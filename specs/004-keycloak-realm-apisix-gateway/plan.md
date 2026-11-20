@@ -77,7 +77,7 @@ specs/openapi/eduworld-api.v1.yaml # delta x-internal
 
 ## Phase 0: Research
 
-→ [research.md](research.md): R1 plugin `ew-tenant-header`; R2 khóa username không ghi body; R3 hành vi khi Valkey lỗi; R4 công cụ áp realm; R5 spike direct grant cho portal (`amr`/`acr`, required action — ADR-0091) [Proposed].
+→ [research.md](research.md): R1 plugin `ew-tenant-header`; R2 khóa username không ghi body; R3 hành vi khi Valkey lỗi; R4 công cụ áp realm; R5 spike direct grant cho portal (`amr`/`acr`, required action — ADR-0091) [Confirmed].
 
 ## Phase 1: Design & Contracts
 
@@ -95,7 +95,7 @@ specs/openapi/eduworld-api.v1.yaml # delta x-internal
 
 **Mô hình route** (`routes.yaml`, mỗi mục): `id`, `uris`, `gateway: public|internal|both`, `upstream: core-api|realtime`, `module: <module sở hữu>` (từ `x-service`), `auth: oidc|none|ticket`, `tenant_header: required|optional|none`, `rate: <khóa tham số>`, `body_max: <khóa tham số>`, `log_body: false` (bắt buộc false cho `/auth/game/*` và `/auth/portal/*`), `host` (route `/auth/portal/*` gắn `EW_PORTAL_HOST` — cùng origin SPA, ADR-0091), `priority`. `render.mjs` thay biến `${EW_*}` từ file env và sinh standalone/ADC.
 
-**Client service account** ([KEYCLOAK_SSO §3.2](../../docs/09-identity/KEYCLOAK_SSO.md), ADR-0074 mục 5): chỉ `svc-identity` (client credentials, secret `${env.KC_SVC_IDENTITY_SECRET}`), gán role `realm-management` tối thiểu (`manage-users`, `view-users`, `manage-organizations` [Proposed]) để module identity gọi Admin API. Không có client scope `internal-<module>` hay audience `svc-<module>-api`: module gọi nhau trong tiến trình qua facade, không dùng token.
+**Client service account** ([KEYCLOAK_SSO §3.2](../../docs/09-identity/KEYCLOAK_SSO.md), ADR-0074 mục 5): chỉ `svc-identity` (client credentials, secret `${env.KC_SVC_IDENTITY_SECRET}`), gán role `realm-management` tối thiểu (`manage-users`, `view-users`, `manage-organizations` [Confirmed]) để module identity gọi Admin API. Không có client scope `internal-<module>` hay audience `svc-<module>-api`: module gọi nhau trong tiến trình qua facade, không dùng token.
 
 ### Tích hợp và phụ thuộc
 

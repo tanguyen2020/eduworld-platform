@@ -5,7 +5,7 @@
 ## R1. Hiện thực kiểm tra `X-Tenant-Id` ở gateway
 
 - **Decision**: Lua plugin riêng `ew-tenant-header` (`deploy/apisix/plugins/ew-tenant-header.lua`, priority trước `limit-count`), cấu hình `mode: required | optional`, trả Problem Details JSON (`type`, `title`, `status`, `code`, `trace_id` lấy từ `traceparent`/`request-id`), set `ctx.var.ew_tenant_id` để `limit-count` (`key_type: var`) và logger/OTel dùng.
-- **Rationale**: Dùng lại trên mọi route bằng tên plugin, test được bằng `busted`/test-nginx, kiểm schema cấu hình; tránh lặp mã Lua trong `serverless-pre-function` ở hàng trăm route. API_DESIGN §10 và DEPLOYMENT §5 để ngỏ hai lựa chọn [Proposed].
+- **Rationale**: Dùng lại trên mọi route bằng tên plugin, test được bằng `busted`/test-nginx, kiểm schema cấu hình; tránh lặp mã Lua trong `serverless-pre-function` ở hàng trăm route. API_DESIGN §10 và DEPLOYMENT §5 để ngỏ hai lựa chọn [Confirmed].
 - **Alternatives**: `serverless-pre-function` (khó test, khó review, lặp); kiểm hoàn toàn ở backend (mất khóa rate limit theo tenant và không chặn sớm).
 
 ## R2. Giới hạn đăng nhập theo username mà không ghi body

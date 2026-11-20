@@ -102,14 +102,14 @@ sequenceDiagram
 
 | Tham số | Giá trị | Nhãn |
 |---|---|---|
-| Ticket TTL / số lần dùng | 60 s / 1 lần | [Proposed] ADR-0008 |
-| Heartbeat client | 15 s (`system.heartbeat.ping`) | [Proposed] |
-| Timeout không nhận frame | 45 s | [Proposed] |
+| Ticket TTL / số lần dùng | 60 s / 1 lần | [Confirmed] ADR-0008 |
+| Heartbeat client | 15 s (`system.heartbeat.ping`) | [Confirmed] |
+| Timeout không nhận frame | 45 s | [Confirmed] |
 | `game_session_heartbeat_timeout` — game session không còn heartbeat (WS hoặc REST khi WS chưa Online) | 45 s → module game kết thúc session `end_reason = timeout`; job `game-session-timeout` quét mỗi 15 s | [Confirmed — Technical Architect 2026-11-16] |
-| WS ping control frame từ server | 20 s | [Proposed] |
-| Kích thước frame tối đa client→server | 16 KB | [Proposed] |
-| Resume window | 120 s | [Proposed] |
-| Timeout lệnh NATS request | 2 s (quá hạn → `system.command.failed` `UNAVAILABLE`, `retryable`) | [Proposed] |
+| WS ping control frame từ server | 20 s | [Confirmed] |
+| Kích thước frame tối đa client→server | 16 KB | [Confirmed] |
+| Resume window | 120 s | [Confirmed] |
+| Timeout lệnh NATS request | 2 s (quá hạn → `system.command.failed` `UNAVAILABLE`, `retryable`) | [Confirmed] |
 | Số kết nối đồng thời mỗi user | 1 (kết nối mới đóng kết nối cũ với `4409 replaced`) | [Confirmed] ADR-0031 |
 | Ai được kết nối | Chỉ học sinh: module game chỉ cấp ticket cho game session của `student` (ADR-0031) | [Confirmed] |
 
@@ -239,12 +239,12 @@ ew:rt:room:<room_id>:ckpt   STRING JSON checkpoint  EX 3600
 
 | Tham số | Giá trị | Nhãn |
 |---|---|---|
-| Sức chứa hub instance | 40 người | [Proposed] |
-| Client gửi `hub.player.move` | ≤ 10 Hz, chỉ khi thay đổi (+1 Hz keepalive khi đứng yên) | [Proposed] |
-| Server tick / snapshot | 10 Hz (room host trong module competition) | [Proposed] |
-| Interest grid | Ô 16 m × 16 m, gửi thực thể trong ô hiện tại + 8 ô lân cận | [Proposed] |
-| Interpolation buffer client | 100 ms | [Proposed] |
-| Tốc độ tối đa | theo `world_area` (vd. 6 m/s chạy); vượt → clamp + đếm vi phạm | [Proposed] |
+| Sức chứa hub instance | 40 người | [Confirmed] |
+| Client gửi `hub.player.move` | ≤ 10 Hz, chỉ khi thay đổi (+1 Hz keepalive khi đứng yên) | [Confirmed] |
+| Server tick / snapshot | 10 Hz (room host trong module competition) | [Confirmed] |
+| Interest grid | Ô 16 m × 16 m, gửi thực thể trong ô hiện tại + 8 ô lân cận | [Confirmed] |
+| Interpolation buffer client | 100 ms | [Confirmed] |
+| Tốc độ tối đa | theo `world_area` (vd. 6 m/s chạy); vượt → clamp + đếm vi phạm | [Confirmed] |
 
 ```mermaid
 flowchart LR
@@ -257,7 +257,7 @@ flowchart LR
   D --> OUT["PUBLISH ew:rt:room:id:out → gateway → hub.snapshot.updated"]
 ```
 
-- Snapshot chứa `tick`, danh sách entity `{eid, p:[x,y,z], r:yaw, a:anim}`; entity rời AOI → `removed[]`. Snapshot theo người xem được đóng gói theo gateway node (một message Valkey chứa snapshot cho các user trên node đó) để giảm số message Pub/Sub [Proposed].
+- Snapshot chứa `tick`, danh sách entity `{eid, p:[x,y,z], r:yaw, a:anim}`; entity rời AOI → `removed[]`. Snapshot theo người xem được đóng gói theo gateway node (một message Valkey chứa snapshot cho các user trên node đó) để giảm số message Pub/Sub [Confirmed].
 - Hub chỉ xác thực mức vừa đủ (tốc độ, biên); không có vật lý server-side. Va chạm giữa người chơi tắt.
 - Tương tác có giá trị (mở quest, nhận item) đi qua REST của module game; kiểm tra khoảng cách (dung sai 3 m) dựa trên vị trí gần nhất do room host của module competition giữ (`ew:rt:room:<id>:pos:<user>` TTL 5 s). module game **không** đọc trực tiếp key Valkey thuộc module competition (ACL theo module); lấy vị trí qua facade của module competition, gọi trong tiến trình `core-api` (ADR-0074) — operation do F071 bổ sung vào spec internal [TBD].
 - Party ưu tiên cùng instance; nếu đầy, cả party chuyển sang instance mới (`hub.instance.assigned`).
@@ -290,7 +290,7 @@ Quy tắc:
 
 1. Khi tạo match, module competition (trong `core-api`) gọi facade `question-plans` của module learning trong tiến trình (ADR-0074) → nhận `plan_id` + render payload từng câu (**không** answer key). Render payload gửi client lúc `QuestionShown` (ADR-0016).
 2. `battle.answer.submit` chứa `question_instance_id` + `response`; room host gắn `received_at` (server time). Trả lời sau `deadline + 300 ms grace` bị từ chối (`ANSWER_LATE`).
-3. Chấm: room host gọi facade `question-plans/{plan_id}/answers:score` của module learning trong tiến trình `core-api` (module learning chấm bằng answer key, ghi `AttemptAnswer` `mode=competition` cho từng học sinh — learning record riêng [Confirmed Addendum §4]). Bonus thời gian tính trên server time của room host (trừ RTT ước lượng tối đa 150 ms) [Proposed]. module learning lỗi/chậm → câu được làm lại, quá 2 lần → match `aborted`.
+3. Chấm: room host gọi facade `question-plans/{plan_id}/answers:score` của module learning trong tiến trình `core-api` (module learning chấm bằng answer key, ghi `AttemptAnswer` `mode=competition` cho từng học sinh — learning record riêng [Confirmed Addendum §4]). Bonus thời gian tính trên server time của room host (trừ RTT ước lượng tối đa 150 ms) [Confirmed]. module learning lỗi/chậm → câu được làm lại, quá 2 lần → match `aborted`.
 4. `Finalizing` chạy command `FinalizeMatch(match_id, results)` — unique theo `match_id` → không tính trùng [Confirmed §22]; outbox `match.completed` → module game (XP), module chat (đóng channel `match`), module learning (evidence).
 
 ### 7.2. Co-op room
@@ -319,7 +319,7 @@ Quy tắc:
 | `hub.player.move` (`ws_frame_rate`) | 12/s | [Confirmed — Technical Architect 2026-11-16] |
 | `chat.message.send` | Theo ChatPolicy hiệu lực; giá trị và cách đếm (Valkey xuyên node) chỉ định nghĩa ở [CHAT_SYSTEM §3.1](../03-social-multiplayer/CHAT_SYSTEM.md); gateway không có giới hạn chat riêng ngoài `ws_frame_rate` | — |
 | `party.invitation.send` | `party_invite_rate` (module competition; giá trị ở [PARTY_SYSTEM §10](../03-social-multiplayer/PARTY_SYSTEM.md)) | — |
-| `matchmaking.proposal.accept/decline`, `matchmaking.ticket.cancel` | 10/phút (tạo ticket đi qua REST `POST /api/v1/competition/matchmaking/tickets`, limit 6/phút tại APISIX) | [Proposed] |
+| `matchmaking.proposal.accept/decline`, `matchmaking.ticket.cancel` | 10/phút (tạo ticket đi qua REST `POST /api/v1/competition/matchmaking/tickets`, limit 6/phút tại APISIX) | [Confirmed] |
 
 Vi phạm nhẹ → `system.command.failed` mã `RATE_LIMITED` kèm `retry_after_ms`; liên tục > 3 lần/phút (`ws_frame_rate`) → đóng `4429`, ghi metric và audit (gửi `audit.recorded` qua NATS).
 
@@ -344,10 +344,10 @@ sequenceDiagram
   end
 ```
 
-- Buffer resume: message **không droppable** của 120 s gần nhất mỗi user trong `ew:rt:resume:<token>` (LIST ≤ 500) [Proposed].
+- Buffer resume: message **không droppable** của 120 s gần nhất mỗi user trong `ew:rt:resume:<token>` (LIST ≤ 500) [Confirmed].
 - Ticket mới bắt buộc (dùng 1 lần).
 - Battle: grace 30 s giữ chỗ (module competition); quay lại nhận `battle.state.snapshot`.
-- Party: thành viên disconnect → `party.member.status_changed{status:"disconnected"}`; leader disconnect > 60 s → tự chuyển leader [Proposed] ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md)).
+- Party: thành viên disconnect → `party.member.status_changed{status:"disconnected"}`; leader disconnect > 60 s → tự chuyển leader [Confirmed] ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md)).
 - Presence chuyển `offline` sau 45 s không có kết nối.
 
 ## 10. Bảo mật realtime
@@ -367,7 +367,7 @@ Mục tiêu năng lực Release 1.0 là **10.000 người chơi đồng thời**
 |---|---|---|---|
 | Kết nối WS đồng thời | 1.000 | 10.000 (+ 20% dự phòng reconnect) | Mỗi người chơi 1 kết nối |
 | Kết nối/gateway node mục tiêu | 5.000 | 4.000 (giữ ≤ 50% CPU) | Đo thực tế để điều chỉnh |
-| Replica `realtime` (N+1) | 2 | **4** (4–6 replica, tăng theo lịch học và alert số kết nối; Docker Swarm không autoscale theo tải) | Node 2 vCPU / 2 GB ([DEPLOYMENT §4.2](../11-operations/DEPLOYMENT.md#42-release-10-10000-ccu-trên-docker-swarm-nfr-scal-002-confirmed-adr-0024-adr-0045--sizing-proposed)) |
+| Replica `realtime` (N+1) | 2 | **4** (4–6 replica, tăng theo lịch học và alert số kết nối; Docker Swarm không autoscale theo tải) | Node 2 vCPU / 2 GB ([DEPLOYMENT §4.2](../11-operations/DEPLOYMENT.md#42-release-10-10000-ccu-trên-docker-swarm-nfr-scal-002-confirmed-adr-0024-adr-0045--sizing-confirmed)) |
 | Phân bố người chơi | — | ~70% ở hub (≤ 40/instance → ~175 instance), ~20% trong trận/co-op, ~10% học/làm bài | Theo GAMEPLAY_LOOP |
 | Room host (module competition trong `core-api`) | 2 replica `core-api` | Chia trên các replica `core-api`; ~175 hub instance + trận, tick ≤ 5 ms → ≈ 9 vCPU ở đỉnh | Theo số room hub + trận |
 | Hub: input vào (NATS core `ew.in.room.*`) | 10k msg/s | ~70k msg/s (7.000 × 10 Hz) | Gộp/giảm tần suất khi đứng yên |
@@ -381,7 +381,7 @@ Chiến lược scale:
 
 1. Scale ngang `realtime` (theo số kết nối) và `core-api` (theo lệnh nghiệp vụ và số room) độc lập; trên Docker Swarm (ADR-0024) không có autoscale theo tải: số replica tăng theo lịch học (`ops-scheduler`, DEPLOYMENT §4.4) và theo alert khi `eduworld_rt_connections` > 3.500/replica hoặc CPU > 70%. APISIX cân bằng kết nối mới giữa các task (`tasks.realtime`, least-conn); không cần sticky session vì client reconnect bằng ticket mới và resume theo `last_seq`.
 2. Gộp snapshot theo gateway node để giảm Pub/Sub; affinity (APISIX `chash` theo cookie `rt_affinity`) đặt thành viên cùng room/party trên ít gateway node.
-3. **Bão kết nối** đầu giờ học: kết nối WS chỉ mở sau khi đăng nhập xong nên được hàng chờ đăng nhập (ADR-0045) điều tiết; gateway giới hạn tốc độ nhận kết nối mới mỗi node (200 kết nối/giây [Proposed]) và trả close 4429 kèm thời gian thử lại khi quá tải.
+3. **Bão kết nối** đầu giờ học: kết nối WS chỉ mở sau khi đăng nhập xong nên được hàng chờ đăng nhập (ADR-0045) điều tiết; gateway giới hạn tốc độ nhận kết nối mới mỗi node (200 kết nối/giây [Confirmed]) và trả close 4429 kèm thời gian thử lại khi quá tải.
 4. Scale trước theo lịch học (`ops-scheduler`, `docker service scale`, DEPLOYMENT §4.4) cho `realtime`, `core-api`, `worker-chat`.
 5. Khi > 50k CCU hoặc cần vật lý thời gian thực → ADR mới (dedicated game server).
 

@@ -36,12 +36,12 @@ Learning event là append-only, có `idempotency_key` (= `<source_event_id>:<stu
 
 Mastery `M ∈ [0, 1]` theo cặp `(student_id, learning_objective_id)`. Mỗi **evidence** là một item đã chấm (`question.answered` với `is_scored=true` **và** `rapid_guess=false`) gắn LO đó. Một item gắn nhiều LO → mỗi LO nhận một evidence.
 
-- Lần trả lời gắn cờ `rapid_guess` ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed)) **không phải evidence**: không cập nhật `M`, không tăng `n`, không tính ngày cho `d_min`; vẫn được đếm trong chỉ số `rapid_guess_rate` (§4).
+- Lần trả lời gắn cờ `rapid_guess` ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed)) **không phải evidence**: không cập nhật `M`, không tăng `n`, không tính ngày cho `d_min`; vẫn được đếm trong chỉ số `rapid_guess_rate` (§4).
 - Kết quả bài chẩn đoán (`mode = diagnostic`) không đi qua công thức EWMA mà đặt `M0` ban đầu (§3.5).
 
 Tham số (lưu trong `learning.mastery_model_configs`, phiên bản hóa, `model_version` ghi vào từng bản ghi mastery):
 
-| Tham số | Ký hiệu | Mặc định ([Proposed] trừ khi ghi khác) |
+| Tham số | Ký hiệu | Mặc định ([Confirmed] trừ khi ghi khác) |
 |---|---|---|
 | Prior ban đầu | `M0` | 0.30 (hoặc theo bài chẩn đoán, §3.5) |
 | Tốc độ học cơ sở | `α_base` | 0.35 |
@@ -58,7 +58,7 @@ Tham số (lưu trong `learning.mastery_model_configs`, phiên bản hóa, `mode
 | Chu kỳ bán rã decay | `h` | 90 ngày |
 | Mastered: tối thiểu evidence / ngày khác nhau | `n_min`, `d_min` | 5 / 2 |
 
-**Ngưỡng `rapid_guess` mặc định theo loại câu** (`min_response_ms`, dùng khi câu hỏi không khai báo; cơ chế đo và gắn cờ ở [ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed)) [Confirmed — Technical Architect 2026-11-15]:
+**Ngưỡng `rapid_guess` mặc định theo loại câu** (`min_response_ms`, dùng khi câu hỏi không khai báo; cơ chế đo và gắn cờ ở [ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed)) [Confirmed — Technical Architect 2026-11-15]:
 
 | Loại câu (`QuestionType`) | `min_response_ms` |
 |---|---|
@@ -148,7 +148,7 @@ type MasteryModel interface {
 | Giá trị dự báo bên ngoài | Tương quan với bài kiểm tra độc lập ([LEARNING_EFFICACY_PLAN §5](LEARNING_EFFICACY_PLAN.md#5-đối-chiếu-mastery-với-bài-kiểm-tra-độc-lập-predictive-validity)) không thấp hơn EWMA |
 | Minh bạch | Vẫn trả lời được "vì sao" (danh sách evidence) cho nhà trường và học sinh |
 
-### 3.5. Bài chẩn đoán đặt M0 ban đầu [Proposed]
+### 3.5. Bài chẩn đoán đặt M0 ban đầu [Confirmed]
 
 Thay vì mọi LO bắt đầu ở cùng `M0 = 0.30`, bài chẩn đoán ngắn (`mode = diagnostic`, [ACTIVITY_ENGINE §6.1](ACTIVITY_ENGINE.md#61-mode--hoạt-động-được-gọi-từ-đâu-trong-game)) đặt prior theo từng LO:
 
@@ -215,12 +215,12 @@ Bảng trên gồm hai loại: **read model trạng thái hiện tại** (`objec
 
 - Dashboard không đọc `learning_events`, `attempts`, `attempt_answers` (DASHBOARD_DATA §1, D-1).
 - Read model gắn `school_id`, lọc theo RLS như bảng nghiệp vụ.
-- Báo cáo cấp tổ chức/platform chỉ dùng dữ liệu **gộp**, ẩn ô có < 5 học sinh (k-anonymity tối thiểu) [Proposed].
+- Báo cáo cấp tổ chức/platform chỉ dùng dữ liệu **gộp**, ẩn ô có < 5 học sinh (k-anonymity tối thiểu) [Confirmed].
 - Mọi aggregate theo lớp dùng enrollment **tại thời điểm event** (`learning_events.class_id` snapshot) để chuyển lớp không làm méo số liệu lớp cũ.
 
 ## 6. Recommendation rules
 
-Gợi ý tự động là **kênh chính** thay cho việc người lớn chỉ định ôn tập (ADR-0072). Rule-based, giải thích được (không black-box) [Proposed]. Mỗi gợi ý có `recommendation_id`; attempt bắt đầu từ gợi ý mang `recommendation_id` trong `context` để đo `recommendation_follow_rate` và để module game áp dụng miễn giảm XP cho ôn LO tiên quyết ([PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md)).
+Gợi ý tự động là **kênh chính** thay cho việc người lớn chỉ định ôn tập (ADR-0072). Rule-based, giải thích được (không black-box) [Confirmed]. Mỗi gợi ý có `recommendation_id`; attempt bắt đầu từ gợi ý mang `recommendation_id` trong `context` để đo `recommendation_follow_rate` và để module game áp dụng miễn giảm XP cho ôn LO tiên quyết ([PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md)).
 
 | # | Điều kiện | Gợi ý | Ưu tiên |
 |---|---|---|---|
@@ -252,7 +252,7 @@ Kết quả trên dashboard là **tham khảo** cho nhà trường, không thay 
 
 | Method | Path | Mô tả |
 |---|---|---|
-| GET | `/api/v1/learning/progress/me?subject_id=` (`getMyProgress`) | Tiến độ của tôi: tổng quan (`lessons_completed`, `items_answered`, `accuracy`, `active_minutes`) và mastery theo LO (level + biểu tượng, giá trị số chỉ cho lớp 6–9 [Proposed]) trong cùng một response; không có endpoint mastery riêng (thay `/learning/mastery/me` cũ); level tính sau decay lúc đọc, không trả giá trị thô [Proposed thay giá trị số lớp 6–9 cho tới khi có màn hình cần] (F031) |
+| GET | `/api/v1/learning/progress/me?subject_id=` (`getMyProgress`) | Tiến độ của tôi: tổng quan (`lessons_completed`, `items_answered`, `accuracy`, `active_minutes`) và mastery theo LO (level + biểu tượng, giá trị số chỉ cho lớp 6–9 [Confirmed]) trong cùng một response; không có endpoint mastery riêng (thay `/learning/mastery/me` cũ); level tính sau decay lúc đọc, không trả giá trị thô [Confirmed thay giá trị số lớp 6–9 cho tới khi có màn hình cần] (F031) |
 | GET | `/api/v1/learning/recommendations/me` | Gợi ý |
 | GET | `/api/v1/lms/dashboards/school` | School Learning Dashboard: tổng quan trường → lớp (`school_admin`, `academic_manager`) |
 | GET | `/api/v1/lms/classes/{class_id}/analytics/objectives?subject=` | Bảng LO × HS của lớp (`school_admin`; `academic_manager` theo môn) |
@@ -264,7 +264,7 @@ Kết quả trên dashboard là **tham khảo** cho nhà trường, không thay 
 
 - Purpose limitation: dữ liệu học tập dùng cho (1) phản hồi và gợi ý cho học sinh, (2) nhà trường hỗ trợ học sinh, (3) quản lý chất lượng giáo dục của trường, (4) cải thiện nội dung và đánh giá hiệu quả học tập (gộp, ẩn danh, [LEARNING_EFFICACY_PLAN](LEARNING_EFFICACY_PLAN.md)). Không dùng cho quảng cáo, không bán/chia sẻ bên thứ ba.
 - Không ghi dữ liệu hành vi game chi tiết (vị trí, đường đi) vào learning events.
-- Retention [Proposed]: learning events chi tiết giữ trong thời gian học sinh học tại trường + 1 năm; sau đó job gộp/ẩn danh hóa (không xóa vật lý, ADR-0070) theo [DATA_PRIVACY](../10-security/DATA_PRIVACY.md). Rà soát thời hạn theo luật ngoài version này (ADR-0082).
+- Retention [Confirmed]: learning events chi tiết giữ trong thời gian học sinh học tại trường + 1 năm; sau đó job gộp/ẩn danh hóa (không xóa vật lý, ADR-0070) theo [DATA_PRIVACY](../10-security/DATA_PRIVACY.md). Rà soát thời hạn theo luật ngoài version này (ADR-0082).
 - Mọi truy cập hồ sơ học tập cá nhân ghi audit (`audit.audit_logs`, action `learning.profile_viewed`).
 - Mô hình mastery minh bạch: nhà trường và học sinh (lớp 6–9) xem được "vì sao" (danh sách evidence gần nhất, evidence bị loại vì `rapid_guess`) cho từng ô.
 

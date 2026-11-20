@@ -256,7 +256,7 @@ Chưa có tên trong CONFIG_DEFAULTS (giá trị ở [LEARNING_EFFICACY_PLAN](..
 
 - Soạn nội dung câu/đề đo hiệu quả, lồng tiếng lớp 1–3 — đội EdTech/nội dung (dùng F053, F025).
 - Hồi quy đa mức, phản biện thống kê, ngưỡng đạt exit criterion — chuyên gia thống kê, PO (ADR-0080 mục 2).
-- Thử nghiệm `selection_rule` — chưa xếp feature [Proposed].
+- Thử nghiệm `selection_rule` — chưa xếp feature [Confirmed].
 - Mô hình consent, nhận định pháp lý về nghiên cứu trên trẻ em — deferred (ADR-0082).
 - Exam Zone trên Godot — F064 (dùng nguyên luồng ExamSession); giao diện giao bài/đề thường — F055.
 - Thu điểm kiểm tra định kỳ của nhà trường làm tiêu chí ngoài — chưa xếp feature.
@@ -264,8 +264,8 @@ Chưa có tên trong CONFIG_DEFAULTS (giá trị ở [LEARNING_EFFICACY_PLAN](..
 ## Assumptions
 
 - Permission `platform.efficacy_study.manage`, `platform.efficacy_study.export`, `platform.learning_experiment.manage` (platform-only) cấp cho role `system_admin` (Technical Architect duyệt 2026-11-17; catalog ADMIN_PORTAL §2.2); chưa có role EdTech riêng.
-- [Proposed] Chỉ số chính của thử nghiệm khi chưa có bài kiểm tra độc lập: độ chính xác lần đầu trên câu mới cùng LO sau độ trễ đánh giá ([LEARNING_EFFICACY_PLAN §6](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md)).
-- [Proposed] Khóa giả danh lấy từ Docker secret `EW_EFFICACY_PSEUDONYM_KEY_FILE` (đăng ký ở LOCAL_DEVELOPMENT §4 qua task).
+- [Confirmed] Chỉ số chính của thử nghiệm khi chưa có bài kiểm tra độc lập: độ chính xác lần đầu trên câu mới cùng LO sau độ trễ đánh giá ([LEARNING_EFFICACY_PLAN §6](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md)).
+- [Confirmed] Khóa giả danh lấy từ Docker secret `EW_EFFICACY_PSEUDONYM_KEY_FILE` (đăng ký ở LOCAL_DEVELOPMENT §4 qua task).
 - ExamSession đo hiệu quả không bao giờ công bố kết quả cho học sinh, kể cả sau khi study `completed` ([LEARNING_EFFICACY_PLAN §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md)).
 
 ### Câu hỏi mở (không chặn triển khai)

@@ -16,7 +16,7 @@ Thêm các màn quản trị vào chunk workspace `school_lms` (`src/cms/fronten
 | Testing | Vitest + Testing Library + MSW (`// MOCK (test-only)`); Playwright E2E với backend local; axe |
 | Target Platform | Trình duyệt desktop/tablet/mobile |
 | Project Type | Web app (workspace chunk) |
-| Performance Goals | Danh sách phân trang cursor, trang đầu < 1,5 s trên dữ liệu seed [Proposed] |
+| Performance Goals | Danh sách phân trang cursor, trang đầu < 1,5 s trên dữ liệu seed [Confirmed] |
 | Constraints | AGENTS R1, R14, R16, R20, R21, R23, R32 · ADR-0027, ADR-0031, ADR-0032, ADR-0060, ADR-0066, ADR-0069, ADR-0072, ADR-0081 |
 | Scale/Scope | ~14 màn; tham số `csv_import_max`, `inactive_student_cleanup_days`, `principal_cache_ttl` |
 

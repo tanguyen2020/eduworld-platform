@@ -125,7 +125,7 @@ Không có. Thuật toán (hard constraint → soft scoring, expanding window, g
 - Metric: `eduworld_mm_queue_size{mode,grade_key,subject}`, `eduworld_mm_wait_seconds{mode,result}`, `eduworld_mm_proposals_total{result}`, `eduworld_mm_rating_gap`, `eduworld_mm_matches_created_total{mode}`, `eduworld_mm_loop_duration_seconds`.
 - Span: `CreateTicket`, `matchmaker.tick`, `CreateMatch`, `CreateDuel`.
 
-Ước lượng: 2 sprint (backend 2 dev) [Proposed].
+Ước lượng: 2 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

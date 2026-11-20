@@ -10,8 +10,8 @@
 - Q: Tài khoản đang bị School Admin khóa (nghỉ học) lại nhận `account_lock` từ Safety Team, sau đó trường mở khóa — tài khoản có mở không? → A: Không. Mỗi khóa có **nguồn** riêng; tài khoản chỉ `active` khi không còn khóa hiệu lực nào. Khóa nguồn kiểm duyệt chỉ gỡ qua `revokeSanction`/hết hạn sanction (F121), không gỡ qua `unlockTenantUser`/`unlockUser` ([MODERATION §7](../../docs/03-social-multiplayer/MODERATION.md): khóa quản trị của trường "không phải sanction kiểm duyệt").
 - Q: Ai gửi email cho nhà trường? → A: module identity (nơi duy nhất giữ email nhân sự — F121 Clarifications) tiêu thụ event của module chat; bảng giao email không lưu địa chỉ, chỉ `recipient_user_id`, địa chỉ đọc lúc gửi (R14, NFR-PRIV-002).
 - Q: "Chưa có người nhận" của case p1 khi đã phân công theo vòng trực? → A: Case được gán tự động (`assigned_via = rotation`) vẫn ở `open` cho tới khi người trực bấm nhận (`assignModerationCase` → `in_review`, F121). "Chưa nhận" = còn `open`.
-- Q: Ai duyệt break-glass? → A: [MODERATION §6.1](../../docs/03-social-multiplayer/MODERATION.md) "phê duyệt hai người": một System Admin yêu cầu, một System Admin **khác** duyệt; permission platform-only mới `platform.break_glass.request`, `platform.break_glass.approve` [Proposed] (R20: tiền tố `platform.*` không bao giờ cấp cho role tenant).
-- Q: Lịch trực lưu ở đâu? → A: module chat (module moderation), dữ liệu platform không theo tenant; thời điểm ca, người trực (user_id nhân sự platform), vai trò `primary`/`secondary` [Proposed]. Trưởng ca (`moderation.case.lead`, F121) quản lý lịch.
+- Q: Ai duyệt break-glass? → A: [MODERATION §6.1](../../docs/03-social-multiplayer/MODERATION.md) "phê duyệt hai người": một System Admin yêu cầu, một System Admin **khác** duyệt; permission platform-only mới `platform.break_glass.request`, `platform.break_glass.approve` [Confirmed] (R20: tiền tố `platform.*` không bao giờ cấp cho role tenant).
+- Q: Lịch trực lưu ở đâu? → A: module chat (module moderation), dữ liệu platform không theo tenant; thời điểm ca, người trực (user_id nhân sự platform), vai trò `primary`/`secondary` [Confirmed]. Trưởng ca (`moderation.case.lead`, F121) quản lý lịch.
 
 ### Session 2026-11-17
 
@@ -169,9 +169,9 @@ Có yêu cầu pháp lý về tin nhắn DM của một học sinh không thuộ
 
 ## Assumptions
 
-- [Proposed] Permission mới platform-only `platform.break_glass.request`, `platform.break_glass.approve` (gán `system_admin`); cập nhật ADMIN_PORTAL §2.2 và `src/backend/pkg/authz/catalog.go`.
-- [Proposed] Tham số mới cần đăng ký CONFIG_DEFAULTS (R33): `break_glass_max_duration_hours` = 4, `break_glass_max_window_days` = 30, `oncall_shift_max_hours` = 168, `email_delivery_max_attempts` = 8 (backoff lũy thừa tới 1 giờ). Code đọc từ `platform.platform_settings`, không hardcode.
-- [Proposed] Mã lỗi mới: `ACCOUNT_LOCK_HELD_BY_SAFETY` (409), `ONCALL_SHIFT_OVERLAP` (409), `BREAK_GLASS_NOT_PENDING` (409), `BREAK_GLASS_NOT_ACTIVE` (403) — thêm API_DESIGN §4.1 và `ProblemCode`.
-- [Proposed] Không có School Admin → gửi Tenant Admin (MODERATION §6.4 chỉ nêu School Admin).
-- Seed local [Proposed]: `sm.truongca` (F121), `sa.admin2` (system_admin thứ hai, duyệt break-glass).
+- [Confirmed] Permission mới platform-only `platform.break_glass.request`, `platform.break_glass.approve` (gán `system_admin`); cập nhật ADMIN_PORTAL §2.2 và `src/backend/pkg/authz/catalog.go`.
+- [Confirmed] Tham số mới cần đăng ký CONFIG_DEFAULTS (R33): `break_glass_max_duration_hours` = 4, `break_glass_max_window_days` = 30, `oncall_shift_max_hours` = 168, `email_delivery_max_attempts` = 8 (backoff lũy thừa tới 1 giờ). Code đọc từ `platform.platform_settings`, không hardcode.
+- [Confirmed] Mã lỗi mới: `ACCOUNT_LOCK_HELD_BY_SAFETY` (409), `ONCALL_SHIFT_OVERLAP` (409), `BREAK_GLASS_NOT_PENDING` (409), `BREAK_GLASS_NOT_ACTIVE` (403) — thêm API_DESIGN §4.1 và `ProblemCode`.
+- [Confirmed] Không có School Admin → gửi Tenant Admin (MODERATION §6.4 chỉ nêu School Admin).
+- Seed local [Confirmed]: `sm.truongca` (F121), `sa.admin2` (system_admin thứ hai, duyệt break-glass).
 - Email gửi qua SMTP cấu hình bằng env/secret (local: mailpit, [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).

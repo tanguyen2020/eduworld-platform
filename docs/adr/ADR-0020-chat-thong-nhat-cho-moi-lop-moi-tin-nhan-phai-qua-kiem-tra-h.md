@@ -26,7 +26,7 @@ Stakeholder quyết định: chat **không phân biệt theo lớp**, mọi tin 
 
 ## Hệ quả
 
-(+) Trải nghiệm chat đồng nhất, dễ hiểu, dễ kiểm thử. (−) Học sinh nhỏ tuổi nhận cùng mức tự do như học sinh lớn, nên bộ lọc, moderation và thời gian xử lý báo cáo phải đạt ngưỡng trước khi phát hành (recall ≥ 95%, false positive ≤ 3% [Proposed], xem TEST_STRATEGY); cần công cụ moderation đầy đủ ngay khi bật chat.
+(+) Trải nghiệm chat đồng nhất, dễ hiểu, dễ kiểm thử. (−) Học sinh nhỏ tuổi nhận cùng mức tự do như học sinh lớn, nên bộ lọc, moderation và thời gian xử lý báo cáo phải đạt ngưỡng trước khi phát hành (recall ≥ 95%, false positive ≤ 3% [Confirmed], xem TEST_STRATEGY); cần công cụ moderation đầy đủ ngay khi bật chat.
 
 ## Phương án đã loại
 

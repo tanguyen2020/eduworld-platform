@@ -65,7 +65,7 @@ src/backend/pkg/
 ├── outbox/        writer.go relay.go consumer.go dlq.go auditrecorder.go envelope.go
 ├── natsx/         conn.go streams.go headers.go principal_invalidator.go
 ├── modcall/       call.go (Call, Op, Kind) context.go (Principal gốc, caller, scope, Idempotency-Key) deadline.go mapproblem.go metrics.go callers.go (đọc allowed_callers_gen)
-src/backend/cmd/internal/wiring/principal_resolver.go   # adapter authz.PrincipalResolver bọc facade identity [Proposed]
+src/backend/cmd/internal/wiring/principal_resolver.go   # adapter authz.PrincipalResolver bọc facade identity [Confirmed]
 ├── lifecycle/     shutdown.go (core-api, realtime, worker)
 └── testkit/       containers.go migrate.go fixtures.go contract/{openapi.go,events.go}
     └── sample/    module mẫu Widget theo khuôn ADR-0087:
@@ -108,7 +108,7 @@ Không có. Thư viện và luồng đã chốt ở ADR-0039, ADR-0040, ADR-0042
 **Hành vi chính**:
 
 - `UnitOfWork.Do`: lấy scope từ context (do middleware `principal`/`tenant`, adapter NATS hoặc `outbox.Consumer` đặt) → `InTenantTx` → gắn `*ent.Tx` vào context; repository và `outbox.Writer` lấy tx từ context; commit/rollback (cả khi panic). Không lồng tx: gọi `Do` khi đã có tx trong context dùng lại tx đó.
-- `ReadSession.InTenantRead`: `BEGIN READ ONLY` + `set_config('app.tenant_id')` trên client đọc (`EW_DB_READ_URL_FILE` nếu có, mặc định primary) [Proposed — tên biến, thêm vào BACKEND_DESIGN §12 khi triển khai].
+- `ReadSession.InTenantRead`: `BEGIN READ ONLY` + `set_config('app.tenant_id')` trên client đọc (`EW_DB_READ_URL_FILE` nếu có, mặc định primary) [Confirmed — tên biến, thêm vào BACKEND_DESIGN §12 khi triển khai].
 - `observability.UseCase(ctx, name) (context.Context, func(error))`: span `name`, metric `eduworld_usecase_duration_seconds{module,kind,usecase,result}`, log một dòng (không payload); `result` ∈ `ok`, `client_error`, `server_error` theo `problem.Kind`.
 - Middleware `httpx.Idempotency` (chỉ operation khai báo `IdempotencyKey` trong spec): kiểm key là UUIDv7 và timestamp lệch ≤ `idempotency_record_ttl` (nếu không → `400 BAD_REQUEST`), tính `key_issued_on`; đọc `infra.idempotency_records` theo PK (bỏ `expires_at < now()`) → có bản ghi: so `request_hash` (SHA-256 body chuẩn hóa) rồi replay hoặc `409 IDEMPOTENCY_KEY_REUSED`; chưa có: đặt `idempotency.Pending` vào context và chạy handler. `UnitOfWork.Do` thấy `Pending` thì `INSERT` bản ghi (hash + response đã tuần tự hóa do handler đăng ký qua `idempotency.SetResponse(ctx, status, body)`) ngay trước commit, cùng transaction nghiệp vụ. Request trùng đồng thời chờ ở unique index; khi transaction đầu commit, `INSERT` của request sau lỗi unique → đọc lại và replay; chờ vượt `lock_timeout` → `409 IDEMPOTENCY_IN_PROGRESS` + `Retry-After`. Không khóa Valkey, không trạng thái `in_progress` (ADR-0089 §4). Lớp cuối vẫn là unique constraint nghiệp vụ (API_DESIGN §6).
 - Relay: `SELECT … WHERE published_at IS NULL ORDER BY event_id LIMIT 500 FOR UPDATE SKIP LOCKED` (dùng role `<module>_relay`, bảng không RLS, ADR-0089 §4) → `js.Publish(subject, data, nats.MsgId(event_id))` → `UPDATE published_at, attempts`.

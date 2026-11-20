@@ -11,12 +11,12 @@ Bổ sung vào workspace `content-studio` các màn quản lý/phát hành: tab 
 | Mục | Giá trị |
 |---|---|
 | Language/Version | TypeScript (strict) · React 18 · Vite |
-| Primary Dependencies | Ant Design 5 + Pro (ProTable, StepsForm, Timeline, Upload.Dragger), TanStack Query, `@dnd-kit/core`, SheetJS `xlsx` (đọc file trên trình duyệt) [Proposed], `papaparse` (CSV) [Proposed], `ops-ui` (F053), `diff` hiển thị theo field (tự viết trên JSON diff của `ContentVersionDiff`) |
+| Primary Dependencies | Ant Design 5 + Pro (ProTable, StepsForm, Timeline, Upload.Dragger), TanStack Query, `@dnd-kit/core`, SheetJS `xlsx` (đọc file trên trình duyệt) [Confirmed], `papaparse` (CSV) [Confirmed], `ops-ui` (F053), `diff` hiển thị theo field (tự viết trên JSON diff của `ContentVersionDiff`) |
 | Storage | Không có (client); dữ liệu ở `eduworld_learning` (F024–F027) |
 | Testing | Vitest + Testing Library + MSW (`// MOCK (test-only)`); Playwright E2E với backend local; axe |
 | Target Platform | Trình duyệt; builder/diff/import ≥ 1024 px, duyệt và xem mọi breakpoint |
 | Project Type | Web app (workspace chunk) |
-| Performance Goals | Danh sách cursor; parse file 2.000 dòng < 3 s trên trình duyệt [Proposed] |
+| Performance Goals | Danh sách cursor; parse file 2.000 dòng < 3 s trên trình duyệt [Confirmed] |
 | Constraints | AGENTS R10, R11, R21, R23, R31, R32 · ADR-0028, ADR-0031, ADR-0043, ADR-0044, ADR-0055, ADR-0056 |
 | Scale/Scope | ~12 màn; tham số `scheduled_publish_min_lead`, `publish_to_visible_max`, `assets_per_version_max` |
 
@@ -74,7 +74,7 @@ src/cms/frontend/apps/portal/tests/{unit/content-studio,e2e/content-studio}/
 
 ## Phase 0: Research
 
-Không có — ADR-0043/0044/0055 và tài liệu sở hữu đủ; lựa chọn thư viện đọc file ghi [Proposed] ở Technical Context.
+Không có — ADR-0043/0044/0055 và tài liệu sở hữu đủ; lựa chọn thư viện đọc file ghi [Confirmed] ở Technical Context.
 
 ## Phase 1: Design & Contracts
 
@@ -117,7 +117,7 @@ Không có — ADR-0043/0044/0055 và tài liệu sở hữu đủ; lựa chọn
 
 ### Quan sát
 
-- Không log nội dung câu hỏi/đáp án ra console; lỗi hiển thị `trace_id`; đếm lỗi parse import theo mã (client, không PII) [Proposed].
+- Không log nội dung câu hỏi/đáp án ra console; lỗi hiển thị `trace_id`; đếm lỗi parse import theo mã (client, không PII) [Confirmed].
 
 
 ### Danh mục menu/action portal (ADR-0090)

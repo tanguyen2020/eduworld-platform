@@ -190,5 +190,5 @@ Game Designer lưu cấu hình challenge sai thì bị chặn với lỗi rõ r�
 ## Assumptions
 
 - module learning (F030) mở `createAttempt` cho mode `challenge` với dải độ khó và khối trước khi US3 Done (delta §6).
-- Reward rule có trigger `challenge.completed` (delta `reward-rule.schema.json`) và dùng `conditions.first_completion_only` cho phần thưởng lần đầu; hệ số `reward_multiplier` đọc từ payload event [Proposed].
-- Nếu F091 đã có lease/out cho hub, F076 trích phần đó vào `src/backend/pkg/roomhost` thay vì viết mới [Proposed].
+- Reward rule có trigger `challenge.completed` (delta `reward-rule.schema.json`) và dùng `conditions.first_completion_only` cho phần thưởng lần đầu; hệ số `reward_multiplier` đọc từ payload event [Confirmed].
+- Nếu F091 đã có lease/out cho hub, F076 trích phần đó vào `src/backend/pkg/roomhost` thay vì viết mới [Confirmed].

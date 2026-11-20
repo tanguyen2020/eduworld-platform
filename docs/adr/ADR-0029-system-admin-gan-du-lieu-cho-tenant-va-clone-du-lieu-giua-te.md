@@ -12,7 +12,7 @@ Stakeholder yêu cầu: dữ liệu System Admin tạo có thể gán cho các t
    - Truy vấn của tenant = dữ liệu `tenant_id = $tenant` **hoặc** dữ liệu platform có assignment active; cả hai lọc `deleted_at IS NULL`.
    - Dữ liệu được gán **chỉ đọc** với tenant; muốn sửa thì System Admin clone về tenant.
    - Gỡ gán = soft-delete assignment; lịch sử học tập đã tham chiếu version giữ nguyên.
-   - Tùy chọn "gán cho mọi tenant hiện tại và tenant mới" [Proposed].
+   - Tùy chọn "gán cho mọi tenant hiện tại và tenant mới" [Confirmed].
 2. **Clone giữa tenant (chỉ System Admin):** chọn tenant nguồn, bản ghi, tenant đích → bản sao **sâu** với ID mới, `tenant_id = đích`, trạng thái `draft` cho nội dung có workflow, cột nguồn gốc `cloned_from_id`, `cloned_from_tenant_id`, `cloned_at`, `cloned_by`.
    - Clone kéo theo phụ thuộc và ánh xạ lại tham chiếu; phụ thuộc là dữ liệu platform thì giữ tham chiếu.
    - **Không bao giờ clone dữ liệu cá nhân/học tập của học sinh**.

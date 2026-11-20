@@ -32,7 +32,7 @@ Hai module, giao tiếp chỉ bằng event (R29). **module identity**: (1) consu
 | IV Server-authoritative | ✅ | Mốc gọi trực, hạn grant tính ở server; ghi có `Idempotency-Key` + audit |
 | V Xác thực, phân quyền | ✅ | `moderation.case.read/lead`, `platform.break_glass.request/approve` platform-only; hai người khác nhau; MFA; gateway nội bộ |
 | VI An toàn trẻ em | ✅ | Email/audit/log không tên học sinh, không nội dung; học sinh chỉ thấy `ACCOUNT_LOCKED` trung tính (R14, R16) |
-| VII Một nguồn sự thật, cấu hình | ✅ | Tham số theo tên; 4 tham số mới [Proposed] đăng ký CONFIG_DEFAULTS (T046); SMTP/URL portal qua env (R3); mẫu email trong file dịch |
+| VII Một nguồn sự thật, cấu hình | ✅ | Tham số theo tên; 4 tham số mới [Confirmed] đăng ký CONFIG_DEFAULTS (T046); SMTP/URL portal qua env (R3); mẫu email trong file dịch |
 | VIII UI tách logic, token | ✅ | Không có UI; email HTML dùng màu từ `design/admin-tokens/` sinh sẵn |
 | IX Test có bằng chứng | ✅ | Mỗi F124-AC có test viết trước; ma trận nguồn khóa; ma trận authz |
 

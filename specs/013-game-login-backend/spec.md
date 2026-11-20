@@ -14,7 +14,7 @@
 - Q: Game có phải nhập mật khẩu mỗi lần mở (ADR-0064)? → A: **Không** trên thiết bị cá nhân — ADR-0086 thay ADR-0064 mục 1, 2, 4, 5. Client lưu refresh token trong kho bảo mật OS (F060/F061); server: phiên client `eduworld-game-backend` idle 7 ngày / tối đa 30 ngày (`game_session_sso`), không offline token. `refreshGameToken` nhận `device_id` (bắt buộc) và `mode` (`renew` | `resume`); `resume` kiểm tra lại tài khoản/tenant/enrollment và trả `bootstrap`.
 - Q: Phát hiện dùng lại và gắn thiết bị dựa vào đâu? → A: module identity ghi phiên đăng nhập game (`game_auth_sessions`: `sid`, `device_id`, SHA-256 của refresh token hiện hành + ≤ 20 hash đã xoay; không lưu token thô). Hash đã xoay → `401 REFRESH_TOKEN_REUSED` + thu hồi cả phiên; `device_id` khác → `401 REFRESH_TOKEN_DEVICE_MISMATCH` (không thu hồi); hết hạn/thu hồi/không nhận ra → `401 REFRESH_TOKEN_INVALID`. Ba mã mới đã thêm vào `ProblemCode` + API_DESIGN §4.1.
 - Q: Thu hồi phiên game khi nào, ai làm? → A: module identity: `gameLogout` (US3); consumer `user.access_revoked`/`user.status_changed` (khóa, xử phạt, thu hồi quyền), `student.cleaned_up` (ADR-0085); takeover (consumer `game_session.replaced` thuộc F014) và đổi/đặt lại mật khẩu (F016) gọi port `GameAuthSessionRevoker` của feature này. Mỗi lần thu hồi: `revoked_at` + xóa phiên Keycloak theo `sid` + audit.
-- Q: Nguồn `min_client_version` cho kiểm tra `426` ở module identity? → A: Cấu hình triển khai dùng chung với module game (`EW_GAME_MIN_CLIENT_VERSION`) [Proposed]; cần đăng ký tên tham số trong CONFIG_DEFAULTS (task Polish).
+- Q: Nguồn `min_client_version` cho kiểm tra `426` ở module identity? → A: Cấu hình triển khai dùng chung với module game (`EW_GAME_MIN_CLIENT_VERSION`) [Confirmed]; cần đăng ký tên tham số trong CONFIG_DEFAULTS (task Polish).
 
 ### Session 2026-11-17 (ADR-0089)
 
@@ -25,11 +25,11 @@
 
 ### Session 2026-11-19 (triển khai)
 
-- Q: Học sinh còn required action Keycloak (mật khẩu tạm `UPDATE_PASSWORD`) đăng nhập game trả gì? Contract game không có `ACCOUNT_SETUP_REQUIRED`. → A: [Proposed] `401 INVALID_CREDENTIALS` như mọi lỗi thông tin đăng nhập (không lộ trạng thái tài khoản); nhà trường đặt lại mật khẩu học sinh (F016) — OQ F013-1.
+- Q: Học sinh còn required action Keycloak (mật khẩu tạm `UPDATE_PASSWORD`) đăng nhập game trả gì? Contract game không có `ACCOUNT_SETUP_REQUIRED`. → A: [Confirmed] `401 INVALID_CREDENTIALS` như mọi lỗi thông tin đăng nhập (không lộ trạng thái tài khoản); nhà trường đặt lại mật khẩu học sinh (F016) — OQ F013-1.
 - Q: Học sinh thuộc hai tenant (US2) có xảy ra với mô hình dữ liệu hiện tại? → A: Không: `org.students.student_id` là khóa chính (= `user_id`) và `enrollments_one_active_uq` chỉ cho một enrollment active trên toàn hệ thống, nên `memberships_for_user` trả tối đa một tenant học sinh. Luồng `TENANT_NOT_SELECTED` + `login_ticket` + `selectGameLoginTenant` vẫn hiện thực đầy đủ và được kiểm bằng test double thêm membership thứ hai (`extraMembership`, có nhãn) — OQ F013-2 (cùng gốc OQ F011-1 học sinh trùng người liên tenant).
-- Q: Claim `organization` (F013-AC-25)? → A: Realm hiện không gán scope `organization` cho client nào nên token không có claim này. `pkg/httpx` đọc claim (dạng danh sách alias hoặc object theo alias) và từ chối token có > 1 organization bằng `403 TENANT_NOT_SELECTED`; đối chiếu alias với tenant đang hoạt động (`TENANT_ACCESS_DISABLED`) cần alias trong Principal (facade `resolvePrincipal`) — OQ F013-3 [Proposed: làm khi bật scope `organization`].
+- Q: Claim `organization` (F013-AC-25)? → A: Realm hiện không gán scope `organization` cho client nào nên token không có claim này. `pkg/httpx` đọc claim (dạng danh sách alias hoặc object theo alias) và từ chối token có > 1 organization bằng `403 TENANT_NOT_SELECTED`; đối chiếu alias với tenant đang hoạt động (`TENANT_ACCESS_DISABLED`) cần alias trong Principal (facade `resolvePrincipal`) — OQ F013-3 [Confirmed: làm khi bật scope `organization`].
 - Q: Khung giới nghiêm của trường (F015)? → A: `CurfewSource` là port; F013 dùng `platform_curfew` từ `EW_PLATFORM_CURFEW` (mặc định 21:30–06:30 ICT, [Confirmed] ADR-0078) cho mọi học sinh, mọi khối, tenant chung; F015 thay bằng nguồn hợp khung trường — OQ F013-4.
-- Q: `ip_hash`? → A: HMAC-SHA-256 khóa `EW_LOGIN_IP_HASH_KEY` của địa chỉ kết nối tới `core-api`; sau APISIX cần cấu hình proxy tin cậy để lấy IP client thật [Proposed] — OQ F013-5.
+- Q: `ip_hash`? → A: HMAC-SHA-256 khóa `EW_LOGIN_IP_HASH_KEY` của địa chỉ kết nối tới `core-api`; sau APISIX cần cấu hình proxy tin cậy để lấy IP client thật [Confirmed] — OQ F013-5.
 - Q: Keycloak thật trong testcontainers (plan Testing)? → A: Như F012, test integration dùng Keycloak giả có nhãn (`fakeKeycloak`, endpoint token/logout/Admin `DELETE /sessions/{sid}` theo Keycloak 26) cùng PostgreSQL và Valkey thật; kiểm với realm thật thuộc smoke F004/quickstart. Handler và consumer chưa nối vào binary `core-api`/`worker` (cùng OQ F010-2).
 
 ## User Scenarios & Testing *(bắt buộc)*
@@ -146,7 +146,7 @@ Sau đăng nhập, mọi request tenant-scoped mang `X-Tenant-Id`; backend đố
 - NẾU Valkey lỗi, THÌ login ticket không tạo được → `503 UNAVAILABLE` (không cho chọn tenant thiếu ticket); rate limit chuyển sang giới hạn trong bộ nhớ của replica.
 - NẾU ngoài khung giờ trường cấu hình, THÌ `403 ACCESS_OUTSIDE_ALLOWED_HOURS` (bật khi F015 có cài đặt trường); với `mode = resume` phiên game **không** bị thu hồi vì lý do này (học sinh vào lại được trong khung giờ).
 - NẾU client gửi hai refresh song song với cùng token (lỗi single-flight phía client), THÌ lời gọi thứ hai bị coi là dùng lại (`REFRESH_TOKEN_REUSED`) và phiên bị thu hồi — client F061 bắt buộc refresh đơn luồng.
-- NẾU Keycloak đã xoay token nhưng client không nhận được phản hồi (mất mạng), THÌ token client đang giữ đã là token cũ; lần thử lại → `REFRESH_TOKEN_REUSED` → đăng nhập lại (chấp nhận, ưu tiên an toàn) [Proposed].
+- NẾU Keycloak đã xoay token nhưng client không nhận được phản hồi (mất mạng), THÌ token client đang giữ đã là token cũ; lần thử lại → `REFRESH_TOKEN_REUSED` → đăng nhập lại (chấp nhận, ưu tiên an toàn) [Confirmed].
 
 ## Requirements *(bắt buộc)*
 
@@ -217,5 +217,5 @@ Sau đăng nhập, mọi request tenant-scoped mang `X-Tenant-Id`; backend đố
 - F004 đã cấu hình client `eduworld-game-backend` (chỉ Direct Access Grants, rotation reuse 0, client session idle 7 ngày / max 30 ngày, realm SSO Session ≥ giá trị đó, không `offline_access`) và brute-force theo tài khoản.
 - F014 phát `game_session.replaced` có `old_device_id`/`old_keycloak_sid`; consumer `revoke_on_session_replaced` của F014 (trong module identity) gọi `GameAuthSessionRevoker` để thu hồi phiên game của thiết bị cũ.
 - Phân biệt lỗi role và lỗi mật khẩu từ Keycloak cần kiểm chứng (KEYCLOAK_SSO §3.1b); lớp backend luôn kiểm `user_type`.
-- Certificate pinning là việc của client [Proposed].
+- Certificate pinning là việc của client [Confirmed].
 - ADR-0089 (làm rõ 2026-11-17) đã chốt hai câu hỏi trước đây: `identity.login_events` dùng mixin `TenantOptionalAppendOnly`, dòng tenant NULL ghi bằng `identity_platform`; đường đăng nhập đọc membership qua hàm `SECURITY DEFINER` `identity.memberships_for_user`, không cần `BYPASSRLS`.

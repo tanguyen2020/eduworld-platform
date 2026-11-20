@@ -6,8 +6,8 @@
 
 - Phụ thuộc đã Done: F014, F015, F051, F052, F056, F077, F078, F079 (và các feature phát event nguồn).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); Prometheus trong compose observability.
-- Tài khoản: `sa.admin`, tài khoản `liveops` seed [Proposed: `lo.vanhanh`], `ad.donvi`, `ad.truong.a`, `ad.truong.b`, `sm.antoan`; học sinh `hs.an.3a`, `hs.dung.7a`.
-- Dữ liệu: golden dataset `src/backend/modules/game/tests/fixtures/analytics/golden/` (event giả danh), script phát event `make seed-analytics` [Proposed].
+- Tài khoản: `sa.admin`, tài khoản `liveops` seed [Confirmed: `lo.vanhanh`], `ad.donvi`, `ad.truong.a`, `ad.truong.b`, `sm.antoan`; học sinh `hs.an.3a`, `hs.dung.7a`.
+- Dữ liệu: golden dataset `src/backend/modules/game/tests/fixtures/analytics/golden/` (event giả danh), script phát event `make seed-analytics` [Confirmed].
 
 ## 2. Kịch bản kiểm tra
 

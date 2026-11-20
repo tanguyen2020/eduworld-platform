@@ -31,10 +31,10 @@ Stakeholder hỏi nội dung có hình ảnh, media thì lưu ở đâu; sau đ�
 
 3. **Upload:**
    - **Từ Admin Portal:** presigned PUT (giới hạn loại/dung lượng) → `ew-media-quarantine` → event → **media worker** (trong worker của service sở hữu nội dung, dùng chung `pkg/media`): quét virus (ClamAV), kiểm tra magic bytes, xóa EXIF/GPS, chuyển đổi (ảnh → WebP + PNG 256/1024/2048 px; âm thanh → Ogg Vorbis cho Godot + MP3; video → Ogg Theora cho Godot 4 + HLS/MP4 cho web; mô hình 3D → glTF/GLB theo WORLD_RENDERING), lưu khóa **content-addressed** `media/<sha256>/<variant>.<ext>`.
-   - **Học sinh chỉ upload trong ngoại lệ có kiểm soát:** ghi âm speaking, sản phẩm dự án, ảnh bài làm toán (`allow_photo_submission`, **tắt mặc định**), vào `ew-student-submissions`; giữ ghi âm 90 ngày sau khi chấm, sản phẩm 1 năm học [Proposed].
+   - **Học sinh chỉ upload trong ngoại lệ có kiểm soát:** ghi âm speaking, sản phẩm dự án, ảnh bài làm toán (`allow_photo_submission`, **tắt mặc định**), vào `ew-student-submissions`; giữ ghi âm 90 ngày sau khi chấm, sản phẩm 1 năm học [Confirmed].
 4. **Bất biến:** media không sửa tại chỗ; thay ảnh = asset mới. Version nội dung cũ vẫn trỏ asset cũ (ADR-0043). Asset còn được tham chiếu không bị xóa (`media_usages`); asset mồ côi được đánh dấu để dọn theo quy trình.
 5. **Metadata** `media_assets` (DB của service sở hữu): `asset_id`, `tenant_id`/`owner_scope`, `kind`, `original_filename` varchar(255), `mime_type` varchar(127), `size_bytes`, `width`, `height`, `duration_ms`, `sha256` varchar(64), `variants` jsonb, `alt_text` varchar(500), `license` varchar(255), `status` (`quarantined|processing|ready|rejected`), cột audit chuẩn.
-6. **Giới hạn [Proposed]:** ảnh ≤ 10 MB, âm thanh ≤ 20 MB, video ≤ 300 MB, mô hình 3D ≤ 50 MB; tối đa 50 asset mỗi version nội dung.
+6. **Giới hạn [Confirmed]:** ảnh ≤ 10 MB, âm thanh ≤ 20 MB, video ≤ 300 MB, mô hình 3D ≤ 50 MB; tối đa 50 asset mỗi version nội dung.
 7. **Client:** Godot tải media qua CDN, cache `user://cache/media/<sha256>`; preload theo manifest trước khi vào màn.
 
 ## Hệ quả

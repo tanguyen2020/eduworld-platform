@@ -143,7 +143,7 @@ Ví dụ: `ui.login.forgot_password_hint` — vi "Quên mật khẩu? Liên hệ
 
 **13. Hiệu năng máy tầm trung.** Form là ảnh 2D tĩnh + Control; tải trước gói Hub trong nền khi người dùng đang nhập. Mục tiêu: từ mở app tới form ≤ 3 s; từ bấm Đăng nhập tới phản hồi p95 ≤ 1 s khi không xếp hàng; từ đăng nhập xong tới S03 theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md).
 
-**14. An toàn/riêng tư.** Mật khẩu chỉ nằm trong ô nhập và bộ nhớ request; sau khi gửi (thành công hay lỗi) ô mật khẩu bị xóa, không ghi mật khẩu vào log/telemetry/crash report, không lưu `user://` (ADR-0068). Chỉ gửi qua HTTPS tới tên miền API (certificate pinning [Proposed]); không bao giờ gửi tới Keycloak trực tiếp. Access token chỉ nằm trong RAM; refresh token (kèm trường của phiên) chỉ lưu trong kho bảo mật của hệ điều hành trên thiết bị cá nhân (Windows DPAPI, Android Keystore, iOS Keychain), chỉ RAM trên Web và máy dùng chung — Windows mặc định là máy dùng chung (ADR-0086); màn S01b chỉ hiện nickname + avatar (không tên thật) để bạn khác dùng chung máy nhận ra không phải tài khoản của mình; mật khẩu không bao giờ được lưu; không hiển thị tên học sinh trước khi đăng nhập xong; thông điệp lỗi không tiết lộ tài khoản tồn tại, bị khóa hay thuộc trường nào; danh sách chọn trường chỉ hiển thị sau xác thực và chỉ gồm trường của chính người dùng; quên mật khẩu không reset qua email — School Admin đặt lại trên Admin Portal.
+**14. An toàn/riêng tư.** Mật khẩu chỉ nằm trong ô nhập và bộ nhớ request; sau khi gửi (thành công hay lỗi) ô mật khẩu bị xóa, không ghi mật khẩu vào log/telemetry/crash report, không lưu `user://` (ADR-0068). Chỉ gửi qua HTTPS tới tên miền API (certificate pinning [Confirmed]); không bao giờ gửi tới Keycloak trực tiếp. Access token chỉ nằm trong RAM; refresh token (kèm trường của phiên) chỉ lưu trong kho bảo mật của hệ điều hành trên thiết bị cá nhân (Windows DPAPI, Android Keystore, iOS Keychain), chỉ RAM trên Web và máy dùng chung — Windows mặc định là máy dùng chung (ADR-0086); màn S01b chỉ hiện nickname + avatar (không tên thật) để bạn khác dùng chung máy nhận ra không phải tài khoản của mình; mật khẩu không bao giờ được lưu; không hiển thị tên học sinh trước khi đăng nhập xong; thông điệp lỗi không tiết lộ tài khoản tồn tại, bị khóa hay thuộc trường nào; danh sách chọn trường chỉ hiển thị sau xác thực và chỉ gồm trường của chính người dùng; quên mật khẩu không reset qua email — School Admin đặt lại trên Admin Portal.
 
 **15. AC.**
 
@@ -225,7 +225,7 @@ Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vu
 
 **10. Khác biệt theo grade band.** `g1_3`: 3 bước, nút ≥ 64 dp, đọc to hướng dẫn, nickname gợi ý kèm hình con vật; `g4_5`: đủ bước, có nút "Bỏ qua tùy chỉnh"; `g6_9`: đủ bước, thêm thanh trượt màu tóc trong bảng màu cố định.
 
-**11. Song ngữ.** Khóa: `ui.avatar.title`, `ui.avatar.step_preset`, `ui.avatar.step_customize`, `ui.avatar.step_name`, `ui.avatar.step_done`, `ui.avatar.body_type`, `ui.avatar.skin_tone`, `ui.avatar.hair_style`, `ui.avatar.hair_color`, `ui.avatar.outfit`, `ui.avatar.skip_customize`, `ui.avatar.more_names`, `ui.avatar.confirm`. Nickname gợi ý sinh theo ngôn ngữ đang chọn (vi: "Cú Mèo Chăm Chỉ 27", en: "Busy Owl 27") và **giữ nguyên** khi đổi ngôn ngữ sau này (nickname là tên riêng). Chuỗi dài nhất: nickname vi (tối đa 24 ký tự [Proposed]).
+**11. Song ngữ.** Khóa: `ui.avatar.title`, `ui.avatar.step_preset`, `ui.avatar.step_customize`, `ui.avatar.step_name`, `ui.avatar.step_done`, `ui.avatar.body_type`, `ui.avatar.skin_tone`, `ui.avatar.hair_style`, `ui.avatar.hair_color`, `ui.avatar.outfit`, `ui.avatar.skip_customize`, `ui.avatar.more_names`, `ui.avatar.confirm`. Nickname gợi ý sinh theo ngôn ngữ đang chọn (vi: "Cú Mèo Chăm Chỉ 27", en: "Busy Owl 27") và **giữ nguyên** khi đổi ngôn ngữ sau này (nickname là tên riêng). Chuỗi dài nhất: nickname vi (tối đa 24 ký tự [Confirmed]).
 
 **12. Trợ năng.** Mỗi lựa chọn màu có tên đọc được ("Màu tóc nâu sẫm"); điều hướng bàn phím trên lưới; giảm chuyển động tắt xoay tự động.
 
@@ -290,7 +290,7 @@ Bước Tên:  Chọn tên của em  ( Cú Mèo Chăm Chỉ 27 )( Rồng Xanh Vu
 
 **6. Thành phần.** `PlayerBadge` (avatar, nickname, danh hiệu, level), `XpBar`, `CurrencyChip`, `NotificationBell`, `QuestTracker` (≤ 3 quest), `AreaTitle`, `EventChip`, `Minimap` (ảnh 2D + marker), `ContextActionButton`, `Joystick` (mobile), `ChatDock`, `PartyChip`, `HomeButton`, `ToastStack` (≤ 3 toast).
 
-**7. Dữ liệu & API.** Khi vào: `getGameProfile`, `getProgression`, `listQuests?status=active`, `listWorldAreas`, `getWorldExploration`, ví Xu (`getWallet`). Cập nhật realtime (không polling): `progression.xp.updated`, `progression.level.reached` (mở S07), `quest.progress.updated`, `world.area.unlocked`, `notification.item.created`, `hub.instance.assigned`, chat theo [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md). Vào vùng: `enterWorldArea`. Bài nhà trường giao: `listMyAssignments` (`GET /api/v1/learning/my-assignments`, đã có trong OpenAPI; [SCHOOL_LMS §11](../04-admin-portal/SCHOOL_LMS.md#11-api)) hoặc quest nguồn `assignment` trong `listQuests` [Proposed].
+**7. Dữ liệu & API.** Khi vào: `getGameProfile`, `getProgression`, `listQuests?status=active`, `listWorldAreas`, `getWorldExploration`, ví Xu (`getWallet`). Cập nhật realtime (không polling): `progression.xp.updated`, `progression.level.reached` (mở S07), `quest.progress.updated`, `world.area.unlocked`, `notification.item.created`, `hub.instance.assigned`, chat theo [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md). Vào vùng: `enterWorldArea`. Bài nhà trường giao: `listMyAssignments` (`GET /api/v1/learning/my-assignments`, đã có trong OpenAPI; [SCHOOL_LMS §11](../04-admin-portal/SCHOOL_LMS.md#11-api)) hoặc quest nguồn `assignment` trong `listQuests` [Confirmed].
 
 **8. Trạng thái.**
 
@@ -542,7 +542,7 @@ Trong lúc chơi trên mobile **ẩn joystick** (camera cố định kiểu sân
 
 **11. Song ngữ.** Khóa: `ui.challenge.difficulty.easy|normal|hard|expert|legendary`, `ui.challenge.attempts_left`, `ui.challenge.time_per_question`, `ui.challenge.solo`, `ui.challenge.enter`, `ui.challenge.no_attempts`, `ui.boss.energy`, `ui.boss.phase`, `ui.boss.need_contribution`, `ui.boss.leave`, `ui.boss.leave_confirm`, `ui.boss.defeated`, `ui.boss.reached_phase`, `ui.boss.retry_phase`. Tên boss, câu thoại boss (`presentation`) là `i18nText`. Câu hỏi hiển thị theo ngôn ngữ nội dung ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) §3). Chuỗi dài nhất: `ui.boss.need_contribution`.
 
-**12. Trợ năng.** Timer có tùy chọn "thêm thời gian" nếu trường bật cho học sinh cần hỗ trợ [Proposed]; thanh năng lượng có số %; âm thanh không phải là tín hiệu duy nhất.
+**12. Trợ năng.** Timer có tùy chọn "thêm thời gian" nếu trường bật cho học sinh cần hỗ trợ [Confirmed]; thanh năng lượng có số %; âm thanh không phải là tín hiệu duy nhất.
 
 **13. Hiệu năng máy tầm trung.** Cảnh boss là arena riêng nhẹ (ngân sách cảnh trong [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md)); tối đa 8 nhân vật; hiệu ứng tấn công dùng particle ≤ 200 hạt (preset Trung bình), tắt ở preset Thấp; camera cố định trên mobile; panel câu hỏi là Control 2D (không SubViewport 3D).
 
@@ -629,8 +629,8 @@ Trong lúc chơi trên mobile **ẩn joystick** (camera cố định kiểu sân
 
 | Loại | Nội dung | Nhãn |
 |---|---|---|
-| Endpoint | `GET /api/v1/game/profile/nickname-suggestions` (`suggestNicknames`) — gợi ý nickname duy nhất trong tenant theo ngôn ngữ | [Proposed] |
-| Endpoint | `GET /api/v1/learning/my-assignments` (`listMyAssignments`, đã có trong OpenAPI) — bài nhà trường giao cho học sinh hiện hành; gộp vào `listQuests` nguồn `assignment` | [Proposed] |
-| Quy ước | Ảnh minh họa bản đồ/nền không chứa chữ (để dịch) | [Proposed] |
-| Quy ước | Level-up hoãn khi đang trong hoạt động có giới hạn thời gian | [Proposed] |
-| Giới hạn | Nickname tối đa 24 ký tự | [Proposed] |
+| Endpoint | `GET /api/v1/game/profile/nickname-suggestions` (`suggestNicknames`) — gợi ý nickname duy nhất trong tenant theo ngôn ngữ | [Confirmed] |
+| Endpoint | `GET /api/v1/learning/my-assignments` (`listMyAssignments`, đã có trong OpenAPI) — bài nhà trường giao cho học sinh hiện hành; gộp vào `listQuests` nguồn `assignment` | [Confirmed] |
+| Quy ước | Ảnh minh họa bản đồ/nền không chứa chữ (để dịch) | [Confirmed] |
+| Quy ước | Level-up hoãn khi đang trong hoạt động có giới hạn thời gian | [Confirmed] |
+| Giới hạn | Nickname tối đa 24 ký tự | [Confirmed] |

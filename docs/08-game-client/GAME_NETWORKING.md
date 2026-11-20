@@ -60,8 +60,8 @@ Backoff: `delay = min(15 s, 0.5 s × 2^(n−1)) × (1 ± 0.2 jitter)`, tối đa
 
 ### 2.4. Đồng thời & hàng đợi
 
-- Pool tối đa 4 `HTTPRequest` song song [Proposed]; request ưu tiên (submit answer) đi trước request nền (prefetch catalog).
-- Hàng đợi ghi bền trong bộ nhớ (`PendingWrites`) cho answers/report khi mất mạng; flush theo thứ tự khi có mạng lại. Không lưu xuống đĩa (tránh replay câu trả lời cũ; server-authoritative) [Proposed].
+- Pool tối đa 4 `HTTPRequest` song song [Confirmed]; request ưu tiên (submit answer) đi trước request nền (prefetch catalog).
+- Hàng đợi ghi bền trong bộ nhớ (`PendingWrites`) cho answers/report khi mất mạng; flush theo thứ tự khi có mạng lại. Không lưu xuống đĩa (tránh replay câu trả lời cũ; server-authoritative) [Confirmed].
 
 ## 3. Token lifecycle
 
@@ -87,7 +87,7 @@ stateDiagram-v2
 - **Khởi động (ADR-0086):** có refresh token đã lưu → `POST /auth/game/token:refresh` với `{refresh_token, device_id, client_version, mode: "resume"}` và `X-Tenant-Id` = `tenant_id` đã lưu → `200`: lưu token mới, hiện màn **"Tiếp tục là <nickname>?"** (nickname từ `bootstrap`; mọi nền tảng, `resume_confirm_screen`, [Confirmed — Technical Architect 2026-11-17]) → "Tiếp tục": tạo game session (`POST /game/sessions`) rồi vào hub, **không** hiện form; "Không phải tôi": `POST /auth/game/logout`, xóa token, hiện form S01. Trong giờ giới nghiêm (`platform_curfew`, ADR-0078) server trả lỗi giới nghiêm → client hiện giờ mở lại, **giữ** token, không thử lại tự động trước giờ mở. Thất bại xác định (`401 REFRESH_TOKEN_INVALID`/`REFRESH_TOKEN_REUSED`/`REFRESH_TOKEN_DEVICE_MISMATCH`, `403` tài khoản/tenant) → xóa token, hiện form S01. Lỗi mạng/5xx/`429` → giữ token, màn "Đang kết nối…" thử lại theo backoff; `426` → màn cập nhật. Phiên Keycloak của game: idle 7 ngày, tối đa 30 ngày (`game_session_sso`); trong lúc game mở, refresh token gia hạn access token (`mode: "renew"`) và dùng cho reconnect (REST + WS) mà không hỏi mật khẩu.
 - **Thoát game và đăng xuất:** thoát game trên thiết bị cá nhân → `POST /game/sessions/{game_session_id}:end` (best effort) và **giữ** refresh token đã lưu. Nút **Đăng xuất** → `:end` rồi `POST /auth/game/logout` (module identity chỉ thu hồi refresh token + phiên Keycloak, không đóng game session — ADR-0083) rồi xóa `SecureStorage` + RAM. Không gọi được `:end` → module game đóng phiên theo heartbeat timeout (§4.3). Mobile bị hệ điều hành đóng hoặc ở nền lâu → mở lại vào thẳng bằng token đã lưu nếu phiên còn hạn. Thiết bị **chế độ dùng chung** (`device.cfg` `shared_device: true`): không lưu token, không nhớ username, thoát game = Đăng xuất, đăng xuất sau 30 phút không hoạt động (`shared_device_idle_logout`).
 - **Hàng chờ đăng nhập:** khi `/api/v1/auth/game/login` trả `429 LOGIN_QUEUE_BUSY` (hoặc `RATE_LIMITED`), client đọc `Retry-After`, cộng jitter ngẫu nhiên 0–50% và hiển thị màn hình "Đang vào lớp… (khoảng N giây)" với animation thân thiện; tự thử lại, không cần học sinh bấm lại. Lỗi mạng/5xx dùng backoff 1 s, 2 s, 4 s… tối đa 30 s, có jitter. Không thử lại vô hạn khi gặp lỗi xác thực (401/403). Màn "Đang vào lớp…" cũng dùng khi tự vào lại bằng token đã lưu (ADR-0086).
-- **Phương thức đăng nhập (ADR-0063, ADR-0068):** Chỉ username + password nhập trong form của game, gửi qua HTTPS tới `POST /api/v1/auth/game/login` (module identity xác thực với Keycloak bằng client confidential `eduworld-game-backend`); game không gọi Keycloak trực tiếp, không biết client secret. Body đăng nhập không được log/telemetry (`ApiClient` tắt debug log cho `/auth/game/*`); certificate pinning [Proposed]. QR lớp + PIN, thẻ QR, mật khẩu hình ảnh **không làm** (ADR-0076 Rejected 2026-11-17); IdP trường, Device Grant là mở rộng sau khi có ADR mới ([KEYCLOAK_SSO §8.1](../09-identity/KEYCLOAK_SSO.md#81-mở-rộng-sau--ngoài-release-10-adr-0063)).
+- **Phương thức đăng nhập (ADR-0063, ADR-0068):** Chỉ username + password nhập trong form của game, gửi qua HTTPS tới `POST /api/v1/auth/game/login` (module identity xác thực với Keycloak bằng client confidential `eduworld-game-backend`); game không gọi Keycloak trực tiếp, không biết client secret. Body đăng nhập không được log/telemetry (`ApiClient` tắt debug log cho `/auth/game/*`); certificate pinning [Confirmed]. QR lớp + PIN, thẻ QR, mật khẩu hình ảnh **không làm** (ADR-0076 Rejected 2026-11-17); IdP trường, Device Grant là mở rộng sau khi có ADR mới ([KEYCLOAK_SSO §8.1](../09-identity/KEYCLOAK_SSO.md#81-mở-rộng-sau--ngoài-release-10-adr-0063)).
 - Mọi phiên gắn với **một tenant** (ADR-0026, ADR-0063): học sinh không chọn trường; tenant do backend xác định theo membership (1 tenant → dùng; nhiều → `TENANT_NOT_SELECTED` + `login_ticket`, chọn sau đăng nhập bằng `/auth/game/tenant:select`; không thuộc tenant chung lẫn tenant SIS → `ACCOUNT_NOT_PROVISIONED`) — trả về trong bootstrap. Sau đó client **phải** gửi `X-Tenant-Id` = tenant đó ở mọi request (ADR-0065); header không phải cách tự chọn tenant — backend luôn kiểm tra khớp membership và game session.
 
 ## 4. RealtimeClient (WebSocket)
@@ -99,7 +99,7 @@ stateDiagram-v2
 3. Nhận `system.session.welcome` → lưu `resume_token`, `heartbeat_s`, `server_time`.
 4. Gửi đăng ký lại các subscription/room hiện tại (zone, party, channel) theo `AppState`.
 
-`RealtimeClient` poll `WebSocketPeer` trong `_process` (không chặn main thread); tăng `inbound_buffer_size`/`outbound_buffer_size` lên 1 MB [Proposed].
+`RealtimeClient` poll `WebSocketPeer` trong `_process` (không chặn main thread); tăng `inbound_buffer_size`/`outbound_buffer_size` lên 1 MB [Confirmed].
 
 ### 4.2. Gửi / nhận
 
@@ -246,7 +246,7 @@ Quy tắc client:
 
 ## 10. Telemetry mạng
 
-Gửi định kỳ (≤ 1 lần/5 phút, batch) tới `POST /api/v1/game/telemetry`: RTT p50/p95, số lần reconnect, resume thành công/thất bại, FPS p10 (`fps_p10`, GAME_ANALYTICS §3.2), platform, client_version. Không chứa PII, không chứa nội dung chat/câu trả lời [Proposed] (ADR-0023).
+Gửi định kỳ (≤ 1 lần/5 phút, batch) tới `POST /api/v1/game/telemetry`: RTT p50/p95, số lần reconnect, resume thành công/thất bại, FPS p10 (`fps_p10`, GAME_ANALYTICS §3.2), platform, client_version. Không chứa PII, không chứa nội dung chat/câu trả lời [Confirmed] (ADR-0023).
 
 ## 11. Kiểm thử
 

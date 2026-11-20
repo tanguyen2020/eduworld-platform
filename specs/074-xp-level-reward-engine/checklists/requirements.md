@@ -27,7 +27,7 @@
 
 ## Notes
 
-- Ranh giới ngày của cap XP chưa ghi ở PROGRESSION_SYSTEM: dùng ngày ICT [Proposed], task Polish cập nhật tài liệu.
+- Ranh giới ngày của cap XP chưa ghi ở PROGRESSION_SYSTEM: dùng ngày ICT [Confirmed], task Polish cập nhật tài liệu.
 - Tên cột đã chốt `xp_required` (PROGRESSION_SYSTEM §6, DATABASE_DESIGN, RB-308).
 - Config type bảng level đã chốt `progression-levels` (thay `levels`, RB-308); đường cong là `progression-curves`.
 - Phụ thuộc delta payload `activity.graded` của module learning.

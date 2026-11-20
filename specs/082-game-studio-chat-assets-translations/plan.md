@@ -16,7 +16,7 @@ Frontend (chunk `game-ops`): module `chat-assets/` (Sticker pack editor, thư vi
 | Testing | Vitest + Testing Library + MSW (chỉ test, nhãn `MOCK`), Playwright E2E · go test + testcontainers (PostgreSQL, floci) |
 | Target Platform | Trình duyệt desktop (editor), tablet xem · Linux container (`core-api` + `worker`, module `game`) |
 | Project Type | web app (workspace A) + mở rộng backend module |
-| Performance Goals | Lưu draft thêm ≤ 20 ms p95 cho tính trạng thái dịch [Proposed]; job xuất 500 item ≤ 2 phút [Proposed] |
+| Performance Goals | Lưu draft thêm ≤ 20 ms p95 cho tính trạng thái dịch [Confirmed]; job xuất 500 item ≤ 2 phút [Confirmed] |
 | Constraints | AGENTS R1, R7, R10, R11, R20, R27, R28, R31, R32; ADR-0027, ADR-0034, ADR-0043, ADR-0044, ADR-0056 |
 | Scale/Scope | `content_ids` ≤ 500, `content_types` ≤ 20, `report.errors` ≤ 500 dòng (`TranslationJob`) |
 

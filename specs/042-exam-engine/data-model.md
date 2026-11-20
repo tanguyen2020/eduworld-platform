@@ -23,7 +23,7 @@ Database `eduworld_learning`, schema `assessment`. Bảng T dùng mixin `Base` (
 | `subject_id` | uuid | NOT NULL | Thêm cột; kiểm scope môn |
 | `grade_level` | smallint | 1–12 | Thêm cột |
 | `status` | `varchar(64)` | CHECK `IN ('scheduled','open','closed','results_released','cancelled')` | Thêm cột |
-| `audience` | `varchar(64)` | CHECK `IN ('assigned','library')` DEFAULT `'assigned'` | Thêm cột [Proposed] |
+| `audience` | `varchar(64)` | CHECK `IN ('assigned','library')` DEFAULT `'assigned'` | Thêm cột [Confirmed] |
 | `variant_strategy` | `varchar(64)` | CHECK `IN ('fixed','independent_draw','per_student')` | Thêm cột (snapshot từ blueprint) |
 | `variant_count` | smallint | ≥ 1 | Thêm cột |
 | `feedback_timing` | `varchar(64)` | CHECK `IN ('after_submit','after_close','never')` | Thêm cột |
@@ -103,7 +103,7 @@ Attempt đề: `in_progress → submitted → graded`; `in_progress → expired 
 
 - `feedback_timing` của session không được `immediate`; `result_release = after_close` ⇒ `feedback_timing ∈ {after_close, never}` ([ACTIVITY_ENGINE §8.1](../../docs/02-learning/ACTIVITY_ENGINE.md#81-feedbacktiming-và-resultrelease)).
 - `deadline_at = min(started_at + effective_duration, window_end)` với `until_window_end`; `full_duration` bỏ giới hạn `window_end`.
-- `extra_time_percent` trong 1–100 [Proposed]; học sinh trong `accommodations` phải thuộc `target`.
+- `extra_time_percent` trong 1–100 [Confirmed]; học sinh trong `accommodations` phải thuộc `target`.
 - Mỗi rule blueprint: pool ≥ `count × variant_count` với `independent_draw`.
 
 ## 4. Event / outbox

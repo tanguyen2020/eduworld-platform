@@ -7,7 +7,7 @@
 
 ### Session 2026-11-16
 
-- Q: Sự kiện party tới client đi qua topic `ew:rt:party:<party_id>` hay `ew:rt:user:<id>`? → A: Fan-out tới `ew:rt:user:<member_id>` của từng thành viên (≤ 8); topic party cần lệnh WS để subscribe và không gỡ được khi bị kick — xem [research.md](research.md) R1 [Proposed].
+- Q: Sự kiện party tới client đi qua topic `ew:rt:party:<party_id>` hay `ew:rt:user:<id>`? → A: Fan-out tới `ew:rt:user:<member_id>` của từng thành viên (≤ 8); topic party cần lệnh WS để subscribe và không gỡ được khi bị kick — xem [research.md](research.md) R1 [Confirmed].
 - Q: Mã lỗi khi mời người đã block/bị block? → A: `403 PARTY_INVITE_NOT_ALLOWED` (không tiết lộ việc block, theo PARTY_SYSTEM §14); vi phạm trường/lớp/khối/sanction → `403 PARTY_POLICY_VIOLATION` + audit. API_DESIGN §5 đã sửa theo (RB-405).
 - Q: Tên party tự đặt kiểm duyệt ở đâu? → A: Gọi facade `chat` (`moderateDisplayText`, trong tiến trình) theo MODERATION §1; module chat không trả lời được → dùng tên mặc định sinh tự động, không chặn tạo party (research R2).
 - Q: Channel chat `party` tạo "cùng transaction" (PARTY_SYSTEM §2)? → A: Không khả thi giữa hai database (ADR-0037); module chat tạo channel khi tiêu thụ `party.created` (F117). F100 chỉ phát event.
@@ -177,7 +177,7 @@ Nhân sự không vào được API party; học sinh tenant/trường khác kh�
 
 ## Assumptions
 
-- Các giới hạn phụ của PARTY_SYSTEM §10 (chờ sau khi bị từ chối, 3 lần từ chối/ngày, tối đa lời mời đang chờ nhận, tạo/giải tán mỗi giờ, kick mỗi giờ) chưa có tên trong CONFIG_DEFAULTS; đề xuất `party_invite_repeat_rules`, `party_pending_invites_max`, `party_create_rate`, `party_kick_rate` (task Polish) [Proposed].
-- Tenant `unit` bật liên trường đọc từ `ref.tenants.settings_subset` (khóa tenant setting theo ADR-0054) [Proposed].
+- Các giới hạn phụ của PARTY_SYSTEM §10 (chờ sau khi bị từ chối, 3 lần từ chối/ngày, tối đa lời mời đang chờ nhận, tạo/giải tán mỗi giờ, kick mỗi giờ) chưa có tên trong CONFIG_DEFAULTS; đề xuất `party_invite_repeat_rules`, `party_pending_invites_max`, `party_create_rate`, `party_kick_rate` (task Polish) [Confirmed].
+- Tenant `unit` bật liên trường đọc từ `ref.tenants.settings_subset` (khóa tenant setting theo ADR-0054) [Confirmed].
 - F095 phát `friend.added`/`friend.removed`, `user.blocked`/`user.unblocked`; F121 phát `sanction.applied`/`sanction.lifted`; module game phát `game_profile.updated` cho `ref.player_profiles`.
 - F100 là feature đầu tiên của module competition nên dựng skeleton module (giống F014 với module game).

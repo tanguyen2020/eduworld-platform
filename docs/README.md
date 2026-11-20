@@ -61,6 +61,8 @@ Bộ tài liệu được tổ chức **game-first**: EduWorld là *game trướ
 
 Không biến giả định thành yêu cầu đã xác nhận.
 
+Ngày 2026-11-20 owner dự án chốt toàn bộ phương án `[Proposed]` đang có trong `docs/` và `specs/` (trừ `docs/99-deferred/`, `specs/_deferred/`): nhãn được đổi thành `[Confirmed]`, nguồn là quyết định này. Đề xuất mới phát sinh sau ngày đó vẫn ghi `[Proposed]` cho tới khi owner chốt.
+
 ### 3.3. Một nguồn sở hữu (không lặp, không đứt quãng)
 
 - **Mỗi quy tắc, tham số, sơ đồ có đúng một tài liệu sở hữu.** Tài liệu khác chỉ link, không chép lại nội dung hay con số.

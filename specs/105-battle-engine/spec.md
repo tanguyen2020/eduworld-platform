@@ -30,7 +30,7 @@
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F105-AC-01 | KHI tạo trận (mở room từ proposal/ticket, trước `countdown`), module competition PHẢI gọi module learning `createQuestionPlan` (khối thấp nhất, môn, chủ đề, số câu và thời gian theo luật mode) và ghim `question_plan_version`; mọi người chơi PHẢI nhận cùng câu, cùng `shown_at`/`deadline_at` theo giờ server | FR-CMP-002 · [COMPETITION_SYSTEM §3.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-proposed) · ADR-0043 | TC-CMP-001, TC-CMP-003 |
+| F105-AC-01 | KHI tạo trận (mở room từ proposal/ticket, trước `countdown`), module competition PHẢI gọi module learning `createQuestionPlan` (khối thấp nhất, môn, chủ đề, số câu và thời gian theo luật mode) và ghim `question_plan_version`; mọi người chơi PHẢI nhận cùng câu, cùng `shown_at`/`deadline_at` theo giờ server | FR-CMP-002 · [COMPETITION_SYSTEM §3.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-confirmed) · ADR-0043 | TC-CMP-001, TC-CMP-003 |
 | F105-AC-02 | module learning PHẢI chọn câu đã publish khả dụng cho tenant, đúng khối/môn/chủ đề, loại trừ câu một trong các người chơi đã gặp trong 7 ngày, và trả render payload không có `answer_key`, `scoring_rule`, `explanation`, `options[].feedback` | FR-CMP-002 · ADR-0016 · AGENTS R6 | TC-LRN-007 |
 | F105-AC-03 | KHI nhận `battle.answer.submit`, room host PHẢI gắn `received_at` server, chỉ chấp nhận từ thành viên room cho câu đang mở thuộc plan; trả lời sau `deadline_at` + grace PHẢI bị từ chối `ANSWER_LATE`; trả lời lần hai PHẢI bị bỏ (`ANSWER_ALREADY_SUBMITTED`, giữ lần đầu); trả lời câu chưa phát/đã đóng/không thuộc trận PHẢI bị từ chối và ghi integrity signal | AC-CMP-006 · [ANTI_CHEAT §3–§4](../../docs/10-security/ANTI_CHEAT.md#3-kiểm-tra-thời-gian) | TC-CMP-007 |
 | F105-AC-04 | HỆ THỐNG PHẢI chấm mỗi câu qua `scorePlanAnswer` và tính điểm: đúng 100, sai/không trả lời 0, câu cuối ×2; Ở NƠI `grade_level` trận ≥ `speed_bonus_min_grade`, HỆ THỐNG PHẢI cộng bonus tốc độ ≤ 50 tuyến tính theo `received_at − shown_at`; trận dưới ngưỡng PHẢI không có bonus | FR-CMP-006 · AC-CMP-103 · `battle_1v1_format` | TC-CMP-007 |
@@ -91,11 +91,11 @@ Học sinh lớp 6 đấu đội 3v3 xoay vòng lượt chính; party lớp 2 c�
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F105-AC-17 | Ở NƠI mode là `team_battle`, HỆ THỐNG PHẢI xoay vòng thành viên trả lời lượt chính mỗi câu, cho thành viên khác lượt hỗ trợ theo `team_battle_format`, tính tổng điểm đội và chỉ mở cho khối ≥ 4 | FR-CMP-001 · [COMPETITION_SYSTEM §3.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#32-team-battle-proposed) | TC-MM-004 |
+| F105-AC-17 | Ở NƠI mode là `team_battle`, HỆ THỐNG PHẢI xoay vòng thành viên trả lời lượt chính mỗi câu, cho thành viên khác lượt hỗ trợ theo `team_battle_format`, tính tổng điểm đội và chỉ mở cho khối ≥ 4 | FR-CMP-001 · [COMPETITION_SYSTEM §3.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#32-team-battle-confirmed) | TC-MM-004 |
 | F105-AC-18 | Ở NƠI mode là `coop_challenge`, HỆ THỐNG PHẢI chạy room `coop` với mục tiêu tập thể và đồng hồ server, ghi mỗi câu trả lời vào attempt của chính học sinh đó, không xếp hạng cá nhân và không có rating | FR-CMP-001 · [COMPETITION_SYSTEM §3.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#33-co-op-challenge) | TC-PTY-010 |
 | F105-AC-19 | Ở NƠI mode là `timed_quiz` (gồm Class Challenge tạo từ template), HỆ THỐNG PHẢI cho 1–40 học sinh cùng bộ câu, áp luật điểm 1v1 (lớp 1–5 không bonus tốc độ), trả top 5 + vị trí của chính mình; lớp 1–3 PHẢI chỉ nhận tiến độ mục tiêu lớp, không thứ hạng cá nhân | FR-CMP-001 · FR-LMS-004 · [COMPETITION_SYSTEM §3.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#34-timed-quiz) | — |
 | F105-AC-20 | Ở NƠI trận `is_bot = true`, HỆ THỐNG PHẢI chạy bot có độ chính xác và thời gian trả lời theo cấu hình, hiển thị nhãn "Robot", `rated = false`, không cộng Competition Points/leaderboard, vẫn ghi bằng chứng học tập của học sinh | [MATCHMAKING §9](../../docs/03-social-multiplayer/MATCHMAKING.md#9-bot-luyện-tập-fallback) | — |
-| F105-AC-21 | Ở NƠI trận thuộc giải (`tournament_node_id`), HỆ THỐNG PHẢI dùng luật 1v1/đội của giải, grace trận giải (tối đa 2 lần/trận), xử thua `forfeit` khi vượt, và luôn `rated = false` | [COMPETITION_SYSTEM §10.7](../../docs/01-game-design/COMPETITION_SYSTEM.md#107-no-show-disconnect-forfeit-kết-quả-proposed) | — |
+| F105-AC-21 | Ở NƠI trận thuộc giải (`tournament_node_id`), HỆ THỐNG PHẢI dùng luật 1v1/đội của giải, grace trận giải (tối đa 2 lần/trận), xử thua `forfeit` khi vượt, và luôn `rated = false` | [COMPETITION_SYSTEM §10.7](../../docs/01-game-design/COMPETITION_SYSTEM.md#107-no-show-disconnect-forfeit-kết-quả-confirmed) | — |
 
 ---
 
@@ -113,7 +113,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 |---|---|---|---|
 | F105-AC-22 | HỆ THỐNG PHẢI tạo room `lobby` → `battle`/`coop` với bản ghi tóm tắt và `session_memberships` (`joined_at`, `left_at`, `leave_reason`, `match_id`, `game_session_id`); lệnh WS từ người không phải thành viên PHẢI nhận `ROOM_NOT_MEMBER`; ticket WS của tenant khác PHẢI nhận `PERMISSION_DENIED` | FR-MP-001 · AC-MP-008 · [MULTIPLAYER_GAMEPLAY §4, §10](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#10-session-membership) | TC-TEN-012 |
 | F105-AC-23 | KHI người tham gia gọi `getMatch`/`listMyMatches`, HỆ THỐNG PHẢI trả trạng thái, kết quả, và sau khi trận kết thúc là câu hỏi + đáp án + giải thích; người không tham gia PHẢI nhận `404 NOT_FOUND`; nhân sự có `lms.class.read` trong trường của học sinh PHẢI xem được qua portal; đối thủ chỉ hiển thị nickname/avatar, không trả số rating | AGENTS R16 · [API_DESIGN §9.7](../../docs/07-backend/API_DESIGN.md#97-competition--apiv1competition) | TC-TEN-001 |
-| F105-AC-24 | KHI học sinh trả lời nhanh hơn `cheat_fast_answer_flag` liên tiếp ≥ 3 câu, HỆ THỐNG PHẢI ghi `integrity_signals` và bỏ bonus tốc độ của các câu đó, không tự hủy kết quả hay phạt | [ANTI_CHEAT §6](../../docs/10-security/ANTI_CHEAT.md#6-anomaly-detection-proposed) · [COMPETITION_SYSTEM §4](../../docs/01-game-design/COMPETITION_SYSTEM.md#4-chấm-điểm-phía-server) | — |
+| F105-AC-24 | KHI học sinh trả lời nhanh hơn `cheat_fast_answer_flag` liên tiếp ≥ 3 câu, HỆ THỐNG PHẢI ghi `integrity_signals` và bỏ bonus tốc độ của các câu đó, không tự hủy kết quả hay phạt | [ANTI_CHEAT §6](../../docs/10-security/ANTI_CHEAT.md#6-anomaly-detection-confirmed) · [COMPETITION_SYSTEM §4](../../docs/01-game-design/COMPETITION_SYSTEM.md#4-chấm-điểm-phía-server) | — |
 | F105-AC-25 | HỆ THỐNG PHẢI chỉ cho principal qua `game_player` gọi `getMatch`/`listMyMatches` phía game và lệnh `battle.*`/`coop.*`; nhân sự gọi route người chơi PHẢI nhận `403 GAME_ACCESS_STUDENT_ONLY`; `X-Tenant-Id` khác tenant phiên PHẢI nhận `403 TENANT_MISMATCH` | AGENTS R23 · ADR-0031 | TC-AUTH-014, TC-TEN-011 |
 | F105-AC-26 | HỆ THỐNG PHẢI phát `match.started`, `match.completed`, `match.aborted` kèm danh sách người tham gia/đội để module chat mở/đóng channel `match`/`team`, và PHẢI không có cờ hay tham số nào tắt chat trận | ADR-0020 · AGENTS R15 · [EVENT_DESIGN §4.8](../../docs/07-backend/EVENT_DESIGN.md#48-competition) | — |
 | F105-AC-27 | NẾU `battle.answer.submit` có `question_instance_id` vượt `maxLength`, response sai schema loại câu, hoặc trường lạ, THÌ HỆ THỐNG PHẢI từ chối `VALIDATION_FAILED` mà không đổi trạng thái room | ADR-0041 | TC-TEN-024 |
@@ -138,7 +138,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 | FR-CMP-003 | Kết quả ghi một lần, idempotent, audit | [COMPETITION_SYSTEM §4](../../docs/01-game-design/COMPETITION_SYSTEM.md#4-chấm-điểm-phía-server), [ANTI_CHEAT §4](../../docs/10-security/ANTI_CHEAT.md#4-duplicate-submission-idempotency--replay) |
 | FR-CMP-004 | Bằng chứng học tập `competition` trọng số thấp | [COMPETITION_SYSTEM §4](../../docs/01-game-design/COMPETITION_SYSTEM.md#4-chấm-điểm-phía-server) |
 | FR-CMP-005 | Grace và forfeit theo mode | [MULTIPLAYER_GAMEPLAY §9.2](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị) |
-| FR-CMP-006 | Không bonus tốc độ khối < `speed_bonus_min_grade` | [COMPETITION_SYSTEM §3.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-proposed) |
+| FR-CMP-006 | Không bonus tốc độ khối < `speed_bonus_min_grade` | [COMPETITION_SYSTEM §3.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-confirmed) |
 | FR-MP-001 | Room `lobby`/`battle`/`coop`, team, match, session membership | [MULTIPLAYER_GAMEPLAY §4, §10](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#4-không-gian-chơi-chung-room) |
 | FR-LMS-004 | Thực thi Class Challenge (Timed Quiz) do School Admin tạo | [SCHOOL_LMS §7](../../docs/04-admin-portal/SCHOOL_LMS.md#7-thử-thách-lớp-và-giải-trường) |
 
@@ -196,7 +196,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 
 ## Assumptions
 
-- [Proposed] `src/backend/pkg/roomhost` (lease, checkpoint, input `ew.in.room.<room_id>`) có sẵn từ F091/F101; nếu chưa, F105 tạo trong `src/backend/pkg/roomhost` với review Backend Architect.
-- [Proposed] Bot luyện tập: độ chính xác và phân bố thời gian trả lời là cấu hình trong payload matchmaking config (`bot_profiles`), mặc định theo [MATCHMAKING §9](../../docs/03-social-multiplayer/MATCHMAKING.md#9-bot-luyện-tập-fallback).
-- [Proposed] Class Challenge Timed Quiz: học sinh vào phòng trong khung từ `starts_at` trừ 5 phút tới câu cuối (`joinChallenge` của F107).
+- [Confirmed] `src/backend/pkg/roomhost` (lease, checkpoint, input `ew.in.room.<room_id>`) có sẵn từ F091/F101; nếu chưa, F105 tạo trong `src/backend/pkg/roomhost` với review Backend Architect.
+- [Confirmed] Bot luyện tập: độ chính xác và phân bố thời gian trả lời là cấu hình trong payload matchmaking config (`bot_profiles`), mặc định theo [MATCHMAKING §9](../../docs/03-social-multiplayer/MATCHMAKING.md#9-bot-luyện-tập-fallback).
+- [Confirmed] Class Challenge Timed Quiz: học sinh vào phòng trong khung từ `starts_at` trừ 5 phút tới câu cuối (`joinChallenge` của F107).
 - Trọng số mastery cho `competition` theo ADR-0017 (cấu hình mastery của module learning).

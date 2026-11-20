@@ -75,8 +75,8 @@ Không tạo trong identity. F045 chỉ ghi qua internal API của module sở h
 | `reason` | `varchar(1000)` | NOT NULL, ≥ 3 ký tự | không chứa PII |
 | `merged_by` | uuid | NOT NULL | System Admin duyệt |
 | `merged_at` | `timestamptz` | NOT NULL | |
-| `saga_id` | uuid | NOT NULL | **Mới** [Proposed] — liên kết `platform.saga_runs` (`saga_type = user_merge`); task cập nhật DATABASE_DESIGN |
-| `reconciliation_issue_id` | uuid | NULL | **Mới** [Proposed] |
+| `saga_id` | uuid | NOT NULL | **Mới** [Confirmed] — liên kết `platform.saga_runs` (`saga_type = user_merge`); task cập nhật DATABASE_DESIGN |
+| `reconciliation_issue_id` | uuid | NULL | **Mới** [Confirmed] |
 
 Append-only (không UPDATE/DELETE). User nguồn soft-delete với `delete_reason = merged`.
 

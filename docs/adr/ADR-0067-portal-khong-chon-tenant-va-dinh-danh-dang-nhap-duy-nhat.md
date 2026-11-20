@@ -32,7 +32,7 @@ Khi đăng nhập không chọn tenant, hệ thống chỉ nhận username (ho�
    - **DB:** unique index `lower(username)` và `lower(email) WHERE email IS NOT NULL AND deleted_at IS NULL`; thêm ràng buộc theo tenant trên bảng membership `(tenant_id, user_id)` để mỗi người chỉ có một membership mỗi tenant.
    - **Một người, một tài khoản:** người làm việc ở nhiều trường/tenant dùng một tài khoản với nhiều membership và UserRole (ADR-0066), không tạo tài khoản trùng.
 3. **Khi đồng bộ SIS hoặc import gặp trùng:** username/email trùng với tài khoản khác → không tạo/không ghi đè, tạo `reconciliation_issue` loại `duplicate_identifier` để Tenant Admin xử lý (đổi username do trường cấp, hoặc gộp tài khoản theo quy trình ACCOUNT_PROVISIONING). Mã lỗi khi tạo/sửa thủ công: `409 USERNAME_TAKEN`, `409 EMAIL_TAKEN`.
-4. Soft-delete (ADR-0028) không giải phóng username/email cho đến khi tài khoản được ẩn danh hóa [Proposed], để tránh nhầm danh tính.
+4. Soft-delete (ADR-0028) không giải phóng username/email cho đến khi tài khoản được ẩn danh hóa [Confirmed], để tránh nhầm danh tính.
 
 ## Hệ quả
 

@@ -177,4 +177,4 @@ Chat chạy mượt trên máy tầm trung, đủ tiếng Việt/Anh, không ch�
 
 - `RealtimeClient` (F092) cung cấp gửi lệnh có `id`, nhận `system.command.failed`, resume với `last_seq`; F119 chỉ dùng API của nó.
 - Trước khi F121 Done, `createReport` dùng Prism mock gắn nhãn MOCK trong build debug; build phát hành không có mock (R17).
-- Thời điểm thu nhỏ panel lấy từ sự kiện của màn câu hỏi (F063/F109) qua `EventBus`, không từ logic chat [Proposed].
+- Thời điểm thu nhỏ panel lấy từ sự kiện của màn câu hỏi (F063/F109) qua `EventBus`, không từ logic chat [Confirmed].

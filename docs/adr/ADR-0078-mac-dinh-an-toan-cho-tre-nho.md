@@ -8,8 +8,8 @@ ADR-0020 áp một bộ quy tắc chat cho mọi lớp; ADR-0030 cho phép Syste
 
 ## Quyết định
 
-1. Bước lọc **PII** và **tín hiệu grooming** luôn chạy, không nằm trong công tắc kiểm duyệt của ADR-0030. Các bước khác giữ công tắc, nhưng mọi lần tắt bắt buộc có `expires_at` (tối đa 24 giờ [Proposed]) và phê duyệt của hai người.
-2. **Giờ giới nghiêm mặc định ở cấp platform** cho game và chat (ví dụ 21:30–06:30 [Proposed]); trường chỉ được siết thêm. Áp như nhau cho mọi học sinh (không trái R15).
+1. Bước lọc **PII** và **tín hiệu grooming** luôn chạy, không nằm trong công tắc kiểm duyệt của ADR-0030. Các bước khác giữ công tắc, nhưng mọi lần tắt bắt buộc có `expires_at` (tối đa 24 giờ [Confirmed]) và phê duyệt của hai người.
+2. **Giờ giới nghiêm mặc định ở cấp platform** cho game và chat (ví dụ 21:30–06:30 [Confirmed]); trường chỉ được siết thêm. Áp như nhau cho mọi học sinh (không trái R15).
 3. **Tenant `common`:** tắt mặc định kết bạn, DM và World chat; consent do platform thu trực tiếp (ADR-0077); giờ giới nghiêm bắt buộc; kiểm duyệt bởi Platform Safety Team (ADR-0072).
 4. Cung cấp preset chính sách "chỉ quick message + emote" mà trường có thể chọn khi onboarding; preset áp cho cả trường, không theo khối (giữ R15), trên mọi channel kể cả channel luôn có `match`/`team`/`party`: channel vẫn tự mở và luôn hoạt động (ADR-0020 mục 6), preset chỉ thu hẹp loại tin thành quick message + emote.
 

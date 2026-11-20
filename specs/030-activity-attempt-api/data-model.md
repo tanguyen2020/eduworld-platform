@@ -14,7 +14,7 @@ Theo DATABASE_DESIGN §2.6a (`activity_type varchar(32)`, `config jsonb ≤ 256 
 |---|---|---|---|
 | `attempt_id`, `tenant_id`, `school_id`, `student_id` | uuid | NOT NULL | T |
 | `mode` | `varchar(64)` | CHECK `AttemptMode` | |
-| `context_type` | `varchar(64)` | CHECK IN (`free_play`,`lesson`,`learning_path`,`recommendation`,`question_set`,`selection`,`assignment`,`quest_step`,`minigame_session`,`exam_session`,`match`,`challenge_attempt`,`boss_encounter`) | Sửa danh sách §3.4; hai giá trị cuối cho mode `challenge` [Proposed] |
+| `context_type` | `varchar(64)` | CHECK IN (`free_play`,`lesson`,`learning_path`,`recommendation`,`question_set`,`selection`,`assignment`,`quest_step`,`minigame_session`,`exam_session`,`match`,`challenge_attempt`,`boss_encounter`) | Sửa danh sách §3.4; hai giá trị cuối cho mode `challenge` [Confirmed] |
 | `context_id` | uuid | NOT NULL | free_play: `activity_id` |
 | `activity_id` | uuid NULL | | Mới; NULL với ad-hoc |
 | `activity_type` | `varchar(32)` | CHECK `ActivityType` | Mới |

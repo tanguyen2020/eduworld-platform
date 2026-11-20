@@ -180,4 +180,4 @@ Client cũ gặp `activity_type` hoặc dạng câu chưa hỗ trợ thì hiện
 
 - F030 cung cấp họ API attempt; F032 cung cấp `revealNextHint`, `getMyRecommendations`/`recommendations` trong review — M-C2 dùng Prism mock gắn nhãn; F063 chỉ `Done` khi chạy với F030, F032 thật.
 - Response schema theo loại câu (Bước 0 S1) và render payload đóng chặt (S4) chốt trước khi viết answer model.
-- `QuestionRender.hint_count`, `ContentManifest.activity_min_client_versions` là delta [Proposed] (contracts §6).
+- `QuestionRender.hint_count`, `ContentManifest.activity_min_client_versions` là delta [Confirmed] (contracts §6).

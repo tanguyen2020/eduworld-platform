@@ -8,9 +8,9 @@
 ### Session 2026-11-16
 
 - Q: FR-RNK-003 chỉ ẩn số rating với lớp 1–5, COMPETITION_SYSTEM §8.2 ẩn với mọi khối — theo bên nào? → A: Theo tài liệu sở hữu (COMPETITION_SYSTEM §8.2, tham số `tiers` "ẩn số rating thô với mọi học sinh"); chặt hơn PRD nên không vi phạm FR.
-- Q: "13 bảng xếp hạng" ánh xạ thế nào? → A: 13 loại của FR-LDB-001 = tổ hợp metric × scope × period × filter của `LeaderboardDefinition` (Global, School, Class, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season); danh mục mặc định ở [COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-proposed) là seed.
+- Q: "13 bảng xếp hạng" ánh xạ thế nào? → A: 13 loại của FR-LDB-001 = tổ hợp metric × scope × period × filter của `LeaderboardDefinition` (Global, School, Class, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season); danh mục mặc định ở [COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-confirmed) là seed.
 - Q: `effort_points` lấy từ đâu? → A: Từ event học tập của module learning (`activity.graded`) đã loại attempt gắn cờ `rapid_guess`; cần bổ sung trường vào payload (contracts §6).
-- Q: Opt-out ẩn tên khỏi bảng ngoài lớp ([COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#94-privacy-và-an-toàn-trẻ-em), [Proposed]) có làm không? → A: Không trong F106 (chưa có contract); mặc định đã ẩn khỏi bảng ngoài trường qua `allow_cross_school_listing = false`.
+- Q: Opt-out ẩn tên khỏi bảng ngoài lớp ([COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#94-privacy-và-an-toàn-trẻ-em), [Confirmed]) có làm không? → A: Không trong F106 (chưa có contract); mặc định đã ẩn khỏi bảng ngoài trường qua `allow_cross_school_listing = false`.
 
 ### Session 2026-11-17
 
@@ -35,7 +35,7 @@ Sau trận 1v1 Toán ranked, rating của hai học sinh được cập nhật �
 | F106-AC-03 | NẾU trận unranked, bot, thách đấu bạn, giải đấu, `cancelled` hoặc `aborted`, THÌ HỆ THỐNG PHẢI không đổi rating và không cộng Competition Points | AC-RNK-003 · [COMPETITION_SYSTEM §7.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#73-công-thức-thang-glicko-2) | TC-CMP-008 |
 | F106-AC-04 | Ở NƠI mode là `team_battle`, HỆ THỐNG PHẢI cập nhật từng thành viên như đấu với "đối thủ ảo" có μ, φ trung bình của đội kia và kết quả của đội; người `abandoned`/`forfeit` nhận kết quả 0, người còn lại 1 | [COMPETITION_SYSTEM §7.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#73-công-thức-thang-glicko-2) | TC-CMP-008 |
 | F106-AC-05 | TRONG KHI học sinh còn provisional theo `rating_provisional`, HỆ THỐNG PHẢI trả trạng thái "Đang xếp hạng (x/10)", không có tier và không đưa vào bảng metric `rating`; matchmaking vẫn dùng μ/RD | [COMPETITION_SYSTEM §7.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#74-provisional) | — |
-| F106-AC-06 | KHI job hằng tuần chạy, HỆ THỐNG PHẢI tăng RD của rating không chơi trong tuần bằng bước "no games" của Glicko-2, không vượt RD tối đa, không giảm rating (không rank decay) | [COMPETITION_SYSTEM §7.2, §12](../../docs/01-game-design/COMPETITION_SYSTEM.md#72-tham-số-proposed) | — |
+| F106-AC-06 | KHI job hằng tuần chạy, HỆ THỐNG PHẢI tăng RD của rating không chơi trong tuần bằng bước "no games" của Glicko-2, không vượt RD tối đa, không giảm rating (không rank decay) | [COMPETITION_SYSTEM §7.2, §12](../../docs/01-game-design/COMPETITION_SYSTEM.md#72-tham-số-confirmed) | — |
 
 ---
 
@@ -69,7 +69,7 @@ Học sinh hoàn thành trận ranked được điểm tham gia, thắng/hòa đ
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F106-AC-10 | KHI trận ranked hoàn thành, HỆ THỐNG PHẢI ghi Competition Points theo bảng điểm trong Ranking Rules (hoàn thành, thắng, hòa, câu đúng có trần, thắng tier cao hơn, abandon trừ nhưng không dưới 0) vào sổ cái append-only unique `(source_type, source_id, student_id)` kèm `rule_version`; thua PHẢI không bị trừ; sau commit PHẢI phát `competition_points.awarded` | FR-RNK-002 · [COMPETITION_SYSTEM §8.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#83-competition-points-proposed) | TC-CMP-009 |
+| F106-AC-10 | KHI trận ranked hoàn thành, HỆ THỐNG PHẢI ghi Competition Points theo bảng điểm trong Ranking Rules (hoàn thành, thắng, hòa, câu đúng có trần, thắng tier cao hơn, abandon trừ nhưng không dưới 0) vào sổ cái append-only unique `(source_type, source_id, student_id)` kèm `rule_version`; thua PHẢI không bị trừ; sau commit PHẢI phát `competition_points.awarded` | FR-RNK-002 · [COMPETITION_SYSTEM §8.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#83-competition-points-confirmed) | TC-CMP-009 |
 | F106-AC-11 | NẾU tổng điểm ngày đạt `competition_points_daily_cap` hoặc vượt số trận/ngày, THÌ HỆ THỐNG PHẢI cộng 0 cho phần vượt (vẫn ghi bút toán 0 có lý do `capped`) | AC-RNK-006 · `competition_points_daily_cap` | — |
 
 ---
@@ -111,7 +111,7 @@ Học sinh hoàn thành trận ranked được điểm tham gia, thắng/hòa đ
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F106-AC-22 | KHI tới `starts_at`/`ends_at` của mùa đã publish, job PHẢI chuyển trạng thái mùa và phát `season.started`/`season.ended` đúng một lần (idempotent theo `season_id`) | FR-RNK-004 · [COMPETITION_SYSTEM §8.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#81-season-proposed) | — |
+| F106-AC-22 | KHI tới `starts_at`/`ends_at` của mùa đã publish, job PHẢI chuyển trạng thái mùa và phát `season.started`/`season.ended` đúng một lần (idempotent theo `season_id`) | FR-RNK-004 · [COMPETITION_SYSTEM §8.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#81-season-confirmed) | — |
 | F106-AC-23 | KHI mùa kết thúc, HỆ THỐNG PHẢI lưu kết quả mùa (rating cuối, RD, tier cao nhất, số trận) không xóa; KHI mùa mới bắt đầu, HỆ THỐNG PHẢI tạo rating mùa mới theo `season_soft_reset` (volatility giữ nguyên) và Competition Points mùa mới bắt đầu từ 0; lịch sử mùa cũ PHẢI truy vấn được | FR-RNK-004 · AC-RNK-004 · `season_soft_reset` | — |
 | F106-AC-24 | KHI học sinh hoặc nhân sự gọi `listSeasons`/`getSeason`, HỆ THỐNG PHẢI trả mùa hiện tại/đã qua (tên, chủ đề, thời gian, trạng thái) và, với học sinh, tier cao nhất của chính mình | FR-RNK-004 | — |
 
@@ -133,11 +133,11 @@ Học sinh hoàn thành trận ranked được điểm tham gia, thắng/hòa đ
 | FR-RNK-001 | Glicko-2 theo `(student, mode, subject, season)` | [COMPETITION_SYSTEM §7](../../docs/01-game-design/COMPETITION_SYSTEM.md#7-game-rating--glicko-2-adr-0018) |
 | FR-RNK-002 | Tách 5 loại số liệu; Competition Points | [COMPETITION_SYSTEM §6, §8.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#6-năm-loại-số-liệu-confirmed) |
 | FR-RNK-003 | Tier, không số rating thô | [COMPETITION_SYSTEM §8.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#82-tier-hiển-thị) |
-| FR-RNK-004 | Mùa và soft reset | [COMPETITION_SYSTEM §8.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#81-season-proposed) |
+| FR-RNK-004 | Mùa và soft reset | [COMPETITION_SYSTEM §8.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#81-season-confirmed) |
 | FR-LDB-001 | 13 loại bảng (metric × scope × period × filter) | [COMPETITION_SYSTEM §9.1–§9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#91-mô-hình-metric--scope--period--filter) |
 | FR-LDB-002 | Valkey sorted set, nguồn PostgreSQL | [COMPETITION_SYSTEM §9.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#93-kiến-trúc-dữ-liệu) |
 | FR-LDB-003 | Ngoài trường chỉ nickname | [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#94-privacy-và-an-toàn-trẻ-em) |
-| FR-LDB-004 | Trường tắt bảng lớp/trường | [COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-proposed) |
+| FR-LDB-004 | Trường tắt bảng lớp/trường | [COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-confirmed) |
 | FR-LDB-005 | Bảng lớp theo nỗ lực/mục tiêu tập thể, không XP | [COMPETITION_SYSTEM §9.1–§9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#91-mô-hình-metric--scope--period--filter) |
 
 ### Key Entities
@@ -194,7 +194,7 @@ Học sinh hoàn thành trận ranked được điểm tham gia, thắng/hòa đ
 
 ## Assumptions
 
-- [Proposed] Mùa "pre-season" seed để có `season_id` trước khi F108 publish mùa đầu.
-- [Proposed] Nhân sự xem bảng trong portal dùng permission `lms.class.read`; có thể bật tên thật cho chính mình theo [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#94-privacy-và-an-toàn-trẻ-em) (`?show_real_names=true`, chỉ trong trường thuộc scope, audit).
-- [Proposed] Ngưỡng "Bạn nổi bật tuần này" và mục tiêu tuần của `class_goal` nằm trong payload leaderboard definition.
+- [Confirmed] Mùa "pre-season" seed để có `season_id` trước khi F108 publish mùa đầu.
+- [Confirmed] Nhân sự xem bảng trong portal dùng permission `lms.class.read`; có thể bật tên thật cho chính mình theo [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#94-privacy-và-an-toàn-trẻ-em) (`?show_real_names=true`, chỉ trong trường thuộc scope, audit).
+- [Confirmed] Ngưỡng "Bạn nổi bật tuần này" và mục tiêu tuần của `class_goal` nằm trong payload leaderboard definition.
 - Danh sách sanction gian lận đọc từ `competition.competition_restrictions` (`restrict_competition`).

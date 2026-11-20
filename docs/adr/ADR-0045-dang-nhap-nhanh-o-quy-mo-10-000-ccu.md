@@ -14,11 +14,11 @@ Stakeholder xác nhận mục tiêu **10.000 CCU** và lo ngại đăng nhập b
 
 ## Quyết định
 
-1. **Mục tiêu tải [Proposed]:** 10.000 CCU; bão đăng nhập 3.000 lượt/10 phút, đỉnh 50 lượt đăng nhập mật khẩu/giây; 500 refresh token/giây.
-2. **SLO [Proposed]:** đăng nhập mật khẩu (bấm nút → vào hub) p95 ≤ 3 s, trong đó Keycloak p95 ≤ 800 ms; refresh p95 ≤ 200 ms; `POST /auth/session` + `POST /game/sessions` p95 ≤ 300 ms.
-3. **Ít phải nhập mật khẩu:** client `eduworld-game` dùng **refresh token rotation**, SSO idle 7 ngày, tối đa 30 ngày [Proposed]; an toàn nhờ một thiết bị (ADR-0031), thu hồi khi takeover/khóa, đăng xuất trên máy dùng chung. Lần mở game sau chỉ refresh.
-4. **Cách đăng nhập nhanh [Proposed, chọn theo trường]:** SSO qua IdP của trường/đơn vị (Google/Microsoft); mã QR (mã lớp ngắn hạn do giáo viên mở kèm PIN, hoặc thẻ QR cá nhân) qua authenticator tùy biến; Device Authorization Grant cho máy phòng tin học; mật khẩu hình ảnh cho lớp 1–3 (UX đăng nhập, không liên quan chính sách chat).
-5. **Keycloak đủ năng lực:** cluster ≥ 3 node 4 vCPU/8 GB [Proposed], **scale theo lịch học** (ADR-0024, không autoscale theo tải); persistent user sessions (Keycloak 26) + cache Infinispan; băm mật khẩu argon2id/pbkdf2 benchmark ≤ 80 ms/lần, rehash khi đăng nhập; theme đăng nhập qua CDN; brute-force detection theo tài khoản, không khóa theo IP NAT của trường.
+1. **Mục tiêu tải [Confirmed]:** 10.000 CCU; bão đăng nhập 3.000 lượt/10 phút, đỉnh 50 lượt đăng nhập mật khẩu/giây; 500 refresh token/giây.
+2. **SLO [Confirmed]:** đăng nhập mật khẩu (bấm nút → vào hub) p95 ≤ 3 s, trong đó Keycloak p95 ≤ 800 ms; refresh p95 ≤ 200 ms; `POST /auth/session` + `POST /game/sessions` p95 ≤ 300 ms.
+3. **Ít phải nhập mật khẩu:** client `eduworld-game` dùng **refresh token rotation**, SSO idle 7 ngày, tối đa 30 ngày [Confirmed]; an toàn nhờ một thiết bị (ADR-0031), thu hồi khi takeover/khóa, đăng xuất trên máy dùng chung. Lần mở game sau chỉ refresh.
+4. **Cách đăng nhập nhanh [Confirmed, chọn theo trường]:** SSO qua IdP của trường/đơn vị (Google/Microsoft); mã QR (mã lớp ngắn hạn do giáo viên mở kèm PIN, hoặc thẻ QR cá nhân) qua authenticator tùy biến; Device Authorization Grant cho máy phòng tin học; mật khẩu hình ảnh cho lớp 1–3 (UX đăng nhập, không liên quan chính sách chat).
+5. **Keycloak đủ năng lực:** cluster ≥ 3 node 4 vCPU/8 GB [Confirmed], **scale theo lịch học** (ADR-0024, không autoscale theo tải); persistent user sessions (Keycloak 26) + cache Infinispan; băm mật khẩu argon2id/pbkdf2 benchmark ≤ 80 ms/lần, rehash khi đăng nhập; theme đăng nhập qua CDN; brute-force detection theo tài khoản, không khóa theo IP NAT của trường.
 6. **Biên và backend:** APISIX rate limit `/auth` theo tenant và thiết bị, `429` + `Retry-After`, client thử lại có jitter; **hàng chờ đăng nhập** ("Đang vào lớp…"); backend cache JWKS, `principals:resolve` và tenant (60 s); bootstrap trả manifest/hồ sơ từ cache; tạo game session không gọi đồng bộ nhiều service; **warm-up** trước khung giờ cao điểm theo lịch học.
 7. **Kiểm chứng:** k6 (luồng game) + keycloak-benchmark (luồng đăng nhập) trên staging tương đương production; không tuyên bố đạt 10.000 CCU khi chưa có kết quả benchmark.
 

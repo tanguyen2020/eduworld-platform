@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F001 (F002 cần cho bước kiểm 401 phía backend)
-- Lệnh: `make up` (keycloak, apisix public `:9080`, apisix-internal `:9180` [Proposed]), `make keycloak-import`, `make apisix-render ENV=local`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
+- Lệnh: `make up` (keycloak, apisix public `:9080`, apisix-internal `:9180` [Confirmed]), `make keycloak-import`, `make apisix-render ENV=local`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo (mật khẩu seed local): `hs.an.3a`, `ad.truong.a`, `ad.truong.b`, `qlcm.truong.a`, `sa.admin`, `sm.antoan`; thêm tài khoản nhân sự còn `UPDATE_PASSWORD` (T043) cho kịch bản 27.
 
 ## 2. Kịch bản kiểm tra

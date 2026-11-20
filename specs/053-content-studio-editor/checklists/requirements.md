@@ -28,5 +28,5 @@
 ## Notes
 
 - Spec có nhắc MathLive/MathJax 4 vì là quyết định ADR-0055 (yêu cầu sản phẩm), không phải lựa chọn hiện thực.
-- Chu kỳ autosave chưa đăng ký trong CONFIG_DEFAULTS (task T061); khối lớp 1–3 bắt buộc lồng tiếng là [Proposed].
+- Chu kỳ autosave chưa đăng ký trong CONFIG_DEFAULTS (task T061); khối lớp 1–3 bắt buộc lồng tiếng là [Confirmed].
 - Activity Builder, Video/Audio/Simulation Manager chưa có feature portal sở hữu (ghi trong báo cáo).

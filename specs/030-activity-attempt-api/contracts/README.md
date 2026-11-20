@@ -61,7 +61,7 @@ ProblemCode: `ATTEMPT_NOT_FOUND`, `ATTEMPT_NOT_IN_PROGRESS`, `ATTEMPT_ALREADY_SU
 - Payload `activity.abandoned.v1.schema.json` (`attempt_id`, `student_id`, `mode`, `reason` ∈ {`expired`,`user`,`superseded`}) theo EVENT_DESIGN (RB-206) (task T005).
 - Domain event `activity.started` (`specs/events/payloads/learning/activity.started.v1.schema.json`, trường theo EVENT_DESIGN §4.3 + `recommendation_id?` cho F032) và `activity.abandoned`: Cần thêm (task T052). F030 là owner duy nhất của domain event `activity.*`; feature khác (F032, F041, F065, F066) chỉ tiêu thụ hoặc phát qua engine.
 - `specs/schemas/learning-event.schema.json`: đổi `exercise.started`/`exercise.submitted` (enum `event_type`, các nhánh `if`, mô tả) sang `activity.started`/`activity.submitted`, thêm `activity.abandoned` (RB-206) (task T052).
-- `learning.internal.v1.yaml` `AttemptCreateRequest.context.context_type`: thêm `challenge_attempt` (F076) và `boss_encounter` (+ `phase`, F103) cho mode `challenge` [Proposed] (task T052).
+- `learning.internal.v1.yaml` `AttemptCreateRequest.context.context_type`: thêm `challenge_attempt` (F076) và `boss_encounter` (+ `phase`, F103) cho mode `challenge` [Confirmed] (task T052).
 - `ActivityTypeInfo`/registry: bảo đảm `min_client_version` bắt buộc với loại `enabled` (task T004).
 - `submitActivityAttempt`, `submitActivityResponse`: liệt kê `410` (`ATTEMPT_EXPIRED`) và `428` trong responses (task T004).
 - DATABASE_DESIGN §3.4: danh sách `context_type` (gồm `challenge_attempt`, `boss_encounter`), cột mới của `attempts`/`attempt_items`/`attempt_answers` (task T007).

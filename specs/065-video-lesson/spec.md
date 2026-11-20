@@ -70,7 +70,7 @@ Học sinh mở bài video từ bài giao/quest: video Theora phát theo chất 
 
 Tại điểm rẽ nhánh, video dừng, học sinh chọn hướng; server ghi lựa chọn và trả đoạn tiếp theo; hoàn thành khi tới đoạn kết thúc.
 
-**Why this priority**: Tính năng [Confirmed] nhưng chi tiết UX [Proposed]; không chặn vòng School Loop.
+**Why this priority**: Tính năng [Confirmed] nhưng chi tiết UX [Confirmed]; không chặn vòng School Loop.
 
 **Independent Test**: Video 2 nhánh: chọn "vào nước" → phát đoạn `water`, tới `is_ending` → hoàn thành; lựa chọn có trong `video_branch_choices`.
 
@@ -145,5 +145,5 @@ Tại điểm rẽ nhánh, video dừng, học sinh chọn hướng; server ghi 
 ## Assumptions
 
 - F030 định nghĩa `activity.Plugin`/`Registry` (ACTIVITY_ENGINE §5), bảng `attempts`/`attempt_items`/`attempt_answers`, command/query handler và outbox; F027 cung cấp port lấy biến thể media + signed URL; F031 cung cấp port ghi learning event.
-- Delta contract [Proposed]: `$defs.render` trong `video-lesson.schema.json`; `ActivityRender.media[].variant/language/segment_id`; `ActivityProgressState.watched_ranges` (contracts §6).
-- Nhánh tương tác chi tiết UX [Proposed] (VIDEO_LEARNING §6).
+- Delta contract [Confirmed]: `$defs.render` trong `video-lesson.schema.json`; `ActivityRender.media[].variant/language/segment_id`; `ActivityProgressState.watched_ranges` (contracts §6).
+- Nhánh tương tác chi tiết UX [Confirmed] (VIDEO_LEARNING §6).

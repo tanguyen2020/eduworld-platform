@@ -199,6 +199,6 @@ Tenant Admin của đơn vị nhiều trường xem tổng hợp học tập the
 ## Assumptions
 
 - `ref.login_activity` (projection từ module game) có sau khi F014 phát event đăng nhập; trước đó chỉ số "lâu không vào game" hiển thị "chưa có dữ liệu".
-- Số thông báo an toàn chưa xác nhận đọc qua facade `chat` khi F122 Done [Proposed]; trước đó trả `null`, không mock (R17).
-- Read replica bắt buộc ở staging/production; local dùng primary với role `learning_dashboard` [Proposed].
-- Ngưỡng `dashboard_attention_thresholds` theo tenant [Confirmed]; các tham số dashboard khác [Proposed].
+- Số thông báo an toàn chưa xác nhận đọc qua facade `chat` khi F122 Done [Confirmed]; trước đó trả `null`, không mock (R17).
+- Read replica bắt buộc ở staging/production; local dùng primary với role `learning_dashboard` [Confirmed].
+- Ngưỡng `dashboard_attention_thresholds` theo tenant [Confirmed]; các tham số dashboard khác [Confirmed].

@@ -42,13 +42,13 @@ flowchart LR
 
 | Thành phần | Giá trị | Nhãn |
 |---|---|---|
-| Phiên bản | Keycloak ≥ 26 (Organizations GA) | [Proposed] |
+| Phiên bản | Keycloak ≥ 26 (Organizations GA) | [Confirmed] |
 | Module sở hữu tích hợp | module `identity` là module duy nhất gọi Keycloak Admin API (provisioning, membership, revoke session); module khác chỉ dùng Principal do middleware `src/backend/pkg/httpx` dựng từ token đã kiểm tra bằng JWKS | [Confirmed] ADR-0074 (thay ADR-0036) |
-| Realm | `eduworld` — một realm cho mỗi môi trường (dev/staging/prod là deployment riêng) | [Proposed] ADR-0006 |
-| Hostname | `auth.<domain>` (public), admin console chỉ qua `auth-admin.<internal>` | [Proposed] |
-| DB | PostgreSQL riêng (instance/database tách khỏi DB nghiệp vụ) | [Proposed] |
-| Cluster | ≥ 3 node, mỗi node 4 vCPU / 8 GB, chạy trên Docker Swarm (ADR-0024): tăng replica 3 → 5 trước khung giờ cao điểm theo lịch học (`ops-scheduler`), alert khi CPU > 60% để scale thủ công; cache Infinispan phân tán; **persistent user sessions** (Keycloak 26, phiên lưu DB nên restart/scale không mất phiên) — ADR-0045 | [Proposed] |
-| Năng lực mục tiêu | 10.000 CCU; bão đăng nhập 3.000 lượt/10 phút, đỉnh 50 đăng nhập mật khẩu/giây, 500 refresh/giây — §12 | [Confirmed] CCU / [Proposed] tải |
+| Realm | `eduworld` — một realm cho mỗi môi trường (dev/staging/prod là deployment riêng) | [Confirmed] ADR-0006 |
+| Hostname | `auth.<domain>` (public), admin console chỉ qua `auth-admin.<internal>` | [Confirmed] |
+| DB | PostgreSQL riêng (instance/database tách khỏi DB nghiệp vụ) | [Confirmed] |
+| Cluster | ≥ 3 node, mỗi node 4 vCPU / 8 GB, chạy trên Docker Swarm (ADR-0024): tăng replica 3 → 5 trước khung giờ cao điểm theo lịch học (`ops-scheduler`), alert khi CPU > 60% để scale thủ công; cache Infinispan phân tán; **persistent user sessions** (Keycloak 26, phiên lưu DB nên restart/scale không mất phiên) — ADR-0045 | [Confirmed] |
+| Năng lực mục tiêu | 10.000 CCU; bão đăng nhập 3.000 lượt/10 phút, đỉnh 50 đăng nhập mật khẩu/giây, 500 refresh/giây — §12 | [Confirmed] CCU / [Confirmed] tải |
 
 ### 2.1. Organizations: mỗi Tenant là một Organization (ADR-0026)
 
@@ -57,11 +57,11 @@ flowchart LR
 | Mỗi **Tenant** (`school`, `unit` hoặc `common`, ADR-0005) = 1 Keycloak Organization. Lưu `platform.tenants.keycloak_org_id` và `keycloak_org_alias` (duy nhất, chữ thường, ví dụ `th-nghiado-a`, `pgd-caugiay`, `common`). Alias là mã tenant của Organization (Release 1.0 không client nào xin scope `organization:{alias}` — ADR-0068, ADR-0091) | [Confirmed] |
 | Tenant loại `unit` có **một** Organization chung cho mọi trường trong đơn vị; **không** tạo Organization cho từng School bên trong tenant | [Confirmed] |
 | Membership do worker (`eduworld-sis-sync`) đồng bộ từ dữ liệu EduWorld (SIS + UserRole, ADR-0066): học sinh là member đúng 1 tenant (tenant chứa trường có enrollment active); nhân sự là member của mọi tenant có UserRole hiệu lực. Chuyển trường trong cùng tenant `unit` không đổi membership. Học sinh tenant chung là member của Organization `common`. Không thêm tay ([ACCOUNT_PROVISIONING §2.1](ACCOUNT_PROVISIONING.md)) | [Confirmed] |
-| Organization attribute: `tenant_id` (UUID EduWorld), `tenant_type`, `display_name`, `logo_url`, `login_code` để theme hiển thị đúng tenant | [Proposed] |
+| Organization attribute: `tenant_id` (UUID EduWorld), `tenant_type`, `display_name`, `logo_url`, `login_code` để theme hiển thị đúng tenant | [Confirmed] |
 | **Organization domain** (vd. `thcs-demo.edu.vn`, đã xác minh, không trùng giữa các Organization): dùng cho **identity-first login** theo tên miền email (chuyển tới IdP của tenant). **Ngoài Release 1.0** (ADR-0063) — mở rộng sau; Release 1.0 không khai báo domain, học sinh đăng nhập bằng username EduWorld cấp | Mở rộng sau |
-| Tạo/tắt Organization khi System Admin tạo/tắt tenant (event `tenant.created`/`tenant.updated`). Tenant tắt → Organization `enabled=false`. SIS sync thêm trường mới vào tenant `unit` không tạo Organization mới | [Proposed] |
+| Tạo/tắt Organization khi System Admin tạo/tắt tenant (event `tenant.created`/`tenant.updated`). Tenant tắt → Organization `enabled=false`. SIS sync thêm trường mới vào tenant `unit` không tạo Organization mới | [Confirmed] |
 
-**Tải với nhiều Organization:** số Organization bằng số tenant (≤ số trường, vì tenant `unit` gom nhiều trường). Phải chạy load test Keycloak với số org và member mục tiêu (OQ-03): thời gian đăng nhập p95, thời gian Admin API khi sync membership, kích thước cache [Proposed].
+**Tải với nhiều Organization:** số Organization bằng số tenant (≤ số trường, vì tenant `unit` gom nhiều trường). Phải chạy load test Keycloak với số org và member mục tiêu (OQ-03): thời gian đăng nhập p95, thời gian Admin API khi sync membership, kích thước cache [Confirmed].
 
 **Cần kiểm chứng trên bản Keycloak triển khai** (spike Phase 1): (1) ~~scope `organization:{alias}` khi user không là member~~ — không còn cần cho Release 1.0 vì không client nào xin scope này (ADR-0068, ADR-0091); (2) ~~định dạng claim `organization`~~ — như (1); (3) IdP chỉ liên kết được với một Organization hay nhiều. Dù kết quả thế nào, backend vẫn chặn đúng vì luôn kiểm tra chéo với DB.
 
@@ -73,7 +73,7 @@ flowchart LR
 |---|---|---|
 | Google Workspace for Education | OIDC | `hd` claim kiểm tra domain; restrict theo organization |
 | Microsoft Entra ID (M365 Education) | OIDC | Tenant ID cố định, không dùng `common` |
-| SSO của SIS / Sở | OIDC hoặc SAML 2.0 | Theo OQ-01/OQ-02. Nhiều trường dùng chung IdP của Sở: nếu các trường cùng một tenant `unit` thì chỉ cần một IdP gắn với Organization của tenant; nếu thuộc nhiều tenant thì tạo một bản cấu hình IdP (alias riêng) cho từng tenant cùng trỏ về một IdP gốc [Proposed — chờ kiểm chứng ở §2.1] |
+| SSO của SIS / Sở | OIDC hoặc SAML 2.0 | Theo OQ-01/OQ-02. Nhiều trường dùng chung IdP của Sở: nếu các trường cùng một tenant `unit` thì chỉ cần một IdP gắn với Organization của tenant; nếu thuộc nhiều tenant thì tạo một bản cấu hình IdP (alias riêng) cho từng tenant cùng trỏ về một IdP gốc [Confirmed — chờ kiểm chứng ở §2.1] |
 | Không có IdP | Local user | Tài khoản tạo bởi SIS provisioning (ACCOUNT_PROVISIONING) |
 
 Mỗi IdP được **liên kết với Organization của tenant** (`Redirect when email domain matches` tắt với học sinh; trang đăng nhập của trường hiển thị nút IdP đó). Cấu hình bắt buộc cho mỗi IdP:
@@ -102,15 +102,15 @@ Các attribute này **không** đưa vào access token của client game/CMS (gi
 | `eduworld-game-backend` | **Confidential** | **Chỉ Direct Access Grants** (password grant) + refresh; tắt Standard Flow, Implicit, Service Account, Device Grant (ADR-0068) | **Chỉ học sinh** (ADR-0031) — nhân sự nhà trường/vận hành/System Admin không vào game | Chỉ **module identity** giữ secret (secret manager, xoay 90 ngày); game không biết secret. Điều kiện realm role `student` trong direct grant flow (§3.1b). Thay client public `eduworld-game` (PKCE) — client này **bỏ** khỏi realm |
 | `eduworld-portal` | **Confidential** (ADR-0091; giữ nguyên client id) | **Chỉ Direct Access Grants** (password grant + `totp`) + refresh; tắt Standard Flow, Implicit, Service Account, Device Grant; không redirect URI/web origin/PKCE. Direct grant flow `eduworld-portal-direct-grant` (§3.3): chỉ `tenant_staff`/`platform_staff`, **OTP bắt buộc có điều kiện** với `platform_staff` (chỉ TOTP, không WebAuthn); đăng nhập bằng username **hoặc email** (ADR-0066, ADR-0067). Secret chỉ module identity giữ | Mọi người dùng Admin Portal (học sinh bị chặn): vận hành tenant (Tenant/School Admin, Academic Manager, Tenant Content Editor/Reviewer) và đội platform (System Admin, Content Admin/Reviewer, Game Designer, Live-ops, Competition Admin, Safety Moderator) — không có role giáo viên (ADR-0072) | Admin Portal `src/cms/frontend/apps/portal`, 5 workspace (ADR-0027 mục 7). Route `/api/v1/game-admin/*`, `/api/v1/admin/*`: chỉ gateway nội bộ, backend yêu cầu `acr` mức MFA + role platform; token của vận hành tenant không bao giờ được chấp nhận ở đó |
 | `eduworld-api` | Bearer-only / resource server | — | — | Đích của audience; không đăng nhập trực tiếp |
-| `eduworld-sis-sync` | Confidential | Client Credentials | Service account của worker | [Proposed] Quyền admin tối thiểu: `manage-users`, `view-users` trong realm, giới hạn bằng fine-grained admin permissions |
-| `eduworld-apisix` | Confidential (tùy chọn) | — | APISIX nếu dùng introspection | Mặc định APISIX kiểm tra JWT bằng JWKS, không cần secret [Proposed] |
+| `eduworld-sis-sync` | Confidential | Client Credentials | Service account của worker | [Confirmed] Quyền admin tối thiểu: `manage-users`, `view-users` trong realm, giới hạn bằng fine-grained admin permissions |
+| `eduworld-apisix` | Confidential (tùy chọn) | — | APISIX nếu dùng introspection | Mặc định APISIX kiểm tra JWT bằng JWKS, không cần secret [Confirmed] |
 | `svc-identity` | Confidential | Client Credentials **duy nhất** (tắt standard flow, implicit, direct grant) | Service account của module identity | **Chỉ** gọi Keycloak Admin API (revoke session, membership Organization, cập nhật user) — ADR-0074 mục 5. Xem §3.2 |
 
 ### 3.1. `eduworld-game-backend` — client confidential cho đăng nhập game (ADR-0068)
 
 | Thiết lập | Giá trị |
 |---|---|
-| `publicClient` | `false` (client authentication bật; secret `${env.KC_GAME_BACKEND_SECRET}`, chỉ mount vào module identity) [Proposed: chuyển sang `client-jwt` (private key JWT) khi vận hành ổn định] |
+| `publicClient` | `false` (client authentication bật; secret `${env.KC_GAME_BACKEND_SECRET}`, chỉ mount vào module identity) [Confirmed: chuyển sang `client-jwt` (private key JWT) khi vận hành ổn định] |
 | `directAccessGrantsEnabled` | `true` — chỉ client này và `eduworld-portal` (confidential, ADR-0091, §3.3) bật; mọi client khác `false` |
 | `standardFlowEnabled`, `implicitFlowEnabled`, `serviceAccountsEnabled`, device grant | `false` (không redirect URI, không web origin) |
 | Direct grant flow | Override `eduworld-game-direct-grant`: Username Validation → Password → **Condition – User Role `student`** → Deny Access; brute-force của realm áp dụng (§10) |
@@ -122,9 +122,9 @@ Client public `eduworld-game` (Authorization Code + PKCE, redirect loopback/cust
 
 ### 3.1b. Chỉ học sinh được đăng nhập game (ADR-0031, ADR-0068)
 
-- **Keycloak (lớp bổ sung):** direct grant flow của `eduworld-game-backend` có bước **Condition – User Role** (`student`) + **Deny Access**; Keycloak trả `invalid_grant`, module identity ánh xạ thành `403 GAME_ACCESS_STUDENT_ONLY` (thông điệp game: "Tài khoản này không dùng để vào game. Thầy cô và cán bộ vui lòng dùng trang quản trị.") [Proposed — kiểm chứng phân biệt được lỗi role với lỗi mật khẩu trên bản Keycloak triển khai; nếu không phân biệt được, dựa vào lớp backend].
+- **Keycloak (lớp bổ sung):** direct grant flow của `eduworld-game-backend` có bước **Condition – User Role** (`student`) + **Deny Access**; Keycloak trả `invalid_grant`, module identity ánh xạ thành `403 GAME_ACCESS_STUDENT_ONLY` (thông điệp game: "Tài khoản này không dùng để vào game. Thầy cô và cán bộ vui lòng dùng trang quản trị.") [Confirmed — kiểm chứng phân biệt được lỗi role với lỗi mật khẩu trên bản Keycloak triển khai; nếu không phân biệt được, dựa vào lớp backend].
 - **Backend (bắt buộc, không phụ thuộc Keycloak):** `POST /api/v1/auth/game/login` sau khi nhận token kiểm tra `identity.users.user_type = 'student'`; khác → thu hồi phiên vừa tạo, `403 GAME_ACCESS_STUDENT_ONLY` + audit `game_access_denied_non_student`. Middleware `game_player` (`azp = eduworld-game-backend` + `user_type = student`) lặp lại ở `POST /game/sessions`, mọi API người chơi và khi cấp realtime ticket.
-- Nhân sự xem thử trải nghiệm qua **preview trong CMS** (Godot Web export, dữ liệu mẫu, không tạo game session/login event) [Proposed].
+- Nhân sự xem thử trải nghiệm qua **preview trong CMS** (Godot Web export, dữ liệu mẫu, không tạo game session/login event) [Confirmed].
 - Ghi `sid` (Keycloak session id) của token vào `game.game_sessions.keycloak_sid` và vào phiên đăng nhập game `identity.game_auth_sessions` (§5.1) để khi tài khoản đăng nhập thiết bị khác, backend thu hồi đúng Keycloak user session của thiết bị cũ (Admin API `DELETE /admin/realms/{realm}/sessions/{sid}`) — refresh token lưu trên thiết bị cũ hết hiệu lực (ADR-0031, ADR-0086).
 
 ### 3.2. Client `svc-identity` cho Keycloak Admin API (ADR-0074 mục 5)
@@ -133,9 +133,9 @@ Backend là modular monolith ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ran
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Loại | Confidential, `serviceAccountsEnabled=true`, chỉ `client_credentials`; secret xoay vòng 90 ngày [Proposed]; Docker secret `kc_svc_identity` chỉ mount vào Swarm service chạy module identity ([DEPLOYMENT §13](../11-operations/DEPLOYMENT.md#13-secret-management)) |
+| Loại | Confidential, `serviceAccountsEnabled=true`, chỉ `client_credentials`; secret xoay vòng 90 ngày [Confirmed]; Docker secret `kc_svc_identity` chỉ mount vào Swarm service chạy module identity ([DEPLOYMENT §13](../11-operations/DEPLOYMENT.md#13-secret-management)) |
 | Mục đích duy nhất | Module identity gọi Keycloak Admin API (revoke session khi đăng nhập thiết bị khác, membership Organization, cập nhật user); không dùng để gọi API của EduWorld |
-| Quyền | Service account chỉ có các role `realm-management` tối thiểu cần cho các thao tác trên (fine-grained admin permissions) [Proposed] |
+| Quyền | Service account chỉ có các role `realm-management` tối thiểu cần cho các thao tác trên (fine-grained admin permissions) [Confirmed] |
 | TTL | Access token 5 phút; adapter cache token đến còn 30 s rồi xin mới; không có refresh token. Adapter có timeout, retry cho thao tác idempotent và circuit breaker như mọi tích hợp ngoài (ADR-0074 mục 5) |
 | Client đặc biệt `svc-keycloak-authn` — **không tạo** | Từng dự kiến cho authenticator QR/PIN/mật khẩu hình chạy bên trong Keycloak; **không làm** vì ADR-0076 Rejected (2026-11-17). Realm không có authenticator tùy biến nào cho học sinh |
 | Khác với `eduworld-game-backend` | `svc-identity` chỉ dùng client credentials cho Keycloak Admin API; đăng nhập học sinh dùng client riêng `eduworld-game-backend` để token người dùng có `azp` riêng và brute-force/role flow riêng (ADR-0068) |
@@ -145,7 +145,7 @@ Backend là modular monolith ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ran
 
 Admin Portal tự vẽ trang `/login` (Ant Design, theme từ `design/admin-tokens/`, ADR-0047) và gọi API `/api/v1/auth/portal/*` của module identity; **không** chuyển hướng sang Keycloak, không Authorization Code + PKCE, không bước chọn trường trước đăng nhập (thay ADR-0066 mục 1, ADR-0067 phần chọn tenant bằng scope, ADR-0068 mục 4 theo [ADR-0091](../adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md)). Màn hình và thông điệp: [ADMIN_PORTAL §1.3b](../04-admin-portal/ADMIN_PORTAL.md); endpoint và mã lỗi: [API_DESIGN §9.1](../07-backend/API_DESIGN.md); mô hình đe dọa, cookie và CSRF: [SECURITY_ARCHITECTURE §3.3](../10-security/SECURITY_ARCHITECTURE.md#33-đăng-nhập-admin-portal-qua-backend-adr-0091).
 
-**Thiết lập client** [Confirmed — ADR-0091 / chi tiết [Proposed]]:
+**Thiết lập client** [Confirmed — ADR-0091 / chi tiết [Confirmed]]:
 
 | Thiết lập | Giá trị |
 |---|---|
@@ -154,8 +154,8 @@ Admin Portal tự vẽ trang `/login` (Ant Design, theme từ `design/admin-toke
 | `standardFlowEnabled`, `implicitFlowEnabled`, `serviceAccountsEnabled`, device grant | `false`; **không** redirect URI, web origin hay PKCE (redirect `https://portal.<domain>/auth/callback` cũ đã bỏ) |
 | Direct grant flow | Override `eduworld-portal-direct-grant` (bảng dưới) |
 | Scope mặc định | `openid profile eduworld-api-audience eduworld-roles` + mapper AMR/LoA; **không** `organization`, không `offline_access` |
-| Token | Access 5 phút; refresh rotation (`revokeRefreshToken=true`, `refreshTokenMaxReuse=0`) [Proposed]; client session idle 30 phút / max 10 giờ (`portal_session_sso`, §5.2) |
-| Realm | `loginWithEmailAllowed=true`, `duplicateEmailsAllowed=false`, `registrationEmailAsUsername=false`; username/email so sánh không phân biệt hoa thường (Keycloak lưu chữ thường) — ADR-0067. Game chỉ gửi username (ADR-0063), module identity từ chối chuỗi có `@` ở `/auth/game/login` [Proposed] |
+| Token | Access 5 phút; refresh rotation (`revokeRefreshToken=true`, `refreshTokenMaxReuse=0`) [Confirmed]; client session idle 30 phút / max 10 giờ (`portal_session_sso`, §5.2) |
+| Realm | `loginWithEmailAllowed=true`, `duplicateEmailsAllowed=false`, `registrationEmailAsUsername=false`; username/email so sánh không phân biệt hoa thường (Keycloak lưu chữ thường) — ADR-0067. Game chỉ gửi username (ADR-0063), module identity từ chối chuỗi có `@` ở `/auth/game/login` [Confirmed] |
 
 **Direct grant flow `eduworld-portal-direct-grant`** (thứ tự bắt buộc; brute-force của realm áp dụng, §10):
 
@@ -168,7 +168,7 @@ Admin Portal tự vẽ trang `/login` (Ant Design, theme từ `design/admin-toke
 | 5 | Required action còn tồn đọng (`UPDATE_PASSWORD`, `CONFIGURE_TOTP`) | — | Keycloak trả "Account is not fully set up" **sau** khi mật khẩu đúng → `403 ACCOUNT_SETUP_REQUIRED` + `setup_ticket` (bên dưới) |
 
 - **MFA chỉ TOTP**; WebAuthn không dùng được qua Direct Access Grant nên bỏ khỏi phạm vi portal (ADR-0091 mục 2).
-- **Mapper AMR/LoA** [Proposed — spike trước F012/F051]: mapper "Authentication Method Reference (AMR)" đọc reference value của authenticator đã chạy (`pwd`, `otp`) → claim `amr`; ánh xạ LoA → `acr` (`1` = mật khẩu, `2` = có OTP; `EW_OIDC_PLATFORM_REQUIRED_ACR` đặt theo giá trị MFA). Mục tiêu: các kiểm tra MFA hiện có (`acr` mức MFA, `amr` chứa `otp`) giữ nguyên. Spike (F004) xác nhận Keycloak đặt `amr`/`acr` đúng trong direct grant, và OTP REQUIRED với user chưa cấu hình OTP sinh required action `CONFIGURE_TOTP`; nếu không đạt, module identity tự gắn cờ MFA vào phiên không được phép — phải tìm cấu hình Keycloak thay thế và ghi ADR.
+- **Mapper AMR/LoA** [Confirmed — spike trước F012/F051]: mapper "Authentication Method Reference (AMR)" đọc reference value của authenticator đã chạy (`pwd`, `otp`) → claim `amr`; ánh xạ LoA → `acr` (`1` = mật khẩu, `2` = có OTP; `EW_OIDC_PLATFORM_REQUIRED_ACR` đặt theo giá trị MFA). Mục tiêu: các kiểm tra MFA hiện có (`acr` mức MFA, `amr` chứa `otp`) giữ nguyên. Spike (F004) xác nhận Keycloak đặt `amr`/`acr` đúng trong direct grant, và OTP REQUIRED với user chưa cấu hình OTP sinh required action `CONFIGURE_TOTP`; nếu không đạt, module identity tự gắn cờ MFA vào phiên không được phép — phải tìm cấu hình Keycloak thay thế và ghi ADR.
 - **Mã lỗi chung:** sai username/mật khẩu/OTP, thiếu OTP với `platform_staff`, tài khoản Keycloak tắt hoặc khóa tạm → **một** lỗi `401 INVALID_CREDENTIALS`, thông điệp "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng". `User.status` của EduWorld không active (kiểm tra sau khi Keycloak chấp nhận) → `403 ACCOUNT_DEACTIVATED`.
 
 **Mật khẩu lần đầu, đăng ký OTP, quên mật khẩu** (ADR-0091 mục 3):
@@ -185,12 +185,12 @@ Admin Portal tự vẽ trang `/login` (Ant Design, theme từ `design/admin-toke
 | Tham số | Giá trị | Nhãn |
 |---|---|---|
 | `portal_setup_ticket_ttl` | 10 phút, dùng một lần | [Confirmed] (ADR-0091) |
-| `portal_password_reset_ttl` | 30 phút, dùng một lần | [Proposed] |
+| `portal_password_reset_ttl` | 30 phút, dùng một lần | [Confirmed] |
 
 **Token và phiên trên trình duyệt** (chi tiết bảo vệ: [SECURITY_ARCHITECTURE §3.3](../10-security/SECURITY_ARCHITECTURE.md#33-đăng-nhập-admin-portal-qua-backend-adr-0091)):
 
 - Access token trả trong body, SPA **chỉ giữ trong bộ nhớ** (không `localStorage`/`sessionStorage`). Refresh token đặt trong cookie `__Secure-ew_portal_rt` (`HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`), JavaScript không đọc được. `token:refresh` và `logout` đòi header `X-EW-CSRF` khớp cookie double-submit `__Host-ew_portal_csrf` (sai/thiếu → `403 CSRF_TOKEN_INVALID`).
-- APISIX public phục vụ `/api/v1/*` dưới origin của portal (`https://portal.<domain>/api/v1/...`) để cookie là first-party [Proposed]; workspace platform vẫn gọi gateway nội bộ bằng Bearer token trong bộ nhớ.
+- APISIX public phục vụ `/api/v1/*` dưới origin của portal (`https://portal.<domain>/api/v1/...`) để cookie là first-party [Confirmed]; workspace platform vẫn gọi gateway nội bộ bằng Bearer token trong bộ nhớ.
 - Tải lại trang → `POST /auth/portal/token:refresh` khôi phục phiên (§5.2). Đăng xuất → `POST /auth/portal/logout`: module identity thu hồi refresh token và phiên Keycloak (`sid`), xóa cookie.
 - **Step-up:** route platform chỉ nhận `auth_time` trong 8 giờ gần nhất; quá hạn hoặc token platform thiếu MFA → `403 MFA_REQUIRED`, portal mở hộp đăng nhập lại (mật khẩu + OTP), không dùng `acr_values`/chuyển hướng.
 - Backend kiểm tra theo route (không đổi): `/api/v1/game-admin/*` và `/api/v1/admin/*` chỉ chấp nhận `azp = eduworld-portal` có MFA (`acr`) và Principal có role platform; `/api/v1/cms/learning/*`, `/api/v1/lms/*`, `/api/v1/schools/*`, `/api/v1/tenant/*` chấp nhận `eduworld-portal` với `user_type = staff` (ADR-0027, ADR-0066, ADR-0081, [SECURITY_ARCHITECTURE §5](../10-security/SECURITY_ARCHITECTURE.md)).
@@ -210,14 +210,14 @@ Realm role chỉ là **cổng đăng nhập thô** cho từng client, không ph�
 | `platform_staff` | Đội EduWorld: System Admin, Content Admin/Reviewer, Game Designer, Live-ops, Competition Admin, Safety Moderator | `eduworld-portal` (OTP bắt buộc có điều kiện theo role này trong `eduworld-portal-direct-grant`, §3.3) |
 
 - Role nghiệp vụ chi tiết (`school_admin`, `academic_manager`, `game_designer`, `safety_moderator`, ...) và permission **không nằm trong Keycloak**: chúng là Role/UserRole trong DB (`identity.roles`, `identity.user_roles`) + permission catalog trong code (ADR-0066). Realm role `tenant_staff`/`platform_staff` được worker gán/gỡ theo event `user_role.changed` (có ít nhất một UserRole portal hiệu lực → `tenant_staff`; có UserRole platform → `platform_staff`) ([ADMIN_PORTAL §2](../04-admin-portal/ADMIN_PORTAL.md#2-permission-model), [IDENTITY_MAPPING §6](IDENTITY_MAPPING.md)). Khi có mâu thuẫn, **DB thắng**.
-- `platform_staff` chỉ được gán bởi System Admin qua workspace Platform Administration (hoặc quy trình IaC realm); worker SIS (`eduworld-sis-sync`) chỉ được gán `student`/`tenant_staff` và không có quyền gán `platform_staff` (fine-grained admin permissions) [Proposed].
+- `platform_staff` chỉ được gán bởi System Admin qua workspace Platform Administration (hoặc quy trình IaC realm); worker SIS (`eduworld-sis-sync`) chỉ được gán `student`/`tenant_staff` và không có quyền gán `platform_staff` (fine-grained admin permissions) [Confirmed].
 - Role game/thi đấu (`game_designer`, `liveops`, `competition_admin`) chỉ có hiệu lực với token `eduworld-portal` có MFA; backend từ chối permission platform-only nếu `azp` khác hoặc thiếu MFA.
 
-Client roles: không dùng trong Release 1.0 [Proposed].
+Client roles: không dùng trong Release 1.0 [Confirmed].
 
 ### 4.2. Groups
 
-Không dùng group để biểu diễn trường/lớp (dữ liệu đó thuộc SIS/DB). Group chỉ dùng cho vận hành nội bộ: `/ops/platform-admins`, `/ops/content-team`. [Proposed]
+Không dùng group để biểu diễn trường/lớp (dữ liệu đó thuộc SIS/DB). Group chỉ dùng cho vận hành nội bộ: `/ops/platform-admins`, `/ops/content-team`. [Confirmed]
 
 ### 4.3. Client scopes
 
@@ -227,8 +227,8 @@ Không dùng group để biểu diễn trường/lớp (dữ liệu đó thuộc
 | `eduworld-api-audience` | Default | Audience mapper → `aud: eduworld-api` | `eduworld-game-backend`, `eduworld-portal` |
 | `eduworld-roles` | Default | Realm roles → claim `roles` (mảng phẳng) | `eduworld-game-backend`, `eduworld-portal` |
 | `organization` (built-in, Keycloak ≥ 26) | **Không gán cho client nào** trong Release 1.0 | Organization Membership mapper | ~~`eduworld-portal` sau bước chọn tenant~~ — thay bởi ADR-0091: portal chọn tenant bằng `X-Tenant-Id` + membership; `eduworld-game-backend` không dùng (ADR-0068) |
-| `eduworld-amr-loa` | Default | Mapper AMR (`amr` từ reference value `pwd`/`otp` của authenticator) + LoA → `acr` [Proposed — spike F004] | `eduworld-portal` |
-| `offline_access` | **Không cấp** | — | Cấm refresh token offline cho trẻ em [Proposed] |
+| `eduworld-amr-loa` | Default | Mapper AMR (`amr` từ reference value `pwd`/`otp` của authenticator) + LoA → `acr` [Confirmed — spike F004] | `eduworld-portal` |
+| `offline_access` | **Không cấp** | — | Cấm refresh token offline cho trẻ em [Confirmed] |
 
 Nguyên tắc data minimization: access token **không** chứa họ tên, email, ngày sinh, mã học sinh.
 
@@ -260,9 +260,9 @@ Backend kiểm tra: chữ ký (JWKS, cache theo `kid`, refresh khi gặp `kid` l
 
 Kiểm tra tenant (ADR-0026, ADR-0065, chi tiết [MULTITENANCY §8](../06-architecture/MULTITENANCY.md)): mọi request tenant-scoped phải có `X-Tenant-Id` và header phải thuộc membership của user theo DB (và trùng tenant của game session với token game) — không khớp → `403 TENANT_MISMATCH`. Với `eduworld-portal`, token không có claim `organization` (ADR-0091); nếu một token cũ hoặc cấu hình sai vẫn mang claim này thì backend bỏ qua nó và chỉ dựa vào `X-Tenant-Id` + membership. Header thiếu ở route tenant-scoped → backend chọn theo membership (1 → dùng; nhiều → `403 TENANT_NOT_SELECTED` kèm danh sách; không thuộc tenant chung và không thuộc tenant SIS nào → `403 ACCOUNT_NOT_PROVISIONED`, audit, thu hồi phiên Keycloak theo `sid` — ADR-0063). Không bao giờ tự đưa người dùng vào tenant chung. Backend chấp nhận cả dạng claim mảng alias và dạng object có id (tùy cấu hình mapper), nhưng chỉ tin id/alias sau khi đối chiếu `platform.tenants`. `preferred_username` **không** dùng để suy ra tenant.
 
-## 5. Session & token policy [Proposed]
+## 5. Session & token policy [Confirmed]
 
-Tham số `game_session_sso` [Confirmed — Technical Architect 2026-11-16] (ADR-0086); `portal_session_sso` giữ idle/max cũ [Proposed], cách lưu token theo ADR-0091.
+Tham số `game_session_sso` [Confirmed — Technical Architect 2026-11-16] (ADR-0086); `portal_session_sso` giữ idle/max cũ [Confirmed], cách lưu token theo ADR-0091.
 
 | Tham số | eduworld-game-backend (game) | eduworld-portal |
 |---|---|---|
@@ -296,7 +296,7 @@ Rủi ro còn lại: thiết bị cá nhân bị người khác dùng khi phiên
 
 ### 5.2. Phiên portal (ADR-0086 mục 7, ADR-0091 mục 4)
 
-Portal giữ chính sách phiên hiện hành: idle 30 phút, tối đa 10 giờ, MFA theo role (`portal_session_sso`). Refresh token nằm trong cookie `HttpOnly` do module identity đặt (§3.3), access token chỉ trong bộ nhớ SPA. Tải lại trang hoặc mở tab mới: SPA gọi `POST /auth/portal/token:refresh` (cookie + header `X-EW-CSRF`) nên **không phải đăng nhập lại khi phiên còn hạn**; refresh lỗi (`401 REFRESH_TOKEN_INVALID`) → về `/login` của portal, giữ URL để quay lại. Giới hạn idle 30 phút / tối đa 10 giờ là client session idle/max của `eduworld-portal` (cấu hình ở mức client; realm giữ 7 ngày/30 ngày cho game): quá idle thì refresh token hết hạn; module identity còn kiểm tra `auth_time` ≤ 10 giờ khi refresh [Proposed — kiểm chứng trên bản Keycloak triển khai]. Backend từ chối token có `auth_time` quá 10 giờ (route platform ≤ 8 giờ → `403 MFA_REQUIRED`, portal mở hộp đăng nhập lại mật khẩu + OTP). Không còn `prompt=none`, `max_age`, `prompt=login` hay RP-initiated logout từ trình duyệt (thay bởi ADR-0091).
+Portal giữ chính sách phiên hiện hành: idle 30 phút, tối đa 10 giờ, MFA theo role (`portal_session_sso`). Refresh token nằm trong cookie `HttpOnly` do module identity đặt (§3.3), access token chỉ trong bộ nhớ SPA. Tải lại trang hoặc mở tab mới: SPA gọi `POST /auth/portal/token:refresh` (cookie + header `X-EW-CSRF`) nên **không phải đăng nhập lại khi phiên còn hạn**; refresh lỗi (`401 REFRESH_TOKEN_INVALID`) → về `/login` của portal, giữ URL để quay lại. Giới hạn idle 30 phút / tối đa 10 giờ là client session idle/max của `eduworld-portal` (cấu hình ở mức client; realm giữ 7 ngày/30 ngày cho game): quá idle thì refresh token hết hạn; module identity còn kiểm tra `auth_time` ≤ 10 giờ khi refresh [Confirmed — kiểm chứng trên bản Keycloak triển khai]. Backend từ chối token có `auth_time` quá 10 giờ (route platform ≤ 8 giờ → `403 MFA_REQUIRED`, portal mở hộp đăng nhập lại mật khẩu + OTP). Không còn `prompt=none`, `max_age`, `prompt=login` hay RP-initiated logout từ trình duyệt (thay bởi ADR-0091).
 
 ## 6. Luồng đăng nhập game — form trong Godot qua backend (ADR-0068)
 
@@ -346,7 +346,7 @@ sequenceDiagram
 
 - Không trình duyệt hệ thống, không Custom Tabs/`ASWebAuthenticationSession`, không WebView, không TCPServer loopback, không PKCE/`prompt=login`/`login_hint` cho game. Web export gọi cùng API bằng `fetch` (CORS chỉ origin `https://play.<domain>`).
 - Access token chỉ trong bộ nhớ tiến trình. Refresh token: thiết bị cá nhân lưu trong kho bảo mật OS (Windows DPAPI, Android Keystore, iOS Keychain); **không bao giờ** lưu vào `user://`, file thường hay localStorage; Web và máy `shared_device` chỉ giữ trong RAM (reload tab Web = đăng nhập lại). App bị hệ điều hành đóng trên thiết bị cá nhân → mở lại theo §5.1, không hỏi mật khẩu khi phiên còn hạn (ADR-0086).
-- Certificate pinning cho tên miền API trên bản desktop/mobile [Proposed]; Web dựa vào HSTS.
+- Certificate pinning cho tên miền API trên bản desktop/mobile [Confirmed]; Web dựa vào HSTS.
 
 Mở lại game trên thiết bị cá nhân khi còn refresh token (ADR-0086):
 
@@ -406,7 +406,7 @@ Tiếp theo → game client gọi `POST /api/v1/game/sessions` (`createGameSessi
 | Đổi / đặt lại mật khẩu | module identity (F016) thu hồi mọi `game_auth_sessions` của user (`password_changed`) + phiên Keycloak theo `sid` — thiết bị đang lưu token phải đăng nhập lại bằng mật khẩu mới (ADR-0086); đặt lại mật khẩu học sinh: [ACCOUNT_PROVISIONING §6d](ACCOUNT_PROVISIONING.md#6d-đặt-lại-mật-khẩu-học-sinh) |
 | Thu hồi quyền truy cập / dọn học sinh | `user.access_revoked` (rời tenant, chuyển trường sang tenant khác, tenant tắt) và `student.cleaned_up` (ADR-0085) → identity thu hồi `game_auth_sessions` liên quan (`access_revoked`/`cleanup`) + phiên Keycloak |
 | Đăng nhập thiết bị khác (ADR-0031) | Khi `POST /game/sessions` có `takeover: true` (ADR-0083), module game kết thúc game session cũ, gửi `session.session.replaced` + close 4409 tới thiết bị cũ, rồi `keycloak-provisioner` (consume `game_session.replaced`) thu hồi Keycloak session theo `sid` của session cũ và đánh dấu `game_auth_sessions` của thiết bị cũ `revoked_at` (`takeover`) — refresh token lưu trên thiết bị cũ bị từ chối (`401 REFRESH_TOKEN_INVALID`). Keycloak cho phép nhiều SSO session song song; quy tắc một thiết bị được thực thi ở game session của EduWorld, không dùng giới hạn session của Keycloak |
-| Backchannel logout | Cấu hình `backchannel_logout_url` cho `eduworld-api` (`/internal/auth/backchannel-logout`, chỉ mạng nội bộ) để backend đóng game session khi phiên Keycloak bị hủy [Proposed] |
+| Backchannel logout | Cấu hình `backchannel_logout_url` cho `eduworld-api` (`/internal/auth/backchannel-logout`, chỉ mạng nội bộ) để backend đóng game session khi phiên Keycloak bị hủy [Confirmed] |
 
 Access token 5 phút nghĩa là khoảng trễ thu hồi tối đa 5 phút cho REST; backend còn kiểm tra `user.status` (cache ≤ 60s) ở mỗi request nên khoảng trễ thực tế ≤ 60s.
 
@@ -441,13 +441,13 @@ Không dùng Device Authorization Grant (§8.1). **Windows mặc định là má
 
 ## 10. Bảo vệ brute-force & chính sách mật khẩu
 
-| Thiết lập | Giá trị [Proposed] |
+| Thiết lập | Giá trị [Confirmed] |
 |---|---|
 | Brute force detection | Bật **theo tài khoản** (không khóa theo IP vì cả trường dùng chung NAT); `failureFactor=5`, wait increment 1 phút, max wait 15 phút, quick login check 1s |
 | Băm mật khẩu | argon2id (hoặc pbkdf2-sha512) với tham số **benchmark trên phần cứng triển khai** để ≤ 80 ms/lần mà vẫn đạt khuyến nghị bảo mật hiện hành (OWASP Password Storage); **rehash on login** khi đổi tham số (ADR-0045) |
 | Permanent lockout | Tắt (tránh DoS khóa tài khoản học sinh) |
 | Password policy (local user) | Học sinh: tối thiểu 6 ký tự (cân bằng với trẻ nhỏ), không trùng username; Nhân sự: ≥ 10 ký tự, `notUsername`, `passwordHistory(3)` |
-| Rate limit tại APISIX / module identity | `POST /auth/game/login`: theo **thiết bị** (`X-Device-Id`) 10/phút và theo **username** 10/phút, không theo IP đơn lẻ (NAT trường học), cộng ngưỡng toàn cục; vượt ngưỡng trả `429` + `Retry-After` (`RATE_LIMITED` hoặc `LOGIN_QUEUE_BUSY`), client thử lại có jitter và hiển thị hàng chờ. `/auth/portal/*` theo `portal_login_rate` (username, `device_id`, toàn cục; không theo IP) — chi tiết [SECURITY §14](../10-security/SECURITY_ARCHITECTURE.md#14-rate-limiting-proposed) |
+| Rate limit tại APISIX / module identity | `POST /auth/game/login`: theo **thiết bị** (`X-Device-Id`) 10/phút và theo **username** 10/phút, không theo IP đơn lẻ (NAT trường học), cộng ngưỡng toàn cục; vượt ngưỡng trả `429` + `Retry-After` (`RATE_LIMITED` hoặc `LOGIN_QUEUE_BUSY`), client thử lại có jitter và hiển thị hàng chờ. `/auth/portal/*` theo `portal_login_rate` (username, `device_id`, toàn cục; không theo IP) — chi tiết [SECURITY §14](../10-security/SECURITY_ARCHITECTURE.md#14-rate-limiting-confirmed) |
 | Brute force qua portal | Direct grant của `eduworld-portal` dùng cùng brute-force detection theo tài khoản (khóa tạm sau 5 lần sai, gồm sai OTP); lỗi luôn là `401 INVALID_CREDENTIALS` chung (ADR-0091 mục 2) |
 | Định danh (ADR-0067) | `duplicateEmailsAllowed=false`, `loginWithEmailAllowed=true` (dùng ở portal), `editUsernameAllowed=false` (đổi username chỉ qua module identity sau khi kiểm tra trùng trên SSO và trong tenant, ADR-0069) |
 | Events | Bật login events & admin events, xuất sang hệ thống log tập trung, lưu 90 ngày |
@@ -484,7 +484,7 @@ EW_GAME_LOGIN_TICKET_TTL=2m
 
 ## 12. Năng lực đăng nhập 10.000 CCU (ADR-0045)
 
-| Hạng mục | Thiết kế [Proposed] |
+| Hạng mục | Thiết kế [Confirmed] |
 |---|---|
 | Tải mục tiêu | 10.000 CCU; bão đăng nhập **5.000 lượt trong 10 phút** đầu giờ học; đỉnh **100 đăng nhập mật khẩu/giây** (ADR-0064 mục 6, giữ làm giả định thận trọng cho máy phòng tin học/Web và phiên hết hạn); 500 refresh/giây (gồm `resume` khi mở lại game — ADR-0086) |
 | SLO | Đăng nhập mật khẩu → vào hub p95 ≤ 3 s; Keycloak xác thực p95 ≤ 800 ms; refresh p95 ≤ 200 ms |

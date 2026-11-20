@@ -10,7 +10,7 @@
 - Q: Hoạt động học tập kích hoạt XP bằng event nào? → A: `activity.graded` (đã chấm xong, payload schema có sẵn); `exercise.submitted` trong EVENT_DESIGN §4.3 không có payload schema nên không dùng. Payload cần bổ sung `content_version_id`, `first_try_correct_count`, `recommendation_id`, `content_grade_levels` (delta ở [contracts](contracts/README.md) §6).
 - Q: Config type `levels` hay `progression-curves`? → A: `progression-curves` (permission `game.progression.write` — đổi ở Session 2026-11-17). Enum `levels` đổi thành `progression-levels` (Session 2026-11-17); gói level/zone (`game.level_definitions`) thuộc F071.
 - Q: Phần thưởng lên cấp loại Xu/vật phẩm/huy hiệu? → A: Reward Engine cấp qua `GrantApplier` theo loại; F074 có applier `xp`, `title`; applier `currency`, `item`, `badge`, `collection_item` do F075 đăng ký. Publish curve có loại thưởng chưa có applier bị từ chối.
-- Q: Ranh giới "ngày" của cap XP? → A: Ngày lịch theo giờ `Asia/Ho_Chi_Minh` [Proposed] (tài liệu sở hữu chưa ghi; xem Assumptions).
+- Q: Ranh giới "ngày" của cap XP? → A: Ngày lịch theo giờ `Asia/Ho_Chi_Minh` [Confirmed] (tài liệu sở hữu chưa ghi; xem Assumptions).
 
 ### Session 2026-11-17
 
@@ -198,7 +198,7 @@ NFR: NFR-SAFE-003 (không streak, không thưởng đăng nhập) — F074-AC-09
 
 ## Assumptions
 
-- Ngày của cap XP theo lịch `Asia/Ho_Chi_Minh` 00:00–24:00 [Proposed]; cần ghi vào PROGRESSION_SYSTEM §3.2 (task Polish).
-- Release 1.0 chỉ một progression curve platform đang dùng; tạo curve thứ hai trả `409 CONFLICT` [Proposed].
+- Ngày của cap XP theo lịch `Asia/Ho_Chi_Minh` 00:00–24:00 [Confirmed]; cần ghi vào PROGRESSION_SYSTEM §3.2 (task Polish).
+- Release 1.0 chỉ một progression curve platform đang dùng; tạo curve thứ hai trả `409 CONFLICT` [Confirmed].
 - Kernel nội dung version hóa của module game (version + con trỏ `current_version_id`, `game.content_releases`, `content.published`) có từ F071/F072; F074 đăng ký module `progression-curves`, `reward-rules`. Trước F078, version published được nạp bằng lệnh seed của worker.
 - module learning bổ sung trường cho `activity.graded` (delta §6) trước khi US1 Done; quest/minigame/world event payload do F071–F073 định nghĩa.

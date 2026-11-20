@@ -27,5 +27,5 @@
 
 ## Notes
 
-- Mâu thuẫn tài liệu đã xử lý bằng quyết định [Proposed] và báo cáo: transcript bắt buộc (ADMIN_PORTAL §3.13 vs AUDIO_LANGUAGE_LEARNING §2); schema `learning.*` (SIMULATION_ENGINE §7, AUDIO §3) vs `content.*`/`assessment.*` (DATABASE_DESIGN — theo DATABASE_DESIGN); `SimulationTemplate.kind` lệch enum `simulation_kind`; `time_limit_seconds` trong SIMULATION_ENGINE §4 nhưng không có trong `simulation.schema.json` `interaction` (dùng `time_limit_seconds` chung của activity, ACTIVITY_ENGINE §4); `recording_uploader.gd` trong GODOT_ARCHITECTURE §3 trái ADR-0072.
+- Mâu thuẫn tài liệu đã xử lý bằng quyết định [Confirmed] và báo cáo: transcript bắt buộc (ADMIN_PORTAL §3.13 vs AUDIO_LANGUAGE_LEARNING §2); schema `learning.*` (SIMULATION_ENGINE §7, AUDIO §3) vs `content.*`/`assessment.*` (DATABASE_DESIGN — theo DATABASE_DESIGN); `SimulationTemplate.kind` lệch enum `simulation_kind`; `time_limit_seconds` trong SIMULATION_ENGINE §4 nhưng không có trong `simulation.schema.json` `interaction` (dùng `time_limit_seconds` chung của activity, ACTIVITY_ENGINE §4); `recording_uploader.gd` trong GODOT_ARCHITECTURE §3 trái ADR-0072.
 - F066-AC-04, AC-14, AC-19, AC-23 phụ thuộc delta T004.

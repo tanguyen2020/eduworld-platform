@@ -13,7 +13,7 @@ Master Prompt "Re-architecture" §13.2–13.3 yêu cầu party tạm thời và 
 
 - **Party** (competition-service): nhóm tạm thời để chơi cùng, 2–8 người (mặc định 4), tự giải tán; chat `party` bị purge (ADR-0033).
 - **Guild/Club** (chat-service, domain Social): nhóm **bền vững** có loại (Study Group, School Club, Subject Club, Competition Team, Interest Group), vai trò (owner/officer/member), yêu cầu tham gia, mục tiêu và hoạt động nhóm, thành tích nhóm, channel chat bền vững (không purge), sự kiện câu lạc bộ.
-- **Phạm vi:** guild/club chỉ trong **một tenant**; tạo bởi nhà trường (`school_admin`/`academic_manager`) hoặc học sinh; club do học sinh tạo cần nhà trường duyệt [Proposed]; tối đa 50 thành viên (cấu hình). Party có thể tạo từ thành viên một club.
+- **Phạm vi:** guild/club chỉ trong **một tenant**; tạo bởi nhà trường (`school_admin`/`academic_manager`) hoặc học sinh; club do học sinh tạo cần nhà trường duyệt [Confirmed]; tối đa 50 thành viên (cấu hình). Party có thể tạo từ thành viên một club.
 - Team cố định và Study Group hiện có là các loại guild/club (không thêm khái niệm thứ ba).
 
 ## Hệ quả

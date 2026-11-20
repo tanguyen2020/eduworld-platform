@@ -76,7 +76,7 @@ flowchart LR
 | Zone 0 → 1 | TLS, WAF rule cơ bản (APISIX), rate limit, body size limit, CORS whitelist; kiểm tra có mặt/định dạng `X-Tenant-Id` ở route tenant-scoped (`400 TENANT_HEADER_REQUIRED`, ADR-0065); route đăng nhập game `/auth/game/*` không ghi body vào log/trace (ADR-0068) |
 | Zone 1 → 2 | Chỉ APISIX/LB gọi được cổng public của `core-api` và `realtime`; JWT đã kiểm tra nhưng app **kiểm tra lại**; header `X-Request-Id` chuẩn hóa; header nội bộ (`X-User-*`) bị APISIX **xóa** khỏi request vào |
 | Zone 2 ↔ 2 (module ↔ module, binary ↔ binary) | Module gọi nhau trong tiến trình qua facade, không có cổng HTTP nội bộ (§5.5). Giữa binary chỉ có NATS: `realtime` → `core-api` qua request/reply `ew.cmd.*`, phản ứng phụ qua JetStream; quyền subject theo NATS user (§8.1) |
-| Zone 2 → 3 | Overlay network `data` của Docker Swarm (chỉ binary cần dữ liệu mới gắn vào) + credential riêng: mỗi pool chỉ tới **database của module mình** bằng role của module đó, Valkey ACL theo module, NATS user theo Swarm service; `realtime` không có credential PostgreSQL; TLS nội bộ [Proposed] |
+| Zone 2 → 3 | Overlay network `data` của Docker Swarm (chỉ binary cần dữ liệu mới gắn vào) + credential riêng: mỗi pool chỉ tới **database của module mình** bằng role của module đó, Valkey ACL theo module, NATS user theo Swarm service; `realtime` không có credential PostgreSQL; TLS nội bộ [Confirmed] |
 | Zone 4 | Chỉ qua VPN/bastion + MFA; route `/api/v1/admin/*`, `/api/v1/sis/*` (API quản trị cho người), `/internal/*` (machine-to-machine: SIS webhook, Keycloak backchannel logout), Keycloak admin **không** có trên APISIX public |
 | External | SIS credential chỉ ở Swarm service chạy adapter SIS của module identity, lưu secret manager; IdP qua Keycloak brokering, backend không nói chuyện trực tiếp với IdP |
 
@@ -113,20 +113,20 @@ sequenceDiagram
 | Token / credential | TTL | Lưu ở | Nhãn |
 |---|---|---|---|
 | Mật khẩu học sinh (đăng nhập game, ADR-0068) | Chỉ trong thời gian xử lý `POST /auth/game/login` | RAM của Godot (xóa ô nhập sau khi gửi) và RAM của module identity (xóa sau khi gọi Keycloak, best effort); **không** log, trace, audit, lưu DB/Valkey | [Confirmed] |
-| `login_ticket` (chọn tenant khi thuộc nhiều tenant) | 2 phút, một lần, gắn `device_id` | Valkey (hash) `ew:id:login_ticket:<hash>`; giữ token chờ chọn tenant, không giữ mật khẩu | [Proposed] tham số |
-| Access token | 5 phút | Memory client | [Proposed] |
+| `login_ticket` (chọn tenant khi thuộc nhiều tenant) | 2 phút, một lần, gắn `device_id` | Valkey (hash) `ew:id:login_ticket:<hash>`; giữ token chờ chọn tenant, không giữ mật khẩu | [Confirmed] tham số |
+| Access token | 5 phút | Memory client | [Confirmed] |
 | Refresh token (game) | Client session idle **7 ngày**, max **30 ngày** (`game_session_sso`), rotation mỗi lần dùng + reuse detection, gắn `device_id`; không Remember me, không offline token (ADR-0086); thuộc client confidential `eduworld-game-backend` nên chỉ làm mới qua `POST /auth/game/token:refresh` (ADR-0068) | **Thiết bị cá nhân:** kho bảo mật OS — Windows DPAPI (theo user), Android Keystore, iOS Keychain (`ThisDeviceOnly`, không đồng bộ iCloud); không bao giờ ở file thường, `user://` dạng rõ, log. **Web và máy `shared_device = true`:** chỉ RAM. Server chỉ lưu SHA-256 của token (`identity.game_auth_sessions`), không lưu token thô | [Confirmed — Technical Architect 2026-11-16] (ADR-0086) |
 | ~~Mã QR lớp (đăng nhập nhanh)~~ — không làm (ADR-0076 Rejected 2026-11-17) | — | — | — |
 | ~~PIN / thẻ QR cá nhân / mật khẩu hình ảnh~~ — không làm (ADR-0076 Rejected 2026-11-17) | — | — | — |
-| Signed URL media riêng tenant (CDN) | 5–15 phút | Tham số URL ký bởi khóa CDN | [Proposed] ADR-0044 |
+| Signed URL media riêng tenant (CDN) | 5–15 phút | Tham số URL ký bởi khóa CDN | [Confirmed] ADR-0044 |
 | Mật khẩu + mã OTP nhân sự (đăng nhập portal, ADR-0091) | Chỉ trong thời gian xử lý `POST /auth/portal/login` (và `setup:password`, `password:reset` cho mật khẩu mới) | RAM của SPA (xóa ô nhập sau khi gửi) và RAM của module identity (xóa sau khi gọi Keycloak, best effort); **không** log, trace, audit, lưu DB/Valkey | [Confirmed] (ADR-0091) |
-| Refresh token (portal) | idle 30 phút, max 10 h (`portal_session_sso`), rotation | Cookie `__Secure-ew_portal_rt` (`HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`) do module identity đặt, JavaScript không đọc được; tải lại trang → `POST /auth/portal/token:refresh` (§3.3). Access token portal chỉ trong bộ nhớ SPA; không `localStorage`/`sessionStorage` cho token | [Confirmed] cơ chế (ADR-0091) / [Proposed] thời hạn |
+| Refresh token (portal) | idle 30 phút, max 10 h (`portal_session_sso`), rotation | Cookie `__Secure-ew_portal_rt` (`HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`) do module identity đặt, JavaScript không đọc được; tải lại trang → `POST /auth/portal/token:refresh` (§3.3). Access token portal chỉ trong bộ nhớ SPA; không `localStorage`/`sessionStorage` cho token | [Confirmed] cơ chế (ADR-0091) / [Confirmed] thời hạn |
 | CSRF token portal | Theo vòng đời refresh token, xoay khi đăng nhập/refresh | Cookie `__Host-ew_portal_csrf` (không `HttpOnly`, `Secure; SameSite=Strict; Path=/`) + header `X-EW-CSRF` (double-submit) | [Confirmed] (ADR-0091) |
 | `setup_ticket` (mật khẩu tạm / đăng ký OTP lần đầu) | `portal_setup_ticket_ttl` (10 phút), một lần, gắn `user_id` | Valkey (hash) `ew:portal:setup:{sha256}`; không chứa mật khẩu | [Confirmed] (ADR-0091) |
-| Token đặt lại mật khẩu portal | `portal_password_reset_ttl`, một lần | Chỉ trong email gửi nhân sự; DB chỉ lưu SHA-256 (`identity.portal_password_reset_tokens`) | [Proposed] |
-| Realtime ticket | 60 s, 1 lần | Valkey (hash) | [Proposed] ADR-0008 |
-| Idempotency key | 24 h | PG/Valkey | [Proposed] ADR-0010 |
-| Service account `svc-identity` / `eduworld-sis-sync` (module identity → Keycloak Admin API) | client_credentials, token 5', cache đến 30 s trước hết hạn | Memory của binary chạy module identity; secret client trong secret manager | [Proposed] |
+| Token đặt lại mật khẩu portal | `portal_password_reset_ttl`, một lần | Chỉ trong email gửi nhân sự; DB chỉ lưu SHA-256 (`identity.portal_password_reset_tokens`) | [Confirmed] |
+| Realtime ticket | 60 s, 1 lần | Valkey (hash) | [Confirmed] ADR-0008 |
+| Idempotency key | 24 h | PG/Valkey | [Confirmed] ADR-0010 |
+| Service account `svc-identity` / `eduworld-sis-sync` (module identity → Keycloak Admin API) | client_credentials, token 5', cache đến 30 s trước hết hạn | Memory của binary chạy module identity; secret client trong secret manager | [Confirmed] |
 | ~~Token service-to-service `svc-*` giữa module~~ — bỏ (ADR-0074): module gọi nhau trong tiến trình, không có token | — | — | — |
 
 Admin Portal dùng luồng tương tự qua backend nhưng riêng (§3.3, ADR-0091): form `/login` của portal gửi mật khẩu + OTP tới `POST /auth/portal/login`, module identity gọi Keycloak bằng client confidential `eduworld-portal`; không chọn tenant trước đăng nhập; sau đăng nhập gọi `GET /me/tenants` để vào thẳng/chọn tenant, tenant đi bằng `X-Tenant-Id` + membership (ADR-0065, ADR-0067). Chi tiết cấu hình Keycloak: [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md). Kiểm tra tenant khi đăng nhập và ở mỗi request: [MULTITENANCY §8](../06-architecture/MULTITENANCY.md).
@@ -164,7 +164,7 @@ Game không mở trình duyệt; mật khẩu học sinh đi qua Godot → APISI
 | Mối đe dọa | Biện pháp bắt buộc |
 |---|---|
 | Lộ mật khẩu/refresh token qua log/trace/APM | APISIX route `/auth/game/*` tắt ghi body (logger, `opentelemetry` không thu `request_body`); module identity: handler không log request, middleware redaction che field `password`, `refresh_token`, `login_ticket` trong mọi log/trace/panic dump; span không gắn body; error reporter lọc field. Test tự động kiểm log không chứa mật khẩu mẫu (TEST_STRATEGY) |
-| Lộ mật khẩu trên đường truyền | TLS 1.2+ bắt buộc, HSTS; certificate pinning trong Godot cho tên miền API [Proposed]; chặn client quá cũ bằng `min_client_version` (`426 CLIENT_VERSION_UNSUPPORTED`) |
+| Lộ mật khẩu trên đường truyền | TLS 1.2+ bắt buộc, HSTS; certificate pinning trong Godot cho tên miền API [Confirmed]; chặn client quá cũ bằng `min_client_version` (`426 CLIENT_VERSION_UNSUPPORTED`) |
 | Dò mật khẩu / credential stuffing | Rate limit 10 lần/phút theo thiết bị và 10 lần/phút theo username, ngưỡng toàn cục theo năng lực Keycloak (§14); Keycloak brute-force khóa tạm sau 5 lần sai (1–15 phút); thông điệp lỗi chung `INVALID_CREDENTIALS` (không lộ tài khoản tồn tại/bị khóa) |
 | Lộ client secret `eduworld-game-backend` | Secret chỉ ở module identity (secret manager, xoay 90 ngày), không có trong game; client chỉ bật Direct Access Grants, tắt Standard Flow; chỉ cho realm role `student` |
 | Nhân sự dùng form game | Keycloak flow + module identity từ chối user không có realm role `student` → `403 GAME_ACCESS_STUDENT_ONLY`, audit |
@@ -195,9 +195,9 @@ Admin Portal không còn chuyển hướng OIDC (Authorization Code + PKCE của
 | Dò mật khẩu / credential stuffing / dò OTP | `portal_login_rate` theo **username**, theo **`device_id`** và **toàn cục** (§14) — **không** giới hạn theo một IP vì nhiều nhân sự trường đi qua chung NAT (R30); brute-force Keycloak theo tài khoản (khóa tạm sau 5 lần sai, tính cả sai OTP) |
 | Dò tài khoản tồn tại / tài khoản nào là nhân sự platform | Một lỗi chung `401 INVALID_CREDENTIALS` ("Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng") cho sai username, sai mật khẩu, sai/thiếu OTP, tài khoản Keycloak tắt hoặc đang khóa tạm; không có bước hỏi "tài khoản có cần OTP không"; thời gian phản hồi tương đương (gọi Keycloak cả khi username không tồn tại). Portal chỉ nhớ phía trình duyệt (không bí mật) rằng lần trước đăng nhập có OTP để làm nổi bật ô mã. `password:forgot` **luôn** trả `202`. `ACCOUNT_SETUP_REQUIRED`, `PORTAL_ACCESS_STAFF_ONLY`, `ACCOUNT_DEACTIVATED` chỉ trả **sau** khi mật khẩu đúng |
 | Học sinh vào portal | Hai lớp: flow Keycloak chỉ cho `tenant_staff`/`platform_staff` (→ `403 PORTAL_ACCESS_STAFF_ONLY`) và backend `azp = eduworld-portal` + `user_type = staff` ở mọi route portal (§5.3c) |
-| XSS đánh cắp token | Access token chỉ trong bộ nhớ SPA (không `localStorage`/`sessionStorage`); refresh token trong cookie `HttpOnly` nên JavaScript không đọc được; CSP chặt (`script-src 'self'`, không inline) cho portal [Proposed] |
-| CSRF tới `token:refresh`/`logout` (cookie tự gửi kèm) | Cookie refresh `__Secure-ew_portal_rt`: `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`. **Double-submit:** cookie `__Host-ew_portal_csrf` (không `HttpOnly`, `Secure; SameSite=Strict; Path=/`, 32 byte ngẫu nhiên, xoay khi đăng nhập/refresh); `token:refresh` và `logout` bắt buộc header `X-EW-CSRF` trùng giá trị cookie (so sánh thời gian hằng), thiếu/sai → `403 CSRF_TOKEN_INVALID` + audit. Kiểm thêm `Origin` thuộc origin portal [Proposed] |
-| Cookie không first-party | APISIX public phục vụ `/api/v1/*` dưới **cùng origin** với portal (`https://portal.<domain>/api/v1/...`) để cookie là first-party và `SameSite=Strict` có hiệu lực [Proposed]; CORS không mở cho origin khác ở `/auth/portal/*`. Workspace platform gọi gateway nội bộ bằng Bearer token trong bộ nhớ (không cookie) |
+| XSS đánh cắp token | Access token chỉ trong bộ nhớ SPA (không `localStorage`/`sessionStorage`); refresh token trong cookie `HttpOnly` nên JavaScript không đọc được; CSP chặt (`script-src 'self'`, không inline) cho portal [Confirmed] |
+| CSRF tới `token:refresh`/`logout` (cookie tự gửi kèm) | Cookie refresh `__Secure-ew_portal_rt`: `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`. **Double-submit:** cookie `__Host-ew_portal_csrf` (không `HttpOnly`, `Secure; SameSite=Strict; Path=/`, 32 byte ngẫu nhiên, xoay khi đăng nhập/refresh); `token:refresh` và `logout` bắt buộc header `X-EW-CSRF` trùng giá trị cookie (so sánh thời gian hằng), thiếu/sai → `403 CSRF_TOKEN_INVALID` + audit. Kiểm thêm `Origin` thuộc origin portal [Confirmed] |
+| Cookie không first-party | APISIX public phục vụ `/api/v1/*` dưới **cùng origin** với portal (`https://portal.<domain>/api/v1/...`) để cookie là first-party và `SameSite=Strict` có hiệu lực [Confirmed]; CORS không mở cho origin khác ở `/auth/portal/*`. Workspace platform gọi gateway nội bộ bằng Bearer token trong bộ nhớ (không cookie) |
 | Refresh token bị đánh cắp | Rotation mỗi lần refresh (`revokeRefreshToken=true`, reuse 0); token đã xoay bị dùng lại, hết hạn hoặc bị thu hồi → `401 REFRESH_TOKEN_INVALID`; idle 30 phút / tối đa 10 giờ (`portal_session_sso`); đặt lại mật khẩu, khóa tài khoản, thu hồi role platform thu hồi phiên portal |
 | Lộ client secret `eduworld-portal` | Secret chỉ module identity giữ (secret manager, xoay 90 ngày); client tắt Standard Flow/Implicit/Service Account; không có trong bundle portal |
 | `setup_ticket` bị đánh cắp | Ngẫu nhiên, một lần (`GETDEL`), gắn `user_id`, TTL `portal_setup_ticket_ttl`, lưu dạng hash trong Valkey, không chứa mật khẩu; chỉ dùng được cho `setup:password` của chính user đó |
@@ -226,17 +226,17 @@ Nguồn chuẩn: [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-le
 ### 5.1. Permission, Role, UserRole và `role_scope_kind` (ADR-0066)
 
 - **Permission** — quyền nguyên tử, **định nghĩa trong code** (catalog cố định, `scope_kind` `tenant` | `platform`); DB không tạo được permission mới.
-- **Role** — tập permission lưu trong `identity.roles` + `identity.role_permissions`: `code`, tên song ngữ, `role_scope_kind`, `is_system` (role seed, không sửa/xóa), `tenant_id` (NULL = dùng chung; có giá trị = role tùy biến của tenant [Proposed]).
+- **Role** — tập permission lưu trong `identity.roles` + `identity.role_permissions`: `code`, tên song ngữ, `role_scope_kind`, `is_system` (role seed, không sửa/xóa), `tenant_id` (NULL = dùng chung; có giá trị = role tùy biến của tenant [Confirmed]).
 - **UserRole** — `identity.user_roles`: gán role cho người dùng trong `tenant_id` + `scope_type` (`platform` | `tenant` | `school` | `subject`; không có scope `class` theo phân công giảng dạy — ADR-0072) + `scope_id`, `valid_from`/`valid_to`, `granted_by`, `source` (`sis` | `manual`), soft-delete. Thay tên `role_assignments` cũ.
 - **Đánh giá quyền:** Principal = hợp permission của mọi UserRole còn hiệu lực (`deleted_at IS NULL`, `valid_from ≤ now < valid_to`) trong tenant đã kiểm tra qua `X-Tenant-Id` (+ UserRole platform), giao với scope tài nguyên; cache 60 s, làm mới khi có `role.updated`/`user_role.changed`.
-- **Bất biến:** role `tenant` không chứa permission `platform.*`/`game.*`/`competition.config.*` (kiểm tra khi lưu role, khi khởi động và bằng trigger DB); UserRole của role `platform` chỉ có `scope_type = platform`; học sinh không được gán role portal; người gán chỉ cấp được role có permission là tập con quyền của chính mình trong cùng scope [Proposed: chống leo thang]; mọi thay đổi ghi audit `role.*`/`user_role.*`.
+- **Bất biến:** role `tenant` không chứa permission `platform.*`/`game.*`/`competition.config.*` (kiểm tra khi lưu role, khi khởi động và bằng trigger DB); UserRole của role `platform` chỉ có `scope_type = platform`; học sinh không được gán role portal; người gán chỉ cấp được role có permission là tập con quyền của chính mình trong cùng scope [Confirmed: chống leo thang]; mọi thay đổi ghi audit `role.*`/`user_role.*`.
 
 Role hệ thống seed sẵn (`is_system = true`):
 
 | Role | `role_scope_kind` | Phạm vi gán | Ví dụ quyền |
 |---|---|---|---|
 | `student` | tenant | tenant (ngầm định qua Student; trường qua enrollment) | Làm bài, xem kết quả của mình, chat theo ChatPolicy |
-| `tenant_admin` | tenant | tenant | Quản trị tenant (tenant `unit`: mọi trường trong đơn vị): cài đặt tenant, phân quyền trong tenant, SIS, nội dung của tenant, thùng rác tenant [Proposed]; gửi yêu cầu từ nhạy cảm bổ sung cho Safety Team |
+| `tenant_admin` | tenant | tenant | Quản trị tenant (tenant `unit`: mọi trường trong đơn vị): cài đặt tenant, phân quyền trong tenant, SIS, nội dung của tenant, thùng rác tenant [Confirmed]; gửi yêu cầu từ nhạy cảm bổ sung cho Safety Team |
 | `school_admin` | tenant | school (một trường trong tenant) | Lớp (từ SIS), cài đặt trường, chat policy và khung giờ truy cập cấp trường, giao bài/đề, thử thách lớp và giải trường từ template, study group, School Learning Dashboard, nhận và xác nhận thông báo vụ việc an toàn (ADR-0072) |
 | `academic_manager` (tổ chuyên môn) | tenant | tenant / school / subject | Curriculum riêng của tenant, giao bài/đề, study group, nội dung và báo cáo trong scope |
 | `tenant_content_editor`, `tenant_content_reviewer` | tenant | tenant / school | Soạn/duyệt nội dung học tập của tenant |
@@ -330,7 +330,7 @@ func Require(ctx context.Context, p Principal, perm Permission, r Resource) erro
 ```
 
 - `Require` kiểm tra: (0) `r.TenantID` = tenant của phiên, trừ khi Principal có `platform.cross_tenant.read`; tài nguyên platform (`TenantID = nil`) chỉ đọc được bởi tenant khi có assignment active (ADR-0029, nếu không → `403 RESOURCE_NOT_ASSIGNED`); (1) Principal có permission qua UserRole còn hiệu lực ở scope bao phủ `r`; (2) với permission platform-only, Principal phải có role platform **và** token có `azp = eduworld-portal` + MFA (`acr`/`amr`, thiếu → `MFA_REQUIRED`); (3) ownership/TeachingAssignment khi resource yêu cầu.
-- Bảng quyền có unit test dạng bảng cho mọi permission × role × scope. Không dùng OPA trong Release 1.0 [Proposed]; có thể chuyển khi policy phức tạp (ADR mới).
+- Bảng quyền có unit test dạng bảng cho mọi permission × role × scope. Không dùng OPA trong Release 1.0 [Confirmed]; có thể chuyển khi policy phức tạp (ADR mới).
 - Deny mặc định khi không có rule. Từ chối trả `403 PERMISSION_DENIED`, hoặc `404` nếu tài nguyên thuộc tenant khác (không lộ sự tồn tại).
 - Quyết định từ chối được log (`authz_denied_total{permission,azp}`); tăng đột biến = cảnh báo dò quét.
 - Policy nghiệp vụ động (ChatPolicy, Party group rules) là dữ liệu cấu hình, đánh giá trong module tương ứng nhưng gọi qua `authorization` cho phần role/scope.
@@ -408,10 +408,10 @@ Quy tắc:
 | Phạm vi | Biện pháp | Nhãn |
 |---|---|---|
 | Client ↔ edge | TLS 1.2+ (ưu tiên 1.3), HSTS, chỉ `wss://` | [Confirmed §17] |
-| Nội bộ app ↔ DB/Valkey | TLS trong staging/prod | [Proposed] |
-| At-rest DB | Mã hóa volume/disk (LUKS hoặc managed) + backup mã hóa | [Proposed] |
-| Trường nhạy cảm | Mã hóa cấp ứng dụng (AES-256-GCM, envelope key) cho `date_of_birth`, ghi chú moderation chứa PII | [Proposed] |
-| Object storage | SSE; bucket `ew-media-quarantine`/`ew-media-private`/`ew-exports` private; học sinh không upload file trong version này (ADR-0082); media riêng tenant qua **CDN signed URL** 5–15 phút; media dùng chung và snapshot nội dung game qua URL bất biến có hash (ADR-0044, ADR-0043); **câu hỏi đề kiểm tra và answer key không bao giờ lên CDN** | [Proposed] |
+| Nội bộ app ↔ DB/Valkey | TLS trong staging/prod | [Confirmed] |
+| At-rest DB | Mã hóa volume/disk (LUKS hoặc managed) + backup mã hóa | [Confirmed] |
+| Trường nhạy cảm | Mã hóa cấp ứng dụng (AES-256-GCM, envelope key) cho `date_of_birth`, ghi chú moderation chứa PII | [Confirmed] |
+| Object storage | SSE; bucket `ew-media-quarantine`/`ew-media-private`/`ew-exports` private; học sinh không upload file trong version này (ADR-0082); media riêng tenant qua **CDN signed URL** 5–15 phút; media dùng chung và snapshot nội dung game qua URL bất biến có hash (ADR-0044, ADR-0043); **câu hỏi đề kiểm tra và answer key không bao giờ lên CDN** | [Confirmed] |
 | Mật khẩu | **EduWorld không lưu mật khẩu** — Keycloak/IdP quản lý | [Confirmed §10.1] |
 
 ## 8. Phân vùng mạng
@@ -450,18 +450,18 @@ LaTeX do người biên tập nhập trên Admin Portal và **SVG do trình duy�
 |---|---|
 | Allowlist extension | Chỉ `ams`, `mhchem`, `color` (giới hạn bảng màu) trong cấu hình MathJax 4 của portal; tắt autoload extension khác. module learning **tự parse LaTeX** (tokenizer allowlist lệnh/môi trường) khi lưu, không chỉ dựa vào kiểm tra phía trình duyệt |
 | Lệnh bị cấm | `\href`, `\url`, `\html*` (`\htmlClass`, `\htmlId`, `\htmlStyle`, `\htmlData`), `\class`, `\cssId`, `\style`, `\require`, `\unicode` tùy ý, `\def`/`\newcommand` đệ quy; bị chặn khi validate (server trả `422 MATH_RENDER_FAILED`) và tắt trong cấu hình MathJax/MathLive phía client |
-| Giới hạn | Độ dài LaTeX ≤ 2.000 ký tự (ADR-0041), **độ sâu lồng ≤ 20** (`EW_MATH_MAX_DEPTH`), số macro mở rộng tối đa; **kích thước SVG ≤ 256 KB/công thức** (`EW_MATH_MAX_SVG_BYTES=262144`) và số phần tử tối đa [Proposed]; vượt giới hạn → `422 MATH_RENDER_FAILED` |
+| Giới hạn | Độ dài LaTeX ≤ 2.000 ký tự (ADR-0041), **độ sâu lồng ≤ 20** (`EW_MATH_MAX_DEPTH`), số macro mở rộng tối đa; **kích thước SVG ≤ 256 KB/công thức** (`EW_MATH_MAX_SVG_BYTES=262144`) và số phần tử tối đa [Confirmed]; vượt giới hạn → `422 MATH_RENDER_FAILED` |
 | **Sanitize SVG phía server (bắt buộc)** | module learning parse SVG bằng parser XML không nạp entity ngoài (chống XXE), áp sanitizer allowlist (chỉ phần tử/thuộc tính vẽ: `svg`, `g`, `path`, `use`, `defs`, `rect`, `line`, `title`, `desc`…; loại `script`, `foreignObject`, `image`, `on*`, `href`/`xlink:href` ngoài `#…`, `style` chứa `url(`/`@import`), chuẩn hóa màu về `currentColor`, rồi mới lưu `math/<sha256>.svg` (hash tính sau sanitize). SVG không hợp lệ → `422 MATH_RENDER_FAILED` |
 | Ràng buộc LaTeX ↔ SVG | SVG phải đi kèm đúng LaTeX của công thức (gửi theo cặp, server lưu hash LaTeX); sửa LaTeX mà không gửi SVG mới → từ chối |
-| Import hàng loạt | Màn Import của portal render trên trình duyệt và gửi qua cùng API kiểm tra trên; CLI render trong CI/vận hành [Proposed] cũng đi qua API này |
+| Import hàng loạt | Màn Import của portal render trên trình duyệt và gửi qua cùng API kiểm tra trên; CLI render trong CI/vận hành [Confirmed] cũng đi qua API này |
 | Portal | MathJax/MathLive không bật chế độ cho phép HTML trong công thức; nội dung rich text quanh công thức vẫn qua sanitizer HTML chung; CSP không cho script inline |
 
 ## 9. Threat model (STRIDE tóm tắt)
 
 | Thành phần | S — Spoofing | T — Tampering | R — Repudiation | I — Info disclosure | D — DoS | E — Elevation |
 |---|---|---|---|---|---|---|
-| **Admin Portal (SPA)** | Phishing trang đăng nhập giả lấy mật khẩu + OTP (không có WebAuthn) → chỉ một origin `portal.<domain>`, HSTS, đào tạo nhân sự, OTP chỉ dùng một lần trong cửa sổ 30 s, cảnh báo đăng nhập bất thường [Proposed] (§3.3) | CSRF tới `token:refresh`/`logout` → cookie `SameSite=Strict` + double-submit `X-EW-CSRF` | Audit đăng nhập portal thành công/thất bại | XSS đọc token → access token chỉ trong bộ nhớ, refresh token `HttpOnly`, CSP chặt | Dò mật khẩu → `portal_login_rate` + brute-force Keycloak | Gọi API của menu/action đang tắt → `featuregate` `403 FEATURE_DISABLED` (không thay authz) |
-| **Godot client** | Giả mạo client/bot đăng nhập → rate limit `/auth/game/login` theo thiết bị/username + hàng chờ toàn cục, brute force theo tài khoản, `min_client_version`, certificate pinning [Proposed]; access token chỉ trong RAM, refresh token trong kho bảo mật OS (chỉ RAM trên Web/`shared_device`), xoay vòng + gắn `device_id` (ADR-0086, ADR-0068) | Sửa điểm/thời gian/vị trí → server-authoritative, server time, validate tốc độ | — | Đọc answer key trong client → không gửi key (ADR-0016) | Spam request/WS → rate limit APISIX + per-connection | Gọi API admin → `azp` check + role |
+| **Admin Portal (SPA)** | Phishing trang đăng nhập giả lấy mật khẩu + OTP (không có WebAuthn) → chỉ một origin `portal.<domain>`, HSTS, đào tạo nhân sự, OTP chỉ dùng một lần trong cửa sổ 30 s, cảnh báo đăng nhập bất thường [Confirmed] (§3.3) | CSRF tới `token:refresh`/`logout` → cookie `SameSite=Strict` + double-submit `X-EW-CSRF` | Audit đăng nhập portal thành công/thất bại | XSS đọc token → access token chỉ trong bộ nhớ, refresh token `HttpOnly`, CSP chặt | Dò mật khẩu → `portal_login_rate` + brute-force Keycloak | Gọi API của menu/action đang tắt → `featuregate` `403 FEATURE_DISABLED` (không thay authz) |
+| **Godot client** | Giả mạo client/bot đăng nhập → rate limit `/auth/game/login` theo thiết bị/username + hàng chờ toàn cục, brute force theo tài khoản, `min_client_version`, certificate pinning [Confirmed]; access token chỉ trong RAM, refresh token trong kho bảo mật OS (chỉ RAM trên Web/`shared_device`), xoay vòng + gắn `device_id` (ADR-0086, ADR-0068) | Sửa điểm/thời gian/vị trí → server-authoritative, server time, validate tốc độ | — | Đọc answer key trong client → không gửi key (ADR-0016) | Spam request/WS → rate limit APISIX + per-connection | Gọi API admin → `azp` check + role |
 | **APISIX** | Token giả → JWKS verify | Header injection `X-User-*` → strip; `X-Tenant-Id` giả → `core-api` so với token + membership (ADR-0065) | Access log tập trung (không body route đăng nhập) | Lộ route nội bộ → không publish | Flood → `limit-req`, `limit-conn`, LB protection | Cấu hình sai → config-as-code + review |
 | **`core-api` (REST public)** | Token của client khác (`azp`) | Mass assignment → DTO tách model, OpenAPI validation | Audit log thao tác nhạy cảm | IDOR cross-tenant → TenantScope + RLS + 404 | Query nặng → pagination bắt buộc, timeout ctx | Lỗi authz → bảng policy test, deny mặc định |
 | **realtime** | Dùng lại ticket → GETDEL 1 lần | Forge lệnh/header → chỉ user NATS `realtime` publish `ew.cmd.>`; module sở hữu validate | Tin chat vào JetStream trước fan-out | Subscribe channel trường khác → kiểm tra quyền | Kết nối treo/flood → heartbeat, queue bounded, 4429 | — |
@@ -470,7 +470,7 @@ LaTeX do người biên tập nhập trên Admin Portal và **SVG do trình duy�
 | **Worker / SIS (module identity)** | SIS webhook giả → HMAC signature + IP allowlist | Dữ liệu SIS bẩn → staging + reconciliation | Sync run log | Rò SIS credential → secret manager, chỉ Swarm service chạy adapter SIS | SIS chậm → timeout, retry backoff, circuit breaker | Service account Keycloak quá quyền → chỉ `manage-users` realm `eduworld` |
 | **PostgreSQL** | Kết nối trái phép → overlay network `data` + pg_hba theo user/database + password/TLS | SQLi → ent/SQL tham số hóa | WAL + audit | Backup rò → mã hóa backup | Bảng lớn → partition, statement_timeout | `BYPASSRLS` lạm dụng → chỉ `<module>_platform`, audit; lộ credential một DB không ảnh hưởng DB khác |
 | **Valkey** | Truy cập trái phép → ACL + TLS | Ghi đè state → ACL theo key pattern | — | PII trong key → chỉ ID | Memory đầy → maxmemory + eviction có chủ đích, TTL bắt buộc | — |
-| **Keycloak** | Credential stuffing → brute force detection theo tài khoản, MFA (TOTP) bắt buộc cho mọi role platform (gồm `safety_moderator`) và tùy chọn với admin tenant [Proposed]; client `eduworld-game-backend` và `eduworld-portal` confidential, secret chỉ ở module identity (ADR-0068, ADR-0091) | — | Event log Keycloak lưu 90 ngày | Admin console public → chỉ admin network | Bão đăng nhập/login flood → cluster ≥ 3 replica (tăng tới 5 theo lịch học trên Docker Swarm), băm mật khẩu benchmark ≤ 80 ms, rate limit tenant/thiết bị + hàng chờ `429` (ADR-0045) | Lạm dụng role mapping → review định kỳ |
+| **Keycloak** | Credential stuffing → brute force detection theo tài khoản, MFA (TOTP) bắt buộc cho mọi role platform (gồm `safety_moderator`) và tùy chọn với admin tenant [Confirmed]; client `eduworld-game-backend` và `eduworld-portal` confidential, secret chỉ ở module identity (ADR-0068, ADR-0091) | — | Event log Keycloak lưu 90 ngày | Admin console public → chỉ admin network | Bão đăng nhập/login flood → cluster ≥ 3 replica (tăng tới 5 theo lịch học trên Docker Swarm), băm mật khẩu benchmark ≤ 80 ms, rate limit tenant/thiết bị + hàng chờ `429` (ADR-0045) | Lạm dụng role mapping → review định kỳ |
 | **Object storage / CDN** | URL đoán được → khóa content-addressed + signed URL cho media riêng | Upload file độc → quarantine + ClamAV + kiểm magic bytes | Audit upload | Lộ đề/answer key → không đưa lên CDN | Hotlink/tải hàng loạt → CDN rate limit, signed URL | Upload trực tiếp vào bucket public → chỉ media worker ghi `ew-media-public` |
 | **Chat** | Mạo danh nhà trường/EduWorld → tin hệ thống chỉ do server phát (`kind = system`), badge server-side | — | Message bất biến, moderation audit | PII học sinh → PII detector (ADR-0020) | Spam → rate limit theo policy | — |
 
@@ -490,11 +490,11 @@ Chi tiết biện pháp gian lận: [ANTI_CHEAT](ANTI_CHEAT.md). Biện pháp an
 
 | Giai đoạn | Hoạt động bắt buộc | Công cụ / Bằng chứng |
 |---|---|---|
-| Thiết kế | Threat model (STRIDE) cho mỗi module/operation facade mới hoặc thay đổi luồng auth/realtime/chat; review an toàn trẻ em cho tính năng social | `docs/10-security/threat-models/<module>.md` [Proposed] |
+| Thiết kế | Threat model (STRIDE) cho mỗi module/operation facade mới hoặc thay đổi luồng auth/realtime/chat; review an toàn trẻ em cho tính năng social | `docs/10-security/threat-models/<module>.md` [Confirmed] |
 | Contract | OpenAPI có `security` cho mọi operation; lint quy tắc bảo mật (Spectral ruleset: không operation thiếu security, không trả field `answer_key`) | CI `spec-lint` |
 | Code | Review 2 người cho thay đổi `identity`, `authorization`, `assessment` scoring, `chat` moderation | MR approval rule |
 | Build | SAST (`gosec`, `golangci-lint`), secret scanning (`gitleaks`), dependency scan (`govulncheck`, `npm audit`/OSV-Scanner) | CI fail khi severity ≥ High |
-| Package | Container scan (Trivy/Grype), SBOM (Syft, CycloneDX), image ký (cosign) [Proposed] | Artifact registry |
+| Package | Container scan (Trivy/Grype), SBOM (Syft, CycloneDX), image ký (cosign) [Confirmed] | Artifact registry |
 | Test | Authorization test matrix (§13.4), tenant isolation test, DAST (OWASP ZAP baseline) trên staging hằng tuần | CI nightly |
 | Release | Checklist phát hành (§18), không có lỗ hổng High/Critical mở | Release ticket |
 | Vận hành | Patch hệ điều hành/base image hằng tháng; patch Critical ≤ 72h | Ops runbook |
@@ -516,7 +516,7 @@ Chi tiết biện pháp gian lận: [ANTI_CHEAT](ANTI_CHEAT.md). Biện pháp an
 | API9 Improper Inventory Management | OpenAPI là inventory; APISIX chỉ route path có trong spec; deprecate theo ADR-0010 |
 | API10 Unsafe Consumption of APIs | SIS response validate schema, giới hạn kích thước, timeout; không tin dữ liệu SIS làm HTML |
 
-### 12.2. OWASP ASVS 4.0 — mục tiêu Level 2 [Proposed]
+### 12.2. OWASP ASVS 4.0 — mục tiêu Level 2 [Confirmed]
 
 Các chương trọng tâm: V2 Authentication (do Keycloak, cấu hình theo KEYCLOAK_SSO), V3 Session, V4 Access Control, V5 Validation/Encoding, V7 Error Handling & Logging, V8 Data Protection, V9 Communications, V13 API, V14 Configuration. Checklist chi tiết duy trì trong `docs/10-security/asvs-checklist.md` (tạo trong Phase 1) với cột: requirement, áp dụng?, bằng chứng, owner.
 
@@ -548,13 +548,13 @@ Tự sinh test từ bảng `permissions × roles × scope relation` (cùng lớp
 
 Route người chơi: test tự sinh mỗi route × {school_admin, tenant_admin, safety_moderator, system_admin} → `403 GAME_ACCESS_STUDENT_ONLY` (cơ chế ở §5.3b). Endpoint internal: cơ chế ở §5.5.
 
-## 14. Rate limiting [Proposed]
+## 14. Rate limiting [Confirmed]
 
 Rate limit tại APISIX (`limit-count` lưu Valkey, key theo `consumer`/`sub` sau JWT, fallback IP) + kiểm tra nghiệp vụ trong Go cho các flow nhạy cảm. Lưu ý: nhiều học sinh cùng trường đi ra qua **một IP NAT** → **không giới hạn đăng nhập theo IP đơn lẻ**; giới hạn chính theo user, **tenant** và **thiết bị** (`X-Device-Id`), cộng ngưỡng toàn cục bảo vệ Keycloak (ADR-0045).
 
 | Route / hành động | Key | Giới hạn | Khi vượt |
 |---|---|---|---|
-| Đăng nhập game `POST /api/v1/auth/game/login` (ADR-0068) | toàn cục (chưa biết tenant trước khi đăng nhập — ADR-0063) | Ngưỡng **toàn cục** 120 đăng nhập mật khẩu/giây (đỉnh thiết kế 100/s, ADR-0064 mục 6) [Proposed] | `429 LOGIN_QUEUE_BUSY` + `Retry-After` có jitter → game hiển thị "Đang vào lớp…" |
+| Đăng nhập game `POST /api/v1/auth/game/login` (ADR-0068) | toàn cục (chưa biết tenant trước khi đăng nhập — ADR-0063) | Ngưỡng **toàn cục** 120 đăng nhập mật khẩu/giây (đỉnh thiết kế 100/s, ADR-0064 mục 6) [Confirmed] | `429 LOGIN_QUEUE_BUSY` + `Retry-After` có jitter → game hiển thị "Đang vào lớp…" |
 | Đăng nhập game | thiết bị (`X-Device-Id`) | 10/phút | `429 RATE_LIMITED` |
 | Đăng nhập game | username đã chuẩn hóa | 10/phút | `429 RATE_LIMITED` |
 | `POST /api/v1/auth/game/tenant:select` | thiết bị | 10/phút; ticket một lần | 429 / `401 LOGIN_TICKET_INVALID` |
@@ -622,7 +622,7 @@ Renovate/Dependabot mở MR cập nhật hằng tuần; base image distroless/`a
 | Đợt | Thời điểm | Phạm vi | Thực hiện |
 |---|---|---|---|
 | P1 | Cuối Phase 3 | Auth/SSO, BOLA/tenant isolation, CMS, exam submission | Nội bộ + ZAP/Burp |
-| P2 | Cuối Phase 5 | Realtime/WS, chat & moderation bypass, lạm dụng quyền đọc liên tenant của `safety_moderator` ngoài module moderation, party, matchmaking abuse, Godot client tampering (memory edit, packet replay), **lateral movement giữa module/binary** (NATS subject ngoài quyền, truy cập database module khác bằng credential của một module, lạm dụng facade platform) | Bên thứ ba độc lập [Proposed] |
+| P2 | Cuối Phase 5 | Realtime/WS, chat & moderation bypass, lạm dụng quyền đọc liên tenant của `safety_moderator` ngoài module moderation, party, matchmaking abuse, Godot client tampering (memory edit, packet replay), **lateral movement giữa module/binary** (NATS subject ngoài quyền, truy cập database module khác bằng credential của một module, lạm dụng facade platform) | Bên thứ ba độc lập [Confirmed] |
 | P3 | Trước Production (Phase 6) | Toàn bộ + hạ tầng, Keycloak, APISIX, cấu hình cloud | Bên thứ ba |
 
 Tiêu chí: không còn lỗ hổng Critical/High; Medium có kế hoạch xử lý. Báo cáo lưu nội bộ (không commit vào repo).

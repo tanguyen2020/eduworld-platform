@@ -27,5 +27,5 @@
 
 ## Notes
 
-- Mã lỗi reviewer = author (`PERMISSION_DENIED`) và action `revise` là quyết định [Proposed], cần xác nhận khi review contract Phase 2.
+- Mã lỗi reviewer = author (`PERMISSION_DENIED`) và action `revise` là quyết định [Confirmed], cần xác nhận khi review contract Phase 2.
 - `content_review_sla_days` chưa có trong CONFIG_DEFAULTS (task Polish). Đề xuất thêm F027 vào phụ thuộc (bảng media).

@@ -13,8 +13,8 @@
 | Phụ đề tiếng Việt/Anh | [Confirmed] |
 | Lưu tiến độ, xem tiếp (resume) | [Confirmed] |
 | Câu hỏi chèn tại mốc thời gian | [Confirmed] |
-| Video tương tác có nhánh | [Confirmed]; chi tiết UX [Proposed] |
-| Theo dõi hoàn thành | [Confirmed]; quy tắc [Proposed] |
+| Video tương tác có nhánh | [Confirmed]; chi tiết UX [Confirmed] |
+| Theo dõi hoàn thành | [Confirmed]; quy tắc [Confirmed] |
 
 **Không** có upload video của học sinh. Video do CMS upload (ADR-0044).
 
@@ -27,7 +27,7 @@
 | CMS / web | HLS (360p, 720p) + MP4 dự phòng | Trình phát web của Admin Portal |
 | Phụ đề | **WebVTT** (`vi`, `en`; thêm ngôn ngữ khác theo cấu hình) | Godot: tự parse VTT và vẽ bằng Label theo Theme game. Web: `<track>` |
 
-- Media worker chuyển đổi khi upload (ADR-0044). Video giới hạn ≤ 300 MB nguồn, khuyến nghị bài ≤ 8 phút cho lớp 1–5, ≤ 15 phút cho lớp 6–9 [Proposed].
+- Media worker chuyển đổi khi upload (ADR-0044). Video giới hạn ≤ 300 MB nguồn, khuyến nghị bài ≤ 8 phút cho lớp 1–5, ≤ 15 phút cho lớp 6–9 [Confirmed].
 - File phát qua CDN, URL có version/hash; nội dung riêng tenant dùng signed URL.
 - Ghim version theo ADR-0043: học sinh đang xem không bị đổi video khi có version mới.
 
@@ -72,10 +72,10 @@ sequenceDiagram
 ```
 
 - Câu hỏi chèn lấy từ Question Bank (`question_version_id`), chấm `auto` (ADR-0016).
-- `required = true`: không xem tiếp được khi chưa trả lời (vẫn được trả lời sai). `allow_skip_after_wrong`: sau 2 lần sai được đi tiếp, hiện giải thích [Proposed].
+- `required = true`: không xem tiếp được khi chưa trả lời (vẫn được trả lời sai). `allow_skip_after_wrong`: sau 2 lần sai được đi tiếp, hiện giải thích [Confirmed].
 - Client không được biết đáp án trước; danh sách cue chỉ có `at_ms` và `question` render payload.
 
-## 6. Video tương tác có nhánh [Proposed]
+## 6. Video tương tác có nhánh [Confirmed]
 
 - Tại `branch_point`, video dừng, học sinh chọn hướng (ví dụ "Thử nhỏ giọt nước vào dầu" / "vào nước").
 - Lựa chọn được ghi vào attempt (dùng cho phân tích, không chấm đúng/sai trừ khi cấu hình là câu hỏi).
@@ -83,7 +83,7 @@ sequenceDiagram
 
 ## 7. Quy tắc hoàn thành (`completion_rule`)
 
-| Thuộc tính | Mặc định [Proposed] | Ghi chú |
+| Thuộc tính | Mặc định [Confirmed] | Ghi chú |
 |---|---|---|
 | `min_watched_ratio` | 0,9 | Theo khoảng **đã xem thật**, tua qua không tính |
 | `require_required_cues` | true | Mọi câu chèn `required` đã được trả lời |

@@ -27,4 +27,4 @@
 
 ## Notes
 
-- Giá trị màu/font khởi tạo là [Proposed] theo DESIGN_SYSTEM; không chặn Ready.
+- Giá trị màu/font khởi tạo là [Confirmed] theo DESIGN_SYSTEM; không chặn Ready.

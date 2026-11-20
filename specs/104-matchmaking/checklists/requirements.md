@@ -29,4 +29,4 @@
 
 - Spec nhắc "Valkey"/"PostgreSQL" ở một số tiêu chí vì FR-MM-006 và ADR-0004 là yêu cầu nghiệp vụ về nơi lưu.
 - Lệch tài liệu: MATCHMAKING §5 dùng key `ew:mm:player:*` có đoạn `{scope}`; VALKEY_DESIGN §3.1 dùng `ew:mm:user:*` và không có scope. Data-model theo VALKEY_DESIGN + thêm scope (task cập nhật VALKEY_DESIGN).
-- `proposal_id` = `match_id` là quyết định [Proposed] để khớp REST `proposal:accept` (path `match_id`) với WS (`proposal_id`).
+- `proposal_id` = `match_id` là quyết định [Confirmed] để khớp REST `proposal:accept` (path `match_id`) với WS (`proposal_id`).

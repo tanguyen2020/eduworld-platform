@@ -12,7 +12,7 @@
 
 | operationId | Gọi từ → tới | Spec | `x-allowed-callers` | Trạng thái |
 |---|---|---|---|---|
-| — | Runbook khôi phục gọi lệnh con của binary `worker` (`projection rebuild`, `retention-reapply`, `reconcile --module=<module>` [Proposed]); các lệnh này gọi use case/facade trong tiến trình do module sở hữu định nghĩa (ADR-0074), F130 không thêm operation facade | — | — | Không áp dụng |
+| — | Runbook khôi phục gọi lệnh con của binary `worker` (`projection rebuild`, `retention-reapply`, `reconcile --module=<module>` [Confirmed]); các lệnh này gọi use case/facade trong tiến trình do module sở hữu định nghĩa (ADR-0074), F130 không thêm operation facade | — | — | Không áp dụng |
 
 ## 3. Realtime (AsyncAPI)
 

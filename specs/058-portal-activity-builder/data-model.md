@@ -15,7 +15,7 @@ Trạng thái phía client (không bền vững):
 | `Idempotency-Key` thao tác đang chờ | RAM, theo mutation | Sinh một lần, giữ khi thử lại; xóa khi thành công |
 | Phiên preview | RAM | Hủy khi quá `expires_at`; tạo lại khi bấm Xem trước |
 | Polling `getRegradeRequest` / `getMediaAsset` | RAM | Dừng khi `completed`/`failed` hoặc `ready`/`rejected` |
-| Cờ "video có lời" | RAM (form) | Không gửi server; chỉ điều kiện bắt buộc phụ đề `vi` [Proposed] |
+| Cờ "video có lời" | RAM (form) | Không gửi server; chỉ điều kiện bắt buộc phụ đề `vi` [Confirmed] |
 
 Schema dùng (chỉ đọc định nghĩa):
 

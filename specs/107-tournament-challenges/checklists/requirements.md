@@ -27,6 +27,6 @@
 
 ## Notes
 
-- Mâu thuẫn chốt [Proposed]: `/lms/challenges` ghi `x-service: learning` (API_DESIGN §9.14, `learning.v1.yaml`) nhưng SCHOOL_LMS §7 và COMPETITION_SYSTEM §10.2 đặt thực thi + template ở module competition → chuyển route sang module competition.
+- Mâu thuẫn chốt [Confirmed]: `/lms/challenges` ghi `x-service: learning` (API_DESIGN §9.14, `learning.v1.yaml`) nhưng SCHOOL_LMS §7 và COMPETITION_SYSTEM §10.2 đặt thực thi + template ở module competition → chuyển route sang module competition.
 - COMPETITION_SYSTEM §10.2 cho Tenant Admin tenant `unit` tạo giải liên trường, trái ADMIN_PORTAL §2.3 (chỉ `school_admin` có `lms.challenge.write`) — spec theo ADMIN_PORTAL/ADR-0072.
 - Format double elim, vòng bảng, giải đội là P6 theo PRD (FR-TRN-001) — để ở US5 (P3).

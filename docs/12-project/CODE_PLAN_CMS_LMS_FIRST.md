@@ -9,7 +9,7 @@ Kế hoạch code của EduWorld theo **Spec-Driven Development** (chuẩn GitHu
 
 Ba làn chạy song song trong mỗi mốc: **Backend** (`src/backend/pkg/`, `src/backend/modules/`, `src/backend/cmd/`, `deploy/`), **Frontend** (`src/cms/frontend/` Admin Portal), **Game client** (`src/game/`).
 
-Đây là đề xuất đổi thứ tự so với [ROADMAP](ROADMAP.md) [Proposed]; ROADMAP cập nhật khi stakeholder duyệt (liên quan [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md), Proposed).
+Đây là đề xuất đổi thứ tự so với [ROADMAP](ROADMAP.md) [Confirmed]; ROADMAP cập nhật khi stakeholder duyệt (liên quan [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md), Proposed).
 
 ### 1.1. Lý do đổi thứ tự
 
@@ -21,7 +21,7 @@ Ba làn chạy song song trong mỗi mốc: **Backend** (`src/backend/pkg/`, `sr
 
 | Rủi ro | Giảm thiểu |
 |---|---|
-| Đội web chỉ 1 người (ROADMAP §1 giả định) không đủ cho CMS-first | Tăng lên 2–3 web dev trong giai đoạn này, hoặc chuyển 1 Godot dev sang web ở giai đoạn F/M-C1 [Proposed] |
+| Đội web chỉ 1 người (ROADMAP §1 giả định) không đủ cho CMS-first | Tăng lên 2–3 web dev trong giai đoạn này, hoặc chuyển 1 Godot dev sang web ở giai đoạn F/M-C1 [Confirmed] |
 | Godot dev ít việc lúc đầu | Luồng C build trên **Prism mock** sinh từ `specs/openapi` (gắn nhãn MOCK, R17) cho tới khi backend thật sẵn sàng |
 | Cổng hiệu năng M1 (Main Hub 40 avatar) bị lùi | Giữ benchmark headless + `QualityManager` trong luồng C từ đầu; hub đông người làm khi có realtime |
 | CMS cần module game cho một số màn (GamePreviewFrame, catalog game activity, thumbnail 3D) | Ẩn các màn này sau permission/feature flag tới khi module game có `/game-admin/*` |
@@ -52,7 +52,7 @@ Ba làn chạy song song trong mỗi mốc: **Backend** (`src/backend/pkg/`, `sr
 
 Rà soát cho thấy một số điểm docs và specs chưa khớp. Phải chốt trước khi sinh code, vì đổi sau sẽ phải migrate. Mỗi dòng: sửa tài liệu sở hữu + spec, ghi CHANGELOG; điểm nào là quyết định kiến trúc thì viết ADR.
 
-| # | Mâu thuẫn | Nơi xung đột | Đề xuất [Proposed] |
+| # | Mâu thuẫn | Nơi xung đột | Đề xuất [Confirmed] |
 |---|---|---|---|
 | D1 | Tên thư mục service: `services/learning/` vs `src/backend/modules/learning/` | BACKEND_DESIGN §3, SYSTEM_ARCHITECTURE §8 vs LOCAL_DEVELOPMENT §3.2 | `src/backend/modules/<name>/` (khớp tên image, compose) — **Thay bởi ADR-0074 (2026-11-17):** `src/backend/modules/<module>/` trong một `go.mod`, ba binary `src/backend/cmd/core-api`, `src/backend/cmd/realtime`, `src/backend/cmd/worker` |
 | D2 | Tên biến môi trường (`EW_DB_URL_FILE`/`EW_DB_DSN`, `EW_CLIENT_*`/`EW_SVC_*`, `EW_OBJECT_STORAGE_*`/`EW_S3_*`, `EW_ADMIN_ADDR`…) | BACKEND_DESIGN §12 vs LOCAL_DEVELOPMENT §4 | Một bảng duy nhất ở LOCAL_DEVELOPMENT §4, BACKEND_DESIGN chỉ link; giữ `EW_S3_*`, `OTEL_*` chuẩn — **ADR-0074:** bỏ `EW_SVC_*` (không gọi HTTP giữa module); kết nối DB theo module `EW_DB_<MODULE>_*`, Keycloak Admin `EW_KC_ADMIN_CLIENT_*` |
@@ -73,7 +73,7 @@ Rà soát cho thấy một số điểm docs và specs chưa khớp. Phải ch�
 | D17 | Đường dẫn presign media (`/cms/learning/media:presign` vs `/cms/media:presign-upload`), `license` varchar(255) vs (64) | API_DESIGN §8, ADR-0044 vs spec, DATABASE_DESIGN | Theo spec; `license` 255 |
 | D18 | Dấu vết vai trò giáo viên trong spec: role `teacher`, `user_type = teacher`, `teaching_assignment`, `/lms/reviews*`, `pending_review`/`returned`, `actor.type = teacher` | identity/learning OpenAPI, SIS contract, `learning-event.schema.json` vs ADR-0072 | Gỡ theo ADR-0072; thêm role `safety_moderator`; `actor.type` = `student, system, staff` |
 
-**Mục SPC từ [EDU_FIT_REVIEW](EDU_FIT_REVIEW.md) §4.4 phải chốt trong Bước 0** [Proposed]:
+**Mục SPC từ [EDU_FIT_REVIEW](EDU_FIT_REVIEW.md) §4.4 phải chốt trong Bước 0** [Confirmed]:
 
 | # | Việc | Nguồn | TC |
 |---|---|---|---|
@@ -109,8 +109,8 @@ Rà soát cho thấy một số điểm docs và specs chưa khớp. Phải ch�
 | [F013](../../specs/013-game-login-backend/spec.md) | Đăng nhập game qua backend: login, chọn tenant, refresh, logout, bảo vệ đăng nhập, hàng chờ | module `identity` | M-C1 | F011, F012 | FR-AUTH-002, FR-AUTH-003, FR-AUTH-007…009, FR-AUTH-017, FR-AUTH-018, FR-AUTH-022, FR-AUTH-027, FR-AUTH-028 | Done (2026-11-19, bằng chứng local; OQ F013-1 required action, F013-2 học sinh hai tenant, F013-3 alias `organization`, F013-4 giới nghiêm trường ở F015, F013-5 IP sau proxy; k6 hàng chờ chờ staging; nối binary theo OQ F010-2) |
 | [F014](../../specs/014-game-session-thin/spec.md) | Game session lát mỏng: một thiết bị, login events, client-config, manifest tối thiểu | module `game` | M-C1 | F013 | FR-AUTH-023, FR-GAME-007, FR-GAME-008, FR-GAME-013, FR-GAME-014 | Done (2026-11-19, bằng chứng local; OQ F014-1 `sis_connection_id`, F014-2 `platform_curfew` từ cấu hình, F014-3 idempotency sau 409, F014-5 học sinh nhiều tenant, F014-6 metric projection; E2E + `login_slo` chờ nối binary theo OQ F014-7/OQ F010-2) |
 | [F015](../../specs/015-audit-settings/spec.md) | Audit log tập trung và cài đặt platform/tenant/trường | module `identity` | M-C1 | F012 | FR-AUD-001, FR-AUD-002, FR-ORG-007, NFR-SCAL-004 | Done (2026-11-19, bằng chứng local; OQ F015-1 version dòng làm ETag cài đặt, F015-2 hàm definer thay `identity_retention`, F015-3 kiểm tenant qua `school_id`, F015-4 quyền đọc, F015-5, F015-6 `getTenant`, F015-7 partition `sis.*`; nối binary theo OQ F010-2) |
-| [F016](../../specs/016-account-lifecycle/spec.md) | Vòng đời tài khoản: khóa, thu hồi truy cập, dọn học sinh không đăng nhập, ẩn danh hóa | module `identity` | M-C3 | F011, F014, F015 | FR-AUTH-010, FR-AUTH-024, FR-SIS-008, FR-ORG-014, NFR-PRIV-002, NFR-PRIV-003 | Done (2026-11-19, bằng chứng local: 27/27 AC có test; OQ F016-1…13 [Proposed]; e2e qua binary chờ OQ F010-2) |
-| [F017](../../specs/017-sis-contract-v1/spec.md) | SIS `contract_v1`: provider API theo EduWorld SIS Contract, webhook, conformance kit, `sis-mock` (tách từ F011) | module `identity` | M2 | F011 | FR-SIS-001, FR-SIS-003 (phần `contract_v1`), FR-SIS-004, FR-SIS-009 | Done (2026-11-19, bằng chứng local + conformance Postman vào sis-mock; OQ F017-1…11 [Proposed]: ánh xạ `config.schools[]`, client viết tay thay oapi-codegen, định dạng secret, lịch mặc định tới khi đọc tenant settings; nối binary worker/core-api theo OQ F010-2) |
+| [F016](../../specs/016-account-lifecycle/spec.md) | Vòng đời tài khoản: khóa, thu hồi truy cập, dọn học sinh không đăng nhập, ẩn danh hóa | module `identity` | M-C3 | F011, F014, F015 | FR-AUTH-010, FR-AUTH-024, FR-SIS-008, FR-ORG-014, NFR-PRIV-002, NFR-PRIV-003 | Done (2026-11-19, bằng chứng local: 27/27 AC có test; OQ F016-1…13 [Confirmed]; e2e qua binary chờ OQ F010-2) |
+| [F017](../../specs/017-sis-contract-v1/spec.md) | SIS `contract_v1`: provider API theo EduWorld SIS Contract, webhook, conformance kit, `sis-mock` (tách từ F011) | module `identity` | M2 | F011 | FR-SIS-001, FR-SIS-003 (phần `contract_v1`), FR-SIS-004, FR-SIS-009 | Done (2026-11-19, bằng chứng local + conformance Postman vào sis-mock; OQ F017-1…11 [Confirmed]: ánh xạ `config.schools[]`, client viết tay thay oapi-codegen, định dạng secret, lịch mặc định tới khi đọc tenant settings; nối binary worker/core-api theo OQ F010-2) |
 | [F020](../../specs/020-learning-foundation/spec.md) | Nền module learning: projection, mô hình nội dung, gán platform→tenant, thùng rác tenant | module `learning` | M-C2 | F003, F010 | FR-CNT-001, FR-CNT-002, FR-CNT-005, FR-CMS-014, FR-CMS-015 | Done (2026-11-19, bằng chứng local: 32/32 AC có test; chưa nối facade/consumer vào binary — OQ F020-3; `arch-check` theo operation — OQ F020-2) |
 | [F021](../../specs/021-curriculum/spec.md) | Curriculum: cấu trúc, LO, DAG tiên quyết, version, mapping, import/export, seed GDPT | module `learning` | M-C2 | F020 | FR-CUR-001…012, FR-CMS-002 | Done (2026-11-19, bằng chứng local: 29/29 AC có test, 43 operation; chưa nối route/job vào binary — cùng OQ F020-3; cache Valkey cây curriculum chưa làm — OQ F021-10; import qua portal cần media F027 — OQ F021-4) |
 | [F022](../../specs/022-question-bank-core/spec.md) | Question Bank 8 loại cơ bản: validator, scorer server-side, render payload không đáp án | module `learning` | M-C2 | F021 | FR-QB-001…004, FR-QB-006, FR-QB-007, FR-QB-013, FR-QB-015 | Done (2026-11-19, bằng chứng local: 28/28 AC có test, 7 operation CMS + port `Delivery`; consumer/Delivery chưa nối binary — OQ F022-8 (cùng OQ F020-3); cache answer key chưa làm — OQ F022-12; publish thật ở F025/F026) |
@@ -232,7 +232,7 @@ M-P1 không chờ M2…M4a xong: lát cắt pilot chạy song song từ giữa P
 
 ### 5.1. Lát cắt pilot (M-P1) theo feature
 
-Nguồn phạm vi: [ROADMAP §3.4](ROADMAP.md#34-pilot-slice--m-p1-pilot-start), ADR-0073 mục 1, RB-811 của [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md). "Toàn bộ" = mọi tiêu chí của feature phải `Done` trước M-P1; "Lát cắt" = chỉ phần ghi trong cột, phần còn lại giữ ở mốc của §4. Feature có lát cắt được đánh dấu trạng thái `Pilot slice done` trong báo cáo M-P1 (không đổi trạng thái `Done` của §2 cho tới khi xong toàn bộ) [Proposed].
+Nguồn phạm vi: [ROADMAP §3.4](ROADMAP.md#34-pilot-slice--m-p1-pilot-start), ADR-0073 mục 1, RB-811 của [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md). "Toàn bộ" = mọi tiêu chí của feature phải `Done` trước M-P1; "Lát cắt" = chỉ phần ghi trong cột, phần còn lại giữ ở mốc của §4. Feature có lát cắt được đánh dấu trạng thái `Pilot slice done` trong báo cáo M-P1 (không đổi trạng thái `Done` của §2 cho tới khi xong toàn bộ) [Confirmed].
 
 | Nhóm | Feature | Phạm vi pilot |
 |---|---|---|
@@ -257,7 +257,7 @@ Nguồn phạm vi: [ROADMAP §3.4](ROADMAP.md#34-pilot-slice--m-p1-pilot-start),
 | | F124 | Lát cắt: vòng trực Safety Team cho `p1` |
 | Game client | F069 | Lát cắt: tiến trình, kho đồ, shop cosmetic (challenge solo ở M3) |
 | | F092, F102, F110, F119 | Lát cắt: `RealtimeClient`; panel party, lời mời, lobby; màn boss + thẻ dữ kiện `interdependent`; chat quick message + emote, báo cáo |
-| Vận hành, phát hành | F130 | Lát cắt: production quy mô pilot ([DEPLOYMENT §4.1](../11-operations/DEPLOYMENT.md#41-pilot-nfr-scal-001-5-trường--5000-hs--1000-ccu--proposed)), PITR + diễn tập khôi phục, object storage theo ADR-0075 |
+| Vận hành, phát hành | F130 | Lát cắt: production quy mô pilot ([DEPLOYMENT §4.1](../11-operations/DEPLOYMENT.md#41-pilot-nfr-scal-001-5-trường--5000-hs--1000-ccu--confirmed)), PITR + diễn tập khôi phục, object storage theo ADR-0075 |
 | | F131 | Lát cắt: alert chính, dashboard vận hành, runbook sự cố pilot |
 | | F132 | Lát cắt: load test ở NFR-SCAL-001, pen-test đăng nhập game và refresh token (10.000 CCU, chaos đầy đủ ở M6) |
 | | F133 | Toàn bộ cho 4 nền tảng Windows, Android, iOS (ký + TestFlight/MDM, runner macOS), Web (RB-811) |
@@ -314,8 +314,8 @@ Nhóm F (Godot) viết sau khi nhóm sở hữu backend tương ứng (B, D, G, 
 ## 9. Câu hỏi mở liên quan
 
 - **OQ-07** (mô hình quản trị CMS): đã trả lời bởi ADR-0072, role theo A1.
-- **OQ-08** (chương trình, bộ sách): seed GDPT 2018 Toán lớp 1–5 [Proposed].
-- **OQ-18** (thi chính thức): chỉ luyện/thi thử + kiểm tra nhà trường giao [Proposed].
-- **OQ-23** (nhu cầu đặc biệt, dân tộc thiểu số): lồng tiếng `g1_3` + phụ đề [Proposed].
+- **OQ-08** (chương trình, bộ sách): seed GDPT 2018 Toán lớp 1–5 [Confirmed].
+- **OQ-18** (thi chính thức): chỉ luyện/thi thử + kiểm tra nhà trường giao [Confirmed].
+- **OQ-23** (nhu cầu đặc biệt, dân tộc thiểu số): lồng tiếng `g1_3` + phụ đề [Confirmed].
 - **OQ-01** (SIS API): giai đoạn này chỉ `csv_import`; `contract_v1` + `sis-mock` làm sau M-C3.
 - Quyết định đổi thứ tự roadmap (tài liệu này) cần PM + Architect duyệt trước khi bắt đầu sprint 1.

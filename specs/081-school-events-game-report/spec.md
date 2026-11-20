@@ -11,7 +11,7 @@
 - Q: "Xem tiến độ community goal theo lớp" ([ADMIN_PORTAL §3.15](../../docs/04-admin-portal/ADMIN_PORTAL.md)) gọi API nào? → A: Chưa có (`getCommunityGoal` chỉ cho học sinh). F081 thêm `getSchoolEventProgress` (module game, chỉ đọc PostgreSQL) — "Cần thêm" ([contracts](contracts/README.md) §6).
 - Q: Bộ chọn quest/challenge trong form hiển thị tên lấy ở đâu khi `EventTemplate.quest_options` chỉ là UUID? → A: Delta cộng thêm `quest_option_items[]`/`challenge_option_items[]` (id + tiêu đề song ngữ + khối) vào `EventTemplate`; Portal không tự tra tên ở module khác.
 - Q: `TenantGameSummary` thiếu một số chỉ số §7.2 (`active_days_per_week`, `session_duration_p50`, `chapter0_completion`, `social_play_rate`, chơi khuya, phân bố nền tảng/hạng thiết bị)? → A: Mở rộng response (cộng thêm field, đọc bảng tổng hợp của F080); không định nghĩa lại chỉ số. Đổi ở Session 2026-11-17: phần này chuyển sang F080 (F080-AC-31).
-- Q: Academic Manager có xem báo cáo game không? GAME_ANALYTICS §8 ghi "không", nhưng ADMIN_PORTAL §2.2 và SECURITY_ARCHITECTURE cấp `analytics.school.read` (kèm báo cáo game) cho `academic_manager`. → A: [Proposed] Theo permission catalog (ADMIN_PORTAL §2.2 sở hữu catalog): có `analytics.tenant.read`/`analytics.school.read` ở scope tenant/trường thì xem được; UserRole chỉ scope `subject` → `403 PERMISSION_DENIED` (đổi ở Session 2026-11-17; dữ liệu game không có chiều môn). Mâu thuẫn GAME_ANALYTICS §8 ghi báo cáo. Đổi ở Session 2026-11-17: câu trả lời này chuyển sang F080 cùng màn "Hoạt động game".
+- Q: Academic Manager có xem báo cáo game không? GAME_ANALYTICS §8 ghi "không", nhưng ADMIN_PORTAL §2.2 và SECURITY_ARCHITECTURE cấp `analytics.school.read` (kèm báo cáo game) cho `academic_manager`. → A: [Confirmed] Theo permission catalog (ADMIN_PORTAL §2.2 sở hữu catalog): có `analytics.tenant.read`/`analytics.school.read` ở scope tenant/trường thì xem được; UserRole chỉ scope `subject` → `403 PERMISSION_DENIED` (đổi ở Session 2026-11-17; dữ liệu game không có chiều môn). Mâu thuẫn GAME_ANALYTICS §8 ghi báo cáo. Đổi ở Session 2026-11-17: câu trả lời này chuyển sang F080 cùng màn "Hoạt động game".
 - Q: Xuất CSV báo cáo game tenant? → A: Không trong §7.2; ngoài phạm vi (chuyển sang F080 cùng màn báo cáo).
 
 ### Session 2026-11-17
@@ -153,6 +153,6 @@ Trong khi sự kiện chạy, School Admin xem số học sinh tham gia, thanh t
 
 ## Assumptions
 
-- [Proposed] Route `/school-lms/school-events`, `/school-lms/school-events/:eventId` trong chunk `school-lms` (F052); menu "Giao bài & lịch → Sự kiện trường".
-- [Proposed] Bảng đóng góp theo lớp không áp ẩn ô < 5 (dữ liệu vận hành trong trường, không phải analytics giả danh); chỉ hiện số học sinh có đóng góp, không danh sách.
+- [Confirmed] Route `/school-lms/school-events`, `/school-lms/school-events/:eventId` trong chunk `school-lms` (F052); menu "Giao bài & lịch → Sự kiện trường".
+- [Confirmed] Bảng đóng góp theo lớp không áp ẩn ô < 5 (dữ liệu vận hành trong trường, không phải analytics giả danh); chỉ hiện số học sinh có đóng góp, không danh sách.
 - System Admin xem tiến độ của một tenant đích mỗi lần (API có `X-Tenant-Id`).

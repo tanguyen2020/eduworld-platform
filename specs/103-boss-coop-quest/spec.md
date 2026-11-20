@@ -171,5 +171,5 @@ Mỗi thành viên giữ một vai (ví dụ "Người đo", "Người đọc b�
 ## Assumptions
 
 - F076 cung cấp `src/backend/pkg/roomhost` (owner node, lease, checkpoint, timer) và aggregate challenge; F072 cung cấp `QuestProgress`, consumer `activity.graded`; F074 cung cấp Reward Engine idempotent trong module game.
-- module learning thêm `game` vào `x-allowed-callers` của `createQuestionPlan`/`scorePlanAnswer` và thêm API render dữ kiện (delta contract, nhóm D sở hữu) [Proposed].
-- Mã lý do không đủ điều kiện (`reason_code`) là enum mới trong spec internal (facade) [Proposed].
+- module learning thêm `game` vào `x-allowed-callers` của `createQuestionPlan`/`scorePlanAnswer` và thêm API render dữ kiện (delta contract, nhóm D sở hữu) [Confirmed].
+- Mã lý do không đủ điều kiện (`reason_code`) là enum mới trong spec internal (facade) [Confirmed].

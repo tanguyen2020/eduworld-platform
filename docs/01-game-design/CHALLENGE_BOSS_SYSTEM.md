@@ -45,10 +45,10 @@ Năm mức: `easy`, `normal`, `hard`, `expert`, `legendary`.
 | Grade | Mỗi mức độ khó ánh xạ sang dải độ khó câu hỏi (1–5) **trong phạm vi khối lớp** của học sinh; không lấy nội dung khối khác |
 | Subject, LO | Bộ câu hỏi/selection rule lọc theo LO |
 | Activity type | Loại activity được dùng (ADR-0048) |
-| Hiệu suất học sinh | Có thể tự điều chỉnh: mastery của LO thấp → gợi ý mức dễ hơn; không tự hạ cấp khi đang chơi [Proposed] |
+| Hiệu suất học sinh | Có thể tự điều chỉnh: mastery của LO thấp → gợi ý mức dễ hơn; không tự hạ cấp khi đang chơi [Confirmed] |
 | Game mode | Solo/party: party có mục tiêu tổng lớn hơn nhưng phần mỗi người không đổi |
 
-Tham số theo mức [Proposed]:
+Tham số theo mức [Confirmed]:
 
 | Mức | Dải độ khó câu | Thời gian/câu | Sức bền (survival) | Hệ số thưởng |
 |---|---|---|---|---|
@@ -58,7 +58,7 @@ Tham số theo mức [Proposed]:
 | Expert | 4–5 | 20 s | 3 | ×2,0 |
 | Legendary | 5 + câu tổng hợp nhiều LO | 20 s | 2 | ×2,5 |
 
-Lớp 1–3: thời gian/câu × 1,5 và chỉ mở `easy`–`hard` theo mặc định [Proposed] (UX theo độ tuổi, không phải chính sách chat).
+Lớp 1–3: thời gian/câu × 1,5 và chỉ mở `easy`–`hard` theo mặc định [Confirmed] (UX theo độ tuổi, không phải chính sách chat).
 
 ### 2.3. Vòng đời
 
@@ -76,12 +76,12 @@ stateDiagram-v2
 ```
 
 - `ChallengeAttempt` ghim `challenge_version` và các `activity_version` (ADR-0043).
-- Mỗi câu/hoạt động trong challenge tạo **Attempt học tập cá nhân** ở module learning (mode `challenge` [Proposed], ADR-0048) qua facade `attempts` của module learning (gọi trong tiến trình, ADR-0074). Chấm điểm luôn ở module learning (ADR-0016).
+- Mỗi câu/hoạt động trong challenge tạo **Attempt học tập cá nhân** ở module learning (mode `challenge` [Confirmed], ADR-0048) qua facade `attempts` của module learning (gọi trong tiến trình, ADR-0074). Chấm điểm luôn ở module learning (ADR-0016).
 - Thời gian dùng giờ server (`started_at`, `deadline_at`).
 
 ### 2.4. Thử lại và giới hạn
 
-| Thuộc tính | Mặc định [Proposed] |
+| Thuộc tính | Mặc định [Confirmed] |
 |---|---|
 | `max_attempts_per_day` | 5 (weekly/seasonal: theo kỳ) |
 | `retry_policy` | Câu hỏi mới mỗi lần thử (`new_questions`) |
@@ -127,7 +127,7 @@ stateDiagram-v2
 
 - Mỗi yêu cầu học tập do **từng học sinh** tự làm, tạo attempt riêng. Phase party dùng `collective_count`: tiến độ phase = tổng đóng góp, nhưng mỗi người phải đạt `min_contribution` mới được tính là tham gia (chống "ăn theo", giống QUEST_SYSTEM §6).
 - `boss_encounter_contributions`: `student_id`, `phase_id`, `correct_count`, `activities_completed`, `contribution_pct`.
-- Phần thưởng: `defeat_rewards` cho mọi người đạt `min_contribution`; không có "MVP" công khai xếp hạng trong nhóm [Proposed].
+- Phần thưởng: `defeat_rewards` cho mọi người đạt `min_contribution`; không có "MVP" công khai xếp hạng trong nhóm [Confirmed].
 - **Kết quả học tập không chia sẻ**: mỗi học sinh có learning record riêng, boss bị hạ không làm thay đổi điểm/mastery của người chưa tự làm đúng.
 
 ### 3.5. Không gây áp lực tiêu cực
@@ -138,11 +138,11 @@ stateDiagram-v2
 
 ### 3.6. Độ khó theo khối
 
-Boss có `grade_levels[]`; mỗi khối có bộ yêu cầu riêng (cùng boss, khác nội dung). Party có thành viên khác khối: mỗi người nhận câu hỏi theo khối của mình; party chỉ được vào boss mà mọi thành viên đều thuộc `grade_levels` [Proposed].
+Boss có `grade_levels[]`; mỗi khối có bộ yêu cầu riêng (cùng boss, khác nội dung). Party có thành viên khác khối: mỗi người nhận câu hỏi theo khối của mình; party chỉ được vào boss mà mọi thành viên đều thuộc `grade_levels` [Confirmed].
 
 ## 4. Multiplayer boss: chạy ở đâu
 
-**Quyết định [Proposed]:** encounter (solo và party) chạy **server-authoritative trong module `game`**, dùng chung thư viện room host (`src/backend/pkg/roomhost`) với module `competition`.
+**Quyết định [Confirmed]:** encounter (solo và party) chạy **server-authoritative trong module `game`**, dùng chung thư viện room host (`src/backend/pkg/roomhost`) với module `competition`.
 
 Lý do:
 - Boss là nội dung PvE gắn quest, progression và phần thưởng (dữ liệu đều ở module game); không có rating nên không cần module competition.

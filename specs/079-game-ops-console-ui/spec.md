@@ -195,6 +195,6 @@ Danh sách item hiển thị thumbnail theo version; mở chi tiết xem turntab
 
 ## Assumptions
 
-- [Proposed] Thư mục `src/cms/frontend/apps/portal/src/workspaces/game-ops/`, route `/game-ops/*` (F051).
-- [Proposed] Thumbnail đọc từ trường mới `GameConfigVersion.media` (delta F078); trước khi có, cột thumbnail ẩn.
+- [Confirmed] Thư mục `src/cms/frontend/apps/portal/src/workspaces/game-ops/`, route `/game-ops/*` (F051).
+- [Confirmed] Thumbnail đọc từ trường mới `GameConfigVersion.media` (delta F078); trước khi có, cột thumbnail ẩn.
 - Permission ghi `progression-curves`/`progression-levels` là `game.progression.write`; `shop-items` là `game.shop.write`, `collections` là `game.collection.write` (RB-309); UI chỉ dựa `getMyPermissions`.

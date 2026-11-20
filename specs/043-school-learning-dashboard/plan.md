@@ -98,7 +98,7 @@ Không có. Cơ chế đã chốt ở ADR-0062 và DASHBOARD_DATA §3–§9.
 ### Tích hợp và phụ thuộc
 
 - Feature phụ thuộc: F031 (learning events, mastery), F041 (`assignment.*`, `lms.assignment_submissions`), F032 (`recommendation_id`, `rm_student_recommendations`), F014 (event đăng nhập → `ref.login_activity`).
-- Facade: `chat` đếm `school-notifications` [Proposed, khi F122 Done], gọi trong tiến trình qua `src/backend/pkg/modcall` (R29).
+- Facade: `chat` đếm `school-notifications` [Confirmed, khi F122 Done], gọi trong tiến trình qua `src/backend/pkg/modcall` (R29).
 - Event tiêu thụ: `question.answered`, `activity.submitted`, `activity.graded`, `exam.graded`, `attempt.re_evaluated`, `assignment.created/published/completed/results_released`, `assignment.submission_updated`, `learning_objective.progressed/mastered`, `learning.recommendation_generated`, `student.game_logged_in/out`. Event phát: không.
 
 ### Bảo mật, tenant, idempotency, audit
@@ -112,7 +112,7 @@ Không có. Cơ chế đã chốt ở ADR-0062 và DASHBOARD_DATA §3–§9.
 - Metric DASHBOARD_DATA §13: `eduworld_dashboard_query_duration_seconds`, `eduworld_dashboard_cache_requests_total`, `eduworld_dashboard_rejected_total`, `eduworld_rollup_lag_seconds`, `eduworld_rollup_day_close_duration_seconds`, `eduworld_rollup_late_events_total`.
 - Log không PII (chỉ `query_id`, `tenant_id`, phạm vi id); span `dashboard.query`, `rollup.apply_batch`, `rollup.close_day`.
 
-Ước lượng: 3 sprint (backend 2 dev) [Proposed].
+Ước lượng: 3 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

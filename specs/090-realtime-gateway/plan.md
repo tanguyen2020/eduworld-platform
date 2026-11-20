@@ -11,7 +11,7 @@ Dựng module `realtime` và binary `src/backend/cmd/realtime` (Go mỏng, khôn
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | `coder/websocket` (hoặc `gorilla/websocket`) [Proposed, research R2], `valkey-io/valkey-go`, `nats.go`, `src/backend/pkg/natsx`, `src/backend/pkg/config`, `src/backend/pkg/observability`, `src/backend/pkg/health`; module game: chi, ent, oapi-codegen, `src/backend/pkg/httpx` (`game_player`, `tenant`) |
+| Primary Dependencies | `coder/websocket` (hoặc `gorilla/websocket`) [Confirmed, research R2], `valkey-io/valkey-go`, `nats.go`, `src/backend/pkg/natsx`, `src/backend/pkg/config`, `src/backend/pkg/observability`, `src/backend/pkg/health`; module game: chi, ent, oapi-codegen, `src/backend/pkg/httpx` (`game_player`, `tenant`) |
 | Storage | Không có PostgreSQL ở gateway; Valkey: `ew:game:rt:ticket:*` (game ghi), `ew:gateway:rt:*` (conn, node, resume); module game đọc/ghi `game.game_sessions` (F014) |
 | Testing | go test; testcontainers Valkey + NATS; client WS headless; toxiproxy cho reconnect |
 | Target Platform | Linux container (binary `realtime`; cổng public và cổng quản trị theo LOCAL_DEVELOPMENT §3.2) |

@@ -56,4 +56,4 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → sinh `specs/openapi/modul
 - `eduworld-api.v1.yaml` (social): bổ sung response lỗi như bảng §1; `redeemFriendCode` dùng `404 FRIEND_CODE_INVALID` (bỏ `410`); mô tả từ chối lặng lẽ cho `listFriendRequests`; thống nhất `maxLength` `nickname` = 32 cho `PlayerCard`, `PlayerRelation` và `PublicPlayer` AsyncAPI theo DATABASE_DESIGN §1.4 (`varchar(32)`, RB-302).
 - Payload schema 7 event chat (`specs/events/payloads/chat/`), cập nhật `specs/events/README.md`.
 - Kiểm: `make specs-lint`, `make gen MOD=chat`, `make test-contract`.
-- ADR-0078: `sendFriendRequest`, mã bạn bè khai báo `403 SOCIAL_SCOPE_VIOLATION` cho tenant `common`; bootstrap/client-config báo `social.friends_enabled = false` [Proposed] (task T029).
+- ADR-0078: `sendFriendRequest`, mã bạn bè khai báo `403 SOCIAL_SCOPE_VIOLATION` cho tenant `common`; bootstrap/client-config báo `social.friends_enabled = false` [Confirmed] (task T029).

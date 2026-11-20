@@ -199,6 +199,6 @@ NFR: NFR-SAFE-003 (không streak/áp lực), NFR-I18N-001, NFR-I18N-003, NFR-A11
 ## Assumptions
 
 - Trước khi F074/F075/F076 `Done`, client chạy trên Prism mock sinh từ `specs/` (profile `mock`, nhãn MOCK — R17); feature chỉ `Done` với backend thật.
-- Delta contract ở [contracts §6](contracts/README.md) (`active_attempt_id`, `difficulties[]`, `how_to_obtain`, `hidden`, nhãn song ngữ) do F075/F076 thực hiện [Proposed]; khi chưa có, client ẩn phần tương ứng (không suy luật).
+- Delta contract ở [contracts §6](contracts/README.md) (`active_attempt_id`, `difficulties[]`, `how_to_obtain`, `hidden`, nhãn song ngữ) do F075/F076 thực hiện [Confirmed]; khi chưa có, client ẩn phần tương ứng (không suy luật).
 - `ProfileService`, `InventoryService` (bản đầu), `AvatarPreview3D`, `ItemVisual` có từ F070; `ActivityHost`, `LearningService.resume` từ F063; `Clock` từ F061.
-- `AppState.blocking_activity` (mới) do ExamRunner (F064), boss (F110) và `ChallengeClient` đặt để hoãn level-up [Proposed].
+- `AppState.blocking_activity` (mới) do ExamRunner (F064), boss (F110) và `ChallengeClient` đặt để hoãn level-up [Confirmed].

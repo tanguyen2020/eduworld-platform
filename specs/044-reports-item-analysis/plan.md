@@ -11,7 +11,7 @@ Bổ sung vào module `learning`: (1) module `reporting`: bảng `learning.repor
 | Mục | Giá trị |
 |---|---|
 | Language/Version | Go ≥ 1.24 |
-| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (work-queue), AWS SDK for Go v2 (S3 presign, floci), excelize (XLSX), thư viện PDF server-side [Proposed], `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/authz`, `src/backend/pkg/idempotency`, `src/backend/pkg/outbox` |
+| Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (work-queue), AWS SDK for Go v2 (S3 presign, floci), excelize (XLSX), thư viện PDF server-side [Confirmed], `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/authz`, `src/backend/pkg/idempotency`, `src/backend/pkg/outbox` |
 | Storage | PostgreSQL `eduworld_learning` (`learning`, `content`, `assessment`); object storage bucket `ew-exports` (ADR-0044); Valkey không dùng cho dữ liệu bền |
 | Testing | go test + testcontainers (PostgreSQL, NATS, floci S3); dữ liệu mẫu tính tay cho item analysis/KR-20 |
 | Target Platform | Linux container (module `learning` api + worker) |
@@ -86,7 +86,7 @@ src/backend/modules/learning/
 
 ## Phase 0: Research
 
-Không có quyết định mở. Công thức KR-20/alpha/SEM, point-biserial và thuật toán cân bằng đã ở EXAM_ENGINE §4.1, §8.1 và QUESTION_BANK §9; chọn thư viện PDF ghi [Proposed] trong Assumptions.
+Không có quyết định mở. Công thức KR-20/alpha/SEM, point-biserial và thuật toán cân bằng đã ở EXAM_ENGINE §4.1, §8.1 và QUESTION_BANK §9; chọn thư viện PDF ghi [Confirmed] trong Assumptions.
 
 ## Phase 1: Design & Contracts
 
@@ -107,7 +107,7 @@ Không có quyết định mở. Công thức KR-20/alpha/SEM, point-biserial v�
 
 - Feature phụ thuộc: F042 (`ExamPaper`, `VariantBalancer`, `exam.closed`), F043 (rollup, role `learning_dashboard`), F041 (`lms.assignment_submissions`), F031/F032 (`objective_masteries`, `rapid_guess`, `hints_used`), F025/F026 (workflow tạo/duyệt version).
 - Facade: không gọi facade module khác.
-- Event phát: `audit.recorded` (`report.exported`, `learning.reference_report_exported`, `content.version_created` khi chấp nhận hiệu chỉnh), `report.completed` [Proposed, thông báo portal]. Event tiêu thụ: `exam.closed`, `attempt.re_evaluated`.
+- Event phát: `audit.recorded` (`report.exported`, `learning.reference_report_exported`, `content.version_created` khi chấp nhận hiệu chỉnh), `report.completed` [Confirmed, thông báo portal]. Event tiêu thụ: `exam.closed`, `attempt.re_evaluated`.
 
 ### Bảo mật, tenant, idempotency, audit
 
@@ -120,7 +120,7 @@ Không có quyết định mở. Công thức KR-20/alpha/SEM, point-biserial v�
 - Metric: `eduworld_export_jobs_total{status}`, `eduworld_export_jobs_duration_seconds`, `eduworld_item_analysis_questions_total`, `eduworld_calibration_proposals_total{status}`, `eduworld_exam_reliability_low_total`.
 - Log không chứa nội dung file/điểm học sinh; span `report.run`, `itemanalysis.compute`, `examquality.compute`.
 
-Ước lượng: 2–3 sprint (backend 2 dev) [Proposed].
+Ước lượng: 2–3 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

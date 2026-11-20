@@ -30,12 +30,12 @@
 
 | Quy tắc | Chi tiết | Nhãn |
 |---|---|---|
-| Nickname | Sinh tự động dạng `<Tính từ/Màu><Con vật><2 số>` (vd. "MèoXanh42") từ danh sách đã duyệt; học sinh được đổi bằng cách chọn lại từ bộ sinh, **không gõ tự do** | [Proposed] |
-| Tên thật | Chỉ hiển thị cho nhân sự nhà trường có quyền trong portal (`school_admin`, `academic_manager`); bạn cùng lớp thấy tên thật nếu trường bật | [Proposed] |
-| Avatar | Chỉ từ bộ customization; không upload ảnh | [Proposed] |
-| Hồ sơ người chơi khác | Nickname, avatar, level, badge công khai; không trường, lớp, tuổi, ngày sinh | [Proposed] |
-| Liên trường | Hiển thị "Trường khác" thay tên trường | [Proposed] |
-| Leaderboard | Nickname; không ảnh, không tên thật (trừ leaderboard lớp nếu trường bật tên thật) | [Proposed] |
+| Nickname | Sinh tự động dạng `<Tính từ/Màu><Con vật><2 số>` (vd. "MèoXanh42") từ danh sách đã duyệt; học sinh được đổi bằng cách chọn lại từ bộ sinh, **không gõ tự do** | [Confirmed] |
+| Tên thật | Chỉ hiển thị cho nhân sự nhà trường có quyền trong portal (`school_admin`, `academic_manager`); bạn cùng lớp thấy tên thật nếu trường bật | [Confirmed] |
+| Avatar | Chỉ từ bộ customization; không upload ảnh | [Confirmed] |
+| Hồ sơ người chơi khác | Nickname, avatar, level, badge công khai; không trường, lớp, tuổi, ngày sinh | [Confirmed] |
+| Liên trường | Hiển thị "Trường khác" thay tên trường | [Confirmed] |
+| Leaderboard | Nickname; không ảnh, không tên thật (trừ leaderboard lớp nếu trường bật tên thật) | [Confirmed] |
 
 ## 3. Chính sách chat: một bộ quy tắc cho mọi lớp
 
@@ -56,7 +56,7 @@ Giá trị khởi tạo của `chat_policy` cấp platform. Cấp tenant/school/
 | `direct` | Hai người đã là bạn bè, không block nhau | Text, emoji, quick message, sticker, GIF (thư viện nội bộ đã duyệt), reaction |
 | Liên trường | Theo channel ở trên | Như trên; chỉ hiện nickname/avatar |
 
-### 3.2. Kiểm tra hợp lệ và tham số [Proposed — giá trị số]
+### 3.2. Kiểm tra hợp lệ và tham số [Confirmed — giá trị số]
 
 | Tham số | Giá trị mặc định (mọi lớp) |
 |---|---|
@@ -99,7 +99,7 @@ ADR-0030 cho phép tắt từng bước kiểm tra nội dung; [ADR-0078](../adr
 | Vẫn giữ | PII, grooming, độ dài tối đa, rate limit, quyền channel, sanction, block/mute/report, moderation thủ công khi có report |
 | Truy vết | Tin gửi khi tắt được đánh dấu `unchecked` để điều tra khi có báo cáo |
 
-Khuyến nghị vận hành [Proposed]: chỉ tắt từng bước có lý do cụ thể (ví dụ false positive hàng loạt sau khi đổi danh mục), trong thời gian ngắn nhất có thể trong giới hạn 24 giờ.
+Khuyến nghị vận hành [Confirmed]: chỉ tắt từng bước có lý do cụ thể (ví dụ false positive hàng loạt sau khi đổi danh mục), trong thời gian ngắn nhất có thể trong giới hạn 24 giờ.
 
 ### 3.3b. An toàn cho các tính năng chat mở rộng (ADR-0034)
 
@@ -110,7 +110,7 @@ Khuyến nghị vận hành [Proposed]: chỉ tắt từng bước có lý do c�
 | Forward | Phát tán tin nhắn riêng để bêu xấu | Chỉ trong cùng tenant, chạy lại kiểm duyệt tại channel đích, tối đa 5 nơi, có nhãn nguồn; forward từ DM được ghi nhận làm tín hiệu cho phân tích bất đồng bộ |
 | Mention | Gắn tên liên tục để quấy rối | ≤ 5 mention/tin, rate limit, không mention được người đã block mình; mention lặp là tín hiệu bắt nạt |
 | Sticker / GIF | Nội dung hình ảnh không phù hợp | Chỉ thư viện nội bộ đã duyệt, không upload, không dịch vụ GIF Internet |
-| Receipts / typing | Áp lực "đã xem sao không trả lời" | Không có ở World/Area; lớp chỉ hiện số người đã xem; người bị block không thấy trạng thái đọc [Proposed: cho phép học sinh tắt hiển thị "đã xem" của mình ở DM] |
+| Receipts / typing | Áp lực "đã xem sao không trả lời" | Không có ở World/Area; lớp chỉ hiện số người đã xem; người bị block không thấy trạng thái đọc [Confirmed: cho phép học sinh tắt hiển thị "đã xem" của mình ở DM] |
 | Tìm kiếm | Tra cứu thông tin người khác | Chỉ trong channel mình là thành viên, chỉ trên nội dung đã che |
 
 ### 3.4. Quan hệ xã hội
@@ -119,7 +119,7 @@ Khuyến nghị vận hành [Proposed]: chỉ tắt từng bước có lý do c�
 |---|---|
 | Kết bạn | Cùng trường (như nhau cho mọi lớp); tenant `common`: tắt mặc định (§3.6) |
 | Mời party | Bạn bè hoặc bạn cùng lớp; không mời người lạ |
-| Party liên trường | Không (mặc định Release 1.0) [Proposed] |
+| Party liên trường | Không (mặc định Release 1.0) [Confirmed] |
 | Party khác grade band | Được nếu cùng trường và thỏa điều kiện ghép nhóm ([PARTY_SYSTEM §6.2](../03-social-multiplayer/PARTY_SYSTEM.md#62-kiểm-tra-ở-bước-3--eligibility): cùng band hoặc band liền kề khi activity cho phép); câu hỏi theo khối thấp hơn của nhóm ([COMPETITION_SYSTEM §5](../01-game-design/COMPETITION_SYSTEM.md#5-công-bằng-theo-khối-lớp)). Đây là điều kiện ghép **hoạt động học tập**, không áp vào chat (ADR-0020) |
 | Block | Chặn mọi tương tác (chat, mời, ghép party, ghép trận nếu còn lựa chọn khác) |
 
@@ -146,12 +146,12 @@ Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom h
 | Kết bạn, DM, World chat | **Tắt**; chỉ System Admin bật lại cho một tenant `common` cụ thể, có lý do + audit |
 | Channel còn lại | `area` chỉ quick message + emote; `match`/`team`/`party` luôn có theo ADR-0020 mục 6, qua pipeline đầy đủ |
 | Giờ giới nghiêm | Bắt buộc `platform_curfew` (§4.1), không có `school_admin` để siết thêm |
-| Kiểm duyệt | Platform Safety Team (ADR-0072); không có thông báo nhà trường, liên hệ theo [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-proposed) |
+| Kiểm duyệt | Platform Safety Team (ADR-0072); không có thông báo nhà trường, liên hệ theo [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed) |
 | Consent | Platform thu trực tiếp (ADR-0077); pháp lý ngoài version này (ADR-0082) |
 
 ## 4. Thời gian chơi và sức khỏe (OQ-17)
 
-| Biện pháp | Mặc định [Proposed] | Ai cấu hình |
+| Biện pháp | Mặc định [Confirmed] | Ai cấu hình |
 |---|---|---|
 | Nhắc nghỉ | Sau 45 phút liên tục: Mây nhắc nghỉ mắt + gợi ý vận động; g1_3 sau 30 phút | Platform, trường siết thêm |
 | Nhắc lần 2 | Sau 90 phút: nhắc nổi bật hơn, tổng kết phiên | Platform |
@@ -178,7 +178,7 @@ Tenant `common` ([MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md)) gom h
 | Cấm | Lý do |
 |---|---|
 | Loot box, gacha, quay thưởng (kể cả bằng tiền ảo miễn phí) có phần thưởng ngẫu nhiên giá trị | Cơ chế cờ bạc với trẻ em |
-| In-app purchase, tiền thật | Không pay-to-win/pay-to-learn (OQ-14) [Proposed] |
+| In-app purchase, tiền thật | Không pay-to-win/pay-to-learn (OQ-14) [Confirmed] |
 | Streak bị mất gây lo âu | Thay bằng mục tiêu tuần linh hoạt |
 | Đếm ngược FOMO, vật phẩm "chỉ một lần" | Sự kiện và vật phẩm có lặp lại |
 | Push notification kéo người chơi quay lại | Không push marketing |
@@ -237,7 +237,7 @@ Kiểm duyệt tập trung theo ADR-0072. Nhân sự nhà trường không vào 
 
 | Vai trò | Quyền an toàn (chỉ trong phạm vi được giao) |
 |---|---|
-| School Admin | Cấu hình `chat_policy` cấp trường và cấp lớp (chỉ siết chặt, áp như nhau cho mọi học sinh trong phạm vi): bật/tắt DM, world chat, channel lớp, study group, tên thật cho bạn cùng lớp, mở rộng khung giới nghiêm (không nới quá giờ giới nghiêm platform, §4.1); chọn preset "chỉ quick message + emote" cho cả trường (§3.5) (không tắt được chat trận/party — ADR-0020 mục 6); cấu hình khung giờ truy cập; tạo study group; nhận và xác nhận thông báo vụ việc nghiêm trọng để liên hệ phụ huynh ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-proposed)) |
+| School Admin | Cấu hình `chat_policy` cấp trường và cấp lớp (chỉ siết chặt, áp như nhau cho mọi học sinh trong phạm vi): bật/tắt DM, world chat, channel lớp, study group, tên thật cho bạn cùng lớp, mở rộng khung giới nghiêm (không nới quá giờ giới nghiêm platform, §4.1); chọn preset "chỉ quick message + emote" cho cả trường (§3.5) (không tắt được chat trận/party — ADR-0020 mục 6); cấu hình khung giờ truy cập; tạo study group; nhận và xác nhận thông báo vụ việc nghiêm trọng để liên hệ phụ huynh ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed)) |
 | Academic Manager | Tạo study group cho môn trong phạm vi; không có quyền an toàn khác |
 | Tenant Admin | Chính sách liên trường trong tenant; báo cáo tổng hợp ẩn danh; gửi yêu cầu thêm từ nhạy cảm cho Safety Team |
 | Platform Safety Team (`safety_moderator`, MFA) | Xử lý mọi moderation case của mọi tenant, đọc nội dung chỉ trong ngữ cảnh case qua `tenancy.Bypass(ctx, "moderation_case")` có audit và metric `eduworld_tenant_filter_bypass_total`; áp/thu hồi sanction; ghi mục từ bổ sung và bật/tắt nhóm từ của tenant; gửi thông báo nhà trường |
@@ -263,7 +263,7 @@ Không có vai trò nào đọc được toàn bộ chat mọi trường [Confir
 
 Mọi thao tác đọc nội dung chat ngoài channel mà người đó là thành viên đều **ghi audit** (`chat.message.read_for_moderation`, kèm `tenant_id` đích) và được tổng hợp (số lượt, không nội dung) trong báo cáo minh bạch hằng tháng cho School Admin.
 
-## 8. Tín hiệu rủi ro an toàn trẻ em [Proposed]
+## 8. Tín hiệu rủi ro an toàn trẻ em [Confirmed]
 
 Phát hiện đồng bộ (pipeline trước khi gửi) và cơ chế worker bất đồng bộ thuộc [MODERATION](../03-social-multiplayer/MODERATION.md) §3–§4, §11–§12. Bảng dưới là **ngưỡng và phản hồi** đặc thù an toàn trẻ em mà worker `async_analysis` của MODERATION áp dụng:
 
@@ -274,7 +274,7 @@ Phát hiện đồng bộ (pipeline trước khi gửi) và cơ chế worker b�
 | Loại trừ | Một học sinh bị kick khỏi party liên tục bởi nhiều leader | ≥ 5 lần/7 ngày | Case `p3` "theo dõi" (không trừng phạt); Safety Team có thể gửi thông báo nhà trường để quan tâm học sinh bị loại trừ |
 | Grooming / tiếp cận bất thường | Tài khoản gửi friend request/lời mời tới nhiều học sinh nhỏ hơn ≥ 3 khối, hoặc cố chia sẻ liên hệ (PII bị chặn) lặp lại, hoặc yêu cầu "chuyển sang app khác" | ≥ 2 lần PII-block + mục tiêu nhỏ tuổi | Case `p1`, tự động hạn chế social của tài khoản gửi, gọi on-call Safety Team |
 | Spam | Tần suất cao, nội dung trùng lặp | Theo rate policy | Mute tự động 10 phút → 1 giờ |
-| Tự hại / khủng hoảng | Từ khóa liên quan tự làm hại bản thân | Bất kỳ | Không phạt người gửi; tin nhắn giữ lại; case `p1`, gọi on-call Safety Team; thông báo nhà trường ngay ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-proposed)) để trường liên hệ phụ huynh; hiển thị cho học sinh thông điệp hỗ trợ (vd. Tổng đài quốc gia bảo vệ trẻ em 111) |
+| Tự hại / khủng hoảng | Từ khóa liên quan tự làm hại bản thân | Bất kỳ | Không phạt người gửi; tin nhắn giữ lại; case `p1`, gọi on-call Safety Team; thông báo nhà trường ngay ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed)) để trường liên hệ phụ huynh; hiển thị cho học sinh thông điệp hỗ trợ (vd. Tổng đài quốc gia bảo vệ trẻ em 111) |
 | Nhiều report | ≥ 3 report độc lập về cùng người trong 24h | 3 | Case `p2` |
 
 Mọi phát hiện tự động chỉ **tạo case/hạn chế tạm thời**; xử phạt kéo dài cần con người xác nhận. Từ khóa và ngưỡng nằm trong cấu hình phiên bản hóa (`moderation_rules`), review mỗi tháng để giảm false positive.
@@ -321,15 +321,15 @@ Cơ chế lưu, thời hạn và giữ bằng chứng trước khi purge chat ga
 | Bảo mật dữ liệu & quyền riêng tư khi xem chat, quy tắc đọc liên tenant chỉ trong case | Safety Team, System Admin | Trước khi cấp quyền |
 | Quy trình leo thang & liên hệ khẩn cấp | Safety Team | Hằng quý (diễn tập) |
 
-Quyền moderation (`moderation.case.*`, `moderation.sanction.*`) chỉ được cấp cho role `safety_moderator` sau khi hoàn thành đào tạo (`identity.user_roles` có `training_completed_at`, ADR-0066) [Proposed].
+Quyền moderation (`moderation.case.*`, `moderation.sanction.*`) chỉ được cấp cho role `safety_moderator` sau khi hoàn thành đào tạo (`identity.user_roles` có `training_completed_at`, ADR-0066) [Confirmed].
 
-**Lịch trực Safety Team** [Proposed]: case `p2`/`p3` xử lý trong giờ làm việc theo SLA của [MODERATION §6.3](../03-social-multiplayer/MODERATION.md#63-sla-xử-lý-proposed); case `p1` grooming, tự hại, đe dọa có **on-call 24/7** (ca chính + ca dự phòng, alert khi case `p1` chưa được nhận sau 15 phút). Ngoài giờ làm việc, pipeline vẫn kiểm tra mọi tin như trong giờ và hệ thống tự hạn chế tạm thời người gửi khi có tín hiệu `p1`. Giờ chat (§3.2) và giờ truy cập (§4) là chính sách áp như nhau cho mọi học sinh trong phạm vi policy; không có quy tắc bật/tắt chat theo khối lớp (ADR-0020, R15).
+**Lịch trực Safety Team** [Confirmed]: case `p2`/`p3` xử lý trong giờ làm việc theo SLA của [MODERATION §6.3](../03-social-multiplayer/MODERATION.md#63-sla-xử-lý-confirmed); case `p1` grooming, tự hại, đe dọa có **on-call 24/7** (ca chính + ca dự phòng, alert khi case `p1` chưa được nhận sau 15 phút). Ngoài giờ làm việc, pipeline vẫn kiểm tra mọi tin như trong giờ và hệ thống tự hạn chế tạm thời người gửi khi có tín hiệu `p1`. Giờ chat (§3.2) và giờ truy cập (§4) là chính sách áp như nhau cho mọi học sinh trong phạm vi policy; không có quy tắc bật/tắt chat theo khối lớp (ADR-0020, R15).
 
 ## 12. An toàn nội dung học tập và game
 
 - Mọi nội dung (câu hỏi, NPC dialogue, quest, quick message, emote, item) qua workflow Draft → Review → Approved → Published (ADR-0015) với Content Reviewer.
 - Checklist review: phù hợp lứa tuổi, không bạo lực, không định kiến giới/vùng miền/dân tộc, không thương hiệu/quảng cáo, đúng kiến thức.
-- Không có UGC công khai (học sinh tạo nội dung người khác thấy) trong Release 1.0, ngoài chat đã qua kiểm tra hợp lệ [Proposed].
+- Không có UGC công khai (học sinh tạo nội dung người khác thấy) trong Release 1.0, ngoài chat đã qua kiểm tra hợp lệ [Confirmed].
 
 ## 13. Minh bạch
 
@@ -344,7 +344,7 @@ Quyền moderation (`moderation.case.*`, `moderation.sanction.*`) chỉ được
 
 ## 15. Kiểm thử
 
-- Test pipeline với bộ dữ liệu tiếng Việt (có dấu/không dấu/teencode/chèn ký tự) — đo precision/recall; mục tiêu recall PII ≥ 95% trên bộ test [Proposed].
+- Test pipeline với bộ dữ liệu tiếng Việt (có dấu/không dấu/teencode/chèn ký tự) — đo precision/recall; mục tiêu recall PII ≥ 95% trên bộ test [Confirmed].
 - Test policy: tin vi phạm (PII, tục tĩu) gửi thẳng qua WS bằng client bị sửa vẫn bị chặn; cùng một tin cho cùng quyết định với học sinh lớp 2 và lớp 8 (không có nhánh theo lớp); DM tới người không phải bạn bè bị từ chối; học sinh trường A không mời được học sinh trường B vào party private khi policy cấm; role tenant (`school_admin`, `tenant_admin`, `academic_manager`) không đọc được nội dung chat; `safety_moderator` chỉ đọc qua case và mọi lượt đọc có audit.
 - Test ADR-0078: yêu cầu tắt `pii`/grooming bị từ chối và khi `enabled_all` tắt tin có SĐT vẫn bị chặn (TC-CHAT-044); tắt bước khác thiếu `expires_at`/quá 24 giờ hoặc tự duyệt bị từ chối (TC-CHAT-045); giờ giới nghiêm chặn đăng nhập, game session, chat và trường không nới được (TC-CHAT-046, TC-AUTH-092); tenant `common` không kết bạn/DM/World chat (TC-CHAT-047); preset chỉ quick message + emote từ chối text tự do ở mọi channel của trường (TC-CHAT-048).
 - Red-team nội bộ trước Phase 5: thử lách filter, chia sẻ số điện thoại, tạo nickname phản cảm.
@@ -355,7 +355,7 @@ Quyền moderation (`moderation.case.*`, `moderation.sanction.*`) chỉ được
 | # | Tiêu chí | Phase |
 |---|---|---|
 | CS-01 | Policy mặc định §3 được seed và có test tự động cho từng channel; test chứng minh cùng một tin cho cùng quyết định với học sinh mọi lớp | 5 |
-| CS-01b | Bộ lọc đạt recall ≥ 95%, false positive ≤ 3% trên bộ test tiếng Việt (có/không dấu, teencode) trước khi bật chat [Proposed] | 4 (trước khi bật chat gameplay), 5 |
+| CS-01b | Bộ lọc đạt recall ≥ 95%, false positive ≤ 3% trên bộ test tiếng Việt (có/không dấu, teencode) trước khi bật chat [Confirmed] | 4 (trước khi bật chat gameplay), 5 |
 | CS-01c | Danh mục từ nhạy cảm platform được seed, có quy trình review và test hồi quy khi publish; công tắc kiểm duyệt có audit, banner CMS và alert hoạt động (ADR-0030) | 5 |
 | CS-01d | Chat `match`/`team`/`party` tự có khi vào trận/party, không tắt được bằng policy trường/lớp; mute/chặn/báo cáo trong trận hoạt động; purge gameplay chat đúng hạn và giữ bằng chứng của report (ADR-0033) | 4 |
 | CS-02 | Không thể gửi SĐT/email/link qua bất kỳ channel nào (test với biến thể có/không dấu, khoảng trắng, chữ số viết bằng chữ) | 4, 5 |
@@ -364,8 +364,8 @@ Quyền moderation (`moderation.case.*`, `moderation.sanction.*`) chỉ được
 | CS-05 | Không tồn tại loot box/IAP/quảng cáo trong build | 2, 6 |
 | CS-06 | Nhắc nghỉ hoạt động theo cấu hình | 2 |
 | CS-07 | **Deferred (ADR-0082)** — đánh giá pháp lý không thuộc version này | — |
-| CS-08 | Safety Team có nhân sự, lịch trực on-call 24/7 cho `p1` và đã diễn tập leo thang trước khi bật chat gameplay [Proposed] | 4 |
-| CS-09 | Luồng thông báo vụ việc cho nhà trường (gửi, xác nhận, nhắc lại) hoạt động và không lộ nội dung chat thô [Proposed] | 4, 5 |
+| CS-08 | Safety Team có nhân sự, lịch trực on-call 24/7 cho `p1` và đã diễn tập leo thang trước khi bật chat gameplay [Confirmed] | 4 |
+| CS-09 | Luồng thông báo vụ việc cho nhà trường (gửi, xác nhận, nhắc lại) hoạt động và không lộ nội dung chat thô [Confirmed] | 4, 5 |
 | CS-10 | PII và grooming luôn chạy, không tắt được; tắt bước khác cần `expires_at` ≤ 24 giờ + hai người duyệt (ADR-0078; TC-CHAT-044, 045) | Pilot, 4 |
 | CS-11 | Giờ giới nghiêm platform chặn game và chat, trường chỉ siết thêm (TC-AUTH-092, TC-CHAT-046) | Pilot |
 | CS-12 | Tenant `common` tắt kết bạn, DM, World chat; preset "chỉ quick message + emote" hoạt động (TC-CHAT-047, 048) | Pilot, 5 |

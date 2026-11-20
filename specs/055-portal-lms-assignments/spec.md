@@ -100,7 +100,7 @@ School Admin tạo nhóm học tập "Ôn Nhân 3A" và lên lịch hạn nộp/
 
 Academic Manager cộng thêm thời gian làm đề kiểm tra cho một học sinh cần hỗ trợ (FR-EXM-009).
 
-**Why this priority**: [Proposed] trong PRD; cần delta contract trước.
+**Why this priority**: [Confirmed] trong PRD; cần delta contract trước.
 
 **Independent Test**: Với bài `mode=graded` có `exam_session_id`, thêm accommodation +25% cho `hs.binh.3a`; `deadline_at` của học sinh dài hơn bạn cùng lớp.
 
@@ -207,6 +207,6 @@ Mọi màn của F055 chỉ hiện thao tác người dùng được phép và c
 
 - Thư mục workspace C là `src/cms/frontend/apps/portal/src/workspaces/school-lms/`, route gốc `/portal/school-lms/...` (ADMIN_PORTAL §1.2, F051).
 - `RegradeDialog` (ops-ui) do F058 tạo (cùng mốc M-C3); F055 chỉ gắn vào màn bài giao có đề kiểm tra.
-- [Proposed] Client TS sinh bằng `pnpm gen:api` (openapi-typescript) từ `specs/openapi/eduworld-api.v1.yaml`; `apiClient` (F050) tự gắn `Authorization`, `X-Tenant-Id`, `Idempotency-Key`, `If-Match`.
+- [Confirmed] Client TS sinh bằng `pnpm gen:api` (openapi-typescript) từ `specs/openapi/eduworld-api.v1.yaml`; `apiClient` (F050) tự gắn `Authorization`, `X-Tenant-Id`, `Idempotency-Key`, `If-Match`.
 - Server là nguồn quyết định quyền, scope và trạng thái; Portal chỉ ẩn/hiện theo `getMyPermissions` (ADR-0027 mục 3).
-- [Proposed] Permission cho accommodations là `lms.assignment.write` cho tới khi contract chốt (F042).
+- [Confirmed] Permission cho accommodations là `lms.assignment.write` cho tới khi contract chốt (F042).

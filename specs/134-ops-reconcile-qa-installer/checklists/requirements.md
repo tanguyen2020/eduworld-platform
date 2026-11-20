@@ -22,7 +22,7 @@
 ## Feature Readiness
 
 - [x] Mỗi user story có Independent Test
-- [x] Tham số dùng tên CONFIG_DEFAULTS, không chép giá trị (`reconcile_settle_minutes` mới ghi [Proposed], task T038)
+- [x] Tham số dùng tên CONFIG_DEFAULTS, không chép giá trị (`reconcile_settle_minutes` mới ghi [Confirmed], task T038)
 - [x] Không mâu thuẫn tài liệu sở hữu và ADR hiện hành
 
 ## Notes

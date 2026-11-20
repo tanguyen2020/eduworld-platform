@@ -11,7 +11,7 @@
 - Q: Editor video thuộc F054 (theo Ngoài phạm vi của F065) hay F058? → A: F058 theo danh mục CODE_PLAN §4.
 - Q: "Tạo bản nháp từ v{n}" cho activity dùng API nào? → A: Chưa có; thêm `createCmsActivityVersion` (delta, owner F030), cùng mẫu `createQuestionVersion`.
 - Q: Xem số attempt bị ảnh hưởng trước khi chấm lại, theo dõi và lịch sử yêu cầu? → A: Chỉ có `createRegradeRequest`; thêm `previewRegradeRequest`, `getRegradeRequest` (đã ghi ở F031), `listRegradeRequests` (delta, owner F031).
-- Q: Upload phụ đề WebVTT dùng `MediaKind` nào? → A: `MediaKind` chưa có loại phụ đề; [Proposed] thêm `subtitle` (delta, owner F027).
+- Q: Upload phụ đề WebVTT dùng `MediaKind` nào? → A: `MediaKind` chưa có loại phụ đề; [Confirmed] thêm `subtitle` (delta, owner F027).
 - Q: Chấm lại đề (`scope = exam_session`) có trong F058? → A: F058 làm hộp thoại dùng chung nhận `scope`; chỉ gắn vào trang version câu hỏi/activity. Gắn vào màn đề/kết quả đề ngoài phạm vi (xem Ngoài phạm vi).
 
 ### Session 2026-11-17
@@ -78,7 +78,7 @@ Biên tập viên upload video, chia chương, gắn phụ đề vi/en, chèn c�
 |---|---|---|---|
 | F058-AC-15 | KHI chọn video, Portal PHẢI cho chọn asset `kind = video` qua `listMediaAssets` hoặc upload mới (`presignMediaUpload`, cần `media.upload`), theo dõi `getMediaAsset` tới `ready`/`rejected`, lấy `duration_ms` từ asset (chỉ đọc); TRONG KHI asset chưa `ready`, Portal PHẢI khóa Gửi duyệt và hiển thị `VIDEO_NOT_READY`/`MEDIA_NOT_READY` theo `code` | FR-CNT-014 · FR-CNT-006 · [VIDEO_LEARNING §3](../../docs/02-learning/VIDEO_LEARNING.md) | TC-CNT-008 |
 | F058-AC-16 | Portal PHẢI cho soạn `chapters[]` (tối đa `maxItems`) trên timeline với `start_ms < end_ms ≤ duration_ms`, không chồng lấn, tiêu đề song ngữ trong `maxLength`, gắn LO tùy chọn | FR-CNT-014 · [VIDEO_LEARNING §3](../../docs/02-learning/VIDEO_LEARNING.md) | — |
-| F058-AC-17 | Portal PHẢI cho gắn `subtitles[]` (WebVTT, `language` theo pattern schema, đúng một `is_default`); Ở NƠI video được đánh dấu "có lời", Portal PHẢI bắt buộc phụ đề `vi` trước khi Gửi duyệt [Proposed] | FR-CNT-014 · [ADMIN_PORTAL §3.13](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-VID-004 |
+| F058-AC-17 | Portal PHẢI cho gắn `subtitles[]` (WebVTT, `language` theo pattern schema, đúng một `is_default`); Ở NƠI video được đánh dấu "có lời", Portal PHẢI bắt buộc phụ đề `vi` trước khi Gửi duyệt [Confirmed] | FR-CNT-014 · [ADMIN_PORTAL §3.13](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-VID-004 |
 | F058-AC-18 | Portal PHẢI cho chèn `embedded_questions[]` (tối đa `maxItems`) với `cue_id` duy nhất, `at_ms` trong `[0, duration_ms]`, câu hỏi chọn từ câu `published` (`content_version_id`), cờ `required`, `allow_skip_after_wrong`; NẾU mốc ngoài thời lượng, THÌ Portal PHẢI chặn lưu và báo đúng cue | FR-CNT-014 · AC-CNT-006 · [VIDEO_LEARNING §5](../../docs/02-learning/VIDEO_LEARNING.md) | TC-VID-001 |
 | F058-AC-19 | KHI soạn video có nhánh, Portal PHẢI yêu cầu mỗi `branches[].options[]` (2–4 lựa chọn) trỏ `target_segment_id` tồn tại trong `segments[]` và ít nhất một segment `is_ending`; segment PHẢI dùng asset video `ready` | FR-CNT-014 · [VIDEO_LEARNING §6](../../docs/02-learning/VIDEO_LEARNING.md) | — |
 | F058-AC-20 | Portal PHẢI điền sẵn `interaction.allow_seek = watched_only` và `completion_rule` (`mode = min_watched_ratio`, `min_watched_ratio`, `require_required_cues`) theo tham số `video_completion`, và cảnh báo (không chặn) khi thời lượng vượt `video_recommended_length` theo khối | FR-CNT-014 · [VIDEO_LEARNING §7](../../docs/02-learning/VIDEO_LEARNING.md) | TC-VID-002 |
@@ -197,8 +197,8 @@ Biên tập viên upload video, chia chương, gắn phụ đề vi/en, chèn c�
 
 ## Assumptions
 
-- [Proposed] Thư mục `src/cms/frontend/apps/portal/src/workspaces/content-studio/activities/`, route `/portal/content-studio/activities/*`; component editor tái sử dụng ở `src/cms/frontend/packages/ops-ui/src/activity-editor/`.
-- [Proposed] Phụ đề upload với `kind = subtitle` sau delta F027; trước delta, mục phụ đề hiển thị nhưng khóa upload mới (chọn asset có sẵn).
-- [Proposed] Cờ "video có lời" là trạng thái form (không lưu); điều kiện phụ đề `vi` bắt buộc theo ADMIN_PORTAL §3.13 [Proposed], server vẫn quyết định.
-- [Proposed] Lồng tiếng hướng dẫn khối 1–3 theo PED-07 (OQ-23); bật/tắt theo kết quả OQ chỉ đổi điều kiện hiển thị.
+- [Confirmed] Thư mục `src/cms/frontend/apps/portal/src/workspaces/content-studio/activities/`, route `/portal/content-studio/activities/*`; component editor tái sử dụng ở `src/cms/frontend/packages/ops-ui/src/activity-editor/`.
+- [Confirmed] Phụ đề upload với `kind = subtitle` sau delta F027; trước delta, mục phụ đề hiển thị nhưng khóa upload mới (chọn asset có sẵn).
+- [Confirmed] Cờ "video có lời" là trạng thái form (không lưu); điều kiện phụ đề `vi` bắt buộc theo ADMIN_PORTAL §3.13 [Confirmed], server vẫn quyết định.
+- [Confirmed] Lồng tiếng hướng dẫn khối 1–3 theo PED-07 (OQ-23); bật/tắt theo kết quả OQ chỉ đổi điều kiện hiển thị.
 - F054 cung cấp `VersionHistoryTab`/`PublishDialog` tổng quát theo `content_type`; nếu F054 chưa xong, F058 dùng thanh trạng thái của F053 cho thao tác trên một item.

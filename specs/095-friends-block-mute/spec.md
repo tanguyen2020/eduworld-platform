@@ -7,7 +7,7 @@
 
 ### Session 2026-11-16
 
-- Q: Route `/social/friends*`, `/social/blocks*`, `/social/mutes*`, `/social/friend-codes*` có qua middleware `game_player`? → A: Có — chỉ học sinh dùng các route này trong game (API_DESIGN §9.10 cột Role = STU); nhân sự nhận `403 GAME_ACCESS_STUDENT_ONLY`. AGENTS R23 chưa liệt kê `/social/*` — bổ sung khi review [Proposed].
+- Q: Route `/social/friends*`, `/social/blocks*`, `/social/mutes*`, `/social/friend-codes*` có qua middleware `game_player`? → A: Có — chỉ học sinh dùng các route này trong game (API_DESIGN §9.10 cột Role = STU); nhân sự nhận `403 GAME_ACCESS_STUDENT_ONLY`. AGENTS R23 chưa liệt kê `/social/*` — bổ sung khi review [Confirmed].
 - Q: Giới hạn lời mời theo ngày: `friend_limits` (SOCIAL_SYSTEM §4.1) hay rate limit "10/giờ, 30/ngày" (API_DESIGN §8)? → A: Theo `friend_limits` (SOCIAL_SYSTEM là tài liệu sở hữu, R33); sửa API_DESIGN §8 (task Polish).
 - Q: Tenant bật kết bạn liên trường bằng cài đặt nào? → A: `cross_school_social_enabled` trong `platform.tenants.settings` (chỉ áp dụng tenant `unit`), đọc từ projection `ref.tenants.settings_subset` — [Confirmed, RB-003].
 - Q: Chặn có hủy kết bạn? → A: Có — chặn kết thúc tình bạn (lặng lẽ, phát `friend.removed`) và hủy lời mời đang chờ hai chiều; bỏ chặn không khôi phục tình bạn — [Confirmed, RB-002].
@@ -163,7 +163,7 @@ Học sinh thấy bạn nào đang online, đang học hay đang thi đấu đ�
 - Thông báo trong game cho lời mời kết bạn → F123; báo cáo người dùng → F121.
 - Club/guild, study group → F120 (FR-SOC-004).
 - UI bạn bè trong Godot: chưa có feature trong danh mục (đề xuất gắn F102 hoặc thêm feature mới).
-- Hiển thị tên thật cho bạn cùng lớp (SOCIAL_SYSTEM §4.1 [Proposed]) — contract `PlayerCard` chưa có trường; không làm ở F095.
+- Hiển thị tên thật cho bạn cùng lớp (SOCIAL_SYSTEM §4.1 [Confirmed]) — contract `PlayerCard` chưa có trường; không làm ở F095.
 
 ## Assumptions
 

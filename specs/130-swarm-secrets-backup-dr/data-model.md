@@ -18,7 +18,7 @@ Không áp dụng — F130 không tạo hay sửa bảng trong database của mo
 
 | Thuộc tính | Ràng buộc |
 |---|---|
-| `owner` | một trong `identity`, `learning`, `game`, `competition`, `chat` (credential theo module), `core`, `worker`, `realtime` (NATS creds theo binary), `chat_purger`, `kc_game_backend`, `kc_svc_identity`, `backup`, `ops`, `apisix`, `keycloak`, `s3_<binary>` (credential object storage theo binary, [DEPLOYMENT §9b](../../docs/11-operations/DEPLOYMENT.md) [Proposed]) (theo [DEPLOYMENT §13](../../docs/11-operations/DEPLOYMENT.md)) |
+| `owner` | một trong `identity`, `learning`, `game`, `competition`, `chat` (credential theo module), `core`, `worker`, `realtime` (NATS creds theo binary), `chat_purger`, `kc_game_backend`, `kc_svc_identity`, `backup`, `ops`, `apisix`, `keycloak`, `s3_<binary>` (credential object storage theo binary, [DEPLOYMENT §9b](../../docs/11-operations/DEPLOYMENT.md) [Confirmed]) (theo [DEPLOYMENT §13](../../docs/11-operations/DEPLOYMENT.md)) |
 | label `ew.sha256` | hash giá trị (phát hiện đổi khi đồng bộ) |
 | Bất biến | Đổi giá trị = tạo `_v<N+1>`; xóa bản cũ chỉ sau khi không Swarm service nào tham chiếu |
 

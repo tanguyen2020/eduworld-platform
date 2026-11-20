@@ -10,7 +10,7 @@ F020 không thêm endpoint public. Endpoint public liên quan thuộc module ide
 |---|---|---|---|---|
 | `assignToTenants` / `unassignFromTenants` / `listTenantAssignments` | `POST`/`DELETE`/`GET /api/v1/admin/tenant-assignments` | `specs/openapi/eduworld-api.v1.yaml` (`x-service: identity`) | `platform.tenant_data.assign` | Có sẵn (F045) |
 | `listTrash` / `restoreTrashItem` | `GET /api/v1/admin/trash`, `POST /api/v1/admin/trash/{resource_type}/{resource_id}:restore` | như trên | system_admin | Có sẵn (F045) |
-| `listTenantTrash` / `restoreTenantTrashItem` | `GET /api/v1/tenant/trash`, `POST …:restore` | như trên | `tenant.trash.*` [Proposed] | Có sẵn (F045) |
+| `listTenantTrash` / `restoreTenantTrashItem` | `GET /api/v1/tenant/trash`, `POST …:restore` | như trên | `tenant.trash.*` [Confirmed] | Có sẵn (F045) |
 
 ## 2. Internal API
 
@@ -58,4 +58,4 @@ F020 không thêm endpoint public. Endpoint public liên quan thuộc module ide
 
 - T004 xong: ba operation `applyTenantAssignments`, `revokeTenantAssignments`, `listResourceAssignments` nằm trong block platform-ops của `common/internal-common.v1.yaml`, đồng bộ sang `learning`/`game`/`competition`/`chat` `*.internal.v1.yaml` bằng `sync-platform-ops.mjs`; facade sinh lại (`tools/facadegen`, `tools/allowedcallers`). Schema mới: `TenantAssignmentApplyRequest`, `TenantAssignmentRevokeRequest` (`reason` 3–1000), `TenantAssignment` (`status` `active`/`revoked`, `revoked_at`), `TenantAssignmentList`. Module `game`/`competition`/`chat` chỉ có kiểu sinh, chưa hiện thực.
 - T005 xong: `resource.deleted.v1`, `resource.restored.v1` (schema chung cho mẫu `<resource_type>.deleted/restored`; `check-cross-features.mjs` chấp nhận tên file theo mẫu chung này).
-- T006: payload event identity ở §4 đã có (F010/F011/F016, áp 2026-11-17). Khoảng trống ghi nhận cho owner identity [Proposed]: `class.synced` không mang `academic_year_id`/`is_virtual`/`source_version` (projection dùng `occurred_at` của envelope làm version, `academic_year_id` để NULL); `school.synced` không mang `school_level`/`is_virtual`. Rebuild projection qua `listProjectionSnapshot` (F010 T043) chưa nối ở F020 (thư mục `presentation/job` để trống theo plan).
+- T006: payload event identity ở §4 đã có (F010/F011/F016, áp 2026-11-17). Khoảng trống ghi nhận cho owner identity [Confirmed]: `class.synced` không mang `academic_year_id`/`is_virtual`/`source_version` (projection dùng `occurred_at` của envelope làm version, `academic_year_id` để NULL); `school.synced` không mang `school_level`/`is_virtual`. Rebuild projection qua `listProjectionSnapshot` (F010 T043) chưa nối ở F020 (thư mục `presentation/job` để trống theo plan).

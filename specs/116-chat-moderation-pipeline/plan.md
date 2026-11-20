@@ -18,7 +18,7 @@ Thêm module `moderation` (phần pipeline + danh mục + công tắc) vào modu
 | Project Type | backend module |
 | Performance Goals | `moderation_pipeline_latency` (NFR-SAFE-002); reload ≤ 60 s |
 | Constraints | AGENTS R14, R15, R20, R21, R26, R27, R28; ADR-0020, ADR-0030, ADR-0056, ADR-0072 |
-| Scale/Scope | ≤ 200 pattern/tenant [Proposed]; danh mục platform + bổ sung mỗi tenant |
+| Scale/Scope | ≤ 200 pattern/tenant [Confirmed]; danh mục platform + bổ sung mỗi tenant |
 
 ## Constitution Check
 

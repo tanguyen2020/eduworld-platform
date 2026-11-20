@@ -124,7 +124,7 @@ Không có. State machine, chấm, checkpoint, grace đã định ở REALTIME_A
 - Metric: `eduworld_rooms_active{room_type}`, `eduworld_battle_answer_rejected_total{code}`, `eduworld_battle_score_call_seconds`, `eduworld_room_abandon_total{mode}`, `eduworld_matches_aborted_total{reason}`, `eduworld_reconnect_total{result}`, `eduworld_integrity_signals_total{type}`.
 - Span: `OpenMatchRoom`→`createQuestionPlan`, `SubmitAnswer`→`scorePlanAnswer`, `RecordMatchResult`.
 
-Ước lượng: 3 sprint (backend 2 dev) [Proposed].
+Ước lượng: 3 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

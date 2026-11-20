@@ -12,7 +12,7 @@
 - Q: Client biết trường cho học sinh tạo club bằng gì? → A: Đề xuất thêm `PlayerBootstrap.policies.social` (owner F013/F015); chỉ để ẩn/hiện nút, `createClub` vẫn do server kiểm (F120-AC-17).
 - Q: Lớp 1–3 có tab Club? → A: Theo [STUDENT_GAME_UX_SOCIAL §6](../../docs/05-ux/STUDENT_GAME_UX_SOCIAL.md): `g1_3` chỉ xem club của mình (do nhà trường tạo) và nhận lời mời; không có club đề xuất, không tạo club. Khác biệt chỉ ở UX (ADR-0020).
 - Q: "Mục tiêu tuần: học 4/7 ngày" lấy từ đâu? → A: Là tiến độ weekly quest do server tính ([QUEST_SYSTEM §2.4](../../docs/01-game-design/QUEST_SYSTEM.md#24-daily-và-weekly-quest)); client chỉ hiển thị `QuestProgress`, không tự đếm ngày.
-- Q: Lớp 4–5 có tab Mùa? → A: [Proposed] Có (UX chỉ quy định `g1_3` rút gọn, `g6_9` đủ); `g4_5` dùng bố cục đủ 4 tab.
+- Q: Lớp 4–5 có tab Mùa? → A: [Confirmed] Có (UX chỉ quy định `g1_3` rút gọn, `g6_9` đủ); `g4_5` dùng bố cục đủ 4 tab.
 
 ### Session 2026-11-17
 
@@ -245,6 +245,6 @@ NFR: NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-SAFE-003, NFR-COMP-001.
 
 - Trước khi F077, F095, F120 `Done`, client chạy trên Prism mock sinh từ `specs/` (profile `mock`, nhãn MOCK — R17); feature chỉ `Done` với backend thật.
 - Contract "Cần thêm/Cần sửa" ([contracts §6](contracts/README.md)) có trước US tương ứng: `listFriendSuggestions` (US2), `listMyClubInvitations` và `PlayerBootstrap.policies.social` (US5), `hub.instance.join.follow_user_id` (US1).
-- [Proposed] Cửa sổ "Vừa chơi cùng" là tham số server mới (đề xuất `friend_suggestion_recent_window`, owner SOCIAL_SYSTEM) — client không biết giá trị.
-- [Proposed] Tên thật của bạn cùng lớp (SOCIAL_SYSTEM §4.1) không hiển thị vì `PlayerCard` chưa có trường; F111 chỉ dùng nickname.
+- [Confirmed] Cửa sổ "Vừa chơi cùng" là tham số server mới (đề xuất `friend_suggestion_recent_window`, owner SOCIAL_SYSTEM) — client không biết giá trị.
+- [Confirmed] Tên thật của bạn cùng lớp (SOCIAL_SYSTEM §4.1) không hiển thị vì `PlayerCard` chưa có trường; F111 chỉ dùng nickname.
 - `ChatDock` (F119) mở được channel `team` cố định của club theo `channel_id`; khi chưa hỗ trợ, nút "Chat club" ẩn.

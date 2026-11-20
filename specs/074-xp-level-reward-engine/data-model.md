@@ -30,7 +30,7 @@ Database `eduworld_game`. Cột chung theo loại bảng (T/TA/G) theo DATABASE_
 | Trường | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
 | `tenant_id`, `student_id` | uuid | NOT NULL | |
-| `cap_date` | date | NOT NULL | ngày ICT [Proposed]; DATABASE_DESIGN ghi `date` → đổi tên cột tránh từ khóa |
+| `cap_date` | date | NOT NULL | ngày ICT [Confirmed]; DATABASE_DESIGN ghi `date` → đổi tên cột tránh từ khóa |
 | `bucket` | `varchar(64)` | NOT NULL | `xp:total`, `xp:src:<source_type>`; F075 dùng `currency:xu` |
 | `granted` | int | NOT NULL CHECK ≥ 0 | |
 

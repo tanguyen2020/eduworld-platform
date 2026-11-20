@@ -11,8 +11,8 @@ Nguyên tắc:
 
 - **[Confirmed]** Không hardcode một chương trình học duy nhất; hỗ trợ nhiều chương trình và phiên bản (Master Prompt §4.1).
 - **[Confirmed]** CMS quản lý được nội dung và cấu trúc chương trình.
-- **[Proposed]** Learning Objective (LO) là đơn vị nguyên tử để đo mastery, gợi ý ôn tập và ghép nội dung game.
-- **[Proposed]** Cấu trúc chương trình được phiên bản hóa theo **CurriculumVersion**; một version đã `published` thì bất biến (ADR-0015).
+- **[Confirmed]** Learning Objective (LO) là đơn vị nguyên tử để đo mastery, gợi ý ôn tập và ghép nội dung game.
+- **[Confirmed]** Cấu trúc chương trình được phiên bản hóa theo **CurriculumVersion**; một version đã `published` thì bất biến (ADR-0015).
 
 ## 2. Cấu trúc phân cấp
 
@@ -81,14 +81,14 @@ Ranh giới: các cấp 1–5 thuộc `curriculum`; 6–9 thuộc `content`. Con
 | `prerequisite_ids[]` | LO tiên quyết (đồ thị DAG, dùng cho gợi ý ôn tập và bài chẩn đoán) |
 | `stable_key` | khóa ổn định qua các version (§5) |
 | `mastery_params_ref` | tham chiếu cấu hình mastery riêng (tùy chọn, ADR-0017) |
-| `yccd_ref` | Mã **yêu cầu cần đạt** trong văn bản chương trình (string ≤ 64 ký tự, tùy chọn, bắt buộc với curriculum `GDPT2018` khi publish version) [Proposed]. Nhiều LO có thể cùng một `yccd_ref` (LO tách nhỏ một yêu cầu cần đạt) |
-| `competency_ids[]` | Năng lực/phẩm chất mà LO góp phần hình thành, tham chiếu danh mục `competency` của curriculum version (§3.4) [Proposed] |
+| `yccd_ref` | Mã **yêu cầu cần đạt** trong văn bản chương trình (string ≤ 64 ký tự, tùy chọn, bắt buộc với curriculum `GDPT2018` khi publish version) [Confirmed]. Nhiều LO có thể cùng một `yccd_ref` (LO tách nhỏ một yêu cầu cần đạt) |
+| `competency_ids[]` | Năng lực/phẩm chất mà LO góp phần hình thành, tham chiếu danh mục `competency` của curriculum version (§3.4) [Confirmed] |
 
-### 3.4. Competency (năng lực, phẩm chất) [Proposed]
+### 3.4. Competency (năng lực, phẩm chất) [Confirmed]
 
 Danh mục thuộc curriculum version (bất biến sau publish): `competency_id`, `code` (`UPPER_SNAKE`, ≤ 64), `name` (i18n), `kind` ∈ {`general_competency`, `subject_competency`, `quality`}, `subject_id?` (chỉ với `subject_competency`). Với GDPT 2018, danh mục gồm năng lực chung, năng lực đặc thù theo môn và phẩm chất chủ yếu; danh sách và mã do EdTech Specialist lập theo văn bản chương trình [Ngoài — cần EdTech xác nhận]. Dùng cho báo cáo tham khảo theo cấp học ([ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md)); không dùng để tính mastery.
 
-## 4. Mã Learning Objective chuẩn [Proposed]
+## 4. Mã Learning Objective chuẩn [Confirmed]
 
 Định dạng: `<SUBJECT>.G<grade>.<STRAND>.<SKILL>[.<n>]`
 
@@ -110,13 +110,13 @@ Quy tắc:
 
 ## 5. Đa chương trình & di chuyển phiên bản
 
-- Một trường chọn **curriculum version mặc định** cho mỗi năm học, tùy chọn theo khối; cài đặt lưu ở module learning (`lms.school_curriculum_settings`), do School Admin đặt trên workspace C ([SCHOOL_LMS §3](../04-admin-portal/SCHOOL_LMS.md#3-course-và-learning-path) sở hữu quy tắc chọn và giá trị mặc định khi trường chưa cài đặt) [Proposed].
+- Một trường chọn **curriculum version mặc định** cho mỗi năm học, tùy chọn theo khối; cài đặt lưu ở module learning (`lms.school_curriculum_settings`), do School Admin đặt trên workspace C ([SCHOOL_LMS §3](../04-admin-portal/SCHOOL_LMS.md#3-course-và-learning-path) sở hữu quy tắc chọn và giá trị mặc định khi trường chưa cài đặt) [Confirmed].
 - Có thể tồn tại song song nhiều version (vd. khối 1–5 dùng 2018.1, khối 6–9 dùng 2018.2).
 - Khi publish CurriculumVersion mới (có `supersedes_version_id`), mọi LO của version cũ phải có mapping trong `curriculum.lo_version_mappings`: mỗi dòng có khóa riêng `mapping_id`, `curriculum_version_id` (version mới), `from_lo_id`, `to_lo_id` và `relation ∈ {same, split, merge, replaces, removed}`; `to_lo_id` NULL khi và chỉ khi `relation = removed`. Một LO cũ có thể có nhiều dòng (`split`), nhiều LO cũ có thể trỏ một LO mới (`merge`); unique theo `(curriculum_version_id, from_lo_id, to_lo_id)`.
 - Mastery: khi học sinh chuyển sang version mới, mastery được **chiếu** qua mapping `same` (giữ nguyên), `split` (copy giá trị, giảm `evidence_count` một nửa), `merge` (trung bình có trọng số theo evidence), `removed` (giữ lịch sử, không hiển thị). Learning events gốc không bị sửa.
 - Attempt/learning event luôn lưu `learning_objective_id` của version tại thời điểm làm bài → truy xuất lịch sử chính xác.
 
-## 6. Mapping bộ sách giáo khoa [Proposed, TBD — OQ-08]
+## 6. Mapping bộ sách giáo khoa [Confirmed, TBD — OQ-08]
 
 Chương trình GDPT 2018 có nhiều bộ sách (vd. "Kết nối tri thức với cuộc sống", "Chân trời sáng tạo", "Cánh Diều"). Bộ sách khác nhau về **thứ tự và cách chia bài**, không về yêu cầu cần đạt. Do đó:
 
@@ -129,11 +129,11 @@ Chương trình GDPT 2018 có nhiều bộ sách (vd. "Kết nối tri thức v�
 
 Dùng cho: người biên tập và `academic_manager` lọc nội dung "theo bài 12 sách Cánh Diều"; lịch học (LMS) sắp xếp theo tiến độ sách của trường. Nội dung câu hỏi **không** sao chép nguyên văn sách giáo khoa khi chưa có giấy phép (RISK bản quyền, OQ-08).
 
-## 7. Seed ví dụ — GDPT 2018 Toán lớp 1–5 [Proposed, OQ-08]
+## 7. Seed ví dụ — GDPT 2018 Toán lớp 1–5 [Confirmed, OQ-08]
 
 Dữ liệu seed cho môi trường dev và pilot. Đây là **ví dụ cấu trúc**, chưa phải nội dung chương trình đã kiểm chứng. Seed nạp vào curriculum mã **`GDPT2018_SAMPLE`** (không áp quy tắc bắt buộc `yccd_ref`, publish được để dev/pilot có dữ liệu); curriculum `GDPT2018` chỉ được tạo và publish sau khi rà soát dưới đây hoàn tất.
 
-**Rà soát bắt buộc trước khi dùng cho pilot/production** [Proposed]: EdTech Specialist đối chiếu từng LO với **văn bản chương trình môn học chính thức** (GDPT 2018 và văn bản sửa đổi còn hiệu lực), điền `yccd_ref` và `competency_ids[]`, sửa mô tả theo đúng yêu cầu cần đạt, rồi ghi biên bản rà soát (người rà soát, văn bản đối chiếu, ngày) vào `change_note` của CurriculumVersion. CurriculumVersion `GDPT2018` không được publish khi còn LO thiếu `yccd_ref` (§3.3). Cột `yccd_ref` dưới đây để trống có chủ đích: mã thật lấy từ văn bản chương trình, không tự đặt [Ngoài — cần EdTech xác nhận].
+**Rà soát bắt buộc trước khi dùng cho pilot/production** [Confirmed]: EdTech Specialist đối chiếu từng LO với **văn bản chương trình môn học chính thức** (GDPT 2018 và văn bản sửa đổi còn hiệu lực), điền `yccd_ref` và `competency_ids[]`, sửa mô tả theo đúng yêu cầu cần đạt, rồi ghi biên bản rà soát (người rà soát, văn bản đối chiếu, ngày) vào `change_note` của CurriculumVersion. CurriculumVersion `GDPT2018` không được publish khi còn LO thiếu `yccd_ref` (§3.3). Cột `yccd_ref` dưới đây để trống có chủ đích: mã thật lấy từ văn bản chương trình, không tự đặt [Ngoài — cần EdTech xác nhận].
 
 | Khối | Mạch | Topic | LO code | Mô tả LO | `yccd_ref` |
 |---|---|---|---|---|---|

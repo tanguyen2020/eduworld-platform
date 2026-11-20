@@ -3,7 +3,7 @@
 > Trạng thái: Draft · Phiên bản: 0.1 · Owner: EdTech Specialist + Product Owner · Cập nhật: 2026-11-15
 > Liên quan: [CURRICULUM_MODEL](CURRICULUM_MODEL.md) · [CONTENT_MODEL](CONTENT_MODEL.md) · [QUESTION_BANK](QUESTION_BANK.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) (PED-02, K2) · [OQ-08](../12-project/OPEN_QUESTIONS.md) · [RISKS](../12-project/RISKS.md) (RISK-06) · [ROADMAP](../12-project/ROADMAP.md)
 
-Mọi con số trong tài liệu là **[Proposed]** — ước tính để lập kế hoạch, phải được EdTech Specialist hiệu chỉnh bằng dữ liệu thật sau 4 tuần sản xuất đầu tiên. Phạm vi môn/khối phụ thuộc **OQ-08** (chưa trả lời) [TBD].
+Mọi con số trong tài liệu là **[Confirmed]** — ước tính để lập kế hoạch, phải được EdTech Specialist hiệu chỉnh bằng dữ liệu thật sau 4 tuần sản xuất đầu tiên. Phạm vi môn/khối phụ thuộc **OQ-08** (chưa trả lời) [TBD].
 
 ## 1. Mục đích và phạm vi
 
@@ -19,7 +19,7 @@ Engine học tập của EduWorld cần nhiều nội dung: selection rule cần
 
 | Phương án | Môn × khối | Ghi chú |
 |---|---|---|
-| Pilot tối thiểu (khuyến nghị) | Toán + Tiếng Việt, lớp 1–5 | Khớp phạm vi pilot gợi ý ở [EDU_FIT_REVIEW §6](../12-project/EDU_FIT_REVIEW.md) và seed hiện có ([CURRICULUM_MODEL §7](CURRICULUM_MODEL.md#7-seed-ví-dụ--gdpt-2018-toán-lớp-15-proposed-oq-08)) |
+| Pilot tối thiểu (khuyến nghị) | Toán + Tiếng Việt, lớp 1–5 | Khớp phạm vi pilot gợi ý ở [EDU_FIT_REVIEW §6](../12-project/EDU_FIT_REVIEW.md) và seed hiện có ([CURRICULUM_MODEL §7](CURRICULUM_MODEL.md#7-seed-ví-dụ--gdpt-2018-toán-lớp-15-confirmed-oq-08)) |
 | Mở rộng 1 | + Tiếng Anh lớp 3–5 | Cần audio `en` cho mọi câu nghe |
 | Release đầy đủ | 4 môn × 9 khối | Chỉ sau khi đạt throughput ổn định |
 
@@ -45,7 +45,7 @@ FTE            = Giờ công / giờ sản xuất hiệu dụng của một ngư
 | Bài chẩn đoán | 4 | 2–3 câu/LO, dư cho 2 dạng |
 | **Tổng** | **30** | |
 
-Một **template tham số hóa** ([QUESTION_BANK §5](QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-proposed)) sinh nhiều biến thể; quy ước tính bằng **10 câu tương đương** cho luyện tập (không dùng cho `exam_only` và bài đo hiệu quả).
+Một **template tham số hóa** ([QUESTION_BANK §5](QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-confirmed)) sinh nhiều biến thể; quy ước tính bằng **10 câu tương đương** cho luyện tập (không dùng cho `exam_only` và bài đo hiệu quả).
 
 ### 3.3. Chi phí đơn vị
 
@@ -55,7 +55,7 @@ Một **template tham số hóa** ([QUESTION_BANK §5](QUESTION_BANK.md#5-câu-h
 | Soạn template tham số hóa (kể cả ràng buộc, kiểm thử biến thể) | 30 phút | |
 | Duyệt chuyên môn (reviewer ≠ author) | 5 phút/câu hoặc template | |
 | Audio `g1_3`: ghi âm giọng người, cắt, gắn | 3 phút/clip | Trung bình 1,5 clip/câu (đề + hướng dẫn/gợi ý) |
-| Audio `g1_3` bằng TTS: sinh + nghe duyệt | 1 phút/clip | Khi engine TTS được chọn ([CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-proposed)) |
+| Audio `g1_3` bằng TTS: sinh + nghe duyệt | 1 phút/clip | Khi engine TTS được chọn ([CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed)) |
 | Dịch `en` (tùy chọn, ADR-0056) | 5 phút/câu | Chỉ khi trường song ngữ cần |
 | Ví dụ mẫu (`worked_example`) | 30 phút/LO | 1 ví dụ/LO |
 
@@ -80,7 +80,7 @@ Với ~130 giờ sản xuất hiệu dụng/người/tháng, pilot cần khoản
 - **Nên tham số hóa:** phép tính, so sánh số, đo lường, đổi đơn vị, bài toán có lời văn với số thay đổi, chu vi/diện tích; `numeric`, `single_choice` có phương án nhiễu sinh theo lỗi sai điển hình (ví dụ `a + b` khi đề là `a × b`, kèm `options[].feedback` tương ứng).
 - **Không nên tham số hóa:** chính tả, từ vựng, đọc hiểu, câu phụ thuộc hình vẽ cố định, câu `exam_only` của đề chính thức và bài đo hiệu quả (cần kiểm soát độ khó chính xác).
 - **Yêu cầu chất lượng template:** ràng buộc tránh giá trị suy biến (chia cho 0, kết quả âm với lớp nhỏ), xem trước ≥ 20 biến thể ngẫu nhiên trong portal trước khi duyệt, độ khó các biến thể tương đương.
-- Mục tiêu: ≥ 40% câu luyện tập Toán ở dạng template [Proposed].
+- Mục tiêu: ≥ 40% câu luyện tập Toán ở dạng template [Confirmed].
 
 ## 5. Quy trình biên soạn – duyệt – publish
 
@@ -104,7 +104,7 @@ flowchart LR
 | Duyệt | `content_reviewer`/`tenant_content_reviewer` (≠ tác giả) | Approve/reject có lý do |
 | Audio | Người lồng tiếng / người duyệt TTS | Đủ audio bắt buộc, phát âm chuẩn |
 | Publish | `content_admin` hoặc người có quyền publish | Theo [CONTENT_MODEL §6](CONTENT_MODEL.md#6-workflow-trạng-thái) |
-| Sau publish | EdTech | Item analysis, hiệu chỉnh độ khó ([QUESTION_BANK §9.1](QUESTION_BANK.md#91-hiệu-chỉnh-độ-khó-bán-tự-động-proposed)), viết thêm phản hồi cho phương án nhiễu được chọn nhiều |
+| Sau publish | EdTech | Item analysis, hiệu chỉnh độ khó ([QUESTION_BANK §9.1](QUESTION_BANK.md#91-hiệu-chỉnh-độ-khó-bán-tự-động-confirmed)), viết thêm phản hồi cho phương án nhiễu được chọn nhiều |
 
 **Chỉ số theo dõi hằng tuần:** câu publish/tuần theo môn × khối, tỉ lệ reject ở bước duyệt (mục tiêu < 20%), thời gian từ soạn đến publish, số LO chưa đủ pool (`pool < 3 × count`), số câu thiếu audio.
 
@@ -128,7 +128,7 @@ Dùng mô hình ngôn ngữ để sinh **nháp** câu hỏi, gợi ý, phản h�
 - Ghi nguồn gốc `provenance = ai_assisted` trên version để thống kê chất lượng và tỉ lệ reject riêng.
 - Đánh giá bản quyền, nơi xử lý dữ liệu, chi phí; đo chất lượng bằng item analysis so với câu tự soạn.
 
-## 8. Import Word/MathType [Proposed]
+## 8. Import Word/MathType [Confirmed]
 
 Nhiều người soạn có sẵn câu hỏi trong Word với công thức MathType/Equation. Đề xuất công cụ import vào portal (bổ sung cho import Excel/CSV/QTI-lite, FR-QB-011):
 

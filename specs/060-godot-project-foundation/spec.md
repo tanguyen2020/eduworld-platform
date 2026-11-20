@@ -7,9 +7,9 @@
 
 ### Session 2026-11-16
 
-- Q: File cấu hình môi trường: `res://config/<env>.json` (GODOT_ARCHITECTURE §4), `res://config/env/<env>.json` (KEYCLOAK_SSO §11) hay `src/game/config/env/local.cfg` (LOCAL_DEVELOPMENT §4)? → A: `res://config/env/<env>.json` (JSON, sinh lúc build theo `--env`) — xem [research.md](research.md) R1 [Proposed]; hai tài liệu còn lại sửa ở task tài liệu.
+- Q: File cấu hình môi trường: `res://config/<env>.json` (GODOT_ARCHITECTURE §4), `res://config/env/<env>.json` (KEYCLOAK_SSO §11) hay `src/game/config/env/local.cfg` (LOCAL_DEVELOPMENT §4)? → A: `res://config/env/<env>.json` (JSON, sinh lúc build theo `--env`) — xem [research.md](research.md) R1 [Confirmed]; hai tài liệu còn lại sửa ở task tài liệu.
 - Q: `Config` có khóa `oidc_issuer`, `oidc_client_id` (GODOT_ARCHITECTURE §4)? → A: Không. Game đăng nhập qua `POST /auth/game/login` (ADR-0068); gỡ dấu vết OIDC theo D16.
-- Q: Mật độ (density) trước khi có bootstrap (chưa biết khối)? → A: Dùng `g1_3` (chữ/nút lớn nhất) cho màn trước đăng nhập để đạt NFR-A11Y-001; sau bootstrap theo `grade_band` [Proposed].
+- Q: Mật độ (density) trước khi có bootstrap (chưa biết khối)? → A: Dùng `g1_3` (chữ/nút lớn nhất) cho màn trước đăng nhập để đạt NFR-A11Y-001; sau bootstrap theo `grade_band` [Confirmed].
 - Q: Autoload nào thuộc F060? → A: `Config`, `Log`, `EventBus`, `AppState`, `SceneRouter`, `AudioDirector` (khung âm lượng), `Settings`; `AuthService`, `ApiClient` → F061; `RealtimeClient` → F092; `ContentCache`, `QualityManager` → F062. Thứ tự giữ đúng bảng GODOT_ARCHITECTURE §4.
 
 ### Session 2026-11-16 (ADR-0086)
@@ -21,15 +21,15 @@
 
 - Q: Windows mặc định máy dùng chung khi thiếu `device.cfg` (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
 
-### Session 2026-11-19 (triển khai — Câu hỏi mở, dùng mặc định [Proposed])
+### Session 2026-11-19 (triển khai — Câu hỏi mở, dùng mặc định [Confirmed])
 
-- Q: `login_path` trong data-model là `/api/v1/auth/game/login` trong khi `api_base_url` đã gồm `/api/v1` (LOCAL_DEVELOPMENT §4)? → A: [Proposed] `login_path = /auth/game/login`, **tương đối với `api_base_url`**; F061 ghép hai giá trị.
-- Q: Ba mức cỡ chữ (F060-AC-09) không có token riêng? → A: [Proposed] hệ số 1,0 / 1,175 / 1,35 lấy từ `UiTokens.NUMBER_RATIO_100` và `NUMBER_RATIO_135` (mức giữa là trung bình), áp lên bản sao của Theme sinh lúc chạy; xác nhận với UX ở S01 (F061).
-- Q: `device.cfg` ở `user://` (spec) hay thư mục cài đặt (GODOT_ARCHITECTURE §5.1)? → A: [Proposed] đường dẫn là project setting `eduworld/device/config_path` (mặc định `user://device.cfg` theo spec); bộ cài F133 có thể trỏ sang thư mục cài đặt chỉ admin ghi. Mặc định `shared_device_default` theo nền tảng nằm ở project setting `eduworld/device/shared_device_default/<platform>`.
-- Q: Máy dev không có toolchain C++/Android — adapter native kiểm ở đâu? → A: [Proposed] GDExtension DPAPI (godot-cpp tag `godot-4.5-stable`) và AAR Keystore build trong `godot.yml` (job `platform-windows` chạy bộ test `SecureStorage` với DPAPI thật trên runner Windows; job `platform-android`). Checkout không có DLL/AAR → `is_available() = false`, factory trả `MemoryOnly` (không có đường lưu dạng rõ). Phần lưu file (ghi tạm + đổi tên, bản ghi hỏng, log không kèm giá trị) test bằng cipher giả `tests/fixtures/fake_cipher.gd`. Test trên emulator Android (phần Android của F060-AC-23/25/26) chờ lane thiết bị của F133.
-- Q: Baseline ảnh `UiGallery` khác nhau giữa GPU/OS? → A: [Proposed] baseline theo nền tảng `tests/scene/baselines/<os>/`; nền tảng chưa có baseline thì `tools/screenshot_gallery.gd` ghi ảnh ứng viên, báo "baseline missing" và CI tải artifact để duyệt (như F050).
-- Q: Domain dev/staging/production chưa chốt (OQ-10)? → A: [Proposed] `config/env/{dev,staging,production}.json` dùng placeholder `*.eduworld.example` như `servers` của OpenAPI; thay khi OQ-10 có câu trả lời. Prism phục vụ path không có tiền tố `/api/v1` nên `mock.json` dùng `http://localhost:4011`.
-- Q: Ký bản Android trong CI PR? → A: [Proposed] `godot.yml` export Android **debug-signed** (không cần secret); ký release bằng keystore từ GitHub Environment thuộc `release.yml`/F133.
+- Q: `login_path` trong data-model là `/api/v1/auth/game/login` trong khi `api_base_url` đã gồm `/api/v1` (LOCAL_DEVELOPMENT §4)? → A: [Confirmed] `login_path = /auth/game/login`, **tương đối với `api_base_url`**; F061 ghép hai giá trị.
+- Q: Ba mức cỡ chữ (F060-AC-09) không có token riêng? → A: [Confirmed] hệ số 1,0 / 1,175 / 1,35 lấy từ `UiTokens.NUMBER_RATIO_100` và `NUMBER_RATIO_135` (mức giữa là trung bình), áp lên bản sao của Theme sinh lúc chạy; xác nhận với UX ở S01 (F061).
+- Q: `device.cfg` ở `user://` (spec) hay thư mục cài đặt (GODOT_ARCHITECTURE §5.1)? → A: [Confirmed] đường dẫn là project setting `eduworld/device/config_path` (mặc định `user://device.cfg` theo spec); bộ cài F133 có thể trỏ sang thư mục cài đặt chỉ admin ghi. Mặc định `shared_device_default` theo nền tảng nằm ở project setting `eduworld/device/shared_device_default/<platform>`.
+- Q: Máy dev không có toolchain C++/Android — adapter native kiểm ở đâu? → A: [Confirmed] GDExtension DPAPI (godot-cpp tag `godot-4.5-stable`) và AAR Keystore build trong `godot.yml` (job `platform-windows` chạy bộ test `SecureStorage` với DPAPI thật trên runner Windows; job `platform-android`). Checkout không có DLL/AAR → `is_available() = false`, factory trả `MemoryOnly` (không có đường lưu dạng rõ). Phần lưu file (ghi tạm + đổi tên, bản ghi hỏng, log không kèm giá trị) test bằng cipher giả `tests/fixtures/fake_cipher.gd`. Test trên emulator Android (phần Android của F060-AC-23/25/26) chờ lane thiết bị của F133.
+- Q: Baseline ảnh `UiGallery` khác nhau giữa GPU/OS? → A: [Confirmed] baseline theo nền tảng `tests/scene/baselines/<os>/`; nền tảng chưa có baseline thì `tools/screenshot_gallery.gd` ghi ảnh ứng viên, báo "baseline missing" và CI tải artifact để duyệt (như F050).
+- Q: Domain dev/staging/production chưa chốt (OQ-10)? → A: [Confirmed] `config/env/{dev,staging,production}.json` dùng placeholder `*.eduworld.example` như `servers` của OpenAPI; thay khi OQ-10 có câu trả lời. Prism phục vụ path không có tiền tố `/api/v1` nên `mock.json` dùng `http://localhost:4011`.
+- Q: Ký bản Android trong CI PR? → A: [Confirmed] `godot.yml` export Android **debug-signed** (không cần secret); ký release bằng keystore từ GitHub Environment thuộc `release.yml`/F133.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -199,6 +199,6 @@ Học sinh dùng máy cá nhân không phải nhập mật khẩu mỗi lần m�
 
 ## Assumptions
 
-- Godot 4.x bản stable tại Phase 1 (ghim minor), GdUnit4, gdtoolkit (`gdlint`) [Proposed — ADR-0014].
+- Godot 4.x bản stable tại Phase 1 (ghim minor), GdUnit4, gdtoolkit (`gdlint`) [Confirmed — ADR-0014].
 - Đầu ra Theme/`UiTokens` của F005 có sẵn; F060 không sửa file sinh.
-- Prism (`stoplight/prism:4`, xem LOCAL_DEVELOPMENT §3.1) chạy trong compose profile `mock` cổng `4011` [Proposed]; dữ liệu mock chỉ là ví dụ trong spec.
+- Prism (`stoplight/prism:4`, xem LOCAL_DEVELOPMENT §3.1) chạy trong compose profile `mock` cổng `4011` [Confirmed]; dữ liệu mock chỉ là ví dụ trong spec.

@@ -27,6 +27,6 @@
 
 ## Notes
 
-- Quyết định [Proposed] cần xác nhận khi review: `/social/*` (bạn bè, chặn, tắt tiếng) qua `game_player`; (đã chốt 2026-11-16: chặn kết thúc tình bạn RB-002, tên cài đặt `cross_school_social_enabled` RB-003); mã bạn bè một mã hiệu lực/người.
+- Quyết định [Confirmed] cần xác nhận khi review: `/social/*` (bạn bè, chặn, tắt tiếng) qua `game_player`; (đã chốt 2026-11-16: chặn kết thúc tình bạn RB-002, tên cài đặt `cross_school_social_enabled` RB-003); mã bạn bè một mã hiệu lực/người.
 - Mâu thuẫn: rate limit lời mời API_DESIGN §8 (10/giờ, 30/ngày) khác `friend_limits` (SOCIAL_SYSTEM); `redeemFriendCode` OpenAPI có `410`, API_DESIGN ghi `404 FRIEND_CODE_INVALID`.
 - DATABASE_DESIGN §2.11 dùng PK cặp cho `friendships`/`blocks`/`mutes` — không tương thích soft-delete khi tạo lại quan hệ; data-model đổi sang PK UUID + unique partial (task cập nhật DATABASE_DESIGN).

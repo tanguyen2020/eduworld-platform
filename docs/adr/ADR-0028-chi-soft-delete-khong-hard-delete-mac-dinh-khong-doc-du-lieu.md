@@ -17,7 +17,7 @@ Stakeholder yêu cầu: ứng dụng chỉ soft-delete, không hard-delete; khi 
 1. Mọi bảng nghiệp vụ có `deleted_at`, `deleted_by` (và `delete_reason` tùy chọn). "Xóa" = `UPDATE ... SET deleted_at = now(), deleted_by = $actor`, ghi audit và phát event `<entity>.deleted`.
 2. **Ứng dụng không bao giờ chạy `DELETE`.** Role DB ứng dụng (`<svc>_app`, `<svc>_platform`) **không có quyền `DELETE`/`TRUNCATE`** trên bảng nghiệp vụ (REVOKE + kiểm tra trong CI). Endpoint `DELETE` của API mang nghĩa soft-delete. Hook của ent đổi delete thành soft-delete (ADR-0039).
 3. **Mọi truy vấn đọc mặc định loại dữ liệu đã xóa:** global filter `deleted_at IS NULL` cùng `tenant_id` (ADR-0005, ADR-0039); RLS SELECT cũng có điều kiện này; unique constraint dùng partial index `WHERE deleted_at IS NULL`.
-4. **Xem/khôi phục** chỉ qua "Thùng rác" dành cho System Admin (Tenant Admin trong tenant của mình nếu được cấp quyền [Proposed]), có audit; khôi phục kiểm tra không vi phạm unique.
+4. **Xem/khôi phục** chỉ qua "Thùng rác" dành cho System Admin (Tenant Admin trong tenant của mình nếu được cấp quyền [Confirmed]), có audit; khôi phục kiểm tra không vi phạm unique.
 5. **Quan hệ cha–con:** soft-delete cha không xóa cứng con; con được ẩn theo quy tắc từng aggregate (DATABASE_DESIGN).
 6. **Bảng append-only** (learning events, attempt answers, audit logs, ledger XP/tiền tệ, outbox) không có thao tác xóa; sửa sai bằng bản ghi bù.
 7. **Dữ liệu tạm trong Valkey** hết hạn bằng TTL, không thuộc phạm vi ADR này.

@@ -4,7 +4,7 @@
 
 ## R1. Đường đẩy sự kiện party tới client
 
-- **Decision**: module competition publish mỗi message party (`party.member.joined`, `party.member.left`, `party.leader.transferred`, `party.state.snapshot`, `party.party.disbanded`, …) tới `ew:rt:user:<member_id>` của từng thành viên active (≤ 8 lần `PUBLISH`); lời mời publish tới `ew:rt:user:<invitee_id>` [Proposed].
+- **Decision**: module competition publish mỗi message party (`party.member.joined`, `party.member.left`, `party.leader.transferred`, `party.state.snapshot`, `party.party.disbanded`, …) tới `ew:rt:user:<member_id>` của từng thành viên active (≤ 8 lần `PUBLISH`); lời mời publish tới `ew:rt:user:<invitee_id>` [Confirmed].
 - **Rationale**: gateway chỉ `SUBSCRIBE` topic `ew:rt:party:<party_id>` khi module trả `subscribe` trong reply một lệnh WS ([REALTIME_ARCHITECTURE §4.1, §2.1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md)); tạo/accept/join đi qua REST nên không có reply WS để subscribe, và khi bị kick không có cơ chế gỡ subscribe → người bị kick vẫn nhận sự kiện party. Fan-out theo user không cần trạng thái subscription, không lộ dữ liệu sau khi rời, chi phí nhỏ (party ≤ 8).
 - **Alternatives**: (a) topic party + lệnh WS mới `party.state.subscribe` + gateway tự gỡ khi thấy `party.member.left` của chính user — đưa logic nghiệp vụ vào gateway (trái REALTIME §1); (b) chỉ dùng REST polling — không đạt ≤ 1 s (AC-PTY-003).
 - **Hệ quả**: cập nhật REALTIME_ARCHITECTURE §5 và VALKEY_DESIGN §3.2 (topic `ew:rt:party:<party_id>` không dùng trong Release 1.0) — task Polish.

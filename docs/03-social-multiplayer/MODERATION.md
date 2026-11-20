@@ -61,7 +61,7 @@ flowchart LR
 
 - Bước 3, 5, 6 và các tín hiệu bắt nạt của phân tích bất đồng bộ là **bước có thể tắt** (`steps.*`, §12). Bước tắt được bỏ qua (coi như `allow`). **Bước 4 (PII) và phát hiện grooming luôn chạy** (ADR-0078), kể cả khi công tắc tổng tắt; vì vậy bước 1 (normalize) cũng luôn chạy.
 - Giới hạn kỹ thuật ở đầu pipeline **luôn chạy**, kể cả khi công tắc tổng tắt.
-- Ngân sách độ trễ: mục tiêu **p95 < 20 ms**, trần **50 ms** theo ADR-0030, cho toàn pipeline (chạy in-process trong **module chat** (handler lệnh NATS và REST), danh mục biên dịch sẵn trong bộ nhớ, reload theo §11.6) **[Proposed]**.
+- Ngân sách độ trễ: mục tiêu **p95 < 20 ms**, trần **50 ms** theo ADR-0030, cho toàn pipeline (chạy in-process trong **module chat** (handler lệnh NATS và REST), danh mục biên dịch sẵn trong bộ nhớ, reload theo §11.6) **[Confirmed]**.
 
 ### 3.1. Bước 1 — Normalize (tiếng Việt)
 
@@ -75,16 +75,16 @@ Tạo nhiều "góc nhìn" của cùng văn bản để so khớp:
 | Leetspeak / ký tự thay thế | `0`→`o`, `1`→`i`/`l`, `3`→`e`, `4`→`a`, `@`→`a`, `$`→`s` |
 | Ký tự lặp | `ngooooc` → `ngoc` (giảm ≥3 ký tự lặp về 1–2) |
 | Bỏ ký tự chèn giữa | `n.g.u`, `n g u`, `n_g_u` → `ngu` (gộp chuỗi ký tự đơn cách nhau bởi dấu/khoảng trắng) |
-| Telex/VNI chưa gõ xong | `ddoof` → `đồ` (map Telex), `d9o62` (VNI) [Proposed] |
+| Telex/VNI chưa gõ xong | `ddoof` → `đồ` (map Telex), `d9o62` (VNI) [Confirmed] |
 | Homoglyph | Chữ Cyrillic/Greek giống Latin → Latin |
 
 ### 3.2. Bước 3 — Danh mục từ nhạy cảm (`steps.sensitive_terms`)
 
 - So khớp văn bản đã normalize với **danh mục từ nhạy cảm hiệu lực** của tenant (danh mục platform + mục bổ sung của tenant, trừ category đang tắt). Data model, phạm vi và engine ở **§11**.
 - Hành động lấy từ mục từ (nếu có ghi đè) hoặc từ category theo `severity`: `low → mask`, `medium → block`, `high → hold_for_review`, `critical → block_and_alert` (ADR-0030).
-- Category có `severity = watch` [Proposed] (từ nhạy cảm theo ngữ cảnh: "chết", "đánh") → `allow` + tăng điểm rủi ro cho phân tích async.
+- Category có `severity = watch` [Confirmed] (từ nhạy cảm theo ngữ cảnh: "chết", "đánh") → `allow` + tăng điểm rủi ro cho phân tích async.
 - `validation.strictness` của channel có thể nâng hành động lên một mức (vd. `very_strict`: `mask → block`). Không có điều kiện theo lớp.
-- So khớp trên cả bản có dấu và không dấu, theo **ranh giới từ** (tránh false positive kiểu "ngủ" bị bắt vì "ngu": chỉ áp bản không dấu khi văn bản gốc **không có dấu**) **[Proposed]**. Allowlist (§11.3) loại các cụm hợp lệ trước khi so khớp.
+- So khớp trên cả bản có dấu và không dấu, theo **ranh giới từ** (tránh false positive kiểu "ngủ" bị bắt vì "ngu": chỉ áp bản không dấu khi văn bản gốc **không có dấu**) **[Confirmed]**. Allowlist (§11.3) loại các cụm hợp lệ trước khi so khớp.
 - Khi chặn/che, phản hồi cho client chỉ có `category_code` và thông điệp thân thiện, **không** trả từ đã khớp hay vị trí.
 
 ### 3.3. Bước 4 — PII detector (`steps.pii`, luôn chạy)
@@ -102,11 +102,11 @@ Bước này **không tắt được** (ADR-0078): không có trong công tắc 
 | Hẹn gặp ngoài đời | "gặp ở", "nhà mình ở", "mấy giờ ra" + địa điểm | hold_for_review + điểm rủi ro grooming |
 | Tên trường/lớp thật kèm tên người | NER đơn giản dựa danh sách trường trong org | mask |
 
-Thông điệp trả về cho học sinh thân thiện và mang tính giáo dục, vd: *"Để an toàn, EduWorld không cho chia sẻ số điện thoại hay mạng xã hội trong game nhé!"* — không lặp lại nội dung vi phạm **[Proposed]**.
+Thông điệp trả về cho học sinh thân thiện và mang tính giáo dục, vd: *"Để an toàn, EduWorld không cho chia sẻ số điện thoại hay mạng xã hội trong game nhé!"* — không lặp lại nội dung vi phạm **[Confirmed]**.
 
 ### 3.4. Bước 5 — Anti-spam & trùng lặp (`steps.spam`)
 
-Rate limit theo policy (`messages_per_minute` + burst và `chat_rate_per_user`, nguồn duy nhất ở [CHAT_SYSTEM §3.1](CHAT_SYSTEM.md#31-mặc-định-platform-proposed--giá-trị-số-cấu-trúc-confirmed-theo-adr-0020)) là **giới hạn kỹ thuật, luôn chạy** ở đầu pipeline và không thuộc bước `spam`. Bước `spam` gồm các kiểm tra nội dung sau:
+Rate limit theo policy (`messages_per_minute` + burst và `chat_rate_per_user`, nguồn duy nhất ở [CHAT_SYSTEM §3.1](CHAT_SYSTEM.md#31-mặc-định-platform-confirmed--giá-trị-số-cấu-trúc-confirmed-theo-adr-0020)) là **giới hạn kỹ thuật, luôn chạy** ở đầu pipeline và không thuộc bước `spam`. Bước `spam` gồm các kiểm tra nội dung sau:
 
 | Quy tắc | Ngưỡng (`chat_spam_thresholds`, [Confirmed — Technical Architect 2026-11-16]) | Hành động |
 |---|---|---|
@@ -135,7 +135,7 @@ Tắt bước này thì `chat-moderation-async` (profile `worker-chat`) bỏ qua
 | Grooming pattern (luôn chạy) | Hỏi tuổi, địa chỉ, yêu cầu giữ bí mật, rủ chuyển nền tảng khác |
 | Báo cáo trước đó | Người gửi có report được xác nhận |
 
-Vượt ngưỡng → tạo `moderation_case` mức ưu tiên tương ứng, **không** tự động trừng phạt nặng; chỉ auto-mute ngắn với tín hiệu rõ ràng **[Proposed]**. Mô hình ML/LLM phân loại có thể bổ sung sau, chỉ khi xử lý trong hạ tầng đáp ứng OQ-12 và có ADR **[TBD]**.
+Vượt ngưỡng → tạo `moderation_case` mức ưu tiên tương ứng, **không** tự động trừng phạt nặng; chỉ auto-mute ngắn với tín hiệu rõ ràng **[Confirmed]**. Mô hình ML/LLM phân loại có thể bổ sung sau, chỉ khi xử lý trong hạ tầng đáp ứng OQ-12 và có ADR **[TBD]**.
 
 ## 5. Report flow
 
@@ -159,8 +159,8 @@ sequenceDiagram
 
 - API kiểm duyệt của Safety Team nằm dưới `/api/v1/admin/moderation/*` (chỉ gateway nội bộ, `azp = eduworld-portal` + MFA, role platform); học sinh chỉ có `POST /api/v1/chat/reports`. Snapshot lúc tạo report là **±10 tin** (nguồn duy nhất của con số này; DATABASE_DESIGN theo); khi channel còn, moderator xem thêm ±200 tin ngữ cảnh (§6.1).
 - `reason` (enum, chọn bằng icon cho lớp 1–5): `rude_language`, `bullying`, `asked_personal_info`, `spam`, `inappropriate_content`, `cheating`, `other`.
-- Báo cáo `asked_personal_info` hoặc dấu hiệu grooming → `p1` theo §6.2, kèm thông báo nhà trường theo §6.4 **[Proposed]**.
-- Lạm dụng báo cáo (nhiều báo cáo bị bác bỏ) → giảm trọng số, không phạt trẻ (chỉ nhắc nhở) **[Proposed]**.
+- Báo cáo `asked_personal_info` hoặc dấu hiệu grooming → `p1` theo §6.2, kèm thông báo nhà trường theo §6.4 **[Confirmed]**.
+- Lạm dụng báo cáo (nhiều báo cáo bị bác bỏ) → giảm trọng số, không phạt trẻ (chỉ nhắc nhở) **[Confirmed]**.
 - **Report từ trong trận/party:** chat gameplay luôn có (ADR-0020 mục 6), nên mỗi tin trong panel chat trận/party có menu nhanh **Tắt tiếng / Chặn / Báo cáo**; màn hình kết quả trận và lịch sử party có nút "Báo cáo người chơi". Report gắn `match_id`/`party_id` làm ngữ cảnh.
 - **Cửa sổ report cho chat gameplay:** học sinh báo cáo được tin trong trận/party cho đến khi channel bị purge, tức **ít nhất 3 ngày** sau khi trận kết thúc/party giải tán (`gameplay_chat_retention_days` ≥ 3, mặc định 7 — ADR-0033). Snapshot ngữ cảnh được chụp ngay lúc tạo report nên không bị mất khi purge.
 
@@ -179,7 +179,7 @@ Kiểm duyệt tập trung ở platform (ADR-0072):
 | `tenant_admin` | Không đọc case; báo cáo tổng hợp ẩn danh của tenant; xem (chỉ đọc) trạng thái nhóm từ của tenant | Gửi yêu cầu cho Safety Team: thêm mục từ bổ sung, bật/tắt nhóm từ của tenant (§11.3) |
 
 - **Không vai trò nào** có API duyệt/tìm kiếm tự do toàn bộ tin nhắn của mọi trường **[Confirmed]**. `safety_moderator` đọc liên tenant **chỉ** trong ngữ cảnh một case (snapshot + ngữ cảnh case), không duyệt lịch sử chat tùy ý; ngoài module moderation, `safety_moderator` không có quyền đọc dữ liệu tenant. Quyền đọc liên tenant đầy đủ chỉ thuộc `system_admin` (AGENTS.md R20).
-- Case liên trường (vd. tin ở world/area hoặc trận liên trường): **một case** do Safety Team xử lý; thông báo gửi mỗi trường (§6.4) chỉ chứa thông tin học sinh của trường đó **[Proposed]**.
+- Case liên trường (vd. tin ở world/area hoặc trận liên trường): **một case** do Safety Team xử lý; thông báo gửi mỗi trường (§6.4) chỉ chứa thông tin học sinh của trường đó **[Confirmed]**.
 - Mỗi case có `assignee_moderator_id` (`safety_moderator` đang xử lý, gán tự động theo vòng trực hoặc nhận thủ công); chỉ người được gán và trưởng ca đọc nội dung case. Tài khoản demo: `sm.antoan` (`safety_moderator`).
 - Mọi truy cập nội dung case ghi `audit` (`moderation.case.viewed`) kèm `tenant_id` đích; mỗi lần `Bypass` tăng metric `eduworld_tenant_filter_bypass_total{reason="moderation_case"}`.
 - **Tin đã thu hồi / đã sửa trong case:** snapshot case gồm nội dung gốc và mọi revision (người dùng thường chỉ thấy placeholder/bản mới). Báo cáo một tin đã thu hồi trong cửa sổ báo cáo vẫn tạo case bình thường; job purge giữ bằng chứng theo §10.
@@ -199,7 +199,7 @@ stateDiagram-v2
   resolved --> [*]
 ```
 
-Ưu tiên (nguồn duy nhất; [CHILD_SAFETY §9](../10-security/CHILD_SAFETY.md#9-báo-cáo-leo-thang-và-phản-hồi) chỉ tham chiếu) **[Proposed]**:
+Ưu tiên (nguồn duy nhất; [CHILD_SAFETY §9](../10-security/CHILD_SAFETY.md#9-báo-cáo-leo-thang-và-phản-hồi) chỉ tham chiếu) **[Confirmed]**:
 
 | Ưu tiên | Loại vụ việc |
 |---|---|
@@ -207,7 +207,7 @@ stateDiagram-v2
 | `p2` | Bắt nạt, xúc phạm, bắt nạt hội đồng; **chia sẻ thông tin cá nhân của người khác** (bêu xấu) |
 | `p3` | Ngôn ngữ thô, spam; học sinh **tự chia sẻ PII của chính mình** bị pipeline chặn lặp lại (chỉ tạo case khi lặp ≥ 3 lần/24 h, mục tiêu là nhắc nhở) |
 
-### 6.3. SLA xử lý [Proposed]
+### 6.3. SLA xử lý [Confirmed]
 
 | Ưu tiên | Phản hồi đầu tiên | Xử lý xong | Escalate tự động nếu quá hạn |
 |---|---|---|---|
@@ -215,17 +215,17 @@ stateDiagram-v2
 | p2 | 1 ngày làm việc | 3 ngày làm việc | `safety_moderator` → trưởng ca |
 | p3 | 3 ngày làm việc | 7 ngày làm việc | — |
 
-- Lịch trực p1 24/7, kênh gọi on-call (alert từ `eduworld_moderation_cases_open{severity="p1"}` chưa nhận sau `p1_unclaimed_alert_minutes` = 15 phút **[Confirmed — Technical Architect 2026-11-15]**) và diễn tập hằng quý: [CHILD_SAFETY §11](../10-security/CHILD_SAFETY.md#11-đào-tạo-và-vận-hành-moderator) **[Proposed]**.
+- Lịch trực p1 24/7, kênh gọi on-call (alert từ `eduworld_moderation_cases_open{severity="p1"}` chưa nhận sau `p1_unclaimed_alert_minutes` = 15 phút **[Confirmed — Technical Architect 2026-11-15]**) và diễn tập hằng quý: [CHILD_SAFETY §11](../10-security/CHILD_SAFETY.md#11-đào-tạo-và-vận-hành-moderator) **[Confirmed]**.
 - Trong lúc chờ người xử lý, hệ thống chỉ **hạn chế tạm thời** người gửi (hold chat, chặn friend request/lời mời mới), không áp sanction dài hạn tự động.
-- Nội dung liên quan tự hại/xâm hại: hiển thị hướng dẫn hỗ trợ (Tổng đài quốc gia bảo vệ trẻ em 111) cho `safety_moderator` và quy trình thông báo nhà trường (§6.4) để nhà trường liên hệ phụ huynh, theo [CHILD_SAFETY §8–§9](../10-security/CHILD_SAFETY.md#8-tín-hiệu-rủi-ro-an-toàn-trẻ-em-proposed) **[Proposed]**.
+- Nội dung liên quan tự hại/xâm hại: hiển thị hướng dẫn hỗ trợ (Tổng đài quốc gia bảo vệ trẻ em 111) cho `safety_moderator` và quy trình thông báo nhà trường (§6.4) để nhà trường liên hệ phụ huynh, theo [CHILD_SAFETY §8–§9](../10-security/CHILD_SAFETY.md#8-tín-hiệu-rủi-ro-an-toàn-trẻ-em-confirmed) **[Confirmed]**.
 
-### 6.4. Thông báo vụ việc cho nhà trường [Proposed]
+### 6.4. Thông báo vụ việc cho nhà trường [Confirmed]
 
 Nhà trường không xử lý case nhưng là đầu mối liên hệ phụ huynh (EduWorld không có kênh phụ huynh trực tiếp, OQ-13).
 
 | Mục | Quy tắc |
 |---|---|
-| Khi nào gửi | Case `p1`; sanction ≥ `restrict_multiplayer`; tín hiệu tự hại (kể cả khi người gửi không vi phạm); trường hợp khác khi `safety_moderator` thấy cần nhà trường quan tâm (vd. học sinh bị loại trừ lặp lại, [CHILD_SAFETY §8](../10-security/CHILD_SAFETY.md#8-tín-hiệu-rủi-ro-an-toàn-trẻ-em-proposed)) |
+| Khi nào gửi | Case `p1`; sanction ≥ `restrict_multiplayer`; tín hiệu tự hại (kể cả khi người gửi không vi phạm); trường hợp khác khi `safety_moderator` thấy cần nhà trường quan tâm (vd. học sinh bị loại trừ lặp lại, [CHILD_SAFETY §8](../10-security/CHILD_SAFETY.md#8-tín-hiệu-rủi-ro-an-toàn-trẻ-em-confirmed)) |
 | Người nhận | `school_admin` của trường có học sinh liên quan (mỗi trường chỉ nhận phần học sinh trường mình); hiển thị trong Admin Portal workspace C ("An toàn → Vụ việc cần liên hệ phụ huynh") + email báo có thông báo mới (email **không** chứa tên học sinh hay nội dung) |
 | Nội dung | Mã case, học sinh liên quan của trường (tên, lớp), vai trò (người bị ảnh hưởng/người vi phạm), loại vụ việc (`category_code`), mức ưu tiên, biện pháp đã áp, **tóm tắt theo mẫu** do Safety Team viết; **không** có nội dung chat thô, không có thông tin học sinh trường khác |
 | Thời điểm lưu | Trên `chat.moderation_cases` ([DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md)): `school_notified_at` (lúc gửi), `school_ack_at` + `acknowledged_by` (trường xác nhận đã liên hệ), `contact_outcome` (`parent_contacted`, `unable_to_contact`, `not_needed`), ghi chú ngắn ≤ 500 ký tự |
@@ -247,7 +247,7 @@ Nhà trường không xử lý case nhưng là đầu mối liên hệ phụ huy
 | `account_lock` | Khóa tài khoản (phối hợp Keycloak + `user.status=locked`) | Trưởng ca Safety Team, `system_admin` | theo vụ |
 
 - Sanction lưu `chat.sanctions` (`user_id`, `school_id`, `type`, `scope`, `reason`, `case_id`, `issued_by`, `starts_at`, `ends_at`, `revoked_at`); cache Valkey để pipeline kiểm tra nhanh.
-- Học sinh luôn thấy **lý do bằng ngôn ngữ phù hợp lứa tuổi** và thời hạn; nhà trường được thông báo (tóm tắt, §6.4) với sanction ≥ `restrict_multiplayer` để liên hệ phụ huynh **[Proposed]**.
+- Học sinh luôn thấy **lý do bằng ngôn ngữ phù hợp lứa tuổi** và thời hạn; nhà trường được thông báo (tóm tắt, §6.4) với sanction ≥ `restrict_multiplayer` để liên hệ phụ huynh **[Confirmed]**.
 - `school_admin` vẫn có thể khóa/mở tài khoản học sinh vì lý do quản trị (nghỉ học, chuyển trường) trong quản lý người dùng; đó không phải sanction kiểm duyệt.
 - Tinh thần giáo dục: ưu tiên `warning`, nhắc nhở, hướng dẫn ứng xử số; không công khai hình phạt.
 
@@ -264,11 +264,11 @@ Nhà trường không xử lý case nhưng là đầu mối liên hệ phụ huy
 
 ## 9. Audit
 
-Ghi `audit.audit_logs` cho: thay đổi `chat_policy` (before/after), mọi thay đổi danh mục từ nhạy cảm (category/term/allowlist, kèm `catalog_version`), **mọi lần bật/tắt công tắc kiểm duyệt** (cấp, tenant, bước, lý do, `expires_at`, actor), xem nội dung danh mục, thay đổi teencode map, mọi sanction (áp/thu hồi), xem nội dung case (kèm `tenant_id` đích và lý do `Bypass`), escalate, break-glass access, gỡ tin bởi `safety_moderator`, gửi/xác nhận thông báo nhà trường. Audit log **không** sao chép nội dung tin nhắn — chỉ tham chiếu `message_id`/`case_id`. Retention audit: theo [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) (đề xuất 2 năm) **[Proposed]**.
+Ghi `audit.audit_logs` cho: thay đổi `chat_policy` (before/after), mọi thay đổi danh mục từ nhạy cảm (category/term/allowlist, kèm `catalog_version`), **mọi lần bật/tắt công tắc kiểm duyệt** (cấp, tenant, bước, lý do, `expires_at`, actor), xem nội dung danh mục, thay đổi teencode map, mọi sanction (áp/thu hồi), xem nội dung case (kèm `tenant_id` đích và lý do `Bypass`), escalate, break-glass access, gỡ tin bởi `safety_moderator`, gửi/xác nhận thông báo nhà trường. Audit log **không** sao chép nội dung tin nhắn — chỉ tham chiếu `message_id`/`case_id`. Retention audit: theo [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) (đề xuất 2 năm) **[Confirmed]**.
 
 ## 10. Data minimization & retention
 
-- Bộ lọc xử lý in-memory; tin bị `block` **không lưu nội dung gốc** nếu chứa PII — chỉ lưu bản đã che + nhãn vi phạm (đủ để thống kê, xử lý tái phạm) **[Proposed]**.
+- Bộ lọc xử lý in-memory; tin bị `block` **không lưu nội dung gốc** nếu chứa PII — chỉ lưu bản đã che + nhãn vi phạm (đủ để thống kê, xử lý tái phạm) **[Confirmed]**.
 - Điểm rủi ro trong Valkey hết hạn sau 24 h; chỉ lưu bền vững khi thành `moderation_case`.
 - Snapshot ngữ cảnh và bằng chứng của case (report, case, sanction, `moderation_evidence`) giữ đến khi case đóng + 1 năm (`moderation_snapshot_retention`) **[Confirmed — Technical Architect 2026-11-16]**; hết hạn thì ẩn danh hóa (ADR-0070). Mục này là nguồn duy nhất của thời hạn này.
 - **Giữ bằng chứng trước khi purge chat gameplay (ADR-0033):** trước mỗi lần chạy `gameplay-chat-purge`, mọi tin trong channel `match`/`team` theo trận/`party`/World/Area đang được tham chiếu bởi report, moderation case (mọi trạng thái chưa hết hạn lưu giữ) hoặc sanction được **sao chép** sang `chat.moderation_evidence` (nội dung, người gửi, thời điểm, `channel_type`, `match_id`/`party_id`, `catalog_version`). Bằng chứng theo thời hạn lưu của moderation, không theo hạn purge của channel.
@@ -282,7 +282,7 @@ Ghi `audit.audit_logs` cho: thay đổi `chat_policy` (before/after), mọi thay
 
 | Entity | Thuộc tính chính | Ghi chú |
 |---|---|---|
-| **SensitiveTermCategory** | `category_id`, `tenant_id` (NULL = platform), `code` (`profanity`, `insult`, `violence`, `sexual`, `drugs`, `self_harm`, `grooming_scam`, `politics_religion`, `pii_pattern`…), `name`, `description`, `severity` (`watch` [Proposed] / `low` / `medium` / `high` / `critical`), `default_action`, `enabled`, `allow_tenant_toggle`, `deleted_at` | Category platform do System Admin tạo. Tenant không tạo category mới, chỉ thêm term vào category có sẵn [Proposed] |
+| **SensitiveTermCategory** | `category_id`, `tenant_id` (NULL = platform), `code` (`profanity`, `insult`, `violence`, `sexual`, `drugs`, `self_harm`, `grooming_scam`, `politics_religion`, `pii_pattern`…), `name`, `description`, `severity` (`watch` [Confirmed] / `low` / `medium` / `high` / `critical`), `default_action`, `enabled`, `allow_tenant_toggle`, `deleted_at` | Category platform do System Admin tạo. Tenant không tạo category mới, chỉ thêm term vào category có sẵn [Confirmed] |
 | **SensitiveTerm** | `term_id`, `category_id`, `tenant_id` (NULL = platform), `term`, `match_type` (`word` / `phrase` / `contains` / `pattern`), `locale` (`vi` / `en`), `variants[]` (khai báo thêm), `severity_override?`, `action_override?`, `enabled`, `note`, `created_by`, `deleted_at` | `pattern` là RE2, tối đa 200 ký tự, cấm backreference/lookaround |
 | **SensitiveAllowlistEntry** | `entry_id`, `tenant_id?`, `phrase`, `locale`, `reason`, `deleted_at` | Cụm hợp lệ chứa chuỗi trùng (địa danh, thuật ngữ khoa học, từ ghép) |
 | **SensitiveCatalogVersion** | `catalog_version` (tăng đơn điệu theo phạm vi platform/tenant), `scope`, `tenant_id?`, `published_at`, `published_by`, `change_summary`, `term_count`, `checksum` | Mỗi lần publish thay đổi tạo version mới. Decision log ghi version đã dùng |
@@ -293,7 +293,7 @@ Biến thể **tự sinh** khi biên dịch: bản không dấu (`vi_fold`), tee
 
 | Severity | Action mặc định | Hành vi | Phản hồi cho người gửi |
 |---|---|---|---|
-| `watch` [Proposed] | `allow` | Gửi bình thường, cộng điểm rủi ro async | — |
+| `watch` [Confirmed] | `allow` | Gửi bình thường, cộng điểm rủi ro async | — |
 | `low` | `mask` | Thay đoạn khớp bằng `***`, tin vẫn gửi | Nhắc nhẹ: "Một vài từ đã được ẩn để giữ lịch sự nhé" |
 | `medium` | `block` | Không gửi, không lưu nội dung | "Tin nhắn có từ chưa phù hợp, em thử viết lại nhé" |
 | `high` | `hold_for_review` | Không gửi, tạo `moderation_case` p2 | "Tin nhắn đang chờ đội an toàn xem" |
@@ -318,8 +318,8 @@ Không bao giờ trả về từ đã khớp, vị trí khớp hay nội dung da
 
 1. Thêm/sửa term ở trạng thái nháp (theo phạm vi).
 2. Chạy **thử chuỗi** (`POST .../sensitive-terms:test`): nhập câu mẫu → xem category/action sẽ áp dụng (chỉ người có quyền xem danh mục).
-3. **Test hồi quy tự động**: bộ ≥ 2.000 câu mẫu gán nhãn (có dấu/không dấu/teencode) + tập hội thoại học tập bình thường. Publish bị chặn nếu recall < 95% với `high`/`critical` + PII hoặc false positive > 3% (ADR-0030) **[Proposed]**.
-4. Danh mục platform: một System Admin khác duyệt (four-eyes) trước khi publish [Proposed]. Mục từ bổ sung của tenant: `safety_moderator` publish, ghi mã yêu cầu của Tenant Admin vào `change_summary`.
+3. **Test hồi quy tự động**: bộ ≥ 2.000 câu mẫu gán nhãn (có dấu/không dấu/teencode) + tập hội thoại học tập bình thường. Publish bị chặn nếu recall < 95% với `high`/`critical` + PII hoặc false positive > 3% (ADR-0030) **[Confirmed]**.
+4. Danh mục platform: một System Admin khác duyệt (four-eyes) trước khi publish [Confirmed]. Mục từ bổ sung của tenant: `safety_moderator` publish, ghi mã yêu cầu của Tenant Admin vào `change_summary`.
 5. Publish → tạo `catalog_version` mới → event `sensitive_term.updated` → engine reload (§11.6).
 6. Xóa term = soft-delete (ADR-0028), có hiệu lực ở version kế tiếp.
 

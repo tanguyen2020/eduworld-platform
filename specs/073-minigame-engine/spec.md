@@ -188,7 +188,7 @@ Thêm `calculation`, `puzzle`, `word_game`, `science_simulation`, `timed_challen
 
 - Cấp XP/Xu/item theo `reward_rule_id`, cap → F074/F075; game score trong thi đấu → F104–F106.
 - Biên tập cấu hình, preview Godot Web trên Game Operations Console (`/game-admin/minigame-configs`) → F078/F079; activity builder trên portal → F058.
-- Giao bài mini-game cho lớp (assignment, `startActivityAttempt`, tab "Nhà trường giao") → F041/F055/F063; `difficulty = adaptive` → sau Release (Phase 3, [Proposed]).
+- Giao bài mini-game cho lớp (assignment, `startActivityAttempt`, tab "Nhà trường giao") → F041/F055/F063; `difficulty = adaptive` → sau Release (Phase 3, [Confirmed]).
 - Cờ thời gian trả lời bất thường dùng `rapid_guess` sẵn có → F032; cơ chế học tập nội tại pilot (LEARNING_MECHANICS §7) là nội dung, không phải engine.
 
 ## Assumptions

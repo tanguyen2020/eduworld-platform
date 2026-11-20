@@ -5,7 +5,7 @@
 ## 1. Chuẩn bị
 
 - Phụ thuộc đã Done: F004, F012, F050.
-- Lệnh (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; `make portal-catalog`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` → `http://localhost:5173` (dev server proxy `/api/v1` cùng origin để cookie `__Secure-ew_portal_rt`/`__Host-ew_portal_csrf` hoạt động [Proposed]).
+- Lệnh (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make seed`, `make up-app`; `make portal-catalog`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` → `http://localhost:5173` (dev server proxy `/api/v1` cùng origin để cookie `__Secure-ew_portal_rt`/`__Host-ew_portal_csrf` hoạt động [Confirmed]).
 - Tài khoản demo (mật khẩu seed local): `ad.truong.a` (school_admin, 1 tenant), `qlcm.truong.a` (academic_manager, 2 tenant), `sa.admin` (system_admin), `cm.noidung` (content_admin), `hs.an.3a` (học sinh).
 
 ## 2. Kịch bản kiểm tra

@@ -28,4 +28,4 @@
 ## Notes
 
 - Ân hạn đồng bộ offline (30 giây) và chu kỳ job auto-submit (15 giây) chưa có tên trong CONFIG_DEFAULTS; spec link EXAM_ENGINE §6, §7.2 thay vì chép giá trị.
-- Tên cột đã chốt `exam_type`/`duration_sec` (EXAM_ENGINE §5, DATABASE_DESIGN, RB-212); API giữ `type`/`duration_seconds` ánh xạ ở DTO [Proposed].
+- Tên cột đã chốt `exam_type`/`duration_sec` (EXAM_ENGINE §5, DATABASE_DESIGN, RB-212); API giữ `type`/`duration_seconds` ánh xạ ở DTO [Confirmed].

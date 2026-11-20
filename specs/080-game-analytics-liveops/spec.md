@@ -18,7 +18,7 @@
 
 - Q: Component hiển thị ô bị ẩn < 5? → A: Dùng lại `SuppressedCell` của F056 trong `ops-ui` (DESIGN_SYSTEM §4, RB-619); workspace E là thư mục `live-ops`.
 - Q: UI báo cáo game tổng hợp cho nhà trường (workspace C) thuộc feature nào? → A: Technical Architect chốt tách F081 ([CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý)): User Story 4 cũ của F081 (tiêu chí 13–18 cũ) chuyển vào US5 của feature này thành F080-AC-27…32 (M4b); màn đặt trong chunk `school-lms` (F052), dùng component dashboard của F056; mở rộng `TenantGameSummary` theo đủ [GAME_ANALYTICS §7.2](../../docs/11-operations/GAME_ANALYTICS.md) cũng ở đây.
-- Q: Academic Manager có xem báo cáo game không? GAME_ANALYTICS §8 ghi "không", nhưng ADMIN_PORTAL §2.2 và SECURITY_ARCHITECTURE cấp `analytics.school.read` cho `academic_manager`. → A: [Proposed] Theo permission catalog (ADMIN_PORTAL §2.2 sở hữu catalog): có `analytics.tenant.read`/`analytics.school.read` ở scope tenant/trường thì xem được; UserRole chỉ scope `subject` → `403 PERMISSION_DENIED` (dữ liệu game không có chiều môn). Mâu thuẫn GAME_ANALYTICS §8 ghi báo cáo (chuyển từ F081).
+- Q: Academic Manager có xem báo cáo game không? GAME_ANALYTICS §8 ghi "không", nhưng ADMIN_PORTAL §2.2 và SECURITY_ARCHITECTURE cấp `analytics.school.read` cho `academic_manager`. → A: [Confirmed] Theo permission catalog (ADMIN_PORTAL §2.2 sở hữu catalog): có `analytics.tenant.read`/`analytics.school.read` ở scope tenant/trường thì xem được; UserRole chỉ scope `subject` → `403 PERMISSION_DENIED` (dữ liệu game không có chiều môn). Mâu thuẫn GAME_ANALYTICS §8 ghi báo cáo (chuyển từ F081).
 - Q: Xuất CSV báo cáo game tenant? → A: Không trong GAME_ANALYTICS §7.2; ngoài phạm vi.
 
 ## User Scenarios & Testing *(bắt buộc)*
@@ -176,7 +176,7 @@ Game designer xem 11 panel, lọc khối/nền tảng/hạng thiết bị, so s�
 
 ### Edge Cases
 
-- NẾU khóa HMAC `player_key` xoay (sau `analytics_player_key_rotation_months`), THÌ retention qua mốc xoay tính theo bảng ánh xạ phiên bản khóa [Proposed]; không lưu `student_id`.
+- NẾU khóa HMAC `player_key` xoay (sau `analytics_player_key_rotation_months`), THÌ retention qua mốc xoay tính theo bảng ánh xạ phiên bản khóa [Confirmed]; không lưu `student_id`.
 - NẾU Valkey mất, THÌ API vẫn trả đúng số (chậm hơn, không cache) (AC-DASH-012).
 - NẾU chưa có dữ liệu cho chỉ số mới, THÌ trả `available_from`; UI (workspace E và màn "Hoạt động game") hiển thị "Chưa có số liệu trước ngày …" thay vì 0.
 - NẾU tenant tắt telemetry sản phẩm, THÌ chỉ số từ telemetry client (phân bố thiết bị) trên màn "Hoạt động game" có thể thiếu → hiển thị "Không có dữ liệu", không lỗi.
@@ -255,8 +255,8 @@ Game designer xem 11 panel, lọc khối/nền tảng/hạng thiết bị, so s�
 
 ## Assumptions
 
-- [Proposed] Live dashboard đọc Prometheus HTTP API qua adapter trong module game, URL `EW_PROMETHEUS_URL` từ env (R3); query catalog cố định trong code.
-- [Proposed] `getGameAnalyticsExport` là operationId mới (API_DESIGN chỉ có `createGameAnalyticsExport`).
-- [Proposed] UI Game Analytics đặt `src/cms/frontend/apps/portal/src/workspaces/live-ops/{dashboard,analytics,events}/` (F051 slug `live-ops`).
-- [Proposed] Màn "Hoạt động game" route `/school-lms/reports/game-activity` trong chunk `school-lms` (F052), menu "Tiến độ & báo cáo → Hoạt động game"; dùng `DashboardRangePicker`, `DashboardWidget`, `SuppressedCell`, `useDashboardQueue` của F056 trong `ops-ui`.
+- [Confirmed] Live dashboard đọc Prometheus HTTP API qua adapter trong module game, URL `EW_PROMETHEUS_URL` từ env (R3); query catalog cố định trong code.
+- [Confirmed] `getGameAnalyticsExport` là operationId mới (API_DESIGN chỉ có `createGameAnalyticsExport`).
+- [Confirmed] UI Game Analytics đặt `src/cms/frontend/apps/portal/src/workspaces/live-ops/{dashboard,analytics,events}/` (F051 slug `live-ops`).
+- [Confirmed] Màn "Hoạt động game" route `/school-lms/reports/game-activity` trong chunk `school-lms` (F052), menu "Tiến độ & báo cáo → Hoạt động game"; dùng `DashboardRangePicker`, `DashboardWidget`, `SuppressedCell`, `useDashboardQueue` của F056 trong `ops-ui`.
 - ADR-0058 ở trạng thái Proposed nhưng được liệt kê "đang dùng làm mặc định" trong chỉ mục ADR.

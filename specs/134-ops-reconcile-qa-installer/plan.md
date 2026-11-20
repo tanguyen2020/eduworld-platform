@@ -30,9 +30,9 @@
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Đối soát chỉ qua facade trong tiến trình (`src/backend/pkg/modcall`); operation đối soát là query handler chỉ đọc; chỉ import `src/backend/modules/<khác>/api` theo `x-allowed-callers` (`src/backend/pkg/reconcile` dùng chung) |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng `infra.*` là hạ tầng không thuộc tenant (đọc như outbox relay, chỉ trả ID, không payload); `listSchoolClientInstallers` kiểm scope trường; dashboard platform vẫn qua `CrossTenantScope` hiện có; không ghi/xóa |
 | IV Server-authoritative | ✅ | Lọc QA, lọc khối, kiểm chữ ký ở server |
-| V Xác thực, phân quyền | ✅ | Internal: `x-allowed-callers`; `platform.tenant.manage` cho cờ QA; `school.installer.read` [Proposed] |
+| V Xác thực, phân quyền | ✅ | Internal: `x-allowed-callers`; `platform.tenant.manage` cho cờ QA; `school.installer.read` [Confirmed] |
 | VI An toàn trẻ em | ✅ | Báo cáo/endpoint không PII; tenant QA không chứa học sinh thật |
-| VII Một nguồn sự thật, cấu hình | ✅ | `outbox_retention` theo tên; `reconcile_settle_minutes` [Proposed] đăng ký CONFIG_DEFAULTS; URL CDN/khóa công khai qua env |
+| VII Một nguồn sự thật, cấu hình | ✅ | `outbox_retention` theo tên; `reconcile_settle_minutes` [Confirmed] đăng ký CONFIG_DEFAULTS; URL CDN/khóa công khai qua env |
 | VIII UI tách logic, token | ✅ | Trang bộ cài/công tắc QA chỉ gọi API, theme `design/admin-tokens/` |
 | IX Test có bằng chứng | ✅ | Mỗi F134-AC có test viết trước; TC-SVC-014 chạy trong CI nightly |
 

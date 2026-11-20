@@ -26,7 +26,7 @@ Answer key không bao giờ có trong render payload; `explanation` chỉ trả 
 
 ## 3. Kiểm tra thời gian
 
-| Kiểm tra | Quy tắc [Proposed] | Hành động |
+| Kiểm tra | Quy tắc [Confirmed] | Hành động |
 |---|---|---|
 | Deadline | `answered_at > deadline_at + grace(2s)` | Từ chối (`ATTEMPT_DEADLINE_PASSED`); exam tự động submit tại deadline bởi worker |
 | Thời gian tối thiểu hợp lý | `min_plausible_ms` theo loại câu + độ dài stem: đọc 2 từ/giây cho lớp 1–3, 4 từ/giây lớp 4–9, tối thiểu 800 ms; matching/ordering nhân số mục | Không từ chối; gắn cờ `too_fast` vào answer; ≥ 30% câu `too_fast` và đúng trong một attempt → tín hiệu anomaly |
@@ -54,7 +54,7 @@ Theo [SECURITY_ARCHITECTURE §14](SECURITY_ARCHITECTURE.md). Bổ sung riêng an
 | Rời trận giữa chừng | Tính thua; abandon lặp lại → hạn chế ranked (ngưỡng và thời gian do [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) sở hữu) |
 | Retry câu sai | Không giới hạn học tập, nhưng không XP sau cap (§7) |
 
-## 6. Anomaly detection [Proposed]
+## 6. Anomaly detection [Confirmed]
 
 Chạy trong worker (consumer event `question.answered`, `match.completed`, `activity.graded`), ghi `competition.integrity_signals` / `assessment.integrity_signals` (`student_id`, `signal_type`, `score`, `evidence`, `created_at`). Không tự động phạt; tổng hợp thành **integrity score** theo cửa sổ 7 ngày.
 
@@ -85,7 +85,7 @@ Lưu ý thực tế trường học: nhiều học sinh dùng **chung máy phòn
 
 - Battle chạy trong module `competition` (lệnh WS tới qua realtime → NATS request/reply), câu hỏi và chấm điểm lấy từ module `learning` qua facade gọi trong tiến trình `core-api` (room host của module competition chạy trong `core-api`, ADR-0074): câu hỏi chỉ gửi khi bắt đầu lượt, không gửi trước cả bộ đề; đáp án và kết quả công bố sau khi lượt đóng cho mọi người cùng lúc.
 - Không có REST endpoint cho phép client tạo match result; `MatchResult` chỉ được ghi bởi room state machine qua use case `competition.RecordResult` (idempotent theo `match_id`).
-- Matchmaking: client chỉ tạo/hủy ticket; không chọn đối thủ (trừ friend match có xác nhận 2 bên). Ranked friend match không tính rating [Proposed] để tránh win trading.
+- Matchmaking: client chỉ tạo/hủy ticket; không chọn đối thủ (trừ friend match có xác nhận 2 bên). Ranked friend match không tính rating [Confirmed] để tránh win trading.
 - Tournament: kết quả match giải được xác nhận bởi hệ thống; điều chỉnh thủ công cần quyền tổ chức giải + audit + lý do.
 - Reconnect: được vào lại room trong 30s với cùng user (kiểm tra principal), không phải bằng room token chia sẻ được.
 - **Một thiết bị cho mỗi tài khoản (ADR-0031):** chỉ một game session active/học sinh, nên không thể chơi song song hai trận, hai máy cùng tài khoản (vd. một máy tra cứu, một máy thi đấu với cùng danh tính). Takeover giữa trận: thiết bị cũ bị đóng, thiết bị mới vào lại trong grace; mọi takeover ghi audit, tần suất cao bất thường (`GameTakeoverSpike`) là tín hiệu dùng chung tài khoản.

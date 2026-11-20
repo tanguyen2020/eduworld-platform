@@ -7,12 +7,12 @@
 
 ## 1. Nguyên tắc
 
-1. **Contract-first** [Proposed — ADR-0010, ADR-0074]: sửa spec trước, review, rồi sinh code (`oapi-codegen`) và client (Godot API layer, TypeScript cho `src/cms/frontend/`, facade giữa module).
+1. **Contract-first** [Confirmed — ADR-0010, ADR-0074]: sửa spec trước, review, rồi sinh code (`oapi-codegen`) và client (Godot API layer, TypeScript cho `src/cms/frontend/`, facade giữa module).
    - **API public:** nguồn sự thật là spec gộp `specs/openapi/eduworld-api.v1.yaml`; mỗi operation có `x-service` (tên module sở hữu). Spec public theo module `specs/openapi/modules/<module>.v1.yaml` được **sinh tự động** bằng `scripts/openapi/split-public.mjs` (không sửa tay; CI chạy `--check`).
    - **Facade giữa module:** mỗi module sở hữu `specs/openapi/modules/<module>.internal.v1.yaml` (sửa tay), là hợp đồng của facade gọi trong tiến trình (§12), không phải API HTTP. Interface platform ops chuẩn định nghĩa một lần trong `specs/openapi/modules/common/internal-common.v1.yaml` và được đồng bộ vào từng file bằng `scripts/openapi/sync-platform-ops.mjs` (§12).
 2. REST cho nghiệp vụ; WebSocket (`/realtime/v1`, [AsyncAPI](../../specs/asyncapi)) cho chat, notification, presence, party/lobby, matchmaking events, battle room [Confirmed — Master Prompt §12.3, §14].
 3. Không expose database model; DTO API độc lập với bảng [Confirmed — §12.3].
-4. Mọi endpoint yêu cầu authN; mọi endpoint kiểm tra authZ + tenant trong Go [Confirmed — §11]. Ngoại lệ có chủ đích: `/livez`, `/readyz` (chỉ mạng private) và `GET /game/client-config` (public, chỉ trả cấu hình không nhạy cảm, có rate limit) [Proposed].
+4. Mọi endpoint yêu cầu authN; mọi endpoint kiểm tra authZ + tenant trong Go [Confirmed — §11]. Ngoại lệ có chủ đích: `/livez`, `/readyz` (chỉ mạng private) và `GET /game/client-config` (public, chỉ trả cấu hình không nhạy cảm, có rate limit) [Confirmed].
 5. Client không bao giờ gửi điểm, kết quả, XP, rating; server tính (ADR-0016) [Confirmed — §4.3, §5.6].
 6. **Phạm vi tài liệu:** quy ước API + catalog endpoint (method, path, quyền, idempotency, phase) + facade giữa module. Quy tắc nghiệp vụ của từng endpoint nằm ở tài liệu domain được link trong mỗi mục §9; không lặp lại ở đây.
 
@@ -119,7 +119,7 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 
 | HTTP | `code` | Khi nào |
 |---|---|---|
-| 401 | `INVALID_CREDENTIALS` | **Portal** `POST /auth/portal/login` (ADR-0091): một mã và một thông điệp chung "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng" cho sai/không tồn tại username, sai mật khẩu, sai **hoặc thiếu** OTP (kể cả tài khoản vận hành platform không gửi `otp`), tài khoản khóa tạm hoặc bị tắt ở Keycloak — không có bước hỏi trước tài khoản có cần OTP. **Game** `POST /auth/game/login`: Keycloak từ chối username/mật khẩu — tài khoản không tồn tại, sai mật khẩu, **hoặc** đang bị khóa tạm do brute-force (Keycloak khóa sau 5 lần sai, 1–15 phút). Bước xác thực SSO chạy **trước** mọi kiểm tra tenant (ADR-0069 mục 3). Một thông điệp chung "Tên đăng nhập hoặc mật khẩu chưa đúng", không tiết lộ tài khoản có tồn tại hay đang bị khóa; game thêm gợi ý "Nếu nhập sai nhiều lần, hãy đợi vài phút" [Proposed] — ADR-0068 |
+| 401 | `INVALID_CREDENTIALS` | **Portal** `POST /auth/portal/login` (ADR-0091): một mã và một thông điệp chung "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng" cho sai/không tồn tại username, sai mật khẩu, sai **hoặc thiếu** OTP (kể cả tài khoản vận hành platform không gửi `otp`), tài khoản khóa tạm hoặc bị tắt ở Keycloak — không có bước hỏi trước tài khoản có cần OTP. **Game** `POST /auth/game/login`: Keycloak từ chối username/mật khẩu — tài khoản không tồn tại, sai mật khẩu, **hoặc** đang bị khóa tạm do brute-force (Keycloak khóa sau 5 lần sai, 1–15 phút). Bước xác thực SSO chạy **trước** mọi kiểm tra tenant (ADR-0069 mục 3). Một thông điệp chung "Tên đăng nhập hoặc mật khẩu chưa đúng", không tiết lộ tài khoản có tồn tại hay đang bị khóa; game thêm gợi ý "Nếu nhập sai nhiều lần, hãy đợi vài phút" [Confirmed] — ADR-0068 |
 | 401 | `LOGIN_TICKET_INVALID` | `POST /auth/game/tenant:select`: `login_ticket` hết hạn (2 phút), đã dùng, không tồn tại hoặc khác `device_id` — game quay lại form đăng nhập (ADR-0068) |
 | 403 | `ACCOUNT_SETUP_REQUIRED` | `POST /auth/portal/login`: mật khẩu đúng nhưng tài khoản còn required action Keycloak (`UPDATE_PASSWORD` mật khẩu tạm, `CONFIGURE_TOTP` chưa đăng ký OTP). Body có `setup_ticket` (dùng một lần, `portal_setup_ticket_ttl`, không chứa mật khẩu), `required_steps[]` (`update_password`, `configure_otp`) và `otp_setup_email_sent`; portal mở màn đổi mật khẩu tạm hoặc màn "Kiểm tra email để cài ứng dụng xác thực" — ADR-0091 mục 3 |
 | 401 | `SETUP_TICKET_INVALID` | `POST /auth/portal/setup:password`: `setup_ticket` hết hạn, đã dùng hoặc không tồn tại — portal về `/login` (ADR-0091) |
@@ -312,11 +312,11 @@ Thêm mã mới → cập nhật bảng này + `specs` (enum `ProblemCode`) tron
 
 ## 5. Pagination, filtering, sorting
 
-- Cursor-based: `?limit=20&cursor=<opaque>`; `limit` mặc định 20, tối đa 100. Cursor là base64url của `(sort_key, id)` có ký HMAC để chống sửa [Proposed].
-- Không hỗ trợ offset cho bảng lớn (chat, event, attempt). Bảng nhỏ trong CMS có thể dùng `?page=` [Proposed].
+- Cursor-based: `?limit=20&cursor=<opaque>`; `limit` mặc định 20, tối đa 100. Cursor là base64url của `(sort_key, id)` có ký HMAC để chống sửa [Confirmed].
+- Không hỗ trợ offset cho bảng lớn (chat, event, attempt). Bảng nhỏ trong CMS có thể dùng `?page=` [Confirmed].
 - Filter: tham số tường minh theo field (`?grade_level=3&subject_id=...&status=published`); nhiều giá trị: lặp tham số (`?status=draft&status=in_review`). Không có ngôn ngữ query tự do.
 - Sort: `?sort=-created_at,name` chỉ trên whitelist field có index.
-- Tìm kiếm text (CMS): `?q=` dùng PostgreSQL full-text (`unaccent` + `simple`) [Proposed].
+- Tìm kiếm text (CMS): `?q=` dùng PostgreSQL full-text (`unaccent` + `simple`) [Confirmed].
 
 ## 6. Idempotency
 
@@ -328,7 +328,7 @@ Thêm mã mới → cập nhật bảng này + `specs` (enum `ProblemCode`) tron
 | Lưu | `infra.idempotency_records` trong database của module xử lý ([DATABASE_DESIGN §3.10](DATABASE_DESIGN.md#310-idempotency-records)): `INSERT` **một lần trong cùng transaction `UnitOfWork`** với thay đổi nghiệp vụ, kèm hash request body và response đã tuần tự hóa (code + body); `expires_at` = + `idempotency_record_ttl` (24 h); không có trạng thái `in_progress` (ADR-0089 §4) |
 | Lặp lại cùng payload | Trả **nguyên response đã lưu** + header `Idempotent-Replayed: true` |
 | Cùng key khác payload | `409 IDEMPOTENCY_KEY_REUSED` |
-| Đang xử lý | Request trùng chạy đồng thời chờ ở unique index tới khi transaction đầu commit, rồi trả response đã lưu (`Idempotent-Replayed: true`). Chỉ khi chờ vượt `lock_timeout` của transaction mới trả `409 IDEMPOTENCY_IN_PROGRESS` + `Retry-After: 1` [Proposed] |
+| Đang xử lý | Request trùng chạy đồng thời chờ ở unique index tới khi transaction đầu commit, rồi trả response đã lưu (`Idempotent-Replayed: true`). Chỉ khi chờ vượt `lock_timeout` của transaction mới trả `409 IDEMPOTENCY_IN_PROGRESS` + `Retry-After: 1` [Confirmed] |
 | Lỗi | Bản ghi chỉ tồn tại khi transaction nghiệp vụ commit; lỗi 4xx/5xx làm rollback cả bản ghi, client retry cùng key được xử lý lại |
 
 Idempotency của nghiệp vụ còn được bảo vệ bằng unique constraint DB (một submit/attempt, một `match_results` per match, `xp_ledger` unique) — header chỉ là lớp đầu.
@@ -350,7 +350,7 @@ RateLimit-Reset: 18
 Retry-After: 18        # chỉ khi 429
 ```
 
-| Nhóm route | Giới hạn mặc định [Proposed] | Khóa |
+| Nhóm route | Giới hạn mặc định [Confirmed] | Khóa |
 |---|---|---|
 | `/api/v1/auth/game/login`, `/auth/game/tenant:select` (ADR-0068) | 10 lần/phút theo `X-Device-Id` **và** 10 lần/phút theo username đã chuẩn hóa (plugin Lua đọc field `username`, không log body); hàng chờ toàn cục theo năng lực (ADR-0045) → `429 LOGIN_QUEUE_BUSY` + `Retry-After` | thiết bị + username + toàn cục |
 | `/api/v1/auth/portal/*` (ADR-0091) | Theo `portal_login_rate` ([SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md), nguồn duy nhất): `login` theo username đã chuẩn hóa + theo `device_id` + toàn cục; `password:forgot` theo identifier + `device_id`; `setup:password`, `password:reset`, `token:refresh` theo `device_id`. **Không** giới hạn theo một IP (R30); plugin đọc field, không log body | username / identifier + `device_id` + toàn cục |
@@ -398,7 +398,7 @@ Ký hiệu **Role**: `STU` student, `TA` tenant_admin, `SA` school_admin (một 
 
 Tính năng đăng nhập nhanh (mã lớp + PIN, thẻ QR, mật khẩu hình ảnh — ADR-0045 mục 4) và tra tenant trước đăng nhập **không có trong Release 1.0**: Release 1.0 chỉ đăng nhập username + mật khẩu (ADR-0063). Các endpoint `/lms/classes/{id}/login-codes*`, `/tenant/students/{id}/login-card|login-pin|picture-password`, internal `/internal/v1/login-credentials:verify` và `/auth/tenants:resolve` là **mở rộng sau (ADR-0063)** — đã gỡ khỏi OpenAPI, cần ADR mới để đưa lại.
 
-**Phiên Admin Portal trên trình duyệt (ADR-0091 mục 4).** Access token chỉ ở bộ nhớ SPA (không localStorage/sessionStorage); tải lại trang = `refreshPortalToken`. APISIX public phục vụ `/api/v1/*` dưới origin của portal (`https://portal.<domain>/api/v1/...`) để cookie là first-party [Proposed]; workspace platform vẫn gọi gateway nội bộ bằng Bearer token trong bộ nhớ. Tenant của phiên do `X-Tenant-Id` + membership quyết định (ADR-0065): đổi tenant chỉ đổi header và tải lại `GET /me/permissions`, **không** xin token mới; portal không dùng scope `organization:{alias}`.
+**Phiên Admin Portal trên trình duyệt (ADR-0091 mục 4).** Access token chỉ ở bộ nhớ SPA (không localStorage/sessionStorage); tải lại trang = `refreshPortalToken`. APISIX public phục vụ `/api/v1/*` dưới origin của portal (`https://portal.<domain>/api/v1/...`) để cookie là first-party [Confirmed]; workspace platform vẫn gọi gateway nội bộ bằng Bearer token trong bộ nhớ. Tenant của phiên do `X-Tenant-Id` + membership quyết định (ADR-0065): đổi tenant chỉ đổi header và tải lại `GET /me/permissions`, **không** xin token mới; portal không dùng scope `organization:{alias}`.
 
 | Cookie | Thuộc tính | Dùng ở |
 |---|---|---|
@@ -511,7 +511,7 @@ Trường, lớp, khối, tỉnh của học sinh trả trong `PlayerBootstrap.s
 | GET | `/learning/activity-attempts` | `listMyActivityAttempts` | Lịch sử attempt của mình (`?status&mode&cursor`) | STU (self) | T | P2 |
 | GET | `/learning/activity-attempts/{attempt_id}` | `getActivityAttempt` | Trạng thái, items, tiến độ, evaluation có hiệu lực — dùng để resume; tạm dừng là cờ `paused_at` | STU (self) | T | P2 |
 | POST | `/learning/activity-attempts/{attempt_id}/responses` | `submitActivityResponse` | Trả lời một item (câu hỏi, câu chèn video, chọn nhánh, câu hỏi kèm mô phỏng); kết quả `ActivityResponseResult` có `feedback` theo phương án đã chọn khi FeedbackTiming cho phép | STU (self) | B | P2 |
-| POST | `/learning/activity-attempts/{attempt_id}/items/{position}/hints:next` | `revealNextHint` | Mở gợi ý cấp tiếp theo `{level, total_levels, hint}` (`HINTS_NOT_ALLOWED`, `HINTS_EXHAUSTED`) [Proposed] | STU (self) | B | P2 |
+| POST | `/learning/activity-attempts/{attempt_id}/items/{position}/hints:next` | `revealNextHint` | Mở gợi ý cấp tiếp theo `{level, total_levels, hint}` (`HINTS_NOT_ALLOWED`, `HINTS_EXHAUSTED`) [Confirmed] | STU (self) | B | P2 |
 | POST | `/learning/activity-attempts/{attempt_id}/progress` | `reportActivityProgress` | Heartbeat tiến độ video/audio/mô phỏng (idempotent `client_seq`) | STU (self) | B | P3 |
 | POST | `/learning/activity-attempts/{attempt_id}:pause` | `pauseActivityAttempt` | Tạm dừng theo resume policy (đặt `paused_at`) | STU (self) | B | P2 |
 | POST | `/learning/activity-attempts/{attempt_id}:submit` | `submitActivityAttempt` | Nộp; server chấm tự động | STU (self) | B | P2 |
@@ -742,7 +742,7 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | GET | `/schools/{school_id}/classes` | Lớp theo năm học | SA, AM | T | P1 |
 | GET | `/schools/{school_id}/classes/{class_id}/students` | Danh sách học sinh lớp | SA, AM (scope) | T | P3 |
 | GET / POST | `/schools/{school_id}/user-roles` | Xem / gán UserRole thủ công (`source = manual`) trong phạm vi trường (`scope_type` = `school`/`subject` thuộc trường; không có scope lớp — ADR-0072) — chỉ role tenant mà người gán được phép cấp (ADR-0066); thay `PUT /schools/{id}/role-assignments/{id}` cũ — `listSchoolUserRoles`, `grantSchoolUserRole` | SA · `tenant.user_role.write` (scope trường) | T / B | P3 |
-| POST | `/schools/{school_id}/sis-imports` | School Admin tải CSV SIS (`csv_import`, cột theo EduWorld SIS Contract): trả presigned URL, file ≤ 10 MB [Proposed], worker xử lý bất đồng bộ → SyncRun | SA (school) | B | P1 |
+| POST | `/schools/{school_id}/sis-imports` | School Admin tải CSV SIS (`csv_import`, cột theo EduWorld SIS Contract): trả presigned URL, file ≤ 10 MB [Confirmed], worker xử lý bất đồng bộ → SyncRun | SA (school) | B | P1 |
 | GET | `/schools/{school_id}/sis-imports/{import_id}` | Trạng thái import (dòng hợp lệ/bị từ chối, số reconciliation issue) | SA (school) | T | P1 |
 | GET | `/schools/{school_id}/reconciliation-issues` | Xung đột đồng bộ của trường (`listSchoolReconciliationIssues`, F052) | SA (school), TA · `tenant.sis.read` | T | P1 |
 | POST | `/schools/{school_id}/reconciliation-issues/{issue_id}:resolve` | Đánh dấu đã xử lý/bỏ qua, `reason` bắt buộc, Idempotency-Key (`resolveSchoolReconciliationIssue`, F052) | SA (school) · `tenant.sis.import` | B | P1 |
@@ -776,7 +776,7 @@ Vùng **Learning Management** (ADR-0027): dùng được bởi vận hành tenan
 | GET/POST · GET · POST · PATCH | `/cms/learning/question-sets`, `/{question_set_id}`, `/{question_set_id}/versions`, `/{question_set_id}/versions/{version}` | Question set / selection rule (`default_feedback_timing`) | `learning_content.read/write` | T/B/T/B/T | P2 |
 | GET/POST · GET · POST · PATCH | `/cms/learning/assessment-blueprints` (+ `/{assessment_blueprint_id}`, `/versions`, `/versions/{version}`) | Ma trận đề (`feedback_timing`, `result_release`, `variants.balance`) | `learning_content.read/write` | T/B/T/B/T | P3 |
 | GET/POST · GET · POST · PATCH | `/cms/learning/lessons` (+ `/{lesson_id}`, `/versions`, `/versions/{version}`) | Bài học (khối `rich_text`, `media`, `worked_example`, `activity`) | `learning_content.read/write` | T/B/T/B/T | P3 |
-| GET/POST/PATCH | `/cms/learning/activities` (+ `/versions`) | Learning activity mọi `activity_type`; `config` validate theo [schema loại](../../specs/schemas/activities/activity-base.schema.json) (`ACTIVITY_CONFIG_INVALID`); có công thức thì gửi kèm SVG MathJax 4 (`MATH_RENDER_FAILED`) — publish/rollback dùng endpoint chung `content/{content_type}/...` với `content_type = activity` [Proposed] | `learning_content.activity.write` | T/B/T | P2 |
+| GET/POST/PATCH | `/cms/learning/activities` (+ `/versions`) | Learning activity mọi `activity_type`; `config` validate theo [schema loại](../../specs/schemas/activities/activity-base.schema.json) (`ACTIVITY_CONFIG_INVALID`); có công thức thì gửi kèm SVG MathJax 4 (`MATH_RENDER_FAILED`) — publish/rollback dùng endpoint chung `content/{content_type}/...` với `content_type = activity` [Confirmed] | `learning_content.activity.write` | T/B/T | P2 |
 | GET | `/cms/learning/activity-types` | Danh mục `activity_type` + JSON Schema cấu hình (editor registry của portal) | `learning_content.read` | T | P2 |
 | GET | `/cms/learning/simulation-templates` | Template mô phỏng đã đăng ký + `parameter_schema` (chỉ đọc; platform đăng ký khi phát hành game) | `learning_content.read` | T | P4 |
 | POST | `/cms/media:presign-upload` | Xin presigned PUT lên `ew-media-quarantine` (giới hạn loại + dung lượng, `sha256` để khử trùng); asset `quarantined` → media worker (ADR-0044) | `media.upload` | B | P2 |
@@ -854,11 +854,11 @@ Mã lỗi sự kiện/mùa (`EVENT_NOT_AVAILABLE`, `EVENT_ENDED`, `EVENT_MILESTO
 | GET | `/lms/courses?school_id=&class_id=&subject_id=` | Course (lớp × môn × năm học, tự tạo từ lớp SIS × môn của khối) — `listCourses` | SA (school), AM (scope), TA (đọc) | T | P3 |
 | PATCH | `/lms/courses/{course_id}` | Ẩn/hiện course (`status`) — `updateCourse` | SA | T | P3 |
 | GET/POST · PATCH | `/lms/courses/{course_id}/paths`, `/lms/courses/{course_id}/paths/{path_id}` | Learning path (`unlock_mode` sequential/free/mastery_gate) — `listLearningPaths`, `createLearningPath`, `updateLearningPath` | SA, AM | T/B/T | P3 |
-| POST | `/lms/courses/{course_id}/paths/{path_id}/nodes/{node_id}/students/{student_id}:unlock` | Mở khóa node thủ công (lý do, audit) [Proposed] — `unlockPathNodeForStudent` | SA, AM | B | P3 |
+| POST | `/lms/courses/{course_id}/paths/{path_id}/nodes/{node_id}/students/{student_id}:unlock` | Mở khóa node thủ công (lý do, audit) [Confirmed] — `unlockPathNodeForStudent` | SA, AM | B | P3 |
 | GET | `/lms/courses/{course_id}/results` | Bảng kết quả course — điểm **tự chấm** các bài graded, thang 10 (thay sổ điểm) — `getCourseResults` | SA, AM | T | P3 |
 | GET/POST | `/lms/assignments` | Danh sách (`?class_id&course_id&status`) / tạo bài giao draft: `course_id`, `title`, `instructions`, `content_ref` (`activity`/`question_set`/`assessment_blueprint`/`lesson`/`quest`/`minigame_config`, `pinned_version_id`), `follow_latest`, `mode`, `targets[]` (`target_type` class/study_group/students), `open_at`/`due_at`, `late_policy`, `max_attempts`, `score_policy`, `feedback_timing` (FeedbackTiming), `result_release` (ResultRelease) — `listAssignments`, `createAssignment` | SA (school), AM (scope); TA chỉ đọc | T/B | P3 |
 | GET / PATCH | `/lms/assignments/{assignment_id}` | Chi tiết / sửa (`If-Match`; `open` chỉ đổi `due_at`/`instructions`/`late_policy`, ngược lại `ASSIGNMENT_NOT_EDITABLE`) — `getAssignment`, `updateAssignment` | SA, AM | T | P3 |
-| POST | `/lms/assignments/{assignment_id}:publish` · `:cancel` · `:release-results` · `:archive` · `:remind` | Workflow `status` (`draft`, `scheduled`, `open`, `closed`, `results_released`, `archived`, `cancelled`); `:release-results` cần `lms.result.release`; `:remind` [Proposed] — `publishAssignment`, `cancelAssignment`, `releaseAssignmentResults`, `archiveAssignment`, `remindAssignment` | SA, AM | B | P3 |
+| POST | `/lms/assignments/{assignment_id}:publish` · `:cancel` · `:release-results` · `:archive` · `:remind` | Workflow `status` (`draft`, `scheduled`, `open`, `closed`, `results_released`, `archived`, `cancelled`); `:release-results` cần `lms.result.release`; `:remind` [Confirmed] — `publishAssignment`, `cancelAssignment`, `releaseAssignmentResults`, `archiveAssignment`, `remindAssignment` | SA, AM | B | P3 |
 | POST | `/lms/assignments/{assignment_id}/students/{student_id}:extend` · `:excuse` | Gia hạn `due_at` cá nhân / miễn bài (lý do, audit) — `extendAssignmentForStudent`, `excuseAssignmentForStudent` | SA, AM | B | P3 |
 | GET | `/lms/assignments/{assignment_id}/submissions` | Kết quả từng học sinh (điểm tự chấm, `rapid_guess_count` "làm quá nhanh") — `listAssignmentSubmissions` | SA, AM | T | P3 |
 | GET/POST · PATCH/DELETE | `/lms/schedules`, `/lms/schedules/{schedule_item_id}` | Lịch học/hạn nộp/đề theo course — `listScheduleItems`, `createScheduleItem`, `updateScheduleItem`, `deleteScheduleItem` | SA, AM | T/B/T | P3 |
@@ -924,12 +924,12 @@ Webhook từ SIS **không** nằm trong `/api/v1/sis/*`. Đây là luồng machi
 | POST | `/admin/schools:import` | Import CSV trường vào tenant đích (header `X-Tenant-Id` bắt buộc), `dry_run`, bất đồng bộ `202` → `GET /admin/school-imports/{import_id}` — `importSchools`, `getSchoolImport` | SYS · `platform.catalog.write` | B | P1 |
 | GET | `/admin/audit-logs?tenant_ids=&actor_id=&action=&action_prefix=&resource_type=&from=&to=` | Truy vấn audit liên tenant (gồm `role.*`, `user_role.*`, `cross_tenant.accessed`, `moderation.*`); `action_prefix` (≤ 10, ví dụ `role`, `user_role`) lọc nhóm action để xem chung nhật ký phân quyền (F059-3) — `listPlatformAuditLogs` | SYS · `platform.audit.read` | T | P1 |
 | GET | `/admin/login-events?tenant_ids=&student_id=&from=&to=` | **→ module `game`.** Lịch sử đăng nhập game liên tenant (ADR-0031), dropdown tenant | SYS · `platform.cross_tenant.read` | T | P1 |
-| GET/PUT | `/admin/settings/student-cleanup` | Cấu hình platform `inactive_student_cleanup_days` (mặc định 180 [Proposed]), `notice_days`, `allow_tenant_override`, ngưỡng cảnh báo % (ADR-0032) — `If-Match`, bắt buộc `reason` | SYS · `platform.settings.write` | T | P2 |
+| GET/PUT | `/admin/settings/student-cleanup` | Cấu hình platform `inactive_student_cleanup_days` (mặc định 180 [Confirmed]), `notice_days`, `allow_tenant_override`, ngưỡng cảnh báo % (ADR-0032) — `If-Match`, bắt buộc `reason` | SYS · `platform.settings.write` | T | P2 |
 | GET/PUT | `/admin/settings/curfew` | Giờ giới nghiêm platform `platform_curfew` (giá trị mặc định ở CONFIG_DEFAULTS, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)) — `getPlatformCurfewSettings`/`putPlatformCurfewSettings`, `If-Match`, bắt buộc `reason`, audit, phát `platform_settings.changed` (ADR-0078) | SYS · `platform.settings.write` | T | P1 |
 | GET | `/admin/student-cleanup/runs?tenant_ids=` | Lịch sử các lần chạy worker dọn (số dọn, bị loại trừ, bị chặn do vượt ngưỡng) | SYS | T | P2 |
 | GET/PUT | `/admin/settings/chat-retention` | Thời hạn lưu chat gameplay `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3 → `422 RETENTION_BELOW_MINIMUM`), `ephemeral_retention_hours` (24), `allow_tenant_override` — bắt buộc `reason`, audit (ADR-0033) | SYS · `platform.settings.write` | T | P4 |
-| POST | `/admin/student-cleanup/runs/{run_id}:approve` | Xác nhận thủ công lần dọn vượt ngưỡng > 10% học sinh tenant [Proposed] | SYS | B | P2 |
-| POST | `/admin/student-cleanup/runs/{run_id}:cancel` | Hủy lần dọn `awaiting_approval` (lý do 3..500 ký tự) → `cancelled`, không dọn học sinh nào — `cancelStudentCleanupRun` [Proposed] | SYS | B | P2 |
+| POST | `/admin/student-cleanup/runs/{run_id}:approve` | Xác nhận thủ công lần dọn vượt ngưỡng > 10% học sinh tenant [Confirmed] | SYS | B | P2 |
+| POST | `/admin/student-cleanup/runs/{run_id}:cancel` | Hủy lần dọn `awaiting_approval` (lý do 3..500 ký tự) → `cancelled`, không dọn học sinh nào — `cancelStudentCleanupRun` [Confirmed] | SYS | B | P2 |
 | GET | `/admin/feature-flags?flag_kind=&tenant_id=` | Feature flag và cờ bật/tắt menu/action của portal: mặc định platform, ghi đè của `tenant_id`, giá trị hiệu lực (ADR-0090) — `listFeatureFlags` | SYS · `platform.feature_flag.write` | T | P1 |
 | PUT | `/admin/feature-flags/{flag_key}` | `{scope: platform\|tenant, state: enabled\|disabled\|inherit, reason}` + `If-Match`; `scope = tenant` cần `X-Tenant-Id` = tenant đích; khóa `menu.*`/`action.*` phải có trong `platform.portal_menu_catalog` (`404`); mục `can_disable = false` → `422 FEATURE_NOT_DISABLEABLE`; audit + `platform_settings.changed` — `putFeatureFlag` | SYS · `platform.feature_flag.write` | T | P1 |
 | GET | `/admin/portal-menu-catalog?tenant_id=` | Cây workspace → menu → action (bản sao đọc-chỉ của `specs/portal/menu-catalog.yaml`, `catalog_version`) kèm `can_disable`, mặc định, ghi đè, hiệu lực — màn "Bật/tắt menu & action" — `listPortalMenuCatalog` | SYS · `platform.feature_flag.write` | T | P1 |
@@ -962,13 +962,13 @@ Webhook từ SIS **không** nằm trong `/api/v1/sis/*`. Đây là luồng machi
 | POST | `/tenant/users` | Tạo tài khoản nhân sự thủ công (ngoài SIS) trong tenant của phiên (`user_type = staff`, `primary_tenant_id` = tenant của phiên, chỉ nhận role tenant — ADR-0081): username, email **bắt buộc** với nhân sự, tên, ít nhất một UserRole ban đầu. Một người một tài khoản SSO (ADR-0069): username/email đã thuộc tài khoản khác (trong tenant hoặc trên SSO) → `409 USERNAME_TAKEN` / `409 EMAIL_TAKEN`; nếu là **cùng một người** đã có tài khoản ở tenant khác thì thêm membership/UserRole qua `POST /tenant/user-roles` thay vì tạo tài khoản mới — `createTenantUser` | TA · `tenant.user.write` | B | P3 |
 | PATCH | `/tenant/users/{user_id}` | Sửa thông tin nhân sự do tenant quản lý (`If-Match`); đổi username/email kiểm tra trùng trên SSO (ADR-0069) — `updateTenantUser` | TA · `tenant.user.write` | T | P3 |
 | GET | `/tenant/permissions` | Catalog permission **tenant** (định nghĩa trong code, nhóm theo workspace, tên song ngữ) để dựng màn tạo role; không trả permission platform. — `listTenantPermissions` | TA · `tenant.role.read` | T | P3 |
-| GET / POST | `/tenant/roles` | Danh sách role dùng được trong tenant (role hệ thống `is_system` chỉ đọc + role tùy biến của tenant) / tạo role tùy biến [Proposed] từ permission tenant; chứa permission platform/`game.*`/`competition.config.*` → `422 VALIDATION_FAILED` (`errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE`). — `listTenantRoles`, `createTenantRole` | TA · `tenant.role.read` / `tenant.role.write` | T / B | P3 |
+| GET / POST | `/tenant/roles` | Danh sách role dùng được trong tenant (role hệ thống `is_system` chỉ đọc + role tùy biến của tenant) / tạo role tùy biến [Confirmed] từ permission tenant; chứa permission platform/`game.*`/`competition.config.*` → `422 VALIDATION_FAILED` (`errors[].code = PERMISSION_NOT_ALLOWED_FOR_SCOPE`). — `listTenantRoles`, `createTenantRole` | TA · `tenant.role.read` / `tenant.role.write` | T / B | P3 |
 | GET / PATCH / DELETE | `/tenant/roles/{role_id}` | Chi tiết / sửa (`If-Match`) / soft-delete role tùy biến; role `is_system` → `403 PERMISSION_DENIED`; xóa role còn UserRole hiệu lực → `409 CONFLICT`. Phát `role.updated`. — `getTenantRole`, `updateTenantRole`, `deleteTenantRole` | TA · `tenant.role.write` | T | P3 |
 | GET / POST | `/tenant/user-roles?user_id=&role_id=&scope_type=&scope_id=` | Danh sách / gán UserRole trong tenant: `{user_id, role_id, scope_type (tenant/school/subject), scope_id, valid_from, valid_to}`; mã role không tồn tại → `422 ROLE_NOT_FOUND`; `source = manual`, `granted_by` = người gọi. Không gán role platform, không gán role portal cho học sinh (`422`). Phát `user_role.changed`. — `listTenantUserRoles`, `grantTenantUserRole` | TA · `tenant.user_role.write`; SA trong trường | T / B | P3 |
 | DELETE | `/tenant/user-roles/{user_role_id}` | Thu hồi (soft-delete) UserRole (mọi UserRole đều `source = manual`, SIS không cấp role). Phát `user_role.changed` — `revokeTenantUserRole` | TA · `tenant.user_role.write` | T | P3 |
 | GET | `/tenant/audit-logs?school_id=&actor_id=&action=&action_prefix=&from=&to=` | Audit trong tenant của phiên (School Admin chỉ trường mình; không có nhật ký module moderation) — `listTenantAuditLogs` | TA, SA · `tenant.audit.read` | T | P3 |
-| GET | `/tenant/trash?resource_type=` | Thùng rác của tenant [Proposed] | TA · `tenant.trash.read` | T | P3 |
-| POST | `/tenant/trash/{resource_type}/{id}:restore` | Khôi phục trong tenant [Proposed] | TA · `tenant.trash.restore` | B | P3 |
+| GET | `/tenant/trash?resource_type=` | Thùng rác của tenant [Confirmed] | TA · `tenant.trash.read` | T | P3 |
+| POST | `/tenant/trash/{resource_type}/{id}:restore` | Khôi phục trong tenant [Confirmed] | TA · `tenant.trash.restore` | B | P3 |
 
 Game Analytics (module game, ADR-0058, [GAME_ANALYTICS §11](../11-operations/GAME_ANALYTICS.md#11-api)); operationId lần lượt `getGameMetrics`, `getGameRetention`, `getGameFunnel`, `getGameContentStats`, `getGamePerformance`, `createGameAnalyticsExport`, `getTenantGameSummary`:
 
@@ -1014,7 +1014,7 @@ Kinh tế game (module game, ADR-0049):
 
 ### 9.17. Route nội bộ — tiền tố và luồng machine-to-machine
 
-**Quy ước tiền tố** [Proposed]. Gọi giữa module không có tiền tố HTTP: path `/internal/v1/...` trong spec internal chỉ là định danh operation của facade gọi trong tiến trình (§12).
+**Quy ước tiền tố** [Confirmed]. Gọi giữa module không có tiền tố HTTP: path `/internal/v1/...` trong spec internal chỉ là định danh operation của facade gọi trong tiến trình (§12).
 
 | Tiền tố | Dành cho | Gateway | Xác thực |
 |---|---|---|---|
@@ -1044,13 +1044,13 @@ Message types: [AsyncAPI](../../specs/asyncapi) và [REALTIME_ARCHITECTURE](../0
 
 ## 10. APISIX route mapping
 
-APISIX chỉ có **hai upstream** (ADR-0074 mục 5): `core-api` cho mọi route REST (`/api/v1/*`, `/internal/sis/*`, `/internal/auth/*`) và `realtime` cho `/realtime/v1`. Upstream là Swarm service (staging/production) hoặc Compose service (local), phân giải bằng DNS nội bộ (`tasks.core-api`, `tasks.realtime` để APISIX health check từng replica; ADR-0024). Cột Module trong bảng dưới chỉ module xử lý route bên trong `core-api`, dùng để đối chiếu với `x-service`. Plugin chung cho mọi route public có token: `openid-connect` (bearer_only, JWKS, `aud = eduworld-api`), `request-id`, `opentelemetry`, `prometheus`, `cors` theo origin. **Kiểm tra header tenant (ADR-0065):** plugin `tenant-header` [Proposed: plugin Lua nhỏ hoặc `serverless-pre-function`] gắn ở mọi route tenant-scoped — thiếu `X-Tenant-Id` → `400 TENANT_HEADER_REQUIRED`, sai định dạng UUID → `400 BAD_REQUEST`; giá trị dùng làm khóa `limit-count` theo tenant và gắn vào log/trace (`tenant.id`). Route **không** gắn plugin: `/auth/game/login`, `/auth/game/tenant:select`, `/auth/session`, `/me/tenants`, `/game/client-config`, `/realtime/v1` (tenant cố định trong ticket); route `/catalog/countries`, `/catalog/provinces`, `/cms/*`, `/me/permissions` và `/admin/*` gắn ở chế độ "tùy chọn" (System Admin đọc liên tenant không gửi header; ghi dữ liệu tenant thì module tự đòi header). APISIX chỉ kiểm tra có mặt và định dạng; việc khớp tenant do `core-api` kiểm tra (§11).
+APISIX chỉ có **hai upstream** (ADR-0074 mục 5): `core-api` cho mọi route REST (`/api/v1/*`, `/internal/sis/*`, `/internal/auth/*`) và `realtime` cho `/realtime/v1`. Upstream là Swarm service (staging/production) hoặc Compose service (local), phân giải bằng DNS nội bộ (`tasks.core-api`, `tasks.realtime` để APISIX health check từng replica; ADR-0024). Cột Module trong bảng dưới chỉ module xử lý route bên trong `core-api`, dùng để đối chiếu với `x-service`. Plugin chung cho mọi route public có token: `openid-connect` (bearer_only, JWKS, `aud = eduworld-api`), `request-id`, `opentelemetry`, `prometheus`, `cors` theo origin. **Kiểm tra header tenant (ADR-0065):** plugin `tenant-header` [Confirmed: plugin Lua nhỏ hoặc `serverless-pre-function`] gắn ở mọi route tenant-scoped — thiếu `X-Tenant-Id` → `400 TENANT_HEADER_REQUIRED`, sai định dạng UUID → `400 BAD_REQUEST`; giá trị dùng làm khóa `limit-count` theo tenant và gắn vào log/trace (`tenant.id`). Route **không** gắn plugin: `/auth/game/login`, `/auth/game/tenant:select`, `/auth/session`, `/me/tenants`, `/game/client-config`, `/realtime/v1` (tenant cố định trong ticket); route `/catalog/countries`, `/catalog/provinces`, `/cms/*`, `/me/permissions` và `/admin/*` gắn ở chế độ "tùy chọn" (System Admin đọc liên tenant không gửi header; ghi dữ liệu tenant thì module tự đòi header). APISIX chỉ kiểm tra có mặt và định dạng; việc khớp tenant do `core-api` kiểm tra (§11).
 
 | Route (uri) | Gateway | Plugins bổ sung | Module (upstream `core-api`) | Ghi chú |
 |---|---|---|---|---|
 | `/api/v1/auth/game/login`, `/api/v1/auth/game/tenant:select` | public | **không** `openid-connect`, **không** `tenant-header`; `limit-count` 10/phút theo `X-Device-Id` + 10/phút theo username (plugin đọc field, không log), hàng chờ toàn cục → `429 LOGIN_QUEUE_BUSY`; body 4 KB; **tắt ghi body** ở logger và `opentelemetry` (không thu `request_body`), chỉ HTTPS | module `identity` | ADR-0068: mật khẩu đi qua route này; không log, không trace body |
 | `/api/v1/auth/game/token:refresh`, `/api/v1/auth/game/logout` | public | không `openid-connect` (refresh token trong body, module identity kiểm tra rotation + `device_id`, ADR-0086); `limit-count` 20/phút theo thiết bị; tắt ghi body | module `identity` | Refresh token không vào log |
-| `/api/v1/auth/portal/*` (ADR-0091) | public, dưới origin của portal [Proposed] | **không** `openid-connect`, **không** `tenant-header`; `limit-count` theo `portal_login_rate` (username/identifier, `device_id`, toàn cục — không theo IP); body 4 KB; **tắt ghi body** ở logger và `opentelemetry`; chỉ HTTPS; không cache | module `identity` | Mật khẩu, OTP, token đặt lại và refresh token (cookie) đi qua route này; không log, không trace body/cookie |
+| `/api/v1/auth/portal/*` (ADR-0091) | public, dưới origin của portal [Confirmed] | **không** `openid-connect`, **không** `tenant-header`; `limit-count` theo `portal_login_rate` (username/identifier, `device_id`, toàn cục — không theo IP); body 4 KB; **tắt ghi body** ở logger và `opentelemetry`; chỉ HTTPS; không cache | module `identity` | Mật khẩu, OTP, token đặt lại và refresh token (cookie) đi qua route này; không log, không trace body/cookie |
 | `/api/v1/catalog/*` | public + internal (Admin Portal) | `limit-count` 60/phút; `tenant-header` tùy chọn (`countries`, `provinces`), bắt buộc (`schools`); cache `ETag` | module `identity` | Danh mục ADR-0060 |
 | `/api/v1/auth/*` (còn lại), `/api/v1/me/*`, `/api/v1/students/me` | public | `limit-count` 20/phút (IP+sub); `tenant-header` trừ `/auth/session`, `/me/tenants` | module `identity` | |
 | `/api/v1/{schools,tenant}/*` (trừ ngoại lệ dưới) | public + internal (Admin Portal) | `limit-count`, body 1 MB, chấp nhận azp `eduworld-portal`, `tenant-header` | module `identity` | |
@@ -1081,7 +1081,7 @@ APISIX chỉ có **hai upstream** (ADR-0074 mục 5): `core-api` cho mọi route
 | `/internal/auth/backchannel-logout` | internal | `ip-restriction` (mạng Keycloak) | module `identity` | |
 | `/livez`, `/readyz`, `/metrics` | **không route** | — | — | Cổng quản trị riêng của từng binary |
 
-Cấu hình declarative (`deploy/apisix/apisix.yaml` local, ADC cho staging/prod) — xem [DEPLOYMENT](../11-operations/DEPLOYMENT.md). APISIX **không** quyết định quyền nghiệp vụ. Bảng route phải khớp §2.1 và `x-service` (kiểm tra trong CI bằng script so route ↔ spec [Proposed]).
+Cấu hình declarative (`deploy/apisix/apisix.yaml` local, ADC cho staging/prod) — xem [DEPLOYMENT](../11-operations/DEPLOYMENT.md). APISIX **không** quyết định quyền nghiệp vụ. Bảng route phải khớp §2.1 và `x-service` (kiểm tra trong CI bằng script so route ↔ spec [Confirmed]).
 
 ## 11. Authorization per route — quy tắc chung
 
@@ -1136,7 +1136,7 @@ Backend là modular monolith ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ran
 
 Phụ thuộc đồng bộ chỉ đi một chiều: game/competition → learning → identity; identity → module khác chỉ trong saga platform ([SYSTEM_ARCHITECTURE §4.1](../06-architecture/SYSTEM_ARCHITECTURE.md#41-gọi-đồng-bộ-và-bất-đồng-bộ)). Phản ứng phụ không cần kết quả ngay (cộng XP, cập nhật quest, mở/đóng channel chat, projection `ref_*`, audit) **không** gọi facade mà dùng domain event trên NATS JetStream ([EVENT_DESIGN](EVENT_DESIGN.md), [specs/events](../../specs/events/README.md)).
 
-### 12.3. Resilience (mặc định [Proposed])
+### 12.3. Resilience (mặc định [Confirmed])
 
 **Lời gọi facade (trong tiến trình):** chỉ có deadline, không retry, circuit breaker hay bulkhead (ADR-0074 mục 3). `src/backend/pkg/modcall` đặt deadline theo loại thao tác nếu context chưa có deadline ngắn hơn:
 
@@ -1157,7 +1157,7 @@ Fallback: chỉ dùng cache còn hạn cho dữ liệu đọc không nhạy cả
 | Circuit breaker | Mở khi ≥ 50% lỗi trong 20 request gần nhất; nửa mở sau 10 s | Mỗi cặp (adapter, thao tác) |
 | Bulkhead | Giới hạn concurrency 50 request/hệ thống ngoài/instance | Tránh lan lỗi |
 
-Thư viện: `failsafe-go` [Proposed]. Giá trị đăng ký ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md): `external_api_resilience` cho tích hợp bên ngoài, `module_call_deadline` cho deadline lời gọi facade. Metric: lời gọi facade `eduworld_internal_client_requests_total{caller_module,callee_module,operation,outcome}`, `eduworld_internal_client_duration_seconds{caller_module,callee_module,operation}` (`caller`/`callee` là tên module); tích hợp ngoài `eduworld_external_client_requests_total{client,operation,outcome}`, `eduworld_external_client_duration_seconds{client,operation}`, `eduworld_external_client_circuit_state{client}` (0 = closed, 1 = half-open, 2 = open).
+Thư viện: `failsafe-go` [Confirmed]. Giá trị đăng ký ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md): `external_api_resilience` cho tích hợp bên ngoài, `module_call_deadline` cho deadline lời gọi facade. Metric: lời gọi facade `eduworld_internal_client_requests_total{caller_module,callee_module,operation,outcome}`, `eduworld_internal_client_duration_seconds{caller_module,callee_module,operation}` (`caller`/`callee` là tên module); tích hợp ngoài `eduworld_external_client_requests_total{client,operation,outcome}`, `eduworld_external_client_duration_seconds{client,operation}`, `eduworld_external_client_circuit_state{client}` (0 = closed, 1 = half-open, 2 = open).
 
 ## 13. Giới hạn độ dài chuỗi và validation (ADR-0041)
 
@@ -1207,7 +1207,7 @@ Bảng kiểm tra spec phủ đủ luồng chơi xương sống của [SYSTEM_AR
 | 21 | Xem tiến độ học tập của mình | learning | `getMyProgress` | — | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) |
 | 22 | Làm bài được giao trong game | learning | 🆕 `listMyAssignments` → bắt đầu activity như bước 9 | — | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
 | 23 | Nhà trường giao bài/đề, xem kết quả và LO yếu (M3 School Loop — ADR-0072); hệ thống chấm lại khi nội dung lỗi | learning | 🆕 `createAssignment`, `publishAssignment`, `listAssignmentSubmissions`, `releaseAssignmentResults`, `createExamSession`, `getSchoolDashboard`, `getClassDashboard`, `createRegradeRequest` | — | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
-| 23b | 🆕 Thông báo vụ việc an toàn cho nhà trường, nhà trường xác nhận đã liên hệ phụ huynh | chat | `notifySchoolForCase`, `listSchoolSafetyNotifications`, `acknowledgeSchoolSafetyNotification` | — | [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-proposed) |
+| 23b | 🆕 Thông báo vụ việc an toàn cho nhà trường, nhà trường xác nhận đã liên hệ phụ huynh | chat | `notifySchoolForCase`, `listSchoolSafetyNotifications`, `acknowledgeSchoolSafetyNotification` | — | [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed) |
 | 24 | 🆕 Xem sự kiện đang chạy, tham gia, nhận thưởng mốc | game | `listGameEvents`, `getGameEvent`, `joinGameEvent`, `claimEventMilestone` | `event.status.changed`, `event.progress.updated` | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | 25 | 🆕 Đóng góp community goal của trường | game | `getCommunityGoal` | `event.community_goal.updated` | [EVENT_SEASON_SYSTEM §6](../01-game-design/EVENT_SEASON_SYSTEM.md#6-community-goal) |
 | 26 | 🆕 Season track: xem cấp, nhận thưởng cấp, xem mùa trước | game | `getSeasonTrack`, `claimSeasonTier`, `listSeasonTrackHistory` | `season.track.updated` | [EVENT_SEASON_SYSTEM §7](../01-game-design/EVENT_SEASON_SYSTEM.md#7-season-và-season-track) |

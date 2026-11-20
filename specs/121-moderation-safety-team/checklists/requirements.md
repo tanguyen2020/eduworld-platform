@@ -28,4 +28,4 @@
 ## Notes
 
 - Enum OpenAPI lệch MODERATION (trạng thái case, sanction, reason) → theo MODERATION, delta Phase 2.
-- `moderation.case.lead` [Proposed] chưa có trong catalog; khóa tài khoản và email trường cần consumer ở module identity — đã báo cáo.
+- `moderation.case.lead` [Confirmed] chưa có trong catalog; khóa tài khoản và email trường cần consumer ở module identity — đã báo cáo.

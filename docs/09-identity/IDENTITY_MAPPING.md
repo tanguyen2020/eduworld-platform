@@ -39,7 +39,7 @@
 | **Class** | `org.classes` | `class_id` | Theo năm học | 6A 2026–2027 |
 | **Enrollment** | `org.enrollments` | `enrollment_id` | Có `start_date/end_date`, lưu lịch sử | HS X ∈ 6A |
 | **SISLink** | `sis.sis_links` | `(sis_connection_id, entity_type, external_id)` | Đồng bộ | mã HS trong SIS |
-| **Role** | `identity.roles` + `identity.role_permissions` | `role_id`; `code` duy nhất trong phạm vi (dùng chung hoặc tenant) | Role hệ thống seed (`is_system`), role tùy biến của tenant [Proposed] | `school_admin`, `academic_manager`, `safety_moderator` |
+| **Role** | `identity.roles` + `identity.role_permissions` | `role_id`; `code` duy nhất trong phạm vi (dùng chung hoặc tenant) | Role hệ thống seed (`is_system`), role tùy biến của tenant [Confirmed] | `school_admin`, `academic_manager`, `safety_moderator` |
 | **UserRole** | `identity.user_roles` (thay `role_assignments`, ADR-0066) | `(user_id, role_id, scope_type, scope_id)` | Có `valid_from/valid_to`, `source = manual` (SIS không cấp UserRole, ADR-0072), `granted_by`, soft-delete | academic_manager @ school X, subject Toán |
 
 Quan hệ: một EduWorld User có **0..n** ExternalIdentity (vd. vừa local user vừa link Google), nhưng mỗi `(issuer, subject)` chỉ trỏ đến **đúng một** user.
@@ -160,7 +160,7 @@ Sau khi có User, module identity đọc `identity.sis_identity_links` đang `ac
 
 Cache chỉ tối ưu; nguồn sự thật là PostgreSQL. Valkey lỗi → đọc trực tiếp DB (degraded mode, có metric).
 
-**Fast path đăng nhập (ADR-0045):** ở 10.000 CCU, phần resolve sau khi có token (trong `POST /api/v1/auth/game/login`, `POST /api/v1/auth/game/token:refresh` với `mode=resume` và `GET /api/v1/me/tenants`, `GET /api/v1/me/permissions` của portal) phải đạt p95 ≤ 150 ms phía module identity, chưa tính lời gọi token endpoint Keycloak (ADR-0068). Vì vậy JWT được kiểm bằng **JWKS cache** trong bộ nhớ (làm mới nền mỗi 10 phút, làm mới ngay khi gặp `kid` lạ, tối đa 1 lần/30 s), Principal và membership lấy từ cache trên (tỷ lệ hit mục tiêu ≥ 95% [Proposed]; ADR-0086 cho học sinh trên thiết bị cá nhân vào lại bằng refresh token (`mode=resume`, vẫn kiểm tra lại tài khoản/tenant/enrollment), máy dùng chung vẫn đăng nhập mật khẩu — TTL cache L2 phải được kiểm chứng đủ cho bão đăng nhập đầu giờ), thông tin tenant (`ew:id:tenant:<tenant_id>`, TTL 60 s). Không có lời gọi đồng bộ sang module khác trên đường đăng nhập.
+**Fast path đăng nhập (ADR-0045):** ở 10.000 CCU, phần resolve sau khi có token (trong `POST /api/v1/auth/game/login`, `POST /api/v1/auth/game/token:refresh` với `mode=resume` và `GET /api/v1/me/tenants`, `GET /api/v1/me/permissions` của portal) phải đạt p95 ≤ 150 ms phía module identity, chưa tính lời gọi token endpoint Keycloak (ADR-0068). Vì vậy JWT được kiểm bằng **JWKS cache** trong bộ nhớ (làm mới nền mỗi 10 phút, làm mới ngay khi gặp `kid` lạ, tối đa 1 lần/30 s), Principal và membership lấy từ cache trên (tỷ lệ hit mục tiêu ≥ 95% [Confirmed]; ADR-0086 cho học sinh trên thiết bị cá nhân vào lại bằng refresh token (`mode=resume`, vẫn kiểm tra lại tài khoản/tenant/enrollment), máy dùng chung vẫn đăng nhập mật khẩu — TTL cache L2 phải được kiểm chứng đủ cho bão đăng nhập đầu giờ), thông tin tenant (`ew:id:tenant:<tenant_id>`, TTL 60 s). Không có lời gọi đồng bộ sang module khác trên đường đăng nhập.
 
 ### 3.2. Xác định SIS nguồn khi đăng nhập (ADR-0046)
 
@@ -280,7 +280,7 @@ Quy tắc:
 | 3 | `ACCOUNT_NOT_PROVISIONED` | 403 | Không có ExternalIdentity (Release 1.0 không JIT), **hoặc** user không thuộc tenant chung và không thuộc tenant SIS nào (0 membership — kiểm tra sau bước 4). Ghi audit `account_not_provisioned`, thu hồi phiên Keycloak theo `sid`; không bao giờ tự đưa vào tenant chung (ADR-0063) |
 | 4 | `ACCOUNT_LOCKED` / `ACCOUNT_DEACTIVATED` | 403 | `user.status` |
 | 5 | `TENANT_NOT_SELECTED` | 403 | Claim có > 1 tenant, hoặc không có claim mà user thuộc > 1 tenant; response kèm danh sách tenant (`choices[]`: alias, tên, loại) |
-| 6 | `TENANT_MISMATCH` | 403 | Tenant trong claim không thuộc membership của user; ghi audit + security event `tenant_mismatch` (cảnh báo khi một user/IP lặp lại > 5 lần/giờ [Proposed]) |
+| 6 | `TENANT_MISMATCH` | 403 | Tenant trong claim không thuộc membership của user; ghi audit + security event `tenant_mismatch` (cảnh báo khi một user/IP lặp lại > 5 lần/giờ [Confirmed]) |
 | 7 | `NO_ACTIVE_ENROLLMENT` | 403 | Học sinh thuộc tenant thường nhưng chưa có enrollment active (một trường, một lớp — ADR-0060) **sau** login sync nhánh B; tạo `reconciliation_issue` `missing_class`. Không áp dụng cho tenant chung (luôn có lớp ảo theo khối) |
 | 8 | `ACCESS_OUTSIDE_ALLOWED_HOURS` | 403 | Ngoài khung giờ trường cấu hình |
 | 8b | `GAME_ACCESS_STUDENT_ONLY` | 403 | Đăng nhập game (`/auth/game/login`, token `azp = eduworld-game-backend`) nhưng `user_type ≠ student` (ADR-0031, ADR-0068). Kiểm tra **trước** JIT: không bao giờ JIT tạo tài khoản qua client game cho người không phải học sinh |
@@ -318,7 +318,7 @@ stateDiagram-v2
 ### 6.1. Chuyển lớp (cùng trường)
 
 1. SIS sync (hoặc login sync, ADR-0061) phát hiện enrollment mới → đóng enrollment cũ (`status=transferred`, `end_date`), tạo enrollment mới **trong cùng transaction** — không có thời điểm học sinh không có lớp hoặc có hai lớp (ADR-0060).
-2. Event `enrollment.changed` → invalidate Principal cache; thoát khỏi Class Chat cũ, vào Class Chat mới; assignment chưa hết hạn của lớp cũ chuyển trạng thái theo policy [Proposed: vẫn nhìn thấy kết quả đã nộp, không làm tiếp bài mới của lớp cũ].
+2. Event `enrollment.changed` → invalidate Principal cache; thoát khỏi Class Chat cũ, vào Class Chat mới; assignment chưa hết hạn của lớp cũ chuyển trạng thái theo policy [Confirmed: vẫn nhìn thấy kết quả đã nộp, không làm tiếp bài mới của lớp cũ].
 3. Attempt/learning event giữ nguyên `class_id` tại thời điểm làm (snapshot), không cập nhật hồi tố.
 
 ### 6.2. Chuyển trường
@@ -331,7 +331,7 @@ stateDiagram-v2
 |---|---|
 | 1 | SIS trường cũ báo học sinh rời (`status=transferred_out`) → enrollment đóng; `students.tenant_id`/`school_id` vẫn trỏ trường cũ cho đến khi có trường mới. Trong thời gian chờ trường mới, đăng nhập nhận `NO_ACTIVE_ENROLLMENT`; nếu đã bị gỡ khỏi mọi tenant → `ACCOUNT_NOT_PROVISIONED`. Không tự đưa vào tenant chung (ADR-0063) |
 | 2 | SIS trường mới gửi bản ghi học sinh → **reconciliation** cố gắng khớp với user hiện có (mã định danh học sinh quốc gia nếu SIS cung cấp, hoặc School Admin xác nhận thủ công) — xem [SIS_INTEGRATION §6](SIS_INTEGRATION.md) |
-| 3 | Khớp thành công: cùng `user_id`, cập nhật `students.tenant_id`/`school_id`, tạo enrollment mới, `UserRole` mới; worker **gỡ membership Keycloak Organization của tenant cũ, thêm vào Organization tenant mới, thu hồi phiên/refresh token đang gắn tenant cũ (kể cả refresh token game lưu trên thiết bị — `game_auth_sessions`, ADR-0086)** và phát `user.access_revoked` (ADR-0026, [ACCOUNT_PROVISIONING §5](ACCOUNT_PROVISIONING.md)); từ đây token còn mang tenant cũ → `TENANT_MISMATCH`, lần đăng nhập sau backend tự xác định tenant mới; dữ liệu tenant cũ: learning record của học sinh **theo học sinh** (học sinh vẫn xem được lịch sử của mình), trường cũ giữ quyền đọc dữ liệu phát sinh trong thời gian học ở trường cũ theo policy [Proposed] |
+| 3 | Khớp thành công: cùng `user_id`, cập nhật `students.tenant_id`/`school_id`, tạo enrollment mới, `UserRole` mới; worker **gỡ membership Keycloak Organization của tenant cũ, thêm vào Organization tenant mới, thu hồi phiên/refresh token đang gắn tenant cũ (kể cả refresh token game lưu trên thiết bị — `game_auth_sessions`, ADR-0086)** và phát `user.access_revoked` (ADR-0026, [ACCOUNT_PROVISIONING §5](ACCOUNT_PROVISIONING.md)); từ đây token còn mang tenant cũ → `TENANT_MISMATCH`, lần đăng nhập sau backend tự xác định tenant mới; dữ liệu tenant cũ: learning record của học sinh **theo học sinh** (học sinh vẫn xem được lịch sử của mình), trường cũ giữ quyền đọc dữ liệu phát sinh trong thời gian học ở trường cũ theo policy [Confirmed] |
 | 4 | Không khớp được: tạo user mới, mở `ReconciliationIssue` để admin hợp nhất sau (merge có audit) |
 | 5 | Party, friend, chat: rời party; friendship khác trường xử lý theo chat/friend policy (mặc định: giữ quan hệ nhưng DM bị chặn nếu policy yêu cầu cùng trường) |
 
@@ -345,7 +345,7 @@ Dữ liệu tenant-scoped (attempt, learning event) lưu `tenant_id`/`school_id`
 
 ### 7.1. Job `identity-relink` (khôi phục sau khi dựng lại Keycloak)
 
-Dùng khi DB Keycloak phải dựng lại từ đầu ([BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md)): user được SIS sync provisioning lại nên `subject` mới khác `subject` cũ, và `(issuer, subject)` cũ không còn khớp [Proposed].
+Dùng khi DB Keycloak phải dựng lại từ đầu ([BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md)): user được SIS sync provisioning lại nên `subject` mới khác `subject` cũ, và `(issuer, subject)` cũ không còn khớp [Confirmed].
 
 1. Chạy trong binary `worker` (profile `jobs`, module identity), chỉ do System Admin kích hoạt; mọi bước được audit. Không ảnh hưởng module khác vì chúng tham chiếu `user_id` nội bộ, không tham chiếu `subject`.
 2. Với mỗi Keycloak user mới, đọc attribute `school_code` + `student_code` (hoặc `staff_code`). Tra `org.students` theo **`school_id` + `student_code`**; nhân sự tra `identity.users` theo `username`/email đã chuẩn hóa kèm xác nhận System Admin (không bao giờ theo tên).

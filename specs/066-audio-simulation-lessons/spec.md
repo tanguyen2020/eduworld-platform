@@ -8,7 +8,7 @@
 ### Session 2026-11-16
 
 - Q: "Lượt nghe" (`max_plays`) do ai đếm? → A: Server đếm trong tiến độ media; client báo `play_started` khi phát từ đầu hoặc phát lại sau khi hết bài; vượt lượt → server từ chối, client không phát ([research.md](research.md) R1). Server không ngăn được phát cục bộ, nên số lượt server ghi là nguồn sự thật cho báo cáo.
-- Q: Transcript bắt buộc? AUDIO_LANGUAGE_LEARNING §2 ghi `transcript_asset_id?`, ADMIN_PORTAL §3.13 (Audio Manager) ghi "Transcript bắt buộc cho bài nghe". → A: [Proposed] Lưu Draft cho phép thiếu; publish bắt buộc có transcript (trợ năng khi phòng máy không có tai nghe — STUDENT_GAME_UX_LEARNING §6.3). Đã báo mâu thuẫn để chốt ở tài liệu sở hữu.
+- Q: Transcript bắt buộc? AUDIO_LANGUAGE_LEARNING §2 ghi `transcript_asset_id?`, ADMIN_PORTAL §3.13 (Audio Manager) ghi "Transcript bắt buộc cho bài nghe". → A: [Confirmed] Lưu Draft cho phép thiếu; publish bắt buộc có transcript (trợ năng khi phòng máy không có tai nghe — STUDENT_GAME_UX_LEARNING §6.3). Đã báo mâu thuẫn để chốt ở tài liệu sở hữu.
 - Q: Render payload mô phỏng có `goals[].check` (metric/operator/value)? → A: Không. `check` là tham số kiểm chứng (ACTIVITY_ENGINE §5) — client chỉ nhận `goal_id` + `description` ([research.md](research.md) R3).
 - Q: Server dùng tham số/seed client gửi? → A: Không. Checker dùng tham số của version đã ghim và seed server cấp lúc start; giá trị client gửi lệch → `422 SIMULATION_LOG_INVALID`.
 - Q: Điểm phần mô phỏng lấy từ lần chạy nào? → A: Lần chạy `verified` cuối cùng trước submit (nhất quán ACTIVITY_ENGINE §7.2).
@@ -195,6 +195,6 @@ Giới hạn action log (≤ 500 hành động, ≤ 64 KB) và mục tiêu hiệ
 ## Assumptions
 
 - F030 cung cấp `activity.Plugin`/`Registry`, bảng `attempts`/`attempt_items`/`attempt_answers`, command/query handler, outbox, Problem codes; F065 cung cấp domain `ranges`/`plausibility` và repository `video_progress` dùng lại cho audio; F031 cung cấp port ghi learning event và evidence; F063 cung cấp `ActivityRendererBase`, renderer câu hỏi, `PendingWrites`; F058 cung cấp editor registry của portal.
-- Delta contract [Proposed] ở [contracts/README.md](contracts/README.md) §6: `play_started`/`plays_used`, `AUDIO_PLAY_LIMIT_REACHED`, `SIMULATION_RUN_LIMIT_REACHED`, `$defs.render` cho hai schema, `SimulationRunResult.goals_met[]`/`verification_status`, `SimulationTemplate.actions/metrics/status`, event payload `simulation.run_verified`/`run_rejected`.
-- [Proposed] Danh mục template được đồng bộ từ descriptor trong mã nguồn module learning lúc triển khai (research R2), không có API ghi.
+- Delta contract [Confirmed] ở [contracts/README.md](contracts/README.md) §6: `play_started`/`plays_used`, `AUDIO_PLAY_LIMIT_REACHED`, `SIMULATION_RUN_LIMIT_REACHED`, `$defs.render` cho hai schema, `SimulationRunResult.goals_met[]`/`verification_status`, `SimulationTemplate.actions/metrics/status`, event payload `simulation.run_verified`/`run_rejected`.
+- [Confirmed] Danh mục template được đồng bộ từ descriptor trong mã nguồn module learning lúc triển khai (research R2), không có API ghi.
 - ADR-0048, ADR-0052 đang Proposed nhưng được liệt kê là quyết định hiện hành ở chỉ mục ADR.

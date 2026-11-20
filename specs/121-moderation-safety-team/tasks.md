@@ -6,7 +6,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Đăng ký permission `moderation.case.read/act`, `moderation.case.messages.read`, `moderation.sanction.read/write`, `moderation.school_notification.send/read/acknowledge`, `moderation.case.lead` [Proposed] (platform-only, kiểm khởi động) — file: `src/backend/pkg/authz/catalog.go`, `src/backend/modules/chat/internal/bootstrap/authz.go`
+- [ ] T001 Đăng ký permission `moderation.case.read/act`, `moderation.case.messages.read`, `moderation.sanction.read/write`, `moderation.school_notification.send/read/acknowledge`, `moderation.case.lead` [Confirmed] (platform-only, kiểm khởi động) — file: `src/backend/pkg/authz/catalog.go`, `src/backend/modules/chat/internal/bootstrap/authz.go`
 - [ ] T002 [P] Linter allowlist: `tenancy.Bypass` chỉ trong `internal/presentation/http/admin/` và `internal/application/query/moderation/` — file: `.go-arch-lint.yml`, `src/backend/modules/chat/.golangci.yml`
 - [ ] T003 [P] Lịch job `moderation-sla-escalator`, `school-notification-reminder`, `case-hold-release`, `sanction-expirer` — file: `src/backend/modules/chat/config/worker.yaml`
 
@@ -114,7 +114,7 @@
 
 - [ ] T045 [P] Mục runbook on-call p1 (`runbook_url` của alert) và bảng alert — file: `docs/11-operations/MONITORING.md`
 - [ ] T046 [P] Cập nhật DATABASE_DESIGN §2.12 (cột mới, `school_safety_notifications`), MODERATION §5 (đường dẫn API `/admin/moderation/*`), ghi chú ±10/±20 tin — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/03-social-multiplayer/MODERATION.md`
-- [ ] T047 [P] Seed local `sm.truongca` [Proposed] — file: `deploy/keycloak/realm/seed-users.local.json`
+- [ ] T047 [P] Seed local `sm.truongca` [Confirmed] — file: `deploy/keycloak/realm/seed-users.local.json`
 - [ ] T048 [P] CHANGELOG — file: `CHANGELOG.md`
 - [ ] T049 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 

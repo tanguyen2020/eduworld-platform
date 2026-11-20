@@ -125,7 +125,7 @@ Không có quyết định kỹ thuật cần nghiên cứu. Sở hữu study gr
 
 - Log không có tên học sinh/PII (R14); metric `eduworld_lms_courses_provisioned_total{result}`, `eduworld_lms_path_node_unlocks_total{source}`; span `EnsureCoursesForClass`, `UnlockPolicy.evaluate`.
 
-Ước lượng: 2 sprint (backend 1–2 dev) (gồm study group) [Proposed].
+Ước lượng: 2 sprint (backend 1–2 dev) (gồm study group) [Confirmed].
 
 ## Complexity Tracking
 

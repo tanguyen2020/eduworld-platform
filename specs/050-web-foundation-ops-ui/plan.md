@@ -79,7 +79,7 @@ src/cms/frontend/tests/visual/storybook.spec.ts  playwright.config.ts
 
 ## Phase 0: Research
 
-Không có. Stack theo ADR-0022/ADR-0047 [Proposed] và DESIGN_SYSTEM §4; lựa chọn chi tiết ghi ở Clarifications.
+Không có. Stack theo ADR-0022/ADR-0047 [Confirmed] và DESIGN_SYSTEM §4; lựa chọn chi tiết ghi ở Clarifications.
 
 ## Phase 1: Design & Contracts
 

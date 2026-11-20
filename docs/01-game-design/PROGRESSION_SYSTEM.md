@@ -37,7 +37,7 @@ Quy tắc:
 
 Mỗi lần cộng XP gắn một `source_code` trong catalog cấu hình (Game Studio). Số XP cụ thể nằm trong reward rule ([reward-rule.schema.json](../../specs/schemas/reward-rule.schema.json)), không hardcode trong client.
 
-| `source_code` | Sự kiện kích hoạt | XP gợi ý [Proposed] | Ghi chú |
+| `source_code` | Sự kiện kích hoạt | XP gợi ý [Confirmed] | Ghi chú |
 |---|---|---|---|
 | `quest.main_completed` | `quest.completed` (main) | 150 | Một lần cho mỗi quest |
 | `quest.side_completed` | `quest.completed` (side, learning, exploration) | 60–100 | |
@@ -59,10 +59,10 @@ Không có XP cho: đăng nhập hằng ngày đơn thuần, thời gian online,
 ### 3.2. Cap, giảm dần và chống lạm dụng
 
 Tài liệu này **sở hữu** các quy tắc XP dưới đây; [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) chỉ mô tả cách phát hiện và xử lý gian lận:
-- Giảm dần khi lặp cùng nội dung, trong cửa sổ 7 ngày theo content version: lần 1 = 100%, lần 2 = 50%, lần 3 = 25%, từ lần 4 = 0% [Proposed].
-- Cap tổng **1.000 XP/ngày** và cap theo nhóm nguồn (`xp_daily_caps`) [Proposed].
+- Giảm dần khi lặp cùng nội dung, trong cửa sổ 7 ngày theo content version: lần 1 = 100%, lần 2 = 50%, lần 3 = 25%, từ lần 4 = 0% [Confirmed].
+- Cap tổng **1.000 XP/ngày** và cap theo nhóm nguồn (`xp_daily_caps`) [Confirmed].
 - Câu sai không cho XP; câu đúng sau khi đã xem giải thích của chính câu đó: 0 XP.
-- Nội dung có độ khó thấp hơn khối hiện tại của học sinh ≥ 2 khối: XP × 0,25 [Proposed], **trừ** hoạt động ôn tập LO tiên quyết do **hệ thống gợi ý** (attempt mang `recommendation_id` từ recommendation rule R3, [LEARNING_ANALYTICS §6](../02-learning/LEARNING_ANALYTICS.md#6-recommendation-rules)) hoặc do **nhà trường giao** (attempt mode `assignment`): các hoạt động này nhận XP đầy đủ, để XP không ngược với gợi ý ôn tập [Proposed]. Giảm dần khi lặp và cap ngày vẫn áp dụng.
+- Nội dung có độ khó thấp hơn khối hiện tại của học sinh ≥ 2 khối: XP × 0,25 [Confirmed], **trừ** hoạt động ôn tập LO tiên quyết do **hệ thống gợi ý** (attempt mang `recommendation_id` từ recommendation rule R3, [LEARNING_ANALYTICS §6](../02-learning/LEARNING_ANALYTICS.md#6-recommendation-rules)) hoặc do **nhà trường giao** (attempt mode `assignment`): các hoạt động này nhận XP đầy đủ, để XP không ngược với gợi ý ôn tập [Confirmed]. Giảm dần khi lặp và cap ngày vẫn áp dụng.
 - Cap Xu/ngày và cách Xu áp cùng cơ chế giảm dần: [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) (nơi sở hữu).
 - XP do **server** tính khi nhận domain event; client không gửi số XP. Mỗi lần cộng idempotent theo `(student_id, source_type, source_id, rule_id)` (ADR-0049).
 - Cảnh báo (không tự phạt) khi phát hiện mẫu bất thường: tỷ lệ đúng đột biến, thời gian trả lời quá ngắn, nhiều tài khoản cùng thiết bị → `integrity_signals` cho moderator xem.
@@ -93,7 +93,7 @@ Hai cách khai báo:
 1. **Công thức** `xp_to_next(L) = round(base × L^exponent + linear × L)`, tham số `base`, `exponent`, `linear`, `max_level`.
 2. **Bảng** `levels[]` ghi rõ `xp_required` cho từng level (ghi đè công thức khi cần cân chỉnh tay).
 
-Mặc định [Proposed]: `base = 100`, `exponent = 1.35`, `linear = 20`, `max_level = 60`.
+Mặc định [Confirmed]: `base = 100`, `exponent = 1.35`, `linear = 20`, `max_level = 60`.
 
 | Level | XP cần để lên level tiếp | XP tích lũy (xấp xỉ) |
 |---|---|---|
@@ -103,7 +103,7 @@ Mặc định [Proposed]: `base = 100`, `exponent = 1.35`, `linear = 20`, `max_l
 | 20 → 21 | 6.107 | 55.649 |
 | 30 → 31 | 10.465 | 140.204 |
 
-Mục tiêu cân bằng [Proposed]: học sinh chơi đều 20–30 phút/ngày (khoảng 300–400 XP/ngày, dưới cap 1.000) lên level 10 sau khoảng 4 tuần và level 20 sau khoảng một học kỳ; level 30+ dành cho người chơi lâu năm. Không cần chơi dài để theo kịp. Số liệu phải được hiệu chỉnh bằng dữ liệu pilot.
+Mục tiêu cân bằng [Confirmed]: học sinh chơi đều 20–30 phút/ngày (khoảng 300–400 XP/ngày, dưới cap 1.000) lên level 10 sau khoảng 4 tuần và level 20 sau khoảng một học kỳ; level 30+ dành cho người chơi lâu năm. Không cần chơi dài để theo kịp. Số liệu phải được hiệu chỉnh bằng dữ liệu pilot.
 
 ### 4.2. Đổi đường cong khi đang vận hành
 
@@ -113,7 +113,7 @@ Mục tiêu cân bằng [Proposed]: học sinh chơi đều 20–30 phút/ngày 
 
 ### 4.3. Danh hiệu cấp độ
 
-`LevelTitle` cấu hình theo khoảng level [Proposed]:
+`LevelTitle` cấu hình theo khoảng level [Confirmed]:
 
 | Khoảng level | Danh hiệu (vi) | Mã |
 |---|---|---|
@@ -165,7 +165,7 @@ sequenceDiagram
 
 Mở khóa vùng, điểm khám phá, vật sưu tầm, secret quest, hoàn thành bản đồ và chương truyện thuộc [WORLD_DESIGN](WORLD_DESIGN.md) §7–8. Progression chỉ cung cấp: điều kiện `min_level` (dùng cho khu trang trí, không cho khu học tập) và XP cho khám phá theo catalog §3.1.
 
-### 5.1. Chuyển năm học (lên lớp) [Proposed]
+### 5.1. Chuyển năm học (lên lớp) [Confirmed]
 
 Khi học sinh lên lớp, module game nhận `student.synced` (đổi `grade_level`) / `enrollment.changed` từ module identity và áp các quy tắc sau trong một command idempotent theo `(student_id, school_year)`:
 

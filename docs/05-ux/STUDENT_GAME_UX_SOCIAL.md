@@ -109,7 +109,7 @@ Tablet: 6 cột, danh sách slot hiển thị đầy đủ như PC thay cho nút
 
 **Mục đích.** Xem thành tựu, huy hiệu, danh hiệu, bộ sưu tập (pet, thẻ kiến thức, vật khám phá, sự kiện) và cách nhận. Nghiệp vụ: [INVENTORY_ECONOMY §6–§7](../01-game-design/INVENTORY_ECONOMY.md).
 
-**Điểm vào/ra.** Menu chính → "Thành tựu" (không có phím tắt riêng; `J` là Nhật ký nhiệm vụ theo [STUDENT_GAME_UX §4.1](STUDENT_GAME_UX.md#41-webpc--phím-mặc-định-cho-phép-đổi-phím-trong-cài-đặt-proposed)) · thông báo mở khóa · hồ sơ của mình. Ra: Đóng/`Esc`.
+**Điểm vào/ra.** Menu chính → "Thành tựu" (không có phím tắt riêng; `J` là Nhật ký nhiệm vụ theo [STUDENT_GAME_UX §4.1](STUDENT_GAME_UX.md#41-webpc--phím-mặc-định-cho-phép-đổi-phím-trong-cài-đặt-confirmed)) · thông báo mở khóa · hồ sơ của mình. Ra: Đóng/`Esc`.
 
 **Bố cục Web/PC**
 

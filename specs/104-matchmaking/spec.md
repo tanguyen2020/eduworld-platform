@@ -7,7 +7,7 @@
 
 ### Session 2026-11-16
 
-- Q: REST `acceptMatchProposal` dùng `{match_id}` trong khi WS dùng `proposal_id` — hai ID khác nhau? → A: Không. `proposal_id` là UUIDv7 cấp lúc tạo proposal và **được dùng làm `match_id`** khi mọi bên accept; `matches.match_id` là PK nên tạo trận idempotent theo proposal ([MATCHMAKING §6](../../docs/03-social-multiplayer/MATCHMAKING.md#6-matchmaker-worker)) [Proposed].
+- Q: REST `acceptMatchProposal` dùng `{match_id}` trong khi WS dùng `proposal_id` — hai ID khác nhau? → A: Không. `proposal_id` là UUIDv7 cấp lúc tạo proposal và **được dùng làm `match_id`** khi mọi bên accept; `matches.match_id` là PK nên tạo trận idempotent theo proposal ([MATCHMAKING §6](../../docs/03-social-multiplayer/MATCHMAKING.md#6-matchmaker-worker)) [Confirmed].
 - Q: Bot luyện tập chạy ở đâu? → A: F104 đề nghị bot (sau `mm_bot_after`) và tạo trận bot unranked qua `startBotMatch`; luật chơi và hành vi bot do F105 thực thi.
 - Q: Matchmaking `tournament` có queue không? → A: Không. F104 cung cấp command nội bộ `CreateDirectProposal` (proposal + ready check không qua queue) cho F107; ticket `matchmaking_type = tournament` bị từ chối.
 - Q: Phạm vi liên trường đọc ở đâu? → A: Cài đặt tenant (`ref.tenants.settings_subset`), không nằm trong cấu hình matchmaking ([MATCHMAKING §5.1](../../docs/03-social-multiplayer/MATCHMAKING.md#51-cấu-hình-matchmaking--platform-only)).
@@ -192,7 +192,7 @@ Chỉ học sinh vào hàng đợi; dữ liệu một tenant không lẫn sang t
 
 ## Assumptions
 
-- [Proposed] `proposal_id` dùng làm `match_id` (Clarifications); không cần đổi path REST.
-- [Proposed] Cờ liên trường đọc từ `ref.tenants.settings_subset.cross_school_matchmaking`; khung giờ truy cập đọc từ `ref.schools.settings_subset.access_hours` (cần module identity phát trong `school.updated`/`tenant.updated`).
-- [Proposed] Sanction `restrict_competition` được ghi vào `competition.competition_restrictions` bởi feature xử lý vi phạm sau này; F104 chỉ đọc.
-- Giá trị cửa sổ, timeout là mặc định [Proposed] trong CONFIG_DEFAULTS; giá trị hiệu lực lấy từ cấu hình matchmaking đã publish (seed khi chưa có F108).
+- [Confirmed] `proposal_id` dùng làm `match_id` (Clarifications); không cần đổi path REST.
+- [Confirmed] Cờ liên trường đọc từ `ref.tenants.settings_subset.cross_school_matchmaking`; khung giờ truy cập đọc từ `ref.schools.settings_subset.access_hours` (cần module identity phát trong `school.updated`/`tenant.updated`).
+- [Confirmed] Sanction `restrict_competition` được ghi vào `competition.competition_restrictions` bởi feature xử lý vi phạm sau này; F104 chỉ đọc.
+- Giá trị cửa sổ, timeout là mặc định [Confirmed] trong CONFIG_DEFAULTS; giá trị hiệu lực lấy từ cấu hình matchmaking đã publish (seed khi chưa có F108).

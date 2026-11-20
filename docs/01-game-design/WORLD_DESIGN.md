@@ -18,7 +18,7 @@ Thế giới phải khiến học sinh **muốn đi khám phá**: mỗi vùng c�
 **EduWorld — Quần đảo Tri Thức** (*EduWorld — The Knowledge Archipelago*): chuỗi vùng đất nổi đã "mất màu" vì các **Tia Sáng** (*Knowledge Sparks*) bị phân tán. Người chơi là **Nhà Thám Hiểm** (*Explorer*) trẻ, cùng hướng dẫn viên **Mây** đi khắp các vùng, giúp cư dân giải quyết vấn đề bằng kiến thức. Mỗi khi học sinh nắm vững một mục tiêu học tập, một phần vùng đất được tô màu lại.
 
 - Không có kẻ thù bạo lực, không vũ khí [Confirmed — Master Prompt §3.1]. "Đối thủ" là câu đố, vấn đề của NPC, boss "mất năng lượng" (không phải "máu", [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md)).
-- Thế giới phản ánh **mastery**, không phản ánh thời gian chơi: vùng đổi màu theo `objective_mastery` [Proposed].
+- Thế giới phản ánh **mastery**, không phản ánh thời gian chơi: vùng đổi màu theo `objective_mastery` [Confirmed].
 
 ### 2.2. Mạch truyện chính [Confirmed — người duyệt 2026-11-15, ADR-0056]
 
@@ -75,7 +75,7 @@ Mọi tên riêng của thế giới là `i18nText` `{vi, en}` bắt buộc đ�
 
 Quy tắc hiển thị:
 - **Ngôn ngữ đơn (mặc định):** hiển thị theo ngôn ngữ người chơi chọn; `area_id`/`npc_id`/`chapter_id` không đổi theo ngôn ngữ.
-- **Hiển thị song song** (Cài đặt → "Hiện tên song ngữ", mặc định **bật** khi đang ở Rừng Ngôn Ngữ khu Tiếng Anh, tắt ở nơi khác [Proposed]): tên riêng và từ vựng chủ chốt hiển thị dạng `Vương quốc Số · Math Kingdom` (ngôn ngữ đang chọn đứng trước, ngôn ngữ còn lại chữ nhỏ, nghiêng). Không áp dụng cho câu hội thoại dài và đề bài.
+- **Hiển thị song song** (Cài đặt → "Hiện tên song ngữ", mặc định **bật** khi đang ở Rừng Ngôn Ngữ khu Tiếng Anh, tắt ở nơi khác [Confirmed]): tên riêng và từ vựng chủ chốt hiển thị dạng `Vương quốc Số · Math Kingdom` (ngôn ngữ đang chọn đứng trước, ngôn ngữ còn lại chữ nhỏ, nghiêng). Không áp dụng cho câu hội thoại dài và đề bài.
 - **Lồng tiếng/voice-over** NPC (nếu có) theo ngôn ngữ đã chọn; chưa có bản ghi thì hiển thị phụ đề, không đọc ngôn ngữ khác.
 - Thiếu bản dịch ở client (dữ liệu cũ): rơi về `vi`, ghi telemetry `i18n.missing_key` (không hiển thị khóa thô cho học sinh).
 
@@ -172,12 +172,12 @@ Level designer đặt điểm neo trong scene; nhà thiết kế nội dung gắ
 
 | Quy tắc | Chi tiết | Nhãn |
 |---|---|---|
-| Spawn | Lần đầu: Quảng trường Tia Sáng (sau tạo nhân vật, [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md)); lần sau: `game_profile.last_area` nếu là khu công khai, ngược lại về Quảng trường | [Proposed] |
-| Cổng gió (teleport) | Mỗi vùng có cổng về Thị trấn; cổng giữa các vùng mở khi đã mở cả hai vùng | [Proposed] |
-| Bản đồ thế giới | Màn hình World Map: vùng đã mở/chưa mở (kèm điều kiện), % khám phá từng vùng, fast travel tới cổng đã kích hoạt | [Proposed] |
-| Về nhà nhanh | Nút "Về Quảng trường" trên HUD, ≤ 1 thao tác từ mọi khu | [Proposed] |
-| Theo độ tuổi | Lớp 1–3: dịch chuyển bằng bảng chọn hình (không bắt đi bộ xa), tap-to-move; lớp 6–9: đi bộ khám phá tự do | [Proposed] |
-| Thời gian chuyển khu | Theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11 (hạng Tầm trung) | [Proposed] ADR-0057 |
+| Spawn | Lần đầu: Quảng trường Tia Sáng (sau tạo nhân vật, [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md)); lần sau: `game_profile.last_area` nếu là khu công khai, ngược lại về Quảng trường | [Confirmed] |
+| Cổng gió (teleport) | Mỗi vùng có cổng về Thị trấn; cổng giữa các vùng mở khi đã mở cả hai vùng | [Confirmed] |
+| Bản đồ thế giới | Màn hình World Map: vùng đã mở/chưa mở (kèm điều kiện), % khám phá từng vùng, fast travel tới cổng đã kích hoạt | [Confirmed] |
+| Về nhà nhanh | Nút "Về Quảng trường" trên HUD, ≤ 1 thao tác từ mọi khu | [Confirmed] |
+| Theo độ tuổi | Lớp 1–3: dịch chuyển bằng bảng chọn hình (không bắt đi bộ xa), tap-to-move; lớp 6–9: đi bộ khám phá tự do | [Confirmed] |
+| Thời gian chuyển khu | Theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11 (hạng Tầm trung) | [Confirmed] ADR-0057 |
 
 ## 7. Mở khóa và gating
 
@@ -187,8 +187,8 @@ Level designer đặt điểm neo trong scene; nhà thiết kế nội dung gắ
 |---|---|
 | **Vùng/khu học tập theo khối và môn của học sinh luôn mở** — không khóa học tập sau level, tiền tệ hay chuỗi truyện | [Confirmed — Master Prompt re-architecture §9] |
 | Không có cơ chế trả tiền để mở vùng | [Confirmed] |
-| Học sinh chỉ thấy trạm/quest phù hợp `grade_level` (có thể mở nội dung khối dưới để ôn) | [Proposed] |
-| Môn/vùng có thể bị trường tắt (`school.settings`) | [Proposed] |
+| Học sinh chỉ thấy trạm/quest phù hợp `grade_level` (có thể mở nội dung khối dưới để ôn) | [Confirmed] |
+| Môn/vùng có thể bị trường tắt (`school.settings`) | [Confirmed] |
 | Tháp Thử Thách chính thức chỉ mở trong cửa sổ `exam_session` | [Confirmed — Master Prompt §4.5] |
 | Mở khóa do server quyết định; client chỉ ẩn cổng khi chưa mở | [Confirmed — ADR-0016] |
 
@@ -218,13 +218,13 @@ Vào area chưa mở → `403 AREA_LOCKED` kèm điều kiện còn thiếu (th�
 | **Story chapter** | Chuỗi main quest theo vùng | `story_chapters` cấu hình, tiến độ suy từ quest |
 | **Thành tựu khu vực** | Ví dụ "Khám phá 100% Vương quốc Số" | [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §7 |
 
-XP cho khám phá (`exploration.discovery`, `exploration.area_completed`) theo catalog ở [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.1. Giới hạn báo khám phá: 30 lần/phút/học sinh [Proposed].
+XP cho khám phá (`exploration.discovery`, `exploration.area_completed`) theo catalog ở [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.1. Giới hạn báo khám phá: 30 lần/phút/học sinh [Confirmed].
 
 ## 9. Capacity và instance (ADR-0012)
 
 | Loại | `room_type` | Sức chứa | Ghép người | Vòng đời |
 |---|---|---|---|---|
-| Khu công khai | `hub_instance` | 40 [Proposed] | Cùng trường + grade band (mặc định không trộn trường); ưu tiên bạn bè và party cùng instance | Tạo khi cần, đóng khi rỗng 5 phút |
+| Khu công khai | `hub_instance` | 40 [Confirmed] | Cùng trường + grade band (mặc định không trộn trường); ưu tiên bạn bè và party cùng instance | Tạo khi cần, đóng khi rỗng 5 phút |
 | Party/co-op/boss | `private_instance` | = số thành viên party (≤ 8) | Chỉ thành viên party | Theo party activity |
 | Trận đấu | `battle` | 2 (1v1) – 8 (4v4) | Matchmaking | Theo trận |
 | Phòng chờ | `lobby` | Theo mode | Matchmaking/party | Đến khi trận bắt đầu |
@@ -240,11 +240,11 @@ Sự kiện thế giới là sự kiện live-ops loại `world_festival` (lễ 
 | Khía cạnh | Hướng | Nhãn |
 |---|---|---|
 | Phong cách | Stylized low-poly, màu tươi vừa, viền mềm, ánh sáng ấm, không bạo lực | [Confirmed — Master Prompt §3.1] |
-| Nhân vật | Tỉ lệ chibi (đầu ~1/3 thân), biểu cảm rõ, không vũ khí | [Proposed] |
-| Văn hóa | Cảm hứng Việt Nam (mái ngói, cây đa, ruộng bậc thang, thuyền thúng) trộn kỳ ảo; tránh khuôn mẫu | [Proposed] |
-| Màu theo môn/vùng | Toán xanh dương, Tiếng Việt cam, Tiếng Anh tím, Khoa học xanh lá, Lịch sử nâu đỏ; là **mã màu nghiệp vụ dùng chung** (`design/shared-tokens/`) để game và portal cùng màu (ADR-0047) | [Proposed] |
-| Mastery visualization | Đất xám → có màu → nở hoa/cây lớn theo `beginning/developing/proficient/mastered` | [Proposed] |
-| Trợ năng | Không chỉ dùng màu (thêm biểu tượng); chế độ tương phản cao | [Proposed] |
+| Nhân vật | Tỉ lệ chibi (đầu ~1/3 thân), biểu cảm rõ, không vũ khí | [Confirmed] |
+| Văn hóa | Cảm hứng Việt Nam (mái ngói, cây đa, ruộng bậc thang, thuyền thúng) trộn kỳ ảo; tránh khuôn mẫu | [Confirmed] |
+| Màu theo môn/vùng | Toán xanh dương, Tiếng Việt cam, Tiếng Anh tím, Khoa học xanh lá, Lịch sử nâu đỏ; là **mã màu nghiệp vụ dùng chung** (`design/shared-tokens/`) để game và portal cùng màu (ADR-0047) | [Confirmed] |
+| Mastery visualization | Đất xám → có màu → nở hoa/cây lớn theo `beginning/developing/proficient/mastered` | [Confirmed] |
+| Trợ năng | Không chỉ dùng màu (thêm biểu tượng); chế độ tương phản cao | [Confirmed] |
 | Ngân sách hiệu năng | Theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) (nơi sở hữu, máy tầm trung — ADR-0057); áp dụng trong pipeline dựng ở [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) §6 | — |
 | Nguồn asset | Mua pack có license + tự làm nhân vật chính (OQ-16) | [TBD] |
 | Design system | Màu, font, UI, toon/outline, ánh sáng, VFX từ game design system ([DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) §5) | [Confirmed — ADR-0047] |

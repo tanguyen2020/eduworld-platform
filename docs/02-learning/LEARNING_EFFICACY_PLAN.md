@@ -3,7 +3,7 @@
 > Trạng thái: Draft · Phiên bản: 0.1 · Owner: EdTech Specialist + Product Owner · Cập nhật: 2026-11-15
 > Liên quan: [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) · [LEARNING_ANALYTICS](LEARNING_ANALYTICS.md) · [EXAM_ENGINE](EXAM_ENGINE.md) · [QUESTION_BANK](QUESTION_BANK.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) (PED-01, K1) · [PRODUCT_VISION](../00-overview/PRODUCT_VISION.md) · [ROADMAP](../12-project/ROADMAP.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [OQ-12](../12-project/OPEN_QUESTIONS.md)
 
-ADR-0080 đã Accepted (2026-11-17). Thiết kế chi tiết dưới đây vẫn là **[Proposed]** cho tới khi chuyên gia đánh giá giáo dục/thống kê rà soát; yêu cầu là FR-ANL-017…023 trong [PRD](../00-overview/PRODUCT_REQUIREMENTS.md), triển khai ở [F035](../../specs/035-learning-efficacy-study/spec.md).
+ADR-0080 đã Accepted (2026-11-17). Thiết kế chi tiết dưới đây vẫn là **[Confirmed]** cho tới khi chuyên gia đánh giá giáo dục/thống kê rà soát; yêu cầu là FR-ANL-017…023 trong [PRD](../00-overview/PRODUCT_REQUIREMENTS.md), triển khai ở [F035](../../specs/035-learning-efficacy-study/spec.md).
 
 ## 1. Mục đích và phạm vi
 
@@ -46,9 +46,9 @@ flowchart LR
 
 - **Độc lập với nội dung luyện tập:** ngân hàng câu riêng (`efficacy_instrument`), do EdTech soạn và người thứ hai duyệt, **không** xuất hiện trong practice/quest/minigame/đề thường (cơ chế `exam_only`, [QUESTION_BANK §8](QUESTION_BANK.md#8-chống-lộ-đáp-án)); không dùng câu tham số hóa từ template luyện tập.
 - **Tự chấm trong game:** tổ chức như một ExamSession ([EXAM_ENGINE](EXAM_ENGINE.md)) với `feedback_timing = never`, `result_release = manual` (kết quả không công bố cho học sinh trong thời gian nghiên cứu), không thưởng XP theo điểm, không gợi ý; evidence **không** đưa vào mastery (để không làm nhiễu Q2).
-- **Hai dạng song song A và B** cân bằng độ khó ([EXAM_ENGINE §4.1](EXAM_ENGINE.md#41-cân-bằng-độ-khó-giữa-các-biến-thể-proposed)); một nửa số lớp làm A trước B sau, nửa còn lại ngược lại (counterbalancing).
+- **Hai dạng song song A và B** cân bằng độ khó ([EXAM_ENGINE §4.1](EXAM_ENGINE.md#41-cân-bằng-độ-khó-giữa-các-biến-thể-confirmed)); một nửa số lớp làm A trước B sau, nửa còn lại ngược lại (counterbalancing).
 - **Phủ LO:** mỗi LO trong phạm vi có ≥ 3 câu mỗi dạng để tính điểm theo LO; tổng 20–30 câu, ≤ 40 phút (lớp 1–3: ≤ 20 câu, có audio đọc đề).
-- **Kiểm định trước khi dùng:** thử trên một lớp không tham gia, yêu cầu reliability (KR-20) ≥ 0,7 ([EXAM_ENGINE §8.1](EXAM_ENGINE.md#81-độ-tin-cậy-của-đề-chính-thức-proposed)).
+- **Kiểm định trước khi dùng:** thử trên một lớp không tham gia, yêu cầu reliability (KR-20) ≥ 0,7 ([EXAM_ENGINE §8.1](EXAM_ENGINE.md#81-độ-tin-cậy-của-đề-chính-thức-confirmed)).
 - Khi trường cho phép, thu thêm điểm bài kiểm tra định kỳ của nhà trường (ẩn danh hóa) làm tiêu chí ngoài thứ hai.
 
 ## 4. Chỉ số
@@ -79,7 +79,7 @@ Kết quả là đầu vào cho việc chỉnh tham số mastery và cho quyết
 
 ## 6. Hạ tầng A/B cho mastery model và selection rule
 
-| Thành phần | Thiết kế [Proposed] |
+| Thành phần | Thiết kế [Confirmed] |
 |---|---|
 | Đăng ký thử nghiệm | Bảng `learning.experiments` (`experiment_id`, `code` ≤ 64, `kind` ∈ {`mastery_model`, `selection_rule`, `recommendation_rule`}, `arms` jsonb, `unit` ∈ {`student`, `class`}, `start_at`, `end_at`, `status`, `owner`), phiên bản hóa, thay đổi có audit |
 | Phân nhánh | Hash ổn định `(experiment_id, unit_id) mod 100` → arm; mặc định đơn vị là **lớp** để tránh học sinh cùng lớp nhận trải nghiệm khác nhau; tenant phải đồng ý tham gia |

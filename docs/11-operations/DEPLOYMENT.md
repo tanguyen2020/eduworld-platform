@@ -9,15 +9,15 @@
 
 Tài liệu này mô tả cách đóng gói, triển khai, phát hành và vận hành EduWorld trên 4 môi trường. Backend là **modular monolith** ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md), thay ADR-0036): một Go module, 5 module domain (`identity`, `learning`, `game`, `competition`, `chat`) + module `realtime`, đóng gói thành **3 binary** (`core-api`, `realtime`, `worker`) và triển khai thành 5 Swarm service theo hồ sơ chạy (§3.1). Mỗi module domain có database riêng (ADR-0037) trên **một cụm PostgreSQL** chung. Module gọi nhau trong tiến trình qua facade sinh từ spec internal (`src/backend/pkg/modcall`), không có HTTP nội bộ; phản ứng phụ đi qua outbox → NATS JetStream (ADR-0042); `realtime` gửi lệnh tới `core-api` qua NATS request/reply.
 
-Nền tảng chạy container là **Docker** (ADR-0024, Accepted): Docker Compose cho local/dev, **Docker Engine chế độ Swarm** cho staging/production. **Chưa dùng Kubernetes.** Topology ứng dụng đã chốt bằng ADR-0074 (trả lời OQ-10); nhà cung cấp cloud tại VN hay on-prem, managed hay tự vận hành là lựa chọn mua sắm còn [TBD]; yêu cầu lưu trữ dữ liệu tại Việt Nam phụ thuộc **OQ-12**. Các con số dưới đây là mặc định **[Proposed]**, đủ để dựng staging từ Phase 1.
+Nền tảng chạy container là **Docker** (ADR-0024, Accepted): Docker Compose cho local/dev, **Docker Engine chế độ Swarm** cho staging/production. **Chưa dùng Kubernetes.** Topology ứng dụng đã chốt bằng ADR-0074 (trả lời OQ-10); nhà cung cấp cloud tại VN hay on-prem, managed hay tự vận hành là lựa chọn mua sắm còn [TBD]; yêu cầu lưu trữ dữ liệu tại Việt Nam phụ thuộc **OQ-12**. Các con số dưới đây là mặc định **[Confirmed]**, đủ để dựng staging từ Phase 1.
 
 ## 2. Môi trường
 
 | Môi trường | Mục đích | Hạ tầng | Dữ liệu | Ai truy cập | Nhãn |
 |---|---|---|---|---|---|
 | **local** | Phát triển trên máy dev | Docker Compose ([LOCAL_DEVELOPMENT](LOCAL_DEVELOPMENT.md)) | Seed giả | Dev | [Confirmed] (Docker Compose, Master Prompt §18) |
-| **dev** | Tích hợp liên tục, deploy tự động từ `main` | 1–2 VM, Docker Compose | Seed giả, reset được | Team | [Proposed] |
-| **staging** | UAT, load test, kiểm thử tích hợp SIS/IdP sandbox | Docker Swarm, cùng topology production, ít node hơn | Dữ liệu giả hoặc đã ẩn danh; **không** dùng dữ liệu học sinh thật | Team, QA, đại diện trường (UAT) | [Proposed] |
+| **dev** | Tích hợp liên tục, deploy tự động từ `main` | 1–2 VM, Docker Compose | Seed giả, reset được | Team | [Confirmed] |
+| **staging** | UAT, load test, kiểm thử tích hợp SIS/IdP sandbox | Docker Swarm, cùng topology production, ít node hơn | Dữ liệu giả hoặc đã ẩn danh; **không** dùng dữ liệu học sinh thật | Team, QA, đại diện trường (UAT) | [Confirmed] |
 | **production** | Học sinh và nhân sự nhà trường thật | Docker Swarm (ADR-0024) trên VM cloud/on-prem theo OQ-10; HA cho mọi thành phần stateful | Thật, chịu DATA_PRIVACY | Vận hành (least privilege, có audit) | [Confirmed] Docker Swarm · [TBD] OQ-10 nơi đặt hạ tầng |
 
 Quy tắc:
@@ -41,7 +41,7 @@ Mã nguồn backend là một Go module ở `src/backend/` (`src/backend/go.mod`
 
 Image `eduworld/migrate` (Atlas, ADR-0039) chứa thư mục migration của mọi module, chạy như job `migrate --module=<module>` trước khi rollout (§12). Một profile worker hỏng hoặc quá tải không chặn profile khác; chat tăng đột biến chỉ cần tăng replica `worker-chat` (ADR-0074 mục 2).
 
-**Công thức (ADR-0055):** không có math worker hay image riêng. Admin Portal render công thức thành SVG + speech text bằng MathJax 4 trên trình duyệt khi lưu/publish; module learning chỉ kiểm tra allowlist LaTeX (≤ 2.000 ký tự, độ sâu lồng ≤ 20), sanitize SVG (≤ 256 KB) và lưu `math/<sha256>.svg` lên object storage (§9b). Env: `EW_MATH_MAX_LATEX_LENGTH=2000`, `EW_MATH_MAX_SVG_BYTES=262144`, `EW_MATH_MAX_DEPTH=20`. CLI render dùng cùng MathJax 4 cho import hàng loạt trong CI/vận hành là [Proposed] (job một lần, không chạy thường trực).
+**Công thức (ADR-0055):** không có math worker hay image riêng. Admin Portal render công thức thành SVG + speech text bằng MathJax 4 trên trình duyệt khi lưu/publish; module learning chỉ kiểm tra allowlist LaTeX (≤ 2.000 ký tự, độ sâu lồng ≤ 20), sanitize SVG (≤ 256 KB) và lưu `math/<sha256>.svg` lên object storage (§9b). Env: `EW_MATH_MAX_LATEX_LENGTH=2000`, `EW_MATH_MAX_SVG_BYTES=262144`, `EW_MATH_MAX_DEPTH=20`. CLI render dùng cùng MathJax 4 cho import hàng loạt trong CI/vận hành là [Confirmed] (job một lần, không chạy thường trực).
 
 ### 3.2. Thành phần khác
 
@@ -55,7 +55,7 @@ Image `eduworld/migrate` (Atlas, ADR-0039) chứa thư mục migration của m�
 | PostgreSQL | `postgres:17` (hoặc managed) | `deploy/postgres/` (init script tạo database/role theo module) | Extension: `pgcrypto`, `pg_stat_statements`, `unaccent` |
 | Valkey | `valkey/valkey:8` | — | |
 | Object storage | local/CI: **floci** (ADR-0044); staging/production: **S3-compatible managed tại Việt Nam** (ưu tiên) hoặc **Garage/SeaweedFS ≥ 3 node** tự host có replication — chọn sau spike [TBD] ([ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md), [Confirmed — Technical Architect 2026-11-17]; thay ADR-0071) | `deploy/object-storage/` (bucket, policy, lifecycle) | 6 bucket theo ADR-0044 (§9b) |
-| Media pipeline | Thư viện `src/backend/pkg/media` chạy trong profile `worker-events` (consumer `media-processor`, `content-snapshot-builder`); image phụ `eduworld/media-tools` (ffmpeg, libvips, gltf-transform) | `src/backend/modules/*/` + `deploy/media/` | Tách thành profile/Swarm service riêng (`--profile=media`) khi tải lớn [Proposed] |
+| Media pipeline | Thư viện `src/backend/pkg/media` chạy trong profile `worker-events` (consumer `media-processor`, `content-snapshot-builder`); image phụ `eduworld/media-tools` (ffmpeg, libvips, gltf-transform) | `src/backend/modules/*/` + `deploy/media/` | Tách thành profile/Swarm service riêng (`--profile=media`) khi tải lớn [Confirmed] |
 | ClamAV | `clamav/clamav:stable` (clamd + freshclam) | — | Media worker quét file trong quarantine qua TCP clamd |
 | NATS | `nats:2.10-alpine` (JetStream) | `deploy/nats/` (server config, account/user JWT, không chứa secret) | Cluster 3 node; `prometheus-nats-exporter` |
 | Observability | otel-collector, prometheus, grafana, loki, tempo | `deploy/observability/` | ADR-0023 |
@@ -69,7 +69,7 @@ Yêu cầu chung cho image do dự án build:
 
 ## 4. Topology
 
-### 4.1. Pilot (NFR-SCAL-001: 5 trường · 5.000 HS · 1.000 CCU) — [Proposed]
+### 4.1. Pilot (NFR-SCAL-001: 5 trường · 5.000 HS · 1.000 CCU) — [Confirmed]
 
 Mục tiêu: vận hành đơn giản, HA tối thiểu cho dữ liệu. Chạy **Docker Swarm** nhỏ trên VM (3 manager có thể đặt chung trên app-1, app-2, ops-1 ở pilot); `core-api` và `realtime` mỗi Swarm service 2 replica trải trên 2 VM app (`placement.preferences: spread node.labels.zone`); ba profile worker chạy chung trên 2 VM app, không cần VM worker riêng.
 
@@ -102,7 +102,7 @@ flowchart TB
 
 > Pilot dùng 8 VM (trước đây 9 VM khi còn VM worker riêng cho 5 service). Sizing là ước lượng ban đầu, **phải hiệu chỉnh bằng load test** ([TEST_STRATEGY](../12-project/TEST_STRATEGY.md) §8). Không tuyên bố năng lực khi chưa benchmark.
 
-### 4.2. Release 1.0: 10.000 CCU trên Docker Swarm (NFR-SCAL-002 [Confirmed], ADR-0024, ADR-0045) — sizing [Proposed]
+### 4.2. Release 1.0: 10.000 CCU trên Docker Swarm (NFR-SCAL-002 [Confirmed], ADR-0024, ADR-0045) — sizing [Confirmed]
 
 Release 1.0 chạy **Docker Swarm** (ADR-0024), không dùng Kubernetes. Mỗi node VM được gắn nhãn vai trò; service đặt bằng `placement.constraints` theo nhãn. Năng lực VM được cấp **đủ cho giờ cao điểm**; số replica tăng/giảm theo lịch học (§4.4), không có autoscale theo tải thực.
 
@@ -155,9 +155,9 @@ flowchart TB
 
 > Tổng giới hạn ở đỉnh: `core-api` 16 × 4 = 64 vCPU, `worker-events` 8, `worker-chat` 8, `worker-jobs` 2 → ≈ 82 vCPU trên 6 node `app` 16 vCPU (96 vCPU, dư ~15%). Bản 6 microservice cần ≈ 100 vCPU trên 7 node; phần giảm đến từ bỏ HTTP/JSON và token nội bộ trên đường nóng và bớt overhead tiến trình. Tổng số node Release 1.0 giảm từ 34 xuống 30 (`app` 7 → 6, `data-pg` 6 → 3, chưa tính node `storage` tự host). VM chạy cả ngày nên chi phí tính theo mức đỉnh; giảm replica ngoài giờ chỉ giải phóng tài nguyên cho job nền (rollup, snapshot, media). Phải hiệu chỉnh bằng load test (TC-PERF-014), không phải cam kết.
 
-**Thành phần có trạng thái** (ADR-0024 mục 3): ghim node bằng `placement.constraints: [node.labels.role == data-pg, node.hostname == pg-1]`, volume local NVMe (bind mount hoặc local volume driver), HA ở tầng ứng dụng: PostgreSQL + Patroni (etcd riêng của Patroni hoặc DCS Consul), Valkey replica + Sentinel 3, NATS cluster 3 route, Keycloak 3 replica (Infinispan JDBC_PING). Có thể thay bằng dịch vụ managed của nhà cung cấp cloud tại VN (PostgreSQL, Valkey/Redis-compatible, object storage) khi OQ-10 chọn cloud [Proposed].
+**Thành phần có trạng thái** (ADR-0024 mục 3): ghim node bằng `placement.constraints: [node.labels.role == data-pg, node.hostname == pg-1]`, volume local NVMe (bind mount hoặc local volume driver), HA ở tầng ứng dụng: PostgreSQL + Patroni (etcd riêng của Patroni hoặc DCS Consul), Valkey replica + Sentinel 3, NATS cluster 3 route, Keycloak 3 replica (Infinispan JDBC_PING). Có thể thay bằng dịch vụ managed của nhà cung cấp cloud tại VN (PostgreSQL, Valkey/Redis-compatible, object storage) khi OQ-10 chọn cloud [Confirmed].
 
-**Service discovery:** DNS nội bộ của Swarm. Không có lời gọi HTTP giữa module (ADR-0074 mục 3): module gọi nhau trong tiến trình `core-api`/`worker`; `realtime` gửi lệnh tới `core-api` qua NATS request/reply; mọi phản ứng phụ qua NATS JetStream. APISIX dùng `tasks.core-api` và `tasks.realtime` (DNS round-robin từng task) để health check và cân bằng tải từng replica [Proposed]. Không dùng service mesh.
+**Service discovery:** DNS nội bộ của Swarm. Không có lời gọi HTTP giữa module (ADR-0074 mục 3): module gọi nhau trong tiến trình `core-api`/`worker`; `realtime` gửi lệnh tới `core-api` qua NATS request/reply; mọi phản ứng phụ qua NATS JetStream. APISIX dùng `tasks.core-api` và `tasks.realtime` (DNS round-robin từng task) để health check và cân bằng tải từng replica [Confirmed]. Không dùng service mesh.
 
 ### 4.3. Phân vùng mạng (overlay network + firewall)
 
@@ -182,7 +182,7 @@ Swarm overlay network tách lớp; một service chỉ được gắn vào netwo
 
 Gọi đồng bộ giữa module diễn ra trong tiến trình nên tầng mạng không thấy và không cần chặn. **Ma trận gọi facade** được cưỡng chế lúc build: quy tắc `internal/` của Go chặn import vào bên trong module, `depguard`/`go-arch-lint` chỉ cho module import `src/backend/modules/<khác>/api` khi có trong `x-allowed-callers` của operation (ADR-0074 mục 1). Ở runtime, ranh giới dữ liệu do role DB theo module (mỗi pool chỉ `CONNECT` database của module đó) và quyền NATS theo binary bảo đảm. Tầng mạng chỉ chặn ở mức network (binary không gắn `data` thì không tới được database). Firewall host (nftables/security group) chỉ mở cổng Swarm giữa các node (2377/tcp tới manager, 7946/tcp+udp, 4789/udp, ESP cho overlay mã hóa) và cổng publish của LB/APISIX.
 
-Ma trận gọi facade cho phép (cưỡng chế bằng linter, không phải tầng mạng) — [Proposed]:
+Ma trận gọi facade cho phép (cưỡng chế bằng linter, không phải tầng mạng) — [Confirmed]:
 
 | Module gọi → module nhận | identity | learning | game | competition | chat |
 |---|---|---|---|---|---|
@@ -197,7 +197,7 @@ Outbound Internet: chỉ Swarm service chạy adapter SIS của module `identity
 
 ### 4.4. Scale theo lịch học (thay autoscale, ADR-0024 mục 4, ADR-0045)
 
-- Lịch scale khai báo trong Git: `deploy/swarm/<env>/scale-schedule.yaml` (mỗi Swarm service `core-api`, `realtime`, `worker-*`, Keycloak: `baseline`, `peak`, các khung giờ). Mặc định khung cao điểm 06:45–08:00, 13:15–14:30, 19:00–21:00 ICT [Proposed]; có thể sinh thêm từ lịch học/lịch kiểm tra trong module learning.
+- Lịch scale khai báo trong Git: `deploy/swarm/<env>/scale-schedule.yaml` (mỗi Swarm service `core-api`, `realtime`, `worker-*`, Keycloak: `baseline`, `peak`, các khung giờ). Mặc định khung cao điểm 06:45–08:00, 13:15–14:30, 19:00–21:00 ICT [Confirmed]; có thể sinh thêm từ lịch học/lịch kiểm tra trong module learning.
 - Container `ops-scheduler` (chạy trên node `ops`, có quyền Docker API của manager qua socket proxy chỉ cho phép `service update`) chạy `docker service scale <stack>_<service>=<n>` **15 phút trước** khung cao điểm và thu nhỏ sau đó; ghi log + metric `eduworld_ops_scale_actions_total`.
 - Ngoài lịch: alert `NodeCapacityHigh`, `EventConsumerLag`, `ScheduledScaleFailed` và alert số WS/replica (định nghĩa và ngưỡng: [MONITORING §5](MONITORING.md)) báo người trực scale thủ công theo runbook; không có scale tự động theo tải.
 - Không scale vượt năng lực node vai trò; scheduler từ chối nếu tổng `resources.reservations` vượt dung lượng còn lại.
@@ -340,7 +340,7 @@ Không có prefix `/internal/v1/*`: module gọi nhau trong tiến trình (ADR-0
 - Mỗi role chỉ có `CONNECT` trên database của module mình; `pg_hba.conf` giới hạn theo `database/user`. Không role nào được truy cập database của module khác (ADR-0037, ADR-0074 mục 4). `core-api` và `worker` mở một pool riêng cho mỗi database của module mình nạp, mỗi pool dùng role của module đó; không join, không transaction chéo database.
 - Mọi role ứng dụng bị `REVOKE DELETE, TRUNCATE` (ADR-0028); ngoại lệ duy nhất là `chat_purger`.
 - Role platform dùng cho phiên System Admin xem liên tenant và job platform, có audit.
-- **Dashboard (ADR-0062, [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)):** API dashboard và export worker của module learning và module game chỉ kết nối **read replica** của `eduworld_learning`/`eduworld_game` qua pool PgBouncer riêng (≤ 10 kết nối mỗi replica `core-api`) bằng role `<module>_dashboard`. Release 1.0: cụm có 2 replica Patroni, dành một replica (async, `hot_standby_feedback=on`, `max_standby_streaming_delay` 30 s) ưu tiên cho dashboard/export; pilot dùng replica standby duy nhất. Cảnh báo khi replica lag > 60 s [Proposed].
+- **Dashboard (ADR-0062, [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)):** API dashboard và export worker của module learning và module game chỉ kết nối **read replica** của `eduworld_learning`/`eduworld_game` qua pool PgBouncer riêng (≤ 10 kết nối mỗi replica `core-api`) bằng role `<module>_dashboard`. Release 1.0: cụm có 2 replica Patroni, dành một replica (async, `hot_standby_feedback=on`, `max_standby_streaming_delay` 30 s) ưu tiên cho dashboard/export; pilot dùng replica standby duy nhất. Cảnh báo khi replica lag > 60 s [Confirmed].
 
 **Job nền theo module** (chạy trong binary `worker`, cột Profile là Swarm service):
 
@@ -380,7 +380,7 @@ Không có prefix `/internal/v1/*`: module gọi nhau trong tiến trình (ADR-0
 
 - Request/reply cho lệnh realtime (`ew.cmd.<module>.>`) dùng NATS core (không lưu); handler chạy trong `core-api`, queue group theo module.
 - Stream và consumer được binary tạo idempotent khi khởi động từ cấu hình trong repo; thay đổi cấu hình qua merge request.
-- Dung lượng ước tính [Proposed]: chat ~26 GB/replica (72 h), event ~5 GB/replica (7 ngày) → cấp 80 GB SSD mỗi node.
+- Dung lượng ước tính [Confirmed]: chat ~26 GB/replica (72 h), event ~5 GB/replica (7 ngày) → cấp 80 GB SSD mỗi node.
 - Không backup NATS: PostgreSQL là nguồn sự thật; outbox giữ 30 ngày để replay ([BACKUP_RECOVERY](BACKUP_RECOVERY.md)).
 - Nâng cấp rolling từng node; kiểm tra `nats server check jetstream` trước/sau.
 
@@ -388,13 +388,13 @@ Không có prefix `/internal/v1/*`: module gọi nhau trong tiến trình (ADR-0
 
 | Artifact | Kênh phân phối | Ghi chú |
 |---|---|---|
-| Windows build | CDN tải trực tiếp + (tùy chọn) phần mềm quản lý phòng máy của trường | Ký code (Authenticode) [Proposed] |
+| Windows build | CDN tải trực tiếp + (tùy chọn) phần mềm quản lý phòng máy của trường | Ký code (Authenticode) [Confirmed] |
 | Android | Google Play (internal → closed → production) và/hoặc APK cho MDM của trường | `.aab` ký bằng upload key trong secret manager |
 | iOS | App Store (TestFlight → production) và/hoặc Apple Business Manager/MDM | Build trên GitHub-hosted macOS runner |
 | Web | CDN static (`play.<domain>`), `.wasm`/`.pck` nén Brotli, cache theo hash | Renderer Compatibility, preset tối đa Trung bình, tải đầu theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11, §14 |
 | Content pack `.pck` / media | Object storage + CDN, URL theo hash nội dung | Manifest có chữ ký; client kiểm tra hash; mỗi vùng một gói tải theo nhu cầu |
-| Bộ cài cho trường kèm gói nội dung cài sẵn [Proposed] | Tải từ portal (School Admin) hoặc phát qua MDM/phần mềm quản lý phòng máy; gồm PCK các vùng theo khối của trường | Cập nhật delta theo hash; ngân sách và quy tắc ở [PERFORMANCE_BUDGET §10.1](../08-game-client/PERFORMANCE_BUDGET.md#101-ngân-sách-phòng-máy-classroom-budget-proposed) |
-| Cache LAN tùy chọn của trường [Proposed] | Reverse proxy HTTP trong LAN trường trỏ về CDN nội dung công khai; client đọc `lan_cache_url` trong `device.cfg` | Chỉ PCK/media công khai theo khóa hash; không cache API, câu hỏi đề, answer key, media private; client luôn kiểm tra SHA-256 |
+| Bộ cài cho trường kèm gói nội dung cài sẵn [Confirmed] | Tải từ portal (School Admin) hoặc phát qua MDM/phần mềm quản lý phòng máy; gồm PCK các vùng theo khối của trường | Cập nhật delta theo hash; ngân sách và quy tắc ở [PERFORMANCE_BUDGET §10.1](../08-game-client/PERFORMANCE_BUDGET.md#101-ngân-sách-phòng-máy-classroom-budget-confirmed) |
+| Cache LAN tùy chọn của trường [Confirmed] | Reverse proxy HTTP trong LAN trường trỏ về CDN nội dung công khai; client đọc `lan_cache_url` trong `device.cfg` | Chỉ PCK/media công khai theo khóa hash; không cache API, câu hỏi đề, answer key, media private; client luôn kiểm tra SHA-256 |
 
 **Dung lượng build và gói nội dung (ADR-0057):** giới hạn bản cài Windows/Android/iOS, tải đầu Web và kích thước gói mỗi vùng do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) §11 sở hữu. Pipeline build Godot (job `godot:export:*`) đo kích thước artifact và **thất bại khi vượt giới hạn**; báo cáo kích thước đính kèm mỗi release. Nội dung ngoài lõi (vùng, cosmetic, media) không đóng vào bản cài mà phát qua `ew-game-bundles`/`ew-media-public` trên CDN để bản cài nhỏ và cập nhật nội dung không cần phát hành lại app.
 | Media học tập, sticker, GIF | Object storage + CDN; signed URL cho media riêng tenant (`ew-media-private`) | ADR-0044 |
@@ -610,7 +610,7 @@ Mỗi binary mở **một cổng quản trị** `EW_ADMIN_ADDR`, cố định `:
 | `GET /metrics` | Prometheus | |
 | `GET /version` | `binary`, `version`, `commit`, `build_time` | |
 
-- `core-api` **không** fail readiness khi chỉ một database module tạm lỗi: module đó trả `503` cho route của nó, các module khác vẫn phục vụ (tránh một database kéo cả binary ra khỏi APISIX) [Proposed]. Tích hợp bên ngoài (Keycloak Admin, SIS, object storage) có timeout, retry cho thao tác idempotent và circuit breaker trong adapter riêng (ADR-0074 mục 5), không ảnh hưởng readiness.
+- `core-api` **không** fail readiness khi chỉ một database module tạm lỗi: module đó trả `503` cho route của nó, các module khác vẫn phục vụ (tránh một database kéo cả binary ra khỏi APISIX) [Confirmed]. Tích hợp bên ngoài (Keycloak Admin, SIS, object storage) có timeout, retry cho thao tác idempotent và circuit breaker trong adapter riêng (ADR-0074 mục 5), không ảnh hưởng readiness.
 - Readiness không fail khi Keycloak tạm không truy cập được nếu JWKS còn trong cache.
 - Graceful shutdown: SIGTERM → readiness false → chờ LB rút (5 s) → đóng HTTP server (30 s), drain consumer NATS, drain WS (120 s) → đóng pool.
 - Swarm `healthcheck` dùng `/livez` (binary tự kiểm tra bằng lệnh con `healthcheck`, interval 10 s, retries 3) để Swarm khởi động lại task chết và quyết định rolling update. `/readyz` dùng cho health check chủ động của APISIX tới từng task (`tasks.core-api`, `tasks.realtime`, 5 s), không dùng làm Swarm healthcheck để tránh restart dây chuyền khi phụ thuộc tạm lỗi. `stop_grace_period` ≥ thời gian drain (`core-api`/`worker` 40 s, `realtime` 150 s). Recover middleware bắt panic trong handler HTTP, consumer và job để một lỗi không làm sập cả binary (ADR-0074 hệ quả).

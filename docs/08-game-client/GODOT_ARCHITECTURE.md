@@ -11,8 +11,8 @@
 |---|---|---|
 | G-1 | Godot là **client hiển thị và xử lý tương tác**. Không quyết định điểm, kết quả trận, mastery, reward, quyền truy cập (Master Prompt §13.1, ADR-0016) | [Confirmed] |
 | G-2 | Không hardcode nội dung học tập trong scene. Quest, mini-game, NPC dialogue, câu hỏi tải từ backend (data-driven) | [Confirmed] |
-| G-3 | Godot 4.x (bản stable mới nhất tại thời điểm Phase 1, khóa phiên bản minor trong `project.godot` và CI), GDScript **static typing bắt buộc** | [Proposed] ADR-0014 |
-| G-4 | Tách 3 lớp: **Service** (logic thuần, `RefCounted`, test được) ← **Gameplay** (Node 3D, controller) ← **UI** (Control). UI và gameplay không gọi HTTP trực tiếp | [Proposed] |
+| G-3 | Godot 4.x (bản stable mới nhất tại thời điểm Phase 1, khóa phiên bản minor trong `project.godot` và CI), GDScript **static typing bắt buộc** | [Confirmed] ADR-0014 |
+| G-4 | Tách 3 lớp: **Service** (logic thuần, `RefCounted`, test được) ← **Gameplay** (Node 3D, controller) ← **UI** (Control). UI và gameplay không gọi HTTP trực tiếp | [Confirmed] |
 | G-5 | Scene không phụ thuộc chặt vào scene khác: giao tiếp qua signal, `EventBus`, hoặc dữ liệu inject khi khởi tạo | [Confirmed] (§21) |
 | G-6 | Không giữ answer key, không tự tính XP/reward. Mọi số liệu nghiệp vụ hiển thị lấy từ response server | [Confirmed] |
 | G-7 | Không hiển thị thông tin cá nhân nhạy cảm của người chơi khác: chỉ `nickname` + avatar (DOMAIN_MODEL §2) | [Confirmed] |
@@ -228,7 +228,7 @@ Quy tắc token và phiên (ADR-0064 mục 3, 6, 7 còn hiệu lực; ADR-0086):
 - **Máy dùng chung mặc định trên Windows** (`shared_device_default`, [Confirmed — Technical Architect 2026-11-17], ADR-0078, ADR-0086): bộ cài Windows (installer ký số) có lựa chọn "Máy dùng chung (phòng máy, máy gia đình nhiều người)" — **mặc định** — và "Máy cá nhân"; bộ cài ghi `shared_device: true|false` vào `device.cfg` (thư mục cài đặt, quyền ghi chỉ cho admin, đọc bởi `Config`). Thiếu `device.cfg` trên Windows → coi là `true`. Android/iOS mặc định `false` (thiết bị cá nhân); MDM của trường có thể đặt `true`. Web luôn `MemoryOnly`.
 - Khởi động game: có refresh token trong `SecureStorage` → `Resume` (§5.2) → `ResumeConfirm`; không có (lần đầu, đã đăng xuất, phiên hết, Web, `shared_device`) → `Login` với ô mật khẩu trống.
 - Access token **chỉ trong RAM** của `AuthService`. Refresh token: RAM + `SecureStorage` trên thiết bị cá nhân; chỉ RAM trên Web và `shared_device`. Không ghi token vào `user://` dạng rõ, file cấu hình, localStorage, log, telemetry hay crash report. Trong lúc game mở, refresh token gia hạn access token (5 phút) và reconnect, không hỏi mật khẩu.
-- Mật khẩu chỉ nằm trong `LineEdit` và body request; xóa ô và biến ngay sau khi nhận phản hồi; không bao giờ lưu mật khẩu; không log, không telemetry, không crash report chứa body đăng nhập (ADR-0068). Certificate pinning cho tên miền API [Proposed].
+- Mật khẩu chỉ nằm trong `LineEdit` và body request; xóa ô và biến ngay sau khi nhận phản hồi; không bao giờ lưu mật khẩu; không log, không telemetry, không crash report chứa body đăng nhập (ADR-0068). Certificate pinning cho tên miền API [Confirmed].
 - Nhớ **username** (`user://settings.cfg` → `last_username`, tùy chọn, mặc định bật) để điền sẵn ô tên đăng nhập khi phải đăng nhập lại; máy `device.cfg` có `shared_device: true` thì ẩn tùy chọn và không lưu username.
 - Thoát game trên thiết bị cá nhân → `:end` game session, giữ refresh token; Đăng xuất → `:end`, `POST /auth/game/logout`, xóa `SecureStorage`; tắt đột ngột → module game đóng game session theo heartbeat timeout, phiên Keycloak còn hiệu lực tới idle 7 ngày/tối đa 30 ngày (`game_session_sso`).
 - **Header `X-Tenant-Id` bắt buộc** (ADR-0065): sau bootstrap, `ApiClient` gắn `X-Tenant-Id = bootstrap.tenant_id` vào mọi request REST (trừ `client-config`, `/auth/game/login`, `/auth/game/tenant:select`); backend kiểm tra header khớp membership và game session. `tenant_id` của phiên được lưu cùng refresh token trong `SecureStorage` (để gửi khi Resume), không còn `user://tenant.cfg`, không gợi ý tenant trước đăng nhập. Không đổi tenant giữa phiên (muốn đổi → đăng xuất, đăng nhập lại). Nhận `400 TENANT_HEADER_REQUIRED` là lỗi lập trình (báo telemetry, về `Login`).
@@ -296,7 +296,7 @@ Quy tắc review code:
 
 Release 1.0 không có renderer cho loại activity ngoài version này (ADR-0082); client không xin quyền micro. Loại chưa có renderer (nếu server trả về do lỗi cấu hình) → màn "Cần cập nhật game", gửi telemetry, không crash.
 
-**Thành phần dùng chung của mọi renderer câu hỏi** [Proposed]:
+**Thành phần dùng chung của mọi renderer câu hỏi** [Confirmed]:
 
 | Thành phần | Hành vi |
 |---|---|
@@ -390,8 +390,8 @@ sequenceDiagram
 - Học sinh đang ở màn với version cũ tiếp tục thấy nội dung cũ đến khi rời màn, kể cả khi CMS publish bản mới hoặc rollback.
 - **Preload màn:** trước khi vào màn, tải đủ snapshot + bundle + media trong danh sách `:start` trả về (ưu tiên biến thể ảnh 1024 px trên mobile, 2048 px trên PC); hiển thị màn hình chờ có tiến trình. Thiếu mạng giữa chừng → thử lại có backoff; không vào màn khi thiếu tài nguyên bắt buộc.
 - **Nội dung không cache bền:** câu hỏi đề kiểm tra, render payload của attempt, mọi dữ liệu tenant nhạy cảm — chỉ giữ trong bộ nhớ trong attempt. Answer key không bao giờ xuống client.
-- Bundle chỉ chứa **asset và scene** (mesh, texture, audio, scene zone). **Không chứa script thực thi logic mới** [Proposed] — giảm rủi ro an ninh và tương thích; logic mới đi theo bản build client.
-- LRU dọn cache khi vượt ngân sách lưu trữ (Android mặc định 1.5 GB [Proposed]); không xóa tài nguyên của màn đang chơi.
+- Bundle chỉ chứa **asset và scene** (mesh, texture, audio, scene zone). **Không chứa script thực thi logic mới** [Confirmed] — giảm rủi ro an ninh và tương thích; logic mới đi theo bản build client.
+- LRU dọn cache khi vượt ngân sách lưu trữ (Android mặc định 1.5 GB [Confirmed]); không xóa tài nguyên của màn đang chơi.
 - Không cache dữ liệu tenant (danh sách lớp, kết quả bài) xuống đĩa trừ settings và bản sao profile tối thiểu để hiển thị offline screen.
 
 ## 9. Error handling & offline
@@ -399,7 +399,7 @@ sequenceDiagram
 | Tình huống | Hành vi client |
 |---|---|
 | Mất mạng ngắn (< 30s) | Banner "Đang kết nối lại…", RealtimeClient reconnect, chặn thao tác ghi; avatar đứng yên |
-| Mất mạng dài | Màn hình chờ kết nối; không cho làm bài offline [Proposed] (server-authoritative) |
+| Mất mạng dài | Màn hình chờ kết nối; không cho làm bài offline [Confirmed] (server-authoritative) |
 | Đang làm bài khi mất mạng | Câu trả lời đã gửi được server lưu; câu chưa gửi giữ trong hàng đợi bộ nhớ, gửi lại cùng `Idempotency-Key` khi có mạng; attempt resume theo policy (§4.4 Master Prompt) qua `GET /api/v1/learning/activity-attempts/{id}` |
 | 401 | `AuthService.refresh()` (single-flight) một lần, lặp lại request; thất bại → xóa token (RAM + `SecureStorage`), `EventBus.session_expired` → Login (nhập mật khẩu) |
 | 401 `REFRESH_TOKEN_INVALID` (Resume hoặc refresh) | "Phiên đăng nhập đã hết, em đăng nhập lại nhé." → xóa `SecureStorage` + RAM, về `Login` (điền sẵn username nếu nhớ) (ADR-0086) |
@@ -435,7 +435,7 @@ Thông điệp lỗi cho lớp 1–5 dùng ngôn ngữ đơn giản + biểu tư
 - Nội dung học tập và nội dung game (câu hỏi, hội thoại NPC, quest) đã được bản địa hóa phía backend; client chỉ chọn bản theo ngôn ngữ, không dịch.
 - **Theme và token (ADR-0047, [DESIGN_SYSTEM §5](../05-ux/DESIGN_SYSTEM.md#5-game-design-system-godot-3d)):** game dùng **game design system** riêng, không dùng UI admin. `Theme` (`resources/ui/theme/eduworld_theme.tres`), lớp hằng `UiTokens` và resource 3D (`resources/art/generated/`) được **sinh** từ `design/game-tokens/` bằng `make design-tokens`; không sửa tay. Mọi `Control` lấy style từ Theme; không override màu/font/cỡ chữ trong scene (lint `src/game/tools/lint_theme_overrides.gd` chặn trong CI, trừ allowlist). Kiểm tra trực quan bằng scene `UiGallery.tscn` (build debug).
 - UI có hai lớp dùng chung Theme: **overlay 2D** (`CanvasLayer`: HUD, panel nhiệm vụ, câu hỏi, chat) và **UI trong không gian 3D** (`SubViewport` → `ViewportTexture` trên mesh/`Sprite3D`; `Label3D` cho nickname) cho bảng tên NPC, bảng câu hỏi gắn trong màn, biển chỉ dẫn.
-- Font: font tiêu đề tròn thân thiện + font nội dung dễ đọc, hỗ trợ đầy đủ tiếng Việt có dấu, license OFL (vd. Baloo 2 + Be Vietnam Pro) [Proposed, Game Director chọn], fallback font trong `Theme`.
+- Font: font tiêu đề tròn thân thiện + font nội dung dễ đọc, hỗ trợ đầy đủ tiếng Việt có dấu, license OFL (vd. Baloo 2 + Be Vietnam Pro) [Confirmed, Game Director chọn], fallback font trong `Theme`.
 - Theme theo grade band (density token): `g1_3` chữ cơ sở 24px, nút ≥ 64px; `g4_5` 22px/56px; `g6_7` 18px/48px; `g8_9` 18px/44px; icon kèm chữ ở lớp nhỏ. Biến thể chọn từ `AppState.player.grade_band`.
 - Tùy chọn: cỡ chữ (3 mức), chế độ tương phản cao, giảm chuyển động (tắt camera shake/particle), phụ đề cho mọi audio có lời, âm lượng riêng nhạc/SFX/giọng.
 - Nhắc nghỉ giải lao (`break_reminder`, CHILD_SAFETY): ngưỡng do server gửi trong `PlayerBootstrap.policies.play_time.break_reminder_minutes`; `PlayTimeService` chỉ đếm thời gian phiên liên tục để hiện hộp nhắc (`BreakReminderDialog`), không chặn chơi; chặn ngoài khung giờ do server (`403 ACCESS_OUTSIDE_ALLOWED_HOURS`).
@@ -512,9 +512,9 @@ flowchart LR
 | Integration | Headless client + backend docker compose | Login qua `/auth/game/login` (Keycloak test realm, user test) → bootstrap → mọi request có `X-Tenant-Id` → vào hub → làm 1 quest; kiểm tra log client không chứa mật khẩu/token; thoát rồi mở lại → tự vào hub qua Resume (TC-AUTH-082) |
 | Performance | Kiểm tra import asset + cảnh benchmark headless trong CI (frame time CPU, draw call, tam giác qua `RenderingServer`); thiết bị lab thật mỗi milestone | Không vượt ngân sách [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §7–§8 quá 5%; AC-PERF-001…011 |
 | Theme / UI | `UiGallery.tscn` chụp ảnh từng density + lint override | Không màu/font hardcode trong `.tscn`; ảnh UI Gallery so với baseline (DESIGN_SYSTEM §9) |
-| Renderer parity | Chụp ảnh zone/nhân vật mẫu trên Mobile, Forward+, Compatibility | Sai khác vượt ngưỡng SSIM → cảnh báo cho Art/Game Director [Proposed] |
+| Renderer parity | Chụp ảnh zone/nhân vật mẫu trên Mobile, Forward+, Compatibility | Sai khác vượt ngưỡng SSIM → cảnh báo cho Art/Game Director [Confirmed] |
 
-Mục tiêu: service layer coverage ≥ 70% [Proposed]; mọi bug liên quan dữ liệu nghiệp vụ phải có test tái hiện.
+Mục tiêu: service layer coverage ≥ 70% [Confirmed]; mọi bug liên quan dữ liệu nghiệp vụ phải có test tái hiện.
 
 ## 13. Mã mẫu
 
@@ -714,7 +714,7 @@ Ghi chú: game không xác thực chữ ký token; **xác thực có thẩm quy�
 
 ## 14. Việc còn mở
 
-- Certificate pinning trong Godot (desktop/mobile) cho tên miền API [Proposed, ADR-0068] — chọn cơ chế (`TLSOptions.client` với chứng chỉ CA riêng hoặc pin public key) và quy trình xoay chứng chỉ.
+- Certificate pinning trong Godot (desktop/mobile) cho tên miền API [Confirmed, ADR-0068] — chọn cơ chế (`TLSOptions.client` với chứng chỉ CA riêng hoặc pin public key) và quy trình xoay chứng chỉ.
 - Danh sách GPU/SoC cần ép Compatibility hoặc preset Thấp (`client-config.device_profiles`) — lập sau khảo sát thiết bị trường (OQ-04) và benchmark Phase 1.
 - Device Authorization Grant cho máy dùng chung: ngoài Release 1.0 (ADR-0063), mở rộng sau.
-- `SecureStorage` cho macOS/Linux (Keychain/Secret Service) nếu sau này phát hành hai nền tảng này; Web lưu bền refresh token (hiện chỉ RAM, ADR-0086 mục 1) [Proposed].
+- `SecureStorage` cho macOS/Linux (Keychain/Secret Service) nếu sau này phát hành hai nền tảng này; Web lưu bền refresh token (hiện chỉ RAM, ADR-0086 mục 1) [Confirmed].

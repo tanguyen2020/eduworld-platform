@@ -19,12 +19,12 @@ Ngoài phạm vi: Admin Portal (xem [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORT
 
 | Nền tảng | Kích thước tham chiếu | Nhập liệu | Ghi chú | Nhãn |
 |---|---|---|---|---|
-| **Web/PC** (Windows app và trình duyệt PC) | Cửa sổ tối thiểu 1280×720; tham chiếu 1920×1080 | Chuột + bàn phím; có phím tắt | Cửa sổ thay đổi kích thước được; UI co giãn theo `stretch_mode = canvas_items`, `aspect = expand` | [Proposed] |
-| **Mobile — điện thoại** | Ngang, ≥ 6"; tham chiếu 2400×1080 (20:9) | Cảm ứng đa điểm | Tôn trọng safe area (notch, thanh điều hướng); khóa hướng **ngang** | [Proposed] |
-| **Mobile — tablet** | Ngang; tham chiếu 2160×1620 (4:3) | Cảm ứng; bàn phím ngoài nếu có | Dùng bố cục mobile với lề rộng hơn; panel có thể hiển thị hai cột | [Proposed] |
-| Trình duyệt trên điện thoại | — | — | **Không hỗ trợ** trong Release 1.0; trang báo "Hãy tải ứng dụng EduWorld" | [Proposed] |
+| **Web/PC** (Windows app và trình duyệt PC) | Cửa sổ tối thiểu 1280×720; tham chiếu 1920×1080 | Chuột + bàn phím; có phím tắt | Cửa sổ thay đổi kích thước được; UI co giãn theo `stretch_mode = canvas_items`, `aspect = expand` | [Confirmed] |
+| **Mobile — điện thoại** | Ngang, ≥ 6"; tham chiếu 2400×1080 (20:9) | Cảm ứng đa điểm | Tôn trọng safe area (notch, thanh điều hướng); khóa hướng **ngang** | [Confirmed] |
+| **Mobile — tablet** | Ngang; tham chiếu 2160×1620 (4:3) | Cảm ứng; bàn phím ngoài nếu có | Dùng bố cục mobile với lề rộng hơn; panel có thể hiển thị hai cột | [Confirmed] |
+| Trình duyệt trên điện thoại | — | — | **Không hỗ trợ** trong Release 1.0; trang báo "Hãy tải ứng dụng EduWorld" | [Confirmed] |
 
-- **Hướng màn hình: ngang (landscape) trên mọi nền tảng** [Proposed]. Không thiết kế bố cục dọc.
+- **Hướng màn hình: ngang (landscape) trên mọi nền tảng** [Confirmed]. Không thiết kế bố cục dọc.
 - **Breakpoint UI** (tính theo kích thước logic sau khi scale): `compact` (điện thoại, chiều cao logic < 800), `regular` (tablet, PC 1280×720), `wide` (PC ≥ 1600 chiều rộng). Mỗi màn ghi rõ khác biệt giữa **Web/PC** và **Mobile**; tablet dùng bố cục Mobile với lề rộng (`regular`).
 - Tỉ lệ khác 16:9: phần thế giới 3D mở rộng theo chiều ngang; HUD bám góc theo anchor, không kéo giãn panel.
 
@@ -74,7 +74,7 @@ Mobile — điện thoại ngang (2400×1080, trong safe area)
 
 ## 4. Điều khiển
 
-### 4.1. Web/PC — phím mặc định (cho phép đổi phím trong Cài đặt) [Proposed]
+### 4.1. Web/PC — phím mặc định (cho phép đổi phím trong Cài đặt) [Confirmed]
 
 | Hành động | Phím | Hành động | Phím |
 |---|---|---|---|
@@ -114,7 +114,7 @@ Chuột: mọi chức năng đều bấm được bằng chuột (học sinh nh�
 | File dịch | `src/game/locale/vi.po` (gốc), `src/game/locale/en.po`; mọi `Label`/`Button` gán khóa, không gán chuỗi |
 | Dữ liệu từ backend | Trường `i18nText` (`{vi, en}`); client chọn theo ngôn ngữ hiện tại, thiếu `en` thì dùng `vi` kèm nhãn nhỏ "VI" |
 | Đổi ngôn ngữ | Trong Cài đặt (S15) và ở màn đăng nhập (S01); áp dụng ngay, không tải lại scene |
-| Hiển thị song song | Tùy chọn hiển thị tên riêng/từ khóa ở cả hai ngôn ngữ (ví dụ "Vương quốc Số · Math Kingdom") [Proposed] |
+| Hiển thị song song | Tùy chọn hiển thị tên riêng/từ khóa ở cả hai ngôn ngữ (ví dụ "Vương quốc Số · Math Kingdom") [Confirmed] |
 | Độ dài chuỗi | Bố cục chịu được chuỗi **dài hơn 35%** so với bản ngắn nhất; mỗi màn ghi "chuỗi dài nhất" để kiểm thử; chữ không vừa thì xuống dòng, không thu nhỏ dưới cỡ tối thiểu, không cắt ở nút chính |
 | Kiểm thử | Pseudo-locale `xx` (kéo dài chuỗi 40%, thêm dấu) chạy trong CI chụp ảnh từng màn |
 
@@ -124,15 +124,15 @@ Ngân sách tổng thể của game nằm trong [PERFORMANCE_BUDGET](../08-game-
 
 | Quy tắc | Chi tiết | Nhãn |
 |---|---|---|
-| Số `Control` hiển thị | ≤ 150 node/màn ở preset Trung bình; danh sách dài dùng **ảo hóa** (chỉ tạo hàng nhìn thấy) | [Proposed] |
-| Cập nhật theo sự kiện | HUD cập nhật qua signal/event (XP, Xu, quest), **không** cập nhật trong `_process` mỗi frame | [Proposed] |
-| Không hiệu ứng nền nặng | Không blur nền, không `BackBufferCopy`/shader toàn màn cho panel; nền panel dùng `StyleBoxFlat` hoặc 9-slice | [Proposed] |
-| Texture | Icon/khung UI trong **atlas**; ảnh minh họa nén (WebP/ETC2/ASTC theo nền tảng); không nạp ảnh > 2048 px | [Proposed] |
-| Font | Font dạng MSDF cho tiêu đề cỡ lớn; giới hạn 2 họ font | [Proposed] |
-| Animation | ≤ 6 tween chạy đồng thời; particle UI ≤ 64 hạt/hiệu ứng; tắt khi bật "Giảm chuyển động" | [Proposed] |
-| Bản đồ nhỏ/xem trước 3D | Không dùng camera thứ hai render liên tục cho minimap; minimap/world map là ảnh 2D vẽ sẵn + marker. Xem trước 3D (avatar, item) dùng `SubViewport` độ phân giải theo preset, 30 FPS, tắt khi màn không hiển thị | [Proposed] |
-| Mở màn | Màn panel mở ≤ 200 ms trên máy tầm trung; dữ liệu lớn tải sau khung, hiển thị skeleton | [Proposed] |
-| Đo | Mỗi màn có cảnh benchmark trong CI (đếm Control, draw call UI, thời gian mở) | [Proposed] |
+| Số `Control` hiển thị | ≤ 150 node/màn ở preset Trung bình; danh sách dài dùng **ảo hóa** (chỉ tạo hàng nhìn thấy) | [Confirmed] |
+| Cập nhật theo sự kiện | HUD cập nhật qua signal/event (XP, Xu, quest), **không** cập nhật trong `_process` mỗi frame | [Confirmed] |
+| Không hiệu ứng nền nặng | Không blur nền, không `BackBufferCopy`/shader toàn màn cho panel; nền panel dùng `StyleBoxFlat` hoặc 9-slice | [Confirmed] |
+| Texture | Icon/khung UI trong **atlas**; ảnh minh họa nén (WebP/ETC2/ASTC theo nền tảng); không nạp ảnh > 2048 px | [Confirmed] |
+| Font | Font dạng MSDF cho tiêu đề cỡ lớn; giới hạn 2 họ font | [Confirmed] |
+| Animation | ≤ 6 tween chạy đồng thời; particle UI ≤ 64 hạt/hiệu ứng; tắt khi bật "Giảm chuyển động" | [Confirmed] |
+| Bản đồ nhỏ/xem trước 3D | Không dùng camera thứ hai render liên tục cho minimap; minimap/world map là ảnh 2D vẽ sẵn + marker. Xem trước 3D (avatar, item) dùng `SubViewport` độ phân giải theo preset, 30 FPS, tắt khi màn không hiển thị | [Confirmed] |
+| Mở màn | Màn panel mở ≤ 200 ms trên máy tầm trung; dữ liệu lớn tải sau khung, hiển thị skeleton | [Confirmed] |
+| Đo | Mỗi màn có cảnh benchmark trong CI (đếm Control, draw call UI, thời gian mở) | [Confirmed] |
 
 ## 7. Trạng thái chuẩn
 
@@ -150,7 +150,7 @@ Không dùng chữ "Thất bại" đỏ toàn màn, không đếm ngược gây 
 
 ## 8. Trợ năng
 
-- Tùy chọn: 3 mức cỡ chữ, tương phản cao, giảm chuyển động, phụ đề cho mọi âm thanh có lời, đọc to (TTS hai ngôn ngữ, [Proposed]), bấm-để-đi.
+- Tùy chọn: 3 mức cỡ chữ, tương phản cao, giảm chuyển động, phụ đề cho mọi âm thanh có lời, đọc to (TTS hai ngôn ngữ, [Confirmed]), bấm-để-đi.
 - Lớp 1–3 (`g1_3`): đề bài và hướng dẫn quest có **lồng tiếng tiếng Việt** phát tự động (PED-07, điều kiện publish do tài liệu nội dung sở hữu — [LEARNING_EXPERIENCE §8](../02-learning/LEARNING_EXPERIENCE.md#8-ux-học-tập-theo-grade-band)); luôn kèm phụ đề và icon minh họa để học sinh không có tai nghe vẫn làm được ([STUDENT_GAME_UX_LEARNING §7](STUDENT_GAME_UX_LEARNING.md#7-hỗ-trợ-lớp-13-lồng-tiếng-phụ-đề-và-icon)).
 - Điều hướng bàn phím trên PC: mọi nút có thể focus (Tab/Shift+Tab), focus hiển thị rõ; Enter/Space kích hoạt.
 - Không truyền thông tin chỉ bằng màu (đúng/sai kèm icon ✓/✗ và chữ).

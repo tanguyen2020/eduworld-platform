@@ -27,7 +27,7 @@ Database `eduworld_identity`.
 | `description` | `varchar(1000)` | | |
 | `role_scope_kind` | `varchar(64)` | CHECK `tenant`/`platform`; `tenant` hoặc `tenant_id IS NULL` | |
 | `is_system` | boolean | CHECK `NOT is_system OR tenant_id IS NULL`; trigger chặn UPDATE/DELETE bởi `identity_app` | |
-| `tenant_id` | uuid NULL | RLS: dòng có `tenant_id` chỉ thấy trong tenant đó | role tùy biến [Proposed] |
+| `tenant_id` | uuid NULL | RLS: dòng có `tenant_id` chỉ thấy trong tenant đó | role tùy biến [Confirmed] |
 | `version` | integer | `If-Match` | |
 | `created_by`, `updated_by`, `deleted_at`, `deleted_by` | | | |
 

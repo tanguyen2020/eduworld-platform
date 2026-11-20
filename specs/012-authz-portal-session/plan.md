@@ -16,7 +16,7 @@ Bổ sung catalog permission nhóm identity vào `src/backend/pkg/authz/catalog.
 | Testing | go test + testcontainers (PostgreSQL, Valkey, NATS, Keycloak test realm); test sinh từ OpenAPI cho authorization matrix |
 | Target Platform | Linux container |
 | Project Type | backend module + platform kit (`src/backend/pkg/authz` catalog) |
-| Performance Goals | Đường đăng nhập portal (`listMyTenants` → `getMyPermissions` → `getMe`) p95 theo `login_slo`; `resolvePrincipal` hit cache ≥ 95% [Proposed] ([BACKEND_DESIGN §6.1](../../docs/07-backend/BACKEND_DESIGN.md)) |
+| Performance Goals | Đường đăng nhập portal (`listMyTenants` → `getMyPermissions` → `getMe`) p95 theo `login_slo`; `resolvePrincipal` hit cache ≥ 95% [Confirmed] ([BACKEND_DESIGN §6.1](../../docs/07-backend/BACKEND_DESIGN.md)) |
 | Constraints | AGENTS R7, R8, R14, R20, R27, R29, R30; ADR-0027, ADR-0065, ADR-0066, ADR-0067, ADR-0072, ADR-0081, ADR-0090, ADR-0091 |
 | Scale/Scope | `principal_cache`, `principal_cache_ttl`, `portal_login_rate`, `portal_setup_ticket_ttl`, `portal_password_reset_ttl`, `feature_toggle_cache_ttl` |
 
@@ -79,7 +79,7 @@ src/backend/cmd/core-api/                         # gắn featuregate sau portal
 
 ## Phase 0: Research
 
-Không có research riêng — ADR-0066/0067/0081/0090/0091 và DATABASE_DESIGN §3.1 đã đủ; hành vi Keycloak direct grant (`amr`/`acr`, required action) lấy từ spike [F004 research R5](../004-keycloak-realm-apisix-gateway/research.md) [Proposed].
+Không có research riêng — ADR-0066/0067/0081/0090/0091 và DATABASE_DESIGN §3.1 đã đủ; hành vi Keycloak direct grant (`amr`/`acr`, required action) lấy từ spike [F004 research R5](../004-keycloak-realm-apisix-gateway/research.md) [Confirmed].
 
 ## Phase 1: Design & Contracts
 

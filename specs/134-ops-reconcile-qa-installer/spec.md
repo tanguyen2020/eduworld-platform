@@ -8,7 +8,7 @@
 ### Session 2026-11-16
 
 - Q: `reconcile-<module>` đọc dữ liệu module khác thế nào khi không được đọc DB chéo (R13)? → A: Mỗi module có DB hiện thực hai operation facade (spec internal) chỉ trả **ID event + metadata** từ bảng hạ tầng `infra.outbox_events`, `infra.processed_events`, `infra.dead_letters` của database mình; lệnh chạy trong binary `worker` (`worker reconcile --module=<module>`, job Swarm một lần) với code của module được khôi phục, gọi facade của các module khác trong tiến trình qua `src/backend/pkg/modcall` (ADR-0074, R29) — không HTTP, không token.
-- Q: Thế nào là "lệch không giải thích được" ([BACKUP_RECOVERY §8](../../docs/11-operations/BACKUP_RECOVERY.md))? → A: [Proposed] Lệch có event time ≤ điểm khôi phục T, hoặc event nguồn đã publish quá thời gian chờ mà bên nhận chưa xử lý và không nằm trong DLQ. Lệch có event time > T (bên nhận đã xử lý event mà nguồn mất sau khôi phục) là **giải thích được** và được liệt kê để bù trừ thủ công.
+- Q: Thế nào là "lệch không giải thích được" ([BACKUP_RECOVERY §8](../../docs/11-operations/BACKUP_RECOVERY.md))? → A: [Confirmed] Lệch có event time ≤ điểm khôi phục T, hoặc event nguồn đã publish quá thời gian chờ mà bên nhận chưa xử lý và không nằm trong DLQ. Lệch có event time > T (bên nhận đã xử lý event mà nguồn mất sau khôi phục) là **giải thích được** và được liệt kê để bù trừ thủ công.
 - Q: Lệnh có tự bù trừ (ví dụ thu hồi XP)? → A: Không. Chỉ đọc và lập danh sách; bù trừ bằng API nghiệp vụ có audit (vd. `createEconomyAdjustment`), không xóa ([BACKUP_RECOVERY §3.5](../../docs/11-operations/BACKUP_RECOVERY.md)).
 - Q: Đánh dấu QA ở cấp tenant hay trường/tài khoản? → A: Cấp tenant (CODE_PLAN: "loại tenant QA"); tenant QA là tenant riêng chỉ có tài khoản test (F131). Chỉ System Admin đặt cờ; tenant `common` không được đánh dấu.
 - Q: Link tải bộ cài có cần ký/hạn? → A: Không. Bộ cài không chứa dữ liệu tenant hay secret (F133-AC-17), phát qua CDN công khai; API chỉ trả danh sách đã kiểm chữ ký chỉ mục, lọc theo khối của trường.
@@ -145,8 +145,8 @@ Sau khi khôi phục `eduworld_learning` về T (RB-01), người trực chạy 
 
 ## Assumptions
 
-- [Proposed] Quy tắc phân loại lệch như Clarifications; `--settle` mặc định 10 phút, cần đăng ký CONFIG_DEFAULTS là `reconcile_settle_minutes` (R33).
-- [Proposed] Permission mới `school.installer.read` (tenant được phép; gán `tenant_admin`, `school_admin`; System Admin theo tenant đích) — cập nhật ADMIN_PORTAL §2.2.
-- [Proposed] Cột `platform.tenants.is_qa` và `ref.tenants.is_qa` (game, learning); `updateTenant` do F010 thêm vào contract.
+- [Confirmed] Quy tắc phân loại lệch như Clarifications; `--settle` mặc định 10 phút, cần đăng ký CONFIG_DEFAULTS là `reconcile_settle_minutes` (R33).
+- [Confirmed] Permission mới `school.installer.read` (tenant được phép; gán `tenant_admin`, `school_admin`; System Admin theo tenant đích) — cập nhật ADMIN_PORTAL §2.2.
+- [Confirmed] Cột `platform.tenants.is_qa` và `ref.tenants.is_qa` (game, learning); `updateTenant` do F010 thêm vào contract.
 - Ánh xạ khối → `grade_band` theo [GLOSSARY](../../docs/00-overview/GLOSSARY.md) (`g1_3`, `g4_5`, `g6_7`, `g8_9`).
 - Chỉ mục bộ cài đặt cạnh manifest phát hành của F133 trên CDN `play.<domain>/releases/`; base URL và khóa công khai qua env (R3).

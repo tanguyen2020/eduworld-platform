@@ -6,7 +6,7 @@
 
 - [x] T001 Khởi tạo `design/package.json` (style-dictionary@4, fontkit, script `build`, `check`, `test`), `design/README.md` quy trình đổi token, `design/CHANGELOG.md` `tokens@0.1.0` — file: `design/package.json` — **xong 2026-11-19 — `design/package.json` (`@eduworld/design-tokens@0.1.0`, style-dictionary 4.4.0, fontkit 2.0.4, pnpm 10.34.9, script `build`/`check`/`test`), `design/README.md`, `design/CHANGELOG.md` mục `tokens@0.1.0`**
 - [x] T002 [P] Target `make design-tokens` (build web + JSON Godot + Godot headless) và `make design-tokens-check` (build vào thư mục tạm rồi so) — file: `Makefile` — **xong 2026-11-19 — `make design-tokens` (`cd design && pnpm install --frozen-lockfile && pnpm build`), `make design-tokens-check` (`pnpm test` + `pnpm check`: sinh trong bộ nhớ rồi so byte với file commit, `BASE_REF` cho semver); Godot không cần (Clarification 2026-11-19)**
-- [x] T003 [P] Ghim phiên bản Godot nếu chưa có — file: `src/game/.godot-version` — **xong 2026-11-19 — `src/game/.godot-version` = `4.5.1` [Proposed, F060 xác nhận]**
+- [x] T003 [P] Ghim phiên bản Godot nếu chưa có — file: `src/game/.godot-version` — **xong 2026-11-19 — `src/game/.godot-version` = `4.5.1` [Confirmed, F060 xác nhận]**
 
 ## Phase 2: Foundational (chặn mọi user story)
 
@@ -84,7 +84,7 @@
 
 ## Phase N: Polish & Cross-Cutting
 
-- [x] T031 [P] Cập nhật DESIGN_SYSTEM §3 (bỏ [Proposed] cho `build_theme.gd` khi đã chạy), ghi phiên bản token đầu tiên — file: `docs/05-ux/DESIGN_SYSTEM.md` — **xong 2026-11-19 — DESIGN_SYSTEM §3 (pipeline ghi `.tres` trực tiếp, bộ kiểm, `tokens@0.1.0`), §4.1 (`colorPrimary`, compact không dùng `compactAlgorithm`)**
+- [x] T031 [P] Cập nhật DESIGN_SYSTEM §3 (bỏ [Confirmed] cho `build_theme.gd` khi đã chạy), ghi phiên bản token đầu tiên — file: `docs/05-ux/DESIGN_SYSTEM.md` — **xong 2026-11-19 — DESIGN_SYSTEM §3 (pipeline ghi `.tres` trực tiếp, bộ kiểm, `tokens@0.1.0`), §4.1 (`colorPrimary`, compact không dùng `compactAlgorithm`)**
 - [x] T032 [P] CHANGELOG mục F005 — file: `CHANGELOG.md` — **xong 2026-11-19 — CHANGELOG mục F005**
 - [x] T033 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/005-design-tokens/quickstart.md` — **xong 2026-11-19 — quickstart.md mục Bằng chứng**
 

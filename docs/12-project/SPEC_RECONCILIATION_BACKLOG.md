@@ -8,7 +8,7 @@
 Khi viết 91 feature spec (`specs/<NNN>-<slug>/`), các agent phát hiện chỗ tài liệu sở hữu, contract trong `specs/` và feature spec chưa khớp nhau. Tài liệu này là **danh sách việc** để đối soát; nó không định nghĩa quy tắc (R33).
 
 - Mỗi mục có mã `RB-NNN`. Xử lý: sửa **tài liệu sở hữu** (và contract/CONFIG_DEFAULTS nếu có) trong cùng merge request, sau đó đổi trạng thái thành `Đã xử lý` kèm commit/ADR.
-- Phần lớn mục đã có task **Polish** trong `tasks.md` của feature liên quan (cột Feature). Feature chọn phương án ghi ở cột "Feature đã chọn" là mặc định tạm [Proposed] cho tới khi tài liệu sở hữu được sửa.
+- Phần lớn mục đã có task **Polish** trong `tasks.md` của feature liên quan (cột Feature). Feature chọn phương án ghi ở cột "Feature đã chọn" là mặc định tạm [Confirmed] cho tới khi tài liệu sở hữu được sửa.
 - **Delta contract** (operationId, schema, event cần thêm/sửa) được liệt kê đầy đủ trong `contracts/README.md` §6 của từng feature và có task Phase 2; không lặp lại ở đây.
 - Ưu tiên: `P1` chặn code hoặc sai bảo mật/dữ liệu · `P2` gây hiểu sai khi code · `P3` câu chữ, tên.
 

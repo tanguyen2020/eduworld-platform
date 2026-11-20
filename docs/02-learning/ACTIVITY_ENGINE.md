@@ -50,7 +50,7 @@ Release chỉ gồm các loại **server tự chấm được** ([ADR-0072](../a
 | `interactive_exercise` | Điền khuyết, trả lời ngắn (tập đáp án đóng), kéo thả, nối, sắp xếp, nhập số, puzzle, tính toán tương tác | `auto` / `accepted_answers` / `rule` / `numeric_tolerance` | [QUESTION_BANK](QUESTION_BANK.md) | [Confirmed] |
 | `video_lesson` | Video, chapter, phụ đề, câu hỏi chèn tự chấm, nhánh | `completion` + `auto` cho câu chèn | [VIDEO_LEARNING](VIDEO_LEARNING.md) | [Confirmed] |
 | `audio_lesson` | Bài nghe, nghe hiểu, nghe chép (câu hỏi tự chấm) | `completion` + `auto` | [AUDIO_LANGUAGE_LEARNING](AUDIO_LANGUAGE_LEARNING.md) | [Confirmed] |
-| `simulation` | Mô phỏng khoa học, vật lý, hình học 3D, phòng thí nghiệm ảo | `deterministic_check` + `auto` | [SIMULATION_ENGINE](SIMULATION_ENGINE.md) | [Proposed] |
+| `simulation` | Mô phỏng khoa học, vật lý, hình học 3D, phòng thí nghiệm ảo | `deterministic_check` + `auto` | [SIMULATION_ENGINE](SIMULATION_ENGINE.md) | [Confirmed] |
 | `minigame` | Mini-game giáo dục dùng câu hỏi từ Question Bank | `auto` | [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) | [Confirmed] |
 
 **Ngoài version này (ADR-0072, ADR-0082):** `written_response`, `speaking` và `project` cần người chấm nên không có plugin, renderer hay editor và không được publish.
@@ -70,7 +70,7 @@ Mỗi loại có JSON Schema riêng trong `specs/schemas/activities/` (kế th�
 | `grade_levels` | int[1..9] | |
 | `subject_id`, `topic_id`, `objective_ids[]` | UUID | Ít nhất một LO [Confirmed] |
 | `difficulty` | 1–5 | Ánh xạ sang Easy…Legendary ở [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
-| `instructions` | i18n, ≤ 2.000 | Kèm audio đọc hướng dẫn; bắt buộc với nhóm `g1_3` ([CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-proposed)) |
+| `instructions` | i18n, ≤ 2.000 | Kèm audio đọc hướng dẫn; bắt buộc với nhóm `g1_3` ([CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed)) |
 | `content`, `interaction` | object theo schema loại | Nội dung và cách tương tác |
 | `evaluation` | object | Chiến lược chấm (§7), `max_score`, `pass_threshold` |
 | `feedback_timing` | `FeedbackTiming` | `immediate`, `after_submit`, `after_close`, `never` — mặc định theo mode (§8.1) |
@@ -126,7 +126,7 @@ type Registry interface {
 | `practice` | Tự luyện ở Practice Zone (chủ đề, lớp, mức độ, kỹ năng, luyện trộn chủ đề) | Học sinh | Phản hồi ngay, có gợi ý, không giới hạn lượt |
 | `retry_wrong` | "Ôn câu sai" (gợi ý của NPC/hệ thống) | Học sinh | Ưu tiên **câu anh em** của câu đã sai (cùng LO, cùng loại, cùng độ khó, khác `question_id`); hết câu anh em mới dùng lại cùng `question_id` ([QUESTION_BANK §6](QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện)) |
 | `assignment` | Bài nhà trường giao ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)) | `school_admin`/`academic_manager` tạo bài giao; học sinh bắt đầu | `open_at/due_at`, `max_attempts`, `feedback_timing`, `result_release` |
-| `diagnostic` | Bài chẩn đoán ngắn đầu năm học hoặc đầu chủ đề | Hệ thống gợi ý ([LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules)) hoặc nhà trường giao | Không gợi ý, không phản hồi từng câu; kết quả đặt mastery ban đầu (`M0`) cho LO chưa có evidence ([LEARNING_ANALYTICS §3.5](LEARNING_ANALYTICS.md#35-bài-chẩn-đoán-đặt-m0-ban-đầu-proposed)); không XP theo điểm |
+| `diagnostic` | Bài chẩn đoán ngắn đầu năm học hoặc đầu chủ đề | Hệ thống gợi ý ([LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules)) hoặc nhà trường giao | Không gợi ý, không phản hồi từng câu; kết quả đặt mastery ban đầu (`M0`) cho LO chưa có evidence ([LEARNING_ANALYTICS §3.5](LEARNING_ANALYTICS.md#35-bài-chẩn-đoán-đặt-m0-ban-đầu-confirmed)); không XP theo điểm |
 | `competition` | Câu hỏi trong trận 1v1/đội | module competition | Ghi evidence trọng số thấp |
 | `exam` | Đề kiểm tra | `exam` | [EXAM_ENGINE](EXAM_ENGINE.md) |
 
@@ -150,7 +150,7 @@ stateDiagram-v2
 
 | Trạng thái | Ý nghĩa |
 |---|---|
-| `in_progress` | Đang làm, nhận phản hồi. **Tạm dừng** không phải trạng thái riêng: attempt có `paused_at` khi không hoạt động > `idle_timeout` (5 phút [Proposed]) hoặc client gọi `:pause`; thời gian pause không tính vào duration |
+| `in_progress` | Đang làm, nhận phản hồi. **Tạm dừng** không phải trạng thái riêng: attempt có `paused_at` khi không hoạt động > `idle_timeout` (5 phút [Confirmed]) hoặc client gọi `:pause`; thời gian pause không tính vào duration |
 | `submitted` | Đã nộp, không nhận thêm phản hồi |
 | `graded` | Có evaluation hiệu lực; event phát đi. Re-evaluate giữ trạng thái `graded`, chỉ thay evaluation hiệu lực (§7.3) |
 | `expired` | Hết `deadline_at`; worker auto-submit |
@@ -175,11 +175,11 @@ Resume trả về item (render payload + `presentation`), phản hồi đã lưu
 
 | Yêu cầu | Lưu ở |
 |---|---|
-| Attempt | `assessment.attempts`; ngữ cảnh khởi tạo ở `context_type` + `context_id` với `context_type` ∈ {`free_play`, `lesson`, `learning_path`, `recommendation`, `question_set`, `selection`, `assignment`, `quest_step`, `minigame_session`, `exam_session`, `match`, `challenge_attempt`, `boss_encounter` (mode `challenge`, [Proposed])} — hợp các giá trị của request start trong OpenAPI (`ActivityAttemptStart`, `AdHocAttemptStart`, internal `AttemptCreateRequest`) |
+| Attempt | `assessment.attempts`; ngữ cảnh khởi tạo ở `context_type` + `context_id` với `context_type` ∈ {`free_play`, `lesson`, `learning_path`, `recommendation`, `question_set`, `selection`, `assignment`, `quest_step`, `minigame_session`, `exam_session`, `match`, `challenge_attempt`, `boss_encounter` (mode `challenge`, [Confirmed])} — hợp các giá trị của request start trong OpenAPI (`ActivityAttemptStart`, `AdHocAttemptStart`, internal `AttemptCreateRequest`) |
 | Phản hồi | `assessment.attempt_answers` (append-only); phản hồi không phải câu hỏi (video progress, simulation run) ở bảng riêng của từng loại |
 | Đúng/sai, điểm | `attempt_answers.is_correct/score`, `attempt_items.final_*`, `attempts.score/max_score`, `evaluations` |
-| Gợi ý, thời gian trả lời, đoán bừa [Proposed] | `attempt_items.hints_revealed` (số cấp đã mở), `attempt_answers.hints_used` (số gợi ý đã mở **trước** lần trả lời đó), `attempt_answers.response_ms`, `attempt_answers.rapid_guess` (§11.1) |
-| Gợi ý ôn tập đã dẫn tới attempt [Proposed] | `attempts.recommendation_id` (tùy chọn, §9) |
+| Gợi ý, thời gian trả lời, đoán bừa [Confirmed] | `attempt_items.hints_revealed` (số cấp đã mở), `attempt_answers.hints_used` (số gợi ý đã mở **trước** lần trả lời đó), `attempt_answers.response_ms`, `attempt_answers.rapid_guess` (§11.1) |
+| Gợi ý ôn tập đã dẫn tới attempt [Confirmed] | `attempts.recommendation_id` (tùy chọn, §9) |
 | Thời lượng | `attempts.duration_ms` = `submitted_at − started_at − paused_ms` (server); `client_elapsed_ms` chỉ tham khảo |
 | Thời điểm nộp | `attempts.submitted_at` (server) |
 | Content version | `attempts.source_version_id`, `attempt_items.question_version_id` (ghim lúc start) |
@@ -209,7 +209,7 @@ Một activity có thể kết hợp chiến lược theo phần (ví dụ video
 ### 7.2. Tính điểm
 
 - Điểm câu = kết quả chấm × `max_score` của item. Điểm item cuối = lần trả lời **có tính điểm** cuối cùng trước submit (`is_scored=true`). Câu không trả lời = 0.
-- `score = Σ final_score`; `max_score = Σ item.max_score`. Thang 10 hiển thị cho bài giao: `round(score/max_score × 10, 1)` [Proposed]; luôn lưu giá trị gốc.
+- `score = Σ final_score`; `max_score = Σ item.max_score`. Thang 10 hiển thị cho bài giao: `round(score/max_score × 10, 1)` [Confirmed]; luôn lưu giá trị gốc.
 - Gợi ý và cờ `rapid_guess` **không** làm thay đổi điểm của attempt; chúng chỉ ảnh hưởng trọng số evidence mastery ([LEARNING_ANALYTICS §3.1](LEARNING_ANALYTICS.md#31-định-nghĩa)).
 - Điểm học tập **không** bị ảnh hưởng bởi XP, vật phẩm hay rating (ADR-0018).
 
@@ -252,14 +252,14 @@ Ràng buộc: phản hồi từng câu không bao giờ hiện trước thời �
 
 Mini-game có thêm thuộc tính hiển thị `feedback_display: end_of_round | end_of_game` — chỉ là cách trình bày khi `FeedbackTiming = immediate` ([MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md)).
 
-- Thử lại câu sai trong practice/quest/challenge: lần thử lại có `is_scored=false`; lần đầu tính điểm và evidence. Số lượt thử theo khối lớp do [LEARNING_EXPERIENCE §4.2](LEARNING_EXPERIENCE.md#42-số-lượt-thử-proposed) quy định; cách trình bày phản hồi (NPC, hiệu ứng, gợi ý nhiều cấp) ở [LEARNING_EXPERIENCE §4](LEARNING_EXPERIENCE.md#4-phản-hồi-đúngsai-thân-thiện).
+- Thử lại câu sai trong practice/quest/challenge: lần thử lại có `is_scored=false`; lần đầu tính điểm và evidence. Số lượt thử theo khối lớp do [LEARNING_EXPERIENCE §4.2](LEARNING_EXPERIENCE.md#42-số-lượt-thử-confirmed) quy định; cách trình bày phản hồi (NPC, hiệu ứng, gợi ý nhiều cấp) ở [LEARNING_EXPERIENCE §4](LEARNING_EXPERIENCE.md#4-phản-hồi-đúngsai-thân-thiện).
 - `feedback_timing` trong activity definition (§4) ghi đè mặc định của mode trong phạm vi ràng buộc trên.
 
-### 8.2. Phản hồi theo phương án nhiễu [Proposed]
+### 8.2. Phản hồi theo phương án nhiễu [Confirmed]
 
 Khi `FeedbackTiming` cho phép, kết quả chấm một câu (`ActivityResponseResult`) có trường `feedback`: phản hồi riêng cho phương án học sinh đã chọn (`options[].feedback` của câu hỏi, [QUESTION_BANK §2](QUESTION_BANK.md#2-cấu-trúc-một-question-version)), ví dụ "Em đang cộng thay vì nhân". `options[].feedback` thuộc phần đáp án: **không bao giờ** có trong render payload, chỉ trả trong kết quả chấm và trong màn xem lại theo `ResultRelease`.
 
-### 8.3. Gợi ý trong attempt [Proposed]
+### 8.3. Gợi ý trong attempt [Confirmed]
 
 - Học sinh xin gợi ý cấp tiếp theo của một item bằng `POST /api/v1/learning/activity-attempts/{attempt_id}/items/{position}/hints:next`; server trả `{level, total_levels, hint}` lấy từ `hints[]` của version đã ghim ([QUESTION_BANK §2](QUESTION_BANK.md#2-cấu-trúc-một-question-version)). Gợi ý mở tuần tự, không nhảy cấp.
 - Chỉ cho phép khi `FeedbackTiming = immediate` và mode ∉ {`exam`, `diagnostic`, `competition`}; ngược lại `HINTS_NOT_ALLOWED`. Hết cấp → `HINTS_EXHAUSTED`.
@@ -347,7 +347,7 @@ Consumer: learning_record (mastery, từ `activity.graded`), module game (quest 
 - Đúng 100% với < 1,5 giây/câu trên ≥ 10 câu → cờ `suspicious_speed` gửi [ANTI_CHEAT](../10-security/ANTI_CHEAT.md), không tự phạt.
 - Chống farm XP do module game xử lý (cap, giảm dần), không xử lý ở đây.
 
-### 11.1. Cờ `rapid_guess` — trả lời quá nhanh để kịp đọc đề [Proposed]
+### 11.1. Cờ `rapid_guess` — trả lời quá nhanh để kịp đọc đề [Confirmed]
 
 `suspicious_speed` phát hiện gian lận; `rapid_guess` phát hiện **đoán bừa** (đúng hay sai đều có thể), để không làm sai lệch mastery.
 

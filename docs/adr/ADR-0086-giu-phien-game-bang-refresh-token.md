@@ -11,10 +11,10 @@
 
 ## Quyết định
 
-1. **Lưu refresh token an toàn trên thiết bị cá nhân.** Sau đăng nhập thành công, game client lưu refresh token trong kho bảo mật của hệ điều hành: Windows DPAPI (theo user), Android Keystore, iOS Keychain. Không lưu mật khẩu; access token chỉ ở RAM. **Web** không lưu refresh token bền vững (chỉ RAM) [Proposed] vì storage trình duyệt không đủ an toàn.
+1. **Lưu refresh token an toàn trên thiết bị cá nhân.** Sau đăng nhập thành công, game client lưu refresh token trong kho bảo mật của hệ điều hành: Windows DPAPI (theo user), Android Keystore, iOS Keychain. Không lưu mật khẩu; access token chỉ ở RAM. **Web** không lưu refresh token bền vững (chỉ RAM) [Confirmed] vì storage trình duyệt không đủ an toàn.
 2. **Máy dùng chung không lưu.** Thiết bị cấu hình `shared_device = true` (phòng máy, `device.cfg`) giữ hành vi cũ: token chỉ trong RAM, mở lại game phải đăng nhập; thoát game thì logout.
 3. **Khởi động game:** nếu có refresh token → gọi `POST /auth/game/token:refresh` kèm `device_id`. Thành công → bỏ qua màn đăng nhập, tạo game session (`POST /game/sessions`, ADR-0083) và vào game. Thất bại (hết hạn, bị thu hồi, sai thiết bị) → xóa token khỏi kho bảo mật và hiện form đăng nhập.
-4. **Thời hạn [Proposed]:** access token 5 phút; phiên Keycloak của client `eduworld-game-backend` idle 7 ngày, tối đa 30 ngày (tham số `game_session_sso`). Không dùng offline token. Hết hạn → đăng nhập lại.
+4. **Thời hạn [Confirmed]:** access token 5 phút; phiên Keycloak của client `eduworld-game-backend` idle 7 ngày, tối đa 30 ngày (tham số `game_session_sso`). Không dùng offline token. Hết hạn → đăng nhập lại.
 5. **Bảo vệ refresh token:**
    - Xoay vòng (rotation) mỗi lần dùng; phát hiện dùng lại token cũ → thu hồi cả phiên.
    - Gắn với `device_id`: identity-service từ chối refresh từ thiết bị khác.

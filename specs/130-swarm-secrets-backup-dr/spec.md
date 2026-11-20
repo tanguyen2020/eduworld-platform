@@ -7,11 +7,11 @@
 
 ### Session 2026-11-16
 
-- Q: Nguồn gốc secret khi OQ-10 chưa chốt (Vault/OpenBao, KMS cloud hay SOPS)? → A: SOPS (age) mã hóa trong Git `deploy/secrets/<env>/`, workflow deploy giải mã và tạo Docker secret có hậu tố version; khóa age ở secret manager/secret của GitHub Environment; đổi sang Vault chỉ thay script đồng bộ ([DEPLOYMENT §13](../../docs/11-operations/DEPLOYMENT.md), [SECURITY_ARCHITECTURE §6](../../docs/10-security/SECURITY_ARCHITECTURE.md)) [Proposed, OQ-10].
-- Q: Topology staging? → A: Topology pilot [DEPLOYMENT §4.1](../../docs/11-operations/DEPLOYMENT.md) với cùng stack file production (khác số replica/sizing trong `<swarm-service>.env`/override); production theo §4.2 [Proposed].
+- Q: Nguồn gốc secret khi OQ-10 chưa chốt (Vault/OpenBao, KMS cloud hay SOPS)? → A: SOPS (age) mã hóa trong Git `deploy/secrets/<env>/`, workflow deploy giải mã và tạo Docker secret có hậu tố version; khóa age ở secret manager/secret của GitHub Environment; đổi sang Vault chỉ thay script đồng bộ ([DEPLOYMENT §13](../../docs/11-operations/DEPLOYMENT.md), [SECURITY_ARCHITECTURE §6](../../docs/10-security/SECURITY_ARCHITECTURE.md)) [Confirmed, OQ-10].
+- Q: Topology staging? → A: Topology pilot [DEPLOYMENT §4.1](../../docs/11-operations/DEPLOYMENT.md) với cùng stack file production (khác số replica/sizing trong `<swarm-service>.env`/override); production theo §4.2 [Confirmed].
 - Q: Cổng quản trị trong Swarm? → A: `EW_ADMIN_ADDR=:9090` trong container (mỗi task một network namespace), không publish, không route APISIX — khớp F001 (một cổng quản trị) và [DEPLOYMENT §14](../../docs/11-operations/DEPLOYMENT.md).
-- Q: Công cụ backup PostgreSQL? → A: pgBackRest, repo host trên node `ops` kết nối node `data-pg` qua pgBackRest TLS server ([BACKUP_RECOVERY §3.1](../../docs/11-operations/BACKUP_RECOVERY.md)); chi tiết ở [research.md](research.md) [Proposed].
-- Q: Lệnh `reconcile-<module>`, `projection rebuild`, `retention-reapply`, `saga resume` do ai làm? → A: Module sở hữu cung cấp dưới dạng lệnh con của binary `worker` (vd. `worker reconcile --module=<module>` [Proposed], ADR-0074); F130 điều phối trong runbook và kiểm chứng. Lệnh chưa có feature sở hữu → ghi ở Assumptions.
+- Q: Công cụ backup PostgreSQL? → A: pgBackRest, repo host trên node `ops` kết nối node `data-pg` qua pgBackRest TLS server ([BACKUP_RECOVERY §3.1](../../docs/11-operations/BACKUP_RECOVERY.md)); chi tiết ở [research.md](research.md) [Confirmed].
+- Q: Lệnh `reconcile-<module>`, `projection rebuild`, `retention-reapply`, `saga resume` do ai làm? → A: Module sở hữu cung cấp dưới dạng lệnh con của binary `worker` (vd. `worker reconcile --module=<module>` [Confirmed], ADR-0074); F130 điều phối trong runbook và kiểm chứng. Lệnh chưa có feature sở hữu → ghi ở Assumptions.
 
 ### Session 2026-11-17
 
@@ -185,8 +185,8 @@ Trước giờ vào học, replica Keycloak, `core-api`, `realtime`… tự tăn
 
 ## Assumptions
 
-- OQ-10 chưa chốt: thiết kế không phụ thuộc cloud hay on-prem; secret qua SOPS [Proposed]; Vault/OpenBao thay được bằng script `secrets-sync`.
+- OQ-10 chưa chốt: thiết kế không phụ thuộc cloud hay on-prem; secret qua SOPS [Confirmed]; Vault/OpenBao thay được bằng script `secrets-sync`.
 - CI/CD là GitHub Actions (ADR-0088): job deploy chạy trên self-hosted runner nhãn `deploy` trong mạng quản trị, có quyền Docker API manager qua TLS, không nhận job từ PR của fork; secret theo GitHub Environment `staging`/`production`; action ghim theo SHA commit (DEPLOYMENT §10).
-- `reconcile-<module>` (lệnh con `worker reconcile --module=<module>` [Proposed]) chưa có feature sở hữu trong CODE_PLAN; F130 định nghĩa giao diện CLI (mã thoát, JSON kết quả) và chờ module bổ sung — rủi ro cho TC-SVC-014.
+- `reconcile-<module>` (lệnh con `worker reconcile --module=<module>` [Confirmed]) chưa có feature sở hữu trong CODE_PLAN; F130 định nghĩa giao diện CLI (mã thoát, JSON kết quả) và chờ module bổ sung — rủi ro cho TC-SVC-014.
 - ADR-0074 (modular monolith) Accepted 2026-11-17: stack, secret, migrate, canary, rollback trong spec này theo 3 binary/5 Swarm service và một cụm PostgreSQL.
 - ADR-0075 Accepted (thay ADR-0071): staging/production dùng S3-compatible managed tại Việt Nam (ưu tiên) hoặc Garage/SeaweedFS ≥ 3 node; floci chỉ ở local/CI. Lựa chọn backend do spike trước pilot quyết định (`object_storage_backend` [TBD] trong CONFIG_DEFAULTS); F130-AC-14, F130-AC-20 viết để đạt với cả hai backend, stack `data.stack.yml` chỉ chứa cụm `storage` khi chọn tự host.

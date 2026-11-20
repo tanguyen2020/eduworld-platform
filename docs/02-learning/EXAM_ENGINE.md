@@ -7,7 +7,7 @@
 
 Module `exam` (schema `assessment`) tổ chức **bài kiểm tra có cấu trúc đề, giới hạn thời gian và chính sách công bố kết quả**. Dùng chung `attempt`/`attempt_item`/`attempt_answer` và grader của question_bank. Mọi câu trong đề là loại server tự chấm; đề không có câu tự luận chấm tay ([ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) mục 3). Người tạo đề và ExamSession của trường là `school_admin` hoặc `academic_manager` (thường qua LMS Assignment); đề dùng chung của platform do `content_admin` soạn.
 
-**[Proposed, OQ-18]** EduWorld hỗ trợ luyện đề, thi thử, kiểm tra do nhà trường giao. **Không** tổ chức kỳ thi có giá trị pháp lý trong Release 1.0 khi chưa có quyết định ở OQ-18; không có proctoring (camera/khóa màn hình). Cờ `is_official` chỉ có nghĩa "kết quả được nhà trường ghi nhận trong sổ điểm LMS để tham khảo"; không thay đánh giá chính thức theo quy định của Bộ ([ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md)).
+**[Confirmed, OQ-18]** EduWorld hỗ trợ luyện đề, thi thử, kiểm tra do nhà trường giao. **Không** tổ chức kỳ thi có giá trị pháp lý trong Release 1.0 khi chưa có quyết định ở OQ-18; không có proctoring (camera/khóa màn hình). Cờ `is_official` chỉ có nghĩa "kết quả được nhà trường ghi nhận trong sổ điểm LMS để tham khảo"; không thay đánh giá chính thức theo quy định của Bộ ([ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md)).
 
 ## 2. Loại đề [Confirmed — Master Prompt §4.5]
 
@@ -29,7 +29,7 @@ Phân biệt rõ:
 | Xem kết quả | Ngay sau nộp (`result_release = immediate`) | Theo `result_release` (mặc định `after_close`) |
 | Ghi vào sổ điểm LMS | Không | Có (tham khảo) |
 | Trọng số mastery (ADR-0017) | 0.7 (practice) | 1.0 (exam) |
-| XP | Có (cap) | Không thưởng XP theo điểm [Proposed] — chỉ XP tham gia cố định, tránh áp lực |
+| XP | Có (cap) | Không thưởng XP theo điểm [Confirmed] — chỉ XP tham gia cố định, tránh áp lực |
 | Leaderboard | Không | Không |
 
 ## 3. Assessment Blueprint
@@ -92,11 +92,11 @@ flowchart LR
 - Mỗi attempt: chọn variant theo `hash(student_id, exam_session_id) mod N`, rồi shuffle item (nếu section cho phép) và option theo seed attempt.
 - Câu đánh dấu `exam_only` được ưu tiên cho exam official.
 
-### 4.1. Cân bằng độ khó giữa các biến thể [Proposed]
+### 4.1. Cân bằng độ khó giữa các biến thể [Confirmed]
 
 Với `independent_draw`, các biến thể phải tương đương để học sinh không thiệt vì rút phải đề khó hơn:
 
-1. Mỗi câu ứng viên có **độ khó ước lượng** `p̂`: dùng `p_value` khi câu đủ dữ liệu ([QUESTION_BANK §9](QUESTION_BANK.md#9-thống-kê-chất-lượng-câu-hỏi-item-analysis-proposed)), ngược lại suy từ `difficulty` khai báo theo bảng ánh xạ ở cùng mục.
+1. Mỗi câu ứng viên có **độ khó ước lượng** `p̂`: dùng `p_value` khi câu đủ dữ liệu ([QUESTION_BANK §9](QUESTION_BANK.md#9-thống-kê-chất-lượng-câu-hỏi-item-analysis-confirmed)), ngược lại suy từ `difficulty` khai báo theo bảng ánh xạ ở cùng mục.
 2. Generator rút ứng viên cho từng biến thể theo rule, tính `P_v = Σ(p̂ × points) / total_points` (tỉ lệ điểm kỳ vọng của biến thể v).
 3. Nếu `max(P_v) − min(P_v) > balance.max_mean_p_diff` (mặc định 0,05, `variant_balance_max_mean_p_diff` [Confirmed — Technical Architect 2026-11-15]), hoán đổi câu cùng rule giữa các biến thể hoặc rút lại (tối đa 200 lần lặp, seed cố định để tái lập). Không đạt → vẫn sinh đề nhưng cảnh báo người tạo đề kèm số liệu từng biến thể.
 4. `ExamPaper` lưu `expected_p` của biến thể; báo cáo sau đề so sánh điểm trung bình thực tế giữa các biến thể (§8.1).
@@ -123,7 +123,7 @@ Worker chuyển trạng thái theo thời gian; event `exam.opened`, `exam.close
 - Client hiển thị đồng hồ dựa trên `deadline_at` + `server_time` trả về trong mọi response (bù lệch đồng hồ).
 - Lưu câu trả lời: `PUT /api/v1/exams/attempts/{id}/answers/{position}` (ghi đè, chấm **trì hoãn** đến khi nộp; server vẫn lưu lịch sử append-only).
 - Không trả `is_correct`/explanation trong khi làm; không có gợi ý.
-- Mất kết nối: thời gian **vẫn chạy**; client giữ câu trả lời chưa gửi **chỉ trong bộ nhớ (RAM)** của phiên đang chạy, không ghi ra đĩa hay storage của trình duyệt (thoát game là mất phần chưa gửi), rồi gửi lại khi kết nối lại. Server nhận câu trả lời đến trễ nếu `answered_at_client` < `deadline_at` **và** server nhận trước `deadline_at + exam_offline_sync_grace`; `exam_offline_sync_grace` = 30 giây [Proposed]. Ân hạn này chỉ áp cho đề kiểm tra; attempt hoạt động thường dùng ân hạn mạng `deadline_grace` ([ACTIVITY_ENGINE §11](ACTIVITY_ENGINE.md#11-toàn-vẹn-và-chống-gian-lận)). Client không tự quyết định theo ân hạn: server trả `EXAM_TIME_OVER` khi quá hạn.
+- Mất kết nối: thời gian **vẫn chạy**; client giữ câu trả lời chưa gửi **chỉ trong bộ nhớ (RAM)** của phiên đang chạy, không ghi ra đĩa hay storage của trình duyệt (thoát game là mất phần chưa gửi), rồi gửi lại khi kết nối lại. Server nhận câu trả lời đến trễ nếu `answered_at_client` < `deadline_at` **và** server nhận trước `deadline_at + exam_offline_sync_grace`; `exam_offline_sync_grace` = 30 giây [Confirmed]. Ân hạn này chỉ áp cho đề kiểm tra; attempt hoạt động thường dùng ân hạn mạng `deadline_grace` ([ACTIVITY_ENGINE §11](ACTIVITY_ENGINE.md#11-toàn-vẹn-và-chống-gian-lận)). Client không tự quyết định theo ân hạn: server trả `EXAM_TIME_OVER` khi quá hạn.
 
 ## 7. Nộp bài
 
@@ -141,7 +141,7 @@ RETURNING ...;
 
 ### 7.2. Tự động nộp khi hết giờ
 
-- Worker job `exam.autosubmit` chạy mỗi `exam_autosubmit_interval` = 15 giây [Proposed]: chọn attempt `in_progress AND deadline_at + exam_offline_sync_grace < now()` (`FOR UPDATE SKIP LOCKED`), chuyển `expired → submitted` (`submit_reason='auto_timeout'`), đưa vào hàng chấm tự động.
+- Worker job `exam.autosubmit` chạy mỗi `exam_autosubmit_interval` = 15 giây [Confirmed]: chọn attempt `in_progress AND deadline_at + exam_offline_sync_grace < now()` (`FOR UPDATE SKIP LOCKED`), chuyển `expired → submitted` (`submit_reason='auto_timeout'`), đưa vào hàng chấm tự động.
 - Đồng thời, request answer đến sau `deadline_at + exam_offline_sync_grace` bị từ chối `422 EXAM_TIME_OVER`.
 - Window đóng: mọi attempt còn mở bị auto-submit; học sinh chưa bắt đầu → `absent` (bản ghi `exam_participation`).
 
@@ -156,7 +156,7 @@ RETURNING ...;
 - `show_correct_answers`, `show_explanations` cấu hình riêng.
 - Event: `exam.submitted` (khi submit), `exam.graded` (khi có điểm — consumer learning_record dùng event này), `exam.results_released`.
 
-### 8.1. Độ tin cậy của đề chính thức [Proposed]
+### 8.1. Độ tin cậy của đề chính thức [Confirmed]
 
 Sau khi session `is_official` đóng, worker tính và lưu vào báo cáo đề (`GET /api/v1/exams/sessions/{id}/report`):
 
@@ -165,9 +165,9 @@ Sau khi session `is_official` đóng, worker tính và lưu vào báo cáo đề
 | Độ tin cậy | KR-20 nếu mọi câu chấm 0/1, ngược lại Cronbach alpha; tính riêng từng biến thể | ≥ 30 học sinh đã nộp trên biến thể đó |
 | Sai số đo lường chuẩn (SEM) | `SD × √(1 − reliability)` | Như trên |
 | Chênh lệch giữa biến thể | Điểm trung bình, độ lệch chuẩn từng biến thể; cờ khi chênh ≥ 1 điểm trên thang 10 | ≥ 2 biến thể |
-| Câu có vấn đề | `discrimination` < 0,1 hoặc âm, `p_value` < 0,1 hoặc > 0,95 | ≥ `item_analysis_min_responses` lượt ([QUESTION_BANK §9](QUESTION_BANK.md#9-thống-kê-chất-lượng-câu-hỏi-item-analysis-proposed)) |
+| Câu có vấn đề | `discrimination` < 0,1 hoặc âm, `p_value` < 0,1 hoặc > 0,95 | ≥ `item_analysis_min_responses` lượt ([QUESTION_BANK §9](QUESTION_BANK.md#9-thống-kê-chất-lượng-câu-hỏi-item-analysis-confirmed)) |
 
-Reliability < 0,7 → báo cáo hiển thị cảnh báo "Độ tin cậy thấp, nên dùng kết quả thận trọng" cho người tạo đề và EdTech; không tự sửa điểm. Câu có vấn đề được gợi ý `drop_item` qua quy trình §9. Ngưỡng cảnh báo độ tin cậy (`exam_reliability_warn`: < 0,7, cần ≥ 30 học sinh) [Confirmed — Technical Architect 2026-11-15]; các ngưỡng khác là mặc định [Proposed]; chỉ mục ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md).
+Reliability < 0,7 → báo cáo hiển thị cảnh báo "Độ tin cậy thấp, nên dùng kết quả thận trọng" cho người tạo đề và EdTech; không tự sửa điểm. Câu có vấn đề được gợi ý `drop_item` qua quy trình §9. Ngưỡng cảnh báo độ tin cậy (`exam_reliability_warn`: < 0,7, cần ≥ 30 học sinh) [Confirmed — Technical Architect 2026-11-15]; các ngưỡng khác là mặc định [Confirmed]; chỉ mục ở [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md).
 
 ## 9. Chấm lại (regrade)
 
@@ -188,7 +188,7 @@ Sau khi kết quả được công bố, API `GET /api/v1/exams/attempts/{id}/an
 | Theo section | điểm / tối đa |
 | Theo LO | số câu đúng/tổng theo từng LO, mastery hiện tại |
 | Câu sai | câu, lựa chọn của học sinh, đáp án đúng, explanation, phản hồi theo phương án đã chọn (theo `feedback_timing`/`result_release`) |
-| Mẫu lỗi | phân loại lỗi phổ biến nếu option sai có `misconception_tag` (vd. "nhầm nhân với cộng") [Proposed] |
+| Mẫu lỗi | phân loại lỗi phổ biến nếu option sai có `misconception_tag` (vd. "nhầm nhân với cộng") [Confirmed] |
 | Đề xuất ôn tập | 1–3 LO yếu nhất → link Practice (SelectionRule `prefer_weak_objectives`), lesson tương ứng, quest liên quan |
 
 Quy tắc đề xuất (chi tiết [LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules)): LO có tỉ lệ đúng trong đề < 60% **và** mastery < `proficient`; ưu tiên LO tiên quyết của LO sai nếu LO tiên quyết cũng yếu.
@@ -221,7 +221,7 @@ Mã lỗi: `EXAM_NOT_OPEN`, `EXAM_WINDOW_CLOSED`, `EXAM_TIME_OVER`, `EXAM_ALREAD
 | Kéo dài thời gian | Deadline server, từ chối answer sau grace |
 | Lộ đề cho bạn chưa làm | Nhiều variant, shuffle, `after_close` |
 | Nhờ người khác làm | Không phát hiện được hoàn toàn bằng kỹ thuật (không proctoring, OQ-18); ghi `client_platform`, `game_session_id`, IP hash để nhà trường đối chiếu khi cần |
-| Tốc độ bất thường | Cờ `suspicious_speed` (ANTI_CHEAT); cờ `rapid_guess` loại evidence khỏi mastery ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed)) |
+| Tốc độ bất thường | Cờ `suspicious_speed` (ANTI_CHEAT); cờ `rapid_guess` loại evidence khỏi mastery ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed)) |
 | Mở nhiều thiết bị cùng lúc | Một attempt chỉ có một `active_device_token`; thiết bị thứ hai nhận `EXAM_ACTIVE_ON_OTHER_DEVICE` và có thể "chuyển sang thiết bị này" (vô hiệu thiết bị cũ, audit) |
 
 Kết quả thi lưu bền vững trong PostgreSQL, không phụ thuộc Valkey (ADR-0004); backup theo [BACKUP_RECOVERY](../11-operations/BACKUP_RECOVERY.md).

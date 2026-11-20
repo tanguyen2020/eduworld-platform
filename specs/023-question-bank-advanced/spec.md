@@ -7,20 +7,20 @@
 
 ### Session 2026-11-16
 
-- Q: Fuzzy match "không áp dụng cho môn Tiếng Việt/Tiếng Anh chính tả" — chặn hay chỉ cảnh báo? → A: Chặn khi lưu câu thuộc môn `vietnamese` hoặc `english` có `fuzzy.enabled = true` [Proposed] — đơn giản, kiểm được, tránh chấm sai chính tả ([QUESTION_BANK §4](../../docs/02-learning/QUESTION_BANK.md#4-chuẩn-hóa-văn-bản-tiếng-việt-match--normalized) bước 7).
+- Q: Fuzzy match "không áp dụng cho môn Tiếng Việt/Tiếng Anh chính tả" — chặn hay chỉ cảnh báo? → A: Chặn khi lưu câu thuộc môn `vietnamese` hoặc `english` có `fuzzy.enabled = true` [Confirmed] — đơn giản, kiểm được, tránh chấm sai chính tả ([QUESTION_BANK §4](../../docs/02-learning/QUESTION_BANK.md#4-chuẩn-hóa-văn-bản-tiếng-việt-match--normalized) bước 7).
 - Q: Loại nào được tham số hóa? → A: `single_choice` và `numeric` — hai loại `question.schema.json` cho phép `params`.
-- Q: Widget `interactive` đầu tiên? → A: `balance_scale` phiên bản `1.0`, validator `balance_scale.equal` theo ví dụ [QUESTION_BANK §3.11](../../docs/02-learning/QUESTION_BANK.md#311-interactive--câu-hỏi-tương-tác--mô-phỏng) [Proposed]; widget mới là release kỹ thuật (validator Go + scene Godot ở F063).
+- Q: Widget `interactive` đầu tiên? → A: `balance_scale` phiên bản `1.0`, validator `balance_scale.equal` theo ví dụ [QUESTION_BANK §3.11](../../docs/02-learning/QUESTION_BANK.md#311-interactive--câu-hỏi-tương-tác--mô-phỏng) [Confirmed]; widget mới là release kỹ thuật (validator Go + scene Godot ở F063).
 
 ### Session 2026-11-19 (triển khai)
 
-- OQ F023-1: Bố cục package khác plan: handler 3 loại mới ở `internal/domain/question/advanced.go` (không có thư mục `types/`, như OQ F022-2), hình học (tròn, chữ nhật, đa giác even-odd, kiểm tự cắt) nằm trong handler `image_based`; `expr`, `params`, `widget` là package riêng; Levenshtein và chuẩn hóa tiếng Anh dùng lại `normalize` của F022 (đã có). → [Proposed].
-- OQ F023-2: Registry đủ 11 loại là `question.Full()`; `question.Base()` (8 loại) vẫn trả `TYPE_NOT_ENABLED` cho 3 loại mới (F022-AC-02 kiểm ở domain). Binary chưa nối (OQ F020-3) nên môi trường test dùng `Full()`. → [Proposed].
-  - 2026-11-20 [Proposed]: binary đã nối theo OQ F010-2 (specs/010-tenant-org-structure/spec.md, phiên "nối binary"): `module.go` của module khai báo route/relay/consumer/job, `cmd/internal/wiring.Compose` ghép module.
-- OQ F023-3: Chặn fuzzy theo môn áp cho mọi đáp án chữ có `fuzzy.enabled = true` trong `answer_key` (`short_answer` và các chỗ trống `fill_in_blank`), theo mã môn `vietnamese`, `english` của danh mục. → [Proposed].
-- OQ F023-4: `choice` của `params` chỉ nhận giá trị số (biến chữ không dùng được trong biểu thức) [Proposed]; số thập phân hiển thị tối đa 6 chữ số sau dấu phẩy; `presentation.params` lưu chuỗi thập phân dấu chấm. `Registry.GradeIn(content, presentation, response)` chấm theo giá trị của presentation (sinh lại từ `seed` nếu `params` trống); `Delivery.Grade` và preview (F027) dùng nó. → [Proposed].
-- OQ F023-5: `interactive` — action log theo `interactiveResponse` (`{t_ms, action, args}`; `balance_scale`: `place`/`remove` với `args.w`), `state` là `{right_weights}`; mỗi quả cân có sẵn dùng tối đa một lần; `balance_scale.equal` so tổng đĩa phải với `params.target` (mặc định tổng đĩa trái). Lệch phát lại → điểm 0 + `GradeResult.integrity_mismatch` + metric `eduworld_qb_interactive_integrity_mismatch_total{widget}`; lưu tín hiệu gian lận thuộc F030/F031. → [Proposed].
-- OQ F023-6: `image_based` thêm `render_payload.max_selections.maximum = 10` (khớp tối đa 10 điểm của response) và `answer_key.placements.maxProperties = 16`; chạm nhiều lần cùng một vùng tính một lần; với `partial/proportional` hotspot cho điểm theo phần vùng trúng khi không vượt `max_selections`. Ảnh phải nằm trong `media_refs` của version (kiểm có thật/`ready` thuộc F027/F025). → [Proposed].
-- OQ F023-7: Test tích hợp đặt phẳng `tests/integration/question_advanced_test.go`; benchmark T031 chưa viết (đo khi F030 cần). → [Proposed].
+- OQ F023-1: Bố cục package khác plan: handler 3 loại mới ở `internal/domain/question/advanced.go` (không có thư mục `types/`, như OQ F022-2), hình học (tròn, chữ nhật, đa giác even-odd, kiểm tự cắt) nằm trong handler `image_based`; `expr`, `params`, `widget` là package riêng; Levenshtein và chuẩn hóa tiếng Anh dùng lại `normalize` của F022 (đã có). → [Confirmed].
+- OQ F023-2: Registry đủ 11 loại là `question.Full()`; `question.Base()` (8 loại) vẫn trả `TYPE_NOT_ENABLED` cho 3 loại mới (F022-AC-02 kiểm ở domain). Binary chưa nối (OQ F020-3) nên môi trường test dùng `Full()`. → [Confirmed].
+  - 2026-11-20 [Confirmed]: binary đã nối theo OQ F010-2 (specs/010-tenant-org-structure/spec.md, phiên "nối binary"): `module.go` của module khai báo route/relay/consumer/job, `cmd/internal/wiring.Compose` ghép module.
+- OQ F023-3: Chặn fuzzy theo môn áp cho mọi đáp án chữ có `fuzzy.enabled = true` trong `answer_key` (`short_answer` và các chỗ trống `fill_in_blank`), theo mã môn `vietnamese`, `english` của danh mục. → [Confirmed].
+- OQ F023-4: `choice` của `params` chỉ nhận giá trị số (biến chữ không dùng được trong biểu thức) [Confirmed]; số thập phân hiển thị tối đa 6 chữ số sau dấu phẩy; `presentation.params` lưu chuỗi thập phân dấu chấm. `Registry.GradeIn(content, presentation, response)` chấm theo giá trị của presentation (sinh lại từ `seed` nếu `params` trống); `Delivery.Grade` và preview (F027) dùng nó. → [Confirmed].
+- OQ F023-5: `interactive` — action log theo `interactiveResponse` (`{t_ms, action, args}`; `balance_scale`: `place`/`remove` với `args.w`), `state` là `{right_weights}`; mỗi quả cân có sẵn dùng tối đa một lần; `balance_scale.equal` so tổng đĩa phải với `params.target` (mặc định tổng đĩa trái). Lệch phát lại → điểm 0 + `GradeResult.integrity_mismatch` + metric `eduworld_qb_interactive_integrity_mismatch_total{widget}`; lưu tín hiệu gian lận thuộc F030/F031. → [Confirmed].
+- OQ F023-6: `image_based` thêm `render_payload.max_selections.maximum = 10` (khớp tối đa 10 điểm của response) và `answer_key.placements.maxProperties = 16`; chạm nhiều lần cùng một vùng tính một lần; với `partial/proportional` hotspot cho điểm theo phần vùng trúng khi không vượt `max_selections`. Ảnh phải nằm trong `media_refs` của version (kiểm có thật/`ready` thuộc F027/F025). → [Confirmed].
+- OQ F023-7: Test tích hợp đặt phẳng `tests/integration/question_advanced_test.go`; benchmark T031 chưa viết (đo khi F030 cần). → [Confirmed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -94,7 +94,7 @@ Biên tập viên viết "{{a}} × {{b}} = ?" với ràng buộc; mỗi lượt 
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F023-AC-14 | KHI lưu câu có `params` (chỉ `single_choice`, `numeric`), HỆ THỐNG PHẢI kiểm tên biến, kiểu (`int`, `decimal`, `choice`), `min ≤ max`, `step > 0`, mọi `{{biến}}` trong đề/phương án/đáp án đã khai báo, mọi ràng buộc và biểu thức đáp án parse được bằng evaluator an toàn, và tồn tại ít nhất một bộ giá trị thỏa ràng buộc; vi phạm PHẢI trả `422 VALIDATION_FAILED` | FR-QB-008 · [QUESTION_BANK §5](../../docs/02-learning/QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-proposed) | — |
+| F023-AC-14 | KHI lưu câu có `params` (chỉ `single_choice`, `numeric`), HỆ THỐNG PHẢI kiểm tên biến, kiểu (`int`, `decimal`, `choice`), `min ≤ max`, `step > 0`, mọi `{{biến}}` trong đề/phương án/đáp án đã khai báo, mọi ràng buộc và biểu thức đáp án parse được bằng evaluator an toàn, và tồn tại ít nhất một bộ giá trị thỏa ràng buộc; vi phạm PHẢI trả `422 VALIDATION_FAILED` | FR-QB-008 · [QUESTION_BANK §5](../../docs/02-learning/QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-confirmed) | — |
 | F023-AC-15 | HỆ THỐNG PHẢI chỉ cho evaluator dùng số, biến đã khai báo, `+ − × ÷ ^`, so sánh, phép logic và/hoặc/phủ định và ngoặc; mọi định danh hoặc lời gọi hàm khác PHẢI bị từ chối khi lưu | FR-QB-008 | — |
 | F023-AC-16 | KHI tạo `Presentation` với một seed, HỆ THỐNG PHẢI sinh bộ giá trị thỏa ràng buộc, tái lập với cùng seed, lưu vào `presentation.params`, và thay giá trị vào đề, phương án trước khi trả cho client (định dạng số theo `content_language`) | FR-QB-008 | TC-LRN-003 |
 | F023-AC-17 | KHI chấm câu tham số hóa, HỆ THỐNG PHẢI tính đáp án bằng evaluator trên `presentation.params` rồi áp quy tắc chấm của loại (dung sai `numeric`) | FR-QB-008 · FR-QB-006 | TC-LRN-003 |
@@ -121,7 +121,7 @@ Các loại mới đi qua cùng API CMS của F022 nên phải giữ nguyên ph�
 
 - NẾU `short_answer` có hai đáp án chấp nhận trùng sau chuẩn hóa, THÌ lưu được, chấm như một (F023-AC-02).
 - NẾU học sinh chạm đúng hai lần vào cùng một vùng, THÌ tính một lần trúng (F023-AC-07).
-- NẾU đa giác tự cắt, THÌ vẫn dùng even-odd, validator cảnh báo bằng lỗi `422` khi cạnh tự cắt [Proposed] (F023-AC-05).
+- NẾU đa giác tự cắt, THÌ vẫn dùng even-odd, validator cảnh báo bằng lỗi `422` khi cạnh tự cắt [Confirmed] (F023-AC-05).
 - NẾU ràng buộc tham số chỉ thỏa với rất ít bộ giá trị, THÌ kiểm khả thi khi lưu theo số lần thử tối đa; không tìm được → `422` (F023-AC-14).
 - NẾU phép chia trong biểu thức gặp mẫu 0 khi sinh, THÌ coi bộ giá trị đó không thỏa và sinh lại (F023-AC-16).
 - NẾU widget có phiên bản mới, THÌ câu cũ giữ `widget_version` cũ và vẫn chấm bằng validator phiên bản cũ (F023-AC-09).
@@ -134,7 +134,7 @@ Các loại mới đi qua cùng API CMS của F022 nên phải giữ nguyên ph�
 |---|---|---|
 | FR-QB-001 | `short_answer`, `image_based`, `interactive` (đủ 11 loại cùng F022) | [QUESTION_BANK §3.5, §3.10, §3.11](../../docs/02-learning/QUESTION_BANK.md#3-mười-một-dạng-câu-hỏi) |
 | FR-QB-006 | Chuẩn hóa + fuzzy cho `short_answer`; chuẩn hóa tiếng Anh | [QUESTION_BANK §4](../../docs/02-learning/QUESTION_BANK.md#4-chuẩn-hóa-văn-bản-tiếng-việt-match--normalized) |
-| FR-QB-008 | Tham số hóa: khai báo, evaluator an toàn, sinh theo seed, render, chấm | [QUESTION_BANK §5](../../docs/02-learning/QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-proposed) |
+| FR-QB-008 | Tham số hóa: khai báo, evaluator an toàn, sinh theo seed, render, chấm | [QUESTION_BANK §5](../../docs/02-learning/QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-confirmed) |
 | FR-QB-009 | Registry widget/validator Go, replay `action_log` | [QUESTION_BANK §3.11](../../docs/02-learning/QUESTION_BANK.md#311-interactive--câu-hỏi-tương-tác--mô-phỏng) |
 
 ### Key Entities
@@ -155,7 +155,7 @@ Các loại mới đi qua cùng API CMS của F022 nên phải giữ nguyên ph�
 
 | Ràng buộc | Nguồn |
 |---|---|
-| Không thực thi mã do người soạn viết; không eval tổng quát | [QUESTION_BANK §3.11, §5](../../docs/02-learning/QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-proposed) · AGENTS R5 |
+| Không thực thi mã do người soạn viết; không eval tổng quát | [QUESTION_BANK §3.11, §5](../../docs/02-learning/QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-confirmed) · AGENTS R5 |
 | Đáp án/vùng/biểu thức không ra client | ADR-0016 · AGENTS R6 |
 | Mọi chuỗi/mảng có giới hạn | NFR-MAINT-005 · ADR-0041 |
 | Coverage domain ≥ 70% | NFR-MAINT-003 |
@@ -179,6 +179,6 @@ Các loại mới đi qua cùng API CMS của F022 nên phải giữ nguyên ph�
 
 ## Assumptions
 
-- Danh sách môn áp quy tắc chặn fuzzy theo mã môn `vietnamese`, `english` của danh mục môn (F021) [Proposed].
-- Đa giác tối đa 64 đỉnh, tối đa 20 vùng, tối đa 10 biến và 10 ràng buộc mỗi câu (giới hạn độ dài schema theo ADR-0041, bổ sung vào `question.schema.json`) [Proposed].
-- Widget `balance_scale@1.0` là widget tham chiếu duy nhất ở Release này cho tới khi đội game thêm widget khác [Proposed].
+- Danh sách môn áp quy tắc chặn fuzzy theo mã môn `vietnamese`, `english` của danh mục môn (F021) [Confirmed].
+- Đa giác tối đa 64 đỉnh, tối đa 20 vùng, tối đa 10 biến và 10 ràng buộc mỗi câu (giới hạn độ dài schema theo ADR-0041, bổ sung vào `question.schema.json`) [Confirmed].
+- Widget `balance_scale@1.0` là widget tham chiếu duy nhất ở Release này cho tới khi đội game thêm widget khác [Confirmed].

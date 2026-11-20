@@ -10,7 +10,7 @@
 
 - Go dùng `log/slog` (JSON) + OpenTelemetry SDK (trace + metrics), xuất qua OTel Collector tới **Prometheus** (metrics), **Tempo** (trace), **Loki** (log), hiển thị bằng **Grafana**. Trace lan truyền qua HTTP và NATS.
 - APISIX bật plugin `prometheus` và `opentelemetry`.
-- Error tracking Sentry-compatible (GlitchTip/Sentry tự host) [Proposed].
+- Error tracking Sentry-compatible (GlitchTip/Sentry tự host) [Confirmed].
 - Godot gửi crash/perf telemetry tối giản, không chứa PII, qua `/api/v1/game/telemetry` có rate limit.
 - Tên metric dùng tiền tố `eduworld_*`.
 

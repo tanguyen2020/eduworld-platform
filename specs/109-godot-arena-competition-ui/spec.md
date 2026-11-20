@@ -232,6 +232,6 @@ Học sinh thách đấu một bạn (unranked); bạn nhận lời mời, chấ
 
 ## Assumptions
 
-- [Proposed] Delta contract ở [contracts/README.md §6](contracts/README.md) được owner F105/F106/F107 chấp nhận; trước đó dùng Prism mock + fixture AsyncAPI gắn nhãn MOCK (CODE_PLAN §2), F109 chỉ `Done` với backend thật.
-- [Proposed] Seed thêm một học sinh 7A (cùng khối với `hs.dung.7a`) để kiểm 1v1 khối 6–9 và `ranked_around_me`; nếu chưa có, dùng bot unranked.
+- [Confirmed] Delta contract ở [contracts/README.md §6](contracts/README.md) được owner F105/F106/F107 chấp nhận; trước đó dùng Prism mock + fixture AsyncAPI gắn nhãn MOCK (CODE_PLAN §2), F109 chỉ `Done` với backend thật.
+- [Confirmed] Seed thêm một học sinh 7A (cùng khối với `hs.dung.7a`) để kiểm 1v1 khối 6–9 và `ranked_around_me`; nếu chưa có, dùng bot unranked.
 - `RealtimeClient`, `Clock` (F061/F092) và `QuestionRendererRegistry` (F063) có sẵn.

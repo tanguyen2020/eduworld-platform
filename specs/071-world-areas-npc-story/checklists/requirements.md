@@ -27,6 +27,6 @@
 
 ## Notes
 
-- Lõi phát hành nội dung game đặt ở F071 (F078 thêm workflow/API platform) — cần CODE_PLAN ghi rõ phân định [Proposed].
+- Lõi phát hành nội dung game đặt ở F071 (F078 thêm workflow/API platform) — cần CODE_PLAN ghi rõ phân định [Confirmed].
 - `InstanceAllocator` v0 và presence Valkey là bản tạm có nhãn, F091 thay; không phải mock.
 - DATABASE_DESIGN §2.8a dùng `display_name varchar(128)`/`title varchar(128)` một ngôn ngữ, trái ADR-0056 — task Polish sửa.

@@ -25,7 +25,7 @@ Tài liệu này là **nguồn duy nhất** cho: loại sự kiện live-ops, m�
 |---|---|---|
 | E-1 | Sự kiện làm thế giới **sống động** (trang trí, nhạc, NPC lễ hội, quest mới), không phải cơ chế ép đăng nhập | [Confirmed — Master Prompt §12] |
 | E-2 | **Không phạt mất chuỗi**, không đếm ngược gây áp lực, không thưởng đăng nhập liên tục | [Confirmed] |
-| E-3 | Phần thưởng sự kiện đạt được với nhịp chơi vừa phải (khoảng 3 phiên/tuần); vật phẩm sự kiện **quay lại** ở lần tổ chức sau (không FOMO) | [Proposed] |
+| E-3 | Phần thưởng sự kiện đạt được với nhịp chơi vừa phải (khoảng 3 phiên/tuần); vật phẩm sự kiện **quay lại** ở lần tổ chức sau (không FOMO) | [Confirmed] |
 | E-4 | Sự kiện **không khóa** nội dung học tập theo khối; hoạt động học tập trong sự kiện vẫn là attempt học tập cá nhân bình thường | [Confirmed] |
 | E-5 | Không có pass/season track trả phí, không phần thưởng ngẫu nhiên trả phí | [Confirmed — ADR-0049] |
 | E-6 | Mọi phần thưởng do server cấp, idempotent, đi qua sổ cái (ADR-0049) | [Confirmed] |
@@ -33,7 +33,7 @@ Tài liệu này là **nguồn duy nhất** cho: loại sự kiện live-ops, m�
 
 ## 3. Loại sự kiện
 
-`event_kind` [Proposed]:
+`event_kind` [Confirmed]:
 
 | `event_kind` | Ví dụ | Thời lượng gợi ý | Thành phần thường dùng | Ai tạo |
 |---|---|---|---|---|
@@ -102,21 +102,21 @@ stateDiagram-v2
 ### 5.3. Sửa sự kiện đang chạy
 
 - Sửa chữ, trang trí: publish version mới, áp dụng ngay cho lượt chơi mới.
-- Sửa luật, phần thưởng, lịch kết thúc: version mới có hiệu lực từ **04:00 ICT hôm sau** [Proposed]; tiến độ, điểm sự kiện và mốc đã đạt **không bao giờ bị giảm**.
+- Sửa luật, phần thưởng, lịch kết thúc: version mới có hiệu lực từ **04:00 ICT hôm sau** [Confirmed]; tiến độ, điểm sự kiện và mốc đã đạt **không bao giờ bị giảm**.
 - Rút ngắn `end_at` khi đang chạy chỉ qua dừng khẩn cấp/hủy (có audit).
 
 ## 6. Community goal
 
 | Thuộc tính | Mô tả | Nhãn |
 |---|---|---|
-| `metric` | `correct_answers` (theo môn/LO), `activities_completed`, `quests_completed`, `discoveries_found`, `boss_phases_cleared`, `coop_sessions` | [Proposed] |
-| `scope` | `school` (mặc định), `tenant`, `platform` (khi platform tổ chức; mỗi tenant xem tiến độ chung + đóng góp tenant mình) | [Proposed] |
-| `target` | Ngưỡng tổng; mốc 25/50/75/100% | [Proposed] |
+| `metric` | `correct_answers` (theo môn/LO), `activities_completed`, `quests_completed`, `discoveries_found`, `boss_phases_cleared`, `coop_sessions` | [Confirmed] |
+| `scope` | `school` (mặc định), `tenant`, `platform` (khi platform tổ chức; mỗi tenant xem tiến độ chung + đóng góp tenant mình) | [Confirmed] |
+| `target` | Ngưỡng tổng; mốc 25/50/75/100% | [Confirmed] |
 | Nguồn đóng góp | **Chỉ domain event server đã kiểm chứng** (`activity.graded` qua attempt hợp lệ, `quest.completed`, `world.discovery_found`…); client không gửi số đóng góp | [Confirmed — server-authoritative] |
-| Chống gian lận | Khử trùng theo `source_event_id`; trần đóng góp mỗi học sinh mỗi ngày; bỏ đóng góp từ tài khoản đang bị cờ gian lận ([ANTI_CHEAT](../10-security/ANTI_CHEAT.md)); câu trả lời đúng chỉ tính khi attempt không bị đánh dấu `suspicious_speed` | [Proposed] |
-| Tổng hợp | Đếm nhanh bằng Valkey (`ew:game:cgoal:<goal_id>:<scope_id>`), ghi bền vững bảng đóng góp append-only; tổng chính thức tính lại từ PostgreSQL định kỳ, mất Valkey thì dựng lại | [Proposed] |
-| Hiển thị | Thanh tiến độ lớn trong hub (ví dụ cây đèn lồng sáng dần); mốc đạt được đổi trang trí thế giới cho cả trường; **không xếp hạng cá nhân**; trường có thể xem đóng góp theo lớp (lớp 4–9) | [Proposed] |
-| Phần thưởng | Mọi học sinh trong phạm vi có **≥ 1 đóng góp** nhận phần thưởng mốc khi mốc đạt; không phụ thuộc lượng đóng góp cá nhân | [Proposed] |
+| Chống gian lận | Khử trùng theo `source_event_id`; trần đóng góp mỗi học sinh mỗi ngày; bỏ đóng góp từ tài khoản đang bị cờ gian lận ([ANTI_CHEAT](../10-security/ANTI_CHEAT.md)); câu trả lời đúng chỉ tính khi attempt không bị đánh dấu `suspicious_speed` | [Confirmed] |
+| Tổng hợp | Đếm nhanh bằng Valkey (`ew:game:cgoal:<goal_id>:<scope_id>`), ghi bền vững bảng đóng góp append-only; tổng chính thức tính lại từ PostgreSQL định kỳ, mất Valkey thì dựng lại | [Confirmed] |
+| Hiển thị | Thanh tiến độ lớn trong hub (ví dụ cây đèn lồng sáng dần); mốc đạt được đổi trang trí thế giới cho cả trường; **không xếp hạng cá nhân**; trường có thể xem đóng góp theo lớp (lớp 4–9) | [Confirmed] |
+| Phần thưởng | Mọi học sinh trong phạm vi có **≥ 1 đóng góp** nhận phần thưởng mốc khi mốc đạt; không phụ thuộc lượng đóng góp cá nhân | [Confirmed] |
 
 ## 7. Season và season track
 
@@ -143,10 +143,10 @@ Season track (mốc M3) đọc lịch mùa của module competition qua projecti
 | `coop.completed` | 10 / phiên | Quest/boss co-op |
 | `match.completed` | 5 / trận | Không phụ thuộc thắng/thua |
 
-  Trần **100 điểm mùa/ngày** [Proposed]; nguồn có giá trị bị giảm dần XP vẫn cho điểm mùa theo bảng trên (điểm mùa không thay XP).
-- **Cấp track:** 30 cấp × 100 điểm [Proposed]. Chơi khoảng 4 ngày/tuần trong 8 tuần đạt cấp cuối; 3 ngày/tuần đạt khoảng cấp 24. Không có "mua cấp".
+  Trần **100 điểm mùa/ngày** [Confirmed]; nguồn có giá trị bị giảm dần XP vẫn cho điểm mùa theo bảng trên (điểm mùa không thay XP).
+- **Cấp track:** 30 cấp × 100 điểm [Confirmed]. Chơi khoảng 4 ngày/tuần trong 8 tuần đạt cấp cuối; 3 ngày/tuần đạt khoảng cấp 24. Không có "mua cấp".
 - **Phần thưởng mỗi cấp:** Xu, vật phẩm trang trí theo chủ đề mùa, sticker, khung avatar; cấp 10/20/30 là mốc có danh hiệu/huy hiệu mùa. Không có phần thưởng ảnh hưởng học tập hay sức mạnh thi đấu.
-- **Nhận thưởng:** học sinh bấm nhận ở màn Season Track (nghi thức vui); **khi hết mùa, thưởng chưa nhận được tự cấp** [Proposed].
+- **Nhận thưởng:** học sinh bấm nhận ở màn Season Track (nghi thức vui); **khi hết mùa, thưởng chưa nhận được tự cấp** [Confirmed].
 - **Hết mùa:** điểm mùa về 0; lịch sử cấp đạt được lưu `season_track_progress` (không xóa); vật phẩm mùa có thể quay lại ở mùa sau qua shop/sự kiện (E-3).
 
 ## 8. Daily, weekly
@@ -168,7 +168,7 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 
 - Platform tạo **template sự kiện** (`event-templates`) với `allowed_params` và gán cho tenant (ADR-0029).
 - School Admin/Tenant Admin tạo sự kiện trường ở workspace C (School & Learning Management) chỉ bằng cách điền tham số cho phép: tên (song ngữ: `vi` bắt buộc, `en` tùy chọn), mô tả, ngày bắt đầu/kết thúc (≤ `school_event_max_duration_days`), đối tượng (lớp/khối trong tenant), mục tiêu community goal, chọn quest/challenge **trong danh sách template cho phép**, chọn phần thưởng **trong bộ phần thưởng template cho phép** (thường là huy hiệu trường). Tham số ngoài danh sách → `422`.
-- Văn bản do tenant nhập đi qua kiểm tra từ nhạy cảm (ADR-0030) trước khi lưu [Proposed].
+- Văn bản do tenant nhập đi qua kiểm tra từ nhạy cảm (ADR-0030) trước khi lưu [Confirmed].
 - Tenant không đổi được luật chơi, cách tính điểm, phần thưởng ngoài template (ADR-0027).
 - Tối đa `school_events_concurrent_per_tenant` sự kiện đang chạy mỗi tenant.
 
@@ -182,7 +182,7 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 
 - Trang trí sự kiện dùng **environment preset** và **gói PCK riêng** (`bundle_id`), tải trước trong màn tải khi vào vùng; không thêm shader mới.
 - Ngân sách: gói trang trí ≤ `event_decoration_bundle_max_mb` trên mobile; tổng tam giác/draw call của vùng khi có trang trí vẫn trong ngân sách [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md); preset **Thấp** dùng biến thể trang trí rút gọn.
-- Mỗi vùng tối đa **một** bộ trang trí sự kiện hoạt động cùng lúc [Proposed].
+- Mỗi vùng tối đa **một** bộ trang trí sự kiện hoạt động cùng lúc [Confirmed].
 - Community goal hiển thị bằng một đối tượng 3D đơn giản + UI; cập nhật tiến độ tối đa mỗi `community_goal_progress_flush_seconds`, không đẩy realtime theo từng đóng góp.
 
 ## 13. Dữ liệu (module game, `eduworld_game`)
@@ -270,7 +270,7 @@ Tỷ lệ tham gia sự kiện, tỷ lệ đạt mốc, nhịp tiến độ comm
 
 Test case: [TEST_STRATEGY §6.1](../12-project/TEST_STRATEGY.md) (TC-EVT-001…012).
 
-### Tham số mặc định do tài liệu này sở hữu [Proposed]
+### Tham số mặc định do tài liệu này sở hữu [Confirmed]
 
 | Tham số | Giá trị |
 |---|---|

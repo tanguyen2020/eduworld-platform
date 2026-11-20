@@ -128,7 +128,7 @@ Không có. Thuật toán và tham số đã có ở LEARNING_ANALYTICS §3, §6
 - Metric: `eduworld_learning_hints_revealed_total{mode}`, `eduworld_learning_rapid_guess_total{question_type}`, `eduworld_learning_recommendations_generated_total{rule_code}`, `eduworld_learning_question_pool_insufficient_total`.
 - Span: `StartAdHocAttempt`, `selection.pick`, `RevealNextHint`, `RecomputeStudentRecommendations`.
 
-Ước lượng: 2–3 sprint (backend 2 dev) [Proposed].
+Ước lượng: 2–3 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

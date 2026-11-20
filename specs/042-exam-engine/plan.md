@@ -110,7 +110,7 @@ Không có. Thuật toán sinh đề, deadline, auto-submit, regrade đã địn
 
 ### Bảo mật, tenant, idempotency, audit
 
-- `createExamSession`, `listExamSessionPapers`: `lms.assignment.write` [Proposed]; `listExamSessions`/`getExamSession` (nhân sự): `lms.assignment.read`; `releaseExamResults`: `lms.result.release`; regrade: `learning_content.re_evaluate`; route làm bài: học sinh self + thuộc đối tượng (`AudienceResolver` từ `ref.enrollments`, target snapshot).
+- `createExamSession`, `listExamSessionPapers`: `lms.assignment.write` [Confirmed]; `listExamSessions`/`getExamSession` (nhân sự): `lms.assignment.read`; `releaseExamResults`: `lms.result.release`; regrade: `learning_content.re_evaluate`; route làm bài: học sinh self + thuộc đối tượng (`AudienceResolver` từ `ref.enrollments`, target snapshot).
 - Scope: `school_admin` trường mình; `academic_manager` trường × môn (`PERMISSION_DENIED`); System Admin ghi với `X-Tenant-Id` đích.
 - `Idempotency-Key` bắt buộc: `createExamSession`, `startExamAttempt`, `submitExamAttempt`, `releaseExamResults`, `createRegradeRequest`.
 - Audit: `exam_session.created`, `exam_session.results_released`, `exam_session.cancelled`, `exam_attempt.device_switched`, `content.re_evaluated`.
@@ -121,7 +121,7 @@ Không có. Thuật toán sinh đề, deadline, auto-submit, regrade đã địn
 - Metric: `eduworld_exam_attempts_started_total`, `eduworld_exam_autosubmit_total{reason}`, `eduworld_exam_answer_rejected_total{code}`, `eduworld_exam_grade_duration_seconds`, `eduworld_exam_regrade_attempts_total{action}`.
 - Span: `CreateExamSession`, `paper.generate`, `StartExamAttempt`, `GradeExamAttempt`, `RunExamRegrade`.
 
-Ước lượng: 2–3 sprint (backend 2 dev) [Proposed].
+Ước lượng: 2–3 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

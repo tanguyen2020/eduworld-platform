@@ -94,12 +94,12 @@ Nguyên tắc:
 | | `eduworld_infra_partition_dropped_total`, `eduworld_infra_partition_refused_total` | Counter | `module`, `table` | job `infra-partition-maintenance` — refused = partition hết hạn còn outbox chưa publish / dead letter chưa xử lý |
 | | `eduworld_principal_cache_hits_total` | Counter | `layer` (`l1`/`valkey`), `result` (`hit`/`miss`/`error`) | `src/backend/pkg/authz.CachedResolver` (F002) |
 | | `eduworld_jwks_refresh_total`, `eduworld_auth_tenant_mismatch_total` | Counter | `result` / — | `src/backend/pkg/httpx` (F002) |
-| | `eduworld_moderation_school_notifications_total` | Counter | `status` (sent/acknowledged/overdue) | module chat (`worker-chat`) [Proposed] |
+| | `eduworld_moderation_school_notifications_total` | Counter | `status` (sent/acknowledged/overdue) | module chat (`worker-chat`) [Confirmed] |
 | | `eduworld_reports_total` | Counter | `target_type`, `reason` | module chat |
 | Learning Completion | `eduworld_learning_activities_completed_total` | Counter | `activity_type`, `context` (practice/assignment/quest/competition), `subject`, `grade_band` | module learning |
 | | `eduworld_attempts_submitted_total` | Counter | `mode`, `result` (ok/duplicate/late/rejected) | module learning |
-| | `eduworld_hint_requests_total`, `eduworld_rapid_guess_responses_total` | Counter | `subject`, `grade_band` | module learning [Proposed] |
-| | `eduworld_client_content_download_bytes_total` | Counter | `source` (preinstalled/lan_cache/cdn) | client telemetry → module game [Proposed] ([PERFORMANCE_BUDGET §10.1](../08-game-client/PERFORMANCE_BUDGET.md#101-ngân-sách-phòng-máy-classroom-budget-proposed)) |
+| | `eduworld_hint_requests_total`, `eduworld_rapid_guess_responses_total` | Counter | `subject`, `grade_band` | module learning [Confirmed] |
+| | `eduworld_client_content_download_bytes_total` | Counter | `source` (preinstalled/lan_cache/cdn) | client telemetry → module game [Confirmed] ([PERFORMANCE_BUDGET §10.1](../08-game-client/PERFORMANCE_BUDGET.md#101-ngân-sách-phòng-máy-classroom-budget-confirmed)) |
 | Exam Submission | `eduworld_exam_submissions_total` | Counter | `exam_type`, `result` | module learning |
 | | `eduworld_exam_submit_duration_seconds` | Histogram | `exam_type` | module learning |
 | Database Performance | `pg_stat_database_*`, `pg_stat_statements_*`, `pg_replication_lag_seconds` | — | | postgres_exporter |
@@ -176,7 +176,7 @@ Metric bổ sung:
 
 Dashboard lưu dạng JSON trong `deploy/observability/grafana/dashboards/` (provisioning as code).
 
-## 5. Alert rules — [Proposed]
+## 5. Alert rules — [Confirmed]
 
 Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học" = 06:30–22:00 ICT.
 
@@ -243,7 +243,7 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `KeycloakLoginFailuresSpike` | Login thất bại > 5× baseline trong 10 phút | Warning | Nghi brute-force/IdP lỗi |
 | `JWKSFetchFailing` | Lỗi tải JWKS > 5 phút | Critical | |
 | `SISSyncFailed` | 2 lần sync liên tiếp thất bại cho một connection | Warning | Báo School Admin |
-| `ChatModerationBacklog` | Case `high` chờ > 30 phút | Critical | Báo ca trực Platform Safety Team (ADR-0072); case p1 (grooming, tự hại) theo on-call 24/7 [Proposed] |
+| `ChatModerationBacklog` | Case `high` chờ > 30 phút | Critical | Báo ca trực Platform Safety Team (ADR-0072); case p1 (grooming, tự hại) theo on-call 24/7 [Confirmed] |
 | `ChatPIISpike` | Tỷ lệ PII blocked > 5× baseline 15 phút | Warning | Kiểm tra sự cố/chiến dịch spam |
 | `ChatModerationDisabled` | `eduworld_chat_policy_disabled == 1` cho bất kỳ tenant/bước nào | Warning (ngay khi tắt) | Xác nhận với System Admin đã tắt, kiểm tra lý do và `expires_at` (ADR-0030) |
 | `ChatModerationDisabledLong` | `eduworld_chat_policy_disabled == 1` liên tục > 24 h, hoặc bước `pii` tắt > 4 h | Critical | Báo quản lý vận hành và Tenant Admin; đề xuất bật lại |
@@ -268,7 +268,7 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 
 Alert định nghĩa trong `deploy/observability/prometheus/rules/*.yaml`, mỗi alert có `runbook_url` trỏ tới runbook trong `docs/11-operations/runbooks/`; biên bản diễn tập alert lưu ở `docs/11-operations/alert-drills/` ([DEPLOYMENT §15](DEPLOYMENT.md)). Prometheus scrape mỗi task qua cổng quản trị `EW_ADMIN_ADDR` (`tasks.<swarm-service>:9090`, [DEPLOYMENT §14](DEPLOYMENT.md)). Probe synthetic chạy bằng tài khoản `hs.qa.probe` trong tenant QA (`is_qa = true`); số liệu của tenant QA bị loại khỏi analytics và dashboard ([GAME_ANALYTICS](GAME_ANALYTICS.md), [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)).
 
-## 6. SLO — [Proposed], phụ thuộc OQ-11
+## 6. SLO — [Confirmed], phụ thuộc OQ-11
 
 | SLO | SLI | Mục tiêu | Cửa sổ |
 |---|---|---|---|
@@ -289,7 +289,7 @@ Error budget hết → đóng băng tính năng mới, ưu tiên ổn định.
 - OTel SDK Go (qua `src/backend/pkg/otel`): span cho HTTP handler, command/query handler (`<module>.command.<Name>`, `<module>.query.<Name>`, ADR-0038), truy vấn DB (pgx tracer dưới ent), Valkey, lời gọi facade sang module khác (span `<caller>→<callee>.<operationId>` do `src/backend/pkg/modcall` mở, cùng trace, ADR-0074), NATS request/reply và publish/consume JetStream (`traceparent` trong header message; consumer tạo span con hoặc link tới span publish), lời gọi SIS/Keycloak.
 - Tempo bật **service graph** (từ span client/server, span `modcall` và producer/consumer) để vẽ dashboard Module Map.
 - Saga liên module có một trace gốc; mỗi bước gắn thuộc tính `saga.id`, `saga.step`.
-- Sampling: 100% ở local/dev; staging/prod: head sampling 10% + tail sampling ở collector giữ 100% trace lỗi và trace > 1s [Proposed].
+- Sampling: 100% ở local/dev; staging/prod: head sampling 10% + tail sampling ở collector giữ 100% trace lỗi và trace > 1s [Confirmed].
 - Realtime: span cho `ws.connect`, mỗi message type quan trọng (`battle.answer.submit`, `party.start`), **không** span cho từng gói position sync (chỉ metric).
 - Thuộc tính span không chứa PII: dùng `enduser.pseudo_id` (hash có salt của user_id) thay vì user_id khi cần tương quan; nội dung tin nhắn/câu trả lời không bao giờ vào span.
 
@@ -303,11 +303,11 @@ Error budget hết → đóng băng tính năng mới, ưu tiên ổn định.
 | Redaction | Middleware loại bỏ header nhạy cảm; collector có processor `redaction` chặn pattern token/JWT/email/SĐT như lớp phòng thủ thứ hai |
 | Định danh | Dùng `user_id` (UUID nội bộ) trong log ứng dụng khi cần điều tra; Loki giới hạn quyền truy cập theo vai trò vận hành, truy vấn production được audit |
 | Retention | App log 14 ngày (pilot) / 30 ngày; audit log nghiệp vụ nằm trong PostgreSQL (`audit.audit_logs`), không phụ thuộc Loki |
-| APISIX access log | Bỏ query string của `/realtime/v1` (chứa ticket), IP lưu dạng rút gọn /24 sau 7 ngày [Proposed] |
+| APISIX access log | Bỏ query string của `/realtime/v1` (chứa ticket), IP lưu dạng rút gọn /24 sau 7 ngày [Confirmed] |
 
 ## 9. Error tracking
 
-- Self-host GlitchTip hoặc Sentry (ADR-0023, [Proposed]) — dữ liệu ở cùng vùng lưu trữ với production (DATA_PRIVACY §5).
+- Self-host GlitchTip hoặc Sentry (ADR-0023, [Confirmed]) — dữ liệu ở cùng vùng lưu trữ với production (DATA_PRIVACY §5).
 - Backend gửi panic đã recover và lỗi 5xx không mong đợi kèm `trace_id`; tắt gửi request body, `send_default_pii=false`.
 - Godot: crash report + log ngắn (không PII) qua endpoint telemetry; ghép theo `client_version`, `platform`, `device_tier`.
 - Mỗi issue mới ở production tạo ticket tự động cho đội sở hữu module (theo thẻ `module`).
@@ -316,6 +316,6 @@ Error budget hết → đóng băng tính năng mới, ưu tiên ổn định.
 
 - Endpoint `POST /api/v1/game/telemetry` (batch, gzip, rate limit 1 req/30s/session).
 - Nội dung: FPS percentile, frame time, thời gian load scene, RAM, device tier (low/mid/high theo phân loại nội bộ), lỗi script. **Không** gửi vị trí GPS, danh sách app, định danh thiết bị phần cứng.
-- Học sinh/trường có thể tắt telemetry không thiết yếu theo policy [Proposed].
+- Học sinh/trường có thể tắt telemetry không thiết yếu theo policy [Confirmed].
 - module game tách payload: lỗi script/crash (stack trace đã scrub) → error tracking (§9); sự kiện sản phẩm (`screen_view`, `tutorial_step`) và mẫu hiệu năng (`perf_sample`, `load_time`) → analytics consumer. Danh mục `type` và thuộc tính: [GAME_ANALYTICS §3.2](GAME_ANALYTICS.md#32-nguồn-client-telemetry-post-apiv1gametelemetry).
-- Metric pipeline analytics (theo dõi ngưỡng chuyển kho phân tích riêng, ADR-0058): `eduworld_analytics_raw_rows`, `eduworld_analytics_rollup_duration_seconds`, `eduworld_analytics_query_duration_seconds`, `eduworld_analytics_consumer_lag`. Alert [Proposed]: rollup ngày > 2 giờ; consumer lag > 10.000 event (dùng chung ngưỡng `EventConsumerLag`).
+- Metric pipeline analytics (theo dõi ngưỡng chuyển kho phân tích riêng, ADR-0058): `eduworld_analytics_raw_rows`, `eduworld_analytics_rollup_duration_seconds`, `eduworld_analytics_query_duration_seconds`, `eduworld_analytics_consumer_lag`. Alert [Confirmed]: rollup ngày > 2 giờ; consumer lag > 10.000 event (dùng chung ngưỡng `EventConsumerLag`).

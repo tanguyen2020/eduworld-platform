@@ -30,7 +30,7 @@ Nguyên tắc bắt buộc:
 | `frame` | Khung avatar | `frame` |
 | `decoration` | Đồ trang trí cho góc cá nhân/khu nhà (nếu có) | — |
 | `knowledge_card` | Thẻ kiến thức sưu tầm (tóm tắt ngắn một LO) | — |
-| `consumable_cosmetic` | Hiệu ứng tạm thời (pháo hoa khi lên cấp…) | — [Proposed, không bắt buộc] |
+| `consumable_cosmetic` | Hiệu ứng tạm thời (pháo hoa khi lên cấp…) | — [Confirmed, không bắt buộc] |
 
 Không có vật phẩm tiêu hao tăng sức mạnh, tăng XP hay bỏ qua bài học.
 
@@ -58,7 +58,7 @@ Vật phẩm là nội dung platform (Game Studio, ADR-0027); có thể gán cho
 
 | Tiền | Kiếm từ | Dùng cho | Nhãn |
 |---|---|---|---|
-| **Xu** | Quest, challenge, boss, achievement, lên cấp, sự kiện (theo reward rule) | Mua cosmetic trong Shop | [Proposed] ADR-0049 |
+| **Xu** | Quest, challenge, boss, achievement, lên cấp, sự kiện (theo reward rule) | Mua cosmetic trong Shop | [Confirmed] ADR-0049 |
 | "Ngọc" hoặc tiền thứ hai | — | — | [TBD] OQ-14; không tạo khi chưa có quyết định |
 
 Xu **không** mua được bằng tiền thật và **không** đổi ra tiền thật.
@@ -72,7 +72,7 @@ Xu **không** mua được bằng tiền thật và **không** đổi ra tiền 
 
 ### 4.3. Giới hạn kiếm Xu
 
-Tài liệu này **sở hữu** cap Xu: **300 Xu/ngày** [Proposed] (`currencies.daily_cap`), áp cùng cơ chế giảm dần khi lặp nội dung như XP ([PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.2); phát hiện lạm dụng ở [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) §7. Mục tiêu: một món cosmetic phổ biến cần vài ngày chơi bình thường, không cần chơi dài.
+Tài liệu này **sở hữu** cap Xu: **300 Xu/ngày** [Confirmed] (`currencies.daily_cap`), áp cùng cơ chế giảm dần khi lặp nội dung như XP ([PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.2); phát hiện lạm dụng ở [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) §7. Mục tiêu: một món cosmetic phổ biến cần vài ngày chơi bình thường, không cần chơi dài.
 
 ## 5. Shop và danh mục phần thưởng
 
@@ -136,7 +136,7 @@ sequenceDiagram
 
 ### 6.3. Trùng lặp
 
-Nhận lại món đã có (không xếp chồng): quy đổi Xu theo độ hiếm [Proposed: common 5, uncommon 10, rare 25, epic 50, legendary 100], ghi rõ trong thông báo.
+Nhận lại món đã có (không xếp chồng): quy đổi Xu theo độ hiếm [Confirmed: common 5, uncommon 10, rare 25, epic 50, legendary 100], ghi rõ trong thông báo.
 
 ### 6.4. Trao đổi (trading)
 
@@ -156,7 +156,7 @@ Nhận lại món đã có (không xếp chồng): quy đổi Xu theo độ hi�
 | `tiers[]` | Tùy chọn: đồng/bạc/vàng theo ngưỡng |
 
 Quy tắc:
-- Achievement học tập dựa trên **mastery/hoàn thành**, không dựa trên thời gian chơi hay số lần đăng nhập [Proposed, [GAME_DESIGN](GAME_DESIGN.md) §12].
+- Achievement học tập dựa trên **mastery/hoàn thành**, không dựa trên thời gian chơi hay số lần đăng nhập [Confirmed, [GAME_DESIGN](GAME_DESIGN.md) §12].
 - Achievement xã hội chỉ dựa trên hành vi tích cực (giúp bạn trong co-op), không dựa trên số tin nhắn.
 - Đánh giá bởi consumer `achievement-evaluator` trong module game, idempotent theo `(student_id, achievement_id, tier)`.
 - Đổi điều kiện bằng version mới: tiến độ đã đạt không bị giảm; học sinh đã mở khóa giữ nguyên.
@@ -195,7 +195,7 @@ Chi tiết: [DATABASE_DESIGN §2.8a](../07-backend/DATABASE_DESIGN.md).
 | GET | `/game/collections/{collection_id}` | Chi tiết, cách nhận từng món | T |
 | GET | `/game/achievements` | Thành tựu + tiến độ (đã có) | T |
 
-Cấu hình (`/api/v1/game-admin/{config_type}`): `items`, `currencies`, `shop-items`, `collections`, `achievements`, `reward-rules`. Điều chỉnh số dư/vật phẩm (bút toán bù): `POST /api/v1/admin/economy/adjustments` (System Admin, lý do bắt buộc, four-eyes [Proposed]).
+Cấu hình (`/api/v1/game-admin/{config_type}`): `items`, `currencies`, `shop-items`, `collections`, `achievements`, `reward-rules`. Điều chỉnh số dư/vật phẩm (bút toán bù): `POST /api/v1/admin/economy/adjustments` (System Admin, lý do bắt buộc, four-eyes [Confirmed]).
 
 ## 10. Event
 

@@ -10,8 +10,8 @@
 - Q: Backend sticker/GIF đã có chưa? → A: Có — F118 (module chat, `game-admin/{sticker-packs|gifs}` qua `x-service-routing`, kiểm tệp, duyệt, version). Presign asset chat và JSON Schema payload là delta owner F118 ([contracts](contracts/README.md) §6); F082 tạo contract nếu F118 chưa làm, không viết lại backend.
 - Q: Backend dịch nội dung game thuộc feature nào? → A: Chưa có (F078 ghi ngoài phạm vi). F082 hiện thực trong module game: `exportGameTranslations`, `importGameTranslations`, `getGameTranslationJob` (contract có sẵn) và tính `translation_status` khi lưu draft.
 - Q: File dịch có gồm sticker/GIF không? → A: Không — `TranslationExportRequest.content_types` là `config_type` của module game; tên pack, alt text, tag GIF soạn song ngữ trực tiếp trong form.
-- Q: Ngôn ngữ gốc của văn bản game? → A: [Proposed] `vi` (ADR-0056 mục 1); cả `vi` và `en` bắt buộc trước khi gửi duyệt (`game_text_required_languages`).
-- Q: File nhập dịch upload thế nào? → A: [Proposed] `presignGameMediaUpload` với `kind = document` (XLIFF/CSV); file không gắn `media_usages`, không phát hành CDN.
+- Q: Ngôn ngữ gốc của văn bản game? → A: [Confirmed] `vi` (ADR-0056 mục 1); cả `vi` và `en` bắt buộc trước khi gửi duyệt (`game_text_required_languages`).
+- Q: File nhập dịch upload thế nào? → A: [Confirmed] `presignGameMediaUpload` với `kind = document` (XLIFF/CSV); file không gắn `media_usages`, không phát hành CDN.
 - Q: Nhập dịch khi item đã có version mới hơn version trong khóa? → A: Bỏ dòng, báo `stale_version` ([research](research.md) R2).
 
 ## User Scenarios & Testing *(bắt buộc)*
@@ -141,7 +141,7 @@ Người dịch xuất 120 quest/NPC dialogue cần dịch ra XLIFF 2.1, gửi �
 | Tham số (CONFIG_DEFAULTS) | Dùng để |
 |---|---|
 | `game_text_required_languages` | Ngôn ngữ bắt buộc của văn bản game khi tính trạng thái/khóa gửi duyệt |
-| `report_link_ttl` | [Proposed] Thời hạn link tải file dịch (dùng chung với link báo cáo) |
+| `report_link_ttl` | [Confirmed] Thời hạn link tải file dịch (dùng chung với link báo cáo) |
 | `idempotency_record_ttl` | Thời gian giữ kết quả `Idempotency-Key` của job |
 | `portal_session_sso` | Phiên platform, step-up MFA |
 
@@ -176,7 +176,7 @@ Người dịch xuất 120 quest/NPC dialogue cần dịch ra XLIFF 2.1, gửi �
 
 ## Assumptions
 
-- [Proposed] Route `/game-ops/chat-assets/sticker-packs`, `/game-ops/chat-assets/gifs`, `/game-ops/translations` trong chunk `game-ops` (F051).
-- [Proposed] Duyệt sticker/GIF dùng `game.chat_assets.write` (người khác tác giả) theo ADMIN_PORTAL §3.3; publish theo bảng quyền của F118.
-- [Proposed] Thời hạn link tải dùng `report_link_ttl`; file kết quả giữ theo cấu hình bucket `ew-exports` (đề xuất đăng ký tham số riêng cho file dịch ở Polish).
-- [Proposed] Component dialog dịch của F053 (`TranslationExportDialog`, `TranslationImportDialog`) được tách phần trình bày sang `ops-ui` để workspace A dùng lại.
+- [Confirmed] Route `/game-ops/chat-assets/sticker-packs`, `/game-ops/chat-assets/gifs`, `/game-ops/translations` trong chunk `game-ops` (F051).
+- [Confirmed] Duyệt sticker/GIF dùng `game.chat_assets.write` (người khác tác giả) theo ADMIN_PORTAL §3.3; publish theo bảng quyền của F118.
+- [Confirmed] Thời hạn link tải dùng `report_link_ttl`; file kết quả giữ theo cấu hình bucket `ew-exports` (đề xuất đăng ký tham số riêng cho file dịch ở Polish).
+- [Confirmed] Component dialog dịch của F053 (`TranslationExportDialog`, `TranslationImportDialog`) được tách phần trình bày sang `ops-ui` để workspace A dùng lại.

@@ -9,15 +9,15 @@
 
 - Q: Manifest do ai dựng? → A: Bảng `game.content_manifests` và `getContentManifest` thuộc module `game` (DATABASE_DESIGN §3.13, F014). F026 phát `content.*` đủ trường và thêm consumer `game.manifest_on_learning_content` gộp mục nội dung học tập vào manifest.
 - Q: Hẹn giờ publish lưu ở đâu khi `content_releases` là append-only? → A: Bảng mới `content.scheduled_publications`; dòng `content_releases` chỉ ghi khi con trỏ thực sự đổi.
-- Q: "Nơi sử dụng" gồm tham chiếu từ quest/challenge (module game)? → A: F026 trả tham chiếu trong module `learning` (question set, lesson, activity, bài giao, exam session); tham chiếu từ nội dung game do F078 bổ sung (projection) [Proposed].
+- Q: "Nơi sử dụng" gồm tham chiếu từ quest/challenge (module game)? → A: F026 trả tham chiếu trong module `learning` (question set, lesson, activity, bài giao, exam session); tham chiếu từ nội dung game do F078 bổ sung (projection) [Confirmed].
 
 ### Session 2026-11-20 (triển khai)
 
-- Q: Game biết tenant đích của item platform thế nào khi không đọc được DB learning? → A: Payload `content.published/rolled_back/unpublished` mang `tenant_ids` (tenant sở hữu hoặc mọi tenant được gán lúc phát, đọc qua `tenancy.Bypass(platform_job)`); gán mới sau khi publish chưa cập nhật manifest (theo dõi ở F045/F078) [Proposed].
-- Q: Khóa hàng khi publish song song? → A: Optimistic theo `version` của item/version (`409 CONTENT_VERSION_CONFLICT`); job hẹn giờ dùng `version` của lịch hẹn để hai worker không áp dụng trùng [Proposed].
+- Q: Game biết tenant đích của item platform thế nào khi không đọc được DB learning? → A: Payload `content.published/rolled_back/unpublished` mang `tenant_ids` (tenant sở hữu hoặc mọi tenant được gán lúc phát, đọc qua `tenancy.Bypass(platform_job)`); gán mới sau khi publish chưa cập nhật manifest (theo dõi ở F045/F078) [Confirmed].
+- Q: Khóa hàng khi publish song song? → A: Optimistic theo `version` của item/version (`409 CONTENT_VERSION_CONFLICT`); job hẹn giờ dùng `version` của lịch hẹn để hai worker không áp dụng trùng [Confirmed].
 - Q: Rollback/unpublish ai được làm? → A: rollback `content.release.rollback` (System Admin, liveops theo catalog role); unpublish `learning_content.publish`.
-- Q: Nội dung riêng tenant lên CDN? → A: Không; chỉ nội dung platform không phải đề kiểm tra (`cdn_eligible`) lên `ew-media-public`; còn lại phục vụ qua API [Proposed].
-- Q: `active_pinned_sessions`, nơi sử dụng ngoài question set? → A: 0 và chỉ question set cho tới F030/F041/F042 [Proposed].
+- Q: Nội dung riêng tenant lên CDN? → A: Không; chỉ nội dung platform không phải đề kiểm tra (`cdn_eligible`) lên `ew-media-public`; còn lại phục vụ qua API [Confirmed].
+- Q: `active_pinned_sessions`, nơi sử dụng ngoài question set? → A: 0 và chỉ question set cho tới F030/F041/F042 [Confirmed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -222,5 +222,5 @@ TTL trượt của snapshot Valkey (ADR-0043 mục 6) chưa có tên trong CONFI
 ## Assumptions
 
 - Consumer manifest trong module game phụ thuộc F014 Done (bảng + endpoint) → đề xuất thêm F014 vào phụ thuộc của F026.
-- `min_client_version` của mỗi `activity_type` khai báo trong metadata plugin Activity Registry (F030) và được đưa vào payload `content.published` [Proposed]; F026 làm trước F030 nên dùng bảng metadata tĩnh cho `quiz`/`interactive_exercise` tới khi registry có.
+- `min_client_version` của mỗi `activity_type` khai báo trong metadata plugin Activity Registry (F030) và được đưa vào payload `content.published` [Confirmed]; F026 làm trước F030 nên dùng bảng metadata tĩnh cho `quiz`/`interactive_exercise` tới khi registry có.
 - Nội dung riêng tenant lên CDN qua bucket `ew-media-private` + signed URL; nội dung platform không nhạy cảm qua `ew-media-public` (ADR-0044).

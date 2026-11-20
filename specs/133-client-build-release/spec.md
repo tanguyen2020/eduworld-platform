@@ -9,8 +9,8 @@
 
 - Q: ADR-0079 đề xuất bản đầu chỉ Windows + Android — có thu hẹp phạm vi? → A: Không. ADR-0079 bị Rejected (2026-11-17); giữ 4 nền tảng theo ADR-0013.
 - Q: GODOT_ARCHITECTURE §11 còn intent filter `oauth2/callback` (Android) và "redirect OIDC cùng tab" (Web)? → A: Đã gỡ theo ADR-0068 (CODE_PLAN D16): build không có intent filter OAuth, không redirect OIDC; task tài liệu sửa §11.
-- Q: Windows phân phối qua Microsoft Store hay installer? → A: Installer ký Authenticode tải qua CDN + kênh phần mềm quản lý phòng máy ([DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md)); Microsoft Store không làm trong Release 1.0 [Proposed].
-- Q: Tải trước ngoài giờ không có đăng nhập học sinh thì biết tải gì? → A: Từ chỉ mục gói công khai có chữ ký trên CDN theo `client_version` (vùng thế giới, không theo tenant) + media công khai đã có trong manifest nội dung tenant được cache ở phiên trước (URL theo hash). Không gọi API cần token [Proposed].
+- Q: Windows phân phối qua Microsoft Store hay installer? → A: Installer ký Authenticode tải qua CDN + kênh phần mềm quản lý phòng máy ([DEPLOYMENT §9](../../docs/11-operations/DEPLOYMENT.md)); Microsoft Store không làm trong Release 1.0 [Confirmed].
+- Q: Tải trước ngoài giờ không có đăng nhập học sinh thì biết tải gì? → A: Từ chỉ mục gói công khai có chữ ký trên CDN theo `client_version` (vùng thế giới, không theo tenant) + media công khai đã có trong manifest nội dung tenant được cache ở phiên trước (URL theo hash). Không gọi API cần token [Confirmed].
 - Q: Firefox/Safari? → A: Không hỗ trợ trong Release 1.0 ([TBD] NFR-COMP-004); trình duyệt không có WebGL 2 nhận trang thông báo.
 
 ### Session 2026-11-16 (ADR-0086)
@@ -200,6 +200,6 @@ Học sinh cài bản chính thức trên laptop Windows, điện thoại Androi
 
 - Tài khoản Google Play Console, Apple Developer (tổ chức) và chứng chỉ Authenticode được mua trước M6 (quy trình tổ chức).
 - Nhà cung cấp CDN theo OQ-10 [TBD]; cấu hình header viết dạng độc lập nhà cung cấp.
-- Thiết bị lab §2.1 có sẵn; device matrix chốt sau khảo sát OQ-04 [Proposed].
+- Thiết bị lab §2.1 có sẵn; device matrix chốt sau khảo sát OQ-04 [Confirmed].
 - ADR-0079 Rejected: giữ đủ 4 nền tảng (ADR-0013). ADR-0075 Accepted không đổi quy trình build (client dùng URL CDN; upload gói qua API S3 chuẩn).
 - CI/CD là GitHub Actions (ADR-0088): `godot.yml` export Windows/Android/Web trên runner Linux, export + ký iOS trên runner macOS (tốn phút tính phí — chỉ chạy job iOS trên tag và nhánh `main`); action ghim SHA commit, Dependabot cập nhật action.

@@ -24,7 +24,7 @@ Ràng buộc kỹ thuật của Keycloak: không có API tạo credential OTP; l
 ### 2. Keycloak
 
 - Client `eduworld-portal` chuyển sang **confidential**, tắt Standard Flow, bật Direct Access Grants; secret chỉ module `identity` giữ. Giữ nguyên client id nên mọi kiểm tra `azp = eduworld-portal` (R20, R23, ADR-0066) không đổi.
-- Direct grant flow `eduworld-portal-direct-grant`: kiểm tra username → mật khẩu → chỉ cho realm role `tenant_staff`/`platform_staff` → OTP có điều kiện (bắt buộc với `platform_staff`, tùy chọn với nhân sự tenant đã đăng ký OTP). Mapper AMR/LoA đặt `amr` chứa `otp` và `acr` mức MFA khi bước OTP chạy, để các kiểm tra MFA hiện có giữ nguyên. Spike xác nhận claim này trước khi làm F051/F012 [Proposed].
+- Direct grant flow `eduworld-portal-direct-grant`: kiểm tra username → mật khẩu → chỉ cho realm role `tenant_staff`/`platform_staff` → OTP có điều kiện (bắt buộc với `platform_staff`, tùy chọn với nhân sự tenant đã đăng ký OTP). Mapper AMR/LoA đặt `amr` chứa `otp` và `acr` mức MFA khi bước OTP chạy, để các kiểm tra MFA hiện có giữ nguyên. Spike xác nhận claim này trước khi làm F051/F012 [Confirmed].
 - MFA chỉ TOTP; WebAuthn không còn trong phạm vi portal.
 - Brute-force detection của Keycloak giữ nguyên (khóa tạm sau 5 lần sai).
 

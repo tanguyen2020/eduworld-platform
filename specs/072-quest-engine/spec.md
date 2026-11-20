@@ -202,5 +202,5 @@ Quest đổi version không ảnh hưởng người đang làm; quest lặp lạ
 ## Assumptions
 
 - F030 có `createAttempt` internal và event `activity.graded` (`attempt_id`, `correct_count`, `item_count`, `passed`); F071 có lõi phát hành, presence, `ref.mastery_summary`.
-- Chọn daily/weekly "theo LO yếu" dùng `ref.mastery_summary` mức `beginning`/`developing` [Proposed]; chủ đề tuần do nhà trường chọn → F055.
+- Chọn daily/weekly "theo LO yếu" dùng `ref.mastery_summary` mức `beginning`/`developing` [Confirmed]; chủ đề tuần do nhà trường chọn → F055.
 - Seed 3 quest chỉ dùng bước của F072 (chuỗi main quest chương 0, một quest Toán lớp 3, một daily) và gán 3 tenant demo; quest mẫu "Phiên chợ của bác Gấu Nâu" có bước `minigame` do F073 seed.

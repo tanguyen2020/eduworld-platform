@@ -120,7 +120,7 @@ Không có. Công thức Glicko-2, tier, point table, effort points, visibility,
 - Metric: `eduworld_rating_updates_total{mode}`, `eduworld_points_capped_total`, `eduworld_ldb_rebuild_total{reason}`, `eduworld_ldb_drift_detected_total`, `eduworld_ldb_period_close_seconds`.
 - Span: `ApplyMatchRating`, `RecordContribution`, `ClosePeriod`, `RebuildLeaderboard`.
 
-Ước lượng: 2–3 sprint (backend 2 dev) [Proposed].
+Ước lượng: 2–3 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

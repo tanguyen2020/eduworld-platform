@@ -12,9 +12,9 @@ Tài liệu là nguồn duy nhất cho **kỹ thuật dựng** thế giới 3D t
 | Hạng mục | Quyết định | Nhãn |
 |---|---|---|
 | Thiết bị, FPS, renderer, preset | Theo hạng thiết bị tầm trung: [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §2–§5 (nơi sở hữu) | [Confirmed] yêu cầu ADR-0057 |
-| Tổ chức thế giới | Hybrid: hub instance, private instance, match room — không có open world liền mạch; phong cách hình ảnh theo [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) §11 | [Proposed] ADR-0012 |
+| Tổ chức thế giới | Hybrid: hub instance, private instance, match room — không có open world liền mạch; phong cách hình ảnh theo [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) §11 | [Confirmed] ADR-0012 |
 | Token 3D/art | Palette vật liệu theo khu vực, tham số toon/outline, Environment, gradient VFX, màu độ hiếm khai báo trong `design/game-tokens/art3d.json` và mã màu nghiệp vụ `design/shared-tokens/`; sinh ra `src/game/resources/art/generated/` (ADR-0047, [DESIGN_SYSTEM §5.3](../05-ux/DESIGN_SYSTEM.md#53-token-3dart-art3djson)). Material và Environment của zone tham chiếu preset sinh ra, không tự đặt màu | [Confirmed] ADR-0047 |
-| Renderer parity | Hình ảnh tương đương giữa Mobile (mặc định PC/Android/iOS), Compatibility (Web, máy Tối thiểu, preview CMS) và Forward+ (chỉ preset Cao, thumbnail) — [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §4; shader toon viết tương thích cả ba renderer; kiểm tra bằng ảnh so sánh trong CI | [Proposed] |
+| Renderer parity | Hình ảnh tương đương giữa Mobile (mặc định PC/Android/iOS), Compatibility (Web, máy Tối thiểu, preview CMS) và Forward+ (chỉ preset Cao, thumbnail) — [PERFORMANCE_BUDGET](PERFORMANCE_BUDGET.md) §4; shader toon viết tương thích cả ba renderer; kiểm tra bằng ảnh so sánh trong CI | [Confirmed] |
 
 ## 2. Cấu trúc scene theo zone
 
@@ -71,7 +71,7 @@ sequenceDiagram
 ```
 
 - Chỉ một zone trong bộ nhớ tại một thời điểm (+ Main Hub giữ thumbnail). Zone cũ `queue_free()` sau khi zone mới sẵn sàng → tránh khựng.
-- Preload nền zone kế tiếp có khả năng cao (vd. quest đang theo dõi trỏ tới) khi thiết bị có RAM > 4 GB [Proposed].
+- Preload nền zone kế tiếp có khả năng cao (vd. quest đang theo dõi trỏ tới) khi thiết bị có RAM > 4 GB [Confirmed].
 - Server quyết định instance (ADR-0012): ưu tiên instance có bạn bè/party, giới hạn `capacity` (mặc định 40).
 - Quyền vào khu (`access_policy`) do server kiểm tra; client chỉ ẩn cổng khi `AppState` báo chưa mở khóa.
 
@@ -124,7 +124,7 @@ Mọi zone phải qua **benchmark scene** tự động trong CI và trên thiế
 
 - **Baked lighting**: `LightmapGI` cho zone tĩnh (độ phân giải texel vừa phải), kết hợp 1 directional light thời gian thực cho bóng nhân vật.
 - Mobile renderer: bóng nhân vật dùng blob shadow (decal) ở preset `low`.
-- Không dùng chu kỳ ngày/đêm động (chi phí hiệu năng trên máy tầm trung, ADR-0057) [Proposed]; mỗi zone có `Environment` riêng, sinh từ token `env.<zone>.*` trong `design/game-tokens/art3d.json` vào `resources/art/generated/` (ADR-0047); không đặt màu trời/sương/ánh sáng trực tiếp trong scene. Sự kiện mùa (World Event) đổi environment preset qua manifest.
+- Không dùng chu kỳ ngày/đêm động (chi phí hiệu năng trên máy tầm trung, ADR-0057) [Confirmed]; mỗi zone có `Environment` riêng, sinh từ token `env.<zone>.*` trong `design/game-tokens/art3d.json` vào `resources/art/generated/` (ADR-0047); không đặt màu trời/sương/ánh sáng trực tiếp trong scene. Sự kiện mùa (World Event) đổi environment preset qua manifest.
 
 ## 8. Asset pipeline
 
@@ -157,7 +157,7 @@ flowchart LR
 
 - `bundle_id` theo zone hoặc nhóm cosmetic (`zone.main_hub`, `cosmetics.season_1`).
 - Client build chứa: core scripts, UI, Main Hub tối thiểu, nhân vật cơ bản. Các zone khác tải từ CDN khi cần → bản cài nhỏ và thêm khu không cần phát hành client mới.
-- Bundle chỉ chứa resource (scene, mesh, texture, audio); **không chứa script mới** [Proposed] (GODOT_ARCHITECTURE §8.2). Scene trong bundle chỉ được dùng script có sẵn trong client (`interactable.gd`, `spawn_point.gd`...).
+- Bundle chỉ chứa resource (scene, mesh, texture, audio); **không chứa script mới** [Confirmed] (GODOT_ARCHITECTURE §8.2). Scene trong bundle chỉ được dùng script có sẵn trong client (`interactable.gd`, `spawn_point.gd`...).
 - Manifest ký/được phục vụ qua HTTPS từ API; client kiểm tra `sha256` trước khi mount.
 - **Level package có version (ADR-0043/0044):** mỗi level/zone là một item nội dung game có Draft/Publish/rollback trong Game Studio. Bundle lưu ở bucket `ew-game-bundles`, đường dẫn CDN `bundles/<bundle_id>/<version>/<sha256>.pck` (`Cache-Control: immutable`). Content manifest của tenant trỏ version hiện hành; học sinh đang ở trong màn giữ bundle version cũ đến khi rời màn (`level_sessions.content_versions`). Rollback level = trỏ manifest về bundle version cũ, không build lại.
 - Media dùng trong cấu hình level (ảnh bảng tin, âm thanh NPC) tham chiếu `media_assets` qua `sha256`, không nhúng vào bundle.

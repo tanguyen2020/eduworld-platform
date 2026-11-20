@@ -9,12 +9,12 @@
 
 | Mã | Mục tiêu | Giá trị | Nhãn |
 |---|---|---|---|
-| NFR-AVAIL-002 | RPO dữ liệu học tập (PostgreSQL, **áp dụng cho từng database module**) | ≤ 5 phút | [Proposed] |
-| NFR-AVAIL-002 | RTO dữ liệu học tập | ≤ 4 giờ | [Proposed] |
-| — | RPO Keycloak | ≤ 24 giờ cho cấu hình (cấu hình cũng có trong Git); ≤ 5 phút khi Keycloak nằm trong cụm PostgreSQL chung có PITR (mặc định, ADR-0074 mục 4) | [Proposed] |
-| — | RPO media/object storage | Bucket riêng tư (`ew-media-private`; `ew-student-submissions` nếu sau này có): **bằng dữ liệu học tập** (≤ 5 phút, [ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md)); media công khai, asset game: ≤ 24 giờ (dựng lại được từ PostgreSQL + nguồn CI) | [Confirmed — Technical Architect 2026-11-17] nguyên tắc · [Proposed] số |
+| NFR-AVAIL-002 | RPO dữ liệu học tập (PostgreSQL, **áp dụng cho từng database module**) | ≤ 5 phút | [Confirmed] |
+| NFR-AVAIL-002 | RTO dữ liệu học tập | ≤ 4 giờ | [Confirmed] |
+| — | RPO Keycloak | ≤ 24 giờ cho cấu hình (cấu hình cũng có trong Git); ≤ 5 phút khi Keycloak nằm trong cụm PostgreSQL chung có PITR (mặc định, ADR-0074 mục 4) | [Confirmed] |
+| — | RPO media/object storage | Bucket riêng tư (`ew-media-private`; `ew-student-submissions` nếu sau này có): **bằng dữ liệu học tập** (≤ 5 phút, [ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md)); media công khai, asset game: ≤ 24 giờ (dựng lại được từ PostgreSQL + nguồn CI) | [Confirmed — Technical Architect 2026-11-17] nguyên tắc · [Confirmed] số |
 | — | Valkey | Không có RPO nghiệp vụ (ADR-0004) | [Confirmed] |
-| — | NATS JetStream | Không backup; PostgreSQL là nguồn sự thật (ADR-0035, ADR-0042). Mất toàn bộ cluster NATS chỉ mất tin chat đã ack nhưng chưa persist (thường < 1 giây tin); domain event vẫn còn trong outbox 30 ngày để relay lại | [Proposed] |
+| — | NATS JetStream | Không backup; PostgreSQL là nguồn sự thật (ADR-0035, ADR-0042). Mất toàn bộ cluster NATS chỉ mất tin chat đã ack nhưng chưa persist (thường < 1 giây tin); domain event vẫn còn trong outbox 30 ngày để relay lại | [Confirmed] |
 
 ## 2. Phân loại dữ liệu cần bảo vệ
 
@@ -35,7 +35,7 @@
 ## 3. PostgreSQL
 
 ### 3.1. Công cụ
-- **pgBackRest** (khuyến nghị) hoặc WAL-G [Proposed]; với managed PostgreSQL dùng PITR của nhà cung cấp + export logic bổ sung.
+- **pgBackRest** (khuyến nghị) hoặc WAL-G [Confirmed]; với managed PostgreSQL dùng PITR của nhà cung cấp + export logic bổ sung.
 - Mọi môi trường: **một cụm** PostgreSQL chứa 5 database module + `keycloak` (ADR-0074 mục 4), một stanza pgBackRest cho cả cụm; khôi phục **một database** bằng `--db-include=<database>` vào cụm tạm. Chỉ khi một database được chuyển sang cụm riêng (ADR-0074 mục 7) mới thêm stanza cho cụm đó.
 - Repository backup trên object storage S3-compatible **khác** hạ tầng chính (khác tài khoản/khác site), bật object lock/immutability 14 ngày để chống ransomware.
 
@@ -46,7 +46,7 @@
 | WAL archiving liên tục | `archive_timeout = 60s` | 14 ngày | Bảo đảm RPO ≤ 5 phút |
 | Full backup | Chủ nhật 01:00 ICT | 4 bản (4 tuần) | Ngoài giờ học |
 | Differential | Hằng ngày 01:00 ICT (trừ Chủ nhật) | 14 ngày | |
-| Snapshot cuối học kỳ | Cuối mỗi học kỳ | 2 năm [Proposed] | Lưu trữ lạnh, mã hóa |
+| Snapshot cuối học kỳ | Cuối mỗi học kỳ | 2 năm [Confirmed] | Lưu trữ lạnh, mã hóa |
 | Logical dump (`pg_dump -Fc` theo **database module**) | Hằng tuần | 4 bản | Khôi phục chọn lọc một database/bảng |
 
 ### 3.3. Mã hóa và quyền
@@ -89,17 +89,17 @@ Khôi phục toàn bộ hệ thống về cùng thời điểm T chỉ dùng khi
 
 - Không backup (ADR-0035, ADR-0042): stream `CHAT_MESSAGES` là bộ đệm 72 h trước khi `chat-persister` ghi PostgreSQL; stream `EVT_*` là bản phát của outbox (outbox trong database mỗi module giữ 30 ngày, relay lại được).
 - Mất 1 node: cluster R3 tiếp tục. Mất toàn bộ: dựng lại cluster từ cấu hình trong Git, worker tự tạo lại stream/consumer; tin đã ack nhưng chưa persist bị mất (chấp nhận, đo bằng `eduworld_chat_persist_lag_seconds`).
-- Khôi phục PostgreSQL bằng PITR về thời điểm T: tin chat sau T còn trong JetStream (≤ 72 h) có thể được persister **ghi bù** bằng cách reset consumer `persister` về thời điểm T (`nats consumer` với `deliver_policy=by_start_time`); ghi idempotent theo `message_id` [Proposed].
+- Khôi phục PostgreSQL bằng PITR về thời điểm T: tin chat sau T còn trong JetStream (≤ 72 h) có thể được persister **ghi bù** bằng cách reset consumer `persister` về thời điểm T (`nats consumer` với `deliver_policy=by_start_time`); ghi idempotent theo `message_id` [Confirmed].
 
 ## 6. Object storage
 
-- Bucket theo ADR-0044: `ew-media-public`, `ew-media-private`, `ew-game-bundles` bật **versioning** (và object lock ở chế độ governance cho `ew-media-public` [Proposed]); `ew-media-quarantine` không backup (file tạm, lifecycle 7 ngày); `ew-exports` theo retention của DATA_PRIVACY. Bucket backup riêng theo §3.2.
+- Bucket theo ADR-0044: `ew-media-public`, `ew-media-private`, `ew-game-bundles` bật **versioning** (và object lock ở chế độ governance cho `ew-media-public` [Confirmed]); `ew-media-quarantine` không backup (file tạm, lifecycle 7 ngày); `ew-exports` theo retention của DATA_PRIVACY. Bucket backup riêng theo §3.2.
 - Object media và snapshot nội dung có khóa content-addressed (`media/<sha256>/...`, snapshot theo version + hash) nên **không bao giờ bị ghi đè**; noncurrent version chỉ phát sinh khi lỗi vận hành, giữ 30 ngày.
 - Asset còn được bất kỳ content version nào tham chiếu không được xóa (ADR-0044 mục 4); job đối soát hằng tuần so `media_assets` (DB của module sở hữu) với object storage, báo object thiếu/mồ côi.
 - Snapshot nội dung (ADR-0043) có thể **dựng lại** từ PostgreSQL (version bất biến) nếu mất: chạy lại `content-snapshot-builder` cho các version đang được tham chiếu, rồi dựng lại manifest các tenant.
 - **Staging/production không dùng floci** ([ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md), [Confirmed — Technical Architect 2026-11-17]; thay toàn phần ADR-0071). floci chỉ ở local/CI, không cần backup.
 - **Backend được chọn sau spike** ([DEPLOYMENT §9b](DEPLOYMENT.md#9b-object-storage-và-media-pipeline-adr-0044-adr-0043)):
-  - *S3 managed tại Việt Nam:* replication của nhà cung cấp (đa vùng lỗi) + versioning; bản sao **ngoài tài khoản/nhà cung cấp** hằng ngày cho mọi bucket trừ `ew-media-quarantine` (`rclone`/`aws s3 sync`), giữ 30 bản ngày + 12 bản tháng [Proposed].
+  - *S3 managed tại Việt Nam:* replication của nhà cung cấp (đa vùng lỗi) + versioning; bản sao **ngoài tài khoản/nhà cung cấp** hằng ngày cho mọi bucket trừ `ew-media-quarantine` (`rclone`/`aws s3 sync`), giữ 30 bản ngày + 12 bản tháng [Confirmed].
   - *Garage/SeaweedFS tự host:* replication factor 3 trên 3 node `storage` (mất 1 node không mất dữ liệu, không gián đoạn); bản sao **ngoài cụm, khác site** (trong lãnh thổ Việt Nam nếu OQ-12 yêu cầu) hằng ngày, giữ như trên; mã hóa khi lưu.
 - **Bucket riêng tư** (`ew-media-private`; `ew-student-submissions` nếu sau này có): RPO bằng dữ liệu học tập — bật replication liên tục sang vị trí thứ hai (cross-region replication của dịch vụ managed hoặc replication bất đồng bộ sang cụm/site thứ hai) để độ trễ sao chép ≤ 5 phút; giám sát độ trễ replication ([MONITORING](MONITORING.md)).
 - Versioning, object lock, SSE, lifecycle phải được backend hỗ trợ — là tiêu chí chọn trong spike (ADR-0075 mục 4); kiểm tra checksum khóa `media/<sha256>/…` sau mỗi lần đồng bộ.
@@ -108,7 +108,7 @@ Khôi phục toàn bộ hệ thống về cùng thời điểm T chỉ dùng khi
 ## 7. Retention và xóa dữ liệu trong backup
 
 - Ứng dụng chỉ soft-delete và ẩn danh hóa (ADR-0028). Khi dữ liệu bị ẩn danh theo chính sách (vd. chat quá 180 ngày, tài khoản có yêu cầu xóa hợp lệ), bản gốc trong backup **tự hết hạn** theo vòng đời backup (tối đa 14 ngày PITR + snapshot học kỳ). Dữ liệu soft-delete vẫn có trong backup và được khôi phục cùng `deleted_at` (vẫn ẩn sau restore).
-- Snapshot học kỳ dài hạn [Proposed]: yêu cầu xóa theo luật ngoài version này (ADR-0082); khi mở lại, phương án là loại trừ schema `chat` khỏi snapshot dài hạn hoặc ghi danh sách "tombstone" để áp lại việc xóa sau khi khôi phục.
+- Snapshot học kỳ dài hạn [Confirmed]: yêu cầu xóa theo luật ngoài version này (ADR-0082); khi mở lại, phương án là loại trừ schema `chat` khỏi snapshot dài hạn hoặc ghi danh sách "tombstone" để áp lại việc xóa sau khi khôi phục.
 - Sau mọi lần khôi phục, chạy job `retention-reapply` để **ẩn danh hóa lại** dữ liệu đã quá hạn hoặc đã có yêu cầu xóa (module identity đọc `deletion_requests`, `erasure_log` trong `eduworld_identity` rồi gọi facade platform của từng module trong tiến trình theo saga). Job không chạy `DELETE`; Release 1.0 không có `physical_erase` (ADR-0070).
 - **Ngoại lệ ADR-0033:** chat gameplay (`chat.gameplay_messages`, channel `match`/`party`/`team` theo trận, `chat.ephemeral_messages`) bị purge vật lý bởi job `gameplay-chat-purge` sau thời hạn (mặc định 7 ngày / 24 h). Backup không cần giữ riêng dữ liệu này; sau khi khôi phục, job purge chạy lại sẽ xóa các partition quá hạn vừa được khôi phục (không cần `retention-reapply`). Bằng chứng moderation đã nằm trong `chat.moderation_evidence` nên vẫn còn.
 - Học sinh bị dọn (ADR-0032) chỉ là soft-delete nên khôi phục backup không làm sống lại sai: trạng thái `deleted_at` được khôi phục cùng dữ liệu; nếu backup cũ hơn lần dọn, job `student-inactive-cleanup` chạy lại sẽ dọn tiếp theo cùng quy tắc.

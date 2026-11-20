@@ -31,7 +31,7 @@ Mỗi lần mở game học sinh phải nhập lại mật khẩu (ADR-0064). V�
    - Không log body của route đăng nhập ở APISIX, backend, tracing; mật khẩu không ghi vào bất kỳ đâu, xóa khỏi bộ nhớ sau khi gọi Keycloak (best effort).
    - Rate limit: theo thiết bị 10 lần/phút, theo username 10 lần/phút, toàn cục theo năng lực (ADR-0045/0064); brute-force detection của Keycloak khóa tạm tài khoản sau 5 lần sai (1–15 phút); thông điệp lỗi chung "Tên đăng nhập hoặc mật khẩu chưa đúng" (không tiết lộ tài khoản có tồn tại hay không).
    - Chỉ cho realm role `student` đăng nhập qua client `eduworld-game-backend` (nhân sự bị từ chối `GAME_ACCESS_STUDENT_ONLY`, ADR-0031).
-   - Certificate pinning trong game cho tên miền API [Proposed]; chặn đăng nhập từ phiên bản client quá cũ (`min_client_version`).
+   - Certificate pinning trong game cho tên miền API [Confirmed]; chặn đăng nhập từ phiên bản client quá cũ (`min_client_version`).
 4. **Portal giữ đăng nhập qua trang Keycloak trên trình duyệt** (ADR-0066/0067) vì là ứng dụng web, có MFA.
 5. Hàng chờ đăng nhập (ADR-0045) áp dụng tại API `/auth/game/login`: quá tải → `429` + `Retry-After`, game hiển thị "Đang vào lớp…".
 

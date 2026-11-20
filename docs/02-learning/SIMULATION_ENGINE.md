@@ -71,7 +71,7 @@ type Checker interface {
 
 ## 6. Hiệu năng
 
-| Mục tiêu [Proposed] | Giá trị |
+| Mục tiêu [Confirmed] | Giá trị |
 |---|---|
 | FPS theo hạng thiết bị ([PERFORMANCE_BUDGET §3](../08-game-client/PERFORMANCE_BUDGET.md#3-mục-tiêu-khung-hình)) | ≥ 30 ở máy tầm trung, preset Trung bình |
 | Kích thước gói một template | ≤ 15 MB |

@@ -39,7 +39,7 @@ Append-only (`REVOKE UPDATE, DELETE`); mixin `TenantOptionalAppendOnly` (TA\*, A
 | `revoke_reason` | `varchar(32)` NULL | CHECK `logout`/`takeover`/`password_changed`/`account_locked`/`sanction`/`access_revoked`/`cleanup`/`refresh_reuse`/`admin` | |
 | `deleted_at`, `deleted_by` | mixin `entx.Base` | | soft-delete (R21); phiên thu hồi không bị xóa |
 
-**Không** lưu token thô. Index `(tenant_id, user_id) WHERE revoked_at IS NULL`, `(device_id) WHERE revoked_at IS NULL`. Retention: phiên đã thu hồi/hết hạn ẩn danh hóa theo DATA_PRIVACY (`device_id` coi là định danh thiết bị) [Proposed].
+**Không** lưu token thô. Index `(tenant_id, user_id) WHERE revoked_at IS NULL`, `(device_id) WHERE revoked_at IS NULL`. Retention: phiên đã thu hồi/hết hạn ẩn danh hóa theo DATA_PRIVACY (`device_id` coi là định danh thiết bị) [Confirmed].
 
 ### User — `identity.users` (Có sẵn) · ExternalIdentity — `identity.external_identities` (Có sẵn)
 

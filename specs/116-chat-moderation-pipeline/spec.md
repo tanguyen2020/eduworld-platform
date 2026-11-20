@@ -113,7 +113,7 @@ Học sinh lớp 2 chạm "Cố lên!"; bạn chọn tiếng Anh thấy "Go for 
 
 - NẾU pattern RE2 chạy quá 5 ms, THÌ bỏ qua pattern đó an toàn (không chặn nhầm cả tin), tăng metric và ghi log không nội dung (TC-CHAT-011).
 - NẾU bản biên dịch danh mục không nạp được khi khởi động và không có bản cache, THÌ instance không nhận lưu lượng (readiness fail), không chạy với danh mục rỗng.
-- NẾU "ngủ ngon" (có dấu) chứa chuỗi trùng "ngu", THÌ không bị khớp (bản không dấu chỉ áp khi văn bản gốc không dấu) [Proposed] (AC-MOD-002).
+- NẾU "ngủ ngon" (có dấu) chứa chuỗi trùng "ngu", THÌ không bị khớp (bản không dấu chỉ áp khi văn bản gốc không dấu) [Confirmed] (AC-MOD-002).
 - NẾU cấu hình cũ có `steps.pii = false`, THÌ bị bỏ qua khi resolve và migration đưa về bật (ADR-0078, F116-AC-30).
 - NẾU yêu cầu tắt `pending_approval` quá 24 giờ chưa được duyệt, THÌ tự hết hạn, không bao giờ có hiệu lực (F116-AC-32).
 - NẾU Valkey pub/sub mất thông báo version, THÌ đối chiếu `ew:chat:sensitive:current` mỗi 60 s.
@@ -184,7 +184,7 @@ Học sinh lớp 2 chạm "Cố lên!"; bạn chọn tiếng Anh thấy "Go for 
 
 ## Assumptions
 
-- Bảng teencode/leetspeak dùng cho normalize nạp từ cấu hình có version trong `src/backend/modules/chat/seed/normalization/` (không chứa từ nhạy cảm); API quản lý chưa có trong contract → ghi "Cần thêm" ở contracts §6 [Proposed].
-- Bộ test hồi quy ≥ 2.000 câu là dữ liệu vận hành lưu ngoài repo (object storage, quyền `chat.sensitive_terms.read`); CI dùng bộ placeholder không chứa từ thật (R15) [Proposed].
-- Thời gian hiệu lực ≤ 60 s, timeout RE2 5 ms, ngưỡng spam (3 tin/60 s, 4 channel/2 phút, 3 block/10 phút) chưa có tên trong CONFIG_DEFAULTS → task Polish đề xuất đăng ký [Proposed].
-- Ánh xạ severity → action và chi tiết pipeline là [Proposed] theo PRD FR-MOD-010, FR-CHAT-005.
+- Bảng teencode/leetspeak dùng cho normalize nạp từ cấu hình có version trong `src/backend/modules/chat/seed/normalization/` (không chứa từ nhạy cảm); API quản lý chưa có trong contract → ghi "Cần thêm" ở contracts §6 [Confirmed].
+- Bộ test hồi quy ≥ 2.000 câu là dữ liệu vận hành lưu ngoài repo (object storage, quyền `chat.sensitive_terms.read`); CI dùng bộ placeholder không chứa từ thật (R15) [Confirmed].
+- Thời gian hiệu lực ≤ 60 s, timeout RE2 5 ms, ngưỡng spam (3 tin/60 s, 4 channel/2 phút, 3 block/10 phút) chưa có tên trong CONFIG_DEFAULTS → task Polish đề xuất đăng ký [Confirmed].
+- Ánh xạ severity → action và chi tiết pipeline là [Confirmed] theo PRD FR-MOD-010, FR-CHAT-005.

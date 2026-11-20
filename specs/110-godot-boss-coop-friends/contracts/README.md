@@ -64,6 +64,6 @@ Không có delta do F110 sở hữu. F110 phụ thuộc delta của:
 
 - **F103** (module game): `createBossEncounter` chỉ `solo`; `BossEncounter` thêm `state_version`, `deadline_at`, `phase_retries_left`, `outcome`, `my_questions`; `getQuestStepClues`, `shareQuestStepClue`, `assignQuestStepRoles`; AsyncAPI `boss.question.assigned`, `boss.answer.evaluated`, `quest.roles.assigned`, `quest.clue.shared`, `quest.progress.updated.party_progress`, `BossEncounterEnded.outcome`.
 - **F101**: `party.session.started.room_type` thêm `boss`. **F095**: mã lỗi social, `404 FRIEND_CODE_INVALID`. **F091**: enum presence chung (MULTIPLAYER_GAMEPLAY §5) giữa `PlayerCard.presence` và `presence.friend.updated.status`; ẩn trạng thái là cờ `hidden` của `presence.status.set`.
-- **Đề xuất mới [Proposed] (owner F095)**: `PlayerCard` thêm `title` (`LocalizedName`, danh hiệu) để hiển thị trong danh sách bạn như wireframe S11; khi chưa có, client ẩn danh hiệu.
+- **Đề xuất mới [Confirmed] (owner F095)**: `PlayerCard` thêm `title` (`LocalizedName`, danh hiệu) để hiển thị trong danh sách bạn như wireframe S11; khi chưa có, client ẩn danh hiệu.
 - Fixture `src/game/tests/fixtures/{boss,coop_quest,social}/*.json` sinh lại từ example sau khi delta merge; test contract parse mọi example ([GODOT_ARCHITECTURE §12](../../../docs/08-game-client/GODOT_ARCHITECTURE.md)).
 - Kiểm (owner backend): `make specs-lint`, `make specs-breaking`, `make gen MOD=game`, `make gen MOD=chat`.

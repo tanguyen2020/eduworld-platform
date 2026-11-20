@@ -12,11 +12,11 @@
 | 1 | **EduWorld sở hữu contract tích hợp (DTO + API).** Mỗi trường cung cấp endpoint triển khai đúng [EduWorld SIS Contract v1](../../specs/sis/eduworld-sis-contract.v1.yaml). EduWorld **không** nhận DTO riêng của từng SIS và **không** viết adapter ánh xạ theo cấu trúc SIS, vì làm vậy sẽ phá vỡ cấu trúc domain | [Confirmed] |
 | 2 | Không giả định SIS cụ thể. Trường dùng SIS nào thì trường (hoặc nhà cung cấp SIS) tự dựng lớp facade theo contract; phần này nằm ngoài EduWorld | [Confirmed] |
 | 3 | Godot và CMS SPA **không bao giờ** gọi SIS. Chỉ adapter SIS của module identity gọi (job `sis-sync` trong profile `worker-jobs`, lookup lúc đăng nhập trong `core-api`; ADR-0074) | [Confirmed] |
-| 4 | SIS là nguồn sự thật cho học sinh, trường, lớp, enrollment và trạng thái tài khoản học sinh (các trường dữ liệu có trong contract). SIS **không** cung cấp giáo viên hay phân công giảng dạy; nhân sự nhà trường được tạo thủ công trên Admin Portal kèm UserRole (ADR-0072) | [Proposed] / [Confirmed] ADR-0072 |
+| 4 | SIS là nguồn sự thật cho học sinh, trường, lớp, enrollment và trạng thái tài khoản học sinh (các trường dữ liệu có trong contract). SIS **không** cung cấp giáo viên hay phân công giảng dạy; nhân sự nhà trường được tạo thủ công trên Admin Portal kèm UserRole (ADR-0072) | [Confirmed] / [Confirmed] ADR-0072 |
 | 5 | Contract chỉ chứa trường dữ liệu EduWorld cần (data minimization): không địa chỉ, số điện thoại, phụ huynh, ảnh, điểm SIS | [Confirmed] |
-| 6 | Mọi dữ liệu từ SIS đi qua validate contract → staging → reconciliation → apply, có audit | [Proposed] |
+| 6 | Mọi dữ liệu từ SIS đi qua validate contract → staging → reconciliation → apply, có audit | [Confirmed] |
 | 7 | Credential SIS nằm trong secret manager, không lưu plaintext trong DB, không đi qua public gateway | [Confirmed] |
-| 8 | Trường chưa có API dùng `csv_import`. File CSV có cùng tên trường với DTO của contract | [Proposed] |
+| 8 | Trường chưa có API dùng `csv_import`. File CSV có cùng tên trường với DTO của contract | [Confirmed] |
 
 ## 2. Contract do EduWorld sở hữu
 
@@ -64,7 +64,7 @@ Enum (`status`, `role`, `subject_code`…) dùng **giá trị của EduWorld**. 
 ### 2.4. Quản lý phiên bản contract
 
 - EduWorld là bên duy nhất được sửa contract. Thay đổi đi qua merge request vào `specs/sis/` và phải có ghi chú phát hành gửi các trường.
-- Trong `v1` chỉ thêm trường **tùy chọn** hoặc giá trị enum mới, báo trước tối thiểu 1 học kỳ [Proposed]. Breaking change → `/v2` chạy song song, mỗi connection khai báo `contract_version` đang dùng.
+- Trong `v1` chỉ thêm trường **tùy chọn** hoặc giá trị enum mới, báo trước tối thiểu 1 học kỳ [Confirmed]. Breaking change → `/v2` chạy song song, mỗi connection khai báo `contract_version` đang dùng.
 - `GET /health` trả `contract_version`. Worker từ chối đồng bộ nếu major version khác version connection đã đăng ký.
 
 ### 2.5. Khi dữ liệu không đúng contract
@@ -162,14 +162,14 @@ func VerifyAndParseWebhook(secret []byte, h http.Header, body []byte, now time.T
 
 Bước `mapping` chỉ chuyển DTO contract → entity domain (`org`, `identity`) theo một bảng ánh xạ cố định do EduWorld viết. Không có mapping cấu hình theo từng SIS (không JSONPath, không field-mapping trong `sis_connections.config`).
 
-### 4.2. `contract_v1`: pull qua HTTP [Proposed, Phase 1]
+### 4.2. `contract_v1`: pull qua HTTP [Confirmed, Phase 1]
 
 - Cấu hình connection: `base_url`, `auth_type` (`oauth2_client_credentials` | `api_key` | `mtls`), `token_url` (nếu OAuth2), `secret_ref`, `contract_version`, `schools[]` (danh sách `school_external_id` thuộc connection).
 - Client giới hạn tốc độ `sis_client_rate`: 10 req/s mỗi connection, timeout 15 s/request, tôn trọng `Retry-After` [Confirmed — Technical Architect 2026-11-16].
 - Mỗi response được validate theo JSON Schema trích từ spec trước khi vào staging (§2.5).
-- Credential theo `auth_type` [Proposed, F017]: `api_key` = giá trị khóa (header `X-Api-Key`); `oauth2_client_credentials` = JSON `{client_id, client_secret}`, token lấy lại một lần khi hết hạn giữa run; `mtls` = một file PEM chứng chỉ + khóa. Ánh xạ trường: `config.schools[]` = `{school_external_id, school_id}` (chỉ dùng trường đang active trên connection). Webhook dùng `webhook_secret_ref` riêng.
+- Credential theo `auth_type` [Confirmed, F017]: `api_key` = giá trị khóa (header `X-Api-Key`); `oauth2_client_credentials` = JSON `{client_id, client_secret}`, token lấy lại một lần khi hết hạn giữa run; `mtls` = một file PEM chứng chỉ + khóa. Ánh xạ trường: `config.schools[]` = `{school_external_id, school_id}` (chỉ dùng trường đang active trên connection). Webhook dùng `webhook_secret_ref` riêng.
 
-### 4.3. `csv_import`: cho trường chưa có API [Proposed, Phase 1]
+### 4.3. `csv_import`: cho trường chưa có API [Confirmed, Phase 1]
 
 School Admin upload qua CMS (`POST /api/v1/schools/{school_id}/sis-imports`; System Admin dùng `/api/v1/sis/imports` trên gateway nội bộ), ≤ 10 MB/file, có quét malware. Một import gồm một hoặc nhiều file UTF-8 (chấp nhận BOM), phân cách `,`, header bắt buộc. **Tên cột trùng tên trường DTO của contract**. Riêng `login` tách thành `login_username`, `login_idp_alias`, `login_idp_subject`.
 
@@ -197,9 +197,9 @@ student_external_id,class_external_id,start_date,end_date,status
 HS-000123,C-2026-3A,2026-09-05,,active
 ```
 
-Validate bằng cùng contract validator với `contract_v1`. Lỗi từng dòng ghi `sis.sync_record_errors` (số dòng, cột, mã lỗi). Import theo chế độ **all-or-nothing theo file** [Proposed] để tránh trạng thái nửa vời. Có **dry-run** hiển thị diff trước khi áp dụng.
+Validate bằng cùng contract validator với `contract_v1`. Lỗi từng dòng ghi `sis.sync_record_errors` (số dòng, cột, mã lỗi). Import theo chế độ **all-or-nothing theo file** [Confirmed] để tránh trạng thái nửa vời. Có **dry-run** hiển thị diff trước khi áp dụng.
 
-Luồng (F011): tạo import (`dry_run` mặc định `true`) → presigned PUT ký cả `Content-Length` (`sis_import_upload_ttl`) vào bucket private `ew-sis-imports` → job watcher HEAD object mỗi `sis_import_watch_interval` và xếp job `csv_import` vào `IDENTITY_SIS_JOBS` (`Nats-Msg-Id import:<id>`) → worker kiểm kích thước, quét clamd, đọc theo contract, chạy pipeline §6 với actor `system:sis-sync:<connection_id>`; quá hạn upload → `expired`. Mỗi import một file một loại bản ghi [Proposed].
+Luồng (F011): tạo import (`dry_run` mặc định `true`) → presigned PUT ký cả `Content-Length` (`sis_import_upload_ttl`) vào bucket private `ew-sis-imports` → job watcher HEAD object mỗi `sis_import_watch_interval` và xếp job `csv_import` vào `IDENTITY_SIS_JOBS` (`Nats-Msg-Id import:<id>`) → worker kiểm kích thước, quét clamd, đọc theo contract, chạy pipeline §6 với actor `system:sis-sync:<connection_id>`; quá hạn upload → `expired`. Mỗi import một file một loại bản ghi [Confirmed].
 
 ## 4.4. Nhận biết SIS nguồn khi đăng nhập (ADR-0046)
 
@@ -254,7 +254,7 @@ sequenceDiagram
 
 - **Bootstrap trả về trường, lớp, khối, tỉnh/thành từ module identity**, nên lần đăng nhập đầu hiển thị đúng ngay; các module khác cập nhật projection `ref.students`, `ref.schools`, `ref.classes`, `ref.enrollments` qua event ([DATABASE_DESIGN §2.17](../07-backend/DATABASE_DESIGN.md)).
 - **Bảo vệ khi tải cao:** tối đa `sis_login_sync_concurrency` (20) lookup đồng thời mỗi connection; vượt giới hạn hoặc circuit breaker connection đang mở → nhánh B dùng dữ liệu đồng bộ gần nhất (nếu đủ) hoặc trả `NO_ACTIVE_ENROLLMENT` kèm thông điệp "thử lại sau ít phút"; nhánh C chỉ xếp job. Không có retry đồng bộ trên đường đăng nhập.
-- **Circuit breaker theo connection** (`sis_login_sync_breaker`): 5 lookup lỗi liên tiếp mở mạch 30 giây [Proposed]; khi mở, nhánh B xử lý như vượt giới hạn.
+- **Circuit breaker theo connection** (`sis_login_sync_breaker`): 5 lookup lỗi liên tiếp mở mạch 30 giây [Confirmed]; khi mở, nhánh B xử lý như vượt giới hạn.
 - **Quan sát:** metric `eduworld_sis_login_sync_total{branch,result}` (`branch` = `fresh`/`blocking`/`background`; `result` = `ok`/`timeout`/`error`/`missing_class`/`throttled`), `eduworld_sis_login_sync_duration_seconds`; cảnh báo khi tỷ lệ `timeout` nhánh B > 5% trong 10 phút ([MONITORING](../11-operations/MONITORING.md)).
 - `login_events.sis_connection_id` và kết quả sync được ghi lại (ADR-0046 mục 8).
 - Phạm vi dữ liệu đúng DTO contract (ADR-0021); không lấy trường ngoài contract.
@@ -270,8 +270,8 @@ sequenceDiagram
 
 | Chế độ | Khi nào | Phạm vi | Ghi chú |
 |---|---|---|---|
-| Full sync | Hằng đêm 01:00 ICT [Proposed]; đầu năm học; theo yêu cầu admin | Toàn bộ trường của connection | Phát hiện xóa (bản ghi biến mất) → đánh dấu `missing_in_source`, **không xóa ngay**; sau 2 lần full sync liên tiếp vẫn thiếu → đề xuất deactivate (`deactivation_review`); vượt `sis_missing_review_ratio` (5%) hai lần liên tiếp → một issue `deactivation_review` cấp trường. Import CSV có file học sinh được coi là full của trường |
-| Delta sync | Mỗi 15 phút giờ hành chính [Proposed], khi trường khai báo capability `delta` | `ListChanges(since)` (`GET /changes`); 410 → full sync | Watermark lưu `sis.sis_connections.delta_watermark` sau khi apply thành công |
+| Full sync | Hằng đêm 01:00 ICT [Confirmed]; đầu năm học; theo yêu cầu admin | Toàn bộ trường của connection | Phát hiện xóa (bản ghi biến mất) → đánh dấu `missing_in_source`, **không xóa ngay**; sau 2 lần full sync liên tiếp vẫn thiếu → đề xuất deactivate (`deactivation_review`); vượt `sis_missing_review_ratio` (5%) hai lần liên tiếp → một issue `deactivation_review` cấp trường. Import CSV có file học sinh được coi là full của trường |
+| Delta sync | Mỗi 15 phút giờ hành chính [Confirmed], khi trường khai báo capability `delta` | `ListChanges(since)` (`GET /changes`); 410 → full sync | Watermark lưu `sis.sis_connections.delta_watermark` sau khi apply thành công |
 | Webhook | Real-time khi SIS hỗ trợ | Thay đổi đơn lẻ | Endpoint `/internal/sis/webhooks/{connection_id}` chỉ trên gateway nội bộ/allowlist IP; payload `ChangeBatch` theo contract; xác thực HMAC + timestamp ±5 phút + chống replay theo `delivery_id` (`ew:identity:sis:wh:nonce:<id>` TTL 10 phút); đẩy vào JetStream work-queue `IDENTITY_SIS_JOBS`, xử lý như delta |
 | CSV import | Thủ công | File | Như §4.3 |
 | On-demand lookup | Lần đầu đăng nhập qua IdP mà không tìm thấy trong dữ liệu đã đồng bộ (ADR-0046) | 1 học sinh | Chỉ gọi **đúng các connection** của các trường thuộc tenant xác định được, có capability `student_lookup`; gọi **song song**, timeout 3 s mỗi connection; kết quả vẫn qua contract validator + reconciliation trước khi tạo link |
@@ -335,7 +335,7 @@ Apply trong transaction theo **lô 500 bản ghi**, mỗi lô idempotent (dựa 
 | Bản ghi mới, chưa có link | Không có `sis_links` | Tạo entity + link | — |
 | Bản ghi đổi nội dung | `raw_hash` khác | Update trường do SIS sở hữu | — |
 | `external_id` mới nhưng trùng `student_code` + ngày sinh với HS khác trong cùng trường | Rule trùng lặp | Không | `possible_duplicate` |
-| HS xuất hiện ở trường mới, có `national_student_id` hash trùng HS trường khác | Rule chuyển trường | Link vào user cũ nếu chính sách cho phép auto-transfer [Proposed: tự động khi trong cùng tenant `unit`] | Khác tenant → `transfer_confirmation` |
+| HS xuất hiện ở trường mới, có `national_student_id` hash trùng HS trường khác | Rule chuyển trường | Link vào user cũ nếu chính sách cho phép auto-transfer [Confirmed: tự động khi trong cùng tenant `unit`] | Khác tenant → `transfer_confirmation` |
 | **Chuyển trường giữa hai SIS** (trường mới dùng connection khác), `national_student_id` hash trùng | Rule chuyển SIS (ADR-0046 mục 6) | Chuyển `identity.sis_identity_links` sang `(connection mới, external_id mới)`, link cũ `status = superseded`; cập nhật thuộc tính Keycloak `ew_sis_connection`/`ew_external_id`; User và dữ liệu học tập/game giữ nguyên. Tự động trong cùng tenant `unit` theo policy | Khác tenant → `transfer_confirmation` |
 | **Username hoặc email trùng** (không phân biệt hoa thường) với tài khoản khác trên toàn hệ thống, kể cả tenant khác hoặc tài khoản soft-delete chưa ẩn danh hóa (ADR-0067, [ADR-0069](../adr/ADR-0069-username-email-duy-nhat-theo-tenant-va-dang-nhap-khong-chon-tenant.md)) | Unique `lower(username)`/`lower(email)` ở `identity.users` + Keycloak `duplicateEmailsAllowed=false` | Không tạo, không ghi đè tài khoản kia; bản ghi chờ `pending_identifier` | `duplicate_identifier` — **cùng một người** (liên kết định danh SIS hoặc Tenant Admin xác nhận) → thêm membership vào tài khoản sẵn có (nhân sự làm nhiều trường: thêm UserRole; học sinh: enrollment tenant mới); **người khác** → trường đổi username theo mẫu có mã trường |
 | Khóa đăng nhập (`student_login_keys`) trùng giữa hai bản ghi | Unique theo connection; trùng **giữa hai connection** → phát hiện khi đăng nhập | Không tự chọn | `ambiguous_login` → `IDENTITY_CONFLICT` khi đăng nhập |
@@ -420,4 +420,4 @@ Circuit breaker cho mỗi connection (`sis_circuit_breaker`): 5 run liên tiếp
 - Fake SIS server (httptest) mô phỏng phân trang, 429, 5xx, webhook có/không chữ ký hợp lệ.
 - Kịch bản: import lần đầu; import lại không đổi (0 update); đổi lớp; chuyển trường cùng org/khác org; học sinh biến mất; dữ liệu lỗi một dòng; webhook replay bị chặn.
 - Nhận biết SIS nguồn (ADR-0046): hai SIS cùng gửi `student_external_id = HS-0001` cho hai học sinh khác nhau → hai bản ghi, hai link, không nhầm; đăng nhập IdP khớp 0/1/2 bản ghi; lookup timeout ở một connection không chặn connection khác; chuyển trường giữa hai SIS giữ nguyên User và dữ liệu (TC-AUTH-030…035 trong [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)).
-- Hiệu năng: full sync 50.000 học sinh trong < 15 phút [Proposed].
+- Hiệu năng: full sync 50.000 học sinh trong < 15 phút [Confirmed].

@@ -6,7 +6,7 @@
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| `listSchoolClientInstallers` | `GET /api/v1/tenant/client-installers?school_id=` (`X-Tenant-Id`) | `specs/openapi/modules/game.v1.yaml` + `eduworld-api.v1.yaml` | `school.installer.read` [Proposed] | Cần thêm |
+| `listSchoolClientInstallers` | `GET /api/v1/tenant/client-installers?school_id=` (`X-Tenant-Id`) | `specs/openapi/modules/game.v1.yaml` + `eduworld-api.v1.yaml` | `school.installer.read` [Confirmed] | Cần thêm |
 | `updateTenant` | `PATCH /api/v1/admin/tenants/{tenant_id}` | identity.v1 | `platform.tenant.manage` | Cần thêm (F010) — Cần sửa: body thêm `is_qa` (boolean) |
 | `listTenants` | `GET /api/v1/admin/tenants` | eduworld-api | `platform.cross_tenant.read` | Có sẵn — Cần sửa: `TenantSummary` thêm `is_qa` |
 | `getGameMetrics` · `getGameRetention` · `getGameFunnel` · `getGameContentStats` · `getGamePerformance` · `createGameAnalyticsExport` | `/api/v1/admin/analytics/game/*` | eduworld-api | `game.analytics.read` | Có sẵn — Cần sửa: response thêm `excluded_tenant_ids[]` |

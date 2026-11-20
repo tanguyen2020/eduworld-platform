@@ -133,5 +133,5 @@ UNIQUE `(question_id) WHERE status = 'pending' AND deleted_at IS NULL`.
 | Event | Khi nào | Payload schema |
 |---|---|---|
 | `audit.recorded` (`report.exported`, `learning.reference_report_exported`, `content.calibration_accepted`) | Xuất file, chấp nhận đề xuất | Envelope chung `specs/events/envelope.schema.json` |
-| `report.completed` | Job xong (thông báo portal) | Cần thêm `specs/events/payloads/learning/report.completed.v1.schema.json` [Proposed] |
+| `report.completed` | Job xong (thông báo portal) | Cần thêm `specs/events/payloads/learning/report.completed.v1.schema.json` [Confirmed] |
 | `exam.closed` (tiêu thụ) | Session đóng → tính chất lượng đề | Cần thêm `specs/events/payloads/learning/exam.closed.v1.schema.json` (thuộc F042) |

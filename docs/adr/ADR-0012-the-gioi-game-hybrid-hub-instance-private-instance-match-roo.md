@@ -8,7 +8,7 @@ OQ-05: thế giới persistent MMO, multiplayer hub hay hybrid. Học sinh cần
 
 ## Quyết định
 
-- **Hub/Zone instance** (Main Hub, các khu học tập, Social Zone…): shard tối đa 40 người [Proposed], cấp theo `(tenant/school, grade band)`; bạn bè/party được ưu tiên vào cùng instance.
+- **Hub/Zone instance** (Main Hub, các khu học tập, Social Zone…): shard tối đa 40 người [Confirmed], cấp theo `(tenant/school, grade band)`; bạn bè/party được ưu tiên vào cùng instance.
 - **Private instance:** cho party/quest co-op/boss, chỉ thành viên party.
 - **Match room:** cho Knowledge Battle/Team Battle/trận giải đấu, vòng đời ngắn.
 - Không có persistent MMO world liên tục; trạng thái bền vững (quest progress, inventory, vị trí cuối ở hub) lưu PostgreSQL.

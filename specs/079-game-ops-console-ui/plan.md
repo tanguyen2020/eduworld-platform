@@ -11,7 +11,7 @@ Xây chunk workspace `game-ops` (F051) gọi API `/api/v1/game-admin/*` qua gate
 | Mục | Giá trị |
 |---|---|
 | Language/Version | TypeScript strict (React 18, Vite) |
-| Primary Dependencies | Ant Design 5 + Pro (ProTable, ProForm, StepsForm, Calendar), TanStack Query, openapi-fetch (F050), `@rjsf/antd` hoặc form sinh từ JSON Schema [Proposed], React Flow (graph quest/NPC) [Proposed], chart theo DESIGN_SYSTEM §4.4, i18next |
+| Primary Dependencies | Ant Design 5 + Pro (ProTable, ProForm, StepsForm, Calendar), TanStack Query, openapi-fetch (F050), `@rjsf/antd` hoặc form sinh từ JSON Schema [Confirmed], React Flow (graph quest/NPC) [Confirmed], chart theo DESIGN_SYSTEM §4.4, i18next |
 | Storage | Không (RAM; autosave lên server) |
 | Testing | Vitest + Testing Library + MSW (test-only, nhãn `MOCK`), Playwright E2E với backend compose (gateway nội bộ local), axe, visual regression |
 | Target Platform | Desktop ≥ 1280 px cho builder; tablet/điện thoại chỉ xem |
@@ -79,7 +79,7 @@ src/cms/frontend/apps/portal/tests/e2e/game-ops/*.spec.ts
 
 ## Phase 0: Research
 
-Không có quyết định cần nghiên cứu riêng; thư viện form schema và graph là lựa chọn hiện thực [Proposed], không đổi contract.
+Không có quyết định cần nghiên cứu riêng; thư viện form schema và graph là lựa chọn hiện thực [Confirmed], không đổi contract.
 
 ## Phase 1: Design & Contracts
 

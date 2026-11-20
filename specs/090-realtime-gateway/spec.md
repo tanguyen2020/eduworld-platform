@@ -13,7 +13,7 @@
 - Q: Mỗi học sinh 1 kết nối (REALTIME_ARCHITECTURE §3, ADR-0031) hay `ws_connections_per_user` = 2 ([CONFIG_DEFAULTS](../../docs/00-overview/CONFIG_DEFAULTS.md))? → A: Một kết nối hiệu lực; kết nối mới thay kết nối cũ (đóng `4409`, không kèm message). Ghi chú CONFIG_DEFAULTS cần làm rõ (task Polish).
 - Q: Ai đẩy lệnh đóng khi `user.access_revoked`? → A: module identity publish message điều khiển lên `ew:rt:user:<id>` (REALTIME_ARCHITECTURE §10, phần publish thuộc F016); gateway không là consumer JetStream ([EVENT_DESIGN §3.2](../../docs/07-backend/EVENT_DESIGN.md)).
 - Q: Định tuyến `hub.*`: AsyncAPI ghi module game, REALTIME_ARCHITECTURE §4.1 ghi module competition? → A: Theo REALTIME_ARCHITECTURE §4.1 (tài liệu sở hữu); bảng định tuyến sinh từ AsyncAPI nên phải sửa phần mô tả định tuyến của AsyncAPI (contracts §6, quyết định ở F091 research R1).
-- Q: Gateway ghi audit thế nào khi không có database/outbox? → A: Publish trực tiếp `audit.recorded` lên JetStream (stream mới `EVT_REALTIME`) — at-most-once, chấp nhận cho audit vi phạm rate limit [Proposed]; contracts §6.
+- Q: Gateway ghi audit thế nào khi không có database/outbox? → A: Publish trực tiếp `audit.recorded` lên JetStream (stream mới `EVT_REALTIME`) — at-most-once, chấp nhận cho audit vi phạm rate limit [Confirmed]; contracts §6.
 
 ### Session 2026-11-17
 
@@ -198,5 +198,5 @@ Vận hành tăng/giảm replica theo lịch học, deploy không làm học sin
 ## Assumptions
 
 - F003 cung cấp `src/backend/pkg/natsx` (request/reply, header ngữ cảnh) và key builder Valkey; F014 đã có game session và `ew:game:active_session:<student_id>`.
-- Giới hạn tần suất frame, số lệnh đang chờ, hàng đợi gửi, tốc độ nhận kết nối mới chưa có tên trong CONFIG_DEFAULTS; đề xuất `ws_frame_rate`, `ws_inflight_commands`, `ws_send_queue`, `ws_accept_rate` (task Polish) [Proposed].
-- Stream `EVT_REALTIME` cho `audit.recorded` của gateway [Proposed] — cần cập nhật EVENT_DESIGN §3.1.
+- Giới hạn tần suất frame, số lệnh đang chờ, hàng đợi gửi, tốc độ nhận kết nối mới chưa có tên trong CONFIG_DEFAULTS; đề xuất `ws_frame_rate`, `ws_inflight_commands`, `ws_send_queue`, `ws_accept_rate` (task Polish) [Confirmed].
+- Stream `EVT_REALTIME` cho `audit.recorded` của gateway [Confirmed] — cần cập nhật EVENT_DESIGN §3.1.

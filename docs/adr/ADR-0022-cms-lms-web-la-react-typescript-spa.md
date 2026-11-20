@@ -9,8 +9,8 @@ Stakeholder xác nhận frontend quản trị dùng **React** và chọn **một
 ## Quyết định
 
 - **[Confirmed]** Frontend quản trị là SPA **React**: một ứng dụng `web/apps/portal` với 5 workspace (ADR-0027), component đặc thù trong `web/packages/ops-ui`.
-- **[Proposed]** Stack: TypeScript, Vite, React Router, TanStack Query, API client sinh từ OpenAPI bằng `openapi-typescript`, React Hook Form + Zod, `oidc-client-ts`; test Vitest + Testing Library, E2E Playwright.
-- **Giao diện Admin/Ops** chuyên cho vận hành game: Ant Design 5 + Ant Design Pro với theme EduWorld [Proposed], không theo phong cách game (ADR-0047). Công thức: MathJax 4 + MathLive (ADR-0055).
+- **[Confirmed]** Stack: TypeScript, Vite, React Router, TanStack Query, API client sinh từ OpenAPI bằng `openapi-typescript`, React Hook Form + Zod, `oidc-client-ts`; test Vitest + Testing Library, E2E Playwright.
+- **Giao diện Admin/Ops** chuyên cho vận hành game: Ant Design 5 + Ant Design Pro với theme EduWorld [Confirmed], không theo phong cách game (ADR-0047). Công thức: MathJax 4 + MathLive (ADR-0055).
 - Đăng nhập OIDC Authorization Code + PKCE qua client `eduworld-portal`; MFA bắt buộc với role platform. Token giữ trong bộ nhớ, không lưu `localStorage`.
 - Ẩn/hiện UI theo permission chỉ là tiện ích; backend luôn quyết định quyền.
 - Preview nội dung game bằng Godot Web export nhúng trong khung preview.

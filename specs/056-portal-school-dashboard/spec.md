@@ -203,5 +203,5 @@ Academic Manager xuất kết quả bài giao (XLSX) và báo cáo tham khảo T
 ## Assumptions
 
 - Thư mục `src/cms/frontend/apps/portal/src/workspaces/school-lms/dashboard/`, route `/portal/school-lms/dashboard/*` (ADMIN_PORTAL §1.2, F051).
-- [Proposed] Endpoint hồ sơ học sinh và phân tích đề/bài theo đề xuất ở [contracts §6](contracts/README.md) — chờ owner F043/F044 chốt; US2 phần hồ sơ và US3 phần phân tích chỉ chạy sau delta.
-- Số liệu "tự học sau gợi ý" (câu hỏi 4) cần trường bổ sung trong `SchoolDashboard` (delta [Proposed]); trước khi có, widget ẩn kèm "Chưa có số liệu".
+- [Confirmed] Endpoint hồ sơ học sinh và phân tích đề/bài theo đề xuất ở [contracts §6](contracts/README.md) — chờ owner F043/F044 chốt; US2 phần hồ sơ và US3 phần phân tích chỉ chạy sau delta.
+- Số liệu "tự học sau gợi ý" (câu hỏi 4) cần trường bổ sung trong `SchoolDashboard` (delta [Confirmed]); trước khi có, widget ẩn kèm "Chưa có số liệu".

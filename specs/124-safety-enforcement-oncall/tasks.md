@@ -99,7 +99,7 @@ Viết tắt: `ID/` = `src/backend/modules/identity/`, `CH/` = `src/backend/modu
 
 - [ ] T046 [P] Đăng ký tham số `break_glass_max_duration_hours`, `break_glass_max_window_days`, `oncall_shift_max_hours`, `email_delivery_max_attempts` vào CONFIG_DEFAULTS + tài liệu sở hữu (MODERATION §6.1, §6.3) — file: `docs/00-overview/CONFIG_DEFAULTS.md`, `docs/03-social-multiplayer/MODERATION.md`
 - [ ] T047 [P] DATABASE_DESIGN (bảng mới, cột mới); ACCOUNT_PROVISIONING §6 (khóa đa nguồn); MONITORING §3, §5 (metric, alert, `reason="break_glass"`) — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/09-identity/ACCOUNT_PROVISIONING.md`, `docs/11-operations/MONITORING.md`
-- [ ] T048 [P] Seed local `sa.admin2` [Proposed]; LOCAL_DEVELOPMENT bảng tài khoản demo — file: `deploy/keycloak/realm/seed-users.local.json`, `docs/11-operations/LOCAL_DEVELOPMENT.md`
+- [ ] T048 [P] Seed local `sa.admin2` [Confirmed]; LOCAL_DEVELOPMENT bảng tài khoản demo — file: `deploy/keycloak/realm/seed-users.local.json`, `docs/11-operations/LOCAL_DEVELOPMENT.md`
 - [ ] T049 [P] Contract test payload chat → identity (consumer-driven) cho 6 event tiêu thụ — file: `ID/tests/contract/chat_events_test.go`
 - [ ] T050 [P] CHANGELOG — file: `CHANGELOG.md`
 - [ ] T051 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng

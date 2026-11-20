@@ -26,7 +26,7 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (x-service `learning` trừ khi ghi k
 | `listCmsActivities` · `listActivityTypes` · `listCmsQuestionSets` · `listCmsAssessmentBlueprints` · `listCmsLessons` · `listCmsObjectives` | `GET /api/v1/cms/learning/…` | eduworld-api | `learning_content.read` | Có sẵn |
 | `listClasses` | `GET /api/v1/schools/{school_id}/classes` | eduworld-api (identity) | `lms.class.read` | Có sẵn |
 | `getExamSession` | `GET /api/v1/exams/sessions/{exam_session_id}` | eduworld-api | `lms.assignment.read` | Có sẵn |
-| `putExamAccommodations` | `PUT /api/v1/exams/sessions/{exam_session_id}/accommodations` | eduworld-api | `lms.assignment.write` [Proposed] | Cần thêm |
+| `putExamAccommodations` | `PUT /api/v1/exams/sessions/{exam_session_id}/accommodations` | eduworld-api | `lms.assignment.write` [Confirmed] | Cần thêm |
 | `createRegradeRequest` | `POST /api/v1/cms/learning/regrade-requests` (`scope = exam_session`) | eduworld-api | `learning_content.re_evaluate` · `Idempotency-Key` | Có sẵn |
 | `previewRegradeRequest` · `getRegradeRequest` | `POST …/regrade-requests:preview` · `GET …/regrade-requests/{regrade_request_id}` | eduworld-api | `learning_content.re_evaluate` | Cần thêm (owner F031, ghi ở F058 §6) |
 | `getMyPermissions` | `GET /api/v1/me/permissions` | eduworld-api (identity) | đã đăng nhập portal | Có sẵn |

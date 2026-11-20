@@ -198,7 +198,7 @@ Tablet ngang: dùng bố cục Web/PC thu tỉ lệ (vùng nội dung rộng t�
 
 ### 4.5. Dữ liệu & API, trạng thái
 
-- Mỗi lần "Kiểm tra" → `POST …/responses` `{position, response, client_elapsed_ms}`; phản hồi theo mode. Lượt thử lại theo [LEARNING_EXPERIENCE §4.2](../02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-proposed).
+- Mỗi lần "Kiểm tra" → `POST …/responses` `{position, response, client_elapsed_ms}`; phản hồi theo mode. Lượt thử lại theo [LEARNING_EXPERIENCE §4.2](../02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-confirmed).
 - Trạng thái riêng: chưa chọn đáp án → nút chính mờ + gợi ý "Chọn một đáp án"; đã khóa câu (hết lượt) → hiển thị đáp án đúng + giải thích (khi mode cho phép); gửi lỗi → giữ lựa chọn, nút "Gửi lại".
 
 ### 4.6. Khác biệt grade band
@@ -285,7 +285,7 @@ Tới mốc `at_ms`: video tạm dừng, khung video mờ, câu hỏi hiện ở
 
 ### 5.5. Song ngữ, trợ năng, hiệu năng
 
-- Phụ đề WebVTT `vi`/`en`; nút CC chọn vi/en/tắt; mặc định theo ngôn ngữ giao diện; môn Tiếng Anh mặc định phụ đề `en`, cho bật song song 2 dòng vi+en [Proposed].
+- Phụ đề WebVTT `vi`/`en`; nút CC chọn vi/en/tắt; mặc định theo ngôn ngữ giao diện; môn Tiếng Anh mặc định phụ đề `en`, cho bật song song 2 dòng vi+en [Confirmed].
 - Phụ đề vẽ bằng Label theo Theme (cỡ ≥ cỡ chữ cơ sở của khối, nền mờ).
 - Hiệu năng: P-1, P-3; dừng render thế giới 3D khi phát video; giải mã Theora trên thiết bị tầm trung ở 720p@30, 480p cho Web và preset Thấp.
 
@@ -342,7 +342,7 @@ API: `POST /learning/activities/{id}/attempts` (URL audio, transcript nếu đư
 | Lồng tiếng đề bài | Tự phát khi câu hỏi hiện (giọng tiếng Việt ghi sẵn); nút 🔊 lớn để nghe lại; lựa chọn có hình được đọc khi chạm giữ |
 | Lồng tiếng hướng dẫn quest/NPC | Thoại NPC trong bước quest học tập phát kèm hộp thoại |
 | Phụ đề + icon | Khung `VoiceCaption` (DESIGN_SYSTEM §5.1): chữ to theo cỡ đề bài của khối, icon người nói (NPC/loa) và biểu tượng hành động ("chạm", "kéo", "chọn") để làm được khi tắt tiếng hoặc không có tai nghe |
-| Gợi ý | Gợi ý cấp 1 có lồng tiếng và hình minh họa; hiện sau lượt sai đầu tiên theo [LEARNING_EXPERIENCE §4.2](../02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-proposed) |
+| Gợi ý | Gợi ý cấp 1 có lồng tiếng và hình minh họa; hiện sau lượt sai đầu tiên theo [LEARNING_EXPERIENCE §4.2](../02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-confirmed) |
 | Thiếu file lồng tiếng (nội dung cũ) | Dùng TTS nếu có, kèm phụ đề; không chặn học sinh làm bài |
 
 Cài đặt "Tự đọc đề bài" mặc định bật cho `g1_3`, tắt được trong S15. Tắt tiếng thiết bị → phụ đề luôn hiện. Hiệu năng: audio thoại nén Ogg Vorbis, tải trước cùng media câu kế tiếp (P-4).

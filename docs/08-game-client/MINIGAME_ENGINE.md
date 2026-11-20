@@ -13,10 +13,10 @@
 |---|---|---|
 | M-1 | Mini-game **không có ngân hàng câu hỏi riêng**; câu hỏi lấy từ Question Bank qua `question_source` | [Confirmed] (§3.5) |
 | M-2 | Mỗi lượt chơi là một **Attempt** (`mode = minigame`; ngữ cảnh quest/assignment/challenge ghi ở `context_ref`), chấm ở module learning | [Confirmed] (ADR-0016) |
-| M-3 | Mini-game là **lớp trình bày** (presentation) trên câu hỏi: cùng một câu hỏi có thể hiện dạng thẻ, bóng bay, xe đua... Ưu tiên mini-game mà thao tác chơi chính là khái niệm học, theo [LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md) | [Proposed] |
+| M-3 | Mini-game là **lớp trình bày** (presentation) trên câu hỏi: cùng một câu hỏi có thể hiện dạng thẻ, bóng bay, xe đua... Ưu tiên mini-game mà thao tác chơi chính là khái niệm học, theo [LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md) | [Confirmed] |
 | M-4 | Cấu hình hoàn toàn data-driven, phiên bản hóa (`MiniGameConfig` → `MiniGameConfigVersion`) | [Confirmed] |
-| M-5 | Hai loại điểm tách biệt: **learning score** (attempt, theo scoring rule câu hỏi) và **game score** (điểm vui, thưởng tốc độ/chuỗi). Cả hai do server tính; game score không ảnh hưởng mastery | [Proposed] (DOMAIN_MODEL §10) |
-| M-6 | Mini-game là một `activity_type = minigame` trong [Activity Registry](../02-learning/ACTIVITY_ENGINE.md) (ADR-0048): quest/assignment/challenge tham chiếu activity, không gọi riêng mini-game engine; plugin `minigame` dùng Exercise Engine làm lõi chấm | [Proposed] |
+| M-5 | Hai loại điểm tách biệt: **learning score** (attempt, theo scoring rule câu hỏi) và **game score** (điểm vui, thưởng tốc độ/chuỗi). Cả hai do server tính; game score không ảnh hưởng mastery | [Confirmed] (DOMAIN_MODEL §10) |
+| M-6 | Mini-game là một `activity_type = minigame` trong [Activity Registry](../02-learning/ACTIVITY_ENGINE.md) (ADR-0048): quest/assignment/challenge tham chiếu activity, không gọi riêng mini-game engine; plugin `minigame` dùng Exercise Engine làm lõi chấm | [Confirmed] |
 
 ## 2. Loại mini-game và tương thích câu hỏi
 
@@ -48,7 +48,7 @@ Schema chuẩn: [specs/schemas/minigame-config.schema.json](../../specs/schemas/
 |---|---|---|
 | Loại | `minigame_type` | `matching` |
 | Nguồn câu hỏi | `question_source` | `{ kind: "question_set", question_set_id, version }` hoặc `{ kind: "selection_rule", rule: { grade_levels, subject_id, topic_ids, objective_ids, difficulty_min, difficulty_max, question_types } }` |
-| Độ khó | `difficulty` | `1–5` hoặc `adaptive` [Proposed — chọn theo mastery, Phase 3] |
+| Độ khó | `difficulty` | `1–5` hoặc `adaptive` [Confirmed — chọn theo mastery, Phase 3] |
 | Thời gian | `time_limit_seconds`, `per_item_time_seconds` | 180 / null |
 | Số câu hỏi | `question_count` | 6 |
 | Điểm số | `scoring` | `points_per_correct`, `time_bonus`, `streak_bonus`, `wrong_penalty` (≥ 0, mặc định 0 cho lớp 1–5) |
@@ -151,7 +151,7 @@ sequenceDiagram
 | Tình huống | Xử lý |
 |---|---|
 | Hết giờ (`deadline_at` server) | Server tự đóng attempt (`expired`) và chấm phần đã trả lời; client nhận khi gọi lại hoặc qua notification |
-| Thoát giữa chừng | Attempt `in_progress`, resume theo policy (§4.4 Master Prompt) trong `resume_window` [Proposed 30 phút]; mini-game timed không resume |
+| Thoát giữa chừng | Attempt `in_progress`, resume theo policy (§4.4 Master Prompt) trong `resume_window` [Confirmed 30 phút]; mini-game timed không resume |
 | Mất mạng | Hàng đợi answers gửi lại cùng `Idempotency-Key`; đồng hồ hiển thị dựa server time, không "dừng giờ" trên client |
 | Prefetch | `timed_challenge` nhận sẵn batch items (render payload) để không chờ mạng giữa các câu; kết quả chấm vẫn từ server |
 
@@ -161,7 +161,7 @@ sequenceDiagram
 2. Minigame scorer (module `minigame`) tính **game score** từ chuỗi answers: `points_per_correct`, `time_bonus` dựa `answered_at` server − thời điểm item được phát, `streak_bonus`. Không dùng `client_elapsed_ms` để tính điểm.
 3. `completion_rule` đánh giá trên learning score → báo cho quest (nếu có context quest).
 4. module learning phát `activity.graded` (gồm phần `minigame`: `learning_score`, `game_score`, `completion_met`); module game tiêu thụ, ghi lượt chơi và phát `minigame.completed` đúng một lần → Reward Engine áp `reward_rule_id` với cap/diminishing returns. module learning **không** tiêu thụ `minigame.completed` (evidence học tập đã có từ `activity.*` của chính nó, tránh trùng).
-5. Anti-cheat: thời gian trả lời nhỏ hơn ngưỡng tối thiểu hợp lý theo loại câu (vd. < 300 ms cho câu cần đọc) bị gắn cờ `suspicious_timing` để phân tích, không tự động phạt học sinh [Proposed] (xem ANTI_CHEAT).
+5. Anti-cheat: thời gian trả lời nhỏ hơn ngưỡng tối thiểu hợp lý theo loại câu (vd. < 300 ms cho câu cần đọc) bị gắn cờ `suspicious_timing` để phân tích, không tự động phạt học sinh [Confirmed] (xem ANTI_CHEAT).
 
 ## 7. Thêm một mini-game mới — checklist
 

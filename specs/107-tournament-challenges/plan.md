@@ -122,7 +122,7 @@ Không có. Thuật toán và luật đã định ở [COMPETITION_SYSTEM §10](
 - Metric: `eduworld_tournament_matches_scheduled_total`, `eduworld_tournament_forfeits_total{reason}`, `eduworld_tournament_overrides_total`, `eduworld_tournament_scheduler_lag_seconds`.
 - Span: `CreateChallenge`, `GenerateBracket`, `ScheduleDueNodes`, `AdvanceOnMatch`, `AwardRewards`.
 
-Ước lượng: 2–3 sprint (backend 2 dev) [Proposed].
+Ước lượng: 2–3 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

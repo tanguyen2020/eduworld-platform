@@ -23,7 +23,7 @@ Stakeholder yêu cầu phân biệt được học sinh thuộc tenant nào đ�
    - Token có claim `organization` thì tenant đó phải nằm trong danh sách; không khớp → `403 TENANT_MISMATCH`, audit + security event, không tạo session.
    - Tenant bị tắt → `TENANT_ACCESS_DISABLED`.
    - Học sinh tenant thường phải có enrollment active (SIS); học sinh tenant chung không cần SIS.
-   - **JIT provisioning:** khớp bản ghi SIS của một tenant → tạo trong tenant đó (cách tìm SIS nguồn: ADR-0046); không khớp tenant nào và người dùng không chọn tenant → tạo trong **tenant chung**, School ảo "EduWorld chung" [Proposed].
+   - **JIT provisioning:** khớp bản ghi SIS của một tenant → tạo trong tenant đó (cách tìm SIS nguồn: ADR-0046); không khớp tenant nào và người dùng không chọn tenant → tạo trong **tenant chung**, School ảo "EduWorld chung" [Confirmed].
 5. **Một tenant hoạt động cho mỗi phiên.** `Principal.tenant_id` lấy từ bước 4; repository dùng `TenantScope`; RLS `SET LOCAL app.tenant_id`. Đổi tenant = xin token mới (SSO). System Admin không gắn tenant, dùng chế độ liên tenant của ADR-0027.
 6. **Username duy nhất toàn realm** (`hs.<school_code>.<student_code>`) nhưng **không** dùng để suy ra tenant; tenant chỉ lấy từ claim đã ký và membership trong DB.
 

@@ -17,7 +17,7 @@
 - **Cổng hiệu năng máy tầm trung** [Confirmed — ADR-0057]: từ M1, mỗi mốc có client phải đạt ngân sách của [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) cho các cảnh có trong mốc, đo trên thiết bị lab hạng Tầm trung; benchmark CI (TC-PERF-018) chặn merge khi vượt.
 - Learning Engine là lõi: mọi gameplay phải dùng Learning Engine thật, không hardcode câu hỏi. CMS/LMS làm trước theo [CODE_PLAN](CODE_PLAN_CMS_LMS_FIRST.md).
 - Thứ tự an toàn chat: chat gameplay (`match`/`team`/`party`) luôn có khi có chế độ chơi cùng nhau (ADR-0020 mục 6). Ở pilot, kiểu co-op duy nhất dùng channel `party` chỉ cho quick message + emote (preset ADR-0078), pipeline kiểm tra với PII/grooming luôn chạy và report tối thiểu phải sẵn sàng. Text tự do trong `party`/`match`/`team` mở ở giai đoạn Mở rộng khi gate CS-01b/CS-01d/CS-02/CS-04/CS-08 đạt; channel bền vững (World, Area, Class, Study Group, DM) và club ở giai đoạn Hoàn thiện.
-- Ước lượng theo **sprint 2 tuần**, giả định đội: 3 Go, 3 Godot (gồm 1 tech artist), 2–3 web trong giai đoạn CMS-first ([CODE_PLAN §1.2](CODE_PLAN_CMS_LMS_FIRST.md#12-rủi-ro-của-việc-đổi-thứ-tự)), 1 QA, 0,5 DevOps (tăng khi dựng production pilot nếu cần), 1 EdTech, 1 Game Designer, 1 UX/UI, PM/Architect [Proposed]. Backend là **modular monolith** ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md), thay ADR-0036): 3 binary, một cụm PostgreSQL, một pipeline Go theo ma trận module, nên không còn giả định thêm Go dev hay DevOps toàn thời gian để vận hành 6 service và 6 bộ image/pipeline/dashboard. Thay đổi đội → ước lượng lại.
+- Ước lượng theo **sprint 2 tuần**, giả định đội: 3 Go, 3 Godot (gồm 1 tech artist), 2–3 web trong giai đoạn CMS-first ([CODE_PLAN §1.2](CODE_PLAN_CMS_LMS_FIRST.md#12-rủi-ro-của-việc-đổi-thứ-tự)), 1 QA, 0,5 DevOps (tăng khi dựng production pilot nếu cần), 1 EdTech, 1 Game Designer, 1 UX/UI, PM/Architect [Confirmed]. Backend là **modular monolith** ([ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md), thay ADR-0036): 3 binary, một cụm PostgreSQL, một pipeline Go theo ma trận module, nên không còn giả định thêm Go dev hay DevOps toàn thời gian để vận hành 6 service và 6 bộ image/pipeline/dashboard. Thay đổi đội → ước lượng lại.
 
 **Quy tắc nghiệm thu milestone**
 
@@ -34,7 +34,7 @@
 
 | Giai đoạn | Mục tiêu (tuần từ 2026-11-16) | Phạm vi chính | Cổng ra |
 |---|---|---|---|
-| **Pilot ưu tiên giáo dục** | Sẵn sàng khoảng tuần 30–36 (M-P1); vận hành theo năm học [Proposed] | Learning Engine 6–8 loại câu hỏi; LMS nhà trường (giao bài, School Learning Dashboard, heatmap LO); Toán + Tiếng Việt lớp 1–5; quest `main`/`learning`/`daily`/`weekly` + boss solo; 4–5 mini-game trong đó ≥ 2 cơ chế "kỹ năng là cách chơi" ([LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md)); XP, level, shop cosmetic; một kiểu co-op phụ thuộc lẫn nhau; chat chỉ quick message + emote; 4 nền tảng; mặc định an toàn ADR-0078; hạ tầng nghiên cứu hiệu quả (F035) | M-P2: báo cáo hiệu quả đạt ngưỡng ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)) |
+| **Pilot ưu tiên giáo dục** | Sẵn sàng khoảng tuần 30–36 (M-P1); vận hành theo năm học [Confirmed] | Learning Engine 6–8 loại câu hỏi; LMS nhà trường (giao bài, School Learning Dashboard, heatmap LO); Toán + Tiếng Việt lớp 1–5; quest `main`/`learning`/`daily`/`weekly` + boss solo; 4–5 mini-game trong đó ≥ 2 cơ chế "kỹ năng là cách chơi" ([LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md)); XP, level, shop cosmetic; một kiểu co-op phụ thuộc lẫn nhau; chat chỉ quick message + emote; 4 nền tảng; mặc định an toàn ADR-0078; hạ tầng nghiên cứu hiệu quả (F035) | M-P2: báo cáo hiệu quả đạt ngưỡng ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)) |
 | **Mở rộng** | Phát triển song song từ sau M-P1; phát hành cho trường sau M-P2 | Knowledge Battle 1v1 + bot, Team Battle, Glicko-2, leaderboard cấp trường; chat `party`/`match`/`team` có text tự do với kiểm duyệt đầy đủ; party đầy đủ (Addendum); thêm môn/khối; đủ 11 loại câu hỏi, 11 mini-game, 12 loại quest, 8 vùng; challenge engine, Game Operations Console | Exit criteria M2, M3, M4a, M4b |
 | **Hoàn thiện** = Release 1.0 | Sau Mở rộng | Leaderboard Global và đủ 13 bảng, các định dạng giải còn lại, đủ 8 chế độ matchmaking/thi đấu, đủ 8 channel + DM, bạn bè đầy đủ, club, season/event, moderation nâng cao, chứng minh 10.000 CCU, phát hành store đầy đủ | Exit criteria M5, M6 |
 
@@ -70,7 +70,7 @@
 
 M-C3 thay mốc "M3 School Loop" của bản trước; "M3" nay là Game Ops theo CODE_PLAN.
 
-Ước lượng [Proposed]: pilot sẵn sàng ~tuần 36 (Phase 0: 3 sprint, Phase 1: 6 sprint, M-C2 + M-C3: 7 sprint; lát cắt gameplay pilot chạy song song từ giữa Phase 1 ở làn Godot/module game); vận hành pilot ≥ 8 tuần học + kiểm tra trước/sau (~12 tuần); Mở rộng ~10 sprint; Hoàn thiện ~12 sprint. Tổng tới M6 xấp xỉ bản trước (~80+ tuần) nhưng có sản phẩm tại trường sớm khoảng 1 năm. **Lịch pilot phải khớp năm học** (khai giảng đầu tháng 9): nếu M-P1 rơi vào hè, dùng thời gian còn lại cho UAT, đào tạo nhà trường và kiểm tra trước, pilot chạy học kỳ I [Proposed — RISK-05].
+Ước lượng [Confirmed]: pilot sẵn sàng ~tuần 36 (Phase 0: 3 sprint, Phase 1: 6 sprint, M-C2 + M-C3: 7 sprint; lát cắt gameplay pilot chạy song song từ giữa Phase 1 ở làn Godot/module game); vận hành pilot ≥ 8 tuần học + kiểm tra trước/sau (~12 tuần); Mở rộng ~10 sprint; Hoàn thiện ~12 sprint. Tổng tới M6 xấp xỉ bản trước (~80+ tuần) nhưng có sản phẩm tại trường sớm khoảng 1 năm. **Lịch pilot phải khớp năm học** (khai giảng đầu tháng 9): nếu M-P1 rơi vào hè, dùng thời gian còn lại cho UAT, đào tạo nhà trường và kiểm tra trước, pilot chạy học kỳ I [Confirmed — RISK-05].
 
 Song song từ M-C2: **dòng sản xuất nội dung** (EdTech + content team). Pilot: Toán + Tiếng Việt lớp 1–5, khối lượng do PO + EdTech chốt [TBD — OQ-08]. Mở rộng/Hoàn thiện: Tiếng Anh, Khoa học (Tự nhiên & Xã hội / Khoa học / KHTN theo khối) và lớp 6–9. Engine không giới hạn số môn.
 
@@ -225,7 +225,7 @@ Phạm vi theo [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.
 - **Chat chỉ quick message + emote**: channel `party` luôn có (ADR-0020 mục 6) với preset `quick_message_emote_only` áp mặc định cho mọi trường pilot; pipeline kiểm tra (PII/grooming luôn chạy) cho tham số quick message; báo cáo người chơi và hàng đợi Safety Team tối thiểu.
 - **Mặc định an toàn ADR-0078**: giờ giới nghiêm platform 21:30–06:30 cho game và chat, trường chỉ siết thêm; tenant `common` tắt kết bạn/DM/World chat; công tắc kiểm duyệt có `expires_at` ≤ 24 giờ + hai người duyệt ([CHILD_SAFETY](../10-security/CHILD_SAFETY.md)).
 - **Bốn nền tảng** (ADR-0013): Windows (bộ cài ký số, mặc định máy dùng chung, tùy chọn "máy cá nhân"), Android, iOS (ký + TestFlight/App Store hoặc MDM trường), Web qua CDN; đăng nhập bằng form trong game và màn "Tiếp tục là <nickname>?" trên mọi nền tảng.
-- **Production quy mô pilot** (NFR-SCAL-001, [DEPLOYMENT §4.1](../11-operations/DEPLOYMENT.md#41-pilot-nfr-scal-001-5-trường--5000-hs--1000-ccu--proposed)): Docker Swarm production, PostgreSQL HA + PITR, object storage theo [ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md) (spike xong, đã chọn backend), backup/khôi phục diễn tập, giám sát/alert, runbook; pen-test đăng nhập game và refresh token.
+- **Production quy mô pilot** (NFR-SCAL-001, [DEPLOYMENT §4.1](../11-operations/DEPLOYMENT.md#41-pilot-nfr-scal-001-5-trường--5000-hs--1000-ccu--confirmed)): Docker Swarm production, PostgreSQL HA + PITR, object storage theo [ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md) (spike xong, đã chọn backend), backup/khôi phục diễn tập, giám sát/alert, runbook; pen-test đăng nhập game và refresh token.
 - **Hạ tầng nghiên cứu hiệu quả (F035, ADR-0080)**: bài kiểm tra độc lập trước/sau (đề riêng, không dùng câu luyện tập), gắn lớp so sánh, xuất dữ liệu định danh giả, A/B cấu hình mastery theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md); consent và định danh giả theo ADR-0077.
 - Vận hành: UAT với trường pilot, đào tạo `school_admin`/`academic_manager`, tài liệu người dùng; Safety Team có lịch trực cho `p1`.
 
@@ -250,7 +250,7 @@ Phạm vi theo [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.
 **Trải nghiệm người chơi:** như M-P1; học sinh làm bài kiểm tra độc lập trước và sau (không phải hoạt động luyện tập trong game).
 
 **Phạm vi**
-- Vận hành pilot tối thiểu **8 tuần học** [Proposed — ADR-0080] tại trường pilot, có lớp so sánh; theo dõi KPI [PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md#7-mục-tiêu-đo-lường-kpi-đề-xuất).
+- Vận hành pilot tối thiểu **8 tuần học** [Confirmed — ADR-0080] tại trường pilot, có lớp so sánh; theo dõi KPI [PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md#7-mục-tiêu-đo-lường-kpi-đề-xuất).
 - Bài kiểm tra độc lập cuối kỳ; phân tích learning gain, effect size, đối chiếu mastery với kết quả kiểm tra (độ tin cậy dự báo) theo [LEARNING_EFFICACY_PLAN §4–§5](../02-learning/LEARNING_EFFICACY_PLAN.md#4-chỉ-số); hiệu chỉnh tham số mastery (ADR-0017).
 - Sửa lỗi, tinh chỉnh nội dung và gợi ý theo dữ liệu thật; không phát hành chức năng Mở rộng tới trường trong thời gian này.
 
@@ -302,7 +302,7 @@ Phát triển song song từ sau M-P1; chỉ phát hành tới trường sau M-P
 #### Exit criteria và demo (M5)
 
 - [ ] TC-CHAT-001…010 pass (tạo/tham gia channel, gửi/nhận, block, report, moderation, không truy cập channel trái phép, không đọc tin trường khác, PII bị chặn, cùng quy tắc cho mọi lớp); tenant `common` vẫn không có DM/World chat (TC-CHAT-047).
-- [ ] Bộ test lọc tiếng Việt (≥ 2.000 mẫu có/không dấu, teencode) đạt recall ≥ 95% cho danh mục cấm, false positive ≤ 3% [Proposed].
+- [ ] Bộ test lọc tiếng Việt (≥ 2.000 mẫu có/không dấu, teencode) đạt recall ≥ 95% cho danh mục cấm, false positive ≤ 3% [Confirmed].
 - [ ] `safety_moderator` đọc liên tenant chỉ trong module moderation qua `tenancy.Bypass` có audit; nhà trường nhận thông báo vụ việc không chứa chat thô (TC-CHAT-042…043).
 - [ ] Đủ 8 chế độ matchmaking, 8 competition mode, 13 loại leaderboard, 6 format tournament theo Master Prompt §5.2–§5.5; season/event chạy được qua Game Live Operations.
 - [ ] Cổng hiệu năng M5: chat panel (danh sách ảo hóa, sticker/GIF) giữ ngân sách UI §9 [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) khi channel có > 500 tin.

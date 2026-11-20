@@ -26,10 +26,10 @@ Ranh giới: số đếm **người chơi / hành vi** → Game Analytics; **th�
 | A-1 | Chỉ báo cáo số liệu **tổng hợp**; không lập hồ sơ hành vi từng học sinh; không dùng dữ liệu analytics để chấm điểm, xếp loại hay quảng cáo | [Confirmed — FR-ANL-004, ADR-0058] |
 | A-2 | **Không** dùng thời gian chơi làm thước đo thành công; không đặt mục tiêu tăng thời lượng phiên. Chỉ số thời lượng chỉ dùng để phát hiện chơi quá mức | [Confirmed — PRODUCT_VISION §7] |
 | A-3 | Tối thiểu hóa dữ liệu: chỉ thu thuộc tính cần cho chỉ số đã định nghĩa; không thu nội dung chat, vị trí GPS, danh bạ, định danh phần cứng | [Confirmed] |
-| A-4 | Định danh người chơi trong analytics là **khóa giả danh** `player_key` = HMAC-SHA256(`student_id`, khóa bí mật analytics), xoay khóa mỗi 24 tháng; không lưu `student_id`, tên, nickname | [Proposed] |
-| A-5 | Báo cáo cho tenant ẩn ô có **< 5 học sinh** (k-anonymity, cùng ngưỡng LEARNING_ANALYTICS) | [Proposed] |
-| A-6 | Sự kiện phía server là nguồn chính; telemetry client chỉ bổ sung cái server không thấy (màn hình, tutorial, hiệu năng, lỗi client) | [Proposed] |
-| A-7 | Mỗi chỉ số định nghĩa **một lần** ở §4; đổi định nghĩa = tăng `metric_version`, không viết lại dữ liệu cũ | [Proposed] |
+| A-4 | Định danh người chơi trong analytics là **khóa giả danh** `player_key` = HMAC-SHA256(`student_id`, khóa bí mật analytics), xoay khóa mỗi 24 tháng; không lưu `student_id`, tên, nickname | [Confirmed] |
+| A-5 | Báo cáo cho tenant ẩn ô có **< 5 học sinh** (k-anonymity, cùng ngưỡng LEARNING_ANALYTICS) | [Confirmed] |
+| A-6 | Sự kiện phía server là nguồn chính; telemetry client chỉ bổ sung cái server không thấy (màn hình, tutorial, hiệu năng, lỗi client) | [Confirmed] |
+| A-7 | Mỗi chỉ số định nghĩa **một lần** ở §4; đổi định nghĩa = tăng `metric_version`, không viết lại dữ liệu cũ | [Confirmed] |
 | A-8 | **Tenant QA** (`tenants.is_qa = true`, chỉ System Admin đặt; tenant `common` không được đánh dấu) không được tính vào analytics: consumer và `POST /game/telemetry` bỏ sự kiện của tenant QA (không ghi `events_raw`/`player_days`, metric `eduworld_analytics_events_dropped_total{reason="qa_tenant"}`); mọi rollup, API chỉ số và export loại tenant QA kể cả dữ liệu ghi trước khi đánh dấu, khi `tenant_ids` chỉ định tenant QA thì trả rỗng kèm `excluded_tenant_ids`; Tenant Admin của tenant QA nhận số liệu rỗng. Bỏ cờ → sự kiện mới được tính, không backfill thời gian đã đánh dấu | [Confirmed — Technical Architect 2026-11-16] |
 
 ## 3. Danh mục sự kiện tracking
@@ -72,7 +72,7 @@ Gửi theo lô, nén, tần suất và kích thước theo [MONITORING §10](MON
 | `client_error` / `crash` | `error_code`, `scene_code`, `fatal` | Khi xảy ra | Crash-free sessions; chi tiết stack trace đi error tracking |
 | `break_reminder_shown` | `reminder_no` (1–20, lần nhắc thứ mấy trong phiên), `minutes_played` (0–1.440, số phút chơi liên tục client đếm lúc nhắc) | Mỗi lần game client hiện hộp nhắc nghỉ (F062-AC-21; lời nhắc bị hoãn chỉ gửi khi thật sự hiện), gửi trong lô kế tiếp | Chỉ số chơi lành mạnh §4.6 (F080). Không PII; server gắn `session_key` từ game session của token (không nhận từ client), khử trùng `client_event_id`; giá trị client chỉ dùng cho thống kê, không dùng để chặn chơi hay tính thưởng (ADR-0016). Ngưỡng nhắc do [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) sở hữu (`break_reminder`) |
 
-Trường hoặc platform tắt telemetry sản phẩm (không thiết yếu) thì client không gửi `screen_view`/`tutorial_step`; `perf_sample`, `load_time`, `crash` vẫn gửi vì phục vụ ổn định, `break_reminder_shown` vẫn gửi vì phục vụ giám sát chơi lành mạnh (FR-ANL-010) [Proposed].
+Trường hoặc platform tắt telemetry sản phẩm (không thiết yếu) thì client không gửi `screen_view`/`tutorial_step`; `perf_sample`, `load_time`, `crash` vẫn gửi vì phục vụ ổn định, `break_reminder_shown` vẫn gửi vì phục vụ giám sát chơi lành mạnh (FR-ANL-010) [Confirmed].
 
 ## 4. Định nghĩa chỉ số
 
@@ -102,7 +102,7 @@ Trường hoặc platform tắt telemetry sản phẩm (không thiết yếu) th
 | `boss_defeat_rate` | `result = defeated` ÷ encounter, theo `party_size`, khối | Boss version · tuần |
 | `abandon_rate` | Gộp: quest bỏ, challenge `abandoned`, trận `abandoned` ÷ số bắt đầu tương ứng | Ngày |
 
-Ngưỡng cân bằng độ khó tham khảo cho game designer [Proposed]: `challenge_success_rate` mục tiêu 60–85% ở mức Normal; quest có `quest_abandon_rate` > 40% vào danh sách cần xem lại.
+Ngưỡng cân bằng độ khó tham khảo cho game designer [Confirmed]: `challenge_success_rate` mục tiêu 60–85% ở mức Normal; quest có `quest_abandon_rate` > 40% vào danh sách cần xem lại.
 
 ### 4.3. Tiến trình và khám phá
 
@@ -238,7 +238,7 @@ Tenant Admin/School Admin (và Academic Manager có `analytics.school.read` scop
 | School Admin, Academic Manager | Trường của mình trong tenant, báo cáo §7.2; quyết định theo permission, không theo tên vai trò. UserRole scope `subject` (Academic Manager theo môn) không đủ cho báo cáo game cấp trường → `403 PERMISSION_DENIED` | `analytics.school.read` (scope `school`) |
 | Safety Moderator, học sinh | Không có quyền Game Analytics | — |
 
-Tra ngược `player_key` → học sinh chỉ dùng cho hỗ trợ/an toàn, do System Admin thực hiện qua công cụ riêng, bắt buộc lý do và audit [Proposed].
+Tra ngược `player_key` → học sinh chỉ dùng cho hỗ trợ/an toàn, do System Admin thực hiện qua công cụ riêng, bắt buộc lý do và audit [Confirmed].
 
 ## 9. Retention và quyền riêng tư
 

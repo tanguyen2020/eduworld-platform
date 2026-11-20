@@ -81,7 +81,7 @@ Viết tắt: `<module>` ∈ `identity`, `learning`, `game`, `competition`, `cha
 
 - [ ] T036 [P] BACKUP_RECOVERY §3.5, §9 RB-01 bước 7 (lệnh cụ thể, exit code, cách đọc báo cáo); TEST_STRATEGY §4 (cờ `is_qa`) — file: `docs/11-operations/BACKUP_RECOVERY.md`, `docs/12-project/TEST_STRATEGY.md`
 - [ ] T037 [P] DATABASE_DESIGN (`is_qa`), GAME_ANALYTICS §5 (bỏ tenant QA), DASHBOARD_DATA §2, DEPLOYMENT §9 (chỉ mục bộ cài, trang portal), ADMIN_PORTAL §2.2 (`school.installer.read`), §10 sitemap C — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/11-operations/GAME_ANALYTICS.md`, `docs/07-backend/DASHBOARD_DATA.md`, `docs/11-operations/DEPLOYMENT.md`, `docs/04-admin-portal/ADMIN_PORTAL.md`
-- [ ] T038 [P] Đăng ký `reconcile_settle_minutes` [Proposed] — file: `docs/00-overview/CONFIG_DEFAULTS.md`
+- [ ] T038 [P] Đăng ký `reconcile_settle_minutes` [Confirmed] — file: `docs/00-overview/CONFIG_DEFAULTS.md`
 - [ ] T039 [P] MONITORING: `eduworld_analytics_events_dropped_total`, `eduworld_school_kit_index_fetch_total`, alert `SchoolKitIndexInvalid` + rule — file: `docs/11-operations/MONITORING.md`, `deploy/observability/prometheus/rules/game.yaml`
 - [ ] T040 [P] Workflow nightly (`on.schedule` trong `go.yml`) chạy T011 (TC-SVC-014) — file: `.github/workflows/go.yml`
 - [ ] T041 [P] CHANGELOG — file: `CHANGELOG.md`

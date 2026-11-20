@@ -12,7 +12,7 @@
    - `answer_key` — chỉ server đọc.
    - `scoring_rule` — chỉ server đọc.
    - `explanation` và phản hồi theo phương án (`options[].feedback`) — gửi cho client **sau khi** chấm, theo `FeedbackTiming` ([ACTIVITY_ENGINE §8](ACTIVITY_ENGINE.md#8-phản-hồi-trong-game)).
-   - `hints[]` — gửi từng cấp khi học sinh xin gợi ý ([ACTIVITY_ENGINE §8.3](ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-proposed)).
+   - `hints[]` — gửi từng cấp khi học sinh xin gợi ý ([ACTIVITY_ENGINE §8.3](ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-confirmed)).
 4. Module `question_bank` cung cấp port cho module khác:
 
 ```go
@@ -31,15 +31,15 @@ type Delivery interface {
 |---|---|---|
 | `question_version_id`, `question_id`, `version` | ✔ (`question_version_id`) | |
 | `type` | ✔ | `QuestionType`, 11 dạng §3 |
-| `stem` | ✔ | rich content (CONTENT_MODEL §9); `stem.audio_ref` bắt buộc với nhóm `g1_3` ([CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-proposed)) |
+| `stem` | ✔ | rich content (CONTENT_MODEL §9); `stem.audio_ref` bắt buộc với nhóm `g1_3` ([CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed)) |
 | `render_payload` | ✔ | dữ liệu hiển thị theo dạng |
 | `answer_key` | ✘ | đáp án |
 | `scoring_rule` | ✘ | cách tính điểm |
-| `options[].feedback` | sau chấm | Phản hồi riêng cho từng phương án (i18n, ≤ 500 ký tự) [Proposed]: thuộc **phần đáp án**, bị loại khỏi DTO render như `options[].misconception_tag`; chỉ trả trong `ActivityResponseResult.feedback` ([ACTIVITY_ENGINE §8.2](ACTIVITY_ENGINE.md#82-phản-hồi-theo-phương-án-nhiễu-proposed)). Áp dụng cho dạng có `options` (`single_choice`, `multiple_choice`); dạng khác dùng `explanation` |
+| `options[].feedback` | sau chấm | Phản hồi riêng cho từng phương án (i18n, ≤ 500 ký tự) [Confirmed]: thuộc **phần đáp án**, bị loại khỏi DTO render như `options[].misconception_tag`; chỉ trả trong `ActivityResponseResult.feedback` ([ACTIVITY_ENGINE §8.2](ACTIVITY_ENGINE.md#82-phản-hồi-theo-phương-án-nhiễu-confirmed)). Áp dụng cho dạng có `options` (`single_choice`, `multiple_choice`); dạng khác dùng `explanation` |
 | `explanation` | sau chấm | lời giải |
-| `hints[]` | từng cấp, khi xin | Gợi ý nhiều cấp (≤ 5): cấp 1 định hướng ("Nhớ lại bảng nhân 7"), cấp 2 bước trung gian ("7 × 8 = 7 × 7 + 7"), cấp cuối gần lời giải nhưng không nêu đáp án. Phục vụ qua `hints:next` ([ACTIVITY_ENGINE §8.3](ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-proposed)); không có trong render payload ban đầu. Khuyến nghị ≥ 2 cấp cho câu dùng trong practice/quest của `g1_3`, `g4_5` [Proposed] |
-| `worked_example_ref?` | ✔ | Object `{content_item_id, block_id}`: `content_item_id` là lesson hoặc learning material, `block_id` là `id` của khối `worked_example` trong version hiện hành của nội dung đó, có ít nhất một LO chung với câu hỏi ([CONTENT_MODEL §9.2](CONTENT_MODEL.md#92-khối-worked_example-proposed)); tham chiếu không tồn tại → `422`. Client hiện nút "Xem ví dụ mẫu" sau khi trả lời sai [Proposed] |
-| `min_response_ms?` | ✘ | Ngưỡng thời gian tối thiểu để không bị coi là đoán bừa; không khai báo thì dùng mặc định theo loại câu ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed)) [Proposed] |
+| `hints[]` | từng cấp, khi xin | Gợi ý nhiều cấp (≤ 5): cấp 1 định hướng ("Nhớ lại bảng nhân 7"), cấp 2 bước trung gian ("7 × 8 = 7 × 7 + 7"), cấp cuối gần lời giải nhưng không nêu đáp án. Phục vụ qua `hints:next` ([ACTIVITY_ENGINE §8.3](ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-confirmed)); không có trong render payload ban đầu. Khuyến nghị ≥ 2 cấp cho câu dùng trong practice/quest của `g1_3`, `g4_5` [Confirmed] |
+| `worked_example_ref?` | ✔ | Object `{content_item_id, block_id}`: `content_item_id` là lesson hoặc learning material, `block_id` là `id` của khối `worked_example` trong version hiện hành của nội dung đó, có ít nhất một LO chung với câu hỏi ([CONTENT_MODEL §9.2](CONTENT_MODEL.md#92-khối-worked_example-confirmed)); tham chiếu không tồn tại → `422`. Client hiện nút "Xem ví dụ mẫu" sau khi trả lời sai [Confirmed] |
+| `min_response_ms?` | ✘ | Ngưỡng thời gian tối thiểu để không bị coi là đoán bừa; không khai báo thì dùng mặc định theo loại câu ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed)) [Confirmed] |
 | `max_score` | ✔ | điểm tối đa (mặc định 1) |
 | meta: `difficulty`, `grade_levels`, `subject_id`, `topic_id`, `objective_ids`, `status`, `author_id`, `reviewer_id`, `published_at`, `content_language` | một phần | client chỉ nhận `difficulty`, `grade_levels`, `subject_id` |
 
@@ -107,7 +107,7 @@ Response: `{ "option_ids": ["o_1", "o_3"] }`.
 | `right_minus_wrong` [mặc định] | `max(0, (c − w) / C) × max_score` |
 | `proportional` | `c / C × max_score` nếu `w = 0`, ngược lại 0 |
 
-`show_correct_count=true` cho lớp 1–3 ("Chọn 2 đáp án") [Proposed].
+`show_correct_count=true` cho lớp 1–3 ("Chọn 2 đáp án") [Confirmed].
 
 ### 3.3. `true_false`
 
@@ -211,8 +211,8 @@ Công thức Toán, Lý, Hóa **chỉ để hiển thị** trong game: trong đ�
 | `ordering` | Sắp xếp các bước biến đổi biểu thức |
 | `drag_drop` | Kéo hệ số vào phương trình cân bằng (thẻ là số/công thức đã render) |
 
-- [Proposed] Câu hỏi bắt học sinh **gõ biểu thức toán** (đáp án là biểu thức) không có trong game Release 1.0. Loại đánh giá này dùng hình thức khác (chọn đáp án, nhập số, điền số/từ, sắp xếp bước biến đổi).
-- **An toàn:** LaTeX là dữ liệu không tin cậy: allowlist lệnh/extension (`ams`, `mhchem`, `color` giới hạn), chặn `\href`, `\url`, `\html*`, `\class`, `\style`, `\require`, `\unicode`, macro tự định nghĩa; giới hạn độ dài 2.000 và độ sâu lồng 20 [Proposed]. SVG luôn được sanitize phía server (chỉ phần tử/thuộc tính SVG an toàn, không `<script>`, không thuộc tính sự kiện, không tham chiếu ngoài), ≤ 256 KB [Proposed]. Thiếu SVG, SVG không hợp lệ hoặc LaTeX ngoài allowlist → `422 MATH_RENDER_FAILED`.
+- [Confirmed] Câu hỏi bắt học sinh **gõ biểu thức toán** (đáp án là biểu thức) không có trong game Release 1.0. Loại đánh giá này dùng hình thức khác (chọn đáp án, nhập số, điền số/từ, sắp xếp bước biến đổi).
+- **An toàn:** LaTeX là dữ liệu không tin cậy: allowlist lệnh/extension (`ams`, `mhchem`, `color` giới hạn), chặn `\href`, `\url`, `\html*`, `\class`, `\style`, `\require`, `\unicode`, macro tự định nghĩa; giới hạn độ dài 2.000 và độ sâu lồng 20 [Confirmed]. SVG luôn được sanitize phía server (chỉ phần tử/thuộc tính SVG an toàn, không `<script>`, không thuộc tính sự kiện, không tham chiếu ngoài), ≤ 256 KB [Confirmed]. Thiếu SVG, SVG không hợp lệ hoặc LaTeX ngoài allowlist → `422 MATH_RENDER_FAILED`.
 
 ### 3.7. `matching` — Nối cặp
 
@@ -332,13 +332,13 @@ Quy tắc:
 3. Lowercase (theo locale vi).
 4. Bỏ dấu câu ở đầu/cuối (`.,!?;:"'`).
 5. Chuẩn hóa vị trí dấu thanh kiểu cũ/mới (`hoà` ≡ `hòa`, `thuỷ` ≡ `thủy`) bằng bảng ánh xạ.
-6. Nếu `allow_diacritics_missing=true`: so sánh thêm sau khi bỏ dấu (`ha noi` ≡ `Hà Nội`) — **mặc định false** cho môn Tiếng Việt (chính tả là mục tiêu học), true cho môn khác [Proposed].
+6. Nếu `allow_diacritics_missing=true`: so sánh thêm sau khi bỏ dấu (`ha noi` ≡ `Hà Nội`) — **mặc định false** cho môn Tiếng Việt (chính tả là mục tiêu học), true cho môn khác [Confirmed].
 7. Fuzzy (tùy chọn): Levenshtein ≤ `max_edit_distance` (1–2) khi chuỗi đã chuẩn hóa ≥ `min_length` (≥ 3); không áp dụng cho môn Tiếng Việt/Tiếng Anh chính tả — lưu câu thuộc môn `vietnamese`/`english` có `fuzzy.enabled = true` bị từ chối `422 VALIDATION_FAILED`, `errors[].code = FUZZY_NOT_ALLOWED_FOR_SUBJECT` (F023).
 8. Số trong chuỗi: `"5"` ≡ `"năm"` chỉ khi khai báo trong `accepted`.
 
-`match = exact`: chỉ bước 1–2. Các bước chuẩn hóa được unit test bằng bộ test-case tiếng Việt (≥ 200 cặp) [Proposed].
+`match = exact`: chỉ bước 1–2. Các bước chuẩn hóa được unit test bằng bộ test-case tiếng Việt (≥ 200 cặp) [Confirmed].
 
-## 5. Câu hỏi tham số hóa [Proposed]
+## 5. Câu hỏi tham số hóa [Confirmed]
 
 `render_payload.params` định nghĩa biến ngẫu nhiên; server sinh giá trị theo `seed` của attempt, lưu vào `attempt_items.presentation.params`:
 
@@ -356,7 +356,7 @@ Stem `"{{a}} × {{b}} = ?"`, `answer_key.value = "{{a}} * {{b}}"`. Server render
 
 Evaluator (F023): số, biến đã khai báo, `+ − × ÷ ^` (cả `* / :`), so sánh `== != < <= > >=` (`=` ≡ `==`), `&& || !` (`and or not`), ngoặc; mọi định danh khác và lời gọi hàm bị từ chối khi lưu; số học chính xác (phân số), biểu thức ≤ 255 ký tự, độ sâu ≤ 32, số mũ nguyên |e| ≤ 10. Chỉ `single_choice` và `numeric` có `params`; tối đa 10 biến (`int`, `decimal` cần `step`, `choice` giá trị số ≤ 20), 10 ràng buộc. Giá trị đã sinh lưu ở `presentation.params` (chuỗi thập phân) và hiển thị theo `content_language` (`vi`: dấu phẩy thập phân).
 
-Sinh giá trị bằng rejection sampling: rút ngẫu nhiên theo `seed` tới khi bộ giá trị thỏa mọi `constraints` (phép chia cho 0 coi là không thỏa), tối đa `param_sampling_max_tries` = 1.000 lần [Proposed] (phạm vi `code`). Khi lưu câu hỏi, server chạy cùng giới hạn để kiểm khả thi; không tìm được bộ giá trị nào → `422 VALIDATION_FAILED`.
+Sinh giá trị bằng rejection sampling: rút ngẫu nhiên theo `seed` tới khi bộ giá trị thỏa mọi `constraints` (phép chia cho 0 coi là không thỏa), tối đa `param_sampling_max_tries` = 1.000 lần [Confirmed] (phạm vi `code`). Khi lưu câu hỏi, server chạy cùng giới hạn để kiểm khả thi; không tìm được bộ giá trị nào → `422 VALIDATION_FAILED`.
 
 ## 6. Chọn câu ngẫu nhiên theo điều kiện
 
@@ -386,15 +386,15 @@ Sinh giá trị bằng rejection sampling: rút ngẫu nhiên theo `seed` tới 
 }
 ```
 
-Thuật toán [Proposed]:
+Thuật toán [Confirmed]:
 
 1. Lọc ứng viên: version `published`, scope khả dụng cho học sinh, khớp filter.
 2. Loại câu học sinh đã gặp trong `window_days` (từ `attempt_items`), nếu còn đủ ứng viên.
 3. Chia theo `distribution` (hoặc theo objective nếu `per_objective`), chọn ngẫu nhiên có trọng số bằng PRNG seed = `attempt.seed` → tái lập được.
 4. Không đủ câu: nới lỏng theo thứ tự `avoid_recent` → difficulty ±1; vẫn thiếu → lỗi `QUESTION_POOL_INSUFFICIENT` (CMS cảnh báo khi pool < 3 × count).
 5. `prefer_weak_objectives=true` (retry/practice thích ứng): trọng số ∝ `1 − mastery` của LO.
-6. **Câu anh em** — `prefer_siblings_of: [question_id…]` (mode `retry_wrong`) [Proposed]: với mỗi câu đã sai, chọn một câu **anh em** = cùng ít nhất một `objective_id`, cùng `type`, cùng `difficulty`, khác `question_id`, chưa gặp trong `window_days`. Ưu tiên câu anh em có `p_value` gần câu gốc nhất. Không có câu anh em → nới `difficulty` ±1 → cuối cùng mới dùng version hiện hành của chính `question_id` đó (mastery giảm trọng số bằng `w_rep`, [LEARNING_ANALYTICS §3.1](LEARNING_ANALYTICS.md#31-định-nghĩa)). Câu tham số hóa (§5) tự sinh giá trị mới nên được coi là câu anh em của chính nó khi tham số khác lần trước.
-7. **Luyện trộn chủ đề (interleaving)** — `interleave.enabled=true` với `filters.topic_ids` gồm ≥ 2 topic [Proposed]: chia `count` cho các topic theo `interleave.mix` (tỉ lệ mặc định ở [LEARNING_EXPERIENCE §5.2](LEARNING_EXPERIENCE.md#52-luyện-trộn-chủ-đề-interleaving-proposed); không khai báo thì chia đều), rồi sắp thứ tự sao cho không quá `max_consecutive_same_topic` câu liên tiếp cùng topic. Dùng cho gợi ý "Luyện trộn" ([LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules)) và Practice Zone.
+6. **Câu anh em** — `prefer_siblings_of: [question_id…]` (mode `retry_wrong`) [Confirmed]: với mỗi câu đã sai, chọn một câu **anh em** = cùng ít nhất một `objective_id`, cùng `type`, cùng `difficulty`, khác `question_id`, chưa gặp trong `window_days`. Ưu tiên câu anh em có `p_value` gần câu gốc nhất. Không có câu anh em → nới `difficulty` ±1 → cuối cùng mới dùng version hiện hành của chính `question_id` đó (mastery giảm trọng số bằng `w_rep`, [LEARNING_ANALYTICS §3.1](LEARNING_ANALYTICS.md#31-định-nghĩa)). Câu tham số hóa (§5) tự sinh giá trị mới nên được coi là câu anh em của chính nó khi tham số khác lần trước.
+7. **Luyện trộn chủ đề (interleaving)** — `interleave.enabled=true` với `filters.topic_ids` gồm ≥ 2 topic [Confirmed]: chia `count` cho các topic theo `interleave.mix` (tỉ lệ mặc định ở [LEARNING_EXPERIENCE §5.2](LEARNING_EXPERIENCE.md#52-luyện-trộn-chủ-đề-interleaving-confirmed); không khai báo thì chia đều), rồi sắp thứ tự sao cho không quá `max_consecutive_same_topic` câu liên tiếp cùng topic. Dùng cho gợi ý "Luyện trộn" ([LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules)) và Practice Zone.
 
 Truy vấn ứng viên dùng index `(subject_id, grade_level, topic_id, difficulty) WHERE status='published'` và cache danh sách ID theo filter trong Valkey 5 phút (`ew:learning:qb:pool:<tenant_id>:<filter_hash>`), xóa khi có `content.published`/`content.rolled_back`/`content.unpublished` của câu hỏi liên quan. Pool chỉ chứa version là **con trỏ hiện hành** của mỗi câu (không chọn version cũ đã publish nhưng không còn là con trỏ). Render payload từng version lấy từ snapshot bất biến `ew:learning:cv:question:<id>:<v>`; `answer_key` cache riêng phía server (`ew:learning:key:<question_version_id>`, không bao giờ trả client, không lên CDN) — ADR-0043.
 
@@ -416,9 +416,9 @@ Truy vấn ứng viên dùng index `(subject_id, grade_level, topic_id, difficul
 | Tải hàng loạt question bank qua API | Không có endpoint liệt kê render payload cho học sinh ngoài attempt; CMS API yêu cầu role biên tập |
 | Battle: đối thủ nhìn đáp án qua mạng | Server chỉ phát kết quả câu sau khi khóa câu trả lời của mọi người chơi |
 
-## 9. Thống kê chất lượng câu hỏi (item analysis) [Proposed]
+## 9. Thống kê chất lượng câu hỏi (item analysis) [Confirmed]
 
-Worker tính hằng đêm cho question version có ≥ `item_analysis_min_responses` = 30 lần trả lời đầu (sau khi loại `rapid_guess`) [Proposed], chỉ dùng **lần trả lời đầu tiên có tính điểm** và **loại** lần trả lời gắn `rapid_guess` ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed)), tách riêng lần trả lời có dùng gợi ý:
+Worker tính hằng đêm cho question version có ≥ `item_analysis_min_responses` = 30 lần trả lời đầu (sau khi loại `rapid_guess`) [Confirmed], chỉ dùng **lần trả lời đầu tiên có tính điểm** và **loại** lần trả lời gắn `rapid_guess` ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed)), tách riêng lần trả lời có dùng gợi ý:
 
 - `p_value` (tỷ lệ đúng) — so với `difficulty` khai báo; lệch lớn → cờ "cần hiệu chỉnh độ khó".
 - `discrimination` (point-biserial với tổng điểm attempt).
@@ -427,7 +427,7 @@ Worker tính hằng đêm cho question version có ≥ `item_analysis_min_respon
 
 Kết quả lưu `content.question_stats` và hiển thị trong CMS; **không** tự động sửa version đã publish.
 
-### 9.1. Hiệu chỉnh độ khó bán tự động [Proposed]
+### 9.1. Hiệu chỉnh độ khó bán tự động [Confirmed]
 
 Độ khó do tác giả khai báo được hiệu chỉnh theo dữ liệu thật, **luôn có người duyệt**:
 
@@ -443,7 +443,7 @@ Ngưỡng ≥ 100 lượt và bảng ánh xạ trên (`difficulty_calibration`):
 
 1. Hằng tuần worker so `difficulty` khai báo với độ khó đề xuất; lệch ≥ 1 mức → tạo **đề xuất hiệu chỉnh** trong hàng đợi CMS (kèm `p_value`, số lượt, phân bố theo khối).
 2. Người duyệt nội dung (`content_reviewer`/`tenant_content_reviewer` theo `owner_scope`) chấp nhận hoặc bỏ qua. Chấp nhận → hệ thống tạo **version mới** chỉ đổi `difficulty` (`change_note = "difficulty_calibration"`), đi qua publish như thường (ADR-0015, R11); không sửa version đã publish.
-3. Ngược lại, khi câu chưa đủ dữ liệu, `p̂` dùng cho sinh đề ([EXAM_ENGINE §4.1](EXAM_ENGINE.md#41-cân-bằng-độ-khó-giữa-các-biến-thể-proposed)) suy từ `difficulty` theo giá trị giữa khoảng của bảng trên (1 → 0,90; 2 → 0,77; 3 → 0,60; 4 → 0,40; 5 → 0,20).
+3. Ngược lại, khi câu chưa đủ dữ liệu, `p̂` dùng cho sinh đề ([EXAM_ENGINE §4.1](EXAM_ENGINE.md#41-cân-bằng-độ-khó-giữa-các-biến-thể-confirmed)) suy từ `difficulty` theo giá trị giữa khoảng của bảng trên (1 → 0,90; 2 → 0,77; 3 → 0,60; 4 → 0,40; 5 → 0,20).
 4. Câu bị bỏ qua đề xuất 2 lần liên tiếp không được đề xuất lại trong 90 ngày.
 
 ## 10. Yêu cầu chức năng

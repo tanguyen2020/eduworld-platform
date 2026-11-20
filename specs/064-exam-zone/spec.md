@@ -155,5 +155,5 @@ Khi nhà trường giao bài/đề mới, học sinh thấy toast và badge 🔔
 ## Assumptions
 
 - F063 cung cấp renderer câu hỏi (chế độ exam), `PendingWrites`; F062 cung cấp `AssignmentService`, HUD, `suspend_world`; F061 cung cấp `Clock`.
-- Delta [Proposed]: `MyAssignment.exam_session_id` (chung F062), `ExamSession.navigation`, tham số `takeover` cho `startExamAttempt` (contracts §6).
+- Delta [Confirmed]: `MyAssignment.exam_session_id` (chung F062), `ExamSession.navigation`, tham số `takeover` cho `startExamAttempt` (contracts §6).
 - Ân hạn đồng bộ offline 30 giây của exam ([EXAM_ENGINE §6](../../docs/02-learning/EXAM_ENGINE.md)) chưa có trong CONFIG_DEFAULTS; client không dựa vào giá trị này (server quyết định qua `EXAM_TIME_OVER`).

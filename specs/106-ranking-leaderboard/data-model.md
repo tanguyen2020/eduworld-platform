@@ -81,8 +81,8 @@ Valkey (Rebuildable, [VALKEY_DESIGN §3.1](../../docs/07-backend/VALKEY_DESIGN.m
 
 ## 3. Quy tắc kiểm tra dữ liệu
 
-- Glicko-2 và tham số: [COMPETITION_SYSTEM §7.2–§7.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#72-tham-số-proposed); rating chỉ cập nhật khi `match.completed.rated = true`.
-- Bảng điểm, trần: [COMPETITION_SYSTEM §8.3, §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#83-competition-points-proposed); `effort_points` bỏ attempt `rapid_guess_flagged`.
+- Glicko-2 và tham số: [COMPETITION_SYSTEM §7.2–§7.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#72-tham-số-confirmed); rating chỉ cập nhật khi `match.completed.rated = true`.
+- Bảng điểm, trần: [COMPETITION_SYSTEM §8.3, §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#83-competition-points-confirmed); `effort_points` bỏ attempt `rapid_guess_flagged`.
 - Visibility: [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#94-privacy-và-an-toàn-trẻ-em) theo khối người xem.
 
 ## 4. Event / outbox

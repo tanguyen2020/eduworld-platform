@@ -7,7 +7,7 @@
 
 ### Session 2026-11-16
 
-- Q: Curriculum version mặc định theo năm học của trường (`school.settings.curriculum_version_id`, CURRICULUM_MODEL §5) lưu ở đâu khi chưa có endpoint cài đặt trường nào chứa trường này? → A: [Proposed] module learning (sở hữu curriculum) lưu cài đặt theo trường × năm học × khối; course đọc trực tiếp, không gọi module identity.
+- Q: Curriculum version mặc định theo năm học của trường (`school.settings.curriculum_version_id`, CURRICULUM_MODEL §5) lưu ở đâu khi chưa có endpoint cài đặt trường nào chứa trường này? → A: [Confirmed] module learning (sở hữu curriculum) lưu cài đặt theo trường × năm học × khối; course đọc trực tiếp, không gọi module identity.
 - Q: Rule gợi ý R6 (topic kế tiếp theo lịch LMS) thuộc feature nào? → A: F040 đăng ký R6 vào rule engine của F032 ([LEARNING_ANALYTICS §6](../../docs/02-learning/LEARNING_ANALYTICS.md#6-recommendation-rules)).
 - Q: Học sinh đọc lộ trình và lịch trong game qua API nào? → A: Route học sinh nằm dưới `/learning/*` (`/lms/*` chỉ cho nhân sự, API_DESIGN §9.3); hạn nộp lấy từ `listMyAssignments` (F041); lộ trình và lịch bài học cần endpoint mới (contracts §6).
 - Q: Study group thuộc module nào? → A: Đã chốt — [ADR-0084](../../docs/adr/ADR-0084-nhom-hoc-tap-thuoc-learning-service.md): module learning sở hữu (`lms.study_groups`, `lms.study_group_members`), phát `study_group.created/updated/member_changed/deleted` qua outbox; module chat (M5, F120) tạo channel `study_group` từ event; club do học sinh tạo vẫn thuộc module chat.
@@ -190,7 +190,7 @@ Mọi endpoint của F040 chỉ cho đúng vai trò, đúng trường/môn, đú
 
 ## Assumptions
 
-- [Proposed] Course tự tạo, lộ trình mẫu theo bộ sách, `mastery_gate` mở khi LO trước ≥ `developing` (SCHOOL_LMS §3).
-- [Proposed] Cài đặt curriculum của trường lưu ở module learning; đổi cài đặt không đổi course đã tạo của năm học hiện tại.
+- [Confirmed] Course tự tạo, lộ trình mẫu theo bộ sách, `mastery_gate` mở khi LO trước ≥ `developing` (SCHOOL_LMS §3).
+- [Confirmed] Cài đặt curriculum của trường lưu ở module learning; đổi cài đặt không đổi course đã tạo của năm học hiện tại.
 - Projection `ref.classes`, `ref.enrollments`, `ref.students` đã có từ F020 (event `class.synced`, `enrollment.changed`).
-- Seed GDPT Toán lớp 1–5 có bộ sách và topic để dựng lộ trình mẫu (OQ-08 [Proposed]).
+- Seed GDPT Toán lớp 1–5 có bộ sách và topic để dựng lộ trình mẫu (OQ-08 [Confirmed]).

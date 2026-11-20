@@ -9,7 +9,7 @@
 
 - Q: Channel `study_group` lấy thành viên từ đâu? → A: Theo [ADR-0084](../../docs/adr/ADR-0084-nhom-hoc-tap-thuoc-learning-service.md): module chat tiêu thụ `study_group.created/updated/member_changed/deleted` của module learning (F040), chỉ giữ bản chiếu thành viên trong `chat.channel_members`; không gọi đồng bộ module learning, không có bảng `social.study_group_members`.
 - Q: Study group còn là một `club_type`? → A: Không (ADR-0084 mục 4). `ClubType` bỏ `study_group` (delta contract); SOCIAL_SYSTEM §6.1, DATABASE_DESIGN §2.11, CHAT_SYSTEM §4 cần sửa theo (báo cáo).
-- Q: Club (trừ study group) dùng `channel_type` nào? → A: [Proposed] `team` cố định, `scope_ref = {club_id}`, `is_gameplay = false`, không purge — khớp CHAT_SYSTEM §2 ("team cố định") và CHECK `is_gameplay` của DATABASE_DESIGN §2.12.
+- Q: Club (trừ study group) dùng `channel_type` nào? → A: [Confirmed] `team` cố định, `scope_ref = {club_id}`, `is_gameplay = false`, không purge — khớp CHAT_SYSTEM §2 ("team cố định") và CHECK `is_gameplay` của DATABASE_DESIGN §2.12.
 - Q: Ai sửa chính sách chat từng cấp? → A: Platform: System Admin; tenant: `tenant.settings.write`; trường và lớp: `school.settings.write` (School Admin trường mình) — [ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md). Contract chưa có → delta.
 - Q: Thời hạn lưu channel bền vững? → A: Mặc định 180 ngày theo CHAT_SYSTEM §2, FR-CHAT-006; tên tham số chưa đăng ký CONFIG_DEFAULTS → đề xuất `persistent_chat_retention_days` (Assumptions).
 
@@ -210,8 +210,8 @@ Sau 180 ngày, nội dung tin channel lớp được ẩn danh hóa; tin liên q
 
 ## Assumptions
 
-- [Proposed] Club dùng channel `team` cố định (Clarifications); CHAT_SYSTEM §2 cần ghi rõ.
-- [Proposed] Thời hạn lưu channel bền vững đọc từ `platform.platform_settings` khóa `chat_retention.persistent_days` (mặc định 180, CHAT_SYSTEM §2); đề xuất đăng ký tên `persistent_chat_retention_days` trong CONFIG_DEFAULTS (task Polish).
-- [Proposed] `student_club_creation` đọc từ projection `ref.schools` (event `school.updated` của identity, F015); giá trị theo SOCIAL_SYSTEM `disabled`/`requires_approval`/`auto` (RB-511 đã chốt theo SOCIAL_SYSTEM).
-- [Proposed] Metric `minutes_learning` của club goal chỉ tính khi `activity.graded` có `duration_seconds` (delta, owner F031); trước đó tạo goal metric này trả `422 VALIDATION_FAILED`.
-- OQ-09: khung giờ chat mặc định còn mở; dùng mặc định `[Proposed]` CHAT_SYSTEM §3.1.
+- [Confirmed] Club dùng channel `team` cố định (Clarifications); CHAT_SYSTEM §2 cần ghi rõ.
+- [Confirmed] Thời hạn lưu channel bền vững đọc từ `platform.platform_settings` khóa `chat_retention.persistent_days` (mặc định 180, CHAT_SYSTEM §2); đề xuất đăng ký tên `persistent_chat_retention_days` trong CONFIG_DEFAULTS (task Polish).
+- [Confirmed] `student_club_creation` đọc từ projection `ref.schools` (event `school.updated` của identity, F015); giá trị theo SOCIAL_SYSTEM `disabled`/`requires_approval`/`auto` (RB-511 đã chốt theo SOCIAL_SYSTEM).
+- [Confirmed] Metric `minutes_learning` của club goal chỉ tính khi `activity.graded` có `duration_seconds` (delta, owner F031); trước đó tạo goal metric này trả `422 VALIDATION_FAILED`.
+- OQ-09: khung giờ chat mặc định còn mở; dùng mặc định `[Confirmed]` CHAT_SYSTEM §3.1.

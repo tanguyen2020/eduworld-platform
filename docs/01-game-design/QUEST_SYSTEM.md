@@ -15,9 +15,9 @@ Quest là cầu nối giữa **thế giới game** và **Learning Engine** [Conf
 | Q-2 | Tiến độ quest do **server** quyết định; client chỉ báo sự kiện tương tác và hiển thị | [Confirmed] (ADR-0016) |
 | Q-3 | Bước học tập luôn tạo **Attempt riêng của từng học sinh** — kể cả trong party | [Confirmed] (Addendum §4) |
 | Q-4 | Quest liên kết `grade_levels`, `subject_id`, `topic_ids`, `objective_ids` | [Confirmed] |
-| Q-5 | Không trừng phạt nặng khi sai: bước học tập cho phép thử lại với câu hỏi mới; quest không "thất bại" vì trả lời sai | [Proposed] |
-| Q-6 | Phần thưởng đi qua Reward Engine (cap, diminishing returns) — quest chỉ khai báo ý định thưởng | [Proposed] |
-| Q-7 | Ưu tiên bước mà **hành động chính chính là khái niệm học** (cơ chế học tập nội tại, [LEARNING_MECHANICS](LEARNING_MECHANICS.md)); bước khung (`talk_npc`/`go_to`/`collect`) chỉ dẫn dắt | [Proposed] |
+| Q-5 | Không trừng phạt nặng khi sai: bước học tập cho phép thử lại với câu hỏi mới; quest không "thất bại" vì trả lời sai | [Confirmed] |
+| Q-6 | Phần thưởng đi qua Reward Engine (cap, diminishing returns) — quest chỉ khai báo ý định thưởng | [Confirmed] |
+| Q-7 | Ưu tiên bước mà **hành động chính chính là khái niệm học** (cơ chế học tập nội tại, [LEARNING_MECHANICS](LEARNING_MECHANICS.md)); bước khung (`talk_npc`/`go_to`/`collect`) chỉ dẫn dắt | [Confirmed] |
 
 ## 2. Data model
 
@@ -60,7 +60,7 @@ Entity: `QuestDefinition` (định danh) → `QuestVersion` (nội dung bất bi
 | `period_key` | Cho daily/weekly: `2026-11-15`, `2026-W46` — unique `(student_id, quest_id, period_key)` |
 | `started_at`, `completed_at`, `expires_at` | Thời gian server |
 
-Bất biến: một học sinh có tối đa **một** `QuestProgress` `active` cho mỗi `quest_id`; số quest active đồng thời ≤ 10 [Proposed].
+Bất biến: một học sinh có tối đa **một** `QuestProgress` `active` cho mỗi `quest_id`; số quest active đồng thời ≤ 10 [Confirmed].
 
 ### 2.3. Mười hai loại quest
 
@@ -81,7 +81,7 @@ Bất biến: một học sinh có tối đa **một** `QuestProgress` `active` 
 
 ### 2.4. Daily và weekly quest
 
-Tài liệu này sở hữu các tham số sau [Proposed]:
+Tài liệu này sở hữu các tham số sau [Confirmed]:
 
 | Tham số | Giá trị |
 |---|---|
@@ -110,7 +110,7 @@ Tài liệu này sở hữu các tham số sau [Proposed]:
 | `activity` | Làm hoạt động học tập: `content_ref.item_type` ∈ `question_set`, `lesson`, `assessment`, `activity` (activity tương tác, video, audio, mô phỏng — [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)) | `activities:start` → attempt | Attempt do `exercise` chấm; hoàn thành khi thỏa `pass_rule` |
 | `minigame` | Chơi mini-game (câu hỏi từ Learning Engine) | `activities:start` → attempt | Như `activity`; xem [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) |
 | `party_activity` | Hoạt động tập thể (co-op puzzle, đếm chung) | qua room co-op | Mỗi thành viên có attempt riêng; tiến độ tập thể = tổng hợp theo `collective_target` |
-| `interdependent` | Câu đố **phụ thuộc lẫn nhau**: mỗi thành viên giữ một phần dữ kiện theo `role`, chỉ giải được khi ghép dữ kiện của cả nhóm [Proposed] | qua room co-op (§3.2) | Server chỉ gửi dữ kiện của role cho người giữ role đó; mỗi thành viên trả lời câu hỏi cuối trong attempt riêng |
+| `interdependent` | Câu đố **phụ thuộc lẫn nhau**: mỗi thành viên giữ một phần dữ kiện theo `role`, chỉ giải được khi ghép dữ kiện của cả nhóm [Confirmed] | qua room co-op (§3.2) | Server chỉ gửi dữ kiện của role cho người giữ role đó; mỗi thành viên trả lời câu hỏi cuối trong attempt riêng |
 | `discover` | Tìm N điểm khám phá/vật sưu tầm trong area | `:discover` ([WORLD_DESIGN](WORLD_DESIGN.md) §8) | Như `collect`, đồng thời ghi `exploration_progress` |
 | `challenge` | Hoàn thành một challenge (tùy chọn độ khó tối thiểu) | `/game/challenges/{id}:start` | Hoàn thành khi `challenge.completed` với `status = succeeded` và độ khó ≥ `challenge_min_difficulty` |
 | `boss` | Hạ một boss | `/game/bosses/{id}/encounters` | Hoàn thành khi `boss.encounter_completed` `defeated` và học sinh đạt `min_contribution` |
@@ -128,7 +128,7 @@ Bước `talk_npc`/`go_to`/`collect` **không cấp mastery/điểm**; chúng ch
 - Không đạt → bước vẫn `active`, học sinh được gợi ý ôn (link lesson của LO yếu) và thử lại với bộ câu mới (`retry_policy: new_questions`).
 - `max_attempts_per_day` chống farm; vượt → thông báo "Hãy quay lại ngày mai" (thân thiện).
 
-### 3.2. Gán bước trong party và bước `interdependent` [Proposed]
+### 3.2. Gán bước trong party và bước `interdependent` [Confirmed]
 
 **`assignee`** (mọi bước, chỉ có nghĩa khi quest chơi theo party): `each_member` (mặc định cho bước học tập — mỗi người tự làm), `any_member` (một người làm tính cho cả nhóm, chỉ cho bước khung, theo `shared_progress_policy` §6), `role:<role>` (chỉ người giữ role đó làm).
 
@@ -160,7 +160,7 @@ Quy tắc:
 |---|---|
 | `npc` | Nhận từ NPC (dialogue action `give_quest`) |
 | `quest_board` | Bảng nhiệm vụ ở hub |
-| `auto_daily` / `auto_weekly` | Server cấp khi bắt đầu kỳ (lần đăng nhập đầu tiên trong kỳ), chọn theo grade/subject và LO yếu [Proposed] |
+| `auto_daily` / `auto_weekly` | Server cấp khi bắt đầu kỳ (lần đăng nhập đầu tiên trong kỳ), chọn theo grade/subject và LO yếu [Confirmed] |
 | `assignment` | Nhà trường giao qua LMS (`school_admin`/`academic_manager`, `Assignment.content_ref` trỏ quest); hiển thị ở tab "Nhà trường giao" trong game |
 | `event` | Sự kiện live-ops đang chạy (`event_id`; [EVENT_SEASON_SYSTEM](EVENT_SEASON_SYSTEM.md)); sự kiện bị tạm dừng/kết thúc thì quest ẩn khỏi danh sách nhận mới; quest đã nhận vẫn hoàn thành được theo version đã ghim đến hết `claim_grace_hours` sau khi sự kiện kết thúc |
 | `chain` | Tự mở khi hoàn thành quest trước (`prerequisites.completed_quest_ids`) |
@@ -201,7 +201,7 @@ stateDiagram-v2
 
 `party_mode`: `solo` | `party_optional` | `party_required`. `party_size`: `{min, max}`.
 
-Tài liệu này là **nguồn duy nhất** của enum `shared_progress_policy` (khớp [quest.schema.json](../../specs/schemas/quest.schema.json) và `completion_rule` của boss); [PARTY_SYSTEM §7.1](../03-social-multiplayer/PARTY_SYSTEM.md#71-shared-quest-progress) chỉ tham chiếu. Ba giá trị [Proposed]:
+Tài liệu này là **nguồn duy nhất** của enum `shared_progress_policy` (khớp [quest.schema.json](../../specs/schemas/quest.schema.json) và `completion_rule` của boss); [PARTY_SYSTEM §7.1](../03-social-multiplayer/PARTY_SYSTEM.md#71-shared-quest-progress) chỉ tham chiếu. Ba giá trị [Confirmed]:
 
 | `shared_progress_policy` | Bước `talk_npc`/`go_to`/`collect` | Bước học tập | Dùng cho |
 |---|---|---|---|
@@ -213,7 +213,7 @@ Bước `interdependent` (§3.2) dùng được với mọi policy. Tên trong b
 
 Quy tắc [Confirmed] (Addendum §4, §6):
 - Kết quả học tập, attempt, mastery **luôn cá nhân**; party chỉ chia sẻ **tiến độ quest** theo policy.
-- Thành viên rời party giữa chừng: giữ `QuestProgress` cá nhân với tiến độ đã có; các bước shared đã hoàn thành vẫn giữ [Proposed].
+- Thành viên rời party giữa chừng: giữ `QuestProgress` cá nhân với tiến độ đã có; các bước shared đã hoàn thành vẫn giữ [Confirmed].
 - Thành viên disconnect: party tiếp tục nếu `party_mode ≠ party_required` hoặc số người còn lại ≥ `party_size.min`; người quay lại trong 120 s được nối lại (xem PARTY_SYSTEM).
 - Server kiểm tra mọi thành viên thỏa `grade_levels` và policy trước khi bắt đầu (Addendum §5 bước 3).
 - `min_contribution` chống "ăn theo": mỗi thành viên phải tự hoàn thành tối thiểu phần học tập của mình mới nhận thưởng.

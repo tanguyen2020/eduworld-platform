@@ -4,7 +4,7 @@
 
 ## 1. Chuẩn bị
 
-- Phụ thuộc đã Done: F105 (`match.completed`), F104; seed Ranking Rules, mùa "pre-season", danh mục leaderboard mặc định ([COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-proposed)).
+- Phụ thuộc đã Done: F105 (`match.completed`), F104; seed Ranking Rules, mùa "pre-season", danh mục leaderboard mặc định ([COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-confirmed)).
 - Lệnh: `make up`, `make seed`, `make run-core-api`, `make run-worker PROFILE=events` (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (lớp 3, TH Demo A), `hs.chi.3b`, `hs.dung.7a` (lớp 7, `pgd-demo`), `hs.em.4a` (lớp 4), `ad.truong.a`, `ad.truong.b`, `qlcm.truong.a`. Dữ liệu 50.000 học sinh cho SC-005: script `tests/perf/seed_leaderboard.go`.
 

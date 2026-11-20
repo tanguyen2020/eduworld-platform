@@ -39,7 +39,7 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
 | `audit.recorded` | Phát (`report.exported`, `learning.reference_report_exported`, audit chấp nhận/bỏ qua đề xuất) | `specs/events/envelope.schema.json` | Có sẵn |
-| `report.completed` | Phát (thông báo portal) | `specs/events/payloads/learning/report.completed.v1.schema.json` | Cần thêm [Proposed] |
+| `report.completed` | Phát (thông báo portal) | `specs/events/payloads/learning/report.completed.v1.schema.json` | Cần thêm [Confirmed] |
 | `exam.closed` | Tiêu thụ | `specs/events/payloads/learning/exam.closed.v1.schema.json` | Cần thêm (thuộc F042; EXAM_ENGINE §5 có, EVENT_DESIGN §4.3 thiếu) |
 | `attempt.re_evaluated` | Tiêu thụ (tính lại bảng kết quả, thống kê) | `specs/events/payloads/learning/attempt.re_evaluated.v1.schema.json` | Cần thêm (thuộc F031) |
 

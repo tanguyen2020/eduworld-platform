@@ -3,7 +3,7 @@
 > Trạng thái: Draft · Phiên bản: 0.1 · Owner: Game Director + EdTech Specialist · Cập nhật: 2026-11-15
 > Liên quan: [GAME_DESIGN §6](GAME_DESIGN.md#6-học-tập-lồng-trong-gameplay) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) · [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) PED-03 · [ADR-0016](../adr/ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) · [ADR-0052](../adr/README.md) · [ADR-0073 (Proposed)](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md)
 
-Toàn bộ nội dung tài liệu là **[Proposed]** cho tới khi Game Director và EdTech Specialist duyệt.
+Toàn bộ nội dung tài liệu là **[Confirmed]** cho tới khi Game Director và EdTech Specialist duyệt.
 
 ## 1. Mục đích và phạm vi
 
@@ -81,7 +81,7 @@ Không tạo hệ thống mới; mỗi cơ chế dùng một trong các khối s
 | Bước quest `minigame` ([QUEST_SYSTEM §3](QUEST_SYSTEM.md#3-step-types)) + `minigame_type` hiện có (`drag_and_drop`, `ordering`, `word_game`, `matching`) | `LM-MATH-03`, `LM-VIE-01`, `LM-VIE-02`, `LM-VIE-03`, `LM-ENG-02`, `LM-SCI-03` | Câu hỏi `drag_drop`/`ordering`/`fill_in_blank` ở Question Bank, chấm server | Scene trình bày mới trong cùng `minigame_type` (không đổi schema) |
 | Câu hỏi `interactive` (validator kiểm chuỗi hành động, [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)) trong bước `minigame` | `LM-MATH-01`, `LM-MATH-02` (lớp 1–5), `LM-MATH-04`, `LM-MATH-05`, `LM-VIE-04`, `LM-ENG-01` | Validator server tính lại từ chuỗi hành động | `minigame_type` mới khi cần trình bày riêng (ví dụ `number_line`) theo checklist [MINIGAME_ENGINE §7](../08-game-client/MINIGAME_ENGINE.md#7-thêm-một-mini-game-mới--checklist) |
 | Activity `simulation` + checker Go ([SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md), ADR-0052) | `LM-MATH-02` (lớp 6–8), `LM-SCI-01`, `LM-SCI-02`, `LM-SCI-04`, `LM-SCI-05` | Checker tính lại từ tham số + action log | Template mô phỏng mới (`template_code`) và checker tương ứng |
-| Bước `interdependent` (co-op, [QUEST_SYSTEM §3.2](QUEST_SYSTEM.md#32-gán-bước-trong-party-và-bước-interdependent-proposed)) | Biến thể nhóm của `LM-MATH-02` (mỗi bạn giữ khối lượng một bên cân), `LM-VIE-04` (mỗi bạn giữ một phần chỉ dẫn), `LM-SCI-01` | Mỗi thành viên trả lời câu hỏi cuối trong attempt riêng | Thẻ dữ kiện theo role |
+| Bước `interdependent` (co-op, [QUEST_SYSTEM §3.2](QUEST_SYSTEM.md#32-gán-bước-trong-party-và-bước-interdependent-confirmed)) | Biến thể nhóm của `LM-MATH-02` (mỗi bạn giữ khối lượng một bên cân), `LM-VIE-04` (mỗi bạn giữ một phần chỉ dẫn), `LM-SCI-01` | Mỗi thành viên trả lời câu hỏi cuối trong attempt riêng | Thẻ dữ kiện theo role |
 | Phase boss ([CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md)) | `LM-MATH-04` cho Rồng Phân Số, `LM-VIE-03` cho Bóng Ma Chính Tả | Như khối gốc của phase | Phase dùng activity cơ chế thay vì chỉ câu hỏi trắc nghiệm |
 | Bước khung `go_to`/`collect` | Chỉ dẫn dắt tới nơi diễn ra cơ chế | Không chấm | Không gắn điều kiện học tập vào `collect`; khi việc thu thập mang khái niệm (như `LM-MATH-03`), đổi thành bước `minigame` |
 

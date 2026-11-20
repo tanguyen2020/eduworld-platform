@@ -16,7 +16,7 @@ Thêm hiện thực thứ hai của port `SISProvider` (F011): `contractV1Client
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); fake SIS `httptest` (chỉ test, nhãn `MOCK`); Postman CLI + `sis-mock` trong CI |
 | Target Platform | Linux container (module `identity` api + worker); `sis-mock` trong `deploy/compose` |
 | Project Type | backend module + công cụ kiểm thử |
-| Performance Goals | Full sync 50.000 học sinh < 15 phút [Proposed] ([SIS_INTEGRATION §11](../../docs/09-identity/SIS_INTEGRATION.md)) |
+| Performance Goals | Full sync 50.000 học sinh < 15 phút [Confirmed] ([SIS_INTEGRATION §11](../../docs/09-identity/SIS_INTEGRATION.md)) |
 | Constraints | AGENTS R3, R4, R9, R10, R13, R14, R28, R29 (không áp dụng: SIS là hệ thống ngoài, không phải service EduWorld), R30; ADR-0009, ADR-0021, ADR-0042, ADR-0045, ADR-0046, ADR-0061 |
 | Scale/Scope | `sis_login_sync_concurrency`, `sis_sync_schedule`; hàng trăm connection |
 

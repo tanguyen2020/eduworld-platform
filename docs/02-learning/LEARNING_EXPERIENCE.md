@@ -11,7 +11,7 @@
 | L1 | Game phục vụ Learning Engine | Mọi hoạt động học tập là một `attempt` của [Activity & Attempt Engine](ACTIVITY_ENGINE.md) (hoặc exam), bất kể được mở từ quest, boss, mini-game hay trận đấu | [Confirmed — §4] |
 | L2 | Server-authoritative | Client nhận render payload, không có answer key (ADR-0016) | [Confirmed] |
 | L3 | Mastery ≠ điểm một lần | Mastery từ nhiều bằng chứng, có trọng số theo ngữ cảnh (ADR-0017) | [Confirmed — §4.6] |
-| L4 | Sai là một phần của học | Phản hồi mang tính hướng dẫn, không trừng phạt | [Proposed] |
+| L4 | Sai là một phần của học | Phản hồi mang tính hướng dẫn, không trừng phạt | [Confirmed] |
 | L5 | Phân biệt luyện tập và kiểm tra | Practice: phản hồi ngay, gợi ý; Exam: không gợi ý, kết quả sau khi nộp | [Confirmed — §4.5] |
 | L6 | Nội dung theo chương trình, không hardcode | Curriculum/LO/question lấy từ CMS (ADR-0015) | [Confirmed] |
 | L7 | **Không chỉ quiz** — học tập đa định dạng | Video có câu hỏi chèn, bài nghe hiểu, bài tập tương tác, mô phỏng/phòng thí nghiệm ảo, mini-game; tất cả server tự chấm qua [Activity Registry](ACTIVITY_ENGINE.md) (ADR-0048) để quest/assignment dùng chung. Hoạt động cần người chấm (tự luận, nói, dự án) ngoài Release (ADR-0072) | [Confirmed — Master Prompt mới §15; ADR-0072] |
@@ -34,7 +34,7 @@ Học sinh không mở "màn làm bài". Hoạt động học tập luôn có **
 
 **Tách bạch tiến trình:** XP/level/vật phẩm là tiến trình **game**; mastery là tiến trình **học tập**; rating là tiến trình **thi đấu**. Không trộn thành một điểm, không dùng level game làm bằng chứng năng lực ([PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md), ADR-0018).
 
-### 2.1. Không biến game thành chuỗi quiz [Proposed]
+### 2.1. Không biến game thành chuỗi quiz [Confirmed]
 
 | Quy tắc | Giá trị mặc định | Áp dụng |
 |---|---|---|
@@ -43,7 +43,7 @@ Học sinh không mở "màn làm bài". Hoạt động học tập luôn có **
 | Đa dạng định dạng trong một chuỗi quest | ≥ 2 `activity_type` trong chuỗi ≥ 3 quest | Khuyến nghị khi biên tập (cảnh báo, không chặn) |
 | Hoạt động học tập có lời dẫn trong câu chuyện | Bắt buộc với quest `learning`/`main` | Trường `narrative` của bước |
 
-### 2.2. Gắn định dạng học tập vào trải nghiệm game [Proposed]
+### 2.2. Gắn định dạng học tập vào trải nghiệm game [Confirmed]
 
 | Định dạng | Ngữ cảnh trong thế giới game | Lưu ý theo khối |
 |---|---|---|
@@ -86,7 +86,7 @@ flowchart LR
 
 Thời điểm hiện phản hồi theo `FeedbackTiming` của mode ([ACTIVITY_ENGINE §8.1](ACTIVITY_ENGINE.md#81-feedbacktiming-và-resultrelease)); bảng trên áp dụng khi `FeedbackTiming = immediate`.
 
-### 4.2. Số lượt thử (Proposed)
+### 4.2. Số lượt thử (Confirmed)
 
 | Grade band | Practice/Quest | Assignment | Exam |
 |---|---|---|---|
@@ -100,25 +100,25 @@ Bảng này là **nguồn duy nhất** cho số lượt thử mỗi câu ([ACTIV
 
 | Kỹ thuật | Mô tả | Cấu hình ở |
 |---|---|---|
-| Gợi ý nhiều cấp | `hints[]` trong question version (cấp 1: định hướng; cấp 2: bước trung gian). Học sinh bấm nút "Gợi ý" (biểu tượng bóng đèn) trước khi trả lời, hoặc gợi ý tự bật sau lượt sai; mỗi lần bấm client gọi `POST …/items/{position}/hints:next` ([ACTIVITY_ENGINE §8.3](ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-proposed)). Dùng gợi ý không mất XP, không bị đánh dấu xấu; mastery giảm trọng số ([LEARNING_ANALYTICS §3.1](LEARNING_ANALYTICS.md#31-định-nghĩa)) | [QUESTION_BANK §2](QUESTION_BANK.md#2-cấu-trúc-một-question-version) |
-| Worked example | Trước bài mới, NPC trình bày 1 ví dụ mẫu từng bước; sau khi sai có thể mở lại | [CONTENT_MODEL §9.2](CONTENT_MODEL.md#92-khối-worked_example-proposed) |
+| Gợi ý nhiều cấp | `hints[]` trong question version (cấp 1: định hướng; cấp 2: bước trung gian). Học sinh bấm nút "Gợi ý" (biểu tượng bóng đèn) trước khi trả lời, hoặc gợi ý tự bật sau lượt sai; mỗi lần bấm client gọi `POST …/items/{position}/hints:next` ([ACTIVITY_ENGINE §8.3](ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-confirmed)). Dùng gợi ý không mất XP, không bị đánh dấu xấu; mastery giảm trọng số ([LEARNING_ANALYTICS §3.1](LEARNING_ANALYTICS.md#31-định-nghĩa)) | [QUESTION_BANK §2](QUESTION_BANK.md#2-cấu-trúc-một-question-version) |
+| Worked example | Trước bài mới, NPC trình bày 1 ví dụ mẫu từng bước; sau khi sai có thể mở lại | [CONTENT_MODEL §9.2](CONTENT_MODEL.md#92-khối-worked_example-confirmed) |
 | Độ khó thích ứng nhẹ | Selection rule chọn difficulty theo mastery hiện tại: `beginning` → 1–2, `developing` → 2–3, `proficient` → 3–4, `mastered` → 4–5 | Question Set selection rule |
-| Bài khởi động | Bài chẩn đoán ngắn đầu năm/đầu chủ đề để không bắt học sinh làm lại thứ đã biết, cũng không bỏ qua LO tiên quyết còn yếu | [LEARNING_ANALYTICS §3.5](LEARNING_ANALYTICS.md#35-bài-chẩn-đoán-đặt-m0-ban-đầu-proposed) |
+| Bài khởi động | Bài chẩn đoán ngắn đầu năm/đầu chủ đề để không bắt học sinh làm lại thứ đã biết, cũng không bỏ qua LO tiên quyết còn yếu | [LEARNING_ANALYTICS §3.5](LEARNING_ANALYTICS.md#35-bài-chẩn-đoán-đặt-m0-ban-đầu-confirmed) |
 | Luyện trộn | Practice xen kẽ nhiều chủ đề đã học để học sinh phải chọn cách giải | [QUESTION_BANK §6](QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện) |
 | Chia nhỏ | Câu nhiều bước tách thành chuỗi câu ngắn cho g1_3 | Content authoring |
-| Hỗ trợ đọc | Lồng tiếng đề bài và hướng dẫn cho lớp 1–3 (bắt buộc); bắt buộc với Tiếng Anh nghe | §5.1, [CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-proposed) |
+| Hỗ trợ đọc | Lồng tiếng đề bài và hướng dẫn cho lớp 1–3 (bắt buộc); bắt buộc với Tiếng Anh nghe | §5.1, [CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed) |
 | Công cụ trực quan | Que tính, bảng nhân, trục số ảo trong UI Toán g1_5 | Mini-game template |
 
-### 5.1. Hỗ trợ đọc cho lớp 1–3 [Proposed]
+### 5.1. Hỗ trợ đọc cho lớp 1–3 [Confirmed]
 
-Quy tắc dữ liệu (audio là điều kiện publish) ở [CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-proposed); phần này là trải nghiệm trong game:
+Quy tắc dữ liệu (audio là điều kiện publish) ở [CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed); phần này là trải nghiệm trong game:
 
-- **Tự đọc:** khi hiện đề bài, hướng dẫn activity hay hướng dẫn bước quest, game tự phát audio tiếng Việt (mặc định bật cho `g1_3`); nút loa lớn để nghe lại bất kỳ lúc nào; ngưỡng `rapid_guess` của `g1_3` đã nhân hệ số để tính cả thời gian nghe ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed)).
+- **Tự đọc:** khi hiện đề bài, hướng dẫn activity hay hướng dẫn bước quest, game tự phát audio tiếng Việt (mặc định bật cho `g1_3`); nút loa lớn để nghe lại bất kỳ lúc nào; ngưỡng `rapid_guess` của `g1_3` đã nhân hệ số để tính cả thời gian nghe ([ACTIVITY_ENGINE §11.1](ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed)).
 - **Không có tai nghe / tắt tiếng:** văn bản luôn hiển thị như phụ đề (chữ to theo §8, từ đang đọc được tô sáng khi có audio); hướng dẫn thao tác kèm biểu tượng (`instruction_icons[]`: chạm, kéo, nghe, chọn hình) và hoạt ảnh tay mẫu ở lần đầu gặp dạng câu.
 - **Phòng máy:** khi game phát hiện không có thiết bị âm thanh, hiện biểu tượng phụ đề rõ ràng thay vì báo lỗi.
 - Thoại NPC giao nhiệm vụ cho lớp 1–3 có lồng tiếng theo cùng quy tắc publish ([QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md)).
 
-### 5.2. Luyện trộn chủ đề (interleaving) [Proposed]
+### 5.2. Luyện trộn chủ đề (interleaving) [Confirmed]
 
 Sau khi học sinh đã học vài chủ đề, luyện xen kẽ giúp học sinh phải tự nhận ra nên dùng cách giải nào, thay vì làm liền 10 câu cùng một dạng. Gợi ý "Luyện trộn" do [LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules) kích hoạt; cơ chế chọn câu ở [QUESTION_BANK §6](QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện).
 
@@ -139,12 +139,12 @@ Trong game, lượt luyện trộn được trình bày như một "thử thách
 ### 6.1. Ôn câu sai (`retry_wrong`)
 
 - Câu trả lời sai (lượt đầu) vào danh sách ôn của học sinh, gắn LO.
-- Lịch ôn đơn giản 1–3–7 ngày; đúng 2 lần liên tiếp ở các ngày khác nhau → rời danh sách [Proposed].
-- Ôn ưu tiên **câu anh em** cùng LO, cùng loại, cùng độ khó, khác câu gốc (không chỉ lặp nguyên câu) để tránh học thuộc đáp án; quy tắc chọn ở [QUESTION_BANK §6](QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện) [Proposed].
+- Lịch ôn đơn giản 1–3–7 ngày; đúng 2 lần liên tiếp ở các ngày khác nhau → rời danh sách [Confirmed].
+- Ôn ưu tiên **câu anh em** cùng LO, cùng loại, cùng độ khó, khác câu gốc (không chỉ lặp nguyên câu) để tránh học thuộc đáp án; quy tắc chọn ở [QUESTION_BANK §6](QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện) [Confirmed].
 
 ### 6.2. Recommendation (Release 1.0: rule-based)
 
-Gợi ý tự động là con đường chính để học sinh biết nên học gì tiếp (ADR-0072). Quy tắc và điều kiện kích hoạt là nguồn duy nhất ở [LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules); phần này mô tả cách Mây (NPC dẫn đường) trình bày, theo thứ tự ưu tiên [Proposed]:
+Gợi ý tự động là con đường chính để học sinh biết nên học gì tiếp (ADR-0072). Quy tắc và điều kiện kích hoạt là nguồn duy nhất ở [LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules); phần này mô tả cách Mây (NPC dẫn đường) trình bày, theo thứ tự ưu tiên [Confirmed]:
 
 1. Bài nhà trường giao chưa hoàn thành, gần deadline.
 2. Bài khởi động khi bắt đầu năm học/chủ đề mới.
@@ -153,7 +153,7 @@ Gợi ý tự động là con đường chính để học sinh biết nên họ
 5. Quest kế tiếp trong chuỗi chủ đề hiện tại của lớp.
 6. Hoạt động xã hội/thi đấu (chỉ khi 1–5 đã ổn trong ngày).
 
-Mỗi gợi ý kèm lý do dễ hiểu ("Vì lần trước em còn nhầm phép nhân 7"). Recommendation dựa trên ML chỉ cân nhắc sau Release 1.0 khi có đủ dữ liệu thật [Proposed]; rule engine được thiết kế để thay thế được (strategy).
+Mỗi gợi ý kèm lý do dễ hiểu ("Vì lần trước em còn nhầm phép nhân 7"). Recommendation dựa trên ML chỉ cân nhắc sau Release 1.0 khi có đủ dữ liệu thật [Confirmed]; rule engine được thiết kế để thay thế được (strategy).
 
 ## 7. Hiển thị tiến bộ cho học sinh
 
@@ -163,7 +163,7 @@ Mỗi gợi ý kèm lý do dễ hiểu ("Vì lần trước em còn nhầm phép
 | `g4_5` | Hình ảnh + nhãn mức (Mới bắt đầu / Đang tiến bộ / Thành thạo / Xuất sắc) | Số câu đúng + thang 10 cho bài kiểm tra |
 | `g6_7`, `g8_9` | Nhãn mức + % theo LO + biểu đồ tiến bộ theo thời gian | Thang 10, phân tích câu sai theo LO |
 
-Nhãn mức ánh xạ `objective_mastery.level`: `beginning` → Mới bắt đầu, `developing` → Đang tiến bộ, `proficient` → Thành thạo, `mastered` → Xuất sắc [Proposed]. Không hiển thị mastery của học sinh này cho học sinh khác.
+Nhãn mức ánh xạ `objective_mastery.level`: `beginning` → Mới bắt đầu, `developing` → Đang tiến bộ, `proficient` → Thành thạo, `mastered` → Xuất sắc [Confirmed]. Không hiển thị mastery của học sinh này cho học sinh khác.
 
 ## 8. UX học tập theo grade band
 
@@ -183,13 +183,13 @@ Tất cả UI câu hỏi là template chung cho 11 loại (QUESTION_BANK), skin 
 
 - Trước khi bắt đầu: màn hình quy chế (số câu, thời gian, có được quay lại câu trước không, chính sách xem kết quả).
 - Thời gian theo server (`deadline_at`); client hiển thị đếm ngược đồng bộ, tự nộp khi hết giờ (server cũng tự đóng attempt).
-- Mất kết nối: được tiếp tục cùng attempt nếu còn trong `deadline_at` (resume policy) [Proposed].
+- Mất kết nối: được tiếp tục cùng attempt nếu còn trong `deadline_at` (resume policy) [Confirmed].
 - Sau khi nộp: điểm + phân tích theo LO + danh sách câu sai có giải thích (khi `ResultRelease`/`FeedbackTiming` cho phép, [ACTIVITY_ENGINE §8.1](ACTIVITY_ENGINE.md#81-feedbacktiming-và-resultrelease)) + nút "Luyện LO này".
-- Không XP theo điểm thi chính thức; chỉ XP "hoàn thành" cố định để tránh áp lực điểm–thưởng [Proposed].
+- Không XP theo điểm thi chính thức; chỉ XP "hoàn thành" cố định để tránh áp lực điểm–thưởng [Confirmed].
 
 ## 10. Accessibility và hòa nhập
 
 - Chế độ chữ lớn, tương phản cao, giảm hiệu ứng chuyển động.
 - Không dùng màu duy nhất để báo đúng/sai (kèm biểu tượng ✓/✗ và âm thanh).
-- Thời gian mở rộng (x1.5) cho học sinh được nhà trường cấp quyền hỗ trợ đặc biệt (Assignment/Exam) [Proposed].
+- Thời gian mở rộng (x1.5) cho học sinh được nhà trường cấp quyền hỗ trợ đặc biệt (Assignment/Exam) [Confirmed].
 - Ngôn ngữ: song ngữ `vi-VN` (mặc định) / `en-US` theo lựa chọn của học sinh ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md)). Nội dung học tập hiển thị theo ngôn ngữ đã chọn nếu có bản dịch; nếu không, hiển thị ngôn ngữ gốc kèm nhãn **"Chưa có bản tiếng Anh"** / **"No Vietnamese version yet"** và không tính là lỗi. Hội thoại NPC, phản hồi, gợi ý trong game luôn có đủ hai ngôn ngữ. Ở khu Tiếng Anh, tên đồ vật và từ khóa có thể hiển thị song song Việt–Anh để hỗ trợ học từ vựng. Quy tắc dữ liệu: [CONTENT_MODEL §8](CONTENT_MODEL.md#8-ngôn-ngữ-nội-dung-và-bản-dịch-adr-0056).

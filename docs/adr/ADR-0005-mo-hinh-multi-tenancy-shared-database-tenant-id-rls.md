@@ -11,7 +11,7 @@ Khách hàng có thể là một trường đơn lẻ hoặc một đơn vị qu
 1. **Phân cấp** `Platform → Tenant → School → Class`. Entity **Tenant** (`tenant_id`, `code`, `name`, `tenant_type ∈ {school, unit, common}`, `status`, `keycloak_org_id`):
    - `school`: một trường độc lập, chứa đúng 1 School.
    - `unit`: một đơn vị chứa nhiều School; dữ liệu mọi trường trong đơn vị cùng `tenant_id`, `school_id` là chiều phân loại bên trong tenant.
-   - `common`: **tenant chung** duy nhất (`code = common`) cho học sinh không thuộc tenant nào (ADR-0026), có một School ảo "EduWorld chung" [Proposed].
+   - `common`: **tenant chung** duy nhất (`code = common`) cho học sinh không thuộc tenant nào (ADR-0026), có một School ảo "EduWorld chung" [Confirmed].
 2. **Khóa cô lập là `tenant_id`.** Mọi bảng nghiệp vụ có `tenant_id NOT NULL`. Dữ liệu do platform sở hữu (cấu hình game, nội dung dùng chung) có `tenant_id = NULL` + `owner_scope = platform`; tenant chỉ thấy khi được gán (ADR-0029).
 3. **Mọi truy vấn lọc theo `tenant_id`**, hai lớp bảo vệ:
    - **Ứng dụng (bắt buộc):** use case nhận `Principal` có `tenant_id` hoạt động; repository bắt buộc nhận `TenantScope` và thêm `tenant_id = $tenant` cùng điều kiện soft-delete (ADR-0028). Global filter của ent thực thi điều này (ADR-0039).

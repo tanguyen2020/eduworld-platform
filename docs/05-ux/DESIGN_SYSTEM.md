@@ -13,7 +13,7 @@ EduWorld có **hai hệ thống giao diện tách biệt**, mỗi hệ thống p
 | Nền tảng | Godot 4: thế giới 3D + UI `Control` | React SPA: **một Admin Portal** `src/cms/frontend/apps/portal` với 5 workspace (ADR-0027 mục 7) |
 | Mục tiêu | Hấp dẫn, dễ hiểu, an toàn, chữ và nút lớn | Thao tác nhanh, xem nhiều dữ liệu, ít lỗi, đọc số liệu chính xác |
 | Phong cách | Stylized low-poly, toon shading, màu tươi, chuyển động | Trung tính, gọn, dày dữ liệu, ít trang trí |
-| Thư viện | Theme Godot sinh từ token + component scene trong `src/game/scenes/ui/components/` | Ant Design 5 + Ant Design Pro components (ProLayout, ProTable, ProForm) [Proposed] + `src/cms/frontend/packages/ops-ui` |
+| Thư viện | Theme Godot sinh từ token + component scene trong `src/game/scenes/ui/components/` | Ant Design 5 + Ant Design Pro components (ProLayout, ProTable, ProForm) [Confirmed] + `src/cms/frontend/packages/ops-ui` |
 | Nguồn token | `design/game-tokens/` | `design/admin-tokens/` |
 
 **Dùng chung giữa hai hệ thống** (không phải phong cách UI): logo, màu thương hiệu chính, và **mã màu nghiệp vụ** trong `design/shared-tokens/` (§6).
@@ -59,14 +59,14 @@ flowchart LR
 ```
 
 - Lệnh: `make design-tokens` (chạy trong CI ở mọi MR chạm `design/**`). File sinh ra **không sửa tay**; CI chạy lại và báo lỗi nếu khác (`make design-tokens-check`).
-- Godot: Style Dictionary v4 phân giải alias, format riêng trong `design/sd/formats/` **ghi trực tiếp** `Theme` (`eduworld_theme.tres` mật độ `g6_7`, `eduworld_theme_<band>.tres` mỗi grade band, `eduworld_theme_high_contrast.tres`), `Environment` theo zone và `Gradient` VFX dạng text resource (`format=3`, dòng đầu là chú thích `;` GENERATED), cùng `UiTokens` và `Art3dTokens` (`src/game/resources/art/generated/art3d_tokens.gd`); font Be Vietnam Pro/Baloo 2 + OFL được chép vào `src/game/resources/ui/theme/fonts/`. Không cần Godot headless để sinh hay kiểm (F005, thay phương án `build_theme.gd`); JSON trung gian `design/build/godot/tokens.json` cho công cụ F060. Preset `ShaderMaterial` toon sinh khi có shader toon chung (F071) [Proposed].
+- Godot: Style Dictionary v4 phân giải alias, format riêng trong `design/sd/formats/` **ghi trực tiếp** `Theme` (`eduworld_theme.tres` mật độ `g6_7`, `eduworld_theme_<band>.tres` mỗi grade band, `eduworld_theme_high_contrast.tres`), `Environment` theo zone và `Gradient` VFX dạng text resource (`format=3`, dòng đầu là chú thích `;` GENERATED), cùng `UiTokens` và `Art3dTokens` (`src/game/resources/art/generated/art3d_tokens.gd`); font Be Vietnam Pro/Baloo 2 + OFL được chép vào `src/game/resources/ui/theme/fonts/`. Không cần Godot headless để sinh hay kiểm (F005, thay phương án `build_theme.gd`); JSON trung gian `design/build/godot/tokens.json` cho công cụ F060. Preset `ShaderMaterial` toon sinh khi có shader toon chung (F071) [Confirmed].
 - Kiểm khi build (`design/checks/`): cấu trúc W3C, alias thiếu/vòng lặp, literal ở tầng semantic/component/mode/density/art, màu nghiệp vụ chỉ ở shared + đủ 3 biến thể, tên token game và admin không trùng, tương phản WCAG 2.1 AA mọi cặp `contrastWith` (báo cáo `design/build/reports/contrast.json`), kích thước tối thiểu đọc từ §5.2 và §4.5 của tài liệu này, font OFL + bộ glyph tiếng Việt, semver so với nhánh gốc của PR.
 - Web: xuất object `ThemeConfig` cho `ConfigProvider` của Ant Design và CSS variables `--ew-*` cho component tự viết trong `ops-ui`.
 - Phiên bản token: `design/CHANGELOG.md` + semver (phiên bản đầu `tokens@0.1.0`, mục `## tokens@x.y.z`); thay đổi phá vỡ (đổi tên token) cần MR riêng và cập nhật mọi nơi dùng trong cùng MR.
 
 ## 4. Admin/Ops design system (CMS/LMS/Admin)
 
-### 4.1. Theme Ant Design đề xuất [Proposed]
+### 4.1. Theme Ant Design đề xuất [Confirmed]
 
 | Token Ant Design | Giá trị đề xuất | Ghi chú |
 |---|---|---|
@@ -107,7 +107,7 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 | **Danh sách** | Bộ lọc (QueryFilter, gồm dropdown tenant cho System Admin) + **ProTable** (sort, filter cột, cột cố định, phân trang cursor, chọn hàng) + thao tác hàng loạt (publish, gán tenant, khôi phục…) | Cột Tenant luôn có ở chế độ liên tenant; trạng thái hiển thị bằng `Tag` theo mã màu nghiệp vụ; hành động phá hủy có xác nhận + lý do |
 | **Chi tiết** | Header thông tin + **Tabs** (Thông tin, Phiên bản, Phát hành, Sử dụng, Audit) + **Timeline** audit/version | Tab Phiên bản: danh sách version, xem chỉ đọc, diff, preview (ADR-0043) |
 | **Form** | **ProForm** (StepsForm cho nội dung nhiều bước), autosave Draft | Validation sinh từ OpenAPI: `maxLength`, `required`, `pattern` (ADR-0041); hiển thị bộ đếm ký tự; lỗi `VALIDATION_FAILED` map về từng trường |
-| **Dashboard live-ops** | Thẻ KPI (`StatisticCard`) + biểu đồ (ECharts hoặc Ant Design Charts [Proposed]) + bảng sự kiện gần nhất | Tự làm mới 15–30 giây; ghi rõ thời điểm dữ liệu |
+| **Dashboard live-ops** | Thẻ KPI (`StatisticCard`) + biểu đồ (ECharts hoặc Ant Design Charts [Confirmed]) + bảng sự kiện gần nhất | Tự làm mới 15–30 giây; ghi rõ thời điểm dữ liệu |
 | **Trình soạn đặc thù** | Trong `src/cms/frontend/packages/ops-ui` | Trình soạn 11 dạng câu hỏi (gồm gợi ý nhiều cấp và phản hồi theo phương án), sơ đồ bước quest/NPC dialogue (graph editor), bracket giải đấu, trình xem danh mục từ nhạy cảm + thử chuỗi, thư viện media có thumbnail 3D, `MasteryHeatmap` (heatmap LO có ký hiệu mức, dùng ở School Learning Dashboard) |
 
 **KPI dashboard live-ops (workspace Game Live Operations; phiên bản giới hạn theo tenant trong School & Learning Management):**
@@ -186,7 +186,7 @@ Mật độ là tập token ghi đè (`density/*.json`) sinh ra các Theme biế
 
 ### 5.5. Font
 
-- Một họ font tròn, thân thiện cho tiêu đề (ví dụ "Baloo 2") và một font dễ đọc cho nội dung (ví dụ "Be Vietnam Pro"), đều hỗ trợ đầy đủ tiếng Việt có dấu và license OFL [Proposed, Game Director chọn]. Fallback font khai báo trong Theme. Không dùng font không có license nhúng cho ứng dụng.
+- Một họ font tròn, thân thiện cho tiêu đề (ví dụ "Baloo 2") và một font dễ đọc cho nội dung (ví dụ "Be Vietnam Pro"), đều hỗ trợ đầy đủ tiếng Việt có dấu và license OFL [Confirmed, Game Director chọn]. Fallback font khai báo trong Theme. Không dùng font không có license nhúng cho ứng dụng.
 - **Song ngữ (ADR-0056):** font phải phủ đủ tiếng Việt có dấu và Latin mở rộng cho cả hai ngôn ngữ; không có font riêng theo ngôn ngữ. Token `text.expansion_allowance = 1.35`: mọi component (nút, tab, nhãn HUD, thẻ quest) được thiết kế và kiểm tra với chuỗi dài hơn 35% bản ngắn nhất, dùng autowrap/ellipsis + tooltip thay vì cắt chữ. Chế độ "hiện tên song song" dùng kiểu chữ phụ (token `text.secondary_language`: cỡ 0,85×, nghiêng, màu `text.muted`) đặt sau tên chính, ví dụ "Vương quốc Số · *Math Kingdom*" ([WORLD_DESIGN §2.4](../01-game-design/WORLD_DESIGN.md#24-tên-song-ngữ-và-quy-tắc-hiển-thị-confirmed--adr-0056)). Ảnh chụp màn hình kiểm tra trực quan chạy ở `vi`, `en` và pseudo-locale ([GODOT_ARCHITECTURE §10.1](../08-game-client/GODOT_ARCHITECTURE.md#101-quốc-tế-hóa-i18n)).
 
 ### 5.6. Công thức trong game (ADR-0055)
@@ -225,7 +225,7 @@ Danh mục dùng để lập kế hoạch đặc tả UX từng màn (Master Pro
 
 | Nhóm | Giá trị (đề xuất) | Dùng ở game | Dùng ở CMS |
 |---|---|---|---|
-| Môn học / khu vực | Toán xanh dương, Tiếng Việt cam, Tiếng Anh tím, Khoa học xanh lá [Proposed, khớp [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)] | Palette khu vực, cổng, đảo | Tag môn học, màu series trong chart |
+| Môn học / khu vực | Toán xanh dương, Tiếng Việt cam, Tiếng Anh tím, Khoa học xanh lá [Confirmed, khớp [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)] | Palette khu vực, cổng, đảo | Tag môn học, màu series trong chart |
 | Độ hiếm vật phẩm | common xám, uncommon xanh lá, rare xanh dương, epic tím, legendary vàng cam | Viền/hào quang item | Tag độ hiếm trong Game Studio |
 | Trạng thái nội dung | draft xám, in_review vàng, approved xanh dương nhạt, published xanh lá, archived xám đậm, rejected đỏ | (preview) | Tag trạng thái, timeline |
 | Brand | `brand.primary`, `brand.secondary`, logo | Splash, loading | `colorPrimary`, logo |
@@ -243,7 +243,7 @@ Mỗi màu nghiệp vụ có biến thể cho nền sáng/tối của CMS và bi
 
 - Owner: Game Director (game-tokens, art3d), UX Lead (admin-tokens), cả hai cùng duyệt shared-tokens.
 - Mọi thay đổi token qua merge request, kèm ảnh chụp trước/sau (Storybook/UI Gallery) và báo cáo tương phản; không đổi giá trị trực tiếp trong code.
-- Nguồn thiết kế (Figma hoặc công cụ team dùng) xuất W3C tokens qua plugin; file trong Git là nguồn sự thật [Proposed].
+- Nguồn thiết kế (Figma hoặc công cụ team dùng) xuất W3C tokens qua plugin; file trong Git là nguồn sự thật [Confirmed].
 - Token bị bỏ đánh dấu `deprecated` ít nhất 1 phiên bản trước khi xóa.
 
 ## 9. Đảm bảo chất lượng
@@ -256,7 +256,7 @@ Mỗi màu nghiệp vụ có biến thể cho nền sáng/tối của CMS và bi
 | Tương phản | Mọi cặp chữ/nền trong token admin | Script khi build token + axe trong E2E |
 | Lint hardcode | Màu/font/kích thước trong CSS/TSX | stylelint + ESLint rule (`no-hardcoded-colors`) |
 | Lint scene Godot | `.tscn` không override màu/font ngoài Theme (trừ allowlist) | Script `src/game/tools/lint_theme_overrides.gd` |
-| Renderer parity | Ảnh chụp các zone/nhân vật mẫu trên Mobile, Forward+, Compatibility | So sánh ảnh (SSIM ≥ ngưỡng) trong CI [Proposed] |
+| Renderer parity | Ảnh chụp các zone/nhân vật mẫu trên Mobile, Forward+, Compatibility | So sánh ảnh (SSIM ≥ ngưỡng) trong CI [Confirmed] |
 
 ## 10. Yêu cầu và acceptance
 
@@ -266,6 +266,6 @@ Mỗi màu nghiệp vụ có biến thể cho nền sáng/tối của CMS và bi
 | DS-002 | Game UI chỉ dùng Theme sinh từ game-tokens; không dùng component admin | [Confirmed] |
 | DS-003 | Mã màu nghiệp vụ trùng tên và ý nghĩa ở game và CMS | [Confirmed] |
 | DS-004 | Đổi một token shared → cả hai bên cập nhật sau `make design-tokens`, không sửa tay | [Confirmed] |
-| DS-005 | CMS đạt WCAG 2.1 AA (tương phản, bàn phím) | [Proposed] |
-| DS-006 | Thumbnail render tự động cho mọi version publish của asset 3D | [Proposed] |
-| DS-007 | Không có màu/font hardcode trong CSS/TSX/`.tscn` (CI chặn) | [Proposed] |
+| DS-005 | CMS đạt WCAG 2.1 AA (tương phản, bàn phím) | [Confirmed] |
+| DS-006 | Thumbnail render tự động cho mọi version publish của asset 3D | [Confirmed] |
+| DS-007 | Không có màu/font hardcode trong CSS/TSX/`.tscn` (CI chặn) | [Confirmed] |

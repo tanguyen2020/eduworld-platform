@@ -14,11 +14,11 @@ Stakeholder yêu cầu: phải có trang dashboard; dữ liệu rất lớn vì 
 1. **Dashboard không bao giờ truy vấn bảng nghiệp vụ hay bảng sự kiện thô.** Chỉ đọc **bảng tổng hợp (rollup)** dựng sẵn theo các chiều cố định: ngày, tuần, tháng × tenant × trường × lớp × khối × môn/LO (learning) hoặc nền tảng/ngôn ngữ/hạng thiết bị (game).
 2. **Dựng rollup gia tăng (incremental)** bằng worker từ event NATS (ADR-0042) và job định kỳ:
    - Mỗi event cập nhật bộ đếm "hôm nay" (upsert theo khóa chiều) — số liệu gần thời gian thực.
-   - Job cuối ngày (02:30 ICT [Proposed]) chốt ngày hôm qua, tính các chỉ số không cộng dồn được (distinct, retention, percentile) và rollup tuần/tháng từ bảng ngày.
+   - Job cuối ngày (02:30 ICT [Confirmed]) chốt ngày hôm qua, tính các chỉ số không cộng dồn được (distinct, retention, percentile) và rollup tuần/tháng từ bảng ngày.
    - Dữ liệu đến muộn ≤ 48 giờ được tính lại cho đúng ngày (ADR-0058).
 3. **Lưu trữ:** bảng rollup **partition theo tháng** (bảng ngày) hoặc theo năm (bảng tuần/tháng); index B-tree theo `(tenant_id, scope_id, date)` và BRIN theo `date` cho bảng lớn; dùng `pg_partman` hoặc job tương đương để tạo/gỡ partition. Rollup nằm trong database của service sở hữu (learning-service cho học tập, game-service cho game) — không join chéo database.
 4. **Bảo vệ database khi truy vấn:**
-   - Truy vấn dashboard chạy trên **read replica** với role DB riêng, `statement_timeout` 5 giây, giới hạn số kết nối cho pool dashboard [Proposed].
+   - Truy vấn dashboard chạy trên **read replica** với role DB riêng, `statement_timeout` 5 giây, giới hạn số kết nối cho pool dashboard [Confirmed].
    - **Tự chọn độ hạt theo khoảng thời gian:** ≤ 31 ngày → theo ngày; ≤ 1 năm → theo tuần; > 1 năm → theo tháng. Khoảng tối đa một lần truy vấn: 2 năm.
    - Bắt buộc lọc theo tenant (và trường/lớp theo quyền); cấm truy vấn không có điều kiện thời gian.
    - Kết quả ô/tile cache Valkey theo khóa (scope, metric, khoảng, độ hạt), TTL 5 phút cho hôm nay, 24 giờ cho dữ liệu đã chốt.

@@ -16,7 +16,7 @@ Hai module mới trong module `learning`: `efficacy` (thỏa thuận, study, l�
 | Testing | go test (golden stats), testcontainers (PostgreSQL, NATS); Vitest + Playwright |
 | Target Platform | Linux container (module `learning` trong `core-api`, `worker-jobs`); trình duyệt |
 | Project Type | backend module + web app |
-| Performance Goals | Báo cáo một study ≤ 2.000 participant chạy nền ≤ 5 phút [Proposed]; consumer mastery thêm ≤ 20% thời gian xử lý khi có arm shadow (SC-002 của F031) |
+| Performance Goals | Báo cáo một study ≤ 2.000 participant chạy nền ≤ 5 phút [Confirmed]; consumer mastery thêm ≤ 20% thời gian xử lý khi có arm shadow (SC-002 của F031) |
 | Constraints | R5, R6, R8, R10, R13, R14, R16, R19, R20, R21, R26, R27, R28; ADR-0016, ADR-0017, ADR-0027, ADR-0043, ADR-0044, ADR-0062, ADR-0070, ADR-0080, ADR-0087 |
 | Scale/Scope | Pilot 6–8 lớp mỗi nhóm (~200 học sinh/nhóm, [LEARNING_EFFICACY_PLAN §4](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md)) |
 

@@ -28,4 +28,4 @@
 ## Notes
 
 - AC-03, AC-07 phụ thuộc delta owner F118 (`presignChatAssetUpload_chat`, URL ký cho Draft, schema `sticker-pack`/`gif`).
-- `report_link_ttl` dùng tạm cho link file dịch [Proposed]; đề xuất tham số riêng ở Polish.
+- `report_link_ttl` dùng tạm cho link file dịch [Confirmed]; đề xuất tham số riêng ở Polish.

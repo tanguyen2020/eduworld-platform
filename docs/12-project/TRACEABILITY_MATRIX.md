@@ -91,7 +91,7 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 56 AC, 0 US — [ACCOUNT_PROVISION
 | FR-AUTH-029 | Admin Portal có màn đăng nhập riêng do portal tự vẽ, qua backend (ADR-0091, thay luồng chuyển hướng OIDC củ… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend](../adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) | `portalLogin` | _suy luận:_ TC-AUTH |
 | FR-AUTH-030 | Portal không chọn tenant trước đăng nhập (ADR-0067): role platform → phạm vi platform; 1 tenant → vào thẳng… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `listMyTenants` | _suy luận:_ TC-AUTH |
 | FR-AUTH-031 | Username và email không trùng trong cùng tenant; trên SSO một người một tài khoản (username/email duy nhất… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-AUTH |
-| FR-AUTH-032 | Quản lý Role/UserRole trên portal (ADR-0066): Tenant Admin quản lý role tùy biến [Proposed] và UserRole tro… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-AUTH |
+| FR-AUTH-032 | Quản lý Role/UserRole trên portal (ADR-0066): Tenant Admin quản lý role tùy biến [Confirmed] và UserRole tr… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-AUTH |
 
 ### 3.2. `ORG` Organization & Multi-tenancy
 

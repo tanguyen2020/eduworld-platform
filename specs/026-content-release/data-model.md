@@ -24,7 +24,7 @@
 | `based_on_version_id` | uuid NULL | | |
 | `published_by` | uuid NULL | | Mới (`ContentVersionSummary.published_by`) |
 
-Trigger `forbid_published_update` (§3.3) gắn cho mọi bảng `*_versions`; partial unique `(item_id) WHERE status IN ('draft','in_review') AND deleted_at IS NULL` (một bản mở/item, Mới [Proposed]).
+Trigger `forbid_published_update` (§3.3) gắn cho mọi bảng `*_versions`; partial unique `(item_id) WHERE status IN ('draft','in_review') AND deleted_at IS NULL` (một bản mở/item, Mới [Confirmed]).
 
 ### ContentRelease — `content.content_releases` (Có sẵn §3.13, append-only)
 

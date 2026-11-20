@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F115, F116, F117, F118, F095, F012.
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); gọi API admin qua gateway nội bộ local.
 - Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (TH Demo A), `hs.dung.7a` (`pgd-demo`), `hs.tudo` (tenant chung), `sm.antoan` (safety_moderator), `sa.admin`, `ad.truong.a`, `ad.truong.b`, `ad.donvi`, `qlcm.truong.a`.
-- Tài khoản bổ sung seed local [Proposed]: `sm.truongca` (safety_moderator + `moderation.case.lead`).
+- Tài khoản bổ sung seed local [Confirmed]: `sm.truongca` (safety_moderator + `moderation.case.lead`).
 
 ## 2. Kịch bản kiểm tra
 

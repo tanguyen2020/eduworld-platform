@@ -8,20 +8,20 @@
 ### Session 2026-11-16
 
 - Q: Thao tác publish/rollback/unpublish/archive thuộc feature nào? → A: F026 (endpoint riêng theo ADR-0043); F025 chỉ làm `submit_review`, `approve`, `reject`, `revise` và cung cấp bộ kiểm tra (guard) dùng lại khi publish.
-- Q: Mã lỗi khi reviewer = author? → A: `403 PERMISSION_DENIED` [Proposed] (không có mã riêng trong `ProblemCode`; CONTENT_MODEL §6 chỉ nêu quy tắc).
+- Q: Mã lỗi khi reviewer = author? → A: `403 PERMISSION_DENIED` [Confirmed] (không có mã riêng trong `ProblemCode`; CONTENT_MODEL §6 chỉ nêu quy tắc).
 - Q: Trả nội dung rejected về draft bằng gì? → A: action `revise` trên `transitionContentVersion` (delta contract, CONTENT_MODEL §6 `rejected → draft`, `approved → draft`).
 - Q: `self_approve_allowed` có làm không? → A: Không — tham số chưa đăng ký CONFIG_DEFAULTS; reviewer ≠ author luôn áp dụng.
 
 ### Session 2026-11-19 (triển khai)
 
-- Q: Loại nội dung nào có workflow ở F025? → A: question, question_set, lesson, learning_material, assessment_blueprint; `activity` thêm ở F030, `learning_path` ở F040 (`422 VALIDATION_FAILED` trên `content_type` cho tới khi có) [Proposed].
-- Q: Metadata bắt buộc khi gửi duyệt của loại F024 (nháp cho phép thiếu)? → A: `grade_levels`, `subject_id`; thêm `objective_ids` với question_set (CONTENT_MODEL §3) [Proposed].
-- Q: `school_id` của review task lấy từ đâu (nội dung không có cột trường)? → A: Từ grant `learning_content.write` của tác giả khi mọi grant đó giới hạn cùng một trường; reviewer có grant giới hạn trường chỉ thấy task của trường mình; task cấp tenant không có trường [Proposed].
-- Q: Văn bản nào được tính cho `translation_status`/`TRANSLATION_INCOMPLETE`? → A: Object `{vi, en}` ở mọi vị trí và chuỗi thuần dưới khóa văn bản `text`, `alt`, `caption`, `speech_text`, `title`, `summary`, `instructions`, `label`, `prompt`, `placeholder` (`i18ntext.Texts`) [Proposed]; ưu tiên `partial` khi vừa thiếu vừa cũ.
-- Q: `stem.audio_ref` chỉ có một trường — môn Tiếng Anh cần hai audio? → A: Một `audio_ref` đủ cho release này (schema chỉ có một ref) [Proposed]; tách audio theo ngôn ngữ cần delta schema sau.
-- Q: F025-AC-20 (`Content-Language` khi phục vụ học sinh)? → A: `i18ntext.Resolve`/`Locale` có unit test; nối vào API học sinh ở F030 (API phục vụ activity) [Proposed].
+- Q: Loại nội dung nào có workflow ở F025? → A: question, question_set, lesson, learning_material, assessment_blueprint; `activity` thêm ở F030, `learning_path` ở F040 (`422 VALIDATION_FAILED` trên `content_type` cho tới khi có) [Confirmed].
+- Q: Metadata bắt buộc khi gửi duyệt của loại F024 (nháp cho phép thiếu)? → A: `grade_levels`, `subject_id`; thêm `objective_ids` với question_set (CONTENT_MODEL §3) [Confirmed].
+- Q: `school_id` của review task lấy từ đâu (nội dung không có cột trường)? → A: Từ grant `learning_content.write` của tác giả khi mọi grant đó giới hạn cùng một trường; reviewer có grant giới hạn trường chỉ thấy task của trường mình; task cấp tenant không có trường [Confirmed].
+- Q: Văn bản nào được tính cho `translation_status`/`TRANSLATION_INCOMPLETE`? → A: Object `{vi, en}` ở mọi vị trí và chuỗi thuần dưới khóa văn bản `text`, `alt`, `caption`, `speech_text`, `title`, `summary`, `instructions`, `label`, `prompt`, `placeholder` (`i18ntext.Texts`) [Confirmed]; ưu tiên `partial` khi vừa thiếu vừa cũ.
+- Q: `stem.audio_ref` chỉ có một trường — môn Tiếng Anh cần hai audio? → A: Một `audio_ref` đủ cho release này (schema chỉ có một ref) [Confirmed]; tách audio theo ngôn ngữ cần delta schema sau.
+- Q: F025-AC-20 (`Content-Language` khi phục vụ học sinh)? → A: `i18ntext.Resolve`/`Locale` có unit test; nối vào API học sinh ở F030 (API phục vụ activity) [Confirmed].
 - Q: Trường portal F053 cần (OQ F053)? → A: `ContentVersion.outdated_fields` (JSON pointer các bản dịch lỗi thời, `i18ntext.OutdatedFields` từ `translation_meta`) trả ở mọi view CMS của question và loại F024 cùng `translation_status`; `QuestionAuthoringInput.audio_exempt_reason`/`LessonAuthoringInput.audio_exempt_reason` nhận, lưu (≤ 255) và dùng cho luật `g1_3`; `warnings[]` trả trong `ContentVersion` của `submit_review`.
-- Q: Export dịch chọn version nào? → A: Version con trỏ release nếu có, không thì version mới nhất; `content_ids` bắt buộc 1–500 [Proposed].
+- Q: Export dịch chọn version nào? → A: Version con trỏ release nếu có, không thì version mới nhất; `content_ids` bắt buộc 1–500 [Confirmed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -191,4 +191,4 @@ SLA cảnh báo task quá hạn ([ADMIN_PORTAL §4](../../docs/04-admin-portal/A
 - `review_lane` dùng `tenant` | `platform_learning` theo ADMIN_PORTAL §3.5; enum trong OpenAPI (`school`/`organization`) được sửa ở Phase 2 (D8).
 - Tên event theo EVENT_DESIGN §4.2 (`content.version_submitted/approved/rejected`), không theo CONTENT_MODEL §6 (D11).
 - Engine TTS chưa chọn [TBD]; audio là media thường do F027 xử lý; F025 chỉ kiểm tra tham chiếu và trạng thái `ready`.
-- Media status đọc từ `content.media_assets` (F027) → đề xuất thêm F027 vào phụ thuộc của F025 (OQ-23 [Proposed] cho phạm vi hỗ trợ `g1_3`).
+- Media status đọc từ `content.media_assets` (F027) → đề xuất thêm F027 vào phụ thuộc của F025 (OQ-23 [Confirmed] cho phạm vi hỗ trợ `g1_3`).

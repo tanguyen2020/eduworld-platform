@@ -81,7 +81,7 @@ Database `eduworld_chat`, schema `chat`. Độ dài chuỗi theo DATABASE_DESIGN
 ## 3. Quy tắc kiểm tra dữ liệu
 
 - Category platform-only; tenant chỉ thêm term vào category có sẵn ([MODERATION §11.3](../../docs/03-social-multiplayer/MODERATION.md)).
-- Pattern RE2 ≤ 200 ký tự, cấm backreference/lookaround; ≤ 200 pattern/tenant [Proposed].
+- Pattern RE2 ≤ 200 ký tự, cấm backreference/lookaround; ≤ 200 pattern/tenant [Confirmed].
 - Seed/fixture chỉ dùng term placeholder (`__test_term_01__`), không từ nhạy cảm thật (R15).
 
 ## 4. Event / outbox

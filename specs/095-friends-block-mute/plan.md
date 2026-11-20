@@ -72,7 +72,7 @@ src/backend/modules/chat/
 
 ## Phase 0: Research
 
-Không có — SOCIAL_SYSTEM §4–§5, ADR-0054, DATABASE_DESIGN §2.11 đủ; quyết định nhỏ ([Proposed]) ghi ở spec Clarifications.
+Không có — SOCIAL_SYSTEM §4–§5, ADR-0054, DATABASE_DESIGN §2.11 đủ; quyết định nhỏ ([Confirmed]) ghi ở spec Clarifications.
 
 ## Phase 1: Design & Contracts
 
@@ -99,7 +99,7 @@ Không có — SOCIAL_SYSTEM §4–§5, ADR-0054, DATABASE_DESIGN §2.11 đủ; 
 - `game_player` + `tenant` middleware; mọi query lọc tenant phiên + chủ thể là người gọi.
 - `Idempotency-Key` bắt buộc: `sendFriendRequest`, `acceptFriendRequest`, `createFriendCode`, `redeemFriendCode`; PUT/DELETE block/mute idempotent theo trạng thái.
 - Audit: `social.friend_request_sent`, `social.friend_added`, `social.user_blocked`, `social.user_unblocked`, `social.user_muted` (không PII).
-- Mã bạn bè: 8 ký tự A–Z0–9 [Proposed], so khớp hằng thời gian, rate limit redeem theo `api_rate_default`.
+- Mã bạn bè: 8 ký tự A–Z0–9 [Confirmed], so khớp hằng thời gian, rate limit redeem theo `api_rate_default`.
 
 ### Quan sát
 

@@ -11,12 +11,12 @@ Xây component soạn thảo dùng chung trong `src/cms/frontend/packages/ops-ui
 | Mục | Giá trị |
 |---|---|
 | Language/Version | TypeScript (strict) · React 18 · Vite |
-| Primary Dependencies | `mathjax@4.x` (tex → svg, `mhchem`, speech), `mathlive` (ghim phiên bản cố định), Ant Design 5 + Pro (ProForm, Tree, Tabs), `@dnd-kit` (kéo-thả khối/chủ đề) [Proposed], `ajv` 2020-12, TanStack Query, React Hook Form + Zod |
+| Primary Dependencies | `mathjax@4.x` (tex → svg, `mhchem`, speech), `mathlive` (ghim phiên bản cố định), Ant Design 5 + Pro (ProForm, Tree, Tabs), `@dnd-kit` (kéo-thả khối/chủ đề) [Confirmed], `ajv` 2020-12, TanStack Query, React Hook Form + Zod |
 | Storage | Không có (client); dữ liệu ở `eduworld_learning` (F020–F027) |
 | Testing | Vitest + Testing Library + MSW (`// MOCK (test-only)`); Playwright E2E + screenshot (bộ công thức mẫu); Storybook 8 |
 | Target Platform | Trình duyệt desktop/tablet ≥ 1024 px cho editor; mọi breakpoint cho xem |
 | Project Type | Web app (workspace chunk) + thư viện component |
-| Performance Goals | Render 50 công thức < 1 s trên máy văn phòng [Proposed]; autosave không chặn gõ |
+| Performance Goals | Render 50 công thức < 1 s trên máy văn phòng [Confirmed]; autosave không chặn gõ |
 | Constraints | AGENTS R1, R2, R6, R11, R28, R31, R32 · ADR-0015, ADR-0043, ADR-0044, ADR-0047, ADR-0055, ADR-0056, ADR-0072 |
 | Scale/Scope | 11 dạng câu hỏi, ~8 component ops-ui, 4 màn portal |
 
@@ -109,7 +109,7 @@ Xem [research.md](research.md): R1 render công thức trên trình duyệt; R2 
 
 ### Quan sát
 
-- Đo thời gian render công thức (client metric không PII) [Proposed]; không log đề/đáp án ra console; lỗi hiển thị `trace_id`.
+- Đo thời gian render công thức (client metric không PII) [Confirmed]; không log đề/đáp án ra console; lỗi hiển thị `trace_id`.
 
 
 ### Danh mục menu/action portal (ADR-0090)

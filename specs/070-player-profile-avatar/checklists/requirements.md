@@ -27,6 +27,6 @@
 
 ## Notes
 
-- Hai tham số mới `nickname_change_monthly_limit`, `nickname_suggestion_ttl` [Proposed] — task Polish đăng ký CONFIG_DEFAULTS + CHARACTER_SYSTEM §5.3.
+- Hai tham số mới `nickname_change_monthly_limit`, `nickname_suggestion_ttl` [Confirmed] — task Polish đăng ký CONFIG_DEFAULTS + CHARACTER_SYSTEM §5.3.
 - `AvatarConfig` OpenAPI lệch CHARACTER_SYSTEM §5.1; nickname đã chốt duy nhất theo tenant, `varchar(32)` (RB-302) — contract sửa ở Phase 2.
 - Thao tác ghi của feature (avatar, nickname) không thuộc nhóm R10 (submit/thưởng/lời mời); vết thay đổi nickname lưu `game.nickname_changes`.

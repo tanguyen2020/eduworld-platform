@@ -25,7 +25,7 @@ Bản nháp đầu của ADR này cho phép hai người khác nhau ở hai tena
 6. **Khi tạo/sửa/đồng bộ gặp trùng:**
    - Trùng trong cùng tenant → `409 USERNAME_TAKEN` / `409 EMAIL_TAKEN` (tạo tay) hoặc `reconciliation_issue` loại `duplicate_identifier` (SIS/import).
    - Trùng với tài khoản ở tenant khác: nếu xác định là **cùng một người** (theo liên kết định danh SIS hoặc Tenant Admin xác nhận theo [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md)) → thêm membership vào tài khoản sẵn có; nếu là người khác → không tạo, mở `reconciliation_issue` để trường đổi username.
-7. Soft-delete (ADR-0028) không giải phóng username/email cho đến khi tài khoản được ẩn danh hóa [Proposed] (giữ từ ADR-0067 mục 4).
+7. Soft-delete (ADR-0028) không giải phóng username/email cho đến khi tài khoản được ẩn danh hóa [Confirmed] (giữ từ ADR-0067 mục 4).
 8. Chống brute-force giữ như ADR-0068 mục 3 (rate limit theo thiết bị và theo username, brute-force detection Keycloak, thông điệp lỗi chung).
 
 ## Hệ quả

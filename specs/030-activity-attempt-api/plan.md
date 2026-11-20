@@ -16,7 +16,7 @@ Module `activity` trong module `learning`: interface `Plugin` + `Registry` (ACTI
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey); contract test plugin; facade test với module game (game test với fake facade `learning`; learning test hiện thực facade theo ví dụ spec internal) |
 | Target Platform | Linux container (module `learning` trong `core-api`, `worker-events`) |
 | Project Type | backend module |
-| Performance Goals | start p95 < 300 ms, response p95 < 150 ms, submit p95 < 300 ms [Proposed]; gọi liên module theo TC-PERF-013 |
+| Performance Goals | start p95 < 300 ms, response p95 < 150 ms, submit p95 < 300 ms [Confirmed]; gọi liên module theo TC-PERF-013 |
 | Constraints | R5, R6, R10, R11, R13, R14, R23, R26, R29, R31; ADR-0016, ADR-0043, ADR-0048, ADR-0059 |
 | Scale/Scope | 10.000 CCU (NFR-SCAL); `answer_rate`, `attempt_start_rate` |
 

@@ -131,7 +131,7 @@ flowchart TB
 
 Mỗi binary chỉ mở kết nối tới database của module nó nạp, bằng role của module đó (`<module>_app`, `_platform`, `_relay`…); không module nào đọc database của module khác (quyền `CONNECT` theo module). Gọi giữa module là gọi facade **trong cùng tiến trình** (không có mũi tên mạng giữa module); phản ứng phụ đi qua outbox → NATS. Binary `realtime` không có database và chỉ chạm logic nghiệp vụ qua NATS request/reply tới `core-api`.
 
-Release 1.0 hỗ trợ 4 nền tảng client: Windows, Android, iOS, Web (ADR-0013 [Proposed], OQ-04).
+Release 1.0 hỗ trợ 4 nền tảng client: Windows, Android, iOS, Web (ADR-0013 [Confirmed], OQ-04).
 
 ### 3.1. Trách nhiệm từng container
 
@@ -150,7 +150,7 @@ Release 1.0 hỗ trợ 4 nền tảng client: Windows, Android, iOS, Web (ADR-00
 | NATS JetStream | Domain events (outbox, ADR-0042), chat durable stream (ADR-0035), request/reply lệnh realtime | Lưu lâu dài; không mở cho client |
 | Valkey | Cache, presence, queue matchmaking, rate limit, ticket, seq chat, Pub/Sub fan-out (ADR-0004), snapshot nội dung bất biến + con trỏ release (ADR-0043) | Nguồn sự thật; domain event (không còn Streams) |
 | Object storage + CDN | File media (ADR-0044), snapshot/gói nội dung game và content manifest bất biến (ADR-0043), build Godot/PCK | Câu hỏi đề kiểm tra, answer key (chỉ qua API) |
-| Media pipeline | Quét ClamAV, kiểm magic bytes, xóa EXIF, chuyển đổi ảnh/âm thanh/video/3D, dựng snapshot và manifest khi publish; thư viện `src/backend/pkg/media` chạy trong `worker-events` thay module sở hữu nội dung (learning, game, chat) [Proposed] | Quyết định publish (chỉ thực thi sau event) |
+| Media pipeline | Quét ClamAV, kiểm magic bytes, xóa EXIF, chuyển đổi ảnh/âm thanh/video/3D, dựng snapshot và manifest khi publish; thư viện `src/backend/pkg/media` chạy trong `worker-events` thay module sở hữu nội dung (learning, game, chat) [Confirmed] | Quyết định publish (chỉ thực thi sau event) |
 
 Trách nhiệm nghiệp vụ của từng module (`identity`, `learning`, `game`, `competition`, `chat`) ở bảng §0; ranh giới mã và composition root ở [BACKEND_DESIGN §3](../07-backend/BACKEND_DESIGN.md#3-cấu-trúc-repository-và-module-clean-architecture).
 
@@ -308,24 +308,24 @@ Mọi môi trường: 5 database của module chung **một cụm** PostgreSQL q
 
 | Mã | Yêu cầu | Giá trị | Nhãn |
 |---|---|---|---|
-| NFR-PERF-001 | REST p95 latency (đọc) | < 200 ms tại gateway | [Proposed] |
-| NFR-PERF-002 | REST p95 latency (ghi: submit bài) | < 400 ms | [Proposed] |
-| NFR-PERF-003 | WS message delivery p95 (chat, lobby) | < 250 ms | [Proposed] |
-| NFR-PERF-004 | Client FPS theo hạng thiết bị ([PERFORMANCE_BUDGET §3](../08-game-client/PERFORMANCE_BUDGET.md#3-mục-tiêu-khung-hình), ADR-0057) | Máy tầm trung, preset Trung bình: Hub ổn định 30 FPS trên mobile/web (FPS p10 ≥ 27); số theo từng nền tảng/hạng ở PERFORMANCE_BUDGET | Yêu cầu Accepted, thông số [Proposed] (ADR-0057) |
-| NFR-PERF-011 | Lời gọi facade giữa module p95 (trong tiến trình, gồm truy vấn DB của module đích) | < 50 ms (không tính xử lý nghiệp vụ nặng) | [Proposed] |
-| NFR-PERF-012 | Độ trễ event (outbox → consumer) p95 | < 1 s | [Proposed] |
-| NFR-SCAL-001 | Pilot | 5 trường · 5.000 học sinh · 1.000 CCU | [Proposed] (số trường/học sinh chờ OQ-03) |
+| NFR-PERF-001 | REST p95 latency (đọc) | < 200 ms tại gateway | [Confirmed] |
+| NFR-PERF-002 | REST p95 latency (ghi: submit bài) | < 400 ms | [Confirmed] |
+| NFR-PERF-003 | WS message delivery p95 (chat, lobby) | < 250 ms | [Confirmed] |
+| NFR-PERF-004 | Client FPS theo hạng thiết bị ([PERFORMANCE_BUDGET §3](../08-game-client/PERFORMANCE_BUDGET.md#3-mục-tiêu-khung-hình), ADR-0057) | Máy tầm trung, preset Trung bình: Hub ổn định 30 FPS trên mobile/web (FPS p10 ≥ 27); số theo từng nền tảng/hạng ở PERFORMANCE_BUDGET | Yêu cầu Accepted, thông số [Confirmed] (ADR-0057) |
+| NFR-PERF-011 | Lời gọi facade giữa module p95 (trong tiến trình, gồm truy vấn DB của module đích) | < 50 ms (không tính xử lý nghiệp vụ nặng) | [Confirmed] |
+| NFR-PERF-012 | Độ trễ event (outbox → consumer) p95 | < 1 s | [Confirmed] |
+| NFR-SCAL-001 | Pilot | 5 trường · 5.000 học sinh · 1.000 CCU | [Confirmed] (số trường/học sinh chờ OQ-03) |
 | NFR-SCAL-002 | **Mục tiêu năng lực Release 1.0** | **10.000 người chơi đồng thời (CCU)** trên game | **[Confirmed]** ADR-0045 |
-| NFR-SCAL-005 | Bão đăng nhập | 5.000 lượt đăng nhập trong 10 phút; đỉnh 100 đăng nhập mật khẩu/giây (giả định thận trọng của ADR-0064 mục 6, giữ dù ADR-0086 cho vào lại bằng refresh token); 500 refresh token/giây (gồm `resume` khi mở game) | [Proposed] ADR-0045, ADR-0064, ADR-0086 |
-| NFR-PERF-013 | Đăng nhập mật khẩu → vào hub | p95 ≤ 3 s (Keycloak xác thực p95 ≤ 800 ms) | [Proposed] ADR-0045 |
-| NFR-PERF-014 | Refresh token; `auth/session` + `game/sessions` | p95 ≤ 200 ms; p95 ≤ 300 ms | [Proposed] ADR-0045 |
-| NFR-PERF-015 | Publish → học sinh nhận bản mới ở lượt chơi kế tiếp | ≤ 30 s | [Proposed] ADR-0043 |
-| NFR-PERF-016 | Tải nội dung một màn (snapshot + media đã cache CDN) | p95 ≤ 2 s trên Wi-Fi trường học/4G | [Proposed] |
+| NFR-SCAL-005 | Bão đăng nhập | 5.000 lượt đăng nhập trong 10 phút; đỉnh 100 đăng nhập mật khẩu/giây (giả định thận trọng của ADR-0064 mục 6, giữ dù ADR-0086 cho vào lại bằng refresh token); 500 refresh token/giây (gồm `resume` khi mở game) | [Confirmed] ADR-0045, ADR-0064, ADR-0086 |
+| NFR-PERF-013 | Đăng nhập mật khẩu → vào hub | p95 ≤ 3 s (Keycloak xác thực p95 ≤ 800 ms) | [Confirmed] ADR-0045 |
+| NFR-PERF-014 | Refresh token; `auth/session` + `game/sessions` | p95 ≤ 200 ms; p95 ≤ 300 ms | [Confirmed] ADR-0045 |
+| NFR-PERF-015 | Publish → học sinh nhận bản mới ở lượt chơi kế tiếp | ≤ 30 s | [Confirmed] ADR-0043 |
+| NFR-PERF-016 | Tải nội dung một màn (snapshot + media đã cache CDN) | p95 ≤ 2 s trên Wi-Fi trường học/4G | [Confirmed] |
 | NFR-AVAIL-001 | Availability trong giờ học (6:30–22:00 ICT) | 99.5%/tháng | [TBD] OQ-11 |
-| NFR-AVAIL-002 | RPO / RTO dữ liệu học tập | RPO ≤ 5 phút · RTO ≤ 4 giờ (theo từng database) | [Proposed] |
+| NFR-AVAIL-002 | RPO / RTO dữ liệu học tập | RPO ≤ 5 phút · RTO ≤ 4 giờ (theo từng database) | [Confirmed] |
 | NFR-SEC-001 | Mọi endpoint ngoài health có authN + authZ; facade giữa module áp `TenantScope` + quyền của Principal gốc và chỉ module trong `x-allowed-callers` được gọi | 100% | [Confirmed] |
-| NFR-PRIV-001 | Dữ liệu cá nhân học sinh lưu trữ tại Việt Nam | — | [Proposed] (rà soát pháp lý ngoài version này, ADR-0082) |
-| NFR-OBS-001 | Trace xuyên APISIX → binary → module (span facade) → DB/NATS → worker | 100% request | [Proposed] |
+| NFR-PRIV-001 | Dữ liệu cá nhân học sinh lưu trữ tại Việt Nam | — | [Confirmed] (rà soát pháp lý ngoài version này, ADR-0082) |
+| NFR-OBS-001 | Trace xuyên APISIX → binary → module (span facade) → DB/NATS → worker | 100% request | [Confirmed] |
 
 Các NFR còn lại (scale theo hồ sơ chạy, cô lập lỗi, bảo trì, maxLength NFR-MAINT-005…) do [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md) sở hữu. Không tuyên bố năng lực tải khi chưa có benchmark ([TEST_STRATEGY](../12-project/TEST_STRATEGY.md)).
 

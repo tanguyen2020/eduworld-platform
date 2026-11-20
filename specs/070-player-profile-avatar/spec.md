@@ -9,9 +9,9 @@
 
 - Q: GameProfile được tạo khi nào? → A: Trong transaction `StartGameSession` của F014 (bước `EnsureGameProfile`, cùng cập nhật `last_game_login_at`), không qua event identity, để không có độ trễ trước màn tạo nhân vật. Profile mới có `avatar_config = NULL`, `nickname = NULL`.
 - Q: Shape `AvatarConfig` theo OpenAPI (`hair_item_id` UUID, `emote_item_ids` ≤ 8) hay CHARACTER_SYSTEM §5.1 (`item_id` mã chuỗi, `emote_slots` ≤ 6, slot phụ kiện)? → A: Theo tài liệu sở hữu [CHARACTER_SYSTEM §5.1](../../docs/01-game-design/CHARACTER_SYSTEM.md#51-data-model-khớp-domain_model-5); `item_id` là mã `varchar(64)` như `item_ledger`, `quest.schema.json`. Sửa OpenAPI ở Phase 2 (contracts §6).
-- Q: Nickname duy nhất theo trường (DATABASE_DESIGN §2.8 [Proposed]) hay theo tenant (`suggestNicknames`, STUDENT_GAME_UX_CORE S02)? → A: Theo tenant (chặt hơn, đúng với tương tác liên trường trong tenant `unit`, ADR-0054); cập nhật DATABASE_DESIGN ở Polish.
+- Q: Nickname duy nhất theo trường (DATABASE_DESIGN §2.8 [Confirmed]) hay theo tenant (`suggestNicknames`, STUDENT_GAME_UX_CORE S02)? → A: Theo tenant (chặt hơn, đúng với tương tác liên trường trong tenant `unit`, ADR-0054); cập nhật DATABASE_DESIGN ở Polish.
 - Q: Danh mục preset, dáng người, bảng màu, đồ mặc định, bộ từ sinh nickname lưu ở đâu? → A: Nội dung platform có version (ADR-0043) `CharacterCatalog`, seed bởi `src/backend/modules/game/seed/`; không hardcode trong client (R2). Biên tập trên Game Operations Console → F078.
-- Q: Giới hạn đổi nickname/tháng? → A: CHARACTER_SYSTEM §5.3 nêu "giới hạn số lần/tháng theo policy trường" nhưng chưa có giá trị; dùng tham số mới `nickname_change_monthly_limit` [Proposed], đăng ký CONFIG_DEFAULTS ở Polish.
+- Q: Giới hạn đổi nickname/tháng? → A: CHARACTER_SYSTEM §5.3 nêu "giới hạn số lần/tháng theo policy trường" nhưng chưa có giá trị; dùng tham số mới `nickname_change_monthly_limit` [Confirmed], đăng ký CONFIG_DEFAULTS ở Polish.
 
 ### Session 2026-11-17
 
@@ -148,8 +148,8 @@ Chỉ học sinh dùng được các API hồ sơ của mình; dữ liệu của
 | `emote_wheel_slots` | Số emote tối đa trên wheel |
 | `supported_locales` | Ngôn ngữ sinh nickname và tên hiển thị danh mục |
 | `api_rate_default` | Rate limit `suggestNicknames`, `updateAvatar` |
-| `nickname_change_monthly_limit` (Mới, [Proposed]) | Số lần học sinh tự đổi nickname mỗi tháng |
-| `nickname_suggestion_ttl` (Mới, [Proposed]) | Thời gian `nickname_option_id` còn hiệu lực |
+| `nickname_change_monthly_limit` (Mới, [Confirmed]) | Số lần học sinh tự đổi nickname mỗi tháng |
+| `nickname_suggestion_ttl` (Mới, [Confirmed]) | Thời gian `nickname_option_id` còn hiệu lực |
 
 ### Ràng buộc phi chức năng
 
@@ -180,5 +180,5 @@ Chỉ học sinh dùng được các API hồ sơ của mình; dữ liệu của
 ## Assumptions
 
 - F014 đã có `StartGameSession`, projection `ref.students`, `ref.tenants`; F070 thêm bước `EnsureGameProfile` vào transaction đó.
-- Danh mục v1 (6 preset, 4 dáng, bảng màu, đồ mặc định, 6 emote, bộ từ nickname vi/en) do content team cung cấp qua seed [Proposed]; asset 3D theo OQ-16 [TBD].
+- Danh mục v1 (6 preset, 4 dáng, bảng màu, đồ mặc định, 6 emote, bộ từ nickname vi/en) do content team cung cấp qua seed [Confirmed]; asset 3D theo OQ-16 [TBD].
 - Gợi ý nickname giữ tạm trong Valkey (không phải dữ liệu quan trọng, ADR-0004); nickname đã chọn lưu PostgreSQL.

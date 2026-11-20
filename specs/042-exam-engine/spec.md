@@ -15,7 +15,7 @@
 ### Session 2026-11-17
 
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
-- Q: Giữ route `/exams/attempts/{id}/analysis` và `/exams/sessions/{id}/report` không? → A: Có (RB-213 "Thêm", API_DESIGN §9.5): F042 thêm `getExamAttemptAnalysis`; `/report` là `getExamSessionReport` của F044. Cột `assessment.exam_sessions` là `exam_type`, `duration_sec` (EXAM_ENGINE §5, DATABASE_DESIGN, RB-212); field API `ExamSession.type`/`duration_seconds` ánh xạ ở DTO cho tới khi delta contract đổi tên [Proposed].
+- Q: Giữ route `/exams/attempts/{id}/analysis` và `/exams/sessions/{id}/report` không? → A: Có (RB-213 "Thêm", API_DESIGN §9.5): F042 thêm `getExamAttemptAnalysis`; `/report` là `getExamSessionReport` của F044. Cột `assessment.exam_sessions` là `exam_type`, `duration_sec` (EXAM_ENGINE §5, DATABASE_DESIGN, RB-212); field API `ExamSession.type`/`duration_seconds` ánh xạ ở DTO cho tới khi delta contract đổi tên [Confirmed].
 
 - Q: Vòng phụ thuộc F041 ↔ F042 xử lý thế nào? → A: Technical Architect chốt thứ tự F040 → F041 → F042 ([CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý)). F041 sở hữu port `ExamSessionCreator` và trả `422 VALIDATION_FAILED` cho bài `graded` + blueprint khi chưa có adapter thật (F041-AC-09). F042 nhận phần còn lại của F041-AC-09 cũ: adapter gọi `CreateExamSession`/`CancelExamSession`, tạo ExamSession khi publish bài và lưu `exam_session_id`, hủy ExamSession khi hủy bài (F042-AC-31), cùng integration test tương ứng.
 
@@ -204,7 +204,7 @@ Phát hiện câu sai đáp án sau kỳ kiểm tra, `qlcm.truong.a` tạo yêu 
 
 ## Assumptions
 
-- [Proposed, OQ-18] Chỉ luyện đề, thi thử và kiểm tra do nhà trường giao; `is_official` chỉ là "kết quả được ghi nhận tham khảo".
-- [Proposed] Thư viện đề luyện là ExamSession `practice_test`/`mock` không chính thức do nhà trường tạo cho khối/lớp với cửa sổ dài (từ blueprint của tenant hoặc blueprint platform được gán); học sinh không tự tạo session.
-- [Proposed] Permission: tạo/xem trước đề `lms.assignment.write`, xem session `lms.assignment.read`, công bố `lms.result.release`, chấm lại `learning_content.re_evaluate` ([ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md#22-permission-catalog)).
-- Ân hạn đồng bộ offline 30 giây và job auto-submit mỗi 15 giây theo EXAM_ENGINE là [Proposed].
+- [Confirmed, OQ-18] Chỉ luyện đề, thi thử và kiểm tra do nhà trường giao; `is_official` chỉ là "kết quả được ghi nhận tham khảo".
+- [Confirmed] Thư viện đề luyện là ExamSession `practice_test`/`mock` không chính thức do nhà trường tạo cho khối/lớp với cửa sổ dài (từ blueprint của tenant hoặc blueprint platform được gán); học sinh không tự tạo session.
+- [Confirmed] Permission: tạo/xem trước đề `lms.assignment.write`, xem session `lms.assignment.read`, công bố `lms.result.release`, chấm lại `learning_content.re_evaluate` ([ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md#22-permission-catalog)).
+- Ân hạn đồng bộ offline 30 giây và job auto-submit mỗi 15 giây theo EXAM_ENGINE là [Confirmed].

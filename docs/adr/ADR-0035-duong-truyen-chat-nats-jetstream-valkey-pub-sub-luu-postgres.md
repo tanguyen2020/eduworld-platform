@@ -17,7 +17,7 @@ Stakeholder yêu cầu chat dùng Pub/Sub (Valkey) + NATS để gửi, nhận v�
    | **PostgreSQL** | **Nguồn sự thật**: tin nhắn, revision, reaction, pin, con trỏ đọc, lịch sử, tìm kiếm | Không nằm trên đường trễ gửi/nhận |
 
 2. **Luồng gửi** (trong **chat-service**; gateway chỉ chuyển lệnh qua NATS request/reply, ADR-0036): kiểm tra membership/policy/rate limit → pipeline kiểm duyệt (ADR-0020/0030) → cấp `seq` bằng Valkey `INCR` (khởi tạo từ `MAX(seq)` trong PostgreSQL khi key mất, script Lua nguyên tử) → envelope (`message_id` UUIDv7, `tenant_id`, `channel_id`, `seq`, `client_msg_id`, nội dung đã kiểm duyệt) → **publish JetStream** `ew.chat.<tenant_id>.msg.<channel_id>` với `Nats-Msg-Id = message_id` → ack → trả `chat.message.acked` (Sent) → **publish Valkey** `ew:chat:fanout:<channel_id>` → gateway giao `chat.message.created` → thiết bị nhận ack `delivered`.
-3. **Luồng lưu:** worker `chat-persister` (JetStream durable pull consumer, nhiều instance) ghi theo lô vào PostgreSQL với `ON CONFLICT (message_id) DO NOTHING`, cập nhật `channels.last_seq`; độ trễ lưu p95 ≤ 500 ms [Proposed]; ack JetStream sau khi commit; lỗi lặp lại → DLQ + alert.
+3. **Luồng lưu:** worker `chat-persister` (JetStream durable pull consumer, nhiều instance) ghi theo lô vào PostgreSQL với `ON CONFLICT (message_id) DO NOTHING`, cập nhật `channels.last_seq`; độ trễ lưu p95 ≤ 500 ms [Confirmed]; ack JetStream sau khi commit; lỗi lặp lại → DLQ + alert.
 4. **Consumer khác:** `chat-notifier` (mention/tin mới cho người offline), `chat-moderation-async` (bước `async_analysis`), `chat-stats` (rollup analytics, ADR-0033). Con trỏ đọc gửi gộp tối đa 1 lần/2 giây/thành viên.
 5. **Tín hiệu tạm chỉ qua Valkey Pub/Sub:** typing, delivered/read broadcast, `chat.unread.updated`.
 6. **Độ tin cậy:**
@@ -25,7 +25,7 @@ Stakeholder yêu cầu chat dùng Pub/Sub (Valkey) + NATS để gửi, nhận v�
    - NATS không sẵn sàng: từ chối gửi `CHAT_TEMPORARILY_UNAVAILABLE`; **không** phát tin chưa vào JetStream.
    - PostgreSQL không sẵn sàng: JetStream giữ tin (≤ 72 giờ), persister ghi bù.
    - Thứ tự hiển thị theo `seq`.
-7. **JetStream [Proposed]:** stream `CHAT_MESSAGES` (subjects `ew.chat.*.msg.*`, `ew.chat.*.evt.*`, `ew.chat.*.cursor.*`), file storage, 3 replicas, `max_age` 72 h, `duplicate_window` 2 phút; consumer `persister`, `notifier`, `moderation`, `stats`.
+7. **JetStream [Confirmed]:** stream `CHAT_MESSAGES` (subjects `ew.chat.*.msg.*`, `ew.chat.*.evt.*`, `ew.chat.*.cursor.*`), file storage, 3 replicas, `max_age` 72 h, `duplicate_window` 2 phút; consumer `persister`, `notifier`, `moderation`, `stats`.
 8. **Cô lập và bảo mật:** subject chứa `tenant_id`; consumer đối chiếu `tenant_id` với channel; NATS account/user riêng cho từng service, quyền tối thiểu, TLS, chỉ mạng private. Game client và portal **không** kết nối NATS/Valkey.
 9. **Hạ tầng:** NATS cluster 3 node có JetStream (local: 1 node); metric qua `prometheus-nats-exporter`; không cần backup NATS.
 10. **Phạm vi:** party/lobby/hub/battle dùng Valkey Pub/Sub (ADR-0011); domain event chung dùng NATS JetStream (ADR-0042) — hệ thống chỉ có một message bus bền vững.

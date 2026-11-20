@@ -11,7 +11,7 @@
 - Q: Hook/interceptor ent ở `src/backend/pkg/tenancy` hay `src/backend/pkg/entx`? → A: `src/backend/pkg/entx` (D5); `src/backend/pkg/entx` dùng `TenantScope`, `Bypass` của `src/backend/pkg/tenancy` (F002).
 - Q: Xung đột optimistic concurrency trả mã nào (BACKEND_DESIGN §5.5 dùng `CONCURRENT_MODIFICATION`, không có trong catalog)? → A: `409 CONFLICT` từ repository; `412 VERSION_MISMATCH` khi request có `If-Match` lệch ETag (API_DESIGN §7). Không thêm mã mới.
 - Q: Tên metric lời gọi giữa module? → A: Theo [API_DESIGN §12.3](../../docs/07-backend/API_DESIGN.md) (tài liệu sở hữu quy ước facade): `eduworld_internal_client_requests_total{caller_module,callee_module,operation,outcome}`, `eduworld_internal_client_duration_seconds` (`caller`/`callee` là tên module); không có metric circuit cho lời gọi facade (ADR-0074). Metric `eduworld_external_client_*` thuộc adapter tích hợp ngoài.
-- Q: Adapter `resolvePrincipal` dùng chung đặt ở đâu? → A: (sửa 2026-11-17 theo ADR-0074) `src/backend/pkg/` không được import `src/backend/modules/`, nên `src/backend/pkg/authz` chỉ có port `PrincipalResolver`; adapter bọc facade `identity` (`src/backend/modules/identity/api`, operation `resolvePrincipal`) qua `src/backend/pkg/modcall` nằm ở composition root `src/backend/cmd/internal/wiring/principal_resolver.go` [Proposed] ([BACKEND_DESIGN §6](../../docs/07-backend/BACKEND_DESIGN.md)).
+- Q: Adapter `resolvePrincipal` dùng chung đặt ở đâu? → A: (sửa 2026-11-17 theo ADR-0074) `src/backend/pkg/` không được import `src/backend/modules/`, nên `src/backend/pkg/authz` chỉ có port `PrincipalResolver`; adapter bọc facade `identity` (`src/backend/modules/identity/api`, operation `resolvePrincipal`) qua `src/backend/pkg/modcall` nằm ở composition root `src/backend/cmd/internal/wiring/principal_resolver.go` [Confirmed] ([BACKEND_DESIGN §6](../../docs/07-backend/BACKEND_DESIGN.md)).
 - Q: `src/backend/pkg/modcall` còn token, header, retry, circuit breaker? → A: Không (ADR-0074 mục 3). `modcall.Call` chạy trong tiến trình: span, deadline theo `module_call_deadline`, kiểm `x-context-required` và `x-allowed-callers`, giữ Principal gốc/`TenantScope`/`Idempotency-Key` trong `context`, ánh xạ lỗi sang `problem` ([BACKEND_DESIGN §7.2](../../docs/07-backend/BACKEND_DESIGN.md)). Resilience (`external_api_resilience`) chỉ ở adapter tích hợp ngoài của module sở hữu.
 
 ### Session 2026-11-16 (ADR-0087)
@@ -28,7 +28,7 @@
 - Q: Chống trùng xuyên ngày khi partition theo ngày? → A: Khóa partition ổn định: `processed_events` partition theo `event_occurred_at` của envelope, PK `(consumer, event_id, event_occurred_at)`; `idempotency_records` partition theo `key_issued_on` lấy từ timestamp của `Idempotency-Key` (bắt buộc UUIDv7), PK `(user_id, route_template, idem_key, key_issued_on)`; key không phải UUIDv7 hoặc lệch quá `idempotency_record_ttl` → `400` (ADR-0089 §4).
 - Q: Ghi idempotency thế nào? → A: `INSERT` một lần trong cùng transaction `UnitOfWork` với thay đổi nghiệp vụ, kèm response đã tuần tự hóa; request trùng đồng thời chờ ở unique index tới khi transaction đầu commit rồi replay; không có trạng thái `in_progress`, không khóa Valkey (ADR-0089 §4).
 
-### Session 2026-11-18 (quyết định khi triển khai, [Proposed])
+### Session 2026-11-18 (quyết định khi triển khai, [Confirmed])
 
 - Q: Bảng `infra` sinh bằng ent? → A: Không. Bốn bảng partition theo ngày (ent/Atlas không biểu diễn `PARTITION BY`) nên DDL viết tay, sinh từ một template bằng `tools/infragen` cho 5 module; `outbox`/`idempotency`/consumer truy cập bằng SQL tường minh trong tx của `UnitOfWork`. Partition tạo/gỡ qua hàm `SECURITY DEFINER` (owner `<m>_migrator`), `<m>_partition_admin` chỉ có `EXECUTE`; có partition `DEFAULT` để ghi không lỗi khi thiếu partition ngày.
 - Q: Hook/interceptor gắn thế nào khi `entx` không được import code sinh? → A: Mixin mang `Interceptors()` (truy vấn) và `Hooks()` (create/update/delete, soft-delete); `Where`/`Client().Mutate` gọi qua reflection. Bảng H khai báo `HybridContent{ResourceType}`.
@@ -256,4 +256,4 @@ Mọi module có integration test trên database/NATS/Valkey thật, fixture ten
 
 - Thư viện: ent + pgx/v5, Atlas, nats.go (JetStream API mới), failsafe-go, oapi-codegen client, kin-openapi, testcontainers-go (ADR-0025, ADR-0039, ADR-0040).
 - Payload `audit.recorded` và các event identity dùng để invalidate cache chưa có schema → thêm ở Phase 2 (contracts §6).
-- D5, D6 theo đề xuất CODE_PLAN §3 [Proposed].
+- D5, D6 theo đề xuất CODE_PLAN §3 [Confirmed].

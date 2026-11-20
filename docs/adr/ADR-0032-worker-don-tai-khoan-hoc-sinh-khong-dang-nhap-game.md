@@ -11,16 +11,16 @@ Stakeholder yêu cầu worker dọn học sinh không login vào game, số ngà
 
 ## Quyết định
 
-1. **Cấu hình:** `inactive_student_cleanup_days` cấp platform (mặc định) và cấp tenant (ghi đè); `null`/`0` = tắt. System Admin sửa cấp platform; Tenant Admin sửa cấp tenant nếu được cấp quyền [Proposed]; có audit. Mặc định đề xuất 180 ngày [Proposed].
+1. **Cấu hình:** `inactive_student_cleanup_days` cấp platform (mặc định) và cấp tenant (ghi đè); `null`/`0` = tắt. System Admin sửa cấp platform; Tenant Admin sửa cấp tenant nếu được cấp quyền [Confirmed]; có audit. Mặc định đề xuất 180 ngày [Confirmed].
 2. **Điều kiện dọn:** học sinh chưa bị xóa thỏa `COALESCE(last_login_at, provisioned_at) + cleanup_days < now()`. Không dọn học sinh đang có game session active, đang làm bài kiểm tra/giải đấu chưa kết thúc, hoặc có moderation case mở.
 3. **"Clean" = soft-delete** (ADR-0028): đặt `deleted_at` cho User, Student, GameProfile và membership liên quan, `delete_reason = inactive_cleanup`; gỡ khỏi Keycloak Organization và vô hiệu hóa user Keycloak; thu hồi session; rời party; event `student.cleaned_up`; audit. Chạy như **saga** do identity-service điều phối qua internal platform API của từng service.
-4. **Báo trước:** trước N ngày (mặc định 14 [Proposed]), tạo danh sách "sắp bị dọn" cho Tenant Admin/School Admin trong portal; tenant có thể **loại trừ** hoặc gia hạn.
+4. **Báo trước:** trước N ngày (mặc định 14 [Confirmed]), tạo danh sách "sắp bị dọn" cho Tenant Admin/School Admin trong portal; tenant có thể **loại trừ** hoặc gia hạn.
 5. **Quay lại:** học sinh đăng nhập lại qua SSO và vẫn hợp lệ trong SIS → **khôi phục** (bỏ `deleted_at`, thêm lại membership) kèm dữ liệu cũ, audit `student.restored`. SIS sync **không** tự khôi phục học sinh đã bị dọn khi họ chưa đăng nhập lại.
-6. **Vận hành:** chạy hằng ngày 02:00 ICT [Proposed], lô 500, khóa singleton, idempotent, có dry-run, metric `eduworld_student_cleanup_total{tenant,result}`, báo cáo mỗi lần chạy.
+6. **Vận hành:** chạy hằng ngày 02:00 ICT [Confirmed], lô 500, khóa singleton, idempotent, có dry-run, metric `eduworld_student_cleanup_total{tenant,result}`, báo cáo mỗi lần chạy.
 
 ## Hệ quả
 
-(+) Danh sách học sinh gọn, tối thiểu hóa dữ liệu. (−) Cấu hình quá ngắn (vd nghỉ hè) có thể dọn nhầm hàng loạt; biện pháp: báo trước, loại trừ, khôi phục khi đăng nhập lại, cảnh báo và yêu cầu xác nhận khi một lần chạy dọn > 10% học sinh của tenant [Proposed].
+(+) Danh sách học sinh gọn, tối thiểu hóa dữ liệu. (−) Cấu hình quá ngắn (vd nghỉ hè) có thể dọn nhầm hàng loạt; biện pháp: báo trước, loại trừ, khôi phục khi đăng nhập lại, cảnh báo và yêu cầu xác nhận khi một lần chạy dọn > 10% học sinh của tenant [Confirmed].
 
 ## Lịch sử thay đổi
 

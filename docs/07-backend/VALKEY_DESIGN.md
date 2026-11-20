@@ -21,11 +21,11 @@
 
 | Hạng mục | Local | Staging/Prod | Nhãn |
 |---|---|---|---|
-| Phiên bản | Valkey 8.x | Valkey 8.x | [Proposed] |
-| Topology | 1 instance | Primary + 2 replica + 3 Sentinel (pilot); Valkey Cluster khi pub/sub/throughput vượt ngưỡng (§8) | [Proposed] |
-| Persistence | Tắt | AOF `appendfsync everysec` + RDB snapshot 15'; **không** dùng để khôi phục dữ liệu nghiệp vụ, chỉ giảm thời gian warm-up | [Proposed] |
-| Memory | 256 MB | `maxmemory` = 70% RAM; `maxmemory-policy volatile-lru` (chỉ evict key có TTL) | [Proposed] |
-| Bảo mật | không | ACL user theo module (`identity`, `learning`, `game`, `competition`, `chat`, `realtime`, `apisix_ratelimit`; `core-api` và `worker` mở một client Valkey cho mỗi module nạp, dùng user của module đó — ADR-0074): mỗi user chỉ key `~ew:<module>:*` của mình (+ `realtime` đọc/`GETDEL` `~ew:game:rt:ticket:*`, ghi `~ew:gateway:*`) và kênh Pub/Sub cần dùng (`&ew:rt:*`, `&ew:chat:fanout:*`); TLS; tắt `KEYS`, `FLUSHALL`, `DEBUG`, `CONFIG` cho user ứng dụng | [Proposed] |
+| Phiên bản | Valkey 8.x | Valkey 8.x | [Confirmed] |
+| Topology | 1 instance | Primary + 2 replica + 3 Sentinel (pilot); Valkey Cluster khi pub/sub/throughput vượt ngưỡng (§8) | [Confirmed] |
+| Persistence | Tắt | AOF `appendfsync everysec` + RDB snapshot 15'; **không** dùng để khôi phục dữ liệu nghiệp vụ, chỉ giảm thời gian warm-up | [Confirmed] |
+| Memory | 256 MB | `maxmemory` = 70% RAM; `maxmemory-policy volatile-lru` (chỉ evict key có TTL) | [Confirmed] |
+| Bảo mật | không | ACL user theo module (`identity`, `learning`, `game`, `competition`, `chat`, `realtime`, `apisix_ratelimit`; `core-api` và `worker` mở một client Valkey cho mỗi module nạp, dùng user của module đó — ADR-0074): mỗi user chỉ key `~ew:<module>:*` của mình (+ `realtime` đọc/`GETDEL` `~ew:game:rt:ticket:*`, ghi `~ew:gateway:*`) và kênh Pub/Sub cần dùng (`&ew:rt:*`, `&ew:chat:fanout:*`); TLS; tắt `KEYS`, `FLUSHALL`, `DEBUG`, `CONFIG` cho user ứng dụng | [Confirmed] |
 | Client Go | `valkey-io/valkey-go` (client-side caching tắt mặc định) | | ADR-0025 |
 
 Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lua/Functions đặt trong `src/backend/modules/<module>/internal/infrastructure/cache/scripts/`, có test.
@@ -69,7 +69,7 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:mm:cooldown:<student_id>` | STRING | Theo `mm_ticket_rate` | `competition · matchmaking` | Ephemeral — chặn tạo ticket dồn dập |
 | `ew:rl:<scope>:<subject>:<window>` | STRING counter / ZSET | = window | `mỗi module (src/backend/pkg/httpx)` | Ephemeral |
 | `ew:idem:<principal_id>:<key>` | STRING (JSON status + response ref) | 24 h | `mỗi module (src/backend/pkg/httpx)` | Ephemeral cache — bản ghi chuẩn ở `infra.idempotency_records` |
-| `ew:<module>:principal:<user_id>:<tenant_id>` (tên đầy đủ) | STRING (JSON Principal của phiên tenant + `version`; phiên platform dùng `<tenant_id>` = `platform`) | `principal_cache_ttl` | mỗi module (`src/backend/pkg/authz`, cache kết quả facade `principals:resolve` của module identity) | Rebuildable — xóa khi `user_role.changed`, `role.updated` (mọi user có role đó; xóa theo version role [Proposed]), `tenant_membership.changed`, `enrollment.changed`, `user.access_revoked`, `tenant.updated`. Principal chứa permission = hợp các UserRole hiệu lực (ADR-0066). Khóa phụ cùng TTL (F002): `ew:<module>:principal:sub:<sha256(iss,sub)[:16]>` → `user_id` (token không mang `user_id`) và `ew:<module>:principal:idx:<user_id>` (SET phần tenant) cho invalidate toàn user; L1 trong tiến trình 15 s; `ClientID`/`sid`/MFA không cache |
+| `ew:<module>:principal:<user_id>:<tenant_id>` (tên đầy đủ) | STRING (JSON Principal của phiên tenant + `version`; phiên platform dùng `<tenant_id>` = `platform`) | `principal_cache_ttl` | mỗi module (`src/backend/pkg/authz`, cache kết quả facade `principals:resolve` của module identity) | Rebuildable — xóa khi `user_role.changed`, `role.updated` (mọi user có role đó; xóa theo version role [Confirmed]), `tenant_membership.changed`, `enrollment.changed`, `user.access_revoked`, `tenant.updated`. Principal chứa permission = hợp các UserRole hiệu lực (ADR-0066). Khóa phụ cùng TTL (F002): `ew:<module>:principal:sub:<sha256(iss,sub)[:16]>` → `user_id` (token không mang `user_id`) và `ew:<module>:principal:idx:<user_id>` (SET phần tenant) cho invalidate toàn user; L1 trong tiến trình 15 s; `ClientID`/`sid`/MFA không cache |
 | `ew:id:login_ticket:<sha256(ticket)>` | STRING (JSON `{user_id, device_id, choices[], token_ref}` — token được mã hóa bằng khóa của module identity, **không** chứa mật khẩu) | 2 phút, `GETDEL` một lần | `identity · identity` | Ephemeral — chọn tenant sau `POST /auth/game/login` khi học sinh thuộc nhiều tenant (ADR-0068); mất key = học sinh đăng nhập lại |
 | `ew:id:login_rl:<sha256(username)>` | STRING counter | 60 s | `identity · identity` | Ephemeral — đếm lần đăng nhập game theo username (bổ sung cho APISIX, 10/phút, ADR-0068) |
 | `ew:fg:<tenant_id>` / `ew:fg:platform` (tên đầy đủ `ew:identity:fg:…`) | HASH `{catalog_version, disabled_menus[], disabled_actions[]}` — trạng thái bật/tắt menu/action **hiệu lực** của Admin Portal theo tenant (`platform` = mặc định platform, dùng cho System Admin liên tenant không gửi `X-Tenant-Id`) | `feature_toggle_cache_ttl` (60 s, ≤ `principal_cache_ttl`); xóa ngay khi nhận `platform_settings.changed` scope `feature_flag` | `identity · featuregate.Source` (ADR-0090) | Rebuildable — nguồn `platform.feature_flags` + `platform.portal_menu_catalog`; miss + DB lỗi → `featuregate` trả `503 UNAVAILABLE` (fail-closed) |
@@ -225,7 +225,7 @@ end
 return redis.call('INCR', KEYS[1])
 ```
 
-module chat chỉ đọc `eduworld_chat` khi key không tồn tại (lần đầu hoặc sau khi Valkey mất). Vì persister có thể chưa ghi kịp, giá trị khởi tạo dùng `GREATEST(channels.last_seq, max seq trong ew:chat:recent)`; trùng hiếm gặp bị unique PG chặn và persister gán seq mới + phát `chat.message.resequenced` [Proposed].
+module chat chỉ đọc `eduworld_chat` khi key không tồn tại (lần đầu hoặc sau khi Valkey mất). Vì persister có thể chưa ghi kịp, giá trị khởi tạo dùng `GREATEST(channels.last_seq, max seq trong ew:chat:recent)`; trùng hiếm gặp bị unique PG chặn và persister gán seq mới + phát `chat.message.resequenced` [Confirmed].
 
 ## 5. Dữ liệu cấm chỉ lưu trong Valkey (ADR-0004)
 
@@ -267,7 +267,7 @@ Readiness của `realtime` fail khi Valkey không kết nối được (không n
 
 ## 7. Metrics & cảnh báo
 
-| Metric | Ngưỡng cảnh báo [Proposed] |
+| Metric | Ngưỡng cảnh báo [Confirmed] |
 |---|---|
 | `used_memory / maxmemory` | > 75% |
 | `evicted_keys` tăng | > 0 trong 5 phút (key không TTL không bị evict, nên evict = thiếu RAM) |

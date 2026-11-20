@@ -25,7 +25,7 @@ Database `eduworld_identity`.
 | `trace_id` | `varchar(64)` | | |
 | `ip_hash` | bytea | | |
 
-**Index**: `(tenant_id, occurred_at DESC)`, `(target_type, target_id)`; `REVOKE UPDATE, DELETE, TRUNCATE` khỏi `identity_app`, `identity_platform`. Job `audit-retention` dùng role riêng `identity_retention` (Mới, [Proposed]) chỉ có `UPDATE (actor_id, ip_hash, metadata)` — ẩn danh hóa, không xóa; cần ghi vào DATABASE_DESIGN §1.1 (task Polish).
+**Index**: `(tenant_id, occurred_at DESC)`, `(target_type, target_id)`; `REVOKE UPDATE, DELETE, TRUNCATE` khỏi `identity_app`, `identity_platform`. Job `audit-retention` dùng role riêng `identity_retention` (Mới, [Confirmed]) chỉ có `UPDATE (actor_id, ip_hash, metadata)` — ẩn danh hóa, không xóa; cần ghi vào DATABASE_DESIGN §1.1 (task Polish).
 
 ### PlatformSetting — `platform.platform_settings` (Có sẵn, G)
 

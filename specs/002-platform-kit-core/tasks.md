@@ -137,7 +137,7 @@
 ## Phase N: Polish & Cross-Cutting
 
 - [x] T051 [P] Sửa tài liệu: SECURITY_ARCHITECTURE §5.2 đường dẫn `src/backend/pkg/authz/catalog.go`; MULTITENANCY §4.1/§4.3 key cache `ew:<module>:principal:`; TEST_STRATEGY TC-SVC-006 kỳ vọng `CALLER_NOT_ALLOWED` — file: `docs/10-security/SECURITY_ARCHITECTURE.md`
-- [x] T052 [P] Ghi danh sách permission platform-only mở rộng (moderation/chat) vào SECURITY_ARCHITECTURE §5.2 (bỏ nhãn [Proposed]) — file: `docs/10-security/SECURITY_ARCHITECTURE.md`
+- [x] T052 [P] Ghi danh sách permission platform-only mở rộng (moderation/chat) vào SECURITY_ARCHITECTURE §5.2 (bỏ nhãn [Confirmed]) — file: `docs/10-security/SECURITY_ARCHITECTURE.md`
 - [x] T053 [P] CHANGELOG mục F002 — file: `CHANGELOG.md`
 - [x] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/002-platform-kit-core/quickstart.md`
 

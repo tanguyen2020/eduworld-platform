@@ -15,7 +15,7 @@ Quy tắc: tính năng nào vượt ngân sách ở hạng **Tầm trung** phả
 
 ## 2. Hạng thiết bị tham chiếu
 
-Theo ADR-0057 [Proposed, chốt sau khảo sát thiết bị trường — OQ-04]:
+Theo ADR-0057 [Confirmed, chốt sau khảo sát thiết bị trường — OQ-04]:
 
 | Hạng | PC Windows | Android | iOS | Web | Preset mặc định |
 |---|---|---|---|---|---|
@@ -23,7 +23,7 @@ Theo ADR-0057 [Proposed, chốt sau khảo sát thiết bị trường — OQ-04
 | **Tầm trung (mục tiêu chính)** | Intel Core i3 thế hệ 10 / Ryzen 3 3200G, RAM 8 GB, iGPU Intel UHD 630 / Radeon Vega 8 | RAM 4 GB, SoC tầm Snapdragon 680 / Helio G85, GPU Mali-G52 / Adreno 610 | iPhone 11 / iPad thế hệ 8, iOS 15 | Chrome/Edge mới trên PC Tầm trung | Trung bình |
 | **Cao** | GPU rời tầm GTX 1650 | RAM ≥ 6 GB, SoC cận cao cấp | iPhone 13 trở lên | — | Cao |
 
-### 2.1. Thiết bị kiểm thử tham chiếu (lab) [Proposed]
+### 2.1. Thiết bị kiểm thử tham chiếu (lab) [Confirmed]
 
 | Mã | Thiết bị | Hạng | Renderer kiểm thử |
 |---|---|---|---|
@@ -47,7 +47,7 @@ Danh sách cập nhật theo kết quả khảo sát thiết bị thực tế t�
 | **Tầm trung (Trung bình)** | **ổn định 30 FPS** (khóa 30), p10 ≥ 27 FPS | **60 FPS** (≤ 16,7 ms), cho phép xuống 30 ở cảnh đông nhất | FPS p10, khung giật > 100 ms ≤ 1/phút |
 | Cao | 30 FPS khóa (60 tùy chọn) | 60 FPS | FPS p10 |
 
-- **Ngân sách thời gian một khung** ở hạng Tầm trung mobile (33,3 ms): game logic + script ≤ 6 ms, vật lý ≤ 3 ms, animation ≤ 4 ms, render CPU ≤ 10 ms, GPU ≤ 28 ms, còn lại dự phòng [Proposed].
+- **Ngân sách thời gian một khung** ở hạng Tầm trung mobile (33,3 ms): game logic + script ≤ 6 ms, vật lý ≤ 3 ms, animation ≤ 4 ms, render CPU ≤ 10 ms, GPU ≤ 28 ms, còn lại dự phòng [Confirmed].
 - Màn học tập (activity player) không được giật khi học sinh thao tác: phản hồi chạm/nhấn ≤ 100 ms.
 
 ## 4. Renderer theo nền tảng
@@ -151,7 +151,7 @@ Học sinh đổi preset và từng thiết lập trong Cài đặt; lựa chọ
 | Mạng tối thiểu chơi được | 4G hoặc Wi-Fi 1 Mbps, RTT ≤ 200 ms | Trên 300 ms: hiển thị chỉ báo mạng yếu |
 | Tải nội dung vùng (PCK) | Tải nền khi đang ở vùng trước; tiếp tục được khi rớt mạng | §11 |
 
-### 10.1. Ngân sách phòng máy (classroom budget) [Proposed]
+### 10.1. Ngân sách phòng máy (classroom budget) [Confirmed]
 
 Ngân sách trên tính cho **một** học sinh. Phòng máy trường học dùng chung một đường truyền: 40 máy cùng tải gói vùng 40 MB đầu tiết là khoảng 1,6 GB, vượt khả năng của đường truyền trường phổ thông. Release 1.0 thiết kế theo các quy tắc sau (nguồn: [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) CLS-03; NFR-PERF-019 trong [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md)):
 
@@ -190,7 +190,7 @@ Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `of
 - Mobile khóa **30 FPS** mặc định (§3); không cho 60 FPS ở preset Trung bình.
 - Ứng dụng xuống nền: dừng render, giảm mạng về heartbeat; Web tab ẩn: `requestAnimationFrame` tự dừng.
 - Màn đứng yên (đọc bài, chờ trong lobby) > 10 giây: giảm render 3D xuống 15 FPS.
-- Mục tiêu tiêu thụ pin trên DEV-AND-MID: ≤ 15%/giờ chơi ở preset Trung bình [Proposed]; nhiệt độ không kích hoạt throttle mức "severe" trong phiên 30 phút.
+- Mục tiêu tiêu thụ pin trên DEV-AND-MID: ≤ 15%/giờ chơi ở preset Trung bình [Confirmed]; nhiệt độ không kích hoạt throttle mức "severe" trong phiên 30 phút.
 
 ## 13. Kỹ thuật tối ưu bắt buộc
 
@@ -209,7 +209,7 @@ Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `of
 
 ## 14. Web export
 
-- Renderer **Compatibility** (WebGL 2), export **single-threaded** (không cần COOP/COEP) [Proposed].
+- Renderer **Compatibility** (WebGL 2), export **single-threaded** (không cần COOP/COEP) [Confirmed].
 - Preset tối đa: Trung bình; không Forward+.
 - Giới hạn bộ nhớ heap wasm khởi tạo 512 MB, tối đa 1 GB; không preload toàn bộ vùng.
 - Tải theo gói: lõi ≤ 40 MB (§11), vùng tải sau; dùng cache trình duyệt + Cache Storage theo hash.
@@ -240,4 +240,4 @@ Tham số `classroom_reference_bandwidth` (đường truyền tham chiếu), `of
 | AC-PERF-009 | Đồng bộ Hub 40 người ≤ 30 KB/s xuống trong 10 phút đo |
 | AC-PERF-010 | Mọi zone trong bản build qua benchmark CI không vượt ngân sách §7 quá 5% |
 | AC-PERF-011 | DEV-AND-MID1 chơi 30 phút: pin giảm ≤ 8%, không throttle mức severe |
-| AC-PERF-012 | Phòng máy giả lập 40 client trên đường truyền 20 Mbps: với gói nội dung cài sẵn hoặc cache LAN, cả lớp vào Hub ≤ 2 phút; client kiểm tra SHA-256 và tự về CDN khi cache LAN lỗi [Proposed] |
+| AC-PERF-012 | Phòng máy giả lập 40 client trên đường truyền 20 Mbps: với gói nội dung cài sẵn hoặc cache LAN, cả lớp vào Hub ≤ 2 phút; client kiểm tra SHA-256 và tự về CDN khi cache LAN lỗi [Confirmed] |

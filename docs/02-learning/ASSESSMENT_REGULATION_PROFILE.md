@@ -3,7 +3,7 @@
 > Trạng thái: Draft · Phiên bản: 0.1 · Owner: EdTech Specialist · Cập nhật: 2026-11-15
 > Liên quan: [LEARNING_ANALYTICS](LEARNING_ANALYTICS.md) · [EXAM_ENGINE](EXAM_ENGINE.md) · [CURRICULUM_MODEL](CURRICULUM_MODEL.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) (PED-06) · Yêu cầu: FR-ANL-015 ([PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIREMENTS.md))
 
-Toàn bộ tài liệu là **[Proposed]**, trừ ngưỡng mặc định ở §4.1, §4.2 (`assessment_reference_thresholds`, [Confirmed — Technical Architect 2026-11-15]). Mọi mô tả nội dung thông tư dưới đây là **[Ngoài — cần pháp chế/EdTech xác nhận]**: phải đối chiếu văn bản gốc và các văn bản sửa đổi, bổ sung còn hiệu lực trước khi triển khai.
+Toàn bộ tài liệu là **[Confirmed]**, trừ ngưỡng mặc định ở §4.1, §4.2 (`assessment_reference_thresholds`, [Confirmed — Technical Architect 2026-11-15]). Mọi mô tả nội dung thông tư dưới đây là **[Ngoài — cần pháp chế/EdTech xác nhận]**: phải đối chiếu văn bản gốc và các văn bản sửa đổi, bổ sung còn hiệu lực trước khi triển khai.
 
 ## 1. Mục đích và phạm vi
 
@@ -14,7 +14,7 @@ Nhà trường cần đọc kết quả học tập trên EduWorld theo ngôn ng
 1. Báo cáo **chỉ để tham khảo**, **không thay** đánh giá chính thức của nhà trường theo quy định của Bộ (ADR-0072 mục 2). Không ghi tự động vào học bạ hay hồ sơ chính thức.
 2. Mọi màn hình và file xuất có dòng ghi chú: *"Kết quả tham khảo từ hoạt động học trên EduWorld, không phải kết quả đánh giá chính thức."*
 3. Không xếp hạng học sinh; không hiển thị nhãn mức thông tư cho học sinh trong game (học sinh chỉ thấy mastery thân thiện, [LEARNING_EXPERIENCE §7](LEARNING_EXPERIENCE.md#7-hiển-thị-tiến-bộ-cho-học-sinh)).
-4. Phẩm chất và năng lực chung **không** suy ra tự động từ dữ liệu trong game (cần quan sát của nhà trường); hệ thống chỉ liệt kê bằng chứng LO liên quan qua `competency_ids[]` ([CURRICULUM_MODEL §3.4](CURRICULUM_MODEL.md#34-competency-năng-lực-phẩm-chất-proposed)).
+4. Phẩm chất và năng lực chung **không** suy ra tự động từ dữ liệu trong game (cần quan sát của nhà trường); hệ thống chỉ liệt kê bằng chứng LO liên quan qua `competency_ids[]` ([CURRICULUM_MODEL §3.4](CURRICULUM_MODEL.md#34-competency-năng-lực-phẩm-chất-confirmed)).
 5. Thiếu dữ liệu thì hiển thị "Chưa đủ dữ liệu", không ép ra một mức.
 
 | Trong phạm vi | Ngoài phạm vi |
@@ -76,7 +76,7 @@ Kèm theo: điểm tham khảo thang 10 của các đề `is_official` trong k�
 
 - Evidence `rapid_guess` đã bị loại khỏi mastery ([LEARNING_ANALYTICS §3.1](LEARNING_ANALYTICS.md#31-định-nghĩa)); báo cáo hiển thị thêm tỉ lệ "làm quá nhanh" của học sinh để nhà trường cân nhắc độ tin cậy.
 - Kết quả bài đo hiệu quả học tập ([LEARNING_EFFICACY_PLAN](LEARNING_EFFICACY_PLAN.md)) không dùng trong báo cáo này.
-- Đề có cảnh báo độ tin cậy thấp ([EXAM_ENGINE §8.1](EXAM_ENGINE.md#81-độ-tin-cậy-của-đề-chính-thức-proposed)) được đánh dấu bên cạnh điểm tham khảo.
+- Đề có cảnh báo độ tin cậy thấp ([EXAM_ENGINE §8.1](EXAM_ENGINE.md#81-độ-tin-cậy-của-đề-chính-thức-confirmed)) được đánh dấu bên cạnh điểm tham khảo.
 
 ## 5. Hiển thị và quyền
 

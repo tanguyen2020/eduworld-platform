@@ -30,7 +30,7 @@ module identity thêm command `LockUser`, `UnlockUser`, `DeactivateUser` (outbox
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Liên module chỉ qua facade (saga) và event; mỗi module tự soft-delete dữ liệu của mình |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Soft-delete + ẩn danh hóa, không `DELETE`; job platform có `tenant_id` tường minh |
 | IV Server-authoritative | ✅ | Lock/unlock/duyệt có `Idempotency-Key` + audit; saga idempotent theo `saga_id` |
-| V Xác thực, phân quyền | ✅ | `platform.user.manage`, `tenant.user.lock` [Proposed], `tenant.student_cleanup.*`, `platform.student_cleanup.approve`, `platform.data_request.write`; internal `x-allowed-callers: [identity]` |
+| V Xác thực, phân quyền | ✅ | `platform.user.manage`, `tenant.user.lock` [Confirmed], `tenant.student_cleanup.*`, `platform.student_cleanup.approve`, `platform.data_request.write`; internal `x-allowed-callers: [identity]` |
 | VI An toàn trẻ em | ✅ | Lý do khóa trung tính với học sinh; event không PII |
 | VII Một nguồn sự thật, cấu hình | ✅ | Số ngày/ngưỡng từ cài đặt hiệu lực (F015); retention theo DATA_PRIVACY §2 (đăng ký tên tham số) |
 | VIII UI tách logic, token | ✅ | Không có UI |
@@ -71,7 +71,7 @@ src/backend/modules/learning/internal/presentation/http/internal/platform_studen
 
 ## Phase 0: Research
 
-Không có tài liệu research riêng; hai quyết định ghi ở spec Clarifications: thứ tự saga dọn [Proposed]; Keycloak khi dọn — đã chốt (giữ user `enabled`, gỡ membership Organization, thu hồi phiên).
+Không có tài liệu research riêng; hai quyết định ghi ở spec Clarifications: thứ tự saga dọn [Confirmed]; Keycloak khi dọn — đã chốt (giữ user `enabled`, gỡ membership Organization, thu hồi phiên).
 
 ## Phase 1: Design & Contracts
 

@@ -75,7 +75,7 @@ src/cms/frontend/packages/ops-ui/src/theme/{antd-theme.ts,tokens.css}           
 
 ## Phase 0: Research
 
-Không có. Công cụ và luồng đã chốt ở DESIGN_SYSTEM §3 [Proposed]; các lựa chọn còn lại ghi ở Clarifications.
+Không có. Công cụ và luồng đã chốt ở DESIGN_SYSTEM §3 [Confirmed]; các lựa chọn còn lại ghi ở Clarifications.
 
 ## Phase 1: Design & Contracts
 

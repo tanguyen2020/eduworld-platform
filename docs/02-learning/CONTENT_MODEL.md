@@ -102,7 +102,7 @@ erDiagram
 Quy tắc:
 
 1. **Version** là bản nội dung. **Draft** sửa tự do (optimistic concurrency theo field `version` của ent, ADR-0039). Khi đã `published` thì **bất biến**: hook ent + trigger DB chặn UPDATE cột nội dung.
-2. Sửa nội dung đã publish = tạo Draft mới từ version đó (`POST .../versions` với `based_on_version`). Chỉ **một** Draft/In-review mở cho mỗi item tại một thời điểm [Proposed].
+2. Sửa nội dung đã publish = tạo Draft mới từ version đó (`POST .../versions` với `based_on_version`). Chỉ **một** Draft/In-review mở cho mỗi item tại một thời điểm [Confirmed].
 3. **Release pointer** `content_items.current_version_id` quyết định version học sinh nhận khi **bắt đầu** một lượt chơi/học mới. Mỗi lần đổi con trỏ ghi một dòng `content_releases` + audit + outbox event.
 4. **Publish**: version `approved` → `published`, con trỏ trỏ sang version đó (ngay hoặc hẹn giờ `publish_at`). Lịch hẹn lưu ở `content.scheduled_publications` (trạng thái `scheduled`/`applied`/`cancelled`/`failed`, hủy được trước giờ chạy); `content_releases` là bảng append-only và chỉ ghi khi con trỏ thực sự đổi. Đến giờ, worker chạy lại toàn bộ điều kiện publish; lỗi → lịch `failed` kèm lý do, con trỏ giữ nguyên. Version published trước đó **vẫn giữ** trạng thái `published` (xem và rollback được), chỉ không còn là con trỏ.
 5. **Rollback**: trỏ con trỏ về một version `published` cũ hơn (hoặc mới hơn = roll forward). **Không** sao chép, **không** tạo version mới. Bắt buộc `reason`, permission `content.release.rollback`, audit (thay quy tắc "clone rồi publish" cũ của ADR-0015).
@@ -123,7 +123,7 @@ Khi học sinh **bắt đầu** một đơn vị chơi/học, server đọc con 
 | Đơn vị | Nơi ghi version | Thời điểm ghim | Hết ghim khi |
 |---|---|---|---|
 | Màn/level | `game.level_sessions.content_versions` (jsonb: item → version) | `POST /game/levels/{level_id}:start` | Hoàn thành/rời màn |
-| Quest | `game.quest_progress.quest_version_id` | Nhận quest | Hoàn thành/bỏ quest (quest nhiều ngày giữ đến khi xong) [Proposed] |
+| Quest | `game.quest_progress.quest_version_id` | Nhận quest | Hoàn thành/bỏ quest (quest nhiều ngày giữ đến khi xong) [Confirmed] |
 | Mini-game | `assessment.attempts.source_version_id` (mode `minigame`) | Bắt đầu mini-game | Nộp/hết giờ |
 | Bài học | `learning.lesson_sessions.lesson_version_id` | Mở bài | Hoàn thành/đóng |
 | Attempt bài tập | `attempts.source_version_id` + `attempt_items.question_version_id` | Bắt đầu attempt | Submit/expire |
@@ -162,10 +162,10 @@ sequenceDiagram
   SVC-->>Client: content.manifest.updated (realtime)
 ```
 
-- Snapshot bất biến → không bao giờ cần invalidate; chỉ con trỏ và manifest đổi. TTL trượt của snapshot trong Valkey `content_snapshot_cache_ttl` = 7 ngày [Proposed]. Cache miss → đọc DB, nạp lại (ADR-0004).
+- Snapshot bất biến → không bao giờ cần invalidate; chỉ con trỏ và manifest đổi. TTL trượt của snapshot trong Valkey `content_snapshot_cache_ttl` = 7 ngày [Confirmed]. Cache miss → đọc DB, nạp lại (ADR-0004).
 - **Không đưa lên CDN:** render payload câu hỏi của đề kiểm tra, mọi `answer_key`/`scoring_rule`, nội dung bài giao chưa mở. Những thứ này chỉ phục vụ qua API có kiểm quyền và cache phía server.
 - Nội dung riêng tenant trên CDN dùng signed URL ngắn hạn (ADR-0044).
-- Mục tiêu từ khi bấm Publish đến khi học sinh mới nhận được: ≤ 30 giây [Proposed].
+- Mục tiêu từ khi bấm Publish đến khi học sinh mới nhận được: ≤ 30 giây [Confirmed].
 
 ## 6. Workflow trạng thái
 
@@ -196,7 +196,7 @@ stateDiagram-v2
 | `archive` | không phải con trỏ hiện hành | `content.version_archived` |
 | (sau mọi thao tác đổi con trỏ) | manifest tenant dựng lại | `content.manifest_updated` |
 
-Cấu hình tenant nhỏ có thể bật `self_approve_allowed` (người biên tập nội dung của tenant tự duyệt câu hỏi riêng của tenant, có audit) [Proposed].
+Cấu hình tenant nhỏ có thể bật `self_approve_allowed` (người biên tập nội dung của tenant tự duyệt câu hỏi riêng của tenant, có audit) [Confirmed].
 
 ## 7. Media asset pipeline (ADR-0044)
 
@@ -220,7 +220,7 @@ flowchart LR
   PUB & PRI --> CDN[CDN]
 ```
 
-| Loại | Đầu vào | Đầu ra | Giới hạn `media_max_bytes_by_kind` [Proposed] |
+| Loại | Đầu vào | Đầu ra | Giới hạn `media_max_bytes_by_kind` [Confirmed] |
 |---|---|---|---|
 | Ảnh | PNG, JPG, WebP, SVG (sanitize) | WebP + PNG, 3 kích thước 256 / 1024 / 2048 px | ≤ 10 MB |
 | Âm thanh | MP3, WAV, OGG | **Ogg Vorbis** (Godot) + MP3 (web) | ≤ 20 MB, ≤ 10 phút |
@@ -229,10 +229,10 @@ flowchart LR
 
 - **Khóa content-addressed:** `media/<sha256>/<variant>.<ext>` → bất biến, CDN và client cache vĩnh viễn (`Cache-Control: immutable`).
 - **Bất biến theo version:** thay ảnh = upload asset mới; version nội dung cũ vẫn trỏ asset cũ, nên học sinh đang chơi version cũ thấy đúng media cũ. Asset còn được version nào tham chiếu thì không bị xóa (soft-delete, ADR-0028).
-- **Xin upload và báo xong:** `presignMediaUpload` tạo asset `quarantined` và trả presigned PUT tới `ew-media-quarantine`, hạn `media_presign_ttl` = 15 phút [Proposed]; trùng `sha256` trong cùng phạm vi → trả `duplicate_of`, không cấp URL mới. Sau khi PUT, portal gọi `completeMediaUpload` (`POST /api/v1/cms/media/{asset_id}:complete-upload`, `Idempotency-Key`): server kiểm object tồn tại, kích thước và `sha256` khớp rồi chuyển `processing` và ghi outbox `media.uploaded`; không khớp → `rejected` (`type_mismatch`/`too_large`). Gọi lại trả trạng thái hiện tại, không phát lại event.
+- **Xin upload và báo xong:** `presignMediaUpload` tạo asset `quarantined` và trả presigned PUT tới `ew-media-quarantine`, hạn `media_presign_ttl` = 15 phút [Confirmed]; trùng `sha256` trong cùng phạm vi → trả `duplicate_of`, không cấp URL mới. Sau khi PUT, portal gọi `completeMediaUpload` (`POST /api/v1/cms/media/{asset_id}:complete-upload`, `Idempotency-Key`): server kiểm object tồn tại, kích thước và `sha256` khớp rồi chuyển `processing` và ghi outbox `media.uploaded`; không khớp → `rejected` (`type_mismatch`/`too_large`). Gọi lại trả trạng thái hiện tại, không phát lại event.
 - Trạng thái: `quarantined → processing → ready | rejected`. Version không được `submit_review` nếu media chưa `ready`.
-- Media nội dung riêng tenant và media của đề kiểm tra nằm ở `ew-media-private`, phát bằng **signed URL** hạn `media_signed_url_ttl` = 10 phút [Proposed] (ADR-0044 cho phép 5–15 phút). Media nội dung platform ở `ew-media-public`.
-- Một version tham chiếu tối đa 50 asset [Proposed]. Media không chứa dữ liệu học sinh (học sinh không upload).
+- Media nội dung riêng tenant và media của đề kiểm tra nằm ở `ew-media-private`, phát bằng **signed URL** hạn `media_signed_url_ttl` = 10 phút [Confirmed] (ADR-0044 cho phép 5–15 phút). Media nội dung platform ở `ew-media-public`.
+- Một version tham chiếu tối đa 50 asset [Confirmed]. Media không chứa dữ liệu học sinh (học sinh không upload).
 
 Metadata `media_assets`: `asset_id`, `tenant_id`/`owner_scope`, `kind`, `original_filename` varchar(255), `mime_type` varchar(127), `size_bytes`, `width`, `height`, `duration_ms`, `sha256` varchar(64), `variants` jsonb (≤ 16 KB), `alt_text` varchar(500), `license` varchar(255), `status`, cột chuẩn ADR-0039.
 
@@ -245,14 +245,14 @@ Game song ngữ `vi-VN` (mặc định) và `en-US` [Confirmed — ADR-0056]. T�
 | Kiểu | Dùng cho | Quy tắc | Schema |
 |---|---|---|---|
 | **Văn bản game** (`localized_text`) | Tên/mô tả vùng, khu, NPC, hội thoại NPC, quest, challenge, boss, achievement, danh hiệu, item, sự kiện, chương truyện | `{ "vi": "...", "en": "..." }` **bắt buộc đủ cả hai** trước khi publish [Confirmed] | `quest`, `boss`, `challenge`, `achievement`, `minigame-config`, `npc-dialogue`, `progression-curve` (`$defs/localized_text`) |
-| **Văn bản học tập** (`i18nText`, `i18nShort/Medium/Long`) | Đề bài, đáp án, giải thích, bài học, hướng dẫn hoạt động, phụ đề | Bắt buộc bản theo `content_language`; bản dịch còn lại **tùy chọn** [Proposed] | `question`, `activities/*` |
+| **Văn bản học tập** (`i18nText`, `i18nShort/Medium/Long`) | Đề bài, đáp án, giải thích, bài học, hướng dẫn hoạt động, phụ đề | Bắt buộc bản theo `content_language`; bản dịch còn lại **tùy chọn** [Confirmed] | `question`, `activities/*` |
 
 Khóa ngôn ngữ trong dữ liệu luôn là `vi`/`en` (không dùng `vi-VN`/`en-US` trong JSON nội dung); locale đầy đủ chỉ dùng ở client/HTTP (`Accept-Language: vi-VN`).
 
 **`content_language` (bắt buộc ở mọi version nội dung học tập)**
 
 - Môn Tiếng Anh: `en`; đề và đáp án bằng tiếng Anh, hướng dẫn có thể kèm bản `vi` cho lớp nhỏ.
-- Các môn khác: `vi`; bản `en` chỉ cần khi trường song ngữ dùng [Proposed].
+- Các môn khác: `vi`; bản `en` chỉ cần khi trường song ngữ dùng [Confirmed].
 - Câu hỏi tham số hóa, công thức (§9.1), media dùng chung giữa hai bản; alt text và `speech_text` theo từng ngôn ngữ.
 
 **Kiểm tra đủ bản dịch trước khi publish**
@@ -273,7 +273,7 @@ Khóa ngôn ngữ trong dữ liệu luôn là `vi`/`en` (không dùng `vi-VN`/`e
 - Âm thanh đọc đề và hướng dẫn là `media_ref` gắn với `stem.audio_ref` / `instructions_audio_ref`, mỗi ngôn ngữ một bản; bắt buộc với nhóm `g1_3` (§8.1).
 - Chuẩn hóa Unicode NFC khi lưu mọi text tiếng Việt.
 
-### 8.1. Audio đọc đề và hướng dẫn cho nhóm `g1_3` [Proposed]
+### 8.1. Audio đọc đề và hướng dẫn cho nhóm `g1_3` [Confirmed]
 
 Học sinh lớp 1–3 chưa đọc thạo, nên **lồng tiếng là điều kiện publish** chứ không phải tùy chọn:
 
@@ -287,7 +287,7 @@ Học sinh lớp 1–3 chưa đọc thạo, nên **lồng tiếng là điều ki
 - **Nguồn audio:** ghi âm giọng người (ưu tiên) hoặc TTS tiếng Việt đã được người duyệt nghe lại trước khi approve; engine TTS chưa chọn [TBD]. Audio là media thường (Ogg Vorbis + MP3, §7), bất biến theo version.
 - **Miễn trừ:** câu mà đọc to làm lộ đáp án (chính tả, nhận biết chữ, đánh vần) khai báo `audio_exempt_reason` (≤ 255 ký tự); reviewer phải duyệt rõ miễn trừ này.
 - **Kiểm tra:** thiếu audio bắt buộc → chặn `submit_review` và `publish` với `422 AUDIO_REQUIRED` (liệt kê field thiếu).
-- **Phụ đề và icon:** văn bản đề luôn hiển thị cùng audio (phụ đề); hướng dẫn có thể kèm `instruction_icons[]` (biểu tượng hành động: chạm, kéo, nghe) để học sinh làm được khi phòng máy không có tai nghe hoặc tắt tiếng. Cách hiển thị: [LEARNING_EXPERIENCE §5.1](LEARNING_EXPERIENCE.md#51-hỗ-trợ-đọc-cho-lớp-13-proposed).
+- **Phụ đề và icon:** văn bản đề luôn hiển thị cùng audio (phụ đề); hướng dẫn có thể kèm `instruction_icons[]` (biểu tượng hành động: chạm, kéo, nghe) để học sinh làm được khi phòng máy không có tai nghe hoặc tắt tiếng. Cách hiển thị: [LEARNING_EXPERIENCE §5.1](LEARNING_EXPERIENCE.md#51-hỗ-trợ-đọc-cho-lớp-13-confirmed).
 - **Ngân sách sản xuất audio:** [CONTENT_PRODUCTION_PLAN](CONTENT_PRODUCTION_PLAN.md).
 
 ## 9. Định dạng rich content
@@ -305,7 +305,7 @@ Dùng cấu trúc khối JSON (không lưu HTML tự do) để Godot và web cù
 }
 ```
 
-Khối hỗ trợ: `paragraph` (inline bold/italic/underline, công thức inline `\( ... \)`), `heading`, `list`, `math` (công thức block), `image`, `audio`, `video`, `table`, `callout`, `worked_example` (§9.2, chỉ trong lesson/learning material). Biến `{{x}}` chỉ dùng cho câu hỏi tham số hóa ([QUESTION_BANK §5](QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-proposed)).
+Khối hỗ trợ: `paragraph` (inline bold/italic/underline, công thức inline `\( ... \)`), `heading`, `list`, `math` (công thức block), `image`, `audio`, `video`, `table`, `callout`, `worked_example` (§9.2, chỉ trong lesson/learning material). Biến `{{x}}` chỉ dùng cho câu hỏi tham số hóa ([QUESTION_BANK §5](QUESTION_BANK.md#5-câu-hỏi-tham-số-hóa-confirmed)).
 
 ### 9.1. Công thức Toán, Lý, Hóa (ADR-0055)
 
@@ -314,14 +314,14 @@ Khối hỗ trợ: `paragraph` (inline bold/italic/underline, công thức inlin
 | Định dạng lưu | **LaTeX** (mỗi công thức ≤ 2.000 ký tự), hóa học **mhchem** (`\ce{}`, `\pu{}`); inline `\( ... \)`, block `\[ ... \]` hoặc khối `math` |
 | Soạn (chỉ Admin Portal) | **MathLive** `<math-field>` trong Lesson/Question/Activity Builder, đáp án, giải thích, gợi ý, phản hồi theo phương án, ví dụ mẫu; preview bằng **MathJax 4** |
 | Render SVG | Khi lưu/publish, **portal render trên trình duyệt** bằng MathJax 4 mỗi công thức thành **SVG + speech text**, gửi kèm nội dung. Không có worker render chạy thường trực |
-| Kiểm tra phía server | module learning kiểm tra LaTeX theo allowlist, **sanitize SVG** (chỉ phần tử/thuộc tính an toàn, ≤ 256 KB [Proposed]), LaTeX ≤ 2.000 ký tự và độ sâu lồng ≤ 20, lưu `math/<sha256>.svg` trên object storage/CDN (ADR-0044). Thiếu SVG, SVG không hợp lệ, LaTeX ngoài allowlist → `422 MATH_RENDER_FAILED` |
-| Import hàng loạt | Qua màn Import của portal (render trên trình duyệt) hoặc công cụ dòng lệnh dùng cùng MathJax 4 chạy trong CI/vận hành [Proposed] |
+| Kiểm tra phía server | module learning kiểm tra LaTeX theo allowlist, **sanitize SVG** (chỉ phần tử/thuộc tính an toàn, ≤ 256 KB [Confirmed]), LaTeX ≤ 2.000 ký tự và độ sâu lồng ≤ 20, lưu `math/<sha256>.svg` trên object storage/CDN (ADR-0044). Thiếu SVG, SVG không hợp lệ, LaTeX ngoài allowlist → `422 MATH_RENDER_FAILED` |
+| Import hàng loạt | Qua màn Import của portal (render trên trình duyệt) hoặc công cụ dòng lệnh dùng cùng MathJax 4 chạy trong CI/vận hành [Confirmed] |
 | Hiển thị game | Render payload thay LaTeX bằng khối `{ "math_ref": "math/<sha256>.svg", "speech_text": "...", "latex": "..." }`; Godot hiển thị SVG inline ([GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md)). **Game chỉ hiển thị, không nhập công thức** |
 | Trả lời của học sinh | Không gõ biểu thức; dùng chọn đáp án, đúng/sai, nhập số, điền số/từ, ghép, sắp xếp, kéo thả ([QUESTION_BANK §3.6.1](QUESTION_BANK.md#361-câu-hỏi-có-công-thức-adr-0055)) |
 | Trợ năng | Portal: đọc công thức của MathJax 4; game: `speech_text` cho TTS/mô tả thay thế |
 | Phiên bản | Ghim MathJax 4.x và MathLive trong `package.json` của portal; nâng cấp phải qua visual regression bộ công thức mẫu Toán/Lý/Hóa. SVG đã publish không render lại (bất biến theo version, ADR-0043) |
 
-### 9.2. Khối `worked_example` [Proposed]
+### 9.2. Khối `worked_example` [Confirmed]
 
 Ví dụ mẫu có lời giải từng bước, dùng trước bài mới (NPC trình bày) và sau khi học sinh trả lời sai (nút "Xem ví dụ mẫu" từ `worked_example_ref` của câu hỏi, [QUESTION_BANK §2](QUESTION_BANK.md#2-cấu-trúc-một-question-version)):
 

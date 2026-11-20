@@ -76,7 +76,7 @@ Room (Valkey + checkpoint): `lobby → countdown → question_shown ⇄ reveal �
 
 ## 3. Quy tắc kiểm tra dữ liệu
 
-- Điểm/câu theo `battle_1v1_format`, `team_battle_format`; bonus chỉ khi `matches.grade_level ≥ speed_bonus_min_grade` ([COMPETITION_SYSTEM §3.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-proposed)).
+- Điểm/câu theo `battle_1v1_format`, `team_battle_format`; bonus chỉ khi `matches.grade_level ≥ speed_bonus_min_grade` ([COMPETITION_SYSTEM §3.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-confirmed)).
 - `rated = matches.ranked AND status = completed AND NOT is_bot AND tournament_id IS NULL AND end_reason ≠ server_failure`.
 - `outcome` người rời quá grace: `abandoned` (thường) / `forfeit` (giải).
 

@@ -19,7 +19,7 @@ Mọi bảng ở DB `eduworld_chat`, schema `chat`, loại T: `tenant_id uuid NO
 | `note` | `varchar(500)` | **Thêm cột** | chỉ chuẩn hóa, không chặn |
 | `context` | jsonb | **Thêm cột** | `{channel_id, channel_type, match_id?, party_id?}` |
 | `case_id` | uuid | **Thêm cột** NOT NULL | |
-| `weight` | `numeric(3,2)` | **Thêm cột** DEFAULT 1 | lạm dụng báo cáo [Proposed] |
+| `weight` | `numeric(3,2)` | **Thêm cột** DEFAULT 1 | lạm dụng báo cáo [Confirmed] |
 | `status` | `varchar(16)` | `open/linked/dismissed` | |
 | `evidence` | jsonb | | snapshot ±10 tin (gốc + revision) |
 | `created_at`, `deleted_at` | | | |

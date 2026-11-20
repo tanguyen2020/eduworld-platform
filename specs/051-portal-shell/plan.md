@@ -16,7 +16,7 @@ Dựng khung ứng dụng `src/cms/frontend/apps/portal`: trang `/login` tự v�
 | Testing | Vitest + Testing Library + MSW (mock **chỉ trong test**, gắn nhãn `// MOCK (test-only)`); Playwright E2E với backend local thật; axe-core; Playwright screenshot |
 | Target Platform | Trình duyệt desktop/tablet/mobile (Chromium, Firefox, Safari mới) |
 | Project Type | Web app (SPA) |
-| Performance Goals | Bundle khởi đầu không chứa mã workspace; shell tương tác < 2 s trên mạng trường [Proposed] |
+| Performance Goals | Bundle khởi đầu không chứa mã workspace; shell tương tác < 2 s trên mạng trường [Confirmed] |
 | Constraints | AGENTS R1, R3, R4, R14, R20, R32 · ADR-0022, ADR-0027, ADR-0047, ADR-0065, ADR-0066, ADR-0067, ADR-0081, ADR-0090, ADR-0091 |
 | Scale/Scope | 5 workspace, ~12 màn shell; tham số `portal_session_sso`, `principal_cache_ttl` |
 
@@ -121,7 +121,7 @@ Xem [research.md](research.md): R1 (thay bởi R5) lưu token và làm mới im 
 ### Quan sát
 
 - Error boundary ghi `trace_id` từ Problem Details vào thông điệp người dùng; không log body, token, email, tên học sinh ra console ở build production (R14).
-- Đếm sự kiện client (không PII) `portal_login_route{result}` gửi qua kênh telemetry của F050 nếu có [Proposed].
+- Đếm sự kiện client (không PII) `portal_login_route{result}` gửi qua kênh telemetry của F050 nếu có [Confirmed].
 
 ## Complexity Tracking
 

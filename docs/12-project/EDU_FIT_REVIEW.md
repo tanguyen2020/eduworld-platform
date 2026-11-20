@@ -83,7 +83,7 @@ Mức độ: **C** Critical · **H** High · **M** Medium · **L** Low.
 | SAF-03 | H | Mặc định an toàn còn lỏng cho trẻ 6–8 tuổi: lớp 1 có text tự do, DM, forward, GIF như lớp 9; kết bạn trong trường không giới hạn khối; bước PII tắt được qua công tắc kiểm duyệt (ADR-0030), mâu thuẫn NFR-SAFE-001 | [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md), [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md), [CHILD_SAFETY §3.3](../10-security/CHILD_SAFETY.md) | Bước PII và grooming luôn chạy, không tắt được; `expires_at` bắt buộc + phê duyệt 2 người; kết bạn chênh ≥ 3 khối cần giáo viên duyệt; preset "chỉ quick message" để trường áp cho lớp 1–3; hoặc mở ADR xem lại ADR-0020 |
 | SAF-04 | H | Tenant `common` coi mọi học sinh là "cùng trường": hàng nghìn người lạ, không có trường thu consent, không có giáo viên/giờ truy cập | [MULTITENANCY §8.3](../06-architecture/MULTITENANCY.md) | Với `common`: tắt friend/DM/World chat mặc định, platform tự thu consent, giờ giới nghiêm bắt buộc, moderator platform |
 | SAF-05 | H | Kiểm duyệt chỉ có người trực trong giờ học; câu "ngoài giờ, chat lớp 1–5 có thể tự động tắt" là điều kiện theo khối, trái ADR-0020 và R15 | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) dòng 277; [MODERATION §6.3](../03-social-multiplayer/MODERATION.md) | SLA p1 24/7 cho grooming/tự hại (on-call hoặc tự động hạn chế người gửi); viết lại câu theo hướng giờ chat áp cho mọi học sinh |
-| CLS-01 | H | Không có chế độ lớp do giáo viên điều khiển: "chế độ trong giờ học" chỉ có 1 dòng, không có FR/API; không có bắt đầu/dừng/khóa phiên, đẩy cả lớp vào hoạt động, xem ai bị kẹt, trình chiếu | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) dòng 131; `class_group` mới [Proposed] ở [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) | ADR + FR "Class Session" (module learning): `start/pause/lock/end`, đẩy qua realtime, màn giám sát lớp và trình chiếu trên portal, Timed Quiz do giáo viên dẫn |
+| CLS-01 | H | Không có chế độ lớp do giáo viên điều khiển: "chế độ trong giờ học" chỉ có 1 dòng, không có FR/API; không có bắt đầu/dừng/khóa phiên, đẩy cả lớp vào hoạt động, xem ai bị kẹt, trình chiếu | [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) dòng 131; `class_group` mới [Confirmed] ở [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) | ADR + FR "Class Session" (module learning): `start/pause/lock/end`, đẩy qua realtime, màn giám sát lớp và trình chiếu trên portal, Timed Quiz do giáo viên dẫn |
 | CLS-02 | H | Đăng nhập không thực tế với lớp 1–2: username + mật khẩu ≥ 6 ký tự mỗi lần mở game; QR/mật khẩu hình ảnh nằm ngoài Release 1.0; lockout sau 5 lần sai cho phép bạn khóa tài khoản nhau | [ADR-0063](../adr/ADR-0063-dang-nhap-release-1-0-username-password-va-quy-tac-tenant.md), [ADR-0064](../adr/ADR-0064-khong-tu-dang-nhap-khi-mo-lai-game.md), [KEYCLOAK_SSO §10](../09-identity/KEYCLOAK_SSO.md) | ADR mới đưa "QR lớp + PIN/mật khẩu hình" cho lớp 1–3 vào phạm vi pilot, hoặc giáo viên mở phiên lớp rồi học sinh chọn tên + PIN; lockout theo cặp (username, thiết bị) |
 | CLS-03 | M | Ngân sách mạng chỉ tính từng học sinh, không tính tổng cho cả phòng máy (40 × gói 40 MB ≈ 1,6 GB đầu tiết); không có cache LAN, bộ cài offline, xử lý máy có phần mềm đóng băng | [PERFORMANCE_BUDGET §8, §10](../08-game-client/PERFORMANCE_BUDGET.md) | "Classroom budget"; gói nội dung cài sẵn; cache LAN tùy chọn theo hash; chế độ dữ liệu thấp; tải trước ngoài giờ |
 | A11Y-01 | M | Trợ năng cho trẻ chưa đọc và học sinh có nhu cầu đặc biệt: TTS tiếng Việt chưa chọn (thường thiếu trên Android rẻ/Web); audio "nếu có"; OQ-15 bỏ ngỏ dân tộc thiểu số/khuyết tật | [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md); grep `dyslex\|nhu cầu đặc biệt\|khiếm thính` = 0 | Audio tiếng Việt (ghi sẵn hoặc TTS phía server, cache như media) là điều kiện publish cho nội dung lớp 1–2; font thân thiện người khó đọc; OQ mới cho nhu cầu đặc biệt |
@@ -144,7 +144,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | 7 | Phạm vi nền tảng Release đầu: Windows + Android; Web lite/iOS sau | Một phần ADR-0013 | Công nghệ |
 | 8 | Kế hoạch đo hiệu quả học tập là exit criterion của pilot | ROADMAP, PRODUCT_VISION §7 | K1 |
 
-## 6. Phạm vi pilot gợi ý nếu ưu tiên giáo dục [Proposed]
+## 6. Phạm vi pilot gợi ý nếu ưu tiên giáo dục [Confirmed]
 
 1. **Pilot:** Learning Engine 6–8 loại câu hỏi; LMS giao bài + dashboard + heatmap; Class Session; Toán và Tiếng Việt lớp 1–5; quest `main/learning/daily/weekly` + boss solo; 4–5 mini-game, trong đó có 2 cơ chế lấy kỹ năng làm cách chơi; XP, level, shop cosmetic; Timed Quiz do giáo viên dẫn; một kiểu co-op có phụ thuộc lẫn nhau; chỉ quick message + emote (không chat tự do); Windows + Android; nghiên cứu hiệu quả có test trước/sau.
 2. **Sau khi có bằng chứng pilot:** 1v1 + bot, Team Battle, Glicko-2, leaderboard cấp trường, chat party/match có kiểm duyệt, thêm môn/khối, Web.
@@ -166,14 +166,14 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 
 ## 9. Trạng thái xử lý
 
-> Cập nhật: 2026-11-15, đợt sửa tài liệu theo ADR-0072; đợt 2 theo ADR-0081 (`user_type`) và ADR-0082 (pháp lý, viết/nói Deferred). Cột "Xử lý" ghi nơi quyết định/thay đổi được sở hữu; "Sửa tài liệu [Proposed]" nghĩa là đã đưa vào tài liệu sở hữu với nhãn [Proposed], chờ người duyệt. **Đợt 3 (2026-11-17, Technical Architect):** ADR-0073, ADR-0075, ADR-0078, ADR-0080 Accepted; ADR-0076, ADR-0079 Rejected (giữ 4 nền tảng theo ADR-0013); ADR-0077 hoãn (ADR-0082). CI chuyển sang GitHub Actions (ADR-0088). **Đợt 4 (2026-11-17, Technical Architect):** ADR-0074 Accepted (modular monolith thay ADR-0036), tài liệu vận hành, dữ liệu, định danh, bảo mật và dự án đã viết lại theo ADR-0074.
+> Cập nhật: 2026-11-15, đợt sửa tài liệu theo ADR-0072; đợt 2 theo ADR-0081 (`user_type`) và ADR-0082 (pháp lý, viết/nói Deferred). Cột "Xử lý" ghi nơi quyết định/thay đổi được sở hữu; "Sửa tài liệu [Confirmed]" nghĩa là đã đưa vào tài liệu sở hữu với nhãn [Confirmed], chờ người duyệt. **Đợt 3 (2026-11-17, Technical Architect):** ADR-0073, ADR-0075, ADR-0078, ADR-0080 Accepted; ADR-0076, ADR-0079 Rejected (giữ 4 nền tảng theo ADR-0013); ADR-0077 hoãn (ADR-0082). CI chuyển sang GitHub Actions (ADR-0088). **Đợt 4 (2026-11-17, Technical Architect):** ADR-0074 Accepted (modular monolith thay ADR-0036), tài liệu vận hành, dữ liệu, định danh, bảo mật và dự án đã viết lại theo ADR-0074.
 
 **Xử lý tổng quát**
 
 | Loại | Ý nghĩa |
 |---|---|
 | ADR-0072 | Giải quyết hoặc làm thay đổi bản chất phát hiện bởi quyết định bỏ vai trò giáo viên, học sinh tự học, kiểm duyệt tập trung |
-| Sửa tài liệu [Proposed] | Bổ sung vào tài liệu sở hữu theo khuyến nghị, gắn [Proposed] |
+| Sửa tài liệu [Confirmed] | Bổ sung vào tài liệu sở hữu theo khuyến nghị, gắn [Confirmed] |
 | ADR Proposed | Quyết định lớn đã viết thành ADR đề xuất, chờ stakeholder |
 | ADR Accepted (2026-11-17) | Đã quyết định và áp vào tài liệu sở hữu |
 | Một phần | Đã xử lý một phần, phần còn lại ghi ở cột Ghi chú |
@@ -187,7 +187,7 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 | K1 | ADR Accepted (2026-11-17) — [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) | Cổng M-P2 ở ROADMAP §3.5, KPI ở PRODUCT_VISION §7; hạ tầng nghiên cứu là F035 (chưa viết spec); ngưỡng đạt [TBD] do PO + EdTech chốt trước pilot |
 | K2 | Còn mở | Chốt OQ-08 theo phạm vi pilot; mô hình throughput nội dung chưa có |
 | K3 | **Một phần** — ADR Accepted (2026-11-17) [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) | ROADMAP §1–§3 và PRODUCT_VISION §8 viết lại theo Pilot → Mở rộng → Hoàn thiện, bỏ "không MVP"; còn lại: pilot vẫn làm đủ 4 nền tảng (ADR-0013, ADR-0079 Rejected) nên tải client chưa giảm (RISK-54); CODE_PLAN §5 cần ánh xạ feature theo lát cắt pilot |
-| K4 | Sửa tài liệu [Proposed] — Bước 0 của [CODE_PLAN](CODE_PLAN_CMS_LMS_FIRST.md) (S1, S2) | Enum chung `specs/schemas/common`, response schema theo loại câu; TC-LRN-016…017 |
+| K4 | Sửa tài liệu [Confirmed] — Bước 0 của [CODE_PLAN](CODE_PLAN_CMS_LMS_FIRST.md) (S1, S2) | Enum chung `specs/schemas/common`, response schema theo loại câu; TC-LRN-016…017 |
 | K5 | ADR-0072 + CLS-02 + CLS-03 | "Chế độ lớp do giáo viên điều khiển" không còn áp dụng; không làm đăng nhập QR/PIN (ADR-0076 Rejected), đăng nhập lớp 1–3 xử lý theo CLS-02; băng thông phòng máy ở CLS-03 |
 | K6 | **Đã xử lý** — ADR Accepted (2026-11-17): [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) và [ADR-0075](../adr/ADR-0075-object-storage-production-khong-dung-floci.md) | Modular monolith thay 6 microservice (ADR-0036 Superseded): 3 binary `core-api`/`realtime`/`worker` + profile, một cụm PostgreSQL 5 database, một pipeline Go ma trận module; sizing giảm từ 34 xuống 30 node Release 1.0 và 9 xuống 8 VM pilot ([DEPLOYMENT](../11-operations/DEPLOYMENT.md) §3.1, §4), giả định đội 3 Go + 0,5 DevOps ([ROADMAP §1](ROADMAP.md)); RISK-27 đóng, RISK-55/56 mới. Object storage staging/production không dùng floci (thay ADR-0071; DEPLOYMENT §9b, BACKUP_RECOVERY §6, chọn backend sau spike) |
 
@@ -197,38 +197,38 @@ Số liệu: 364 operation public (identity 79, learning 80, game 87, competitio
 |---|---|---|
 | PED-01 | ADR Accepted — ADR-0080 | Cùng K1; RISK-47, RISK-53 |
 | PED-02 | Còn mở | OQ-08; RISK-06 |
-| PED-03 | **Đã có tài liệu** [Proposed] — [LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md) | Cơ chế học tập nội tại (hành động chính = khái niệm học); pilot yêu cầu ≥ 2 cơ chế "kỹ năng là cách chơi" (ADR-0073, ROADMAP §3.4); chờ Game Director + EdTech duyệt |
-| PED-04 | Sửa tài liệu [Proposed] — ACTIVITY_ENGINE, QUESTION_BANK, LEARNING_ANALYTICS | `hints:next`, `hints_used`, `w_hint`, `options[].feedback` chỉ trong kết quả chấm, `worked_example`; TC-LRN-011…012 |
-| PED-05 | Sửa tài liệu [Proposed] — ACTIVITY_ENGINE, LEARNING_ANALYTICS | `rapid_guess`, hệ số đoán trúng, câu "anh em" cho `retry_wrong`; báo cho nhà trường thay vì giáo viên; TC-LRN-013 |
-| PED-06 | Sửa tài liệu [Proposed] — CURRICULUM_MODEL | `yccd_ref`, `competency_ids[]`, báo cáo tham khảo TT27/TT22; TC-LRN-018 |
-| PED-07 | **Đã có tài liệu** [Proposed] — CONTENT_MODEL, LEARNING_EXPERIENCE, [LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md) | Lồng tiếng `g1_3` là điều kiện publish (miễn trừ cho câu đánh vần/chính tả); TC-CNT-010; cơ chế `LM-VIE-01` ghép âm tiết cho lớp 1–2 |
-| PED-08 | Sửa tài liệu [Proposed] — ACTIVITY_ENGINE, LEARNING_ANALYTICS, QUESTION_BANK | `AttemptMode = diagnostic`, hiệu chỉnh độ khó bán tự động, interleaving; TC-LRN-014; BKT/IRT theo dữ liệu thật |
-| PED-09 | Sửa tài liệu [Proposed] — PROGRESSION_SYSTEM, LEARNING_ANALYTICS | Miễn giảm XP cho ôn LO tiên quyết do hệ thống/nhà trường giao; giảm trọng số `timed_challenge` |
+| PED-03 | **Đã có tài liệu** [Confirmed] — [LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md) | Cơ chế học tập nội tại (hành động chính = khái niệm học); pilot yêu cầu ≥ 2 cơ chế "kỹ năng là cách chơi" (ADR-0073, ROADMAP §3.4); chờ Game Director + EdTech duyệt |
+| PED-04 | Sửa tài liệu [Confirmed] — ACTIVITY_ENGINE, QUESTION_BANK, LEARNING_ANALYTICS | `hints:next`, `hints_used`, `w_hint`, `options[].feedback` chỉ trong kết quả chấm, `worked_example`; TC-LRN-011…012 |
+| PED-05 | Sửa tài liệu [Confirmed] — ACTIVITY_ENGINE, LEARNING_ANALYTICS | `rapid_guess`, hệ số đoán trúng, câu "anh em" cho `retry_wrong`; báo cho nhà trường thay vì giáo viên; TC-LRN-013 |
+| PED-06 | Sửa tài liệu [Confirmed] — CURRICULUM_MODEL | `yccd_ref`, `competency_ids[]`, báo cáo tham khảo TT27/TT22; TC-LRN-018 |
+| PED-07 | **Đã có tài liệu** [Confirmed] — CONTENT_MODEL, LEARNING_EXPERIENCE, [LEARNING_MECHANICS](../01-game-design/LEARNING_MECHANICS.md) | Lồng tiếng `g1_3` là điều kiện publish (miễn trừ cho câu đánh vần/chính tả); TC-CNT-010; cơ chế `LM-VIE-01` ghép âm tiết cho lớp 1–2 |
+| PED-08 | Sửa tài liệu [Confirmed] — ACTIVITY_ENGINE, LEARNING_ANALYTICS, QUESTION_BANK | `AttemptMode = diagnostic`, hiệu chỉnh độ khó bán tự động, interleaving; TC-LRN-014; BKT/IRT theo dữ liệu thật |
+| PED-09 | Sửa tài liệu [Confirmed] — PROGRESSION_SYSTEM, LEARNING_ANALYTICS | Miễn giảm XP cho ôn LO tiên quyết do hệ thống/nhà trường giao; giảm trọng số `timed_challenge` |
 | PED-10 | Không còn áp dụng (ADR-0072); viết/nói **Deferred (ADR-0082)** | Không còn chấm tay, rubric, hàng đợi chấm hay nguồn evidence từ giáo viên; thiết kế chuyển `docs/99-deferred/`, schema chuyển `specs/_deferred/` |
-| PED-11 | Sửa tài liệu [Proposed] — EXAM_ENGINE | Cân bằng biến thể đề, báo cáo độ tin cậy |
+| PED-11 | Sửa tài liệu [Confirmed] — EXAM_ENGINE | Cân bằng biến thể đề, báo cáo độ tin cậy |
 | GD-01 | ADR Accepted — ADR-0073 | ROADMAP theo giai đoạn: pilot sau M-C3 School Loop, cổng hiệu quả M-P2; RISK-05 đã sửa |
-| GD-02 | Sửa tài liệu [Proposed] — QUEST_SYSTEM, PARTY_SYSTEM | Bước `interdependent` có `role` |
-| GD-03 | Sửa tài liệu [Proposed] — COMPETITION_SYSTEM | Bảng lớp theo nỗ lực/tiến bộ hoặc mục tiêu tập thể; RISK-12 đã sửa (leaderboard chỉ platform cấu hình); không có bật/tắt theo giáo viên |
-| GD-04 | Sửa tài liệu [Proposed] — COMPETITION_SYSTEM | Bỏ bonus tốc độ 1v1 cho lớp 1–5 |
-| GD-05 | Sửa tài liệu [Proposed] — PROGRESSION_SYSTEM | Quy tắc chuyển năm học |
+| GD-02 | Sửa tài liệu [Confirmed] — QUEST_SYSTEM, PARTY_SYSTEM | Bước `interdependent` có `role` |
+| GD-03 | Sửa tài liệu [Confirmed] — COMPETITION_SYSTEM | Bảng lớp theo nỗ lực/tiến bộ hoặc mục tiêu tập thể; RISK-12 đã sửa (leaderboard chỉ platform cấu hình); không có bật/tắt theo giáo viên |
+| GD-04 | Sửa tài liệu [Confirmed] — COMPETITION_SYSTEM | Bỏ bonus tốc độ 1v1 cho lớp 1–5 |
+| GD-05 | Sửa tài liệu [Confirmed] — PROGRESSION_SYSTEM | Quy tắc chuyển năm học |
 | GD-06 | ADR-0072 (một phần) + còn mở | Liên hệ phụ huynh qua nhà trường khi có vụ việc (ADR-0072 mục 4, OQ-13); parent portal còn mở |
-| GD-07 | Sửa tài liệu [Proposed] | KPI chỉ định nghĩa ở PRODUCT_VISION §7; RISK-02 đã sửa (chat gameplay từ Phase 4) |
+| GD-07 | Sửa tài liệu [Confirmed] | KPI chỉ định nghĩa ở PRODUCT_VISION §7; RISK-02 đã sửa (chat gameplay từ Phase 4) |
 | GD-08 | Không còn áp dụng (ADR-0072) | Không có giáo viên tạo quest; quest template từ nhà trường không thuộc phạm vi |
 | SAF-01 | **Deferred (ADR-0082)** — ADR-0077 hoãn | Cơ sở pháp lý, vai trò dữ liệu, consent chuyển [LEGAL_COMPLIANCE](../99-deferred/LEGAL_COMPLIANCE.md); bỏ `consent_status` khỏi DATABASE_DESIGN; OQ-12 hoãn; rủi ro chấp nhận (RISK-03, RISK-50). Nguyên tắc kỹ thuật giữ ở DATA_PRIVACY |
 | SAF-02 | Phần pháp lý **Deferred (ADR-0082)**; phần kỹ thuật **Đã xử lý** — [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) Accepted | OQ-24 hoãn; đối chiếu NĐ 147/2024 chuyển LEGAL_COMPLIANCE §10; giờ giới nghiêm platform 21:30–06:30 ở CHILD_SAFETY §4.1; trần thời lượng/ngày vẫn do trường tự bật |
 | SAF-03 | **Đã xử lý** — ADR-0078 Accepted | PII/grooming luôn chạy, công tắc có thời hạn ≤ 24 giờ + hai người duyệt (MODERATION §12), preset "chỉ quick message + emote" cấp trường (CHILD_SAFETY §3.5); không có quy tắc theo khối (R15) |
 | SAF-04 | **Đã xử lý** — ADR-0078 Accepted | Tenant `common`: tắt kết bạn, DM, World chat, giờ giới nghiêm bắt buộc, Safety Team kiểm duyệt (CHILD_SAFETY §3.6, MULTITENANCY §8.3, SOCIAL_SYSTEM §7) |
-| SAF-05 | Sửa tài liệu [Proposed] — CHILD_SAFETY, MODERATION | Bỏ câu điều kiện theo khối; on-call 24/7 cho case p1; RISK-48 |
+| SAF-05 | Sửa tài liệu [Confirmed] — CHILD_SAFETY, MODERATION | Bỏ câu điều kiện theo khối; on-call 24/7 cho case p1; RISK-48 |
 | CLS-01 | Không còn áp dụng (ADR-0072) | Không có Class Session do giáo viên điều khiển; "chế độ trong giờ học" thay bằng khung giờ truy cập cấp trường do `school_admin` đặt |
 | CLS-02 | **Không làm QR** (ADR-0076 Rejected 2026-11-17); một phần đã xử lý — [ADR-0086](../adr/ADR-0086-giu-phien-game-bang-refresh-token.md) | Không có thẻ QR/PIN/mật khẩu hình; thiết bị cá nhân vào lại bằng refresh token qua màn "Tiếp tục là <nickname>?"; Windows mặc định là máy dùng chung nên phòng máy vẫn nhập username/mật khẩu ngắn do trường in phát; rủi ro còn lại ở RISK-10 |
-| CLS-03 | Sửa tài liệu [Proposed] — PERFORMANCE_BUDGET | Ngân sách băng thông phòng máy, cache LAN, gói cài sẵn, tải trước ngoài giờ |
+| CLS-03 | Sửa tài liệu [Confirmed] — PERFORMANCE_BUDGET | Ngân sách băng thông phòng máy, cache LAN, gói cài sẵn, tải trước ngoài giờ |
 | A11Y-01 | Còn mở — OQ-23 | Phần lồng tiếng `g1_3` xử lý cùng PED-07; không phụ thuộc phần deferred (lồng tiếng là audio do người soạn cung cấp, không ghi âm học sinh) |
 | PRV-01 | **Deferred (ADR-0082)** | DPIA và thời hạn thông báo vi phạm theo luật chuyển LEGAL_COMPLIANCE §6–§7; bỏ khỏi exit criteria (ROADMAP, DEPLOYMENT, CHILD_SAFETY CS-07); ghi âm giọng nói thuộc SPEAKING_ASSESSMENT (deferred) |
-| SPC-01…04 | Sửa tài liệu [Proposed] — Bước 0 CODE_PLAN (S1–S4) | TC-LRN-007, TC-LRN-016…017 |
-| SPC-05 | Sửa tài liệu [Proposed] — Bước 0 CODE_PLAN (S5) | Giao `activity` cho video/âm thanh/mô phỏng; tự luận/nói Deferred (ADR-0082): schema `written-response`, `speaking`, `project`, `rubric` chuyển `specs/_deferred/`, `$defs outOfRelease*` bỏ khỏi `activity-base`, `check-enums` chặn giá trị deferred |
-| SPC-06 | Sửa tài liệu [Proposed] — Bước 0 CODE_PLAN (S2, S5) | `actor.type` = `student, system, staff` (không có giáo viên); envelope domain event bỏ `admin` (ADR-0081) |
+| SPC-01…04 | Sửa tài liệu [Confirmed] — Bước 0 CODE_PLAN (S1–S4) | TC-LRN-007, TC-LRN-016…017 |
+| SPC-05 | Sửa tài liệu [Confirmed] — Bước 0 CODE_PLAN (S5) | Giao `activity` cho video/âm thanh/mô phỏng; tự luận/nói Deferred (ADR-0082): schema `written-response`, `speaking`, `project`, `rubric` chuyển `specs/_deferred/`, `$defs outOfRelease*` bỏ khỏi `activity-base`, `check-enums` chặn giá trị deferred |
+| SPC-06 | Sửa tài liệu [Confirmed] — Bước 0 CODE_PLAN (S2, S5) | `actor.type` = `student, system, staff` (không có giáo viên); envelope domain event bỏ `admin` (ADR-0081) |
 | `user_type` (ADR-0081) | Đã sửa | `user_type` ∈ `student, staff` ở OpenAPI, internal spec, envelope, DATABASE_DESIGN (CHECK + bất biến `primary_tenant_id` ↔ role scope), BACKEND_DESIGN (`portal_staff`), GLOSSARY, 09-identity, ADMIN_PORTAL; PRD FR-AUTH-022 cần sửa riêng |
-| SPC-07 | Sửa tài liệu [Proposed] — Bước 0 CODE_PLAN (S6) | |
+| SPC-07 | Sửa tài liệu [Confirmed] — Bước 0 CODE_PLAN (S6) | |
 | SPC-08 | Còn mở | Bắt buộc trước Phase 4; hàng đợi case của `safety_moderator` |
 | SPC-09 | Còn mở (rubric Deferred, ADR-0082) | Schema activity `quiz`, `interactive_exercise`, `minigame` vẫn cần |
 | SPC-10, SPC-11 | Còn mở | Theo dữ liệu thật / bổ sung dần |

@@ -39,7 +39,7 @@
 
 ### Bổ sung ADR-0091 — client `eduworld-portal` dùng direct grant
 
-- [x] T039 [US1] SPIKE [Proposed] F004-AC-29: đo trên Keycloak 26.x claim `amr`/`acr` của direct grant có/không OTP, lỗi khi còn required action (`UPDATE_PASSWORD`, `CONFIGURE_TOTP`), conditional OTP tự thêm `CONFIGURE_TOTP`, thông điệp chặn `student`, trang action-token từ `execute-actions-email`; ghi kết quả vào research R5 — **chặn** phần đăng nhập portal của F012 và F051 — file: `specs/004-keycloak-realm-apisix-gateway/research.md`
+- [x] T039 [US1] SPIKE [Confirmed] F004-AC-29: đo trên Keycloak 26.x claim `amr`/`acr` của direct grant có/không OTP, lỗi khi còn required action (`UPDATE_PASSWORD`, `CONFIGURE_TOTP`), conditional OTP tự thêm `CONFIGURE_TOTP`, thông điệp chặn `student`, trang action-token từ `execute-actions-email`; ghi kết quả vào research R5 — **chặn** phần đăng nhập portal của F012 và F051 — file: `specs/004-keycloak-realm-apisix-gateway/research.md`
 - [x] T040 [P] [US1] Test F004-AC-24, F004-AC-25, F004-AC-26, F004-AC-27: `check-realm.mjs` fail khi `eduworld-portal` có redirect URI/Standard Flow/public; flow portal đúng thứ tự; OTP sai/thiếu cùng lỗi với sai mật khẩu; token có `amr`/`acr` theo bước OTP; không browser flow/login theme cho portal, không WebAuthn (TC-AUTH-067, TC-AUTH-093, TC-AUTH-094, TC-AUTH-095 phần Keycloak) — file: `deploy/keycloak/tests/portal_direct_grant.test.mjs` — phải FAIL trước khi code
 - [x] T041 [US1] Client `eduworld-portal` confidential (`${env.KC_PORTAL_CLIENT_SECRET}`, Standard Flow/Implicit tắt, Direct Access Grants bật, bỏ redirect URI/web origin) + flow `eduworld-portal-direct-grant` (Username Validation → Password → allow-access-for-role `tenant_staff`/`platform_staff` → Conditional OTP theo `platform_staff`), xóa `eduworld-portal-browser` — file: `deploy/keycloak/realm-eduworld.json`
 - [x] T042 [US1] Mapper AMR (reference value `pwd`/`otp` trên authenticator) và ánh xạ ACR→LoA cho `eduworld-portal` theo kết quả T039 — file: `deploy/keycloak/realm-eduworld.json`
@@ -92,7 +92,7 @@
 ### Bổ sung ADR-0091 — route `/api/v1/auth/portal/*`
 
 - [ ] T044 [P] [US3] Test F004-AC-28: route `/auth/portal/*` không `openid-connect`/`ew-tenant-header`, chỉ host portal, `check-no-body-logging.mjs` bao prefix này, 11 lần/phút theo username/`device_id` → 429 `RATE_LIMITED`, ngưỡng toàn cục, IP chung không bị chặn, `Set-Cookie` đi qua nguyên vẹn (TC-AUTH-099, TC-AUTH-100 phần gateway) — file: `deploy/apisix/tests/portal_auth_routes.t` — phải FAIL trước khi code — **một phần** — đã có: route không `openid-connect`/`ew-tenant-header`, host portal, `check-no-body-logging` bao prefix, mật khẩu portal không vào log (smoke); còn lại (`Set-Cookie` đi qua nguyên vẹn, 429 theo username portal trên stack) cần backend F012
-- [x] T045 [US3] Route `/api/v1/auth/portal/*` trên gateway public với `host = ${EW_PORTAL_HOST}` (cùng origin SPA [Proposed]), `ew-login-key` đọc `username`/`identifier`, `limit-count` theo `portal_login_rate`, logger/OTel không body/cookie/`X-EW-CSRF`, chỉ HTTPS — file: `deploy/apisix/routes/routes.yaml` — **xong 2026-11-18**
+- [x] T045 [US3] Route `/api/v1/auth/portal/*` trên gateway public với `host = ${EW_PORTAL_HOST}` (cùng origin SPA [Confirmed]), `ew-login-key` đọc `username`/`identifier`, `limit-count` theo `portal_login_rate`, logger/OTel không body/cookie/`X-EW-CSRF`, chỉ HTTPS — file: `deploy/apisix/routes/routes.yaml` — **xong 2026-11-18**
 
 **Checkpoint**: User Story 3 chạy và kiểm độc lập được.
 
@@ -115,7 +115,7 @@
 
 ## Phase N: Polish & Cross-Cutting
 
-- [x] T035 [P] Cập nhật LOCAL_DEVELOPMENT §3.1 (`apisix-internal :9180`), §4 (biến `EW_APISIX_LOGIN_KEY_SECRET`, `EW_ADMIN_CIDRS`); DEPLOYMENT §5 ghi chốt plugin Lua `ew-tenant-header` (bỏ [Proposed]) — file: `docs/11-operations/LOCAL_DEVELOPMENT.md` — **xong 2026-11-18 — LOCAL_DEVELOPMENT §3.1, §4, §7, §8; DEPLOYMENT §5**
+- [x] T035 [P] Cập nhật LOCAL_DEVELOPMENT §3.1 (`apisix-internal :9180`), §4 (biến `EW_APISIX_LOGIN_KEY_SECRET`, `EW_ADMIN_CIDRS`); DEPLOYMENT §5 ghi chốt plugin Lua `ew-tenant-header` (bỏ [Confirmed]) — file: `docs/11-operations/LOCAL_DEVELOPMENT.md` — **xong 2026-11-18 — LOCAL_DEVELOPMENT §3.1, §4, §7, §8; DEPLOYMENT §5**
 - [ ] T036 [P] Postman collection gateway (prefix nội bộ 404, thiếu header, rate limit) — file: `specs/postman/gateway.postman_collection.json` — **chưa làm** (tùy chọn) — các kịch bản đã có trong `smoke.test.mjs`
 - [x] T037 [P] CHANGELOG mục F004 — file: `CHANGELOG.md` — **xong 2026-11-18**
 - [x] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/004-keycloak-realm-apisix-gateway/quickstart.md` — **xong 2026-11-18**
@@ -139,4 +139,4 @@
 
 - Realm chung áp bằng `adorsys/keycloak-config-cli:6.4.0-26.1.0` (job compose `keycloak-config`, profile `tools`); placeholder secret dùng cú pháp thay biến của công cụ `$(env:KC_…)` (tương đương `${env.KC_…}` trong tài liệu). Phần công cụ không biểu diễn được làm bằng Admin API idempotent: `post-apply.mjs` (bỏ `offline_access`/`uma_authorization` khỏi `default-roles-eduworld`) cho mọi môi trường; `seed-dev.mjs` (chỉ `EW_ENV=local`: `partialImport` người dùng với `SKIP` — áp lại không đặt lại mật khẩu nên không vi phạm `passwordHistory(3)` — và Organization + thành viên vì 6.4 không import organizations). `realm-eduworld.dev.json` sinh bằng `gen-dev-realm.mjs` (33 tài khoản LOCAL_DEVELOPMENT §5 + `sa.moi` cho required action; OTP cố định cho `sa.admin`, chỉ local).
 - Kết quả spike R5 (research.md) thay đổi thiết kế: OTP chỉ chạy khi người dùng đã cấu hình (OTP REQUIRED với người chưa có → 500); MFA của token portal suy ra từ `amr` chứa `otp` (`acr` luôn `1` trong direct grant) — `httpx` nhận thêm `EW_OIDC_PLATFORM_REQUIRED_AMR` (mặc định `otp`); token direct grant không có `auth_time` → `httpx` dùng `iat`, F012 cưỡng chế tuổi xác thực khi refresh; User Profile (component `declarative-user-profile`) bỏ bắt buộc email/họ/tên; mỗi execution có authenticator config riêng (Keycloak giữ một config cho mỗi alias).
-- `svc-identity` có `manage-users`, `view-users`, `query-users`, `manage-realm` (`manage-realm` cần cho membership Organization trên Keycloak 26 [Proposed]).
+- `svc-identity` có `manage-users`, `view-users`, `query-users`, `manage-realm` (`manage-realm` cần cho membership Organization trên Keycloak 26 [Confirmed]).

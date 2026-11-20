@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F051, F050, F077, F078 (và F074 cho progression).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Tài khoản: `sa.admin` (MFA tắt ở local; bật OTP seed để thử step-up), tài khoản seed `game_designer`/`liveops`/`content_reviewer` [Proposed: `gd.thietke`, `lo.vanhanh`, `cm.duyet`]; `ad.truong.a`, `qlcm.truong.a`, `sm.antoan` cho kiểm chặn.
+- Tài khoản: `sa.admin` (MFA tắt ở local; bật OTP seed để thử step-up), tài khoản seed `game_designer`/`liveops`/`content_reviewer` [Confirmed: `gd.thietke`, `lo.vanhanh`, `cm.duyet`]; `ad.truong.a`, `qlcm.truong.a`, `sm.antoan` cho kiểm chặn.
 - Dữ liệu: seed module game (8 vùng, NPC mẫu, client manifest hiện hành).
 
 ## 2. Kịch bản kiểm tra

@@ -7,10 +7,10 @@
 
 ### Session 2026-11-16
 
-- Q: Ai đánh giá rule và định tuyến alert — Grafana Alerting hay Prometheus + Alertmanager? → A: Prometheus đánh giá rule trong `deploy/observability/prometheus/rules/*.yaml` ([MONITORING §5](../../docs/11-operations/MONITORING.md)), Alertmanager định tuyến/khử trùng/im lặng; Grafana chỉ hiển thị. Chi tiết ở [research.md](research.md) [Proposed].
-- Q: Runbook theo alert đặt ở đâu (MONITORING chỉ nói "mục runbook trong repo")? → A: `docs/11-operations/runbooks/<AlertName>.md`, mỗi file một alert, khung mục cố định; RB-01…05 vẫn do [BACKUP_RECOVERY §9](../../docs/11-operations/BACKUP_RECOVERY.md) sở hữu, runbook alert chỉ link [Proposed].
+- Q: Ai đánh giá rule và định tuyến alert — Grafana Alerting hay Prometheus + Alertmanager? → A: Prometheus đánh giá rule trong `deploy/observability/prometheus/rules/*.yaml` ([MONITORING §5](../../docs/11-operations/MONITORING.md)), Alertmanager định tuyến/khử trùng/im lặng; Grafana chỉ hiển thị. Chi tiết ở [research.md](research.md) [Confirmed].
+- Q: Runbook theo alert đặt ở đâu (MONITORING chỉ nói "mục runbook trong repo")? → A: `docs/11-operations/runbooks/<AlertName>.md`, mỗi file một alert, khung mục cố định; RB-01…05 vẫn do [BACKUP_RECOVERY §9](../../docs/11-operations/BACKUP_RECOVERY.md) sở hữu, runbook alert chỉ link [Confirmed].
 - Q: Ai phát metric nghiệp vụ (CCU, matchmaking, chat…)? → A: Module sở hữu (feature nền của module) phát qua `src/backend/pkg/otel` (F002) với nhãn `service` (= binary `core-api`, `realtime`, `worker`), `module` và `profile` (worker) theo [MONITORING §2](../../docs/11-operations/MONITORING.md) (ADR-0074); F131 kiểm **có mặt** đúng tên/label theo [MONITORING §3](../../docs/11-operations/MONITORING.md), dựng dashboard/alert. Metric client từ telemetry do F080 chuyển đổi.
-- Q: Synthetic monitoring dùng tài khoản nào? → A: Tenant QA riêng (seed như tenant demo, không học sinh thật) theo [TEST_STRATEGY §4](../../docs/12-project/TEST_STRATEGY.md); chỉ luồng đọc + đăng nhập học sinh QA [Proposed].
+- Q: Synthetic monitoring dùng tài khoản nào? → A: Tenant QA riêng (seed như tenant demo, không học sinh thật) theo [TEST_STRATEGY §4](../../docs/12-project/TEST_STRATEGY.md); chỉ luồng đọc + đăng nhập học sinh QA [Confirmed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -158,8 +158,8 @@ Trực vận hành, đội backend, Safety Team có dashboard đúng [MONITORING
 
 ## Assumptions
 
-- Alertmanager được thêm vào sơ đồ MONITORING §1 (task tài liệu) [Proposed].
+- Alertmanager được thêm vào sơ đồ MONITORING §1 (task tài liệu) [Confirmed].
 - Tenant QA được loại khỏi analytics/dashboard nhà trường và khỏi job dọn học sinh bằng cấu hình tenant; cơ chế loại trừ analytics chưa có trong tài liệu — cần bổ sung ở F080/F043 (ghi báo cáo).
 - OQ-11 chưa chốt: mục tiêu SLO dùng `availability` [TBD]; đổi giá trị chỉ sửa CONFIG_DEFAULTS + MONITORING.
 - ADR-0074 Accepted (2026-11-17): nhãn `service` = binary (`core-api`, `realtime`, `worker`) kèm `module` và `profile` ([MONITORING §2](../../docs/11-operations/MONITORING.md)); dashboard/alert theo 5 Swarm service và 5 module domain.
-- CI là GitHub Actions (ADR-0088): kiểm tra cấu hình quan sát chạy trong workflow `obs.yml` theo path filter [Proposed]; ticket lỗi tạo trên GitHub Issues.
+- CI là GitHub Actions (ADR-0088): kiểm tra cấu hình quan sát chạy trong workflow `obs.yml` theo path filter [Confirmed]; ticket lỗi tạo trên GitHub Issues.

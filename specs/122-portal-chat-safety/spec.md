@@ -263,6 +263,6 @@ Theo yêu cầu của `ad.donvi`, `sm.antoan` thêm term bổ sung cho `pgd-demo
 
 ## Assumptions
 
-- [Proposed] Thư mục: `src/cms/frontend/apps/portal/src/workspaces/live-ops/moderation/`, `…/platform-admin/chat-safety/`, `…/school-lms/safety/`; banner `src/cms/frontend/apps/portal/src/shell/banners/ModerationDisabledBanner.tsx` (F051 cung cấp slot). Tên thư mục workspace D là `platform-admin` (RB-603/RB-619 đã chốt).
-- [Proposed] Danh sách học sinh để chọn trong form thông báo lấy từ `subject_user_ids` của `ModerationCaseDetail` kèm `school_id` (delta F121 `school_ids`); nếu thiếu tên, hiển thị mã học sinh.
-- [Proposed] Four-eyes khi publish danh mục platform do server thực thi; UI chỉ hiển thị trạng thái chờ duyệt nếu server trả.
+- [Confirmed] Thư mục: `src/cms/frontend/apps/portal/src/workspaces/live-ops/moderation/`, `…/platform-admin/chat-safety/`, `…/school-lms/safety/`; banner `src/cms/frontend/apps/portal/src/shell/banners/ModerationDisabledBanner.tsx` (F051 cung cấp slot). Tên thư mục workspace D là `platform-admin` (RB-603/RB-619 đã chốt).
+- [Confirmed] Danh sách học sinh để chọn trong form thông báo lấy từ `subject_user_ids` của `ModerationCaseDetail` kèm `school_id` (delta F121 `school_ids`); nếu thiếu tên, hiển thị mã học sinh.
+- [Confirmed] Four-eyes khi publish danh mục platform do server thực thi; UI chỉ hiển thị trạng thái chờ duyệt nếu server trả.

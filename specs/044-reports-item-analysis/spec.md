@@ -207,7 +207,7 @@ Người tạo đề "Phép nhân" 4 biến thể nhận các biến thể tươ
 
 ## Assumptions
 
-- Nội dung và tên mức TT27/TT22 cần pháp chế/EdTech xác nhận trước pilot (ASSESSMENT_REGULATION_PROFILE §6); ngưỡng mặc định [Confirmed], phần còn lại [Proposed].
-- Ngưỡng ≥ 30 lượt và chu kỳ hằng đêm/hằng tuần của item analysis theo QUESTION_BANK §9 [Proposed]; nên đăng ký vào CONFIG_DEFAULTS (ghi trong báo cáo).
-- PDF dùng thư viện render phía server trong worker [Proposed]; bucket `ew-exports` theo ADR-0044.
-- Trọng số `exam_type` cho điểm tham khảo THCS do tenant cấu hình (ASSESSMENT_REGULATION_PROFILE §4.2); mặc định trung bình đều [Proposed].
+- Nội dung và tên mức TT27/TT22 cần pháp chế/EdTech xác nhận trước pilot (ASSESSMENT_REGULATION_PROFILE §6); ngưỡng mặc định [Confirmed], phần còn lại [Confirmed].
+- Ngưỡng ≥ 30 lượt và chu kỳ hằng đêm/hằng tuần của item analysis theo QUESTION_BANK §9 [Confirmed]; nên đăng ký vào CONFIG_DEFAULTS (ghi trong báo cáo).
+- PDF dùng thư viện render phía server trong worker [Confirmed]; bucket `ew-exports` theo ADR-0044.
+- Trọng số `exam_type` cho điểm tham khảo THCS do tenant cấu hình (ASSESSMENT_REGULATION_PROFILE §4.2); mặc định trung bình đều [Confirmed].

@@ -32,13 +32,13 @@ flowchart LR
 
 | # | Constraint | Giá trị mặc định | Nhãn |
 |---|---|---|---|
-| H1 | **Grade**: lớp 1–5 cùng `grade_level`; lớp 6–9 cùng `grade_level` hoặc ±1 trong cùng `grade_band` (`g6_7`, `g8_9`) | Queue partition theo `grade_level` (1–5) hoặc `grade_band` (6–9) | [Confirmed] nguyên tắc / giá trị [Proposed] |
+| H1 | **Grade**: lớp 1–5 cùng `grade_level`; lớp 6–9 cùng `grade_level` hoặc ±1 trong cùng `grade_band` (`g6_7`, `g8_9`) | Queue partition theo `grade_level` (1–5) hoặc `grade_band` (6–9) | [Confirmed] nguyên tắc / giá trị [Confirmed] |
 | H2 | **Nội dung phù hợp**: `subject_id` + (tùy mode) `topic_id`; câu hỏi chọn từ grade thấp nhất trong trận | Bắt buộc | [Confirmed] |
-| H3 | **Phạm vi**: cùng `school_id` (mặc định); toàn tenant `unit` khi tenant bật `cross_school_social_enabled`; `platform` chỉ cho giải/sự kiện liên tenant do platform tổ chức (ADR-0054) | `school` | [Proposed] |
+| H3 | **Phạm vi**: cùng `school_id` (mặc định); toàn tenant `unit` khi tenant bật `cross_school_social_enabled`; `platform` chỉ cho giải/sự kiện liên tenant do platform tổ chức (ADR-0054) | `school` | [Confirmed] |
 | H4 | **Mode** & ruleset version | Bắt buộc | [Confirmed] |
-| H5 | **Trạng thái**: tài khoản active, không bị sanction `restrict_competition`, trong khung giờ cho phép | Kiểm tra lúc tạo ticket và lúc tạo proposal | [Proposed] |
-| H6 | **Block**: hai người block nhau không ghép cùng trận | Kiểm tra ở bước tạo proposal (pairwise) | [Proposed] |
-| H7 | Ngôn ngữ nội dung (vi/en cho môn Tiếng Anh) | Theo subject | [Proposed] |
+| H5 | **Trạng thái**: tài khoản active, không bị sanction `restrict_competition`, trong khung giờ cho phép | Kiểm tra lúc tạo ticket và lúc tạo proposal | [Confirmed] |
+| H6 | **Block**: hai người block nhau không ghép cùng trận | Kiểm tra ở bước tạo proposal (pairwise) | [Confirmed] |
+| H7 | Ngôn ngữ nội dung (vi/en cho môn Tiếng Anh) | Theo subject | [Confirmed] |
 
 ### 2.2. Soft scoring (trong một queue)
 
@@ -55,11 +55,11 @@ Ghép hợp lệ khi `|μa − μb| ≤ window(t)` với **expanding window**:
 
 | Thời gian chờ `t` | `window(t)` (rating Glicko-2 thang 1500) | Nhãn |
 |---|---|---|
-| 0–10 s | 100 | [Proposed] |
-| 10–20 s | 200 | [Proposed] |
-| 20–40 s | 350 | [Proposed] |
-| 40–60 s | ∞ (bỏ qua rating, vẫn giữ hard constraints) | [Proposed] |
-| > 90 s | Đề nghị client: chơi với bot luyện tập (unranked, không rating) hoặc tiếp tục chờ | [Proposed] |
+| 0–10 s | 100 | [Confirmed] |
+| 10–20 s | 200 | [Confirmed] |
+| 20–40 s | 350 | [Confirmed] |
+| 40–60 s | ∞ (bỏ qua rating, vẫn giữ hard constraints) | [Confirmed] |
+| > 90 s | Đề nghị client: chơi với bot luyện tập (unranked, không rating) hoặc tiếp tục chờ | [Confirmed] |
 
 Hard constraints **không bao giờ** nới, kể cả khi chờ lâu.
 
@@ -71,8 +71,8 @@ Hard constraints **không bao giờ** nới, kể cả khi chờ lâu.
 | Skill-based | Có | H1–H7 | Có (expanding window) | Có | [Confirmed] |
 | Grade-based | Có | H1 dùng `grade_level` chính xác cho mọi lớp | Tùy chọn | Tùy | [Confirmed] |
 | Subject-based | Có | `subject_id` bắt buộc | Rating theo subject | Có | [Confirmed] |
-| Topic-based | Có | `topic_id` bắt buộc | Rating theo subject (không tách theo topic — quá thưa) | Không mặc định | [Confirmed] / [Proposed] |
-| Friend | Không — thách đấu bạn trực tiếp (friend duel) | Hai người là bạn, H1 nới thành "cùng grade band", H5, H6 | Không | Không (unranked) | [Confirmed] / [Proposed] |
+| Topic-based | Có | `topic_id` bắt buộc | Rating theo subject (không tách theo topic — quá thưa) | Không mặc định | [Confirmed] / [Confirmed] |
+| Friend | Không — thách đấu bạn trực tiếp (friend duel) | Hai người là bạn, H1 nới thành "cùng grade band", H5, H6 | Không | Không (unranked) | [Confirmed] / [Confirmed] |
 | Team | Có — ticket nhóm (party `competition_team`) | H1 áp cho **mọi** member; team rating = trung bình có trọng số | Có | Có | [Confirmed] |
 | Tournament | Không queue tự do — bracket quyết định cặp đấu, dùng cùng cơ chế proposal/ready check | Theo luật giải | Seeding | Theo giải | [Confirmed] |
 
@@ -85,7 +85,7 @@ Hard constraints **không bao giờ** nới, kể cả khi chờ lâu.
 | Tạo ticket | `POST /api/v1/competition/matchmaking/tickets` (`Idempotency-Key`) | Body: `mode`, `subject_id`, `topic_id?`, `party_id?`; server tự lấy grade, school, rating |
 | Xem ticket | `GET /api/v1/competition/matchmaking/tickets/{ticket_id}` | Trạng thái, thời gian chờ ước tính |
 | Hủy ticket | `DELETE /api/v1/competition/matchmaking/tickets/{ticket_id}` hoặc WS `matchmaking.ticket.cancel` | |
-| Thách đấu bạn | `POST /api/v1/competition/duels` (+ `:accept`, `:decline`) | Friend mode. Đề xuất, **chưa có trong OpenAPI**; dùng tên `duels` để không trùng "challenge" PvE của module game [Proposed] |
+| Thách đấu bạn | `POST /api/v1/competition/duels` (+ `:accept`, `:decline`) | Friend mode. Đề xuất, **chưa có trong OpenAPI**; dùng tên `duels` để không trùng "challenge" PvE của module game [Confirmed] |
 | Ready check | WS `matchmaking.proposal.accept` / `matchmaking.proposal.decline` | |
 
 Sự kiện WS gửi client (tên theo [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)): `matchmaking.ticket.updated` (status `queued`/`searching`/`cancelled`/`expired`, window mở rộng, ước tính chờ), `matchmaking.proposal.created`, `matchmaking.proposal.updated`, `matchmaking.proposal.cancelled`, `matchmaking.match.assigned` (kèm `room_id` lobby/battle).
@@ -108,9 +108,9 @@ stateDiagram-v2
 
 Quy tắc:
 
-- Mỗi học sinh tối đa **1 ticket active** (Valkey `SET NX ew:mm:player:{student_id}`) **[Proposed]**.
+- Mỗi học sinh tối đa **1 ticket active** (Valkey `SET NX ew:mm:player:{student_id}`) **[Confirmed]**.
 - Party ticket: chỉ leader tạo; mọi member phải online và không có ticket riêng; member rời party → ticket party bị hủy.
-- Decline/timeout ready check 3 lần trong 10 phút → cooldown 2 phút **[Proposed]**.
+- Decline/timeout ready check 3 lần trong 10 phút → cooldown 2 phút **[Confirmed]**.
 - Ticket **chỉ tồn tại trong Valkey** (ADR-0004). Mất Valkey → client nhận `matchmaking.ticket.updated` (status `cancelled`, reason `service_reset`) và tự tạo lại.
 
 ## 5. Thiết kế queue trong Valkey
@@ -160,7 +160,7 @@ sequenceDiagram
   API->>RT: allocate room battle/lobby → matchmaking.match.assigned
 ```
 
-- Thuật toán greedy theo thời gian chờ là đủ cho quy mô pilot; queue > 500 ticket → chuyển sang chia bucket rating trước khi ghép **[Proposed]**.
+- Thuật toán greedy theo thời gian chờ là đủ cho quy mô pilot; queue > 500 ticket → chuyển sang chia bucket rating trước khi ghép **[Confirmed]**.
 - Nhiều instance worker chạy song song; lock per-queue đảm bảo một queue chỉ một matchmaker xử lý tại một thời điểm. Lock TTL ngắn, worker chết → worker khác tiếp quản sau ≤ 2 s.
 - Tạo `Match` trong PostgreSQL dùng `proposal_id` làm khóa idempotent (unique), chống tạo trận trùng khi retry.
 
@@ -168,27 +168,27 @@ sequenceDiagram
 
 | Bước | Chi tiết | Timeout | Nhãn |
 |---|---|---|---|
-| Match Proposal | Gửi `matchmaking.proposal.created` (mode, môn, số người; **không** gửi tên/trường đối thủ trước khi accept) | — | [Proposed] |
-| Ready Check | Mỗi người accept | 15 s | [Proposed] |
-| Lobby | Room `lobby`: hiển thị nickname + avatar + tier đối thủ, đội, đếm ngược | 10 s (1v1), 20 s (team) | [Proposed] |
-| Team Assignment | Party giữ nguyên đội. Ticket lẻ trong team mode: snake draft theo rating (A1,B1,B2,A2…) để cân tổng rating; ưu tiên đặt bạn cùng lớp chung đội | — | [Proposed] |
+| Match Proposal | Gửi `matchmaking.proposal.created` (mode, môn, số người; **không** gửi tên/trường đối thủ trước khi accept) | — | [Confirmed] |
+| Ready Check | Mỗi người accept | 15 s | [Confirmed] |
+| Lobby | Room `lobby`: hiển thị nickname + avatar + tier đối thủ, đội, đếm ngược | 10 s (1v1), 20 s (team) | [Confirmed] |
+| Team Assignment | Party giữ nguyên đội. Ticket lẻ trong team mode: snake draft theo rating (A1,B1,B2,A2…) để cân tổng rating; ưu tiên đặt bạn cùng lớp chung đội | — | [Confirmed] |
 | Chat trận (always-on) | Khi tạo room `lobby`: tạo channel `match` (và `team` mỗi đội ở team mode), mọi người chơi tự join — chat có ngay từ lobby, không tắt được bằng cài đặt trường/lớp (ADR-0020 mục 6, [CHAT_SYSTEM §4.1](CHAT_SYSTEM.md#41-vòng-đời-channel-gameplay-always-on)) | — | [Confirmed] |
 | Tạo trận (CreateMatch) | Khi mọi người accept: tạo `Match` (idempotent theo `proposal_id`) và **tạo luôn** `question_plan` server-side (facade `question-plans` của module learning, gọi trong tiến trình, [REALTIME_ARCHITECTURE §7.1](../06-architecture/REALTIME_ARCHITECTURE.md#71-state-machine-knowledge-battle)) từ Question Bank theo grade thấp nhất + subject/topic, cùng đề cho mọi người; plan **ghim** `question_version_id` theo con trỏ release lúc tạo trận (`matches.question_plan_version`, ADR-0043) — publish/rollback câu hỏi giữa trận không đổi đề; tạo plan thất bại → trận hủy trước lobby | — | [Confirmed] (server-authoritative) |
 | Match Start | Room `battle` chuyển `running` với plan đã tạo | — | [Confirmed] |
 | Match End | State machine kết thúc; `MatchResult` ghi một lần (unique `match_id`) | — | [Confirmed] |
-| Reconnect | Theo [MULTIPLAYER_GAMEPLAY §9.2](MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị) | 30–60 s | [Proposed] |
+| Reconnect | Theo [MULTIPLAYER_GAMEPLAY §9.2](MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị) | 30–60 s | [Confirmed] |
 | Đóng chat | `match.completed`/`match.aborted` → channel `match`/`team` read-only, purge sau `gameplay_chat_retention_days` (ADR-0033) | — | [Confirmed] |
 | Match Result | `match.completed` → ranking, competition points, reward, learning evidence (`context=competition`) theo [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) | — | [Confirmed] |
 
 ## 8. Party queue & Friend duel
 
-- Party `competition_team` đủ size mode → một ticket; thiếu người → server cho phép "fill" bằng ticket lẻ cùng queue nếu leader bật `allow_fill` **[Proposed]**.
-- Rating đội dùng để ghép: `μ_team = Σ μ_i / n`, `RD_team = sqrt(Σ RD_i²) / n` **[Proposed]**; cách cập nhật rating sau trận thuộc [RANKING](../01-game-design/COMPETITION_SYSTEM.md).
+- Party `competition_team` đủ size mode → một ticket; thiếu người → server cho phép "fill" bằng ticket lẻ cùng queue nếu leader bật `allow_fill` **[Confirmed]**.
+- Rating đội dùng để ghép: `μ_team = Σ μ_i / n`, `RD_team = sqrt(Σ RD_i²) / n` **[Confirmed]**; cách cập nhật rating sau trận thuộc [RANKING](../01-game-design/COMPETITION_SYSTEM.md).
 - Friend duel: lời thách đấu (event `duel.sent`) hết hạn 60 s, unranked, không tính Competition Points, vẫn tính XP theo cap và learning evidence; người đã block nhau không thách đấu được ([SOCIAL_SYSTEM §5](SOCIAL_SYSTEM.md#5-block-mute-report-điểm-vào)).
 
 ## 9. Bot luyện tập (fallback)
 
-Khi không tìm được đối thủ sau 90 s, client có thể chọn "Đấu với Robot Học Giỏi" **[Proposed]**: bot unranked, độ chính xác theo bảng cấu hình (60–85%) và thời gian trả lời ngẫu nhiên hợp lý; trận không ảnh hưởng rating/points/leaderboard; vẫn tạo attempt learning của học sinh. Bot luôn được gắn nhãn "Robot" rõ ràng — không giả làm người.
+Khi không tìm được đối thủ sau 90 s, client có thể chọn "Đấu với Robot Học Giỏi" **[Confirmed]**: bot unranked, độ chính xác theo bảng cấu hình (60–85%) và thời gian trả lời ngẫu nhiên hợp lý; trận không ảnh hưởng rating/points/leaderboard; vẫn tạo attempt learning của học sinh. Bot luôn được gắn nhãn "Robot" rõ ràng — không giả làm người.
 
 ## 10. Metrics & alert
 

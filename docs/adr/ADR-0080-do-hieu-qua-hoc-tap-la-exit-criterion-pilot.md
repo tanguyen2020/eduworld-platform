@@ -8,7 +8,7 @@ KPI "mastery gain" trong [PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md) 
 
 ## Quyết định
 
-1. Pilot (ADR-0073) chỉ được coi là đạt khi có báo cáo nghiên cứu hiệu quả theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md): bài kiểm tra độc lập trước/sau (tự chấm, không dùng câu hỏi luyện tập), có lớp so sánh, thời gian tối thiểu 8 tuần [Proposed].
+1. Pilot (ADR-0073) chỉ được coi là đạt khi có báo cáo nghiên cứu hiệu quả theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md): bài kiểm tra độc lập trước/sau (tự chấm, không dùng câu hỏi luyện tập), có lớp so sánh, thời gian tối thiểu 8 tuần [Confirmed].
 2. Ngưỡng đạt (effect size, tỉ lệ học sinh tiến bộ) do PO + EdTech chốt trước khi pilot bắt đầu [TBD].
 3. Báo cáo gồm đối chiếu mastery với kết quả kiểm tra độc lập (độ tin cậy dự báo); kết quả dùng để hiệu chỉnh tham số mastery (ADR-0017).
 4. Dữ liệu nghiên cứu dùng định danh giả và tối thiểu hóa theo [DATA_PRIVACY](../10-security/DATA_PRIVACY.md); nhà trường tham gia bằng thỏa thuận pilot và có quyền rút lớp/học sinh khỏi phần phân tích. Phần pháp lý (consent, ADR-0077) hoãn theo ADR-0082.

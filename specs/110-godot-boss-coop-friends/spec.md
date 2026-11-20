@@ -200,5 +200,5 @@ NFR: NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-COMP-001.
 
 - Trước khi F095/F103 `Done`, client chạy trên Prism mock sinh từ `specs/` (profile `mock`, nhãn MOCK — R17); feature chỉ `Done` với backend thật.
 - Message/operation "Cần thêm/Cần sửa" của F103 (`boss.question.assigned`, `boss.answer.evaluated`, `quest.roles.assigned`, `quest.clue.shared`, `party_progress`, `getQuestStepClues`, `shareQuestStepClue`, `assignQuestStepRoles`, `getBossEncounter` có `my_questions`) và F101 (`room_type: boss`) có trước US1/US3 ([contracts §6](contracts/README.md)).
-- Kết nối lại: gửi lại `boss.encounter.ready` để gateway đăng ký lại room `ew:rt:room:<encounter_id>:out` [Proposed — xác nhận với F103].
+- Kết nối lại: gửi lại `boss.encounter.ready` để gateway đăng ký lại room `ew:rt:room:<encounter_id>:out` [Confirmed — xác nhận với F103].
 - `PlayerCard.presence` và `presence.friend.updated.status` dùng một enum chung theo MULTIPLAYER_GAMEPLAY §5 (`offline`, `online`, `in_activity`, `in_match`, `away`; RB-404, delta F091).

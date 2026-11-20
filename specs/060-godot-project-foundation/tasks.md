@@ -51,7 +51,7 @@
 - [x] T017 [P] [US2] Test F060-AC-07: fixture `.tscn` có override màu/font → `lint_theme_overrides.gd` fail; allowlist qua (TC-UI-003) — file: `src/game/tests/unit/theme/test_lint_theme_overrides.gd` — phải FAIL trước khi code — ✅ `test_lint_theme_overrides.gd` 6/6
 - [x] T018 [P] [US2] Test F060-AC-08: density mặc định `g1_3`; đổi `grade_band` → Theme đổi, signal `density_changed` — file: `src/game/tests/unit/theme/test_theme_service.gd` — ✅ `test_theme_service.gd` 7/7
 - [x] T019 [P] [US2] Test F060-AC-09: `Settings` lưu/đọc `settings.cfg`, không ghi khóa ngoài danh sách — file: `src/game/tests/unit/core/test_settings.gd` — ✅ `test_settings.gd` 4/4
-- [x] T020 [P] [US2] Test F060-AC-10: `screenshot_gallery.gd` chụp 4 density × 3 locale, so baseline (TC-UI-001 phía Godot) — file: `src/game/tests/scene/test_ui_gallery_snapshot.gd` — ✅ `test_ui_gallery_snapshot.gd` 4/4 (headless) + `tools/screenshot_gallery.gd` 13 ảnh, 0 khác baseline Windows; baseline Linux tạo ở CI lần đầu [Proposed]
+- [x] T020 [P] [US2] Test F060-AC-10: `screenshot_gallery.gd` chụp 4 density × 3 locale, so baseline (TC-UI-001 phía Godot) — file: `src/game/tests/scene/test_ui_gallery_snapshot.gd` — ✅ `test_ui_gallery_snapshot.gd` 4/4 (headless) + `tools/screenshot_gallery.gd` 13 ảnh, 0 khác baseline Windows; baseline Linux tạo ở CI lần đầu [Confirmed]
 - [x] T021 [P] [US2] Test F060-AC-11: quét `src/game/` không có addon/thư mục Admin UI, không import `src/cms/frontend/` (TC-UI-010) — file: `src/game/tools/check_no_admin_ui.sh` — ✅ `tools/check_no_admin_ui.sh` (OK trên project, fail với fixture `addons/antd`)
 
 ### Implementation cho User Story 2

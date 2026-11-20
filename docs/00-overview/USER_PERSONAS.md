@@ -3,7 +3,7 @@
 > Trạng thái: Draft · Phiên bản: 0.3 · Owner: Product Manager + UX/UI Designer · Cập nhật: 2026-11-16 (ADR-0086: không nhập mật khẩu mỗi lần mở game)
 > Liên quan: [PRODUCT_VISION](PRODUCT_VISION.md) · [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md)
 
-Personas dưới đây là **giả thuyết [Proposed]** dựa trên Master Prompt và hiểu biết chung về trường phổ thông Việt Nam. Cần kiểm chứng bằng phỏng vấn/khảo sát tại trường pilot trong Phase 0–1 (liên quan OQ-04, OQ-07, OQ-09, OQ-17). Tên nhân vật là hư cấu.
+Personas dưới đây là **giả thuyết [Confirmed]** dựa trên Master Prompt và hiểu biết chung về trường phổ thông Việt Nam. Cần kiểm chứng bằng phỏng vấn/khảo sát tại trường pilot trong Phase 0–1 (liên quan OQ-04, OQ-07, OQ-09, OQ-17). Tên nhân vật là hư cấu.
 
 EduWorld là môi trường **học sinh tự học**: hệ thống tự chấm, tự gợi ý ôn tập; nhà trường (`school_admin`, `academic_manager`) quản trị ở cấp trường; kiểm duyệt chat do Platform Safety Team đảm nhận ([ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md)). Không có persona giáo viên.
 
@@ -148,7 +148,7 @@ Release 1.0 không có vai trò giáo viên (ADR-0072). Bảng dưới phân l�
 | Mục tiêu | Vận hành Learning Management cho cả tenant: cài đặt tenant, phân quyền School Admin/Academic Manager, đồng bộ SIS, nội dung học tập của tenant, báo cáo theo trường |
 | Pain points | Phải làm việc trên nhiều trường; sợ thao tác nhầm làm mất dữ liệu; muốn dùng lại bộ câu hỏi chuẩn |
 | Thiết bị | PC văn phòng |
-| Nhu cầu UX | Chọn trường trong đơn vị; dùng nội dung "Từ EduWorld" được gán (chỉ đọc); Thùng rác để khôi phục khi xóa nhầm [Proposed]; không có dropdown tenant (luôn một tenant) |
+| Nhu cầu UX | Chọn trường trong đơn vị; dùng nội dung "Từ EduWorld" được gán (chỉ đọc); Thùng rác để khôi phục khi xóa nhầm [Confirmed]; không có dropdown tenant (luôn một tenant) |
 | Quyền hạn | `UserRole(tenant_admin, tenant)` (quản lý Role/UserRole trong tenant, ADR-0066): toàn bộ Learning Management trong tenant; **không** thấy tenant khác, menu Game Studio hay cấu hình thi đấu (ADR-0027) |
 | Thành công khi | Onboard một đơn vị 25 trường trong ≤ 3 ngày làm việc |
 
@@ -197,7 +197,7 @@ Chi tiết ở [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) 
 | Xem dữ liệu nhiều tenant | — | — | — | — | — | Chỉ case moderation (audit) | ✔ (đầy đủ, duy nhất, audit) |
 | Cấu hình game / thi đấu (Game Studio) | — | ✘ | ✘ | — | — | ✘ | ✔ (+ Game Designer/Live-ops/Competition Admin) |
 | Gán dữ liệu cho tenant / clone giữa tenant | — | ✘ | ✘ | — | — | ✘ | ✔ |
-| Thùng rác | — | ✘ (Tenant Admin: tenant mình [Proposed]) | ✘ | — | — | ✘ | ✔ mọi tenant |
+| Thùng rác | — | ✘ (Tenant Admin: tenant mình [Confirmed]) | ✘ | — | — | ✘ | ✔ mọi tenant |
 | Chơi game, làm bài | ✔ | — | — | — | — | — | — |
 | Xem kết quả bản thân | ✔ | — | — | — | — | — | — |
 | Xem kết quả học sinh (School Learning Dashboard) | — | Trường | Trường/tenant theo môn | — | — | — | Theo policy + audit |

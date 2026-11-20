@@ -9,7 +9,7 @@ Stakeholder yêu cầu: game **đặc biệt phải chạy được trên máy t
 ## Quyết định
 
 1. **Yêu cầu [Confirmed]:** mọi tính năng của Release 1.0 phải chơi được ở **cấu hình tham chiếu tầm trung** dưới đây. Tính năng nào không đạt ngân sách thì phải có phương án giảm chất lượng, không được loại thiết bị tầm trung.
-2. **Hạng thiết bị tham chiếu [Proposed, chốt khi khảo sát OQ-04]:**
+2. **Hạng thiết bị tham chiếu [Confirmed, chốt khi khảo sát OQ-04]:**
 
    | Hạng | PC Windows | Android | iOS | Web |
    |---|---|---|---|---|

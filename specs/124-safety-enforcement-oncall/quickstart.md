@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F015, F016, F121 (F131 cho bước Alertmanager trên staging).
 - Lệnh: `make up` (gồm `mailpit` :8025), `make seed`, `make run-core-api`, `make run-worker PROFILE=events`, `make run-worker PROFILE=chat` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Tài khoản demo: `sm.antoan` (safety_moderator), `sm.truongca` (safety_moderator + `moderation.case.lead`, seed [Proposed] của F121), `sa.admin`, `sa.admin2` (system_admin thứ hai, seed [Proposed]), `ad.truong.a`, `ad.truong.b`, `ad.donvi`, `hs.binh.3a`, `hs.an.3a`. Mật khẩu chung `Demo@12345`, MFA tắt ở local.
+- Tài khoản demo: `sm.antoan` (safety_moderator), `sm.truongca` (safety_moderator + `moderation.case.lead`, seed [Confirmed] của F121), `sa.admin`, `sa.admin2` (system_admin thứ hai, seed [Confirmed]), `ad.truong.a`, `ad.truong.b`, `ad.donvi`, `hs.binh.3a`, `hs.an.3a`. Mật khẩu chung `Demo@12345`, MFA tắt ở local.
 - Đồng hồ giả cho job: `EW_CLOCK_OFFSET` chỉ ở local/test.
 
 ## 2. Kịch bản kiểm tra

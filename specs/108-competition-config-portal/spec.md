@@ -139,6 +139,6 @@ Competition Admin mở workspace A → "Thi đấu", thấy 5 nhóm (Matchmaking
 
 ## Assumptions
 
-- [Proposed] Demo local dùng `sa.admin` (System Admin kiêm `competition.config.*`, MFA tắt ở local); đề xuất thêm tài khoản `competition_admin` vào LOCAL_DEVELOPMENT.
-- [Proposed] Route portal: `/game-ops/competition/{matchmaking,ranking,seasons,templates,leaderboards}` và `/school-lms/challenges` (tên route workspace theo F051).
-- [Proposed] Mục "Thử thách lớp / giải trường" nằm trong nhóm "Giao bài & lịch" của workspace C ([ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md#10-màn-hình-chính-sitemap-theo-workspace)).
+- [Confirmed] Demo local dùng `sa.admin` (System Admin kiêm `competition.config.*`, MFA tắt ở local); đề xuất thêm tài khoản `competition_admin` vào LOCAL_DEVELOPMENT.
+- [Confirmed] Route portal: `/game-ops/competition/{matchmaking,ranking,seasons,templates,leaderboards}` và `/school-lms/challenges` (tên route workspace theo F051).
+- [Confirmed] Mục "Thử thách lớp / giải trường" nằm trong nhóm "Giao bài & lịch" của workspace C ([ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md#10-màn-hình-chính-sitemap-theo-workspace)).

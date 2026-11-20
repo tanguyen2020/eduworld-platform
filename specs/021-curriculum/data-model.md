@@ -122,7 +122,7 @@ CurriculumVersion theo `contentmodel.Lifecycle` (F020): `draft → in_review →
 
 ## 3. Quy tắc kiểm tra dữ liệu
 
-- Mã LO: `^[A-Z]{2,8}\.G[1-9]\.[A-Z]{1,6}\.[A-Z][A-Z0-9_]{0,40}(\.[0-9]{1,2})?$` ([CURRICULUM_MODEL §4](../../docs/02-learning/CURRICULUM_MODEL.md#4-mã-learning-objective-chuẩn-proposed)); `G<grade>` phải bằng `grade_level` của topic.
+- Mã LO: `^[A-Z]{2,8}\.G[1-9]\.[A-Z]{1,6}\.[A-Z][A-Z0-9_]{0,40}(\.[0-9]{1,2})?$` ([CURRICULUM_MODEL §4](../../docs/02-learning/CURRICULUM_MODEL.md#4-mã-learning-objective-chuẩn-confirmed)); `G<grade>` phải bằng `grade_level` của topic.
 - Tiên quyết: cùng version, không tự tham chiếu, đồ thị không chu trình.
 - Publish `GDPT2018`: mọi LO có `yccd_ref`. Publish version có `supersedes_version_id`: mọi LO version cũ có mapping.
 - Chỉ một version `draft`/`in_review` mở mỗi curriculum.

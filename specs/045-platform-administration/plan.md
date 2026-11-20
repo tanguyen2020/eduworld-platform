@@ -16,7 +16,7 @@ Module `platformadmin` trong module `identity` phục vụ các route System Adm
 | Testing | go test + testcontainers (PostgreSQL, NATS); facade test với module learning (`make test-contract`: identity dùng fake facade, learning test hiện thực facade theo ví dụ spec internal); `make arch-check` |
 | Target Platform | Linux container (module `identity` api + worker) |
 | Project Type | backend module |
-| Performance Goals | Deadline mỗi bước saga theo `module_call_deadline` (bước saga); thử lại do engine saga (không retry/circuit breaker trong tiến trình, ADR-0074) ([API_DESIGN §12.3](../../docs/07-backend/API_DESIGN.md#123-resilience-mặc-định-proposed)) |
+| Performance Goals | Deadline mỗi bước saga theo `module_call_deadline` (bước saga); thử lại do engine saga (không retry/circuit breaker trong tiến trình, ADR-0074) ([API_DESIGN §12.3](../../docs/07-backend/API_DESIGN.md#123-resilience-mặc-định-confirmed)) |
 | Constraints | AGENTS R7, R8, R10, R13, R20, R21, R22, R27, R28, R29 · ADR-0027, ADR-0028, ADR-0029, ADR-0040, ADR-0065, ADR-0066, ADR-0074 |
 | Scale/Scope | `resource_ids` ≤ 500/job; `tenant_ids` ≤ 100/request (spec) |
 
@@ -30,7 +30,7 @@ Module `platformadmin` trong module `identity` phục vụ các route System Adm
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Identity chỉ điều phối; mọi đọc/ghi dữ liệu module khác qua facade (`src/backend/pkg/modcall`); saga là command handler + outbox |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng `platform.*` dùng role `identity_platform` có audit; không hard-delete; test tenant isolation cho `/tenant/trash*` |
 | IV Server-authoritative | ✅ | Không liên quan điểm/kết quả; mọi ghi có `Idempotency-Key` + audit |
-| V Xác thực, phân quyền | ✅ | `/admin/*` gateway nội bộ + `azp = eduworld-portal` + MFA + role platform; permission `platform.cross_tenant.read`, `platform.trash.*`, `platform.tenant_data.assign/clone`, `platform.user.merge` [Proposed], `tenant.trash.*` |
+| V Xác thực, phân quyền | ✅ | `/admin/*` gateway nội bộ + `azp = eduworld-portal` + MFA + role platform; permission `platform.cross_tenant.read`, `platform.trash.*`, `platform.tenant_data.assign/clone`, `platform.user.merge` [Confirmed], `tenant.trash.*` |
 | VI An toàn trẻ em | ✅ | Không clone dữ liệu học sinh (R22); `TrashItem` không chứa PII ngoài tiêu đề tài nguyên; log không chứa nội dung |
 | VII Một nguồn sự thật, cấu hình | ✅ | Bảng định tuyến `resource_type` → module một nơi trong code; facade nối ở composition root (`module.go`), không URL/env cho gọi giữa module; chuỗi có `MaxLen` |
 | VIII UI tách logic, token | ✅ | Không có UI (F057 làm giao diện) |
@@ -115,7 +115,7 @@ Không có. Saga, idempotency, resilience, phạm vi liên tenant đã chốt �
 - Đọc liên tenant: `authz.CrossTenantScope(p, tenant_ids, reason)` → audit `cross_tenant.accessed`; người dùng tenant: `authz.ScopeFor(p)`, `tenant_ids` bị bỏ qua.
 - Ghi của System Admin: `X-Tenant-Id` = tenant đích khi bản ghi thuộc tenant (`restoreTrashItem`); gán/clone mang tenant trong body (`tenant_ids`, `target_tenant_id`), luôn danh sách tường minh.
 - `Idempotency-Key` bắt buộc cho `assignToTenants`, `unassignFromTenants`, `createTenantClone`, `restoreTrashItem`, `restoreTenantTrashItem`; mỗi bước saga gọi facade module đích với key `<saga_id>:<step_no>`.
-- Audit action: `cross_tenant.accessed`, `tenant_data.assigned`, `tenant_data.unassigned`, `tenant_data.cloned` (ghi ở tenant nguồn và đích), `trash.viewed` [Proposed], `<resource_type>.restored`, `authz.denied`.
+- Audit action: `cross_tenant.accessed`, `tenant_data.assigned`, `tenant_data.unassigned`, `tenant_data.cloned` (ghi ở tenant nguồn và đích), `trash.viewed` [Confirmed], `<resource_type>.restored`, `authz.denied`.
 
 ### Quan sát
 
@@ -123,7 +123,7 @@ Không có. Saga, idempotency, resilience, phạm vi liên tenant đã chốt �
 - Metric: `eduworld_platform_saga_steps_total{saga_type,service,status}`, `eduworld_platform_saga_duration_seconds{saga_type}`, `eduworld_tenant_filter_bypass_total{module,reason}`, metric gọi facade của `src/backend/pkg/modcall` (`caller="identity"`, `callee`, `operation`, `outcome`; tên theo API_DESIGN §12.3).
 - Span: `AssignToTenants`, `CreateTenantClone`, `RunSagaStep(service, action)`, `ListTrash(resource_type)`.
 
-Ước lượng: 1–2 sprint (backend 1–2 dev) [Proposed].
+Ước lượng: 1–2 sprint (backend 1–2 dev) [Confirmed].
 
 ## Complexity Tracking
 

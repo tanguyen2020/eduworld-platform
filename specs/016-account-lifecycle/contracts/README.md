@@ -10,7 +10,7 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml`.
 |---|---|---|---|---|
 | `lockUser` | `POST /api/v1/admin/users/{user_id}:lock` | identity.v1.yaml | `platform.user.manage` (MFA, gateway nội bộ) | Có sẵn |
 | `unlockUser` · `deactivateUser` | `POST /api/v1/admin/users/{user_id}:unlock` · `:deactivate` | identity.v1.yaml | `platform.user.manage` | Cần thêm |
-| `lockTenantUser` · `unlockTenantUser` | `POST /api/v1/tenant/users/{user_id}:lock` · `:unlock` (`reason`, `Idempotency-Key`) | identity.v1.yaml | `tenant.user.lock` [Proposed] (School Admin: học sinh trường mình) | Cần thêm |
+| `lockTenantUser` · `unlockTenantUser` | `POST /api/v1/tenant/users/{user_id}:lock` · `:unlock` (`reason`, `Idempotency-Key`) | identity.v1.yaml | `tenant.user.lock` [Confirmed] (School Admin: học sinh trường mình) | Cần thêm |
 | `resetStudentPassword` | `POST /api/v1/tenant/students/{student_id}/password:reset` (`reason`, `Idempotency-Key`; System Admin: `X-Tenant-Id` = tenant đích, gồm `common`) | identity.v1.yaml | `lms.student.password_reset` (School Admin trường mình, Tenant Admin, System Admin) | Có sẵn (áp 2026-11-17, quyết định Technical Architect) — `200 StudentPasswordResetResult` (`initial_password` một lần, `no-store`, replay `password_redacted`) |
 | `previewTenantStudentCleanup` | `GET /api/v1/tenant/student-cleanup/preview` | identity.v1.yaml | `tenant.student_cleanup.read` | Có sẵn |
 | `createStudentCleanupExclusions` · `deleteStudentCleanupExclusions` | `POST/DELETE /api/v1/tenant/student-cleanup/exclusions` | identity.v1.yaml | `tenant.student_cleanup.exclude` | Có sẵn |

@@ -10,7 +10,7 @@
 
 ## R2. Nguồn `min_client_version`
 
-- **Decision**: Cấu hình triển khai dùng chung `EW_GAME_MIN_CLIENT_VERSION` đọc bởi module identity (`gameLogin`) và module game (`getClientConfig`, F014) [Proposed]; đăng ký tên `min_client_version` trong CONFIG_DEFAULTS §16.
+- **Decision**: Cấu hình triển khai dùng chung `EW_GAME_MIN_CLIENT_VERSION` đọc bởi module identity (`gameLogin`) và module game (`getClientConfig`, F014) [Confirmed]; đăng ký tên `min_client_version` trong CONFIG_DEFAULTS §16.
 - **Rationale**: Kiểm `426` trước khi gọi Keycloak mà không gọi module game đồng bộ (R30).
 - **Alternatives**: identity gọi `getClientConfig` — bị loại (R30). Projection từ event của module game — chưa có event; có thể chuyển sau.
 

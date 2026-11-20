@@ -28,5 +28,5 @@
 ## Notes
 
 - Đã chốt (Technical Architect 2026-11-16): khi dọn giữ user Keycloak `enabled`, gỡ membership tenant/Organization, thu hồi phiên; đăng nhập lại → khôi phục (FR-AUTH-024, AC-AUTH-018). ACCOUNT_PROVISIONING §6b, TC-AUTH-020 sửa theo. Status Ready.
-- Thứ tự saga dọn [Proposed] (module tham gia trước, identity sau) khác ACCOUNT_PROVISIONING §6b — cần cập nhật tài liệu cùng PR.
-- Permission `tenant.user.lock` [Proposed] chưa có trong catalog ADMIN_PORTAL §2.2.
+- Thứ tự saga dọn [Confirmed] (module tham gia trước, identity sau) khác ACCOUNT_PROVISIONING §6b — cần cập nhật tài liệu cùng PR.
+- Permission `tenant.user.lock` [Confirmed] chưa có trong catalog ADMIN_PORTAL §2.2.

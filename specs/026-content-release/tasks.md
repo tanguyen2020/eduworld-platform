@@ -139,13 +139,13 @@
 | Task | File thực tế | Ghi chú |
 |---|---|---|
 | T001–T003 | `internal/domain/release/`, `internal/domain/snapshot/`; key Valkey trong `infrastructure/cache/snapshot_cache.go`; consumer `learning.release_pointer_cache` (`presentation/consumer/release_pointer_cache.go`), `game.manifest_on_learning_content` (module game) | Binary chưa nối route/consumer của module learning (OQ F020-3); consumer kiểm bằng gọi `Handle` trực tiếp |
-| T004, T005 | `specs/openapi/eduworld-api.v1.yaml` (+ split-public, portal `gen:api`), `specs/events/payloads/learning/content.{published,rolled_back,unpublished,publish_scheduled,version_archived}.v1`, `specs/events/payloads/game/content.manifest_updated.v1` | `content.*` thêm `tenant_ids` (tenant đích) [Proposed] |
+| T004, T005 | `specs/openapi/eduworld-api.v1.yaml` (+ split-public, portal `gen:api`), `specs/events/payloads/learning/content.{published,rolled_back,unpublished,publish_scheduled,version_archived}.v1`, `specs/events/payloads/game/content.manifest_updated.v1` | `content.*` thêm `tenant_ids` (tenant đích) [Confirmed] |
 | T006–T008 | `ent/schema/release.go` (`ScheduledPublication`), cột `published_by` (mixin `WorkflowFields`), migration `20261129000001_f026_release.sql`, DATABASE_DESIGN §2.5/§3.13 | Trigger `forbid_published_update`, `<item>_release_target` đã có từ F022/F024 (giữ nguyên) |
-| T009–T018 | `internal/domain/release/release_test.go`, `command/releases.go`, `persistence/write/release_repo.go`, `presentation/http/cms_release.go`, `tests/integration/release_test.go` (`TestReleasePublish`) | Khóa hàng item = optimistic version (`409 CONTENT_VERSION_CONFLICT`) thay `SELECT … FOR UPDATE` [Proposed] |
+| T009–T018 | `internal/domain/release/release_test.go`, `command/releases.go`, `persistence/write/release_repo.go`, `presentation/http/cms_release.go`, `tests/integration/release_test.go` (`TestReleasePublish`) | Khóa hàng item = optimistic version (`409 CONTENT_VERSION_CONFLICT`) thay `SELECT … FOR UPDATE` [Confirmed] |
 | T019–T023 | `TestReleaseRollbackUnpublish` | |
 | T024–T031 | `domain/snapshot/snapshot_test.go`, `tests/contract/snapshot_strip_test.go`, `TestReleaseSnapshotsCache`, `query/releases.go` (`ContentReader.Current/Snapshot` = ReleaseResolver/VersionReader) | |
-| T032–T036 | `TestReleaseSchedule`, `command.Releases.RunDueSchedules`, `presentation/job/curriculum.go` (`ScheduleWorker`) | Hai worker: version hàng lịch hẹn (optimistic) thay `FOR UPDATE SKIP LOCKED` [Proposed] |
-| T037–T040 | `TestReleaseHistory`, `query/releases.go`, `persistence/read/release.go` | `active_pinned_sessions` = 0 tới F030 [Proposed] |
+| T032–T036 | `TestReleaseSchedule`, `command.Releases.RunDueSchedules`, `presentation/job/curriculum.go` (`ScheduleWorker`) | Hai worker: version hàng lịch hẹn (optimistic) thay `FOR UPDATE SKIP LOCKED` [Confirmed] |
+| T037–T040 | `TestReleaseHistory`, `query/releases.go`, `persistence/read/release.go` | `active_pinned_sessions` = 0 tới F030 [Confirmed] |
 | T041–T046 | `modules/game/internal/application/command/manifest.go`, `.../consumer/manifest_on_learning_content.go`, `.../persistence/write/manifest_repo.go`, `modules/game/tests/integration/manifest_learning_test.go` | `min_client_version` từ bảng tạm `command.MinClientVersions` tới F030 |
 | T047–T049 | `TestReleaseHistory` (usages, archive) | Nơi sử dụng: question set; activity/bài giao/exam ở F030/F041/F042 |
 | T050 | `infrastructure/observability/release_metrics.go`, game `PublishToVisible` | |

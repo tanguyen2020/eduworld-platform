@@ -21,7 +21,7 @@ Vấn đề, ràng buộc, yêu cầu của stakeholder, OQ liên quan.
 
 ## Quyết định
 
-Bản **hiện hành**, viết liền mạch, đủ cụ thể để triển khai. Nhãn [Confirmed]/[Proposed]/[TBD] cho từng tham số chưa chốt. Không gạch xóa, không chú thích "sửa cùng ngày" trong thân — mọi lần sửa ghi ở Lịch sử thay đổi.
+Bản **hiện hành**, viết liền mạch, đủ cụ thể để triển khai. Nhãn [Confirmed]/[Confirmed]/[TBD] cho từng tham số chưa chốt. Không gạch xóa, không chú thích "sửa cùng ngày" trong thân — mọi lần sửa ghi ở Lịch sử thay đổi.
 
 ## Hệ quả
 

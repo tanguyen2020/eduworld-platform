@@ -26,7 +26,7 @@
 ### 1.1. Giao diện: Admin/Ops UI, không theo phong cách game (ADR-0047)
 
 - **[Confirmed — ADR-0047]** Toàn bộ Admin Portal (mọi workspace) dùng **Admin/Ops design system** dành cho vận hành game: gọn, trung tính, dày dữ liệu. **Không** dùng phong cách, component hay Theme của game. Chi tiết: [DESIGN_SYSTEM §4](../05-ux/DESIGN_SYSTEM.md#4-adminops-design-system-cmslmsadmin).
-- **[Proposed]** Thư viện: **Ant Design 5** + Ant Design Pro components (ProLayout, ProTable, ProForm, QueryFilter, StatisticCard), theme EduWorld qua `ConfigProvider` sinh từ `design/admin-tokens/` (màu thương hiệu, compact, sáng/tối, locale `vi_VN`). Component đặc thù trong `src/cms/frontend/packages/ops-ui`: trình soạn 11 dạng câu hỏi, graph editor quest/NPC dialogue, bracket giải đấu, thư viện media có thumbnail 3D, `GamePreviewFrame`.
+- **[Confirmed]** Thư viện: **Ant Design 5** + Ant Design Pro components (ProLayout, ProTable, ProForm, QueryFilter, StatisticCard), theme EduWorld qua `ConfigProvider` sinh từ `design/admin-tokens/` (màu thương hiệu, compact, sáng/tối, locale `vi_VN`). Component đặc thù trong `src/cms/frontend/packages/ops-ui`: trình soạn 11 dạng câu hỏi, graph editor quest/NPC dialogue, bracket giải đấu, thư viện media có thumbnail 3D, `GamePreviewFrame`.
 - **Ánh xạ mẫu màn → component:** danh sách = QueryFilter (có dropdown tenant cho System Admin) + ProTable + thao tác hàng loạt; chi tiết = Tabs (Thông tin/Phiên bản/Phát hành/Sử dụng/Audit) + Timeline; form = ProForm/StepsForm với validation sinh từ OpenAPI (`maxLength`, `required`); dashboard = StatisticCard + chart (ECharts hoặc Ant Design Charts).
 - Layout: ProLayout, sidebar menu **sinh từ danh mục** `specs/portal/menu-catalog.yaml` (§2.7) và lọc theo `GET /api/v1/me/permissions` (permission + `disabled_menus`/`disabled_actions`); header có bộ lọc tenant (System Admin, chọn nhiều) hoặc bộ chọn đơn vị làm việc (nhân sự thuộc nhiều tenant, §1.3b), trạng thái hệ thống, thông báo; banner cảnh báo hệ thống (ví dụ "Đang tắt kiểm duyệt", ADR-0030).
 - Màu môn học, độ hiếm, trạng thái nội dung dùng **mã màu nghiệp vụ dùng chung** với game (`design/shared-tokens/`), hiển thị bằng `DomainTag` của `ops-ui` (chấm màu + nhãn chữ, F050).
@@ -46,7 +46,7 @@
 - Tenant **không bao giờ** thấy workspace A, D, E; trong B và C chỉ thấy dữ liệu tenant mình + dữ liệu platform được gán (chỉ đọc).
 - Safety Moderator chỉ thấy module Kiểm duyệt của workspace E; không thấy workspace A, B, C, D.
 - Mã nguồn mỗi workspace là một **chunk lazy-load** trong `src/cms/frontend/apps/portal/src/workspaces/<thư mục>`, tên thư mục cố định: A `game-ops`, B `content-studio`, C `school-lms`, D `platform-admin`, E `live-ops`; chỉ tải khi `GET /api/v1/me/permissions` trả về workspace đó. Đây là tối ưu tải trang, **không phải lớp bảo mật**: bảo mật dựa vào permission backend, gateway nội bộ và MFA (ADR-0027 mục 3).
-- Workspace A, D, E gọi API chỉ có ở gateway nội bộ. Người dùng platform ngoài VPN mở portal vẫn thấy menu nhưng mọi thao tác trả lỗi kết nối; portal hiển thị thông báo "Cần kết nối mạng quản trị (VPN)" thay vì lỗi chung [Proposed].
+- Workspace A, D, E gọi API chỉ có ở gateway nội bộ. Người dùng platform ngoài VPN mở portal vẫn thấy menu nhưng mọi thao tác trả lỗi kết nối; portal hiển thị thông báo "Cần kết nối mạng quản trị (VPN)" thay vì lỗi chung [Confirmed].
 
 ### 1.3. Information Architecture (bố cục chung)
 
@@ -64,7 +64,7 @@
 
 | Thành phần | Hành vi |
 |---|---|
-| **Workspace switcher** | Dropdown các workspace người dùng có quyền; nhớ workspace gần nhất theo người dùng (per-viewer). Phím tắt `Ctrl+K` mở tìm kiếm, `G W` đổi workspace [Proposed] |
+| **Workspace switcher** | Dropdown các workspace người dùng có quyền; nhớ workspace gần nhất theo người dùng (per-viewer). Phím tắt `Ctrl+K` mở tìm kiếm, `G W` đổi workspace [Confirmed] |
 | **Tìm kiếm toàn portal** | Tìm theo mã/tên trong phạm vi quyền: học sinh, lớp, câu hỏi, activity, quest, item, tenant (System Admin). Kết quả nhóm theo workspace; không trả mục ngoài tenant/permission |
 | **Bộ chọn tenant** | System Admin: bộ **lọc** tenant, dropdown tìm kiếm, mặc định "Tất cả tenant", chọn nhiều (§2.5), áp cho mọi màn có dữ liệu theo tenant. Nhân sự thuộc nhiều tenant: bộ **chọn đơn vị làm việc** (chọn một; đổi = đổi `X-Tenant-Id`, không xin token mới, §1.3b). Nhân sự một tenant: chỉ hiển thị tên đơn vị |
 | **Thông báo** | Review chờ duyệt, publish hẹn giờ, job clone/import xong, thông báo vụ việc an toàn (nhà trường) / case mới (Safety Team), sự cố live-ops |
@@ -171,7 +171,7 @@ Desktop (≥ 1200 px)                                         Mobile (< 768 px)
 
 **Định danh (ADR-0067, [ADR-0069](../adr/ADR-0069-username-email-duy-nhat-theo-tenant-va-dang-nhap-khong-chon-tenant.md)):** đăng nhập portal bằng username **hoặc** email; cả hai là duy nhất trên SSO (một người một tài khoản, không phân biệt hoa thường), nên không trùng trong cùng tenant; Keycloak xác thực trước, module identity kiểm tra tenant sau; nhân sự bắt buộc có email; một người làm nhiều trường dùng **một** tài khoản với nhiều membership và UserRole.
 
-### 1.5. Bố cục responsive web/mobile của portal [Proposed]
+### 1.5. Bố cục responsive web/mobile của portal [Confirmed]
 
 Portal là web app (React + Ant Design 5, ADR-0047), chạy trên trình duyệt desktop, tablet và điện thoại. Cùng một ứng dụng, bố cục đổi theo breakpoint; quyền và dữ liệu không đổi theo thiết bị.
 
@@ -251,7 +251,7 @@ Mobile
                                                    └───────────────────────────┘
 ```
 
-Xác nhận lưu thời điểm và người xác nhận vào case (audit); hạn xác nhận theo `school_notification_ack_sla_hours` do [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-proposed) sở hữu; thông báo quá hạn chưa xác nhận được nhắc lại cho School Admin và hiển thị cho Safety Team [Proposed]. API: `GET /api/v1/tenant/safety/school-notifications`, `POST /api/v1/tenant/safety/school-notifications/{notification_id}:acknowledge`.
+Xác nhận lưu thời điểm và người xác nhận vào case (audit); hạn xác nhận theo `school_notification_ack_sla_hours` do [MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed) sở hữu; thông báo quá hạn chưa xác nhận được nhắc lại cho School Admin và hiển thị cho Safety Team [Confirmed]. API: `GET /api/v1/tenant/safety/school-notifications`, `POST /api/v1/tenant/safety/school-notifications/{notification_id}:acknowledge`.
 
 #### 1.5.3. Danh sách nội dung (Learning Content Studio)
 
@@ -306,14 +306,14 @@ Game song ngữ `vi` + `en` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.m
 | **Preview theo ngôn ngữ** | `GamePreviewFrame` và preview học tập có công tắc `vi` / `en` / "song song" để người duyệt xem đúng bản học sinh thấy |
 | **Xuất / nhập file dịch** | Xuất các trường cần dịch của một hoặc nhiều nội dung ra **XLIFF 2.1** hoặc **CSV** (khóa ổn định = `<content_type>/<id>/<version>/<json-pointer>`) cho người dịch ngoài hệ thống; nhập lại tạo Draft mới, so khớp khóa, báo trường không khớp; chỉ người có permission `learning_content.translate` hoặc `game.content.translate` (§2.2) |
 | **Bản dịch lỗi thời** | Sửa bản gốc sau khi đã dịch → field dịch tự đánh dấu `Lỗi thời`, hiện diff bản gốc cũ/mới cho người dịch |
-| **Giao diện portal** | Ngôn ngữ giao diện `vi` (mặc định) / `en` chọn ở user menu [Proposed]; chuỗi UI portal qua i18n của React (khóa `portal.<workspace>.<screen>.<element>`), không phụ thuộc ngôn ngữ nội dung đang soạn |
-| **Không dịch máy tự động** | Không tự dịch khi publish. Gợi ý dịch máy (nếu bật sau này) chỉ điền Draft, người duyệt phải xác nhận [Proposed] |
+| **Giao diện portal** | Ngôn ngữ giao diện `vi` (mặc định) / `en` chọn ở user menu [Confirmed]; chuỗi UI portal qua i18n của React (khóa `portal.<workspace>.<screen>.<element>`), không phụ thuộc ngôn ngữ nội dung đang soạn |
+| **Không dịch máy tự động** | Không tự dịch khi publish. Gợi ý dịch máy (nếu bật sau này) chỉ điền Draft, người duyệt phải xác nhận [Confirmed] |
 
 ## 2. Permission model
 
 ### 2.1. Nguyên tắc
 
-1. Authorization dựa trên **permission** — quyền nguyên tử **định nghĩa trong code** ở platform kit (`src/backend/pkg/authz/catalog.go`, có `scope_kind` `tenant`/`platform`; mọi binary kiểm tra catalog lúc khởi động — AGENTS R20). **Role** là tập permission **lưu trong DB** (`identity.roles`, `identity.role_permissions`): role hệ thống seed sẵn (`is_system`, không sửa/xóa) và role tùy biến của tenant [Proposed]. **UserRole** (`identity.user_roles`) gán role cho người dùng theo phạm vi và thời hạn (ADR-0066, [SECURITY_ARCHITECTURE §5](../10-security/SECURITY_ARCHITECTURE.md)).
+1. Authorization dựa trên **permission** — quyền nguyên tử **định nghĩa trong code** ở platform kit (`src/backend/pkg/authz/catalog.go`, có `scope_kind` `tenant`/`platform`; mọi binary kiểm tra catalog lúc khởi động — AGENTS R20). **Role** là tập permission **lưu trong DB** (`identity.roles`, `identity.role_permissions`): role hệ thống seed sẵn (`is_system`, không sửa/xóa) và role tùy biến của tenant [Confirmed]. **UserRole** (`identity.user_roles`) gán role cho người dùng theo phạm vi và thời hạn (ADR-0066, [SECURITY_ARCHITECTURE §5](../10-security/SECURITY_ARCHITECTURE.md)).
 2. Mỗi role có `role_scope_kind`:
    - `tenant`: UserRole ở scope `tenant`, `school` hoặc `subject`, luôn trong **một** tenant. Không có scope `class` hay `class × subject` theo phân công giảng dạy (ADR-0072).
    - `platform`: UserRole chỉ ở scope `platform`.
@@ -332,7 +332,7 @@ Game song ngữ `vi` + `en` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.m
 | `lms.*` | `lms.class.read`, `lms.assignment.read`, `lms.assignment.write`, `lms.challenge.write`, `lms.school_event.write` (sự kiện trường từ template — EVENT_SEASON_SYSTEM §10), `lms.schedule.write`, `lms.report.read`, `lms.course.write`, `lms.learning_path.write`, `lms.study_group.write` (nhóm học tập — ADR-0072), `lms.result.release` (công bố kết quả bài `result_release = manual`), `lms.student.password_reset` (đặt lại mật khẩu học sinh trong scope, mật khẩu mới hiển thị một lần — [ACCOUNT_PROVISIONING §6d](../09-identity/ACCOUNT_PROVISIONING.md#6d-đặt-lại-mật-khẩu-học-sinh)) | ✔ | ✔ (System Admin, theo tenant đích) |
 | `learning_content.*` | `learning_content.read`, `learning_content.write`, `learning_content.review`, `learning_content.publish`, `content.release.rollback`, `learning_content.import`, `media.upload`, `learning_content.activity.write`, `learning_content.activity.review` (activity theo `activity_type` trong Release, ADR-0048, ADR-0072), `learning_content.re_evaluate` (kích hoạt hệ thống chấm lại khi nội dung có lỗi, `attempt.re_evaluated` — ADR-0072), `learning_content.translate` (dịch, xuất/nhập file dịch — ADR-0056) | ✔ (dữ liệu của tenant) | ✔ (dữ liệu platform; System Admin cả dữ liệu tenant) |
 | `curriculum.*` | `curriculum.read`, `curriculum.write`, `curriculum.publish` | `read` mọi role; `write/publish` Academic Manager scope tenant (curriculum riêng của tenant) | ✔ |
-| `tenant.*` | `tenant.settings.read`, `tenant.settings.write` (chat policy tenant, khung giờ, thông báo), `tenant.user.read`, `tenant.user.write` (tạo/sửa nhân sự thủ công; một người một tài khoản SSO — ADR-0069), `tenant.user.lock` (khóa/mở khóa học sinh của tenant; School Admin chỉ trường mình — F016), `tenant.school.read`, `tenant.school.write` (sửa thông tin hiển thị, duyệt trường `pending_review` — ADR-0060), `tenant.class.read` (lớp, sĩ số, học sinh chưa có lớp — ADR-0060), `tenant.role.read`, `tenant.role.write` (role tùy biến của tenant [Proposed] — ADR-0066), `tenant.user_role.write` (gán/thu hồi UserRole trong tenant; thay `tenant.roles.assign`), `tenant.sis.import`, `tenant.sis.read`, `tenant.trash.read`, `tenant.trash.restore` [Proposed] | ✔ | ✔ (System Admin) |
+| `tenant.*` | `tenant.settings.read`, `tenant.settings.write` (chat policy tenant, khung giờ, thông báo), `tenant.user.read`, `tenant.user.write` (tạo/sửa nhân sự thủ công; một người một tài khoản SSO — ADR-0069), `tenant.user.lock` (khóa/mở khóa học sinh của tenant; School Admin chỉ trường mình — F016), `tenant.school.read`, `tenant.school.write` (sửa thông tin hiển thị, duyệt trường `pending_review` — ADR-0060), `tenant.class.read` (lớp, sĩ số, học sinh chưa có lớp — ADR-0060), `tenant.role.read`, `tenant.role.write` (role tùy biến của tenant [Confirmed] — ADR-0066), `tenant.user_role.write` (gán/thu hồi UserRole trong tenant; thay `tenant.roles.assign`), `tenant.sis.import`, `tenant.sis.read`, `tenant.trash.read`, `tenant.trash.restore` [Confirmed] | ✔ | ✔ (System Admin) |
 | `school.*` | `school.settings.read`, `school.settings.write` (chính sách trường: khung giờ truy cập, chat policy cấp trường, bật/tắt bảng xếp hạng lớp/trường — [COMPETITION_SYSTEM §9.2](../01-game-design/COMPETITION_SYSTEM.md), `student_club_creation` mặc định tắt), `school.people.read` | ✔ | ✔ (System Admin) |
 | `lms.student_activity.read` · `tenant.student_cleanup.*` | `lms.student_activity.read` (lịch sử đăng nhập game, lần đăng nhập cuối — ADR-0031), `tenant.student_cleanup.read` (danh sách sắp bị dọn), `tenant.student_cleanup.exclude` (loại trừ/gia hạn), `tenant.student_cleanup.configure` (đổi `inactive_student_cleanup_days` của tenant khi platform cho phép), `tenant.chat_retention.configure` (đổi `gameplay_chat_retention_days` ≥ 3 khi được phép — ADR-0033) | ✔ (TA/SA; Academic Manager chỉ `lms.student_activity.read` trong scope) | ✔ (System Admin) |
 | `analytics.*` · `report.export` | `analytics.class.read`, `analytics.school.read`, `analytics.tenant.read` (Learning Analytics và báo cáo **tổng hợp** Game Analytics của tenant/trường — [GAME_ANALYTICS §7.2](../11-operations/GAME_ANALYTICS.md#72-báo-cáo-tenant-workspace-school--learning-management); dashboard đọc rollup — ADR-0062), `report.export` (xuất báo cáo bất đồng bộ `/tenant/reports`, `/admin/reports` — [DASHBOARD_DATA §10](../07-backend/DASHBOARD_DATA.md#10-xuất-báo-cáo-bất-đồng-bộ)) | ✔ | ✔ (System Admin) |
@@ -344,8 +344,8 @@ Game song ngữ `vi` + `en` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.m
 | `game.*` | `game.content.translate` (dịch nội dung game, xuất/nhập file dịch — ADR-0056), `game.chat_assets.write` (sticker pack, thư viện GIF — ADR-0034), `game.quest.write`, `game.minigame.write`, `game.npc.write`, `game.world.write`, `game.event.write` (sự kiện, template sự kiện — thay `game.world_event.write`), `game.event.operate` (dừng/tiếp tục/hủy sự kiện đang chạy), `game.season_track.write`, `game.item.write`, `game.reward_rule.write`, `game.progression.write` (đường cong XP, ngưỡng level `progression_levels`, nguồn XP và cap — [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md)), `game.challenge.write`, `game.boss.write`, `game.achievement.write`, `game.economy.write` (tiền tệ trong game — ADR-0049), `game.shop.write` (Shop: giá, giới hạn mua, lịch bán), `game.collection.write` (bộ sưu tập), `game.economy.adjust` (bút toán bù, chỉ System Admin + người duyệt thứ hai), `game.liveops.read` (Game Live Operations), `game.content.review`, `game.content.publish` | **✘ (cấm)** | ✔ |
 | `competition.config.*` | `competition.config.matchmaking.write`, `competition.config.ranking.write`, `competition.config.season.write`, `competition.config.tournament_template.write`, `competition.config.leaderboard.write`, `competition.config.reward.write` | **✘ (cấm)** | ✔ |
 | `platform.*` (bổ sung) | `platform.settings.write` (cấu hình platform: dọn học sinh, thời hạn chat gameplay — ADR-0032/0033), `platform.student_cleanup.approve` (xác nhận lần dọn vượt ngưỡng) | **✘ (cấm)** | ✔ (System Admin) |
-| `platform.*` | `platform.catalog.write` (danh mục quốc gia/tỉnh/kế thừa tỉnh, import trường — ADR-0060), `platform.role.read`, `platform.role.write` (role platform và role dùng chung), `platform.user_role.write` (gán/thu hồi UserRole platform và UserRole tenant ở tenant đích), `platform.cross_tenant.read`, `platform.tenant.manage`, `platform.tenant_data.assign`, `platform.tenant_data.clone`, `platform.trash.read`, `platform.trash.restore`, `platform.user.manage`, `platform.user.merge` (duyệt gộp hai tài khoản của cùng một người — F045, [Proposed]), `platform.feature_flag.write`, `platform.sis_connection.manage`, `platform.break_glass.request`, `platform.break_glass.approve` (truy cập nội dung ngoài phạm vi case, phê duyệt hai người — [MODERATION §6.1](../03-social-multiplayer/MODERATION.md)) | **✘ (cấm)** | ✔ (chủ yếu System Admin) |
-| `platform.*` (nghiên cứu hiệu quả — [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | `platform.efficacy_study.manage` (thỏa thuận nghiên cứu, study, lớp/cặp, đợt kiểm tra, rút khỏi nghiên cứu, báo cáo hiệu quả — `/admin/learning/research-agreements*`, `/admin/learning/efficacy-studies*`), `platform.efficacy_study.export` (xuất bộ dữ liệu định danh giả `report_type = efficacy_dataset`, cùng `report.export`), `platform.learning_experiment.manage` (thử nghiệm A/B cấu hình mastery và luật gợi ý — `/admin/learning/experiments*`) [Proposed] | **✘ (cấm)** | ✔ (System Admin; chưa có role EdTech riêng) |
+| `platform.*` | `platform.catalog.write` (danh mục quốc gia/tỉnh/kế thừa tỉnh, import trường — ADR-0060), `platform.role.read`, `platform.role.write` (role platform và role dùng chung), `platform.user_role.write` (gán/thu hồi UserRole platform và UserRole tenant ở tenant đích), `platform.cross_tenant.read`, `platform.tenant.manage`, `platform.tenant_data.assign`, `platform.tenant_data.clone`, `platform.trash.read`, `platform.trash.restore`, `platform.user.manage`, `platform.user.merge` (duyệt gộp hai tài khoản của cùng một người — F045, [Confirmed]), `platform.feature_flag.write`, `platform.sis_connection.manage`, `platform.break_glass.request`, `platform.break_glass.approve` (truy cập nội dung ngoài phạm vi case, phê duyệt hai người — [MODERATION §6.1](../03-social-multiplayer/MODERATION.md)) | **✘ (cấm)** | ✔ (chủ yếu System Admin) |
+| `platform.*` (nghiên cứu hiệu quả — [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | `platform.efficacy_study.manage` (thỏa thuận nghiên cứu, study, lớp/cặp, đợt kiểm tra, rút khỏi nghiên cứu, báo cáo hiệu quả — `/admin/learning/research-agreements*`, `/admin/learning/efficacy-studies*`), `platform.efficacy_study.export` (xuất bộ dữ liệu định danh giả `report_type = efficacy_dataset`, cùng `report.export`), `platform.learning_experiment.manage` (thử nghiệm A/B cấu hình mastery và luật gợi ý — `/admin/learning/experiments*`) [Confirmed] | **✘ (cấm)** | ✔ (System Admin; chưa có role EdTech riêng) |
 | `audit.*` · `data_request` · `social.*` | `tenant.audit.read` (nhật ký audit của tenant), `platform.audit.read` (audit mọi tenant), `platform.data_request.write` (tiếp nhận/xử lý yêu cầu về dữ liệu cá nhân), `social.club.approve` (duyệt club do học sinh tạo, chính sách `student_club_creation`) | ✔ `tenant.audit.read` (Tenant Admin, School Admin trong trường), `social.club.approve` (School Admin); ✘ `platform.*` | ✔ (System Admin) |
 
 Chat policy cấp tenant/trường (`tenant.settings.write`, `school.settings.write`) là **cài đặt an toàn** theo ADR-0020, không phải cấu hình game. Cấp dưới chỉ siết chặt hơn mặc định platform.
@@ -396,7 +396,7 @@ Không có role `platform_admin`/`trust_safety` riêng: quản trị tenant do `
 | School Learning Dashboard, báo cáo/analytics | tenant (tổng hợp) | trường | scope | ✘ | mọi tenant (lọc) | ✘ | ✘ | ✘ | ✘ |
 | Cài đặt tenant / trường (gồm khung giờ truy cập, chat policy trường), SIS import | ✔ / ✔ | – / ✔ | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ | ✘ |
 | Gán/thu hồi UserRole trong tenant | ✔ | trong trường | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ | ✘ |
-| Tạo/sửa role tùy biến của tenant [Proposed] | ✔ | ✘ | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ | ✘ |
+| Tạo/sửa role tùy biến của tenant [Confirmed] | ✔ | ✘ | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ | ✘ |
 | Tạo/sửa role platform, gán UserRole platform | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ | ✘ |
 | Moderation case, sanction, đọc tin nhắn trong case | ✘ | ✘ | ✘ | ✘ | ✔ mọi tenant (audit) | ✘ | ✔ liên tenant, chỉ module moderation (audit) | ✘ | ✘ |
 | Thông báo vụ việc an toàn: xem tóm tắt, xác nhận đã liên hệ phụ huynh | ✔ (tenant) | ✔ (trường mình) | ✘ | ✘ | ✔ | ✘ | gửi, theo dõi | ✘ | ✘ |
@@ -437,7 +437,7 @@ Nguyên tắc bổ sung:
 
 ### 2.6. Tenant chung (`common`)
 
-Tenant chung chứa học sinh không thuộc tenant nào (ADR-0026). Không có vận hành tenant riêng mặc định: System Admin quản trị (giao nội dung đã gán), Platform Safety Team kiểm duyệt chat như mọi tenant. Có thể chỉ định `tenant_admin` cho tenant chung nếu đội vận hành EduWorld cần [Proposed].
+Tenant chung chứa học sinh không thuộc tenant nào (ADR-0026). Không có vận hành tenant riêng mặc định: System Admin quản trị (giao nội dung đã gán), Platform Safety Team kiểm duyệt chat như mọi tenant. Có thể chỉ định `tenant_admin` cho tenant chung nếu đội vận hành EduWorld cần [Confirmed].
 
 ### 2.7. Danh mục menu/action và bật/tắt (ADR-0090)
 
@@ -484,9 +484,9 @@ Quản lý chương trình, khối lớp, môn, chủ đề (cây kéo-thả), L
 
 | Màn hình | Chức năng |
 |---|---|
-| Lesson editor | Khối nội dung (CONTENT_MODEL §9, gồm khối `worked_example` — ví dụ mẫu từng bước [Proposed]), chèn activity, gắn LO |
+| Lesson editor | Khối nội dung (CONTENT_MODEL §9, gồm khối `worked_example` — ví dụ mẫu từng bước [Confirmed]), chèn activity, gắn LO |
 | Learning Material / Media library | Upload, trạng thái pipeline, license, tìm kiếm, "đang dùng ở đâu" |
-| Question editor | 11 dạng (form theo dạng), preview như học sinh thấy, kiểm tra hợp lệ (mỗi option có id, key khớp), tham số hóa, `misconception_tag` và **phản hồi theo phương án sai** (`options[].feedback`, song ngữ; chỉ trả cho học sinh trong kết quả chấm) cho option sai; **gợi ý nhiều cấp** `hints[]` (PED-04, [QUESTION_BANK](../02-learning/QUESTION_BANK.md)); với khối lớp 1–3: tải **lồng tiếng** đề bài (thiếu → cảnh báo chặn publish, PED-07) [Proposed]; công thức nhập bằng MathLive, hiển thị bằng MathJax 4 (phương án lựa chọn có thể là công thức). Học sinh không gõ biểu thức trong game: câu hỏi có công thức dùng dạng chọn đáp án, đúng/sai, nhập số (numeric + dung sai), điền số/từ, ghép cặp, sắp xếp, kéo thả (ADR-0055 mục 6); editor cảnh báo nếu chọn dạng đòi học sinh nhập công thức |
+| Question editor | 11 dạng (form theo dạng), preview như học sinh thấy, kiểm tra hợp lệ (mỗi option có id, key khớp), tham số hóa, `misconception_tag` và **phản hồi theo phương án sai** (`options[].feedback`, song ngữ; chỉ trả cho học sinh trong kết quả chấm) cho option sai; **gợi ý nhiều cấp** `hints[]` (PED-04, [QUESTION_BANK](../02-learning/QUESTION_BANK.md)); với khối lớp 1–3: tải **lồng tiếng** đề bài (thiếu → cảnh báo chặn publish, PED-07) [Confirmed]; công thức nhập bằng MathLive, hiển thị bằng MathJax 4 (phương án lựa chọn có thể là công thức). Học sinh không gõ biểu thức trong game: câu hỏi có công thức dùng dạng chọn đáp án, đúng/sai, nhập số (numeric + dung sai), điền số/từ, ghép cặp, sắp xếp, kéo thả (ADR-0055 mục 6); editor cảnh báo nếu chọn dạng đòi học sinh nhập công thức |
 | Question Bank browser | Lọc theo curriculum/grade/subject/topic/LO/difficulty/type/status/nguồn (của tenant / được gán từ platform); thống kê item analysis |
 | Question Set editor | Static hoặc selection rules; hiển thị kích thước pool hiện tại |
 | Assessment Blueprint editor | Ma trận LO × độ khó, kiểm tra tổng điểm, pool đủ, xem trước đề sinh mẫu |
@@ -510,7 +510,7 @@ Người dùng tenant thấy: dữ liệu `tenant_id` = tenant của mình **c�
 | Thư viện GIF | Upload GIF (≤ 2 MB, ≤ 480 px, tự sinh preview tĩnh), gắn tag vi/en, duyệt (bắt buộc người duyệt khác người upload), publish/archive | `game.chat_assets.write` | ADR-0034; chỉ GIF nội bộ, không dịch vụ bên thứ ba |
 | Game Activity | Liên kết activity học tập ↔ vị trí trong thế giới (bảng, cổng, NPC) | `game.world.write` | |
 
-Game content là dữ liệu platform (`tenant_id = NULL`). Quest/mini-game muốn cho tenant giao bài thì System Admin **gán** cho tenant (ADR-0029); có tùy chọn "gán cho mọi tenant hiện tại và tenant mới" [Proposed]. Game content chỉ tham chiếu `area_id`/`npc_id`/`scene_ref` có trong **manifest** của bản build Godot hiện hành (`game.client_manifests`). API: `/api/v1/game-admin/*` ([API_DESIGN §9.13b](../07-backend/API_DESIGN.md)).
+Game content là dữ liệu platform (`tenant_id = NULL`). Quest/mini-game muốn cho tenant giao bài thì System Admin **gán** cho tenant (ADR-0029); có tùy chọn "gán cho mọi tenant hiện tại và tenant mới" [Confirmed]. Game content chỉ tham chiếu `area_id`/`npc_id`/`scene_ref` có trong **manifest** của bản build Godot hiện hành (`game.client_manifests`). API: `/api/v1/game-admin/*` ([API_DESIGN §9.13b](../07-backend/API_DESIGN.md)).
 
 ### 3.4. Competition Management (§8.4) — **workspace A, platform-only (ADR-0027)**
 
@@ -539,7 +539,7 @@ Tenant chỉ **chọn** quest/mini-game đã publish và được gán (ADR-0029
 | Bước | Màn hình | API |
 |---|---|---|
 | Chọn dữ liệu platform (curriculum, lesson, question/question set, blueprint, template thử thách/giải, quest/mini-game, item sự kiện) | Danh sách dữ liệu platform → nút "Gán cho tenant" | — |
-| Chọn tenant (dropdown tìm kiếm, chọn nhiều) hoặc "Mọi tenant hiện tại và tenant mới" [Proposed] | Hộp thoại gán | `POST /api/v1/admin/tenant-assignments` |
+| Chọn tenant (dropdown tìm kiếm, chọn nhiều) hoặc "Mọi tenant hiện tại và tenant mới" [Confirmed] | Hộp thoại gán | `POST /api/v1/admin/tenant-assignments` |
 | Xem tenant đang được gán | Tab "Tenant được gán" của bản ghi | `GET /api/v1/admin/tenant-assignments?resource_type=&resource_id=` |
 | Gỡ gán | Chọn tenant → gỡ (soft-delete assignment); lịch sử học tập giữ nguyên | `DELETE /api/v1/admin/tenant-assignments` |
 
@@ -569,7 +569,7 @@ Permission `platform.tenant_data.clone`. **Không bao giờ** clone dữ liệu 
 | Tenant Admin (`tenant.trash.read`, `tenant.trash.restore`; School Admin và role tenant khác không có Thùng rác) | Tenant của mình | `GET /api/v1/tenant/trash?resource_type=` · `POST /api/v1/tenant/trash/{resource_type}/{id}:restore` |
 
 - Khôi phục kiểm tra unique (vd. mã câu hỏi đã có bản ghi mới cùng mã → `409`), khôi phục theo quan hệ theo quy tắc aggregate ([DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md)). Mọi thao tác xem/khôi phục ghi audit.
-- Khôi phục bắt buộc lý do (body `{reason}` 3–1000 ký tự, F045); System Admin gửi `X-Tenant-Id` = tenant của bản ghi (vắng với dữ liệu platform). Loại `user` (tài khoản đã gộp) chỉ xem, không khôi phục (`409`); loại `student` (học sinh bị dọn) khôi phục qua saga của F016 [Proposed].
+- Khôi phục bắt buộc lý do (body `{reason}` 3–1000 ký tự, F045); System Admin gửi `X-Tenant-Id` = tenant của bản ghi (vắng với dữ liệu platform). Loại `user` (tài khoản đã gộp) chỉ xem, không khôi phục (`409`); loại `student` (học sinh bị dọn) khôi phục qua saga của F016 [Confirmed].
 - Không có nút "Xóa vĩnh viễn" trong ứng dụng.
 
 ### 3.9. An toàn chat: danh mục từ nhạy cảm, công tắc kiểm duyệt và thông báo vụ việc
@@ -578,7 +578,7 @@ Chi tiết nghiệp vụ: [MODERATION §11–§12](../03-social-multiplayer/MODE
 
 | Màn hình | Workspace | Người dùng | Chức năng |
 |---|---|---|---|
-| **Danh mục từ nhạy cảm** | D → An toàn chat | System Admin (`chat.sensitive_terms.write`) | CRUD category (code, severity, action mặc định, `enabled`, `allow_tenant_toggle`), term (match_type, locale, biến thể, override), allowlist; xóa = soft-delete; **thử chuỗi** (nhập câu → category/action sẽ áp); xem kết quả test hồi quy; gửi duyệt (four-eyes [Proposed]) và publish → `catalog_version` mới; lịch sử version |
+| **Danh mục từ nhạy cảm** | D → An toàn chat | System Admin (`chat.sensitive_terms.write`) | CRUD category (code, severity, action mặc định, `enabled`, `allow_tenant_toggle`), term (match_type, locale, biến thể, override), allowlist; xóa = soft-delete; **thử chuỗi** (nhập câu → category/action sẽ áp); xem kết quả test hồi quy; gửi duyệt (four-eyes [Confirmed]) và publish → `catalog_version` mới; lịch sử version |
 | **Công tắc kiểm duyệt** | D → An toàn chat | System Admin (`chat.policy.toggle`) | Bảng theo tenant với **dropdown tenant** (mặc định "Tất cả", chọn nhiều) + dòng "Platform"; mỗi dòng có công tắc tổng `enabled_all` và 5 công tắc bước (`sensitive_terms`, `pii`, `spam`, `bullying`, `async_analysis`); khi tắt bắt buộc nhập **lý do**, tùy chọn **thời hạn tự bật lại**; hộp thoại xác nhận nêu rõ rủi ro với học sinh 6–15 tuổi; lịch sử thay đổi (audit) |
 | **Hàng đợi case** | E → Kiểm duyệt | Safety Moderator, System Admin (`moderation.case.*`) | Danh sách case mọi tenant (dropdown tenant, mức p1–p3, loại, SLA, trạng thái); mở case → bằng chứng và tin nhắn liên quan case (`moderation.case.messages.read`, qua `tenancy.Bypass(ctx, "moderation_case")`, mỗi lần mở ghi audit — §2.5b); ẩn tin, áp sanction (`moderation.sanction.*`: tắt tiếng, hạn chế, khóa chat có thời hạn), chuyển cấp, đóng case có lý do. Không có ô tìm kiếm chat tự do ngoài case |
 | **Thông báo nhà trường** | E → Kiểm duyệt (gửi) · C → An toàn (nhận, §1.5.2) | Safety Moderator gửi (`moderation.school_notification.send`); School Admin, Tenant Admin nhận (`moderation.school_notification.read`, `.acknowledge`) | Với vụ việc nghiêm trọng liên quan học sinh của trường: Safety Team ghi **tóm tắt** (không có nội dung chat thô, không có thông tin học sinh khác ngoài trường) → trường nhận thông báo, ghi chú liên hệ và **xác nhận đã liên hệ phụ huynh**; case lưu thời điểm yêu cầu và thời điểm trường xác nhận |
@@ -597,7 +597,7 @@ Chi tiết nghiệp vụ: [MODERATION §11–§12](../03-social-multiplayer/MODE
 |---|---|---|---|
 | **Hoạt động đăng nhập** (trong hồ sơ học sinh và danh sách lớp) | C (một tenant; System Admin có dropdown tenant) | TA, SA, Academic Manager (scope); System Admin | Lần đăng nhập game gần nhất, số ngày chưa vào game, lịch sử phiên (thời điểm vào/ra, nền tảng, thiết bị rút gọn, lý do kết thúc như "đăng nhập thiết bị khác"). Không hiển thị IP. Lọc "chưa vào game ≥ N ngày" |
 | **Học sinh sắp bị dọn** | C → Cài đặt tenant | TA, SA (`tenant.student_cleanup.read/exclude`) | Danh sách từ `GET /tenant/student-cleanup/preview` (ngày dự kiến dọn, lần đăng nhập cuối); chọn nhiều → **Loại trừ** / **Gia hạn đến ngày** (bắt buộc lý do); xem lịch sử các lần dọn của tenant |
-| **Cài đặt dọn học sinh** | C → Cài đặt tenant (khi platform cho phép ghi đè) · D → Cấu hình hệ thống | TA (`tenant.student_cleanup.configure`) · System Admin (`platform.settings.write`) | Số ngày không đăng nhập (`0` = tắt), số ngày báo trước, ngưỡng % cần xác nhận (platform). Lưu bắt buộc lý do, audit. Cảnh báo khi đặt < 60 ngày (dễ dọn nhầm qua kỳ nghỉ hè) [Proposed] |
+| **Cài đặt dọn học sinh** | C → Cài đặt tenant (khi platform cho phép ghi đè) · D → Cấu hình hệ thống | TA (`tenant.student_cleanup.configure`) · System Admin (`platform.settings.write`) | Số ngày không đăng nhập (`0` = tắt), số ngày báo trước, ngưỡng % cần xác nhận (platform). Lưu bắt buộc lý do, audit. Cảnh báo khi đặt < 60 ngày (dễ dọn nhầm qua kỳ nghỉ hè) [Confirmed] |
 | **Lần dọn chờ xác nhận** | D → Cấu hình hệ thống | System Admin (`platform.student_cleanup.approve`) | Lần chạy vượt 10% học sinh của tenant ở trạng thái `awaiting_approval`; xem mẫu danh sách, **Xác nhận** hoặc **Hủy** |
 | **Thời hạn lưu chat gameplay** | D → An toàn chat · C → Cài đặt tenant (khi được phép) | System Admin · TA (`tenant.chat_retention.configure`) | `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3 — nhập < 3 bị chặn `RETENTION_BELOW_MINIMUM`), `ephemeral_retention_hours` (24, chỉ platform); hiển thị thống kê purge gần nhất (số channel/tin, không nội dung) |
 
@@ -611,7 +611,7 @@ Chi tiết nghiệp vụ: [MODERATION §11–§12](../03-social-multiplayer/MODE
 |---|---|---|
 | **Thanh trạng thái item** (đầu mọi trang soạn) | Badge: `Bản nháp` / `Đang duyệt` / `Đã duyệt` / `Đã xuất bản v{n}` / `Có bản nháp mới (v{n+1}) chưa xuất bản` / `Đã gỡ xuất bản`; hiển thị version học sinh đang nhận (con trỏ) và số lượt chơi/học còn đang ghim version cũ | `*.read` |
 | **Soạn bản nháp** | "Tạo bản nháp từ v{n}" khi item đã publish; autosave, `If-Match`; ghi `change_note` (≤ 500 ký tự) | `*.write` |
-| **Xuất bản** | Nút "Xuất bản ngay" hoặc "Hẹn giờ" (`publish_at`, giờ ICT, ≥ 5 phút tới) [Proposed]; hộp thoại tóm tắt thay đổi (diff với version đang xuất bản), cảnh báo nếu media chưa `ready`; tiến trình "Đang chuẩn bị cache → Đã xuất bản"; huỷ hẹn giờ trước giờ chạy | `*.publish` |
+| **Xuất bản** | Nút "Xuất bản ngay" hoặc "Hẹn giờ" (`publish_at`, giờ ICT, ≥ 5 phút tới) [Confirmed]; hộp thoại tóm tắt thay đổi (diff với version đang xuất bản), cảnh báo nếu media chưa `ready`; tiến trình "Đang chuẩn bị cache → Đã xuất bản"; huỷ hẹn giờ trước giờ chạy | `*.publish` |
 | **Lịch sử phiên bản** | Bảng mọi version: số, trạng thái, tác giả, người duyệt, người xuất bản, thời gian, `change_note`; dòng thời gian release (publish/rollback/unpublish, người làm, lý do); lọc theo trạng thái | `*.read` |
 | **Xem version** | Mở nội dung một version ở chế độ **chỉ đọc** (kể cả version cũ đã publish, version archived) | `*.read` |
 | **So sánh** | Chọn 2 version → diff theo field/khối (text, đáp án, media thay đổi, metadata). Reviewer thấy diff mặc định với version đang xuất bản | `*.read`; xem diff `answer_key` cần `*.review` |
@@ -629,10 +629,10 @@ Nghiệp vụ chi tiết nằm trong tài liệu product; CMS chỉ đặc tả 
 | Builder | Nguồn nghiệp vụ | Thành phần chính | Validation đặc thù | Permission |
 |---|---|---|---|---|
 | **Level & XP Configuration** | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) | Bảng ngưỡng level (sinh từ công thức đường cong + chỉnh tay), biểu đồ đường cong XP, danh hiệu theo mốc level, phần thưởng lên cấp, bảng nguồn XP + cap ngày/tuần, mô phỏng "học sinh chơi N phút/ngày đạt level nào sau 4 tuần" | Ngưỡng tăng đơn điệu; cap > 0; thay đổi chỉ áp dụng từ `effective_from`, không thu hồi XP đã cấp | `game.progression.write` |
-| **Challenge Builder** | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) | Chọn loại thử thách, độ khó (Easy → Legendary), điều kiện theo khối/môn/LO, activity tham chiếu (Activity Registry), thời gian, luật thắng/thua, phần thưởng, lịch | Activity tham chiếu đã publish; độ khó phù hợp khối; không có cơ chế phạt gây xấu hổ | `game.challenge.write` [Proposed] |
-| **Boss Management** | CHALLENGE_BOSS_SYSTEM | Hồ sơ boss (model 3D qua thumbnail/turntable), các phase kéo-thả (mỗi phase: loại yêu cầu, activity, ngưỡng tiến độ, giới hạn thời gian), đóng góp cá nhân/đội, retry, phần thưởng; preview Godot | Mỗi phase có điều kiện kết thúc; tổng thời gian ≤ giới hạn cấu hình; phase dùng activity hợp khối | `game.boss.write` [Proposed] |
-| **Achievement Builder** | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) | Định nghĩa, trigger (event), điều kiện, tiến độ, phần thưởng, hiển thị (ẩn/hiện), version | Trigger là event có trong [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md); điều kiện không dựa vào điểm học tập chính thức | `game.achievement.write` [Proposed] |
-| **Item / Inventory Catalog / Shop / Currency** | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md), ADR-0049 | Danh mục item (loại, độ hiếm, slot, thumbnail), nguồn nhận, giá trong Shop (chỉ tiền trong game), giới hạn mua, lịch bán; cấu hình tiền tệ; tra cứu sổ cái và **bút toán bù** có duyệt | Không có giá bằng tiền thật; không vật phẩm ngẫu nhiên trả phí; bút toán bù cần người duyệt khác người tạo | `game.item.write` (item), `game.shop.write` (Shop), `game.collection.write` (bộ sưu tập), `game.economy.write` (tiền tệ), `game.economy.adjust` (bút toán bù) [Proposed] |
+| **Challenge Builder** | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) | Chọn loại thử thách, độ khó (Easy → Legendary), điều kiện theo khối/môn/LO, activity tham chiếu (Activity Registry), thời gian, luật thắng/thua, phần thưởng, lịch | Activity tham chiếu đã publish; độ khó phù hợp khối; không có cơ chế phạt gây xấu hổ | `game.challenge.write` [Confirmed] |
+| **Boss Management** | CHALLENGE_BOSS_SYSTEM | Hồ sơ boss (model 3D qua thumbnail/turntable), các phase kéo-thả (mỗi phase: loại yêu cầu, activity, ngưỡng tiến độ, giới hạn thời gian), đóng góp cá nhân/đội, retry, phần thưởng; preview Godot | Mỗi phase có điều kiện kết thúc; tổng thời gian ≤ giới hạn cấu hình; phase dùng activity hợp khối | `game.boss.write` [Confirmed] |
+| **Achievement Builder** | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) | Định nghĩa, trigger (event), điều kiện, tiến độ, phần thưởng, hiển thị (ẩn/hiện), version | Trigger là event có trong [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md); điều kiện không dựa vào điểm học tập chính thức | `game.achievement.write` [Confirmed] |
+| **Item / Inventory Catalog / Shop / Currency** | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md), ADR-0049 | Danh mục item (loại, độ hiếm, slot, thumbnail), nguồn nhận, giá trong Shop (chỉ tiền trong game), giới hạn mua, lịch bán; cấu hình tiền tệ; tra cứu sổ cái và **bút toán bù** có duyệt | Không có giá bằng tiền thật; không vật phẩm ngẫu nhiên trả phí; bút toán bù cần người duyệt khác người tạo | `game.item.write` (item), `game.shop.write` (Shop), `game.collection.write` (bộ sưu tập), `game.economy.write` (tiền tệ), `game.economy.adjust` (bút toán bù) [Confirmed] |
 
 ### 3.13. Builder mới của Learning Content Studio (workspace B)
 
@@ -640,8 +640,8 @@ Chỉ có builder cho hoạt động **server tự chấm** (ADR-0072). Tự lu�
 
 | Builder / màn | Nguồn nghiệp vụ | Thành phần chính | Validation đặc thù | Permission |
 |---|---|---|---|---|
-| **Learning Activity Builder** | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), ADR-0048 | Bước 1 chọn `activity_type` từ Activity Registry (chỉ loại trong Release: `quiz`, `interactive_exercise`, `minigame`, `video_lesson`, `audio_lesson`, `simulation`); bước 2 form sinh từ `ConfigSchema` của loại đó; metadata (khối, môn, chủ đề, LO, độ khó, thời gian, chấm điểm, FeedbackTiming, reward); preview bằng renderer tương ứng | Theo schema của loại; loại chưa có renderer trên client hiện hành → cảnh báo không cho publish; loại ngoài Release không xuất hiện trong danh sách (API trả `422`); khối lớp 1–3 thiếu lồng tiếng đề bài/hướng dẫn → chặn publish (PED-07) [Proposed] | `learning_content.activity.write`; duyệt `learning_content.activity.review` |
-| **Video Manager** | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) | Upload (media pipeline ADR-0044), chương (chapter), phụ đề (VTT), câu hỏi chèn theo mốc thời gian, điều kiện hoàn thành | Phụ đề tiếng Việt bắt buộc với video có lời [Proposed]; mốc câu hỏi nằm trong thời lượng | `learning_content.activity.write`, `media.upload` |
+| **Learning Activity Builder** | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), ADR-0048 | Bước 1 chọn `activity_type` từ Activity Registry (chỉ loại trong Release: `quiz`, `interactive_exercise`, `minigame`, `video_lesson`, `audio_lesson`, `simulation`); bước 2 form sinh từ `ConfigSchema` của loại đó; metadata (khối, môn, chủ đề, LO, độ khó, thời gian, chấm điểm, FeedbackTiming, reward); preview bằng renderer tương ứng | Theo schema của loại; loại chưa có renderer trên client hiện hành → cảnh báo không cho publish; loại ngoài Release không xuất hiện trong danh sách (API trả `422`); khối lớp 1–3 thiếu lồng tiếng đề bài/hướng dẫn → chặn publish (PED-07) [Confirmed] | `learning_content.activity.write`; duyệt `learning_content.activity.review` |
+| **Video Manager** | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) | Upload (media pipeline ADR-0044), chương (chapter), phụ đề (VTT), câu hỏi chèn theo mốc thời gian, điều kiện hoàn thành | Phụ đề tiếng Việt bắt buộc với video có lời [Confirmed]; mốc câu hỏi nằm trong thời lượng | `learning_content.activity.write`, `media.upload` |
 | **Audio Manager** | [AUDIO_LANGUAGE_LEARNING](../02-learning/AUDIO_LANGUAGE_LEARNING.md) | Bài nghe (audio, transcript, câu hỏi nghe hiểu tự chấm); lồng tiếng đề bài cho khối lớp 1–3. Bài nói ngoài version này (ADR-0082) | Bản nháp được thiếu transcript; publish bài nghe bắt buộc có transcript ([AUDIO_LANGUAGE_LEARNING §2](../02-learning/AUDIO_LANGUAGE_LEARNING.md)) | `learning_content.activity.write`, `media.upload` |
 | **Simulation Configuration** | [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md), ADR-0052 | Chọn mô phỏng có sẵn trong client (theo manifest), nhập tham số, mục tiêu, câu hỏi gắn kèm; preview Godot | Tham số trong khoảng mô phỏng cho phép; không nạp script | `learning_content.activity.write` |
 | **Chấm lại hệ thống** (từ trang version nội dung) | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), [EXAM_ENGINE §9](../02-learning/EXAM_ENGINE.md#9-chấm-lại-regrade) | Khi phát hiện đáp án/câu lỗi: chọn version lỗi, xem số attempt bị ảnh hưởng, nhập lý do → hệ thống re-evaluate, phát `attempt.re_evaluated` | Lý do bắt buộc; không sửa evaluation cũ (superseded); audit | `learning_content.re_evaluate` (Content Admin, Academic Manager). Chấm lại một **đề thi** (`scope = exam_session`) mở từ trang kết quả đề ở workspace C ([SCHOOL_LMS §4.5](SCHOOL_LMS.md#45-công-bố-kết-quả-và-chấm-lại)) |
@@ -683,13 +683,13 @@ Nghiệp vụ: [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md). 
 
 | Màn | Workspace | Thành phần chính | Validation / quy tắc | Permission |
 |---|---|---|---|---|
-| **Danh sách sự kiện** | A | ProTable: tên (vi/en), loại, trạng thái chạy (Scheduled/Live/Suspended/Ended/Cancelled/Archived), lịch, đối tượng, phiên bản; lọc theo loại/trạng thái/khoảng ngày/tenant | — | `game.event.write` (xem/sửa), `game.liveops.read` (xem) [Proposed] |
+| **Danh sách sự kiện** | A | ProTable: tên (vi/en), loại, trạng thái chạy (Scheduled/Live/Suspended/Ended/Cancelled/Archived), lịch, đối tượng, phiên bản; lọc theo loại/trạng thái/khoảng ngày/tenant | — | `game.event.write` (xem/sửa), `game.liveops.read` (xem) [Confirmed] |
 | **Lịch sự kiện** | A | Calendar tháng/tuần (ICT), mỗi sự kiện một thanh màu theo loại; cảnh báo chồng chéo (2 sự kiện trang trí cùng vùng, quá nhiều sự kiện cùng khối) | Một vùng tối đa một bộ trang trí cùng lúc | `game.liveops.read` |
 | **Event Builder (wizard)** | A | Dùng `ContentEditorShell` (§1.4), 8 bước: ① Thông tin song ngữ (tên, mô tả, tagline vi/en, theme, banner) → ② Đối tượng (phạm vi, tenant/trường/lớp, khối, môn; số học sinh ước tính) → ③ Nội dung tham chiếu (chọn quest/challenge/boss/shop item/collection đã publish; community goal: metric, phạm vi, mục tiêu, mốc, trần/ngày) → ④ Phần thưởng (tham gia, mốc điểm sự kiện, mốc community goal; chọn từ catalog) → ⑤ Lịch (bắt đầu/kết thúc ICT, cửa sổ ngày trong tuần, thời gian nhận thưởng) → ⑥ Preview (Event Center và trang trí trong Godot Web; chọn preset Thấp/Trung bình) → ⑦ Gửi duyệt → ⑧ Lên lịch (publish) | Thiếu bản `en` của sự kiện platform → chặn publish (`TRANSLATION_INCOMPLETE`); nội dung tham chiếu phải đã publish; phần thưởng không có tiền thật; lễ hội ≥ 7 ngày; cảnh báo nếu mốc thưởng cần > 3 phiên/tuần; gói trang trí vượt ngân sách mobile → chặn | `game.event.write`; duyệt `game.content.review`; publish `game.content.publish` |
-| **Giám sát sự kiện đang chạy** | E | Trạng thái run, số học sinh tham gia, tiến độ community goal theo phạm vi, tỷ lệ nhận thưởng, lỗi; nút **Tạm dừng khẩn cấp / Tiếp tục / Hủy** (bắt buộc nhập lý do, xác nhận 2 bước) | Dừng khẩn cấp không cắt lượt chơi đang dở; mọi thao tác ghi audit | `game.event.operate` [Proposed] |
-| **Season Track** | A | Chọn mùa (từ lịch mùa §3.4), bảng 30 cấp × phần thưởng, nguồn điểm mùa + trần/ngày, mô phỏng "chơi N ngày/tuần đạt cấp nào", preview màn Season Track | `paid_track` luôn tắt; thưởng chưa nhận tự cấp khi hết mùa; không phần thưởng ảnh hưởng học tập | `game.season_track.write` [Proposed] |
+| **Giám sát sự kiện đang chạy** | E | Trạng thái run, số học sinh tham gia, tiến độ community goal theo phạm vi, tỷ lệ nhận thưởng, lỗi; nút **Tạm dừng khẩn cấp / Tiếp tục / Hủy** (bắt buộc nhập lý do, xác nhận 2 bước) | Dừng khẩn cấp không cắt lượt chơi đang dở; mọi thao tác ghi audit | `game.event.operate` [Confirmed] |
+| **Season Track** | A | Chọn mùa (từ lịch mùa §3.4), bảng 30 cấp × phần thưởng, nguồn điểm mùa + trần/ngày, mô phỏng "chơi N ngày/tuần đạt cấp nào", preview màn Season Track | `paid_track` luôn tắt; thưởng chưa nhận tự cấp khi hết mùa; không phần thưởng ảnh hưởng học tập | `game.season_track.write` [Confirmed] |
 | **Template sự kiện cho tenant** | A | Template + `allowed_params` (tên, ngày ≤ 28 ngày, đối tượng trong tenant, mục tiêu community goal, danh sách quest/challenge/phần thưởng được chọn); gán tenant (§3.7) | Chỉ tham chiếu nội dung platform đã publish | `game.event.write` |
-| **Sự kiện của trường** | C | Danh sách sự kiện trường; tạo từ template đã gán (form chỉ hiện tham số cho phép); xem tiến độ community goal theo lớp (`getSchoolEventProgress`, module game, chỉ số tổng hợp theo lớp, không có danh sách học sinh); hủy | Tham số ngoài template → `422`; tên qua kiểm tra từ nhạy cảm; tối đa 3 sự kiện chạy đồng thời/tenant | `lms.school_event.write` (Tenant Admin, School Admin) [Proposed] |
+| **Sự kiện của trường** | C | Danh sách sự kiện trường; tạo từ template đã gán (form chỉ hiện tham số cho phép); xem tiến độ community goal theo lớp (`getSchoolEventProgress`, module game, chỉ số tổng hợp theo lớp, không có danh sách học sinh); hủy | Tham số ngoài template → `422`; tên qua kiểm tra từ nhạy cảm; tối đa 3 sự kiện chạy đồng thời/tenant | `lms.school_event.write` (Tenant Admin, School Admin) [Confirmed] |
 
 - Song ngữ: form có hai cột vi/en cạnh nhau, chỉ báo độ đầy đủ bản dịch.
 - Responsive: Event Builder và Season Track chỉ trên desktop/tablet ngang; điện thoại xem danh sách, lịch, giám sát và dừng khẩn cấp.
@@ -719,7 +719,7 @@ Permission: `platform.catalog.write` (platform-only), `tenant.school.write`, `te
 
 Ba màn trong workspace C (Tenant Admin; School Admin giới hạn trường mình) và workspace D (System Admin, mọi tenant + platform). API: [API_DESIGN §9.16](../07-backend/API_DESIGN.md#916-admin-internal--apiv1admin) (**spec: chưa**).
 
-**a) Role** — danh sách role dùng được trong tenant: role hệ thống (`is_system`, nhãn "Hệ thống", chỉ xem) và role tùy biến của tenant [Proposed].
+**a) Role** — danh sách role dùng được trong tenant: role hệ thống (`is_system`, nhãn "Hệ thống", chỉ xem) và role tùy biến của tenant [Confirmed].
 
 ```text
 ┌ Role ───────────────────────────────────────────────────────── [+ Tạo role] ┐
@@ -774,7 +774,7 @@ Hộp gán role: Role [▾ chỉ role người gán được phép cấp] · Ph�
               · Từ ngày [..] Đến ngày [..] (tùy chọn) · Lý do* · [Gán]
 ```
 
-- Không gán role platform trong tenant, không gán role platform cho nhân sự có tenant gốc hay role tenant cho nhân sự platform (ADR-0081); không gán role portal cho học sinh (`422`). School Admin chỉ gán trong trường mình và chỉ role không vượt quyền của chính mình [Proposed].
+- Không gán role platform trong tenant, không gán role platform cho nhân sự có tenant gốc hay role tenant cho nhân sự platform (ADR-0081); không gán role portal cho học sinh (`422`). School Admin chỉ gán trong trường mình và chỉ role không vượt quyền của chính mình [Confirmed].
 - Mọi UserRole portal là thủ công; không có UserRole sinh từ SIS (ADR-0072).
 - Mọi gán/thu hồi phát `user_role.changed`, ghi audit; người được gán thấy menu mới trong ≤ 60 s. **Nhật ký phân quyền** liệt kê `role.*`/`user_role.*` (ai, khi nào, trước/sau, lý do).
 
@@ -849,7 +849,7 @@ sequenceDiagram
 |---|---|---|
 | Question / Question Set | Renderer web dùng chung component với LMS + chế độ "thử làm" (chấm bằng API preview, không lưu attempt; hiện gợi ý từng cấp và phản hồi theo phương án như học sinh thấy) | B |
 | Lesson | Renderer web | B |
-| Mini-game / Quest / NPC dialogue / Challenge / Boss (draft) | Godot Web export nhúng nạp cấu hình draft qua token preview ngắn hạn (Phase 3) [Proposed] | A |
+| Mini-game / Quest / NPC dialogue / Challenge / Boss (draft) | Godot Web export nhúng nạp cấu hình draft qua token preview ngắn hạn (Phase 3) [Confirmed] | A |
 | Quest/mini-game đã publish và được gán (để nhà trường xem trước khi giao) | Mô tả, LO, ảnh/video minh họa; chạy thử bản published | C (chỉ đọc) |
 | Assessment Blueprint | Sinh 1 đề mẫu (không lưu ExamPaper) | B |
 
@@ -880,7 +880,7 @@ Mọi thao tác ghi `audit.audit_logs`:
 | `reason` | Bắt buộc với reject/archive/rollback/delete nội dung đã publish/restore |
 | `ip_hash`, `user_agent`, `trace_id`, `at` | |
 
-Mọi lần bị từ chối vì thiếu permission ở `/game-admin/*`, `/admin/*` hoặc gọi thiếu MFA / không phải client `eduworld-portal` ghi `authz.denied` và cảnh báo bảo mật nếu lặp lại (≥ 5 lần/10 phút [Proposed]).
+Mọi lần bị từ chối vì thiếu permission ở `/game-admin/*`, `/admin/*` hoặc gọi thiếu MFA / không phải client `eduworld-portal` ghi `authz.denied` và cảnh báo bảo mật nếu lặp lại (≥ 5 lần/10 phút [Confirmed]).
 
 ## 8. API (tóm tắt)
 
@@ -891,8 +891,8 @@ Mọi lần bị từ chối vì thiếu permission ở `/game-admin/*`, `/admin
 | Phát hành (ADR-0043) | `/api/v1/cms/learning/content/{type}/{id}/` (tương tự `/api/v1/game-admin/{config_type}/{id}/`) | như trên | `versions`, `versions/{v}`, `versions/{v}:diff?with=`, `versions/{v}:publish`, `:rollback`, `:unpublish`, `releases` |
 | Media (ADR-0044) | `/api/v1/cms/media` (game: `/api/v1/game-media`, chỉ gateway nội bộ) | như trên | `media:presign-upload` (`presignMediaUpload`), `media/{asset_id}:complete-upload` (`completeMediaUpload`, báo upload xong để vào pipeline), `media/{asset_id}`, `media?kind=&status=&q=` |
 | LMS | `/api/v1/lms/` | như trên | `assignments` (+ `:publish`, `:cancel`, `:release-results`, `:archive`, `:remind`), `challenges`, `catalog/*`, `courses`, `learning-paths`, `schedules`, `dashboards/school`, `reports` ([SCHOOL_LMS §11](SCHOOL_LMS.md#11-api)) |
-| Thông báo an toàn (trường) | `/api/v1/tenant/safety/` | Public | `school-notifications` (`moderation.school_notification.read`), `school-notifications/{notification_id}:acknowledge` (`moderation.school_notification.acknowledge`) [Proposed] |
-| Tenant & trường | `/api/v1/tenant/`, `/api/v1/schools/{school_id}/` | như trên | `tenant/settings` (gồm `inactive_student_cleanup_days`, `gameplay_chat_retention_days`), `tenant/trash` [Proposed], `tenant/students/{id}/login-events`, `tenant/student-cleanup/preview`, `tenant/student-cleanup/exclusions`, `schools/{id}/settings`, `sis-imports` |
+| Thông báo an toàn (trường) | `/api/v1/tenant/safety/` | Public | `school-notifications` (`moderation.school_notification.read`), `school-notifications/{notification_id}:acknowledge` (`moderation.school_notification.acknowledge`) [Confirmed] |
+| Tenant & trường | `/api/v1/tenant/`, `/api/v1/schools/{school_id}/` | như trên | `tenant/settings` (gồm `inactive_student_cleanup_days`, `gameplay_chat_retention_days`), `tenant/trash` [Confirmed], `tenant/students/{id}/login-events`, `tenant/student-cleanup/preview`, `tenant/student-cleanup/exclusions`, `schools/{id}/settings`, `sis-imports` |
 | Đăng nhập portal (ADR-0091) | `/api/v1/auth/portal/` | Public, không token, không `X-Tenant-Id`; không log body | `login` (`portalLogin`), `token:refresh` (`refreshPortalToken`, cookie + `X-EW-CSRF`), `logout` (`portalLogout`, cookie + `X-EW-CSRF`), `setup:password` (`setupPortalPassword`), `password:forgot` (`forgotPortalPassword`), `password:reset` (`resetPortalPassword`) |
 | Menu & tenant | `/api/v1/me/permissions`, `/api/v1/me/tenants` | `eduworld-portal` | `me/tenants` (không cần `X-Tenant-Id`) → tenant được vào sau đăng nhập; `me/permissions` (header `X-Tenant-Id`) → role + permission + workspace + `disabled_menus[]`/`disabled_actions[]` (§2.7) |
 | Phân quyền (ADR-0066) | `/api/v1/tenant/`, `/api/v1/admin/` | Public (tenant) · nội bộ (platform) | `tenant/permissions`, `tenant/roles`, `tenant/roles/{id}`, `tenant/user-roles`, `tenant/users`; `admin/permissions`, `admin/roles`, `admin/user-roles` — **spec: chưa** |
@@ -902,7 +902,7 @@ Mọi lần bị từ chối vì thiếu permission ở `/game-admin/*`, `/admin
 | Platform | `/api/v1/admin/` | như trên | `tenants`, `tenant-assignments`, `tenant-clones`, `trash`, `users`, `feature-flags`, `login-events`, `settings/student-cleanup`, `student-cleanup/runs` (+ `:approve`), `settings/chat-retention` |
 | **An toàn chat (platform)** | `/api/v1/admin/chat/` | **chỉ gateway nội bộ · `eduworld-portal` + MFA + role platform** | `sensitive-categories`, `sensitive-terms` (+ `:test`), `sensitive-allowlist`, `sensitive-catalog:publish`, `moderation-switches` |
 | An toàn chat (tenant, chỉ đọc) | `/api/v1/tenant/chat/` | Public | `categories` (danh mục hiệu lực, `chat.sensitive_terms.read`) |
-| **Kiểm duyệt (Platform Safety Team)** | `/api/v1/admin/moderation/`, `/api/v1/admin/chat/tenant-terms`, `/api/v1/admin/chat/tenant-categories/{code}:toggle` | **chỉ gateway nội bộ · `eduworld-portal` + MFA + role platform** | `cases`, `cases/{id}`, `cases/{id}/messages`, `cases/{id}:act`, `sanctions`; thông báo trường `GET /api/v1/admin/safety/school-notifications`; ghi gửi `X-Tenant-Id` = tenant của case [Proposed] |
+| **Kiểm duyệt (Platform Safety Team)** | `/api/v1/admin/moderation/`, `/api/v1/admin/chat/tenant-terms`, `/api/v1/admin/chat/tenant-categories/{code}:toggle` | **chỉ gateway nội bộ · `eduworld-portal` + MFA + role platform** | `cases`, `cases/{id}`, `cases/{id}/messages`, `cases/{id}:act`, `sanctions`; thông báo trường `GET /api/v1/admin/safety/school-notifications`; ghi gửi `X-Tenant-Id` = tenant của case [Confirmed] |
 
 Quy ước liên tenant: list endpoint nhận `tenant_ids[]` (chỉ System Admin, không gửi `X-Tenant-Id`); ghi của System Admin gửi `X-Tenant-Id` = tenant đích; response cho System Admin có `tenant_id`. Danh mục đầy đủ: [API_DESIGN](../07-backend/API_DESIGN.md) và `specs/openapi/eduworld-api.v1.yaml`.
 
@@ -937,9 +937,9 @@ EduWorld Admin Portal   [Workspace ▾]   [Tenant ▾ — System Admin: lọc ·
 │   ├── Tiến độ & báo cáo — School Learning Dashboard (trường → lớp → học sinh) · Bản đồ kỹ năng · Kết quả bài/đề (hộp thoại chấm lại đề `scope = exam_session`, Academic Manager) · Báo cáo tham khảo TT27/TT22 · Analytics
 │   ├── An toàn — Thông báo vụ việc (xác nhận đã liên hệ phụ huynh) · Chat policy trường · Nhóm từ của tenant (chỉ xem)
 │   ├── Hoạt động học sinh (lần đăng nhập game cuối, lịch sử phiên)
-│   ├── Người dùng & phân quyền — Người dùng (nhân sự, học sinh chỉ đọc) · UserRole · Role (hệ thống chỉ đọc, tùy biến [Proposed]) · Nhật ký phân quyền
+│   ├── Người dùng & phân quyền — Người dùng (nhân sự, học sinh chỉ đọc) · UserRole · Role (hệ thống chỉ đọc, tùy biến [Confirmed]) · Nhật ký phân quyền
 │   ├── Cài đặt tenant / trường (khung giờ truy cập, thông báo, dọn học sinh, thời hạn chat gameplay khi được phép)
-│   ├── Thùng rác (Tenant Admin, nếu được bật) [Proposed]
+│   ├── Thùng rác (Tenant Admin, nếu được bật) [Confirmed]
 │   └── Nhật ký (audit trong tenant)
 │
 ├── B. Learning Content Studio   (tenant: dữ liệu tenant + dữ liệu được gán chỉ đọc · platform: dữ liệu platform)
@@ -989,7 +989,7 @@ Mỗi màn dưới đây áp dụng bố cục §1.3 và editor §1.4. Lỗi API
 | Thông báo an toàn của trường | Nhận thông báo vụ việc, xác nhận đã liên hệ phụ huynh (§1.5.2) | School Admin, Tenant Admin | ProTable + panel chi tiết | Lọc trạng thái/lớp, ghi chú, xác nhận | Tóm tắt do Safety Team ghi, mức độ, thời điểm yêu cầu, hạn; **không** có nội dung chat | Chờ xác nhận / đã xác nhận / quá hạn | Ghi chú ≤ 500 ký tự | `PERMISSION_DENIED` (trường khác), `CONFLICT` (đã xác nhận) | `moderation.school_notification.read`, `.acknowledge` | Mọi breakpoint |
 | Hàng đợi case kiểm duyệt | Xử lý case liên tenant | Safety Moderator, System Admin | QueryFilter (dropdown tenant) + ProTable + panel bằng chứng | Ẩn tin, sanction, chuyển cấp, đóng case, gửi thông báo trường | Case, bằng chứng, tin nhắn liên quan case, lịch sử sanction | Mới / đang xử lý / chờ trường xác nhận / đóng | Lý do bắt buộc khi sanction/đóng | `MFA_REQUIRED`, `PERMISSION_DENIED` | `moderation.case.*`, `moderation.sanction.*` | Desktop/tablet; điện thoại xem và xử lý nhanh |
 | Builder game (quest, challenge, boss, level/XP, achievement, item) | Cấu hình nội dung game | Game Designer, Live-ops | `ContentEditorShell`, graph/kéo-thả, thumbnail 3D, `GamePreviewFrame` | Soạn, preview Godot, gửi duyệt, publish, rollback, gán tenant | Cấu hình version, tham chiếu activity/scene | Như editor | Schema + tham chiếu tồn tại trong client manifest | `MFA_REQUIRED`, `CONTENT_VERSION_CONFLICT` | `game.*` | Chỉ desktop |
-| Live dashboard | Giám sát vận hành | Live-ops, System Admin | StatisticCard, chart thời gian thực (làm mới 15–30 s), bảng sự kiện | Lọc tenant/khu vực, mở chi tiết, chuyển sang kiểm duyệt | CCU, phiên, trận, hàng chờ, tin bị chặn, lỗi | Bình thường / cảnh báo / sự cố | — | Mất kết nối gateway nội bộ ("Cần VPN") | `game.liveops.read` [Proposed] | Desktop; tablet xem |
+| Live dashboard | Giám sát vận hành | Live-ops, System Admin | StatisticCard, chart thời gian thực (làm mới 15–30 s), bảng sự kiện | Lọc tenant/khu vực, mở chi tiết, chuyển sang kiểm duyệt | CCU, phiên, trận, hàng chờ, tin bị chặn, lỗi | Bình thường / cảnh báo / sự cố | — | Mất kết nối gateway nội bộ ("Cần VPN") | `game.liveops.read` [Confirmed] | Desktop; tablet xem |
 | Quản lý tenant | Tạo/sửa tenant | System Admin | ProTable + ProForm | Tạo, kích hoạt/tắt, cấu hình SIS, gán nội dung | Mã, loại, trạng thái, số trường/học sinh | Đang hoạt động / tạm tắt | Mã tenant duy nhất, ≤ 64 ký tự | `CONFLICT` | `platform.tenant.manage` | Desktop |
 | Đăng nhập portal (`/login`, §1.3b) | Nhân sự đăng nhập không rời portal | Mọi nhân sự (học sinh bị chặn) | ProForm (username/email, mật khẩu, mã 6 số), chọn ngôn ngữ, link Quên mật khẩu | Đăng nhập (một request), đổi mật khẩu tạm, quên/đặt lại mật khẩu | Không lưu mật khẩu/mã; nhớ per-browser lần trước có dùng mã | Đang gửi, lỗi chung, cần thiết lập tài khoản, bị giới hạn số lần thử | Username/email ≤ 254, mã đúng 6 chữ số | `INVALID_CREDENTIALS`, `ACCOUNT_SETUP_REQUIRED`, `PORTAL_ACCESS_STAFF_ONLY`, `RATE_LIMITED` | Không cần token | Mọi breakpoint |
 | Bật/tắt menu & action (§3.18) | Ngừng/mở lại menu, action của portal không cần deploy | System Admin | Tree + ProTable, chọn phạm vi platform/tenant, ModalForm lý do | Bật/tắt/kế thừa theo phạm vi, xem nhật ký | Danh mục (workspace → menu → action), mặc định, ghi đè tenant, hiệu lực, version | Bật / tắt / tắt do menu cha / khóa (không tắt được) | Lý do bắt buộc ≤ 1000 ký tự, `If-Match` | `FEATURE_NOT_DISABLEABLE`, `VERSION_MISMATCH`, `MFA_REQUIRED` | `platform.feature_flag.write` | Desktop |
@@ -1005,24 +1005,24 @@ Mã chuẩn `FR-CMS-*`/`FR-LMS-*` nằm trong [PRODUCT_REQUIREMENTS §2.26–2.2
 | CMS-D-002 | Module 8.1–8.4; 8.3 và 8.4 chỉ dành cho platform | [Confirmed] |
 | CMS-D-003 | Workflow + versioning + preview + publishing + rollback + audit | [Confirmed] |
 | CMS-D-004 | Không thay đổi lịch sử bài tập đã hoàn thành | [Confirmed] |
-| CMS-D-005 | Reviewer ≠ author | [Proposed] |
-| CMS-D-006 | Publish theo lịch | [Proposed] |
-| CMS-D-007 | Godot Web preview cho game content | [Proposed] |
-| CMS-D-008 | Bulk import có báo lỗi theo dòng | [Proposed] |
-| CMS-D-009 | Game content chỉ tham chiếu scene có trong client manifest | [Proposed] |
+| CMS-D-005 | Reviewer ≠ author | [Confirmed] |
+| CMS-D-006 | Publish theo lịch | [Confirmed] |
+| CMS-D-007 | Godot Web preview cho game content | [Confirmed] |
+| CMS-D-008 | Bulk import có báo lỗi theo dòng | [Confirmed] |
+| CMS-D-009 | Game content chỉ tham chiếu scene có trong client manifest | [Confirmed] |
 | CMS-D-010 | Vận hành tenant đăng nhập CMS và thao tác chức năng Learning Management trong đúng một tenant | [Confirmed] ADR-0027 |
 | CMS-D-011 | Vận hành tenant không thấy và không gọi được menu/API cấu hình game (`/api/v1/game-admin/*`) | [Confirmed] ADR-0027 |
 | CMS-D-012 | Permission catalog trong code; role tenant không chứa `game.*`/`competition.config.*`/`platform.*`; kiểm tra lúc khởi động + trigger DB | [Confirmed] ADR-0027 |
 | CMS-D-013 | **Một Admin Portal** (`src/cms/frontend/apps/portal`, client `eduworld-portal`) với 5 workspace; workspace hiển thị theo permission; mã workspace lazy-load (không phải lớp bảo mật); workspace platform gọi gateway nội bộ, token bắt buộc MFA (thay mô hình 2 bundle) | [Confirmed] ADR-0027 mục 7 |
 | CMS-D-014 | Menu sinh từ danh mục `specs/portal/menu-catalog.yaml`, lọc theo `GET /api/v1/me/permissions` (permission + `disabled_menus`/`disabled_actions`) | [Confirmed] ADR-0027, ADR-0090 |
-| CMS-D-015 | Tenant tạo thử thách lớp/giải trường từ template được gán, chỉ điền tham số cho phép | [Proposed] ADR-0027 |
+| CMS-D-015 | Tenant tạo thử thách lớp/giải trường từ template được gán, chỉ điền tham số cho phép | [Confirmed] ADR-0027 |
 | CMS-D-016 | System Admin là người duy nhất xem dữ liệu liên tenant: dropdown tìm kiếm tenant (mặc định "Tất cả", chọn nhiều), cột Tenant, ghi luôn chọn một tenant đích | [Confirmed] ADR-0027 §6 |
-| CMS-D-017 | Xóa = soft-delete; danh sách không hiển thị dữ liệu đã xóa; Thùng rác để xem/khôi phục (System Admin; Tenant Admin nếu được cấp) | [Confirmed] ADR-0028 / [Proposed] Tenant Admin |
+| CMS-D-017 | Xóa = soft-delete; danh sách không hiển thị dữ liệu đã xóa; Thùng rác để xem/khôi phục (System Admin; Tenant Admin nếu được cấp) | [Confirmed] ADR-0028 / [Confirmed] Tenant Admin |
 | CMS-D-018 | System Admin gán dữ liệu platform cho tenant (chỉ đọc với tenant) và gỡ gán | [Confirmed] ADR-0029 |
 | CMS-D-019 | System Admin clone dữ liệu cấu hình/nội dung từ tenant nguồn sang một tenant đích, bất đồng bộ, không clone dữ liệu học sinh | [Confirmed] ADR-0029 |
 | CMS-D-020 | System Admin quản lý danh mục từ nhạy cảm platform (category, term, allowlist, thử chuỗi, publish có version) | [Confirmed] ADR-0030 |
 | CMS-D-021 | System Admin bật/tắt công tắc kiểm duyệt (tổng/từng bước) theo platform/tenant, lý do bắt buộc, thời hạn tùy chọn, audit, banner cảnh báo | [Confirmed] ADR-0030 |
-| CMS-D-022 | Tenant thêm từ bổ sung (chỉ siết chặt) và bật/tắt category khi `allow_tenant_toggle` | [Proposed] ADR-0030 |
+| CMS-D-022 | Tenant thêm từ bổ sung (chỉ siết chặt) và bật/tắt category khi `allow_tenant_toggle` | [Confirmed] ADR-0030 |
 | CMS-D-023 | Draft/Publish cho mọi nội dung có version; publish ngay hoặc hẹn giờ | [Confirmed] ADR-0043 |
 | CMS-D-024 | Xem lịch sử version, xem nội dung từng version đã publish (chỉ đọc), diff, preview trong game | [Confirmed] ADR-0043 |
 | CMS-D-025 | Rollback = dùng lại version đã publish cho học sinh (đổi con trỏ, lý do bắt buộc, audit); unpublish | [Confirmed] ADR-0043 |
@@ -1032,7 +1032,7 @@ Mã chuẩn `FR-CMS-*`/`FR-LMS-*` nằm trong [PRODUCT_REQUIREMENTS §2.26–2.2
 | CMS-D-029 | Safety Moderator đọc liên tenant chỉ trong module moderation qua `tenancy.Bypass(ctx, "moderation_case")`, có audit và metric | [Confirmed] ADR-0072 |
 | CMS-D-030 | Nhà trường nhận thông báo vụ việc nghiêm trọng (tóm tắt, không chat thô) và xác nhận đã liên hệ phụ huynh; case lưu thời điểm yêu cầu/xác nhận | [Confirmed] ADR-0072 |
 | CMS-D-031 | Từ bổ sung và bật/tắt nhóm từ cấp tenant chỉ Safety Team ghi theo yêu cầu tenant; role tenant không có quyền ghi | [Confirmed] ADR-0072 |
-| CMS-D-032 | Question editor có gợi ý nhiều cấp và phản hồi theo phương án sai (chỉ trả sau khi chấm); khối lớp 1–3 bắt buộc lồng tiếng đề bài trước khi publish | [Proposed] PED-04, PED-07 |
+| CMS-D-032 | Question editor có gợi ý nhiều cấp và phản hồi theo phương án sai (chỉ trả sau khi chấm); khối lớp 1–3 bắt buộc lồng tiếng đề bài trước khi publish | [Confirmed] PED-04, PED-07 |
 | CMS-D-033 | Danh mục menu/action của portal là contract (`specs/portal/menu-catalog.yaml`) có bản sao đọc-chỉ trong DB; menu portal sinh từ danh mục; mỗi operation portal gọi khai báo `x-portal-action` (§2.7) | [Confirmed] ADR-0090 |
 | CMS-D-034 | Chỉ System Admin bật/tắt menu/action theo mặc định platform hoặc ghi đè cho một tenant đích (lý do, `If-Match`, audit); mục bảo vệ không tắt được; backend chặn `403 FEATURE_DISABLED`, portal ẩn menu/action đang tắt (§2.7, §3.18) | [Confirmed] ADR-0090 |
 | CMS-D-035 | Màn đăng nhập portal tự vẽ, gửi mật khẩu và mã xác thực trong một request qua module identity, lỗi chung; đổi mật khẩu tạm, đăng ký mã xác thực qua email, quên/đặt lại mật khẩu; access token trong bộ nhớ, refresh token trong cookie `HttpOnly` có CSRF; đổi tenant bằng `X-Tenant-Id` (§1.3b) | [Confirmed] ADR-0091 |

@@ -126,7 +126,7 @@
 | T003 | `internal/infrastructure/storage/export_bucket.go` (`ExportBucket`, `S3.PresignGet`) | Dùng lại client S3 của F027 (`EW_S3_*`); không sửa `.env.example` (bucket `ew-exports` tạo bằng `EnsureBucket`) |
 | T004 | `specs/openapi/eduworld-api.v1.yaml` → `split-public`; portal `pnpm gen:api` | `AUDIO_REQUIRED` đã có trong ProblemCode/API_DESIGN §4.1; thêm `audio_exempt_reason` vào `QuestionAuthoringInput`, `LessonAuthoringInput`, `ContentVersion` |
 | T005 | `specs/events/payloads/learning/content.version_{submitted,approved,rejected}.v1.schema.json`, `question.schema.json`, `activity-base.schema.json` | |
-| T006 | `ent/schema/workflow.go`, `migrations/20261128000001_f025_workflow.sql`, `ent/ddl_test.go` (`added` + `entx.AddedDDL`) | `review_tasks`/`translation_jobs` dùng mixin `TenantOptional` (T*) [Proposed]; cột `version` của data-model là `version_no` (entx giữ `version`) |
+| T006 | `ent/schema/workflow.go`, `migrations/20261128000001_f025_workflow.sql`, `ent/ddl_test.go` (`added` + `entx.AddedDDL`) | `review_tasks`/`translation_jobs` dùng mixin `TenantOptional` (T*) [Confirmed]; cột `version` của data-model là `version_no` (entx giữ `version`) |
 | T007 | `docs/07-backend/DATABASE_DESIGN.md` §2.5 | |
 | T008 | `internal/application/port/write/workflow.go` (`VersionStatusStore`, `ReviewStore`), media qua `write.MediaStore.Assets` | Loader theo loại dùng `QuestionStore`/`DocStore` có sẵn |
 | T009, T025, T030–T032 | `internal/domain/workflow/workflow_test.go`, `internal/domain/readiness/guard_test.go`, `internal/domain/i18ntext/i18ntext_test.go` | |

@@ -121,7 +121,7 @@ Không có. Quy tắc ở SCHOOL_LMS §4, ACTIVITY_ENGINE §8.1, API_DESIGN §9.
 
 - Log không chứa tên học sinh, câu trả lời (R14); metric `eduworld_lms_assignments_total{status}`, `eduworld_lms_submissions_updated_total{status}`, `eduworld_lms_assignment_reminders_total{result}`; span `PublishAssignment`, `ApplyAttemptEvent`, `CloseDueAssignments`.
 
-Ước lượng: 2 sprint (backend 2 dev) [Proposed].
+Ước lượng: 2 sprint (backend 2 dev) [Confirmed].
 
 ## Complexity Tracking
 

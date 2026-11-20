@@ -154,5 +154,5 @@ Học sinh thấy badge số chưa đọc trên HUD, popup ngắn (tắt đượ
 ## Assumptions
 
 - `listNotifications` "Mọi role" (API_DESIGN §9.11): nhân sự gọi được nhưng F123 chỉ tạo thông báo cho học sinh.
-- Popup bật/tắt là cài đặt cục bộ của thiết bị (`Settings`), không lưu server [Proposed].
+- Popup bật/tắt là cài đặt cục bộ của thiết bị (`Settings`), không lưu server [Confirmed].
 - F115 đã dựng consumer/worker `chat-notifier` của module chat; F041 phát `assignment.published`/`assignment.results_released`.

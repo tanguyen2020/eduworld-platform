@@ -26,8 +26,8 @@ Học sinh vào Practice Zone chọn môn/chủ đề/LO, hệ thống chọn c�
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F032-AC-01 | KHI học sinh gọi `startAdHocAttempt` với `mode = practice` và `source.kind ∈ {selection, question_set}`, module learning PHẢI tạo attempt ghim `question_version_id` hiện hành của từng câu và trả render payload không chứa `answer_key`, `scoring_rule`, `explanation`, `options[].feedback`, `hints` | FR-EXR-001 · AC-EXR-001 · [ACTIVITY_ENGINE §9](../../docs/02-learning/ACTIVITY_ENGINE.md#9-api) | TC-LRN-002, TC-LRN-007 |
-| F032-AC-02 | KHI một lần trả lời có tính điểm được chấm trong attempt có `FeedbackTiming = immediate`, HỆ THỐNG PHẢI trả `is_correct`, `explanation` và `feedback` của đúng phương án đã chọn trong `ActivityResponseResult` | FR-EXR-003 · [ACTIVITY_ENGINE §8.2](../../docs/02-learning/ACTIVITY_ENGINE.md#82-phản-hồi-theo-phương-án-nhiễu-proposed) | TC-LRN-012 |
-| F032-AC-03 | Ở NƠI số lượt thử theo `attempts_per_question` còn, HỆ THỐNG PHẢI nhận lần thử lại với `is_scored = false` và giữ điểm, evidence của lần trả lời đầu; NẾU vượt số lượt, THÌ HỆ THỐNG PHẢI trả `409 ANSWER_LIMIT_REACHED` | [LEARNING_EXPERIENCE §4.2](../../docs/02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-proposed) | — |
+| F032-AC-02 | KHI một lần trả lời có tính điểm được chấm trong attempt có `FeedbackTiming = immediate`, HỆ THỐNG PHẢI trả `is_correct`, `explanation` và `feedback` của đúng phương án đã chọn trong `ActivityResponseResult` | FR-EXR-003 · [ACTIVITY_ENGINE §8.2](../../docs/02-learning/ACTIVITY_ENGINE.md#82-phản-hồi-theo-phương-án-nhiễu-confirmed) | TC-LRN-012 |
+| F032-AC-03 | Ở NƠI số lượt thử theo `attempts_per_question` còn, HỆ THỐNG PHẢI nhận lần thử lại với `is_scored = false` và giữ điểm, evidence của lần trả lời đầu; NẾU vượt số lượt, THÌ HỆ THỐNG PHẢI trả `409 ANSWER_LIMIT_REACHED` | [LEARNING_EXPERIENCE §4.2](../../docs/02-learning/LEARNING_EXPERIENCE.md#42-số-lượt-thử-confirmed) | — |
 | F032-AC-04 | HỆ THỐNG PHẢI không đặt `deadline_at` và không tính điểm theo tốc độ cho attempt `practice`, `retry_wrong`, `diagnostic` | NFR-A11Y-002 | — |
 | F032-AC-05 | KHI `source.kind = selection` không chỉ định `difficulty`, HỆ THỐNG PHẢI chọn độ khó theo level mastery hiện tại (`beginning` 1–2, `developing` 2–3, `proficient` 3–4, `mastered` 4–5) bằng PRNG seed của attempt để tái lập được | [LEARNING_EXPERIENCE §5](../../docs/02-learning/LEARNING_EXPERIENCE.md#5-scaffolding) · [QUESTION_BANK §6](../../docs/02-learning/QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện) | — |
 | F032-AC-06 | NẾU pool vẫn thiếu câu sau khi nới `avoid_recent` và độ khó ±1, THÌ HỆ THỐNG PHẢI trả `422 QUESTION_POOL_INSUFFICIENT` và không tạo attempt | [QUESTION_BANK §6](../../docs/02-learning/QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện) | — |
@@ -49,11 +49,11 @@ Học sinh lớp 3 bí ở một câu, bấm "Gợi ý" để mở lần lượt
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F032-AC-10 | KHI học sinh gọi `revealNextHint` cho item của attempt mình đang `in_progress`, module learning PHẢI trả `{level, total_levels, hint}` của cấp kế tiếp theo thứ tự `hints[]` trong version đã ghim và tăng `attempt_items.hints_revealed` đúng 1 | FR-EXR-012 · US-EXR-003 · [ACTIVITY_ENGINE §8.3](../../docs/02-learning/ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-proposed) | TC-LRN-011 |
+| F032-AC-10 | KHI học sinh gọi `revealNextHint` cho item của attempt mình đang `in_progress`, module learning PHẢI trả `{level, total_levels, hint}` của cấp kế tiếp theo thứ tự `hints[]` trong version đã ghim và tăng `attempt_items.hints_revealed` đúng 1 | FR-EXR-012 · US-EXR-003 · [ACTIVITY_ENGINE §8.3](../../docs/02-learning/ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-confirmed) | TC-LRN-011 |
 | F032-AC-11 | NẾU attempt có mode ∈ {`exam`, `diagnostic`, `competition`} hoặc `FeedbackTiming ≠ immediate`, THÌ HỆ THỐNG PHẢI trả `403 HINTS_NOT_ALLOWED` | FR-EXR-012 | TC-LRN-011 |
 | F032-AC-12 | NẾU đã mở hết cấp gợi ý của item (kể cả item không có `hints[]`), THÌ HỆ THỐNG PHẢI trả `409 HINTS_EXHAUSTED` | FR-EXR-012 | TC-LRN-011 |
 | F032-AC-13 | NẾU attempt không còn `in_progress`, THÌ HỆ THỐNG PHẢI trả `409 ATTEMPT_NOT_IN_PROGRESS`; NẾU attempt thuộc học sinh khác hoặc tenant khác, THÌ HỆ THỐNG PHẢI trả `404 NOT_FOUND` không lộ sự tồn tại | AC-ORG-001 | TC-LRN-011, TC-TEN-001 |
-| F032-AC-14 | KHI ghi một lần trả lời có tính điểm, HỆ THỐNG PHẢI lưu `hints_used` = số cấp đã mở **trước** lần trả lời đó vào `attempt_answers` và learning event `question.answered`; gợi ý mở sau lần trả lời có tính điểm PHẢI không đổi evidence của lần đó | AC-EXR-007 · [ACTIVITY_ENGINE §8.3](../../docs/02-learning/ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-proposed) | TC-LRN-011 |
+| F032-AC-14 | KHI ghi một lần trả lời có tính điểm, HỆ THỐNG PHẢI lưu `hints_used` = số cấp đã mở **trước** lần trả lời đó vào `attempt_answers` và learning event `question.answered`; gợi ý mở sau lần trả lời có tính điểm PHẢI không đổi evidence của lần đó | AC-EXR-007 · [ACTIVITY_ENGINE §8.3](../../docs/02-learning/ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-confirmed) | TC-LRN-011 |
 | F032-AC-15 | KHI `revealNextHint` được gửi lại cùng `Idempotency-Key`, HỆ THỐNG PHẢI trả lại cùng cấp gợi ý và không mở thêm cấp | [API_DESIGN §6](../../docs/07-backend/API_DESIGN.md#6-idempotency) | — |
 
 ---
@@ -70,11 +70,11 @@ Học sinh bấm bừa thật nhanh: điểm bài vẫn ghi, nhưng câu đó kh
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F032-AC-16 | KHI ghi lần trả lời có tính điểm, HỆ THỐNG PHẢI tính `response_ms = min(client_elapsed_ms, server_interval_ms)` (trừ thời gian pause) và gắn `rapid_guess = true` khi `response_ms` nhỏ hơn `min_response_ms` của câu hoặc ngưỡng mặc định `rapid_guess_min_response_ms` theo loại câu (nhân hệ số cho `g1_3`) | FR-PRG-006 · AC-PRG-002 · [ACTIVITY_ENGINE §11.1](../../docs/02-learning/ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed) | TC-LRN-013 |
+| F032-AC-16 | KHI ghi lần trả lời có tính điểm, HỆ THỐNG PHẢI tính `response_ms = min(client_elapsed_ms, server_interval_ms)` (trừ thời gian pause) và gắn `rapid_guess = true` khi `response_ms` nhỏ hơn `min_response_ms` của câu hoặc ngưỡng mặc định `rapid_guess_min_response_ms` theo loại câu (nhân hệ số cho `g1_3`) | FR-PRG-006 · AC-PRG-002 · [ACTIVITY_ENGINE §11.1](../../docs/02-learning/ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed) | TC-LRN-013 |
 | F032-AC-17 | HỆ THỐNG PHẢI giữ nguyên điểm attempt khi lần trả lời có `rapid_guess = true` hoặc `hints_used > 0` | [ACTIVITY_ENGINE §7.2](../../docs/02-learning/ACTIVITY_ENGINE.md#72-tính-điểm) | TC-LRN-013 |
 | F032-AC-18 | KHI cập nhật mastery từ `question.answered`, learning_record PHẢI bỏ qua evidence `rapid_guess` (không đổi `M`, `n`, ngày cho `d_min`) và với lần trả lời đúng PHẢI nhân `w_hint(hints_used)` và `w_guess = 1 − c(type)` theo `guess_coefficient` | FR-PRG-006 · FR-EXR-012 · AC-PRG-001 · [LEARNING_ANALYTICS §3.1](../../docs/02-learning/LEARNING_ANALYTICS.md#31-định-nghĩa) | TC-LRN-010, TC-LRN-013 |
-| F032-AC-19 | Ở NƠI attempt có mode `minigame` hoặc `competition`, HỆ THỐNG PHẢI không áp ngưỡng mặc định theo loại câu mà dùng ngưỡng trong cấu hình mini-game/trận | [ACTIVITY_ENGINE §11.1](../../docs/02-learning/ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed) | — |
-| F032-AC-20 | HỆ THỐNG PHẢI không trả cờ `rapid_guess` hay cảnh báo "làm quá nhanh" trong response cho học sinh | [ACTIVITY_ENGINE §11.1](../../docs/02-learning/ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed) · AGENTS R19 | — |
+| F032-AC-19 | Ở NƠI attempt có mode `minigame` hoặc `competition`, HỆ THỐNG PHẢI không áp ngưỡng mặc định theo loại câu mà dùng ngưỡng trong cấu hình mini-game/trận | [ACTIVITY_ENGINE §11.1](../../docs/02-learning/ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed) | — |
+| F032-AC-20 | HỆ THỐNG PHẢI không trả cờ `rapid_guess` hay cảnh báo "làm quá nhanh" trong response cho học sinh | [ACTIVITY_ENGINE §11.1](../../docs/02-learning/ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed) · AGENTS R19 | — |
 
 ---
 
@@ -93,7 +93,7 @@ Câu sai lượt đầu vào danh sách ôn theo lịch 1–3–7 ngày; khi ôn
 | F032-AC-21 | KHI lần trả lời đầu có tính điểm của một câu sai (không `rapid_guess`), HỆ THỐNG PHẢI đưa câu vào danh sách ôn với hạn ôn theo `retry_wrong_schedule`; KHI học sinh đúng 2 lần liên tiếp ở 2 ngày khác nhau, HỆ THỐNG PHẢI đưa câu ra khỏi danh sách | US-EXR-001 · [LEARNING_EXPERIENCE §6.1](../../docs/02-learning/LEARNING_EXPERIENCE.md#61-ôn-câu-sai-retry_wrong) | TC-LRN-005 |
 | F032-AC-22 | KHI học sinh gọi `startAdHocAttempt` với `source.kind = retry_wrong`, HỆ THỐNG PHẢI tạo attempt `mode = retry_wrong` chọn câu anh em (cùng ≥ 1 LO, cùng loại, cùng độ khó, khác `question_id`, chưa gặp trong cửa sổ `avoid_recent`), nới độ khó ±1 khi thiếu và chỉ dùng lại câu gốc khi hết câu anh em | FR-EXR-013 · [QUESTION_BANK §6](../../docs/02-learning/QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện) | TC-LRN-005, TC-LRN-013 |
 | F032-AC-23 | `listMyWrongQuestions` PHẢI chỉ trả câu trong danh sách ôn của chính học sinh, kèm hạn ôn, không chứa đáp án hay giải thích | FR-EXR-013 · ADR-0016 | TC-TEN-001 |
-| F032-AC-24 | KHI `source.kind = selection` có `interleave = true` và ≥ 2 topic đã học của cùng môn, HỆ THỐNG PHẢI chia câu theo `interleave_mix` và không xếp quá số câu liên tiếp cùng topic quy định; NẾU mode là `exam` hoặc `diagnostic`, THÌ HỆ THỐNG PHẢI từ chối `interleave` bằng `422 VALIDATION_FAILED` | FR-EXR-014 · [LEARNING_EXPERIENCE §5.2](../../docs/02-learning/LEARNING_EXPERIENCE.md#52-luyện-trộn-chủ-đề-interleaving-proposed) | — |
+| F032-AC-24 | KHI `source.kind = selection` có `interleave = true` và ≥ 2 topic đã học của cùng môn, HỆ THỐNG PHẢI chia câu theo `interleave_mix` và không xếp quá số câu liên tiếp cùng topic quy định; NẾU mode là `exam` hoặc `diagnostic`, THÌ HỆ THỐNG PHẢI từ chối `interleave` bằng `422 VALIDATION_FAILED` | FR-EXR-014 · [LEARNING_EXPERIENCE §5.2](../../docs/02-learning/LEARNING_EXPERIENCE.md#52-luyện-trộn-chủ-đề-interleaving-confirmed) | — |
 
 ---
 
@@ -109,7 +109,7 @@ Câu sai lượt đầu vào danh sách ôn theo lịch 1–3–7 ngày; khi ôn
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F032-AC-25 | KHI học sinh gọi `startAdHocAttempt` với `source.kind = diagnostic` (`subject_id` + `grade_level` hoặc `topic_id`), HỆ THỐNG PHẢI tạo attempt `mode = diagnostic` gồm LO trọng tâm và LO tiên quyết, số câu tối đa và số câu mỗi LO theo `diagnostic_prior`, `FeedbackTiming = after_submit`, không gợi ý | FR-PRG-007 · [LEARNING_ANALYTICS §3.5](../../docs/02-learning/LEARNING_ANALYTICS.md#35-bài-chẩn-đoán-đặt-m0-ban-đầu-proposed) | TC-LRN-014 |
+| F032-AC-25 | KHI học sinh gọi `startAdHocAttempt` với `source.kind = diagnostic` (`subject_id` + `grade_level` hoặc `topic_id`), HỆ THỐNG PHẢI tạo attempt `mode = diagnostic` gồm LO trọng tâm và LO tiên quyết, số câu tối đa và số câu mỗi LO theo `diagnostic_prior`, `FeedbackTiming = after_submit`, không gợi ý | FR-PRG-007 · [LEARNING_ANALYTICS §3.5](../../docs/02-learning/LEARNING_ANALYTICS.md#35-bài-chẩn-đoán-đặt-m0-ban-đầu-confirmed) | TC-LRN-014 |
 | F032-AC-26 | KHI attempt `diagnostic` chuyển `graded`, learning_record PHẢI đặt `M0` cho mỗi LO có ≥ 2 câu được chấm (đã loại `rapid_guess`) và chưa có evidence theo `diagnostic_prior`, lan `M0` tới LO tiên quyết chưa có evidence, ghi `prior_source = diagnostic` và không đổi `n`, `d_min`, level | FR-PRG-007 | TC-LRN-014 |
 | F032-AC-27 | HỆ THỐNG PHẢI phát event của attempt `diagnostic` với `context.mode = diagnostic` để consumer loại khỏi bảng xếp hạng, báo cáo kết quả bài giao và XP theo điểm | FR-PRG-007 · [EVENT_DESIGN §5.1](../../docs/07-backend/EVENT_DESIGN.md#51-trường-bổ-sung-bắt-buộc) | — |
 | F032-AC-28 | KHI học sinh làm lại bài chẩn đoán, HỆ THỐNG PHẢI giữ nguyên lịch sử attempt và chỉ áp `M0` mới cho LO vẫn chưa có evidence | FR-PRG-007 | TC-LRN-014 |
@@ -168,13 +168,13 @@ Học sinh xem mastery của mình theo LO bằng biểu tượng phù hợp đ�
 |---|---|---|
 | FR-EXR-001 | Mode `practice`, `retry_wrong`, `diagnostic` (mode khác thuộc F030/F041/F042/F072) | [ACTIVITY_ENGINE §6.1](../../docs/02-learning/ACTIVITY_ENGINE.md#61-mode--hoạt-động-được-gọi-từ-đâu-trong-game) |
 | FR-EXR-003 | Phản hồi đúng/sai + giải thích + phản hồi theo phương án ngay sau mỗi câu ở practice | [ACTIVITY_ENGINE §8.1](../../docs/02-learning/ACTIVITY_ENGINE.md#81-feedbacktiming-và-resultrelease) |
-| FR-EXR-012 | `revealNextHint`, `hints_used`, trọng số `w_hint` | [ACTIVITY_ENGINE §8.3](../../docs/02-learning/ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-proposed) |
+| FR-EXR-012 | `revealNextHint`, `hints_used`, trọng số `w_hint` | [ACTIVITY_ENGINE §8.3](../../docs/02-learning/ACTIVITY_ENGINE.md#83-gợi-ý-trong-attempt-confirmed) |
 | FR-EXR-013 | Danh sách ôn câu sai, chọn câu anh em | [QUESTION_BANK §6](../../docs/02-learning/QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện) |
-| FR-EXR-014 | Luyện trộn chủ đề | [LEARNING_EXPERIENCE §5.2](../../docs/02-learning/LEARNING_EXPERIENCE.md#52-luyện-trộn-chủ-đề-interleaving-proposed) |
+| FR-EXR-014 | Luyện trộn chủ đề | [LEARNING_EXPERIENCE §5.2](../../docs/02-learning/LEARNING_EXPERIENCE.md#52-luyện-trộn-chủ-đề-interleaving-confirmed) |
 | FR-PRG-004 | API và worker gợi ý ôn tập theo LO yếu | [LEARNING_ANALYTICS §6](../../docs/02-learning/LEARNING_ANALYTICS.md#6-recommendation-rules) |
 | FR-PRG-005 | Tiến độ thân thiện theo độ tuổi | [LEARNING_EXPERIENCE §7](../../docs/02-learning/LEARNING_EXPERIENCE.md#7-hiển-thị-tiến-bộ-cho-học-sinh) |
 | FR-PRG-006 | Cờ `rapid_guess`, loại khỏi mastery, hệ số đoán trúng | [LEARNING_ANALYTICS §3.1](../../docs/02-learning/LEARNING_ANALYTICS.md#31-định-nghĩa) |
-| FR-PRG-007 | Bài chẩn đoán đặt `M0` | [LEARNING_ANALYTICS §3.5](../../docs/02-learning/LEARNING_ANALYTICS.md#35-bài-chẩn-đoán-đặt-m0-ban-đầu-proposed) |
+| FR-PRG-007 | Bài chẩn đoán đặt `M0` | [LEARNING_ANALYTICS §3.5](../../docs/02-learning/LEARNING_ANALYTICS.md#35-bài-chẩn-đoán-đặt-m0-ban-đầu-confirmed) |
 | FR-PRG-008 | Gợi ý tự động có lý do là con đường học chính | [LEARNING_ANALYTICS §6](../../docs/02-learning/LEARNING_ANALYTICS.md#6-recommendation-rules) |
 | NFR-A11Y-002 | Practice/retry/diagnostic không giới hạn thời gian | [LEARNING_EXPERIENCE §10](../../docs/02-learning/LEARNING_EXPERIENCE.md#10-accessibility-và-hòa-nhập) |
 
@@ -231,7 +231,7 @@ Học sinh xem mastery của mình theo LO bằng biểu tượng phù hợp đ�
 
 ## Assumptions
 
-- Ngưỡng `rapid_guess`, `w_hint`, `guess_coefficient`, `diagnostic_prior`, `interleave_mix` lấy từ cấu hình platform (Confirmed trong CONFIG_DEFAULTS); lịch ôn, độ khó thích ứng và rule gợi ý là [Proposed].
+- Ngưỡng `rapid_guess`, `w_hint`, `guess_coefficient`, `diagnostic_prior`, `interleave_mix` lấy từ cấu hình platform (Confirmed trong CONFIG_DEFAULTS); lịch ôn, độ khó thích ứng và rule gợi ý là [Confirmed].
 - F031 đã có `MasteryModel` v1, consumer mastery và bảng cấu hình mô hình; F032 thêm version cấu hình mới, không đổi model cũ.
 - Lý do gợi ý là mã + bản dịch trong file dịch của module (song ngữ vi/en, ADR-0056); không sinh văn bản tự do.
-- Seed GDPT Toán lớp 1–5 (OQ-08 [Proposed]) đủ câu anh em và LO tiên quyết cho kịch bản demo.
+- Seed GDPT Toán lớp 1–5 (OQ-08 [Confirmed]) đủ câu anh em và LO tiên quyết cho kịch bản demo.

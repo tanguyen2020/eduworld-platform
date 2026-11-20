@@ -108,7 +108,7 @@ Tin trong trận/party tự xóa hẳn sau thời hạn lưu để không tích 
 - NẾU `party.member_joined` đến sau `party.disbanded` (lệch thứ tự), THÌ bỏ qua thêm thành viên vào channel đã đóng.
 - NẾU job chạy song song trên hai worker, THÌ lock `ew:lock:job:gameplay-chat-purge` bảo đảm một instance; xóa lô idempotent.
 - NẾU Safety Team mở case sau khi channel đã purge, THÌ chỉ thấy bằng chứng đã lưu (MODERATION §10).
-- NẾU trận liên tenant do platform tổ chức (MATCHMAKING H3 `platform`), THÌ channel dùng `tenant_ids` [Proposed]; triển khai cùng F107.
+- NẾU trận liên tenant do platform tổ chức (MATCHMAKING H3 `platform`), THÌ channel dùng `tenant_ids` [Confirmed]; triển khai cùng F107.
 
 ## Requirements *(bắt buộc)*
 
@@ -169,5 +169,5 @@ Tin trong trận/party tự xóa hẳn sau thời hạn lưu để không tích 
 
 - module competition (F101/F105) bổ sung payload `match.started` (`participants[]` gồm `student_id`, `team_id?`, `school_id`) và dùng cùng hàm id tất định để trả `chat_channel_id` (contract delta ở contracts §6).
 - `gameplay_chat_retention_days` hiệu lực đọc từ `ref.tenants.settings_subset` (cập nhật từ event identity; dự phòng facade `identity` `getTenant`).
-- Lịch chạy job hằng giờ, lô 1.000 dòng, ngưỡng cảnh báo tồn đọng 2 ngày lấy từ DATABASE_DESIGN/ADR-0033 [Proposed]; chưa có tên trong CONFIG_DEFAULTS.
+- Lịch chạy job hằng giờ, lô 1.000 dòng, ngưỡng cảnh báo tồn đọng 2 ngày lấy từ DATABASE_DESIGN/ADR-0033 [Confirmed]; chưa có tên trong CONFIG_DEFAULTS.
 - Bảng `chat.reports`, `chat.moderation_cases` do F121 tạo; trước đó job ở chế độ fail-closed (F117-AC-19).

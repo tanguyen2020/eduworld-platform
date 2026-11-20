@@ -68,7 +68,7 @@ Khóa chính: `(tenant_id, <chiều phạm vi>, bucket_date, metric_version)`. N
 |---|---|---|
 | Đếm distinct (người dùng) | DAU, số học sinh hoạt động trong lớp/tuần | **Hôm nay:** HyperLogLog trong Valkey (`PFADD`/`PFCOUNT`, sai số ~0,8%) hiển thị tạm tính. **Đã chốt:** job cuối ngày tính chính xác từ bảng 1 dòng/người/ngày (`learning.progress_daily`, `analytics.player_days`). Tuần/tháng **không** cộng từ ngày mà tính từ bảng người/ngày theo cửa sổ |
 | Tỷ lệ | Độ chính xác, tỷ lệ hoàn thành | Lưu **tử số và mẫu số** riêng (`numerator`, `denominator`); tỷ lệ tính khi đọc → cộng dồn đúng qua ngày/phạm vi |
-| Percentile | Thời gian phiên p50, thời gian làm bài p50 | Lưu **histogram bucket cố định** (`hist` = mảng số đếm theo các mốc cấu hình); cộng histogram qua ngày/phạm vi rồi nội suy percentile khi đọc. Độ chính xác đủ cho dashboard (sai số trong một bucket) [Proposed] |
+| Percentile | Thời gian phiên p50, thời gian làm bài p50 | Lưu **histogram bucket cố định** (`hist` = mảng số đếm theo các mốc cấu hình); cộng histogram qua ngày/phạm vi rồi nội suy percentile khi đọc. Độ chính xác đủ cho dashboard (sai số trong một bucket) [Confirmed] |
 | Retention, cohort | D1/D7/D30 | Tính trong job cuối ngày vào bảng cohort riêng (GAME_ANALYTICS §6) |
 | Mastery | Phân bố level theo LO | Read model trạng thái hiện tại + snapshot tuần (LEARNING_ANALYTICS §5) |
 
@@ -123,7 +123,7 @@ sequenceDiagram
 ```
 
 - **Upsert gia tăng:** consumer cộng dồn vào dòng của ngày event (`ON CONFLICT … DO UPDATE SET count = count + excluded.count`), idempotent nhờ `processed_events` (ADR-0042). Gom lô để giảm số câu lệnh ghi.
-- **Job chốt ngày** (`dashboard-day-close`, 02:30 ICT [Proposed], profile `worker-jobs`): chạy theo module, theo từng tenant để chia nhỏ; tính các chỉ số không cộng dồn (§3.2); đặt `is_final = true`; dựng tuần/tháng từ bảng ngày (không từ dữ liệu thô).
+- **Job chốt ngày** (`dashboard-day-close`, 02:30 ICT [Confirmed], profile `worker-jobs`): chạy theo module, theo từng tenant để chia nhỏ; tính các chỉ số không cộng dồn (§3.2); đặt `is_final = true`; dựng tuần/tháng từ bảng ngày (không từ dữ liệu thô).
 - **Read model 15 phút** (LEARNING_ANALYTICS §5) vẫn giữ cho trạng thái hiện tại; rollup chuỗi thời gian không phụ thuộc vào chúng.
 - Rollup chỉ chạy trên **primary** bằng role `<module>_app`/worker; replica chỉ đọc.
 
@@ -142,12 +142,12 @@ sequenceDiagram
 
 | Bảng | Partition | Index | Retention |
 |---|---|---|---|
-| `*_daily` | Theo **tháng** của `bucket_date` | B-tree `(tenant_id, <scope_id>, bucket_date)` (PK); **BRIN** `(bucket_date)` | 2 năm [Proposed] |
-| `*_weekly` | Theo **năm** | B-tree như trên | 3 năm [Proposed] |
-| `*_monthly` | Không partition (nhỏ) hoặc theo năm | B-tree như trên | 5 năm [Proposed] |
+| `*_daily` | Theo **tháng** của `bucket_date` | B-tree `(tenant_id, <scope_id>, bucket_date)` (PK); **BRIN** `(bucket_date)` | 2 năm [Confirmed] |
+| `*_weekly` | Theo **năm** | B-tree như trên | 3 năm [Confirmed] |
+| `*_monthly` | Không partition (nhỏ) hoặc theo năm | B-tree như trên | 5 năm [Confirmed] |
 | `learning.progress_daily` (cấp học sinh) | Theo tháng | B-tree `(tenant_id, class_id, bucket_date)`, `(tenant_id, student_id, bucket_date)`; BRIN `(bucket_date)` | Theo LEARNING_ANALYTICS |
 
-- Tạo partition trước 3 tháng bằng **pg_partman** (hoặc job worker tương đương) [Proposed]; có partition `DEFAULT` và cảnh báo khi có dòng rơi vào.
+- Tạo partition trước 3 tháng bằng **pg_partman** (hoặc job worker tương đương) [Confirmed]; có partition `DEFAULT` và cảnh báo khi có dòng rơi vào.
 - Partition giúp truy vấn theo khoảng ngày chỉ chạm vài partition (partition pruning); Release 1.0 giữ lại mọi partition, không gỡ (ADR-0070). Bảng rollup không chứa PII cấp cá nhân, trừ `progress_daily` (theo retention học tập).
 - BRIN theo `bucket_date` rất nhỏ (vài trang) và hiệu quả vì dữ liệu ghi theo thứ tự thời gian; B-tree theo phạm vi phục vụ lọc theo tenant/trường/lớp.
 
@@ -155,15 +155,15 @@ sequenceDiagram
 
 | Biện pháp | Giá trị mặc định | Nhãn |
 |---|---|---|
-| Truy vấn trên **read replica** của `eduworld_learning` và `eduworld_game` | Bắt buộc ở staging/production; local dùng primary | [Proposed] |
-| Role `<module>_dashboard` (`learning_dashboard`, `game_dashboard`) | Chỉ `SELECT` trên bảng rollup/read model và view dashboard; chịu RLS; không truy cập bảng nghiệp vụ/thô | [Proposed] |
+| Truy vấn trên **read replica** của `eduworld_learning` và `eduworld_game` | Bắt buộc ở staging/production; local dùng primary | [Confirmed] |
+| Role `<module>_dashboard` (`learning_dashboard`, `game_dashboard`) | Chỉ `SELECT` trên bảng rollup/read model và view dashboard; chịu RLS; không truy cập bảng nghiệp vụ/thô | [Confirmed] |
 | `statement_timeout` | 5 giây (role dashboard) | [Confirmed — ADR-0062] |
-| `idle_in_transaction_session_timeout` | 10 giây | [Proposed] |
-| `work_mem` cho role dashboard | 32 MB | [Proposed] |
-| Pool kết nối dashboard tách khỏi pool nghiệp vụ | ≤ 10 kết nối/replica API | [Proposed] |
-| Đồng thời theo người dùng | ≤ 4 truy vấn dashboard đang chạy; vượt → `429 DASHBOARD_BUSY` | [Proposed] |
-| Đồng thời theo tenant | ≤ 30 | [Proposed] |
-| Replica lag | Dashboard hiển thị `data_as_of`; lag > 60 s → cảnh báo; lag > 5 phút → API đọc fallback primary bị **cấm**, trả số liệu kèm cảnh báo trễ | [Proposed] |
+| `idle_in_transaction_session_timeout` | 10 giây | [Confirmed] |
+| `work_mem` cho role dashboard | 32 MB | [Confirmed] |
+| Pool kết nối dashboard tách khỏi pool nghiệp vụ | ≤ 10 kết nối/replica API | [Confirmed] |
+| Đồng thời theo người dùng | ≤ 4 truy vấn dashboard đang chạy; vượt → `429 DASHBOARD_BUSY` | [Confirmed] |
+| Đồng thời theo tenant | ≤ 30 | [Confirmed] |
+| Replica lag | Dashboard hiển thị `data_as_of`; lag > 60 s → cảnh báo; lag > 5 phút → API đọc fallback primary bị **cấm**, trả số liệu kèm cảnh báo trễ | [Confirmed] |
 
 Timeout trả `504 DASHBOARD_QUERY_TIMEOUT` kèm gợi ý thu hẹp khoảng/phạm vi; không tự retry phía server.
 
@@ -210,14 +210,14 @@ flowchart LR
   F --> N[Thông báo trong portal + link ký có hạn]
 ```
 
-- Một người dùng tối đa 2 export đang chạy; một export tối đa 1.000.000 dòng [Proposed]; quá → yêu cầu thu hẹp.
+- Một người dùng tối đa 2 export đang chạy; một export tối đa 1.000.000 dòng [Confirmed]; quá → yêu cầu thu hẹp.
 - Link tải ký **15 phút** (khớp SCHOOL_LMS §10), file giữ 7 ngày trên bucket `ew-exports` (ADR-0044) rồi hết hạn theo lifecycle.
 - Có watermark (người xuất, thời điểm), audit `report.exported`, chỉ dữ liệu trong quyền, không xuất chat.
 - Báo cáo LMS dùng endpoint sẵn có `/lms/reports` (SCHOOL_LMS §10); export Game Analytics dùng `/admin/analytics/game/exports` (GAME_ANALYTICS §11); các cấp còn lại xem §14.
 
 ## 11. Ước lượng kích thước
 
-Giả định để minh họa [Proposed]: **10.000 học sinh**, 300 lớp, 20 trường, 1 tenant; 5 môn; học sinh hoạt động trung bình 2 môn/ngày; 365 ngày/năm (game có hoạt động cả ngày nghỉ).
+Giả định để minh họa [Confirmed]: **10.000 học sinh**, 300 lớp, 20 trường, 1 tenant; 5 môn; học sinh hoạt động trung bình 2 môn/ngày; 365 ngày/năm (game có hoạt động cả ngày nghỉ).
 
 | Bảng | Công thức | Dòng/năm | Dòng/2 năm |
 |---|---|---|---|

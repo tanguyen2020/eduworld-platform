@@ -209,7 +209,7 @@ Sự kiện không ép online, không đếm ngược gây áp lực, không kh�
 
 ## Assumptions
 
-- Endpoint kiểm tra văn bản của module chat chưa có trong spec internal (delta) [Proposed].
-- Sự kiện tenant thuộc phạm vi một trường (School Admin) hoặc toàn tenant (Tenant Admin) theo scope UserRole [Proposed].
-- Ngày của trần điểm theo lịch ICT như F074 [Proposed].
+- Endpoint kiểm tra văn bản của module chat chưa có trong spec internal (delta) [Confirmed].
+- Sự kiện tenant thuộc phạm vi một trường (School Admin) hoặc toàn tenant (Tenant Admin) theo scope UserRole [Confirmed].
+- Ngày của trần điểm theo lịch ICT như F074 [Confirmed].
 - Season track chỉ hoạt động sau khi F106 phát `season.started`; trước đó kiểm bằng fixture.

@@ -43,14 +43,14 @@ Mọi học sinh dùng được tất cả; khác nhau ở rủi ro và cách ki
 
 | Hành động | Quy tắc mặc định | Nhãn |
 |---|---|---|
-| Gửi lời mời kết bạn | Tới học sinh **cùng trường**; khác trường trong cùng tenant `unit` khi tenant bật `cross_school_social_enabled` (§7, ADR-0054); không bao giờ khác tenant; hai người đã chặn nhau (một trong hai chiều) không gửi được. **Tenant `common`: tắt mặc định** (`common_tenant_social_defaults`, [CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078)) — API trả `SOCIAL_SCOPE_VIOLATION`, UI ẩn nút kết bạn và mã bạn bè | [Proposed] · tenant `common` [Confirmed — Technical Architect 2026-11-17] (ADR-0078) |
-| Tìm bạn | **Không** có tìm kiếm tự do theo tên/ID. Chỉ chọn từ: người chơi gần (cùng instance), bạn cùng lớp, thành viên party/trận/club vừa chơi cùng (trong phạm vi được phép) | [Proposed] |
-| Mã bạn bè | Mã ngắn hết hạn sau `friend_code_ttl` (10 phút; mỗi người một mã hiệu lực) do một người tạo để bạn ngồi cạnh nhập (phòng máy), vẫn kiểm tra phạm vi trường | [Proposed] |
-| Giới hạn (`friend_limits`) | ≤ 10 lời mời đang chờ; ≤ 20 lời mời/ngày; ≤ 100 bạn. Đây là giới hạn duy nhất cho lời mời kết bạn (rate limit API áp theo cùng tham số) | [Proposed] |
-| Hết hạn lời mời (`friend_request_ttl`) | 7 ngày | [Proposed] |
-| Từ chối | Lặng lẽ: người gửi chỉ thấy "đang chờ" đến khi hết hạn, tránh tổn thương | [Proposed] |
-| Hủy kết bạn | Một chạm, không thông báo cho người kia | [Proposed] |
-| Hiển thị trong danh sách | Nickname, avatar, level, trạng thái presence ([MULTIPLAYER_GAMEPLAY §4](MULTIPLAYER_GAMEPLAY.md#5-presence)); tên thật chỉ hiện với bạn cùng lớp | [Proposed] |
+| Gửi lời mời kết bạn | Tới học sinh **cùng trường**; khác trường trong cùng tenant `unit` khi tenant bật `cross_school_social_enabled` (§7, ADR-0054); không bao giờ khác tenant; hai người đã chặn nhau (một trong hai chiều) không gửi được. **Tenant `common`: tắt mặc định** (`common_tenant_social_defaults`, [CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078)) — API trả `SOCIAL_SCOPE_VIOLATION`, UI ẩn nút kết bạn và mã bạn bè | [Confirmed] · tenant `common` [Confirmed — Technical Architect 2026-11-17] (ADR-0078) |
+| Tìm bạn | **Không** có tìm kiếm tự do theo tên/ID. Chỉ chọn từ: người chơi gần (cùng instance), bạn cùng lớp, thành viên party/trận/club vừa chơi cùng (trong phạm vi được phép) | [Confirmed] |
+| Mã bạn bè | Mã ngắn hết hạn sau `friend_code_ttl` (10 phút; mỗi người một mã hiệu lực) do một người tạo để bạn ngồi cạnh nhập (phòng máy), vẫn kiểm tra phạm vi trường | [Confirmed] |
+| Giới hạn (`friend_limits`) | ≤ 10 lời mời đang chờ; ≤ 20 lời mời/ngày; ≤ 100 bạn. Đây là giới hạn duy nhất cho lời mời kết bạn (rate limit API áp theo cùng tham số) | [Confirmed] |
+| Hết hạn lời mời (`friend_request_ttl`) | 7 ngày | [Confirmed] |
+| Từ chối | Lặng lẽ: người gửi chỉ thấy "đang chờ" đến khi hết hạn, tránh tổn thương | [Confirmed] |
+| Hủy kết bạn | Một chạm, không thông báo cho người kia | [Confirmed] |
+| Hiển thị trong danh sách | Nickname, avatar, level, trạng thái presence ([MULTIPLAYER_GAMEPLAY §4](MULTIPLAYER_GAMEPLAY.md#5-presence)); tên thật chỉ hiện với bạn cùng lớp | [Confirmed] |
 
 ### 4.2. Hành động từ danh sách bạn bè
 
@@ -79,7 +79,7 @@ Mọi học sinh dùng được tất cả; khác nhau ở rủi ro và cách ki
 - Mọi nickname/tin nhắn/avatar có menu **Báo cáo · Chặn · Tắt tiếng**, ≤ 2 chạm trong trận.
 - Report được Platform Safety Team xử lý tập trung ([MODERATION §6](MODERATION.md#6-moderation-queue--quyền-moderator), ADR-0072).
 
-## 6. Club / Guild (nhóm bền vững) — ADR-0050 [Proposed]
+## 6. Club / Guild (nhóm bền vững) — ADR-0050 [Confirmed]
 
 Club là nhóm **bền vững** (khác Party là nhóm chơi tạm thời). Team cố định là **loại club**, không phải khái niệm riêng. **Study group không phải club** ([ADR-0084](../adr/ADR-0084-nhom-hoc-tap-thuoc-learning-service.md)): là nhóm LMS do module learning sở hữu ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)); module chat chỉ tạo channel `study_group` theo event của module learning ([CHAT_SYSTEM §2](CHAT_SYSTEM.md#2-channel-types)). Mục này chỉ áp dụng cho club.
 
@@ -104,8 +104,8 @@ Policy trường `student_club_creation` (do `school_admin` đặt, như nhau ch
 
 - Tham gia: **yêu cầu tham gia** (owner/officer duyệt) hoặc **lời mời**. Club do nhà trường tạo có thể tự thêm cả lớp hoặc danh sách học sinh.
 - `school_admin` quản lý mọi club của trường trong portal: khóa (`locked`), lưu trữ, gỡ thành viên; **không** đọc nội dung chat club (vi phạm chat do Safety Team xử lý, [MODERATION](MODERATION.md)).
-- Kích thước tối đa: 50 (cấu hình theo loại, platform-only) **[Proposed]**.
-- Mỗi học sinh tối đa 5 club **[Proposed]**.
+- Kích thước tối đa: 50 (cấu hình theo loại, platform-only) **[Confirmed]**.
+- Mỗi học sinh tối đa 5 club **[Confirmed]**.
 - Phạm vi: **một tenant**; mặc định cùng trường, liên trường trong tenant `unit` khi tenant bật `cross_school_social_enabled` (§7, ADR-0054).
 
 ### 6.3. Nội dung club
@@ -155,7 +155,7 @@ Policy trường `student_club_creation` (do `school_admin` đặt, như nhau ch
 | Thông báo trường: **chỉ** bài được giao và kết quả bài giao đã công bố | Bảng tin lớp ở Main Hub + hộp thông báo (tab "Nhà trường giao") | Ưu tiên cao; không có thông báo tự do của nhân sự nhà trường tới học sinh |
 | Kết quả xử lý báo cáo | Hộp thông báo ("Báo cáo của em đã được xử lý") | Không nêu chi tiết hình phạt |
 
-**Không có push notification ngoài game cho học sinh trong Release 1.0** [Proposed]: tránh kéo trẻ quay lại game ([GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)). Thông báo chỉ hiển thị trong game; nhân sự nhà trường nhận thông báo trong Admin Portal. API: `GET /api/v1/notifications`; đẩy realtime qua `notification.item.created`. Loại thông báo dùng **một enum `kind`** chung cho REST và WS (contract ở `specs/openapi`, `specs/asyncapi`).
+**Không có push notification ngoài game cho học sinh trong Release 1.0** [Confirmed]: tránh kéo trẻ quay lại game ([GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)). Thông báo chỉ hiển thị trong game; nhân sự nhà trường nhận thông báo trong Admin Portal. API: `GET /api/v1/notifications`; đẩy realtime qua `notification.item.created`. Loại thông báo dùng **một enum `kind`** chung cho REST và WS (contract ở `specs/openapi`, `specs/asyncapi`).
 
 ## 9. Acceptance criteria
 

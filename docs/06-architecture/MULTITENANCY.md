@@ -53,7 +53,7 @@ flowchart TD
 |---|---|---|---|
 | `school` | Đúng 1 | Trường độc lập ký hợp đồng trực tiếp | Tenant Admin ≈ quản trị trường |
 | `unit` | ≥ 1 | Sở/Phòng GD&ĐT, hệ thống trường | Dữ liệu mọi trường trong đơn vị cùng `tenant_id`; học sinh chuyển trường **trong** đơn vị không đổi tenant |
-| `common` | 1 (School ảo "EduWorld chung") | Học sinh do platform (System Admin) tạo/import có chủ đích (ADR-0063) | Duy nhất (`code = 'common'`); không có SIS; nội dung do System Admin gán [Proposed] |
+| `common` | 1 (School ảo "EduWorld chung") | Học sinh do platform (System Admin) tạo/import có chủ đích (ADR-0063) | Duy nhất (`code = 'common'`); không có SIS; nội dung do System Admin gán [Confirmed] |
 
 ## 3. Phân loại bảng
 
@@ -258,7 +258,7 @@ Không set `app.tenant_id` → `NULL` → không trả dòng nào. Phiên System
 ## 6. Valkey và realtime
 
 - Key chứa dữ liệu tenant có `tenant_id` trong key ([VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md)). Gateway không tự quyết định subscribe: module sở hữu (chat/competition) kiểm tra `tenant_id` của channel/room so với `Ew-Tenant-Id` của lệnh rồi mới trả `subscribe` cho gateway.
-- Hub instance cấp theo `(tenant_id, school_id, grade_band)` [Proposed]; tenant chung có instance riêng. Instance/match liên tenant chỉ tồn tại cho sự kiện do platform tạo, chat theo cùng ChatPolicy (ADR-0020), chỉ hiển thị nickname.
+- Hub instance cấp theo `(tenant_id, school_id, grade_band)` [Confirmed]; tenant chung có instance riêng. Instance/match liên tenant chỉ tồn tại cho sự kiện do platform tạo, chat theo cùng ChatPolicy (ADR-0020), chỉ hiển thị nickname.
 - Pub/sub không mang dữ liệu vượt tenant: message của channel tenant A chỉ publish trên `ew:chat:fanout:<channel_id>`, chỉ node có subscriber hợp lệ nhận.
 - **NATS JetStream (ADR-0035):** subject chat chứa tenant: `ew.chat.<tenant_id>.{msg|evt|cursor}.<channel_id>`. Persister và mọi consumer của module chat đối chiếu `tenant_id` của envelope với channel trong `eduworld_chat`; ghi qua unit of work có `TenantScope` + RLS `app.tenant_id` của envelope. Domain event `EVT_*` cũng mang `tenant_id` trong envelope; consumer của mọi module áp cùng quy tắc. Envelope sai tenant → DLQ + alert bảo mật.
 
@@ -266,15 +266,15 @@ Không set `app.tenant_id` → `NULL` → không trả dòng nào. Phiên System
 
 | Tình huống | Xử lý | Nhãn |
 |---|---|---|
-| **Chuyển lớp** trong cùng trường | Enrollment cũ `status=ended/transferred`, tạo enrollment mới; dữ liệu học tập giữ nguyên | [Proposed] |
+| **Chuyển lớp** trong cùng trường | Enrollment cũ `status=ended/transferred`, tạo enrollment mới; dữ liệu học tập giữ nguyên | [Confirmed] |
 | **Chuyển trường trong cùng tenant `unit`** | Đổi `school_id`, enrollment mới; **không** đổi tenant, không đổi membership Keycloak; lịch sử vẫn trong tenant | [Confirmed] |
-| **Chuyển sang trường thuộc tenant khác** | User giữ `user_id`; Student đổi `tenant_id`/`school_id` hiện tại; bản ghi lịch sử **giữ `tenant_id` cũ**. Tenant mới không tự thấy lịch sử cũ. Mastery & Game Profile đi theo học sinh. Không chia sẻ hồ sơ học tập cũ cho tenant mới | [Proposed] |
+| **Chuyển sang trường thuộc tenant khác** | User giữ `user_id`; Student đổi `tenant_id`/`school_id` hiện tại; bản ghi lịch sử **giữ `tenant_id` cũ**. Tenant mới không tự thấy lịch sử cũ. Mastery & Game Profile đi theo học sinh. Không chia sẻ hồ sơ học tập cũ cho tenant mới | [Confirmed] |
 | **Học sinh không thuộc tenant SIS nào** | Chỉ vào tenant `common` nếu platform đã tạo tài khoản ở đó; nếu không → `ACCOUNT_NOT_PROVISIONED`, không cho đăng nhập; xem [§8.3](#83-tenant-chung) | [Confirmed] ADR-0063 |
 | **Xã hội liên trường trong tenant `unit`** | Cài đặt tenant `cross_school_social_enabled` (`platform.tenants.settings`, mặc định tắt, chỉ có nghĩa với tenant `unit`): bật → kết bạn, DM, party, club, World mở rộng, ghép trận giữa các trường trong cùng tenant; không bao giờ mở liên tenant. Quy tắc chi tiết: [SOCIAL_SYSTEM §7](../03-social-multiplayer/SOCIAL_SYSTEM.md#7-quy-tắc-liên-trường--adr-0054) | [Confirmed — Technical Architect 2026-11-16] ADR-0054 |
-| **Thi đấu liên tenant** | `competition.matches.tenant_ids[]`; mỗi `match_participants` có `tenant_id`; đối thủ chỉ thấy nickname/avatar/tier. Attempt/learning event ghi theo `tenant_id` của từng học sinh | [Proposed] |
-| **Giải đấu trong tenant `unit`** | Tạo từ template platform trong tenant; đăng ký chỉ học sinh của tenant | [Proposed] |
+| **Thi đấu liên tenant** | `competition.matches.tenant_ids[]`; mỗi `match_participants` có `tenant_id`; đối thủ chỉ thấy nickname/avatar/tier. Attempt/learning event ghi theo `tenant_id` của từng học sinh | [Confirmed] |
+| **Giải đấu trong tenant `unit`** | Tạo từ template platform trong tenant; đăng ký chỉ học sinh của tenant | [Confirmed] |
 | **Nội dung platform dùng trong tenant** | Chỉ đọc khi được gán; muốn sửa → System Admin clone sang tenant (ADR-0029) | [Confirmed] |
-| **Báo cáo tổng hợp tenant `unit`** | Tenant Admin xem báo cáo theo trường trong tenant; báo cáo vượt tenant chỉ System Admin, dạng aggregate k-anonymity ≥ 5 [Proposed] | [Proposed] |
+| **Báo cáo tổng hợp tenant `unit`** | Tenant Admin xem báo cáo theo trường trong tenant; báo cáo vượt tenant chỉ System Admin, dạng aggregate k-anonymity ≥ 5 [Confirmed] | [Confirmed] |
 | **Moderation** | Tập trung ở Platform Safety Team (`safety_moderator`, ADR-0072); case luôn gắn `tenant_id` (tin nhắn liên tenant bị report → case thuộc tenant của người bị report); đọc liên tenant chỉ trong module moderation qua `tenancy.Bypass(ctx, "moderation_case")` có audit; nhà trường nhận thông báo tóm tắt vụ việc nghiêm trọng của học sinh trường mình | [Confirmed] ADR-0072 |
 | **System Admin hỗ trợ** | `CrossTenantScope(reason)`, dropdown chọn tenant, audit | [Confirmed] |
 
@@ -302,9 +302,9 @@ Tóm tắt: có claim `organization` thì tenant đó phải thuộc membership 
 | Hạng mục | Quy tắc | Nhãn |
 |---|---|---|
 | Ai vào | Chỉ tài khoản do platform (System Admin) **tạo/import có chủ đích** vào tenant chung, kèm khối và lớp ảo theo khối (ADR-0063, ADR-0060). Không có JIT tự đưa người dùng vào tenant chung; người không thuộc tenant chung và không thuộc tenant SIS nào bị từ chối `ACCOUNT_NOT_PROVISIONED` | [Confirmed] |
-| Cấu trúc | Tenant `common`, School ảo "EduWorld chung"; lớp ảo theo khối (`common-g1` … `common-g9`) để mọi chức năng cần lớp vẫn hoạt động; khối lớp do System Admin đặt khi tạo/import tài khoản | [Proposed] |
-| Nội dung | Chỉ dữ liệu platform được System Admin gán cho `common` | [Proposed] |
-| Chuyển sang tenant thật | Khi SIS của một tenant đồng bộ bản ghi khớp user → membership tenant đó → lần đăng nhập sau dùng tenant mới; lịch sử ở `common` giữ `tenant_id = common` | [Proposed] |
+| Cấu trúc | Tenant `common`, School ảo "EduWorld chung"; lớp ảo theo khối (`common-g1` … `common-g9`) để mọi chức năng cần lớp vẫn hoạt động; khối lớp do System Admin đặt khi tạo/import tài khoản | [Confirmed] |
+| Nội dung | Chỉ dữ liệu platform được System Admin gán cho `common` | [Confirmed] |
+| Chuyển sang tenant thật | Khi SIS của một tenant đồng bộ bản ghi khớp user → membership tenant đó → lần đăng nhập sau dùng tenant mới; lịch sử ở `common` giữ `tenant_id = common` | [Confirmed] |
 | An toàn (ADR-0078) | Mặc định siết chặt `common_tenant_social_defaults`: **tắt** kết bạn, DM và World chat; giờ giới nghiêm platform `platform_curfew` bắt buộc; kiểm duyệt bởi Platform Safety Team (ADR-0072); consent do platform thu trực tiếp (ADR-0077). Không có nhà trường nhận thông báo vụ việc nên Safety Team tự liên hệ theo quy trình platform. Chính sách chi tiết: [CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078); chỉ System Admin bật lại từng mục, có lý do + audit | [Confirmed — Technical Architect 2026-11-17] |
 | Lý do | "Cùng tenant" ở `common` là hàng nghìn học sinh không quen nhau và không có trường thu consent hay giám sát, nên quy tắc "cùng trường" của SOCIAL_SYSTEM không đủ an toàn | — |
 
@@ -321,7 +321,7 @@ Tóm tắt: có claim `organization` thì tenant đó phải thuộc membership 
 | Nhân sự có UserRole ở nhiều tenant | Member của mọi tenant có UserRole hiệu lực. Đăng nhập portal (không chọn trước) → chọn tenant sau đăng nhập (ADR-0063 mục 5, ADR-0067); đổi tenant = đổi header `X-Tenant-Id` (backend kiểm tra membership), không xin token mới (ADR-0091, thay cách dùng `organization:{alias}` của ADR-0067) | [Confirmed] |
 | Nhân sự quản lý nhiều trường trong cùng tenant `unit` | Một phiên tenant; `Principal.SchoolIDs` gồm các trường có UserRole scope `school`; màn hình portal lọc theo trường | [Confirmed] |
 | Học sinh chuyển sang tenant khác | Worker gỡ membership tenant cũ, thêm tenant mới, thu hồi session gắn tenant cũ, phát `user.access_revoked`. Lần đăng nhập sau backend tự xác định tenant mới; token còn mang tenant cũ → `TENANT_MISMATCH`, client đăng nhập lại | [Confirmed] |
-| Thiết bị phòng máy dùng chung | Tenant cố định trong file cấu hình thiết bị ([GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md)) | [Proposed] |
+| Thiết bị phòng máy dùng chung | Tenant cố định trong file cấu hình thiết bị ([GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md)) | [Confirmed] |
 | Nhân sự (School Admin, Tenant Admin, System Admin…) mở game | Không được vào game: `403 GAME_ACCESS_STUDENT_ONLY` (ADR-0031); tenant không thay đổi điều này | [Confirmed] |
 | Học sinh đăng nhập thiết bị thứ hai | Tenant của phiên mới phải khớp như bình thường; takeover chỉ kết thúc session cũ, không đổi tenant (ADR-0031) | [Confirmed] |
 | Học sinh bị dọn do không đăng nhập (ADR-0032) | Soft-delete + gỡ membership tenant; đăng nhập lại và còn hợp lệ trong SIS của **cùng tenant** → khôi phục; SIS tenant khác → xử lý như chuyển tenant | [Confirmed] |
@@ -354,7 +354,7 @@ flowchart LR
   CJ -->|bản sao sâu, ID mới,\ncloned_from_*| TC[(Dữ liệu riêng tenant C)]
 ```
 
-- Gán: `infra.tenant_resource_assignments(resource_type, resource_id, tenant_id, assigned_by, assigned_at, deleted_at)` nằm trong **database của module sở hữu tài nguyên**; System Admin thao tác qua `/api/v1/admin/tenant-assignments` (module identity định tuyến tới module sở hữu theo `resource_type`); tùy chọn `apply_to_new_tenants` lưu ở `platform.tenant_default_assignments` (identity) và được áp khi có `tenant.created` [Proposed].
+- Gán: `infra.tenant_resource_assignments(resource_type, resource_id, tenant_id, assigned_by, assigned_at, deleted_at)` nằm trong **database của module sở hữu tài nguyên**; System Admin thao tác qua `/api/v1/admin/tenant-assignments` (module identity định tuyến tới module sở hữu theo `resource_type`); tùy chọn `apply_to_new_tenants` lưu ở `platform.tenant_default_assignments` (identity) và được áp khi có `tenant.created` [Confirmed].
 - Clone: saga do module identity điều phối (`platform.tenant_clone_jobs`), từng module thực hiện phần của mình qua facade platform `tenant-clones/{job_id}/steps` (idempotent theo `job_id`, gọi trong tiến trình), đồ thị phụ thuộc theo loại tài nguyên; phụ thuộc chéo module (vd. quest tham chiếu question set) được ánh xạ bằng `id_map` trả về của bước trước; **không clone** học sinh, enrollment, attempt, kết quả, chat, mastery, XP. Audit ghi ở cả tenant nguồn và đích.
 
 ## 11. Test bắt buộc

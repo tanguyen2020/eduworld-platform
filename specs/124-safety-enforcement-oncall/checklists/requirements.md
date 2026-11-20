@@ -22,7 +22,7 @@
 ## Feature Readiness
 
 - [x] Mỗi user story có Independent Test
-- [x] Tham số dùng tên CONFIG_DEFAULTS, không chép giá trị (4 tham số mới ghi [Proposed] ở Assumptions, task T046 đăng ký)
+- [x] Tham số dùng tên CONFIG_DEFAULTS, không chép giá trị (4 tham số mới ghi [Confirmed] ở Assumptions, task T046 đăng ký)
 - [x] Không mâu thuẫn tài liệu sở hữu và ADR hiện hành
 
 ## Notes

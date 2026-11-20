@@ -8,8 +8,8 @@
 ### Session 2026-11-16
 
 - Q: Permission catalog đặt ở `internal/authorization` (SECURITY_ARCHITECTURE §5.2) hay `src/backend/pkg/authz`? → A: `src/backend/pkg/authz/catalog.go` (D4, AGENTS R20); mọi binary gọi `ValidateCatalog` lúc khởi động.
-- Q: `Bypass`/`TenantScope` ở `src/backend/pkg/tenancy` hay `src/backend/pkg/entx`? → A: `TenantScope`, `Bypass` ở `src/backend/pkg/tenancy`; interceptor/hook ent ở `src/backend/pkg/entx` (F003) — D5 [Proposed].
-- Q: Key cache Principal? → A: Mỗi module dùng prefix của mình `ew:<module>:principal:<user_id>:<tenant_id>` (VALKEY_DESIGN §1, ACL theo module); D7 chỉ chốt endpoint `principals:resolve` [Proposed].
+- Q: `Bypass`/`TenantScope` ở `src/backend/pkg/tenancy` hay `src/backend/pkg/entx`? → A: `TenantScope`, `Bypass` ở `src/backend/pkg/tenancy`; interceptor/hook ent ở `src/backend/pkg/entx` (F003) — D5 [Confirmed].
+- Q: Key cache Principal? → A: Mỗi module dùng prefix của mình `ew:<module>:principal:<user_id>:<tenant_id>` (VALKEY_DESIGN §1, ACL theo module); D7 chỉ chốt endpoint `principals:resolve` [Confirmed].
 - Q: Internal API gọi sai `azp` trả `CALLER_NOT_ALLOWED` (API_DESIGN §12.1) hay `PERMISSION_DENIED` (TC-SVC-006)? → A: `403 CALLER_NOT_ALLOWED` theo catalog mã lỗi (API_DESIGN §4.1 là nguồn); TC-SVC-006 cần sửa kỳ vọng.
 
 ### Session 2026-11-17
@@ -23,7 +23,7 @@
 - Q: Policy RLS có lọc `deleted_at` không? → A: Không. RLS chỉ lọc tenant (PostgreSQL buộc dòng mới của `UPDATE` thỏa policy `SELECT`, nên `deleted_at` trong policy chặn soft-delete); lớp thứ hai cho bản ghi đã xóa là view `<table>_live` cho `<module>_readonly` (ADR-0089 §1).
 - Q: Có những loại scope nào và `Bypass` nhận lý do gì? → A: `TenantScope` (`authz.ScopeFor(p)`), `CrossTenantScope` (`authz.CrossTenantScope(p, ids, reason)`), `PlatformScope` (`authz.PlatformScope(p)` cho nhân sự platform, `authz.SystemPlatformScope(job)` cho job platform); reason là hằng số kiểu `tenancy.BypassReason`, mỗi reason gắn một quyền DB ([MULTITENANCY §4.4](../../docs/06-architecture/MULTITENANCY.md#44-quy-tắc-interceptor-theo-mixin-ba-loại-scope-và-cổng-bypass-adr-0089)); `tenancy.Bypass(ctx, reason)` chỉ nhận lý do thuộc danh sách đóng `system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`, ghi audit `cross_tenant.accessed` + metric `eduworld_tenant_filter_bypass_total{module,reason}`; API công khai `src/backend/pkg/tenancy`/`src/backend/pkg/authz` khóa từ F002, đổi chữ ký cần ADR (ADR-0089 §3).
 
-### Session 2026-11-18 (quyết định khi triển khai, [Proposed] — Technical Architect duyệt)
+### Session 2026-11-18 (quyết định khi triển khai, [Confirmed] — Technical Architect duyệt)
 
 - Q: Danh sách lý do `Bypass` có bao nhiêu mục? → A: 11 — thêm `platform_analytics` theo ADR-0089 §3 (nguồn sở hữu); câu trả lời phiên 2026-11-17 liệt kê 10 mục là thiếu.
 - Q: Resolve Principal bằng gì khi token không mang `user_id` EduWorld? → A: `PrincipalResolver.Resolve(ctx, {Subject{Issuer, Subject}, TenantID, ClientID})`; cache Valkey giữ đúng khóa `ew:<module>:principal:<user_id>:<tenant_id|platform>` của VALKEY_DESIGN, thêm khóa phụ `…:principal:sub:<hash(iss,sub)>` → `user_id` và `…:principal:idx:<user_id>` để `Invalidate(user_id, nil)` xóa mọi tenant; `ClientID`, `sid`, `Channel`, MFA lấy từ token mỗi request, không cache.
@@ -206,6 +206,6 @@ Tech Lead muốn CI chặn vi phạm tầng trong module và bảo đảm mọi 
 
 ## Assumptions
 
-- D4, D5, D7 của CODE_PLAN §3 theo đề xuất [Proposed].
+- D4, D5, D7 của CODE_PLAN §3 theo đề xuất [Confirmed].
 - Thư viện theo ADR-0025: chi, `coreos/go-oidc` + `go-jose`, `koanf`, `log/slog`, OpenTelemetry Go, `prometheus/client_golang`, `kin-openapi` (validator request).
 - `resolvePrincipal` trả `404` khi người dùng không có membership tenant yêu cầu → ánh xạ `TENANT_MISMATCH` (contracts §6 ghi cần làm rõ trong spec internal).

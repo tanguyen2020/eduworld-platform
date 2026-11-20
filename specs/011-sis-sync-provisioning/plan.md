@@ -16,7 +16,7 @@ Pipeline SIS của module identity chạy trong `src/backend/cmd/worker` (profil
 | Testing | go test + testcontainers (PostgreSQL, NATS, Valkey, Keycloak); fake `SisLookupPort` (chỉ test) |
 | Target Platform | Linux container (module `identity` api + worker) |
 | Project Type | backend module |
-| Performance Goals | Import CSV 1.000 học sinh ≤ 10 phút (SC-001) [Proposed] ([SIS_INTEGRATION §11](../../docs/09-identity/SIS_INTEGRATION.md)) |
+| Performance Goals | Import CSV 1.000 học sinh ≤ 10 phút (SC-001) [Confirmed] ([SIS_INTEGRATION §11](../../docs/09-identity/SIS_INTEGRATION.md)) |
 | Constraints | AGENTS R3, R4, R13, R14, R21, R28, R30; ADR-0021, ADR-0046, ADR-0061, ADR-0069 |
 | Scale/Scope | `sis_login_sync_concurrency`, `csv_import_max` |
 

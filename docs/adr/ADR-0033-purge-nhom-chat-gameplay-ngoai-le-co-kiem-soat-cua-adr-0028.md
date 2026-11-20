@@ -9,7 +9,7 @@ Stakeholder yêu cầu clear nhóm chat vì nếu không xóa sẽ tạo nhiều
 ## Quyết định
 
 1. **Phạm vi purge (xóa vật lý)** chỉ dữ liệu chat **ngắn hạn gắn với phiên chơi**: channel `match`, `team` gắn với một trận, `party` (sau khi giải tán), cùng thành viên channel, tin nhắn, reaction, read state; tin nhắn ephemeral của World/Area. **Không** áp dụng cho Class, Study Group, Team cố định/guild, Direct Message.
-2. **Thời điểm:** channel đóng khi trận kết thúc hoặc party giải tán (`closed_at`); purge sau `gameplay_chat_retention_days` kể từ `closed_at`. Mặc định 7 ngày [Proposed], **tối thiểu 3 ngày** để kịp báo cáo; cấu hình cấp platform, tenant được điều chỉnh trong giới hạn [Proposed]. World/Area ephemeral: 24 giờ.
+2. **Thời điểm:** channel đóng khi trận kết thúc hoặc party giải tán (`closed_at`); purge sau `gameplay_chat_retention_days` kể từ `closed_at`. Mặc định 7 ngày [Confirmed], **tối thiểu 3 ngày** để kịp báo cáo; cấu hình cấp platform, tenant được điều chỉnh trong giới hạn [Confirmed]. World/Area ephemeral: 24 giờ.
 3. **Giữ bằng chứng:** tin thuộc report, moderation case mở hoặc sanction được **sao chép** sang `chat.moderation_evidence` trước khi purge; channel có case mở thì hoãn purge.
 4. **Thực hiện (ứng dụng vẫn không hard-delete):**
    - Không API/use case nào xóa vật lý; chỉ job `gameplay-chat-purge` trong worker của chat-service, dùng role DB `chat_purger` chỉ có `DELETE` trên các bảng chat gameplay.

@@ -199,6 +199,6 @@ System Admin gán quest/mini-game đã publish cho tenant; nhà trường chỉ 
 ## Assumptions
 
 - Kernel kho version + publish (dùng cho seed) có từ F071; F078 dùng lại `gameconfig.Publisher` cho đường HTTP.
-- `listGameActivities` giữ `x-service: learning` và module learning dựng projection từ event của F078 [Proposed]; nếu đổi sang module game phục vụ trực tiếp cần sửa OpenAPI và F041.
-- Renderer chạy trong container riêng `game-renderer` (Godot headless) do worker module game điều phối qua hàng đợi [Proposed] ([research.md](research.md) R2).
+- `listGameActivities` giữ `x-service: learning` và module learning dựng projection từ event của F078 [Confirmed]; nếu đổi sang module game phục vụ trực tiếp cần sửa OpenAPI và F041.
+- Renderer chạy trong container riêng `game-renderer` (Godot headless) do worker module game điều phối qua hàng đợi [Confirmed] ([research.md](research.md) R2).
 - Local chưa có tài khoản `game_designer`, `liveops`; quickstart dùng `sa.admin` (kiêm `game.*`) và `cm.duyet` (`game.content.review`); task Polish bổ sung tài khoản demo.

@@ -205,7 +205,7 @@ System Admin sửa số dư/vật phẩm/XP sai do lỗi hoặc gian lận bằn
 
 ## Assumptions
 
-- Cap Xu/ngày dùng ngày ICT như cap XP (F074) [Proposed].
+- Cap Xu/ngày dùng ngày ICT như cap XP (F074) [Confirmed].
 - Achievement `category` thêm `event` khi F077 thêm trigger sự kiện (schema hiện chưa có `event`).
 - Knowledge card cấp từ `learning_objective.progressed` (payload chưa có schema — owner F031) với `level` theo `MasteryLevel`.
 - Quyền đọc trang `listEconomyAdjustments`/từ chối điều chỉnh chưa có trong spec (delta §6); approver tìm điều chỉnh chờ qua endpoint mới.

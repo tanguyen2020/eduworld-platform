@@ -27,5 +27,5 @@
 
 ## Notes
 
-- Density `g1_3` trước bootstrap là [Proposed]; xác nhận với UX khi làm S01 (F061).
+- Density `g1_3` trước bootstrap là [Confirmed]; xác nhận với UX khi làm S01 (F061).
 - 2026-11-16: thêm User Story 5 `SecureStorage` theo ADR-0086 (thay ràng buộc ADR-0064 "không token trên đĩa"); adapter iOS Keychain ở F133.

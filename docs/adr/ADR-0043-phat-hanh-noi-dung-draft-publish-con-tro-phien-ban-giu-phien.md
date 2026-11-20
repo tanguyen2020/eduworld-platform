@@ -15,20 +15,20 @@ Stakeholder yêu cầu: nội dung sửa liên tục nên cần Draft/Publish; p
    - **Version** (`*_versions`): bất biến sau khi publish; Draft sửa tự do; sửa nội dung đã publish = tạo Draft mới từ version đó.
    - **Release pointer** (`content_items.current_version_id`): version học sinh nhận khi **bắt đầu** lượt mới. Mỗi lần đổi con trỏ ghi `content_releases` (`item_id`, `from_version`, `to_version`, `action ∈ {publish, rollback, unpublish}`, `reason`, `released_by`, `released_at`), có audit.
    - Áp dụng cho mọi nội dung có version: lesson, question, question set, activity, rubric, assessment blueprint, learning path (learning-service); quest, mini-game config, NPC dialogue, level package, challenge, boss, reward rule, item, progression curve (game-service); sticker/GIF pack (chat-service).
-2. **Workflow:** `draft → in_review → approved → published`; publish ngay hoặc **hẹn giờ** (`publish_at`) [Proposed]; unpublish = gỡ con trỏ, không xóa version.
+2. **Workflow:** `draft → in_review → approved → published`; publish ngay hoặc **hẹn giờ** (`publish_at`) [Confirmed]; unpublish = gỡ con trỏ, không xóa version.
 3. **Lịch sử version:** Admin Portal liệt kê mọi version, xem chỉ đọc, so sánh hai version (diff), preview trong game.
 4. **Rollback = trỏ con trỏ về một version đã publish trước đó** (không sao chép, không tạo version mới); bắt buộc lý do, quyền riêng, audit; có thể roll forward. Học sinh đang chơi không bị ngắt.
 5. **Giữ phiên bản khi đang chơi (version pinning):**
    - Khi học sinh **bắt đầu** đơn vị chơi/học (level, quest, mini-game, bài học, attempt, challenge, trận đấu), server ghi version vào đơn vị đó (`quest_progress.quest_version_id`, `attempts.source_version_id`, `level_sessions.content_versions`, `matches.question_plan_version`…). Mọi lần tải nội dung trong đơn vị dùng version đã ghi; kết thúc thì lượt sau nhận bản mới nhất.
-   - Quest nhiều ngày giữ version đến khi hoàn thành hoặc bỏ [Proposed].
+   - Quest nhiều ngày giữ version đến khi hoàn thành hoặc bỏ [Confirmed].
    - **Đề kiểm tra:** ExamSession ghi version blueprint lúc tạo; cả lớp cùng đề.
-   - **Bài giao:** mặc định giữ version lúc giao; giáo viên có thể chọn "Luôn dùng bản mới nhất" [Proposed].
+   - **Bài giao:** mặc định giữ version lúc giao; giáo viên có thể chọn "Luôn dùng bản mới nhất" [Confirmed].
    - **Game client:** khi khởi động và **khi vào màn mới**, tải **content manifest** của tenant (item → version hiện hành, `manifest_version`, ETag); trong một màn không đổi nội dung; cache cục bộ theo `(item_id, version)`.
 6. **Đẩy cache khi publish:**
-   - Bước 1 (trước khi đổi con trỏ): dựng **snapshot** bất biến của version (render payload không có answer key, cấu hình, gói level, danh sách media), ghi Valkey `ew:<svc>:cv:<item_type>:<item_id>:<version>` (TTL trượt 7 ngày [Proposed]) và CDN cho gói nội dung game không nhạy cảm (đường dẫn có version/hash, `Cache-Control: immutable`).
+   - Bước 1 (trước khi đổi con trỏ): dựng **snapshot** bất biến của version (render payload không có answer key, cấu hình, gói level, danh sách media), ghi Valkey `ew:<svc>:cv:<item_type>:<item_id>:<version>` (TTL trượt 7 ngày [Confirmed]) và CDN cho gói nội dung game không nhạy cảm (đường dẫn có version/hash, `Cache-Control: immutable`).
    - Bước 2: đổi con trỏ trong transaction + outbox `content.published` / `content.rolled_back`.
    - Bước 3: consumer cập nhật con trỏ cache `ew:<svc>:current:<tenant_id>:<item_type>:<item_id>` và manifest của các tenant liên quan (sở hữu hoặc được gán, ADR-0029), phát `content.manifest_updated` (áp dụng ở lượt sau).
-   - Từ bấm Publish đến khi học sinh mới nhận được ≤ 30 giây [Proposed].
+   - Từ bấm Publish đến khi học sinh mới nhận được ≤ 30 giây [Confirmed].
    - **Câu hỏi đề kiểm tra và mọi answer key không lên CDN**; chỉ phục vụ qua API có kiểm quyền.
 7. **Sửa đồng thời:** Draft dùng optimistic concurrency (`version`, ADR-0039).
 

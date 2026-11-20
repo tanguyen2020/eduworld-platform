@@ -10,7 +10,7 @@
 
 ## R2. Thư viện WebSocket
 
-- **Decision**: `github.com/coder/websocket` (context-aware, hỗ trợ subprotocol, close code tùy ý, nén tắt mặc định) [Proposed].
+- **Decision**: `github.com/coder/websocket` (context-aware, hỗ trợ subprotocol, close code tùy ý, nén tắt mặc định) [Confirmed].
 - **Rationale**: API theo `context.Context` khớp quy ước Go của repo (AGENTS §7); dễ đặt write deadline 10 s.
 - **Alternatives**: `gorilla/websocket` (ổn định nhưng API cũ, cần goroutine ghi riêng); `gobwas/ws` (hiệu năng cao, code phức tạp) — xem lại nếu load test F132 cho thấy cần.
 

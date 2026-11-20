@@ -193,12 +193,12 @@ Developer sao lưu/khôi phục database của một module trước thử nghi�
 ## Assumptions
 
 - ADR-0074 và ADR-0088 Accepted (2026-11-17); cổng, tên biến, tên target theo LOCAL_DEVELOPMENT §3.2, §4, §7 và DEPLOYMENT §3.1, §10.
-- Runner GitHub-hosted có Docker cho testcontainers; repository có quyền cấu hình branch protection/rulesets và GitHub Environments (Owner repo áp cấu hình bằng script `scripts/ci/apply-repo-settings.sh` dùng `gh api` [Proposed]; F001 kiểm lại bằng cùng script ở chế độ `--check`).
+- Runner GitHub-hosted có Docker cho testcontainers; repository có quyền cấu hình branch protection/rulesets và GitHub Environments (Owner repo áp cấu hình bằng script `scripts/ci/apply-repo-settings.sh` dùng `gh api` [Confirmed]; F001 kiểm lại bằng cùng script ở chế độ `--check`).
 - Image `migrate` chứa migration của mọi module; job `migrate --module=<module>` là đơn vị áp migration ([DEPLOYMENT §3.1](../../docs/11-operations/DEPLOYMENT.md)).
 - Ghi nhận khi triển khai (2026-11-17):
   - floci bật `FLOCI_SERVICES_S3_ENFORCE_AUTH` chỉ nhận credential mặc định `test`/`test` → local/CI dùng giá trị này (staging/production theo ADR-0075).
   - `sis-mock` dùng `stoplight/prism:4` (prism 5 lỗi khi khởi động).
   - Atlas chạy bằng image ghim `arigaio/atlas:0.38.0` trong mạng compose; Atlas cảnh báo bản này sắp hết hỗ trợ → nâng phiên bản trong `tools/versions.mk` khi có tag mới.
   - CI dùng Go `stable` mới nhất (bản patch vá CVE của thư viện chuẩn); máy dev nên cập nhật Go lên bản patch mới nhất.
-  - Required status check của `main` chỉ gồm job `security.yml` (luôn chạy). Lane có path filter (`go`, `specs`, `docs`) không đặt required trực tiếp được (workflow bị bỏ qua sẽ treo "pending"); cần thêm job cổng không có path filter tổng hợp kết quả lane đã chạy [Proposed, việc tiếp theo].
+  - Required status check của `main` chỉ gồm job `security.yml` (luôn chạy). Lane có path filter (`go`, `specs`, `docs`) không đặt required trực tiếp được (workflow bị bỏ qua sẽ treo "pending"); cần thêm job cổng không có path filter tổng hợp kết quả lane đã chạy [Confirmed, việc tiếp theo].
   - Không commit file secret giả hay module có lỗ hổng: `test-gitleaks.sh`, `test-vuln-scan.sh` sinh fixture lúc chạy.

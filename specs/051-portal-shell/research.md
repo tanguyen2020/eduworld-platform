@@ -13,7 +13,7 @@
 
 - **Decision**: Sau khi chọn tenant, gọi `userManager.signinRedirect({ scope: "openid profile organization:" + alias, state: { returnUrl } })` (SSO có sẵn nên không hỏi mật khẩu); alias lấy từ `MyTenant.keycloak_org_alias` (delta T004). Phạm vi platform và nhân sự 1 tenant không thêm scope `organization` (backend chọn theo membership, [KEYCLOAK_SSO §4.4](../../docs/09-identity/KEYCLOAK_SSO.md)).
 - **Rationale**: [KEYCLOAK_SSO §3.3, §4.3](../../docs/09-identity/KEYCLOAK_SSO.md); không gửi scope `organization` trống.
-- **Alternatives**: `signinSilent` trong iframe — bị trình duyệt chặn cookie bên thứ ba khi Keycloak khác domain; dùng làm tối ưu khi cùng site [Proposed].
+- **Alternatives**: `signinSilent` trong iframe — bị trình duyệt chặn cookie bên thứ ba khi Keycloak khác domain; dùng làm tối ưu khi cùng site [Confirmed].
 
 ## R3. Chu kỳ làm mới permission
 

@@ -59,7 +59,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (sinh `specs/openapi/modules/
 
 - `eduworld-api.v1.yaml`: `AreaEnterResult` thêm `level_id`; `enterWorldArea` khai báo `403 AREA_LOCKED` (Problem extension `missing_requirements[]` cùng shape `AreaExploration.unlock_requirements`, thêm `kind = chapters_completed`) và `409`; `getNpcDialogue` response `$ref` delivery schema + `ETag`.
 - `AreaExploration.unlock_requirements[].kind` thêm `chapters_completed` (khớp AsyncAPI `world.area.unlocked.unlocked_by`).
-- JSON Schema mới: `world-area`, `story-chapter`, `level-package` (mọi chuỗi có `maxLength`); `GameConfigType` đã có `world-areas`, `story-chapters`, `npc-dialogues`; `levels` đổi thành `progression-levels` (bảng level F074, RB-308) nên **Câu hỏi mở**: config type gói level (`game.level_definitions`) chưa có trong API_DESIGN — tạm `level-packages` [Proposed], chờ tài liệu sở hữu.
+- JSON Schema mới: `world-area`, `story-chapter`, `level-package` (mọi chuỗi có `maxLength`); `GameConfigType` đã có `world-areas`, `story-chapters`, `npc-dialogues`; `levels` đổi thành `progression-levels` (bảng level F074, RB-308) nên **Câu hỏi mở**: config type gói level (`game.level_definitions`) chưa có trong API_DESIGN — tạm `level-packages` [Confirmed], chờ tài liệu sở hữu.
 - Gỡ `joinFriendInWorld` (`POST /game/world/friends/{user_id}:join`) khỏi `game.v1.yaml` và spec gộp: API_DESIGN ghi "Không dùng", "Tham gia bạn" là WS `hub.instance.join {follow_user_id}` (F091, RB-625). Task T004.
 - Payload event game: `content.published`, `world.*`, `story.chapter_completed`; payload `learning_objective.progressed` (learning), `school.updated` (identity) nếu feature sở hữu chưa thêm.
 - Kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=game`, `make test-contract`.

@@ -9,9 +9,9 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` + bản theo module `specs/op
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
 | `listModerationOncallShifts` | `GET /api/v1/admin/moderation/oncall-shifts?from=&to=&oncall_role=` | chat.v1 | `moderation.case.read` | Cần thêm |
-| `createModerationOncallShift` | `POST /api/v1/admin/moderation/oncall-shifts` (`Idempotency-Key`) | chat.v1 | `moderation.case.lead` [Proposed, F121] | Cần thêm |
+| `createModerationOncallShift` | `POST /api/v1/admin/moderation/oncall-shifts` (`Idempotency-Key`) | chat.v1 | `moderation.case.lead` [Confirmed, F121] | Cần thêm |
 | `deleteModerationOncallShift` | `DELETE /api/v1/admin/moderation/oncall-shifts/{shift_id}` (soft-delete) | chat.v1 | `moderation.case.lead` | Cần thêm |
-| `createBreakGlassRequest` | `POST /api/v1/admin/break-glass/grants` (`X-Tenant-Id` đích, `Idempotency-Key`) | chat.v1 | `platform.break_glass.request` [Proposed] | Cần thêm |
+| `createBreakGlassRequest` | `POST /api/v1/admin/break-glass/grants` (`X-Tenant-Id` đích, `Idempotency-Key`) | chat.v1 | `platform.break_glass.request` [Confirmed] | Cần thêm |
 | `listBreakGlassGrants` | `GET /api/v1/admin/break-glass/grants?status=&tenant_ids=` | chat.v1 | `platform.break_glass.approve` hoặc `.request` (chỉ của mình) | Cần thêm |
 | `approveBreakGlassRequest` · `rejectBreakGlassRequest` | `POST /api/v1/admin/break-glass/grants/{grant_id}:approve` · `:reject` (`If-Match`, `Idempotency-Key`) | chat.v1 | `platform.break_glass.approve` (khác người yêu cầu) | Cần thêm |
 | `revokeBreakGlassGrant` | `POST /api/v1/admin/break-glass/grants/{grant_id}:revoke` | chat.v1 | `platform.break_glass.request` hoặc `.approve` | Cần thêm |

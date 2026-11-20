@@ -103,7 +103,7 @@ Không có. Quy tắc ở [MODERATION §5–§10](../../docs/03-social-multiplay
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Permission theo bảng contracts §1; `moderation.case.lead` [Proposed] cho thao tác trưởng ca.
+- Permission theo bảng contracts §1; `moderation.case.lead` [Confirmed] cho thao tác trưởng ca.
 - `tenancy.Bypass(ctx, "moderation_case")` (client `chat_platform`, audit `cross_tenant.accessed`, ADR-0089 §3) chỉ trong query/command admin moderation; metric `eduworld_tenant_filter_bypass_total{reason="moderation_case"}`; ghi luôn cần `X-Tenant-Id` khớp tenant case (`403 TENANT_MISMATCH` nếu lệch).
 - Idempotency-Key: `createReport`, `assignModerationCase`, `actOnModerationCase`, `notifySchoolForCase`, `createSanction`, `revokeSanction`, `acknowledgeSchoolSafetyNotification`.
 - Audit: `moderation.case.viewed`, `moderation.case.messages_viewed`, `moderation.case.searched`, `moderation.case.assigned`, `moderation.case.acted`, `moderation.sanction.applied/revoked`, `moderation.school_notification.sent/acknowledged` (tham chiếu ID, không nội dung).

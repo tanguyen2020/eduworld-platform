@@ -23,11 +23,11 @@
 
 ### Session 2026-11-19 (triển khai)
 
-- Q: Cột `settings_version` cho `platform.tenants`, `org.schools`? → A: [Proposed] Dùng cột `version` (optimistic concurrency) sẵn có của dòng tenant/trường làm ETag cài đặt (thay đổi tên/trạng thái cũng tăng version) — không đổi bảng ent của F010 — OQ F015-1. Khóa `platform_settings` chưa cấu hình có ETag `W/"0"`.
-- Q: Role `identity_retention`? → A: [Proposed] Thay bằng hàm `SECURITY DEFINER` `audit.anonymize_expired` (và `audit.ensure_monthly_partitions`, `audit.monthly_partitions_ahead`) chạy bằng `identity_partition_admin`: `identity_app`/`identity_platform` không có quyền UPDATE nào trên nhật ký — OQ F015-2.
+- Q: Cột `settings_version` cho `platform.tenants`, `org.schools`? → A: [Confirmed] Dùng cột `version` (optimistic concurrency) sẵn có của dòng tenant/trường làm ETag cài đặt (thay đổi tên/trạng thái cũng tăng version) — không đổi bảng ent của F010 — OQ F015-1. Khóa `platform_settings` chưa cấu hình có ETag `W/"0"`.
+- Q: Role `identity_retention`? → A: [Confirmed] Thay bằng hàm `SECURITY DEFINER` `audit.anonymize_expired` (và `audit.ensure_monthly_partitions`, `audit.monthly_partitions_ahead`) chạy bằng `identity_partition_admin`: `identity_app`/`identity_platform` không có quyền UPDATE nào trên nhật ký — OQ F015-2.
 - Q: F015-AC-05 so `tenant_id` của envelope với payload — payload `audit.recorded` v1 không có `tenant_id`? → A: Sink kiểm `school_id` của payload thuộc đúng tenant của envelope; khác → lỗi vĩnh viễn (DLQ) + cảnh báo bảo mật trong log + metric `eduworld_audit_records_total{result="tenant_mismatch"}` — OQ F015-3.
-- Q: Quyền đọc cài đặt platform/feature flag? → A: Catalog chỉ có `platform.settings.write`/`platform.feature_flag.write`; đọc dùng chính quyền ghi [Proposed] — OQ F015-4.
-- Q: `X-Tenant-Id` (tùy chọn) ở `putStudentCleanupSettings`/`putChatRetentionSettings`? → A: [Proposed] Bỏ qua; ghi đè theo tenant đi qua `updateTenantSettings` — OQ F015-5.
+- Q: Quyền đọc cài đặt platform/feature flag? → A: Catalog chỉ có `platform.settings.write`/`platform.feature_flag.write`; đọc dùng chính quyền ghi [Confirmed] — OQ F015-4.
+- Q: `X-Tenant-Id` (tùy chọn) ở `putStudentCleanupSettings`/`putChatRetentionSettings`? → A: [Confirmed] Bỏ qua; ghi đè theo tenant đi qua `updateTenantSettings` — OQ F015-5.
 - Q: `getTenant` (facade internal, F015-AC-14)? → A: Chưa hiện thực (facade identity mới có nhóm Principal); module khác nhận thay đổi qua `tenant.updated`/`platform_settings.changed` — OQ F015-6.
 - Q: Job `partition-maintainer` cho `sis.staging_records`, `sis.sync_record_errors`? → A: F015 tạo partition tháng cho `audit.audit_logs` (không DEFAULT) và `identity.login_events` (tháng đã có dòng trong DEFAULT của F013 bị bỏ qua có cảnh báo); bảng `sis.*` giữ partition DEFAULT của F011 — OQ F015-7.
 - Q: Nối binary? → A: Consumer `identity.audit_sink` (mỗi stream `EVT_*`), `identity.feature_toggle_cache`, job `partition-maintainer`/`audit-retention`, `RegisterSettings` và `featuretoggle.Source` cho `featuregate` chưa nối vào `core-api`/`worker` (cùng OQ F010-2).
@@ -40,7 +40,7 @@
 
 ### Session 2026-11-20 (giới nghiêm platform ở module game, OQ F014-2)
 
-- Q: Module game đọc `platform_curfew` từ `EW_PLATFORM_CURFEW` lúc khởi động nên lệch với module identity sau `putPlatformCurfewSettings` (smoke seed dev, [quickstart F010 §6.1](../010-tenant-org-structure/quickstart.md)) — module game lấy giá trị hiệu lực thế nào? → A: [Proposed] Qua event, không gọi đồng bộ (R13, R29): consumer `game.platform_settings` của module game chiếu `platform_settings.changed` (`key = platform_curfew`, `scope = platform`) vào `ref.platform_settings` của `eduworld_game`, dùng cho `createGameSession` và job `curfew-session-closer` ngay khi nhận (không restart). **Không đổi payload schema** (owner F015): `curfew_window` (F015 T032) đã mang giá trị sau thay đổi; `after` cùng giá trị là dự phòng. Thứ tự theo `occurred_at` của envelope (event cũ đến muộn không ghi đè). Chi tiết và giới hạn (stream giữ 7 ngày; env chỉ là mặc định trước event đầu tiên): [F014 Clarifications OQ F014-2](../014-game-session-thin/spec.md).
+- Q: Module game đọc `platform_curfew` từ `EW_PLATFORM_CURFEW` lúc khởi động nên lệch với module identity sau `putPlatformCurfewSettings` (smoke seed dev, [quickstart F010 §6.1](../010-tenant-org-structure/quickstart.md)) — module game lấy giá trị hiệu lực thế nào? → A: [Confirmed] Qua event, không gọi đồng bộ (R13, R29): consumer `game.platform_settings` của module game chiếu `platform_settings.changed` (`key = platform_curfew`, `scope = platform`) vào `ref.platform_settings` của `eduworld_game`, dùng cho `createGameSession` và job `curfew-session-closer` ngay khi nhận (không restart). **Không đổi payload schema** (owner F015): `curfew_window` (F015 T032) đã mang giá trị sau thay đổi; `after` cùng giá trị là dự phòng. Thứ tự theo `occurred_at` của envelope (event cũ đến muộn không ghi đè). Chi tiết và giới hạn (stream giữ 7 ngày; env chỉ là mặc định trước event đầu tiên): [F014 Clarifications OQ F014-2](../014-game-session-thin/spec.md).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -217,6 +217,6 @@ System Admin bật/tắt feature flag toàn platform hoặc theo tenant; bootstr
 ## Assumptions
 
 - `audit_log_retention` (2 năm theo DATA_PRIVACY §2) chưa có trong CONFIG_DEFAULTS — task đăng ký.
-- Giới hạn khoảng truy vấn audit [Proposed] 93 ngày mỗi lần, đăng ký CONFIG_DEFAULTS cùng task.
+- Giới hạn khoảng truy vấn audit [Confirmed] 93 ngày mỗi lần, đăng ký CONFIG_DEFAULTS cùng task.
 - `platform.feature_flags` chưa có cột trong DATABASE_DESIGN — data-model đề xuất "Mới"; cột `flag_kind`, `parent_key`, khóa ngoại tới `platform.portal_menu_catalog` theo ADR-0090 (DATABASE_DESIGN là nguồn sự thật DDL).
 - Payload `platform_settings.changed` có `scope = feature_flag` — owner schema event là đợt cập nhật event riêng (không sửa trong feature này).

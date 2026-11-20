@@ -88,7 +88,7 @@ Lệnh gate (nối `&&`): `make godot-lint GDLINT=<bỏ qua>` → `make godot-te
 
 Tổng GdUnit4: **111 test, 0 lỗi, 0 fail, 0 orphan**. `design-tokens-check`: 188/188 cặp WCAG AA, 23 file sinh khớp. `check-features`: 93 feature, 0 lỗi.
 
-**Chưa có bằng chứng local (ghi rõ, [Proposed]):**
+**Chưa có bằng chứng local (ghi rõ, [Confirmed]):**
 - `gdlint` (gdtoolkit 4.5.0) chỉ chạy trong CI — cài pip trên máy dev bị từ chối quyền.
 - GDExtension DPAPI và AAR Android Keystore chưa được build/chạy local (không có MSVC/scons, JDK/Android SDK); job `platform-windows` chạy bộ test `SecureStorage` với DPAPI thật, test trên emulator Android chờ lane thiết bị F133. Khi chưa có plugin, factory trả `MemoryOnly` (đã test).
 - Export Windows/Android đầy đủ cần export template (CI tải + kiểm SHA-512); local chỉ export PCK release (`make godot-export-check`).

@@ -106,7 +106,7 @@ Mọi consumer dưới đây chạy trong profile `worker-events` (consumer củ
 
 | Event (producer) | identity | learning | game | competition | chat |
 |---|---|---|---|---|---|
-| `tenant.*`, `school.*`, `class.*` (gồm `class.synced`), `student.synced`, `enrollment.changed` (identity) | — | projection `ref.*`, LMS (course, đối tượng bài giao) | projection `ref.*`; `student.synced`/`enrollment.changed` kích hoạt quy tắc chuyển năm học ([PROGRESSION_SYSTEM §5.1](../01-game-design/PROGRESSION_SYSTEM.md#51-chuyển-năm-học-lên-lớp-proposed)) | projection `ref.*` | projection `ref.*`, channel lớp |
+| `tenant.*`, `school.*`, `class.*` (gồm `class.synced`), `student.synced`, `enrollment.changed` (identity) | — | projection `ref.*`, LMS (course, đối tượng bài giao) | projection `ref.*`; `student.synced`/`enrollment.changed` kích hoạt quy tắc chuyển năm học ([PROGRESSION_SYSTEM §5.1](../01-game-design/PROGRESSION_SYSTEM.md#51-chuyển-năm-học-lên-lớp-confirmed)) | projection `ref.*` | projection `ref.*`, channel lớp |
 | `school.updated` (identity; gồm cài đặt trường `settings_subset`) | — | projection `ref.schools` | projection `ref.schools` | projection `ref.schools` (giờ truy cập, bảng xếp hạng bị tắt) | projection `ref.schools`, chính sách chat cấp trường |
 | `tenant_data.assigned`, `tenant_data.unassigned` (identity, ADR-0029) | — | xóa cache pool câu hỏi; projection `ref.game_activities` khi `resource_type` là `quest`/`minigame_config` (catalog giao bài) | — (module game nhận gán qua facade `applyTenantAssignment` trước khi identity phát) | — | — |
 | `user_role.changed`, `role.updated`, `tenant_membership.changed` (identity) | Keycloak membership + realm role `tenant_staff`/`platform_staff` | invalidate Principal cache | invalidate | invalidate | invalidate |
@@ -218,7 +218,7 @@ Ký hiệu consumer: GAM = gamification, QST = quest, LR = learning_record, LA =
 | `assignment.submission_updated` | lms | LMS read model, dashboard rollup | `assignment_id`, `student_id`, `status` (`not_started`/`in_progress`/`submitted`/`late`/`missed`/`excused`), `best_attempt_id?`, `score?` |
 | `assignment.closed` | lms (worker đóng bài khi qua `due_at` + cửa sổ nộp muộn) | NTF, LMS read model, AUD | `assignment_id`, `school_id`, `closed_at`, `missed_count` |
 | `assignment.reminded` | lms (F041, `RemindAssignment` — số lần nhắc có giới hạn) | NTF (thông báo trong game tới học sinh chưa nộp), AUD | `assignment_id`, `school_id`, `student_ids[]` (≤ 500/lô), `reminder_no`, `due_at`, `reminded_by` |
-| `report.completed` | learning_analytics (F044, job báo cáo) | NTF portal (người yêu cầu), AUD | `report_job_id`, `report_type`, `status` (`completed`/`failed`), `requested_by`, `row_count?`, `expires_at?` — không chứa nội dung báo cáo [Proposed] |
+| `report.completed` | learning_analytics (F044, job báo cáo) | NTF portal (người yêu cầu), AUD | `report_job_id`, `report_type`, `status` (`completed`/`failed`), `requested_by`, `row_count?`, `expires_at?` — không chứa nội dung báo cáo [Confirmed] |
 | `study_group.created` | lms ([ADR-0084](../adr/ADR-0084-nhom-hoc-tap-thuoc-learning-service.md)) | chat (tạo channel `study_group`, từ M5), AUD | `study_group_id`, `school_id`, `class_id?`, `grade_level`, `name`, `member_ids[]`, `version`, `created_by` — schema [`study_group.created.v1`](../../specs/events/payloads/learning/study_group.created.v1.schema.json) |
 | `study_group.updated` | lms | chat (đổi tên channel), AUD | `study_group_id`, `school_id`, `class_id?`, `grade_level`, `name`, `version`, `updated_by` — schema [`study_group.updated.v1`](../../specs/events/payloads/learning/study_group.updated.v1.schema.json) |
 | `study_group.member_changed` | lms | chat (thành viên channel), LMS read model, AUD | `study_group_id`, `school_id`, `added_member_ids[]`, `removed_member_ids[]`, `member_count`, `version`, `changed_by` — schema [`study_group.member_changed.v1`](../../specs/events/payloads/learning/study_group.member_changed.v1.schema.json) |
@@ -426,7 +426,7 @@ Envelope chat:
 
 - Header NATS `Nats-Msg-Id = message_id` (khử trùng lặp trong `duplicate_window` 2'); persister `ON CONFLICT (message_id) DO NOTHING`.
 - Sự kiện `evt` mang `revision` tăng dần; persister bỏ qua bản có `revision` ≤ revision hiện tại (đến muộn).
-- Nội dung gốc khi `mask` không nằm trong `body_display`; nếu cần lưu (bằng chứng), module chat gửi trong trường `body_original` chỉ đọc được bởi consumer `persister`/`moderation` (stream không mở cho consumer khác) [Proposed].
+- Nội dung gốc khi `mask` không nằm trong `body_display`; nếu cần lưu (bằng chứng), module chat gửi trong trường `body_original` chỉ đọc được bởi consumer `persister`/`moderation` (stream không mở cho consumer khác) [Confirmed].
 - Stream `CHAT_MESSAGES`: file storage, 3 replicas, `max_age` 72 h, `duplicate_window` 2'. Consumer `ack_wait` 30 s, `max_deliver` 5.
 - Domain event `chat.message_*` ở §4.9 do persister phát **sau** khi commit PG (qua outbox), dành cho audit/analytics không cần nội dung.
 
@@ -459,7 +459,7 @@ Envelope chat:
 | `simulation.goal_met` | Checker xác nhận đạt một mục tiêu mô phỏng | `attempt_id`, `run_id?`, `goal_id` |
 | `lesson.completed` | Hoàn thành bài học | `duration_ms`, `progress` (0..1) |
 | `question.viewed` | Server gửi render payload câu hỏi cho học sinh | `attempt_id`, `position` (≥ 1), `question_type` |
-| `question.answered` | Server chấm một câu trả lời | `attempt_id`, `position` (≥ 1), `question_version_id`, `question_type` (`QuestionType`), `is_correct`, `is_scored`, `score`, `response` (theo [`question.schema.json#/$defs/response`](../../specs/schemas/question.schema.json)), `response_ms` (server), `attempt_no`, `hints_used` (số cấp gợi ý đã mở trước lần trả lời), `rapid_guess` ([ACTIVITY_ENGINE §11.1](../02-learning/ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-proposed)), `error_tags[]` |
+| `question.answered` | Server chấm một câu trả lời | `attempt_id`, `position` (≥ 1), `question_version_id`, `question_type` (`QuestionType`), `is_correct`, `is_scored`, `score`, `response` (theo [`question.schema.json#/$defs/response`](../../specs/schemas/question.schema.json)), `response_ms` (server), `attempt_no`, `hints_used` (số cấp gợi ý đã mở trước lần trả lời), `rapid_guess` ([ACTIVITY_ENGINE §11.1](../02-learning/ACTIVITY_ENGINE.md#111-cờ-rapid_guess--trả-lời-quá-nhanh-để-kịp-đọc-đề-confirmed)), `error_tags[]` |
 | `question.correct` / `question.incorrect` | Dẫn xuất từ `question.answered` (để tương thích catalog §16; không ghi trùng bản ghi — xem §5.4) | — |
 | `exam.started` / `exam.submitted` | Như domain event | `attempt_id`, `exam_session_id`, `exam_type`, `is_official` |
 | `exam.graded` | Server chấm xong bài thi; evidence mastery của đề lấy từ event này; `actor.type = system` | `attempt_id`, `evaluation_id`, `exam_session_id`, `score`, `is_official`, `result_release` |
@@ -535,22 +535,22 @@ Actor xAPI dùng `account { homePage: "https://eduworld.vn", name: <pseudonymous
 
 | Dữ liệu | Thời gian | Nhãn |
 |---|---|---|
-| NATS JetStream `EVT_*` | 7 ngày (`max_age`), file storage, 3 replicas | [Proposed] |
-| NATS JetStream `CHAT_MESSAGES` | 72 giờ | [Proposed] |
-| NATS JetStream `DLQ_<MODULE>` | 30 ngày | [Proposed] |
-| `infra.outbox_events` | `outbox_retention` (30 ngày) sau `published_at` hiển thị cho replay; partition theo ngày, job `infra-partition-maintenance` (role `<module>_partition_admin`) gỡ partition hết hạn và từ chối gỡ partition còn dòng chưa publish; ứng dụng không `DELETE` (ngoại lệ có giới hạn của ADR-0070 theo ADR-0089 §5, [DATABASE_DESIGN §3.9](DATABASE_DESIGN.md#39-outbox--processed-events)) | [Proposed] |
-| `infra.processed_events` | `outbox_retention` (30 ngày); partition theo ngày trên `event_occurred_at` của envelope (event giao lại luôn vào cùng partition), gỡ partition như outbox (ADR-0089 §4–5) | [Proposed] |
-| `infra.dead_letters` | 90 ngày; partition theo ngày, job `infra-partition-maintenance` gỡ partition hết hạn và từ chối gỡ partition còn dead letter chưa xử lý (`resolved_at IS NULL`) (ADR-0089 §5) | [Proposed] |
-| `learning.learning_events` | Suốt thời gian học tại trường + 1 năm; sau đó ẩn danh hóa/tổng hợp | [Proposed] |
+| NATS JetStream `EVT_*` | 7 ngày (`max_age`), file storage, 3 replicas | [Confirmed] |
+| NATS JetStream `CHAT_MESSAGES` | 72 giờ | [Confirmed] |
+| NATS JetStream `DLQ_<MODULE>` | 30 ngày | [Confirmed] |
+| `infra.outbox_events` | `outbox_retention` (30 ngày) sau `published_at` hiển thị cho replay; partition theo ngày, job `infra-partition-maintenance` (role `<module>_partition_admin`) gỡ partition hết hạn và từ chối gỡ partition còn dòng chưa publish; ứng dụng không `DELETE` (ngoại lệ có giới hạn của ADR-0070 theo ADR-0089 §5, [DATABASE_DESIGN §3.9](DATABASE_DESIGN.md#39-outbox--processed-events)) | [Confirmed] |
+| `infra.processed_events` | `outbox_retention` (30 ngày); partition theo ngày trên `event_occurred_at` của envelope (event giao lại luôn vào cùng partition), gỡ partition như outbox (ADR-0089 §4–5) | [Confirmed] |
+| `infra.dead_letters` | 90 ngày; partition theo ngày, job `infra-partition-maintenance` gỡ partition hết hạn và từ chối gỡ partition còn dead letter chưa xử lý (`resolved_at IS NULL`) (ADR-0089 §5) | [Confirmed] |
+| `learning.learning_events` | Suốt thời gian học tại trường + 1 năm; sau đó ẩn danh hóa/tổng hợp | [Confirmed] |
 | Event chat (`chat.*`) | Theo retention chat (180 ngày) | [TBD] OQ-09 |
-| Dữ liệu chat gameplay (channel `match`/`party`/`team` theo trận, tin ephemeral) | Purge vật lý sau `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3) / 24 h — ngoại lệ ADR-0033; outbox event chỉ chứa ID nên không cần purge | [Proposed] |
+| Dữ liệu chat gameplay (channel `match`/`party`/`team` theo trận, tin ephemeral) | Purge vật lý sau `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3) / 24 h — ngoại lệ ADR-0033; outbox event chỉ chứa ID nên không cần purge | [Confirmed] |
 
 Partition `learning.learning_events` theo tháng (`occurred_at`). Hết hạn: ứng dụng chỉ ẩn danh hóa; partition giữ lại; Release 1.0 không detach, archive hay gỡ partition (ADR-0028, ADR-0070).
 
 ## 9. Privacy
 
 - Payload chỉ chứa ID nội bộ (UUIDv7), không tên, email, ngày sinh, nội dung chat, câu trả lời văn bản của học sinh trong **domain event** (consumer cần chi tiết thì gọi facade của module sở hữu với scope, ADR-0074).
-- Learning event lưu `response` của câu trả lời trong `learning.learning_events.payload` chỉ khi cần cho phân tích lỗi sai; câu trả lời dạng văn bản tự do (short answer) được giới hạn 500 ký tự và chạy PII detector trước khi lưu [Proposed].
+- Learning event lưu `response` của câu trả lời trong `learning.learning_events.payload` chỉ khi cần cho phân tích lỗi sai; câu trả lời dạng văn bản tự do (short answer) được giới hạn 500 ký tự và chạy PII detector trước khi lưu [Confirmed].
 - Mọi consumer xử lý event với `TenantScope` = `tenant_id` của event; event platform (`tenant_id = null`) chỉ consumer platform xử lý.
 - Analytics chỉ dùng event cho mục đích đã công bố (Master Prompt §16); dashboard tổng hợp vượt tenant (chỉ System Admin) áp dụng ngưỡng k-anonymity (MULTITENANCY §7).
 - Yêu cầu xóa dữ liệu (DATA_PRIVACY) được thực thi bằng job ẩn danh hóa `actor.id`/`student_id` trong learning events (thay bằng pseudonym không đảo ngược), giữ số liệu tổng hợp.

@@ -11,7 +11,7 @@ Stakeholder yêu cầu: lưu thời gian login khi vào game; chỉ học sinh l
 1. **Chỉ học sinh vào game.**
    - Backend: `POST /api/v1/auth/session` và `POST /api/v1/game/sessions` với token của client `eduworld-game` (`azp`) chỉ chấp nhận User `user_type = student`, `status = active`, thuộc tenant hợp lệ (ADR-0026). Người dùng khác bị từ chối `403 GAME_ACCESS_STUDENT_ONLY` và ghi audit. API người chơi (`/api/v1/game/*`, `/multiplayer/*`, `/competition/*`) và realtime ticket cũng kiểm tra.
    - Keycloak (lớp bổ sung): client `eduworld-game` chỉ cho role `student` hoàn tất đăng nhập (kiểm chứng trên bản Keycloak triển khai).
-   - Nhân sự nhà trường và vận hành xem trải nghiệm game qua preview trong Admin Portal (Godot Web export, dữ liệu mẫu, không tạo game session thật) [Proposed].
+   - Nhân sự nhà trường và vận hành xem trải nghiệm game qua preview trong Admin Portal (Godot Web export, dữ liệu mẫu, không tạo game session thật) [Confirmed].
 2. **Lưu lịch sử đăng nhập game.**
    - Bảng append-only `game.login_events` (game-service): `login_event_id`, `tenant_id`, `student_id`, `game_session_id`, `device_id`, `platform`, `device_model`, `client_version`, `ip_hash` (không lưu IP thô), `sis_connection_id` (ADR-0046), `login_at` (giờ server), `logout_at`, `end_reason` (`logout | replaced_by_other_device | timeout | account_locked | cleanup | client_crash`).
    - Cập nhật `last_login_at` của User (identity-service, qua event) và `last_game_login_at` của GameProfile.

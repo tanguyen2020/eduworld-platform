@@ -9,27 +9,27 @@
 
 - Q: OpenAPI coi "curriculum" là môn × khối có version, CURRICULUM_MODEL tách Curriculum/CurriculumVersion/SubjectGrade — theo bên nào? → A: Theo tài liệu sở hữu [CURRICULUM_MODEL §2–§3](../../docs/02-learning/CURRICULUM_MODEL.md#2-cấu-trúc-phân-cấp) và DATABASE_DESIGN §2.4; schema OpenAPI `Curriculum`/`CurriculumInput` sửa ở Phase 2 (contracts §6).
 - Q: Workflow CurriculumVersion dùng endpoint chung `content/{content_type}`? → A: Không — `LearningContentType` không có `curriculum`; dùng endpoint riêng dưới `/cms/learning/curricula/{curriculum_id}/versions/…` (Cần thêm), cùng state machine `contentmodel.Lifecycle` của F020.
-- Q: Seed GDPT 2018 để trống `yccd_ref` nhưng version `GDPT2018` không được publish khi thiếu → môi trường dev dùng gì? → A: Seed dev/pilot-trước-rà-soát nhập vào curriculum mã `GDPT2018_SAMPLE` (không áp quy tắc `yccd_ref`) và publish được; curriculum `GDPT2018` chỉ publish sau khi EdTech rà soát điền `yccd_ref` [Proposed] ([CURRICULUM_MODEL §7](../../docs/02-learning/CURRICULUM_MODEL.md#7-seed-ví-dụ--gdpt-2018-toán-lớp-15-proposed-oq-08)).
-- Q: `school.settings.curriculum_version_id` do ai lưu? → A: module identity (cài đặt trường, F015); module learning đọc qua projection `ref.schools` [Proposed].
+- Q: Seed GDPT 2018 để trống `yccd_ref` nhưng version `GDPT2018` không được publish khi thiếu → môi trường dev dùng gì? → A: Seed dev/pilot-trước-rà-soát nhập vào curriculum mã `GDPT2018_SAMPLE` (không áp quy tắc `yccd_ref`) và publish được; curriculum `GDPT2018` chỉ publish sau khi EdTech rà soát điền `yccd_ref` [Confirmed] ([CURRICULUM_MODEL §7](../../docs/02-learning/CURRICULUM_MODEL.md#7-seed-ví-dụ--gdpt-2018-toán-lớp-15-confirmed-oq-08)).
+- Q: `school.settings.curriculum_version_id` do ai lưu? → A: module identity (cài đặt trường, F015); module learning đọc qua projection `ref.schools` [Confirmed].
 
 ### Session 2026-11-19 (triển khai)
 
-- Q: Câu trả lời 2026-11-16 về `ref.schools` mâu thuẫn plan/data-model/contracts (đọc `lms.school_curriculum_settings`, owner F040)? → A: Theo plan/data-model (mới hơn, khớp CURRICULUM_MODEL §5 và DATABASE_DESIGN §2.16): đọc `lms.school_curriculum_settings` cùng module. Bảng do F040 tạo; khi chưa có bảng (kiểm `to_regclass`) hoặc trường chưa cài đặt thì dùng version published có hiệu lực chứa ngày hiện tại. Chọn dòng của trường theo khối (dòng có `grade_level` ưu tiên hơn dòng `NULL`), mới nhất trước; chưa lọc theo năm học vì module learning chưa có projection năm học (OQ F021-5) [Proposed].
-- Q: Bảng con của version (H) hiển thị cho tenant theo assignment nào? → A: Theo assignment của curriculum: mọi bảng `curriculum.*` thuộc version (`curriculum_versions`, `subject_grades`, `topics`, `learning_objectives`, `competencies`, `lo_version_mappings`) có thêm cột `curriculum_id` để interceptor `entx.HybridContent{ResourceIDColumn: curriculum_id}` và policy RLS so với `infra.tenant_resource_assignments.resource_id` (OQ F021-1) [Proposed].
-- Q: `competency_ids`, `prerequisite_ids` (`uuid[]`) và `subjects.grade_levels` (`smallint[]`) lưu thế nào khi ent không có kiểu mảng PostgreSQL? → A: `jsonb` mảng với CHECK `jsonb_array_length ≤ 20` (grade_levels: 1–9 phần tử, giá trị 1–9) và index GIN `jsonb_path_ops` cho `prerequisite_ids`; DATABASE_DESIGN cập nhật (OQ F021-2) [Proposed].
-- Q: Cặp môn × khối được tạo qua đâu khi contracts không có endpoint riêng? → A: `updateCurriculumVersionDraft` nhận `subject_grades[]` (thay cả danh sách của version draft, không gỡ được cặp còn topic) và `createTopic` tự tạo cặp còn thiếu; import tạo theo file (OQ F021-3) [Proposed].
-- Q: `createContentImport` cần `asset_id` của media (F027 chưa có)? → A: Port `AssetReader` đọc file theo `asset_id`; adapter thật đến với F027 (presign/object storage), test dùng test double gắn nhãn; seed đọc file cục bộ (`source_ref`). Job `queued` chạy bằng `ImportWorker.RunPending` (profile `jobs` của worker, nối vào binary cùng F020-3) (OQ F021-4) [Proposed].
-- Q: Version `rejected` quay lại `draft` bằng thao tác nào khi contract chỉ có `submit_review/approve/reject/archive`? → A: Thêm `revise` (`rejected|approved → draft`, `curriculum.write`) theo `contentmodel.Lifecycle` (OQ F021-6) [Proposed].
-- Q: `textbook_section_objectives` PK `(section_id, learning_objective_id)` nhưng bảng G cần soft-delete? → A: Khóa thay thế `section_objective_id` + UNIQUE `(section_id, objective_id) WHERE deleted_at IS NULL`; gán lại = soft-delete dòng cũ, thêm dòng mới (OQ F021-7) [Proposed].
-- Q: PATCH (merge-patch) dùng schema `*Input` có `required`? → A: Thêm schema `CurriculumPatch`, `CurriculumVersionPatch`, `TopicPatch`, `LearningObjectivePatch`, `SubjectPatch`, `CompetencyPatch`, `TextbookSectionPatch` (`minProperties: 1`); mã curriculum/môn/competency không đổi được sau khi tạo [Proposed].
-- Q: `content.import_jobs` loại H? → A: Loại T* (`entx.TenantOptional` + cột `owner_scope`): job không phải tài nguyên gán cho tenant; job platform (`tenant_id` NULL) ghi dưới PlatformScope (OQ F021-9) [Proposed].
-- Q: `createContentImport` thuộc action portal `question_bank.import` (`learning_content.import`)? → A: Giữ `x-portal-action` hiện có; quyền nghiệp vụ theo `kind`: `curriculum_yaml/curriculum_csv` cần `curriculum.write`, loại khác trả 422 tới F024 [Proposed].
-- Q: File CSV mang thông tin curriculum/version ở đâu? → A: Mỗi dòng một LO với cột `curriculum_code`, `curriculum_name_vi`, `version_label` lặp lại (phải giống nhau), `subject_code`, `grade_level`, `topic_code`, `topic_name`, `parent_topic_code`, `objective_code`, `description`, `bloom_level`, `yccd_ref`, `prerequisite_codes` (`|`); CSV không mang competency (chỉ YAML) — mô tả trong `specs/schemas/curriculum-import.schema.json` [Proposed].
-- Q: Nhân sự platform không có `platform.cross_tenant.read` (vd. `content_admin`) đọc CMS curriculum với scope nào? → A: `PlatformScope` của httpx (chỉ curriculum platform); System Admin xem curriculum của một tenant bằng `X-Tenant-Id`. Không dùng `scope.ForRead` (cần quyền liên tenant) cho CMS curriculum [Proposed].
-- Q: `/learning/*` (đọc công khai) kiểm quyền gì khi học sinh không có permission? → A: Principal hợp lệ có tenant phiên (`TenantIdHeader`); người không thuộc tenant bị httpx trả `403 TENANT_MISMATCH`; chỉ version `published`, không field biên tập [Proposed].
-- Q: Audit `authz.denied` khi từ chối trong transaction của use case (ghi curriculum platform)? → A: Ghi bằng context tách khỏi transaction (giữ principal + scope) vì transaction bị rollback [Proposed].
-- Q: Cache Valkey của cây curriculum (plan: `ew:learning:cur:tree:…`) có trong F021? → A: Chưa — read model đọc thẳng DB (version published bất biến nên có thể cache sau, khi có số liệu tải) (OQ F021-10) [Proposed].
-- Q: Seed duyệt version thế nào khi người duyệt phải khác tác giả? → A: Seed là job hệ thống (`SystemPlatformScope("curriculum-seed")`): `submit_review`/`approve` ghi `content_transitions` với `actor_id` = UUID rỗng, publish qua cùng hàm của use case (release, audit, event) [Proposed].
+- Q: Câu trả lời 2026-11-16 về `ref.schools` mâu thuẫn plan/data-model/contracts (đọc `lms.school_curriculum_settings`, owner F040)? → A: Theo plan/data-model (mới hơn, khớp CURRICULUM_MODEL §5 và DATABASE_DESIGN §2.16): đọc `lms.school_curriculum_settings` cùng module. Bảng do F040 tạo; khi chưa có bảng (kiểm `to_regclass`) hoặc trường chưa cài đặt thì dùng version published có hiệu lực chứa ngày hiện tại. Chọn dòng của trường theo khối (dòng có `grade_level` ưu tiên hơn dòng `NULL`), mới nhất trước; chưa lọc theo năm học vì module learning chưa có projection năm học (OQ F021-5) [Confirmed].
+- Q: Bảng con của version (H) hiển thị cho tenant theo assignment nào? → A: Theo assignment của curriculum: mọi bảng `curriculum.*` thuộc version (`curriculum_versions`, `subject_grades`, `topics`, `learning_objectives`, `competencies`, `lo_version_mappings`) có thêm cột `curriculum_id` để interceptor `entx.HybridContent{ResourceIDColumn: curriculum_id}` và policy RLS so với `infra.tenant_resource_assignments.resource_id` (OQ F021-1) [Confirmed].
+- Q: `competency_ids`, `prerequisite_ids` (`uuid[]`) và `subjects.grade_levels` (`smallint[]`) lưu thế nào khi ent không có kiểu mảng PostgreSQL? → A: `jsonb` mảng với CHECK `jsonb_array_length ≤ 20` (grade_levels: 1–9 phần tử, giá trị 1–9) và index GIN `jsonb_path_ops` cho `prerequisite_ids`; DATABASE_DESIGN cập nhật (OQ F021-2) [Confirmed].
+- Q: Cặp môn × khối được tạo qua đâu khi contracts không có endpoint riêng? → A: `updateCurriculumVersionDraft` nhận `subject_grades[]` (thay cả danh sách của version draft, không gỡ được cặp còn topic) và `createTopic` tự tạo cặp còn thiếu; import tạo theo file (OQ F021-3) [Confirmed].
+- Q: `createContentImport` cần `asset_id` của media (F027 chưa có)? → A: Port `AssetReader` đọc file theo `asset_id`; adapter thật đến với F027 (presign/object storage), test dùng test double gắn nhãn; seed đọc file cục bộ (`source_ref`). Job `queued` chạy bằng `ImportWorker.RunPending` (profile `jobs` của worker, nối vào binary cùng F020-3) (OQ F021-4) [Confirmed].
+- Q: Version `rejected` quay lại `draft` bằng thao tác nào khi contract chỉ có `submit_review/approve/reject/archive`? → A: Thêm `revise` (`rejected|approved → draft`, `curriculum.write`) theo `contentmodel.Lifecycle` (OQ F021-6) [Confirmed].
+- Q: `textbook_section_objectives` PK `(section_id, learning_objective_id)` nhưng bảng G cần soft-delete? → A: Khóa thay thế `section_objective_id` + UNIQUE `(section_id, objective_id) WHERE deleted_at IS NULL`; gán lại = soft-delete dòng cũ, thêm dòng mới (OQ F021-7) [Confirmed].
+- Q: PATCH (merge-patch) dùng schema `*Input` có `required`? → A: Thêm schema `CurriculumPatch`, `CurriculumVersionPatch`, `TopicPatch`, `LearningObjectivePatch`, `SubjectPatch`, `CompetencyPatch`, `TextbookSectionPatch` (`minProperties: 1`); mã curriculum/môn/competency không đổi được sau khi tạo [Confirmed].
+- Q: `content.import_jobs` loại H? → A: Loại T* (`entx.TenantOptional` + cột `owner_scope`): job không phải tài nguyên gán cho tenant; job platform (`tenant_id` NULL) ghi dưới PlatformScope (OQ F021-9) [Confirmed].
+- Q: `createContentImport` thuộc action portal `question_bank.import` (`learning_content.import`)? → A: Giữ `x-portal-action` hiện có; quyền nghiệp vụ theo `kind`: `curriculum_yaml/curriculum_csv` cần `curriculum.write`, loại khác trả 422 tới F024 [Confirmed].
+- Q: File CSV mang thông tin curriculum/version ở đâu? → A: Mỗi dòng một LO với cột `curriculum_code`, `curriculum_name_vi`, `version_label` lặp lại (phải giống nhau), `subject_code`, `grade_level`, `topic_code`, `topic_name`, `parent_topic_code`, `objective_code`, `description`, `bloom_level`, `yccd_ref`, `prerequisite_codes` (`|`); CSV không mang competency (chỉ YAML) — mô tả trong `specs/schemas/curriculum-import.schema.json` [Confirmed].
+- Q: Nhân sự platform không có `platform.cross_tenant.read` (vd. `content_admin`) đọc CMS curriculum với scope nào? → A: `PlatformScope` của httpx (chỉ curriculum platform); System Admin xem curriculum của một tenant bằng `X-Tenant-Id`. Không dùng `scope.ForRead` (cần quyền liên tenant) cho CMS curriculum [Confirmed].
+- Q: `/learning/*` (đọc công khai) kiểm quyền gì khi học sinh không có permission? → A: Principal hợp lệ có tenant phiên (`TenantIdHeader`); người không thuộc tenant bị httpx trả `403 TENANT_MISMATCH`; chỉ version `published`, không field biên tập [Confirmed].
+- Q: Audit `authz.denied` khi từ chối trong transaction của use case (ghi curriculum platform)? → A: Ghi bằng context tách khỏi transaction (giữ principal + scope) vì transaction bị rollback [Confirmed].
+- Q: Cache Valkey của cây curriculum (plan: `ew:learning:cur:tree:…`) có trong F021? → A: Chưa — read model đọc thẳng DB (version published bất biến nên có thể cache sau, khi có số liệu tải) (OQ F021-10) [Confirmed].
+- Q: Seed duyệt version thế nào khi người duyệt phải khác tác giả? → A: Seed là job hệ thống (`SystemPlatformScope("curriculum-seed")`): `submit_review`/`approve` ghi `content_transitions` với `actor_id` = UUID rỗng, publish qua cùng hàm của use case (release, audit, event) [Confirmed].
 - Q: Test integration đặt ở `tests/integration/curriculum/`? → A: Đặt trong package `tests/integration` (file `curriculum_*_test.go`) để dùng chung `TestMain`/cluster và fixture tenant; command/query trong package `command`/`query` phẳng, HTTP trong `internal/presentation/http` như module identity.
 - Q: Kiểm thử `tools/routematrix` báo lỗi ở `tests/contract/platform_ops_auth_test.go` (F020, `authztest.Cover` với biến)? → A: Facade operation không thuộc ma trận public; bỏ lời gọi `Cover`, vòng lặp vẫn là test role-denied của facade.
 
@@ -53,7 +53,7 @@ Content Admin (`cm.noidung`) tạo curriculum platform, version nháp, cặp mô
 |---|---|---|---|
 | F021-AC-01 | KHI người có `curriculum.write` tạo curriculum (mã `UPPER_SNAKE`, duy nhất trong phạm vi sở hữu) kèm `Idempotency-Key`, HỆ THỐNG PHẢI tạo curriculum và version 1 ở `draft` | FR-CUR-001 · FR-CUR-005 · FR-CMS-002 | — |
 | F021-AC-02 | HỆ THỐNG PHẢI cho phép nhiều curriculum và nhiều version của một curriculum tồn tại song song, mỗi version có `version_label` dạng `MAJOR.MINOR` và khoảng hiệu lực riêng | FR-CUR-002 · [CURRICULUM_MODEL §3.1](../../docs/02-learning/CURRICULUM_MODEL.md#31-curriculum--curriculumversion) | — |
-| F021-AC-03 | KHI lưu LO, HỆ THỐNG PHẢI kiểm mã theo định dạng `<SUBJECT>.G<grade>.<STRAND>.<SKILL>[.<n>]` và duy nhất trong curriculum version; vi phạm PHẢI trả `422 VALIDATION_FAILED` chỉ rõ field | FR-CUR-003 · [CURRICULUM_MODEL §4](../../docs/02-learning/CURRICULUM_MODEL.md#4-mã-learning-objective-chuẩn-proposed) | — |
+| F021-AC-03 | KHI lưu LO, HỆ THỐNG PHẢI kiểm mã theo định dạng `<SUBJECT>.G<grade>.<STRAND>.<SKILL>[.<n>]` và duy nhất trong curriculum version; vi phạm PHẢI trả `422 VALIDATION_FAILED` chỉ rõ field | FR-CUR-003 · [CURRICULUM_MODEL §4](../../docs/02-learning/CURRICULUM_MODEL.md#4-mã-learning-objective-chuẩn-confirmed) | — |
 | F021-AC-04 | KHI lưu LO có `yccd_ref` dài hơn 64 ký tự hoặc `competency_ids` không thuộc danh mục competency của cùng version, HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` | FR-CUR-009 | TC-LRN-018 |
 | F021-AC-05 | KHI tạo topic, HỆ THỐNG PHẢI yêu cầu topic cha (nếu có) cùng version, môn và khối, và chặn vòng lặp cây với `422 VALIDATION_FAILED` | FR-CUR-001 · [CURRICULUM_MODEL §3.2](../../docs/02-learning/CURRICULUM_MODEL.md#32-topic) | — |
 | F021-AC-06 | NẾU người gọi không có `curriculum.write` (vd. `school_admin`), hoặc người dùng tenant ghi môn học (danh mục platform) hay curriculum platform, THÌ HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` và ghi audit `authz.denied` | [ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md#22-permission-catalog) · AC-CMS-001 | — |
@@ -133,7 +133,7 @@ Content Admin nhập cây chương trình từ YAML/CSV, xuất lại để rà 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F021-AC-22 | KHI gọi `createContentImport` với `kind` curriculum (`curriculum_yaml`/`curriculum_csv`) và `Idempotency-Key`, HỆ THỐNG PHẢI tạo job `202`, kiểm toàn bộ file bằng cùng validator của CMS, với `dry_run` không ghi gì, ngược lại tạo version `draft`, và trả lỗi theo dòng (`row`, `field`, `code`) qua `getContentImport` | FR-CUR-010 | — |
-| F021-AC-23 | HỆ THỐNG PHẢI nạp seed GDPT 2018 Toán lớp 1–5 bằng đúng use case import (không SQL thủ công); chạy lại `make seed` PHẢI không tạo bản ghi trùng | FR-CUR-004 · [CURRICULUM_MODEL §7](../../docs/02-learning/CURRICULUM_MODEL.md#7-seed-ví-dụ--gdpt-2018-toán-lớp-15-proposed-oq-08) | — |
+| F021-AC-23 | HỆ THỐNG PHẢI nạp seed GDPT 2018 Toán lớp 1–5 bằng đúng use case import (không SQL thủ công); chạy lại `make seed` PHẢI không tạo bản ghi trùng | FR-CUR-004 · [CURRICULUM_MODEL §7](../../docs/02-learning/CURRICULUM_MODEL.md#7-seed-ví-dụ--gdpt-2018-toán-lớp-15-confirmed-oq-08) | — |
 | F021-AC-24 | KHI xuất một version (`yaml`/`csv`), HỆ THỐNG PHẢI trả file mà import lại cho cấu trúc tương đương (cùng mã topic, mã LO, tiên quyết, `yccd_ref`) | FR-CUR-010 | — |
 | F021-AC-25 | NẾU file import vượt `csv_import_max` hoặc sai định dạng, THÌ job PHẢI kết thúc `failed` với lỗi rõ ràng và không ghi dữ liệu | FR-CUR-010 · NFR-MAINT-005 | — |
 
@@ -168,7 +168,7 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F021-AC-28 | KHI Content Admin tạo bộ sách, tập sách, bài sách và gán bài ↔ LO (n–n), HỆ THỐNG PHẢI chỉ lưu metadata (mã, tên, nhà xuất bản, chương, số bài, tiêu đề, trang) và không có trường lưu nguyên văn sách | FR-CUR-012 · [CURRICULUM_MODEL §6](../../docs/02-learning/CURRICULUM_MODEL.md#6-mapping-bộ-sách-giáo-khoa-proposed-tbd--oq-08) | — |
+| F021-AC-28 | KHI Content Admin tạo bộ sách, tập sách, bài sách và gán bài ↔ LO (n–n), HỆ THỐNG PHẢI chỉ lưu metadata (mã, tên, nhà xuất bản, chương, số bài, tiêu đề, trang) và không có trường lưu nguyên văn sách | FR-CUR-012 · [CURRICULUM_MODEL §6](../../docs/02-learning/CURRICULUM_MODEL.md#6-mapping-bộ-sách-giáo-khoa-confirmed-tbd--oq-08) | — |
 | F021-AC-29 | KHI lọc LO theo `textbook_section_id`, HỆ THỐNG PHẢI trả đúng các LO đã gán cho bài sách đó trong phạm vi tenant thấy được | FR-CUR-012 | — |
 
 ### Edge Cases
@@ -186,16 +186,16 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 |---|---|---|
 | FR-CUR-001 | Cấu trúc Curriculum → Version → Môn × Khối → Topic → LO (cấp 6–9 do F024/F030 làm) | [CURRICULUM_MODEL §2](../../docs/02-learning/CURRICULUM_MODEL.md#2-cấu-trúc-phân-cấp) |
 | FR-CUR-002 | Nhiều curriculum, nhiều version song song, version bất biến | [CURRICULUM_MODEL §3.1, §5](../../docs/02-learning/CURRICULUM_MODEL.md#31-curriculum--curriculumversion) |
-| FR-CUR-003 | Mã LO chuẩn, `stable_key` | [CURRICULUM_MODEL §4](../../docs/02-learning/CURRICULUM_MODEL.md#4-mã-learning-objective-chuẩn-proposed) |
-| FR-CUR-004 | Seed GDPT 2018 Toán 1–5 qua import | [CURRICULUM_MODEL §7](../../docs/02-learning/CURRICULUM_MODEL.md#7-seed-ví-dụ--gdpt-2018-toán-lớp-15-proposed-oq-08) |
+| FR-CUR-003 | Mã LO chuẩn, `stable_key` | [CURRICULUM_MODEL §4](../../docs/02-learning/CURRICULUM_MODEL.md#4-mã-learning-objective-chuẩn-confirmed) |
+| FR-CUR-004 | Seed GDPT 2018 Toán 1–5 qua import | [CURRICULUM_MODEL §7](../../docs/02-learning/CURRICULUM_MODEL.md#7-seed-ví-dụ--gdpt-2018-toán-lớp-15-confirmed-oq-08) |
 | FR-CUR-005 | CRUD CMS + workflow CurriculumVersion | [CURRICULUM_MODEL §9](../../docs/02-learning/CURRICULUM_MODEL.md#9-api-tóm-tắt) |
 | FR-CUR-006 | API đọc cây cho client | [CURRICULUM_MODEL §9](../../docs/02-learning/CURRICULUM_MODEL.md#9-api-tóm-tắt) |
 | FR-CUR-007 | DAG tiên quyết, phát hiện chu trình | [CURRICULUM_MODEL §3.3](../../docs/02-learning/CURRICULUM_MODEL.md#33-learningobjective) |
 | FR-CUR-008 | Đọc version mặc định theo năm học của trường (cấu hình ở identity) | [CURRICULUM_MODEL §5](../../docs/02-learning/CURRICULUM_MODEL.md#5-đa-chương-trình--di-chuyển-phiên-bản) |
-| FR-CUR-009 | `yccd_ref`, `competency_ids`, danh mục competency, chặn publish `GDPT2018` thiếu `yccd_ref` | [CURRICULUM_MODEL §3.3–§3.4](../../docs/02-learning/CURRICULUM_MODEL.md#34-competency-năng-lực-phẩm-chất-proposed) |
+| FR-CUR-009 | `yccd_ref`, `competency_ids`, danh mục competency, chặn publish `GDPT2018` thiếu `yccd_ref` | [CURRICULUM_MODEL §3.3–§3.4](../../docs/02-learning/CURRICULUM_MODEL.md#34-competency-năng-lực-phẩm-chất-confirmed) |
 | FR-CUR-010 | Import/export YAML/CSV có validate, Idempotency-Key, audit | [CURRICULUM_MODEL §9](../../docs/02-learning/CURRICULUM_MODEL.md#9-api-tóm-tắt) |
 | FR-CUR-011 | Bảng mapping LO khi publish version thay thế (chiếu mastery ở F031) | [CURRICULUM_MODEL §5](../../docs/02-learning/CURRICULUM_MODEL.md#5-đa-chương-trình--di-chuyển-phiên-bản) |
-| FR-CUR-012 | Bộ sách → tập → bài ↔ LO, không sao chép nguyên văn | [CURRICULUM_MODEL §6](../../docs/02-learning/CURRICULUM_MODEL.md#6-mapping-bộ-sách-giáo-khoa-proposed-tbd--oq-08) |
+| FR-CUR-012 | Bộ sách → tập → bài ↔ LO, không sao chép nguyên văn | [CURRICULUM_MODEL §6](../../docs/02-learning/CURRICULUM_MODEL.md#6-mapping-bộ-sách-giáo-khoa-confirmed-tbd--oq-08) |
 | FR-CMS-002 | Backend của Curriculum Management (UI ở F053) | [ADMIN_PORTAL §3.1](../../docs/04-admin-portal/ADMIN_PORTAL.md#31-curriculum-management-master-prompt-81) |
 
 ### Key Entities
@@ -227,7 +227,7 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 | Mọi chuỗi có giới hạn (`yccd_ref` ≤ 64, mã ≤ 64) | NFR-MAINT-005 · ADR-0041 |
 | Tenant isolation 100% endpoint | NFR-SEC-006 · ADR-0005 |
 | Idempotency + audit cho publish/import | NFR-SEC-004 · AGENTS R10 |
-| Không sao chép nguyên văn sách giáo khoa | [CURRICULUM_MODEL §6](../../docs/02-learning/CURRICULUM_MODEL.md#6-mapping-bộ-sách-giáo-khoa-proposed-tbd--oq-08) |
+| Không sao chép nguyên văn sách giáo khoa | [CURRICULUM_MODEL §6](../../docs/02-learning/CURRICULUM_MODEL.md#6-mapping-bộ-sách-giáo-khoa-confirmed-tbd--oq-08) |
 
 ## Success Criteria *(bắt buộc)*
 
@@ -249,7 +249,7 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 
 ## Assumptions
 
-- Mã curriculum duy nhất trong phạm vi sở hữu (platform; từng tenant) để không lộ sự tồn tại curriculum của tenant khác qua `409` [Proposed].
-- Tên topic và mô tả LO lưu theo ngôn ngữ của curriculum (một bản), khớp `TopicInput.name`/`LearningObjectiveInput.description` của OpenAPI; tên curriculum/môn là `LearningName` [Proposed].
-- Seed dùng mã `GDPT2018_SAMPLE`; file seed ở `src/backend/modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml` (thay đường dẫn cũ `backend/migrations/...` trong CURRICULUM_MODEL §7) [Proposed].
-- Cấu hình version mặc định của trường đến module learning qua projection `ref.schools` (cột mới + event của F015) [Proposed].
+- Mã curriculum duy nhất trong phạm vi sở hữu (platform; từng tenant) để không lộ sự tồn tại curriculum của tenant khác qua `409` [Confirmed].
+- Tên topic và mô tả LO lưu theo ngôn ngữ của curriculum (một bản), khớp `TopicInput.name`/`LearningObjectiveInput.description` của OpenAPI; tên curriculum/môn là `LearningName` [Confirmed].
+- Seed dùng mã `GDPT2018_SAMPLE`; file seed ở `src/backend/modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml` (thay đường dẫn cũ `backend/migrations/...` trong CURRICULUM_MODEL §7) [Confirmed].
+- Cấu hình version mặc định của trường đến module learning qua projection `ref.schools` (cột mới + event của F015) [Confirmed].

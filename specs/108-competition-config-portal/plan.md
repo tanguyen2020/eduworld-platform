@@ -124,7 +124,7 @@ Không có. Workflow/publish/rollback theo [API_DESIGN §9.13](../../docs/07-bac
 - Metric: `eduworld_competition_config_publish_total{config_type}`, `eduworld_competition_config_validation_failed_total{config_type}`.
 - Span: `Publish`, `ApplyPublished`; portal gửi `traceparent` qua `apiClient`.
 
-Ước lượng: 1,5 sprint backend + 2 sprint web [Proposed].
+Ước lượng: 1,5 sprint backend + 2 sprint web [Confirmed].
 
 
 ### Danh mục menu/action portal (ADR-0090)

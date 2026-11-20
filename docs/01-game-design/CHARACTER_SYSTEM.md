@@ -24,14 +24,14 @@ Không có vũ khí, sát thương, máu, chiến đấu (§3.1 — không bạo
 
 | Tham số | Giá trị mặc định | Nhãn |
 |---|---|---|
-| Tốc độ đi / chạy | 3.0 / 5.5 m/s | [Proposed] |
-| Nhảy | cao 1.0 m, không double jump | [Proposed] |
-| Gia tốc / ma sát | 20 / 25 m/s² (dừng gọn, dễ điều khiển) | [Proposed] |
-| Dốc tối đa | 40° | [Proposed] |
-| Step height | 0.3 m | [Proposed] |
+| Tốc độ đi / chạy | 3.0 / 5.5 m/s | [Confirmed] |
+| Nhảy | cao 1.0 m, không double jump | [Confirmed] |
+| Gia tốc / ma sát | 20 / 25 m/s² (dừng gọn, dễ điều khiển) | [Confirmed] |
+| Dốc tối đa | 40° | [Confirmed] |
+| Step height | 0.3 m | [Confirmed] |
 
 - Input map trừu tượng (`move_forward`, `move_left`, `jump`, `interact`, `emote_wheel`, `open_quest`, `open_chat`) — hỗ trợ bàn phím, gamepad, và **virtual joystick + nút cảm ứng** trên Android (lớp UI `TouchControls` chỉ hiện trên thiết bị cảm ứng).
-- Chế độ **click/tap-to-move** cho lớp 1–3 [Proposed]: chạm vào mặt đất → `NavigationAgent3D` dẫn đường.
+- Chế độ **click/tap-to-move** cho lớp 1–3 [Confirmed]: chạm vào mặt đất → `NavigationAgent3D` dẫn đường.
 - Controller **không** gửi vị trí trực tiếp; `remote_player_sync.gd` lấy mẫu trạng thái và gửi qua `RealtimeClient` theo nhịp ở [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) §5. Server kiểm tra tốc độ/biên (ADR-0011); nếu server trả `position_correction`, controller nội suy về vị trí đúng trong 200 ms.
 - Khi mở UI toàn màn (exercise, exam, chat nhập liệu) controller tắt input di chuyển.
 
@@ -98,7 +98,7 @@ flowchart LR
 
 | Quy tắc | Chi tiết |
 |---|---|
-| Preset | 6 preset [Proposed] đa dạng, trung tính, phù hợp lứa tuổi; học sinh có thể bỏ qua tùy chỉnh và dùng preset |
+| Preset | 6 preset [Confirmed] đa dạng, trung tính, phù hợp lứa tuổi; học sinh có thể bỏ qua tùy chỉnh và dùng preset |
 | Dáng người (`body_type`) | 3–4 dáng trẻ em stylized, không phân biệt giới tính bắt buộc; không có tùy chọn cơ thể người lớn |
 | Màu da, màu tóc | Bảng màu cố định, miễn phí cho mọi học sinh |
 | Trang phục ban đầu | Bộ mặc định miễn phí; trang phục khác mở khóa qua phần thưởng hoặc Shop Xu ([INVENTORY_ECONOMY](INVENTORY_ECONOMY.md)) |
@@ -129,13 +129,13 @@ Server đánh dấu `game_profiles.avatar_created_at`; event `avatar.created` (d
 | `body_type`, `skin_tone`, màu tóc | Thuộc danh mục miễn phí (mọi học sinh) |
 | `hair.item_id`, `outfit.item_id`, `accessories[].item_id`, `emote_slots[]` | Phải có `InventoryItem(student_id, item_id)` hoặc là item mặc định |
 | `accessories[].slot` | `head`, `face`, `back`, `hand` — tối đa 1 item/slot (danh sách slot chuẩn: [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §2) |
-| `emote_slots` | Tối đa `emote_wheel_slots` (6 ô wheel) [Proposed]; mỗi phần tử là mã emote đã sở hữu |
+| `emote_slots` | Tối đa `emote_wheel_slots` (6 ô wheel) [Confirmed]; mỗi phần tử là mã emote đã sở hữu |
 | `pet` | 1 pet trang trí đi theo nhân vật (không chỉ số), item `kind = pet` |
 | `title`, `frame`, `badge_showcase[]` | Danh hiệu, khung avatar, tối đa 3 huy hiệu trưng bày trên thẻ hồ sơ |
 
 **Equipment slot**: theo danh sách chuẩn ở [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §2. Server từ chối item sai slot (`422 EQUIP_SLOT_INVALID`).
 
-**Avatar preset của học sinh:** lưu tối đa 3 bộ phối đồ (`avatar_presets`) để đổi nhanh [Proposed].
+**Avatar preset của học sinh:** lưu tối đa 3 bộ phối đồ (`avatar_presets`) để đổi nhanh [Confirmed].
 
 **Ngoại hình theo tiến trình:** một số trang phục/khung/danh hiệu chỉ mở ở level hoặc thành tựu nhất định ([PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §4.4), hiển thị cho người khác như dấu hiệu tiến bộ trong game, không lộ thông tin học tập.
 
@@ -163,14 +163,14 @@ Học sinh không sửa được trường/lớp trong game (dữ liệu do SIS 
 
 ### 5.3. Nickname
 
-- Lần đầu vào game, học sinh chọn nickname từ **danh sách sinh tự động** (tính từ + con vật + số, vd. "Cú Mèo Chăm Chỉ 27") [Proposed]; không nhập tự do để tránh lộ tên thật/ngôn từ xấu. Mỗi lựa chọn trong danh sách (`nickname_option_id`) còn hiệu lực `nickname_suggestion_ttl` = **10 phút** **[Confirmed — Technical Architect 2026-11-16]**; hết hạn → client xin danh sách mới.
+- Lần đầu vào game, học sinh chọn nickname từ **danh sách sinh tự động** (tính từ + con vật + số, vd. "Cú Mèo Chăm Chỉ 27") [Confirmed]; không nhập tự do để tránh lộ tên thật/ngôn từ xấu. Mỗi lựa chọn trong danh sách (`nickname_option_id`) còn hiệu lực `nickname_suggestion_ttl` = **10 phút** **[Confirmed — Technical Architect 2026-11-16]**; hết hạn → client xin danh sách mới.
 - Nickname tối đa **32 ký tự** ở mọi nơi (DB `varchar(32)`, OpenAPI/AsyncAPI `maxLength: 32`) và **duy nhất trong tenant** (unique partial `(tenant_id, nickname) WHERE deleted_at IS NULL`), không phải duy nhất theo trường **[Confirmed — Technical Architect 2026-11-16]**.
 - Đổi nickname: tối đa `nickname_change_monthly_limit` = **1 lần/tháng** **[Confirmed — Technical Architect 2026-11-16]** (policy trường chỉ siết chặt hơn); `school_admin` có thể reset; Platform Safety Team (`safety_moderator`) reset khi xử lý vi phạm ([MODERATION](../03-social-multiplayer/MODERATION.md)).
 - Tên thật không bao giờ hiển thị trên đầu nhân vật trong khu công cộng ([CHILD_SAFETY](../10-security/CHILD_SAFETY.md)).
 
 ### 5.4. Nguồn mở khóa
 
-Cosmetic mở khóa qua `RewardGrant` (hoàn thành bài tập, quest, sự kiện, thành tựu, thi đấu) hoặc mua bằng Xu trong Shop ([INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §5). **Không có mua bằng tiền thật** [Proposed] (OQ-14). Không có item ảnh hưởng tới kết quả học tập hay lợi thế thi đấu.
+Cosmetic mở khóa qua `RewardGrant` (hoàn thành bài tập, quest, sự kiện, thành tựu, thi đấu) hoặc mua bằng Xu trong Shop ([INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §5). **Không có mua bằng tiền thật** [Confirmed] (OQ-14). Không có item ảnh hưởng tới kết quả học tập hay lợi thế thi đấu.
 
 ## 6. Inventory UI
 
@@ -206,7 +206,7 @@ sequenceDiagram
 ```
 
 - Snapshot vị trí 10 Hz (`hub.snapshot.updated`, entity `{eid, p, r, a}`) **không** chứa appearance; appearance gửi khi join và khi thay đổi (kèm `avatar_config_hash` để client cache theo hash).
-- `eid` là định danh entity ẩn danh theo room (không phải `student_id`) [Proposed] — giảm lộ ID ra người chơi khác; xem [REALTIME_ARCHITECTURE §6](../06-architecture/REALTIME_ARCHITECTURE.md).
+- `eid` là định danh entity ẩn danh theo room (không phải `student_id`) [Confirmed] — giảm lộ ID ra người chơi khác; xem [REALTIME_ARCHITECTURE §6](../06-architecture/REALTIME_ARCHITECTURE.md).
 - Thông tin hiển thị cho người khác: nickname, avatar, level, badge đang đeo. Không hiển thị trường/lớp với người chơi khác trường (CHILD_SAFETY).
 
 ## 9. Kiểm thử

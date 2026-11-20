@@ -18,7 +18,7 @@ Thêm bounded context `reward` + `progression` vào module game. Consumer durabl
 | Project Type | backend module |
 | Performance Goals | XP tới client ≤ 2 s (AC-GAM-004); consumer ≥ 500 event/s/instance |
 | Constraints | AGENTS R5, R8, R10, R13, R21, R26, R27, R28; ADR-0016, ADR-0018, ADR-0042, ADR-0043, ADR-0049 |
-| Scale/Scope | 10.000 CCU (NFR-SCAL-003); `xp_ledger` partition khi > 50M dòng [Proposed] |
+| Scale/Scope | 10.000 CCU (NFR-SCAL-003); `xp_ledger` partition khi > 50M dòng [Confirmed] |
 
 ## Constitution Check
 
@@ -71,7 +71,7 @@ src/backend/modules/game/
 
 ## Phase 0: Research
 
-Không có — PROGRESSION_SYSTEM, ADR-0049 và DATABASE_DESIGN §2.8a/§2.13 đủ. Hai giả định [Proposed] (ranh giới ngày cap, một curve) ghi ở spec Assumptions.
+Không có — PROGRESSION_SYSTEM, ADR-0049 và DATABASE_DESIGN §2.8a/§2.13 đủ. Hai giả định [Confirmed] (ranh giới ngày cap, một curve) ghi ở spec Assumptions.
 
 ## Phase 1: Design & Contracts
 

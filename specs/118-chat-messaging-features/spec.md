@@ -183,14 +183,14 @@ Trong party 4 người, người gửi thấy ai đã nhận, ai đã xem; trong
 
 ## Ngoài phạm vi
 
-- Tìm kiếm full-text, channel bền vững (class, study group, team cố định, DM) → F120; `show_read_receipts` cho DM [Proposed] → F120.
+- Tìm kiếm full-text, channel bền vững (class, study group, team cố định, DM) → F120; `show_read_receipts` cho DM [Confirmed] → F120.
 - Báo cáo tin (kể cả tin đã thu hồi), moderator xem nội dung gốc/revision, gỡ tin → F121; thông báo mention khi offline → F123.
 - UI Godot (menu thao tác, picker, copy, receipts) → F119; UI Game Studio cho sticker/GIF trong Portal workspace A → chưa có feature trong danh mục (đề xuất bổ sung vào F079).
 - Phần thưởng mở khóa sticker (reward rule, inventory) → F075.
 
 ## Assumptions
 
-- Gán sticker pack/GIF cho tenant dùng `infra.tenant_resource_assignments` của `eduworld_chat`, ghi qua saga gán của System Admin (F045, `executeTenantCloneStep` hoặc bước gán tương đương) [Proposed].
+- Gán sticker pack/GIF cho tenant dùng `infra.tenant_resource_assignments` của `eduworld_chat`, ghi qua saga gán của System Admin (F045, `executeTenantCloneStep` hoặc bước gán tương đương) [Confirmed].
 - module game (F075) phát event mở khóa vật phẩm mang `item_id`/`reward_rule_id`; chưa có thì pack khóa không dùng được (fail-closed).
-- Trần sticker/GIF 4/phút/channel, throttle typing 3 s/hết hạn 5 s, gộp receipt 2 s, giới hạn tệp sticker/GIF chưa có tên trong CONFIG_DEFAULTS → task Polish đề xuất đăng ký [Proposed].
-- Thời hạn sửa/thu hồi và các giới hạn số là [Proposed] theo PRD FR-CHAT-012…015.
+- Trần sticker/GIF 4/phút/channel, throttle typing 3 s/hết hạn 5 s, gộp receipt 2 s, giới hạn tệp sticker/GIF chưa có tên trong CONFIG_DEFAULTS → task Polish đề xuất đăng ký [Confirmed].
+- Thời hạn sửa/thu hồi và các giới hạn số là [Confirmed] theo PRD FR-CHAT-012…015.

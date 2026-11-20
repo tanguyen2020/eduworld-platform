@@ -5,7 +5,7 @@
 
 **Mục đích & phạm vi.** Nguồn duy nhất về **nguyên tắc kỹ thuật** bảo vệ dữ liệu cá nhân: inventory, mục đích, **retention**, yêu cầu về dữ liệu học sinh (xuất, ẩn danh hóa, khóa xử lý), xóa/ẩn danh hóa, luồng dữ liệu, kiểm soát kỹ thuật. An toàn trẻ em → [CHILD_SAFETY](CHILD_SAFETY.md); bảo mật kỹ thuật → [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md).
 
-> **Pháp lý ngoài version này (ADR-0082).** Rà soát theo luật bảo vệ dữ liệu cá nhân, cơ sở pháp lý xử lý, mô hình consent, DPIA và thời hạn thông báo vi phạm theo luật không thuộc version này; thiết kế tham khảo ở [LEGAL_COMPLIANCE](../99-deferred/LEGAL_COMPLIANCE.md) (không triển khai). Giá trị retention dưới đây là tham số kỹ thuật [Proposed].
+> **Pháp lý ngoài version này (ADR-0082).** Rà soát theo luật bảo vệ dữ liệu cá nhân, cơ sở pháp lý xử lý, mô hình consent, DPIA và thời hạn thông báo vi phạm theo luật không thuộc version này; thiết kế tham khảo ở [LEGAL_COMPLIANCE](../99-deferred/LEGAL_COMPLIANCE.md) (không triển khai). Giá trị retention dưới đây là tham số kỹ thuật [Confirmed].
 
 ## 1. Nguyên tắc
 
@@ -21,7 +21,7 @@
 
 ## 2. Data inventory
 
-| Nhóm dữ liệu | Trường chính | Mục đích | Nơi lưu | Retention [Proposed] | Ai truy cập |
+| Nhóm dữ liệu | Trường chính | Mục đích | Nơi lưu | Retention [Confirmed] | Ai truy cập |
 |---|---|---|---|---|---|
 | Định danh học sinh | `full_name`, `student_code`, `grade_level`, `school_id` | Đăng nhập, phân lớp, báo cáo cho nhà trường | `org.students`, Keycloak | Suốt thời gian học + 1 năm sau khi deactivated, sau đó anonymize | Học sinh (bản thân), School Admin, Academic Manager (scope trường/môn) |
 | Ngày sinh | `date_of_birth` (mã hóa cột) | Đối soát SIS, policy theo độ tuổi khi thiếu grade | `org.students` | Như trên | Hệ thống; School Admin |
@@ -29,7 +29,7 @@
 | Thông tin nhân sự (`staff`: nhân sự trường và nhân sự platform, ADR-0081) | `full_name`, email công việc | Đăng nhập portal, phân quyền | `identity.users`, Keycloak | Suốt thời gian công tác + 1 năm | Tenant Admin, School Admin (trường mình) |
 | Định danh đăng nhập | `(issuer, subject)`, username, login events | Xác thực, bảo mật | `identity.*`, Keycloak | ExternalIdentity theo user; `identity.login_events` (nhật ký xác thực) 90 ngày (`login_events_retention`, tối thiểu hóa dữ liệu) [Confirmed — Technical Architect 2026-11-16] | Hệ thống, security team |
 | Lịch sử đăng nhập game (ADR-0031) | `game.login_events`: thời điểm vào/ra, nền tảng, tên thiết bị rút gọn, `device_id` (UUID bản cài, không phải định danh phần cứng), `ip_hash` (HMAC, khóa xoay vòng; **không lưu IP thô**), lý do kết thúc; `users.last_login_at` | Báo cáo hoạt động cho trường, quy tắc một thiết bị, dọn tài khoản không dùng (ADR-0032), điều tra an ninh | PG `game.*`, `identity.users` | `game.login_events` 1 năm rồi ẩn danh hóa (`ip_hash`, `device_model` = NULL) (`login_events_retention`) [Confirmed — Technical Architect 2026-11-16]; `last_login_at` theo vòng đời tài khoản | School Admin (trường mình), Tenant Admin (tenant), System Admin; không hiển thị IP/device_id cho ai |
-| Phiên đăng nhập game (ADR-0086) | `identity.game_auth_sessions`: `keycloak_sid`, `device_id`, nền tảng, SHA-256 của refresh token hiện hành và các token đã xoay (không lưu token thô), thời điểm tạo/refresh/thu hồi, lý do thu hồi. Trên thiết bị cá nhân, refresh token chỉ nằm trong kho bảo mật OS (DPAPI/Keystore/Keychain), bị xóa khi đăng xuất hoặc phiên hết hạn; Web và máy dùng chung không lưu | Giữ phiên game, phát hiện dùng lại token, quy tắc một thiết bị, thu hồi | `identity.*`, kho bảo mật OS trên thiết bị | Phiên hết hạn tối đa 30 ngày (`game_session_sso`); bản ghi phiên đã thu hồi/hết hạn theo login events 90 ngày [Proposed] | Hệ thống, security team |
+| Phiên đăng nhập game (ADR-0086) | `identity.game_auth_sessions`: `keycloak_sid`, `device_id`, nền tảng, SHA-256 của refresh token hiện hành và các token đã xoay (không lưu token thô), thời điểm tạo/refresh/thu hồi, lý do thu hồi. Trên thiết bị cá nhân, refresh token chỉ nằm trong kho bảo mật OS (DPAPI/Keystore/Keychain), bị xóa khi đăng xuất hoặc phiên hết hạn; Web và máy dùng chung không lưu | Giữ phiên game, phát hiện dùng lại token, quy tắc một thiết bị, thu hồi | `identity.*`, kho bảo mật OS trên thiết bị | Phiên hết hạn tối đa 30 ngày (`game_session_sso`); bản ghi phiên đã thu hồi/hết hạn theo login events 90 ngày [Confirmed] | Hệ thống, security team |
 | Learning records | attempts, answers, learning events, mastery | Học tập, đánh giá, gợi ý ôn tập | `assessment.*`, `learning.*` | Suốt thời gian học + 1 năm; sau đó ẩn danh cho thống kê | Học sinh, School Admin, Academic Manager (scope trường/môn); analytics dạng tổng hợp |
 | Tiến độ video/mô phỏng | `video_progress`, `simulation_runs.action_log` (thao tác trong mô phỏng, không có vị trí/thiết bị) | Hoàn thành, kiểm chứng | `assessment.*` | Như learning records | Học sinh, School Admin, Academic Manager (scope) |
 | Kết quả kiểm tra | exam results | Đánh giá | `assessment.*` | Như trên (tối thiểu 1 năm học sau kỳ kiểm tra) | Như trên |
@@ -38,7 +38,7 @@
 | Quan hệ xã hội | friend, block, party history | Kết nối an toàn | `social.*`, `multiplayer.*` | Party history 90 ngày; friend/block theo user | Bản thân; Platform Safety Team qua case (audit) |
 | Nội dung chat gameplay (ADR-0033) | tin trong channel `match`, `team` theo trận, `party`; tin ephemeral World/Area | Giao tiếp khi chơi | `chat.gameplay_messages` (partition ngày tạo `created_on`; gồm cả revision, reaction, pin của tin), `chat.ephemeral_messages` | **Purge vật lý** sau `gameplay_chat_retention_days` kể từ khi channel đóng (mặc định 7, tối thiểu 3) / 24 h; tin thuộc report/case được sao chép sang evidence trước | Thành viên channel trong lúc chơi; Platform Safety Team qua case |
 | Nội dung chat | message body | Giao tiếp, an toàn | `chat.messages` (partition tháng) | `persistent_chat_retention_days` (180 ngày) cho channel bền vững; chat gameplay theo `gameplay_chat_retention_days` (ADR-0033); tin bị report giữ theo ModerationCase | Thành viên channel; Platform Safety Team qua case (audit) |
-| Báo cáo & kiểm duyệt | reports, moderation cases, sanctions, evidence snapshot, thông báo vụ việc cho nhà trường (tóm tắt, thời điểm gửi/xác nhận) | An toàn trẻ em | `chat.reports`, `chat.moderation_cases`, `chat.moderation_evidence` | Theo `moderation_snapshot_retention` ([MODERATION §10](../03-social-multiplayer/MODERATION.md#10-data-minimization--retention)) | Platform Safety Team (đọc liên tenant chỉ trong module moderation, ADR-0072); School Admin chỉ thấy thông báo tóm tắt về học sinh trường mình ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-proposed)) |
+| Báo cáo & kiểm duyệt | reports, moderation cases, sanctions, evidence snapshot, thông báo vụ việc cho nhà trường (tóm tắt, thời điểm gửi/xác nhận) | An toàn trẻ em | `chat.reports`, `chat.moderation_cases`, `chat.moderation_evidence` | Theo `moderation_snapshot_retention` ([MODERATION §10](../03-social-multiplayer/MODERATION.md#10-data-minimization--retention)) | Platform Safety Team (đọc liên tenant chỉ trong module moderation, ADR-0072); School Admin chỉ thấy thông báo tóm tắt về học sinh trường mình ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed)) |
 | Telemetry client | crash, FPS, thiết bị (model, OS), không PII | Ổn định & hiệu năng | Observability stack | 30 ngày | Dev/ops |
 | Game Analytics ([GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md), ADR-0058) | Sự kiện chơi (phiên, khu, quest, challenge, kinh tế, xã hội) và telemetry sản phẩm/hiệu năng; định danh giả danh `player_key`/`session_key` (HMAC, xoay khóa 24 tháng); khối, nền tảng, ngôn ngữ, hạng thiết bị; **không** tên, nickname, `student_id`, nội dung chat | Cải thiện trải nghiệm, cân bằng độ khó, chơi lành mạnh, hiệu năng | `eduworld_game`, schema `analytics` | Raw 90 ngày; `player_days` 400 ngày; tổng hợp 2 năm; hết hạn → ẩn danh hóa (ADR-0028) | Platform (product, live-ops, game design); tenant chỉ xem tổng hợp, ô < 5 bị ẩn |
 | Logs & traces | request metadata, `user_id`, IP | Vận hành, bảo mật | Loki/Tempo | Log 30 ngày, trace 7 ngày; IP rút gọn sau 30 ngày | Ops |
@@ -56,9 +56,9 @@ Không thu thập: ảnh học sinh, giọng nói (không có voice chat trong R
 
 ## 3. Yêu cầu về dữ liệu học sinh
 
-Yêu cầu về dữ liệu học sinh đi qua **nhà trường** (đơn vị ký thỏa thuận với EduWorld). Cơ chế kỹ thuật [Proposed] (danh mục quyền và SLA theo luật: ngoài version này, [LEGAL_COMPLIANCE](../99-deferred/LEGAL_COMPLIANCE.md)):
+Yêu cầu về dữ liệu học sinh đi qua **nhà trường** (đơn vị ký thỏa thuận với EduWorld). Cơ chế kỹ thuật [Confirmed] (danh mục quyền và SLA theo luật: ngoài version này, [LEGAL_COMPLIANCE](../99-deferred/LEGAL_COMPLIANCE.md)):
 
-| Yêu cầu | Kênh | Xử lý kỹ thuật | SLA [Proposed] |
+| Yêu cầu | Kênh | Xử lý kỹ thuật | SLA [Confirmed] |
 |---|---|---|---|
 | Được biết / truy cập | Yêu cầu qua trường → School Admin dùng chức năng "Xuất dữ liệu học sinh" | Export JSON/PDF: hồ sơ, learning records, game profile, danh sách bạn bè (không xuất chat của người khác) | 15 ngày |
 | Chỉnh sửa | Dữ liệu SIS sửa ở SIS; dữ liệu game sửa trong app | Đồng bộ SIS | Theo chu kỳ sync |
@@ -93,7 +93,7 @@ flowchart LR
   CDN[CDN asset tĩnh] -. chỉ asset không PII .-> G
 ```
 
-- [Proposed] Mọi dữ liệu cá nhân lưu và xử lý **tại Việt Nam** (DB, backup, log, object storage). Chỉ asset tĩnh không PII (Godot build, texture, audio) có thể phục vụ qua CDN quốc tế. Học sinh **không** upload media; nội dung đề kiểm tra và media riêng tenant chỉ phục vụ bằng signed URL ngắn hạn, không cache công khai (ADR-0043/0044).
+- [Confirmed] Mọi dữ liệu cá nhân lưu và xử lý **tại Việt Nam** (DB, backup, log, object storage). Chỉ asset tĩnh không PII (Godot build, texture, audio) có thể phục vụ qua CDN quốc tế. Học sinh **không** upload media; nội dung đề kiểm tra và media riêng tenant chỉ phục vụ bằng signed URL ngắn hạn, không cache công khai (ADR-0043/0044).
 - Dịch vụ bên thứ ba xử lý dữ liệu cá nhân (email, error tracking, dịch thuật, AI moderation nếu dùng): ưu tiên self-host hoặc nhà cung cấp tại VN.
 - Error tracking/telemetry: scrub PII trước khi gửi (không username, không nội dung chat).
 

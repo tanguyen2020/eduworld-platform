@@ -23,11 +23,11 @@ GDD là **điểm vào** của toàn bộ thiết kế game: bản sắc, fantas
 | Mục | Giá trị |
 |---|---|
 | Thể loại | Phiêu lưu 3D multiplayer, RPG-lite (phát triển nhân vật, sưu tầm), học tập lồng trong nhiệm vụ, thử thách và thi đấu |
-| Góc nhìn | Third-person, camera follow xoay được; "camera cố định" cho lớp 1–3 [Proposed] |
-| Phiên chơi mục tiêu | 15–30 phút [Proposed] |
+| Góc nhìn | Third-person, camera follow xoay được; "camera cố định" cho lớp 1–3 [Confirmed] |
+| Phiên chơi mục tiêu | 15–30 phút [Confirmed] |
 | Nền tảng | Windows, Android, iOS, Web (ADR-0013) |
 | Người chơi trong một khu | ≤ 40 / hub instance (ADR-0012) |
-| Kinh doanh | Không mua bằng tiền thật, không loot box (OQ-14) [Proposed] |
+| Kinh doanh | Không mua bằng tiền thật, không loot box (OQ-14) [Confirmed] |
 
 ## 3. Core fantasy
 
@@ -40,8 +40,8 @@ Học sinh là **Nhà Thám Hiểm** của **Quần đảo Tri Thức** — th�
 
 | # | Pillar | Ý nghĩa thiết kế | Kiểm tra |
 |---|---|---|---|
-| P1 | **Thế giới đáng khám phá** | Vùng đất có câu chuyện, bí mật, vật sưu tầm, boss; mở rộng theo mùa | Mỗi vùng có ≥ 1 chương truyện, ≥ 5 điểm khám phá, ≥ 1 boss [Proposed] |
-| P2 | **Học là hành động của nhân vật** | Câu hỏi/hoạt động là cách mở cổng, sửa cầu, pha thuốc, hạ boss — không phải popup cản đường | Mỗi quest học tập có ≥ 1 LO; ≥ 60% thời gian quest là tương tác học tập [Proposed]; §6 |
+| P1 | **Thế giới đáng khám phá** | Vùng đất có câu chuyện, bí mật, vật sưu tầm, boss; mở rộng theo mùa | Mỗi vùng có ≥ 1 chương truyện, ≥ 5 điểm khám phá, ≥ 1 boss [Confirmed] |
+| P2 | **Học là hành động của nhân vật** | Câu hỏi/hoạt động là cách mở cổng, sửa cầu, pha thuốc, hạ boss — không phải popup cản đường | Mỗi quest học tập có ≥ 1 LO; ≥ 60% thời gian quest là tương tác học tập [Confirmed]; §6 |
 | P3 | **Tiến bộ nhìn thấy được** | Level, ngoại hình, vùng đất đổi màu theo mastery, bộ sưu tập | Sau mỗi phiên học sinh trả lời được "mình giỏi lên ở đâu" |
 | P4 | **Cùng nhau tốt hơn một mình** | Party, co-op quest, boss nhóm, team battle, mục tiêu lớp | Mỗi vùng chính có hoạt động co-op |
 | P5 | **Công bằng và an toàn** | Server-authoritative (ADR-0016); ghép theo khối; chat theo policy, mọi tin qua kiểm tra (ADR-0020, ADR-0030) | Không có cách mua/farm lợi thế học tập |
@@ -65,14 +65,14 @@ Quy tắc bắt buộc để EduWorld không thành "chuỗi quiz có giao diệ
 
 | # | Quy tắc | Nhãn |
 |---|---|---|
-| L-1 | Hoạt động học tập luôn có **ngữ cảnh game** (NPC cần giúp, boss, cửa cần mở) và **kết quả game** (cầu được sửa, vùng đổi màu, boss mất năng lượng) | [Proposed] |
-| L-2 | Một khối học tập liên tục có số câu tối đa theo grade band (giá trị do [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) sở hữu), rồi xen tương tác thế giới (di chuyển, hội thoại, thu thập) | [Proposed] |
-| L-3 | Đa dạng định dạng server tự chấm: quiz, bài tập tương tác, mini-game, video/audio có câu hỏi chèn, mô phỏng ([ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md); hoạt động cần chấm tay nằm ngoài Release theo ADR-0072); một quest không chỉ dùng một dạng câu hỏi | [Proposed] |
+| L-1 | Hoạt động học tập luôn có **ngữ cảnh game** (NPC cần giúp, boss, cửa cần mở) và **kết quả game** (cầu được sửa, vùng đổi màu, boss mất năng lượng) | [Confirmed] |
+| L-2 | Một khối học tập liên tục có số câu tối đa theo grade band (giá trị do [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) sở hữu), rồi xen tương tác thế giới (di chuyển, hội thoại, thu thập) | [Confirmed] |
+| L-3 | Đa dạng định dạng server tự chấm: quiz, bài tập tương tác, mini-game, video/audio có câu hỏi chèn, mô phỏng ([ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md); hoạt động cần chấm tay nằm ngoài Release theo ADR-0072); một quest không chỉ dùng một dạng câu hỏi | [Confirmed] |
 | L-4 | Kết quả học tập luôn cá nhân, server chấm; phần thưởng game không ảnh hưởng điểm/mastery | [Confirmed] |
 | L-5 | Nội dung học tập không bao giờ bị khóa sau level, tiền tệ hay thi đấu | [Confirmed] |
-| L-6 | Sai → phản hồi thân thiện, gợi ý, thử lại với câu mới; không làm xấu hổ, không hiển thị ai trong nhóm sai | [Proposed] |
-| L-7 | **Hành động chính = khái niệm học.** Ở mọi nơi có thể, thao tác cốt lõi của người chơi chính là khái niệm đang học (di chuyển trên trục số, cân phương trình để sửa cầu, ghép âm tiết để mở cửa), không phải câu hỏi bật lên rồi mới được chơi tiếp. Catalog cơ chế theo môn, cách gắn vào quest/mini-game/mô phỏng và tiêu chí review: [LEARNING_MECHANICS](LEARNING_MECHANICS.md) | [Proposed] |
-| L-8 | Co-op cần **phụ thuộc lẫn nhau** thật (mỗi bạn giữ một phần dữ kiện), không chỉ là quiz cá nhân chạy song song: bước `interdependent` ([QUEST_SYSTEM §3.2](QUEST_SYSTEM.md#32-gán-bước-trong-party-và-bước-interdependent-proposed)) | [Proposed] |
+| L-6 | Sai → phản hồi thân thiện, gợi ý, thử lại với câu mới; không làm xấu hổ, không hiển thị ai trong nhóm sai | [Confirmed] |
+| L-7 | **Hành động chính = khái niệm học.** Ở mọi nơi có thể, thao tác cốt lõi của người chơi chính là khái niệm đang học (di chuyển trên trục số, cân phương trình để sửa cầu, ghép âm tiết để mở cửa), không phải câu hỏi bật lên rồi mới được chơi tiếp. Catalog cơ chế theo môn, cách gắn vào quest/mini-game/mô phỏng và tiêu chí review: [LEARNING_MECHANICS](LEARNING_MECHANICS.md) | [Confirmed] |
+| L-8 | Co-op cần **phụ thuộc lẫn nhau** thật (mỗi bạn giữ một phần dữ kiện), không chỉ là quiz cá nhân chạy song song: bước `interdependent` ([QUEST_SYSTEM §3.2](QUEST_SYSTEM.md#32-gán-bước-trong-party-và-bước-interdependent-confirmed)) | [Confirmed] |
 
 ## 7. Các tầng loop
 
@@ -118,7 +118,7 @@ flowchart TB
   D -->|rồi| BR["Điểm dừng tự nhiên:<br/>#quot;Hôm nay bạn đã tô màu 2 trạm!#quot;<br/>gợi ý nghỉ"]
 ```
 
-Mỗi hoạt động kết thúc bằng **màn tổng kết** = điểm dừng tự nhiên; không auto-chain sang hoạt động tiếp [Proposed].
+Mỗi hoạt động kết thúc bằng **màn tổng kết** = điểm dừng tự nhiên; không auto-chain sang hoạt động tiếp [Confirmed].
 
 ### 7.3. Daily, weekly, season
 
@@ -160,7 +160,7 @@ sequenceDiagram
   S-->>A: Tổng kết: XP cá nhân + thưởng hợp tác
 ```
 
-Quy tắc [Confirmed — Addendum §4]: tiến trình quest chia sẻ theo `shared_progress_policy`; **mỗi học sinh có attempt và kết quả học tập riêng**; không ai làm hộ điểm của người khác; mỗi người phải đạt `min_contribution` mới nhận thưởng. Thiết kế puzzle co-op [Proposed]: chia vai (mỗi người giữ một mảnh dữ kiện), bước chung chỉ mở khi mọi người hoàn thành phần mình. Chi tiết: [QUEST_SYSTEM](QUEST_SYSTEM.md) §6, [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md).
+Quy tắc [Confirmed — Addendum §4]: tiến trình quest chia sẻ theo `shared_progress_policy`; **mỗi học sinh có attempt và kết quả học tập riêng**; không ai làm hộ điểm của người khác; mỗi người phải đạt `min_contribution` mới nhận thưởng. Thiết kế puzzle co-op [Confirmed]: chia vai (mỗi người giữ một mảnh dữ kiện), bước chung chỉ mở khi mọi người hoàn thành phần mình. Chi tiết: [QUEST_SYSTEM](QUEST_SYSTEM.md) §6, [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md).
 
 ## 10. Ví dụ phiên chơi
 
@@ -239,12 +239,12 @@ Số liệu cụ thể nằm ở tài liệu sở hữu; GDD chỉ giữ nguyên
 | Nguyên tắc | Nhãn | Chi tiết |
 |---|---|---|
 | Thưởng nỗ lực học tập và hoàn thành có ý nghĩa, không thưởng thời gian online hay số lần bấm | [Confirmed] | [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3 |
-| XP theo số câu đúng **lần đầu**; trả lời đoán nhanh dưới ngưỡng không được XP | [Proposed] | PROGRESSION §3 |
-| Cap XP/ngày và giảm dần khi lặp lại cùng nội dung | [Proposed] | PROGRESSION §3.2 |
+| XP theo số câu đúng **lần đầu**; trả lời đoán nhanh dưới ngưỡng không được XP | [Confirmed] | PROGRESSION §3 |
+| Cap XP/ngày và giảm dần khi lặp lại cùng nội dung | [Confirmed] | PROGRESSION §3.2 |
 | Level chỉ mở cosmetic/khu trang trí/hoạt động phụ, không mở nội dung học tập bắt buộc | [Confirmed] | PROGRESSION §4.4 |
-| Achievement học tập dựa trên mastery/hoàn thành; achievement xã hội dựa trên hành vi tích cực | [Proposed] | [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §7 |
+| Achievement học tập dựa trên mastery/hoàn thành; achievement xã hội dựa trên hành vi tích cực | [Confirmed] | [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §7 |
 | Collection có nguồn nhận xác định, công khai; không ngẫu nhiên trả phí | [Confirmed] | INVENTORY_ECONOMY §6 |
-| Không streak bị reset gây áp lực; dùng mục tiêu tích lũy trong tuần | [Proposed] | §7.3 |
+| Không streak bị reset gây áp lực; dùng mục tiêu tích lũy trong tuần | [Confirmed] | §7.3 |
 | Reward game không ảnh hưởng Learning Score, mastery hay kết quả đánh giá chính thức; không trả tiền để học tốt hơn | [Confirmed] | ADR-0018, ADR-0049 |
 
 ## 13. Chống gây nghiện và dark pattern
@@ -258,7 +258,7 @@ Số liệu cụ thể nằm ở tài liệu sở hữu; GDD chỉ giữ nguyên
 | Thưởng phiên dài | Cap XP/ngày ([PROGRESSION_SYSTEM §3.2](PROGRESSION_SYSTEM.md)); nhắc nghỉ theo ngưỡng của [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) (OQ-17) |
 | Xếp hạng công khai thứ hạng thấp | Top N + vị trí của mình; tier thay số; lớp 1–3 không thứ hạng cá nhân |
 | So sánh điểm học tập công khai | Leaderboard chỉ dùng Competition Points, điểm nỗ lực, quest; bảng của lớp không xếp theo XP ([COMPETITION_SYSTEM §9](COMPETITION_SYSTEM.md#9-leaderboard)) |
-| Thưởng làm nhanh hơn suy nghĩ | Không XP cho tốc độ/chuỗi đúng; lớp 1–5 không có bonus tốc độ trong trận ([PROGRESSION_SYSTEM §3](PROGRESSION_SYSTEM.md), [COMPETITION_SYSTEM §3.1](COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-proposed)) |
+| Thưởng làm nhanh hơn suy nghĩ | Không XP cho tốc độ/chuỗi đúng; lớp 1–5 không có bonus tốc độ trong trận ([PROGRESSION_SYSTEM §3](PROGRESSION_SYSTEM.md), [COMPETITION_SYSTEM §3.1](COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-confirmed)) |
 
 Chi tiết an toàn: [CHILD_SAFETY](../10-security/CHILD_SAFETY.md).
 
@@ -271,8 +271,8 @@ Mọi nội dung thay đổi được mà không build lại client [Confirmed]:
 Release 1.0 là game hoàn chỉnh theo Master Prompt [Confirmed — stakeholder 2026-11-15]. Chỉ làm khi có quyết định:
 
 - Voice chat: không làm trong Release 1.0 (ADR-0051, ADR-0070).
-- Housing/đảo cá nhân; trading vật phẩm giữa người chơi (tắt mặc định, INVENTORY_ECONOMY §6.4) [Proposed].
-- UGC (học sinh tự tạo màn chơi) [Proposed].
+- Housing/đảo cá nhân; trading vật phẩm giữa người chơi (tắt mặc định, INVENTORY_ECONOMY §6.4) [Confirmed].
+- UGC (học sinh tự tạo màn chơi) [Confirmed].
 - Parent portal (OQ-13) [TBD].
 
 ## 16. Chỉ số thành công

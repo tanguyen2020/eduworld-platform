@@ -8,8 +8,8 @@
 ### Session 2026-11-16
 
 - Q: Enum trạng thái case, loại sanction, lý do báo cáo khác nhau giữa OpenAPI và MODERATION? → A: Theo tài liệu sở hữu [MODERATION §5–§7](../../docs/03-social-multiplayer/MODERATION.md): case `open`/`in_review`/`escalated`/`resolved`/`reopened`; sanction `warning`/`mute`/`restrict_text`/`restrict_dm`/`restrict_multiplayer`/`restrict_competition`/`account_lock`; reason `rude_language`/`bullying`/`asked_personal_info`/`spam`/`inappropriate_content`/`cheating`/`other`. OpenAPI sửa ở Phase 2 (delta "Cần sửa").
-- Q: Ai đọc nội dung case? → A: Người được gán (`assignee_moderator_id`) và trưởng ca; `system_admin` có `moderation.*` (ADMIN_PORTAL §2.3). Trưởng ca biểu diễn bằng permission đề xuất `moderation.case.lead` [Proposed] (catalog chưa có — báo cáo).
-- Q: Phân công theo vòng trực tự động? → A: Release này: nhận thủ công (`assignModerationCase` tự gán) và trưởng ca gán cho người khác (`assigned_via = manual`); vòng trực tự động [Proposed] làm sau, không chặn FR-MOD-018 (alert on-call vẫn chạy).
+- Q: Ai đọc nội dung case? → A: Người được gán (`assignee_moderator_id`) và trưởng ca; `system_admin` có `moderation.*` (ADMIN_PORTAL §2.3). Trưởng ca biểu diễn bằng permission đề xuất `moderation.case.lead` [Confirmed] (catalog chưa có — báo cáo).
+- Q: Phân công theo vòng trực tự động? → A: Release này: nhận thủ công (`assignModerationCase` tự gán) và trưởng ca gán cho người khác (`assigned_via = manual`); vòng trực tự động [Confirmed] làm sau, không chặn FR-MOD-018 (alert on-call vẫn chạy).
 - Q: Email báo "có thông báo mới" cho School Admin? → A: Email không chứa tên/nội dung; module chat không giữ email nhân sự nên module identity gửi khi tiêu thụ `moderation.school_notified` (ngoài phạm vi, báo cáo). Feature này lưu và phát event.
 - Q: Ngữ cảnh snapshot báo cáo ±10 hay ±20 tin? → A: Theo MODERATION §5 (sở hữu): ±10 tin trong channel lúc tạo report; moderator xem thêm ±200 tin ngữ cảnh khi channel còn (MODERATION §6.1). DATABASE_DESIGN ghi ±20 — mâu thuẫn, báo cáo.
 
@@ -134,7 +134,7 @@ Case p1 tạo lúc 23:00 → nếu 15 phút chưa ai nhận, on-call nhận cả
 ### Edge Cases
 
 - NẾU cùng học sinh báo cáo cùng target nhiều lần trong 24 h, THÌ chỉ tăng `report_count` một lần cho người đó (trọng số), không phạt người báo cáo (F121-AC-02).
-- NẾU nhiều report bị bác bỏ từ cùng người, THÌ giảm trọng số report sau, không sanction người báo cáo [Proposed].
+- NẾU nhiều report bị bác bỏ từ cùng người, THÌ giảm trọng số report sau, không sanction người báo cáo [Confirmed].
 - NẾU case liên trường, THÌ một case; mỗi trường nhận thông báo riêng chỉ chứa học sinh của trường đó (F121-AC-17).
 - NẾU sanction trùng loại đang hiệu lực, THÌ tạo sanction mới với `ends_at` mới; sanction cũ giữ lịch sử.
 - NẾU assignee rời ca, THÌ trưởng ca gán lại; case không mất bằng chứng.
@@ -203,7 +203,7 @@ Case p1 tạo lúc 23:00 → nếu 15 phút chưa ai nhận, on-call nhận cả
 
 ## Assumptions
 
-- [Proposed] Ánh xạ reason → mức: `asked_personal_info` → p1; `bullying`, `inappropriate_content` → p2; `rude_language`, `spam`, `cheating`, `other` → p3 (MODERATION §6.2 chỉ quy định loại vụ việc).
-- [Proposed] Permission `moderation.case.lead` cho trưởng ca; cần thêm vào catalog ADMIN_PORTAL §2.2 và `src/backend/pkg/authz/catalog.go`.
-- [Proposed] Thời hạn giữ snapshot = case đóng + 1 năm (MODERATION §10), chưa đăng ký CONFIG_DEFAULTS.
+- [Confirmed] Ánh xạ reason → mức: `asked_personal_info` → p1; `bullying`, `inappropriate_content` → p2; `rude_language`, `spam`, `cheating`, `other` → p3 (MODERATION §6.2 chỉ quy định loại vụ việc).
+- [Confirmed] Permission `moderation.case.lead` cho trưởng ca; cần thêm vào catalog ADMIN_PORTAL §2.2 và `src/backend/pkg/authz/catalog.go`.
+- [Confirmed] Thời hạn giữ snapshot = case đóng + 1 năm (MODERATION §10), chưa đăng ký CONFIG_DEFAULTS.
 - Hold p1 dùng sanction hệ thống (`issued_by_kind = system`) để tái sử dụng cơ chế thực thi.

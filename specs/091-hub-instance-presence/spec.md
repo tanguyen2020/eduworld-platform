@@ -156,11 +156,11 @@ Hệ thống biết học sinh đang online, đang ở khu nào, đang làm gì 
 - Hiển thị presence cho bạn bè, ẩn trạng thái với bạn bè, sự kiện `friend.*`/`user.blocked` → F095 (F091 chỉ tiêu thụ).
 - Party ưu tiên cùng instance, kéo party khi chuyển khu, private instance → F100/F101; lobby/battle/co-op room → F104/F105; boss room → F103.
 - Kiểm tra khoảng cách cho tương tác có giá trị (mở quest, nhận item) và dữ liệu area/mở khóa gốc → F071.
-- Gộp grade band theo cấu hình trường → chưa có tham số, mặc định không gộp [Proposed].
+- Gộp grade band theo cấu hình trường → chưa có tham số, mặc định không gộp [Confirmed].
 
 ## Assumptions
 
 - F071 (module game) phát `content.published` (`item_type = world_area`) và `world.area_unlocked`; trước khi F071 Done, quickstart dùng seed `main_hub` phát qua cùng event (không mock trong đường chạy thật).
 - F070 phát `game_profile.updated` có `avatar_config`; F095 phát `friend.added/removed`, `user.blocked/unblocked` (trước đó projection rỗng: không có ưu tiên bạn bè).
-- Bật ghi nhận hub membership theo tenant chưa có tên trong CONFIG_DEFAULTS; đề xuất `audit_hub_membership` (task Polish) [Proposed].
+- Bật ghi nhận hub membership theo tenant chưa có tên trong CONFIG_DEFAULTS; đề xuất `audit_hub_membership` (task Polish) [Confirmed].
 - Ánh xạ `grade_level` → `grade_band` (`g1_3`, `g4_5`, `g6_7`, `g8_9`) theo [GLOSSARY](../../docs/00-overview/GLOSSARY.md) (mục Grade band).

@@ -9,9 +9,9 @@
 
 - Q: F017 có tự reconcile/apply không? → A: Không. F017 chỉ hiện thực `SISProvider.Kind() = "contract_v1"`, lịch, webhook, retry; bản ghi đi vào pipeline staging → `Reconciler` → apply của F011 (F011 tasks "Dependencies": F017 dùng lại port và pipeline).
 - Q: `sis-mock` là gì? → A: Container Prism mock `specs/sis/eduworld-sis-contract.v1.yaml` (LOCAL_DEVELOPMENT §2, cổng 4010) với `examples` dữ liệu demo; test tích hợp của worker dùng fake SIS `httptest` (chỉ test, gắn nhãn mock — SIS_INTEGRATION §11). Không viết server mock riêng.
-- Q: Webhook secret cấp thế nào khi API không được trả credential? → A: System Admin tạo secret trong secret manager và chỉ nhập tham chiếu `webhook_secret_ref`; secret giao cho trường ngoài hệ thống (SIS_INTEGRATION §9: API không bao giờ trả credential) [Proposed].
+- Q: Webhook secret cấp thế nào khi API không được trả credential? → A: System Admin tạo secret trong secret manager và chỉ nhập tham chiếu `webhook_secret_ref`; secret giao cho trường ngoài hệ thống (SIS_INTEGRATION §9: API không bao giờ trả credential) [Confirmed].
 - Q: Capability của connection lưu ở đâu? → A: Lấy từ `getHealth` lúc health check và đầu mỗi run, lưu trên connection (cột mới, data-model); login sync (F011) đọc capability này.
-- Q: Ngưỡng 10% vi phạm, retry 6 lần, 10 req/s, 5 run lỗi liên tiếp chưa có tên trong CONFIG_DEFAULTS? → A: Dùng giá trị [Proposed] của SIS_INTEGRATION §2.5, §4.2, §7 làm hằng cấu hình code; task Polish đăng ký tên tham số.
+- Q: Ngưỡng 10% vi phạm, retry 6 lần, 10 req/s, 5 run lỗi liên tiếp chưa có tên trong CONFIG_DEFAULTS? → A: Dùng giá trị [Confirmed] của SIS_INTEGRATION §2.5, §4.2, §7 làm hằng cấu hình code; task Polish đăng ký tên tham số.
 
 ### Session 2026-11-17
 
@@ -19,14 +19,14 @@
 
 ### Session 2026-11-19 (triển khai)
 
-- OQ F017-1: `config.schools[]` chỉ có `school_external_id` thì không có chỗ ánh xạ sang trường EduWorld (SIS_INTEGRATION §2.3 yêu cầu System Admin ánh xạ, F011 không có API ánh xạ). → [Proposed] mỗi phần tử là `{school_external_id, school_id}` (`SisContractConfig` trong spec gộp); khi chạy chỉ dùng trường vừa có trong `config.schools[]` vừa active trong `sis_connection_schools`; trường SIS ngoài ánh xạ → issue `unmapped_school` (F017-AC-09).
-- OQ F017-2: T001/T010 yêu cầu oapi-codegen client mode, nhưng repo không có oapi-codegen và contract là OpenAPI 3.1 (`type: [string, 'null']`) mà kin-openapi/oapi-codegen chưa đọc được. → [Proposed] client viết tay (`internal/infrastructure/sis/contractv1client`) dùng DTO dạng map được kiểm bằng JSON Schema trích từ contract (`tools/sisgen`, cùng nguồn với F011); contract vẫn là nguồn duy nhất.
-- OQ F017-3: định dạng secret theo `auth_type` chưa được định nghĩa. → [Proposed] `api_key`: giá trị khóa; `oauth2_client_credentials`: JSON `{client_id, client_secret}`; `mtls`: một file PEM gồm chứng chỉ + khóa riêng. Secret đọc từ `EW_SIS_SECRETS_DIR/<secret_ref>` (Swarm secret), cache ≤ 5 phút.
-- OQ F017-4: data-model ghi `capabilities varchar(64)[]`; ent không có kiểu mảng PostgreSQL trong repo. → [Proposed] `jsonb` + CHECK (mảng ≤ 4 phần tử thuộc enum); migration chép `config.capabilities` (F011 đọc tạm từ `config`) sang cột mới; login sync đọc cột mới. Index `(sis_connection_id, started_at DESC)` không thêm: index F011 `(sis_connection_id, started_at)` quét ngược được.
-- OQ F017-5: ngữ nghĩa `Change.operation = delete` (F017-AC-17). → [Proposed] học sinh = trạng thái `inactive` (deactivate + kết thúc enrollment, như F011-AC-23); enrollment = kết thúc enrollment; trường/lớp chỉ đếm (`*_delete_skipped`), không xóa (chỉ soft-delete có người duyệt, R21). Thay đổi cùng khóa nguồn trong một lô: thay đổi có `sequence` lớn nhất thắng; áp theo thứ tự trường → lớp → học sinh → enrollment → delete của pipeline F011.
-- OQ F017-6: một stream WorkQueue `IDENTITY_SIS_JOBS` không cho hai consumer chồng filter. → [Proposed] consumer `identity_sis_jobs` giữ filter `ew.job.identity.sis.>`, `MaxDeliver = -1`, số lần giao do code quyết định theo subject: `webhook_batch` 5 lần, cách 5 phút rồi `DLQ_IDENTITY` (`ew.dlq.identity.sis_jobs`); job khác 3 lần như F011; job chờ lock của connection (`ErrRunLockBusy`) được giao lại sau 30 giây và không bị đưa vào DLQ.
-- OQ F017-7: `sis_sync_schedule` là tham số tenant nhưng chưa đọc được tenant settings (F015 đang làm). → [Proposed] lịch full = `sis_connections.schedule` hoặc `0 1 * * *` (01:00 ICT); delta = `*/15 7-17 * * 1-6` (giờ hành chính 07:00–17:59 thứ Hai–thứ Bảy, ICT); job `sis-scheduler` tick 30 giây, khử trùng `sched:<connection>:<mode>:<phút>`.
-- OQ F017-8: run thủ công được tạo `queued` khi trigger; run `queued/running` quá 1 giờ coi là treo (worker chết) và không chặn trigger mới [Proposed: `DefaultRunStaleAfter`]. Hai trigger đồng thời được tuần tự hóa bằng version của connection (thua → `409 SIS_SYNC_ALREADY_RUNNING`).
+- OQ F017-1: `config.schools[]` chỉ có `school_external_id` thì không có chỗ ánh xạ sang trường EduWorld (SIS_INTEGRATION §2.3 yêu cầu System Admin ánh xạ, F011 không có API ánh xạ). → [Confirmed] mỗi phần tử là `{school_external_id, school_id}` (`SisContractConfig` trong spec gộp); khi chạy chỉ dùng trường vừa có trong `config.schools[]` vừa active trong `sis_connection_schools`; trường SIS ngoài ánh xạ → issue `unmapped_school` (F017-AC-09).
+- OQ F017-2: T001/T010 yêu cầu oapi-codegen client mode, nhưng repo không có oapi-codegen và contract là OpenAPI 3.1 (`type: [string, 'null']`) mà kin-openapi/oapi-codegen chưa đọc được. → [Confirmed] client viết tay (`internal/infrastructure/sis/contractv1client`) dùng DTO dạng map được kiểm bằng JSON Schema trích từ contract (`tools/sisgen`, cùng nguồn với F011); contract vẫn là nguồn duy nhất.
+- OQ F017-3: định dạng secret theo `auth_type` chưa được định nghĩa. → [Confirmed] `api_key`: giá trị khóa; `oauth2_client_credentials`: JSON `{client_id, client_secret}`; `mtls`: một file PEM gồm chứng chỉ + khóa riêng. Secret đọc từ `EW_SIS_SECRETS_DIR/<secret_ref>` (Swarm secret), cache ≤ 5 phút.
+- OQ F017-4: data-model ghi `capabilities varchar(64)[]`; ent không có kiểu mảng PostgreSQL trong repo. → [Confirmed] `jsonb` + CHECK (mảng ≤ 4 phần tử thuộc enum); migration chép `config.capabilities` (F011 đọc tạm từ `config`) sang cột mới; login sync đọc cột mới. Index `(sis_connection_id, started_at DESC)` không thêm: index F011 `(sis_connection_id, started_at)` quét ngược được.
+- OQ F017-5: ngữ nghĩa `Change.operation = delete` (F017-AC-17). → [Confirmed] học sinh = trạng thái `inactive` (deactivate + kết thúc enrollment, như F011-AC-23); enrollment = kết thúc enrollment; trường/lớp chỉ đếm (`*_delete_skipped`), không xóa (chỉ soft-delete có người duyệt, R21). Thay đổi cùng khóa nguồn trong một lô: thay đổi có `sequence` lớn nhất thắng; áp theo thứ tự trường → lớp → học sinh → enrollment → delete của pipeline F011.
+- OQ F017-6: một stream WorkQueue `IDENTITY_SIS_JOBS` không cho hai consumer chồng filter. → [Confirmed] consumer `identity_sis_jobs` giữ filter `ew.job.identity.sis.>`, `MaxDeliver = -1`, số lần giao do code quyết định theo subject: `webhook_batch` 5 lần, cách 5 phút rồi `DLQ_IDENTITY` (`ew.dlq.identity.sis_jobs`); job khác 3 lần như F011; job chờ lock của connection (`ErrRunLockBusy`) được giao lại sau 30 giây và không bị đưa vào DLQ.
+- OQ F017-7: `sis_sync_schedule` là tham số tenant nhưng chưa đọc được tenant settings (F015 đang làm). → [Confirmed] lịch full = `sis_connections.schedule` hoặc `0 1 * * *` (01:00 ICT); delta = `*/15 7-17 * * 1-6` (giờ hành chính 07:00–17:59 thứ Hai–thứ Bảy, ICT); job `sis-scheduler` tick 30 giây, khử trùng `sched:<connection>:<mode>:<phút>`.
+- OQ F017-8: run thủ công được tạo `queued` khi trigger; run `queued/running` quá 1 giờ coi là treo (worker chết) và không chặn trigger mới [Confirmed: `DefaultRunStaleAfter`]. Hai trigger đồng thời được tuần tự hóa bằng version của connection (thua → `409 SIS_SYNC_ALREADY_RUNNING`).
 - OQ F017-9: binary chưa được nối dây (OQ F010-2) → các thành phần F017 đăng ký qua `RegisterSisContract`, `sisinternal.Register`, `messaging.SisJobHandlers{ScheduledSync, WebhookBatch}`, `command.ScheduleSisSync` + `job.SisSchedulerInterval`, `contractv1client.ConfigFrom` (`EW_SIS_SECRETS_DIR`, `EW_SIS_EGRESS_PROXY_URL`, `EW_SIS_ALLOW_HTTP_BASE_URL`); `.env.example` nằm trong deny-list của agent nên chưa được cập nhật (T002 một phần).
 - OQ F017-10: phản hồi webhook: chữ ký/timestamp sai → `401 UNAUTHENTICATED` không chi tiết; body không phải `ChangeBatch` → `400 BAD_REQUEST`; Valkey/JetStream/secret lỗi → `503 UNAVAILABLE` (fail closed); `202` trả `{delivery_id}`.
 - OQ F017-11: test đơn vị đặt cạnh package (quy ước repo, vd. `internal/domain/sis/contract_test.go`) thay vì `tests/unit/...` của tasks.md.
@@ -236,7 +236,7 @@ Trường/nhà cung cấp SIS chạy bộ conformance test của EduWorld vào f
 ### Measurable Outcomes
 
 - **SC-001**: Một trường mới đi từ "có facade" tới "full sync dry-run có diff" trong ≤ 1 ngày làm việc nhờ conformance kit (đo ở trường pilot).
-- **SC-002**: Full sync 50.000 học sinh hoàn tất < 15 phút [Proposed] ([SIS_INTEGRATION §11](../../docs/09-identity/SIS_INTEGRATION.md)).
+- **SC-002**: Full sync 50.000 học sinh hoàn tất < 15 phút [Confirmed] ([SIS_INTEGRATION §11](../../docs/09-identity/SIS_INTEGRATION.md)).
 - **SC-003**: Học sinh bị SIS báo nghỉ học không tạo được game session mới sau ≤ 1 chu kỳ delta/webhook.
 - **SC-004**: 0 credential/`secret_ref` xuất hiện trong response, log hoặc audit (quét tự động).
 - **SC-005**: 100% endpoint bắt buộc của contract có test trong conformance kit, chạy xanh với `sis-mock` ở mọi PR sửa `specs/sis/`.
@@ -252,7 +252,7 @@ Trường/nhà cung cấp SIS chạy bộ conformance test của EduWorld vào f
 ## Assumptions
 
 - Adapter chỉ dùng `sis_login_sync_timeout_ms`; `sis_lookup_timeout` đã bỏ (RB-111).
-- [Proposed] Ngưỡng vi phạm, lịch backoff, giới hạn tốc độ, ngưỡng circuit breaker theo SIS_INTEGRATION §2.5, §4.2, §7; đăng ký CONFIG_DEFAULTS ở task Polish.
-- [Proposed] Xoay vòng webhook secret = cập nhật `webhook_secret_ref`; batch ký bằng secret cũ trong lúc đổi bị `401` và SIS gửi lại.
-- [Proposed] Môi trường local cho phép `base_url` http tới `sis-mock` qua biến môi trường chỉ có trong compose dev; staging/production luôn bắt buộc https (F017-AC-30).
+- [Confirmed] Ngưỡng vi phạm, lịch backoff, giới hạn tốc độ, ngưỡng circuit breaker theo SIS_INTEGRATION §2.5, §4.2, §7; đăng ký CONFIG_DEFAULTS ở task Polish.
+- [Confirmed] Xoay vòng webhook secret = cập nhật `webhook_secret_ref`; batch ký bằng secret cũ trong lúc đổi bị `401` và SIS gửi lại.
+- [Confirmed] Môi trường local cho phép `base_url` http tới `sis-mock` qua biến môi trường chỉ có trong compose dev; staging/production luôn bắt buộc https (F017-AC-30).
 - OQ-01: chưa trường nào triển khai facade; contract vẫn Draft (v1.2.0).

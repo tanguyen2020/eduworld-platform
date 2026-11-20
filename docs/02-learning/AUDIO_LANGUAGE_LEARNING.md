@@ -1,7 +1,7 @@
 # Audio & Language Learning
 
 > Trạng thái: Draft · Phiên bản: 0.4 · Owner: EdTech Specialist (Tiếng Anh, Tiếng Việt) + Identity & Security Engineer · Cập nhật: 2026-11-16
-> Liên quan: [ACTIVITY_ENGINE](ACTIVITY_ENGINE.md) · [VIDEO_LEARNING](VIDEO_LEARNING.md) · [CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-proposed) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [ADR-0044](../adr/ADR-0044-luu-tru-hinh-anh-va-media-object-storage-s3-compatible-cdn.md) · [ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md) · Schema: [`audio-lesson.schema.json`](../../specs/schemas/activities/audio-lesson.schema.json)
+> Liên quan: [ACTIVITY_ENGINE](ACTIVITY_ENGINE.md) · [VIDEO_LEARNING](VIDEO_LEARNING.md) · [CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [ADR-0044](../adr/ADR-0044-luu-tru-hinh-anh-va-media-object-storage-s3-compatible-cdn.md) · [ADR-0059](../adr/ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md) · Schema: [`audio-lesson.schema.json`](../../specs/schemas/activities/audio-lesson.schema.json)
 
 ## 1. Mục đích và phạm vi
 
@@ -11,7 +11,7 @@
 
 Version này chỉ có hoạt động nghe hiểu **server tự chấm**. Không có ghi âm giọng nói học sinh, không có AI giọng nói (speech-to-text, chấm phát âm tự động) [Confirmed, ADR-0059, ADR-0072]. Bài nói (`speaking`) ngoài version này (ADR-0082).
 
-Audio đọc đề và hướng dẫn cho lớp 1–3 (không phải hoạt động nghe hiểu) là yêu cầu nội dung, quy định ở [CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-proposed).
+Audio đọc đề và hướng dẫn cho lớp 1–3 (không phải hoạt động nghe hiểu) là yêu cầu nội dung, quy định ở [CONTENT_MODEL §8.1](CONTENT_MODEL.md#81-audio-đọc-đề-và-hướng-dẫn-cho-nhóm-g1_3-confirmed).
 
 ## 2. `audio_lesson`
 

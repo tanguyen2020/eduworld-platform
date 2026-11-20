@@ -29,4 +29,4 @@
 
 - 4 endpoint "Cần thêm" và 4 nhóm "Cần sửa" ([contracts](../contracts/README.md) §6); backend owner F024–F027.
 - Giới hạn duyệt hàng loạt, SLA hàng đợi, giới hạn dung lượng media chưa đăng ký CONFIG_DEFAULTS (task T064).
-- Thùng rác tenant và role tùy biến là [Proposed]; màn ẩn theo permission.
+- Thùng rác tenant và role tùy biến là [Confirmed]; màn ẩn theo permission.

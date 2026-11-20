@@ -60,7 +60,7 @@ Tournament theo [COMPETITION_SYSTEM §10.3](../../docs/01-game-design/COMPETITIO
 
 ## 3. Quy tắc kiểm tra dữ liệu
 
-- Tối thiểu entry: single elim ≥ 4, double elim ≥ 4, round robin ≥ 3 ([COMPETITION_SYSTEM §10.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#104-đăng-ký-và-xác-nhận-proposed-trừ-khi-ghi-khác)).
+- Tối thiểu entry: single elim ≥ 4, double elim ≥ 4, round robin ≥ 3 ([COMPETITION_SYSTEM §10.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#104-đăng-ký-và-xác-nhận-confirmed-trừ-khi-ghi-khác)).
 - `params` ⊆ `allowed_params` của template version; `reward_rule_refs`, `format`, `mode` chỉ từ template.
 - Bracket sinh trong một transaction; trận giải không đổi rating.
 

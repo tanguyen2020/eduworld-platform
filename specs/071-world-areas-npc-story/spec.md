@@ -15,7 +15,7 @@
 
 ### Session 2026-11-17
 
-- Q: REST `joinFriendInWorld` và config type `levels`? → A: Gỡ `joinFriendInWorld` khỏi contract — "Tham gia bạn" chỉ qua WS `hub.instance.join {follow_user_id}` (API_DESIGN, RB-625). Enum `levels` đổi thành `progression-levels` (bảng level của F074, RB-308); config type cho gói level `game.level_definitions` chưa có trong API_DESIGN — Câu hỏi mở, tạm `level-packages` [Proposed].
+- Q: REST `joinFriendInWorld` và config type `levels`? → A: Gỡ `joinFriendInWorld` khỏi contract — "Tham gia bạn" chỉ qua WS `hub.instance.join {follow_user_id}` (API_DESIGN, RB-625). Enum `levels` đổi thành `progression-levels` (bảng level của F074, RB-308); config type cho gói level `game.level_definitions` chưa có trong API_DESIGN — Câu hỏi mở, tạm `level-packages` [Confirmed].
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -208,4 +208,4 @@ Học sinh tìm điểm khám phá, vật sưu tầm; bản đồ thế giới h
 
 - F026 cung cấp mẫu phát hành và event `content.published` của learning; F071 áp cùng mẫu cho `eduworld_game`.
 - Asset 3D 12 zone theo pipeline WORLD_RENDERING; nguồn asset OQ-16 [TBD] — zone greybox được chấp nhận ở M2 nếu đạt lint và ngân sách.
-- Cài đặt môn bật/tắt của trường đến qua projection `ref.schools.settings_subset` (event `school.updated` của identity) [Proposed].
+- Cài đặt môn bật/tắt của trường đến qua projection `ref.schools.settings_subset` (event `school.updated` của identity) [Confirmed].

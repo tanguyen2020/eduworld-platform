@@ -13,8 +13,8 @@ Stakeholder yêu cầu dùng Refit khi gọi service to service; vì giữ Golan
 
 - Mỗi service công bố **internal API** bằng OpenAPI (`specs/openapi/services/<service>.internal.v1.yaml`, prefix `/internal/v1/...`, chỉ mạng private, không qua APISIX public). Mỗi operation có `x-allowed-callers`.
 - Bên gọi dùng **client type-safe sinh bằng `oapi-codegen`**, bọc trong adapter ở tầng infrastructure, expose qua port của application.
-- **Resilience chuẩn:** timeout theo endpoint, retry có backoff + jitter chỉ cho thao tác idempotent, circuit breaker, bulkhead bằng `failsafe-go` [Proposed; tham số trong API_DESIGN].
-- **Xác thực:** mỗi service một Keycloak confidential client (`svc-identity`, `svc-learning`, `svc-game`, `svc-competition`, `svc-chat`, `svc-realtime`), token client credentials (audience `svc-<callee>-api`, scope `internal-<callee>`), cache đến gần hết hạn; bên nhận kiểm tra `azp` theo allowlist. mTLS tầng mạng [Proposed].
+- **Resilience chuẩn:** timeout theo endpoint, retry có backoff + jitter chỉ cho thao tác idempotent, circuit breaker, bulkhead bằng `failsafe-go` [Confirmed; tham số trong API_DESIGN].
+- **Xác thực:** mỗi service một Keycloak confidential client (`svc-identity`, `svc-learning`, `svc-game`, `svc-competition`, `svc-chat`, `svc-realtime`), token client credentials (audience `svc-<callee>-api`, scope `internal-<callee>`), cache đến gần hết hạn; bên nhận kiểm tra `azp` theo allowlist. mTLS tầng mạng [Confirmed].
 - **Truyền ngữ cảnh:** `traceparent`, `X-Tenant-Id` (bên nhận vẫn kiểm tra quyền), `X-Request-Id`, `Idempotency-Key`, `X-On-Behalf-Of` (user gốc) khi cần audit.
 - Chỉ gọi đồng bộ khi cần kết quả ngay (vd game → learning bắt đầu attempt; competition → learning lấy câu hỏi/chấm; mọi service → identity `principals:resolve`). Phản ứng phụ dùng event NATS (ADR-0042).
 - Contract test consumer-driven giữa các cặp service trong CI.

@@ -61,7 +61,7 @@ Chuỗi theo ADR-0041 (`MaxLen(n)` → `varchar(n)`). Bảng mới cập nhật 
 | `shift_id` | UUIDv7 | PK | |
 | `moderator_user_id` | uuid | NOT NULL | nhân sự platform có `moderation.case.act` |
 | `oncall_role` | `varchar(16)` | CHECK `primary/secondary` | |
-| `starts_at`, `ends_at` | timestamptz | CHECK `ends_at > starts_at`; độ dài ≤ `oncall_shift_max_hours` [Proposed] | |
+| `starts_at`, `ends_at` | timestamptz | CHECK `ends_at > starts_at`; độ dài ≤ `oncall_shift_max_hours` [Confirmed] | |
 | `note` | `varchar(500)` | | |
 | `created_by`, `created_at`, `version` | | | `If-Match` không bắt buộc (tạo/xóa) |
 | `deleted_at`, `deleted_by` | | | soft-delete (R21) |
@@ -76,8 +76,8 @@ Chuỗi theo ADR-0041 (`MaxLen(n)` → `varchar(n)`). Bảng mới cập nhật 
 | `tenant_id` | uuid | NOT NULL | tenant đích (ghi luôn có tenant, R20) |
 | `scope_type` | `varchar(16)` | CHECK `channel/user` | |
 | `scope_id` | uuid | NOT NULL | `channel_id` hoặc `user_id` |
-| `window_from`, `window_to` | timestamptz | `window_to > window_from`, ≤ `break_glass_max_window_days` [Proposed] | khoảng thời gian tin được đọc |
-| `duration_minutes` | int | 1…`break_glass_max_duration_hours`×60 [Proposed] | |
+| `window_from`, `window_to` | timestamptz | `window_to > window_from`, ≤ `break_glass_max_window_days` [Confirmed] | khoảng thời gian tin được đọc |
+| `duration_minutes` | int | 1…`break_glass_max_duration_hours`×60 [Confirmed] | |
 | `reason` | `varchar(1000)` | NOT NULL, ≥ 20 | |
 | `status` | `varchar(16)` | CHECK `pending/approved/rejected/expired/revoked` | |
 | `requested_by`, `requested_at` | uuid, timestamptz | NOT NULL | |

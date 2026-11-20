@@ -43,7 +43,7 @@ erDiagram
 | Entity | Thuộc tính chính | Ghi chú |
 |---|---|---|
 | **SchoolCurriculumSetting** | `tenant_id`, `school_id`, `academic_year_id`, `grade_level?`, `curriculum_version_id` (`lms.school_curriculum_settings`) | Curriculum version mặc định của trường theo năm học (và khối, tùy chọn) — §3 |
-| **Course** | `course_id`, `tenant_id`, `school_id`, `class_id`, `subject_id`, `academic_year_id`, `curriculum_version_id`, `textbook_series_id?`, `status` (`active`/`hidden`/`archived`) | Một lớp × một môn × một năm học; **tự tạo** từ lớp (SIS) × các môn của khối trong curriculum version hiệu lực của trường (§3) [Proposed]. Không phụ thuộc phân công giảng dạy |
+| **Course** | `course_id`, `tenant_id`, `school_id`, `class_id`, `subject_id`, `academic_year_id`, `curriculum_version_id`, `textbook_series_id?`, `status` (`active`/`hidden`/`archived`) | Một lớp × một môn × một năm học; **tự tạo** từ lớp (SIS) × các môn của khối trong curriculum version hiệu lực của trường (§3) [Confirmed]. Không phụ thuộc phân công giảng dạy |
 | **LearningPath** | `path_id`, `course_id`, `title`, `unlock_mode` (`sequential`/`free`/`mastery_gate`), `is_template`, `version` (khóa lạc quan `If-Match`, không phải version nội dung) | Không có workflow phát hành (§3) |
 | **PathNode** | `node_id`, `path_id`, `position`, `content_ref` (lesson/activity/question_set/assessment/quest) + `content_version_id` ghim, `unlock_rule` | |
 | **Enrollment (view)** | Dẫn xuất từ enrollment SIS — LMS **không** tự tạo enrollment lớp | Mỗi học sinh có **đúng một lớp active** (ADR-0060), nên danh sách lớp, sĩ số và target `class` của bài giao luôn xác định; học sinh SIS chưa có lớp không xuất hiện trong lớp nào và không vào được game — hiển thị ở màn "Học sinh chưa có lớp" ([ADMIN_PORTAL §3.16](ADMIN_PORTAL.md)) để trường bổ sung trong SIS/CSV |
@@ -56,7 +56,7 @@ erDiagram
 ## 3. Course và Learning Path
 
 - **Curriculum version của trường:** School Admin chọn curriculum version mặc định cho trường theo năm học, tùy chọn theo khối (`lms.school_curriculum_settings`, module learning; FR-CUR-008, [CURRICULUM_MODEL §5](../02-learning/CURRICULUM_MODEL.md#5-đa-chương-trình--di-chuyển-phiên-bản)). Chỉ nhận version đã publish của curriculum thuộc tenant hoặc platform được gán (chưa publish → `409 CONTENT_NOT_PUBLISHED`; chưa gán → `403 RESOURCE_NOT_ASSIGNED`); đổi cài đặt có audit và chỉ áp cho course tạo sau thời điểm đổi. Trường chưa cài đặt dùng version published mới nhất của curriculum tenant sở hữu hoặc được gán.
-- Course tạo tự động khi có lớp mới trong năm học (SIS hoặc CSV, event `class.synced`) cho mọi môn của khối theo curriculum version hiệu lực của trường [Proposed]; School Admin có thể ẩn course trường không dạy (`hidden`).
+- Course tạo tự động khi có lớp mới trong năm học (SIS hoặc CSV, event `class.synced`) cho mọi môn của khối theo curriculum version hiệu lực của trường [Confirmed]; School Admin có thể ẩn course trường không dạy (`hidden`).
 - Learning Path do Academic Manager (hoặc School Admin) dựng từ thư viện nội dung (nội dung tenant + nội dung platform được gán, ADR-0029) hoặc dùng path mẫu theo bộ sách ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)). Course chưa có path riêng dùng path mẫu mặc định của bộ sách để học sinh luôn có con đường tự học.
 - `mastery_gate`: node chỉ mở khi LO trước đạt ≥ `developing`; School Admin/Academic Manager mở khóa thủ công cho học sinh cụ thể (lý do bắt buộc, audit).
 - **Learning path không có version nội dung** và không qua workflow duyệt/phát hành: sửa path (thêm/bớt/sắp lại node, đổi `unlock_mode`) lưu trực tiếp với `If-Match`, ghi audit và áp dụng ngay cho học sinh ở lần mở tiếp theo. Tiến độ và mở khóa của học sinh gắn theo `node_id`, nên node giữ nguyên thì tiến độ giữ nguyên; node bị xóa (soft-delete) không còn hiển thị nhưng lịch sử học tập của node đó vẫn giữ. Mỗi node ghim `content_version_id` của nội dung đã publish; nội dung có version mới thì node vẫn dùng version đã ghim cho tới khi nhà trường cập nhật node.
@@ -85,10 +85,10 @@ Người tạo: **School Admin** (trường mình) hoặc **Academic Manager** (
 1. Chọn nội dung **đã publish**: activity (chỉ `activity_type` trong Release — §6), question set, assessment blueprint, lesson, quest, mini-game.
 2. Chế độ phiên bản (quy tắc pinning ở [CONTENT_MODEL §5.2](../02-learning/CONTENT_MODEL.md#52-version-pinning--học-sinh-đang-chơi-giữ-version-cũ)):
    - **Giữ phiên bản lúc giao** (mặc định).
-   - **Luôn dùng bản mới nhất** (`follow_latest`) [Proposed] — không áp dụng cho `mode=graded`.
+   - **Luôn dùng bản mới nhất** (`follow_latest`) [Confirmed] — không áp dụng cho `mode=graded`.
 3. Đối tượng (`target_type`): `class` (một hoặc nhiều lớp), `study_group`, `students` (danh sách học sinh) — luôn trong phạm vi trường/scope của người tạo.
 4. Thời gian, số lần làm, chính sách điểm, `feedback_timing` (khi nào học sinh thấy đúng/sai và giải thích từng câu) và `result_release` (khi nào công bố kết quả/đáp án). Bài `mode=graded` mặc định `feedback_timing = after_close`, `result_release = after_close` [Confirmed — Technical Architect 2026-11-15].
-5. `mode=graded` với assessment → tạo `ExamSession`; còn lại → attempt `mode=assignment`. Bài chẩn đoán đầu năm/đầu chủ đề dùng attempt `mode=diagnostic` [Proposed] (PED-08, [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md)).
+5. `mode=graded` với assessment → tạo `ExamSession`; còn lại → attempt `mode=assignment`. Bài chẩn đoán đầu năm/đầu chủ đề dùng attempt `mode=diagnostic` [Confirmed] (PED-08, [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md)).
 6. Nộp muộn: `late_window_hours` từ 0 (mặc định, không nhận nộp muộn) tới tối đa 168 giờ [Confirmed — Technical Architect 2026-11-15]. Nhắc học sinh chưa làm (`:remind`) tối đa 1 lần/ngày/bài (`assignment_remind_limit`) [Confirmed — Technical Architect 2026-11-15].
 7. Publish → `assignment.published` → học sinh thấy bài **trong game** (tab "Nhà trường giao" của quest journal, bảng nhiệm vụ lớp, Bưu tá Nhím, thông báo).
 
@@ -98,7 +98,7 @@ Người tạo: **School Admin** (trường mình) hoặc **Academic Manager** (
 
 ### 4.3. Enrollment thay đổi khi bài đang mở
 
-| Tình huống | Xử lý [Proposed] |
+| Tình huống | Xử lý [Confirmed] |
 |---|---|
 | Học sinh mới vào lớp | Tự thêm vào target nếu `target_type=class` và bài còn `open` |
 | Học sinh chuyển lớp/trường | Submission giữ nguyên ở lớp cũ; không thấy bài mới của lớp cũ |
@@ -117,7 +117,7 @@ Người tạo: **School Admin** (trường mình) hoặc **Academic Manager** (
 ## 5. Lesson Delivery
 
 - Học sinh mở lesson trong game (Learning Zone). Client gửi heartbeat qua endpoint whitelist ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)).
-- `lesson.completed` do **server** xác định: đã xem khối bắt buộc (heartbeat ≥ 50% `estimated_duration_sec` [Proposed]) **và** hoàn thành activity kiểm tra cuối (nếu có).
+- `lesson.completed` do **server** xác định: đã xem khối bắt buộc (heartbeat ≥ 50% `estimated_duration_sec` [Confirmed]) **và** hoàn thành activity kiểm tra cuối (nếu có).
 
 ## 6. Chỉ giao hoạt động tự chấm
 
@@ -137,7 +137,7 @@ Người dùng: **School Admin** (trường mình) và **Academic Manager** (tro
 |---|---|---|---|---|
 | 1 | Đã làm bài giao chưa? | **Bài giao đang mở / sắp hạn (48 giờ)** | Tỉ lệ nộp theo lớp, số chưa bắt đầu, số `missed` tuần trước | `assignment_submissions` |
 | 2 | Yếu ở LO nào? | **LO cần củng cố** + heatmap lớp × LO (§8.3) | Top LO có tỉ lệ học sinh ở mức `beginning` cao nhất theo khối/lớp | Rollup `objective_masteries` |
-| 3 | Ai cần hỗ trợ? | **Cần chú ý** | ≥ 2 bài `missed` trong 14 ngày; ≥ 3 LO `beginning`; tỉ lệ câu trả lời `rapid_guess` ≥ 30% trong 7 ngày (hiển thị "làm quá nhanh"); chưa vào game ≥ 7 ngày (`last_login_at`, ADR-0031) — ngưỡng `dashboard_attention_thresholds` [Confirmed — Technical Architect 2026-11-15]; sắp bị dọn do không đăng nhập (ADR-0032, chỉ xem) [Proposed] | Read model |
+| 3 | Ai cần hỗ trợ? | **Cần chú ý** | ≥ 2 bài `missed` trong 14 ngày; ≥ 3 LO `beginning`; tỉ lệ câu trả lời `rapid_guess` ≥ 30% trong 7 ngày (hiển thị "làm quá nhanh"); chưa vào game ≥ 7 ngày (`last_login_at`, ADR-0031) — ngưỡng `dashboard_attention_thresholds` [Confirmed — Technical Architect 2026-11-15]; sắp bị dọn do không đăng nhập (ADR-0032, chỉ xem) [Confirmed] | Read model |
 | 4 | Có tự học và tiến bộ? | **Tự học & gợi ý** | Thời gian học trung bình/học sinh, % học sinh làm hoạt động gợi ý tự động, số LO chuyển lên mức cao hơn sau ôn tập gợi ý | `progress_daily`, rollup mastery |
 | 5 | Vụ việc an toàn? | **Thông báo an toàn** | Số thông báo vụ việc nghiêm trọng liên quan học sinh của trường chưa xác nhận đã liên hệ phụ huynh (tóm tắt, không có nội dung chat) | `GET /api/v1/tenant/safety/school-notifications` (`moderation.school_notification.read`; [ADMIN_PORTAL §3.9](ADMIN_PORTAL.md#39-an-toàn-chat-danh-mục-từ-nhạy-cảm-công-tắc-kiểm-duyệt-và-thông-báo-vụ-việc)) |
 
@@ -201,8 +201,8 @@ Phổ điểm, trung vị, tỉ lệ đạt; theo câu: p-value của lớp/trư
 - Đọc read model trạng thái hiện tại và **rollup chuỗi thời gian** ([LEARNING_ANALYTICS §5](../02-learning/LEARNING_ANALYTICS.md#5-read-models--aggregation)), không đọc bảng nghiệp vụ hay `learning_events`; cơ chế dữ liệu, read replica, timeout 5 giây, cache và giới hạn khoảng thời gian (tối đa 2 năm, độ hạt tự chọn) theo [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) (ADR-0062). Tiến độ bài giao gần realtime qua `assignment.submission_updated`; số liệu tuần cập nhật ≤ 15 phút (`school_dashboard_refresh`, [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)).
 - Mỗi widget hiển thị **"Cập nhật lúc HH:mm"** từ `data_as_of`; số liệu hôm nay có nhãn "tạm tính" (`is_partial`) cho tới khi chốt ngày (02:30 ICT).
 - Cấp trường/khối đọc `rollup_school_*`; bản tổng hợp tenant (Tenant Admin) đọc `rollup_tenant_*`; khoảng > 31 ngày tự chuyển độ hạt tuần, > 1 năm chuyển tháng.
-- Trang tổng quan tải < 1,5 giây p95 cho trường 1.500 học sinh; trang lớp < 1,5 giây p95 cho lớp 45 học sinh [Proposed].
-- Ngôn ngữ trung tính ("cần hỗ trợ" thay vì "kém"); không xếp hạng học sinh theo điểm học tập [Proposed].
+- Trang tổng quan tải < 1,5 giây p95 cho trường 1.500 học sinh; trang lớp < 1,5 giây p95 cho lớp 45 học sinh [Confirmed].
+- Ngôn ngữ trung tính ("cần hỗ trợ" thay vì "kém"); không xếp hạng học sinh theo điểm học tập [Confirmed].
 
 ## 9. Phạm vi dữ liệu theo vai trò
 
@@ -221,14 +221,14 @@ Permission catalog và role mapping: [ADMIN_PORTAL §2](ADMIN_PORTAL.md#2-permis
 | Nội dung chat (mọi kênh) | ✘ — chỉ Platform Safety Team trong module moderation | ✘ | ✘ |
 | Game Rating, XP, inventory | Tổng hợp | Tổng hợp | ✘ |
 
-- Truy cập hồ sơ ngoài scope → `403`/`404` (không lộ sự tồn tại); xem hồ sơ học sinh ghi audit [Proposed].
-- Học sinh chuyển lớp trong trường: dữ liệu giai đoạn cũ vẫn hiển thị theo lớp cũ; chuyển trường: trường cũ xem dữ liệu giai đoạn học tại trường trong 1 năm học [Proposed].
+- Truy cập hồ sơ ngoài scope → `403`/`404` (không lộ sự tồn tại); xem hồ sơ học sinh ghi audit [Confirmed].
+- Học sinh chuyển lớp trong trường: dữ liệu giai đoạn cũ vẫn hiển thị theo lớp cũ; chuyển trường: trường cũ xem dữ liệu giai đoạn học tại trường trong 1 năm học [Confirmed].
 - "Xóa" bài giao/thử thách/course là soft-delete (ADR-0028); bài đã có lượt làm chỉ `cancel`.
 
 ## 10. Báo cáo kết quả
 
-- **Không có sổ điểm chấm tay.** Bảng kết quả course [Proposed]: cột = bài `mode=graded`, giá trị là điểm **tự chấm** theo `score_policy`, thang 10; không có cột XP, rating, competition points; không đồng bộ ngược SIS trong Release 1.0 [TBD — OQ-01].
-- **Báo cáo tham khảo theo quy định đánh giá:** mức theo TT27/2020 (tiểu học) và TT22/2021 (THCS) suy ra từ kết quả tự chấm và mastery theo profile ở [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md); luôn ghi nhãn "Tham khảo — không thay đánh giá chính thức" [Proposed].
+- **Không có sổ điểm chấm tay.** Bảng kết quả course [Confirmed]: cột = bài `mode=graded`, giá trị là điểm **tự chấm** theo `score_policy`, thang 10; không có cột XP, rating, competition points; không đồng bộ ngược SIS trong Release 1.0 [TBD — OQ-01].
+- **Báo cáo tham khảo theo quy định đánh giá:** mức theo TT27/2020 (tiểu học) và TT22/2021 (THCS) suy ra từ kết quả tự chấm và mastery theo profile ở [ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md); luôn ghi nhãn "Tham khảo — không thay đánh giá chính thức" [Confirmed].
 
 | Báo cáo | Định dạng | Nội dung |
 |---|---|---|
@@ -252,7 +252,7 @@ Xuất là job nền (`POST /api/v1/lms/reports` → `report_id`, URL ký 15 ph�
 | GET/POST/PATCH/DELETE | `/api/v1/lms/schedules` | Lịch (`lms.schedule.write`; xóa = soft-delete) |
 | GET | `/api/v1/learning/my-learning-paths?subject_id=` · `/api/v1/learning/my-schedule?from=&to=` | Học sinh (game): lộ trình và lịch của mình |
 | GET / POST | `/api/v1/lms/assignments` | Danh sách / tạo (Idempotency-Key) |
-| POST | `/api/v1/lms/assignments/{id}:publish` · `:cancel` · `:release-results` · `:archive` · `:remind` | Workflow (`:remind` [Proposed]) |
+| POST | `/api/v1/lms/assignments/{id}:publish` · `:cancel` · `:release-results` · `:archive` · `:remind` | Workflow (`:remind` [Confirmed]) |
 | POST | `/api/v1/lms/assignments/{id}/students/{sid}:extend` · `:excuse` | Ngoại lệ cá nhân |
 | GET | `/api/v1/lms/assignments/{id}/submissions` | Theo dõi |
 | GET | `/api/v1/learning/my-assignments?status=` (`listMyAssignments`) (lịch hạn nộp lấy từ danh sách này; route `/lms/*` chỉ dành cho nhân sự) | Học sinh (game) |

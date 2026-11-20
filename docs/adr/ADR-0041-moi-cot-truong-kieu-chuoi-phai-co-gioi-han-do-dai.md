@@ -9,7 +9,7 @@ Stakeholder yêu cầu: các cột dữ liệu kiểu string phải có giới h
 ## Quyết định
 
 - **Database:** mọi cột chuỗi dùng `varchar(n)` với `n` tường minh, khai báo trong ent bằng `field.String(...).MaxLen(n)`. **Không** dùng `text` không giới hạn. Nội dung dài dùng `varchar(n)` với `n` lớn có lý do (vd 20.000) hoặc `jsonb` kèm CHECK `octet_length(col::text) <= N`.
-- **Bảng độ dài chuẩn [Proposed]:**
+- **Bảng độ dài chuẩn [Confirmed]:**
 
   | Loại | Max | Ví dụ |
   |---|---|---|

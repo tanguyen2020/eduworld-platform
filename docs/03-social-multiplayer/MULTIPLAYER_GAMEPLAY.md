@@ -30,8 +30,8 @@ Yêu cầu nguồn **[Confirmed]** (Master Prompt §13.4, §19, Party Addendum):
 ## 3. Nguyên tắc
 
 1. **Server-authoritative** cho mọi trạng thái có giá trị: kết quả, tiến độ quest chung, điểm trận, trạng thái boss (ADR-0016) **[Confirmed]**.
-2. **Không phải persistent MMO**: thế giới Hybrid gồm hub instance, private instance và match/boss room (ADR-0012) **[Proposed]**.
-3. **Một kênh WebSocket** tới `realtime`; logic room/party/matchmaking/battle chạy trong **module competition**, boss/challenge PvE chạy trong **module game** (dùng chung `src/backend/pkg/roomhost`) **[Proposed]**.
+2. **Không phải persistent MMO**: thế giới Hybrid gồm hub instance, private instance và match/boss room (ADR-0012) **[Confirmed]**.
+3. **Một kênh WebSocket** tới `realtime`; logic room/party/matchmaking/battle chạy trong **module competition**, boss/challenge PvE chạy trong **module game** (dùng chung `src/backend/pkg/roomhost`) **[Confirmed]**.
 4. **An toàn trẻ em trước hết:** chỉ gặp người trong phạm vi policy cho phép (cùng trường mặc định, ADR-0054), không ghép lớp nhỏ với lớp lớn ở không gian chung; hiển thị nickname, không tên thật **[Confirmed]**.
 5. Valkey giữ trạng thái tạm (presence, room registry, lobby); PostgreSQL giữ bản ghi bền vững (room tóm tắt, `session_memberships`, party, match, encounter) (ADR-0004) **[Confirmed]**.
 
@@ -60,16 +60,16 @@ flowchart TB
 
 | `room_type` | Trải nghiệm | Sức chứa | Vòng đời | Module | Nhãn |
 |---|---|---|---|---|---|
-| `hub_instance` | Bản sao một khu chung (Main Hub, các khu học tập, Arena sảnh, Social Zone, Quest Zone — [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)) | 40 (theo `world_area.capacity`) | Tạo khi cần, đóng sau 5 phút rỗng | module competition | [Proposed] |
-| `private_instance` | Khu riêng cho party làm quest/khám phá | = số thành viên party (≤ 8) | Tạo khi party bắt đầu activity, đóng khi activity kết thúc hoặc 10 phút rỗng | module competition | [Proposed] |
-| `lobby` | Phòng chờ trước trận (ready check, chia đội) | Theo mode | 30–120 s | module competition | [Proposed] |
-| `battle` | Knowledge Battle 1v1, Team Battle, Timed Quiz, trận giải | 2–10 | Một trận | module competition | [Proposed] |
-| `coop` | Co-op Challenge, puzzle nhiều người | 2–8 | Một thử thách | module competition | [Proposed] |
-| `boss` | Boss encounter solo hoặc party | 1–8 (theo `party_size` của boss) | Một encounter | module game | [Proposed] |
+| `hub_instance` | Bản sao một khu chung (Main Hub, các khu học tập, Arena sảnh, Social Zone, Quest Zone — [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md)) | 40 (theo `world_area.capacity`) | Tạo khi cần, đóng sau 5 phút rỗng | module competition | [Confirmed] |
+| `private_instance` | Khu riêng cho party làm quest/khám phá | = số thành viên party (≤ 8) | Tạo khi party bắt đầu activity, đóng khi activity kết thúc hoặc 10 phút rỗng | module competition | [Confirmed] |
+| `lobby` | Phòng chờ trước trận (ready check, chia đội) | Theo mode | 30–120 s | module competition | [Confirmed] |
+| `battle` | Knowledge Battle 1v1, Team Battle, Timed Quiz, trận giải | 2–10 | Một trận | module competition | [Confirmed] |
+| `coop` | Co-op Challenge, puzzle nhiều người | 2–8 | Một thử thách | module competition | [Confirmed] |
+| `boss` | Boss encounter solo hoặc party | 1–8 (theo `party_size` của boss) | Một encounter | module game | [Confirmed] |
 
 - **Chat đi kèm (luôn có):** `lobby`/`battle`/`coop` dùng channel `match` (+ `team` mỗi đội); party dùng channel `party` suốt vòng đời, kể cả trong `private_instance` và `boss` ([CHAT_SYSTEM §4.1](CHAT_SYSTEM.md#41-vòng-đời-channel-gameplay-always-on)).
 - **Party Lobby** không phải room riêng: là trạng thái của party ([PARTY_SYSTEM §5](PARTY_SYSTEM.md#5-party-lobby)); khi bắt đầu activity mới sinh `private_instance` / `coop` / `boss` / ticket ghép trận.
-- Vòng đời kỹ thuật của room (owner node, checkpoint, failover): [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md). Luật gameplay khi owner node chết giữa trận: trận khôi phục từ checkpoint; không có checkpoint hợp lệ → trận `aborted`, không có kết quả, không đổi rating, người chơi được thông báo và không bị tính abandon **[Proposed]**.
+- Vòng đời kỹ thuật của room (owner node, checkpoint, failover): [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md). Luật gameplay khi owner node chết giữa trận: trận khôi phục từ checkpoint; không có checkpoint hợp lệ → trận `aborted`, không có kết quả, không đổi rating, người chơi được thông báo và không bị tính abandon **[Confirmed]**.
 
 ## 5. Presence
 
@@ -83,7 +83,7 @@ flowchart TB
 
 - Năm giá trị trên là **enum presence duy nhất** của hệ thống, dùng chung cho realtime (AsyncAPI), `PlayerCard` và REST; không module hay client nào định nghĩa enum presence khác. Người bật "Ẩn trạng thái" hiển thị là `offline` với người không được thấy.
 - Presence chỉ là trạng thái tạm (Valkey, TTL theo heartbeat — [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)), không lưu bền vững; thống kê thời gian chơi lấy từ `game.game_sessions`.
-- Học sinh có thể bật **"Ẩn trạng thái"** với bạn bè (không áp dụng với party đang tham gia) **[Proposed]**.
+- Học sinh có thể bật **"Ẩn trạng thái"** với bạn bè (không áp dụng với party đang tham gia) **[Confirmed]**.
 
 ## 6. Gán instance
 
@@ -103,7 +103,7 @@ flowchart TD
   G -- không --> H[Tạo instance mới]
 ```
 
-- **Partition mặc định:** `(school_id, grade_band)` trong tenant **[Proposed]**. Trường có thể gộp grade band liền kề (ví dụ `g4_5` + `g6_7`); tenant `unit` có thể mở "liên trường cùng tenant" cho khu/sự kiện (ADR-0054). **Không bao giờ** gộp `g1_3` với `g8_9`.
+- **Partition mặc định:** `(school_id, grade_band)` trong tenant **[Confirmed]**. Trường có thể gộp grade band liền kề (ví dụ `g4_5` + `g6_7`); tenant `unit` có thể mở "liên trường cùng tenant" cho khu/sự kiện (ADR-0054). **Không bao giờ** gộp `g1_3` với `g8_9`.
 - Người đã block nhau: tránh đặt cùng instance khi còn lựa chọn (soft constraint); block luôn ẩn chat/emote/lời mời của nhau.
 - Chỗ dành cho party giữ 30 s khi leader chuyển khu.
 - "Tham gia bạn" ([SOCIAL_SYSTEM §4.2](SOCIAL_SYSTEM.md#42-hành-động-từ-danh-sách-bạn-bè)) đi qua cùng thuật toán: chỉ thành công khi cùng partition và còn chỗ.
@@ -138,21 +138,21 @@ Tần suất, interest grid, envelope: [REALTIME_ARCHITECTURE](../06-architectur
 
 - Mất kết nối khi WS đóng bất thường hoặc quá timeout heartbeat ([REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md)). Server giữ **chỗ** của người chơi trong thời gian **grace** theo chế độ (§9.2); client tự kết nối lại và nhận lại trạng thái đầy đủ.
 - **Đổi thiết bị (ADR-0031):** đăng nhập ở thiết bị mới khi đang có phiên → xác nhận takeover; thiết bị cũ bị đăng xuất. Nếu đang trong trận/quest co-op/boss/bài kiểm tra, người chơi **tiếp tục từ thiết bị mới** trong thời gian grace của chế độ, giữ nguyên membership room và channel chat.
-- Abandon lặp lại (≥ 3 trận/24 h) → hạn chế ranked 15 phút và ghi audit **[Proposed]** (chọn mức nhẹ hơn cho trẻ em; tài liệu này sở hữu giá trị); không tính các trận hủy do sự cố server.
+- Abandon lặp lại (≥ 3 trận/24 h) → hạn chế ranked 15 phút và ghi audit **[Confirmed]** (chọn mức nhẹ hơn cho trẻ em; tài liệu này sở hữu giá trị); không tính các trận hủy do sự cố server.
 
 ### 9.2. Grace theo chế độ (tài liệu này sở hữu giá trị)
 
 | Chế độ / room | Grace | Trong lúc mất kết nối | Hết grace | Nhãn |
 |---|---|---|---|---|
-| `hub_instance` | 30 s | Avatar đứng yên, mờ | Rời instance; quay lại → ưu tiên instance cũ | [Proposed] |
-| `private_instance` (quest co-op) | 120 s | Thành viên khác tiếp tục theo quy tắc disconnect của [QUEST_SYSTEM §6](../01-game-design/QUEST_SYSTEM.md#6-party--shared-progress) (`party_mode ≠ party_required` hoặc số người còn lại ≥ `party_size.min`) | Rời activity; tiến độ cá nhân giữ nguyên, vào lại được khi activity còn mở | [Proposed] |
-| `boss` | 120 s | Encounter tiếp tục nếu số người còn lại ≥ `party_size.min` | Rời encounter; đóng góp đã có được giữ | [Proposed] |
-| `lobby` (ready check) | 10 s | — | Coi như `not_ready`, proposal hủy, người còn lại quay lại hàng chờ với ưu tiên | [Proposed] |
-| `battle_1v1` | 30 s | Câu hiện tại chạy tiếp; không trả lời = sai | Thua do `abandon`, tính rating, đối thủ thắng | [Proposed] |
-| `team_battle` | 45 s | Đội tiếp tục thiếu người | Thành viên ghi `abandon`; đội vẫn tính kết quả | [Proposed] |
-| `timed_quiz` | Tới hết giờ quiz | Đồng hồ server chạy tiếp | Nộp tự động các câu đã trả lời | [Proposed] |
-| Trận giải đấu | 60 s, tối đa 2 lần/trận | Như battle | Thua do `forfeit` ([COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md)) | [Proposed] |
-| Party Lobby / leader | 60 s cho leader | [PARTY_SYSTEM §9](PARTY_SYSTEM.md#9-leader-disconnect--member-disconnect) | Tự chuyển leader | [Proposed] |
+| `hub_instance` | 30 s | Avatar đứng yên, mờ | Rời instance; quay lại → ưu tiên instance cũ | [Confirmed] |
+| `private_instance` (quest co-op) | 120 s | Thành viên khác tiếp tục theo quy tắc disconnect của [QUEST_SYSTEM §6](../01-game-design/QUEST_SYSTEM.md#6-party--shared-progress) (`party_mode ≠ party_required` hoặc số người còn lại ≥ `party_size.min`) | Rời activity; tiến độ cá nhân giữ nguyên, vào lại được khi activity còn mở | [Confirmed] |
+| `boss` | 120 s | Encounter tiếp tục nếu số người còn lại ≥ `party_size.min` | Rời encounter; đóng góp đã có được giữ | [Confirmed] |
+| `lobby` (ready check) | 10 s | — | Coi như `not_ready`, proposal hủy, người còn lại quay lại hàng chờ với ưu tiên | [Confirmed] |
+| `battle_1v1` | 30 s | Câu hiện tại chạy tiếp; không trả lời = sai | Thua do `abandon`, tính rating, đối thủ thắng | [Confirmed] |
+| `team_battle` | 45 s | Đội tiếp tục thiếu người | Thành viên ghi `abandon`; đội vẫn tính kết quả | [Confirmed] |
+| `timed_quiz` | Tới hết giờ quiz | Đồng hồ server chạy tiếp | Nộp tự động các câu đã trả lời | [Confirmed] |
+| Trận giải đấu | 60 s, tối đa 2 lần/trận | Như battle | Thua do `forfeit` ([COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md)) | [Confirmed] |
+| Party Lobby / leader | 60 s cho leader | [PARTY_SYSTEM §9](PARTY_SYSTEM.md#9-leader-disconnect--member-disconnect) | Tự chuyển leader | [Confirmed] |
 
 ## 10. Session membership
 

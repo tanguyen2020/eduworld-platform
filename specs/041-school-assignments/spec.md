@@ -209,7 +209,7 @@ Academic Manager chọn quest/mini-game đã publish và được gán cho tenan
 
 ## Assumptions
 
-- [Proposed] `follow_latest`, nhắc học sinh, xử lý enrollment thay đổi theo SCHOOL_LMS §4.3; mặc định graded và cửa sổ muộn là Confirmed trong CONFIG_DEFAULTS.
+- [Confirmed] `follow_latest`, nhắc học sinh, xử lý enrollment thay đổi theo SCHOOL_LMS §4.3; mặc định graded và cửa sổ muộn là Confirmed trong CONFIG_DEFAULTS.
 - F040 cung cấp port đọc thành viên study group; khi sở hữu study group chưa chốt, đối tượng `study_group` bị từ chối `422 VALIDATION_FAILED` (feature flag cấu hình, không mock).
 - F041 sở hữu port `ExamSessionCreator` và đăng ký adapter mặc định "chưa khả dụng" (không phải mock: adapter thật, trả lỗi có kiểu) ở composition root; trước khi F042 `Done`, bài `graded` + `assessment_blueprint` bị từ chối `422 VALIDATION_FAILED` (F041-AC-09). F042 thay adapter bằng adapter gọi `CreateExamSession`/`CancelExamSession` (F042-AC-31).
 - Event module game cho danh mục quest/mini-game do F078 định nghĩa; projection có sẵn bảng trước.

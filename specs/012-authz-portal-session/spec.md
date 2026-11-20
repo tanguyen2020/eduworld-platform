@@ -19,28 +19,28 @@
 - Q: Tài khoản còn mật khẩu tạm/chưa có OTP? → A: `403 ACCOUNT_SETUP_REQUIRED` + `setup_ticket` (một lần, `portal_setup_ticket_ttl`) + `required_steps[]`; đổi mật khẩu bằng `setupPortalPassword`; đăng ký OTP qua email `execute-actions-email` `CONFIGURE_TOTP` (trang action-token Keycloak — ngoại lệ duy nhất); quên mật khẩu bằng `forgotPortalPassword` (luôn `202`) + `resetPortalPassword` (token hash, một lần, `portal_password_reset_ttl`) (US8).
 - Q: Đổi tenant còn xin token mới với scope `organization:{alias}`? → A: Không; tenant của request do `X-Tenant-Id` + kiểm tra membership quyết định (ADR-0065, ADR-0091 mục 4), cùng access token (F012-AC-07).
 - Q: Middleware `featuregate` (ADR-0090) thuộc feature nào? → A: F012 sở hữu middleware trong `src/backend/pkg/httpx` và port `featuregate.Source` (thứ tự: xác thực → `tenant` → `portal_staff` → `featuregate` → handler → `authz.Require`) và trường `disabled_menus`/`disabled_actions` của `getMyPermissions`; F015 sở hữu dữ liệu (`platform.feature_flags`, `platform.portal_menu_catalog`), API System Admin và hiện thực `featuregate.Source` trong module identity (US9).
-- Q: Phần đăng nhập portal có phụ thuộc kết quả spike Keycloak không? → A: Có — F004 T039 (claim `amr`/`acr`, lỗi khi còn required action) phải xong trước T041–T050 của feature này [Proposed].
+- Q: Phần đăng nhập portal có phụ thuộc kết quả spike Keycloak không? → A: Có — F004 T039 (claim `amr`/`acr`, lỗi khi còn required action) phải xong trước T041–T050 của feature này [Confirmed].
 
 ### Session 2026-11-19 (triển khai)
 
 - Q: Loại bảng `roles`, `role_permissions`, `user_roles`? → A: T* (mixin `TenantOptional`): dòng `tenant_id` NULL là role hệ thống/dùng chung và UserRole platform. RLS cho phép mọi tenant **đọc** dòng dùng chung của `roles`/`role_permissions` (cần để dựng Principal), ghi chỉ trong tenant của phiên; dòng dùng chung do `identity_migrator` (seed) hoặc `identity_platform` ghi. Khóa ghép `role_permissions` thành id surrogate + unique index; gỡ permission khỏi role = soft-delete.
-- Q: Tên hiển thị permission/role trong `identity.permissions`/`roles`? → A: [Proposed] Bằng chính mã (`name_vi = name_en = code`), `group_code` = tiền tố trước dấu chấm; portal dịch mã qua file dịch. Chưa có bảng tên trong ADMIN_PORTAL §2.2.
+- Q: Tên hiển thị permission/role trong `identity.permissions`/`roles`? → A: [Confirmed] Bằng chính mã (`name_vi = name_en = code`), `group_code` = tiền tố trước dấu chấm; portal dịch mã qua file dịch. Chưa có bảng tên trong ADMIN_PORTAL §2.2.
 - Q: Đồng bộ catalog chạy ở đâu? → A: `cmd/migrate` gọi `identity.SyncAuthzCatalog` ngay sau Atlas của module identity, một transaction, idempotent: id role hệ thống tất định (UUID v5 theo mã), permission/quyền rời catalog bị soft-delete, `catalog_version` = băm catalog. Trigger chặn `identity_app`/`identity_platform` sửa role hệ thống và quyền của nó (lớp 2 của F012-AC-17).
 - Q: Membership nhân sự? → A: `identity.tenant_memberships_v` thêm nhánh `member_kind = staff` từ UserRole tenant còn hiệu lực (một dòng mỗi tenant/user); consumer `keycloak-membership` của F010 dùng lại view này.
 - Q: `version` của Principal? → A: `users.version`; gán/thu hồi/hết hạn UserRole và đổi trạng thái tăng version trong cùng transaction.
 - Q: Kiểm tra "role vượt quyền người gán" (F012-AC-22) áp cho ai? → A: Chỉ người gán có `tenant.user_role.write` giới hạn theo trường (School Admin); grant toàn tenant (`tenant_admin`) gán mọi role tenant của ADMIN_PORTAL §2.3 (role này không có đủ `lms.*` của `school_admin`).
-- Q: UserRole hết hạn? → A: [Proposed] Job `user-role-expiry` soft-delete dòng quá `valid_to` (`delete_reason = expired`) và phát `user_role.changed` op `expired` (`actor_id` null).
-- Q: Tạo nhân sự đặt mật khẩu thế nào? → A: [Proposed] Không đặt mật khẩu; sau khi tạo, gửi email action Keycloak `UPDATE_PASSWORD`; lỗi gửi chỉ ghi log (đặt lại qua quên mật khẩu). `updateTenantUser` chưa đổi username/email (cần đồng bộ Keycloak) — OQ F012-1.
-- Q: `createAuthSession`, `logout` (T015/T016)? → A: Không làm trong F012: portal không dùng `createAuthSession` (F012-AC-08) và `PlayerBootstrap` cần hồ sơ người chơi của module game — OQ F012-2 [Proposed: F013/F014].
+- Q: UserRole hết hạn? → A: [Confirmed] Job `user-role-expiry` soft-delete dòng quá `valid_to` (`delete_reason = expired`) và phát `user_role.changed` op `expired` (`actor_id` null).
+- Q: Tạo nhân sự đặt mật khẩu thế nào? → A: [Confirmed] Không đặt mật khẩu; sau khi tạo, gửi email action Keycloak `UPDATE_PASSWORD`; lỗi gửi chỉ ghi log (đặt lại qua quên mật khẩu). `updateTenantUser` chưa đổi username/email (cần đồng bộ Keycloak) — OQ F012-1.
+- Q: `createAuthSession`, `logout` (T015/T016)? → A: Không làm trong F012: portal không dùng `createAuthSession` (F012-AC-08) và `PlayerBootstrap` cần hồ sơ người chơi của module game — OQ F012-2 [Confirmed: F013/F014].
 - Q: `featuregate.Source`? → A: Port và middleware ở `pkg/httpx/featuregate` (F012); hiện thực Source, consumer `platform_settings.changed` → `Gate.Invalidate` và cache Valkey `ew:fg:*` do F015; `getMyPermissions` trả `503` khi Source lỗi.
-- Q: Đăng nhập portal (US7/US8) — điểm lệch? → A: `auth_time` của phiên MFA lưu Valkey theo `sid` (token direct grant không có `auth_time`); rate limit fail-open khi Valkey lỗi (APISIX + brute-force Keycloak vẫn chặn); email quên mật khẩu gửi từ goroutine giới hạn (chưa có hạ tầng thông báo dùng outbox) [Proposed]; tên audit theo plan (`auth.portal_logout`…), mô tả OpenAPI cần thống nhất.
+- Q: Đăng nhập portal (US7/US8) — điểm lệch? → A: `auth_time` của phiên MFA lưu Valkey theo `sid` (token direct grant không có `auth_time`); rate limit fail-open khi Valkey lỗi (APISIX + brute-force Keycloak vẫn chặn); email quên mật khẩu gửi từ goroutine giới hạn (chưa có hạ tầng thông báo dùng outbox) [Confirmed]; tên audit theo plan (`auth.portal_logout`…), mô tả OpenAPI cần thống nhất.
 - Q: Gắn binary? → A: Vẫn theo OQ F010-2: F012 cung cấp `Register`, `RegisterPortalAuth`, facade, job và adapter; composition root `cmd/core-api`/`cmd/worker` chưa gắn.
 - Q: Song song hóa F012? → A: Data model (Pha 0) làm trước; `featuregate` (`pkg/httpx`) và đăng nhập portal (US7/US8) làm song song trên nhánh riêng, merge sau gate.
 
 ### Session 2026-11-20 (follow-up F059, Workspace D)
 
 - Q: `listPlatformUsers`, `createPlatformUser` (OQ F059-1, T004 của F059)? → A: Thêm vào contract và module identity. `GET /admin/users` (`platform.user.manage`): vắng `tenant_ids` = chỉ nhân sự platform (`primary_tenant_id = null`); có `tenant_ids` (CrossTenantScope, `platform.cross_tenant.read` + MFA, audit `cross_tenant.accessed`) = người có membership trong các tenant đó, `User.tenant_ids[]` (maxItems 50) chỉ gồm tenant trong phạm vi; không có truy vấn mọi người dùng mọi tenant (AGENTS R8) nên bỏ cờ `platform_only` của đề xuất F059 (vắng `tenant_ids` đã là "chỉ nhân sự platform"); `user_roles` để trống (dùng `listAllUserRoles?user_id=`). `POST /admin/users` (`platform.user.manage` + `platform.user_role.write`, `Idempotency-Key`, `PlatformUserCreateRequest` {username, email, display_name, locale, `initial_role_ids[]` 1–20 role `platform`, reason}): cùng đường Keycloak Admin của `createTenantUser` (user không mật khẩu + email `UPDATE_PASSWORD`, realm role `platform_staff` để OTP bắt buộc), role kiểm trước khi gọi Keycloak (role `tenant`, `safety_moderator` thiếu `training_completed_at` → `422`, gán sau bằng `grantPlatformUserRole`), lỗi DB vô hiệu hóa user Keycloak; phát `user.provisioned` (`tenant_id = null`), audit `user.created`.
-- Q: `getIntegrationOverview` (OQ F059-2, T009 của F059)? → A: `GET /admin/integrations`, chỉ đọc, any-of `platform.sis_connection.manage`/`platform.tenant.manage` (khớp `action.platform_admin.integrations.view`, ADR-0090). Keycloak: issuer (phần tử đầu `EW_OIDC_ISSUERS`), realm, client id + mục đích (`portal`, `game`, `admin_api`), `platform_mfa_required = true`, `platform_auth_max_age_seconds`; APISIX: `EW_GATEWAY_PUBLIC_BASE_URL`/`EW_GATEWAY_INTERNAL_BASE_URL` tùy chọn (null khi trống; URL có user/password, query, fragment bị từ chối lúc khởi động); SIS: số connection theo `status` mọi tenant (bypass `system_admin_cross_tenant` có audit). Không bao giờ đọc biến secret. [Proposed] `route_groups[]` (nhóm prefix → gateway → service) của đề xuất F059 chưa làm: nguồn là `deploy/apisix/routes/routes.yaml` (route-as-code) không có trong image core-api — xem OQ F059-12.
+- Q: `getIntegrationOverview` (OQ F059-2, T009 của F059)? → A: `GET /admin/integrations`, chỉ đọc, any-of `platform.sis_connection.manage`/`platform.tenant.manage` (khớp `action.platform_admin.integrations.view`, ADR-0090). Keycloak: issuer (phần tử đầu `EW_OIDC_ISSUERS`), realm, client id + mục đích (`portal`, `game`, `admin_api`), `platform_mfa_required = true`, `platform_auth_max_age_seconds`; APISIX: `EW_GATEWAY_PUBLIC_BASE_URL`/`EW_GATEWAY_INTERNAL_BASE_URL` tùy chọn (null khi trống; URL có user/password, query, fragment bị từ chối lúc khởi động); SIS: số connection theo `status` mọi tenant (bypass `system_admin_cross_tenant` có audit). Không bao giờ đọc biến secret. [Confirmed] `route_groups[]` (nhóm prefix → gateway → service) của đề xuất F059 chưa làm: nguồn là `deploy/apisix/routes/routes.yaml` (route-as-code) không có trong image core-api — xem OQ F059-12.
 - Q: `TenantUserCreateRequest.initial_user_roles[].scope_type` còn `class` (OQ F059-4)? → A: Đã bỏ trước đó (enum `tenant`/`school`/`subject`, F052); backend vẫn từ chối `class` (ADR-0072). Không đổi thêm.
 - Q: `platform.audit.read` hay `platform.audit.read_all` (OQ F059-11)? → A: `platform.audit.read` — đúng catalog `src/backend/pkg/authz/catalog.go`, OpenAPI, `specs/portal/menu-catalog.yaml` và ADMIN_PORTAL §2.2 (F015 đã gỡ `read_all`); không có permission `platform.audit.read_all`.
 
@@ -109,7 +109,7 @@ Module khác (learning, game, competition, chat; realtime qua NATS request/reply
 
 ### User Story 4 — Quản lý role tùy biến và role platform (Priority: P2)
 
-Tenant Admin tạo role tùy biến chỉ từ permission tenant [Proposed]; System Admin quản lý role platform; role hệ thống chỉ đọc.
+Tenant Admin tạo role tùy biến chỉ từ permission tenant [Confirmed]; System Admin quản lý role platform; role hệ thống chỉ đọc.
 
 **Why this priority**: Nhà trường cần điều chỉnh quyền; không chặn đăng nhập.
 
@@ -309,8 +309,8 @@ Khi System Admin tắt một menu hoặc action (F015), mọi request của Admi
 
 ## Assumptions
 
-- Role tùy biến của tenant [Proposed] (ADR-0066); triển khai nhưng có thể tắt bằng feature flag nếu chưa duyệt.
+- Role tùy biến của tenant [Confirmed] (ADR-0066); triển khai nhưng có thể tắt bằng feature flag nếu chưa duyệt.
 - F002 cung cấp middleware `auth`, `principal`, `tenant`, `portal_staff`, `game_player` trong `src/backend/pkg/httpx`; F012 cung cấp dữ liệu (Principal) và test.
-- `auth_time` tối đa 8 giờ cho route platform [Proposed] theo KEYCLOAK_SSO §3.3.
-- Claim `amr`/`acr` của direct grant và lỗi Keycloak khi còn required action theo giả định của ADR-0091; xác nhận bằng spike F004 T039 [Proposed].
-- APISIX phục vụ `/api/v1/*` dưới origin của portal để cookie là first-party [Proposed] (F004-AC-28).
+- `auth_time` tối đa 8 giờ cho route platform [Confirmed] theo KEYCLOAK_SSO §3.3.
+- Claim `amr`/`acr` của direct grant và lỗi Keycloak khi còn required action theo giả định của ADR-0091; xác nhận bằng spike F004 T039 [Confirmed].
+- APISIX phục vụ `/api/v1/*` dưới origin của portal để cookie là first-party [Confirmed] (F004-AC-28).

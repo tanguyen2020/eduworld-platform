@@ -28,7 +28,7 @@ Ký hiệu: ✅ đáp ứng · 🟡 một phần · ❌ chưa có.
 | § | Yêu cầu | Mức | Hiện có | Thiếu |
 |---|---|---|---|---|
 | 3 | Giữ stack Godot/Go/APISIX/Keycloak/Valkey/SIS | ✅ | ADR-0001…0047 | PostgreSQL đang ghi Accepted, Master Prompt yêu cầu Proposed/TBD → CONFLICT C3 |
-| 4 | Audit + phân loại CONFIRMED/PROPOSED/TBD/CONFLICT/DEPRECATED | 🟡 | Nhãn [Confirmed]/[Proposed]/[TBD]; ADR có Superseded | Chưa có nhãn CONFLICT/DEPRECATED trong tài liệu; báo cáo này là audit đầu tiên |
+| 4 | Audit + phân loại CONFIRMED/PROPOSED/TBD/CONFLICT/DEPRECATED | 🟡 | Nhãn [Confirmed]/[Confirmed]/[TBD]; ADR có Superseded | Chưa có nhãn CONFLICT/DEPRECATED trong tài liệu; báo cáo này là audit đầu tiên |
 | 5.1 | Game World: hub, map, zone, instance, NPC, portal, spawn, discovery, storyline | 🟡 | GAME_WORLD_DESIGN, 3D_WORLD_DESIGN, ADR-0012 | **World map, portal/teleport, discovery point, hidden location, exploration progress, world storyline/chapter, unlock conditions từng khu** |
 | 5.2 | Character & avatar | 🟡 | CHARACTER_SYSTEM | **Luồng tạo avatar lần đầu**, body type, equipment slot, avatar preset, appearance theo progression |
 | 5.3 | Character controller | ✅ | CHARACTER_SYSTEM, GAME_NETWORKING | Accessibility settings điều khiển, mobile controls chi tiết |
@@ -329,7 +329,7 @@ Mâu thuẫn còn mở (cần chốt) liệt kê ở [CONFIG_DEFAULTS §19](../0
 | KEYCLOAK_SSO còn nhắc `svc-keycloak-authn`, `tenants:resolve` | Fork cập nhật tài liệu identity theo ADR-0069 xử lý |
 | OQ cũ còn mở: OQ-02, 04, 08, 12, 14, 16, 17, 18 (OQ-19, 20, 21 đã đóng, xem §9.5) | [OPEN_QUESTIONS](OPEN_QUESTIONS.md) |
 
-**Quyết định `[Proposed]` đang chờ người duyệt:**
+**Quyết định `[Confirmed]` đang chờ người duyệt:**
 
 - **Đăng nhập & RBAC:**
   - plugin APISIX kiểm tra header tenant;
@@ -349,8 +349,8 @@ Mâu thuẫn còn mở (cần chốt) liệt kê ở [CONFIG_DEFAULTS §19](../0
   - `/cms/*` header tùy chọn cho role platform;
   - học sinh/trường/lớp chỉ trong `PlayerBootstrap`.
 - **Hiệu năng:** đổi p5 → p10 nhưng giữ ngưỡng FPS 27/30/50 (tiêu chí lỏng hơn một chút).
-- **Dashboard:** các tham số `[Proposed]` trong DASHBOARD_DATA (ngưỡng khoảng thời gian, grain, TTL cache).
-- **Danh mục:** các tham số `[Proposed]` trong ADR-0060 (mã chính thức tỉnh `official_code` còn TBD).
+- **Dashboard:** các tham số `[Confirmed]` trong DASHBOARD_DATA (ngưỡng khoảng thời gian, grain, TTL cache).
+- **Danh mục:** các tham số `[Confirmed]` trong ADR-0060 (mã chính thức tỉnh `official_code` còn TBD).
 - **Game:** tên boss chương 3–6.
 
 ### 9.5. Đã đóng sau báo cáo (2026-11-15)
@@ -377,6 +377,6 @@ Mâu thuẫn còn mở (cần chốt) liệt kê ở [CONFIG_DEFAULTS §19](../0
 | Mô hình vai trò | [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) (Accepted): không có vai trò giáo viên; học sinh tự học, nhà trường quản trị; kiểm duyệt tập trung ở Platform Safety Team (`safety_moderator`); trả lời OQ-07 |
 | Mục §3 bảng trên: 15.1 (written response/essay/rubric/teacher review, audio/speaking, project-based), 15.5 (rubric, teacher review) | Không còn là yêu cầu của Release: các hoạt động cần chấm tay nằm ngoài Release theo ADR-0072 mục 3; thiết kế tham khảo giữ ở [WRITTEN_RESPONSE_RUBRIC](../99-deferred/WRITTEN_RESPONSE_RUBRIC.md) |
 | Mốc dự án | M3 "Teacher Loop" đổi thành **M3 School Loop** ([ROADMAP §3.4](ROADMAP.md)) |
-| Test | TC chấm tay đánh dấu Removed (ADR-0072); thêm TC-LRN-011…018, TC-CNT-010, TC-CHAT-042…043 [Proposed] ([TEST_STRATEGY](TEST_STRATEGY.md)) |
+| Test | TC chấm tay đánh dấu Removed (ADR-0072); thêm TC-LRN-011…018, TC-CNT-010, TC-CHAT-042…043 [Confirmed] ([TEST_STRATEGY](TEST_STRATEGY.md)) |
 | Rủi ro, câu hỏi mở | RISK-47…49 ([RISKS](RISKS.md)); OQ-23, OQ-24 ([OPEN_QUESTIONS](OPEN_QUESTIONS.md)) |
 | ADR từ EDU_FIT_REVIEW | 2026-11-17: ADR-0073, 0074, 0075, 0078, 0080 Accepted; 0076, 0079 Rejected; 0077 hoãn (ADR-0082); trạng thái trong [Chỉ mục ADR](../adr/README.md) |
