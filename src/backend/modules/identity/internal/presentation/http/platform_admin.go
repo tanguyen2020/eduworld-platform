@@ -182,6 +182,7 @@ type assignBody struct {
 	ApplyToAllTenants bool        `json:"apply_to_all_tenants"`
 	ApplyToNewTenants bool        `json:"apply_to_new_tenants"`
 	Reason            string      `json:"reason"`
+	RemoveDefault     bool        `json:"remove_default"` // unassignFromTenants only (OQ F045-9)
 }
 
 func (h PlatformAdminHandlers) assignToTenants(w http.ResponseWriter, r *http.Request) {
@@ -208,7 +209,7 @@ func (h PlatformAdminHandlers) unassignFromTenants(w http.ResponseWriter, r *htt
 		return
 	}
 	if err := h.Unassign.Handle(r.Context(), command.UnassignInput{ResourceType: b.ResourceType, ResourceID: b.ResourceID, TenantIDs: b.TenantIDs,
-		Reason: b.Reason}); err != nil {
+		Reason: b.Reason, RemoveDefault: b.RemoveDefault}); err != nil {
 		fail(w, r, err)
 		return
 	}

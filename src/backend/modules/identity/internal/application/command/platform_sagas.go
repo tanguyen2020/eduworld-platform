@@ -84,7 +84,12 @@ func (d PlatformAdminDeps) cloneStep(i int) func(ctx context.Context, run write.
 			return saga.Result{}, err
 		}
 		key, _ := modcall.IdempotencyKeyFrom(ctx) // the stable step key of the engine
-		res, err := d.Owners.CloneStep(modcall.WithIdempotencyKey(actx, key), st.Module, req)
+		var res port.CloneStepResult
+		if st.Module == platformadmin.ModuleIdentity { // tenant_settings / school_settings: this module (OQ F045-4)
+			res, err = d.cloneSettings(ctx, *job, st.ResourceType)
+		} else {
+			res, err = d.Owners.CloneStep(modcall.WithIdempotencyKey(actx, key), st.Module, req)
+		}
 		if err != nil {
 			return saga.Result{}, err
 		}
@@ -137,11 +142,15 @@ func (d PlatformAdminDeps) mergeIdentityStep(ctx context.Context, run write.Saga
 		if tr, err = d.Repo.TransferIdentities(ctx, *m, d.now()); err != nil {
 			return err
 		}
+		if err := d.mergedStudentEvents(ctx, *m, tr); err != nil {
+			return err
+		}
 		// user.merged in the target tenant: ids and the reason only, no PII (F045-AC-32, R14).
 		return auditIn(ctx, d.Audit, m.TenantID, audit.Event{Action: "user.merged", TargetType: "user", TargetID: m.Into.String(),
 			Result: audit.ResultSuccess, Reason: m.Reason, Metadata: map[string]any{"merge_id": m.ID.String(), "from_user_id": m.From.String(),
 				"into_user_id": m.Into.String(), "identities_moved": tr.Identities, "identities_superseded": tr.IdentitiesSuperseded,
-				"sis_links_moved": tr.SisLinks, "sis_links_superseded": tr.SisLinksSuperseded}})
+				"sis_links_moved": tr.SisLinks, "sis_links_superseded": tr.SisLinksSuperseded, "enrollments_moved": len(tr.MovedEnrollments),
+				"enrollments_ended": len(tr.EndedEnrollments), "student_removed": tr.StudentRemoved}})
 	})
 	if err != nil {
 		return saga.Result{}, err
@@ -276,4 +285,33 @@ func (h PlatformSagas) closeCloneJobs(ctx context.Context, limit int) (int, erro
 		return nil
 	})
 	return closed, err
+}
+
+// mergedStudentEvents publishes what the identity step changed in the tenant of the merge (OQ F045-6):
+// enrollment.changed for the enrollment moved to the target (added) or ended for the source, and
+// tenant_membership.changed (removed) for the source whose student record is gone.
+func (d PlatformAdminDeps) mergedStudentEvents(ctx context.Context, m write.UserMerge, tr write.MergeTransfer) error {
+	t := m.TenantID
+	publish := func(student uuid.UUID, e write.MergedEnrollment, op, status string, end *string) error {
+		return d.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: e.EnrollmentID.String(), TenantID: &t,
+			Payload: EnrollmentPayload{StudentID: student.String(), ClassID: e.ClassID.String(), Op: op, EnrollmentID: e.EnrollmentID.String(),
+				SchoolID: e.SchoolID.String(), Status: status, StartDate: e.StartDate.Format(time.DateOnly), EndDate: end, Source: e.Source,
+				SourceVersion: e.Version}})
+	}
+	for _, e := range tr.MovedEnrollments {
+		if err := publish(m.Into, e, "added", "active", nil); err != nil {
+			return err
+		}
+	}
+	end := d.now().Format(time.DateOnly)
+	for _, e := range tr.EndedEnrollments {
+		if err := publish(m.From, e, "ended", "ended", &end); err != nil {
+			return err
+		}
+	}
+	if !tr.StudentRemoved {
+		return nil
+	}
+	return d.Events.Publish(ctx, write.Event{Type: "tenant_membership.changed", SubjectType: "tenant_membership", SubjectID: m.From.String(),
+		TenantID: &t, Payload: MembershipPayload{UserID: m.From.String(), TenantID: t.String(), Op: "removed", Source: "merge", UserType: "student"}})
 }

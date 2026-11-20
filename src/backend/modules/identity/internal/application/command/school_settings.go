@@ -116,14 +116,7 @@ func (h Settings) UpdateSchoolSettings(ctx context.Context, schoolID uuid.UUID, 
 		if out, err = dto.SchoolSettingsOf(schoolID, raw, v, nil, platformCurfew); err != nil {
 			return err
 		}
-		subset := map[string]any{"allowed_hours": out.AllowedHours, "curfew_window": out.CurfewWindow, "student_club_creation": out.StudentClubCreation,
-			settings.KeyDailyPlayLimit: out.DailyPlayLimitMinutes} // module game enforces it (F014-AC-27)
-		if out.ClassLeaderboardEnabled != nil {
-			subset["class_leaderboard_enabled"] = *out.ClassLeaderboardEnabled
-		}
-		if out.SchoolLeaderboardEnabled != nil {
-			subset["school_leaderboard_enabled"] = *out.SchoolLeaderboardEnabled
-		}
+		subset := schoolSubset(out)
 		if err := h.Events.Publish(ctx, write.Event{Type: "school.updated", SubjectType: "school", SubjectID: schoolID.String(), TenantID: &tenant,
 			Payload: map[string]any{"school_id": schoolID, "tenant_id": tenant, "status": cur.Status, "settings_subset": subset,
 				"changed_fields": changed, "source_version": v}}); err != nil {
@@ -142,6 +135,19 @@ func (h Settings) UpdateSchoolSettings(ctx context.Context, schoolID uuid.UUID, 
 				"after": auditValue(out), "changed_fields": strings.Join(changed, ",")}})
 	})
 	return out, err
+}
+
+// schoolSubset is settings_subset of school.updated: the school settings the other modules project.
+func schoolSubset(out dto.SchoolSettings) map[string]any {
+	subset := map[string]any{"allowed_hours": out.AllowedHours, "curfew_window": out.CurfewWindow, "student_club_creation": out.StudentClubCreation,
+		settings.KeyDailyPlayLimit: out.DailyPlayLimitMinutes} // module game enforces it (F014-AC-27)
+	if out.ClassLeaderboardEnabled != nil {
+		subset["class_leaderboard_enabled"] = *out.ClassLeaderboardEnabled
+	}
+	if out.SchoolLeaderboardEnabled != nil {
+		subset["school_leaderboard_enabled"] = *out.SchoolLeaderboardEnabled
+	}
+	return subset
 }
 
 func curfewMap(c *settings.Curfew) map[string]any {

@@ -8732,6 +8732,10 @@ paths:
                   maxItems: 100
                   items: { $ref: '#/components/schemas/Uuid' }
                 reason: { type: string, maxLength: 500 }
+                remove_default:
+                  type: boolean
+                  default: false
+                  description: '`true` = soft-delete luôn quy tắc gán mặc định (`apply_to_new_tenants`) của tài nguyên, có audit `tenant_data.default_assignment_removed`; tenant tạo sau không còn được gán (OQ F045-9)'
       responses:
         '204':
           description: Đã gỡ gán
@@ -19390,7 +19394,7 @@ components:
     ResourceType:
       type: string
       description: Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
-      enum: [curriculum, lesson, learning_material, question, question_set, assessment_blueprint, media, assignment, course, learning_path, challenge, challenge_template, tournament_template, quest, minigame_config, item, class_template, school_settings, tenant_settings, user, student]
+      enum: [curriculum, lesson, learning_material, question, question_set, assessment_blueprint, media, assignment, course, learning_path, activity, challenge, challenge_template, tournament_template, quest, minigame_config, item, class_template, school_settings, tenant_settings, user, student]
     TrashItem:
       type: object
       description: Chỉ trả trong API Thùng rác — schema duy nhất có deleted_at

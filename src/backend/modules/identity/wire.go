@@ -178,7 +178,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		Participants: studentParts, Lifecycle: write.LifecycleRepo{}, Events: events, Audit: auditor, Metrics: lm, Cursors: cursors}
 	anonymize := command.UserAnonymize{UoW: core.UoW, Repo: write.AnonymizeRepo{}, Saga: engine, Participants: anonymizers,
 		Lifecycle: write.LifecycleRepo{}, Events: events, Audit: auditor}
-	pad := command.PlatformAdminDeps{UoW: core.UoW, Repo: write.PlatformAdminRepo{}, Owners: gw, Events: events, Audit: auditor,
+	pad := command.PlatformAdminDeps{UoW: core.UoW, Repo: write.PlatformAdminRepo{}, Owners: gw, Events: events, Audit: auditor, Settings: write.SettingsRepo{},
 		Sagas: engine, Students: restore}
 
 	// SIS (F011 CSV import, F017 contract_v1).

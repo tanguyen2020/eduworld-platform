@@ -223,6 +223,7 @@ func (e QuestionType) Valid() bool {
 
 // Defines values for CommonInternalCommonV1ResourceType.
 const (
+	CommonInternalCommonV1ResourceTypeActivity            CommonInternalCommonV1ResourceType = "activity"
 	CommonInternalCommonV1ResourceTypeAssessmentBlueprint CommonInternalCommonV1ResourceType = "assessment_blueprint"
 	CommonInternalCommonV1ResourceTypeAssignment          CommonInternalCommonV1ResourceType = "assignment"
 	CommonInternalCommonV1ResourceTypeChallenge           CommonInternalCommonV1ResourceType = "challenge"
@@ -247,6 +248,8 @@ const (
 // Valid indicates whether the value is a known member of the CommonInternalCommonV1ResourceType enum.
 func (e CommonInternalCommonV1ResourceType) Valid() bool {
 	switch e {
+	case CommonInternalCommonV1ResourceTypeActivity:
+		return true
 	case CommonInternalCommonV1ResourceTypeAssessmentBlueprint:
 		return true
 	case CommonInternalCommonV1ResourceTypeAssignment:

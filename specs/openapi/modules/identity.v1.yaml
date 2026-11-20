@@ -2198,6 +2198,10 @@ paths:
                 reason:
                   type: string
                   maxLength: 500
+                remove_default:
+                  type: boolean
+                  default: false
+                  description: '`true` = soft-delete luôn quy tắc gán mặc định (`apply_to_new_tenants`) của tài nguyên, có audit `tenant_data.default_assignment_removed`; tenant tạo sau không còn được gán (OQ F045-9)'
       responses:
         '204':
           description: Đã gỡ gán
@@ -7458,6 +7462,7 @@ components:
         - assignment
         - course
         - learning_path
+        - activity
         - challenge
         - challenge_template
         - tournament_template

@@ -67,7 +67,7 @@ func platformHTTP(ctx context.Context, t *testing.T, e *env, owners func(port.Ow
 	if owners != nil {
 		gw = owners(gw)
 	}
-	deps := command.PlatformAdminDeps{UoW: e.uow, Repo: write.PlatformAdminRepo{}, Owners: gw, Events: e.deps.Events, Audit: e.deps.Audit,
+	deps := command.PlatformAdminDeps{UoW: e.uow, Repo: write.PlatformAdminRepo{}, Owners: gw, Events: e.deps.Events, Audit: e.deps.Audit, Settings: write.SettingsRepo{},
 		Sagas: saga.Engine{UoW: e.uow, Repo: write.SagaRepo{}, Backoff: time.Millisecond, MaxAttempts: 3}}
 	if err := identityhttp.Register(srv, identityhttp.Handlers{ListTenants: query.ListTenants{Model: read.TenantModel{Session: e.read}, Cursors: codec}}); err != nil {
 		t.Fatal(err)

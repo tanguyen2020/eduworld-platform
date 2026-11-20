@@ -59,6 +59,16 @@ func TestRoutingLearningMaterial(t *testing.T) {
 	}
 }
 
+// activity (F030, OQ F030) is learning content: routed to learning for the trash and assignments.
+func TestRoutingActivity(t *testing.T) {
+	if m, err := platformadmin.Owner("activity"); err != nil || m != platformadmin.ModuleLearning {
+		t.Fatalf("owner = %q %v", m, err)
+	}
+	if !platformadmin.Assignable("activity") || !platformadmin.RestorableThroughTrash("activity") {
+		t.Fatal("activity: assignable/restorable")
+	}
+}
+
 // Every value of the ResourceType enum of the merged public spec (source of truth) has an owner, so filtering or
 // restoring the trash by any type is routed.
 func TestRoutingCoversResourceTypeEnum(t *testing.T) {
@@ -161,5 +171,29 @@ func TestCheckMerge(t *testing.T) {
 	if platformadmin.MergeStatus("blocked") != "failed" || platformadmin.MergeStatus("compensating") != "running" ||
 		platformadmin.MergeStepStatus("pending") != "pending" {
 		t.Fatal("status mapping")
+	}
+}
+
+// OQ F045-4: class_template cannot be cloned in Release 1.0 (422 at job creation); tenant_settings clones the
+// source tenant itself; school_settings clones one source school.
+func TestPlanCloneSettings(t *testing.T) {
+	src, dst, school := uuid.New(), uuid.New(), uuid.New()
+	if _, err := platformadmin.PlanClone(src, dst, "class_template", []uuid.UUID{uuid.New()}); !errors.Is(err, platformadmin.ErrCloneNotAllowed) {
+		t.Fatalf("class_template: %v", err)
+	}
+	if steps, err := platformadmin.PlanClone(src, dst, "tenant_settings", []uuid.UUID{src}); err != nil || len(steps) != 1 ||
+		steps[0].Module != platformadmin.ModuleIdentity {
+		t.Fatalf("tenant_settings: %+v %v", steps, err)
+	}
+	for _, ids := range [][]uuid.UUID{{dst}, {src, uuid.New()}} {
+		if _, err := platformadmin.PlanClone(src, dst, "tenant_settings", ids); !errors.Is(err, platformadmin.ErrCloneSettingsIDs) {
+			t.Fatalf("tenant_settings %v: %v", ids, err)
+		}
+	}
+	if _, err := platformadmin.PlanClone(src, dst, "school_settings", []uuid.UUID{school}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := platformadmin.PlanClone(src, dst, "school_settings", []uuid.UUID{school, uuid.New()}); !errors.Is(err, platformadmin.ErrCloneSettingsIDs) {
+		t.Fatalf("two schools: %v", err)
 	}
 }

@@ -43,6 +43,8 @@ type PlatformAdminDeps struct {
 	Events write.EventPublisher
 	Audit  write.Auditor
 	Sagas  saga.Engine
+	// Settings reads and writes the tenant/school settings of F015 for the identity clone step (OQ F045-4).
+	Settings write.SettingsRepository
 	// Students restores cleaned-up students (F016); nil until wired.
 	Students StudentRestorer
 	Clock    func() time.Time
@@ -274,9 +276,11 @@ type UnassignInput struct {
 	ResourceID   uuid.UUID
 	TenantIDs    []uuid.UUID
 	Reason       string
+	// RemoveDefault also soft-deletes the default assignment (apply_to_new_tenants) of the resource (OQ F045-9).
+	RemoveDefault bool
 }
 
-// UnassignFromTenants implements unassignFromTenants (F045-AC-10, AC-12).
+// UnassignFromTenants implements unassignFromTenants (F045-AC-10, AC-12; remove_default: OQ F045-9).
 type UnassignFromTenants struct{ PlatformAdminDeps }
 
 // defaultUnassignReason is sent to the owning module when System Admin gives no reason (the callee needs 3–1000
@@ -329,6 +333,19 @@ func (h UnassignFromTenants) Handle(ctx context.Context, in UnassignInput) (err 
 				TargetID: in.ResourceID.String(), Result: audit.ResultSuccess, Reason: in.Reason,
 				Metadata: map[string]any{"assignment_id": a.AssignmentID.String(), "owner_module": module}}); err != nil {
 				return err
+			}
+		}
+		if in.RemoveDefault {
+			removed, err := h.Repo.RemoveDefaultAssignment(ctx, in.ResourceType, in.ResourceID, p.UserID, h.now())
+			if err != nil {
+				return err
+			}
+			if removed {
+				if err := h.Audit.Record(ctx, audit.Event{Action: "tenant_data.default_assignment_removed", TargetType: in.ResourceType,
+					TargetID: in.ResourceID.String(), Result: audit.ResultSuccess, Reason: in.Reason,
+					Metadata: map[string]any{"owner_module": module}}); err != nil {
+					return err
+				}
 			}
 		}
 		return idempotency.SetResult(ctx, nil)

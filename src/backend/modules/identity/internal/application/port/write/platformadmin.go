@@ -55,6 +55,19 @@ type UserMerge struct {
 // MergeTransfer counts what the identity step of a merge moved.
 type MergeTransfer struct {
 	Identities, IdentitiesSuperseded, SisLinks, SisLinksSuperseded int
+	// MovedEnrollments are the active enrollments of the source moved to the target, which had none (OQ F045-6);
+	// EndedEnrollments the active ones of the source ended because the target keeps its own.
+	MovedEnrollments, EndedEnrollments []MergedEnrollment
+	// StudentRemoved reports that the student record (org.students) of the source was soft-deleted (merged).
+	StudentRemoved bool
+}
+
+// MergedEnrollment is an enrollment touched by the identity step of a merge.
+type MergedEnrollment struct {
+	EnrollmentID, SchoolID, ClassID uuid.UUID
+	StartDate                       time.Time
+	Source                          string
+	Version                         int64
 }
 
 // PlatformAdminRepository persists the F045 tables with explicit SQL in a platform scope (identity_platform;
@@ -83,6 +96,10 @@ type PlatformAdminRepository interface {
 
 	// AddDefaultAssignment stores a default assignment (no-op when the resource already has one).
 	AddDefaultAssignment(ctx context.Context, d DefaultAssignment) error
+	// TenantSchools returns the live schools of a tenant (identity clone step of school_settings, OQ F045-4).
+	TenantSchools(ctx context.Context, tenant uuid.UUID) ([]uuid.UUID, error)
+	// RemoveDefaultAssignment soft-deletes the live default assignment of a resource (OQ F045-9); false when none.
+	RemoveDefaultAssignment(ctx context.Context, resourceType string, resourceID, by uuid.UUID, at time.Time) (bool, error)
 	// DefaultAssignments returns the live default assignments.
 	DefaultAssignments(ctx context.Context) ([]DefaultAssignment, error)
 
@@ -97,7 +114,8 @@ type PlatformAdminRepository interface {
 	// CreateMerge inserts the merge row (UNIQUE from_user_id: a concurrent duplicate is 409 CONFLICT).
 	CreateMerge(ctx context.Context, m UserMerge) error
 	// TransferIdentities is the identity step of a merge: moves the external identities and SIS links of
-	// m.From to m.Into (superseding the ones whose issuer/link m.Into already holds), soft-deletes m.From
-	// (delete_reason merged) and closes the issue (resolution merged). Idempotent: a second call does nothing.
+	// m.From to m.Into (superseding the ones whose issuer/link m.Into already holds), moves the active enrollment
+	// of m.From to m.Into when m.Into has none (else ends it), soft-deletes the student record and the account of
+	// m.From (delete_reason merged) and closes the issue (resolution merged). Idempotent: a second call does nothing.
 	TransferIdentities(ctx context.Context, m UserMerge, at time.Time) (MergeTransfer, error)
 }

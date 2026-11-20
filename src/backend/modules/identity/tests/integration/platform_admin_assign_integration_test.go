@@ -135,4 +135,35 @@ func TestPlatformAdminAssignments(t *testing.T) {
 	if len(p.learn.list("question_set", qs2, []uuid.UUID{td}).Data) != 1 {
 		t.Fatal("redelivery duplicated the assignment")
 	}
+	// OQ F045-9: unassign with remove_default also soft-deletes the default rule (audited); a later tenant is not
+	// assigned; without remove_default the rule stays.
+	if r = p.do(t, "DELETE", "/admin/tenant-assignments", sa, map[string]string{"Idempotency-Key": newKey()},
+		map[string]any{"resource_type": "question_set", "resource_id": qs2, "tenant_ids": []string{d.tenant}}); r.status != 204 {
+		t.Fatalf("unassign without remove_default: %d %s", r.status, r.raw)
+	}
+	if count(ctx, t, e.platform, `SELECT count(*) FROM platform.tenant_default_assignments WHERE resource_id = $1 AND deleted_at IS NULL`, qs2) != 1 {
+		t.Fatal("the default rule must stay without remove_default")
+	}
+	if r = p.do(t, "DELETE", "/admin/tenant-assignments", sa, map[string]string{"Idempotency-Key": newKey()},
+		map[string]any{"resource_type": "question_set", "resource_id": qs2, "tenant_ids": []string{d.tenant}, "remove_default": true,
+			"reason": "bỏ gán mặc định"}); r.status != 204 {
+		t.Fatalf("unassign remove_default: %d %s", r.status, r.raw)
+	}
+	if count(ctx, t, e.platform, `SELECT count(*) FROM platform.tenant_default_assignments WHERE resource_id = $1 AND deleted_at IS NOT NULL
+		AND deleted_by IS NOT NULL AND delete_reason = 'unassigned'`, qs2) != 1 {
+		t.Fatal("remove_default must soft-delete the default rule")
+	}
+	if outboxCount(ctx, t, p, "audit.recorded", "tenant_data.default_assignment_removed") != 1 {
+		t.Fatal("audit tenant_data.default_assignment_removed")
+	}
+	f := seedTenant(ctx, t, e.platform, "pgd-as-f")
+	tf := uuid.MustParse(f.tenant)
+	payload, _ = json.Marshal(map[string]any{"tenant_id": f.tenant})
+	if err := cons.Handle(ctx, outbox.Envelope{EventID: uuid.Must(uuid.NewV7()), EventType: "tenant.created", OccurredAt: time.Now().UTC(),
+		TenantID: &tf, Payload: payload}); err != nil {
+		t.Fatal(err)
+	}
+	if p.learn.visible(tf, qs2) {
+		t.Fatal("a tenant created after remove_default was assigned")
+	}
 }

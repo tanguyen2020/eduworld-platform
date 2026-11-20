@@ -475,6 +475,11 @@ func (PlatformAdminRepo) CreateMerge(ctx context.Context, m write.UserMerge) err
 
 // TransferIdentities implements write.PlatformAdminRepository.
 func (PlatformAdminRepo) TransferIdentities(ctx context.Context, m write.UserMerge, at time.Time) (out write.MergeTransfer, err error) {
+	defer func() {
+		if err == nil {
+			err = mergeStudentRecord(ctx, m, at, &out)
+		}
+	}()
 	tx, err := portalTx(ctx)
 	if err != nil {
 		return out, err
@@ -539,4 +544,93 @@ func (PlatformAdminRepo) TransferIdentities(ctx context.Context, m write.UserMer
 		}
 	}
 	return out, nil
+}
+
+// RemoveDefaultAssignment implements write.PlatformAdminRepository (soft-delete only, R21).
+func (PlatformAdminRepo) RemoveDefaultAssignment(ctx context.Context, resourceType string, resourceID, by uuid.UUID, at time.Time) (bool, error) {
+	tx, err := portalTx(ctx)
+	if err != nil {
+		return false, err
+	}
+	// tenancyguard:ok platform.tenant_default_assignments is global (G); the live rule of one resource
+	r, err := tx.ExecContext(ctx, `UPDATE platform.tenant_default_assignments SET deleted_at = $3, deleted_by = $4, delete_reason = 'unassigned'
+		WHERE resource_type = $1 AND resource_id = $2 AND deleted_at IS NULL`, resourceType, resourceID, at, by)
+	if err != nil {
+		return false, fmt.Errorf("remove default assignment: %w", err)
+	}
+	n, _ := r.RowsAffected()
+	return n > 0, nil
+}
+
+// mergeStudentRecord is the org part of the identity step of a merge (OQ F045-6), in the same transaction: the
+// active enrollment of the source moves to the target when the target has none in the tenant (else it ends), and
+// the student record of the source is soft-deleted with delete_reason merged. A second call finds nothing to do.
+func mergeStudentRecord(ctx context.Context, m write.UserMerge, at time.Time, out *write.MergeTransfer) error {
+	tx, err := portalTx(ctx)
+	if err != nil {
+		return err
+	}
+	scan := func(q string, args ...any) ([]write.MergedEnrollment, error) {
+		rows, err := tx.QueryContext(ctx, q, args...)
+		if err != nil {
+			return nil, err
+		}
+		defer func() { _ = rows.Close() }()
+		var list []write.MergedEnrollment
+		for rows.Next() {
+			var e write.MergedEnrollment
+			if err := rows.Scan(&e.EnrollmentID, &e.SchoolID, &e.ClassID, &e.StartDate, &e.Source, &e.Version); err != nil {
+				return nil, err
+			}
+			list = append(list, e)
+		}
+		return list, rows.Err()
+	}
+	// tenancyguard:ok explicit tenant condition (tenant of the merge), deleted_at IS NULL: the active enrollment of the source
+	if out.MovedEnrollments, err = scan(`UPDATE org.enrollments e SET student_id = $2, updated_at = $4, updated_by = $5, version = e.version + 1
+		WHERE e.student_id = $1 AND e.tenant_id = $3 AND e.status = 'active' AND e.deleted_at IS NULL
+			AND EXISTS (SELECT 1 FROM org.students s WHERE s.student_id = $2 AND s.tenant_id = $3 AND s.deleted_at IS NULL)
+			AND NOT EXISTS (SELECT 1 FROM org.enrollments t WHERE t.student_id = $2 AND t.status = 'active' AND t.deleted_at IS NULL)
+		RETURNING e.enrollment_id, e.school_id, e.class_id, e.start_date, e.source, e.version`, m.From, m.Into, m.TenantID, at, m.MergedBy); err != nil {
+		return fmt.Errorf("move enrollment: %w", err)
+	}
+	// tenancyguard:ok explicit tenant condition (tenant of the merge), deleted_at IS NULL: the target keeps its own enrollment
+	if out.EndedEnrollments, err = scan(`UPDATE org.enrollments e SET status = 'ended', end_date = $4::date, updated_at = $4, updated_by = $5,
+			version = e.version + 1
+		WHERE e.student_id = $1 AND e.tenant_id = $3 AND e.status = 'active' AND e.deleted_at IS NULL AND $2::uuid IS NOT NULL
+		RETURNING e.enrollment_id, e.school_id, e.class_id, e.start_date, e.source, e.version`, m.From, m.Into, m.TenantID, at, m.MergedBy); err != nil {
+		return fmt.Errorf("end enrollment: %w", err)
+	}
+	// tenancyguard:ok explicit tenant condition (tenant of the merge), deleted_at IS NULL: soft-delete only (R21)
+	r, err := tx.ExecContext(ctx, `UPDATE org.students SET deleted_at = $3, deleted_by = $4, delete_reason = 'merged', updated_at = $3,
+			updated_by = $4, version = version + 1 WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NULL`, m.From, m.TenantID, at, m.MergedBy)
+	if err != nil {
+		return fmt.Errorf("soft-delete merged student: %w", err)
+	}
+	n, _ := r.RowsAffected()
+	out.StudentRemoved = n > 0
+	return nil
+}
+
+// TenantSchools implements write.PlatformAdminRepository.
+func (PlatformAdminRepo) TenantSchools(ctx context.Context, tenant uuid.UUID) ([]uuid.UUID, error) {
+	tx, err := portalTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok explicit tenant condition, deleted_at IS NULL: the live schools of one tenant
+	rows, err := tx.QueryContext(ctx, `SELECT school_id FROM org.schools WHERE tenant_id = $1 AND deleted_at IS NULL ORDER BY school_id`, tenant)
+	if err != nil {
+		return nil, fmt.Errorf("tenant schools: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
 }

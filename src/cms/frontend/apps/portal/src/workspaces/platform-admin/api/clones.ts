@@ -16,7 +16,7 @@ export type TenantCloneJob = Schemas['TenantCloneJob'];
  */
 export const CLONABLE_TYPES: readonly ResourceType[] = [
   'curriculum', 'lesson', 'question', 'question_set', 'assessment_blueprint', 'media', 'learning_path', 'assignment',
-  'challenge_template', 'class_template', 'school_settings', 'tenant_settings',
+  'challenge_template', 'school_settings', 'tenant_settings', // no class_template in Release 1.0 (OQ F045-4)
 ];
 
 /** previewTenantClone is not in the contract yet (F057 T005 pending with owner F045). */

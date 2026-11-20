@@ -12185,7 +12185,7 @@ export interface components {
          * @description Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
          * @enum {string}
          */
-        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "class_template" | "school_settings" | "tenant_settings" | "user" | "student";
+        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "class_template" | "school_settings" | "tenant_settings" | "user" | "student";
         /** @description Lý do khôi phục bản ghi từ Thùng rác (F045-AC-20) */
         RestoreRequest: {
             reason: string;
@@ -17745,6 +17745,11 @@ export interface operations {
             content: {
                 "application/json": {
                     reason?: string;
+                    /**
+                     * @description `true` = soft-delete luôn quy tắc gán mặc định (`apply_to_new_tenants`) của tài nguyên, có audit `tenant_data.default_assignment_removed`; tenant tạo sau không còn được gán (OQ F045-9)
+                     * @default false
+                     */
+                    remove_default?: boolean;
                     resource_id: components["schemas"]["Uuid"];
                     resource_type: components["schemas"]["ResourceType"];
                     tenant_ids: components["schemas"]["Uuid"][];

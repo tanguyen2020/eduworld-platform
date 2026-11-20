@@ -30,6 +30,9 @@ var (
 	ErrCloneTooManyIDs    = errors.New("platformadmin: resource_ids has more than 500 items")
 	ErrCloneDuplicateIDs  = errors.New("platformadmin: resource_ids has duplicates")
 	ErrCloneTenantMissing = errors.New("platformadmin: the tenant does not exist or is not active")
+	// ErrCloneSettingsIDs: tenant_settings clones the settings of the source tenant (resource_ids = [source]);
+	// school_settings clones the settings of one source school onto every school of the target (OQ F045-4).
+	ErrCloneSettingsIDs = errors.New("platformadmin: settings clone takes the source tenant (tenant_settings) or one source school (school_settings)")
 )
 
 // CloneStep is one step of a clone plan: one module clones one resource type, receiving the id_map of the
@@ -59,6 +62,12 @@ func PlanClone(source, target uuid.UUID, rt string, ids []uuid.UUID) ([]CloneSte
 		return nil, ErrCloneNoResources
 	case len(ids) > MaxCloneResources:
 		return nil, ErrCloneTooManyIDs
+	}
+	switch {
+	case rt == "tenant_settings" && (len(ids) != 1 || ids[0] != source):
+		return nil, ErrCloneSettingsIDs
+	case rt == "school_settings" && len(ids) != 1:
+		return nil, ErrCloneSettingsIDs
 	}
 	seen := make(map[uuid.UUID]bool, len(ids))
 	for _, id := range ids {

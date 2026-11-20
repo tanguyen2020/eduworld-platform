@@ -22,6 +22,7 @@ import (
 
 // Defines values for CommonInternalCommonV1ResourceType.
 const (
+	Activity            CommonInternalCommonV1ResourceType = "activity"
 	AssessmentBlueprint CommonInternalCommonV1ResourceType = "assessment_blueprint"
 	Assignment          CommonInternalCommonV1ResourceType = "assignment"
 	Challenge           CommonInternalCommonV1ResourceType = "challenge"
@@ -46,6 +47,8 @@ const (
 // Valid indicates whether the value is a known member of the CommonInternalCommonV1ResourceType enum.
 func (e CommonInternalCommonV1ResourceType) Valid() bool {
 	switch e {
+	case Activity:
+		return true
 	case AssessmentBlueprint:
 		return true
 	case Assignment:
