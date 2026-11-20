@@ -14,6 +14,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/efficacy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/regulation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/reporting"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
@@ -38,6 +39,7 @@ const (
 	reportErrorReplica              = "replica_unavailable"
 	reportErrorQueryTimeout         = "query_timeout"
 	reportErrorReportTypeNotAllowed = "report_type_not_available"
+	reportErrorPseudonymKey         = "pseudonym_key_missing"
 )
 
 // ReportMetrics observes the exports (eduworld_export_jobs_total{status}, eduworld_export_jobs_duration_seconds).
@@ -64,6 +66,13 @@ type Reports struct {
 	Config      reporting.Config
 	Clock       func() time.Time
 	Metrics     ReportMetrics
+	// Efficacy produces the pseudonymous dataset of a study (report_type efficacy_dataset, F035 US7); nil = refused (503).
+	Efficacy EfficacyDataset
+}
+
+// EfficacyDataset is the producer of the efficacy dataset (command.Efficacy).
+type EfficacyDataset interface {
+	Dataset(ctx context.Context, studyID uuid.UUID) ([]string, [][]string, error)
 }
 
 func (h Reports) now() time.Time { return now(h.Clock).UTC() }
@@ -121,8 +130,13 @@ func (h Reports) CreateReport(ctx context.Context, in ReportInput) (out dto.Repo
 			return out, err
 		}
 	}
-	n, err := h.count(wctx, spec)
-	if err != nil {
+	var n int64
+	if in.Request.Type == reporting.TypeEfficacyDataset {
+		// F035: one row per participant of a study (bounded by the study); produced by the efficacy study, not the replica rollups.
+		if h.Efficacy == nil {
+			return out, problem.New(problem.Unavailable, "the efficacy dataset is not configured").Retry()
+		}
+	} else if n, err = h.count(wctx, spec); err != nil {
 		return out, err
 	}
 	if n > cfg.MaxRows {
@@ -227,7 +241,7 @@ func (h Reports) authorizeReport(ctx context.Context, p authz.Principal, r repor
 	perm := authz.PermReportExport
 	params := write.ReportParams{SchoolID: r.SchoolID, ClassID: r.ClassID, CourseID: r.CourseID, AssignmentID: r.AssignmentID,
 		SubjectID: r.SubjectID, Period: r.Period, AcademicYear: r.AcademicYear, SchoolIDs: r.SchoolIDs, TenantIDs: r.TenantIDs,
-		GradeLevel: r.GradeLevel}
+		GradeLevel: r.GradeLevel, StudyID: r.StudyID}
 	if r.From != nil {
 		params.From = r.From.Format(time.DateOnly)
 	}
@@ -241,6 +255,10 @@ func (h Reports) authorizeReport(ctx context.Context, p authz.Principal, r repor
 		}
 		if p.TenantID != nil || !p.IsSystemAdmin {
 			return params, problem.New(problem.PermissionDenied, "")
+		}
+		if r.Type == reporting.TypeEfficacyDataset {
+			// F035-AC-32, AC-34: report.export and platform.efficacy_study.export; the tenants are those of the study.
+			return params, authz.Require(ctx, p, authz.PermPlatformEfficacyStudyExport, authz.Resource{})
 		}
 		if len(r.TenantIDs) == 0 {
 			return params, problem.Invalid("/tenant_ids", problem.SubRequired, "is required for a cross-tenant export")
@@ -415,6 +433,8 @@ func reportErrorCode(err error) string {
 		return reportErrorReplica
 	case errors.Is(err, reporting.ErrNotAvailable):
 		return reportErrorReportTypeNotAllowed
+	case errors.Is(err, efficacy.ErrNoKey):
+		return reportErrorPseudonymKey
 	}
 	return reportErrorGeneric
 }
@@ -427,6 +447,9 @@ var (
 // produce reads the rows batch by batch (one replica transaction each) and writes the file; returns its key and row count.
 func (h Reports) produce(ctx context.Context, j write.ReportJobRow, cfg reporting.Config) (string, int, port.ReportMeta, error) {
 	meta := port.ReportMeta{Title: "EduWorld — " + j.Type, Watermark: reporting.Watermark(j.RequestedBy, h.now())}
+	if j.Type == reporting.TypeEfficacyDataset {
+		return h.produceEfficacy(ctx, j, meta)
+	}
 	if h.DataSession == nil || h.Data == nil || h.Files == nil || h.Writers == nil {
 		return "", 0, meta, problem.New(problem.Unavailable, "exports are not configured")
 	}
@@ -511,6 +534,14 @@ func (h Reports) finish(ctx context.Context, j write.ReportJobRow, _ port.Report
 			Result: audit.ResultSuccess, Metadata: meta, SchoolID: school}); err != nil {
 			return err
 		}
+		if j.Type == reporting.TypeEfficacyDataset && j.Params.StudyID != nil {
+			// F035-AC-34: the study and the row count only (no PII).
+			if err := h.Audit.Record(ctx, audit.Event{Action: ActionDatasetExported, TargetType: "efficacy_study", TargetID: j.Params.StudyID.String(),
+				Result: audit.ResultSuccess, Metadata: map[string]any{"report_id": j.ID.String(), "row_count": *j.RowCount,
+					"requested_by": j.RequestedBy.String()}}); err != nil {
+				return err
+			}
+		}
 		if j.Type == reporting.TypeRegulationReference {
 			if err := h.Audit.Record(ctx, audit.Event{Action: ActionReferenceReportExported, TargetType: "report", TargetID: j.ID.String(),
 				Result: audit.ResultSuccess, Metadata: map[string]any{"report_id": j.ID.String(), "period": j.Params.Period,
@@ -525,4 +556,38 @@ func (h Reports) finish(ctx context.Context, j write.ReportJobRow, _ port.Report
 	return h.Events.Publish(ctx, write.Event{Type: EventReportCompleted, SubjectType: "report", SubjectID: j.ID.String(), TenantID: j.TenantID, Platform: j.TenantID == nil,
 		Payload: map[string]any{"report_id": j.ID, "scope_level": j.Scope, "report_type": j.Type, "format": j.Format, "status": j.Status,
 			"row_count": j.RowCount, "requested_by": j.RequestedBy}})
+}
+
+// produceEfficacy writes the pseudonymous dataset of a study (F035-AC-32, AC-33): CSV, one row per active participant;
+// a missing pseudonymization key fails the job before anything is written.
+func (h Reports) produceEfficacy(ctx context.Context, j write.ReportJobRow, meta port.ReportMeta) (string, int, port.ReportMeta, error) {
+	if h.Efficacy == nil || h.Files == nil || h.Writers == nil || j.Params.StudyID == nil {
+		return "", 0, meta, problem.New(problem.Unavailable, "the efficacy dataset is not configured")
+	}
+	cols, rows, err := h.Efficacy.Dataset(ctx, *j.Params.StudyID)
+	if err != nil {
+		return "", 0, meta, err
+	}
+	meta.Title = "EduWorld — efficacy_dataset (định danh giả)"
+	w, err := h.Writers.New(j.Format, meta)
+	if err != nil {
+		return "", 0, meta, err
+	}
+	if err := w.Header(cols); err != nil {
+		return "", 0, meta, err
+	}
+	for _, r := range rows {
+		if err := w.Row(r); err != nil {
+			return "", 0, meta, err
+		}
+	}
+	data, err := w.Close()
+	if err != nil {
+		return "", 0, meta, err
+	}
+	key := reporting.StorageKey(j.TenantID, j.ID, j.Format)
+	if err := h.Files.Put(ctx, key, data, reporting.ContentType(j.Format)); err != nil {
+		return "", 0, meta, fmt.Errorf("%w: %w", errStorage, err)
+	}
+	return key, len(rows), meta, nil
 }

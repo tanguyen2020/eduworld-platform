@@ -53,6 +53,9 @@ type ExamSessionRow struct {
 	CancelReason       *string
 	Version            int64
 	CreatedAt          time.Time
+	// EfficacyWaveID is the efficacy wave of a session created by F035 (no exam.* event, no mastery evidence, never
+	// released, never shown to students as such).
+	EfficacyWaveID *uuid.UUID
 }
 
 // ExamPaperRow is one row of assessment.exam_papers (immutable).

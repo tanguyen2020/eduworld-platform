@@ -1,0 +1,155 @@
+//go:build integration
+
+package integration
+
+import (
+	"context"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
+)
+
+// F035 demo principals (quickstart §1): a student of 3B, a safety moderator and a System Admin token without MFA.
+const (
+	hsChi      = "hs.chi.3b"
+	smAntoan   = "sm.antoan"
+	saNoMFA    = "sa.nomfa"
+	agreements = "/admin/learning/research-agreements"
+	studies    = "/admin/learning/efficacy-studies"
+)
+
+// effKit is the efficacy kit: the LMS kit of tenant A (3A with hs.an, hs.binh), class 3B of the same school with hs.chi,
+// a class of tenant B, two published platform efficacy forms of three questions each on the LO of the kit.
+type effKit struct {
+	asgKit
+	classB, classOther uuid.UUID
+	qA, qB             []string // efficacy question versions of forms A and B
+	formA, formB       string   // published blueprint versions
+}
+
+// tenantHdr is X-Tenant-Id of a System Admin write into a tenant.
+func tenantHdr(t uuid.UUID) hdr { return hdr{"X-Tenant-Id": t.String()} }
+
+// efficacyQuestion creates and publishes a platform efficacy instrument of the LO of qc; it returns its version id.
+func (c *curEnv) efficacyQuestion(ctx context.Context, t *testing.T, qc qbCurriculum) string {
+	t.Helper()
+	r := must(t, c.createQ(t, cmNoidung, qc.body(qbFixture(t, "single_choice"), map[string]any{"owner_scope": "platform",
+		"efficacy_instrument": true, "exam_only": true})), http.StatusCreated, "efficacy question")
+	return c.publishQuestion(ctx, t, r.str("content_id"), 1)
+}
+
+// efficacyBlueprint is a platform efficacy blueprint over fixed questions (one point each).
+func efficacyBlueprint(qc qbCurriculum, qs []string) map[string]any {
+	ids := make([]any, len(qs))
+	for i, q := range qs {
+		ids[i] = q
+	}
+	b := blueprintBody(qc, float64(len(qs)), []any{map[string]any{"fixed_question_version_ids": ids, "count": len(qs), "points_each": 1}},
+		map[string]any{"strategy": "fixed"})
+	b["efficacy_instrument"] = true
+	return b
+}
+
+// publishForm creates and publishes an efficacy blueprint as cm.noidung; it returns the version id.
+func (c *curEnv) publishForm(ctx context.Context, t *testing.T, qc qbCurriculum, qs []string) string {
+	t.Helper()
+	id := must(t, c.do(t, http.MethodPost, blueprintsPath, cmNoidung, idem(), efficacyBlueprint(qc, qs)), http.StatusCreated, "form").str("content_id")
+	return c.publishDoc(ctx, t, "assessment_blueprints", "assessment_blueprint_versions", "assessment_blueprint_id", id, 1)
+}
+
+func (c *curEnv) effSetup(ctx context.Context, t *testing.T) effKit {
+	t.Helper()
+	k := effKit{asgKit: c.asgSetup(ctx, t), classB: uuid.New(), classOther: uuid.New()}
+	c.user(hsChi, authztest.Student(c.tenantA).PrincipalData, false)
+	c.user(smAntoan, authztest.Platform("safety_moderator").PrincipalData, true)
+	d := authztest.Platform("system_admin").PrincipalData
+	c.user(saNoMFA, d, true)
+	c.tokens[saNoMFA] = c.idp.Token(saNoMFA, httpxtest.PortalClient, false, time.Now())
+	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.classes (class_id, tenant_id, school_id, grade_level, name, source_version)
+		VALUES ($1, $2, $3, 3, '3B', 1), ($4, $5, $6, 3, '3C', 1)`, k.classB, c.tenantA, k.school, k.classOther, c.tenantB, uuid.New()); err != nil {
+		t.Fatal(err)
+	}
+	c.enrollIn(ctx, t, hsChi, k.school, k.classB, 3)
+	for range 3 {
+		k.qA = append(k.qA, c.efficacyQuestion(ctx, t, k.s.qc))
+		k.qB = append(k.qB, c.efficacyQuestion(ctx, t, k.s.qc))
+	}
+	k.formA, k.formB = c.publishForm(ctx, t, k.s.qc, k.qA), c.publishForm(ctx, t, k.s.qc, k.qB)
+	return k
+}
+
+// agreement records an agreement of tenant covering what.
+func (c *curEnv) agreement(t *testing.T, tenant uuid.UUID, ref string, covers ...string) resp {
+	t.Helper()
+	return must(t, c.do(t, http.MethodPost, agreements, saAdmin, merge(idem(), tenantHdr(tenant)), map[string]any{"agreement_ref": ref,
+		"covers": covers, "agreed_on": "2026-09-01"}), http.StatusCreated, "agreement")
+}
+
+func (k effKit) studyBody(code string) map[string]any {
+	return map[string]any{"code": code, "title": "Toán 3 – học kỳ I", "subject_id": k.s.qc.subject, "grade_level": 3,
+		"objective_ids": []string{k.s.qc.lo}, "form_a_blueprint_version_id": k.formA, "form_b_blueprint_version_id": k.formB,
+		"min_intervention_weeks": 8}
+}
+
+// activeStudy creates a study with the pair 3A–3B (random arms) after the agreement of tenant A and activates it.
+func (c *curEnv) activeStudy(t *testing.T, k effKit, code string) string {
+	t.Helper()
+	c.agreement(t, c.tenantA, "HD-"+code, "efficacy_study", "experiment")
+	study := must(t, c.do(t, http.MethodPost, studies, saAdmin, idem(), k.studyBody(code)), http.StatusCreated, "study").str("study_id")
+	for _, cl := range []uuid.UUID{k.class, k.classB} {
+		must(t, c.do(t, http.MethodPost, studies+"/"+study+"/classes", saAdmin, merge(idem(), tenantHdr(c.tenantA)),
+			map[string]any{"class_id": cl, "pair_no": 1}), http.StatusCreated, "class")
+	}
+	must(t, c.do(t, http.MethodPost, studies+"/"+study+":activate", saAdmin, idem(), nil), http.StatusOK, "activate")
+	return study
+}
+
+// wave schedules a wave of kind starting in a minute for an hour (offset after the test clock).
+func (c *curEnv) wave(t *testing.T, study, kind string, offset time.Duration, extra map[string]any) resp {
+	t.Helper()
+	start := c.clk.Now().Add(offset + time.Minute)
+	b := map[string]any{"kind": kind, "window_start": start.Format(time.RFC3339), "window_end": start.Add(time.Hour).Format(time.RFC3339)}
+	for key, v := range extra {
+		b[key] = v
+	}
+	return c.do(t, http.MethodPost, studies+"/"+study+"/waves", saAdmin, idem(), b)
+}
+
+// runWaves runs the job efficacy-wave-monitor once with the test clock.
+func (c *curEnv) runWaves(ctx context.Context, t *testing.T) {
+	t.Helper()
+	if _, err := c.eff.RunWaveMonitor(ctx, 0); err != nil {
+		t.Fatalf("efficacy-wave-monitor: %v", err)
+	}
+}
+
+// sessionOfClass returns the exam session of a class in a wave response.
+func sessionOfClass(t *testing.T, w resp, class uuid.UUID) string {
+	t.Helper()
+	for _, cl := range w.items("classes") {
+		if cl["class_id"] == class.String() {
+			return cl["exam_session_id"].(string)
+		}
+	}
+	t.Fatalf("no session for class %s: %s", class, w.raw)
+	return ""
+}
+
+// realRegistry is the resource registry of module.go (questions, documents, curriculum).
+func (c *curEnv) realRegistry(t *testing.T) *port.Registry {
+	t.Helper()
+	reg, err := port.NewRegistry(append([]port.ResourceHandler{command.CurriculumResource{Store: write.CurriculumRepo{}, Trash: write.CurriculumTrash{}},
+		command.QuestionResource{Store: write.QuestionRepo{}}}, command.DocResources(write.DocRepo{}, write.QuestionRepo{})...)...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return reg
+}

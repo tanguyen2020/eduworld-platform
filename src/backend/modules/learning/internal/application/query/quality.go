@@ -131,6 +131,10 @@ func (q Reports) GetExamSessionReport(ctx context.Context, id uuid.UUID) (out dt
 		if err := lmsScope(ctx, p, authz.PermLmsReportRead, s.SchoolID, s.SubjectID); err != nil {
 			return err
 		}
+		if s.EfficacyWaveID != nil {
+			// F035-AC-16: no report of an efficacy session for tenant staff.
+			return problem.New(problem.PermissionDenied, "an efficacy exam session is managed by the efficacy study")
+		}
 		out = dto.ExamSessionReportView{ExamSessionID: s.ID, IsOfficial: s.IsOfficial, Status: s.Status, ScoreDistribution: []int{},
 			Variants: json.RawMessage("[]"), Items: json.RawMessage("[]"), ProblemItems: json.RawMessage("[]")}
 		r, err := q.Exams.ExamQuality(ctx, id)

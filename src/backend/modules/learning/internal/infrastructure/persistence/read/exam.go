@@ -64,7 +64,7 @@ const examSessionColumnsA = `a.exam_session_id, a.tenant_id, a.school_id, a.subj
 	a.audience, a.variant_strategy, a.variant_count, a.feedback_timing, a.result_release, a.show_correct_answers, a.show_explanations,
 	a.late_start_policy, a.accommodations, a.max_attempts, a.score_policy, a.question_count, a.total_points::float8, a.status, a.created_by,
 	a.created_by_role, a.opened_at, a.closed_at, a.results_released_at, a.results_released_by, a.cancelled_at, a.cancel_reason, a.version,
-	a.created_at`
+	a.created_at, a.efficacy_wave_id`
 
 func nullString(s string) *string {
 	if s == "" {
@@ -77,7 +77,7 @@ const ExamSessionColumns = `exam_session_id, tenant_id, school_id, subject_id, g
 	is_official, blueprint_id, blueprint_version_id, window_start, window_end, duration_sec, target, sections, audience, variant_strategy,
 	variant_count, feedback_timing, result_release, show_correct_answers, show_explanations, late_start_policy, accommodations,
 	max_attempts, score_policy, question_count, total_points::float8, status, created_by, created_by_role, opened_at, closed_at,
-	results_released_at, results_released_by, cancelled_at, cancel_reason, version, created_at`
+	results_released_at, results_released_by, cancelled_at, cancel_reason, version, created_at, efficacy_wave_id`
 
 type rowScanner interface{ Scan(dest ...any) error }
 
@@ -85,17 +85,17 @@ type rowScanner interface{ Scan(dest ...any) error }
 func ScanExamSession(r rowScanner) (write.ExamSessionRow, error) {
 	var s write.ExamSessionRow
 	var grade sql.NullInt64
-	var course, asg, by uuid.NullUUID
+	var course, asg, by, wave uuid.NullUUID
 	err := r.Scan(&s.ID, &s.TenantID, &s.SchoolID, &s.SubjectID, &grade, &course, &asg, &s.Title, &s.Type, &s.IsOfficial, &s.BlueprintID,
 		&s.BlueprintVersionID, &s.WindowStart, &s.WindowEnd, &s.DurationSec, &s.Target, &s.Sections, &s.Audience, &s.Strategy, &s.VariantCount,
 		&s.FeedbackTiming, &s.ResultRelease, &s.ShowCorrect, &s.ShowExplanations, &s.LateStartPolicy, &s.Accommodations, &s.MaxAttempts,
 		&s.ScorePolicy, &s.QuestionCount, &s.TotalPoints, &s.Status, &s.CreatedBy, &s.CreatedByRole, &s.OpenedAt, &s.ClosedAt, &s.ReleasedAt,
-		&by, &s.CancelledAt, &s.CancelReason, &s.Version, &s.CreatedAt)
+		&by, &s.CancelledAt, &s.CancelReason, &s.Version, &s.CreatedAt, &wave)
 	if grade.Valid {
 		g := int(grade.Int64)
 		s.GradeLevel = &g
 	}
-	s.CourseID, s.AssignmentID, s.ReleasedBy = nullUUID(course), nullUUID(asg), nullUUID(by)
+	s.CourseID, s.AssignmentID, s.ReleasedBy, s.EfficacyWaveID = nullUUID(course), nullUUID(asg), nullUUID(by), nullUUID(wave)
 	return s, err
 }
 

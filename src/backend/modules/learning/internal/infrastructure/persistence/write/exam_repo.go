@@ -30,14 +30,14 @@ func (ExamRepo) InsertSession(ctx context.Context, s write.ExamSessionRow) error
 		course_id, assignment_id, title, exam_type, is_official, blueprint_id, blueprint_version_id, window_start, window_end, duration_sec,
 		target, sections, audience, variant_strategy, variant_count, feedback_timing, result_release, show_correct_answers,
 		show_explanations, late_start_policy, accommodations, max_attempts, score_policy, question_count, total_points, status, created_by,
-		created_by_role, opened_at, version, created_at, updated_at, updated_by)
+		created_by_role, opened_at, version, created_at, updated_at, updated_by, efficacy_wave_id)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,
-		$34,1,$35,$35,$32)`,
+		$34,1,$35,$35,$32,$36)`,
 		s.ID, s.TenantID, s.SchoolID, s.SubjectID, s.GradeLevel, s.CourseID, s.AssignmentID, s.Title, s.Type, s.IsOfficial, s.BlueprintID,
 		s.BlueprintVersionID, s.WindowStart, s.WindowEnd, s.DurationSec, jsonOrEmpty(s.Target, "[]"), jsonOrEmpty(s.Sections, "[]"), s.Audience,
 		s.Strategy, s.VariantCount, s.FeedbackTiming, s.ResultRelease, s.ShowCorrect, s.ShowExplanations, s.LateStartPolicy,
 		jsonOrEmpty(s.Accommodations, "[]"), s.MaxAttempts, s.ScorePolicy, s.QuestionCount, s.TotalPoints, s.Status, s.CreatedBy, s.CreatedByRole,
-		s.OpenedAt, s.CreatedAt)
+		s.OpenedAt, s.CreatedAt, s.EfficacyWaveID)
 	if err != nil {
 		return fmt.Errorf("insert exam session: %w", err)
 	}
@@ -474,4 +474,23 @@ func (ExamRepo) LatestResponseMS(ctx context.Context, attemptID uuid.UUID) (map[
 		out[pos] = ms
 	}
 	return out, rows.Err()
+}
+
+var _ write.ExamExclusions = ExamRepo{}
+
+// ExcludeParticipations implements write.ExamExclusions.
+func (ExamRepo) ExcludeParticipations(ctx context.Context, sessionID uuid.UUID, students []uuid.UUID, by uuid.UUID) (int, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return 0, err
+	}
+	// tenancyguard:ok UPDATE in the session tenant (RLS update policy + infra.current_tenant_id()), deleted_at IS NULL
+	res, err := tx.ExecContext(ctx, `UPDATE assessment.exam_participations SET deleted_at = now(), deleted_by = $3, delete_reason = 'efficacy_withdrawn',
+		updated_at = now() WHERE exam_session_id = $1 AND student_id = ANY($2::uuid[]) AND status = 'not_started'
+		AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL`, sessionID, uuidArray(students), by)
+	if err != nil {
+		return 0, fmt.Errorf("exclude participations: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
 }

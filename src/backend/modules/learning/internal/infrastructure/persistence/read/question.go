@@ -254,7 +254,8 @@ func (Delivery) Deliverable(ctx context.Context, versionIDs []uuid.UUID) ([]ques
 		v.max_score, v.content_language, (SELECT LEAST(CASE WHEN jsonb_typeof(x.hints) = 'array' THEN jsonb_array_length(x.hints) ELSE 0 END, 5)
 			FROM content.question_versions x WHERE x.question_version_id = v.question_version_id) FROM content.question_delivery_v v
 		JOIN content.questions q ON q.question_id = v.question_id
-		WHERE `+cond+fmt.Sprintf(` AND v.question_version_id = ANY($%d::uuid[])`, len(args)), args...)
+		WHERE (`+cond+` OR (q.tenant_id IS NULL AND q.deleted_at IS NULL AND v.efficacy_instrument))`+
+		fmt.Sprintf(` AND v.question_version_id = ANY($%d::uuid[])`, len(args)), args...)
 	if err != nil {
 		return nil, fmt.Errorf("question delivery: %w", err)
 	}

@@ -11,7 +11,8 @@ KPI "mastery gain" trong [PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md) 
 1. Pilot (ADR-0073) chỉ được coi là đạt khi có báo cáo nghiên cứu hiệu quả theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md): bài kiểm tra độc lập trước/sau (tự chấm, không dùng câu hỏi luyện tập), có lớp so sánh, thời gian tối thiểu 8 tuần [Confirmed].
 2. Ngưỡng đạt [Confirmed — owner 2026-11-20, theo đề xuất của LEARNING_EFFICACY_PLAN §4]: Hedges' g ≥ 0,2 (mô hình hồi quy đa mức, điểm trước làm biến kiểm soát) với khoảng tin cậy 95% nằm trên 0, tỉ lệ rời nghiên cứu < 20%, tối thiểu 8 tuần; tỉ lệ học sinh tiến bộ báo cáo kèm, không là ngưỡng. Không đạt thì pilot chỉ qua cổng khi có kế hoạch khắc phục được Product Owner chấp nhận.
 3. Báo cáo gồm đối chiếu mastery với kết quả kiểm tra độc lập (độ tin cậy dự báo); kết quả dùng để hiệu chỉnh tham số mastery (ADR-0017).
-4. Dữ liệu nghiên cứu dùng định danh giả và tối thiểu hóa theo [DATA_PRIVACY](../10-security/DATA_PRIVACY.md); nhà trường tham gia bằng thỏa thuận pilot và có quyền rút lớp/học sinh khỏi phần phân tích. Phần pháp lý (consent, ADR-0077) hoãn theo ADR-0082.
+4. Dữ liệu nghiên cứu dùng định danh giả và tối thiểu hóa theo [DATA_PRIVACY](../10-security/DATA_PRIVACY.md); nhà trường tham gia bằng thỏa thuận pilot và có quyền rút lớp/học sinh khỏi phần phân tích. . Hạ tầng thử nghiệm A/B cho mô hình mastery và luật gợi ý (LEARNING_EFFICACY_PLAN §6) [Confirmed — owner 2026-11-20, bổ sung theo F035]: bảng `learning.experiments` (kind `mastery_model`, `recommendation_rule`; `selection_rule` chưa xếp feature), phân nhánh bằng hash ổn định `(experiment_id, unit_id) mod 100` với đơn vị mặc định là lớp và lưu ở lần tiếp xúc đầu; arm không phải control chạy shadow (tính song song, không hiển thị) trước khi bật live; ở live chỉ trải nghiệm phía học sinh đổi theo arm, báo cáo nhà trường, mức tham khảo, XP và `learning_objective.mastered` giữ mô hình `active`; không thử nghiệm trên attempt `exam`; tenant phải có thỏa thuận phủ `experiment`; learning event mang `context.experiment_arms`, không response nào cho học sinh chứa arm; rào chắn dừng sớm khi arm giảm chỉ số chính từ `experiment_guardrail_drop_pp` trở lên.
+6. Bài kiểm tra trước/sau là ExamSession của F042 có `efficacy_wave_id`: không phát `exam.*` ra outbox, không evidence mastery, không công bố kết quả; learning event mang `context.efficacy_wave_id` và mọi consumer/recompute bỏ qua (phòng thủ hai lớp).
 
 ## Hệ quả
 
@@ -24,3 +25,4 @@ KPI "mastery gain" trong [PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md) 
 | 2026-11-15 | Tạo ADR (Proposed) từ EDU_FIT_REVIEW | Technical Architect |
 | 2026-11-17 | Accepted | Technical Architect |
 | 2026-11-20 | Chốt ngưỡng đạt mục 2 theo đề xuất của LEARNING_EFFICACY_PLAN §4 | Owner |
+| 2026-11-21 | Bổ sung mục 5 (hạ tầng A/B, câu hỏi mở 1 của F035 đã chốt 2026-11-20) và mục 6 (đợt kiểm tra không phát `exam.*`) | F035 T008 |

@@ -25,6 +25,7 @@ type ReportParams struct {
 	SchoolIDs      []uuid.UUID `json:"school_ids,omitempty"`
 	TenantIDs      []uuid.UUID `json:"tenant_ids,omitempty"`
 	GradeLevel     *int        `json:"grade_level,omitempty"`
+	StudyID        *uuid.UUID  `json:"study_id,omitempty"`
 	SubjectIDs     []uuid.UUID `json:"scope_subject_ids,omitempty"`
 	ScopeSchoolIDs []uuid.UUID `json:"scope_school_ids,omitempty"`
 }

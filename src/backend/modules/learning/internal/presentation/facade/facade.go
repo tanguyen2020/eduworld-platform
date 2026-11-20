@@ -33,6 +33,8 @@ type Facade struct {
 	AttemptResults AttemptResults
 	// Merge is the learning step of the account merge saga (mergeUserData, OQ F016-2, F045-3).
 	Merge MergeUserDataHandler
+	// Efficacy is the efficacy step of anonymizeUserData (F035-AC-19); nil = nothing to do.
+	Efficacy EfficacyAnonymizer
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }

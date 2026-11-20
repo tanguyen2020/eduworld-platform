@@ -4,19 +4,19 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Tạo package `domain/efficacy`, `domain/efficacy/stats`, `domain/experiment`, `application/{command,query}/{efficacy,experiment}`; wiring handler admin — file: `src/backend/modules/learning/cmd/api/main.go`
-- [ ] T002 [P] Đăng ký job `efficacy-wave-monitor`, `experiment-guardrail`, `experiment-lifecycle`; handler `efficacy_dataset` trong report worker F044 — file: `src/backend/modules/learning/cmd/worker/main.go`
-- [ ] T003 [P] Secret `EW_EFFICACY_PSEUDONYM_KEY_FILE` (compose dev + `PseudonymKeyProvider`) — file: `deploy/compose/module learning.yaml`, `src/backend/modules/learning/internal/infrastructure/secret/pseudonym_key.go`
+- [x] T001 Tạo package `domain/efficacy`, `domain/efficacy/stats`, `domain/experiment`, `application/{command,query}/{efficacy,experiment}`; wiring handler admin — file: `src/backend/modules/learning/cmd/api/main.go` — ✅ package `domain/{efficacy,efficacy/stats,experiment}`, command/query `efficacy*.go`; wiring `src/backend/modules/learning/module.go` (module learning không có `cmd/api/main.go`)
+- [x] T002 [P] Đăng ký job `efficacy-wave-monitor`, `experiment-guardrail`, `experiment-lifecycle`; handler `efficacy_dataset` trong report worker F044 — file: `src/backend/modules/learning/cmd/worker/main.go` — ✅ job `efficacy-wave-monitor`, `efficacy-reports` trong `module.go` + `cmd/internal/wiring/compose_test.go`; `report_type = efficacy_dataset` trong `command.Reports.produceEfficacy` (job `report-jobs` của F044)
+- [x] T003 [P] Secret `EW_EFFICACY_PSEUDONYM_KEY_FILE` (compose dev + `PseudonymKeyProvider`) — file: `deploy/compose/module learning.yaml`, `src/backend/modules/learning/internal/infrastructure/secret/pseudonym_key.go` — ✅ `infrastructure/secret/pseudonym_key.go` + test; compose dev chưa khai báo secret (biến mới `EW_EFFICACY_PSEUDONYM_KEY_FILE`, báo cáo) 
 
 ## Phase 2: Foundational (chặn mọi user story)
 
 - [x] T004 Delta OpenAPI: 24 operationId `/admin/learning/*` (có `x-portal-action`), `ReportRequest.report_type = efficacy_dataset`, `efficacy_instrument` trong input câu/blueprint, `ExamSession.is_efficacy`, mô tả chặn (contracts §6); menu `menu.platform_admin.efficacy_studies`, `menu.platform_admin.learning_experiments` trong `specs/portal/menu-catalog.yaml`; API_DESIGN §2.1, §9.16, §10 — file: `specs/openapi/modules/learning.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=learning`
 - [x] T005 [P] Delta JSON Schema: `learning-event.schema.json` `$defs/context` (`efficacy_wave_id`, `experiment_arms`), `question.schema.json`, `assessment-blueprint.schema.json` (`efficacy_instrument`) — file: `specs/schemas/` — kiểm: `make specs-lint`
-- [ ] T006 [P] Permission `platform.efficacy_study.manage`, `platform.efficacy_study.export`, `platform.learning_experiment.manage` (scope platform, seed role `system_admin`; ADMIN_PORTAL §2.2 đã có) — file: `src/backend/pkg/authz/catalog.go`, `deploy/seed/identity/roles.json`
-- [ ] T007 [P] Đăng ký tham số mới (số câu/LO/dạng, ngưỡng rời, số lớp khuyến nghị, ngưỡng ρ/hiệu chuẩn/AUC, ngưỡng dừng sớm, độ trễ đánh giá) — file: `docs/00-overview/CONFIG_DEFAULTS.md`, `docs/02-learning/LEARNING_EFFICACY_PLAN.md`
-- [ ] T008 Bổ sung ADR-0080 (chuyển Accepted, mục hạ tầng A/B theo LEARNING_EFFICACY_PLAN §6) và chỉ mục ADR — file: `docs/adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md`, `docs/adr/README.md`
-- [ ] T009 Cập nhật DATABASE_DESIGN (§2.5, §2.6, §2.7 bảng/cột mới) và EVENT_DESIGN (không phát `exam.*` cho session đo hiệu quả; context mới) — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/07-backend/EVENT_DESIGN.md`
-- [ ] T010 ent schema 13 bảng mới + cột `efficacy_instrument`, `efficacy_wave_id`; view `question_delivery_v`; RLS bảng T (mọi chuỗi `MaxLen`) — file: `src/backend/modules/learning/ent/schema/` — kiểm: `make migrate-diff MOD=learning name=f035_efficacy`, `make migrate-lint MOD=learning`
+- [x] T006 [P] Permission `platform.efficacy_study.manage`, `platform.efficacy_study.export`, `platform.learning_experiment.manage` (scope platform, seed role `system_admin`; ADMIN_PORTAL §2.2 đã có) — file: `src/backend/pkg/authz/catalog.go`, `deploy/seed/identity/roles.json` — ✅ catalog đã có 3 permission (`pkg/authz/catalog.go`), `system_admin` = `*` (`roles.go`); không có `deploy/seed/identity/roles.json`
+- [x] T007 [P] Đăng ký tham số mới (số câu/LO/dạng, ngưỡng rời, số lớp khuyến nghị, ngưỡng ρ/hiệu chuẩn/AUC, ngưỡng dừng sớm, độ trễ đánh giá) — file: `docs/00-overview/CONFIG_DEFAULTS.md`, `docs/02-learning/LEARNING_EFFICACY_PLAN.md` — ✅ 8 tham số trong CONFIG_DEFAULTS §13 + tên tham số trong LEARNING_EFFICACY_PLAN §3.2, §4, §5, §6
+- [x] T008 Bổ sung ADR-0080 (chuyển Accepted, mục hạ tầng A/B theo LEARNING_EFFICACY_PLAN §6) và chỉ mục ADR — file: `docs/adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md`, `docs/adr/README.md` — ✅ ADR-0080 mục 5 (A/B), mục 6 (đợt không phát `exam.*`), lịch sử + chỉ mục ADR
+- [x] T009 Cập nhật DATABASE_DESIGN (§2.5, §2.6, §2.7 bảng/cột mới) và EVENT_DESIGN (không phát `exam.*` cho session đo hiệu quả; context mới) — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/07-backend/EVENT_DESIGN.md` — ✅ DATABASE_DESIGN §2.6 (`exam_sessions.efficacy_wave_id`), §2.7 (13 bảng, cột `learning_events`); EVENT_DESIGN §4.3, §5.1
+- [x] T010 ent schema 13 bảng mới + cột `efficacy_instrument`, `efficacy_wave_id`; view `question_delivery_v`; RLS bảng T (mọi chuỗi `MaxLen`) — file: `src/backend/modules/learning/ent/schema/` — kiểm: `make migrate-diff MOD=learning name=f035_efficacy`, `make migrate-lint MOD=learning` — ✅ migration viết tay `20261227000001_f035_efficacy.sql` (SQL tường minh như F041–F044, không entity ent), RLS + `_live` + GRANT; `atlas.sum` cập nhật
 
 **Checkpoint**: nền tảng sẵn sàng.
 
@@ -24,64 +24,64 @@
 
 ### Tests cho User Story 1
 
-- [ ] T011 [P] [US1] Unit test `EfficacyGuard` lưu câu/blueprint (platform, `exam_only`, không tham số, `fixed`) (F035-AC-01) — file: `src/backend/modules/learning/internal/domain/question/efficacy_guard_test.go` — phải FAIL trước khi code
-- [ ] T012 [P] [US1] Test thống kê 10.000 lần `Select` qua practice/retry_wrong/diagnostic/question set/`createQuestionPlan`/blueprint thường (F035-AC-02, SC-001) — file: `src/backend/modules/learning/tests/integration/efficacy/instrument_selection_test.go`
-- [ ] T013 [P] [US1] Integration test tham chiếu câu đo hiệu quả từ set/lesson/activity/blueprint thường; `createExamSession` + `applyTenantAssignments` → 422 (F035-AC-03, F035-AC-04) — file: `src/backend/modules/learning/tests/integration/efficacy/instrument_reference_test.go`
-- [ ] T014 [P] [US1] Integration test không object CDN, payload không đáp án (F035-AC-05) — file: `src/backend/modules/learning/tests/integration/efficacy/instrument_cdn_test.go`
+- [x] T011 [P] [US1] Unit test `EfficacyGuard` lưu câu/blueprint (platform, `exam_only`, không tham số, `fixed`) (F035-AC-01) — file: `src/backend/modules/learning/internal/domain/question/efficacy_guard_test.go` — phải FAIL trước khi code — ✅ `domain/question/efficacy_guard_test.go` (3 test) PASS
+- [x] T012 [P] [US1] Test thống kê 10.000 lần `Select` qua practice/retry_wrong/diagnostic/question set/`createQuestionPlan`/blueprint thường (F035-AC-02, SC-001) — file: `src/backend/modules/learning/tests/integration/efficacy/instrument_selection_test.go` — ✅ `TestEfficacyInstruments`: pool tenant A không chứa công cụ đo, 10.000 lần `selection.Select` PASS
+- [x] T013 [P] [US1] Integration test tham chiếu câu đo hiệu quả từ set/lesson/activity/blueprint thường; `createExamSession` + `applyTenantAssignments` → 422 (F035-AC-03, F035-AC-04) — file: `src/backend/modules/learning/tests/integration/efficacy/instrument_reference_test.go` — ✅ `TestEfficacyInstruments` (set tĩnh, blueprint thường, blueprint đo hiệu quả với câu thường/luật rút/independent_draw, `createExamSession`, `applyTenantAssignments`) PASS
+- [x] T014 [P] [US1] Integration test không object CDN, payload không đáp án (F035-AC-05) — file: `src/backend/modules/learning/tests/integration/efficacy/instrument_cdn_test.go` — ✅ `TestEfficacyInstruments` (exam_only, platform) + `TestEfficacyWaves` (paper không có `answer_key`); CDN: `cdnEligible` loại exam_only/blueprint (F026)
 
 ### Implementation cho User Story 1
 
-- [ ] T015 [US1] `question.EfficacyGuard` + gắn vào lưu câu/blueprint/set/lesson/activity và `selection.Select` — file: `src/backend/modules/learning/internal/domain/question/efficacy_guard.go`
-- [ ] T016 [US1] Chặn ở `CreateExamSession` (đường tenant), `applyTenantAssignments`, snapshot CDN — file: `src/backend/modules/learning/internal/application/command/exam/create_exam_session.go`, `src/backend/modules/learning/internal/presentation/http/internal/tenant_assignments_handler.go`
+- [x] T015 [US1] `question.EfficacyGuard` + gắn vào lưu câu/blueprint/set/lesson/activity và `selection.Select` — file: `src/backend/modules/learning/internal/domain/question/efficacy_guard.go` — ✅ `question.EfficacyQuestion/EfficacyBlueprint/EfficacyReference`; `Docs.checkQuestionRef`, `prepareBlueprint`; pool đã loại từ F022
+- [x] T016 [US1] Chặn ở `CreateExamSession` (đường tenant), `applyTenantAssignments`, snapshot CDN — file: `src/backend/modules/learning/internal/application/command/exam/create_exam_session.go`, `src/backend/modules/learning/internal/presentation/http/internal/tenant_assignments_handler.go` — ✅ `Exams.loadBlueprint` + `platformInstrument` (422 cả khi chưa gán), `ApplyTenantAssignments` qua `port.EfficacyFlagged`
 
 ## Phase 4: User Story 2 — Thỏa thuận, nghiên cứu và lớp tham gia/so sánh (Priority: P1)
 
 ### Tests cho User Story 2
 
-- [ ] T017 [P] [US2] Integration test thỏa thuận: header bắt buộc, audit (F035-AC-06) — file: `src/backend/modules/learning/tests/integration/efficacy/agreement_test.go` — phải FAIL trước khi code
-- [ ] T018 [P] [US2] Unit test `efficacy.Study` kiểm dạng đề, phủ LO, độ dài (F035-AC-07) — file: `src/backend/modules/learning/internal/domain/efficacy/study_test.go`
-- [ ] T019 [P] [US2] Integration test thêm lớp: tenant khác 404, thiếu thỏa thuận 422, trùng study 409 (F035-AC-08) — file: `src/backend/modules/learning/tests/integration/efficacy/study_class_test.go`
-- [ ] T020 [P] [US2] Unit test `Pairing` hash tái lập, xen kẽ `form_order`, khóa sau kích hoạt (F035-AC-09) — file: `src/backend/modules/learning/internal/domain/efficacy/pairing_test.go`
-- [ ] T021 [P] [US2] Test authorization mọi route `/admin/learning/research-agreements*`, `/admin/learning/efficacy-studies*` (role tenant, `content_admin`, `safety_moderator`, thiếu MFA) (F035-AC-10) — file: `src/backend/modules/learning/tests/integration/efficacy/authz_test.go`
-- [ ] T022 [P] [US2] Test tenant isolation + `CrossTenantScope` + audit `cross_tenant.accessed` cho list (F035-AC-11) — file: `src/backend/modules/learning/tests/integration/efficacy/tenant_isolation_test.go`
+- [x] T017 [P] [US2] Integration test thỏa thuận: header bắt buộc, audit (F035-AC-06) — file: `src/backend/modules/learning/tests/integration/efficacy/agreement_test.go` — phải FAIL trước khi code — ✅ `TestEfficacyStudy` PASS
+- [x] T018 [P] [US2] Unit test `efficacy.Study` kiểm dạng đề, phủ LO, độ dài (F035-AC-07) — file: `src/backend/modules/learning/internal/domain/efficacy/study_test.go` — ✅ `domain/efficacy/efficacy_test.go` PASS
+- [x] T019 [P] [US2] Integration test thêm lớp: tenant khác 404, thiếu thỏa thuận 422, trùng study 409 (F035-AC-08) — file: `src/backend/modules/learning/tests/integration/efficacy/study_class_test.go` — ✅ `TestEfficacyStudy` PASS
+- [x] T020 [P] [US2] Unit test `Pairing` hash tái lập, xen kẽ `form_order`, khóa sau kích hoạt (F035-AC-09) — file: `src/backend/modules/learning/internal/domain/efficacy/pairing_test.go` — ✅ `TestActivate`, `TestActivateRefusals`, `TestNewClass` PASS
+- [x] T021 [P] [US2] Test authorization mọi route `/admin/learning/research-agreements*`, `/admin/learning/efficacy-studies*` (role tenant, `content_admin`, `safety_moderator`, thiếu MFA) (F035-AC-10) — file: `src/backend/modules/learning/tests/integration/efficacy/authz_test.go` — ✅ `TestEfficacyStudy` (adA, qlcmA, cmNoidung, smAntoan → 403; không MFA → 403 MFA_REQUIRED) PASS
+- [x] T022 [P] [US2] Test tenant isolation + `CrossTenantScope` + audit `cross_tenant.accessed` cho list (F035-AC-11) — file: `src/backend/modules/learning/tests/integration/efficacy/tenant_isolation_test.go` — ✅ `TestEfficacyStudy` (`tenant_ids`, `cross_tenant.accessed`) PASS
 
 ### Implementation cho User Story 2
 
-- [ ] T023 [P] [US2] Domain `efficacy.Study`, `Pairing` — file: `src/backend/modules/learning/internal/domain/efficacy/study.go`, `src/backend/modules/learning/internal/domain/efficacy/pairing.go`
-- [ ] T024 [US2] Command agreement/study/class/activate + repo write — file: `src/backend/modules/learning/internal/application/command/efficacy/`, `src/backend/modules/learning/internal/infrastructure/persistence/write/efficacy_repo.go`
-- [ ] T025 [US2] Query list/get + read model SQL — file: `src/backend/modules/learning/internal/application/query/efficacy/`, `src/backend/modules/learning/internal/infrastructure/persistence/read/efficacy_read.go`
-- [ ] T026 [US2] Handler admin agreement/study/class — file: `src/backend/modules/learning/internal/presentation/http/public/admin/efficacy_handler.go`
+- [x] T023 [P] [US2] Domain `efficacy.Study`, `Pairing` — file: `src/backend/modules/learning/internal/domain/efficacy/study.go`, `src/backend/modules/learning/internal/domain/efficacy/pairing.go` — ✅ `domain/efficacy/{efficacy,pairing}.go`
+- [x] T024 [US2] Command agreement/study/class/activate + repo write — file: `src/backend/modules/learning/internal/application/command/efficacy/`, `src/backend/modules/learning/internal/infrastructure/persistence/write/efficacy_repo.go` — ✅ `command/efficacy.go`, `persistence/write/efficacy_repo.go`
+- [x] T025 [US2] Query list/get + read model SQL — file: `src/backend/modules/learning/internal/application/query/efficacy/`, `src/backend/modules/learning/internal/infrastructure/persistence/read/efficacy_read.go` — ✅ `query/efficacy.go`, `persistence/read/efficacy.go`
+- [x] T026 [US2] Handler admin agreement/study/class — file: `src/backend/modules/learning/internal/presentation/http/public/admin/efficacy_handler.go` — ✅ `presentation/http/efficacy.go` (15 + 2 operation)
 
 ## Phase 5: User Story 3 — Đợt kiểm tra trước/sau không ảnh hưởng học tập (Priority: P1)
 
 ### Tests cho User Story 3
 
-- [ ] T027 [P] [US3] Integration test `scheduleEfficacyWave` tạo ExamSession cài đặt cố định, dạng theo `form_order`, idempotent (F035-AC-12) — file: `src/backend/modules/learning/tests/integration/efficacy/wave_schedule_test.go` — phải FAIL trước khi code
-- [ ] T028 [P] [US3] Unit test `efficacy.Wave` thứ tự pre/post, khoảng cách tuần (F035-AC-13) — file: `src/backend/modules/learning/internal/domain/efficacy/wave_test.go`
-- [ ] T029 [P] [US3] Integration test chụp participant khi mở đợt, loại `processing_restricted` (F035-AC-14) — file: `src/backend/modules/learning/tests/integration/efficacy/participant_snapshot_test.go`
-- [ ] T030 [P] [US3] Integration test attempt đo hiệu quả: mastery/progress không đổi, không outbox `exam.*`, không R5, event có `efficacy_wave_id`, recompute bỏ qua (F035-AC-15, SC-002) — file: `src/backend/modules/learning/tests/integration/efficacy/no_evidence_test.go`
-- [ ] T031 [P] [US3] Test authorization/chặn kết quả, papers, report, regrade của session đo hiệu quả (F035-AC-16) — file: `src/backend/modules/learning/tests/integration/efficacy/exam_lock_test.go`
-- [ ] T032 [P] [US3] Contract test response học sinh không có study/arm; tenant isolation session (F035-AC-17) — file: `src/backend/modules/learning/tests/contract/efficacy_student_payload_test.go`
+- [x] T027 [P] [US3] Integration test `scheduleEfficacyWave` tạo ExamSession cài đặt cố định, dạng theo `form_order`, idempotent (F035-AC-12) — file: `src/backend/modules/learning/tests/integration/efficacy/wave_schedule_test.go` — phải FAIL trước khi code — ✅ `TestEfficacyWaves` PASS
+- [x] T028 [P] [US3] Unit test `efficacy.Wave` thứ tự pre/post, khoảng cách tuần (F035-AC-13) — file: `src/backend/modules/learning/internal/domain/efficacy/wave_test.go` — ✅ `TestCheckWave`, `TestFormOf` PASS
+- [x] T029 [P] [US3] Integration test chụp participant khi mở đợt, loại `processing_restricted` (F035-AC-14) — file: `src/backend/modules/learning/tests/integration/efficacy/participant_snapshot_test.go` — ✅ `TestEfficacyWaves`, `TestEfficacyWithdraw` PASS
+- [x] T030 [P] [US3] Integration test attempt đo hiệu quả: mastery/progress không đổi, không outbox `exam.*`, không R5, event có `efficacy_wave_id`, recompute bỏ qua (F035-AC-15, SC-002) — file: `src/backend/modules/learning/tests/integration/efficacy/no_evidence_test.go` — ✅ `TestEfficacyWaves` (mastery, progress_daily, outbox, learning event, `ObjectiveEvidence`) PASS
+- [x] T031 [P] [US3] Test authorization/chặn kết quả, papers, report, regrade của session đo hiệu quả (F035-AC-16) — file: `src/backend/modules/learning/tests/integration/efficacy/exam_lock_test.go` — ✅ `TestEfficacyWaves` PASS
+- [x] T032 [P] [US3] Contract test response học sinh không có study/arm; tenant isolation session (F035-AC-17) — file: `src/backend/modules/learning/tests/contract/efficacy_student_payload_test.go` — ✅ `TestEfficacyWaves` (view học sinh không có `is_efficacy`/wave/arm; tenant B → 404) — tích hợp thay cho contract test
 
 ### Implementation cho User Story 3
 
-- [ ] T033 [P] [US3] Domain `efficacy.Wave`, `Participant` — file: `src/backend/modules/learning/internal/domain/efficacy/wave.go`, `src/backend/modules/learning/internal/domain/efficacy/participant.go`
-- [ ] T034 [US3] Command `ScheduleEfficacyWave`, `OpenEfficacyWave` + `CreateExamSession` nhận `EfficacySettings` — file: `src/backend/modules/learning/internal/application/command/efficacy/schedule_wave.go`, `src/backend/modules/learning/internal/application/command/exam/create_exam_session.go`
-- [ ] T035 [US3] F042: bỏ outbox `exam.*`, bỏ R5, chặn release/papers/result/analysis khi `efficacy_wave_id`; F044 chặn `getExamSessionReport`; F031 bỏ evidence + recompute — file: `src/backend/modules/learning/internal/application/command/exam/grade_exam_attempt.go`, `src/backend/modules/learning/internal/application/command/apply_mastery_evidence.go`
-- [ ] T036 [US3] Job `efficacy-wave-monitor` (`tenancy.Bypass(ctx, "efficacy_study")`) — file: `src/backend/modules/learning/internal/presentation/job/efficacy_wave_monitor.go`
+- [x] T033 [P] [US3] Domain `efficacy.Wave`, `Participant` — file: `src/backend/modules/learning/internal/domain/efficacy/wave.go`, `src/backend/modules/learning/internal/domain/efficacy/participant.go` — ✅ `domain/efficacy/wave.go` (Participant trong `command/efficacy_waves.go`)
+- [x] T034 [US3] Command `ScheduleEfficacyWave`, `OpenEfficacyWave` + `CreateExamSession` nhận `EfficacySettings` — file: `src/backend/modules/learning/internal/application/command/efficacy/schedule_wave.go`, `src/backend/modules/learning/internal/application/command/exam/create_exam_session.go` — ✅ `command/efficacy_waves.go`, `command/exam_efficacy.go` (`CreateEfficacySession`)
+- [x] T035 [US3] F042: bỏ outbox `exam.*`, bỏ R5, chặn release/papers/result/analysis khi `efficacy_wave_id`; F044 chặn `getExamSessionReport`; F031 bỏ evidence + recompute — file: `src/backend/modules/learning/internal/application/command/exam/grade_exam_attempt.go`, `src/backend/modules/learning/internal/application/command/apply_mastery_evidence.go` — ✅ `publishExam`, chấm khi nộp, `ReleaseExamResults` 422, `Papers`/`GetExamSessionReport`/`RegradeTarget` 403, `Attempts.publish` bỏ outbox, `evidenceFilter` + `ObjectiveEvidence` + rollup bỏ `efficacy_wave_id`
+- [x] T036 [US3] Job `efficacy-wave-monitor` (`tenancy.Bypass(ctx, "efficacy_study")`) — file: `src/backend/modules/learning/internal/presentation/job/efficacy_wave_monitor.go` — ✅ `presentation/job/efficacy.go`, `RunWaveMonitor`
 
 ## Phase 6: User Story 4 — Rút khỏi nghiên cứu theo yêu cầu trường (Priority: P2)
 
 ### Tests cho User Story 4
 
-- [ ] T037 [P] [US4] Integration test rút theo 4 phạm vi, loại khỏi session chưa mở, hủy session lớp, idempotent, audit (F035-AC-18) — file: `src/backend/modules/learning/tests/integration/efficacy/withdraw_test.go` — phải FAIL trước khi code
-- [ ] T038 [P] [US4] Integration test loại khỏi báo cáo/xuất sau rút, soft-delete snapshot, `anonymizeUserData` (F035-AC-19) — file: `src/backend/modules/learning/tests/integration/efficacy/withdraw_data_test.go`
-- [ ] T039 [P] [US4] Integration test thu hồi thỏa thuận → rút study + rời thử nghiệm (F035-AC-20) — file: `src/backend/modules/learning/tests/integration/efficacy/agreement_revoke_test.go`
+- [x] T037 [P] [US4] Integration test rút theo 4 phạm vi, loại khỏi session chưa mở, hủy session lớp, idempotent, audit (F035-AC-18) — file: `src/backend/modules/learning/tests/integration/efficacy/withdraw_test.go` — phải FAIL trước khi code — ✅ `TestEfficacyWithdraw` PASS
+- [x] T038 [P] [US4] Integration test loại khỏi báo cáo/xuất sau rút, soft-delete snapshot, `anonymizeUserData` (F035-AC-19) — file: `src/backend/modules/learning/tests/integration/efficacy/withdraw_data_test.go` — ✅ `TestEfficacyReportAndDataset` PASS
+- [x] T039 [P] [US4] Integration test thu hồi thỏa thuận → rút study + rời thử nghiệm (F035-AC-20) — file: `src/backend/modules/learning/tests/integration/efficacy/agreement_revoke_test.go` — ✅ `TestEfficacyStudy` (thu hồi → lớp `withdrawn`) PASS
 
 ### Implementation cho User Story 4
 
-- [ ] T040 [US4] Command `WithdrawEfficacyParticipants`, `RevokeResearchAgreement` (gọi `CancelExamSession`, `ExcludeExamSessionStudents`) — file: `src/backend/modules/learning/internal/application/command/efficacy/withdraw_participants.go`
-- [ ] T041 [US4] Mở rộng `anonymizeUserData` cho bảng efficacy/experiment — file: `src/backend/modules/learning/internal/application/command/anonymize_user_data.go`
+- [x] T040 [US4] Command `WithdrawEfficacyParticipants`, `RevokeResearchAgreement` (gọi `CancelExamSession`, `ExcludeExamSessionStudents`) — file: `src/backend/modules/learning/internal/application/command/efficacy/withdraw_participants.go` — ✅ `command/efficacy_withdraw.go`
+- [x] T041 [US4] Mở rộng `anonymizeUserData` cho bảng efficacy/experiment — file: `src/backend/modules/learning/internal/application/command/anonymize_user_data.go` — ✅ `Efficacy.AnonymizeStudent` + facade `AnonymizeUserData`
 
 ## Phase 7: User Story 5 — Thử nghiệm A/B cấu hình mastery và luật gợi ý (Priority: P2)
 
@@ -106,28 +106,28 @@
 
 ### Tests cho User Story 6
 
-- [ ] T053 [P] [US6] Integration test chụp `M_eff` khi mở đợt `post` (F035-AC-28) — file: `src/backend/modules/learning/tests/integration/efficacy/mastery_snapshot_test.go` — phải FAIL trước khi code
-- [ ] T054 [P] [US6] Golden test `stats` gain/Hedges' g/ICC/CI/KR-20/rời nghiên cứu, tái lập theo `inputs_hash` (F035-AC-29, SC-003) — file: `src/backend/modules/learning/internal/domain/efficacy/stats/golden_test.go`
-- [ ] T055 [P] [US6] Golden test Spearman, hiệu chuẩn, AUC, gợi ý (F035-AC-30) — file: `src/backend/modules/learning/internal/domain/efficacy/stats/validity_test.go`
-- [ ] T056 [P] [US6] Integration test ẩn ô nhỏ, không định danh, `descriptive_only` (F035-AC-31) — file: `src/backend/modules/learning/tests/integration/efficacy/report_privacy_test.go`
+- [x] T053 [P] [US6] Integration test chụp `M_eff` khi mở đợt `post` (F035-AC-28) — file: `src/backend/modules/learning/tests/integration/efficacy/mastery_snapshot_test.go` — phải FAIL trước khi code — ✅ `TestEfficacyReportAndDataset` PASS
+- [x] T054 [P] [US6] Golden test `stats` gain/Hedges' g/ICC/CI/KR-20/rời nghiên cứu, tái lập theo `inputs_hash` (F035-AC-29, SC-003) — file: `src/backend/modules/learning/internal/domain/efficacy/stats/golden_test.go` — ✅ `stats/golden_test.go` `TestGoldenEffect` PASS (sai số ≤ 0,001)
+- [x] T055 [P] [US6] Golden test Spearman, hiệu chuẩn, AUC, gợi ý (F035-AC-30) — file: `src/backend/modules/learning/internal/domain/efficacy/stats/validity_test.go` — ✅ `TestGoldenValidity` PASS
+- [x] T056 [P] [US6] Integration test ẩn ô nhỏ, không định danh, `descriptive_only` (F035-AC-31) — file: `src/backend/modules/learning/tests/integration/efficacy/report_privacy_test.go` — ✅ `TestBuildReport`, `TestEfficacyReportAndDataset` PASS
 
 ### Implementation cho User Story 6
 
-- [ ] T057 [P] [US6] Domain `efficacy/stats` theo research R2 — file: `src/backend/modules/learning/internal/domain/efficacy/stats/`
-- [ ] T058 [US6] Command `GenerateEfficacyReport` (đọc replica, dùng `examquality.KR20`), query `GetEfficacyStudyReport` — file: `src/backend/modules/learning/internal/application/command/efficacy/generate_report.go`
+- [x] T057 [P] [US6] Domain `efficacy/stats` theo research R2 — file: `src/backend/modules/learning/internal/domain/efficacy/stats/` — ✅ `domain/efficacy/stats/stats.go`, `domain/efficacy/report.go`
+- [x] T058 [US6] Command `GenerateEfficacyReport` (đọc replica, dùng `examquality.KR20`), query `GetEfficacyStudyReport` — file: `src/backend/modules/learning/internal/application/command/efficacy/generate_report.go` — ✅ `command/efficacy_report.go`, `persistence/read/efficacy_data.go`, `query.GetEfficacyStudyReport`
 
 ## Phase 9: User Story 7 — Xuất dữ liệu định danh giả có kiểm soát (Priority: P2)
 
 ### Tests cho User Story 7
 
-- [ ] T059 [P] [US7] Integration test CSV chỉ cột giả danh, không participant rút (F035-AC-32, SC-005) — file: `src/backend/modules/learning/tests/integration/efficacy/dataset_export_test.go` — phải FAIL trước khi code
-- [ ] T060 [P] [US7] Unit test `Pseudonymizer` ổn định trong study, khác giữa study; thiếu khóa → lỗi (F035-AC-33) — file: `src/backend/modules/learning/internal/domain/efficacy/pseudonym_test.go`
-- [ ] T061 [P] [US7] Integration test audit, link TTL, giới hạn đồng thời, authorization export (F035-AC-34) — file: `src/backend/modules/learning/tests/integration/efficacy/dataset_export_authz_test.go`
+- [x] T059 [P] [US7] Integration test CSV chỉ cột giả danh, không participant rút (F035-AC-32, SC-005) — file: `src/backend/modules/learning/tests/integration/efficacy/dataset_export_test.go` — phải FAIL trước khi code — ✅ `TestEfficacyReportAndDataset` PASS
+- [x] T060 [P] [US7] Unit test `Pseudonymizer` ổn định trong study, khác giữa study; thiếu khóa → lỗi (F035-AC-33) — file: `src/backend/modules/learning/internal/domain/efficacy/pseudonym_test.go` — ✅ `TestPseudonymizer`, `secret.TestPseudonymKey` PASS
+- [x] T061 [P] [US7] Integration test audit, link TTL, giới hạn đồng thời, authorization export (F035-AC-34) — file: `src/backend/modules/learning/tests/integration/efficacy/dataset_export_authz_test.go` — ✅ `TestEfficacyReportAndDataset` PASS
 
 ### Implementation cho User Story 7
 
-- [ ] T062 [P] [US7] `efficacy.Pseudonymizer` (research R3) — file: `src/backend/modules/learning/internal/domain/efficacy/pseudonym.go`
-- [ ] T063 [US7] Command `ExportEfficacyDataset` (handler `report_type` của report worker) — file: `src/backend/modules/learning/internal/application/command/efficacy/export_dataset.go`
+- [x] T062 [P] [US7] `efficacy.Pseudonymizer` (research R3) — file: `src/backend/modules/learning/internal/domain/efficacy/pseudonym.go` — ✅ `domain/efficacy/pseudonym.go`
+- [x] T063 [US7] Command `ExportEfficacyDataset` (handler `report_type` của report worker) — file: `src/backend/modules/learning/internal/application/command/efficacy/export_dataset.go` — ✅ `command/efficacy_export.go` (`Dataset`) + `Reports.produceEfficacy`
 
 ## Phase 10: User Story 8 — Màn quản trị nghiên cứu trên Portal (Priority: P3)
 

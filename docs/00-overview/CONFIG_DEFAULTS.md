@@ -232,6 +232,14 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
 | `pilot_efficacy_threshold` | Hedges' g ≥ 0,2 (mô hình hồi quy đa mức, điểm trước làm biến kiểm soát) với khoảng tin cậy 95% nằm trên 0, tỉ lệ rời nghiên cứu < 20%, tối thiểu 8 tuần; tỉ lệ học sinh tiến bộ báo cáo kèm, không là ngưỡng | — | pilot | [Confirmed — owner 2026-11-20] (ADR-0080) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §7 |
+| `efficacy_min_questions_per_lo_per_form` | 3 | câu mỗi LO mỗi dạng đề | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §3.2 |
+| `efficacy_attrition_warn` | ≥ 20% (cảnh báo tỉ lệ rời nghiên cứu, báo cáo phân tích độ nhạy) | — | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §4 |
+| `efficacy_recommended_classes_per_arm` | 6 (dưới mức này báo cáo gắn `descriptive_only`) | lớp mỗi nhóm | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §4 |
+| `efficacy_validity_rho_min` | 0,4 (LO dưới ngưỡng được đánh dấu) | Spearman ρ | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §5 |
+| `efficacy_validity_calibration_min` | 70% học sinh thỏa | — | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §5 |
+| `efficacy_validity_auc_min` | 0,7 | AUC | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §5 |
+| `experiment_guardrail_drop_pp` | ≥ 5 (arm thấp hơn control từ mức này thì dừng sớm) | điểm phần trăm | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §6 |
+| `experiment_eval_delay_days` | 7 (độ trễ đánh giá chỉ số chính: câu mới cùng LO) | ngày | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §6 |
 | `attempt_idle_timeout` | 5 | phút | platform | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
 | `attempt_resume_window` | 24 giờ (practice/retry/quest/challenge) | — | platform | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
 | `deadline_grace` | 2 | giây | code | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |

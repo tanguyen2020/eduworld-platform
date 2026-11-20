@@ -21,6 +21,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/blueprint"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/lesson"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/questionset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -679,8 +680,22 @@ func (h Docs) prepareBlueprint(ctx context.Context, v *dto.DocVersion, body map[
 	}
 	var efficacy bool
 	_ = json.Unmarshal(body["efficacy_instrument"], &efficacy)
-	if efficacy && (!v.Owner.Platform() || d.Variants == nil || d.Variants.Strategy != blueprint.StrategyFixed) {
-		return contentmodel.Violations{{Field: "/efficacy_instrument", Reason: "only platform blueprints with variants.strategy fixed"}}, nil
+	if efficacy {
+		// F035-AC-01: platform, fixed variants, every rule a fixed list (of efficacy questions, checked below).
+		strategy := ""
+		if d.Variants != nil {
+			strategy = d.Variants.Strategy
+		}
+		var rules []question.EfficacyRule
+		for si, s := range d.Sections {
+			for ri, r := range s.Rules {
+				rules = append(rules, question.EfficacyRule{Pointer: "/definition/sections/" + strconv.Itoa(si) + "/rules/" + strconv.Itoa(ri),
+					Fixed: r.FixedQuestionVersionIDs})
+			}
+		}
+		if vs := question.EfficacyBlueprint(v.Owner.Platform(), strategy, rules); len(vs) > 0 {
+			return vs, nil
+		}
 	}
 	body["definition"] = merged
 	objectives, topics := d.References()
@@ -697,7 +712,7 @@ func (h Docs) prepareBlueprint(ctx context.Context, v *dto.DocVersion, body map[
 		}
 	}
 	for i, q := range d.FixedQuestions() {
-		if _, err := h.checkQuestion(ctx, v.Owner, q, "/definition/fixed_question_version_ids/"+strconv.Itoa(i)); err != nil {
+		if _, err := h.checkQuestionRef(ctx, v.Owner, q, "/definition/fixed_question_version_ids/"+strconv.Itoa(i), efficacy); err != nil {
 			return nil, err
 		}
 	}
@@ -720,10 +735,19 @@ func (h Docs) checkItems(ctx context.Context, v *dto.DocVersion) error {
 // to the tenant); a platform item may not reference tenant questions (422); a platform question not assigned to the
 // tenant is 403 RESOURCE_NOT_ASSIGNED; anything else 422 at the pointer.
 func (h Docs) checkQuestion(ctx context.Context, o contentmodel.Owner, id uuid.UUID, ptr string) (dto.QuestionVersion, error) {
+	return h.checkQuestionRef(ctx, o, id, ptr, false)
+}
+
+// checkQuestionRef is checkQuestion for a referrer that is (efficacy) or is not an efficacy blueprint: an efficacy
+// instrument is only referenced by an efficacy blueprint, which references nothing else (F035-AC-01, AC-03).
+func (h Docs) checkQuestionRef(ctx context.Context, o contentmodel.Owner, id uuid.UUID, ptr string, efficacy bool) (dto.QuestionVersion, error) {
 	qv, err := h.Questions.QuestionVersionByID(ctx, id)
 	if err == nil {
 		if o.Platform() && !qv.Owner.Platform() {
 			return qv, problem.Invalid(ptr, problem.SubInvalid, "platform content cannot reference a tenant question")
+		}
+		if why := question.EfficacyReference(efficacy, qv.EfficacyInstrument); why != "" {
+			return qv, problem.Invalid(ptr, problem.SubInvalid, why)
 		}
 		return qv, nil
 	}

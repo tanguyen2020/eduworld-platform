@@ -136,3 +136,10 @@ func (r *Registry) Types() []contentmodel.ResourceType {
 	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
 	return out
 }
+
+// EfficacyFlagged is implemented by the handlers whose items may be efficacy instruments (questions, blueprints;
+// F035-AC-04): such an item is never assigned to a tenant.
+type EfficacyFlagged interface {
+	// EfficacyInstrument reports whether a version of the item is an efficacy instrument (ctx: platform scope).
+	EfficacyInstrument(ctx context.Context, id uuid.UUID) (bool, error)
+}

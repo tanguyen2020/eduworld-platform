@@ -19,6 +19,18 @@
 - Câu hỏi mở 1 (ADR cho hạ tầng A/B) → **Chốt:** bổ sung ADR-0080 (T008) trước khi code US5; không cần ADR riêng.
 - Checklist "PRD chưa có FR riêng" → đã có FR-ANL-017…FR-ANL-023 trong PRD; spec đã dùng.
 
+### Session 2026-11-21 (quyết định khi triển khai — [Proposed], chờ owner xác nhận)
+
+- Đợt kiểm tra tạo mọi ExamSession trong **một** transaction dưới `tenancy.Bypass(efficacy_study)` (có audit); trước mỗi lớp, session tenant của transaction được đặt bằng `set_config('app.tenant_id')` để store của exam engine (F042) ghi đúng tenant — không tách thành nhiều transaction (giữ idempotency và tính nguyên tử của đợt).
+- Công cụ đo hiệu quả không bao giờ được gán cho tenant (F035-AC-04), nên phiên tenant không đọc được chúng qua chính sách RLS của F022: migration thêm policy `efficacy_instrument_read` (chỉ version platform `efficacy_instrument` đã publish/archived) và đường giao đề/chấm của **ExamSession đo hiệu quả** đọc dưới bypass `efficacy_study`; pool, CMS và mọi đường chọn câu vẫn lọc `efficacy_instrument` và gán tenant ở tầng ứng dụng.
+- Attempt của ExamSession đo hiệu quả được **chấm ngay trong transaction nộp bài** (không có `exam.submitted` để worker `learning.exam_grade` nhận); không phát `exam.*`/`activity.*` ra outbox.
+- `releaseExamResults` của session đo hiệu quả trả `422 INVALID_STATE_TRANSITION` (theo F035-AC-16; quickstart ghi `409` — AC thắng).
+- `listResearchAgreements` bắt buộc `tenant_ids` (422 nếu thiếu); `listEfficacyStudies`, `getEfficacyStudy`, `listEfficacyStudyClasses`, `listEfficacyWaves` không có `tenant_ids` thì đọc mọi tenant của study dưới bypass `efficacy_study` (audit `cross_tenant.accessed`).
+- Participant chụp lúc đợt `pre` mở = học sinh `active` của lớp trong `ref.enrollments` × `ref.students.status = 'active'` (tài khoản ẩn danh/hạn chế xử lý không còn `active`); học sinh đã rút theo tên trước khi mở không thành participant.
+- Báo cáo hiệu quả chạy bằng job riêng `efficacy-reports` trên `learning.efficacy_reports` (theo data-model); chỉ bộ dữ liệu giả danh đi qua `learning.report_jobs` của F044 (`report_type = efficacy_dataset`, không kiểm `dashboard_export_max_rows` vì một dòng mỗi participant; `tenant_ids` không bắt buộc).
+- Cột LO trong bộ dữ liệu xuất mang `objective_id` (dữ liệu chương trình, không định danh cá nhân): `pre_correct_lo_<id>`, `pre_total_lo_<id>`, `post_…`, `m_eff_lo_<id>`, `level_lo_<id>`.
+- `updateEfficacyStudy`, `updateLearningExperiment` nhận `application/merge-patch+json` như mọi PATCH khác của API (sửa contract).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Câu và đề đo hiệu quả độc lập với luyện tập (Priority: P1)

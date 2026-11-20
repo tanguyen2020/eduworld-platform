@@ -85,6 +85,10 @@ type Attempts struct {
 	SimMetrics SimulationMetrics
 	// ExamRelease is the result release of an exam session and whether its results are visible (F042); nil = immediate.
 	ExamRelease func(ctx context.Context, sessionID uuid.UUID) (string, bool, error)
+	// EfficacyWave is the efficacy wave of an exam session (F035); nil = no efficacy session.
+	EfficacyWave func(ctx context.Context, sessionID uuid.UUID) (*uuid.UUID, error)
+	// Arms lists the experiment arms ("<code>:<arm>") of a student for the learning events (F035-AC-25); nil = none.
+	Arms func(ctx context.Context, tenant, student uuid.UUID) ([]string, error)
 }
 
 // LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).
@@ -399,14 +403,36 @@ func (h Attempts) learningEvent(ctx context.Context, a attempt.Attempt, typ, key
 	if a.ActivityID != nil {
 		content = a.ActivityID
 	}
+	wave, err := h.efficacyWave(ctx, a)
+	if err != nil {
+		return err
+	}
+	var arms []string
+	if h.Arms != nil && wave == nil && a.Mode != attempt.ModeExam {
+		if arms, err = h.Arms(ctx, a.TenantID, a.StudentID); err != nil {
+			return err
+		}
+	}
 	return h.Learning.Write(ctx, write.LearningEvent{ID: ids.New(), OccurredAt: at, Type: typ, StudentID: a.StudentID, TenantID: a.TenantID,
 		SchoolID: a.SchoolID, ActivityID: a.ActivityID, ContentID: content, ContentVersionID: &cv, ObjectiveIDs: objectives,
-		Context: modeContext(a.Mode), ActorType: actor, Payload: payload, IdempotencyKey: key})
+		Context: modeContext(a.Mode), ActorType: actor, Payload: payload, IdempotencyKey: key, EfficacyWaveID: wave, ExperimentArms: arms})
+}
+
+// efficacyWave is the efficacy wave of an exam attempt (F035-AC-15), nil for any other attempt.
+func (h Attempts) efficacyWave(ctx context.Context, a attempt.Attempt) (*uuid.UUID, error) {
+	if a.ContextType != examContextType || h.EfficacyWave == nil {
+		return nil, nil
+	}
+	return h.EfficacyWave(ctx, a.ContextID)
 }
 
 func (h Attempts) publish(ctx context.Context, a attempt.Attempt, typ string, payload any) error {
 	if h.Events == nil {
 		return nil
+	}
+	// F035-AC-15: an attempt of an efficacy exam session publishes nothing (no mastery, progress, XP, dashboard).
+	if wave, err := h.efficacyWave(ctx, a); err != nil || wave != nil {
+		return err
 	}
 	t := a.TenantID
 	return h.Events.Publish(ctx, write.Event{Type: typ, SubjectType: "attempt", SubjectID: a.ID.String(), TenantID: &t, Payload: payload})

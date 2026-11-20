@@ -3,6 +3,8 @@ package facade
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	learningapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -33,10 +35,33 @@ func (f Facade) RestoreStudentData(ctx context.Context, req learningapi.RestoreS
 // AnonymizeUserData implements learningapi.StrictServerInterface (x-allowed-callers: identity, F016 US5):
 // no attempt, answer or mastery row exists yet (F030+), the ref.* projections follow user.anonymized.
 func (f Facade) AnonymizeUserData(ctx context.Context, req learningapi.AnonymizeUserDataRequestObject) (learningapi.AnonymizeUserDataResponseObject, error) {
-	_, done := observability.UseCase(ctx, "learning.facade.AnonymizeUserData")
-	done(nil)
-	return learningapi.AnonymizeUserData200JSONResponse{UserId: req.UserId,
-		Status: learningapi.CommonInternalCommonV1UserLifecycleResultStatus("nothing_to_do")}, nil
+	ctx, done := observability.UseCase(ctx, "learning.facade.AnonymizeUserData")
+	if f.Efficacy == nil {
+		done(nil)
+		return learningapi.AnonymizeUserData200JSONResponse{UserId: req.UserId,
+			Status: learningapi.CommonInternalCommonV1UserLifecycleResultStatus("nothing_to_do")}, nil
+	}
+	// F035-AC-19: the student leaves the efficacy studies of the tenant; the derived study data is soft-deleted.
+	n, err := f.Efficacy.AnonymizeStudent(ctx, req.UserId)
+	done(err)
+	if err != nil {
+		return nil, err
+	}
+	if n == 0 {
+		return learningapi.AnonymizeUserData200JSONResponse{UserId: req.UserId,
+			Status: learningapi.CommonInternalCommonV1UserLifecycleResultStatus("nothing_to_do")}, nil
+	}
+	affected := []struct {
+		Count        int    `json:"count"`
+		ResourceType string `json:"resource_type"`
+	}{{Count: n, ResourceType: "efficacy_participant"}}
+	return learningapi.AnonymizeUserData200JSONResponse{UserId: req.UserId, Affected: &affected,
+		Status: learningapi.CommonInternalCommonV1UserLifecycleResultStatus("done")}, nil
+}
+
+// EfficacyAnonymizer is the efficacy step of anonymizeUserData (command.Efficacy, F035-AC-19).
+type EfficacyAnonymizer interface {
+	AnonymizeStudent(ctx context.Context, studentID uuid.UUID) (int, error)
 }
 
 // MergeUserDataHandler is the learning step of the account merge saga (command.MergeUserData).

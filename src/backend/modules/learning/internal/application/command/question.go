@@ -248,8 +248,9 @@ func (h Questions) prepare(ctx context.Context, v *dto.QuestionVersion, authRend
 			}
 		}
 	}
-	if v.EfficacyInstrument && (v.Owner.TenantID != nil || !v.ExamOnly) {
-		all = append(all, contentmodel.Violation{Field: "/efficacy_instrument", Reason: "only platform questions with exam_only"})
+	if v.EfficacyInstrument {
+		// F035-AC-01: platform, exam_only and never parameterized.
+		all = append(all, question.EfficacyQuestion(v.Owner.TenantID == nil, v.ExamOnly, authRender)...)
 	}
 	if len(all) > 0 {
 		return problemOfViolations(all)
@@ -717,4 +718,21 @@ func nonEmpty(s *string) *string {
 	}
 	v := strings.TrimSpace(*s)
 	return &v
+}
+
+// EfficacyInstrument implements port.EfficacyFlagged: a version of the question is an efficacy instrument (F035-AC-04).
+func (r QuestionResource) EfficacyInstrument(ctx context.Context, id uuid.UUID) (bool, error) {
+	vs, err := r.Store.QuestionVersions(ctx, id)
+	if err != nil {
+		if pe, ok := problemOf(err); ok && pe.Code == problem.NotFound {
+			return false, nil
+		}
+		return false, err
+	}
+	for _, v := range vs {
+		if v.EfficacyInstrument {
+			return true, nil
+		}
+	}
+	return false, nil
 }

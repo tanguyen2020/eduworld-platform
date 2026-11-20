@@ -47,7 +47,7 @@ flowchart LR
 - **Độc lập với nội dung luyện tập:** ngân hàng câu riêng (`efficacy_instrument`), do EdTech soạn và người thứ hai duyệt, **không** xuất hiện trong practice/quest/minigame/đề thường (cơ chế `exam_only`, [QUESTION_BANK §8](QUESTION_BANK.md#8-chống-lộ-đáp-án)); không dùng câu tham số hóa từ template luyện tập.
 - **Tự chấm trong game:** tổ chức như một ExamSession ([EXAM_ENGINE](EXAM_ENGINE.md)) với `feedback_timing = never`, `result_release = manual` (kết quả không công bố cho học sinh trong thời gian nghiên cứu), không thưởng XP theo điểm, không gợi ý; evidence **không** đưa vào mastery (để không làm nhiễu Q2).
 - **Hai dạng song song A và B** cân bằng độ khó ([EXAM_ENGINE §4.1](EXAM_ENGINE.md#41-cân-bằng-độ-khó-giữa-các-biến-thể-confirmed)); một nửa số lớp làm A trước B sau, nửa còn lại ngược lại (counterbalancing).
-- **Phủ LO:** mỗi LO trong phạm vi có ≥ 3 câu mỗi dạng để tính điểm theo LO; tổng 20–30 câu, ≤ 40 phút (lớp 1–3: ≤ 20 câu, có audio đọc đề).
+- **Phủ LO:** mỗi LO trong phạm vi có ≥ 3 câu mỗi dạng (`efficacy_min_questions_per_lo_per_form`) để tính điểm theo LO; tổng 20–30 câu, ≤ 40 phút (lớp 1–3: ≤ 20 câu, có audio đọc đề).
 - **Kiểm định trước khi dùng:** thử trên một lớp không tham gia, yêu cầu reliability (KR-20) ≥ 0,7 ([EXAM_ENGINE §8.1](EXAM_ENGINE.md#81-độ-tin-cậy-của-đề-chính-thức-confirmed)).
 - Khi trường cho phép, thu thêm điểm bài kiểm tra định kỳ của nhà trường (ẩn danh hóa) làm tiêu chí ngoài thứ hai.
 
@@ -60,9 +60,9 @@ flowchart LR
 | Effect size | Hedges' g của chênh lệch gain giữa hai nhóm; mô hình chính: hồi quy đa mức (học sinh trong lớp) với điểm trước làm biến kiểm soát | g ≥ 0,2 là tín hiệu tích cực tối thiểu cho exit criterion pilot (ADR-0080) |
 | Gain theo LO | Gain trên các LO được gợi ý ôn (Q3) so với LO không được gợi ý | — |
 | Mức sử dụng | Thời gian học thực (`active_learning_time_sec`), số buổi, `rapid_guess_rate` | Báo cáo để giải thích kết quả (liều dùng) |
-| Tỉ lệ rời nghiên cứu | Học sinh thiếu bài trước hoặc sau | < 20%; báo cáo phân tích độ nhạy nếu cao hơn |
+| Tỉ lệ rời nghiên cứu | Học sinh thiếu bài trước hoặc sau | < 20% (`efficacy_attrition_warn`); báo cáo phân tích độ nhạy nếu cao hơn |
 
-**Cỡ mẫu (ước tính sơ bộ, cần chuyên gia thống kê xác nhận):** phát hiện g = 0,3 với power 0,8, α = 0,05 và hệ số tương quan nội lớp khoảng 0,1–0,2 cần khoảng 6–8 lớp mỗi nhóm (~200 học sinh/nhóm). Số liệu nhỏ hơn chỉ cho kết quả mô tả, không kết luận.
+**Cỡ mẫu (ước tính sơ bộ, cần chuyên gia thống kê xác nhận):** phát hiện g = 0,3 với power 0,8, α = 0,05 và hệ số tương quan nội lớp khoảng 0,1–0,2 cần khoảng 6–8 lớp mỗi nhóm (~200 học sinh/nhóm). Số liệu nhỏ hơn chỉ cho kết quả mô tả, không kết luận: báo cáo trong hệ thống gắn nhãn `descriptive_only` khi số lớp mỗi nhóm dưới `efficacy_recommended_classes_per_arm` (6).
 
 ## 5. Đối chiếu mastery với bài kiểm tra độc lập (predictive validity)
 
@@ -70,9 +70,9 @@ Kiểm tra mastery có phản ánh năng lực thật không, dùng dữ liệu 
 
 | Phân tích | Cách làm | Ngưỡng tham chiếu |
 |---|---|---|
-| Tương quan theo LO | Spearman giữa `M_eff` ở cuối tuần 8 và tỉ lệ đúng của học sinh trên các câu của LO đó ở bài sau | ρ ≥ 0,4 |
-| Hiệu chuẩn mức | Học sinh `mastered` ở LO X đạt ≥ 80% câu của LO X ở bài sau; học sinh `beginning` đạt < 50% | ≥ 70% học sinh thỏa |
-| Phân biệt | AUC của `M_eff` khi dự đoán "đạt ≥ 2/3 câu của LO" | ≥ 0,7 |
+| Tương quan theo LO | Spearman giữa `M_eff` ở cuối tuần 8 và tỉ lệ đúng của học sinh trên các câu của LO đó ở bài sau | ρ ≥ 0,4 (`efficacy_validity_rho_min`) |
+| Hiệu chuẩn mức | Học sinh `mastered` ở LO X đạt ≥ 80% câu của LO X ở bài sau; học sinh `beginning` đạt < 50% | ≥ 70% học sinh thỏa (`efficacy_validity_calibration_min`) |
+| Phân biệt | AUC của `M_eff` khi dự đoán "đạt ≥ 2/3 câu của LO" | ≥ 0,7 (`efficacy_validity_auc_min`) |
 | Phân tích lỗi | LO có tương quan thấp → xem lại câu hỏi (item analysis), trọng số ngữ cảnh, `rapid_guess` | Đưa vào backlog nội dung/mô hình |
 
 Kết quả là đầu vào cho việc chỉnh tham số mastery và cho quyết định chuyển sang BKT/IRT ([LEARNING_ANALYTICS §3.4](LEARNING_ANALYTICS.md#34-triển-khai-và-lộ-trình-mô-hình)).
@@ -86,10 +86,10 @@ Kết quả là đầu vào cho việc chỉnh tham số mastery và cho quyết
 | Mastery model | Mỗi arm trỏ một `mastery_model_configs` version; arm không phải control **chạy shadow** cho mọi học sinh (tính song song, không hiển thị) trước khi hiển thị cho arm thật |
 | Selection rule | Arm đổi tham số SelectionRule (ví dụ tỉ lệ câu anh em, interleaving, phân bố độ khó) |
 | Ghi nhận | Learning event mang `experiment_arms` (danh sách `experiment_code:arm`) để phân tích; không lộ cho client |
-| Chỉ số đánh giá | Chính: kết quả bài kiểm tra độc lập (nếu có) hoặc độ chính xác lần đầu trên câu **mới** cùng LO sau 7 ngày; phụ: log-loss dự đoán, thời gian học |
-| Rào chắn | Không thử nghiệm trên đề `is_official` hoặc thứ ảnh hưởng điểm trong sổ điểm; dừng sớm khi arm làm giảm độ chính xác ≥ 5 điểm phần trăm so với control; không thử nghiệm làm tăng thời gian chơi hay áp lực (R19) |
+| Chỉ số đánh giá | Chính: kết quả bài kiểm tra độc lập (nếu có) hoặc độ chính xác lần đầu trên câu **mới** cùng LO sau 7 ngày (`experiment_eval_delay_days`); phụ: log-loss dự đoán, thời gian học |
+| Rào chắn | Không thử nghiệm trên đề `is_official` hoặc thứ ảnh hưởng điểm trong sổ điểm; dừng sớm khi arm làm giảm độ chính xác ≥ 5 điểm phần trăm so với control (`experiment_guardrail_drop_pp`); không thử nghiệm làm tăng thời gian chơi hay áp lực (R19) |
 
-Hạ tầng này chạm schema module learning và learning event; triển khai cần ADR riêng hoặc bổ sung vào ADR-0080 khi được chấp nhận.
+Hạ tầng này chạm schema module learning và learning event; quyết định đã bổ sung vào [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) (mục hạ tầng A/B, F035). F035 hiện thực `mastery_model` và `recommendation_rule`; `selection_rule` chưa xếp feature.
 
 ## 7. Exit criterion của pilot
 

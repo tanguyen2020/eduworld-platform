@@ -81,6 +81,8 @@ type Exams struct {
 	Clock    func() time.Time
 	Config   ExamConfig
 	Balancer paper.VariantBalancer
+	// Instruments reads the platform efficacy forms (F035-AC-04: a form is refused with 422, never "not assigned").
+	Instruments write.EfficacyContent
 	// PValues reads the measured p_value of the pool for the balancer (F044 item analysis); nil = p̂ from the difficulty.
 	PValues write.QuestionPValues
 	Metrics ExamMetrics
@@ -178,6 +180,12 @@ func (h Exams) loadBlueprint(ctx context.Context, versionID uuid.UUID) (loadedBl
 	if v == nil {
 		if ok, err := h.Asg.platformHas(ctx, find); err != nil || ok {
 			if err == nil {
+				if eff, e := h.platformInstrument(ctx, versionID); e != nil || eff {
+					if e == nil {
+						e = problem.Invalid("/assessment_blueprint_version_id", problem.SubInvalid, "efficacy instruments are scheduled by F035 only")
+					}
+					return out, e
+				}
 				err = problem.New(problem.ResourceNotAssigned, "the platform blueprint is not assigned to the tenant")
 			}
 			return out, err
@@ -506,7 +514,7 @@ func (h Exams) createSession(ctx context.Context, in ExamSessionInput, ns newSes
 		return row, err
 	}
 	if status == exam.StatusOpen {
-		return row, h.publish(ctx, EventExamOpened, "exam_session", row.ID, row.TenantID, windowPayload(row))
+		return row, h.publishExam(ctx, row.EfficacyWaveID, EventExamOpened, "exam_session", row.ID, row.TenantID, windowPayload(row))
 	}
 	return row, nil
 }
@@ -663,6 +671,10 @@ func (h Exams) ReleaseExamResults(ctx context.Context, id uuid.UUID) (out dto.Ex
 		if err := AuthorizeLMS(ctx, p, authz.PermLmsResultRelease, s.SchoolID, &s.SubjectID); err != nil {
 			return err
 		}
+		if s.EfficacyWaveID != nil {
+			// F035-AC-16: the results of an efficacy session are never released.
+			return problem.New(problem.InvalidStateTransition, "the results of an efficacy exam session are never released")
+		}
 		if !exam.CanRelease(s.ResultRelease, exam.Status(s.Status)) {
 			return problem.New(problem.Conflict, "only a closed exam session with manual release is released")
 		}
@@ -687,7 +699,7 @@ func (h Exams) release(ctx context.Context, s *write.ExamSessionRow, by *uuid.UU
 		return problem.New(problem.VersionMismatch, "")
 	}
 	s.Version = prev + 1
-	if err := h.publish(ctx, EventExamResultsReleased, "exam_session", s.ID, s.TenantID, map[string]any{"exam_session_id": s.ID,
+	if err := h.publishExam(ctx, s.EfficacyWaveID, EventExamResultsReleased, "exam_session", s.ID, s.TenantID, map[string]any{"exam_session_id": s.ID,
 		"school_id": s.SchoolID, "assignment_id": nullableID(s.AssignmentID), "released_at": now, "released_by": nullableID(by),
 		"mode": s.ResultRelease}); err != nil {
 		return err
@@ -750,7 +762,7 @@ func (h Exams) open(ctx context.Context, id uuid.UUID, now time.Time, rep *ExamW
 		return err
 	}
 	rep.Opened++
-	return h.publish(ctx, EventExamOpened, "exam_session", s.ID, s.TenantID, windowPayload(*s))
+	return h.publishExam(ctx, s.EfficacyWaveID, EventExamOpened, "exam_session", s.ID, s.TenantID, windowPayload(*s))
 }
 
 func (h Exams) close(ctx context.Context, id uuid.UUID, now time.Time, rep *ExamWindowReport) error {
@@ -788,7 +800,7 @@ func (h Exams) close(ctx context.Context, id uuid.UUID, now time.Time, rep *Exam
 	rep.Absent += absent
 	payload := windowPayload(*s)
 	payload["absent_count"], payload["auto_submitted_count"] = absent, submitted
-	if err := h.publish(ctx, EventExamClosed, "exam_session", s.ID, s.TenantID, payload); err != nil {
+	if err := h.publishExam(ctx, s.EfficacyWaveID, EventExamClosed, "exam_session", s.ID, s.TenantID, payload); err != nil {
 		return err
 	}
 	if s.ResultRelease == exam.ReleaseAfterClose {
@@ -815,6 +827,9 @@ func (h Exams) RegradeTarget(ctx context.Context, sessionID, questionVersionID u
 	}
 	if s == nil {
 		return uuid.Nil, uuid.Nil, problem.New(problem.NotFound, "")
+	}
+	if err := efficacyLocked(s); err != nil {
+		return uuid.Nil, uuid.Nil, err // F035-AC-16: no regrade of an efficacy session
 	}
 	ps, err := h.Store.Papers(ctx, s.ID)
 	if err != nil {
@@ -856,7 +871,7 @@ func (h Exams) Regraded(ctx context.Context, r write.RegradeRequest, attempts []
 			h.Metrics.Regraded(string(r.Action))
 		}
 	}
-	return h.publish(ctx, EventExamRegraded, "exam_session", s.ID, s.TenantID, map[string]any{"exam_session_id": s.ID, "school_id": s.SchoolID,
+	return h.publishExam(ctx, s.EfficacyWaveID, EventExamRegraded, "exam_session", s.ID, s.TenantID, map[string]any{"exam_session_id": s.ID, "school_id": s.SchoolID,
 		"regrade_request_id": r.ID, "question_version_id": *r.QuestionVersionID, "corrected_version_id": nullableID(r.CorrectedVersionID),
 		"action": string(r.Action), "affected_attempt_ids": attempts})
 }

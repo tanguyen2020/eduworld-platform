@@ -374,6 +374,7 @@ func (RollupRepo) ObjectiveWeek(ctx context.Context, start, from, to time.Time, 
 					COALESCE((le.payload->>'rapid_guess')::boolean, false) AS rapid
 				FROM learning.learning_events le CROSS JOIN LATERAL unnest(le.objective_ids) AS o(objective_id)
 				WHERE le.tenant_id = infra.current_tenant_id() AND le.event_type = 'question.answered' AND le.class_id IS NOT NULL
+					AND le.efficacy_wave_id IS NULL
 					AND le.occurred_at >= $2::timestamptz AND le.occurred_at < $3::timestamptz
 					AND COALESCE((le.payload->>'is_scored')::boolean, true) AND COALESCE((le.payload->>'attempt_no')::int, 1) = 1)
 			INSERT INTO learning.rollup_class_objective_weekly AS r (tenant_id, class_id, objective_id, bucket_date, metric_version, school_id,

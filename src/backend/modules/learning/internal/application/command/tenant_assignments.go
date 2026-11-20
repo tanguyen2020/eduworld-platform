@@ -153,6 +153,15 @@ func (h ApplyTenantAssignments) Handle(ctx context.Context, in AssignmentsInput)
 		owner, found := owners[in.ResourceID]
 		if !found || !owner.Platform() {
 			pe.AddField("resource_id", problem.SubInvalid, "is not a live platform resource")
+		} else if ef, ok := handler.(port.EfficacyFlagged); ok {
+			// F035-AC-04: an efficacy instrument is scheduled by F035 only, never assigned to a tenant.
+			flagged, err := ef.EfficacyInstrument(tenancy.WithScope(ctx, ps), in.ResourceID)
+			if err != nil {
+				return err
+			}
+			if flagged {
+				pe.AddField("resource_id", problem.SubInvalid, "an efficacy instrument is never assigned to a tenant")
+			}
 		}
 		active, err := h.Tenants.ActiveTenants(ctx, tenants)
 		if err != nil {

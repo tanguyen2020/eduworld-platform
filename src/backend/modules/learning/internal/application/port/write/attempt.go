@@ -104,6 +104,10 @@ type LearningEvent struct {
 	ActorID          *uuid.UUID // staff user of a staff event (nil: the student, or the zero UUID for system events)
 	Payload          any
 	IdempotencyKey   string
+	// EfficacyWaveID marks an event of an efficacy exam session (F035-AC-15): no consumer turns it into mastery or progress.
+	EfficacyWaveID *uuid.UUID
+	// ExperimentArms lists "<experiment_code>:<arm>" of the running experiments of the student (F035-AC-25).
+	ExperimentArms []string
 }
 
 // LearningEventWriter appends learning events (INSERT … ON CONFLICT DO NOTHING on the idempotency key).

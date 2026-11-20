@@ -102,6 +102,9 @@ type reportBody struct {
 	SchoolIDs    []uuid.UUID `json:"school_ids"`
 	TenantIDs    []uuid.UUID `json:"tenant_ids"`
 	GradeLevel   *int        `json:"grade_level"`
+	Params       struct {
+		StudyID *uuid.UUID `json:"study_id"`
+	} `json:"params"`
 }
 
 func bodyDate(field, s string) (*time.Time, error) {
@@ -123,7 +126,7 @@ func (h Handlers) createReport(w http.ResponseWriter, r *http.Request, scope rep
 	}
 	req := reporting.Request{Scope: scope, Type: b.ReportType, Format: b.Format, SchoolID: b.SchoolID, ClassID: b.ClassID,
 		CourseID: b.CourseID, AssignmentID: b.AssignmentID, SubjectID: b.SubjectID, Period: b.Period, AcademicYear: b.AcademicYear,
-		SchoolIDs: b.SchoolIDs, TenantIDs: b.TenantIDs, GradeLevel: b.GradeLevel}
+		SchoolIDs: b.SchoolIDs, TenantIDs: b.TenantIDs, GradeLevel: b.GradeLevel, StudyID: b.Params.StudyID}
 	var err error
 	if req.From, err = bodyDate("from", b.From); err == nil {
 		req.To, err = bodyDate("to", b.To)

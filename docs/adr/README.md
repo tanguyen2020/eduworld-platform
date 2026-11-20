@@ -247,7 +247,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0057](ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) | Hạng thiết bị tầm trung, preset chất lượng, ngân sách hiệu năng |
 | [0058](ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) | Game Analytics trong PostgreSQL qua NATS (raw không purge, 0070) |
 | [0073](ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) | Phát hành theo pilot ưu tiên giáo dục rồi mở rộng theo giai đoạn, đủ 4 nền tảng (0013) |
-| [0080](ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) | Báo cáo hiệu quả học tập (kiểm tra độc lập trước/sau, lớp so sánh) là exit criterion của pilot |
+| [0080](ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) | Báo cáo hiệu quả học tập (kiểm tra độc lập trước/sau, lớp so sánh) là exit criterion của pilot; hạ tầng A/B mô hình mastery và luật gợi ý (mục 5) |
 | [0062](ADR-0062-kien-truc-du-lieu-dashboard-khong-truy-van-du-lieu-tho.md) | Job chốt rollup dashboard; không truy vấn dữ liệu thô cho dashboard |
 
 ### Đề xuất hoãn hoặc bị từ chối

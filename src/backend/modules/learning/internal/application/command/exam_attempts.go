@@ -165,7 +165,11 @@ func (h Exams) StartExamAttempt(ctx context.Context, in StartExamInput) (out dto
 		for i, it := range ordered {
 			qids[i] = it.QuestionVersionID
 		}
-		items, rendered, err := h.Att.pinItems(ctx, qids, seed, false, nil)
+		cctx, err := contentScope(ctx, s.EfficacyWaveID, s.TenantID)
+		if err != nil {
+			return err
+		}
+		items, rendered, err := h.Att.pinItems(cctx, qids, seed, false, nil)
 		if err != nil {
 			return err
 		}
@@ -195,7 +199,7 @@ func (h Exams) StartExamAttempt(ctx context.Context, in StartExamInput) (out dto
 		if err := h.Att.started(ctx, a); err != nil {
 			return err
 		}
-		if err := h.publish(ctx, EventExamStarted, "attempt", a.ID, a.TenantID, map[string]any{"attempt_id": a.ID, "exam_session_id": s.ID,
+		if err := h.publishExam(ctx, s.EfficacyWaveID, EventExamStarted, "attempt", a.ID, a.TenantID, map[string]any{"attempt_id": a.ID, "exam_session_id": s.ID,
 			"school_id": s.SchoolID, "student_id": p.UserID, "exam_paper_id": pp.ID, "exam_type": s.Type, "is_official": s.IsOfficial,
 			"assignment_id": nullableID(s.AssignmentID), "started_at": now, "deadline_at": deadline, "attempt_no": part.AttemptsUsed}); err != nil {
 			return err
@@ -284,6 +288,13 @@ func (h Exams) paperOf(ctx context.Context, s write.ExamSessionRow, studentID uu
 
 // attemptView renders an exam attempt with its saved answers (resume, F042-AC-13); never a result.
 func (h Exams) attemptView(ctx context.Context, a attempt.Attempt) (dto.AttemptView, error) {
+	wave, err := h.WaveOf(ctx, a.ContextID)
+	if err != nil {
+		return dto.AttemptView{}, err
+	}
+	if ctx, err = contentScope(ctx, wave, a.TenantID); err != nil {
+		return dto.AttemptView{}, err
+	}
 	latest, err := h.Store.LatestAnswers(ctx, a.ID)
 	if err != nil {
 		return dto.AttemptView{}, err
@@ -464,7 +475,11 @@ func (h Exams) submitAttempt(ctx context.Context, id uuid.UUID, reason string, _
 	if reason != exam.ReasonManual && h.Metrics != nil {
 		h.Metrics.AutoSubmitted(reason)
 	}
-	return true, h.publish(ctx, EventExamSubmitted, "attempt", a.ID, a.TenantID, map[string]any{"attempt_id": a.ID, "exam_session_id": s.ID,
+	if s.EfficacyWaveID != nil {
+		// F035-AC-15: no exam.submitted (no outbox event at all): the attempt is graded in the submit transaction.
+		return true, h.gradeAttempt(ctx, a.ID)
+	}
+	return true, h.publishExam(ctx, s.EfficacyWaveID, EventExamSubmitted, "attempt", a.ID, a.TenantID, map[string]any{"attempt_id": a.ID, "exam_session_id": s.ID,
 		"school_id": s.SchoolID, "student_id": a.StudentID, "exam_type": s.Type, "is_official": s.IsOfficial,
 		"assignment_id": nullableID(s.AssignmentID), "submit_reason": reason, "submitted_at": end, "answered_count": len(latest)})
 }
@@ -515,6 +530,11 @@ func (h Exams) AutoSubmitExpired(ctx context.Context, limit int) (rep AutoSubmit
 func (h Exams) GradeExamAttempt(ctx context.Context, id uuid.UUID) (err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.GradeExamAttempt")
 	defer func() { done(err) }()
+	return h.gradeAttempt(ctx, id)
+}
+
+// gradeAttempt is GradeExamAttempt in the transaction of ctx.
+func (h Exams) gradeAttempt(ctx context.Context, id uuid.UUID) error {
 	a, err := h.Att.Store.Attempt(ctx, id)
 	if err != nil {
 		return err
@@ -535,13 +555,17 @@ func (h Exams) GradeExamAttempt(ctx context.Context, id uuid.UUID) (err error) {
 	if err != nil {
 		return err
 	}
+	gctx, err := contentScope(ctx, s.EfficacyWaveID, s.TenantID)
+	if err != nil {
+		return err
+	}
 	for i := range a.Items {
 		it := &a.Items[i]
 		c, sc := false, 0.0
 		if resp, ok := latest[it.Position]; ok {
 			var pres question.Presentation
 			_ = json.Unmarshal(it.Presentation, &pres)
-			g, err := h.Att.Delivery.Grade(ctx, it.QuestionVersionID, pres, resp)
+			g, err := h.Att.Delivery.Grade(gctx, it.QuestionVersionID, pres, resp)
 			if err != nil {
 				if pe, ok := problemOf(err); !ok || pe.Code != problem.InvalidResponse {
 					return err
@@ -604,7 +628,7 @@ func (h Exams) GradeExamAttempt(ctx context.Context, id uuid.UUID) (err error) {
 	if visible {
 		visibleAt = &now
 	}
-	return h.publish(ctx, EventExamGraded, "attempt", a.ID, a.TenantID, map[string]any{"attempt_id": a.ID, "evaluation_id": evID,
+	return h.publishExam(ctx, s.EfficacyWaveID, EventExamGraded, "attempt", a.ID, a.TenantID, map[string]any{"attempt_id": a.ID, "evaluation_id": evID,
 		"exam_session_id": s.ID, "school_id": s.SchoolID, "student_id": a.StudentID, "exam_type": s.Type, "is_official": s.IsOfficial,
 		"assignment_id": nullableID(s.AssignmentID), "score": res.Score, "max_score": res.MaxScore, "correct_count": res.CorrectCount,
 		"item_count": len(a.Items), "result_release": s.ResultRelease, "results_visible_at": visibleAt, "submit_reason": *a.SubmitReason,

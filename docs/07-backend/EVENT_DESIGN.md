@@ -228,6 +228,8 @@ Ký hiệu consumer: GAM = gamification, QST = quest, LR = learning_record, LA =
 | `study_group.member_changed` | lms | chat (thành viên channel), LMS read model, AUD | `study_group_id`, `school_id`, `added_member_ids[]`, `removed_member_ids[]`, `member_count`, `version`, `changed_by` — schema [`study_group.member_changed.v1`](../../specs/events/payloads/learning/study_group.member_changed.v1.schema.json) |
 | `study_group.deleted` | lms | chat (lưu trữ channel, không purge), AUD | `study_group_id`, `school_id`, `version`, `deleted_by` (soft-delete, ADR-0028) — schema [`study_group.deleted.v1`](../../specs/events/payloads/learning/study_group.deleted.v1.schema.json) |
 
+ExamSession có `efficacy_wave_id` (F035, [LEARNING_EFFICACY_PLAN §3.2](../02-learning/LEARNING_EFFICACY_PLAN.md)) **không phát** `exam.*`, `activity.*` ra outbox (chặn tại nguồn, ADR-0080 mục 6): bài được chấm ngay trong transaction nộp bài, chỉ ghi learning event (có `context.efficacy_wave_id`); vì vậy không evidence mastery, không XP/quest, không thông báo, không vào dashboard.
+
 Chấm tay, trả bài và bài nói ngoài version này (ADR-0082): không có event. Payload JSON Schema của event learning: [`specs/events/payloads/learning/`](../../specs/events/payloads/learning/).
 
 ### 4.4. Learning record
@@ -447,7 +449,7 @@ Envelope chat:
 | `activity_id` | Learning activity / quest step / match / assignment ref |
 | `content_id`, `content_version_id` | Nội dung cụ thể (question version, question set version, lesson version…) |
 | `actor` | `type` ∈ `student` (học sinh tự làm), `system` (server/worker sinh: chấm, mastery), `staff` (nhân sự kích hoạt, vd. re-evaluate) |
-| `context` | `{ mode, assignment_id?, exam_session_id?, quest_version_id?, minigame_version_id?, challenge_attempt_id?, match_id?, party_id?, is_official? }`; `mode` theo enum chuẩn `AttemptMode` (`practice`, `assignment`, `quest`, `minigame`, `challenge`, `exam`, `competition`, `retry_wrong`, `diagnostic` — [enums.schema.json](../../specs/schemas/common/enums.schema.json)). Event không gắn attempt (`lesson.completed`, `quest.completed`) dùng mode của ngữ cảnh (`practice` khi tự học, `assignment` khi nhà trường giao, `quest`) |
+| `context` | `{ mode, assignment_id?, exam_session_id?, quest_version_id?, minigame_version_id?, challenge_attempt_id?, match_id?, party_id?, is_official?, efficacy_wave_id?, experiment_arms? }` (F035: `efficacy_wave_id` trên event của attempt ExamSession đo hiệu quả — mọi consumer mastery, progress, gợi ý, rollup và recompute bỏ qua; `experiment_arms` = danh sách `<experiment_code>:<arm>` ≤ 10 của học sinh trong thử nghiệm `shadow`/`live`, không bao giờ trả về client); `mode` theo enum chuẩn `AttemptMode` (`practice`, `assignment`, `quest`, `minigame`, `challenge`, `exam`, `competition`, `retry_wrong`, `diagnostic` — [enums.schema.json](../../specs/schemas/common/enums.schema.json)). Event không gắn attempt (`lesson.completed`, `quest.completed`) dùng mode của ngữ cảnh (`practice` khi tự học, `assignment` khi nhà trường giao, `quest`) |
 | `objective_ids[]` | Learning objectives liên quan |
 
 ### 5.2. Catalog learning event

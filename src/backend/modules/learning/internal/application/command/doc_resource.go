@@ -272,3 +272,27 @@ func (r DocResource) cloneActivityRefs(ctx context.Context, in port.CloneInput, 
 	v.Body, err = json.Marshal(body)
 	return err
 }
+
+// EfficacyInstrument implements port.EfficacyFlagged: a version of the blueprint is an efficacy instrument (F035-AC-04);
+// other content types never are.
+func (r DocResource) EfficacyInstrument(ctx context.Context, id uuid.UUID) (bool, error) {
+	if r.Type != contentmodel.TypeAssessmentBlueprint {
+		return false, nil
+	}
+	vs, err := r.Store.DocVersions(ctx, r.Type, id)
+	if err != nil {
+		if pe, ok := problemOf(err); ok && pe.Code == problem.NotFound {
+			return false, nil
+		}
+		return false, err
+	}
+	for _, v := range vs {
+		var b struct {
+			Efficacy bool `json:"efficacy_instrument"`
+		}
+		if json.Unmarshal(v.Body, &b) == nil && b.Efficacy {
+			return true, nil
+		}
+	}
+	return false, nil
+}

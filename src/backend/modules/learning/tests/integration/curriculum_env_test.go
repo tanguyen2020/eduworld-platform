@@ -23,6 +23,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/plugins"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/analytics"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/efficacy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/examquality"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/recommendation"
@@ -111,6 +112,7 @@ type curEnv struct {
 	reports *command.Reports        // F044: exports (worker run by the tests)
 	quality *command.Quality        // F044: item analysis, calibration, exam quality, reference levels
 	reportq *query.Reports          // F044 reads
+	eff     *command.Efficacy       // F035: the efficacy study (jobs run by the tests)
 }
 
 // envOpt configures newCurEnv.
@@ -260,8 +262,10 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	asg := command.Assignments{UoW: e.uow, Store: write.SchoolAssignmentRepo{}, Read: e.read, Exams: examsession.Unavailable{},
 		Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Metrics: observability.SchoolAssignmentCounter{}}
 	exams := command.Exams{UoW: e.uow, Store: write.ExamRepo{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
-		Clock: clk.Now, Metrics: observability.ExamCounter{}}
+		Instruments: write.EfficacyRepo{},
+		Clock:       clk.Now, Metrics: observability.ExamCounter{}}
 	att.ExamRelease = exams.ReleaseOf
+	att.EfficacyWave = exams.WaveOf
 	if !o.noExams {
 		asg.Exams = &command.ExamSessionCreator{Exams: &exams}
 	}
@@ -304,6 +308,11 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	handlers.Reports = learninghttp.ReportHandlers{Commands: reportsProxy{reports}, Calibration: qualityProxy{quality}, Queries: reportqProxy{reportq}}
 	exams.Balancer, exams.PValues = examquality.Balancer{}, write.QualityRepo{}
 	handlers.ExamCommands = exams
+	// F035: the efficacy study with the test clock.
+	eff := &command.Efficacy{UoW: e.uow, Store: write.EfficacyRepo{}, Content: write.EfficacyRepo{}, Exams: &exams, Exclusions: write.ExamRepo{}, Data: read.EfficacyModel{},
+		Read: e.read, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Config: efficacy.DefaultConfig()}
+	reports.Efficacy = eff
+	handlers.Efficacy = learninghttp.EfficacyHandlers{Commands: eff, Queries: query.Efficacy{Session: e.read, Model: read.EfficacyModel{}, Cursors: codec}}
 	// F031 US4: re-evaluation with the test clock.
 	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Exams: exams}
 	handlers.Regrades, handlers.RegradeQueries = rgd, query.Regrades{Session: e.read, Model: read.RegradeModel{}}
@@ -317,7 +326,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
 		lms: lmsCmd, asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq,
-		reports: reports, quality: quality, reportq: reportq}
+		reports: reports, quality: quality, reportq: reportq, eff: eff}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

@@ -77,15 +77,17 @@ func (LearningEventWriter) Write(ctx context.Context, e write.LearningEvent) err
 	// The NOT EXISTS and the enrollment snapshot (ref.enrollments has no deleted_at: status) read the tenant $6 only.
 	// tenancyguard:ok append-only learning_events without deleted_at; insert of the session tenant (RLS insert policy)
 	_, err = tx.ExecContext(ctx, `INSERT INTO learning.learning_events (event_id, occurred_at, event_type, student_id, tenant_id, school_id,
-		class_id, game_session_id, activity_id, content_id, content_version_id, objective_ids, context, actor_type, payload, idempotency_key)
+		class_id, game_session_id, activity_id, content_id, content_version_id, objective_ids, context, actor_type, payload, idempotency_key,
+		efficacy_wave_id, experiment_arms)
 		SELECT $1::uuid, $2::timestamptz, $3::varchar, $4::uuid, $6::uuid, $5::uuid,
 			COALESCE($7::uuid, (SELECT en.class_id FROM ref.enrollments en WHERE en.student_id = $4 AND en.tenant_id = $6
 				AND en.status = 'active' ORDER BY en.start_date DESC LIMIT 1)),
-			$8::uuid, $9::uuid, $10::uuid, $11::uuid, $12::uuid[], $13::varchar, $14::varchar, $15::jsonb, $16::varchar
+			$8::uuid, $9::uuid, $10::uuid, $11::uuid, $12::uuid[], $13::varchar, $14::varchar, $15::jsonb, $16::varchar,
+			$17::uuid, $18::varchar(97)[]
 		WHERE NOT EXISTS (SELECT 1 FROM learning.learning_events le WHERE le.idempotency_key = $16::varchar AND le.tenant_id = $6::uuid)
 		ON CONFLICT DO NOTHING`,
 		e.ID, e.OccurredAt.UTC(), e.Type, e.StudentID, e.SchoolID, e.TenantID, e.ClassID, e.GameSessionID, e.ActivityID, e.ContentID,
-		e.ContentVersionID, uuidArray(e.ObjectiveIDs), e.Context, actor, payload, e.IdempotencyKey)
+		e.ContentVersionID, uuidArray(e.ObjectiveIDs), e.Context, actor, payload, e.IdempotencyKey, e.EfficacyWaveID, armsArray(e.ExperimentArms))
 	if err != nil {
 		return fmt.Errorf("learning event %s: %w", e.Type, err)
 	}
@@ -113,7 +115,7 @@ func Envelope(e write.LearningEvent, payload json.RawMessage, recordedAt time.Ti
 		"producer": Producer, "tenant_id": e.TenantID, "school_id": e.SchoolID, "student_id": e.StudentID,
 		"actor": map[string]any{"type": e.ActorType, "id": actorID}, "subject": map[string]any{"type": st, "id": sid},
 		"session_id": nil, "activity_id": nil, "content_id": nil, "content_version_id": nil,
-		"context": map[string]any{"mode": e.Context}, "objective_ids": objectives, "idempotency_key": e.IdempotencyKey,
+		"context": eventContext(e), "objective_ids": objectives, "idempotency_key": e.IdempotencyKey,
 		"payload": payload}
 	if e.GameSessionID != nil {
 		doc["session_id"] = *e.GameSessionID
@@ -160,4 +162,24 @@ func subjectOf(e write.LearningEvent, payload json.RawMessage) (string, string) 
 		return "learning_activity", e.ActivityID.String()
 	}
 	return "learning_activity", e.ID.String()
+}
+
+// eventContext is the context of the envelope: the mode, the efficacy wave and the experiment arms (F035-AC-15, AC-25).
+func eventContext(e write.LearningEvent) map[string]any {
+	c := map[string]any{"mode": e.Context}
+	if e.EfficacyWaveID != nil {
+		c["efficacy_wave_id"] = *e.EfficacyWaveID
+	}
+	if len(e.ExperimentArms) > 0 {
+		c["experiment_arms"] = e.ExperimentArms
+	}
+	return c
+}
+
+// armsArray is the varchar[] of the experiment arms (NULL when none).
+func armsArray(arms []string) any {
+	if len(arms) == 0 {
+		return nil
+	}
+	return textArray(arms)
 }

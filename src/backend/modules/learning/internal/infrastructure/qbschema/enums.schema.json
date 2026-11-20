@@ -4,6 +4,11 @@
   "title": "EduWorld — enum dùng chung",
   "description": "Nguồn duy nhất cho các enum nội dung học tập (EDU_FIT_REVIEW SPC-02, SPC-03; ADR-0072). JSON Schema khác $ref tới $defs ở đây; OpenAPI/AsyncAPI khai báo inline với giá trị và thứ tự y hệt (kiểm tra bằng scripts/specs/check-enums.mjs).",
   "$defs": {
+    "PresenceStatus": {
+      "type": "string",
+      "description": "Enum presence duy nhất của hệ thống (MULTIPLAYER_GAMEPLAY §5, F091): realtime (AsyncAPI), PlayerCard và REST; người bật ẩn trạng thái hiển thị offline với người không được thấy.",
+      "enum": ["offline", "online", "in_activity", "in_match", "away"]
+    },
     "QuestionType": {
       "type": "string",
       "description": "Loại câu hỏi (QUESTION_BANK).",

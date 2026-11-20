@@ -58,13 +58,23 @@ func sessionView(s read.ExamSessionRow, now time.Time) dto.ExamSessionView {
 		FeedbackTiming: s.FeedbackTiming, ResultRelease: s.ResultRelease, ResultsReleasedAt: s.ReleasedAt, SchoolID: s.SchoolID,
 		CourseID: s.CourseID, AssignmentID: s.AssignmentID, Audience: s.Audience, VariantStrategy: s.Strategy, VariantCount: s.VariantCount,
 		LateStartPolicy: s.LateStartPolicy, ScorePolicy: s.ScorePolicy, ShowCorrectAnswers: s.ShowCorrect, ShowExplanations: s.ShowExplanations,
-		Accommodations: acc, ServerTime: now, CreatedAt: s.CreatedAt, Version: s.Version}
+		Accommodations: acc, ServerTime: now, CreatedAt: s.CreatedAt, Version: s.Version, IsEfficacy: isEfficacy(s)}
+}
+
+// isEfficacy marks a session of an efficacy wave for the staff (F035-AC-17: read-only; never the wave, study nor arm).
+func isEfficacy(s read.ExamSessionRow) *bool {
+	if s.EfficacyWaveID == nil {
+		return nil
+	}
+	t := true
+	return &t
 }
 
 // studentView hides the accommodations of others and adds the student's attempts and effective duration.
 func studentView(s read.ExamSessionRow, part *read.ExamParticipationRow, now time.Time) dto.ExamSessionView {
 	v := sessionView(s, now)
 	v.Accommodations = nil
+	v.IsEfficacy = nil // F035-AC-17: a student never learns the session is an efficacy test
 	if part != nil {
 		used, d := part.AttemptsUsed, part.EffectiveDurationSec
 		v.AttemptsUsed, v.EffectiveDurationSecond = &used, &d
@@ -231,6 +241,10 @@ func (q Exams) Papers(ctx context.Context, id uuid.UUID) (out []dto.ExamPaperVie
 		s, err := q.readable(ctx, p, authz.PermLmsAssignmentWrite, id)
 		if err != nil {
 			return err
+		}
+		if s.EfficacyWaveID != nil {
+			// F035-AC-16: the papers of an efficacy session are never shown to tenant staff.
+			return problem.New(problem.PermissionDenied, "an efficacy exam session is managed by the efficacy study")
 		}
 		titles := map[string]string{}
 		for _, sec := range sessionSections(*s) {

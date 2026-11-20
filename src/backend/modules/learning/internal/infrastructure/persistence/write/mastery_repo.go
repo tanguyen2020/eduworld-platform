@@ -227,7 +227,7 @@ func (MasteryRepo) Attempt(ctx context.Context, attemptID uuid.UUID) (write.Atte
 // LEARNING_ANALYTICS §3.1; is_scored defaults to true in the schema) and not part of an efficacy wave (F035). The answers
 // of a diagnostic set the prior M0 instead (LEARNING_ANALYTICS §3.5, F032) and are no evidence.
 const evidenceFilter = `le.event_type = 'question.answered' AND COALESCE((le.payload->>'is_scored')::boolean, true)
-	AND NOT COALESCE((le.payload->>'rapid_guess')::boolean, false) AND le.context <> 'diagnostic'`
+	AND NOT COALESCE((le.payload->>'rapid_guess')::boolean, false) AND le.context <> 'diagnostic' AND le.efficacy_wave_id IS NULL`
 
 // AttemptObjectives implements write.EvidenceReader.
 func (MasteryRepo) AttemptObjectives(ctx context.Context, attemptID uuid.UUID) ([]uuid.UUID, error) {
@@ -278,7 +278,8 @@ func (MasteryRepo) ObjectiveEvidence(ctx context.Context, studentID, objectiveID
 				WHERE e2.attempt_id = (le.payload->>'attempt_id')::uuid AND e2.effective AND e2.source = 're_evaluation'
 					AND e2.tenant_id = le.tenant_id AND e2.deleted_at IS NULL AND (it->>'position')::int = (le.payload->>'position')::int
 				LIMIT 1) ov(item) ON true
-			WHERE le.tenant_id = infra.current_tenant_id() AND le.student_id = $1 AND le.event_type = 'question.answered')
+			WHERE le.tenant_id = infra.current_tenant_id() AND le.student_id = $1 AND le.event_type = 'question.answered'
+				AND le.efficacy_wave_id IS NULL)
 		SELECT e.event_id, e.occurred_at, e.context, array_to_string(e.objective_ids, ','), e.payload->>'question_type',
 			COALESCE(e.difficulty, 0),
 			COALESCE((e.override->>'score')::float8, (e.payload->'score'->>'raw')::float8, 0),

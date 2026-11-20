@@ -50,12 +50,12 @@ const (
 	StatusExpired   = "expired"
 )
 
-// types are the report types a route serves in this release. game_summary belongs to F080 and efficacy_dataset to F035:
-// the contract lists them, the request is refused until those features are delivered [Proposed].
+// types are the report types a route serves in this release. game_summary belongs to F080: the contract lists it, the request
+// is refused until that feature is delivered [Proposed]. efficacy_dataset (F035) is a platform export of one study.
 var types = map[Scope][]string{
 	ScopeLMS:      {TypeAssignmentResults, TypeCourseResults, TypeRegulationReference, TypeSkillMap, TypeSchoolMonthly},
 	ScopeTenant:   {TypeLearningSummary, TypeClassProgress, TypeAssignmentResults},
-	ScopePlatform: {TypeLearningSummary},
+	ScopePlatform: {TypeLearningSummary, TypeEfficacyDataset},
 }
 
 // Config holds the export parameters (CONFIG_DEFAULTS, owner DASHBOARD_DATA §10; a settings reader does not exist yet, the
@@ -94,6 +94,7 @@ type Request struct {
 	SchoolIDs    []uuid.UUID
 	TenantIDs    []uuid.UUID
 	GradeLevel   *int
+	StudyID      *uuid.UUID // params.study_id of efficacy_dataset (F035)
 }
 
 // FieldError is a request field that is missing or invalid (422 VALIDATION_FAILED).
@@ -117,7 +118,7 @@ func required(field string) error {
 // Validate checks the request against its route (F044-AC-07).
 func (r Request) Validate(cfg Config) error {
 	if !slices.Contains(types[r.Scope], r.Type) {
-		if r.Type == TypeGameSummary || r.Type == TypeEfficacyDataset {
+		if r.Type == TypeGameSummary {
 			return &FieldError{Field: "report_type", Reason: ErrNotAvailable.Error()}
 		}
 		return &FieldError{Field: "report_type", Reason: "is not a report type of this route"}
@@ -159,6 +160,12 @@ func (r Request) Validate(cfg Config) error {
 		errs = append(errs, need(r.ClassID != nil, "class_id"), need(r.SubjectID != nil, "subject_id"))
 	case TypeSchoolMonthly:
 		errs = append(errs, need(r.SchoolID != nil, "school_id"), need(r.From != nil, "from"), need(r.To != nil, "to"))
+	case TypeEfficacyDataset:
+		// F035-AC-32: one study, pseudonymous CSV only.
+		errs = append(errs, need(r.StudyID != nil, "params/study_id"))
+		if r.Format != FormatCSV {
+			errs = append(errs, &FieldError{Field: "format", Reason: "the efficacy dataset is exported as csv only"})
+		}
 	}
 	if r.Scope != ScopeLMS {
 		errs = append(errs, need(r.From != nil, "from"), need(r.To != nil, "to"))
