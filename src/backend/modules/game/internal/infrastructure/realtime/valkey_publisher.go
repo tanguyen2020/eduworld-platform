@@ -56,11 +56,19 @@ func (p ValkeyPublisher) SessionReplaced(ctx context.Context, student, session u
 		"game_session_id": session.String(), "replaced_at": at.UnixMilli(), "new_device_platform": newPlatform}})
 }
 
-// SessionEnded implements port.RealtimePublisher (session.session.ended: curfew → 4410 with reopen_at; else 4403).
+// SessionEnded implements port.RealtimePublisher (session.session.ended: curfew, daily_limit → 4410 with reopen_at;
+// else 4403).
 func (p ValkeyPublisher) SessionEnded(ctx context.Context, student, session uuid.UUID, reason string, at time.Time, reopenAt *time.Time) error {
 	payload := map[string]any{"game_session_id": session.String(), "reason": reason, "ended_at": at.UnixMilli()}
-	if reopenAt != nil && reason == "curfew" {
+	if reopenAt != nil && (reason == "curfew" || reason == "daily_limit") {
 		payload["reopen_at"] = reopenAt.UnixMilli()
 	}
 	return p.publish(ctx, student, Message{Type: "session.session.ended", Payload: payload})
+}
+
+// SessionEndingSoon implements port.RealtimePublisher (session.session.ending_soon: warning before the daily play
+// limit ends the session, OQ-17).
+func (p ValkeyPublisher) SessionEndingSoon(ctx context.Context, student, session uuid.UUID, reason string, endsAt time.Time) error {
+	return p.publish(ctx, student, Message{Type: "session.session.ending_soon", Payload: map[string]any{
+		"game_session_id": session.String(), "reason": reason, "ends_at": endsAt.UnixMilli()}})
 }

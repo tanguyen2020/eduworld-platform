@@ -19,7 +19,7 @@ import (
 
 // Keys of the school settings JSON written through updateSchoolSettings.
 var schoolKeys = map[string]bool{"allowed_hours": true, "class_leaderboard_enabled": true, "school_leaderboard_enabled": true,
-	"student_club_creation": true, "curfew_window": true}
+	"student_club_creation": true, "curfew_window": true, settings.KeyDailyPlayLimit: true}
 
 // CurrentPlatformCurfew returns platform_curfew in force (configured value or CONFIG_DEFAULTS).
 func (h Settings) CurrentPlatformCurfew(ctx context.Context) (settings.Curfew, error) {
@@ -31,7 +31,7 @@ func (h Settings) CurrentPlatformCurfew(ctx context.Context) (settings.Curfew, e
 	return settings.Curfew{Start: c.Start, End: c.End}, err
 }
 
-// UpdateSchoolSettings implements updateSchoolSettings (F015-AC-16, AC-17, AC-19, AC-22): school.settings.write
+// UpdateSchoolSettings implements updateSchoolSettings (F015-AC-16, AC-17, AC-19, AC-22, AC-30): school.settings.write
 // on that school (another school → 403, another tenant → 404 through RLS); the access hours only tighten the
 // tenant hours; the curfew window must contain platform_curfew and needs a reason; school.updated and, for the
 // curfew, platform_settings.changed (scope school) are published with the audit in the same transaction.
@@ -54,7 +54,8 @@ func (h Settings) UpdateSchoolSettings(ctx context.Context, schoolID uuid.UUID, 
 		}
 	}
 	_, curfewChanged := patch["curfew_window"]
-	if curfewChanged {
+	_, limitChanged := patch[settings.KeyDailyPlayLimit]
+	if curfewChanged || limitChanged { // F015-AC-22, AC-30: audited with a reason
 		if err := checkReason(reason); err != nil {
 			return out, err
 		}
@@ -115,7 +116,8 @@ func (h Settings) UpdateSchoolSettings(ctx context.Context, schoolID uuid.UUID, 
 		if out, err = dto.SchoolSettingsOf(schoolID, raw, v, nil, platformCurfew); err != nil {
 			return err
 		}
-		subset := map[string]any{"allowed_hours": out.AllowedHours, "curfew_window": out.CurfewWindow, "student_club_creation": out.StudentClubCreation}
+		subset := map[string]any{"allowed_hours": out.AllowedHours, "curfew_window": out.CurfewWindow, "student_club_creation": out.StudentClubCreation,
+			settings.KeyDailyPlayLimit: out.DailyPlayLimitMinutes} // module game enforces it (F014-AC-27)
 		if out.ClassLeaderboardEnabled != nil {
 			subset["class_leaderboard_enabled"] = *out.ClassLeaderboardEnabled
 		}
@@ -179,6 +181,15 @@ func (h Settings) checkSchoolPatch(ctx context.Context, tenant uuid.UUID, patch 
 			if err := json.Unmarshal(raw, &b); err != nil {
 				return problem.Invalid(k, problem.SubInvalid, "boolean")
 			}
+		}
+	}
+	if raw, ok := patch[settings.KeyDailyPlayLimit]; ok && !isNull(raw) {
+		var minutes int
+		if err := json.Unmarshal(raw, &minutes); err != nil {
+			return problem.Invalid(settings.KeyDailyPlayLimit, problem.SubInvalid, "integer minutes or null")
+		}
+		if err := settings.ValidateDailyPlayLimit(minutes); err != nil {
+			return settingsInvalid(err)
 		}
 	}
 	if raw, ok := patch["curfew_window"]; ok && !isNull(raw) {

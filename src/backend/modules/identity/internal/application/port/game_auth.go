@@ -51,6 +51,13 @@ type CurfewSource interface {
 	EffectiveCurfew(ctx context.Context, tenantID uuid.UUID, schoolID *uuid.UUID) (gamelogin.Curfew, error)
 }
 
+// DailyPlayLimitSource returns the daily play limit of the school of a student (daily_play_limit_minutes, nil =
+// off) and the time the student played in the tenant on the day of now in loc (OQ-17, F013-AC-33).
+type DailyPlayLimitSource interface {
+	DailyPlayLimit(ctx context.Context, tenantID uuid.UUID, schoolID *uuid.UUID, userID uuid.UUID, now time.Time) (limitMinutes *int,
+		played time.Duration, loc *time.Location, err error)
+}
+
 // Results of eduworld_auth_game_login_total and identity.login_events.result.
 const (
 	GameLoginSuccess              = "success"
@@ -67,6 +74,7 @@ const (
 	GameLoginVersionUnsupported   = "client_version_unsupported"
 	GameLoginCurfewActive         = "curfew_active"
 	GameLoginOutsideHours         = "access_outside_allowed_hours"
+	GameLoginDailyLimitReached    = "daily_play_limit_reached"
 	GameLoginUnavailable          = "unavailable"
 	GameLoginTicketInvalidOutcome = "login_ticket_invalid" // metric only (not a journal result)
 )

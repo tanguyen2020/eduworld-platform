@@ -124,7 +124,7 @@ Nguồn chuẩn của mã đóng kết nối. Hành vi phía client (reconnect, 
 | 4403 | Tài khoản bị khóa/thu hồi quyền (kể cả chuyển trường khác tenant), dọn học sinh, đặt lại mật khẩu, kết thúc do quản trị — credential/phiên đã bị thu hồi: gửi `session.session.ended` (`reason` = `account_locked`/`access_revoked`/`cleanup`/`admin`/`password_changed`) trước khi đóng; client đăng xuất và xóa refresh token |
 | 4408 | Heartbeat timeout |
 | 4409 | Bị thay thế, gồm **đăng nhập trên thiết bị khác** (gửi `session.session.replaced` trước khi đóng) |
-| 4410 | Game session bị server kết thúc **không** thu hồi credential — hiện chỉ giờ giới nghiêm: gửi `session.session.ended` (`reason = curfew`, `reopen_at`) trước khi đóng; client không tự kết nối lại, giữ refresh token — module game publish (F014), gateway giao và đóng (F090) |
+| 4410 | Game session bị server kết thúc **không** thu hồi credential — giờ giới nghiêm hoặc giới hạn chơi/ngày (OQ-17, owner 2026-11-20): gửi `session.session.ended` (`reason = curfew` hoặc `daily_limit`, `reopen_at`; với `daily_limit` là 00:00 ICT hôm sau) trước khi đóng; client không tự kết nối lại, giữ refresh token — module game publish (F014), gateway giao và đóng (F090) |
 | 4429 | Vượt rate limit nặng |
 | 1012 | Node shutdown (graceful): gateway gửi `system.server.draining` (kèm `reconnect_after_ms` ngẫu nhiên để giãn tải) rồi đóng `1012`; client resume ở node khác |
 

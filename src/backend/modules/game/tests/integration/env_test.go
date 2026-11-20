@@ -97,6 +97,13 @@ func (p *pushes) SessionEnded(_ context.Context, student, session uuid.UUID, rea
 	return nil
 }
 
+func (p *pushes) SessionEndingSoon(_ context.Context, student, session uuid.UUID, reason string, _ time.Time) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.msgs = append(p.msgs, "ending_soon:"+student.String()+":"+session.String()+":"+reason)
+	return nil
+}
+
 func (p *pushes) all() []string {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -169,7 +176,7 @@ func setup(ctx context.Context, t *testing.T, o envOpts) *env {
 		}
 	}
 	e.cfg = command.SessionConfig{MinClientVersion: MinVersion, HeartbeatTimeout: 45 * time.Second, PlatformCurfew: curfew,
-		CurfewLocation: ict, Maintenance: command.Maintenance{Active: o.maintenance, Message: "Bảo trì định kỳ"}}
+		CurfewLocation: ict, WarningBefore: 10 * time.Minute, Maintenance: command.Maintenance{Active: o.maintenance, Message: "Bảo trì định kỳ"}}
 	e.sessions = command.Sessions{UoW: e.uow, AfterCommit: entx.AfterCommit, Sessions: write.SessionRepo{}, Logins: write.LoginEventRepo{},
 		Directory: write.Directory{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Realtime: e.pushes,
 		Metrics: observability.SessionMetrics{}, Config: e.cfg, Now: e.clock.Now}

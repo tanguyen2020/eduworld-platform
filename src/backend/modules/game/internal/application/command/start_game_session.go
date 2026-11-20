@@ -66,6 +66,8 @@ func startOutcome(err error, takeover bool) string {
 		return port.StartDenied
 	case problem.CurfewActive:
 		return port.StartCurfew
+	case problem.DailyPlayLimitReached:
+		return port.StartDailyLimit
 	case problem.ClientVersionUnsupported:
 		return port.StartUnsupported
 	case problem.Maintenance:
@@ -132,6 +134,12 @@ func (h Sessions) Start(ctx context.Context, in StartInput) (res StartResult, er
 		if active, reopen := cf.Active(now); active {
 			return problem.New(problem.CurfewActive, "").With("reopen_at", reopen.UTC())
 		}
+		// Daily play limit of the school (OQ-17, F014-AC-27): also for takeover (the old session counts until now).
+		if a, err := h.dailyAllowance(ctx, tenant, student, st.SchoolID, now); err != nil {
+			return err
+		} else if a.Reached() {
+			return problem.New(problem.DailyPlayLimitReached, "").With("reopen_at", a.Reopen.UTC())
+		}
 		if err := h.Sessions.LockStudent(ctx, student); err != nil {
 			return err
 		}
@@ -160,7 +168,8 @@ func (h Sessions) Start(ctx context.Context, in StartInput) (res StartResult, er
 			return err
 		}
 		login := write.LoginEvent{ID: ids.New(), TenantID: tenant, StudentID: student, GameSessionID: s.ID, DeviceID: in.DeviceID,
-			Platform: in.Platform, DeviceModel: in.DeviceModel, ClientVersion: in.ClientVersion, IPHash: in.IPHash, LoginAt: now}
+			Platform: in.Platform, DeviceModel: in.DeviceModel, ClientVersion: in.ClientVersion, IPHash: in.IPHash, LoginAt: now,
+			SISConnectionID: st.SISConnectionID} // OQ F014-1: projected from the SIS link events of module identity
 		if err := h.Logins.Create(ctx, login); err != nil {
 			return err
 		}

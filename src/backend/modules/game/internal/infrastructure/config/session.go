@@ -18,6 +18,7 @@ import (
 const (
 	DefaultHeartbeatTimeout = 45 * time.Second // game_session_heartbeat_timeout
 	DefaultTimeoutScan      = 15 * time.Second // job game-session-timeout scan interval
+	DefaultWarningMinutes   = 10               // curfew_warning_minutes (daily play limit warning, OQ-17)
 	DefaultPlatformCurfew   = "21:30-06:30"    // platform_curfew (ADR-0078), Asia/Ho_Chi_Minh
 	DefaultLocales          = "vi-VN,en-US"    // supported_locales (ADR-0056)
 	CurfewTimeZone          = "Asia/Ho_Chi_Minh"
@@ -52,6 +53,8 @@ func Location() *time.Location {
 //     ref.platform_settings; from then on the setting of the System Admin applies without a restart (OQ F014-2);
 //   - EW_GAME_LOGIN_URL (login.login_url, optional), EW_GAME_REMEMBER_USERNAME_DEFAULT (game_remember_username,
 //     true), EW_SUPPORTED_LOCALES (supported_locales);
+//   - EW_CURFEW_WARNING_MINUTES (curfew_warning_minutes, 10; shared with module identity): warning before the daily
+//     play limit ends a session (OQ-17);
 //   - EW_GAME_IP_HASH_KEY(_FILE) (secret; rotated by redeploying a new key).
 func SessionFrom(c *config.Config) (Session, error) {
 	if err := c.Require("EW_GAME_MIN_CLIENT_VERSION"); err != nil {
@@ -87,13 +90,17 @@ func SessionFrom(c *config.Config) (Session, error) {
 	if len([]rune(m.Message)) > 1000 {
 		return Session{}, errors.New("game config: EW_GAME_MAINTENANCE_MESSAGE is longer than 1000 characters")
 	}
+	warning := c.Int("EW_CURFEW_WARNING_MINUTES", DefaultWarningMinutes)
+	if warning < 0 || warning > 60 {
+		return Session{}, errors.New("game config: EW_CURFEW_WARNING_MINUTES must be 0..60")
+	}
 	locales := c.List("EW_SUPPORTED_LOCALES")
 	if len(locales) == 0 {
 		locales = strings.Split(DefaultLocales, ",")
 	}
 	out := Session{
 		UseCase: command.SessionConfig{MinClientVersion: minVersion, HeartbeatTimeout: timeout, Maintenance: m,
-			PlatformCurfew: curfew, CurfewLocation: loc},
+			PlatformCurfew: curfew, CurfewLocation: loc, WarningBefore: time.Duration(warning) * time.Minute},
 		ClientConfig: query.ClientConfigSource{MinClientVersion: minVersion, LatestClientVersion: latest,
 			LoginURL: c.String("EW_GAME_LOGIN_URL"), RememberUsernameDefault: c.Bool("EW_GAME_REMEMBER_USERNAME_DEFAULT", true),
 			SupportedLocales: locales, Maintenance: func() query.Maintenance {

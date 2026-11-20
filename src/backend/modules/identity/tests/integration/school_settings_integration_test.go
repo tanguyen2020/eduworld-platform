@@ -74,6 +74,43 @@ func TestSchoolSettings(t *testing.T) {
 		AND envelope::text LIKE '%`+a.school+`%'`); n != 2 {
 		t.Fatal("audit with school_id")
 	}
+	// AC-30: daily_play_limit_minutes off by default (null); out of 15..300 → 422; without reason → 422; set with a
+	// reason → stored, audited and carried in school.updated; null turns it off again.
+	etag = r.header.Get("ETag")
+	if r = h.do(t, "GET", path, tok, map[string]string{"X-Tenant-Id": a.tenant}, nil); r.status != 200 || r.body["daily_play_limit_minutes"] != nil {
+		t.Fatalf("limit default: %d %v", r.status, r.body)
+	}
+	if _, present := r.body["daily_play_limit_minutes"]; !present {
+		t.Fatal("daily_play_limit_minutes must be present (null)")
+	}
+	for _, bad := range []any{0, 14, 301, "120", 12.5} {
+		if r = h.do(t, "PATCH", path, tok, hdr(etag), map[string]any{"daily_play_limit_minutes": bad, "reason": "Giới hạn chơi"}); r.status != 422 {
+			t.Fatalf("limit %v: %d", bad, r.status)
+		}
+	}
+	if r = h.do(t, "PATCH", path, tok, hdr(etag), map[string]any{"daily_play_limit_minutes": 120}); r.status != 422 {
+		t.Fatalf("limit without reason: %d", r.status)
+	}
+	r = h.do(t, "PATCH", path, tok, hdr(etag), map[string]any{"daily_play_limit_minutes": 120, "reason": "Giới hạn chơi mỗi ngày"})
+	if r.status != 200 || r.body["daily_play_limit_minutes"] != float64(120) {
+		t.Fatalf("limit: %d %v", r.status, r.body)
+	}
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'school.updated' AND tenant_id = $1
+		AND envelope::text LIKE '%"daily_play_limit_minutes": 120%'`, a.tenant); n != 1 {
+		t.Fatalf("school.updated with the limit = %d", n)
+	}
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'audit.recorded'
+		AND envelope::text LIKE '%school.settings_updated%' AND envelope::text LIKE '%Giới hạn chơi mỗi ngày%'`); n != 1 {
+		t.Fatal("audit with the reason")
+	}
+	if r = h.do(t, "PATCH", path, tok, hdr(r.header.Get("ETag")), map[string]any{"daily_play_limit_minutes": nil, "reason": "Tắt giới hạn"}); r.status != 200 ||
+		r.body["daily_play_limit_minutes"] != nil {
+		t.Fatalf("limit off: %d %v", r.status, r.body)
+	}
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'school.updated' AND tenant_id = $1
+		AND envelope::text LIKE '%"daily_play_limit_minutes": null%' AND envelope::text LIKE '%settings.daily_play_limit_minutes%'`, a.tenant); n != 1 {
+		t.Fatalf("school.updated with the limit off = %d", n)
+	}
 	// AC-17: another school of the tenant → 403; a school of another tenant → 404.
 	if r = h.do(t, "GET", "/schools/"+a.otherSchool+"/settings", tok, map[string]string{"X-Tenant-Id": a.tenant}, nil); r.status != 403 {
 		t.Fatalf("other school: %d", r.status)

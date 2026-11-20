@@ -38,12 +38,14 @@ type RefSchool struct {
 
 // RefStudent is a row of ref.students. Nil fields keep the stored value on update.
 type RefStudent struct {
-	StudentID     uuid.UUID
-	TenantID      uuid.UUID
-	SchoolID      uuid.UUID
-	GradeLevel    *int
-	Status        *string
-	SourceVersion int64
+	StudentID  uuid.UUID
+	TenantID   uuid.UUID
+	SchoolID   uuid.UUID
+	GradeLevel *int
+	Status     *string
+	// SISConnectionID is the SIS connection of student.synced (nil keeps the stored value, OQ F014-1).
+	SISConnectionID *uuid.UUID
+	SourceVersion   int64
 }
 
 // ProjectionWriter writes the ref.* projections of module identity (DATABASE_DESIGN §2.17). Only the command
@@ -60,6 +62,9 @@ type ProjectionWriter interface {
 	SetStudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error)
 	// MarkStudentDeleted sets (deleted) or clears deleted_at of a projected student, ordered by the event time.
 	MarkStudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
+	// SetStudentSIS sets the SIS connection of a projected student of tenant (student.sis_link_created /
+	// student.sis_link_superseded, OQ F014-1); false when the student is not projected yet (student.synced carries it).
+	SetStudentSIS(ctx context.Context, student, tenant, connection uuid.UUID) (bool, error)
 }
 
 // KeyPlatformCurfew is the platform setting platform_curfew (CONFIG_DEFAULTS, ADR-0078; owner module identity, F015).

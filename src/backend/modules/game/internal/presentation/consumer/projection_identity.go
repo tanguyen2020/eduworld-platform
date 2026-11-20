@@ -121,6 +121,9 @@ func (c IdentityProjection) dispatch(ctx context.Context, e outbox.Envelope) (st
 	case "student.cleaned_up", "student.restored":
 		applied, err = c.studentDeleted(ctx, e)
 		return when(applied, "students"), err
+	case "student.sis_link_created", "student.sis_link_superseded":
+		applied, err = c.studentSIS(ctx, e)
+		return when(applied, "students"), err
 	}
 	return "", nil // another identity event: nothing to project
 }
@@ -180,12 +183,13 @@ func (c IdentityProjection) school(ctx context.Context, e outbox.Envelope) (bool
 }
 
 type studentPayload struct {
-	StudentID     uuid.UUID `json:"student_id"`
-	SchoolID      uuid.UUID `json:"school_id"`
-	Action        string    `json:"action"`
-	GradeLevel    *int      `json:"grade_level"`
-	Status        *string   `json:"status"`
-	SourceVersion *int64    `json:"source_version"`
+	StudentID     uuid.UUID  `json:"student_id"`
+	SchoolID      uuid.UUID  `json:"school_id"`
+	Action        string     `json:"action"`
+	GradeLevel    *int       `json:"grade_level"`
+	Status        *string    `json:"status"`
+	SISConnection *uuid.UUID `json:"sis_connection_id"`
+	SourceVersion *int64     `json:"source_version"`
 }
 
 func (c IdentityProjection) student(ctx context.Context, e outbox.Envelope) (bool, error) {
@@ -209,7 +213,7 @@ func (c IdentityProjection) student(ctx context.Context, e outbox.Envelope) (boo
 		status = &s
 	}
 	return c.Upsert.Student(ctx, e.TenantID, write.RefStudent{StudentID: p.StudentID, SchoolID: p.SchoolID, GradeLevel: p.GradeLevel,
-		Status: status, SourceVersion: version(p.SourceVersion, e)})
+		Status: status, SISConnectionID: p.SISConnection, SourceVersion: version(p.SourceVersion, e)})
 }
 
 type statusPayload struct {
@@ -245,4 +249,31 @@ func (c IdentityProjection) studentDeleted(ctx context.Context, e outbox.Envelop
 		return false, invalid(e.EventType, "student_id and tenant_id are required")
 	}
 	return c.Upsert.StudentDeleted(ctx, e.TenantID, p.StudentID, p.TenantID, e.EventType == "student.cleaned_up", e.OccurredAt)
+}
+
+type sisLinkPayload struct {
+	UserID     uuid.UUID `json:"user_id"`
+	TenantID   uuid.UUID `json:"tenant_id"`         // student.sis_link_created
+	Connection uuid.UUID `json:"sis_connection_id"` // student.sis_link_created
+	New        uuid.UUID `json:"new_sis_connection_id"`
+}
+
+// studentSIS applies the SIS link of a student (OQ F014-1): the new connection of student.sis_link_superseded or the
+// connection of student.sis_link_created.
+func (c IdentityProjection) studentSIS(ctx context.Context, e outbox.Envelope) (bool, error) {
+	var p sisLinkPayload
+	if err := decode(e, &p); err != nil {
+		return false, err
+	}
+	conn := p.Connection
+	if e.EventType == "student.sis_link_superseded" {
+		conn = p.New
+	}
+	switch {
+	case p.UserID == uuid.Nil || conn == uuid.Nil:
+		return false, invalid(e.EventType, "user_id and the SIS connection are required")
+	case e.EventType == "student.sis_link_created" && (e.TenantID == nil || p.TenantID != *e.TenantID):
+		return false, fmt.Errorf("%w: payload tenant", command.ErrProjectionTenantMismatch)
+	}
+	return c.Upsert.StudentSIS(ctx, e.TenantID, p.UserID, conn)
 }

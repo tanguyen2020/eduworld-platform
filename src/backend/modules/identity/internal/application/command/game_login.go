@@ -16,6 +16,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/gamelogin"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/portalauth"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/settings"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -119,7 +120,8 @@ type GameAuth struct {
 	Tickets     port.LoginTicketStore
 	Limiter     port.RateLimiter
 	Curfew      port.CurfewSource
-	Hours       port.AccessHoursSource // F015: school/tenant access hours (nil = none)
+	Hours       port.AccessHoursSource    // F015: school/tenant access hours (nil = none)
+	DailyLimit  port.DailyPlayLimitSource // OQ-17: daily play limit of the school (nil = none)
 	Sync        LoginSyncFunc
 	Restore     LoginRestorer // F016 US4: restore of a cleaned-up student (nil = ACCOUNT_NOT_PROVISIONED)
 	Metrics     port.GameAuthMetrics
@@ -541,6 +543,9 @@ func (h GameAuth) complete(ctx context.Context, cfg GameAuthConfig, c completion
 	if err := h.applyCurfew(ctx, cfg, &b); err != nil {
 		return deny(port.GameLoginCurfewActive, err)
 	}
+	if err := h.applyDailyLimit(ctx, &b, user); err != nil {
+		return deny(port.GameLoginDailyLimitReached, err)
+	}
 	now := h.now()
 	s := &gamelogin.Session{ID: uuid.Must(uuid.NewV7()), TenantID: tenant, UserID: user, KeycloakSID: c.tok.SessionID,
 		DeviceID: c.deviceID, Platform: c.platform, CurrentHash: gamelogin.HashToken(c.tok.RefreshToken), CreatedAt: now, LastRefreshedAt: now}
@@ -605,6 +610,24 @@ func (h GameAuth) applyCurfew(ctx context.Context, cfg GameAuthConfig, b *dto.Pl
 	b.Policies.PlayTime = &dto.PlayTimePolicy{Curfew: &dto.CurfewPolicy{Start: hhmm(cf.Start), End: hhmm(cf.End), WarningMinutes: cfg.CurfewWarningMinutes}}
 	if on, reopen := cf.Active(h.now()); on {
 		return problem.New(problem.CurfewActive, "").With("reopen_at", reopen.UTC().Format(time.RFC3339))
+	}
+	return nil
+}
+
+// applyDailyLimit refuses with 403 DAILY_PLAY_LIMIT_REACHED + reopen_at (00:00 ICT the next day) a student whose
+// school set daily_play_limit_minutes and who already played that long today (OQ-17, F013-AC-33). The time played
+// is the projection of game_session.ended (module game is never called, R30); the common tenant has no limit.
+func (h GameAuth) applyDailyLimit(ctx context.Context, b *dto.PlayerBootstrap, user uuid.UUID) error {
+	if h.DailyLimit == nil || b.IsCommonTenant {
+		return nil
+	}
+	now := h.now()
+	limit, played, loc, err := h.DailyLimit.DailyPlayLimit(ctx, b.TenantID, b.SchoolID, user, now)
+	if err != nil {
+		return unavailable(err)
+	}
+	if settings.DailyLimitReached(limit, played) {
+		return problem.New(problem.DailyPlayLimitReached, "").With("reopen_at", settings.NextMidnight(now, loc).UTC().Format(time.RFC3339))
 	}
 	return nil
 }

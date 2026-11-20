@@ -20,13 +20,14 @@ const (
 	ReasonCleanup       = "cleanup"
 	ReasonClientCrash   = "client_crash"
 	ReasonCurfew        = "curfew"
+	ReasonDailyLimit    = "daily_limit" // daily play limit of the school reached (OQ-17, F014-AC-27)
 )
 
 // ValidEndReason reports whether r is an end reason.
 func ValidEndReason(r string) bool {
 	switch r {
 	case ReasonLogout, ReasonReplaced, ReasonTimeout, ReasonAccountLocked, ReasonAccessRevoked, ReasonCleanup,
-		ReasonClientCrash, ReasonCurfew:
+		ReasonClientCrash, ReasonCurfew, ReasonDailyLimit:
 		return true
 	}
 	return false

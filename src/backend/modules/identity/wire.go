@@ -243,10 +243,11 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	if err != nil {
 		return err
 	}
-	policy := gameauth.SettingsPolicy{Reader: read.SettingsModel{Session: core.ReadSession}, Defaults: defaults}
+	policy := gameauth.SettingsPolicy{Reader: read.SettingsModel{Session: core.ReadSession}, PlayTime: read.PlayTimeModel{Session: core.ReadSession},
+		Defaults: defaults}
 	gameAuth := command.GameAuth{UoW: core.UoW, Accounts: write.GameLoginRepo{}, Memberships: read.LoginMembershipReader{Session: core.ReadSession},
 		Sessions: write.GameAuthSessionRepo{}, Bootstrap: read.BootstrapReader{Session: core.ReadSession}, Events: events, Audit: auditor,
-		IdP: gameTokens, KC: kc, Tickets: tickets, Limiter: cache.NewFallbackLimiter(cache.RateLimiter{C: vk}), Curfew: policy, Hours: policy,
+		IdP: gameTokens, KC: kc, Tickets: tickets, Limiter: cache.NewFallbackLimiter(cache.RateLimiter{C: vk}), Curfew: policy, Hours: policy, DailyLimit: policy,
 		Sync: func(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error) {
 			res, err := ls.Ensure(ctx, userID)
 			return res.SisConnectionID, err
@@ -379,6 +380,8 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		consumer.RevokeOnSessionReplacedName: {consumer.RevokeOnSessionReplacedSubjects, consumer.RevokeOnSessionReplaced{Revoker: gameAuth}.Handle},
 		consumer.LastLoginName: {consumer.LastLoginSubjects, consumer.LastLoginOnGameLoggedIn{Users: command.RecordGameLogin{
 			Users: write.LastLoginRepo{}}}.Handle},
+		consumer.DailyPlayTimeName: {consumer.DailyPlayTimeSubjects, consumer.DailyPlayTime{PlayTime: command.RecordPlayTime{
+			PlayTime: write.PlayTimeRepo{}, Location: policy.Location()}}.Handle}, // OQ-17
 		consumer.DefaultAssignmentsName: {consumer.DefaultAssignmentsSubjects, consumer.DefaultAssignments{Apply: command.ApplyDefaultAssignments{PlatformAdminDeps: pad}}.Handle},
 		consumer.FeatureToggleCacheName: {[]string{consumer.FeatureToggleCacheSubject}, consumer.FeatureToggleCache{Cache: toggles}.Handle},
 	}

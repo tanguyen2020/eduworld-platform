@@ -107,7 +107,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '403':
-          description: TENANT_NOT_SELECTED (học sinh thuộc nhiều tenant — kèm choices + login_ticket), GAME_ACCESS_STUDENT_ONLY, ACCOUNT_NOT_PROVISIONED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (giờ giới nghiêm hiệu lực, kèm `reopen_at` — ADR-0078)
+          description: TENANT_NOT_SELECTED (học sinh thuộc nhiều tenant — kèm choices + login_ticket), GAME_ACCESS_STUDENT_ONLY, ACCOUNT_NOT_PROVISIONED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (giờ giới nghiêm hiệu lực, kèm `reopen_at` — ADR-0078), DAILY_PLAY_LIMIT_REACHED (đã đạt giới hạn chơi/ngày của trường, kèm `reopen_at` = 00:00 ICT hôm sau — OQ-17)
           content:
             application/problem+json:
               schema:
@@ -163,7 +163,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '403':
-          description: TENANT_MISMATCH, TENANT_ACCESS_DISABLED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (kèm `reopen_at` — ADR-0078)
+          description: TENANT_MISMATCH, TENANT_ACCESS_DISABLED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (kèm `reopen_at` — ADR-0078), DAILY_PLAY_LIMIT_REACHED (đã đạt giới hạn chơi/ngày của trường, kèm `reopen_at` = 00:00 ICT hôm sau — OQ-17)
           content:
             application/problem+json:
               schema:
@@ -232,7 +232,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '403':
-          description: ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, TENANT_MISMATCH, ACCESS_OUTSIDE_ALLOWED_HOURS, GAME_ACCESS_STUDENT_ONLY, CURFEW_ACTIVE (chỉ `mode = resume`, kèm `reopen_at` — ADR-0078)
+          description: ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, TENANT_MISMATCH, ACCESS_OUTSIDE_ALLOWED_HOURS, GAME_ACCESS_STUDENT_ONLY, CURFEW_ACTIVE (chỉ `mode = resume`, kèm `reopen_at` — ADR-0078), DAILY_PLAY_LIMIT_REACHED (chỉ `mode = resume`, kèm `reopen_at` — OQ-17)
           content:
             application/problem+json:
               schema:
@@ -6371,6 +6371,13 @@ components:
         student_club_creation:
           type: boolean
           default: false
+        daily_play_limit_minutes:
+          description: Giới hạn chơi/ngày (phút) áp như nhau cho mọi học sinh của trường, tính trên tổng thời gian game session trong ngày (ICT); `null` = tắt (mặc định — CONFIG_DEFAULTS `daily_play_limit_minutes`, CHILD_SAFETY §4, OQ-17). Phát trong `school.updated` cho module game; tenant `common` không áp; khoảng 15–300 phút [Proposed]
+          oneOf:
+            - type: integer
+              minimum: 15
+              maximum: 300
+            - type: 'null'
         curfew_window:
           description: Khung giới nghiêm của trường (chỉ mở rộng, phải chứa trọn platform_curfew); null = chỉ áp platform_curfew
           oneOf:
@@ -6394,7 +6401,7 @@ components:
           minLength: 3
           maxLength: 500
           writeOnly: true
-          description: Bắt buộc khi đổi curfew_window (audit)
+          description: Bắt buộc khi đổi curfew_window hoặc daily_play_limit_minutes (audit)
     AllowedHours:
       type: object
       additionalProperties: false
@@ -9161,7 +9168,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Forbidden:
-      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
+      description: PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED
       content:
         application/problem+json:
           schema:

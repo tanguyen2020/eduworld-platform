@@ -139,9 +139,11 @@ func (h Sessions) TimeoutStaleSessions(ctx context.Context, batch int) (n int, e
 	return n, errors.Join(errs...)
 }
 
-// CloseSessionsAtCurfew is one run of the job curfew-session-closer (F014-AC-26): every active session of a
-// student inside the effective curfew ends with curfew; the client gets session.session.ended with reopen_at
-// (gateway F090 closes 4410). Progress recorded on the server is untouched.
+// CloseSessionsAtCurfew is one run of the job curfew-session-closer (F014-AC-26, AC-27): every active session of a
+// student inside the effective curfew ends with curfew, and every session of a student who reached the daily play
+// limit of the school ends with daily_limit (warned with session.session.ending_soon curfew_warning_minutes
+// before); the client gets session.session.ended with reopen_at (gateway F090 closes 4410). Progress recorded on
+// the server is untouched.
 func (h Sessions) CloseSessionsAtCurfew(ctx context.Context, batch int) (n int, err error) {
 	ctx, done := observability.UseCase(ctx, "game.command.CloseSessionsAtCurfew")
 	defer func() { done(err) }()
@@ -168,6 +170,8 @@ func (h Sessions) CloseSessionsAtCurfew(ctx context.Context, batch int) (n int, 
 		for _, ref := range refs {
 			after = ref.ID
 			var reopen time.Time
+			var reason string
+			var warnAt *time.Time
 			ok, s, err := h.endRef(ctx, ref, func(ctx context.Context, s *gamesession.Session, now time.Time) (string, bool, error) {
 				school := uuid.Nil
 				if s.SchoolID != nil {
@@ -178,8 +182,24 @@ func (h Sessions) CloseSessionsAtCurfew(ctx context.Context, batch int) (n int, 
 					return "", false, err
 				}
 				var active bool
-				active, reopen = cf.Active(now)
-				return gamesession.ReasonCurfew, active, nil
+				if active, reopen = cf.Active(now); active {
+					reason = gamesession.ReasonCurfew
+					return reason, true, nil
+				}
+				// Daily play limit of the school (OQ-17, F014-AC-27): end at the limit, warn before it.
+				a, err := h.dailyAllowance(ctx, s.TenantID, s.StudentID, school, now)
+				if err != nil {
+					return "", false, err
+				}
+				if a.Reached() {
+					reason, reopen = gamesession.ReasonDailyLimit, a.Reopen
+					return reason, true, nil
+				}
+				if h.warnNow(a, s.StartedAt, now) {
+					endsAt := now.Add(a.Remaining)
+					warnAt = &endsAt
+				}
+				return "", false, nil
 			})
 			if err != nil {
 				errs = append(errs, err)
@@ -189,8 +209,10 @@ func (h Sessions) CloseSessionsAtCurfew(ctx context.Context, batch int) (n int, 
 				n++
 				if h.Realtime != nil {
 					at := *s.EndedAt
-					_ = h.Realtime.SessionEnded(ctx, s.StudentID, s.ID, gamesession.ReasonCurfew, at, &reopen)
+					_ = h.Realtime.SessionEnded(ctx, s.StudentID, s.ID, reason, at, &reopen)
 				}
+			} else if warnAt != nil && h.Realtime != nil {
+				_ = h.Realtime.SessionEndingSoon(ctx, ref.StudentID, ref.ID, gamesession.ReasonDailyLimit, *warnAt)
 			}
 		}
 		if len(refs) < batch {

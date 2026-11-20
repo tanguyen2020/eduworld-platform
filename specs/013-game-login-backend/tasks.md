@@ -106,9 +106,9 @@
 
 ## OQ chốt 2026-11-20 (việc bổ sung)
 
-Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
+Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Đã làm 2026-11-20.
 
-- [ ] T048 **OQ chốt 2026-11-20** (OQ-17, F013-AC-33) Projection thời gian chơi/ngày từ `game_session.ended` + kiểm `daily_play_limit_minutes` của trường trong `GameLogin`/`SelectGameLoginTenant`/`RefreshGameToken` (`resume`); `ProblemCode` thêm `DAILY_PLAY_LIMIT_REACHED` (`reopen_at`); test F013-AC-33 — file: `specs/openapi/modules/identity.v1.yaml`, `src/backend/modules/identity/internal/presentation/consumer/`, `internal/infrastructure/gameauth/policy.go` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ M
+- [x] T048 **OQ chốt 2026-11-20** (OQ-17, F013-AC-33) Projection thời gian chơi/ngày từ `game_session.ended` + kiểm `daily_play_limit_minutes` của trường trong `GameLogin`/`SelectGameLoginTenant`/`RefreshGameToken` (`resume`); `ProblemCode` thêm `DAILY_PLAY_LIMIT_REACHED` (`reopen_at`); test F013-AC-33 — file: `specs/openapi/modules/identity.v1.yaml`, `src/backend/modules/identity/internal/presentation/consumer/`, `internal/infrastructure/gameauth/policy.go` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ M — ✅ 2026-11-20: bảng `identity.daily_play_time` (RLS, migration `20261128000001_oq17_daily_play_time.sql`), consumer `identity.daily_play_time` (`game_session.ended`, tách theo ngày ICT), `GameAuth.applyDailyLimit` ở login/tenant:select/resume (journal `daily_play_limit_reached`, không thu hồi phiên), `SettingsPolicy.DailyPlayLimit`; test `TestDailyPlayLimitAtGameLogin`, `TestDailyPlayTimeProjection`, `TestSplitByDayOverMidnight` PASS (F013-AC-33)
 
 ## Dependencies & Execution Order
 

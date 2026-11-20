@@ -5071,6 +5071,7 @@ export interface paths {
          *     lại với `takeover: true` (không nhập lại mật khẩu; body khác nên dùng `Idempotency-Key` **mới**) để kết thúc
          *     session cũ (thiết bị cũ nhận `session.session.replaced`).
          *     Trong giờ giới nghiêm hiệu lực (platform_curfew ∪ curfew_window của trường) → `403 CURFEW_ACTIVE` kèm `reopen_at` (ADR-0078).
+         *     Trường bật `daily_play_limit_minutes` và tổng thời gian game session của học sinh trong ngày (ICT) đã đạt giới hạn → `403 DAILY_PLAY_LIMIT_REACHED` kèm `reopen_at` = 00:00 ICT hôm sau, kể cả `takeover` (OQ-17).
          *     `client_version` thấp hơn tối thiểu → `426 CLIENT_VERSION_UNSUPPORTED`; đang bảo trì → `503 MAINTENANCE`.
          */
         post: operations["createGameSession"];
@@ -12483,10 +12484,12 @@ export interface components {
             class_leaderboard_enabled?: boolean;
             /** @description Khung giới nghiêm của trường (chỉ mở rộng, phải chứa trọn platform_curfew); null = chỉ áp platform_curfew */
             curfew_window?: components["schemas"]["CurfewWindow"] | null;
+            /** @description Giới hạn chơi/ngày (phút) áp như nhau cho mọi học sinh của trường, tính trên tổng thời gian game session trong ngày (ICT); `null` = tắt (mặc định — CONFIG_DEFAULTS `daily_play_limit_minutes`, CHILD_SAFETY §4, OQ-17). Phát trong `school.updated` cho module game; tenant `common` không áp; khoảng 15–300 phút [Proposed] */
+            daily_play_limit_minutes?: number | null;
             /** @description Giới nghiêm hiệu lực của học sinh trường = hợp platform_curfew và curfew_window */
             readonly effective_curfew?: components["schemas"]["CurfewWindow"];
             readonly platform_curfew?: components["schemas"]["CurfewWindow"];
-            /** @description Bắt buộc khi đổi curfew_window (audit) */
+            /** @description Bắt buộc khi đổi curfew_window hoặc daily_play_limit_minutes (audit) */
             reason?: string;
             readonly school_id?: components["schemas"]["Uuid"];
             school_leaderboard_enabled?: boolean;
@@ -13646,7 +13649,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED */
+        /** @description PERMISSION_DENIED, FEATURE_DISABLED (action/menu portal đang tắt, có `feature_key` — ADR-0090), GAME_ACCESS_STUDENT_ONLY, POLICY_DENIED, TENANT_NOT_SELECTED, TENANT_MISMATCH, TENANT_ACCESS_DISABLED, RESOURCE_NOT_ASSIGNED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, ACCOUNT_NOT_PROVISIONED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE, DAILY_PLAY_LIMIT_REACHED, PARTY_NOT_LEADER, PARTY_INVITE_NOT_ALLOWED, PARTY_POLICY_VIOLATION, CHAT_NOT_ALLOWED, CHAT_KIND_NOT_ALLOWED, CHAT_MUTED, TENANT_TOGGLE_NOT_ALLOWED, MODERATION_SWITCH_SELF_APPROVAL, PORTAL_ACCESS_STAFF_ONLY, HINTS_NOT_ALLOWED */
         Forbidden: {
             headers: {
                 [name: string]: unknown;
@@ -18570,7 +18573,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description TENANT_NOT_SELECTED (học sinh thuộc nhiều tenant — kèm choices + login_ticket), GAME_ACCESS_STUDENT_ONLY, ACCOUNT_NOT_PROVISIONED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (giờ giới nghiêm hiệu lực, kèm `reopen_at` — ADR-0078) */
+            /** @description TENANT_NOT_SELECTED (học sinh thuộc nhiều tenant — kèm choices + login_ticket), GAME_ACCESS_STUDENT_ONLY, ACCOUNT_NOT_PROVISIONED, ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (giờ giới nghiêm hiệu lực, kèm `reopen_at` — ADR-0078), DAILY_PLAY_LIMIT_REACHED (đã đạt giới hạn chơi/ngày của trường, kèm `reopen_at` = 00:00 ICT hôm sau — OQ-17) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -18658,7 +18661,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description TENANT_MISMATCH, TENANT_ACCESS_DISABLED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (kèm `reopen_at` — ADR-0078) */
+            /** @description TENANT_MISMATCH, TENANT_ACCESS_DISABLED, NO_ACTIVE_ENROLLMENT, ACCESS_OUTSIDE_ALLOWED_HOURS, CURFEW_ACTIVE (kèm `reopen_at` — ADR-0078), DAILY_PLAY_LIMIT_REACHED (đã đạt giới hạn chơi/ngày của trường, kèm `reopen_at` = 00:00 ICT hôm sau — OQ-17) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -18713,7 +18716,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, TENANT_MISMATCH, ACCESS_OUTSIDE_ALLOWED_HOURS, GAME_ACCESS_STUDENT_ONLY, CURFEW_ACTIVE (chỉ `mode = resume`, kèm `reopen_at` — ADR-0078) */
+            /** @description ACCOUNT_LOCKED, ACCOUNT_DEACTIVATED, NO_ACTIVE_ENROLLMENT, TENANT_ACCESS_DISABLED, TENANT_MISMATCH, ACCESS_OUTSIDE_ALLOWED_HOURS, GAME_ACCESS_STUDENT_ONLY, CURFEW_ACTIVE (chỉ `mode = resume`, kèm `reopen_at` — ADR-0078), DAILY_PLAY_LIMIT_REACHED (chỉ `mode = resume`, kèm `reopen_at` — OQ-17) */
             403: {
                 headers: {
                     [name: string]: unknown;

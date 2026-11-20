@@ -207,3 +207,9 @@ type FeatureFlagReader interface {
 	Catalog(ctx context.Context) (version string, items []settings.CatalogItem, err error)
 	Flags(ctx context.Context) ([]settings.Flag, error)
 }
+
+// PlayTimeReader reads identity.daily_play_time (OQ-17, F013-AC-33) under the TenantScope of the caller.
+type PlayTimeReader interface {
+	// PlayedOn returns the time user played in tenant on day (0 when none).
+	PlayedOn(ctx context.Context, tenant, user uuid.UUID, day settings.PlayDate) (time.Duration, error)
+}

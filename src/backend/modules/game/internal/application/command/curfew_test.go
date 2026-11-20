@@ -20,6 +20,7 @@ type directory struct {
 	school   *write.CurfewWindow
 	err      error
 	reads    int
+	limit    *int // daily_play_limit_minutes of the school
 }
 
 func (d *directory) Student(context.Context, uuid.UUID, uuid.UUID) (*write.Student, error) {
@@ -33,6 +34,10 @@ func (d *directory) SchoolCurfew(context.Context, uuid.UUID, uuid.UUID) (*write.
 func (d *directory) PlatformCurfew(context.Context) (*write.CurfewWindow, error) {
 	d.reads++
 	return d.platform, d.err
+}
+
+func (d *directory) DailyPlayLimit(context.Context, uuid.UUID, uuid.UUID) (*int, error) {
+	return d.limit, nil
 }
 
 func window(t *testing.T, s string) gamesession.Window {

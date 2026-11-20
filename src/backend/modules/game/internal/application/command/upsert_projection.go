@@ -115,3 +115,15 @@ func (h UpsertProjection) StudentDeleted(ctx context.Context, envTenant *uuid.UU
 		return h.Refs.MarkStudentDeleted(ctx, student, t, deleted, at)
 	})
 }
+
+// StudentSIS applies student.sis_link_created and student.sis_link_superseded: the SIS connection that game.login_events
+// records for the student (OQ F014-1), on the student row of the envelope tenant only.
+func (h UpsertProjection) StudentSIS(ctx context.Context, envTenant *uuid.UUID, student, connection uuid.UUID) (bool, error) {
+	return run(ctx, "StudentSIS", func(ctx context.Context) (bool, error) {
+		t, err := sameTenant(envTenant, uuid.Nil)
+		if err != nil {
+			return false, err
+		}
+		return h.Refs.SetStudentSIS(ctx, student, t, connection) // a student of another tenant (cross-tenant move) is untouched
+	})
+}

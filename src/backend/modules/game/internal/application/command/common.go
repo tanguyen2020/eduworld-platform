@@ -40,8 +40,11 @@ type SessionConfig struct {
 	// it applies only until module game has projected platform_settings.changed (key platform_curfew) of module
 	// identity; from then on the projected value applies (OQ F014-2).
 	PlatformCurfew gamesession.Window
-	// CurfewLocation is the time zone of curfew windows (Asia/Ho_Chi_Minh).
+	// CurfewLocation is the time zone of curfew windows and of the play day of the daily limit (Asia/Ho_Chi_Minh).
 	CurfewLocation *time.Location
+	// WarningBefore is curfew_warning_minutes (CONFIG_DEFAULTS, 10 min): the job warns a session that long before
+	// the daily play limit ends it (OQ-17, F014-AC-27).
+	WarningBefore time.Duration
 }
 
 // Sessions are the game session use cases (createGameSession, endGameSession, heartbeatGameSession, the jobs

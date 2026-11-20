@@ -57,10 +57,10 @@ channels:
       Một kết nối WebSocket cho mỗi người dùng (kết nối mới thay thế kết nối cũ, close 4409).
       Chỉ học sinh (token game `azp = eduworld-game-backend`, ADR-0068) được cấp ticket (ADR-0031); tenant của kết nối cố định theo `X-Tenant-Id` lúc cấp ticket (ADR-0065). Khi tài khoản đăng nhập trên thiết bị khác
       (takeover), thiết bị cũ nhận `session.session.replaced` rồi bị đóng với close 4409. Khi server kết thúc game session, client nhận
-      `session.session.ended` rồi bị đóng: `reason = curfew` → close 4410 (không thu hồi credential); lý do khác → close 4403 (credential/phiên bị thu hồi).
+      `session.session.ended` rồi bị đóng: `reason = curfew` hoặc `daily_limit` → close 4410 (không thu hồi credential); lý do khác → close 4403 (credential/phiên bị thu hồi).
       Subprotocol `eduworld.v1`. Ticket lấy từ `POST /api/v1/game/sessions/{id}/realtime-tickets` (TTL 60s, dùng 1 lần).
       Close codes: 4400 bad message · 4401 ticket invalid · 4403 access revoked (đăng xuất, xóa refresh token) · 4408 heartbeat timeout ·
-      4409 replaced · 4410 session ended không thu hồi credential (hiện chỉ curfew; không reconnect) · 4429 rate limited · 4500 server shutdown (reconnect + resume).
+      4409 replaced · 4410 session ended không thu hồi credential (curfew, daily_limit; không reconnect) · 4429 rate limited · 4500 server shutdown (reconnect + resume).
     bindings:
       ws:
         query:
@@ -92,6 +92,7 @@ channels:
       SystemNoticeBroadcast: { $ref: '#/components/messages/SystemNoticeBroadcast' }
       SessionReplaced: { $ref: '#/components/messages/SessionReplaced' }
       SessionEnded: { $ref: '#/components/messages/SessionEnded' }
+      SessionEndingSoon: { $ref: '#/components/messages/SessionEndingSoon' }
       ContentManifestUpdated: { $ref: '#/components/messages/ContentManifestUpdated' }
       # ---------- presence ----------
       PresenceStatusSet: { $ref: '#/components/messages/PresenceStatusSet' }
@@ -229,6 +230,7 @@ operations:
       - $ref: '#/channels/realtime/messages/SystemNoticeBroadcast'
       - $ref: '#/channels/realtime/messages/SessionReplaced'
       - $ref: '#/channels/realtime/messages/SessionEnded'
+      - $ref: '#/channels/realtime/messages/SessionEndingSoon'
       - $ref: '#/channels/realtime/messages/ContentManifestUpdated'
   receivePresenceCommands:
     action: receive
@@ -1007,6 +1009,8 @@ components:
         Gửi ngay trước khi gateway (F090) đóng kết nối đang giữ đúng `game_session_id` (REALTIME_ARCHITECTURE §3.1):
         - `reason = curfew` (module game, job `curfew-session-closer`, F014-AC-26): close **4410** — session kết thúc **không** thu hồi credential;
           client hiện màn giờ giới nghiêm với `reopen_at`, giữ refresh token, không tự kết nối lại.
+        - `reason = daily_limit` (module game, job `curfew-session-closer`, F014-AC-27, OQ-17): học sinh đạt giới hạn chơi/ngày của trường; xử lý như `curfew`
+          (close **4410**, `reopen_at` = 00:00 ICT hôm sau, giữ refresh token).
         - `account_locked`, `access_revoked`, `cleanup`, `admin`, `password_changed` (credential/phiên đã bị thu hồi, vd. `user.access_revoked`): close **4403**;
           client đăng xuất, xóa refresh token, về màn đăng nhập với thông báo theo `reason` (GAME_NETWORKING §4.4).
         `session.session.replaced`/4409 không đổi.
@@ -1021,15 +1025,37 @@ components:
                 required: [game_session_id, reason, ended_at]
                 properties:
                   game_session_id: { type: string, format: uuid, description: Session bị kết thúc; gateway chỉ đóng kết nối đang giữ session này }
-                  reason: { type: string, enum: [curfew, account_locked, cleanup, access_revoked, admin, password_changed], description: 'curfew → close 4410; còn lại → close 4403' }
-                  reopen_at: { $ref: '#/components/schemas/EpochMs', description: Chỉ có khi reason = curfew — thời điểm hết giờ giới nghiêm hiệu lực (giờ server) }
+                  reason: { type: string, enum: [curfew, daily_limit, account_locked, cleanup, access_revoked, admin, password_changed], description: 'curfew, daily_limit → close 4410; còn lại → close 4403' }
+                  reopen_at: { $ref: '#/components/schemas/EpochMs', description: Chỉ có khi reason = curfew (hết giờ giới nghiêm hiệu lực) hoặc daily_limit (00:00 ICT hôm sau) — giờ server }
                   ended_at: { $ref: '#/components/schemas/EpochMs' }
                 if:
-                  properties: { reason: { const: curfew } }
+                  properties: { reason: { enum: [curfew, daily_limit] } }
                 then:
                   required: [reopen_at]
                 else:
                   not: { required: [reopen_at] }
+
+    SessionEndingSoon:
+      name: session.session.ending_soon
+      summary: Game session sắp bị server kết thúc vì đạt giới hạn chơi/ngày của trường — owner F014 (F014-AC-27, OQ-17).
+      description: |
+        Job `curfew-session-closer` của module game gửi một lần khi thời gian chơi còn lại trong ngày (ICT) của học sinh
+        ≤ `curfew_warning_minutes` (CONFIG_DEFAULTS, 10 phút). Client hiện cảnh báo trong game và lưu tiến độ; tới `ends_at`
+        server gửi `session.session.ended` (`reason = daily_limit`). Cảnh báo giờ giới nghiêm vẫn do client tự tính từ
+        khung giới nghiêm trong bootstrap (F015-AC-22). Best effort: thiếu tin này không đổi việc kết thúc phiên.
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: session.session.ending_soon }
+              payload:
+                type: object
+                required: [game_session_id, reason, ends_at]
+                properties:
+                  game_session_id: { type: string, format: uuid }
+                  reason: { type: string, enum: [daily_limit] }
+                  ends_at: { $ref: '#/components/schemas/EpochMs', description: Thời điểm dự kiến kết thúc phiên (giờ server) }
 
     ContentManifestUpdated:
       name: content.manifest.updated

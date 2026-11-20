@@ -1,6 +1,7 @@
-h1:3f8VnVhrXljELG1o+kf2HlDZvVFyfXfInNEdFmBTD2g=
+h1:srKdQltfvo7NpxDINcqfs8+HQt/E0lWYw7J+OqaIJ7A=
 00000000000001_baseline.sql h1:WreCSBdAYTYkGe694PcUFXKiPa0uhokOHJyWHZ5ly2s=
 20261118000001_infra.sql h1:YU0AXTuwBEq964n8p4Lag+gP6CEZd0G61Pv3IA4t3nU=
 20261119000010_infra_platform_grants.sql h1:NE31C5rhg1Lwnc1Vh6Z6D240GQx/wVqzlIh+gaOofkE=
 20261123000001_f014_game_session.sql h1:nNtIUZUDYOHvA18o7edpWF4T5gSKpIXIk0JObXXIRUc=
 20261124000001_ref_platform_settings.sql h1:Q+KxuliOiLGMJJ7PcZp+d0lJk6Tq/tiI2GBHquXV6lw=
+20261128000001_oq17_daily_limit_sis_link.sql h1:YiFn48gQhNa9cSi41dultT476hfIEmJQQdZCEu41t9Q=

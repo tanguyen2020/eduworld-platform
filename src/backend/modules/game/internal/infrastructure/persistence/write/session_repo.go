@@ -255,3 +255,25 @@ func (SessionRepo) ActiveByPlatform(ctx context.Context) (map[string]int, error)
 	}
 	return out, rows.Err()
 }
+
+// PlayedSince implements write.SessionRepository: the sessions of the student overlapping [since, now], each clipped
+// to that interval (an active session counts until now).
+func (SessionRepo) PlayedSince(ctx context.Context, tenant, student uuid.UUID, since, now time.Time) (time.Duration, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return 0, err
+	}
+	var ms float64
+	// tenancyguard:ok TenantScope (RLS) plus the explicit tenant_id; deleted_at filtered
+	if err := t.QueryRowContext(ctx, `SELECT coalesce(sum(extract(epoch FROM
+			least(coalesce(ended_at, $4::timestamptz), $4::timestamptz) - greatest(started_at, $3::timestamptz)) * 1000), 0)
+		FROM game.game_sessions
+		WHERE tenant_id = $1 AND student_id = $2 AND deleted_at IS NULL AND started_at < $4 AND (ended_at IS NULL OR ended_at > $3)`,
+		tenant, student, since.UTC(), now.UTC()).Scan(&ms); err != nil {
+		return 0, fmt.Errorf("game sessions: played since: %w", err)
+	}
+	if ms < 0 {
+		ms = 0
+	}
+	return time.Duration(ms) * time.Millisecond, nil
+}

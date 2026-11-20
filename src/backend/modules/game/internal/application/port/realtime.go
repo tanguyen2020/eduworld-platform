@@ -14,8 +14,10 @@ import (
 type RealtimePublisher interface {
 	// SessionReplaced: session.session.replaced to the old device, which the gateway closes with 4409.
 	SessionReplaced(ctx context.Context, student, session uuid.UUID, newPlatform string, at time.Time) error
-	// SessionEnded: session.session.ended (curfew → 4410 with reopen_at; revocations → 4403).
+	// SessionEnded: session.session.ended (curfew, daily_limit → 4410 with reopen_at; revocations → 4403).
 	SessionEnded(ctx context.Context, student, session uuid.UUID, reason string, at time.Time, reopenAt *time.Time) error
+	// SessionEndingSoon: session.session.ending_soon (daily_limit) before the job ends the session at endsAt (F014-AC-27).
+	SessionEndingSoon(ctx context.Context, student, session uuid.UUID, reason string, endsAt time.Time) error
 }
 
 // IPHasher returns the HMAC of a client address (key from the secret store); the raw IP never leaves the

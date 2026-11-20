@@ -13,7 +13,8 @@ const ProjectionIdentityName = "game.projection_identity"
 
 // ProjectionIdentityEvents are the identity events projected into ref.tenants, ref.schools, ref.students.
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "school.synced", "school.updated",
-	"student.synced", "user.status_changed", "student.cleaned_up", "student.restored"}
+	"student.synced", "user.status_changed", "student.cleaned_up", "student.restored",
+	"student.sis_link_created", "student.sis_link_superseded"} // ref.students.sis_connection_id (OQ F014-1)
 
 // SessionRevokeName is the durable consumer that ends the game sessions of a revoked, locked or cleaned-up student
 // (F014-AC-24, T039).

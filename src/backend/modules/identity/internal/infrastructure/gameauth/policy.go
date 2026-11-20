@@ -15,18 +15,23 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
-// SettingsPolicy implements port.CurfewSource and port.AccessHoursSource from the settings of F015: the
+// SettingsPolicy implements port.CurfewSource, port.AccessHoursSource and port.DailyPlayLimitSource from the settings of F015: the
 // effective curfew is platform_curfew united with the curfew_window of the school (ADR-0078, F015-AC-22; the
 // common tenant's virtual school has none); the access hours are those of the school, else of the tenant.
 type SettingsPolicy struct {
 	Reader   read.SettingsReader
+	PlayTime read.PlayTimeReader // OQ-17: time played per day (nil = no daily play limit)
 	Defaults settings.Defaults
 }
 
 var (
-	_ port.CurfewSource      = SettingsPolicy{}
-	_ port.AccessHoursSource = SettingsPolicy{}
+	_ port.CurfewSource         = SettingsPolicy{}
+	_ port.AccessHoursSource    = SettingsPolicy{}
+	_ port.DailyPlayLimitSource = SettingsPolicy{}
 )
+
+// Location returns the platform time zone of the settings (Asia/Ho_Chi_Minh; fixed UTC+7 when unknown).
+func (p SettingsPolicy) Location() *time.Location { return p.location() }
 
 func (p SettingsPolicy) location() *time.Location {
 	if loc, err := time.LoadLocation(p.Defaults.TimeZone); err == nil {
@@ -95,4 +100,24 @@ func (p SettingsPolicy) AllowedHours(ctx context.Context, tenant uuid.UUID, scho
 		return nil, nil, err
 	}
 	return t.AllowedHours, p.location(), nil
+}
+
+// DailyPlayLimit implements port.DailyPlayLimitSource: daily_play_limit_minutes of the school (OQ-17, F015-AC-30)
+// and the time played on the ICT day of now, from the projection identity.daily_play_time (F013-AC-33).
+func (p SettingsPolicy) DailyPlayLimit(ctx context.Context, tenant uuid.UUID, school *uuid.UUID, user uuid.UUID, now time.Time) (*int,
+	time.Duration, *time.Location, error) {
+	loc := p.location()
+	if p.PlayTime == nil {
+		return nil, 0, loc, nil
+	}
+	s, err := p.school(ctx, tenant, school, settings.Curfew{})
+	if err != nil || s == nil || s.DailyPlayLimitMinutes == nil {
+		return nil, 0, loc, err
+	}
+	sc, err := authz.EventScope(tenant)
+	if err != nil {
+		return nil, 0, loc, err
+	}
+	played, err := p.PlayTime.PlayedOn(tenancy.WithScope(ctx, sc), tenant, user, settings.DateOf(now, loc))
+	return s.DailyPlayLimitMinutes, played, loc, err
 }

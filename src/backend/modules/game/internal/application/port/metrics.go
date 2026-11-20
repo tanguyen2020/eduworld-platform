@@ -9,6 +9,7 @@ const (
 	StartConflict     = "conflict"
 	StartDenied       = "denied"
 	StartCurfew       = "curfew"
+	StartDailyLimit   = "daily_limit"
 	StartUnsupported  = "client_version_unsupported"
 	StartMaintenance  = "maintenance"
 	StartNotProjected = "not_projected"

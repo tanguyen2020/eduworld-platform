@@ -73,9 +73,10 @@ func (Directory) Student(ctx context.Context, tenant, student uuid.UUID) (*write
 	}
 	s := write.Student{StudentID: student}
 	var deleted sql.NullTime
+	var sis uuid.NullUUID
 	// tenancyguard:ok projection ref.students (RLS + explicit tenant_id); deleted_at is read as the projected source state
-	err = t.QueryRowContext(ctx, `SELECT tenant_id, school_id, status, deleted_at FROM ref.students
-		WHERE student_id = $1 AND tenant_id = $2`, student, tenant).Scan(&s.TenantID, &s.SchoolID, &s.Status, &deleted)
+	err = t.QueryRowContext(ctx, `SELECT tenant_id, school_id, status, deleted_at, sis_connection_id FROM ref.students
+		WHERE student_id = $1 AND tenant_id = $2`, student, tenant).Scan(&s.TenantID, &s.SchoolID, &s.Status, &deleted, &sis)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -83,6 +84,9 @@ func (Directory) Student(ctx context.Context, tenant, student uuid.UUID) (*write
 		return nil, fmt.Errorf("ref students: %w", err)
 	}
 	s.Deleted = deleted.Valid
+	if sis.Valid {
+		s.SISConnectionID = &sis.UUID
+	}
 	return &s, nil
 }
 
@@ -150,3 +154,26 @@ var _ write.Auditor = Auditor{}
 
 // Record records e (in the transaction of ctx, or in its own when there is none).
 func (a Auditor) Record(ctx context.Context, e audit.Event) error { return a.R.Record(ctx, e) }
+
+// DailyPlayLimit implements write.Directory (settings_subset.daily_play_limit_minutes of school.updated, OQ-17); the
+// common tenant is never limited (CHILD_SAFETY §4.2).
+func (Directory) DailyPlayLimit(ctx context.Context, tenant, school uuid.UUID) (*int, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var limit sql.NullInt64
+	// tenancyguard:ok projections ref.schools (RLS + explicit tenant_id) and the tenant registry ref.tenants; projections have no deleted_at
+	err = t.QueryRowContext(ctx, `SELECT CASE WHEN jsonb_typeof(s.settings_subset->'daily_play_limit_minutes') = 'number'
+			THEN (s.settings_subset->>'daily_play_limit_minutes')::numeric::bigint END
+		FROM ref.schools s JOIN ref.tenants te ON te.tenant_id = s.tenant_id
+		WHERE s.school_id = $1 AND s.tenant_id = $2 AND te.tenant_type <> 'common'`, school, tenant).Scan(&limit)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && (!limit.Valid || limit.Int64 <= 0)) {
+		return nil, nil // no projected limit (or a malformed one): not limited
+	}
+	if err != nil {
+		return nil, fmt.Errorf("ref schools: daily play limit: %w", err)
+	}
+	minutes := int(limit.Int64)
+	return &minutes, nil
+}

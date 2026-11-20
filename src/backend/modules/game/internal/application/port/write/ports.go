@@ -71,6 +71,9 @@ type SessionRepository interface {
 	Stale(ctx context.Context, before time.Time, limit int) ([]SessionRef, error)
 	// ActiveByPlatform counts the active sessions per client platform (platform scope, gauge eduworld_game_sessions_active).
 	ActiveByPlatform(ctx context.Context) (map[string]int, error)
+	// PlayedSince returns the time the student played in tenant from since to now: every session (ended or active)
+	// clipped to [since, now] (daily play limit, OQ-17, F014-AC-27).
+	PlayedSince(ctx context.Context, tenant, student uuid.UUID, since, now time.Time) (time.Duration, error)
 	// ActivePage lists active sessions after the session id after (platform scope, job curfew-session-closer).
 	ActivePage(ctx context.Context, after uuid.UUID, limit int) ([]SessionRef, error)
 }
@@ -104,6 +107,8 @@ type Student struct {
 	SchoolID  uuid.UUID
 	Status    string
 	Deleted   bool
+	// SISConnectionID is the SIS connection of the student (OQ F014-1), nil when unknown or not synced from a SIS.
+	SISConnectionID *uuid.UUID
 }
 
 // Playable reports a student who may enter the game (active, not cleaned up).
@@ -126,4 +131,7 @@ type Directory interface {
 	// PlatformCurfew returns platform_curfew projected from platform_settings.changed, nil before the first event
 	// (the caller then keeps its start-up default EW_PLATFORM_CURFEW).
 	PlatformCurfew(ctx context.Context) (*CurfewWindow, error)
+	// DailyPlayLimit returns daily_play_limit_minutes of a school (school.updated settings_subset, OQ-17), nil when
+	// off, unknown or the tenant is the common tenant (never limited).
+	DailyPlayLimit(ctx context.Context, tenant, school uuid.UUID) (*int, error)
 }
