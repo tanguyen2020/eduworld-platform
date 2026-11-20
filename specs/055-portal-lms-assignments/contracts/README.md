@@ -59,4 +59,4 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (x-service `learning` trừ khi ghi k
 
 - **Cần thêm** (owner F042, Phase 2 task T004): schema `ExamAccommodation` `{student_id: Uuid, extra_time_percent: integer (min 1, max theo EXAM_ENGINE §5), reason: string maxLength 500}`; trường `accommodations[]` (maxItems 200) trong `ExamSession`; operation `putExamAccommodations` `PUT /exams/sessions/{exam_session_id}/accommodations` (`Idempotency-Key`, `If-Match`, 403/404/409/422). Cập nhật [EXAM_ENGINE §11](../../../docs/02-learning/EXAM_ENGINE.md) cùng PR.
 - **Đã làm (2026-11-21):** D2 như trên với body `ExamAccommodationsUpdate {accommodations[], reason}` (lý do chung, `ExamAccommodation` giữ `additionalProperties: false`), 200 `ExamSession` + `ETag`, 409 khi session đã đóng.
-- **D1 (2026-11-21, [Proposed]):** `Course.version`, `ScheduleItem.version` (readOnly) — `If-Match` của `updateCourse`/`updateScheduleItem` từ danh sách (không có GET đơn lẻ).
+- **D1 (2026-11-21, [Confirmed]):** `Course.version`, `ScheduleItem.version` (readOnly) — `If-Match` của `updateCourse`/`updateScheduleItem` từ danh sách (không có GET đơn lẻ).
