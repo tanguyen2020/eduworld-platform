@@ -4,7 +4,9 @@ import (
 	"context"
 
 	learningapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/api"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
 // Student lifecycle operations of the identity sagas (F016 T024, ADR-0032). Module learning keeps no
@@ -35,4 +37,35 @@ func (f Facade) AnonymizeUserData(ctx context.Context, req learningapi.Anonymize
 	done(nil)
 	return learningapi.AnonymizeUserData200JSONResponse{UserId: req.UserId,
 		Status: learningapi.CommonInternalCommonV1UserLifecycleResultStatus("nothing_to_do")}, nil
+}
+
+// MergeUserDataHandler is the learning step of the account merge saga (command.MergeUserData).
+type MergeUserDataHandler interface {
+	Handle(ctx context.Context, in command.MergeUserDataInput) (command.MergeUserDataResult, error)
+}
+
+// MergeUserData implements learningapi.StrictServerInterface (x-allowed-callers: identity; OQ F016-2, F045-3): the
+// original student_id keeps its learning data and is linked to the target user, idempotent by merge_id
+// (Idempotency-Key). Without a handler (binary without the merge step) it answers 503 UNAVAILABLE, never a silent success.
+func (f Facade) MergeUserData(ctx context.Context, req learningapi.MergeUserDataRequestObject) (learningapi.MergeUserDataResponseObject, error) {
+	if req.Body == nil {
+		return nil, problem.New(problem.BadRequest, "body is required")
+	}
+	if f.Merge == nil {
+		return nil, problem.New(problem.Unavailable, "").Retry()
+	}
+	b := *req.Body
+	in := command.MergeUserDataInput{MergeID: b.MergeId, From: req.UserId, Into: b.TargetUserId, Reason: b.Reason}
+	r, err := idempotent(ctx, f.Idempotency, "mergeUserData", in, func(ctx context.Context) (command.MergeUserDataResult, error) {
+		return f.Merge.Handle(ctx, in)
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := learningapi.MergeUserData200JSONResponse{UserId: req.UserId, Status: learningapi.CommonInternalCommonV1UserLifecycleResultStatus(r.Status)}
+	if r.BlockedReason != "" {
+		reason := r.BlockedReason
+		out.BlockedReason = &reason
+	}
+	return out, nil
 }

@@ -29,7 +29,7 @@ import (
 
 // platformOps are the facade operations F020 implements.
 var platformOps = []string{"listTrash", "restoreTrashItem", "executeTenantCloneStep", "applyTenantAssignments",
-	"revokeTenantAssignments", "listResourceAssignments"}
+	"revokeTenantAssignments", "listResourceAssignments", "mergeUserData"}
 
 func repoFile(t *testing.T, rel string) []byte {
 	t.Helper()
@@ -175,6 +175,12 @@ func TestPlatformOpsAuthorizePrincipal(t *testing.T) {
 		},
 		"restoreTrashItem": func(ctx context.Context) error {
 			_, err := command.RestoreResource{}.Handle(ctx, command.RestoreInput{ResourceType: "question", ID: uuid.New(), Reason: "valid reason"})
+			return err
+		},
+		// F030 T056: the merge step needs platform.user.merge (the Principal identity calls on behalf of).
+		"mergeUserData": func(ctx context.Context) error {
+			_, err := command.MergeUserData{}.Handle(ctx, command.MergeUserDataInput{MergeID: uuid.New(), From: uuid.New(), Into: uuid.New(),
+				Reason: "same person"})
 			return err
 		},
 	}

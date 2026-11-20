@@ -31,7 +31,7 @@ type LearningPlatformOps interface {
 	ExecuteTenantCloneStep(ctx context.Context, req learningapi.ExecuteTenantCloneStepRequestObject) (learningapi.ExecuteTenantCloneStepResponseObject, error)
 }
 
-// LearningMergeOps is mergeUserData of module learning (not implemented by its facade yet, OQ F045-3).
+// LearningMergeOps is mergeUserData of module learning (F030 T056, OQ F016-2, F045-3).
 type LearningMergeOps interface {
 	MergeUserData(ctx context.Context, req learningapi.MergeUserDataRequestObject) (learningapi.MergeUserDataResponseObject, error)
 }

@@ -31,6 +31,8 @@ type Facade struct {
 	// AttemptOpener and AttemptResults serve createAttempt / getAttemptResult for module game (F030 US5).
 	AttemptOpener  AttemptOpener
 	AttemptResults AttemptResults
+	// Merge is the learning step of the account merge saga (mergeUserData, OQ F016-2, F045-3).
+	Merge MergeUserDataHandler
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }

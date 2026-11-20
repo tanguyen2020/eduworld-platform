@@ -68,8 +68,9 @@ const (
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
 // implemented in this release: the platform-ops operations of F020, the student lifecycle steps of F016 and the
-// attempt operations of F030 US5 (createAttempt, getAttemptResult; caller module game, wired by F072). The
-// question-plan operations (createQuestionPlan, scorePlanAnswer) and mergeUserData belong to later features (OQ F045-3).
+// attempt operations of F030 US5 (createAttempt, getAttemptResult; caller module game, wired by F072) and the merge
+// step mergeUserData (F030 T056). The question-plan operations (createQuestionPlan, scorePlanAnswer) belong to later
+// features.
 type Facade interface {
 	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
@@ -82,6 +83,7 @@ type Facade interface {
 	AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error)
 	CreateAttempt(ctx context.Context, req api.CreateAttemptRequestObject) (api.CreateAttemptResponseObject, error)
 	GetAttemptResult(ctx context.Context, req api.GetAttemptResultRequestObject) (api.GetAttemptResultResponseObject, error)
+	MergeUserData(ctx context.Context, req api.MergeUserDataRequestObject) (api.MergeUserDataResponseObject, error)
 }
 
 var _ Facade = facade.Facade{}
@@ -349,6 +351,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Clone: command.ExecuteCloneStep{CloneDeps: command.CloneDeps{UoW: core.UoW, Resources: resources, Tenants: read.TenantDirectory{},
 			Audit: auditor}},
 		AttemptOpener: att, AttemptResults: attq,
+		Merge:       command.MergeUserData{UoW: core.UoW, Store: write.MergeRepo{}, Audit: auditor},
 		Idempotency: core.Idempotency}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
 		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,

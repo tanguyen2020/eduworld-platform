@@ -80,6 +80,7 @@ var _ Facade = identityFacade{}
 // LearningFacade is what module identity calls on module learning (x-allowed-callers: identity).
 type LearningFacade interface {
 	modules.LearningPlatformOps
+	modules.LearningMergeOps
 	participants.LearningFacade
 	AnonymizeUserData(ctx context.Context, req learningapi.AnonymizeUserDataRequestObject) (learningapi.AnonymizeUserDataResponseObject, error)
 }
@@ -163,7 +164,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 
 	// Facades of learning and game (sagas F016, platform operations F045); mergeUserData is not implemented by
 	// any module yet (OQ F045-3): LearningMerge stays nil and the merge step answers 503 UNAVAILABLE.
-	gw := modules.Gateway{Learning: in.Learning}
+	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning}
 	studentParts := []port.StudentDataParticipant{participants.Game{F: in.Game}, participants.Learning{F: in.Learning}}
 	anonymizers := []port.UserDataAnonymizer{participants.GameAnonymize{F: in.Game}, participants.LearningAnonymize{F: in.Learning}}
 
