@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/quiz.schema.json",
+  "title": "QuizActivityVersion",
+  "description": "activity_type = quiz: câu chọn một/nhiều đáp án, đúng/sai, câu dựa trên hình, quiz tính giờ; server tự chấm (auto). Câu hỏi tham chiếu Question Bank, activity không chứa câu hỏi riêng. Xem docs/02-learning/ACTIVITY_ENGINE.md §3 và docs/02-learning/QUESTION_BANK.md.",
+  "type": "object",
+  "allOf": [{ "$ref": "activity-base.schema.json#/$defs/activityCommon" }],
+  "required": ["activity_type", "content"],
+  "properties": {
+    "activity_type": { "const": "quiz" },
+    "content": {
+      "type": "object",
+      "required": ["question_source"],
+      "properties": {
+        "question_source": { "$ref": "activity-base.schema.json#/$defs/questionSource" },
+        "allowed_question_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Loại câu hợp lệ cho quiz; mặc định single_choice, multiple_choice, true_false, image_based. Câu ngoài danh sách → ACTIVITY_CONFIG_INVALID khi lưu/publish.",
+          "items": { "type": "string", "enum": ["single_choice", "multiple_choice", "true_false", "image_based"] },
+          "default": ["single_choice", "multiple_choice", "true_false", "image_based"]
+        },
+        "timed": {
+          "type": "object",
+          "description": "Quiz tính giờ (thời gian do server tính).",
+          "required": ["total_seconds"],
+          "properties": {
+            "total_seconds": { "type": "integer", "minimum": 10, "maximum": 3600 },
+            "show_timer": { "type": "boolean", "default": true }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": { "$ref": "activity-base.schema.json#/$defs/questionInteraction" }
+  },
+  "unevaluatedProperties": false
+}

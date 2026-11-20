@@ -17,6 +17,8 @@ export interface ContentAccess {
   platform: boolean;
   question: { write: boolean; review: boolean; publish: boolean; translate: boolean; upload: boolean; preview: boolean };
   curriculum: { read: boolean; write: boolean; publish: boolean };
+  /** Activity Builder (F058, ACTIVITY_ENGINE §13): activity.write / activity.review, publish, re_evaluate. */
+  activity: { write: boolean; review: boolean; publish: boolean; reEvaluate: boolean };
   /** Action enabled (permission held and not turned off). */
   enabled: (key: ActionKey) => boolean;
 }
@@ -39,6 +41,12 @@ export function useContentAccess(): ContentAccess {
       preview: has('learning_content.read'),
     },
     curriculum: { read: has('curriculum.read'), write: has('curriculum.write'), publish: has('curriculum.publish') },
+    activity: {
+      write: has('learning_content.activity.write'),
+      review: has('learning_content.activity.review'),
+      publish: has('learning_content.publish'),
+      reEvaluate: has('learning_content.re_evaluate'),
+    },
     enabled: (key) => !!view && actionStatus(key, view) === 'enabled',
   };
 }

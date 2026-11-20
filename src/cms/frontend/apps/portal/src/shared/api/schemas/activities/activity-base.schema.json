@@ -1,0 +1,592 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/content/activities/activity-base.schema.json",
+  "title": "LearningActivityVersion (base)",
+  "description": "Phần chung của mọi Learning Activity version trong Activity Registry (ADR-0048, docs/02-learning/ACTIVITY_ENGINE.md). Schema theo loại (quiz, interactive-exercise, minigame, video-lesson, audio-lesson, simulation) kế thừa $defs/activityCommon. Đây là cấu hình phía server: có thể chứa đáp án/tham số chấm, KHÔNG gửi nguyên văn xuống client (ADR-0016).",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "#/$defs/activityCommon"
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "maxLength": 36
+    },
+    "nullableUuid": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "i18nShort": {
+      "type": "object",
+      "description": "Văn bản nội dung học tập: bắt buộc bản theo content_language, bản dịch còn lại tùy chọn (ADR-0056 mục 3).",
+      "minProperties": 1,
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        }
+      },
+      "additionalProperties": false
+    },
+    "i18nMedium": {
+      "type": "object",
+      "description": "Văn bản nội dung học tập: bắt buộc bản theo content_language, bản dịch còn lại tùy chọn (ADR-0056 mục 3).",
+      "minProperties": 1,
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "i18nLong": {
+      "type": "object",
+      "description": "Văn bản nội dung học tập: bắt buộc bản theo content_language, bản dịch còn lại tùy chọn (ADR-0056 mục 3).",
+      "minProperties": 1,
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      },
+      "additionalProperties": false
+    },
+    "slug": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+    },
+    "mathDisplay": {
+      "description": "Công thức chỉ để hiển thị (ADR-0055): LaTeX (mhchem cho hóa học) + SVG render sẵn bằng MathJax 4 trên portal (sanitize, ≤ 256 KB) + speech text; LaTeX ≤ 2.000 ký tự, độ sâu lồng ≤ 20 (kiểm tra phía server). Game không nhập công thức.",
+      "type": "object",
+      "required": [
+        "latex",
+        "svg_asset",
+        "speech_text"
+      ],
+      "properties": {
+        "latex": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "svg_asset": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^math/[0-9a-f]{64}\\.svg$"
+        },
+        "speech_text": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "numericAnswer": {
+      "description": "Đáp số dạng số (học sinh nhập số, có dung sai/đơn vị). Cấu hình phía server.",
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "tolerance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "tolerance_type": {
+          "type": "string",
+          "enum": [
+            "exact",
+            "absolute",
+            "relative"
+          ],
+          "default": "absolute"
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "require_unit": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "questionRef": {
+      "type": "object",
+      "required": [
+        "question_version_id"
+      ],
+      "properties": {
+        "question_version_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "additionalProperties": false
+    },
+    "questionSource": {
+      "type": "object",
+      "description": "Nguồn câu hỏi của activity dạng câu hỏi (quiz, interactive_exercise): danh sách câu cố định, question set (ghim version khi bắt đầu attempt, ADR-0043) hoặc quy tắc chọn từ Question Bank.",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "questions",
+            "question_set",
+            "selection"
+          ]
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/questionRef"
+          }
+        },
+        "question_set_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "question_set_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "null = version hiện hành khi bắt đầu attempt"
+        },
+        "selection": {
+          "type": "object",
+          "required": [
+            "count"
+          ],
+          "properties": {
+            "topic_ids": {
+              "type": "array",
+              "maxItems": 20,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/uuid"
+              }
+            },
+            "objective_ids": {
+              "type": "array",
+              "maxItems": 20,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/uuid"
+              }
+            },
+            "difficulty_min": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "difficulty_max": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "question_types": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/QuestionType"
+              }
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "questions"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "questions"
+            ],
+            "properties": {
+              "questions": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "question_set"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "question_set_id"
+            ],
+            "properties": {
+              "question_set_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "selection"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "selection"
+            ],
+            "properties": {
+              "selection": true
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "questionInteraction": {
+      "type": "object",
+      "description": "Cách làm bài dạng câu hỏi. Số lượt thử theo khối lớp: LEARNING_EXPERIENCE §4.2; gợi ý: ACTIVITY_ENGINE §8.3.",
+      "properties": {
+        "shuffle_items": {
+          "type": "boolean",
+          "default": true
+        },
+        "shuffle_options": {
+          "type": "boolean",
+          "default": true
+        },
+        "per_item_time_limit_seconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 5,
+          "maximum": 600
+        },
+        "allow_unscored_retry": {
+          "type": "boolean",
+          "default": true,
+          "description": "Cho thử lại câu sai không tính điểm (is_scored=false) khi FeedbackTiming = immediate."
+        },
+        "hints_enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Cho xin gợi ý (hints:next) khi FeedbackTiming = immediate và mode cho phép."
+        },
+        "navigation": {
+          "type": "string",
+          "enum": [
+            "free",
+            "sequential"
+          ],
+          "default": "sequential"
+        }
+      },
+      "additionalProperties": false
+    },
+    "activityType": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType"
+    },
+    "evaluation": {
+      "type": "object",
+      "required": [
+        "strategies",
+        "max_score"
+      ],
+      "properties": {
+        "strategies": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "exact",
+              "accepted_answers",
+              "rule",
+              "numeric_tolerance",
+              "completion",
+              "deterministic_check"
+            ]
+          }
+        },
+        "max_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "pass_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "description": "Mọi hoạt động do server tự chấm (ADR-0016, ADR-0072, ADR-0082)."
+    },
+    "feedback": {
+      "type": "object",
+      "required": [
+        "timing"
+      ],
+      "properties": {
+        "timing": {
+          "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/FeedbackTiming"
+        },
+        "show_explanation": {
+          "type": "boolean",
+          "default": true
+        },
+        "show_correct_answer": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false,
+      "description": "Phản hồi từng câu theo enum chuẩn FeedbackTiming (EDU_FIT_REVIEW SPC-03). Phản hồi theo phương án nhiễu (option_feedback) và gợi ý (hints) nằm trong câu hỏi, chỉ trả trong kết quả chấm."
+    },
+    "completionRule": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "submit",
+            "min_watched_ratio",
+            "goals_met",
+            "graded"
+          ]
+        },
+        "min_watched_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "min_score_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "require_required_cues": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "activityCommon": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "activity_id",
+        "activity_version_id",
+        "version",
+        "activity_type",
+        "owner_scope",
+        "title",
+        "grade_levels",
+        "subject_id",
+        "objective_ids",
+        "difficulty",
+        "evaluation",
+        "feedback",
+        "completion_rule",
+        "status",
+        "content",
+        "content_language"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "activity_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "activity_version_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "activity_type": {
+          "$ref": "#/$defs/activityType"
+        },
+        "owner_scope": {
+          "type": "string",
+          "enum": [
+            "platform",
+            "tenant"
+          ]
+        },
+        "tenant_id": {
+          "$ref": "#/$defs/nullableUuid"
+        },
+        "title": {
+          "$ref": "#/$defs/i18nShort"
+        },
+        "description": {
+          "$ref": "#/$defs/i18nMedium"
+        },
+        "grade_levels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        },
+        "subject_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "topic_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "objective_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "instructions": {
+          "$ref": "#/$defs/i18nLong"
+        },
+        "instructions_audio_ref": {
+          "$ref": "#/$defs/uuid",
+          "description": "Audio đọc hướng dẫn bản content_language, bắt buộc với nhóm g1_3 (CONTENT_MODEL §8.1, F025-AC-15)."
+        },
+        "audio_exempt_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "description": "Miễn trừ audio g1_3; reviewer xác nhận khi approve (CONTENT_MODEL §8.1, F025-AC-16)."
+        },
+        "time_limit_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 14400
+        },
+        "evaluation": {
+          "$ref": "#/$defs/evaluation"
+        },
+        "feedback": {
+          "$ref": "#/$defs/feedback"
+        },
+        "completion_rule": {
+          "$ref": "#/$defs/completionRule"
+        },
+        "reward_rule_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "media_refs": {
+          "type": "array",
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "math_assets": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/mathDisplay"
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "in_review",
+            "approved",
+            "published",
+            "archived",
+            "rejected"
+          ]
+        },
+        "content": {
+          "type": "object"
+        },
+        "interaction": {
+          "type": "object"
+        },
+        "content_language": {
+          "$ref": "#/$defs/contentLanguage"
+        }
+      }
+    },
+    "contentLanguage": {
+      "type": "string",
+      "enum": [
+        "vi",
+        "en"
+      ],
+      "description": "Ngôn ngữ gốc của nội dung (ADR-0056)."
+    }
+  }
+}

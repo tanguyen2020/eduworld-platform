@@ -12,7 +12,8 @@ import { sha256OfFile, useMediaAsset, useMediaList, useMediaUpload, type MediaKi
 
 export interface MediaPickerProps {
   id: string;
-  kind: Extract<MediaKind, 'image' | 'audio' | 'video'>;
+  /** subtitle = WebVTT of a video lesson (MediaKind subtitle, F027 T040 / F058-AC-17). */
+  kind: Extract<MediaKind, 'image' | 'audio' | 'video' | 'subtitle'>;
   value?: string;
   onChange: (assetId: string | undefined) => void;
   /** Pipeline status of the chosen asset (blocks submit until ready). */
@@ -136,7 +137,7 @@ export function MediaPicker({ id, kind, value, onChange, onStatus, disabled = fa
             <input
               type="file"
               aria-label={t('content_studio.media.file')}
-              accept={kind === 'image' ? 'image/*' : kind === 'audio' ? 'audio/*' : 'video/*'}
+              accept={kind === 'image' ? 'image/*' : kind === 'audio' ? 'audio/*' : kind === 'subtitle' ? '.vtt,text/vtt' : 'video/*'}
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </Form.Item>

@@ -18,6 +18,15 @@
 
 - Q: Mã lỗi khi vượt phạm vi trường/môn của UserRole? → A: `403 PERMISSION_DENIED`; `FORBIDDEN_SCOPE` không phát và sẽ bị gỡ khỏi `ProblemCode` ([API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md), RB-113).
 
+### Session 2026-11-20 (triển khai — điểm chưa chốt, mặc định [Proposed])
+
+- Q: `getCmsActivity` thiếu các trường builder phải sửa lại (mô tả, hướng dẫn, chủ đề, giới hạn giờ, công thức, tác giả, cờ được gán), autosave PATCH gửi lại toàn bộ `ActivityDefinitionInput` sẽ làm mất chúng? → A: [Proposed] Delta (owner F030): `ActivityDefinition` thêm `description`, `instructions`, `topic_id`, `time_limit_seconds`, `reward_rule_id`, `math_assets`, `author_id`, `assigned` (nội dung platform với phiên tenant). Thuần bổ sung.
+- Q: Dạng của `previewRegradeRequest` / `listRegradeRequests` (T006)? → A: [Proposed] `POST /cms/learning/regrade-requests:preview` nhận đúng `RegradeRequestCreate`, trả `RegradeImpact {affected_attempts}`, không ghi gì (yêu cầu platform đếm mọi tenant qua `tenancy.Bypass(re_evaluation)`); `GET /cms/learning/regrade-requests?question_version_id|activity_version_id` (bắt buộc đúng một), mới nhất trước, ≤ 100, trong phạm vi người gọi. Thêm vào action `action.content_studio.regrade.request` của danh mục portal. Chưa thêm "trường version" vào `RegradeRequest` (đã có `question_version_id`/`activity_version_id`).
+- Q: Component editor đặt ở `packages/ops-ui/src/activity-editor` (plan) hay trong portal? → A: [Proposed] Trong `apps/portal/src/workspaces/content-studio/activities/` (cạnh `DocMetaFields`, `MediaPicker`, `QuestionPicker` của F053/F054 mà editor dùng lại); điểm cắm cho F066 là `editorRegistry.registerActivityEditor` thay vì package riêng. Form cấu hình là editor riêng theo loại + kiểm ajv bằng bản sinh của `specs/schemas/activities/*.schema.json` (`pnpm gen:schemas`), không phải form sinh hoàn toàn từ schema.
+- Q: Preview video bằng HLS (`hls.js`)? → A: [Proposed] Bản này phát biến thể MP4 (đường "MP4 dự phòng" của F058-AC-21) bằng `<video>` có phụ đề `<track>` (biến thể `vtt`, F027 T040), danh sách chương và dừng ở cue; HLS chờ pipeline F027 sinh biến thể HLS (chưa có) — không thêm phụ thuộc.
+- Q: Cờ "video có lời" lưu ở đâu? → A: [Confirmed ở Assumptions] trạng thái form (không lưu); trang giữ cờ và chặn Gửi duyệt khi thiếu phụ đề `vi`.
+- Q: Màn `menu.content_studio.regrade`? → A: [Proposed] Màn tra cứu lịch sử theo mã version (câu hỏi/hoạt động) + trạng thái từng yêu cầu; tạo yêu cầu chỉ từ trang version (nút "Chấm lại hệ thống" trên trang câu hỏi/hoạt động đã xuất bản).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn activity `quiz` và `interactive_exercise` (Priority: P1) 🎯 MVP

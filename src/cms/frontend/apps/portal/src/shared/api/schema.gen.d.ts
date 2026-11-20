@@ -3367,7 +3367,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Lịch sử RegradeRequest của một version câu hỏi/activity trong phạm vi (learning_content.re_evaluate, F058-AC-23) */
+        get: operations["listRegradeRequests"];
         put?: never;
         /**
          * Tạo RegradeRequest — hệ thống chấm lại (re-evaluate) các attempt bị ảnh hưởng bởi version câu hỏi/activity lỗi (learning_content.re_evaluate)
@@ -3380,6 +3381,23 @@ export interface paths {
          *     Với đề kiểm tra: `scope = exam_session` + `action` ∈ {accept_all, use_new_key, drop_item} (EXAM_ENGINE §9), phát thêm `exam.regraded`.
          */
         post: operations["createRegradeRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/learning/regrade-requests:preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Số attempt sẽ bị chấm lại nếu tạo yêu cầu này (không ghi gì; learning_content.re_evaluate, F058-AC-22) */
+        post: operations["previewRegradeRequest"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8350,20 +8368,38 @@ export interface components {
             activity_id: components["schemas"]["Uuid"];
             activity_type: components["schemas"]["ActivityType"];
             activity_version_id?: components["schemas"]["Uuid"];
+            /** @description Nội dung platform được gán cho tenant phiên — chỉ đọc "Từ EduWorld" (F058-AC-27) */
+            assigned?: boolean;
+            /** @description Tác giả version (portal ẩn Duyệt với chính tác giả */
+            author_id?: components["schemas"]["Uuid"];
             config?: {
                 [key: string]: unknown;
             };
             content_language?: components["schemas"]["ContentLanguage"];
             current_published_version?: number | null;
+            description?: components["schemas"]["LearningText"];
             difficulty?: number;
             grade_levels?: components["schemas"]["GradeLevel"][];
+            instructions?: components["schemas"]["LearningText"];
+            /** @description Công thức đã lưu của version (Activity Builder F058 sửa lại không mất SVG) */
+            math_assets?: {
+                /** @enum {string} */
+                display?: "inline" | "block";
+                latex: string;
+                math_id: string;
+                speech_text?: string;
+                svg: string;
+            }[];
             objective_ids?: components["schemas"]["Uuid"][];
             /** @enum {string} */
             owner_scope?: "platform" | "tenant";
+            reward_rule_id?: components["schemas"]["Uuid"];
             status: components["schemas"]["ContentStatus"];
             subject_id?: components["schemas"]["Uuid"];
             tenant_id?: components["schemas"]["Uuid"];
+            time_limit_seconds?: number;
             title: components["schemas"]["LearningName"];
+            topic_id?: components["schemas"]["Uuid"];
             readonly translation_status?: components["schemas"]["TranslationStatus"];
             updated_at?: components["schemas"]["Timestamp"];
             version: number;
@@ -13347,6 +13383,10 @@ export interface components {
                 target_type: "activity" | "lesson" | "question_set" | "assignment" | "selection" | "quest";
                 title?: components["schemas"]["LearningName"];
             }[];
+        };
+        RegradeImpact: {
+            /** @description Attempt graded (mode khác exam) dùng version này trong phạm vi người gọi */
+            affected_attempts: number;
         };
         RegradeRequest: {
             /** @enum {string} */
@@ -24233,6 +24273,42 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
+    listRegradeRequests: {
+        parameters: {
+            query?: {
+                activity_version_id?: components["schemas"]["Uuid"];
+                limit?: components["parameters"]["Limit"];
+                question_version_id?: components["schemas"]["Uuid"];
+            };
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Mới nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RegradeRequest"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     createRegradeRequest: {
         parameters: {
             query?: never;
@@ -24275,6 +24351,41 @@ export interface operations {
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    previewRegradeRequest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegradeRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Phạm vi ảnh hưởng */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegradeImpact"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     getRegradeRequest: {

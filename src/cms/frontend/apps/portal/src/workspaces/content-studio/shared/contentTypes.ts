@@ -67,10 +67,12 @@ export const CONTENT_TYPES: Record<ContentType, ContentTypeDef> = {
   activity: {
     actions: {
       view: 'action.content_studio.activities.view',
+      edit: 'action.content_studio.activities.edit',
       workflow: 'action.content_studio.activities.workflow',
       publish: 'action.content_studio.activities.publish',
       rollback: 'action.content_studio.activities.rollback',
     },
+    base: '/cms/learning/activities',
   },
   learning_path: {
     actions: {

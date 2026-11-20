@@ -26,6 +26,8 @@ export interface PublishDialogProps {
   onClose: () => void;
   /** Clock (tests). */
   now?: () => Date;
+  /** Extra notice of the content type (activity: running attempts keep their version, F058-AC-14). */
+  notice?: string;
 }
 
 /** Ids of the media referenced by a version body (stem/blocks/options…). */
@@ -43,7 +45,7 @@ function useMediaWarnings(item: ItemRef, version: number | null) {
   return assets.filter((a) => a.data && a.data.status !== 'ready').map((a) => a.data!);
 }
 
-export function PublishDialog({ item, version, current: currentProp, onClose, now = () => new Date() }: PublishDialogProps) {
+export function PublishDialog({ item, version, current: currentProp, onClose, now = () => new Date(), notice }: PublishDialogProps) {
   const history = useVersions(item);
   const current = currentProp ?? history.data?.current_version;
   const { t } = useTranslation();
@@ -103,6 +105,7 @@ export function PublishDialog({ item, version, current: currentProp, onClose, no
       }}
     >
       <Flex vertical gap="middle">
+        {notice && <Alert type="info" showIcon message={notice} data-testid="publish-notice" />}
         <Radio.Group value={mode} onChange={(e) => setMode(e.target.value as 'now' | 'schedule')} aria-label={t('content_studio.release.when')}>
           <Radio value="now">{t('content_studio.release.whenNow')}</Radio>
           <Radio value="schedule">{t('content_studio.release.whenSchedule')}</Radio>

@@ -27,6 +27,7 @@ import { registerUnsavedChanges } from '../../../session/unsavedChangesGuard';
 import { useMe } from '../../../shared/api/hooks/useMe';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
+import { RegradeEntryButton } from '../regrade/RegradeEntryButton';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { ReasonDialog } from '../../../shell/ReasonDialog';
 import { LargeScreenRequired } from '../../../shell/StatusPages';
@@ -283,6 +284,9 @@ function QuestionEditorForm({ questionId, server, etag, reload }: { questionId?:
             items={[
               { key: 'meta', label: t('content_studio.question.meta'), children: <QuestionMetaPanel value={state.meta} onChange={(meta) => change({ ...state, meta })} readOnly={readOnly} languageLocked={!!questionId} errors={errors} /> },
               { key: 'preview', label: t('content_studio.preview.title'), children: <StudentViewPreview draft={state.draft} contentLanguage={lang} saved={questionId && server ? { contentId: questionId, version: server.version } : undefined} dirty={autosave.dirty} /> },
+              ...(questionId && server?.content_version_id && status === 'published'
+                ? [{ key: 'regrade', label: t('content_studio.regrade.title'), children: <RegradeEntryButton scope="question_version" versionId={server.content_version_id} item={{ contentType: 'question', contentId: questionId }} /> }]
+                : []),
             ]}
           />
         }

@@ -93,6 +93,7 @@ const NEW_VERSION_PATH: Partial<Record<ContentType, string>> = {
   assessment_blueprint: '/cms/learning/assessment-blueprints/{assessment_blueprint_id}/versions',
   lesson: '/cms/learning/lessons/{lesson_id}/versions',
   learning_material: '/cms/learning/learning-materials/{learning_material_id}/versions',
+  activity: '/cms/learning/activities/{activity_id}/versions',
 };
 
 /** Path parameter name of the item id in the authoring API of a type (`question_set_id`…). */

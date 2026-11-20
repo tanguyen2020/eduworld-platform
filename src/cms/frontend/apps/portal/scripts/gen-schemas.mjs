@@ -14,6 +14,13 @@ export const OUT_DIR = path.join(PORTAL_DIR, 'src/shared/api/schemas');
 export const SCHEMAS = {
   'specs/schemas/question.schema.json': 'question.schema.json',
   'specs/schemas/common/enums.schema.json': 'enums.schema.json',
+  // Activity Builder (F058, F066): config of each activity type, checked with ajv before saving.
+  'specs/schemas/activities/activity-base.schema.json': 'activities/activity-base.schema.json',
+  'specs/schemas/activities/quiz.schema.json': 'activities/quiz.schema.json',
+  'specs/schemas/activities/interactive-exercise.schema.json': 'activities/interactive-exercise.schema.json',
+  'specs/schemas/activities/video-lesson.schema.json': 'activities/video-lesson.schema.json',
+  'specs/schemas/activities/audio-lesson.schema.json': 'activities/audio-lesson.schema.json',
+  'specs/schemas/activities/simulation.schema.json': 'activities/simulation.schema.json',
 };
 
 const norm = (s) => s.replace(/\r\n/g, '\n');
@@ -25,7 +32,7 @@ export function expected() {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const check = process.argv.includes('--check');
   let drift = 0;
-  fs.mkdirSync(OUT_DIR, { recursive: true });
+  fs.mkdirSync(path.join(OUT_DIR, 'activities'), { recursive: true });
   for (const { name, content } of expected()) {
     const out = path.join(OUT_DIR, name);
     const cur = fs.existsSync(out) ? norm(fs.readFileSync(out, 'utf8')) : null;
