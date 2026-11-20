@@ -35,13 +35,13 @@
 
 ### 1.2. Admin Portal: 5 workspace (ADR-0027 mục 7, Master Prompt tái cấu trúc §16)
 
-| Workspace | Ai thấy | Gateway | Module (✅ đã có đặc tả chi tiết · 🆕 đặc tả mới lượt này · [TBD] để lượt sau) |
+| Workspace | Ai thấy | Gateway | Module (✅ đã có đặc tả chi tiết · 🆕 đặc tả mới lượt này · ⛔ không có màn riêng trong Release 1.0, owner 2026-11-20) |
 |---|---|---|---|
-| **A. Game Operations Console** | Chỉ platform: Game Designer, Live-ops, Competition Admin, System Admin | Nội bộ + MFA | Game Dashboard [TBD] · Game World / Zone / Area ✅ (§3.3) · NPC Management ✅ · Quest Builder ✅ ([QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md)) · **Challenge Builder** 🆕 · **Boss Management** 🆕 · **Level & XP Configuration** 🆕 · **Achievement Builder** 🆕 · **Item / Inventory Catalog / Shop / Currency** 🆕 (§3.12) · Reward Configuration ✅ · **Event Builder & Season Track** 🆕 (§3.15, [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md)) · Player Management [TBD] · Party & Group Management [TBD] · Competition Management ✅ (§3.4) · Leaderboard Configuration ✅ · Sticker/GIF ✅ · Game Analytics [TBD] |
+| **A. Game Operations Console** | Chỉ platform: Game Designer, Live-ops, Competition Admin, System Admin | Nội bộ + MFA | Game Dashboard ⛔ (dùng Live dashboard + Game Analytics ở workspace E, F080) · Game World / Zone / Area ✅ (§3.3) · NPC Management ✅ · Quest Builder ✅ ([QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md)) · **Challenge Builder** 🆕 · **Boss Management** 🆕 · **Level & XP Configuration** 🆕 · **Achievement Builder** 🆕 · **Item / Inventory Catalog / Shop / Currency** 🆕 (§3.12) · Reward Configuration ✅ · **Event Builder & Season Track** 🆕 (§3.15, [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md)) · Player Management ⛔ · Party & Group Management ⛔ (tra cứu tài khoản qua Người dùng ở workspace D, vi phạm qua Kiểm duyệt, trạng thái party qua Live dashboard) · Competition Management ✅ (§3.4) · Leaderboard Configuration ✅ · Sticker/GIF ✅ · Game Analytics → workspace E (F080) |
 | **B. Learning Content Studio** | Tenant (dữ liệu tenant) + Content Admin/Reviewer platform (dữ liệu platform) + System Admin | Public (tenant) / nội bộ (dữ liệu platform) | Curriculum · Grade · Subject · Topic · Learning Objective · Learning Unit ✅ (§3.1) · Lesson Builder ✅ (§3.2) · **Learning Activity Builder theo activity type** 🆕 (§3.13) · Question Bank / Quiz / Exercise Builder ✅ · **Video Manager** 🆕 · **Audio Manager** 🆕 · **Simulation Configuration** 🆕 · Assessment Builder ✅ · Learning Path Builder 🟡 ([SCHOOL_LMS](SCHOOL_LMS.md)) · Preview ✅ (§5) · Versioning / Approval / Publish ✅ (§3.11, §4, §6) |
 | **C. School & Learning Management** | Tenant + System Admin (dropdown tenant) | Public | School · Class · Student Directory ✅ · SIS Synchronization ✅ · Course & Learning Path ✅ · Learning Assignment ✅ · **School Learning Dashboard** (trường → lớp → học sinh) ✅ ([SCHOOL_LMS §8](SCHOOL_LMS.md#8-school-learning-dashboard)) · Learning Analytics ✅ · Assessment Results & báo cáo tham khảo TT27/TT22 ✅ · Reports ✅ · Thông báo an toàn của trường ✅ (§3.9) · Hoạt động học sinh ✅ (§3.10) · Cài đặt tenant/trường (gồm khung giờ truy cập) ✅ |
-| **D. Platform Administration** | Chỉ System Admin | Nội bộ + MFA | User & Role ✅ · Permission (catalog, chỉ xem) ✅ · Tenant Management ✅ · Gán / Clone (ADR-0029) ✅ · School Policies ✅ · Keycloak / SIS / APISIX (tham chiếu cấu hình) ✅ · System Configuration (dọn học sinh, retention) ✅ · Audit Logs ✅ · Data Retention ✅ · Thùng rác ✅ · Feature Flags ✅ · Integration Monitoring [TBD] · Danh mục từ nhạy cảm + Công tắc kiểm duyệt ✅ (§3.9) |
-| **E. Game Live Operations** | Chỉ platform (Live-ops, System Admin; Safety Moderator chỉ thấy module Kiểm duyệt) | Nội bộ + MFA | Online Players / CCU · Concurrent Sessions · Active Events · World Health · Matchmaking Status · Party Status · Game Session Status · **Kiểm duyệt — Platform Safety Team** ✅ (§3.9: hàng đợi case liên tenant, bằng chứng, sanction, từ bổ sung theo yêu cầu tenant, thông báo nhà trường) · Incident Management · Server Health · Operational Metrics: dashboard theo [DESIGN_SYSTEM §4](../05-ux/DESIGN_SYSTEM.md#4-adminops-design-system-cmslmsadmin) (KPI live-ops) và [MONITORING](../11-operations/MONITORING.md); màn hình chi tiết [TBD] |
+| **D. Platform Administration** | Chỉ System Admin | Nội bộ + MFA | User & Role ✅ · Permission (catalog, chỉ xem) ✅ · Tenant Management ✅ · Gán / Clone (ADR-0029) ✅ · School Policies ✅ · Keycloak / SIS / APISIX (tham chiếu cấu hình) ✅ · System Configuration (dọn học sinh, retention) ✅ · Audit Logs ✅ · Data Retention ✅ · Thùng rác ✅ · Feature Flags ✅ · Integration Monitoring ⛔ (giám sát tích hợp bằng dashboard/alert Grafana theo MONITORING; portal chỉ có màn tham chiếu chỉ xem) · Danh mục từ nhạy cảm + Công tắc kiểm duyệt ✅ (§3.9) |
+| **E. Game Live Operations** | Chỉ platform (Live-ops, System Admin; Safety Moderator chỉ thấy module Kiểm duyệt) | Nội bộ + MFA | Online Players / CCU · Concurrent Sessions · Active Events · World Health · Matchmaking Status · Party Status · Game Session Status · **Kiểm duyệt — Platform Safety Team** ✅ (§3.9: hàng đợi case liên tenant, bằng chứng, sanction, từ bổ sung theo yêu cầu tenant, thông báo nhà trường) · Incident Management · Server Health · Operational Metrics: dashboard theo [DESIGN_SYSTEM §4](../05-ux/DESIGN_SYSTEM.md#4-adminops-design-system-cmslmsadmin) (KPI live-ops) và [MONITORING](../11-operations/MONITORING.md); màn hình chi tiết theo F080 (live dashboard, Game Analytics) và F122 (kiểm duyệt); Incident Management ⛔ trong portal — sự cố xử lý qua alert + runbook (F131) |
 
 - Tenant **không bao giờ** thấy workspace A, D, E; trong B và C chỉ thấy dữ liệu tenant mình + dữ liệu platform được gán (chỉ đọc).
 - Safety Moderator chỉ thấy module Kiểm duyệt của workspace E; không thấy workspace A, B, C, D.
@@ -951,20 +951,20 @@ EduWorld Admin Portal   [Workspace ▾]   [Tenant ▾ — System Admin: lọc ·
 │   └── Duyệt nội dung (lane tenant / platform_learning) · Preview
 │
 ├── A. Game Operations Console   (chỉ platform · gateway nội bộ · MFA)
-│   ├── Game Dashboard [TBD]
+│   ├── Game Dashboard ⛔ (dùng Live dashboard + Game Analytics của E)
 │   ├── Thế giới — World · Zone · Area · NPC & hội thoại · World event
 │   ├── Quest Builder · Challenge Builder · Boss Management
 │   ├── Level & XP · Achievement · Item / Shop / Tiền tệ · Phần thưởng
 │   ├── Sự kiện & mùa · Thi đấu (matchmaking, ranking, mùa giải, template, leaderboard)
 │   ├── Tài nguyên chat — Sticker pack · Thư viện GIF
-│   ├── Người chơi · Party & nhóm [TBD]
+│   ├── Người chơi · Party & nhóm ⛔ (không có màn riêng trong Release 1.0)
 │   └── Duyệt & publish (lane platform_game) · Preview Godot Web
 │
 ├── E. Game Live Operations   (chỉ platform · gateway nội bộ · MFA)
 │   ├── Live dashboard (CCU, phiên, sự kiện đang chạy, hàng chờ ghép trận, party, sức khỏe thế giới/server)
 │   ├── Game Analytics (tổng quan, retention, onboarding, quest, challenge/boss, tiến trình, kinh tế, xã hội, sự kiện, chơi lành mạnh, hiệu năng thiết bị — §3.14)
 │   ├── Kiểm duyệt — Platform Safety Team (Safety Moderator, System Admin): hàng đợi case mọi tenant · sanction · thông báo nhà trường · từ bổ sung / nhóm từ của tenant · lịch trực on-call · báo cáo khẩn
-│   └── Sự cố (incident) [TBD]
+│   └── Sự cố (incident) ⛔ (alert + runbook ngoài portal, F131)
 │
 └── D. Platform Administration   (chỉ System Admin · gateway nội bộ · MFA)
     ├── Tenant (trường độc lập, đơn vị, tenant chung; kích hoạt; SIS connection)
@@ -972,7 +972,7 @@ EduWorld Admin Portal   [Workspace ▾]   [Tenant ▾ — System Admin: lọc ·
     ├── Gán cho tenant · Clone giữa tenant (job)
     ├── Chính sách trường · An toàn chat — Danh mục từ nhạy cảm · Công tắc kiểm duyệt · Break-glass
     ├── Cấu hình hệ thống — Dọn học sinh · Thời hạn chat gameplay · Retention · Feature flag · Bật/tắt menu & action (§3.18)
-    ├── Tích hợp — Keycloak · SIS · APISIX (tham chiếu, chỉ xem: `getIntegrationOverview`, giá trị từ cấu hình server, không secret) · Integration Monitoring [TBD]
+    ├── Tích hợp — Keycloak · SIS · APISIX (tham chiếu, chỉ xem: `getIntegrationOverview`, giá trị từ cấu hình server, không secret) · Integration Monitoring ⛔ (Grafana/alert)
     ├── Thùng rác (mọi tenant + platform)
     └── Nhật ký toàn hệ thống
 ```

@@ -140,7 +140,7 @@ Nhiều người soạn có sẵn câu hỏi trong Word với công thức MathT
 | 4. Kết quả | Chỉ tạo **Draft**, kèm báo cáo từng câu (thành công/cảnh báo/lỗi); không bao giờ tự publish; người soạn sửa trong editor rồi gửi duyệt |
 | 5. An toàn | File tải lên quét virus như media; bỏ macro, liên kết ngoài; giới hạn dung lượng |
 
-Thư viện chuyển đổi chưa chọn [TBD]; cần spike kỹ thuật đo tỉ lệ chuyển đổi đúng trên bộ mẫu thật của Toán/Lý/Hóa trước khi cam kết.
+Công cụ chuyển đổi: **Pandoc** (CLI, đọc `.docx` gồm công thức OMML ra LaTeX) chạy như tiến trình ngoài trong image `eduworld/media-tools` cùng ffmpeg/libvips, không link vào binary Go [Confirmed — owner 2026-11-20]. Đối tượng MathType OLE không có MathML nhúng vẫn đánh dấu "cần soạn lại công thức". Trước khi mở cho người soạn, spike đo tỉ lệ chuyển đổi đúng trên bộ mẫu thật của Toán/Lý/Hóa làm tiêu chí nghiệm thu. Import `lessons_docx` chưa thuộc feature nào (F024, F054 để ngoài phạm vi); cần feature riêng trước khi triển khai.
 
 ## 9. Rủi ro
 

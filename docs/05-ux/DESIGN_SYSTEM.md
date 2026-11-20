@@ -199,7 +199,7 @@ Mật độ là tập token ghi đè (`density/*.json`) sinh ra các Theme biế
 
 Quy ước chung và chỉ mục đặc tả chi tiết: [STUDENT_GAME_UX](STUDENT_GAME_UX.md).
 
-Danh mục dùng để lập kế hoạch đặc tả UX từng màn (Master Prompt tái cấu trúc §25). Mọi màn dùng Theme game, mật độ theo grade band (§5.2), không hiển thị thông tin cá nhân nhạy cảm của học sinh cho người khác. Đặc tả chi tiết từng màn (thành phần, trạng thái, lỗi, quyền, responsive) là **[TBD — lượt sau]**; cột "Trạng thái đặc tả" cho biết nghiệp vụ đã đủ để thiết kế màn chưa.
+Danh mục dùng để lập kế hoạch đặc tả UX từng màn (Master Prompt tái cấu trúc §25). Mọi màn dùng Theme game, mật độ theo grade band (§5.2), không hiển thị thông tin cá nhân nhạy cảm của học sinh cho người khác. Đặc tả chi tiết từng màn (thành phần, trạng thái, lỗi, quyền, responsive) nằm trong feature spec Godot sở hữu màn đó (`specs/<NNN>-*/spec.md`, cột cuối) và các tài liệu STUDENT_GAME_UX_*, không viết lại ở đây [Confirmed — owner 2026-11-20]; cột "Trạng thái đặc tả" cho biết nghiệp vụ đã đủ để thiết kế màn chưa.
 
 | Màn | Mục đích | Tài liệu nghiệp vụ | Trạng thái đặc tả |
 |---|---|---|---|
@@ -210,16 +210,16 @@ Danh mục dùng để lập kế hoạch đặc tả UX từng màn (Master Pro
 | Quest journal | Quest đang làm/hoàn thành, bước, phần thưởng, bài nhà trường giao | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md), [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s05--quest-journal) |
 | Challenge / Boss | Chọn độ khó, thanh tiến độ boss, phase, đóng góp đội | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s06--challenge--boss) |
 | Level-up | Hiệu ứng lên cấp, danh hiệu, phần thưởng | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_CORE](STUDENT_GAME_UX_CORE.md#s07--level-up) |
-| Inventory / Shop | Trang bị, tủ đồ, ví Xu, mua vật phẩm trang trí | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) | Nghiệp vụ có; UX màn [TBD] |
-| Achievement / Collection | Thành tựu, bộ sưu tập, tiến độ | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) | Nghiệp vụ có; UX màn [TBD] |
-| Party lobby | Thành viên, sẵn sàng, chọn hoạt động, chat party | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) | Nghiệp vụ có; UX màn [TBD] |
-| Bạn bè | Danh sách, lời mời, chặn, báo cáo | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) | Nghiệp vụ có; UX màn [TBD] |
+| Inventory / Shop | Trang bị, tủ đồ, ví Xu, mua vật phẩm trang trí | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) | Nghiệp vụ có; UX màn ở F069 |
+| Achievement / Collection | Thành tựu, bộ sưu tập, tiến độ | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) | Nghiệp vụ có; UX màn ở F069 |
+| Party lobby | Thành viên, sẵn sàng, chọn hoạt động, chat party | [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) | Nghiệp vụ có; UX màn ở F102 |
+| Bạn bè | Danh sách, lời mời, chặn, báo cáo | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) | Nghiệp vụ có; UX màn ở F110 |
 | Chat | Kênh, tin nhắn, menu nhấn giữ, quick message, sticker/GIF | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) | Nghiệp vụ có; UX màn một phần |
 | Learning activity player | Khung chung chạy mọi `activity_type` trong Release (renderer registry), nút gợi ý | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_LEARNING](STUDENT_GAME_UX_LEARNING.md) |
 | Video / exercise player | Phát video có câu chèn; bảng câu hỏi 11 dạng; gợi ý nhiều cấp; phản hồi theo phương án sai; công thức SVG | [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md), [QUESTION_BANK](../02-learning/QUESTION_BANK.md) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_LEARNING](STUDENT_GAME_UX_LEARNING.md) |
 | Kết quả học tập | Tổng kết, LO cần ôn, gợi ý tiếp theo, hiển thị mastery theo khối | [LEARNING_EXPERIENCE §7](../02-learning/LEARNING_EXPERIENCE.md#7-hiển-thị-tiến-bộ-cho-học-sinh) | Đặc tả UX đầy đủ (web/PC + mobile): [STUDENT_GAME_UX_LEARNING](STUDENT_GAME_UX_LEARNING.md) |
-| Competition Arena | Chọn mode, hàng chờ, ready check, trận, kết quả, tier | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) | Nghiệp vụ có; UX màn [TBD] |
-| Event center | Sự kiện đang diễn ra, nhiệm vụ ngày/tuần, mùa | [GAME_DESIGN](../01-game-design/GAME_DESIGN.md) | Nghiệp vụ một phần (Event & Season [TBD]); UX màn [TBD] |
+| Competition Arena | Chọn mode, hàng chờ, ready check, trận, kết quả, tier | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) | Nghiệp vụ có; UX màn ở F109 |
+| Event center | Sự kiện đang diễn ra, nhiệm vụ ngày/tuần, mùa | [GAME_DESIGN](../01-game-design/GAME_DESIGN.md) | Nghiệp vụ có ([EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md)); UX màn ở F111 |
 
 ## 6. Mã màu nghiệp vụ dùng chung (`shared-tokens/domain.json`)
 

@@ -119,7 +119,7 @@ Rate limit theo policy (`messages_per_minute` + burst và `chat_rate_per_user`, 
 
 ### 3.5. Bước 6–7 — Bắt nạt (`steps.bullying`) và context rules
 
-Bước `bullying` dùng rule (cụm xúc phạm nhắm vào người, mention + từ `medium` trở lên) và classifier [TBD] để chấm điểm tin đơn lẻ; tắt bước này thì bỏ chấm điểm đồng bộ. Context rules luôn chạy khi còn bước nội dung bật:
+Bước `bullying` dùng rule (cụm xúc phạm nhắm vào người, mention + từ `medium` trở lên) để chấm điểm tin đơn lẻ (Release 1.0 không dùng classifier ML, chỉ rule [Confirmed — owner 2026-11-20]); tắt bước này thì bỏ chấm điểm đồng bộ. Context rules luôn chạy khi còn bước nội dung bật:
 
 Kết hợp loại channel, `validation.strictness` của effective policy (trường/lớp có thể nâng), giờ, quan hệ (bạn bè/không), cross-school để chọn mức xử lý. **Không** dùng lớp/khối của người gửi hay người nhận làm điều kiện: cùng một tin ở cùng channel và cùng policy cho cùng quyết định với mọi học sinh.
 
@@ -135,7 +135,7 @@ Tắt bước này thì `chat-moderation-async` (profile `worker-chat`) bỏ qua
 | Grooming pattern (luôn chạy) | Hỏi tuổi, địa chỉ, yêu cầu giữ bí mật, rủ chuyển nền tảng khác |
 | Báo cáo trước đó | Người gửi có report được xác nhận |
 
-Vượt ngưỡng → tạo `moderation_case` mức ưu tiên tương ứng, **không** tự động trừng phạt nặng; chỉ auto-mute ngắn với tín hiệu rõ ràng **[Confirmed]**. Mô hình ML/LLM phân loại có thể bổ sung sau, chỉ khi xử lý trong hạ tầng đáp ứng OQ-12 và có ADR **[TBD]**.
+Vượt ngưỡng → tạo `moderation_case` mức ưu tiên tương ứng, **không** tự động trừng phạt nặng; chỉ auto-mute ngắn với tín hiệu rõ ràng **[Confirmed]**. Release 1.0 **không** dùng mô hình ML/LLM phân loại [Confirmed — owner 2026-11-20]; bổ sung sau chỉ khi có ADR mới và xử lý trong hạ tầng đáp ứng OQ-12.
 
 ## 5. Report flow
 

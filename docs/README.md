@@ -61,7 +61,7 @@ Bộ tài liệu được tổ chức **game-first**: EduWorld là *game trướ
 
 Không biến giả định thành yêu cầu đã xác nhận.
 
-Ngày 2026-11-20 owner dự án chốt toàn bộ phương án `[Proposed]` đang có trong `docs/` và `specs/` (trừ `docs/99-deferred/`, `specs/_deferred/`): nhãn được đổi thành `[Confirmed]`, nguồn là quyết định này. Đề xuất mới phát sinh sau ngày đó vẫn ghi `[Proposed]` cho tới khi owner chốt.
+Ngày 2026-11-20 owner dự án chốt toàn bộ phương án `[Proposed]` đang có trong `docs/` và `specs/` (trừ `docs/99-deferred/`, `specs/_deferred/`): nhãn được đổi thành `[Confirmed]`, nguồn là quyết định này. Đề xuất mới phát sinh sau ngày đó vẫn ghi `[Proposed]` cho tới khi owner chốt. Cùng ngày, owner chốt mọi `[TBD]`, mọi Open Question còn mở (trừ mục hoãn theo ADR-0082) và mọi ADR còn `Proposed` ([OPEN_QUESTIONS](12-project/OPEN_QUESTIONS.md), [chỉ mục ADR](adr/README.md)); nhãn `[TBD]` chỉ dùng lại cho câu hỏi mới.
 
 ### 3.3. Một nguồn sở hữu (không lặp, không đứt quãng)
 

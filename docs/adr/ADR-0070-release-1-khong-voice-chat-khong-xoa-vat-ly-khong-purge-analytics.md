@@ -21,10 +21,11 @@ Ba câu hỏi còn mở trước khi chốt phạm vi Release 1.0: voice chat (O
 
 ## Hệ quả
 
-(+) Phạm vi Release 1.0 gọn; không thêm rủi ro an toàn trẻ em từ giọng nói; không có đường xóa dữ liệu nào ngoài ADR-0033. (−) Dung lượng PostgreSQL tăng liên tục ở schema `analytics` và các bảng soft-delete, cần theo dõi và dự trù ổ đĩa; việc đáp ứng yêu cầu xóa bằng ẩn danh hóa cần tư vấn pháp lý xác nhận là đủ theo quy định bảo vệ dữ liệu cá nhân hiện hành [TBD — rủi ro pháp lý, xem RISKS].
+(+) Phạm vi Release 1.0 gọn; không thêm rủi ro an toàn trẻ em từ giọng nói; không có đường xóa dữ liệu nào ngoài ADR-0033. (−) Dung lượng PostgreSQL tăng liên tục ở schema `analytics` và các bảng soft-delete, cần theo dõi và dự trù ổ đĩa; việc đáp ứng yêu cầu xóa bằng ẩn danh hóa cần tư vấn pháp lý xác nhận là đủ theo quy định bảo vệ dữ liệu cá nhân hiện hành [Hoãn — pháp lý ngoài version này (ADR-0082); rủi ro chấp nhận, xem RISKS].
 
 ## Lịch sử thay đổi
 
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR; đóng OQ-19, OQ-20; không làm ngoại lệ purge analytics | Stakeholder (người duyệt) |
+| 2026-11-20 | Nhãn rủi ro pháp lý ở Hệ quả đổi thành Hoãn (ADR-0082), không đổi ý nghĩa quyết định | Owner |

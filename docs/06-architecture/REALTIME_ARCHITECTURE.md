@@ -259,7 +259,7 @@ flowchart LR
 
 - Snapshot chứa `tick`, danh sách entity `{eid, p:[x,y,z], r:yaw, a:anim}`; entity rời AOI → `removed[]`. Snapshot theo người xem được đóng gói theo gateway node (một message Valkey chứa snapshot cho các user trên node đó) để giảm số message Pub/Sub [Confirmed].
 - Hub chỉ xác thực mức vừa đủ (tốc độ, biên); không có vật lý server-side. Va chạm giữa người chơi tắt.
-- Tương tác có giá trị (mở quest, nhận item) đi qua REST của module game; kiểm tra khoảng cách (dung sai 3 m) dựa trên vị trí gần nhất do room host của module competition giữ (`ew:rt:room:<id>:pos:<user>` TTL 5 s). module game **không** đọc trực tiếp key Valkey thuộc module competition (ACL theo module); lấy vị trí qua facade của module competition, gọi trong tiến trình `core-api` (ADR-0074) — operation do F071 bổ sung vào spec internal [TBD].
+- Tương tác có giá trị (mở quest, nhận item) đi qua REST của module game; kiểm tra khoảng cách (dung sai 3 m) dựa trên vị trí gần nhất do room host của module competition giữ (`ew:rt:room:<id>:pos:<user>` TTL 5 s). module game **không** đọc trực tiếp key Valkey thuộc module competition (ACL theo module); lấy vị trí qua facade của module competition, gọi trong tiến trình `core-api` (ADR-0074) — operation do F071 khai báo trong `competition.internal.v1.yaml` (`x-allowed-callers: [game]`), phía competition đọc vị trí do room host hub của F091 giữ [Confirmed — owner 2026-11-20].
 - Party ưu tiên cùng instance; nếu đầy, cả party chuyển sang instance mới (`hub.instance.assigned`).
 
 ## 7. Battle & Co-op room (server-authoritative)
@@ -359,7 +359,7 @@ sequenceDiagram
 - Revocation: module identity phát `user.access_revoked` → `PUBLISH ew:rt:user:<id>` → gateway đóng `4403` trong ≤ 5 s.
 - Không gửi PII trong message hub/battle: chỉ `nickname`, `avatar_config`, `eid`.
 
-## 11. Scaling & ước lượng năng lực — mục tiêu 10.000 CCU (ADR-0045) [số liệu Proposed, phải xác minh bằng load test]
+## 11. Scaling & ước lượng năng lực — mục tiêu 10.000 CCU (ADR-0045) [Confirmed — mục tiêu thiết kế, phải xác minh bằng load test]
 
 Mục tiêu năng lực Release 1.0 là **10.000 người chơi đồng thời** [Confirmed] (NFR-SCAL-002). Bảng dưới là ước lượng để dựng hạ tầng và kịch bản load test, chưa phải cam kết.
 

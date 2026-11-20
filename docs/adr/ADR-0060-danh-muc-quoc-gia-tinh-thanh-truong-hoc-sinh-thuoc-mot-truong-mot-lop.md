@@ -10,7 +10,7 @@ Stakeholder (người duyệt) yêu cầu: phải có **danh mục trường**; 
 
 1. **Danh mục dùng chung toàn platform** (thuộc identity-service, không theo tenant; chỉ System Admin sửa; các service khác nhận qua projection `ref.*`):
    - **Country**: `country_code` (ISO 3166-1 alpha-2, ví dụ `VN`), tên song ngữ (ADR-0056), `status`. Release 1.0 chỉ bật `VN`.
-   - **Province** (tỉnh/thành cấp 1): `province_id`, `country_code`, `code` nội bộ ổn định, `official_code` (mã đơn vị hành chính chính thức — **[TBD] nhập từ danh mục chính thức của cơ quan nhà nước, không tự đặt**), `name` song ngữ, `type` (`municipality` thành phố trực thuộc trung ương | `province` tỉnh), `effective_from`, `effective_to`, `status`. Có **lịch sử**: đơn vị cũ (trước sáp nhập) giữ dạng `inactive` + bảng `province_successions(old_province_id → new_province_id, effective_date)` để ánh xạ dữ liệu cũ.
+   - **Province** (tỉnh/thành cấp 1): `province_id`, `country_code`, `code` nội bộ ổn định, `official_code` (mã đơn vị hành chính chính thức — **[Confirmed] nhập từ danh mục chính thức của cơ quan nhà nước trước khi seed production, NULL tới khi nhập, không tự đặt**), `name` song ngữ, `type` (`municipality` thành phố trực thuộc trung ương | `province` tỉnh), `effective_from`, `effective_to`, `status`. Có **lịch sử**: đơn vị cũ (trước sáp nhập) giữ dạng `inactive` + bảng `province_successions(old_province_id → new_province_id, effective_date)` để ánh xạ dữ liệu cũ.
    - Cấp xã/phường: chưa làm trong Release 1.0; mô hình để mở rộng `ward` sau [Confirmed].
    - **School** (danh mục trường): `school_id`, `tenant_id`, `country_code`, `province_id`, `moet_code` (mã trường do ngành giáo dục cấp, nếu có), tên song ngữ, cấp học (`primary` tiểu học, `lower_secondary` THCS, `multi_level` liên cấp), khối áp dụng (1–9), địa chỉ (chuỗi, có giới hạn độ dài), `status`, `sis_connection_id?`. Trường do SIS đồng bộ hoặc System Admin/Tenant Admin tạo; mỗi trường thuộc đúng một tenant.
 2. **Seed tỉnh/thành Việt Nam (34 đơn vị)** theo sắp xếp đơn vị hành chính có hiệu lực từ 01/7/2025 [Confirmed về số lượng; mã chính thức TBD]. Dữ liệu seed đặt tại `specs/reference-data/` (JSON, có schema), kèm 63 đơn vị cũ ở trạng thái `inactive` và bảng kế thừa. Trước khi đưa vào production phải đối chiếu tên, loại và mã với văn bản chính thức.
@@ -30,3 +30,4 @@ Stakeholder (người duyệt) yêu cầu: phải có **danh mục trường**; 
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
+| 2026-11-20 | Chốt nguồn `official_code`: nhập từ danh mục chính thức trước khi seed production, NULL tới khi nhập | Owner |

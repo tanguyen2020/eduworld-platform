@@ -76,7 +76,7 @@ Hạng thiết bị, thiết bị lab cụ thể (mã DEV-*) và preset mặc đ
 | **Tầm trung (mục tiêu chính, preset Trung bình)** | DEV-PC-MID, DEV-PC-AMD, DEV-AND-MID1, DEV-AND-MID2, DEV-TAB-MID, DEV-IOS-MID, DEV-WEB-MID | Toàn bộ E2E smoke + đăng nhập bằng form trong game theo nền tảng (bàn phím vật lý, bàn phím ảo mobile, Web — ADR-0068), mất mạng/khôi phục, battle, boss co-op, chat | TC-PERF-009, 018, 020–024 |
 | Cao (preset Cao, Forward+ trên PC) | 1 PC GPU rời, 1 Android cận cao cấp | Smoke + renderer parity | TC-PERF-018 (chỉ kiểm tra không lỗi) |
 
-Mỗi release candidate chạy smoke E2E trên **toàn bộ thiết bị hạng Tầm trung** và ít nhất 1 thiết bị Tối thiểu mỗi nền tảng. Trình duyệt Web: Chrome và Edge bản mới bắt buộc; Firefox/Safari không bắt buộc, không chặn release (OQ-04, owner 2026-11-20).
+Mỗi release candidate chạy smoke E2E trên **toàn bộ thiết bị hạng Tầm trung** và ít nhất 1 thiết bị Tối thiểu mỗi nền tảng. Trình duyệt Web: Chrome và Edge bản mới bắt buộc; Firefox/Safari không được hỗ trợ trong Release 1.0, không kiểm thử (OQ-04, owner 2026-11-20).
 
 ## 5. Dữ liệu kiểm thử
 

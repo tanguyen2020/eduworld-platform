@@ -1,6 +1,6 @@
 # Game Analytics
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Product Manager + Game Director + Backend Architect · Cập nhật: 2026-11-17 (telemetry `break_reminder_shown` thay domain event `wellbeing.break_reminder_shown` [TBD]; loại tenant QA, rollup theo `dims_hash`, quyền Academic Manager)
+> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Product Manager + Game Director + Backend Architect · Cập nhật: 2026-11-17 (telemetry `break_reminder_shown` thay domain event `wellbeing.break_reminder_shown` (chưa từng được chốt); loại tenant QA, rollup theo `dims_hash`, quyền Academic Manager)
 > Liên quan: [ADR-0058](../adr/ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [MONITORING](MONITORING.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Nguyên tắc · 3. Danh mục sự kiện tracking · 4. Định nghĩa chỉ số · 5. Pipeline · 6. Mô hình dữ liệu · 7. Dashboard và báo cáo · 8. Quyền truy cập · 9. Retention và quyền riêng tư · 10. Ngưỡng chuyển kho phân tích riêng · 11. API · 12. Tiêu chí nghiệm thu

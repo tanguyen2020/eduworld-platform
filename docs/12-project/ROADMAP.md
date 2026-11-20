@@ -76,7 +76,7 @@ Song song từ M-C2: **dòng sản xuất nội dung** (EdTech + content team). 
 
 ```mermaid
 gantt
-  title EduWorld Roadmap theo giai đoạn (Proposed, sprint 2 tuần, bắt đầu 2026-11-16)
+  title EduWorld Roadmap theo giai đoạn (Confirmed, sprint 2 tuần, bắt đầu 2026-11-16)
   dateFormat  YYYY-MM-DD
   axisFormat  %m/%Y
   section Pilot
@@ -240,7 +240,7 @@ Phạm vi theo [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.
 - [ ] Mặc định an toàn ADR-0078: giờ giới nghiêm chặn đăng nhập, game session và chat, trường không nới được (TC-AUTH-092, TC-CHAT-046); công tắc kiểm duyệt có thời hạn + hai người duyệt (TC-CHAT-045); tenant `common` không kết bạn/DM/World chat (TC-CHAT-047); gate CS-10, CS-11, CS-12 đạt.
 - [ ] Client chạy trên **Windows, Android, iOS, Web** đạt AC-PERF của các cảnh pilot trên device matrix ([TEST_STRATEGY](TEST_STRATEGY.md) §4.1); Windows cài mặc định là máy dùng chung (TC-AUTH-090); "Tiếp tục là <nickname>?" hoạt động trên cả 4 nền tảng (TC-AUTH-091); luồng quest mẫu chạy trên thiết bị Tối thiểu (TC-PERF-019).
 - [ ] Production pilot: load test ở mức NFR-SCAL-001 có báo cáo; restore PITR từng database và khôi phục object storage (RB-05) diễn tập thành công; spike object storage ADR-0075 có báo cáo và quyết định; alert chính kích hoạt thử; pen-test đăng nhập game không còn High/Critical.
-- [ ] F035 `Done`: bài kiểm tra trước đã chạy ở lớp pilot và lớp so sánh; ngưỡng đạt (effect size, tỉ lệ học sinh tiến bộ) đã được PO + EdTech chốt **trước khi** pilot bắt đầu [TBD]; dữ liệu nghiên cứu định danh giả.
+- [ ] F035 `Done`: bài kiểm tra trước đã chạy ở lớp pilot và lớp so sánh; ngưỡng đạt theo `pilot_efficacy_threshold` (ADR-0080 mục 2) [Confirmed — owner 2026-11-20]; dữ liệu nghiên cứu định danh giả.
 - [ ] UAT với trường pilot ký nhận; tài liệu người dùng (học sinh, quản trị trường, quản lý chuyên môn, Safety Team) hoàn thành.
 
 **Demo script:** học sinh lớp 3 cài game trên máy phòng tin (mặc định máy dùng chung) và trên tablet Android → tạo avatar → nhận quest "Giúp bác nông dân đếm trứng" → mini-game phép nhân → sai 1 câu, xem gợi ý → hoàn thành, nhận XP + Xu → mua mũ trong Shop → rủ bạn cùng lớp làm quest co-op ghép dữ kiện, chỉ gửi được quick message + emote → đánh boss solo → nhà trường mở dashboard thấy LO thay đổi; 21:30 game cảnh báo rồi kết thúc phiên.
@@ -347,7 +347,7 @@ Báo cáo 1 học kỳ vận hành Release 1.0 — tần suất sử dụng, t�
 | Parent portal | Không làm trong Release 1.0 (OQ-13, owner 2026-11-20); thêm vai trò `parent` cần ADR mới | Không có trong Master Prompt |
 | Thi chính thức có giá trị pháp lý / proctoring | Không làm trong Release 1.0 (OQ-18, owner 2026-11-20) | |
 | Thanh toán / in-app purchase | Không làm (OQ-14, owner 2026-11-20: B2B license theo trường) | Không bao giờ pay-to-learn |
-| Full LRS endpoint chuẩn xAPI | [TBD] | Master Prompt §16 không bắt buộc; dữ liệu đã thiết kế tương thích xAPI |
+| Full LRS endpoint chuẩn xAPI | Không làm trong Release 1.0 (owner 2026-11-20) | Master Prompt §16 không bắt buộc; dữ liệu đã thiết kế tương thích xAPI |
 | Mastery BKT/IRT | Cải tiến sau khi có dữ liệu thật (gồm dữ liệu pilot ADR-0080) | ADR-0017: model cắm được |
 | Onboard thêm trường kết nối API theo EduWorld SIS Contract | Vận hành liên tục | OQ-01, ADR-0021 |
 | Tách một module thành service riêng (chat là ứng viên đầu tiên) khi có số đo theo tiêu chí ADR-0074 mục 7 | Theo số liệu | ADR-0074 (mỗi lần tách cần ADR mới) |

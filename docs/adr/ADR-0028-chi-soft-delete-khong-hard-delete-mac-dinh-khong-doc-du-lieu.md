@@ -21,7 +21,7 @@ Stakeholder yêu cầu: ứng dụng chỉ soft-delete, không hard-delete; khi 
 5. **Quan hệ cha–con:** soft-delete cha không xóa cứng con; con được ẩn theo quy tắc từng aggregate (DATABASE_DESIGN).
 6. **Bảng append-only** (learning events, attempt answers, audit logs, ledger XP/tiền tệ, outbox) không có thao tác xóa; sửa sai bằng bản ghi bù.
 7. **Dữ liệu tạm trong Valkey** hết hạn bằng TTL, không thuộc phạm vi ADR này.
-8. **Nghĩa vụ xóa theo luật/thời hạn lưu trữ:** ứng dụng xử lý bằng **ẩn danh hóa** (ghi đè PII, giữ bản ghi). Xóa vật lý (nếu luật bắt buộc hoặc gỡ partition hết hạn) chỉ qua quy trình vận hành có phê duyệt, ngoài ứng dụng, có biên bản [TBD OQ-20].
+8. **Nghĩa vụ xóa theo luật/thời hạn lưu trữ:** ứng dụng xử lý bằng **ẩn danh hóa** (ghi đè PII, giữ bản ghi). Xóa vật lý (nếu luật bắt buộc hoặc gỡ partition hết hạn) chỉ qua quy trình vận hành có phê duyệt, ngoài ứng dụng, có biên bản — Release 1.0 không có quy trình này (ADR-0070, OQ-20 đã trả lời).
 9. **Ngoại lệ duy nhất:** chat gameplay ngắn hạn được purge vật lý bởi job riêng theo ADR-0033. Mọi ngoại lệ khác cần ADR mới.
 
 ## Hệ quả
@@ -36,3 +36,4 @@ Stakeholder yêu cầu: ứng dụng chỉ soft-delete, không hard-delete; khi 
 | 2026-11-15 | Thêm ngoại lệ purge chat gameplay | ADR-0033 |
 | 2026-11-15 | Role DB theo service; hook ent | ADR-0037, ADR-0039 |
 | 2026-11-17 | Một phần superseded by ADR-0089 (RLS chỉ lọc tenant) | Technical Architect |
+| 2026-11-20 | Cập nhật tham chiếu mục 8: OQ-20 đã trả lời bằng ADR-0070 (không đổi ý nghĩa quyết định) | Owner |

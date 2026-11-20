@@ -712,9 +712,9 @@ func end() -> void:
 
 Ghi chú: game không xác thực chữ ký token; **xác thực có thẩm quyền do backend thực hiện** khi nhận access token (ADR-0008). `Api.post_public` dùng cùng pool `HTTPRequest`, tắt ghi body vào log debug cho mọi path `/auth/game/*`.
 
-## 14. Việc còn mở
+## 14. Quyết định chi tiết đã chốt (owner 2026-11-20)
 
-- Certificate pinning trong Godot (desktop/mobile) cho tên miền API [Confirmed, ADR-0068] — chọn cơ chế (`TLSOptions.client` với chứng chỉ CA riêng hoặc pin public key) và quy trình xoay chứng chỉ.
-- Danh sách GPU/SoC cần ép Compatibility hoặc preset Thấp (`client-config.device_profiles`) — lập sau khảo sát thiết bị trường (OQ-04) và benchmark Phase 1.
-- Device Authorization Grant cho máy dùng chung: ngoài Release 1.0 (ADR-0063), mở rộng sau.
-- `SecureStorage` cho macOS/Linux (Keychain/Secret Service) nếu sau này phát hành hai nền tảng này; Web lưu bền refresh token (hiện chỉ RAM, ADR-0086 mục 1) [Confirmed].
+- Certificate pinning trong Godot (desktop/mobile) cho tên miền API và realtime [Confirmed, ADR-0068]: dùng `TLSOptions.client(trusted_chain)` với `trusted_chain` chỉ gồm CA phát hành chứng chỉ của tên miền API (CA chính + một CA dự phòng), đóng gói trong build; xoay chứng chỉ lá không cần cập nhật client; đổi CA phải phát hành build mới chứa CA mới trước khi đổi và nâng `min_client_version`. Web không pin (HSTS, `certificate_pinning`) [Confirmed — owner 2026-11-20].
+- Danh sách GPU/SoC cần ép Compatibility hoặc preset Thấp nằm trong `client-config.device_profiles` (dữ liệu cấu hình, không build lại client); khảo sát thiết bị trường pilot (OQ-04) và benchmark Phase 1 chỉ cập nhật danh sách [Confirmed — owner 2026-11-20].
+- Device Authorization Grant cho máy dùng chung: ngoài Release 1.0 (ADR-0063).
+- `SecureStorage` cho macOS/Linux: không làm (Release 1.0 không phát hành hai nền tảng này, F133); Web chỉ giữ refresh token trong RAM (ADR-0086 mục 1) [Confirmed].

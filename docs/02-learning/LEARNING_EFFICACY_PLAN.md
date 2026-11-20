@@ -93,7 +93,7 @@ Hạ tầng này chạm schema module learning và learning event; triển khai 
 
 ## 7. Exit criterion của pilot
 
-Kết quả nghiên cứu là điều kiện ra khỏi pilot ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)): có báo cáo đủ §4–§5 với dữ liệu tối thiểu một chu kỳ 8 tuần; effect size không âm có ý nghĩa và đạt ngưỡng tham chiếu §4, hoặc có kế hoạch khắc phục được Product Owner chấp nhận. Ngưỡng chính thức do ADR-0080 chốt, tài liệu này chỉ đề xuất.
+Kết quả nghiên cứu là điều kiện ra khỏi pilot ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)): có báo cáo đủ §4–§5 với dữ liệu tối thiểu một chu kỳ 8 tuần; effect size không âm có ý nghĩa và đạt ngưỡng tham chiếu §4, hoặc có kế hoạch khắc phục được Product Owner chấp nhận. Ngưỡng chính thức đã chốt ở ADR-0080 mục 2 (owner 2026-11-20): Hedges' g ≥ 0,2 (mô hình hồi quy đa mức, điểm trước làm biến kiểm soát) với khoảng tin cậy 95% nằm trên 0, tỉ lệ rời nghiên cứu < 20%, tối thiểu 8 tuần; tỉ lệ học sinh tiến bộ báo cáo kèm, không là ngưỡng (`pilot_efficacy_threshold`).
 
 ## 8. Đạo đức nghiên cứu và dữ liệu trẻ em
 

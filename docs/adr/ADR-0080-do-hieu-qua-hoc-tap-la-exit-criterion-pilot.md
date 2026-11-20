@@ -9,7 +9,7 @@ KPI "mastery gain" trong [PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md) 
 ## Quyết định
 
 1. Pilot (ADR-0073) chỉ được coi là đạt khi có báo cáo nghiên cứu hiệu quả theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md): bài kiểm tra độc lập trước/sau (tự chấm, không dùng câu hỏi luyện tập), có lớp so sánh, thời gian tối thiểu 8 tuần [Confirmed].
-2. Ngưỡng đạt (effect size, tỉ lệ học sinh tiến bộ) do PO + EdTech chốt trước khi pilot bắt đầu [TBD].
+2. Ngưỡng đạt [Confirmed — owner 2026-11-20, theo đề xuất của LEARNING_EFFICACY_PLAN §4]: Hedges' g ≥ 0,2 (mô hình hồi quy đa mức, điểm trước làm biến kiểm soát) với khoảng tin cậy 95% nằm trên 0, tỉ lệ rời nghiên cứu < 20%, tối thiểu 8 tuần; tỉ lệ học sinh tiến bộ báo cáo kèm, không là ngưỡng. Không đạt thì pilot chỉ qua cổng khi có kế hoạch khắc phục được Product Owner chấp nhận.
 3. Báo cáo gồm đối chiếu mastery với kết quả kiểm tra độc lập (độ tin cậy dự báo); kết quả dùng để hiệu chỉnh tham số mastery (ADR-0017).
 4. Dữ liệu nghiên cứu dùng định danh giả và tối thiểu hóa theo [DATA_PRIVACY](../10-security/DATA_PRIVACY.md); nhà trường tham gia bằng thỏa thuận pilot và có quyền rút lớp/học sinh khỏi phần phân tích. Phần pháp lý (consent, ADR-0077) hoãn theo ADR-0082.
 
@@ -23,3 +23,4 @@ KPI "mastery gain" trong [PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md) 
 |---|---|---|
 | 2026-11-15 | Tạo ADR (Proposed) từ EDU_FIT_REVIEW | Technical Architect |
 | 2026-11-17 | Accepted | Technical Architect |
+| 2026-11-20 | Chốt ngưỡng đạt mục 2 theo đề xuất của LEARNING_EFFICACY_PLAN §4 | Owner |

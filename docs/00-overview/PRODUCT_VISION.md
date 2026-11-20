@@ -83,7 +83,7 @@ Ràng buộc bổ sung:
 
 ## 7. Mục tiêu đo lường (KPI đề xuất)
 
-Mục này là **nơi duy nhất định nghĩa KPI sản phẩm và mục tiêu pilot** (R33); [GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [ROADMAP](../12-project/ROADMAP.md) và tài liệu khác chỉ link tới đây. Mọi chỉ số là **[Confirmed]**, chốt ngưỡng sau pilot. **Không** tối đa hóa thời gian chơi (trái nguyên tắc chống gây nghiện). Hiệu quả học tập được đo bằng bài kiểm tra độc lập với mô hình mastery của hệ thống, theo thiết kế ở [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md); đây là **cổng thoát pilot** ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md), [Confirmed — Technical Architect 2026-11-17]): pilot chỉ đạt khi có báo cáo nghiên cứu hiệu quả đạt ngưỡng do PO + EdTech chốt trước khi pilot bắt đầu [TBD]. Các KPI khác ở bảng dưới là chỉ số theo dõi, không thay thế cổng này. Định nghĩa chỉ số game, sức khỏe chơi và hiệu năng thực tế (`active_days_per_week`, `chapter0_completion`, `social_play_rate`, `session_duration_p50`, `sessions_over_second_reminder`, `crash_free_sessions`…) ở [GAME_ANALYTICS §4](../11-operations/GAME_ANALYTICS.md#4-định-nghĩa-chỉ-số); chỉ số học tập ở [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md); chỉ số kỹ thuật ở [MONITORING](../11-operations/MONITORING.md).
+Mục này là **nơi duy nhất định nghĩa KPI sản phẩm và mục tiêu pilot** (R33); [GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [ROADMAP](../12-project/ROADMAP.md) và tài liệu khác chỉ link tới đây. Mọi chỉ số là **[Confirmed]**, chốt ngưỡng sau pilot. **Không** tối đa hóa thời gian chơi (trái nguyên tắc chống gây nghiện). Hiệu quả học tập được đo bằng bài kiểm tra độc lập với mô hình mastery của hệ thống, theo thiết kế ở [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md); đây là **cổng thoát pilot** ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md), [Confirmed — Technical Architect 2026-11-17]): pilot chỉ đạt khi có báo cáo nghiên cứu hiệu quả đạt ngưỡng `pilot_efficacy_threshold` (ADR-0080 mục 2) [Confirmed — owner 2026-11-20]. Các KPI khác ở bảng dưới là chỉ số theo dõi, không thay thế cổng này. Định nghĩa chỉ số game, sức khỏe chơi và hiệu năng thực tế (`active_days_per_week`, `chapter0_completion`, `social_play_rate`, `session_duration_p50`, `sessions_over_second_reminder`, `crash_free_sessions`…) ở [GAME_ANALYTICS §4](../11-operations/GAME_ANALYTICS.md#4-định-nghĩa-chỉ-số); chỉ số học tập ở [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md); chỉ số kỹ thuật ở [MONITORING](../11-operations/MONITORING.md).
 
 | Nhóm | KPI | Mục tiêu pilot |
 |---|---|---|
@@ -91,7 +91,7 @@ Mục này là **nơi duy nhất định nghĩa KPI sản phẩm và mục tiêu
 | Game | Hoàn thành chương 0 (tutorial) | ≥ 90% |
 | Game | Tham gia co-op/party ít nhất 1 lần/tuần | ≥ 40% |
 | Học tập | Activity completion rate | ≥ 75% |
-| Học tập | **Cổng thoát pilot** (ADR-0080) — hiệu quả học tập đo độc lập: chênh lệch tiến bộ bài kiểm tra trước/sau giữa lớp dùng EduWorld và lớp so sánh (effect size), tối thiểu 8 tuần | Ngưỡng và phương pháp theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §7 [TBD trước pilot] |
+| Học tập | **Cổng thoát pilot** (ADR-0080) — hiệu quả học tập đo độc lập: chênh lệch tiến bộ bài kiểm tra trước/sau giữa lớp dùng EduWorld và lớp so sánh (effect size), tối thiểu 8 tuần | Ngưỡng và phương pháp theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §7 [Confirmed — owner 2026-11-20] |
 | Học tập | Mastery gain sau 8 tuần (% LO lên ≥ 1 mức) — chỉ số nội bộ, phải đối chiếu với bài kiểm tra độc lập ở trên | ≥ 30% LO được luyện |
 | Học tập | Học tập tự nguyện (% attempt không do nhà trường giao) | ≥ 50% |
 | Học tập | Gợi ý ôn tập tự động được học sinh mở và hoàn thành | ≥ 40% gợi ý |
@@ -122,7 +122,7 @@ Không làm trong Release 1.0: voice chat ([ADR-0051](../adr/ADR-0051-pham-vi-vo
 - Không MMO persistent world liên tục cho toàn hệ thống ([ADR-0012](../adr/ADR-0012-the-gioi-game-hybrid-hub-instance-private-instance-match-roo.md)).
 - Không cho học sinh tự đăng ký tài khoản [Confirmed].
 - Không giao tiếp tự do không kiểm soát; không liên lạc giữa học sinh khác tenant ngoài sự kiện do platform tổ chức ([ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md)).
-- Không bán lợi thế, không loot box, không cơ chế đánh bạc, không quảng cáo, không bán dữ liệu [Confirmed + Proposed].
+- Không bán lợi thế, không loot box, không cơ chế đánh bạc, không quảng cáo, không bán dữ liệu [Confirmed].
 - Không dùng Game Rating hay level để đánh giá năng lực học tập ([ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md)) [Confirmed].
 - Không nhập công thức trong game (game chỉ hiển thị, [ADR-0055](../adr/ADR-0055-cong-thuc-toan-vat-ly-hoa-hoc-mathjax-4-hien-thi-mathlive-nh.md)).
 - Không nhận DTO riêng của SIS: EduWorld định nghĩa contract ([ADR-0021](../adr/ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md)) [Confirmed].

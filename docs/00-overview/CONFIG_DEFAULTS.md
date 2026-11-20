@@ -229,6 +229,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
+| `pilot_efficacy_threshold` | Hedges' g ≥ 0,2 (mô hình hồi quy đa mức, điểm trước làm biến kiểm soát) với khoảng tin cậy 95% nằm trên 0, tỉ lệ rời nghiên cứu < 20%, tối thiểu 8 tuần; tỉ lệ học sinh tiến bộ báo cáo kèm, không là ngưỡng | — | pilot | [Confirmed — owner 2026-11-20] (ADR-0080) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §7 |
 | `attempt_idle_timeout` | 5 | phút | platform | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
 | `attempt_resume_window` | 24 giờ (practice/retry/quest/challenge) | — | platform | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
 | `deadline_grace` | 2 | giây | code | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |

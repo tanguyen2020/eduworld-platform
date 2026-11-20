@@ -28,7 +28,7 @@ Ký hiệu: ✅ đáp ứng · 🟡 một phần · ❌ chưa có.
 | § | Yêu cầu | Mức | Hiện có | Thiếu |
 |---|---|---|---|---|
 | 3 | Giữ stack Godot/Go/APISIX/Keycloak/Valkey/SIS | ✅ | ADR-0001…0047 | PostgreSQL đang ghi Accepted, Master Prompt yêu cầu Proposed/TBD → CONFLICT C3 |
-| 4 | Audit + phân loại CONFIRMED/PROPOSED/TBD/CONFLICT/DEPRECATED | 🟡 | Nhãn [Confirmed]/[Confirmed]/[TBD]; ADR có Superseded | Chưa có nhãn CONFLICT/DEPRECATED trong tài liệu; báo cáo này là audit đầu tiên |
+| 4 | Audit + phân loại CONFIRMED/PROPOSED/TBD/CONFLICT/DEPRECATED | 🟡 | Nhãn [Confirmed]/[Proposed]/[TBD]; ADR có Superseded | Chưa có nhãn CONFLICT/DEPRECATED trong tài liệu; báo cáo này là audit đầu tiên |
 | 5.1 | Game World: hub, map, zone, instance, NPC, portal, spawn, discovery, storyline | 🟡 | GAME_WORLD_DESIGN, 3D_WORLD_DESIGN, ADR-0012 | **World map, portal/teleport, discovery point, hidden location, exploration progress, world storyline/chapter, unlock conditions từng khu** |
 | 5.2 | Character & avatar | 🟡 | CHARACTER_SYSTEM | **Luồng tạo avatar lần đầu**, body type, equipment slot, avatar preset, appearance theo progression |
 | 5.3 | Character controller | ✅ | CHARACTER_SYSTEM, GAME_NETWORKING | Accessibility settings điều khiển, mobile controls chi tiết |
@@ -245,7 +245,7 @@ Stakeholder yêu cầu: *"review lại tất cả specs và docs xem đã phù h
 | G-5 | Core loop bắt đầu bằng "chọn hoạt động: quest/luyện tập/ôn thi" | Bắt đầu bằng gợi ý phiêu lưu và khám phá (Mây); bảng động lực người chơi theo khối | [GAME_DESIGN](../01-game-design/GAME_DESIGN.md), [USER_PERSONAS](../00-overview/USER_PERSONAS.md) |
 | G-6 | Roadmap chỉ liệt kê hạng mục kỹ thuật | Mỗi phase nêu "trải nghiệm người chơi khi xong phase" | [ROADMAP](ROADMAP.md) |
 | G-7 | Tài liệu kỹ thuật không có luồng chơi xuyên suốt | Thêm luồng chơi end-to-end theo service (đăng nhập → hub → quest → activity → chấm → XP/level/mở khóa → party/boss/trận → chat → mastery) | [SYSTEM_ARCHITECTURE §5](../06-architecture/SYSTEM_ARCHITECTURE.md) |
-| G-8 | Chưa có danh mục màn hình học sinh trong game | Danh mục 17 màn (chi tiết từng màn [TBD]) | [DESIGN_SYSTEM §5.7](../05-ux/DESIGN_SYSTEM.md) |
+| G-8 | Chưa có danh mục màn hình học sinh trong game | Danh mục 17 màn (chi tiết từng màn ở feature spec Godot tương ứng, 2026-11-20) | [DESIGN_SYSTEM §5.7](../05-ux/DESIGN_SYSTEM.md) |
 | G-9 | 4/20 kịch bản nghiệm thu Master Prompt §26 không có test case | Bổ sung; bảng ánh xạ 20 kịch bản → TC | [TEST_STRATEGY §6.0](TEST_STRATEGY.md) |
 | G-10 | Tham số mặc định rải rác, con số lặp ở nhiều tài liệu | Quy tắc "một nguồn sở hữu" + sổ [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md) | [docs/README §3.3](../README.md) |
 
@@ -364,7 +364,7 @@ Mâu thuẫn còn mở (cần chốt) liệt kê ở [CONFIG_DEFAULTS §19](../0
 
 **Cần người duyệt lưu ý thêm:**
 
-- File ghi âm giọng nói học sinh (`ew-student-submissions/recordings/`) trước đây xóa sau 90 ngày; theo ADR-0070 nay chỉ ẩn khỏi API, file vẫn giữ trong bucket private [TBD: xác nhận hoặc thêm ngoại lệ xóa].
+- File ghi âm giọng nói học sinh (`ew-student-submissions/recordings/`) trước đây xóa sau 90 ngày; theo ADR-0070 nay chỉ ẩn khỏi API, file vẫn giữ trong bucket private. Chốt (owner 2026-11-20): không thêm ngoại lệ xóa (ADR-0070); version này không có ghi âm học sinh (ADR-0059, ADR-0082).
 - Lifecycle tự xóa object ở `ew-media-quarantine` (file tạm 7 ngày) và `ew-exports` (file xuất báo cáo) vẫn giữ như ADR-0044; cần người duyệt xác nhận đây không thuộc phạm vi "không xóa vật lý" của ADR-0070.
 - Bảng kỹ thuật `infra.outbox_events` (EVENT_DESIGN, DATABASE_DESIGN) vẫn mô tả dọn bằng gỡ partition sau 30 ngày; cần xác nhận có được coi là ngoại lệ kỹ thuật (không chứa dữ liệu cá nhân trực tiếp) hay giữ lại vĩnh viễn. → Đã chốt 2026-11-17: ngoại lệ có giới hạn cho `outbox_events`, `processed_events`, `idempotency_records` (ADR-0089 §5).
 - `erase_student` đổi từ xóa user Keycloak sang vô hiệu hóa + ẩn danh hóa user Keycloak (DATA_PRIVACY).

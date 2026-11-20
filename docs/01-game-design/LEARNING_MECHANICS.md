@@ -1,7 +1,7 @@
 # Learning Mechanics — Cơ chế học tập nội tại
 
 > Trạng thái: Draft · Phiên bản: 0.1 · Owner: Game Director + EdTech Specialist · Cập nhật: 2026-11-15
-> Liên quan: [GAME_DESIGN §6](GAME_DESIGN.md#6-học-tập-lồng-trong-gameplay) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) · [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) PED-03 · [ADR-0016](../adr/ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) · [ADR-0052](../adr/README.md) · [ADR-0073 (Proposed)](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md)
+> Liên quan: [GAME_DESIGN §6](GAME_DESIGN.md#6-học-tập-lồng-trong-gameplay) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) · [SIMULATION_ENGINE](../02-learning/SIMULATION_ENGINE.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) PED-03 · [ADR-0016](../adr/ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) · [ADR-0052](../adr/README.md) · [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md)
 
 Toàn bộ nội dung tài liệu là **[Confirmed]** cho tới khi Game Director và EdTech Specialist duyệt.
 
@@ -112,20 +112,20 @@ Một cơ chế (hoặc một quest dùng cơ chế) chỉ được publish khi 
 
 ## 7. Ưu tiên cho pilot
 
-Chọn 2–4 cơ chế cho pilot (phạm vi pilot theo [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md), Proposed). Tiêu chí chọn: dùng khối có sẵn (không cần engine mới), phủ nhóm lớp 1–3 khó nhất, khớp cốt truyện chương 1–2 ([WORLD_DESIGN §2.2](WORLD_DESIGN.md#22-mạch-truyện-chính-confirmed--người-duyệt-2026-11-15-adr-0056)), tham số hóa tốt.
+Chọn 2–4 cơ chế cho pilot (phạm vi pilot theo [ADR-0073](../adr/ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md), Accepted). Tiêu chí chọn: dùng khối có sẵn (không cần engine mới), phủ nhóm lớp 1–3 khó nhất, khớp cốt truyện chương 1–2 ([WORLD_DESIGN §2.2](WORLD_DESIGN.md#22-mạch-truyện-chính-confirmed--người-duyệt-2026-11-15-adr-0056)), tham số hóa tốt.
 
 | Thứ tự | Cơ chế | Lý do | Khối kỹ thuật |
 |---|---|---|---|
 | 1 | `LM-MATH-03` Nhân = nhóm vật phẩm | Khớp quest mẫu Toán lớp 3; chỉ cần scene trình bày mới trên `drag_and_drop` | `minigame` + câu hỏi `drag_drop` |
 | 2 | `LM-MATH-02` Cân phương trình sửa cầu (bản lớp 2–5) | Khớp chương 1 "giúp cư dân sửa cầu"; dùng được cho co-op `interdependent` | `minigame` + câu hỏi `interactive` |
 | 3 | `LM-VIE-01` Ghép âm tiết mở cửa | Lớp 1–2 chưa đọc thạo là nhóm thiếu thiết kế nhất (PED-07); khớp chương 2 Rừng Ngôn Ngữ | `minigame` (`word_game`/`drag_and_drop`) + lồng tiếng |
-| 4 (tùy chọn) | `LM-MATH-01` Trục số để di chuyển | Dùng cho nhiều khối và nhiều chủ đề số | `interactive` + `minigame_type` mới `number_line` |
+| 4 (tùy chọn) | `LM-MATH-01` Trục số để di chuyển | Dùng cho nhiều khối và nhiều chủ đề số | `interactive` với scene chung (không thêm `minigame_type` ở pilot, §8) |
 
-Đo hiệu quả của các cơ chế pilot theo kế hoạch đo hiệu quả học tập ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md), Proposed).
+Đo hiệu quả của các cơ chế pilot theo kế hoạch đo hiệu quả học tập ([ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md), Accepted).
 
-## 8. Câu hỏi mở
+## 8. Quyết định còn lại
 
-- Có thêm `minigame_type` mới (`number_line`) cho pilot hay dùng `interactive` với scene chung? Phụ thuộc năng lực Godot ở Phase pilot [TBD].
+- `LM-MATH-01` ở pilot dùng câu hỏi `interactive` với scene chung, **không** thêm `minigame_type` `number_line`; chỉ thêm sau pilot khi cần trình bày riêng, theo checklist [MINIGAME_ENGINE §7](../08-game-client/MINIGAME_ENGINE.md#7-thêm-một-mini-game-mới--checklist) [Confirmed — owner 2026-11-20].
 - Lồng tiếng tiếng Việt cho `LM-VIE-01`: **ghi âm sẵn giọng người**, không TTS phía server; ngân sách tính trong giờ audio của [CONTENT_PRODUCTION_PLAN §3.4](../02-learning/CONTENT_PRODUCTION_PLAN.md#34-ví-dụ-pilot-toán--tiếng-việt-lớp-15) [Confirmed — owner 2026-11-20, OQ-23].
 
 ## 9. Acceptance criteria
