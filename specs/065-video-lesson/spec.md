@@ -9,6 +9,16 @@
 
 - Q: Câu trả lời câu chèn lưu ở bảng nào? VIDEO_LEARNING §8/DATABASE_DESIGN §2.6a nêu `activity_attempt_responses` (part `cue_id`), nhưng gợi ý (`hints:next` theo `position`), `hints_used`, `rapid_guess` chỉ có ở `attempt_items`/`attempt_answers`. → A: Mỗi câu chèn là một item (`attempt_items.position` theo thứ tự `at_ms`); câu trả lời ghi `assessment.attempt_answers` như câu hỏi thường (chung scorer F030). Lý do và phương án loại: [research.md](research.md) R1.
 - Q: "Sau 2 lần sai được đi tiếp" lấy số ở đâu? → A: Theo `attempts_per_question` ([LEARNING_EXPERIENCE §4.2](../../docs/02-learning/LEARNING_EXPERIENCE.md) là nguồn duy nhất số lượt thử mỗi câu).
+
+### Session 2026-11-20 (triển khai — giả định [Proposed], chờ owner xác nhận)
+
+- Cue "đã xử lý" lưu trong `assessment.video_progress.processed_cue_ids` khi chấm câu trả lời: đúng, hoặc sai đủ `attempts_per_question` với `allow_skip_after_wrong` (lượt thử lại không chấm điểm của engine không ghi đúng/sai vào item). Cue `allow_skip_after_wrong = false` sai đủ số lượt → không trả lời thêm được (`ANSWER_LIMIT_REACHED`) và chặn hoàn thành.
+- Video không có câu chèn: điểm theo chiến lược `completion` — `max_score` của version (≥ 1) khi đạt quy tắc hoàn thành, 0 khi không (learning event yêu cầu `score.max > 0`).
+- `ActivityResponseSubmission.response` không còn `required` trong contract: `branch_choice` gửi `branch_point_id` + `option_id`; kind câu hỏi thiếu `response` vẫn là `422 INVALID_RESPONSE` (nới ràng buộc request, không phá vỡ).
+- Video nhánh: hoàn thành khi lựa chọn dẫn tới đoạn `is_ending` (+ cue bắt buộc), không xét `watched_ratio` của video chính.
+- `assessment.integrity_signals` tạo ở F065, append-only, chưa partition.
+- Biến thể: pipeline F027 thêm `ogv_480` (cạnh `ogv_720`); render chỉ trả biến thể `ogv_*` và phụ đề; phụ đề chọn biến thể `vtt`/`original`. Pipeline media chưa nhận MIME `text/vtt` (F027) — Câu hỏi mở cho owner F027.
+- `client_seq` client đặt bằng unix ms tăng dần (server giữ số lớn nhất, kể cả qua thiết bị/resume); heartbeat gửi toàn bộ `watched_ranges` nên mất một heartbeat không mất tiến độ (thay `PendingWrites` cho tiến độ).
 - Q: Tua vượt phần đã xem xử lý thế nào? → A: Server cắt phần `watched_ranges` tăng nhanh hơn thời gian thực × tốc độ phát tối đa (integrity signal); với `allow_seek = watched_only`, `position_ms` vượt mép đã xem được chấp nhận → `422 VIDEO_SEEK_NOT_ALLOWED`, trạng thái không đổi ([research.md](research.md) R2).
 
 ## User Scenarios & Testing *(bắt buộc)*

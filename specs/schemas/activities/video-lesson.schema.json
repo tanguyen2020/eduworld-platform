@@ -119,5 +119,129 @@
       "additionalProperties": false
     }
   },
-  "unevaluatedProperties": false
+  "unevaluatedProperties": false,
+  "$defs": {
+    "render": {
+      "description": "Phần hiển thị của video_lesson trả cho game client (ActivityRender.render_payload, F065-AC-02): không có target_segment_id, đáp án hay phản hồi; câu chèn là item của attempt (position).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "duration_ms",
+        "chapters",
+        "cues",
+        "branches",
+        "segments",
+        "interaction",
+        "completion",
+        "heartbeat_seconds"
+      ],
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0, "maximum": 7200000 },
+        "heartbeat_seconds": { "type": "integer", "minimum": 1, "maximum": 60 },
+        "chapters": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["chapter_id", "title", "start_ms", "end_ms"],
+            "properties": {
+              "chapter_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "title": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+              "start_ms": { "type": "integer", "minimum": 0, "maximum": 7200000 },
+              "end_ms": { "type": "integer", "minimum": 0, "maximum": 7200000 }
+            }
+          }
+        },
+        "cues": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["cue_id", "at_ms", "position", "required", "allow_skip_after_wrong", "pause"],
+            "properties": {
+              "cue_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "at_ms": { "type": "integer", "minimum": 0, "maximum": 7200000 },
+              "position": { "type": "integer", "minimum": 1, "maximum": 30 },
+              "required": { "type": "boolean" },
+              "allow_skip_after_wrong": { "type": "boolean" },
+              "pause": { "type": "boolean" }
+            }
+          }
+        },
+        "branches": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["branch_point_id", "at_ms", "prompt", "options"],
+            "properties": {
+              "branch_point_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+              "at_ms": { "type": "integer", "minimum": 0, "maximum": 7200000 },
+              "prompt": { "$ref": "activity-base.schema.json#/$defs/i18nShort" },
+              "options": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["option_id", "label"],
+                  "properties": {
+                    "option_id": { "$ref": "activity-base.schema.json#/$defs/slug" },
+                    "label": { "$ref": "activity-base.schema.json#/$defs/i18nShort" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "segments": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["segment_id", "is_ending"],
+            "properties": { "segment_id": {"$ref": "activity-base.schema.json#/$defs/slug"}, "is_ending": {"type": "boolean"} }
+          }
+        },
+        "subtitles": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["language", "is_default"],
+            "properties": {
+              "language": { "type": "string", "maxLength": 8, "pattern": "^[a-z]{2}(-[A-Z]{2})?$" },
+              "is_default": { "type": "boolean" }
+            }
+          }
+        },
+        "interaction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["allow_seek", "playback_rates", "allow_subtitles_toggle", "autoplay_next_chapter"],
+          "properties": {
+            "allow_seek": { "type": "string", "enum": ["free", "backward_only", "watched_only"] },
+            "playback_rates": { "type": "array", "minItems": 1, "maxItems": 5, "items": {"type": "number", "minimum": 0.5, "maximum": 2} },
+            "allow_subtitles_toggle": { "type": "boolean" },
+            "autoplay_next_chapter": { "type": "boolean" }
+          }
+        },
+        "completion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min_watched_ratio", "require_required_cues"],
+          "properties": {
+            "min_watched_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+            "require_required_cues": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
 }

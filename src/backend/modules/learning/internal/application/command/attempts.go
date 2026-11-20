@@ -72,6 +72,12 @@ type Attempts struct {
 	// Rate counts answer_rate (T053); nil = not limited. AnswerRate zero = DefaultAnswerRate.
 	Rate       RateLimiter
 	AnswerRate AnswerRate
+	// Progress, Media and Signer serve the media activities (F065 video_lesson): heartbeats, branch choices, the
+	// ready check of the video and its signed URLs. MediaMetrics may be nil.
+	Progress     write.MediaProgressStore
+	Media        write.MediaStore
+	Signer       port.URLSigner
+	MediaMetrics VideoMetrics
 }
 
 // LessonPinner opens or reuses the lesson session of a start in the context of a lesson (command.Lessons.Pin).
@@ -504,7 +510,7 @@ func (h Attempts) view(ctx context.Context, a attempt.Attempt, rendered []questi
 		r := attemptview.Render(*src, h.Registry, a.DisplayLanguage)
 		render = &r
 	}
-	return attemptview.Attempt(a, attemptview.Items(a.Items, rendered), saved, render, ev, h.now()), nil
+	return h.withTimeline(ctx, a, src, attemptview.Attempt(a, attemptview.Items(a.Items, rendered), saved, render, ev, h.now()))
 }
 
 // learningScore is $defs/score of learning-event.schema.json ({raw, max, scaled}); the mastery outcome is raw / max.

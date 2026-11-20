@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/videolesson"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/attempt"
 )
 
@@ -39,4 +40,10 @@ type AttemptReadModel interface {
 	Evaluation(ctx context.Context, attemptID uuid.UUID) (*dto.EvaluationView, error)
 	// ActivityVersion returns an activity and one of its versions by id (the version pinned by an attempt).
 	ActivityVersion(ctx context.Context, activityID, versionID uuid.UUID) (dto.Doc, dto.DocVersion, error)
+}
+
+// MediaProgressReadModel reads the progress of the media attempts (assessment.video_progress_live, F065).
+type MediaProgressReadModel interface {
+	// Progress returns the progress of an attempt (nil when none).
+	Progress(ctx context.Context, attemptID uuid.UUID) (*videolesson.Progress, error)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/videolesson"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/attempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/i18ntext"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
@@ -189,13 +190,22 @@ func (h Attempts) newActivityAttempt(ctx context.Context, p authz.Principal, sch
 	ctxID uuid.UUID, recommendation *uuid.UUID, acceptLanguage, key string, now time.Time) (attempt.Attempt, []question.Rendered, error) {
 	seed := randomSeed()
 	allowed := src.Plugin.AllowedQuestionTypes(src.Config)
-	qids, err := h.sourceQuestions(ctx, src.Config.Content.QuestionSource, src.Version.SubjectID, src.Version.GradeLevels, allowed, seed)
+	// Media activities (F065): the items are the embedded questions by at_ms, never shuffled; the video must be ready.
+	qids, media, err := h.timelineStart(ctx, src)
 	if err != nil {
 		return attempt.Attempt{}, nil, err
 	}
-	items, rendered, err := h.pinItems(ctx, qids, seed, activity.Bool(src.Config.Interaction.ShuffleItems, true), allowed)
-	if err != nil {
-		return attempt.Attempt{}, nil, err
+	if !media {
+		if qids, err = h.sourceQuestions(ctx, src.Config.Content.QuestionSource, src.Version.SubjectID, src.Version.GradeLevels, allowed, seed); err != nil {
+			return attempt.Attempt{}, nil, err
+		}
+	}
+	var items []attempt.Item
+	var rendered []question.Rendered
+	if !media || len(qids) > 0 {
+		if items, rendered, err = h.pinItems(ctx, qids, seed, !media && activity.Bool(src.Config.Interaction.ShuffleItems, true), allowed); err != nil {
+			return attempt.Attempt{}, nil, err
+		}
 	}
 	activityID := src.Doc.ID
 	a := attempt.New(attempt.Start{ID: ids.New(), TenantID: *p.TenantID, SchoolID: school, StudentID: p.UserID, Mode: mode, ContextType: ctxType,
@@ -206,13 +216,20 @@ func (h Attempts) newActivityAttempt(ctx context.Context, p authz.Principal, sch
 	if err := h.Store.InsertAttempt(ctx, a); err != nil {
 		return a, nil, err
 	}
+	if media && h.Progress != nil {
+		if err := h.Progress.SaveProgress(ctx, videolesson.NewProgress(a.ID, a.TenantID, a.SchoolID, now)); err != nil {
+			return a, nil, err
+		}
+	}
 	return a, rendered, h.started(ctx, a)
 }
 
-// RespondInput is ActivityResponseSubmission (kind question).
+// RespondInput is ActivityResponseSubmission (kind question, or cue_answer of a media activity with CueID).
 type RespondInput struct {
 	AttemptID       uuid.UUID
+	Kind            string
 	Position        int
+	CueID           string
 	Response        json.RawMessage
 	ClientElapsedMS *int64
 }
@@ -227,7 +244,7 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 	if err != nil {
 		return out, err
 	}
-	if in.Position < 1 {
+	if in.Position < 1 && in.CueID == "" {
 		return out, problem.Invalid("/position", problem.SubRequired, "is required for a question response")
 	}
 	if len(in.Response) == 0 || string(in.Response) == "null" {
@@ -246,9 +263,21 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 		if err != nil {
 			return err
 		}
-		_, v, _, err := h.versionOf(ctx, a)
+		plugin, v, _, err := h.versionOf(ctx, a)
 		if err != nil {
 			return err
+		}
+		vc, media, err := timeline(plugin, v)
+		if err != nil {
+			return err
+		}
+		if in.Kind == KindCueAnswer && !media {
+			return problem.Invalid("/kind", problem.SubInvalid, "cue_answer is only for media activities")
+		}
+		if in.CueID != "" {
+			if in.Position = vc.CuePosition(in.CueID); in.Position == 0 {
+				return problem.Invalid("/cue_id", problem.SubInvalid, "is not a cue of the video")
+			}
 		}
 		pol := h.policy()
 		now := h.now()
@@ -288,6 +317,11 @@ func (h Attempts) Respond(ctx context.Context, in RespondInput) (out dto.Respons
 		}
 		if err := h.Self.recordAnswer(ctx, a, *it, qv, ans, g.IsCorrect, rapid, now); err != nil {
 			return err
+		}
+		if media {
+			if err := h.cueAnswered(ctx, a, vc, *it, ans, g.IsCorrect, rapid, pol.AnswerLimit(grade)); err != nil {
+				return err
+			}
 		}
 		if err := h.learningEvent(ctx, a, EventQuestionAnswered, "qa:"+a.ID.String()+":"+itoa(in.Position)+":"+itoa(ans.AttemptNo), now,
 			it.ObjectiveIDs, "student", map[string]any{"attempt_id": a.ID, "position": in.Position, "question_version_id": it.QuestionVersionID,
@@ -384,8 +418,23 @@ func (h Attempts) Submit(ctx context.Context, id uuid.UUID) (out dto.AttemptView
 		if a.Status == attempt.StatusSubmitted || a.Status == attempt.StatusGraded {
 			return problem.New(problem.AttemptAlreadySubmitted, "")
 		}
+		// Media activities (F065-AC-10): required cues first; completion follows the watched ratio.
+		outcome, err := h.timelineOutcome(ctx, a)
+		if err != nil {
+			return err
+		}
+		if outcome != nil && len(outcome.MissingRequired) > 0 {
+			pe := problem.New(problem.CueAnswerRequired, "a required embedded question is not answered")
+			for _, id := range outcome.MissingRequired {
+				pe.AddField("/pending_cue_ids", problem.SubRequired, id)
+			}
+			return pe
+		}
 		ev, src, err := h.gradeAttempt(ctx, &a, attempt.ReasonManual)
 		if err != nil {
+			return err
+		}
+		if err := h.completed(ctx, a, outcome); err != nil {
 			return err
 		}
 		if out, err = h.view(ctx, a, nil, src, nil, ev); err != nil {
@@ -404,6 +453,20 @@ func (h Attempts) gradeAttempt(ctx context.Context, a *attempt.Attempt, reason s
 	}
 	row := a.RowVersion
 	res := plugin.Evaluate(v, a.ItemResults())
+	// A media activity without embedded question is scored by its completion strategy (F065 [Proposed]): max_score of
+	// the version (≥ 1) when the completion rule is met, 0 otherwise — a score always has max > 0 (learning-event).
+	if res.MaxScore == 0 {
+		o, err := h.timelineOutcome(ctx, *a)
+		if err != nil {
+			return nil, nil, err
+		}
+		if o != nil {
+			res.MaxScore = max(v.Config.Evaluation.MaxScore, 1)
+			if o.Completed {
+				res.Score = res.MaxScore
+			}
+		}
+	}
 	if err := a.Submit(h.now(), h.policy(), reason, res); err != nil {
 		return nil, nil, attemptProblem(err)
 	}

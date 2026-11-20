@@ -49,6 +49,35 @@ type ActivityRenderView struct {
 	ContentLanguage    string          `json:"content_language"`
 	DisplayLanguage    string          `json:"display_language"`
 	TranslationMissing bool            `json:"translation_missing"`
+	// Media are the signed media of a media activity (video variants, subtitles; F065).
+	Media []MediaRefView `json:"media,omitempty"`
+}
+
+// MediaRefView is one entry of ActivityRender.media.
+type MediaRefView struct {
+	AssetID   uuid.UUID  `json:"asset_id"`
+	URL       string     `json:"url"`
+	Kind      string     `json:"kind"`
+	Variant   string     `json:"variant,omitempty"`
+	Language  string     `json:"language,omitempty"`
+	SegmentID string     `json:"segment_id,omitempty"`
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+}
+
+// WatchedRangeView is one entry of ActivityProgressState.watched_ranges.
+type WatchedRangeView struct {
+	StartMS int64 `json:"start_ms"`
+	EndMS   int64 `json:"end_ms"`
+}
+
+// ProgressStateView is ActivityProgressState (media attempts, F065).
+type ProgressStateView struct {
+	PositionMS    int64              `json:"position_ms"`
+	WatchedRatio  float64            `json:"watched_ratio"`
+	Completed     bool               `json:"completed"`
+	WatchedRanges []WatchedRangeView `json:"watched_ranges"`
+	SegmentID     string             `json:"segment_id,omitempty"`
+	PendingCueIDs []string           `json:"pending_cue_ids"`
 }
 
 // EvaluationView is Evaluation.
@@ -86,6 +115,9 @@ type AttemptView struct {
 	SavedResponses    []SavedResponseView  `json:"saved_responses"`
 	Render            *ActivityRenderView  `json:"render,omitempty"`
 	Evaluation        *EvaluationView      `json:"evaluation,omitempty"`
+	// ResumePositionMS and Progress are set for the media activities (F065-AC-12).
+	ResumePositionMS *int64             `json:"resume_position_ms,omitempty"`
+	Progress         *ProgressStateView `json:"progress,omitempty"`
 }
 
 // AttemptSummaryView is AttemptSummary.
@@ -117,6 +149,8 @@ type ResponseResultView struct {
 	Explanation string              `json:"explanation,omitempty"`
 	Feedback    *AnswerFeedbackView `json:"feedback"`
 	HintsUsed   int                 `json:"hints_used"`
+	// NextSegmentID is the segment to play after a branch choice (F065-AC-24).
+	NextSegmentID string `json:"next_segment_id,omitempty"`
 }
 
 // ReviewItemView is one item of AttemptReview.

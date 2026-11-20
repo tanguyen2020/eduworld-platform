@@ -22412,6 +22412,10 @@ components:
               asset_id: { $ref: '#/components/schemas/Uuid' }
               url: { type: string, maxLength: 2048, format: uri }
               kind: { type: string, enum: [image, audio, video, subtitle] }
+              variant: { type: string, maxLength: 32, description: 'Biến thể media (ogv_480, ogv_720, ogg, vtt…) — client chọn theo preset chất lượng (F065 research R3)' }
+              language: { type: string, maxLength: 8, description: Ngôn ngữ của phụ đề (kind subtitle) }
+              segment_id: { type: string, maxLength: 64, description: Đoạn của video tương tác (vắng = video chính) }
+              expires_at: { $ref: '#/components/schemas/Timestamp', description: Hết hạn của signed URL (media riêng tenant, ADR-0044) }
         min_client_version: { type: string, maxLength: 32 }
         content_language: { $ref: '#/components/schemas/ContentLanguage' }
         display_language: { $ref: '#/components/schemas/Locale' }
@@ -22458,6 +22462,17 @@ components:
         position_ms: { type: integer, minimum: 0 }
         watched_ratio: { type: number, minimum: 0, maximum: 1 }
         completed: { type: boolean }
+        watched_ranges:
+          type: array
+          maxItems: 64
+          description: Khoảng đã xem được server chấp nhận (đã gộp) — client khóa tua theo mép (F065-AC-17)
+          items:
+            type: object
+            required: [start_ms, end_ms]
+            properties:
+              start_ms: { type: integer, minimum: 0 }
+              end_ms: { type: integer, minimum: 0 }
+        segment_id: { type: string, maxLength: 64, description: Đoạn đang phát của video tương tác }
         pending_cue_ids:
           type: array
           maxItems: 50
@@ -22684,8 +22699,7 @@ components:
         context_id: { $ref: '#/components/schemas/Uuid' }
     ActivityResponseSubmission:
       type: object
-      description: Một câu trả lời trong attempt (thay AnswerSubmission/ActivityPartialResponse — ADR-0059). Server chấm; client không gửi điểm.
-      required: [response]
+      description: Một câu trả lời trong attempt (thay AnswerSubmission/ActivityPartialResponse — ADR-0059). Server chấm; client không gửi điểm. `response` bắt buộc với kind question/cue_answer/simulation_question (thiếu → 422 INVALID_RESPONSE); kind branch_choice gửi `branch_point_id` + `option_id`, không có response (F065-AC-24).
       properties:
         kind: { type: string, enum: [question, cue_answer, branch_choice, simulation_question], default: question, description: 'Vắng mặt = question; exam (PUT /exams/attempts/{attempt_id}/answers/{position}) chỉ dùng question' }
         position: { type: integer, minimum: 1, description: Vị trí item (kind=question) }

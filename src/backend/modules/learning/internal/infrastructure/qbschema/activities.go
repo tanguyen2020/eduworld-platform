@@ -13,7 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 )
 
-// Embedded copies of the activity schemas of F030 (kept equal to specs/schemas/activities by TestEmbeddedSchemas).
+// Embedded copies of the activity schemas of F030 and F065 (kept equal to specs/schemas/activities by TestEmbeddedSchemas).
 var (
 	//go:embed activity-base.schema.json
 	ActivityBaseSchemaJSON []byte
@@ -21,6 +21,8 @@ var (
 	QuizSchemaJSON []byte
 	//go:embed interactive-exercise.schema.json
 	InteractiveExerciseSchemaJSON []byte
+	//go:embed video-lesson.schema.json
+	VideoLessonSchemaJSON []byte
 )
 
 const activitiesBase = contentBase + "activities/"
@@ -32,6 +34,7 @@ var activitySchemas = map[string]struct {
 }{
 	"quiz":                 {"quiz.schema.json", QuizSchemaJSON},
 	"interactive_exercise": {"interactive-exercise.schema.json", InteractiveExerciseSchemaJSON},
+	"video_lesson":         {"video-lesson.schema.json", VideoLessonSchemaJSON},
 }
 
 // configWrapper is the config of an ActivityDefinitionInput (content, interaction, evaluation, feedback, completion_rule)

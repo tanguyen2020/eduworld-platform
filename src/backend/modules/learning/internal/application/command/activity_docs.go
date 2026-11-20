@@ -98,6 +98,23 @@ func (h Docs) prepareActivity(ctx context.Context, v *dto.DocVersion, body map[s
 			return configProblem(contentmodel.Violations{{Field: ptr, Reason: "has a question type not allowed by the activity"}})
 		}
 	}
+	// Media activities (F065-AC-01): every embedded question is a published, auto-graded question version.
+	if tl, ok := p.(activity.Timeline); ok {
+		cues, err := tl.CueQuestions(activity.Version{Type: activity.Type(typ), Config: cfg})
+		if err != nil {
+			return configProblem(contentmodel.Violations{{Field: "/config/content", Reason: "cannot be read"}})
+		}
+		for i, id := range cues {
+			ptr := "/config/content/embedded_questions/" + strconv.Itoa(i) + "/question_version_id"
+			qv, err := h.checkQuestion(ctx, v.Owner, id, ptr)
+			if err != nil {
+				return err
+			}
+			if qv.Status != contentmodel.StatusPublished || !slices.Contains(allowed, qv.Type) {
+				return configProblem(contentmodel.Violations{{Field: ptr, Reason: "is not a published, auto-graded question version"}})
+			}
+		}
+	}
 	if id := cfg.Content.QuestionSource.QuestionSetID; id != nil {
 		if _, err := h.Store.Doc(ctx, contentmodel.TypeQuestionSet, *id); err != nil {
 			return configProblem(contentmodel.Violations{{Field: "/config/content/question_source/question_set_id", Reason: "is not a visible question set"}})

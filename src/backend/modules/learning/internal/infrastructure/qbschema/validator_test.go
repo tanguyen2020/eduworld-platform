@@ -22,7 +22,8 @@ func TestEmbeddedSchemas(t *testing.T) {
 	for name, b := range map[string][]byte{"question.schema.json": QuestionSchemaJSON, "common/enums.schema.json": EnumsSchemaJSON,
 		"question-set.schema.json": QuestionSetSchemaJSON, "assessment-blueprint.schema.json": BlueprintSchemaJSON, "lesson.schema.json": LessonSchemaJSON,
 		"activities/activity-base.schema.json": ActivityBaseSchemaJSON, "activities/quiz.schema.json": QuizSchemaJSON,
-		"activities/interactive-exercise.schema.json": InteractiveExerciseSchemaJSON, "learning-event.schema.json": LearningEventSchemaJSON} {
+		"activities/interactive-exercise.schema.json": InteractiveExerciseSchemaJSON,
+		"activities/video-lesson.schema.json":         VideoLessonSchemaJSON, "learning-event.schema.json": LearningEventSchemaJSON} {
 		src, err := os.ReadFile(filepath.Join(repo(t), "specs", "schemas", filepath.FromSlash(name)))
 		if err != nil {
 			t.Fatal(err)

@@ -19,6 +19,8 @@ type AttemptCommands interface {
 	StartActivity(ctx context.Context, in command.StartActivityInput) (dto.AttemptView, error)
 	StartAdHoc(ctx context.Context, in command.StartAdHocInput) (dto.AttemptView, error)
 	Respond(ctx context.Context, in command.RespondInput) (dto.ResponseResultView, error)
+	Branch(ctx context.Context, in command.BranchInput) (dto.ResponseResultView, error)
+	ReportProgress(ctx context.Context, in command.ProgressInput) (dto.ProgressStateView, error)
 	Pause(ctx context.Context, id uuid.UUID) (dto.AttemptView, error)
 	Submit(ctx context.Context, id uuid.UUID) (dto.AttemptView, error)
 }
@@ -50,6 +52,7 @@ func init() {
 		"listMyActivityAttempts":   player("listMyActivityAttempts", http.MethodGet, attemptsPath, httpx.IdempotencyNone, 200),
 		"getActivityAttempt":       player("getActivityAttempt", http.MethodGet, one, httpx.IdempotencyNone, 200),
 		"submitActivityResponse":   player("submitActivityResponse", http.MethodPost, one+"/responses", httpx.IdempotencyRequired, 200),
+		"reportActivityProgress":   player("reportActivityProgress", http.MethodPost, one+"/progress", httpx.IdempotencyNone, 200),
 		"pauseActivityAttempt":     player("pauseActivityAttempt", http.MethodPost, one+":pause", httpx.IdempotencyRequired, 200),
 		"submitActivityAttempt":    player("submitActivityAttempt", http.MethodPost, one+":submit", httpx.IdempotencyRequired, 200),
 		"getActivityAttemptReview": player("getActivityAttemptReview", http.MethodGet, one+"/review", httpx.IdempotencyNone, 200),
@@ -65,6 +68,7 @@ var attemptRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Request
 	"listMyActivityAttempts":   Handlers.listMyActivityAttempts,
 	"getActivityAttempt":       Handlers.getActivityAttempt,
 	"submitActivityResponse":   Handlers.submitActivityResponse,
+	"reportActivityProgress":   Handlers.reportActivityProgress,
 	"pauseActivityAttempt":     Handlers.pauseActivityAttempt,
 	"submitActivityAttempt":    Handlers.submitActivityAttempt,
 	"getActivityAttemptReview": Handlers.getActivityAttemptReview,
@@ -185,6 +189,9 @@ func (h Handlers) submitActivityResponse(w http.ResponseWriter, r *http.Request)
 	var b struct {
 		Kind            string          `json:"kind"`
 		Position        int             `json:"position"`
+		CueID           string          `json:"cue_id"`
+		BranchPointID   string          `json:"branch_point_id"`
+		OptionID        string          `json:"option_id"`
 		Response        json.RawMessage `json:"response"`
 		ClientElapsedMS *int64          `json:"client_elapsed_ms"`
 	}
@@ -192,12 +199,53 @@ func (h Handlers) submitActivityResponse(w http.ResponseWriter, r *http.Request)
 		fail(w, r, err)
 		return
 	}
-	if b.Kind != "" && b.Kind != "question" {
-		fail(w, r, problem.Invalid("/kind", problem.SubInvalid, "only question responses exist for quiz and interactive_exercise"))
+	// ADR-0041 / F065-AC-14: the ids of a media response are slugs of at most 64 characters.
+	for ptr, s := range map[string]string{"/cue_id": b.CueID, "/branch_point_id": b.BranchPointID, "/option_id": b.OptionID} {
+		if len(s) > 64 {
+			fail(w, r, problem.Invalid(ptr, problem.SubInvalid, "is longer than 64 characters"))
+			return
+		}
+	}
+	var v dto.ResponseResultView
+	switch b.Kind {
+	case "", command.KindQuestion, command.KindCueAnswer:
+		if b.Kind == command.KindCueAnswer && b.CueID == "" && b.Position < 1 {
+			fail(w, r, problem.Invalid("/cue_id", problem.SubRequired, "is required for a cue answer"))
+			return
+		}
+		v, err = h.Attempts.Respond(r.Context(), command.RespondInput{AttemptID: id, Kind: b.Kind, Position: b.Position, CueID: b.CueID,
+			Response: b.Response, ClientElapsedMS: b.ClientElapsedMS})
+	case command.KindBranchChoice:
+		v, err = h.Attempts.Branch(r.Context(), command.BranchInput{AttemptID: id, BranchPointID: b.BranchPointID, OptionID: b.OptionID})
+	default:
+		fail(w, r, problem.Invalid("/kind", problem.SubInvalid, "is not a response kind of this release"))
 		return
 	}
-	v, err := h.Attempts.Respond(r.Context(), command.RespondInput{AttemptID: id, Position: b.Position, Response: b.Response,
-		ClientElapsedMS: b.ClientElapsedMS})
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, v)
+}
+
+func (h Handlers) reportActivityProgress(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "attempt_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var b struct {
+		ClientSeq     int64                  `json:"client_seq"`
+		PositionMS    int64                  `json:"position_ms"`
+		WatchedRanges []dto.WatchedRangeView `json:"watched_ranges"`
+		PlaybackRate  *float64               `json:"playback_rate"`
+	}
+	if err := decode(r, &b); err != nil {
+		fail(w, r, err)
+		return
+	}
+	v, err := h.Attempts.ReportProgress(r.Context(), command.ProgressInput{AttemptID: id, ClientSeq: b.ClientSeq, PositionMS: b.PositionMS,
+		WatchedRanges: b.WatchedRanges, PlaybackRate: b.PlaybackRate})
 	if err != nil {
 		fail(w, r, err)
 		return

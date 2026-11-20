@@ -122,10 +122,13 @@ type Feedback struct {
 	ShowCorrectAnswer *bool  `json:"show_correct_answer,omitempty"`
 }
 
-// CompletionRule is the completion rule ("hoàn thành" ≠ "đạt").
+// CompletionRule is the completion rule ("hoàn thành" ≠ "đạt"); the watched ratio and required cues are the rule of the
+// media types (activity-base.schema.json#/$defs/completionRule, F065).
 type CompletionRule struct {
-	Mode          string   `json:"mode"`
-	MinScoreRatio *float64 `json:"min_score_ratio,omitempty"`
+	Mode                string   `json:"mode"`
+	MinScoreRatio       *float64 `json:"min_score_ratio,omitempty"`
+	MinWatchedRatio     *float64 `json:"min_watched_ratio,omitempty"`
+	RequireRequiredCues *bool    `json:"require_required_cues,omitempty"`
 }
 
 // Config is the config of an activity version (ActivityDefinitionInput.config).
@@ -135,6 +138,9 @@ type Config struct {
 	Evaluation     Evaluation     `json:"evaluation"`
 	Feedback       Feedback       `json:"feedback"`
 	CompletionRule CompletionRule `json:"completion_rule"`
+	// Raw is the config as stored: the plugins whose content is not question-based (video_lesson, audio_lesson,
+	// simulation) read their own content and interaction from it.
+	Raw json.RawMessage `json:"-"`
 }
 
 // ParseConfig decodes a config already checked against the JSON Schema of its type.
@@ -144,6 +150,7 @@ func ParseConfig(raw json.RawMessage) (Config, error) {
 		return c, errors.New("activity: empty config")
 	}
 	err := json.Unmarshal(raw, &c)
+	c.Raw = raw
 	return c, err
 }
 
@@ -199,6 +206,16 @@ type Plugin interface {
 	Evaluate(v Version, items []ItemResult) Result
 	// CompletionRule returns the completion rule of the version.
 	CompletionRule(v Version) CompletionRule
+}
+
+// Timeline is implemented by the plugins of the media activities (video_lesson; audio_lesson in F066): the items of an
+// attempt are the embedded questions of the version in time order (never shuffled) and the attempt receives progress
+// heartbeats (ACTIVITY_ENGINE §5, F065 research R1).
+type Timeline interface {
+	// CueQuestions are the question versions of the cues by at_ms (item position i+1 is cue i).
+	CueQuestions(v Version) ([]uuid.UUID, error)
+	// MediaAssetIDs are the media the version plays (start checks they are ready, the render signs their URLs).
+	MediaAssetIDs(v Version) ([]uuid.UUID, error)
 }
 
 // ErrNotSupported is returned for a type outside the release or without plugin (ACTIVITY_TYPE_NOT_SUPPORTED).

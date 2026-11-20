@@ -8321,6 +8321,13 @@ export interface components {
             completed: boolean;
             pending_cue_ids?: string[];
             position_ms?: number;
+            /** @description Đoạn đang phát của video tương tác */
+            segment_id?: string;
+            /** @description Khoảng đã xem được server chấp nhận (đã gộp) — client khóa tua theo mép (F065-AC-17) */
+            watched_ranges?: {
+                end_ms: number;
+                start_ms: number;
+            }[];
             watched_ratio: number;
         };
         /** @description Render payload — KHÔNG chứa đáp án, phản hồi theo phương án hay scoring rule (ADR-0016) */
@@ -8334,10 +8341,18 @@ export interface components {
             math_assets?: components["schemas"]["MathAssetRef"][];
             media?: {
                 asset_id: components["schemas"]["Uuid"];
+                /** @description Hết hạn của signed URL (media riêng tenant */
+                expires_at?: components["schemas"]["Timestamp"];
                 /** @enum {string} */
                 kind?: "image" | "audio" | "video" | "subtitle";
+                /** @description Ngôn ngữ của phụ đề (kind subtitle) */
+                language?: string;
+                /** @description Đoạn của video tương tác (vắng = video chính) */
+                segment_id?: string;
                 /** Format: uri */
                 url: string;
+                /** @description Biến thể media (ogv_480, ogv_720, ogg, vtt…) — client chọn theo preset chất lượng (F065 research R3) */
+                variant?: string;
             }[];
             min_client_version?: string;
             /** @description Theo specs/schemas/activities/<type>.schema.json (phần hiển thị) — không chứa đáp án, scoring, phản hồi theo phương án hay gợi ý */
@@ -8383,7 +8398,7 @@ export interface components {
             position?: number;
             score?: number | null;
         };
-        /** @description Một câu trả lời trong attempt (thay AnswerSubmission/ActivityPartialResponse — ADR-0059). Server chấm; client không gửi điểm. */
+        /** @description Một câu trả lời trong attempt (thay AnswerSubmission/ActivityPartialResponse — ADR-0059). Server chấm; client không gửi điểm. `response` bắt buộc với kind question/cue_answer/simulation_question (thiếu → 422 INVALID_RESPONSE); kind branch_choice gửi `branch_point_id` + `option_id`, không có response (F065-AC-24). */
         ActivityResponseSubmission: {
             branch_point_id?: string;
             /** @description Chỉ tham khảo; server dùng thời gian của server */
@@ -8399,7 +8414,7 @@ export interface components {
             /** @description Vị trí item (kind=question) */
             position?: number;
             question_version_id?: components["schemas"]["Uuid"];
-            response: components["schemas"]["QuestionResponse"];
+            response?: components["schemas"]["QuestionResponse"];
         };
         /**
          * @description Loại learning activity trong version này (ADR-0072, ADR-0082)

@@ -64,7 +64,8 @@ func AudioJobs() []Job {
 
 func scaleTo(h int) string { return "scale=-2:'min(" + strconv.Itoa(h) + ",ih)'" }
 
-// VideoJobs are the video variants.
+// VideoJobs are the video variants: Theora 480p/720p for the game client (Low/Web and Medium/High presets, F065
+// research R3), MP4 and HLS for the web.
 func VideoJobs() []Job {
 	hls := func(h int) Job {
 		dir := "hls_" + strconv.Itoa(h)
@@ -73,6 +74,8 @@ func VideoJobs() []Job {
 			"-f", "hls", "-hls_time", "6", "-hls_playlist_type", "vod", "-hls_segment_filename", dir + "/seg_%03d.ts", dir + "/index.m3u8"}}
 	}
 	return []Job{
+		{Variant: "ogv_480", Main: "ogv_480.ogv", MIME: "video/ogg", Args: []string{"-map_metadata", "-1", "-vf", scaleTo(480),
+			"-c:v", "libtheora", "-q:v", "5", "-c:a", "libvorbis", "-q:a", "3", "ogv_480.ogv"}},
 		{Variant: "ogv_720", Main: "ogv_720.ogv", MIME: "video/ogg", Args: []string{"-map_metadata", "-1", "-vf", scaleTo(720),
 			"-c:v", "libtheora", "-q:v", "6", "-c:a", "libvorbis", "-q:a", "4", "ogv_720.ogv"}},
 		{Variant: "mp4_720", Main: "mp4_720.mp4", MIME: "video/mp4", Args: []string{"-map_metadata", "-1", "-vf", scaleTo(720),

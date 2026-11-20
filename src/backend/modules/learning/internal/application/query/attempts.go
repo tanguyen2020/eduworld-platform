@@ -8,10 +8,13 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/attemptview"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/videolesson"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/attempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/i18ntext"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/media"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -29,6 +32,10 @@ type Attempts struct {
 	Registry *activity.Registry
 	Cursors  *page.Codec
 	Clock    func() time.Time
+	// Media, Progress and Signer add the signed media and the progress of the media activities (F065).
+	Media    read.MediaReadModel
+	Progress read.MediaProgressReadModel
+	Signer   port.URLSigner
 }
 
 func (q Attempts) now() time.Time {
@@ -70,6 +77,37 @@ type loaded struct {
 	answers []read.SavedAnswer
 	ev      *dto.EvaluationView
 	src     *attemptview.Source
+	// video is set for a media activity, with its assets and progress.
+	video    *videolesson.Config
+	assets   map[uuid.UUID]media.Asset
+	progress *videolesson.Progress
+}
+
+// timeline loads the assets and progress of a media attempt (F065).
+func (q Attempts) timeline(ctx context.Context, out *loaded) error {
+	if out.src == nil || out.src.Body.ActivityType != string(activity.VideoLesson) {
+		return nil
+	}
+	vc, err := videolesson.Parse(out.src.Config.Raw)
+	if err != nil {
+		return problem.New(problem.ActivityConfigInvalid, "the published video config cannot be read")
+	}
+	out.video, out.assets = &vc, map[uuid.UUID]media.Asset{}
+	if q.Media != nil {
+		for _, id := range vc.AssetIDs() {
+			a, err := q.Media.Asset(ctx, id)
+			if err != nil {
+				continue
+			}
+			out.assets[id] = a
+		}
+	}
+	if q.Progress != nil {
+		if out.progress, err = q.Progress.Progress(ctx, out.a.ID); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (q Attempts) load(ctx context.Context, id uuid.UUID) (out loaded, err error) {
@@ -99,7 +137,7 @@ func (q Attempts) load(ctx context.Context, id uuid.UUID) (out loaded, err error
 			}
 			out.src = &src
 		}
-		return nil
+		return q.timeline(ctx, &out)
 	})
 	return out, err
 }
@@ -146,7 +184,11 @@ func (q Attempts) Get(ctx context.Context, id uuid.UUID) (out dto.AttemptView, l
 		r := attemptview.Render(*l.src, q.Registry, l.a.DisplayLanguage)
 		render = &r
 	}
-	return attemptview.Attempt(l.a, attemptview.Items(l.a.Items, rendered), saved, render, l.ev, q.now()), l.a.DisplayLanguage, nil
+	v := attemptview.Attempt(l.a, attemptview.Items(l.a.Items, rendered), saved, render, l.ev, q.now())
+	if l.video != nil {
+		v = attemptview.WithTimeline(v, *l.video, l.assets, q.Signer, l.progress, q.now())
+	}
+	return v, l.a.DisplayLanguage, nil
 }
 
 // ListMineInput filters listMyActivityAttempts.

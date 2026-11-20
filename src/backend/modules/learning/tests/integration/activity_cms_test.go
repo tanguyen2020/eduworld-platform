@@ -57,7 +57,8 @@ func TestActivityRegistryAndConfig(t *testing.T) {
 
 	r := must(t, c.do(t, http.MethodGet, "/cms/learning/activity-types", qlcmA, nil, nil), http.StatusOK, "types")
 	types := r.items("data")
-	if len(types) != 2 || types[0]["activity_type"] != "interactive_exercise" || types[1]["activity_type"] != "quiz" {
+	if len(types) != 3 || types[0]["activity_type"] != "interactive_exercise" || types[1]["activity_type"] != "quiz" ||
+		types[2]["activity_type"] != "video_lesson" {
 		t.Fatalf("types: %s", r.raw)
 	}
 	for _, ty := range types {
@@ -71,9 +72,9 @@ func TestActivityRegistryAndConfig(t *testing.T) {
 	}
 
 	// AC-20: a type of the release without plugin, and a type outside the release (refused by the contract enum).
-	if r := c.do(t, http.MethodPost, "/cms/learning/activities", qlcmA, idem(), activityBody(qc, "video_lesson", quizConfig(q1))); r.status != 422 ||
+	if r := c.do(t, http.MethodPost, "/cms/learning/activities", qlcmA, idem(), activityBody(qc, "audio_lesson", quizConfig(q1))); r.status != 422 ||
 		r.str("code") != "ACTIVITY_TYPE_NOT_SUPPORTED" {
-		t.Fatalf("video_lesson: %d %s", r.status, r.raw)
+		t.Fatalf("audio_lesson: %d %s", r.status, r.raw)
 	}
 	if r := c.do(t, http.MethodPost, "/cms/learning/activities", qlcmA, idem(), activityBody(qc, "speaking", quizConfig(q1))); r.status != 422 {
 		t.Fatalf("speaking: %d %s", r.status, r.raw)

@@ -236,6 +236,7 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterWorkflow(reg)
 	observability.RegisterRelease(reg)
 	observability.RegisterAttempts(reg)
+	observability.RegisterVideo(reg)
 	observability.RegisterMastery(reg)
 	observability.RegisterRegrade(reg)
 	observability.RegisterLessons(reg)
@@ -265,7 +266,7 @@ func build(r *module.Registry) (*wiring, error) {
 		WorkDir: cfg.StringOr("EW_MEDIA_WORK_DIR", os.TempDir()), Metrics: observability.MediaCounter{}}
 	math := &command.MathAssets{Store: write.MathRepo{}, Storage: s3, Metrics: observability.MediaCounter{}}
 	registry := question.Full()      // F023 Done: the 11 question types (OQ F023-2 [Proposed])
-	activities := plugins.Registry() // F030: quiz, interactive_exercise
+	activities := plugins.Registry() // F030: quiz, interactive_exercise; F065: video_lesson
 	activitySchema, err := qbschema.NewActivities()
 	if err != nil {
 		return nil, err
@@ -295,7 +296,8 @@ func build(r *module.Registry) (*wiring, error) {
 		Metrics: observability.QuestionCounter{}}
 	att := command.Attempts{UoW: core.UoW, Store: write.AttemptRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		Docs: write.DocRepo{}, Questions: write.QuestionRepo{}, Delivery: delivery, Students: read.SchoolSettings{}, Registry: activities,
-		Metrics: observability.AttemptCounter{}, Rate: cache.Rate{C: vk, Metrics: observability.RateCounter{}}}
+		Metrics: observability.AttemptCounter{}, Rate: cache.Rate{C: vk, Metrics: observability.RateCounter{}},
+		Progress: write.MediaProgressRepo{}, Media: write.MediaRepo{}, Signer: signer, MediaMetrics: observability.VideoCounter{}}
 	lessons := command.Lessons{Store: write.LessonRepo{}, Docs: write.DocRepo{}, Learning: write.LearningEventWriter{}, Events: events,
 		UoW: core.UoW, Metrics: observability.LessonCounter{}}
 	att.Lessons = lessons
@@ -311,7 +313,7 @@ func build(r *module.Registry) (*wiring, error) {
 	lmsCmd := command.LMS{UoW: core.UoW, Store: write.LMSRepo{}, Read: core.ReadSession, Events: events, Audit: auditor,
 		Metrics: observability.LMSCounter{}}
 	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
-		Registry: activities, Cursors: cursors}
+		Registry: activities, Cursors: cursors, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: signer}
 
 	h := learninghttp.Handlers{Commands: cur,
 		Queries:          query.Curriculum{Session: core.ReadSession, Model: read.CurriculumModel{}, Settings: read.SchoolSettings{}, Codec: importer.Codec{}, Cursors: cursors},

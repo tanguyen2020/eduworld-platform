@@ -96,9 +96,9 @@ sequenceDiagram
 
 | Bảng | Cột chính |
 |---|---|
-| `assessment.video_progress` | `attempt_id` PK, `tenant_id`, `student_id`, `position_ms`, `watched_ranges` jsonb (≤ 64 khoảng), `watched_ratio` numeric(5,4), `last_heartbeat_at`, `client_seq` |
-| `assessment.attempt_items` / `assessment.attempt_answers` | Mỗi câu chèn là một item của attempt (`position` theo thứ tự `at_ms`, `cue_id` lưu trong `presentation`); câu trả lời ghi `attempt_answers` như câu hỏi thường nên dùng chung scorer, gợi ý (`hints:next` theo `position`), `hints_used`, `rapid_guess` ([ACTIVITY_ENGINE §6.4](ACTIVITY_ENGINE.md#64-dữ-liệu-lưu-trữ-confirmed)) |
-| `assessment.video_branch_choices` | `attempt_id`, `branch_point_id` varchar(64), `option_id` varchar(64), `chosen_at` |
+| `assessment.video_progress` | `attempt_id` PK, `tenant_id`, `school_id`, `position_ms`, `watched_ranges` jsonb (≤ 64 khoảng), `watched_ratio` numeric(5,4), `last_heartbeat_at`, `client_seq`, `milestones_emitted` (bitmask 25/50/75/100 %, chống phát trùng `video.progressed`), `processed_cue_ids` (cue đã xử lý theo §5), `segment_id`, `reached_ending` (video nhánh) — F065 |
+| `assessment.attempt_items` / `assessment.attempt_answers` | Mỗi câu chèn là một item của attempt (`position` theo thứ tự `at_ms` của version đã ghim — ánh xạ `cue_id → position` tính lại từ version, F065); câu trả lời ghi `attempt_answers` như câu hỏi thường nên dùng chung scorer, gợi ý (`hints:next` theo `position`), `hints_used`, `rapid_guess` ([ACTIVITY_ENGINE §6.4](ACTIVITY_ENGINE.md#64-dữ-liệu-lưu-trữ-confirmed)) |
+| `assessment.video_branch_choices` | `choice_id` PK, `attempt_id`, `branch_point_id` varchar(64), `option_id` varchar(64), `target_segment_id` varchar(64), `chosen_at`; UNIQUE `(attempt_id, branch_point_id)` live |
 | `assessment.integrity_signals` | Tiến độ tăng nhanh hơn thời gian thực × tốc độ phát tối đa bị cắt và ghi `signal_type = video_progress_implausible` |
 
 Chi tiết DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md).
