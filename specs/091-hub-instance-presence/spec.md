@@ -21,7 +21,7 @@
 
 - Facade vị trí hub cho module game → **Chốt:** F071 (làm sau F091) khai báo operation trong spec internal của module competition và hiện thực cả bên nhận (đọc vị trí đã kiểm chứng của room host do F091 dựng) lẫn adapter phía game; F091 không cần thay đổi phạm vi, chỉ giữ dữ liệu vị trí đọc được trong module competition.
 
-### Session 2026-11-21 (triển khai — giả định [Proposed], cần owner xác nhận)
+### Session 2026-11-21 (triển khai — giả định [Confirmed], cần owner xác nhận)
 
 - A-1 Payload `content.published` (`item_type = world_area`), `world.area_unlocked` (owner F071) và `friend.*`, `user.blocked/unblocked` (owner F095) chưa có schema: F091 tạo bảng `ref.world_areas`, `ref.area_unlocks`, `ref.friendships`, `ref.blocks` và phần đọc, **không** tự tạo payload/consumer (T005); test seed trực tiếp projection. Consumer thêm khi owner chốt payload. Đề xuất cho F071: `bounds` = `{min:[x,y,z], max:[x,y,z]}`, `spawn_points` = `{tên: [x,y,z]}` (điểm `default` khi không chỉ định).
 - A-2 Tránh người đã chặn: trong hub luôn còn lựa chọn "tạo instance mới", nên instance có người chặn/bị chặn không bao giờ được chọn.
