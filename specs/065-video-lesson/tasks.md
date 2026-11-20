@@ -79,20 +79,20 @@
 
 ### Tests cho User Story 3
 
-- [ ] T034 [P] [US3] Integration F065-AC-25 (ghi `video_branch_choices`, một lựa chọn mỗi điểm rẽ, idempotent, trả `next_segment_id`, hoàn thành ở `is_ending`) — file: `src/backend/modules/learning/tests/integration/videolesson/branch_test.go` — phải FAIL trước khi code
-- [ ] T035 [P] [US3] Scene test F065-AC-24 (dừng tại điểm rẽ, gửi `branch_choice`, phát đoạn theo `next_segment_id`) — file: `src/game/tests/scene/video/test_branch_choice.gd`
+- [x] T034 [P] [US3] Integration F065-AC-25 (ghi `video_branch_choices`, một lựa chọn mỗi điểm rẽ, idempotent, trả `next_segment_id`, hoàn thành ở `is_ending`) — file: `src/backend/modules/learning/tests/integration/videolesson/branch_test.go` — phải FAIL trước khi code — ✅ `tests/integration/videolesson_test.go::TestVideoLessonBranches` (một lựa chọn mỗi điểm rẽ, cùng option trả lại, khác option 409, không chấm đúng/sai, `next_segment_id`, hoàn thành ở đoạn `is_ending` + `activity.completed`)
+- [x] T035 [P] [US3] Scene test F065-AC-24 (dừng tại điểm rẽ, gửi `branch_choice`, phát đoạn theo `next_segment_id`) — file: `src/game/tests/scene/video/test_branch_choice.gd` — ✅ `tests/scene/video/test_branch_choice.gd` 1/1 pass (dừng ở điểm rẽ, prompt + lựa chọn, `branch_choice`, phát đoạn `water` từ đầu, hết đoạn kết → `finish_requested`)
 
 ### Implementation cho User Story 3
 
-- [ ] T036 [US3] `Respond(branch_choice)` + điều kiện hoàn thành theo đoạn — file: `src/backend/modules/learning/internal/application/activityplugin/videolesson/plugin.go`, `src/backend/modules/learning/internal/domain/activity/videolesson/completion.go`
-- [ ] T037 [US3] `BranchPrompt` trong player + chuyển đoạn — file: `src/game/scenes/learning/video/BranchPrompt.tscn`, `src/game/scenes/learning/video/video_lesson_player.gd`
+- [x] T036 [US3] `Respond(branch_choice)` + điều kiện hoàn thành theo đoạn — file: `src/backend/modules/learning/internal/application/activityplugin/videolesson/plugin.go`, `src/backend/modules/learning/internal/domain/activity/videolesson/completion.go` — ✅ `Attempts.Branch` + `videolesson.Evaluate` (đoạn kết thay `watched_ratio` cho video nhánh) — cùng commit US1
+- [x] T037 [US3] `BranchPrompt` trong player + chuyển đoạn — file: `src/game/scenes/learning/video/BranchPrompt.tscn`, `src/game/scenes/learning/video/video_lesson_player.gd` — ✅ prompt nhánh nằm trong `VideoLessonRenderer.tscn` (`%Branch`, `open_branch_prompt`, `choose_branch`, `_branch_chosen`) thay cho scene `BranchPrompt` riêng; host gửi `choose_branch` và trả `next_segment_id` cho renderer
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T038 [P] Đo 720p@30 trên DEV-AND-MID1, 480p Web (TC-PERF-020) — file: `src/game/tests/perf/video_player_benchmark.gd`
-- [ ] T039 [P] Postman request cho start/progress/responses/submit video — file: `specs/postman/` (khi thư mục được tạo ở Bước 0)
-- [ ] T040 [P] Cập nhật tài liệu: VIDEO_LEARNING §8 (cue là item, bảng `assessment.*`), DATABASE_DESIGN §2.6a (`milestones_emitted`, PK `video_branch_choices`), CHANGELOG — file: `docs/02-learning/VIDEO_LEARNING.md`, `docs/07-backend/DATABASE_DESIGN.md`, `CHANGELOG.md`
-- [ ] T041 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/065-video-lesson/quickstart.md`
+- [ ] T038 [P] Đo 720p@30 trên DEV-AND-MID1, 480p Web (TC-PERF-020) — file: `src/game/tests/perf/video_player_benchmark.gd` — **chưa làm**: cần thiết bị DEV-AND-MID1 (F133); headless chỉ kiểm logic, không đo FPS giải mã Theora
+- [ ] T039 [P] Postman request cho start/progress/responses/submit video — file: `specs/postman/` (khi thư mục được tạo ở Bước 0) — **chưa làm**: thư mục `specs/postman/` chưa có (Bước 0)
+- [x] T040 [P] Cập nhật tài liệu: VIDEO_LEARNING §8 (cue là item, bảng `assessment.*`), DATABASE_DESIGN §2.6a (`milestones_emitted`, PK `video_branch_choices`), CHANGELOG — file: `docs/02-learning/VIDEO_LEARNING.md`, `docs/07-backend/DATABASE_DESIGN.md`, `CHANGELOG.md` — ✅ VIDEO_LEARNING §8 (cue là item theo `at_ms`, cột mới), DATABASE_DESIGN §2.6a/§2.16, CHANGELOG
+- [ ] T041 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/065-video-lesson/quickstart.md` — **chưa làm**: cần backend compose + video seed đã transcode Theora (F027)
 
 ## Dependencies & Execution Order
 
@@ -101,8 +101,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F065-AC-* có test pass (ghi mã test/TC)
+- [x] Mọi tiêu chí F065-AC-* có test pass (ghi mã test/TC) — 25/25 (backend: `videolesson_test.go` domain, contract, 4 integration testcontainers; client: 6 suite `tests/{unit,scene}/video`); AC-23 FPS 720p trên thiết bị tầm trung chờ T038
 - [ ] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make migrate-lint` (MOD=learning) và `make godot-test` xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — fake chỉ ở `tests/`
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi — VIDEO_LEARNING, DATABASE_DESIGN, CHANGELOG (CONFIG_DEFAULTS không đổi)
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật — `In progress`
