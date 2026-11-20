@@ -53,13 +53,13 @@
 
 ### Tests cho User Story 2
 
-- [ ] T022 [P] [US2] Scene test F063-AC-14 (có/không `is_correct`, feedback theo phương án, icon + chữ) — file: `src/game/tests/scene/learning/test_feedback_strip.gd` — phải FAIL trước khi code
-- [ ] T023 [P] [US2] Unit + scene test F063-AC-15, F063-AC-16 (`revealNextHint` với key; `HINTS_EXHAUSTED` → mờ; `HINTS_NOT_ALLOWED`/mode exam → ẩn; không tự đếm) — file: `src/game/tests/scene/learning/test_hint_panel.gd`
-- [ ] T024 [P] [US2] Scene test F063-AC-17 (nút ví dụ mẫu → overlay từ `getLesson`) — file: `src/game/tests/scene/learning/test_worked_example.gd`
+- [x] T022 [P] [US2] Scene test F063-AC-14 (có/không `is_correct`, feedback theo phương án, icon + chữ) — file: `src/game/tests/scene/learning/test_feedback_strip.gd` — phải FAIL trước khi code — ✅ `test_feedback_strip.gd` 5/5 pass (✗/✓ + chữ, panel `FeedbackIncorrectPanel`/`FeedbackCorrectPanel` từ Theme sinh, feedback theo phương án + giải thích, null → chỉ "Đã lưu câu trả lời")
+- [x] T023 [P] [US2] Unit + scene test F063-AC-15, F063-AC-16 (`revealNextHint` với key; `HINTS_EXHAUSTED` → mờ; `HINTS_NOT_ALLOWED`/mode exam → ẩn; không tự đếm) — file: `src/game/tests/scene/learning/test_hint_panel.gd` — ✅ `test_hint_panel.gd` 8/8 pass (key mới mỗi cấp, `Gợi ý n/total`, `HINTS_EXHAUSTED` → mờ + thông điệp, `HINTS_NOT_ALLOWED`/`hint_count = 0`/mode exam·diagnostic·competition → ẩn, phím `H`)
+- [x] T024 [P] [US2] Scene test F063-AC-17 (nút ví dụ mẫu → overlay từ `getLesson`) — file: `src/game/tests/scene/learning/test_worked_example.gd` — ✅ `test_worked_example.gd` 2/2 pass (nút → `getLesson` → overlay chỉ đọc, không ô nhập; không có ref → ẩn nút)
 
 ### Implementation cho User Story 2
 
-- [ ] T025 [US2] `FeedbackStrip`, `HintPanel`, `WorkedExampleOverlay`, `LearningService.request_next_hint` — file: `src/game/scenes/learning/FeedbackStrip.tscn`, `src/game/scenes/learning/HintPanel.tscn`, `src/game/scenes/learning/WorkedExampleOverlay.tscn`, `src/game/scripts/learning/learning_service.gd`
+- [x] T025 [US2] `FeedbackStrip`, `HintPanel`, `WorkedExampleOverlay`, `LearningService.request_next_hint` — file: `src/game/scenes/learning/FeedbackStrip.tscn`, `src/game/scenes/learning/HintPanel.tscn`, `src/game/scenes/learning/WorkedExampleOverlay.tscn`, `src/game/scripts/learning/learning_service.gd` — ✅ `FeedbackStrip.tscn` (+ `feedback_strip.gd`), `HintPanel.tscn` (+ `hint_panel.gd`), `WorkedExampleOverlay.tscn`, `LearningService.request_next_hint`/`get_lesson`; nối trong `ActivityHost` (lát US1)
 
 ## Phase 5: User Story 3 — Hiển thị công thức Toán/Lý/Hóa (Priority: P1)
 
