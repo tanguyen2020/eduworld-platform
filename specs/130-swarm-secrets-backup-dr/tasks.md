@@ -139,6 +139,7 @@
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
 
 - [ ] T052 **OQ chốt 2026-11-20** (DEPLOYMENT §5) Đầu ra ADC sinh từ `deploy/apisix/routes/routes.yaml` + `routes/env/<env>.env` và CI job `apisix:sync` (dry-run diff ở PR, áp ở deploy, admin key qua secret chỉ job này dùng) — file: `deploy/apisix/scripts/`, `.github/workflows/` — kiểm: diff ADC khớp render standalone, sync vào APISIX etcd ở staging — cỡ M
+- [ ] T053 **OQ chốt 2026-11-20** (OQ F090-2) ACL Valkey (user + key pattern `ew:rt:*`, `ew:game:rt:*` theo binary) và NATS (user + subject theo binary/profile, realtime chỉ publish `ew.cmd.*`/`ew.in.room.*`) trong `deploy/`, secret qua Swarm secret — file: `deploy/`
 
 ## Dependencies & Execution Order
 

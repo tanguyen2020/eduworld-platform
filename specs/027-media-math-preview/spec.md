@@ -35,7 +35,7 @@
 
 ### Session 2026-11-20 (follow-up F065 — phụ đề WebVTT)
 
-- Q: Pipeline có nhận phụ đề `text/vtt` cho `video_lesson` (F065 Câu hỏi mở)? → A: Có: `MediaKind` `subtitle` (đã [Confirmed] ở Clarifications F058), MIME `text/vtt`; giới hạn [Proposed] 10 MB = giới hạn `document`/`csv_import_max` (CONFIG_DEFAULTS chưa có tham số riêng cho phụ đề); magic bytes là dòng đầu `WEBVTT`; lưu nguyên dưới `media/<sha256>/vtt.vtt` (biến thể `vtt`). Transcript văn bản thường (`text/plain`) của bài nghe F066 chưa nằm trong danh sách MIME — Câu hỏi mở cho owner.
+- Q: Pipeline có nhận phụ đề `text/vtt` cho `video_lesson` (F065 Câu hỏi mở)? → A: Có: `MediaKind` `subtitle` (đã [Confirmed] ở Clarifications F058), MIME `text/vtt`; giới hạn [Confirmed] 10 MB = giới hạn `document`/`csv_import_max` (CONFIG_DEFAULTS chưa có tham số riêng cho phụ đề); magic bytes là dòng đầu `WEBVTT`; lưu nguyên dưới `media/<sha256>/vtt.vtt` (biến thể `vtt`). Transcript văn bản thường (`text/plain`) của bài nghe F066 chưa nằm trong danh sách MIME — Câu hỏi mở cho owner.
 
 ### Session 2026-11-20 (owner chốt)
 

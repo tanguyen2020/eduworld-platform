@@ -126,7 +126,7 @@ Nguồn chuẩn của mã đóng kết nối. Hành vi phía client (reconnect, 
 | 4409 | Bị thay thế, gồm **đăng nhập trên thiết bị khác** (gửi `session.session.replaced` trước khi đóng) |
 | 4410 | Game session bị server kết thúc **không** thu hồi credential — giờ giới nghiêm hoặc giới hạn chơi/ngày (OQ-17, owner 2026-11-20): gửi `session.session.ended` (`reason = curfew` hoặc `daily_limit`, `reopen_at`; với `daily_limit` là 00:00 ICT hôm sau) trước khi đóng; client không tự kết nối lại, giữ refresh token — module game publish (F014), gateway giao và đóng (F090) |
 | 4429 | Vượt rate limit nặng |
-| 1012 | Node shutdown (graceful): gateway gửi `system.server.draining` (kèm `reconnect_after_ms` ngẫu nhiên để giãn tải) rồi đóng `1012`, rải trong `ws_drain_window` ([Proposed] 15 s, ≤ 30 s); client resume ở node khác |
+| 1012 | Node shutdown (graceful): gateway gửi `system.server.draining` (kèm `reconnect_after_ms` ngẫu nhiên để giãn tải) rồi đóng `1012`, rải trong `ws_drain_window` ([Confirmed] 15 s, ≤ 30 s); client resume ở node khác |
 
 ### 3.2. Một thiết bị cho mỗi tài khoản (ADR-0031)
 
@@ -310,7 +310,7 @@ Quy tắc:
 | Nhận kết nối mới mỗi node — `ws_accept_rate` | 200 kết nối/giây | Quá tải → đóng `4429` kèm thời gian thử lại |
 | Room tick budget (module competition) | ≤ 5 ms/tick cho hub 40 người | Metric `eduworld_room_tick_duration_seconds`; cảnh báo p99 > 20 ms |
 | NATS request in-flight mỗi kết nối — `ws_inflight_commands` | 8 | Vượt → `RATE_LIMITED` |
-| Lỗi giao thức lặp lại — `ws_protocol_errors` [Proposed] | 5 lần/phút | Mỗi lỗi → `system.command.failed` (`VALIDATION_FAILED`/`UNKNOWN_TYPE`), không chuyển tiếp; vượt → đóng `4400` |
+| Lỗi giao thức lặp lại — `ws_protocol_errors` [Confirmed] | 5 lần/phút | Mỗi lỗi → `system.command.failed` (`VALIDATION_FAILED`/`UNKNOWN_TYPE`), không chuyển tiếp; vượt → đóng `4400` |
 
 ### 8.1. Rate limit theo kết nối (token bucket tại gateway + tổng hợp Valkey ở module)
 

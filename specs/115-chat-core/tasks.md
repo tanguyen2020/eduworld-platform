@@ -89,6 +89,7 @@
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
 
 - [ ] T042 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) Facade vòng đời/gộp của module chat; facade test với identity — file: `src/backend/modules/chat/internal/presentation/facade/` — kiểm: `make test-contract`, integration — cỡ M
+- [ ] T043 **OQ chốt 2026-11-20** (OQ F090-1) Đổi tên lệnh `chat.sync` thành tên 3 đoạn khớp pattern `type` của `ClientEnvelope` (đề xuất `chat.channel.sync`), cập nhật AsyncAPI `x-routing` + chạy `scripts/realtime/gen-routes.mjs`; test gateway định tuyến được lệnh — file: `specs/asyncapi/eduworld-realtime.v1.yaml`, `src/backend/modules/chat/`
 
 ## Dependencies & Execution Order
 
