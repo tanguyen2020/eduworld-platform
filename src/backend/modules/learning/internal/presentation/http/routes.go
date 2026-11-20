@@ -118,6 +118,8 @@ type Handlers struct {
 	Reports ReportHandlers
 	// Efficacy serves the efficacy study of F035 (System Admin, /admin/learning/*).
 	Efficacy EfficacyHandlers
+	// Experiments serves the A/B experiments of F035 US5.
+	Experiments ExperimentHandlers
 }
 
 func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -248,6 +250,10 @@ func Register(s *httpx.Server, h Handlers) error {
 	efficacyWired := h.Efficacy.Commands != nil && h.Efficacy.Queries != nil
 	for id, fn := range efficacyRoutes {
 		routes[id] = wiredOr(efficacyWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	}
+	experimentsWired := h.Experiments.Commands != nil && h.Experiments.Queries != nil
+	for id, fn := range experimentRoutes {
+		routes[id] = wiredOr(experimentsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
 	}
 	for id, fn := range publicRoutes {
 		routes[id] = func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) }

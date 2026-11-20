@@ -24,6 +24,8 @@ type Progress struct {
 	// Details reads the masteries with their curriculum metadata (getMyMastery, F032 US7).
 	Details read.SelfStudyReadModel
 	Clock   func() time.Time
+	// Arms reads the live arm of a student (F035-AC-24); nil = no experiment.
+	Arms read.ArmReader
 }
 
 func (q Progress) now() time.Time {

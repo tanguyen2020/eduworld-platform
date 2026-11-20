@@ -113,6 +113,7 @@ type curEnv struct {
 	quality *command.Quality        // F044: item analysis, calibration, exam quality, reference levels
 	reportq *query.Reports          // F044 reads
 	eff     *command.Efficacy       // F035: the efficacy study (jobs run by the tests)
+	exps    *command.Experiments    // F035 US5: the A/B experiments
 }
 
 // envOpt configures newCurEnv.
@@ -266,6 +267,9 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		Clock:       clk.Now, Metrics: observability.ExamCounter{}}
 	att.ExamRelease = exams.ReleaseOf
 	att.EfficacyWave = exams.WaveOf
+	exps := &command.Experiments{UoW: e.uow, Store: write.ExperimentRepo{}, Efficacy: write.EfficacyRepo{}, Mastery: write.MasteryRepo{},
+		Evidence: write.MasteryRepo{}, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Config: command.DefaultExperimentConfig()}
+	att.Arms = exps.ArmsOf
 	if !o.noExams {
 		asg.Exams = &command.ExamSessionCreator{Exams: &exams}
 	}
@@ -283,7 +287,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	handlers.LMS = query.LMS{Session: e.read, Model: read.LMSModel{}, Progress: read.ProgressModel{}, Cursors: codec, Clock: clk.Now}
 	handlers.Hints = att
 	handlers.SelfStudy = query.SelfStudy{Session: e.read, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: codec, Clock: clk.Now}
-	handlers.Mastery = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now}
+	handlers.Mastery = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now, Arms: read.ExperimentModel{}}
 	handlers.Lessons, handlers.LessonQueries = lessons, query.Lessons{Session: e.read, Model: read.LessonModel{}}
 	attq := query.Attempts{Session: e.read, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery, Registry: registry, Cursors: codec,
 		Clock: clk.Now, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: testSigner, Assignments: asgq, Runs: read.SimulationRunModel{},
@@ -312,6 +316,8 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	eff := &command.Efficacy{UoW: e.uow, Store: write.EfficacyRepo{}, Content: write.EfficacyRepo{}, Exams: &exams, Exclusions: write.ExamRepo{}, Data: read.EfficacyModel{},
 		Read: e.read, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Config: efficacy.DefaultConfig()}
 	reports.Efficacy = eff
+	eff.Experiments = exps
+	handlers.Experiments = learninghttp.ExperimentHandlers{Commands: exps, Queries: query.Experiments{Session: e.read, Model: read.ExperimentModel{}, Cursors: codec}}
 	handlers.Efficacy = learninghttp.EfficacyHandlers{Commands: eff, Queries: query.Efficacy{Session: e.read, Model: read.EfficacyModel{}, Cursors: codec}}
 	// F031 US4: re-evaluation with the test clock.
 	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Exams: exams}
@@ -326,7 +332,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
 		lms: lmsCmd, asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq,
-		reports: reports, quality: quality, reportq: reportq, eff: eff}
+		reports: reports, quality: quality, reportq: reportq, eff: eff, exps: exps}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)
 	ce.user(saAdmin, authztest.Platform("system_admin").PrincipalData, true)

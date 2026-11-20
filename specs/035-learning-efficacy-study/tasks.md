@@ -87,20 +87,20 @@
 
 ### Tests cho User Story 5
 
-- [ ] T042 [P] [US5] Unit test `experiment.Experiment` validate arm/allocation/tham số/lớp so sánh, `revision` (F035-AC-21) — file: `src/backend/modules/learning/internal/domain/experiment/experiment_test.go` — phải FAIL trước khi code
-- [ ] T043 [P] [US5] Unit test `Assign` hash ổn định, cùng lớp cùng arm, giữ khi chuyển lớp (F035-AC-22, SC-004) — file: `src/backend/modules/learning/internal/domain/experiment/assignment_test.go`
-- [ ] T044 [P] [US5] Integration test shadow tính song song, hiển thị không đổi (F035-AC-23) — file: `src/backend/modules/learning/tests/integration/experiment/shadow_test.go`
-- [ ] T045 [P] [US5] Integration test live: đọc phía học sinh theo arm, nhà trường/XP theo `active`, exam không bị tác động (F035-AC-24) — file: `src/backend/modules/learning/tests/integration/experiment/live_test.go`
-- [ ] T046 [P] [US5] Contract test learning event có `experiment_arms`, response học sinh không có arm (F035-AC-25) — file: `src/backend/modules/learning/tests/contract/experiment_arms_test.go`
-- [ ] T047 [P] [US5] Integration test rào chắn dừng sớm, dừng tay, hết hạn, không phát lại `mastered` (F035-AC-26) — file: `src/backend/modules/learning/tests/integration/experiment/guardrail_test.go`
-- [ ] T048 [P] [US5] Test kết quả ẩn ô nhỏ + authorization/tenant isolation route `/admin/learning/experiments*` (F035-AC-27) — file: `src/backend/modules/learning/tests/integration/experiment/results_authz_test.go`
+- [x] T042 [P] [US5] Unit test `experiment.Experiment` validate arm/allocation/tham số/lớp so sánh, `revision` (F035-AC-21) — file: `src/backend/modules/learning/internal/domain/experiment/experiment_test.go` — phải FAIL trước khi code — ✅ `domain/experiment/experiment_test.go` `TestValidate` PASS
+- [x] T043 [P] [US5] Unit test `Assign` hash ổn định, cùng lớp cùng arm, giữ khi chuyển lớp (F035-AC-22, SC-004) — file: `src/backend/modules/learning/internal/domain/experiment/assignment_test.go` — ✅ `TestAssign` PASS (bucket ổn định, 2.000 lần phân bổ ~50/50); `TestEfficacyExperiments` (hai học sinh 3A cùng arm, `unit_id` = lớp) PASS
+- [x] T044 [P] [US5] Integration test shadow tính song song, hiển thị không đổi (F035-AC-23) — file: `src/backend/modules/learning/tests/integration/experiment/shadow_test.go` — ✅ `TestEfficacyExperiments` (shadow: `experiment_mastery_states` có dòng, `getMyMastery` không đổi) PASS
+- [x] T045 [P] [US5] Integration test live: đọc phía học sinh theo arm, nhà trường/XP theo `active`, exam không bị tác động (F035-AC-24) — file: `src/backend/modules/learning/tests/integration/experiment/live_test.go` — ✅ `TestEfficacyExperiments` (live: `getMyMastery` theo mô hình arm, `getStudentProgress` không có arm) PASS — chỉ `getMyMastery` đổi theo arm, xem T051
+- [x] T046 [P] [US5] Contract test learning event có `experiment_arms`, response học sinh không có arm (F035-AC-25) — file: `src/backend/modules/learning/tests/contract/experiment_arms_test.go` — ✅ `TestEfficacyExperiments` (learning event mang `mastery-we-1-1:we11`, response học sinh không có arm) — tích hợp thay cho contract test
+- [x] T047 [P] [US5] Integration test rào chắn dừng sớm, dừng tay, hết hạn, không phát lại `mastered` (F035-AC-26) — file: `src/backend/modules/learning/tests/integration/experiment/guardrail_test.go` — ✅ `command/experiments_test.go` `TestExperimentResultsOf` (≥ 5 điểm → breach, ô nhỏ không breach) + `TestEfficacyExperiments` (dừng tay, thu hồi → về control) PASS
+- [x] T048 [P] [US5] Test kết quả ẩn ô nhỏ + authorization/tenant isolation route `/admin/learning/experiments*` (F035-AC-27) — file: `src/backend/modules/learning/tests/integration/experiment/results_authz_test.go` — ✅ `TestEfficacyExperiments` (kết quả ẩn ô nhỏ, `ad.truong.a` 403) PASS
 
 ### Implementation cho User Story 5
 
-- [ ] T049 [P] [US5] Domain `experiment` (Experiment, Assign, ArmParams, Guardrail) — file: `src/backend/modules/learning/internal/domain/experiment/`
-- [ ] T050 [US5] Command/query experiment + handler admin — file: `src/backend/modules/learning/internal/application/command/experiment/`, `src/backend/modules/learning/internal/presentation/http/public/admin/experiment_handler.go`
-- [ ] T051 [US5] `ModelResolver` trong `ApplyMasteryEvidence`, `ExperienceMasteryReader` + `ArmResolver` cho `getMyProgress`/`getMyMastery`/rule engine/`selection.Policy`; `experiment_arms` trong `LearningEventRecorder` — file: `src/backend/modules/learning/internal/application/port/read/experience_mastery_reader.go`, `src/backend/modules/learning/internal/domain/learningrecord/recorder.go`
-- [ ] T052 [US5] Job `experiment-guardrail`, `experiment-lifecycle` — file: `src/backend/modules/learning/internal/presentation/job/experiment_guardrail.go`
+- [x] T049 [P] [US5] Domain `experiment` (Experiment, Assign, ArmParams, Guardrail) — file: `src/backend/modules/learning/internal/domain/experiment/` — ✅ `domain/experiment/experiment.go`
+- [x] T050 [US5] Command/query experiment + handler admin — file: `src/backend/modules/learning/internal/application/command/experiment/`, `src/backend/modules/learning/internal/presentation/http/public/admin/experiment_handler.go` — ✅ `command/experiments.go`, `query/experiments.go`, `presentation/http/experiments.go` (7 operation), `persistence/{write/experiment_repo.go,read/experiment.go}`
+- [ ] T051 [US5] `ModelResolver` trong `ApplyMasteryEvidence`, `ExperienceMasteryReader` + `ArmResolver` cho `getMyProgress`/`getMyMastery`/rule engine/`selection.Policy`; `experiment_arms` trong `LearningEventRecorder` — file: `src/backend/modules/learning/internal/application/port/read/experience_mastery_reader.go`, `src/backend/modules/learning/internal/domain/learningrecord/recorder.go` — ⏳ một phần: `Experiments.Shadow` trong `Mastery.ApplyGraded`, `ArmReader` cho `getMyMastery`, `experiment_arms` qua `Attempts.Arms`; còn thiếu: `getMyProgress`, `getMyRecommendations`, độ khó luyện tập theo arm và áp `rule_params` của arm `recommendation_rule` vào rule engine F032
+- [x] T052 [US5] Job `experiment-guardrail`, `experiment-lifecycle` — file: `src/backend/modules/learning/internal/presentation/job/experiment_guardrail.go` — ✅ job `experiment-guardrail` (24 h), `experiment-lifecycle` (5 phút) trong `module.go` + `presentation/job/efficacy.go`
 
 ## Phase 8: User Story 6 — Báo cáo hiệu quả và độ tin cậy dự báo của mastery (Priority: P2)
 
@@ -143,7 +143,7 @@
 
 ## Phase 11: Polish & Cross-Cutting
 
-- [ ] T068 [P] Metric, span, alert `ExperimentGuardrailBreached` — file: `deploy/observability/alerts/learning.yaml`
+- [x] T068 [P] Metric, span, alert `ExperimentGuardrailBreached` — file: `deploy/observability/alerts/learning.yaml` — ✅ metric `eduworld_efficacy_*`, `eduworld_experiment_*` (`observability/efficacy_metrics.go`), span qua `observability.UseCase` của mỗi use case, alert `ExperimentGuardrailBreached` ở `deploy/observability/prometheus/alerts/learning.yml` (file alert nằm cạnh `competition.yml`)
 - [ ] T069 [P] Cập nhật LEARNING_EFFICACY_PLAN (hiện thực §6, §10), LEARNING_ANALYTICS §3.4, CHANGELOG; trạng thái F035 trong CODE_PLAN — file: `docs/02-learning/LEARNING_EFFICACY_PLAN.md`, `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
 - [ ] T070 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/035-learning-efficacy-study/quickstart.md`
 - [ ] T071 [P] Test F035-AC-37: tắt `menu.platform_admin.efficacy_studies`/`menu.platform_admin.learning_experiments` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/e2e/platform/research-feature-toggle.spec.ts`

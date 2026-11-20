@@ -113,3 +113,39 @@ type EfficacyReportView struct {
 	StartedAt       *time.Time      `json:"started_at"`
 	FinishedAt      *time.Time      `json:"finished_at"`
 }
+
+// ExperimentArmView is ExperimentArm.
+type ExperimentArmView struct {
+	Code          string          `json:"code"`
+	AllocationPct int             `json:"allocation_pct"`
+	IsControl     bool            `json:"is_control"`
+	ModelVersion  string          `json:"model_version,omitempty"`
+	RuleParams    json.RawMessage `json:"rule_params,omitempty"`
+}
+
+// LearningExperimentView is LearningExperiment.
+type LearningExperimentView struct {
+	ExperimentID uuid.UUID           `json:"experiment_id"`
+	Code         string              `json:"code"`
+	Kind         string              `json:"kind"`
+	Unit         string              `json:"unit"`
+	Arms         []ExperimentArmView `json:"arms"`
+	TenantIDs    []uuid.UUID         `json:"tenant_ids"`
+	StudyID      *uuid.UUID          `json:"study_id"`
+	Status       string              `json:"status"`
+	StopReason   *string             `json:"stop_reason"`
+	StartAt      time.Time           `json:"start_at"`
+	EndAt        time.Time           `json:"end_at"`
+	Revision     int                 `json:"revision"`
+	OwnerID      uuid.UUID           `json:"owner_id"`
+	CreatedAt    time.Time           `json:"created_at"`
+	UpdatedAt    time.Time           `json:"updated_at"`
+}
+
+// ExperimentResultsView is ExperimentResults.
+type ExperimentResultsView struct {
+	ExperimentID      uuid.UUID        `json:"experiment_id"`
+	ComputedAt        time.Time        `json:"computed_at"`
+	GuardrailBreached bool             `json:"guardrail_breached"`
+	Arms              []map[string]any `json:"arms"`
+}

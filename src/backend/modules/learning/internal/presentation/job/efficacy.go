@@ -33,3 +33,25 @@ type EfficacyReports struct{ Runner EfficacyReportRunner }
 func (j EfficacyReports) RunOnce(ctx context.Context) (int, error) {
 	return j.Runner.RunEfficacyReports(ctx)
 }
+
+// ExperimentRunner runs the experiment jobs (command.Experiments, F035 US5).
+type ExperimentRunner interface {
+	RunGuardrail(ctx context.Context) (int, error)
+	RunLifecycle(ctx context.Context) (int, error)
+}
+
+// ExperimentGuardrail is the job experiment-guardrail (daily, F035-AC-26).
+type ExperimentGuardrail struct{ Runner ExperimentRunner }
+
+// RunOnce evaluates the running experiments.
+func (j ExperimentGuardrail) RunOnce(ctx context.Context) (int, error) {
+	return j.Runner.RunGuardrail(ctx)
+}
+
+// ExperimentLifecycle is the job experiment-lifecycle: running experiments past end_at complete.
+type ExperimentLifecycle struct{ Runner ExperimentRunner }
+
+// RunOnce completes the due experiments.
+func (j ExperimentLifecycle) RunOnce(ctx context.Context) (int, error) {
+	return j.Runner.RunLifecycle(ctx)
+}

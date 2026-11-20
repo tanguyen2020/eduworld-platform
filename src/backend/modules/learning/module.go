@@ -93,6 +93,9 @@ const (
 	EfficacyWaveInterval = time.Minute
 	// F035: the queued efficacy reports are computed within 30 seconds [Proposed].
 	EfficacyReportsInterval = 30 * time.Second
+	// F035 US5: the guardrail of the experiments runs daily, the end of the experiments is checked every 5 minutes [Proposed].
+	ExperimentGuardrailInterval = 24 * time.Hour
+	ExperimentLifecycleInterval = 5 * time.Minute
 )
 
 // DashboardPoolSize is dashboard_db_pool_per_api_replica (CONFIG_DEFAULTS, DASHBOARD_DATA §7).
@@ -229,6 +232,8 @@ func Register(r *module.Registry) (*Module, error) {
 	// F035: efficacy waves (participant and mastery snapshots).
 	r.Job(Name, "efficacy-wave-monitor", EfficacyWaveInterval, job.EfficacyWaveMonitor{Runner: w.efficacy}.RunOnce)
 	r.Job(Name, "efficacy-reports", EfficacyReportsInterval, job.EfficacyReports{Runner: w.efficacy}.RunOnce)
+	r.Job(Name, "experiment-guardrail", ExperimentGuardrailInterval, job.ExperimentGuardrail{Runner: w.experiments}.RunOnce)
+	r.Job(Name, "experiment-lifecycle", ExperimentLifecycleInterval, job.ExperimentLifecycle{Runner: w.experiments}.RunOnce)
 	r.Consumer(messaging.ExamQualityName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.ExamQualityOptions(consumer.ExamQuality{Runner: w.quality}, core.UoW, core.App, js)
 	})
@@ -262,7 +267,8 @@ type wiring struct {
 	reports command.Reports
 	quality command.Quality
 	// F035: the efficacy study.
-	efficacy command.Efficacy
+	efficacy    command.Efficacy
+	experiments command.Experiments
 }
 
 // build constructs the use cases of module learning on the real adapters: PostgreSQL (UnitOfWork/ReadSession),
@@ -395,6 +401,10 @@ func build(r *module.Registry) (*wiring, error) {
 		Balancer:    examquality.Balancer{}, PValues: write.QualityRepo{}}
 	att.ExamRelease = exams.ReleaseOf
 	att.EfficacyWave = exams.WaveOf // F035: no event, no mastery evidence for an efficacy exam
+	// F035 US5: the A/B experiments (arm labels of the learning events, arm mastery in parallel, guardrail).
+	exps := command.Experiments{UoW: core.UoW, Store: write.ExperimentRepo{}, Efficacy: write.EfficacyRepo{}, Mastery: write.MasteryRepo{},
+		Evidence: write.MasteryRepo{}, Audit: auditor, Config: command.DefaultExperimentConfig(), Metrics: observability.EfficacyCounter{}}
+	att.Arms = exps.ArmsOf
 	asg.Exams = &command.ExamSessionCreator{Exams: &exams}
 	att.Gate = asg
 	exams.Asg, exams.Att = asg, att
@@ -425,7 +435,8 @@ func build(r *module.Registry) (*wiring, error) {
 		Attempts: att, AttemptQueries: attq,
 		Progress:     query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}},
 		ProfileAudit: command.ProfileViews{UoW: core.UoW, Audit: auditor}}
-	h.Hints, h.Mastery = att, query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}}
+	h.Hints, h.Mastery = att, query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{},
+		Arms: read.ExperimentModel{}}
 	h.LMSCommands = lmsCmd
 	h.AssignmentCommands, h.Assignments = asg, asgq
 	h.ExamCommands, h.ExamQueries = exams, query.Exams{Session: core.ReadSession, Model: read.ExamModel{}, Attempts: attq, Cursors: cursors}
@@ -435,6 +446,7 @@ func build(r *module.Registry) (*wiring, error) {
 	mst := command.Mastery{Store: learningRecord, Evidence: learningRecord, Learning: write.LearningEventWriter{}, Events: events,
 		Metrics: observability.MasteryCounter{}, Diagnostic: &command.DiagnosticPriors{Reader: selfRepo, Prior: practice.Diagnostic},
 		Recommend: recs}
+	mst.Experiments = exps // F035-AC-23: the arm models in parallel
 	// F043: the progress consumer also keeps the class/school/tenant daily rollups (late events: dashboard_late_window_hours).
 	dashCfg := analytics.DefaultConfig()
 	prg := command.Progress{Store: learningRecord, Evidence: learningRecord, Lessons: write.LessonRepo{}, Rollups: write.RollupRepo{},
@@ -484,14 +496,17 @@ func build(r *module.Registry) (*wiring, error) {
 	// F035: the efficacy study of System Admin (bypass efficacy_study across tenants) and its wave monitor.
 	eff := command.Efficacy{UoW: core.UoW, Store: write.EfficacyRepo{}, Content: write.EfficacyRepo{}, Exams: &exams, Exclusions: write.ExamRepo{},
 		Read: core.ReadSession, Data: read.EfficacyModel{}, Keys: secret.PseudonymKey{Path: cfg.String("EW_EFFICACY_PSEUDONYM_KEY_FILE")}, Audit: auditor, Config: efficacy.DefaultConfig(), Metrics: observability.EfficacyCounter{}}
+	eff.Experiments = exps // F035-AC-20: a revoked agreement takes the students out of the experiments
 	reports.Efficacy = eff // F035 US7: report_type efficacy_dataset of createPlatformReport
 	f.Efficacy = eff       // F035-AC-19: anonymizeUserData excludes the student from the studies
+	h.Experiments = learninghttp.ExperimentHandlers{Commands: exps, Queries: query.Experiments{Session: core.ReadSession, Model: read.ExperimentModel{},
+		Cursors: cursors}}
 	h.Reports.Commands = reports
 	h.Efficacy = learninghttp.EfficacyHandlers{Commands: eff, Queries: query.Efficacy{Session: core.ReadSession, Model: read.EfficacyModel{},
 		Cursors: cursors}}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
 		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,
-		lms: lmsCmd, assignments: asg, exams: exams, dashboards: dashboards, reports: reports, quality: quality, efficacy: eff}, nil
+		lms: lmsCmd, assignments: asg, exams: exams, dashboards: dashboards, reports: reports, quality: quality, efficacy: eff, experiments: exps}, nil
 }
 
 // dashboardSession opens the read session of the dashboards (F043-AC-18, F043-AC-21, DASHBOARD_DATA §7): the role

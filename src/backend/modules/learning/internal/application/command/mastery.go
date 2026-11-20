@@ -55,6 +55,8 @@ type Mastery struct {
 	Diagnostic *DiagnosticPriors
 	// Recommend recomputes the recommendations of the student once the mastery is updated (F032 US6); nil = none.
 	Recommend RecommendationTrigger
+	// Experiments computes the mastery of the experiment arms (F035 US5); nil = none.
+	Experiments ArmShadow
 }
 
 // RecommendationTrigger is command.Recommendations.OnAttempt.
@@ -133,6 +135,12 @@ func (h Mastery) ApplyGraded(ctx context.Context, in GradedAttempt) (err error) 
 		}
 		for _, o := range objectives {
 			if err := h.Recompute(ctx, m, src, o); err != nil {
+				return err
+			}
+		}
+		if h.Experiments != nil && len(objectives) > 0 {
+			// F035-AC-23: the models of the experiment arms, in parallel and never displayed while shadow.
+			if err := h.Experiments.Shadow(ctx, src.TenantID, src.StudentID, objectives); err != nil {
 				return err
 			}
 		}
@@ -410,4 +418,9 @@ func (h Mastery) mastered(ctx context.Context, src Source, next write.MasteryRow
 		domain[k] = v
 	}
 	return h.publish(ctx, src, EventObjectiveMastered, next.ObjectiveID, domain)
+}
+
+// ArmShadow is Experiments.Shadow.
+type ArmShadow interface {
+	Shadow(ctx context.Context, tenant, student uuid.UUID, objectives []uuid.UUID) error
 }
