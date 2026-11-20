@@ -171,7 +171,7 @@ Phổ điểm, trung vị, tỉ lệ đạt; theo câu: p-value của lớp/trư
 | Khung trang, chọn khối/lớp/môn | `ProLayout` + `Select` khối, lớp, môn |
 | Thẻ số liệu | `StatisticCard` |
 | Danh sách bài, học sinh | `ProTable` |
-| Heatmap LO | Heatmap ECharts, màu từ `admin-tokens`, kèm ký hiệu |
+| Heatmap LO | `MasteryHeatmap` (ops-ui): bảng lưới màu từ `admin-tokens` + ký hiệu mức, đọc được bằng bàn phím và trình đọc màn hình; biểu đồ cột/đường dùng ECharts (F056) |
 | Hồ sơ học sinh | `Descriptions` + `Tabs` + `Timeline` |
 | Hoạt động game được giao | `Card` có thumbnail 3D + `GamePreviewFrame` |
 | Công thức trong câu hỏi | MathJax 4 (ADR-0055) |

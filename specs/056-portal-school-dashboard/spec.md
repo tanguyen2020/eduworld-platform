@@ -20,6 +20,21 @@
 
 - Endpoint hồ sơ học sinh và phân tích đề/bài (contracts §6, Assumptions "chờ owner F043/F044 chốt") → **Chốt:** theo đề xuất ở contracts §6; F043 làm `getStudentLearningProfile` và `SchoolDashboard.widgets.self_study`, F044 làm `getExamSessionReport`/`getAssignmentItemAnalysis` (đã có trong spec/tasks của hai feature).
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+Quyết định khi triển khai, chọn phương án bảo thủ nhất (owner đã duyệt trước mặc định đề xuất):
+
+- **Phân tích đề/bài (F056-AC-13):** F044 chỉ thêm `getExamSessionReport`; `getAssignmentItemAnalysis` **không** có trong OpenAPI. Không thêm endpoint mới: tab Phân tích của bài `graded` đọc `Assignment.exam_session_id` → `getExamSessionReport` (phổ điểm, trung vị, tỉ lệ đạt, p-value loại `rapid_guess`, `top_misconceptions`, cảnh báo độ tin cậy/chênh biến thể). Bài không có phiên thi hiện "chưa có phân tích theo câu". Contract không cho biết học sinh nào sai từng câu, nên nút "Giao ôn tập cho học sinh sai câu này" mở wizard F055 `mode=practice` với lớp của bài (không điền danh sách học sinh). Câu hỏi mở F056-1.
+- **Thử lại `DASHBOARD_BUSY` (F056-AC-04):** chỉ một lớp thử lại là apiClient: `429 DASHBOARD_BUSY` chờ `Retry-After` kẹp trong 2–5 giây, tối đa `MAX_RETRIES` = 2 lần; `504 DASHBOARD_QUERY_TIMEOUT` không lặp lại (gợi ý thu hẹp phạm vi). `useDashboardQueue` (ops-ui) chỉ giới hạn ≤ `dashboard_max_concurrent_per_user` truy vấn đồng thời mỗi trang.
+- **Preset "Học kỳ này"/"Năm học này" (F056-AC-03):** API công khai chưa có ngày năm học/học kỳ của trường (bảng `academic_years` không có operation đọc). Hai preset hiển thị nhưng bị vô hiệu kèm tooltip "Chưa có lịch năm học của trường"; `DashboardRangePicker` nhận lịch qua prop khi contract có. Câu hỏi mở F056-2.
+- **"Đang tính số liệu…", `available_from`, cảnh báo trễ replica (F056-AC-02, Edge Cases):** `DashboardMeta` chỉ có `grain`, `data_as_of`, `is_partial`. Portal hiển thị "Đang tính số liệu…" cho giá trị `null` khi `is_partial = true` (không bao giờ vẽ `null` thành 0); "Chưa có số liệu trước ngày …" và cảnh báo trễ chưa làm vì contract chưa có trường — Câu hỏi mở F056-3.
+- **Heatmap (F056-AC-09):** `MasteryHeatmap` là bảng HTML (caption, tiêu đề hàng/cột, ô focus được bằng bàn phím, `aria-label` + tooltip giá trị chính xác, ký hiệu ○◔◑◕●) tô màu bằng token ngữ nghĩa Admin (`colorErrorBg`, `colorWarningBg`, `colorInfoBg`, `colorSuccessBg`, `colorFillSecondary`) — không thêm mã màu nghiệp vụ mới. ECharts 5.6.0 (tải theo nhu cầu, chunk riêng) dùng cho biểu đồ cột/đường (phổ điểm, xu hướng 8 tuần, phút học), luôn kèm `aria-label` liệt kê giá trị. Đã cập nhật SCHOOL_LMS §8.7.
+- **Lý do "Cần chú ý" (F056-AC-05):** dùng enum contract `AttentionReason` (`missed_assignments`, `beginning_objectives`, `inactive_game`, `rapid_guess` → "Làm quá nhanh", `scheduled_cleanup`) thay cho tên trong văn bản AC (`inactive`, `low_accuracy`, `rapid_guessing`). Nhãn mức mastery theo LEARNING_EXPERIENCE §7 [Confirmed] (Mới bắt đầu, Đang tiến bộ, Thành thạo, Xuất sắc; `not_started` → "Chưa bắt đầu").
+- **Route và màn:** đường dẫn lấy từ danh mục menu (ADR-0090): `/school-lms/school-dashboard` (tổng quan, `classes/:id`, `students/:id`, `reference` — mức tham khảo TT27/TT22 từ `getRegulationReferenceReport`), `/school-lms/results` (khóa học → `:courseId` → `:courseId/analysis/:assignmentId`), `/school-lms/reports` (tab "Xuất báo cáo" theo `action.school_lms.reports.export`, tab "Tổng hợp đơn vị" theo `action.school_lms.reports.view`), `/platform-admin/reports`. Thay giả định `/portal/school-lms/dashboard/*`.
+- **Tên học sinh:** `StudentLearningProfile` và `ClassDashboard.students` không có họ tên; Portal lấy tên từ `listTenantClassStudents` của lớp đang xem (F052), thiếu thì hiện "Học sinh". Tên môn ở tổng hợp platform lấy từ `listCmsSubjects` (không có quyền thì hiện mã).
+- **Tham số:** giá trị `dashboard_*`, `school_dashboard_refresh` phạm vi `code` mirror trong `dashboard/model/limits.ts`, test so với CONFIG_DEFAULTS (R33).
+- **Mock test:** theo mẫu repo (`MockPortalBackend` + `src/test/dashboard-mock.ts`, nhãn MOCK) thay cho MSW `__tests__/msw/handlers.ts` của T010.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trang tổng quan trường (Priority: P1) 🎯 MVP
