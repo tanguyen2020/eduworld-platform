@@ -22,6 +22,22 @@
 - Facade vòng đời học sinh của module game (OQ F016-2, F045-3) → **Chốt:** F070 (tạo `game_profiles`) hiện thực `cleanupStudentData`/`restoreStudentData` (soft-delete/khôi phục GameProfile, giữ chặn khi có session active), `anonymizeUserData` (nickname → giá trị ẩn danh, xóa avatar tùy biến không cần cho thống kê) và `mergeUserData` (chọn một GameProfile — profile user đích giữ, profile nguồn soft-delete; idempotent theo `merge_id`); gộp ledger XP ở F074.
 - OQ-16 (asset 3D) → đã trả lời (owner 2026-11-20, OPEN_QUESTIONS): stylized low-poly, asset pack có license thương mại + tự làm nhân vật chính.
 
+### Session 2026-11-21 (quyết định khi triển khai, [Proposed] chờ owner xác nhận)
+
+- `game_profiles`, `avatar_presets`, `inventory_items` dùng khóa thay thế (`game_profile_id`, `avatar_preset_id`, `inventory_item_id`) + unique partial `WHERE deleted_at IS NULL` thay khóa `student_id` / khóa ghép của DATABASE_DESIGN: ent không có khóa ghép, và một học sinh có thể thuộc nhiều tenant (khóa `student_id` đơn sẽ làm `createGameSession` lỗi ở tenant thứ hai). DATABASE_DESIGN §2.8/§2.8a đã cập nhật. [Proposed]
+- `item_definition_versions.sources` lưu `jsonb` (mảng ≤ 20) thay `varchar(64)[]` (ent không biểu diễn mảng có `MaxLen`). [Proposed]
+- `getGameProfile` khi học sinh chưa mở phiên game (chưa có dòng profile) trả profile rỗng level 1, `setup_required = true`, không ghi DB (query không ghi); `updateAvatar`/`updateGameProfile`/`saveAvatarPreset` tự tạo profile trong transaction của chúng. [Proposed]
+- Giới hạn đổi nickname tính theo **tháng dương lịch giờ Asia/Ho_Chi_Minh**; `retry_after` = 00:00 ngày 1 tháng sau; trường chỉ siết qua `settings_subset.nickname_change_monthly_limit` của `school.updated`. Lần đặt đầu (`initial`) không tính. [Proposed]
+- `emote_slots` vắng mặt: lần tạo đầu điền 6 emote mặc định (F070-AC-19); lần sau giữ wheel hiện tại; `[]` tường minh = wheel rỗng. Cùng cấu hình (hash trùng) không phát event. [Proposed]
+- Item không có định nghĩa (mã lạ) → `ITEM_NOT_OWNED` (không mô tả item lạ); kiểm sở hữu trước slot. Với `emote_wheel_slots = 6`, OpenAPI `maxItems: 6` từ chối 7 emote bằng `422 VALIDATION_FAILED` trước use case; `EQUIP_SLOT_INVALID` cho emote áp dụng khi cấu hình nhỏ hơn 6. [Proposed]
+- Edge case "item bị thu hồi": server không tự đổi item về mặc định; lần `updateAvatar` có item không còn sở hữu trả `ITEM_NOT_OWNED`, client hiển thị item mặc định cùng slot (F070-AC-18). [Proposed]
+- Ẩn danh hóa (`anonymizeUserData`): nickname → `an_` + 16 hex SHA-256 của user id, xóa `avatar_config`/hash/settings/tên bộ phối; giữ level, `avatar_created_at`. `game.nickname_changes` append-only giữ nguyên (nickname sinh từ bộ từ đã duyệt, học sinh không gõ). [Proposed]
+- `mergeUserData`: preset nguồn chuyển sang ô trống của user đích (ô trùng → soft-delete nguồn); profile đích có sẵn → profile nguồn soft-delete `user_merge`; đích chưa có → chuyển profile nguồn sang đích; phiên game đang mở của nguồn → `blocked active_game_session`. [Proposed]
+- Khôi phục học sinh đã dọn mà nickname cũ đã bị người khác lấy → khôi phục profile với `nickname = NULL` (học sinh chọn lại, `setup_required`). [Proposed]
+- Client (Godot): đọc profile lỗi sau khi mở phiên → vào S02, không vào Main Hub; danh mục cache trong bộ nhớ theo ETag; nhãn item tóc/trang phục/phụ kiện/emote theo thứ tự ("Mẫu n"); giá trị màu da/tóc và tỉ lệ dáng là resource hiển thị placeholder ở client; lồng tiếng tra `res://resources/audio/voice/<lang>/<key>.ogg`, chưa có clip thì chỉ hiện chú thích. [Proposed]
+- Câu hỏi mở F070-1: `CharacterCatalog` chưa có tên vi/en của item tóc/trang phục/phụ kiện/emote; thêm `items[]` (tên, `equip_slot`) vào danh mục hay chờ `GET /game/inventory/catalog` của F075?
+- Câu hỏi mở F070-2: giá trị màu da/màu tóc nằm ở client (`resources/avatar/*.tres`, placeholder) hay trong danh mục / `design/game-tokens/art3d.json`?
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo nhân vật lần đầu (Priority: P1)

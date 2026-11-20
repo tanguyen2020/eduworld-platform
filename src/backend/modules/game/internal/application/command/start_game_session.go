@@ -173,6 +173,10 @@ func (h Sessions) Start(ctx context.Context, in StartInput) (res StartResult, er
 		if err := h.Logins.Create(ctx, login); err != nil {
 			return err
 		}
+		// F070 T015: the game profile exists from the first session on (setup_required until avatar and nickname).
+		if err := EnsureGameProfile(ctx, h.Profiles, tenant, student, st.SchoolID, now); err != nil {
+			return err
+		}
 		if err := h.started(ctx, s, login, old, decision); err != nil {
 			return err
 		}

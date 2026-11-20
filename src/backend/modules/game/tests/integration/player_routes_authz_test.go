@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
-// F014-AC-18 (TC-AUTH-014, AGENTS R23): every player route of F014 × {school_admin, academic_manager, tenant_admin,
+// F014-AC-18, F070-AC-21 (TC-AUTH-014, AGENTS R23): every player route of F014 and F070 × {school_admin, academic_manager, tenant_admin,
 // safety_moderator, system_admin} with portal tokens → 403 GAME_ACCESS_STUDENT_ONLY; nothing is written.
 func TestPlayerRoutesStaffDenied(t *testing.T) {
 	ctx := context.Background()
@@ -30,7 +31,7 @@ func TestPlayerRoutesStaffDenied(t *testing.T) {
 	session := uuid.NewString()
 	for _, id := range gamehttp.PlayerOperations {
 		o := gamehttp.Operations[id]
-		path := strings.ReplaceAll(o.Pattern, "{game_session_id}", session)
+		path := strings.NewReplacer("{game_session_id}", session, "{slot}", "1").Replace(o.Pattern)
 		for role, sub := range subs {
 			tok := e.idp.Token(sub, "eduworld-portal", true, nowWall())
 			h := map[string]string{"X-Tenant-Id": e.tenantA.String(), "X-Device-Id": uuid.NewString(), "Idempotency-Key": newKey()}
@@ -48,8 +49,22 @@ func TestPlayerRoutesStaffDenied(t *testing.T) {
 			}
 		}
 	}
-	if n := count(ctx, t, e.platform, `SELECT count(*) FROM game.game_sessions`) + count(ctx, t, e.platform, `SELECT count(*) FROM game.login_events`); n != 0 {
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM game.game_sessions`) + count(ctx, t, e.platform, `SELECT count(*) FROM game.login_events`) +
+		count(ctx, t, e.platform, `SELECT count(*) FROM game.game_profiles`) + count(ctx, t, e.platform, `SELECT count(*) FROM game.avatar_presets`); n != 0 {
 		t.Fatalf("rows written: %d", n)
 	}
 	authztest.Cover(t, "getContentManifest", authztest.RoleDenied)
+	for _, id := range []string{"getGameProfile", "updateGameProfile", "suggestNicknames", "updateAvatar", "listAvatarPresets",
+		"saveAvatarPreset", "getCharacterCatalog"} {
+		if !slices.Contains(gamehttp.PlayerOperations, id) {
+			t.Fatalf("%s is not a player operation", id)
+		}
+	}
+	authztest.Cover(t, "getGameProfile", authztest.RoleDenied)
+	authztest.Cover(t, "updateGameProfile", authztest.RoleDenied)
+	authztest.Cover(t, "suggestNicknames", authztest.RoleDenied)
+	authztest.Cover(t, "updateAvatar", authztest.RoleDenied)
+	authztest.Cover(t, "listAvatarPresets", authztest.RoleDenied)
+	authztest.Cover(t, "saveAvatarPreset", authztest.RoleDenied)
+	authztest.Cover(t, "getCharacterCatalog", authztest.RoleDenied)
 }

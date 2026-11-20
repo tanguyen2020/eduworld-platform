@@ -8,6 +8,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
 // Facade serves the student lifecycle operations of module game (F016).
@@ -39,12 +40,30 @@ func (f Facade) RestoreStudentData(ctx context.Context, req api.RestoreStudentDa
 }
 
 // AnonymizeUserData implements gameapi.StrictServerInterface (x-allowed-callers: identity, F016 US5). Module
-// game keeps no personal data of a student yet (nickname, avatar and inventory arrive with F070+; the login
-// events are anonymized by their own retention, DATA_PRIVACY §2), so the step has nothing to do.
+// game overwrites the nickname and removes the custom avatar of the game profile (F070 T039); the login events are
+// anonymized by their own retention (DATA_PRIVACY §2).
 func (f Facade) AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error) {
 	status, err := f.Lifecycle.Anonymize(ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 	return api.AnonymizeUserData200JSONResponse{UserId: req.UserId, Status: api.CommonInternalCommonV1UserLifecycleResultStatus(status)}, nil
+}
+
+// MergeUserData implements gameapi.StrictServerInterface (x-allowed-callers: identity, F045 user merge saga; F070
+// T039): the target keeps one game profile, the source profile is soft-deleted (or moved when the target has none).
+// Idempotent per merge_id (Idempotency-Key of the saga step): a repeated call has nothing left to move.
+func (f Facade) MergeUserData(ctx context.Context, req api.MergeUserDataRequestObject) (api.MergeUserDataResponseObject, error) {
+	if req.Body == nil {
+		return nil, problem.Invalid("body", problem.SubRequired, "merge request required")
+	}
+	status, reason, err := f.Lifecycle.Merge(ctx, req.UserId, req.Body.TargetUserId)
+	if err != nil {
+		return nil, err
+	}
+	out := api.MergeUserData200JSONResponse{UserId: req.UserId, Status: api.CommonInternalCommonV1UserLifecycleResultStatus(status)}
+	if reason != "" {
+		out.BlockedReason = &reason
+	}
+	return out, nil
 }

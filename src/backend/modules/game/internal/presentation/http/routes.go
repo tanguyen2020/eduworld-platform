@@ -60,6 +60,9 @@ type Handlers struct {
 	Manifest     ManifestHandler
 	LoginEvents  LoginEventsHandler
 	Tickets      TicketHandler
+	// Profiles and ProfileQueries are the F070 profile use cases.
+	Profiles       ProfileCommands
+	ProfileQueries ProfileQueries
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -89,16 +92,33 @@ var Operations = map[string]httpx.Operation{
 		httpx.TenantRequired, httpx.IdempotencyNone, http.StatusOK, httpx.GuardPortalStaff),
 	"listLoginEventsCrossTenant": op("listLoginEventsCrossTenant", http.MethodGet, "/admin/login-events", httpx.TenantNone,
 		httpx.IdempotencyNone, http.StatusOK, httpx.GuardPortalStaff),
+	// F070 player profile (game_player, X-Tenant-Id; PUT routes are idempotent by nature, no Idempotency-Key in the spec).
+	"getGameProfile": {ID: "getGameProfile", Module: "game", Method: http.MethodGet, Pattern: "/game/profile", Tenant: httpx.TenantRequired,
+		Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
+	"updateGameProfile": {ID: "updateGameProfile", Module: "game", Method: http.MethodPatch, Pattern: "/game/profile",
+		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
+	"suggestNicknames": {ID: "suggestNicknames", Module: "game", Method: http.MethodGet, Pattern: "/game/profile/nickname-suggestions",
+		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
+	"updateAvatar": {ID: "updateAvatar", Module: "game", Method: http.MethodPut, Pattern: "/game/profile/avatar",
+		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
+	"listAvatarPresets": {ID: "listAvatarPresets", Module: "game", Method: http.MethodGet, Pattern: "/game/avatar-presets",
+		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
+	"saveAvatarPreset": {ID: "saveAvatarPreset", Module: "game", Method: http.MethodPut, Pattern: "/game/avatar-presets/{slot}",
+		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
+	"getCharacterCatalog": {ID: "getCharacterCatalog", Module: "game", Method: http.MethodGet, Pattern: "/game/character/catalog",
+		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
 }
 
 // PlayerOperations are the player routes of F014 (F014-AC-18: staff tokens get 403 GAME_ACCESS_STUDENT_ONLY).
 var PlayerOperations = []string{"createGameSession", "endGameSession", "heartbeatGameSession", "getContentManifest",
-	"createRealtimeTicket"}
+	"createRealtimeTicket", "getGameProfile", "updateGameProfile", "suggestNicknames", "updateAvatar", "listAvatarPresets",
+	"saveAvatarPreset", "getCharacterCatalog"}
 
 // Register mounts every F014 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
-	if h.Sessions == nil || h.ClientConfig == nil || h.Manifest == nil || h.LoginEvents == nil || h.Tickets == nil {
-		return errors.New("game: every F014/F090 handler is required")
+	if h.Sessions == nil || h.ClientConfig == nil || h.Manifest == nil || h.LoginEvents == nil || h.Tickets == nil ||
+		h.Profiles == nil || h.ProfileQueries == nil {
+		return errors.New("game: every F014/F090/F070 handler is required")
 	}
 	routes := map[string]http.HandlerFunc{
 		"createGameSession":            h.createGameSession,
@@ -109,6 +129,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		"getClientConfig":              h.getClientConfig,
 		"listTenantStudentLoginEvents": h.listTenantStudentLoginEvents,
 		"listLoginEventsCrossTenant":   h.listLoginEventsCrossTenant,
+	}
+	for id, fn := range h.profileRoutes() {
+		routes[id] = fn
 	}
 	for id, fn := range routes {
 		o, ok := Operations[id]

@@ -11,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/cache"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
@@ -37,13 +38,14 @@ import (
 const Name = "game"
 
 // Facade is the part of the game facade (api.StrictServerInterface, specs/openapi/modules/game.internal.v1.yaml)
-// implemented in this release: the student lifecycle operations of the identity sagas (F016). The platform-ops
-// operations (assignments, trash, clone, mergeUserData) are not implemented by module game yet (OQ F045-3): the
+// implemented in this release: the student lifecycle operations of the identity sagas (F016) and mergeUserData (F070 T039). The other
+// platform-ops operations (assignments, trash, clone) are not implemented by module game yet (OQ F045-3): the
 // identity gateway answers 503 UNAVAILABLE for them, never a silent success.
 type Facade interface {
 	CleanupStudentData(ctx context.Context, req api.CleanupStudentDataRequestObject) (api.CleanupStudentDataResponseObject, error)
 	RestoreStudentData(ctx context.Context, req api.RestoreStudentDataRequestObject) (api.RestoreStudentDataResponseObject, error)
 	AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error)
+	MergeUserData(ctx context.Context, req api.MergeUserDataRequestObject) (api.MergeUserDataResponseObject, error)
 }
 
 // Imports are the facades module game calls: none (projections and events only, ADR-0037).
@@ -93,15 +95,27 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	observability.Register(r.Metrics())
 	observability.RegisterManifest(r.Metrics())
+	observability.RegisterProfile(r.Metrics())
+	profileCfg, err := gameconfig.ProfileFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
 	sessions := command.Sessions{UoW: core.UoW, AfterCommit: entx.AfterCommit, Sessions: write.SessionRepo{}, Logins: write.LoginEventRepo{},
-		Directory: write.Directory{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
+		Profiles: write.ProfileRepo{}, Directory: write.Directory{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
 		Realtime: realtime.ValkeyPublisher{C: vk}, Metrics: observability.SessionMetrics{}, Config: cfg.UseCase}
-	m := &Module{facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{}}}}
+	m := &Module{facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
+		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}}}}
+	options := cache.NicknameOptionStore{C: vk}
+	profiles := command.Profiles{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: write.ProfileRepo{}, Catalog: write.CatalogRepo{},
+		Owned: write.OwnershipRepo{}, Presets: write.PresetRepo{}, Directory: write.Directory{}, Schools: write.Directory{},
+		Options: options, Events: write.Publisher{W: core.Writer}, Metrics: observability.ProfileMetrics{}, Config: profileCfg}
 
 	h := gamehttp.Handlers{Sessions: sessions, ClientConfig: cfg.ClientConfig,
 		Manifest:    query.GetContentManifest{Read: core.ReadSession, Manifests: read.Manifests{}, MinClientVersion: cfg.UseCase.MinClientVersion},
 		LoginEvents: query.LoginEvents{Read: core.ReadSession, Events: read.LoginEvents{}, Students: read.Students{}, Cursors: cursors},
-		Tickets:     command.RealtimeTickets{Sessions: sessions, Store: realtime.TicketStore{C: vk}, Config: cfg.Tickets}}
+		Tickets:     command.RealtimeTickets{Sessions: sessions, Store: realtime.TicketStore{C: vk}, Config: cfg.Tickets},
+		Profiles:    profiles, ProfileQueries: query.Profile{Read: core.ReadSession, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
+			Options: options, TTL: profileCfg.SuggestionTTL}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}

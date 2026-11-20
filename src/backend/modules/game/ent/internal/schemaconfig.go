@@ -7,8 +7,16 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	GameSession string // GameSession table.
-	LoginEvent  string // LoginEvent table.
+	AvatarPreset            string // AvatarPreset table.
+	CharacterCatalog        string // CharacterCatalog table.
+	CharacterCatalogVersion string // CharacterCatalogVersion table.
+	GameProfile             string // GameProfile table.
+	GameSession             string // GameSession table.
+	InventoryItem           string // InventoryItem table.
+	ItemDefinition          string // ItemDefinition table.
+	ItemDefinitionVersion   string // ItemDefinitionVersion table.
+	LoginEvent              string // LoginEvent table.
+	NicknameChange          string // NicknameChange table.
 }
 
 type schemaCtxKey struct{}

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "presets": [
+    { "preset_code": "preset_explorer", "name": { "vi": "Nhà thám hiểm", "en": "Explorer" },
+      "avatar_config": { "schema_version": 1, "body_type": "kid_a", "skin_tone": "tone_02", "hair": { "item_id": "hair_short_01", "color": "hair_col_01" },
+        "outfit": { "item_id": "outfit_explorer_01" }, "accessories": [ { "slot": "back", "item_id": "acc_backpack_owl" } ],
+        "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"] } },
+    { "preset_code": "preset_artist", "name": { "vi": "Họa sĩ nhí", "en": "Little artist" },
+      "avatar_config": { "schema_version": 1, "body_type": "kid_b", "skin_tone": "tone_03", "hair": { "item_id": "hair_ponytail_01", "color": "hair_col_03" },
+        "outfit": { "item_id": "outfit_casual_01" }, "accessories": [],
+        "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"] } },
+    { "preset_code": "preset_sporty", "name": { "vi": "Vận động viên", "en": "Athlete" },
+      "avatar_config": { "schema_version": 1, "body_type": "kid_c", "skin_tone": "tone_04", "hair": { "item_id": "hair_spiky_01", "color": "hair_col_02" },
+        "outfit": { "item_id": "outfit_sport_01" }, "accessories": [ { "slot": "head", "item_id": "acc_cap_star" } ],
+        "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"] } },
+    { "preset_code": "preset_scientist", "name": { "vi": "Nhà khoa học", "en": "Scientist" },
+      "avatar_config": { "schema_version": 1, "body_type": "kid_d", "skin_tone": "tone_05", "hair": { "item_id": "hair_curly_01", "color": "hair_col_04" },
+        "outfit": { "item_id": "outfit_school_01" }, "accessories": [ { "slot": "face", "item_id": "acc_glasses_round" } ],
+        "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"] } },
+    { "preset_code": "preset_musician", "name": { "vi": "Nhạc sĩ nhí", "en": "Little musician" },
+      "avatar_config": { "schema_version": 1, "body_type": "kid_a", "skin_tone": "tone_01", "hair": { "item_id": "hair_bob_01", "color": "hair_col_05" },
+        "outfit": { "item_id": "outfit_star_01" }, "accessories": [],
+        "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"] } },
+    { "preset_code": "preset_gardener", "name": { "vi": "Người làm vườn", "en": "Gardener" },
+      "avatar_config": { "schema_version": 1, "body_type": "kid_b", "skin_tone": "tone_06", "hair": { "item_id": "hair_braids_01", "color": "hair_col_06" },
+        "outfit": { "item_id": "outfit_rain_01" }, "accessories": [ { "slot": "hand", "item_id": "acc_flag_small" } ],
+        "emote_slots": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"] } }
+  ],
+  "body_types": [
+    { "code": "kid_a", "name": { "vi": "Dáng A", "en": "Shape A" } },
+    { "code": "kid_b", "name": { "vi": "Dáng B", "en": "Shape B" } },
+    { "code": "kid_c", "name": { "vi": "Dáng C", "en": "Shape C" } },
+    { "code": "kid_d", "name": { "vi": "Dáng D", "en": "Shape D" } }
+  ],
+  "skin_tones": [
+    { "code": "tone_01", "name": { "vi": "Màu da 1", "en": "Skin tone 1" } },
+    { "code": "tone_02", "name": { "vi": "Màu da 2", "en": "Skin tone 2" } },
+    { "code": "tone_03", "name": { "vi": "Màu da 3", "en": "Skin tone 3" } },
+    { "code": "tone_04", "name": { "vi": "Màu da 4", "en": "Skin tone 4" } },
+    { "code": "tone_05", "name": { "vi": "Màu da 5", "en": "Skin tone 5" } },
+    { "code": "tone_06", "name": { "vi": "Màu da 6", "en": "Skin tone 6" } }
+  ],
+  "hair_colors": [
+    { "code": "hair_col_01", "name": { "vi": "Đen", "en": "Black" } },
+    { "code": "hair_col_02", "name": { "vi": "Nâu sẫm", "en": "Dark brown" } },
+    { "code": "hair_col_03", "name": { "vi": "Nâu hạt dẻ", "en": "Chestnut" } },
+    { "code": "hair_col_04", "name": { "vi": "Vàng nâu", "en": "Honey" } },
+    { "code": "hair_col_05", "name": { "vi": "Vàng", "en": "Blond" } },
+    { "code": "hair_col_06", "name": { "vi": "Đỏ cam", "en": "Ginger" } },
+    { "code": "hair_col_07", "name": { "vi": "Xanh dương", "en": "Blue" } },
+    { "code": "hair_col_08", "name": { "vi": "Tím", "en": "Purple" } }
+  ],
+  "default_item_ids": [
+    "hair_short_01", "hair_ponytail_01", "hair_curly_01", "hair_bob_01", "hair_spiky_01", "hair_braids_01",
+    "outfit_explorer_01", "outfit_sport_01", "outfit_school_01", "outfit_casual_01", "outfit_rain_01", "outfit_star_01",
+    "acc_cap_star", "acc_glasses_round", "acc_backpack_owl", "acc_flag_small"
+  ],
+  "default_emote_ids": ["emote_wave", "emote_clap", "emote_dance", "emote_celebrate", "emote_thank", "emote_apologize"],
+  "nickname_parts": {
+    "vi": {
+      "adjectives": ["Chăm Chỉ", "Vui Vẻ", "Nhanh Nhẹn", "Thông Thái", "Tò Mò", "Hiền Lành", "Siêu Tốc", "Lấp Lánh", "Tinh Nghịch",
+        "Khéo Tay", "Ham Học", "Sáng Tạo", "Ngộ Nghĩnh", "Kiên Nhẫn", "Hào Hứng", "Tốt Bụng", "Lém Lỉnh", "Mạnh Mẽ"],
+      "nouns": ["Cú Mèo", "Gấu Trúc", "Sóc Nâu", "Cá Heo", "Chim Sẻ", "Thỏ Trắng", "Rùa Xanh", "Cáo Nhỏ", "Gấu Koala", "Chim Cánh Cụt",
+        "Rái Cá", "Hổ Con", "Rồng Con", "Nhím Con", "Chim Ưng", "Voi Con", "Mèo Mướp", "Sư Tử"]
+    },
+    "en": {
+      "adjectives": ["Brave", "Clever", "Happy", "Curious", "Swift", "Gentle", "Bright", "Sunny", "Lucky", "Jolly", "Witty", "Calm",
+        "Cosmic", "Mighty", "Cheerful", "Kind", "Playful", "Smart"],
+      "nouns": ["Owl", "Panda", "Squirrel", "Dolphin", "Sparrow", "Rabbit", "Turtle", "Fox", "Koala", "Penguin", "Otter", "Tiger",
+        "Dragon", "Hedgehog", "Falcon", "Elephant", "Kitten", "Lion"]
+    }
+  }
+}

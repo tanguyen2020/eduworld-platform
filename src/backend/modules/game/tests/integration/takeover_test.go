@@ -86,7 +86,7 @@ func TestTakeover(t *testing.T) {
 		t.Fatal("end")
 	}
 	seen := e.checkEventSchemas(ctx, t)
-	for _, typ := range gameEventTypes {
+	for _, typ := range sessionEventTypes {
 		if seen[typ] == 0 {
 			t.Errorf("no %s event checked", typ)
 		}

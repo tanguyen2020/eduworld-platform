@@ -22,11 +22,16 @@ var printDDL = flag.String("print", "", "print the entddl block of this migratio
 // §2.17 minimal columns, no entx mixin — same decision as F020).
 var migrations = map[string][]string{
 	"20261123000001_f014_game_session.sql": {"game_sessions"},
+	"20261223000001_f070_profile.sql": {"game_profiles", "nickname_changes", "avatar_presets", "character_catalogs",
+		"character_catalog_versions", "item_definitions", "item_definition_versions", "inventory_items"},
 }
 
 func schemas() map[string]string {
 	c := ent.DefaultSchemaConfig
-	return map[string]string{"game_sessions": c.GameSession, "login_events": c.LoginEvent}
+	return map[string]string{"game_sessions": c.GameSession, "login_events": c.LoginEvent, "game_profiles": c.GameProfile,
+		"nickname_changes": c.NicknameChange, "avatar_presets": c.AvatarPreset, "character_catalogs": c.CharacterCatalog,
+		"character_catalog_versions": c.CharacterCatalogVersion, "item_definitions": c.ItemDefinition,
+		"item_definition_versions": c.ItemDefinitionVersion, "inventory_items": c.InventoryItem}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

@@ -23,6 +23,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gamesession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/profile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
@@ -155,6 +156,9 @@ type env struct {
 	srv                            *httptest.Server
 	tickets                        port.TicketStore
 	realtimeURL                    string
+	profiles                       command.Profiles
+	profileCfg                     command.ProfileConfig
+	options                        *memOptions
 	tenantA, tenantB               uuid.UUID
 	schoolA, schoolA2, schoolB     uuid.UUID
 }
@@ -174,6 +178,7 @@ type envOpts struct {
 	tickets     port.TicketStore // nil: in-memory TEST DOUBLE (tests not about the ticket store)
 	realtimeURL string           // EW_REALTIME_PUBLIC_URL; "" = ws://localhost:9080/realtime/v1
 	curfew      string           // platform curfew; "" = none (tests not about the curfew)
+	emoteWheel  int              // emote_wheel_slots; 0 = 6 (CONFIG_DEFAULTS)
 }
 
 func setup(ctx context.Context, t *testing.T, o envOpts) *env {
@@ -208,9 +213,20 @@ func setup(ctx context.Context, t *testing.T, o envOpts) *env {
 	}
 	e.cfg = command.SessionConfig{MinClientVersion: MinVersion, HeartbeatTimeout: 45 * time.Second, PlatformCurfew: curfew,
 		CurfewLocation: ict, WarningBefore: 10 * time.Minute, Maintenance: command.Maintenance{Active: o.maintenance, Message: "Bảo trì định kỳ"}}
-	e.sessions = command.Sessions{UoW: e.uow, AfterCommit: entx.AfterCommit, Sessions: write.SessionRepo{}, Logins: write.LoginEventRepo{},
+	e.sessions = command.Sessions{UoW: e.uow, AfterCommit: entx.AfterCommit, Sessions: write.SessionRepo{}, Logins: write.LoginEventRepo{}, Profiles: write.ProfileRepo{},
 		Directory: write.Directory{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Realtime: e.pushes,
 		Metrics: observability.SessionMetrics{}, Config: e.cfg, Now: e.clock.Now}
+	wheel := o.emoteWheel
+	if wheel == 0 {
+		wheel = 6
+	}
+	e.profileCfg = command.ProfileConfig{EmoteWheelSlots: wheel, SavedOutfitsMax: 3, SuggestionTTL: 10 * time.Minute,
+		Nickname: profile.NicknamePolicy{MonthlyLimit: 1, Location: ict}, SupportedLocales: []string{"vi-VN", "en-US"}}
+	e.options = &memOptions{now: e.clock.Now, sets: map[uuid.UUID]map[uuid.UUID]memOption{}}
+	e.profiles = command.Profiles{UoW: e.uow, AfterCommit: entx.AfterCommit, Repo: write.ProfileRepo{}, Catalog: write.CatalogRepo{},
+		Owned: write.OwnershipRepo{}, Presets: write.PresetRepo{}, Directory: write.Directory{}, Schools: write.Directory{},
+		Options: e.options, Events: write.Publisher{W: e.writer}, Metrics: observability.ProfileMetrics{}, Config: e.profileCfg, Now: e.clock.Now}
+	e.publishCatalog(ctx, t)
 	e.tickets, e.realtimeURL = o.tickets, o.realtimeURL
 	if e.tickets == nil {
 		e.tickets = &memTickets{saved: map[string]rt.TicketClaims{}}
@@ -253,7 +269,9 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 		LoginEvents: query.LoginEvents{Read: e.read, Events: read.LoginEvents{}, Students: read.Students{}, Cursors: codec},
 		IPHasher:    security.NewIPHasher([]byte(strings.Repeat("h", 32))),
 		Tickets: command.RealtimeTickets{Sessions: e.sessions, Store: e.tickets,
-			Config: command.TicketConfig{URL: e.realtimeURL, TTL: time.Minute, Rate: 10, RateWindow: time.Minute}}}
+			Config: command.TicketConfig{URL: e.realtimeURL, TTL: time.Minute, Rate: 10, RateWindow: time.Minute}},
+		Profiles: e.profiles, ProfileQueries: query.Profile{Read: e.read, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
+			Options: e.options, TTL: e.profileCfg.SuggestionTTL}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

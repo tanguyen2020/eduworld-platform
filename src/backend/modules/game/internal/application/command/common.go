@@ -54,6 +54,7 @@ type Sessions struct {
 	AfterCommit write.AfterCommit
 	Sessions    write.SessionRepository
 	Logins      write.LoginEventRepository
+	Profiles    write.ProfileRepository // EnsureGameProfile in the start transaction (F070)
 	Directory   write.Directory
 	Events      write.EventPublisher
 	Audit       write.Auditor

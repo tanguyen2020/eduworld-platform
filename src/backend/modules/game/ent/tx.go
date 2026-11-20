@@ -12,10 +12,26 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// AvatarPreset is the client for interacting with the AvatarPreset builders.
+	AvatarPreset *AvatarPresetClient
+	// CharacterCatalog is the client for interacting with the CharacterCatalog builders.
+	CharacterCatalog *CharacterCatalogClient
+	// CharacterCatalogVersion is the client for interacting with the CharacterCatalogVersion builders.
+	CharacterCatalogVersion *CharacterCatalogVersionClient
+	// GameProfile is the client for interacting with the GameProfile builders.
+	GameProfile *GameProfileClient
 	// GameSession is the client for interacting with the GameSession builders.
 	GameSession *GameSessionClient
+	// InventoryItem is the client for interacting with the InventoryItem builders.
+	InventoryItem *InventoryItemClient
+	// ItemDefinition is the client for interacting with the ItemDefinition builders.
+	ItemDefinition *ItemDefinitionClient
+	// ItemDefinitionVersion is the client for interacting with the ItemDefinitionVersion builders.
+	ItemDefinitionVersion *ItemDefinitionVersionClient
 	// LoginEvent is the client for interacting with the LoginEvent builders.
 	LoginEvent *LoginEventClient
+	// NicknameChange is the client for interacting with the NicknameChange builders.
+	NicknameChange *NicknameChangeClient
 
 	// lazily loaded.
 	client     *Client
@@ -147,8 +163,16 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.AvatarPreset = NewAvatarPresetClient(tx.config)
+	tx.CharacterCatalog = NewCharacterCatalogClient(tx.config)
+	tx.CharacterCatalogVersion = NewCharacterCatalogVersionClient(tx.config)
+	tx.GameProfile = NewGameProfileClient(tx.config)
 	tx.GameSession = NewGameSessionClient(tx.config)
+	tx.InventoryItem = NewInventoryItemClient(tx.config)
+	tx.ItemDefinition = NewItemDefinitionClient(tx.config)
+	tx.ItemDefinitionVersion = NewItemDefinitionVersionClient(tx.config)
 	tx.LoginEvent = NewLoginEventClient(tx.config)
+	tx.NicknameChange = NewNicknameChangeClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -158,7 +182,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: GameSession.QueryXXX(), the query will be executed
+// applies a query, for example: AvatarPreset.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

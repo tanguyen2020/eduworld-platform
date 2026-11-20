@@ -15,8 +15,11 @@ import (
 )
 
 // gameEventTypes are the events of module game owned by F014 (specs/events/payloads/game).
-var gameEventTypes = []string{"game_session.started", "game_session.ended", "game_session.replaced", "student.game_logged_in",
+var sessionEventTypes = []string{"game_session.started", "game_session.ended", "game_session.replaced", "student.game_logged_in",
 	"student.game_logged_out"}
+
+// gameEventTypes are the events checked against their schema: F014 plus the profile events of F070.
+var gameEventTypes = append(append([]string{}, sessionEventTypes...), "avatar.created", "avatar.updated", "game_profile.updated")
 
 // checkEventSchemas validates every F014 event in the outbox: envelope (specs/events/envelope.schema.json) and payload
 // (specs/events/payloads/game/<type>.v1.schema.json, contract first) — the consumers of identity, learning and the

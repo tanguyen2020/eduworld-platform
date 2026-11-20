@@ -9,6 +9,54 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent"
 )
 
+// The AvatarPresetFunc type is an adapter to allow the use of ordinary
+// function as AvatarPreset mutator.
+type AvatarPresetFunc func(context.Context, *ent.AvatarPresetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AvatarPresetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AvatarPresetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AvatarPresetMutation", m)
+}
+
+// The CharacterCatalogFunc type is an adapter to allow the use of ordinary
+// function as CharacterCatalog mutator.
+type CharacterCatalogFunc func(context.Context, *ent.CharacterCatalogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CharacterCatalogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CharacterCatalogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CharacterCatalogMutation", m)
+}
+
+// The CharacterCatalogVersionFunc type is an adapter to allow the use of ordinary
+// function as CharacterCatalogVersion mutator.
+type CharacterCatalogVersionFunc func(context.Context, *ent.CharacterCatalogVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CharacterCatalogVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CharacterCatalogVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CharacterCatalogVersionMutation", m)
+}
+
+// The GameProfileFunc type is an adapter to allow the use of ordinary
+// function as GameProfile mutator.
+type GameProfileFunc func(context.Context, *ent.GameProfileMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GameProfileFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GameProfileMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameProfileMutation", m)
+}
+
 // The GameSessionFunc type is an adapter to allow the use of ordinary
 // function as GameSession mutator.
 type GameSessionFunc func(context.Context, *ent.GameSessionMutation) (ent.Value, error)
@@ -21,6 +69,42 @@ func (f GameSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameSessionMutation", m)
 }
 
+// The InventoryItemFunc type is an adapter to allow the use of ordinary
+// function as InventoryItem mutator.
+type InventoryItemFunc func(context.Context, *ent.InventoryItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f InventoryItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.InventoryItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.InventoryItemMutation", m)
+}
+
+// The ItemDefinitionFunc type is an adapter to allow the use of ordinary
+// function as ItemDefinition mutator.
+type ItemDefinitionFunc func(context.Context, *ent.ItemDefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ItemDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ItemDefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ItemDefinitionMutation", m)
+}
+
+// The ItemDefinitionVersionFunc type is an adapter to allow the use of ordinary
+// function as ItemDefinitionVersion mutator.
+type ItemDefinitionVersionFunc func(context.Context, *ent.ItemDefinitionVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ItemDefinitionVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ItemDefinitionVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ItemDefinitionVersionMutation", m)
+}
+
 // The LoginEventFunc type is an adapter to allow the use of ordinary
 // function as LoginEvent mutator.
 type LoginEventFunc func(context.Context, *ent.LoginEventMutation) (ent.Value, error)
@@ -31,6 +115,18 @@ func (f LoginEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoginEventMutation", m)
+}
+
+// The NicknameChangeFunc type is an adapter to allow the use of ordinary
+// function as NicknameChange mutator.
+type NicknameChangeFunc func(context.Context, *ent.NicknameChangeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f NicknameChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.NicknameChangeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NicknameChangeMutation", m)
 }
 
 // Condition is a hook condition function.

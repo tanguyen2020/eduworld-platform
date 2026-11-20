@@ -6,8 +6,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/inventoryitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinitionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/schema"
 )
 
@@ -15,6 +23,194 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	avatarpresetMixin := schema.AvatarPreset{}.Mixin()
+	avatarpresetMixinHooks0 := avatarpresetMixin[0].Hooks()
+	avatarpreset.Hooks[0] = avatarpresetMixinHooks0[0]
+	avatarpresetMixinInters0 := avatarpresetMixin[0].Interceptors()
+	avatarpreset.Interceptors[0] = avatarpresetMixinInters0[0]
+	avatarpresetMixinFields0 := avatarpresetMixin[0].Fields()
+	_ = avatarpresetMixinFields0
+	avatarpresetFields := schema.AvatarPreset{}.Fields()
+	_ = avatarpresetFields
+	// avatarpresetDescCreatedAt is the schema descriptor for created_at field.
+	avatarpresetDescCreatedAt := avatarpresetMixinFields0[2].Descriptor()
+	// avatarpreset.DefaultCreatedAt holds the default value on creation for the created_at field.
+	avatarpreset.DefaultCreatedAt = avatarpresetDescCreatedAt.Default.(func() time.Time)
+	// avatarpresetDescUpdatedAt is the schema descriptor for updated_at field.
+	avatarpresetDescUpdatedAt := avatarpresetMixinFields0[4].Descriptor()
+	// avatarpreset.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	avatarpreset.DefaultUpdatedAt = avatarpresetDescUpdatedAt.Default.(func() time.Time)
+	// avatarpreset.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	avatarpreset.UpdateDefaultUpdatedAt = avatarpresetDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// avatarpresetDescDeleteReason is the schema descriptor for delete_reason field.
+	avatarpresetDescDeleteReason := avatarpresetMixinFields0[8].Descriptor()
+	// avatarpreset.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	avatarpreset.DeleteReasonValidator = avatarpresetDescDeleteReason.Validators[0].(func(string) error)
+	// avatarpresetDescVersion is the schema descriptor for version field.
+	avatarpresetDescVersion := avatarpresetMixinFields0[9].Descriptor()
+	// avatarpreset.DefaultVersion holds the default value on creation for the version field.
+	avatarpreset.DefaultVersion = avatarpresetDescVersion.Default.(int64)
+	// avatarpresetDescName is the schema descriptor for name field.
+	avatarpresetDescName := avatarpresetFields[2].Descriptor()
+	// avatarpreset.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	avatarpreset.NameValidator = avatarpresetDescName.Validators[0].(func(string) error)
+	// avatarpresetDescID is the schema descriptor for id field.
+	avatarpresetDescID := avatarpresetMixinFields0[0].Descriptor()
+	// avatarpreset.DefaultID holds the default value on creation for the id field.
+	avatarpreset.DefaultID = avatarpresetDescID.Default.(func() uuid.UUID)
+	charactercatalogMixin := schema.CharacterCatalog{}.Mixin()
+	charactercatalogMixinHooks0 := charactercatalogMixin[0].Hooks()
+	charactercatalog.Hooks[0] = charactercatalogMixinHooks0[0]
+	charactercatalogMixinInters0 := charactercatalogMixin[0].Interceptors()
+	charactercatalog.Interceptors[0] = charactercatalogMixinInters0[0]
+	charactercatalogMixinFields0 := charactercatalogMixin[0].Fields()
+	_ = charactercatalogMixinFields0
+	charactercatalogFields := schema.CharacterCatalog{}.Fields()
+	_ = charactercatalogFields
+	// charactercatalogDescCreatedAt is the schema descriptor for created_at field.
+	charactercatalogDescCreatedAt := charactercatalogMixinFields0[1].Descriptor()
+	// charactercatalog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	charactercatalog.DefaultCreatedAt = charactercatalogDescCreatedAt.Default.(func() time.Time)
+	// charactercatalogDescUpdatedAt is the schema descriptor for updated_at field.
+	charactercatalogDescUpdatedAt := charactercatalogMixinFields0[3].Descriptor()
+	// charactercatalog.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	charactercatalog.DefaultUpdatedAt = charactercatalogDescUpdatedAt.Default.(func() time.Time)
+	// charactercatalog.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	charactercatalog.UpdateDefaultUpdatedAt = charactercatalogDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// charactercatalogDescDeleteReason is the schema descriptor for delete_reason field.
+	charactercatalogDescDeleteReason := charactercatalogMixinFields0[7].Descriptor()
+	// charactercatalog.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	charactercatalog.DeleteReasonValidator = charactercatalogDescDeleteReason.Validators[0].(func(string) error)
+	// charactercatalogDescVersion is the schema descriptor for version field.
+	charactercatalogDescVersion := charactercatalogMixinFields0[8].Descriptor()
+	// charactercatalog.DefaultVersion holds the default value on creation for the version field.
+	charactercatalog.DefaultVersion = charactercatalogDescVersion.Default.(int64)
+	// charactercatalogDescCode is the schema descriptor for code field.
+	charactercatalogDescCode := charactercatalogFields[0].Descriptor()
+	// charactercatalog.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	charactercatalog.CodeValidator = charactercatalogDescCode.Validators[0].(func(string) error)
+	// charactercatalogDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	charactercatalogDescLatestVersionNo := charactercatalogFields[2].Descriptor()
+	// charactercatalog.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	charactercatalog.DefaultLatestVersionNo = charactercatalogDescLatestVersionNo.Default.(int)
+	// charactercatalogDescID is the schema descriptor for id field.
+	charactercatalogDescID := charactercatalogMixinFields0[0].Descriptor()
+	// charactercatalog.DefaultID holds the default value on creation for the id field.
+	charactercatalog.DefaultID = charactercatalogDescID.Default.(func() uuid.UUID)
+	charactercatalogversionMixin := schema.CharacterCatalogVersion{}.Mixin()
+	charactercatalogversionMixinHooks0 := charactercatalogversionMixin[0].Hooks()
+	charactercatalogversion.Hooks[0] = charactercatalogversionMixinHooks0[0]
+	charactercatalogversionMixinInters0 := charactercatalogversionMixin[0].Interceptors()
+	charactercatalogversion.Interceptors[0] = charactercatalogversionMixinInters0[0]
+	charactercatalogversionMixinFields0 := charactercatalogversionMixin[0].Fields()
+	_ = charactercatalogversionMixinFields0
+	charactercatalogversionFields := schema.CharacterCatalogVersion{}.Fields()
+	_ = charactercatalogversionFields
+	// charactercatalogversionDescCreatedAt is the schema descriptor for created_at field.
+	charactercatalogversionDescCreatedAt := charactercatalogversionMixinFields0[1].Descriptor()
+	// charactercatalogversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	charactercatalogversion.DefaultCreatedAt = charactercatalogversionDescCreatedAt.Default.(func() time.Time)
+	// charactercatalogversionDescUpdatedAt is the schema descriptor for updated_at field.
+	charactercatalogversionDescUpdatedAt := charactercatalogversionMixinFields0[3].Descriptor()
+	// charactercatalogversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	charactercatalogversion.DefaultUpdatedAt = charactercatalogversionDescUpdatedAt.Default.(func() time.Time)
+	// charactercatalogversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	charactercatalogversion.UpdateDefaultUpdatedAt = charactercatalogversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// charactercatalogversionDescDeleteReason is the schema descriptor for delete_reason field.
+	charactercatalogversionDescDeleteReason := charactercatalogversionMixinFields0[7].Descriptor()
+	// charactercatalogversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	charactercatalogversion.DeleteReasonValidator = charactercatalogversionDescDeleteReason.Validators[0].(func(string) error)
+	// charactercatalogversionDescVersion is the schema descriptor for version field.
+	charactercatalogversionDescVersion := charactercatalogversionMixinFields0[8].Descriptor()
+	// charactercatalogversion.DefaultVersion holds the default value on creation for the version field.
+	charactercatalogversion.DefaultVersion = charactercatalogversionDescVersion.Default.(int64)
+	// charactercatalogversionDescStatus is the schema descriptor for status field.
+	charactercatalogversionDescStatus := charactercatalogversionFields[2].Descriptor()
+	// charactercatalogversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	charactercatalogversion.StatusValidator = charactercatalogversionDescStatus.Validators[0].(func(string) error)
+	// charactercatalogversionDescPayloadSha256 is the schema descriptor for payload_sha256 field.
+	charactercatalogversionDescPayloadSha256 := charactercatalogversionFields[4].Descriptor()
+	// charactercatalogversion.PayloadSha256Validator is a validator for the "payload_sha256" field. It is called by the builders before save.
+	charactercatalogversion.PayloadSha256Validator = charactercatalogversionDescPayloadSha256.Validators[0].(func(string) error)
+	// charactercatalogversionDescChangeNote is the schema descriptor for change_note field.
+	charactercatalogversionDescChangeNote := charactercatalogversionFields[5].Descriptor()
+	// charactercatalogversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	charactercatalogversion.ChangeNoteValidator = charactercatalogversionDescChangeNote.Validators[0].(func(string) error)
+	// charactercatalogversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	charactercatalogversionDescSnapshotKey := charactercatalogversionFields[6].Descriptor()
+	// charactercatalogversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	charactercatalogversion.SnapshotKeyValidator = charactercatalogversionDescSnapshotKey.Validators[0].(func(string) error)
+	// charactercatalogversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	charactercatalogversionDescSnapshotSha256 := charactercatalogversionFields[7].Descriptor()
+	// charactercatalogversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	charactercatalogversion.SnapshotSha256Validator = charactercatalogversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// charactercatalogversionDescID is the schema descriptor for id field.
+	charactercatalogversionDescID := charactercatalogversionMixinFields0[0].Descriptor()
+	// charactercatalogversion.DefaultID holds the default value on creation for the id field.
+	charactercatalogversion.DefaultID = charactercatalogversionDescID.Default.(func() uuid.UUID)
+	gameprofileMixin := schema.GameProfile{}.Mixin()
+	gameprofileMixinHooks0 := gameprofileMixin[0].Hooks()
+	gameprofile.Hooks[0] = gameprofileMixinHooks0[0]
+	gameprofileMixinInters0 := gameprofileMixin[0].Interceptors()
+	gameprofile.Interceptors[0] = gameprofileMixinInters0[0]
+	gameprofileMixinFields0 := gameprofileMixin[0].Fields()
+	_ = gameprofileMixinFields0
+	gameprofileFields := schema.GameProfile{}.Fields()
+	_ = gameprofileFields
+	// gameprofileDescCreatedAt is the schema descriptor for created_at field.
+	gameprofileDescCreatedAt := gameprofileMixinFields0[2].Descriptor()
+	// gameprofile.DefaultCreatedAt holds the default value on creation for the created_at field.
+	gameprofile.DefaultCreatedAt = gameprofileDescCreatedAt.Default.(func() time.Time)
+	// gameprofileDescUpdatedAt is the schema descriptor for updated_at field.
+	gameprofileDescUpdatedAt := gameprofileMixinFields0[4].Descriptor()
+	// gameprofile.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	gameprofile.DefaultUpdatedAt = gameprofileDescUpdatedAt.Default.(func() time.Time)
+	// gameprofile.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	gameprofile.UpdateDefaultUpdatedAt = gameprofileDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// gameprofileDescDeleteReason is the schema descriptor for delete_reason field.
+	gameprofileDescDeleteReason := gameprofileMixinFields0[8].Descriptor()
+	// gameprofile.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	gameprofile.DeleteReasonValidator = gameprofileDescDeleteReason.Validators[0].(func(string) error)
+	// gameprofileDescVersion is the schema descriptor for version field.
+	gameprofileDescVersion := gameprofileMixinFields0[9].Descriptor()
+	// gameprofile.DefaultVersion holds the default value on creation for the version field.
+	gameprofile.DefaultVersion = gameprofileDescVersion.Default.(int64)
+	// gameprofileDescNickname is the schema descriptor for nickname field.
+	gameprofileDescNickname := gameprofileFields[2].Descriptor()
+	// gameprofile.NicknameValidator is a validator for the "nickname" field. It is called by the builders before save.
+	gameprofile.NicknameValidator = gameprofileDescNickname.Validators[0].(func(string) error)
+	// gameprofileDescLevel is the schema descriptor for level field.
+	gameprofileDescLevel := gameprofileFields[3].Descriptor()
+	// gameprofile.DefaultLevel holds the default value on creation for the level field.
+	gameprofile.DefaultLevel = gameprofileDescLevel.Default.(int)
+	// gameprofileDescXpTotal is the schema descriptor for xp_total field.
+	gameprofileDescXpTotal := gameprofileFields[4].Descriptor()
+	// gameprofile.DefaultXpTotal holds the default value on creation for the xp_total field.
+	gameprofile.DefaultXpTotal = gameprofileDescXpTotal.Default.(int64)
+	// gameprofileDescTitleCode is the schema descriptor for title_code field.
+	gameprofileDescTitleCode := gameprofileFields[6].Descriptor()
+	// gameprofile.TitleCodeValidator is a validator for the "title_code" field. It is called by the builders before save.
+	gameprofile.TitleCodeValidator = gameprofileDescTitleCode.Validators[0].(func(string) error)
+	// gameprofileDescAvatarConfigHash is the schema descriptor for avatar_config_hash field.
+	gameprofileDescAvatarConfigHash := gameprofileFields[8].Descriptor()
+	// gameprofile.AvatarConfigHashValidator is a validator for the "avatar_config_hash" field. It is called by the builders before save.
+	gameprofile.AvatarConfigHashValidator = gameprofileDescAvatarConfigHash.Validators[0].(func(string) error)
+	// gameprofileDescLastAreaID is the schema descriptor for last_area_id field.
+	gameprofileDescLastAreaID := gameprofileFields[10].Descriptor()
+	// gameprofile.LastAreaIDValidator is a validator for the "last_area_id" field. It is called by the builders before save.
+	gameprofile.LastAreaIDValidator = gameprofileDescLastAreaID.Validators[0].(func(string) error)
+	// gameprofileDescSettings is the schema descriptor for settings field.
+	gameprofileDescSettings := gameprofileFields[11].Descriptor()
+	// gameprofile.DefaultSettings holds the default value on creation for the settings field.
+	gameprofile.DefaultSettings = gameprofileDescSettings.Default.(map[string]interface{})
+	// gameprofileDescPreferredLanguage is the schema descriptor for preferred_language field.
+	gameprofileDescPreferredLanguage := gameprofileFields[12].Descriptor()
+	// gameprofile.PreferredLanguageValidator is a validator for the "preferred_language" field. It is called by the builders before save.
+	gameprofile.PreferredLanguageValidator = gameprofileDescPreferredLanguage.Validators[0].(func(string) error)
+	// gameprofileDescID is the schema descriptor for id field.
+	gameprofileDescID := gameprofileMixinFields0[0].Descriptor()
+	// gameprofile.DefaultID holds the default value on creation for the id field.
+	gameprofile.DefaultID = gameprofileDescID.Default.(func() uuid.UUID)
 	gamesessionMixin := schema.GameSession{}.Mixin()
 	gamesessionMixinHooks0 := gamesessionMixin[0].Hooks()
 	gamesession.Hooks[0] = gamesessionMixinHooks0[0]
@@ -74,6 +270,149 @@ func init() {
 	gamesessionDescID := gamesessionMixinFields0[0].Descriptor()
 	// gamesession.DefaultID holds the default value on creation for the id field.
 	gamesession.DefaultID = gamesessionDescID.Default.(func() uuid.UUID)
+	inventoryitemMixin := schema.InventoryItem{}.Mixin()
+	inventoryitemMixinHooks0 := inventoryitemMixin[0].Hooks()
+	inventoryitem.Hooks[0] = inventoryitemMixinHooks0[0]
+	inventoryitemMixinInters0 := inventoryitemMixin[0].Interceptors()
+	inventoryitem.Interceptors[0] = inventoryitemMixinInters0[0]
+	inventoryitemMixinFields0 := inventoryitemMixin[0].Fields()
+	_ = inventoryitemMixinFields0
+	inventoryitemFields := schema.InventoryItem{}.Fields()
+	_ = inventoryitemFields
+	// inventoryitemDescCreatedAt is the schema descriptor for created_at field.
+	inventoryitemDescCreatedAt := inventoryitemMixinFields0[2].Descriptor()
+	// inventoryitem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	inventoryitem.DefaultCreatedAt = inventoryitemDescCreatedAt.Default.(func() time.Time)
+	// inventoryitemDescUpdatedAt is the schema descriptor for updated_at field.
+	inventoryitemDescUpdatedAt := inventoryitemMixinFields0[4].Descriptor()
+	// inventoryitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	inventoryitem.DefaultUpdatedAt = inventoryitemDescUpdatedAt.Default.(func() time.Time)
+	// inventoryitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	inventoryitem.UpdateDefaultUpdatedAt = inventoryitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// inventoryitemDescDeleteReason is the schema descriptor for delete_reason field.
+	inventoryitemDescDeleteReason := inventoryitemMixinFields0[8].Descriptor()
+	// inventoryitem.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	inventoryitem.DeleteReasonValidator = inventoryitemDescDeleteReason.Validators[0].(func(string) error)
+	// inventoryitemDescVersion is the schema descriptor for version field.
+	inventoryitemDescVersion := inventoryitemMixinFields0[9].Descriptor()
+	// inventoryitem.DefaultVersion holds the default value on creation for the version field.
+	inventoryitem.DefaultVersion = inventoryitemDescVersion.Default.(int64)
+	// inventoryitemDescItemID is the schema descriptor for item_id field.
+	inventoryitemDescItemID := inventoryitemFields[1].Descriptor()
+	// inventoryitem.ItemIDValidator is a validator for the "item_id" field. It is called by the builders before save.
+	inventoryitem.ItemIDValidator = inventoryitemDescItemID.Validators[0].(func(string) error)
+	// inventoryitemDescQuantity is the schema descriptor for quantity field.
+	inventoryitemDescQuantity := inventoryitemFields[3].Descriptor()
+	// inventoryitem.DefaultQuantity holds the default value on creation for the quantity field.
+	inventoryitem.DefaultQuantity = inventoryitemDescQuantity.Default.(int)
+	// inventoryitemDescAcquiredAt is the schema descriptor for acquired_at field.
+	inventoryitemDescAcquiredAt := inventoryitemFields[4].Descriptor()
+	// inventoryitem.DefaultAcquiredAt holds the default value on creation for the acquired_at field.
+	inventoryitem.DefaultAcquiredAt = inventoryitemDescAcquiredAt.Default.(func() time.Time)
+	// inventoryitemDescID is the schema descriptor for id field.
+	inventoryitemDescID := inventoryitemMixinFields0[0].Descriptor()
+	// inventoryitem.DefaultID holds the default value on creation for the id field.
+	inventoryitem.DefaultID = inventoryitemDescID.Default.(func() uuid.UUID)
+	itemdefinitionMixin := schema.ItemDefinition{}.Mixin()
+	itemdefinitionMixinHooks0 := itemdefinitionMixin[0].Hooks()
+	itemdefinition.Hooks[0] = itemdefinitionMixinHooks0[0]
+	itemdefinitionMixinInters0 := itemdefinitionMixin[0].Interceptors()
+	itemdefinition.Interceptors[0] = itemdefinitionMixinInters0[0]
+	itemdefinitionMixinFields0 := itemdefinitionMixin[0].Fields()
+	_ = itemdefinitionMixinFields0
+	itemdefinitionFields := schema.ItemDefinition{}.Fields()
+	_ = itemdefinitionFields
+	// itemdefinitionDescCreatedAt is the schema descriptor for created_at field.
+	itemdefinitionDescCreatedAt := itemdefinitionMixinFields0[1].Descriptor()
+	// itemdefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
+	itemdefinition.DefaultCreatedAt = itemdefinitionDescCreatedAt.Default.(func() time.Time)
+	// itemdefinitionDescUpdatedAt is the schema descriptor for updated_at field.
+	itemdefinitionDescUpdatedAt := itemdefinitionMixinFields0[3].Descriptor()
+	// itemdefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	itemdefinition.DefaultUpdatedAt = itemdefinitionDescUpdatedAt.Default.(func() time.Time)
+	// itemdefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	itemdefinition.UpdateDefaultUpdatedAt = itemdefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// itemdefinitionDescDeleteReason is the schema descriptor for delete_reason field.
+	itemdefinitionDescDeleteReason := itemdefinitionMixinFields0[7].Descriptor()
+	// itemdefinition.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	itemdefinition.DeleteReasonValidator = itemdefinitionDescDeleteReason.Validators[0].(func(string) error)
+	// itemdefinitionDescVersion is the schema descriptor for version field.
+	itemdefinitionDescVersion := itemdefinitionMixinFields0[8].Descriptor()
+	// itemdefinition.DefaultVersion holds the default value on creation for the version field.
+	itemdefinition.DefaultVersion = itemdefinitionDescVersion.Default.(int64)
+	// itemdefinitionDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	itemdefinitionDescLatestVersionNo := itemdefinitionFields[1].Descriptor()
+	// itemdefinition.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	itemdefinition.DefaultLatestVersionNo = itemdefinitionDescLatestVersionNo.Default.(int)
+	// itemdefinitionDescID is the schema descriptor for id field.
+	itemdefinitionDescID := itemdefinitionMixinFields0[0].Descriptor()
+	// itemdefinition.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	itemdefinition.IDValidator = func() func(string) error {
+		validators := itemdefinitionDescID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(id string) error {
+			for _, fn := range fns {
+				if err := fn(id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	itemdefinitionversionMixin := schema.ItemDefinitionVersion{}.Mixin()
+	itemdefinitionversionMixinHooks0 := itemdefinitionversionMixin[0].Hooks()
+	itemdefinitionversion.Hooks[0] = itemdefinitionversionMixinHooks0[0]
+	itemdefinitionversionMixinInters0 := itemdefinitionversionMixin[0].Interceptors()
+	itemdefinitionversion.Interceptors[0] = itemdefinitionversionMixinInters0[0]
+	itemdefinitionversionMixinFields0 := itemdefinitionversionMixin[0].Fields()
+	_ = itemdefinitionversionMixinFields0
+	itemdefinitionversionFields := schema.ItemDefinitionVersion{}.Fields()
+	_ = itemdefinitionversionFields
+	// itemdefinitionversionDescCreatedAt is the schema descriptor for created_at field.
+	itemdefinitionversionDescCreatedAt := itemdefinitionversionMixinFields0[1].Descriptor()
+	// itemdefinitionversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	itemdefinitionversion.DefaultCreatedAt = itemdefinitionversionDescCreatedAt.Default.(func() time.Time)
+	// itemdefinitionversionDescUpdatedAt is the schema descriptor for updated_at field.
+	itemdefinitionversionDescUpdatedAt := itemdefinitionversionMixinFields0[3].Descriptor()
+	// itemdefinitionversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	itemdefinitionversion.DefaultUpdatedAt = itemdefinitionversionDescUpdatedAt.Default.(func() time.Time)
+	// itemdefinitionversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	itemdefinitionversion.UpdateDefaultUpdatedAt = itemdefinitionversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// itemdefinitionversionDescDeleteReason is the schema descriptor for delete_reason field.
+	itemdefinitionversionDescDeleteReason := itemdefinitionversionMixinFields0[7].Descriptor()
+	// itemdefinitionversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	itemdefinitionversion.DeleteReasonValidator = itemdefinitionversionDescDeleteReason.Validators[0].(func(string) error)
+	// itemdefinitionversionDescVersion is the schema descriptor for version field.
+	itemdefinitionversionDescVersion := itemdefinitionversionMixinFields0[8].Descriptor()
+	// itemdefinitionversion.DefaultVersion holds the default value on creation for the version field.
+	itemdefinitionversion.DefaultVersion = itemdefinitionversionDescVersion.Default.(int64)
+	// itemdefinitionversionDescItemID is the schema descriptor for item_id field.
+	itemdefinitionversionDescItemID := itemdefinitionversionFields[0].Descriptor()
+	// itemdefinitionversion.ItemIDValidator is a validator for the "item_id" field. It is called by the builders before save.
+	itemdefinitionversion.ItemIDValidator = itemdefinitionversionDescItemID.Validators[0].(func(string) error)
+	// itemdefinitionversionDescKind is the schema descriptor for kind field.
+	itemdefinitionversionDescKind := itemdefinitionversionFields[2].Descriptor()
+	// itemdefinitionversion.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	itemdefinitionversion.KindValidator = itemdefinitionversionDescKind.Validators[0].(func(string) error)
+	// itemdefinitionversionDescEquipSlot is the schema descriptor for equip_slot field.
+	itemdefinitionversionDescEquipSlot := itemdefinitionversionFields[3].Descriptor()
+	// itemdefinitionversion.EquipSlotValidator is a validator for the "equip_slot" field. It is called by the builders before save.
+	itemdefinitionversion.EquipSlotValidator = itemdefinitionversionDescEquipSlot.Validators[0].(func(string) error)
+	// itemdefinitionversionDescRarity is the schema descriptor for rarity field.
+	itemdefinitionversionDescRarity := itemdefinitionversionFields[4].Descriptor()
+	// itemdefinitionversion.RarityValidator is a validator for the "rarity" field. It is called by the builders before save.
+	itemdefinitionversion.RarityValidator = itemdefinitionversionDescRarity.Validators[0].(func(string) error)
+	// itemdefinitionversionDescStatus is the schema descriptor for status field.
+	itemdefinitionversionDescStatus := itemdefinitionversionFields[8].Descriptor()
+	// itemdefinitionversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	itemdefinitionversion.StatusValidator = itemdefinitionversionDescStatus.Validators[0].(func(string) error)
+	// itemdefinitionversionDescID is the schema descriptor for id field.
+	itemdefinitionversionDescID := itemdefinitionversionMixinFields0[0].Descriptor()
+	// itemdefinitionversion.DefaultID holds the default value on creation for the id field.
+	itemdefinitionversion.DefaultID = itemdefinitionversionDescID.Default.(func() uuid.UUID)
 	logineventMixin := schema.LoginEvent{}.Mixin()
 	logineventMixinHooks0 := logineventMixin[0].Hooks()
 	loginevent.Hooks[0] = logineventMixinHooks0[0]
@@ -111,6 +450,39 @@ func init() {
 	logineventDescID := logineventMixinFields0[0].Descriptor()
 	// loginevent.DefaultID holds the default value on creation for the id field.
 	loginevent.DefaultID = logineventDescID.Default.(func() uuid.UUID)
+	nicknamechangeMixin := schema.NicknameChange{}.Mixin()
+	nicknamechangeMixinHooks0 := nicknamechangeMixin[0].Hooks()
+	nicknamechange.Hooks[0] = nicknamechangeMixinHooks0[0]
+	nicknamechangeMixinInters0 := nicknamechangeMixin[0].Interceptors()
+	nicknamechange.Interceptors[0] = nicknamechangeMixinInters0[0]
+	nicknamechangeMixinFields0 := nicknamechangeMixin[0].Fields()
+	_ = nicknamechangeMixinFields0
+	nicknamechangeFields := schema.NicknameChange{}.Fields()
+	_ = nicknamechangeFields
+	// nicknamechangeDescCreatedAt is the schema descriptor for created_at field.
+	nicknamechangeDescCreatedAt := nicknamechangeMixinFields0[2].Descriptor()
+	// nicknamechange.DefaultCreatedAt holds the default value on creation for the created_at field.
+	nicknamechange.DefaultCreatedAt = nicknamechangeDescCreatedAt.Default.(func() time.Time)
+	// nicknamechangeDescOldNickname is the schema descriptor for old_nickname field.
+	nicknamechangeDescOldNickname := nicknamechangeFields[1].Descriptor()
+	// nicknamechange.OldNicknameValidator is a validator for the "old_nickname" field. It is called by the builders before save.
+	nicknamechange.OldNicknameValidator = nicknamechangeDescOldNickname.Validators[0].(func(string) error)
+	// nicknamechangeDescNewNickname is the schema descriptor for new_nickname field.
+	nicknamechangeDescNewNickname := nicknamechangeFields[2].Descriptor()
+	// nicknamechange.NewNicknameValidator is a validator for the "new_nickname" field. It is called by the builders before save.
+	nicknamechange.NewNicknameValidator = nicknamechangeDescNewNickname.Validators[0].(func(string) error)
+	// nicknamechangeDescReason is the schema descriptor for reason field.
+	nicknamechangeDescReason := nicknamechangeFields[3].Descriptor()
+	// nicknamechange.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	nicknamechange.ReasonValidator = nicknamechangeDescReason.Validators[0].(func(string) error)
+	// nicknamechangeDescChangedAt is the schema descriptor for changed_at field.
+	nicknamechangeDescChangedAt := nicknamechangeFields[5].Descriptor()
+	// nicknamechange.DefaultChangedAt holds the default value on creation for the changed_at field.
+	nicknamechange.DefaultChangedAt = nicknamechangeDescChangedAt.Default.(func() time.Time)
+	// nicknamechangeDescID is the schema descriptor for id field.
+	nicknamechangeDescID := nicknamechangeMixinFields0[0].Descriptor()
+	// nicknamechange.DefaultID holds the default value on creation for the id field.
+	nicknamechange.DefaultID = nicknamechangeDescID.Default.(func() uuid.UUID)
 }
 
 const (

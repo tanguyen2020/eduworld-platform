@@ -9,6 +9,152 @@ import (
 )
 
 var (
+	// AvatarPresetsColumns holds the columns for the "avatar_presets" table.
+	AvatarPresetsColumns = []*schema.Column{
+		{Name: "avatar_preset_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "slot", Type: field.TypeInt16},
+		{Name: "name", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "avatar_config", Type: field.TypeJSON},
+	}
+	// AvatarPresetsTable holds the schema information for the "avatar_presets" table.
+	AvatarPresetsTable = &schema.Table{
+		Name:       "avatar_presets",
+		Columns:    AvatarPresetsColumns,
+		PrimaryKey: []*schema.Column{AvatarPresetsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "avatar_presets_slot_uq",
+				Unique:  true,
+				Columns: []*schema.Column{AvatarPresetsColumns[10], AvatarPresetsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// CharacterCatalogsColumns holds the columns for the "character_catalogs" table.
+	CharacterCatalogsColumns = []*schema.Column{
+		{Name: "catalog_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// CharacterCatalogsTable holds the schema information for the "character_catalogs" table.
+	CharacterCatalogsTable = &schema.Table{
+		Name:       "character_catalogs",
+		Columns:    CharacterCatalogsColumns,
+		PrimaryKey: []*schema.Column{CharacterCatalogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "character_catalogs_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CharacterCatalogsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// CharacterCatalogVersionsColumns holds the columns for the "character_catalog_versions" table.
+	CharacterCatalogVersionsColumns = []*schema.Column{
+		{Name: "catalog_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "catalog_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+	}
+	// CharacterCatalogVersionsTable holds the schema information for the "character_catalog_versions" table.
+	CharacterCatalogVersionsTable = &schema.Table{
+		Name:       "character_catalog_versions",
+		Columns:    CharacterCatalogVersionsColumns,
+		PrimaryKey: []*schema.Column{CharacterCatalogVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "character_catalog_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CharacterCatalogVersionsColumns[9], CharacterCatalogVersionsColumns[10]},
+			},
+		},
+	}
+	// GameProfilesColumns holds the columns for the "game_profiles" table.
+	GameProfilesColumns = []*schema.Column{
+		{Name: "game_profile_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "nickname", Type: field.TypeString, Nullable: true, Size: 32},
+		{Name: "level", Type: field.TypeInt, Default: 1},
+		{Name: "xp_total", Type: field.TypeInt64, Default: 0},
+		{Name: "curve_version", Type: field.TypeInt, Nullable: true},
+		{Name: "title_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "avatar_config", Type: field.TypeJSON, Nullable: true},
+		{Name: "avatar_config_hash", Type: field.TypeString, Nullable: true, Size: 128},
+		{Name: "avatar_created_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_area_id", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "settings", Type: field.TypeJSON},
+		{Name: "preferred_language", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "last_game_login_at", Type: field.TypeTime, Nullable: true},
+	}
+	// GameProfilesTable holds the schema information for the "game_profiles" table.
+	GameProfilesTable = &schema.Table{
+		Name:       "game_profiles",
+		Columns:    GameProfilesColumns,
+		PrimaryKey: []*schema.Column{GameProfilesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "game_profiles_student_uq",
+				Unique:  true,
+				Columns: []*schema.Column{GameProfilesColumns[1], GameProfilesColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "game_profiles_tenant_school_idx",
+				Unique:  false,
+				Columns: []*schema.Column{GameProfilesColumns[1], GameProfilesColumns[11]},
+			},
+		},
+	}
 	// GameSessionsColumns holds the columns for the "game_sessions" table.
 	GameSessionsColumns = []*schema.Column{
 		{Name: "game_session_id", Type: field.TypeUUID},
@@ -58,6 +204,95 @@ var (
 			},
 		},
 	}
+	// InventoryItemsColumns holds the columns for the "inventory_items" table.
+	InventoryItemsColumns = []*schema.Column{
+		{Name: "inventory_item_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "item_id", Type: field.TypeString, Size: 64},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "quantity", Type: field.TypeInt, Default: 1},
+		{Name: "acquired_at", Type: field.TypeTime},
+		{Name: "reward_grant_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// InventoryItemsTable holds the schema information for the "inventory_items" table.
+	InventoryItemsTable = &schema.Table{
+		Name:       "inventory_items",
+		Columns:    InventoryItemsColumns,
+		PrimaryKey: []*schema.Column{InventoryItemsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "inventory_items_student_item_uq",
+				Unique:  true,
+				Columns: []*schema.Column{InventoryItemsColumns[10], InventoryItemsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ItemDefinitionsColumns holds the columns for the "item_definitions" table.
+	ItemDefinitionsColumns = []*schema.Column{
+		{Name: "item_id", Type: field.TypeString, Size: 64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// ItemDefinitionsTable holds the schema information for the "item_definitions" table.
+	ItemDefinitionsTable = &schema.Table{
+		Name:       "item_definitions",
+		Columns:    ItemDefinitionsColumns,
+		PrimaryKey: []*schema.Column{ItemDefinitionsColumns[0]},
+	}
+	// ItemDefinitionVersionsColumns holds the columns for the "item_definition_versions" table.
+	ItemDefinitionVersionsColumns = []*schema.Column{
+		{Name: "item_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "item_id", Type: field.TypeString, Size: 64},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "equip_slot", Type: field.TypeString, Size: 64},
+		{Name: "rarity", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeJSON},
+		{Name: "sources", Type: field.TypeJSON},
+		{Name: "asset_refs", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 64},
+	}
+	// ItemDefinitionVersionsTable holds the schema information for the "item_definition_versions" table.
+	ItemDefinitionVersionsTable = &schema.Table{
+		Name:       "item_definition_versions",
+		Columns:    ItemDefinitionVersionsColumns,
+		PrimaryKey: []*schema.Column{ItemDefinitionVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "item_definition_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ItemDefinitionVersionsColumns[9], ItemDefinitionVersionsColumns[10]},
+			},
+		},
+	}
 	// LoginEventsColumns holds the columns for the "login_events" table.
 	LoginEventsColumns = []*schema.Column{
 		{Name: "login_event_id", Type: field.TypeUUID},
@@ -82,18 +317,76 @@ var (
 		Columns:    LoginEventsColumns,
 		PrimaryKey: []*schema.Column{LoginEventsColumns[0]},
 	}
+	// NicknameChangesColumns holds the columns for the "nickname_changes" table.
+	NicknameChangesColumns = []*schema.Column{
+		{Name: "nickname_change_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "old_nickname", Type: field.TypeString, Nullable: true, Size: 32},
+		{Name: "new_nickname", Type: field.TypeString, Size: 32},
+		{Name: "reason", Type: field.TypeString, Size: 64},
+		{Name: "changed_by", Type: field.TypeUUID},
+		{Name: "changed_at", Type: field.TypeTime},
+	}
+	// NicknameChangesTable holds the schema information for the "nickname_changes" table.
+	NicknameChangesTable = &schema.Table{
+		Name:       "nickname_changes",
+		Columns:    NicknameChangesColumns,
+		PrimaryKey: []*schema.Column{NicknameChangesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "nickname_changes_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{NicknameChangesColumns[1], NicknameChangesColumns[4], NicknameChangesColumns[9]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AvatarPresetsTable,
+		CharacterCatalogsTable,
+		CharacterCatalogVersionsTable,
+		GameProfilesTable,
 		GameSessionsTable,
+		InventoryItemsTable,
+		ItemDefinitionsTable,
+		ItemDefinitionVersionsTable,
 		LoginEventsTable,
+		NicknameChangesTable,
 	}
 )
 
 func init() {
+	AvatarPresetsTable.Annotation = &entsql.Annotation{
+		Table: "avatar_presets",
+	}
+	CharacterCatalogsTable.Annotation = &entsql.Annotation{
+		Table: "character_catalogs",
+	}
+	CharacterCatalogVersionsTable.Annotation = &entsql.Annotation{
+		Table: "character_catalog_versions",
+	}
+	GameProfilesTable.Annotation = &entsql.Annotation{
+		Table: "game_profiles",
+	}
 	GameSessionsTable.Annotation = &entsql.Annotation{
 		Table: "game_sessions",
 	}
+	InventoryItemsTable.Annotation = &entsql.Annotation{
+		Table: "inventory_items",
+	}
+	ItemDefinitionsTable.Annotation = &entsql.Annotation{
+		Table: "item_definitions",
+	}
+	ItemDefinitionVersionsTable.Annotation = &entsql.Annotation{
+		Table: "item_definition_versions",
+	}
 	LoginEventsTable.Annotation = &entsql.Annotation{
 		Table: "login_events",
+	}
+	NicknameChangesTable.Annotation = &entsql.Annotation{
+		Table: "nickname_changes",
 	}
 }

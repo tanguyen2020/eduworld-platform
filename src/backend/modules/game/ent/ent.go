@@ -12,8 +12,16 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/inventoryitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinitionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -74,8 +82,16 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			gamesession.Table: gamesession.ValidColumn,
-			loginevent.Table:  loginevent.ValidColumn,
+			avatarpreset.Table:            avatarpreset.ValidColumn,
+			charactercatalog.Table:        charactercatalog.ValidColumn,
+			charactercatalogversion.Table: charactercatalogversion.ValidColumn,
+			gameprofile.Table:             gameprofile.ValidColumn,
+			gamesession.Table:             gamesession.ValidColumn,
+			inventoryitem.Table:           inventoryitem.ValidColumn,
+			itemdefinition.Table:          itemdefinition.ValidColumn,
+			itemdefinitionversion.Table:   itemdefinitionversion.ValidColumn,
+			loginevent.Table:              loginevent.ValidColumn,
+			nicknamechange.Table:          nicknamechange.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

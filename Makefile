@@ -98,7 +98,7 @@ build: ## Build every binary into ./bin with build metadata
 	  CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS) -X $(GOPKG)/pkg/buildinfo.Binary=$$b" -o $(GOBIN)/$$b ./cmd/$$b; done
 
 # ---------- database ----------
-.PHONY: migrate migrate-diff migrate-lint seed seed-identity seed-learning seed-check db-privileges db-backup db-restore
+.PHONY: migrate migrate-diff migrate-lint seed seed-identity seed-learning seed-game seed-check db-privileges db-backup db-restore
 migrate: $(addprefix migrate-,$(MODULES)) ## Apply Atlas migrations to every module database
 
 migrate-%: ## Apply Atlas migrations of one module (role <module>_migrator)
@@ -109,13 +109,16 @@ migrate-%: ## Apply Atlas migrations of one module (role <module>_migrator)
 SEED_ENV = EW_ENV=local EW_OIDC_ISSUERS=$${EW_OIDC_ISSUERS:-http://keycloak:8180/realms/eduworld} \
   EW_KC_ADMIN_BASE_URL=$${EW_KC_ADMIN_BASE_URL:-http://localhost:8180/admin/realms/eduworld} \
   EW_KC_ADMIN_CLIENT_ID=svc-identity EW_KC_ADMIN_CLIENT_SECRET=$${KC_SVC_IDENTITY_SECRET:-$(PW)}
-seed: keycloak-import migrate seed-identity seed-learning ## Dev seed: realm import → migrate → identity → learning; then make up-app && make seed-check
+seed: keycloak-import migrate seed-identity seed-learning seed-game ## Dev seed: realm import → migrate → identity → learning → game; then make up-app && make seed-check
 
 seed-identity: ## Identity dev seed through its use cases (modules/identity/seed: bootstrap sa.admin, tenants, schools, SIS csv students, staff, roles)
 	$(SEED_ENV) EW_DB_IDENTITY_DSN=$(call dsn,identity,app) EW_DB_IDENTITY_PLATFORM_DSN=$(call dsn,identity,platform) $(GO) run ./modules/identity/cmd/seed
 
 seed-learning: ## Learning dev seed (subjects + curriculum GDPT2018_SAMPLE through the import use case, F021)
 	EW_DB_LEARNING_DSN=$(call dsn,learning,app) EW_DB_LEARNING_PLATFORM_DSN=$(call dsn,learning,platform) $(GO) run ./modules/learning/cmd/seed
+
+seed-game: ## Game dev seed (character catalog v1 + default item definitions through the publish use case, F070)
+	EW_DB_GAME_DSN=$(call dsn,game,app) EW_DB_GAME_PLATFORM_DSN=$(call dsn,game,platform) $(GO) run ./modules/game/cmd/seed
 
 seed-check: ## Wait until the worker projected every seeded student into ref.students of learning and game (after make up-app)
 	bash scripts/dev/seed-check.sh

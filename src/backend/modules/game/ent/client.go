@@ -15,8 +15,16 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/inventoryitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinitionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/internal"
 )
@@ -26,10 +34,26 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// AvatarPreset is the client for interacting with the AvatarPreset builders.
+	AvatarPreset *AvatarPresetClient
+	// CharacterCatalog is the client for interacting with the CharacterCatalog builders.
+	CharacterCatalog *CharacterCatalogClient
+	// CharacterCatalogVersion is the client for interacting with the CharacterCatalogVersion builders.
+	CharacterCatalogVersion *CharacterCatalogVersionClient
+	// GameProfile is the client for interacting with the GameProfile builders.
+	GameProfile *GameProfileClient
 	// GameSession is the client for interacting with the GameSession builders.
 	GameSession *GameSessionClient
+	// InventoryItem is the client for interacting with the InventoryItem builders.
+	InventoryItem *InventoryItemClient
+	// ItemDefinition is the client for interacting with the ItemDefinition builders.
+	ItemDefinition *ItemDefinitionClient
+	// ItemDefinitionVersion is the client for interacting with the ItemDefinitionVersion builders.
+	ItemDefinitionVersion *ItemDefinitionVersionClient
 	// LoginEvent is the client for interacting with the LoginEvent builders.
 	LoginEvent *LoginEventClient
+	// NicknameChange is the client for interacting with the NicknameChange builders.
+	NicknameChange *NicknameChangeClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -41,8 +65,16 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.AvatarPreset = NewAvatarPresetClient(c.config)
+	c.CharacterCatalog = NewCharacterCatalogClient(c.config)
+	c.CharacterCatalogVersion = NewCharacterCatalogVersionClient(c.config)
+	c.GameProfile = NewGameProfileClient(c.config)
 	c.GameSession = NewGameSessionClient(c.config)
+	c.InventoryItem = NewInventoryItemClient(c.config)
+	c.ItemDefinition = NewItemDefinitionClient(c.config)
+	c.ItemDefinitionVersion = NewItemDefinitionVersionClient(c.config)
 	c.LoginEvent = NewLoginEventClient(c.config)
+	c.NicknameChange = NewNicknameChangeClient(c.config)
 }
 
 type (
@@ -136,10 +168,18 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:         ctx,
-		config:      cfg,
-		GameSession: NewGameSessionClient(cfg),
-		LoginEvent:  NewLoginEventClient(cfg),
+		ctx:                     ctx,
+		config:                  cfg,
+		AvatarPreset:            NewAvatarPresetClient(cfg),
+		CharacterCatalog:        NewCharacterCatalogClient(cfg),
+		CharacterCatalogVersion: NewCharacterCatalogVersionClient(cfg),
+		GameProfile:             NewGameProfileClient(cfg),
+		GameSession:             NewGameSessionClient(cfg),
+		InventoryItem:           NewInventoryItemClient(cfg),
+		ItemDefinition:          NewItemDefinitionClient(cfg),
+		ItemDefinitionVersion:   NewItemDefinitionVersionClient(cfg),
+		LoginEvent:              NewLoginEventClient(cfg),
+		NicknameChange:          NewNicknameChangeClient(cfg),
 	}, nil
 }
 
@@ -157,17 +197,25 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:         ctx,
-		config:      cfg,
-		GameSession: NewGameSessionClient(cfg),
-		LoginEvent:  NewLoginEventClient(cfg),
+		ctx:                     ctx,
+		config:                  cfg,
+		AvatarPreset:            NewAvatarPresetClient(cfg),
+		CharacterCatalog:        NewCharacterCatalogClient(cfg),
+		CharacterCatalogVersion: NewCharacterCatalogVersionClient(cfg),
+		GameProfile:             NewGameProfileClient(cfg),
+		GameSession:             NewGameSessionClient(cfg),
+		InventoryItem:           NewInventoryItemClient(cfg),
+		ItemDefinition:          NewItemDefinitionClient(cfg),
+		ItemDefinitionVersion:   NewItemDefinitionVersionClient(cfg),
+		LoginEvent:              NewLoginEventClient(cfg),
+		NicknameChange:          NewNicknameChangeClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		GameSession.
+//		AvatarPreset.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -189,26 +237,592 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.GameSession.Use(hooks...)
-	c.LoginEvent.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.AvatarPreset, c.CharacterCatalog, c.CharacterCatalogVersion, c.GameProfile,
+		c.GameSession, c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion,
+		c.LoginEvent, c.NicknameChange,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.GameSession.Intercept(interceptors...)
-	c.LoginEvent.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.AvatarPreset, c.CharacterCatalog, c.CharacterCatalogVersion, c.GameProfile,
+		c.GameSession, c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion,
+		c.LoginEvent, c.NicknameChange,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AvatarPresetMutation:
+		return c.AvatarPreset.mutate(ctx, m)
+	case *CharacterCatalogMutation:
+		return c.CharacterCatalog.mutate(ctx, m)
+	case *CharacterCatalogVersionMutation:
+		return c.CharacterCatalogVersion.mutate(ctx, m)
+	case *GameProfileMutation:
+		return c.GameProfile.mutate(ctx, m)
 	case *GameSessionMutation:
 		return c.GameSession.mutate(ctx, m)
+	case *InventoryItemMutation:
+		return c.InventoryItem.mutate(ctx, m)
+	case *ItemDefinitionMutation:
+		return c.ItemDefinition.mutate(ctx, m)
+	case *ItemDefinitionVersionMutation:
+		return c.ItemDefinitionVersion.mutate(ctx, m)
 	case *LoginEventMutation:
 		return c.LoginEvent.mutate(ctx, m)
+	case *NicknameChangeMutation:
+		return c.NicknameChange.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AvatarPresetClient is a client for the AvatarPreset schema.
+type AvatarPresetClient struct {
+	config
+}
+
+// NewAvatarPresetClient returns a client for the AvatarPreset from the given config.
+func NewAvatarPresetClient(c config) *AvatarPresetClient {
+	return &AvatarPresetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `avatarpreset.Hooks(f(g(h())))`.
+func (c *AvatarPresetClient) Use(hooks ...Hook) {
+	c.hooks.AvatarPreset = append(c.hooks.AvatarPreset, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `avatarpreset.Intercept(f(g(h())))`.
+func (c *AvatarPresetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AvatarPreset = append(c.inters.AvatarPreset, interceptors...)
+}
+
+// Create returns a builder for creating a AvatarPreset entity.
+func (c *AvatarPresetClient) Create() *AvatarPresetCreate {
+	mutation := newAvatarPresetMutation(c.config, OpCreate)
+	return &AvatarPresetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AvatarPreset entities.
+func (c *AvatarPresetClient) CreateBulk(builders ...*AvatarPresetCreate) *AvatarPresetCreateBulk {
+	return &AvatarPresetCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AvatarPresetClient) MapCreateBulk(slice any, setFunc func(*AvatarPresetCreate, int)) *AvatarPresetCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AvatarPresetCreateBulk{err: fmt.Errorf("calling to AvatarPresetClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AvatarPresetCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AvatarPresetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AvatarPreset.
+func (c *AvatarPresetClient) Update() *AvatarPresetUpdate {
+	mutation := newAvatarPresetMutation(c.config, OpUpdate)
+	return &AvatarPresetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AvatarPresetClient) UpdateOne(_m *AvatarPreset) *AvatarPresetUpdateOne {
+	mutation := newAvatarPresetMutation(c.config, OpUpdateOne, withAvatarPreset(_m))
+	return &AvatarPresetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AvatarPresetClient) UpdateOneID(id uuid.UUID) *AvatarPresetUpdateOne {
+	mutation := newAvatarPresetMutation(c.config, OpUpdateOne, withAvatarPresetID(id))
+	return &AvatarPresetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AvatarPreset.
+func (c *AvatarPresetClient) Delete() *AvatarPresetDelete {
+	mutation := newAvatarPresetMutation(c.config, OpDelete)
+	return &AvatarPresetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AvatarPresetClient) DeleteOne(_m *AvatarPreset) *AvatarPresetDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AvatarPresetClient) DeleteOneID(id uuid.UUID) *AvatarPresetDeleteOne {
+	builder := c.Delete().Where(avatarpreset.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AvatarPresetDeleteOne{builder}
+}
+
+// Query returns a query builder for AvatarPreset.
+func (c *AvatarPresetClient) Query() *AvatarPresetQuery {
+	return &AvatarPresetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAvatarPreset},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AvatarPreset entity by its id.
+func (c *AvatarPresetClient) Get(ctx context.Context, id uuid.UUID) (*AvatarPreset, error) {
+	return c.Query().Where(avatarpreset.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AvatarPresetClient) GetX(ctx context.Context, id uuid.UUID) *AvatarPreset {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AvatarPresetClient) Hooks() []Hook {
+	hooks := c.hooks.AvatarPreset
+	return append(hooks[:len(hooks):len(hooks)], avatarpreset.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *AvatarPresetClient) Interceptors() []Interceptor {
+	inters := c.inters.AvatarPreset
+	return append(inters[:len(inters):len(inters)], avatarpreset.Interceptors[:]...)
+}
+
+func (c *AvatarPresetClient) mutate(ctx context.Context, m *AvatarPresetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AvatarPresetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AvatarPresetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AvatarPresetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AvatarPresetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AvatarPreset mutation op: %q", m.Op())
+	}
+}
+
+// CharacterCatalogClient is a client for the CharacterCatalog schema.
+type CharacterCatalogClient struct {
+	config
+}
+
+// NewCharacterCatalogClient returns a client for the CharacterCatalog from the given config.
+func NewCharacterCatalogClient(c config) *CharacterCatalogClient {
+	return &CharacterCatalogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `charactercatalog.Hooks(f(g(h())))`.
+func (c *CharacterCatalogClient) Use(hooks ...Hook) {
+	c.hooks.CharacterCatalog = append(c.hooks.CharacterCatalog, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `charactercatalog.Intercept(f(g(h())))`.
+func (c *CharacterCatalogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CharacterCatalog = append(c.inters.CharacterCatalog, interceptors...)
+}
+
+// Create returns a builder for creating a CharacterCatalog entity.
+func (c *CharacterCatalogClient) Create() *CharacterCatalogCreate {
+	mutation := newCharacterCatalogMutation(c.config, OpCreate)
+	return &CharacterCatalogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CharacterCatalog entities.
+func (c *CharacterCatalogClient) CreateBulk(builders ...*CharacterCatalogCreate) *CharacterCatalogCreateBulk {
+	return &CharacterCatalogCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CharacterCatalogClient) MapCreateBulk(slice any, setFunc func(*CharacterCatalogCreate, int)) *CharacterCatalogCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CharacterCatalogCreateBulk{err: fmt.Errorf("calling to CharacterCatalogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CharacterCatalogCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CharacterCatalogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CharacterCatalog.
+func (c *CharacterCatalogClient) Update() *CharacterCatalogUpdate {
+	mutation := newCharacterCatalogMutation(c.config, OpUpdate)
+	return &CharacterCatalogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CharacterCatalogClient) UpdateOne(_m *CharacterCatalog) *CharacterCatalogUpdateOne {
+	mutation := newCharacterCatalogMutation(c.config, OpUpdateOne, withCharacterCatalog(_m))
+	return &CharacterCatalogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CharacterCatalogClient) UpdateOneID(id uuid.UUID) *CharacterCatalogUpdateOne {
+	mutation := newCharacterCatalogMutation(c.config, OpUpdateOne, withCharacterCatalogID(id))
+	return &CharacterCatalogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CharacterCatalog.
+func (c *CharacterCatalogClient) Delete() *CharacterCatalogDelete {
+	mutation := newCharacterCatalogMutation(c.config, OpDelete)
+	return &CharacterCatalogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CharacterCatalogClient) DeleteOne(_m *CharacterCatalog) *CharacterCatalogDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CharacterCatalogClient) DeleteOneID(id uuid.UUID) *CharacterCatalogDeleteOne {
+	builder := c.Delete().Where(charactercatalog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CharacterCatalogDeleteOne{builder}
+}
+
+// Query returns a query builder for CharacterCatalog.
+func (c *CharacterCatalogClient) Query() *CharacterCatalogQuery {
+	return &CharacterCatalogQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCharacterCatalog},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CharacterCatalog entity by its id.
+func (c *CharacterCatalogClient) Get(ctx context.Context, id uuid.UUID) (*CharacterCatalog, error) {
+	return c.Query().Where(charactercatalog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CharacterCatalogClient) GetX(ctx context.Context, id uuid.UUID) *CharacterCatalog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CharacterCatalogClient) Hooks() []Hook {
+	hooks := c.hooks.CharacterCatalog
+	return append(hooks[:len(hooks):len(hooks)], charactercatalog.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CharacterCatalogClient) Interceptors() []Interceptor {
+	inters := c.inters.CharacterCatalog
+	return append(inters[:len(inters):len(inters)], charactercatalog.Interceptors[:]...)
+}
+
+func (c *CharacterCatalogClient) mutate(ctx context.Context, m *CharacterCatalogMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CharacterCatalogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CharacterCatalogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CharacterCatalogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CharacterCatalogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CharacterCatalog mutation op: %q", m.Op())
+	}
+}
+
+// CharacterCatalogVersionClient is a client for the CharacterCatalogVersion schema.
+type CharacterCatalogVersionClient struct {
+	config
+}
+
+// NewCharacterCatalogVersionClient returns a client for the CharacterCatalogVersion from the given config.
+func NewCharacterCatalogVersionClient(c config) *CharacterCatalogVersionClient {
+	return &CharacterCatalogVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `charactercatalogversion.Hooks(f(g(h())))`.
+func (c *CharacterCatalogVersionClient) Use(hooks ...Hook) {
+	c.hooks.CharacterCatalogVersion = append(c.hooks.CharacterCatalogVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `charactercatalogversion.Intercept(f(g(h())))`.
+func (c *CharacterCatalogVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CharacterCatalogVersion = append(c.inters.CharacterCatalogVersion, interceptors...)
+}
+
+// Create returns a builder for creating a CharacterCatalogVersion entity.
+func (c *CharacterCatalogVersionClient) Create() *CharacterCatalogVersionCreate {
+	mutation := newCharacterCatalogVersionMutation(c.config, OpCreate)
+	return &CharacterCatalogVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CharacterCatalogVersion entities.
+func (c *CharacterCatalogVersionClient) CreateBulk(builders ...*CharacterCatalogVersionCreate) *CharacterCatalogVersionCreateBulk {
+	return &CharacterCatalogVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CharacterCatalogVersionClient) MapCreateBulk(slice any, setFunc func(*CharacterCatalogVersionCreate, int)) *CharacterCatalogVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CharacterCatalogVersionCreateBulk{err: fmt.Errorf("calling to CharacterCatalogVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CharacterCatalogVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CharacterCatalogVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CharacterCatalogVersion.
+func (c *CharacterCatalogVersionClient) Update() *CharacterCatalogVersionUpdate {
+	mutation := newCharacterCatalogVersionMutation(c.config, OpUpdate)
+	return &CharacterCatalogVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CharacterCatalogVersionClient) UpdateOne(_m *CharacterCatalogVersion) *CharacterCatalogVersionUpdateOne {
+	mutation := newCharacterCatalogVersionMutation(c.config, OpUpdateOne, withCharacterCatalogVersion(_m))
+	return &CharacterCatalogVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CharacterCatalogVersionClient) UpdateOneID(id uuid.UUID) *CharacterCatalogVersionUpdateOne {
+	mutation := newCharacterCatalogVersionMutation(c.config, OpUpdateOne, withCharacterCatalogVersionID(id))
+	return &CharacterCatalogVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CharacterCatalogVersion.
+func (c *CharacterCatalogVersionClient) Delete() *CharacterCatalogVersionDelete {
+	mutation := newCharacterCatalogVersionMutation(c.config, OpDelete)
+	return &CharacterCatalogVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CharacterCatalogVersionClient) DeleteOne(_m *CharacterCatalogVersion) *CharacterCatalogVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CharacterCatalogVersionClient) DeleteOneID(id uuid.UUID) *CharacterCatalogVersionDeleteOne {
+	builder := c.Delete().Where(charactercatalogversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CharacterCatalogVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for CharacterCatalogVersion.
+func (c *CharacterCatalogVersionClient) Query() *CharacterCatalogVersionQuery {
+	return &CharacterCatalogVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCharacterCatalogVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CharacterCatalogVersion entity by its id.
+func (c *CharacterCatalogVersionClient) Get(ctx context.Context, id uuid.UUID) (*CharacterCatalogVersion, error) {
+	return c.Query().Where(charactercatalogversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CharacterCatalogVersionClient) GetX(ctx context.Context, id uuid.UUID) *CharacterCatalogVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CharacterCatalogVersionClient) Hooks() []Hook {
+	hooks := c.hooks.CharacterCatalogVersion
+	return append(hooks[:len(hooks):len(hooks)], charactercatalogversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CharacterCatalogVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.CharacterCatalogVersion
+	return append(inters[:len(inters):len(inters)], charactercatalogversion.Interceptors[:]...)
+}
+
+func (c *CharacterCatalogVersionClient) mutate(ctx context.Context, m *CharacterCatalogVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CharacterCatalogVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CharacterCatalogVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CharacterCatalogVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CharacterCatalogVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CharacterCatalogVersion mutation op: %q", m.Op())
+	}
+}
+
+// GameProfileClient is a client for the GameProfile schema.
+type GameProfileClient struct {
+	config
+}
+
+// NewGameProfileClient returns a client for the GameProfile from the given config.
+func NewGameProfileClient(c config) *GameProfileClient {
+	return &GameProfileClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `gameprofile.Hooks(f(g(h())))`.
+func (c *GameProfileClient) Use(hooks ...Hook) {
+	c.hooks.GameProfile = append(c.hooks.GameProfile, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `gameprofile.Intercept(f(g(h())))`.
+func (c *GameProfileClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GameProfile = append(c.inters.GameProfile, interceptors...)
+}
+
+// Create returns a builder for creating a GameProfile entity.
+func (c *GameProfileClient) Create() *GameProfileCreate {
+	mutation := newGameProfileMutation(c.config, OpCreate)
+	return &GameProfileCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GameProfile entities.
+func (c *GameProfileClient) CreateBulk(builders ...*GameProfileCreate) *GameProfileCreateBulk {
+	return &GameProfileCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GameProfileClient) MapCreateBulk(slice any, setFunc func(*GameProfileCreate, int)) *GameProfileCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GameProfileCreateBulk{err: fmt.Errorf("calling to GameProfileClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GameProfileCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GameProfileCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GameProfile.
+func (c *GameProfileClient) Update() *GameProfileUpdate {
+	mutation := newGameProfileMutation(c.config, OpUpdate)
+	return &GameProfileUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GameProfileClient) UpdateOne(_m *GameProfile) *GameProfileUpdateOne {
+	mutation := newGameProfileMutation(c.config, OpUpdateOne, withGameProfile(_m))
+	return &GameProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GameProfileClient) UpdateOneID(id uuid.UUID) *GameProfileUpdateOne {
+	mutation := newGameProfileMutation(c.config, OpUpdateOne, withGameProfileID(id))
+	return &GameProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GameProfile.
+func (c *GameProfileClient) Delete() *GameProfileDelete {
+	mutation := newGameProfileMutation(c.config, OpDelete)
+	return &GameProfileDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GameProfileClient) DeleteOne(_m *GameProfile) *GameProfileDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GameProfileClient) DeleteOneID(id uuid.UUID) *GameProfileDeleteOne {
+	builder := c.Delete().Where(gameprofile.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GameProfileDeleteOne{builder}
+}
+
+// Query returns a query builder for GameProfile.
+func (c *GameProfileClient) Query() *GameProfileQuery {
+	return &GameProfileQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGameProfile},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GameProfile entity by its id.
+func (c *GameProfileClient) Get(ctx context.Context, id uuid.UUID) (*GameProfile, error) {
+	return c.Query().Where(gameprofile.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GameProfileClient) GetX(ctx context.Context, id uuid.UUID) *GameProfile {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GameProfileClient) Hooks() []Hook {
+	hooks := c.hooks.GameProfile
+	return append(hooks[:len(hooks):len(hooks)], gameprofile.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *GameProfileClient) Interceptors() []Interceptor {
+	inters := c.inters.GameProfile
+	return append(inters[:len(inters):len(inters)], gameprofile.Interceptors[:]...)
+}
+
+func (c *GameProfileClient) mutate(ctx context.Context, m *GameProfileMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GameProfileCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GameProfileUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GameProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GameProfileDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GameProfile mutation op: %q", m.Op())
 	}
 }
 
@@ -347,6 +961,411 @@ func (c *GameSessionClient) mutate(ctx context.Context, m *GameSessionMutation) 
 	}
 }
 
+// InventoryItemClient is a client for the InventoryItem schema.
+type InventoryItemClient struct {
+	config
+}
+
+// NewInventoryItemClient returns a client for the InventoryItem from the given config.
+func NewInventoryItemClient(c config) *InventoryItemClient {
+	return &InventoryItemClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `inventoryitem.Hooks(f(g(h())))`.
+func (c *InventoryItemClient) Use(hooks ...Hook) {
+	c.hooks.InventoryItem = append(c.hooks.InventoryItem, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `inventoryitem.Intercept(f(g(h())))`.
+func (c *InventoryItemClient) Intercept(interceptors ...Interceptor) {
+	c.inters.InventoryItem = append(c.inters.InventoryItem, interceptors...)
+}
+
+// Create returns a builder for creating a InventoryItem entity.
+func (c *InventoryItemClient) Create() *InventoryItemCreate {
+	mutation := newInventoryItemMutation(c.config, OpCreate)
+	return &InventoryItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of InventoryItem entities.
+func (c *InventoryItemClient) CreateBulk(builders ...*InventoryItemCreate) *InventoryItemCreateBulk {
+	return &InventoryItemCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *InventoryItemClient) MapCreateBulk(slice any, setFunc func(*InventoryItemCreate, int)) *InventoryItemCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &InventoryItemCreateBulk{err: fmt.Errorf("calling to InventoryItemClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*InventoryItemCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &InventoryItemCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for InventoryItem.
+func (c *InventoryItemClient) Update() *InventoryItemUpdate {
+	mutation := newInventoryItemMutation(c.config, OpUpdate)
+	return &InventoryItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *InventoryItemClient) UpdateOne(_m *InventoryItem) *InventoryItemUpdateOne {
+	mutation := newInventoryItemMutation(c.config, OpUpdateOne, withInventoryItem(_m))
+	return &InventoryItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *InventoryItemClient) UpdateOneID(id uuid.UUID) *InventoryItemUpdateOne {
+	mutation := newInventoryItemMutation(c.config, OpUpdateOne, withInventoryItemID(id))
+	return &InventoryItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for InventoryItem.
+func (c *InventoryItemClient) Delete() *InventoryItemDelete {
+	mutation := newInventoryItemMutation(c.config, OpDelete)
+	return &InventoryItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *InventoryItemClient) DeleteOne(_m *InventoryItem) *InventoryItemDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *InventoryItemClient) DeleteOneID(id uuid.UUID) *InventoryItemDeleteOne {
+	builder := c.Delete().Where(inventoryitem.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &InventoryItemDeleteOne{builder}
+}
+
+// Query returns a query builder for InventoryItem.
+func (c *InventoryItemClient) Query() *InventoryItemQuery {
+	return &InventoryItemQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeInventoryItem},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a InventoryItem entity by its id.
+func (c *InventoryItemClient) Get(ctx context.Context, id uuid.UUID) (*InventoryItem, error) {
+	return c.Query().Where(inventoryitem.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *InventoryItemClient) GetX(ctx context.Context, id uuid.UUID) *InventoryItem {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *InventoryItemClient) Hooks() []Hook {
+	hooks := c.hooks.InventoryItem
+	return append(hooks[:len(hooks):len(hooks)], inventoryitem.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *InventoryItemClient) Interceptors() []Interceptor {
+	inters := c.inters.InventoryItem
+	return append(inters[:len(inters):len(inters)], inventoryitem.Interceptors[:]...)
+}
+
+func (c *InventoryItemClient) mutate(ctx context.Context, m *InventoryItemMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&InventoryItemCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&InventoryItemUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&InventoryItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&InventoryItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown InventoryItem mutation op: %q", m.Op())
+	}
+}
+
+// ItemDefinitionClient is a client for the ItemDefinition schema.
+type ItemDefinitionClient struct {
+	config
+}
+
+// NewItemDefinitionClient returns a client for the ItemDefinition from the given config.
+func NewItemDefinitionClient(c config) *ItemDefinitionClient {
+	return &ItemDefinitionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `itemdefinition.Hooks(f(g(h())))`.
+func (c *ItemDefinitionClient) Use(hooks ...Hook) {
+	c.hooks.ItemDefinition = append(c.hooks.ItemDefinition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `itemdefinition.Intercept(f(g(h())))`.
+func (c *ItemDefinitionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ItemDefinition = append(c.inters.ItemDefinition, interceptors...)
+}
+
+// Create returns a builder for creating a ItemDefinition entity.
+func (c *ItemDefinitionClient) Create() *ItemDefinitionCreate {
+	mutation := newItemDefinitionMutation(c.config, OpCreate)
+	return &ItemDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ItemDefinition entities.
+func (c *ItemDefinitionClient) CreateBulk(builders ...*ItemDefinitionCreate) *ItemDefinitionCreateBulk {
+	return &ItemDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ItemDefinitionClient) MapCreateBulk(slice any, setFunc func(*ItemDefinitionCreate, int)) *ItemDefinitionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ItemDefinitionCreateBulk{err: fmt.Errorf("calling to ItemDefinitionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ItemDefinitionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ItemDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ItemDefinition.
+func (c *ItemDefinitionClient) Update() *ItemDefinitionUpdate {
+	mutation := newItemDefinitionMutation(c.config, OpUpdate)
+	return &ItemDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ItemDefinitionClient) UpdateOne(_m *ItemDefinition) *ItemDefinitionUpdateOne {
+	mutation := newItemDefinitionMutation(c.config, OpUpdateOne, withItemDefinition(_m))
+	return &ItemDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ItemDefinitionClient) UpdateOneID(id string) *ItemDefinitionUpdateOne {
+	mutation := newItemDefinitionMutation(c.config, OpUpdateOne, withItemDefinitionID(id))
+	return &ItemDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ItemDefinition.
+func (c *ItemDefinitionClient) Delete() *ItemDefinitionDelete {
+	mutation := newItemDefinitionMutation(c.config, OpDelete)
+	return &ItemDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ItemDefinitionClient) DeleteOne(_m *ItemDefinition) *ItemDefinitionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ItemDefinitionClient) DeleteOneID(id string) *ItemDefinitionDeleteOne {
+	builder := c.Delete().Where(itemdefinition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ItemDefinitionDeleteOne{builder}
+}
+
+// Query returns a query builder for ItemDefinition.
+func (c *ItemDefinitionClient) Query() *ItemDefinitionQuery {
+	return &ItemDefinitionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeItemDefinition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ItemDefinition entity by its id.
+func (c *ItemDefinitionClient) Get(ctx context.Context, id string) (*ItemDefinition, error) {
+	return c.Query().Where(itemdefinition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ItemDefinitionClient) GetX(ctx context.Context, id string) *ItemDefinition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ItemDefinitionClient) Hooks() []Hook {
+	hooks := c.hooks.ItemDefinition
+	return append(hooks[:len(hooks):len(hooks)], itemdefinition.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ItemDefinitionClient) Interceptors() []Interceptor {
+	inters := c.inters.ItemDefinition
+	return append(inters[:len(inters):len(inters)], itemdefinition.Interceptors[:]...)
+}
+
+func (c *ItemDefinitionClient) mutate(ctx context.Context, m *ItemDefinitionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ItemDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ItemDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ItemDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ItemDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ItemDefinition mutation op: %q", m.Op())
+	}
+}
+
+// ItemDefinitionVersionClient is a client for the ItemDefinitionVersion schema.
+type ItemDefinitionVersionClient struct {
+	config
+}
+
+// NewItemDefinitionVersionClient returns a client for the ItemDefinitionVersion from the given config.
+func NewItemDefinitionVersionClient(c config) *ItemDefinitionVersionClient {
+	return &ItemDefinitionVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `itemdefinitionversion.Hooks(f(g(h())))`.
+func (c *ItemDefinitionVersionClient) Use(hooks ...Hook) {
+	c.hooks.ItemDefinitionVersion = append(c.hooks.ItemDefinitionVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `itemdefinitionversion.Intercept(f(g(h())))`.
+func (c *ItemDefinitionVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ItemDefinitionVersion = append(c.inters.ItemDefinitionVersion, interceptors...)
+}
+
+// Create returns a builder for creating a ItemDefinitionVersion entity.
+func (c *ItemDefinitionVersionClient) Create() *ItemDefinitionVersionCreate {
+	mutation := newItemDefinitionVersionMutation(c.config, OpCreate)
+	return &ItemDefinitionVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ItemDefinitionVersion entities.
+func (c *ItemDefinitionVersionClient) CreateBulk(builders ...*ItemDefinitionVersionCreate) *ItemDefinitionVersionCreateBulk {
+	return &ItemDefinitionVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ItemDefinitionVersionClient) MapCreateBulk(slice any, setFunc func(*ItemDefinitionVersionCreate, int)) *ItemDefinitionVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ItemDefinitionVersionCreateBulk{err: fmt.Errorf("calling to ItemDefinitionVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ItemDefinitionVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ItemDefinitionVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ItemDefinitionVersion.
+func (c *ItemDefinitionVersionClient) Update() *ItemDefinitionVersionUpdate {
+	mutation := newItemDefinitionVersionMutation(c.config, OpUpdate)
+	return &ItemDefinitionVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ItemDefinitionVersionClient) UpdateOne(_m *ItemDefinitionVersion) *ItemDefinitionVersionUpdateOne {
+	mutation := newItemDefinitionVersionMutation(c.config, OpUpdateOne, withItemDefinitionVersion(_m))
+	return &ItemDefinitionVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ItemDefinitionVersionClient) UpdateOneID(id uuid.UUID) *ItemDefinitionVersionUpdateOne {
+	mutation := newItemDefinitionVersionMutation(c.config, OpUpdateOne, withItemDefinitionVersionID(id))
+	return &ItemDefinitionVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ItemDefinitionVersion.
+func (c *ItemDefinitionVersionClient) Delete() *ItemDefinitionVersionDelete {
+	mutation := newItemDefinitionVersionMutation(c.config, OpDelete)
+	return &ItemDefinitionVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ItemDefinitionVersionClient) DeleteOne(_m *ItemDefinitionVersion) *ItemDefinitionVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ItemDefinitionVersionClient) DeleteOneID(id uuid.UUID) *ItemDefinitionVersionDeleteOne {
+	builder := c.Delete().Where(itemdefinitionversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ItemDefinitionVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for ItemDefinitionVersion.
+func (c *ItemDefinitionVersionClient) Query() *ItemDefinitionVersionQuery {
+	return &ItemDefinitionVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeItemDefinitionVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ItemDefinitionVersion entity by its id.
+func (c *ItemDefinitionVersionClient) Get(ctx context.Context, id uuid.UUID) (*ItemDefinitionVersion, error) {
+	return c.Query().Where(itemdefinitionversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ItemDefinitionVersionClient) GetX(ctx context.Context, id uuid.UUID) *ItemDefinitionVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ItemDefinitionVersionClient) Hooks() []Hook {
+	hooks := c.hooks.ItemDefinitionVersion
+	return append(hooks[:len(hooks):len(hooks)], itemdefinitionversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ItemDefinitionVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.ItemDefinitionVersion
+	return append(inters[:len(inters):len(inters)], itemdefinitionversion.Interceptors[:]...)
+}
+
+func (c *ItemDefinitionVersionClient) mutate(ctx context.Context, m *ItemDefinitionVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ItemDefinitionVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ItemDefinitionVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ItemDefinitionVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ItemDefinitionVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ItemDefinitionVersion mutation op: %q", m.Op())
+	}
+}
+
 // LoginEventClient is a client for the LoginEvent schema.
 type LoginEventClient struct {
 	config
@@ -482,21 +1501,168 @@ func (c *LoginEventClient) mutate(ctx context.Context, m *LoginEventMutation) (V
 	}
 }
 
+// NicknameChangeClient is a client for the NicknameChange schema.
+type NicknameChangeClient struct {
+	config
+}
+
+// NewNicknameChangeClient returns a client for the NicknameChange from the given config.
+func NewNicknameChangeClient(c config) *NicknameChangeClient {
+	return &NicknameChangeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `nicknamechange.Hooks(f(g(h())))`.
+func (c *NicknameChangeClient) Use(hooks ...Hook) {
+	c.hooks.NicknameChange = append(c.hooks.NicknameChange, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `nicknamechange.Intercept(f(g(h())))`.
+func (c *NicknameChangeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.NicknameChange = append(c.inters.NicknameChange, interceptors...)
+}
+
+// Create returns a builder for creating a NicknameChange entity.
+func (c *NicknameChangeClient) Create() *NicknameChangeCreate {
+	mutation := newNicknameChangeMutation(c.config, OpCreate)
+	return &NicknameChangeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of NicknameChange entities.
+func (c *NicknameChangeClient) CreateBulk(builders ...*NicknameChangeCreate) *NicknameChangeCreateBulk {
+	return &NicknameChangeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NicknameChangeClient) MapCreateBulk(slice any, setFunc func(*NicknameChangeCreate, int)) *NicknameChangeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NicknameChangeCreateBulk{err: fmt.Errorf("calling to NicknameChangeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NicknameChangeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NicknameChangeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for NicknameChange.
+func (c *NicknameChangeClient) Update() *NicknameChangeUpdate {
+	mutation := newNicknameChangeMutation(c.config, OpUpdate)
+	return &NicknameChangeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NicknameChangeClient) UpdateOne(_m *NicknameChange) *NicknameChangeUpdateOne {
+	mutation := newNicknameChangeMutation(c.config, OpUpdateOne, withNicknameChange(_m))
+	return &NicknameChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NicknameChangeClient) UpdateOneID(id uuid.UUID) *NicknameChangeUpdateOne {
+	mutation := newNicknameChangeMutation(c.config, OpUpdateOne, withNicknameChangeID(id))
+	return &NicknameChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for NicknameChange.
+func (c *NicknameChangeClient) Delete() *NicknameChangeDelete {
+	mutation := newNicknameChangeMutation(c.config, OpDelete)
+	return &NicknameChangeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NicknameChangeClient) DeleteOne(_m *NicknameChange) *NicknameChangeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NicknameChangeClient) DeleteOneID(id uuid.UUID) *NicknameChangeDeleteOne {
+	builder := c.Delete().Where(nicknamechange.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NicknameChangeDeleteOne{builder}
+}
+
+// Query returns a query builder for NicknameChange.
+func (c *NicknameChangeClient) Query() *NicknameChangeQuery {
+	return &NicknameChangeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNicknameChange},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a NicknameChange entity by its id.
+func (c *NicknameChangeClient) Get(ctx context.Context, id uuid.UUID) (*NicknameChange, error) {
+	return c.Query().Where(nicknamechange.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NicknameChangeClient) GetX(ctx context.Context, id uuid.UUID) *NicknameChange {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *NicknameChangeClient) Hooks() []Hook {
+	hooks := c.hooks.NicknameChange
+	return append(hooks[:len(hooks):len(hooks)], nicknamechange.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *NicknameChangeClient) Interceptors() []Interceptor {
+	inters := c.inters.NicknameChange
+	return append(inters[:len(inters):len(inters)], nicknamechange.Interceptors[:]...)
+}
+
+func (c *NicknameChangeClient) mutate(ctx context.Context, m *NicknameChangeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NicknameChangeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NicknameChangeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NicknameChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NicknameChangeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown NicknameChange mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		GameSession, LoginEvent []ent.Hook
+		AvatarPreset, CharacterCatalog, CharacterCatalogVersion, GameProfile,
+		GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion, LoginEvent,
+		NicknameChange []ent.Hook
 	}
 	inters struct {
-		GameSession, LoginEvent []ent.Interceptor
+		AvatarPreset, CharacterCatalog, CharacterCatalogVersion, GameProfile,
+		GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion, LoginEvent,
+		NicknameChange []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		GameSession: tableSchemas[0],
-		LoginEvent:  tableSchemas[0],
+		AvatarPreset:            tableSchemas[0],
+		CharacterCatalog:        tableSchemas[0],
+		CharacterCatalogVersion: tableSchemas[0],
+		GameProfile:             tableSchemas[0],
+		GameSession:             tableSchemas[0],
+		InventoryItem:           tableSchemas[0],
+		ItemDefinition:          tableSchemas[0],
+		ItemDefinitionVersion:   tableSchemas[0],
+		LoginEvent:              tableSchemas[0],
+		NicknameChange:          tableSchemas[0],
 	}
 	tableSchemas = [...]string{"game"}
 )

@@ -1,0 +1,123 @@
+// Command seed loads the dev/pilot seed of module game (F070 T008, LOCAL_DEVELOPMENT §5): the character catalog v1
+// (seed/character_catalog.v1.json: presets, palette, default items and emotes, nickname words vi/en) and the default
+// item definitions (seed/items.default.v1.json) through the publish use case under a PlatformScope — never SQL by
+// hand. Running it again publishes nothing (identical versions are skipped).
+//
+//	go -C src/backend run ./modules/game/cmd/seed [-dir modules/game/seed]
+//
+// Connections: EW_DB_GAME_DSN (game_app) and EW_DB_GAME_PLATFORM_DSN (game_platform, platform content), or their
+// _URL_FILE variants (LOCAL_DEVELOPMENT §3).
+package main
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"log/slog"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"strings"
+	"syscall"
+
+	_ "github.com/jackc/pgx/v5/stdlib" // database/sql driver "pgx"
+
+	_ "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/runtime" // mixin hooks, interceptors
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/catalog"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
+)
+
+func main() {
+	dir := flag.String("dir", filepath.Join("modules", "game", "seed"), "directory of the game seed files")
+	flag.Parse()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if err := run(ctx, *dir); err != nil {
+		slog.Error("game seed failed", "error", err)
+		os.Exit(1)
+	}
+}
+
+func dsn(key string) (string, error) {
+	if v := strings.TrimSpace(os.Getenv(key + "_DSN")); v != "" {
+		return v, nil
+	}
+	if f := strings.TrimSpace(os.Getenv(key + "_URL_FILE")); f != "" {
+		b, err := os.ReadFile(f) //nolint:gosec // path from the operator's environment
+		if err != nil {
+			return "", fmt.Errorf("read %s_URL_FILE: %w", key, err)
+		}
+		return strings.TrimSpace(string(b)), nil
+	}
+	return "", fmt.Errorf("set %s_DSN or %s_URL_FILE", key, key)
+}
+
+func open(key string) (*sql.DB, error) {
+	d, err := dsn(key)
+	if err != nil {
+		return nil, err
+	}
+	return sql.Open("pgx", d)
+}
+
+// Load reads the catalog payload and the item definitions of dir.
+func Load(dir string) ([]byte, []catalog.ItemDefinition, error) {
+	payload, err := os.ReadFile(filepath.Join(dir, "character_catalog.v1.json")) //nolint:gosec // repository seed path
+	if err != nil {
+		return nil, nil, err
+	}
+	raw, err := os.ReadFile(filepath.Join(dir, "items.default.v1.json")) //nolint:gosec // repository seed path
+	if err != nil {
+		return nil, nil, err
+	}
+	var items []catalog.ItemDefinition
+	if err := json.Unmarshal(raw, &items); err != nil {
+		return nil, nil, fmt.Errorf("items.default.v1.json: %w", err)
+	}
+	return payload, items, nil
+}
+
+func run(ctx context.Context, dir string) error {
+	payload, items, err := Load(dir)
+	if err != nil {
+		return err
+	}
+	app, err := open("EW_DB_GAME")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = app.Close() }()
+	platform, err := open("EW_DB_GAME_PLATFORM")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = platform.Close() }()
+	w, err := outbox.NewWriter("game", "core", nil)
+	if err != nil {
+		return err
+	}
+	rec := outbox.NewAuditRecorder(w, app)
+	tenancy.Configure(tenancy.Hooks{Recorder: rec})
+	uow, err := entx.NewUnitOfWork(entx.Options{Module: "game", DBs: entx.DBs{App: app, Platform: platform}, Events: w, Audit: rec})
+	if err != nil {
+		return err
+	}
+	sc, err := authz.SystemPlatformScope("game-seed")
+	if err != nil {
+		return err
+	}
+	h := command.CatalogPublish{UoW: uow, Store: write.CatalogRepo{}, Audit: write.Auditor{R: rec}}
+	res, err := h.Publish(tenancy.WithScope(ctx, sc), payload, items, "seed v1")
+	if err != nil {
+		return err
+	}
+	slog.InfoContext(ctx, "game seed done", "catalog_published", res.CatalogPublished, "items_published", res.ItemsPublished)
+	return nil
+}

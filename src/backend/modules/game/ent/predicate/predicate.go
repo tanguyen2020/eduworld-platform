@@ -6,8 +6,32 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// AvatarPreset is the predicate function for avatarpreset builders.
+type AvatarPreset func(*sql.Selector)
+
+// CharacterCatalog is the predicate function for charactercatalog builders.
+type CharacterCatalog func(*sql.Selector)
+
+// CharacterCatalogVersion is the predicate function for charactercatalogversion builders.
+type CharacterCatalogVersion func(*sql.Selector)
+
+// GameProfile is the predicate function for gameprofile builders.
+type GameProfile func(*sql.Selector)
+
 // GameSession is the predicate function for gamesession builders.
 type GameSession func(*sql.Selector)
 
+// InventoryItem is the predicate function for inventoryitem builders.
+type InventoryItem func(*sql.Selector)
+
+// ItemDefinition is the predicate function for itemdefinition builders.
+type ItemDefinition func(*sql.Selector)
+
+// ItemDefinitionVersion is the predicate function for itemdefinitionversion builders.
+type ItemDefinitionVersion func(*sql.Selector)
+
 // LoginEvent is the predicate function for loginevent builders.
 type LoginEvent func(*sql.Selector)
+
+// NicknameChange is the predicate function for nicknamechange builders.
+type NicknameChange func(*sql.Selector)
