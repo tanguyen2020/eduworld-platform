@@ -2608,12 +2608,32 @@ components:
                       properties:
                         user_id: { $ref: '#/components/schemas/Uuid' }
                         team: { type: integer }
-                        outcome: { type: string, enum: [win, loss, draw, no_contest] }
+                        outcome: { type: string, enum: [win, loss, draw, abandoned, forfeit, no_contest] }
                         score: { type: integer }
                         correct_count: { type: integer }
                         competition_points: { type: integer }
+                  end_reason: { type: string, enum: [finished, abandon, forfeit, all_left, server_failure, plan_failure], description: 'Lý do kết thúc (F105).' }
                   rated: { type: boolean, description: 'false khi aborted / chế độ không tính rating.' }
                   review_available: { type: boolean, description: 'Có thể xem lại câu sai qua REST.' }
+                  top:
+                    type: array
+                    maxItems: 5
+                    description: 'Timed Quiz lớp ≥ 4: top 5 theo điểm (nickname do client lấy từ snapshot, không tên thật). Không gửi cho lớp 1–3 (COMPETITION_SYSTEM §3.4).'
+                    items:
+                      type: object
+                      properties:
+                        user_id: { $ref: '#/components/schemas/Uuid' }
+                        rank: { type: integer, minimum: 1 }
+                        score: { type: integer }
+                  my_rank: { type: integer, minimum: 1, description: 'Timed Quiz lớp ≥ 4: vị trí của chính người nhận (message gửi riêng từng người).' }
+                  grade_goal:
+                    type: object
+                    description: 'Timed Quiz lớp 1–3 (thử thách khối grade_challenge, ADR-0095): tiến độ tập thể (tổng câu đúng so với mục tiêu), không thứ hạng cá nhân, không nickname người khác; contributors_count ẩn khi < 5 học sinh.'
+                    properties:
+                      current: { type: integer, minimum: 0 }
+                      target: { type: integer, minimum: 0 }
+                      reached: { type: boolean }
+                      contributors_count: { type: integer, minimum: 5 }
 
     # ======================= COOP =======================
     # ---------- boss / challenge / progression (CHALLENGE_BOSS_SYSTEM, PROGRESSION_SYSTEM) — module game qua ew.cmd.game.*

@@ -22,6 +22,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/match"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchparticipant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyactivity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
@@ -52,6 +53,8 @@ type Client struct {
 	Match *MatchClient
 	// MatchParticipant is the client for interacting with the MatchParticipant builders.
 	MatchParticipant *MatchParticipantClient
+	// MatchResult is the client for interacting with the MatchResult builders.
+	MatchResult *MatchResultClient
 	// Party is the client for interacting with the Party builders.
 	Party *PartyClient
 	// PartyActivity is the client for interacting with the PartyActivity builders.
@@ -84,6 +87,7 @@ func (c *Client) init() {
 	c.GameConfigVersion = NewGameConfigVersionClient(c.config)
 	c.Match = NewMatchClient(c.config)
 	c.MatchParticipant = NewMatchParticipantClient(c.config)
+	c.MatchResult = NewMatchResultClient(c.config)
 	c.Party = NewPartyClient(c.config)
 	c.PartyActivity = NewPartyActivityClient(c.config)
 	c.PartyInvitation = NewPartyInvitationClient(c.config)
@@ -193,6 +197,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		GameConfigVersion:      NewGameConfigVersionClient(cfg),
 		Match:                  NewMatchClient(cfg),
 		MatchParticipant:       NewMatchParticipantClient(cfg),
+		MatchResult:            NewMatchResultClient(cfg),
 		Party:                  NewPartyClient(cfg),
 		PartyActivity:          NewPartyActivityClient(cfg),
 		PartyInvitation:        NewPartyInvitationClient(cfg),
@@ -226,6 +231,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		GameConfigVersion:      NewGameConfigVersionClient(cfg),
 		Match:                  NewMatchClient(cfg),
 		MatchParticipant:       NewMatchParticipantClient(cfg),
+		MatchResult:            NewMatchResultClient(cfg),
 		Party:                  NewPartyClient(cfg),
 		PartyActivity:          NewPartyActivityClient(cfg),
 		PartyInvitation:        NewPartyInvitationClient(cfg),
@@ -263,8 +269,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.CompetitionRestriction, c.ContentRelease, c.Duel, c.GameConfig,
-		c.GameConfigVersion, c.Match, c.MatchParticipant, c.Party, c.PartyActivity,
-		c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room, c.SessionMembership,
+		c.GameConfigVersion, c.Match, c.MatchParticipant, c.MatchResult, c.Party,
+		c.PartyActivity, c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room,
+		c.SessionMembership,
 	} {
 		n.Use(hooks...)
 	}
@@ -275,8 +282,9 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.CompetitionRestriction, c.ContentRelease, c.Duel, c.GameConfig,
-		c.GameConfigVersion, c.Match, c.MatchParticipant, c.Party, c.PartyActivity,
-		c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room, c.SessionMembership,
+		c.GameConfigVersion, c.Match, c.MatchParticipant, c.MatchResult, c.Party,
+		c.PartyActivity, c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room,
+		c.SessionMembership,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -299,6 +307,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Match.mutate(ctx, m)
 	case *MatchParticipantMutation:
 		return c.MatchParticipant.mutate(ctx, m)
+	case *MatchResultMutation:
+		return c.MatchResult.mutate(ctx, m)
 	case *PartyMutation:
 		return c.Party.mutate(ctx, m)
 	case *PartyActivityMutation:
@@ -1262,6 +1272,141 @@ func (c *MatchParticipantClient) mutate(ctx context.Context, m *MatchParticipant
 	}
 }
 
+// MatchResultClient is a client for the MatchResult schema.
+type MatchResultClient struct {
+	config
+}
+
+// NewMatchResultClient returns a client for the MatchResult from the given config.
+func NewMatchResultClient(c config) *MatchResultClient {
+	return &MatchResultClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `matchresult.Hooks(f(g(h())))`.
+func (c *MatchResultClient) Use(hooks ...Hook) {
+	c.hooks.MatchResult = append(c.hooks.MatchResult, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `matchresult.Intercept(f(g(h())))`.
+func (c *MatchResultClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MatchResult = append(c.inters.MatchResult, interceptors...)
+}
+
+// Create returns a builder for creating a MatchResult entity.
+func (c *MatchResultClient) Create() *MatchResultCreate {
+	mutation := newMatchResultMutation(c.config, OpCreate)
+	return &MatchResultCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MatchResult entities.
+func (c *MatchResultClient) CreateBulk(builders ...*MatchResultCreate) *MatchResultCreateBulk {
+	return &MatchResultCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MatchResultClient) MapCreateBulk(slice any, setFunc func(*MatchResultCreate, int)) *MatchResultCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MatchResultCreateBulk{err: fmt.Errorf("calling to MatchResultClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MatchResultCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MatchResultCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MatchResult.
+func (c *MatchResultClient) Update() *MatchResultUpdate {
+	mutation := newMatchResultMutation(c.config, OpUpdate)
+	return &MatchResultUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MatchResultClient) UpdateOne(_m *MatchResult) *MatchResultUpdateOne {
+	mutation := newMatchResultMutation(c.config, OpUpdateOne, withMatchResult(_m))
+	return &MatchResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MatchResultClient) UpdateOneID(id uuid.UUID) *MatchResultUpdateOne {
+	mutation := newMatchResultMutation(c.config, OpUpdateOne, withMatchResultID(id))
+	return &MatchResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MatchResult.
+func (c *MatchResultClient) Delete() *MatchResultDelete {
+	mutation := newMatchResultMutation(c.config, OpDelete)
+	return &MatchResultDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MatchResultClient) DeleteOne(_m *MatchResult) *MatchResultDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MatchResultClient) DeleteOneID(id uuid.UUID) *MatchResultDeleteOne {
+	builder := c.Delete().Where(matchresult.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MatchResultDeleteOne{builder}
+}
+
+// Query returns a query builder for MatchResult.
+func (c *MatchResultClient) Query() *MatchResultQuery {
+	return &MatchResultQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMatchResult},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MatchResult entity by its id.
+func (c *MatchResultClient) Get(ctx context.Context, id uuid.UUID) (*MatchResult, error) {
+	return c.Query().Where(matchresult.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MatchResultClient) GetX(ctx context.Context, id uuid.UUID) *MatchResult {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MatchResultClient) Hooks() []Hook {
+	hooks := c.hooks.MatchResult
+	return append(hooks[:len(hooks):len(hooks)], matchresult.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *MatchResultClient) Interceptors() []Interceptor {
+	inters := c.inters.MatchResult
+	return append(inters[:len(inters):len(inters)], matchresult.Interceptors[:]...)
+}
+
+func (c *MatchResultClient) mutate(ctx context.Context, m *MatchResultMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MatchResultCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MatchResultUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MatchResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MatchResultDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MatchResult mutation op: %q", m.Op())
+	}
+}
+
 // PartyClient is a client for the Party schema.
 type PartyClient struct {
 	config
@@ -2211,13 +2356,13 @@ func (c *SessionMembershipClient) mutate(ctx context.Context, m *SessionMembersh
 type (
 	hooks struct {
 		CompetitionRestriction, ContentRelease, Duel, GameConfig, GameConfigVersion,
-		Match, MatchParticipant, Party, PartyActivity, PartyInvitation, PartyMember,
-		PartyPolicy, Room, SessionMembership []ent.Hook
+		Match, MatchParticipant, MatchResult, Party, PartyActivity, PartyInvitation,
+		PartyMember, PartyPolicy, Room, SessionMembership []ent.Hook
 	}
 	inters struct {
 		CompetitionRestriction, ContentRelease, Duel, GameConfig, GameConfigVersion,
-		Match, MatchParticipant, Party, PartyActivity, PartyInvitation, PartyMember,
-		PartyPolicy, Room, SessionMembership []ent.Interceptor
+		Match, MatchParticipant, MatchResult, Party, PartyActivity, PartyInvitation,
+		PartyMember, PartyPolicy, Room, SessionMembership []ent.Interceptor
 	}
 )
 
@@ -2231,6 +2376,7 @@ var (
 		GameConfigVersion:      tableSchemas[0],
 		Match:                  tableSchemas[0],
 		MatchParticipant:       tableSchemas[0],
+		MatchResult:            tableSchemas[0],
 		Party:                  tableSchemas[1],
 		PartyActivity:          tableSchemas[1],
 		PartyInvitation:        tableSchemas[1],

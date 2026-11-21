@@ -56,7 +56,11 @@ type MatchParticipant struct {
 	RatingMuAtMatch *float64 `json:"rating_mu_at_match,omitempty"`
 	// RatingRdAtMatch holds the value of the "rating_rd_at_match" field.
 	RatingRdAtMatch *float64 `json:"rating_rd_at_match,omitempty"`
-	selectValues    sql.SelectValues
+	// CorrectCount holds the value of the "correct_count" field.
+	CorrectCount *int16 `json:"correct_count,omitempty"`
+	// Disconnects holds the value of the "disconnects" field.
+	Disconnects  int16 `json:"disconnects,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -68,7 +72,7 @@ func (*MatchParticipant) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case matchparticipant.FieldScore, matchparticipant.FieldRatingMuAtMatch, matchparticipant.FieldRatingRdAtMatch:
 			values[i] = new(sql.NullFloat64)
-		case matchparticipant.FieldVersion, matchparticipant.FieldTeamNo, matchparticipant.FieldConnectedMs:
+		case matchparticipant.FieldVersion, matchparticipant.FieldTeamNo, matchparticipant.FieldConnectedMs, matchparticipant.FieldCorrectCount, matchparticipant.FieldDisconnects:
 			values[i] = new(sql.NullInt64)
 		case matchparticipant.FieldDeleteReason, matchparticipant.FieldOutcome:
 			values[i] = new(sql.NullString)
@@ -222,6 +226,19 @@ func (_m *MatchParticipant) assignValues(columns []string, values []any) error {
 				_m.RatingRdAtMatch = new(float64)
 				*_m.RatingRdAtMatch = value.Float64
 			}
+		case matchparticipant.FieldCorrectCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field correct_count", values[i])
+			} else if value.Valid {
+				_m.CorrectCount = new(int16)
+				*_m.CorrectCount = int16(value.Int64)
+			}
+		case matchparticipant.FieldDisconnects:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field disconnects", values[i])
+			} else if value.Valid {
+				_m.Disconnects = int16(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -336,6 +353,14 @@ func (_m *MatchParticipant) String() string {
 		builder.WriteString("rating_rd_at_match=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
+	builder.WriteString(", ")
+	if v := _m.CorrectCount; v != nil {
+		builder.WriteString("correct_count=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("disconnects=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Disconnects))
 	builder.WriteByte(')')
 	return builder.String()
 }

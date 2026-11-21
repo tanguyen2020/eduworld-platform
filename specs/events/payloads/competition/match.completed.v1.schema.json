@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/match.completed.v1.schema.json",
+  "title": "Payload match.completed v1 (module competition, owner F105)",
+  "description": "Kết quả trận đã ghi bền vững đúng một lần (competition.match_results, PK match_id, F105-AC-07), phát cùng transaction; ghi lại không phát lần hai. Trận cancelled (mọi người rời) cũng phát với rated = false để chat đóng channel. Consumer: ranking/leaderboard (F106), game (XP), learning, chat (đóng channel), analytics. Không tên thật (R16).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["match_id", "room_id", "mode", "matchmaking_type", "ranked", "rated", "is_bot", "subject_id", "grade_level", "status", "end_reason", "ended_at", "results"],
+  "properties": {
+    "match_id": { "type": "string", "format": "uuid" },
+    "room_id": { "type": "string", "format": "uuid" },
+    "mode": { "type": "string", "enum": ["battle_1v1", "team_battle", "coop_challenge", "timed_quiz", "tournament"] },
+    "matchmaking_type": { "type": "string", "enum": ["random", "skill", "grade", "subject", "topic", "friend", "team", "tournament", "bot"] },
+    "ranked": { "type": "boolean" },
+    "rated": { "type": "boolean", "description": "ranked AND completed AND NOT is_bot AND không phải trận giải AND end_reason khác server_failure (data-model §3)" },
+    "is_bot": { "type": "boolean" },
+    "subject_id": { "type": "string", "format": "uuid" },
+    "grade_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+    "status": { "type": "string", "enum": ["completed", "cancelled"] },
+    "end_reason": { "type": "string", "enum": ["finished", "abandon", "forfeit", "all_left"] },
+    "winner_team": { "type": ["integer", "null"], "minimum": 0, "maximum": 1 },
+    "rule_version_id": { "type": "string", "format": "uuid" },
+    "tournament_id": { "type": ["string", "null"], "format": "uuid" },
+    "tournament_node_id": { "type": ["string", "null"], "format": "uuid" },
+    "ended_at": { "type": "string", "format": "date-time" },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["student_id", "tenant_id", "school_id", "team_no", "outcome", "score", "correct_count"],
+        "properties": {
+          "student_id": { "type": "string", "format": "uuid" },
+          "tenant_id": { "type": "string", "format": "uuid" },
+          "school_id": { "type": "string", "format": "uuid" },
+          "team_no": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "outcome": { "type": "string", "enum": ["win", "loss", "draw", "abandoned", "forfeit", "no_contest"] },
+          "score": { "type": "integer", "minimum": 0 },
+          "correct_count": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "match_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "room_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "mode": "battle_1v1",
+      "matchmaking_type": "skill",
+      "ranked": true,
+      "rated": true,
+      "is_bot": false,
+      "subject_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000d1",
+      "grade_level": 3,
+      "status": "completed",
+      "end_reason": "finished",
+      "winner_team": 0,
+      "rule_version_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000e1",
+      "tournament_id": null,
+      "tournament_node_id": null,
+      "ended_at": "2026-11-21T08:04:10Z",
+      "results": [
+        { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011", "team_no": 0, "outcome": "win", "score": 600, "correct_count": 5 },
+        { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000007", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011", "team_no": 1, "outcome": "loss", "score": 400, "correct_count": 4 }
+      ]
+    }
+  ]
+}

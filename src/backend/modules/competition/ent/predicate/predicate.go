@@ -27,6 +27,9 @@ type Match func(*sql.Selector)
 // MatchParticipant is the predicate function for matchparticipant builders.
 type MatchParticipant func(*sql.Selector)
 
+// MatchResult is the predicate function for matchresult builders.
+type MatchResult func(*sql.Selector)
+
 // Party is the predicate function for party builders.
 type Party func(*sql.Selector)
 

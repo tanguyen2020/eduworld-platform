@@ -35,6 +35,8 @@ func (Room) Fields() []ent.Field {
 		field.Int("capacity").Immutable(),
 		field.String("status").MaxLen(64).Default("open"),
 		field.Time("closed_at").Optional().Nillable(),
+		// F105: the match of a battle/coop room (room_id = match_id).
+		field.UUID("match_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 	}
 }
 func (Room) Indexes() []ent.Index {

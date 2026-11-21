@@ -89,6 +89,8 @@ Season 8 tuần (§8): Competition Points tích lũy từ trận và giải; sea
 
 Chi tiết chống gian lận: [ANTI_CHEAT](../10-security/ANTI_CHEAT.md).
 
+Hiện thực (F105): room host server-authoritative, question plan/chấm/reveal ở module learning, tham số Timed Quiz, Co-op Challenge, bot và timer của room — [F105 spec, Clarifications 2026-11-21](../../specs/105-battle-engine/spec.md#session-2026-11-21-triển-khai--confirmed-owner-chốt-2026-11-20).
+
 ## 5. Công bằng theo khối lớp
 
 1. **Hard constraint trước rating** [Confirmed — Master Prompt §5.2]: không bao giờ ghép lớp 1 với lớp 9 dù rating tương đương.

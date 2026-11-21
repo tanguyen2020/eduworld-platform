@@ -222,6 +222,10 @@ var (
 		{Name: "question_plan", Type: field.TypeJSON, Nullable: true},
 		{Name: "started_at", Type: field.TypeTime, Nullable: true},
 		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+		{Name: "question_plan_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "question_plan_version", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "room_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "end_reason", Type: field.TypeString, Nullable: true, Size: 64},
 	}
 	// MatchesTable holds the schema information for the "matches" table.
 	MatchesTable = &schema.Table{
@@ -266,6 +270,8 @@ var (
 		{Name: "connected_ms", Type: field.TypeInt64, Nullable: true},
 		{Name: "rating_mu_at_match", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(8,3)"}},
 		{Name: "rating_rd_at_match", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(8,3)"}},
+		{Name: "correct_count", Type: field.TypeInt16, Nullable: true},
+		{Name: "disconnects", Type: field.TypeInt16, Default: 0},
 	}
 	// MatchParticipantsTable holds the schema information for the "match_participants" table.
 	MatchParticipantsTable = &schema.Table{
@@ -287,6 +293,32 @@ var (
 				Columns: []*schema.Column{MatchParticipantsColumns[1], MatchParticipantsColumns[11], MatchParticipantsColumns[2]},
 			},
 		},
+	}
+	// MatchResultsColumns holds the columns for the "match_results" table.
+	MatchResultsColumns = []*schema.Column{
+		{Name: "match_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "end_reason", Type: field.TypeString, Size: 64},
+		{Name: "winner_team", Type: field.TypeInt16, Nullable: true},
+		{Name: "rated", Type: field.TypeBool},
+		{Name: "rule_version_id", Type: field.TypeUUID},
+		{Name: "summary", Type: field.TypeJSON},
+		{Name: "verified_at", Type: field.TypeTime},
+		{Name: "recorded_by", Type: field.TypeString, Size: 64},
+	}
+	// MatchResultsTable holds the schema information for the "match_results" table.
+	MatchResultsTable = &schema.Table{
+		Name:       "match_results",
+		Columns:    MatchResultsColumns,
+		PrimaryKey: []*schema.Column{MatchResultsColumns[0]},
 	}
 	// PartiesColumns holds the columns for the "parties" table.
 	PartiesColumns = []*schema.Column{
@@ -566,6 +598,7 @@ var (
 		{Name: "capacity", Type: field.TypeInt},
 		{Name: "status", Type: field.TypeString, Size: 64, Default: "open"},
 		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "match_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// RoomsTable holds the schema information for the "rooms" table.
 	RoomsTable = &schema.Table{
@@ -647,6 +680,7 @@ var (
 		GameConfigVersionsTable,
 		MatchesTable,
 		MatchParticipantsTable,
+		MatchResultsTable,
 		PartiesTable,
 		PartyActivitiesTable,
 		PartyInvitationsTable,
@@ -678,6 +712,9 @@ func init() {
 	}
 	MatchParticipantsTable.Annotation = &entsql.Annotation{
 		Table: "match_participants",
+	}
+	MatchResultsTable.Annotation = &entsql.Annotation{
+		Table: "match_results",
 	}
 	PartiesTable.Annotation = &entsql.Annotation{
 		Table: "parties",

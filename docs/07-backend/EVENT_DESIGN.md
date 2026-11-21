@@ -344,9 +344,9 @@ Module sở hữu dịch domain event/kết quả command thành WS message theo
 | Event | Producer | Consumers | Payload chính |
 |---|---|---|---|
 | `match.created` | competition | AUD | `match_id`, `mode`, `participants[]` |
-| `match.started` | competition | LA, chat (mở channel `match`/`team`) | `match_id`, `mode`, `participants[] {student_id, team_no}` |
-| `match.completed` | competition | RNK, LDB, GAM, LR, NTF | `match_id`, `mode`, `subject_id`, `results[] {student_id, outcome, points}` |
-| `match.aborted` | competition | AUD | `match_id`, `reason` |
+| `match.started` | competition | LA, chat (mở channel `match`/`team`) | `match_id`, `room_id`, `mode`, `matchmaking_type`, `ranked`, `is_bot`, `subject_id`, `grade_level`, `question_count`, `question_plan_version`, `participants[] {student_id, tenant_id, school_id, team_no}` (owner F105) |
+| `match.completed` | competition | RNK, LDB, GAM, LR, NTF, chat (đóng channel) | `match_id`, `mode`, `matchmaking_type`, `ranked`, `rated`, `is_bot`, `subject_id`, `grade_level`, `status`, `end_reason`, `winner_team`, `tournament_id`, `tournament_node_id`, `results[] {student_id, school_id, team_no, outcome, score, correct_count}` (owner F105; một lần/trận) |
+| `match.aborted` | competition | AUD, chat (đóng channel) | `match_id`, `mode`, `reason` (`server_failure`/`plan_failure`), `participants[]` (owner F105; không kết quả, không rating) |
 | `rating.updated` | ranking | LDB, RT | `student_id`, `mode`, `subject_id`, `season_id`, `rating`, `rd` |
 | `competition_points.awarded` | ranking (F106) | LDB, RT, ANA | `student_id`, `season_id`, `source_type` (`match`/`tournament`), `source_id`, `points`, `balance_after` |
 | `leaderboard.period_closed` | leaderboard (F106, job đóng kỳ) | NTF (trong game), RT, AUD | `leaderboard_id`, `scope_type`, `scope_id`, `period_key`, `top[]` (≤ 100: `student_id`, `rank`, `value`) |

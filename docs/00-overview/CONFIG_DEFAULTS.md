@@ -99,6 +99,10 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 |---|---|---|---|---|---|
 | `battle_1v1_format` | 7 câu × 20 s (g1_3: 30 s); 100 điểm + bonus tốc độ ≤ 50; câu cuối ×2 | — | platform | [Confirmed] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
 | `team_battle_format` | 10 câu; lượt hỗ trợ 30% điểm | — | platform | [Confirmed] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
+| `timed_quiz_format` | 10 câu × 20 s (g1_3: 30 s); tối đa 40 học sinh; top 5 từ lớp 4; `grade_goal` = 60% (người × câu) cho lớp 1–3 | — | platform | [Confirmed — owner chốt 2026-11-20] | [F105 Clarifications 2026-11-21](../../specs/105-battle-engine/spec.md#session-2026-11-21-triển-khai--confirmed-owner-chốt-2026-11-20) |
+| `coop_challenge_format` | 12 câu × 25 s; mục tiêu 10 câu đúng tập thể; grace 120 s | — | platform | [Confirmed — owner chốt 2026-11-20] | [F105 Clarifications 2026-11-21](../../specs/105-battle-engine/spec.md#session-2026-11-21-triển-khai--confirmed-owner-chốt-2026-11-20) |
+| `battle_room_timers` | lobby chờ 15 s; đếm ngược 3 s; reveal 3 s; chờ chấm 3 s; chờ reveal 2 s; trễ chấp nhận 300 ms; RTT trừ 150 ms; làm lại câu tối đa 2 lần | — | platform | [Confirmed — owner chốt 2026-11-20] | [F105 Clarifications 2026-11-21](../../specs/105-battle-engine/spec.md#session-2026-11-21-triển-khai--confirmed-owner-chốt-2026-11-20) |
+| `bot_profiles` | lớp 1–3: 60%, 6–18 s; lớp 4–5: 70%, 4–14 s; lớp 6–9: 75%, 3–12 s | — | platform | [Confirmed — owner chốt 2026-11-20] | [F105 Clarifications 2026-11-21](../../specs/105-battle-engine/spec.md#session-2026-11-21-triển-khai--confirmed-owner-chốt-2026-11-20) |
 | `grade_window_g6_9` | ±1 khối sau 30 s chờ (g1_5 luôn cùng khối) | — | platform | [Confirmed] nguyên tắc · [Confirmed] số | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
 | `glicko2_params` | r0 1500, RD 350, σ 0,06, τ 0,5; RD 50–350 | — | code | [Confirmed] (ADR-0018) | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
 | `rating_provisional` | < 10 trận hoặc RD > 110 | — | code | [Confirmed] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |

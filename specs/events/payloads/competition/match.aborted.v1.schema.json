@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/match.aborted.v1.schema.json",
+  "title": "Payload match.aborted v1 (module competition, owner F105)",
+  "description": "Trận bị hủy do sự cố (plan câu hỏi lỗi, chấm lỗi quá 2 lần, mất checkpoint khi failover — F105-AC-15): không kết quả, không rating, không tính abandon. Danh sách người tham gia để module chat đóng channel. Consumer: chat (F117), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["match_id", "room_id", "mode", "reason", "aborted_at", "participants"],
+  "properties": {
+    "match_id": { "type": "string", "format": "uuid" },
+    "room_id": { "type": "string", "format": "uuid" },
+    "mode": { "type": "string", "enum": ["battle_1v1", "team_battle", "coop_challenge", "timed_quiz", "tournament"] },
+    "reason": { "type": "string", "enum": ["server_failure", "plan_failure"] },
+    "aborted_at": { "type": "string", "format": "date-time" },
+    "participants": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["student_id", "tenant_id", "school_id", "team_no"],
+        "properties": {
+          "student_id": { "type": "string", "format": "uuid" },
+          "tenant_id": { "type": "string", "format": "uuid" },
+          "school_id": { "type": "string", "format": "uuid" },
+          "team_no": { "type": "integer", "minimum": 0, "maximum": 1 }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "match_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "room_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "mode": "battle_1v1",
+      "reason": "plan_failure",
+      "aborted_at": "2026-11-21T08:00:01Z",
+      "participants": [
+        { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011", "team_no": 0 }
+      ]
+    }
+  ]
+}

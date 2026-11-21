@@ -150,6 +150,16 @@ func RatingRdAtMatch(v float64) predicate.MatchParticipant {
 	return predicate.MatchParticipant(sql.FieldEQ(FieldRatingRdAtMatch, v))
 }
 
+// CorrectCount applies equality check predicate on the "correct_count" field. It's identical to CorrectCountEQ.
+func CorrectCount(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldEQ(FieldCorrectCount, v))
+}
+
+// Disconnects applies equality check predicate on the "disconnects" field. It's identical to DisconnectsEQ.
+func Disconnects(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldEQ(FieldDisconnects, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.MatchParticipant {
 	return predicate.MatchParticipant(sql.FieldEQ(FieldTenantID, v))
@@ -1068,6 +1078,96 @@ func RatingRdAtMatchIsNil() predicate.MatchParticipant {
 // RatingRdAtMatchNotNil applies the NotNil predicate on the "rating_rd_at_match" field.
 func RatingRdAtMatchNotNil() predicate.MatchParticipant {
 	return predicate.MatchParticipant(sql.FieldNotNull(FieldRatingRdAtMatch))
+}
+
+// CorrectCountEQ applies the EQ predicate on the "correct_count" field.
+func CorrectCountEQ(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldEQ(FieldCorrectCount, v))
+}
+
+// CorrectCountNEQ applies the NEQ predicate on the "correct_count" field.
+func CorrectCountNEQ(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldNEQ(FieldCorrectCount, v))
+}
+
+// CorrectCountIn applies the In predicate on the "correct_count" field.
+func CorrectCountIn(vs ...int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldIn(FieldCorrectCount, vs...))
+}
+
+// CorrectCountNotIn applies the NotIn predicate on the "correct_count" field.
+func CorrectCountNotIn(vs ...int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldNotIn(FieldCorrectCount, vs...))
+}
+
+// CorrectCountGT applies the GT predicate on the "correct_count" field.
+func CorrectCountGT(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldGT(FieldCorrectCount, v))
+}
+
+// CorrectCountGTE applies the GTE predicate on the "correct_count" field.
+func CorrectCountGTE(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldGTE(FieldCorrectCount, v))
+}
+
+// CorrectCountLT applies the LT predicate on the "correct_count" field.
+func CorrectCountLT(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldLT(FieldCorrectCount, v))
+}
+
+// CorrectCountLTE applies the LTE predicate on the "correct_count" field.
+func CorrectCountLTE(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldLTE(FieldCorrectCount, v))
+}
+
+// CorrectCountIsNil applies the IsNil predicate on the "correct_count" field.
+func CorrectCountIsNil() predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldIsNull(FieldCorrectCount))
+}
+
+// CorrectCountNotNil applies the NotNil predicate on the "correct_count" field.
+func CorrectCountNotNil() predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldNotNull(FieldCorrectCount))
+}
+
+// DisconnectsEQ applies the EQ predicate on the "disconnects" field.
+func DisconnectsEQ(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldEQ(FieldDisconnects, v))
+}
+
+// DisconnectsNEQ applies the NEQ predicate on the "disconnects" field.
+func DisconnectsNEQ(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldNEQ(FieldDisconnects, v))
+}
+
+// DisconnectsIn applies the In predicate on the "disconnects" field.
+func DisconnectsIn(vs ...int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldIn(FieldDisconnects, vs...))
+}
+
+// DisconnectsNotIn applies the NotIn predicate on the "disconnects" field.
+func DisconnectsNotIn(vs ...int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldNotIn(FieldDisconnects, vs...))
+}
+
+// DisconnectsGT applies the GT predicate on the "disconnects" field.
+func DisconnectsGT(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldGT(FieldDisconnects, v))
+}
+
+// DisconnectsGTE applies the GTE predicate on the "disconnects" field.
+func DisconnectsGTE(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldGTE(FieldDisconnects, v))
+}
+
+// DisconnectsLT applies the LT predicate on the "disconnects" field.
+func DisconnectsLT(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldLT(FieldDisconnects, v))
+}
+
+// DisconnectsLTE applies the LTE predicate on the "disconnects" field.
+func DisconnectsLTE(v int16) predicate.MatchParticipant {
+	return predicate.MatchParticipant(sql.FieldLTE(FieldDisconnects, v))
 }
 
 // And groups predicates with the AND operator between them.

@@ -49,7 +49,9 @@ type Room struct {
 	// Status holds the value of the "status" field.
 	Status string `json:"status,omitempty"`
 	// ClosedAt holds the value of the "closed_at" field.
-	ClosedAt     *time.Time `json:"closed_at,omitempty"`
+	ClosedAt *time.Time `json:"closed_at,omitempty"`
+	// MatchID holds the value of the "match_id" field.
+	MatchID      *uuid.UUID `json:"match_id,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -58,7 +60,7 @@ func (*Room) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case room.FieldCreatedBy, room.FieldUpdatedBy, room.FieldDeletedBy, room.FieldSchoolID:
+		case room.FieldCreatedBy, room.FieldUpdatedBy, room.FieldDeletedBy, room.FieldSchoolID, room.FieldMatchID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case room.FieldVersion, room.FieldCapacity:
 			values[i] = new(sql.NullInt64)
@@ -193,6 +195,13 @@ func (_m *Room) assignValues(columns []string, values []any) error {
 				_m.ClosedAt = new(time.Time)
 				*_m.ClosedAt = value.Time
 			}
+		case room.FieldMatchID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field match_id", values[i])
+			} else if value.Valid {
+				_m.MatchID = new(uuid.UUID)
+				*_m.MatchID = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -291,6 +300,11 @@ func (_m *Room) String() string {
 	if v := _m.ClosedAt; v != nil {
 		builder.WriteString("closed_at=")
 		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.MatchID; v != nil {
+		builder.WriteString("match_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteByte(')')
 	return builder.String()

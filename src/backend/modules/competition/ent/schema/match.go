@@ -42,6 +42,12 @@ func (Match) Fields() []ent.Field {
 		field.JSON("question_plan", map[string]any{}).Optional(),
 		field.Time("started_at").Optional().Nillable(),
 		field.Time("ended_at").Optional().Nillable(),
+		// F105: the question plan of module learning pinned when the match room opens (ADR-0043), the room and why
+		// the match ended.
+		field.UUID("question_plan_id", uuid.UUID{}).Optional().Nillable(),
+		field.String("question_plan_version").MaxLen(64).Optional().Nillable(),
+		field.UUID("room_id", uuid.UUID{}).Optional().Nillable(),
+		field.String("end_reason").MaxLen(64).Optional().Nillable(),
 	}
 }
 func (Match) Indexes() []ent.Index {
@@ -76,6 +82,34 @@ func (MatchParticipant) Fields() []ent.Field {
 			SchemaType(map[string]string{"postgres": "numeric(8,3)"}),
 		field.Float("rating_rd_at_match").Optional().Nillable().Immutable().
 			SchemaType(map[string]string{"postgres": "numeric(8,3)"}),
+		// F105: correct answers and disconnections of the student in the match (tournament: at most 2 graces).
+		field.Int16("correct_count").Optional().Nillable(),
+		field.Int16("disconnects").Default(0),
+	}
+}
+
+// MatchResult — competition.match_results (G*, DATABASE_DESIGN §2.10, F105): the one result of a match (PK match_id,
+// AC-CMP-005): written once by RecordMatchResult with the participants' outcomes and the outbox match.completed in one
+// transaction. Like matches it may span tenants (tenant_ids, hand-written uuid[] column) and is reached through
+// match_participants. summary holds ids, points and times only (no response, no answer key).
+type MatchResult struct{ ent.Schema }
+
+func (MatchResult) Annotations() []schema.Annotation {
+	return []schema.Annotation{entsql.Annotation{Schema: "competition", Table: "match_results"}}
+}
+func (MatchResult) Mixin() []ent.Mixin {
+	return []ent.Mixin{entx.GlobalBase{PK: entx.PK{Column: "match_id"}}}
+}
+func (MatchResult) Fields() []ent.Field {
+	return []ent.Field{
+		field.String("status").MaxLen(64).Immutable(),
+		field.String("end_reason").MaxLen(64).Immutable(),
+		field.Int16("winner_team").Optional().Nillable().Immutable(),
+		field.Bool("rated").Immutable(),
+		field.UUID("rule_version_id", uuid.UUID{}).Immutable(),
+		field.JSON("summary", map[string]any{}).Immutable(),
+		field.Time("verified_at").Immutable(),
+		field.String("recorded_by").MaxLen(64).Immutable(),
 	}
 }
 func (MatchParticipant) Indexes() []ent.Index {

@@ -64,6 +64,10 @@ func Compose(r *module.Registry) (*Composition, error) {
 	if f := cht.Facade(); f != nil {
 		cin.Chat = f
 	}
+	// The battle engine (F105) asks module learning for the question plans of the matches.
+	if f := lrn.Facade(); f != nil {
+		cin.Learning = f
+	}
 	cmp.Wire(cin)
 	in := identity.Imports{}
 	if f := lrn.Facade(); f != nil {

@@ -56,6 +56,8 @@ type Handlers struct {
 	// F104 — matchmaking and friend duels (nil: not mounted).
 	Matchmaking        MatchmakingCommands
 	MatchmakingQueries MatchmakingQueries
+	// F105 — match history and review (nil: not mounted).
+	Battles BattleQueries
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -123,7 +125,12 @@ func Register(s *httpx.Server, h Handlers) error {
 		}
 	}
 	if h.Matchmaking != nil && h.MatchmakingQueries != nil {
-		return registerMatchmaking(s, h.Matchmaking, h.MatchmakingQueries)
+		if err := registerMatchmaking(s, h.Matchmaking, h.MatchmakingQueries); err != nil {
+			return err
+		}
+	}
+	if h.Battles != nil {
+		return registerBattles(s, h.Battles)
 	}
 	return nil
 }

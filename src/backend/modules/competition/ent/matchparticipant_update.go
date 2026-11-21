@@ -211,6 +211,54 @@ func (_u *MatchParticipantUpdate) ClearConnectedMs() *MatchParticipantUpdate {
 	return _u
 }
 
+// SetCorrectCount sets the "correct_count" field.
+func (_u *MatchParticipantUpdate) SetCorrectCount(v int16) *MatchParticipantUpdate {
+	_u.mutation.ResetCorrectCount()
+	_u.mutation.SetCorrectCount(v)
+	return _u
+}
+
+// SetNillableCorrectCount sets the "correct_count" field if the given value is not nil.
+func (_u *MatchParticipantUpdate) SetNillableCorrectCount(v *int16) *MatchParticipantUpdate {
+	if v != nil {
+		_u.SetCorrectCount(*v)
+	}
+	return _u
+}
+
+// AddCorrectCount adds value to the "correct_count" field.
+func (_u *MatchParticipantUpdate) AddCorrectCount(v int16) *MatchParticipantUpdate {
+	_u.mutation.AddCorrectCount(v)
+	return _u
+}
+
+// ClearCorrectCount clears the value of the "correct_count" field.
+func (_u *MatchParticipantUpdate) ClearCorrectCount() *MatchParticipantUpdate {
+	_u.mutation.ClearCorrectCount()
+	return _u
+}
+
+// SetDisconnects sets the "disconnects" field.
+func (_u *MatchParticipantUpdate) SetDisconnects(v int16) *MatchParticipantUpdate {
+	_u.mutation.ResetDisconnects()
+	_u.mutation.SetDisconnects(v)
+	return _u
+}
+
+// SetNillableDisconnects sets the "disconnects" field if the given value is not nil.
+func (_u *MatchParticipantUpdate) SetNillableDisconnects(v *int16) *MatchParticipantUpdate {
+	if v != nil {
+		_u.SetDisconnects(*v)
+	}
+	return _u
+}
+
+// AddDisconnects adds value to the "disconnects" field.
+func (_u *MatchParticipantUpdate) AddDisconnects(v int16) *MatchParticipantUpdate {
+	_u.mutation.AddDisconnects(v)
+	return _u
+}
+
 // Mutation returns the MatchParticipantMutation object of the builder.
 func (_u *MatchParticipantUpdate) Mutation() *MatchParticipantMutation {
 	return _u.mutation
@@ -353,6 +401,21 @@ func (_u *MatchParticipantUpdate) sqlSave(ctx context.Context) (_node int, err e
 	}
 	if _u.mutation.RatingRdAtMatchCleared() {
 		_spec.ClearField(matchparticipant.FieldRatingRdAtMatch, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.CorrectCount(); ok {
+		_spec.SetField(matchparticipant.FieldCorrectCount, field.TypeInt16, value)
+	}
+	if value, ok := _u.mutation.AddedCorrectCount(); ok {
+		_spec.AddField(matchparticipant.FieldCorrectCount, field.TypeInt16, value)
+	}
+	if _u.mutation.CorrectCountCleared() {
+		_spec.ClearField(matchparticipant.FieldCorrectCount, field.TypeInt16)
+	}
+	if value, ok := _u.mutation.Disconnects(); ok {
+		_spec.SetField(matchparticipant.FieldDisconnects, field.TypeInt16, value)
+	}
+	if value, ok := _u.mutation.AddedDisconnects(); ok {
+		_spec.AddField(matchparticipant.FieldDisconnects, field.TypeInt16, value)
 	}
 	_spec.Node.Schema = _u.schemaConfig.MatchParticipant
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -557,6 +620,54 @@ func (_u *MatchParticipantUpdateOne) ClearConnectedMs() *MatchParticipantUpdateO
 	return _u
 }
 
+// SetCorrectCount sets the "correct_count" field.
+func (_u *MatchParticipantUpdateOne) SetCorrectCount(v int16) *MatchParticipantUpdateOne {
+	_u.mutation.ResetCorrectCount()
+	_u.mutation.SetCorrectCount(v)
+	return _u
+}
+
+// SetNillableCorrectCount sets the "correct_count" field if the given value is not nil.
+func (_u *MatchParticipantUpdateOne) SetNillableCorrectCount(v *int16) *MatchParticipantUpdateOne {
+	if v != nil {
+		_u.SetCorrectCount(*v)
+	}
+	return _u
+}
+
+// AddCorrectCount adds value to the "correct_count" field.
+func (_u *MatchParticipantUpdateOne) AddCorrectCount(v int16) *MatchParticipantUpdateOne {
+	_u.mutation.AddCorrectCount(v)
+	return _u
+}
+
+// ClearCorrectCount clears the value of the "correct_count" field.
+func (_u *MatchParticipantUpdateOne) ClearCorrectCount() *MatchParticipantUpdateOne {
+	_u.mutation.ClearCorrectCount()
+	return _u
+}
+
+// SetDisconnects sets the "disconnects" field.
+func (_u *MatchParticipantUpdateOne) SetDisconnects(v int16) *MatchParticipantUpdateOne {
+	_u.mutation.ResetDisconnects()
+	_u.mutation.SetDisconnects(v)
+	return _u
+}
+
+// SetNillableDisconnects sets the "disconnects" field if the given value is not nil.
+func (_u *MatchParticipantUpdateOne) SetNillableDisconnects(v *int16) *MatchParticipantUpdateOne {
+	if v != nil {
+		_u.SetDisconnects(*v)
+	}
+	return _u
+}
+
+// AddDisconnects adds value to the "disconnects" field.
+func (_u *MatchParticipantUpdateOne) AddDisconnects(v int16) *MatchParticipantUpdateOne {
+	_u.mutation.AddDisconnects(v)
+	return _u
+}
+
 // Mutation returns the MatchParticipantMutation object of the builder.
 func (_u *MatchParticipantUpdateOne) Mutation() *MatchParticipantMutation {
 	return _u.mutation
@@ -729,6 +840,21 @@ func (_u *MatchParticipantUpdateOne) sqlSave(ctx context.Context) (_node *MatchP
 	}
 	if _u.mutation.RatingRdAtMatchCleared() {
 		_spec.ClearField(matchparticipant.FieldRatingRdAtMatch, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.CorrectCount(); ok {
+		_spec.SetField(matchparticipant.FieldCorrectCount, field.TypeInt16, value)
+	}
+	if value, ok := _u.mutation.AddedCorrectCount(); ok {
+		_spec.AddField(matchparticipant.FieldCorrectCount, field.TypeInt16, value)
+	}
+	if _u.mutation.CorrectCountCleared() {
+		_spec.ClearField(matchparticipant.FieldCorrectCount, field.TypeInt16)
+	}
+	if value, ok := _u.mutation.Disconnects(); ok {
+		_spec.SetField(matchparticipant.FieldDisconnects, field.TypeInt16, value)
+	}
+	if value, ok := _u.mutation.AddedDisconnects(); ok {
+		_spec.AddField(matchparticipant.FieldDisconnects, field.TypeInt16, value)
 	}
 	_spec.Node.Schema = _u.schemaConfig.MatchParticipant
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

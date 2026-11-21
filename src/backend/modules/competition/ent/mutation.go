@@ -19,6 +19,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/match"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchparticipant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyactivity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
@@ -45,6 +46,7 @@ const (
 	TypeGameConfigVersion      = "GameConfigVersion"
 	TypeMatch                  = "Match"
 	TypeMatchParticipant       = "MatchParticipant"
+	TypeMatchResult            = "MatchResult"
 	TypeParty                  = "Party"
 	TypePartyActivity          = "PartyActivity"
 	TypePartyInvitation        = "PartyInvitation"
@@ -6333,39 +6335,43 @@ func (m *GameConfigVersionMutation) ResetEdge(name string) error {
 // MatchMutation represents an operation that mutates the Match nodes in the graph.
 type MatchMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *uuid.UUID
-	created_at         *time.Time
-	created_by         *uuid.UUID
-	updated_at         *time.Time
-	updated_by         *uuid.UUID
-	deleted_at         *time.Time
-	deleted_by         *uuid.UUID
-	delete_reason      *string
-	version            *int64
-	addversion         *int64
-	mode               *string
-	matchmaking_type   *string
-	subject_id         *uuid.UUID
-	topic_id           *uuid.UUID
-	grade_level        *int16
-	addgrade_level     *int16
-	status             *string
-	ranked             *bool
-	is_bot             *bool
-	scope_kind         *string
-	tournament_id      *uuid.UUID
-	tournament_node_id *uuid.UUID
-	duel_id            *uuid.UUID
-	ruleset_version_id *uuid.UUID
-	question_plan      *map[string]interface{}
-	started_at         *time.Time
-	ended_at           *time.Time
-	clearedFields      map[string]struct{}
-	done               bool
-	oldValue           func(context.Context) (*Match, error)
-	predicates         []predicate.Match
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	created_at            *time.Time
+	created_by            *uuid.UUID
+	updated_at            *time.Time
+	updated_by            *uuid.UUID
+	deleted_at            *time.Time
+	deleted_by            *uuid.UUID
+	delete_reason         *string
+	version               *int64
+	addversion            *int64
+	mode                  *string
+	matchmaking_type      *string
+	subject_id            *uuid.UUID
+	topic_id              *uuid.UUID
+	grade_level           *int16
+	addgrade_level        *int16
+	status                *string
+	ranked                *bool
+	is_bot                *bool
+	scope_kind            *string
+	tournament_id         *uuid.UUID
+	tournament_node_id    *uuid.UUID
+	duel_id               *uuid.UUID
+	ruleset_version_id    *uuid.UUID
+	question_plan         *map[string]interface{}
+	started_at            *time.Time
+	ended_at              *time.Time
+	question_plan_id      *uuid.UUID
+	question_plan_version *string
+	room_id               *uuid.UUID
+	end_reason            *string
+	clearedFields         map[string]struct{}
+	done                  bool
+	oldValue              func(context.Context) (*Match, error)
+	predicates            []predicate.Match
 }
 
 var _ ent.Mutation = (*MatchMutation)(nil)
@@ -7532,6 +7538,202 @@ func (m *MatchMutation) ResetEndedAt() {
 	delete(m.clearedFields, match.FieldEndedAt)
 }
 
+// SetQuestionPlanID sets the "question_plan_id" field.
+func (m *MatchMutation) SetQuestionPlanID(u uuid.UUID) {
+	m.question_plan_id = &u
+}
+
+// QuestionPlanID returns the value of the "question_plan_id" field in the mutation.
+func (m *MatchMutation) QuestionPlanID() (r uuid.UUID, exists bool) {
+	v := m.question_plan_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionPlanID returns the old "question_plan_id" field's value of the Match entity.
+// If the Match object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchMutation) OldQuestionPlanID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionPlanID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionPlanID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionPlanID: %w", err)
+	}
+	return oldValue.QuestionPlanID, nil
+}
+
+// ClearQuestionPlanID clears the value of the "question_plan_id" field.
+func (m *MatchMutation) ClearQuestionPlanID() {
+	m.question_plan_id = nil
+	m.clearedFields[match.FieldQuestionPlanID] = struct{}{}
+}
+
+// QuestionPlanIDCleared returns if the "question_plan_id" field was cleared in this mutation.
+func (m *MatchMutation) QuestionPlanIDCleared() bool {
+	_, ok := m.clearedFields[match.FieldQuestionPlanID]
+	return ok
+}
+
+// ResetQuestionPlanID resets all changes to the "question_plan_id" field.
+func (m *MatchMutation) ResetQuestionPlanID() {
+	m.question_plan_id = nil
+	delete(m.clearedFields, match.FieldQuestionPlanID)
+}
+
+// SetQuestionPlanVersion sets the "question_plan_version" field.
+func (m *MatchMutation) SetQuestionPlanVersion(s string) {
+	m.question_plan_version = &s
+}
+
+// QuestionPlanVersion returns the value of the "question_plan_version" field in the mutation.
+func (m *MatchMutation) QuestionPlanVersion() (r string, exists bool) {
+	v := m.question_plan_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuestionPlanVersion returns the old "question_plan_version" field's value of the Match entity.
+// If the Match object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchMutation) OldQuestionPlanVersion(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuestionPlanVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuestionPlanVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuestionPlanVersion: %w", err)
+	}
+	return oldValue.QuestionPlanVersion, nil
+}
+
+// ClearQuestionPlanVersion clears the value of the "question_plan_version" field.
+func (m *MatchMutation) ClearQuestionPlanVersion() {
+	m.question_plan_version = nil
+	m.clearedFields[match.FieldQuestionPlanVersion] = struct{}{}
+}
+
+// QuestionPlanVersionCleared returns if the "question_plan_version" field was cleared in this mutation.
+func (m *MatchMutation) QuestionPlanVersionCleared() bool {
+	_, ok := m.clearedFields[match.FieldQuestionPlanVersion]
+	return ok
+}
+
+// ResetQuestionPlanVersion resets all changes to the "question_plan_version" field.
+func (m *MatchMutation) ResetQuestionPlanVersion() {
+	m.question_plan_version = nil
+	delete(m.clearedFields, match.FieldQuestionPlanVersion)
+}
+
+// SetRoomID sets the "room_id" field.
+func (m *MatchMutation) SetRoomID(u uuid.UUID) {
+	m.room_id = &u
+}
+
+// RoomID returns the value of the "room_id" field in the mutation.
+func (m *MatchMutation) RoomID() (r uuid.UUID, exists bool) {
+	v := m.room_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRoomID returns the old "room_id" field's value of the Match entity.
+// If the Match object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchMutation) OldRoomID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRoomID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRoomID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRoomID: %w", err)
+	}
+	return oldValue.RoomID, nil
+}
+
+// ClearRoomID clears the value of the "room_id" field.
+func (m *MatchMutation) ClearRoomID() {
+	m.room_id = nil
+	m.clearedFields[match.FieldRoomID] = struct{}{}
+}
+
+// RoomIDCleared returns if the "room_id" field was cleared in this mutation.
+func (m *MatchMutation) RoomIDCleared() bool {
+	_, ok := m.clearedFields[match.FieldRoomID]
+	return ok
+}
+
+// ResetRoomID resets all changes to the "room_id" field.
+func (m *MatchMutation) ResetRoomID() {
+	m.room_id = nil
+	delete(m.clearedFields, match.FieldRoomID)
+}
+
+// SetEndReason sets the "end_reason" field.
+func (m *MatchMutation) SetEndReason(s string) {
+	m.end_reason = &s
+}
+
+// EndReason returns the value of the "end_reason" field in the mutation.
+func (m *MatchMutation) EndReason() (r string, exists bool) {
+	v := m.end_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndReason returns the old "end_reason" field's value of the Match entity.
+// If the Match object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchMutation) OldEndReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndReason: %w", err)
+	}
+	return oldValue.EndReason, nil
+}
+
+// ClearEndReason clears the value of the "end_reason" field.
+func (m *MatchMutation) ClearEndReason() {
+	m.end_reason = nil
+	m.clearedFields[match.FieldEndReason] = struct{}{}
+}
+
+// EndReasonCleared returns if the "end_reason" field was cleared in this mutation.
+func (m *MatchMutation) EndReasonCleared() bool {
+	_, ok := m.clearedFields[match.FieldEndReason]
+	return ok
+}
+
+// ResetEndReason resets all changes to the "end_reason" field.
+func (m *MatchMutation) ResetEndReason() {
+	m.end_reason = nil
+	delete(m.clearedFields, match.FieldEndReason)
+}
+
 // Where appends a list predicates to the MatchMutation builder.
 func (m *MatchMutation) Where(ps ...predicate.Match) {
 	m.predicates = append(m.predicates, ps...)
@@ -7566,7 +7768,7 @@ func (m *MatchMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MatchMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 28)
 	if m.created_at != nil {
 		fields = append(fields, match.FieldCreatedAt)
 	}
@@ -7639,6 +7841,18 @@ func (m *MatchMutation) Fields() []string {
 	if m.ended_at != nil {
 		fields = append(fields, match.FieldEndedAt)
 	}
+	if m.question_plan_id != nil {
+		fields = append(fields, match.FieldQuestionPlanID)
+	}
+	if m.question_plan_version != nil {
+		fields = append(fields, match.FieldQuestionPlanVersion)
+	}
+	if m.room_id != nil {
+		fields = append(fields, match.FieldRoomID)
+	}
+	if m.end_reason != nil {
+		fields = append(fields, match.FieldEndReason)
+	}
 	return fields
 }
 
@@ -7695,6 +7909,14 @@ func (m *MatchMutation) Field(name string) (ent.Value, bool) {
 		return m.StartedAt()
 	case match.FieldEndedAt:
 		return m.EndedAt()
+	case match.FieldQuestionPlanID:
+		return m.QuestionPlanID()
+	case match.FieldQuestionPlanVersion:
+		return m.QuestionPlanVersion()
+	case match.FieldRoomID:
+		return m.RoomID()
+	case match.FieldEndReason:
+		return m.EndReason()
 	}
 	return nil, false
 }
@@ -7752,6 +7974,14 @@ func (m *MatchMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldStartedAt(ctx)
 	case match.FieldEndedAt:
 		return m.OldEndedAt(ctx)
+	case match.FieldQuestionPlanID:
+		return m.OldQuestionPlanID(ctx)
+	case match.FieldQuestionPlanVersion:
+		return m.OldQuestionPlanVersion(ctx)
+	case match.FieldRoomID:
+		return m.OldRoomID(ctx)
+	case match.FieldEndReason:
+		return m.OldEndReason(ctx)
 	}
 	return nil, fmt.Errorf("unknown Match field %s", name)
 }
@@ -7929,6 +8159,34 @@ func (m *MatchMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEndedAt(v)
 		return nil
+	case match.FieldQuestionPlanID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionPlanID(v)
+		return nil
+	case match.FieldQuestionPlanVersion:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuestionPlanVersion(v)
+		return nil
+	case match.FieldRoomID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRoomID(v)
+		return nil
+	case match.FieldEndReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndReason(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Match field %s", name)
 }
@@ -8022,6 +8280,18 @@ func (m *MatchMutation) ClearedFields() []string {
 	if m.FieldCleared(match.FieldEndedAt) {
 		fields = append(fields, match.FieldEndedAt)
 	}
+	if m.FieldCleared(match.FieldQuestionPlanID) {
+		fields = append(fields, match.FieldQuestionPlanID)
+	}
+	if m.FieldCleared(match.FieldQuestionPlanVersion) {
+		fields = append(fields, match.FieldQuestionPlanVersion)
+	}
+	if m.FieldCleared(match.FieldRoomID) {
+		fields = append(fields, match.FieldRoomID)
+	}
+	if m.FieldCleared(match.FieldEndReason) {
+		fields = append(fields, match.FieldEndReason)
+	}
 	return fields
 }
 
@@ -8071,6 +8341,18 @@ func (m *MatchMutation) ClearField(name string) error {
 		return nil
 	case match.FieldEndedAt:
 		m.ClearEndedAt()
+		return nil
+	case match.FieldQuestionPlanID:
+		m.ClearQuestionPlanID()
+		return nil
+	case match.FieldQuestionPlanVersion:
+		m.ClearQuestionPlanVersion()
+		return nil
+	case match.FieldRoomID:
+		m.ClearRoomID()
+		return nil
+	case match.FieldEndReason:
+		m.ClearEndReason()
 		return nil
 	}
 	return fmt.Errorf("unknown Match nullable field %s", name)
@@ -8151,6 +8433,18 @@ func (m *MatchMutation) ResetField(name string) error {
 		return nil
 	case match.FieldEndedAt:
 		m.ResetEndedAt()
+		return nil
+	case match.FieldQuestionPlanID:
+		m.ResetQuestionPlanID()
+		return nil
+	case match.FieldQuestionPlanVersion:
+		m.ResetQuestionPlanVersion()
+		return nil
+	case match.FieldRoomID:
+		m.ResetRoomID()
+		return nil
+	case match.FieldEndReason:
+		m.ResetEndReason()
 		return nil
 	}
 	return fmt.Errorf("unknown Match field %s", name)
@@ -8235,6 +8529,10 @@ type MatchParticipantMutation struct {
 	addrating_mu_at_match *float64
 	rating_rd_at_match    *float64
 	addrating_rd_at_match *float64
+	correct_count         *int16
+	addcorrect_count      *int16
+	disconnects           *int16
+	adddisconnects        *int16
 	clearedFields         map[string]struct{}
 	done                  bool
 	oldValue              func(context.Context) (*MatchParticipant, error)
@@ -9296,6 +9594,132 @@ func (m *MatchParticipantMutation) ResetRatingRdAtMatch() {
 	delete(m.clearedFields, matchparticipant.FieldRatingRdAtMatch)
 }
 
+// SetCorrectCount sets the "correct_count" field.
+func (m *MatchParticipantMutation) SetCorrectCount(i int16) {
+	m.correct_count = &i
+	m.addcorrect_count = nil
+}
+
+// CorrectCount returns the value of the "correct_count" field in the mutation.
+func (m *MatchParticipantMutation) CorrectCount() (r int16, exists bool) {
+	v := m.correct_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCorrectCount returns the old "correct_count" field's value of the MatchParticipant entity.
+// If the MatchParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchParticipantMutation) OldCorrectCount(ctx context.Context) (v *int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCorrectCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCorrectCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCorrectCount: %w", err)
+	}
+	return oldValue.CorrectCount, nil
+}
+
+// AddCorrectCount adds i to the "correct_count" field.
+func (m *MatchParticipantMutation) AddCorrectCount(i int16) {
+	if m.addcorrect_count != nil {
+		*m.addcorrect_count += i
+	} else {
+		m.addcorrect_count = &i
+	}
+}
+
+// AddedCorrectCount returns the value that was added to the "correct_count" field in this mutation.
+func (m *MatchParticipantMutation) AddedCorrectCount() (r int16, exists bool) {
+	v := m.addcorrect_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearCorrectCount clears the value of the "correct_count" field.
+func (m *MatchParticipantMutation) ClearCorrectCount() {
+	m.correct_count = nil
+	m.addcorrect_count = nil
+	m.clearedFields[matchparticipant.FieldCorrectCount] = struct{}{}
+}
+
+// CorrectCountCleared returns if the "correct_count" field was cleared in this mutation.
+func (m *MatchParticipantMutation) CorrectCountCleared() bool {
+	_, ok := m.clearedFields[matchparticipant.FieldCorrectCount]
+	return ok
+}
+
+// ResetCorrectCount resets all changes to the "correct_count" field.
+func (m *MatchParticipantMutation) ResetCorrectCount() {
+	m.correct_count = nil
+	m.addcorrect_count = nil
+	delete(m.clearedFields, matchparticipant.FieldCorrectCount)
+}
+
+// SetDisconnects sets the "disconnects" field.
+func (m *MatchParticipantMutation) SetDisconnects(i int16) {
+	m.disconnects = &i
+	m.adddisconnects = nil
+}
+
+// Disconnects returns the value of the "disconnects" field in the mutation.
+func (m *MatchParticipantMutation) Disconnects() (r int16, exists bool) {
+	v := m.disconnects
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisconnects returns the old "disconnects" field's value of the MatchParticipant entity.
+// If the MatchParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchParticipantMutation) OldDisconnects(ctx context.Context) (v int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisconnects is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisconnects requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisconnects: %w", err)
+	}
+	return oldValue.Disconnects, nil
+}
+
+// AddDisconnects adds i to the "disconnects" field.
+func (m *MatchParticipantMutation) AddDisconnects(i int16) {
+	if m.adddisconnects != nil {
+		*m.adddisconnects += i
+	} else {
+		m.adddisconnects = &i
+	}
+}
+
+// AddedDisconnects returns the value that was added to the "disconnects" field in this mutation.
+func (m *MatchParticipantMutation) AddedDisconnects() (r int16, exists bool) {
+	v := m.adddisconnects
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDisconnects resets all changes to the "disconnects" field.
+func (m *MatchParticipantMutation) ResetDisconnects() {
+	m.disconnects = nil
+	m.adddisconnects = nil
+}
+
 // Where appends a list predicates to the MatchParticipantMutation builder.
 func (m *MatchParticipantMutation) Where(ps ...predicate.MatchParticipant) {
 	m.predicates = append(m.predicates, ps...)
@@ -9330,7 +9754,7 @@ func (m *MatchParticipantMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MatchParticipantMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 21)
 	if m.tenant_id != nil {
 		fields = append(fields, matchparticipant.FieldTenantID)
 	}
@@ -9388,6 +9812,12 @@ func (m *MatchParticipantMutation) Fields() []string {
 	if m.rating_rd_at_match != nil {
 		fields = append(fields, matchparticipant.FieldRatingRdAtMatch)
 	}
+	if m.correct_count != nil {
+		fields = append(fields, matchparticipant.FieldCorrectCount)
+	}
+	if m.disconnects != nil {
+		fields = append(fields, matchparticipant.FieldDisconnects)
+	}
 	return fields
 }
 
@@ -9434,6 +9864,10 @@ func (m *MatchParticipantMutation) Field(name string) (ent.Value, bool) {
 		return m.RatingMuAtMatch()
 	case matchparticipant.FieldRatingRdAtMatch:
 		return m.RatingRdAtMatch()
+	case matchparticipant.FieldCorrectCount:
+		return m.CorrectCount()
+	case matchparticipant.FieldDisconnects:
+		return m.Disconnects()
 	}
 	return nil, false
 }
@@ -9481,6 +9915,10 @@ func (m *MatchParticipantMutation) OldField(ctx context.Context, name string) (e
 		return m.OldRatingMuAtMatch(ctx)
 	case matchparticipant.FieldRatingRdAtMatch:
 		return m.OldRatingRdAtMatch(ctx)
+	case matchparticipant.FieldCorrectCount:
+		return m.OldCorrectCount(ctx)
+	case matchparticipant.FieldDisconnects:
+		return m.OldDisconnects(ctx)
 	}
 	return nil, fmt.Errorf("unknown MatchParticipant field %s", name)
 }
@@ -9623,6 +10061,20 @@ func (m *MatchParticipantMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetRatingRdAtMatch(v)
 		return nil
+	case matchparticipant.FieldCorrectCount:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCorrectCount(v)
+		return nil
+	case matchparticipant.FieldDisconnects:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisconnects(v)
+		return nil
 	}
 	return fmt.Errorf("unknown MatchParticipant field %s", name)
 }
@@ -9649,6 +10101,12 @@ func (m *MatchParticipantMutation) AddedFields() []string {
 	if m.addrating_rd_at_match != nil {
 		fields = append(fields, matchparticipant.FieldRatingRdAtMatch)
 	}
+	if m.addcorrect_count != nil {
+		fields = append(fields, matchparticipant.FieldCorrectCount)
+	}
+	if m.adddisconnects != nil {
+		fields = append(fields, matchparticipant.FieldDisconnects)
+	}
 	return fields
 }
 
@@ -9669,6 +10127,10 @@ func (m *MatchParticipantMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedRatingMuAtMatch()
 	case matchparticipant.FieldRatingRdAtMatch:
 		return m.AddedRatingRdAtMatch()
+	case matchparticipant.FieldCorrectCount:
+		return m.AddedCorrectCount()
+	case matchparticipant.FieldDisconnects:
+		return m.AddedDisconnects()
 	}
 	return nil, false
 }
@@ -9720,6 +10182,20 @@ func (m *MatchParticipantMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddRatingRdAtMatch(v)
 		return nil
+	case matchparticipant.FieldCorrectCount:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCorrectCount(v)
+		return nil
+	case matchparticipant.FieldDisconnects:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDisconnects(v)
+		return nil
 	}
 	return fmt.Errorf("unknown MatchParticipant numeric field %s", name)
 }
@@ -9760,6 +10236,9 @@ func (m *MatchParticipantMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(matchparticipant.FieldRatingRdAtMatch) {
 		fields = append(fields, matchparticipant.FieldRatingRdAtMatch)
+	}
+	if m.FieldCleared(matchparticipant.FieldCorrectCount) {
+		fields = append(fields, matchparticipant.FieldCorrectCount)
 	}
 	return fields
 }
@@ -9807,6 +10286,9 @@ func (m *MatchParticipantMutation) ClearField(name string) error {
 		return nil
 	case matchparticipant.FieldRatingRdAtMatch:
 		m.ClearRatingRdAtMatch()
+		return nil
+	case matchparticipant.FieldCorrectCount:
+		m.ClearCorrectCount()
 		return nil
 	}
 	return fmt.Errorf("unknown MatchParticipant nullable field %s", name)
@@ -9873,6 +10355,12 @@ func (m *MatchParticipantMutation) ResetField(name string) error {
 	case matchparticipant.FieldRatingRdAtMatch:
 		m.ResetRatingRdAtMatch()
 		return nil
+	case matchparticipant.FieldCorrectCount:
+		m.ResetCorrectCount()
+		return nil
+	case matchparticipant.FieldDisconnects:
+		m.ResetDisconnects()
+		return nil
 	}
 	return fmt.Errorf("unknown MatchParticipant field %s", name)
 }
@@ -9923,6 +10411,1335 @@ func (m *MatchParticipantMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *MatchParticipantMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown MatchParticipant edge %s", name)
+}
+
+// MatchResultMutation represents an operation that mutates the MatchResult nodes in the graph.
+type MatchResultMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	created_at      *time.Time
+	created_by      *uuid.UUID
+	updated_at      *time.Time
+	updated_by      *uuid.UUID
+	deleted_at      *time.Time
+	deleted_by      *uuid.UUID
+	delete_reason   *string
+	version         *int64
+	addversion      *int64
+	status          *string
+	end_reason      *string
+	winner_team     *int16
+	addwinner_team  *int16
+	rated           *bool
+	rule_version_id *uuid.UUID
+	summary         *map[string]interface{}
+	verified_at     *time.Time
+	recorded_by     *string
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*MatchResult, error)
+	predicates      []predicate.MatchResult
+}
+
+var _ ent.Mutation = (*MatchResultMutation)(nil)
+
+// matchresultOption allows management of the mutation configuration using functional options.
+type matchresultOption func(*MatchResultMutation)
+
+// newMatchResultMutation creates new mutation for the MatchResult entity.
+func newMatchResultMutation(c config, op Op, opts ...matchresultOption) *MatchResultMutation {
+	m := &MatchResultMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMatchResult,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMatchResultID sets the ID field of the mutation.
+func withMatchResultID(id uuid.UUID) matchresultOption {
+	return func(m *MatchResultMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MatchResult
+		)
+		m.oldValue = func(ctx context.Context) (*MatchResult, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MatchResult.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMatchResult sets the old MatchResult of the mutation.
+func withMatchResult(node *MatchResult) matchresultOption {
+	return func(m *MatchResultMutation) {
+		m.oldValue = func(context.Context) (*MatchResult, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MatchResultMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MatchResultMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MatchResult entities.
+func (m *MatchResultMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MatchResultMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MatchResultMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MatchResult.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MatchResultMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MatchResultMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MatchResultMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *MatchResultMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *MatchResultMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *MatchResultMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[matchresult.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *MatchResultMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[matchresult.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *MatchResultMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, matchresult.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *MatchResultMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *MatchResultMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *MatchResultMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *MatchResultMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *MatchResultMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *MatchResultMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[matchresult.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *MatchResultMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[matchresult.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *MatchResultMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, matchresult.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *MatchResultMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *MatchResultMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *MatchResultMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[matchresult.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *MatchResultMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[matchresult.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *MatchResultMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, matchresult.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *MatchResultMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *MatchResultMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *MatchResultMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[matchresult.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *MatchResultMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[matchresult.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *MatchResultMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, matchresult.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *MatchResultMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *MatchResultMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *MatchResultMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[matchresult.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *MatchResultMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[matchresult.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *MatchResultMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, matchresult.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *MatchResultMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *MatchResultMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *MatchResultMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *MatchResultMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *MatchResultMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *MatchResultMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *MatchResultMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *MatchResultMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetEndReason sets the "end_reason" field.
+func (m *MatchResultMutation) SetEndReason(s string) {
+	m.end_reason = &s
+}
+
+// EndReason returns the value of the "end_reason" field in the mutation.
+func (m *MatchResultMutation) EndReason() (r string, exists bool) {
+	v := m.end_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndReason returns the old "end_reason" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldEndReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndReason: %w", err)
+	}
+	return oldValue.EndReason, nil
+}
+
+// ResetEndReason resets all changes to the "end_reason" field.
+func (m *MatchResultMutation) ResetEndReason() {
+	m.end_reason = nil
+}
+
+// SetWinnerTeam sets the "winner_team" field.
+func (m *MatchResultMutation) SetWinnerTeam(i int16) {
+	m.winner_team = &i
+	m.addwinner_team = nil
+}
+
+// WinnerTeam returns the value of the "winner_team" field in the mutation.
+func (m *MatchResultMutation) WinnerTeam() (r int16, exists bool) {
+	v := m.winner_team
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWinnerTeam returns the old "winner_team" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldWinnerTeam(ctx context.Context) (v *int16, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWinnerTeam is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWinnerTeam requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWinnerTeam: %w", err)
+	}
+	return oldValue.WinnerTeam, nil
+}
+
+// AddWinnerTeam adds i to the "winner_team" field.
+func (m *MatchResultMutation) AddWinnerTeam(i int16) {
+	if m.addwinner_team != nil {
+		*m.addwinner_team += i
+	} else {
+		m.addwinner_team = &i
+	}
+}
+
+// AddedWinnerTeam returns the value that was added to the "winner_team" field in this mutation.
+func (m *MatchResultMutation) AddedWinnerTeam() (r int16, exists bool) {
+	v := m.addwinner_team
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearWinnerTeam clears the value of the "winner_team" field.
+func (m *MatchResultMutation) ClearWinnerTeam() {
+	m.winner_team = nil
+	m.addwinner_team = nil
+	m.clearedFields[matchresult.FieldWinnerTeam] = struct{}{}
+}
+
+// WinnerTeamCleared returns if the "winner_team" field was cleared in this mutation.
+func (m *MatchResultMutation) WinnerTeamCleared() bool {
+	_, ok := m.clearedFields[matchresult.FieldWinnerTeam]
+	return ok
+}
+
+// ResetWinnerTeam resets all changes to the "winner_team" field.
+func (m *MatchResultMutation) ResetWinnerTeam() {
+	m.winner_team = nil
+	m.addwinner_team = nil
+	delete(m.clearedFields, matchresult.FieldWinnerTeam)
+}
+
+// SetRated sets the "rated" field.
+func (m *MatchResultMutation) SetRated(b bool) {
+	m.rated = &b
+}
+
+// Rated returns the value of the "rated" field in the mutation.
+func (m *MatchResultMutation) Rated() (r bool, exists bool) {
+	v := m.rated
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRated returns the old "rated" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldRated(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRated is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRated requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRated: %w", err)
+	}
+	return oldValue.Rated, nil
+}
+
+// ResetRated resets all changes to the "rated" field.
+func (m *MatchResultMutation) ResetRated() {
+	m.rated = nil
+}
+
+// SetRuleVersionID sets the "rule_version_id" field.
+func (m *MatchResultMutation) SetRuleVersionID(u uuid.UUID) {
+	m.rule_version_id = &u
+}
+
+// RuleVersionID returns the value of the "rule_version_id" field in the mutation.
+func (m *MatchResultMutation) RuleVersionID() (r uuid.UUID, exists bool) {
+	v := m.rule_version_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRuleVersionID returns the old "rule_version_id" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldRuleVersionID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRuleVersionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRuleVersionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRuleVersionID: %w", err)
+	}
+	return oldValue.RuleVersionID, nil
+}
+
+// ResetRuleVersionID resets all changes to the "rule_version_id" field.
+func (m *MatchResultMutation) ResetRuleVersionID() {
+	m.rule_version_id = nil
+}
+
+// SetSummary sets the "summary" field.
+func (m *MatchResultMutation) SetSummary(value map[string]interface{}) {
+	m.summary = &value
+}
+
+// Summary returns the value of the "summary" field in the mutation.
+func (m *MatchResultMutation) Summary() (r map[string]interface{}, exists bool) {
+	v := m.summary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSummary returns the old "summary" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldSummary(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSummary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSummary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSummary: %w", err)
+	}
+	return oldValue.Summary, nil
+}
+
+// ResetSummary resets all changes to the "summary" field.
+func (m *MatchResultMutation) ResetSummary() {
+	m.summary = nil
+}
+
+// SetVerifiedAt sets the "verified_at" field.
+func (m *MatchResultMutation) SetVerifiedAt(t time.Time) {
+	m.verified_at = &t
+}
+
+// VerifiedAt returns the value of the "verified_at" field in the mutation.
+func (m *MatchResultMutation) VerifiedAt() (r time.Time, exists bool) {
+	v := m.verified_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVerifiedAt returns the old "verified_at" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldVerifiedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVerifiedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVerifiedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVerifiedAt: %w", err)
+	}
+	return oldValue.VerifiedAt, nil
+}
+
+// ResetVerifiedAt resets all changes to the "verified_at" field.
+func (m *MatchResultMutation) ResetVerifiedAt() {
+	m.verified_at = nil
+}
+
+// SetRecordedBy sets the "recorded_by" field.
+func (m *MatchResultMutation) SetRecordedBy(s string) {
+	m.recorded_by = &s
+}
+
+// RecordedBy returns the value of the "recorded_by" field in the mutation.
+func (m *MatchResultMutation) RecordedBy() (r string, exists bool) {
+	v := m.recorded_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRecordedBy returns the old "recorded_by" field's value of the MatchResult entity.
+// If the MatchResult object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MatchResultMutation) OldRecordedBy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRecordedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRecordedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRecordedBy: %w", err)
+	}
+	return oldValue.RecordedBy, nil
+}
+
+// ResetRecordedBy resets all changes to the "recorded_by" field.
+func (m *MatchResultMutation) ResetRecordedBy() {
+	m.recorded_by = nil
+}
+
+// Where appends a list predicates to the MatchResultMutation builder.
+func (m *MatchResultMutation) Where(ps ...predicate.MatchResult) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MatchResultMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MatchResultMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MatchResult, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MatchResultMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MatchResultMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MatchResult).
+func (m *MatchResultMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MatchResultMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.created_at != nil {
+		fields = append(fields, matchresult.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, matchresult.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, matchresult.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, matchresult.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, matchresult.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, matchresult.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, matchresult.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, matchresult.FieldVersion)
+	}
+	if m.status != nil {
+		fields = append(fields, matchresult.FieldStatus)
+	}
+	if m.end_reason != nil {
+		fields = append(fields, matchresult.FieldEndReason)
+	}
+	if m.winner_team != nil {
+		fields = append(fields, matchresult.FieldWinnerTeam)
+	}
+	if m.rated != nil {
+		fields = append(fields, matchresult.FieldRated)
+	}
+	if m.rule_version_id != nil {
+		fields = append(fields, matchresult.FieldRuleVersionID)
+	}
+	if m.summary != nil {
+		fields = append(fields, matchresult.FieldSummary)
+	}
+	if m.verified_at != nil {
+		fields = append(fields, matchresult.FieldVerifiedAt)
+	}
+	if m.recorded_by != nil {
+		fields = append(fields, matchresult.FieldRecordedBy)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MatchResultMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case matchresult.FieldCreatedAt:
+		return m.CreatedAt()
+	case matchresult.FieldCreatedBy:
+		return m.CreatedBy()
+	case matchresult.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case matchresult.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case matchresult.FieldDeletedAt:
+		return m.DeletedAt()
+	case matchresult.FieldDeletedBy:
+		return m.DeletedBy()
+	case matchresult.FieldDeleteReason:
+		return m.DeleteReason()
+	case matchresult.FieldVersion:
+		return m.Version()
+	case matchresult.FieldStatus:
+		return m.Status()
+	case matchresult.FieldEndReason:
+		return m.EndReason()
+	case matchresult.FieldWinnerTeam:
+		return m.WinnerTeam()
+	case matchresult.FieldRated:
+		return m.Rated()
+	case matchresult.FieldRuleVersionID:
+		return m.RuleVersionID()
+	case matchresult.FieldSummary:
+		return m.Summary()
+	case matchresult.FieldVerifiedAt:
+		return m.VerifiedAt()
+	case matchresult.FieldRecordedBy:
+		return m.RecordedBy()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MatchResultMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case matchresult.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case matchresult.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case matchresult.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case matchresult.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case matchresult.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case matchresult.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case matchresult.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case matchresult.FieldVersion:
+		return m.OldVersion(ctx)
+	case matchresult.FieldStatus:
+		return m.OldStatus(ctx)
+	case matchresult.FieldEndReason:
+		return m.OldEndReason(ctx)
+	case matchresult.FieldWinnerTeam:
+		return m.OldWinnerTeam(ctx)
+	case matchresult.FieldRated:
+		return m.OldRated(ctx)
+	case matchresult.FieldRuleVersionID:
+		return m.OldRuleVersionID(ctx)
+	case matchresult.FieldSummary:
+		return m.OldSummary(ctx)
+	case matchresult.FieldVerifiedAt:
+		return m.OldVerifiedAt(ctx)
+	case matchresult.FieldRecordedBy:
+		return m.OldRecordedBy(ctx)
+	}
+	return nil, fmt.Errorf("unknown MatchResult field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MatchResultMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case matchresult.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case matchresult.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case matchresult.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case matchresult.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case matchresult.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case matchresult.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case matchresult.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case matchresult.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case matchresult.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case matchresult.FieldEndReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndReason(v)
+		return nil
+	case matchresult.FieldWinnerTeam:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWinnerTeam(v)
+		return nil
+	case matchresult.FieldRated:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRated(v)
+		return nil
+	case matchresult.FieldRuleVersionID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRuleVersionID(v)
+		return nil
+	case matchresult.FieldSummary:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSummary(v)
+		return nil
+	case matchresult.FieldVerifiedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVerifiedAt(v)
+		return nil
+	case matchresult.FieldRecordedBy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRecordedBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MatchResult field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MatchResultMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, matchresult.FieldVersion)
+	}
+	if m.addwinner_team != nil {
+		fields = append(fields, matchresult.FieldWinnerTeam)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MatchResultMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case matchresult.FieldVersion:
+		return m.AddedVersion()
+	case matchresult.FieldWinnerTeam:
+		return m.AddedWinnerTeam()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MatchResultMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case matchresult.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case matchresult.FieldWinnerTeam:
+		v, ok := value.(int16)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddWinnerTeam(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MatchResult numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MatchResultMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(matchresult.FieldCreatedBy) {
+		fields = append(fields, matchresult.FieldCreatedBy)
+	}
+	if m.FieldCleared(matchresult.FieldUpdatedBy) {
+		fields = append(fields, matchresult.FieldUpdatedBy)
+	}
+	if m.FieldCleared(matchresult.FieldDeletedAt) {
+		fields = append(fields, matchresult.FieldDeletedAt)
+	}
+	if m.FieldCleared(matchresult.FieldDeletedBy) {
+		fields = append(fields, matchresult.FieldDeletedBy)
+	}
+	if m.FieldCleared(matchresult.FieldDeleteReason) {
+		fields = append(fields, matchresult.FieldDeleteReason)
+	}
+	if m.FieldCleared(matchresult.FieldWinnerTeam) {
+		fields = append(fields, matchresult.FieldWinnerTeam)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MatchResultMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MatchResultMutation) ClearField(name string) error {
+	switch name {
+	case matchresult.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case matchresult.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case matchresult.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case matchresult.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case matchresult.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case matchresult.FieldWinnerTeam:
+		m.ClearWinnerTeam()
+		return nil
+	}
+	return fmt.Errorf("unknown MatchResult nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MatchResultMutation) ResetField(name string) error {
+	switch name {
+	case matchresult.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case matchresult.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case matchresult.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case matchresult.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case matchresult.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case matchresult.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case matchresult.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case matchresult.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case matchresult.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case matchresult.FieldEndReason:
+		m.ResetEndReason()
+		return nil
+	case matchresult.FieldWinnerTeam:
+		m.ResetWinnerTeam()
+		return nil
+	case matchresult.FieldRated:
+		m.ResetRated()
+		return nil
+	case matchresult.FieldRuleVersionID:
+		m.ResetRuleVersionID()
+		return nil
+	case matchresult.FieldSummary:
+		m.ResetSummary()
+		return nil
+	case matchresult.FieldVerifiedAt:
+		m.ResetVerifiedAt()
+		return nil
+	case matchresult.FieldRecordedBy:
+		m.ResetRecordedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown MatchResult field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MatchResultMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MatchResultMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MatchResultMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MatchResultMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MatchResultMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MatchResultMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MatchResultMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown MatchResult unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MatchResultMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown MatchResult edge %s", name)
 }
 
 // PartyMutation represents an operation that mutates the Party nodes in the graph.
@@ -17683,6 +19500,7 @@ type RoomMutation struct {
 	addcapacity   *int
 	status        *string
 	closed_at     *time.Time
+	match_id      *uuid.UUID
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Room, error)
@@ -18513,6 +20331,55 @@ func (m *RoomMutation) ResetClosedAt() {
 	delete(m.clearedFields, room.FieldClosedAt)
 }
 
+// SetMatchID sets the "match_id" field.
+func (m *RoomMutation) SetMatchID(u uuid.UUID) {
+	m.match_id = &u
+}
+
+// MatchID returns the value of the "match_id" field in the mutation.
+func (m *RoomMutation) MatchID() (r uuid.UUID, exists bool) {
+	v := m.match_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMatchID returns the old "match_id" field's value of the Room entity.
+// If the Room object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RoomMutation) OldMatchID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMatchID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMatchID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMatchID: %w", err)
+	}
+	return oldValue.MatchID, nil
+}
+
+// ClearMatchID clears the value of the "match_id" field.
+func (m *RoomMutation) ClearMatchID() {
+	m.match_id = nil
+	m.clearedFields[room.FieldMatchID] = struct{}{}
+}
+
+// MatchIDCleared returns if the "match_id" field was cleared in this mutation.
+func (m *RoomMutation) MatchIDCleared() bool {
+	_, ok := m.clearedFields[room.FieldMatchID]
+	return ok
+}
+
+// ResetMatchID resets all changes to the "match_id" field.
+func (m *RoomMutation) ResetMatchID() {
+	m.match_id = nil
+	delete(m.clearedFields, room.FieldMatchID)
+}
+
 // Where appends a list predicates to the RoomMutation builder.
 func (m *RoomMutation) Where(ps ...predicate.Room) {
 	m.predicates = append(m.predicates, ps...)
@@ -18547,7 +20414,7 @@ func (m *RoomMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RoomMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.tenant_id != nil {
 		fields = append(fields, room.FieldTenantID)
 	}
@@ -18596,6 +20463,9 @@ func (m *RoomMutation) Fields() []string {
 	if m.closed_at != nil {
 		fields = append(fields, room.FieldClosedAt)
 	}
+	if m.match_id != nil {
+		fields = append(fields, room.FieldMatchID)
+	}
 	return fields
 }
 
@@ -18636,6 +20506,8 @@ func (m *RoomMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case room.FieldClosedAt:
 		return m.ClosedAt()
+	case room.FieldMatchID:
+		return m.MatchID()
 	}
 	return nil, false
 }
@@ -18677,6 +20549,8 @@ func (m *RoomMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldStatus(ctx)
 	case room.FieldClosedAt:
 		return m.OldClosedAt(ctx)
+	case room.FieldMatchID:
+		return m.OldMatchID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Room field %s", name)
 }
@@ -18798,6 +20672,13 @@ func (m *RoomMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetClosedAt(v)
 		return nil
+	case room.FieldMatchID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMatchID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Room field %s", name)
 }
@@ -18879,6 +20760,9 @@ func (m *RoomMutation) ClearedFields() []string {
 	if m.FieldCleared(room.FieldClosedAt) {
 		fields = append(fields, room.FieldClosedAt)
 	}
+	if m.FieldCleared(room.FieldMatchID) {
+		fields = append(fields, room.FieldMatchID)
+	}
 	return fields
 }
 
@@ -18916,6 +20800,9 @@ func (m *RoomMutation) ClearField(name string) error {
 		return nil
 	case room.FieldClosedAt:
 		m.ClearClosedAt()
+		return nil
+	case room.FieldMatchID:
+		m.ClearMatchID()
 		return nil
 	}
 	return fmt.Errorf("unknown Room nullable field %s", name)
@@ -18972,6 +20859,9 @@ func (m *RoomMutation) ResetField(name string) error {
 		return nil
 	case room.FieldClosedAt:
 		m.ResetClosedAt()
+		return nil
+	case room.FieldMatchID:
+		m.ResetMatchID()
 		return nil
 	}
 	return fmt.Errorf("unknown Room field %s", name)

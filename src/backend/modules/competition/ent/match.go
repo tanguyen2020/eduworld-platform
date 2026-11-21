@@ -66,7 +66,15 @@ type Match struct {
 	// StartedAt holds the value of the "started_at" field.
 	StartedAt *time.Time `json:"started_at,omitempty"`
 	// EndedAt holds the value of the "ended_at" field.
-	EndedAt      *time.Time `json:"ended_at,omitempty"`
+	EndedAt *time.Time `json:"ended_at,omitempty"`
+	// QuestionPlanID holds the value of the "question_plan_id" field.
+	QuestionPlanID *uuid.UUID `json:"question_plan_id,omitempty"`
+	// QuestionPlanVersion holds the value of the "question_plan_version" field.
+	QuestionPlanVersion *string `json:"question_plan_version,omitempty"`
+	// RoomID holds the value of the "room_id" field.
+	RoomID *uuid.UUID `json:"room_id,omitempty"`
+	// EndReason holds the value of the "end_reason" field.
+	EndReason    *string `json:"end_reason,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -75,7 +83,7 @@ func (*Match) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case match.FieldCreatedBy, match.FieldUpdatedBy, match.FieldDeletedBy, match.FieldTopicID, match.FieldTournamentID, match.FieldTournamentNodeID, match.FieldDuelID:
+		case match.FieldCreatedBy, match.FieldUpdatedBy, match.FieldDeletedBy, match.FieldTopicID, match.FieldTournamentID, match.FieldTournamentNodeID, match.FieldDuelID, match.FieldQuestionPlanID, match.FieldRoomID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case match.FieldQuestionPlan:
 			values[i] = new([]byte)
@@ -83,7 +91,7 @@ func (*Match) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case match.FieldVersion, match.FieldGradeLevel:
 			values[i] = new(sql.NullInt64)
-		case match.FieldDeleteReason, match.FieldMode, match.FieldMatchmakingType, match.FieldStatus, match.FieldScopeKind:
+		case match.FieldDeleteReason, match.FieldMode, match.FieldMatchmakingType, match.FieldStatus, match.FieldScopeKind, match.FieldQuestionPlanVersion, match.FieldEndReason:
 			values[i] = new(sql.NullString)
 		case match.FieldCreatedAt, match.FieldUpdatedAt, match.FieldDeletedAt, match.FieldStartedAt, match.FieldEndedAt:
 			values[i] = new(sql.NullTime)
@@ -267,6 +275,34 @@ func (_m *Match) assignValues(columns []string, values []any) error {
 				_m.EndedAt = new(time.Time)
 				*_m.EndedAt = value.Time
 			}
+		case match.FieldQuestionPlanID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field question_plan_id", values[i])
+			} else if value.Valid {
+				_m.QuestionPlanID = new(uuid.UUID)
+				*_m.QuestionPlanID = *value.S.(*uuid.UUID)
+			}
+		case match.FieldQuestionPlanVersion:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field question_plan_version", values[i])
+			} else if value.Valid {
+				_m.QuestionPlanVersion = new(string)
+				*_m.QuestionPlanVersion = value.String
+			}
+		case match.FieldRoomID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field room_id", values[i])
+			} else if value.Valid {
+				_m.RoomID = new(uuid.UUID)
+				*_m.RoomID = *value.S.(*uuid.UUID)
+			}
+		case match.FieldEndReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field end_reason", values[i])
+			} else if value.Valid {
+				_m.EndReason = new(string)
+				*_m.EndReason = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -395,6 +431,26 @@ func (_m *Match) String() string {
 	if v := _m.EndedAt; v != nil {
 		builder.WriteString("ended_at=")
 		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.QuestionPlanID; v != nil {
+		builder.WriteString("question_plan_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.QuestionPlanVersion; v != nil {
+		builder.WriteString("question_plan_version=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.RoomID; v != nil {
+		builder.WriteString("room_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.EndReason; v != nil {
+		builder.WriteString("end_reason=")
+		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')
 	return builder.String()

@@ -26,6 +26,8 @@ type Tx struct {
 	Match *MatchClient
 	// MatchParticipant is the client for interacting with the MatchParticipant builders.
 	MatchParticipant *MatchParticipantClient
+	// MatchResult is the client for interacting with the MatchResult builders.
+	MatchResult *MatchResultClient
 	// Party is the client for interacting with the Party builders.
 	Party *PartyClient
 	// PartyActivity is the client for interacting with the PartyActivity builders.
@@ -178,6 +180,7 @@ func (tx *Tx) init() {
 	tx.GameConfigVersion = NewGameConfigVersionClient(tx.config)
 	tx.Match = NewMatchClient(tx.config)
 	tx.MatchParticipant = NewMatchParticipantClient(tx.config)
+	tx.MatchResult = NewMatchResultClient(tx.config)
 	tx.Party = NewPartyClient(tx.config)
 	tx.PartyActivity = NewPartyActivityClient(tx.config)
 	tx.PartyInvitation = NewPartyInvitationClient(tx.config)

@@ -53,6 +53,10 @@ const (
 	FieldRatingMuAtMatch = "rating_mu_at_match"
 	// FieldRatingRdAtMatch holds the string denoting the rating_rd_at_match field in the database.
 	FieldRatingRdAtMatch = "rating_rd_at_match"
+	// FieldCorrectCount holds the string denoting the correct_count field in the database.
+	FieldCorrectCount = "correct_count"
+	// FieldDisconnects holds the string denoting the disconnects field in the database.
+	FieldDisconnects = "disconnects"
 	// Table holds the table name of the matchparticipant in the database.
 	Table = "match_participants"
 )
@@ -79,6 +83,8 @@ var Columns = []string{
 	FieldConnectedMs,
 	FieldRatingMuAtMatch,
 	FieldRatingRdAtMatch,
+	FieldCorrectCount,
+	FieldDisconnects,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -111,6 +117,8 @@ var (
 	DefaultVersion int64
 	// OutcomeValidator is a validator for the "outcome" field. It is called by the builders before save.
 	OutcomeValidator func(string) error
+	// DefaultDisconnects holds the default value on creation for the "disconnects" field.
+	DefaultDisconnects int16
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -216,4 +224,14 @@ func ByRatingMuAtMatch(opts ...sql.OrderTermOption) OrderOption {
 // ByRatingRdAtMatch orders the results by the rating_rd_at_match field.
 func ByRatingRdAtMatch(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRatingRdAtMatch, opts...).ToFunc()
+}
+
+// ByCorrectCount orders the results by the correct_count field.
+func ByCorrectCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCorrectCount, opts...).ToFunc()
+}
+
+// ByDisconnects orders the results by the disconnects field.
+func ByDisconnects(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDisconnects, opts...).ToFunc()
 }

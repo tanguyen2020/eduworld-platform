@@ -296,6 +296,9 @@ func (_u *RoomUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ClosedAtCleared() {
 		_spec.ClearField(room.FieldClosedAt, field.TypeTime)
 	}
+	if _u.mutation.MatchIDCleared() {
+		_spec.ClearField(room.FieldMatchID, field.TypeUUID)
+	}
 	_spec.Node.Schema = _u.schemaConfig.Room
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -613,6 +616,9 @@ func (_u *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) {
 	}
 	if _u.mutation.ClosedAtCleared() {
 		_spec.ClearField(room.FieldClosedAt, field.TypeTime)
+	}
+	if _u.mutation.MatchIDCleared() {
+		_spec.ClearField(room.FieldMatchID, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Room
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

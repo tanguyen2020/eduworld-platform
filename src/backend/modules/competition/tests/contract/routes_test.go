@@ -47,7 +47,8 @@ func TestPartyOperationsMatchSpec(t *testing.T) {
 			if public := op.Security != nil && len(*op.Security) == 0; public || o.Public {
 				t.Errorf("%s: public route", id)
 			}
-			if o.Guard&httpx.GuardGamePlayer == 0 {
+			// getMatch serves participants (game) and school staff (portal): its use case checks the channel (F105-AC-25).
+			if o.Guard&httpx.GuardGamePlayer == 0 && id != "getMatch" {
 				t.Errorf("%s: a player route needs the game_player guard", id)
 			}
 			var params []string
@@ -79,8 +80,8 @@ func TestPartyOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(competitionhttp.Operations) || len(found) != 28 {
-		t.Fatalf("F100/F101/F104 operations found in the spec: %v", found)
+	if len(found) != len(competitionhttp.Operations) || len(found) != 30 {
+		t.Fatalf("F100/F101/F104/F105 operations found in the spec: %v", found)
 	}
 	for _, id := range []string{"createParty", "inviteToParty", "acceptPartyInvitation", "joinParty", "transferPartyLeader",
 		"startPartySession", "createMatchmakingTicket", "createDuel", "acceptDuel", "startBotMatch"} {

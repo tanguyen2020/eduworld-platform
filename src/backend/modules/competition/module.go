@@ -11,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/query"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/battlehost"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/cache"
 	hubconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/modules"
@@ -45,6 +46,9 @@ const Name = "competition"
 type Imports struct {
 	Chat modules.ChatModeration
 	Game modules.GameActivities
+	// Learning is the question plans of module learning for the battle engine (F105): nil → every new match aborts
+	// with plan_failure (no question can be served).
+	Learning modules.LearningPlans
 }
 
 // Facade is the part of the competition facade (api.StrictServerInterface, specs/openapi/modules/competition.internal.v1.yaml)
@@ -64,6 +68,8 @@ type Facade interface {
 type Module struct {
 	moderator *modules.LateModerator
 	game      *modules.LateGame
+	learning  *modules.LateLearning
+	deadlines modules.LearningDeadlines
 	facade    Facade
 }
 
@@ -77,6 +83,9 @@ func (m *Module) Wire(in Imports) {
 	}
 	if m.game != nil {
 		m.game.Set(in.Game)
+	}
+	if m.learning != nil {
+		m.learning.Set(in.Learning, m.deadlines)
 	}
 }
 
@@ -93,7 +102,7 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
-	m := &Module{moderator: &modules.LateModerator{}, game: &modules.LateGame{}}
+	m := &Module{moderator: &modules.LateModerator{}, game: &modules.LateGame{}, learning: &modules.LateLearning{}}
 	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
 		return m, nil
 	}
@@ -153,10 +162,24 @@ func Register(r *module.Registry) (*Module, error) {
 		Metrics: observability.Matchmaking{}, Settings: mmCfg.Settings, Configs: command.NewConfigCache(mmCfg.Settings.ConfigTTL),
 		Tracker: command.NewTicketTracker()}
 
+	// F105 — battle engine: match rooms hosted by core-api (lease + checkpoint in Valkey), results in PostgreSQL.
+	btCfg, err := hubconfig.BattleFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("competition: %w", err)
+	}
+	observability.RegisterBattle(r.Metrics())
+	m.deadlines = modules.LearningDeadlines{Plan: btCfg.PlanDeadline, Score: btCfg.ScoreDeadline}
+	battles := command.Battles{UoW: core.UoW, Repo: persistence.Battle{}, Plans: m.learning, Cards: persistence.PartyDirectory{},
+		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Metrics: observability.Battle{},
+		Instance: btCfg.InstanceID}
+	battleHost := battlehost.New(battlehost.Config{InstanceID: btCfg.InstanceID, TickHz: btCfg.TickHz, CheckpointEvery: btCfg.Checkpoint,
+		ClientOnly: !r.ServesHTTP()}, r.NATS(), cache.BattleStore{C: vk}, realtime.BattleOutput{P: pub}, battles, nil)
+
 	if r.ServesHTTP() {
 		h := competitionhttp.Handlers{Commands: parties, Queries: query.Parties{Read: core.ReadSession, Reader: persistence.Parties{},
 			Presence: presence, Lobby: lobbies, LobbyReader: persistence.LobbyRead{}, Game: m.game, PrivateCapacity: lobbyCfg.PrivateCapacity},
-			Matchmaking: matchmaking, MatchmakingQueries: query.Matchmaking{Read: core.ReadSession, Reader: persistence.Matchmaking{}, Store: mmStore}}
+			Matchmaking: matchmaking, MatchmakingQueries: query.Matchmaking{Read: core.ReadSession, Reader: persistence.Matchmaking{}, Store: mmStore},
+			Battles: query.Battles{Read: core.ReadSession, Reader: persistence.BattleRead{}, Plans: m.learning}}
 		r.HTTP(Name, func(s *httpx.Server) error { return competitionhttp.Register(s, h) })
 	}
 	// Room host, realtime commands (F091 US1, US2) and the party presence store (F100): core-api.
@@ -174,6 +197,14 @@ func Register(r *module.Registry) (*Module, error) {
 			natscmd.TypeActivitySelect: natscmd.ActivitySelect(parties), natscmd.TypeSessionStart: natscmd.SessionStart(parties),
 			natscmd.TypeTicketCancel: natscmd.TicketCancel(matchmaking), natscmd.TypeProposalAccept: natscmd.ProposalAccept(matchmaking),
 			natscmd.TypeProposalDecline: natscmd.ProposalDecline(matchmaking)} {
+			r.Go("competition.cmd."+typ, func(ctx context.Context) error { return rt.ServeCommand(ctx, nc, natscmd.Module, typ, h, 0) })
+		}
+		// Match rooms (F105): the battle room host and the battle/co-op commands of the realtime gateway.
+		r.Go("competition.battlehost", battleHost.Run)
+		bm := observability.Battle{}
+		for typ, h := range map[string]rt.CommandHandler{natscmd.TypeBattleAnswer: natscmd.BattleAnswer(battleHost, bm),
+			natscmd.TypeBattleState: natscmd.BattleState(battleHost, bm), natscmd.TypeCoopAnswer: natscmd.CoopAnswer(battleHost, bm),
+			natscmd.TypeCoopAction: natscmd.CoopAction(battleHost, bm)} {
 			r.Go("competition.cmd."+typ, func(ctx context.Context) error { return rt.ServeCommand(ctx, nc, natscmd.Module, typ, h, 0) })
 		}
 	}
@@ -213,6 +244,9 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, job.PartyInvitationExpiry, partyCfg.ExpiryInterval, module.JobFunc(job.PartyInvitationExpiryJob(expire)))
 	r.Consumer("competition.matchmaking_party", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.MatchmakingPartyOptions(consumer.MatchmakingParty{H: matchmaking}, core.UoW, core.App, js)
+	})
+	r.Consumer("competition.battle_open", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.BattleOpenOptions(consumer.BattleOpen{R: battleHost}, core.UoW, core.App, js)
 	})
 	r.Job(Name, job.Matchmaker, mmCfg.Tick, module.JobFunc(job.MatchmakingJob(matchmaking.Tick)))
 	r.Job(Name, job.MatchmakingTicketExpiry, mmCfg.Tick, module.JobFunc(job.MatchmakingJob(matchmaking.ExpireTickets)))

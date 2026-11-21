@@ -63,6 +63,14 @@ const (
 	FieldStartedAt = "started_at"
 	// FieldEndedAt holds the string denoting the ended_at field in the database.
 	FieldEndedAt = "ended_at"
+	// FieldQuestionPlanID holds the string denoting the question_plan_id field in the database.
+	FieldQuestionPlanID = "question_plan_id"
+	// FieldQuestionPlanVersion holds the string denoting the question_plan_version field in the database.
+	FieldQuestionPlanVersion = "question_plan_version"
+	// FieldRoomID holds the string denoting the room_id field in the database.
+	FieldRoomID = "room_id"
+	// FieldEndReason holds the string denoting the end_reason field in the database.
+	FieldEndReason = "end_reason"
 	// Table holds the table name of the match in the database.
 	Table = "matches"
 )
@@ -94,6 +102,10 @@ var Columns = []string{
 	FieldQuestionPlan,
 	FieldStartedAt,
 	FieldEndedAt,
+	FieldQuestionPlanID,
+	FieldQuestionPlanVersion,
+	FieldRoomID,
+	FieldEndReason,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -136,6 +148,10 @@ var (
 	DefaultIsBot bool
 	// ScopeKindValidator is a validator for the "scope_kind" field. It is called by the builders before save.
 	ScopeKindValidator func(string) error
+	// QuestionPlanVersionValidator is a validator for the "question_plan_version" field. It is called by the builders before save.
+	QuestionPlanVersionValidator func(string) error
+	// EndReasonValidator is a validator for the "end_reason" field. It is called by the builders before save.
+	EndReasonValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -261,4 +277,24 @@ func ByStartedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByEndedAt orders the results by the ended_at field.
 func ByEndedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEndedAt, opts...).ToFunc()
+}
+
+// ByQuestionPlanID orders the results by the question_plan_id field.
+func ByQuestionPlanID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQuestionPlanID, opts...).ToFunc()
+}
+
+// ByQuestionPlanVersion orders the results by the question_plan_version field.
+func ByQuestionPlanVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQuestionPlanVersion, opts...).ToFunc()
+}
+
+// ByRoomID orders the results by the room_id field.
+func ByRoomID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRoomID, opts...).ToFunc()
+}
+
+// ByEndReason orders the results by the end_reason field.
+func ByEndReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEndReason, opts...).ToFunc()
 }

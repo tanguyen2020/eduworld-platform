@@ -81,3 +81,10 @@ const MatchmakingPartyName = "competition.matchmaking_party"
 
 // MatchmakingPartyEvents are the party events it handles.
 var MatchmakingPartyEvents = []string{"party.member_left", "party.member_kicked", "party.member_joined", "party.disbanded"}
+
+// BattleOpenName opens the match room of every new match (F105-AC-01): match.created of module competition itself
+// (owner F104) asks a core-api replica to host the room and pin the question plan.
+const BattleOpenName = "competition.battle_open"
+
+// BattleOpenEvents are the competition events it handles.
+var BattleOpenEvents = []string{"match.created"}

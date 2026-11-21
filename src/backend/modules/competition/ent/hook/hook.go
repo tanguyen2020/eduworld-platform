@@ -93,6 +93,18 @@ func (f MatchParticipantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MatchParticipantMutation", m)
 }
 
+// The MatchResultFunc type is an adapter to allow the use of ordinary
+// function as MatchResult mutator.
+type MatchResultFunc func(context.Context, *ent.MatchResultMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MatchResultFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MatchResultMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MatchResultMutation", m)
+}
+
 // The PartyFunc type is an adapter to allow the use of ordinary
 // function as Party mutator.
 type PartyFunc func(context.Context, *ent.PartyMutation) (ent.Value, error)

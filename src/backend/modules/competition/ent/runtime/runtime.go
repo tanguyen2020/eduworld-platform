@@ -13,6 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/match"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchparticipant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyactivity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
@@ -273,6 +274,14 @@ func init() {
 	matchDescScopeKind := matchFields[8].Descriptor()
 	// match.ScopeKindValidator is a validator for the "scope_kind" field. It is called by the builders before save.
 	match.ScopeKindValidator = matchDescScopeKind.Validators[0].(func(string) error)
+	// matchDescQuestionPlanVersion is the schema descriptor for question_plan_version field.
+	matchDescQuestionPlanVersion := matchFields[17].Descriptor()
+	// match.QuestionPlanVersionValidator is a validator for the "question_plan_version" field. It is called by the builders before save.
+	match.QuestionPlanVersionValidator = matchDescQuestionPlanVersion.Validators[0].(func(string) error)
+	// matchDescEndReason is the schema descriptor for end_reason field.
+	matchDescEndReason := matchFields[19].Descriptor()
+	// match.EndReasonValidator is a validator for the "end_reason" field. It is called by the builders before save.
+	match.EndReasonValidator = matchDescEndReason.Validators[0].(func(string) error)
 	// matchDescID is the schema descriptor for id field.
 	matchDescID := matchMixinFields0[0].Descriptor()
 	// match.DefaultID holds the default value on creation for the id field.
@@ -308,10 +317,57 @@ func init() {
 	matchparticipantDescOutcome := matchparticipantFields[5].Descriptor()
 	// matchparticipant.OutcomeValidator is a validator for the "outcome" field. It is called by the builders before save.
 	matchparticipant.OutcomeValidator = matchparticipantDescOutcome.Validators[0].(func(string) error)
+	// matchparticipantDescDisconnects is the schema descriptor for disconnects field.
+	matchparticipantDescDisconnects := matchparticipantFields[11].Descriptor()
+	// matchparticipant.DefaultDisconnects holds the default value on creation for the disconnects field.
+	matchparticipant.DefaultDisconnects = matchparticipantDescDisconnects.Default.(int16)
 	// matchparticipantDescID is the schema descriptor for id field.
 	matchparticipantDescID := matchparticipantMixinFields0[0].Descriptor()
 	// matchparticipant.DefaultID holds the default value on creation for the id field.
 	matchparticipant.DefaultID = matchparticipantDescID.Default.(func() uuid.UUID)
+	matchresultMixin := schema.MatchResult{}.Mixin()
+	matchresultMixinHooks0 := matchresultMixin[0].Hooks()
+	matchresult.Hooks[0] = matchresultMixinHooks0[0]
+	matchresultMixinInters0 := matchresultMixin[0].Interceptors()
+	matchresult.Interceptors[0] = matchresultMixinInters0[0]
+	matchresultMixinFields0 := matchresultMixin[0].Fields()
+	_ = matchresultMixinFields0
+	matchresultFields := schema.MatchResult{}.Fields()
+	_ = matchresultFields
+	// matchresultDescCreatedAt is the schema descriptor for created_at field.
+	matchresultDescCreatedAt := matchresultMixinFields0[1].Descriptor()
+	// matchresult.DefaultCreatedAt holds the default value on creation for the created_at field.
+	matchresult.DefaultCreatedAt = matchresultDescCreatedAt.Default.(func() time.Time)
+	// matchresultDescUpdatedAt is the schema descriptor for updated_at field.
+	matchresultDescUpdatedAt := matchresultMixinFields0[3].Descriptor()
+	// matchresult.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	matchresult.DefaultUpdatedAt = matchresultDescUpdatedAt.Default.(func() time.Time)
+	// matchresult.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	matchresult.UpdateDefaultUpdatedAt = matchresultDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// matchresultDescDeleteReason is the schema descriptor for delete_reason field.
+	matchresultDescDeleteReason := matchresultMixinFields0[7].Descriptor()
+	// matchresult.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	matchresult.DeleteReasonValidator = matchresultDescDeleteReason.Validators[0].(func(string) error)
+	// matchresultDescVersion is the schema descriptor for version field.
+	matchresultDescVersion := matchresultMixinFields0[8].Descriptor()
+	// matchresult.DefaultVersion holds the default value on creation for the version field.
+	matchresult.DefaultVersion = matchresultDescVersion.Default.(int64)
+	// matchresultDescStatus is the schema descriptor for status field.
+	matchresultDescStatus := matchresultFields[0].Descriptor()
+	// matchresult.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	matchresult.StatusValidator = matchresultDescStatus.Validators[0].(func(string) error)
+	// matchresultDescEndReason is the schema descriptor for end_reason field.
+	matchresultDescEndReason := matchresultFields[1].Descriptor()
+	// matchresult.EndReasonValidator is a validator for the "end_reason" field. It is called by the builders before save.
+	matchresult.EndReasonValidator = matchresultDescEndReason.Validators[0].(func(string) error)
+	// matchresultDescRecordedBy is the schema descriptor for recorded_by field.
+	matchresultDescRecordedBy := matchresultFields[7].Descriptor()
+	// matchresult.RecordedByValidator is a validator for the "recorded_by" field. It is called by the builders before save.
+	matchresult.RecordedByValidator = matchresultDescRecordedBy.Validators[0].(func(string) error)
+	// matchresultDescID is the schema descriptor for id field.
+	matchresultDescID := matchresultMixinFields0[0].Descriptor()
+	// matchresult.DefaultID holds the default value on creation for the id field.
+	matchresult.DefaultID = matchresultDescID.Default.(func() uuid.UUID)
 	partyMixin := schema.Party{}.Mixin()
 	partyMixinHooks0 := partyMixin[0].Hooks()
 	party.Hooks[0] = partyMixinHooks0[0]

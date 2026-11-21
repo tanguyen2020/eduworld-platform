@@ -135,6 +135,11 @@ func ClosedAt(v time.Time) predicate.Room {
 	return predicate.Room(sql.FieldEQ(FieldClosedAt, v))
 }
 
+// MatchID applies equality check predicate on the "match_id" field. It's identical to MatchIDEQ.
+func MatchID(v uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldEQ(FieldMatchID, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.Room {
 	return predicate.Room(sql.FieldEQ(FieldTenantID, v))
@@ -978,6 +983,56 @@ func ClosedAtIsNil() predicate.Room {
 // ClosedAtNotNil applies the NotNil predicate on the "closed_at" field.
 func ClosedAtNotNil() predicate.Room {
 	return predicate.Room(sql.FieldNotNull(FieldClosedAt))
+}
+
+// MatchIDEQ applies the EQ predicate on the "match_id" field.
+func MatchIDEQ(v uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldEQ(FieldMatchID, v))
+}
+
+// MatchIDNEQ applies the NEQ predicate on the "match_id" field.
+func MatchIDNEQ(v uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldNEQ(FieldMatchID, v))
+}
+
+// MatchIDIn applies the In predicate on the "match_id" field.
+func MatchIDIn(vs ...uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldIn(FieldMatchID, vs...))
+}
+
+// MatchIDNotIn applies the NotIn predicate on the "match_id" field.
+func MatchIDNotIn(vs ...uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldNotIn(FieldMatchID, vs...))
+}
+
+// MatchIDGT applies the GT predicate on the "match_id" field.
+func MatchIDGT(v uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldGT(FieldMatchID, v))
+}
+
+// MatchIDGTE applies the GTE predicate on the "match_id" field.
+func MatchIDGTE(v uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldGTE(FieldMatchID, v))
+}
+
+// MatchIDLT applies the LT predicate on the "match_id" field.
+func MatchIDLT(v uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldLT(FieldMatchID, v))
+}
+
+// MatchIDLTE applies the LTE predicate on the "match_id" field.
+func MatchIDLTE(v uuid.UUID) predicate.Room {
+	return predicate.Room(sql.FieldLTE(FieldMatchID, v))
+}
+
+// MatchIDIsNil applies the IsNil predicate on the "match_id" field.
+func MatchIDIsNil() predicate.Room {
+	return predicate.Room(sql.FieldIsNull(FieldMatchID))
+}
+
+// MatchIDNotNil applies the NotNil predicate on the "match_id" field.
+func MatchIDNotNil() predicate.Room {
+	return predicate.Room(sql.FieldNotNull(FieldMatchID))
 }
 
 // And groups predicates with the AND operator between them.

@@ -293,6 +293,62 @@ func (_c *MatchCreate) SetNillableEndedAt(v *time.Time) *MatchCreate {
 	return _c
 }
 
+// SetQuestionPlanID sets the "question_plan_id" field.
+func (_c *MatchCreate) SetQuestionPlanID(v uuid.UUID) *MatchCreate {
+	_c.mutation.SetQuestionPlanID(v)
+	return _c
+}
+
+// SetNillableQuestionPlanID sets the "question_plan_id" field if the given value is not nil.
+func (_c *MatchCreate) SetNillableQuestionPlanID(v *uuid.UUID) *MatchCreate {
+	if v != nil {
+		_c.SetQuestionPlanID(*v)
+	}
+	return _c
+}
+
+// SetQuestionPlanVersion sets the "question_plan_version" field.
+func (_c *MatchCreate) SetQuestionPlanVersion(v string) *MatchCreate {
+	_c.mutation.SetQuestionPlanVersion(v)
+	return _c
+}
+
+// SetNillableQuestionPlanVersion sets the "question_plan_version" field if the given value is not nil.
+func (_c *MatchCreate) SetNillableQuestionPlanVersion(v *string) *MatchCreate {
+	if v != nil {
+		_c.SetQuestionPlanVersion(*v)
+	}
+	return _c
+}
+
+// SetRoomID sets the "room_id" field.
+func (_c *MatchCreate) SetRoomID(v uuid.UUID) *MatchCreate {
+	_c.mutation.SetRoomID(v)
+	return _c
+}
+
+// SetNillableRoomID sets the "room_id" field if the given value is not nil.
+func (_c *MatchCreate) SetNillableRoomID(v *uuid.UUID) *MatchCreate {
+	if v != nil {
+		_c.SetRoomID(*v)
+	}
+	return _c
+}
+
+// SetEndReason sets the "end_reason" field.
+func (_c *MatchCreate) SetEndReason(v string) *MatchCreate {
+	_c.mutation.SetEndReason(v)
+	return _c
+}
+
+// SetNillableEndReason sets the "end_reason" field if the given value is not nil.
+func (_c *MatchCreate) SetNillableEndReason(v *string) *MatchCreate {
+	if v != nil {
+		_c.SetEndReason(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *MatchCreate) SetID(v uuid.UUID) *MatchCreate {
 	_c.mutation.SetID(v)
@@ -443,6 +499,16 @@ func (_c *MatchCreate) check() error {
 	if _, ok := _c.mutation.RulesetVersionID(); !ok {
 		return &ValidationError{Name: "ruleset_version_id", err: errors.New(`ent: missing required field "Match.ruleset_version_id"`)}
 	}
+	if v, ok := _c.mutation.QuestionPlanVersion(); ok {
+		if err := match.QuestionPlanVersionValidator(v); err != nil {
+			return &ValidationError{Name: "question_plan_version", err: fmt.Errorf(`ent: validator failed for field "Match.question_plan_version": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.EndReason(); ok {
+		if err := match.EndReasonValidator(v); err != nil {
+			return &ValidationError{Name: "end_reason", err: fmt.Errorf(`ent: validator failed for field "Match.end_reason": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -574,6 +640,22 @@ func (_c *MatchCreate) createSpec() (*Match, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.EndedAt(); ok {
 		_spec.SetField(match.FieldEndedAt, field.TypeTime, value)
 		_node.EndedAt = &value
+	}
+	if value, ok := _c.mutation.QuestionPlanID(); ok {
+		_spec.SetField(match.FieldQuestionPlanID, field.TypeUUID, value)
+		_node.QuestionPlanID = &value
+	}
+	if value, ok := _c.mutation.QuestionPlanVersion(); ok {
+		_spec.SetField(match.FieldQuestionPlanVersion, field.TypeString, value)
+		_node.QuestionPlanVersion = &value
+	}
+	if value, ok := _c.mutation.RoomID(); ok {
+		_spec.SetField(match.FieldRoomID, field.TypeUUID, value)
+		_node.RoomID = &value
+	}
+	if value, ok := _c.mutation.EndReason(); ok {
+		_spec.SetField(match.FieldEndReason, field.TypeString, value)
+		_node.EndReason = &value
 	}
 	return _node, _spec
 }

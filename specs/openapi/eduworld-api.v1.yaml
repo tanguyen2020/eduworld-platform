@@ -2888,11 +2888,17 @@ paths:
       tags: [competition]
       operationId: getMatch
       summary: Trạng thái và kết quả trận
+      description: |
+        Học sinh tham gia trận (token game, `game_player`) hoặc nhân sự có `lms.class.read` (sẽ đổi tên `lms.student.read`, ADR-0095 mục 6) trong trường của một người
+        tham gia (token portal) — API_DESIGN §9.7 "STU (participant), SA (school)". Người khác → `404`; nhân sự gọi bằng
+        token game → `403 GAME_ACCESS_STUDENT_ONLY`. Đối thủ chỉ có nickname/avatar, không số rating (R16, F105-AC-23).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
         - $ref: '#/components/parameters/MatchId'
       responses:
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '200':
           description: OK
           content:
@@ -19951,17 +19957,38 @@ components:
         room_id: { $ref: '#/components/schemas/Uuid' }
         started_at: { $ref: '#/components/schemas/Timestamp' }
         ended_at: { $ref: '#/components/schemas/Timestamp' }
+        end_reason:
+          type: [string, 'null']
+          enum: [finished, abandon, forfeit, all_left, server_failure, plan_failure, null]
+          description: 'Lý do kết thúc (F105): finished, abandon (1v1 quá grace), forfeit (trận giải), all_left (cả hai rời → cancelled), server_failure/plan_failure (aborted, không tính rating).'
+        rated: { type: boolean, description: 'Kết quả có tính rating (F106) hay không: ranked, completed, không bot, không trận giải, không sự cố server.' }
+        question_count: { type: integer, minimum: 0, maximum: 30 }
         participants:
           type: array
+          maxItems: 40
           items:
             type: object
             properties:
               player: { $ref: '#/components/schemas/PlayerCard' }
               team_no: { type: integer }
-              outcome: { type: [string, 'null'], enum: [win, loss, draw, abandoned, null] }
+              outcome: { type: [string, 'null'], enum: [win, loss, draw, abandoned, forfeit, no_contest, null] }
               score: { type: [number, 'null'] }
+              correct_count: { type: [integer, 'null'], minimum: 0 }
               competition_points: { type: [integer, 'null'] }
-              rating_delta: { type: [number, 'null'] }
+        review:
+          type: array
+          maxItems: 30
+          description: 'Xem lại câu hỏi sau trận (F105-AC-23): chỉ khi status = completed và người gọi là người tham gia hoặc nhân sự có lms.class.read trong trường của người tham gia; câu hỏi, đáp án đúng, giải thích lấy từ module learning (revealPlanItem), không bao giờ trước khi trận kết thúc (ADR-0016).'
+          items:
+            type: object
+            required: [index]
+            properties:
+              index: { type: integer, minimum: 0 }
+              question: { type: object, description: 'Render payload của câu (không đáp án).' }
+              correct_response: { type: [object, 'null'], description: 'Đáp án đúng (shape QuestionResponse) khi loại câu có đáp án cố định.' }
+              explanation: { type: [string, 'null'], maxLength: 2000 }
+              my_answer_correct: { type: [boolean, 'null'], description: 'null khi người xem không phải người chơi hoặc không trả lời.' }
+              my_points: { type: [integer, 'null'] }
     Rating:
       type: object
       required: [mode, subject_id, season_id, tier]

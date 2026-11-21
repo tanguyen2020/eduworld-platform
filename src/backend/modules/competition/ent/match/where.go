@@ -170,6 +170,26 @@ func EndedAt(v time.Time) predicate.Match {
 	return predicate.Match(sql.FieldEQ(FieldEndedAt, v))
 }
 
+// QuestionPlanID applies equality check predicate on the "question_plan_id" field. It's identical to QuestionPlanIDEQ.
+func QuestionPlanID(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldQuestionPlanID, v))
+}
+
+// QuestionPlanVersion applies equality check predicate on the "question_plan_version" field. It's identical to QuestionPlanVersionEQ.
+func QuestionPlanVersion(v string) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldQuestionPlanVersion, v))
+}
+
+// RoomID applies equality check predicate on the "room_id" field. It's identical to RoomIDEQ.
+func RoomID(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldRoomID, v))
+}
+
+// EndReason applies equality check predicate on the "end_reason" field. It's identical to EndReasonEQ.
+func EndReason(v string) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldEndReason, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Match {
 	return predicate.Match(sql.FieldEQ(FieldCreatedAt, v))
@@ -1273,6 +1293,256 @@ func EndedAtIsNil() predicate.Match {
 // EndedAtNotNil applies the NotNil predicate on the "ended_at" field.
 func EndedAtNotNil() predicate.Match {
 	return predicate.Match(sql.FieldNotNull(FieldEndedAt))
+}
+
+// QuestionPlanIDEQ applies the EQ predicate on the "question_plan_id" field.
+func QuestionPlanIDEQ(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldQuestionPlanID, v))
+}
+
+// QuestionPlanIDNEQ applies the NEQ predicate on the "question_plan_id" field.
+func QuestionPlanIDNEQ(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldNEQ(FieldQuestionPlanID, v))
+}
+
+// QuestionPlanIDIn applies the In predicate on the "question_plan_id" field.
+func QuestionPlanIDIn(vs ...uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldIn(FieldQuestionPlanID, vs...))
+}
+
+// QuestionPlanIDNotIn applies the NotIn predicate on the "question_plan_id" field.
+func QuestionPlanIDNotIn(vs ...uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldNotIn(FieldQuestionPlanID, vs...))
+}
+
+// QuestionPlanIDGT applies the GT predicate on the "question_plan_id" field.
+func QuestionPlanIDGT(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldGT(FieldQuestionPlanID, v))
+}
+
+// QuestionPlanIDGTE applies the GTE predicate on the "question_plan_id" field.
+func QuestionPlanIDGTE(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldGTE(FieldQuestionPlanID, v))
+}
+
+// QuestionPlanIDLT applies the LT predicate on the "question_plan_id" field.
+func QuestionPlanIDLT(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldLT(FieldQuestionPlanID, v))
+}
+
+// QuestionPlanIDLTE applies the LTE predicate on the "question_plan_id" field.
+func QuestionPlanIDLTE(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldLTE(FieldQuestionPlanID, v))
+}
+
+// QuestionPlanIDIsNil applies the IsNil predicate on the "question_plan_id" field.
+func QuestionPlanIDIsNil() predicate.Match {
+	return predicate.Match(sql.FieldIsNull(FieldQuestionPlanID))
+}
+
+// QuestionPlanIDNotNil applies the NotNil predicate on the "question_plan_id" field.
+func QuestionPlanIDNotNil() predicate.Match {
+	return predicate.Match(sql.FieldNotNull(FieldQuestionPlanID))
+}
+
+// QuestionPlanVersionEQ applies the EQ predicate on the "question_plan_version" field.
+func QuestionPlanVersionEQ(v string) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionNEQ applies the NEQ predicate on the "question_plan_version" field.
+func QuestionPlanVersionNEQ(v string) predicate.Match {
+	return predicate.Match(sql.FieldNEQ(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionIn applies the In predicate on the "question_plan_version" field.
+func QuestionPlanVersionIn(vs ...string) predicate.Match {
+	return predicate.Match(sql.FieldIn(FieldQuestionPlanVersion, vs...))
+}
+
+// QuestionPlanVersionNotIn applies the NotIn predicate on the "question_plan_version" field.
+func QuestionPlanVersionNotIn(vs ...string) predicate.Match {
+	return predicate.Match(sql.FieldNotIn(FieldQuestionPlanVersion, vs...))
+}
+
+// QuestionPlanVersionGT applies the GT predicate on the "question_plan_version" field.
+func QuestionPlanVersionGT(v string) predicate.Match {
+	return predicate.Match(sql.FieldGT(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionGTE applies the GTE predicate on the "question_plan_version" field.
+func QuestionPlanVersionGTE(v string) predicate.Match {
+	return predicate.Match(sql.FieldGTE(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionLT applies the LT predicate on the "question_plan_version" field.
+func QuestionPlanVersionLT(v string) predicate.Match {
+	return predicate.Match(sql.FieldLT(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionLTE applies the LTE predicate on the "question_plan_version" field.
+func QuestionPlanVersionLTE(v string) predicate.Match {
+	return predicate.Match(sql.FieldLTE(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionContains applies the Contains predicate on the "question_plan_version" field.
+func QuestionPlanVersionContains(v string) predicate.Match {
+	return predicate.Match(sql.FieldContains(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionHasPrefix applies the HasPrefix predicate on the "question_plan_version" field.
+func QuestionPlanVersionHasPrefix(v string) predicate.Match {
+	return predicate.Match(sql.FieldHasPrefix(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionHasSuffix applies the HasSuffix predicate on the "question_plan_version" field.
+func QuestionPlanVersionHasSuffix(v string) predicate.Match {
+	return predicate.Match(sql.FieldHasSuffix(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionIsNil applies the IsNil predicate on the "question_plan_version" field.
+func QuestionPlanVersionIsNil() predicate.Match {
+	return predicate.Match(sql.FieldIsNull(FieldQuestionPlanVersion))
+}
+
+// QuestionPlanVersionNotNil applies the NotNil predicate on the "question_plan_version" field.
+func QuestionPlanVersionNotNil() predicate.Match {
+	return predicate.Match(sql.FieldNotNull(FieldQuestionPlanVersion))
+}
+
+// QuestionPlanVersionEqualFold applies the EqualFold predicate on the "question_plan_version" field.
+func QuestionPlanVersionEqualFold(v string) predicate.Match {
+	return predicate.Match(sql.FieldEqualFold(FieldQuestionPlanVersion, v))
+}
+
+// QuestionPlanVersionContainsFold applies the ContainsFold predicate on the "question_plan_version" field.
+func QuestionPlanVersionContainsFold(v string) predicate.Match {
+	return predicate.Match(sql.FieldContainsFold(FieldQuestionPlanVersion, v))
+}
+
+// RoomIDEQ applies the EQ predicate on the "room_id" field.
+func RoomIDEQ(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldRoomID, v))
+}
+
+// RoomIDNEQ applies the NEQ predicate on the "room_id" field.
+func RoomIDNEQ(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldNEQ(FieldRoomID, v))
+}
+
+// RoomIDIn applies the In predicate on the "room_id" field.
+func RoomIDIn(vs ...uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldIn(FieldRoomID, vs...))
+}
+
+// RoomIDNotIn applies the NotIn predicate on the "room_id" field.
+func RoomIDNotIn(vs ...uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldNotIn(FieldRoomID, vs...))
+}
+
+// RoomIDGT applies the GT predicate on the "room_id" field.
+func RoomIDGT(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldGT(FieldRoomID, v))
+}
+
+// RoomIDGTE applies the GTE predicate on the "room_id" field.
+func RoomIDGTE(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldGTE(FieldRoomID, v))
+}
+
+// RoomIDLT applies the LT predicate on the "room_id" field.
+func RoomIDLT(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldLT(FieldRoomID, v))
+}
+
+// RoomIDLTE applies the LTE predicate on the "room_id" field.
+func RoomIDLTE(v uuid.UUID) predicate.Match {
+	return predicate.Match(sql.FieldLTE(FieldRoomID, v))
+}
+
+// RoomIDIsNil applies the IsNil predicate on the "room_id" field.
+func RoomIDIsNil() predicate.Match {
+	return predicate.Match(sql.FieldIsNull(FieldRoomID))
+}
+
+// RoomIDNotNil applies the NotNil predicate on the "room_id" field.
+func RoomIDNotNil() predicate.Match {
+	return predicate.Match(sql.FieldNotNull(FieldRoomID))
+}
+
+// EndReasonEQ applies the EQ predicate on the "end_reason" field.
+func EndReasonEQ(v string) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldEndReason, v))
+}
+
+// EndReasonNEQ applies the NEQ predicate on the "end_reason" field.
+func EndReasonNEQ(v string) predicate.Match {
+	return predicate.Match(sql.FieldNEQ(FieldEndReason, v))
+}
+
+// EndReasonIn applies the In predicate on the "end_reason" field.
+func EndReasonIn(vs ...string) predicate.Match {
+	return predicate.Match(sql.FieldIn(FieldEndReason, vs...))
+}
+
+// EndReasonNotIn applies the NotIn predicate on the "end_reason" field.
+func EndReasonNotIn(vs ...string) predicate.Match {
+	return predicate.Match(sql.FieldNotIn(FieldEndReason, vs...))
+}
+
+// EndReasonGT applies the GT predicate on the "end_reason" field.
+func EndReasonGT(v string) predicate.Match {
+	return predicate.Match(sql.FieldGT(FieldEndReason, v))
+}
+
+// EndReasonGTE applies the GTE predicate on the "end_reason" field.
+func EndReasonGTE(v string) predicate.Match {
+	return predicate.Match(sql.FieldGTE(FieldEndReason, v))
+}
+
+// EndReasonLT applies the LT predicate on the "end_reason" field.
+func EndReasonLT(v string) predicate.Match {
+	return predicate.Match(sql.FieldLT(FieldEndReason, v))
+}
+
+// EndReasonLTE applies the LTE predicate on the "end_reason" field.
+func EndReasonLTE(v string) predicate.Match {
+	return predicate.Match(sql.FieldLTE(FieldEndReason, v))
+}
+
+// EndReasonContains applies the Contains predicate on the "end_reason" field.
+func EndReasonContains(v string) predicate.Match {
+	return predicate.Match(sql.FieldContains(FieldEndReason, v))
+}
+
+// EndReasonHasPrefix applies the HasPrefix predicate on the "end_reason" field.
+func EndReasonHasPrefix(v string) predicate.Match {
+	return predicate.Match(sql.FieldHasPrefix(FieldEndReason, v))
+}
+
+// EndReasonHasSuffix applies the HasSuffix predicate on the "end_reason" field.
+func EndReasonHasSuffix(v string) predicate.Match {
+	return predicate.Match(sql.FieldHasSuffix(FieldEndReason, v))
+}
+
+// EndReasonIsNil applies the IsNil predicate on the "end_reason" field.
+func EndReasonIsNil() predicate.Match {
+	return predicate.Match(sql.FieldIsNull(FieldEndReason))
+}
+
+// EndReasonNotNil applies the NotNil predicate on the "end_reason" field.
+func EndReasonNotNil() predicate.Match {
+	return predicate.Match(sql.FieldNotNull(FieldEndReason))
+}
+
+// EndReasonEqualFold applies the EqualFold predicate on the "end_reason" field.
+func EndReasonEqualFold(v string) predicate.Match {
+	return predicate.Match(sql.FieldEqualFold(FieldEndReason, v))
+}
+
+// EndReasonContainsFold applies the ContainsFold predicate on the "end_reason" field.
+func EndReasonContainsFold(v string) predicate.Match {
+	return predicate.Match(sql.FieldContainsFold(FieldEndReason, v))
 }
 
 // And groups predicates with the AND operator between them.

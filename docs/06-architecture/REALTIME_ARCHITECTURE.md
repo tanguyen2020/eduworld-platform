@@ -292,6 +292,7 @@ Quy tắc:
 2. `battle.answer.submit` chứa `question_instance_id` + `response`; room host gắn `received_at` (server time). Trả lời sau `deadline + 300 ms grace` bị từ chối (`ANSWER_LATE`).
 3. Chấm: room host gọi facade `question-plans/{plan_id}/answers:score` của module learning trong tiến trình `core-api` (module learning chấm bằng answer key, ghi `AttemptAnswer` `mode=competition` cho từng học sinh — learning record riêng [Confirmed Addendum §4]). Bonus thời gian tính trên server time của room host (trừ RTT ước lượng tối đa 150 ms) [Confirmed]. module learning lỗi/chậm → câu được làm lại, quá 2 lần → match `aborted`.
 4. `Finalizing` chạy command `FinalizeMatch(match_id, results)` — unique theo `match_id` → không tính trùng [Confirmed §22]; outbox `match.completed` → module game (XP), module chat (đóng channel `match`), module learning (evidence).
+5. Hiện thực (F105): mở room qua consumer `competition.battle_open` → NATS `ew.int.competition.battle.open`, vào room bằng `battle.state.request` (reply có snapshot + subscribe room output), lệnh giữa replica `ew.int.competition.battle.<room>.<op>`, checkpoint `ew:competition:rt:room:<id>:ckpt` — [F105 Clarifications 2026-11-21](../../specs/105-battle-engine/spec.md#session-2026-11-21-triển-khai--confirmed-owner-chốt-2026-11-20).
 
 ### 7.2. Co-op room
 

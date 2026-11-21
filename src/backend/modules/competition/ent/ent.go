@@ -19,6 +19,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfigversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/match"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchparticipant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyactivity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
@@ -93,6 +94,7 @@ func checkColumn(t, c string) error {
 			gameconfigversion.Table:      gameconfigversion.ValidColumn,
 			match.Table:                  match.ValidColumn,
 			matchparticipant.Table:       matchparticipant.ValidColumn,
+			matchresult.Table:            matchresult.ValidColumn,
 			party.Table:                  party.ValidColumn,
 			partyactivity.Table:          partyactivity.ValidColumn,
 			partyinvitation.Table:        partyinvitation.ValidColumn,

@@ -14,6 +14,7 @@ type SchemaConfig struct {
 	GameConfigVersion      string // GameConfigVersion table.
 	Match                  string // Match table.
 	MatchParticipant       string // MatchParticipant table.
+	MatchResult            string // MatchResult table.
 	Party                  string // Party table.
 	PartyActivity          string // PartyActivity table.
 	PartyInvitation        string // PartyInvitation table.

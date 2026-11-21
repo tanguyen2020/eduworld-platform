@@ -47,6 +47,8 @@ const (
 	FieldStatus = "status"
 	// FieldClosedAt holds the string denoting the closed_at field in the database.
 	FieldClosedAt = "closed_at"
+	// FieldMatchID holds the string denoting the match_id field in the database.
+	FieldMatchID = "match_id"
 	// Table holds the table name of the room in the database.
 	Table = "rooms"
 )
@@ -70,6 +72,7 @@ var Columns = []string{
 	FieldCapacity,
 	FieldStatus,
 	FieldClosedAt,
+	FieldMatchID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -200,4 +203,9 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByClosedAt orders the results by the closed_at field.
 func ByClosedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldClosedAt, opts...).ToFunc()
+}
+
+// ByMatchID orders the results by the match_id field.
+func ByMatchID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMatchID, opts...).ToFunc()
 }

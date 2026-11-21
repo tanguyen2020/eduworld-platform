@@ -25,6 +25,7 @@ var migrations = map[string][]string{
 	"20261230000001_f101_lobby_session.sql": {"party_activities"},
 	"20261231000001_f104_matchmaking.sql": {"matches", "match_participants", "duels", "competition_restrictions", "game_configs",
 		"game_config_versions", "content_releases"},
+	"20261231000003_f105_battle.sql": {"match_results"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -35,6 +36,11 @@ type addition struct {
 }
 
 var added = map[string][]addition{
+	"20261231000003_f105_battle.sql": {
+		{"matches", []string{"question_plan_id", "question_plan_version", "room_id", "end_reason"}, nil},
+		{"match_participants", []string{"correct_count", "disconnects"}, nil},
+		{"rooms", []string{"match_id"}, nil},
+	},
 	"20261230000001_f101_lobby_session.sql": {
 		{"parties", []string{"selected_activity_type", "selected_activity_ref", "selected_game_mode"}, nil},
 		{"session_memberships", []string{"party_activity_id"}, []string{"session_memberships_activity_idx"}},
@@ -81,7 +87,7 @@ func schemas() map[string]string {
 		"party_members": c.PartyMember, "party_invitations": c.PartyInvitation, "party_policies": c.PartyPolicy,
 		"party_activities": c.PartyActivity, "matches": c.Match, "match_participants": c.MatchParticipant, "duels": c.Duel,
 		"competition_restrictions": c.CompetitionRestriction, "game_configs": c.GameConfig, "game_config_versions": c.GameConfigVersion,
-		"content_releases": c.ContentRelease}
+		"content_releases": c.ContentRelease, "match_results": c.MatchResult}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

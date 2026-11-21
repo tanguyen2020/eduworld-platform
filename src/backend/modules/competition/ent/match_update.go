@@ -203,6 +203,86 @@ func (_u *MatchUpdate) ClearEndedAt() *MatchUpdate {
 	return _u
 }
 
+// SetQuestionPlanID sets the "question_plan_id" field.
+func (_u *MatchUpdate) SetQuestionPlanID(v uuid.UUID) *MatchUpdate {
+	_u.mutation.SetQuestionPlanID(v)
+	return _u
+}
+
+// SetNillableQuestionPlanID sets the "question_plan_id" field if the given value is not nil.
+func (_u *MatchUpdate) SetNillableQuestionPlanID(v *uuid.UUID) *MatchUpdate {
+	if v != nil {
+		_u.SetQuestionPlanID(*v)
+	}
+	return _u
+}
+
+// ClearQuestionPlanID clears the value of the "question_plan_id" field.
+func (_u *MatchUpdate) ClearQuestionPlanID() *MatchUpdate {
+	_u.mutation.ClearQuestionPlanID()
+	return _u
+}
+
+// SetQuestionPlanVersion sets the "question_plan_version" field.
+func (_u *MatchUpdate) SetQuestionPlanVersion(v string) *MatchUpdate {
+	_u.mutation.SetQuestionPlanVersion(v)
+	return _u
+}
+
+// SetNillableQuestionPlanVersion sets the "question_plan_version" field if the given value is not nil.
+func (_u *MatchUpdate) SetNillableQuestionPlanVersion(v *string) *MatchUpdate {
+	if v != nil {
+		_u.SetQuestionPlanVersion(*v)
+	}
+	return _u
+}
+
+// ClearQuestionPlanVersion clears the value of the "question_plan_version" field.
+func (_u *MatchUpdate) ClearQuestionPlanVersion() *MatchUpdate {
+	_u.mutation.ClearQuestionPlanVersion()
+	return _u
+}
+
+// SetRoomID sets the "room_id" field.
+func (_u *MatchUpdate) SetRoomID(v uuid.UUID) *MatchUpdate {
+	_u.mutation.SetRoomID(v)
+	return _u
+}
+
+// SetNillableRoomID sets the "room_id" field if the given value is not nil.
+func (_u *MatchUpdate) SetNillableRoomID(v *uuid.UUID) *MatchUpdate {
+	if v != nil {
+		_u.SetRoomID(*v)
+	}
+	return _u
+}
+
+// ClearRoomID clears the value of the "room_id" field.
+func (_u *MatchUpdate) ClearRoomID() *MatchUpdate {
+	_u.mutation.ClearRoomID()
+	return _u
+}
+
+// SetEndReason sets the "end_reason" field.
+func (_u *MatchUpdate) SetEndReason(v string) *MatchUpdate {
+	_u.mutation.SetEndReason(v)
+	return _u
+}
+
+// SetNillableEndReason sets the "end_reason" field if the given value is not nil.
+func (_u *MatchUpdate) SetNillableEndReason(v *string) *MatchUpdate {
+	if v != nil {
+		_u.SetEndReason(*v)
+	}
+	return _u
+}
+
+// ClearEndReason clears the value of the "end_reason" field.
+func (_u *MatchUpdate) ClearEndReason() *MatchUpdate {
+	_u.mutation.ClearEndReason()
+	return _u
+}
+
 // Mutation returns the MatchMutation object of the builder.
 func (_u *MatchUpdate) Mutation() *MatchMutation {
 	return _u.mutation
@@ -260,6 +340,16 @@ func (_u *MatchUpdate) check() error {
 	if v, ok := _u.mutation.Status(); ok {
 		if err := match.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Match.status": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.QuestionPlanVersion(); ok {
+		if err := match.QuestionPlanVersionValidator(v); err != nil {
+			return &ValidationError{Name: "question_plan_version", err: fmt.Errorf(`ent: validator failed for field "Match.question_plan_version": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.EndReason(); ok {
+		if err := match.EndReasonValidator(v); err != nil {
+			return &ValidationError{Name: "end_reason", err: fmt.Errorf(`ent: validator failed for field "Match.end_reason": %w`, err)}
 		}
 	}
 	return nil
@@ -345,6 +435,30 @@ func (_u *MatchUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.EndedAtCleared() {
 		_spec.ClearField(match.FieldEndedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.QuestionPlanID(); ok {
+		_spec.SetField(match.FieldQuestionPlanID, field.TypeUUID, value)
+	}
+	if _u.mutation.QuestionPlanIDCleared() {
+		_spec.ClearField(match.FieldQuestionPlanID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.QuestionPlanVersion(); ok {
+		_spec.SetField(match.FieldQuestionPlanVersion, field.TypeString, value)
+	}
+	if _u.mutation.QuestionPlanVersionCleared() {
+		_spec.ClearField(match.FieldQuestionPlanVersion, field.TypeString)
+	}
+	if value, ok := _u.mutation.RoomID(); ok {
+		_spec.SetField(match.FieldRoomID, field.TypeUUID, value)
+	}
+	if _u.mutation.RoomIDCleared() {
+		_spec.ClearField(match.FieldRoomID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.EndReason(); ok {
+		_spec.SetField(match.FieldEndReason, field.TypeString, value)
+	}
+	if _u.mutation.EndReasonCleared() {
+		_spec.ClearField(match.FieldEndReason, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Match
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -541,6 +655,86 @@ func (_u *MatchUpdateOne) ClearEndedAt() *MatchUpdateOne {
 	return _u
 }
 
+// SetQuestionPlanID sets the "question_plan_id" field.
+func (_u *MatchUpdateOne) SetQuestionPlanID(v uuid.UUID) *MatchUpdateOne {
+	_u.mutation.SetQuestionPlanID(v)
+	return _u
+}
+
+// SetNillableQuestionPlanID sets the "question_plan_id" field if the given value is not nil.
+func (_u *MatchUpdateOne) SetNillableQuestionPlanID(v *uuid.UUID) *MatchUpdateOne {
+	if v != nil {
+		_u.SetQuestionPlanID(*v)
+	}
+	return _u
+}
+
+// ClearQuestionPlanID clears the value of the "question_plan_id" field.
+func (_u *MatchUpdateOne) ClearQuestionPlanID() *MatchUpdateOne {
+	_u.mutation.ClearQuestionPlanID()
+	return _u
+}
+
+// SetQuestionPlanVersion sets the "question_plan_version" field.
+func (_u *MatchUpdateOne) SetQuestionPlanVersion(v string) *MatchUpdateOne {
+	_u.mutation.SetQuestionPlanVersion(v)
+	return _u
+}
+
+// SetNillableQuestionPlanVersion sets the "question_plan_version" field if the given value is not nil.
+func (_u *MatchUpdateOne) SetNillableQuestionPlanVersion(v *string) *MatchUpdateOne {
+	if v != nil {
+		_u.SetQuestionPlanVersion(*v)
+	}
+	return _u
+}
+
+// ClearQuestionPlanVersion clears the value of the "question_plan_version" field.
+func (_u *MatchUpdateOne) ClearQuestionPlanVersion() *MatchUpdateOne {
+	_u.mutation.ClearQuestionPlanVersion()
+	return _u
+}
+
+// SetRoomID sets the "room_id" field.
+func (_u *MatchUpdateOne) SetRoomID(v uuid.UUID) *MatchUpdateOne {
+	_u.mutation.SetRoomID(v)
+	return _u
+}
+
+// SetNillableRoomID sets the "room_id" field if the given value is not nil.
+func (_u *MatchUpdateOne) SetNillableRoomID(v *uuid.UUID) *MatchUpdateOne {
+	if v != nil {
+		_u.SetRoomID(*v)
+	}
+	return _u
+}
+
+// ClearRoomID clears the value of the "room_id" field.
+func (_u *MatchUpdateOne) ClearRoomID() *MatchUpdateOne {
+	_u.mutation.ClearRoomID()
+	return _u
+}
+
+// SetEndReason sets the "end_reason" field.
+func (_u *MatchUpdateOne) SetEndReason(v string) *MatchUpdateOne {
+	_u.mutation.SetEndReason(v)
+	return _u
+}
+
+// SetNillableEndReason sets the "end_reason" field if the given value is not nil.
+func (_u *MatchUpdateOne) SetNillableEndReason(v *string) *MatchUpdateOne {
+	if v != nil {
+		_u.SetEndReason(*v)
+	}
+	return _u
+}
+
+// ClearEndReason clears the value of the "end_reason" field.
+func (_u *MatchUpdateOne) ClearEndReason() *MatchUpdateOne {
+	_u.mutation.ClearEndReason()
+	return _u
+}
+
 // Mutation returns the MatchMutation object of the builder.
 func (_u *MatchUpdateOne) Mutation() *MatchMutation {
 	return _u.mutation
@@ -611,6 +805,16 @@ func (_u *MatchUpdateOne) check() error {
 	if v, ok := _u.mutation.Status(); ok {
 		if err := match.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Match.status": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.QuestionPlanVersion(); ok {
+		if err := match.QuestionPlanVersionValidator(v); err != nil {
+			return &ValidationError{Name: "question_plan_version", err: fmt.Errorf(`ent: validator failed for field "Match.question_plan_version": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.EndReason(); ok {
+		if err := match.EndReasonValidator(v); err != nil {
+			return &ValidationError{Name: "end_reason", err: fmt.Errorf(`ent: validator failed for field "Match.end_reason": %w`, err)}
 		}
 	}
 	return nil
@@ -713,6 +917,30 @@ func (_u *MatchUpdateOne) sqlSave(ctx context.Context) (_node *Match, err error)
 	}
 	if _u.mutation.EndedAtCleared() {
 		_spec.ClearField(match.FieldEndedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.QuestionPlanID(); ok {
+		_spec.SetField(match.FieldQuestionPlanID, field.TypeUUID, value)
+	}
+	if _u.mutation.QuestionPlanIDCleared() {
+		_spec.ClearField(match.FieldQuestionPlanID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.QuestionPlanVersion(); ok {
+		_spec.SetField(match.FieldQuestionPlanVersion, field.TypeString, value)
+	}
+	if _u.mutation.QuestionPlanVersionCleared() {
+		_spec.ClearField(match.FieldQuestionPlanVersion, field.TypeString)
+	}
+	if value, ok := _u.mutation.RoomID(); ok {
+		_spec.SetField(match.FieldRoomID, field.TypeUUID, value)
+	}
+	if _u.mutation.RoomIDCleared() {
+		_spec.ClearField(match.FieldRoomID, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.EndReason(); ok {
+		_spec.SetField(match.FieldEndReason, field.TypeString, value)
+	}
+	if _u.mutation.EndReasonCleared() {
+		_spec.ClearField(match.FieldEndReason, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Match
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

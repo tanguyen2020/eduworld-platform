@@ -213,6 +213,20 @@ func (_c *RoomCreate) SetNillableClosedAt(v *time.Time) *RoomCreate {
 	return _c
 }
 
+// SetMatchID sets the "match_id" field.
+func (_c *RoomCreate) SetMatchID(v uuid.UUID) *RoomCreate {
+	_c.mutation.SetMatchID(v)
+	return _c
+}
+
+// SetNillableMatchID sets the "match_id" field if the given value is not nil.
+func (_c *RoomCreate) SetNillableMatchID(v *uuid.UUID) *RoomCreate {
+	if v != nil {
+		_c.SetMatchID(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *RoomCreate) SetID(v uuid.UUID) *RoomCreate {
 	_c.mutation.SetID(v)
@@ -446,6 +460,10 @@ func (_c *RoomCreate) createSpec() (*Room, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ClosedAt(); ok {
 		_spec.SetField(room.FieldClosedAt, field.TypeTime, value)
 		_node.ClosedAt = &value
+	}
+	if value, ok := _c.mutation.MatchID(); ok {
+		_spec.SetField(room.FieldMatchID, field.TypeUUID, value)
+		_node.MatchID = &value
 	}
 	return _node, _spec
 }

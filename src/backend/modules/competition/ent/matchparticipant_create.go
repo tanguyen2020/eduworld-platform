@@ -247,6 +247,34 @@ func (_c *MatchParticipantCreate) SetNillableRatingRdAtMatch(v *float64) *MatchP
 	return _c
 }
 
+// SetCorrectCount sets the "correct_count" field.
+func (_c *MatchParticipantCreate) SetCorrectCount(v int16) *MatchParticipantCreate {
+	_c.mutation.SetCorrectCount(v)
+	return _c
+}
+
+// SetNillableCorrectCount sets the "correct_count" field if the given value is not nil.
+func (_c *MatchParticipantCreate) SetNillableCorrectCount(v *int16) *MatchParticipantCreate {
+	if v != nil {
+		_c.SetCorrectCount(*v)
+	}
+	return _c
+}
+
+// SetDisconnects sets the "disconnects" field.
+func (_c *MatchParticipantCreate) SetDisconnects(v int16) *MatchParticipantCreate {
+	_c.mutation.SetDisconnects(v)
+	return _c
+}
+
+// SetNillableDisconnects sets the "disconnects" field if the given value is not nil.
+func (_c *MatchParticipantCreate) SetNillableDisconnects(v *int16) *MatchParticipantCreate {
+	if v != nil {
+		_c.SetDisconnects(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *MatchParticipantCreate) SetID(v uuid.UUID) *MatchParticipantCreate {
 	_c.mutation.SetID(v)
@@ -316,6 +344,10 @@ func (_c *MatchParticipantCreate) defaults() error {
 		v := matchparticipant.DefaultVersion
 		_c.mutation.SetVersion(v)
 	}
+	if _, ok := _c.mutation.Disconnects(); !ok {
+		v := matchparticipant.DefaultDisconnects
+		_c.mutation.SetDisconnects(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		if matchparticipant.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized matchparticipant.DefaultID (forgotten import ent/runtime?)")
@@ -361,6 +393,9 @@ func (_c *MatchParticipantCreate) check() error {
 		if err := matchparticipant.OutcomeValidator(v); err != nil {
 			return &ValidationError{Name: "outcome", err: fmt.Errorf(`ent: validator failed for field "MatchParticipant.outcome": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.Disconnects(); !ok {
+		return &ValidationError{Name: "disconnects", err: errors.New(`ent: missing required field "MatchParticipant.disconnects"`)}
 	}
 	return nil
 }
@@ -473,6 +508,14 @@ func (_c *MatchParticipantCreate) createSpec() (*MatchParticipant, *sqlgraph.Cre
 	if value, ok := _c.mutation.RatingRdAtMatch(); ok {
 		_spec.SetField(matchparticipant.FieldRatingRdAtMatch, field.TypeFloat64, value)
 		_node.RatingRdAtMatch = &value
+	}
+	if value, ok := _c.mutation.CorrectCount(); ok {
+		_spec.SetField(matchparticipant.FieldCorrectCount, field.TypeInt16, value)
+		_node.CorrectCount = &value
+	}
+	if value, ok := _c.mutation.Disconnects(); ok {
+		_spec.SetField(matchparticipant.FieldDisconnects, field.TypeInt16, value)
+		_node.Disconnects = value
 	}
 	return _node, _spec
 }

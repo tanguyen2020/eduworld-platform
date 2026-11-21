@@ -3939,7 +3939,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Trạng thái và kết quả trận */
+        /**
+         * Trạng thái và kết quả trận
+         * @description Học sinh tham gia trận (token game, `game_player`) hoặc nhân sự có `lms.class.read` (sẽ đổi tên `lms.student.read`, ADR-0095 mục 6) trong trường của một người
+         *     tham gia (token portal) — API_DESIGN §9.7 "STU (participant), SA (school)". Người khác → `404`; nhân sự gọi bằng
+         *     token game → `403 GAME_ACCESS_STUDENT_ONLY`. Đối thủ chỉ có nickname/avatar, không số rating (R16, F105-AC-23).
+         */
         get: operations["getMatch"];
         put?: never;
         post?: never;
@@ -12639,6 +12644,11 @@ export interface components {
         /** @enum {string} */
         MasteryLevel: "not_started" | "beginning" | "developing" | "proficient" | "mastered";
         Match: {
+            /**
+             * @description Lý do kết thúc (F105): finished, abandon (1v1 quá grace), forfeit (trận giải), all_left (cả hai rời → cancelled), server_failure/plan_failure (aborted, không tính rating).
+             * @enum {string|null}
+             */
+            end_reason?: "finished" | "abandon" | "forfeit" | "all_left" | "server_failure" | "plan_failure" | null;
             ended_at?: components["schemas"]["Timestamp"];
             grade_level?: components["schemas"]["GradeLevel"];
             /** @description Trận với bot luyện tập "Robot Học Giỏi" (unranked). */
@@ -12649,14 +12659,29 @@ export interface components {
             mode: components["schemas"]["MatchMode"];
             participants?: {
                 competition_points?: number | null;
+                correct_count?: number | null;
                 /** @enum {string|null} */
-                outcome?: "win" | "loss" | "draw" | "abandoned" | null;
+                outcome?: "win" | "loss" | "draw" | "abandoned" | "forfeit" | "no_contest" | null;
                 player?: components["schemas"]["PlayerCard"];
-                rating_delta?: number | null;
                 score?: number | null;
                 team_no?: number;
             }[];
+            question_count?: number;
             ranked?: boolean;
+            /** @description Kết quả có tính rating (F106) hay không: ranked, completed, không bot, không trận giải, không sự cố server. */
+            rated?: boolean;
+            /** @description Xem lại câu hỏi sau trận (F105-AC-23): chỉ khi status = completed và người gọi là người tham gia hoặc nhân sự có lms.class.read trong trường của người tham gia; câu hỏi, đáp án đúng, giải thích lấy từ module learning (revealPlanItem), không bao giờ trước khi trận kết thúc (ADR-0016). */
+            review?: {
+                /** @description Đáp án đúng (shape QuestionResponse) khi loại câu có đáp án cố định. */
+                correct_response?: Record<string, never> | null;
+                explanation?: string | null;
+                index: number;
+                /** @description null khi người xem không phải người chơi hoặc không trả lời. */
+                my_answer_correct?: boolean | null;
+                my_points?: number | null;
+                /** @description Render payload của câu (không đáp án). */
+                question?: Record<string, never>;
+            }[];
             room_id?: components["schemas"]["Uuid"];
             started_at?: components["schemas"]["Timestamp"];
             /** @enum {string} */
@@ -26636,6 +26661,8 @@ export interface operations {
                     "application/json": components["schemas"]["Match"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
