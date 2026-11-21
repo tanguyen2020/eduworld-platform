@@ -38,3 +38,8 @@ func test_exam_board_opens_the_exam_lobby() -> void:
 	assert_str(String(_intents[0][0])).is_equal("exam_lobby")
 	assert_dict(_intents[0][1] as Dictionary).is_empty()
 	assert_bool(UiScreenRegistry.has(&"exam_lobby")).is_true()
+
+
+func test_exam_screen_is_an_exam_activity_for_presence() -> void:
+	# AsyncAPI presence `activity` enum has `exam`; the exam screen reports it like the activity player reports learning.
+	assert_array(PresenceService.SCREEN_STATUS[&"exam_lobby"] as Array).is_equal([PresenceService.IN_ACTIVITY, "exam"])

@@ -14,6 +14,8 @@ var media: MediaLoader = null
 var video_files: VideoFileCache = null
 ## Timed exams of the Exam Zone (F064): sessions, attempt, server countdown, answers queued in RAM.
 var exam: ExamService = null
+## In-game notices of new school work (F064 US4): toast + 🔔 badge from the refreshes of `assignments`.
+var notifications: NotificationService = null
 ## Player profile, nickname, avatar and saved outfits (F070); character catalog cache + ownership view (F070/F075).
 var profile: ProfileService = null
 var inventory: InventoryService = null
@@ -32,6 +34,8 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	play_time = PlayTimeService.new()
 	play_time.break_reminder_shown.connect(_on_break_reminder_shown)
 	assignments.access_denied.connect(_on_access_denied)
+	notifications = NotificationService.new()
+	notifications.bind(assignments)
 	learning = LearningService.new(rest, telemetry, clock)
 	learning.access_denied.connect(_on_access_denied)
 	exam = ExamService.new(rest, clock)
@@ -56,6 +60,7 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 ## Applies the bootstrap of a new session (policies, product telemetry switch) and drops the previous data.
 func start_session(bootstrap: Dictionary) -> void:
 	assignments.clear()
+	notifications.reset()
 	play_time.configure(bootstrap.get("policies", {}) as Dictionary)
 	var flags: Variant = bootstrap.get("feature_flags", {})
 	# CONFIG_DEFAULTS `analytics_product_telemetry_enabled` (default on) as published in the bootstrap feature flags.
@@ -68,6 +73,7 @@ func start_session(bootstrap: Dictionary) -> void:
 ## is ever sent with the next student's token or tenant.
 func end_session() -> void:
 	assignments.clear()
+	notifications.reset()
 	learning.clear()
 	exam.clear()
 	media.clear()

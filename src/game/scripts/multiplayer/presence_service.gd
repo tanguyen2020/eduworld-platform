@@ -16,6 +16,7 @@ const AWAY_AFTER_MS: int = 300000
 ## UI screens that mean an activity (`activity` of AsyncAPI: idle, learning, quest, battle, party_lobby, exam).
 const SCREEN_STATUS: Dictionary = {
 	&"activity_host": [IN_ACTIVITY, "learning"],
+	&"exam_lobby": [IN_ACTIVITY, "exam"],
 }
 
 var realtime: GameRealtimeClient = null

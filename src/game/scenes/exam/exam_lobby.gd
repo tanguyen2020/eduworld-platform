@@ -12,6 +12,8 @@ signal closed()
 enum View { IDLE, LOADING, LIST, RULES, RUNNING, AFTER, ERROR }
 
 const RUNNER_SCENE: PackedScene = preload("res://scenes/exam/ExamRunner.tscn")
+const RESULT_SCENE: PackedScene = preload("res://scenes/exam/ExamResult.tscn")
+const SCREEN_ACTIVITY_HOST: StringName = &"activity_host"
 const NAVIGATION_KEYS: Dictionary = {
 	ExamSessionModel.NAV_FREE: "ui.exam.rules_navigation_free",
 	ExamSessionModel.NAV_SEQUENTIAL: "ui.exam.rules_navigation_sequential",
@@ -30,6 +32,7 @@ var grade_band: String = ""
 var args: Dictionary = {}
 var view: View = View.IDLE
 var runner: Control = null
+var result_view: Control = null
 var session_id: String = ""
 var attempt_id: String = ""
 var _retry_action: Callable = Callable()
@@ -55,6 +58,7 @@ var _retry_action: Callable = Callable()
 @onready var _after: VBoxContainer = %After
 @onready var _after_label: Label = %AfterLabel
 @onready var _after_back: Button = %AfterBack
+@onready var _result_host: VBoxContainer = %ResultHost
 @onready var _runner_host: Control = %RunnerHost
 
 
@@ -88,6 +92,7 @@ func close() -> void:
 	if runner != null:
 		await runner.call("leave")
 	_drop_runner()
+	_drop_result()
 	if service != null and (service.submitted or service.attempt == null):
 		service.clear()
 	_set_view(View.IDLE)
@@ -173,11 +178,28 @@ func start_exam(take_over: bool = false) -> void:
 	_open_runner()
 
 
-## Coroutine: after the runner (submitted, closed or time up).
+## Coroutine: after the runner (submitted, closed or time up) or "Xem kết quả": asks `getExamResult` once; not
+## released yet → "Nhà trường sẽ công bố kết quả sau" (F064-AC-17); released → score, objectives, wrong questions and
+## practice (F064-AC-18, F064-AC-19).
 func show_after(finished_attempt_id: String) -> void:
 	attempt_id = finished_attempt_id
-	_after_label.text = tr("ui.exam.submitted")
+	_after_label.text = tr("ui.exam.submitted") if service.submitted else ""
+	_after_label.visible = service.submitted
+	_drop_result()
+	result_view = RESULT_SCENE.instantiate() as Control
+	_result_host.add_child(result_view)
+	result_view.connect("practice_requested", _on_practice_requested)
 	_set_view(View.AFTER)
+	var released: ExamResultModel = await service.result(finished_attempt_id)
+	if not visible or result_view == null:
+		return
+	if released == null:
+		if service.last_error_code in ExamService.ACCESS_DENIED_CODES:
+			close()
+			return
+		result_view.call("show_pending")
+		return
+	result_view.call("show_result", released, grade_band, _result_context())
 
 
 # ---------- internals ----------
@@ -210,6 +232,30 @@ func _drop_runner() -> void:
 		_runner_host.remove_child(runner)
 	runner.queue_free()
 	runner = null
+
+
+func _drop_result() -> void:
+	if result_view == null:
+		return
+	if result_view.get_parent() == _result_host:
+		_result_host.remove_child(result_view)
+	result_view.queue_free()
+	result_view = null
+
+
+## "Luyện LO này" / a recommended practice: the activity player opens the practice (it closes this screen).
+func _on_practice_requested(practice: Dictionary) -> void:
+	service.clear()
+	EventBus.ui_requested.emit(SCREEN_ACTIVITY_HOST, practice)
+
+
+## Content language of the result texts: the attempt's when known, else the UI locale's data language.
+func _result_context() -> RendererContext:
+	var ctx: RendererContext = RendererContext.new()
+	ctx.content_language = service.attempt.content_language() if service.attempt != null 			else L10n.data_language(TranslationServer.get_locale())
+	ctx.grade_band = grade_band
+	ctx.math = services.math_svg
+	return ctx
 
 
 func _context() -> RendererContext:

@@ -441,11 +441,41 @@ msgstr "Câu sau ▶"
 msgid "ui.exam.offline"
 msgstr "Đang mất kết nối — câu trả lời được lưu tạm trên máy"
 
+msgid "ui.exam.practice_objective"
+msgstr "Luyện LO này"
+
 msgid "ui.exam.prev"
 msgstr "◀ Câu trước"
 
 msgid "ui.exam.question_of"
 msgstr "Câu {n}/{total}"
+
+msgid "ui.exam.result_correct"
+msgstr "Đúng {correct}/{total} câu"
+
+msgid "ui.exam.result_heading"
+msgstr "Kết quả bài kiểm tra"
+
+msgid "ui.exam.result_objective"
+msgstr "Mục tiêu {n}: đúng {correct}/{total} câu"
+
+msgid "ui.exam.result_score"
+msgstr "Điểm: {score}/{max}"
+
+msgid "ui.exam.result_score_scaled"
+msgstr "Điểm: {score}"
+
+msgid "ui.exam.result_section"
+msgstr "{title}: {score}/{max}"
+
+msgid "ui.exam.result_wrong_heading"
+msgstr "Câu cần xem lại"
+
+msgid "ui.exam.result_wrong_item"
+msgstr "Câu {n}"
+
+msgid "ui.exam.results_pending"
+msgstr "Nhà trường sẽ công bố kết quả sau."
 
 msgid "ui.exam.retry"
 msgstr "Thử lại"
@@ -917,6 +947,24 @@ msgstr "Phiên bản {version}"
 
 msgid "ui.login.wait_hint"
 msgstr "Nếu nhập sai nhiều lần, hãy đợi vài phút rồi thử lại."
+
+msgid "ui.notification.assignment_new"
+msgstr "Em có bài mới: {title}"
+
+msgid "ui.notification.assignments_new_count"
+msgstr "Em có {count} bài mới được giao"
+
+msgid "ui.notification.assignments_pending"
+msgstr "Em có {count} bài nhà trường giao chưa làm"
+
+msgid "ui.notification.bell"
+msgstr "🔔"
+
+msgid "ui.notification.bell_count"
+msgstr "🔔 {count}"
+
+msgid "ui.notification.bell_tooltip"
+msgstr "Thông báo bài mới"
 
 msgid "ui.quality.antialiasing"
 msgstr "Khử răng cưa"

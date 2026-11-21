@@ -1,0 +1,54 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/exam/exam_result.gd" id="1_script"]
+
+[node name="ExamResult" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="Heading" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.exam.result_heading"
+
+[node name="Pending" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "ui.exam.results_pending"
+autowrap_mode = 3
+
+[node name="Score" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+auto_translate_mode = 2
+
+[node name="Correct" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+auto_translate_mode = 2
+
+[node name="Sections" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Objectives" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="WrongList" type="VBoxContainer" parent="Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Practice" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2

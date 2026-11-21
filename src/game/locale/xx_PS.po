@@ -440,11 +440,41 @@ msgstr "[!! Ñëxţ ▶ ~~~ !!]"
 msgid "ui.exam.offline"
 msgstr "[!! Öƒƒĺïñë — ýöüŕ áñšŵëŕš áŕë ķëþţ öñ ţĥïš đëvïçë ƒöŕ ñöŵ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.exam.practice_objective"
+msgstr "[!! Pŕáçţïšë ţĥïš ğöáĺ ~~~~~~~~ !!]"
+
 msgid "ui.exam.prev"
 msgstr "[!! ◀ Pŕëvïöüš ~~~~ !!]"
 
 msgid "ui.exam.question_of"
 msgstr "[!! Qüëšţïöñ {n}/{total} ~~~~~~~~ !!]"
+
+msgid "ui.exam.result_correct"
+msgstr "[!! {correct}/{total} çöŕŕëçţ ~~~~~~~~~~ !!]"
+
+msgid "ui.exam.result_heading"
+msgstr "[!! Ţëšţ ŕëšüĺţ ~~~~~ !!]"
+
+msgid "ui.exam.result_objective"
+msgstr "[!! Ğöáĺ {n}: {correct}/{total} çöŕŕëçţ ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.result_score"
+msgstr "[!! Šçöŕë: {score}/{max} ~~~~~~~~ !!]"
+
+msgid "ui.exam.result_score_scaled"
+msgstr "[!! Šçöŕë: {score} ~~~~~~ !!]"
+
+msgid "ui.exam.result_section"
+msgstr "[!! {title}: {score}/{max} ~~~~~~~~~ !!]"
+
+msgid "ui.exam.result_wrong_heading"
+msgstr "[!! Qüëšţïöñš ţö ŕëvïëŵ ~~~~~~~~ !!]"
+
+msgid "ui.exam.result_wrong_item"
+msgstr "[!! Qüëšţïöñ {n} ~~~~~ !!]"
+
+msgid "ui.exam.results_pending"
+msgstr "[!! Ýöüŕ šçĥööĺ ŵïĺĺ ŕëĺëášë ţĥë ŕëšüĺţ ĺáţëŕ. ~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.exam.retry"
 msgstr "[!! Ţŕý áğáïñ ~~~~ !!]"
@@ -916,6 +946,24 @@ msgstr "[!! Vëŕšïöñ {version} ~~~~~~~ !!]"
 
 msgid "ui.login.wait_hint"
 msgstr "[!! Ïƒ ýöü ğöţ ïţ ŵŕöñğ šëvëŕáĺ ţïɱëš, ŵáïţ á ƒëŵ ɱïñüţëš áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.assignment_new"
+msgstr "[!! Ñëŵ ŵöŕķ: {title} ~~~~~~~ !!]"
+
+msgid "ui.notification.assignments_new_count"
+msgstr "[!! Ýöü ĥávë {count} ñëŵ šçĥööĺ ţášķš ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.assignments_pending"
+msgstr "[!! Ýöü ĥávë {count} šçĥööĺ ţášķš ţö đö ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.notification.bell"
+msgstr "[!! 🔔 ~ !!]"
+
+msgid "ui.notification.bell_count"
+msgstr "[!! 🔔 {count} ~~~~ !!]"
+
+msgid "ui.notification.bell_tooltip"
+msgstr "[!! Ñëŵ ŵöŕķ ~~~~ !!]"
 
 msgid "ui.quality.antialiasing"
 msgstr "[!! Åñţï-áĺïášïñğ ~~~~~~ !!]"

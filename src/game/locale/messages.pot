@@ -438,10 +438,40 @@ msgstr ""
 msgid "ui.exam.offline"
 msgstr ""
 
+msgid "ui.exam.practice_objective"
+msgstr ""
+
 msgid "ui.exam.prev"
 msgstr ""
 
 msgid "ui.exam.question_of"
+msgstr ""
+
+msgid "ui.exam.result_correct"
+msgstr ""
+
+msgid "ui.exam.result_heading"
+msgstr ""
+
+msgid "ui.exam.result_objective"
+msgstr ""
+
+msgid "ui.exam.result_score"
+msgstr ""
+
+msgid "ui.exam.result_score_scaled"
+msgstr ""
+
+msgid "ui.exam.result_section"
+msgstr ""
+
+msgid "ui.exam.result_wrong_heading"
+msgstr ""
+
+msgid "ui.exam.result_wrong_item"
+msgstr ""
+
+msgid "ui.exam.results_pending"
 msgstr ""
 
 msgid "ui.exam.retry"
@@ -913,6 +943,24 @@ msgid "ui.login.version"
 msgstr ""
 
 msgid "ui.login.wait_hint"
+msgstr ""
+
+msgid "ui.notification.assignment_new"
+msgstr ""
+
+msgid "ui.notification.assignments_new_count"
+msgstr ""
+
+msgid "ui.notification.assignments_pending"
+msgstr ""
+
+msgid "ui.notification.bell"
+msgstr ""
+
+msgid "ui.notification.bell_count"
+msgstr ""
+
+msgid "ui.notification.bell_tooltip"
 msgstr ""
 
 msgid "ui.quality.antialiasing"

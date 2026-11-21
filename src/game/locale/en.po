@@ -441,11 +441,41 @@ msgstr "Next ▶"
 msgid "ui.exam.offline"
 msgstr "Offline — your answers are kept on this device for now"
 
+msgid "ui.exam.practice_objective"
+msgstr "Practise this goal"
+
 msgid "ui.exam.prev"
 msgstr "◀ Previous"
 
 msgid "ui.exam.question_of"
 msgstr "Question {n}/{total}"
+
+msgid "ui.exam.result_correct"
+msgstr "{correct}/{total} correct"
+
+msgid "ui.exam.result_heading"
+msgstr "Test result"
+
+msgid "ui.exam.result_objective"
+msgstr "Goal {n}: {correct}/{total} correct"
+
+msgid "ui.exam.result_score"
+msgstr "Score: {score}/{max}"
+
+msgid "ui.exam.result_score_scaled"
+msgstr "Score: {score}"
+
+msgid "ui.exam.result_section"
+msgstr "{title}: {score}/{max}"
+
+msgid "ui.exam.result_wrong_heading"
+msgstr "Questions to review"
+
+msgid "ui.exam.result_wrong_item"
+msgstr "Question {n}"
+
+msgid "ui.exam.results_pending"
+msgstr "Your school will release the result later."
 
 msgid "ui.exam.retry"
 msgstr "Try again"
@@ -917,6 +947,24 @@ msgstr "Version {version}"
 
 msgid "ui.login.wait_hint"
 msgstr "If you got it wrong several times, wait a few minutes and try again."
+
+msgid "ui.notification.assignment_new"
+msgstr "New work: {title}"
+
+msgid "ui.notification.assignments_new_count"
+msgstr "You have {count} new school tasks"
+
+msgid "ui.notification.assignments_pending"
+msgstr "You have {count} school tasks to do"
+
+msgid "ui.notification.bell"
+msgstr "🔔"
+
+msgid "ui.notification.bell_count"
+msgstr "🔔 {count}"
+
+msgid "ui.notification.bell_tooltip"
+msgstr "New work"
 
 msgid "ui.quality.antialiasing"
 msgstr "Anti-aliasing"

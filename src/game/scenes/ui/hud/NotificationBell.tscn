@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/hud/notification_bell.gd" id="1_script"]
+
+[node name="NotificationBell" type="Button"]
+size_flags_vertical = 0
+tooltip_text = "ui.notification.bell_tooltip"
+theme_type_variation = &"SecondaryButton"
+auto_translate_mode = 2
+script = ExtResource("1_script")

@@ -78,6 +78,8 @@ func _init(rest: RestApiClient = null, telemetry_service: TelemetryService = nul
 ## - `{activity_id, mode?, context_type?, context_id?, recommendation_id?}` → `startActivityAttempt`;
 ## - `{question_set_id, mode?, context_type?, context_id?, recommendation_id?}` → `startAdHocAttempt`
 ##   (`source.kind = question_set`, default mode `assignment` for a school assignment);
+## - `{objective_id, mode?, context_type?}` → `startAdHocAttempt` (`source.kind = selection`; "Luyện LO này" of an
+##   exam result, F064-AC-19);
 ## - `{attempt_id}` → `getActivityAttempt` (resume). Null when the intent has none of these ids.
 static func start_request(args: Dictionary) -> ApiRequest:
 	var activity_id: String = _uuid(args, "activity_id")
@@ -96,6 +98,12 @@ static func start_request(args: Dictionary) -> ApiRequest:
 		_put_uuid(adhoc, "context_id", args)
 		_put_uuid(adhoc, "recommendation_id", args)
 		return ApiRequest.make_post(PATH_ATTEMPTS, adhoc)
+	var objective_id: String = _uuid(args, "objective_id")
+	if not objective_id.is_empty():
+		var practice: Dictionary = {"mode": "practice", "source": {"kind": "selection", "objective_id": objective_id}}
+		_put_enum(practice, "mode", args, ADHOC_MODES)
+		_put_enum(practice, "context_type", args, ADHOC_CONTEXTS)
+		return ApiRequest.make_post(PATH_ATTEMPTS, practice)
 	var attempt_id: String = _uuid(args, "attempt_id")
 	if not attempt_id.is_empty():
 		return ApiRequest.make_get("%s/%s" % [PATH_ATTEMPTS, attempt_id])

@@ -178,3 +178,22 @@ func test_close_returns_to_the_game() -> void:
 	lobby.call("close")
 	assert_bool(lobby.visible).is_false()
 	assert_int(closed).is_equal(1)
+
+
+func test_clock_shows_digits_or_a_sand_glass_for_g1_3() -> void:
+	var runner: Control = await _start()
+	var clock: Control = runner.find_child("Clock", true, false) as Control
+	assert_str(String(clock.call("time_text"))).is_equal(tr("ui.exam.time_left").format({"time": "15:00"}))
+	assert_bool((clock.find_child("Sand", true, false) as Control).visible).is_false()
+	runner.call("leave")
+	lobby.set("grade_band", "g1_3")
+	h.http.reply(ExamFixtures.ROUTE_START, 201, ExamFixtures.attempt())
+	await lobby.call("start_exam")
+	clock = (lobby.get("runner") as Control).find_child("Clock", true, false) as Control
+	assert_str(String(clock.call("time_text"))).is_empty()
+	assert_bool((clock.find_child("Sand", true, false) as Control).visible).is_true()
+	# Last 5 minutes: the steady warning colour (token variation), no blinking.
+	h.clock.advance(601.0)
+	(lobby.get("runner") as Control).call("_process", 1.0)
+	assert_bool(bool(clock.get("warning"))).is_true()
+	assert_str(String((clock.find_child("Icon", true, false) as Label).theme_type_variation)).is_equal("ExamClockWarningLabel")

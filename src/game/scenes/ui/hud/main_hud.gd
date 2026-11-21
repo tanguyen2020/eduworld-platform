@@ -13,6 +13,8 @@ signal settings_pressed()
 ## F070: Tủ đồ (CustomizationStudio).
 signal wardrobe_pressed()
 signal home_pressed()
+## F064: 🔔 or a toast touched — the owner opens "Nhà trường giao" through NotificationService.
+signal notifications_pressed()
 signal joystick_moved(vector: Vector2)
 
 ## PlayerBadge width in touch-target units (nickname ≤ 24 chars + grade band fit at every density).
@@ -44,6 +46,11 @@ var banner_args: Dictionary = {}
 @onready var _context_action: Button = %ContextActionButton
 @onready var _joystick: Control = %Joystick
 @onready var _network: PanelContainer = %NetworkBanner
+@onready var _bell: Button = %NotificationBell
+@onready var _toasts: VBoxContainer = %ToastStack
+
+## F064: notices of new school work (AppState.services; null in previews and unit tests of the HUD alone).
+var notifications: NotificationService = null
 
 
 func _ready() -> void:
@@ -57,6 +64,9 @@ func _ready() -> void:
 	_home.pressed.connect(home_pressed.emit)
 	_context_action.pressed.connect(context_action_pressed.emit)
 	_joystick.connect("moved", joystick_moved.emit)
+	_bell.pressed.connect(notifications_pressed.emit)
+	_toasts.connect("toast_pressed", notifications_pressed.emit)
+	bind_notifications(AppState.services.notifications if AppState.services != null else null)
 	AppState.player_changed.connect(_on_player_changed)
 	AppState.assignments_changed.connect(_on_assignments_changed)
 	AppState.grade_band_changed.connect(apply_band)
@@ -66,6 +76,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	bind_notifications(null)
 	for pair: Array in [[AppState.player_changed, _on_player_changed], [AppState.assignments_changed,
 			_on_assignments_changed], [AppState.grade_band_changed, apply_band], [EventBus.locale_changed, _on_locale_changed]]:
 		var sig: Signal = pair[0] as Signal
@@ -78,10 +89,24 @@ func apply_band(value: String) -> void:
 	band = value if ThemeService.is_valid_band(value) else ThemeService.default_band()
 	minimap_allowed = not band in NO_MINIMAP_BANDS
 	var target: float = float(UiTokens.DENSITY_BUTTON_MIN_HEIGHT[band])
-	for button: Button in [_assignments_chip, _journal, _settings, _wardrobe, _home, _context_action]:
+	for button: Button in [_assignments_chip, _journal, _bell, _settings, _wardrobe, _home, _context_action]:
 		button.custom_minimum_size = Vector2(target, target)
 	_badge.custom_minimum_size = Vector2(target * BADGE_WIDTH_FACTOR, target)
 	_render()
+
+
+## F064-AC-20…22: follows the badge and the toasts of `service` (null unbinds).
+func bind_notifications(service: NotificationService) -> void:
+	if notifications != null:
+		if notifications.toast_requested.is_connected(_on_toast_requested):
+			notifications.toast_requested.disconnect(_on_toast_requested)
+		if notifications.badge_changed.is_connected(_on_badge_changed):
+			notifications.badge_changed.disconnect(_on_badge_changed)
+	notifications = service
+	if service != null:
+		service.toast_requested.connect(_on_toast_requested)
+		service.badge_changed.connect(_on_badge_changed)
+	_bell.call("set_count", service.badge if service != null else 0)
 
 
 ## ContextActionButton for the Interactable the player stands in ("" hides it).
@@ -122,6 +147,14 @@ func _render() -> void:
 			else tr("ui.hub.assignments")
 	_banner.visible = not banner_key.is_empty()
 	_banner_label.text = tr(banner_key).format(banner_args) if not banner_key.is_empty() else ""
+
+
+func _on_toast_requested(key: String, args: Dictionary) -> void:
+	_toasts.call("push", tr(key).format(args))
+
+
+func _on_badge_changed(count: int) -> void:
+	_bell.call("set_count", count)
 
 
 func _on_player_changed(_player: Dictionary) -> void:

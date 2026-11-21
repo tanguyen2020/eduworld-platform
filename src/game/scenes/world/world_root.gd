@@ -38,6 +38,7 @@ func _ready() -> void:
 	_hud.connect("wardrobe_pressed", _on_wardrobe_pressed)
 	_hud.connect("home_pressed", zone.return_home)
 	_hud.connect("joystick_moved", _on_joystick_moved)
+	_hud.connect("notifications_pressed", _on_notifications_pressed)
 	zone.interaction_focus_changed.connect(_on_focus_changed)
 	EventBus.ui_requested.connect(_on_ui_requested)
 	AuthService.curfew_warning_raised.connect(_on_curfew_warning_raised)
@@ -154,6 +155,11 @@ func _on_journal_pressed() -> void:
 
 func _on_settings_pressed() -> void:
 	EventBus.ui_requested.emit(&"settings", {})
+
+
+## F064-AC-22: 🔔 or a toast → badge cleared, "Nhà trường giao" tab (which refreshes the list).
+func _on_notifications_pressed() -> void:
+	AppState.get_services().notifications.open_assigned()
 
 
 ## F070 Tủ đồ: HUD button or `open_wardrobe` (I).

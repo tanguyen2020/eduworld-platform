@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/hud/main_hud.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/ContextActionButton.tscn" id="2_action"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/Joystick.tscn" id="3_joystick"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/NetworkBanner.tscn" id="4_network"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/NotificationBell.tscn" id="5_bell"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/ToastStack.tscn" id="6_toasts"]
 
 [node name="MainHud" type="CanvasLayer"]
 layer = 2
@@ -78,6 +80,10 @@ tooltip_text = "ui.hub.journal.tooltip"
 theme_type_variation = &"SecondaryButton"
 text = "ui.hub.journal"
 
+[node name="NotificationBell" parent="Root/TopBar" instance=ExtResource("5_bell")]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="SettingsButton" type="Button" parent="Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -112,6 +118,16 @@ layout_mode = 2
 theme_type_variation = &"HudLabel"
 horizontal_alignment = 1
 autowrap_mode = 3
+
+[node name="ToastStack" parent="Root" instance=ExtResource("6_toasts")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.2
+anchor_right = 0.75
+anchor_bottom = 0.2
+grow_horizontal = 2
 
 [node name="QuestTracker" type="Control" parent="Root"]
 visible = false
