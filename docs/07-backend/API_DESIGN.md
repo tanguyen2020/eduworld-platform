@@ -597,10 +597,11 @@ Quy tắc: lệnh WS không bao giờ tạo hoặc xóa membership. REST là ngu
 
 | Method | Path | Mô tả | Role | Idem | Phase |
 |---|---|---|---|---|---|
-| GET | `/competition/modes` | Chế độ thi đấu khả dụng theo khối/môn | STU | T | P4 |
+| GET | `/competition/modes` | Chế độ thi đấu khả dụng theo khối/môn và cấu hình matchmaking hiệu lực (`listCompetitionModes`, F104) | STU | T | P4 |
 | POST | `/competition/matchmaking/tickets` | Vào hàng đợi (solo hoặc party leader) | STU | B | P4 |
 | GET | `/competition/matchmaking/tickets/{ticket_id}` | Trạng thái ticket (fallback khi mất WS) | STU (owner) | T | P4 |
 | DELETE | `/competition/matchmaking/tickets/{ticket_id}` | Rời hàng đợi | STU (owner) | T | P4 |
+| POST | `/competition/matchmaking/tickets/{ticket_id}:bot-match` | Đấu với bot luyện tập "Robot Học Giỏi" sau `mm_bot_after` (`startBotMatch`, unranked — F104) | STU (owner) | B | P4 |
 | POST | `/competition/duels` | Thách đấu bạn (friend duel, unranked, hết hạn 60 s — MATCHMAKING §8) | STU | B | P4 |
 | POST | `/competition/duels/{duel_id}:accept` | Nhận thách đấu → tạo match unranked (`DUEL_EXPIRED`) | STU (opponent) | B | P4 |
 | POST | `/competition/duels/{duel_id}:decline` | Từ chối thách đấu | STU (opponent) | T | P4 |

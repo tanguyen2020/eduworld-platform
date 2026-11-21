@@ -1,6 +1,6 @@
 # Matchmaking
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Multiplayer Engineer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Multiplayer Engineer · Cập nhật: 2026-11-21 (triển khai [F104](../../specs/104-matchmaking/spec.md): quyết định ở Clarifications 2026-11-21) · 2026-11-15
 > Liên quan: [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) · [PARTY_SYSTEM](PARTY_SYSTEM.md) · [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [RANKING](../01-game-design/COMPETITION_SYSTEM.md) · [TOURNAMENT](../01-game-design/COMPETITION_SYSTEM.md) · [ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
 ## 0. Mục đích & phạm vi
@@ -108,10 +108,10 @@ stateDiagram-v2
 
 Quy tắc:
 
-- Mỗi học sinh tối đa **1 ticket active** (Valkey `SET NX ew:mm:player:{student_id}`) **[Confirmed]**.
+- Mỗi học sinh tối đa **1 ticket active** (Valkey `SET NX ew:mm:user:{student_id}`, tên key theo [VALKEY_DESIGN §3.1](../07-backend/VALKEY_DESIGN.md)) **[Confirmed]**.
 - Party ticket: chỉ leader tạo; mọi member phải online và không có ticket riêng; member rời party → ticket party bị hủy.
 - Decline/timeout ready check 3 lần trong 10 phút → cooldown 2 phút **[Confirmed]**.
-- Ticket **chỉ tồn tại trong Valkey** (ADR-0004). Mất Valkey → client nhận `matchmaking.ticket.updated` (status `cancelled`, reason `service_reset`) và tự tạo lại.
+- Ticket **chỉ tồn tại trong Valkey** (ADR-0004). Mất Valkey → client nhận `matchmaking.ticket.updated` (status `cancelled`, `cancel_reason = system` theo enum AsyncAPI) và tự tạo lại.
 
 ## 5. Thiết kế queue trong Valkey
 
@@ -126,7 +126,7 @@ Tên key cuối cùng theo [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md); đ�
 | `ew:mm:queues` | set | danh sách queue key đang có ticket (để matchmaker quét) |
 | `ew:mm:lock:{queue_key}` | string NX | lock matchmaker per queue · TTL 5 s (gia hạn) |
 
-`{scope}` = `s:{school_id}` | `t:{tenant_id}` | `p`. `{grade_key}` = `g3` (lớp 1–5) hoặc `b6_7` (lớp 6–9).
+`{scope}` = `s:{school_id}` | `t:{tenant_id}` | `p`. `{grade_key}` = `g3` (lớp 1–5) hoặc `b6_7` (lớp 6–9). Khóa thật có thêm kiểu ghép và cỡ đội (`team_battle`) — danh sách key cuối cùng ở [VALKEY_DESIGN §3.1](../07-backend/VALKEY_DESIGN.md).
 
 Ví dụ: `ew:mm:queue:battle_1v1:s:018f…:g3:math`.
 

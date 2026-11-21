@@ -2662,7 +2662,10 @@ paths:
       tags: [competition]
       operationId: createDuel
       summary: Thách đấu bạn (friend duel, unranked) — hết hạn 60 giây
-      description: Hai người là bạn bè, cùng grade band, không block nhau (MATCHMAKING §8). Không tính rating/Competition Points; vẫn tính XP theo cap và learning evidence.
+      description: |
+        Hai người là bạn bè, cùng grade band, không block nhau (MATCHMAKING §8); sai một điều kiện hoặc đối thủ không thuộc
+        tenant của phiên → `403 SOCIAL_SCOPE_VIOLATION` (không nói điều kiện nào). Đã có lời thách đấu pending tới cùng bạn →
+        `409 CONFLICT`. Không tính rating/Competition Points; vẫn tính XP theo cap và learning evidence (F104-AC-19).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2690,13 +2693,18 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
         '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /competition/duels/{duel_id}:accept:
     post:
       x-service: competition
       tags: [competition]
       operationId: acceptDuel
       summary: Nhận lời thách đấu — tạo match unranked
+      description: |
+        Chỉ người được thách đấu; duel của người khác/tenant khác → `404`. Quá 60 giây hoặc đã hủy/từ chối →
+        `410 DUEL_EXPIRED`. Trận tạo ra có `ranked = false`, `matchmaking_type = friend` (F104-AC-20).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2712,6 +2720,7 @@ paths:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '410': { $ref: '#/components/responses/Gone' }
@@ -2728,13 +2737,22 @@ paths:
       responses:
         '204': { description: Đã từ chối }
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '410': { $ref: '#/components/responses/Gone' }
   /competition/matchmaking/tickets:
     post:
       x-service: competition
       tags: [competition]
       operationId: createMatchmakingTicket
       summary: Vào hàng đợi (solo hoặc party leader). Ràng buộc khối lớp được áp trước rating.
+      description: |
+        Khối, trường, lớp, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
+        ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`; bị hạn chế thi đấu,
+        khối không có mode (vd. `team_battle` lớp < 4) hoặc party có thành viên khác khối → `403 POLICY_DENIED`; không phải
+        leader → `403 PARTY_NOT_LEADER`; thành viên offline → `409 PARTY_MEMBER_NOT_ONLINE`; `matchmaking_type` `friend`
+        (dùng `createDuel`) hoặc `tournament` (proposal trực tiếp của giải), `topic` thiếu `topic_id`, môn/chủ đề không
+        khả dụng cho khối → `422`; vượt `mm_ticket_rate` hoặc đang cooldown → `429` + `Retry-After`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2755,14 +2773,75 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /competition/matchmaking/tickets/{ticket_id}:bot-match:
+    post:
+      x-service: competition
+      tags: [competition]
+      operationId: startBotMatch
+      summary: Đấu với "Robot Học Giỏi" (bot luyện tập unranked) khi chờ quá mm_bot_after
+      description: |
+        Chỉ chủ ticket solo đang `queued` có `bot_offer_available = true` (chờ quá `mm_bot_after`); chưa đủ thời gian hoặc
+        ticket không còn chờ → `409 CONFLICT`. Ticket bị hủy (`cancel_reason = user`) và tạo trận `is_bot = true`,
+        `ranked = false` cùng môn/khối (F104-AC-12, MATCHMAKING §9). Bot luôn gắn nhãn "Robot" — luật chơi do F105.
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/TicketId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Trận bot đã tạo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Match' }
+          headers:
+            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
+            Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /competition/modes:
+    get:
+      x-service: competition
+      tags: [competition]
+      operationId: listCompetitionModes
+      summary: Các mode và kiểu ghép khả dụng cho học sinh của phiên
+      description: Theo khối, môn của học sinh và cấu hình matchmaking đang hiệu lực (F104-AC-22). `friend` (duel) và `tournament` không vào hàng đợi nên không có trong `matchmaking_types`.
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 10
+                    items: { $ref: '#/components/schemas/CompetitionMode' }
+          headers:
+            Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /competition/matchmaking/tickets/{ticket_id}:
     get:
       x-service: competition
       tags: [competition]
       operationId: getMatchmakingTicket
       summary: Trạng thái matchmaking ticket (fallback khi mất WS)
+      description: Chỉ người có trong ticket; ticket của người khác/tenant khác hoặc đã mất cùng Valkey → `404` (F104-AC-24).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2776,18 +2855,22 @@ paths:
                 $ref: '#/components/schemas/MatchmakingTicket'
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-service: competition
       tags: [competition]
       operationId: cancelMatchmakingTicket
       summary: Rời hàng đợi (fallback của WS matchmaking.ticket.cancel)
+      description: Chủ ticket solo hoặc leader của ticket đội (thành viên khác → `403 PARTY_NOT_LEADER`); ticket `cancelled` với `cancel_reason = user` (F104-AC-10).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
         - $ref: '#/components/parameters/TicketId'
       responses:
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '204': { description: Đã rời hàng đợi }
   /competition/matches:
@@ -2806,6 +2889,7 @@ paths:
         - $ref: '#/components/parameters/Cursor'
       responses:
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '200':
           description: Match history
           content:
@@ -2846,12 +2930,33 @@ paths:
       tags: [competition]
       operationId: acceptMatchProposal
       summary: Chấp nhận ready check (fallback của WS matchmaking.proposal.accept)
+      description: '`match_id` là `proposal_id` (Clarifications F104 2026-11-16). Không phải người tham gia → `404`; proposal hết hạn/đã hủy → `409`.'
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
         - $ref: '#/components/parameters/MatchId'
       responses:
         '204': { description: Đã sẵn sàng }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /competition/matches/{match_id}/proposal:decline:
+    post:
+      x-service: competition
+      tags: [competition]
+      operationId: declineMatchProposal
+      summary: Từ chối ready check (fallback của WS matchmaking.proposal.decline)
+      description: Proposal bị hủy; ticket của người đã chấp nhận về hàng đợi giữ nguyên thời gian chờ, ticket của người từ chối bị hủy (F104-AC-06).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '204': { description: Đã từ chối }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
   /competition/ratings/me:
     get:
@@ -20263,8 +20368,13 @@ components:
           $ref: '#/components/schemas/Uuid'
         matchmaking_type:
           type: string
+          description: '`friend` chỉ qua createDuel, `tournament` chỉ qua proposal trực tiếp của giải → 422 (F104-AC-18).'
           enum: [random, skill, grade, subject, topic, friend, team, tournament]
           default: skill
+        allow_fill:
+          type: boolean
+          default: false
+          description: Ticket đội — cho phép ghép thêm ticket lẻ cùng hàng đợi để đủ đội (MATCHMAKING §8).
     MatchmakingTicket:
       type: object
       required: [ticket_id, status, mode, created_at]
@@ -20272,10 +20382,41 @@ components:
         ticket_id: { $ref: '#/components/schemas/Uuid' }
         status: { type: string, enum: [queued, proposed, matched, cancelled, expired] }
         mode: { $ref: '#/components/schemas/MatchMode' }
+        matchmaking_type: { type: string, enum: [random, skill, grade, subject, topic, team] }
         subject_id: { $ref: '#/components/schemas/Uuid' }
+        topic_id: { $ref: '#/components/schemas/Uuid' }
+        party_id: { $ref: '#/components/schemas/Uuid' }
         created_at: { $ref: '#/components/schemas/Timestamp' }
+        wait_seconds: { type: integer, minimum: 0 }
         estimated_wait_seconds: { type: integer }
-        match_id: { $ref: '#/components/schemas/Uuid' }
+        search_widened: { type: boolean, description: 'Đã nới cửa sổ rating (không bao giờ nới ràng buộc khối lớp).' }
+        bot_offer_available: { type: boolean, description: 'Chờ quá mm_bot_after — có thể gọi startBotMatch.' }
+        requeued: { type: boolean, description: 'Về lại hàng đợi sau khi proposal bị hủy, giữ thời gian chờ.' }
+        cancel_reason: { type: string, enum: [user, party_changed, timeout, system, declined_proposal] }
+        proposal_id: { $ref: '#/components/schemas/Uuid' }
+        match_id:
+          $ref: '#/components/schemas/Uuid'
+          description: Bằng proposal_id của proposal đã được mọi bên chấp nhận.
+    CompetitionMode:
+      type: object
+      required: [mode, matchmaking_types, ranked, min_grade, subjects]
+      properties:
+        mode: { $ref: '#/components/schemas/MatchMode' }
+        matchmaking_types:
+          type: array
+          maxItems: 8
+          items: { type: string, enum: [random, skill, grade, subject, topic, team] }
+        ranked: { type: boolean, description: 'Mode có kiểu ghép tính rating.' }
+        ranked_matchmaking_types:
+          type: array
+          maxItems: 8
+          items: { type: string, enum: [random, skill, grade, subject, topic, team] }
+        min_grade: { $ref: '#/components/schemas/GradeLevel' }
+        subjects:
+          type: array
+          maxItems: 50
+          description: Môn khả dụng cho khối; rỗng = cấu hình chưa giới hạn môn.
+          items: { $ref: '#/components/schemas/Uuid' }
     Match:
       type: object
       required: [match_id, mode, status]
@@ -20285,6 +20426,9 @@ components:
         subject_id: { $ref: '#/components/schemas/Uuid' }
         grade_level: { $ref: '#/components/schemas/GradeLevel' }
         status: { type: string, enum: [proposed, lobby, running, completed, cancelled, aborted] }
+        matchmaking_type: { type: string, enum: [random, skill, grade, subject, topic, friend, team, tournament, bot] }
+        ranked: { type: boolean }
+        is_bot: { type: boolean, description: 'Trận với bot luyện tập "Robot Học Giỏi" (unranked).' }
         room_id: { $ref: '#/components/schemas/Uuid' }
         started_at: { $ref: '#/components/schemas/Timestamp' }
         ended_at: { $ref: '#/components/schemas/Timestamp' }

@@ -1,6 +1,6 @@
 # Contracts: F104 — Matchmaking 8 chế độ: queue, ticket, proposal, ready check, ràng buộc khối
 
-**Spec**: [../spec.md](../spec.md) · **Plan**: [../plan.md](../plan.md)
+**Spec**: [../spec.md](../spec.md) · **Plan**: [../plan.md](../plan.md) · **Đã áp dụng 2026-11-21** (mọi dòng "Cần thêm/Cần sửa" của F104 đã vào contract; khác biệt ghi ở [Clarifications 2026-11-21](../spec.md#clarifications))
 
 ## 1. API (OpenAPI)
 

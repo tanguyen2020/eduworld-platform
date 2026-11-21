@@ -9,6 +9,285 @@ import (
 )
 
 var (
+	// CompetitionRestrictionsColumns holds the columns for the "competition_restrictions" table.
+	CompetitionRestrictionsColumns = []*schema.Column{
+		{Name: "restriction_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "reason", Type: field.TypeString, Size: 1000},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "ends_at", Type: field.TypeTime},
+	}
+	// CompetitionRestrictionsTable holds the schema information for the "competition_restrictions" table.
+	CompetitionRestrictionsTable = &schema.Table{
+		Name:       "competition_restrictions",
+		Columns:    CompetitionRestrictionsColumns,
+		PrimaryKey: []*schema.Column{CompetitionRestrictionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "competition_restrictions_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{CompetitionRestrictionsColumns[1], CompetitionRestrictionsColumns[11], CompetitionRestrictionsColumns[15]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ContentReleasesColumns holds the columns for the "content_releases" table.
+	ContentReleasesColumns = []*schema.Column{
+		{Name: "release_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "action", Type: field.TypeString, Size: 64},
+		{Name: "from_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "to_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "released_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "released_at", Type: field.TypeTime},
+	}
+	// ContentReleasesTable holds the schema information for the "content_releases" table.
+	ContentReleasesTable = &schema.Table{
+		Name:       "content_releases",
+		Columns:    ContentReleasesColumns,
+		PrimaryKey: []*schema.Column{ContentReleasesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "content_releases_config_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ContentReleasesColumns[3], ContentReleasesColumns[9]},
+			},
+		},
+	}
+	// DuelsColumns holds the columns for the "duels" table.
+	DuelsColumns = []*schema.Column{
+		{Name: "duel_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "challenger_id", Type: field.TypeUUID},
+		{Name: "opponent_id", Type: field.TypeUUID},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "topic_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "pending"},
+		{Name: "match_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "responded_at", Type: field.TypeTime, Nullable: true},
+	}
+	// DuelsTable holds the schema information for the "duels" table.
+	DuelsTable = &schema.Table{
+		Name:       "duels",
+		Columns:    DuelsColumns,
+		PrimaryKey: []*schema.Column{DuelsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "duels_pending_uq",
+				Unique:  true,
+				Columns: []*schema.Column{DuelsColumns[11], DuelsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'pending' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "duels_expiry_idx",
+				Unique:  false,
+				Columns: []*schema.Column{DuelsColumns[17]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'pending' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "duels_opponent_idx",
+				Unique:  false,
+				Columns: []*schema.Column{DuelsColumns[1], DuelsColumns[12], DuelsColumns[15]},
+			},
+		},
+	}
+	// GameConfigsColumns holds the columns for the "game_configs" table.
+	GameConfigsColumns = []*schema.Column{
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "config_type", Type: field.TypeString, Size: 64},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "platform"},
+	}
+	// GameConfigsTable holds the schema information for the "game_configs" table.
+	GameConfigsTable = &schema.Table{
+		Name:       "game_configs",
+		Columns:    GameConfigsColumns,
+		PrimaryKey: []*schema.Column{GameConfigsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "game_configs_type_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{GameConfigsColumns[9], GameConfigsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// GameConfigVersionsColumns holds the columns for the "game_config_versions" table.
+	GameConfigVersionsColumns = []*schema.Column{
+		{Name: "config_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "config_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "draft"},
+		{Name: "title", Type: field.TypeString, Size: 255},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "effective_from", Type: field.TypeTime, Nullable: true},
+		{Name: "author_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reviewer_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+	}
+	// GameConfigVersionsTable holds the schema information for the "game_config_versions" table.
+	GameConfigVersionsTable = &schema.Table{
+		Name:       "game_config_versions",
+		Columns:    GameConfigVersionsColumns,
+		PrimaryKey: []*schema.Column{GameConfigVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "game_config_versions_config_version_uq",
+				Unique:  true,
+				Columns: []*schema.Column{GameConfigVersionsColumns[9], GameConfigVersionsColumns[10]},
+			},
+			{
+				Name:    "game_config_versions_active_idx",
+				Unique:  false,
+				Columns: []*schema.Column{GameConfigVersionsColumns[9], GameConfigVersionsColumns[11], GameConfigVersionsColumns[14]},
+			},
+		},
+	}
+	// MatchesColumns holds the columns for the "matches" table.
+	MatchesColumns = []*schema.Column{
+		{Name: "match_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "matchmaking_type", Type: field.TypeString, Size: 64},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "topic_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "grade_level", Type: field.TypeInt16},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "lobby"},
+		{Name: "ranked", Type: field.TypeBool},
+		{Name: "is_bot", Type: field.TypeBool, Default: false},
+		{Name: "scope_kind", Type: field.TypeString, Size: 64},
+		{Name: "tournament_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "tournament_node_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "duel_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "ruleset_version_id", Type: field.TypeUUID},
+		{Name: "question_plan", Type: field.TypeJSON, Nullable: true},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+	}
+	// MatchesTable holds the schema information for the "matches" table.
+	MatchesTable = &schema.Table{
+		Name:       "matches",
+		Columns:    MatchesColumns,
+		PrimaryKey: []*schema.Column{MatchesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "matches_tournament_idx",
+				Unique:  false,
+				Columns: []*schema.Column{MatchesColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "tournament_id IS NOT NULL",
+				},
+			},
+			{
+				Name:    "matches_status_created_idx",
+				Unique:  false,
+				Columns: []*schema.Column{MatchesColumns[14], MatchesColumns[1]},
+			},
+		},
+	}
+	// MatchParticipantsColumns holds the columns for the "match_participants" table.
+	MatchParticipantsColumns = []*schema.Column{
+		{Name: "participant_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "match_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "team_no", Type: field.TypeInt16},
+		{Name: "party_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "outcome", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "score", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(9,3)"}},
+		{Name: "connected_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "rating_mu_at_match", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(8,3)"}},
+		{Name: "rating_rd_at_match", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(8,3)"}},
+	}
+	// MatchParticipantsTable holds the schema information for the "match_participants" table.
+	MatchParticipantsTable = &schema.Table{
+		Name:       "match_participants",
+		Columns:    MatchParticipantsColumns,
+		PrimaryKey: []*schema.Column{MatchParticipantsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "match_participants_match_student_uq",
+				Unique:  true,
+				Columns: []*schema.Column{MatchParticipantsColumns[10], MatchParticipantsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "match_participants_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{MatchParticipantsColumns[1], MatchParticipantsColumns[11], MatchParticipantsColumns[2]},
+			},
+		},
+	}
 	// PartiesColumns holds the columns for the "parties" table.
 	PartiesColumns = []*schema.Column{
 		{Name: "party_id", Type: field.TypeUUID},
@@ -361,6 +640,13 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CompetitionRestrictionsTable,
+		ContentReleasesTable,
+		DuelsTable,
+		GameConfigsTable,
+		GameConfigVersionsTable,
+		MatchesTable,
+		MatchParticipantsTable,
 		PartiesTable,
 		PartyActivitiesTable,
 		PartyInvitationsTable,
@@ -372,6 +658,27 @@ var (
 )
 
 func init() {
+	CompetitionRestrictionsTable.Annotation = &entsql.Annotation{
+		Table: "competition_restrictions",
+	}
+	ContentReleasesTable.Annotation = &entsql.Annotation{
+		Table: "content_releases",
+	}
+	DuelsTable.Annotation = &entsql.Annotation{
+		Table: "duels",
+	}
+	GameConfigsTable.Annotation = &entsql.Annotation{
+		Table: "game_configs",
+	}
+	GameConfigVersionsTable.Annotation = &entsql.Annotation{
+		Table: "game_config_versions",
+	}
+	MatchesTable.Annotation = &entsql.Annotation{
+		Table: "matches",
+	}
+	MatchParticipantsTable.Annotation = &entsql.Annotation{
+		Table: "match_participants",
+	}
 	PartiesTable.Annotation = &entsql.Annotation{
 		Table: "parties",
 	}

@@ -49,10 +49,13 @@ type Queries interface {
 	ListEligibleActivities(ctx context.Context, partyID uuid.UUID) ([]view.Eligible, error)
 }
 
-// Handlers are the F100 use cases served over HTTP.
+// Handlers are the F100, F101 and F104 use cases served over HTTP.
 type Handlers struct {
 	Commands Commands
 	Queries  Queries
+	// F104 — matchmaking and friend duels (nil: not mounted).
+	Matchmaking        MatchmakingCommands
+	MatchmakingQueries MatchmakingQueries
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -89,7 +92,7 @@ var PlayerOperations = []string{"createParty", "getMyParty", "getParty", "update
 	"transferPartyLeader", "kickPartyMember", "inviteToParty", "listMyInvitations", "acceptPartyInvitation", "rejectPartyInvitation",
 	"cancelPartyInvitation", "joinParty", "setPartyReady", "selectPartyActivity", "startPartySession", "listPartyEligibleActivities"}
 
-// Register mounts every F100 and F101 operation on the server.
+// Register mounts every F100, F101 and F104 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
 	if h.Commands == nil || h.Queries == nil {
 		return errors.New("competition: the F100 handlers are required")
@@ -118,6 +121,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		if err := s.Handle(Operations[id], routes[id]); err != nil {
 			return err
 		}
+	}
+	if h.Matchmaking != nil && h.MatchmakingQueries != nil {
+		return registerMatchmaking(s, h.Matchmaking, h.MatchmakingQueries)
 	}
 	return nil
 }

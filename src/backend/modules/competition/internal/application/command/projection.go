@@ -82,3 +82,8 @@ func (p Projection) Enrollment(ctx context.Context, tenant, student, class uuid.
 	}
 	return p.Refs.Enrollment(ctx, tenant, student, class, school, status, start, end, version)
 }
+
+// School applies school.updated (owner F010/F015): settings_subset of the school (allowed hours for matchmaking, F104).
+func (p Projection) School(ctx context.Context, tenant, school uuid.UUID, status string, settings []byte, version int64) (bool, error) {
+	return p.Refs.School(ctx, school, tenant, status, settings, version)
+}

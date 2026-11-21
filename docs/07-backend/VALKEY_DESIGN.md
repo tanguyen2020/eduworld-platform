@@ -70,12 +70,16 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:party:presence:<user_id>` | HASH {status, ts} — presence gần nhất module competition nhận từ tín hiệu `ew.rt.presence.<tenant_id>` (subscriber `competition.party_presence` trong `core-api`), ghi bằng Lua chỉ khi `ts` mới hơn; mất kết nối = `offline` (chuyển leader cho thành viên online, F100) | `presence_ttl` (90 s) | `competition · party` | Ephemeral — hết hạn = offline |
 | `ew:lobby:<room_id>` | HASH {match_id?, state, deadline_ms} | 30 phút | `competition · lobby` | Ephemeral |
 | `ew:lobby:<room_id>:ready` | HASH user_id → 0/1 | 30 phút | `competition · lobby` | Ephemeral |
-| `ew:mm:queue:<mode>:<scope>:<grade_key>:<subject>[:<topic>]` (`<scope>` = phạm vi ghép theo [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md), vd. `school:<school_id>`, `tenant:<tenant_id>`) | ZSET ticket_id → enqueue_ms | Không TTL key; phần tử dọn bởi matchmaker (ticket TTL) | `competition · matchmaking` | Ephemeral |
-| `ew:mm:ticket:<ticket_id>` | HASH {queue_key, user_ids, party_id, grade_level, tenant_id, school_id, rating, rd, constraints, status} | 10 phút | `competition · matchmaking` | Ephemeral |
-| `ew:mm:user:<user_id>` | STRING ticket_id | 10 phút | `competition · matchmaking` | Ephemeral |
-| `ew:mm:proposal:<proposal_id>` | HASH {ticket_ids, accepted, deadline_ms} | 30 s | `competition · matchmaking` | Ephemeral |
-| `ew:mm:lock:<queue_key>` | STRING worker_id | 5 s (gia hạn) | `competition · matchmaking` | Ephemeral |
+| `ew:mm:queue:<mode>:<type>:<scope>:<grade_key>:<subject>[:<topic>][:n<team_size>]` (`<type>` = `matchmaking_type`; `<scope>` = `s:<school_id>` \| `t:<tenant_id>` \| `p` theo [MATCHMAKING §5](../03-social-multiplayer/MATCHMAKING.md#5-thiết-kế-queue-trong-valkey); `n<team_size>` chỉ cho `team_battle` — F104) | ZSET ticket_id → enqueue_ms | Không TTL key; phần tử dọn bởi matchmaker (ticket TTL) | `competition · matchmaking` | Ephemeral |
+| `ew:mm:ticket:<ticket_id>` | HASH {id, tenant, owner, queue, mode, type, scope_kind, scope_id, grade_key, subject, topic, party, allow_fill, team_size, students, schools, classes, grade, mu, rd, enq, status, reason, proposal, match, requeued, bot, offline} | 10 phút (ticket kết thúc giữ thêm 10 phút cho `getMatchmakingTicket`) | `competition · matchmaking` | Ephemeral |
+| `ew:mm:user:<user_id>` | STRING ticket_id (NX: `mm_tickets_per_user`) | 10 phút | `competition · matchmaking` | Ephemeral |
+| `ew:mm:party:<party_id>` | STRING ticket_id (NX: một ticket đội/party, F104) | 10 phút | `competition · matchmaking` | Ephemeral |
+| `ew:mm:proposal:<proposal_id>` | HASH {doc (JSON chỉ ID), status, deadline, n, acc:<student_id>, accepted_at} | `mm_ready_check` + 1 phút; `accepted` 10 phút tới khi có trận | `competition · matchmaking` | Ephemeral |
+| `ew:mm:proposals` | ZSET proposal_id → deadline (open) / lúc thử lại (accepted) | Không TTL; matchmaker dọn | `competition · matchmaking` | Ephemeral — ready check hết hạn, tạo trận thử lại (F104) |
+| `ew:mm:lock:<queue_key>` | STRING worker_id (`SET NX PX`) | 5 s (`EW_MM_LOCK_TTL`) | `competition · matchmaking` | Ephemeral |
 | `ew:mm:queues` | SET queue_key đang có ticket | Không TTL; matchmaker dọn khi queue rỗng | `competition · matchmaking` | Ephemeral |
+| `ew:mm:rate:<student_id>` | ZSET cửa sổ trượt 1 giờ của `mm_ticket_rate` (F104) | 1 giờ | `competition · matchmaking` | Ephemeral |
+| `ew:mm:declines:<student_id>` | ZSET decline/timeout ready check trong cửa sổ của `mm_ticket_rate` (F104) | = cửa sổ | `competition · matchmaking` | Ephemeral |
 | `ew:mm:cooldown:<student_id>` | STRING | Theo `mm_ticket_rate` | `competition · matchmaking` | Ephemeral — chặn tạo ticket dồn dập |
 | `ew:rl:<scope>:<subject>:<window>` | STRING counter / ZSET | = window | `mỗi module (src/backend/pkg/httpx)` | Ephemeral |
 | `ew:idem:<principal_id>:<key>` | STRING (JSON status + response ref) | 24 h | `mỗi module (src/backend/pkg/httpx)` | Ephemeral cache — bản ghi chuẩn ở `infra.idempotency_records` |

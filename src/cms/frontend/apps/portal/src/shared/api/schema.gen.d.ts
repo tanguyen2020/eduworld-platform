@@ -3869,7 +3869,9 @@ export interface paths {
         put?: never;
         /**
          * Thách đấu bạn (friend duel, unranked) — hết hạn 60 giây
-         * @description Hai người là bạn bè, cùng grade band, không block nhau (MATCHMAKING §8). Không tính rating/Competition Points; vẫn tính XP theo cap và learning evidence.
+         * @description Hai người là bạn bè, cùng grade band, không block nhau (MATCHMAKING §8); sai một điều kiện hoặc đối thủ không thuộc
+         *     tenant của phiên → `403 SOCIAL_SCOPE_VIOLATION` (không nói điều kiện nào). Đã có lời thách đấu pending tới cùng bạn →
+         *     `409 CONFLICT`. Không tính rating/Competition Points; vẫn tính XP theo cap và learning evidence (F104-AC-19).
          */
         post: operations["createDuel"];
         delete?: never;
@@ -3887,7 +3889,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Nhận lời thách đấu — tạo match unranked */
+        /**
+         * Nhận lời thách đấu — tạo match unranked
+         * @description Chỉ người được thách đấu; duel của người khác/tenant khác → `404`. Quá 60 giây hoặc đã hủy/từ chối →
+         *     `410 DUEL_EXPIRED`. Trận tạo ra có `ranked = false`, `matchmaking_type = friend` (F104-AC-20).
+         */
         post: operations["acceptDuel"];
         delete?: never;
         options?: never;
@@ -3955,8 +3961,31 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Chấp nhận ready check (fallback của WS matchmaking.proposal.accept) */
+        /**
+         * Chấp nhận ready check (fallback của WS matchmaking.proposal.accept)
+         * @description `match_id` là `proposal_id` (Clarifications F104 2026-11-16). Không phải người tham gia → `404`; proposal hết hạn/đã hủy → `409`.
+         */
         post: operations["acceptMatchProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/matches/{match_id}/proposal:decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Từ chối ready check (fallback của WS matchmaking.proposal.decline)
+         * @description Proposal bị hủy; ticket của người đã chấp nhận về hàng đợi giữ nguyên thời gian chờ, ticket của người từ chối bị hủy (F104-AC-06).
+         */
+        post: operations["declineMatchProposal"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3972,7 +4001,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Vào hàng đợi (solo hoặc party leader). Ràng buộc khối lớp được áp trước rating. */
+        /**
+         * Vào hàng đợi (solo hoặc party leader). Ràng buộc khối lớp được áp trước rating.
+         * @description Khối, trường, lớp, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
+         *     ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`; bị hạn chế thi đấu,
+         *     khối không có mode (vd. `team_battle` lớp < 4) hoặc party có thành viên khác khối → `403 POLICY_DENIED`; không phải
+         *     leader → `403 PARTY_NOT_LEADER`; thành viên offline → `409 PARTY_MEMBER_NOT_ONLINE`; `matchmaking_type` `friend`
+         *     (dùng `createDuel`) hoặc `tournament` (proposal trực tiếp của giải), `topic` thiếu `topic_id`, môn/chủ đề không
+         *     khả dụng cho khối → `422`; vượt `mm_ticket_rate` hoặc đang cooldown → `429` + `Retry-After`.
+         */
         post: operations["createMatchmakingTicket"];
         delete?: never;
         options?: never;
@@ -3987,12 +4024,60 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Trạng thái matchmaking ticket (fallback khi mất WS) */
+        /**
+         * Trạng thái matchmaking ticket (fallback khi mất WS)
+         * @description Chỉ người có trong ticket; ticket của người khác/tenant khác hoặc đã mất cùng Valkey → `404` (F104-AC-24).
+         */
         get: operations["getMatchmakingTicket"];
         put?: never;
         post?: never;
-        /** Rời hàng đợi (fallback của WS matchmaking.ticket.cancel) */
+        /**
+         * Rời hàng đợi (fallback của WS matchmaking.ticket.cancel)
+         * @description Chủ ticket solo hoặc leader của ticket đội (thành viên khác → `403 PARTY_NOT_LEADER`); ticket `cancelled` với `cancel_reason = user` (F104-AC-10).
+         */
         delete: operations["cancelMatchmakingTicket"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/matchmaking/tickets/{ticket_id}:bot-match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đấu với "Robot Học Giỏi" (bot luyện tập unranked) khi chờ quá mm_bot_after
+         * @description Chỉ chủ ticket solo đang `queued` có `bot_offer_available = true` (chờ quá `mm_bot_after`); chưa đủ thời gian hoặc
+         *     ticket không còn chờ → `409 CONFLICT`. Ticket bị hủy (`cancel_reason = user`) và tạo trận `is_bot = true`,
+         *     `ranked = false` cùng môn/khối (F104-AC-12, MATCHMAKING §9). Bot luôn gắn nhãn "Robot" — luật chơi do F105.
+         */
+        post: operations["startBotMatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/modes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Các mode và kiểu ghép khả dụng cho học sinh của phiên
+         * @description Theo khối, môn của học sinh và cấu hình matchmaking đang hiệu lực (F104-AC-22). `friend` (duel) và `tournament` không vào hàng đợi nên không có trong `matchmaking_types`.
+         */
+        get: operations["listCompetitionModes"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -10693,6 +10778,16 @@ export interface components {
         CompetencyPatch: {
             name?: components["schemas"]["LearningName"];
         };
+        CompetitionMode: {
+            matchmaking_types: ("random" | "skill" | "grade" | "subject" | "topic" | "team")[];
+            min_grade: components["schemas"]["GradeLevel"];
+            mode: components["schemas"]["MatchMode"];
+            /** @description Mode có kiểu ghép tính rating. */
+            ranked: boolean;
+            ranked_matchmaking_types?: ("random" | "skill" | "grade" | "subject" | "topic" | "team")[];
+            /** @description Môn khả dụng cho khối; rỗng = cấu hình chưa giới hạn môn. */
+            subjects: components["schemas"]["Uuid"][];
+        };
         ContentBundle: {
             bundle_id: string;
             platforms?: ("windows" | "android" | "ios" | "web" | "macos" | "linux")[];
@@ -12785,7 +12880,11 @@ export interface components {
         Match: {
             ended_at?: components["schemas"]["Timestamp"];
             grade_level?: components["schemas"]["GradeLevel"];
+            /** @description Trận với bot luyện tập "Robot Học Giỏi" (unranked). */
+            is_bot?: boolean;
             match_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            matchmaking_type?: "random" | "skill" | "grade" | "subject" | "topic" | "friend" | "team" | "tournament" | "bot";
             mode: components["schemas"]["MatchMode"];
             participants?: {
                 competition_points?: number | null;
@@ -12796,6 +12895,7 @@ export interface components {
                 score?: number | null;
                 team_no?: number;
             }[];
+            ranked?: boolean;
             room_id?: components["schemas"]["Uuid"];
             started_at?: components["schemas"]["Timestamp"];
             /** @enum {string} */
@@ -12810,17 +12910,38 @@ export interface components {
             ][];
         };
         MatchmakingTicket: {
+            /** @description Chờ quá mm_bot_after — có thể gọi startBotMatch. */
+            bot_offer_available?: boolean;
+            /** @enum {string} */
+            cancel_reason?: "user" | "party_changed" | "timeout" | "system" | "declined_proposal";
             created_at: components["schemas"]["Timestamp"];
             estimated_wait_seconds?: number;
+            /** @description Bằng proposal_id của proposal đã được mọi bên chấp nhận. */
             match_id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            matchmaking_type?: "random" | "skill" | "grade" | "subject" | "topic" | "team";
             mode: components["schemas"]["MatchMode"];
+            party_id?: components["schemas"]["Uuid"];
+            proposal_id?: components["schemas"]["Uuid"];
+            /** @description Về lại hàng đợi sau khi proposal bị hủy, giữ thời gian chờ. */
+            requeued?: boolean;
+            /** @description Đã nới cửa sổ rating (không bao giờ nới ràng buộc khối lớp). */
+            search_widened?: boolean;
             /** @enum {string} */
             status: "queued" | "proposed" | "matched" | "cancelled" | "expired";
             subject_id?: components["schemas"]["Uuid"];
             ticket_id: components["schemas"]["Uuid"];
+            topic_id?: components["schemas"]["Uuid"];
+            wait_seconds?: number;
         };
         MatchmakingTicketCreate: {
             /**
+             * @description Ticket đội — cho phép ghép thêm ticket lẻ cùng hàng đợi để đủ đội (MATCHMAKING §8).
+             * @default false
+             */
+            allow_fill: boolean;
+            /**
+             * @description `friend` chỉ qua createDuel, `tournament` chỉ qua proposal trực tiếp của giải → 422 (F104-AC-18).
              * @default skill
              * @enum {string}
              */
@@ -26512,7 +26633,9 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
             429: components["responses"]["RateLimited"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     acceptDuel: {
@@ -26553,6 +26676,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             410: components["responses"]["Gone"];
@@ -26586,7 +26710,9 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            410: components["responses"]["Gone"];
         };
     };
     listMyMatches: {
@@ -26626,6 +26752,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getMatch: {
@@ -26688,6 +26815,42 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    declineMatchProposal: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                match_id: components["parameters"]["MatchId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã từ chối */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
         };
     };
@@ -26730,8 +26893,12 @@ export interface operations {
                     "application/json": components["schemas"]["MatchmakingTicket"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     getMatchmakingTicket: {
@@ -26764,6 +26931,8 @@ export interface operations {
                     "application/json": components["schemas"]["MatchmakingTicket"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -26795,7 +26964,86 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    startBotMatch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                ticket_id: components["parameters"]["TicketId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trận bot đã tạo */
+            201: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Match"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listCompetitionModes: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CompetitionMode"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     getMyRatings: {

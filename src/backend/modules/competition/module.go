@@ -118,6 +118,11 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.Register(r.Metrics())
 	observability.RegisterParty(r.Metrics())
 	observability.RegisterLobby(r.Metrics())
+	observability.RegisterMatchmaking(r.Metrics())
+	mmCfg, err := hubconfig.MatchmakingFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("competition: %w", err)
+	}
 	reg := cache.HubRegistry{C: vk}
 	pub := rt.Publisher{C: vk}
 	host := roomhost.New(roomhost.Config{InstanceID: cfg.InstanceID, TickHz: cfg.TickHz, Grace: cfg.Grace, IdleClose: cfg.IdleClose,
@@ -138,9 +143,18 @@ func Register(r *module.Registry) (*Module, error) {
 		Lobby:  lobbies, Activities: persistence.Activities{}, Areas: persistence.Areas{}, Game: m.game, Statuses: presence,
 		LobbyMetrics: observability.Lobby{}, LobbyConfig: lobbyCfg, Sweeps: persistence.Sweeps{}, Locks: lobbies}
 
+	// F104 — matchmaking (tickets and proposals in Valkey, matches and duels in PostgreSQL).
+	mmStore := cache.MatchmakingStore{C: vk}
+	matchmaking := command.Matchmaking{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Matchmaking{},
+		Directory: persistence.PartyDirectory{}, Parties: persistence.Parties{}, Events: persistence.Publisher{W: core.Writer},
+		Audit: persistence.Auditor{R: core.Recorder}, Store: mmStore, Realtime: realtime.PartyPublisher{P: pub}, Presence: presence,
+		Metrics: observability.Matchmaking{}, Settings: mmCfg.Settings, Configs: command.NewConfigCache(mmCfg.Settings.ConfigTTL),
+		Tracker: command.NewTicketTracker()}
+
 	if r.ServesHTTP() {
 		h := competitionhttp.Handlers{Commands: parties, Queries: query.Parties{Read: core.ReadSession, Reader: persistence.Parties{},
-			Presence: presence, Lobby: lobbies, LobbyReader: persistence.LobbyRead{}, Game: m.game, PrivateCapacity: lobbyCfg.PrivateCapacity}}
+			Presence: presence, Lobby: lobbies, LobbyReader: persistence.LobbyRead{}, Game: m.game, PrivateCapacity: lobbyCfg.PrivateCapacity},
+			Matchmaking: matchmaking, MatchmakingQueries: query.Matchmaking{Read: core.ReadSession, Reader: persistence.Matchmaking{}, Store: mmStore}}
 		r.HTTP(Name, func(s *httpx.Server) error { return competitionhttp.Register(s, h) })
 	}
 	// Room host, realtime commands (F091 US1, US2) and the party presence store (F100): core-api.
@@ -153,9 +167,11 @@ func Register(r *module.Registry) (*Module, error) {
 			return rt.ServeCommand(ctx, nc, natscmd.Module, natscmd.TypePlayerEmote, natscmd.PlayerEmote(hub), 0)
 		})
 		r.Go("competition.party_presence", func(ctx context.Context) error { return subscriber.PartyPresence(ctx, nc, presence) })
-		// Party Lobby commands of the realtime gateway (F101): the same use cases as REST.
+		// Party Lobby (F101) and matchmaking (F104) commands of the realtime gateway: the same use cases as REST.
 		for typ, h := range map[string]rt.CommandHandler{natscmd.TypeReadySet: natscmd.ReadySet(parties),
-			natscmd.TypeActivitySelect: natscmd.ActivitySelect(parties), natscmd.TypeSessionStart: natscmd.SessionStart(parties)} {
+			natscmd.TypeActivitySelect: natscmd.ActivitySelect(parties), natscmd.TypeSessionStart: natscmd.SessionStart(parties),
+			natscmd.TypeTicketCancel: natscmd.TicketCancel(matchmaking), natscmd.TypeProposalAccept: natscmd.ProposalAccept(matchmaking),
+			natscmd.TypeProposalDecline: natscmd.ProposalDecline(matchmaking)} {
 			r.Go("competition.cmd."+typ, func(ctx context.Context) error { return rt.ServeCommand(ctx, nc, natscmd.Module, typ, h, 0) })
 		}
 	}
@@ -193,6 +209,15 @@ func Register(r *module.Registry) (*Module, error) {
 		return parties.ExpireInvitations(ctx, persistence.Expiry{}, batch)
 	}
 	r.Job(Name, job.PartyInvitationExpiry, partyCfg.ExpiryInterval, module.JobFunc(job.PartyInvitationExpiryJob(expire)))
+	r.Consumer("competition.matchmaking_party", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.MatchmakingPartyOptions(consumer.MatchmakingParty{H: matchmaking}, core.UoW, core.App, js)
+	})
+	r.Job(Name, job.Matchmaker, mmCfg.Tick, module.JobFunc(job.MatchmakingJob(matchmaking.Tick)))
+	r.Job(Name, job.MatchmakingTicketExpiry, mmCfg.Tick, module.JobFunc(job.MatchmakingJob(matchmaking.ExpireTickets)))
+	expireDuels := func(ctx context.Context) (int, error) {
+		return matchmaking.ExpireDuels(ctx, persistence.Matchmaking{}, 500)
+	}
+	r.Job(Name, job.DuelExpiry, job.DuelExpiryInterval, module.JobFunc(job.MatchmakingJob(expireDuels)))
 	r.Job(Name, job.PartyPresenceSweeper, job.SweepInterval,
 		module.JobFunc(job.PartyPresenceSweeperJob(command.NewSweeper(parties, job.SweepInterval))))
 	return m, nil

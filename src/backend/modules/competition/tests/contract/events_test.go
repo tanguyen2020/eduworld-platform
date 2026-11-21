@@ -59,6 +59,11 @@ func (f *fakeRefs) Enrollment(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, 
 	return true, nil
 }
 
+func (f *fakeRefs) School(context.Context, uuid.UUID, uuid.UUID, string, []byte, int64) (bool, error) {
+	f.calls = append(f.calls, "school")
+	return true, nil
+}
+
 // fakeHub is a TEST DOUBLE of the hub side of the consumers (R17).
 type fakeHub struct{ removed []uuid.UUID }
 

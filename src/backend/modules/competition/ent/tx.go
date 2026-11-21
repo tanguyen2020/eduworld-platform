@@ -12,6 +12,20 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// CompetitionRestriction is the client for interacting with the CompetitionRestriction builders.
+	CompetitionRestriction *CompetitionRestrictionClient
+	// ContentRelease is the client for interacting with the ContentRelease builders.
+	ContentRelease *ContentReleaseClient
+	// Duel is the client for interacting with the Duel builders.
+	Duel *DuelClient
+	// GameConfig is the client for interacting with the GameConfig builders.
+	GameConfig *GameConfigClient
+	// GameConfigVersion is the client for interacting with the GameConfigVersion builders.
+	GameConfigVersion *GameConfigVersionClient
+	// Match is the client for interacting with the Match builders.
+	Match *MatchClient
+	// MatchParticipant is the client for interacting with the MatchParticipant builders.
+	MatchParticipant *MatchParticipantClient
 	// Party is the client for interacting with the Party builders.
 	Party *PartyClient
 	// PartyActivity is the client for interacting with the PartyActivity builders.
@@ -157,6 +171,13 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.CompetitionRestriction = NewCompetitionRestrictionClient(tx.config)
+	tx.ContentRelease = NewContentReleaseClient(tx.config)
+	tx.Duel = NewDuelClient(tx.config)
+	tx.GameConfig = NewGameConfigClient(tx.config)
+	tx.GameConfigVersion = NewGameConfigVersionClient(tx.config)
+	tx.Match = NewMatchClient(tx.config)
+	tx.MatchParticipant = NewMatchParticipantClient(tx.config)
 	tx.Party = NewPartyClient(tx.config)
 	tx.PartyActivity = NewPartyActivityClient(tx.config)
 	tx.PartyInvitation = NewPartyInvitationClient(tx.config)
@@ -173,7 +194,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Party.QueryXXX(), the query will be executed
+// applies a query, for example: CompetitionRestriction.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

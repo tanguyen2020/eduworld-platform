@@ -23,6 +23,8 @@ var migrations = map[string][]string{
 	"20261225000001_f091_hub.sql":           {"rooms", "session_memberships"},
 	"20261229000001_f100_party.sql":         {"parties", "party_members", "party_invitations", "party_policies"},
 	"20261230000001_f101_lobby_session.sql": {"party_activities"},
+	"20261231000001_f104_matchmaking.sql": {"matches", "match_participants", "duels", "competition_restrictions", "game_configs",
+		"game_config_versions", "content_releases"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -77,7 +79,9 @@ func schemas() map[string]string {
 	c := ent.DefaultSchemaConfig
 	return map[string]string{"rooms": c.Room, "session_memberships": c.SessionMembership, "parties": c.Party,
 		"party_members": c.PartyMember, "party_invitations": c.PartyInvitation, "party_policies": c.PartyPolicy,
-		"party_activities": c.PartyActivity}
+		"party_activities": c.PartyActivity, "matches": c.Match, "match_participants": c.MatchParticipant, "duels": c.Duel,
+		"competition_restrictions": c.CompetitionRestriction, "game_configs": c.GameConfig, "game_config_versions": c.GameConfigVersion,
+		"content_releases": c.ContentRelease}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

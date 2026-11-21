@@ -1304,6 +1304,18 @@
     ]
   },
   {
+    "operation_id": "declineMatchProposal",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/matches/{match_id}/proposal:decline",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "deleteCmsAssessmentBlueprint",
     "module": "learning",
     "method": "DELETE",
@@ -3488,6 +3500,17 @@
     ]
   },
   {
+    "operation_id": "listCompetitionModes",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/modes",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listContentReleases",
     "module": "learning",
     "method": "GET",
@@ -5504,6 +5527,18 @@
     "method": "POST",
     "path": "/learning/activity-attempts",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "startBotMatch",
+    "module": "competition",
+    "method": "POST",
+    "path": "/competition/matchmaking/tickets/{ticket_id}:bot-match",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"

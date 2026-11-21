@@ -12,6 +12,13 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionrestriction"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/contentrelease"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/duel"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfig"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfigversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/match"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchparticipant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyactivity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
@@ -79,13 +86,20 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			party.Table:             party.ValidColumn,
-			partyactivity.Table:     partyactivity.ValidColumn,
-			partyinvitation.Table:   partyinvitation.ValidColumn,
-			partymember.Table:       partymember.ValidColumn,
-			partypolicy.Table:       partypolicy.ValidColumn,
-			room.Table:              room.ValidColumn,
-			sessionmembership.Table: sessionmembership.ValidColumn,
+			competitionrestriction.Table: competitionrestriction.ValidColumn,
+			contentrelease.Table:         contentrelease.ValidColumn,
+			duel.Table:                   duel.ValidColumn,
+			gameconfig.Table:             gameconfig.ValidColumn,
+			gameconfigversion.Table:      gameconfigversion.ValidColumn,
+			match.Table:                  match.ValidColumn,
+			matchparticipant.Table:       matchparticipant.ValidColumn,
+			party.Table:                  party.ValidColumn,
+			partyactivity.Table:          partyactivity.ValidColumn,
+			partyinvitation.Table:        partyinvitation.ValidColumn,
+			partymember.Table:            partymember.ValidColumn,
+			partypolicy.Table:            partypolicy.ValidColumn,
+			room.Table:                   room.ValidColumn,
+			sessionmembership.Table:      sessionmembership.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

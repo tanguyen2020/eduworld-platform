@@ -49,3 +49,29 @@ make migrate-lint MOD=competition
 ## 4. Bằng chứng cần nộp
 
 - Số test pass/fail package `matchmaking`, `duel`; trace_id kịch bản 1–2, 10, 17; báo cáo k6 TC-PERF-004; ảnh dashboard metric `eduworld_mm_*`.
+
+## 5. Bằng chứng triển khai (2026-11-21)
+
+Kịch bản tay ở §2 cần stack compose; mỗi kịch bản được phủ bằng test integration (PostgreSQL + Valkey thật, chuỗi `pkg/httpx`, `src/backend/modules/competition/tests/integration/mm_*_test.go`) — chạy lại: `make test-integration MOD=competition`.
+
+| # | Test |
+|---|---|
+| 1–2 | `TestMMCreateTicketServerSide`, `TestMMProposalAccept` |
+| 3 | `TestMMDeclineTimeoutCooldown` |
+| 4 | `TestMMOneTicketPerStudent` |
+| 5 | unit `TestPairingNeverBreaksGradeConstraint`, `TestGradeCompatible` |
+| 6 | `TestMMScope` |
+| 7 | `TestMMEligibilityAndBlocks` |
+| 8 | `TestMMParallelMatchmakers` |
+| 9 | `TestMMCancelAndExpire` |
+| 10 | `TestMMValkeyReset` |
+| 11–12 | `TestMMBotAndTicketRate` |
+| 13–14 | `TestMMPartyTicket`, `TestMMPartyChangedWhileProposed`, `TestMMAllowFill` |
+| 15 | `TestMMTeamPolicy`, `TestMMDirectProposalAndModes` |
+| 16 | `TestMMTypeValidation` |
+| 17 | `TestMMDuel` |
+| 18 | `TestMMDirectProposalAndModes` |
+| 19 | `TestMMRoutesStaffDenied` |
+| 20 | `TestMMTenantIsolation`, `TestMatchmakingRLS` |
+| 21 | `TestMMIdempotency` (thiếu key `428`, dùng lại key khác body `409` — Clarifications 2026-11-21) |
+| 22 | local `TestMMQueueLoad` (400 học sinh, wait p90 1 s, lượt matchmaker chậm nhất 54 ms); k6 `tests/perf/matchmaking_queue.js` chờ staging |

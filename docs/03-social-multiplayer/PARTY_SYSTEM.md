@@ -173,7 +173,7 @@ sequenceDiagram
 | Cùng thực hiện Quest | Cooperative Quest: `quest_version.shared_progress_policy` (xem dưới) |
 | Cùng giải Educational Puzzle | Room `coop`: state machine server-authoritative; mỗi đóng góp là một câu trả lời của **một** học sinh → ghi vào attempt của học sinh đó |
 | Learning Challenge | Mỗi member làm attempt riêng, kết quả nhóm = hàm tổng hợp (tổng/trung bình/ngưỡng) chỉ dùng cho tiến độ game & reward |
-| Team Competition | Party `competition_team` vào team matchmaking ([MATCHMAKING](MATCHMAKING.md)) |
+| Team Competition | Party `competition_team` vào team matchmaking ([MATCHMAKING §8](MATCHMAKING.md#8-party-queue--friend-duel); triển khai và quy tắc cỡ đội/cùng khối: [F104 Clarifications 2026-11-21](../../specs/104-matchmaking/spec.md#clarifications)) |
 | Nhiệm vụ nhiều bước | Step gán cho `any_member`, `each_member`, `role:<x>` (vai trò trong nhóm); bước `interdependent` mỗi người giữ một phần dữ kiện ([QUEST_SYSTEM §3.2](../01-game-design/QUEST_SYSTEM.md#32-gán-bước-trong-party-và-bước-interdependent-confirmed)) |
 
 ### 7.1. Shared Quest Progress

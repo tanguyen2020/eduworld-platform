@@ -9,6 +9,90 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent"
 )
 
+// The CompetitionRestrictionFunc type is an adapter to allow the use of ordinary
+// function as CompetitionRestriction mutator.
+type CompetitionRestrictionFunc func(context.Context, *ent.CompetitionRestrictionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CompetitionRestrictionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CompetitionRestrictionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CompetitionRestrictionMutation", m)
+}
+
+// The ContentReleaseFunc type is an adapter to allow the use of ordinary
+// function as ContentRelease mutator.
+type ContentReleaseFunc func(context.Context, *ent.ContentReleaseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ContentReleaseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ContentReleaseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContentReleaseMutation", m)
+}
+
+// The DuelFunc type is an adapter to allow the use of ordinary
+// function as Duel mutator.
+type DuelFunc func(context.Context, *ent.DuelMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DuelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DuelMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DuelMutation", m)
+}
+
+// The GameConfigFunc type is an adapter to allow the use of ordinary
+// function as GameConfig mutator.
+type GameConfigFunc func(context.Context, *ent.GameConfigMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GameConfigFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GameConfigMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameConfigMutation", m)
+}
+
+// The GameConfigVersionFunc type is an adapter to allow the use of ordinary
+// function as GameConfigVersion mutator.
+type GameConfigVersionFunc func(context.Context, *ent.GameConfigVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GameConfigVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GameConfigVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameConfigVersionMutation", m)
+}
+
+// The MatchFunc type is an adapter to allow the use of ordinary
+// function as Match mutator.
+type MatchFunc func(context.Context, *ent.MatchMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MatchFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MatchMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MatchMutation", m)
+}
+
+// The MatchParticipantFunc type is an adapter to allow the use of ordinary
+// function as MatchParticipant mutator.
+type MatchParticipantFunc func(context.Context, *ent.MatchParticipantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MatchParticipantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MatchParticipantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MatchParticipantMutation", m)
+}
+
 // The PartyFunc type is an adapter to allow the use of ordinary
 // function as Party mutator.
 type PartyFunc func(context.Context, *ent.PartyMutation) (ent.Value, error)

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "rating_window": [
+    { "after_s": 0, "width": 100 },
+    { "after_s": 10, "width": 200 },
+    { "after_s": 20, "width": 350 },
+    { "after_s": 40, "width": null }
+  ],
+  "ready_check_s": 15,
+  "bot_after_s": 90,
+  "ticket_ttl_s": 300,
+  "tickets_per_user": 1,
+  "ticket_rate": { "per_hour": 30, "decline_limit": 3, "decline_window_s": 600, "cooldown_s": 120 },
+  "grade_window_g6_9": { "after_s": 30, "levels": 1 },
+  "disconnect_cancel_s": 30,
+  "bucket_threshold": 500,
+  "batch": 200,
+  "cost_weights": { "rating": 1, "rd": 0.1, "recent_opponent": 0.5, "same_class": 0.2 },
+  "recent_opponent_window_s": 1800,
+  "default_rating": { "mu": 1500, "rd": 350 },
+  "modes": [
+    { "mode": "battle_1v1", "min_grade": 1, "matchmaking_types": ["random", "skill", "grade", "subject", "topic"], "ranked_types": ["skill", "subject"] },
+    { "mode": "team_battle", "min_grade": 4, "matchmaking_types": ["team"], "ranked_types": ["team"], "team_size": 3, "min_team_size": 2, "max_team_size": 4 }
+  ],
+  "subjects": []
+}

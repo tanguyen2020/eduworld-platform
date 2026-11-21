@@ -200,4 +200,6 @@ type ProjectionWriter interface {
 	// Enrollment applies enrollment.changed of module identity (class of a student, F100).
 	Enrollment(ctx context.Context, tenant, student, class uuid.UUID, school *uuid.UUID, status string, start, end *time.Time,
 		version int64) (bool, error)
+	// School applies school.updated of module identity (settings_subset: allowed hours, F104 H5).
+	School(ctx context.Context, school, tenant uuid.UUID, status string, settings []byte, version int64) (bool, error)
 }

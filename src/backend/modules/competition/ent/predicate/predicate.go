@@ -6,6 +6,27 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// CompetitionRestriction is the predicate function for competitionrestriction builders.
+type CompetitionRestriction func(*sql.Selector)
+
+// ContentRelease is the predicate function for contentrelease builders.
+type ContentRelease func(*sql.Selector)
+
+// Duel is the predicate function for duel builders.
+type Duel func(*sql.Selector)
+
+// GameConfig is the predicate function for gameconfig builders.
+type GameConfig func(*sql.Selector)
+
+// GameConfigVersion is the predicate function for gameconfigversion builders.
+type GameConfigVersion func(*sql.Selector)
+
+// Match is the predicate function for match builders.
+type Match func(*sql.Selector)
+
+// MatchParticipant is the predicate function for matchparticipant builders.
+type MatchParticipant func(*sql.Selector)
+
 // Party is the predicate function for party builders.
 type Party func(*sql.Selector)
 

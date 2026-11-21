@@ -161,7 +161,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `mm_ready_check` | 15 | giây | platform | [Confirmed] | [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) |
 | `mm_bot_after` | 90 (bot luyện tập unranked) | giây | platform | [Confirmed] | [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) |
 | `mm_ticket_ttl` / `mm_tickets_per_user` | 5 phút / 1 | — | platform | [Confirmed] | [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) |
-| `mm_ticket_rate` | 30/giờ; cooldown 2 / 10 phút | — | platform | [Confirmed] | [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) |
+| `mm_ticket_rate` | 30/giờ; cooldown 2 phút sau 3 lần từ chối/hết hạn ready check trong 10 phút (cùng giới hạn áp cho `createDuel` — F104) | — | platform | [Confirmed] | [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) |
 
 ## 11. Multiplayer và realtime
 

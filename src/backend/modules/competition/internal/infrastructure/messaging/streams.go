@@ -15,7 +15,7 @@ const ProjectionIdentityName = "competition.projection_identity"
 
 // ProjectionIdentityEvents are the identity events it projects.
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "student.synced", "user.status_changed",
-	"student.cleaned_up", "student.restored", "enrollment.changed"}
+	"student.cleaned_up", "student.restored", "enrollment.changed", "school.updated"}
 
 // HubAccessRevokedName removes a revoked student from the hub at once (F091 edge case, no grace).
 const HubAccessRevokedName = "competition.hub_access_revoked"
@@ -70,3 +70,13 @@ const PartyActivityEndName = "competition.party_activity_end"
 
 // PartyActivityEndEvents are the game events it handles.
 var PartyActivityEndEvents = []string{"boss.encounter_completed", "quest.party_completed"}
+
+// CompetitionStream is the stream of module competition itself (its own party events, F104).
+var CompetitionStream = natsx.EventStream("competition")
+
+// MatchmakingPartyName cancels the team ticket of a party whose members changed (F104-AC-15): party.member_left,
+// party.member_kicked, party.member_joined and party.disbanded of module competition (owner F100).
+const MatchmakingPartyName = "competition.matchmaking_party"
+
+// MatchmakingPartyEvents are the party events it handles.
+var MatchmakingPartyEvents = []string{"party.member_left", "party.member_kicked", "party.member_joined", "party.disbanded"}

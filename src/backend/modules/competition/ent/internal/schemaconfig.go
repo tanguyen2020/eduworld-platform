@@ -7,13 +7,20 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	Party             string // Party table.
-	PartyActivity     string // PartyActivity table.
-	PartyInvitation   string // PartyInvitation table.
-	PartyMember       string // PartyMember table.
-	PartyPolicy       string // PartyPolicy table.
-	Room              string // Room table.
-	SessionMembership string // SessionMembership table.
+	CompetitionRestriction string // CompetitionRestriction table.
+	ContentRelease         string // ContentRelease table.
+	Duel                   string // Duel table.
+	GameConfig             string // GameConfig table.
+	GameConfigVersion      string // GameConfigVersion table.
+	Match                  string // Match table.
+	MatchParticipant       string // MatchParticipant table.
+	Party                  string // Party table.
+	PartyActivity          string // PartyActivity table.
+	PartyInvitation        string // PartyInvitation table.
+	PartyMember            string // PartyMember table.
+	PartyPolicy            string // PartyPolicy table.
+	Room                   string // Room table.
+	SessionMembership      string // SessionMembership table.
 }
 
 type schemaCtxKey struct{}

@@ -54,3 +54,23 @@ type PresenceSweeper interface {
 func PartyPresenceSweeperJob(s PresenceSweeper) func(ctx context.Context) (int, error) {
 	return s.Run
 }
+
+// Matchmaker is the job matchmaker (F104 T022, MATCHMAKING §6): one pass over every queue each EW_MM_TICK, one
+// matchmaker per queue across replicas (per-queue lock), then the ready checks past their deadline.
+const Matchmaker = "matchmaker"
+
+// MatchmakingTicketExpiry is the job matchmaking-ticket-expiry (F104 T026): mm_ticket_ttl, mm_bot_after, disconnected
+// students and tickets lost with Valkey.
+const MatchmakingTicketExpiry = "matchmaking-ticket-expiry"
+
+// DuelExpiry is the job duel-expiry (F104 T035): pending friend duels past 60 s.
+const DuelExpiry = "duel-expiry"
+
+// DuelExpiryInterval is the period of duel-expiry (code constant: a 60 s duel expires within 5 s).
+const DuelExpiryInterval = 5 * time.Second
+
+// MatchmakingRunner runs one pass of a matchmaking job (command.Matchmaking.Tick / ExpireTickets).
+type MatchmakingRunner func(ctx context.Context) (int, error)
+
+// MatchmakingJob returns one run of a matchmaking job.
+func MatchmakingJob(run MatchmakingRunner) func(ctx context.Context) (int, error) { return run }

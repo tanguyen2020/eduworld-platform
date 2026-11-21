@@ -28,8 +28,8 @@
 | `MG` Mini-game Engine | module learning · game client | 4 | 4 | 0 | 1 | 0 | ACT (5) | 1 | 0 | 0 / 10 |
 | `MP` Multiplayer & Presence | module competition · realtime | 6 | 6 | 0 | 3 | 0 | PTY (14), CMP (10) | 0 | 0 | 0 / 11 |
 | `PTY` Party | module competition | 14 | 14 | 1 | 18 | 0 | PTY (14) | 4 | 13 | 0 / 0 |
-| `MM` Matchmaking | module competition | 6 | 6 | 0 | 3 | 0 | MM (4) | 1 | 0 | 0 / 8 |
-| `CMP` Competition / Battle | module competition | 6 | 6 | 0 | 6 | 0 | CMP (10) | 0 | 6 | 0 / 13 |
+| `MM` Matchmaking | module competition | 6 | 6 | 0 | 4 | 0 | MM (4) | 1 | 0 | 0 / 8 |
+| `CMP` Competition / Battle | module competition | 6 | 6 | 0 | 7 | 0 | CMP (10) | 0 | 6 | 0 / 13 |
 | `RNK` Ranking | module competition | 4 | 4 | 0 | 1 | 0 | CMP (10) | 0 | 0 | 0 / 6 |
 | `LDB` Leaderboard | module competition | 5 | 5 | 0 | 2 | 0 | CMP (10) | 1 | 0 | 0 / 7 |
 | `TRN` Tournament | module competition | 3 | 3 | 0 | 1 | 0 | CMP (10) | 1 | 0 | 0 / 8 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 47 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 20 | 565 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 20 | 568 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -420,12 +420,12 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 8 AC, 0 US — [MATCHMAKING](../03
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-MM-001 | Chế độ: Random, Skill-based, Grade-based, Subject-based, Topic-based, Friend, Team, Tournament | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-MM |
-| FR-MM-002 | Ràng buộc cứng (khối lớp, độ phù hợp nội dung, policy trường) kiểm tra trước rating; không ghép lớp 1 với l… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-MM |
-| FR-MM-003 | Mặc định: lớp 1–5 chỉ ghép cùng khối (grade_level); lớp 6–9 theo grade_band (±1 khối khi chờ lâu); chỉ cùng… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-MM |
-| FR-MM-004 | Vòng đời: Queue → Ticket → Match Proposal → Lobby → Ready Check → Team Assignment → Match Start → Match End… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-MM |
-| FR-MM-005 | Cửa sổ rating mở rộng theo thời gian chờ; timeout ghép trận 90 giây đề xuất chế độ khác/bot luyện tập | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-MM |
-| FR-MM-006 | Ticket chỉ trong Valkey; mất → client tạo lại (ADR-0004) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-MM |
+| FR-MM-001 | Chế độ: Random, Skill-based, Grade-based, Subject-based, Topic-based, Friend, Team, Tournament | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-MM |
+| FR-MM-002 | Ràng buộc cứng (khối lớp, độ phù hợp nội dung, policy trường) kiểm tra trước rating; không ghép lớp 1 với l… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-MM |
+| FR-MM-003 | Mặc định: lớp 1–5 chỉ ghép cùng khối (grade_level); lớp 6–9 theo grade_band (±1 khối khi chờ lâu); chỉ cùng… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-MM |
+| FR-MM-004 | Vòng đời: Queue → Ticket → Match Proposal → Lobby → Ready Check → Team Assignment → Match Start → Match End… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-MM |
+| FR-MM-005 | Cửa sổ rating mở rộng theo thời gian chờ; timeout ghép trận 90 giây đề xuất chế độ khác/bot luyện tập | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-MM |
+| FR-MM-006 | Ticket chỉ trong Valkey; mất → client tạo lại (ADR-0004) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-MM |
 
 ### 3.17. `CMP` Competition / Battle
 
@@ -437,12 +437,12 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 13 AC, 0 US — [COMPETITION_SYSTE
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-CMP-001 | Chế độ: 1v1 Knowledge Battle, Team Battle, Co-op Challenge, Timed Quiz, Subject Tournament, Class/School/Se… | P4 (Seasonal: P6+) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-CMP |
-| FR-CMP-002 | Battle là state machine server-authoritative: question plan do server chọn, chấm và tính điểm thời gian ser… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-CMP |
-| FR-CMP-003 | Kết quả trận ghi một lần (unique match_id), idempotent, audit | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-CMP |
-| FR-CMP-004 | Câu trả lời trong trận ghi learning evidence với context competition (trọng số thấp cho mastery) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-CMP |
-| FR-CMP-005 | Xử lý disconnect: grace 30 giây; quá hạn → xử thua phần còn lại/forfeit theo mode | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-CMP |
-| FR-CMP-006 | Không có bonus điểm tốc độ trong 1v1 cho lớp 1–5 (COMPETITION_SYSTEM) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 6 op | _suy luận:_ TC-CMP |
+| FR-CMP-001 | Chế độ: 1v1 Knowledge Battle, Team Battle, Co-op Challenge, Timed Quiz, Subject Tournament, Class/School/Se… | P4 (Seasonal: P6+) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-CMP |
+| FR-CMP-002 | Battle là state machine server-authoritative: question plan do server chọn, chấm và tính điểm thời gian ser… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-CMP |
+| FR-CMP-003 | Kết quả trận ghi một lần (unique match_id), idempotent, audit | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-CMP |
+| FR-CMP-004 | Câu trả lời trong trận ghi learning evidence với context competition (trọng số thấp cho mastery) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-CMP |
+| FR-CMP-005 | Xử lý disconnect: grace 30 giây; quá hạn → xử thua phần còn lại/forfeit theo mode | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-CMP |
+| FR-CMP-006 | Không có bonus điểm tốc độ trong 1v1 cho lớp 1–5 (COMPETITION_SYSTEM) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 7 op | _suy luận:_ TC-CMP |
 
 ### 3.18. `RNK` Ranking
 

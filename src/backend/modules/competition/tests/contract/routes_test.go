@@ -24,7 +24,7 @@ func spec(t *testing.T) *openapi3.T {
 	return doc
 }
 
-// T005 (F100), T005 (F101) — the F100 and F101 operations match the merged spec (x-service competition): method + path, never public, X-Tenant-Id
+// T005 (F100), T005 (F101), T003 (F104) — the F100, F101 and F104 operations match the merged spec (x-service competition): method + path, never public, X-Tenant-Id
 // mode from TenantIdHeader, Idempotency-Key from IdempotencyKey (createParty, inviteToParty, acceptPartyInvitation,
 // joinParty, transferPartyLeader — F100-AC-03), success status; every route carries the game_player guard (F100-AC-23).
 func TestPartyOperationsMatchSpec(t *testing.T) {
@@ -79,11 +79,11 @@ func TestPartyOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(competitionhttp.Operations) || len(found) != 18 {
-		t.Fatalf("F100/F101 operations found in the spec: %v", found)
+	if len(found) != len(competitionhttp.Operations) || len(found) != 28 {
+		t.Fatalf("F100/F101/F104 operations found in the spec: %v", found)
 	}
 	for _, id := range []string{"createParty", "inviteToParty", "acceptPartyInvitation", "joinParty", "transferPartyLeader",
-		"startPartySession"} {
+		"startPartySession", "createMatchmakingTicket", "createDuel", "acceptDuel", "startBotMatch"} {
 		if competitionhttp.Operations[id].Idempotency != httpx.IdempotencyRequired {
 			t.Errorf("%s: Idempotency-Key required (F100-AC-03)", id)
 		}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/match.created.v1.schema.json",
+  "title": "Payload match.created v1 (module competition, owner F104)",
+  "description": "Trận được tạo khi mọi bên chấp nhận ready check (match_id = proposal_id), khi nhận duel hoặc khi bắt đầu trận bot (F104-AC-05, AC-12, AC-20, AC-21). Không tên thật, không nickname (R16). Consumer: competition (F105 mở room trận), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["match_id", "mode", "matchmaking_type", "ranked", "is_bot", "subject_id", "grade_level", "scope_kind", "participants"],
+  "properties": {
+    "match_id": { "type": "string", "format": "uuid" },
+    "mode": { "type": "string", "enum": ["battle_1v1", "team_battle", "coop_challenge", "timed_quiz", "tournament"] },
+    "matchmaking_type": { "type": "string", "enum": ["random", "skill", "grade", "subject", "topic", "friend", "team", "tournament", "bot"] },
+    "ranked": { "type": "boolean" },
+    "is_bot": { "type": "boolean" },
+    "subject_id": { "type": "string", "format": "uuid" },
+    "topic_id": { "type": ["string", "null"], "format": "uuid" },
+    "grade_level": { "type": "integer", "minimum": 1, "maximum": 9, "description": "Khối thấp nhất của trận (câu hỏi theo khối này)" },
+    "scope_kind": { "type": "string", "enum": ["school", "tenant", "platform"] },
+    "ruleset_version_id": { "type": "string", "format": "uuid", "description": "Phiên bản cấu hình matchmaking hiệu lực lúc tạo trận" },
+    "duel_id": { "type": ["string", "null"], "format": "uuid" },
+    "tournament_node_id": { "type": ["string", "null"], "format": "uuid" },
+    "room_id": { "type": "string", "format": "uuid", "description": "Phòng trận F105 mở (= match_id)" },
+    "participants": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["student_id", "tenant_id", "school_id", "team_no"],
+        "properties": {
+          "student_id": { "type": "string", "format": "uuid" },
+          "tenant_id": { "type": "string", "format": "uuid" },
+          "school_id": { "type": "string", "format": "uuid" },
+          "team_no": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "party_id": { "type": ["string", "null"], "format": "uuid" }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "match_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "mode": "battle_1v1",
+      "matchmaking_type": "skill",
+      "ranked": true,
+      "is_bot": false,
+      "subject_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000d1",
+      "topic_id": null,
+      "grade_level": 3,
+      "scope_kind": "school",
+      "ruleset_version_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000e1",
+      "duel_id": null,
+      "tournament_node_id": null,
+      "room_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1",
+      "participants": [
+        { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011", "team_no": 0, "party_id": null },
+        { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000007", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011", "team_no": 1, "party_id": null }
+      ]
+    }
+  ]
+}

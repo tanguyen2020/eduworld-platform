@@ -175,6 +175,8 @@ type popts struct {
 	game     port.GameActivities  // nil: module game offers no party activities
 	lobbyCfg *command.LobbyConfig // nil: lobbyConfig
 	statuses port.PresenceStatuses
+	// F104: extra handlers mounted on the same server (matchmaking).
+	extra func(e *penv, h *competitionhttp.Handlers)
 }
 
 func setupParty(t *testing.T, o popts) *penv {
@@ -247,7 +249,11 @@ func setupParty(t *testing.T, o popts) *penv {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := competitionhttp.Register(s, competitionhttp.Handlers{Commands: e.parties, Queries: e.queries}); err != nil {
+	handlers := competitionhttp.Handlers{Commands: e.parties, Queries: e.queries}
+	if o.extra != nil {
+		o.extra(e, &handlers)
+	}
+	if err := competitionhttp.Register(s, handlers); err != nil {
 		t.Fatal(err)
 	}
 	e.srv = httptest.NewServer(s)
@@ -533,7 +539,10 @@ var partyEventTypes = []string{"party.created", "party.settings_updated", "party
 
 // checkEventSchemas validates every F100 event of the outbox against the envelope and payload schemas (contract first:
 // module chat F117 and game F103 rely on them). Returns the number checked per type.
-func (e *penv) checkEventSchemas() map[string]int {
+func (e *penv) checkEventSchemas() map[string]int { return e.checkSchemasOf(partyEventTypes) }
+
+// checkSchemasOf validates the outbox events of the given types against the envelope and their payload schema.
+func (e *penv) checkSchemasOf(types []string) map[string]int {
 	e.t.Helper()
 	root := filepath.Join(testkit.RepoRoot(e.t), "specs", "events")
 	c := jsonschema.NewCompiler()
@@ -543,7 +552,7 @@ func (e *penv) checkEventSchemas() map[string]int {
 		e.t.Fatal(err)
 	}
 	seen := map[string]int{}
-	for _, typ := range partyEventTypes {
+	for _, typ := range types {
 		payload, err := c.Compile(filepath.Join(root, "payloads", "competition", typ+".v1.schema.json"))
 		if err != nil {
 			e.t.Fatal(err)

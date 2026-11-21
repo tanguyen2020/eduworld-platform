@@ -2055,6 +2055,9 @@ components:
                   estimated_wait_ms: { type: integer }
                   search_widened: { type: boolean, description: 'Đã nới rating window (không bao giờ nới ràng buộc khối lớp).' }
                   cancel_reason: { type: string, enum: [user, party_changed, timeout, system, declined_proposal] }
+                  matchmaking_type: { type: string, maxLength: 64, description: 'Kiểu ghép của ticket (random, skill, grade, subject, topic, team — F104-AC-18).' }
+                  bot_offer_available: { type: boolean, description: 'Chờ quá mm_bot_after — client có thể đề nghị "Đấu với Robot Học Giỏi" (startBotMatch, F104-AC-12).' }
+                  requeued: { type: boolean, description: 'Về lại hàng đợi sau khi proposal bị hủy, giữ nguyên thời gian chờ (F104-AC-06).' }
     MatchmakingProposalCreated:
       name: matchmaking.proposal.created
       payload:

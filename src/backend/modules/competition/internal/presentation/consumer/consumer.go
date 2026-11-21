@@ -118,6 +118,9 @@ func (c IdentityProjection) Handle(ctx context.Context, e outbox.Envelope) error
 	case "enrollment.changed":
 		ok, err := c.enrollment(ctx, e)
 		return classify("enrollments", e, ok, err)
+	case "school.updated":
+		ok, err := c.school(ctx, e)
+		return classify("schools", e, ok, err)
 	}
 	return nil
 }
@@ -154,6 +157,35 @@ func (c IdentityProjection) enrollment(ctx context.Context, e outbox.Envelope) (
 		return false, invalid(e.EventType, "op/status/dates")
 	}
 	return c.P.Enrollment(ctx, tenant, p.StudentID, p.ClassID, p.SchoolID, status, start, end, version(p.SourceVersion, e))
+}
+
+// school applies school.updated (owner F010/F015) to ref.schools (F104: allowed hours of the school, H5).
+func (c IdentityProjection) school(ctx context.Context, e outbox.Envelope) (bool, error) {
+	var p struct {
+		SchoolID       uuid.UUID      `json:"school_id"`
+		TenantID       uuid.UUID      `json:"tenant_id"`
+		Status         string         `json:"status"`
+		SettingsSubset map[string]any `json:"settings_subset"`
+		SourceVersion  *int64         `json:"source_version"`
+	}
+	if err := decode(e, &p); err != nil {
+		return false, err
+	}
+	tenant, err := envTenant(e)
+	if err != nil {
+		return false, err
+	}
+	settings, _ := json.Marshal(p.SettingsSubset)
+	switch {
+	case p.SchoolID == uuid.Nil || p.TenantID != tenant:
+		return false, invalid(e.EventType, "school_id and tenant_id")
+	case !maxLen(&p.Status, 64) || p.Status == "" || len(settings) > 16384:
+		return false, invalid(e.EventType, "status/settings")
+	}
+	if p.SettingsSubset == nil {
+		settings = nil
+	}
+	return c.P.School(ctx, tenant, p.SchoolID, p.Status, settings, version(p.SourceVersion, e))
 }
 
 func date(s *string) (*time.Time, error) {
