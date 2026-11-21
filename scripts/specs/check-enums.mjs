@@ -81,6 +81,16 @@ for (const rel of enumScan) {
   for (const f of found) errors.push(`${rel}: ${f} (deferred, ADR-0082)`);
 }
 
+// Bản chép nhúng (go:embed) trong backend phải giống hệt nguồn; lệch thì TestEmbeddedSchemas của learning đỏ.
+const EMBEDDED_COPIES = ['src/backend/modules/learning/internal/infrastructure/qbschema/enums.schema.json'];
+const norm = (s) => s.replace(/\r\n/g, '\n');
+const sourceText = norm(fs.readFileSync(path.join(repo, SOURCE), 'utf8'));
+for (const rel of EMBEDDED_COPIES) {
+  const p = path.join(repo, rel);
+  if (!fs.existsSync(p)) { errors.push(`${rel}: không tìm thấy bản chép nhúng`); continue; }
+  if (norm(fs.readFileSync(p, 'utf8')) !== sourceText) errors.push(`${rel}: lệch ${SOURCE} — chép lại file nguồn`);
+}
+
 if (process.argv.includes('--verbose')) for (const i of infos) console.log('  info:', i);
 for (const e of errors) console.log('  LỖI:', e);
 console.log(`check-enums: ${NAMES.length} enum nguồn, ${compared} khai báo đã so sánh, ${enumScan.length} file quét giá trị deferred, ${infos.length} khai báo vắng mặt (--verbose để xem), ${errors.length} lỗi`);
