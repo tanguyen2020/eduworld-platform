@@ -13,6 +13,13 @@
       "newAssignment": "Giao bài mới",
       "reference": "Mức tham khảo TT27/TT22"
     },
+    "greeting": {
+      "morning": "Chào buổi sáng, thầy cô",
+      "noon": "Chào buổi trưa, thầy cô",
+      "afternoon": "Chào buổi chiều, thầy cô",
+      "evening": "Chào buổi tối, thầy cô",
+      "lead": "Những việc cần quan tâm của trường trong khoảng thời gian đã chọn."
+    },
     "breadcrumb": {
       "school": "Tổng quan trường"
     },

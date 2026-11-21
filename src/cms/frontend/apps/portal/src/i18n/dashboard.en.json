@@ -13,6 +13,13 @@
       "newAssignment": "New assignment",
       "reference": "Reference levels TT27/TT22"
     },
+    "greeting": {
+      "morning": "Good morning, teachers",
+      "noon": "Good day, teachers",
+      "afternoon": "Good afternoon, teachers",
+      "evening": "Good evening, teachers",
+      "lead": "What needs attention at your school in the selected period."
+    },
     "breadcrumb": {
       "school": "School overview"
     },

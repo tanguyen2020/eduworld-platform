@@ -4,7 +4,11 @@
 // recommendations, ⑤ safety notifications (count only + link, never chat content). Every widget has its own skeleton,
 // "Cập nhật lúc", grain and "Tạm tính" (ops-ui DashboardWidget); numbers are the server's (AGENTS R1, ADR-0062).
 // Students are never ranked by score (no score column, server order kept). Mobile: widgets stack as cards.
+// Look (DESIGN_SYSTEM §4.2, direction B "Sổ tay giáo viên", owner 2026-11-21): greeting by time of day, prominent
+// primary action "+ Giao bài mới", each widget a KPI card with a 4 px accent top border — no number is invented here.
+import type { Accent } from '@eduworld/ops-ui';
 import { DashboardChart, DashboardMetric, DashboardWidget, type DashboardMetaView } from '@eduworld/ops-ui/dashboard';
+import { PlusOutlined } from '@ant-design/icons';
 import { Alert, Button, Col, Flex, List, Progress, Row, Space, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +35,25 @@ export function classHref(f: DashboardFilters, classId: string): string {
 export function studentHref(f: DashboardFilters, studentId: string, classId?: string): string {
   return `${DASHBOARD_BASE}/students/${studentId}?${filtersToSearch({ ...f, classId: classId ?? f.classId }).toString()}`;
 }
+
+export type Greeting = 'morning' | 'noon' | 'afternoon' | 'evening';
+
+/** Greeting of the overview header by the viewer's local hour (presentation only). */
+export function greetingOf(hour: number): Greeting {
+  if (hour < 11) return 'morning';
+  if (hour < 13) return 'noon';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+}
+
+/** Accent of each widget card (DESIGN_SYSTEM §4.1 "Thẻ KPI/widget"): semantic colours of the theme. */
+export const WIDGET_ACCENTS: Record<'assignments' | 'weak' | 'attention' | 'selfStudy' | 'safety', Accent> = {
+  assignments: 'primary',
+  weak: 'color.subject.english',
+  attention: 'warning',
+  selfStudy: 'success',
+  safety: 'info',
+};
 
 function AssignmentsWidget({ w, f, partial }: { w: Widgets; f: DashboardFilters; partial: boolean }) {
   const { t } = useTranslation();
@@ -199,9 +222,10 @@ export function OverviewPage() {
   const meta = metaOf(q.data);
   const partial = !!q.data?.is_partial;
   const loading = q.isPending && !!filters.schoolId;
-  const frame = (key: string, n: number, body: (w: Widgets) => JSX.Element, empty?: (w: Widgets) => boolean) => (
+  const frame = (key: keyof typeof WIDGET_ACCENTS, n: number, body: (w: Widgets) => JSX.Element, empty?: (w: Widgets) => boolean) => (
     <DashboardWidget
       testId={`widget-${key}`}
+      accent={WIDGET_ACCENTS[key]}
       title={t(`dashboard.widget.${key}`, { n })}
       meta={meta}
       loading={loading}
@@ -221,16 +245,24 @@ export function OverviewPage() {
   };
   return (
     <Flex vertical gap="middle" data-testid="dashboard-overview">
+      <Flex justify="space-between" align="flex-end" wrap gap="middle" data-testid="dashboard-greeting">
+        <div>
+          <Typography.Title level={2} style={{ margin: 0 }}>
+            {t(`dashboard.greeting.${greetingOf(dayjs().hour())}`)}
+          </Typography.Title>
+          <Typography.Text type="secondary">{t('dashboard.greeting.lead')}</Typography.Text>
+        </div>
+        <Space wrap>
+          <Button onClick={() => navigate(`${DASHBOARD_BASE}/reference?${filtersToSearch(filters).toString()}`)}>{t('dashboard.action.reference')}</Button>
+          <ActionGate actionKey="action.school_lms.assignments.edit">
+            <Button type="primary" size="large" icon={<PlusOutlined aria-hidden />} onClick={() => navigate(`${ASSIGNMENTS_BASE}/new`)}>
+              {t('dashboard.action.newAssignment')}
+            </Button>
+          </ActionGate>
+        </Space>
+      </Flex>
       <DashboardFilterBar filters={filters} onChange={setFilters} />
       {!filters.schoolId ? <Alert type="info" showIcon message={t('dashboard.pickSchool')} /> : null}
-      <Space wrap>
-        <ActionGate actionKey="action.school_lms.assignments.edit">
-          <Button type="primary" onClick={() => navigate(`${ASSIGNMENTS_BASE}/new`)}>
-            {t('dashboard.action.newAssignment')}
-          </Button>
-        </ActionGate>
-        <Button onClick={() => navigate(`${DASHBOARD_BASE}/reference?${filtersToSearch(filters).toString()}`)}>{t('dashboard.action.reference')}</Button>
-      </Space>
       {filters.schoolId ? (
         <Row gutter={[16, 16]}>
           <Col xs={24} xl={12}>

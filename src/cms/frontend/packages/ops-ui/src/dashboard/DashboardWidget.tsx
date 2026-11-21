@@ -3,12 +3,13 @@
 // when `is_partial`, an empty state with guidance, and the refused-query hints by Problem `code`
 // (DASHBOARD_RANGE_TOO_LARGE → narrow the range, DASHBOARD_QUERY_TIMEOUT → narrow the scope, DASHBOARD_BUSY → busy).
 // DashboardMetric shows one number: "Đang tính số liệu…" instead of 0 while the period is not closed, "< 5" when
-// suppressed. Presentational only: every number comes from the server (AGENTS R1, ADR-0062).
+// suppressed. `accent` gives the KPI card look of the teacher notebook theme. Presentational only: every number comes from the server (AGENTS R1, ADR-0062).
 import { Alert, Card, Empty, Flex, Skeleton, Statistic, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OPS_UI_NS } from '../i18n';
+import { ACCENT_BORDER_WIDTH, useAccentColor, type Accent } from '../theme/accent';
 import { SuppressedCell } from './SuppressedCell';
 
 export type DashboardGrain = 'day' | 'week' | 'month';
@@ -45,6 +46,8 @@ export interface DashboardWidgetProps {
   empty?: boolean;
   emptyHint?: ReactNode;
   extra?: ReactNode;
+  /** KPI card look (DESIGN_SYSTEM §4.1): 4 px top border in a semantic or business colour; the title stays the label. */
+  accent?: Accent;
   children?: ReactNode;
 }
 
@@ -70,8 +73,9 @@ function DashboardMetaLine({ meta }: { meta: DashboardMetaView }) {
   );
 }
 
-export function DashboardWidget({ title, testId, meta, loading, error, empty, emptyHint, extra, children }: DashboardWidgetProps) {
+export function DashboardWidget({ title, testId, meta, loading, error, empty, emptyHint, extra, accent, children }: DashboardWidgetProps) {
   const { t } = useTranslation(OPS_UI_NS);
+  const accentColor = useAccentColor(accent);
   let body: ReactNode;
   if (loading)
     body = (
@@ -85,7 +89,14 @@ export function DashboardWidget({ title, testId, meta, loading, error, empty, em
   } else if (empty) body = <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={emptyHint ?? t('dashboard.empty')} />;
   else body = children;
   return (
-    <Card title={title} extra={extra} data-testid={testId} aria-busy={loading ? true : undefined}>
+    <Card
+      title={title}
+      extra={extra}
+      data-testid={testId}
+      data-accent={accent}
+      aria-busy={loading ? true : undefined}
+      style={accentColor ? { borderTop: `${ACCENT_BORDER_WIDTH} solid ${accentColor}` } : undefined}
+    >
       <Flex vertical gap="small">
         {meta && !loading && !error ? <DashboardMetaLine meta={meta} /> : null}
         {body}

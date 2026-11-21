@@ -5,6 +5,7 @@ import { screen } from '@testing-library/react';
 import dayjs from 'dayjs';
 import { describe, expect, it } from 'vitest';
 import { renderOps } from '../test/render';
+import { domainColors, lightTheme } from '../theme/antd-theme';
 import { DashboardMetric, DashboardWidget } from './DashboardWidget';
 
 const asOf = '2026-11-21T03:05:00Z';
@@ -83,5 +84,27 @@ describe('DashboardWidget (F056-AC-02, F056-AC-04)', () => {
   it('empty state with guidance instead of zeros (start of the school year)', async () => {
     await renderOps(<DashboardWidget title="A" empty emptyHint="Chưa có bài giao. Hãy giao bài đầu tiên." />);
     expect(screen.getByText('Chưa có bài giao. Hãy giao bài đầu tiên.')).toBeInTheDocument();
+  });
+});
+
+describe('DashboardWidget accent (DESIGN_SYSTEM §4.1, teacher notebook theme)', () => {
+  // jsdom keeps a var() shorthand as written; the theme may lower-case the hex: compare case-insensitively
+  const border = (el: HTMLElement) => el.style.borderTop.toLowerCase();
+
+  it('semantic accent → 4 px token top border in the theme colour; title kept as the label', async () => {
+    await renderOps(<DashboardWidget title="Bài giao" testId="w" accent="primary" />);
+    const card = screen.getByTestId('w');
+    expect(card).toHaveAttribute('data-accent', 'primary');
+    expect(card.style.borderTop).toContain('var(--ew-dashboard-accent-width)');
+    expect(border(card)).toContain((lightTheme.token!.colorPrimary as string).toLowerCase());
+    expect(screen.getByText('Bài giao')).toBeInTheDocument();
+  });
+
+  it('business colour accent uses domainColors of the mode; no accent → no inline border', async () => {
+    const r = await renderOps(<DashboardWidget title="A" testId="w" accent="color.subject.english" />, 'vi-VN', 'dark');
+    expect(border(screen.getByTestId('w'))).toContain(domainColors['color.subject.english']!.dark.toLowerCase());
+    r.unmount();
+    await renderOps(<DashboardWidget title="B" testId="w2" />);
+    expect(screen.getByTestId('w2').style.borderTop).toBe('');
   });
 });

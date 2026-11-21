@@ -3,6 +3,8 @@
 // built from the generated catalog filtered by getMyPermissions, breadcrumb, main content. Desktop ≥ 1280 px: fixed
 // sidebar; < 1280 px: sidebar in a drawer (☰); < 768 px: tenant controls move into the drawer too; touch targets
 // ≥ 44 px below desktop. Skip link, landmarks and labels for keyboard/screen readers. No business logic (AGENTS R1).
+// Look of direction B "Sổ tay giáo viên" (DESIGN_SYSTEM §4.2, owner 2026-11-21): topbar and sidebar on the container
+// colour with a 1 px subtle border, brand mark next to the product name, roomier content area — tokens only.
 import { MenuOutlined, UserOutlined } from '@ant-design/icons';
 import { Breadcrumb, Button, Drawer, Flex, Layout, Menu, Popover, Segmented, Select, Switch, Typography, theme } from 'antd';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -28,6 +30,32 @@ import './shell.css';
 export const DESKTOP_MIN_WIDTH_PX = 1280;
 export const TOUCH_TARGET_PX = 44;
 export const MAIN_ID = 'ew-main';
+
+/** Square brand mark (notebook) in the primary colour; decorative, the product name follows as text. */
+export function BrandMark() {
+  const { token } = theme.useToken();
+  return (
+    <span
+      aria-hidden="true"
+      data-testid="brand-mark"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 'none',
+        width: token.controlHeight,
+        height: token.controlHeight,
+        borderRadius: token.borderRadius,
+        background: token.colorPrimary,
+      }}
+    >
+      <svg width={token.sizeMD} height={token.sizeMD} viewBox="0 0 24 24" fill="none" stroke={token.colorTextLightSolid} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2" />
+        <path d="M8 7h7M8 11h5" />
+      </svg>
+    </span>
+  );
+}
 
 /** Banner slot (ADMIN_PORTAL §1.3): visible on every breakpoint; F122 adds "Đang tắt kiểm duyệt" here. */
 export function BannerSlot({ children }: { children?: ReactNode }) {
@@ -85,7 +113,7 @@ export function UserMenu() {
       />
       <Flex gap="small" align="center" justify="space-between">
         <span id="ew-compact-label">{t('shell.userMenu.compact')}</span>
-        <Switch aria-labelledby="ew-compact-label" checked={preferences.density === 'compact'} onChange={(c) => update({ density: c ? 'compact' : 'default' })} />
+        <Switch aria-labelledby="ew-compact-label" checked={preferences.density === 'compact'} onChange={(c) => update({ density: c ? 'compact' : 'default', densityChosen: true })} />
       </Flex>
       <Button
         danger
@@ -118,6 +146,7 @@ function SideMenu({ workspace, onNavigate }: { workspace: WorkspaceDef; onNaviga
     <nav aria-label={t('shell.layout.navigation')}>
       <Menu
         mode="inline"
+        style={{ borderInlineEnd: 'none' }}
         selectedKeys={selected ? [selected.key] : []}
         items={menus.map((m) => ({
           key: m.key,
@@ -197,7 +226,12 @@ export function PortalLayout() {
         <Flex align="center" gap="middle" wrap justify="space-between">
           <Flex align="center" gap="middle" wrap>
             {!desktop ? <Button icon={<MenuOutlined />} aria-label={t('shell.layout.openMenu')} onClick={() => setDrawer(true)} style={touch} /> : null}
-            <Typography.Text strong>{t('app.shortTitle')}</Typography.Text>
+            <Flex align="center" gap="small">
+              <BrandMark />
+              <Typography.Text strong style={{ fontSize: token.fontSizeLG }}>
+                {t('app.shortTitle')}
+              </Typography.Text>
+            </Flex>
             <WorkspaceSwitcher workspaces={workspaces} current={workspace} />
             {!mobile ? tenantControls : null}
           </Flex>
@@ -207,7 +241,7 @@ export function PortalLayout() {
       <BannerSlot>{vpn ? <VpnRequiredNotice onClose={dismissVpn} /> : null}</BannerSlot>
       <Layout>
         {desktop && workspace ? (
-          <Layout.Sider width={token.screenXS / 2} style={{ background: token.colorBgContainer }}>
+          <Layout.Sider width={token.screenXS / 2} style={{ background: token.colorBgContainer, borderInlineEnd: `${token.lineWidth}px ${token.lineType} ${token.colorBorderSecondary}`, paddingBlock: token.paddingXS }}>
             <SideMenu workspace={workspace} />
           </Layout.Sider>
         ) : null}
@@ -217,7 +251,7 @@ export function PortalLayout() {
             {workspace ? <SideMenu workspace={workspace} onNavigate={() => setDrawer(false)} /> : null}
           </Flex>
         </Drawer>
-        <Layout.Content id={MAIN_ID} tabIndex={-1} style={{ padding: token.paddingLG }}>
+        <Layout.Content id={MAIN_ID} tabIndex={-1} style={{ padding: desktop ? token.paddingXL : token.paddingMD }}>
           <Breadcrumb
             items={[...(workspace ? [{ title: <Link to={workspace.path}>{t(workspace.labelKey)}</Link> }] : []), ...(menu ? [{ title: t(menu.labelKey) }] : [])]}
           />

@@ -50,11 +50,13 @@ describe('user menu and accessibility (F051-AC-16, F051-AC-17, F051-AC-18)', () 
     await user.click(screen.getByRole('button', { name: 'Tài khoản' }));
     await user.click(await screen.findByText('Tối'));
     await waitFor(() => expect(document.querySelector('.ew-ops-root')).toHaveAttribute('data-theme', 'dark'));
+    // comfortable density is the default (DESIGN_SYSTEM §4.1); the switch turns compact on as an explicit choice
+    expect(document.querySelector('.ew-ops-root')).toHaveAttribute('data-density', 'default');
     await user.click(screen.getByRole('switch', { name: 'Mật độ gọn' }));
-    await waitFor(() => expect(document.querySelector('.ew-ops-root')).toHaveAttribute('data-density', 'default'));
+    await waitFor(() => expect(document.querySelector('.ew-ops-root')).toHaveAttribute('data-density', 'compact'));
     await i18n.changeLanguage('en-US');
     expect(await screen.findByRole('heading', { level: 1, name: 'Classes & students' })).toBeInTheDocument();
-    expect(JSON.parse(window.localStorage.getItem('ew.portal.prefs') ?? '{}')).toMatchObject({ theme: 'dark', density: 'default' });
+    expect(JSON.parse(window.localStorage.getItem('ew.portal.prefs') ?? '{}')).toMatchObject({ theme: 'dark', density: 'compact', densityChosen: true });
   });
 
   it('skip link to the main landmark, labelled navigation, breadcrumb', async () => {
