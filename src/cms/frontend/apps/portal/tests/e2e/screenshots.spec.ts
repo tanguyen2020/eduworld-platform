@@ -16,9 +16,9 @@ const OUT = process.env.EW_E2E_SCREENSHOT_DIR ?? '';
 const DESKTOP = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
 const NAV = 'Menu điều hướng';
-/** Screens of the class concept, removed by the owner on 2026-11-21 (students by grade only): kept as the before state. */
+/** Screens of the class concept removed by ADR-0095 (students by school grade): kept as the before state. */
 const TO_BE_REMOVED = ['/school-lms/classes', '/school-lms/courses', '/school-lms/schedules', '/school-lms/study-groups', '/content-studio/learning-paths'];
-const REMOVED_NOTE = 'sẽ bị gỡ (bỏ khái niệm lớp)';
+const REMOVED_NOTE = 'sẽ bị gỡ (ADR-0095)';
 
 interface Shot {
   folder: string;
