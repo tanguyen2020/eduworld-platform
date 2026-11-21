@@ -150,6 +150,11 @@ Viết tắt: `OPS/` = `src/cms/frontend/packages/ops-ui/src/`, `WS/` = `src/cms
 - [x] T064 [P] Test F053-AC-33: tắt `action.content_studio.question_bank.publish` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/content-studio/question-feature-toggle.spec.ts` — **2026-11-19:** `QuestionEditorPage.test.tsx` › AC-13/AC-33 (action `question_bank.publish` tắt → nút khóa); `403 FEATURE_DISABLED` do shell F051 (đã test).
 - [x] T065 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F053-AC-33) — file: `src/cms/frontend/apps/portal/src/workspaces/content-studio/routes.tsx` — **2026-11-19:** nút workflow bọc `<ActionGate>` qua `gateQuestionAction`; upload/xuất dịch/curriculum dùng `ActionGate`.
 
+## Nhận sau E2E portal (owner chốt 2026-11-21)
+
+- [ ] T066 (OQ F053-9) Bộ chọn chủ đề trong `DocMetaFields`/`QuestionActivityEditor` tự suy `curriculum_version_id` hiện hành theo môn × khối (curriculum của trường/tenant đang dùng) rồi gọi `listCmsTopics` theo contract; không có version hiện hành thì hiện trạng thái rỗng có giải thích — vitest — cỡ S
+- [ ] T067 Sửa test đang đỏ trên main: `CurriculumTreePage.test.tsx` AC-26 (phiên `cm.noidung`, "Toán" không hiện) — tìm nguyên nhân (test hay code), sửa phía sai — vitest — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T005–T010 contract + sinh code; T015–T017 nền editor) → US1, US2 (song song sau T016) → US3, US4 (song song) → US5 → Polish.
