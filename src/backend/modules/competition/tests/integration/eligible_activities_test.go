@@ -80,7 +80,7 @@ func TestEligibleActivities(t *testing.T) {
 	if len(r.data()) != 3 {
 		t.Fatalf("explore areas: %s", r.raw)
 	}
-	for _, k := range []kid{e.kidA(), e.kid(e.tenantB, e.schoolB, e.classA, 6)} {
+	for _, k := range []kid{e.kidA(), e.kid(e.tenantB, e.schoolB, 6)} {
 		if r := e.call(k, http.MethodGet, "/multiplayer/parties/"+id+"/eligible-activities", "", nil); r.status != http.StatusNotFound ||
 			r.code() != "PARTY_NOT_FOUND" {
 			t.Fatalf("outsider: %d %s", r.status, r.raw)

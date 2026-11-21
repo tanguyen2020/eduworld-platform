@@ -29,7 +29,6 @@ type Ticket struct {
 	TeamSize     int
 	Students     []uuid.UUID
 	Schools      []uuid.UUID // school of each student (same order)
-	Classes      []uuid.UUID // known classes of the students
 	Grade        int         // common grade of the students (H1)
 	Rating       mm.Rating
 	EnqueuedAt   time.Time
@@ -54,7 +53,7 @@ func (t Ticket) Has(student uuid.UUID) bool {
 
 // Candidate is the pairing view of a queued ticket.
 func (t Ticket) Candidate() mm.Candidate {
-	return mm.Candidate{TicketID: t.ID, Students: t.Students, Classes: t.Classes, Grade: t.Grade, Rating: t.Rating, EnqueuedAt: t.EnqueuedAt,
+	return mm.Candidate{TicketID: t.ID, Students: t.Students, Grade: t.Grade, Rating: t.Rating, EnqueuedAt: t.EnqueuedAt,
 		PartyID: t.PartyID, AllowFill: t.AllowFill}
 }
 

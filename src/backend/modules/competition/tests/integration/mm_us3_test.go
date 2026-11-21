@@ -58,9 +58,9 @@ func teamBody(party string, fill bool) map[string]any {
 // cancels the ticket for every member (party_changed) through the consumer competition.matchmaking_party.
 func TestMMPartyTicket(t *testing.T) {
 	m := setupMM(t)
-	lead := m.kid(m.tenantA, m.schoolA, m.classA, 7)
-	b := m.kid(m.tenantA, m.schoolA, m.classA, 7)
-	c := m.kid(m.tenantA, m.schoolA, m.classA, 7)
+	lead := m.kid(m.tenantA, m.schoolA, 7)
+	b := m.kid(m.tenantA, m.schoolA, 7)
+	c := m.kid(m.tenantA, m.schoolA, 7)
 	pid := m.competitionParty(lead, b, c)
 	m.ratings.set(lead, 1400)
 	m.ratings.set(b, 1500)
@@ -115,8 +115,8 @@ func TestMMPartyChangedWhileProposed(t *testing.T) {
 	m := setupMM(t)
 	var all []kid
 	newTeam := func() (string, []kid) {
-		l := m.kid(m.tenantA, m.schoolA, m.classA, 7)
-		x, y := m.kid(m.tenantA, m.schoolA, m.classA, 7), m.kid(m.tenantA, m.schoolA, m.classA, 7)
+		l := m.kid(m.tenantA, m.schoolA, 7)
+		x, y := m.kid(m.tenantA, m.schoolA, 7), m.kid(m.tenantA, m.schoolA, 7)
 		m.setOnline(l, x, y)
 		all = append(all, l, x, y)
 		return m.competitionParty(l, x, y), []kid{l, x, y}
@@ -171,14 +171,14 @@ func TestMMPartyChangedWhileProposed(t *testing.T) {
 // the solos are drafted.
 func TestMMAllowFill(t *testing.T) {
 	m := setupMM(t)
-	l := m.kid(m.tenantA, m.schoolA, m.classA, 7)
-	x := m.kid(m.tenantA, m.schoolA, m.classA, 7)
+	l := m.kid(m.tenantA, m.schoolA, 7)
+	x := m.kid(m.tenantA, m.schoolA, 7)
 	m.setOnline(l, x)
 	pid := m.competitionParty(l, x)
 	m.ticket(l, http.StatusCreated, teamBody(pid, true))
 	var solos []kid
 	for range 4 {
-		s := m.kid(m.tenantA, m.schoolA, m.classA, 7)
+		s := m.kid(m.tenantA, m.schoolA, 7)
 		solos = append(solos, s)
 		m.clock.Add(time.Second)
 		m.ticket(s, http.StatusCreated, teamBody("", false))
@@ -209,12 +209,12 @@ func TestMMAllowFill(t *testing.T) {
 // 403 POLICY_DENIED.
 func TestMMTeamPolicy(t *testing.T) {
 	m := setupMM(t)
-	g3 := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	g3 := m.kid(m.tenantA, m.schoolA, 3)
 	if r := m.ticket(g3, http.StatusForbidden, teamBody("", false)); r.code() != "POLICY_DENIED" {
 		t.Fatalf("team_battle grade 3: %s", r.raw)
 	}
-	l := m.kid(m.tenantA, m.schoolA, m.classA, 6)
-	x := m.kid(m.tenantA, m.schoolA, m.classA, 7)
+	l := m.kid(m.tenantA, m.schoolA, 6)
+	x := m.kid(m.tenantA, m.schoolA, 7)
 	m.setOnline(l, x)
 	pid := m.competitionParty(l, x)
 	if r := m.ticket(l, http.StatusForbidden, teamBody(pid, true)); r.code() != "POLICY_DENIED" {

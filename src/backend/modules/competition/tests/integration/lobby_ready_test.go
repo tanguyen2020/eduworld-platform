@@ -77,7 +77,7 @@ func TestLobbyReady(t *testing.T) {
 	}
 
 	// F101-AC-02: outsiders, other tenant, not open, rate.
-	out, other := e.kidA(), e.kid(e.tenantB, e.schoolB, uuid.Nil, 6)
+	out, other := e.kidA(), e.kid(e.tenantB, e.schoolB, 6)
 	for _, k := range []kid{out, other} {
 		if r := e.ready(k, id, true); r.status != http.StatusNotFound || r.code() != "PARTY_NOT_FOUND" {
 			t.Fatalf("outsider %s: %d %s", k.nickname, r.status, r.raw)

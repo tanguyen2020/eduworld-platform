@@ -18,9 +18,9 @@ import (
 func TestMatchmakingRLS(t *testing.T) {
 	m := setupMM(t)
 	ctx := context.Background()
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	b := m.kid(m.tenantB, m.schoolB, uuid.Nil, 3)
-	b2 := m.kid(m.tenantB, m.schoolB, uuid.Nil, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
+	b := m.kid(m.tenantB, m.schoolB, 3)
+	b2 := m.kid(m.tenantB, m.schoolB, 3)
 	now := m.clock.Now()
 	match := uuid.New()
 	m.exec(`INSERT INTO competition.matches (match_id, mode, matchmaking_type, subject_id, grade_level, ranked, scope_kind, ruleset_version_id, tenant_ids)

@@ -65,7 +65,7 @@ func (Matchmaking) ActiveConfig(ctx context.Context, at time.Time) (mm.Config, e
 	return cfg, nil
 }
 
-// Players implements write.MatchRepository and read.MatchmakingReader: grade, school, class, status of the student and
+// Players implements write.MatchRepository and read.MatchmakingReader: grade, school, status of the student and
 // the restrictions in force at now — competition_restrictions (abandon_penalty, restrict_competition) and the
 // multiplayer sanctions of ref.sanctions — plus the allowed hours of its school (H5).
 func (Matchmaking) Players(ctx context.Context, tenant uuid.UUID, ids []uuid.UUID, now time.Time) (map[uuid.UUID]mm.Player, error) {
@@ -77,10 +77,8 @@ func (Matchmaking) Players(ctx context.Context, tenant uuid.UUID, ids []uuid.UUI
 	if err != nil {
 		return nil, err
 	}
-	// tenancyguard:ok projection read under the TenantScope; ref.students.deleted_at mirrors the source (cleanup), ref.enrollments, ref.sanctions and ref.schools have none (rule 2); competition_restrictions filtered on deleted_at
+	// tenancyguard:ok projection read under the TenantScope; ref.students.deleted_at mirrors the source (cleanup), ref.sanctions and ref.schools have none (rule 2); competition_restrictions filtered on deleted_at
 	rows, err := t.QueryContext(ctx, `SELECT st.student_id, st.school_id, st.grade_level, st.status, st.deleted_at,
-		(SELECT e.class_id FROM ref.enrollments e WHERE e.tenant_id = st.tenant_id AND e.student_id = st.student_id AND e.status = 'active'
-			ORDER BY e.start_date DESC NULLS LAST, e.source_version DESC LIMIT 1),
 		EXISTS (SELECT 1 FROM ref.sanctions x WHERE x.tenant_id = st.tenant_id AND x.user_id = st.student_id AND x.active
 			AND (x.until IS NULL OR x.until > $3))
 		OR EXISTS (SELECT 1 FROM competition.competition_restrictions r WHERE r.tenant_id = st.tenant_id AND r.student_id = st.student_id
@@ -96,17 +94,12 @@ func (Matchmaking) Players(ctx context.Context, tenant uuid.UUID, ids []uuid.UUI
 		var grade sql.NullInt32
 		var status string
 		var deleted sql.NullTime
-		var class uuid.NullUUID
 		var settings []byte
-		if err := rows.Scan(&p.ID, &p.SchoolID, &grade, &status, &deleted, &class, &p.Restrict, &settings); err != nil {
+		if err := rows.Scan(&p.ID, &p.SchoolID, &grade, &status, &deleted, &p.Restrict, &settings); err != nil {
 			return nil, err
 		}
 		if grade.Valid {
 			p.Grade = int(grade.Int32)
-		}
-		if class.Valid {
-			c := class.UUID
-			p.ClassID = &c
 		}
 		p.Active = status == "active" && !deleted.Valid
 		if h := mm.ParseAllowedHours(settings); h != nil {

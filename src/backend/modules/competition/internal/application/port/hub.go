@@ -192,14 +192,13 @@ type ProjectionWriter interface {
 	Tenant(ctx context.Context, tenant uuid.UUID, code *string, typ, status string, isQA *bool, settings []byte, version int64) (bool, error)
 	Student(ctx context.Context, student, tenant, school uuid.UUID, grade *int, status *string, version int64) (bool, error)
 	StudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error)
+	// Placement applies student.placement_changed of module identity (school and grade level of the student, ADR-0095).
+	Placement(ctx context.Context, student, tenant, school uuid.UUID, grade int, active bool, version int64) (bool, error)
 	StudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
 	PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickname *string, level int, avatar []byte, version int64) (bool, error)
 	// Friendship and Block apply friend.added/removed and user.blocked/unblocked of module chat (owner F095).
 	Friendship(ctx context.Context, tenant, low, high uuid.UUID, active bool, version int64) (bool, error)
 	Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, active bool, version int64) (bool, error)
-	// Enrollment applies enrollment.changed of module identity (class of a student, F100).
-	Enrollment(ctx context.Context, tenant, student, class uuid.UUID, school *uuid.UUID, status string, start, end *time.Time,
-		version int64) (bool, error)
 	// School applies school.updated of module identity (settings_subset: allowed hours, F104 H5).
 	School(ctx context.Context, school, tenant uuid.UUID, status string, settings []byte, version int64) (bool, error)
 }

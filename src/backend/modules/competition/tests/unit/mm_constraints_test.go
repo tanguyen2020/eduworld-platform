@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,6 +24,9 @@ func seedConfig(t *testing.T) mm.Config {
 	b, err := os.ReadFile(filepath.Join(filepath.Dir(file), "..", "..", "seed", "matchmaking_config.json"))
 	if err != nil {
 		t.Fatal(err)
+	}
+	if strings.Contains(string(b), "same_class") {
+		t.Fatal("seed still has the same_class weight (ADR-0095)")
 	}
 	c, err := mm.Parse(b)
 	if err != nil {

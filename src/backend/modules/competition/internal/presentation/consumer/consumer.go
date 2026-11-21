@@ -115,9 +115,14 @@ func (c IdentityProjection) Handle(ctx context.Context, e outbox.Envelope) error
 		}
 		ok, err := c.P.StudentDeleted(ctx, tenant, p.StudentID, e.EventType == "student.cleaned_up", e.OccurredAt)
 		return classify("students", e, ok, err)
+	case "student.placement_changed":
+		ok, err := c.placement(ctx, e)
+		return classify("students", e, ok, err)
 	case "enrollment.changed":
-		ok, err := c.enrollment(ctx, e)
-		return classify("enrollments", e, ok, err)
+		// ADR-0095: party and matchmaking read school and grade from ref.students; the class of a student is no longer
+		// projected. The event is still acknowledged (with or without class_id) so the durable keeps flowing until
+		// identity stops producing it (WP-I1); ref.enrollments is dropped in WP-R.
+		return nil
 	case "school.updated":
 		ok, err := c.school(ctx, e)
 		return classify("schools", e, ok, err)
@@ -125,38 +130,30 @@ func (c IdentityProjection) Handle(ctx context.Context, e outbox.Envelope) error
 	return nil
 }
 
-// enrollment applies enrollment.changed (owner F010) to ref.enrollments (F100: class of a student).
-func (c IdentityProjection) enrollment(ctx context.Context, e outbox.Envelope) (bool, error) {
+// placement applies student.placement_changed (owner F010, ADR-0095) to ref.students: school and grade level of the
+// student (party and matchmaking grade rules), status active/inactive. Tolerant of fields it does not use.
+func (c IdentityProjection) placement(ctx context.Context, e outbox.Envelope) (bool, error) {
 	var p struct {
-		StudentID     uuid.UUID  `json:"student_id"`
-		ClassID       uuid.UUID  `json:"class_id"`
-		Op            string     `json:"op"`
-		SchoolID      *uuid.UUID `json:"school_id"`
-		Status        *string    `json:"status"`
-		StartDate     *string    `json:"start_date"`
-		EndDate       *string    `json:"end_date"`
-		SourceVersion *int64     `json:"source_version"`
+		StudentID     uuid.UUID `json:"student_id"`
+		TenantID      uuid.UUID `json:"tenant_id"`
+		SchoolID      uuid.UUID `json:"school_id"`
+		GradeLevel    int       `json:"grade_level"`
+		Status        string    `json:"status"`
+		SourceVersion *int64    `json:"source_version"`
 	}
 	if err := decode(e, &p); err != nil {
 		return false, err
 	}
 	tenant, err := envTenant(e)
-	if err != nil {
-		return false, err
-	}
-	status := map[string]string{"added": "active", "ended": "ended", "transferred": "transferred"}[p.Op]
-	if p.Status != nil {
-		status = *p.Status
-	}
-	start, err1 := date(p.StartDate)
-	end, err2 := date(p.EndDate)
 	switch {
-	case p.StudentID == uuid.Nil || p.ClassID == uuid.Nil:
-		return false, invalid(e.EventType, "student_id and class_id are required")
-	case !slices.Contains([]string{"active", "transferred", "ended"}, status), err1 != nil, err2 != nil:
-		return false, invalid(e.EventType, "op/status/dates")
+	case err != nil:
+		return false, err
+	case p.StudentID == uuid.Nil || p.SchoolID == uuid.Nil || p.TenantID != tenant:
+		return false, invalid(e.EventType, "student_id, school_id and tenant_id")
+	case p.GradeLevel < 1 || p.GradeLevel > 9, p.Status != "active" && p.Status != "inactive":
+		return false, invalid(e.EventType, "grade_level/status")
 	}
-	return c.P.Enrollment(ctx, tenant, p.StudentID, p.ClassID, p.SchoolID, status, start, end, version(p.SourceVersion, e))
+	return c.P.Placement(ctx, tenant, p.StudentID, p.SchoolID, p.GradeLevel, p.Status == "active", version(p.SourceVersion, e))
 }
 
 // school applies school.updated (owner F010/F015) to ref.schools (F104: allowed hours of the school, H5).
@@ -186,17 +183,6 @@ func (c IdentityProjection) school(ctx context.Context, e outbox.Envelope) (bool
 		settings = nil
 	}
 	return c.P.School(ctx, tenant, p.SchoolID, p.Status, settings, version(p.SourceVersion, e))
-}
-
-func date(s *string) (*time.Time, error) {
-	if s == nil || *s == "" {
-		return nil, nil
-	}
-	d, err := time.Parse(time.DateOnly, *s)
-	if err != nil {
-		return nil, err
-	}
-	return &d, nil
 }
 
 func (c IdentityProjection) tenant(ctx context.Context, e outbox.Envelope) (bool, error) {

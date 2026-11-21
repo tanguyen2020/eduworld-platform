@@ -29,12 +29,12 @@ const (
 	RuleTenant     = "tenant"        // invitee unknown in the session tenant (other tenant, not projected, inactive)
 	RuleSchool     = "school"        // other school without cross-school social (ADR-0054)
 	RuleGradeBand  = "grade_band"    // other grade band while cross_grade_band is off
-	RuleClass      = "class"         // other class while cross_class is off (always for grades 1–3)
+	RuleGrade      = "grade"         // other grade level while same_grade_only (always for grades 1–3, ADR-0095)
 	RuleFriendOnly = "friend_only"   // party_type friend: friends of the inviter only (PARTY_SYSTEM §4)
 	RuleSanction   = "sanction"      // restrict_multiplayer (or account_lock) in force
 	RuleKickBlock  = "kick_reinvite" // kicked from this party less than party_kick_reinvite_block ago
 	RulePrivate    = "private"       // join of a private party without an accepted, unexpired invitation
-	RuleVisibility = "visibility"    // join of a class/friends party outside its circle
+	RuleVisibility = "visibility"    // join of a friends party by a non-friend of the leader
 )
 
 // ValidationError is a 422 VALIDATION_FAILED on one field.

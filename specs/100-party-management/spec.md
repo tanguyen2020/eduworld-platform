@@ -1,7 +1,7 @@
 # Feature Specification: F100 — Party: tạo/tham gia/mời/kick/chuyển leader/giải tán, một party active, giới hạn
 
 **Feature Branch**: `100-party-management` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `competition` · **Mốc**: M4a · **Phụ thuộc**: F095
-**Input**: Học sinh lập nhóm chơi tạm thời (party): tạo, mời bạn, chấp nhận/từ chối/hủy lời mời, tham gia party công khai trong lớp/bạn bè, rời, kick, chuyển leader, giải tán, sửa cài đặt; một học sinh tối đa một party active; giới hạn theo trường/lớp/khối/block/sanction; chống spam lời mời; audit. FR nguồn: FR-PTY-001…005, FR-PTY-009…011, FR-PTY-014.
+**Input**: Học sinh lập nhóm chơi tạm thời (party): tạo, mời bạn, chấp nhận/từ chối/hủy lời mời, tham gia party công khai trong vòng bạn bè, rời, kick, chuyển leader, giải tán, sửa cài đặt; một học sinh tối đa một party active; giới hạn theo trường/khối/block/sanction (không còn lớp — ADR-0095); chống spam lời mời; audit. FR nguồn: FR-PTY-001…005, FR-PTY-009…011, FR-PTY-014.
 
 ## Clarifications
 
@@ -37,6 +37,15 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (owner 
 - Kick phát `party.member_kicked` (không kèm `party.member_left`); giải tán phát một `party.disbanded` (không phát `party.member_left` từng người); realtime `party.member.left.reason` của loại do policy là `account_disabled` (sanction, khóa, dọn) hoặc `transferred_school`.
 - Consumer `competition.party_safety_chat` (`user.blocked`, `sanction.applied`/`lifted` — đọc payload theo EVENT_DESIGN §4 vì schema thuộc F121 chưa có; chỉ lưu `restrict_multiplayer`, `account_lock`) và `competition.party_safety_identity` (`student.synced` đổi trường/ngừng, `user.status_changed` khóa/ngừng/ẩn danh, `student.cleaned_up`).
 - Cấu hình party đọc từ biến môi trường với mặc định CONFIG_DEFAULTS (như F091/F095), chưa từ `platform_settings`; Principal lấy từ chuỗi `pkg/httpx` nên không cần adapter `resolvePrincipal` riêng (T002). Gauge `eduworld_party_active` chưa làm (nhiều replica — đếm bằng truy vấn khi có dashboard).
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+Bỏ khái niệm lớp ([ADR-0095](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) mục 5, D2, D7; WP-C1). Thay các quyết định "cùng lớp" của phiên triển khai ở trên:
+
+- Q: Party lớp 1–3 giới hạn thế nào khi không còn lớp? → A: chỉ `friend`/`quest`; mọi thành viên **cùng đúng khối** (`grade_level`) với người mời/leader (`Rules.SameGradeOnly`, rule audit `grade`); không bắt buộc cùng trường nhưng khác trường chỉ trong cùng tenant khi tenant `unit` bật liên trường (ADR-0054, rule `school`); khác tenant không bao giờ (Subject tra theo tenant của phiên → rule `tenant`); party `friend` vẫn chỉ mời bạn bè. Học sinh chưa có khối → bị từ chối (`grade_band`).
+- Q: `visibility = class`, cờ `cross_class`, cấp `class` của `party_policies`? → A: bỏ. Visibility chỉ `private`/`friends` (gửi `class` → `422`); party `class` cũ được migration `20261231000002_adr0095_noclass.sql` chuyển `private` và code đọc giá trị cũ như `private`. `party_policies` cấp `class` bị soft-delete (`delete_reason = adr0095_class_removed`), khóa `cross_class` bị gỡ khỏi `rules`; cấp trường có thêm khóa `same_grade_only` (chỉ bật, không nới).
+- Q: Loại party `study_group`? → A: đổi tên `study_party` (D7), giữ hành vi (lớp 6–9); migration đổi dòng cũ, CHECK tạm chấp nhận cả hai giá trị (expand) tới WP-R; `party.created` phát **v2** (`schema_version = 2`: enum `party_type`/`visibility` mới), v1 bị xóa vì không còn producer.
+- Q: Trường/khối của học sinh lấy từ đâu? → A: `ref.students` (`student.synced` và `student.placement_changed` — owner F010); không đọc `ref.enrollments` nữa. `enrollment.changed` chỉ được xác nhận (ack) không chiếu cho tới khi identity ngừng phát (WP-I1); `ref.enrollments` bị DROP ở WP-R. `competition.party_safety_identity` cũng nhận `student.placement_changed` (đổi trường khi tenant tắt liên trường hoặc `inactive` → rời party).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -75,7 +84,7 @@ A mời B, C, D (bạn bè cùng trường); B, C, D nhận lời mời realtime
 |---|---|---|---|
 | F100-AC-07 | KHI leader (hoặc thành viên khi `invitation_policy = members`) gọi `inviteToParty` cho học sinh thỏa policy, module competition PHẢI tạo lời mời `pending` có `expires_at` = thời điểm server + `party_invite_ttl`, phát `party.invitation_sent` và đẩy `party.invitation.received` tới invitee | FR-PTY-001 · FR-PTY-009 · AC-PTY-002 | TC-PTY-002 |
 | F100-AC-08 | NẾU người mời không được phép theo `invitation_policy`, hoặc hai học sinh block nhau (một chiều bất kỳ), THÌ module competition PHẢI trả `403 PARTY_INVITE_NOT_ALLOWED` không tiết lộ lý do block | FR-PTY-009 · [PARTY_SYSTEM §14](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-011 |
-| F100-AC-09 | NẾU invitee khác trường (trừ tenant `unit` bật liên trường), khác tenant, đang bị sanction `restrict_multiplayer`, hoặc vi phạm `party_policies` (lớp, grade band, loại party; lớp 1–3 chỉ mời bạn cùng lớp), THÌ module competition PHẢI trả `403 PARTY_POLICY_VIOLATION` và ghi audit | FR-PTY-010 · ADR-0054 · [PARTY_SYSTEM §8](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-011 |
+| F100-AC-09 | NẾU invitee khác trường (trừ tenant `unit` bật liên trường — ADR-0054), khác tenant, đang bị sanction `restrict_multiplayer`, hoặc vi phạm `party_policies` (grade band, loại party, `same_grade_only`; party lớp 1–3 chỉ nhận học sinh **cùng đúng khối** với người mời/leader — ADR-0095 D2), THÌ module competition PHẢI trả `403 PARTY_POLICY_VIOLATION` và ghi audit (rule trong audit, không trong response) | FR-PTY-010 · ADR-0054 · [PARTY_SYSTEM §8](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-011 |
 | F100-AC-10 | NẾU người mời vượt `party_invite_rate`, hoặc mời lại người vừa từ chối trong thời gian chờ, hoặc đã có lời mời `pending` tới cùng người cho party đó, THÌ module competition PHẢI trả `429 PARTY_INVITE_RATE_LIMITED` (hoặc `409 CONFLICT` với lời mời trùng) và ghi audit khi vượt rate | FR-PTY-011 · AC-PTY-011 | TC-PTY-013 |
 | F100-AC-11 | KHI invitee gọi `acceptPartyInvitation` cho lời mời `pending` còn hạn, module competition PHẢI kiểm tra lại toàn bộ policy tại thời điểm accept, thêm thành viên, đặt lời mời `accepted`, phát `party.invitation_accepted` + `party.member_joined` và đẩy `party.member.joined` tới mọi thành viên; gọi lại PHẢI không tạo thành viên trùng | FR-PTY-001 · FR-PTY-005 · AC-PTY-002 | TC-PTY-003 |
 | F100-AC-12 | NẾU party đã đủ `max_members` (kể cả khi nhiều lời mời được accept đồng thời), THÌ module competition PHẢI trả `409 PARTY_FULL` cho phần vượt; NẾU lời mời quá `expires_at`, THÌ PHẢI trả `410 PARTY_INVITATION_EXPIRED`; NẾU người gọi không phải invitee, THÌ PHẢI trả `403 PERMISSION_DENIED` | FR-PTY-004 · FR-PTY-009 · AC-PTY-010 | TC-PTY-003 |
@@ -87,17 +96,17 @@ A mời B, C, D (bạn bè cùng trường); B, C, D nhận lời mời realtime
 
 ### User Story 3 — Tham gia, rời, kick, chuyển leader, giải tán, sửa cài đặt (Priority: P1)
 
-Bạn cùng lớp tham gia party `visibility = class`; thành viên rời nhóm; leader kick, chuyển leader, sửa cài đặt hoặc giải tán.
+Bạn bè của leader tham gia party `visibility = friends`; thành viên rời nhóm; leader kick, chuyển leader, sửa cài đặt hoặc giải tán.
 
 **Why this priority**: Vòng đời party đầy đủ là điều kiện để lobby và phiên chơi (F101) hoạt động đúng.
 
-**Independent Test**: B `joinParty` party class của A → thành viên; A kick B → B không được mời lại trong `party_kick_reinvite_block`; A chuyển leader cho C (online) → C leader; C disband → mọi thành viên rời, lời mời pending hết hạn.
+**Independent Test**: B (bạn của A) `joinParty` party `friends` của A → thành viên; A kick B → B không được mời lại trong `party_kick_reinvite_block`; A chuyển leader cho C (online) → C leader; C disband → mọi thành viên rời, lời mời pending hết hạn.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F100-AC-16 | KHI học sinh gọi `joinParty` cho party `visibility = class` (cùng lớp) hoặc `friends` (là bạn của leader) và thỏa policy, module competition PHẢI thêm thành viên như F100-AC-11; NẾU party `private` và không có lời mời `accepted` còn hạn, THÌ PHẢI trả `403 PARTY_POLICY_VIOLATION` | FR-PTY-001 · FR-PTY-009 · AC-PTY-010 | TC-PTY-011 |
+| F100-AC-16 | KHI học sinh gọi `joinParty` cho party `visibility = friends` (là bạn của leader) và thỏa policy, module competition PHẢI thêm thành viên như F100-AC-11; NẾU party `private` và không có lời mời `accepted` còn hạn, THÌ PHẢI trả `403 PARTY_POLICY_VIOLATION`; NẾU `createParty`/`updatePartySettings` gửi `visibility = class`, THÌ PHẢI trả `422 VALIDATION_FAILED` (ADR-0095) | FR-PTY-001 · FR-PTY-009 · AC-PTY-010 | TC-PTY-011 |
 | F100-AC-17 | KHI thành viên gọi `leaveParty`, module competition PHẢI đặt `left_at`, `left_reason = left`, phát `party.member_left`; NẾU người rời là leader, THÌ PHẢI chuyển leader cho thành viên online gia nhập sớm nhất (không ai online → gia nhập sớm nhất) với reason `leader_left`; NẾU không còn thành viên, THÌ PHẢI giải tán party với reason `all_left` | FR-PTY-001 · [PARTY_SYSTEM §9](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-014 |
 | F100-AC-18 | KHI leader gọi `kickPartyMember`, module competition PHẢI loại thành viên (`left_reason = kicked`), hủy các lời mời do người đó gửi, chặn mời lại người đó vào party này trong `party_kick_reinvite_block`, phát `party.member_kicked` và ghi audit; người không phải leader PHẢI nhận `403 PARTY_NOT_LEADER` | FR-PTY-001 · FR-PTY-011 · AC-PTY-011 | TC-PTY-014 |
 | F100-AC-19 | KHI leader gọi `transferPartyLeader` tới thành viên đang online, module competition PHẢI đổi leader trong một transaction (đúng một leader active), phát `party.leader_transferred` (reason `manual`) và ghi audit; NẾU đích không online, THÌ PHẢI trả `409 PARTY_MEMBER_NOT_ONLINE` | FR-PTY-001 · FR-PTY-011 | TC-PTY-014 |
@@ -140,11 +149,11 @@ Nhân sự không vào được API party; học sinh tenant/trường khác kh�
 |---|---|---|
 | FR-PTY-001 | Create, Join, Leave, Invite, Accept, Reject, Kick, Transfer Leader, Disband, Settings; phát event để module chat mở/đóng channel `party` (channel do F117) | [PARTY_SYSTEM §2](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
 | FR-PTY-002 | Thuộc tính party trong response và DB | [PARTY_SYSTEM §3](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
-| FR-PTY-003 | Loại party `friend`, `study_group`, `quest`, `competition_team`, `custom`; nhóm lớp = `visibility = class` | [PARTY_SYSTEM §4](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
+| FR-PTY-003 | Loại party `friend`, `study_party` (đổi tên từ `study_group` — ADR-0095 D7), `quest`, `competition_team`, `custom`; không có party theo lớp | [PARTY_SYSTEM §4](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
 | FR-PTY-004 | `max_members` cấu hình 2–8, mặc định theo `party_max_members` | [PARTY_SYSTEM §3](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
 | FR-PTY-005 | Một party active/học sinh; chống duplicate membership | [DATABASE_DESIGN §3.7](../../docs/07-backend/DATABASE_DESIGN.md) |
 | FR-PTY-009 | Party private cần lời mời; hết hạn lời mời; block | [PARTY_SYSTEM §8, §13.2](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
-| FR-PTY-010 | Giới hạn trường/lớp/khối/loại party; mặc định cùng trường | [ADR-0054](../../docs/adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [PARTY_SYSTEM §8](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
+| FR-PTY-010 | Giới hạn trường/khối/loại party; mặc định cùng trường; lớp 1–3 cùng đúng khối (ADR-0095) | [ADR-0054](../../docs/adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [PARTY_SYSTEM §8](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
 | FR-PTY-011 | Rate limit lời mời, audit create/kick/transfer/disband | [PARTY_SYSTEM §10, §11](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
 | FR-PTY-014 | API `/api/v1/multiplayer/parties`, `/api/v1/multiplayer/invitations`; message realtime | [API_DESIGN §9.6](../../docs/07-backend/API_DESIGN.md) |
 
@@ -153,9 +162,9 @@ Nhân sự không vào được API party; học sinh tenant/trường khác kh�
 - **Party**: nhóm chơi tạm thời trong một tenant/trường; leader, loại, visibility, chính sách mời, số thành viên tối đa, trạng thái `open`/`in_activity`/`disbanded`, phiên bản trạng thái.
 - **PartyMember**: tư cách thành viên có thời điểm vào/ra và lý do ra; tối đa một membership active mỗi học sinh.
 - **PartyInvitation**: lời mời có hạn; `pending`/`accepted`/`rejected`/`expired`/`cancelled`.
-- **PartyPolicy**: giới hạn cấp trường/lớp (loại party, liên lớp, liên grade band, trần thành viên); cấp dưới chỉ siết chặt.
+- **PartyPolicy**: giới hạn cấp trường (loại party, `same_grade_only`, liên grade band, trần thành viên); cấp dưới chỉ siết chặt; không còn cấp lớp (ADR-0095).
 - **PartyHistory**: nhật ký append-only của party.
-- **Projection**: hồ sơ học sinh (trường, lớp, grade band, trạng thái), hồ sơ người chơi (nickname, avatar), quan hệ bạn bè, block, sanction.
+- **Projection**: hồ sơ học sinh (trường, khối, grade band, trạng thái — `ref.students` từ `student.synced`/`student.placement_changed`), hồ sơ người chơi (nickname, avatar), quan hệ bạn bè, block, sanction.
 
 ### Tham số
 
@@ -193,7 +202,7 @@ Nhân sự không vào được API party; học sinh tenant/trường khác kh�
 - Giao diện party trong Godot → F102. Channel chat `party` (tạo/đóng/purge) → F117; giao diện chat → F119.
 - Bạn bè, block (nguồn event) → F095; sanction `restrict_multiplayer` (nguồn event) → F121; pipeline kiểm duyệt tên → F116.
 - Thông báo offline cho invitee → F123. `safety_moderator` giải tán party khi xử lý case → F121 (cần API moderation riêng; route người chơi không cho nhân sự).
-- API/UI quản trị `party_policies` cấp trường/lớp: chưa có feature trong danh mục (đề xuất thêm vào F052 + endpoint `/tenant/party-policies`).
+- API/UI quản trị `party_policies` cấp trường: chưa có feature trong danh mục (đề xuất thêm vào F052 + endpoint `/tenant/party-policies`).
 - Party tạo từ club (`club_id`) → F120; party `competition_team` vào matchmaking → F104.
 
 ## Assumptions

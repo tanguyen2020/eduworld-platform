@@ -13,9 +13,10 @@ var (
 // ProjectionIdentityName keeps ref.tenants and ref.students of eduworld_competition (F091 T009).
 const ProjectionIdentityName = "competition.projection_identity"
 
-// ProjectionIdentityEvents are the identity events it projects.
+// ProjectionIdentityEvents are the identity events it projects. enrollment.changed is only acknowledged (no class since
+// ADR-0095) until identity stops producing it (WP-I1); student.placement_changed carries the school and grade level.
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "student.synced", "user.status_changed",
-	"student.cleaned_up", "student.restored", "enrollment.changed", "school.updated"}
+	"student.cleaned_up", "student.restored", "student.placement_changed", "enrollment.changed", "school.updated"}
 
 // HubAccessRevokedName removes a revoked student from the hub at once (F091 edge case, no grace).
 const HubAccessRevokedName = "competition.hub_access_revoked"
@@ -62,7 +63,7 @@ var PartySafetyChatEvents = []string{"user.blocked", "sanction.applied", "sancti
 const PartySafetyIdentityName = "competition.party_safety_identity"
 
 // PartySafetyIdentityEvents are the identity events it handles (owners F010, F016).
-var PartySafetyIdentityEvents = []string{"student.synced", "user.status_changed", "student.cleaned_up"}
+var PartySafetyIdentityEvents = []string{"student.synced", "student.placement_changed", "user.status_changed", "student.cleaned_up"}
 
 // PartyActivityEndName ends the party activities when module game reports the end of their session (F101-AC-12):
 // boss.encounter_completed (party_activity_id, result) and quest.party_completed (owner F103).

@@ -14,8 +14,8 @@ Database `eduworld_competition`, schema `multiplayer`. Mọi bảng T: `tenant_i
 | `tenant_id`, `school_id` | uuid | NOT NULL, RLS | của leader lúc tạo |
 | `name` | `varchar(128)` (`MaxLen(128)`) | CHECK `char_length BETWEEN 1 AND 40` | đã kiểm duyệt (research R2) |
 | `leader_id` | uuid | NOT NULL | khớp thành viên `role = leader` |
-| `party_type` | `varchar(64)` | CHECK `friend/study_group/quest/competition_team/custom` | |
-| `visibility` | `varchar(64)` | CHECK `private/friends/class`, mặc định `private` | |
+| `party_type` | `varchar(64)` | CHECK `friend/study_party/quest/competition_team/custom` (`study_group` cũ còn trong CHECK tới WP-R, dữ liệu đã đổi — ADR-0095 D7) | |
+| `visibility` | `varchar(64)` | `private/friends`, mặc định `private` (giá trị `class` cũ còn trong CHECK tới WP-R, dữ liệu đã đổi `private`, code đọc `class` như `private` — ADR-0095) | |
 | `invitation_policy` | `varchar(64)` | CHECK `leader_only/members` | |
 | `max_members` | smallint | CHECK 2–8 | mặc định `party_max_members` |
 | `grade_band` | `varchar(64)` | NOT NULL | Có sẵn §2.16 (grade band thấp nhất) |
@@ -53,14 +53,14 @@ Database `eduworld_competition`, schema `multiplayer`. Mọi bảng T: `tenant_i
 
 ### PartyPolicy — `multiplayer.party_policies` (Có sẵn §2.16, chỉ đọc ở F100)
 
-`policy_id`, `tenant_id`, `scope_type varchar(64)` (`school`/`class`), `scope_id uuid`, `school_id`, `rules jsonb` (`allowed_party_types`, `cross_class`, `cross_grade_band`, `max_members_cap`), `version int`; UNIQUE `(scope_type, scope_id) WHERE deleted_at IS NULL`. Cấp platform lấy từ cấu hình (không có dòng).
+`policy_id`, `tenant_id`, `scope_type varchar(64)` (`school`; dòng `class` cũ đã soft-delete — ADR-0095), `scope_id uuid`, `school_id`, `rules jsonb` (`allowed_party_types`, `same_grade_only`, `cross_grade_band`, `max_members_cap`; khóa `cross_class` cũ bị gỡ), `version int`; UNIQUE `(scope_type, scope_id) WHERE deleted_at IS NULL`. Cấp platform lấy từ cấu hình (không có dòng).
 
 ### Projection `ref.*` (consumer ghi, use case chỉ đọc; có `source_version bigint`)
 
 | Bảng | Trạng thái | Cột | Nguồn event |
 |---|---|---|---|
-| `ref.tenants`, `ref.students`, `ref.classes`, `ref.player_profiles` | Có sẵn §2.17 | theo §2.17 | identity, game |
-| `ref.enrollments` | Thêm vào competition (§2.17 hiện chỉ learning/game/chat) | `student_id`, `class_id`, `tenant_id`, `status`, `start_date`, `end_date` | `enrollment.changed` |
+| `ref.tenants`, `ref.students`, `ref.player_profiles` | Có sẵn §2.17 | theo §2.17; `ref.students.school_id`, `grade_level` là nguồn trường/khối của luật party (ADR-0095) | identity (`student.synced`; tiêu thụ `student.placement_changed` — owner F010), game |
+| `ref.enrollments` | Không còn đọc/ghi (ADR-0095); DROP ở WP-R | — | `enrollment.changed` chỉ được ack, không chiếu |
 | `ref.friendships` | Có sẵn (F091) | `tenant_id`, `user_low_id`, `user_high_id`, `active`, `source_version`; PK `(user_low_id, user_high_id)` — tra theo cặp đã chuẩn hóa thứ tự | `friend.added`, `friend.removed` (consumer của F091) |
 | `ref.blocks` | Có sẵn (F091) | `tenant_id`, `blocker_id`, `blocked_id`, `active`, `source_version`; PK `(blocker_id, blocked_id)` | `user.blocked`, `user.unblocked` (consumer của F091) |
 | `ref.sanctions` | **Mới** | `sanction_id`, `user_id`, `tenant_id`, `sanction_type varchar(64)`, `until timestamptz` | `sanction.applied`, `sanction.lifted` |
@@ -90,7 +90,7 @@ Lời mời: `pending → accepted | rejected | expired | cancelled` ([PARTY_SYS
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `party.created` | Tạo party | `specs/events/payloads/competition/party.created.v1.schema.json` — Cần thêm |
+| `party.created` | Tạo party | `specs/events/payloads/competition/party.created.v2.schema.json` — Cần thêm |
 | `party.settings_updated` | Sửa cài đặt | `party.settings_updated.v1` — Cần thêm |
 | `party.invitation_sent` / `_accepted` / `_rejected` / `_expired` / `_cancelled` | Vòng đời lời mời | `party.invitation_<x>.v1` — Cần thêm |
 | `party.member_joined` / `_left` / `_kicked` | Thay đổi thành viên | `party.member_<x>.v1` — Cần thêm |

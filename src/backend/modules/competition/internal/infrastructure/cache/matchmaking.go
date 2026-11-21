@@ -160,7 +160,7 @@ func ticketFields(t port.Ticket) []string {
 	return []string{"id", t.ID.String(), "tenant", t.TenantID.String(), "owner", t.OwnerID.String(), "queue", t.Queue, "mode", t.Mode,
 		"type", t.Type, "scope_kind", t.ScopeKind, "scope_id", t.ScopeID.String(), "grade_key", t.GradeKey, "subject", t.SubjectID.String(),
 		"topic", optID(t.TopicID), "party", optID(t.PartyID), "allow_fill", flag(t.AllowFill), "team_size", strconv.Itoa(t.TeamSize),
-		"students", ids(t.Students), "schools", ids(t.Schools), "classes", ids(t.Classes), "grade", strconv.Itoa(t.Grade),
+		"students", ids(t.Students), "schools", ids(t.Schools), "grade", strconv.Itoa(t.Grade),
 		"mu", strconv.FormatFloat(t.Rating.Mu, 'f', 3, 64), "rd", strconv.FormatFloat(t.Rating.RD, 'f', 3, 64), "enq", ms(t.EnqueuedAt),
 		"status", t.Status, "requeued", "0", "bot", "0"}
 }
@@ -172,7 +172,7 @@ func parseTicket(h map[string]string) *port.Ticket {
 	}
 	t := &port.Ticket{ID: id, Queue: h["queue"], Mode: h["mode"], Type: h["type"], ScopeKind: h["scope_kind"], GradeKey: h["grade_key"],
 		TopicID: parseOpt(h["topic"]), PartyID: parseOpt(h["party"]), AllowFill: h["allow_fill"] == "1", Students: parseIDs(h["students"]),
-		Schools: parseIDs(h["schools"]), Classes: parseIDs(h["classes"]), EnqueuedAt: fromMS(h["enq"]), Status: h["status"],
+		Schools: parseIDs(h["schools"]), EnqueuedAt: fromMS(h["enq"]), Status: h["status"],
 		CancelReason: h["reason"], ProposalID: parseOpt(h["proposal"]), MatchID: parseOpt(h["match"]), Requeued: h["requeued"] == "1",
 		BotOffered: h["bot"] == "1"}
 	t.TenantID, _ = uuid.Parse(h["tenant"])

@@ -60,7 +60,7 @@ func TestLobbyAuthzTenant(t *testing.T) {
 	}
 
 	// Another tenant (its own X-Tenant-Id) and a stranger of the same tenant: 404, same as an unknown party.
-	dung := e.kid(e.tenantB, e.schoolB, uuid.Nil, 6)
+	dung := e.kid(e.tenantB, e.schoolB, 6)
 	stranger := e.kidA()
 	for _, k := range []kid{dung, stranger} {
 		for _, op := range lobbyOperations {

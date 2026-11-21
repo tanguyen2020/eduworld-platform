@@ -386,7 +386,7 @@ paths:
       tags:
         - multiplayer
       operationId: startPartySession
-      summary: Leader bắt đầu — kiểm tra member, policy lớp, tạo room/GameSession chung
+      summary: Leader bắt đầu — kiểm tra member, policy khối/trường, tạo room/GameSession chung
       description: |
         Luồng 9 bước (PARTY_SYSTEM §6.1): chỉ leader (`403 PARTY_NOT_LEADER`); `expected_version` lệch → `412 VERSION_MISMATCH`;
         party không `open` hoặc chưa chọn hoạt động → `422 INVALID_STATE_TRANSITION`; còn thành viên online chưa Ready hoặc số
@@ -485,7 +485,8 @@ paths:
       summary: Mời bạn vào party
       description: |
         Người mời không được phép theo `invitation_policy` hoặc hai bên chặn nhau → `403 PARTY_INVITE_NOT_ALLOWED` (không tiết lộ
-        lý do); khác trường/tenant, sanction, vi phạm `party_policies` → `403 PARTY_POLICY_VIOLATION`; đã có lời mời chờ → `409`;
+        lý do); khác trường (tenant chưa bật liên trường — ADR-0054)/khác tenant, sanction, khác khối ở party lớp 1–3 (ADR-0095),
+        vi phạm `party_policies` → `403 PARTY_POLICY_VIOLATION`; đã có lời mời chờ → `409`;
         vượt `party_invite_rate` hoặc `party_invite_repeat_rules` → `429 PARTY_INVITE_RATE_LIMITED` (F100-AC-07…10).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
@@ -655,10 +656,10 @@ paths:
       tags:
         - multiplayer
       operationId: joinParty
-      summary: Tham gia party visibility class/friends (party private bắt buộc qua invitation)
+      summary: Tham gia party visibility friends (party private bắt buộc qua invitation)
       description: |
-        `class`: cùng lớp với leader; `friends`: là bạn của leader; `private` không có lời mời `accepted` còn hạn →
-        `403 PARTY_POLICY_VIOLATION` (F100-AC-16).
+        `friends`: là bạn của leader; `private` không có lời mời `accepted` còn hạn → `403 PARTY_POLICY_VIOLATION`
+        (F100-AC-16). Không còn visibility `class` (ADR-0095). Party khối 1–3: người tham gia phải cùng đúng khối với leader.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -833,9 +834,9 @@ paths:
       tags:
         - competition
       operationId: createMatchmakingTicket
-      summary: Vào hàng đợi (solo hoặc party leader). Ràng buộc khối lớp được áp trước rating.
+      summary: Vào hàng đợi (solo hoặc party leader). Ràng buộc khối được áp trước rating.
       description: |
-        Khối, trường, lớp, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
+        Khối, trường, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
         ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`; bị hạn chế thi đấu,
         khối không có mode (vd. `team_battle` lớp < 4) hoặc party có thành viên khác khối → `403 POLICY_DENIED`; không phải
         leader → `403 PARTY_NOT_LEADER`; thành viên offline → `409 PARTY_MEMBER_NOT_ONLINE`; `matchmaking_type` `friend`
@@ -2238,18 +2239,19 @@ components:
           description: Vắng mặt = party_max_members (CONFIG_DEFAULTS), không vượt max_members_cap của party_policies
     PartyType:
       type: string
+      description: study_party là tên mới của study_group (ADR-0095 D7, giữ hành vi).
       enum:
         - friend
-        - study_group
+        - study_party
         - quest
         - competition_team
         - custom
     PartyVisibility:
       type: string
+      description: Không còn class (ADR-0095); party class cũ đọc thành private.
       enum:
         - private
         - friends
-        - class
     Party:
       type: object
       required:

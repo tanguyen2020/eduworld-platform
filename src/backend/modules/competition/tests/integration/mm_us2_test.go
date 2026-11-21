@@ -27,9 +27,9 @@ func (m *menv) wsCall(k kid, h rt.CommandHandler, payload map[string]any) rt.Rep
 // waiting longer than mm_ticket_ttl (5 min) expires.
 func TestMMCancelAndExpire(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	b := m.kid(m.tenantA, m.schoolA2, uuid.Nil, 4)
-	c := m.kid(m.tenantB, m.schoolB, uuid.Nil, 5)
+	a := m.kid(m.tenantA, m.schoolA, 3)
+	b := m.kid(m.tenantA, m.schoolA2, 4)
+	c := m.kid(m.tenantB, m.schoolB, 5)
 	m.setOnline(a, b, c)
 	ta := m.ticket(a, http.StatusCreated, nil).str("ticket_id")
 	if r := m.call(a, http.MethodDelete, "/competition/matchmaking/tickets/"+ta, "", nil); r.status != http.StatusNoContent {
@@ -70,7 +70,7 @@ func TestMMCancelAndExpire(t *testing.T) {
 	}
 	m.ticket(c, http.StatusCreated, nil) // free again
 	// a student disconnected longer than 30 s loses its ticket (edge case, cancel_reason system)
-	d := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	d := m.kid(m.tenantA, m.schoolA, 3)
 	td := m.ticket(d, http.StatusCreated, nil).str("ticket_id")
 	m.sweep() // offline since now
 	m.clock.Add(31 * time.Second)
@@ -84,9 +84,9 @@ func TestMMCancelAndExpire(t *testing.T) {
 // a proposal of lost tickets creates no match in PostgreSQL.
 func TestMMValkeyReset(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	b := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	c := m.kid(m.tenantA, m.schoolA, m.classA, 6)
+	a := m.kid(m.tenantA, m.schoolA, 3)
+	b := m.kid(m.tenantA, m.schoolA, 3)
+	c := m.kid(m.tenantA, m.schoolA, 6)
 	m.setOnline(a, b, c)
 	for _, k := range []kid{a, b, c} {
 		m.ticket(k, http.StatusCreated, nil)
@@ -120,7 +120,7 @@ func TestMMValkeyReset(t *testing.T) {
 // tickets in an hour → 429 + Retry-After.
 func TestMMBotAndTicketRate(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
 	m.setOnline(a)
 	ta := m.ticket(a, http.StatusCreated, nil).str("ticket_id")
 	if r := m.call(a, http.MethodPost, "/competition/matchmaking/tickets/"+ta+":bot-match", key(), nil); r.status != http.StatusConflict {
@@ -156,7 +156,7 @@ func TestMMBotAndTicketRate(t *testing.T) {
 		t.Fatalf("ticket after bot %s", g.raw)
 	}
 	// mm_ticket_rate: 30 tickets per hour
-	b := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	b := m.kid(m.tenantA, m.schoolA, 3)
 	for i := range 30 {
 		id := m.ticket(b, http.StatusCreated, nil).str("ticket_id")
 		if c := m.call(b, http.MethodDelete, "/competition/matchmaking/tickets/"+id, "", nil); c.status != http.StatusNoContent {

@@ -46,7 +46,7 @@ func TestKickPartyMember(t *testing.T) {
 	if r := e.invite(a, id, b, http.StatusForbidden); r.code() != "PARTY_POLICY_VIOLATION" {
 		t.Fatalf("re-invite: %s", r.raw)
 	}
-	if u := e.call(a, http.MethodPatch, "/multiplayer/parties/"+id, "", map[string]any{"visibility": "class"}); u.status != http.StatusOK {
+	if u := e.call(a, http.MethodPatch, "/multiplayer/parties/"+id, "", map[string]any{"visibility": "friends"}); u.status != http.StatusOK {
 		t.Fatal(u.raw)
 	}
 	if r := e.call(b, http.MethodPost, "/multiplayer/parties/"+id+":join", key(), nil); r.code() != "PARTY_POLICY_VIOLATION" {

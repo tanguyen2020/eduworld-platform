@@ -32,6 +32,10 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (owner 
 - `party_lobby_cmd_rate` đếm trên Valkey (`ew:rl:party_lobby:<user_id>`, cửa sổ 1 s, Ready + chọn hoạt động); vượt → `429` + `Retry-After`, chỉ metric (không audit từng lần để tránh tràn audit). Chu kỳ sweeper 5 s (hằng số), khóa `ew:lock:job:party-presence-sweeper`.
 - E2E qua gateway (T015, T032) chưa có harness (F090): AC-01 đo bằng integration với Valkey thật (độ trễ tới kênh `ew:rt:user:<id>`).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Party `study_group` trong luật dormant (F101-AC-16) và chọn activity? → A: đổi tên `study_party` (ADR-0095 D7), giữ hành vi; dòng cũ được migration đổi và code đọc `study_group` như `study_party` (`Party.Legacy()`). Không có điều kiện theo lớp ở lobby/activity; điều kiện đủ của thành viên chỉ theo khối, grade band, tiên quyết, mở khóa, sanction. AC giữ mã, chỉ sửa chữ.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Party Lobby: sẵn sàng, chọn hoạt động (Priority: P1)
@@ -50,7 +54,7 @@ Các thành viên thấy nhau trong lobby (avatar, online, Ready), bấm Sẵn s
 | F101-AC-02 | NẾU party không ở `open`, người gọi không là thành viên, hoặc lệnh lobby của một thành viên vượt giới hạn tần suất, THÌ module competition PHẢI trả `422 INVALID_STATE_TRANSITION`, `404 PARTY_NOT_FOUND` hoặc `429 RATE_LIMITED` tương ứng | FR-PTY-006 · [PARTY_SYSTEM §10](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | — |
 | F101-AC-03 | KHI leader chọn hoạt động (`selectPartyActivity` hoặc WS `party.activity.select`) với `expected_version` khớp `state_version`, module competition PHẢI lưu lựa chọn, reset Ready của mọi thành viên, tăng `state_version`, phát `party.activity_selected` và đẩy `party.activity.selected` kèm `ineligible_members` (mã lý do) | FR-PTY-006 · AC-PTY-004 | TC-PTY-005 |
 | F101-AC-04 | NẾU người chọn hoạt động không phải leader, THÌ module competition PHẢI trả `403 PARTY_NOT_LEADER`; NẾU `expected_version` lệch, THÌ PHẢI trả `412 VERSION_MISMATCH` kèm `state_version` hiện tại (catalog API_DESIGN §4.1, Clarifications 2026-11-21) | FR-PTY-006 · AC-PTY-004 | TC-PTY-005 |
-| F101-AC-05 | KHI thành viên gọi `listPartyEligibleActivities`, module competition PHẢI trả hoạt động mà mọi thành viên đủ điều kiện và hoạt động chỉ một số đủ điều kiện kèm cảnh báo theo thành viên (mã lý do + yêu cầu của hoạt động, không lộ khối/lớp thực của bạn khác) | FR-PTY-006 · AGENTS R16 · [PARTY_SYSTEM §5](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-005 |
+| F101-AC-05 | KHI thành viên gọi `listPartyEligibleActivities`, module competition PHẢI trả hoạt động mà mọi thành viên đủ điều kiện và hoạt động chỉ một số đủ điều kiện kèm cảnh báo theo thành viên (mã lý do + yêu cầu của hoạt động, không lộ khối/trường thực của bạn khác) | FR-PTY-006 · AGENTS R16 · [PARTY_SYSTEM §5](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-005 |
 | F101-AC-06 | KHI thành viên mở lobby hoặc kết nối lại, module competition PHẢI cung cấp snapshot đầy đủ (thành viên, presence, Ready, hoạt động đã chọn, `state_version`) qua `getParty` và `party.state.snapshot`; NẾU state tạm bị mất, THÌ PHẢI dựng lại từ dữ liệu bền vững với Ready = false | FR-PTY-006 · ADR-0004 | TC-PTY-004 |
 
 ---
@@ -68,7 +72,7 @@ Khi mọi người sẵn sàng, leader bấm Bắt đầu; cả nhóm vào cùng
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F101-AC-07 | KHI leader gọi `startPartySession` (`Idempotency-Key`, `expected_version`) và mọi thành viên online đều Ready, số thành viên online nằm trong khoảng tối thiểu–tối đa của hoạt động và mọi thành viên đủ điều kiện, module competition PHẢI trong một transaction tạo party activity `running`, ghi session membership cho từng thành viên tham gia, đặt party `in_activity`, phát `party.activity_started`, trả `201` (`room_id`, `game_session_ref`, `members`) và đẩy `party.session.started` cùng `room_id` tới mọi thành viên tham gia | FR-PTY-007 · AC-PTY-005 | TC-PTY-006 |
-| F101-AC-08 | NẾU có thành viên không đủ điều kiện (khối/lớp theo hoạt động, grade band, tiên quyết quest, mở khóa, sanction), THÌ module competition PHẢI trả `409 PARTY_ACTIVITY_NOT_ELIGIBLE` kèm danh sách `student_id` + mã lý do, không tạo activity/room và không đưa thành viên nào vào phiên | FR-PTY-007 · AC-PTY-005 | TC-PTY-006 |
+| F101-AC-08 | NẾU có thành viên không đủ điều kiện (khối theo hoạt động, grade band, tiên quyết quest, mở khóa, sanction), THÌ module competition PHẢI trả `409 PARTY_ACTIVITY_NOT_ELIGIBLE` kèm danh sách `student_id` + mã lý do, không tạo activity/room và không đưa thành viên nào vào phiên | FR-PTY-007 · AC-PTY-005 | TC-PTY-006 |
 | F101-AC-09 | NẾU người gọi không phải leader, THÌ module competition PHẢI trả `403 PARTY_NOT_LEADER`; NẾU còn thành viên online chưa Ready hoặc thiếu số tối thiểu, THÌ PHẢI trả `409 PARTY_NOT_READY`; thiếu `Idempotency-Key` → `428 PRECONDITION_REQUIRED`; gửi lại cùng key PHẢI trả cùng kết quả và chỉ một activity | FR-PTY-007 · AC-PTY-004 · AGENTS R10 | TC-PTY-005 |
 | F101-AC-10 | KHI hoạt động là `quest` hoặc `boss`, module competition PHẢI lấy điều kiện và tham chiếu phiên (encounter boss hoặc phiên quest chung) từ module game (idempotent theo `party_activity_id`); NẾU module game lỗi hoặc quá thời gian, THÌ PHẢI không đổi trạng thái party và trả `503 UNAVAILABLE` có `Retry-After`; hoạt động `explore` và `quest` PHẢI được cấp `private_instance` của khu tương ứng, `boss` dùng phòng của encounter | FR-PTY-007 · AGENTS R29 · ADR-0012 | TC-PTY-006 |
 | F101-AC-11 | NẾU học sinh không thuộc session membership của phiên gửi lệnh vào phòng `private_instance` của party, THÌ module competition PHẢI trả `ROOM_NOT_MEMBER` và phòng không bị ảnh hưởng | FR-PTY-007 · AC-PTY-010 | TC-PTY-011 |
@@ -91,7 +95,7 @@ Một bạn rớt mạng thì cả nhóm vẫn chơi tiếp (nếu hoạt độn
 |---|---|---|---|
 | F101-AC-14 | KHI presence của một thành viên hết hạn hoặc chuyển trạng thái, module competition PHẢI cập nhật trạng thái thành viên (`online`/`away`/`in_activity`/`disconnected`) trong một chu kỳ quét, đẩy `party.member.status_changed`, và reset Ready của thành viên đó nếu party đang ở lobby; thành viên vẫn giữ tư cách thành viên | FR-PTY-012 · [PARTY_SYSTEM §9](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-008 |
 | F101-AC-15 | KHI leader mất kết nối, module competition PHẢI bắt đầu grace `party_leader_grace` (snapshot báo leader đang kết nối lại); NẾU leader quay lại trong grace, THÌ PHẢI giữ nguyên leader; NẾU hết grace, THÌ PHẢI chuyển leader cho thành viên online gia nhập sớm nhất, phát `party.leader_transferred` (reason `leader_disconnected`), đẩy `party.leader.transferred` và ghi audit | FR-PTY-008 · AC-PTY-008 | TC-PTY-009 |
-| F101-AC-16 | NẾU hết grace leader mà không còn thành viên online, THÌ module competition PHẢI giữ party ở trạng thái ngủ (dormant) và giao leader cho thành viên đầu tiên online trở lại; party `friend`/`custom`/`study_group` không có ai online quá `party_dormant_timeout` PHẢI tự giải tán với reason `inactivity` | FR-PTY-008 · [PARTY_SYSTEM §9](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-009 |
+| F101-AC-16 | NẾU hết grace leader mà không còn thành viên online, THÌ module competition PHẢI giữ party ở trạng thái ngủ (dormant) và giao leader cho thành viên đầu tiên online trở lại; party `friend`/`custom`/`study_party` không có ai online quá `party_dormant_timeout` PHẢI tự giải tán với reason `inactivity` | FR-PTY-008 · [PARTY_SYSTEM §9](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-009 |
 | F101-AC-17 | TRONG KHI party `in_activity` (`explore`/`quest`), khi một thành viên mất kết nối, module competition PHẢI giữ chỗ trong `disconnect_grace` của loại phòng, cho thành viên khác tiếp tục khi hoạt động cho phép, đưa thành viên quay lại trong grace (kể cả từ thiết bị khác sau takeover) về đúng `room_id`; hết grace PHẢI đóng membership với lý do `disconnected` | FR-PTY-012 · AC-PTY-007 · ADR-0031 | TC-PTY-008 |
 | F101-AC-18 | NẾU hoạt động không cho tiếp tục khi thiếu người hoặc số thành viên online dưới tối thiểu quá ngưỡng, THÌ module competition PHẢI kết thúc activity với `timeout` như F101-AC-12 | FR-PTY-012 · AC-PTY-007 | TC-PTY-008 |
 
@@ -159,7 +163,7 @@ Một bạn rớt mạng thì cả nhóm vẫn chơi tiếp (nếu hoạt độn
 | Grace timer do worker module competition quản lý, không phụ thuộc node gateway | [PARTY_SYSTEM §9](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) |
 | Gọi module game qua facade `game`; `startPartyActivity` mang `Idempotency-Key` | AGENTS R29 · ADR-0074 |
 | Lobby cập nhật ≤ 1 s p95 | AC-PTY-003 |
-| Không lộ điểm/khối/lớp của bạn khác | AGENTS R16 · FR-PTY-013 |
+| Không lộ điểm/khối/trường của bạn khác | AGENTS R16 · FR-PTY-013 |
 
 ## Success Criteria *(bắt buộc)*
 

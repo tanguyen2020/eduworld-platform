@@ -77,10 +77,10 @@ func TestMMRoutesStaffDenied(t *testing.T) {
 // X-Tenant-Id other than the session tenant → 403 TENANT_MISMATCH.
 func TestMMTenantIsolation(t *testing.T) {
 	m := setupMM(t)
-	an := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	binh := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	chi := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	dung := m.kid(m.tenantB, m.schoolB, uuid.Nil, 3)
+	an := m.kid(m.tenantA, m.schoolA, 3)
+	binh := m.kid(m.tenantA, m.schoolA, 3)
+	chi := m.kid(m.tenantA, m.schoolA, 3)
+	dung := m.kid(m.tenantB, m.schoolB, 3)
 	tb := m.ticket(binh, http.StatusCreated, nil).str("ticket_id")
 	m.ticket(chi, http.StatusCreated, nil)
 	m.tick()
@@ -133,7 +133,7 @@ func TestMMTenantIsolation(t *testing.T) {
 // (Idempotent-Replayed); same key, other body → 409 IDEMPOTENCY_KEY_REUSED (catalog code); match and duel audited.
 func TestMMIdempotency(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
 	for _, id := range []string{"createMatchmakingTicket", "createDuel", "acceptDuel", "startBotMatch"} {
 		o := competitionhttp.MatchmakingOperations[id]
 		r := m.do(o.Method, mmPath(id, uuid.NewString()), a.token, map[string]string{"X-Tenant-Id": a.tenant.String()}, mmBody(id, m.subject), "")
@@ -166,7 +166,7 @@ func TestMMQueueLoad(t *testing.T) {
 	m := setupMM(t)
 	var kids []kid
 	for i := range 400 {
-		k := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+		k := m.kid(m.tenantA, m.schoolA, 3)
 		m.ratings.set(k, 1000+float64((i*37)%1000))
 		kids = append(kids, k)
 	}

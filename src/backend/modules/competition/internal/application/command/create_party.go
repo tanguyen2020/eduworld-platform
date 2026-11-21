@@ -90,7 +90,7 @@ func (h Parties) CreateParty(ctx context.Context, in CreateInput) (res view.Part
 		if sub.Band == "" { // no grade projected: no grade band to place the party in
 			return h.policyDenied(party.PolicyError{Rule: party.RuleGradeBand}, nil, me, CmdCreate)
 		}
-		rules, err := h.rules(ctx, tenant, sub.Band, sub.SchoolID, sub)
+		rules, err := h.rules(ctx, tenant, sub.Band, sub.SchoolID)
 		if err != nil {
 			return err
 		}
@@ -196,8 +196,7 @@ func (h Parties) UpdatePartySettings(ctx context.Context, partyID uuid.UUID, s p
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		now := h.now()
 		fx := &effects{}
-		sub, err := h.caller(ctx, tenant, me, now)
-		if err != nil {
+		if _, err := h.caller(ctx, tenant, me, now); err != nil {
 			return err
 		}
 		p, err := h.load(ctx, tenant, partyID)
@@ -214,7 +213,7 @@ func (h Parties) UpdatePartySettings(ctx context.Context, partyID uuid.UUID, s p
 			}
 			s.Name = ptr(party.DefaultName(nick))
 		}
-		rules, err := h.rules(ctx, tenant, p.GradeBand, p.SchoolID, sub)
+		rules, err := h.rules(ctx, tenant, p.GradeBand, p.SchoolID)
 		if err != nil {
 			return err
 		}

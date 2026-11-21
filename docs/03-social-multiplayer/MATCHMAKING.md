@@ -4,7 +4,7 @@
 > Liên quan: [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) · [PARTY_SYSTEM](PARTY_SYSTEM.md) · [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [RANKING](../01-game-design/COMPETITION_SYSTEM.md) · [TOURNAMENT](../01-game-design/COMPETITION_SYSTEM.md) · [ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) · [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml)
 
 > [!IMPORTANT]
-> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Bỏ trọng số `same_class` của hàm chi phí và "ưu tiên bạn cùng lớp" khi chia đội; cấu hình matchmaking xuất bản version mới không có khóa này; ticket không còn trường `classes`. Ràng buộc khối/trường (FR-MM-002/003, ADR-0054) giữ nguyên. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-C1 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Bỏ trọng số `same_class` của hàm chi phí và "ưu tiên bạn cùng lớp" khi chia đội; cấu hình matchmaking xuất bản version mới không có khóa này; ticket không còn trường `classes`. Ràng buộc khối/trường (FR-MM-002/003, ADR-0054) giữ nguyên. Đã áp ở WP-C1 (2026-11-21): code, cấu hình version 2, §2.2, §4 (ticket Valkey), §8 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
 
 ## 0. Mục đích & phạm vi
 
@@ -15,7 +15,7 @@ Tài liệu **sở hữu cơ chế ghép trận PvP**: hard constraints, queue, 
 Master Prompt §5.2 **[Confirmed]**:
 
 - Chế độ: Random, Skill-based, Grade-based, Subject-based, Topic-based, Friend, Team, Tournament matchmaking.
-- **Ưu tiên kiểm tra điều kiện độ tuổi/lớp học và tính phù hợp nội dung trước khi dùng rating.** Không ghép lớp 1 với lớp 9 chỉ vì rating tương đương.
+- **Ưu tiên kiểm tra điều kiện độ tuổi/khối và tính phù hợp nội dung trước khi dùng rating.** Không ghép lớp 1 với lớp 9 chỉ vì rating tương đương.
 - Hỗ trợ: Queue, Matchmaking Ticket, Match Proposal, Lobby, Ready Check, Team Assignment, Match Start, Match End, Reconnect, Match Result.
 
 ## 2. Mô hình hai tầng: hard constraints → soft scoring
@@ -51,8 +51,9 @@ flowchart LR
 cost(a,b) = w_r · |μa − μb| / window(t)            // chênh lệch rating Glicko-2 (RANKING)
           + w_rd · max(0, RDa + RDb − 300) / 300   // ưu tiên ghép người đã ổn định với nhau
           + w_rep · recent_opponent(a,b)           // tránh gặp lại cùng đối thủ trong 30 phút
-          + w_cls · same_class(a,b) · pref         // Class Competition: ưu tiên cùng lớp; ranked: hơi ưu tiên khác lớp
 ```
+
+Không còn trọng số `same_class` (ADR-0095): cấu hình matchmaking version 2 bỏ khóa `cost_weights.same_class` (payload cũ còn khóa này vẫn đọc được, khóa bị bỏ qua); không có trọng số thay thế theo khối — ràng buộc khối/trường là hard constraint §2.1.
 
 Ghép hợp lệ khi `|μa − μb| ≤ window(t)` với **expanding window**:
 
@@ -123,7 +124,7 @@ Tên key cuối cùng theo [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md); đ�
 | Key | Kiểu | Nội dung |
 |---|---|---|
 | `ew:mm:queue:{mode}:{scope}:{grade_key}:{subject}[:{topic}]` | sorted set | member = `ticket_id`, score = `enqueued_at` (ms) |
-| `ew:mm:ticket:{ticket_id}` | hash | `student_ids`, `party_id`, `rating`, `rd`, `school_id`, `class_id`, `grade_level`, `enqueued_at`, `status`, `proposal_id` · TTL 10 phút |
+| `ew:mm:ticket:{ticket_id}` | hash | `student_ids`, `party_id`, `rating`, `rd`, `school_id`, `grade_level`, `enqueued_at`, `status`, `proposal_id` · TTL 10 phút |
 | `ew:mm:user:{user_id}` | string | `ticket_id` (NX) · TTL 10 phút |
 | `ew:mm:proposal:{proposal_id}` | hash | ticket ids, deadline, accept flags · TTL 30 s |
 | `ew:mm:queues` | set | danh sách queue key đang có ticket (để matchmaker quét) |
@@ -174,7 +175,7 @@ sequenceDiagram
 | Match Proposal | Gửi `matchmaking.proposal.created` (mode, môn, số người; **không** gửi tên/trường đối thủ trước khi accept) | — | [Confirmed] |
 | Ready Check | Mỗi người accept | 15 s | [Confirmed] |
 | Lobby | Room `lobby`: hiển thị nickname + avatar + tier đối thủ, đội, đếm ngược | 10 s (1v1), 20 s (team) | [Confirmed] |
-| Team Assignment | Party giữ nguyên đội. Ticket lẻ trong team mode: snake draft theo rating (A1,B1,B2,A2…) để cân tổng rating; ưu tiên đặt bạn cùng lớp chung đội | — | [Confirmed] |
+| Team Assignment | Party giữ nguyên đội. Ticket lẻ trong team mode: snake draft theo rating (A1,B1,B2,A2…) để cân tổng rating (không còn ưu tiên bạn cùng lớp — ADR-0095) | — | [Confirmed] |
 | Chat trận (always-on) | Khi tạo room `lobby`: tạo channel `match` (và `team` mỗi đội ở team mode), mọi người chơi tự join — chat có ngay từ lobby, không tắt được bằng cài đặt trường/lớp (ADR-0020 mục 6, [CHAT_SYSTEM §4.1](CHAT_SYSTEM.md#41-vòng-đời-channel-gameplay-always-on)) | — | [Confirmed] |
 | Tạo trận (CreateMatch) | Khi mọi người accept: tạo `Match` (idempotent theo `proposal_id`) và **tạo luôn** `question_plan` server-side (facade `question-plans` của module learning, gọi trong tiến trình, [REALTIME_ARCHITECTURE §7.1](../06-architecture/REALTIME_ARCHITECTURE.md#71-state-machine-knowledge-battle)) từ Question Bank theo grade thấp nhất + subject/topic, cùng đề cho mọi người; plan **ghim** `question_version_id` theo con trỏ release lúc tạo trận (`matches.question_plan_version`, ADR-0043) — publish/rollback câu hỏi giữa trận không đổi đề; tạo plan thất bại → trận hủy trước lobby | — | [Confirmed] (server-authoritative) |
 | Match Start | Room `battle` chuyển `running` với plan đã tạo | — | [Confirmed] |

@@ -46,6 +46,15 @@ func (p Projection) Student(ctx context.Context, tenant, student, school uuid.UU
 	return p.Refs.Student(ctx, student, tenant, school, grade, status, version)
 }
 
+// Placement applies student.placement_changed (owner F010, ADR-0095): the school and grade level of a student for the
+// grade rules of party and matchmaking; inactive = no longer placed (never an active subject).
+func (p Projection) Placement(ctx context.Context, tenant, student, school uuid.UUID, grade int, active bool, version int64) (bool, error) {
+	if err := p.owned(ctx, tenant, "students", student); err != nil {
+		return false, err
+	}
+	return p.Refs.Placement(ctx, student, tenant, school, grade, active, version)
+}
+
 // StudentStatus applies user.status_changed.
 func (p Projection) StudentStatus(ctx context.Context, tenant *uuid.UUID, student uuid.UUID, status string) (bool, error) {
 	return p.Refs.StudentStatus(ctx, student, tenant, status)
@@ -72,15 +81,6 @@ func (p Projection) Friendship(ctx context.Context, tenant, low, high uuid.UUID,
 // Block applies user.blocked (active) and user.unblocked (inactive) of module chat (owner F095).
 func (p Projection) Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, active bool, version int64) (bool, error) {
 	return p.Refs.Block(ctx, tenant, blocker, blocked, active, version)
-}
-
-// Enrollment applies enrollment.changed (owner F010): the class of a student for the same-class party rules (F100).
-func (p Projection) Enrollment(ctx context.Context, tenant, student, class uuid.UUID, school *uuid.UUID, status string, start, end *time.Time,
-	version int64) (bool, error) {
-	if err := p.owned(ctx, tenant, "students", student); err != nil {
-		return false, err
-	}
-	return p.Refs.Enrollment(ctx, tenant, student, class, school, status, start, end, version)
 }
 
 // School applies school.updated (owner F010/F015): settings_subset of the school (allowed hours for matchmaking, F104).

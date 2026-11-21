@@ -592,7 +592,8 @@ components:
         - UNAVAILABLE
     ChatChannelType:
       type: string
-      enum: [world, area, match, party, team, class, study_group, direct]
+      description: Không còn class, study_group (ADR-0095).
+      enum: [world, area, match, party, team, direct]
     ChatMessageKind:
       type: string
       enum: [text, quick, emoji, sticker, gif, system]
@@ -1196,7 +1197,7 @@ components:
                   hidden: { type: boolean, description: 'Ẩn trạng thái: người không được thấy nhận offline (MULTIPLAYER_GAMEPLAY §5). Vắng = giữ giá trị hiện tại.' }
     PresenceFriendUpdated:
       name: presence.friend.updated
-      summary: Chỉ gửi cho bạn bè/party/lớp theo policy; trong exam không lộ chi tiết hoạt động.
+      summary: Chỉ gửi cho bạn bè/party/club theo policy (không theo lớp — ADR-0095); trong exam không lộ chi tiết hoạt động.
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'
@@ -1244,7 +1245,7 @@ components:
     ChatMessageSend:
       name: chat.message.send
       summary: |
-        Gửi tin. `kind` được phép theo ChatPolicy của channel — một bộ quy tắc cho mọi lớp (ADR-0020); mọi kind qua kiểm tra hợp lệ.
+        Gửi tin. `kind` được phép theo ChatPolicy của channel — một bộ quy tắc cho mọi khối (ADR-0020); mọi kind qua kiểm tra hợp lệ.
         Pipeline lọc đồng bộ: allow → created; mask → created với body đã che; block → system.command.failed CHAT_CONTENT_BLOCKED;
         hold_for_review → chat.message.held (chỉ người gửi). Người gửi nhận chat.message.acked (Sent) chỉ sau khi NATS JetStream ack;
         NATS lỗi → system.command.failed CHAT_TEMPORARILY_UNAVAILABLE (ADR-0035).
@@ -1656,7 +1657,7 @@ components:
                   read_seq: { type: integer }
                   read_count_by_seq:
                     type: object
-                    description: Chỉ cho channel kiểu đếm (class/study_group) — seq → số người đã xem
+                    description: Chỉ cho channel kiểu đếm (seq → số người đã xem); sau ADR-0095 không còn channel class/study_group nên trường này vắng mặt
                     additionalProperties: { type: integer }
     ChatMentionCreated:
       name: chat.mention.created
@@ -1755,7 +1756,7 @@ components:
                   ready: { type: boolean }
     PartyActivitySelect:
       name: party.activity.select
-      summary: Chỉ leader. Server kiểm tra mọi thành viên đủ điều kiện (grade/class/school) với activity.
+      summary: Chỉ leader. Server kiểm tra mọi thành viên đủ điều kiện (khối/trường) với activity.
       payload:
         allOf:
           - $ref: '#/components/schemas/ClientEnvelope'
@@ -1801,8 +1802,8 @@ components:
                   party_id: { $ref: '#/components/schemas/Uuid' }
                   state_version: { type: integer }
                   name: { type: string, maxLength: 255 }
-                  party_type: { type: string, enum: [friend, study_group, quest, competition_team, custom] }
-                  visibility: { type: string, enum: [private, friends, class] }
+                  party_type: { type: string, enum: [friend, study_party, quest, competition_team, custom] }
+                  visibility: { type: string, enum: [private, friends] }
                   leader_id: { $ref: '#/components/schemas/Uuid' }
                   max_members: { type: integer, minimum: 2, maximum: 8 }
                   status: { type: string, enum: [open, in_activity, disbanded] }
@@ -1941,7 +1942,7 @@ components:
                   ineligible_members:
                     type: array
                     maxItems: 8
-                    description: Thành viên không đủ điều kiện — chỉ mã lý do và yêu cầu của hoạt động, không lộ khối/lớp thực (R16); leader phải đổi hoạt động hoặc thành viên rời.
+                    description: Thành viên không đủ điều kiện — chỉ mã lý do và yêu cầu của hoạt động, không lộ khối/trường thực (R16); leader phải đổi hoạt động hoặc thành viên rời.
                     items: { $ref: '#/components/schemas/PartyIneligibleMember' }
     PartySessionStarted:
       name: party.session.started

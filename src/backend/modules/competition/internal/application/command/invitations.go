@@ -20,7 +20,7 @@ import (
 // a sliding 24 h window [Proposed F100].
 const day = 24 * time.Hour
 
-// InviteToParty implements inviteToParty (F100-AC-07…10): invitation_policy, blocks, school/tenant/class/grade band
+// InviteToParty implements inviteToParty (F100-AC-07…10): invitation_policy, blocks, school/tenant/grade band/grade
 // rules, sanctions, the kick block, then the repeat rules and party_invite_rate; a pending invitation expiring after
 // party_invite_ttl, party.invitation_sent and party.invitation.received to the invitee.
 func (h Parties) InviteToParty(ctx context.Context, partyID, invitee uuid.UUID) (res view.Invitation, err error) {
@@ -73,7 +73,7 @@ func (h Parties) InviteToParty(ctx context.Context, partyID, invitee uuid.UUID) 
 				return err
 			}
 		}
-		if check.Rules, err = h.rules(ctx, tenant, p.GradeBand, p.SchoolID, inviter, target); err != nil {
+		if check.Rules, err = h.rules(ctx, tenant, p.GradeBand, p.SchoolID); err != nil {
 			return err
 		}
 		if err := check.Evaluate(); err != nil {
@@ -283,7 +283,7 @@ func (h Parties) AcceptPartyInvitation(ctx context.Context, id uuid.UUID) (res v
 		if check.Kicked, err = h.Repo.KickedSince(ctx, tenant, p.ID, me, now.Add(-h.Config.KickReinviteBlock)); err != nil {
 			return err
 		}
-		if check.Rules, err = h.rules(ctx, tenant, p.GradeBand, p.SchoolID, refSub, sub); err != nil {
+		if check.Rules, err = h.rules(ctx, tenant, p.GradeBand, p.SchoolID); err != nil {
 			return err
 		}
 		if err := check.AcceptCheck(); err != nil {

@@ -4,7 +4,7 @@
 
 ## Summary
 
-Feature đầu tiên của module competition: dựng skeleton theo BACKEND_DESIGN §3, bounded context `party` trong schema `multiplayer` của `eduworld_competition`. Aggregate `Party` (thành viên, leader, cài đặt) và `PartyInvitation`; mọi command handler (write context) dùng `UnitOfWork`: transaction ent với `FOR UPDATE` trên party + unique partial index (research R4), outbox các event `party.*`. Policy kiểm tra trên projection `ref.*` (học sinh, lớp, bạn bè, block, sanction — research R3). Sau commit cập nhật Valkey `ew:party:*` và fan-out message WS qua `ew:rt:user:<id>` (research R1). Tên tự đặt kiểm duyệt qua module chat internal có fallback (research R2). Worker: job hết hạn lời mời, consumer projection.
+Feature đầu tiên của module competition: dựng skeleton theo BACKEND_DESIGN §3, bounded context `party` trong schema `multiplayer` của `eduworld_competition`. Aggregate `Party` (thành viên, leader, cài đặt) và `PartyInvitation`; mọi command handler (write context) dùng `UnitOfWork`: transaction ent với `FOR UPDATE` trên party + unique partial index (research R4), outbox các event `party.*`. Policy kiểm tra trên projection `ref.*` (học sinh, khối, bạn bè, block, sanction — research R3; không còn lớp — ADR-0095). Sau commit cập nhật Valkey `ew:party:*` và fan-out message WS qua `ew:rt:user:<id>` (research R1). Tên tự đặt kiểm duyệt qua module chat internal có fallback (research R2). Worker: job hết hạn lời mời, consumer projection.
 
 ## Technical Context
 
@@ -88,7 +88,7 @@ Xem [research.md](research.md): R1 fan-out theo user, R2 kiểm duyệt tên, R3
 
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
-| domain | `Party` (AddMember, RemoveMember(reason), TransferLeader, UpdateSettings, Disband, nextLeader()), `PartyInvitation` (Accept, Reject, Cancel, Expire), `PolicyEvaluator` (trường/tenant unit, lớp, grade band, loại party theo band, block, sanction, `party_policies` siết dần) | Thuần; Clock inject |
+| domain | `Party` (AddMember, RemoveMember(reason), TransferLeader, UpdateSettings, Disband, nextLeader()), `PartyInvitation` (Accept, Reject, Cancel, Expire), `PolicyEvaluator` (trường/tenant unit, khối (`same_grade_only`, ADR-0095), grade band, loại party theo band, block, sanction, `party_policies` siết dần) | Thuần; Clock inject |
 | application | Command ở cây trên (mỗi command: nạp aggregate `FOR UPDATE`, gọi domain, lưu, outbox + `party_histories` cùng transaction); query đọc read model | `game_player` + kiểm tra leader/member/invitee trong handler |
 | infrastructure | ent repo, projection reader, adapter facade `chat`, Valkey state + publisher, rate limiter `ew:rl:party_invite:<student_id>:<window>` | Key qua `cache/keys.go` |
 | presentation | `createParty`, `getMyParty`, `getParty`, `updatePartySettings`, `inviteToParty`, `listMyInvitations`, `acceptPartyInvitation`, `rejectPartyInvitation`, `cancelPartyInvitation`, `joinParty`, `leaveParty`, `kickPartyMember`, `transferPartyLeader`, `disbandParty` · consumer projection/safety · job `party-invitation-expiry` (mỗi 15 s, khóa `ew:lock:job:party-invitation-expiry`) | |

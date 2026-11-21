@@ -197,16 +197,11 @@ func (h Parties) scope(ctx context.Context, tenant uuid.UUID) (party.Scope, erro
 	return party.Scope{CrossSchool: t.Type == "unit" && t.CrossSchool}, nil
 }
 
-// rules are the effective policies of a grade band in a school, tightened by the class policies of the students.
-func (h Parties) rules(ctx context.Context, tenant uuid.UUID, band string, school uuid.UUID, subjects ...party.Subject) (party.Rules, error) {
-	var classes []uuid.UUID
-	for _, s := range subjects {
-		if s.ClassID != nil {
-			classes = append(classes, *s.ClassID)
-		}
-	}
+// rules are the effective policies of a grade band in the school of the party (platform defaults tightened by the
+// school policy; no class level since ADR-0095).
+func (h Parties) rules(ctx context.Context, tenant uuid.UUID, band string, school uuid.UUID) (party.Rules, error) {
 	r := party.PlatformRules(band, party.MaxMembers)
-	os, err := h.Directory.Overrides(ctx, tenant, school, classes)
+	os, err := h.Directory.Overrides(ctx, tenant, school)
 	if err != nil {
 		return r, err
 	}
@@ -259,8 +254,12 @@ func ptr[T any](v T) *T { return &v }
 func (h Parties) publish(ctx context.Context, typ string, p *party.Party, at time.Time, payload map[string]any) error {
 	t := p.TenantID
 	return h.Events.Publish(ctx, write.Event{Type: typ, SubjectType: "party", SubjectID: p.ID.String(), PartitionKey: p.ID.String(),
-		TenantID: &t, OccurredAt: at, Payload: payload})
+		TenantID: &t, OccurredAt: at, Payload: payload, SchemaVersion: schemaVersions[typ]})
 }
+
+// schemaVersions are the payload versions above 1 (EVENT_DESIGN §2): party.created v2 (ADR-0095 — party_type
+// study_party, visibility without class); every other party event is v1.
+var schemaVersions = map[string]int{"party.created": 2}
 
 func (h Parties) history(ctx context.Context, p *party.Party, typ string, actor *uuid.UUID, at time.Time, data map[string]any) error {
 	if data == nil {

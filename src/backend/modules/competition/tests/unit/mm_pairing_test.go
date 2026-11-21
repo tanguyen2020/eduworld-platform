@@ -40,8 +40,8 @@ func TestPairWithinWindow(t *testing.T) {
 	}
 }
 
-// F104-AC-04: the oldest ticket chooses first and takes the partner of smallest cost (rating, recent opponent,
-// same class in ranked).
+// F104-AC-04: the oldest ticket chooses first and takes the partner of smallest cost (rating, recent opponent; no
+// class term since ADR-0095).
 func TestPairOldestFirstLowestCost(t *testing.T) {
 	c := seedConfig(t)
 	k := queue(mm.ModeBattle1v1, mm.TypeSkill, 3)
@@ -60,13 +60,11 @@ func TestPairOldestFirstLowestCost(t *testing.T) {
 	if len(g) != 1 || g[0].Tickets[1].TicketID != mid.TicketID {
 		t.Fatalf("recent opponent not avoided: %+v", g)
 	}
-	// same class costs more in ranked play
-	class := uuid.New()
-	old.Classes, near.Classes = []uuid.UUID{class}, []uuid.UUID{class}
+	// ADR-0095: no class term in ranked play — the nearest rating still wins.
 	other := cand(3, 1530, 2*time.Second, t0)
 	g = c.Pair(k, []mm.Candidate{near, other, old}, mm.Env{Now: t0})
-	if len(g) != 1 || g[0].Tickets[1].TicketID != other.TicketID {
-		t.Fatalf("ranked: another class preferred: %+v", g)
+	if len(g) != 1 || g[0].Tickets[1].TicketID != near.TicketID {
+		t.Fatalf("ranked: nearest rating expected: %+v", g)
 	}
 }
 

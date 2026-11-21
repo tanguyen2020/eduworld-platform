@@ -72,7 +72,7 @@ F104 chỉ đọc (`ConfigReader.Active(type, at)` = version `published` có `ef
 | Bảng | Trạng thái | Cột dùng |
 |---|---|---|
 | `ref.students` | Có sẵn | `grade_level`, `school_id`, `status`, `deleted_at` |
-| `ref.enrollments` | Thêm vào competition (§2.17 chưa liệt kê) | `student_id`, `class_id`, `status` — cost cùng lớp, scope `class` (F106, F107) |
+| `ref.enrollments` | Không còn đọc (ADR-0095: bỏ cost cùng lớp); DROP ở WP-R | — |
 | `ref.schools` | Thêm cột `settings_subset jsonb` | `access_hours`, `disabled_leaderboard_definitions`, `allow_cross_school_listing` |
 | `ref.tenants` | Có sẵn `settings_subset` | `cross_school_matchmaking` |
 | `ref.player_profiles` | Có sẵn | `nickname`, `avatar_thumb_key` cho proposal |

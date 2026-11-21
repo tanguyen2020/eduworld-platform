@@ -18,7 +18,7 @@ import (
 // subjects not available for the grade → 422 VALIDATION_FAILED naming the field.
 func TestMMTypeValidation(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
 	cases := []struct {
 		body map[string]any
 		want string
@@ -46,7 +46,7 @@ func TestMMTypeValidation(t *testing.T) {
 	}
 	// a configuration listing subjects per grade refuses another subject
 	m.publishConfig(map[string]any{"subjects": []map[string]any{{"subject_id": m.subject, "grade_levels": []int{3}}}})
-	b := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	b := m.kid(m.tenantA, m.schoolA, 3)
 	if r := m.ticket(b, 0, map[string]any{"subject_id": uuid.New()}); r.status != http.StatusUnprocessableEntity || !containsField(r, "subject_id") {
 		t.Fatalf("subject not available: %d %s", r.status, r.raw)
 	}
@@ -86,11 +86,11 @@ func (m *menv) publishConfig(over map[string]any) {
 // duel.accepted; after 60 s → 410 DUEL_EXPIRED and the job marks it expired; decline → duel.declined.
 func TestMMDuel(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	b := m.kid(m.tenantA, m.schoolA, m.classA, 2)
-	stranger := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	older := m.kid(m.tenantA, m.schoolA, m.classA, 5)
-	foe := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
+	b := m.kid(m.tenantA, m.schoolA, 2)
+	stranger := m.kid(m.tenantA, m.schoolA, 3)
+	older := m.kid(m.tenantA, m.schoolA, 5)
+	foe := m.kid(m.tenantA, m.schoolA, 3)
 	m.friends(a, b)
 	m.friends(a, older)
 	m.friends(a, foe)
@@ -164,8 +164,8 @@ func TestMMDuel(t *testing.T) {
 // configuration in effect.
 func TestMMDirectProposalAndModes(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 4)
-	b := m.kid(m.tenantA, m.schoolA2, uuid.Nil, 4)
+	a := m.kid(m.tenantA, m.schoolA, 4)
+	b := m.kid(m.tenantA, m.schoolA2, 4)
 	node := uuid.New()
 	in := command.DirectInput{TournamentNodeID: node, Mode: "battle_1v1", SubjectID: m.subject, Grade: 4, ScopeKind: "tenant",
 		Entries: [2]command.DirectEntry{{Students: []uuid.UUID{a.id}, Tenants: []uuid.UUID{a.tenant}, Schools: []uuid.UUID{a.school}},
@@ -187,7 +187,7 @@ func TestMMDirectProposalAndModes(t *testing.T) {
 		t.Fatal("tournament match")
 	}
 	// modes
-	g3 := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	g3 := m.kid(m.tenantA, m.schoolA, 3)
 	modes := func(k kid) []map[string]any {
 		r := m.call(k, http.MethodGet, "/competition/modes", "", nil)
 		if r.status != http.StatusOK {

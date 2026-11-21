@@ -102,6 +102,13 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 - [ ] T043 Consumer `competition.party_safety_chat` xử lý `sanction.applied`/`sanction.lifted` có `reason_code = case_hold` (hold tạm khi case p1 mở): người bị hold không gửi được lời mời party mới và không được mời; gỡ khi `sanction.lifted`; fixture test contract competition validate theo `specs/events/payloads/chat/sanction.*.v1.schema.json` (EVENT_DESIGN §4.9: `sanction_type`, `until`, `reason_code`) — kiểm: `make test-integration MOD=competition`, `make test-contract` — cỡ S
 
+## ADR-0095 — bỏ khái niệm lớp (WP-C1, 2026-11-21)
+
+- [x] T044 Luật party không lớp (D2): `Rules.SameGradeOnly` thay `CrossClass` (lớp 1–3 luôn bật; cấp trường chỉ bật), rule `grade` thay `class`; bỏ `visibility = class`, cấp `class` của `party_policies`; đọc dòng cũ (`study_group`, `class`) qua `Party.Legacy()` — file: `internal/domain/party/policy.go`, `party.go`, `errors.go`; test `TestGrades13SameGrade`, `TestPartyLegacyValues` (unit), `TestGrades13SameGradeParty` (integration: khác khối / khác trường khi tenant tắt liên trường / khác tenant → 403 + audit; tenant `unit` bật liên trường cùng khối → 201) pass
+- [x] T045 D7 `study_group` → `study_party` (code, OpenAPI, AsyncAPI, `party.created.v2`); migration `20261231000002_adr0095_noclass.sql` (CHECK mở rộng, đổi dữ liệu, `visibility class` → `private`, soft-delete policy cấp lớp, gỡ `cross_class`) — test `TestCreatePartyValidation`, `TestJoinParty` (`visibility = class` → 422) pass
+- [x] T046 Projection không lớp: Subject đọc `ref.students`; consumer `student.placement_changed` (owner F010) vào `ref.students` + `competition.party_safety_identity`; `enrollment.changed` chỉ ack — test `TestConsumersAcceptOwnerExamples`, `TestPartySafetyConsumers`, `TestIdentityProjectionWithoutClasses` (contract), `TestPlacementChangedFeedsGradeRule` (integration) pass
+- [ ] T047 (WP-R) DROP `ref.enrollments`; bỏ `study_group`, `class` khỏi `parties_type_chk`/`parties_visibility_chk` và `class` khỏi `party_policies_scope_chk` khi 0 dòng mang giá trị cũ (kể cả đã soft-delete)
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T010 projection trước mọi story) → US1 → US2, US3 song song → US4 → Polish.

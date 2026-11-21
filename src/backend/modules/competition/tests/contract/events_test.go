@@ -53,9 +53,8 @@ func (f *fakeRefs) Block(_ context.Context, _, _, _ uuid.UUID, active bool, _ in
 	return true, nil
 }
 
-func (f *fakeRefs) Enrollment(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, *uuid.UUID, string, *time.Time, *time.Time,
-	int64) (bool, error) {
-	f.calls = append(f.calls, "enrollment")
+func (f *fakeRefs) Placement(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, int, bool, int64) (bool, error) {
+	f.calls = append(f.calls, "placement")
 	return true, nil
 }
 
@@ -116,8 +115,10 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 		{"identity", "user.status_changed", "status", id.Handle},
 		{"identity", "student.cleaned_up", "deleted", id.Handle},
 		{"identity", "student.restored", "deleted", id.Handle},
-		// F100 T010: the class of a student (same-class party rules).
-		{"identity", "enrollment.changed", "enrollment", id.Handle},
+		// ADR-0095: student.placement_changed carries school and grade level (owner F010).
+		{"identity", "student.placement_changed", "placement", id.Handle},
+		// ADR-0095: enrollment.changed is acknowledged without a projection (no class rule any more) until WP-I1.
+		{"identity", "enrollment.changed", "", id.Handle},
 		{"game", "game_profile.updated", "profile", game.Handle},
 		// F095 T021: the relation events of module chat (spec F091 A-1).
 		{"chat", "friend.added", "friend+", socialP.Handle},
@@ -131,6 +132,9 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 		e := outbox.Envelope{EventID: uuid.New(), EventType: c.event, OccurredAt: time.Now(), TenantID: tenant, Payload: payload}
 		if err := c.handle(context.Background(), e); err != nil {
 			t.Errorf("%s: %v", c.event, err)
+			continue
+		}
+		if c.want == "" && len(refs.calls) == 0 {
 			continue
 		}
 		if len(refs.calls) != 1 || refs.calls[0] != c.want {
@@ -206,6 +210,7 @@ func TestPartySafetyConsumers(t *testing.T) {
 	}{
 		{"chat", "user.blocked", "blocked", chat.Handle},
 		{"identity", "student.synced", "synced", ident.Handle},
+		{"identity", "student.placement_changed", "synced", ident.Handle}, // ADR-0095
 		{"identity", "user.status_changed", "status", ident.Handle},
 		{"identity", "student.cleaned_up", "cleaned", ident.Handle},
 	}
@@ -240,5 +245,40 @@ func TestPartySafetyConsumers(t *testing.T) {
 		if err := chat.Handle(context.Background(), e); err == nil || !errors.Is(err, outbox.ErrPermanent) {
 			t.Errorf("%s %s: %v", bad.typ, bad.payload, err)
 		}
+	}
+	// ADR-0095: a placement without status or of another tenant goes to the DLQ at once.
+	for _, bad := range []string{
+		`{"student_id":"` + uuid.NewString() + `","tenant_id":"` + tenant.String() + `","school_id":"` + uuid.NewString() + `","grade_level":3}`,
+		`{"student_id":"` + uuid.NewString() + `","tenant_id":"` + uuid.NewString() + `","school_id":"` + uuid.NewString() + `","grade_level":3,"status":"active"}`,
+	} {
+		e := outbox.Envelope{EventType: "student.placement_changed", TenantID: &tenant, OccurredAt: time.Now(), Payload: json.RawMessage(bad)}
+		if err := ident.Handle(context.Background(), e); err == nil || !errors.Is(err, outbox.ErrPermanent) {
+			t.Errorf("placement %s: %v", bad, err)
+		}
+	}
+}
+
+// ADR-0095: enrollment.changed without class_id (WP-I1 transition) is acknowledged; a placement with a grade outside
+// 1–9 or an unknown status goes to the DLQ at once without touching ref.students.
+func TestIdentityProjectionWithoutClasses(t *testing.T) {
+	refs := &fakeRefs{}
+	id := consumer.IdentityProjection{P: command.Projection{Refs: refs}}
+	tenant := uuid.New()
+	enrollment := `{"student_id":"` + uuid.NewString() + `","school_id":"` + uuid.NewString() + `","op":"added"}`
+	if err := id.Handle(context.Background(), outbox.Envelope{EventType: "enrollment.changed", TenantID: &tenant, OccurredAt: time.Now(),
+		Payload: json.RawMessage(enrollment)}); err != nil {
+		t.Fatalf("enrollment.changed without class_id: %v", err)
+	}
+	for _, bad := range []string{
+		`{"student_id":"` + uuid.NewString() + `","tenant_id":"` + tenant.String() + `","school_id":"` + uuid.NewString() + `","grade_level":10,"status":"active","source":"sis","source_version":1}`,
+		`{"student_id":"` + uuid.NewString() + `","tenant_id":"` + tenant.String() + `","school_id":"` + uuid.NewString() + `","grade_level":3,"status":"locked","source":"sis","source_version":1}`,
+	} {
+		e := outbox.Envelope{EventType: "student.placement_changed", TenantID: &tenant, OccurredAt: time.Now(), Payload: json.RawMessage(bad)}
+		if err := id.Handle(context.Background(), e); err == nil || !errors.Is(err, outbox.ErrPermanent) {
+			t.Errorf("placement %s: %v", bad, err)
+		}
+	}
+	if len(refs.calls) != 0 {
+		t.Fatalf("reached the projection: %v", refs.calls)
 	}
 }

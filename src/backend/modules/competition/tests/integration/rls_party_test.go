@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
-	"github.com/google/uuid"
 )
 
 // T011 — RLS and soft-delete only on multiplayer.parties, party_members, party_invitations, party_policies,
@@ -18,9 +16,9 @@ func TestPartyRLS(t *testing.T) {
 	e := setupParty(t, popts{})
 	a, b := e.kidA(), e.kidA()
 	e.party(a, b)
-	dung, em := e.kid(e.tenantB, e.schoolB, uuid.Nil, 6), e.kid(e.tenantB, e.schoolB, uuid.Nil, 6)
+	dung, em := e.kid(e.tenantB, e.schoolB, 6), e.kid(e.tenantB, e.schoolB, 6)
 	pb := e.party(dung, em)
-	e.friends(dung, e.kid(e.tenantB, e.schoolB, uuid.Nil, 6))
+	e.friends(dung, e.kid(e.tenantB, e.schoolB, 6))
 	ctx := context.Background()
 	tables := []string{"multiplayer.parties", "multiplayer.party_members", "multiplayer.party_invitations", "multiplayer.party_policies",
 		"multiplayer.party_histories"}

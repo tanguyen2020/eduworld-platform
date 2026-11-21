@@ -122,8 +122,8 @@ func (PartyDirectory) Tenant(ctx context.Context, tenant uuid.UUID) (*write.Tena
 	return &out, nil
 }
 
-// Subject implements write.Directory: school, grade band, class of the active enrollment and the multiplayer
-// sanctions in force at now.
+// Subject implements write.Directory: school, grade level and band of the student (ref.students — ADR-0095, no
+// enrollment) and the multiplayer sanctions in force at now.
 func (PartyDirectory) Subject(ctx context.Context, tenant, student uuid.UUID, now time.Time) (*party.Subject, error) {
 	t, err := tx(ctx)
 	if err != nil {
@@ -133,15 +133,12 @@ func (PartyDirectory) Subject(ctx context.Context, tenant, student uuid.UUID, no
 	var grade sql.NullInt32
 	var status string
 	var deleted sql.NullTime
-	var class uuid.NullUUID
-	// tenancyguard:ok projection read under the TenantScope of the command; deleted_at mirrors the source (cleanup), ref.enrollments and ref.sanctions have none (rule 2)
+	// tenancyguard:ok projection read under the TenantScope of the command; deleted_at mirrors the source (cleanup), ref.sanctions has none (rule 2)
 	err = t.QueryRowContext(ctx, `SELECT st.school_id, st.grade_level, st.status, st.deleted_at,
-		(SELECT e.class_id FROM ref.enrollments e WHERE e.tenant_id = st.tenant_id AND e.student_id = st.student_id AND e.status = 'active'
-			ORDER BY e.start_date DESC NULLS LAST, e.source_version DESC LIMIT 1),
 		EXISTS (SELECT 1 FROM ref.sanctions x WHERE x.tenant_id = st.tenant_id AND x.user_id = st.student_id AND x.active
 			AND (x.until IS NULL OR x.until > $3))
 		FROM ref.students st WHERE st.student_id = $1 AND st.tenant_id = $2`, student, tenant, now).
-		Scan(&s.SchoolID, &grade, &status, &deleted, &class, &s.Restricted)
+		Scan(&s.SchoolID, &grade, &status, &deleted, &s.Restricted)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -149,11 +146,8 @@ func (PartyDirectory) Subject(ctx context.Context, tenant, student uuid.UUID, no
 		return nil, fmt.Errorf("ref students: %w", err)
 	}
 	if grade.Valid {
-		s.Band = party.BandOf(int(grade.Int32))
-	}
-	if class.Valid {
-		c := class.UUID
-		s.ClassID = &c
+		s.Grade = int(grade.Int32)
+		s.Band = party.BandOf(s.Grade)
 	}
 	s.Active = status == "active" && !deleted.Valid
 	return &s, nil
@@ -182,14 +176,13 @@ func (PartyDirectory) Blocked(ctx context.Context, tenant, student uuid.UUID, ot
 }
 
 // Overrides implements write.Directory.
-func (PartyDirectory) Overrides(ctx context.Context, tenant, school uuid.UUID, classes []uuid.UUID) ([]party.Override, error) {
+func (PartyDirectory) Overrides(ctx context.Context, tenant, school uuid.UUID) ([]party.Override, error) {
 	t, err := tx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	rows, err := t.QueryContext(ctx, `SELECT rules FROM multiplayer.party_policies WHERE tenant_id = $1 AND deleted_at IS NULL
-		AND ((scope_type = 'school' AND scope_id = $2) OR (scope_type = 'class' AND scope_id = ANY($3::uuid[])))
-		ORDER BY scope_type DESC`, tenant, school, uuidArray(classes))
+		AND scope_type = 'school' AND scope_id = $2`, tenant, school)
 	if err != nil {
 		return nil, fmt.Errorf("party policies: %w", err)
 	}
@@ -331,6 +324,7 @@ func (Parties) Load(ctx context.Context, tenant, id uuid.UUID, lock bool) (*part
 	if err != nil {
 		return nil, fmt.Errorf("party: load: %w", err)
 	}
+	p.Legacy()
 	p.CreatedAt, p.UpdatedAt = p.CreatedAt.UTC(), p.UpdatedAt.UTC()
 	if disbanded.Valid {
 		at := disbanded.Time.UTC()
@@ -734,6 +728,6 @@ var _ write.EventPublisher = Publisher{}
 // Publish writes e into the outbox of the transaction.
 func (p Publisher) Publish(ctx context.Context, e write.Event) error {
 	_, err := p.W.Publish(ctx, outbox.Message{Type: e.Type, Subject: outbox.Subject{Type: e.SubjectType, ID: e.SubjectID},
-		PartitionKey: e.PartitionKey, TenantID: e.TenantID, OccurredAt: e.OccurredAt, Payload: e.Payload})
+		PartitionKey: e.PartitionKey, TenantID: e.TenantID, OccurredAt: e.OccurredAt, Payload: e.Payload, SchemaVersion: e.SchemaVersion})
 	return err
 }

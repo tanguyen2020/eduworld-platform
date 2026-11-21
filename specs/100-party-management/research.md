@@ -16,9 +16,9 @@
 - **Alternatives**: (a) chỉ cho chọn tên từ danh sách sinh sẵn như nickname — trái PARTY_SYSTEM §3 (tên tự đặt [Confirmed]); (b) kiểm duyệt bất đồng bộ sau khi lưu — tên vi phạm hiển thị trong khoảng trễ.
 - **Contract**: operation facade `moderateDisplayText` (`x-allowed-callers: [competition]`) — Cần thêm vào `chat.internal.v1.yaml`, F116 hiện thực.
 
-## R3. Dữ liệu bạn bè, block, sanction, lớp
+## R3. Dữ liệu bạn bè, block, sanction, khối (trước ADR-0095: lớp)
 
-- **Decision**: projection trong `eduworld_competition`: `ref.friendships` (từ `friend.added`/`friend.removed`), `ref.blocks` (`user.blocked`/`user.unblocked`), `ref.sanctions` (`sanction.applied`/`sanction.lifted`, chỉ loại ảnh hưởng multiplayer), `ref.enrollments` (`enrollment.changed`) bên cạnh `ref.students`, `ref.player_profiles`, `ref.tenants` đã có trong DATABASE_DESIGN §2.17.
+- **Decision**: projection trong `eduworld_competition`: `ref.friendships` (từ `friend.added`/`friend.removed`), `ref.blocks` (`user.blocked`/`user.unblocked`), `ref.sanctions` (`sanction.applied`/`sanction.lifted`, chỉ loại ảnh hưởng multiplayer), `ref.enrollments` (`enrollment.changed`) bên cạnh `ref.students`, `ref.player_profiles`, `ref.tenants` đã có trong DATABASE_DESIGN §2.17. **Cập nhật ADR-0095 (2026-11-21):** không còn `ref.enrollments`; trường/khối lấy từ `ref.students` (`student.synced`, `student.placement_changed`).
 - **Rationale**: policy party kiểm tra trong transaction, không gọi đồng bộ module chat/identity (R29, đường ghi nhẹ). `ref.blocks` đã được nhắc ở DATABASE_DESIGN §2.10 (duels).
 - **Alternatives**: gọi module chat internal mỗi lần mời — thêm phụ thuộc đồng bộ, tăng độ trễ, không có endpoint.
 - **Hệ quả**: bổ sung DATABASE_DESIGN §2.17 và consumer trong EVENT_DESIGN §3 (competition tiêu thụ `friend.*`, `sanction.*`, `enrollment.changed`) — task Polish.

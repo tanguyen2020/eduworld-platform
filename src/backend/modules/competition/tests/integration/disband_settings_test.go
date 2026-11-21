@@ -68,8 +68,8 @@ func TestPartySettingsAndHistory(t *testing.T) {
 	if r := e.call(a, http.MethodPatch, path, "", map[string]any{"max_members": 2}); r.status != http.StatusUnprocessableEntity {
 		t.Fatalf("below members: %d %s", r.status, r.raw)
 	}
-	r := e.call(a, http.MethodPatch, path, "", map[string]any{"name": "Nhóm Mới", "visibility": "class", "max_members": 5})
-	if r.status != http.StatusOK || r.str("name") != "Nhóm Mới" || r.str("visibility") != "class" || r.body["max_members"].(float64) != 5 {
+	r := e.call(a, http.MethodPatch, path, "", map[string]any{"name": "Nhóm Mới", "visibility": "friends", "max_members": 5})
+	if r.status != http.StatusOK || r.str("name") != "Nhóm Mới" || r.str("visibility") != "friends" || r.body["max_members"].(float64) != 5 {
 		t.Fatalf("update: %d %s", r.status, r.raw)
 	}
 	version := r.body["state_version"].(float64)
@@ -78,12 +78,12 @@ func TestPartySettingsAndHistory(t *testing.T) {
 	}
 	for _, k := range []kid{a, b, c} {
 		got := e.push.of(k.id, "party.state.snapshot")
-		if len(got) != 1 || got[0]["state_version"].(float64) != version || got[0]["visibility"] != "class" {
+		if len(got) != 1 || got[0]["state_version"].(float64) != version || got[0]["visibility"] != "friends" {
 			t.Fatalf("snapshot to %s: %v", k.nickname, got)
 		}
 	}
 	// No change → no event.
-	e.call(a, http.MethodPatch, path, "", map[string]any{"visibility": "class"})
+	e.call(a, http.MethodPatch, path, "", map[string]any{"visibility": "friends"})
 	if ev := e.events("party.settings_updated"); len(ev) != 1 {
 		t.Fatalf("no-op event: %d", len(ev))
 	}

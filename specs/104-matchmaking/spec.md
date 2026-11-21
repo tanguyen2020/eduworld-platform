@@ -34,6 +34,11 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (an to�
 - Metric `eduworld_mm_*` không có nhãn trường/học sinh; nhãn `subject` là `subject_id` (số môn có hạn). Ticket không audit (ephemeral); `match.created`, `duel.*` có audit.
 - F104-AC-27: đo local bằng integration (400 học sinh vào hàng 4/s, PostgreSQL + Valkey thật): wait p90 ≤ 45 s, mỗi lượt matchmaker < 1 s; kịch bản k6 TC-PERF-004 (`tests/perf/matchmaking_queue.js`) chạy trên staging khi có môi trường.
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Trọng số `same_class` (hơi ưu tiên khác lớp ở trận ranked) và "ưu tiên bạn cùng lớp" khi chia đội? → A: bỏ, không thay thế (ADR-0095 mục 5). Cấu hình matchmaking xuất bản **version 2** (migration `20261231000002_adr0095_noclass.sql`, cùng `effective_from`, reader lấy `version_no` cao nhất) không có khóa `cost_weights.same_class`; payload cũ còn khóa này vẫn đọc được (bỏ qua). Ticket Valkey không còn trường `classes`.
+- Q: Khối/trường của người chơi lấy từ đâu? → A: `ref.students` (`student.synced`, `student.placement_changed` — owner F010); không đọc `ref.enrollments`. Ràng buộc khối/trường H1–H5 (FR-MM-002/003, ADR-0054) giữ nguyên. AC giữ mã; F104-AC-01, AC-04, AC-05 sửa chữ.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Ghép 1v1 cùng khối theo rating (Priority: P1) 🎯 MVP
@@ -48,11 +53,11 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (an to�
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F104-AC-01 | KHI học sinh gọi `createMatchmakingTicket` hợp lệ, module competition PHẢI tự lấy khối, trường, lớp, tenant, rating (μ, RD) từ dữ liệu server (không nhận từ body), tạo ticket `queued` chỉ trong Valkey và đẩy `matchmaking.ticket.updated` | FR-MM-004 · FR-MM-006 · [MATCHMAKING §4](../../docs/03-social-multiplayer/MATCHMAKING.md#4-ticket) | TC-CMP-002 |
+| F104-AC-01 | KHI học sinh gọi `createMatchmakingTicket` hợp lệ, module competition PHẢI tự lấy khối, trường, tenant, rating (μ, RD) từ dữ liệu server (không nhận từ body), tạo ticket `queued` chỉ trong Valkey và đẩy `matchmaking.ticket.updated` | FR-MM-004 · FR-MM-006 · [MATCHMAKING §4](../../docs/03-social-multiplayer/MATCHMAKING.md#4-ticket) | TC-CMP-002 |
 | F104-AC-02 | HỆ THỐNG PHẢI đưa ràng buộc cứng H1–H7 vào khóa queue và kiểm tra **trước** rating: lớp 1–5 cùng `grade_level`; lớp 6–9 cùng `grade_band` với nới ±1 khối theo `grade_window_g6_9`; không bao giờ ghép lớp 1–5 với khối khác, kể cả khi chờ quá `mm_bot_after` | FR-MM-002 · FR-MM-003 · AC-CMP-002 · [MATCHMAKING §2.1](../../docs/03-social-multiplayer/MATCHMAKING.md#21-hard-constraints-thành-phần-của-queue-key--không-nới-theo-thời-gian) | TC-MM-003 |
 | F104-AC-03 | HỆ THỐNG PHẢI giới hạn phạm vi ghép cùng `school_id` theo mặc định; Ở NƠI tenant `unit` bật ghép liên trường, HỆ THỐNG PHẢI dùng phạm vi tenant; phạm vi platform chỉ dùng cho proposal do giải/sự kiện platform tạo; không bao giờ ghép hai tenant trong queue thường | FR-MM-003 · ADR-0054 | TC-TEN-012 |
-| F104-AC-04 | TRONG KHI ticket chờ, matchmaker PHẢI ghép khi chênh lệch μ giữa hai ticket ≤ `window(t)` theo `mm_rating_window`, ưu tiên ticket chờ lâu nhất và cost nhỏ nhất (rating, RD, đối thủ gặp gần đây, cùng lớp); hết cửa sổ hữu hạn chỉ bỏ qua rating, không nới H1–H7 | FR-MM-005 · [MATCHMAKING §2.2](../../docs/03-social-multiplayer/MATCHMAKING.md#22-soft-scoring-trong-một-queue) | TC-MM-002 |
-| F104-AC-05 | KHI matchmaker chọn cặp, HỆ THỐNG PHẢI tạo proposal với deadline `mm_ready_check`, gửi `matchmaking.proposal.created` chỉ chứa nickname, avatar, tier (không tên thật, trường, lớp); KHI mọi bên accept, HỆ THỐNG PHẢI tạo `Match` với `match_id = proposal_id` trong PostgreSQL rồi gửi `matchmaking.match.assigned` | FR-MM-004 · AC-CMP-001 · AGENTS R16 | TC-CMP-001 |
+| F104-AC-04 | TRONG KHI ticket chờ, matchmaker PHẢI ghép khi chênh lệch μ giữa hai ticket ≤ `window(t)` theo `mm_rating_window`, ưu tiên ticket chờ lâu nhất và cost nhỏ nhất (rating, RD, đối thủ gặp gần đây; không còn trọng số `same_class` — ADR-0095); hết cửa sổ hữu hạn chỉ bỏ qua rating, không nới H1–H7 | FR-MM-005 · [MATCHMAKING §2.2](../../docs/03-social-multiplayer/MATCHMAKING.md#22-soft-scoring-trong-một-queue) | TC-MM-002 |
+| F104-AC-05 | KHI matchmaker chọn cặp, HỆ THỐNG PHẢI tạo proposal với deadline `mm_ready_check`, gửi `matchmaking.proposal.created` chỉ chứa nickname, avatar, tier (không tên thật, trường, khối); KHI mọi bên accept, HỆ THỐNG PHẢI tạo `Match` với `match_id = proposal_id` trong PostgreSQL rồi gửi `matchmaking.match.assigned` | FR-MM-004 · AC-CMP-001 · AGENTS R16 | TC-CMP-001 |
 | F104-AC-06 | NẾU một bên decline hoặc hết `mm_ready_check`, THÌ HỆ THỐNG PHẢI hủy proposal, trả ticket của bên đã accept về queue giữ nguyên `enqueued_at` (`requeued = true`) và hủy ticket của bên decline/timeout; decline/timeout ≥ 3 lần trong 10 phút PHẢI kích hoạt cooldown theo `mm_ticket_rate` | AC-MM-004 · [MATCHMAKING §4.2](../../docs/03-social-multiplayer/MATCHMAKING.md#42-lifecycle) | TC-CMP-002 |
 | F104-AC-07 | NẾU học sinh đã có ticket active (hoặc thuộc party đang có ticket), THÌ HỆ THỐNG PHẢI trả `409 MM_TICKET_ALREADY_ACTIVE` | AC-MM-003 · `mm_tickets_per_user` | — |
 | F104-AC-08 | HỆ THỐNG PHẢI không đặt hai học sinh đã block nhau vào cùng proposal và PHẢI kiểm tra lại trạng thái tài khoản, hạn chế thi đấu (`abandon_penalty`, sanction `restrict_competition`) khi tạo ticket và khi tạo proposal; học sinh bị hạn chế tạo ticket PHẢI nhận `403 POLICY_DENIED` | AC-MM-005 · [MATCHMAKING §2.1](../../docs/03-social-multiplayer/MATCHMAKING.md#21-hard-constraints-thành-phần-của-queue-key--không-nới-theo-thời-gian) | — |
@@ -139,7 +144,7 @@ Chỉ học sinh vào hàng đợi; dữ liệu một tenant không lẫn sang t
 ### Edge Cases
 
 - NẾU học sinh mất kết nối WS > 30 s khi đang `queued`, THÌ ticket bị hủy (`cancel_reason = system`) (F104-AC-10).
-- NẾU học sinh chuyển lớp/khối hoặc bị khóa khi đang chờ, THÌ proposal kiểm tra lại H1/H5 và loại ticket đó (F104-AC-08).
+- NẾU học sinh chuyển trường/khối hoặc bị khóa khi đang chờ, THÌ proposal kiểm tra lại H1/H5 và loại ticket đó (F104-AC-08).
 - NẾU proposal có ticket của party và party đổi thành viên trước khi accept, THÌ proposal hủy, ticket còn lại về queue (F104-AC-06, F104-AC-15).
 - NẾU học sinh có game session bị takeover (ADR-0031), THÌ ticket giữ nguyên, sự kiện WS gửi tới thiết bị mới.
 - NẾU hai request `createMatchmakingTicket` đồng thời khác key, THÌ chỉ một thành công (`SET NX`), request kia nhận `409 MM_TICKET_ALREADY_ACTIVE` (F104-AC-07).

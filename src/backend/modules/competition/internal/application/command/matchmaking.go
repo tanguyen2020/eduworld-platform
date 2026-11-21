@@ -186,7 +186,7 @@ func ticketID(ctx context.Context, me uuid.UUID, salt string) uuid.UUID {
 var matchmakingNamespace = uuid.MustParse("0193a5f4-6c1e-7b2a-9d1f-00000000f104")
 
 // CreateTicket implements createMatchmakingTicket (F104-AC-01…03, AC-07, AC-08, AC-13, AC-14, AC-17, AC-18, AC-26):
-// grade, school, class, tenant and rating come from the server; the ticket lives in Valkey only.
+// grade, school, tenant and rating come from the server; the ticket lives in Valkey only.
 func (h Matchmaking) CreateTicket(ctx context.Context, in mm.Request) (res view.Ticket, err error) {
 	ctx, done := observability.UseCase(ctx, "competition.command.CreateMatchmakingTicket")
 	defer func() { done(err) }()
@@ -249,9 +249,6 @@ func (h Matchmaking) CreateTicket(ctx context.Context, in mm.Request) (res view.
 		for _, p := range ps {
 			t.Students = append(t.Students, p.ID)
 			t.Schools = append(t.Schools, p.SchoolID)
-			if p.ClassID != nil {
-				t.Classes = append(t.Classes, *p.ClassID)
-			}
 		}
 		if _, err := h.Store.Create(ctx, t); err != nil {
 			return err

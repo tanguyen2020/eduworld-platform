@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -162,7 +163,6 @@ type penv struct {
 	tenantA, tenantB, tenantU   uuid.UUID
 	schoolA, schoolA2           uuid.UUID
 	schoolB, schoolU1, schoolU2 uuid.UUID
-	classA, classA2             uuid.UUID
 }
 
 type popts struct {
@@ -186,8 +186,7 @@ func setupParty(t *testing.T, o popts) *penv {
 	e := &penv{t: t, app: open(t, cl.ModuleDSN("competition", "app")), platform: open(t, cl.ModuleDSN("competition", "platform")),
 		relay: open(t, cl.ModuleDSN("competition", "relay")), clock: &pclock{now: time.Date(2026, 11, 21, 3, 0, 0, 0, time.UTC)},
 		push: &pushRec{}, online: &onlineSet{}, mod: &fakeModerator{}, tenantA: uuid.New(), tenantB: uuid.New(), tenantU: uuid.New(),
-		schoolA: uuid.New(), schoolA2: uuid.New(), schoolB: uuid.New(), schoolU1: uuid.New(), schoolU2: uuid.New(), classA: uuid.New(),
-		classA2: uuid.New()}
+		schoolA: uuid.New(), schoolA2: uuid.New(), schoolB: uuid.New(), schoolU1: uuid.New(), schoolU2: uuid.New()}
 	migrator := open(t, cl.ModuleDSN("competition", "migrator"))
 	var dbName string
 	if err := migrator.QueryRowContext(ctx, `SELECT current_database()`).Scan(&dbName); err != nil {
@@ -287,27 +286,22 @@ func (e *penv) ptenant(id uuid.UUID, typ string, settings map[string]any) {
 		ON CONFLICT (tenant_id) DO UPDATE SET tenant_type = $2, settings_subset = $3`, id, typ, string(b))
 }
 
-// kid is a projected student with a public profile, a class and its game token.
+// kid is a projected student with a public profile, a school and a grade (no class — ADR-0095) and its game token.
 type kid struct {
 	id, tenant, school uuid.UUID
-	class              uuid.UUID
 	grade              int
 	nickname           string
 	token              string
 }
 
-// kid projects an active student (ref.students, ref.player_profiles, ref.enrollments) and registers its principal.
-func (e *penv) kid(tenant, school, class uuid.UUID, grade int) kid {
+// kid projects an active student (ref.students, ref.player_profiles) and registers its principal.
+func (e *penv) kid(tenant, school uuid.UUID, grade int) kid {
 	e.t.Helper()
-	k := kid{id: uuid.New(), tenant: tenant, school: school, class: class, grade: grade, nickname: "Meo" + uuid.NewString()[:6]}
+	k := kid{id: uuid.New(), tenant: tenant, school: school, grade: grade, nickname: "Meo" + uuid.NewString()[:6]}
 	e.exec(`INSERT INTO ref.students (student_id, tenant_id, school_id, grade_level, status, source_version) VALUES ($1, $2, $3, $4, 'active', 1)`,
 		k.id, tenant, school, grade)
 	e.exec(`INSERT INTO ref.player_profiles (student_id, tenant_id, nickname, level, avatar_config, source_version)
 		VALUES ($1, $2, $3, 4, '{"body":"body_01","hair":"hair_02"}', 1)`, k.id, tenant, k.nickname)
-	if class != uuid.Nil {
-		e.exec(`INSERT INTO ref.enrollments (student_id, class_id, tenant_id, school_id, status, start_date, source_version)
-			VALUES ($1, $2, $3, $4, 'active', '2026-09-05', 1)`, k.id, class, tenant, school)
-	}
 	tt := tenant
 	sub := "kc-" + uuid.NewString()
 	e.res.Set(sub, authz.PrincipalData{UserID: k.id, UserType: authz.UserTypeStudent, TenantID: &tt, TenantType: authz.TenantTypeSchool})
@@ -326,8 +320,8 @@ func (e *penv) ghost(tenant uuid.UUID) kid {
 	return k
 }
 
-// kidA is a grade 6 student of school A, class A (no same-class rule at grade 6).
-func (e *penv) kidA() kid { return e.kid(e.tenantA, e.schoolA, e.classA, 6) }
+// kidA is a grade 6 student of school A (no same-grade rule at grade 6).
+func (e *penv) kidA() kid { return e.kid(e.tenantA, e.schoolA, 6) }
 
 func (e *penv) friends(a, b kid) {
 	e.t.Helper()
@@ -553,10 +547,6 @@ func (e *penv) checkSchemasOf(types []string) map[string]int {
 	}
 	seen := map[string]int{}
 	for _, typ := range types {
-		payload, err := c.Compile(filepath.Join(root, "payloads", "competition", typ+".v1.schema.json"))
-		if err != nil {
-			e.t.Fatal(err)
-		}
 		rows, err := e.relay.QueryContext(context.Background(), `SELECT envelope FROM infra.outbox_events WHERE event_type = $1`, typ)
 		if err != nil {
 			e.t.Fatal(err)
@@ -574,9 +564,15 @@ func (e *penv) checkSchemasOf(types []string) map[string]int {
 				e.t.Errorf("%s envelope: %v", typ, err)
 			}
 			var env struct {
-				Payload json.RawMessage `json:"payload"`
+				SchemaVersion int             `json:"schema_version"`
+				Payload       json.RawMessage `json:"payload"`
 			}
 			_ = json.Unmarshal(raw, &env)
+			// the payload schema of the envelope version (party.created is v2 since ADR-0095)
+			payload, err := c.Compile(filepath.Join(root, "payloads", "competition", fmt.Sprintf("%s.v%d.schema.json", typ, env.SchemaVersion)))
+			if err != nil {
+				e.t.Fatal(err)
+			}
 			pd, err := jsonschema.UnmarshalJSON(bytes.NewReader(env.Payload))
 			if err != nil {
 				e.t.Fatal(err)

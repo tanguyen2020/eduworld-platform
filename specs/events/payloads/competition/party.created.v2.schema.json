@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.created.v1.schema.json",
-  "title": "Payload party.created v1 (module competition, owner F100)",
-  "description": "Học sinh tạo party và là leader (createParty, F100-AC-01). Consumer: chat (mở channel party, F117), AUD, ANA.",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.created.v2.schema.json",
+  "title": "Payload party.created v2 (module competition, owner F100)",
+  "description": "Học sinh tạo party và là leader (createParty, F100-AC-01). v2 (ADR-0095, envelope schema_version = 2): party_type study_party thay study_group (D7), visibility không còn class. Consumer: chat (mở channel party, F117), AUD, ANA — nhận cả v1 và v2 trong đợt chuyển đổi.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -39,7 +39,7 @@
       "type": "string",
       "enum": [
         "friend",
-        "study_group",
+        "study_party",
         "quest",
         "competition_team",
         "custom"
@@ -49,8 +49,7 @@
       "type": "string",
       "enum": [
         "private",
-        "friends",
-        "class"
+        "friends"
       ]
     },
     "invitation_policy": {

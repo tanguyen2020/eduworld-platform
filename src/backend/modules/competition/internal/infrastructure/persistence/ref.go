@@ -60,6 +60,19 @@ func (Refs) Student(ctx context.Context, student, tenant, school uuid.UUID, grad
 		WHERE st.source_version < $6 AND st.tenant_id = $2`, student, tenant, school, grade, status, version)
 }
 
+// Placement upserts ref.students from student.placement_changed (newer source_version only; never another tenant):
+// school and grade always; an inactive placement sets status inactive, an active one only revives a row left inactive
+// by a placement (an account status from user.status_changed is kept).
+func (Refs) Placement(ctx context.Context, student, tenant, school uuid.UUID, grade int, active bool, version int64) (bool, error) {
+	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); deleted_at mirrors the source (cleanup)
+	return exec(ctx, `INSERT INTO ref.students AS st (student_id, tenant_id, school_id, grade_level, status, source_version)
+		VALUES ($1, $2, $3, $4::smallint, CASE WHEN $5::boolean THEN 'active' ELSE 'inactive' END, $6)
+		ON CONFLICT (student_id) DO UPDATE SET school_id = $3, grade_level = $4::smallint,
+			status = CASE WHEN NOT $5::boolean THEN 'inactive' WHEN st.status = 'inactive' THEN 'active' ELSE st.status END,
+			source_version = $6
+		WHERE st.source_version < $6 AND st.tenant_id = $2`, student, tenant, school, grade, active, version)
+}
+
 // StudentStatus applies user.status_changed (tenant nil: platform event, every tenant of that student).
 func (Refs) StudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error) {
 	// tenancyguard:ok projection of user.status_changed; deleted_at is the projected source state
@@ -109,15 +122,4 @@ func (Refs) Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, activ
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (blocker_id, blocked_id) DO UPDATE SET active = $4, source_version = $5
 		WHERE b.source_version < $5 AND b.tenant_id = $1`, tenant, blocker, blocked, active, version)
-}
-
-// Enrollment upserts ref.enrollments from enrollment.changed (newer source_version only; never another tenant).
-func (Refs) Enrollment(ctx context.Context, tenant, student, class uuid.UUID, school *uuid.UUID, status string, start, end *time.Time,
-	version int64) (bool, error) {
-	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
-	return exec(ctx, `INSERT INTO ref.enrollments AS e (student_id, class_id, tenant_id, school_id, status, start_date, end_date, source_version)
-		VALUES ($1, $2, $3, $4, $5, $6::date, $7::date, $8)
-		ON CONFLICT (student_id, class_id) DO UPDATE SET school_id = coalesce($4, e.school_id), status = $5, start_date = coalesce($6::date, e.start_date),
-			end_date = $7::date, source_version = $8
-		WHERE e.source_version < $8 AND e.tenant_id = $3`, student, class, tenant, school, status, start, end, version)
 }

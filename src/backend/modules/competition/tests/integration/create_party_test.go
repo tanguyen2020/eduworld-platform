@@ -66,7 +66,7 @@ func TestCreateParty(t *testing.T) {
 func TestCreatePartyValidation(t *testing.T) {
 	e := setupParty(t, popts{})
 	an := e.kidA()
-	small := e.kid(e.tenantA, e.schoolA, e.classA, 3) // grade 3: friend/quest only
+	small := e.kid(e.tenantA, e.schoolA, 3) // grade 3: friend/quest only
 	cases := []struct {
 		who   kid
 		body  map[string]any
@@ -76,7 +76,9 @@ func TestCreatePartyValidation(t *testing.T) {
 		{an, map[string]any{"name": "   ", "party_type": "friend"}, "name"},
 		{an, map[string]any{"name": "Nhóm", "party_type": "friend", "max_members": 9}, "max_members"},
 		{an, map[string]any{"name": "Nhóm", "party_type": "friend", "max_members": 1}, "max_members"},
-		{small, map[string]any{"name": "Nhóm", "party_type": "study_group"}, "party_type"},
+		{small, map[string]any{"name": "Nhóm", "party_type": "study_party"}, "party_type"},
+		{an, map[string]any{"name": "Nhóm", "party_type": "study_group"}, "party_type"}, // renamed study_party (ADR-0095 D7)
+		{an, map[string]any{"name": "Nhóm", "party_type": "friend", "visibility": "class"}, "visibility"},
 		{small, map[string]any{"name": "Nhóm", "party_type": "custom"}, "party_type"},
 	}
 	for _, c := range cases {

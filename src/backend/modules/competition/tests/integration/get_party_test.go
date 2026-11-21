@@ -44,8 +44,8 @@ func TestGetParty(t *testing.T) {
 	}
 	// Outsiders of the same school, another school and another tenant: 404, never the party.
 	other := e.kidA()
-	school2 := e.kid(e.tenantA, e.schoolA2, uuid.Nil, 6)
-	dung := e.kid(e.tenantB, e.schoolB, uuid.Nil, 7)
+	school2 := e.kid(e.tenantA, e.schoolA2, 6)
+	dung := e.kid(e.tenantB, e.schoolB, 7)
 	for _, k := range []kid{other, school2, dung} {
 		r := e.call(k, http.MethodGet, "/multiplayer/parties/"+id, "", nil)
 		if r.status != http.StatusNotFound || r.code() != "PARTY_NOT_FOUND" {

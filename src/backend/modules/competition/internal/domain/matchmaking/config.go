@@ -77,12 +77,12 @@ type GradeWindow struct {
 	Levels int `json:"levels"`
 }
 
-// CostWeights are the weights of the soft scoring (MATCHMAKING §2.2).
+// CostWeights are the weights of the soft scoring (MATCHMAKING §2.2); no same_class weight since ADR-0095 (a legacy
+// key in an older published version is ignored).
 type CostWeights struct {
 	Rating         float64 `json:"rating"`
 	RD             float64 `json:"rd"`
 	RecentOpponent float64 `json:"recent_opponent"`
-	SameClass      float64 `json:"same_class"`
 }
 
 // Rating is a Glicko-2 rating on the 1500 scale (glicko2_params).

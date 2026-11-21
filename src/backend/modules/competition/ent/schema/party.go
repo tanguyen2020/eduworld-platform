@@ -121,8 +121,8 @@ func (PartyInvitation) Indexes() []ent.Index {
 	}
 }
 
-// PartyPolicy — multiplayer.party_policies (T, DATABASE_DESIGN §2.16): limits of a school or a class
-// (allowed_party_types, cross_class, cross_grade_band, max_members_cap); a lower level only tightens. F100 reads them
+// PartyPolicy — multiplayer.party_policies (T, DATABASE_DESIGN §2.16): limits of a school (no class level, ADR-0095)
+// (allowed_party_types, same_grade_only, cross_grade_band, max_members_cap); a lower level only tightens. F100 reads them
 // only (no administration API yet); the platform level comes from the configuration (no row). The policy version is
 // the version column of the mixin.
 type PartyPolicy struct{ ent.Schema }

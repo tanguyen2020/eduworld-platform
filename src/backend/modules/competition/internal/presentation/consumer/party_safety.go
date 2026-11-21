@@ -106,6 +106,18 @@ func (c PartySafetyIdentity) Handle(ctx context.Context, e outbox.Envelope) erro
 		}
 		_, err := c.S.StatusChanged(ctx, e.TenantID, p.UserID, p.To)
 		return classify("", e, false, err)
+	case "student.placement_changed": // ADR-0095: another school (no cross-school social) or no longer placed → leave
+		tenant, err := envTenant(e)
+		if err != nil || p.StudentID == uuid.Nil || p.SchoolID == uuid.Nil || p.TenantID != tenant || p.Status == nil ||
+			(*p.Status != "active" && *p.Status != "inactive") {
+			return outbox.Permanent(invalid(e.EventType, "student_id, school_id, tenant_id and status are required"))
+		}
+		status := ""
+		if *p.Status == "inactive" {
+			status = "inactive"
+		}
+		_, err = c.S.StudentSynced(ctx, tenant, p.StudentID, p.SchoolID, status)
+		return classify("", e, false, err)
 	case "student.cleaned_up":
 		tenant, err := envTenant(e)
 		if err != nil || p.StudentID == uuid.Nil || p.TenantID != tenant {

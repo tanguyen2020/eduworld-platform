@@ -22,7 +22,7 @@ const (
 	RealtimeAccountDisabled   = "account_disabled"
 )
 
-// JoinParty implements joinParty (F100-AC-16): class (same class as the leader) or friends (friend of the leader)
+// JoinParty implements joinParty (F100-AC-16): friends parties (friend of the leader, no class visibility — ADR-0095)
 // parties within the policies; a private party needs an accepted invitation that has not expired.
 func (h Parties) JoinParty(ctx context.Context, partyID uuid.UUID) (res view.Party, err error) {
 	ctx, done := observability.UseCase(ctx, "competition.command.JoinParty")
@@ -74,7 +74,7 @@ func (h Parties) JoinParty(ctx context.Context, partyID uuid.UUID) (res view.Par
 			if check.Invited, err = h.Repo.AcceptedInvitation(ctx, tenant, p.ID, me, now); err != nil {
 				return err
 			}
-			if check.Rules, err = h.rules(ctx, tenant, p.GradeBand, p.SchoolID, leader, sub); err != nil {
+			if check.Rules, err = h.rules(ctx, tenant, p.GradeBand, p.SchoolID); err != nil {
 				return err
 			}
 			if err := check.Evaluate(); err != nil {

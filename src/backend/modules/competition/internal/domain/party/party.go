@@ -14,17 +14,16 @@ import (
 // Party types (PARTY_SYSTEM §4).
 const (
 	TypeFriend          = "friend"
-	TypeStudyGroup      = "study_group"
+	TypeStudyParty      = "study_party" // renamed from study_group (ADR-0095 D7)
 	TypeQuest           = "quest"
 	TypeCompetitionTeam = "competition_team"
 	TypeCustom          = "custom"
 )
 
-// Visibility of a party (PARTY_SYSTEM §3).
+// Visibility of a party (PARTY_SYSTEM §3); no class visibility (ADR-0095).
 const (
 	VisibilityPrivate = "private"
 	VisibilityFriends = "friends"
-	VisibilityClass   = "class"
 )
 
 // Invitation policies.
@@ -77,9 +76,20 @@ const (
 	fallback    = "Nhóm mới"
 )
 
-var types = map[string]bool{TypeFriend: true, TypeStudyGroup: true, TypeQuest: true, TypeCompetitionTeam: true, TypeCustom: true}
-var visibilities = map[string]bool{VisibilityPrivate: true, VisibilityFriends: true, VisibilityClass: true}
+var types = map[string]bool{TypeFriend: true, TypeStudyParty: true, TypeQuest: true, TypeCompetitionTeam: true, TypeCustom: true}
+var visibilities = map[string]bool{VisibilityPrivate: true, VisibilityFriends: true}
 var invitePolicies = map[string]bool{InviteLeaderOnly: true, InviteMembers: true}
+
+// Legacy reads a row written before ADR-0095 (or by an older binary during the rollout): study_group is study_party
+// (D7) and a class visibility, which has no circle any more, is private. Migration 20261231000002 backfills both.
+func (p *Party) Legacy() {
+	if p.Type == "study_group" {
+		p.Type = TypeStudyParty
+	}
+	if p.Visibility == "class" {
+		p.Visibility = VisibilityPrivate
+	}
+}
 
 // ValidType reports a known party type.
 func ValidType(t string) bool { return types[t] }

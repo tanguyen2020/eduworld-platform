@@ -28,5 +28,5 @@
 ## Notes
 
 - Mâu thuẫn tài liệu đã chọn hướng và cần sửa ở task Polish: mã lỗi block (PARTY_SYSTEM §14 vs API_DESIGN §5); rate lời mời đã chốt 50/ngày (RB-405, CONFIG_DEFAULTS C-3); channel `party` "cùng transaction" (PARTY_SYSTEM §2) không khả thi giữa hai DB (ADR-0037); `club_id` study group của PARTY_SYSTEM §4 lỗi thời theo ADR-0084.
-- FR-PTY-003 ghi "Class Group" nhưng enum `party_type` không có; feature dùng `visibility = class`.
+- FR-PTY-003 ghi "Class Group" nhưng enum `party_type` không có; feature dùng `visibility = class`. (ADR-0095: bỏ `visibility = class`; FR-PTY-003 viết lại không còn nhóm lớp.)
 - Giới hạn phụ của PARTY_SYSTEM §10 chưa có tên CONFIG_DEFAULTS — task Polish đăng ký.

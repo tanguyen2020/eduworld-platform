@@ -18,12 +18,12 @@
 | 3 | A `createParty` với `name` 41 ký tự / `max_members = 9` | `422 VALIDATION_FAILED` chỉ rõ trường | F100-AC-04 |
 | 4 | A `updatePartySettings` đặt tên vi phạm danh mục placeholder; dừng module chat rồi đặt tên khác | `422` không kèm từ khớp; lần 2 lưu tên mặc định | F100-AC-05, F100-AC-21 |
 | 5 | A mời `hs.binh.3a` | `201 pending`; B nhận `party.invitation.received` ≤ 1 s | F100-AC-07 |
-| 6 | A mời `hs.chi.3b` (khác lớp, lớp 3) | `403 PARTY_POLICY_VIOLATION`, có audit | F100-AC-09 |
+| 6 | A (khối 3) mời bạn khối 2 cùng trường; mời bạn khối 3 trường khác cùng tenant khi tenant tắt liên trường | `403 PARTY_POLICY_VIOLATION`, có audit (rule `grade`, `school`) | F100-AC-09 |
 | 7 | B block A (F095) rồi A mời lại B | `403 PARTY_INVITE_NOT_ALLOWED` (không nói block); B bỏ block | F100-AC-08, F100-AC-25 |
 | 8 | A gửi 11 lời mời trong 1 phút (script) | Lời mời thứ 11 → `429 PARTY_INVITE_RATE_LIMITED`, audit | F100-AC-10 |
 | 9 | B `listMyInvitations`, `acceptPartyInvitation` (gửi 2 lần) | Chỉ lời mời của B; 2 thành viên, không trùng; A nhận `party.member.joined` | F100-AC-15, F100-AC-11 |
 | 10 | Mời giả lập thứ 3 khi đủ 2 người; accept lời mời quá hạn (đặt Clock) | `409 PARTY_FULL`; `410 PARTY_INVITATION_EXPIRED` | F100-AC-12, F100-AC-14 |
-| 11 | A đổi `visibility = class`; bạn cùng lớp `joinParty`; đổi lại `private`, người không có lời mời `joinParty` | Vào được; `403 PARTY_POLICY_VIOLATION` | F100-AC-16 |
+| 11 | A đổi `visibility = class` → `422`; đổi `friends`, bạn của A `joinParty`; đổi lại `private`, người không có lời mời `joinParty` | `422`; vào được; `403 PARTY_POLICY_VIOLATION` | F100-AC-16 |
 | 12 | A `transferPartyLeader` cho B (B offline rồi online) | Offline → `409 PARTY_MEMBER_NOT_ONLINE`; online → B leader, audit | F100-AC-19 |
 | 13 | B kick A; B mời lại A ngay | A rời (`kicked`); lời mời → `429`/`403` trong `party_kick_reinvite_block` | F100-AC-18 |
 | 14 | B `disbandParty` (gọi 2 lần) | `disbanded`, lời mời pending `expired`, một `party.disbanded` | F100-AC-20, F100-AC-22 |

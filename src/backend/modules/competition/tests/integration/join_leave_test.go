@@ -6,32 +6,34 @@ import (
 	"net/http"
 	"testing"
 	"time"
-
-	"github.com/google/uuid"
 )
 
-// T030 — F100-AC-16 (TC-PTY-011): class parties take students of the leader's class, friends parties the friends of
-// the leader; a private party without an accepted invitation → 403 PARTY_POLICY_VIOLATION; a repeated join is
-// idempotent.
+// T030 — F100-AC-16 (TC-PTY-011): friends parties take the friends of the leader (no class visibility since ADR-0095:
+// visibility class → 422); a private party without an accepted invitation → 403 PARTY_POLICY_VIOLATION; a repeated
+// join is idempotent.
 func TestJoinParty(t *testing.T) {
 	e := setupParty(t, popts{})
 	a := e.kidA()
-	id := e.create(a, http.StatusCreated, map[string]any{"name": "Lớp 6A", "party_type": "quest", "visibility": "class", "max_members": 8}).
+	if r := e.call(a, http.MethodPost, "/multiplayer/parties", key(), map[string]any{"name": "Lớp 6A", "party_type": "quest",
+		"visibility": "class"}); r.status != http.StatusUnprocessableEntity || r.code() != "VALIDATION_FAILED" {
+		t.Fatalf("visibility class: %d %s", r.status, r.raw)
+	}
+	id := e.create(a, http.StatusCreated, map[string]any{"name": "Nhóm 6", "party_type": "quest", "visibility": "friends", "max_members": 8}).
 		str("party_id")
 	mate := e.kidA()
-	otherClass := e.kid(e.tenantA, e.schoolA, e.classA2, 6)
-	k := key()
-	r := e.call(mate, http.MethodPost, "/multiplayer/parties/"+id+":join", k, nil)
+	e.friends(a, mate)
+	stranger6 := e.kid(e.tenantA, e.schoolA, 6)
+	r := e.call(mate, http.MethodPost, "/multiplayer/parties/"+id+":join", key(), nil)
 	if r.status != http.StatusOK || len(r.members()) != 2 {
-		t.Fatalf("join class: %d %s", r.status, r.raw)
+		t.Fatalf("join friends: %d %s", r.status, r.raw)
 	}
 	if again := e.call(mate, http.MethodPost, "/multiplayer/parties/"+id+":join", key(), nil); again.status != http.StatusOK ||
 		len(again.members()) != 2 {
 		t.Fatalf("join again: %d %s", again.status, again.raw)
 	}
-	if r := e.call(otherClass, http.MethodPost, "/multiplayer/parties/"+id+":join", key(), nil); r.status != http.StatusForbidden ||
+	if r := e.call(stranger6, http.MethodPost, "/multiplayer/parties/"+id+":join", key(), nil); r.status != http.StatusForbidden ||
 		r.code() != "PARTY_POLICY_VIOLATION" {
-		t.Fatalf("other class: %d %s", r.status, r.raw)
+		t.Fatalf("stranger: %d %s", r.status, r.raw)
 	}
 	if got := e.push.of(a.id, "party.member.joined"); len(got) != 1 {
 		t.Fatalf("leader told: %v", got)
@@ -39,17 +41,8 @@ func TestJoinParty(t *testing.T) {
 	if ev := e.events("party.member_joined"); len(ev) != 1 || ev[0]["via"] != "join" {
 		t.Fatalf("event: %v", ev)
 	}
-	// friends: the friend of the leader joins, a stranger does not.
-	if u := e.call(a, http.MethodPatch, "/multiplayer/parties/"+id, "", map[string]any{"visibility": "friends"}); u.status != http.StatusOK {
-		t.Fatal(u.raw)
-	}
-	friend := e.kid(e.tenantA, e.schoolA, e.classA2, 6)
-	e.friends(a, friend)
-	if r := e.call(friend, http.MethodPost, "/multiplayer/parties/"+id+":join", key(), nil); r.status != http.StatusOK {
-		t.Fatalf("join friends: %d %s", r.status, r.raw)
-	}
-	if r := e.call(otherClass, http.MethodPost, "/multiplayer/parties/"+id+":join", key(), nil); r.code() != "PARTY_POLICY_VIOLATION" {
-		t.Fatalf("stranger: %s", r.raw)
+	if u := e.call(a, http.MethodPatch, "/multiplayer/parties/"+id, "", map[string]any{"visibility": "class"}); u.status != http.StatusUnprocessableEntity {
+		t.Fatalf("settings visibility class: %d %s", u.status, u.raw)
 	}
 	// private: no accepted invitation → refused.
 	if u := e.call(a, http.MethodPatch, "/multiplayer/parties/"+id, "", map[string]any{"visibility": "private"}); u.status != http.StatusOK {
@@ -61,7 +54,7 @@ func TestJoinParty(t *testing.T) {
 		t.Fatalf("private: %d %s", r.status, r.raw)
 	}
 	// A party of another tenant is unknown (404).
-	dung := e.kid(e.tenantB, e.schoolB, uuid.Nil, 6)
+	dung := e.kid(e.tenantB, e.schoolB, 6)
 	if r := e.call(dung, http.MethodPost, "/multiplayer/parties/"+id+":join", key(), nil); r.status != http.StatusNotFound {
 		t.Fatalf("other tenant: %d %s", r.status, r.raw)
 	}

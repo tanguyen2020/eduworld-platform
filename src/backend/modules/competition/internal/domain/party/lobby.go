@@ -110,9 +110,9 @@ const (
 )
 
 // DormantDisbands reports the party types that disband after party_dormant_timeout without anyone online
-// (PARTY_SYSTEM §9: friend, custom, study_group).
+// (PARTY_SYSTEM §9: friend, custom, study_party).
 func DormantDisbands(typ string) bool {
-	return typ == TypeFriend || typ == TypeCustom || typ == TypeStudyGroup
+	return typ == TypeFriend || typ == TypeCustom || typ == TypeStudyParty
 }
 
 // SweepConfig are the timers of the presence sweeper (CONFIG_DEFAULTS party_leader_grace, party_dormant_timeout,

@@ -31,7 +31,7 @@ Mở rộng bounded context `party` của module competition (F100): lobby state
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng mới có `tenant_id` + RLS + `deleted_at`; test isolation REST + WS |
 | IV Server-authoritative | ✅ | Leader/Ready/số lượng kiểm ở server; không lưu điểm; `Idempotency-Key` cho start; audit chuyển leader tự động |
 | V Xác thực, phân quyền | ✅ | `game_player` REST; lệnh WS chỉ qua user NATS của binary `realtime`; gọi facade `game` mang TenantScope + Principal gốc trong context |
-| VI An toàn trẻ em | ✅ | Không lộ khối/lớp/điểm của bạn; lý do không đủ điều kiện dạng mã |
+| VI An toàn trẻ em | ✅ | Không lộ khối/trường/điểm của bạn; lý do không đủ điều kiện dạng mã |
 | VII Một nguồn sự thật, cấu hình | ✅ | Enum `PartyActivityType` chung; tham số theo tên CONFIG_DEFAULTS |
 | VIII UI tách logic, token | ✅ | Không có UI |
 | IX Test có bằng chứng | ✅ | Mỗi F101-AC có task test; stub module game gắn nhãn MOCK chỉ trong test |

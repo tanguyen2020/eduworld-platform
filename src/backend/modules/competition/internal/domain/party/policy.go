@@ -8,15 +8,15 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/hub"
 )
 
-// Subject is what the policies know of a student (projections ref.students, ref.enrollments, ref.sanctions): never
-// sent to another student (R16).
+// Subject is what the policies know of a student (projections ref.students, ref.sanctions): never sent to another
+// student (R16). School and grade level come from the student itself (ADR-0095: no class, no enrollment).
 type Subject struct {
 	ID         uuid.UUID
 	SchoolID   uuid.UUID
-	Band       string     // grade band (g1_3…); "" when the grade is unknown
-	ClassID    *uuid.UUID // class of the active enrollment
-	Active     bool       // projected, active, not cleaned up
-	Restricted bool       // restrict_multiplayer (or account_lock) in force
+	Grade      int    // grade level 1–9; 0 when unknown
+	Band       string // grade band (g1_3…); "" when the grade is unknown
+	Active     bool   // projected, active, not cleaned up
+	Restricted bool   // restrict_multiplayer (or account_lock) in force
 }
 
 // BandOf is the grade band of a grade level (g1_3, g4_5, g6_7, g8_9).
@@ -25,41 +25,44 @@ func BandOf(grade int) string {
 	return b
 }
 
-// Rules are the effective party policies (PARTY_SYSTEM §8 R7): platform defaults tightened by the school and class
-// party_policies rows; a lower level only tightens.
+// Rules are the effective party policies (PARTY_SYSTEM §8 R7): platform defaults tightened by the school
+// party_policies row; a lower level only tightens.
 type Rules struct {
 	AllowedTypes   []string
-	CrossClass     bool
+	SameGradeOnly  bool // every member in the grade level of the reference student (always for grades 1–3)
 	CrossGradeBand bool
 	MaxMembersCap  int
 }
 
-// PlatformRules are the platform party_policies of a grade band [Proposed F100, owner chốt 2026-11-20]: grades 1–3
-// create friend/quest parties of their own class only (R12); study_group and custom from grade 6 (PARTY_SYSTEM §4);
-// competition_team from grade 4; one grade band per party; max_members_cap = capacity (platform 8).
+// PlatformRules are the platform party_policies of a grade band [Confirmed ADR-0095 D2, D7]: grades 1–3 create
+// friend/quest parties whose members are all in the same grade level (R12; another school only inside the tenant under
+// ADR-0054); study_party and custom from grade 6 (PARTY_SYSTEM §4); competition_team from grade 4; one grade band per
+// party; max_members_cap = capacity (platform 8).
 func PlatformRules(band string, capacity int) Rules {
-	r := Rules{CrossClass: true, CrossGradeBand: false, MaxMembersCap: capacity}
+	r := Rules{CrossGradeBand: false, MaxMembersCap: capacity}
 	switch band {
 	case hub.BandG1to3:
 		r.AllowedTypes = []string{TypeFriend, TypeQuest}
-		r.CrossClass = false
+		r.SameGradeOnly = true
 	case "g4_5":
 		r.AllowedTypes = []string{TypeFriend, TypeQuest, TypeCompetitionTeam}
 	default:
-		r.AllowedTypes = []string{TypeFriend, TypeStudyGroup, TypeQuest, TypeCompetitionTeam, TypeCustom}
+		r.AllowedTypes = []string{TypeFriend, TypeStudyParty, TypeQuest, TypeCompetitionTeam, TypeCustom}
 	}
 	return r
 }
 
-// Override is the rules object of a party_policies row (nil: not set at that level).
+// Override is the rules object of a party_policies row (nil: not set at that level). A legacy cross_class key is
+// ignored (ADR-0095).
 type Override struct {
 	AllowedTypes   []string `json:"allowed_party_types,omitempty"`
-	CrossClass     *bool    `json:"cross_class,omitempty"`
+	SameGradeOnly  *bool    `json:"same_grade_only,omitempty"`
 	CrossGradeBand *bool    `json:"cross_grade_band,omitempty"`
 	MaxMembersCap  *int     `json:"max_members_cap,omitempty"`
 }
 
-// Tighten applies a lower level: allowed types intersect, booleans only turn off, the cap only decreases.
+// Tighten applies a lower level: allowed types intersect, cross_grade_band only turns off, same_grade_only only turns
+// on, the cap only decreases.
 func (r Rules) Tighten(o Override) Rules {
 	out := r
 	if o.AllowedTypes != nil {
@@ -70,8 +73,8 @@ func (r Rules) Tighten(o Override) Rules {
 			}
 		}
 	}
-	if o.CrossClass != nil && !*o.CrossClass {
-		out.CrossClass = false
+	if o.SameGradeOnly != nil && *o.SameGradeOnly {
+		out.SameGradeOnly = true
 	}
 	if o.CrossGradeBand != nil && !*o.CrossGradeBand {
 		out.CrossGradeBand = false
@@ -104,7 +107,8 @@ func CheckCreate(r Rules, creator Subject, typ string, maxMembers int) error {
 	return nil
 }
 
-// pair checks school, grade band and class between the reference student (inviter, leader) and another student.
+// pair checks school, grade band and grade level between the reference student (inviter, leader) and another student
+// of the same tenant (the Subject lookup is tenant-scoped: another tenant is RuleTenant before pair — R8, ADR-0005).
 func pair(r Rules, sc Scope, band string, ref, other Subject) error {
 	if ref.SchoolID != other.SchoolID && !sc.CrossSchool {
 		return PolicyError{Rule: RuleSchool}
@@ -112,14 +116,10 @@ func pair(r Rules, sc Scope, band string, ref, other Subject) error {
 	if other.Band != band && !r.CrossGradeBand {
 		return PolicyError{Rule: RuleGradeBand}
 	}
-	if !r.CrossClass && !sameClass(ref, other) {
-		return PolicyError{Rule: RuleClass}
+	if r.SameGradeOnly && (ref.Grade == 0 || other.Grade != ref.Grade) {
+		return PolicyError{Rule: RuleGrade}
 	}
 	return nil
-}
-
-func sameClass(a, b Subject) bool {
-	return a.ClassID != nil && b.ClassID != nil && *a.ClassID == *b.ClassID
 }
 
 // InviteCheck is the evaluation of inviteToParty (F100-AC-08, AC-09) and its re-check at accept (AC-11).
@@ -219,14 +219,12 @@ func (c JoinCheck) Evaluate() error {
 		if !c.Invited {
 			return PolicyError{Rule: RulePrivate}
 		}
-	case VisibilityClass:
-		if !sameClass(c.Leader, c.Joiner) {
-			return PolicyError{Rule: RuleVisibility}
-		}
 	case VisibilityFriends:
 		if !c.FriendOfLeader {
 			return PolicyError{Rule: RuleVisibility}
 		}
+	default: // no other circle (the class visibility is gone, ADR-0095)
+		return PolicyError{Rule: RuleVisibility}
 	}
 	if err := pair(c.Rules, c.Scope, c.Party.GradeBand, c.Leader, c.Joiner); err != nil {
 		return err

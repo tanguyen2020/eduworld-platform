@@ -17,7 +17,7 @@ func TestOneActivePartyUnderConcurrency(t *testing.T) {
 	students := 0
 	for round := 0; round < rounds; round++ {
 		open := e.kidA()
-		classParty := e.create(open, http.StatusCreated, map[string]any{"name": "Lớp", "party_type": "quest", "visibility": "class",
+		friendsParty := e.create(open, http.StatusCreated, map[string]any{"name": "Bạn bè", "party_type": "quest", "visibility": "friends",
 			"max_members": 8}).str("party_id")
 		host := e.kidA()
 		private := e.create(host, http.StatusCreated, map[string]any{"name": "Riêng", "party_type": "quest", "max_members": 8}).str("party_id")
@@ -25,6 +25,7 @@ func TestOneActivePartyUnderConcurrency(t *testing.T) {
 		invs := make([]string, perRound)
 		for i := range kids {
 			kids[i] = e.kidA()
+			e.friends(open, kids[i])
 			invs[i] = e.invite(host, private, kids[i], http.StatusCreated).str("invitation_id")
 		}
 		var wg sync.WaitGroup
@@ -41,7 +42,7 @@ func TestOneActivePartyUnderConcurrency(t *testing.T) {
 					case 1:
 						results[i][j] = e.call(kids[i], http.MethodPost, "/multiplayer/invitations/"+invs[i]+":accept", key(), nil)
 					default:
-						results[i][j] = e.call(kids[i], http.MethodPost, "/multiplayer/parties/"+classParty+":join", key(), nil)
+						results[i][j] = e.call(kids[i], http.MethodPost, "/multiplayer/parties/"+friendsParty+":join", key(), nil)
 					}
 				}(i, j)
 			}

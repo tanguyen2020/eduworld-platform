@@ -14,17 +14,18 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/cache"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/persistence"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 )
 
-// T014 — F104-AC-01: grade, school, class, tenant and rating come from the server (fields of the body ignored); the
+// T014 — F104-AC-01: grade, school, tenant and rating come from the server (fields of the body ignored; no class, ADR-0095); the
 // ticket is queued in Valkey only and matchmaking.ticket.updated is pushed. TestSeedMatchmakingConfig: the migration
 // seed equals seed/matchmaking_config.json.
 func TestMMCreateTicketServerSide(t *testing.T) {
 	m := setupMM(t)
-	an := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	an := m.kid(m.tenantA, m.schoolA, 3)
 	r := m.ticket(an, http.StatusCreated, map[string]any{"grade_level": 9, "school_id": uuid.New(), "rating": 2900})
 	id := r.str("ticket_id")
 	if r.str("status") != "queued" || r.str("matchmaking_type") != "skill" || r.str("mode") != "battle_1v1" {
@@ -35,9 +36,17 @@ func TestMMCreateTicketServerSide(t *testing.T) {
 	if err != nil || tk == nil {
 		t.Fatalf("ticket not in Valkey: %v", err)
 	}
-	if tk.Grade != 3 || tk.Schools[0] != m.schoolA || tk.TenantID != m.tenantA || tk.Rating.Mu != 1500 || len(tk.Classes) != 1 ||
-		tk.Classes[0] != m.classA || tk.ScopeKind != "school" || tk.ScopeID != m.schoolA || tk.GradeKey != "g3" {
+	if tk.Grade != 3 || tk.Schools[0] != m.schoolA || tk.TenantID != m.tenantA || tk.Rating.Mu != 1500 ||
+		tk.ScopeKind != "school" || tk.ScopeID != m.schoolA || tk.GradeKey != "g3" {
 		t.Fatalf("server-side fields %+v", tk)
+	}
+	// ADR-0095: the ticket carries no class.
+	fields, err := m.vk.Do(context.Background(), m.vk.B().Hgetall().Key(cache.MMTicketKey(uuid.MustParse(id))).Build()).AsStrMap()
+	if err != nil || len(fields) == 0 {
+		t.Fatalf("ticket hash: %v", err)
+	}
+	if _, ok := fields["classes"]; ok {
+		t.Fatal("ticket still carries classes")
 	}
 	if !strings.Contains(tk.Queue, ":s:"+m.schoolA.String()+":g3:") {
 		t.Fatalf("queue key %s", tk.Queue)
@@ -58,8 +67,10 @@ func TestSeedMatchmakingConfig(t *testing.T) {
 	m := setupMM(t)
 	seed := readSeed(t)
 	var raw []byte
+	// ADR-0095: version 2 (no same_class) is the current published version.
 	if err := m.su.QueryRowContext(context.Background(), `SELECT v.payload FROM competition.game_config_versions v
-		JOIN competition.game_configs c ON c.config_id = v.config_id WHERE c.config_type = 'matchmaking-configs' AND v.status = 'published'`).
+		JOIN competition.game_configs c ON c.config_id = v.config_id AND c.current_version_id = v.config_version_id
+		WHERE c.config_type = 'matchmaking-configs' AND v.status = 'published' AND v.version_no = 2`).
 		Scan(&raw); err != nil {
 		t.Fatal(err)
 	}
@@ -86,11 +97,11 @@ func TestSeedMatchmakingConfig(t *testing.T) {
 // two tenants never share a queue.
 func TestMMScope(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	other := m.kid(m.tenantA, m.schoolA2, uuid.Nil, 3)
-	b := m.kid(m.tenantB, m.schoolB, uuid.Nil, 3)
-	u1 := m.kid(m.tenantU, m.schoolU1, uuid.Nil, 3)
-	u2 := m.kid(m.tenantU, m.schoolU2, uuid.Nil, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
+	other := m.kid(m.tenantA, m.schoolA2, 3)
+	b := m.kid(m.tenantB, m.schoolB, 3)
+	u1 := m.kid(m.tenantU, m.schoolU1, 3)
+	u2 := m.kid(m.tenantU, m.schoolU2, 3)
 	for _, k := range []kid{a, other, b, u1, u2} {
 		m.ticket(k, http.StatusCreated, nil)
 	}
@@ -112,9 +123,9 @@ func TestMMScope(t *testing.T) {
 // match.created + audit, matchmaking.match.assigned; a retry creates nothing more.
 func TestMMProposalAccept(t *testing.T) {
 	m := setupMM(t)
-	an := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	binh := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	far := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	an := m.kid(m.tenantA, m.schoolA, 3)
+	binh := m.kid(m.tenantA, m.schoolA, 3)
+	far := m.kid(m.tenantA, m.schoolA, 3)
 	m.ratings.set(an, 1500)
 	m.ratings.set(binh, 1550)
 	m.ratings.set(far, 1900)
@@ -184,8 +195,8 @@ func TestMMProposalAccept(t *testing.T) {
 // kept; a timeout requeues who accepted; 3 declines/timeouts in 10 minutes start the cooldown (429 + Retry-After).
 func TestMMDeclineTimeoutCooldown(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	b := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
+	b := m.kid(m.tenantA, m.schoolA, 3)
 	start := m.clock.Now()
 	ta := m.ticket(a, http.StatusCreated, nil).str("ticket_id")
 	for round := 1; round <= 3; round++ {
@@ -229,12 +240,12 @@ func TestMMDeclineTimeoutCooldown(t *testing.T) {
 // T016 — F104-AC-07: a second ticket is 409 MM_TICKET_ALREADY_ACTIVE, also for concurrent requests with other keys.
 func TestMMOneTicketPerStudent(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
 	m.ticket(a, http.StatusCreated, nil)
 	if r := m.ticket(a, http.StatusConflict, nil); r.code() != "MM_TICKET_ALREADY_ACTIVE" {
 		t.Fatalf("second ticket %s", r.raw)
 	}
-	b := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	b := m.kid(m.tenantA, m.schoolA, 3)
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	codes := map[int]int{}
@@ -259,9 +270,9 @@ func TestMMOneTicketPerStudent(t *testing.T) {
 // pass (H5 checked again before proposing).
 func TestMMEligibilityAndBlocks(t *testing.T) {
 	m := setupMM(t)
-	a := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	b := m.kid(m.tenantA, m.schoolA, m.classA, 3)
-	c := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	a := m.kid(m.tenantA, m.schoolA, 3)
+	b := m.kid(m.tenantA, m.schoolA, 3)
+	c := m.kid(m.tenantA, m.schoolA, 3)
 	m.block(a, b)
 	m.ticket(a, http.StatusCreated, nil)
 	m.clock.Add(time.Second)
@@ -278,13 +289,13 @@ func TestMMEligibilityAndBlocks(t *testing.T) {
 		t.Fatal("a must meet c")
 	}
 	for _, kind := range []string{"abandon_penalty", "restrict_competition"} {
-		k := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+		k := m.kid(m.tenantA, m.schoolA, 3)
 		m.restrict(k, kind)
 		if r := m.ticket(k, http.StatusForbidden, nil); r.code() != "POLICY_DENIED" {
 			t.Fatalf("%s: %s", kind, r.raw)
 		}
 	}
-	late := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+	late := m.kid(m.tenantA, m.schoolA, 3)
 	tl := m.ticket(late, http.StatusCreated, nil).str("ticket_id")
 	m.restrict(late, "restrict_competition")
 	m.tick()
@@ -302,7 +313,7 @@ func TestMMParallelMatchmakers(t *testing.T) {
 	m := setupMM(t)
 	var kids []kid
 	for range 200 {
-		k := m.kid(m.tenantA, m.schoolA, m.classA, 3)
+		k := m.kid(m.tenantA, m.schoolA, 3)
 		kids = append(kids, k)
 		m.ticket(k, http.StatusCreated, nil)
 	}

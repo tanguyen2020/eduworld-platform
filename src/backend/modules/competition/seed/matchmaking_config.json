@@ -15,7 +15,7 @@
   "disconnect_cancel_s": 30,
   "bucket_threshold": 500,
   "batch": 200,
-  "cost_weights": { "rating": 1, "rd": 0.1, "recent_opponent": 0.5, "same_class": 0.2 },
+  "cost_weights": { "rating": 1, "rd": 0.1, "recent_opponent": 0.5 },
   "recent_opponent_window_s": 1800,
   "default_rating": { "mu": 1500, "rd": 350 },
   "modes": [

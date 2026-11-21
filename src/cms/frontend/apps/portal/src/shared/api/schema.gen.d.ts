@@ -2284,7 +2284,7 @@ export interface paths {
         };
         /**
          * Trạng thái đã nhận/đã xem của một tin
-         * @description Nhóm ≤ 8 người trả danh sách từng người; class/study_group chỉ trả số đếm; world/area không hỗ trợ (CHAT_FEATURE_DISABLED).
+         * @description Nhóm ≤ 8 người trả danh sách từng người (không còn channel class/study_group đếm số — ADR-0095); world/area không hỗ trợ (CHAT_FEATURE_DISABLED).
          */
         get: operations["getMessageReceipts"];
         put?: never;
@@ -3999,8 +3999,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Vào hàng đợi (solo hoặc party leader). Ràng buộc khối lớp được áp trước rating.
-         * @description Khối, trường, lớp, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
+         * Vào hàng đợi (solo hoặc party leader). Ràng buộc khối được áp trước rating.
+         * @description Khối, trường, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
          *     ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`; bị hạn chế thi đấu,
          *     khối không có mode (vd. `team_battle` lớp < 4) hoặc party có thành viên khác khối → `403 POLICY_DENIED`; không phải
          *     leader → `403 PARTY_NOT_LEADER`; thành viên offline → `409 PARTY_MEMBER_NOT_ONLINE`; `matchmaking_type` `friend`
@@ -7052,9 +7052,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Tham gia party visibility class/friends (party private bắt buộc qua invitation)
-         * @description `class`: cùng lớp với leader; `friends`: là bạn của leader; `private` không có lời mời `accepted` còn hạn →
-         *     `403 PARTY_POLICY_VIOLATION` (F100-AC-16).
+         * Tham gia party visibility friends (party private bắt buộc qua invitation)
+         * @description `friends`: là bạn của leader; `private` không có lời mời `accepted` còn hạn → `403 PARTY_POLICY_VIOLATION`
+         *     (F100-AC-16). Không còn visibility `class` (ADR-0095). Party khối 1–3: người tham gia phải cùng đúng khối với leader.
          */
         post: operations["joinParty"];
         delete?: never;
@@ -7093,7 +7093,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Leader bắt đầu — kiểm tra member, policy lớp, tạo room/GameSession chung
+         * Leader bắt đầu — kiểm tra member, policy khối/trường, tạo room/GameSession chung
          * @description Luồng 9 bước (PARTY_SYSTEM §6.1): chỉ leader (`403 PARTY_NOT_LEADER`); `expected_version` lệch → `412 VERSION_MISMATCH`;
          *     party không `open` hoặc chưa chọn hoạt động → `422 INVALID_STATE_TRANSITION`; còn thành viên online chưa Ready hoặc số
          *     thành viên online ngoài khoảng của hoạt động → `409 PARTY_NOT_READY`; có thành viên không đủ điều kiện →
@@ -7185,7 +7185,8 @@ export interface paths {
         /**
          * Mời bạn vào party
          * @description Người mời không được phép theo `invitation_policy` hoặc hai bên chặn nhau → `403 PARTY_INVITE_NOT_ALLOWED` (không tiết lộ
-         *     lý do); khác trường/tenant, sanction, vi phạm `party_policies` → `403 PARTY_POLICY_VIOLATION`; đã có lời mời chờ → `409`;
+         *     lý do); khác trường (tenant chưa bật liên trường — ADR-0054)/khác tenant, sanction, khác khối ở party lớp 1–3 (ADR-0095),
+         *     vi phạm `party_policies` → `403 PARTY_POLICY_VIOLATION`; đã có lời mời chờ → `409`;
          *     vượt `party_invite_rate` hoặc `party_invite_repeat_rules` → `429 PARTY_INVITE_RATE_LIMITED` (F100-AC-07…10).
          */
         post: operations["inviteToParty"];
@@ -10399,8 +10400,11 @@ export interface components {
             unread_count?: number;
             unread_mentions?: number;
         };
-        /** @enum {string} */
-        ChannelType: "world" | "area" | "match" | "party" | "team" | "class" | "study_group" | "direct";
+        /**
+         * @description Không còn class, study_group (ADR-0095).
+         * @enum {string}
+         */
+        ChannelType: "world" | "area" | "match" | "party" | "team" | "direct";
         /** @description Danh mục tạo nhân vật đang publish (nội dung platform có version, ADR-0043) — bản JSON Schema specs/schemas/character-catalog.schema.json (F070-AC-02). Bộ từ nickname không gửi xuống client (gợi ý sinh ở server). */
         CharacterCatalog: {
             body_types: components["schemas"]["CatalogNamedCodes"];
@@ -10583,12 +10587,6 @@ export interface components {
             version?: number;
         };
         ClubCreate: {
-            /**
-             * @description Chỉ nhân sự trường (study group do school_admin/academic_manager tạo); thêm toàn bộ học sinh lớp `class_id`
-             * @default false
-             */
-            add_whole_class: boolean;
-            class_id?: components["schemas"]["Uuid"];
             club_type: components["schemas"]["ClubType"];
             description?: string;
             icon_id?: string;
@@ -10671,8 +10669,11 @@ export interface components {
         ClubRole: "owner" | "officer" | "member";
         /** @enum {string} */
         ClubStatus: "pending_approval" | "active" | "locked" | "archived";
-        /** @enum {string} */
-        ClubType: "study_group" | "school_club" | "subject_club" | "competition_team" | "interest_group";
+        /**
+         * @description Không còn study_group (nhóm học tập LMS bị bỏ — ADR-0095).
+         * @enum {string}
+         */
+        ClubType: "school_club" | "subject_club" | "competition_team" | "interest_group";
         ClubUpdate: {
             description?: string;
             icon_id?: string;
@@ -13602,10 +13603,16 @@ export interface components {
         PartyStartProblem: components["schemas"]["Problem"] & {
             ineligible_members?: components["schemas"]["PartyIneligibleMember"][];
         };
-        /** @enum {string} */
-        PartyType: "friend" | "study_group" | "quest" | "competition_team" | "custom";
-        /** @enum {string} */
-        PartyVisibility: "private" | "friends" | "class";
+        /**
+         * @description study_party là tên mới của study_group (ADR-0095 D7, giữ hành vi).
+         * @enum {string}
+         */
+        PartyType: "friend" | "study_party" | "quest" | "competition_team" | "custom";
+        /**
+         * @description Không còn class (ADR-0095); party class cũ đọc thành private.
+         * @enum {string}
+         */
+        PartyVisibility: "private" | "friends";
         PathNode: {
             content_ref: {
                 /** @enum {string} */
@@ -14848,8 +14855,9 @@ export interface components {
             /** @enum {string} */
             severity: "p1" | "p2" | "p3";
             students?: {
-                class_name?: string;
                 display_name?: string;
+                /** @description Khối của học sinh (thay class_name — ADR-0095); chỉ nhân sự trường của học sinh thấy */
+                grade_level?: number;
                 /** @enum {string} */
                 role: "affected" | "offender";
                 student_id: components["schemas"]["Uuid"];

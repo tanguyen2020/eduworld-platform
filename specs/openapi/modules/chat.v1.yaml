@@ -275,7 +275,7 @@ paths:
         - chat
       operationId: getMessageReceipts
       summary: Trạng thái đã nhận/đã xem của một tin
-      description: Nhóm ≤ 8 người trả danh sách từng người; class/study_group chỉ trả số đếm; world/area không hỗ trợ (CHAT_FEATURE_DISABLED).
+      description: Nhóm ≤ 8 người trả danh sách từng người (không còn channel class/study_group đếm số — ADR-0095); world/area không hỗ trợ (CHAT_FEATURE_DISABLED).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -4125,14 +4125,13 @@ components:
           type: boolean
     ChannelType:
       type: string
+      description: Không còn class, study_group (ADR-0095).
       enum:
         - world
         - area
         - match
         - party
         - team
-        - class
-        - study_group
         - direct
     MessageKind:
       type: string
@@ -5028,8 +5027,8 @@ components:
           $ref: '#/components/schemas/Timestamp'
     ClubType:
       type: string
+      description: Không còn study_group (nhóm học tập LMS bị bỏ — ADR-0095).
       enum:
-        - study_group
         - school_club
         - subject_club
         - competition_team
@@ -5113,12 +5112,6 @@ components:
           maxLength: 64
         subject_id:
           $ref: '#/components/schemas/Uuid'
-        class_id:
-          $ref: '#/components/schemas/Uuid'
-        add_whole_class:
-          type: boolean
-          default: false
-          description: Chỉ nhân sự trường (study group do school_admin/academic_manager tạo); thêm toàn bộ học sinh lớp `class_id`
     ClubUpdate:
       type: object
       properties:
@@ -6180,9 +6173,11 @@ components:
               display_name:
                 type: string
                 maxLength: 128
-              class_name:
-                type: string
-                maxLength: 128
+              grade_level:
+                type: integer
+                minimum: 1
+                maximum: 9
+                description: Khối của học sinh (thay class_name — ADR-0095); chỉ nhân sự trường của học sinh thấy
               role:
                 type: string
                 enum:

@@ -2391,7 +2391,7 @@ paths:
       x-service: competition
       tags: [multiplayer]
       operationId: startPartySession
-      summary: Leader bắt đầu — kiểm tra member, policy lớp, tạo room/GameSession chung
+      summary: Leader bắt đầu — kiểm tra member, policy khối/trường, tạo room/GameSession chung
       description: |
         Luồng 9 bước (PARTY_SYSTEM §6.1): chỉ leader (`403 PARTY_NOT_LEADER`); `expected_version` lệch → `412 VERSION_MISMATCH`;
         party không `open` hoặc chưa chọn hoạt động → `422 INVALID_STATE_TRANSITION`; còn thành viên online chưa Ready hoặc số
@@ -2472,7 +2472,8 @@ paths:
       summary: Mời bạn vào party
       description: |
         Người mời không được phép theo `invitation_policy` hoặc hai bên chặn nhau → `403 PARTY_INVITE_NOT_ALLOWED` (không tiết lộ
-        lý do); khác trường/tenant, sanction, vi phạm `party_policies` → `403 PARTY_POLICY_VIOLATION`; đã có lời mời chờ → `409`;
+        lý do); khác trường (tenant chưa bật liên trường — ADR-0054)/khác tenant, sanction, khác khối ở party lớp 1–3 (ADR-0095),
+        vi phạm `party_policies` → `403 PARTY_POLICY_VIOLATION`; đã có lời mời chờ → `409`;
         vượt `party_invite_rate` hoặc `party_invite_repeat_rules` → `429 PARTY_INVITE_RATE_LIMITED` (F100-AC-07…10).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
@@ -2604,10 +2605,10 @@ paths:
       x-service: competition
       tags: [multiplayer]
       operationId: joinParty
-      summary: Tham gia party visibility class/friends (party private bắt buộc qua invitation)
+      summary: Tham gia party visibility friends (party private bắt buộc qua invitation)
       description: |
-        `class`: cùng lớp với leader; `friends`: là bạn của leader; `private` không có lời mời `accepted` còn hạn →
-        `403 PARTY_POLICY_VIOLATION` (F100-AC-16).
+        `friends`: là bạn của leader; `private` không có lời mời `accepted` còn hạn → `403 PARTY_POLICY_VIOLATION`
+        (F100-AC-16). Không còn visibility `class` (ADR-0095). Party khối 1–3: người tham gia phải cùng đúng khối với leader.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2742,9 +2743,9 @@ paths:
       x-service: competition
       tags: [competition]
       operationId: createMatchmakingTicket
-      summary: Vào hàng đợi (solo hoặc party leader). Ràng buộc khối lớp được áp trước rating.
+      summary: Vào hàng đợi (solo hoặc party leader). Ràng buộc khối được áp trước rating.
       description: |
-        Khối, trường, lớp, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
+        Khối, trường, tenant và rating do server lấy từ dữ liệu của phiên, không nhận từ body (F104-AC-01). Ticket chỉ
         ở Valkey (ADR-0004). Đã có ticket active (kể cả của party) → `409 MM_TICKET_ALREADY_ACTIVE`; bị hạn chế thi đấu,
         khối không có mode (vd. `team_battle` lớp < 4) hoặc party có thành viên khác khối → `403 POLICY_DENIED`; không phải
         leader → `403 PARTY_NOT_LEADER`; thành viên offline → `409 PARTY_MEMBER_NOT_ONLINE`; `matchmaking_type` `friend`
@@ -3242,7 +3243,7 @@ paths:
       tags: [chat]
       operationId: getMessageReceipts
       summary: Trạng thái đã nhận/đã xem của một tin
-      description: Nhóm ≤ 8 người trả danh sách từng người; class/study_group chỉ trả số đếm; world/area không hỗ trợ (CHAT_FEATURE_DISABLED).
+      description: Nhóm ≤ 8 người trả danh sách từng người (không còn channel class/study_group đếm số — ADR-0095); world/area không hỗ trợ (CHAT_FEATURE_DISABLED).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -19046,7 +19047,8 @@ components:
         expires_at: { $ref: '#/components/schemas/Timestamp' }
     ClubType:
       type: string
-      enum: [study_group, school_club, subject_club, competition_team, interest_group]
+      description: 'Không còn study_group (nhóm học tập LMS bị bỏ — ADR-0095).'
+      enum: [school_club, subject_club, competition_team, interest_group]
     ClubRole:
       type: string
       enum: [owner, officer, member]
@@ -19081,11 +19083,6 @@ components:
         description: { type: string, maxLength: 500 }
         icon_id: { type: string, maxLength: 64 }
         subject_id: { $ref: '#/components/schemas/Uuid' }
-        class_id: { $ref: '#/components/schemas/Uuid' }
-        add_whole_class:
-          type: boolean
-          default: false
-          description: Chỉ nhân sự trường (study group do school_admin/academic_manager tạo); thêm toàn bộ học sinh lớp `class_id`
     ClubUpdate:
       type: object
       properties:
@@ -20186,10 +20183,12 @@ components:
     # ---------- multiplayer
     PartyType:
       type: string
-      enum: [friend, study_group, quest, competition_team, custom]
+      description: 'study_party là tên mới của study_group (ADR-0095 D7, giữ hành vi).'
+      enum: [friend, study_party, quest, competition_team, custom]
     PartyVisibility:
       type: string
-      enum: [private, friends, class]
+      description: 'Không còn class (ADR-0095); party class cũ đọc thành private.'
+      enum: [private, friends]
     PartyCreate:
       type: object
       required: [name, party_type]
@@ -20507,7 +20506,8 @@ components:
     # ---------- chat / social / notification
     ChannelType:
       type: string
-      enum: [world, area, match, party, team, class, study_group, direct]
+      description: 'Không còn class, study_group (ADR-0095).'
+      enum: [world, area, match, party, team, direct]
     MessageKind:
       type: string
       enum: [text, emoji, quick, sticker, gif, system]
@@ -23907,7 +23907,7 @@ components:
             properties:
               student_id: { $ref: '#/components/schemas/Uuid' }
               display_name: { type: string, maxLength: 128 }
-              class_name: { type: string, maxLength: 128 }
+              grade_level: { type: integer, minimum: 1, maximum: 9, description: "Khối của học sinh (thay class_name — ADR-0095); chỉ nhân sự trường của học sinh thấy" }
               role: { type: string, enum: [affected, offender] }
         measures_taken: { type: string, maxLength: 500 }
         summary: { type: string, maxLength: 1000 }

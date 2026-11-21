@@ -13,7 +13,6 @@ import (
 type Candidate struct {
 	TicketID   uuid.UUID
 	Students   []uuid.UUID
-	Classes    []uuid.UUID // class of each student when known
 	Grade      int
 	Rating     Rating // μ_team / RD_team for a party ticket
 	EnqueuedAt time.Time
@@ -75,15 +74,6 @@ func (g Group) TicketIDs() []uuid.UUID {
 	return out
 }
 
-func sameClass(a, b Candidate) bool {
-	for _, x := range a.Classes {
-		if slices.Contains(b.Classes, x) {
-			return true
-		}
-	}
-	return false
-}
-
 // Cost is cost(a, b) of MATCHMAKING §2.2 (smaller is better) for the window w of the pair.
 func (c Config) Cost(k QueueKey, a, b Candidate, w float64, env Env) float64 {
 	cw := c.CostWeights
@@ -94,9 +84,6 @@ func (c Config) Cost(k QueueKey, a, b Candidate, w float64, env Env) float64 {
 	cost += cw.RD * math.Max(0, a.Rating.RD+b.Rating.RD-300) / 300
 	if env.recent(a, b) {
 		cost += cw.RecentOpponent
-	}
-	if c.Ranked(k.Mode, k.Type) && sameClass(a, b) { // ranked: slightly prefer another class
-		cost += cw.SameClass
 	}
 	return cost
 }

@@ -33,6 +33,9 @@ type Event struct {
 	TenantID     *uuid.UUID
 	OccurredAt   time.Time
 	Payload      any
+	// SchemaVersion of the payload (0 = 1); party.created is v2 since ADR-0095 (party_type study_party, no class
+	// visibility).
+	SchemaVersion int
 }
 
 // EventPublisher writes events into the outbox of the transaction.
@@ -62,8 +65,8 @@ type Directory interface {
 	Friends(ctx context.Context, tenant, a, b uuid.UUID) (bool, error)
 	// Blocked reports a live block between student and any of others, either direction.
 	Blocked(ctx context.Context, tenant, student uuid.UUID, others []uuid.UUID) (bool, error)
-	// Overrides returns the party_policies rules of the school and of the classes (live rows only).
-	Overrides(ctx context.Context, tenant, school uuid.UUID, classes []uuid.UUID) ([]party.Override, error)
+	// Overrides returns the party_policies rules of the school (live rows only; no class level since ADR-0095).
+	Overrides(ctx context.Context, tenant, school uuid.UUID) ([]party.Override, error)
 	// Cards returns the public cards of the students of tenant (missing profiles are absent).
 	Cards(ctx context.Context, tenant uuid.UUID, ids []uuid.UUID) (map[uuid.UUID]port.Card, error)
 }

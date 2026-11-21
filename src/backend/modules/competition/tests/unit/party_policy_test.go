@@ -10,8 +10,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/party"
 )
 
-func subj(school uuid.UUID, band string, class *uuid.UUID) party.Subject {
-	return party.Subject{ID: uuid.New(), SchoolID: school, Band: band, ClassID: class, Active: true}
+func subj(school uuid.UUID, grade int) party.Subject {
+	return party.Subject{ID: uuid.New(), SchoolID: school, Grade: grade, Band: party.BandOf(grade), Active: true}
 }
 
 func rule(err error) string {
@@ -29,14 +29,13 @@ func rule(err error) string {
 func TestInviteCheck(t *testing.T) {
 	now := time.Now()
 	school, school2 := uuid.New(), uuid.New()
-	c1, c2 := uuid.New(), uuid.New()
-	leader := subj(school, "g6_7", &c1)
+	leader := subj(school, 6)
 	p, err := party.New(uuid.New(), uuid.New(), school, leader.ID, party.TypeFriend, "g6_7", "Nhóm", party.Settings{}, 4, now)
 	if err != nil {
 		t.Fatal(err)
 	}
 	base := func() party.InviteCheck {
-		return party.InviteCheck{Party: p, Inviter: leader, Invitee: subj(school, "g6_7", &c2), Friends: true,
+		return party.InviteCheck{Party: p, Inviter: leader, Invitee: subj(school, 7), Friends: true,
 			Rules: party.PlatformRules("g6_7", party.MaxMembers)}
 	}
 	cases := []struct {
@@ -51,11 +50,11 @@ func TestInviteCheck(t *testing.T) {
 		{"sanction", func(c *party.InviteCheck) { c.Invitee.Restricted = true }, party.RuleSanction},
 		{"other school", func(c *party.InviteCheck) { c.Invitee.SchoolID = school2 }, party.RuleSchool},
 		{"other school, unit cross-school", func(c *party.InviteCheck) { c.Invitee.SchoolID = school2; c.Scope.CrossSchool = true }, ""},
-		{"grade band", func(c *party.InviteCheck) { c.Invitee.Band = "g8_9" }, party.RuleGradeBand},
+		{"grade band", func(c *party.InviteCheck) { c.Invitee.Grade, c.Invitee.Band = 8, "g8_9" }, party.RuleGradeBand},
 		{"friend only", func(c *party.InviteCheck) { c.Friends = false }, party.RuleFriendOnly},
 		{"kick block", func(c *party.InviteCheck) { c.Kicked = true }, party.RuleKickBlock},
-		{"class off", func(c *party.InviteCheck) { c.Rules.CrossClass = false }, party.RuleClass},
-		{"class off, same class", func(c *party.InviteCheck) { c.Rules.CrossClass = false; c.Invitee.ClassID = &c1 }, ""},
+		{"same grade only, other grade", func(c *party.InviteCheck) { c.Rules.SameGradeOnly = true }, party.RuleGrade},
+		{"same grade only, same grade", func(c *party.InviteCheck) { c.Rules.SameGradeOnly = true; c.Invitee.Grade = 6 }, ""},
 	}
 	for _, c := range cases {
 		chk := base()
@@ -65,7 +64,7 @@ func TestInviteCheck(t *testing.T) {
 		}
 	}
 	// invitation_policy: a member may invite only when the policy is members.
-	member := subj(school, "g6_7", &c1)
+	member := subj(school, 6)
 	if err := p.Add(party.Member{StudentID: member.ID, SchoolID: school, JoinedAt: now}, now); err != nil {
 		t.Fatal(err)
 	}
@@ -83,23 +82,23 @@ func TestInviteCheck(t *testing.T) {
 // PARTY_SYSTEM §4, §8 R12 and the tightening of party_policies.
 func TestPlatformRulesAndTighten(t *testing.T) {
 	g13 := party.PlatformRules("g1_3", 8)
-	if g13.CrossClass || !g13.Allows(party.TypeFriend) || !g13.Allows(party.TypeQuest) || g13.Allows(party.TypeStudyGroup) ||
+	if !g13.SameGradeOnly || !g13.Allows(party.TypeFriend) || !g13.Allows(party.TypeQuest) || g13.Allows(party.TypeStudyParty) ||
 		g13.Allows(party.TypeCustom) || g13.Allows(party.TypeCompetitionTeam) {
 		t.Fatalf("g1_3: %+v", g13)
 	}
-	if g45 := party.PlatformRules("g4_5", 8); !g45.Allows(party.TypeCompetitionTeam) || g45.Allows(party.TypeStudyGroup) {
+	if g45 := party.PlatformRules("g4_5", 8); !g45.Allows(party.TypeCompetitionTeam) || g45.Allows(party.TypeStudyParty) || g45.SameGradeOnly {
 		t.Fatalf("g4_5: %+v", g45)
 	}
 	g67 := party.PlatformRules("g6_7", 8)
-	if !g67.Allows(party.TypeStudyGroup) || !g67.Allows(party.TypeCustom) || !g67.CrossClass || g67.CrossGradeBand {
+	if !g67.Allows(party.TypeStudyParty) || !g67.Allows(party.TypeCustom) || g67.SameGradeOnly || g67.CrossGradeBand {
 		t.Fatalf("g6_7: %+v", g67)
 	}
 	yes, no, three, nine := true, false, 3, 9
-	r := g67.Tighten(party.Override{AllowedTypes: []string{party.TypeQuest, "unknown"}, CrossClass: &no, CrossGradeBand: &yes, MaxMembersCap: &three})
-	if len(r.AllowedTypes) != 1 || r.CrossClass || r.CrossGradeBand || r.MaxMembersCap != 3 {
+	r := g67.Tighten(party.Override{AllowedTypes: []string{party.TypeQuest, "unknown"}, SameGradeOnly: &yes, CrossGradeBand: &yes, MaxMembersCap: &three})
+	if len(r.AllowedTypes) != 1 || !r.SameGradeOnly || r.CrossGradeBand || r.MaxMembersCap != 3 {
 		t.Fatalf("tighten: %+v", r) // a lower level never loosens cross_grade_band
 	}
-	if r := r.Tighten(party.Override{MaxMembersCap: &nine, CrossClass: &yes}); r.MaxMembersCap != 3 || r.CrossClass {
+	if r := r.Tighten(party.Override{MaxMembersCap: &nine, SameGradeOnly: &no}); r.MaxMembersCap != 3 || !r.SameGradeOnly {
 		t.Fatalf("loosened: %+v", r)
 	}
 	if err := party.CheckCreate(g13, party.Subject{}, party.TypeCustom, 4); rule(err) == "" {
@@ -114,20 +113,17 @@ func TestPlatformRulesAndTighten(t *testing.T) {
 func TestJoinCheck(t *testing.T) {
 	now := time.Now()
 	school := uuid.New()
-	c1, c2 := uuid.New(), uuid.New()
-	leader := subj(school, "g6_7", &c1)
+	leader := subj(school, 6)
 	p, _ := party.New(uuid.New(), uuid.New(), school, leader.ID, party.TypeQuest, "g6_7", "Nhóm", party.Settings{}, 4, now)
 	check := func(vis string, joiner party.Subject, friend, invited bool) string {
 		p.Visibility = vis
 		return rule(party.JoinCheck{Party: p, Leader: leader, Joiner: joiner, FriendOfLeader: friend, Invited: invited,
 			Rules: party.PlatformRules("g6_7", 8)}.Evaluate())
 	}
-	same, other := subj(school, "g6_7", &c1), subj(school, "g6_7", &c2)
-	if got := check(party.VisibilityClass, same, false, false); got != "" {
-		t.Fatalf("class same: %s", got)
-	}
-	if got := check(party.VisibilityClass, other, true, false); got != party.RuleVisibility {
-		t.Fatalf("class other: %s", got)
+	same, other := subj(school, 6), subj(school, 7)
+	// ADR-0095: no class circle — a legacy class visibility joins nobody without an invitation.
+	if got := check("class", same, true, false); got != party.RuleVisibility {
+		t.Fatalf("class visibility: %s", got)
 	}
 	if got := check(party.VisibilityFriends, other, true, false); got != "" {
 		t.Fatalf("friends: %s", got)
@@ -163,10 +159,13 @@ func TestPartyAggregate(t *testing.T) {
 	if _, err := p.Update(party.Settings{MaxMembers: ptr(5)}, 4, t0); rule(err) == "" {
 		t.Fatal("max above the cap accepted")
 	}
-	if changed, err := p.Update(party.Settings{Visibility: ptr(party.VisibilityClass)}, 8, t0); err != nil || len(changed) != 1 || p.StateVersion != 3 {
+	if _, err := p.Update(party.Settings{Visibility: ptr("class")}, 8, t0); rule(err) == "" {
+		t.Fatal("visibility class accepted (ADR-0095)")
+	}
+	if changed, err := p.Update(party.Settings{Visibility: ptr(party.VisibilityFriends)}, 8, t0); err != nil || len(changed) != 1 || p.StateVersion != 3 {
 		t.Fatalf("update: %v %v %d", changed, err, p.StateVersion)
 	}
-	if changed, _ := p.Update(party.Settings{Visibility: ptr(party.VisibilityClass)}, 8, t0); changed != nil || p.StateVersion != 3 {
+	if changed, _ := p.Update(party.Settings{Visibility: ptr(party.VisibilityFriends)}, 8, t0); changed != nil || p.StateVersion != 3 {
 		t.Fatal("no-op update changed the version")
 	}
 	// Leader leaves: c online → c leads although b joined first.
@@ -216,3 +215,71 @@ func TestInvitation(t *testing.T) {
 }
 
 func ptr[T any](v T) *T { return &v }
+
+// ADR-0095 D2 (F100-AC-09, PARTY_SYSTEM §8 R12): a grade 1–3 party takes members of the exact grade of the inviter or
+// leader; another school only inside the tenant when cross-school social is on (ADR-0054); another tenant is never
+// projected (RuleTenant); a friend party still takes friends only.
+func TestGrades13SameGrade(t *testing.T) {
+	now := time.Now()
+	school, school2 := uuid.New(), uuid.New()
+	leader := subj(school, 2)
+	p, err := party.New(uuid.New(), uuid.New(), school, leader.ID, party.TypeFriend, "g1_3", "Nhóm", party.Settings{}, 4, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	invite := func(invitee party.Subject, friends, crossSchool bool) string {
+		return rule(party.InviteCheck{Party: p, Inviter: leader, Invitee: invitee, Friends: friends,
+			Rules: party.PlatformRules("g1_3", party.MaxMembers), Scope: party.Scope{CrossSchool: crossSchool}}.Evaluate())
+	}
+	otherTenant := subj(school, 2)
+	otherTenant.Active = false // unknown in the session tenant: the Subject lookup is tenant-scoped
+	cases := []struct {
+		name        string
+		invitee     party.Subject
+		friends     bool
+		crossSchool bool
+		want        string
+	}{
+		{"same grade, same school", subj(school, 2), true, false, ""},
+		{"other grade of the band", subj(school, 3), true, false, party.RuleGrade},
+		{"other grade, cross-school on", subj(school2, 1), true, true, party.RuleGrade},
+		{"same grade, other school, cross-school off", subj(school2, 2), true, false, party.RuleSchool},
+		{"same grade, other school, cross-school on", subj(school2, 2), true, true, ""},
+		{"other tenant", otherTenant, true, true, party.RuleTenant},
+		{"same grade, not a friend", subj(school, 2), false, false, party.RuleFriendOnly},
+		{"grade unknown", subj(school, 0), true, false, party.RuleGradeBand},
+	}
+	for _, c := range cases {
+		if got := invite(c.invitee, c.friends, c.crossSchool); got != c.want {
+			t.Errorf("%s: %q, want %q", c.name, got, c.want)
+		}
+	}
+	// joinParty of a friends party checks the grade of the leader the same way.
+	p.Visibility = party.VisibilityFriends
+	join := func(joiner party.Subject) string {
+		return rule(party.JoinCheck{Party: p, Leader: leader, Joiner: joiner, FriendOfLeader: true,
+			Rules: party.PlatformRules("g1_3", party.MaxMembers), Scope: party.Scope{CrossSchool: true}}.Evaluate())
+	}
+	if got := join(subj(school2, 2)); got != "" {
+		t.Fatalf("join same grade other school: %s", got)
+	}
+	if got := join(subj(school, 1)); got != party.RuleGrade {
+		t.Fatalf("join other grade: %s", got)
+	}
+	// study_party is not allowed below grade 6 (D7 keeps the behaviour of study_group).
+	if err := party.CheckCreate(party.PlatformRules("g1_3", 8), leader, party.TypeStudyParty, 4); rule(err) == "" {
+		t.Fatal("study_party allowed at grade 2")
+	}
+	if party.ValidType("study_group") {
+		t.Fatal("study_group still a valid party type")
+	}
+}
+
+// ADR-0095: a row written before the backfill reads as study_party / private.
+func TestPartyLegacyValues(t *testing.T) {
+	p := party.Party{Type: "study_group", Visibility: "class"}
+	p.Legacy()
+	if p.Type != party.TypeStudyParty || p.Visibility != party.VisibilityPrivate {
+		t.Fatalf("legacy: %+v", p)
+	}
+}

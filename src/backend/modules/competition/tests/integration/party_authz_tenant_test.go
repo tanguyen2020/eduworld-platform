@@ -79,9 +79,9 @@ func TestPartyRoutesStaffDenied(t *testing.T) {
 func TestPartyTenantIsolation(t *testing.T) {
 	e := setupParty(t, popts{})
 	an := e.kidA()
-	dung, em := e.kid(e.tenantB, e.schoolB, uuid.Nil, 6), e.kid(e.tenantB, e.schoolB, uuid.Nil, 6)
+	dung, em := e.kid(e.tenantB, e.schoolB, 6), e.kid(e.tenantB, e.schoolB, 6)
 	pb := e.party(dung, em)
-	x := e.kid(e.tenantB, e.schoolB, uuid.Nil, 6)
+	x := e.kid(e.tenantB, e.schoolB, 6)
 	e.friends(dung, x)
 	invB := e.invite(dung, pb, x, http.StatusCreated).str("invitation_id")
 	// Wrong X-Tenant-Id.

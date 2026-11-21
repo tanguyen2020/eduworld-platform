@@ -49,7 +49,7 @@ Giao qua Valkey `ew:rt:user:<user_id>` (research R1).
 
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
-| `party.created`, `party.disbanded` | competition → chat (channel `party`, `ref.parties`), AUD, ANA | `specs/events/payloads/competition/party.created.v1.schema.json`, `party.disbanded.v1.schema.json` | Cần thêm |
+| `party.created`, `party.disbanded` | competition → chat (channel `party`, `ref.parties`), AUD, ANA | `specs/events/payloads/competition/party.created.v2.schema.json`, `party.disbanded.v1.schema.json` | Cần thêm |
 | `party.member_joined` / `_left` / `_kicked` | competition → chat, game (F103), AUD | `party.member_joined.v1`, `party.member_left.v1`, `party.member_kicked.v1` | Cần thêm |
 | `party.invitation_*` (5 event) | competition → NTF, AUD | `party.invitation_sent.v1` … `party.invitation_cancelled.v1` | Cần thêm |
 | `party.leader_transferred`, `party.settings_updated` | competition → AUD, game (F103) | `party.leader_transferred.v1`, `party.settings_updated.v1` | Cần thêm |

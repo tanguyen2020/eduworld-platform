@@ -121,7 +121,6 @@ type Player struct {
 	ID        uuid.UUID
 	TenantID  uuid.UUID
 	SchoolID  uuid.UUID
-	ClassID   *uuid.UUID
 	Grade     int // 0: not projected
 	Active    bool
 	Restrict  bool // abandon_penalty / restrict_competition / sanction in force
