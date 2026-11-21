@@ -81,16 +81,6 @@
       "noProvince": "SIS did not send the school's province."
     }
   },
-  "classes": {
-    "tab": "Classes",
-    "name": "Class",
-    "grade": "Grade",
-    "academicYear": "Academic year",
-    "academicYearHint": "2026-2027",
-    "studentCount": "Students",
-    "students": "Students of the class",
-    "readOnlyHint": "Students come from SIS/CSV and are read-only. Edit details or change classes in SIS or the CSV file."
-  },
   "students": {
     "name": "Name",
     "username": "Username",
@@ -101,15 +91,11 @@
     "daysAway": "Days without the game",
     "days": "{{count}} days",
     "activity": "Login activity",
-    "searchHint": "Name, username or student code (at least 2 characters)"
-  },
-  "unassigned": {
-    "tab": "Students without a class",
-    "title": "Students without a class cannot enter the game",
-    "guidance": "Every student belongs to exactly one school and one class. Add the class of the students below in SIS or the CSV file, then sync/import again; the portal does not assign temporary classes.",
-    "reason": "Reason",
-    "reasons": { "missing_class": "No class", "class_not_found": "Class not found", "multiple_classes": "Several classes" },
-    "detectedAt": "Detected at"
+    "searchHint": "Name or username (at least 2 characters)",
+    "readOnlyHint": "Students belong to one school and one grade, come from SIS/CSV and are read-only. Edit details or change school/grade in SIS or the CSV file.",
+    "searchFirst": "Type a name or username (at least 2 characters) to find students of the school.",
+    "searchUnavailable": "Students cannot be searched with your current permissions (requires viewing the users of the school).",
+    "found": "Students found"
   },
   "activity": {
     "loginAt": "Entered",
@@ -349,7 +335,6 @@
     "chatRetention": "In-match chat retention (days)",
     "chatRetentionHelp": "Empty = EduWorld default; not below the minimum.",
     "schoolPolicy": "School policy",
-    "classLeaderboard": "Class leaderboard",
     "schoolLeaderboard": "School leaderboard",
     "clubCreation": "Students may create clubs"
   },

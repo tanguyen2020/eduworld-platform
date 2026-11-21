@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from '../../../../shared/api/middleware/problem';
 import en from '../../../../i18n/lms.en.json';
 import vi from '../../../../i18n/lms.vi.json';
-import { EMPTY_FORM, editableFields, formFieldOf, stepOf, toCreatePayload, toUpdatePayload, validateAssignment, type Assignment, type AssignmentFormValues } from './assignmentForm';
+import { EMPTY_FORM, editableFields, excludedIncludes, formFieldOf, stepOf, toCreatePayload, toTargets, toUpdatePayload, validateAssignment, type Assignment, type AssignmentFormValues } from './assignmentForm';
 import { LMS_ENUMS, LMS_FIELDS, LMS_LIMITS } from './fieldSchemas';
 import { isContentError, isStale, lmsErrorKey, LMS_OWN_CODES } from './problemMessages';
 
@@ -53,21 +53,39 @@ describe('fieldSchemas mirror the OpenAPI spec (ADR-0041, F055-AC-04)', () => {
 const filled: AssignmentFormValues = {
   ...EMPTY_FORM,
   content: { contentType: 'activity', contentId: 'c1', versionId: 'v1', title: 'Quiz' },
-  courseId: 'course',
-  targetIds: ['class-3a'],
+  schoolId: 'school-a',
+  subjectId: 'math',
+  grades: [3],
   title: 'Ôn tập',
   openAt: '2026-11-20T01:00:00.000Z',
   dueAt: '2026-11-27T10:00:00.000Z',
 };
 
 describe('assignment form (F055-AC-03, AC-04)', () => {
-  it('a valid form has no issue; payload pins the version and has no release fields', () => {
+  it('a valid form has no issue; payload has school, subject, a grade target, the pinned version and no release fields', () => {
     expect(validateAssignment(filled)).toEqual([]);
     const p = toCreatePayload(filled);
+    expect(p).toMatchObject({ school_id: 'school-a', subject_id: 'math' });
+    expect(p).not.toHaveProperty('course_id');
     expect(p.content_ref).toEqual({ content_type: 'activity', content_id: 'c1', pinned_version_id: 'v1' });
-    expect(p.targets).toEqual([{ target_type: 'class', target_id: 'class-3a' }]);
+    expect(p.targets).toEqual([{ target_type: 'grade', grade_level: 3 }]);
     expect(p).not.toHaveProperty('feedback_timing');
     expect(p).not.toHaveProperty('result_release');
+  });
+
+  it('grades: one target per grade (sorted, no duplicate), include on the first, exclude on every grade target (ADR-0095)', () => {
+    const v = { ...filled, grades: [4, 3, 4], includeIds: ['s9', 's9'], excludeIds: ['s1', 's9'] };
+    expect(toTargets(v)).toEqual([
+      { target_type: 'grade', grade_level: 3, include_student_ids: ['s9'], exclude_student_ids: ['s1', 's9'] },
+      { target_type: 'grade', grade_level: 4, exclude_student_ids: ['s1', 's9'] },
+    ]);
+    expect(excludedIncludes(v)).toEqual(['s9', 's9']);
+    expect(excludedIncludes(filled)).toEqual([]);
+  });
+
+  it('students mode: one students target only; grades, include and exclude are not sent', () => {
+    const p = toCreatePayload({ ...filled, targetMode: 'students', studentIds: ['s1', 's2', 's1'], includeIds: ['x'], excludeIds: ['y'] });
+    expect(p.targets).toEqual([{ target_type: 'students', student_ids: ['s1', 's2'] }]);
   });
 
   it('graded: follow_latest is never sent true and the version stays pinned (AC-03)', () => {
@@ -81,31 +99,53 @@ describe('assignment form (F055-AC-03, AC-04)', () => {
   });
 
   it('release fields are sent only when chosen; students target is one target with student_ids', () => {
-    const p = toCreatePayload({ ...filled, resultRelease: 'manual', targetType: 'students', targetIds: ['s1', 's2'] });
+    const p = toCreatePayload({ ...filled, resultRelease: 'manual', targetMode: 'students', studentIds: ['s1', 's2'] });
     expect(p.result_release).toBe('manual');
     expect(p.targets).toEqual([{ target_type: 'students', student_ids: ['s1', 's2'] }]);
   });
 
-  it('limits: title maxLength, instructions maxLength, targets maxItems, due > open, ranges (AC-04)', () => {
+  it('limits: title maxLength, instructions maxLength, grade targets maxItems (9), include/exclude maxItems, due > open, ranges (AC-04)', () => {
+    const many = (n: number, p: string) => Array.from({ length: n }, (_, i) => `${p}${i}`);
     const issues = validateAssignment({
       ...filled,
       title: 'x'.repeat(LMS_FIELDS.assignmentTitle.maxLength + 1),
       instructions: 'y'.repeat(LMS_FIELDS.assignmentInstructions.maxLength + 1),
-      targetIds: Array.from({ length: LMS_LIMITS.targets.maxItems + 1 }, (_, i) => `c${i}`),
+      grades: Array.from({ length: LMS_LIMITS.targets.maxItems + 1 }, (_, i) => i + 1),
+      includeIds: many(LMS_LIMITS.includeStudents.maxItems + 1, 'i'),
+      excludeIds: many(LMS_LIMITS.excludeStudents.maxItems + 1, 'e'),
       dueAt: '2026-11-19T00:00:00.000Z',
       lateWindowHours: LMS_LIMITS.lateWindowHours.maximum + 1,
       maxAttempts: 0,
     });
-    expect(issues.map((i) => `${i.field}:${i.key}`).sort()).toEqual(['dueAt:dueAfterOpen', 'instructions:tooLong', 'lateWindowHours:range', 'maxAttempts:range', 'targetIds:tooMany', 'title:tooLong']);
-    expect(validateAssignment({ ...EMPTY_FORM }).map((i) => i.field)).toEqual(expect.arrayContaining(['title', 'content', 'courseId', 'targetIds', 'openAt', 'dueAt']));
+    expect(issues.map((i) => `${i.field}:${i.key}`).sort()).toEqual([
+      'dueAt:dueAfterOpen',
+      'excludeIds:tooMany',
+      'grades:tooMany',
+      'includeIds:tooMany',
+      'instructions:tooLong',
+      'lateWindowHours:range',
+      'maxAttempts:range',
+      'title:tooLong',
+    ]);
+    expect(validateAssignment({ ...filled, grades: [0] }).map((i) => `${i.field}:${i.key}`)).toEqual(['grades:range']);
+    expect(validateAssignment({ ...filled, targetMode: 'students', studentIds: many(LMS_LIMITS.targetStudents.maxItems + 1, 's') }).map((i) => `${i.field}:${i.key}`)).toEqual(['studentIds:tooMany']);
+    expect(validateAssignment({ ...EMPTY_FORM }).map((i) => i.field)).toEqual(expect.arrayContaining(['title', 'content', 'schoolId', 'subjectId', 'grades', 'openAt', 'dueAt']));
+    expect(validateAssignment({ ...EMPTY_FORM, targetMode: 'students' }).map((i) => i.field)).toEqual(expect.arrayContaining(['studentIds']));
   });
 
   it('server pointers map to fields and steps', () => {
     expect(formFieldOf('/due_at')).toBe('dueAt');
-    expect(formFieldOf('/targets/0/target_id')).toBe('targetIds');
+    expect(formFieldOf('/school_id')).toBe('schoolId');
+    expect(formFieldOf('/subject_id')).toBe('subjectId');
+    expect(formFieldOf('/targets/0/include_student_ids/3')).toBe('includeIds');
+    expect(formFieldOf('/targets/1/exclude_student_ids')).toBe('excludeIds');
+    expect(formFieldOf('/targets/0/student_ids/0')).toBe('studentIds');
+    expect(formFieldOf('/targets/2/grade_level')).toBe('grades');
+    expect(formFieldOf('/targets')).toBe('grades');
     expect(formFieldOf('late_policy.late_window_hours')).toBe('lateWindowHours');
     expect(stepOf('content')).toBe(0);
-    expect(stepOf('targetIds')).toBe(1);
+    expect(stepOf('includeIds')).toBe(1);
+    expect(stepOf('subjectId')).toBe(1);
     expect(stepOf('title')).toBe(2);
     expect(stepOf('resultRelease')).toBe(3);
   });

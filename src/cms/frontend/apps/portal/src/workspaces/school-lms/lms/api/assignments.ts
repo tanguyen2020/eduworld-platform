@@ -12,21 +12,30 @@ export type Assignment = S['Assignment'];
 export type AssignmentSubmission = S['AssignmentSubmission'];
 export type AssignmentStatus = S['AssignmentStatus'];
 
+/** Filters of listAssignments (ADR-0095: school, subject, grade — no course or class). */
 export interface AssignmentFilters {
   status?: AssignmentStatus;
-  courseId?: string;
-  classId?: string;
+  schoolId?: string;
+  subjectId?: string;
+  gradeLevel?: number;
 }
 
 export function useAssignments(f: AssignmentFilters = {}) {
   const { api, scope } = useLmsContext();
   return useDataList<Assignment>(
-    lmsKey('assignments', scope, f.status ?? '', f.courseId ?? '', f.classId ?? ''),
+    lmsKey('assignments', scope, f.status ?? '', f.schoolId ?? '', f.subjectId ?? '', f.gradeLevel ?? ''),
     (cursor) =>
       api.call<DataPage<Assignment>>(
         api.client.GET('/lms/assignments', {
           params: {
-            query: { limit: LMS_PAGE_SIZE, ...(cursor ? { cursor } : {}), ...(f.status ? { status: f.status } : {}), ...(f.courseId ? { course_id: f.courseId } : {}), ...(f.classId ? { class_id: f.classId } : {}) },
+            query: {
+              limit: LMS_PAGE_SIZE,
+              ...(cursor ? { cursor } : {}),
+              ...(f.status ? { status: f.status } : {}),
+              ...(f.schoolId ? { school_id: f.schoolId } : {}),
+              ...(f.subjectId ? { subject_id: f.subjectId } : {}),
+              ...(f.gradeLevel ? { grade_level: f.gradeLevel } : {}),
+            },
           },
           headers: scope.headers,
         } as never),

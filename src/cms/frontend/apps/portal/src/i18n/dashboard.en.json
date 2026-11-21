@@ -7,7 +7,9 @@
     "noValue": "no data",
     "suppressedShort": "fewer than 5 students",
     "metric": {
-      "noData": "No data yet"
+      "noData": "No data yet",
+      "activeStudents": "Active students",
+      "rapidGuess": "Rapid-guess rate"
     },
     "action": {
       "newAssignment": "New assignment",
@@ -43,8 +45,6 @@
       "grade": "Grade",
       "allGrades": "All grades",
       "gradeN": "Grade {{n}}",
-      "class": "Class",
-      "allClasses": "All classes",
       "subject": "Subject",
       "allSubjects": "All subjects"
     },
@@ -54,14 +54,12 @@
       "completion": "Submission rate",
       "none": "No assignment due soon.",
       "item": "{{title}} — due {{due}}",
-      "submitted": "{{submitted}}/{{total}}",
-      "byClass": "Submission rate by class"
+      "submitted": "{{submitted}}/{{total}}"
     },
     "weak": {
-      "skillMap": "Skill map",
       "assignPractice": "Assign practice for this objective",
       "codeRef": "{{code}} ({{ref}})",
-      "belowProficient": "{{ratio}} of students below proficient · {{classes}}"
+      "belowProficient": "{{ratio}} of students below proficient"
     },
     "attention": {
       "total": "{{count}} students need support"
@@ -83,19 +81,6 @@
       "pending": "Notifications awaiting parent-contact confirmation",
       "open": "Open safety notifications"
     },
-    "class": {
-      "unnamed": "Class",
-      "summary": "Class {{name}} overview",
-      "activeStudents": "Active students",
-      "rapidGuess": "Too-fast answer rate",
-      "heatmap": "Skill map (objective × level)",
-      "heatmapCaption": "Mastery level distribution per objective of class {{name}}",
-      "objective": "Objective",
-      "actions": "Actions",
-      "students": "Students of the class",
-      "searchStudent": "Search a student by name",
-      "noMatch": "No matching student."
-    },
     "heatmap": {
       "cell": "{{lo}} · {{level}}: {{count}} students",
       "topicCell": "{{topic}} · {{level}}: {{count}} objectives"
@@ -114,7 +99,8 @@
       "lessons": "Lessons completed",
       "minutes": "Study minutes",
       "accuracy": "Accuracy",
-      "flags": "Attention"
+      "flags": "Attention",
+      "numbered": "Student {{n}}"
     },
     "submission": {
       "not_started": "Not started",
@@ -158,14 +144,11 @@
       "R9": "Retry wrong questions"
     },
     "results": {
-      "pickCourse": "Choose a course to see the table of self-scored tests.",
       "scale": "Self-scored marks on a 10-point scale; no manual grades.",
       "openAnalysis": "Open the analysis of {{title}}",
-      "tooFastHint": "Some answers were flagged as too fast.",
-      "noGraded": "The course has no self-scored test yet.",
-      "back": "Back to courses",
       "courses": "Results",
-      "tab": "Results"
+      "pickAssignment": "Pick an assignment to see the analysis of its results; filter by school, subject and grade.",
+      "averageScore": "Average score"
     },
     "analysis": {
       "title": "Analysis of {{title}}",
@@ -190,19 +173,17 @@
       "flag": "Warning",
       "problemItem": "Item to review",
       "assignWrong": "Assign practice to students who missed this item",
-      "pValueNote": "The correct rate excludes too-fast answers."
+      "pValueNote": "The correct rate excludes too-fast answers.",
+      "actions": "Actions"
     },
     "export": {
       "limit": "You already have too many reports being prepared. Wait for one to finish and try again.",
       "type": "Report type",
       "format": "Format",
-      "course": "Course",
       "assignment": "Assignment",
       "types": {
         "assignment_results": "Assignment results",
-        "course_results": "Course results table",
         "regulation_reference": "Reference report TT27/TT22",
-        "skill_map": "Skill map",
         "school_monthly": "Monthly school report"
       }
     },

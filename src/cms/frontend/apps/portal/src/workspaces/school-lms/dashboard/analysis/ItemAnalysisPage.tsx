@@ -1,16 +1,18 @@
 // Tab "Phân tích" of a graded assignment (F056 T032; F056-AC-13; SCHOOL_LMS §8.6, EXAM_ENGINE §11): the exam session
 // behind the assignment (`Assignment.exam_session_id`) → getExamSessionReport: score distribution (0.5-point buckets,
-// chart + text), mean, median, pass rate, per item the p-value of the class/school WITHOUT `rapid_guess` answers, the
+// chart + text), mean, median, pass rate, per item the p-value of the students WITHOUT `rapid_guess` answers, the
 // rapid-guess rate, common wrong choices by `misconception_tag`, average time; the low-reliability and variant-gap
 // warnings when the server raises them. "Giao ôn tập cho học sinh sai câu này" opens the F055 wizard in practice mode
-// for the classes of the assignment (the contract does not list who answered an item wrong). Assignments without an
-// exam session have no item analysis yet (getAssignmentItemAnalysis is not in the contract — spec Clarifications).
+// for the school, subject and first grade of the assignment (ADR-0095; the contract does not list who answered an item
+// wrong). Assignments without an exam session have no item analysis yet (getAssignmentItemAnalysis is not in the
+// contract — spec Clarifications).
 import { DashboardChart, DashboardMetric, DashboardWidget } from '@eduworld/ops-ui/dashboard';
 import { Alert, Breadcrumb, Button, Col, Flex, Row, Table, Tag, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ActionGate } from '../../../../permissions/ActionGate';
 import { useAssignment } from '../../lms/api/assignments';
+import { TargetsText } from '../../lms/LmsUi';
 import { useExamSessionReport, type ExamItemQuality } from '../api/resultsApi';
 import { DashboardPageError, practiceWizardHref, RESULTS_BASE, useWidgetError } from '../DashboardUi';
 import { LmsReportExport } from '../reports/ReportExport';
@@ -20,7 +22,7 @@ const BUCKET = 0.5;
 export function ItemAnalysisPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { courseId, assignmentId } = useParams();
+  const { assignmentId } = useParams();
   const assignment = useAssignment(assignmentId);
   const sessionId = assignment.data?.exam_session_id;
   const report = useExamSessionReport(sessionId);
@@ -31,13 +33,14 @@ export function ItemAnalysisPage() {
   const r = report.data;
   const num = (v: number, d = 1) => new Intl.NumberFormat(i18n.language, { maximumFractionDigits: d }).format(v);
   const pct = (v: number | null | undefined) => (v === null || v === undefined ? '' : new Intl.NumberFormat(i18n.language, { style: 'percent', maximumFractionDigits: 0 }).format(v));
-  const classIds = (a?.targets ?? []).filter((x) => x.target_type === 'class').map((x) => x.target_id);
+  const grade = (a?.targets ?? []).find((x) => x.target_type === 'grade')?.grade_level;
   const buckets = (r?.score_distribution ?? []).map((_, i) => `${num(i * BUCKET)}–${num((i + 1) * BUCKET)}`);
   const items = r?.items ?? [];
-  const assignHref = practiceWizardHref({ classId: classIds[0] });
+  const assignHref = practiceWizardHref({ schoolId: a?.school_id, subjectId: a?.subject_id, grade });
   return (
     <Flex vertical gap="middle" data-testid="item-analysis">
-      <Breadcrumb items={[{ title: <Link to={RESULTS_BASE}>{t('dashboard.results.courses')}</Link> }, { title: <Link to={`${RESULTS_BASE}/${courseId}`}>{t('dashboard.results.tab')}</Link> }, { title: a?.title ?? '' }]} />
+      <Breadcrumb items={[{ title: <Link to={RESULTS_BASE}>{t('dashboard.results.courses')}</Link> }, { title: a?.title ?? '' }]} />
+      {a ? <TargetsText targets={a.targets} /> : null}
       {a && !sessionId ? <Alert type="info" showIcon data-testid="no-item-analysis" message={t('dashboard.analysis.unavailable')} /> : null}
       {a ? <LmsReportExport label={t('dashboard.analysis.exportAssignment')} request={{ report_type: 'assignment_results', format: 'xlsx', assignment_id: a.assignment_id }} /> : null}
       {sessionId ? (
@@ -92,7 +95,7 @@ export function ItemAnalysisPage() {
                   { key: 'flag', title: t('dashboard.analysis.flag'), render: (_, i) => (i.problem ? <Tag color="warning">{t('dashboard.analysis.problemItem')}</Tag> : null) },
                   {
                     key: 'assign',
-                    title: t('dashboard.class.actions'),
+                    title: t('dashboard.analysis.actions'),
                     render: () => (
                       <ActionGate actionKey="action.school_lms.assignments.edit">
                         <Button size="small" onClick={() => navigate(assignHref)}>

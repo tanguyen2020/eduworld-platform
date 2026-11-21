@@ -18,8 +18,7 @@
       "tooLong": "Tối đa {{max}} ký tự.",
       "tooMany": "Chọn tối đa {{max}} mục.",
       "dueAfterOpen": "Hạn nộp phải sau thời điểm mở bài.",
-      "range": "Giá trị từ {{min}} đến {{max}}.",
-      "itemsRange": "Chọn từ {{min}} đến {{max}} học sinh."
+      "range": "Giá trị từ {{min}} đến {{max}}."
     },
     "assignmentStatus": {
       "draft": "Nháp",
@@ -38,7 +37,6 @@
       "missed": "Bỏ lỡ",
       "excused": "Được miễn"
     },
-    "courseStatus": { "active": "Đang dạy", "hidden": "Đã ẩn", "archived": "Lưu trữ" },
     "contentType": {
       "activity": "Activity",
       "question_set": "Bộ câu hỏi",
@@ -47,15 +45,12 @@
       "quest": "Quest",
       "minigame_config": "Mini-game"
     },
-    "targetType": { "class": "Lớp", "study_group": "Nhóm học tập", "students": "Học sinh cụ thể" },
+    "targetMode": { "grades": "Theo khối", "students": "Học sinh cụ thể" },
+    "filters": { "allSubjects": "Tất cả môn", "allGrades": "Tất cả khối" },
     "mode": { "practice": "Luyện tập", "graded": "Kiểm tra (tính điểm)" },
     "scorePolicy": { "best": "Lần cao nhất", "last": "Lần cuối", "first": "Lần đầu" },
     "feedbackTiming": { "immediate": "Ngay sau mỗi câu", "after_submit": "Sau khi nộp", "after_close": "Sau khi đóng bài", "never": "Không hiển thị" },
     "resultRelease": { "immediate": "Ngay khi nộp", "after_close": "Sau khi đóng bài", "manual": "Công bố thủ công" },
-    "unlockMode": { "sequential": "Theo thứ tự", "free": "Tự do", "mastery_gate": "Theo mức thành thạo" },
-    "unlockRule": { "always": "Luôn mở", "previous_completed": "Xong bước trước", "mastery_gate": "Đạt mức thành thạo", "date": "Theo ngày" },
-    "mastery": { "beginning": "Bắt đầu", "developing": "Đang phát triển", "proficient": "Thành thạo", "mastered": "Vững vàng" },
-    "scheduleKind": { "lesson": "Tiết học", "assignment_due": "Hạn nộp bài", "exam": "Kiểm tra", "event": "Sự kiện" },
     "picker": {
       "activity": "Activity",
       "question_set": "Bộ câu hỏi",
@@ -73,9 +68,20 @@
       "grade": "Khối",
       "gradeN": "Khối {{n}}",
       "selectedContent": "Đã chọn: {{title}}",
-      "course": "Khóa học",
+      "subject": "Môn học",
       "targetType": "Giao cho",
-      "targets": { "class": "Lớp", "study_group": "Nhóm học tập", "students": "Học sinh" },
+      "grades": "Khối được giao",
+      "includeIds": "Thêm học sinh khối khác (cùng trường)",
+      "excludeIds": "Bớt học sinh",
+      "studentIds": "Học sinh",
+      "searchStudent": "Gõ ít nhất 2 ký tự để tìm học sinh của trường",
+      "searchHint": "Gõ ít nhất 2 ký tự để tìm.",
+      "studentPrefilled": "Học sinh đã chọn sẵn",
+      "studentSearchUnavailable": "Chưa tra cứu được học sinh ở đây (cần quyền xem người dùng). Vẫn giao được theo khối; học sinh đã chọn sẵn từ dashboard được giữ.",
+      "excludeWins": "{{n}} học sinh vừa được thêm vừa bị bớt: học sinh bị bớt sẽ không nhận bài.",
+      "newStudentsJoin": "Học sinh mới vào khối sau khi giao được tự động thêm vào bài còn mở (trừ học sinh bị bớt).",
+      "includeCount": "thêm {{n}} học sinh",
+      "excludeCount": "bớt {{n}} học sinh",
       "targetCount": "{{type}}: {{n}}",
       "title": "Tiêu đề",
       "instructions": "Hướng dẫn",
@@ -138,57 +144,6 @@
     "regrade": {
       "open": "Chấm lại đề",
       "questionLabel": "Đề {{variant}} · câu {{position}}"
-    },
-    "course": {
-      "name": "Khóa học",
-      "students": "Sĩ số",
-      "hide": "Ẩn",
-      "show": "Hiện"
-    },
-    "path": {
-      "list": "Lộ trình học",
-      "none": "Chưa có lộ trình.",
-      "new": "Tạo lộ trình",
-      "view": "Xem",
-      "template": "Mẫu",
-      "templateReadOnly": "Lộ trình mẫu theo bộ sách chỉ đọc.",
-      "title": "Tên lộ trình",
-      "unlockMode": "Cách mở khóa",
-      "unlockRule": "Điều kiện mở",
-      "minMastery": "Mức tối thiểu",
-      "noNodes": "Chưa có bước nào.",
-      "addNode": "Thêm bước",
-      "moveUp": "Lên",
-      "moveDown": "Xuống",
-      "nodeCount": "{{n}}/{{max}} bước",
-      "unlock": "Mở khóa cho học sinh",
-      "unlockTitle": "Mở khóa bước {{position}} cho một học sinh",
-      "pickStudent": "Chọn học sinh trước khi xác nhận.",
-      "unlocked": "Đã mở khóa."
-    },
-    "schedule": {
-      "month": "Tháng",
-      "week": "Tuần",
-      "add": "Thêm mục lịch",
-      "newTitle": "Thêm mục lịch",
-      "editTitle": "Sửa mục lịch",
-      "deleteConfirm": "Xóa mục lịch này?",
-      "date": "Ngày",
-      "kind": "Loại",
-      "period": "Tiết",
-      "note": "Ghi chú",
-      "prevWeek": "Tuần trước",
-      "nextWeek": "Tuần sau"
-    },
-    "group": {
-      "name": "Tên nhóm",
-      "class": "Lớp",
-      "members": "Thành viên",
-      "memberCount": "Số thành viên",
-      "new": "Tạo nhóm",
-      "newTitle": "Tạo nhóm học tập",
-      "editTitle": "Sửa nhóm học tập",
-      "deleteConfirm": "Xóa nhóm \"{{name}}\"? Bài đã giao cho nhóm vẫn giữ danh sách học sinh."
     },
     "games": {
       "help": "Quest và mini-game đã xuất bản có thể giao cho học sinh. Cấu hình game do đội vận hành game quản lý."

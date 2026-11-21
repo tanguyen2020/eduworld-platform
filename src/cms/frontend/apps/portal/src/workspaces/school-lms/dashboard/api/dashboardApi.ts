@@ -11,7 +11,6 @@ import { DASHBOARD_CONFIG, DASHBOARD_QUERY_TIMING } from '../model/limits';
 import type { DashboardFilters } from '../model/filters';
 
 export type SchoolDashboard = Schemas['SchoolDashboard'];
-export type ClassDashboard = Schemas['ClassDashboard'];
 export type StudentLearningProfile = Schemas['StudentLearningProfile'];
 export type AttentionReason = Schemas['AttentionReason'];
 export type Subject = Schemas['Subject'];
@@ -30,14 +29,13 @@ export function useDashboardContext() {
 
 const rangeQuery = (f: DashboardFilters) => ({ from: f.range.from, to: f.range.to });
 
-/** getSchoolDashboard: the 5 widgets of the school (or of one class with `class_id`). */
+/** getSchoolDashboard: the 5 widgets of the school (one grade with `grade_level`; no class — ADR-0095). */
 export function useSchoolDashboard(f: DashboardFilters) {
   const { api, scope, queue } = useDashboardContext();
   const query = {
     school_id: f.schoolId!,
     ...rangeQuery(f),
     ...(f.grade ? { grade_level: f.grade } : {}),
-    ...(f.classId ? { class_id: f.classId } : {}),
     ...(f.subjectId ? { subject_id: f.subjectId } : {}),
   };
   return useQuery({
@@ -46,37 +44,6 @@ export function useSchoolDashboard(f: DashboardFilters) {
     enabled: scope.ready && !!f.schoolId,
     ...DASHBOARD_QUERY_TIMING,
   });
-}
-
-/** getClassDashboard: heatmap class × LO and the students of the class (cursor pages ≤ dashboard_page_size_max). */
-export function useClassDashboard(classId: string | undefined, f: DashboardFilters) {
-  const { api, scope, queue } = useDashboardContext();
-  const query = { ...rangeQuery(f), ...(f.subjectId ? { subject_id: f.subjectId } : {}), ...(f.range.grain ? { grain: f.range.grain } : {}), page_size: DASHBOARD_CONFIG.dashboard_page_size_max };
-  const q = useInfiniteQuery({
-    queryKey: dashKey('class', scope, classId, query),
-    queryFn: ({ pageParam }) =>
-      queue.run(() =>
-        api.call<ClassDashboard>(
-          api.client.GET('/lms/classes/{class_id}/dashboard', {
-            params: { path: { class_id: classId! }, query: { ...query, ...(pageParam ? { cursor: pageParam } : {}) } },
-            headers: scope.headers,
-          } as never),
-        ),
-      ),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last: ClassDashboard) => (last.students.page?.has_more && last.students.page.next_cursor ? last.students.page.next_cursor : undefined),
-    enabled: scope.ready && !!classId,
-    ...DASHBOARD_QUERY_TIMING,
-  });
-  return {
-    first: q.data?.pages[0],
-    students: q.data?.pages.flatMap((p) => p.students.data) ?? [],
-    hasMore: !!q.hasNextPage,
-    loadMore: () => void q.fetchNextPage(),
-    isLoading: q.isPending && !!classId,
-    isFetching: q.isFetching,
-    error: q.error,
-  };
 }
 
 /** getStudentLearningProfile (audited `learning.profile_viewed` by the server). */
@@ -108,14 +75,13 @@ export function useSubjects() {
 export interface ReferenceFilters {
   schoolId?: string;
   subjectId?: string;
-  classId?: string;
   period: AssessmentPeriod;
 }
 
 /** getRegulationReferenceReport: reference levels TT27/TT22 (always with the server disclaimer, F056-AC-16). */
 export function useRegulationReference(f: ReferenceFilters) {
   const { api, scope, queue } = useDashboardContext();
-  const query = { subject_id: f.subjectId!, period: f.period, ...(f.classId ? { class_id: f.classId } : {}), limit: DASHBOARD_CONFIG.dashboard_page_size_max };
+  const query = { subject_id: f.subjectId!, period: f.period, limit: DASHBOARD_CONFIG.dashboard_page_size_max };
   const q = useInfiniteQuery({
     queryKey: dashKey('reference', scope, f.schoolId, query),
     queryFn: ({ pageParam }) =>

@@ -21,7 +21,6 @@ export function CleanupPreviewPage() {
   const [open, setOpen] = useState(false);
   const columns: ColumnType<CleanupCandidate>[] = [
     { key: 'title', title: t('portal.school_lms.students.name'), dataIndex: 'display_name' },
-    { key: 'class', title: t('portal.school_lms.classes.name'), render: (_, c) => c.class_name ?? '' },
     { key: 'last', title: t('portal.school_lms.students.lastLogin'), render: (_, c) => (c.last_login_at ? formatDateTime(c.last_login_at) : t('portal.school_lms.students.never')) },
     { key: 'scheduled', title: t('portal.school_lms.cleanup.scheduledAt'), render: (_, c) => formatDate(c.scheduled_cleanup_at) },
     { key: 'excluded', title: t('portal.school_lms.cleanup.exclusion'), render: (_, c) => (c.excluded_until ? <Tag>{t('portal.school_lms.cleanup.excludedUntil', { date: formatDate(c.excluded_until) })}</Tag> : null) },

@@ -8,9 +8,6 @@ export const LMS_FIELDS = {
   assignmentInstructions: { source: 'schemas/AssignmentCreate/properties/instructions', maxLength: 2000 },
   extendReason: { source: 'schemas/AssignmentExtendRequest/properties/reason', minLength: 3, maxLength: 500 },
   reason: { source: 'schemas/ReasonRequest/properties/reason', minLength: 1, maxLength: 500 },
-  pathTitle: { source: 'schemas/LearningPathInput/properties/title', minLength: 1, maxLength: 255 },
-  studyGroupName: { source: 'schemas/StudyGroupInput/properties/name', minLength: 1, maxLength: 64 },
-  scheduleNote: { source: 'schemas/ScheduleItemInput/properties/note', maxLength: 500 },
   accommodationReason: { source: 'schemas/ExamAccommodationsUpdate/properties/reason', minLength: 3, maxLength: 500 },
 } as const satisfies Record<string, FieldSchema>;
 
@@ -18,11 +15,11 @@ export const LMS_FIELDS = {
 export const LMS_LIMITS = {
   lateWindowHours: { source: 'schemas/AssignmentCreate/properties/late_policy/properties/late_window_hours', minimum: 0, maximum: 168 },
   maxAttempts: { source: 'schemas/AssignmentCreate/properties/max_attempts', minimum: 1, maximum: 10 },
-  targets: { source: 'schemas/AssignmentCreate/properties/targets', minItems: 1, maxItems: 50 },
+  targets: { source: 'schemas/AssignmentCreate/properties/targets', minItems: 1, maxItems: 9 },
   targetStudents: { source: 'schemas/AssignmentTarget/properties/student_ids', maxItems: 200 },
-  pathNodes: { source: 'schemas/LearningPathInput/properties/nodes', minItems: 1, maxItems: 200 },
-  groupMembers: { source: 'schemas/StudyGroupInput/properties/member_ids', minItems: 1, maxItems: 100 },
-  schedulePeriod: { source: 'schemas/ScheduleItemInput/properties/period', minimum: 1, maximum: 15 },
+  includeStudents: { source: 'schemas/AssignmentTarget/properties/include_student_ids', maxItems: 200 },
+  excludeStudents: { source: 'schemas/AssignmentTarget/properties/exclude_student_ids', maxItems: 200 },
+  gradeLevel: { source: 'schemas/AssignmentTarget/properties/grade_level', minimum: 1, maximum: 9 },
   extraTimePercent: { source: 'schemas/ExamAccommodation/properties/extra_time_percent', minimum: 1, maximum: 100 },
   accommodations: { source: 'schemas/ExamAccommodationsUpdate/properties/accommodations', maxItems: 200 },
   regradeReason: { source: 'schemas/RegradeRequestCreate/properties/reason', minLength: 10, maxLength: 1000 },
@@ -35,14 +32,9 @@ export const LMS_ENUMS = {
   scorePolicy: { source: 'schemas/AssignmentCreate/properties/score_policy', values: ['best', 'last', 'first'] },
   feedbackTiming: { source: 'schemas/FeedbackTiming', values: ['immediate', 'after_submit', 'after_close', 'never'] },
   resultRelease: { source: 'schemas/ResultRelease', values: ['immediate', 'after_close', 'manual'] },
-  targetType: { source: 'schemas/AssignmentTarget/properties/target_type', values: ['class', 'study_group', 'students'] },
+  targetType: { source: 'schemas/AssignmentTarget/properties/target_type', values: ['grade', 'students'] },
   assignmentStatus: { source: 'schemas/AssignmentStatus', values: ['draft', 'scheduled', 'open', 'closed', 'results_released', 'archived', 'cancelled'] },
   submissionStatus: { source: 'schemas/AssignmentSubmissionStatus', values: ['not_started', 'in_progress', 'submitted', 'late', 'missed', 'excused'] },
-  courseStatus: { source: 'schemas/Course/properties/status', values: ['active', 'hidden', 'archived'] },
-  unlockMode: { source: 'schemas/LearningPathInput/properties/unlock_mode', values: ['sequential', 'free', 'mastery_gate'] },
-  pathContentType: { source: 'schemas/PathNode/properties/content_ref/properties/content_type', values: ['lesson', 'activity', 'question_set', 'assessment_blueprint', 'quest'] },
-  unlockRule: { source: 'schemas/PathNode/properties/unlock_rule/properties/kind', values: ['always', 'previous_completed', 'mastery_gate', 'date'] },
-  scheduleKind: { source: 'schemas/ScheduleItemInput/properties/kind', values: ['lesson', 'assignment_due', 'exam', 'event'] },
   regradeAction: { source: 'schemas/RegradeRequestCreate/properties/action', values: ['accept_all', 'use_new_key', 'drop_item'] },
 } as const;
 

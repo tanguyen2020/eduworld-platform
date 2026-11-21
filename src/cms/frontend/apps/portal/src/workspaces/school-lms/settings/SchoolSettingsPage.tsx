@@ -1,4 +1,5 @@
-// School settings (F052 T042, F052-AC-22, F052-AC-29, F052-AC-30): access hours, class/school leaderboard,
+// School settings (F052 T042, F052-AC-22, F052-AC-29, F052-AC-30): access hours, school leaderboard (the class leaderboard
+// is gone — ADR-0095 D5; `class_leaderboard_enabled` is never sent and leaves the contract with WP-I1),
 // `student_club_creation` — updateSchoolSettings (JSON Merge Patch of changed fields, If-Match) with errors at the
 // field — the curfew card and the daily play limit card (OQ-17). A school of the `common` tenant (virtual school) shows only the platform curfew.
 import { App, Button, Card, Form, Space, Spin, Switch } from 'antd';
@@ -16,8 +17,8 @@ import { CurfewSettingsCard } from './CurfewSettingsCard';
 import { DailyPlayLimitCard } from './DailyPlayLimitCard';
 import { useSchoolSettings, useUpdateSchoolSettings, type SchoolSettings } from './useSettings';
 
-type PolicyForm = Pick<SchoolSettings, 'allowed_hours' | 'class_leaderboard_enabled' | 'school_leaderboard_enabled' | 'student_club_creation'>;
-const POLICY_FIELDS = ['allowed_hours', 'class_leaderboard_enabled', 'school_leaderboard_enabled', 'student_club_creation'] as const;
+type PolicyForm = Pick<SchoolSettings, 'allowed_hours' | 'school_leaderboard_enabled' | 'student_club_creation'>;
+const POLICY_FIELDS = ['allowed_hours', 'school_leaderboard_enabled', 'student_club_creation'] as const;
 
 export function policyPatch(before: SchoolSettings, after: PolicyForm): Partial<SchoolSettings> {
   const patch: Record<string, unknown> = {};
@@ -47,9 +48,6 @@ function SchoolPolicy({ schoolId, settings }: { schoolId: string; settings: Scho
       <Form<PolicyForm> form={form} layout="vertical" initialValues={settings} onFinish={submit} disabled={!canEdit}>
         <Form.Item label={t('portal.school_lms.settings.allowedHours')}>
           <AllowedHoursField disabled={!canEdit} />
-        </Form.Item>
-        <Form.Item name="class_leaderboard_enabled" label={t('portal.school_lms.settings.classLeaderboard')} valuePropName="checked">
-          <Switch />
         </Form.Item>
         <Form.Item name="school_leaderboard_enabled" label={t('portal.school_lms.settings.schoolLeaderboard')} valuePropName="checked">
           <Switch />

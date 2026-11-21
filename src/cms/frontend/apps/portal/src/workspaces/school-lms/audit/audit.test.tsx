@@ -42,7 +42,7 @@ describe('Nhật ký (F052-AC-23)', () => {
   it('no audit menu without tenant.audit.read', async () => {
     await renderSchoolLms('/school-lms/classes', { account: accountWith('qlcm.truong.a', TENANTS.thDemoA, SCHOOL_PERMS.filter((p) => p !== 'tenant.audit.read')) });
     const nav = await screen.findByRole('navigation', { name: 'Menu điều hướng' });
-    expect(within(nav).getByText('Lớp & học sinh')).toBeInTheDocument();
+    expect(within(nav).getByText('Học sinh theo khối')).toBeInTheDocument();
     expect(within(nav).queryByText('Nhật ký')).toBeNull();
   });
 });

@@ -62,7 +62,7 @@ describe('menus from getMyPermissions (F051-AC-09, F051-AC-35)', () => {
     const { router } = await renderPortal({ url: '/school-lms/overview', backend });
     const nav = await screen.findByRole('navigation', { name: 'Menu điều hướng' });
     expect(within(nav).queryByText('Bài tập, đề, bài chẩn đoán')).toBeNull();
-    expect(within(nav).getByText('Lớp & học sinh')).toBeInTheDocument();
+    expect(within(nav).getByText('Học sinh theo khối')).toBeInTheDocument();
     await router.navigate('/school-lms/assignments');
     expect(await screen.findByTestId('feature-disabled')).toBeInTheDocument();
     expect(screen.queryByText('Không có quyền truy cập')).toBeNull();
@@ -72,7 +72,7 @@ describe('menus from getMyPermissions (F051-AC-09, F051-AC-35)', () => {
   it('403 FEATURE_DISABLED → notice with feature key and trace id, no sign-out, permissions reloaded (F051-AC-37)', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
     const { runtime } = await renderPortal({ url: '/school-lms/classes', backend });
-    await screen.findByRole('heading', { level: 1, name: 'Lớp & học sinh' });
+    await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     const before = backend.calls('GET', '/me/permissions').length;
     backend.overrides.push((r) => (r.path === '/auth/me' ? problem(403, 'FEATURE_DISABLED', { feature_key: 'menu.school_lms.classes' }) : undefined));
     backend.disabledMenus = ['menu.school_lms.classes'];
@@ -88,7 +88,7 @@ describe('menus from getMyPermissions (F051-AC-09, F051-AC-35)', () => {
   it('403 PERMISSION_DENIED → permissions reloaded at once (F051-AC-12)', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
     const { runtime } = await renderPortal({ url: '/school-lms/classes', backend });
-    await screen.findByRole('heading', { level: 1, name: 'Lớp & học sinh' });
+    await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     const before = backend.calls('GET', '/me/permissions').length;
     backend.overrides.push((r) => (r.path === '/auth/me' ? problem(403, 'PERMISSION_DENIED') : undefined));
     await runtime.api.call(runtime.api.client.GET('/auth/me', {})).catch(() => undefined);

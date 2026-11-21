@@ -1,5 +1,5 @@
-// Filters of the School Learning Dashboard (F056 T018, F056-AC-01, F056-AC-08, F056-AC-19): school, grade, class,
-// subject and range live in the URL so a drill-down (school → class → student) keeps them; the last grade/subject/preset
+// Filters of the School Learning Dashboard (F056 T018, F056-AC-01, F056-AC-08, F056-AC-19): school, grade, subject
+// and range live in the URL so a drill-down (school → grade → student, ADR-0095: no class) keeps them; the last grade/subject/preset
 // is remembered per viewer and tenant in localStorage (convenience only, no student data — data-model F056). The
 // subject list of a subject-scoped academic manager only holds the subjects of their scope (display filter: the server
 // answers 403 for any other subject).
@@ -11,7 +11,6 @@ import type { Schemas } from '../../common/api';
 export interface DashboardFilters {
   schoolId?: string;
   grade?: number;
-  classId?: string;
   subjectId?: string;
   range: DashboardRange;
 }
@@ -19,6 +18,8 @@ export interface DashboardFilters {
 const PRESETS: RangePreset[] = ['today', '7d', '30d', 'term', 'school_year', '12m', 'custom'];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const GRAINS = ['day', 'week', 'month'] as const;
+/** Grades of the system (ADR-0095: khối 1–9). */
+export const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 export const todayIso = () => dayjs().format('YYYY-MM-DD');
 
@@ -38,8 +39,7 @@ export function filtersFromSearch(p: URLSearchParams, today: string): DashboardF
   const grade = Number(p.get('grade'));
   return {
     schoolId: p.get('school') ?? undefined,
-    grade: Number.isInteger(grade) && grade >= 1 && grade <= 12 ? grade : undefined,
-    classId: p.get('class') ?? undefined,
+    grade: Number.isInteger(grade) && grade >= GRADES[0] && grade <= GRADES[GRADES.length - 1]! ? grade : undefined,
     subjectId: p.get('subject') ?? undefined,
     range,
   };
@@ -49,7 +49,6 @@ export function filtersToSearch(f: DashboardFilters): URLSearchParams {
   const p = new URLSearchParams();
   if (f.schoolId) p.set('school', f.schoolId);
   if (f.grade) p.set('grade', String(f.grade));
-  if (f.classId) p.set('class', f.classId);
   if (f.subjectId) p.set('subject', f.subjectId);
   p.set('preset', f.range.preset);
   p.set('from', f.range.from);

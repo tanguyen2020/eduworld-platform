@@ -1,6 +1,6 @@
 // MOCK (test only, AGENTS R17): in-memory stand-in of the identity/game operations used by F052 screens, answering per
 // specs/openapi/eduworld-api.v1.yaml so workspace C can be tested before the backend endpoints of F010/F011/F015 exist
-// (listTenantClassStudents, listSchoolReconciliationIssues, resolveSchoolReconciliationIssue are contract-only).
+// (listSchoolReconciliationIssues, resolveSchoolReconciliationIssue are contract-only). No class route (ADR-0095).
 // Tenant isolation is simulated: data belongs to one tenant, another tenant's X-Tenant-Id gets 404 (AC-ORG-001).
 // Never imported by application code; NOT a real backend and no live integration.
 import { permissionsOf, problem, TENANTS, type MockAccount, type MockPortalBackend, type RecordedRequest } from './mock-backend';
@@ -130,23 +130,6 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
       s.version++;
       return json(200, s, etag(s.version));
     }
-    if ((x = /^\/tenant\/schools\/([^/]+)\/classes$/.exec(p)) && m === 'GET') {
-      if (!schoolIn(r, x[1]!)) return problem(404, 'NOT_FOUND');
-      return json(200, page(x[1] === IDS.schoolA ? [{ class_id: IDS.class3A, school_id: IDS.schoolA, grade_level: 3, name: '3A', student_count: 2 }] : []));
-    }
-    if ((x = /^\/tenant\/schools\/([^/]+)\/classes\/([^/]+)\/students$/.exec(p)) && m === 'GET') {
-      if (!schoolIn(r, x[1]!) || x[2] !== IDS.class3A) return problem(404, 'NOT_FOUND');
-      return json(
-        200,
-        page([
-          { student_id: IDS.studentAn, display_name: 'Nguyễn An', student_code: 'HS001', username: 'hs.an.3a', status: 'active', source: 'sis', last_login_at: '2026-11-17T08:00:00Z', days_since_last_login: 2 },
-          { student_id: IDS.studentSapBiDon, display_name: 'Trần Sắp Bị Dọn', student_code: 'HS002', username: 'hs.sapbidon', status: 'active', source: 'sis', last_login_at: null, days_since_last_login: null },
-        ]),
-      );
-    }
-    if (m === 'GET' && p === '/tenant/students/unassigned') {
-      return json(200, page(tenantOf(r) === T_A ? [{ student_id: '0193a4d2-4000-7000-8000-0000000000a9', display_name: 'Lê Chưa Lớp', username: 'hs.chualop', school_id: IDS.schoolA, grade_level: 3, reason: 'missing_class' }] : []));
-    }
     if ((x = /^\/tenant\/students\/([^/]+)\/login-events$/.exec(p)) && m === 'GET') {
       if (tenantOf(r) !== T_A || x[1] !== IDS.studentAn) return problem(404, 'NOT_FOUND');
       return json(
@@ -198,13 +181,19 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
         if (b.username === 'ad.truong.a') return problem(409, 'USERNAME_TAKEN');
         return json(201, { user_id: '0193a4d2-1111-7000-8000-0000000000ff', user_type: 'staff', status: 'pending', username: b.username, version: 1 });
       }
-      return json(
-        200,
-        page([
-          { user_id: IDS.userQlcm, user_type: 'staff', status: 'active', username: 'qlcm.truong.a', email: 'qlcm.a@thdemo.edu.vn', display_name: 'Cán bộ B', source: 'manual', user_roles: [], version: 1 },
-          { user_id: IDS.studentAn, user_type: 'student', status: 'active', username: 'hs.an.3a', display_name: 'Nguyễn An', source: 'sis', version: 1 },
-        ]),
-      );
+      // MOCK filters of listTenantUsers: user_type, school_id (students of the school), q (name/username); tenant A only
+      const q = new URLSearchParams(r.search);
+      const users = [
+        { user_id: IDS.userQlcm, user_type: 'staff', status: 'active', username: 'qlcm.truong.a', email: 'qlcm.a@thdemo.edu.vn', display_name: 'Cán bộ B', source: 'manual', user_roles: [], version: 1 },
+        { user_id: IDS.studentAn, user_type: 'student', status: 'active', username: 'hs.an.3a', display_name: 'Nguyễn An', source: 'sis', last_login_at: '2026-11-17T08:00:00Z', version: 1 },
+      ];
+      const text = (q.get('q') ?? '').toLowerCase();
+      const keep = (u: (typeof users)[number]) =>
+        tenantOf(r) === T_A &&
+        (!q.get('user_type') || u.user_type === q.get('user_type')) &&
+        (!q.get('school_id') || (u.user_type === 'student' && q.get('school_id') === IDS.schoolA)) &&
+        (!text || `${u.display_name} ${u.username}`.toLowerCase().includes(text));
+      return json(200, page(users.filter(keep)));
     }
     if (m === 'GET' && p === '/tenant/permissions') {
       return json(200, {

@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { writeErrorKey } from '../common/errors';
 import { FIELDS } from '../common/fieldSchemas';
 import { useFieldRules } from '../common/ui';
-import { useResetStudentPassword, type PasswordResetResult } from './useClasses';
+import { useResetStudentPassword, type PasswordResetResult } from './useStudentPassword';
 
 export interface ResetStudentPasswordDialogProps {
   student: { student_id: string; display_name: string; username: string };

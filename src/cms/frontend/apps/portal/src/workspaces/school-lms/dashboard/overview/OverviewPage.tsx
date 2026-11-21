@@ -1,9 +1,11 @@
 // Overview of the School Learning Dashboard (F056 T020; F056-AC-01, AC-02, AC-04, AC-05, AC-07; SCHOOL_LMS §8.1, §8.7):
-// one getSchoolDashboard call (school_id, from, to, grade/class/subject) answers the 5 weekly questions, shown in this
+// one getSchoolDashboard call (school_id, from, to, grade/subject) answers the 5 weekly questions, shown in this
 // order: ① open / due-soon assignments, ② LOs to consolidate, ③ students needing support, ④ self-study after
 // recommendations, ⑤ safety notifications (count only + link, never chat content). Every widget has its own skeleton,
 // "Cập nhật lúc", grain and "Tạm tính" (ops-ui DashboardWidget); numbers are the server's (AGENTS R1, ADR-0062).
-// Students are never ranked by score (no score column, server order kept). Mobile: widgets stack as cards.
+// Students are never ranked by score (no score column, server order kept). Mobile: widgets stack as cards. Drill-down
+// is school → grade (filter) → student (ADR-0095): no class page, list or link; class fields the server may still send
+// before WP-L2 (`classes`, `by_class`, `class_ids`) are not shown.
 // Look (DESIGN_SYSTEM §4.2, direction B "Sổ tay giáo viên", owner 2026-11-21): greeting by time of day, prominent
 // primary action "+ Giao bài mới", each widget a KPI card with a 4 px accent top border — no number is invented here.
 import type { Accent } from '@eduworld/ops-ui';
@@ -27,13 +29,9 @@ type Widgets = SchoolDashboard['widgets'];
 const metaOf = (d: SchoolDashboard | undefined): DashboardMetaView | undefined =>
   d ? { data_as_of: d.data_as_of, grain: d.grain, is_partial: d.is_partial, from: d.from, available_from: d.available_from, replica_lag_warning: d.replica_lag_warning } : undefined;
 
-/** Link to a class page keeping range, subject and grade (F056-AC-08). */
-export function classHref(f: DashboardFilters, classId: string): string {
-  return `${DASHBOARD_BASE}/classes/${classId}?${filtersToSearch({ ...f, classId }).toString()}`;
-}
-
-export function studentHref(f: DashboardFilters, studentId: string, classId?: string): string {
-  return `${DASHBOARD_BASE}/students/${studentId}?${filtersToSearch({ ...f, classId: classId ?? f.classId }).toString()}`;
+/** Link to a student page keeping school, grade, subject and range (F056-AC-08). */
+export function studentHref(f: DashboardFilters, studentId: string): string {
+  return `${DASHBOARD_BASE}/students/${studentId}?${filtersToSearch(f).toString()}`;
 }
 
 export type Greeting = 'morning' | 'noon' | 'afternoon' | 'evening';
@@ -55,9 +53,8 @@ export const WIDGET_ACCENTS: Record<'assignments' | 'weak' | 'attention' | 'self
   safety: 'info',
 };
 
-function AssignmentsWidget({ w, f, partial }: { w: Widgets; f: DashboardFilters; partial: boolean }) {
+function AssignmentsWidget({ w, partial }: { w: Widgets; partial: boolean }) {
   const { t } = useTranslation();
-  const className = (id: string) => w.classes?.find((c) => c.class_id === id)?.name ?? '';
   return (
     <Flex vertical gap="middle">
       <Row gutter={[16, 8]}>
@@ -79,35 +76,19 @@ function AssignmentsWidget({ w, f, partial }: { w: Widgets; f: DashboardFilters;
           <List.Item key={a.assignment_id}>
             <Flex vertical gap="small" style={{ width: '100%' }}>
               <Typography.Text strong>{t('dashboard.assignments.item', { title: a.title, due: formatDateTime(a.due_at) })}</Typography.Text>
-              {(a.by_class ?? []).map((c) => (
-                <Flex key={c.class_id} gap="small" align="center" wrap>
-                  <Link to={classHref(f, c.class_id)}>{className(c.class_id) || t('dashboard.class.unnamed')}</Link>
-                  <Progress percent={c.total ? Math.round((c.submitted / c.total) * 100) : 0} size="small" style={{ flex: 1 }} format={() => t('dashboard.assignments.submitted', { submitted: c.submitted, total: c.total })} />
-                </Flex>
-              ))}
+              {a.total ? (
+                <Progress percent={Math.round((a.submitted / a.total) * 100)} size="small" format={() => t('dashboard.assignments.submitted', { submitted: a.submitted, total: a.total })} />
+              ) : null}
             </Flex>
           </List.Item>
         )}
       />
-      {w.classes?.length ? (
-        <List
-          size="small"
-          header={t('dashboard.assignments.byClass')}
-          dataSource={w.classes}
-          renderItem={(c) => (
-            <List.Item key={c.class_id} extra={<DashboardMetric label={t('dashboard.assignments.completion')} value={c.assignment_completion_rate} format="percent" partial={partial} />}>
-              <Link to={classHref(f, c.class_id)}>{c.name || t('dashboard.class.unnamed')}</Link>
-            </List.Item>
-          )}
-        />
-      ) : null}
     </Flex>
   );
 }
 
 function WeakObjectivesWidget({ w, f }: { w: Widgets; f: DashboardFilters }) {
   const { t, i18n } = useTranslation();
-  const className = (id: string) => w.classes?.find((c) => c.class_id === id)?.name ?? '';
   const pct = (v?: number) => (v === undefined ? '' : new Intl.NumberFormat(i18n.language, { style: 'percent', maximumFractionDigits: 0 }).format(v));
   return (
     <List
@@ -117,22 +98,15 @@ function WeakObjectivesWidget({ w, f }: { w: Widgets; f: DashboardFilters }) {
         <List.Item
           key={o.objective_id}
           actions={[
-            ...(o.class_ids?.[0]
-              ? [
-                  <Link key="map" to={classHref(f, o.class_ids[0])}>
-                    {t('dashboard.weak.skillMap')}
-                  </Link>,
-                ]
-              : []),
             <ActionGate key="assign" actionKey="action.school_lms.assignments.edit">
-              <Link to={practiceWizardHref({ objectiveId: o.objective_id, classId: o.class_ids?.[0] })}>{t('dashboard.weak.assignPractice')}</Link>
+              <Link to={practiceWizardHref({ objectiveId: o.objective_id, schoolId: f.schoolId, subjectId: f.subjectId, grade: f.grade })}>{t('dashboard.weak.assignPractice')}</Link>
             </ActionGate>,
           ]}
         >
           <Flex vertical>
             <Typography.Text strong>{o.yccd_ref ? t('dashboard.weak.codeRef', { code: o.code, ref: o.yccd_ref }) : o.code}</Typography.Text>
             <Typography.Text type="secondary">
-              {t('dashboard.weak.belowProficient', { ratio: pct(o.below_proficient_ratio), classes: (o.class_ids ?? []).map(className).filter(Boolean).join(', ') })}
+              {t('dashboard.weak.belowProficient', { ratio: pct(o.below_proficient_ratio) })}
             </Typography.Text>
           </Flex>
         </List.Item>
@@ -153,7 +127,9 @@ function AttentionWidget({ w, f }: { w: Widgets; f: DashboardFilters }) {
         renderItem={(s) => (
           <List.Item key={s.student_id}>
             <Flex wrap gap="small" align="center">
-              <Link to={studentHref(f, s.student_id, s.class_id)}>{s.display_name || t('dashboard.student.unnamed')}</Link>
+              <Link to={studentHref(f, s.student_id)} state={{ name: s.display_name }}>
+                {s.display_name || t('dashboard.student.unnamed')}
+              </Link>
               {s.reasons.map((r) => (
                 <ReasonTag key={r} reason={r} />
               ))}
@@ -237,7 +213,7 @@ export function OverviewPage() {
     </DashboardWidget>
   );
   const widgets = {
-    assignments: frame('assignments', 1, (x) => <AssignmentsWidget w={x} f={filters} partial={partial} />, (x) => !x.assignments_open && !x.assignments?.length && !x.classes?.length),
+    assignments: frame('assignments', 1, (x) => <AssignmentsWidget w={x} partial={partial} />, (x) => !x.assignments_open && !x.assignments?.length),
     weak: frame('weak', 2, (x) => <WeakObjectivesWidget w={x} f={filters} />, (x) => !x.weak_objectives?.length),
     attention: frame('attention', 3, (x) => <AttentionWidget w={x} f={filters} />, (x) => !x.students_needing_attention?.length),
     selfStudy: frame('selfStudy', 4, (x) => <SelfStudyWidget w={x} partial={partial} />),

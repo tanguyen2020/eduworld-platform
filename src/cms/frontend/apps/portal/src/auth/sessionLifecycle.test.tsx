@@ -24,7 +24,7 @@ describe('reload while the session is valid (F051-AC-28)', () => {
     const csrf = backend.csrf;
     window.sessionStorage.setItem('ew.portal.sessionTenantId', TENANTS.pgdDemo.tenant_id);
     const { router, runtime } = await renderPortal({ url: '/school-lms/classes?page=2', backend });
-    expect(await screen.findByRole('heading', { level: 1, name: 'Lớp & học sinh' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' })).toBeInTheDocument();
     expect(router.state.location.pathname + router.state.location.search).toBe('/school-lms/classes?page=2');
     expect(backend.calls('POST', '/auth/portal/token:refresh')[0]!.headers['x-ew-csrf']).toBe(csrf);
     expect(backend.calls('GET', '/me/permissions')[0]!.headers['x-tenant-id']).toBe(TENANTS.pgdDemo.tenant_id);
@@ -55,7 +55,7 @@ describe('idle limit (F051-AC-29)', () => {
   it('idle detected while working → sign-out, "session ended" notice on /login', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
     const { router, runtime } = await renderPortal({ url: '/school-lms/classes', backend });
-    await screen.findByRole('heading', { level: 1, name: 'Lớp & học sinh' });
+    await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     window.localStorage.setItem('ew.portal.lastActivityAt', new Date(Date.now() - 31 * 60 * 1000).toISOString());
     // run the idle check now instead of waiting for the interval
     (runtime.idle as unknown as { memory: number | null }).memory = null;
@@ -84,7 +84,7 @@ describe('session expired while working (F051-AC-07)', () => {
   it('refresh fails on TOKEN_EXPIRED → dialog → /login → back to the same URL', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
     const { router, runtime, user } = await renderPortal({ url: '/school-lms/classes', backend });
-    await screen.findByRole('heading', { level: 1, name: 'Lớp & học sinh' });
+    await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     backend.expiredTokens.add(runtime.tokens.get()!.token);
     backend.refreshAlive = false;
     await runtime.queryClient.refetchQueries({ queryKey: ['me', 'permissions'] });

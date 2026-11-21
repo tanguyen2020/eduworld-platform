@@ -2,19 +2,18 @@
 // catalog action is granted and turned on (ADR-0090) — "Xuất báo cáo" (createLmsReport: report type, format and the
 // scope the type needs; asynchronous job, link with expiry; reference reports labelled "Tham khảo") and "Tổng hợp đơn
 // vị" (Tenant Admin: getTenantLearningSummary by school × grade × subject, "< 5" for suppressed cells, export through
-// createTenantReport). Numbers are the server's; cells are never recomputed.
+// createTenantReport). Numbers are the server's; cells are never recomputed. ADR-0095: no course or class — the course
+// results and the class skill map (`skill_map` needs a `class_id` until WP-L2 reworks it by grade) are not offered;
+// reference levels are per school and subject.
 import { DashboardMetric, DashboardQueueProvider, DashboardRangePicker, DashboardWidget, SuppressedCell, type DashboardRange } from '@eduworld/ops-ui/dashboard';
 import { Col, Flex, Form, Row, Select, Table, Tabs } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSchoolClasses } from '../../classes/useClasses';
 import { localizedName } from '../../common/format';
 import { SchoolSelect } from '../../common/SchoolSelect';
 import { SingleTenantGate } from '../../common/scope';
 import { PageTitle } from '../../common/ui';
 import { useAssignments } from '../../lms/api/assignments';
-import { useCourses } from '../../lms/api/courses';
-import { courseLabel } from '../../lms/assignments/wizard/StepTargets';
 import { useActionEnabled } from '../../lms/LmsUi';
 import { useSchoolList } from '../../schools/useSchools';
 import { useSubjects, type AssessmentPeriod } from '../api/dashboardApi';
@@ -25,15 +24,14 @@ import { DASHBOARD_CONFIG, RANGE_LIMITS } from '../model/limits';
 import { RegulationDisclaimer } from './RegulationDisclaimer';
 import { LmsReportExport, TenantReportExport } from './ReportExport';
 
-type ReportType = LmsReportRequest['report_type'];
+/** Report types offered by the portal (ADR-0095: not `course_results`, not the class `skill_map`). */
+type ReportType = Exclude<LmsReportRequest['report_type'], 'course_results' | 'skill_map'>;
 type Format = LmsReportRequest['format'];
 
 /** Formats offered per report type (SCHOOL_LMS §10 table); the server validates the request anyway. */
 export const REPORT_FORMATS: Record<ReportType, Format[]> = {
   assignment_results: ['xlsx', 'csv'],
-  course_results: ['xlsx'],
   regulation_reference: ['xlsx', 'pdf'],
-  skill_map: ['xlsx', 'pdf'],
   school_monthly: ['pdf'],
 };
 const TYPES = Object.keys(REPORT_FORMATS) as ReportType[];
@@ -43,9 +41,7 @@ interface ExportForm {
   type: ReportType;
   format: Format;
   schoolId?: string;
-  courseId?: string;
   assignmentId?: string;
-  classId?: string;
   subjectId?: string;
   period: AssessmentPeriod;
   range: DashboardRange;
@@ -57,12 +53,8 @@ export function toLmsReportRequest(v: ExportForm): LmsReportRequest | null {
   switch (v.type) {
     case 'assignment_results':
       return v.assignmentId ? { ...base, assignment_id: v.assignmentId } : null;
-    case 'course_results':
-      return v.courseId ? { ...base, course_id: v.courseId } : null;
     case 'regulation_reference':
-      return v.schoolId && v.subjectId ? { ...base, school_id: v.schoolId, subject_id: v.subjectId, period: v.period, ...(v.classId ? { class_id: v.classId } : {}) } : null;
-    case 'skill_map':
-      return v.classId && v.subjectId ? { ...base, class_id: v.classId, subject_id: v.subjectId } : null;
+      return v.schoolId && v.subjectId ? { ...base, school_id: v.schoolId, subject_id: v.subjectId, period: v.period } : null;
     case 'school_monthly':
       return v.schoolId ? { ...base, school_id: v.schoolId, from: v.range.from, to: v.range.to } : null;
   }
@@ -72,19 +64,15 @@ function ExportTab() {
   const { t, i18n } = useTranslation();
   const [v, setV] = useState<ExportForm>({ type: 'assignment_results', format: 'xlsx', period: 'end_term_1', range: defaultRange(todayIso()) });
   const set = (p: Partial<ExportForm>) => setV((o) => ({ ...o, ...p }));
-  const needs = (k: 'school' | 'course' | 'assignment' | 'class' | 'subject' | 'period' | 'range') =>
+  const needs = (k: 'school' | 'assignment' | 'subject' | 'period' | 'range') =>
     ({
       assignment_results: ['assignment'],
-      course_results: ['course'],
-      regulation_reference: ['school', 'subject', 'period', 'class'],
-      skill_map: ['school', 'class', 'subject'],
+      regulation_reference: ['school', 'subject', 'period'],
       school_monthly: ['school', 'range'],
     })[v.type].includes(k);
-  const show = { school: needs('school'), course: needs('course'), assignment: needs('assignment'), class: needs('class'), subject: needs('subject'), period: needs('period'), range: needs('range') };
-  const courses = useCourses({ status: 'active' }, show.course);
+  const show = { school: needs('school'), assignment: needs('assignment'), subject: needs('subject'), period: needs('period'), range: needs('range') };
   const assignments = useAssignments({});
   const subjects = useSubjects();
-  const classes = useSchoolClasses(show.class ? v.schoolId : undefined);
   const request = toLmsReportRequest(v);
   return (
     <Flex vertical gap="middle" data-testid="export-tab">
@@ -103,22 +91,12 @@ function ExportTab() {
         </Form.Item>
         {show.school ? (
           <Form.Item label={t('portal.school_lms.common.school')} style={{ marginBottom: 0 }}>
-            <SchoolSelect value={v.schoolId} onChange={(schoolId) => set({ schoolId, classId: undefined })} />
-          </Form.Item>
-        ) : null}
-        {show.course ? (
-          <Form.Item label={t('dashboard.export.course')} style={{ marginBottom: 0 }}>
-            <Select aria-label={t('dashboard.export.course')} value={v.courseId} onChange={(courseId: string) => set({ courseId })} options={courses.items.map((c) => ({ value: c.course_id, label: courseLabel(c, i18n.language) }))} popupMatchSelectWidth={false} />
+            <SchoolSelect value={v.schoolId} onChange={(schoolId) => set({ schoolId })} />
           </Form.Item>
         ) : null}
         {show.assignment ? (
           <Form.Item label={t('dashboard.export.assignment')} style={{ marginBottom: 0 }}>
             <Select aria-label={t('dashboard.export.assignment')} value={v.assignmentId} onChange={(assignmentId: string) => set({ assignmentId })} options={assignments.items.map((a) => ({ value: a.assignment_id, label: a.title }))} popupMatchSelectWidth={false} />
-          </Form.Item>
-        ) : null}
-        {show.class ? (
-          <Form.Item label={t('dashboard.filter.class')} style={{ marginBottom: 0 }}>
-            <Select allowClear aria-label={t('dashboard.filter.class')} value={v.classId} onChange={(classId?: string) => set({ classId })} options={classes.items.map((c) => ({ value: c.class_id, label: c.name }))} popupMatchSelectWidth={false} />
           </Form.Item>
         ) : null}
         {show.subject ? (
@@ -186,7 +164,7 @@ function TenantSummaryTab() {
           <Flex vertical gap="middle">
             <Row gutter={[16, 8]}>
               <Col xs={12} md={6}>
-                <DashboardMetric label={t('dashboard.class.activeStudents')} value={d.active_students} partial={d.is_partial} />
+                <DashboardMetric label={t('dashboard.metric.activeStudents')} value={d.active_students} partial={d.is_partial} />
               </Col>
               <Col xs={12} md={6}>
                 <DashboardMetric label={t('dashboard.student.accuracy')} value={d.accuracy} format="percent" partial={d.is_partial} />
@@ -209,7 +187,7 @@ function TenantSummaryTab() {
                 { key: 'grade', title: t('dashboard.filter.grade'), render: (_, c) => t('dashboard.filter.gradeN', { n: c.grade_level }) },
                 { key: 'subject', title: t('dashboard.filter.subject'), render: (_, c) => subjectName(c.subject_id) },
                 { key: 'students', title: t('dashboard.summary.students'), render: (_, c) => hidden(c, n(c.students)) },
-                { key: 'active', title: t('dashboard.class.activeStudents'), render: (_, c) => hidden(c, n(c.active_students)) },
+                { key: 'active', title: t('dashboard.metric.activeStudents'), render: (_, c) => hidden(c, n(c.active_students)) },
                 { key: 'accuracy', title: t('dashboard.student.accuracy'), render: (_, c) => hidden(c, pct(c.accuracy)) },
                 { key: 'minutes', title: t('dashboard.summary.minutes'), render: (_, c) => hidden(c, n(c.active_minutes_avg)) },
                 { key: 'attempts', title: t('dashboard.summary.attempts'), render: (_, c) => hidden(c, n(c.attempts_completed)) },

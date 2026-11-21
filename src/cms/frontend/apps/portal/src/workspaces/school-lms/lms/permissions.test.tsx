@@ -2,7 +2,8 @@
 // TC-CMS-MENU-02): write buttons only with their permission (tenant_admin read-only), 403 keeps the data; a user
 // without lms.* gets the portal 403 page without loading the workspace C chunk; every LMS request carries the session
 // X-Tenant-Id and no tenant_ids, another tenant's assignment is "Không tìm thấy"; no quest/mini-game configuration
-// screen; a turned-off study-group menu hides the menu and the target option, 403 FEATURE_DISABLED shows the notice.
+// screen; a turned-off game-activity menu is hidden, 403 FEATURE_DISABLED shows the notice; the course, schedule and
+// study-group screens are gone (ADR-0095).
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { WORKSPACE_CATALOG } from '../../../generated/menu-catalog';
@@ -66,24 +67,27 @@ describe('Phân quyền và cô lập tenant', () => {
     expect(screens['menu.school_lms.game_activities'].name).toBe('GameActivitiesScreen');
   });
 
-  it('study groups turned off: menu hidden, no "Nhóm học tập" target; 403 FEATURE_DISABLED → notice + permissions reloaded (F055-AC-24)', async () => {
-    const { backend } = await renderLms('/school-lms/assignments/new', { disabledMenus: ['menu.school_lms.study_groups'] });
-    expect(await screen.findByTestId('content-picker')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Nhóm học tập' })).toBeNull();
-    const picker = screen.getByTestId('content-picker');
-    fireEvent.click(within((await within(picker).findByText('Quiz phép nhân')).closest('li')!).getByRole('button', { name: 'Chọn' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Tiếp' }));
-    expect(await screen.findByRole('radio', { name: 'Lớp' })).toBeInTheDocument();
-    expect(screen.queryByRole('radio', { name: 'Nhóm học tập' })).toBeNull();
+  it('menu turned off: hidden; 403 FEATURE_DISABLED → notice + permissions reloaded (F055-AC-24)', async () => {
+    await renderLms('/school-lms/assignments', { disabledMenus: ['menu.school_lms.game_activities'] });
+    const nav = await screen.findByRole('navigation', { name: 'Menu điều hướng' });
+    await within(nav).findByRole('link', { name: 'Bài tập, đề, bài chẩn đoán' });
+    expect(within(nav).queryByRole('link', { name: 'Hoạt động game được gán' })).toBeNull();
     stopPortals();
     cleanup();
-    const r2 = await renderLms('/school-lms/courses');
+    const r2 = await renderLms('/school-lms/assignments');
     const before = r2.backend.calls('GET', '/me/permissions').length;
-    r2.backend.overrides.unshift((r) => (r.path === '/lms/courses' ? problem(403, 'FEATURE_DISABLED', { feature_key: 'menu.school_lms.courses' }) : undefined));
-    fireEvent.click(await screen.findByRole('link', { name: 'Lịch học' }));
-    fireEvent.click(await screen.findByRole('link', { name: 'Khóa học & lộ trình học' }));
+    r2.backend.overrides.unshift((r) => (r.path === '/lms/catalog/game-activities' ? problem(403, 'FEATURE_DISABLED', { feature_key: 'menu.school_lms.game_activities' }) : undefined));
+    fireEvent.click(await screen.findByRole('link', { name: 'Hoạt động game được gán' }));
     expect(await screen.findByText(/Tính năng đang tạm tắt|Khóa tính năng/)).toBeInTheDocument();
     await waitFor(() => expect(r2.backend.calls('GET', '/me/permissions').length).toBeGreaterThan(before));
-    expect(backend.calls('GET', '/me/permissions').length).toBeGreaterThan(0);
+  });
+
+  it('ADR-0095: no course, schedule, study-group or class route or menu in workspace C', async () => {
+    const lmsMenus = WORKSPACE_CATALOG.find((w) => w.key === 'school_lms')!.menus.map((m) => m.key);
+    for (const k of ['menu.school_lms.courses', 'menu.school_lms.schedules', 'menu.school_lms.study_groups']) expect(lmsMenus).not.toContain(k);
+    expect(Object.keys(screens).some((k) => /courses|schedules|study_groups/.test(k))).toBe(false);
+    const { backend } = await renderLms('/school-lms/courses');
+    expect(await screen.findByText(/Không tìm thấy trang|không tồn tại/i)).toBeInTheDocument();
+    expect(backend.requests.some((r) => /\/lms\/(courses|schedules)|study-groups/.test(r.path))).toBe(false);
   });
 });

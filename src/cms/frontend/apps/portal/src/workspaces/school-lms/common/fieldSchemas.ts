@@ -17,7 +17,6 @@ export const FIELDS = {
   emailUpdate: { source: 'schemas/TenantUserUpdateRequest/properties/email', maxLength: 320 },
   displayName: { source: 'schemas/TenantUserCreateRequest/properties/display_name', minLength: 1, maxLength: 128 },
   userSearch: { source: 'paths/listTenantUsers/q', minLength: 2, maxLength: 100 },
-  classStudentSearch: { source: 'paths/listTenantClassStudents/q', minLength: 2, maxLength: 100 },
   roleCode: { source: 'schemas/RoleCode', maxLength: 64, pattern: '^[a-z][a-z0-9_]{1,63}$' },
   roleReason: { source: 'schemas/RoleInput/properties/reason', maxLength: 1000 },
   grantReason: { source: 'schemas/UserRoleGrantRequest/properties/reason', maxLength: 1000 },

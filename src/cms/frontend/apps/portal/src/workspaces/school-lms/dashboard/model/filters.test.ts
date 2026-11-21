@@ -10,11 +10,12 @@ import { defaultRange, filtersFromSearch, filtersToSearch, subjectLabel, subject
 const keys = (o: unknown, p = ''): string[] => (o && typeof o === 'object' ? Object.entries(o).flatMap(([k, v]) => keys(v, p ? `${p}.${k}` : k)) : [p]);
 
 describe('dashboard filters', () => {
-  it('URL round trip keeps school, grade, class, subject, range and grain; bad values fall back', () => {
-    const f = { schoolId: 's', grade: 3, classId: 'c', subjectId: 'm', range: { preset: 'custom' as const, from: '2026-01-01', to: '2026-03-31', grain: 'month' as const } };
+  it('URL round trip keeps school, grade, subject, range and grain (no class — ADR-0095); bad values fall back', () => {
+    const f = { schoolId: 's', grade: 3, subjectId: 'm', range: { preset: 'custom' as const, from: '2026-01-01', to: '2026-03-31', grain: 'month' as const } };
     expect(filtersFromSearch(filtersToSearch(f), '2026-11-21')).toEqual(f);
-    const bad = filtersFromSearch(new URLSearchParams('grade=99&preset=all_time&from=x'), '2026-11-21');
+    const bad = filtersFromSearch(new URLSearchParams('grade=10&class=c&preset=all_time&from=x'), '2026-11-21');
     expect(bad.grade).toBeUndefined();
+    expect(bad).not.toHaveProperty('classId');
     expect(bad.range).toEqual(defaultRange('2026-11-21'));
     expect(filtersFromSearch(new URLSearchParams('preset=30d'), '2026-11-21').range).toEqual({ preset: '30d', from: '2026-10-23', to: '2026-11-21' });
   });

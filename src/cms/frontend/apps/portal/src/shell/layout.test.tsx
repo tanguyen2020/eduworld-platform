@@ -10,7 +10,7 @@ afterEach(() => stopPortals());
 async function qlcmInThDemoA() {
   window.sessionStorage.setItem('ew.portal.sessionTenantId', TENANTS.thDemoA.tenant_id);
   const r = await renderPortal({ url: '/school-lms/classes', backend: new MockPortalBackend().withSession('qlcm.truong.a') });
-  await screen.findByRole('heading', { level: 1, name: 'Lớp & học sinh' });
+  await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
   return r;
 }
 
@@ -55,7 +55,7 @@ describe('user menu and accessibility (F051-AC-16, F051-AC-17, F051-AC-18)', () 
     await user.click(screen.getByRole('switch', { name: 'Mật độ gọn' }));
     await waitFor(() => expect(document.querySelector('.ew-ops-root')).toHaveAttribute('data-density', 'compact'));
     await i18n.changeLanguage('en-US');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Classes & students' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Students by grade' })).toBeInTheDocument();
     expect(JSON.parse(window.localStorage.getItem('ew.portal.prefs') ?? '{}')).toMatchObject({ theme: 'dark', density: 'compact', densityChosen: true });
   });
 

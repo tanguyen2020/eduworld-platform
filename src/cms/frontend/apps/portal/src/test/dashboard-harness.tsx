@@ -1,5 +1,5 @@
 // MOCK (test only, AGENTS R17): renders the whole portal on a dashboard / results / reports URL (F056) against the shell
-// MOCK backend + the F052 MOCK (schools, classes, students, login events) + the LMS MOCK (assignments, courses) + the
+// MOCK backend + the F052 MOCK (schools, students, login events) + the LMS MOCK (assignments) + the
 // dashboard MOCK (dashboard-mock.ts), signed in as a quickstart account. `roles` adds effective roles to
 // getMyPermissions (e.g. an academic manager scoped to one subject).
 import { configure } from '@testing-library/react';
@@ -21,7 +21,6 @@ export const SCHOOL_ADMIN_DASH_PERMS = [
   'report.export',
   'lms.assignment.read',
   'lms.assignment.write',
-  'lms.course.read',
   'lms.student.read',
   'lms.student_activity.read',
   'tenant.school.read',

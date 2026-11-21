@@ -81,16 +81,6 @@
       "noProvince": "SIS chưa gửi tỉnh/thành của trường."
     }
   },
-  "classes": {
-    "tab": "Lớp",
-    "name": "Lớp",
-    "grade": "Khối",
-    "academicYear": "Năm học",
-    "academicYearHint": "2026-2027",
-    "studentCount": "Sĩ số",
-    "students": "Học sinh của lớp",
-    "readOnlyHint": "Danh sách học sinh lấy từ SIS/CSV, chỉ xem. Sửa thông tin hoặc chuyển lớp trong SIS hoặc file CSV."
-  },
   "students": {
     "name": "Họ tên",
     "username": "Tên đăng nhập",
@@ -101,15 +91,11 @@
     "daysAway": "Số ngày chưa vào game",
     "days": "{{count}} ngày",
     "activity": "Hoạt động đăng nhập",
-    "searchHint": "Tên, tên đăng nhập hoặc mã học sinh (ít nhất 2 ký tự)"
-  },
-  "unassigned": {
-    "tab": "Học sinh chưa có lớp",
-    "title": "Học sinh chưa có lớp chưa vào được game",
-    "guidance": "Mỗi học sinh phải thuộc đúng một trường và một lớp. Hãy bổ sung lớp cho các học sinh dưới đây trong SIS hoặc file CSV rồi đồng bộ/nhập lại; cổng quản trị không gán lớp tạm.",
-    "reason": "Lý do",
-    "reasons": { "missing_class": "Thiếu lớp", "class_not_found": "Lớp không tồn tại", "multiple_classes": "Thuộc nhiều lớp" },
-    "detectedAt": "Phát hiện lúc"
+    "searchHint": "Tên hoặc tên đăng nhập (ít nhất 2 ký tự)",
+    "readOnlyHint": "Học sinh thuộc một trường và một khối, lấy từ SIS/CSV, chỉ xem. Sửa thông tin hoặc đổi trường/khối trong SIS hoặc file CSV.",
+    "searchFirst": "Gõ tên hoặc tên đăng nhập (ít nhất 2 ký tự) để tìm học sinh của trường.",
+    "searchUnavailable": "Chưa tìm được học sinh với quyền hiện tại (cần quyền xem người dùng của trường).",
+    "found": "Học sinh tìm thấy"
   },
   "activity": {
     "loginAt": "Vào game",
@@ -349,7 +335,6 @@
     "chatRetention": "Thời hạn lưu chat trong trận (ngày)",
     "chatRetentionHelp": "Để trống = theo mặc định của EduWorld; không thấp hơn mức tối thiểu.",
     "schoolPolicy": "Chính sách trường",
-    "classLeaderboard": "Bảng xếp hạng lớp",
     "schoolLeaderboard": "Bảng xếp hạng trường",
     "clubCreation": "Cho học sinh tạo câu lạc bộ"
   },

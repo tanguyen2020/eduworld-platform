@@ -18,8 +18,7 @@
       "tooLong": "At most {{max}} characters.",
       "tooMany": "Choose at most {{max}} items.",
       "dueAfterOpen": "The due date must be after the opening time.",
-      "range": "Value from {{min}} to {{max}}.",
-      "itemsRange": "Choose {{min}} to {{max}} students."
+      "range": "Value from {{min}} to {{max}}."
     },
     "assignmentStatus": {
       "draft": "Draft",
@@ -38,7 +37,6 @@
       "missed": "Missed",
       "excused": "Excused"
     },
-    "courseStatus": { "active": "Active", "hidden": "Hidden", "archived": "Archived" },
     "contentType": {
       "activity": "Activity",
       "question_set": "Question set",
@@ -47,15 +45,12 @@
       "quest": "Quest",
       "minigame_config": "Mini-game"
     },
-    "targetType": { "class": "Class", "study_group": "Study group", "students": "Specific students" },
+    "targetMode": { "grades": "By grade", "students": "Specific students" },
+    "filters": { "allSubjects": "All subjects", "allGrades": "All grades" },
     "mode": { "practice": "Practice", "graded": "Graded" },
     "scorePolicy": { "best": "Best attempt", "last": "Last attempt", "first": "First attempt" },
     "feedbackTiming": { "immediate": "After each question", "after_submit": "After submitting", "after_close": "After closing", "never": "Never" },
     "resultRelease": { "immediate": "On submit", "after_close": "After closing", "manual": "Released manually" },
-    "unlockMode": { "sequential": "In order", "free": "Free", "mastery_gate": "By mastery" },
-    "unlockRule": { "always": "Always open", "previous_completed": "Previous step done", "mastery_gate": "Mastery reached", "date": "By date" },
-    "mastery": { "beginning": "Beginning", "developing": "Developing", "proficient": "Proficient", "mastered": "Mastered" },
-    "scheduleKind": { "lesson": "Lesson", "assignment_due": "Assignment due", "exam": "Test", "event": "Event" },
     "picker": {
       "activity": "Activity",
       "question_set": "Question set",
@@ -73,9 +68,20 @@
       "grade": "Grade",
       "gradeN": "Grade {{n}}",
       "selectedContent": "Chosen: {{title}}",
-      "course": "Course",
+      "subject": "Subject",
       "targetType": "Assign to",
-      "targets": { "class": "Classes", "study_group": "Study groups", "students": "Students" },
+      "grades": "Grades",
+      "includeIds": "Add students of other grades (same school)",
+      "excludeIds": "Leave out students",
+      "studentIds": "Students",
+      "searchStudent": "Type at least 2 characters to search students of the school",
+      "searchHint": "Type at least 2 characters to search.",
+      "studentPrefilled": "Preselected student",
+      "studentSearchUnavailable": "Students cannot be looked up here (requires the permission to view users). You can still assign by grade; students preselected from the dashboard are kept.",
+      "excludeWins": "{{n}} students are both added and left out: left-out students will not get the assignment.",
+      "newStudentsJoin": "Students who join the grade after assigning are added to the open assignment automatically (except left-out students).",
+      "includeCount": "{{n}} students added",
+      "excludeCount": "{{n}} students left out",
       "targetCount": "{{type}}: {{n}}",
       "title": "Title",
       "instructions": "Instructions",
@@ -138,57 +144,6 @@
     "regrade": {
       "open": "Re-evaluate the test",
       "questionLabel": "Paper {{variant}} · question {{position}}"
-    },
-    "course": {
-      "name": "Course",
-      "students": "Students",
-      "hide": "Hide",
-      "show": "Show"
-    },
-    "path": {
-      "list": "Learning paths",
-      "none": "No learning path yet.",
-      "new": "Create path",
-      "view": "View",
-      "template": "Template",
-      "templateReadOnly": "Template paths of the textbook series are read-only.",
-      "title": "Path name",
-      "unlockMode": "Unlock mode",
-      "unlockRule": "Unlock rule",
-      "minMastery": "Minimum level",
-      "noNodes": "No step yet.",
-      "addNode": "Add step",
-      "moveUp": "Up",
-      "moveDown": "Down",
-      "nodeCount": "{{n}}/{{max}} steps",
-      "unlock": "Unlock for a student",
-      "unlockTitle": "Unlock step {{position}} for one student",
-      "pickStudent": "Choose a student before confirming.",
-      "unlocked": "Unlocked."
-    },
-    "schedule": {
-      "month": "Month",
-      "week": "Week",
-      "add": "Add schedule item",
-      "newTitle": "Add schedule item",
-      "editTitle": "Edit schedule item",
-      "deleteConfirm": "Delete this schedule item?",
-      "date": "Date",
-      "kind": "Kind",
-      "period": "Period",
-      "note": "Note",
-      "prevWeek": "Previous week",
-      "nextWeek": "Next week"
-    },
-    "group": {
-      "name": "Group name",
-      "class": "Class",
-      "members": "Members",
-      "memberCount": "Members",
-      "new": "Create group",
-      "newTitle": "Create study group",
-      "editTitle": "Edit study group",
-      "deleteConfirm": "Delete group \"{{name}}\"? Assignments given to the group keep their student list."
     },
     "games": {
       "help": "Published quests and mini-games that can be assigned to students. Game configuration is managed by the game operations team."

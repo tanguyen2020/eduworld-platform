@@ -1,6 +1,7 @@
-// F056 T029, T030, T034, T035, T038, T039 (US3, US4, US5) — F056-AC-12 (course results: graded columns, score_10,
-// status, cursor pages ≤ 100, no XP/rating/competition/manual input), F056-AC-13 (exam analysis: distribution, median,
-// pass rate, p-value without rapid_guess, misconceptions, reliability warning, "Giao ôn tập" button), F056-AC-14/15
+// F056 T029, T030, T034, T035, T038, T039 (US3, US4, US5) — F056-AC-12 (results by assignment — ADR-0095, no course:
+// listAssignments filtered by school/subject/grade, targets, completion, mean self-scored result, no XP/rating/
+// competition/manual input), F056-AC-13 (exam analysis: distribution, median, pass rate, p-value without rapid_guess,
+// misconceptions, reliability warning, "Giao ôn tập" button with the school, subject and grade of the assignment), F056-AC-14/15
 // (createLmsReport with Idempotency-Key → "Đang chuẩn bị" → link with expiry; EXPORT_LIMIT_REACHED message),
 // F056-AC-16 (reference label + "Chưa đủ dữ liệu"), F056-AC-17 (tenant summary "< 5" + createTenantReport),
 // F056-AC-18 (System Admin: tenant_ids[] from the filter, no X-Tenant-Id, Tenant column, createPlatformReport).
@@ -18,28 +19,43 @@ afterEach(() => {
 });
 
 const graded = (lms: LmsMockState) => {
-  lms.assignments.set(DASH_IDS.assignmentGraded, lmsAssignment({ assignment_id: DASH_IDS.assignmentGraded, title: 'Kiểm tra Phép nhân', mode: 'graded', exam_session_id: LMS_IDS.examSession }));
+  lms.assignments.set(
+    DASH_IDS.assignmentGraded,
+    lmsAssignment({ assignment_id: DASH_IDS.assignmentGraded, title: 'Kiểm tra Phép nhân', mode: 'graded', exam_session_id: LMS_IDS.examSession, completion: { assigned: 3, submitted: 2, missed: 1, excused: 0, average_score: 8.5 } }),
+  );
   lms.assignments.set(DASH_IDS.assignmentPractice, lmsAssignment({ assignment_id: DASH_IDS.assignmentPractice, title: 'Luyện tập thêm', mode: 'practice' }));
 };
 
 describe('Bảng kết quả và phân tích (US3)', () => {
-  it('F056-AC-12: graded columns with score_10 and status, "làm quá nhanh" mark, cursor pages, no XP/rating/manual input', async () => {
-    const { backend } = await renderDashboard(`/school-lms/results/${LMS_IDS.courseMath}`, { setup: (_d, l) => graded(l) });
-    const table = await screen.findByTestId('course-results');
+  it('F056-AC-12: assignments by school/subject/grade with targets, completion and mean score; no course, class, XP/rating/manual input', async () => {
+    const { backend } = await renderDashboard('/school-lms/results', { setup: (_d, l) => graded(l) });
+    const table = await screen.findByTestId('assignment-results');
     expect(await within(table).findByRole('link', { name: 'Mở phân tích bài Kiểm tra Phép nhân' })).toBeInTheDocument();
-    expect(within(table).getByTestId('score')).toHaveTextContent('8,5');
-    expect(within(table).getByText('Làm quá nhanh')).toBeInTheDocument();
-    expect(new URLSearchParams(backend.calls('GET', `/lms/courses/${LMS_IDS.courseMath}/results`)[0]!.search).get('limit')).toBe('100');
-    fireEvent.click(within(table).getByRole('button', { name: 'Xem thêm' }));
-    expect(await within(table).findByText('Không nộp')).toBeInTheDocument();
-    expect(backend.calls('GET', `/lms/courses/${LMS_IDS.courseMath}/results`).some((r) => new URLSearchParams(r.search).get('cursor') === 'r2')).toBe(true);
-    expect(table.textContent).not.toMatch(/XP|rating|thi đấu/i);
+    const row = within(table).getByRole('link', { name: 'Mở phân tích bài Kiểm tra Phép nhân' }).closest('tr')!;
+    expect(within(row).getByTestId('score')).toHaveTextContent('8,5');
+    expect(within(row).getByTestId('assignment-targets')).toHaveTextContent('Khối 3');
+    expect(row).toHaveTextContent('2/3');
+    // filters: school, subject, grade → listAssignments(school_id, subject_id, grade_level)
+    fireEvent.mouseDown(within(table).getByRole('combobox', { name: 'Trường' }));
+    fireEvent.click(await screen.findByTitle('TH Demo A'));
+    fireEvent.mouseDown(within(table).getByRole('combobox', { name: 'Môn học' }));
+    fireEvent.click(await screen.findByTitle('Toán'));
+    fireEvent.mouseDown(within(table).getByRole('combobox', { name: 'Khối' }));
+    expect(screen.queryByTitle('Khối 6')).toBeNull();
+    fireEvent.click(await screen.findByTitle('Khối 3'));
+    await waitFor(() => {
+      const q = new URLSearchParams(backend.calls('GET', '/lms/assignments').at(-1)!.search);
+      expect([q.get('school_id'), q.get('subject_id'), q.get('grade_level'), q.get('course_id'), q.get('class_id')]).toEqual([IDS.schoolA, IDS.subjectMath, '3', null, null]);
+    });
+    expect(await within(table).findByText('Kiểm tra Phép nhân')).toBeInTheDocument();
+    expect(backend.requests.some((r) => /\/courses|\/classes/.test(r.path))).toBe(false);
+    expect(table.textContent).not.toMatch(/XP|rating|thi đấu|khóa học|lớp/i);
     expect(within(table).queryAllByRole('textbox')).toHaveLength(0);
     expect(within(table).queryAllByRole('spinbutton')).toHaveLength(0);
   });
 
   it('F056-AC-13: analysis of the exam session (distribution, median, pass rate, p-value w/o rapid guess, misconceptions, reliability) + practice button', async () => {
-    const { backend, router } = await renderDashboard(`/school-lms/results/${LMS_IDS.courseMath}/analysis/${DASH_IDS.assignmentGraded}`, { setup: (_d, l) => graded(l) });
+    const { backend, router } = await renderDashboard(`/school-lms/results/${DASH_IDS.assignmentGraded}`, { setup: (_d, l) => graded(l) });
     const w = await screen.findByTestId('widget-analysis');
     await waitFor(() => expect(within(w).getByTestId('metric-median')).toHaveTextContent('6,5'));
     expect(backend.calls('GET', `/exams/sessions/${LMS_IDS.examSession}/report`)).toHaveLength(1);
@@ -54,25 +70,24 @@ describe('Bảng kết quả và phân tích (US3)', () => {
     expect(row).toHaveTextContent('Câu cần xem lại');
     fireEvent.click(within(row).getByRole('button', { name: 'Giao ôn tập cho học sinh sai câu này' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/assignments/new'));
-    expect(new URLSearchParams(router.state.location.search).get('mode')).toBe('practice');
-    expect(new URLSearchParams(router.state.location.search).get('class_id')).toBe(IDS.class3A);
+    expect(Object.fromEntries(new URLSearchParams(router.state.location.search))).toEqual({ mode: 'practice', school_id: IDS.schoolA, subject_id: IDS.subjectMath, grade: '3' });
   });
 
   it('F056-AC-13: an assignment without exam session explains that item analysis is not available', async () => {
-    await renderDashboard(`/school-lms/results/${LMS_IDS.courseMath}/analysis/${DASH_IDS.assignmentPractice}`, { setup: (_d, l) => graded(l) });
+    await renderDashboard(`/school-lms/results/${DASH_IDS.assignmentPractice}`, { setup: (_d, l) => graded(l) });
     expect(await screen.findByTestId('no-item-analysis')).toBeInTheDocument();
   });
 });
 
 describe('Xuất báo cáo (US4)', () => {
   it('F056-AC-14: createLmsReport with Idempotency-Key → "Đang chuẩn bị báo cáo" → link with expiry; nothing downloaded from the create request', async () => {
-    const { backend } = await renderDashboard(`/school-lms/results/${LMS_IDS.courseMath}`, { setup: (_d, l) => graded(l) });
-    const table = await screen.findByTestId('course-results');
-    fireEvent.click(await within(table).findByRole('button', { name: 'Xuất báo cáo' }));
+    const { backend } = await renderDashboard(`/school-lms/results/${DASH_IDS.assignmentGraded}`, { setup: (_d, l) => graded(l) });
+    const table = await screen.findByTestId('item-analysis');
+    fireEvent.click(await within(table).findByRole('button', { name: 'Xuất kết quả bài giao' }));
     await waitFor(() => expect(backend.calls('POST', '/lms/reports')).toHaveLength(1));
     const post = backend.calls('POST', '/lms/reports')[0]!;
     expect(post.headers['idempotency-key']).toBeTruthy();
-    expect(post.body).toEqual({ report_type: 'course_results', format: 'xlsx', course_id: LMS_IDS.courseMath });
+    expect(post.body).toEqual({ report_type: 'assignment_results', format: 'xlsx', assignment_id: DASH_IDS.assignmentGraded });
     expect(await within(table).findByText('Đang chuẩn bị báo cáo…')).toBeInTheDocument();
     const link = await within(table).findByTestId('export-link', {}, { timeout: 20_000 });
     expect(link.getAttribute('href')).toMatch(/^https:\/\/exports\.test\/.+\.xlsx\?sig=mock$/);
@@ -81,18 +96,18 @@ describe('Xuất báo cáo (US4)', () => {
   });
 
   it('F056-AC-15: 429 EXPORT_LIMIT_REACHED → explained, export can be retried; expired link → "Tạo lại báo cáo"', async () => {
-    const { dash } = await renderDashboard(`/school-lms/results/${LMS_IDS.courseMath}`, {
+    const { dash } = await renderDashboard(`/school-lms/results/${DASH_IDS.assignmentGraded}`, {
       setup: (d, l) => {
         graded(l);
         d.exportLimit = true;
         d.linkTtlSeconds = 1;
       },
     });
-    const table = await screen.findByTestId('course-results');
-    fireEvent.click(await within(table).findByRole('button', { name: 'Xuất báo cáo' }));
+    const table = await screen.findByTestId('item-analysis');
+    fireEvent.click(await within(table).findByRole('button', { name: 'Xuất kết quả bài giao' }));
     expect(await within(table).findByText('Bạn đang có quá nhiều báo cáo đang chuẩn bị. Hãy chờ một báo cáo xong rồi thử lại.')).toBeInTheDocument();
     dash.exportLimit = false;
-    fireEvent.click(within(table).getByRole('button', { name: 'Xuất báo cáo' }));
+    fireEvent.click(within(table).getByRole('button', { name: 'Xuất kết quả bài giao' }));
     expect(await within(table).findByTestId('export-link', {}, { timeout: 20_000 })).toBeInTheDocument();
     expect(await within(table).findByRole('button', { name: 'Tạo lại báo cáo' }, { timeout: 10_000 })).toBeEnabled();
     expect(within(table).queryByTestId('export-link')).toBeNull();
@@ -106,12 +121,15 @@ describe('Xuất báo cáo (US4)', () => {
     expect(screen.getByRole('button', { name: 'Xuất báo cáo' })).toBeDisabled();
     stopPortals();
     cleanup();
-    await renderDashboard(`/school-lms/school-dashboard/reference?school=${IDS.schoolA}&class=${IDS.class3A}&subject=${IDS.subjectMath}&preset=7d&from=2026-11-15&to=2026-11-21`);
+    await renderDashboard(`/school-lms/school-dashboard/reference?school=${IDS.schoolA}&subject=${IDS.subjectMath}&preset=7d&from=2026-11-15&to=2026-11-21`);
     const page = await screen.findByTestId('dashboard-reference');
     expect(within(page).getByTestId('regulation-disclaimer')).toHaveTextContent('Tham khảo — không thay đánh giá chính thức');
     expect(await within(page).findByText('Chưa đủ dữ liệu')).toBeInTheDocument();
     expect(within(page).getByText('Hoàn thành')).toBeInTheDocument();
     expect(await within(page).findByText('Mức tham khảo suy ra từ kết quả tự chấm theo hồ sơ đánh giá.')).toBeInTheDocument();
+    // no class filter or class name (ADR-0095); rows are numbered until the report carries names (WP-L2)
+    expect(within(page).queryByRole('combobox', { name: 'Lớp' })).toBeNull();
+    expect(within(page).getAllByText(/^Học sinh \d+$/).length).toBeGreaterThan(0);
   });
 });
 

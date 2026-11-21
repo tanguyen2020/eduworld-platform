@@ -2,36 +2,33 @@
 // overview, mastery by topic (MasteryHeatmap), 8-week trend, assignment history (no answers), recommendations shown to
 // the student — and the tab "Hoạt động đăng nhập" from listTenantStudentLoginEvents (F052 panel, needs
 // lms.student_activity.read). Never shown: Game Rating, position in the game, friends, chat, IP, device id (none of
-// them is in the contract; the login panel's view model drops unknown fields). Out of scope → "Không tìm thấy".
+// them is in the contract; the login panel's view model drops unknown fields). Out of scope → "Không tìm thấy". The name
+// comes with the link from the overview (router state, never in the URL); there is no class level (ADR-0095).
 import { DashboardChart, DashboardMetric, DashboardWidget, MASTERY_LEVELS, MasteryHeatmap, type HeatmapRow } from '@eduworld/ops-ui/dashboard';
 import { Breadcrumb, Col, Descriptions, Flex, List, Row, Table, Tabs, Tag, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { useActionEnabled } from '../../lms/LmsUi';
-import { useClassName, useClassStudents } from '../../classes/useClasses';
 import { formatDate, formatDateTime } from '../../common/format';
 import { StudentLoginActivityPanel } from '../../students/StudentLoginActivityPanel';
 import { useStudentProfile, useSubjects, type StudentLearningProfile } from '../api/dashboardApi';
 import { DashboardPageError, DASHBOARD_BASE, useWidgetError } from '../DashboardUi';
 import { useDashboardFilters } from '../DashboardFilterBar';
 import { filtersToSearch, subjectLabel } from '../model/filters';
-import { classHref } from '../overview/OverviewPage';
 
 type Attempt = StudentLearningProfile['recent_attempts'][number];
 
 export function StudentProfilePage() {
   const { t, i18n } = useTranslation();
   const { studentId } = useParams();
+  const linked = (useLocation().state as { name?: string } | null)?.name;
   const { filters } = useDashboardFilters();
   const q = useStudentProfile(studentId, filters);
   const error = useWidgetError(q.error);
   const subjects = useSubjects();
   const p = q.data;
-  const schoolId = p?.school_id ?? filters.schoolId;
-  const classStudents = useClassStudents(schoolId, filters.classId);
-  const className = useClassName(schoolId, filters.classId);
   if (q.error && !error?.code.startsWith('DASHBOARD_')) return <DashboardPageError error={q.error} />;
-  const name = classStudents.items.find((s) => s.student_id === studentId)?.display_name ?? t('dashboard.student.unnamed');
+  const name = linked || t('dashboard.student.unnamed');
   const subjectName = (id?: string) => {
     const s = subjects.data?.find((x) => x.subject_id === id);
     return s ? subjectLabel(s, i18n.language) : '';
@@ -142,8 +139,8 @@ export function StudentProfilePage() {
     <Flex vertical gap="middle" data-testid="dashboard-student">
       <Breadcrumb
         items={[
-          { title: <Link to={`${DASHBOARD_BASE}?${filtersToSearch({ ...filters, classId: undefined }).toString()}`}>{t('dashboard.breadcrumb.school')}</Link> },
-          ...(filters.classId ? [{ title: <Link to={classHref(filters, filters.classId)}>{className || t('dashboard.class.unnamed')}</Link> }] : []),
+          { title: <Link to={`${DASHBOARD_BASE}?${filtersToSearch(filters).toString()}`}>{t('dashboard.breadcrumb.school')}</Link> },
+          ...(filters.grade ? [{ title: t('dashboard.filter.gradeN', { n: filters.grade }) }] : []),
           { title: name },
         ]}
       />

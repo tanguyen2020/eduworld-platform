@@ -105,7 +105,7 @@ function PlatformSummary() {
           <Flex vertical gap="middle">
             <Row gutter={[16, 8]}>
               <Col xs={12} md={6}>
-                <DashboardMetric label={t('dashboard.class.activeStudents')} value={d.active_students} partial={d.is_partial} />
+                <DashboardMetric label={t('dashboard.metric.activeStudents')} value={d.active_students} partial={d.is_partial} />
               </Col>
               <Col xs={12} md={6}>
                 <DashboardMetric label={t('dashboard.student.accuracy')} value={d.accuracy} format="percent" partial={d.is_partial} />
@@ -124,7 +124,7 @@ function PlatformSummary() {
               dataSource={d.by_tenant ?? []}
               columns={[
                 { key: 'tenant', title: t('platform.common.tenant'), render: (_, r) => <TenantCell tenantId={r.tenant_id} directory={directory} /> },
-                { key: 'active', title: t('dashboard.class.activeStudents'), render: (_, r) => (r.active_students === null || r.active_students === undefined ? <SuppressedCell /> : n(r.active_students)) },
+                { key: 'active', title: t('dashboard.metric.activeStudents'), render: (_, r) => (r.active_students === null || r.active_students === undefined ? <SuppressedCell /> : n(r.active_students)) },
                 { key: 'accuracy', title: t('dashboard.student.accuracy'), render: (_, r) => pct(r.accuracy) },
               ]}
             />
@@ -139,7 +139,7 @@ function PlatformSummary() {
                 { key: 'grade', title: t('dashboard.filter.grade'), render: (_, c) => t('dashboard.filter.gradeN', { n: c.grade_level }) },
                 { key: 'subject', title: t('dashboard.filter.subject'), render: (_, c) => subjectName(c.subject_id) },
                 { key: 'students', title: t('dashboard.summary.students'), render: (_, c) => hidden(c, n(c.students)) },
-                { key: 'active', title: t('dashboard.class.activeStudents'), render: (_, c) => hidden(c, n(c.active_students)) },
+                { key: 'active', title: t('dashboard.metric.activeStudents'), render: (_, c) => hidden(c, n(c.active_students)) },
                 { key: 'accuracy', title: t('dashboard.student.accuracy'), render: (_, c) => hidden(c, pct(c.accuracy)) },
                 { key: 'attempts', title: t('dashboard.summary.attempts'), render: (_, c) => hidden(c, n(c.attempts_completed)) },
               ]}

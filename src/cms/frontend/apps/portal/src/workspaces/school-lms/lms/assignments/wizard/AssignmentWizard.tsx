@@ -4,7 +4,8 @@
 // Server errors: VALIDATION_FAILED errors[] → their field and step; CONTENT_NOT_PUBLISHED / RESOURCE_NOT_ASSIGNED →
 // back to the content step; others → translated message + trace id. A System Admin works on the one tenant picked in
 // the topbar (SingleTenantGate) which is also sent as `tenant_id` (F055-AC-07). Prefill from F056 shortcuts:
-// `?objective_id=&class_id=&student_ids=&mode=`. Wizard is desktop/tablet only (ADMIN_PORTAL §1.5).
+// `?objective_id=&school_id=&subject_id=&grade=&student_ids=&mode=` (ADR-0095: grade of a school, no class). Wizard is
+// desktop/tablet only (ADMIN_PORTAL §1.5).
 import { Alert, Button, Descriptions, Flex, Form, Grid, Steps } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,23 +17,43 @@ import { useSchoolLmsScope } from '../../../common/scope';
 import { formatDateTime } from '../../../common/format';
 import { useCreateAndPublishAssignment } from '../../api/assignments';
 import { EMPTY_FORM, formFieldOf, stepOf, toCreatePayload, validateAssignment, type AssignmentFormValues, type FormIssue } from '../../model/assignmentForm';
+import { LMS_LIMITS } from '../../model/fieldSchemas';
 import { isContentError } from '../../model/problemMessages';
 import { LmsProblem } from '../../LmsUi';
 import { StepContent } from './StepContent';
 import { StepPolicy, StepSchedule } from './StepDetails';
 import { StepTargets } from './StepTargets';
 
-const STEP_FIELDS: (keyof AssignmentFormValues)[][] = [['content'], ['courseId', 'targetIds'], ['title', 'instructions', 'openAt', 'dueAt', 'lateWindowHours'], ['maxAttempts']];
+const STEP_FIELDS: (keyof AssignmentFormValues)[][] = [
+  ['content'],
+  ['schoolId', 'subjectId', 'grades', 'includeIds', 'excludeIds', 'studentIds'],
+  ['title', 'instructions', 'openAt', 'dueAt', 'lateWindowHours'],
+  ['maxAttempts'],
+];
 const STEPS = ['content', 'targets', 'schedule', 'policy', 'review'] as const;
 
 function initialValues(params: URLSearchParams): AssignmentFormValues {
   const mode = params.get('mode');
   const students = params.get('student_ids')?.split(',').filter(Boolean) ?? [];
+  const grade = Number(params.get('grade'));
+  const { minimum, maximum } = LMS_LIMITS.gradeLevel;
   return {
     ...EMPTY_FORM,
     ...(mode === 'practice' || mode === 'graded' ? { mode } : {}),
-    ...(students.length ? { targetType: 'students' as const, targetIds: students } : {}),
+    ...(params.get('school_id') ? { schoolId: params.get('school_id')! } : {}),
+    ...(params.get('subject_id') ? { subjectId: params.get('subject_id')! } : {}),
+    ...(Number.isInteger(grade) && grade >= minimum && grade <= maximum ? { grades: [grade] } : {}),
+    ...(students.length ? { targetMode: 'students' as const, studentIds: students } : {}),
   };
+}
+
+/** Text of the targets on the review step: "Khối 3, Khối 4 · thêm 2 · bớt 1" or "Học sinh cụ thể: 5". */
+function targetSummary(v: AssignmentFormValues, t: (k: string, o?: Record<string, unknown>) => string): string {
+  if (v.targetMode === 'students') return t('lms.wizard.targetCount', { type: t('lms.targetMode.students'), n: v.studentIds.length });
+  const grades = [...v.grades].sort((a, b) => a - b).map((n) => t('lms.wizard.gradeN', { n }));
+  return [grades.join(', '), v.includeIds.length ? t('lms.wizard.includeCount', { n: v.includeIds.length }) : '', v.excludeIds.length ? t('lms.wizard.excludeCount', { n: v.excludeIds.length }) : '']
+    .filter(Boolean)
+    .join(' · ');
 }
 
 export function AssignmentWizard() {
@@ -104,7 +125,7 @@ export function AssignmentWizard() {
           <Descriptions bordered size="small" column={1} data-testid="wizard-review">
             <Descriptions.Item label={t('lms.wizard.steps.content')}>{v.content?.title}</Descriptions.Item>
             <Descriptions.Item label={t('lms.wizard.title')}>{v.title}</Descriptions.Item>
-            <Descriptions.Item label={t('lms.wizard.targetType')}>{t('lms.wizard.targetCount', { type: t(`lms.targetType.${v.targetType}`), n: v.targetIds.length })}</Descriptions.Item>
+            <Descriptions.Item label={t('lms.wizard.targetType')}>{targetSummary(v, t)}</Descriptions.Item>
             <Descriptions.Item label={t('lms.wizard.openAt')}>{formatDateTime(v.openAt)}</Descriptions.Item>
             <Descriptions.Item label={t('lms.wizard.dueAt')}>{formatDateTime(v.dueAt)}</Descriptions.Item>
             <Descriptions.Item label={t('lms.wizard.mode')}>{t(`lms.mode.${v.mode}`)}</Descriptions.Item>

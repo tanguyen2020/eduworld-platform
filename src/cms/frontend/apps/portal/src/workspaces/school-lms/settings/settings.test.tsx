@@ -140,10 +140,11 @@ describe('Cài đặt trường + giờ giới nghiêm (F052-AC-22, F052-AC-29, 
     const { backend } = await renderSchoolLms('/school-lms/settings');
     await openSchoolTab();
     const policy = await screen.findByTestId('school-policy');
-    fireEvent.click(within(policy).getByRole('switch', { name: 'Bảng xếp hạng lớp' }));
+    expect(within(policy).queryByRole('switch', { name: /lớp/i })).toBeNull();
+    fireEvent.click(within(policy).getByRole('switch', { name: 'Bảng xếp hạng trường' }));
     fireEvent.click(within(policy).getByRole('button', { name: 'Lưu' }));
     await waitFor(() => expect(backend.calls('PATCH', `/schools/${IDS.schoolA}/settings`)).toHaveLength(1));
-    expect(backend.calls('PATCH', `/schools/${IDS.schoolA}/settings`)[0]!.body).toEqual({ class_leaderboard_enabled: false });
+    expect(backend.calls('PATCH', `/schools/${IDS.schoolA}/settings`)[0]!.body).toEqual({ school_leaderboard_enabled: false });
     expect(backend.calls('PATCH', `/schools/${IDS.schoolA}/settings`)[0]!.headers['if-match']).toBe('"v1"');
   });
 });

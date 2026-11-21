@@ -7,7 +7,9 @@
     "noValue": "chưa có số liệu",
     "suppressedShort": "dưới 5 học sinh",
     "metric": {
-      "noData": "Chưa có số liệu"
+      "noData": "Chưa có số liệu",
+      "activeStudents": "Học sinh hoạt động",
+      "rapidGuess": "Tỉ lệ làm quá nhanh"
     },
     "action": {
       "newAssignment": "Giao bài mới",
@@ -43,8 +45,6 @@
       "grade": "Khối",
       "allGrades": "Tất cả khối",
       "gradeN": "Khối {{n}}",
-      "class": "Lớp",
-      "allClasses": "Tất cả lớp",
       "subject": "Môn",
       "allSubjects": "Tất cả môn"
     },
@@ -54,14 +54,12 @@
       "completion": "Tỉ lệ nộp",
       "none": "Không có bài giao sắp hạn.",
       "item": "{{title}} — hạn {{due}}",
-      "submitted": "{{submitted}}/{{total}}",
-      "byClass": "Tỉ lệ nộp theo lớp"
+      "submitted": "{{submitted}}/{{total}}"
     },
     "weak": {
-      "skillMap": "Bản đồ kỹ năng",
       "assignPractice": "Giao ôn tập theo LO",
       "codeRef": "{{code}} ({{ref}})",
-      "belowProficient": "{{ratio}} học sinh dưới mức thành thạo · {{classes}}"
+      "belowProficient": "{{ratio}} học sinh dưới mức thành thạo"
     },
     "attention": {
       "total": "{{count}} học sinh cần hỗ trợ"
@@ -83,19 +81,6 @@
       "pending": "Thông báo chờ xác nhận liên hệ phụ huynh",
       "open": "Xem thông báo an toàn"
     },
-    "class": {
-      "unnamed": "Lớp",
-      "summary": "Tổng quan lớp {{name}}",
-      "activeStudents": "Học sinh hoạt động",
-      "rapidGuess": "Tỉ lệ làm quá nhanh",
-      "heatmap": "Bản đồ kỹ năng (LO × mức)",
-      "heatmapCaption": "Phân bố mức thành thạo theo LO của lớp {{name}}",
-      "objective": "LO",
-      "actions": "Thao tác",
-      "students": "Học sinh của lớp",
-      "searchStudent": "Tìm học sinh theo tên",
-      "noMatch": "Không có học sinh khớp."
-    },
     "heatmap": {
       "cell": "{{lo}} · {{level}}: {{count}} học sinh",
       "topicCell": "{{topic}} · {{level}}: {{count}} LO"
@@ -114,7 +99,8 @@
       "lessons": "Bài học hoàn thành",
       "minutes": "Phút học",
       "accuracy": "Tỉ lệ đúng",
-      "flags": "Cần chú ý"
+      "flags": "Cần chú ý",
+      "numbered": "Học sinh {{n}}"
     },
     "submission": {
       "not_started": "Chưa làm",
@@ -158,14 +144,11 @@
       "R9": "Ôn câu sai"
     },
     "results": {
-      "pickCourse": "Chọn khóa học để xem bảng kết quả các bài kiểm tra tự chấm.",
       "scale": "Điểm tự chấm theo thang 10; không có điểm nhập tay.",
       "openAnalysis": "Mở phân tích bài {{title}}",
-      "tooFastHint": "Có lượt trả lời được đánh dấu làm quá nhanh.",
-      "noGraded": "Khóa học chưa có bài kiểm tra tự chấm.",
-      "back": "Về danh sách khóa học",
       "courses": "Kết quả bài/đề",
-      "tab": "Kết quả"
+      "pickAssignment": "Chọn bài giao để xem phân tích kết quả; lọc theo trường, môn và khối.",
+      "averageScore": "Điểm trung bình"
     },
     "analysis": {
       "title": "Phân tích {{title}}",
@@ -190,19 +173,17 @@
       "flag": "Cảnh báo",
       "problemItem": "Câu cần xem lại",
       "assignWrong": "Giao ôn tập cho học sinh sai câu này",
-      "pValueNote": "Tỉ lệ đúng không tính các lượt làm quá nhanh."
+      "pValueNote": "Tỉ lệ đúng không tính các lượt làm quá nhanh.",
+      "actions": "Thao tác"
     },
     "export": {
       "limit": "Bạn đang có quá nhiều báo cáo đang chuẩn bị. Hãy chờ một báo cáo xong rồi thử lại.",
       "type": "Loại báo cáo",
       "format": "Định dạng",
-      "course": "Khóa học",
       "assignment": "Bài giao",
       "types": {
         "assignment_results": "Kết quả bài giao",
-        "course_results": "Bảng kết quả khóa học",
         "regulation_reference": "Báo cáo tham khảo TT27/TT22",
-        "skill_map": "Bản đồ kỹ năng",
         "school_monthly": "Báo cáo trường theo tháng"
       }
     },

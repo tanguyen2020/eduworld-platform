@@ -62,11 +62,16 @@ export function ReasonTag({ reason }: { reason: AttentionReason }) {
   return <Tag data-testid={`reason-${reason}`}>{t(`dashboard.reason.${reason}`)}</Tag>;
 }
 
-/** Link of the F055 wizard prefilled for a practice on one LO (`?mode=practice&objective_id=&class_id=&student_ids=`). */
-export function practiceWizardHref(p: { objectiveId?: string; classId?: string; studentIds?: string[] }): string {
+/**
+ * Link of the F055 wizard prefilled for a practice on one LO
+ * (`?mode=practice&objective_id=&school_id=&subject_id=&grade=&student_ids=` — a grade of a school, ADR-0095).
+ */
+export function practiceWizardHref(p: { objectiveId?: string; schoolId?: string; subjectId?: string; grade?: number; studentIds?: string[] }): string {
   const q = new URLSearchParams({ mode: 'practice' });
   if (p.objectiveId) q.set('objective_id', p.objectiveId);
-  if (p.classId) q.set('class_id', p.classId);
+  if (p.schoolId) q.set('school_id', p.schoolId);
+  if (p.subjectId) q.set('subject_id', p.subjectId);
+  if (p.grade) q.set('grade', String(p.grade));
   if (p.studentIds?.length) q.set('student_ids', p.studentIds.join(','));
   return `${ASSIGNMENTS_BASE}/new?${q.toString()}`;
 }
