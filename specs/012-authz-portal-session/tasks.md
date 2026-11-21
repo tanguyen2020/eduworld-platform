@@ -177,6 +177,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 - [ ] T058 `safety_moderator` (role platform, MFA) gửi `X-Tenant-Id` thì Principal được resolve vào tenant đích cho các route module moderation/chat theo ADR-0072 (đọc liên tenant chỉ trong moderation, có audit + metric qua `tenancy.Bypass(ctx, "moderation_case")`); hiện trả `TENANT_MISMATCH` — test authz + tenant isolation (không mở quyền liên tenant ngoài moderation) — file: `src/backend/modules/identity/`, `src/backend/pkg/httpx` — kiểm: `make test-integration MOD=identity`, `make test-integration MOD=chat` — cỡ S
 - [ ] T059 Cấp `chat.sensitive_terms.read` cho role `school_admin` (chỉ đọc danh mục category của tenant mình, `/tenant/chat/categories`); không cấp `chat.tenant_terms.write`/`chat.tenant_category.toggle` (R20) — file: `src/backend/pkg/authz/catalog.go`, seed role — kiểm: test catalog khởi động (R20), integration chat `/tenant/chat/categories` 200 cho `school_admin` — cỡ S
 
+## Nhận từ F121 (owner chốt 2026-11-21)
+
+- [ ] T060 Cấp permission `moderation.case.lead` cho trưởng ca an toàn: role platform riêng (ví dụ `safety_lead`, MFA, không phải role tenant — R20) gồm quyền của `safety_moderator` + `moderation.case.lead`; seed `sm.truongca` dùng role này; test catalog khởi động (R20) và integration chat (thao tác trưởng ca của F121 được phép với `sm.truongca`, bị từ chối với `sm.antoan`) — file: `src/backend/pkg/authz/catalog.go`, seed identity — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2, US3 song song → US4 → US5 → US6 → Polish.

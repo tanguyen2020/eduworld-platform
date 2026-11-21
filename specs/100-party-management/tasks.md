@@ -98,6 +98,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 - [x] T042 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) Facade vòng đời/gộp của module competition; facade test với identity — file: `src/backend/modules/competition/internal/presentation/facade/` — kiểm: `make test-contract`, integration — cỡ M — xong: `command/student_lifecycle.go` (`PartyLifecycle`: cleanup → rời party + kết thúc lời mời; restore → `nothing_to_do`; anonymize → rời party + đặt lại tên party đã lập/làm leader; merge → chuyển membership sang user đích giữ vai trò, hoặc rời khi đích đã có party; idempotent), `presentation/facade/facade.go`, `Module.Facade()`; identity: `participants/competition.go`, `Gateway.CompetitionMerge`, `wire.go` (`Imports.Competition`), compose nối facade; test `TestPartyLifecycleFacade` (integration), `TestOwnerGatewayCompetition` (contract bên gọi)
 
+## Nhận từ F121 (owner chốt 2026-11-21)
+
+- [ ] T043 Consumer `competition.party_safety_chat` xử lý `sanction.applied`/`sanction.lifted` có `reason_code = case_hold` (hold tạm khi case p1 mở): người bị hold không gửi được lời mời party mới và không được mời; gỡ khi `sanction.lifted`; fixture test contract competition validate theo `specs/events/payloads/chat/sanction.*.v1.schema.json` (EVENT_DESIGN §4.9: `sanction_type`, `until`, `reason_code`) — kiểm: `make test-integration MOD=competition`, `make test-contract` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T010 projection trước mọi story) → US1 → US2, US3 song song → US4 → Polish.

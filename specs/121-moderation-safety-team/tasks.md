@@ -118,6 +118,10 @@
 - [x] T048 [P] CHANGELOG — file: `CHANGELOG.md` — **Bằng chứng:** CHANGELOG
 - [ ] T049 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **Chưa chạy:** cần stack compose (`make up-app`); kịch bản đã phủ bằng 13 test tích hợp
 
+## Việc nhận (owner chốt 2026-11-21)
+
+- [ ] T050 Worker `chat-moderation-async` (profile `worker-chat`) thuộc F121 theo Clarifications F116 (bước `async_analysis`): tiêu thụ tin đã ack khi bước `async_analysis` bật, chạy phân tích bất đồng bộ trên cùng engine/danh mục của F116, mở case qua `OpenCaseFromSignal` (p2 `async_analysis`, p1 nếu category p1); không lưu/ghi log nội dung (R14), idempotent theo `message_id` — kiểm: `make test-integration MOD=chat` — cỡ M
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T009) → US1 → US2 → US3 → US4 → US5, US6 song song → Polish.
