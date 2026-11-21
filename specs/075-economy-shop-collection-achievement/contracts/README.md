@@ -18,7 +18,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ga
 | `listCollections` | `GET /api/v1/game/collections` → `CollectionProgress[]` | game.v1.yaml | `game_player` | Có sẵn |
 | `getCollection` | `GET /api/v1/game/collections/{collection_id}` → `CollectionDetail` | game.v1.yaml | `game_player` | Có sẵn |
 | `listAchievements` | `GET /api/v1/game/achievements?category=` → `AchievementProgress[]` | game.v1.yaml | `game_player` | Có sẵn |
-| `createEconomyAdjustment` | `POST /api/v1/admin/economy/adjustments` (`X-Tenant-Id` đích, `Idempotency-Key`) → `202 EconomyAdjustment` | game.v1.yaml | `game.economy.adjust` (MFA, gateway nội bộ) | Có sẵn |
+| `createEconomyAdjustment` | `POST /api/v1/admin/economy/adjustments` (`X-Tenant-Id` đích, `Idempotency-Key`) → `202 EconomyAdjustment` | game.v1.yaml | `game.economy.adjust` (role platform, gateway nội bộ) | Có sẵn |
 | `approveEconomyAdjustment` | `POST /api/v1/admin/economy/adjustments/{adjustment_id}:approve` | game.v1.yaml | `game.economy.adjust` (≠ người tạo) | Cần sửa (thêm `IdempotencyKey`, `TenantIdHeader`, `422`) |
 | `listEconomyAdjustments` | `GET /api/v1/admin/economy/adjustments?status=&tenant_ids=` | game.v1.yaml | `game.economy.adjust` | Cần thêm |
 | `rejectEconomyAdjustment` | `POST /api/v1/admin/economy/adjustments/{adjustment_id}:reject` (`ReasonRequest`) | game.v1.yaml | `game.economy.adjust` | Cần thêm |

@@ -41,7 +41,7 @@ describe('Phân quyền và cô lập tenant', () => {
   });
 
   it('no lms.* permission (Safety Moderator) → portal 403 page, workspace C chunk not loaded (F055-AC-20, TC-CMS-WS-01)', async () => {
-    const sm = { ...accountWith('sm.antoan', TENANTS.thDemoA, []), tenants: [], platform: true, otp: '111111', perms: { platform: { workspaces: ['live_ops' as const], permissions: ['moderation.case.read'] } } };
+    const sm = { ...accountWith('sm.antoan', TENANTS.thDemoA, []), tenants: [], platform: true, perms: { platform: { workspaces: ['live_ops' as const], permissions: ['moderation.case.read'] } } };
     const { loaders } = await renderLms('/school-lms/assignments', { account: sm });
     expect(await screen.findByText('Không có quyền truy cập')).toBeInTheDocument();
     expect(loaders.school_lms).not.toHaveBeenCalled();

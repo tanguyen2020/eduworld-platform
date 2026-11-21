@@ -30,7 +30,7 @@ Dùng `src/backend/pkg/audit` (interface `audit.Recorder` của F002) và hiện
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Module khác chỉ phát event; không ghi DB identity |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Audit có `tenant_id` + RLS (TA); truy vấn qua TenantScope; System Admin CrossTenantScope + audit; append-only |
 | IV Server-authoritative | ✅ | Ghi cài đặt có `If-Match` + `reason` + audit; không có điểm/thưởng |
-| V Xác thực, phân quyền | ✅ | `tenant.audit.read`, `platform.audit.read`, `platform.settings.write`, `tenant.settings.*`, `tenant.student_cleanup.configure`, `school.settings.*`, `platform.feature_flag.write` (chỉ System Admin, gateway nội bộ + MFA); bật/tắt menu không thay authorization |
+| V Xác thực, phân quyền | ✅ | `tenant.audit.read`, `platform.audit.read`, `platform.settings.write`, `tenant.settings.*`, `tenant.student_cleanup.configure`, `school.settings.*`, `platform.feature_flag.write` (chỉ System Admin, gateway nội bộ + role platform); bật/tắt menu không thay authorization |
 | VI An toàn trẻ em | ✅ | Lọc PII/nội dung chat khỏi audit; khung giờ truy cập do trường đặt |
 | VII Một nguồn sự thật, cấu hình | ✅ | Giá trị cài đặt lưu một nơi (identity), module khác nhận qua event/facade `getTenant` |
 | VIII UI tách logic, token | ✅ | Không có UI |
@@ -96,7 +96,7 @@ Không có — DATABASE_DESIGN §1.3, §3.11 và EVENT_DESIGN §3.2 đã chốt 
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Route `/admin/*`: gateway nội bộ + MFA; `/tenant/*`, `/schools/*`: `portal_staff` + permission + scope.
+- Route `/admin/*`: gateway nội bộ + role platform; `/tenant/*`, `/schools/*`: `portal_staff` + permission + scope.
 - `If-Match` + `reason` cho mọi ghi cài đặt; `putFeatureFlag` idempotent theo `If-Match` + trạng thái đích (PUT), `X-Tenant-Id` = tenant đích khi `scope = tenant`.
 - Bật/tắt menu/action: audit `feature_flag.updated` (trước/sau, `reason`, tenant), event `platform_settings.changed` scope `feature_flag`; mục `can_disable = false` → `422 FEATURE_NOT_DISABLEABLE`; `identity_app` không ghi được catalog.
 - Xem liên tenant: `CrossTenantScope` + audit `cross_tenant.accessed`.

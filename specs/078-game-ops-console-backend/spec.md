@@ -24,21 +24,25 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F078-AC-01: điều kiện "MFA (`acr`/`amr`)" và mã `403 MFA_REQUIRED` bỏ; giữ `azp = eduworld-portal`, role platform, permission theo loại cấu hình (thiếu → `403 PERMISSION_DENIED` + audit). T001, T010, plan, quickstart nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: US1, F078-AC-01, Constitution, SC-001. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Ranh giới quyền của Game Operations Console (Priority: P1)
 
-Chỉ đội platform có MFA mới soạn, duyệt, phát hành nội dung game; nhân sự trường không có đường nào vào.
+Chỉ đội platform (role platform, gateway nội bộ) mới soạn, duyệt, phát hành nội dung game; nhân sự trường không có đường nào vào.
 
 **Why this priority**: Cấu hình game platform-only là quyết định kiến trúc (ADR-0027, R20); mọi story sau dựa vào đó.
 
-**Independent Test**: Gọi mọi operation `/game-admin/*` với token `ad.truong.a`, token platform thiếu MFA, token `game_designer` cho loại ngoài quyền → `403` + `authz.denied`; qua gateway public → không có route.
+**Independent Test**: Gọi mọi operation `/game-admin/*` với token `ad.truong.a`, token nhân sự không có role platform, token `game_designer` cho loại ngoài quyền → `403` + `authz.denied`; qua gateway public → không có route.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F078-AC-01 | HỆ THỐNG PHẢI yêu cầu cho mọi operation `/game-admin/*`, `/game-media*`: `azp = eduworld-portal`, MFA (`acr`/`amr`), role platform và permission theo loại cấu hình; thiếu điều kiện PHẢI trả `403 PERMISSION_DENIED` (hoặc `403 MFA_REQUIRED`) và ghi audit `authz.denied` | FR-CMS-004 · AC-CMS-001 · ADR-0027 | TC-CMS-001 |
+| F078-AC-01 | HỆ THỐNG PHẢI yêu cầu cho mọi operation `/game-admin/*`, `/game-media*`: `azp = eduworld-portal`, role platform và permission theo loại cấu hình (không MFA — ADR-0094); thiếu điều kiện PHẢI trả `403 PERMISSION_DENIED` và ghi audit `authz.denied` | FR-CMS-004 · AC-CMS-001 · ADR-0027 | TC-CMS-001 |
 | F078-AC-02 | Gateway public (APISIX) PHẢI không có route `/api/v1/game-admin/*`, `/api/v1/game-media*`; gọi thẳng module game bằng token tenant PHẢI nhận `403` | AC-CMS-001 · AGENTS R20 | TC-CMS-001 |
 | F078-AC-03 | HỆ THỐNG PHẢI lưu mọi cấu hình game với `tenant_id = NULL` (`owner_scope = platform`), bỏ qua `X-Tenant-Id`/`tenant_ids` trên route này; `config_type` không thuộc module game PHẢI trả `404 NOT_FOUND` | FR-CMS-004 · ADR-0027 | — |
 
@@ -179,7 +183,7 @@ System Admin gán quest/mini-game đã publish cho tenant; nhà trường chỉ 
 
 | Ràng buộc | Nguồn |
 |---|---|
-| Route chỉ gateway nội bộ, `eduworld-portal` + MFA + role platform; chặn ở backend | AGENTS R7, R20 · ADR-0027 |
+| Route chỉ gateway nội bộ, `eduworld-portal` + role platform; chặn ở backend | AGENTS R7, R20 · ADR-0027 |
 | Version publish bất biến, rollback chỉ đổi con trỏ, lượt chơi ghim version | AGENTS R11, R31 · ADR-0043 |
 | Media chỉ object storage, khóa `media/<sha256>` bất biến | ADR-0044 · AGENTS R31 |
 | Nội dung game không bao giờ thuộc tenant; gán theo ADR-0029 | AGENTS R22 · ADR-0029 |
@@ -188,7 +192,7 @@ System Admin gán quest/mini-game đã publish cho tenant; nhà trường chỉ 
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% operation `/game-admin/*` trả `403` với mọi role tenant và với token platform thiếu MFA (test sinh từ OpenAPI).
+- **SC-001**: 100% operation `/game-admin/*` trả `403` với mọi role tenant và với token nhân sự không có role platform (test sinh từ OpenAPI).
 - **SC-002**: 95% lần publish tới học sinh mới nhận trong thời gian `publish_to_visible_max`.
 - **SC-003**: 0 lượt chơi đang ghim bị đổi version sau publish/rollback trong test 1.000 lượt.
 - **SC-004**: ≥ 99% version publish có asset 3D có thumbnail trong ≤ 10 phút trên staging.

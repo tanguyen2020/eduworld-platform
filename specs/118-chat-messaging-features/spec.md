@@ -21,6 +21,10 @@
 
 - Q: Receipts và ghim còn nhánh cho channel `class`/`study_group`? → A: Không — hai loại channel này bị bỏ ([ADR-0095 §5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md), FR-CHAT-001). `getMessageReceipts` trả danh sách từng người với channel ≤ 8 thành viên (`party`, `match`, `team` theo trận, `direct`) và chỉ số đếm với channel nhiều thành viên còn lại là club (`team` cố định, tới `club_max_members`) [Proposed — WP-S: thay nhánh `class`/`study_group` cũ bằng club; mô tả operation trong `chat.v1` do WP-C1 sửa]. Ghim ở `world`/`area` vẫn `403 CHAT_FEATURE_DISABLED`. F118-AC-20, F118-AC-23 viết lại.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F118-AC-17. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Sửa và thu hồi tin mà không xóa được bằng chứng (Priority: P1)
@@ -81,7 +85,7 @@ Học sinh lớp nhỏ biểu đạt bằng sticker, GIF chủ đề học tập
 | F118-AC-14 | KHI học sinh gọi `listStickerPacks`, module chat PHẢI trả pack được gán cho tenant kèm trạng thái mở khóa của chính học sinh, nhãn song ngữ | FR-CHAT-014 | TC-CHAT-033 |
 | F118-AC-15 | HỆ THỐNG PHẢI giới hạn sticker/GIF chung theo rate của channel và trần sticker/GIF mỗi phút; emoji chỉ từ bộ cho phép cấu hình platform | FR-CHAT-014 · [CHAT_SYSTEM §7.5](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-033 |
 | F118-AC-16 | KHI thành viên `chat.reaction.toggle` (hoặc REST) một reaction trong bộ cho phép, module chat PHẢI bật/tắt reaction, giới hạn `chat_reactions_per_user` mỗi người mỗi tin, từ chối trên tin đã thu hồi, và phát `chat.reaction.updated` với số đếm đồng bộ mọi client | FR-CHAT-014 · FR-CHAT-003 | TC-CHAT-034 |
-| F118-AC-17 | KHI người có `game.chat_assets.write` (gateway nội bộ, MFA) tạo/sửa/duyệt/publish sticker pack hoặc GIF, module chat PHẢI kiểm tệp (sticker webp/png ≤ 512 KB; GIF ≤ 2 MB, ≤ 480 px, có preview tĩnh), bắt buộc người duyệt khác người upload với GIF, version hóa, ghi audit; role tenant PHẢI nhận `403 PERMISSION_DENIED` | FR-CHAT-014 · AGENTS R20 · [ADMIN_PORTAL §3.3](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CHAT-033 |
+| F118-AC-17 | KHI người có `game.chat_assets.write` (gateway nội bộ, role platform) tạo/sửa/duyệt/publish sticker pack hoặc GIF, module chat PHẢI kiểm tệp (sticker webp/png ≤ 512 KB; GIF ≤ 2 MB, ≤ 480 px, có preview tĩnh), bắt buộc người duyệt khác người upload với GIF, version hóa, ghi audit; role tenant PHẢI nhận `403 PERMISSION_DENIED` | FR-CHAT-014 · AGENTS R20 · [ADMIN_PORTAL §3.3](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CHAT-033 |
 
 ---
 

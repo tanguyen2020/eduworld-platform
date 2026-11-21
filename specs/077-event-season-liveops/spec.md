@@ -20,6 +20,10 @@
 
 - Q: Bỏ khái niệm lớp ([ADR-0095](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) mục 5, D5) — đối tượng sự kiện và đóng góp community goal đổi thế nào? → A: [Confirmed] `audience` chỉ còn tenant, trường, khối (`grade_levels`), môn; không còn `class_ids`/phạm vi `class` ([event.schema.json](../schemas/event.schema.json), `SchoolEventCreate/Update.audience` — đã áp 2026-11-21, WP-S). Đóng góp community goal hiển thị theo **khối của trường** (`CommunityGoalProgress.by_grade[] {grade_level, progress}` thay `by_class`, cờ cấu hình `show_grade_contributions` thay `show_class_contributions`): không tên, không xếp hạng cá nhân, khối có < `analytics_min_cell_size` (5) học sinh đóng góp bị ẩn (không trả dòng). Lọc `audience` theo `ref.students` (`school_id`, `grade_level` — cập nhật từ `student.placement_changed`, owner F010), không dùng `ref.enrollments`. `community_goal_contributions` ghi `grade_level` tại thời điểm đóng góp (ADR-0095 mục 2), không `class_id`.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F077-AC-06, Constitution, plan. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Vòng đời chạy sự kiện và vận hành khẩn cấp (Priority: P1)
@@ -39,7 +43,7 @@
 | F077-AC-03 | KHI người có `game.event.operate` gọi `suspendEventRun`, `resumeEventRun` hoặc `cancelEventRun` với lý do 3–1000 ký tự và `Idempotency-Key`, module game PHẢI đổi trạng thái theo sơ đồ, ghi audit kèm lý do, phát `event.suspended`/`event.resumed`/`event.cancelled`; chuyển không hợp lệ PHẢI trả `422 INVALID_STATE_TRANSITION` | FR-EVT-003 · AC-EVT-003 | TC-EVT-003 |
 | F077-AC-04 | TRONG KHI run `suspended`, module game PHẢI ẩn thành phần sự kiện, không cấp thưởng sự kiện mới, và cho lượt chơi đã bắt đầu kết thúc bình thường theo version đã ghim | FR-EVT-003 · ADR-0043 | TC-EVT-003 |
 | F077-AC-05 | KHI tới `claim_until` (`end_at` + `event_claim_grace_hours`) hoặc run bị hủy, module game PHẢI tự cấp mọi mốc đã đạt chưa nhận (một lần) rồi chuyển `archived` | FR-EVT-003 · AC-EVT-012 | TC-EVT-012 |
-| F077-AC-06 | NẾU người gọi `/game-admin/events/*` không có `game.event.operate` (thao tác) hoặc `game.liveops.read` (`getEventRunStats`), thiếu MFA hay không phải `eduworld-portal`, THÌ module game PHẢI trả `403 PERMISSION_DENIED`/`403 MFA_REQUIRED` và ghi `authz.denied` | AGENTS R20 · ADR-0027 | TC-TEN-004 |
+| F077-AC-06 | NẾU người gọi `/game-admin/events/*` không có `game.event.operate` (thao tác) hoặc `game.liveops.read` (`getEventRunStats`), không có role platform hay không phải `eduworld-portal`, THÌ module game PHẢI trả `403 PERMISSION_DENIED` (không MFA — ADR-0094) và ghi `authz.denied` | AGENTS R20 · ADR-0027 | TC-TEN-004 |
 
 ---
 
@@ -195,7 +199,7 @@ Sự kiện không ép online, không đếm ngược gây áp lực, không kh�
 | Phần thưởng chỉ do server, idempotent, qua sổ cái | ADR-0049 · AGENTS R5, R10 |
 | Community goal: Valkey chỉ là cache | AGENTS R9 · NFR-AVAIL-003 |
 | Không streak, không push ngoài game, không track trả phí | AGENTS R19 · NFR-SAFE-003 |
-| Thao tác vận hành chỉ qua gateway nội bộ + MFA; tenant chỉ dùng template | AGENTS R20 · ADR-0027 |
+| Thao tác vận hành chỉ qua gateway nội bộ + role platform; tenant chỉ dùng template | AGENTS R20 · ADR-0027 |
 
 ## Success Criteria *(bắt buộc)*
 

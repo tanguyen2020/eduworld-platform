@@ -16,7 +16,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ga
 | `getSeasonTrack` | `GET /api/v1/game/season-track` | game.v1.yaml | `game_player` | Có sẵn |
 | `claimSeasonTier` | `POST /api/v1/game/season-track/tiers/{tier}:claim` (`Idempotency-Key`) | game.v1.yaml | `game_player` | Có sẵn |
 | `listSeasonTrackHistory` | `GET /api/v1/game/season-track/history` | game.v1.yaml | `game_player` | Có sẵn |
-| `suspendEventRun` / `resumeEventRun` / `cancelEventRun` | `POST /api/v1/game-admin/events/{event_id}/runs/{run_id}:suspend\|:resume\|:cancel` (`EventRunOperation`) | game.v1.yaml | `game.event.operate` (MFA, gateway nội bộ) | Có sẵn |
+| `suspendEventRun` / `resumeEventRun` / `cancelEventRun` | `POST /api/v1/game-admin/events/{event_id}/runs/{run_id}:suspend\|:resume\|:cancel` (`EventRunOperation`) | game.v1.yaml | `game.event.operate` (role platform, gateway nội bộ) | Có sẵn |
 | `getEventRunStats` | `GET /api/v1/game-admin/events/{event_id}/runs/{run_id}/stats` | game.v1.yaml | `game.liveops.read` | Có sẵn |
 | `listEventTemplates` | `GET /api/v1/lms/event-templates` | game.v1.yaml | `lms.school_event.write` | Có sẵn |
 | `listSchoolEvents` / `createSchoolEvent` | `GET/POST /api/v1/lms/school-events` | game.v1.yaml | `lms.school_event.write` | Cần sửa (`createSchoolEvent` khai báo `409`, `503`) |

@@ -56,6 +56,10 @@ Owner đã duyệt trước các mặc định [Proposed]; khi tài liệu thi�
 
 - Q: Pipeline có đổi khi bỏ lớp? → A: không đổi hành vi: pipeline vẫn không nhận tham số khối (R15); policy hiệu lực đọc 3 cấp platform → tenant → school (F115), không còn channel `class`/`study_group`. AC giữ mã, chỉ sửa chữ F116-AC-11.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F116-AC-12, Constitution, plan. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Mọi tin nhắn được kiểm tra trước khi phát (Priority: P1)
@@ -96,7 +100,7 @@ System Admin thêm từ, thử câu mẫu, publish; trong một phút mọi tin 
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F116-AC-12 | KHI System Admin (`chat.sensitive_terms.write`, gateway nội bộ, MFA) tạo/sửa/xóa mềm category, term, allowlist, module chat PHẢI lưu ở trạng thái nháp, kiểm `match_type = pattern` là RE2 ≤ 200 ký tự không backreference/lookaround (sai → `SENSITIVE_TERM_INVALID`), ghi audit và phát `sensitive_term.created/updated/deleted` không chứa nội dung term | FR-MOD-009 · AC-MOD-019 · AGENTS R21 | TC-CHAT-016 |
+| F116-AC-12 | KHI System Admin (`chat.sensitive_terms.write`, gateway nội bộ, role platform) tạo/sửa/xóa mềm category, term, allowlist, module chat PHẢI lưu ở trạng thái nháp, kiểm `match_type = pattern` là RE2 ≤ 200 ký tự không backreference/lookaround (sai → `SENSITIVE_TERM_INVALID`), ghi audit và phát `sensitive_term.created/updated/deleted` không chứa nội dung term | FR-MOD-009 · AC-MOD-019 · AGENTS R21 | TC-CHAT-016 |
 | F116-AC-13 | KHI người có `chat.sensitive_terms.read` gọi `testSensitiveTerms`, module chat PHẢI trả danh sách `category_code`, `severity`, `action`, span và decision mà không ghi tin nào | FR-MOD-009 · [MODERATION §11.4](../../docs/03-social-multiplayer/MODERATION.md) | TC-CHAT-011 |
 | F116-AC-14 | KHI gọi `publishSensitiveCatalog`, module chat PHẢI chạy bộ test hồi quy; NẾU recall với `high`/`critical`/PII hoặc false positive không đạt `filter_quality_gate`, THÌ PHẢI trả `422 SENSITIVE_CATALOG_REGRESSION_FAILED` và không tạo version; đạt thì tạo `catalog_version` tăng đơn điệu, lưu `checksum`, `regression_recall`, `regression_fp_rate`, phát `sensitive_catalog.published` | FR-MOD-015 · ADR-0030 | TC-CHAT-012 |
 | F116-AC-15 | KHI có version mới, mọi instance module chat PHẢI biên dịch ở nền và hoán đổi nguyên tử trong ≤ 60 giây (pub/sub + đối chiếu định kỳ); tin đang xử lý dùng bản cũ, tin sau thời điểm hiệu lực dùng bản mới, không lỗi và p95 không vượt trần | FR-MOD-015 · AC-MOD-020 · AC-MOD-012 | TC-CHAT-012 |
@@ -200,7 +204,7 @@ Học sinh lớp 2 chạm "Cố lên!"; bạn chọn tiếng Anh thấy "Go for 
 |---|---|
 | Không hardcode từ nhạy cảm trong code/test/seed (fixture placeholder); không trả từ khớp | AGENTS R15 · ADR-0030 |
 | Không cờ tắt kiểm duyệt trong code/env | AGENTS R15 |
-| Endpoint quản trị chỉ gateway nội bộ, `azp = eduworld-portal` + MFA + role platform | AGENTS R20 · ADR-0027 |
+| Endpoint quản trị chỉ gateway nội bộ, `azp = eduworld-portal` + role platform | AGENTS R20 · ADR-0027 |
 | Xóa = soft-delete; version danh mục append-only | AGENTS R21 · ADR-0028 |
 | Pipeline in-process, p95 theo `moderation_pipeline_latency` | NFR-SAFE-002 |
 

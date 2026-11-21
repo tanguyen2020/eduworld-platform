@@ -66,6 +66,10 @@ Quyết định khi hiện thực F011; mục [Confirmed] đã được owner ch
 
 - Q: Pipeline SIS khi bỏ lớp/enrollment (ADR-0095 D6, SIS contract 1.3.0)? → A: [Confirmed] Apply theo thứ tự school → student; bản ghi học sinh xếp học sinh vào trường (`school_external_id`) và khối (`grade_level`) của `org.students`; trạng thái nguồn đổi trạng thái hiệu lực (`inactive`/`graduated`/`transferred_out` → `org.students.status = inactive`, `active` → `active`, `suspended` chỉ khóa tài khoản). Mỗi thay đổi trường/khối/hiệu lực phát `student.placement_changed` (`source = sis`, `sync_run_id`). File `classes.csv`/`enrollments.csv`, `entity_kinds` `classes`/`enrollments` cũ và `Change` loại `class`/`enrollment` được **bỏ qua kèm cảnh báo** (đếm `<kind>_ignored`/`changes_ignored` trong stats của run, log WARN), không từ chối, không lưu; EduWorld không gọi `listClasses`/`listEnrollments` nữa. Issue `missing_class`, `class_school_mismatch`, `orphan_enrollment`, `multi_school_enrollment`, `grade_mismatch` bị bỏ (issue mở còn lại đóng `ignored` bởi migration); login sync dùng kết quả `missing_placement`. Import CSV/full pull có năm học hiện tại thì tạo năm học của trường (`academic_year_id` của event).
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: plan (route connection: gateway nội bộ + role platform). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — School Admin nhập CSV theo contract (Priority: P1)

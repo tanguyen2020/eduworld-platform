@@ -55,6 +55,10 @@
 
 - Q: Gộp tài khoản và clone khi bỏ enrollment? → A: [Confirmed] Bước identity của gộp tài khoản chỉ soft-delete `org.students` của nguồn (target giữ trường/khối của mình), phát `student.placement_changed` (`source = platform_saga`, `status = inactive` nếu nguồn đang hiệu lực) và `tenant_membership.changed` (removed); không còn chuyển/đóng enrollment. Clone không bao giờ sao chép học sinh hay xếp trường/khối (R22); `class_template` bị gỡ khỏi `ResourceType`. Test: `TestPlatformAdminMerge`, `TestPlanCloneSettings`.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F045-AC-04, bảng tham số `portal_session_sso`, SC-001, plan (middleware `/admin/*`). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin đọc dữ liệu liên tenant có kiểm soát (Priority: P1)
@@ -72,7 +76,7 @@
 | F045-AC-01 | KHI System Admin gọi endpoint danh sách của F045 không kèm `X-Tenant-Id` và có `tenant_ids[]` (rỗng = mọi tenant `active`), module identity PHẢI dùng phạm vi liên tenant với danh sách tenant tường minh, trả `tenant_id` trên mỗi dòng và ghi audit `cross_tenant.accessed` (actor, `tenant_ids`, endpoint) | FR-ORG-008 · FR-CMS-013 · AC-ORG-004 | TC-TEN-018, TC-CMS-TEN-02 |
 | F045-AC-02 | NẾU người dùng tenant gửi `tenant_ids`, THÌ HỆ THỐNG PHẢI bỏ qua tham số và chỉ trả dữ liệu tenant của phiên | AC-CMS-002 | TC-CMS-TEN-01, TC-TEN-011 |
 | F045-AC-03 | NẾU role platform khác `system_admin` (vd. `content_admin`, `safety_moderator`) gọi API dữ liệu tenant của F045, THÌ HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` | [ADMIN_PORTAL §2.1](../../docs/04-admin-portal/ADMIN_PORTAL.md#21-nguyên-tắc) | TC-CMS-TEN-04, TC-TEN-004 |
-| F045-AC-04 | HỆ THỐNG PHẢI chỉ phục vụ route `/api/v1/admin/*` của F045 qua gateway nội bộ với `azp = eduworld-portal`, MFA và role platform; thiếu MFA PHẢI nhận `403 MFA_REQUIRED`; token role tenant PHẢI nhận `403 PERMISSION_DENIED` kèm audit `authz.denied`; gọi qua gateway public PHẢI không có route | AC-CMS-001 · ADR-0027 | TC-CMS-WS-02, TC-CMS-WS-03 |
+| F045-AC-04 | HỆ THỐNG PHẢI chỉ phục vụ route `/api/v1/admin/*` của F045 qua gateway nội bộ với `azp = eduworld-portal` và role platform (không MFA — ADR-0094); token role tenant hoặc thiếu role platform PHẢI nhận `403 PERMISSION_DENIED` kèm audit `authz.denied`; gọi qua gateway public PHẢI không có route | AC-CMS-001 · ADR-0027 | TC-CMS-WS-02, TC-CMS-WS-03 |
 | F045-AC-05 | KHI System Admin gọi `listTenants` với `q`, HỆ THỐNG PHẢI trả tenant khớp mã hoặc tên (không phân biệt hoa thường), kèm `tenant_type`, phân trang cursor; NẾU `q` vượt `maxLength`, THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` | FR-CMS-013 · ADR-0041 | TC-TEN-024 |
 | F045-AC-06 | HỆ THỐNG PHẢI chỉ bỏ global filter tenant/soft-delete trong API liên tenant và Thùng rác qua `tenancy.Bypass(ctx, reason)` có audit và tăng `eduworld_tenant_filter_bypass_total`; linter PHẢI chặn bỏ filter ở chỗ khác | AGENTS R27 · ADR-0039 | TC-TEN-023 |
 
@@ -219,7 +223,7 @@ Một học sinh có hai tài khoản (phát hiện qua issue `duplicate_identif
 |---|---|
 | `module_call_deadline` | Deadline bước saga (5 s) đặt vào `context` khi gọi facade; thử lại do engine saga với cùng `Idempotency-Key` (không retry/circuit breaker/bulkhead trong tiến trình, ADR-0074) |
 | `idempotency_record_ttl` | Thời gian giữ kết quả theo `Idempotency-Key` |
-| `portal_session_sso` | Phiên portal và `auth_time` của role platform (MFA) |
+| `portal_session_sso` | Phiên portal; phiên role platform tối đa 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, ADR-0094) |
 | `tenant_header_required` | Quy tắc header `X-Tenant-Id` (đọc liên tenant không gửi, ghi gửi tenant đích) |
 | `principal_cache_ttl` | Hiệu lực thu hồi quyền platform |
 
@@ -239,7 +243,7 @@ Một học sinh có hai tài khoản (phát hiện qua issue `duplicate_identif
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% endpoint của F045 có test authorization (System Admin / role platform khác / role tenant / thiếu MFA) và test tenant isolation pass.
+- **SC-001**: 100% endpoint của F045 có test authorization (System Admin / role platform khác / role tenant / không có role platform) và test tenant isolation pass.
 - **SC-002**: 100% lần đọc liên tenant và thao tác gán, gỡ gán, clone, khôi phục có bản ghi audit tương ứng (kiểm bằng truy vấn đối soát trong test).
 - **SC-003**: Trong bộ test clone, 0 bản ghi học sinh, enrollment, attempt, kết quả, mastery được tạo ở tenant đích.
 - **SC-004**: Chạy lại bất kỳ bước saga nào hai lần cho cùng job không làm số bản sao thay đổi.

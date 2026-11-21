@@ -39,6 +39,10 @@
 
 - Q: Contract SIS sau ADR-0095? → A: [Confirmed] **EduWorld SIS Contract 1.3.0**: gỡ `Class`, `Enrollment`, `ClassPage`, `EnrollmentPage`, `listClasses`, `listEnrollments`, `Change.entity_kind` `class`/`enrollment`. Full sync chỉ gọi schools → academic-years → students (năm học hiện tại được tạo ở trường); EduWorld không gọi hai op đã gỡ dù facade còn triển khai; `Change` loại `class`/`enrollment` (delta, webhook) được bỏ qua kèm cảnh báo (`changes_ignored`), không thành vi phạm contract. Mock `sis-mock` (Prism) và bộ conformance Postman sinh lại từ contract. Test: `TestSisContractPull`, `TestSisContractDelta`, `TestClientPagesAndValidation`.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: plan, contracts/README (route `x-internal`). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Đăng ký connection `contract_v1` và kiểm tra kết nối (Priority: P1) 🎯 MVP

@@ -1,7 +1,7 @@
 # Feature Specification: F057 — Workspace D — Platform Administration: tenant, gán/clone, thùng rác, danh mục, cấu hình hệ thống
 
 **Feature Branch**: `057-portal-platform-admin` · **Created**: 2026-11-16 · **Status**: Done · **Module**: `src/cms/frontend/apps/portal` (workspace D) · **Mốc**: M-C3 · **Phụ thuộc**: F045, F051
-**Input**: Workspace D chỉ cho System Admin (gateway nội bộ + MFA): bộ lọc tenant liên tenant dùng chung cho mọi workspace, quản lý tenant, gán dữ liệu platform cho tenant, clone giữa tenant, Thùng rác mọi tenant, danh mục quốc gia/tỉnh/trường, cấu hình hệ thống (dọn học sinh, thời hạn chat gameplay). FR nguồn: FR-AUTH-024, FR-CMS-013, FR-CMS-015, FR-ORG-012, FR-ORG-013, FR-ORG-015.
+**Input**: Workspace D chỉ cho System Admin (gateway nội bộ + role platform; không MFA — ADR-0094): bộ lọc tenant liên tenant dùng chung cho mọi workspace, quản lý tenant, gán dữ liệu platform cho tenant, clone giữa tenant, Thùng rác mọi tenant, danh mục quốc gia/tỉnh/trường, cấu hình hệ thống (dọn học sinh, thời hạn chat gameplay). FR nguồn: FR-AUTH-024, FR-CMS-013, FR-CMS-015, FR-ORG-012, FR-ORG-013, FR-ORG-015.
 
 ## Clarifications
 
@@ -56,6 +56,10 @@ Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [C
 ### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F057-AC-19 (và F051-AC-13 được dẫn) không còn áp dụng: không có `MFA_REQUIRED`/đăng nhập lại có MFA; lỗi kết nối gateway nội bộ vẫn hiển thị "Cần VPN". T003, T008, T041, T044, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: Input, F057-AC-19 (403 → "Không có quyền" kèm `trace_id`, không step-up), bảng tham số, Constitution, plan. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -193,7 +197,7 @@ System Admin tạo tenant trường mới, tắt tenant ngừng hợp đồng.
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F057-AC-18 | KHI người dùng không có role `system_admin` (theo `getMyPermissions`) mở URL workspace D, Portal PHẢI hiển thị trang 403 và không tải chunk workspace D | FR-CMS-011 · ADR-0027 · AGENTS R20 | TC-CMS-AUTHZ-05 |
-| F057-AC-19 | NẾU API trả `403 MFA_REQUIRED`, THÌ Portal PHẢI chuyển người dùng sang đăng nhập lại có MFA (step-up) và quay về URL cũ; NẾU request tới gateway nội bộ lỗi kết nối, THÌ Portal PHẢI hiển thị "Cần kết nối mạng quản trị (VPN)" thay cho lỗi chung | FR-CMS-011 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-02 |
+| F057-AC-19 | NẾU API trả `403 PERMISSION_DENIED`, THÌ Portal PHẢI hiển thị "Không có quyền" kèm `trace_id` (không có step-up MFA — ADR-0094); NẾU request tới gateway nội bộ lỗi kết nối, THÌ Portal PHẢI hiển thị "Cần kết nối mạng quản trị (VPN)" thay cho lỗi chung | FR-CMS-011 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-02 |
 | F057-AC-20 | HỆ THỐNG PHẢI gửi `Idempotency-Key` cho mọi thao tác ghi của workspace D (gán, gỡ gán, clone, khôi phục, import, cài đặt, duyệt) và giữ nguyên khi thử lại; thông điệp lỗi theo `code` kèm `trace_id` | AGENTS R10 · ADR-0010 | TC-CMS-ASG-01 |
 | F057-AC-21 | HỆ THỐNG PHẢI giới hạn mọi ô nhập (lý do, mã, tên, tìm kiếm) theo `maxLength` của schema OpenAPI và hiển thị bộ đếm ký tự | ADR-0041 | TC-TEN-024 |
 | F057-AC-22 | KHI menu/action của feature (`menu.platform_admin.tenants`, `menu.platform_admin.tenant_data`, `menu.platform_admin.trash`, `menu.platform_admin.catalog`, `menu.platform_admin.system_settings` và action con) đang tắt cho phạm vi phiên (`disabled_menus`/`disabled_actions` của `getMyPermissions`), Portal PHẢI ẩn menu và ẩn/khóa nút tương ứng (`<ActionGate actionKey>`); NẾU API trả `403 FEATURE_DISABLED`, Portal PHẢI hiện thông báo tính năng tạm tắt và tải lại quyền | FR-CMS-018 · ADR-0090 | TC-CMS-MENU-02 |
@@ -241,14 +245,14 @@ System Admin tạo tenant trường mới, tắt tenant ngừng hợp đồng.
 |---|---|
 | `inactive_student_cleanup_days` | Giá trị mặc định hiển thị/sửa ở cài đặt dọn học sinh |
 | `gameplay_chat_retention_days` | Thời hạn chat gameplay (tối thiểu do server trả) |
-| `portal_session_sso` | Phiên platform, step-up MFA |
+| `portal_session_sso` | Phiên platform (tối đa 8 giờ từ lúc nhập mật khẩu; không step-up — ADR-0094) |
 | `identifier_uniqueness` | Thông điệp trùng mã khi tạo tenant |
 
 ### Ràng buộc phi chức năng
 
 | Ràng buộc | Nguồn |
 |---|---|
-| Workspace D chỉ gọi gateway nội bộ, token MFA; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
+| Workspace D chỉ gọi gateway nội bộ, token `eduworld-portal` + role platform; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
 | Không hardcode URL gateway; lấy từ cấu hình môi trường | AGENTS R3 |
 | UI theo Admin/Ops design system, không component game | AGENTS R32 · ADR-0047 |
 | Gán/clone chỉ System Admin; clone không dữ liệu học sinh | AGENTS R22 · ADR-0029 |

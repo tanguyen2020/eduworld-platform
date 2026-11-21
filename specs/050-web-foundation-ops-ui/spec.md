@@ -38,6 +38,10 @@
 
 - Q: Ở local mọi màn của gateway nội bộ báo "Cần kết nối mạng quản trị (VPN)" vì `:9180` không trả CORS cho origin `:5173` — mở CORS hay proxy? → A: Giữ bất biến F004-AC-21 (gateway nội bộ không CORS ở mọi môi trường). **Chỉ dev server Vite** proxy tiền tố cùng origin `/__internal` sang origin trong biến `EW_PORTAL_DEV_INTERNAL_GATEWAY` (local `http://localhost:9180`; chỉ origin http(s), không user/path/query); `public/config.example.json` đặt `apiInternalBaseUrl = http://localhost:5173/__internal/api/v1` (vẫn là URL đầy đủ nên `validateRuntimeConfig` không đổi). Không có URL trong mã nguồn (R3); thiếu biến → không proxy, request `/__internal` bị ngắt như gateway không tới được (thông báo VPN của F050-AC-13 giữ nguyên). Build production và `config.json` deploy không đổi. Tài liệu: [LOCAL_DEVELOPMENT §6.4](../../docs/11-operations/LOCAL_DEVELOPMENT.md#64-web-cmslms).
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F050-AC-15 (không có sự kiện `mfa_required`), mô tả US. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khung Admin Portal một ứng dụng, 5 workspace (Priority: P1)
@@ -81,7 +85,7 @@ Web dev dùng `OpsThemeProvider` và component `ops-ui`; theme lấy từ token;
 
 ### User Story 3 — `apiClient` sinh từ OpenAPI, xử lý header và lỗi chuẩn (Priority: P1)
 
-Mọi màn portal gọi API qua một client có type, tự gắn header bắt buộc, ánh xạ Problem Details theo `code`, xử lý hết hạn token, sai tenant, thiếu MFA.
+Mọi màn portal gọi API qua một client có type, tự gắn header bắt buộc, ánh xạ Problem Details theo `code`, xử lý hết hạn token, sai tenant (không có bước MFA — ADR-0094).
 
 **Why this priority**: R3, R5, R10 phía client; ADR-0065 (`X-Tenant-Id`), ADR-0010.
 
@@ -96,7 +100,7 @@ Mọi màn portal gọi API qua một client có type, tự gắn header bắt b
 | F050-AC-12 | KHI gọi operation có idempotency bắt buộc, apiClient PHẢI sinh `Idempotency-Key` dạng UUIDv7 (ADR-0089 §4) và giữ nguyên key khi retry cùng thao tác; KHI gọi operation cần `If-Match`, apiClient PHẢI gửi ETag đã nhận từ lần `GET` | AGENTS R10 · API_DESIGN §6, §7 | — |
 | F050-AC-13 | Operation có prefix `/admin/`, `/sis/`, `/game-admin/`, `/game-media` PHẢI gọi base URL gateway nội bộ; các operation khác PHẢI gọi gateway public; NẾU gateway nội bộ không kết nối được, THÌ portal PHẢI báo "Cần kết nối mạng quản trị (VPN)" | FR-SIS-007 · ADR-0027 · ADMIN_PORTAL §1.2 | TC-CMS-WS-03 |
 | F050-AC-14 | KHI nhận Problem Details, apiClient PHẢI ánh xạ theo `code` (không theo `title`) sang khóa dịch `error.<CODE>`, `errors[]` của `VALIDATION_FAILED` sang lỗi từng trường, mã chưa có khóa sang `error.generic`, và hiển thị `trace_id` trong chi tiết lỗi | ADR-0010 · API_DESIGN §4 | — |
-| F050-AC-15 | KHI nhận `401 TOKEN_EXPIRED`, apiClient PHẢI gọi `TokenProvider.refresh()` đúng một lần rồi lặp lại request; refresh thất bại PHẢI phát sự kiện `session_expired`; `403 TENANT_MISMATCH` PHẢI phát `tenant_mismatch`; `403 MFA_REQUIRED` PHẢI phát `mfa_required`; `429` PHẢI tôn trọng `Retry-After` | API_DESIGN §4.1 · ADR-0065 · KEYCLOAK_SSO §3.3 | TC-CMS-WS-02 |
+| F050-AC-15 | KHI nhận `401 TOKEN_EXPIRED`, apiClient PHẢI gọi `TokenProvider.refresh()` đúng một lần rồi lặp lại request; refresh thất bại PHẢI phát sự kiện `session_expired`; `403 TENANT_MISMATCH` PHẢI phát `tenant_mismatch` (không có sự kiện `mfa_required` — ADR-0094); `429` PHẢI tôn trọng `Retry-After` | API_DESIGN §4.1 · ADR-0065 · KEYCLOAK_SSO §3.3 | TC-CMS-WS-02 |
 | F050-AC-16 | apiClient PHẢI chỉ tự retry GET hoặc request có `Idempotency-Key` khi lỗi mạng hoặc 502/503/504, với số lần và backoff giới hạn; PHẢI KHÔNG retry 4xx (trừ 429) | API_DESIGN §12.3 · ADR-0010 | — |
 | F050-AC-17 | apiClient PHẢI KHÔNG lưu token vào `localStorage`/`sessionStorage`/cookie và PHẢI KHÔNG ghi header `Authorization` hay body chứa mật khẩu vào log/console | AGENTS R14 · KEYCLOAK_SSO §5 | — |
 

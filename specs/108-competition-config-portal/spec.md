@@ -30,6 +30,10 @@
 - Q: Màn workspace C đổi gì? → A: "Thử thách lớp / giải trường" → **"Thử thách khối / giải trường"** (khóa menu/action `menu.school_lms.challenges`, `action.school_lms.challenges.*` giữ nguyên; nhãn hiển thị thuộc ADMIN_PORTAL và file dịch). Wizard chọn **một trường** của phạm vi, **một khối** (1–9) và danh sách học sinh thêm/loại trừ cùng trường (≤ 500 mỗi danh sách; exclude thắng; học sinh khác trường → `422`); không bộ chọn lớp; đăng ký hộ theo đối tượng đó (F107).
 - Q: Contract? → A: Delta op learning (`listChallenges` lọc `grade_level`, `ChallengeTemplate.kind`, `ChallengeCreate.school_id/targets/exclude_student_ids`) ghi ở [F107 contracts §6](../107-tournament-challenges/contracts/README.md#6-delta-cần-thực-hiện), chờ áp sau WP-L1; F108 dùng lại, không định nghĩa lại.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F108-AC-03, Independent Test, Constitution, Assumptions (demo local), plan. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Cấu hình thi đấu phiên bản hóa qua `/game-admin/*` (Priority: P1) 🎯 MVP
@@ -46,7 +50,7 @@ Competition Admin tạo bản nháp "Matchmaking v3" nới cửa sổ rating, g�
 |---|---|---|---|
 | F108-AC-01 | module competition PHẢI cung cấp `listGameConfigs_competition`, `createGameConfig_competition`, `getGameConfigVersion_competition`, `updateGameConfigDraft_competition`, `transitionGameConfigVersion_competition`, `listGameConfigVersions_competition`, `diffGameConfigVersions_competition`, `publishGameConfigVersion_competition`, `rollbackGameConfig_competition`, `unpublishGameConfig_competition`, `listGameConfigReleases_competition` cho 7 loại `matchmaking-configs`, `ranking-rules`, `seasons`, `tournament-templates`, `challenge-templates`, `leaderboard-definitions`, `competition-rewards` | FR-CMS-005 · [API_DESIGN §9.13](../../docs/07-backend/API_DESIGN.md) | TC-CMS-001 |
 | F108-AC-02 | HỆ THỐNG PHẢI yêu cầu permission theo loại: `competition.config.matchmaking.write`, `competition.config.ranking.write`, `competition.config.season.write`, `competition.config.tournament_template.write` (template giải và thử thách), `competition.config.leaderboard.write`, `competition.config.reward.write` (`competition-rewards`); duyệt cần `game.content.review`, publish/rollback cần `game.content.publish`; thiếu quyền PHẢI nhận `403 PERMISSION_DENIED` và audit `authz.denied` | FR-CMS-005 · [ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md#22-permission-catalog) | TC-CMS-AUTHZ-02 |
-| F108-AC-03 | HỆ THỐNG PHẢI chỉ phục vụ `/game-admin/*` qua gateway nội bộ, với `azp = eduworld-portal`, MFA (`acr`) và role platform; gọi qua gateway public PHẢI nhận 404 tại APISIX; token thiếu MFA PHẢI nhận `403 MFA_REQUIRED`; role tenant không bao giờ có `competition.config.*` | AGENTS R20 · ADR-0027 · FR-CMS-005 | TC-CMS-AUTHZ-01, TC-CMS-WS-02, TC-CMS-WS-03 |
+| F108-AC-03 | HỆ THỐNG PHẢI chỉ phục vụ `/game-admin/*` qua gateway nội bộ, với `azp = eduworld-portal` và role platform (không MFA — ADR-0094); gọi qua gateway public PHẢI nhận 404 tại APISIX; token không có role platform PHẢI nhận `403 PERMISSION_DENIED`; role tenant không bao giờ có `competition.config.*` | AGENTS R20 · ADR-0027 · FR-CMS-005 | TC-CMS-AUTHZ-01, TC-CMS-WS-02, TC-CMS-WS-03 |
 | F108-AC-04 | KHI tạo/sửa bản nháp hoặc publish, HỆ THỐNG PHẢI validate `payload` theo JSON Schema của loại và invariant nghiệp vụ: ràng buộc khối không nới được (lớp 1–5 cùng khối, không gộp `g1_3` với `g8_9`), không bật bonus tốc độ cho khối dưới `speed_bonus_min_grade`, ngưỡng tier tăng dần, bảng scope `school`/`grade` không dùng `xp`, không có scope `class`/metric `class_goal` (ADR-0095; mục tiêu tập thể dùng `grade_goal`), template chỉ có `allowed_params` trong danh sách cho phép và phần thưởng chỉ cosmetic/badge/title; vi phạm PHẢI nhận `422 VALIDATION_FAILED` chỉ rõ trường | FR-CMS-005 · AC-LDB-007 · AGENTS R19 · [COMPETITION_SYSTEM §13](../../docs/01-game-design/COMPETITION_SYSTEM.md#13-cấu-hình-platform-only-adr-0027) | TC-TEN-024 |
 | F108-AC-05 | HỆ THỐNG PHẢI giữ version đã publish bất biến (sửa → `409 CONTENT_NOT_EDITABLE`; bản nháp mới tạo từ `based_on_version_id`); publish PHẢI đặt `effective_from` ≥ hiện tại (không hồi tố trận đã kết thúc), cập nhật con trỏ, ghi `content_releases` và phát `competition_config.published`; rollback/unpublish PHẢI bắt buộc lý do, chỉ đổi con trỏ tới version đã từng publish (khác → `422 ROLLBACK_TARGET_INVALID`) | AGENTS R11, R31 · ADR-0043 | TC-CMS-002, TC-CMS-003 |
 | F108-AC-06 | NẾU `If-Match` thiếu khi sửa/chuyển trạng thái, THÌ HỆ THỐNG PHẢI trả `428 PRECONDITION_REQUIRED`; NẾU lệch version, THÌ PHẢI trả `412` với code `CONTENT_VERSION_CONFLICT` | [API_DESIGN §9.13](../../docs/07-backend/API_DESIGN.md) | — |
@@ -61,7 +65,7 @@ Competition Admin mở workspace A → "Thi đấu", thấy 5 nhóm (Matchmaking
 
 **Why this priority**: Không có UI thì platform phải sửa seed bằng tay.
 
-**Independent Test**: Playwright: Competition Admin (MFA) tạo bản nháp ranking-rules, nhập ngưỡng tier giảm dần → hiển thị lỗi trường từ server; publish → bảng trạng thái cập nhật; School Admin mở `/game-ops/competition` → trang 403, không tải chunk `game-ops`.
+**Independent Test**: Playwright: Competition Admin tạo bản nháp ranking-rules, nhập ngưỡng tier giảm dần → hiển thị lỗi trường từ server; publish → bảng trạng thái cập nhật; School Admin mở `/game-ops/competition` → trang 403, không tải chunk `game-ops`.
 
 **Acceptance Criteria (EARS)**:
 
@@ -128,7 +132,7 @@ Competition Admin mở workspace A → "Thi đấu", thấy 5 nhóm (Matchmaking
 
 | Ràng buộc | Nguồn |
 |---|---|
-| `/game-admin/*` chỉ gateway nội bộ + MFA + role platform; chặn ở backend | AGENTS R7, R20 · ADR-0027 |
+| `/game-admin/*` chỉ gateway nội bộ + role platform; chặn ở backend | AGENTS R7, R20 · ADR-0027 |
 | Version publish bất biến; rollback đổi con trỏ | AGENTS R11, R31 · ADR-0043 |
 | UI không business logic; token admin | AGENTS R1, R32 · ADR-0047 |
 | Phần thưởng không pay-to-win | AGENTS R19 |
@@ -153,6 +157,6 @@ Competition Admin mở workspace A → "Thi đấu", thấy 5 nhóm (Matchmaking
 
 ## Assumptions
 
-- [Confirmed] Demo local dùng `sa.admin` (System Admin kiêm `competition.config.*`, MFA tắt ở local); đề xuất thêm tài khoản `competition_admin` vào LOCAL_DEVELOPMENT.
+- [Confirmed] Demo local dùng `sa.admin` (System Admin kiêm `competition.config.*`; không MFA ở mọi môi trường — ADR-0094); đề xuất thêm tài khoản `competition_admin` vào LOCAL_DEVELOPMENT.
 - [Confirmed] Route portal: `/game-ops/competition/{matchmaking,ranking,seasons,templates,leaderboards}` và `/school-lms/challenges` (tên route workspace theo F051).
 - [Confirmed] Mục "Thử thách khối / giải trường" (nhãn đổi theo ADR-0095; khóa `menu.school_lms.challenges` giữ nguyên) nằm trong nhóm "Giao bài & lịch" của workspace C ([ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md#10-màn-hình-chính-sitemap-theo-workspace)).

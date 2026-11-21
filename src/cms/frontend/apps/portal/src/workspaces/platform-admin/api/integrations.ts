@@ -1,7 +1,7 @@
 // Integrations (read only) hooks (F059 T046, F059-AC-22/23, FR-SIS-007, ADMIN_PORTAL §10): SIS connections of every
 // tenant (listSisConnections: `tenant_ids[]`, `status`, cursor), their schools (listSisConnectionSchools) and sync runs
 // (listSisSyncRuns). Responses carry no secret (`has_secret` only, F011-AC-27/F017-AC-04) and the screens render only
-// schema fields. getIntegrationOverview (OQ F059-2 resolved 2026-11-20): Keycloak issuer/realm/clients, platform MFA,
+// schema fields. getIntegrationOverview (OQ F059-2 resolved 2026-11-20): Keycloak issuer/realm/clients, max auth age of platform sessions (no MFA, ADR-0094),
 // APISIX gateway URLs (null = not configured) and route groups (generated from route-as-code, OQ F059-12), SIS counts by status, all from
 // the server configuration without any secret. No write operation here.
 import { useQuery } from '@tanstack/react-query';

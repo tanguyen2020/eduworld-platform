@@ -45,7 +45,7 @@
 
 - Tenant **không bao giờ** thấy workspace A, D, E; trong B và C chỉ thấy dữ liệu tenant mình + dữ liệu platform được gán (chỉ đọc).
 - Safety Moderator chỉ thấy module Kiểm duyệt của workspace E; không thấy workspace A, B, C, D.
-- Mã nguồn mỗi workspace là một **chunk lazy-load** trong `src/cms/frontend/apps/portal/src/workspaces/<thư mục>`, tên thư mục cố định: A `game-ops`, B `content-studio`, C `school-lms`, D `platform-admin`, E `live-ops`; chỉ tải khi `GET /api/v1/me/permissions` trả về workspace đó. Đây là tối ưu tải trang, **không phải lớp bảo mật**: bảo mật dựa vào permission backend, gateway nội bộ và MFA (ADR-0027 mục 3).
+- Mã nguồn mỗi workspace là một **chunk lazy-load** trong `src/cms/frontend/apps/portal/src/workspaces/<thư mục>`, tên thư mục cố định: A `game-ops`, B `content-studio`, C `school-lms`, D `platform-admin`, E `live-ops`; chỉ tải khi `GET /api/v1/me/permissions` trả về workspace đó. Đây là tối ưu tải trang, **không phải lớp bảo mật**: bảo mật dựa vào permission backend, gateway nội bộ và role platform (ADR-0027 mục 3; không MFA — ADR-0094).
 - Workspace A, D, E gọi API chỉ có ở gateway nội bộ. Người dùng platform ngoài VPN mở portal vẫn thấy menu nhưng mọi thao tác trả lỗi kết nối; portal hiển thị thông báo "Cần kết nối mạng quản trị (VPN)" thay vì lỗi chung [Confirmed].
 
 ### 1.3. Information Architecture (bố cục chung)

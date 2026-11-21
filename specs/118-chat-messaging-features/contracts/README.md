@@ -17,7 +17,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` → `specs/openapi/modules/ch
 | `listStickerPacks` | `GET /api/v1/chat/stickers` | chat.v1.yaml | `game_player` | Có sẵn |
 | `listGifs` | `GET /api/v1/chat/gifs?tag=` | chat.v1.yaml | `game_player` | Có sẵn |
 | `toggleMessageReaction` | `POST /api/v1/chat/messages/{message_id}/reactions` (REST fallback của `chat.reaction.toggle`, API_DESIGN §9.9) | chat.v1.yaml | `game_player` + member | Cần thêm |
-| `listGameConfigs_chat`, `createGameConfig_chat`, `getGameConfigVersion_chat`, `updateGameConfigDraft_chat`, `transitionGameConfigVersion_chat`, `listGameConfigVersions_chat`, `diffGameConfigVersions_chat`, `publishGameConfigVersion_chat`, `rollbackGameConfig_chat`, `unpublishGameConfig_chat`, `listGameConfigReleases_chat` | `/api/v1/game-admin/{config_type}…` với `config_type ∈ {sticker-packs, gifs}` | chat.v1.yaml | `game.chat_assets.write` (gateway nội bộ, MFA) | Có sẵn |
+| `listGameConfigs_chat`, `createGameConfig_chat`, `getGameConfigVersion_chat`, `updateGameConfigDraft_chat`, `transitionGameConfigVersion_chat`, `listGameConfigVersions_chat`, `diffGameConfigVersions_chat`, `publishGameConfigVersion_chat`, `rollbackGameConfig_chat`, `unpublishGameConfig_chat`, `listGameConfigReleases_chat` | `/api/v1/game-admin/{config_type}…` với `config_type ∈ {sticker-packs, gifs}` | chat.v1.yaml | `game.chat_assets.write` (gateway nội bộ, role platform) | Có sẵn |
 | Presign upload asset chat | `POST /api/v1/game-admin/{config_type}/{config_id}/assets:presign` (đề xuất) | chat.v1.yaml | `game.chat_assets.write` | Cần thêm |
 
 ## 2. Internal API

@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-api.v1.yaml`, `x-service: learning`). Route `/admin/learning/*`: `security: keycloakAdminBearer`, `x-internal: true` (gateway nội bộ, MFA). Permission (catalog [ADMIN_PORTAL §2.2](../../../docs/04-admin-portal/ADMIN_PORTAL.md), platform-only, System Admin): `platform.efficacy_study.manage` (viết tắt **ESM**), `platform.efficacy_study.export`, `platform.learning_experiment.manage` (**LEM**). Mọi operation `/admin/learning/*` có `x-portal-action` thuộc menu `menu.platform_admin.efficacy_studies` (action `view`, `manage_agreements`, `edit`, `schedule_waves`, `withdraw`, `report`) hoặc `menu.platform_admin.learning_experiments` (action `view`, `edit`, `operate`) trong [`specs/portal/menu-catalog.yaml`](../../portal/menu-catalog.yaml).
+Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-api.v1.yaml`, `x-service: learning`). Route `/admin/learning/*`: `security: keycloakAdminBearer`, `x-internal: true` (gateway nội bộ, role platform; không MFA — ADR-0094). Permission (catalog [ADMIN_PORTAL §2.2](../../../docs/04-admin-portal/ADMIN_PORTAL.md), platform-only, System Admin): `platform.efficacy_study.manage` (viết tắt **ESM**), `platform.efficacy_study.export`, `platform.learning_experiment.manage` (**LEM**). Mọi operation `/admin/learning/*` có `x-portal-action` thuộc menu `menu.platform_admin.efficacy_studies` (action `view`, `manage_agreements`, `edit`, `schedule_waves`, `withdraw`, `report`) hoặc `menu.platform_admin.learning_experiments` (action `view`, `edit`, `operate`) trong [`specs/portal/menu-catalog.yaml`](../../portal/menu-catalog.yaml).
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
@@ -42,7 +42,7 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 | `listExamSessionPapers`, `getExamAttemptAnalysis`, `getExamSessionReport` | `/api/v1/exams/...` | — (F042/F044 Cần thêm) | như F042/F044 | Mô tả chặn khi F042/F044 thêm |
 | `getMyProgress`, `getMyMastery`, `getMyRecommendations`, `startAdHocAttempt` | `/api/v1/learning/*` | learning.v1 (F031/F032) | `game_player` | Có sẵn / F032 thêm — không đổi schema; hành vi theo arm (F035-AC-24) |
 
-ProblemCode dùng: `PERMISSION_DENIED`, `MFA_REQUIRED`, `TENANT_HEADER_REQUIRED`, `TENANT_MISMATCH`, `NOT_FOUND`, `CONFLICT`, `INVALID_STATE_TRANSITION`, `VALIDATION_FAILED`, `VERSION_MISMATCH`, `IDEMPOTENCY_KEY_REQUIRED`, `EXAM_RESULTS_NOT_RELEASED`, `EXPORT_LIMIT_REACHED` (F044). Không thêm mã mới.
+ProblemCode dùng: `PERMISSION_DENIED`, `TENANT_HEADER_REQUIRED`, `TENANT_MISMATCH`, `NOT_FOUND`, `CONFLICT`, `INVALID_STATE_TRANSITION`, `VALIDATION_FAILED`, `VERSION_MISMATCH`, `IDEMPOTENCY_KEY_REQUIRED`, `EXAM_RESULTS_NOT_RELEASED`, `EXPORT_LIMIT_REACHED` (F044). Không thêm mã mới.
 
 ## 2. Internal API
 

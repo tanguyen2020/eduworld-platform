@@ -14,7 +14,7 @@ Spec nguồn: `specs/openapi/modules/game.v1.yaml`.
 | `getClientConfig` | `GET /api/v1/game/client-config?platform=&version=` (public, không `X-Tenant-Id`) | game.v1.yaml | public | Có sẵn |
 | `getContentManifest` | `GET /api/v1/game/content-manifest` (`ETag`, `If-None-Match`) | game.v1.yaml | `game_player` | Có sẵn |
 | `listTenantStudentLoginEvents` | `GET /api/v1/tenant/students/{student_id}/login-events` | game.v1.yaml | `lms.student_activity.read` (scope) | Có sẵn |
-| `listLoginEventsCrossTenant` | `GET /api/v1/admin/login-events?tenant_ids=` | game.v1.yaml | `platform.cross_tenant.read` (MFA, gateway nội bộ) | Có sẵn |
+| `listLoginEventsCrossTenant` | `GET /api/v1/admin/login-events?tenant_ids=` | game.v1.yaml | `platform.cross_tenant.read` (role platform, gateway nội bộ) | Có sẵn |
 
 ## 2. Internal API
 

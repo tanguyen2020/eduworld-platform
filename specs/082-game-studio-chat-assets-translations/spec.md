@@ -1,7 +1,7 @@
 # Feature Specification: F082 — Game Studio — quản lý sticker/GIF và dịch nội dung game (`/game-admin/translations*`)
 
 **Feature Branch**: `082-game-studio-chat-assets-translations` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace A `game-ops`) + module `game` (trạng thái bản dịch, job xuất/nhập file dịch) · **Mốc**: M4b · **Phụ thuộc**: F079, F118 (và F078 workflow, F053 `BilingualField`)
-**Input**: Trong Game Operations Console (platform-only, gateway nội bộ + MFA): màn "Tài nguyên chat" quản lý sticker pack và thư viện GIF nội bộ trên backend module chat của F118 (upload presigned, alt text/tag song ngữ, mở khóa bằng phần thưởng, duyệt người khác người upload, publish/rollback); màn "Dịch nội dung game" với trạng thái bản dịch (`complete`/`partial`/`outdated`) cho mọi cấu hình module game, biên tập hai cột vi/en, xuất/nhập XLIFF 2.1/CSV qua `/api/v1/game-admin/translations*`. FR nguồn: FR-CHAT-014, FR-CNT-018, NFR-I18N-002, FR-CMS-006, FR-CMS-011.
+**Input**: Trong Game Operations Console (platform-only, gateway nội bộ + role platform; không MFA — ADR-0094): màn "Tài nguyên chat" quản lý sticker pack và thư viện GIF nội bộ trên backend module chat của F118 (upload presigned, alt text/tag song ngữ, mở khóa bằng phần thưởng, duyệt người khác người upload, publish/rollback); màn "Dịch nội dung game" với trạng thái bản dịch (`complete`/`partial`/`outdated`) cho mọi cấu hình module game, biên tập hai cột vi/en, xuất/nhập XLIFF 2.1/CSV qua `/api/v1/game-admin/translations*`. FR nguồn: FR-CHAT-014, FR-CNT-018, NFR-I18N-002, FR-CMS-006, FR-CMS-011.
 
 ## Clarifications
 
@@ -22,6 +22,10 @@
 ### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F082-AC-16, AC-18: bỏ điều kiện "thiếu MFA", mã `403 MFA_REQUIRED` và step-up MFA; giữ permission, `azp`, role platform, lỗi gateway nội bộ. T030, T032, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: Input, Independent Test US, F082-AC-16, F082-AC-18, bảng FR/tham số/Constitution, contracts. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -104,15 +108,15 @@ Người dịch xuất 120 quest/NPC dialogue cần dịch ra XLIFF 2.1, gửi �
 
 **Why this priority**: FR-CMS-011 — role tenant không chạm Game Studio; constitution điều III, V.
 
-**Independent Test**: `ad.truong.a`, `sm.antoan` mở `/game-ops/chat-assets`, `/game-ops/translations` → 403, không tải chunk; gọi API dịch bằng token thiếu MFA → `403 MFA_REQUIRED`; khóa trỏ tới sự kiện trường của tenant → báo lỗi như không tồn tại.
+**Independent Test**: `ad.truong.a`, `sm.antoan` mở `/game-ops/chat-assets`, `/game-ops/translations` → 403, không tải chunk; gọi API dịch bằng token nhân sự không có role platform → `403 PERMISSION_DENIED`; khóa trỏ tới sự kiện trường của tenant → báo lỗi như không tồn tại.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F082-AC-16 | NẾU người gọi `/game-admin/translations*` không có `game.content.translate`, thiếu MFA, `azp` khác `eduworld-portal` hoặc không có role platform, THÌ module game PHẢI trả `403 PERMISSION_DENIED`/`403 MFA_REQUIRED` và ghi `authz.denied`; `getGameTranslationJob` PHẢI chỉ trả job của chính người tạo (System Admin xem mọi job), còn lại `404 NOT_FOUND` | AGENTS R7, R20 · ADR-0027 | TC-CMS-WS-02 |
+| F082-AC-16 | NẾU người gọi `/game-admin/translations*` không có `game.content.translate`, `azp` khác `eduworld-portal` hoặc không có role platform, THÌ module game PHẢI trả `403 PERMISSION_DENIED` (không MFA — ADR-0094) và ghi `authz.denied`; `getGameTranslationJob` PHẢI chỉ trả job của chính người tạo (System Admin xem mọi job), còn lại `404 NOT_FOUND` | AGENTS R7, R20 · ADR-0027 | TC-CMS-WS-02 |
 | F082-AC-17 | module game PHẢI chỉ xuất/nhập cấu hình dữ liệu platform; khóa hay `content_ids` trỏ tới bản ghi của tenant (vd. sự kiện trường) PHẢI bị xử lý như không tồn tại (không đọc, không ghi, không lộ tồn tại); route `/game-admin/translations*` gọi qua gateway public PHẢI bị chặn tại APISIX | AGENTS R8, R27 · ADR-0005 | TC-CMS-WS-03 |
-| F082-AC-18 | KHI người dùng không có `game.chat_assets.write`/`game.content.translate` mở URL màn tương ứng, Portal PHẢI hiển thị trang 403; role tenant PHẢI không tải được chunk workspace A; NẾU API trả `403 MFA_REQUIRED`, THÌ PHẢI step-up MFA; NẾU gateway nội bộ không kết nối được, THÌ PHẢI hiển thị "Cần kết nối mạng quản trị (VPN)" | FR-CMS-011 · ADR-0027 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-01 |
+| F082-AC-18 | KHI người dùng không có `game.chat_assets.write`/`game.content.translate` mở URL màn tương ứng, Portal PHẢI hiển thị trang 403; role tenant PHẢI không tải được chunk workspace A (không có step-up MFA — ADR-0094); NẾU gateway nội bộ không kết nối được, THÌ PHẢI hiển thị "Cần kết nối mạng quản trị (VPN)" | FR-CMS-011 · ADR-0027 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-01 |
 | F082-AC-19 | HỆ THỐNG PHẢI giới hạn `content_types` ≤ 20, `content_ids` ≤ 500, tag GIF, tên pack, alt text và chuỗi trong file dịch theo `maxLength`/`maxItems` của schema, trả `422 VALIDATION_FAILED` chỉ rõ field; Portal PHẢI hiển thị bộ đếm ký tự và lỗi theo `code` + `trace_id` | ADR-0041 · AGENTS R28 | TC-TEN-024 |
 | F082-AC-20 | KHI menu/action của feature (`menu.game_ops.chat_assets`, `menu.game_ops.translations`, `menu.game_ops.media` và action con) đang tắt cho phạm vi phiên (`disabled_menus`/`disabled_actions` của `getMyPermissions`), Portal PHẢI ẩn menu và ẩn/khóa nút tương ứng (`<ActionGate actionKey>`); NẾU API trả `403 FEATURE_DISABLED`, Portal PHẢI hiện thông báo tính năng tạm tắt và tải lại quyền | FR-CMS-018 · ADR-0090 | TC-CMS-MENU-02 |
 
@@ -135,7 +139,7 @@ Người dịch xuất 120 quest/NPC dialogue cần dịch ra XLIFF 2.1, gửi �
 | FR-CNT-018 | `translation_status` cho nội dung game, chặn khi thiếu bản bắt buộc, xuất/nhập file dịch | [CONTENT_MODEL §8](../../docs/02-learning/CONTENT_MODEL.md) · [ADMIN_PORTAL §1.5](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | NFR-I18N-002 | Văn bản game đủ `vi` + `en` trước khi publish (phần sticker/GIF và biên tập dịch) | [CONTENT_MODEL §8](../../docs/02-learning/CONTENT_MODEL.md) · ADR-0056 |
 | FR-CMS-006 | Workflow, version, publish, rollback cho sticker pack/GIF trên UI | [ADMIN_PORTAL §1.4, §4–§6](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
-| FR-CMS-011 | Lớp chặn bundle + 403/MFA cho màn mới của workspace A | [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
+| FR-CMS-011 | Lớp chặn bundle + 403 cho màn mới của workspace A | [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-CMS-018 | Menu/action của feature theo danh mục `specs/portal/menu-catalog.yaml`, ẩn khi tắt, xử lý `403 FEATURE_DISABLED` | [ADMIN_PORTAL §2.7](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 
 ### Key Entities
@@ -152,13 +156,13 @@ Người dịch xuất 120 quest/NPC dialogue cần dịch ra XLIFF 2.1, gửi �
 | `game_text_required_languages` | Ngôn ngữ bắt buộc của văn bản game khi tính trạng thái/khóa gửi duyệt |
 | `report_link_ttl` | [Confirmed] Thời hạn link tải file dịch (dùng chung với link báo cáo) |
 | `idempotency_record_ttl` | Thời gian giữ kết quả `Idempotency-Key` của job |
-| `portal_session_sso` | Phiên platform, step-up MFA |
+| `portal_session_sso` | Phiên platform (tối đa 8 giờ từ lúc nhập mật khẩu; không step-up — ADR-0094) |
 
 ### Ràng buộc phi chức năng
 
 | Ràng buộc | Nguồn |
 |---|---|
-| Workspace A chỉ gateway nội bộ + MFA; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
+| Workspace A chỉ gateway nội bộ + role platform; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
 | Không upload của học sinh, không dịch vụ GIF bên thứ ba | ADR-0034 · [CHAT_SYSTEM §7.5](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) |
 | Không sửa version đã publish; nhập dịch tạo Draft | AGENTS R11, R31 · ADR-0043 |
 | File chỉ ở object storage, không blob trong DB | AGENTS R31 · ADR-0044 |

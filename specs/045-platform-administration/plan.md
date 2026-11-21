@@ -30,7 +30,7 @@ Module `platformadmin` trong module `identity` phục vụ các route System Adm
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Identity chỉ điều phối; mọi đọc/ghi dữ liệu module khác qua facade (`src/backend/pkg/modcall`); saga là command handler + outbox |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng `platform.*` dùng role `identity_platform` có audit; không hard-delete; test tenant isolation cho `/tenant/trash*` |
 | IV Server-authoritative | ✅ | Không liên quan điểm/kết quả; mọi ghi có `Idempotency-Key` + audit |
-| V Xác thực, phân quyền | ✅ | `/admin/*` gateway nội bộ + `azp = eduworld-portal` + MFA + role platform; permission `platform.cross_tenant.read`, `platform.trash.*`, `platform.tenant_data.assign/clone`, `platform.user.merge` [Confirmed], `tenant.trash.*` |
+| V Xác thực, phân quyền | ✅ | `/admin/*` gateway nội bộ + `azp = eduworld-portal` + role platform; permission `platform.cross_tenant.read`, `platform.trash.*`, `platform.tenant_data.assign/clone`, `platform.user.merge` [Confirmed], `tenant.trash.*` |
 | VI An toàn trẻ em | ✅ | Không clone dữ liệu học sinh (R22); `TrashItem` không chứa PII ngoài tiêu đề tài nguyên; log không chứa nội dung |
 | VII Một nguồn sự thật, cấu hình | ✅ | Bảng định tuyến `resource_type` → module một nơi trong code; facade nối ở composition root (`module.go`), không URL/env cho gọi giữa module; chuỗi có `MaxLen` |
 | VIII UI tách logic, token | ✅ | Không có UI (F057 làm giao diện) |
@@ -102,7 +102,7 @@ Không có. Saga, idempotency, resilience, phạm vi liên tenant đã chốt �
 | domain | `ResourceRouting`, `ClonePlan`, `TenantCloneJob`, `SagaRun`/`SagaStep` | Invariant: một tenant đích; nguồn ≠ đích; loại clone trong allowlist; không loại dữ liệu học sinh |
 | application | Command `AssignToTenants`, `UnassignFromTenants`, `ApplyDefaultAssignments`, `CreateTenantClone`, `RunSagaStep`, `RestoreTrashItem` · Query `ListTenants`, `ListTrash`, `ListTenantAssignments`, `GetTenantClone` | Permission: `platform.cross_tenant.read` (đọc liên tenant, `listTenants`), `platform.tenant_data.assign`, `platform.tenant_data.clone`, `platform.trash.read`, `platform.trash.restore`, `tenant.trash.read`, `tenant.trash.restore` |
 | infrastructure | Adapter facade 4 module + `OwnerGateway`; repo ent; trash provider identity (`class_template`, `school_settings`, `tenant_settings`); outbox | `src/backend/pkg/modcall` (deadline, `TenantScope`, Principal gốc, `Idempotency-Key`; không token, không retry trong tiến trình) |
-| presentation | Handler `listTenants`, `listTrash`, `restoreTrashItem`, `listTenantAssignments`, `assignToTenants`, `unassignFromTenants`, `createTenantClone`, `getTenantClone`, `listTenantTrash`, `restoreTenantTrashItem` · consumer `tenant.created` · job `platform-saga` | Middleware `/admin/*`: `azp`, MFA (`acr`/`amr`), role platform |
+| presentation | Handler `listTenants`, `listTrash`, `restoreTrashItem`, `listTenantAssignments`, `assignToTenants`, `unassignFromTenants`, `createTenantClone`, `getTenantClone`, `listTenantTrash`, `restoreTenantTrashItem` · consumer `tenant.created` · job `platform-saga` | Middleware `/admin/*`: `azp`, role platform (không MFA — ADR-0094) |
 
 ### Tích hợp và phụ thuộc
 

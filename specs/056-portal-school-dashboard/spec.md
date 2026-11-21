@@ -44,6 +44,10 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (owner 
 
 - Giao diện màn làm việc → **Chốt:** hướng B "Sổ tay giáo viên" áp qua token và component token `ConfigProvider` (DESIGN_SYSTEM §4.1–§4.2): nền trang ngả ấm, thẻ viền 1 px bo 12 px, chữ nội dung 15 px (compact 13 giữ nguyên lựa chọn người dùng), header/sidebar nền thẻ. Trang tổng quan dashboard có lời chào theo buổi ("Chào buổi sáng, thầy cô"), nút chính "+ Giao bài mới" cỡ lớn (vẫn bọc `ActionGate action.school_lms.assignments.edit`), mỗi widget là thẻ KPI có viền trên 4 px theo màu ngữ nghĩa (`DashboardWidget accent`), số KPI 30 px. Dữ liệu và hành vi không đổi: mọi số vẫn từ `getSchoolDashboard`, không số liệu dựng sẵn.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: plan (platform summary). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trang tổng quan trường (Priority: P1) 🎯 MVP

@@ -25,6 +25,10 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F080-AC-11, AC-14, AC-25: bỏ điều kiện MFA, mã `403 MFA_REQUIRED` và step-up MFA; giữ gateway nội bộ, `azp`, permission `game.analytics.read`/`game.liveops.read`. T029, T046, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F080-AC-11, F080-AC-14, F080-AC-25. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Telemetry client không PII (Priority: P1) 🎯 MVP
@@ -96,10 +100,10 @@ Live-ops truy vấn chuỗi `dau`, retention cohort, funnel onboarding, top ques
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F080-AC-11 | KHI người có `game.analytics.read` (token `eduworld-portal` + MFA, gateway nội bộ) gọi `getGameMetrics`/`getGameRetention`/`getGameFunnel`/`getGameContentStats`/`getGamePerformance` với `from`/`to`, module game PHẢI đọc chỉ bảng tổng hợp trên read replica bằng role `game_dashboard`, lọc `tenant_ids` (audit `cross_tenant.accessed`), trả `grain`, `data_as_of`, `is_partial`, ≤ 120 điểm | FR-ANL-009 · ADR-0062 · [DASHBOARD_DATA §7–§8](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-003 |
+| F080-AC-11 | KHI người có `game.analytics.read` (token `eduworld-portal` + role platform, gateway nội bộ) gọi `getGameMetrics`/`getGameRetention`/`getGameFunnel`/`getGameContentStats`/`getGamePerformance` với `from`/`to`, module game PHẢI đọc chỉ bảng tổng hợp trên read replica bằng role `game_dashboard`, lọc `tenant_ids` (audit `cross_tenant.accessed`), trả `grain`, `data_as_of`, `is_partial`, ≤ 120 điểm | FR-ANL-009 · ADR-0062 · [DASHBOARD_DATA §7–§8](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-003 |
 | F080-AC-12 | NẾU thiếu `from`/`to` hoặc khoảng > `dashboard_max_range_days`, THÌ module game PHẢI trả `422 DASHBOARD_RANGE_TOO_LARGE`/`VALIDATION_FAILED`; vượt `dashboard_max_concurrent_per_user` → `429 DASHBOARD_BUSY`; quá `dashboard_statement_timeout` → `504 DASHBOARD_QUERY_TIMEOUT` | FR-ANL-009 · AC-DASH-002 · AC-DASH-004 · AC-DASH-005 | TC-DASH-002 |
 | F080-AC-13 | KHI gọi `createGameAnalyticsExport` với `Idempotency-Key`, module game PHẢI tạo job `202`, worker ghi CSV lên object storage `ew-exports`, `getGameAnalyticsExport` trả link ký hạn `dashboard_export_link_ttl_minutes`; vượt `dashboard_export_max_concurrent_per_user` → `429 EXPORT_LIMIT_REACHED`; audit `report.exported` | FR-ANL-009 · [DASHBOARD_DATA §10](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-008 |
-| F080-AC-14 | NẾU role tenant gọi `/admin/analytics/game/*`, THÌ gateway public PHẢI không có route và backend trả `403 PERMISSION_DENIED`; thiếu MFA → `403 MFA_REQUIRED` | FR-ANL-009 · AC-ANL-105 · AGENTS R20 | TC-ANL-006 |
+| F080-AC-14 | NẾU role tenant gọi `/admin/analytics/game/*`, THÌ gateway public PHẢI không có route và backend trả `403 PERMISSION_DENIED` (không MFA — ADR-0094) | FR-ANL-009 · AC-ANL-105 · AGENTS R20 | TC-ANL-006 |
 
 ---
 
@@ -174,7 +178,7 @@ Game designer xem 11 panel, lọc khối/nền tảng/hạng thiết bị, so s�
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F080-AC-24 | KHI người dùng không có `game.liveops.read`/`game.analytics.read` (kể cả Safety Moderator) mở URL Live dashboard/Game Analytics, Portal PHẢI hiển thị trang 403; role tenant PHẢI không tải được chunk workspace E | FR-ANL-009 · ADR-0027 · AGENTS R20 | TC-CMS-WS-01 |
-| F080-AC-25 | NẾU API trả `403 MFA_REQUIRED`, THÌ Portal PHẢI step-up MFA; NẾU gateway nội bộ không kết nối được, THÌ hiển thị "Cần kết nối mạng quản trị (VPN)" | ADR-0027 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-02 |
+| F080-AC-25 | NẾU API trả `403 PERMISSION_DENIED`, THÌ Portal PHẢI hiển thị trang 403 kèm `trace_id` (không có step-up MFA — ADR-0094); NẾU gateway nội bộ không kết nối được, THÌ hiển thị "Cần kết nối mạng quản trị (VPN)" | ADR-0027 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-02 |
 | F080-AC-26 | HỆ THỐNG PHẢI giới hạn mọi tham số chuỗi (`metric_codes`, `client_versions`, lý do dừng sự kiện…) theo `maxLength`/`maxItems` của schema và trả `422 VALIDATION_FAILED` khi vượt | ADR-0041 · AGENTS R28 | TC-TEN-024 |
 | F080-AC-33 | KHI menu/action của feature (`menu.live_ops.game_analytics`, `menu.live_ops.live_dashboard`, `menu.school_lms.reports` và action con) đang tắt cho phạm vi phiên (`disabled_menus`/`disabled_actions` của `getMyPermissions`), Portal PHẢI ẩn menu và ẩn/khóa nút tương ứng (`<ActionGate actionKey>`); NẾU API trả `403 FEATURE_DISABLED`, Portal PHẢI hiện thông báo tính năng tạm tắt và tải lại quyền | FR-CMS-018 · ADR-0090 | TC-CMS-MENU-02 |
 

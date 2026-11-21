@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-internal: true`, `keycloakAdminBearer`, gateway nội bộ + MFA). Permission theo `config_type` ([API_DESIGN §9.13b](../../../docs/07-backend/API_DESIGN.md)).
+Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-internal: true`, `keycloakAdminBearer`, gateway nội bộ + role platform). Permission theo `config_type` ([API_DESIGN §9.13b](../../../docs/07-backend/API_DESIGN.md)).
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|

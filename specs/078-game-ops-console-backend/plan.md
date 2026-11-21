@@ -4,7 +4,7 @@
 
 ## Summary
 
-Mở HTTP `/api/v1/game-admin/*` và `/api/v1/game-media*` trên module game (gateway nội bộ) quanh aggregate `GameConfigVersion` (BACKEND_DESIGN §3.1). Middleware `platform_staff` (azp `eduworld-portal`, MFA, role platform) + bảng quyền theo `config_type`. Command `CreateGameConfig`, `CreateGameConfigVersion`, `UpdateGameConfigDraft`, `TransitionGameConfigVersion`, `PublishGameConfig` (ngay/hẹn giờ), `RollbackGameConfig`, `UnpublishGameConfig`, `CreatePreviewSession`, `PresignGameMedia` dùng `ConfigTypeRegistry` (module của F071–F077) để validate và `OnPublished`. Job `scheduled-publish`, consumer `game.render_thumbnails` + container `game-renderer`. Internal `applyTenantAssignment` (gọi từ module identity) và `listAssignedGameActivities` (gọi từ module learning) cho catalog nhà trường.
+Mở HTTP `/api/v1/game-admin/*` và `/api/v1/game-media*` trên module game (gateway nội bộ) quanh aggregate `GameConfigVersion` (BACKEND_DESIGN §3.1). Middleware `platform_staff` (azp `eduworld-portal`, role platform) + bảng quyền theo `config_type`. Command `CreateGameConfig`, `CreateGameConfigVersion`, `UpdateGameConfigDraft`, `TransitionGameConfigVersion`, `PublishGameConfig` (ngay/hẹn giờ), `RollbackGameConfig`, `UnpublishGameConfig`, `CreatePreviewSession`, `PresignGameMedia` dùng `ConfigTypeRegistry` (module của F071–F077) để validate và `OnPublished`. Job `scheduled-publish`, consumer `game.render_thumbnails` + container `game-renderer`. Internal `applyTenantAssignment` (gọi từ module identity) và `listAssignedGameActivities` (gọi từ module learning) cho catalog nhà trường.
 
 ## Technical Context
 
@@ -30,7 +30,7 @@ Mở HTTP `/api/v1/game-admin/*` và `/api/v1/game-media*` trên module game (ga
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Catalog qua event + internal API (research R1); renderer không ghi DB; module loại nằm ở feature domain |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Nội dung `tenant_id NULL`; gán qua `tenant_resource_assignments` soft-delete; manifest theo tenant |
 | IV Server-authoritative | ✅ | Version bất biến, ghim lượt chơi, `Idempotency-Key` + audit mọi thao tác ghi |
-| V Xác thực, phân quyền | ✅ | `platform_staff` + MFA + quyền theo loại; reviewer ≠ author; internal `x-allowed-callers` |
+| V Xác thực, phân quyền | ✅ | `platform_staff` + role platform + quyền theo loại; reviewer ≠ author; internal `x-allowed-callers` |
 | VI An toàn trẻ em | ✅ | Preview không tạo game session/XP; không dữ liệu học sinh |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số CONFIG_DEFAULTS; validate theo JSON Schema `specs/schemas` |
 | VIII UI tách logic, token | ✅ | Không có UI web; thumbnail là dữ liệu nhận diện (ADR-0047) |
@@ -121,7 +121,7 @@ Bảng quyền ghi theo `config_type` (đọc: quyền ghi của loại hoặc `
 
 ### Bảo mật, tenant, idempotency, audit
 
-- `platform_staff` (azp `eduworld-portal`, MFA, role platform) trên mọi route; facade nội bộ: caller theo `x-allowed-callers` (`make arch-check`).
+- `platform_staff` (azp `eduworld-portal`, role platform) trên mọi route; facade nội bộ: caller theo `x-allowed-callers` (`make arch-check`).
 - Ghi dữ liệu platform không theo tenant; manifest/assignment theo tenant đích.
 - `Idempotency-Key` cho mọi POST ghi; `If-Match` cho update/transition/publish.
 - Audit theo ADMIN_PORTAL §7; `authz.denied` cho mọi từ chối.

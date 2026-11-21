@@ -2,7 +2,7 @@
 
 **Spec**: [../spec.md](../spec.md) · **Plan**: [../plan.md](../plan.md)
 
-Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` + bản theo module `specs/openapi/modules/{chat,identity}.v1.yaml`. Route `/admin/*` chỉ gateway nội bộ, `azp = eduworld-portal` + MFA (ADR-0027).
+Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` + bản theo module `specs/openapi/modules/{chat,identity}.v1.yaml`. Route `/admin/*` chỉ gateway nội bộ, `azp = eduworld-portal` + role platform (ADR-0027).
 
 ## 1. API (OpenAPI)
 

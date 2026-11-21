@@ -30,7 +30,7 @@ Thêm bounded context `economy` (ví, sổ cái Xu/vật phẩm, shop, điều c
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ trong module game; mastery nhận qua event; không facade mới |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng T/TA + RLS; ledger chỉ INSERT; test isolation mọi endpoint |
 | IV Server-authoritative | ✅ | Giá/số dư/cấp thưởng ở server; `Idempotency-Key` + audit cho mua và điều chỉnh |
-| V Xác thực, phân quyền | ✅ | `game_player` cho học sinh; `game.economy.adjust` + MFA + `eduworld-portal` cho điều chỉnh; config qua F078 (`game.item.write`, `game.economy.write`, `game.shop.write`, `game.collection.write`, `game.achievement.write`) |
+| V Xác thực, phân quyền | ✅ | `game_player` cho học sinh; `game.economy.adjust` + role platform + `eduworld-portal` cho điều chỉnh; config qua F078 (`game.item.write`, `game.economy.write`, `game.shop.write`, `game.collection.write`, `game.achievement.write`) |
 | VI An toàn trẻ em | ✅ | Không tiền thật/loot box/trading; achievement không dựa thời gian chơi (R19) |
 | VII Một nguồn sự thật, cấu hình | ✅ | `xu_daily_cap`, `duplicate_item_xu` từ cấu hình |
 | VIII UI tách logic, token | ✅ | Không có UI trong feature (màu độ hiếm là shared token ở client) |
@@ -101,7 +101,7 @@ Không có — INVENTORY_ECONOMY, ADR-0049, DATABASE_DESIGN §2.8a đủ. Kiểu
 ### Bảo mật, tenant, idempotency, audit
 
 - Học sinh: `game_player`, `TenantScope` từ Principal, chỉ `student_id = principal.user_id`; shop lọc `infra.tenant_resource_assignments` (`resource_type = shop_item`) hoặc mặt hàng gán mọi tenant.
-- Điều chỉnh: route `/admin/economy/*` chỉ gateway nội bộ; `azp = eduworld-portal`, MFA, role platform, permission `game.economy.adjust`; ghi theo `X-Tenant-Id` tenant đích.
+- Điều chỉnh: route `/admin/economy/*` chỉ gateway nội bộ; `azp = eduworld-portal`, role platform, permission `game.economy.adjust`; ghi theo `X-Tenant-Id` tenant đích.
 - `Idempotency-Key` bắt buộc: `purchaseShopItem`, `createEconomyAdjustment`, `approveEconomyAdjustment`. Audit: `shop.item_purchased`, `economy_adjustment.created/approved/rejected`, `authz.denied`.
 
 ### Quan sát

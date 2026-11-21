@@ -30,7 +30,7 @@ Bổ sung vào module `learning`: (1) module `reporting`: bảng `learning.repor
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ module `learning`; tạo version mới qua command của workflow nội dung cùng module; worker gọi command handler qua interface có kiểu |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng mới T có `tenant_id` + `deleted_at` + RLS (dữ liệu platform `owner_scope`); không hard-delete (file hết hạn theo lifecycle bucket) |
 | IV Server-authoritative | ✅ | Thống kê, mức tham khảo, độ tin cậy tính ở server; báo cáo đề không lộ đáp án ngoài phạm vi; tạo job/chấp nhận đề xuất có `Idempotency-Key` + audit |
-| V Xác thực, phân quyền | ✅ | `report.export`, `lms.report.read`, `analytics.school.read`, `learning_content.read`, `learning_content.review`; route `/admin/reports` gateway nội bộ + MFA |
+| V Xác thực, phân quyền | ✅ | `report.export`, `lms.report.read`, `analytics.school.read`, `learning_content.read`, `learning_content.review`; route `/admin/reports` gateway nội bộ + role platform |
 | VI An toàn trẻ em | ✅ | Không xuất chat; watermark; ẩn ô < 5 cấp tenant/platform; không nhãn thông tư cho học sinh |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số theo tên CONFIG_DEFAULTS; ngưỡng ≥ 30 lượt link QUESTION_BANK §9 (đề nghị đăng ký CONFIG_DEFAULTS); chuỗi `MaxLen` |
 | VIII UI tách logic, token | ✅ | Không có UI (F054, F056) |

@@ -4,7 +4,7 @@
 
 ## Summary
 
-Xây workspace D (chunk lazy-load `src/workspaces/platform-admin`) chỉ cho System Admin, gọi API `/api/v1/admin/*` qua gateway nội bộ với token MFA: Tenant, Gán cho tenant (hộp thoại + tab dùng chung), Clone giữa tenant (wizard + theo dõi job), Thùng rác mọi tenant, Danh mục (quốc gia, tỉnh/thành, kế thừa, trường, import CSV), Cấu hình hệ thống (dọn học sinh, lần dọn chờ duyệt, thời hạn chat gameplay). Thêm `TenantFilter` (ops-ui) và hook `useCrossTenantScope` để mọi workspace áp quy ước liên tenant (FR-CMS-013): list gửi `tenant_ids[]` không có `X-Tenant-Id`, ghi gửi `X-Tenant-Id` tenant đích. Bốn delta contract đưa vào Phase 2.
+Xây workspace D (chunk lazy-load `src/workspaces/platform-admin`) chỉ cho System Admin, gọi API `/api/v1/admin/*` qua gateway nội bộ với token `eduworld-portal` của role platform: Tenant, Gán cho tenant (hộp thoại + tab dùng chung), Clone giữa tenant (wizard + theo dõi job), Thùng rác mọi tenant, Danh mục (quốc gia, tỉnh/thành, kế thừa, trường, import CSV), Cấu hình hệ thống (dọn học sinh, lần dọn chờ duyệt, thời hạn chat gameplay). Thêm `TenantFilter` (ops-ui) và hook `useCrossTenantScope` để mọi workspace áp quy ước liên tenant (FR-CMS-013): list gửi `tenant_ids[]` không có `X-Tenant-Id`, ghi gửi `X-Tenant-Id` tenant đích. Bốn delta contract đưa vào Phase 2.
 
 ## Technical Context
 
@@ -30,7 +30,7 @@ Xây workspace D (chunk lazy-load `src/workspaces/platform-admin`) chỉ cho Sys
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Gọi API identity/learning qua APISIX nội bộ; không logic nghiệp vụ ở client |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Quy ước `tenant_ids`/`X-Tenant-Id`; không xóa vĩnh viễn; clone không dữ liệu học sinh |
 | IV Server-authoritative | ✅ | Kết quả clone/restore/import do server; Portal hiển thị |
-| V Xác thực, phân quyền | ✅ | Chỉ `system_admin`; MFA step-up; "Cần VPN"; test ma trận |
+| V Xác thực, phân quyền | ✅ | Chỉ `system_admin`; 403 kèm `trace_id` (không step-up — ADR-0094); "Cần VPN"; test ma trận |
 | VI An toàn trẻ em | ✅ | Không hiển thị dữ liệu học sinh ngoài danh sách cần thiết; clone loại trừ dữ liệu học sinh |
 | VII Một nguồn sự thật, cấu hình | ✅ | Giới hạn từ schema; URL gateway từ env; tham số theo tên |
 | VIII UI tách logic, token | ✅ | Hook gọi API; theme `admin-tokens` |
@@ -113,7 +113,7 @@ Không có. Quy ước liên tenant ở [ADMIN_PORTAL §2.5](../../docs/04-admin
 ### Bảo mật, tenant, idempotency, audit
 
 - Permission: `platform.cross_tenant.read`, `platform.tenant.manage`, `platform.tenant_data.assign`, `platform.tenant_data.clone`, `platform.trash.read`, `platform.trash.restore`, `platform.catalog.write`, `platform.settings.write`, `platform.student_cleanup.approve`.
-- Token `azp = eduworld-portal` + MFA (`acr`); `403 MFA_REQUIRED` → shell F051 mở hộp đăng nhập lại (mật khẩu + OTP qua `portalLogin`, ADR-0091).
+- Token `azp = eduworld-portal` + role platform (không MFA, không step-up — ADR-0094); `403 PERMISSION_DENIED` → trang "Không có quyền" kèm `trace_id`.
 - Idempotency-Key: `assignToTenants`, `unassignFromTenants`, `createTenantClone`, `restoreTrashItem`, `importSchools`, `approveStudentCleanupRun`, `createTenant`; audit `tenant_data.assigned/unassigned/cloned`, `content.restored`, `cross_tenant.accessed` ghi ở backend.
 
 ### Quan sát

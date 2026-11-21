@@ -30,7 +30,7 @@ Dựng module `learning_analytics` trong module `learning` theo ADR-0062: (1) co
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Rollup chỉ từ event (không đọc DB module khác); query handler chỉ đọc; consumer/job gọi command handler qua interface có kiểu |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng rollup có `tenant_id` + RLS (bảng dẫn xuất không `deleted_at` theo DASHBOARD_DATA §3.1); SQL query catalog nhận `TenantScope`; test tenant isolation |
 | IV Server-authoritative | ✅ | Chỉ đọc số liệu server tính; không endpoint ghi từ client |
-| V Xác thực, phân quyền | ✅ | `analytics.school.read`, `analytics.tenant.read`, `platform.cross_tenant.read`; scope trường/môn; route `/admin/*` gateway nội bộ + MFA |
+| V Xác thực, phân quyền | ✅ | `analytics.school.read`, `analytics.tenant.read`, `platform.cross_tenant.read`; scope trường/môn; route `/admin/*` gateway nội bộ + role platform |
 | VI An toàn trẻ em | ✅ | Không nội dung chat, không Game Rating; audit xem hồ sơ; ẩn ô < 5 ở cấp tenant/platform |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số `dashboard_*`, `analytics_min_cell_size` từ cấu hình; chuỗi `MaxLen` |
 | VIII UI tách logic, token | ✅ | Không có UI (F056) |

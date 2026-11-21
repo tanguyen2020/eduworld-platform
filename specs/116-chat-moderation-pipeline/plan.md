@@ -98,7 +98,7 @@ src/backend/modules/chat/
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Endpoint `/admin/chat/*`: gateway nội bộ, middleware `portal_staff` + MFA (`acr`) + permission; ghi của System Admin luôn có tenant đích khi `scope = tenant` (R20). Đọc `tenant_ids` dùng `CrossTenantScope` + audit.
+- Endpoint `/admin/chat/*`: gateway nội bộ, middleware `portal_staff` + `platform_role` + permission (không MFA — ADR-0094); ghi của System Admin luôn có tenant đích khi `scope = tenant` (R20). Đọc `tenant_ids` dùng `CrossTenantScope` + audit.
 - `Idempotency-Key` cho create/publish/toggle/set; `If-Match` cho update.
 - Audit: mọi thay đổi danh mục (kèm `catalog_version`, không nội dung term), mọi bật/tắt công tắc, `testSensitiveTerms` (xem nội dung danh mục), áp sanction hệ thống.
 

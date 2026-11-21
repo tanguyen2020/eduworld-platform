@@ -30,7 +30,7 @@ Thêm bounded context `moderation` vào module chat: aggregate `Report`, `Modera
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | `account_lock` và email trường qua event (R29); bounded context moderation cùng module chat nên đọc tin trực tiếp |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bypass chỉ trong handler moderation (linter allowlist); test RLS; bằng chứng bất biến, không DELETE |
 | IV Server-authoritative | ✅ | Mức ưu tiên, SLA, hạn xác nhận tính ở server; client không gửi |
-| V Xác thực, phân quyền | ✅ | `moderation.case.read/act`, `moderation.case.messages.read`, `moderation.sanction.read/write`, `moderation.school_notification.send/read/acknowledge`; MFA; gateway nội bộ |
+| V Xác thực, phân quyền | ✅ | `moderation.case.read/act`, `moderation.case.messages.read`, `moderation.sanction.read/write`, `moderation.school_notification.send/read/acknowledge`; role platform; gateway nội bộ |
 | VI An toàn trẻ em | ✅ | Thông báo không chat thô; người báo cáo ẩn danh; không phạt tín hiệu tự hại; audit không chép nội dung |
 | VII Một nguồn sự thật, cấu hình | ✅ | Enum theo MODERATION; tham số theo tên; `MaxLen` |
 | VIII UI tách logic, token | ✅ | Không có UI (F122) |

@@ -12,7 +12,7 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 | `getLmsReport` | `GET /api/v1/lms/reports/{report_id}` | `learning.v1.yaml` | người tạo | Đã sửa (F044: `status`, `row_count`, `download_url`, `expires_at`, `error`) |
 | `createTenantReport` | `POST /api/v1/tenant/reports` → 202 | `learning.v1.yaml` | `report.export` (TA, SA) · `Idempotency-Key` | Có sẵn, đã hiện thực (F044) |
 | `getTenantReport` | `GET /api/v1/tenant/reports/{report_id}` | `learning.v1.yaml` | người tạo | Có sẵn, đã hiện thực (F044) |
-| `createPlatformReport` | `POST /api/v1/admin/reports` → 202 | `learning.v1.yaml` | System Admin · `report.export` · gateway nội bộ + MFA | Có sẵn, đã hiện thực (F044) |
+| `createPlatformReport` | `POST /api/v1/admin/reports` → 202 | `learning.v1.yaml` | System Admin · `report.export` · gateway nội bộ + role platform | Có sẵn, đã hiện thực (F044) |
 | `getPlatformReport` | `GET /api/v1/admin/reports/{report_id}` | `learning.v1.yaml` | người tạo (System Admin) | Có sẵn, đã hiện thực (F044) |
 | ~~`getCourseResults`~~ | ~~`GET /api/v1/lms/courses/{course_id}/results`~~ | — | — | **Đã xóa** (ADR-0095: không còn course — kết quả theo bài giao `assignment_results`) |
 | `getRegulationReferenceReport` | `GET /api/v1/lms/schools/{school_id}/reference-levels?subject_id=&period=&grade_level=` | — | `analytics.school.read` | Đã thêm (F044); ADR-0095: lọc `grade_level` thay `class_id`, item có `grade_level` |

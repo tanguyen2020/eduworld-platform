@@ -82,6 +82,10 @@
 - Q: API "lớp" của portal thay bằng gì? → A: [Confirmed] `listTenantGradeStudents` (`GET /tenant/schools/{school_id}/grades/{grade_level}/students`, cursor, `q`; `tenant.student.read` hoặc `lms.student.read`, ngoài scope → 404, khối ngoài 1–9 → 422) thay `listClasses`, `listTenantSchoolClasses`, `listTenantClassStudents`, `listUnassignedStudents` (xóa). Menu `menu.school_lms.classes` → `menu.school_lms.students` ("Học sinh theo khối"). `getMyStudentProfile`/`getStudentProfile`/bootstrap không còn `class_id`/`class_name`/`class`. Facade: `checkMemberships` bỏ `class_id`, `Principal` bỏ `class_ids`, `listProjectionSnapshot` chỉ còn `tenant`, `school`, `student` (`student` = trường của `student.placement_changed`).
 - Q: Tenant chung (AC-24)? → A: [Confirmed] Học sinh thuộc School ảo với khối khai báo, không lớp ảo, không enrollment; phát `student.placement_changed` (`source = platform_common`).
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F010-AC-04. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin tạo và quản lý tenant (Priority: P1)
@@ -99,7 +103,7 @@ System Admin (`sa.admin`) tạo tenant loại trường độc lập, đơn vị
 | F010-AC-01 | KHI System Admin tạo tenant, module identity PHẢI lưu tenant với `tenant_type ∈ {school, unit, common}`, `keycloak_org_alias` duy nhất khớp mẫu `^[a-z0-9-]{3,63}$`, phát `tenant.created` và worker PHẢI tạo đúng một Keycloak Organization có attribute `tenant_id`, `tenant_type` | FR-ORG-001 · FR-ORG-009 · [KEYCLOAK_SSO §2.1](../../docs/09-identity/KEYCLOAK_SSO.md) | — |
 | F010-AC-02 | NẾU đã tồn tại một tenant `common`, THÌ module identity PHẢI từ chối tạo tenant `common` thứ hai với `409 CONFLICT` | FR-ORG-001 · [DATABASE_DESIGN §2.0](../../docs/07-backend/DATABASE_DESIGN.md) | — |
 | F010-AC-03 | KHI tenant chuyển `status = disabled`, worker PHẢI đặt Organization `enabled=false` và mọi thành viên PHẢI nhận `403 TENANT_ACCESS_DISABLED` ở lần resolve kế tiếp | FR-ORG-009 · AC-AUTH-010 | TC-TEN-007 |
-| F010-AC-04 | HỆ THỐNG PHẢI chỉ cho người có permission `platform.tenant.manage` (token `eduworld-portal` + MFA, gateway nội bộ) tạo/sửa tenant; người dùng tenant nhận `403 PERMISSION_DENIED` | FR-ORG-001 · ADR-0027 | TC-CMS-WS-02 |
+| F010-AC-04 | HỆ THỐNG PHẢI chỉ cho người có permission `platform.tenant.manage` (token `eduworld-portal` + role platform, gateway nội bộ; không MFA — ADR-0094) tạo/sửa tenant; người dùng tenant nhận `403 PERMISSION_DENIED` | FR-ORG-001 · ADR-0027 | TC-CMS-WS-02 |
 | F010-AC-05 | KHI tạo/sửa tenant hoặc trường, module identity PHẢI yêu cầu `Idempotency-Key`, ghi audit `tenant.created`/`tenant.updated` và từ chối chuỗi vượt `maxLength` với `422 VALIDATION_FAILED` chỉ rõ trường | FR-ORG-001 · ADR-0041 | TC-TEN-024 |
 
 ---

@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-service: game`). `/admin/*` chỉ gateway nội bộ + MFA.
+Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-service: game`). `/admin/*` chỉ gateway nội bộ + role platform.
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|

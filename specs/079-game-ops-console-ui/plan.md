@@ -4,7 +4,7 @@
 
 ## Summary
 
-Xây chunk workspace `game-ops` (F051) gọi API `/api/v1/game-admin/*` qua gateway nội bộ + MFA. Lõi là `ContentEditorShell` (ops-ui) dùng chung cho mọi `GameConfigType` thuộc module game: danh sách, form sinh từ JSON Schema, autosave `If-Match`, workflow, version/diff/release, rollback. Trên lõi có builder đặc thù: `QuestStepEditor`, `DialogueGraphEditor`, `ProgressionCurveEditor` (biểu đồ + mô phỏng server), `EventWizard` 8 bước + `EventCalendar`, `SeasonTrackEditor`, `EventTemplateEditor`; `ThumbnailImage`/`TurntableViewer` và `GamePreviewFrame`. Bốn delta contract (owner F078/F074/F077) đưa vào Phase 2.
+Xây chunk workspace `game-ops` (F051) gọi API `/api/v1/game-admin/*` qua gateway nội bộ + role platform. Lõi là `ContentEditorShell` (ops-ui) dùng chung cho mọi `GameConfigType` thuộc module game: danh sách, form sinh từ JSON Schema, autosave `If-Match`, workflow, version/diff/release, rollback. Trên lõi có builder đặc thù: `QuestStepEditor`, `DialogueGraphEditor`, `ProgressionCurveEditor` (biểu đồ + mô phỏng server), `EventWizard` 8 bước + `EventCalendar`, `SeasonTrackEditor`, `EventTemplateEditor`; `ThumbnailImage`/`TurntableViewer` và `GamePreviewFrame`. Bốn delta contract (owner F078/F074/F077) đưa vào Phase 2.
 
 ## Technical Context
 
@@ -30,7 +30,7 @@ Xây chunk workspace `game-ops` (F051) gọi API `/api/v1/game-admin/*` qua gate
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ gọi API qua APISIX nội bộ; không logic nghiệp vụ ở client |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Dữ liệu platform (`tenant_id = NULL`); không có xóa vĩnh viễn; version publish chỉ đọc |
 | IV Server-authoritative | ✅ | Validate nghiệp vụ, mô phỏng, cảnh báo lịch do server |
-| V Xác thực, phân quyền | ✅ | Menu theo permission; 403; MFA step-up; E2E role tenant |
+| V Xác thực, phân quyền | ✅ | Menu theo permission; 403; 403 kèm `trace_id` (không step-up — ADR-0094); E2E role tenant |
 | VI An toàn trẻ em | ✅ | Không trường tiền thật/loot box; không dark pattern (cảnh báo > 3 phiên/tuần) |
 | VII Một nguồn sự thật, cấu hình | ✅ | Form sinh từ JSON Schema; giới hạn từ OpenAPI; tham số theo tên |
 | VIII UI tách logic, token | ✅ | Theme `admin-tokens`; màu trạng thái/loại sự kiện từ `shared-tokens` |

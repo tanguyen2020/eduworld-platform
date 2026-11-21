@@ -4,7 +4,7 @@
 
 ## Summary
 
-Thêm stack quan sát vào `deploy/swarm/<env>/infra.stack.yml` (node `ops`): OTel Collector (redaction, head/tail sampling), Prometheus (`dockerswarm_sd_configs`, rule), Alertmanager (định tuyến, inhibit, Watchdog), Loki, Tempo (metrics generator service graph), Grafana (provision dashboard JSON, đăng nhập Keycloak MFA), exporter (node, cAdvisor global; postgres, redis, nats; `swarm-exporter` Go chỉ đọc), GlitchTip. Ba script kiểm CI đọc thẳng bảng trong MONITORING (nguồn duy nhất): catalog metric, rule ↔ bảng alert ↔ runbook, label policy. Runbook mỗi alert trong `docs/11-operations/runbooks/`. Probe synthetic k6 chạy trong service `synthetic-probe` (k6 + supercronic, remote write về Prometheus) trên node `ops`.
+Thêm stack quan sát vào `deploy/swarm/<env>/infra.stack.yml` (node `ops`): OTel Collector (redaction, head/tail sampling), Prometheus (`dockerswarm_sd_configs`, rule), Alertmanager (định tuyến, inhibit, Watchdog), Loki, Tempo (metrics generator service graph), Grafana (provision dashboard JSON, đăng nhập Keycloak, không MFA — ADR-0094 mục 2b), exporter (node, cAdvisor global; postgres, redis, nats; `swarm-exporter` Go chỉ đọc), GlitchTip. Ba script kiểm CI đọc thẳng bảng trong MONITORING (nguồn duy nhất): catalog metric, rule ↔ bảng alert ↔ runbook, label policy. Runbook mỗi alert trong `docs/11-operations/runbooks/`. Probe synthetic k6 chạy trong service `synthetic-probe` (k6 + supercronic, remote write về Prometheus) trên node `ops`.
 
 ## Technical Context
 
@@ -30,7 +30,7 @@ Thêm stack quan sát vào `deploy/swarm/<env>/infra.stack.yml` (node `ops`): OT
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Không sửa code module; `swarm-exporter` là tool trong `src/backend/tools/`, không import `src/backend/modules/` |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Không có label `school_id`/user; không dữ liệu tenant trong Prometheus; probe dùng tenant QA |
 | IV Server-authoritative | ✅ | Không áp dụng |
-| V Xác thực, phân quyền | ✅ | Công cụ chỉ qua network `admin` + Keycloak MFA, role vận hành platform; credential kênh trực qua Docker secret |
+| V Xác thực, phân quyền | ✅ | Công cụ chỉ qua network `admin` + đăng nhập Keycloak có role vận hành platform (không MFA — ADR-0094 mục 2b); credential kênh trực qua Docker secret |
 | VI An toàn trẻ em | ✅ | Redaction ở Collector, label policy, dashboard Chat Safety không nội dung |
 | VII Một nguồn sự thật, cấu hình | ✅ | Script đọc bảng MONITORING §3/§5; ngưỡng theo `alert_thresholds` và MONITORING; alert mới bổ sung vào MONITORING (task) |
 | VIII UI tách logic, token | ✅ | Không áp dụng (Grafana là công cụ vận hành, không phải Admin Portal) |
@@ -104,7 +104,7 @@ docs/11-operations/alert-drills/README.md
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Grafana OAuth Keycloak bắt buộc `acr` MFA, role map: `platform_ops` → Editor, `system_admin` → Admin, còn lại Viewer chỉ khi có `platform_staff`; tài khoản tenant bị từ chối (`role_attribute_strict`).
+- Grafana OAuth Keycloak (không MFA — ADR-0094 mục 2b), role map: `platform_ops` → Editor, `system_admin` → Admin, còn lại Viewer chỉ khi có `platform_staff`; tài khoản tenant bị từ chối (`role_attribute_strict`).
 - Loki production: bật query audit log của Grafana (`[log] filters` + audit) và lưu trong Loki tenant riêng `audit-ops`.
 - Không idempotency nghiệp vụ; ticket GlitchTip khử trùng theo `issue_id`.
 

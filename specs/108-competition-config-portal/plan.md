@@ -4,7 +4,7 @@
 
 ## Summary
 
-Hai phần, backend trước. (1) **module competition**: phía ghi của bảng cấu hình `game_configs`/`game_config_versions`/`content_releases` (F104 đã tạo, chỉ đọc): command tạo/sửa nháp, transition workflow, publish có `effective_from`, rollback/unpublish; validator theo JSON Schema (7 schema mới) + invariant domain; outbox `competition_config.published`; consumer áp runtime (mùa, leaderboard definition — dùng command của F106). Router `/game-admin/*` gắn middleware `platform_admin` (azp `eduworld-portal`, MFA `acr`, role platform) chỉ ở listener gateway nội bộ. (2) **src/cms/frontend/apps/portal**: module `competition` trong chunk `game-ops` (workspace A) và module `challenges` trong chunk `school-lms` (workspace C), gọi API qua `apiClient` (F050) với hook TanStack Query; không business logic.
+Hai phần, backend trước. (1) **module competition**: phía ghi của bảng cấu hình `game_configs`/`game_config_versions`/`content_releases` (F104 đã tạo, chỉ đọc): command tạo/sửa nháp, transition workflow, publish có `effective_from`, rollback/unpublish; validator theo JSON Schema (7 schema mới) + invariant domain; outbox `competition_config.published`; consumer áp runtime (mùa, leaderboard definition — dùng command của F106). Router `/game-admin/*` gắn middleware `platform_admin` (azp `eduworld-portal`, role platform; không MFA — ADR-0094) chỉ ở listener gateway nội bộ. (2) **src/cms/frontend/apps/portal**: module `competition` trong chunk `game-ops` (workspace A) và module `challenges` trong chunk `school-lms` (workspace C), gọi API qua `apiClient` (F050) với hook TanStack Query; không business logic.
 
 ## Technical Context
 
@@ -30,7 +30,7 @@ Hai phần, backend trước. (1) **module competition**: phía ghi của bảng
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Backend chỉ module competition; portal chỉ gọi API |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Cấu hình là G (platform); workspace C luôn một tenant (System Admin chọn tenant đích); không hard-delete |
 | IV Server-authoritative | ✅ | Validation và invariant ở server; publish idempotent + audit |
-| V Xác thực, phân quyền | ✅ | `competition.config.*` theo loại, `game.content.review/publish`, MFA + gateway nội bộ; `lms.challenge.write` cho workspace C |
+| V Xác thực, phân quyền | ✅ | `competition.config.*` theo loại, `game.content.review/publish`, role platform + gateway nội bộ; `lms.challenge.write` cho workspace C |
 | VI An toàn trẻ em | ✅ | Invariant chặn nới ràng buộc khối, bonus tốc độ khối nhỏ (lớp 1–5), XP ở bảng trường/khối, scope `class`/metric `class_goal` (ADR-0095), phần thưởng trả tiền |
 | VII Một nguồn sự thật, cấu hình | ✅ | Giá trị khởi tạo theo tên CONFIG_DEFAULTS; schema `maxLength` |
 | VIII UI tách logic, token | ✅ | Hook `api/` là lớp duy nhất gọi mạng; style từ token admin |

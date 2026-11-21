@@ -30,7 +30,7 @@ Thêm bounded context `liveops` (event, run, participation, community goal) và 
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Lịch mùa qua event; kiểm văn bản qua facade `chat`; scheduler là job gọi command |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng T/TA + RLS; sự kiện tenant `tenant_id NOT NULL`; goal `platform` chỉ trả tổng; test isolation |
 | IV Server-authoritative | ✅ | Điểm/đóng góp chỉ từ event server; claim có `Idempotency-Key` + audit; vận hành có audit |
-| V Xác thực, phân quyền | ✅ | `game_player`; `lms.school_event.write` (tenant); `game.event.operate`, `game.liveops.read` (platform, MFA) |
+| V Xác thực, phân quyền | ✅ | `game_player`; `lms.school_event.write` (tenant); `game.event.operate`, `game.liveops.read` (platform, gateway nội bộ) |
 | VI An toàn trẻ em | ✅ | Không streak/push/track trả phí; kiểm từ nhạy cảm, không trả từ khớp (R15); không xếp hạng cá nhân |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số theo CONFIG_DEFAULTS + version sự kiện |
 | VIII UI tách logic, token | ✅ | Không có UI |
@@ -104,7 +104,7 @@ Không có — EVENT_SEASON_SYSTEM, DATABASE_DESIGN §2.8c, ADR-0043/0049 đủ.
 
 - Học sinh: `game_player`, lọc `audience` theo `ref.students` (`school_id`, `grade_level`; projection cập nhật từ `student.placement_changed` — ADR-0095, không `ref.enrollments`).
 - Tenant: `portal_staff` + `lms.school_event.write`, scope trường; sự kiện tenant `owner_scope = tenant`, `tenant_id` của phiên; template chỉ khi có assignment.
-- Platform: `/game-admin/events/*` gateway nội bộ, MFA, `game.event.operate`/`game.liveops.read`.
+- Platform: `/game-admin/events/*` gateway nội bộ, role platform, `game.event.operate`/`game.liveops.read`.
 - `Idempotency-Key`: `joinGameEvent`, `claimEventMilestone`, `claimSeasonTier`, `suspend/resume/cancelEventRun`, `create/update/cancelSchoolEvent`. Audit: thao tác vận hành, sự kiện trường, claim, tự cấp.
 
 ### Quan sát

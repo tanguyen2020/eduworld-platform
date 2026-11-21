@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec: `specs/openapi/eduworld-api.v1.yaml`. Route `/lms/*`, `/tenant/*` gửi `X-Tenant-Id`; route `/admin/*` chỉ gateway nội bộ + MFA, list dùng `tenant_ids[]`.
+Spec: `specs/openapi/eduworld-api.v1.yaml`. Route `/lms/*`, `/tenant/*` gửi `X-Tenant-Id`; route `/admin/*` chỉ gateway nội bộ + role platform, list dùng `tenant_ids[]`.
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|

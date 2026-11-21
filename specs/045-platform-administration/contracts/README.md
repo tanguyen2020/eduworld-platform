@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec: `specs/openapi/modules/identity.v1.yaml` (bundle `specs/openapi/eduworld-api.v1.yaml`, `x-service: identity`). Route `/admin/*` chỉ gateway nội bộ (`x-internal: true`), `azp = eduworld-portal` + MFA + role platform.
+Spec: `specs/openapi/modules/identity.v1.yaml` (bundle `specs/openapi/eduworld-api.v1.yaml`, `x-service: identity`). Route `/admin/*` chỉ gateway nội bộ (`x-internal: true`), `azp = eduworld-portal` + role platform.
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|

@@ -30,7 +30,7 @@ Xây các màn an toàn chat trong ba chunk workspace của portal (F051): `live
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ gọi API public/nội bộ qua APISIX; không logic nghiệp vụ |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Ghi luôn `X-Tenant-Id` tenant đích/tenant case; người dùng tenant không gửi `tenant_ids`; không có xóa vĩnh viễn |
 | IV Server-authoritative | ✅ | SLA, hạn xác nhận, quyết định thử chuỗi do server trả |
-| V Xác thực, phân quyền | ✅ | Menu theo `getMyPermissions`; 403 page; MFA step-up; ma trận E2E |
+| V Xác thực, phân quyền | ✅ | Menu theo `getMyPermissions`; 403 page; 403 kèm `trace_id` (không step-up — ADR-0094); ma trận E2E |
 | VI An toàn trẻ em | ✅ | Không màn nào hiển thị chat ngoài case; thông báo trường không có nội dung chat; không log term/tin; không control theo khối |
 | VII Một nguồn sự thật, cấu hình | ✅ | Giới hạn độ dài từ schema; URL gateway từ env |
 | VIII UI tách logic, token | ✅ | Theme `admin-tokens`; màu trạng thái từ `shared-tokens` |
@@ -106,7 +106,7 @@ Không có. Màn hình ở [ADMIN_PORTAL §1.5.2, §3.9, §10.1](../../docs/04-a
 ### Bảo mật, tenant, idempotency, audit
 
 - Permission: `moderation.case.read/act`, `moderation.case.messages.read`, `moderation.sanction.read/write`, `moderation.school_notification.send/read/acknowledge`, `chat.sensitive_terms.read/write`, `chat.policy.toggle`, `chat.tenant_terms.write`, `chat.tenant_category.toggle`, `school.settings.read/write`, `social.club.approve`.
-- Workspace E/D: token MFA, gateway nội bộ; `TenantFilter` trong hàng đợi case chỉ cho Safety Moderator/System Admin (không phải `platform.cross_tenant.read` toàn portal).
+- Workspace E/D: token `eduworld-portal` của role platform, gateway nội bộ; `TenantFilter` trong hàng đợi case chỉ cho Safety Moderator/System Admin (không phải `platform.cross_tenant.read` toàn portal).
 - Idempotency-Key cho mọi POST ghi; audit ghi ở backend.
 
 ### Quan sát

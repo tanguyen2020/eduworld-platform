@@ -56,6 +56,10 @@
 
 - Q: Dọn/khôi phục học sinh khi bỏ enrollment? → A: [Confirmed] Dọn học sinh chỉ soft-delete `identity.users` + `org.students` (không còn enrollment); dọn và khôi phục phát thêm `student.placement_changed` (`source = lifecycle`, `status` inactive/active) để module khác cập nhật `ref.students`.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: contracts/README (`lockUser`). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khóa, mở khóa, vô hiệu hóa và thu hồi truy cập (Priority: P1)

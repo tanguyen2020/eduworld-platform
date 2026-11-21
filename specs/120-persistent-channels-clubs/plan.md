@@ -103,7 +103,7 @@ Không có. Thuật toán policy ở [CHAT_SYSTEM §3](../../docs/03-social-mult
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Route học sinh (`/chat/*`, `/social/clubs*` khi người gọi là học sinh) qua `game_player`; route nhân sự (`approveClub`, `createClub` loại trường, `putChatPolicy`) yêu cầu `azp = eduworld-portal`; cấp platform chỉ gateway nội bộ + MFA.
+- Route học sinh (`/chat/*`, `/social/clubs*` khi người gọi là học sinh) qua `game_player`; route nhân sự (`approveClub`, `createClub` loại trường, `putChatPolicy`) yêu cầu `azp = eduworld-portal`; cấp platform chỉ gateway nội bộ + role platform.
 - `TenantScope` mọi query; không `CrossTenantScope`. Idempotency-Key: `createClub`, `approveClub`, `requestJoinClub`, `inviteToClub`, `accept*`, `createClubGoal`, `createClubEvent`; `putChatPolicy` dùng `If-Match`.
 - Audit: `chat_policy.updated` (before/after), `club.created/approved/archived/member_removed`, `chat.retention_applied` (tổng hợp, không nội dung).
 

@@ -4,7 +4,7 @@
 
 ## Summary
 
-Thêm 9 màn vào chunk workspace D (`src/cms/frontend/apps/portal/src/workspaces/platform-admin/`, do F057 tạo): Permission catalog (chỉ xem), Role platform/dùng chung (+ xem role tùy biến của tenant), UserRole (platform + tenant đích), Người dùng mọi tenant, Nhật ký toàn hệ thống, Nhật ký phân quyền, Đăng nhập game liên tenant, Feature flag, Tích hợp (Keycloak/SIS/APISIX chỉ xem). Gọi `/api/v1/admin/*` qua gateway nội bộ với token MFA, dùng lại `TenantFilter`, `TargetTenantField`, `useCrossTenantScope`, `MfaStepUp`, `VpnRequiredBanner` của F057. Không có logic nghiệp vụ ở client: picker permission/role chỉ lọc hiển thị, server quyết định (`422`/`403`). Delta contract (owner F011, F012, F015, F016, identity) đưa vào Phase 2; màn phụ thuộc delta ẩn sau feature flag tới khi contract có.
+Thêm 9 màn vào chunk workspace D (`src/cms/frontend/apps/portal/src/workspaces/platform-admin/`, do F057 tạo): Permission catalog (chỉ xem), Role platform/dùng chung (+ xem role tùy biến của tenant), UserRole (platform + tenant đích), Người dùng mọi tenant, Nhật ký toàn hệ thống, Nhật ký phân quyền, Đăng nhập game liên tenant, Feature flag, Tích hợp (Keycloak/SIS/APISIX chỉ xem). Gọi `/api/v1/admin/*` qua gateway nội bộ với token `eduworld-portal` của role platform, dùng lại `TenantFilter`, `TargetTenantField`, `useCrossTenantScope`, `VpnRequiredBanner` của F057. Không có logic nghiệp vụ ở client: picker permission/role chỉ lọc hiển thị, server quyết định (`422`/`403`). Delta contract (owner F011, F012, F015, F016, identity) đưa vào Phase 2; màn phụ thuộc delta ẩn sau feature flag tới khi contract có.
 
 ## Technical Context
 
@@ -30,7 +30,7 @@ Thêm 9 màn vào chunk workspace D (`src/cms/frontend/apps/portal/src/workspace
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Frontend gọi API identity/game qua APISIX nội bộ; không đọc DB, không logic nghiệp vụ |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | List gửi `tenant_ids[]` không `X-Tenant-Id`; ghi tenant gửi `X-Tenant-Id` tenant đích; xóa role là soft-delete; audit chỉ đọc |
 | IV Server-authoritative | ✅ | Kiểm tra scope/permission ở server; Portal hiển thị `code` lỗi |
-| V Xác thực, phân quyền | ✅ | Chỉ `system_admin`; permission từng màn; MFA step-up; test ma trận 403 |
+| V Xác thực, phân quyền | ✅ | Chỉ `system_admin`; permission từng màn; 403 kèm `trace_id` (không step-up — ADR-0094); test ma trận 403 |
 | VI An toàn trẻ em | ✅ | Không hiển thị IP, token; login events chỉ phục vụ System Admin; không log lý do/PII ở client |
 | VII Một nguồn sự thật, cấu hình | ✅ | Giới hạn từ schema OpenAPI; URL gateway từ env; tham số theo tên CONFIG_DEFAULTS |
 | VIII UI tách logic, token | ✅ | Hook `api/*.ts` gọi API; component theo theme `admin-tokens` |
@@ -105,7 +105,7 @@ Không có. Quy tắc role/UserRole ở [ADMIN_PORTAL §2, §3.17](../../docs/04
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F012 (role/UserRole/permission/user API), F015 (audit, feature flag), F057 (chunk D, `TenantFilter`, lỗi MFA/VPN), F014 (login events), F016 (lock/unlock/deactivate), F011/F017 (SIS connection), F050, F051.
+- Feature phụ thuộc: F012 (role/UserRole/permission/user API), F015 (audit, feature flag), F057 (chunk D, `TenantFilter`, lỗi VPN), F014 (login events), F016 (lock/unlock/deactivate), F011/F017 (SIS connection), F050, F051.
 - Typed client: client TS sinh từ `specs/openapi/eduworld-api.v1.yaml` (`pnpm gen:api`).
 
 ### Bảo mật, tenant, idempotency, audit
@@ -116,7 +116,7 @@ Không có. Quy tắc role/UserRole ở [ADMIN_PORTAL §2, §3.17](../../docs/04
 
 ### Quan sát
 
-- Log client: `code`, `trace_id`, route; không username/email/lý do nhập tay; đếm lỗi `403`/`MFA_REQUIRED` theo màn (metric web RUM nếu F050 có).
+- Log client: `code`, `trace_id`, route; không username/email/lý do nhập tay; đếm lỗi `403` theo màn (metric web RUM nếu F050 có).
 
 
 ### Danh mục menu/action portal (ADR-0090)

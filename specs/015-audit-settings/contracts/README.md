@@ -9,14 +9,14 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml`.
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
 | `listTenantAuditLogs` | `GET /api/v1/tenant/audit-logs?school_id=&actor_id=&action=&from=&to=` | identity.v1.yaml | `tenant.audit.read` (School Admin: trường mình) | Có sẵn |
-| `listPlatformAuditLogs` | `GET /api/v1/admin/audit-logs?tenant_ids=&…` | identity.v1.yaml | `platform.audit.read` (MFA, gateway nội bộ) | Có sẵn (schema `AuditLogEntry` Có sẵn (áp 2026-11-17); `x-internal` áp ở F004 T005) |
+| `listPlatformAuditLogs` | `GET /api/v1/admin/audit-logs?tenant_ids=&…` | identity.v1.yaml | `platform.audit.read` (role platform, gateway nội bộ) | Có sẵn (schema `AuditLogEntry` Có sẵn (áp 2026-11-17); `x-internal` áp ở F004 T005) |
 | `getStudentCleanupSettings` · `putStudentCleanupSettings` | `GET/PUT /api/v1/admin/settings/student-cleanup` | identity.v1.yaml | `platform.settings.write` | Có sẵn |
 | `getChatRetentionSettings` · `putChatRetentionSettings` | `GET/PUT /api/v1/admin/settings/chat-retention` | identity.v1.yaml | `platform.settings.write` | Có sẵn |
 | `getTenantSettings` · `updateTenantSettings` | `GET/PATCH /api/v1/tenant/settings` (`If-Match`) | identity.v1.yaml | `tenant.settings.read` / `tenant.settings.write` (+ `tenant.student_cleanup.configure`, `tenant.chat_retention.configure`) | Có sẵn |
 | `getSchoolSettings` | `GET /api/v1/schools/{school_id}/settings` | identity.v1.yaml | `school.settings.read` (scope trường) | Có sẵn (`SchoolSettings`, ETag; gồm `platform_curfew`, `effective_curfew` chỉ đọc) |
-| `getPlatformCurfewSettings` · `putPlatformCurfewSettings` | `GET/PUT /api/v1/admin/settings/curfew` (`If-Match`, `reason`) | identity.v1.yaml | `platform.settings.write` (gateway nội bộ + MFA) | Có sẵn (`PlatformCurfewSettings`, F015-AC-21) |
+| `getPlatformCurfewSettings` · `putPlatformCurfewSettings` | `GET/PUT /api/v1/admin/settings/curfew` (`If-Match`, `reason`) | identity.v1.yaml | `platform.settings.write` (gateway nội bộ + role platform) | Có sẵn (`PlatformCurfewSettings`, F015-AC-21) |
 | `updateSchoolSettings` | `PATCH /api/v1/schools/{school_id}/settings` (`If-Match`, `reason`) | identity.v1.yaml | `school.settings.write` (scope trường) | Có sẵn (đã có trong spec gộp, kiểm 2026-11-17) |
-| `listFeatureFlags` · `putFeatureFlag` | `GET /api/v1/admin/feature-flags?flag_kind=&tenant_id=` · `PUT /api/v1/admin/feature-flags/{flag_key}` (body `{scope, state, reason}`, `If-Match`, `X-Tenant-Id` đích khi `scope = tenant`) | spec gộp `eduworld-api.v1.yaml` → identity.v1.yaml (module identity, `x-internal`) | `platform.feature_flag.write` (gateway nội bộ + MFA) | Có trong spec gộp (ADR-0090) — F015 kiểm khớp; lỗi `422 FEATURE_NOT_DISABLEABLE`, `412`, `428`, `404` |
+| `listFeatureFlags` · `putFeatureFlag` | `GET /api/v1/admin/feature-flags?flag_kind=&tenant_id=` · `PUT /api/v1/admin/feature-flags/{flag_key}` (body `{scope, state, reason}`, `If-Match`, `X-Tenant-Id` đích khi `scope = tenant`) | spec gộp `eduworld-api.v1.yaml` → identity.v1.yaml (module identity, `x-internal`) | `platform.feature_flag.write` (gateway nội bộ + role platform) | Có trong spec gộp (ADR-0090) — F015 kiểm khớp; lỗi `422 FEATURE_NOT_DISABLEABLE`, `412`, `428`, `404` |
 | `listPortalMenuCatalog` | `GET /api/v1/admin/portal-menu-catalog?tenant_id=` | spec gộp → identity.v1.yaml | `platform.feature_flag.write` | Có trong spec gộp (ADR-0090) — cây workspace/menu/action + trạng thái + `catalog_version` |
 
 ## 2. Internal API

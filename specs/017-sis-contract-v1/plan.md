@@ -119,7 +119,7 @@ deploy/apisix/routes/internal-sis-webhook.yaml
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Permission `platform.sis_connection.manage` (create/update/health-check/trigger mọi trường), `tenant.sis.import` scope trường (trigger cho trường mình). Route `/api/v1/sis/*` chỉ APISIX internal + MFA với role platform.
+- Permission `platform.sis_connection.manage` (create/update/health-check/trigger mọi trường), `tenant.sis.import` scope trường (trigger cho trường mình). Route `/api/v1/sis/*` chỉ APISIX internal với role platform.
 - Webhook: HMAC-SHA256, `sis_webhook_skew`, nonce `ew:identity:sis:wh:nonce:<delivery_id>` TTL `sis_webhook_nonce_ttl`; Valkey lỗi → `503` (fail closed); APISIX IP allowlist theo connection.
 - Idempotency-Key: `createSisConnection`, `triggerSisSync`; audit `sis_connection.created/updated/status_changed`, `sis.sync_run.*` actor `system:sis-sync:<connection_id>`.
 - Egress cố định, TLS 1.2+, không tắt kiểm cert; không log body response SIS.

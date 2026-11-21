@@ -38,5 +38,5 @@
 
 ## 6. Delta cần thực hiện
 
-- Không có delta contract trong `specs/`. Không probe portal (đăng nhập portal cần MFA tương tác); sức khỏe portal theo dõi qua SLO APISIX.
+- Không có delta contract trong `specs/`. Không probe portal (không đặt tài khoản probe đăng nhập portal); sức khỏe portal theo dõi qua SLO APISIX.
 - Hợp đồng ngoài: định dạng rule Prometheus, cấu hình Alertmanager, JSON dashboard Grafana, SDK Sentry (GlitchTip).

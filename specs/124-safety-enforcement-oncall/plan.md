@@ -30,7 +30,7 @@ Hai module, giao tiếp chỉ bằng event (R29). **module identity**: (1) consu
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | chat ↔ identity chỉ qua event + `resolvePrincipal` (facade `identity`); consumer gọi command handler qua interface có kiểu |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Consumer dùng `TenantScope` từ envelope + kiểm membership; Bypass `break_glass` chỉ trong handler System Admin (R27 — API liên tenant của System Admin); `moderation_oncall_shifts` là bảng platform không chứa dữ liệu học sinh; chỉ soft-delete |
 | IV Server-authoritative | ✅ | Mốc gọi trực, hạn grant tính ở server; ghi có `Idempotency-Key` + audit |
-| V Xác thực, phân quyền | ✅ | `moderation.case.read/lead`, `platform.break_glass.request/approve` platform-only; hai người khác nhau; MFA; gateway nội bộ |
+| V Xác thực, phân quyền | ✅ | `moderation.case.read/lead`, `platform.break_glass.request/approve` platform-only; hai người khác nhau; role platform; gateway nội bộ |
 | VI An toàn trẻ em | ✅ | Email/audit/log không tên học sinh, không nội dung; học sinh chỉ thấy `ACCOUNT_LOCKED` trung tính (R14, R16) |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số theo tên; 4 tham số mới [Confirmed] đăng ký CONFIG_DEFAULTS (T046); SMTP/URL portal qua env (R3); mẫu email trong file dịch |
 | VIII UI tách logic, token | ✅ | Không có UI; email HTML dùng màu từ `design/admin-tokens/` sinh sẵn |

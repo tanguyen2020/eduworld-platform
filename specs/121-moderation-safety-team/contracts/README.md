@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (`x-service: chat`). Route `/admin/*` chỉ gateway nội bộ, `azp = eduworld-portal` + MFA.
+Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (`x-service: chat`). Route `/admin/*` chỉ gateway nội bộ, `azp = eduworld-portal` + role platform.
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|

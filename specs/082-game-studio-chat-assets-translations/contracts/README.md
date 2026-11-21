@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-internal: true`, `keycloakAdminBearer`, gateway nội bộ + MFA); `config_type` `sticker-packs`/`gifs` định tuyến tới module chat (`specs/openapi/modules/chat.v1.yaml`, operationId `*_chat`), loại còn lại tới module game (`game.v1.yaml`).
+Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-internal: true`, `keycloakAdminBearer`, gateway nội bộ + role platform); `config_type` `sticker-packs`/`gifs` định tuyến tới module chat (`specs/openapi/modules/chat.v1.yaml`, operationId `*_chat`), loại còn lại tới module game (`game.v1.yaml`).
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
@@ -20,7 +20,7 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-internal: true`, `keycloakAdminBe
 | `getGameTranslationJob` | `GET /api/v1/game-admin/translations/jobs/{job_id}` | eduworld-api (game) | `game.content.translate` | Có sẵn |
 | `getMyPermissions` | `GET /api/v1/me/permissions` | eduworld-api | đã đăng nhập | Có sẵn |
 
-Schema dùng: `GameConfigType`, `GameConfigInput`, `GameConfigVersion`, `ContentStatus`, `PublishRequest`, `RollbackRequest`, `MediaPresignRequest`, `MediaPresignResponse`, `MediaKind`, `TranslationExportRequest`, `TranslationImportRequest`, `TranslationJob`, `ContentLanguage`, `LocalizedName`, `Problem` (`VALIDATION_FAILED`, `TRANSLATION_INCOMPLETE`, `MEDIA_TOO_LARGE`, `MEDIA_TYPE_NOT_ALLOWED`, `CONTENT_VERSION_CONFLICT`, `VERSION_MISMATCH`, `PERMISSION_DENIED`, `MFA_REQUIRED`, `NOT_FOUND`, `IDEMPOTENCY_KEY_REUSED`, `PRECONDITION_REQUIRED`).
+Schema dùng: `GameConfigType`, `GameConfigInput`, `GameConfigVersion`, `ContentStatus`, `PublishRequest`, `RollbackRequest`, `MediaPresignRequest`, `MediaPresignResponse`, `MediaKind`, `TranslationExportRequest`, `TranslationImportRequest`, `TranslationJob`, `ContentLanguage`, `LocalizedName`, `Problem` (`VALIDATION_FAILED`, `TRANSLATION_INCOMPLETE`, `MEDIA_TOO_LARGE`, `MEDIA_TYPE_NOT_ALLOWED`, `CONTENT_VERSION_CONFLICT`, `VERSION_MISMATCH`, `PERMISSION_DENIED`, `NOT_FOUND`, `IDEMPOTENCY_KEY_REUSED`, `PRECONDITION_REQUIRED`).
 
 ## 2. Internal API
 

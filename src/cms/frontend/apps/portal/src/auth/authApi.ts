@@ -1,7 +1,7 @@
 // authApi (F051 T017, ADR-0091): the six portal session operations `/api/v1/auth/portal/*` — portalLogin,
 // refreshPortalToken, portalLogout, setupPortalPassword, forgotPortalPassword, resetPortalPassword. Public gateway,
 // same origin, `credentials: "include"` so the browser sends/stores the HttpOnly refresh cookie; refresh and logout
-// carry `X-EW-CSRF`. No Authorization, no X-Tenant-Id, no Idempotency-Key (contract). Bodies (password, OTP, setup
+// carry `X-EW-CSRF`. No Authorization, no X-Tenant-Id, no Idempotency-Key (contract). Bodies (password, setup
 // ticket, reset token) are never logged or stored; errors map to ApiError by Problem `code` (F050-AC-14).
 import type { RuntimeConfig } from '../shared/api/types';
 import { traceparent } from '../shared/api/ids';

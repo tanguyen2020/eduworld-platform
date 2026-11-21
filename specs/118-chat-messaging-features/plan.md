@@ -98,7 +98,7 @@ src/backend/modules/chat/
 
 - Forward: `Idempotency-Key`; mọi đích phải cùng `tenant_id` phiên. Edit: `If-Match`/`revision_expected`.
 - Audit: pin/unpin, thu hồi, mọi thao tác Game Studio (không nội dung tin).
-- `/game-admin/*`: gateway nội bộ, `azp = eduworld-portal` + MFA + role platform (R20).
+- `/game-admin/*`: gateway nội bộ, `azp = eduworld-portal` + role platform (R20).
 
 ### Quan sát
 

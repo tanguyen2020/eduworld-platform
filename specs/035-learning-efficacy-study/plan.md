@@ -30,7 +30,7 @@ Hai module mới trong module `learning`: `efficacy` (thỏa thuận, study, l�
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Mọi dữ liệu nguồn trong `eduworld_learning`; không gọi module khác; command ở `application/command/{efficacy,experiment}` + `UnitOfWork` + outbox `audit.recorded`; query ở `application/query/...` chỉ đọc `port/read` (replica); không mediator (ADR-0087) |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng T có `tenant_id` + RLS + `deleted_at`; bảng G platform; liên tenant chỉ `CrossTenantScope` của System Admin; rút = soft-delete dữ liệu dẫn xuất |
 | IV Server-authoritative | ✅ | Chấm bởi grader F042; không đáp án/kết quả xuống học sinh; thao tác ghi có `Idempotency-Key` + audit |
-| V Xác thực, phân quyền | ✅ | `platform.efficacy_study.manage`/`.export`, `platform.learning_experiment.manage` (platform-only, MFA, gateway nội bộ); `authz.Require` đầu mỗi handler |
+| V Xác thực, phân quyền | ✅ | `platform.efficacy_study.manage`/`.export`, `platform.learning_experiment.manage` (platform-only, role platform, gateway nội bộ); `authz.Require` đầu mỗi handler |
 | VI An toàn trẻ em | ✅ | Không xếp hạng, không công bố điểm, không XP theo điểm; mã giả danh; ô nhỏ bị ẩn; rào chắn R19 cho A/B |
 | VII Một nguồn sự thật, cấu hình | ✅ | Ngưỡng từ CONFIG_DEFAULTS (tham số mới đăng ký ở T007); không FR tự tạo; mọi chuỗi có `MaxLen`/`maxLength` |
 | VIII UI tách logic, token | ✅ | Portal chỉ gọi API, theme `ops-ui` |
@@ -114,7 +114,7 @@ src/cms/frontend/apps/portal/src/workspaces/content-studio/…/EfficacyInstrumen
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Route `/api/v1/admin/learning/*`: gateway nội bộ, `azp = eduworld-portal`, MFA, role platform; ghi dữ liệu tenant (agreement, class, withdrawal) bắt buộc `X-Tenant-Id` tenant đích; list dùng `tenant_ids[]` + `CrossTenantScope` + audit `cross_tenant.accessed`; ghi platform (study, wave, experiment) không header.
+- Route `/api/v1/admin/learning/*`: gateway nội bộ, `azp = eduworld-portal`, role platform; ghi dữ liệu tenant (agreement, class, withdrawal) bắt buộc `X-Tenant-Id` tenant đích; list dùng `tenant_ids[]` + `CrossTenantScope` + audit `cross_tenant.accessed`; ghi platform (study, wave, experiment) không header.
 - `Idempotency-Key` cho mọi POST tạo/chuyển trạng thái.
 - Audit: `research_agreement.created|revoked`, `efficacy_study.created|updated|cohort_added|cohort_removed (ADR-0095, thay class_added|class_removed)|activated|completed`, `efficacy_wave.scheduled|opened|closed`, `efficacy.participants_withdrawn`, `efficacy_report.generated`, `efficacy.dataset_exported`, `learning_experiment.created|updated|started|stopped`.
 - Job `efficacy-wave-monitor` tạo/đọc dữ liệu nhiều tenant qua `tenancy.Bypass(ctx, "efficacy_study")` (reason trong danh sách đóng ADR-0089 §3, client `learning_platform`) có metric `eduworld_tenant_filter_bypass_total{module,reason}` và audit `cross_tenant.accessed` theo tenant.

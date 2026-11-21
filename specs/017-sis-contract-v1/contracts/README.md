@@ -4,7 +4,7 @@
 
 ## 1. API (OpenAPI)
 
-Spec nguồn: `specs/openapi/modules/identity.v1.yaml` (gộp vào `specs/openapi/eduworld-api.v1.yaml`). Mọi route `x-internal: true` (APISIX internal + MFA với role platform).
+Spec nguồn: `specs/openapi/modules/identity.v1.yaml` (gộp vào `specs/openapi/eduworld-api.v1.yaml`). Mọi route `x-internal: true` (APISIX internal với role platform).
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|

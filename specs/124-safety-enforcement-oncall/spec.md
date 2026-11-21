@@ -21,6 +21,10 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F124-AC-16, AC-21: bỏ điều kiện "token thiếu MFA" và mã `403 MFA_REQUIRED` của API break-glass; `safety_moderator`, role tenant vẫn `403 PERMISSION_DENIED`. T033, T042, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F124-AC-21, Constitution. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Sanction `account_lock` khóa tài khoản và thu hồi phiên (Priority: P1) 🎯 MVP
@@ -100,7 +104,7 @@ Có yêu cầu pháp lý về tin nhắn DM của một học sinh không thuộ
 | F124-AC-18 | KHI người có `platform.break_glass.approve` **khác** người yêu cầu gọi `approveBreakGlassRequest`/`rejectBreakGlassRequest` (`decision_note` ≤ 1000, `If-Match`, `Idempotency-Key`), module chat PHẢI chuyển `approved` (đặt `expires_at`) hoặc `rejected` và audit; người yêu cầu tự duyệt PHẢI nhận `403 PERMISSION_DENIED`; yêu cầu không còn `pending` PHẢI trả `409 BREAK_GLASS_NOT_PENDING` | FR-MOD-005 · [CHILD_SAFETY §7](../../docs/10-security/CHILD_SAFETY.md) | — |
 | F124-AC-19 | TRONG KHI grant `approved` và chưa hết hạn, module chat PHẢI cho đúng người yêu cầu gọi `listBreakGlassMessages` chỉ trong phạm vi (tin của channel, hoặc tin do người dùng gửi, trong tenant đích và khoảng `window_from`–`window_to`), đọc qua `tenancy.Bypass(ctx, "break_glass")`, ghi audit `break_glass.messages_viewed` mỗi lượt và tăng `eduworld_tenant_filter_bypass_total{reason="break_glass"}`; ngoài phạm vi, người khác, grant hết hạn/thu hồi PHẢI trả `403 BREAK_GLASS_NOT_ACTIVE` | FR-MOD-005 · AGENTS R27 · ADR-0039 | TC-TEN-023 |
 | F124-AC-20 | KHI quá `expires_at` hoặc System Admin gọi `revokeBreakGlassGrant` (`reason` ≤ 1000), module chat PHẢI kết thúc grant ngay (`expired`/`revoked`), audit; `listBreakGlassGrants` PHẢI cho mọi người có `platform.break_glass.approve` xem toàn bộ yêu cầu (người, lý do, phạm vi, số tin đã xem) để hậu kiểm | FR-AUD-001 · FR-MOD-005 | — |
-| F124-AC-21 | NẾU `safety_moderator`, role tenant hoặc token thiếu MFA gọi API break-glass, THÌ HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED`/`403 MFA_REQUIRED` (route chỉ ở gateway nội bộ); NẾU chuỗi vượt `maxLength` hoặc `duration_minutes`/khoảng thời gian vượt giới hạn, THÌ PHẢI trả `422 VALIDATION_FAILED` | AGENTS R20, R28 · ADR-0027 | TC-TEN-024 |
+| F124-AC-21 | NẾU `safety_moderator`, role tenant hoặc token không có role platform được phép gọi API break-glass, THÌ HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` (route chỉ ở gateway nội bộ; không MFA — ADR-0094); NẾU chuỗi vượt `maxLength` hoặc `duration_minutes`/khoảng thời gian vượt giới hạn, THÌ PHẢI trả `422 VALIDATION_FAILED` | AGENTS R20, R28 · ADR-0027 | TC-TEN-024 |
 | F124-AC-22 | HỆ THỐNG PHẢI không chép nội dung tin vào audit, event hay log của break-glass; tin gameplay đã purge (ADR-0033) PHẢI không được khôi phục để phục vụ break-glass | FR-MOD-008 · AGENTS R14, R21 · ADR-0033 | TC-CHAT-022 |
 
 ### Edge Cases
@@ -149,7 +153,7 @@ Có yêu cầu pháp lý về tin nhắn DM của một học sinh không thuộ
 |---|---|
 | Khóa/mở khóa qua event, không gọi đồng bộ chat ↔ identity | AGENTS R29 · ADR-0042 |
 | Bypass `break_glass` chỉ trong handler break-glass của System Admin, audit + metric | AGENTS R20, R27 · ADR-0039 |
-| `/admin/moderation/oncall-shifts*`, `/admin/break-glass/*` chỉ gateway nội bộ, `azp = eduworld-portal` + MFA | AGENTS R20 · ADR-0027 |
+| `/admin/moderation/oncall-shifts*`, `/admin/break-glass/*` chỉ gateway nội bộ, `azp = eduworld-portal` + role platform | AGENTS R20 · ADR-0027 |
 | Không PII/nội dung case trong email, log INFO, audit | AGENTS R14 · NFR-PRIV-002 |
 | Thao tác ghi có `Idempotency-Key` + audit | AGENTS R10 · NFR-SEC-004 |
 

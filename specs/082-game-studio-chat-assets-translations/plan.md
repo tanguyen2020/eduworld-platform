@@ -30,7 +30,7 @@ Frontend (chunk `game-ops`): module `chat-assets/` (Sticker pack editor, thư vi
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Dịch thuộc module game (chủ dữ liệu); sticker/GIF chỉ gọi API module chat qua gateway; nhập dịch dùng lại command handler F078 qua interface có kiểu |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Chỉ dữ liệu platform; bảng mới G có `deleted_at`; bản ghi tenant bị loại; không hard-delete |
 | IV Server-authoritative | ✅ | Trạng thái dịch, giới hạn tệp, duyệt ≠ tác giả ở server; nhập dịch không sửa version published; Idempotency-Key + audit |
-| V Xác thực, phân quyền | ✅ | `game.content.translate`, `game.chat_assets.write` platform-only; `platform_staff` (azp + MFA + role platform); gateway nội bộ |
+| V Xác thực, phân quyền | ✅ | `game.content.translate`, `game.chat_assets.write` platform-only; `platform_staff` (azp + role platform); gateway nội bộ |
 | VI An toàn trẻ em | ✅ | Không upload học sinh, không GIF bên thứ ba; alt text bắt buộc |
 | VII Một nguồn sự thật, cấu hình | ✅ | Trường cần dịch suy từ JSON Schema (research R1); tham số theo tên; `MaxLen` cho cột mới |
 | VIII UI tách logic, token | ✅ | Admin/Ops theme; game UI chỉ trong `GamePreviewFrame` |

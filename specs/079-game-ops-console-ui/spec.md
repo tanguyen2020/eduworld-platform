@@ -1,7 +1,7 @@
 # Feature Specification: F079 — Workspace A — Game Operations Console UI (world, NPC, quest builder, reward, item, event, season)
 
 **Feature Branch**: `079-game-ops-console-ui` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/cms/frontend/apps/portal` (workspace A `game-ops`) · **Mốc**: M3 · **Phụ thuộc**: F051, F077, F078
-**Input**: Giao diện workspace A (chỉ platform, gateway nội bộ + MFA) cho Game Designer/Live-ops/System Admin: danh sách và editor có version chung (`ContentEditorShell`) cho mọi `GameConfigType` của module game; builder đặc thù cho quest, hội thoại NPC, thế giới/area, phần thưởng, item/shop/tiền tệ, level & XP, Event Builder 8 bước, season track, template sự kiện; thumbnail/turntable 3D; preview Godot Web. FR nguồn: FR-CMS-004, FR-CMS-017, FR-EVT-002, FR-GAM-007.
+**Input**: Giao diện workspace A (chỉ platform, gateway nội bộ + role platform; không MFA — ADR-0094) cho Game Designer/Live-ops/System Admin: danh sách và editor có version chung (`ContentEditorShell`) cho mọi `GameConfigType` của module game; builder đặc thù cho quest, hội thoại NPC, thế giới/area, phần thưởng, item/shop/tiền tệ, level & XP, Event Builder 8 bước, season track, template sự kiện; thumbnail/turntable 3D; preview Godot Web. FR nguồn: FR-CMS-004, FR-CMS-017, FR-EVT-002, FR-GAM-007.
 
 ## Clarifications
 
@@ -23,6 +23,10 @@
 ### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F079-AC-19: nhánh "`403 MFA_REQUIRED` → step-up MFA" bỏ; nhánh gateway nội bộ không kết nối được giữ nguyên. T002, T036, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: Input, F079-AC-19, bảng FR/tham số/Constitution. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -129,7 +133,7 @@ Danh sách item hiển thị thumbnail theo version; mở chi tiết xem turntab
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F079-AC-18 | KHI người dùng không có permission `game.*` nào mở URL `/game-ops/*`, Portal PHẢI hiển thị trang 403 và không tải chunk workspace A | FR-CMS-011 · ADR-0027 · AGENTS R20 | TC-CMS-AUTHZ-05 |
-| F079-AC-19 | NẾU API trả `403 MFA_REQUIRED`, THÌ Portal PHẢI step-up MFA rồi quay lại URL; NẾU gateway nội bộ không kết nối được, THÌ hiển thị "Cần kết nối mạng quản trị (VPN)" | FR-CMS-011 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-02 |
+| F079-AC-19 | NẾU API trả `403 PERMISSION_DENIED`, THÌ Portal PHẢI hiển thị trang 403 kèm `trace_id` (không có step-up MFA — ADR-0094); NẾU gateway nội bộ không kết nối được, THÌ hiển thị "Cần kết nối mạng quản trị (VPN)" | FR-CMS-011 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-02 |
 | F079-AC-20 | HỆ THỐNG PHẢI gửi `Idempotency-Key` cho mọi POST ghi (giữ nguyên khi thử lại), giới hạn mọi ô theo `maxLength` có bộ đếm, hiển thị lỗi theo `code` + `trace_id`, và không import component/Theme game ngoài `GamePreviewFrame` | AGENTS R10, R32 · ADR-0041 | TC-TEN-024 |
 | F079-AC-21 | KHI menu/action của feature (`menu.game_ops.world`, `menu.game_ops.npcs`, `menu.game_ops.quests`, `menu.game_ops.minigames`, `menu.game_ops.progression`, `menu.game_ops.items`, `menu.game_ops.shop`, `menu.game_ops.rewards`, `menu.game_ops.events`, `menu.game_ops.review`, `menu.game_ops.media`, `menu.game_ops.dashboard` và action con) đang tắt cho phạm vi phiên (`disabled_menus`/`disabled_actions` của `getMyPermissions`), Portal PHẢI ẩn menu và ẩn/khóa nút tương ứng (`<ActionGate actionKey>`); NẾU API trả `403 FEATURE_DISABLED`, Portal PHẢI hiện thông báo tính năng tạm tắt và tải lại quyền | FR-CMS-018 · ADR-0090 | TC-CMS-MENU-02 |
 
@@ -152,7 +156,7 @@ Danh sách item hiển thị thumbnail theo version; mở chi tiết xem turntab
 | FR-EVT-002 | Event Builder, lịch, season track, template | [ADMIN_PORTAL §3.15](../../docs/04-admin-portal/ADMIN_PORTAL.md) · [EVENT_SEASON_SYSTEM](../../docs/01-game-design/EVENT_SEASON_SYSTEM.md) |
 | FR-GAM-007 | UI đường cong XP, catalog nguồn XP, danh hiệu | [PROGRESSION_SYSTEM §3–§4](../../docs/01-game-design/PROGRESSION_SYSTEM.md) |
 | FR-CMS-006 | Workflow, version, preview Godot Web, publish, rollback (phía UI game) | [ADMIN_PORTAL §1.4, §4–§6](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
-| FR-CMS-011 | Lớp chặn bundle + hiển thị 403/MFA | [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
+| FR-CMS-011 | Lớp chặn bundle + hiển thị 403 | [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-EVT-008 | Biên tập song ngữ bắt buộc cho sự kiện platform | [ADMIN_PORTAL §1.5](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-CMS-018 | Menu/action của feature theo danh mục `specs/portal/menu-catalog.yaml`, ẩn khi tắt, xử lý `403 FEATURE_DISABLED` | [ADMIN_PORTAL §2.7](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 
@@ -173,13 +177,13 @@ Danh sách item hiển thị thumbnail theo version; mở chi tiết xem turntab
 | `event_decoration_bundle_max_mb` | Thông điệp lỗi gói trang trí |
 | `season_track_tiers` / `season_track_points_per_tier` | Mặc định bảng season track |
 | `school_event_max_duration_days` | Giới hạn `allowed_params` của template |
-| `portal_session_sso` | Phiên platform, step-up MFA |
+| `portal_session_sso` | Phiên platform (tối đa 8 giờ từ lúc nhập mật khẩu; không step-up — ADR-0094) |
 
 ### Ràng buộc phi chức năng
 
 | Ràng buộc | Nguồn |
 |---|---|
-| Workspace A chỉ gateway nội bộ + MFA; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
+| Workspace A chỉ gateway nội bộ + role platform; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
 | Không business logic trong UI (mô phỏng, validate nghiệp vụ ở server) | AGENTS R1 |
 | Admin/Ops design system; game UI chỉ trong `GamePreviewFrame` | AGENTS R32 · ADR-0047 |
 | Không hardcode nội dung game trong portal | AGENTS R2 |

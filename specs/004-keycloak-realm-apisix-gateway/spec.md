@@ -36,6 +36,10 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F004-AC-03, AC-25, AC-26, AC-27 sửa: flow `eduworld-portal-direct-grant` chỉ username → password → chặn người không phải nhân sự, không có bước OTP với bất kỳ role nào; bỏ client scope `eduworld-amr-loa`, authenticator config `ew-portal-ref-otp`, sub-flow `eduworld-portal-otp-configured`; required action `CONFIGURE_TOTP` tắt ở mức realm và `post-apply.mjs` gỡ khỏi người dùng còn tồn đọng; dev realm không seed OTP (`sa.admin`), `sa.moi` chỉ còn `UPDATE_PASSWORD`; `check-realm.mjs` kiểm luật mới. F004-AC-29 (spike R5) là kết quả lịch sử. Nhắc OTP/`amr`/`acr` trong research R5, plan, data-model, tasks (T013, T039–T043), quickstart là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: bảng FR (FR-AUTH-029: không mapper AMR/LoA). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Realm Keycloak được quản lý bằng code (Priority: P1)
@@ -144,7 +148,7 @@ DevOps áp cùng cấu hình route cho local (standalone) và dev/staging/prod (
 | FR-AUTH-003 | Route `/auth/game/*` không log/trace body ở APISIX + kiểm CI | SECURITY_ARCHITECTURE §3.1b, DEPLOYMENT §5 |
 | FR-AUTH-012 | Realm + route cấu hình qua env, không hardcode | KEYCLOAK_SSO §11 |
 | FR-AUTH-013 | Khai báo client, flow, scope, role, chính sách realm | KEYCLOAK_SSO §3–§5, §10 |
-| FR-AUTH-029 | Client `eduworld-portal` confidential + direct grant flow `eduworld-portal-direct-grant`, mapper AMR/LoA, theme chỉ cho trang action-token, route `/api/v1/auth/portal/*` (ADR-0091) | KEYCLOAK_SSO §3.3 · SECURITY_ARCHITECTURE §14 |
+| FR-AUTH-029 | Client `eduworld-portal` confidential + direct grant flow `eduworld-portal-direct-grant` (chỉ mật khẩu, không mapper AMR/LoA — ADR-0094), theme chỉ cho trang action-token, route `/api/v1/auth/portal/*` (ADR-0091) | KEYCLOAK_SSO §3.3 · SECURITY_ARCHITECTURE §14 |
 | FR-AUTH-018 | Plugin `ew-tenant-header` (lớp gateway của kiểm tra header) | API_DESIGN §2, §10 · MULTITENANCY §8 |
 | FR-SIS-007 | `/api/v1/sis` (và mọi prefix nội bộ) chỉ ở gateway nội bộ | API_DESIGN §9.15, §10 |
 | NFR-SEC-002 | TLS ≥ 1.2, HSTS ở gateway public; không log mật khẩu | DEPLOYMENT §5 |

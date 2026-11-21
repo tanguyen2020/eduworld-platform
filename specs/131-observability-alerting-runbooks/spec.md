@@ -16,6 +16,10 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: ADR-0094 bỏ OTP và mapper AMR/LoA khỏi realm `eduworld`, nên yêu cầu "đăng nhập Keycloak có MFA" của F131-AC-07 (Grafana/GlitchTip qua client `eduworld-ops-tools`, T005, T012, plan) không còn đạt được bằng realm này. [Confirmed] Giữ chặn bằng network `admin` (VPN) + role vận hành platform, bỏ yêu cầu `acr` MFA. **Owner chốt 2026-11-21:** không giữ MFA riêng cho công cụ vận hành (Grafana, GlitchTip, Prometheus, Alertmanager, Loki, Tempo) — cùng phạm vi ADR-0094; F131-AC-07 viết lại theo đó.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: Constitution, plan, contracts (công cụ quan sát không MFA — ADR-0094 mục 2b). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Thu thập metric, log, trace xuyên binary và module trên Swarm (Priority: P1)
@@ -139,7 +143,7 @@ Trực vận hành, đội backend, Safety Team có dashboard đúng [MONITORING
 | Ràng buộc | Nguồn |
 |---|---|
 | Không PII/token trong log, label, span | AGENTS R14 · MONITORING §2, §7, §8 |
-| Công cụ quan sát chỉ trong mạng admin + MFA | SECURITY_ARCHITECTURE §8 |
+| Công cụ quan sát chỉ trong mạng admin + đăng nhập Keycloak có role vận hành platform (không MFA — ADR-0094 mục 2b) | SECURITY_ARCHITECTURE §8 |
 | Dữ liệu quan sát lưu cùng vùng với production | MONITORING §9 |
 | Không Kubernetes metrics/KEDA | ADR-0024 |
 

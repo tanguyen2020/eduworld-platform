@@ -101,7 +101,7 @@ Không có quyết định mới. Lựa chọn thư viện JSON Schema validator
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Import: `tenant.sis.import` scope trường; read: `tenant.sis.read`; connection: `platform.sis_connection.manage` (gateway nội bộ + MFA).
+- Import: `tenant.sis.import` scope trường; read: `tenant.sis.read`; connection: `platform.sis_connection.manage` (gateway nội bộ + role platform).
 - Job platform chạy `TenantScope` theo `tenant_id` của connection; audit mỗi run và mỗi thay đổi (`actor = system:sis-sync:<connection_id>`, diff trường, không PII đầy đủ).
 - `Idempotency-Key` cho `createSisImport`, `createSisConnection`, `resolveSisReconciliationIssue`.
 - CSV: quét malware, mã hóa at-rest, chống CSV injection khi xuất lại.

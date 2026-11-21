@@ -1,7 +1,7 @@
 # Feature Specification: F121 — Moderation: báo cáo, sanction, hàng đợi Safety Team liên tenant, thông báo vụ việc cho trường
 
 **Feature Branch**: `121-moderation-safety-team` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `chat` (module moderation) · **Mốc**: M5 · **Phụ thuộc**: F116
-**Input**: Học sinh báo cáo tin/người dùng → case gắn tenant/trường; Platform Safety Team (`safety_moderator`, MFA) xử lý hàng đợi liên tenant **chỉ trong module moderation** qua `tenancy.Bypass(ctx, "moderation_case")`; sanction có thời hạn; thông báo tóm tắt (không chat thô) cho nhà trường để liên hệ phụ huynh; trực 24/7 cho case p1. FR nguồn: FR-MOD-002, FR-MOD-003, FR-MOD-005, FR-MOD-006, FR-MOD-008, FR-MOD-016, FR-MOD-017, FR-MOD-018.
+**Input**: Học sinh báo cáo tin/người dùng → case gắn tenant/trường; Platform Safety Team (`safety_moderator`, role platform qua gateway nội bộ) xử lý hàng đợi liên tenant **chỉ trong module moderation** qua `tenancy.Bypass(ctx, "moderation_case")`; sanction có thời hạn; thông báo tóm tắt (không chat thô) cho nhà trường để liên hệ phụ huynh; trực 24/7 cho case p1. FR nguồn: FR-MOD-002, FR-MOD-003, FR-MOD-005, FR-MOD-006, FR-MOD-008, FR-MOD-016, FR-MOD-017, FR-MOD-018.
 
 ## Clarifications
 
@@ -47,6 +47,10 @@ Owner đã duyệt trước các mặc định [Proposed]; khi tài liệu thi�
 
 - Q: Thông báo trường hiển thị lớp của học sinh? → A: không còn lớp; `SchoolSafetyNotification.students[]` bỏ `class_name`, thêm `grade_level` tùy chọn (khối, portal F122 phân giải cùng tên qua identity; module chat chỉ lưu `student_id` + `role`). Case/bằng chứng của channel `class`/`study_group` cũ (nếu có) giữ nguyên: channel bị soft-delete, tin giữ làm bằng chứng. AC giữ mã, F121-AC-18 sửa chữ.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: Input, F121-AC-06, Constitution. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Học sinh báo cáo, hệ thống tạo case (Priority: P1) 🎯 MVP
@@ -81,7 +85,7 @@ Owner đã duyệt trước các mặc định [Proposed]; khi tài liệu thi�
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F121-AC-06 | KHI người có `moderation.case.read` (Safety Moderator, System Admin; token `eduworld-portal` + MFA, gateway nội bộ) gọi `listModerationCases` không có `X-Tenant-Id`, module chat PHẢI đọc liên tenant qua `tenancy.Bypass(ctx, "moderation_case")`, lọc `tenant_ids`, `status`, `severity`, `assignee`, `category_code`, phân trang cursor, ghi audit và tăng `eduworld_tenant_filter_bypass_total{reason="moderation_case"}` | FR-MOD-016 · ADR-0072 · [ADMIN_PORTAL §2.5b](../../docs/04-admin-portal/ADMIN_PORTAL.md) · AC-MOD-026 | TC-CHAT-042 |
+| F121-AC-06 | KHI người có `moderation.case.read` (Safety Moderator, System Admin; token `eduworld-portal` + role platform, gateway nội bộ) gọi `listModerationCases` không có `X-Tenant-Id`, module chat PHẢI đọc liên tenant qua `tenancy.Bypass(ctx, "moderation_case")`, lọc `tenant_ids`, `status`, `severity`, `assignee`, `category_code`, phân trang cursor, ghi audit và tăng `eduworld_tenant_filter_bypass_total{reason="moderation_case"}` | FR-MOD-016 · ADR-0072 · [ADMIN_PORTAL §2.5b](../../docs/04-admin-portal/ADMIN_PORTAL.md) · AC-MOD-026 | TC-CHAT-042 |
 | F121-AC-07 | KHI người được gán hoặc trưởng ca gọi `getModerationCase`/`listModerationCaseMessages`, module chat PHẢI trả snapshot bằng chứng + ±200 tin ngữ cảnh của channel liên quan (nội dung gốc, revision, trạng thái), tìm `q` chỉ trong phạm vi đó, ghi audit `moderation.case.viewed`/`moderation.case.messages_viewed`/`moderation.case.searched` kèm `tenant_id` đích; NẾU không phải người được gán/trưởng ca, THÌ PHẢI trả `403 PERMISSION_DENIED` | FR-MOD-016 · FR-MOD-005 · [MODERATION §6.1](../../docs/03-social-multiplayer/MODERATION.md) | TC-CHAT-040 |
 | F121-AC-08 | KHI gọi `assignModerationCase` với `Idempotency-Key` và `X-Tenant-Id` = tenant của case, module chat PHẢI đặt `assignee_moderator_id` (tự nhận, hoặc trưởng ca gán người khác), chuyển `open → in_review`, phát `moderation.case_assigned`; case đã `resolved` PHẢI trả `409 MODERATION_CASE_CLOSED` | FR-MOD-003 · [MODERATION §6.2](../../docs/03-social-multiplayer/MODERATION.md) | TC-CHAT-007 |
 | F121-AC-09 | NẾU token `safety_moderator` gọi API ngoài module moderation (LMS, nội dung, hồ sơ học sinh, login events, `searchMessages`), THÌ module đích PHẢI trả `403 PERMISSION_DENIED`; NẾU role tenant gọi `/admin/moderation/*`, THÌ gateway public PHẢI không có route và backend trả `403` | FR-MOD-016 · AC-MOD-006 · AGENTS R20 | TC-CHAT-042 |
@@ -210,7 +214,7 @@ Case p1 tạo lúc 23:00 → nếu 15 phút chưa ai nhận, on-call nhận cả
 | Ràng buộc | Nguồn |
 |---|---|
 | Bypass chỉ trong handler moderation, có audit + metric | AGENTS R27 · ADR-0072 |
-| Endpoint `/admin/moderation/*` chỉ gateway nội bộ, `azp = eduworld-portal` + MFA | AGENTS R20 · ADR-0027 |
+| Endpoint `/admin/moderation/*` chỉ gateway nội bộ, `azp = eduworld-portal` + role platform | AGENTS R20 · ADR-0027 |
 | Thao tác ghi có `Idempotency-Key` + audit | AGENTS R10 |
 | Không log nội dung chat/PII ở INFO; audit không chép nội dung | AGENTS R14 |
 | Sanction thực thi ở pipeline kể cả chat always-on | AGENTS R15 · ADR-0020 |

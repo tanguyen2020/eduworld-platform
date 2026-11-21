@@ -1,7 +1,7 @@
 # Feature Specification: F059 — Workspace D — người dùng/role platform, catalog permission, audit toàn hệ thống, login events liên tenant, feature flags, màn tích hợp
 
 **Feature Branch**: `059-portal-platform-users-audit` · **Created**: 2026-11-16 · **Status**: Done · **Module**: `src/cms/frontend/apps/portal` (workspace D) · **Mốc**: M-C3 · **Phụ thuộc**: F012, F015, F057
-**Input**: Phần còn lại của workspace D (chỉ System Admin, gateway nội bộ + MFA) ngoài F057: Role platform/role dùng chung, UserRole platform và UserRole tenant ở tenant đích, người dùng mọi tenant, Permission catalog (chỉ xem), audit toàn hệ thống và nhật ký phân quyền, lịch sử đăng nhập game liên tenant, feature flag, màn Tích hợp (Keycloak/SIS/APISIX chỉ xem). FR nguồn: FR-AUD-001, FR-AUTH-032, FR-AUTH-016, FR-CMS-001, FR-CMS-012, FR-GAME-013, FR-ORG-007, FR-AUTH-010, FR-SIS-007.
+**Input**: Phần còn lại của workspace D (chỉ System Admin, gateway nội bộ + role platform; không MFA — ADR-0094) ngoài F057: Role platform/role dùng chung, UserRole platform và UserRole tenant ở tenant đích, người dùng mọi tenant, Permission catalog (chỉ xem), audit toàn hệ thống và nhật ký phân quyền, lịch sử đăng nhập game liên tenant, feature flag, màn Tích hợp (Keycloak/SIS/APISIX chỉ xem). FR nguồn: FR-AUD-001, FR-AUTH-032, FR-AUTH-016, FR-CMS-001, FR-CMS-012, FR-GAME-013, FR-ORG-007, FR-AUTH-010, FR-SIS-007.
 
 ## Clarifications
 
@@ -50,6 +50,10 @@
 ### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F059-AC-22: tổng quan tích hợp không còn hiển thị "MFA cho role platform" (`platform_mfa_required` bỏ khỏi `IntegrationOverview`), giữ tuổi tối đa phiên platform. F059-AC-25: nhánh `403 MFA_REQUIRED` → `MfaStepUp` bỏ; lỗi gateway nội bộ giữ nguyên. T044, T048, T051, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: Input, F059-AC-22 (tab Tích hợp: tuổi xác thực tối đa thay dòng MFA), F059-AC-25 (chỉ `VpnRequiredBanner`), bảng FR/tham số/Constitution, plan, contracts (`platform_mfa_required` đã gỡ). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -176,7 +180,7 @@ System Admin xem issuer/realm/client đang dùng, danh sách SIS connection và 
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F059-AC-22 | KHI System Admin mở Tích hợp, Portal PHẢI hiển thị `getIntegrationOverview` (Keycloak: issuer, realm, client id + mục đích, MFA cho role platform; APISIX: base URL public/nội bộ, nhóm prefix → service) và tab SIS: `listSisConnections` lọc `tenant_ids[]`, `listSisConnectionSchools`, `listSisSyncRuns` (trạng thái, thời điểm, số bản ghi lỗi) | FR-SIS-007 · FR-AUTH-012 · [ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md) | — |
+| F059-AC-22 | KHI System Admin mở Tích hợp, Portal PHẢI hiển thị `getIntegrationOverview` (Keycloak: issuer, realm, client id + mục đích, tuổi xác thực tối đa của phiên platform — không có dòng MFA, ADR-0094; APISIX: base URL public/nội bộ, nhóm prefix → service) và tab SIS: `listSisConnections` lọc `tenant_ids[]`, `listSisConnectionSchools`, `listSisSyncRuns` (trạng thái, thời điểm, số bản ghi lỗi) | FR-SIS-007 · FR-AUTH-012 · [ADMIN_PORTAL §10](../../docs/04-admin-portal/ADMIN_PORTAL.md) | — |
 | F059-AC-23 | HỆ THỐNG PHẢI không có thao tác ghi ở màn Tích hợp và không hiển thị secret, credential SIS hay token (chỉ `credential_ref` dạng che); NẾU response chứa trường ngoài schema, THÌ Portal PHẢI bỏ qua | FR-SIS-007 · AGENTS R3, R4 | — |
 
 ---
@@ -192,7 +196,7 @@ System Admin xem issuer/realm/client đang dùng, danh sách SIS connection và 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F059-AC-24 | KHI người dùng không có role `system_admin` mở URL bất kỳ màn F059, Portal PHẢI hiển thị trang 403 và không tải chunk workspace D; mục menu từng màn PHẢI ẩn khi thiếu permission tương ứng (`platform.role.read`, `platform.user_role.write`, `platform.user.manage`, `platform.audit.read`, `platform.cross_tenant.read`, `platform.feature_flag.write`, `platform.sis_connection.manage`) | FR-CMS-011 · FR-CMS-012 · ADR-0027 · AGENTS R20 | TC-CMS-AUTHZ-05 |
-| F059-AC-25 | NẾU API trả `403 MFA_REQUIRED` hoặc lỗi kết nối gateway nội bộ, THÌ Portal PHẢI dùng `MfaStepUp`/`VpnRequiredBanner` của F057; NẾU trả `403 PERMISSION_DENIED`, THÌ Portal PHẢI hiển thị "Không có quyền" kèm `trace_id` | FR-CMS-011 · ADR-0066 | TC-CMS-WS-02 |
+| F059-AC-25 | NẾU lỗi kết nối gateway nội bộ, THÌ Portal PHẢI dùng `VpnRequiredBanner` của F057 (không có step-up MFA — ADR-0094); NẾU trả `403 PERMISSION_DENIED`, THÌ Portal PHẢI hiển thị "Không có quyền" kèm `trace_id` | FR-CMS-011 · ADR-0066 | TC-CMS-WS-02 |
 | F059-AC-26 | HỆ THỐNG PHẢI gửi `Idempotency-Key` cho mọi POST ghi của F059 (tạo role, gán UserRole, tạo người dùng, khóa) và giữ nguyên khi thử lại; `If-Match` cho mọi PATCH/PUT/DELETE có ETag | AGENTS R10 · ADR-0010 | — |
 | F059-AC-27 | HỆ THỐNG PHẢI giới hạn mọi ô nhập (mã role, tên, mô tả, lý do, username, email, tìm kiếm, action) theo `maxLength`/`pattern` của schema OpenAPI và hiển thị bộ đếm ký tự | ADR-0041 · AGENTS R28 | TC-TEN-024 |
 | F059-AC-28 | KHI menu/action của feature (`menu.platform_admin.access_control`, `menu.platform_admin.audit_logs`, `menu.platform_admin.student_activity`, `menu.platform_admin.feature_toggles`, `menu.platform_admin.integrations` và action con) đang tắt cho phạm vi phiên (`disabled_menus`/`disabled_actions` của `getMyPermissions`), Portal PHẢI ẩn menu và ẩn/khóa nút tương ứng (`<ActionGate actionKey>`); NẾU API trả `403 FEATURE_DISABLED`, Portal PHẢI hiện thông báo tính năng tạm tắt và tải lại quyền | FR-CMS-018 · ADR-0090 | TC-CMS-MENU-02 |
@@ -218,7 +222,7 @@ System Admin xem issuer/realm/client đang dùng, danh sách SIS connection và 
 | FR-AUTH-016 | Ràng buộc scope khi gán UserRole (hiển thị, server kiểm) | [ADMIN_PORTAL §2.1](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-CMS-001 | Danh mục role hệ thống tenant/platform hiển thị chỉ đọc | [ADMIN_PORTAL §2.3](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-CMS-012 | Permission catalog chỉ xem | [ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
-| FR-CMS-011 | Màn F059 chỉ System Admin, gateway nội bộ + MFA | [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
+| FR-CMS-011 | Màn F059 chỉ System Admin, gateway nội bộ + role platform | [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-AUTH-031 | Tạo nhân sự, xử lý trùng username/email | [ADMIN_PORTAL §3.17](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-AUTH-010 | Khóa/mở/vô hiệu hóa tài khoản từ portal | [ACCOUNT_PROVISIONING](../../docs/09-identity/ACCOUNT_PROVISIONING.md) |
 | FR-GAME-013 | Lịch sử đăng nhập game liên tenant, không IP | [ADMIN_PORTAL §3.10](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
@@ -243,7 +247,7 @@ System Admin xem issuer/realm/client đang dùng, danh sách SIS connection và 
 | Tham số (CONFIG_DEFAULTS) | Dùng để |
 |---|---|
 | `principal_cache_ttl` | Thông điệp thời gian quyền mới có hiệu lực |
-| `portal_session_sso` | Step-up MFA, `auth_time` route platform |
+| `portal_session_sso` | Phiên platform tối đa 8 giờ từ lúc nhập mật khẩu (không step-up — ADR-0094) |
 | `identifier_uniqueness` | Thông điệp trùng username/email |
 | `sis_sync_schedule` | Hiển thị lịch sync mặc định ở tab SIS |
 
@@ -251,7 +255,7 @@ System Admin xem issuer/realm/client đang dùng, danh sách SIS connection và 
 
 | Ràng buộc | Nguồn |
 |---|---|
-| Chỉ gateway nội bộ + MFA; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
+| Chỉ gateway nội bộ + role platform; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
 | Không hardcode URL/realm/client id; lấy từ cấu hình | AGENTS R3 · FR-AUTH-012 |
 | Không hiển thị PII thừa, token, IP; log client không chứa lý do nhập tay | AGENTS R14 · ADR-0031 |
 | Admin/Ops design system, không component game | AGENTS R32 · ADR-0047 |

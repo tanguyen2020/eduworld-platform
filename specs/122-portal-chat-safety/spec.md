@@ -29,6 +29,10 @@
 - Q: Màn chính sách chat trường còn cấp lớp và channel lớp? → A: Không. Chính sách chat còn 3 cấp `platform → tenant → school` (FR-MOD-004); không có channel `class`/`study_group`, không có control theo khối hay theo lớp, không có lựa chọn "hiển thị tên thật cho bạn cùng lớp" (mọi người chơi khác chỉ thấy nickname + avatar) — [ADR-0095 §5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md). User Story 8, F122-AC-21, F122-AC-22, F122-AC-28 viết lại.
 - Q: Thông báo vụ việc cho trường còn hiển thị lớp của học sinh? → A: Không; hiển thị khối. `SchoolSafetyNotification.students[].class_name` → `grade_level` là delta của WP-C1 (F121, **chờ áp**) [Proposed — tên trường theo đề xuất WP-S]; bộ lọc danh sách chỉ theo trạng thái và thời gian (contract không có lọc lớp). F122-AC-18 viết lại.
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F122-AC-25, bảng tham số/Constitution, plan. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Hàng đợi case của Platform Safety Team (Priority: P1) 🎯 MVP
@@ -202,7 +206,7 @@ Theo yêu cầu của `ad.donvi`, `sm.antoan` thêm term bổ sung cho `pgd-demo
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F122-AC-24 | TRONG KHI người dùng là Safety Moderator, Portal PHẢI chỉ hiển thị module Kiểm duyệt của workspace E (không A, B, C, D, không Live dashboard/Game Analytics); KHI người dùng không có permission tương ứng mở URL màn an toàn chat của E/D, Portal PHẢI hiển thị trang 403 và không tải chunk workspace đó | FR-MOD-003 · ADR-0027 · AGENTS R20 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-01 |
-| F122-AC-25 | NẾU API E/D trả `403 MFA_REQUIRED`, THÌ Portal PHẢI step-up MFA và quay lại URL; NẾU gateway nội bộ không kết nối được, THÌ hiển thị "Cần kết nối mạng quản trị (VPN)" | ADR-0027 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-02 |
+| F122-AC-25 | NẾU API E/D trả `403 PERMISSION_DENIED`, THÌ Portal PHẢI hiển thị trang 403 kèm `trace_id` (không có step-up MFA — ADR-0094); NẾU gateway nội bộ không kết nối được, THÌ hiển thị "Cần kết nối mạng quản trị (VPN)" | ADR-0027 · [ADMIN_PORTAL §1.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CMS-WS-02 |
 | F122-AC-26 | HỆ THỐNG PHẢI giới hạn mọi ô nhập theo `maxLength` schema OpenAPI có bộ đếm ký tự, giữ nguyên `Idempotency-Key` khi thử lại, và chỉ dùng component/theme Admin/Ops (không component game) | ADR-0041 · ADR-0047 · AGENTS R10, R32 | TC-TEN-024 |
 | F122-AC-29 | KHI menu/action của feature (`menu.live_ops.moderation_cases`, `menu.live_ops.sanctions`, `menu.live_ops.tenant_terms`, `menu.platform_admin.chat_safety`, `menu.platform_admin.moderation_switches`, `menu.school_lms.safety_notifications`, `menu.school_lms.chat_safety` và action con) đang tắt cho phạm vi phiên (`disabled_menus`/`disabled_actions` của `getMyPermissions`), Portal PHẢI ẩn menu và ẩn/khóa nút tương ứng (`<ActionGate actionKey>`); NẾU API trả `403 FEATURE_DISABLED`, Portal PHẢI hiện thông báo tính năng tạm tắt và tải lại quyền | FR-CMS-018 · ADR-0090 | TC-CMS-MENU-02 |
 
@@ -247,14 +251,14 @@ Theo yêu cầu của `ad.donvi`, `sm.antoan` thêm term bổ sung cho `pgd-demo
 | `report_sla` | Hiển thị hạn xử lý case |
 | `moderation_switches` | Mặc định bật mọi bước |
 | `chat_policy_cache` | Thời gian hiệu lực thay đổi policy (chú thích UI) |
-| `portal_session_sso` | Phiên platform, step-up MFA |
+| `portal_session_sso` | Phiên platform (tối đa 8 giờ từ lúc nhập mật khẩu; không step-up — ADR-0094) |
 
 ### Ràng buộc phi chức năng
 
 | Ràng buộc | Nguồn |
 |---|---|
 | Không business logic ở UI: quyền, giới hạn, SLA do server; UI chỉ hiển thị/ẩn | AGENTS R1 |
-| Workspace E/D chỉ gateway nội bộ + MFA; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
+| Workspace E/D chỉ gateway nội bộ + role platform; chunk lazy-load không phải lớp bảo mật | AGENTS R20 · ADR-0027 |
 | Không hiển thị nội dung chat ngoài case; không log nội dung term/tin | AGENTS R14, R15 |
 | Theme Admin/Ops từ `design/admin-tokens`, không hardcode style | AGENTS R32 · ADR-0047 |
 | Accessibility WCAG 2.1 AA | NFR-A11Y-003 |

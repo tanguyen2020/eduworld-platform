@@ -34,6 +34,10 @@
 - Q: Club còn liên quan lớp/nhóm học tập? → A: Không. `ClubType` không có `study_group`; club do nhà trường lập không còn tùy chọn "thêm cả lớp" (`ClubCreate.class_id`, `add_whole_class` bỏ). Delta `ChannelType`, `ClubType`, `ClubCreate`, mô tả receipts trong `chat.v1` do WP-C1 áp trong OpenAPI bundle (contracts §6, **chờ áp**). F120-AC-17 viết lại.
 - Q: Danh sách retention và `allowed_hours` của channel bền vững? → A: Chỉ còn `team` cố định (club), `direct` và `world`/`area` (ephemeral, purge ở F117). F120-AC-24 viết lại; trạng thái channel `archived` (chỉ dùng khi study group bị xóa) bỏ khỏi F120 [Proposed — WP-S, không còn nguồn dùng].
 
+### Session 2026-11-22 (ADR-0094 — [Confirmed])
+
+- Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: plan (route nhân sự). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Thành viên channel bền vững đúng và cô lập (Priority: P1) 🎯 MVP

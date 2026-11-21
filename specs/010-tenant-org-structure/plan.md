@@ -102,7 +102,7 @@ Không có — quyết định đã có trong ADR-0005, ADR-0026, ADR-0060, ADR-
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Ghi platform (`/admin/*`): `azp = eduworld-portal` + MFA + role platform, gateway nội bộ; ghi tenant đích qua `X-Tenant-Id`.
+- Ghi platform (`/admin/*`): `azp = eduworld-portal` + role platform, gateway nội bộ; ghi tenant đích qua `X-Tenant-Id`.
 - `TenantScope` từ `authz.ScopeFor`; System Admin dùng `CrossTenantScope` + audit `cross_tenant.accessed`.
 - `Idempotency-Key` bắt buộc cho `createTenant`, `importSchools`, `createCommonTenantStudents`; audit action `tenant.created`, `tenant.updated`, `school.updated`, `school.approved`, `enrollment.changed`, `user.provisioned`.
 
