@@ -8,6 +8,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
+	chatapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
@@ -22,6 +23,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/regression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/security"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/consumer"
+	chatfacade "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/facade"
 	chathttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/job"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/natscmd"
@@ -41,9 +43,24 @@ import (
 // Name is the module name used for its database (eduworld_chat), env prefix and checks.
 const Name = "chat"
 
-// Module is the registered module. Facade() and Wire(Imports) are added when the module exposes or
-// consumes facade operations (specs/openapi/modules/*.internal.v1.yaml).
-type Module struct{}
+// Facade is the part of the chat facade (api.StrictServerInterface, specs/openapi/modules/chat.internal.v1.yaml)
+// implemented: moderateDisplayText (F116, x-allowed-callers: competition — party and team names).
+type Facade interface {
+	ModerateDisplayText(ctx context.Context, req chatapi.ModerateDisplayTextRequestObject) (chatapi.ModerateDisplayTextResponseObject, error)
+}
+
+// Module is the registered module; Facade() serves the facade operations of module chat.
+type Module struct {
+	facade Facade
+}
+
+// Facade returns the in-process facade of module chat (nil in a binary that does not load the moderation pipeline).
+func (m *Module) Facade() Facade {
+	if m == nil || m.facade == nil {
+		return nil
+	}
+	return m.facade
+}
 
 // Register wires the module into the running binary: health checks everywhere; in core-api the social routes (F095),
 // the chat routes and the NATS chat commands of the gateway (F115: one send use case, JetStream before "Sent") and the
@@ -95,6 +112,7 @@ func Register(r *module.Registry) (*Module, error) {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
 	var validator port.ContentValidator = pipe.Validator
+	mod := &Module{facade: chatfacade.Facade{Moderation: pipe.Validator}}
 	if r.ServesHTTP() || runsChat {
 		if err := command.RequireValidator(chatCfg.Env, validator); err != nil {
 			return nil, err
@@ -189,7 +207,7 @@ func Register(r *module.Registry) (*Module, error) {
 		if err := r.Relay(Name); err != nil {
 			return nil, fmt.Errorf("chat: %w", err)
 		}
-		return &Module{}, nil
+		return mod, nil
 	}
 
 	// Outbox relay (worker events): EVT_CHAT (friend.*, user.*, audit.recorded, chat.message_created).
@@ -205,5 +223,5 @@ func Register(r *module.Registry) (*Module, error) {
 	})
 	expiry := command.Expiry{UoW: core.UoW, Repo: persistence.Expiry{}}
 	r.Job(Name, job.ExpireFriendRequests, cfg.ExpiryInterval, module.JobFunc(job.ExpireFriendRequestsJob(expiry)))
-	return &Module{}, nil
+	return mod, nil
 }
