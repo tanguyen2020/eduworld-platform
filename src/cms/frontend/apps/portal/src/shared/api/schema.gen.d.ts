@@ -14604,11 +14604,11 @@ export interface components {
             items: components["schemas"]["School"][];
             page: components["schemas"]["PageInfo"];
         };
-        /** @description Xử lý xung đột ở portal trường (F052-AC-10): `fixed_in_source` → `resolved`, `ignore` → `ignored`; `reason` bắt buộc, ghi vào `resolution_note` và audit. */
+        /** @description Xử lý xung đột ở portal trường (F052-AC-10): `fixed_in_source` → `resolved`, `ignore` → `ignored`; `merge_requested` (F011 T041, OQ F045-7) = đề nghị gộp hai tài khoản, chỉ issue `duplicate_identifier`/`possible_duplicate`, issue giữ `open` (System Admin chạy `mergeUsers`), đã đề nghị → `409 CONFLICT`; `reason` bắt buộc, ghi vào `resolution_note` và audit. */
         SchoolReconciliationResolve: {
             reason: string;
             /** @enum {string} */
-            resolution: "fixed_in_source" | "ignore";
+            resolution: "fixed_in_source" | "ignore" | "merge_requested";
         };
         /** @description Thông báo vụ việc cho nhà trường (MODERATION §6.4) — không có nội dung chat thô, chỉ học sinh của trường nhận */
         SchoolSafetyNotification: {

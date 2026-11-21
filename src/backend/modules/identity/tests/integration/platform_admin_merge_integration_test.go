@@ -94,9 +94,20 @@ func TestPlatformAdminMerge(t *testing.T) {
 		sis_connection_id, student_external_id, linked_at) VALUES ($1, $2, now(), now(), $3, $4, $5, 'HS-A2', now())`, ids.New(), a.tenant, a2, a.school, conn); err != nil {
 		t.Fatal(err)
 	}
-	requested := "merge_requested"
-	issue := mergeIssue(ctx, t, e, a, &requested)
+	// F011 T041 (OQ F045-7): the School Admin proposes the merge on the school route; the issue stays open.
+	requested := "merge_requested" // later issues of the test are seeded already proposed
+	issue := mergeIssue(ctx, t, e, a, nil)
 	notRequested := mergeIssue(ctx, t, e, a, nil)
+	propose := func(id uuid.UUID) httpResp {
+		return p.do(t, "POST", "/schools/"+a.school+"/reconciliation-issues/"+id.String()+":resolve", sch,
+			map[string]string{"X-Tenant-Id": a.tenant, "Idempotency-Key": newKey()}, map[string]any{"resolution": "merge_requested", "reason": "cùng một học sinh"})
+	}
+	if r := propose(issue); r.status != 200 || r.body["status"] != "open" || r.body["resolution"] != "merge_requested" {
+		t.Fatalf("propose merge: %d %s", r.status, r.raw)
+	}
+	if r := propose(issue); r.status != 409 {
+		t.Fatalf("propose twice: %d %s", r.status, r.raw)
+	}
 
 	merge := func(key string, body map[string]any, tok string, hdr map[string]string) httpResp {
 		h := map[string]string{"Idempotency-Key": key}

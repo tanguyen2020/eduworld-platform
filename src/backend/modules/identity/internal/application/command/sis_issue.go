@@ -10,6 +10,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/platformadmin"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -48,7 +49,7 @@ type ResolveSisIssue struct {
 
 var (
 	resolutions       = map[string]bool{"link": true, "same_person": true, "ignore": true, "fixed_in_source": true}
-	schoolResolutions = map[string]bool{"ignore": true, "fixed_in_source": true}
+	schoolResolutions = map[string]bool{"ignore": true, "fixed_in_source": true, platformadmin.ResolutionMergeRequested: true}
 )
 
 // AuditSisIssueResolved is the audit action of both resolve routes (contract resolveSchoolReconciliationIssue).
@@ -59,7 +60,7 @@ func (in ResolveSisIssueInput) validate() (string, error) {
 	note := strings.TrimSpace(in.Note)
 	if in.SchoolID != nil {
 		if !schoolResolutions[in.Resolution] {
-			return "", problem.Invalid("resolution", problem.SubInvalid, "must be fixed_in_source or ignore")
+			return "", problem.Invalid("resolution", problem.SubInvalid, "must be fixed_in_source, ignore or merge_requested")
 		}
 		if n := utf8.RuneCountInString(note); n < 3 || n > 500 {
 			return "", problem.Invalid("reason", problem.SubInvalid, "must be 3 to 500 characters")
@@ -131,6 +132,17 @@ func (h ResolveSisIssue) Handle(ctx context.Context, in ResolveSisIssueInput) (o
 		if row.Status != "open" {
 			return problem.New(problem.Conflict, "the issue is no longer open")
 		}
+		merge := in.Resolution == platformadmin.ResolutionMergeRequested
+		if merge {
+			// F011 T041 (OQ F045-7): the School Admin proposes a merge of two accounts of a duplicate issue; the issue
+			// stays open until a System Admin runs mergeUsers (F045), which then resolves it as merged.
+			if row.Type != platformadmin.IssueDuplicateIdentifier && row.Type != platformadmin.IssuePossibleDuplicate {
+				return problem.Invalid("resolution", problem.SubInvalid, "merge_requested applies to duplicate_identifier and possible_duplicate issues")
+			}
+			if row.Resolution != nil && *row.Resolution == platformadmin.ResolutionMergeRequested {
+				return problem.New(problem.Conflict, "a merge is already requested for this issue")
+			}
+		}
 		if in.Resolution == "same_person" || in.Resolution == "link" {
 			if err := h.linkExisting(ctx, row); err != nil {
 				return err
@@ -140,6 +152,9 @@ func (h ResolveSisIssue) Handle(ctx context.Context, in ResolveSisIssueInput) (o
 		row.Status, row.Resolution, row.ResolvedBy, row.ResolvedAt = "resolved", &res, &by, &now
 		if in.Resolution == "ignore" {
 			row.Status = "ignored"
+		}
+		if merge { // still open, not resolved by anyone yet
+			row.Status, row.ResolvedBy, row.ResolvedAt = "open", nil, nil
 		}
 		if note != "" {
 			row.Note = &note

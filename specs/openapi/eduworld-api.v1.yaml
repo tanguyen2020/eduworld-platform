@@ -21652,9 +21652,9 @@ components:
       type: object
       additionalProperties: false
       required: [resolution, reason]
-      description: "Xử lý xung đột ở portal trường (F052-AC-10): `fixed_in_source` → `resolved`, `ignore` → `ignored`; `reason` bắt buộc, ghi vào `resolution_note` và audit."
+      description: "Xử lý xung đột ở portal trường (F052-AC-10): `fixed_in_source` → `resolved`, `ignore` → `ignored`; `merge_requested` (F011 T041, OQ F045-7) = đề nghị gộp hai tài khoản, chỉ issue `duplicate_identifier`/`possible_duplicate`, issue giữ `open` (System Admin chạy `mergeUsers`), đã đề nghị → `409 CONFLICT`; `reason` bắt buộc, ghi vào `resolution_note` và audit."
       properties:
-        resolution: { type: string, enum: [fixed_in_source, ignore] }
+        resolution: { type: string, enum: [fixed_in_source, ignore, merge_requested] }
         reason: { type: string, minLength: 3, maxLength: 500 }
 
     # ---------- game: progression & exploration (PROGRESSION_SYSTEM, ADR-0049)

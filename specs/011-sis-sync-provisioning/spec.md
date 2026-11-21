@@ -56,6 +56,7 @@ Quyết định khi hiện thực F011; mục [Confirmed] đã được owner ch
 ### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
 
 - Q: T040 — giá trị các field mới? → A: [Confirmed] `class.synced.source_version` = `org.classes.version` sau khi ghi (tạo = 1, cập nhật +1), `academic_year_id` = năm học của dòng lớp (khi cập nhật lấy năm học đã lưu, không đổi theo bản ghi SIS), `is_virtual` = cột của dòng (lớp SIS luôn `false`); `school.synced.source_version` = `org.schools.version` hiện tại (apply SIS không sửa dòng trường). Cập nhật bản ghi SIS của lớp đã xóa mềm không còn "cập nhật 0 dòng" rồi phát `class.synced` (projection sẽ hiện lại lớp): bản ghi không được áp (`404 NOT_FOUND` của bản ghi, savepoint hoàn tác).
+- Q: T041 — `merge_requested` ghi gì? → A: [Confirmed] Chỉ route trường (`resolveSchoolReconciliationIssue`; route platform vẫn trả 422 cho giá trị này), chỉ issue `duplicate_identifier`/`possible_duplicate` của trường (loại khác → `422 VALIDATION_FAILED`), `reason` 3–500 vào `resolution_note`; issue giữ `status = open`, `resolution = merge_requested`, `resolved_by`/`resolved_at` để trống (chưa ai giải quyết); đề nghị lần hai → `409 CONFLICT`; trường vẫn có thể đóng issue bằng `fixed_in_source`/`ignore`. Audit `sis.reconciliation_issue.resolved` (metadata `resolution = merge_requested`, `route = school`); System Admin chạy `mergeUsers` (F045) như cũ.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

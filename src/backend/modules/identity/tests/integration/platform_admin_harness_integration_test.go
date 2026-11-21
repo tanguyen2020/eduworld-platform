@@ -69,7 +69,9 @@ func platformHTTP(ctx context.Context, t *testing.T, e *env, owners func(port.Ow
 	}
 	deps := command.PlatformAdminDeps{UoW: e.uow, Repo: write.PlatformAdminRepo{}, Owners: gw, Events: e.deps.Events, Audit: e.deps.Audit, Settings: write.SettingsRepo{},
 		Sagas: saga.Engine{UoW: e.uow, Repo: write.SagaRepo{}, Backoff: time.Millisecond, MaxAttempts: 3}}
-	if err := identityhttp.Register(srv, identityhttp.Handlers{ListTenants: query.ListTenants{Model: read.TenantModel{Session: e.read}, Cursors: codec}}); err != nil {
+	if err := identityhttp.Register(srv, identityhttp.Handlers{ListTenants: query.ListTenants{Model: read.TenantModel{Session: e.read}, Cursors: codec},
+		// F011 T041: the School Admin proposes a merge on the school route before mergeUsers.
+		ResolveSisIssue: command.ResolveSisIssue{UoW: e.uow, Issues: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}}); err != nil {
 		t.Fatal(err)
 	}
 	if err := identityhttp.RegisterPlatformAdmin(srv, identityhttp.PlatformAdminHandlers{
