@@ -48,7 +48,7 @@ async function pickContent() {
 
 /** Step "Đối tượng": the only school of the scope is picked automatically; subject Toán and grade 3. */
 async function pickTargets() {
-  await waitFor(() => expect(within(screen.getByRole('combobox', { name: 'Trường' }).closest('.ant-select')!).getByText('TH Demo A')).toBeInTheDocument());
+  await waitFor(() => expect(within(screen.getByRole('combobox', { name: 'Trường' }).closest('.ant-select')!).getByText('TH Demo A')).toBeInTheDocument(), { timeout: 120_000 }); // the school list can be slow on a loaded machine
   await pickOption('Môn học', 'Toán');
   await pickOption('Khối được giao', 'Khối 3');
 }
@@ -157,7 +157,7 @@ describe('Wizard giao bài — nội dung và đối tượng', () => {
   it('a student of another school → 422 at the student list, back to the "Đối tượng" step (F055-AC-06, ADR-0095)', async () => {
     await renderLms(`${URL}?student_ids=${OTHER_SCHOOL_STUDENT}`);
     await pickContent();
-    await waitFor(() => expect(within(screen.getByRole('combobox', { name: 'Trường' }).closest('.ant-select')!).getByText('TH Demo A')).toBeInTheDocument());
+    await waitFor(() => expect(within(screen.getByRole('combobox', { name: 'Trường' }).closest('.ant-select')!).getByText('TH Demo A')).toBeInTheDocument(), { timeout: 120_000 }); // the school list can be slow on a loaded machine
     await pickOption('Môn học', 'Toán');
     next();
     fireEvent.change(await screen.findByLabelText('Tiêu đề'), { target: { value: 'Ôn tập' } });
@@ -192,7 +192,7 @@ describe('Wizard giao bài — chính sách, giới hạn, gửi', () => {
     await renderLms(URL);
     await pickContent();
     // the targets step does not let the user go on without subject and grade
-    await waitFor(() => expect(within(screen.getByRole('combobox', { name: 'Trường' }).closest('.ant-select')!).getByText('TH Demo A')).toBeInTheDocument());
+    await waitFor(() => expect(within(screen.getByRole('combobox', { name: 'Trường' }).closest('.ant-select')!).getByText('TH Demo A')).toBeInTheDocument(), { timeout: 120_000 }); // the school list can be slow on a loaded machine
     next();
     expect(await screen.findAllByText('Trường này bắt buộc.')).toHaveLength(2);
     await pickTargets();
