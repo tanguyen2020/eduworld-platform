@@ -132,6 +132,15 @@
 - **F056-2** — Ngày năm học/học kỳ của trường cho preset "Học kỳ này"/"Năm học này" (đọc `academic_years` qua API công khai). Hiện: hai preset bị vô hiệu kèm giải thích. **Chốt 2026-11-21:** thêm operation đọc năm học (F010 T047) rồi bật preset (T052).
 - **F056-3** — `DashboardMeta` thiếu `available_from` ("Chưa có số liệu trước ngày …") và cờ cảnh báo trễ replica (Edge Cases); owner F043 bổ sung contract. **Chốt 2026-11-21:** F043 T042 thêm hai trường, F056 T052 hiển thị.
 
+## ADR-0095 — dashboard trường → khối → học sinh, kết quả theo bài giao (WP-P1, 2026-11-21)
+
+Nguồn: Clarifications "Session 2026-11-21 (ADR-0095 — [Confirmed])" của spec; CODE_PLAN §4.2 WP-P1.
+
+- [x] T054 Gỡ trang lớp (`dashboard/class/ClassDashboardPage.tsx`, route `classes/:classId`, `useClassDashboard`), bộ lọc lớp, danh sách/liên kết lớp ở widget bài giao, LO yếu, "Cần chú ý"; khối 1–9 theo trường; breadcrumb trường → khối → học sinh; tên học sinh qua trạng thái điều hướng (F056-AC-01, AC-08, AC-10, AC-11; AC-22 Removed) — file: `dashboard/{SchoolDashboardScreen,DashboardFilterBar,DashboardUi}.tsx`, `dashboard/model/filters.ts`, `dashboard/overview/OverviewPage.tsx`, `dashboard/student/StudentProfilePage.tsx` — kiểm: `__tests__/grade-student.test.tsx`, `overview.test.tsx`, `permissions.test.tsx`
+- [x] T055 "Kết quả bài/đề" theo bài giao (`listAssignments` lọc trường/môn/khối, đối tượng, đã nộp, điểm trung bình) → Phân tích (`getExamSessionReport`, xuất `assignment_results`); nút "Giao ôn tập…" điền trường/môn/khối của bài; bỏ `getCourseResults` (F056-AC-12, AC-13, AC-14, AC-15) — file: `dashboard/results/ResultsScreen.tsx`, `dashboard/analysis/ItemAnalysisPage.tsx`, `dashboard/api/resultsApi.ts` — kiểm: `__tests__/results-reports.test.tsx`
+- [x] T056 Báo cáo: bỏ `course_results` và `skill_map` lớp khỏi màn xuất, `regulation_reference` không lọc lớp; mức tham khảo đánh số học sinh (F056-AC-14, AC-16) — file: `dashboard/reports/{ReportsScreen,ReferenceLevelsPage}.tsx`, MOCK `dashboard-mock.ts` (giữ trường lớp trong fixture để chứng minh không hiển thị)
+- [x] T057 Sau WP-L2: trang khối `grades/:grade` (`getGradeDashboard`: heatmap LO, học sinh cursor, "< 5" khi `suppressed`), tổng quan `widgets.grades`/`by_grade`/`grade_levels`/`grade_level`, `skill_map` theo khối, mức tham khảo lọc khối và tên từ `listTenantGradeStudents` — file: `dashboard/grade/GradeDashboardPage.tsx`, `dashboard/overview/OverviewPage.tsx`, `dashboard/reports/*`, `test/dashboard-mock.ts` — kiểm: `grade-student.test.tsx`, `results-reports.test.tsx`
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T006 trước T027/T031) → US1 → US2, US6 (song song) → US3, US4 → US5 → Polish.

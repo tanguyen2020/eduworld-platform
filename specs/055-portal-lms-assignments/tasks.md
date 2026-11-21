@@ -123,6 +123,16 @@
 - [x] T049 [P] Test F055-AC-24: tắt `menu.school_lms.study_groups` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/lms-feature-toggle.spec.ts` — **2026-11-21:** `permissions.test.tsx` › study groups tắt + FEATURE_DISABLED (vitest với MOCK; bản Playwright chờ backend compose)
 - [x] T050 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F055-AC-24) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx` — **2026-11-21:** `school-lms/index.tsx` gắn màn vào khóa catalog; nút bọc `<ActionGate actionKey>`
 
+## ADR-0095 — giao bài theo khối, gỡ course/lộ trình/lịch/nhóm học tập (WP-P1, 2026-11-21)
+
+Nguồn: Clarifications "Session 2026-11-21 (ADR-0095 — [Confirmed])" của spec; CODE_PLAN §4.2 WP-P1; contract WP-L1 (`AssignmentTarget` `grade`/`students`, `school_id`, `subject_id`).
+
+- [x] T051 Gỡ màn Course/Learning Path (US3), Lịch, Nhóm học tập (US4): `lms/courses/`, `lms/schedule/`, `lms/study-groups/`, `lms/api/{courses,schedules}.ts`, gán màn trong `school-lms/index.tsx`, khóa i18n `lms.course|path|schedule|group|courseStatus|unlockMode|unlockRule|scheduleKind`, nhãn catalog, MOCK `lms-mock.ts` (F055-AC-13…AC-17 Removed) — kiểm: `permissions.test.tsx` (không route/menu/lời gọi course, lịch, nhóm)
+- [x] T052 Wizard bước "Đối tượng" theo khối: trường (`SchoolSelect`), môn (`listSubjects`, lọc môn của role theo môn), "Theo khối" (khối trường dạy ∩ 1–9, thêm học sinh khối khác cùng trường, bớt học sinh, cảnh báo exclude thắng include) hoặc "Học sinh cụ thể"; `toTargets` (mỗi khối một target, include ở khối đầu, exclude ở mọi khối); giới hạn từ `fieldSchemas` (≤ 9 target, khối 1–9, ≤ 200 học sinh); `422` tại `/targets/i/…` → đúng ô và bước; lối tắt `?school_id&subject_id&grade&student_ids` (F055-AC-02, AC-04, AC-05, AC-06) — file: `lms/model/assignmentForm.ts`, `lms/model/fieldSchemas.ts`, `lms/api/targets.ts`, `lms/assignments/wizard/{StepTargets,AssignmentWizard}.tsx` — kiểm: `model.test.ts`, `wizard.test.tsx`
+- [x] T053 Danh sách bài giao lọc trường/môn/khối/trạng thái (`listAssignments` `school_id`, `subject_id`, `grade_level`), cột "Đối tượng" (`TargetsText`); bảng nộp bài không cột lớp — file: `lms/api/assignments.ts`, `lms/assignments/{AssignmentsScreen,AssignmentFilterBar}.tsx`, `lms/LmsUi.tsx`
+- [x] T054 Kiểm thử: `pnpm typecheck` 0 lỗi, `pnpm lint` sạch, `pnpm gen:check` khớp; Vitest `wizard.test.tsx` 12/12, `model.test.ts`, `permissions.test.tsx` 7/7; toàn bộ portal 2 worker (2026-11-22): 847/851 lần đầu, 4 lỗi đã sửa (nhãn menu cũ, MOCK `listTenantUsers`) hoặc chạy lại pass (chậm do tải máy)
+- [x] T055 Sau WP-I1: ô chọn học sinh của wizard dùng `listTenantGradeStudents` (bộ chọn khối + tìm trên server) thay tìm tạm thời `listTenantUsers`; test `wizard.test.tsx` (lời gọi `/tenant/schools/{school_id}/grades/{grade}/students`, không gọi `/tenant/users`) — file: `lms/api/targets.ts`, `lms/assignments/wizard/StepTargets.tsx`
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 (cần bài đã tạo) → US6 (song song từ khi có US1) → US3, US4 (song song) → US5 (cần T004 merge) → Polish.

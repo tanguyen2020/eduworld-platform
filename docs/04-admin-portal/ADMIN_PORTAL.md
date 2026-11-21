@@ -39,7 +39,7 @@
 |---|---|---|---|
 | **A. Game Operations Console** | Chỉ platform: Game Designer, Live-ops, Competition Admin, System Admin | Nội bộ | Game Dashboard ✅ tối thiểu (F079, owner 2026-11-20: số cấu hình theo trạng thái workflow và số item cần dịch — `translation_status` ≠ `complete`, từ `listGameConfigs` có field của F082; không có số liệu chơi — dùng Live dashboard + Game Analytics ở workspace E, F080) · Game World / Zone / Area ✅ (§3.3) · NPC Management ✅ · Quest Builder ✅ ([QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md)) · **Challenge Builder** 🆕 · **Boss Management** 🆕 · **Level & XP Configuration** 🆕 · **Achievement Builder** 🆕 · **Item / Inventory Catalog / Shop / Currency** 🆕 (§3.12) · Reward Configuration ✅ · **Event Builder & Season Track** 🆕 (§3.15, [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md)) · Player Management ⛔ · Party & Group Management ⛔ (tra cứu tài khoản qua Người dùng ở workspace D, vi phạm qua Kiểm duyệt, trạng thái party qua Live dashboard) · Competition Management ✅ (§3.4) · Leaderboard Configuration ✅ · Sticker/GIF ✅ · Game Analytics → workspace E (F080) |
 | **B. Learning Content Studio** | Tenant (dữ liệu tenant) + Content Admin/Reviewer platform (dữ liệu platform) + System Admin | Public (tenant) / nội bộ (dữ liệu platform) | Curriculum · Grade · Subject · Topic · Learning Objective · Learning Unit ✅ (§3.1) · Lesson Builder ✅ (§3.2) · **Learning Activity Builder theo activity type** 🆕 (§3.13) · Question Bank / Quiz / Exercise Builder ✅ · **Video Manager** 🆕 · **Audio Manager** 🆕 · **Simulation Configuration** 🆕 · Assessment Builder ✅ · Learning Path Builder 🟡 ([SCHOOL_LMS](SCHOOL_LMS.md)) · Preview ✅ (§5) · Versioning / Approval / Publish ✅ (§3.11, §4, §6) |
-| **C. School & Learning Management** | Tenant + System Admin (dropdown tenant) | Public | School · Class · Student Directory ✅ · SIS Synchronization ✅ · Course & Learning Path ✅ · Learning Assignment ✅ · **School Learning Dashboard** (trường → lớp → học sinh) ✅ ([SCHOOL_LMS §8](SCHOOL_LMS.md#8-school-learning-dashboard)) · Learning Analytics ✅ · Assessment Results & báo cáo tham khảo TT27/TT22 ✅ · Reports ✅ · Thông báo an toàn của trường ✅ (§3.9) · Hoạt động học sinh ✅ (§3.10) · Cài đặt tenant/trường (gồm khung giờ truy cập) ✅ |
+| **C. School & Learning Management** | Tenant + System Admin (dropdown tenant) | Public | School · Học sinh theo khối ✅ · SIS Synchronization ✅ · Learning Assignment (theo khối của trường ± học sinh — ADR-0095) ✅ · **School Learning Dashboard** (trường → khối → học sinh — ADR-0095) ✅ ([SCHOOL_LMS §8](SCHOOL_LMS.md#8-school-learning-dashboard)) · Learning Analytics ✅ · Assessment Results & báo cáo tham khảo TT27/TT22 ✅ · Reports ✅ · Thông báo an toàn của trường ✅ (§3.9) · Hoạt động học sinh ✅ (§3.10) · Cài đặt tenant/trường (gồm khung giờ truy cập) ✅ |
 | **D. Platform Administration** | Chỉ System Admin | Nội bộ | User & Role ✅ · Permission (catalog, chỉ xem) ✅ · Tenant Management ✅ · Gán / Clone (ADR-0029) ✅ · School Policies ✅ · Keycloak / SIS / APISIX (tham chiếu cấu hình) ✅ · System Configuration (dọn học sinh, retention) ✅ · Audit Logs ✅ · Data Retention ✅ · Thùng rác ✅ · Feature Flags ✅ · Integration Monitoring ⛔ (giám sát tích hợp bằng dashboard/alert Grafana theo MONITORING; portal chỉ có màn tham chiếu chỉ xem) · Danh mục từ nhạy cảm + Công tắc kiểm duyệt ✅ (§3.9) |
 | **E. Game Live Operations** | Chỉ platform (Live-ops, System Admin; Safety Moderator chỉ thấy module Kiểm duyệt) | Nội bộ | Online Players / CCU · Concurrent Sessions · Active Events · World Health · Matchmaking Status · Party Status · Game Session Status · **Kiểm duyệt — Platform Safety Team** ✅ (§3.9: hàng đợi case liên tenant, bằng chứng, sanction, từ bổ sung theo yêu cầu tenant, thông báo nhà trường) · Incident Management · Server Health · Operational Metrics: dashboard theo [DESIGN_SYSTEM §4](../05-ux/DESIGN_SYSTEM.md#4-adminops-design-system-cmslmsadmin) (KPI live-ops) và [MONITORING](../11-operations/MONITORING.md); màn hình chi tiết theo F080 (live dashboard, Game Analytics) và F122 (kiểm duyệt); Incident Management ⛔ trong portal — sự cố xử lý qua alert + runbook (F131) |
 
@@ -226,13 +226,13 @@ Nghiệp vụ, widget và ngưỡng: [SCHOOL_LMS §8](SCHOOL_LMS.md#8-school-lea
 Desktop (≥ 1280)
 ┌ Topbar ───────────────────────────────────────────────────────────────────────────────┐
 ├ Sidebar ─┬ School & LMS / TH Demo A / Tổng quan ───────────────────────────────────────┤
-│ Tổng quan│ [Khối 3 ▾] [Lớp: Tất cả ▾] [Môn: Toán ▾] [Tuần này ▾]                       │
+│ Tổng quan│ [Trường ▾] [Khối 3 ▾] [Môn: Toán ▾] [Tuần này ▾]                          │
 │ Bài giao │ ┌ Hoàn thành bài giao ┐ ┌ Cần chú ý ─────┐ ┌ An toàn ────────┐ ┌ LO yếu ──┐ │
-│ Học sinh │ │ 3A 24/30 ▓▓▓▓▓▓▓░   │ │ 11 HS   [Xem]  │ │ 1 chờ xác nhận  │ │ 3 LO     │ │
-│ Báo cáo  │ │ 3B 12/30 ▓▓▓░░░░░   │ │ 4 làm quá nhanh│ │ [Xem]           │ │ [Giao ôn]│ │
+│ Học sinh │ │ Bài 1   24/30 ▓▓▓▓░ │ │ 11 HS   [Xem]  │ │ 1 chờ xác nhận  │ │ 3 LO     │ │
+│ Báo cáo  │ │ Bài 2   12/30 ▓▓░░░ │ │ 4 làm quá nhanh│ │ [Xem]           │ │ [Giao ôn]│ │
 │ An toàn  │ └─────────────────────┘ └────────────────┘ └─────────────────┘ └──────────┘ │
-│          │ ┌ Heatmap lớp × LO ───────────────────────┐ ┌ Tự học sau gợi ý ───────────┐ │
-│          │ │ 3A ◑ ● ◔   3B ◔ ◑ ○   3C ● ◕ ◑          │ │ 68% HS làm · 37 LO tiến bộ  │ │
+│          │ ┌ Heatmap khối × LO (WP-L2) ──────────────┐ ┌ Tự học sau gợi ý ───────────┐ │
+│          │ │ Khối 3 ◑ ● ◔   Khối 4 ◔ ◑ ○             │ │ 68% HS làm · 37 LO tiến bộ  │ │
 │          │ └─────────────────────────────────────────┘ └─────────────────────────────┘ │
 └──────────┴────────────────────────────────────────────────────────────────────────────┘
 
@@ -243,7 +243,7 @@ Mobile (< 768)
 │ ┌ Cần chú ý 11 HS   [Xem] ┐ │  chạm để đi tới danh sách
 │ ┌ An toàn: 1 chờ xác nhận ┐ │
 │ ┌ LO yếu: Nhân 7, Chia 8  ┐ │
-│ Heatmap lớp × LO (cuộn)     │
+│ Heatmap khối × LO (cuộn)    │
 │ Bài giao sắp hạn (thẻ)      │
 └─────────────────────────────┘
 ```
@@ -619,7 +619,7 @@ Chi tiết nghiệp vụ: [MODERATION §11–§12](../03-social-multiplayer/MODE
 
 | Màn hình | Workspace | Người dùng | Chức năng |
 |---|---|---|---|
-| **Hoạt động đăng nhập** (trong hồ sơ học sinh và danh sách lớp) | C (một tenant; System Admin có dropdown tenant) | TA, SA, Academic Manager (scope); System Admin | Lần đăng nhập game gần nhất, số ngày chưa vào game, lịch sử phiên (thời điểm vào/ra, nền tảng, thiết bị rút gọn, lý do kết thúc như "đăng nhập thiết bị khác"). Không hiển thị IP. Lọc "chưa vào game ≥ N ngày" |
+| **Hoạt động đăng nhập** (trong hồ sơ học sinh và "Học sinh theo khối") | C (một tenant; System Admin có dropdown tenant) | TA, SA, Academic Manager (scope); System Admin | Lần đăng nhập game gần nhất, số ngày chưa vào game, lịch sử phiên (thời điểm vào/ra, nền tảng, thiết bị rút gọn, lý do kết thúc như "đăng nhập thiết bị khác"). Không hiển thị IP. Lọc "chưa vào game ≥ N ngày" |
 | **Học sinh sắp bị dọn** | C → Cài đặt tenant | TA, SA (`tenant.student_cleanup.read/exclude`) | Danh sách từ `GET /tenant/student-cleanup/preview` (ngày dự kiến dọn, lần đăng nhập cuối); chọn nhiều → **Loại trừ** / **Gia hạn đến ngày** (bắt buộc lý do); xem lịch sử các lần dọn của tenant |
 | **Cài đặt dọn học sinh** | C → Cài đặt tenant (khi platform cho phép ghi đè) · D → Cấu hình hệ thống | TA (`tenant.student_cleanup.configure`) · System Admin (`platform.settings.write`) | Số ngày không đăng nhập (`0` = tắt), số ngày báo trước, ngưỡng % cần xác nhận (platform). Lưu bắt buộc lý do, audit. Cảnh báo khi đặt < 60 ngày (dễ dọn nhầm qua kỳ nghỉ hè) [Confirmed] |
 | **Lần dọn chờ xác nhận** | D → Cấu hình hệ thống | System Admin (`platform.student_cleanup.approve`) | Lần chạy vượt 10% học sinh của tenant ở trạng thái `awaiting_approval`; xem mẫu danh sách, **Xác nhận** hoặc **Hủy** |
@@ -954,10 +954,9 @@ EduWorld Admin Portal   [Workspace ▾]   [Tenant ▾ — System Admin: lọc ·
 │
 ├── C. School & Learning Management   (tenant · System Admin)
 │   ├── Tổng quan (việc cần làm: review chờ, bài sắp hạn, import lỗi, thông báo an toàn chờ xác nhận)
-│   ├── Trường (tenant unit) · Lớp & học sinh (từ SIS, chỉ đọc) · Đồng bộ SIS/CSV
-│   ├── Khóa học & lộ trình học (course tự tạo từ lớp × môn theo khối)
-│   ├── Giao bài & lịch — Bài tập / đề · Bài chẩn đoán · Hoạt động game được gán (chỉ đọc) · Nhóm học tập · Thử thách lớp / giải trường (template, School Admin)
-│   ├── Tiến độ & báo cáo — School Learning Dashboard (trường → lớp → học sinh) · Bản đồ kỹ năng · Kết quả bài/đề (hộp thoại chấm lại đề `scope = exam_session`, Academic Manager) · Báo cáo tham khảo TT27/TT22 · Analytics
+│   ├── Trường (tenant unit) · Học sinh theo khối (từ SIS, chỉ đọc) · Đồng bộ SIS/CSV
+│   ├── Giao bài — Bài tập / đề (theo khối của trường ± học sinh) · Bài chẩn đoán · Hoạt động game được gán (chỉ đọc) · Thử thách khối / giải trường (template, School Admin)
+│   ├── Tiến độ & báo cáo — School Learning Dashboard (trường → khối → học sinh) · Bản đồ kỹ năng · Kết quả bài/đề (hộp thoại chấm lại đề `scope = exam_session`, Academic Manager) · Báo cáo tham khảo TT27/TT22 · Analytics
 │   ├── An toàn — Thông báo vụ việc (xác nhận đã liên hệ phụ huynh) · Chat policy trường · Nhóm từ của tenant (chỉ xem)
 │   ├── Hoạt động học sinh (lần đăng nhập game cuối, lịch sử phiên)
 │   ├── Người dùng & phân quyền — Người dùng (nhân sự, học sinh chỉ đọc) · UserRole · Role (hệ thống chỉ đọc, tùy biến [Confirmed]) · Nhật ký phân quyền
