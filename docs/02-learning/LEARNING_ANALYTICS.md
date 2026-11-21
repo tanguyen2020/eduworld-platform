@@ -4,15 +4,15 @@
 > Liên quan: [ADR-0017](../adr/ADR-0017-mastery-model-co-the-cau-hinh-mac-dinh-weighted-evidence.md) · [ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [LEARNING_EFFICACY_PLAN](LEARNING_EFFICACY_PLAN.md) · [ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [DOMAIN_MODEL §10](../06-architecture/DOMAIN_MODEL.md#10-phân-biệt-năm-loại-số-liệu-bắt-buộc)
 
 > [!IMPORTANT]
-> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Chiều tổ chức của analytics là học sinh → khối → trường → tenant (không lớp); learning event, `progress_daily` và read model báo cáo ghi `grade_level` **tại thời điểm sự kiện** (không suy ngược từ khối hiện tại); heatmap LO theo khối; mọi ô tổng hợp cấp khối áp quy tắc che ô < 5 học sinh (FR-ANL-016). Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-L2 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Chiều tổ chức của analytics là học sinh → khối → trường → tenant (không lớp); learning event, `progress_daily` và read model báo cáo ghi `grade_level` **tại thời điểm sự kiện** (không suy ngược từ khối hiện tại); heatmap LO theo khối; mọi ô tổng hợp cấp khối áp quy tắc che ô < 5 học sinh (FR-ANL-016). §5, §7, §8 đã viết lại ở WP-L2 (2026-11-21): rollup/read model và API theo trường × khối; che ô khối có dưới `analytics_min_cell_size` học sinh, che bổ sung giữa các khối của trường, số của trường chỉ cộng khối hiển thị. Chỗ còn nhắc "lớp" trong bảng chỉ số §4 đọc là "khối".
 
 ## 1. Phạm vi
 
 - Module `learning_record` (schema `learning`): lưu **learning events** (LRS nội bộ, xAPI-like), tính **ObjectiveMastery**, **ProgressSnapshot**.
-- Module `learning_analytics`: read model tổng hợp cho học sinh, nhà trường (trường, lớp), môn, chủ đề, LO.
+- Module `learning_analytics`: read model tổng hợp cho học sinh, nhà trường (trường, khối — ADR-0095), môn, chủ đề, LO.
 - **[Confirmed]** Không đồng nhất điểm một lần làm bài với mastery; phương pháp mastery rõ ràng, cấu hình được.
 - **[Confirmed]** Không dùng dữ liệu hành vi ngoài mục đích đã công bố.
-- **[Confirmed — ADR-0072]** Học sinh tự học, không có người lớn theo dõi từng lớp: **gợi ý tự động (§6) là kênh chính** đưa học sinh tới đúng hoạt động ôn tập; dashboard (§7) phục vụ nhà trường quản trị ở cấp trường → lớp → học sinh.
+- **[Confirmed — ADR-0072]** Học sinh tự học, không có người lớn theo dõi từng lớp: **gợi ý tự động (§6) là kênh chính** đưa học sinh tới đúng hoạt động ôn tập; dashboard (§7) phục vụ nhà trường quản trị ở cấp trường → khối → học sinh (ADR-0095).
 - **Ranh giới:** tài liệu này chỉ về tiến bộ học tập (mastery, tiến độ, LO yếu). Chỉ số hành vi chơi game (DAU/retention, funnel quest, kinh tế, chơi lành mạnh, hiệu năng thiết bị) thuộc [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md); sức khỏe hệ thống thuộc [MONITORING](../11-operations/MONITORING.md). Đo hiệu quả học tập bằng bài kiểm tra độc lập (không dùng chính mastery) thuộc [LEARNING_EFFICACY_PLAN](LEARNING_EFFICACY_PLAN.md).
 
 ## 2. Nguồn dữ liệu
@@ -201,25 +201,23 @@ Giá trị ở bước 1–2 (`diagnostic_prior`: số câu tối đa, ≥ 2 câ
 | `learning.progress_daily` | streaming (consumer) | `(student_id, subject_id, bucket_date)` → counters (khóa và cột chuẩn ở [DASHBOARD_DATA §3](../07-backend/DASHBOARD_DATA.md)) |
 | `learning.objective_masteries` | streaming | trạng thái mastery hiện tại |
 | `learning.mastery_snapshots_weekly` | job hằng tuần (Chủ nhật 23:00) | lịch sử mastery để vẽ xu hướng |
-| `learning.rm_class_objective_stats` | job mỗi 15 phút (giờ học) | `(class_id, objective_id)` → phân bố level, accuracy, số HS có evidence |
-| `learning.rm_class_subject_summary` | job mỗi 15 phút | tổng hợp lớp × môn |
-| `learning.rm_school_grade_summary` | job hằng đêm | trường × khối × môn (chỉ số gộp) |
+| `learning.rm_grade_objective_stats` | job mỗi 15 phút (giờ học) | `(school_id, grade_level, objective_id)` → sĩ số khối, phân bố level, accuracy, số HS có evidence (heatmap LO của khối; ADR-0095 thay `rm_class_objective_stats`) |
+| `learning.rm_school_grade_summary` | job mỗi 15 phút | trường × khối × môn: sĩ số, mức tham gia, độ phủ, gợi ý, tỉ lệ nộp bài theo khối lúc được giao (thay `rm_class_subject_summary`) |
 | `learning.rm_student_recommendations` | streaming + hằng đêm | danh sách gợi ý (§6) |
 
 Bảng trên gồm hai loại: **read model trạng thái hiện tại** (`objective_masteries`, `rm_*`) và **chuỗi thời gian** (`progress_daily`, `mastery_snapshots_weekly`). Dashboard có trục thời gian đọc các **rollup chuỗi thời gian** sau, dựng theo cơ chế chung ở [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) (ADR-0062: upsert gia tăng từ event, job chốt ngày 02:30 ICT, partition, read replica, cache):
 
 | Bảng rollup | Chiều | Độ hạt | Cột đo chính |
 |---|---|---|---|
-| `learning.progress_daily` | học sinh, `class_id` (snapshot lúc event), môn | ngày | số hoạt động, câu trả lời, câu đúng (tử/mẫu), câu `rapid_guess`, câu có gợi ý, giây học, hist thời gian |
-| `learning.rollup_class_daily` / `_weekly` / `_monthly` | lớp, môn | ngày / tuần / tháng | học sinh hoạt động (distinct, chốt cuối ngày), hoạt động hoàn thành, độ chính xác (tử/mẫu), `rapid_guess` (tử/mẫu), giây học, bài giao nộp đúng hạn (tử/mẫu) |
-| `learning.rollup_class_objective_weekly` | lớp, LO | tuần | số evidence, đúng (tử/mẫu), phân bố level cuối tuần |
-| `learning.rollup_school_daily` / `_weekly` / `_monthly` | trường, khối, môn | ngày / tuần / tháng | như cấp lớp + số lớp có hoạt động |
+| `learning.progress_daily` | học sinh, `grade_level` (khối lúc event, ADR-0095), môn | ngày | số hoạt động, câu trả lời, câu đúng (tử/mẫu), câu `rapid_guess`, câu có gợi ý, giây học, hist thời gian |
+| `learning.rollup_school_daily` / `_weekly` / `_monthly` | trường, khối (lúc event), môn | ngày / tuần / tháng | học sinh hoạt động (distinct, chốt cuối ngày), hoạt động hoàn thành, độ chính xác (tử/mẫu), `rapid_guess` (tử/mẫu), giây học, bài giao nộp đúng hạn (tử/mẫu, khối lúc được giao) |
+| `learning.rollup_grade_objective_weekly` | trường, khối (lúc event), LO | tuần | số evidence, đúng (tử/mẫu), phân bố level cuối tuần |
 | `learning.rollup_tenant_daily` / `_weekly` / `_monthly` | khối, môn | ngày / tuần / tháng | như cấp trường + số trường có hoạt động |
 
 - Dashboard không đọc `learning_events`, `attempts`, `attempt_answers` (DASHBOARD_DATA §1, D-1).
 - Read model gắn `school_id`, lọc theo RLS như bảng nghiệp vụ.
-- Báo cáo cấp tổ chức/platform chỉ dùng dữ liệu **gộp**, ẩn ô có < 5 học sinh (k-anonymity tối thiểu) [Confirmed].
-- Mọi aggregate theo lớp dùng enrollment **tại thời điểm event** (`learning_events.class_id` snapshot) để chuyển lớp không làm méo số liệu lớp cũ.
+- Báo cáo cấp tổ chức/platform chỉ dùng dữ liệu **gộp**, ẩn ô có < 5 học sinh (k-anonymity tối thiểu) [Confirmed]. **Mọi ô tổng hợp cấp khối** (dashboard trường, dashboard khối, chuỗi, tiến độ bài giao theo khối, file xuất) có dưới `analytics_min_cell_size` học sinh bị che, che bổ sung giữa các khối của trường; số của trường chỉ cộng khối hiển thị (ADR-0095, FR-ANL-016). Danh sách từng học sinh trong quyền của nhân sự trường không bị che.
+- Mọi aggregate theo khối dùng khối **tại thời điểm event** (`learning_events.grade_level`, `progress_daily.grade_level`) để lên khối/chuyển trường không làm méo số liệu cũ; không còn `class_id` (ADR-0095).
 
 ## 6. Recommendation rules
 
@@ -244,7 +242,7 @@ Giới hạn: tối đa 3 gợi ý hiển thị cùng lúc; không gợi ý lặ
 | Đối tượng | Thấy | Không thấy |
 |---|---|---|
 | Học sinh | mastery của mình (biểu tượng thân thiện), tiến độ, gợi ý, lịch sử bài làm | mastery/điểm của bạn khác; so sánh xếp hạng học tập |
-| School Admin / Academic Manager (**School Learning Dashboard**) | trường → lớp → học sinh: tổng hợp trường × khối × môn, độ phủ chương trình, mức tham gia; bảng LO × HS của lớp, phân bố level, accuracy, assignment completion, HS cần hỗ trợ (nhiều LO yếu, lâu không học, tỉ lệ "làm quá nhanh" cao), hiệu quả gợi ý; `academic_manager` chỉ trong môn được giao phạm vi | dữ liệu trường khác; Game Rating như năng lực; nội dung chat |
+| School Admin / Academic Manager (**School Learning Dashboard**) | trường → khối → học sinh (ADR-0095): tổng hợp trường × khối × môn, độ phủ chương trình, mức tham gia; heatmap LO của khối, học sinh của khối, phân bố level, accuracy, assignment completion, HS cần hỗ trợ (nhiều LO yếu, lâu không học, tỉ lệ "làm quá nhanh" cao), hiệu quả gợi ý; `academic_manager` chỉ trong môn được giao phạm vi | dữ liệu trường khác; Game Rating như năng lực; nội dung chat |
 | Tenant `unit` (đơn vị) | dữ liệu gộp các trường trong tenant (ẩn ô < 5 HS) | dữ liệu cá nhân học sinh (trừ khi có quyền rõ ràng) |
 | Vận hành tenant (TA/SA) | thêm: hoạt động đăng nhập game (lần cuối, số ngày chưa vào, lịch sử phiên — không IP/device_id), danh sách sắp bị dọn | tenant khác |
 | Platform Admin | metric vận hành, gộp | dữ liệu cá nhân theo mặc định (truy cập phải có lý do + audit) |
@@ -257,9 +255,8 @@ Kết quả trên dashboard là **tham khảo** cho nhà trường, không thay 
 |---|---|---|
 | GET | `/api/v1/learning/progress/me?subject_id=` (`getMyProgress`) | Tiến độ của tôi: tổng quan (`lessons_completed`, `items_answered`, `accuracy`, `active_minutes`) và mastery theo LO (level + biểu tượng, giá trị số chỉ cho lớp 6–9 [Confirmed]) trong cùng một response; không có endpoint mastery riêng (thay `/learning/mastery/me` cũ); level tính sau decay lúc đọc, không trả giá trị thô [Confirmed thay giá trị số lớp 6–9 cho tới khi có màn hình cần] (F031) |
 | GET | `/api/v1/learning/recommendations/me` | Gợi ý |
-| GET | `/api/v1/lms/dashboards/school` | School Learning Dashboard: tổng quan trường → lớp (`school_admin`, `academic_manager`) |
-| GET | `/api/v1/lms/classes/{class_id}/analytics/objectives?subject=` | Bảng LO × HS của lớp (`school_admin`; `academic_manager` theo môn) |
-| GET | `/api/v1/lms/classes/{class_id}/analytics/summary` | Tổng quan lớp |
+| GET | `/api/v1/lms/dashboards/school` | School Learning Dashboard: tổng quan trường, lọc khối `grade_level` (`school_admin`, `academic_manager`) |
+| GET | `/api/v1/lms/schools/{school_id}/grades/{grade_level}/dashboard` (`getGradeDashboard`) | Dashboard một khối: heatmap LO × khối, học sinh của khối, tiến độ bài giao (`analytics.school.read`; ADR-0095 thay dashboard lớp) |
 | GET | `/api/v1/lms/students/{student_id}/analytics` | Hồ sơ học tập (người có quyền trong trường, có audit) |
 | POST | `/api/v1/learning/events` | **Chỉ** event phía client được whitelist (`lesson.viewed`, `material.opened`, heartbeat lesson); event kết quả học tập chỉ do server sinh |
 
@@ -290,7 +287,7 @@ Mã FR, nhãn và phase do [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQUIRE
 | FR-EXR-014 | Gợi ý "Luyện trộn" (§6, R8) |
 | FR-ANL-001 | Nguồn learning events (§2) |
 | FR-ANL-002 | `learning.learning_events` append-only làm LRS nội bộ (§2) |
-| FR-ANL-003 | Analytics theo học sinh, lớp, trường, môn, chủ đề, LO (§5, §7) |
+| FR-ANL-003 | Analytics theo học sinh, khối, trường, môn, chủ đề, LO (§5, §7; ADR-0095) |
 | FR-ANL-004 | Purpose limitation (§9) |
 | FR-ANL-005 | Read model và aggregation trong worker (§5) |
 | FR-ANL-015 | Báo cáo tham khảo TT27/2020, TT22/2021 ([ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md)) |

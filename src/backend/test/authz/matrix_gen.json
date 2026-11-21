@@ -1730,18 +1730,6 @@
     ]
   },
   {
-    "operation_id": "getClassDashboard",
-    "module": "learning",
-    "method": "GET",
-    "path": "/lms/classes/{class_id}/dashboard",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "getClientConfig",
     "module": "game",
     "method": "GET",
@@ -1921,18 +1909,6 @@
     "module": "learning",
     "method": "GET",
     "path": "/cms/learning/content/{content_type}/{content_id}/versions/{version}",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "getCourseResults",
-    "module": "learning",
-    "method": "GET",
-    "path": "/lms/courses/{course_id}/results",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -2177,6 +2153,18 @@
     "module": "game",
     "method": "GET",
     "path": "/game-admin/translations/jobs/{job_id}",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getGradeDashboard",
+    "module": "learning",
+    "method": "GET",
+    "path": "/lms/schools/{school_id}/grades/{grade_level}/dashboard",
+    "tenant_scoped": true,
     "has_id_param": true,
     "required": [
       "cross_tenant",

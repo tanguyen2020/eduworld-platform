@@ -18,8 +18,8 @@
 | 3 | Tạo 3 export cùng lúc; tạo export phạm vi vượt giới hạn dòng (fixture); body `format: docx` | Lần 3 `429 EXPORT_LIMIT_REACHED`; `422`; `422 VALIDATION_FAILED` | F044-AC-04, F044-AC-07 |
 | 4 | `ad.truong.b` gọi `getLmsReport` của bước 1 | `404` | F044-AC-05 |
 | 5 | `sa.admin` gọi `createPlatformReport {tenant_ids:[…]}`; `ad.donvi` gọi `/admin/reports` | File có cột tenant, ô < 5 ẩn, audit `cross_tenant.accessed`; `403` | F044-AC-06 |
-| 6 | `ad.truong.a` gọi `getCourseResults` course 3A Toán | Cột = bài graded, điểm theo `score_policy` thang 10, không có XP/rating | F044-AC-08, F044-AC-09 |
-| 7 | `qlcm.truong.a` gọi `getCourseResults` course Tiếng Việt; `ad.truong.b` gọi course 3A | `403 PERMISSION_DENIED`; `404` | F044-AC-10 |
+| 6 | `ad.truong.a` xuất `assignment_results` bài graded Toán khối 3 (ADR-0095: không còn course) | Điểm theo `score_policy` thang 10, cột `grade_level`, không có XP/rating, không lớp | F044-AC-08, F044-AC-09 |
+| 7 | `qlcm.truong.a` (chỉ Toán) xuất bài Tiếng Việt; `ad.truong.b` xuất bài của trường A | `403 PERMISSION_DENIED`; `404` | F044-AC-10 |
 | 8 | Chạy job mức tham khảo; gọi `getRegulationReferenceReport` cho 3A Toán; xuất `regulation_reference` | Mức đúng ngưỡng; độ phủ thấp → "Chưa đủ dữ liệu"; disclaimer ở response và đầu/chân file; audit `learning.reference_report_exported` | F044-AC-11, F044-AC-12, F044-AC-15 |
 | 9 | `hs.an.3a` gọi mọi API học sinh (`getMyProgress`, `getMyMastery`) | Không có nhãn mức thông tư | F044-AC-13 |
 | 10 | Đổi ngưỡng hồ sơ (version mới), tính lại kỳ hiện tại | Kỳ trước giữ version cũ | F044-AC-14 |

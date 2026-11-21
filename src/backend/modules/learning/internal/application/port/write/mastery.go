@@ -114,7 +114,6 @@ type EvidenceReader interface {
 // ProgressDelta adds to the counters of learning.progress_daily (student × subject × day, metric_version 1).
 type ProgressDelta struct {
 	TenantID, StudentID, SchoolID, SubjectID uuid.UUID
-	ClassID                                  *uuid.UUID
 	// GradeLevel is the grade of the student on the day (ADR-0095); nil = read from ref.students.
 	GradeLevel          *int
 	Day                 time.Time // the calendar day (date part used)

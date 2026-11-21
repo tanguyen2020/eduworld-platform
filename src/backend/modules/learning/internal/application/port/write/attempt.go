@@ -93,7 +93,6 @@ type LearningEvent struct {
 	StudentID  uuid.UUID
 	TenantID   uuid.UUID
 	SchoolID   uuid.UUID
-	ClassID    *uuid.UUID
 	// GradeLevel is the grade of the student at the time of the event (ADR-0095); nil = read from ref.students.
 	GradeLevel       *int
 	GameSessionID    *uuid.UUID

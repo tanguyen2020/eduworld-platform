@@ -29,7 +29,6 @@ type CalibrationCommands interface {
 // ReportQueries are the reads of F044 (query.Reports).
 type ReportQueries interface {
 	GetReport(ctx context.Context, scope reporting.Scope, id uuid.UUID) (dto.ReportJobView, error)
-	GetCourseResults(ctx context.Context, in query.CourseResultsInput) (query.CourseResultsPage, error)
 	GetReferenceReport(ctx context.Context, in query.ReferenceInput) (query.ReferencePage, error)
 	GetQuestionStats(ctx context.Context, questionID uuid.UUID) (dto.QuestionStatsView, error)
 	ListCalibrationProposals(ctx context.Context, status string, in query.PageInput) (query.Page[dto.CalibrationProposalView], error)
@@ -53,7 +52,6 @@ func init() {
 		httpx.IdempotencyRequired, 202)
 	Operations["getPlatformReport"] = op("getPlatformReport", http.MethodGet, "/admin/reports/{report_id}", httpx.TenantNone,
 		httpx.IdempotencyNone, 200)
-	Operations["getCourseResults"] = lmsOp("getCourseResults", http.MethodGet, "/lms/courses/{course_id}/results", httpx.IdempotencyNone, 200)
 	Operations["getRegulationReferenceReport"] = lmsOp("getRegulationReferenceReport", http.MethodGet,
 		"/lms/schools/{school_id}/reference-levels", httpx.IdempotencyNone, 200)
 	Operations["getQuestionStats"] = op("getQuestionStats", http.MethodGet, "/cms/learning/questions/{question_id}/stats",
@@ -77,7 +75,6 @@ var reportRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Request)
 	"getLmsReport":                 func(h Handlers, w http.ResponseWriter, r *http.Request) { h.getReport(w, r, reporting.ScopeLMS) },
 	"getTenantReport":              func(h Handlers, w http.ResponseWriter, r *http.Request) { h.getReport(w, r, reporting.ScopeTenant) },
 	"getPlatformReport":            func(h Handlers, w http.ResponseWriter, r *http.Request) { h.getReport(w, r, reporting.ScopePlatform) },
-	"getCourseResults":             Handlers.getCourseResults,
 	"getRegulationReferenceReport": Handlers.getRegulationReferenceReport,
 	"getQuestionStats":             Handlers.getQuestionStats,
 	"listCalibrationProposals":     Handlers.listCalibrationProposals,
@@ -91,9 +88,7 @@ type reportBody struct {
 	ReportType   string      `json:"report_type"`
 	Format       string      `json:"format"`
 	AssignmentID *uuid.UUID  `json:"assignment_id"`
-	CourseID     *uuid.UUID  `json:"course_id"`
 	SchoolID     *uuid.UUID  `json:"school_id"`
-	ClassID      *uuid.UUID  `json:"class_id"`
 	SubjectID    *uuid.UUID  `json:"subject_id"`
 	Period       string      `json:"period"`
 	AcademicYear int         `json:"academic_year"`
@@ -124,8 +119,8 @@ func (h Handlers) createReport(w http.ResponseWriter, r *http.Request, scope rep
 		fail(w, r, err)
 		return
 	}
-	req := reporting.Request{Scope: scope, Type: b.ReportType, Format: b.Format, SchoolID: b.SchoolID, ClassID: b.ClassID,
-		CourseID: b.CourseID, AssignmentID: b.AssignmentID, SubjectID: b.SubjectID, Period: b.Period, AcademicYear: b.AcademicYear,
+	req := reporting.Request{Scope: scope, Type: b.ReportType, Format: b.Format, SchoolID: b.SchoolID,
+		AssignmentID: b.AssignmentID, SubjectID: b.SubjectID, Period: b.Period, AcademicYear: b.AcademicYear,
 		SchoolIDs: b.SchoolIDs, TenantIDs: b.TenantIDs, GradeLevel: b.GradeLevel, StudyID: b.Params.StudyID}
 	var err error
 	if req.From, err = bodyDate("from", b.From); err == nil {
@@ -158,21 +153,6 @@ func (h Handlers) getReport(w http.ResponseWriter, r *http.Request, scope report
 	writeJSON(w, http.StatusOK, v)
 }
 
-func (h Handlers) getCourseResults(w http.ResponseWriter, r *http.Request) {
-	id, err := pathUUID(r, "course_id")
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	v, err := h.Reports.Queries.GetCourseResults(r.Context(), query.CourseResultsInput{CourseID: id, Page: pageIn(r)})
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"course_id": v.CourseID, "columns": v.Columns, "rows": v.Rows,
-		"page": pageJSON{NextCursor: v.NextCursor, HasMore: v.HasMore, Limit: v.Limit}})
-}
-
 func (h Handlers) getRegulationReferenceReport(w http.ResponseWriter, r *http.Request) {
 	in := query.ReferenceInput{Period: r.URL.Query().Get("period"), Page: pageIn(r)}
 	var err error
@@ -186,7 +166,7 @@ func (h Handlers) getRegulationReferenceReport(w http.ResponseWriter, r *http.Re
 	}
 	if err == nil {
 		in.SubjectID = *subject
-		in.ClassID, err = queryUUID(r, "class_id")
+		in.GradeLevel = queryInt(r, "grade_level")
 	}
 	if err != nil {
 		fail(w, r, err)

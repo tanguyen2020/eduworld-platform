@@ -15,7 +15,7 @@ import (
 	readrepo "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/read"
 )
 
-// minDay is the earliest daily rollup bucket of a school or class (tenancyguard: test query on derived rollups, explicit tenant).
+// minDay is the earliest daily rollup bucket of a school (tenancyguard: test query on derived rollups, explicit tenant).
 func (c *curEnv) minDay(ctx context.Context, t *testing.T, level string, tenant, id uuid.UUID) string {
 	t.Helper()
 	var d time.Time
@@ -50,7 +50,7 @@ func (m *memCache) Set(context.Context, string, []byte, time.Duration) error {
 	return nil
 }
 
-// F043 T042 (F056-3): DashboardMeta carries available_from (earliest daily rollup of the scope of the answer: school, class,
+// F043 T042 (F056-3): DashboardMeta carries available_from (earliest daily rollup of the scope of the answer: school, grade,
 // tenant summary) and replica_lag_warning (lag of the dashboard replica above dashboard_replica_lag_alert_seconds); an
 // answer with the warning is not cached.
 func TestDashboardMetaAvailableFromAndReplicaLag(t *testing.T) {
@@ -62,9 +62,10 @@ func TestDashboardMetaAvailableFromAndReplicaLag(t *testing.T) {
 	if want := c.minDay(ctx, t, "school", c.tenantA, k.school); r.str("available_from") != want || r.str("replica_lag_warning") != "false" {
 		t.Fatalf("school meta: available_from %q (want %q) lag %q", r.str("available_from"), want, r.str("replica_lag_warning"))
 	}
-	r = must(t, c.do(t, http.MethodGet, "/lms/classes/"+k.class3A.String()+"/dashboard?"+dashRange, adS, nil, nil), http.StatusOK, "class")
-	if want := c.minDay(ctx, t, "class", c.tenantA, k.class3A); r.str("available_from") != want {
-		t.Fatalf("class available_from %q, want %q", r.str("available_from"), want)
+	// The grade drill-down has the start of the data of its school (ADR-0095: no class level).
+	r = must(t, c.do(t, http.MethodGet, "/lms/schools/"+k.school.String()+"/grades/3/dashboard?"+dashRange, adS, nil, nil), http.StatusOK, "grade")
+	if want := c.minDay(ctx, t, "school", c.tenantA, k.school); r.str("available_from") != want {
+		t.Fatalf("grade available_from %q, want %q", r.str("available_from"), want)
 	}
 	r = must(t, c.do(t, http.MethodGet, "/lms/schools/"+k.school.String()+"/analytics/series?metric=accuracy&"+dashRange, adS, nil, nil),
 		http.StatusOK, "series")

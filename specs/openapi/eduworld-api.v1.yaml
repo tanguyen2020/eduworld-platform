@@ -7989,27 +7989,6 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
-  /lms/courses/{course_id}/results:
-    get:
-      x-service: learning
-      tags: [lms]
-      operationId: getCourseResults
-      x-portal-action: action.school_lms.results.view
-      summary: Bảng kết quả course — điểm tự chấm các bài mode=graded theo score_policy, thang 10 (không có điểm chấm tay)
-      parameters:
-        - { $ref: '#/components/parameters/TenantIdHeader' }
-        - $ref: '#/components/parameters/CourseIdPath'
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Cursor'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/CourseResults' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
   /lms/schools/{school_id}/reference-levels:
     get:
       x-service: learning
@@ -8035,9 +8014,10 @@ paths:
         - name: academic_year
           in: query
           schema: { type: integer, minimum: 2020, maximum: 2100, description: Năm bắt đầu của năm học (mặc định năm học hiện tại) }
-        - name: class_id
+        - name: grade_level
           in: query
-          schema: { $ref: '#/components/schemas/Uuid' }
+          description: Lọc theo khối của học sinh lúc tính mức (ADR-0095 — không còn lọc lớp)
+          schema: { $ref: '#/components/schemas/GradeLevel' }
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -8114,7 +8094,7 @@ paths:
       tags: [lms]
       operationId: createLmsReport
       x-portal-action: action.school_lms.reports.export
-      summary: Xuất báo cáo kết quả bài giao / bảng kết quả course / tham khảo TT27-TT22 / bản đồ kỹ năng (job 202, URL ký 15 phút, audit report.exported)
+      summary: Xuất báo cáo kết quả bài giao / tham khảo TT27-TT22 / bản đồ kỹ năng theo khối / tháng của trường theo khối (job 202, URL ký 15 phút, audit report.exported)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -8154,23 +8134,27 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
-  /lms/classes/{class_id}/dashboard:
+  /lms/schools/{school_id}/grades/{grade_level}/dashboard:
     get:
       x-service: learning
       tags: [lms]
-      operationId: getClassDashboard
+      operationId: getGradeDashboard
       x-portal-action: action.school_lms.school_dashboard.view
-      summary: Dashboard một lớp — drill-down từ School Learning Dashboard (school_admin, academic_manager · analytics.school.read)
+      summary: Dashboard một khối của trường — drill-down trường → khối từ School Learning Dashboard (school_admin, academic_manager · analytics.school.read)
       description: |
-        Tiến độ bài giao, phân bố mức mastery lớp × LO (heatmap, read model 15 phút) và danh sách học sinh phân trang cursor
-        (≤ `dashboard_page_size_max`, `page_size` lớn hơn bị giới hạn). Lớp ngoài trường của grant hoặc thuộc tenant khác → `404`;
-        `subject_id` ngoài môn của grant → `403 PERMISSION_DENIED` (F043-AC-10, F043-AC-13). Không có XP, Game Rating, nội dung chat.
+        ADR-0095 (không còn lớp): tiến độ bài giao theo khối, heatmap LO của khối (phân bố mức mastery trường × khối × LO, read model
+        15 phút) và danh sách học sinh của khối phân trang cursor (≤ `dashboard_page_size_max`, `page_size` lớn hơn bị giới hạn).
+        Khối có dưới `analytics_min_cell_size` học sinh (che bổ sung giữa các khối của trường, FR-ANL-016) → `suppressed: true`:
+        số tổng hợp `null`, heatmap rỗng; danh sách học sinh vẫn trả (dữ liệu từng học sinh trong quyền). Trường ngoài grant
+        hoặc thuộc tenant khác → `404`; `subject_id` ngoài môn của grant → `403 PERMISSION_DENIED` (F043-AC-10, F043-AC-13,
+        F043-AC-28). Không có XP, Game Rating, nội dung chat.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
-        - name: class_id
+        - $ref: '#/components/parameters/SchoolId'
+        - name: grade_level
           in: path
           required: true
-          schema: { $ref: '#/components/schemas/Uuid' }
+          schema: { $ref: '#/components/schemas/GradeLevel' }
         - $ref: '#/components/parameters/SubjectIdQuery'
         - { $ref: '#/components/parameters/DashboardFrom' }
         - { $ref: '#/components/parameters/DashboardTo' }
@@ -8179,11 +8163,11 @@ paths:
         - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
-          description: Tiến độ lớp, heatmap LO, học sinh (trang)
+          description: Tiến độ khối, heatmap LO, học sinh (trang)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClassDashboard'
+                $ref: '#/components/schemas/GradeDashboard'
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -8197,10 +8181,12 @@ paths:
       tags: [lms]
       operationId: getSchoolDashboard
       x-portal-action: action.school_lms.school_dashboard.view
-      summary: School Learning Dashboard — gói widget trường → lớp → học sinh trong một lần gọi (rollup, read replica — ADR-0062, ADR-0072; analytics.school.read)
+      summary: School Learning Dashboard — gói widget trường → khối → học sinh trong một lần gọi (rollup, read replica — ADR-0062, ADR-0072; analytics.school.read)
       description: |
         school_admin (trường mình), academic_manager (trong scope tenant/trường/môn). Kết quả là tham khảo cho nhà trường,
-        không thay đánh giá chính thức. `class_id` vắng mặt = toàn trường; có = drill-down lớp.
+        không thay đánh giá chính thức. `grade_level` vắng mặt = toàn trường; có = một khối (ADR-0095: không còn lớp). Mọi ô
+        tổng hợp cấp khối có dưới `analytics_min_cell_size` học sinh bị che (che bổ sung giữa các khối của trường, FR-ANL-016,
+        F043-AC-28): số tổng hợp của trường chỉ cộng các khối hiển thị; lọc một khối bị che → `suppressed: true`, số tổng hợp `null`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - name: school_id
@@ -8208,9 +8194,6 @@ paths:
           required: true
           schema: { $ref: '#/components/schemas/Uuid' }
         - $ref: '#/components/parameters/GradeLevelQuery'
-        - name: class_id
-          in: query
-          schema: { $ref: '#/components/schemas/Uuid' }
         - $ref: '#/components/parameters/SubjectIdQuery'
         - $ref: '#/components/parameters/DashboardFrom'
         - $ref: '#/components/parameters/DashboardTo'
@@ -8235,7 +8218,10 @@ paths:
       tags: [lms]
       operationId: getSchoolAnalyticsSeries
       x-portal-action: action.school_lms.school_dashboard.view
-      summary: Chuỗi thời gian học tập cấp trường (analytics.school.read)
+      summary: Chuỗi thời gian học tập cấp trường hoặc một khối (analytics.school.read)
+      description: |
+        Cấp trường cộng các khối hiển thị; `grade_level` của một khối có dưới `analytics_min_cell_size` học sinh (che bổ sung
+        giữa các khối, FR-ANL-016, F043-AC-28), hoặc trường không có khối nào đủ ngưỡng → mọi điểm `value: null`, `suppressed: true`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/SchoolId'
@@ -16979,11 +16965,6 @@ components:
       in: path
       required: true
       schema: { $ref: '#/components/schemas/Uuid' }
-    CourseIdPath:
-      name: course_id
-      in: path
-      required: true
-      schema: { $ref: '#/components/schemas/Uuid' }
     CurriculumIdPath:
       name: curriculum_id
       in: path
@@ -20731,21 +20712,27 @@ components:
         reviewer_id: { $ref: '#/components/schemas/Uuid' }
         published_at: { $ref: '#/components/schemas/Timestamp' }
         updated_at: { $ref: '#/components/schemas/Timestamp' }
-    ClassDashboard:
+    GradeDashboard:
       allOf:
         - $ref: '#/components/schemas/DashboardMeta'
         - type: object
-          required: [class_id, generated_at, students]
-          description: Dashboard một lớp (SCHOOL_LMS §8.2–§8.3) — không có cột XP, Game Rating, xếp hạng hay nội dung chat (F043-AC-11)
+          required: [school_id, grade_level, generated_at, suppressed, students]
+          description: |
+            Dashboard một khối của trường (SCHOOL_LMS §8.2–§8.3, ADR-0095) — không có cột XP, Game Rating, xếp hạng hay nội dung
+            chat (F043-AC-11). `suppressed: true` khi khối có dưới `analytics_min_cell_size` học sinh (FR-ANL-016): số tổng hợp
+            `null`, `objective_distribution` rỗng; `students` vẫn liệt kê học sinh của khối.
           properties:
-            class_id: { $ref: '#/components/schemas/Uuid' }
             school_id: { $ref: '#/components/schemas/Uuid' }
+            grade_level: { $ref: '#/components/schemas/GradeLevel' }
             subject_id: { $ref: '#/components/schemas/Uuid' }
             generated_at: { $ref: '#/components/schemas/Timestamp' }
-            active_students_7d: { type: integer, minimum: 0 }
+            suppressed: { type: boolean, description: true khi ô khối < analytics_min_cell_size học sinh bị che }
+            student_count: { type: [integer, 'null'], minimum: 0, description: Số học sinh hiệu lực của khối (null khi bị che) }
+            active_students_7d: { type: [integer, 'null'], minimum: 0 }
             assignments_open: { type: integer, minimum: 0 }
             accuracy: { type: [number, 'null'], minimum: 0, maximum: 1 }
             rapid_guess_ratio: { type: [number, 'null'], minimum: 0, maximum: 1, description: Tỷ lệ câu trả lời "làm quá nhanh" }
+            assignment_completion_rate: { type: [number, 'null'], minimum: 0, maximum: 1, description: Bài giao đến hạn từ 14 ngày qua đã nộp / được giao }
             assignments:
               type: array
               maxItems: 20
@@ -20753,7 +20740,7 @@ components:
             objective_distribution:
               type: array
               maxItems: 500
-              description: Heatmap lớp × LO — phân bố mức mastery (not_started, beginning, developing, proficient, mastered)
+              description: Heatmap khối × LO — phân bố mức mastery (not_started, beginning, developing, proficient, mastered)
               items:
                 type: object
                 properties:
@@ -20783,7 +20770,7 @@ components:
             students:
               type: object
               required: [data, page]
-              description: Học sinh của lớp, phân trang cursor (≤ dashboard_page_size_max)
+              description: Học sinh hiệu lực của khối, phân trang cursor (≤ dashboard_page_size_max)
               properties:
                 data:
                   type: array
@@ -20814,22 +20801,26 @@ components:
         subject_id: { $ref: '#/components/schemas/Uuid' }
         due_at: { $ref: '#/components/schemas/Timestamp' }
         status: { type: string, enum: [scheduled, open, closed, results_released] }
-        submitted: { type: integer, minimum: 0, description: Học sinh đã nộp (đúng hạn hoặc muộn) }
-        total: { type: integer, minimum: 0, description: Học sinh được giao (trừ được miễn) }
+        submitted: { type: integer, minimum: 0, description: Học sinh đã nộp (đúng hạn hoặc muộn) — tổng các ô khối hiển thị }
+        total: { type: integer, minimum: 0, description: Học sinh được giao (trừ được miễn) — tổng các ô khối hiển thị }
         not_started: { type: integer, minimum: 0 }
         missed: { type: integer, minimum: 0 }
-        by_class:
+        by_grade:
           type: array
-          maxItems: 100
+          maxItems: 10
+          description: >-
+            Theo khối của học sinh lúc được giao (ADR-0095); ô có dưới analytics_min_cell_size học sinh bị che (số đếm null,
+            suppressed, che bổ sung trong bài giao — FR-ANL-016); 0 = khối chưa xác định
           items:
             type: object
-            required: [class_id, submitted, total]
+            required: [grade_level, suppressed]
             properties:
-              class_id: { $ref: '#/components/schemas/Uuid' }
-              submitted: { type: integer, minimum: 0 }
-              total: { type: integer, minimum: 0 }
-              not_started: { type: integer, minimum: 0 }
-              missed: { type: integer, minimum: 0 }
+              grade_level: { type: integer, minimum: 0, maximum: 9 }
+              submitted: { type: [integer, 'null'], minimum: 0 }
+              total: { type: [integer, 'null'], minimum: 0 }
+              not_started: { type: [integer, 'null'], minimum: 0 }
+              missed: { type: [integer, 'null'], minimum: 0 }
+              suppressed: { type: boolean }
     AttentionReason:
       type: string
       maxLength: 64
@@ -22054,12 +22045,15 @@ components:
             cột XP, Game Rating, xếp hạng học sinh theo điểm học tập hay nội dung chat (F043-AC-11).
           properties:
             school_id: { $ref: '#/components/schemas/Uuid' }
-            class_id: { $ref: '#/components/schemas/Uuid' }
+            grade_level: { $ref: '#/components/schemas/GradeLevel' }
+            suppressed:
+              type: boolean
+              description: true khi `grade_level` chọn một khối có dưới analytics_min_cell_size học sinh hoặc trường không có khối nào đủ ngưỡng (FR-ANL-016) — số tổng hợp null
             subject_id: { $ref: '#/components/schemas/Uuid' }
             widgets:
               type: object
               properties:
-                active_students: { type: integer, minimum: 0, description: Học sinh có hoạt động học trong 7 ngày kết thúc ở `to` }
+                active_students: { type: [integer, 'null'], minimum: 0, description: Học sinh có hoạt động học trong 7 ngày kết thúc ở `to` (khối hiển thị; null khi bị che) }
                 assignments_open: { type: integer, minimum: 0 }
                 assignments_due_soon: { type: integer, minimum: 0, description: Bài đang mở có hạn trong 48 giờ tới }
                 assignment_completion_rate: { type: [number, 'null'], minimum: 0, maximum: 1 }
@@ -22077,19 +22071,20 @@ components:
                   type: array
                   maxItems: 20
                   items: { $ref: '#/components/schemas/DashboardAssignmentProgress' }
-                classes:
+                grades:
                   type: array
-                  maxItems: 100
+                  maxItems: 9
+                  description: Các khối của trường (ADR-0095) — khối có dưới analytics_min_cell_size học sinh chỉ có grade_level và suppressed (FR-ANL-016)
                   items:
                     type: object
-                    required: [class_id]
+                    required: [grade_level, suppressed]
                     properties:
-                      class_id: { $ref: '#/components/schemas/Uuid' }
-                      name: { type: string, maxLength: 128 }
                       grade_level: { $ref: '#/components/schemas/GradeLevel' }
-                      active_students: { type: [integer, 'null'] }
+                      students: { type: [integer, 'null'], minimum: 0 }
+                      active_students: { type: [integer, 'null'], minimum: 0 }
                       accuracy: { type: [number, 'null'], minimum: 0, maximum: 1 }
                       assignment_completion_rate: { type: [number, 'null'], minimum: 0, maximum: 1 }
+                      suppressed: { type: boolean }
                 weak_objectives:
                   type: array
                   maxItems: 20
@@ -22101,10 +22096,11 @@ components:
                       code: { type: string, maxLength: 64 }
                       yccd_ref: { type: string, maxLength: 64 }
                       below_proficient_ratio: { type: number, minimum: 0, maximum: 1 }
-                      class_ids:
+                      grade_levels:
                         type: array
-                        maxItems: 100
-                        items: { $ref: '#/components/schemas/Uuid' }
+                        maxItems: 9
+                        description: Khối hiển thị có từ 50% học sinh trở lên dưới mức thành thạo
+                        items: { $ref: '#/components/schemas/GradeLevel' }
                 students_needing_attention:
                   type: array
                   maxItems: 100
@@ -22114,7 +22110,7 @@ components:
                     properties:
                       student_id: { $ref: '#/components/schemas/Uuid' }
                       display_name: { type: string, maxLength: 128 }
-                      class_id: { $ref: '#/components/schemas/Uuid' }
+                      grade_level: { $ref: '#/components/schemas/GradeLevel' }
                       reasons:
                         type: array
                         maxItems: 8
@@ -22186,55 +22182,22 @@ components:
         rapid_guess_count: { type: integer, minimum: 0, description: Số câu trả lời gắn cờ rapid_guess ("làm quá nhanh") }
         due_at_override: { $ref: '#/components/schemas/Timestamp' }
         submitted_at: { $ref: '#/components/schemas/Timestamp' }
-    CourseResults:
-      type: object
-      required: [course_id, columns, rows, page]
-      description: Bảng kết quả course — điểm tự chấm các bài graded (thang 10); không có XP/rating; không đồng bộ ngược SIS
-      properties:
-        course_id: { $ref: '#/components/schemas/Uuid' }
-        columns:
-          type: array
-          maxItems: 100
-          items:
-            type: object
-            required: [assignment_id, title]
-            properties:
-              assignment_id: { $ref: '#/components/schemas/Uuid' }
-              title: { type: string, maxLength: 120 }
-              due_at: { $ref: '#/components/schemas/Timestamp' }
-              score_policy: { type: string, enum: [best, last, first] }
-        rows:
-          type: array
-          maxItems: 100
-          items:
-            type: object
-            required: [student_id, scores]
-            properties:
-              student_id: { $ref: '#/components/schemas/Uuid' }
-              display_name: { type: string, maxLength: 128 }
-              scores:
-                type: array
-                maxItems: 100
-                items:
-                  type: object
-                  required: [assignment_id]
-                  properties:
-                    assignment_id: { $ref: '#/components/schemas/Uuid' }
-                    score_10: { type: [number, 'null'], minimum: 0, maximum: 10, description: "Điểm tự chấm hiệu lực theo score_policy (sau re-evaluate), thang score_scale" }
-                    status: { $ref: '#/components/schemas/AssignmentSubmissionStatus' }
-                    too_fast: { type: boolean, description: "Có lượt trả lời làm quá nhanh (rapid_guess)" }
-        page: { $ref: '#/components/schemas/PageInfo' }
     LmsReportRequest:
       type: object
       required: [report_type, format]
       additionalProperties: false
       properties:
-        report_type: { type: string, enum: [assignment_results, course_results, regulation_reference, skill_map, school_monthly] }
+        report_type:
+          type: string
+          enum: [assignment_results, regulation_reference, skill_map, school_monthly]
+          description: >-
+            ADR-0095: không còn course_results (không còn course) — kết quả theo bài giao (assignment_results, có cột khối của
+            học sinh lúc được giao); skill_map theo trường × khối × môn; school_monthly theo khối × môn, ô khối dưới
+            analytics_min_cell_size học sinh bị che (FR-ANL-016)
         format: { type: string, enum: [csv, xlsx, pdf] }
         assignment_id: { $ref: '#/components/schemas/Uuid', description: Bắt buộc với assignment_results }
-        course_id: { $ref: '#/components/schemas/Uuid', description: Bắt buộc với course_results }
-        school_id: { $ref: '#/components/schemas/Uuid', description: "Bắt buộc với regulation_reference, school_monthly" }
-        class_id: { $ref: '#/components/schemas/Uuid', description: Bắt buộc với skill_map; lọc lớp với regulation_reference }
+        school_id: { $ref: '#/components/schemas/Uuid', description: "Bắt buộc với regulation_reference, skill_map, school_monthly" }
+        grade_level: { $ref: '#/components/schemas/GradeLevel', description: "Bắt buộc với skill_map; lọc khối với regulation_reference, school_monthly, assignment_results" }
         subject_id: { $ref: '#/components/schemas/Uuid', description: "Bắt buộc với regulation_reference, skill_map" }
         period: { $ref: '#/components/schemas/AssessmentPeriod' }
         academic_year: { type: integer, minimum: 2020, maximum: 2100, description: Năm bắt đầu năm học của period (mặc định năm học hiện tại) }
@@ -25379,8 +25342,8 @@ components:
       properties:
         report_type:
           type: string
-          enum: [learning_summary, class_progress, assignment_results, game_summary, efficacy_dataset]
-          description: efficacy_dataset chỉ ở /admin/reports, cần thêm permission platform.efficacy_study.export và params.study_id; chỉ format csv, dữ liệu định danh giả (F035, LEARNING_EFFICACY_PLAN §7)
+          enum: [learning_summary, grade_progress, assignment_results, game_summary, efficacy_dataset]
+          description: grade_progress = trường × khối của tenant (ADR-0095, thay class_progress; ô khối dưới analytics_min_cell_size học sinh bị che, FR-ANL-016); efficacy_dataset chỉ ở /admin/reports, cần thêm permission platform.efficacy_study.export và params.study_id; chỉ format csv, dữ liệu định danh giả (F035, LEARNING_EFFICACY_PLAN §7)
         format: { type: string, enum: [csv, xlsx] }
         from: { type: string, format: date }
         to: { type: string, format: date }
@@ -25419,10 +25382,10 @@ components:
           maxItems: 100
           items:
             type: object
-            required: [student_id, class_id, level_code, coverage_ratio, rapid_guess_ratio, profile_version]
+            required: [student_id, level_code, coverage_ratio, rapid_guess_ratio, profile_version]
             properties:
               student_id: { $ref: '#/components/schemas/Uuid' }
-              class_id: { $ref: '#/components/schemas/Uuid' }
+              grade_level: { $ref: '#/components/schemas/GradeLevel', description: Khối của học sinh lúc tính mức (ADR-0095) }
               level_code: { type: string, enum: [excellent, completed, not_completed, pass, not_pass, insufficient_data] }
               coverage_ratio: { type: number, minimum: 0, maximum: 1 }
               proficient_ratio: { type: number, minimum: 0, maximum: 1 }

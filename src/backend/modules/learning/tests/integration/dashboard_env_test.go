@@ -32,8 +32,8 @@ type dashProxy struct{ q *query.Dashboards }
 func (p dashProxy) GetSchoolDashboard(ctx context.Context, in query.SchoolDashboardInput) (dto.SchoolDashboardView, error) {
 	return p.q.GetSchoolDashboard(ctx, in)
 }
-func (p dashProxy) GetClassDashboard(ctx context.Context, in query.ClassDashboardInput) (dto.ClassDashboardView, error) {
-	return p.q.GetClassDashboard(ctx, in)
+func (p dashProxy) GetGradeDashboard(ctx context.Context, in query.GradeDashboardInput) (dto.GradeDashboardView, error) {
+	return p.q.GetGradeDashboard(ctx, in)
 }
 func (p dashProxy) GetSchoolSeries(ctx context.Context, in query.SeriesInput) (dto.AnalyticsSeriesView, error) {
 	return p.q.GetSchoolSeries(ctx, in)
@@ -107,21 +107,21 @@ func date(s string) time.Time {
 	return t
 }
 
-// dashKit is the golden dataset of the dashboard tests: tenant A with school S (classes 3A: a1, a2 — 3B: b1, grade 3) and
-// school S2 (class 4C: c1, grade 4), tenant B with school SB (class 3X: x1); subjects M (math) and V (Vietnamese); the
-// progress consumer (with rollups) on a real JetStream; the jobs with the fixed clock.
+// dashKit is the golden dataset of the dashboard tests (ADR-0095: students belong to a school and a grade, no class): tenant A
+// with school S (grade 3: a1, a2, b1 active plus a3, b2 without activity — 5 students, visible) and school S2 (grade 4: c1
+// alone — hidden by analytics_min_cell_size), tenant B with school SB (grade 3: x1); subjects M (math) and V (Vietnamese);
+// the progress consumer (with rollups) on a real JetStream; the jobs with the fixed clock.
 type dashKit struct {
-	c                                  *curEnv
-	js                                 jetstream.JetStream
-	ev                                 *fakeEvidence
-	prog                               command.Progress
-	jobs                               command.Dashboards
-	versions                           *versionsSpy
-	school, school2, schoolB           uuid.UUID
-	class3A, class3B, class4C, class3X uuid.UUID
-	a1, a2, b1, c1, x1                 uuid.UUID
-	subjM, subjV                       uuid.UUID
-	objectives                         []uuid.UUID // O1..O3 of math, grade 3
+	c                          *curEnv
+	js                         jetstream.JetStream
+	ev                         *fakeEvidence
+	prog                       command.Progress
+	jobs                       command.Dashboards
+	versions                   *versionsSpy
+	school, school2, schoolB   uuid.UUID
+	a1, a2, b1, c1, x1, a3, b2 uuid.UUID
+	subjM, subjV               uuid.UUID
+	objectives                 []uuid.UUID // O1..O3 of math, grade 3
 }
 
 const (
@@ -143,8 +143,7 @@ func (c *curEnv) dashKit(ctx context.Context, t *testing.T) *dashKit {
 	k := &dashKit{c: c, js: jetStream(ctx, t), ev: &fakeEvidence{facts: map[uuid.UUID]write.AttemptFacts{}, counts: map[uuid.UUID]write.ItemCounts{}},
 		versions: &versionsSpy{n: map[uuid.UUID]int{}},
 		school:   uuid.New(), school2: uuid.New(), schoolB: uuid.New(),
-		class3A: uuid.New(), class3B: uuid.New(), class4C: uuid.New(), class3X: uuid.New(),
-		a1: uuid.New(), a2: uuid.New(), b1: uuid.New(), c1: uuid.New(), x1: uuid.New()}
+		a1: uuid.New(), a2: uuid.New(), b1: uuid.New(), c1: uuid.New(), x1: uuid.New(), a3: uuid.New(), b2: uuid.New()}
 	repo := writerepo.MasteryRepo{}
 	k.prog = command.Progress{Store: repo, Evidence: k.ev, Lessons: writerepo.LessonRepo{}, Rollups: writerepo.RollupRepo{},
 		LateWindow: analytics.DefaultConfig().LateWindow, Late: observability.DashboardCounter{}, Clock: c.clk.Now}
@@ -171,24 +170,13 @@ func (c *curEnv) dashKit(ctx context.Context, t *testing.T) *dashKit {
 	for _, s := range []struct{ id, tenant uuid.UUID }{{k.school, c.tenantA}, {k.school2, c.tenantA}, {k.schoolB, c.tenantB}} {
 		exec(`INSERT INTO ref.schools (school_id, tenant_id, status, source_version) VALUES ($1, $2, 'active', 1)`, s.id, s.tenant)
 	}
-	for _, cl := range []struct {
+	for _, st := range []struct {
 		id, tenant, school uuid.UUID
 		grade              int
-		name               string
-	}{{k.class3A, c.tenantA, k.school, 3, "3A"}, {k.class3B, c.tenantA, k.school, 3, "3B"}, {k.class4C, c.tenantA, k.school2, 4, "4C"},
-		{k.class3X, c.tenantB, k.schoolB, 3, "3X"}} {
-		exec(`INSERT INTO ref.classes (class_id, tenant_id, school_id, grade_level, name, source_version) VALUES ($1, $2, $3, $4, $5, 1)`,
-			cl.id, cl.tenant, cl.school, cl.grade, cl.name)
-	}
-	for _, st := range []struct {
-		id, tenant, school, class uuid.UUID
-		grade                     int
-	}{{k.a1, c.tenantA, k.school, k.class3A, 3}, {k.a2, c.tenantA, k.school, k.class3A, 3}, {k.b1, c.tenantA, k.school, k.class3B, 3},
-		{k.c1, c.tenantA, k.school2, k.class4C, 4}, {k.x1, c.tenantB, k.schoolB, k.class3X, 3}} {
+	}{{k.a1, c.tenantA, k.school, 3}, {k.a2, c.tenantA, k.school, 3}, {k.b1, c.tenantA, k.school, 3}, {k.a3, c.tenantA, k.school, 3},
+		{k.b2, c.tenantA, k.school, 3}, {k.c1, c.tenantA, k.school2, 4}, {k.x1, c.tenantB, k.schoolB, 3}} {
 		exec(`INSERT INTO ref.students (student_id, tenant_id, school_id, grade_level, source_version) VALUES ($1, $2, $3, $4, 1)`,
 			st.id, st.tenant, st.school, st.grade)
-		exec(`INSERT INTO ref.enrollments (student_id, class_id, start_date, tenant_id, status, source_version)
-			VALUES ($1, $2, date '2026-09-01', $3, 'active', 1)`, st.id, st.class, st.tenant)
 	}
 	// Curriculum: platform math with three grade-3 objectives, assigned to tenants A and B.
 	k.subjM, k.subjV = uuid.MustParse(c.subject(t, "dash_math")), uuid.MustParse(c.subject(t, "dash_viet"))
@@ -287,22 +275,27 @@ func (k *dashKit) mastery(ctx context.Context, t *testing.T, tenant, school, stu
 	}
 }
 
-// assignment seeds a school assignment of subject with one submission status per student (F041 state read model).
+// assignment seeds a school assignment of subject with, per student, the grade when targeted and the submission status (F041
+// state read model, ADR-0095: assignment_target_students.grade_level).
 func (k *dashKit) assignment(ctx context.Context, t *testing.T, tenant, school, subject uuid.UUID, status string, due time.Time,
 	subs map[uuid.UUID][2]any) uuid.UUID {
 	t.Helper()
 	id := uuid.New()
-	if _, err := k.c.platform.ExecContext(ctx, `INSERT INTO lms.assignments (assignment_id, tenant_id, school_id, course_id, subject_id, created_by,
+	if _, err := k.c.platform.ExecContext(ctx, `INSERT INTO lms.assignments (assignment_id, tenant_id, school_id, subject_id, created_by,
 			created_by_role, title, content_type, content_id, follow_latest, mode, open_at, due_at, feedback_timing, result_release, status)
-		VALUES ($1, $2, $3, $4, $5, $6, 'school_admin', $11, 'activity', $7, true, 'practice', $8, $9,
-			'immediate', 'immediate', $10)`, id, tenant, school, uuid.New(), subject, uuid.New(), uuid.New(), due.Add(-72*time.Hour), due,
+		VALUES ($1, $2, $3, $4, $5, 'school_admin', $10, 'activity', $6, true, 'practice', $7, $8,
+			'immediate', 'immediate', $9)`, id, tenant, school, subject, uuid.New(), uuid.New(), due.Add(-72*time.Hour), due,
 		status, "Bài giao "+id.String()[:8]); err != nil {
 		t.Fatal(err)
 	}
 	for student, v := range subs {
+		if _, err := k.c.platform.ExecContext(ctx, `INSERT INTO lms.assignment_target_students (assignment_target_student_id, tenant_id,
+				school_id, assignment_id, student_id, grade_level, source) VALUES ($1, $2, $3, $4, $5, $6, 'publish')`, uuid.New(), tenant, school, id,
+			student, v[0]); err != nil {
+			t.Fatal(err)
+		}
 		if _, err := k.c.platform.ExecContext(ctx, `INSERT INTO lms.assignment_submissions (assignment_submission_id, tenant_id, school_id,
-				assignment_id, student_id, class_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7)`, uuid.New(), tenant, school, id, student,
-			v[0], v[1]); err != nil {
+				assignment_id, student_id, status) VALUES ($1, $2, $3, $4, $5, $6)`, uuid.New(), tenant, school, id, student, v[1]); err != nil {
 			t.Fatal(err)
 		}
 	}

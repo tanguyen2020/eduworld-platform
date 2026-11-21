@@ -118,14 +118,14 @@ Người tạo: **School Admin** (trường mình) hoặc **Academic Manager** (
 
 ## 8. School Learning Dashboard
 
-Người dùng: **School Admin** (trường mình) và **Academic Manager** (trong scope môn/trường của UserRole), permission `analytics.school.read`; API `GET /api/v1/lms/dashboards/school`. Tenant Admin xem bản tổng hợp cấp tenant (`analytics.tenant.read`, §8.8). Điều hướng **trường → khối/lớp → học sinh**; mọi số liệu đọc rollup (ADR-0062). Kết quả là **tham khảo** cho nhà trường, không thay đánh giá chính thức theo quy định của Bộ ([ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md)).
+Người dùng: **School Admin** (trường mình) và **Academic Manager** (trong scope môn/trường của UserRole), permission `analytics.school.read`; API `GET /api/v1/lms/dashboards/school`. Tenant Admin xem bản tổng hợp cấp tenant (`analytics.tenant.read`, §8.8). Điều hướng **trường → khối → học sinh** (ADR-0095: không còn lớp; dashboard một khối `GET /api/v1/lms/schools/{school_id}/grades/{grade_level}/dashboard`); mọi số liệu đọc rollup (ADR-0062). **Che ô nhỏ:** mọi ô tổng hợp cấp khối có dưới `analytics_min_cell_size` (5) học sinh hiển thị "< 5" không số, che bổ sung giữa các khối của trường; số của trường chỉ cộng khối hiển thị ([LEARNING_ANALYTICS §5](../02-learning/LEARNING_ANALYTICS.md#5-read-models--aggregation), FR-ANL-016). Kết quả là **tham khảo** cho nhà trường, không thay đánh giá chính thức theo quy định của Bộ ([ASSESSMENT_REGULATION_PROFILE](../02-learning/ASSESSMENT_REGULATION_PROFILE.md)).
 
 ### 8.1. Trang tổng quan trường
 
 | # | Câu hỏi (§1) | Widget | Metric | Nguồn |
 |---|---|---|---|---|
-| 1 | Đã làm bài giao chưa? | **Bài giao đang mở / sắp hạn (48 giờ)** | Tỉ lệ nộp theo lớp, số chưa bắt đầu, số `missed` tuần trước | `assignment_submissions` |
-| 2 | Yếu ở LO nào? | **LO cần củng cố** + heatmap lớp × LO (§8.3) | Top LO có tỉ lệ học sinh ở mức `beginning` cao nhất theo khối/lớp | Rollup `objective_masteries` |
+| 1 | Đã làm bài giao chưa? | **Bài giao đang mở / sắp hạn (48 giờ)** | Tỉ lệ nộp theo khối (khối của học sinh lúc được giao; ô < 5 học sinh bị che), số chưa bắt đầu, số `missed` tuần trước | `assignment_submissions` |
+| 2 | Yếu ở LO nào? | **LO cần củng cố** + heatmap khối × LO (§8.3) | Top LO có tỉ lệ học sinh ở mức `beginning` cao nhất theo khối (khối hiển thị) | Rollup `objective_masteries` |
 | 3 | Ai cần hỗ trợ? | **Cần chú ý** | ≥ 2 bài `missed` trong 14 ngày; ≥ 3 LO `beginning`; tỉ lệ câu trả lời `rapid_guess` ≥ 30% trong 7 ngày (hiển thị "làm quá nhanh"); chưa vào game ≥ 7 ngày (`last_login_at`, ADR-0031) — ngưỡng `dashboard_attention_thresholds` [Confirmed — Technical Architect 2026-11-15]; sắp bị dọn do không đăng nhập (ADR-0032, chỉ xem) [Confirmed] | Read model |
 | 4 | Có tự học và tiến bộ? | **Tự học & gợi ý** | Thời gian học trung bình/học sinh, % học sinh làm hoạt động gợi ý tự động, số LO chuyển lên mức cao hơn sau ôn tập gợi ý | `progress_daily`, rollup mastery |
 | 5 | Vụ việc an toàn? | **Thông báo an toàn** | Số thông báo vụ việc nghiêm trọng liên quan học sinh của trường chưa xác nhận đã liên hệ phụ huynh (tóm tắt, không có nội dung chat) | `GET /api/v1/tenant/safety/school-notifications` (`moderation.school_notification.read`; [ADMIN_PORTAL §3.9](ADMIN_PORTAL.md#39-an-toàn-chat-danh-mục-từ-nhạy-cảm-công-tắc-kiểm-duyệt-và-thông-báo-vụ-việc)) |
@@ -136,9 +136,9 @@ Bảng học sinh × trạng thái, điểm tự chấm, số lần làm, thời
 
 ### 8.3. Bản đồ kỹ năng (LO heatmap)
 
-- **Cấp trường/khối:** hàng = lớp, cột = LO; ô = phân bố mức mastery của lớp (thanh xếp chồng + % học sinh đạt ≥ `proficient`).
-- **Cấp lớp:** hàng = học sinh, cột = LO; ô = mức mastery (màu + ký hiệu ○◔◑◕●, không chỉ dựa vào màu). Click ô → evidence gần nhất.
-- Nút **"Giao hoạt động / ôn tập cho lớp"**: chọn LO yếu → gợi ý activity, quest, mini-game có `objective_ids` chứa LO đó (ưu tiên LO tiên quyết còn yếu) → giao cho cả lớp hoặc chỉ nhóm học sinh yếu LO đó trong 2 thao tác (tạo assignment `mode=practice`, §4.1). Hoạt động ôn LO tiên quyết do nhà trường giao không bị giảm XP theo quy tắc ở [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md).
+- **Cấp trường:** hàng = khối, cột = LO; ô = phân bố mức mastery của khối (thanh xếp chồng + % học sinh đạt ≥ `proficient`); khối < 5 học sinh không hiển thị ô.
+- **Cấp khối:** hàng = học sinh của khối, cột = LO; ô = mức mastery (màu + ký hiệu ○◔◑◕●, không chỉ dựa vào màu). Click ô → evidence gần nhất.
+- Nút **"Giao hoạt động / ôn tập cho khối"**: chọn LO yếu → gợi ý activity, quest, mini-game có `objective_ids` chứa LO đó (ưu tiên LO tiên quyết còn yếu) → giao cho cả khối hoặc chỉ danh sách học sinh yếu LO đó trong 2 thao tác (tạo assignment `mode=practice`, §4.1). Hoạt động ôn LO tiên quyết do nhà trường giao không bị giảm XP theo quy tắc ở [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md).
 
 ### 8.4. Gợi ý tự động cho học sinh
 
@@ -151,13 +151,13 @@ Tổng quan môn, mastery theo topic, xu hướng 8 tuần, lịch sử bài, g�
 
 ### 8.6. Phân tích đề/bài
 
-Phổ điểm, trung vị, tỉ lệ đạt; theo câu: p-value của lớp/trường, lựa chọn sai phổ biến (`misconception_tag`), thời gian trung bình, tỉ lệ `rapid_guess` (loại khỏi p-value); nút "Giao ôn tập cho học sinh sai câu này".
+Phổ điểm, trung vị, tỉ lệ đạt; theo câu: p-value của phiên đề/trường, lựa chọn sai phổ biến (`misconception_tag`), thời gian trung bình, tỉ lệ `rapid_guess` (loại khỏi p-value); nút "Giao ôn tập cho học sinh sai câu này".
 
 ### 8.7. Component và bố cục
 
 | Khối | Component (Ant Design Pro / ops-ui) |
 |---|---|
-| Khung trang, chọn khối/lớp/môn | `ProLayout` + `Select` khối, lớp, môn |
+| Khung trang, chọn khối/môn | `ProLayout` + `Select` khối, môn |
 | Thẻ số liệu | `StatisticCard` |
 | Danh sách bài, học sinh | `ProTable` |
 | Heatmap LO | `MasteryHeatmap` (ops-ui): bảng lưới màu từ `admin-tokens` + ký hiệu mức, đọc được bằng bàn phím và trình đọc màn hình; biểu đồ cột/đường dùng ECharts (F056) |
@@ -167,22 +167,21 @@ Phổ điểm, trung vị, tỉ lệ đạt; theo câu: p-value của lớp/trư
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ EduWorld · School & LMS   TH Demo A · Khối [3 ▾] Lớp [Tất cả ▾] Môn [Toán ▾]  │
+│ EduWorld · School & LMS   TH Demo A · Khối [Tất cả ▾] Môn [Toán ▾]            │
 │                                                       🔔 2   ad.truong.a ▾   │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ ① BÀI GIAO SẮP HẠN                        │ ③ CẦN CHÚ Ý                      │
 │ ▸ Bảng nhân 6–9 (hạn 16/11 17:00)          │ ⚠ 7 HS chưa làm 2 bài gần nhất   │
-│   3A ███████████░░░ 24/32  3B ████░░ 12/30 │ ⚠ 11 HS yếu "Chia có dư"         │
+│   Khối 3 ███████████░░░ 36/62              │ ⚠ 11 HS yếu "Chia có dư"         │
 │ ▸ Ôn chu vi (hạn 18/11)       9/62         │ ⓘ 4 HS làm quá nhanh             │
 │                                           │ ⓘ 5 HS không vào game 7 ngày     │
 ├───────────────────────────────────────────┴──────────────────────────────────┤
-│ ② LO CẦN CỦNG CỐ: Chia có dư (3B) · Nhân với 7 (3A, 3C)  [Bản đồ kỹ năng]     │
+│ ② LO CẦN CỦNG CỐ: Chia có dư (khối 3) · Nhân với 7 (khối 4)  [Bản đồ kỹ năng] │
 │ ④ TỰ HỌC TUẦN NÀY  TB 42 phút/HS · 68% HS làm ôn tập gợi ý · 37 LO tiến bộ   │
 │ ⑤ AN TOÀN  1 thông báo chờ xác nhận liên hệ phụ huynh            [Xem]       │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ [+ Giao bài mới] [Giao ôn tập theo LO] [Nhóm học tập] [Thử thách lớp*]        │
+│ [+ Giao bài mới] [Giao ôn tập theo LO]                                        │
 └──────────────────────────────────────────────────────────────────────────────┘
-* chỉ School Admin
 ```
 
 ### 8.8. Hiệu năng và UX
@@ -190,7 +189,7 @@ Phổ điểm, trung vị, tỉ lệ đạt; theo câu: p-value của lớp/trư
 - Đọc read model trạng thái hiện tại và **rollup chuỗi thời gian** ([LEARNING_ANALYTICS §5](../02-learning/LEARNING_ANALYTICS.md#5-read-models--aggregation)), không đọc bảng nghiệp vụ hay `learning_events`; cơ chế dữ liệu, read replica, timeout 5 giây, cache và giới hạn khoảng thời gian (tối đa 2 năm, độ hạt tự chọn) theo [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) (ADR-0062). Tiến độ bài giao gần realtime qua `assignment.submission_updated`; số liệu tuần cập nhật ≤ 15 phút (`school_dashboard_refresh`, [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)).
 - Mỗi widget hiển thị **"Cập nhật lúc HH:mm"** từ `data_as_of`; số liệu hôm nay có nhãn "tạm tính" (`is_partial`) cho tới khi chốt ngày (02:30 ICT).
 - Cấp trường/khối đọc `rollup_school_*`; bản tổng hợp tenant (Tenant Admin) đọc `rollup_tenant_*`; khoảng > 31 ngày tự chuyển độ hạt tuần, > 1 năm chuyển tháng.
-- Trang tổng quan tải < 1,5 giây p95 cho trường 1.500 học sinh; trang lớp < 1,5 giây p95 cho lớp 45 học sinh [Confirmed].
+- Trang tổng quan tải < 1,5 giây p95 cho trường 1.500 học sinh; trang khối < 1,5 giây p95 cho khối 300 học sinh (danh sách phân trang 100) [Confirmed].
 - Ngôn ngữ trung tính ("cần hỗ trợ" thay vì "kém"); không xếp hạng học sinh theo điểm học tập [Confirmed].
 
 ## 9. Phạm vi dữ liệu theo vai trò
@@ -203,7 +202,7 @@ Permission catalog và role mapping: [ADMIN_PORTAL §2](ADMIN_PORTAL.md#2-permis
 | Tạo/sửa bài giao; gia hạn/miễn/nhắc; công bố kết quả | ✘ | Trường mình | Trong scope |
 | Thử thách lớp, giải trường từ template | ✘ | Trường mình | ✘ |
 | Tạo study group | ✘ | Trường mình | Trong scope |
-| Kết quả học tập, dashboard | Tổng hợp tenant, drill-down tới trường | Trường → lớp → học sinh | Trong scope, tới học sinh |
+| Kết quả học tập, dashboard | Tổng hợp tenant, drill-down tới trường | Trường → khối → học sinh | Trong scope, tới học sinh |
 | Họ tên, mã học sinh | ✔ | ✔ | ✔ (trong scope) |
 | Ngày sinh, liên hệ phụ huynh | Theo policy tenant | Theo policy trường | ✘ |
 | Thông báo vụ việc an toàn (tóm tắt) | ✔ | Trường mình | ✘ |
@@ -211,7 +210,7 @@ Permission catalog và role mapping: [ADMIN_PORTAL §2](ADMIN_PORTAL.md#2-permis
 | Game Rating, XP, inventory | Tổng hợp | Tổng hợp | ✘ |
 
 - Truy cập hồ sơ ngoài scope → `403`/`404` (không lộ sự tồn tại); xem hồ sơ học sinh ghi audit [Confirmed].
-- Học sinh chuyển lớp trong trường: dữ liệu giai đoạn cũ vẫn hiển thị theo lớp cũ; chuyển trường: trường cũ xem dữ liệu giai đoạn học tại trường trong 1 năm học [Confirmed].
+- Học sinh lên khối/đổi khối: dữ liệu giai đoạn cũ vẫn tính cho khối cũ (khối ghi lúc sự kiện, ADR-0095); chuyển trường: trường cũ xem dữ liệu giai đoạn học tại trường trong 1 năm học [Confirmed].
 - "Xóa" bài giao/thử thách/course là soft-delete (ADR-0028); bài đã có lượt làm chỉ `cancel`.
 
 ## 10. Báo cáo kết quả
@@ -221,11 +220,11 @@ Permission catalog và role mapping: [ADMIN_PORTAL §2](ADMIN_PORTAL.md#2-permis
 
 | Báo cáo | Định dạng | Nội dung |
 |---|---|---|
-| Kết quả bài giao | XLSX, CSV | Học sinh × điểm tự chấm, trạng thái, thời gian, cờ "làm quá nhanh" |
-| Bảng kết quả course | XLSX | Các bài graded |
+| Kết quả bài giao (`assignment_results`) | XLSX, CSV | Học sinh × điểm tự chấm, khối lúc được giao, trạng thái, thời gian, cờ "làm quá nhanh" (ADR-0095: thay bảng kết quả course) |
 | Báo cáo tham khảo TT27/TT22 | XLSX, PDF | Mức tham khảo theo môn/LO, nhãn "Tham khảo" |
-| Bản đồ kỹ năng | XLSX, PDF | LO × lớp hoặc LO × học sinh |
-| Báo cáo trường/lớp tháng | PDF | Tiến độ, LO mạnh/yếu, mức tham gia, tự học sau gợi ý |
+| Bản đồ kỹ năng (`skill_map`) | XLSX, PDF | Học sinh của một khối × LO của một môn |
+| Báo cáo tháng của trường (`school_monthly`) | PDF, XLSX, CSV | Theo khối × môn: tiến độ, mức tham gia, bài giao; ô khối < 5 học sinh ghi "<5" không số |
+| Tiến độ theo khối của tenant (`grade_progress`, `/tenant/reports`) | XLSX, CSV | Trường × khối; ô < 5 học sinh bị che (thay `class_progress`, ADR-0095) |
 
 Xuất là job nền (`POST /api/v1/lms/reports` → `report_id`, URL ký 15 phút; worker đọc read replica theo lô, giới hạn theo [DASHBOARD_DATA §10](../07-backend/DASHBOARD_DATA.md#10-xuất-báo-cáo-bất-đồng-bộ)), có watermark, chỉ dữ liệu trong quyền, audit `report.exported`, không xuất chat.
 
@@ -239,7 +238,8 @@ Xuất là job nền (`POST /api/v1/lms/reports` → `report_id`, URL ký 15 ph�
 | POST | `/api/v1/lms/assignments/{id}/students/{sid}:extend` · `:excuse` | Ngoại lệ cá nhân |
 | GET | `/api/v1/lms/assignments/{id}/submissions` | Theo dõi |
 | GET | `/api/v1/learning/my-assignments?status=` (`listMyAssignments`) (lịch hạn nộp lấy từ danh sách này; route `/lms/*` chỉ dành cho nhân sự) | Học sinh (game) |
-| GET | `/api/v1/lms/dashboards/school?school_id=&grade=&class_id=&subject=&from=&to=` | School Learning Dashboard (§8, đọc rollup; `analytics.school.read`) |
+| GET | `/api/v1/lms/dashboards/school?school_id=&grade_level=&subject_id=&from=&to=` | School Learning Dashboard (§8, đọc rollup; `analytics.school.read`) |
+| GET | `/api/v1/lms/schools/{school_id}/grades/{grade_level}/dashboard` | Dashboard một khối: heatmap LO, học sinh của khối, tiến độ bài giao (§8.3; `analytics.school.read`; ADR-0095) |
 | GET | `/api/v1/lms/courses/{id}/results` | Bảng kết quả course (tự chấm) |
 | GET / POST | `/api/v1/lms/challenges` | Thử thách từ template (`lms.challenge.write`) |
 | GET | `/api/v1/lms/catalog/challenge-templates` · `/api/v1/lms/catalog/game-activities` | Danh mục chỉ đọc |
@@ -304,7 +304,7 @@ Mã FR/US, nhãn và phase do [PRODUCT_REQUIREMENTS](../00-overview/PRODUCT_REQU
 | AC-LMS-006 | School Admin không thấy workspace Game Ops/Live Ops/Platform; gọi `/api/v1/game-admin/*` qua gateway public → không có route |
 | AC-LMS-007 | Bộ chọn nội dung khi giao bài không liệt kê `written_response`/`speaking`/`project`; gọi API tạo assignment với activity loại đó → `422` |
 | AC-LMS-008 | Bài `result_release = manual`: học sinh không thấy kết quả cho tới khi `:release-results`; `after_close`: tự công bố khi `closed` |
-| AC-LMS-010 | `ad.truong.a` mở dashboard thấy đúng các lớp của trường mình trong năm học hiện tại; drill-down trường → lớp → học sinh |
+| AC-LMS-010 | `ad.truong.a` mở dashboard thấy đúng các khối của trường mình; drill-down trường → khối → học sinh; khối < 5 học sinh bị che (ADR-0095) |
 | AC-LMS-011 | Heatmap khớp `objective_masteries` (lệch do cache ≤ 15 phút) |
 | AC-LMS-012 | School Admin trường A gọi hồ sơ HS trường B cùng tenant → `403`/`404`, không lộ sự tồn tại |
 | AC-LMS-013 | Báo cáo xuất không chứa HS ngoài scope, có watermark; báo cáo TT27/TT22 có nhãn "Tham khảo" |

@@ -1,7 +1,7 @@
 # Feature Specification: F043 — Rollup analytics và School Learning Dashboard API
 
 **Feature Branch**: `043-school-learning-dashboard` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` · **Mốc**: M-C3 · **Phụ thuộc**: F031, F041
-**Input**: Nhà trường (School Admin, Academic Manager) theo dõi bài giao, LO yếu, học sinh cần hỗ trợ và hiệu quả tự học theo trường → lớp → học sinh; Tenant Admin và System Admin xem bản tổng hợp. Mọi số liệu đọc rollup dựng gia tăng, không truy vấn dữ liệu thô (ADR-0062, ADR-0072). FR nguồn: FR-ANL-003, FR-ANL-005, FR-ANL-012, FR-ANL-013, FR-ANL-016, FR-LMS-003, FR-LMS-011, FR-PRG-001, NFR-PERF-017, NFR-PERF-018.
+**Input**: Nhà trường (School Admin, Academic Manager) theo dõi bài giao, LO yếu, học sinh cần hỗ trợ và hiệu quả tự học theo trường → khối → học sinh (ADR-0095: không còn lớp); Tenant Admin và System Admin xem bản tổng hợp. Mọi số liệu đọc rollup dựng gia tăng, không truy vấn dữ liệu thô (ADR-0062, ADR-0072). FR nguồn: FR-ANL-003, FR-ANL-005, FR-ANL-012, FR-ANL-013, FR-ANL-016, FR-LMS-003, FR-LMS-011, FR-PRG-001, NFR-PERF-017, NFR-PERF-018.
 
 ## Clarifications
 
@@ -28,8 +28,14 @@
 
 ### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
 
-- Q: T042 `DashboardMeta.available_from` tính thế nào? → A: [Confirmed] Ngày `bucket_date` nhỏ nhất của rollup ngày trong phạm vi câu trả lời: `rollup_class_daily` của lớp khi có `class_id` (dashboard lớp, dashboard trường lọc lớp), ngược lại `rollup_school_daily` của các trường của phạm vi (dashboard trường, chuỗi, hồ sơ học sinh theo trường của học sinh, tóm tắt tenant); không áp bộ lọc khối/môn; `null`/vắng khi phạm vi chưa có dòng và ở tóm tắt platform (không tính liên tenant). Chưa có bảng `available_from` theo chỉ số của DASHBOARD_DATA §5 (backfill) — khi có, thay nguồn mà không đổi contract.
+- Q: T042 `DashboardMeta.available_from` tính thế nào? → A: [Confirmed] Ngày `bucket_date` nhỏ nhất của rollup ngày trong phạm vi câu trả lời: (ADR-0095: không còn nhánh lớp — luôn `rollup_school_daily` của trường; xem Session ADR-0095) `rollup_class_daily` của lớp khi có `class_id` (dashboard lớp, dashboard trường lọc lớp), ngược lại `rollup_school_daily` của các trường của phạm vi (dashboard trường, chuỗi, hồ sơ học sinh theo trường của học sinh, tóm tắt tenant); không áp bộ lọc khối/môn; `null`/vắng khi phạm vi chưa có dòng và ở tóm tắt platform (không tính liên tenant). Chưa có bảng `available_from` theo chỉ số của DASHBOARD_DATA §5 (backfill) — khi có, thay nguồn mà không đổi contract.
 - Q: T042 `replica_lag_warning`? → A: [Confirmed] Đo trong cùng transaction đọc (savepoint, không bao giờ làm hỏng câu trả lời): `pg_is_in_recovery()` và đã replay hết WAL nhận được → 0, ngược lại `now() - pg_last_xact_replay_timestamp()`; cờ = độ trễ > `dashboard_replica_lag_alert_seconds` (60 s, CONFIG_DEFAULTS, `analytics.Config.ReplicaLagAlert`); không đo được → cờ `true` (log WARN). Số liệu vẫn trả từ replica (không fallback primary, F043-AC-21); phản hồi có cờ `true` không ghi cache Valkey. Cả hai trường là tùy chọn trong contract (không phá vỡ client cũ).
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Bỏ khái niệm lớp (owner chốt 2026-11-21, [ADR-0095](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md)) — dashboard đổi gì? → A: [Confirmed] Phân cấp **trường → khối → học sinh**. Rollup ghi khối **tại thời điểm sự kiện** (`progress_daily.grade_level`, `learning_events.grade_level` của WP-L1; khối hiện tại của `ref.students` chỉ khi dòng chưa có); không ghi `class_id` nữa (cột giữ tới WP-R). Bỏ `rollup_class_*`, `rollup_class_objective_weekly`, `rm_class_objective_stats`, `rm_class_subject_summary` (không ghi, không đọc, DROP ở WP-R); thêm `rollup_grade_objective_weekly` và `rm_grade_objective_stats` (trường × khối × LO, heatmap LO của khối), `rm_school_grade_summary` thêm tỉ lệ nộp bài theo khối (khối của học sinh lúc được giao — `assignment_target_students.grade_level`). Không backfill SQL: job `read-model-refresh`/`dashboard-day-close` dựng lại (ADR-0095 chạy trước lần triển khai staging đầu tiên).
+- Q: Contract? → A: [Confirmed] Xóa `getClassDashboard`; thêm `getGradeDashboard` (`GET /lms/schools/{school_id}/grades/{grade_level}/dashboard`, `x-portal-action: action.school_lms.school_dashboard.view`, `analytics.school.read` trong trường/môn của grant). `getSchoolDashboard` bỏ `class_id` (giữ `grade_level` để lọc một khối): `widgets.classes` → `widgets.grades`, `weak_objectives[].class_ids` → `grade_levels`, `students_needing_attention[].class_id` → `grade_level` (khối hiện tại), `DashboardAssignmentProgress.by_class` → `by_grade`, thêm `suppressed`; `widgets.active_students` nullable. `getSchoolAnalyticsSeries` giữ `grade_level` (chuỗi khối). Không đổi `DashboardMeta` (`available_from` = rollup ngày của trường; `replica_lag_warning` như cũ). Quyền: chỉ `analytics.school.read` (`analytics.class.read` đã gộp ở WP-I1).
+- Q: Che ô nhỏ ở cấp khối? → A: [Confirmed] Mọi ô tổng hợp cấp khối có dưới `analytics_min_cell_size` (5) học sinh bị che (FR-ANL-016) với che bổ sung giữa các khối của trường (`analytics.SuppressGrades`, kích thước khối = học sinh hiệu lực của `ref.students`); khối 0 (chưa rõ) luôn bị che. Số tổng hợp của trường (accuracy, chuỗi, học sinh hoạt động, tự học, LO cần củng cố) chỉ cộng khối hiển thị; lọc một khối bị che hoặc trường không có khối nào hiển thị → `suppressed: true`, số tổng hợp `null`, chuỗi `value: null` + `suppressed`. Ô tiến độ bài giao theo khối có dưới 5 học sinh được giao cũng bị che (che bổ sung trong bài giao; tổng của bài = các ô hiển thị). Danh sách học sinh của khối và học sinh cần chú ý (dữ liệu từng học sinh trong quyền của nhân sự trường) vẫn trả. File xuất áp cùng quy tắc (F044).
 
 ### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
 
@@ -39,7 +45,7 @@
 
 ### User Story 1 — Pipeline rollup gia tăng và chốt ngày (Priority: P1)
 
-Mỗi câu trả lời, bài nộp, thay đổi mastery và trạng thái bài giao được cộng dồn gần thời gian thực vào rollup theo học sinh × ngày, lớp, trường, tenant; job chốt ngày tính chỉ số không cộng dồn và đặt cờ đã chốt.
+Mỗi câu trả lời, bài nộp, thay đổi mastery và trạng thái bài giao được cộng dồn gần thời gian thực vào rollup theo học sinh × ngày, trường × khối, tenant (ADR-0095: không còn cấp lớp); job chốt ngày tính chỉ số không cộng dồn và đặt cờ đã chốt.
 
 **Why this priority**: Mọi dashboard đọc rollup; không có rollup thì không có dashboard (FR-ANL-005, FR-ANL-013).
 
@@ -49,36 +55,37 @@ Mỗi câu trả lời, bài nộp, thay đổi mastery và trạng thái bài g
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F043-AC-01 | KHI nhận event học tập (`question.answered`, `activity.submitted`, `activity.graded`, `exam.graded`, `attempt.re_evaluated`, `assignment.*`, `learning_objective.*`), consumer rollup PHẢI upsert cộng dồn vào dòng của ngày event ở mọi cấp (học sinh, lớp theo `class_id` snapshot lúc event, trường, tenant) với `is_final = false` | FR-ANL-005 · [DASHBOARD_DATA §4](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-004 |
+| F043-AC-01 | KHI nhận event học tập (`question.answered`, `activity.submitted`, `activity.graded`, `exam.graded`, `attempt.re_evaluated`, `assignment.*`, `learning_objective.*`), consumer rollup PHẢI upsert cộng dồn vào dòng của ngày event ở mọi cấp (học sinh, trường × khối theo `grade_level` ghi lúc event — ADR-0095, tenant × khối) với `is_final = false` | FR-ANL-005 · [DASHBOARD_DATA §4](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-004 |
 | F043-AC-02 | KHI cùng `event_id` được giao lại, consumer PHẢI không cộng lần hai (`processed_events`) | ADR-0042 · [DASHBOARD_DATA §4](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-005, TC-SVC-003 |
 | F043-AC-03 | KHI job chốt ngày chạy cho một tenant, HỆ THỐNG PHẢI tính chính xác chỉ số distinct (học sinh hoạt động), đặt `is_final = true`, dựng lại tuần/tháng chứa ngày đó từ bảng ngày và tăng phiên bản cache của tenant | FR-ANL-013 · [DASHBOARD_DATA §4](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-004 |
 | F043-AC-04 | NẾU event đến muộn trong `dashboard_late_window_hours`, THÌ HỆ THỐNG PHẢI cộng vào đúng ngày và đánh dấu ngày cần chốt lại; NẾU muộn hơn cửa sổ, THÌ HỆ THỐNG PHẢI không sửa rollup và tăng metric `eduworld_rollup_late_events_total` | [DASHBOARD_DATA §5](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-005 |
 | F043-AC-05 | HỆ THỐNG PHẢI tính tỷ lệ (accuracy, `rapid_guess`, nộp đúng hạn) từ tử số/mẫu số lưu riêng, loại lần trả lời `rapid_guess` khỏi accuracy và mastery, và gắn `metric_version` cho mọi dòng | FR-PRG-001 · [LEARNING_ANALYTICS §4](../../docs/02-learning/LEARNING_ANALYTICS.md) | TC-DASH-004 |
-| F043-AC-06 | HỆ THỐNG PHẢI làm mới read model trạng thái hiện tại (phân bố level lớp × LO, tổng hợp lớp × môn, trường × khối × môn) trong `school_dashboard_refresh` và snapshot mastery theo tuần | FR-ANL-003 · [LEARNING_ANALYTICS §5](../../docs/02-learning/LEARNING_ANALYTICS.md) | TC-LMS-003 |
+| F043-AC-06 | HỆ THỐNG PHẢI làm mới read model trạng thái hiện tại (phân bố level trường × khối × LO, trường × khối × môn kèm tỉ lệ nộp bài theo khối — ADR-0095) trong `school_dashboard_refresh` và snapshot mastery theo tuần | FR-ANL-003 · [LEARNING_ANALYTICS §5](../../docs/02-learning/LEARNING_ANALYTICS.md) | TC-LMS-003 |
 
 ---
 
-### User Story 2 — School Learning Dashboard cấp trường và lớp (Priority: P1)
+### User Story 2 — School Learning Dashboard cấp trường và khối (Priority: P1)
 
-`ad.truong.a` mở dashboard trường: bài giao đang mở/sắp hạn, LO cần củng cố, học sinh cần chú ý, tự học & gợi ý, thông báo an toàn; drill-down sang lớp (heatmap LO × học sinh, cờ "làm quá nhanh").
+`ad.truong.a` mở dashboard trường: bài giao đang mở/sắp hạn, LO cần củng cố, học sinh cần chú ý, tự học & gợi ý, thông báo an toàn; drill-down sang khối (heatmap LO của khối, học sinh của khối, cờ "làm quá nhanh") — ADR-0095.
 
 **Why this priority**: Trả lời năm câu hỏi hằng tuần của nhà trường (US-LMS-002, US-LMS-003, US-LMS-004).
 
-**Independent Test**: `ad.truong.a` gọi `getSchoolDashboard` và `getClassDashboard` cho 3A → số liệu khớp truy vấn đối soát; `ad.truong.b` gọi với `school_id` TH Demo A → 404.
+**Independent Test**: `ad.truong.a` gọi `getSchoolDashboard` và `getGradeDashboard` cho khối 3 → số liệu khớp truy vấn đối soát; khối dưới 5 học sinh bị che; `ad.truong.b` gọi với `school_id` TH Demo A → 404.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F043-AC-07 | KHI người có `analytics.school.read` gọi `getSchoolDashboard`, module learning PHẢI trả trong một lần gọi các khối: bài giao mở/sắp hạn với tỷ lệ nộp theo lớp, LO cần củng cố, học sinh cần chú ý, tự học & gợi ý, số thông báo an toàn chưa xác nhận, kèm `grain`, `data_as_of`, `is_partial` | FR-LMS-011 · US-LMS-003 · [SCHOOL_LMS §8.1](../../docs/04-admin-portal/SCHOOL_LMS.md) | TC-LMS-003 |
+| F043-AC-07 | KHI người có `analytics.school.read` gọi `getSchoolDashboard`, module learning PHẢI trả trong một lần gọi các khối: bài giao mở/sắp hạn với tỷ lệ nộp theo khối, các khối của trường, LO cần củng cố, học sinh cần chú ý, tự học & gợi ý, số thông báo an toàn chưa xác nhận, kèm `grain`, `data_as_of`, `is_partial` | FR-LMS-011 · US-LMS-003 · [SCHOOL_LMS §8.1](../../docs/04-admin-portal/SCHOOL_LMS.md) | TC-LMS-003 |
 | F043-AC-08 | HỆ THỐNG PHẢI đưa học sinh vào danh sách "cần chú ý" theo `dashboard_attention_thresholds` (bài `missed`, LO `beginning`, lâu không vào game, tỷ lệ `rapid_guess` hiển thị là "làm quá nhanh") | US-LMS-004 · AC-PRG-002 · [SCHOOL_LMS §8.1](../../docs/04-admin-portal/SCHOOL_LMS.md) | TC-LMS-003 |
 | F043-AC-09 | HỆ THỐNG PHẢI trả khối tự học & gợi ý gồm thời gian học trung bình/học sinh, tỷ lệ học sinh bắt đầu hoạt động gợi ý trong 7 ngày và số LO lên mức sau ôn tập gợi ý (`recommendation_follow_rate`) | US-LMS-009 · [LEARNING_ANALYTICS §4](../../docs/02-learning/LEARNING_ANALYTICS.md) | — |
-| F043-AC-10 | KHI gọi `getClassDashboard`, HỆ THỐNG PHẢI trả tiến độ bài giao, phân bố mức mastery lớp × LO (heatmap) và danh sách học sinh phân trang cursor ≤ `dashboard_page_size_max` | US-LMS-002 · [SCHOOL_LMS §8.3](../../docs/04-admin-portal/SCHOOL_LMS.md) | TC-LMS-003, TC-DASH-002 |
+| F043-AC-10 | KHI gọi `getGradeDashboard`, HỆ THỐNG PHẢI trả tiến độ bài giao của khối, phân bố mức mastery khối × LO (heatmap, ADR-0095) và danh sách học sinh của khối phân trang cursor ≤ `dashboard_page_size_max` | US-LMS-002 · [SCHOOL_LMS §8.3](../../docs/04-admin-portal/SCHOOL_LMS.md) | TC-LMS-003, TC-DASH-002 |
 | F043-AC-11 | HỆ THỐNG PHẢI trả Learning Score, Mastery và XP/Game Rating tách biệt, không có cột XP, rating hay xếp hạng học sinh theo điểm học tập, không chứa nội dung chat | FR-ANL-003 · ADR-0018 · [SCHOOL_LMS §9](../../docs/04-admin-portal/SCHOOL_LMS.md) | TC-LMS-003 |
 | F043-AC-12 | KHI gọi `getSchoolAnalyticsSeries` với `metric` hợp lệ, HỆ THỐNG PHẢI trả chuỗi ≤ 120 điểm theo độ hạt server chọn | FR-ANL-012 · [DASHBOARD_DATA §8](../../docs/07-backend/DASHBOARD_DATA.md) | TC-DASH-003 |
 | F043-AC-13 | HỆ THỐNG PHẢI giới hạn `school_admin` trong trường của UserRole và `academic_manager` trong trường/môn được gán; ngoài phạm vi trường PHẢI trả `404 NOT_FOUND`, môn ngoài phạm vi PHẢI trả `403 PERMISSION_DENIED` | AC-ORG-002 · AC-ORG-003 | TC-TEN-002, TC-TEN-003 |
 | F043-AC-14 | NẾU người gọi là `safety_moderator`, học sinh, hoặc thiếu `analytics.school.read`, THÌ HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` | [SCHOOL_LMS §13](../../docs/04-admin-portal/SCHOOL_LMS.md) (AC-LMS-018) · AGENTS R7 | — |
-| F043-AC-15 | NẾU `school_id`/`class_id` thuộc tenant khác, THÌ HỆ THỐNG PHẢI trả `404 NOT_FOUND`; khóa cache PHẢI chứa `tenant_id` và không trả dữ liệu chéo tenant | AC-ORG-001 | TC-DASH-009, TC-TEN-001 |
+| F043-AC-15 | NẾU `school_id` (kể cả của `getGradeDashboard`) thuộc tenant khác, THÌ HỆ THỐNG PHẢI trả `404 NOT_FOUND`; khóa cache PHẢI chứa `tenant_id` và không trả dữ liệu chéo tenant | AC-ORG-001 | TC-DASH-009, TC-TEN-001 |
+| F043-AC-28 | HỆ THỐNG PHẢI che mọi ô tổng hợp cấp khối có dưới `analytics_min_cell_size` học sinh (che bổ sung giữa các khối của trường; ô tiến độ bài giao theo khối theo số học sinh được giao), chỉ cộng khối hiển thị vào số của trường và trả `suppressed: true` với số tổng hợp `null` khi lọc một khối bị che (ADR-0095) | FR-ANL-016 · [LEARNING_ANALYTICS §7](../../docs/02-learning/LEARNING_ANALYTICS.md) | TC-DASH-009 |
 
 ---
 
@@ -108,7 +115,7 @@ Dashboard luôn có khoảng thời gian giới hạn, độ hạt tự chọn, 
 
 School Admin mở hồ sơ một học sinh trong trường: tổng quan môn, mastery theo topic, xu hướng 8 tuần, lịch sử bài, gợi ý hệ thống đang hiển thị; mọi lượt xem được audit.
 
-**Why this priority**: Hỗ trợ đúng học sinh cần giúp (US-LMS-005), sau dashboard trường/lớp.
+**Why this priority**: Hỗ trợ đúng học sinh cần giúp (US-LMS-005), sau dashboard trường/khối.
 
 **Independent Test**: `ad.truong.a` gọi `getStudentLearningProfile` cho `hs.an.3a` → có dữ liệu, audit `learning.profile_viewed`; `ad.truong.b` gọi → 404.
 
@@ -139,7 +146,7 @@ Tenant Admin của đơn vị nhiều trường xem tổng hợp học tập the
 
 ### Edge Cases
 
-- NẾU học sinh chuyển lớp giữa kỳ, THÌ số liệu cũ giữ ở lớp cũ theo `class_id` snapshot (F043-AC-01).
+- NẾU học sinh lên khối/chuyển trường giữa kỳ, THÌ số liệu cũ giữ ở khối/trường cũ theo `grade_level`/`school_id` ghi lúc event (F043-AC-01, ADR-0095); danh sách học sinh và "cần chú ý" theo khối hiện tại.
 - NẾU định nghĩa chỉ số đổi, THÌ tăng `metric_version`, dashboard chỉ đọc version hiện hành (F043-AC-05).
 - NẾU re-evaluate đổi điểm một attempt đã chốt ngày trong cửa sổ trễ, THÌ ngày đó được chốt lại (F043-AC-04).
 - NẾU replica trễ > `dashboard_replica_lag_alert_seconds`, THÌ response vẫn trả kèm `data_as_of` cũ và cảnh báo trễ.
@@ -153,9 +160,9 @@ Tenant Admin của đơn vị nhiều trường xem tổng hợp học tập the
 
 | FR (PRD) | Phần feature này làm | Tài liệu sở hữu quy tắc |
 |---|---|---|
-| FR-ANL-003 | Analytics theo học sinh, lớp, trường, môn, chủ đề, LO | [LEARNING_ANALYTICS §5, §7](../../docs/02-learning/LEARNING_ANALYTICS.md) |
+| FR-ANL-003 | Analytics theo học sinh, khối, trường, môn, chủ đề, LO (ADR-0095) | [LEARNING_ANALYTICS §5, §7](../../docs/02-learning/LEARNING_ANALYTICS.md) |
 | FR-ANL-005 | Aggregation trong worker, dashboard đọc read model | [DASHBOARD_DATA §4](../../docs/07-backend/DASHBOARD_DATA.md) |
-| FR-ANL-012 | API dashboard trường → lớp → học sinh, tenant, platform (phần học tập) | [DASHBOARD_DATA §2, §14](../../docs/07-backend/DASHBOARD_DATA.md) |
+| FR-ANL-012 | API dashboard trường → khối → học sinh, tenant, platform (phần học tập; ADR-0095) | [DASHBOARD_DATA §2, §14](../../docs/07-backend/DASHBOARD_DATA.md) |
 | FR-ANL-013 | Chỉ đọc rollup, khoảng ≤ 2 năm, độ hạt tự chọn, `data_as_of`, `is_partial` | [DASHBOARD_DATA §8](../../docs/07-backend/DASHBOARD_DATA.md) |
 | FR-ANL-016 | Ẩn ô < 5 học sinh ở báo cáo tenant/platform | [LEARNING_ANALYTICS §5](../../docs/02-learning/LEARNING_ANALYTICS.md) |
 | FR-LMS-003 | Theo dõi kết quả, tiến độ, kỹ năng yếu theo LO | [SCHOOL_LMS §8](../../docs/04-admin-portal/SCHOOL_LMS.md) |
@@ -166,8 +173,8 @@ Tenant Admin của đơn vị nhiều trường xem tổng hợp học tập the
 
 ### Key Entities
 
-- **Rollup chuỗi thời gian**: số đo cộng dồn theo phạm vi (học sinh, lớp, lớp × LO, trường × khối × môn, tenant × khối × môn) × ngày/tuần/tháng, có tử/mẫu số, `metric_version`, cờ đã chốt, thời điểm tính.
-- **Read model trạng thái hiện tại**: phân bố level mastery lớp × LO, tổng hợp lớp × môn, trường × khối × môn, snapshot mastery tuần.
+- **Rollup chuỗi thời gian**: số đo cộng dồn theo phạm vi (học sinh, trường × khối × môn, trường × khối × LO, tenant × khối × môn — ADR-0095) × ngày/tuần/tháng, có tử/mẫu số, `metric_version`, cờ đã chốt, thời điểm tính.
+- **Read model trạng thái hiện tại**: phân bố level mastery trường × khối × LO, trường × khối × môn (kèm tỉ lệ nộp bài theo khối), snapshot mastery tuần.
 - **Query catalog**: danh sách truy vấn dashboard định nghĩa sẵn (mã truy vấn, bảng đọc, tham số phạm vi), không có truy vấn tự do.
 - **Danh sách cần chú ý**: học sinh vượt ngưỡng `dashboard_attention_thresholds` kèm lý do.
 - **Hồ sơ học tập học sinh**: tổng hợp đọc từ rollup cấp học sinh, mastery, gợi ý (F032).

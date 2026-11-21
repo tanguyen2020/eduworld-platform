@@ -14,8 +14,6 @@ import (
 // applied by the worker (SubjectIDs nil = every subject of the school; ScopeSchoolIDs nil = every school of the tenant).
 type ReportParams struct {
 	SchoolID       *uuid.UUID  `json:"school_id,omitempty"`
-	ClassID        *uuid.UUID  `json:"class_id,omitempty"`
-	CourseID       *uuid.UUID  `json:"course_id,omitempty"`
 	AssignmentID   *uuid.UUID  `json:"assignment_id,omitempty"`
 	SubjectID      *uuid.UUID  `json:"subject_id,omitempty"`
 	Period         string      `json:"period,omitempty"`
@@ -243,11 +241,11 @@ type AssessmentProfileRow struct {
 	CreatedAt   time.Time
 }
 
-// ReferenceStudent is a student × subject × class to grade for a period, with the objectives of the period scope.
+// ReferenceStudent is a student × subject (school and grade of the student, ADR-0095) to grade for a period, with the objectives of the period scope.
 type ReferenceStudent struct {
-	SchoolID, ClassID, StudentID, SubjectID uuid.UUID
-	GradeLevel                              int
-	Objectives                              []uuid.UUID
+	SchoolID, StudentID, SubjectID uuid.UUID
+	GradeLevel                     int
+	Objectives                     []uuid.UUID
 }
 
 // ObjectiveLevel is the mastery of one objective of a student.
@@ -259,26 +257,27 @@ type ObjectiveLevel struct {
 
 // ReferenceLevelRow is one row of learning.rm_student_subject_reference_levels.
 type ReferenceLevelRow struct {
-	TenantID, SchoolID, ClassID, StudentID, SubjectID uuid.UUID
-	AcademicYear                                      int
-	Period                                            string
-	ProfileID                                         uuid.UUID
-	ProfileCode                                       string
-	ProfileVersion                                    int
-	LevelCode                                         string
-	InScope                                           int
-	Coverage, Proficient, Mastered                    float64
-	OfficialScore                                     *float64
-	LowReliabilityExamIDs                             []uuid.UUID
-	RapidGuessRatio                                   float64
-	ComputedAt                                        time.Time
+	TenantID, SchoolID, StudentID, SubjectID uuid.UUID
+	GradeLevel                               int
+	AcademicYear                             int
+	Period                                   string
+	ProfileID                                uuid.UUID
+	ProfileCode                              string
+	ProfileVersion                           int
+	LevelCode                                string
+	InScope                                  int
+	Coverage, Proficient, Mastered           float64
+	OfficialScore                            *float64
+	LowReliabilityExamIDs                    []uuid.UUID
+	RapidGuessRatio                          float64
+	ComputedAt                               time.Time
 }
 
 // ReferenceStore computes the inputs and keeps the reference levels (tenant of the session).
 type ReferenceStore interface {
 	ActiveProfiles(ctx context.Context) ([]AssessmentProfileRow, error)
-	// ReferenceStudents returns the active students of the tenant with their class (grade 1–9) and, per subject of their
-	// courses, the objectives of the scope: the first share (curriculum order) of the objectives of the grade × subject.
+	// ReferenceStudents returns the active students of the tenant with their school and grade (1–9) and, per subject of
+	// their grade, the objectives of the scope: the first share (curriculum order) of the objectives of the grade × subject.
 	ReferenceStudents(ctx context.Context, share float64) ([]ReferenceStudent, error)
 	ObjectiveLevels(ctx context.Context, studentID uuid.UUID, objectives []uuid.UUID) ([]ObjectiveLevel, error)
 	// OfficialScores returns the average 10-point score of the official sessions of the subject closed in [from, to] and the

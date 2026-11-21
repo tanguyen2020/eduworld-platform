@@ -13,9 +13,9 @@ Database `eduworld_learning`. Bảng T dùng mixin `Base` (`tenant_id`, `created
 | `report_id` | UUIDv7 | PK | |
 | `tenant_id` | uuid | NULL = báo cáo liên tenant của System Admin | RLS; platform report chỉ role `learning_platform` |
 | `scope_level` | `varchar(64)` | CHECK `IN ('lms','tenant','platform')` | Route tạo |
-| `report_type` | `varchar(64)` | CHECK `IN ('assignment_results','course_results','regulation_reference','skill_map','school_monthly','tenant_learning_summary','platform_learning_summary')` | |
+| `report_type` | `varchar(64)` | CHECK `IN ('assignment_results','course_results','regulation_reference','skill_map','school_monthly','tenant_learning_summary','platform_learning_summary')` — ADR-0095: thêm `grade_progress` (migration 20261229000006), `course_results`, `class_progress` chỉ còn cho job cũ | |
 | `format` | `varchar(16)` | CHECK `IN ('csv','xlsx','pdf')` | |
-| `params` | `jsonb` | CHECK `octet_length ≤ 4096` | `school_id`, `class_id`, `course_id`, `assignment_id`, `subject_id`, `from`, `to`, `tenant_ids[]` |
+| `params` | `jsonb` | CHECK `octet_length ≤ 4096` | `school_id`, `grade_level` (ADR-0095 thay `class_id`, `course_id`), `assignment_id`, `subject_id`, `from`, `to`, `tenant_ids[]` |
 | `requested_by` | uuid | NOT NULL | Chỉ người này lấy link |
 | `status` | `varchar(64)` | CHECK `IN ('queued','running','succeeded','failed','expired')` | |
 | `row_count` | `int` | NULL | |
@@ -44,7 +44,7 @@ Database `eduworld_learning`. Bảng T dùng mixin `Base` (`tenant_id`, `created
 
 | Trường | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
-| `tenant_id`, `school_id`, `class_id`, `student_id`, `subject_id` | uuid | NOT NULL | `class_id` lúc tính |
+| `tenant_id`, `school_id`, `class_id`, `student_id`, `subject_id` | uuid | NOT NULL | ADR-0095: `class_id` nullable, không ghi (DROP ở WP-R); thêm `grade_level` = khối lúc tính |
 | `academic_year_id` | uuid | NOT NULL | |
 | `period` | `varchar(64)` | CHECK `IN ('mid_term_1','end_term_1','mid_term_2','end_term_2')` | |
 | `profile_id`, `profile_version` | uuid, `int` | NOT NULL | Giữ version đã dùng |

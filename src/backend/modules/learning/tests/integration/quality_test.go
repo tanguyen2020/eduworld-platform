@@ -318,6 +318,16 @@ func TestReferenceLevels(t *testing.T) {
 	if !strings.Contains(r.str("disclaimer"), "không thay thế đánh giá chính thức") || an["rapid_guess_ratio"] == nil {
 		t.Fatalf("disclaimer/rapid ratio: %s", r.raw)
 	}
+	// ADR-0095: the grade of the student when the level was computed, and the grade filter (no class).
+	if an["grade_level"] != 3.0 || strings.Contains(r.raw, "class_id") {
+		t.Fatalf("grade of the level: %s", r.raw)
+	}
+	if g := must(t, c.do(t, http.MethodGet, path+"&grade_level=3", qlcmA, nil, nil), http.StatusOK, "grade 3"); len(g.items("items")) != len(r.items("items")) {
+		t.Fatalf("grade 3 filter: %s", g.raw)
+	}
+	if g := must(t, c.do(t, http.MethodGet, path+"&grade_level=4", qlcmA, nil, nil), http.StatusOK, "grade 4"); len(g.items("items")) != 0 {
+		t.Fatalf("grade 4 filter: %s", g.raw)
+	}
 	// New thresholds → version 2; the rows of version 1 stay.
 	rules := regulation.DefaultRules()
 	rules.ExcellentMasteredRatio = 0.9

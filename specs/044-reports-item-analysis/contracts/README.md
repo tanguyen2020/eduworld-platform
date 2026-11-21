@@ -8,14 +8,14 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| `createLmsReport` | `POST /api/v1/lms/reports` → 202 | `learning.v1.yaml` | `report.export` · `Idempotency-Key` | Đã sửa (F044: thêm `subject_id`, `class_id`, `period`, `from`/`to`; response `ReportJob`) |
+| `createLmsReport` | `POST /api/v1/lms/reports` → 202 | `learning.v1.yaml` | `report.export` · `Idempotency-Key` | Đã sửa (F044: thêm `subject_id`, `class_id`, `period`, `from`/`to`; response `ReportJob`); ADR-0095: bỏ `class_id`, `course_id`, loại `course_results`; thêm `grade_level` (bắt buộc với `skill_map`); `/tenant/reports` thay `class_progress` bằng `grade_progress` |
 | `getLmsReport` | `GET /api/v1/lms/reports/{report_id}` | `learning.v1.yaml` | người tạo | Đã sửa (F044: `status`, `row_count`, `download_url`, `expires_at`, `error`) |
 | `createTenantReport` | `POST /api/v1/tenant/reports` → 202 | `learning.v1.yaml` | `report.export` (TA, SA) · `Idempotency-Key` | Có sẵn, đã hiện thực (F044) |
 | `getTenantReport` | `GET /api/v1/tenant/reports/{report_id}` | `learning.v1.yaml` | người tạo | Có sẵn, đã hiện thực (F044) |
 | `createPlatformReport` | `POST /api/v1/admin/reports` → 202 | `learning.v1.yaml` | System Admin · `report.export` · gateway nội bộ + MFA | Có sẵn, đã hiện thực (F044) |
 | `getPlatformReport` | `GET /api/v1/admin/reports/{report_id}` | `learning.v1.yaml` | người tạo (System Admin) | Có sẵn, đã hiện thực (F044) |
-| `getCourseResults` | `GET /api/v1/lms/courses/{course_id}/results` | `learning.v1.yaml` | `lms.report.read` (scope trường/môn) | Đã hiện thực (F044, không có cột XP/rating) |
-| `getRegulationReferenceReport` | `GET /api/v1/lms/schools/{school_id}/reference-levels?subject_id=&period=&class_id=` | — | `analytics.school.read` | Đã thêm (F044) |
+| ~~`getCourseResults`~~ | ~~`GET /api/v1/lms/courses/{course_id}/results`~~ | — | — | **Đã xóa** (ADR-0095: không còn course — kết quả theo bài giao `assignment_results`) |
+| `getRegulationReferenceReport` | `GET /api/v1/lms/schools/{school_id}/reference-levels?subject_id=&period=&grade_level=` | — | `analytics.school.read` | Đã thêm (F044); ADR-0095: lọc `grade_level` thay `class_id`, item có `grade_level` |
 | `getQuestionStats` | `GET /api/v1/cms/learning/questions/{question_id}/stats` | — | `learning_content.read` | Đã thêm (F044) |
 | `listCalibrationProposals` | `GET /api/v1/cms/learning/calibration-proposals?status=` | — | `learning_content.review` | Đã thêm (F044) |
 | `acceptCalibrationProposal` | `POST /api/v1/cms/learning/calibration-proposals/{proposal_id}:accept` | — | `learning_content.review` · `Idempotency-Key` · audit | Đã thêm (F044) |

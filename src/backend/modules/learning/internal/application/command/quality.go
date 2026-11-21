@@ -576,7 +576,7 @@ func (h Quality) ReferenceLevelsFor(ctx context.Context, year int, period string
 			if err != nil {
 				return err
 			}
-			rows = append(rows, write.ReferenceLevelRow{TenantID: tenant, SchoolID: s.SchoolID, ClassID: s.ClassID, StudentID: s.StudentID,
+			rows = append(rows, write.ReferenceLevelRow{TenantID: tenant, SchoolID: s.SchoolID, GradeLevel: s.GradeLevel, StudentID: s.StudentID,
 				SubjectID: s.SubjectID, AcademicYear: year, Period: period, ProfileID: prof.ID, ProfileCode: prof.Code, ProfileVersion: prof.Version,
 				LevelCode: res.Level, InScope: len(s.Objectives), Coverage: res.Coverage, Proficient: res.ProficientRatio, Mastered: res.MasteredRatio,
 				OfficialScore: official, LowReliabilityExamIDs: low, RapidGuessRatio: rapid, ComputedAt: at})

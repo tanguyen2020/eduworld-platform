@@ -10,26 +10,19 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
 )
 
-// AvailableFrom implements read.DashboardReader (query available_from, F043 T042): the earliest daily bucket of the scope —
-// rollup_class_daily of the class when ClassID is set, else rollup_school_daily of the schools (the whole tenant when
-// SchoolIDs is nil). Grade and subject filters are not applied: the date is the start of the data of the school/class.
+// AvailableFrom implements read.DashboardReader (query available_from, F043 T042): the earliest daily bucket of
+// rollup_school_daily of the schools of the scope (the whole tenant when SchoolIDs is nil). Grade and subject filters are
+// not applied: the date is the start of the data of the school (ADR-0095: no class level).
 func (DashboardModel) AvailableFrom(ctx context.Context, sc read.DashScope) (*time.Time, error) {
 	q, err := dtx(ctx, "available_from")
 	if err != nil {
 		return nil, err
 	}
 	var d sql.NullTime
-	if sc.ClassID != nil {
-		// tenancyguard:ok derived rollup (no deleted_at): explicit tenant_id and class of the scope (index path of the PK)
-		err = q.row(ctx, `SELECT min(r.bucket_date) FROM learning.rollup_class_daily r
-			WHERE r.tenant_id = $1 AND ($2::uuid[] IS NULL OR r.school_id = ANY($2::uuid[])) AND r.class_id = $3 AND r.metric_version = 1`,
-			sc.TenantID, strIDs(sc.SchoolIDs), *sc.ClassID).Scan(&d)
-	} else {
-		// tenancyguard:ok derived rollup (no deleted_at): explicit tenant_id and schools of the scope (index path of the PK)
-		err = q.row(ctx, `SELECT min(r.bucket_date) FROM learning.rollup_school_daily r
+	// tenancyguard:ok derived rollup (no deleted_at): explicit tenant_id and schools of the scope (index path of the PK)
+	err = q.row(ctx, `SELECT min(r.bucket_date) FROM learning.rollup_school_daily r
 			WHERE r.tenant_id = $1 AND ($2::uuid[] IS NULL OR r.school_id = ANY($2::uuid[])) AND r.metric_version = 1`,
-			sc.TenantID, strIDs(sc.SchoolIDs)).Scan(&d)
-	}
+		sc.TenantID, strIDs(sc.SchoolIDs)).Scan(&d)
 	if err != nil || !d.Valid {
 		return nil, dashErr("available_from", err)
 	}

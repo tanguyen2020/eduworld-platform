@@ -24,12 +24,11 @@ const (
 // Report types.
 const (
 	TypeAssignmentResults   = "assignment_results"
-	TypeCourseResults       = "course_results"
 	TypeRegulationReference = "regulation_reference"
 	TypeSkillMap            = "skill_map"
 	TypeSchoolMonthly       = "school_monthly"
 	TypeLearningSummary     = "learning_summary"
-	TypeClassProgress       = "class_progress"
+	TypeGradeProgress       = "grade_progress"
 	TypeGameSummary         = "game_summary"
 	TypeEfficacyDataset     = "efficacy_dataset"
 )
@@ -52,9 +51,11 @@ const (
 
 // types are the report types a route serves in this release. game_summary belongs to F080: the contract lists it, the request
 // is refused until that feature is delivered [Proposed]. efficacy_dataset (F035) is a platform export of one study.
+// ADR-0095: course_results and class_progress are no longer served (no course, no class); grade_progress (school × grade)
+// replaces class_progress.
 var types = map[Scope][]string{
-	ScopeLMS:      {TypeAssignmentResults, TypeCourseResults, TypeRegulationReference, TypeSkillMap, TypeSchoolMonthly},
-	ScopeTenant:   {TypeLearningSummary, TypeClassProgress, TypeAssignmentResults},
+	ScopeLMS:      {TypeAssignmentResults, TypeRegulationReference, TypeSkillMap, TypeSchoolMonthly},
+	ScopeTenant:   {TypeLearningSummary, TypeGradeProgress, TypeAssignmentResults},
 	ScopePlatform: {TypeLearningSummary, TypeEfficacyDataset},
 }
 
@@ -84,8 +85,6 @@ type Request struct {
 	Type         string
 	Format       string
 	SchoolID     *uuid.UUID
-	ClassID      *uuid.UUID
-	CourseID     *uuid.UUID
 	AssignmentID *uuid.UUID
 	SubjectID    *uuid.UUID
 	Period       string
@@ -132,6 +131,9 @@ func (r Request) Validate(cfg Config) error {
 	default:
 		return &FieldError{Field: "format", Reason: "must be csv, xlsx or pdf"}
 	}
+	if r.GradeLevel != nil && (*r.GradeLevel < 1 || *r.GradeLevel > 9) {
+		return &FieldError{Field: "grade_level", Reason: "must be within 1..9"}
+	}
 	if r.From != nil && r.To != nil {
 		if r.To.Before(*r.From) {
 			return &FieldError{Field: "to", Reason: "is before from"}
@@ -152,12 +154,10 @@ func (r Request) Validate(cfg Config) error {
 		if r.Scope == ScopeLMS {
 			errs = append(errs, need(r.AssignmentID != nil, "assignment_id"))
 		}
-	case TypeCourseResults:
-		errs = append(errs, need(r.CourseID != nil, "course_id"))
 	case TypeRegulationReference:
 		errs = append(errs, need(r.SchoolID != nil, "school_id"), need(r.SubjectID != nil, "subject_id"), need(r.Period != "", "period"))
 	case TypeSkillMap:
-		errs = append(errs, need(r.ClassID != nil, "class_id"), need(r.SubjectID != nil, "subject_id"))
+		errs = append(errs, need(r.SchoolID != nil, "school_id"), need(r.GradeLevel != nil, "grade_level"), need(r.SubjectID != nil, "subject_id"))
 	case TypeSchoolMonthly:
 		errs = append(errs, need(r.SchoolID != nil, "school_id"), need(r.From != nil, "from"), need(r.To != nil, "to"))
 	case TypeEfficacyDataset:

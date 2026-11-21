@@ -30,7 +30,7 @@ func f044Kit(e *env, dash *entx.ReadSession, mk *mediaKit, qcmd command.Question
 	r := &command.Reports{UoW: e.uow, Jobs: write.ReportRepo{}, Queue: write.ReportRepo{}, Read: e.read, Scope: read.QualityModel{},
 		DataSession: dash, Data: read.ReportModel{}, References: read.QualityModel{}, Writers: export.Writers{}, Audit: write.Auditor{R: e.rec},
 		Events: write.Publisher{W: e.writer}, Config: cfg, Clock: clk.Now, Metrics: observability.ReportingCounter{}}
-	q := &query.Reports{Session: e.read, Jobs: read.ReportModel{}, Courses: read.QualityModel{}, References: read.QualityModel{},
+	q := &query.Reports{Session: e.read, Jobs: read.ReportModel{}, References: read.QualityModel{},
 		Quality: read.QualityModel{}, Exams: read.QualityModel{}, Config: cfg, Cursors: codec, Clock: clk.Now}
 	if mk != nil {
 		files := storage.ExportBucket{S3: mk.s3}
@@ -62,9 +62,6 @@ type reportqProxy struct{ q *query.Reports }
 
 func (p reportqProxy) GetReport(ctx context.Context, s reporting.Scope, id uuid.UUID) (dto.ReportJobView, error) {
 	return p.q.GetReport(ctx, s, id)
-}
-func (p reportqProxy) GetCourseResults(ctx context.Context, in query.CourseResultsInput) (query.CourseResultsPage, error) {
-	return p.q.GetCourseResults(ctx, in)
 }
 func (p reportqProxy) GetReferenceReport(ctx context.Context, in query.ReferenceInput) (query.ReferencePage, error) {
 	return p.q.GetReferenceReport(ctx, in)

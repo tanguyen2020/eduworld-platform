@@ -488,7 +488,7 @@ func build(r *module.Registry) (*wiring, error) {
 		References: write.QualityRepo{}, Tenants: write.RollupRepo{}, Questions: qcmd, Audit: auditor, Config: command.DefaultQualityConfig(),
 		Metrics: observability.ReportingCounter{}}
 	h.Reports = learninghttp.ReportHandlers{Commands: reports, Calibration: quality, Queries: query.Reports{Session: core.ReadSession,
-		Jobs: read.ReportModel{}, Files: files, Courses: read.QualityModel{}, References: read.QualityModel{}, Quality: read.QualityModel{},
+		Jobs: read.ReportModel{}, Files: files, References: read.QualityModel{}, Quality: read.QualityModel{},
 		Exams: read.QualityModel{}, Config: reportCfg, Cursors: cursors}}
 	// F035: the efficacy study of System Admin (bypass efficacy_study across tenants) and its wave monitor.
 	eff := command.Efficacy{UoW: core.UoW, Store: write.EfficacyRepo{}, Content: write.EfficacyRepo{}, Exams: &exams, Exclusions: write.ExamRepo{},

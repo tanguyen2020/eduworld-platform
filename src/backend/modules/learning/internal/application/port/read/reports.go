@@ -38,45 +38,12 @@ type ReportJobReader interface {
 	ReportJob(ctx context.Context, id uuid.UUID) (write.ReportJobRow, bool, error)
 }
 
-// ---------- course results (F044 US2)
-
-// CourseRef is the course of a results table.
-type CourseRef struct {
-	CourseID, SchoolID, SubjectID, ClassID uuid.UUID
-}
-
-// GradedAssignment is one column of the course results (assignment mode graded).
-type GradedAssignment struct {
-	AssignmentID uuid.UUID
-	Title        string
-	DueAt        time.Time
-	ScorePolicy  string
-}
-
-// ResultCell is the submission of a student to a graded assignment.
-type ResultCell struct {
-	StudentID       uuid.UUID
-	AssignmentID    uuid.UUID
-	Status          string
-	Score, MaxScore *float64
-	RapidGuessCount int
-}
-
-// CourseResultsReader reads the course results table (lms.courses, lms.assignments, lms.assignment_submissions).
-type CourseResultsReader interface {
-	Course(ctx context.Context, id uuid.UUID) (*CourseRef, error)
-	GradedAssignments(ctx context.Context, courseID uuid.UUID) ([]GradedAssignment, error)
-	// CourseStudents returns up to limit+1 active students of the course class after the student id after.
-	CourseStudents(ctx context.Context, classID uuid.UUID, after uuid.UUID, limit int) ([]uuid.UUID, error)
-	ResultCells(ctx context.Context, courseID uuid.UUID, students []uuid.UUID) ([]ResultCell, error)
-}
-
 // ---------- reference levels (F044 US3)
 
 // ReferenceLevel is one row of the reference report.
 type ReferenceLevel struct {
 	StudentID             uuid.UUID
-	ClassID               uuid.UUID
+	GradeLevel            *int // grade of the student when the level was computed (ADR-0095)
 	LevelCode             string
 	Coverage              float64
 	Proficient, Mastered  float64
@@ -90,7 +57,7 @@ type ReferenceLevel struct {
 
 // ReferenceReader reads learning.rm_student_subject_reference_levels and the profiles.
 type ReferenceReader interface {
-	ReferenceLevels(ctx context.Context, schoolID, subjectID uuid.UUID, year int, period string, classID *uuid.UUID, after uuid.UUID,
+	ReferenceLevels(ctx context.Context, schoolID, subjectID uuid.UUID, year int, period string, grade *int, after uuid.UUID,
 		limit int) ([]ReferenceLevel, error)
 	ProfileDisclaimer(ctx context.Context, code string, version int) (map[string]string, error)
 }
@@ -129,7 +96,5 @@ type ExamQualityReader interface {
 
 // ReportScopeReader resolves the school and subject of the object an LMS export is about (scope checks of createLmsReport).
 type ReportScopeReader interface {
-	Course(ctx context.Context, id uuid.UUID) (*CourseRef, error)
 	AssignmentScope(ctx context.Context, id uuid.UUID) (school, subject uuid.UUID, ok bool, err error)
-	ClassSchool(ctx context.Context, id uuid.UUID) (school uuid.UUID, ok bool, err error)
 }

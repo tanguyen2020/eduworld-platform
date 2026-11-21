@@ -52,8 +52,8 @@ func expectRow(t *testing.T, what string, got rollupRow, active, activeAll, acts
 }
 
 // F043-AC-01, F043-AC-03, F043-AC-05 (TC-DASH-004, SC-001): the golden dataset through the consumer and the day close gives the
-// counters computed by hand at every level (class snapshot, school, tenant; day, week, month), exact distinct active
-// students, accuracy without rapid guesses, numerator/denominator pairs, is_final and a bumped data version.
+// counters computed by hand at every level (school × grade at event time, tenant; day, week, month — ADR-0095: no class),
+// exact distinct active students, accuracy without rapid guesses, numerator/denominator pairs, is_final and a bumped data version.
 func TestDashboardRollupGolden(t *testing.T) {
 	ctx := context.Background()
 	c := newCurEnv(ctx, t)
@@ -63,9 +63,18 @@ func TestDashboardRollupGolden(t *testing.T) {
 	d1, d2 := date("2026-12-07"), date("2026-12-08")
 
 	// F043-AC-01: provisional rows of the event day at every level (is_final = false, distinct counts not yet computed).
-	r := k.rollup(ctx, t, "rollup_class_daily", "tenant_id = $1 AND class_id = $2 AND subject_id = $3 AND bucket_date = $4", A, k.class3A, k.subjM, d1)
+	r := k.rollup(ctx, t, "rollup_school_daily", "tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND subject_id = $3 AND bucket_date = $4",
+		A, k.school, k.subjM, d1)
 	if r.final || r.active.Valid || r.acts != 3 || r.accNum != 12 || r.accDen != 14 || r.rapidNum != 5 || r.rapidDen != 19 || r.sec != 960 {
-		t.Fatalf("provisional class row: %s", r)
+		t.Fatalf("provisional school × grade row: %s", r)
+	}
+	// ADR-0095: nothing is written at the class level any more (class_id neither on progress_daily nor on the events).
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.rollup_class_daily WHERE tenant_id = $1`, A); n != 0 {
+		t.Fatalf("class rollup rows written: %d", n)
+	}
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.progress_daily WHERE tenant_id = $1 AND (class_id IS NOT NULL OR grade_level IS NULL)`,
+		A); n != 0 {
+		t.Fatalf("progress_daily rows with a class or without a grade: %d", n)
 	}
 	r = k.rollup(ctx, t, "rollup_tenant_daily", "tenant_id = $1 AND grade_level = 3 AND subject_id = $2 AND bucket_date = $3", A, k.subjM, d1)
 	if r.final || r.acts != 3 || r.accNum != 12 {
@@ -76,16 +85,10 @@ func TestDashboardRollupGolden(t *testing.T) {
 	if err != nil || n != 3 { // A: 2026-12-07, 2026-12-08; B: 2026-12-07
 		t.Fatalf("close days: %d %v", n, err)
 	}
-	// Class level (class_id snapshot of the event), F043-AC-05 accuracy (8−1)+5+(1−1) / (10−2)+5+(4−3) = 12/14, rapid 5/19.
-	expectRow(t, "3A M d1", k.rollup(ctx, t, "rollup_class_daily", "tenant_id = $1 AND class_id = $2 AND subject_id = $3 AND bucket_date = $4",
-		A, k.class3A, k.subjM, d1), 2, 2, 3, 12, 14, 5, 19, 960, true)
-	expectRow(t, "3B V d1", k.rollup(ctx, t, "rollup_class_daily", "tenant_id = $1 AND class_id = $2 AND subject_id = $3 AND bucket_date = $4",
-		A, k.class3B, k.subjV, d1), 1, 1, 1, 3, 6, 0, 6, 120, true)
-	expectRow(t, "3A V d2", k.rollup(ctx, t, "rollup_class_daily", "tenant_id = $1 AND class_id = $2 AND subject_id = $3 AND bucket_date = $4",
-		A, k.class3A, k.subjV, d2), 1, 1, 1, 6, 7, 1, 8, 240, true)
-	// Exam attempts count answers and time but no completed activity (LEARNING_ANALYTICS §4).
-	expectRow(t, "3B M d2 exam", k.rollup(ctx, t, "rollup_class_daily", "tenant_id = $1 AND class_id = $2 AND subject_id = $3 AND bucket_date = $4",
-		A, k.class3B, k.subjM, d2), 1, 1, 0, 7, 10, 0, 10, 900, true)
+	// F043-AC-05 accuracy (8−1)+5+(1−1) / (10−2)+5+(4−3) = 12/14, rapid 5/19; exam attempts count answers and time but no
+	// completed activity (LEARNING_ANALYTICS §4): S g3 M d2 = b1's exam only.
+	expectRow(t, "S g3 M d2 exam", k.rollup(ctx, t, "rollup_school_daily", "tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND subject_id = $3 AND bucket_date = $4",
+		A, k.school, k.subjM, d2), 1, 2, 0, 7, 10, 0, 10, 900, true)
 	// School × grade: distinct students of the subject, and of every subject (a1, a2, b1 on d1).
 	expectRow(t, "S g3 M d1", k.rollup(ctx, t, "rollup_school_daily", "tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND subject_id = $3 AND bucket_date = $4",
 		A, k.school, k.subjM, d1), 2, 3, 3, 12, 14, 5, 19, 960, true)
@@ -103,8 +106,6 @@ func TestDashboardRollupGolden(t *testing.T) {
 		A, k.school, k.subjM, week), 3, 3, 3, 19, 24, 5, 29, 1860, false)
 	expectRow(t, "S g3 V week", k.rollup(ctx, t, "rollup_school_weekly", "tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND subject_id = $3 AND bucket_date = $4",
 		A, k.school, k.subjV, week), 2, 3, 2, 9, 13, 1, 14, 360, false)
-	expectRow(t, "3A M week", k.rollup(ctx, t, "rollup_class_weekly", "tenant_id = $1 AND class_id = $2 AND subject_id = $3 AND bucket_date = $4",
-		A, k.class3A, k.subjM, week), 2, 2, 3, 12, 14, 5, 19, 960, false)
 	expectRow(t, "A g3 M month", k.rollup(ctx, t, "rollup_tenant_monthly", "tenant_id = $1 AND grade_level = 3 AND subject_id = $2 AND bucket_date = $3",
 		A, k.subjM, date("2026-12-01")), 3, 3, 3, 19, 24, 5, 29, 1860, false)
 	// Tenant B is rolled up in its own rows only.
@@ -142,7 +143,8 @@ func TestDashboardRollupLateAndDuplicate(t *testing.T) {
 		t.Fatal(err)
 	}
 	time.Sleep(2 * time.Second)
-	r := k.rollup(ctx, t, "rollup_class_daily", "tenant_id = $1 AND class_id = $2 AND subject_id = $3 AND bucket_date = $4", A, k.class3A, k.subjM, d9)
+	r := k.rollup(ctx, t, "rollup_school_daily", "tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND subject_id = $3 AND bucket_date = $4",
+		A, k.school, k.subjM, d9)
 	if r.acts != 1 || r.accDen != 2 {
 		t.Fatalf("replayed event counted twice: %s", r)
 	}
@@ -178,9 +180,10 @@ func TestDashboardRollupLateAndDuplicate(t *testing.T) {
 	}
 }
 
-// F043-AC-06 (TC-LMS-003): the refresh job rebuilds the state read models (class × objective level distribution, class ×
-// subject summary, school × grade × subject summary), the "needs attention" list with the reasons of
-// dashboard_attention_thresholds, the class × objective week and the weekly mastery snapshot.
+// F043-AC-06, F043-AC-28 (TC-LMS-003): the refresh job rebuilds the state read models (school × grade × objective level
+// distribution, school × grade × subject summary with the assignment completion by grade when targeted), the "needs
+// attention" list with the reasons of dashboard_attention_thresholds, the grade × objective week and the weekly mastery
+// snapshot (ADR-0095: no class read model).
 func TestDashboardReadModelRefresh(t *testing.T) {
 	ctx := context.Background()
 	c := newCurEnv(ctx, t)
@@ -192,51 +195,61 @@ func TestDashboardReadModelRefresh(t *testing.T) {
 	}
 	A := c.tenantA
 	var dist []int64
-	var with int
-	if err := c.platform.QueryRowContext(ctx, `SELECT level_dist, students_with_evidence FROM learning.rm_class_objective_stats
-		WHERE tenant_id = $1 AND class_id = $2 AND objective_id = $3`, A, k.class3A, k.objectives[0]).Scan(&dist, &with); err != nil {
+	var with, size int
+	// O1: a1, a2 beginning, b1 proficient; a3, b2 without level → not_started 2 (5 students of S × grade 3).
+	if err := c.platform.QueryRowContext(ctx, `SELECT level_dist, students_with_evidence, student_count FROM learning.rm_grade_objective_stats
+		WHERE tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND objective_id = $3`, A, k.school, k.objectives[0]).Scan(&dist, &with, &size); err != nil {
 		t.Fatal(err)
 	}
-	if fmt.Sprint(dist) != "[0 2 0 0 0]" || with != 2 {
-		t.Fatalf("3A × O1 level dist %v with %d", dist, with)
+	if fmt.Sprint(dist) != "[2 2 0 1 0]" || with != 3 || size != 5 {
+		t.Fatalf("S × 3 × O1 level dist %v with %d of %d", dist, with, size)
 	}
-	if err := c.platform.QueryRowContext(ctx, `SELECT level_dist FROM learning.rm_class_objective_stats
-		WHERE tenant_id = $1 AND class_id = $2 AND objective_id = $3`, A, k.class3A, k.objectives[2]).Scan(&dist); err != nil {
+	if err := c.platform.QueryRowContext(ctx, `SELECT level_dist FROM learning.rm_grade_objective_stats
+		WHERE tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND objective_id = $3`, A, k.school, k.objectives[2]).Scan(&dist); err != nil {
 		t.Fatal(err)
 	}
-	if fmt.Sprint(dist) != "[0 1 0 0 1]" {
-		t.Fatalf("3A × O3 level dist %v", dist)
+	if fmt.Sprint(dist) != "[3 1 0 0 1]" {
+		t.Fatalf("S × 3 × O3 level dist %v", dist)
 	}
-	var students, active7, rapid int
-	var compNum, compDen int64
-	var weak []string
-	if err := c.platform.QueryRowContext(ctx, `SELECT student_count, active_students_7d, rapid_guess_students, assignment_completion_num,
-			assignment_completion_den, weak_objective_ids::text[] FROM learning.rm_class_subject_summary
-		WHERE tenant_id = $1 AND class_id = $2 AND subject_id = $3`, A, k.class3A, k.subjM).Scan(&students, &active7, &rapid, &compNum, &compDen, &weak); err != nil {
-		t.Fatal(err)
-	}
-	// a2: 3 rapid of 4 answers in the 7-day window → "làm quá nhanh"; assignment: a1 submitted, a2 not started.
-	if students != 2 || active7 != 2 || rapid != 1 || compNum != 1 || compDen != 2 || len(weak) != 3 {
-		t.Fatalf("3A × M summary: %d %d %d %d/%d weak %v", students, active7, rapid, compNum, compDen, weak)
+	// Tenant B has its own heatmap rows only.
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.rm_grade_objective_stats WHERE tenant_id = $1 AND school_id <> $2`,
+		c.tenantB, k.schoolB); n != 0 {
+		t.Fatalf("tenant B rows of another school: %d", n)
 	}
 	var sc, partNum, partDen int
-	if err := c.platform.QueryRowContext(ctx, `SELECT student_count, participation_num, participation_den FROM learning.rm_school_grade_summary
-		WHERE tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND subject_id = $3`, A, k.school, k.subjM).Scan(&sc, &partNum, &partDen); err != nil {
+	var compNum, compDen int64
+	if err := c.platform.QueryRowContext(ctx, `SELECT student_count, participation_num, participation_den, assignment_completion_num,
+			assignment_completion_den FROM learning.rm_school_grade_summary
+		WHERE tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND subject_id = $3`, A, k.school, k.subjM).Scan(&sc, &partNum, &partDen,
+		&compNum, &compDen); err != nil {
 		t.Fatal(err)
 	}
-	if sc != 3 || partNum != 3 || partDen != 3 {
-		t.Fatalf("school × grade 3 × M: %d %d/%d", sc, partNum, partDen)
+	// Open math assignment: a1 submitted, the other four not started.
+	if sc != 5 || partNum != 3 || partDen != 5 || compNum != 1 || compDen != 5 {
+		t.Fatalf("school × grade 3 × M: %d %d/%d completion %d/%d", sc, partNum, partDen, compNum, compDen)
+	}
+	if err := c.platform.QueryRowContext(ctx, `SELECT assignment_completion_num, assignment_completion_den FROM learning.rm_school_grade_summary
+		WHERE tenant_id = $1 AND school_id = $2 AND grade_level = 3 AND subject_id = $3`, A, k.school, k.subjV).Scan(&compNum, &compDen); err != nil {
+		t.Fatal(err)
+	}
+	if compNum != 0 || compDen != 2 { // b1 missed two Vietnamese assignments
+		t.Fatalf("school × grade 3 × V completion %d/%d", compNum, compDen)
 	}
 	reasons := map[uuid.UUID]string{}
-	rows, err := c.platform.QueryContext(ctx, `SELECT student_id, array_to_string(reasons, ',') FROM learning.rm_student_attention WHERE tenant_id = $1`, A)
+	rows, err := c.platform.QueryContext(ctx, `SELECT student_id, array_to_string(reasons, ','), class_id IS NULL FROM learning.rm_student_attention
+		WHERE tenant_id = $1`, A)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for rows.Next() {
 		var id uuid.UUID
 		var r string
-		if err := rows.Scan(&id, &r); err != nil {
+		var noClass bool
+		if err := rows.Scan(&id, &r, &noClass); err != nil {
 			t.Fatal(err)
+		}
+		if !noClass {
+			t.Fatalf("attention row of %s keeps a class", id)
 		}
 		reasons[id] = r
 	}
@@ -249,14 +262,15 @@ func TestDashboardReadModelRefresh(t *testing.T) {
 		A, date("2026-12-07")); n != 3 {
 		t.Fatalf("weekly mastery snapshots: %d", n)
 	}
-	// The provisional rows of today get their exact distinct counts at each refresh.
-	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.rollup_class_objective_weekly WHERE tenant_id = $1 AND bucket_date = $2
-		AND class_id = $3 AND level_dist[2] = 2`, A, date("2026-12-07"), k.class3A); n != 1 {
-		t.Fatalf("class × objective week with levels: %d", n)
+	// The grade × objective week gets the current level distribution at each refresh.
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.rollup_grade_objective_weekly WHERE tenant_id = $1 AND bucket_date = $2
+		AND school_id = $3 AND grade_level = 3 AND level_dist[2] = 2`, A, date("2026-12-07"), k.school); n != 1 {
+		t.Fatalf("grade × objective week with levels: %d", n)
 	}
 }
 
-// seedState seeds the masteries and assignments of the state read models.
+// seedState seeds the masteries and assignments of the state read models: an open math assignment targeting the five
+// grade-3 students of S (grade when targeted 3: a1 submitted), two closed Vietnamese assignments missed by b1.
 func (k *dashKit) seedState(ctx context.Context, t *testing.T) {
 	t.Helper()
 	c, A := k.c, k.c.tenantA
@@ -268,9 +282,10 @@ func (k *dashKit) seedState(ctx context.Context, t *testing.T) {
 	k.mastery(ctx, t, A, k.school, k.b1, k.objectives[0], "proficient", 0.8)
 	k.mastery(ctx, t, c.tenantB, k.schoolB, k.x1, k.objectives[0], "developing", 0.5)
 	due := dashNow.Add(24 * time.Hour)
-	k.assignment(ctx, t, A, k.school, k.subjM, "open", due, map[uuid.UUID][2]any{k.a1: {k.class3A, "submitted"}, k.a2: {k.class3A, "not_started"}})
+	k.assignment(ctx, t, A, k.school, k.subjM, "open", due, map[uuid.UUID][2]any{k.a1: {3, "submitted"}, k.a2: {3, "not_started"},
+		k.b1: {3, "not_started"}, k.a3: {3, "not_started"}, k.b2: {3, "not_started"}})
 	past := dashNow.Add(-72 * time.Hour)
 	for i := 0; i < 2; i++ {
-		k.assignment(ctx, t, A, k.school, k.subjV, "closed", past, map[uuid.UUID][2]any{k.b1: {k.class3B, "missed"}})
+		k.assignment(ctx, t, A, k.school, k.subjV, "closed", past, map[uuid.UUID][2]any{k.b1: {3, "missed"}})
 	}
 }

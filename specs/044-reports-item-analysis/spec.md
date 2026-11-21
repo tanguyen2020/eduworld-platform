@@ -1,7 +1,7 @@
 # Feature Specification: F044 — Báo cáo, xuất dữ liệu bất đồng bộ, item analysis, chất lượng đề
 
 **Feature Branch**: `044-reports-item-analysis` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` · **Mốc**: M-C3 · **Phụ thuộc**: F042, F043
-**Input**: Nhà trường xuất báo cáo kết quả (bài giao, course, tham khảo TT27/TT22, bản đồ kỹ năng) bằng job nền có link hết hạn và audit; xem bảng kết quả course theo điểm tự chấm; đội nội dung thấy thống kê chất lượng câu hỏi và đề xuất hiệu chỉnh độ khó có người duyệt; người tạo đề nhận đề cân bằng giữa biến thể và báo cáo độ tin cậy. FR nguồn: FR-ANL-014, FR-ANL-015, FR-LMS-013, FR-QB-010, FR-QB-014, FR-EXM-010.
+**Input**: Nhà trường xuất báo cáo kết quả (bài giao, tham khảo TT27/TT22, bản đồ kỹ năng, tháng của trường — theo khối, ADR-0095) bằng job nền có link hết hạn và audit; kết quả theo bài giao/khối thay bảng kết quả course; đội nội dung thấy thống kê chất lượng câu hỏi và đề xuất hiệu chỉnh độ khó có người duyệt; người tạo đề nhận đề cân bằng giữa biến thể và báo cáo độ tin cậy. FR nguồn: FR-ANL-014, FR-ANL-015, FR-LMS-013, FR-QB-010, FR-QB-014, FR-EXM-010.
 
 ## Clarifications
 
@@ -28,6 +28,10 @@
 - Q: Bộ cân bằng (F044-AC-22) — "seed cố định"? → A: Thuật toán tham lam xác định (thứ tự cố định theo version id, không ngẫu nhiên): hoán đổi cùng vị trí rule giữa biến thể dễ nhất/khó nhất hoặc rút lại vị trí đó từ pool trong rule; cùng đầu vào → cùng đề (tái lập). Kết quả trả ở `createExamSession.balance` và `ExamPaper.balance_warning`.
 - Q: Payload `report.completed`? → A: `report_id`, `scope_level`, `report_type`, `format`, `status` (`succeeded`/`failed`), `requested_by`, `row_count`; EVENT_DESIGN §4 đã đồng bộ.
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Bỏ khái niệm lớp và course ([ADR-0095](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md)) — báo cáo đổi gì? → A: [Confirmed] Bỏ `getCourseResults` (không còn course) và loại báo cáo `course_results`, `class_progress` (API từ chối `422`; giá trị giữ trong CHECK `report_jobs_type_ck` và enum `report.completed.v1` cho job đã ghi). Thêm `grade_progress` (tenant: trường × khối, mọi môn). `school_monthly` theo khối × môn của một trường, `skill_map` theo trường × khối × môn (`school_id`, `grade_level`, `subject_id` bắt buộc), `assignment_results` có cột `grade_level` (khối lúc được giao, lọc `grade_level` tùy chọn), báo cáo tham khảo TT27/TT22 lọc `grade_level` (khối lúc tính mức, cột mới `rm_student_subject_reference_levels.grade_level`; `class_id` không ghi nữa, DROP ở WP-R). Ô khối có dưới `analytics_min_cell_size` học sinh trong file `school_monthly`/`grade_progress` ghi `<5` và để trống số (FR-ANL-016). Watermark, phạm vi quyền, R14/R16 giữ nguyên (không tên, không lớp). `report.completed` giữ v1 (chỉ thêm giá trị enum `grade_progress` — tương thích ngược).
+
 ### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: Chỉ plan/contracts nhắc MFA cho đọc liên tenant; đọc là `platform.cross_tenant.read` + client portal + audit, không MFA. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
@@ -36,7 +40,7 @@
 
 ### User Story 1 — Xuất báo cáo bất đồng bộ (Priority: P1)
 
-`qlcm.truong.a` bấm "Xuất" kết quả bài giao "Phép nhân" của 3A; hệ thống tạo job nền, khi xong cho link tải ký có hạn; file có watermark và chỉ chứa dữ liệu trong quyền.
+`qlcm.truong.a` bấm "Xuất" kết quả bài giao "Phép nhân" của khối 3; hệ thống tạo job nền, khi xong cho link tải ký có hạn; file có watermark và chỉ chứa dữ liệu trong quyền.
 
 **Why this priority**: Nhà trường cần mang kết quả vào họp chuyên môn (US-LMS-010); xuất lớn luôn bất đồng bộ để không làm chậm hệ thống (ADR-0062).
 
@@ -56,31 +60,31 @@
 
 ---
 
-### User Story 2 — Bảng kết quả course theo điểm tự chấm (Priority: P1)
+### User Story 2 — Kết quả theo bài giao và khối (Priority: P1)
 
-School Admin xem bảng kết quả course 3A × Toán: mỗi cột là một bài `graded`, giá trị là điểm tự chấm theo chính sách điểm, thang 10; không có cột XP, rating hay điểm thi đấu.
+ADR-0095: không còn course nên không còn bảng kết quả course (`getCourseResults` bỏ). School Admin xuất kết quả một bài `graded` (học sinh × điểm tự chấm theo chính sách điểm, thang 10, cột khối lúc được giao) và bản đồ kỹ năng của một khối; không có cột XP, rating hay điểm thi đấu.
 
 **Why this priority**: Thay sổ điểm chấm tay (ADR-0072), là nguồn cho báo cáo xuất.
 
-**Independent Test**: Sau kịch bản giao đề F042, `getCourseResults` trả học sinh × bài graded với điểm đúng `score_policy`.
+**Independent Test**: Sau kịch bản giao bài F041, `createLmsReport` (`assignment_results`) xuất học sinh × điểm tự chấm đúng `score_policy` kèm khối; `skill_map` của khối 3 chỉ có học sinh khối 3.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F044-AC-08 | KHI người có `lms.report.read` trong phạm vi gọi `getCourseResults`, HỆ THỐNG PHẢI trả học sinh × bài `mode = graded` với điểm tự chấm theo `score_policy` của bài, quy đổi theo `score_scale`, trạng thái nộp, cờ "làm quá nhanh", và điểm hiệu lực sau re-evaluate | FR-LMS-013 · [SCHOOL_LMS §10](../../docs/04-admin-portal/SCHOOL_LMS.md) | — |
+| F044-AC-08 | KHI người có `report.export` trong phạm vi xuất `assignment_results` của một bài, HỆ THỐNG PHẢI ghi học sinh × điểm tự chấm hiệu lực (sau re-evaluate) theo `score_policy`, thang 10, trạng thái nộp, cờ "làm quá nhanh" và khối của học sinh lúc được giao — không có lớp (ADR-0095); `skill_map`, `school_monthly`, `grade_progress` theo khối, ô khối < `analytics_min_cell_size` học sinh ghi `<5` không số | FR-LMS-013 · FR-ANL-016 · [SCHOOL_LMS §10](../../docs/04-admin-portal/SCHOOL_LMS.md) | TC-DASH-008, TC-DASH-009 |
 | F044-AC-09 | HỆ THỐNG PHẢI không trả cột XP, Game Rating, competition points hay xếp hạng học sinh trong bảng kết quả và file xuất | FR-LMS-013 · ADR-0018 | — |
-| F044-AC-10 | NẾU course thuộc trường/môn ngoài phạm vi người gọi, THÌ HỆ THỐNG PHẢI trả `404 NOT_FOUND` (khác trường/tenant) hoặc `403 PERMISSION_DENIED` (môn ngoài scope `academic_manager`) | AC-ORG-002 · AC-ORG-003 | TC-TEN-002, TC-TEN-003 |
+| F044-AC-10 | NẾU bài giao (hoặc trường của báo cáo theo khối) thuộc trường/môn ngoài phạm vi người gọi, THÌ HỆ THỐNG PHẢI trả `404 NOT_FOUND` (khác trường/tenant) hoặc `403 PERMISSION_DENIED` (môn ngoài scope `academic_manager`) | AC-ORG-002 · AC-ORG-003 | TC-TEN-002, TC-TEN-003 |
 
 ---
 
 ### User Story 3 — Báo cáo tham khảo theo TT27/2020 và TT22/2021 (Priority: P2)
 
-Academic Manager xem và xuất mức tham khảo theo môn × kỳ cho trường → lớp → học sinh, luôn kèm dòng "chỉ tham khảo, không thay đánh giá chính thức".
+Academic Manager xem và xuất mức tham khảo theo môn × kỳ cho trường → khối → học sinh (ADR-0095), luôn kèm dòng "chỉ tham khảo, không thay đánh giá chính thức".
 
 **Why this priority**: Giúp nhà trường đọc kết quả bằng ngôn ngữ quy định (FR-ANL-015), cần mastery và kết quả đề.
 
-**Independent Test**: Học sinh lớp 4 có 85% LO ≥ `proficient`, 45% `mastered`, độ phủ 90% → "Hoàn thành tốt"; độ phủ 50% → "Chưa đủ dữ liệu".
+**Independent Test**: Học sinh khối 4 có 85% LO ≥ `proficient`, 45% `mastered`, độ phủ 90% → "Hoàn thành tốt"; độ phủ 50% → "Chưa đủ dữ liệu".
 
 **Acceptance Criteria (EARS)**:
 
@@ -144,13 +148,13 @@ Người tạo đề "Phép nhân" 4 biến thể nhận các biến thể tươ
 |---|---|---|---|
 | F044-AC-22 | KHI F042 sinh đề `independent_draw` có `balance.enabled`, bộ cân bằng PHẢI tính `P_v` từ `p_value` (hoặc `p̂` suy từ `difficulty`), hoán đổi/rút lại với seed cố định tối đa 200 lần để chênh ≤ `variant_balance_max_mean_p_diff`, lưu `expected_p` từng biến thể; NẾU không đạt, THÌ PHẢI vẫn sinh đề và trả cảnh báo kèm số liệu từng biến thể | FR-EXM-010 · [EXAM_ENGINE §4.1](../../docs/02-learning/EXAM_ENGINE.md) | TC-EXM-001 |
 | F044-AC-23 | KHI session `is_official` chuyển `closed`, worker PHẢI tính KR-20 (câu 0/1) hoặc Cronbach alpha và SEM cho từng biến thể có đủ học sinh theo `exam_reliability_warn`, so điểm trung bình giữa biến thể, gắn cờ câu có vấn đề; reliability dưới ngưỡng PHẢI hiển thị cảnh báo và không tự sửa điểm | FR-EXM-010 · [EXAM_ENGINE §8.1](../../docs/02-learning/EXAM_ENGINE.md) | — |
-| F044-AC-24 | KHI người có `lms.report.read` trong phạm vi gọi `getExamSessionReport`, HỆ THỐNG PHẢI trả phổ điểm, trung vị, tỉ lệ đạt, p-value theo câu của lớp/trường (loại `rapid_guess`), lựa chọn sai phổ biến theo `misconception_tag`, thời gian trung bình, chỉ số độ tin cậy | US-LMS-007 · FR-EXM-010 · [SCHOOL_LMS §8.6](../../docs/04-admin-portal/SCHOOL_LMS.md) (AC-LMS-017) | TC-EXM-004 |
+| F044-AC-24 | KHI người có `lms.report.read` trong phạm vi gọi `getExamSessionReport`, HỆ THỐNG PHẢI trả phổ điểm, trung vị, tỉ lệ đạt, p-value theo câu của phiên đề/trường (loại `rapid_guess`), lựa chọn sai phổ biến theo `misconception_tag`, thời gian trung bình, chỉ số độ tin cậy | US-LMS-007 · FR-EXM-010 · [SCHOOL_LMS §8.6](../../docs/04-admin-portal/SCHOOL_LMS.md) (AC-LMS-017) | TC-EXM-004 |
 | F044-AC-25 | NẾU session thuộc trường/tenant khác, THÌ HỆ THỐNG PHẢI trả `404 NOT_FOUND`; NẾU người gọi là học sinh hoặc thiếu quyền, THÌ PHẢI trả `403 PERMISSION_DENIED`; báo cáo PHẢI không chứa đáp án của từng học sinh theo tên ngoài phạm vi | AC-ORG-001 · AGENTS R6, R16 | TC-TEN-001 |
 
 ### Edge Cases
 
 - NẾU job export thất bại giữa chừng, THÌ trạng thái `failed` có `error` (không PII), file dở không có link; người dùng tạo lại được (F044-AC-01).
-- NẾU re-evaluate đổi điểm sau khi xuất, THÌ bảng kết quả mới phản ánh điểm hiệu lực; file cũ giữ nguyên tới hết hạn (F044-AC-08).
+- NẾU re-evaluate đổi điểm sau khi xuất, THÌ file xuất mới phản ánh điểm hiệu lực; file cũ giữ nguyên tới hết hạn (F044-AC-08).
 - NẾU câu có nhiều version, THÌ thống kê tách theo version, đề xuất hiệu chỉnh dựa trên version hiện hành (F044-AC-17, F044-AC-19).
 - NẾU câu chưa đủ lượt, THÌ không có thống kê và bộ cân bằng dùng `p̂` suy từ độ khó (F044-AC-22).
 - NẾU biến thể có < số học sinh tối thiểu, THÌ không tính độ tin cậy, hiển thị "chưa đủ dữ liệu" (F044-AC-23).
@@ -165,7 +169,7 @@ Người tạo đề "Phép nhân" 4 biến thể nhận các biến thể tươ
 |---|---|---|
 | FR-ANL-014 | Export bất đồng bộ `/lms/reports`, `/tenant/reports`, `/admin/reports`, link có hạn, audit | [DASHBOARD_DATA §10](../../docs/07-backend/DASHBOARD_DATA.md) |
 | FR-ANL-015 | Báo cáo tham khảo TT27/TT22 | [ASSESSMENT_REGULATION_PROFILE](../../docs/02-learning/ASSESSMENT_REGULATION_PROFILE.md) |
-| FR-LMS-013 | Bảng kết quả course tự chấm, xuất XLSX/CSV có watermark | [SCHOOL_LMS §10](../../docs/04-admin-portal/SCHOOL_LMS.md) |
+| FR-LMS-013 | Kết quả tự chấm theo bài giao/khối (ADR-0095: không còn course), xuất XLSX/CSV có watermark | [SCHOOL_LMS §10](../../docs/04-admin-portal/SCHOOL_LMS.md) |
 | FR-QB-010 | Item analysis hằng đêm | [QUESTION_BANK §9](../../docs/02-learning/QUESTION_BANK.md) |
 | FR-QB-014 | Đề xuất hiệu chỉnh độ khó, người duyệt chấp nhận tạo version mới | [QUESTION_BANK §9.1](../../docs/02-learning/QUESTION_BANK.md) |
 | FR-EXM-010 | Cân bằng biến thể, độ tin cậy KR-20/alpha, SEM | [EXAM_ENGINE §4.1, §8.1](../../docs/02-learning/EXAM_ENGINE.md) |
@@ -173,7 +177,7 @@ Người tạo đề "Phép nhân" 4 biến thể nhận các biến thể tươ
 ### Key Entities
 
 - **ReportJob**: yêu cầu xuất (loại, định dạng, phạm vi, người tạo, trạng thái, số dòng, khóa file, hạn link).
-- **CourseResultTable**: học sinh × bài graded với điểm tự chấm hiệu lực (dẫn xuất, không lưu riêng).
+- **Kết quả theo bài giao/khối**: học sinh × bài graded với điểm tự chấm hiệu lực và khối lúc được giao (dẫn xuất, không lưu riêng; thay CourseResultTable — ADR-0095).
 - **AssessmentProfile**: hồ sơ ánh xạ mức tham khảo có version, phạm vi khối/môn, kỳ, disclaimer.
 - **ReferenceLevel**: mức tham khảo học sinh × môn × kỳ theo version hồ sơ, độ phủ, tỉ lệ "làm quá nhanh".
 - **QuestionStats**: thống kê chất lượng theo question version.

@@ -14,6 +14,8 @@ func day(s string) *time.Time {
 	return &t
 }
 
+func grade(g int) *int { return &g }
+
 // TestValidate checks F044-AC-07: report types per route, formats, required parameters, range ≤ dashboard_max_range_days.
 func TestValidate(t *testing.T) {
 	cfg := DefaultConfig()
@@ -26,7 +28,14 @@ func TestValidate(t *testing.T) {
 	}{
 		{"lms ok", Request{Scope: ScopeLMS, Type: TypeAssignmentResults, Format: FormatXLSX, AssignmentID: &id}, "", nil},
 		{"lms needs assignment", Request{Scope: ScopeLMS, Type: TypeAssignmentResults, Format: FormatCSV}, "assignment_id", nil},
-		{"bad format", Request{Scope: ScopeLMS, Type: TypeCourseResults, Format: "docx", CourseID: &id}, "format", nil},
+		{"bad format", Request{Scope: ScopeLMS, Type: TypeAssignmentResults, Format: "docx", AssignmentID: &id}, "format", nil},
+		// ADR-0095: no course, no class — course_results and class_progress are refused; skill_map is by school × grade.
+		{"no course results", Request{Scope: ScopeLMS, Type: "course_results", Format: FormatCSV}, "report_type", nil},
+		{"no class progress", Request{Scope: ScopeTenant, Type: "class_progress", Format: FormatCSV, From: day("2026-09-01"), To: day("2026-10-01")}, "report_type", nil},
+		{"skill map needs grade", Request{Scope: ScopeLMS, Type: TypeSkillMap, Format: FormatCSV, SchoolID: &id, SubjectID: &id}, "grade_level", nil},
+		{"skill map ok", Request{Scope: ScopeLMS, Type: TypeSkillMap, Format: FormatCSV, SchoolID: &id, SubjectID: &id, GradeLevel: grade(3)}, "", nil},
+		{"grade out of range", Request{Scope: ScopeLMS, Type: TypeSkillMap, Format: FormatCSV, SchoolID: &id, SubjectID: &id, GradeLevel: grade(10)}, "grade_level", nil},
+		{"grade progress ok", Request{Scope: ScopeTenant, Type: TypeGradeProgress, Format: FormatXLSX, From: day("2026-09-01"), To: day("2026-10-01")}, "", nil},
 		{"pdf tenant", Request{Scope: ScopeTenant, Type: TypeLearningSummary, Format: FormatPDF, From: day("2026-09-01"), To: day("2026-10-01")}, "format", nil},
 		{"wrong route", Request{Scope: ScopeTenant, Type: TypeSkillMap, Format: FormatCSV}, "report_type", nil},
 		{"later feature", Request{Scope: ScopePlatform, Type: TypeGameSummary, Format: FormatCSV}, "report_type", nil},
@@ -35,9 +44,9 @@ func TestValidate(t *testing.T) {
 		{"efficacy ok", Request{Scope: ScopePlatform, Type: TypeEfficacyDataset, Format: FormatCSV, StudyID: &id, From: day("2026-09-01"), To: day("2026-10-01")}, "", nil},
 		{"efficacy not tenant", Request{Scope: ScopeTenant, Type: TypeEfficacyDataset, Format: FormatCSV, StudyID: &id}, "report_type", nil},
 		{"reference", Request{Scope: ScopeLMS, Type: TypeRegulationReference, Format: FormatPDF, SchoolID: &id, SubjectID: &id}, "period", nil},
-		{"tenant dates", Request{Scope: ScopeTenant, Type: TypeClassProgress, Format: FormatCSV, From: day("2026-09-01")}, "to", nil},
-		{"range", Request{Scope: ScopeTenant, Type: TypeClassProgress, Format: FormatCSV, From: day("2024-01-01"), To: day("2026-01-05")}, "", ErrRangeTooLarge},
-		{"reversed", Request{Scope: ScopeTenant, Type: TypeClassProgress, Format: FormatCSV, From: day("2026-02-01"), To: day("2026-01-05")}, "to", nil},
+		{"tenant dates", Request{Scope: ScopeTenant, Type: TypeGradeProgress, Format: FormatCSV, From: day("2026-09-01")}, "to", nil},
+		{"range", Request{Scope: ScopeTenant, Type: TypeGradeProgress, Format: FormatCSV, From: day("2024-01-01"), To: day("2026-01-05")}, "", ErrRangeTooLarge},
+		{"reversed", Request{Scope: ScopeTenant, Type: TypeGradeProgress, Format: FormatCSV, From: day("2026-02-01"), To: day("2026-01-05")}, "to", nil},
 	}
 	for _, c := range cases {
 		err := c.r.Validate(cfg)

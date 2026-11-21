@@ -177,3 +177,39 @@ func TestLastClosable(t *testing.T) {
 		t.Fatal("ICT day")
 	}
 }
+
+// ADR-0095 (FR-ANL-016, F043-AC-28): every grade cell of a school with fewer than analytics_min_cell_size students is hidden,
+// with complementary suppression among the grades of the school; the unknown grade 0 and an empty grade are hidden.
+func TestSuppressGrades(t *testing.T) {
+	cases := []struct {
+		sizes map[int]int
+		want  []int
+	}{
+		{map[int]int{3: 5}, nil},
+		{map[int]int{3: 4}, []int{3}},
+		{map[int]int{1: 30, 2: 3, 3: 12, 4: 40}, []int{2, 3}}, // 2 hidden → the smallest visible (3) too
+		{map[int]int{1: 2, 2: 1, 3: 40}, []int{1, 2}},
+		{map[int]int{0: 9, 5: 0, 6: 20, 7: 25}, []int{0, 5}},
+		{map[int]int{}, nil},
+	}
+	for _, c := range cases {
+		got := SuppressGrades(c.sizes, 5)
+		var hidden []int
+		for g := 0; g <= 12; g++ {
+			if _, known := c.sizes[g]; known && got.Hidden(g) {
+				hidden = append(hidden, g)
+			}
+		}
+		if len(hidden) != len(c.want) {
+			t.Fatalf("%v: hidden %v, want %v", c.sizes, hidden, c.want)
+		}
+		for i := range hidden {
+			if hidden[i] != c.want[i] {
+				t.Fatalf("%v: hidden %v, want %v", c.sizes, hidden, c.want)
+			}
+		}
+	}
+	if g := SuppressGrades(map[int]int{3: 30}, 5); !g.Hidden(4) || g.Hidden(3) || len(g.Visible()) != 1 {
+		t.Fatal("a grade without students must be hidden")
+	}
+}

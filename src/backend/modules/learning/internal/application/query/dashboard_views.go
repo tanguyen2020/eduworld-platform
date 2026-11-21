@@ -17,11 +17,10 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
-// SchoolDashboardInput is getSchoolDashboard.
+// SchoolDashboardInput is getSchoolDashboard (school → grade, ADR-0095: no class).
 type SchoolDashboardInput struct {
 	SchoolID   uuid.UUID
 	GradeLevel *int
-	ClassID    *uuid.UUID
 	SubjectID  *uuid.UUID
 	From, To   time.Time
 	PageSize   int
@@ -33,7 +32,26 @@ const assignmentsDueSoon = 48 * time.Hour
 // widgetAssignments bounds the assignments of the widget (contract maxItems).
 const widgetAssignments = 20
 
-// GetSchoolDashboard is getSchoolDashboard (F043-AC-07..AC-09, AC-11, AC-13..AC-15): every widget in one call.
+// gradeMask reads the grades of the school of the scope (whatever the grade filter) and applies the small-cell rule
+// (analytics_min_cell_size, FR-ANL-016) with complementary suppression among the grades of the school (ADR-0095).
+func (q Dashboards) gradeMask(ctx context.Context, sc read.DashScope) (analytics.GradeMask, map[int]read.GradeSummary, error) {
+	all := sc
+	all.GradeLevel, all.Grades = nil, nil
+	rows, err := q.Model.Grades(ctx, all)
+	if err != nil {
+		return analytics.GradeMask{}, nil, err
+	}
+	sizes := make(map[int]int, len(rows))
+	by := make(map[int]read.GradeSummary, len(rows))
+	for _, r := range rows {
+		sizes[r.GradeLevel], by[r.GradeLevel] = r.Students, r
+	}
+	return analytics.SuppressGrades(sizes, q.Config.MinCellSize), by, nil
+}
+
+// GetSchoolDashboard is getSchoolDashboard (F043-AC-07..AC-09, AC-11, AC-13..AC-15, AC-28): every widget in one call.
+// Aggregates read the visible grades only; with grade_level on a hidden grade the answer is suppressed (aggregates null),
+// the assignment progress keeps its per-cell rule and the students needing attention stay listed.
 func (q Dashboards) GetSchoolDashboard(ctx context.Context, in SchoolDashboardInput) (out dto.SchoolDashboardView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.query.GetSchoolDashboard")
 	defer func() { done(err) }()
@@ -49,45 +67,72 @@ func (q Dashboards) GetSchoolDashboard(ctx context.Context, in SchoolDashboardIn
 	if err != nil {
 		return out, err
 	}
-	sc.GradeLevel, sc.ClassID = in.GradeLevel, in.ClassID
+	sc.GradeLevel = in.GradeLevel
 	size := q.Config.PageSize(in.PageSize)
 	now := q.now()
 	return dashRun(ctx, q, "school_dashboard", p, sc.TenantID, &rg, []any{sc, rg.From, rg.To, size},
 		func(ctx context.Context) (dto.SchoolDashboardView, error) {
-			v := dto.SchoolDashboardView{SchoolID: in.SchoolID, ClassID: in.ClassID, SubjectID: in.SubjectID}
+			v := dto.SchoolDashboardView{SchoolID: in.SchoolID, GradeLevel: in.GradeLevel, SubjectID: in.SubjectID}
 			ok, err := q.Model.SchoolExists(ctx, sc.TenantID, in.SchoolID)
 			if err != nil || !ok {
 				return v, notFoundOr(err)
 			}
-			if in.ClassID != nil {
-				c, err := q.Model.Class(ctx, sc.TenantID, *in.ClassID)
-				if err != nil || c == nil || c.SchoolID != in.SchoolID {
-					return v, notFoundOr(err)
+			mask, grades, err := q.gradeMask(ctx, sc)
+			if err != nil {
+				return v, err
+			}
+			sc.Grades = mask.Visible()
+			// A hidden grade, or a school without any visible grade, has no aggregate to show.
+			v.Suppressed = (in.GradeLevel != nil && mask.Hidden(*in.GradeLevel)) || len(sc.Grades) == 0
+			var m read.RollupMeta
+			w := &v.Widgets
+			if err := q.gradeWidgets(ctx, sc, rg, mask, grades, w, &m); err != nil {
+				return v, err
+			}
+			if v.Suppressed {
+				w.ActiveMinutesSeries = suppressedPoints(rg)
+			} else {
+				totals, err := q.Model.SchoolTotals(ctx, sc, rg)
+				if err != nil {
+					return v, err
+				}
+				m.Merge(totals.RollupMeta)
+				w.Accuracy, w.RapidGuessRatio = analytics.Ratio(totals.AccNum, totals.AccDen), analytics.Ratio(totals.RapidNum, totals.RapidDen)
+				series, sm, err := q.Model.SchoolSeries(ctx, sc, rg)
+				if err != nil {
+					return v, err
+				}
+				m.Merge(sm)
+				w.ActiveMinutesSeries = q.points(rg, series, func(p read.SeriesPoint) *float64 {
+					x := float64(p.ActiveSec / 60)
+					return &x
+				}, true)
+				last := q.lastDay(rg)
+				active, err := q.Model.ActiveStudents(ctx, sc, last.AddDate(0, 0, -6), last)
+				if err != nil {
+					return v, err
+				}
+				w.ActiveStudents = &active
+				if err := q.weakObjectives(ctx, sc, mask, w, &m); err != nil {
+					return v, err
+				}
+				self, err := q.Model.SelfStudy(ctx, sc)
+				if err != nil {
+					return v, err
+				}
+				if self.Students > 0 {
+					avg := float64(totals.ActiveSeconds) / 60 / float64(self.Students)
+					avg = float64(int(avg*10+0.5)) / 10
+					w.SelfStudy.AvgActiveMinutesPerStudent = &avg
+				}
+				w.SelfStudy.RecommendationStartedRate = analytics.Ratio(self.RecNum, self.RecDen)
+				w.SelfStudy.ObjectivesImprovedAfterRecom = self.Improved
+				if self.ComputedAtOldest != nil {
+					m.Merge(read.RollupMeta{Oldest: self.ComputedAtOldest})
 				}
 			}
-			var m read.RollupMeta
-			totals, err := q.Model.SchoolTotals(ctx, sc, rg)
-			if err != nil {
-				return v, err
-			}
-			m.Merge(totals.RollupMeta)
-			w := &v.Widgets
-			w.Accuracy, w.RapidGuessRatio = analytics.Ratio(totals.AccNum, totals.AccDen), analytics.Ratio(totals.RapidNum, totals.RapidDen)
-			series, sm, err := q.Model.SchoolSeries(ctx, sc, rg)
-			if err != nil {
-				return v, err
-			}
-			m.Merge(sm)
-			w.ActiveMinutesSeries = q.points(rg, series, func(p read.SeriesPoint) *float64 {
-				x := float64(p.ActiveSec / 60)
-				return &x
-			}, true)
-			last := q.lastDay(rg)
-			if w.ActiveStudents, err = q.Model.ActiveStudents(ctx, sc, last.AddDate(0, 0, -6), last); err != nil {
-				return v, err
-			}
-			if err := q.classWidgets(ctx, sc, rg, w, &m); err != nil {
-				return v, err
+			if w.WeakObjectives == nil {
+				w.WeakObjectives = []dto.WeakObjectiveView{}
 			}
 			if err := q.assignmentWidgets(ctx, sc, now, w); err != nil {
 				return v, err
@@ -98,23 +143,9 @@ func (q Dashboards) GetSchoolDashboard(ctx context.Context, in SchoolDashboardIn
 			}
 			w.StudentsNeedingAttention, w.StudentsNeedingAttentionTotal = make([]dto.AttentionView, 0, len(att)), total
 			for _, a := range att {
-				w.StudentsNeedingAttention = append(w.StudentsNeedingAttention, dto.AttentionView{StudentID: a.StudentID, ClassID: a.ClassID,
+				w.StudentsNeedingAttention = append(w.StudentsNeedingAttention, dto.AttentionView{StudentID: a.StudentID, GradeLevel: a.GradeLevel,
 					Reasons: a.Reasons})
 				m.Merge(stamp(a.ComputedAt))
-			}
-			self, err := q.Model.SelfStudy(ctx, sc)
-			if err != nil {
-				return v, err
-			}
-			if self.Students > 0 {
-				avg := float64(totals.ActiveSeconds) / 60 / float64(self.Students)
-				avg = float64(int(avg*10+0.5)) / 10
-				w.SelfStudy.AvgActiveMinutesPerStudent = &avg
-			}
-			w.SelfStudy.RecommendationStartedRate = analytics.Ratio(self.RecNum, self.RecDen)
-			w.SelfStudy.ObjectivesImprovedAfterRecom = self.Improved
-			if self.ComputedAtOldest != nil {
-				m.Merge(read.RollupMeta{Oldest: self.ComputedAtOldest})
 			}
 			// Safety notifications come from module chat (F122, facade not available yet): null, never a mock (R17).
 			w.SafetyNotificationsUnacknowledge = nil
@@ -134,46 +165,73 @@ func notFoundOr(err error) error {
 	return problem.New(problem.NotFound, "")
 }
 
-// classWidgets fills the class rows (state read model + accuracy of the range), the completion rate and the weak objectives.
-func (q Dashboards) classWidgets(ctx context.Context, sc read.DashScope, rg analytics.Range, w *dto.SchoolWidgets, m *read.RollupMeta) error {
-	classes, err := q.Model.Classes(ctx, sc)
-	if err != nil {
-		return err
+// suppressedPoints is a series whose every point is hidden (value null, suppressed).
+func suppressedPoints(rg analytics.Range) []dto.AnalyticsPointView {
+	out := make([]dto.AnalyticsPointView, 0, len(rg.Buckets()))
+	for _, b := range rg.Buckets() {
+		out = append(out, dto.AnalyticsPointView{PeriodStart: b.Format(time.DateOnly), Suppressed: true})
 	}
-	acc, am, err := q.Model.ClassTotals(ctx, sc, rg)
+	return out
+}
+
+// gradeWidgets fills the grade rows (state read model + accuracy of the range by grade at event time) and the completion
+// rate over the visible grades: a hidden grade shows its grade_level and suppressed only.
+func (q Dashboards) gradeWidgets(ctx context.Context, sc read.DashScope, rg analytics.Range, mask analytics.GradeMask,
+	grades map[int]read.GradeSummary, w *dto.SchoolWidgets, m *read.RollupMeta) error {
+	acc, am, err := q.Model.GradeTotals(ctx, sc, rg)
 	if err != nil {
 		return err
 	}
 	m.Merge(am)
-	var compNum, compDen int64
-	w.Classes = make([]dto.DashboardClassView, 0, len(classes))
-	for _, c := range classes {
-		active := c.Active7d
-		row := dto.DashboardClassView{ClassID: c.ClassID, Name: c.Name, GradeLevel: c.GradeLevel, ActiveStudents: &active,
-			AssignmentCompletionRate: analytics.Ratio(c.CompNum, c.CompDen)}
-		if t, ok := acc[c.ClassID]; ok {
-			row.Accuracy = analytics.Ratio(t.AccNum, t.AccDen)
+	levels := make([]int, 0, len(grades))
+	for g := range grades {
+		if g >= 1 && (sc.GradeLevel == nil || *sc.GradeLevel == g) { // grade 0 (unknown) is never a row of the contract
+			levels = append(levels, g)
 		}
-		compNum, compDen = compNum+c.CompNum, compDen+c.CompDen
-		m.Merge(stamp(c.ComputedAt))
-		w.Classes = append(w.Classes, row)
+	}
+	sort.Ints(levels)
+	var compNum, compDen int64
+	w.Grades = make([]dto.DashboardGradeView, 0, len(levels))
+	for _, g := range levels {
+		row := dto.DashboardGradeView{GradeLevel: g, Suppressed: mask.Hidden(g)}
+		if !row.Suppressed {
+			s := grades[g]
+			students, active := s.Students, s.Active7d
+			row.Students, row.ActiveStudents = &students, &active
+			row.AssignmentCompletionRate = analytics.Ratio(s.CompNum, s.CompDen)
+			if t, ok := acc[g]; ok {
+				row.Accuracy = analytics.Ratio(t.AccNum, t.AccDen)
+			}
+			compNum, compDen = compNum+s.CompNum, compDen+s.CompDen
+			m.Merge(stamp(s.ComputedAt))
+		}
+		w.Grades = append(w.Grades, row)
 	}
 	w.AssignmentCompletionRate = analytics.Ratio(compNum, compDen)
+	return nil
+}
+
+// weakObjectives aggregates the LO heatmap of the visible grades (rm_grade_objective_stats): objectives with students
+// below proficient, the grades where half of the students or more are below proficient.
+func (q Dashboards) weakObjectives(ctx context.Context, sc read.DashScope, mask analytics.GradeMask, w *dto.SchoolWidgets, m *read.RollupMeta) error {
 	stats, err := q.Model.ObjectiveStats(ctx, sc)
 	if err != nil {
 		return err
 	}
 	type agg struct {
-		v       dto.WeakObjectiveView
-		dist    []int
-		classes []uuid.UUID
+		v      dto.WeakObjectiveView
+		dist   []int
+		grades []int
 	}
 	byObj := map[uuid.UUID]*agg{}
 	order := []uuid.UUID{}
 	for _, s := range stats {
+		if mask.Hidden(s.GradeLevel) {
+			continue
+		}
 		a := byObj[s.ObjectiveID]
 		if a == nil {
-			a = &agg{v: dto.WeakObjectiveView{ObjectiveID: s.ObjectiveID, Code: s.Code, YccdRef: s.YccdRef}, dist: make([]int, 5)}
+			a = &agg{v: dto.WeakObjectiveView{ObjectiveID: s.ObjectiveID, Code: s.Code, YccdRef: s.YccdRef}, dist: make([]int, 5), grades: []int{}}
 			byObj[s.ObjectiveID] = a
 			order = append(order, s.ObjectiveID)
 		}
@@ -183,7 +241,7 @@ func (q Dashboards) classWidgets(ctx context.Context, sc read.DashScope, rg anal
 			}
 		}
 		if r := analytics.BelowProficient(s.LevelDist); r != nil && *r >= 0.5 {
-			a.classes = append(a.classes, s.ClassID)
+			a.grades = append(a.grades, s.GradeLevel)
 		}
 		m.Merge(stamp(s.ComputedAt))
 	}
@@ -194,10 +252,8 @@ func (q Dashboards) classWidgets(ctx context.Context, sc read.DashScope, rg anal
 		if r == nil || *r <= 0 {
 			continue
 		}
-		a.v.BelowProficientRatio, a.v.ClassIDs = *r, a.classes
-		if a.v.ClassIDs == nil {
-			a.v.ClassIDs = []uuid.UUID{}
-		}
+		sort.Ints(a.grades)
+		a.v.BelowProficientRatio, a.v.GradeLevels = *r, a.grades
 		weak = append(weak, a.v)
 	}
 	sort.SliceStable(weak, func(i, j int) bool {
@@ -213,22 +269,33 @@ func (q Dashboards) classWidgets(ctx context.Context, sc read.DashScope, rg anal
 	return nil
 }
 
-// assignments groups the class rows of the open/recent assignments.
-func assignments(rows []read.AssignmentRow) []dto.AssignmentProgressView {
+// assignments groups the grade rows of the open/recent assignments: a grade cell of fewer than analytics_min_cell_size
+// students is hidden (complementary suppression within the assignment) and the totals sum the visible cells only.
+func assignments(rows []read.AssignmentRow, k int) []dto.AssignmentProgressView {
 	out := []dto.AssignmentProgressView{}
 	idx := map[uuid.UUID]int{}
-	for _, r := range rows {
-		i, ok := idx[r.AssignmentID]
+	cells := make([]analytics.Cell, len(rows))
+	for i, r := range rows {
+		cells[i] = analytics.Cell{Group: r.AssignmentID.String(), Students: r.Total}
+	}
+	hidden := analytics.Suppress(cells, k)
+	for i, r := range rows {
+		j, ok := idx[r.AssignmentID]
 		if !ok {
-			i = len(out)
-			idx[r.AssignmentID] = i
+			j = len(out)
+			idx[r.AssignmentID] = j
 			out = append(out, dto.AssignmentProgressView{AssignmentID: r.AssignmentID, Title: r.Title, SubjectID: r.SubjectID, DueAt: r.DueAt.UTC(),
-				Status: r.Status, ByClass: []dto.AssignmentClassProgress{}})
+				Status: r.Status, ByGrade: []dto.AssignmentGradeProgress{}})
 		}
-		a := &out[i]
-		a.Submitted, a.Total, a.NotStarted, a.Missed = a.Submitted+r.Submitted, a.Total+r.Total, a.NotStarted+r.NotStarted, a.Missed+r.Missed
-		a.ByClass = append(a.ByClass, dto.AssignmentClassProgress{ClassID: r.ClassID, Submitted: r.Submitted, Total: r.Total,
-			NotStarted: r.NotStarted, Missed: r.Missed})
+		a := &out[j]
+		if hidden[i] {
+			a.ByGrade = append(a.ByGrade, dto.AssignmentGradeProgress{GradeLevel: r.GradeLevel, Suppressed: true})
+			continue
+		}
+		sub, tot, ns, mis := r.Submitted, r.Total, r.NotStarted, r.Missed
+		a.Submitted, a.Total, a.NotStarted, a.Missed = a.Submitted+sub, a.Total+tot, a.NotStarted+ns, a.Missed+mis
+		a.ByGrade = append(a.ByGrade, dto.AssignmentGradeProgress{GradeLevel: r.GradeLevel, Submitted: &sub, Total: &tot, NotStarted: &ns,
+			Missed: &mis})
 	}
 	return out
 }
@@ -238,7 +305,7 @@ func (q Dashboards) assignmentWidgets(ctx context.Context, sc read.DashScope, no
 	if err != nil {
 		return err
 	}
-	w.Assignments = assignments(rows)
+	w.Assignments = assignments(rows, q.Config.MinCellSize)
 	for _, a := range w.Assignments {
 		if a.Status == "open" {
 			w.AssignmentsOpen++
@@ -276,44 +343,41 @@ func (q Dashboards) points(rg analytics.Range, rows []read.SeriesPoint, value fu
 	return out
 }
 
-// ClassDashboardInput is getClassDashboard.
-type ClassDashboardInput struct {
-	ClassID   uuid.UUID
-	SubjectID *uuid.UUID
-	From, To  time.Time
-	Grain     string
-	PageSize  int
-	Cursor    string
+// GradeDashboardInput is getGradeDashboard.
+type GradeDashboardInput struct {
+	SchoolID   uuid.UUID
+	GradeLevel int
+	SubjectID  *uuid.UUID
+	From, To   time.Time
+	Grain      string
+	PageSize   int
+	Cursor     string
 }
 
-// GetClassDashboard is getClassDashboard (F043-AC-10): assignment progress, class × objective level distribution and the
-// students of the class by cursor pages (≤ dashboard_page_size_max).
-func (q Dashboards) GetClassDashboard(ctx context.Context, in ClassDashboardInput) (out dto.ClassDashboardView, err error) {
-	ctx, done := observability.UseCase(ctx, "learning.query.GetClassDashboard")
+// GetGradeDashboard is getGradeDashboard (F043-AC-10, F043-AC-28, ADR-0095): the drill-down school → grade — assignment
+// progress, the LO heatmap of the grade (school × grade × objective level distribution) and the students of the grade by
+// cursor pages (≤ dashboard_page_size_max). A grade under analytics_min_cell_size (with complementary suppression among the
+// grades of the school) answers suppressed: aggregates null and no heatmap; its students stay listed.
+func (q Dashboards) GetGradeDashboard(ctx context.Context, in GradeDashboardInput) (out dto.GradeDashboardView, err error) {
+	ctx, done := observability.UseCase(ctx, "learning.query.GetGradeDashboard")
 	defer func() { done(err) }()
 	p, err := staff(ctx)
 	if err != nil {
 		return out, err
 	}
+	if in.GradeLevel < 1 || in.GradeLevel > 9 {
+		return out, problem.Invalid("grade_level", problem.SubInvalid, "must be within 1..9")
+	}
 	rg, err := q.dashRange(in.From, in.To, in.Grain)
 	if err != nil {
 		return out, err
 	}
-	if !holds(p, authz.PermAnalyticsSchoolRead) {
-		return out, authz.Require(ctx, p, authz.PermAnalyticsSchoolRead, authz.Resource{TenantID: p.TenantID})
-	}
-	class, err := q.lookup(ctx, func(ctx context.Context) (*read.ClassRef, error) { return q.Model.Class(ctx, *p.TenantID, in.ClassID) })
+	sc, err := schoolScope(ctx, p, in.SchoolID, in.SubjectID, false)
 	if err != nil {
 		return out, err
 	}
-	if class == nil {
-		return out, problem.New(problem.NotFound, "")
-	}
-	sc, err := schoolScope(ctx, p, class.SchoolID, in.SubjectID, false)
-	if err != nil {
-		return out, err
-	}
-	sc.ClassID = &in.ClassID
+	grade := in.GradeLevel
+	sc.GradeLevel = &grade
 	size := q.Config.PageSize(in.PageSize)
 	var after *uuid.UUID
 	if in.Cursor != "" {
@@ -324,77 +388,93 @@ func (q Dashboards) GetClassDashboard(ctx context.Context, in ClassDashboardInpu
 		after = &cur.ID
 	}
 	now := q.now()
-	return dashRun(ctx, q, "class_dashboard", p, sc.TenantID, &rg, []any{sc, rg.From, rg.To, rg.Grain, size, in.Cursor},
-		func(ctx context.Context) (dto.ClassDashboardView, error) {
-			v := dto.ClassDashboardView{ClassID: in.ClassID, SchoolID: class.SchoolID, SubjectID: in.SubjectID, GeneratedAt: now,
+	return dashRun(ctx, q, "grade_dashboard", p, sc.TenantID, &rg, []any{sc, rg.From, rg.To, rg.Grain, size, in.Cursor},
+		func(ctx context.Context) (dto.GradeDashboardView, error) {
+			v := dto.GradeDashboardView{SchoolID: in.SchoolID, GradeLevel: grade, SubjectID: in.SubjectID, GeneratedAt: now,
 				Assignments: []dto.AssignmentProgressView{}, ObjectiveDistribution: []dto.ObjectiveDistributionView{},
-				StudentsNeedingAttention: []dto.ClassAttentionView{}}
-			var m read.RollupMeta
-			totals, tm, err := q.Model.ClassTotals(ctx, sc, rg)
+				StudentsNeedingAttention: []dto.GradeAttentionView{}}
+			ok, err := q.Model.SchoolExists(ctx, sc.TenantID, in.SchoolID)
+			if err != nil || !ok {
+				return v, notFoundOr(err)
+			}
+			mask, grades, err := q.gradeMask(ctx, sc)
 			if err != nil {
 				return v, err
 			}
-			m.Merge(tm)
-			t := totals[in.ClassID]
-			v.Accuracy, v.RapidGuessRatio = analytics.Ratio(t.AccNum, t.AccDen), analytics.Ratio(t.RapidNum, t.RapidDen)
-			last := q.lastDay(rg)
-			if v.ActiveStudents7d, err = q.Model.ActiveStudents(ctx, sc, last.AddDate(0, 0, -6), last); err != nil {
-				return v, err
+			sc.Grades = mask.Visible()
+			v.Suppressed = mask.Hidden(grade)
+			var m read.RollupMeta
+			if !v.Suppressed {
+				s := grades[grade]
+				n := s.Students
+				v.StudentCount = &n
+				v.AssignmentCompletionRate = analytics.Ratio(s.CompNum, s.CompDen)
+				m.Merge(stamp(s.ComputedAt))
+				t, err := q.Model.SchoolTotals(ctx, sc, rg)
+				if err != nil {
+					return v, err
+				}
+				m.Merge(t.RollupMeta)
+				v.Accuracy, v.RapidGuessRatio = analytics.Ratio(t.AccNum, t.AccDen), analytics.Ratio(t.RapidNum, t.RapidDen)
+				last := q.lastDay(rg)
+				active, err := q.Model.ActiveStudents(ctx, sc, last.AddDate(0, 0, -6), last)
+				if err != nil {
+					return v, err
+				}
+				v.Students7d = &active
+				stats, err := q.Model.ObjectiveStats(ctx, sc)
+				if err != nil {
+					return v, err
+				}
+				for _, s := range stats {
+					counts := map[string]int{}
+					for i, l := range analytics.Levels {
+						if i < len(s.LevelDist) {
+							counts[l] = s.LevelDist[i]
+						}
+					}
+					v.ObjectiveDistribution = append(v.ObjectiveDistribution, dto.ObjectiveDistributionView{ObjectiveID: s.ObjectiveID, Code: s.Code,
+						YccdRef: s.YccdRef, StudentsWithEvidence: s.WithEvidence, BelowProficientRatio: analytics.BelowProficient(s.LevelDist),
+						LevelCounts: counts})
+					m.Merge(stamp(s.ComputedAt))
+				}
 			}
 			rows, err := q.Model.Assignments(ctx, sc, now, widgetAssignments)
 			if err != nil {
 				return v, err
 			}
-			v.Assignments = assignments(rows)
+			v.Assignments = assignments(rows, q.Config.MinCellSize)
 			for _, a := range v.Assignments {
 				if a.Status == "open" {
 					v.AssignmentsOpen++
 				}
 			}
-			stats, err := q.Model.ObjectiveStats(ctx, sc)
-			if err != nil {
-				return v, err
-			}
-			for _, s := range stats {
-				counts := map[string]int{}
-				for i, l := range analytics.Levels {
-					if i < len(s.LevelDist) {
-						counts[l] = s.LevelDist[i]
-					}
-				}
-				r := analytics.BelowProficient(s.LevelDist)
-				v.ObjectiveDistribution = append(v.ObjectiveDistribution, dto.ObjectiveDistributionView{ObjectiveID: s.ObjectiveID, Code: s.Code,
-					YccdRef: s.YccdRef, StudentsWithEvidence: s.WithEvidence, BelowProficientRatio: r, LevelCounts: counts})
-				m.Merge(stamp(s.ComputedAt))
-			}
 			att, _, err := q.Model.Attention(ctx, sc, q.Config.PageSizeMax)
 			if err != nil {
 				return v, err
 			}
-			reasons := map[uuid.UUID][]string{}
 			for _, a := range att {
-				reasons[a.StudentID] = a.Reasons
-				// Per-student weak objectives are not part of the read model yet: empty list (heatmap per class) [Proposed].
-				v.StudentsNeedingAttention = append(v.StudentsNeedingAttention, dto.ClassAttentionView{StudentID: a.StudentID, Reasons: a.Reasons,
+				// Per-student weak objectives are not part of the read model yet: empty list [Proposed].
+				v.StudentsNeedingAttention = append(v.StudentsNeedingAttention, dto.GradeAttentionView{StudentID: a.StudentID, Reasons: a.Reasons,
 					WeakObjectiveIDs: []uuid.UUID{}})
 				m.Merge(stamp(a.ComputedAt))
 			}
-			students, err := q.Model.ClassStudents(ctx, sc, rg, after, size+1)
+			students, err := q.Model.GradeStudents(ctx, sc, rg, after, size+1)
 			if err != nil {
 				return v, err
 			}
-			v.Students = dto.ClassStudentsPage{Data: []dto.ClassStudentView{}, Page: dto.PageView{Limit: size}}
+			v.Students = dto.GradeStudentsPage{Data: []dto.GradeStudentView{}, Page: dto.PageView{Limit: size}}
 			if len(students) > size {
 				students = students[:size]
 				next := q.Cursors.Encode(page.Cursor{ID: students[size-1].StudentID})
 				v.Students.Page.HasMore, v.Students.Page.NextCursor = true, &next
 			}
 			for _, s := range students {
-				rs := reasons[s.StudentID]
+				rs := s.Reasons
 				if rs == nil {
 					rs = []string{}
 				}
-				v.Students.Data = append(v.Students.Data, dto.ClassStudentView{StudentID: s.StudentID, ActivitiesCompleted: int(s.Activities),
+				v.Students.Data = append(v.Students.Data, dto.GradeStudentView{StudentID: s.StudentID, ActivitiesCompleted: int(s.Activities),
 					LessonsCompleted: int(s.Lessons), Accuracy: analytics.Ratio(s.AccNum, s.AccDen), ActiveMinutes: minutes(s.ActS),
 					RapidGuessRatio: analytics.Ratio(s.RapidNum, s.RapidDen), RapidGuessFlag: rapidFlag(s.RapidNum, s.RapidDen, q.Config.Attention),
 					Reasons: rs})
@@ -408,8 +488,8 @@ func (q Dashboards) GetClassDashboard(ctx context.Context, in ClassDashboardInpu
 		})
 }
 
-// lookup runs a small scope lookup (class, student) in its own dashboard read before the authorization of the scope, so that
-// a cached answer is never served before the scope check.
+// lookup runs a small scope lookup (student, tenants) in its own dashboard read before the authorization of the scope, so
+// that a cached answer is never served before the scope check.
 func lookup[T any](ctx context.Context, q Dashboards, fn func(ctx context.Context) (T, error)) (out T, err error) {
 	if q.Session == nil || q.Model == nil {
 		return out, problem.New(problem.Unavailable, "dashboard database not configured")
@@ -425,10 +505,6 @@ func lookup[T any](ctx context.Context, q Dashboards, fn func(ctx context.Contex
 	return out, unavailable(ctx, err)
 }
 
-func (q Dashboards) lookup(ctx context.Context, fn func(ctx context.Context) (*read.ClassRef, error)) (*read.ClassRef, error) {
-	return lookup(ctx, q, fn)
-}
-
 // SeriesInput is getSchoolAnalyticsSeries.
 type SeriesInput struct {
 	SchoolID   uuid.UUID
@@ -442,7 +518,8 @@ type SeriesInput struct {
 var seriesUnits = map[string]string{"active_students": "students", "active_minutes": "minutes", "attempts_completed": "attempts",
 	"accuracy": "ratio", "assignment_completion_rate": "ratio", "lessons_completed": "lessons"}
 
-// GetSchoolSeries is getSchoolAnalyticsSeries (F043-AC-12, F043-AC-17): at most 120 points of the grain chosen by the server.
+// GetSchoolSeries is getSchoolAnalyticsSeries (F043-AC-12, F043-AC-17, F043-AC-28): at most 120 points of the grain chosen by
+// the server; the school series sums the visible grades only, the series of a hidden grade has every point suppressed.
 func (q Dashboards) GetSchoolSeries(ctx context.Context, in SeriesInput) (out dto.AnalyticsSeriesView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.query.GetSchoolAnalyticsSeries")
 	defer func() { done(err) }()
@@ -470,29 +547,40 @@ func (q Dashboards) GetSchoolSeries(ctx context.Context, in SeriesInput) (out dt
 			if err != nil || !ok {
 				return v, notFoundOr(err)
 			}
-			rows, m, err := q.Model.SchoolSeries(ctx, sc, rg)
+			mask, _, err := q.gradeMask(ctx, sc)
 			if err != nil {
 				return v, err
 			}
-			value := func(p read.SeriesPoint) *float64 {
-				var x float64
-				switch in.Metric {
-				case "active_students":
-					x = float64(p.ActiveStudents)
-				case "active_minutes":
-					x = float64(p.ActiveSec / 60)
-				case "attempts_completed":
-					x = float64(p.Activities)
-				case "lessons_completed":
-					x = float64(p.Lessons)
-				case "accuracy":
-					return analytics.Ratio(p.AccNum, p.AccDen)
-				case "assignment_completion_rate":
-					return analytics.Ratio(p.AssignCompleted, p.AssignDue)
+			sc.Grades = mask.Visible()
+			var m read.RollupMeta
+			if (in.GradeLevel != nil && mask.Hidden(*in.GradeLevel)) || len(sc.Grades) == 0 {
+				v.Points = suppressedPoints(rg)
+			} else {
+				rows, rm, err := q.Model.SchoolSeries(ctx, sc, rg)
+				if err != nil {
+					return v, err
 				}
-				return &x
+				m = rm
+				value := func(p read.SeriesPoint) *float64 {
+					var x float64
+					switch in.Metric {
+					case "active_students":
+						x = float64(p.ActiveStudents)
+					case "active_minutes":
+						x = float64(p.ActiveSec / 60)
+					case "attempts_completed":
+						x = float64(p.Activities)
+					case "lessons_completed":
+						x = float64(p.Lessons)
+					case "accuracy":
+						return analytics.Ratio(p.AccNum, p.AccDen)
+					case "assignment_completion_rate":
+						return analytics.Ratio(p.AssignCompleted, p.AssignDue)
+					}
+					return &x
+				}
+				v.Points = q.points(rg, rows, value, unit != "ratio")
 			}
-			v.Points = q.points(rg, rows, value, unit != "ratio")
 			meta, err := q.metaOf(ctx, rg, m, sc)
 			if err != nil {
 				return v, err

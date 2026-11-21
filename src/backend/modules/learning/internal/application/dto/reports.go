@@ -22,39 +22,10 @@ type ReportJobView struct {
 	FinishedAt        *time.Time `json:"finished_at,omitempty"`
 }
 
-// CourseResultColumn is one graded assignment of the course results.
-type CourseResultColumn struct {
-	AssignmentID uuid.UUID `json:"assignment_id"`
-	Title        string    `json:"title"`
-	DueAt        time.Time `json:"due_at"`
-	ScorePolicy  string    `json:"score_policy"`
-}
-
-// CourseResultScore is the effective self-graded score of a student on one assignment (10-point scale, score_scale).
-type CourseResultScore struct {
-	AssignmentID uuid.UUID `json:"assignment_id"`
-	Score10      *float64  `json:"score_10"`
-	Status       string    `json:"status"`
-	TooFast      bool      `json:"too_fast"`
-}
-
-// CourseResultRow is one student of the course results.
-type CourseResultRow struct {
-	StudentID uuid.UUID           `json:"student_id"`
-	Scores    []CourseResultScore `json:"scores"`
-}
-
-// CourseResultsView is CourseResults (F044 US2): no XP, rating, competition points nor ranking.
-type CourseResultsView struct {
-	CourseID uuid.UUID            `json:"course_id"`
-	Columns  []CourseResultColumn `json:"columns"`
-	Rows     []CourseResultRow    `json:"rows"`
-}
-
 // ReferenceItem is the reference level of one student.
 type ReferenceItem struct {
 	StudentID             uuid.UUID   `json:"student_id"`
-	ClassID               uuid.UUID   `json:"class_id"`
+	GradeLevel            *int        `json:"grade_level,omitempty"`
 	LevelCode             string      `json:"level_code"`
 	CoverageRatio         float64     `json:"coverage_ratio"`
 	ProficientRatio       float64     `json:"proficient_ratio"`

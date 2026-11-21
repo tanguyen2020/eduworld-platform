@@ -105,17 +105,18 @@ func build(s read.ReportSpec) (*reportQuery, error) {
 	q := &reportQuery{}
 	tenant := "infra.current_tenant_id()"
 	switch s.Type {
-	case reporting.TypeAssignmentResults, reporting.TypeCourseResults:
-		q.sel = `a.assignment_id, a.title, s.student_id, COALESCE(cl.name, ''), s.status, s.score::float8, s.max_score::float8, s.submitted_at,
-			s.rapid_guess_count`
+	case reporting.TypeAssignmentResults:
+		// grade_level: the grade of the student when targeted (ADR-0095), else the current grade; individual rows of the
+		// assignment for the authorized staff (no class).
+		q.sel = `a.assignment_id, a.title, s.student_id, COALESCE(ts.grade_level, st.grade_level, 0), s.status, s.score::float8, s.max_score::float8,
+			s.submitted_at, s.rapid_guess_count`
 		q.from = `lms.assignment_submissions s
 			JOIN lms.assignments a ON a.assignment_id = s.assignment_id AND a.tenant_id = s.tenant_id AND a.deleted_at IS NULL
 			JOIN ref.students st ON st.student_id = s.student_id AND st.tenant_id = s.tenant_id AND st.deleted_at IS NULL
-			LEFT JOIN ref.classes cl ON cl.class_id = s.class_id AND cl.tenant_id = s.tenant_id`
+			LEFT JOIN lms.assignment_target_students ts ON ts.assignment_id = s.assignment_id AND ts.student_id = s.student_id
+				AND ts.tenant_id = s.tenant_id AND ts.deleted_at IS NULL`
 		q.where = []string{"s.tenant_id = " + tenant, "s.deleted_at IS NULL"}
 		switch {
-		case s.Type == reporting.TypeCourseResults:
-			q.where = append(q.where, "a.course_id = "+q.arg(p.CourseID), "a.mode = 'graded'")
 		case p.AssignmentID != nil:
 			q.where = append(q.where, "a.assignment_id = "+q.arg(p.AssignmentID))
 		default:
@@ -127,62 +128,66 @@ func build(s read.ReportSpec) (*reportQuery, error) {
 		if ids := schoolFilter(p); ids != nil {
 			q.where = append(q.where, "a.school_id = ANY("+q.arg(uuids(ids))+"::uuid[])")
 		}
+		if p.GradeLevel != nil {
+			q.where = append(q.where, "COALESCE(ts.grade_level, st.grade_level, 0) = "+q.arg(*p.GradeLevel))
+		}
 		q.keys = [2]string{"a.assignment_id", "s.student_id"}
-		q.columns = []string{"assignment_id", "assignment_title", "student_id", "class", "status", "score_10", "submitted_at", "too_fast"}
+		q.columns = []string{"assignment_id", "assignment_title", "student_id", "grade_level", "status", "score_10", "submitted_at", "too_fast"}
 		q.scan = func(rows *sql.Rows) ([]string, [2]uuid.UUID, error) {
 			var asg, student uuid.UUID
-			var title, class, status string
+			var title, status string
+			var grade int
 			var score, maxScore sql.NullFloat64
 			var submitted sql.NullTime
 			var rapid int
-			if err := rows.Scan(&asg, &title, &student, &class, &status, &score, &maxScore, &submitted, &rapid); err != nil {
+			if err := rows.Scan(&asg, &title, &student, &grade, &status, &score, &maxScore, &submitted, &rapid); err != nil {
 				return nil, [2]uuid.UUID{}, err
 			}
 			sub := ""
 			if submitted.Valid {
 				sub = submitted.Time.UTC().Format(time.RFC3339)
 			}
-			return []string{asg.String(), title, student.String(), class, status, score10(score, maxScore), sub, strconv.FormatBool(rapid > 0)},
-				[2]uuid.UUID{asg, student}, nil
+			return []string{asg.String(), title, student.String(), gradeText(grade), status, score10(score, maxScore), sub,
+				strconv.FormatBool(rapid > 0)}, [2]uuid.UUID{asg, student}, nil
 		}
 	case reporting.TypeRegulationReference:
-		q.sel = `r.class_id, r.student_id, COALESCE(cl.name, ''), r.level_code, r.coverage_ratio::float8, r.proficient_ratio::float8,
+		q.sel = `r.subject_id, r.student_id, r.grade_level, r.level_code, r.coverage_ratio::float8, r.proficient_ratio::float8,
 			r.mastered_ratio::float8, r.official_score::float8, r.rapid_guess_ratio::float8, cardinality(r.low_reliability_exam_ids), r.profile_version`
 		q.from = `learning.rm_student_subject_reference_levels r
-			JOIN ref.students st ON st.student_id = r.student_id AND st.tenant_id = r.tenant_id AND st.deleted_at IS NULL
-			LEFT JOIN ref.classes cl ON cl.class_id = r.class_id AND cl.tenant_id = r.tenant_id`
+			JOIN ref.students st ON st.student_id = r.student_id AND st.tenant_id = r.tenant_id AND st.deleted_at IS NULL`
 		q.where = []string{"r.tenant_id = " + tenant, "r.school_id = " + q.arg(p.SchoolID), "r.subject_id = " + q.arg(p.SubjectID),
 			"r.period = " + q.arg(p.Period), "r.academic_year = " + q.arg(p.AcademicYear),
 			`r.profile_version = (SELECT max(x.profile_version) FROM learning.rm_student_subject_reference_levels x WHERE x.tenant_id = r.tenant_id
 				AND x.student_id = r.student_id AND x.subject_id = r.subject_id AND x.academic_year = r.academic_year AND x.period = r.period)`}
-		if p.ClassID != nil {
-			q.where = append(q.where, "r.class_id = "+q.arg(p.ClassID))
+		if p.GradeLevel != nil {
+			q.where = append(q.where, "r.grade_level = "+q.arg(*p.GradeLevel))
 		}
-		q.keys = [2]string{"r.class_id", "r.student_id"}
-		q.columns = []string{"class", "student_id", "level_code", "level", "coverage_ratio", "proficient_ratio", "mastered_ratio",
+		q.keys = [2]string{"r.subject_id", "r.student_id"}
+		q.columns = []string{"grade_level", "student_id", "level_code", "level", "coverage_ratio", "proficient_ratio", "mastered_ratio",
 			"official_score", "rapid_guess_ratio", "low_reliability_exams", "profile_version"}
 		q.scan = func(rows *sql.Rows) ([]string, [2]uuid.UUID, error) {
-			var class, student uuid.UUID
-			var name, level string
+			var subject, student uuid.UUID
+			var grade sql.NullInt32
+			var level string
 			var cov, prof, mast, rapid float64
 			var official sql.NullFloat64
 			var low, ver int
-			if err := rows.Scan(&class, &student, &name, &level, &cov, &prof, &mast, &official, &rapid, &low, &ver); err != nil {
+			if err := rows.Scan(&subject, &student, &grade, &level, &cov, &prof, &mast, &official, &rapid, &low, &ver); err != nil {
 				return nil, [2]uuid.UUID{}, err
 			}
 			ff := func(x float64) string { return strconv.FormatFloat(x, 'f', 4, 64) }
-			return []string{name, student.String(), level, levelLabels[level], ff(cov), ff(prof), ff(mast), f1(official), ff(rapid),
-				strconv.Itoa(low), strconv.Itoa(ver)}, [2]uuid.UUID{class, student}, nil
+			return []string{gradeText(int(grade.Int32)), student.String(), level, levelLabels[level], ff(cov), ff(prof), ff(mast), f1(official),
+				ff(rapid), strconv.Itoa(low), strconv.Itoa(ver)}, [2]uuid.UUID{subject, student}, nil
 		}
 	case reporting.TypeSkillMap:
+		// The students of one grade of the school (current grade, ADR-0095) × the objectives of the subject.
 		q.sel = `m.student_id, m.objective_id, o.code, m.level, m.value::float8, m.evidence_count`
 		q.from = `learning.objective_masteries m
-			JOIN ref.enrollments e ON e.student_id = m.student_id AND e.tenant_id = m.tenant_id AND e.status = 'active'
-			JOIN ref.students st ON st.student_id = m.student_id AND st.tenant_id = m.tenant_id AND st.deleted_at IS NULL
+			JOIN ref.students st ON st.student_id = m.student_id AND st.tenant_id = m.tenant_id AND st.deleted_at IS NULL AND st.status = 'active'
 			JOIN curriculum.learning_objectives o ON o.objective_id = m.objective_id AND o.deleted_at IS NULL
 			JOIN curriculum.topics t ON t.topic_id = o.topic_id AND t.deleted_at IS NULL`
-		q.where = []string{"m.tenant_id = " + tenant, "m.deleted_at IS NULL", "e.class_id = " + q.arg(p.ClassID),
-			"t.subject_id = " + q.arg(p.SubjectID)}
+		q.where = []string{"m.tenant_id = " + tenant, "m.deleted_at IS NULL", "st.school_id = " + q.arg(p.SchoolID),
+			"st.grade_level = " + q.arg(p.GradeLevel), "t.subject_id = " + q.arg(p.SubjectID)}
 		q.keys = [2]string{"m.student_id", "m.objective_id"}
 		q.columns = []string{"student_id", "objective_code", "mastery_level", "mastery_value", "evidence_count"}
 		q.scan = func(rows *sql.Rows) ([]string, [2]uuid.UUID, error) {
@@ -196,43 +201,110 @@ func build(s read.ReportSpec) (*reportQuery, error) {
 			return []string{student.String(), code, level, strconv.FormatFloat(value, 'f', 3, 64), strconv.Itoa(n)},
 				[2]uuid.UUID{student, objective}, nil
 		}
-	case reporting.TypeSchoolMonthly, reporting.TypeClassProgress:
-		q.sel = `r.class_id, r.subject_id, COALESCE(max(cl.name), ''), sum(r.activities_completed), sum(r.accuracy_num), sum(r.accuracy_den),
-			sum(r.rapid_guess_num), sum(r.rapid_guess_den), sum(r.active_seconds), sum(r.assignments_due), sum(r.assignments_completed),
-			sum(r.assignments_on_time)`
-		q.from = `learning.rollup_class_daily r LEFT JOIN ref.classes cl ON cl.class_id = r.class_id AND cl.tenant_id = r.tenant_id`
-		q.where = []string{"r.tenant_id = " + tenant, "r.subject_id <> '00000000-0000-0000-0000-000000000000'::uuid",
-			"r.bucket_date >= " + q.arg(dateArg(p.From)) + "::date", "r.bucket_date <= " + q.arg(dateArg(p.To)) + "::date"}
-		if p.SchoolID != nil {
-			q.where = append(q.where, "r.school_id = "+q.arg(p.SchoolID))
-		}
-		if ids := schoolFilter(p); ids != nil {
-			q.where = append(q.where, "r.school_id = ANY("+q.arg(uuids(ids))+"::uuid[])")
-		}
-		if p.SubjectIDs != nil {
-			q.where = append(q.where, "r.subject_id = ANY("+q.arg(uuids(p.SubjectIDs))+"::uuid[])")
-		}
-		if p.GradeLevel != nil {
-			q.where = append(q.where, "r.grade_level = "+q.arg(*p.GradeLevel))
-		}
-		q.keys, q.group = [2]string{"r.class_id", "r.subject_id"}, "r.class_id, r.subject_id"
-		q.columns = []string{"class_id", "class", "subject_id", "activities_completed", "accuracy_pct", "rapid_guess_pct", "active_minutes",
-			"assignments_due", "assignments_completed", "assignments_on_time"}
-		q.scan = func(rows *sql.Rows) ([]string, [2]uuid.UUID, error) {
-			var class, subject uuid.UUID
-			var name string
-			var acts, an, ad, rn, rd, secs, due, done, onTime int64
-			if err := rows.Scan(&class, &subject, &name, &acts, &an, &ad, &rn, &rd, &secs, &due, &done, &onTime); err != nil {
-				return nil, [2]uuid.UUID{}, err
-			}
-			i := func(x int64) string { return strconv.FormatInt(x, 10) }
-			return []string{class.String(), name, subject.String(), i(acts), pct(an, ad), pct(rn, rd), i(secs / 60), i(due), i(done), i(onTime)},
-				[2]uuid.UUID{class, subject}, nil
-		}
+	case reporting.TypeSchoolMonthly, reporting.TypeGradeProgress:
+		return gradeQuery(s)
 	case reporting.TypeLearningSummary:
 		return summaryQuery(s)
 	default:
 		return nil, fmt.Errorf("report type %q has no query", s.Type)
+	}
+	return q, nil
+}
+
+// gradeKey is a grade as the uuid of a keyset column (grade 3 → 00000000-0000-0000-0000-000000000003, ordered like the grade).
+const gradeKey = `('00000000-0000-0000-0000-' || lpad(r.grade_level::text, 12, '0'))::uuid`
+
+// gradeText is a grade in a file ("" when unknown).
+func gradeText(g int) string {
+	if g < 1 {
+		return ""
+	}
+	return strconv.Itoa(g)
+}
+
+// gradeQuery is school_monthly (one school: grade × subject) and grade_progress (the schools of the tenant: school × grade,
+// every subject) from rollup_school_daily (grade at event time, ADR-0095). A grade cell of a school with fewer than
+// analytics_min_cell_size students (rm_school_grade_summary) is written with students "<k" and empty numbers (FR-ANL-016).
+func gradeQuery(s read.ReportSpec) (*reportQuery, error) {
+	p := s.Params
+	q := &reportQuery{}
+	minCell := q.arg(max(s.MinCellSize, 1))
+	hide := func(expr string) string {
+		return "CASE WHEN COALESCE(max(n.n), 0) < " + minCell + " THEN NULL ELSE " + expr + " END"
+	}
+	monthly := s.Type == reporting.TypeSchoolMonthly
+	first := "r.subject_id"
+	if !monthly {
+		first = "r.school_id"
+	}
+	q.sel = first + `, r.grade_level, COALESCE(max(n.n), 0), ` + hide("sum(r.activities_completed)") + `, ` + hide("sum(r.accuracy_num)") +
+		`, sum(r.accuracy_den), ` + hide("sum(r.rapid_guess_num)") + `, sum(r.rapid_guess_den), ` + hide("sum(r.active_seconds)") + `, ` +
+		hide("sum(r.assignments_due)") + `, ` + hide("sum(r.assignments_completed)") + `, ` + hide("sum(r.assignments_on_time)")
+	q.from = `learning.rollup_school_daily r LEFT JOIN (SELECT g.school_id, g.grade_level, max(g.student_count) AS n
+			FROM learning.rm_school_grade_summary g WHERE g.tenant_id = infra.current_tenant_id() GROUP BY g.school_id, g.grade_level) n
+		ON n.school_id = r.school_id AND n.grade_level = r.grade_level`
+	q.where = []string{"r.tenant_id = infra.current_tenant_id()", "r.subject_id <> '00000000-0000-0000-0000-000000000000'::uuid",
+		"r.metric_version = 1", "r.bucket_date >= " + q.arg(dateArg(p.From)) + "::date", "r.bucket_date <= " + q.arg(dateArg(p.To)) + "::date"}
+	if p.SchoolID != nil {
+		q.where = append(q.where, "r.school_id = "+q.arg(p.SchoolID))
+	}
+	if ids := schoolFilter(p); ids != nil {
+		q.where = append(q.where, "r.school_id = ANY("+q.arg(uuids(ids))+"::uuid[])")
+	}
+	if p.SubjectIDs != nil {
+		q.where = append(q.where, "r.subject_id = ANY("+q.arg(uuids(p.SubjectIDs))+"::uuid[])")
+	}
+	if p.GradeLevel != nil {
+		q.where = append(q.where, "r.grade_level = "+q.arg(*p.GradeLevel))
+	}
+	if monthly {
+		q.keys, q.group = [2]string{gradeKey, "r.subject_id"}, "r.grade_level, r.subject_id"
+		q.columns = []string{"grade_level", "subject_id"}
+	} else {
+		q.keys, q.group = [2]string{"r.school_id", gradeKey}, "r.school_id, r.grade_level"
+		q.columns = []string{"school_id", "grade_level"}
+	}
+	q.columns = append(q.columns, "students", "activities_completed", "accuracy_pct", "rapid_guess_pct", "active_minutes", "assignments_due",
+		"assignments_completed", "assignments_on_time")
+	q.scan = func(rows *sql.Rows) ([]string, [2]uuid.UUID, error) {
+		var id uuid.UUID
+		var grade int
+		var students int64
+		var acts, an, rn, secs, due, done, onTime sql.NullInt64
+		var ad, rd int64
+		if err := rows.Scan(&id, &grade, &students, &acts, &an, &ad, &rn, &rd, &secs, &due, &done, &onTime); err != nil {
+			return nil, [2]uuid.UUID{}, err
+		}
+		key, err := uuid.Parse(fmt.Sprintf("00000000-0000-0000-0000-%012d", grade))
+		if err != nil {
+			return nil, [2]uuid.UUID{}, err
+		}
+		hidden := !acts.Valid
+		i := func(v sql.NullInt64) string {
+			if hidden {
+				return ""
+			}
+			return strconv.FormatInt(v.Int64, 10)
+		}
+		pc := func(v sql.NullInt64, den int64) string {
+			if hidden {
+				return ""
+			}
+			return pct(v.Int64, den)
+		}
+		st := strconv.FormatInt(students, 10)
+		mins := ""
+		if hidden {
+			st = "<" + strconv.Itoa(max(s.MinCellSize, 1))
+		} else {
+			mins = strconv.FormatInt(secs.Int64/60, 10)
+		}
+		row := []string{id.String(), gradeText(grade), st, i(acts), pc(an, ad), pc(rn, rd), mins, i(due), i(done), i(onTime)}
+		if monthly {
+			row[0], row[1] = gradeText(grade), id.String()
+			return row, [2]uuid.UUID{key, id}, nil
+		}
+		return row, [2]uuid.UUID{id, key}, nil
 	}
 	return q, nil
 }

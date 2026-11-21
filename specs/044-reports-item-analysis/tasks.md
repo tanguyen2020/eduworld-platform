@@ -40,7 +40,7 @@
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 
-## Phase 4: User Story 2 — Bảng kết quả course theo điểm tự chấm (Priority: P1)
+## Phase 4: User Story 2 — Bảng kết quả course theo điểm tự chấm (Priority: P1) — thay bằng kết quả theo bài giao/khối (ADR-0095, T060–T063)
 
 **Goal**: `getCourseResults` đúng `score_policy`, không XP/rating.
 
@@ -158,3 +158,10 @@
 - [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
 - [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
 - [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+
+## ADR-0095 — báo cáo theo khối (WP-L2, 2026-11-21)
+
+- [x] T060 Test trước: `reporting.Validate` từ chối `course_results`, `class_progress`; `skill_map` cần `school_id` + `grade_level` + `subject_id`; `grade_level` 1–9; nhận `grade_progress` — file: `src/backend/modules/learning/internal/domain/reporting/reporting_test.go` — Bằng chứng: `TestValidate` PASS
+- [x] T061 Migration expand `20261229000006_adr0095_grade_reports.sql`: CHECK `report_jobs_type_ck` thêm `grade_progress` (giữ giá trị cũ cho job đã ghi), `rm_student_subject_reference_levels.grade_level` + index, `class_id` nullable
+- [x] T062 Bỏ `getCourseResults` (query, port, handler, contract `CourseResults`, `CourseIdPath`); `assignment_results` có cột `grade_level`; `school_monthly` theo khối × môn, `grade_progress` theo trường × khối (ô < `analytics_min_cell_size` ghi `<5`); `skill_map` theo khối; tham khảo TT27/TT22 lọc `grade_level`; job mức tham khảo đọc `ref.students` (không enrollment) — Bằng chứng: `TestReportExportJob`, `TestReportExportScopeAndLimits`, `TestGradeReports`, `TestReferenceLevels`, `TestPlatformReport`
+- [x] T063 `report.completed.v1`: thêm giá trị enum `grade_progress` (tương thích ngược, không cần v2) — Bằng chứng: `validate-schemas`

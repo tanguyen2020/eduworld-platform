@@ -28,8 +28,8 @@ type DashboardModel struct{}
 var _ read.DashboardReader = DashboardModel{}
 
 // Catalog lists the query ids of the dashboards with one representative statement each (EXPLAIN test, TC-DASH-001).
-var Catalog = []string{"school_totals", "class_totals", "school_series", "class_series", "active_students", "classes",
-	"objective_stats", "attention", "assignments", "self_study", "class_students", "profile_subjects", "profile_topics",
+var Catalog = []string{"school_totals", "grade_totals", "school_series", "active_students", "grades",
+	"objective_stats", "attention", "assignments", "self_study", "grade_students", "profile_subjects", "profile_topics",
 	"profile_trend", "profile_assignments", "profile_recommendations", "school_cells", "tenant_cells", "available_from"}
 
 var grainTables = map[analytics.Grain]string{analytics.Day: "daily", analytics.Week: "weekly", analytics.Month: "monthly"}
@@ -176,25 +176,6 @@ func (DashboardModel) SchoolExists(ctx context.Context, tenantID, schoolID uuid.
 	return ok, dashErr("school", err)
 }
 
-// Class implements read.DashboardReader.
-func (DashboardModel) Class(ctx context.Context, tenantID, classID uuid.UUID) (*read.ClassRef, error) {
-	q, err := dtx(ctx, "class")
-	if err != nil {
-		return nil, err
-	}
-	var c read.ClassRef
-	// tenancyguard:ok ref.classes projection (no deleted_at), explicit tenant_id + RLS
-	err = q.row(ctx, `SELECT class_id, school_id, name, grade_level FROM ref.classes WHERE tenant_id = $1 AND class_id = $2`,
-		tenantID, classID).Scan(&c.ClassID, &c.SchoolID, &c.Name, &c.GradeLevel)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, dashErr("class", err)
-	}
-	return &c, nil
-}
-
 // Student implements read.DashboardReader (a deleted student is not found, spec edge case).
 func (DashboardModel) Student(ctx context.Context, tenantID, studentID uuid.UUID) (*read.DashStudent, error) {
 	q, err := dtx(ctx, "student")
@@ -233,84 +214,86 @@ func scanTotals(row interface{ Scan(...any) error }, t *read.RollupTotals, extra
 	return nil
 }
 
-// SchoolTotals implements read.DashboardReader (query school_totals; class drill-down reads rollup_class_*).
+// grades is the SQL int[] literal of the visible grades of a scope (nil = no filter).
+func grades(gs []int) any {
+	if gs == nil {
+		return nil
+	}
+	parts := make([]string, len(gs))
+	for i, g := range gs {
+		parts[i] = strconv.Itoa(g)
+	}
+	return "{" + strings.Join(parts, ",") + "}"
+}
+
+// SchoolTotals implements read.DashboardReader (query school_totals: rollup_school_* of the visible grades of the scope).
 func (DashboardModel) SchoolTotals(ctx context.Context, sc read.DashScope, rg analytics.Range) (read.RollupTotals, error) {
 	q, err := dtx(ctx, "school_totals")
 	if err != nil {
 		return read.RollupTotals{}, err
 	}
 	var t read.RollupTotals
-	if sc.ClassID != nil {
-		m, _, err := DashboardModel{}.ClassTotals(ctx, sc, rg)
-		if err != nil {
-			return t, err
-		}
-		return m[*sc.ClassID], nil
-	}
 	// tenancyguard:ok derived rollup (no deleted_at): explicit tenant_id, scope and bounded bucket range
 	err = scanTotals(q.row(ctx, fmt.Sprintf(`SELECT `+totalsCols+` FROM learning.rollup_school_%s r
 		WHERE r.tenant_id = $1 AND ($2::uuid[] IS NULL OR r.school_id = ANY($2::uuid[])) AND ($3::int IS NULL OR r.grade_level = $3)
-			AND ($4::uuid[] IS NULL OR r.subject_id = ANY($4::uuid[])) AND r.bucket_date BETWEEN $5::date AND $6::date AND r.metric_version = 1`,
-		suffix(rg)), sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs), day(rg.QueryFrom()), day(rg.To)), &t)
+			AND ($4::uuid[] IS NULL OR r.subject_id = ANY($4::uuid[])) AND r.bucket_date BETWEEN $5::date AND $6::date AND r.metric_version = 1
+			AND ($7::int[] IS NULL OR r.grade_level = ANY($7::int[]))`,
+		suffix(rg)), sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs), day(rg.QueryFrom()), day(rg.To), grades(sc.Grades)), &t)
 	return t, dashErr("school_totals", err)
 }
 
-// ClassTotals implements read.DashboardReader (query class_totals).
-func (DashboardModel) ClassTotals(ctx context.Context, sc read.DashScope, rg analytics.Range) (map[uuid.UUID]read.RollupTotals, read.RollupMeta, error) {
-	q, err := dtx(ctx, "class_totals")
+// GradeTotals implements read.DashboardReader (query grade_totals: rollup_school_* per grade, grade at event time).
+func (DashboardModel) GradeTotals(ctx context.Context, sc read.DashScope, rg analytics.Range) (map[int]read.RollupTotals, read.RollupMeta, error) {
+	q, err := dtx(ctx, "grade_totals")
 	if err != nil {
 		return nil, read.RollupMeta{}, err
 	}
 	// tenancyguard:ok derived rollup (no deleted_at): explicit tenant_id, scope and bounded bucket range
-	rows, err := q.query(ctx, fmt.Sprintf(`SELECT r.class_id, `+totalsCols+` FROM learning.rollup_class_%s r
-		WHERE r.tenant_id = $1 AND ($2::uuid[] IS NULL OR r.school_id = ANY($2::uuid[])) AND ($3::uuid IS NULL OR r.class_id = $3)
-			AND ($4::int IS NULL OR r.grade_level = $4) AND ($5::uuid[] IS NULL OR r.subject_id = ANY($5::uuid[]))
-			AND r.bucket_date BETWEEN $6::date AND $7::date AND r.metric_version = 1
-		GROUP BY r.class_id`, suffix(rg)), sc.TenantID, strIDs(sc.SchoolIDs), sc.ClassID, sc.GradeLevel, strIDs(sc.SubjectIDs),
+	rows, err := q.query(ctx, fmt.Sprintf(`SELECT r.grade_level, `+totalsCols+` FROM learning.rollup_school_%s r
+		WHERE r.tenant_id = $1 AND ($2::uuid[] IS NULL OR r.school_id = ANY($2::uuid[])) AND ($3::int IS NULL OR r.grade_level = $3)
+			AND ($4::uuid[] IS NULL OR r.subject_id = ANY($4::uuid[])) AND r.bucket_date BETWEEN $5::date AND $6::date AND r.metric_version = 1
+		GROUP BY r.grade_level`, suffix(rg)), sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs),
 		day(rg.QueryFrom()), day(rg.To))
 	if err != nil {
-		return nil, read.RollupMeta{}, dashErr("class_totals", err)
+		return nil, read.RollupMeta{}, dashErr("grade_totals", err)
 	}
 	defer func() { _ = rows.Close() }()
-	out := map[uuid.UUID]read.RollupTotals{}
+	out := map[int]read.RollupTotals{}
 	var m read.RollupMeta
 	for rows.Next() {
-		var id uuid.UUID
+		var g int
 		var t read.RollupTotals
-		if err := scanTotals(rows, &t, &id); err != nil {
-			return nil, m, dashErr("class_totals", err)
+		if err := scanTotals(rows, &t, &g); err != nil {
+			return nil, m, dashErr("grade_totals", err)
 		}
-		out[id] = t
+		out[g] = t
 		m.Merge(t.RollupMeta)
 	}
-	return out, m, dashErr("class_totals", rows.Err())
+	return out, m, dashErr("grade_totals", rows.Err())
 }
 
-// SchoolSeries implements read.DashboardReader (queries school_series / class_series): per bucket, the active students are
-// the "all subjects" distinct count of each grade (or class) summed, or the per-subject counts when subjects are limited.
+// SchoolSeries implements read.DashboardReader (query school_series): per bucket, the active students are the "all
+// subjects" distinct count of each grade summed, or the per-subject counts when subjects are limited; visible grades only.
 func (DashboardModel) SchoolSeries(ctx context.Context, sc read.DashScope, rg analytics.Range) ([]read.SeriesPoint, read.RollupMeta, error) {
 	q, err := dtx(ctx, "school_series")
 	if err != nil {
 		return nil, read.RollupMeta{}, err
 	}
-	level, group, classCond := "school", "r.school_id, r.grade_level", "$3::uuid IS NULL"
-	if sc.ClassID != nil {
-		level, group, classCond = "class", "r.class_id", "r.class_id = $3"
-	}
 	// tenancyguard:ok derived rollup (no deleted_at): explicit tenant_id, scope and bounded bucket range
 	rows, err := q.query(ctx, fmt.Sprintf(`SELECT x.bucket_date, bool_and(x.fin), sum(x.act), sum(x.acts), sum(x.less), sum(x.an),
 			sum(x.ad), sum(x.sec), sum(x.due), sum(x.done), min(x.at), bool_or(NOT x.fin)
 		FROM (SELECT r.bucket_date, bool_and(r.is_final) AS fin,
-				CASE WHEN $5::uuid[] IS NULL THEN COALESCE(max(r.active_students_all), 0) ELSE COALESCE(sum(r.active_students), 0) END AS act,
+				CASE WHEN $4::uuid[] IS NULL THEN COALESCE(max(r.active_students_all), 0) ELSE COALESCE(sum(r.active_students), 0) END AS act,
 				sum(r.activities_completed) AS acts, sum(r.lessons_completed) AS less, sum(r.accuracy_num) AS an, sum(r.accuracy_den) AS ad,
 				sum(r.active_seconds) AS sec, sum(r.assignments_due) AS due, sum(r.assignments_completed) AS done, min(r.computed_at) AS at
-			FROM learning.rollup_%s_%s r
-			WHERE r.tenant_id = $1 AND ($2::uuid[] IS NULL OR r.school_id = ANY($2::uuid[])) AND %s
-				AND ($4::int IS NULL OR r.grade_level = $4) AND ($5::uuid[] IS NULL OR r.subject_id = ANY($5::uuid[]))
-				AND r.bucket_date BETWEEN $6::date AND $7::date AND r.metric_version = 1
-			GROUP BY r.bucket_date, %s) x
-		GROUP BY x.bucket_date ORDER BY x.bucket_date LIMIT 120`, level, suffix(rg), classCond, group),
-		sc.TenantID, strIDs(sc.SchoolIDs), sc.ClassID, sc.GradeLevel, strIDs(sc.SubjectIDs), day(rg.QueryFrom()), day(rg.To))
+			FROM learning.rollup_school_%s r
+			WHERE r.tenant_id = $1 AND ($2::uuid[] IS NULL OR r.school_id = ANY($2::uuid[]))
+				AND ($3::int IS NULL OR r.grade_level = $3) AND ($4::uuid[] IS NULL OR r.subject_id = ANY($4::uuid[]))
+				AND r.bucket_date BETWEEN $5::date AND $6::date AND r.metric_version = 1
+				AND ($7::int[] IS NULL OR r.grade_level = ANY($7::int[]))
+			GROUP BY r.bucket_date, r.school_id, r.grade_level) x
+		GROUP BY x.bucket_date ORDER BY x.bucket_date LIMIT 120`, suffix(rg)),
+		sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs), day(rg.QueryFrom()), day(rg.To), grades(sc.Grades))
 	if err != nil {
 		return nil, read.RollupMeta{}, dashErr("school_series", err)
 	}
@@ -332,68 +315,70 @@ func (DashboardModel) SchoolSeries(ctx context.Context, sc read.DashScope, rg an
 	return out, a.m, dashErr("school_series", rows.Err())
 }
 
-// ActiveStudents implements read.DashboardReader (query active_students: progress_daily, bounded window).
+// ActiveStudents implements read.DashboardReader (query active_students: progress_daily, bounded window; grade = grade
+// recorded on the row, visible grades only).
 func (DashboardModel) ActiveStudents(ctx context.Context, sc read.DashScope, from, to time.Time) (int, error) {
 	q, err := dtx(ctx, "active_students")
 	if err != nil {
 		return 0, err
 	}
 	var n int
-	// tenancyguard:ok derived progress_daily (no deleted_at), ref.classes projection: explicit tenant_id, scope and window
+	// tenancyguard:ok derived progress_daily (no deleted_at): explicit tenant_id, scope and window
 	err = q.row(ctx, `SELECT count(DISTINCT p.student_id) FROM learning.progress_daily p
-		WHERE p.tenant_id = $1 AND ($2::uuid[] IS NULL OR p.school_id = ANY($2::uuid[])) AND ($3::uuid IS NULL OR p.class_id = $3)
-			AND ($4::int IS NULL OR EXISTS (SELECT 1 FROM ref.classes c WHERE c.class_id = p.class_id AND c.tenant_id = p.tenant_id
-				AND c.grade_level = $4))
+		WHERE p.tenant_id = $1 AND ($2::uuid[] IS NULL OR p.school_id = ANY($2::uuid[]))
+			AND ($3::int IS NULL OR p.grade_level = $3) AND ($4::int[] IS NULL OR COALESCE(p.grade_level, 0) = ANY($4::int[]))
 			AND ($5::uuid[] IS NULL OR p.subject_id = ANY($5::uuid[])) AND p.bucket_date BETWEEN $6::date AND $7::date
-			AND p.metric_version = 1`, sc.TenantID, strIDs(sc.SchoolIDs), sc.ClassID, sc.GradeLevel, strIDs(sc.SubjectIDs), day(from), day(to)).Scan(&n)
+			AND p.metric_version = 1`, sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, grades(sc.Grades), strIDs(sc.SubjectIDs), day(from),
+		day(to)).Scan(&n)
 	return n, dashErr("active_students", err)
 }
 
-// Classes implements read.DashboardReader (query classes: rm_class_subject_summary per class).
-func (DashboardModel) Classes(ctx context.Context, sc read.DashScope) ([]read.ClassSummary, error) {
-	q, err := dtx(ctx, "classes")
+// Grades implements read.DashboardReader (query grades: rm_school_grade_summary per grade). Students is the size of the
+// grade whatever the subject filter; the active students and the assignment completion are read on the subjects of the scope.
+func (DashboardModel) Grades(ctx context.Context, sc read.DashScope) ([]read.GradeSummary, error) {
+	q, err := dtx(ctx, "grades")
 	if err != nil {
 		return nil, err
 	}
-	// tenancyguard:ok derived read model (no deleted_at), ref.classes projection: explicit tenant_id and scope
-	rows, err := q.query(ctx, `SELECT s.class_id, max(c.name), max(s.grade_level), max(s.active_students_7d),
-			sum(s.assignment_completion_num), sum(s.assignment_completion_den), min(s.computed_at)
-		FROM learning.rm_class_subject_summary s
-		JOIN ref.classes c ON c.class_id = s.class_id AND c.tenant_id = s.tenant_id
-		WHERE s.tenant_id = $1 AND ($2::uuid[] IS NULL OR s.school_id = ANY($2::uuid[])) AND ($3::uuid IS NULL OR s.class_id = $3)
-			AND ($4::int IS NULL OR s.grade_level = $4) AND ($5::uuid[] IS NULL OR s.subject_id = ANY($5::uuid[]))
-		GROUP BY s.class_id ORDER BY max(c.name), s.class_id LIMIT 100`,
-		sc.TenantID, strIDs(sc.SchoolIDs), sc.ClassID, sc.GradeLevel, strIDs(sc.SubjectIDs))
+	// tenancyguard:ok derived read model (no deleted_at): explicit tenant_id and scope
+	rows, err := q.query(ctx, `SELECT s.grade_level, COALESCE(max(s.student_count), 0),
+			COALESCE(max(s.participation_num) FILTER (WHERE $4::uuid[] IS NULL OR s.subject_id = ANY($4::uuid[])), 0),
+			COALESCE(sum(s.assignment_completion_num) FILTER (WHERE $4::uuid[] IS NULL OR s.subject_id = ANY($4::uuid[])), 0),
+			COALESCE(sum(s.assignment_completion_den) FILTER (WHERE $4::uuid[] IS NULL OR s.subject_id = ANY($4::uuid[])), 0),
+			min(s.computed_at)
+		FROM learning.rm_school_grade_summary s
+		WHERE s.tenant_id = $1 AND ($2::uuid[] IS NULL OR s.school_id = ANY($2::uuid[])) AND ($3::int IS NULL OR s.grade_level = $3)
+		GROUP BY s.grade_level ORDER BY s.grade_level LIMIT 13`, sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs))
 	if err != nil {
-		return nil, dashErr("classes", err)
+		return nil, dashErr("grades", err)
 	}
 	defer func() { _ = rows.Close() }()
-	var out []read.ClassSummary
+	var out []read.GradeSummary
 	for rows.Next() {
-		var c read.ClassSummary
-		if err := rows.Scan(&c.ClassID, &c.Name, &c.GradeLevel, &c.Active7d, &c.CompNum, &c.CompDen, &c.ComputedAt); err != nil {
-			return nil, dashErr("classes", err)
+		var g read.GradeSummary
+		if err := rows.Scan(&g.GradeLevel, &g.Students, &g.Active7d, &g.CompNum, &g.CompDen, &g.ComputedAt); err != nil {
+			return nil, dashErr("grades", err)
 		}
-		out = append(out, c)
+		out = append(out, g)
 	}
-	return out, dashErr("classes", rows.Err())
+	return out, dashErr("grades", rows.Err())
 }
 
-// ObjectiveStats implements read.DashboardReader (query objective_stats: rm_class_objective_stats).
+// ObjectiveStats implements read.DashboardReader (query objective_stats: rm_grade_objective_stats, the LO heatmap of the
+// grades of the scope).
 func (DashboardModel) ObjectiveStats(ctx context.Context, sc read.DashScope) ([]read.ObjectiveStat, error) {
 	q, err := dtx(ctx, "objective_stats")
 	if err != nil {
 		return nil, err
 	}
 	// tenancyguard:ok derived read model (no deleted_at): explicit tenant_id and scope
-	rows, err := q.query(ctx, `SELECT s.class_id, s.objective_id, s.objective_code, COALESCE(s.yccd_ref, ''), s.level_dist,
-			s.students_with_evidence, s.computed_at
-		FROM learning.rm_class_objective_stats s
-		WHERE s.tenant_id = $1 AND ($2::uuid[] IS NULL OR s.school_id = ANY($2::uuid[])) AND ($3::uuid IS NULL OR s.class_id = $3)
-			AND ($4::int IS NULL OR s.grade_level = $4) AND ($5::uuid[] IS NULL OR s.subject_id = ANY($5::uuid[]))
-			AND s.students_with_evidence > 0
-		ORDER BY s.objective_code, s.objective_id, s.class_id LIMIT 2000`,
-		sc.TenantID, strIDs(sc.SchoolIDs), sc.ClassID, sc.GradeLevel, strIDs(sc.SubjectIDs))
+	rows, err := q.query(ctx, `SELECT s.grade_level, s.objective_id, s.objective_code, COALESCE(s.yccd_ref, ''), s.level_dist,
+			s.students_with_evidence, s.student_count, s.computed_at
+		FROM learning.rm_grade_objective_stats s
+		WHERE s.tenant_id = $1 AND ($2::uuid[] IS NULL OR s.school_id = ANY($2::uuid[])) AND ($3::int IS NULL OR s.grade_level = $3)
+			AND ($4::uuid[] IS NULL OR s.subject_id = ANY($4::uuid[])) AND s.students_with_evidence > 0
+		ORDER BY s.objective_code, s.objective_id, s.grade_level LIMIT 2000`,
+		sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs))
 	if err != nil {
 		return nil, dashErr("objective_stats", err)
 	}
@@ -402,7 +387,7 @@ func (DashboardModel) ObjectiveStats(ctx context.Context, sc read.DashScope) ([]
 	for rows.Next() {
 		var s read.ObjectiveStat
 		var dist []int64
-		if err := rows.Scan(&s.ClassID, &s.ObjectiveID, &s.Code, &s.YccdRef, &dist, &s.WithEvidence, &s.ComputedAt); err != nil {
+		if err := rows.Scan(&s.GradeLevel, &s.ObjectiveID, &s.Code, &s.YccdRef, &dist, &s.WithEvidence, &s.Students, &s.ComputedAt); err != nil {
 			return nil, dashErr("objective_stats", err)
 		}
 		s.LevelDist = ints(dist)
@@ -419,20 +404,20 @@ func ints(xs []int64) []int {
 	return out
 }
 
-// Attention implements read.DashboardReader (query attention: rm_student_attention of not deleted students).
+// Attention implements read.DashboardReader (query attention: rm_student_attention of not deleted students, current grade
+// of ref.students).
 func (DashboardModel) Attention(ctx context.Context, sc read.DashScope, limit int) ([]read.AttentionEntry, int, error) {
 	q, err := dtx(ctx, "attention")
 	if err != nil {
 		return nil, 0, err
 	}
-	// tenancyguard:ok derived read model (no deleted_at), ref projections with st.deleted_at IS NULL: explicit tenant_id and scope
-	rows, err := q.query(ctx, `SELECT a.student_id, a.class_id, a.reasons, a.computed_at, count(*) OVER ()
+	// tenancyguard:ok derived read model (no deleted_at), ref.students with st.deleted_at IS NULL: explicit tenant_id and scope
+	rows, err := q.query(ctx, `SELECT a.student_id, st.grade_level, a.reasons, a.computed_at, count(*) OVER ()
 		FROM learning.rm_student_attention a
 		JOIN ref.students st ON st.student_id = a.student_id AND st.tenant_id = a.tenant_id AND st.deleted_at IS NULL
-		LEFT JOIN ref.classes c ON c.class_id = a.class_id AND c.tenant_id = a.tenant_id
-		WHERE a.tenant_id = $1 AND ($2::uuid[] IS NULL OR a.school_id = ANY($2::uuid[])) AND ($3::uuid IS NULL OR a.class_id = $3)
-			AND ($4::int IS NULL OR c.grade_level = $4) AND cardinality(a.reasons) > 0
-		ORDER BY cardinality(a.reasons) DESC, a.student_id LIMIT $5`, sc.TenantID, strIDs(sc.SchoolIDs), sc.ClassID, sc.GradeLevel, limit)
+		WHERE a.tenant_id = $1 AND ($2::uuid[] IS NULL OR a.school_id = ANY($2::uuid[])) AND ($3::int IS NULL OR st.grade_level = $3)
+			AND cardinality(a.reasons) > 0
+		ORDER BY cardinality(a.reasons) DESC, a.student_id LIMIT $4`, sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, limit)
 	if err != nil {
 		return nil, 0, dashErr("attention", err)
 	}
@@ -441,13 +426,13 @@ func (DashboardModel) Attention(ctx context.Context, sc read.DashScope, limit in
 	total := 0
 	for rows.Next() {
 		var a read.AttentionEntry
-		var class uuid.NullUUID
-		if err := rows.Scan(&a.StudentID, &class, &a.Reasons, &a.ComputedAt, &total); err != nil {
+		var grade sql.NullInt32
+		if err := rows.Scan(&a.StudentID, &grade, &a.Reasons, &a.ComputedAt, &total); err != nil {
 			return nil, 0, dashErr("attention", err)
 		}
-		if class.Valid {
-			id := class.UUID
-			a.ClassID = &id
+		if grade.Valid {
+			g := int(grade.Int32)
+			a.GradeLevel = &g
 		}
 		out = append(out, a)
 	}
@@ -455,29 +440,40 @@ func (DashboardModel) Attention(ctx context.Context, sc read.DashScope, limit in
 }
 
 // Assignments implements read.DashboardReader (query assignments: open assignments and those closed in the last 7 days,
-// progress per class from lms.assignment_submissions — state read model, DASHBOARD_DATA §2).
+// progress per grade of the students when targeted, else their current grade — lms.assignment_submissions, state read
+// model, DASHBOARD_DATA §2).
 func (DashboardModel) Assignments(ctx context.Context, sc read.DashScope, now time.Time, limit int) ([]read.AssignmentRow, error) {
 	q, err := dtx(ctx, "assignments")
 	if err != nil {
 		return nil, err
 	}
+	// tenancyguard:ok lms sources filtered on tenant and deleted_at IS NULL, ref.students projection: explicit tenant_id and scope
 	rows, err := q.query(ctx, `WITH a AS (
 			SELECT asg.assignment_id, asg.title, asg.subject_id, asg.status, asg.due_at FROM lms.assignments asg
 			WHERE asg.tenant_id = $1 AND asg.deleted_at IS NULL AND ($2::uuid[] IS NULL OR asg.school_id = ANY($2::uuid[]))
-				AND ($5::uuid[] IS NULL OR asg.subject_id = ANY($5::uuid[]))
-				AND (asg.status = 'open' OR (asg.status IN ('closed', 'results_released') AND asg.due_at >= $6::timestamptz - interval '7 days'))
-				AND EXISTS (SELECT 1 FROM lms.assignment_submissions s WHERE s.assignment_id = asg.assignment_id AND s.tenant_id = $1
-					AND s.deleted_at IS NULL AND ($3::uuid IS NULL OR s.class_id = $3))
-			ORDER BY asg.due_at, asg.assignment_id LIMIT $7)
-		SELECT a.assignment_id, a.title, a.subject_id, a.status, a.due_at, s.class_id,
-			count(*) FILTER (WHERE s.status IN ('submitted', 'late')), count(*), count(*) FILTER (WHERE s.status = 'not_started'),
-			count(*) FILTER (WHERE s.status = 'missed')
-		FROM a JOIN lms.assignment_submissions s ON s.assignment_id = a.assignment_id AND s.tenant_id = $1 AND s.deleted_at IS NULL
-			AND s.status <> 'excused' AND s.class_id IS NOT NULL
-		LEFT JOIN ref.classes c ON c.class_id = s.class_id AND c.tenant_id = s.tenant_id
-		WHERE ($3::uuid IS NULL OR s.class_id = $3) AND ($4::int IS NULL OR c.grade_level = $4)
-		GROUP BY a.assignment_id, a.title, a.subject_id, a.status, a.due_at, s.class_id
-		ORDER BY a.due_at, a.assignment_id, s.class_id`, sc.TenantID, strIDs(sc.SchoolIDs), sc.ClassID, sc.GradeLevel, strIDs(sc.SubjectIDs), now, limit)
+				AND ($4::uuid[] IS NULL OR asg.subject_id = ANY($4::uuid[]))
+				AND (asg.status = 'open' OR (asg.status IN ('closed', 'results_released') AND asg.due_at >= $5::timestamptz - interval '7 days'))
+				AND EXISTS (SELECT 1 FROM lms.assignment_submissions s
+					LEFT JOIN lms.assignment_target_students ts ON ts.assignment_id = s.assignment_id AND ts.student_id = s.student_id
+						AND ts.tenant_id = s.tenant_id AND ts.deleted_at IS NULL
+					LEFT JOIN ref.students st ON st.student_id = s.student_id AND st.tenant_id = s.tenant_id
+					WHERE s.assignment_id = asg.assignment_id AND s.tenant_id = $1 AND s.deleted_at IS NULL
+						AND ($3::int IS NULL OR COALESCE(ts.grade_level, st.grade_level, 0) = $3))
+			ORDER BY asg.due_at, asg.assignment_id LIMIT $6),
+		g AS (
+			SELECT s.assignment_id, s.status, COALESCE(ts.grade_level, st.grade_level, 0)::int AS grade_level
+			FROM a JOIN lms.assignment_submissions s ON s.assignment_id = a.assignment_id AND s.tenant_id = $1 AND s.deleted_at IS NULL
+				AND s.status <> 'excused'
+			LEFT JOIN lms.assignment_target_students ts ON ts.assignment_id = s.assignment_id AND ts.student_id = s.student_id
+				AND ts.tenant_id = s.tenant_id AND ts.deleted_at IS NULL
+			LEFT JOIN ref.students st ON st.student_id = s.student_id AND st.tenant_id = s.tenant_id)
+		SELECT a.assignment_id, a.title, a.subject_id, a.status, a.due_at, g.grade_level,
+			count(*) FILTER (WHERE g.status IN ('submitted', 'late')), count(*), count(*) FILTER (WHERE g.status = 'not_started'),
+			count(*) FILTER (WHERE g.status = 'missed')
+		FROM a JOIN g ON g.assignment_id = a.assignment_id
+		WHERE ($3::int IS NULL OR g.grade_level = $3)
+		GROUP BY a.assignment_id, a.title, a.subject_id, a.status, a.due_at, g.grade_level
+		ORDER BY a.due_at, a.assignment_id, g.grade_level`, sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs), now, limit)
 	if err != nil {
 		return nil, dashErr("assignments", err)
 	}
@@ -485,7 +481,7 @@ func (DashboardModel) Assignments(ctx context.Context, sc read.DashScope, now ti
 	var out []read.AssignmentRow
 	for rows.Next() {
 		var r read.AssignmentRow
-		if err := rows.Scan(&r.AssignmentID, &r.Title, &r.SubjectID, &r.Status, &r.DueAt, &r.ClassID, &r.Submitted, &r.Total, &r.NotStarted,
+		if err := rows.Scan(&r.AssignmentID, &r.Title, &r.SubjectID, &r.Status, &r.DueAt, &r.GradeLevel, &r.Submitted, &r.Total, &r.NotStarted,
 			&r.Missed); err != nil {
 			return nil, dashErr("assignments", err)
 		}
@@ -494,7 +490,7 @@ func (DashboardModel) Assignments(ctx context.Context, sc read.DashScope, now ti
 	return out, dashErr("assignments", rows.Err())
 }
 
-// SelfStudy implements read.DashboardReader (query self_study: rm_school_grade_summary).
+// SelfStudy implements read.DashboardReader (query self_study: rm_school_grade_summary of the visible grades).
 func (DashboardModel) SelfStudy(ctx context.Context, sc read.DashScope) (read.SelfStudyFacts, error) {
 	q, err := dtx(ctx, "self_study")
 	if err != nil {
@@ -508,8 +504,10 @@ func (DashboardModel) SelfStudy(ctx context.Context, sc read.DashScope) (read.Se
 			COALESCE(sum(s.recommendation_started_den) FILTER (WHERE $4::uuid[] IS NULL OR s.subject_id = ANY($4::uuid[])), 0),
 			COALESCE(sum(s.objectives_improved) FILTER (WHERE $4::uuid[] IS NULL OR s.subject_id = ANY($4::uuid[])), 0), min(s.computed_at)
 		FROM learning.rm_school_grade_summary s
-		WHERE s.tenant_id = $1 AND ($2::uuid[] IS NULL OR s.school_id = ANY($2::uuid[])) AND ($3::int IS NULL OR s.grade_level = $3)`,
-		sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs), uuid.Nil).Scan(&f.Students, &f.RecNum, &f.RecDen, &f.Improved, &at)
+		WHERE s.tenant_id = $1 AND ($2::uuid[] IS NULL OR s.school_id = ANY($2::uuid[])) AND ($3::int IS NULL OR s.grade_level = $3)
+			AND ($6::int[] IS NULL OR s.grade_level = ANY($6::int[]))`,
+		sc.TenantID, strIDs(sc.SchoolIDs), sc.GradeLevel, strIDs(sc.SubjectIDs), uuid.Nil, grades(sc.Grades)).Scan(&f.Students, &f.RecNum, &f.RecDen,
+		&f.Improved, &at)
 	if at.Valid {
 		t := at.Time.UTC()
 		f.ComputedAtOldest = &t
@@ -517,47 +515,48 @@ func (DashboardModel) SelfStudy(ctx context.Context, sc read.DashScope) (read.Se
 	return f, dashErr("self_study", err)
 }
 
-// ClassStudents implements read.DashboardReader (query class_students: active enrolment of not deleted students by
-// student_id cursor, their progress_daily over the range and their attention reasons).
-func (DashboardModel) ClassStudents(ctx context.Context, sc read.DashScope, rg analytics.Range, after *uuid.UUID, limit int) ([]read.StudentRow, error) {
-	q, err := dtx(ctx, "class_students")
+// GradeStudents implements read.DashboardReader (query grade_students: active, not deleted students of the grade of the
+// school by student_id cursor, their progress_daily over the range and their attention reasons).
+func (DashboardModel) GradeStudents(ctx context.Context, sc read.DashScope, rg analytics.Range, after *uuid.UUID, limit int) ([]read.StudentRow, error) {
+	q, err := dtx(ctx, "grade_students")
 	if err != nil {
 		return nil, err
 	}
-	if sc.ClassID == nil {
+	if sc.GradeLevel == nil || len(sc.SchoolIDs) == 0 {
 		return nil, nil
 	}
+	// tenancyguard:ok ref.students with deleted_at IS NULL, derived progress_daily/rm (no deleted_at): explicit tenant_id and scope
 	rows, err := q.query(ctx, `WITH r AS (
-			SELECT DISTINCT en.student_id FROM ref.enrollments en
-			JOIN ref.students st ON st.student_id = en.student_id AND st.tenant_id = en.tenant_id AND st.deleted_at IS NULL
-			WHERE en.tenant_id = $1 AND en.class_id = $2 AND en.status = 'active' AND ($3::uuid IS NULL OR en.student_id > $3)
-			ORDER BY en.student_id LIMIT $4),
+			SELECT st.student_id FROM ref.students st
+			WHERE st.tenant_id = $1 AND st.school_id = ANY($2::uuid[]) AND st.grade_level = $3 AND st.deleted_at IS NULL
+				AND st.status = 'active' AND ($4::uuid IS NULL OR st.student_id > $4)
+			ORDER BY st.student_id LIMIT $5),
 		p AS (SELECT p.student_id, sum(p.activities_completed) AS acts, sum(p.lessons_completed) AS less,
 				sum(LEAST(GREATEST(p.items_correct - p.items_correct_rapid_guess, 0), GREATEST(p.items_answered - p.items_rapid_guess, 0))) AS an,
 				sum(GREATEST(p.items_answered - p.items_rapid_guess, 0)) AS ad, sum(p.items_rapid_guess) AS rn, sum(p.items_answered) AS rd,
 				sum(p.active_seconds) AS sec
 			FROM learning.progress_daily p JOIN r ON r.student_id = p.student_id
-			WHERE p.tenant_id = $1 AND p.bucket_date BETWEEN $5::date AND $6::date AND p.metric_version = 1
-				AND ($7::uuid[] IS NULL OR p.subject_id = ANY($7::uuid[]))
+			WHERE p.tenant_id = $1 AND p.bucket_date BETWEEN $6::date AND $7::date AND p.metric_version = 1
+				AND ($8::uuid[] IS NULL OR p.subject_id = ANY($8::uuid[]))
 			GROUP BY p.student_id)
 		SELECT r.student_id, COALESCE(p.acts, 0), COALESCE(p.less, 0), COALESCE(p.an, 0), COALESCE(p.ad, 0), COALESCE(p.rn, 0),
 			COALESCE(p.rd, 0), COALESCE(p.sec, 0), COALESCE(a.reasons, '{}')
 		FROM r LEFT JOIN p ON p.student_id = r.student_id
 		LEFT JOIN learning.rm_student_attention a ON a.tenant_id = $1 AND a.student_id = r.student_id
-		ORDER BY r.student_id`, sc.TenantID, *sc.ClassID, after, limit, day(rg.From), day(rg.To), strIDs(sc.SubjectIDs))
+		ORDER BY r.student_id`, sc.TenantID, strIDs(sc.SchoolIDs), *sc.GradeLevel, after, limit, day(rg.From), day(rg.To), strIDs(sc.SubjectIDs))
 	if err != nil {
-		return nil, dashErr("class_students", err)
+		return nil, dashErr("grade_students", err)
 	}
 	defer func() { _ = rows.Close() }()
 	var out []read.StudentRow
 	for rows.Next() {
 		var s read.StudentRow
 		if err := rows.Scan(&s.StudentID, &s.Activities, &s.Lessons, &s.AccNum, &s.AccDen, &s.RapidNum, &s.RapidDen, &s.ActS, &s.Reasons); err != nil {
-			return nil, dashErr("class_students", err)
+			return nil, dashErr("grade_students", err)
 		}
 		out = append(out, s)
 	}
-	return out, dashErr("class_students", rows.Err())
+	return out, dashErr("grade_students", rows.Err())
 }
 
 // ProfileSubjects implements read.DashboardReader (query profile_subjects: progress_daily of one student).

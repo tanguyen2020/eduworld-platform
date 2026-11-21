@@ -325,6 +325,15 @@ func pathUUID(r *http.Request, name string) (uuid.UUID, error) {
 	return id, nil
 }
 
+// pathInt parses an integer path parameter.
+func pathInt(r *http.Request, name string) (int, error) {
+	n, err := strconv.Atoi(chi.URLParam(r, name))
+	if err != nil {
+		return 0, problem.Invalid(name, problem.SubInvalid, "must be an integer")
+	}
+	return n, nil
+}
+
 func pathVersion(r *http.Request) (int, error) {
 	n, err := strconv.Atoi(chi.URLParam(r, "version"))
 	if err != nil || n < 1 {

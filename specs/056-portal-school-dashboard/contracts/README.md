@@ -8,10 +8,10 @@ Spec: `specs/openapi/eduworld-api.v1.yaml`. Route `/lms/*`, `/tenant/*` gửi `X
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| `getSchoolDashboard` | `GET /api/v1/lms/dashboards/school` | eduworld-api | `analytics.school.read` | Có sẵn (cần sửa: widget tự học) |
-| `getClassDashboard` | `GET /api/v1/lms/classes/{class_id}/dashboard` | eduworld-api | `analytics.class.read` | Có sẵn |
-| `getSchoolAnalyticsSeries` | `GET /api/v1/lms/schools/{school_id}/analytics/series` | eduworld-api | `analytics.school.read` | Có sẵn |
-| `getCourseResults` | `GET /api/v1/lms/courses/{course_id}/results` | eduworld-api | `lms.report.read` | Có sẵn |
+| `getSchoolDashboard` | `GET /api/v1/lms/dashboards/school` | eduworld-api | `analytics.school.read` | Có sẵn; ADR-0095 (WP-L2): bỏ `class_id`, lọc `grade_level`; `widgets.grades` (thay `classes`), `weak_objectives[].grade_levels`, `assignments[].by_grade` (ô có `suppressed`, số đếm null), `students_needing_attention[].grade_level`, `suppressed` cấp trả lời, `widgets.active_students` nullable |
+| `getGradeDashboard` | `GET /api/v1/lms/schools/{school_id}/grades/{grade_level}/dashboard` | eduworld-api | `analytics.school.read` | Mới (ADR-0095, WP-L2) — thay `getClassDashboard` (đã xóa): heatmap LO của khối, học sinh của khối (cursor), tiến độ bài giao; `suppressed` khi khối < `analytics_min_cell_size` |
+| `getSchoolAnalyticsSeries` | `GET /api/v1/lms/schools/{school_id}/analytics/series` | eduworld-api | `analytics.school.read` | Có sẵn; ADR-0095: chuỗi khối bị che → điểm `value: null`, `suppressed: true` |
+| ~~`getCourseResults`~~ | ~~`GET /api/v1/lms/courses/{course_id}/results`~~ | — | — | **Đã xóa** (ADR-0095, WP-L2): kết quả theo bài giao = export `assignment_results` (cột `grade_level`); `skill_map` theo khối; `/tenant/reports` `grade_progress` thay `class_progress` |
 | `listAssignmentSubmissions` | `GET /api/v1/lms/assignments/{assignment_id}/submissions` | eduworld-api | `lms.assignment.read` | Có sẵn |
 | `listTenantStudentLoginEvents` | `GET /api/v1/tenant/students/{student_id}/login-events` | eduworld-api | `lms.student_activity.read` | Có sẵn |
 | `createLmsReport` · `getLmsReport` | `POST /api/v1/lms/reports` · `GET …/{report_id}` | eduworld-api | `report.export` | Có sẵn |

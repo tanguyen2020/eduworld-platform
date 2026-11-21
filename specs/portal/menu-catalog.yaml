@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.21.1"
+catalog_version: "2026.11.21.2"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -241,7 +241,7 @@ workspaces:
             label_key: portal.action.school_lms.school_dashboard.view
             title: Xem dashboard trường → lớp → học sinh
             required_permissions: [analytics.school.read]
-            operation_ids: [getSchoolDashboard, getClassDashboard, getSchoolAnalyticsSeries, getStudentLearningProfile, getRegulationReferenceReport, listSchoolAcademicYears]
+            operation_ids: [getSchoolDashboard, getGradeDashboard, getSchoolAnalyticsSeries, getStudentLearningProfile, getRegulationReferenceReport, listSchoolAcademicYears]
             can_disable: true
       - key: menu.school_lms.results
         label_key: portal.menu.school_lms.results
@@ -253,9 +253,9 @@ workspaces:
         actions:
           - key: action.school_lms.results.view
             label_key: portal.action.school_lms.results.view
-            title: Xem bảng kết quả khóa học
+            title: Xem kết quả bài giao và phân tích đề
             required_permissions: [lms.report.read]
-            operation_ids: [getCourseResults, getExamSessionReport]
+            operation_ids: [getExamSessionReport]
             can_disable: true
       - key: menu.school_lms.reports
         label_key: portal.menu.school_lms.reports

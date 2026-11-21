@@ -79,17 +79,21 @@ func noGameOrChat(t *testing.T, r resp) {
 
 const dashRange = "from=2026-12-04&to=2026-12-10"
 
-// F043-AC-07, F043-AC-08, F043-AC-09, F043-AC-11 (TC-LMS-003): one call returns the assignment, weak objective, attention,
-// self-study and safety blocks with grain/data_as_of/is_partial; numbers match the reconciliation of the golden dataset;
-// no XP, rating, ranking nor chat.
+// F043-AC-07, F043-AC-08, F043-AC-09, F043-AC-11, F043-AC-28 (TC-LMS-003, TC-DASH-009): one call returns the assignment
+// (progress by grade), grade, weak objective, attention, self-study and safety blocks with grain/data_as_of/is_partial;
+// numbers match the reconciliation of the golden dataset; every grade cell under analytics_min_cell_size is hidden; no XP,
+// rating, ranking, chat nor class.
 func TestSchoolDashboardWidgets(t *testing.T) {
 	ctx := context.Background()
 	c := newCurEnv(ctx, t)
 	k := c.dashReady(ctx, t)
 	r := must(t, c.do(t, http.MethodGet, "/lms/dashboards/school?school_id="+k.school.String()+"&"+dashRange, adS, nil, nil), http.StatusOK, "school dashboard")
 	noGameOrChat(t, r)
-	if r.str("grain") != "day" || r.str("is_partial") != "true" || r.str("data_as_of") == "" {
-		t.Fatalf("meta: %s %s %s", r.str("grain"), r.str("is_partial"), r.str("data_as_of"))
+	if strings.Contains(r.raw, "class") {
+		t.Fatalf("school dashboard mentions a class: %s", r.raw)
+	}
+	if r.str("grain") != "day" || r.str("is_partial") != "true" || r.str("data_as_of") == "" || r.str("suppressed") != "false" {
+		t.Fatalf("meta: %s %s %s %s", r.str("grain"), r.str("is_partial"), r.str("data_as_of"), r.str("suppressed"))
 	}
 	w := r.obj("widgets")
 	// Reconciliation: school S days 12-07, 12-08: accuracy (12+3+6+7)/(14+6+7+10) = 28/37, rapid 6/43.
@@ -99,38 +103,75 @@ func TestSchoolDashboardWidgets(t *testing.T) {
 	if num(w, "assignments_open") != 1 || num(w, "assignments_due_soon") != 1 || len(list(w, "assignments")) != 3 {
 		t.Fatalf("assignments: %v %v %v", w["assignments_open"], w["assignments_due_soon"], len(list(w, "assignments")))
 	}
+	// Progress by grade when targeted: the open assignment (5 students of grade 3) is visible, a closed one (b1 alone) hidden.
 	open := list(w, "assignments")[2]
-	if open["status"] != "open" || num(open, "submitted") != 1 || num(open, "total") != 2 || len(list(open, "by_class")) != 1 {
+	byGrade := list(open, "by_grade")
+	if open["status"] != "open" || num(open, "submitted") != 1 || num(open, "total") != 5 || len(byGrade) != 1 ||
+		num(byGrade[0], "grade_level") != 3 || byGrade[0]["suppressed"] != false || num(byGrade[0], "not_started") != 4 {
 		t.Fatalf("open assignment: %v", open)
+	}
+	closed := list(w, "assignments")[0]
+	if cg := list(closed, "by_grade"); len(cg) != 1 || cg[0]["suppressed"] != true || cg[0]["total"] != nil || num(closed, "total") != 0 {
+		t.Fatalf("closed assignment of one student: %v", closed)
 	}
 	if w["safety_notifications_unacknowledged"] != nil {
 		t.Fatal("safety count must be null until module chat provides it (R17)")
 	}
-	if len(list(w, "classes")) != 2 || num(w, "assignment_completion_rate") != 0.25 {
-		t.Fatalf("classes %d completion %v", len(list(w, "classes")), w["assignment_completion_rate"])
+	// Grades of the school: grade 3 (5 students) visible; completion 1 / (5 + 2) over the visible grades.
+	grades := list(w, "grades")
+	if len(grades) != 1 || num(grades[0], "grade_level") != 3 || num(grades[0], "students") != 5 || num(grades[0], "active_students") != 3 ||
+		num(grades[0], "accuracy") != 0.757 || grades[0]["suppressed"] != false || num(w, "assignment_completion_rate") != 0.143 {
+		t.Fatalf("grades %v completion %v", grades, w["assignment_completion_rate"])
 	}
 	weak := list(w, "weak_objectives")
-	if len(weak) != 3 || weak[0]["code"] != "DMATH.G3.NUM.SUB" || num(weak[0], "below_proficient_ratio") != 1 {
+	if len(weak) != 3 || weak[0]["code"] != "DMATH.G3.NUM.SUB" || num(weak[0], "below_proficient_ratio") != 1 ||
+		fmt.Sprint(weak[0]["grade_levels"]) != "[3]" {
 		t.Fatalf("weak objectives %v", weak)
 	}
-	// F043-AC-08: a1 (3 objectives beginning), a2 (rapid guesses, shown as "làm quá nhanh"), b1 (2 missed in 14 days).
+	// F043-AC-08: a1 (3 objectives beginning), a2 (rapid guesses, shown as "làm quá nhanh"), b1 (2 missed in 14 days), with
+	// their current grade.
 	att := list(w, "students_needing_attention")
 	got := map[string]string{}
 	for _, a := range att {
 		got[a["student_id"].(string)] = fmt.Sprint(a["reasons"])
+		if num(a, "grade_level") != 3 {
+			t.Fatalf("attention without its grade: %v", a)
+		}
 	}
 	if num(w, "students_needing_attention_total") != 3 || got[k.a1.String()] != "[beginning_objectives]" ||
 		got[k.a2.String()] != "[rapid_guess]" || got[k.b1.String()] != "[missed_assignments]" {
 		t.Fatalf("attention %v", got)
 	}
-	// F043-AC-09: 2220 s of learning / 3 students = 12.3 min; no recommendation in the dataset → null rate.
+	// F043-AC-09: 2220 s of learning / 5 students of the visible grades = 7.4 min; no recommendation → null rate.
 	self := r.obj("widgets", "self_study")
-	if num(self, "avg_active_minutes_per_student") != 12.3 || self["recommendation_started_rate"] != nil ||
+	if num(self, "avg_active_minutes_per_student") != 7.4 || self["recommendation_started_rate"] != nil ||
 		num(self, "objectives_improved_after_recommendation") != 0 {
 		t.Fatalf("self study %v", self)
 	}
 	if len(list(w, "active_minutes_series")) != 7 {
 		t.Fatalf("series of 7 days: %d", len(list(w, "active_minutes_series")))
+	}
+	// The grade filter keeps the visible grade.
+	r = must(t, c.do(t, http.MethodGet, "/lms/dashboards/school?school_id="+k.school.String()+"&grade_level=3&"+dashRange, adS, nil, nil),
+		http.StatusOK, "grade 3")
+	if r.str("suppressed") != "false" || num(r.obj("widgets"), "accuracy") != 0.757 || len(list(r.obj("widgets"), "grades")) != 1 {
+		t.Fatalf("grade 3: %s", r.raw)
+	}
+	// F043-AC-28: school S2 has one grade-4 student (c1): every aggregate is suppressed, the grade row carries no number.
+	for _, q := range []string{"", "&grade_level=4"} {
+		r = must(t, c.do(t, http.MethodGet, "/lms/dashboards/school?school_id="+k.school2.String()+q+"&"+dashRange, adS2, nil, nil),
+			http.StatusOK, "school S2"+q)
+		w = r.obj("widgets")
+		g := list(w, "grades")
+		if r.str("suppressed") != "true" || w["accuracy"] != nil || w["active_students"] != nil || len(g) != 1 || g[0]["suppressed"] != true ||
+			g[0]["students"] != nil || g[0]["accuracy"] != nil {
+			t.Fatalf("S2%s not suppressed: %s", q, r.raw)
+		}
+		for _, p := range list(w, "active_minutes_series") {
+			if p["value"] != nil || p["suppressed"] != true {
+				t.Fatalf("S2%s series point visible: %v", q, p)
+			}
+		}
 	}
 	// A closed range is final.
 	r = must(t, c.do(t, http.MethodGet, "/lms/dashboards/school?school_id="+k.school.String()+"&from=2026-12-01&to=2026-12-08", adS, nil, nil),
@@ -140,36 +181,52 @@ func TestSchoolDashboardWidgets(t *testing.T) {
 	}
 }
 
-// F043-AC-10, F043-AC-12, F043-AC-16, F043-AC-17 (TC-LMS-003, TC-DASH-002, TC-DASH-003): class heatmap and cursor pages
-// limited to dashboard_page_size_max; series of at most 120 points with the grain of the range; range and grain errors.
-func TestClassDashboardAndSeries(t *testing.T) {
+// F043-AC-10, F043-AC-12, F043-AC-16, F043-AC-17, F043-AC-28 (TC-LMS-003, TC-DASH-002, TC-DASH-003): the grade drill-down
+// (LO heatmap of the grade, cursor pages limited to dashboard_page_size_max, a hidden grade without aggregates but with its
+// students); series of at most 120 points with the grain of the range, a hidden grade series suppressed; range and grain errors.
+func TestGradeDashboardAndSeries(t *testing.T) {
 	ctx := context.Background()
 	c := newCurEnv(ctx, t)
 	k := c.dashReady(ctx, t)
-	base := "/lms/classes/" + k.class3A.String() + "/dashboard?" + dashRange
-	r := must(t, c.do(t, http.MethodGet, base+"&page_size=1", adS, nil, nil), http.StatusOK, "class page 1")
+	base := "/lms/schools/" + k.school.String() + "/grades/3/dashboard?" + dashRange
+	r := must(t, c.do(t, http.MethodGet, base+"&page_size=2", adS, nil, nil), http.StatusOK, "grade page 1")
 	noGameOrChat(t, r)
-	page := r.obj("students", "page")
-	data := list(r.obj("students"), "data")
-	if len(data) != 1 || page["has_more"] != true || page["next_cursor"] == nil {
-		t.Fatalf("page 1: %v", r.obj("students"))
+	if r.str("suppressed") != "false" || num(r.body, "student_count") != 5 || num(r.body, "accuracy") != 0.757 || num(r.body, "active_students_7d") != 3 {
+		t.Fatalf("grade 3 aggregates: %s", r.raw)
 	}
-	first := data[0]["student_id"].(string)
-	r2 := must(t, c.do(t, http.MethodGet, base+"&page_size=1&cursor="+page["next_cursor"].(string), adS, nil, nil), http.StatusOK, "page 2")
-	data2 := list(r2.obj("students"), "data")
-	if len(data2) != 1 || data2[0]["student_id"] == first || r2.obj("students", "page")["has_more"] != false {
-		t.Fatalf("page 2: %v", r2.obj("students"))
+	byID := map[string]map[string]any{}
+	cursor, pages := "", 0
+	for {
+		q := base + "&page_size=2"
+		if cursor != "" {
+			q += "&cursor=" + cursor
+		}
+		p := must(t, c.do(t, http.MethodGet, q, adS, nil, nil), http.StatusOK, "grade page")
+		pages++
+		for _, s := range list(p.obj("students"), "data") {
+			byID[s["student_id"].(string)] = s
+		}
+		pg := p.obj("students", "page")
+		if pg["has_more"] != true {
+			break
+		}
+		cursor = pg["next_cursor"].(string)
 	}
-	byID := map[string]map[string]any{data[0]["student_id"].(string): data[0], data2[0]["student_id"].(string): data2[0]}
+	if pages != 3 || len(byID) != 5 {
+		t.Fatalf("pages %d students %d", pages, len(byID))
+	}
 	if a2 := byID[k.a2.String()]; a2["rapid_guess_flag"] != true || fmt.Sprint(a2["reasons"]) != "[rapid_guess]" {
 		t.Fatalf("a2 row: %v", a2)
+	}
+	if b2 := byID[k.b2.String()]; num(b2, "activities_completed") != 0 || b2["accuracy"] != nil {
+		t.Fatalf("b2 row (no activity): %v", b2)
 	}
 	heat := list(r.body, "objective_distribution")
 	if len(heat) != 3 {
 		t.Fatalf("heatmap columns: %d", len(heat))
 	}
 	for _, h := range heat {
-		if h["code"] == "DMATH.G3.NUM.ADD" && fmt.Sprint(h["level_counts"]) != "map[beginning:2 developing:0 mastered:0 not_started:0 proficient:0]" {
+		if h["code"] == "DMATH.G3.NUM.ADD" && fmt.Sprint(h["level_counts"]) != "map[beginning:2 developing:0 mastered:0 not_started:2 proficient:1]" {
 			t.Fatalf("heat O1: %v", h)
 		}
 	}
@@ -177,6 +234,16 @@ func TestClassDashboardAndSeries(t *testing.T) {
 	r = must(t, c.do(t, http.MethodGet, base+"&page_size=500", adS, nil, nil), http.StatusOK, "page size 500")
 	if num(r.obj("students", "page"), "limit") != 100 {
 		t.Fatalf("limit %v", r.obj("students", "page"))
+	}
+	// F043-AC-28: grade 4 of S2 (1 student) is suppressed — no aggregate, no heatmap — but lists its student.
+	r = must(t, c.do(t, http.MethodGet, "/lms/schools/"+k.school2.String()+"/grades/4/dashboard?"+dashRange, adS2, nil, nil), http.StatusOK, "grade 4")
+	if r.str("suppressed") != "true" || r.body["accuracy"] != nil || r.body["student_count"] != nil || r.body["active_students_7d"] != nil ||
+		len(list(r.body, "objective_distribution")) != 0 || len(list(r.obj("students"), "data")) != 1 {
+		t.Fatalf("grade 4 of S2: %s", r.raw)
+	}
+	// A grade outside 1..9 is refused by the contract.
+	if r = c.do(t, http.MethodGet, "/lms/schools/"+k.school.String()+"/grades/10/dashboard?"+dashRange, adS, nil, nil); r.status != http.StatusUnprocessableEntity {
+		t.Fatalf("grade 10: %d %s", r.status, r.raw)
 	}
 	series := "/lms/schools/" + k.school.String() + "/analytics/series?metric="
 	for _, cs := range []struct {
@@ -188,9 +255,18 @@ func TestClassDashboardAndSeries(t *testing.T) {
 			t.Fatalf("series %s: grain %s, %d points", cs.grain, r.str("grain"), len(r.items("points")))
 		}
 	}
-	r = must(t, c.do(t, http.MethodGet, series+"active_students&from=2026-12-07&to=2026-12-08", adS, nil, nil), http.StatusOK, "active series")
-	if pts := r.items("points"); num(pts[0], "value") != 3 || num(pts[1], "value") != 2 || pts[0]["is_final"] != true {
-		t.Fatalf("active students per day: %v", pts)
+	for _, q := range []string{"", "&grade_level=3"} {
+		r = must(t, c.do(t, http.MethodGet, series+"active_students&from=2026-12-07&to=2026-12-08"+q, adS, nil, nil), http.StatusOK, "active series"+q)
+		if pts := r.items("points"); num(pts[0], "value") != 3 || num(pts[1], "value") != 2 || pts[0]["is_final"] != true {
+			t.Fatalf("active students per day%s: %v", q, pts)
+		}
+	}
+	r = must(t, c.do(t, http.MethodGet, "/lms/schools/"+k.school2.String()+"/analytics/series?metric=accuracy&grade_level=4&"+dashRange, adS2, nil, nil),
+		http.StatusOK, "hidden grade series")
+	for _, p := range r.items("points") {
+		if p["value"] != nil || p["suppressed"] != true {
+			t.Fatalf("hidden grade point: %v", p)
+		}
 	}
 	// Coarser grain hint accepted, finer refused; 731 days refused (F043-AC-16, AC-DASH-002).
 	must(t, c.do(t, http.MethodGet, series+"accuracy&from=2026-12-01&to=2026-12-10&grain=month", adS, nil, nil), http.StatusOK, "coarser")
@@ -217,10 +293,10 @@ func TestDashboardAuthorizationAndTenant(t *testing.T) {
 	c := newCurEnv(ctx, t)
 	k := c.dashReady(ctx, t)
 	school := "/lms/dashboards/school?school_id=" + k.school.String() + "&" + dashRange
-	class := "/lms/classes/" + k.class3A.String() + "/dashboard?" + dashRange
+	grade := "/lms/schools/" + k.school.String() + "/grades/3/dashboard?" + dashRange
 	series := "/lms/schools/" + k.school.String() + "/analytics/series?metric=accuracy&" + dashRange
 	profile := "/lms/students/" + k.a1.String() + "/analytics?" + dashRange
-	for _, p := range []string{school, class, series, profile} {
+	for _, p := range []string{school, grade, series, profile} {
 		for _, cs := range []struct {
 			sub    string
 			status int
@@ -237,7 +313,7 @@ func TestDashboardAuthorizationAndTenant(t *testing.T) {
 		}
 	}
 	// Academic Manager limited to subject M: subject V → 403 (dashboards), 404 (profile); M or no subject → math only.
-	for _, p := range []string{school, class, series} {
+	for _, p := range []string{school, grade, series} {
 		if r := c.do(t, http.MethodGet, p+"&subject_id="+k.subjV.String(), amM, nil, nil); r.status != 403 || r.str("code") != "PERMISSION_DENIED" {
 			t.Fatalf("%s subject V: %d %s", p, r.status, r.raw)
 		}
@@ -250,12 +326,16 @@ func TestDashboardAuthorizationAndTenant(t *testing.T) {
 	if num(r.obj("widgets"), "accuracy") != 0.792 { // math only: (12+7)/(14+10) = 19/24
 		t.Fatalf("subject-limited totals: %v", r.obj("widgets")["accuracy"])
 	}
-	// A class of another tenant is not found even for a tenant-wide role.
-	if r := c.do(t, http.MethodGet, "/lms/classes/"+k.class3X.String()+"/dashboard?"+dashRange, taDash, nil, nil); r.status != 404 && r.status != 403 {
-		t.Fatalf("class of tenant B: %d", r.status)
+	// A school of another tenant is never served (TC-DASH-009): 404 for a school role of tenant A, 403 or 404 for the tenant-wide
+	// role without analytics.school.read.
+	if r := c.do(t, http.MethodGet, "/lms/schools/"+k.schoolB.String()+"/grades/3/dashboard?"+dashRange, adS, nil, nil); r.status != 404 {
+		t.Fatalf("grade of tenant B as school admin of A: %d %s", r.status, r.raw)
+	}
+	if r := c.do(t, http.MethodGet, "/lms/schools/"+k.schoolB.String()+"/grades/3/dashboard?"+dashRange, taDash, nil, nil); r.status != 404 && r.status != 403 {
+		t.Fatalf("grade of tenant B: %d %s", r.status, r.raw)
 	}
 	authztest.Cover(t, "getSchoolDashboard", authztest.CrossTenant, authztest.RoleDenied)
-	authztest.Cover(t, "getClassDashboard", authztest.CrossTenant, authztest.RoleDenied)
+	authztest.Cover(t, "getGradeDashboard", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "getSchoolAnalyticsSeries", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "getStudentLearningProfile", authztest.CrossTenant, authztest.RoleDenied)
 	// Safety Moderator (platform role) at the use case: no tenant staff → 403 PERMISSION_DENIED (F043-AC-14).
@@ -425,15 +505,11 @@ func TestTenantAndPlatformSummary(t *testing.T) {
 	c := newCurEnv(ctx, t)
 	k := c.dashKit(ctx, t)
 	k.golden(ctx, t)
-	// Three more grade-3 students in 3A so that school S × grade 3 has 6 students (visible), S2 × grade 4 keeps 1 (hidden).
+	// Three more grade-3 students of S (8 students, visible), S2 × grade 4 keeps 1 (hidden).
 	for i := 0; i < 3; i++ {
 		id := uuid.New()
 		if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.students (student_id, tenant_id, school_id, grade_level, source_version)
 			VALUES ($1, $2, $3, 3, 1)`, id, c.tenantA, k.school); err != nil {
-			t.Fatal(err)
-		}
-		if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.enrollments (student_id, class_id, start_date, tenant_id, status, source_version)
-			VALUES ($1, $2, date '2026-09-01', $3, 'active', 1)`, id, k.class3A, c.tenantA); err != nil {
 			t.Fatal(err)
 		}
 		k.run(ctx, t, c.tenantA, id, k.school, k.subjM, ict(2026, 12, 8, 9), "practice", 120, write.ItemCounts{Answered: 2, Correct: 2})
@@ -551,9 +627,7 @@ func TestDashboardRoleAndQueryCatalog(t *testing.T) {
 		if _, err := tx.ExecContext(ctx, `SET LOCAL enable_seqscan = off`); err != nil {
 			return err
 		}
-		sc := read.DashScope{TenantID: c.tenantA, SchoolIDs: []uuid.UUID{k.school}, GradeLevel: &grade}
-		cls := sc
-		cls.ClassID = &k.class3A
+		sc := read.DashScope{TenantID: c.tenantA, SchoolIDs: []uuid.UUID{k.school}, GradeLevel: &grade, Grades: []int{3}}
 		for _, g := range []struct{ from, to string }{{"2026-12-01", "2026-12-10"}, {"2026-09-01", "2026-12-10"}, {"2025-01-01", "2026-12-10"}} {
 			rg, err := analytics.NewRange(date(g.from), date(g.to), "", analytics.DefaultConfig().Range)
 			if err != nil {
@@ -562,13 +636,10 @@ func TestDashboardRoleAndQueryCatalog(t *testing.T) {
 			if _, err := m.SchoolTotals(ctx, sc, rg); err != nil {
 				return err
 			}
-			if _, _, err := m.ClassTotals(ctx, sc, rg); err != nil {
+			if _, _, err := m.GradeTotals(ctx, sc, rg); err != nil {
 				return err
 			}
 			if _, _, err := m.SchoolSeries(ctx, sc, rg); err != nil {
-				return err
-			}
-			if _, _, err := m.SchoolSeries(ctx, cls, rg); err != nil {
 				return err
 			}
 			if _, _, err := m.SchoolCells(ctx, sc, rg); err != nil {
@@ -577,17 +648,14 @@ func TestDashboardRoleAndQueryCatalog(t *testing.T) {
 			if _, _, err := m.ProfileSubjects(ctx, sc, k.a1, rg); err != nil {
 				return err
 			}
-			if _, err := m.ClassStudents(ctx, cls, rg, nil, 50); err != nil {
+			if _, err := m.GradeStudents(ctx, sc, rg, nil, 50); err != nil {
 				return err
 			}
 		}
 		if _, err := m.ActiveStudents(ctx, sc, date("2026-12-04"), date("2026-12-10")); err != nil {
 			return err
 		}
-		if _, err := m.ActiveStudents(ctx, cls, date("2026-12-04"), date("2026-12-10")); err != nil {
-			return err
-		}
-		if _, err := m.Classes(ctx, sc); err != nil {
+		if _, err := m.Grades(ctx, sc); err != nil {
 			return err
 		}
 		if _, err := m.ObjectiveStats(ctx, sc); err != nil {
@@ -612,9 +680,6 @@ func TestDashboardRoleAndQueryCatalog(t *testing.T) {
 			return err
 		}
 		if _, err := m.AvailableFrom(ctx, sc); err != nil {
-			return err
-		}
-		if _, err := m.AvailableFrom(ctx, cls); err != nil {
 			return err
 		}
 		_, err := m.ProfileRecommendations(ctx, sc, k.a1, 3)

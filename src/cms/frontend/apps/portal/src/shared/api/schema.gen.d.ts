@@ -6383,45 +6383,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/lms/classes/{class_id}/dashboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard một lớp — drill-down từ School Learning Dashboard (school_admin, academic_manager · analytics.school.read)
-         * @description Tiến độ bài giao, phân bố mức mastery lớp × LO (heatmap, read model 15 phút) và danh sách học sinh phân trang cursor
-         *     (≤ `dashboard_page_size_max`, `page_size` lớn hơn bị giới hạn). Lớp ngoài trường của grant hoặc thuộc tenant khác → `404`;
-         *     `subject_id` ngoài môn của grant → `403 PERMISSION_DENIED` (F043-AC-10, F043-AC-13). Không có XP, Game Rating, nội dung chat.
-         */
-        get: operations["getClassDashboard"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/lms/courses/{course_id}/results": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Bảng kết quả course — điểm tự chấm các bài mode=graded theo score_policy, thang 10 (không có điểm chấm tay) */
-        get: operations["getCourseResults"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/lms/dashboards/school": {
         parameters: {
             query?: never;
@@ -6430,9 +6391,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * School Learning Dashboard — gói widget trường → lớp → học sinh trong một lần gọi (rollup, read replica — ADR-0062, ADR-0072; analytics.school.read)
+         * School Learning Dashboard — gói widget trường → khối → học sinh trong một lần gọi (rollup, read replica — ADR-0062, ADR-0072; analytics.school.read)
          * @description school_admin (trường mình), academic_manager (trong scope tenant/trường/môn). Kết quả là tham khảo cho nhà trường,
-         *     không thay đánh giá chính thức. `class_id` vắng mặt = toàn trường; có = drill-down lớp.
+         *     không thay đánh giá chính thức. `grade_level` vắng mặt = toàn trường; có = một khối (ADR-0095: không còn lớp). Mọi ô
+         *     tổng hợp cấp khối có dưới `analytics_min_cell_size` học sinh bị che (che bổ sung giữa các khối của trường, FR-ANL-016,
+         *     F043-AC-28): số tổng hợp của trường chỉ cộng các khối hiển thị; lọc một khối bị che → `suppressed: true`, số tổng hợp `null`.
          */
         get: operations["getSchoolDashboard"];
         put?: never;
@@ -6469,7 +6432,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Xuất báo cáo kết quả bài giao / bảng kết quả course / tham khảo TT27-TT22 / bản đồ kỹ năng (job 202, URL ký 15 phút, audit report.exported) */
+        /** Xuất báo cáo kết quả bài giao / tham khảo TT27-TT22 / bản đồ kỹ năng theo khối / tháng của trường theo khối (job 202, URL ký 15 phút, audit report.exported) */
         post: operations["createLmsReport"];
         delete?: never;
         options?: never;
@@ -6554,7 +6517,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Chuỗi thời gian học tập cấp trường (analytics.school.read) */
+        /**
+         * Chuỗi thời gian học tập cấp trường hoặc một khối (analytics.school.read)
+         * @description Cấp trường cộng các khối hiển thị; `grade_level` của một khối có dưới `analytics_min_cell_size` học sinh (che bổ sung
+         *     giữa các khối, FR-ANL-016, F043-AC-28), hoặc trường không có khối nào đủ ngưỡng → mọi điểm `value: null`, `suppressed: true`.
+         */
         get: operations["getSchoolAnalyticsSeries"];
         put?: never;
         post?: never;
@@ -6580,6 +6547,31 @@ export interface paths {
          *     `school_curriculum.set`. Course đã tạo giữ version của nó.
          */
         put: operations["putSchoolCurriculumSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lms/schools/{school_id}/grades/{grade_level}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard một khối của trường — drill-down trường → khối từ School Learning Dashboard (school_admin, academic_manager · analytics.school.read)
+         * @description ADR-0095 (không còn lớp): tiến độ bài giao theo khối, heatmap LO của khối (phân bố mức mastery trường × khối × LO, read model
+         *     15 phút) và danh sách học sinh của khối phân trang cursor (≤ `dashboard_page_size_max`, `page_size` lớn hơn bị giới hạn).
+         *     Khối có dưới `analytics_min_cell_size` học sinh (che bổ sung giữa các khối của trường, FR-ANL-016) → `suppressed: true`:
+         *     số tổng hợp `null`, heatmap rỗng; danh sách học sinh vẫn trả (dữ liệu từng học sinh trong quyền). Trường ngoài grant
+         *     hoặc thuộc tenant khác → `404`; `subject_id` ngoài môn của grant → `403 PERMISSION_DENIED` (F043-AC-10, F043-AC-13,
+         *     F043-AC-28). Không có XP, Game Rating, nội dung chat.
+         */
+        get: operations["getGradeDashboard"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -10199,50 +10191,6 @@ export interface components {
             readonly minimum_days?: 3;
             reason: string;
         };
-        ClassDashboard: components["schemas"]["DashboardMeta"] & {
-            accuracy?: number | null;
-            active_students_7d?: number;
-            assignments?: components["schemas"]["DashboardAssignmentProgress"][];
-            assignments_open?: number;
-            class_id: components["schemas"]["Uuid"];
-            generated_at: components["schemas"]["Timestamp"];
-            /** @description Heatmap lớp × LO — phân bố mức mastery (not_started, beginning, developing, proficient, mastered) */
-            objective_distribution?: {
-                below_proficient_ratio?: number | null;
-                code?: string;
-                level_counts?: {
-                    [key: string]: number;
-                };
-                objective_id?: components["schemas"]["Uuid"];
-                students_with_evidence?: number;
-                yccd_ref?: string;
-            }[];
-            /** @description Tỷ lệ câu trả lời "làm quá nhanh" */
-            rapid_guess_ratio?: number | null;
-            school_id?: components["schemas"]["Uuid"];
-            /** @description Học sinh của lớp, phân trang cursor (≤ dashboard_page_size_max) */
-            students: {
-                data: {
-                    accuracy?: number | null;
-                    active_minutes?: number;
-                    activities_completed?: number;
-                    lessons_completed?: number;
-                    /** @description true khi tỷ lệ "làm quá nhanh" ≥ ngưỡng của dashboard_attention_thresholds */
-                    rapid_guess_flag?: boolean;
-                    rapid_guess_ratio?: number | null;
-                    reasons?: components["schemas"]["AttentionReason"][];
-                    student_id: components["schemas"]["Uuid"];
-                }[];
-                page: components["schemas"]["PageInfo"];
-            };
-            students_needing_attention?: {
-                display_name?: string;
-                reasons?: components["schemas"]["AttentionReason"][];
-                student_id?: components["schemas"]["Uuid"];
-                weak_objective_ids?: components["schemas"]["Uuid"][];
-            }[];
-            subject_id?: components["schemas"]["Uuid"];
-        };
         CleanupExclusionRequest: {
             reason: string;
             student_ids: components["schemas"]["Uuid"][];
@@ -10762,30 +10710,6 @@ export interface components {
             /** @enum {string} */
             status?: "active" | "inactive";
         };
-        /** @description Bảng kết quả course — điểm tự chấm các bài graded (thang 10); không có XP/rating; không đồng bộ ngược SIS */
-        CourseResults: {
-            columns: {
-                assignment_id: components["schemas"]["Uuid"];
-                due_at?: components["schemas"]["Timestamp"];
-                /** @enum {string} */
-                score_policy?: "best" | "last" | "first";
-                title: string;
-            }[];
-            course_id: components["schemas"]["Uuid"];
-            page: components["schemas"]["PageInfo"];
-            rows: {
-                display_name?: string;
-                scores: {
-                    assignment_id: components["schemas"]["Uuid"];
-                    /** @description Điểm tự chấm hiệu lực theo score_policy (sau re-evaluate), thang score_scale */
-                    score_10?: number | null;
-                    status?: components["schemas"]["AssignmentSubmissionStatus"];
-                    /** @description Có lượt trả lời làm quá nhanh (rapid_guess) */
-                    too_fast?: boolean;
-                }[];
-                student_id: components["schemas"]["Uuid"];
-            }[];
-        };
         /** @description Khung giới nghiêm hằng ngày theo giờ ICT (HH:MM); end nhỏ hơn start nghĩa là qua nửa đêm (vd. 21:30–06:30). Không theo khối lớp (R15). */
         CurfewWindow: {
             /** @example 06:30 */
@@ -10919,12 +10843,14 @@ export interface components {
         /** @description Tiến độ một bài giao đang mở/sắp hạn (read model trạng thái `assignment_submissions`, SCHOOL_LMS §8.1) */
         DashboardAssignmentProgress: {
             assignment_id: components["schemas"]["Uuid"];
-            by_class?: {
-                class_id: components["schemas"]["Uuid"];
-                missed?: number;
-                not_started?: number;
-                submitted: number;
-                total: number;
+            /** @description Theo khối của học sinh lúc được giao (ADR-0095); ô có dưới analytics_min_cell_size học sinh bị che (số đếm null, suppressed, che bổ sung trong bài giao — FR-ANL-016); 0 = khối chưa xác định */
+            by_grade?: {
+                grade_level: number;
+                missed?: number | null;
+                not_started?: number | null;
+                submitted?: number | null;
+                suppressed: boolean;
+                total?: number | null;
             }[];
             due_at: components["schemas"]["Timestamp"];
             missed?: number;
@@ -10932,10 +10858,10 @@ export interface components {
             /** @enum {string} */
             status: "scheduled" | "open" | "closed" | "results_released";
             subject_id?: components["schemas"]["Uuid"];
-            /** @description Học sinh đã nộp (đúng hạn hoặc muộn) */
+            /** @description Học sinh đã nộp (đúng hạn hoặc muộn) — tổng các ô khối hiển thị */
             submitted: number;
             title: string;
-            /** @description Học sinh được giao (trừ được miễn) */
+            /** @description Học sinh được giao (trừ được miễn) — tổng các ô khối hiển thị */
             total: number;
         };
         /** @enum {string} */
@@ -11945,6 +11871,56 @@ export interface components {
         };
         /** @enum {string} */
         GradeBand: "g1_3" | "g4_5" | "g6_7" | "g8_9";
+        GradeDashboard: components["schemas"]["DashboardMeta"] & {
+            accuracy?: number | null;
+            active_students_7d?: number | null;
+            /** @description Bài giao đến hạn từ 14 ngày qua đã nộp / được giao */
+            assignment_completion_rate?: number | null;
+            assignments?: components["schemas"]["DashboardAssignmentProgress"][];
+            assignments_open?: number;
+            generated_at: components["schemas"]["Timestamp"];
+            grade_level: components["schemas"]["GradeLevel"];
+            /** @description Heatmap khối × LO — phân bố mức mastery (not_started, beginning, developing, proficient, mastered) */
+            objective_distribution?: {
+                below_proficient_ratio?: number | null;
+                code?: string;
+                level_counts?: {
+                    [key: string]: number;
+                };
+                objective_id?: components["schemas"]["Uuid"];
+                students_with_evidence?: number;
+                yccd_ref?: string;
+            }[];
+            /** @description Tỷ lệ câu trả lời "làm quá nhanh" */
+            rapid_guess_ratio?: number | null;
+            school_id: components["schemas"]["Uuid"];
+            /** @description Số học sinh hiệu lực của khối (null khi bị che) */
+            student_count?: number | null;
+            /** @description Học sinh hiệu lực của khối, phân trang cursor (≤ dashboard_page_size_max) */
+            students: {
+                data: {
+                    accuracy?: number | null;
+                    active_minutes?: number;
+                    activities_completed?: number;
+                    lessons_completed?: number;
+                    /** @description true khi tỷ lệ "làm quá nhanh" ≥ ngưỡng của dashboard_attention_thresholds */
+                    rapid_guess_flag?: boolean;
+                    rapid_guess_ratio?: number | null;
+                    reasons?: components["schemas"]["AttentionReason"][];
+                    student_id: components["schemas"]["Uuid"];
+                }[];
+                page: components["schemas"]["PageInfo"];
+            };
+            students_needing_attention?: {
+                display_name?: string;
+                reasons?: components["schemas"]["AttentionReason"][];
+                student_id?: components["schemas"]["Uuid"];
+                weak_objective_ids?: components["schemas"]["Uuid"][];
+            }[];
+            subject_id?: components["schemas"]["Uuid"];
+            /** @description true khi ô khối < analytics_min_cell_size học sinh bị che */
+            suppressed: boolean;
+        };
         GradeLevel: number;
         /** @description Học sinh hiệu lực của một khối trong trường (chỉ đọc, dữ liệu SIS/CSV — ADR-0095). Không có ngày sinh, liên hệ phụ huynh, IP, mã thiết bị (ADR-0031). */
         GradeStudent: {
@@ -12510,10 +12486,6 @@ export interface components {
             academic_year?: number;
             /** @description Bắt buộc với assignment_results */
             assignment_id?: components["schemas"]["Uuid"];
-            /** @description Bắt buộc với skill_map; lọc lớp với regulation_reference */
-            class_id?: components["schemas"]["Uuid"];
-            /** @description Bắt buộc với course_results */
-            course_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
             format: "csv" | "xlsx" | "pdf";
             /**
@@ -12521,10 +12493,15 @@ export interface components {
              * @description Bắt buộc với school_monthly; khoảng ≤ dashboard_max_range_days
              */
             from?: string;
+            /** @description Bắt buộc với skill_map; lọc khối với regulation_reference, school_monthly, assignment_results */
+            grade_level?: components["schemas"]["GradeLevel"];
             period?: components["schemas"]["AssessmentPeriod"];
-            /** @enum {string} */
-            report_type: "assignment_results" | "course_results" | "regulation_reference" | "skill_map" | "school_monthly";
-            /** @description Bắt buộc với regulation_reference, school_monthly */
+            /**
+             * @description ADR-0095: không còn course_results (không còn course) — kết quả theo bài giao (assignment_results, có cột khối của học sinh lúc được giao); skill_map theo trường × khối × môn; school_monthly theo khối × môn, ô khối dưới analytics_min_cell_size học sinh bị che (FR-ANL-016)
+             * @enum {string}
+             */
+            report_type: "assignment_results" | "regulation_reference" | "skill_map" | "school_monthly";
+            /** @description Bắt buộc với regulation_reference, skill_map, school_monthly */
             school_id?: components["schemas"]["Uuid"];
             /** @description Bắt buộc với regulation_reference, skill_map */
             subject_id?: components["schemas"]["Uuid"];
@@ -14084,8 +14061,9 @@ export interface components {
             academic_year: number;
             disclaimer: string;
             items: {
-                class_id: components["schemas"]["Uuid"];
                 coverage_ratio: number;
+                /** @description Khối của học sinh lúc tính mức (ADR-0095) */
+                grade_level?: components["schemas"]["GradeLevel"];
                 /** @enum {string} */
                 level_code: "excellent" | "completed" | "not_completed" | "pass" | "not_pass" | "insufficient_data";
                 low_reliability_exam_ids?: components["schemas"]["Uuid"][];
@@ -14151,10 +14129,10 @@ export interface components {
                 study_id?: components["schemas"]["Uuid"];
             };
             /**
-             * @description efficacy_dataset chỉ ở /admin/reports, cần thêm permission platform.efficacy_study.export và params.study_id; chỉ format csv, dữ liệu định danh giả (F035, LEARNING_EFFICACY_PLAN §7)
+             * @description grade_progress = trường × khối của tenant (ADR-0095, thay class_progress; ô khối dưới analytics_min_cell_size học sinh bị che, FR-ANL-016); efficacy_dataset chỉ ở /admin/reports, cần thêm permission platform.efficacy_study.export và params.study_id; chỉ format csv, dữ liệu định danh giả (F035, LEARNING_EFFICACY_PLAN §7)
              * @enum {string}
              */
-            report_type: "learning_summary" | "class_progress" | "assignment_results" | "game_summary" | "efficacy_dataset";
+            report_type: "learning_summary" | "grade_progress" | "assignment_results" | "game_summary" | "efficacy_dataset";
             school_ids?: components["schemas"]["Uuid"][];
             /** @description Chỉ `/admin/reports` (System Admin) */
             tenant_ids?: components["schemas"]["Uuid"][];
@@ -14389,26 +14367,29 @@ export interface components {
             }[];
         };
         SchoolDashboard: components["schemas"]["DashboardMeta"] & {
-            class_id?: components["schemas"]["Uuid"];
+            grade_level?: components["schemas"]["GradeLevel"];
             school_id: components["schemas"]["Uuid"];
             subject_id?: components["schemas"]["Uuid"];
+            /** @description true khi `grade_level` chọn một khối có dưới analytics_min_cell_size học sinh hoặc trường không có khối nào đủ ngưỡng (FR-ANL-016) — số tổng hợp null */
+            suppressed?: boolean;
             widgets: {
                 accuracy?: number | null;
                 active_minutes_series?: components["schemas"]["AnalyticsPoint"][];
-                /** @description Học sinh có hoạt động học trong 7 ngày kết thúc ở `to` */
-                active_students?: number;
+                /** @description Học sinh có hoạt động học trong 7 ngày kết thúc ở `to` (khối hiển thị; null khi bị che) */
+                active_students?: number | null;
                 assignment_completion_rate?: number | null;
                 assignments?: components["schemas"]["DashboardAssignmentProgress"][];
                 /** @description Bài đang mở có hạn trong 48 giờ tới */
                 assignments_due_soon?: number;
                 assignments_open?: number;
-                classes?: {
+                /** @description Các khối của trường (ADR-0095) — khối có dưới analytics_min_cell_size học sinh chỉ có grade_level và suppressed (FR-ANL-016) */
+                grades?: {
                     accuracy?: number | null;
                     active_students?: number | null;
                     assignment_completion_rate?: number | null;
-                    class_id: components["schemas"]["Uuid"];
-                    grade_level?: components["schemas"]["GradeLevel"];
-                    name?: string;
+                    grade_level: components["schemas"]["GradeLevel"];
+                    students?: number | null;
+                    suppressed: boolean;
                 }[];
                 /** @description Tỷ lệ câu trả lời "làm quá nhanh" (rapid_guess) */
                 rapid_guess_ratio?: number | null;
@@ -14423,16 +14404,17 @@ export interface components {
                     recommendation_started_rate?: number | null;
                 };
                 students_needing_attention?: {
-                    class_id?: components["schemas"]["Uuid"];
                     display_name?: string;
+                    grade_level?: components["schemas"]["GradeLevel"];
                     reasons: components["schemas"]["AttentionReason"][];
                     student_id: components["schemas"]["Uuid"];
                 }[];
                 students_needing_attention_total?: number;
                 weak_objectives?: {
                     below_proficient_ratio?: number;
-                    class_ids?: components["schemas"]["Uuid"][];
                     code: string;
+                    /** @description Khối hiển thị có từ 50% học sinh trở lên dưới mức thành thạo */
+                    grade_levels?: components["schemas"]["GradeLevel"][];
                     objective_id: components["schemas"]["Uuid"];
                     yccd_ref?: string;
                 }[];
@@ -15967,7 +15949,6 @@ export interface components {
         /** @description Lọc theo ngôn ngữ gốc của version mới nhất (OQ F054-2, F024 T041) */
         ContentLanguageFilter: components["schemas"]["ContentLanguage"];
         CountryCodePath: string;
-        CourseIdPath: components["schemas"]["Uuid"];
         CurriculumIdPath: components["schemas"]["Uuid"];
         /** @description Cursor opaque từ page.next_cursor */
         Cursor: string;
@@ -32250,100 +32231,9 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
-    getClassDashboard: {
-        parameters: {
-            query: {
-                /** @description Cursor opaque từ page.next_cursor */
-                cursor?: components["parameters"]["Cursor"];
-                /** @description Ngày bắt đầu (bao gồm, theo múi giờ tenant). Khoảng `from`–`to` tối đa 730 ngày (`dashboard_max_range_days`) — vượt → `422 DASHBOARD_RANGE_TOO_LARGE` (DASHBOARD_DATA §8). */
-                from: components["parameters"]["DashboardFrom"];
-                /**
-                 * @description Độ hạt **gợi ý**; server quyết định theo khoảng (≤ 31 ngày → day; 32 ngày–1 năm → week; > 1 năm → month) và chỉ chấp nhận
-                 *     độ hạt **thô hơn** quy tắc, không mịn hơn (DASHBOARD_DATA §8). Phản hồi luôn trả `grain` thực dùng.
-                 */
-                grain?: components["parameters"]["DashboardGrain"];
-                /**
-                 * @description Số dòng của danh sách chi tiết (phân trang cursor — DASHBOARD_DATA §8). Giá trị lớn hơn `dashboard_page_size_max` (100)
-                 *     được server giới hạn về 100, không bị từ chối (F043-AC-16); `page.limit` của phản hồi là giá trị thực dùng.
-                 */
-                page_size?: components["parameters"]["DashboardPageSize"];
-                subject_id?: components["parameters"]["SubjectIdQuery"];
-                /** @description Ngày kết thúc (bao gồm). Phải ≥ `from`. */
-                to: components["parameters"]["DashboardTo"];
-            };
-            header?: {
-                /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
-            };
-            path: {
-                class_id: components["schemas"]["Uuid"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Tiến độ lớp, heatmap LO, học sinh (trang) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClassDashboard"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            422: components["responses"]["ValidationFailed"];
-            429: components["responses"]["DashboardBusy"];
-            503: components["responses"]["ServiceUnavailable"];
-            504: components["responses"]["DashboardTimeout"];
-        };
-    };
-    getCourseResults: {
-        parameters: {
-            query?: {
-                /** @description Cursor opaque từ page.next_cursor */
-                cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
-            };
-            header?: {
-                /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
-            };
-            path: {
-                course_id: components["parameters"]["CourseIdPath"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CourseResults"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
-    };
     getSchoolDashboard: {
         parameters: {
             query: {
-                class_id?: components["schemas"]["Uuid"];
                 /** @description Ngày bắt đầu (bao gồm, theo múi giờ tenant). Khoảng `from`–`to` tối đa 730 ngày (`dashboard_max_range_days`) — vượt → `422 DASHBOARD_RANGE_TOO_LARGE` (DASHBOARD_DATA §8). */
                 from: components["parameters"]["DashboardFrom"];
                 grade_level?: components["parameters"]["GradeLevelQuery"];
@@ -32819,13 +32709,69 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
+    getGradeDashboard: {
+        parameters: {
+            query: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Ngày bắt đầu (bao gồm, theo múi giờ tenant). Khoảng `from`–`to` tối đa 730 ngày (`dashboard_max_range_days`) — vượt → `422 DASHBOARD_RANGE_TOO_LARGE` (DASHBOARD_DATA §8). */
+                from: components["parameters"]["DashboardFrom"];
+                /**
+                 * @description Độ hạt **gợi ý**; server quyết định theo khoảng (≤ 31 ngày → day; 32 ngày–1 năm → week; > 1 năm → month) và chỉ chấp nhận
+                 *     độ hạt **thô hơn** quy tắc, không mịn hơn (DASHBOARD_DATA §8). Phản hồi luôn trả `grain` thực dùng.
+                 */
+                grain?: components["parameters"]["DashboardGrain"];
+                /**
+                 * @description Số dòng của danh sách chi tiết (phân trang cursor — DASHBOARD_DATA §8). Giá trị lớn hơn `dashboard_page_size_max` (100)
+                 *     được server giới hạn về 100, không bị từ chối (F043-AC-16); `page.limit` của phản hồi là giá trị thực dùng.
+                 */
+                page_size?: components["parameters"]["DashboardPageSize"];
+                subject_id?: components["parameters"]["SubjectIdQuery"];
+                /** @description Ngày kết thúc (bao gồm). Phải ≥ `from`. */
+                to: components["parameters"]["DashboardTo"];
+            };
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                grade_level: components["schemas"]["GradeLevel"];
+                school_id: components["parameters"]["SchoolId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tiến độ khối, heatmap LO, học sinh (trang) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeDashboard"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["DashboardBusy"];
+            503: components["responses"]["ServiceUnavailable"];
+            504: components["responses"]["DashboardTimeout"];
+        };
+    };
     getRegulationReferenceReport: {
         parameters: {
             query: {
                 academic_year?: number;
-                class_id?: components["schemas"]["Uuid"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
+                /** @description Lọc theo khối của học sinh lúc tính mức (ADR-0095 — không còn lọc lớp) */
+                grade_level?: components["schemas"]["GradeLevel"];
                 limit?: components["parameters"]["Limit"];
                 period: components["schemas"]["AssessmentPeriod"];
                 subject_id: components["schemas"]["Uuid"];

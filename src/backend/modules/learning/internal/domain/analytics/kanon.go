@@ -50,3 +50,51 @@ func Suppress(cells []Cell, k int) []bool {
 	}
 	return hidden
 }
+
+// GradeMask is the k-anonymity of the grades of one school (ADR-0095, FR-ANL-016): a grade not listed has no student and
+// is hidden.
+type GradeMask struct {
+	hidden map[int]bool
+}
+
+// Hidden reports whether the cells of grade g are hidden (fewer than k students, complementary suppression, unknown grade).
+func (m GradeMask) Hidden(g int) bool {
+	h, ok := m.hidden[g]
+	return !ok || h
+}
+
+// Visible lists the visible grades in ascending order (never nil: an empty list filters every grade out).
+func (m GradeMask) Visible() []int {
+	out := []int{}
+	for g, h := range m.hidden {
+		if !h {
+			out = append(out, g)
+		}
+	}
+	sort.Ints(out)
+	return out
+}
+
+// SuppressGrades applies Suppress to the grades of one school (one group, so that the school total of the visible grades
+// cannot reveal a hidden one): sizes maps a grade to its number of students; the unknown grade 0 is always hidden.
+func SuppressGrades(sizes map[int]int, k int) GradeMask {
+	gs := make([]int, 0, len(sizes))
+	for g := range sizes {
+		gs = append(gs, g)
+	}
+	sort.Ints(gs)
+	cells := make([]Cell, len(gs))
+	for i, g := range gs {
+		n := sizes[g]
+		if g == 0 {
+			n = 0
+		}
+		cells[i] = Cell{Group: "school", Students: n}
+	}
+	hidden := Suppress(cells, k)
+	m := GradeMask{hidden: make(map[int]bool, len(gs))}
+	for i, g := range gs {
+		m.hidden[g] = hidden[i]
+	}
+	return m
+}

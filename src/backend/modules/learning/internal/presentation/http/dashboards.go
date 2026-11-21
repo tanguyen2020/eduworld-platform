@@ -17,7 +17,7 @@ import (
 // DashboardQueries are the dashboard reads of F043 (query.Dashboards).
 type DashboardQueries interface {
 	GetSchoolDashboard(ctx context.Context, in query.SchoolDashboardInput) (dto.SchoolDashboardView, error)
-	GetClassDashboard(ctx context.Context, in query.ClassDashboardInput) (dto.ClassDashboardView, error)
+	GetGradeDashboard(ctx context.Context, in query.GradeDashboardInput) (dto.GradeDashboardView, error)
 	GetSchoolSeries(ctx context.Context, in query.SeriesInput) (dto.AnalyticsSeriesView, error)
 	GetStudentProfile(ctx context.Context, in query.ProfileInput) (dto.StudentLearningProfileView, error)
 	GetTenantSummary(ctx context.Context, in query.TenantSummaryInput) (dto.LearningSummaryView, error)
@@ -26,8 +26,8 @@ type DashboardQueries interface {
 
 func init() {
 	Operations["getSchoolDashboard"] = op("getSchoolDashboard", http.MethodGet, "/lms/dashboards/school", httpx.TenantRequired, httpx.IdempotencyNone, 200)
-	Operations["getClassDashboard"] = op("getClassDashboard", http.MethodGet, "/lms/classes/{class_id}/dashboard", httpx.TenantRequired,
-		httpx.IdempotencyNone, 200)
+	Operations["getGradeDashboard"] = op("getGradeDashboard", http.MethodGet, "/lms/schools/{school_id}/grades/{grade_level}/dashboard",
+		httpx.TenantRequired, httpx.IdempotencyNone, 200)
 	Operations["getSchoolAnalyticsSeries"] = op("getSchoolAnalyticsSeries", http.MethodGet, "/lms/schools/{school_id}/analytics/series",
 		httpx.TenantRequired, httpx.IdempotencyNone, 200)
 	Operations["getStudentLearningProfile"] = op("getStudentLearningProfile", http.MethodGet, "/lms/students/{student_id}/analytics",
@@ -41,7 +41,7 @@ func init() {
 
 var dashboardRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Request){
 	"getSchoolDashboard":         Handlers.getSchoolDashboard,
-	"getClassDashboard":          Handlers.getClassDashboard,
+	"getGradeDashboard":          Handlers.getGradeDashboard,
 	"getSchoolAnalyticsSeries":   Handlers.getSchoolAnalyticsSeries,
 	"getStudentLearningProfile":  Handlers.getStudentLearningProfile,
 	"getTenantLearningSummary":   Handlers.getTenantLearningSummary,
@@ -101,9 +101,6 @@ func (h Handlers) getSchoolDashboard(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == nil {
 		in.SchoolID = *school
-		in.ClassID, err = queryUUID(r, "class_id")
-	}
-	if err == nil {
 		in.SubjectID, err = queryUUID(r, "subject_id")
 	}
 	if err == nil {
@@ -121,10 +118,13 @@ func (h Handlers) getSchoolDashboard(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, v)
 }
 
-func (h Handlers) getClassDashboard(w http.ResponseWriter, r *http.Request) {
-	in := query.ClassDashboardInput{Grain: r.URL.Query().Get("grain"), PageSize: querySize(r), Cursor: r.URL.Query().Get("cursor")}
+func (h Handlers) getGradeDashboard(w http.ResponseWriter, r *http.Request) {
+	in := query.GradeDashboardInput{Grain: r.URL.Query().Get("grain"), PageSize: querySize(r), Cursor: r.URL.Query().Get("cursor")}
 	var err error
-	in.ClassID, err = pathUUID(r, "class_id")
+	in.SchoolID, err = pathUUID(r, "school_id")
+	if err == nil {
+		in.GradeLevel, err = pathInt(r, "grade_level")
+	}
 	if err == nil {
 		in.SubjectID, err = queryUUID(r, "subject_id")
 	}
@@ -135,7 +135,7 @@ func (h Handlers) getClassDashboard(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
-	v, err := h.Dashboards.GetClassDashboard(r.Context(), in)
+	v, err := h.Dashboards.GetGradeDashboard(r.Context(), in)
 	if err != nil {
 		fail(w, r, err)
 		return

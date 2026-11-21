@@ -11,7 +11,8 @@
     "scope_level": { "type": "string", "enum": ["lms", "tenant", "platform"] },
     "report_type": {
       "type": "string",
-      "enum": ["assignment_results", "course_results", "regulation_reference", "skill_map", "school_monthly", "learning_summary", "class_progress", "game_summary", "efficacy_dataset"]
+      "enum": ["assignment_results", "course_results", "regulation_reference", "skill_map", "school_monthly", "learning_summary", "class_progress", "grade_progress", "game_summary", "efficacy_dataset"],
+      "description": "course_results, class_progress: chỉ còn cho job đã ghi trước ADR-0095 (không tạo mới); grade_progress thay class_progress"
     },
     "format": { "type": "string", "enum": ["csv", "xlsx", "pdf"] },
     "status": { "type": "string", "enum": ["succeeded", "failed"] },

@@ -141,3 +141,12 @@
 - [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — số thông báo an toàn trả `null` tới F122
 - [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi — DATABASE_DESIGN §1.1/§2.7, CHANGELOG; giá trị CONFIG_DEFAULTS không đổi
 - [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+
+## ADR-0095 — trường → khối → học sinh (WP-L2, 2026-11-21)
+
+- [x] T043 Test trước: `analytics.SuppressGrades` (ô khối < `analytics_min_cell_size`, che bổ sung giữa các khối, khối 0 luôn che) — file: `src/backend/modules/learning/internal/domain/analytics/{kanon.go,analytics_test.go}` — Bằng chứng: `TestSuppressGrades` FAIL (chưa có hàm) → PASS
+- [x] T044 Migration expand `20261229000005_adr0095_grade_dashboards.sql`: `rollup_grade_objective_weekly` (P năm), `rm_grade_objective_stats`, `rm_school_grade_summary.assignment_completion_*`, `ensure_rollup_partitions` bỏ bảng lớp, GRANT `lms.assignment_target_students` cho `learning_dashboard`; bảng/cột lớp ghi chú "dropped by WP-R" — Bằng chứng: `TestMigrationMatchesEnt`, `TestLearningPartitionsJob` (24 partition)
+- [x] T045 Rollup/read model theo khối: consumer cộng `rollup_school/tenant_daily` theo `progress_daily.grade_level`; job bỏ `rollup_class_*`, `rm_class_*`; tỉ lệ nộp theo khối lúc được giao; `progress_daily`/`learning_events` không ghi `class_id`; `rm_student_attention.class_id = NULL` — file: `persistence/write/rollup_repo.go`, `learning_event_writer.go`, `mastery_repo.go` — Bằng chứng: `TestDashboardRollupGolden`, `TestDashboardRollupLateAndDuplicate`, `TestDashboardReadModelRefresh`
+- [x] T046 Contract: xóa `getClassDashboard`, thêm `getGradeDashboard`; `SchoolDashboard` (`grades`, `grade_levels`, `by_grade`, `suppressed`, `grade_level` của học sinh cần chú ý), `GradeDashboard`; `split-public`; portal `pnpm gen:api` — Bằng chứng: `split-public --check`, `pnpm gen:check`
+- [x] T047 Query/HTTP: `GetGradeDashboard`, che ô khối ở `GetSchoolDashboard`/`GetSchoolSeries`/tiến độ bài giao (F043-AC-28), catalog `grade_totals`, `grades`, `grade_students` — Bằng chứng: `TestSchoolDashboardWidgets`, `TestGradeDashboardAndSeries`, `TestDashboardAuthorizationAndTenant` (TC-DASH-009 viết lại), `TestDashboardMetaAvailableFromAndReplicaLag`, `TestDashboardRoleAndQueryCatalog` (EXPLAIN không Seq Scan)
+- [ ] T048 Portal dùng `getGradeDashboard` và các trường mới (WP-P1b — agent portal; WP-L2 chỉ sinh lại `schema.gen.d.ts`)

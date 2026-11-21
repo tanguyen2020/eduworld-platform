@@ -31,16 +31,18 @@ type AnalyticsPointView struct {
 	IsFinal     bool     `json:"is_final"`
 }
 
-// AssignmentClassProgress is one class of DashboardAssignmentProgress.by_class.
-type AssignmentClassProgress struct {
-	ClassID    uuid.UUID `json:"class_id"`
-	Submitted  int       `json:"submitted"`
-	Total      int       `json:"total"`
-	NotStarted int       `json:"not_started"`
-	Missed     int       `json:"missed"`
+// AssignmentGradeProgress is one grade of DashboardAssignmentProgress.by_grade (grade of the students when targeted): the
+// counts are null when the cell has fewer than analytics_min_cell_size students (suppressed, FR-ANL-016).
+type AssignmentGradeProgress struct {
+	GradeLevel int  `json:"grade_level"`
+	Submitted  *int `json:"submitted"`
+	Total      *int `json:"total"`
+	NotStarted *int `json:"not_started"`
+	Missed     *int `json:"missed"`
+	Suppressed bool `json:"suppressed"`
 }
 
-// AssignmentProgressView is DashboardAssignmentProgress.
+// AssignmentProgressView is DashboardAssignmentProgress (totals over the visible grade cells only).
 type AssignmentProgressView struct {
 	AssignmentID uuid.UUID                 `json:"assignment_id"`
 	Title        string                    `json:"title"`
@@ -51,33 +53,33 @@ type AssignmentProgressView struct {
 	Total        int                       `json:"total"`
 	NotStarted   int                       `json:"not_started"`
 	Missed       int                       `json:"missed"`
-	ByClass      []AssignmentClassProgress `json:"by_class"`
+	ByGrade      []AssignmentGradeProgress `json:"by_grade"`
 }
 
-// DashboardClassView is one row of SchoolDashboard.widgets.classes.
-type DashboardClassView struct {
-	ClassID                  uuid.UUID `json:"class_id"`
-	Name                     string    `json:"name,omitempty"`
-	GradeLevel               int       `json:"grade_level,omitempty"`
-	ActiveStudents           *int      `json:"active_students"`
-	Accuracy                 *float64  `json:"accuracy"`
-	AssignmentCompletionRate *float64  `json:"assignment_completion_rate"`
+// DashboardGradeView is one row of SchoolDashboard.widgets.grades: metrics null when the grade is suppressed (FR-ANL-016).
+type DashboardGradeView struct {
+	GradeLevel               int      `json:"grade_level"`
+	Students                 *int     `json:"students"`
+	ActiveStudents           *int     `json:"active_students"`
+	Accuracy                 *float64 `json:"accuracy"`
+	AssignmentCompletionRate *float64 `json:"assignment_completion_rate"`
+	Suppressed               bool     `json:"suppressed"`
 }
 
 // WeakObjectiveView is one row of SchoolDashboard.widgets.weak_objectives.
 type WeakObjectiveView struct {
-	ObjectiveID          uuid.UUID   `json:"objective_id"`
-	Code                 string      `json:"code"`
-	YccdRef              string      `json:"yccd_ref,omitempty"`
-	BelowProficientRatio float64     `json:"below_proficient_ratio"`
-	ClassIDs             []uuid.UUID `json:"class_ids"`
+	ObjectiveID          uuid.UUID `json:"objective_id"`
+	Code                 string    `json:"code"`
+	YccdRef              string    `json:"yccd_ref,omitempty"`
+	BelowProficientRatio float64   `json:"below_proficient_ratio"`
+	GradeLevels          []int     `json:"grade_levels"`
 }
 
 // AttentionView is one student needing attention (reasons of the AttentionReason enum).
 type AttentionView struct {
-	StudentID uuid.UUID  `json:"student_id"`
-	ClassID   *uuid.UUID `json:"class_id,omitempty"`
-	Reasons   []string   `json:"reasons"`
+	StudentID  uuid.UUID `json:"student_id"`
+	GradeLevel *int      `json:"grade_level,omitempty"`
+	Reasons    []string  `json:"reasons"`
 }
 
 // SelfStudyView is SchoolDashboard.widgets.self_study.
@@ -89,7 +91,7 @@ type SelfStudyView struct {
 
 // SchoolWidgets is SchoolDashboard.widgets: no XP, Game Rating, ranking nor chat field (F043-AC-11).
 type SchoolWidgets struct {
-	ActiveStudents                   int                      `json:"active_students"`
+	ActiveStudents                   *int                     `json:"active_students"`
 	AssignmentsOpen                  int                      `json:"assignments_open"`
 	AssignmentsDueSoon               int                      `json:"assignments_due_soon"`
 	AssignmentCompletionRate         *float64                 `json:"assignment_completion_rate"`
@@ -98,23 +100,24 @@ type SchoolWidgets struct {
 	SafetyNotificationsUnacknowledge *int                     `json:"safety_notifications_unacknowledged"`
 	ActiveMinutesSeries              []AnalyticsPointView     `json:"active_minutes_series"`
 	Assignments                      []AssignmentProgressView `json:"assignments"`
-	Classes                          []DashboardClassView     `json:"classes"`
+	Grades                           []DashboardGradeView     `json:"grades"`
 	WeakObjectives                   []WeakObjectiveView      `json:"weak_objectives"`
 	StudentsNeedingAttention         []AttentionView          `json:"students_needing_attention"`
 	StudentsNeedingAttentionTotal    int                      `json:"students_needing_attention_total"`
 	SelfStudy                        SelfStudyView            `json:"self_study"`
 }
 
-// SchoolDashboardView is SchoolDashboard.
+// SchoolDashboardView is SchoolDashboard: Suppressed when the grade filter selects a hidden grade (aggregates null).
 type SchoolDashboardView struct {
 	DashboardMeta
-	SchoolID  uuid.UUID     `json:"school_id"`
-	ClassID   *uuid.UUID    `json:"class_id,omitempty"`
-	SubjectID *uuid.UUID    `json:"subject_id,omitempty"`
-	Widgets   SchoolWidgets `json:"widgets"`
+	SchoolID   uuid.UUID     `json:"school_id"`
+	GradeLevel *int          `json:"grade_level,omitempty"`
+	SubjectID  *uuid.UUID    `json:"subject_id,omitempty"`
+	Suppressed bool          `json:"suppressed"`
+	Widgets    SchoolWidgets `json:"widgets"`
 }
 
-// ObjectiveDistributionView is one column of the class heatmap.
+// ObjectiveDistributionView is one column of the LO heatmap of a grade (rm_grade_objective_stats).
 type ObjectiveDistributionView struct {
 	ObjectiveID          uuid.UUID      `json:"objective_id"`
 	Code                 string         `json:"code"`
@@ -124,15 +127,15 @@ type ObjectiveDistributionView struct {
 	LevelCounts          map[string]int `json:"level_counts"`
 }
 
-// ClassAttentionView is one row of ClassDashboard.students_needing_attention.
-type ClassAttentionView struct {
+// GradeAttentionView is one row of GradeDashboard.students_needing_attention.
+type GradeAttentionView struct {
 	StudentID        uuid.UUID   `json:"student_id"`
 	Reasons          []string    `json:"reasons"`
 	WeakObjectiveIDs []uuid.UUID `json:"weak_objective_ids"`
 }
 
-// ClassStudentView is one student of the class list.
-type ClassStudentView struct {
+// GradeStudentView is one student of the grade list.
+type GradeStudentView struct {
 	StudentID           uuid.UUID `json:"student_id"`
 	ActivitiesCompleted int       `json:"activities_completed"`
 	LessonsCompleted    int       `json:"lessons_completed"`
@@ -150,27 +153,32 @@ type PageView struct {
 	Limit      int     `json:"limit"`
 }
 
-// ClassStudentsPage is ClassDashboard.students.
-type ClassStudentsPage struct {
-	Data []ClassStudentView `json:"data"`
+// GradeStudentsPage is GradeDashboard.students.
+type GradeStudentsPage struct {
+	Data []GradeStudentView `json:"data"`
 	Page PageView           `json:"page"`
 }
 
-// ClassDashboardView is ClassDashboard.
-type ClassDashboardView struct {
+// GradeDashboardView is GradeDashboard (school → grade drill-down, ADR-0095): Suppressed when the grade has fewer than
+// analytics_min_cell_size students (complementary suppression among the grades of the school) — aggregates null, LO
+// heatmap empty; the students of the grade (individual rows of the authorized school staff) are listed in any case.
+type GradeDashboardView struct {
 	DashboardMeta
-	ClassID                  uuid.UUID                   `json:"class_id"`
 	SchoolID                 uuid.UUID                   `json:"school_id"`
+	GradeLevel               int                         `json:"grade_level"`
 	SubjectID                *uuid.UUID                  `json:"subject_id,omitempty"`
 	GeneratedAt              time.Time                   `json:"generated_at"`
-	ActiveStudents7d         int                         `json:"active_students_7d"`
+	Suppressed               bool                        `json:"suppressed"`
+	Students7d               *int                        `json:"active_students_7d"`
+	StudentCount             *int                        `json:"student_count"`
 	AssignmentsOpen          int                         `json:"assignments_open"`
 	Accuracy                 *float64                    `json:"accuracy"`
 	RapidGuessRatio          *float64                    `json:"rapid_guess_ratio"`
+	AssignmentCompletionRate *float64                    `json:"assignment_completion_rate"`
 	Assignments              []AssignmentProgressView    `json:"assignments"`
 	ObjectiveDistribution    []ObjectiveDistributionView `json:"objective_distribution"`
-	StudentsNeedingAttention []ClassAttentionView        `json:"students_needing_attention"`
-	Students                 ClassStudentsPage           `json:"students"`
+	StudentsNeedingAttention []GradeAttentionView        `json:"students_needing_attention"`
+	Students                 GradeStudentsPage           `json:"students"`
 }
 
 // AnalyticsSeriesView is AnalyticsSeries.

@@ -58,7 +58,6 @@ type RollupJobs interface {
 // AttentionRow is one student of rm_student_attention.
 type AttentionRow struct {
 	StudentID, SchoolID uuid.UUID
-	ClassID             *uuid.UUID
 	Signals             analytics.Signals
 	Reasons             []analytics.Reason
 }

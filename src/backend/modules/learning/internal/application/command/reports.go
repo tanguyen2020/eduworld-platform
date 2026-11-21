@@ -239,7 +239,7 @@ func grantSubjectsOf(p authz.Principal, perm authz.Permission, school uuid.UUID)
 // 404, subject outside the grants of an academic_manager → 403).
 func (h Reports) authorizeReport(ctx context.Context, p authz.Principal, r reporting.Request) (write.ReportParams, error) {
 	perm := authz.PermReportExport
-	params := write.ReportParams{SchoolID: r.SchoolID, ClassID: r.ClassID, CourseID: r.CourseID, AssignmentID: r.AssignmentID,
+	params := write.ReportParams{SchoolID: r.SchoolID, AssignmentID: r.AssignmentID,
 		SubjectID: r.SubjectID, Period: r.Period, AcademicYear: r.AcademicYear, SchoolIDs: r.SchoolIDs, TenantIDs: r.TenantIDs,
 		GradeLevel: r.GradeLevel, StudyID: r.StudyID}
 	if r.From != nil {
@@ -316,19 +316,7 @@ func (h Reports) reportObject(ctx context.Context, r reporting.Request) (uuid.UU
 				return notFoundOr(err)
 			}
 			school, subject = sc, &sub
-		case r.Type == reporting.TypeCourseResults && r.CourseID != nil:
-			c, err := h.Scope.Course(ctx, *r.CourseID)
-			if err != nil || c == nil {
-				return notFoundOr(err)
-			}
-			school, subject = c.SchoolID, &c.SubjectID
-		case r.Type == reporting.TypeSkillMap && r.ClassID != nil:
-			sc, ok, err := h.Scope.ClassSchool(ctx, *r.ClassID)
-			if err != nil || !ok {
-				return notFoundOr(err)
-			}
-			school, subject = sc, r.SubjectID
-		case r.SchoolID != nil:
+		case r.SchoolID != nil: // regulation_reference, skill_map (school × grade, ADR-0095), school_monthly
 			school, subject = *r.SchoolID, r.SubjectID
 		}
 		return nil

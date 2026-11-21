@@ -23,34 +23,31 @@ import (
 // amB is an academic_manager of school SB (tenant B).
 const amB = "dash.am.b"
 
-// reportKit is the dashboard dataset of F043 plus a course 3A × math with one graded assignment (a1 8/10 submitted, a2 3/10
-// with rapid guesses) and one practice assignment (not a results column), and a course 3A × Vietnamese.
+// reportKit is the dashboard dataset of F043 plus, in school S (grade 3), a closed graded math assignment (a1 8/10 submitted,
+// a2 3/10 late with rapid guesses), a closed practice math assignment and a closed graded Vietnamese assignment (b1) —
+// ADR-0095: no course, the grade of the students when targeted.
 type reportKit struct {
 	*dashKit
-	courseM, courseV, graded, practice uuid.UUID
+	graded, practice, gradedV uuid.UUID
 }
 
 func (c *curEnv) reportKit(ctx context.Context, t *testing.T) reportKit {
 	t.Helper()
-	k := reportKit{dashKit: c.dashKit(ctx, t), courseM: uuid.New(), courseV: uuid.New()}
-	for _, cs := range []struct{ id, subject uuid.UUID }{{k.courseM, k.subjM}, {k.courseV, k.subjV}} {
-		c.exec(ctx, t, `INSERT INTO lms.courses (course_id, tenant_id, school_id, class_id, subject_id, grade_level, academic_year_id,
-			curriculum_version_id) VALUES ($1, $2, $3, $4, $5, 3, $6, $7)`, cs.id, c.tenantA, k.school, k.class3A, cs.subject, uuid.New(), uuid.New())
-	}
+	k := reportKit{dashKit: c.dashKit(ctx, t)}
 	due := dashNow.Add(-24 * time.Hour)
-	k.graded = k.assignment(ctx, t, c.tenantA, k.school, k.subjM, "closed", due, nil)
+	k.graded = k.assignment(ctx, t, c.tenantA, k.school, k.subjM, "closed", due, map[uuid.UUID][2]any{k.a1: {3, "submitted"}, k.a2: {3, "late"}})
 	k.practice = k.assignment(ctx, t, c.tenantA, k.school, k.subjM, "closed", due, nil)
-	c.exec(ctx, t, `UPDATE lms.assignments SET mode = 'graded', course_id = $2, follow_latest = false, pinned_version_id = $3,
-		score_policy = 'best' WHERE assignment_id = $1`, k.graded, k.courseM, uuid.New())
-	c.exec(ctx, t, `UPDATE lms.assignments SET course_id = $2 WHERE assignment_id = $1`, k.practice, k.courseM)
+	k.gradedV = k.assignment(ctx, t, c.tenantA, k.school, k.subjV, "closed", due, map[uuid.UUID][2]any{k.b1: {3, "submitted"}})
+	for _, id := range []uuid.UUID{k.graded, k.gradedV} {
+		c.exec(ctx, t, `UPDATE lms.assignments SET mode = 'graded', follow_latest = false, pinned_version_id = $2, score_policy = 'best'
+			WHERE assignment_id = $1`, id, uuid.New())
+	}
 	for _, s := range []struct {
 		student      uuid.UUID
-		status       string
 		score, rapid int
-	}{{k.a1, "submitted", 8, 0}, {k.a2, "late", 3, 2}} {
-		c.exec(ctx, t, `INSERT INTO lms.assignment_submissions (assignment_submission_id, tenant_id, school_id, assignment_id, student_id,
-			class_id, status, score, max_score, rapid_guess_count, attempts_used) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 10, $9, 1)`,
-			uuid.New(), c.tenantA, k.school, k.graded, s.student, k.class3A, s.status, s.score, s.rapid)
+	}{{k.a1, 8, 0}, {k.a2, 3, 2}} {
+		c.exec(ctx, t, `UPDATE lms.assignment_submissions SET score = $3, max_score = 10, rapid_guess_count = $4, attempts_used = 1
+			WHERE assignment_id = $1 AND student_id = $2`, k.graded, s.student, s.score, s.rapid)
 	}
 	return k
 }
@@ -124,6 +121,10 @@ func TestReportExportJob(t *testing.T) {
 		strings.Contains(strings.ToLower(all), "chat") || !strings.Contains(all, "8.0") {
 		t.Fatalf("file rows = %s", all)
 	}
+	// ADR-0095: a grade column (grade when targeted), never a class.
+	if !strings.Contains(all, "grade_level") || !strings.Contains(all, "|3|") || strings.Contains(strings.ToLower(all), "class") {
+		t.Fatalf("grade column = %s", all)
+	}
 	// Past the link TTL the object storage refuses the presigned GET (403).
 	stale, _, err := storage.ExportBucket{S3: c.media.s3}.ReportURL(ctx, reporting.StorageKey(&c.tenantA, uuid.MustParse(first.str("report_id")), "xlsx"),
 		time.Now().Add(-20*time.Minute), 15*time.Minute)
@@ -142,7 +143,7 @@ func TestReportExportJob(t *testing.T) {
 }
 
 // TestReportExportScopeAndLimits checks F044-AC-03…AC-05 and AC-07 (TC-DASH-008, TC-TEN-001, TC-TEN-024, TC-DASH-002): an
-// academic_manager limited to math cannot export the Vietnamese course (403), another school is 404; a job is read by its
+// academic_manager limited to math cannot export the Vietnamese assignment (403), another school is 404; a job is read by its
 // creator only (another user 404, another tenant 404, a student 403); at most 2 running exports per user (429
 // EXPORT_LIMIT_REACHED + Retry-After); over dashboard_export_max_rows → 422; invalid enum → 422; range > 730 days → 422
 // DASHBOARD_RANGE_TOO_LARGE.
@@ -150,15 +151,26 @@ func TestReportExportScopeAndLimits(t *testing.T) {
 	ctx := context.Background()
 	c := newCurEnv(ctx, t, withMedia)
 	k := c.reportKit(ctx, t)
-	vBody := map[string]any{"report_type": "course_results", "format": "csv", "course_id": k.courseV.String()}
+	vBody := map[string]any{"report_type": "assignment_results", "format": "csv", "assignment_id": k.gradedV.String()}
 	if r := c.do(t, http.MethodPost, "/lms/reports", amM, idem(), vBody); r.status != http.StatusForbidden || r.str("code") != "PERMISSION_DENIED" {
 		t.Fatalf("subject out of scope = %d %s", r.status, r.raw)
 	}
 	if r := c.do(t, http.MethodPost, "/lms/reports", adS2, idem(), vBody); r.status != http.StatusNotFound {
 		t.Fatalf("other school = %d %s", r.status, r.raw)
 	}
-	mBody := map[string]any{"report_type": "course_results", "format": "csv", "course_id": k.courseM.String()}
-	job := must(t, c.do(t, http.MethodPost, "/lms/reports", amM, idem(), mBody), http.StatusAccepted, "course export").str("report_id")
+	mBody := map[string]any{"report_type": "assignment_results", "format": "csv", "assignment_id": k.graded.String()}
+	job := must(t, c.do(t, http.MethodPost, "/lms/reports", amM, idem(), mBody), http.StatusAccepted, "assignment export").str("report_id")
+	// ADR-0095: course_results (no course) and class_progress (no class) are refused.
+	for _, x := range []struct{ path, body string }{{"/lms/reports", "course_results"}, {"/tenant/reports", "class_progress"}} {
+		sub := amM
+		if x.path == "/tenant/reports" {
+			sub = taDash
+		}
+		if r := c.do(t, http.MethodPost, x.path, sub, idem(), map[string]any{"report_type": x.body, "format": "csv", "from": "2026-12-01",
+			"to": "2026-12-09"}); r.status != http.StatusUnprocessableEntity {
+			t.Fatalf("%s accepted: %d %s", x.body, r.status, r.raw)
+		}
+	}
 	c.user(amB, authztest.Staff(c.tenantB, "academic_manager", authztest.AtSchool(k.schoolB)).PrincipalData, true)
 	for _, sub := range []string{taDash, amB} {
 		if r := c.do(t, http.MethodGet, "/lms/reports/"+job, sub, nil, nil); r.status != http.StatusNotFound {
@@ -177,10 +189,10 @@ func TestReportExportScopeAndLimits(t *testing.T) {
 		t.Fatalf("third export = %d %s", busy.status, busy.raw)
 	}
 	c.runReports(ctx, t)
-	// The worker applied the subject scope of the requester: the file of course M lists both students of the graded column only.
-	got := must(t, c.do(t, http.MethodGet, "/lms/reports/"+job, amM, nil, nil), http.StatusOK, "course export done")
+	// The worker applied the scope of the requester: the file of the graded math assignment lists its two students.
+	got := must(t, c.do(t, http.MethodGet, "/lms/reports/"+job, amM, nil, nil), http.StatusOK, "assignment export done")
 	if got.str("status") != "succeeded" || got.num("row_count") != 2 {
-		t.Fatalf("course export = %s", got.raw)
+		t.Fatalf("assignment export = %s", got.raw)
 	}
 	c.reports.Config.MaxRows = 1
 	if r := c.do(t, http.MethodPost, "/lms/reports", amM, idem(), mBody); r.status != http.StatusUnprocessableEntity ||
@@ -188,11 +200,11 @@ func TestReportExportScopeAndLimits(t *testing.T) {
 		t.Fatalf("over max rows = %d %s", r.status, r.raw)
 	}
 	c.reports.Config = reporting.DefaultConfig()
-	if r := c.do(t, http.MethodPost, "/lms/reports", amM, idem(), map[string]any{"report_type": "course_results", "format": "docx",
-		"course_id": k.courseM.String()}); r.status != http.StatusUnprocessableEntity {
+	if r := c.do(t, http.MethodPost, "/lms/reports", amM, idem(), map[string]any{"report_type": "assignment_results", "format": "docx",
+		"assignment_id": k.graded.String()}); r.status != http.StatusUnprocessableEntity {
 		t.Fatalf("format docx = %d", r.status)
 	}
-	if r := c.do(t, http.MethodPost, "/tenant/reports", taDash, idem(), map[string]any{"report_type": "class_progress", "format": "csv",
+	if r := c.do(t, http.MethodPost, "/tenant/reports", taDash, idem(), map[string]any{"report_type": "grade_progress", "format": "csv",
 		"from": "2023-01-01", "to": "2026-12-01"}); r.status != http.StatusUnprocessableEntity || r.str("code") != "DASHBOARD_RANGE_TOO_LARGE" {
 		t.Fatalf("range = %d %s", r.status, r.raw)
 	}
@@ -246,47 +258,64 @@ func TestPlatformReport(t *testing.T) {
 	}
 }
 
-// TestCourseResults checks F044-AC-08…AC-10 (TC-TEN-002, TC-TEN-003): one column per graded assignment with its score
-// policy, the effective score on the 10-point scale, status and the "too fast" flag; no XP, rating nor ranking; the
-// Vietnamese course is 403 for a math academic_manager, another school or tenant 404.
-func TestCourseResults(t *testing.T) {
+// TestGradeReports checks F044 after ADR-0095 (TC-DASH-009): school_monthly of a school by grade × subject, grade_progress
+// of the tenant by school × grade and skill_map of a grade read the grade, never a class; every grade cell of fewer than
+// analytics_min_cell_size students is written "<5" without numbers (FR-ANL-016); the course results operation is gone.
+func TestGradeReports(t *testing.T) {
 	ctx := context.Background()
-	c := newCurEnv(ctx, t)
+	c := newCurEnv(ctx, t, withMedia)
 	k := c.reportKit(ctx, t)
-	r := must(t, c.do(t, http.MethodGet, "/lms/courses/"+k.courseM.String()+"/results", adS, nil, nil), http.StatusOK, "course results")
-	cols := r.items("columns")
-	if len(cols) != 1 || cols[0]["assignment_id"] != k.graded.String() || cols[0]["score_policy"] != "best" {
-		t.Fatalf("columns = %v", cols)
+	k.golden(ctx, t)
+	k.seedState(ctx, t)
+	if _, err := k.jobs.CloseDays(ctx); err != nil {
+		t.Fatal(err)
 	}
-	scores := map[string]map[string]any{}
-	for _, row := range r.items("rows") {
-		sc := row["scores"].([]any)[0].(map[string]any)
-		scores[row["student_id"].(string)] = sc
+	if _, err := k.jobs.Refresh(ctx); err != nil {
+		t.Fatal(err)
 	}
-	if a1 := scores[k.a1.String()]; a1["score_10"] != 8.0 || a1["status"] != "submitted" || a1["too_fast"] != false {
-		t.Fatalf("a1 = %v", a1)
-	}
-	if a2 := scores[k.a2.String()]; a2["score_10"] != 3.0 || a2["too_fast"] != true {
-		t.Fatalf("a2 = %v", a2)
-	}
-	for _, banned := range []string{"xp", "rating", "competition", "rank"} {
-		if strings.Contains(strings.ToLower(r.raw), banned) {
-			t.Fatalf("course results expose %q: %s", banned, r.raw)
+	file := func(path, sub string, body map[string]any) string {
+		t.Helper()
+		job := must(t, c.do(t, http.MethodPost, path, sub, idem(), body), http.StatusAccepted, path).str("report_id")
+		c.runReports(ctx, t)
+		got := must(t, c.do(t, http.MethodGet, path+"/"+job, sub, nil, nil), http.StatusOK, path+" done")
+		if got.str("status") != "succeeded" {
+			t.Fatalf("%s = %s", path, got.raw)
 		}
+		_, b := download(t, got.str("download_url"))
+		return string(b)
 	}
-	// Re-evaluation changed the effective score: the table follows (edge case of F044-AC-08).
-	c.exec(ctx, t, `UPDATE lms.assignment_submissions SET score = 9 WHERE assignment_id = $1 AND student_id = $2`, k.graded, k.a1)
-	r = must(t, c.do(t, http.MethodGet, "/lms/courses/"+k.courseM.String()+"/results", amM, nil, nil), http.StatusOK, "after regrade")
-	if !strings.Contains(r.raw, `"score_10":9`) {
-		t.Fatalf("effective score after re-evaluation: %s", r.raw)
+	// School S, grade 3 (5 students): math 12-07/12-08 = 4 activities, accuracy 19/24 = 79.2 %.
+	s := file("/lms/reports", adS, map[string]any{"report_type": "school_monthly", "format": "csv", "school_id": k.school.String(),
+		"from": "2026-12-01", "to": "2026-12-09"})
+	if !strings.Contains(s, "grade_level,subject_id,students") || !strings.Contains(s, "3,"+k.subjM.String()+",5,3,79.2,") ||
+		strings.Contains(strings.ToLower(s), "class") {
+		t.Fatalf("school_monthly S = %s", s)
 	}
-	if x := c.do(t, http.MethodGet, "/lms/courses/"+k.courseV.String()+"/results", amM, nil, nil); x.status != http.StatusForbidden ||
-		x.str("code") != "PERMISSION_DENIED" {
-		t.Fatalf("subject out of scope = %d %s", x.status, x.raw)
+	// School S2, grade 4 (c1 alone): hidden.
+	s = file("/lms/reports", adS2, map[string]any{"report_type": "school_monthly", "format": "csv", "school_id": k.school2.String(),
+		"from": "2026-12-01", "to": "2026-12-09"})
+	if !strings.Contains(s, "4,"+k.subjM.String()+",<5,,,,,,,") || strings.Contains(s, "100.0") {
+		t.Fatalf("school_monthly S2 = %s", s)
 	}
-	for _, sub := range []string{adS2, adSB} {
-		if x := c.do(t, http.MethodGet, "/lms/courses/"+k.courseM.String()+"/results", sub, nil, nil); x.status != http.StatusNotFound {
-			t.Fatalf("%s = %d", sub, x.status)
-		}
+	// Tenant: school × grade (every subject).
+	s = file("/tenant/reports", taDash, map[string]any{"report_type": "grade_progress", "format": "csv", "from": "2026-12-01", "to": "2026-12-09"})
+	if !strings.Contains(s, "school_id,grade_level,students") || !strings.Contains(s, k.school.String()+",3,5,") ||
+		!strings.Contains(s, k.school2.String()+",4,<5,,,,,,,") || strings.Contains(s, k.schoolB.String()) {
+		t.Fatalf("grade_progress = %s", s)
+	}
+	// Skill map of grade 3 × math: the masteries of the grade-3 students of S (a1: 3 objectives, a2: 2, b1: 1).
+	s = file("/lms/reports", adS, map[string]any{"report_type": "skill_map", "format": "csv", "school_id": k.school.String(),
+		"grade_level": 3, "subject_id": k.subjM.String()})
+	if strings.Count(s, "DMATH.G3.NUM.") != 6 || strings.Contains(s, k.x1.String()) {
+		t.Fatalf("skill_map = %s", s)
+	}
+	// skill_map without a grade, an unknown course route and a class filter are refused.
+	if r := c.do(t, http.MethodPost, "/lms/reports", adS, idem(), map[string]any{"report_type": "skill_map", "format": "csv",
+		"school_id": k.school.String(), "subject_id": k.subjM.String()}); r.status != http.StatusUnprocessableEntity {
+		t.Fatalf("skill_map without grade = %d %s", r.status, r.raw)
+	}
+	if r := c.do(t, http.MethodGet, "/lms/courses/"+uuid.NewString()+"/results", adS, nil, nil); r.status != http.StatusNotFound &&
+		r.status != http.StatusMethodNotAllowed {
+		t.Fatalf("course results route = %d", r.status)
 	}
 }

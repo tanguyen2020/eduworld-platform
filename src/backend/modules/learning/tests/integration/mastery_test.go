@@ -141,17 +141,20 @@ func (c *curEnv) validateStoredEvents(ctx context.Context, t *testing.T, attempt
 	types := map[string]int{}
 	for rows.Next() {
 		var e portwrite.LearningEvent
-		var class, session, act, content, cv uuid.NullUUID
+		var class, session, act, content, cv uuid.NullUUID // class_id is always NULL (ADR-0095)
 		var objectives string
 		var payload []byte
 		if err := rows.Scan(&e.ID, &e.OccurredAt, &e.Type, &e.StudentID, &e.TenantID, &e.SchoolID, &class, &session, &act, &content, &cv,
 			&objectives, &e.Context, &e.ActorType, &payload, &e.IdempotencyKey); err != nil {
 			t.Fatal(err)
 		}
+		if class.Valid {
+			t.Fatalf("learning event %s carries a class (ADR-0095)", e.ID)
+		}
 		for _, p := range []struct {
 			n   uuid.NullUUID
 			dst **uuid.UUID
-		}{{class, &e.ClassID}, {session, &e.GameSessionID}, {act, &e.ActivityID}, {content, &e.ContentID}, {cv, &e.ContentVersionID}} {
+		}{{session, &e.GameSessionID}, {act, &e.ActivityID}, {content, &e.ContentID}, {cv, &e.ContentVersionID}} {
 			if p.n.Valid {
 				id := p.n.UUID
 				*p.dst = &id
@@ -476,9 +479,9 @@ func TestLearningPartitionsJob(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// 2028-01, 2028-02 of four tables (8) + F043 rollups: months 2027-11…2028-02 of the three daily rollups (12) and years
-	// 2027, 2028 of the five weekly rollups (10).
-	if n != 30 {
+	// 2028-01, 2028-02 of four tables (8) + F043 rollups: months 2027-11…2028-02 of the two daily rollups (8) and years
+	// 2027, 2028 of the four weekly rollups (8) — school and tenant; ADR-0095: no class rollup, the grade objective week.
+	if n != 24 {
 		t.Fatalf("created %d partitions", n)
 	}
 	for _, table := range portwrite.PartitionedTables {

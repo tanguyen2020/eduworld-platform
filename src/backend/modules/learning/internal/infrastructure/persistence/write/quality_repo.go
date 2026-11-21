@@ -522,22 +522,20 @@ func scanProfile(r interface{ Scan(...any) error }) (write.AssessmentProfileRow,
 // ReferenceStudents implements write.ReferenceStore: the active students with their school and grade (ref.students) and
 // the objectives of each subject of their grade in the curriculum version of the school (the setting of the school for
 // the grade, else for every grade, else the latest published version the tenant sees with the grade) — ADR-0095: no
-// course. The class of the row is the active class of the student while the projection still has one (rollups and
-// reports by class move to the grade in WP-L2); students without an active class are skipped as before.
+// course, no class; the grade of the row is the grade of the student when the level is computed.
 func (QualityRepo) ReferenceStudents(ctx context.Context, share float64) ([]write.ReferenceStudent, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
 	type student struct {
-		class, student, school uuid.UUID
-		grade                  int
+		student, school uuid.UUID
+		grade           int
 	}
-	// tenancyguard:ok enrolments and students of the session tenant (explicit tenant_id + RLS); deleted students excluded
-	srows, err := tx.QueryContext(ctx, `SELECT DISTINCT ON (e.student_id) e.class_id, e.student_id, st.school_id, st.grade_level
-		FROM ref.enrollments e JOIN ref.students st ON st.student_id = e.student_id AND st.tenant_id = e.tenant_id AND st.deleted_at IS NULL
-			AND st.status = 'active' AND st.grade_level BETWEEN 1 AND 9
-		WHERE e.tenant_id = infra.current_tenant_id() AND e.status = 'active' ORDER BY e.student_id, e.start_date DESC`)
+	// tenancyguard:ok students of the session tenant (explicit tenant_id + RLS); deleted students excluded
+	srows, err := tx.QueryContext(ctx, `SELECT st.student_id, st.school_id, st.grade_level FROM ref.students st
+		WHERE st.tenant_id = infra.current_tenant_id() AND st.deleted_at IS NULL AND st.status = 'active' AND st.grade_level BETWEEN 1 AND 9
+		ORDER BY st.student_id`)
 	if err != nil {
 		return nil, fmt.Errorf("reference students: %w", err)
 	}
@@ -545,7 +543,7 @@ func (QualityRepo) ReferenceStudents(ctx context.Context, share float64) ([]writ
 	var students []student
 	for srows.Next() {
 		var s student
-		if err := srows.Scan(&s.class, &s.student, &s.school, &s.grade); err != nil {
+		if err := srows.Scan(&s.student, &s.school, &s.grade); err != nil {
 			return nil, err
 		}
 		students = append(students, s)
@@ -565,7 +563,7 @@ func (QualityRepo) ReferenceStudents(ctx context.Context, share float64) ([]writ
 			scopes[key] = subjects
 		}
 		for _, sub := range subjects {
-			out = append(out, write.ReferenceStudent{SchoolID: s.school, ClassID: s.class, StudentID: s.student, SubjectID: sub.subject,
+			out = append(out, write.ReferenceStudent{SchoolID: s.school, StudentID: s.student, SubjectID: sub.subject,
 				GradeLevel: s.grade, Objectives: sub.objectives})
 		}
 	}
@@ -725,16 +723,16 @@ func (QualityRepo) UpsertReferenceLevels(ctx context.Context, rs []write.Referen
 			low = []uuid.UUID{}
 		}
 		// tenancyguard:ok derived read model (no deleted_at) in the session tenant (RLS insert/update policies)
-		if _, err := tx.ExecContext(ctx, `INSERT INTO learning.rm_student_subject_reference_levels (tenant_id, school_id, class_id, student_id,
+		if _, err := tx.ExecContext(ctx, `INSERT INTO learning.rm_student_subject_reference_levels (tenant_id, school_id, grade_level, student_id,
 				subject_id, academic_year, period, profile_id, profile_code, profile_version, level_code, objectives_in_scope, coverage_ratio,
 				proficient_ratio, mastered_ratio, official_score, low_reliability_exam_ids, rapid_guess_ratio, computed_at)
 			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::uuid[],$18,$19)
 			ON CONFLICT (tenant_id, student_id, subject_id, academic_year, period, profile_version) DO UPDATE SET school_id = EXCLUDED.school_id,
-				class_id = EXCLUDED.class_id, level_code = EXCLUDED.level_code, objectives_in_scope = EXCLUDED.objectives_in_scope,
+				grade_level = EXCLUDED.grade_level, class_id = NULL, level_code = EXCLUDED.level_code, objectives_in_scope = EXCLUDED.objectives_in_scope,
 				coverage_ratio = EXCLUDED.coverage_ratio, proficient_ratio = EXCLUDED.proficient_ratio, mastered_ratio = EXCLUDED.mastered_ratio,
 				official_score = EXCLUDED.official_score, low_reliability_exam_ids = EXCLUDED.low_reliability_exam_ids,
 				rapid_guess_ratio = EXCLUDED.rapid_guess_ratio, computed_at = EXCLUDED.computed_at`,
-			r.TenantID, r.SchoolID, r.ClassID, r.StudentID, r.SubjectID, r.AcademicYear, r.Period, r.ProfileID, r.ProfileCode, r.ProfileVersion,
+			r.TenantID, r.SchoolID, r.GradeLevel, r.StudentID, r.SubjectID, r.AcademicYear, r.Period, r.ProfileID, r.ProfileCode, r.ProfileVersion,
 			r.LevelCode, r.InScope, math.Round(r.Coverage*1e4)/1e4, math.Round(r.Proficient*1e4)/1e4, math.Round(r.Mastered*1e4)/1e4,
 			r.OfficialScore, uuidList(low), r.RapidGuessRatio, r.ComputedAt); err != nil {
 			return fmt.Errorf("upsert reference level: %w", err)
