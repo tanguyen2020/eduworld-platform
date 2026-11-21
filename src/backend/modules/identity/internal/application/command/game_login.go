@@ -80,7 +80,7 @@ func (c GameAuthConfig) withDefaults() GameAuthConfig {
 
 // LoginSyncFunc runs login sync (F011 loginsync.LoginSync.Ensure) for the student under the TenantScope on
 // ctx and returns the SIS connection of the student (nil without SIS link). It returns 403
-// NO_ACTIVE_ENROLLMENT when branch B ends without an active enrollment.
+// NO_ACTIVE_ENROLLMENT when branch B ends without an effective school/grade (ADR-0095).
 type LoginSyncFunc func(ctx context.Context, userID uuid.UUID) (sisConnectionID *uuid.UUID, err error)
 
 // GameSessionHandler is the typed interface of gameLogin, selectGameLoginTenant, refreshGameToken and
@@ -364,9 +364,9 @@ func (h GameAuth) denyAudit(ctx context.Context, code problem.Code, acct *write.
 }
 
 // withoutMembership handles a student with no live membership: when the student belongs to a regular
-// tenant (primary tenant with a student row), login sync branch B may create the enrollment; afterwards
-// the memberships are read again. A student row without active enrollment is NO_ACTIVE_ENROLLMENT; no
-// student row anywhere is ACCOUNT_NOT_PROVISIONED (never moved to the common tenant, ADR-0063).
+// tenant (primary tenant with a student row), login sync branch B may place the student (school + grade); afterwards
+// the memberships are read again. A student row that is not effective (no school/grade in force, ADR-0095) is
+// NO_ACTIVE_ENROLLMENT; no student row anywhere is ACCOUNT_NOT_PROVISIONED (never moved to the common tenant, ADR-0063).
 func (h GameAuth) withoutMembership(ctx context.Context, acct *write.GameAccount) (gamelogin.Decision, error) {
 	if acct.PrimaryTenantID == nil {
 		return gamelogin.Decision{}, problem.New(problem.AccountNotProvisioned, "")
@@ -534,7 +534,7 @@ func (h GameAuth) complete(ctx context.Context, cfg GameAuthConfig, c completion
 	if err != nil {
 		return deny(port.GameLoginUnavailable, unavailable(err))
 	}
-	if !b.IsCommonTenant && !b.Enrolled {
+	if !b.IsCommonTenant && !b.Placed {
 		return deny(port.GameLoginNoActiveEnrollment, problem.New(problem.NoActiveEnrollment, ""))
 	}
 	if err := h.applyHours(ctx, &b); err != nil {

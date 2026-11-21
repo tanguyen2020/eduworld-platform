@@ -42,7 +42,7 @@ describe('portal routes', () => {
   });
 
   it('known menu path → its screen; unknown path inside a workspace → not found', async () => {
-    const { router } = await renderPortal({ url: '/school-lms/classes', backend: new MockPortalBackend().withSession('ad.truong.a') });
+    const { router } = await renderPortal({ url: '/school-lms/students', backend: new MockPortalBackend().withSession('ad.truong.a') });
     expect(await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' })).toBeInTheDocument();
     await router.navigate('/school-lms/does-not-exist');
     await waitFor(() => expect(screen.getByText('Không tìm thấy trang.')).toBeInTheDocument());

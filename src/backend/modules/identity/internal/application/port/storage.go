@@ -41,7 +41,7 @@ type ParsedViolation struct {
 
 // ParsedFile is an import file read against the SIS contract (unknown columns dropped and counted).
 type ParsedFile struct {
-	Kind       string // entity kind of the pipeline: school, class, student, enrollment
+	Kind       string // entity kind of the pipeline: school, student (class/enrollment ignored, ADR-0095)
 	Records    []ParsedRecord
 	Violations []ParsedViolation
 }

@@ -3,13 +3,11 @@ package command
 import (
 	"context"
 	"errors"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -18,7 +16,7 @@ import (
 // SisDelete is a Change with operation = delete of a delta or webhook run (F017-AC-17).
 type SisDelete struct {
 	Kind       string // sis.KindSchool…
-	ExternalID string // enrollment: "student_external_id|class_external_id"
+	ExternalID string
 }
 
 // deleteKind keys the staged deletes of a run (never an entity kind).
@@ -82,9 +80,9 @@ func (h SisRun) RaiseRunIssue(ctx context.Context, run *write.SyncRun, schoolID 
 }
 
 // applyDeletes applies the deletes after the upserts of the run, each in a savepoint: a deleted student is
-// deactivated with its enrollment ended (the SIS record status inactive, F011-AC-23) so the state is
-// effective in the same run; a deleted enrollment is ended; school and class deletes need a person
-// (soft-delete only, AGENTS R21) and are only counted.
+// deactivated and loses its effective placement (the SIS record status inactive, F011-AC-23, ADR-0095) so the state is
+// effective in the same run; school deletes need a person (soft-delete only, AGENTS R21) and are only counted. Class
+// and enrollment deletes are dropped before staging (SIS contract 1.3.0, ADR-0095 D6).
 func (h SisRun) applyDeletes(ctx context.Context, st *runState, items []write.StagingItem, size int) error {
 	for start := 0; start < len(items); start += size {
 		end := min(start+size, len(items))
@@ -120,54 +118,23 @@ func (h SisRun) applyDelete(ctx context.Context, st *runState, kind, ext string)
 			st.stats["student_delete_unknown"]++
 			return nil
 		}
+		tr, err := trackPlacement(ctx, h.Students, h.Events, *s.UserID)
+		if err != nil {
+			return err
+		}
 		if err := h.applyStatus(ctx, st, *s.UserID, "inactive"); err != nil {
+			return err
+		}
+		if err := tr.done(ctx, PlacementChange{Source: placement.SourceSIS, SyncRunID: &st.run.ID}); err != nil {
 			return err
 		}
 		s.RecordStatus, s.Hash = "inactive", "" // the next upsert of the source key is applied again
 		if err := h.Sync.SaveSyncedStudent(ctx, *s); err != nil {
 			return err
 		}
-		st.inactive[ext] = true
 		st.stats["student_deactivated"]++
 		return h.Audit.Record(ctx, audit.Event{Action: "student.synced", TargetType: "student", TargetID: s.UserID.String(), Result: audit.ResultSuccess,
 			Metadata: map[string]any{"actor": "system:sis-sync:" + st.in.ConnectionID.String(), "action": "deactivate"}})
-	case sis.KindEnrollment:
-		studentExt, classExt, _ := strings.Cut(ext, "|")
-		s, err := h.Sync.SyncedStudentOf(ctx, st.in.ConnectionID, studentExt)
-		if err != nil {
-			return err
-		}
-		classID, _, found, err := h.Sync.LinkOf(ctx, st.in.ConnectionID, sis.KindClass, classExt)
-		if err != nil {
-			return err
-		}
-		if s == nil || s.UserID == nil || !found {
-			st.stats["enrollment_delete_unknown"]++
-			return nil
-		}
-		cur, err := h.Enrollments.LockActive(ctx, *s.UserID)
-		var pe *problem.Error
-		if errors.As(err, &pe) && pe.Code == problem.NotFound {
-			st.stats["enrollment_delete_unknown"]++
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if cur.ClassID != classID {
-			st.stats["enrollment_delete_unknown"]++
-			return nil
-		}
-		if err := cur.Close(enrollment.StatusEnded, time.Now()); err != nil {
-			return err
-		}
-		if err := h.Enrollments.Close(ctx, cur); err != nil {
-			return err
-		}
-		st.stats["enrollment_deactivated"]++
-		t := st.tenantID
-		return h.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: cur.ID.String(), TenantID: &t,
-			Payload: enrollmentPayload(cur, "ended", &st.run.ID)})
 	default:
 		st.stats[kind+"_delete_skipped"]++
 		return nil

@@ -18,6 +18,7 @@ tenants:
         grade_min: 1
         grade_max: 5
         sis: sis/DEMOA1
+        academic_year: 2026-2027
   - code: pgd-demo
     name: PGD Demo
     type: unit
@@ -31,6 +32,7 @@ tenants:
         grade_min: 6
         grade_max: 9
         sis: sis/DEMOB1
+        academic_year: 2026-2027
       - code: DEMOC1
         name_vi: Trường Tiểu học Demo C
         name_en: Demo Primary School C
@@ -39,6 +41,7 @@ tenants:
         grade_min: 1
         grade_max: 5
         sis: sis/DEMOC1
+        academic_year: 2026-2027
 
 # The first entry is the bootstrap System Admin (no System Admin exists yet); the others are granted by it.
 platform_staff:

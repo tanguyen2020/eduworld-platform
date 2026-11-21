@@ -39,14 +39,14 @@ var owners = map[string]string{
 	"course": ModuleLearning, "learning_path": ModuleLearning, "activity": ModuleLearning, // activity: F030, OQ F030
 	"challenge": ModuleGame, "challenge_template": ModuleGame, "quest": ModuleGame, "minigame_config": ModuleGame, "item": ModuleGame,
 	"tournament_template": ModuleCompetition,
-	"class_template":      ModuleIdentity, "school_settings": ModuleIdentity, "tenant_settings": ModuleIdentity,
+	"school_settings":     ModuleIdentity, "tenant_settings": ModuleIdentity, // no class_template (ADR-0095)
 	ResourceUser: ModuleIdentity, ResourceStudent: ModuleIdentity,
 }
 
 // cloneAllowlist are the types a clone job may copy (data-model §3): configuration and content only, never
 // student data (AGENTS R22).
 var cloneAllowlist = []string{"curriculum", "lesson", "learning_material", "question", "question_set", "assessment_blueprint", "media",
-	"learning_path", "assignment", "challenge_template", "school_settings", "tenant_settings"} // no class_template in Release 1.0 (OQ F045-4)
+	"learning_path", "assignment", "challenge_template", "school_settings", "tenant_settings"}
 
 // Owner returns the module owning rt.
 func Owner(rt string) (string, error) {

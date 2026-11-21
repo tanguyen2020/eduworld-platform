@@ -24,7 +24,7 @@ type ResolvePrincipalInput struct {
 // system read called by the principal middleware of every module through the identity facade; the caller
 // is authorized by modcall (x-allowed-callers), not by a user permission.
 //
-//   - tenant given: the user must be a member of the active tenant (student enrollment or valid tenant
+//   - tenant given: the user must be a member of the active tenant (effective student — ADR-0095 — or valid tenant
 //     UserRole, identity.tenant_memberships_v); a System Admin may act in any active tenant with its
 //     platform grants. Otherwise 404 (the caller maps it to TENANT_MISMATCH and records the denial).
 //   - no tenant: the platform grants of the user (none for tenant users: they can only call the routes
@@ -83,7 +83,7 @@ func (q ResolvePrincipal) Handle(ctx context.Context, in ResolvePrincipalInput) 
 		}
 		fill(&out, grants)
 		out.TenantType = &mem.TenantType
-		out.SchoolIDs, out.ClassIDs, out.GradeLevel = mem.SchoolIDs, mem.ClassIDs, mem.GradeLevel
+		out.SchoolIDs, out.GradeLevel = mem.SchoolIDs, mem.GradeLevel
 		out.SisConnectionID, out.StudentExternalID = mem.SisConnectionID, mem.StudentExternalID
 	case sysAdmin:
 		tt, err := q.Model.ActiveTenantType(ctx, t)
@@ -157,12 +157,11 @@ func sortedKeys(m map[string]bool) []string {
 type CheckMembershipsInput struct {
 	UserIDs         []uuid.UUID
 	SchoolID        *uuid.UUID
-	ClassID         *uuid.UUID
 	RequireUserType string // "" | student | staff
 }
 
-// CheckMemberships checks up to 100 users against the tenant of the calling scope (party, friends, class
-// channel, assignments…). Nothing but the check result is returned.
+// CheckMemberships checks up to 100 users against the tenant of the calling scope (party, friends,
+// assignments…). Nothing but the check result is returned.
 type CheckMemberships struct {
 	Model read.MembershipChecker
 }
@@ -182,7 +181,7 @@ func (q CheckMemberships) Handle(ctx context.Context, in CheckMembershipsInput) 
 	if !single {
 		return tenant, nil, problem.New(problem.PermissionDenied, "checkMemberships needs the TenantScope of the caller")
 	}
-	if out, err = q.Model.CheckMembers(ctx, id, in.UserIDs, in.SchoolID, in.ClassID); err != nil {
+	if out, err = q.Model.CheckMembers(ctx, id, in.UserIDs, in.SchoolID); err != nil {
 		return id, nil, err
 	}
 	if in.RequireUserType != "" {

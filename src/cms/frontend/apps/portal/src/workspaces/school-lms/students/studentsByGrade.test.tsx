@@ -10,7 +10,7 @@ import { accountWith, IDS, problem, READ_ONLY_PERMS, renderSchoolLms, SCHOOL_PER
 
 afterEach(() => stopPortals());
 
-const URL = '/school-lms/classes';
+const URL = '/school-lms/students';
 
 /** Searches the students of the (only, auto-selected) school by "An". */
 async function searchStudents(q = 'An') {
@@ -114,7 +114,7 @@ describe('Đặt lại mật khẩu học sinh (F052-AC-31, TC-AUTH-087)', () =>
     expect(screen.queryByRole('button', { name: 'Đặt lại mật khẩu' })).toBeNull();
     stopPortals();
     cleanup();
-    await renderSchoolLms(URL, { disabledActions: ['action.school_lms.classes.reset_student_password'] });
+    await renderSchoolLms(URL, { disabledActions: ['action.school_lms.students.reset_password'] });
     await searchStudents();
     expect(await screen.findByText('Nguyễn An')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Đặt lại mật khẩu' })).toBeNull();

@@ -15,6 +15,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/saga"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/settings"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -47,6 +48,7 @@ type StudentCleanup struct {
 	Saga         saga.Engine
 	Participants []port.StudentDataParticipant
 	Lifecycle    write.LifecycleRepository
+	Students     write.StudentRepository // student.placement_changed (source lifecycle, ADR-0095); nil = not published
 	Events       write.EventPublisher
 	Audit        write.Auditor
 	Metrics      CleanupMetrics
@@ -145,9 +147,20 @@ func (h StudentCleanup) Definition() saga.Definition {
 			return err
 		}
 		return h.UoW.Do(tctx, func(ctx context.Context) error {
+			var tr *placementTracker
+			if h.Students != nil {
+				if tr, err = trackPlacement(ctx, h.Students, h.Events, s.StudentID); err != nil {
+					return err
+				}
+			}
 			removed, err := h.Repo.SoftDeleteStudent(ctx, s.StudentID)
 			if err != nil || !removed {
 				return err
+			}
+			if tr != nil {
+				if err := tr.done(ctx, PlacementChange{Source: placement.SourceLifecycle}); err != nil {
+					return err
+				}
 			}
 			tenant := s.TenantID
 			if err := h.Lifecycle.RecordStatusChange(ctx, write.StatusChange{UserID: s.StudentID, TenantID: &tenant, From: "active",

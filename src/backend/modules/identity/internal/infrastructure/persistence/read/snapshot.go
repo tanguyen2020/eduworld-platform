@@ -38,24 +38,16 @@ var snapshotSQL = map[string]string{
 		FROM org.schools s LEFT JOIN catalog.provinces p ON p.province_id = s.province_id
 		WHERE ($1::uuid IS NULL OR s.tenant_id = $1) AND ($2::uuid IS NULL OR s.school_id > $2)
 		ORDER BY s.school_id LIMIT $3`,
-	"class": `SELECT c.class_id, c.tenant_id, c.version, c.deleted_at IS NOT NULL,
-		json_build_object('class_id', c.class_id, 'school_id', c.school_id, 'grade_level', c.grade_level, 'name', c.name,
-			'academic_year', y.name, 'status', c.status)
-		FROM org.classes c JOIN org.academic_years y ON y.academic_year_id = c.academic_year_id AND y.tenant_id = c.tenant_id
-		WHERE ($1::uuid IS NULL OR c.tenant_id = $1) AND ($2::uuid IS NULL OR c.class_id > $2)
-		ORDER BY c.class_id LIMIT $3`,
 	"student": `SELECT st.student_id, st.tenant_id, st.version, st.deleted_at IS NOT NULL,
-		json_build_object('student_id', st.student_id, 'school_id', st.school_id, 'grade_level', st.grade_level, 'status', st.status,
+		-- the placement as student.placement_changed publishes it (ADR-0095): soft-deleted rows are inactive (deleted = true)
+		json_build_object('student_id', st.student_id, 'tenant_id', st.tenant_id, 'school_id', st.school_id, 'grade_level', st.grade_level,
+			'status', CASE WHEN st.status = 'active' AND st.deleted_at IS NULL THEN 'active' ELSE 'inactive' END,
+			'academic_year_id', (SELECT y.academic_year_id FROM org.academic_years y WHERE y.school_id = st.school_id
+				AND y.tenant_id = st.tenant_id AND y.is_current AND y.deleted_at IS NULL ORDER BY y.start_date DESC LIMIT 1),
 			'source_version', st.version)
 		FROM org.students st
 		WHERE ($1::uuid IS NULL OR st.tenant_id = $1) AND ($2::uuid IS NULL OR st.student_id > $2)
 		ORDER BY st.student_id LIMIT $3`,
-	"enrollment": `SELECT e.enrollment_id, e.tenant_id, e.version, e.deleted_at IS NOT NULL,
-		json_build_object('enrollment_id', e.enrollment_id, 'student_id', e.student_id, 'class_id', e.class_id, 'school_id', e.school_id,
-			'status', e.status, 'start_date', e.start_date, 'end_date', e.end_date, 'source', e.source, 'source_version', e.version)
-		FROM org.enrollments e
-		WHERE ($1::uuid IS NULL OR e.tenant_id = $1) AND ($2::uuid IS NULL OR e.enrollment_id > $2)
-		ORDER BY e.enrollment_id LIMIT $3`,
 }
 
 // Snapshot returns up to limit items of entityType ordered by id after afterID.

@@ -44,7 +44,6 @@ func MustValidate(w io.Writer, roles []RoleDef)
 func MustValidateAtStartup()
 func NewCachedResolver(next PrincipalResolver, o CacheOptions) (*CachedResolver, error)
 func NewPrincipal(d PrincipalData) Principal
-const PermAnalyticsClassRead Permission
 const PermAnalyticsSchoolRead Permission
 const PermAnalyticsTenantRead Permission
 const PermChatPolicyToggle Permission
@@ -98,12 +97,12 @@ const PermLearningContentWrite Permission
 const PermLmsAssignmentRead Permission
 const PermLmsAssignmentWrite Permission
 const PermLmsChallengeWrite Permission
-const PermLmsClassRead Permission
 const PermLmsReportRead Permission
 const PermLmsResultRelease Permission
 const PermLmsSchoolEventWrite Permission
 const PermLmsStudentActivityRead Permission
 const PermLmsStudentPasswordReset Permission
+const PermLmsStudentRead Permission
 const PermMediaUpload Permission
 const PermModerationCaseAct Permission
 const PermModerationCaseLead Permission
@@ -144,7 +143,6 @@ const PermSchoolSettingsWrite Permission
 const PermSocialClubApprove Permission
 const PermTenantAuditRead Permission
 const PermTenantChatRetentionConfigure Permission
-const PermTenantClassRead Permission
 const PermTenantRoleRead Permission
 const PermTenantRoleWrite Permission
 const PermTenantRolesAssign Permission
@@ -157,6 +155,7 @@ const PermTenantSisRead Permission
 const PermTenantStudentCleanupConfigure Permission
 const PermTenantStudentCleanupExclude Permission
 const PermTenantStudentCleanupRead Permission
+const PermTenantStudentRead Permission
 const PermTenantTrashRead Permission
 const PermTenantTrashRestore Permission
 const PermTenantUserLock Permission

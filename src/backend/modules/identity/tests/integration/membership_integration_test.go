@@ -11,7 +11,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
@@ -68,7 +68,7 @@ func TestMembershipSync(t *testing.T) {
 	}
 	kc := &kcMembers{kcUsers: newKCUsers(), orgsOf: map[string]map[string]bool{},
 		attrs: map[string]map[string][]string{commonOrg.String(): {"tenant_id": {tenant.CommonTenantID.String()}}, bOrg.String(): {"tenant_id": {b.tenant}}}}
-	create := command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, KC: kc,
+	create := command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, Students: write.StudentRepo{}, KC: kc,
 		Events: e.deps.Events, Audit: e.deps.Audit, LocalIssuer: issuer}
 	out, err := create.Handle(authztest.Ctx(ctx, authztest.Platform("system_admin")), command.CreateCommonStudentsInput{TenantID: tenant.CommonTenantID,
 		Students: []command.CommonStudentInput{{Username: "hs.chuyen", DisplayName: "Chuyển", GradeLevel: 3}}})
@@ -80,10 +80,10 @@ func TestMembershipSync(t *testing.T) {
 	// Move the student to tenant B (cross-tenant scope of System Admin), as F011 would.
 	sa := authztest.Platform("system_admin")
 	cs, _ := authz.CrossTenantScope(sa, []uuid.UUID{tenant.CommonTenantID, uuid.MustParse(b.tenant)}, tenancy.ReasonSystemAdminCrossTenant)
-	tr := command.TransferStudent{TransferDeps: command.TransferDeps{UoW: e.uow, Enrollments: write.EnrollmentRepo{}, Students: write.StudentRepo{},
+	tr := command.TransferStudent{TransferDeps: command.TransferDeps{UoW: e.uow, Schools: write.SchoolRepo{}, Students: write.StudentRepo{},
 		Events: e.deps.Events, Audit: e.deps.Audit}}
 	if _, err := tr.Handle(tenancy.WithScope(authz.WithPrincipal(ctx, sa), cs), command.TransferStudentInput{StudentID: userID,
-		TargetClassID: uuid.MustParse(b.class), On: time.Now().UTC(), Source: enrollment.SourceSIS}); err != nil {
+		TargetSchoolID: uuid.MustParse(b.school), TargetGrade: 3, On: time.Now().UTC(), Source: placement.SourceSIS}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -134,7 +134,7 @@ func TestReconcileOrganizations(t *testing.T) {
 		t.Fatal(err)
 	}
 	kc := &kcMembers{kcUsers: newKCUsers(), orgsOf: map[string]map[string]bool{}, attrs: map[string]map[string][]string{}}
-	create := command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, KC: kc,
+	create := command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, Students: write.StudentRepo{}, KC: kc,
 		Events: e.deps.Events, Audit: e.deps.Audit, LocalIssuer: issuer}
 	if _, err := create.Handle(authztest.Ctx(ctx, authztest.Platform("system_admin")), command.CreateCommonStudentsInput{TenantID: tenant.CommonTenantID,
 		Students: []command.CommonStudentInput{{Username: "hs.that", DisplayName: "Thật", GradeLevel: 2}}}); err != nil {

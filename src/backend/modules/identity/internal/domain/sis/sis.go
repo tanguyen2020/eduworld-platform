@@ -1,6 +1,6 @@
 // Package sis holds the SIS sync rules of module identity (SIS_INTEGRATION §4–§6, ADR-0021, ADR-0046): the
 // typed records of the contract DTOs, their canonical hash (idempotent apply), the staging action and the
-// mapping of SIS record status to the user/enrollment status.
+// mapping of SIS record status to the user and student status (ADR-0095: no class, no enrollment).
 package sis
 
 import (
@@ -14,16 +14,25 @@ import (
 	"time"
 )
 
-// Record kinds, in apply order (F011-AC-04: school → class → student → enrollment).
+// Record kinds, in apply order (F011-AC-04: school → student). A student carries its school and grade
+// (school_external_id, grade_level — ADR-0095 mục 2).
 const (
-	KindSchool     = "school"
+	KindSchool  = "school"
+	KindStudent = "student"
+)
+
+// Kinds removed by EduWorld SIS Contract 1.3.0 (ADR-0095 D6). EduWorld no longer asks for them; a record, a change or a
+// CSV file of these kinds sent by an older facade is ignored with a warning (never rejected, never stored).
+const (
 	KindClass      = "class"
-	KindStudent    = "student"
 	KindEnrollment = "enrollment"
 )
 
 // ApplyOrder is the order in which kinds are applied.
-var ApplyOrder = []string{KindSchool, KindClass, KindStudent, KindEnrollment}
+var ApplyOrder = []string{KindSchool, KindStudent}
+
+// IgnoredKind reports whether a record kind was removed from the contract (ADR-0095 D6).
+func IgnoredKind(kind string) bool { return kind == KindClass || kind == KindEnrollment }
 
 // Staging actions.
 const (
@@ -36,15 +45,10 @@ const (
 // Issue types of the conflict matrix (SIS_INTEGRATION §6.3, F011-AC-14).
 const (
 	IssueDuplicateIdentifier   = "duplicate_identifier"
-	IssueMissingClass          = "missing_class"
-	IssueClassSchoolMismatch   = "class_school_mismatch"
-	IssueOrphanEnrollment      = "orphan_enrollment"
-	IssueMultiSchoolEnrollment = "multi_school_enrollment"
 	IssueUnmappedSchool        = "unmapped_school"
 	IssueCleanedUpStudentInSIS = "cleaned_up_student_in_sis"
 	IssueTransferConfirmation  = "transfer_confirmation"
 	IssueDeactivationReview    = "deactivation_review"
-	IssueGradeMismatch         = "grade_mismatch"
 	IssuePossibleDuplicate     = "possible_duplicate"
 	IssueSchoolProvinceMissing = "school_province_missing"
 )
@@ -95,27 +99,27 @@ func ActionFor(found bool, storedHash, hash string) string {
 	}
 }
 
-// StatusChange is the effect of a SIS record status on the user and the enrollment (F011-AC-23).
+// StatusChange is the effect of a SIS record status on the user and on the student placement (F011-AC-23, ADR-0095).
 type StatusChange struct {
-	UserStatus      string // "" = unchanged
-	CloseEnrollment string // "" = keep; "ended" or "transferred"
+	UserStatus    string // "" = unchanged
+	StudentStatus string // org.students.status: "active", "inactive" or "" = unchanged
 }
 
 // ErrUnknownStatus: a record status outside the contract enum (already rejected by the validator).
 var ErrUnknownStatus = errors.New("sis: unknown record status")
 
-// StatusEffect maps a SIS record status: inactive/graduated → deactivated + enrollment ended; suspended →
-// locked; transferred_out → enrollment transferred; active → active.
+// StatusEffect maps a SIS record status: inactive/graduated → deactivated + student inactive; suspended →
+// locked (the student keeps its school and grade); transferred_out → student inactive; active → active.
 func StatusEffect(recordStatus string) (StatusChange, error) {
 	switch recordStatus {
 	case "active":
-		return StatusChange{UserStatus: "active"}, nil
+		return StatusChange{UserStatus: "active", StudentStatus: "active"}, nil
 	case "inactive", "graduated":
-		return StatusChange{UserStatus: "deactivated", CloseEnrollment: "ended"}, nil
+		return StatusChange{UserStatus: "deactivated", StudentStatus: "inactive"}, nil
 	case "suspended":
 		return StatusChange{UserStatus: "locked"}, nil
 	case "transferred_out":
-		return StatusChange{CloseEnrollment: "transferred"}, nil
+		return StatusChange{StudentStatus: "inactive"}, nil
 	}
 	return StatusChange{}, ErrUnknownStatus
 }

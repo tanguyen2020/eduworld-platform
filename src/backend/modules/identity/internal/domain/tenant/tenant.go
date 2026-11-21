@@ -4,7 +4,6 @@ package tenant
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -31,20 +30,13 @@ const (
 )
 
 // Fixed identifiers of the common tenant, seeded by migration 20261119000002_f010_seed.sql
-// (scripts/db/gen-identity-seed.mjs). Grade classes are CommonClassID(1…9).
+// (scripts/db/gen-identity-seed.mjs). A student of the common tenant belongs to the virtual school with its grade
+// (ADR-0095: no virtual class).
 var (
 	CommonTenantID       = uuid.MustParse("0193a000-0000-7000-8000-000000000001")
 	CommonSchoolID       = uuid.MustParse("0193a000-0000-7000-8000-000000000002")
 	CommonAcademicYearID = uuid.MustParse("0193a000-0000-7000-8000-000000000003")
 )
-
-// CommonClassID returns the virtual class common-g<grade> of the common tenant (grade 1…9).
-func CommonClassID(grade int) (uuid.UUID, error) {
-	if grade < 1 || grade > 9 {
-		return uuid.Nil, ErrInvalid{Field: "grade_level", Reason: "must be 1–9"}
-	}
-	return uuid.MustParse(fmt.Sprintf("0193a000-0000-7000-8000-0000000000%d", 10+grade)), nil
-}
 
 // ErrInvalid is a rule violation on one field (mapped to 422 VALIDATION_FAILED).
 type ErrInvalid struct{ Field, Reason string }

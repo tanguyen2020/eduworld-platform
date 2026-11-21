@@ -13,7 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
-// CleanupRepo implements write.CleanupRepository with explicit SQL (AGENTS R27): students, enrollments and
+// CleanupRepo implements write.CleanupRepository with explicit SQL (AGENTS R27): students and
 // exclusions under the TenantScope (RLS) with deleted_at conditions; users global by id; runs global under the
 // platform scope of the job. Removing = setting deleted_at (R21), never a DELETE.
 type CleanupRepo struct{}
@@ -81,11 +81,6 @@ func (CleanupRepo) SoftDeleteStudent(ctx context.Context, studentID uuid.UUID) (
 	if n, _ := res.RowsAffected(); n == 0 {
 		return false, nil
 	}
-	// tenancyguard:ok org.enrollments under the TenantScope (RLS); soft-delete of the live enrollments of the student
-	if _, err := tx.ExecContext(ctx, `UPDATE org.enrollments SET deleted_at = now(), delete_reason = 'inactive_cleanup', updated_at = now(),
-		version = version + 1 WHERE student_id = $1 AND deleted_at IS NULL`, studentID); err != nil {
-		return false, fmt.Errorf("cleanup enrollments: %w", err)
-	}
 	// tenancyguard:ok identity.users is global (G): the user of the student
 	if _, err := tx.ExecContext(ctx, `UPDATE identity.users SET deleted_at = now(), delete_reason = 'inactive_cleanup', updated_at = now(),
 		version = version + 1 WHERE user_id = $1 AND deleted_at IS NULL`, studentID); err != nil {
@@ -115,11 +110,6 @@ func (CleanupRepo) RestoreStudent(ctx context.Context, studentID uuid.UUID) (*ti
 	if _, err := tx.ExecContext(ctx, `UPDATE org.students SET deleted_at = NULL, delete_reason = NULL, updated_at = now(), version = version + 1
 		WHERE student_id = $1 AND delete_reason = 'inactive_cleanup'`, studentID); err != nil {
 		return nil, fmt.Errorf("restore student: %w", err)
-	}
-	// tenancyguard:ok org.enrollments under the TenantScope (RLS): the enrollments removed by the cleanup
-	if _, err := tx.ExecContext(ctx, `UPDATE org.enrollments SET deleted_at = NULL, delete_reason = NULL, updated_at = now(), version = version + 1
-		WHERE student_id = $1 AND delete_reason = 'inactive_cleanup'`, studentID); err != nil {
-		return nil, fmt.Errorf("restore enrollments: %w", err)
 	}
 	return &at, nil
 }

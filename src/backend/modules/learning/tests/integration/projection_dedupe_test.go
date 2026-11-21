@@ -47,9 +47,9 @@ func TestProjectionTenantMismatchDeadLettered(t *testing.T) {
 		return testutil.ToFloat64(observability.ConsumerRejected().WithLabelValues("learning.projection_identity", "tenant_mismatch"))
 	}
 	before := rejected()
-	// A class of tenant B in a school of tenant A.
-	cls := p.publish(ctx, t, "class.synced", &b, map[string]any{"class_id": uuid.NewString(), "school_id": school.String(),
-		"grade_level": 1, "name": "1A", "academic_year": "2026-2027", "status": "active", "op": "created", "trigger": "manual_import"})
+	// A placement of tenant B in a school of tenant A (ADR-0095: student.placement_changed).
+	cls := p.publish(ctx, t, "student.placement_changed", &b, map[string]any{"student_id": uuid.NewString(), "tenant_id": b.String(),
+		"school_id": school.String(), "grade_level": 1, "status": "active", "source": "sis", "source_version": 1})
 	p.deadLettered(ctx, t, cls)
 	// The school itself re-published under tenant B.
 	sch := p.publish(ctx, t, "school.updated", &b, map[string]any{"school_id": school.String(), "tenant_id": b.String(),
@@ -58,8 +58,8 @@ func TestProjectionTenantMismatchDeadLettered(t *testing.T) {
 	if got := rejected() - before; got != 2 {
 		t.Fatalf("eduworld_consumer_rejected_total += %v, want 2", got)
 	}
-	if n := count(ctx, t, e.migrator, `SELECT count(*) FROM ref.classes`); n != 0 {
-		t.Fatalf("ref.classes rows = %d", n)
+	if n := count(ctx, t, e.migrator, `SELECT count(*) FROM ref.students`); n != 0 {
+		t.Fatalf("ref.students rows = %d", n)
 	}
 	if n := count(ctx, t, e.migrator, `SELECT count(*) FROM ref.schools WHERE school_id = $1 AND tenant_id = $2 AND name = 'School A'`, school, a); n != 1 {
 		t.Fatal("school of tenant A was changed")

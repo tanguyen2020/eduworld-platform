@@ -23,9 +23,9 @@ describe('reload while the session is valid (F051-AC-28)', () => {
     const backend = new MockPortalBackend().withSession('qlcm.truong.a');
     const csrf = backend.csrf;
     window.sessionStorage.setItem('ew.portal.sessionTenantId', TENANTS.pgdDemo.tenant_id);
-    const { router, runtime } = await renderPortal({ url: '/school-lms/classes?page=2', backend });
+    const { router, runtime } = await renderPortal({ url: '/school-lms/students?page=2', backend });
     expect(await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' })).toBeInTheDocument();
-    expect(router.state.location.pathname + router.state.location.search).toBe('/school-lms/classes?page=2');
+    expect(router.state.location.pathname + router.state.location.search).toBe('/school-lms/students?page=2');
     expect(backend.calls('POST', '/auth/portal/token:refresh')[0]!.headers['x-ew-csrf']).toBe(csrf);
     expect(backend.calls('GET', '/me/permissions')[0]!.headers['x-tenant-id']).toBe(TENANTS.pgdDemo.tenant_id);
     expect(screen.queryByRole('heading', { name: 'Chào mừng thầy cô trở lại' })).toBeNull();
@@ -35,7 +35,7 @@ describe('reload while the session is valid (F051-AC-28)', () => {
   it('session gone (401 REFRESH_TOKEN_INVALID / 403 CSRF_TOKEN_INVALID) → /login with returnUrl, no error page', async () => {
     const backend = new MockPortalBackend();
     backend.csrf = 'stale-csrf-value'.padEnd(43, 'x');
-    const { router } = await renderPortal({ url: '/school-lms/classes', backend });
+    const { router } = await renderPortal({ url: '/school-lms/students', backend });
     expect(await screen.findByRole('heading', { name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
     expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fclasses');
   });
@@ -45,7 +45,7 @@ describe('idle limit (F051-AC-29)', () => {
   it('last interaction older than the idle limit → no refresh, portalLogout, /login keeping the URL', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
     window.localStorage.setItem('ew.portal.lastActivityAt', new Date(Date.now() - 31 * 60 * 1000).toISOString());
-    const { router } = await renderPortal({ url: '/school-lms/classes', backend });
+    const { router } = await renderPortal({ url: '/school-lms/students', backend });
     expect(await screen.findByRole('heading', { name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
     expect(backend.calls('POST', '/auth/portal/token:refresh')).toHaveLength(0);
     expect(backend.calls('POST', '/auth/portal/logout')).toHaveLength(1);
@@ -54,7 +54,7 @@ describe('idle limit (F051-AC-29)', () => {
 
   it('idle detected while working → sign-out, "session ended" notice on /login', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
-    const { router, runtime } = await renderPortal({ url: '/school-lms/classes', backend });
+    const { router, runtime } = await renderPortal({ url: '/school-lms/students', backend });
     await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     window.localStorage.setItem('ew.portal.lastActivityAt', new Date(Date.now() - 31 * 60 * 1000).toISOString());
     // run the idle check now instead of waiting for the interval
@@ -83,7 +83,7 @@ describe('idle limit (F051-AC-29)', () => {
 describe('session expired while working (F051-AC-07)', () => {
   it('refresh fails on TOKEN_EXPIRED → dialog → /login → back to the same URL', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
-    const { router, runtime, user } = await renderPortal({ url: '/school-lms/classes', backend });
+    const { router, runtime, user } = await renderPortal({ url: '/school-lms/students', backend });
     await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     backend.expiredTokens.add(runtime.tokens.get()!.token);
     backend.refreshAlive = false;
@@ -94,7 +94,7 @@ describe('session expired while working (F051-AC-07)', () => {
     await user.click(screen.getByRole('button', { name: 'Đăng nhập lại' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
     await signIn(user, 'ad.truong.a');
-    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/classes'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/students'));
   });
 });
 

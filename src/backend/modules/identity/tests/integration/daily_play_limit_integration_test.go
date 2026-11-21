@@ -140,10 +140,6 @@ func TestDailyPlayLimitAtGameLogin(t *testing.T) {
 		VALUES ($1, $2, now(), now(), $3, 4, 'Hoc Sinh Chung')`, common, commonTenant, commonSchool); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := g.platform.ExecContext(ctx, `INSERT INTO org.enrollments (enrollment_id, tenant_id, created_at, updated_at, school_id, student_id, class_id, status, start_date, source)
-		VALUES ($1, $2, now(), now(), $3, $4, $5, 'active', current_date, 'platform_common')`, uuid.New(), commonTenant, commonSchool, common, commonG4); err != nil {
-		t.Fatal(err)
-	}
 	g.identity(ctx, t, common, "hs.chung.choi")
 	setLimit(commonSchool, `{"daily_play_limit_minutes": 15}`)
 	play(commonTenant, common, time.Hour)

@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/appscope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/sis"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/user"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
@@ -43,6 +43,9 @@ type RunImportInput struct {
 	SchoolID     uuid.UUID
 	Files        []SisFile
 	DryRun       bool
+	// AcademicYear is the current academic year of the school in the source (YYYY-YYYY, optional): the run makes sure it
+	// exists (current when the school has none), so student.placement_changed carries academic_year_id (ADR-0095).
+	AcademicYear string
 }
 
 // RunImportResult is the diff (dry run) or the outcome (apply) of a run.
@@ -56,14 +59,15 @@ type RunImportResult struct {
 }
 
 // SisRun orchestrates a csv_import run: validate → staging → reconcile → apply (F011-AC-01…AC-05,
-// AC-08, AC-10, AC-14, AC-15, AC-23, AC-25). Records are applied in batches of BatchSize, each record in a
-// savepoint so a failing record never aborts the batch.
+// AC-08, AC-10, AC-14, AC-23, AC-25). Records are applied in batches of BatchSize, each record in a
+// savepoint so a failing record never aborts the batch. A student record places the student in its school and grade
+// (org.students — ADR-0095 mục 2) and every change of school, grade or effective status publishes
+// student.placement_changed; class and enrollment records are ignored with a warning (SIS contract 1.3.0, D6).
 type SisRun struct {
 	UoW         write.UnitOfWork
 	Savepoints  write.Savepoints
 	Connections write.SisConnectionRepository
 	Sync        write.SisSyncRepository
-	Enrollments write.EnrollmentRepository
 	Missing     write.MissingTracker
 	Transfers   write.TransferMatcher
 	Students    write.StudentRepository
@@ -87,7 +91,6 @@ type runState struct {
 	stats    map[string]int
 	students map[string]uuid.UUID // student external id → user id (this run)
 	seen     map[string]bool      // students present in the file
-	inactive map[string]bool      // students of the run whose record status is not active (no missing_class)
 	// F011-AC-16: national id hash → synced student of another connection; students moved in this run.
 	candidates  map[string]write.TransferCandidate
 	transferred map[string]bool
@@ -95,7 +98,7 @@ type runState struct {
 }
 
 func newRunState(in RunImportInput, tenantID uuid.UUID) *runState {
-	return &runState{in: in, tenantID: tenantID, stats: map[string]int{}, students: map[string]uuid.UUID{}, seen: map[string]bool{}, inactive: map[string]bool{},
+	return &runState{in: in, tenantID: tenantID, stats: map[string]int{}, students: map[string]uuid.UUID{}, seen: map[string]bool{},
 		candidates: map[string]write.TransferCandidate{}, transferred: map[string]bool{}}
 }
 
@@ -209,6 +212,14 @@ func (h SisRun) execute(ctx context.Context, tenantID uuid.UUID, in RunImportInp
 		return out, err
 	}
 	out.RunID = st.run.ID
+	if in.AcademicYear != "" && !in.DryRun {
+		if err = h.UoW.Do(ctx, func(ctx context.Context) error {
+			_, err := h.Sync.AcademicYear(ctx, in.SchoolID, in.AcademicYear)
+			return err
+		}); err != nil {
+			return out, err
+		}
+	}
 
 	files, err := h.process(ctx, st, in.Files, nil, nil, &out)
 	if err != nil {
@@ -255,13 +266,33 @@ func (h SisRun) process(ctx context.Context, st *runState, in []SisFile, recordE
 	out *RunImportResult) (files []SisFile, err error) {
 	// All-or-nothing per file (F011-AC-02): a file with a violation is recorded and skipped entirely.
 	for _, f := range in {
+		if sis.IgnoredKind(f.Kind) { // SIS contract 1.3.0 (ADR-0095 D6): never applied, never stored
+			st.stats[f.Kind+"_ignored"] += len(f.Records) + len(f.Errors)
+			slog.WarnContext(ctx, "sis: records of a kind removed by the SIS contract 1.3.0 are ignored", "kind", f.Kind,
+				"records", len(f.Records)+len(f.Errors), "sis_connection_id", st.in.ConnectionID.String())
+			continue
+		}
 		if len(f.Errors) > 0 {
 			out.Errors = append(out.Errors, f.Errors...)
 			continue
 		}
 		files = append(files, f)
 	}
-	out.Errors = append(out.Errors, recordErrs...) // F017: per-record violations never block the other records
+	for _, e := range recordErrs { // F017: per-record violations never block the other records
+		if sis.IgnoredKind(e.Kind) {
+			continue
+		}
+		out.Errors = append(out.Errors, e)
+	}
+	kept := deletes[:0:0]
+	for _, d := range deletes {
+		if sis.IgnoredKind(d.Kind) {
+			st.stats[d.Kind+"_ignored"]++
+			continue
+		}
+		kept = append(kept, d)
+	}
+	deletes = kept
 	if len(out.Errors) > 0 {
 		if err = h.UoW.Do(ctx, func(ctx context.Context) error { return h.Sync.AddErrors(ctx, st.run.ID, out.Errors) }); err != nil {
 			return nil, err
@@ -311,12 +342,8 @@ func externalID(kind string, d map[string]any) string {
 	switch kind {
 	case sis.KindSchool:
 		return sis.Str(d, "school_external_id")
-	case sis.KindClass:
-		return sis.Str(d, "class_external_id")
-	case sis.KindStudent:
+	default:
 		return sis.Str(d, "student_external_id")
-	default: // enrollment: student + class
-		return sis.Str(d, "student_external_id") + "|" + sis.Str(d, "class_external_id")
 	}
 }
 
@@ -355,7 +382,7 @@ func truncate(s string, n int) string {
 	return s
 }
 
-// apply applies the files in the order school → class → student → enrollment, in batches.
+// apply applies the files in the order school → student, in batches.
 func (h SisRun) apply(ctx context.Context, st *runState, files []SisFile, staged map[string][]write.StagingItem) error {
 	size := h.BatchSize
 	if size <= 0 {
@@ -415,12 +442,8 @@ func (h SisRun) applyOne(ctx context.Context, st *runState, kind string, it writ
 	switch kind {
 	case sis.KindSchool:
 		return h.applySchool(ctx, st, it)
-	case sis.KindClass:
-		return h.applyClass(ctx, st, it)
-	case sis.KindStudent:
-		return h.applyStudent(ctx, st, it)
 	default:
-		return h.applyEnrollment(ctx, st, it)
+		return h.applyStudent(ctx, st, it)
 	}
 }
 
@@ -635,47 +658,6 @@ func (h SisRun) schoolOf(ctx context.Context, st *runState, ext string) (bool, e
 	return id == st.in.SchoolID, nil
 }
 
-func (h SisRun) applyClass(ctx context.Context, st *runState, it write.StagingItem) error {
-	d := it.Payload
-	ok, err := h.schoolOf(ctx, st, sis.Str(d, "school_external_id"))
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return conflict(sis.IssueUnmappedSchool, map[string]any{"class_external_id": it.ExternalID})
-	}
-	year, err := h.Sync.AcademicYear(ctx, st.in.SchoolID, sis.Str(d, "academic_year"))
-	if err != nil {
-		return err
-	}
-	grade, name := sis.Int(d, "grade_level"), sis.Str(d, "name")
-	id, _, found, err := h.Sync.LinkOf(ctx, st.in.ConnectionID, sis.KindClass, it.ExternalID)
-	if err != nil {
-		return err
-	}
-	op := "updated"
-	var synced write.SyncedClass
-	if found {
-		synced, err = h.Sync.UpdateClass(ctx, id, grade, name)
-	} else {
-		id, op = ids.New(), "created"
-		synced, err = h.Sync.CreateClass(ctx, id, st.in.SchoolID, year, grade, name)
-	}
-	if err != nil {
-		return err
-	}
-	school := st.in.SchoolID
-	if err := h.Sync.SaveLink(ctx, st.in.ConnectionID, sis.KindClass, it.ExternalID, id, &school, it.Hash); err != nil {
-		return err
-	}
-	t := st.tenantID
-	return h.Events.Publish(ctx, write.Event{Type: "class.synced", SubjectType: "class", SubjectID: id.String(), TenantID: &t,
-		Payload: map[string]any{"class_id": id.String(), "school_id": school.String(), "grade_level": grade, "name": name,
-			"academic_year": sis.Str(d, "academic_year"), "status": "active", "op": op, "trigger": "manual_import",
-			"sis_connection_id": st.in.ConnectionID.String(), "sync_run_id": st.run.ID.String(),
-			"source_version": synced.Version, "academic_year_id": synced.AcademicYearID.String(), "is_virtual": synced.IsVirtual}})
-}
-
 func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.StagingItem) error {
 	d := it.Payload
 	st.seen[it.ExternalID] = true
@@ -691,8 +673,16 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 		return err
 	}
 	grade, code, name, status := sis.Int(d, "grade_level"), sis.Str(d, "student_code"), sis.Str(d, "full_name"), sis.Str(d, "status")
+	if !placement.ValidGrade(grade) { // the school and grade place the student (ADR-0095 mục 2)
+		return skip(problem.ValidationFailed, "grade_level")
+	}
+	eff, err := sis.StatusEffect(status)
+	if err != nil {
+		return skip(problem.ValidationFailed, "status")
+	}
 	nid := sis.NationalIDHash(h.IDHashKey, sis.Str(d, "national_student_id"))
 	var userID uuid.UUID
+	var tr *placementTracker
 	action := "update"
 	cand, transfer := st.candidates[nid]
 	transfer = transfer && nid != "" && cand.UserID != nil && (existing == nil || existing.UserID == nil)
@@ -701,7 +691,13 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 			return conflict(sis.IssueTransferConfirmation, map[string]any{"student_external_id": it.ExternalID, "match": "national_student_id"})
 		}
 		userID = *cand.UserID
+		if tr, err = trackPlacement(ctx, h.Students, h.Events, userID); err != nil {
+			return err
+		}
 		if err := h.moveLink(ctx, st, cand, it.ExternalID); err != nil {
+			return err
+		}
+		if err := h.transferSchool(ctx, st, userID, tr.Before(), grade); err != nil {
 			return err
 		}
 		if err := h.Sync.UpdateStudent(ctx, userID, grade, code, name); err != nil {
@@ -737,9 +733,15 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 			return conflict(typ, map[string]any{"student_external_id": it.ExternalID, "user_id": owner.String()})
 		}
 		userID, action = ids.New(), "create"
+		tr = &placementTracker{students: h.Students, events: h.Events, studentID: userID} // a new student: first placement
 		if err := h.Sync.CreateSisStudent(ctx, write.NewSisStudent{UserID: userID, Username: username, DisplayName: name, TenantID: st.tenantID,
 			SchoolID: st.in.SchoolID, Grade: grade, StudentCode: code, ConnectionID: st.in.ConnectionID, ExternalID: it.ExternalID}); err != nil {
 			return err
+		}
+		if eff.StudentStatus == placement.StatusInactive { // the user stays pending; the placement follows the record status
+			if err := h.Students.SetStatus(ctx, userID, placement.StatusInactive); err != nil {
+				return err
+			}
 		}
 		if err := h.Sync.SetLoginKey(ctx, st.in.ConnectionID, it.ExternalID, username); err != nil {
 			return err
@@ -761,6 +763,12 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 				return conflict(sis.IssueCleanedUpStudentInSIS, map[string]any{"student_external_id": it.ExternalID, "user_id": userID.String()})
 			}
 			return skip(problem.NotFound, "the student account was deleted")
+		}
+		if tr, err = trackPlacement(ctx, h.Students, h.Events, userID); err != nil {
+			return err
+		}
+		if err := h.transferSchool(ctx, st, userID, tr.Before(), grade); err != nil {
+			return err
 		}
 		if err := h.Sync.UpdateStudent(ctx, userID, grade, code, name); err != nil {
 			return err
@@ -784,19 +792,40 @@ func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.Staging
 	} else if err := h.applyStatus(ctx, st, userID, status); err != nil {
 		return err
 	}
+	if err := tr.done(ctx, PlacementChange{Source: placement.SourceSIS, SyncRunID: &st.run.ID}); err != nil {
+		return err
+	}
 	if err := h.Audit.Record(ctx, audit.Event{Action: "student.synced", TargetType: "student", TargetID: userID.String(), Result: audit.ResultSuccess,
 		Metadata: map[string]any{"actor": "system:sis-sync:" + st.in.ConnectionID.String(), "action": action}}); err != nil {
 		return err
 	}
 	st.students[it.ExternalID] = userID // only once the record is applied
-	st.inactive[it.ExternalID] = status != "active"
 	return h.Events.Publish(ctx, write.Event{Type: "student.synced", SubjectType: "student", SubjectID: userID.String(), TenantID: &t,
 		Payload: map[string]any{"student_id": userID.String(), "school_id": st.in.SchoolID.String(), "action": action, "sync_run_id": st.run.ID.String(),
 			"sis_connection_id": st.in.ConnectionID.String(), "grade_level": grade}})
 }
 
-// applyStatus maps the SIS record status (F011-AC-23): user status, enrollment closed, events in the same
-// transaction. New students keep status pending until provisioning activates them.
+// transferSchool moves a synced student of the tenant to the school of the run when its record now names this school
+// (a SIS link moved by national id, F011-AC-16, or a school change in the same source): the student keeps its user, the
+// move is published as student.transferred (and student.placement_changed by the caller). Another tenant never moves
+// here (transfer_confirmation).
+func (h SisRun) transferSchool(ctx context.Context, st *runState, userID uuid.UUID, before *placement.Record, grade int) error {
+	if before == nil || before.SchoolID == st.in.SchoolID || before.TenantID != st.tenantID {
+		return nil
+	}
+	to := placement.Placement{TenantID: st.tenantID, SchoolID: st.in.SchoolID, Grade: grade, Active: before.Active}
+	if err := h.Students.Move(ctx, userID, to); err != nil {
+		return err
+	}
+	t := st.tenantID
+	return h.Events.Publish(ctx, write.Event{Type: "student.transferred", SubjectType: "student", SubjectID: userID.String(), TenantID: &t,
+		Payload: map[string]string{"student_id": userID.String(), "from_tenant_id": t.String(), "to_tenant_id": t.String(),
+			"from_school_id": before.SchoolID.String(), "to_school_id": st.in.SchoolID.String()}})
+}
+
+// applyStatus maps the SIS record status (F011-AC-23): user status, effective status of the student (org.students —
+// ADR-0095), events in the same transaction. New students keep status pending until provisioning activates them. The
+// caller publishes student.placement_changed.
 func (h SisRun) applyStatus(ctx context.Context, st *runState, userID uuid.UUID, recordStatus string) error {
 	eff, err := sis.StatusEffect(recordStatus)
 	if err != nil {
@@ -832,147 +861,21 @@ func (h SisRun) applyStatus(ctx context.Context, st *runState, userID uuid.UUID,
 			}
 		}
 	}
-	if eff.CloseEnrollment != "" {
-		cur, err := h.Enrollments.LockActive(ctx, userID)
-		var pe *problem.Error
-		if errors.As(err, &pe) && pe.Code == problem.NotFound {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if err := cur.Close(enrollment.Status(eff.CloseEnrollment), time.Now()); err != nil {
-			return err
-		}
-		if err := h.Enrollments.Close(ctx, cur); err != nil {
-			return err
-		}
-		return h.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: cur.ID.String(), TenantID: &t,
-			Payload: enrollmentPayload(cur, "ended", &st.run.ID)})
+	if eff.StudentStatus != "" {
+		return h.Students.SetStatus(ctx, userID, eff.StudentStatus)
 	}
 	return nil
 }
 
-func (h SisRun) applyEnrollment(ctx context.Context, st *runState, it write.StagingItem) error {
-	d := it.Payload
-	studentExt, classExt := sis.Str(d, "student_external_id"), sis.Str(d, "class_external_id")
-	userID, ok := st.students[studentExt]
-	if !ok {
-		s, err := h.Sync.SyncedStudentOf(ctx, st.in.ConnectionID, studentExt)
-		if err != nil {
-			return err
-		}
-		if s == nil || s.UserID == nil {
-			return conflict(sis.IssueOrphanEnrollment, map[string]any{"student_external_id": studentExt, "class_external_id": classExt})
-		}
-		userID = *s.UserID
-	}
-	classID, _, found, err := h.Sync.LinkOf(ctx, st.in.ConnectionID, sis.KindClass, classExt)
-	if err != nil {
-		return err
-	}
-	if !found {
-		return conflict(sis.IssueOrphanEnrollment, map[string]any{"student_external_id": studentExt, "class_external_id": classExt})
-	}
-	classSchool, _, err := h.Sync.ClassSchool(ctx, classID)
-	if err != nil {
-		return err
-	}
-	if classSchool != st.in.SchoolID {
-		return conflict(sis.IssueClassSchoolMismatch, map[string]any{"student_external_id": studentExt, "class_external_id": classExt})
-	}
-	if sis.Str(d, "status") != "active" {
-		return h.Sync.SaveLink(ctx, st.in.ConnectionID, sis.KindEnrollment, it.ExternalID, classID, &classSchool, it.Hash)
-	}
-	start := time.Now()
-	if s := sis.Date(d, "start_date"); s != nil {
-		start = *s
-	}
-	target := enrollment.Placement{TenantID: st.tenantID, SchoolID: st.in.SchoolID, ClassID: classID}
-	cur, err := h.Enrollments.LockActive(ctx, userID)
-	var pe *problem.Error
-	t := st.tenantID
-	switch {
-	case errors.As(err, &pe) && pe.Code == problem.NotFound:
-		opened, err := enrollment.Open(ids.New(), userID, target, start, enrollment.SourceSIS)
-		if err != nil {
-			return err
-		}
-		if err := h.Enrollments.Open(ctx, opened); err != nil {
-			return err
-		}
-		if err := h.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: opened.ID.String(), TenantID: &t,
-			Payload: enrollmentPayload(opened, "added", &st.run.ID)}); err != nil {
-			return err
-		}
-	case err != nil:
-		return err
-	case cur.Placement == target:
-		// already enrolled in this class
-	case cur.TenantID != st.tenantID || (cur.SchoolID != st.in.SchoolID && !st.transferred[studentExt]):
-		return conflict(sis.IssueMultiSchoolEnrollment, map[string]any{"student_external_id": studentExt})
-	default:
-		tr, err := enrollment.TransferTo(cur, ids.New(), target, start, enrollment.SourceSIS)
-		if err != nil {
-			return skip(problem.ValidationFailed, fmt.Sprintf("enrollment: %v", err))
-		}
-		if err := h.Enrollments.Close(ctx, tr.Closed); err != nil {
-			return err
-		}
-		if tr.Kind != enrollment.KindClass { // school transfer after a SIS link move (F011-AC-16)
-			if err := h.Students.Move(ctx, userID, target); err != nil {
-				return err
-			}
-			if err := h.Events.Publish(ctx, write.Event{Type: "student.transferred", SubjectType: "student", SubjectID: userID.String(), TenantID: &t,
-				Payload: map[string]string{"student_id": userID.String(), "from_tenant_id": t.String(), "to_tenant_id": t.String(),
-					"from_school_id": tr.Closed.SchoolID.String(), "to_school_id": tr.Opened.SchoolID.String()}}); err != nil {
-				return err
-			}
-		}
-		if err := h.Enrollments.Open(ctx, tr.Opened); err != nil {
-			return err
-		}
-		for _, x := range []struct {
-			e  *enrollment.Enrollment
-			op string
-		}{{tr.Closed, "transferred"}, {tr.Opened, "added"}} {
-			if err := h.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: x.e.ID.String(), TenantID: &t,
-				Payload: enrollmentPayload(x.e, x.op, &st.run.ID)}); err != nil {
-				return err
-			}
-		}
-	}
-	return h.Sync.SaveLink(ctx, st.in.ConnectionID, sis.KindEnrollment, it.ExternalID, classID, &classSchool, it.Hash)
-}
-
-// afterApply raises missing_class for students of the run without an active enrollment (F011-AC-15).
+// afterApply marks the students missing from a full students file (F011-AC-24). There is no missing_class any more:
+// every student record carries its school and grade (ADR-0095 mục 2).
 func (h SisRun) afterApply(ctx context.Context, st *runState, files []SisFile) error {
 	full := false // a full students file of a csv_import (a lookup run has one record)
 	for _, f := range files {
 		full = full || (f.Kind == sis.KindStudent && (st.run.Mode == "csv_import" || st.full))
 	}
-	if full {
-		if err := h.UoW.Do(ctx, func(ctx context.Context) error { return h.markMissing(ctx, st) }); err != nil {
-			return err
-		}
-	}
-	return h.UoW.Do(ctx, func(ctx context.Context) error {
-		for ext, userID := range st.students {
-			if st.inactive[ext] {
-				continue
-			}
-			_, err := h.Enrollments.LockActive(ctx, userID)
-			var pe *problem.Error
-			if errors.As(err, &pe) && pe.Code == problem.NotFound {
-				if err := h.issue(ctx, st, sis.IssueMissingClass, map[string]any{"student_external_id": ext, "user_id": userID.String()}); err != nil {
-					return err
-				}
-				continue
-			}
-			if err != nil {
-				return err
-			}
-		}
+	if !full {
 		return nil
-	})
+	}
+	return h.UoW.Do(ctx, func(ctx context.Context) error { return h.markMissing(ctx, st) })
 }

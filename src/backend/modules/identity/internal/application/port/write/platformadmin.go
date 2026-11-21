@@ -55,19 +55,20 @@ type UserMerge struct {
 // MergeTransfer counts what the identity step of a merge moved.
 type MergeTransfer struct {
 	Identities, IdentitiesSuperseded, SisLinks, SisLinksSuperseded int
-	// MovedEnrollments are the active enrollments of the source moved to the target, which had none (OQ F045-6);
-	// EndedEnrollments the active ones of the source ended because the target keeps its own.
-	MovedEnrollments, EndedEnrollments []MergedEnrollment
-	// StudentRemoved reports that the student record (org.students) of the source was soft-deleted (merged).
+	// StudentRemoved reports that the student record (org.students) of the source was soft-deleted (merged); the
+	// target keeps its own school and grade (ADR-0095: no enrollment moves any more).
 	StudentRemoved bool
+	// Removed is the placement of the source student before the soft-delete (nil when nothing was removed).
+	Removed *MergedPlacement
 }
 
-// MergedEnrollment is an enrollment touched by the identity step of a merge.
-type MergedEnrollment struct {
-	EnrollmentID, SchoolID, ClassID uuid.UUID
-	StartDate                       time.Time
-	Source                          string
-	Version                         int64
+// MergedPlacement is the school, grade and effective status of the source student of a merge before its record was
+// soft-deleted, with the version of the row after the soft-delete.
+type MergedPlacement struct {
+	SchoolID  uuid.UUID
+	Grade     int
+	WasActive bool
+	Version   int64
 }
 
 // PlatformAdminRepository persists the F045 tables with explicit SQL in a platform scope (identity_platform;
@@ -114,8 +115,8 @@ type PlatformAdminRepository interface {
 	// CreateMerge inserts the merge row (UNIQUE from_user_id: a concurrent duplicate is 409 CONFLICT).
 	CreateMerge(ctx context.Context, m UserMerge) error
 	// TransferIdentities is the identity step of a merge: moves the external identities and SIS links of
-	// m.From to m.Into (superseding the ones whose issuer/link m.Into already holds), moves the active enrollment
-	// of m.From to m.Into when m.Into has none (else ends it), soft-deletes the student record and the account of
+	// m.From to m.Into (superseding the ones whose issuer/link m.Into already holds), soft-deletes the student record
+	// (m.Into keeps its own school and grade — ADR-0095) and the account of
 	// m.From (delete_reason merged) and closes the issue (resolution merged). Idempotent: a second call does nothing.
 	TransferIdentities(ctx context.Context, m UserMerge, at time.Time) (MergeTransfer, error)
 }

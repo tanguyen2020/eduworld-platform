@@ -27,6 +27,8 @@ const (
 	SisImportUploadTTL = 15 * time.Minute // presigned upload TTL of createSisImport
 )
 
+// importKinds: classes and enrollments of SIS contract < 1.3.0 are still accepted and ignored with a warning by the run
+// (ADR-0095 D6), never rejected.
 var importKinds = map[string]bool{"schools": true, "students": true, "classes": true, "enrollments": true}
 
 // CreateSisImportInput is createSisImport (school path) or createPlatformSisImport (school in the body).

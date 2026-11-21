@@ -8,56 +8,49 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
-// TransferStudentInput moves a student to a class (same school, other school, other tenant).
+// TransferStudentInput moves a student to a school and grade (same school other grade, other school, other tenant —
+// ADR-0095 mục 2: there is no class any more).
 type TransferStudentInput struct {
-	StudentID     uuid.UUID
-	TargetClassID uuid.UUID
-	On            time.Time
-	Source        string     // enrollment.SourceSIS / SourceManual / SourcePlatformCommon
-	SyncRunID     *uuid.UUID // SIS run that caused the transfer (F011), if any
+	StudentID      uuid.UUID
+	TargetSchoolID uuid.UUID
+	TargetGrade    int
+	On             time.Time  // date of effect (student.placement_changed.effective_from)
+	Source         string     // placement.SourceSIS / SourceManual / SourcePlatformCommon
+	SyncRunID      *uuid.UUID // SIS run that caused the transfer (F011), if any
+}
+
+// TransferStudentResult is the kind of the move and the placements before and after.
+type TransferStudentResult struct {
+	Kind   placement.Kind
+	Before placement.Placement
+	After  placement.Placement
 }
 
 // TransferStudentHandler is the transfer port used by F011 (SIS apply) and platform tools. The caller
 // authorizes and provides a scope covering the source and target tenants (TenantScope for moves inside
 // one tenant; CrossTenantScope or a platform-job bypass across tenants, ADR-0089 §3).
 type TransferStudentHandler interface {
-	Handle(ctx context.Context, in TransferStudentInput) (enrollment.Transfer, error)
+	Handle(ctx context.Context, in TransferStudentInput) (TransferStudentResult, error)
 }
 
 // TransferDeps are the ports of the transfer.
 type TransferDeps struct {
-	UoW         write.UnitOfWork
-	Enrollments write.EnrollmentRepository
-	Students    write.StudentRepository
-	Events      write.EventPublisher
-	Audit       write.Auditor
+	UoW      write.UnitOfWork
+	Schools  write.SchoolRepository
+	Students write.StudentRepository
+	Events   write.EventPublisher
+	Audit    write.Auditor
 }
 
 // TransferStudent implements TransferStudentHandler (F010-AC-11, AC-13, AC-14, AC-15).
 type TransferStudent struct{ TransferDeps }
-
-// EnrollmentPayload is the payload of enrollment.changed.
-type EnrollmentPayload struct {
-	StudentID     string     `json:"student_id"`
-	ClassID       string     `json:"class_id"`
-	Op            string     `json:"op"`
-	EnrollmentID  string     `json:"enrollment_id"`
-	SchoolID      string     `json:"school_id"`
-	Status        string     `json:"status"`
-	StartDate     string     `json:"start_date"`
-	EndDate       *string    `json:"end_date"`
-	Source        string     `json:"source"`
-	SyncRunID     *uuid.UUID `json:"sync_run_id"`
-	SourceVersion int64      `json:"source_version"`
-}
 
 // MembershipPayload is the payload of tenant_membership.changed.
 type MembershipPayload struct {
@@ -68,85 +61,71 @@ type MembershipPayload struct {
 	UserType string `json:"user_type"`
 }
 
-func enrollmentPayload(e *enrollment.Enrollment, op string, syncRun *uuid.UUID) EnrollmentPayload {
-	p := EnrollmentPayload{StudentID: e.StudentID.String(), ClassID: e.ClassID.String(), Op: op, EnrollmentID: e.ID.String(),
-		SchoolID: e.SchoolID.String(), Status: string(e.Status), StartDate: e.StartDate.Format(time.DateOnly), Source: e.Source,
-		SyncRunID: syncRun, SourceVersion: e.Version}
-	if e.EndDate != nil {
-		d := e.EndDate.Format(time.DateOnly)
-		p.EndDate = &d
-	}
-	return p
-}
-
-// Handle runs the transfer in one transaction.
-func (h TransferStudent) Handle(ctx context.Context, in TransferStudentInput) (out enrollment.Transfer, err error) {
+// Handle runs the transfer in one transaction: the student row is locked, so concurrent transfers of one student
+// serialize (F010-AC-11).
+func (h TransferStudent) Handle(ctx context.Context, in TransferStudentInput) (out TransferStudentResult, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.command.TransferStudent")
 	defer func() { done(err) }()
 	if _, ok := tenancy.ScopeFrom(ctx); !ok {
 		return out, problem.New(problem.Internal, "transfer needs a scope from the caller")
 	}
-	if in.StudentID == uuid.Nil || in.TargetClassID == uuid.Nil {
-		return out, problem.Invalid("class_id", problem.SubRequired, "student and target class are required")
+	if in.StudentID == uuid.Nil || in.TargetSchoolID == uuid.Nil {
+		return out, problem.Invalid("school_id", problem.SubRequired, "student and target school are required")
+	}
+	if !placement.ValidGrade(in.TargetGrade) {
+		return out, problem.Invalid("grade_level", problem.SubInvalid, "grade_level must be 1…9")
 	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
-		cur, err := h.Enrollments.LockActive(ctx, in.StudentID)
+		tr, err := trackPlacement(ctx, h.Students, h.Events, in.StudentID)
 		if err != nil {
 			return err
 		}
-		target, err := h.Enrollments.Placement(ctx, in.TargetClassID)
+		cur := tr.Before()
+		if cur == nil {
+			return problem.New(problem.NotFound, "student not found in scope")
+		}
+		s, err := h.Schools.Get(ctx, in.TargetSchoolID)
 		var pe *problem.Error
 		if errors.As(err, &pe) && pe.Code == problem.NotFound {
-			return problem.Invalid("class_id", problem.SubInvalid, "unknown target class")
+			return problem.Invalid("school_id", problem.SubInvalid, "unknown target school")
 		}
 		if err != nil {
 			return err
 		}
-		tr, err := enrollment.TransferTo(cur, ids.New(), target, in.On, in.Source)
+		target := placement.Placement{TenantID: s.TenantID, SchoolID: s.ID, Grade: in.TargetGrade, Active: true}
+		kind, err := placement.Move(cur.Placement, target)
 		switch {
-		case errors.Is(err, enrollment.ErrSameClass):
-			return problem.Invalid("class_id", problem.SubInvalid, "the student is already in this class")
-		case errors.Is(err, enrollment.ErrBeforeStart):
-			return problem.Invalid("on", problem.SubInvalid, "transfer date before the current enrollment")
+		case errors.Is(err, placement.ErrUnchanged):
+			return problem.Invalid("school_id", problem.SubInvalid, "the student is already in this school and grade")
+		case errors.Is(err, placement.ErrInvalid):
+			return problem.Invalid("student_id", problem.SubInvalid, "the student has no effective school/grade to move from")
 		case err != nil:
 			return err
 		}
-		if err := h.Enrollments.Close(ctx, tr.Closed); err != nil {
+		if err := h.Students.Move(ctx, in.StudentID, target); err != nil {
 			return err
 		}
-		if tr.Kind != enrollment.KindClass {
-			if err := h.Students.Move(ctx, in.StudentID, target); err != nil {
-				return err
-			}
-		}
-		if err := h.Enrollments.Open(ctx, tr.Opened); err != nil {
+		on := in.On
+		if err := tr.done(ctx, PlacementChange{Source: in.Source, SyncRunID: in.SyncRunID, EffectiveFrom: &on}); err != nil {
 			return err
 		}
-		out = tr
-		return h.publish(ctx, tr, in)
+		out = TransferStudentResult{Kind: kind, Before: cur.Placement, After: target}
+		return h.publish(ctx, out, in)
 	})
 	return out, err
 }
 
-func (h TransferStudent) publish(ctx context.Context, tr enrollment.Transfer, in TransferStudentInput) error {
+func (h TransferStudent) publish(ctx context.Context, tr TransferStudentResult, in TransferStudentInput) error {
 	student := in.StudentID.String()
-	from, to := tr.Closed.TenantID, tr.Opened.TenantID
-	if err := h.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: tr.Closed.ID.String(),
-		TenantID: &from, Payload: enrollmentPayload(tr.Closed, "transferred", in.SyncRunID)}); err != nil {
-		return err
-	}
-	if err := h.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: tr.Opened.ID.String(),
-		TenantID: &to, Payload: enrollmentPayload(tr.Opened, "added", in.SyncRunID)}); err != nil {
-		return err
-	}
-	if tr.Kind != enrollment.KindClass {
+	from, to := tr.Before.TenantID, tr.After.TenantID
+	if tr.Kind != placement.KindGrade {
 		if err := h.Events.Publish(ctx, write.Event{Type: "student.transferred", SubjectType: "student", SubjectID: student, TenantID: &to,
 			Payload: map[string]string{"student_id": student, "from_tenant_id": from.String(), "to_tenant_id": to.String(),
-				"from_school_id": tr.Closed.SchoolID.String(), "to_school_id": tr.Opened.SchoolID.String()}}); err != nil {
+				"from_school_id": tr.Before.SchoolID.String(), "to_school_id": tr.After.SchoolID.String()}}); err != nil {
 			return err
 		}
 	}
-	if tr.Kind == enrollment.KindTenant { // removed then added (F010-AC-15)
+	if tr.Kind == placement.KindTenant { // removed then added (F010-AC-15)
 		for _, m := range []struct {
 			tenant uuid.UUID
 			op     string
@@ -158,7 +137,7 @@ func (h TransferStudent) publish(ctx context.Context, tr enrollment.Transfer, in
 			}
 		}
 	}
-	return h.Audit.Record(ctx, audit.Event{Action: "enrollment.changed", TargetType: "student", TargetID: student, Result: audit.ResultSuccess,
-		Metadata: map[string]any{"kind": string(tr.Kind), "from_class_id": tr.Closed.ClassID.String(), "to_class_id": tr.Opened.ClassID.String(),
-			"source": in.Source}})
+	return h.Audit.Record(ctx, audit.Event{Action: "student.placement_changed", TargetType: "student", TargetID: student, Result: audit.ResultSuccess,
+		Metadata: map[string]any{"kind": string(tr.Kind), "from_school_id": tr.Before.SchoolID.String(), "to_school_id": tr.After.SchoolID.String(),
+			"from_grade_level": tr.Before.Grade, "to_grade_level": tr.After.Grade, "source": in.Source}})
 }

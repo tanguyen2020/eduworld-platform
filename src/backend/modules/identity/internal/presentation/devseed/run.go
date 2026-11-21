@@ -316,7 +316,8 @@ func (r *run) importSchool(ctx context.Context, tenantID, conn uuid.UUID, s Scho
 		accounts[u], pending = a, pending || a == nil
 	}
 	if pending {
-		res, err := r.Import.RunImportSystem(ctx, tenantID, command.RunImportInput{ConnectionID: conn, SchoolID: r.schools[s.Code], Files: files})
+		res, err := r.Import.RunImportSystem(ctx, tenantID, command.RunImportInput{ConnectionID: conn, SchoolID: r.schools[s.Code], Files: files,
+			AcademicYear: s.AcademicYear})
 		if err != nil {
 			return err
 		}

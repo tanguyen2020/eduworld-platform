@@ -20,8 +20,9 @@ import (
 // PlanFile is the name of the plan in the seed directory.
 const PlanFile = "dev.yaml"
 
-// SisFiles are the CSV files of a school directory, in the order of the import pipeline.
-var SisFiles = []string{"classes", "students", "enrollments"}
+// SisFiles are the CSV files of a school directory: students carry their school and grade (SIS contract 1.3.0,
+// ADR-0095 — no classes.csv, no enrollments.csv).
+var SisFiles = []string{"students"}
 
 // Plan is the dev seed of module identity.
 type Plan struct {
@@ -51,6 +52,8 @@ type SchoolPlan struct {
 	GradeMin int    `yaml:"grade_min"`
 	GradeMax int    `yaml:"grade_max"`
 	Sis      string `yaml:"sis"`
+	// AcademicYear is the current academic year of the school in its SIS (YYYY-YYYY), created by the import (ADR-0095).
+	AcademicYear string `yaml:"academic_year"`
 }
 
 // StaffPlan is a staff account; Tenant is the home tenant (empty for platform staff).

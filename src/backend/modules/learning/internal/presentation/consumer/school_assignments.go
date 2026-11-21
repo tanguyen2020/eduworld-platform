@@ -60,9 +60,8 @@ func (c AssignmentSubmissions) Handle(ctx context.Context, e outbox.Envelope) er
 }
 
 // AssignmentEnrollment is the consumer learning.assignment_enrollment (F041-AC-16, ADR-0095 mục 3): a student who joins a
-// grade of a school is added to the scheduled and open assignments of that grade (student.placement_changed; until
-// module identity produces it — WP-I1 — student.synced with a grade and enrollment.changed, whose class is ignored, are
-// applied too); a locked account is excused before the due date.
+// grade of a school is added to the scheduled and open assignments of that grade (student.placement_changed, and
+// student.synced with a grade); a locked account is excused before the due date.
 type AssignmentEnrollment struct {
 	Tracker AssignmentTracker
 }
@@ -120,17 +119,5 @@ func (c AssignmentEnrollment) Handle(ctx context.Context, e outbox.Envelope) err
 		return c.Tracker.SyncPlacement(ctx, command.PlacementChange{StudentID: p.StudentID, SchoolID: p.SchoolID, Grade: *p.GradeLevel,
 			Active: true})
 	}
-	// enrollment.changed (deprecated by ADR-0095): the class is ignored; a student added is placed by school and grade.
-	var p struct {
-		StudentID uuid.UUID `json:"student_id"`
-		Op        string    `json:"op"`
-		Status    string    `json:"status"`
-	}
-	if err := json.Unmarshal(e.Payload, &p); err != nil || p.StudentID == uuid.Nil {
-		return invalid(e.EventType, "payload is not an enrollment")
-	}
-	if p.Op != "added" && (p.Op != "updated" || p.Status != "active") {
-		return nil
-	}
-	return c.Tracker.SyncStudent(ctx, p.StudentID)
+	return nil // another identity event (there is no enrollment.changed any more — ADR-0095)
 }

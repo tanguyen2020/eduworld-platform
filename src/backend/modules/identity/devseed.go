@@ -57,7 +57,7 @@ func NewDevSeed(d DevSeedDeps) (devseed.Seeder, error) {
 		return devseed.Seeder{}, err
 	}
 	run := command.SisRun{UoW: d.UoW, Savepoints: d.UoW, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
 		Rules: write.SisSyncRepo{}, Events: events, Audit: auditor, Observer: metrics.Runs{}, History: write.LifecycleRepo{}, IDHashKey: d.IDHash}
 	resolve := query.ResolvePrincipal{Model: read.PrincipalModel{Session: d.Read}}
 	return devseed.Seeder{

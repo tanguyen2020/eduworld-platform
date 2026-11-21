@@ -88,14 +88,6 @@ type PlayerSchool struct {
 	IsVirtual   bool          `json:"is_virtual"`
 }
 
-// PlayerClass is the PlayerClass schema.
-type PlayerClass struct {
-	ClassID      uuid.UUID `json:"class_id"`
-	Name         string    `json:"name"`
-	GradeLevel   int       `json:"grade_level"`
-	AcademicYear string    `json:"academic_year,omitempty"`
-}
-
 // CurfewPolicy is PlayerBootstrap.policies.play_time.curfew.
 type CurfewPolicy struct {
 	Start          string `json:"start"`
@@ -123,14 +115,14 @@ type PlayerBootstrap struct {
 	TenantName     string            `json:"tenant_name,omitempty"`
 	Student        *StudentSummary   `json:"student,omitempty"`
 	School         *PlayerSchool     `json:"school,omitempty"`
-	Class          *PlayerClass      `json:"class,omitempty"`
 	GradeBand      string            `json:"grade_band,omitempty"`
 	Policies       BootstrapPolicies `json:"policies"`
 	FeatureFlags   map[string]bool   `json:"feature_flags"`
-	// SchoolID is the school of the active enrollment (curfew of the school, F015); not serialized.
+	// SchoolID is the school of the student (curfew of the school, F015); not serialized.
 	SchoolID *uuid.UUID `json:"-"`
-	// Enrolled reports an active enrollment (NO_ACTIVE_ENROLLMENT on resume); not serialized.
-	Enrolled bool `json:"-"`
+	// Placed reports an effective student with a school and a grade (NO_ACTIVE_ENROLLMENT otherwise, ADR-0095); not
+	// serialized.
+	Placed bool `json:"-"`
 }
 
 // GradeBand maps a grade level 1–9 to the GradeBand enum.

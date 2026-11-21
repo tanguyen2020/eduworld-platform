@@ -12,7 +12,7 @@
     "role_id": { "type": "string", "format": "uuid" },
     "role_code": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{1,63}$" },
     "tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "null khi scope_type = platform" },
-    "scope_type": { "type": "string", "enum": ["platform", "tenant", "school", "class", "subject"] },
+    "scope_type": { "type": "string", "enum": ["platform", "tenant", "school", "subject"], "description": "Không có scope lớp (ADR-0072, ADR-0095)" },
     "scope_id": { "type": ["string", "null"], "format": "uuid" },
     "source": { "type": "string", "enum": ["sis", "manual"] },
     "op": { "type": "string", "enum": ["granted", "revoked", "expired", "updated"] },

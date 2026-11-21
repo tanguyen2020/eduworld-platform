@@ -14,7 +14,7 @@ export type WorkspaceKey =
 export type MenuKey =
   | "menu.school_lms.overview"
   | "menu.school_lms.schools"
-  | "menu.school_lms.classes"
+  | "menu.school_lms.students"
   | "menu.school_lms.sis_sync"
   | "menu.school_lms.assignments"
   | "menu.school_lms.game_activities"
@@ -94,9 +94,9 @@ export type ActionKey =
   | "action.school_lms.overview.view"
   | "action.school_lms.schools.view"
   | "action.school_lms.schools.edit"
-  | "action.school_lms.classes.view"
-  | "action.school_lms.classes.reset_student_password"
-  | "action.school_lms.classes.lock_student"
+  | "action.school_lms.students.view"
+  | "action.school_lms.students.reset_password"
+  | "action.school_lms.students.lock"
   | "action.school_lms.sis_sync.view"
   | "action.school_lms.sis_sync.import"
   | "action.school_lms.assignments.view"
@@ -370,15 +370,15 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         ],
       },
       {
-        key: "menu.school_lms.classes",
-        path: "/school-lms/classes",
-        labelKey: "portal.menu.school_lms.classes",
+        key: "menu.school_lms.students",
+        path: "/school-lms/students",
+        labelKey: "portal.menu.school_lms.students",
         order: 30,
         requiredPermissions: ["tenant.student.read", "lms.student.read"],
         actions: [
-          { key: "action.school_lms.classes.view", labelKey: "portal.action.school_lms.classes.view", requiredPermissions: ["tenant.student.read", "lms.student.read"] },
-          { key: "action.school_lms.classes.reset_student_password", labelKey: "portal.action.school_lms.classes.reset_student_password", requiredPermissions: ["lms.student.password_reset"] },
-          { key: "action.school_lms.classes.lock_student", labelKey: "portal.action.school_lms.classes.lock_student", requiredPermissions: ["tenant.user.lock"] },
+          { key: "action.school_lms.students.view", labelKey: "portal.action.school_lms.students.view", requiredPermissions: ["tenant.student.read", "lms.student.read"] },
+          { key: "action.school_lms.students.reset_password", labelKey: "portal.action.school_lms.students.reset_password", requiredPermissions: ["lms.student.password_reset"] },
+          { key: "action.school_lms.students.lock", labelKey: "portal.action.school_lms.students.lock", requiredPermissions: ["tenant.user.lock"] },
         ],
       },
       {

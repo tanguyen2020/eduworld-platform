@@ -116,7 +116,6 @@ func TenantSettingsOf(value []byte, version int64, cleanup settings.StudentClean
 type SchoolSettings struct {
 	SchoolID                 uuid.UUID              `json:"school_id"`
 	AllowedHours             *settings.AllowedHours `json:"allowed_hours,omitempty"`
-	ClassLeaderboardEnabled  *bool                  `json:"class_leaderboard_enabled,omitempty"`
 	SchoolLeaderboardEnabled *bool                  `json:"school_leaderboard_enabled,omitempty"`
 	StudentClubCreation      bool                   `json:"student_club_creation"`
 	CurfewWindow             *settings.Curfew       `json:"curfew_window"`
@@ -147,10 +146,7 @@ func SchoolSettingsOf(schoolID uuid.UUID, value []byte, version int64, updatedAt
 	if get("allowed_hours", &hours) {
 		out.AllowedHours = &hours
 	}
-	var b1, b2 bool
-	if get("class_leaderboard_enabled", &b1) {
-		out.ClassLeaderboardEnabled = &b1
-	}
+	var b2 bool
 	if get("school_leaderboard_enabled", &b2) {
 		out.SchoolLeaderboardEnabled = &b2
 	}

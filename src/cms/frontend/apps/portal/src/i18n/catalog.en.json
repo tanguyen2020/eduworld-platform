@@ -10,7 +10,7 @@
     "school_lms": {
       "overview": "Overview",
       "schools": "Schools",
-      "classes": "Students by grade",
+      "students": "Students by grade",
       "sis_sync": "SIS/CSV sync",
       "assignments": "Assignments, tests, diagnostics",
       "game_activities": "Assigned game activities",

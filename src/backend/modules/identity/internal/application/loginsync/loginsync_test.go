@@ -81,7 +81,7 @@ func (f *fakeApply) ApplyLookup(context.Context, uuid.UUID, uuid.UUID, uuid.UUID
 	defer f.state.mu.Unlock()
 	f.calls++
 	if f.enroll {
-		f.state.st.ActiveEnrollment = true
+		f.state.st.Placed = true
 	}
 	return command.RunImportResult{}, nil
 }
@@ -120,7 +120,7 @@ func synced(ago time.Duration) *time.Time {
 
 // F011-AC-18: complete and fresh → no SIS call.
 func TestBranchFresh(t *testing.T) {
-	s, _, fl, _, fj, fm := fixture(write.LoginState{ActiveEnrollment: true, LastSyncedAt: synced(time.Hour), StudentLookup: true, SchoolExternalID: "TH"})
+	s, _, fl, _, fj, fm := fixture(write.LoginState{Placed: true, LastSyncedAt: synced(time.Hour), StudentLookup: true, SchoolExternalID: "TH"})
 	res, err := s.Ensure(context.Background(), uuid.New())
 	if err != nil || res.Branch != BranchFresh || fl.calls.Load() != 0 || len(fj.jobs) != 0 || fm.seen["fresh/ok"] != 1 {
 		t.Fatalf("fresh = %+v %v", res, err)
@@ -130,7 +130,7 @@ func TestBranchFresh(t *testing.T) {
 // F011-AC-21: complete but stale → login continues, one job queued (dedupe by Nats-Msg-Id in the stream).
 func TestBranchBackground(t *testing.T) {
 	conn := uuid.New()
-	s, _, fl, _, fj, _ := fixture(write.LoginState{ConnectionID: conn, ExternalID: "HS-1", ActiveEnrollment: true, LastSyncedAt: synced(25 * time.Hour)})
+	s, _, fl, _, fj, _ := fixture(write.LoginState{ConnectionID: conn, ExternalID: "HS-1", Placed: true, LastSyncedAt: synced(25 * time.Hour)})
 	res, err := s.Ensure(context.Background(), uuid.New())
 	if err != nil || res.Branch != BranchBackground || fl.calls.Load() != 0 || len(fj.jobs) != 1 || fj.jobs[0].ConnectionID != conn {
 		t.Fatalf("background = %+v %v jobs=%v", res, err, fj.jobs)
@@ -158,7 +158,7 @@ func TestBranchBlockingLookup(t *testing.T) {
 	s2, _, _, fa2, _, _ := fixture(write.LoginState{StudentLookup: true, SchoolExternalID: "TH"})
 	res, err = s2.Ensure(context.Background(), uuid.New())
 	var pe *problem.Error
-	if !errors.As(err, &pe) || pe.Code != problem.NoActiveEnrollment || res.Outcome != ResultMissingClass || fa2.calls != 1 {
+	if !errors.As(err, &pe) || pe.Code != problem.NoActiveEnrollment || res.Outcome != ResultMissingPlacement || fa2.calls != 1 {
 		t.Fatalf("still no class = %+v %v", res, err)
 	}
 }

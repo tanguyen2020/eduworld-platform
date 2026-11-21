@@ -28,9 +28,7 @@
       "display_name": "sample",
       "school_id": "00000000-0000-4000-8000-000000000001",
       "school_name": "sample",
-      "grade_level": 1,
-      "class_id": "00000000-0000-4000-8000-000000000001",
-      "class_name": "sample"
+      "grade_level": 1
     },
     "school": {
       "school_id": "00000000-0000-4000-8000-000000000001",
@@ -47,12 +45,6 @@
       },
       "school_level": "primary",
       "is_virtual": false
-    },
-    "class": {
-      "class_id": "00000000-0000-4000-8000-000000000001",
-      "name": "sample",
-      "grade_level": 1,
-      "academic_year": "2026-2027"
     },
     "game_profile": {
       "student_id": "00000000-0000-4000-8000-000000000001",
@@ -97,8 +89,7 @@
         "direct_message_enabled": false
       },
       "party": {
-        "max_members": 4,
-        "cross_class_allowed": false
+        "max_members": 4
       },
       "play_time": {
         "break_reminder_minutes": 1,

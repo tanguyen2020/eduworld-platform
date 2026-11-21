@@ -43,22 +43,27 @@ func schoolScoped(ctx context.Context, school uuid.UUID, perms ...authz.Permissi
 	return ctx, p, problem.New(problem.NotFound, "")
 }
 
-// ClassStudentsInput is the query of listTenantClassStudents.
-type ClassStudentsInput struct {
+// GradeStudentsInput is the query of listTenantGradeStudents.
+type GradeStudentsInput struct {
 	ListInput
-	SchoolID, ClassID uuid.UUID
-	Q                 string
+	SchoolID uuid.UUID
+	Grade    int
+	Q        string
 }
 
-// ListTenantClassStudents is listTenantClassStudents (F052-1, owner F010): the read-only roster of a class
-// with the last game login. tenant.class.read (Tenant Admin) or lms.class.read (School Admin, Academic
-// Manager: the two permissions of action.school_lms.classes.view) on the school of the path; a school or
-// class outside the tenant or the grant scope → 404. Only the ClassStudent fields leave the module (R16).
-func (q Org) ListTenantClassStudents(ctx context.Context, in ClassStudentsInput) (out Page[dto.ClassStudent], err error) {
-	ctx, done := observability.UseCase(ctx, "identity.query.ListTenantClassStudents")
+// ListTenantGradeStudents is listTenantGradeStudents (ADR-0095, owner F010): the read-only list of the effective
+// students of one grade of a school with the last game login. tenant.student.read (Tenant Admin) or lms.student.read
+// (School Admin, Academic Manager: the permissions of action.school_lms.students.view) on the school of the path; a
+// school outside the tenant or the grant scope → 404; a grade outside 1…9 → 422. Only the GradeStudent fields leave the
+// module (R16).
+func (q Org) ListTenantGradeStudents(ctx context.Context, in GradeStudentsInput) (out Page[dto.GradeStudent], err error) {
+	ctx, done := observability.UseCase(ctx, "identity.query.ListTenantGradeStudents")
 	defer func() { done(err) }()
 	if ctx, _, err = schoolScoped(ctx, in.SchoolID, authz.PermTenantStudentRead, authz.PermLmsStudentRead); err != nil {
 		return out, err
+	}
+	if in.Grade < 1 || in.Grade > 9 {
+		return out, problem.Invalid("grade_level", problem.SubInvalid, "must be 1 to 9")
 	}
 	if n := utf8.RuneCountInString(in.Q); in.Q != "" && (n < 2 || n > 100) {
 		return out, problem.Invalid("q", problem.SubInvalid, "must be 2 to 100 characters")
@@ -68,7 +73,7 @@ func (q Org) ListTenantClassStudents(ctx context.Context, in ClassStudentsInput)
 		return out, err
 	}
 	limit := page.Limit(in.Limit)
-	rows, err := q.Model.ClassStudents(ctx, read.ClassStudentFilter{SchoolID: in.SchoolID, ClassID: in.ClassID, Q: in.Q, After: after, Limit: limit})
+	rows, err := q.Model.GradeStudents(ctx, read.GradeStudentFilter{SchoolID: in.SchoolID, Grade: in.Grade, Q: in.Q, After: after, Limit: limit})
 	if err != nil {
 		return out, err
 	}
@@ -79,7 +84,7 @@ func (q Org) ListTenantClassStudents(ctx context.Context, in ClassStudentsInput)
 	for i := range rows {
 		rows[i].DaysSinceLastLogin = daysSince(rows[i].LastLoginAt, now)
 	}
-	return pageOf(q.Cursors, rows, limit, func(s dto.ClassStudent) (string, uuid.UUID) { return s.DisplayName, s.StudentID }), nil
+	return pageOf(q.Cursors, rows, limit, func(s dto.GradeStudent) (string, uuid.UUID) { return s.DisplayName, s.StudentID }), nil
 }
 
 // daysSince is days_since_last_login: whole days since the last game login (nil when never logged in).

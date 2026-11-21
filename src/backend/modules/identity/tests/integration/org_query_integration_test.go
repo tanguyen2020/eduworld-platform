@@ -26,7 +26,7 @@ func TestOrgQueries(t *testing.T) {
 	a := seedTenant(ctx, t, e.platform, "pgd-qa")
 	b := seedTenant(ctx, t, e.platform, "pgd-qb")
 	student := enrolled(ctx, t, e.platform, a, "hs.q.a")
-	// An unassigned student (no active enrollment) in tenant A.
+	// A second student of the same school and grade (ADR-0095: every live student row places the student).
 	tx, _ := e.platform.BeginTx(ctx, nil)
 	if _, err := insertStudent(ctx, tx, a, "hs.q.free"); err != nil {
 		t.Fatal(err)
@@ -123,12 +123,21 @@ func TestOrgQueries(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// AC-18: a school-limited grant cannot list the classes of another school of the same tenant.
+	// AC-18 (ADR-0095): a school-limited grant lists the students of a grade of its school only; another school of the
+	// same tenant → 404, a grade outside 1…9 → 422.
 	schoolAdmin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin", authztest.AtSchool(schoolA1)))
-	if cls, err := q.ListClasses(schoolAdmin, schoolA1, nil, 0); err != nil || len(cls) != 1 {
-		t.Fatalf("own school classes = %+v %v", cls, err)
+	if gs, err := q.ListTenantGradeStudents(schoolAdmin, query.GradeStudentsInput{SchoolID: schoolA1, Grade: 3}); err != nil || len(gs.Items) != 2 {
+		t.Fatalf("own school grade 3 = %+v %v", gs, err)
 	}
-	authztest.ExpectDenied(t, func() error { _, err := q.ListClasses(schoolAdmin, schoolA2, nil, 0); return err }())
+	if gs, err := q.ListTenantGradeStudents(schoolAdmin, query.GradeStudentsInput{SchoolID: schoolA1, Grade: 4}); err != nil || len(gs.Items) != 0 {
+		t.Fatalf("own school grade 4 = %+v %v", gs, err)
+	}
+	if _, err := q.ListTenantGradeStudents(schoolAdmin, query.GradeStudentsInput{SchoolID: schoolA2, Grade: 3}); code(err) != problem.NotFound {
+		t.Fatalf("another school: %v (want 404)", err)
+	}
+	if _, err := q.ListTenantGradeStudents(schoolAdmin, query.GradeStudentsInput{SchoolID: schoolA1, Grade: 10}); code(err) != problem.ValidationFailed {
+		t.Fatalf("grade 10: %v (want 422)", err)
+	}
 
 	// F012 Clarifications 2026-11-21 (portal E2E): School Admin and Academic Manager read their schools; a
 	// school-limited grant lists and opens only its schools; another tenant's school is never visible.
@@ -158,20 +167,19 @@ func TestOrgQueries(t *testing.T) {
 	authztest.ExpectDenied(t, func() error { _, err := q.ListTenantSchools(editor, "", query.ListInput{}); return err }())
 	authztest.Cover(t, "listTenantSchools", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "getTenantSchool", authztest.CrossTenant, authztest.RoleDenied)
-	tcls, err := q.ListTenantSchoolClasses(adminA, query.ClassesInput{SchoolID: schoolA1, Grade: 3})
-	if err != nil || len(tcls.Items) != 1 {
-		t.Fatalf("tenant school classes = %+v %v", tcls, err)
+	// Tenant Admin (tenant.student.read): every school of the tenant; tenant B → 404 (R8).
+	if gs, err := q.ListTenantGradeStudents(adminA, query.GradeStudentsInput{SchoolID: schoolA1, Grade: 3}); err != nil || len(gs.Items) != 2 ||
+		gs.Items[0].GradeLevel != 3 {
+		t.Fatalf("tenant admin grade 3 = %+v %v", gs, err)
+	}
+	if _, err := q.ListTenantGradeStudents(authztest.Ctx(ctx, authztest.Staff(tb, "tenant_admin")), query.GradeStudentsInput{SchoolID: schoolA1, Grade: 3}); code(err) != problem.NotFound {
+		t.Fatalf("tenant B lists a school of A: %v (want 404)", err)
 	}
 
-	un, err := q.ListUnassignedStudents(adminA, nil, query.ListInput{})
-	if err != nil || len(un.Items) != 1 || un.Items[0].Reason != "missing_class" {
-		t.Fatalf("unassigned = %+v %v", un, err)
-	}
-
-	// AC-19: the student reads their own school and class; others need school.people.read in scope.
+	// AC-19: the student reads their own school and grade (no class — ADR-0095); others need school.people.read in scope.
 	me := authz.NewPrincipal(authz.PrincipalData{UserID: student, UserType: authz.UserTypeStudent, TenantID: &ta, Channel: authz.ChannelGame})
 	prof, err := q.GetMyStudentProfile(authztest.Ctx(ctx, me))
-	if err != nil || prof.SchoolID != schoolA1 || prof.ClassName != "3A" || prof.SchoolName == "" {
+	if err != nil || prof.SchoolID != schoolA1 || prof.GradeLevel != 3 || prof.SchoolName == "" {
 		t.Fatalf("my profile = %+v %v", prof, err)
 	}
 	if _, err := q.GetStudentProfile(adminA, student); err != nil {

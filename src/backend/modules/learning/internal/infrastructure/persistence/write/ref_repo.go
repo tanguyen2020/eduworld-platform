@@ -132,12 +132,12 @@ func (RefRepo) UpsertClass(ctx context.Context, r write.RefClass) (bool, error) 
 // UpsertStudent implements write.ProjectionWriter.
 func (RefRepo) UpsertStudent(ctx context.Context, r write.RefStudent) (bool, error) {
 	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); deleted_at mirrors the source (cleanup)
-	return exec(ctx, `INSERT INTO ref.students AS st (student_id, tenant_id, school_id, grade_level, status, source_version)
-		VALUES ($1, $2, $3, $4::smallint, coalesce($5::varchar, 'active'), $6)
+	return exec(ctx, `INSERT INTO ref.students AS st (student_id, tenant_id, school_id, grade_level, status, source_version, academic_year_id)
+		VALUES ($1, $2, $3, $4::smallint, coalesce($5::varchar, 'active'), $6, $7::uuid)
 		ON CONFLICT (student_id) DO UPDATE SET school_id = $3, grade_level = coalesce($4, st.grade_level),
-			status = coalesce($5, st.status), source_version = $6
+			status = coalesce($5, st.status), source_version = $6, academic_year_id = coalesce($7::uuid, st.academic_year_id)
 		WHERE st.source_version < $6 AND st.tenant_id = $2`,
-		r.StudentID, r.TenantID, r.SchoolID, r.GradeLevel, r.Status, r.SourceVersion)
+		r.StudentID, r.TenantID, r.SchoolID, r.GradeLevel, r.Status, r.SourceVersion, r.AcademicYearID)
 }
 
 // MarkStudentDeleted implements write.ProjectionWriter: cleanup sets deleted_at to the event time unless a later

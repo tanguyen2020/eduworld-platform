@@ -65,15 +65,6 @@ func TestApply(t *testing.T) {
 }
 
 func TestCommonIDs(t *testing.T) {
-	id, err := CommonClassID(4)
-	if err != nil || id.String() != "0193a000-0000-7000-8000-000000000014" {
-		t.Fatalf("class g4 = %v %v", id, err)
-	}
-	for _, g := range []int{0, 10} {
-		if _, err := CommonClassID(g); err == nil {
-			t.Fatalf("grade %d accepted", g)
-		}
-	}
 	if CommonTenantID.String() != "0193a000-0000-7000-8000-000000000001" {
 		t.Fatal("common tenant id drifted from the seed migration")
 	}

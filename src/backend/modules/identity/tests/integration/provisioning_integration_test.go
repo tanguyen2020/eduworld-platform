@@ -77,7 +77,7 @@ func TestProvisionStudentAccount(t *testing.T) {
 	sa := authztest.Ctx(ctx, authztest.Platform("system_admin"))
 	conns := command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit}
 	run := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
+		Students: write.StudentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	importStudents := func(school uuid.UUID, csv string) uuid.UUID {
 		t.Helper()

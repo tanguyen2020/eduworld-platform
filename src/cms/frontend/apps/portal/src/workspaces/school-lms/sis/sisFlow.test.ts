@@ -49,8 +49,8 @@ describe('import flow (F052-AC-08, F052-AC-09, F052-AC-11)', () => {
   });
 
   it('upload failure and API failure are told apart', async () => {
-    await expect(runImport(deps({ upload: async () => Promise.reject(new Error('net')) }), csv(), 'classes', true)).rejects.toMatchObject({ problem: 'upload_failed' });
-    await expect(runImport(deps({ create: async () => Promise.reject(new Error('500')) }), csv(), 'classes', true)).rejects.toBeInstanceOf(ImportError);
+    await expect(runImport(deps({ upload: async () => Promise.reject(new Error('net')) }), csv(), 'students', true)).rejects.toMatchObject({ problem: 'upload_failed' });
+    await expect(runImport(deps({ create: async () => Promise.reject(new Error('500')) }), csv(), 'students', true)).rejects.toBeInstanceOf(ImportError);
   });
 
   it('PUT to the presigned URL carries no Authorization nor tenant header', async () => {

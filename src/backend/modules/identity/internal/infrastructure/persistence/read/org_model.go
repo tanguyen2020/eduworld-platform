@@ -8,9 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent"
-	entclass "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
 	entcountry "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
-	entenroll "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/predicate"
 	entprovince "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
 	entschool "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/school"
@@ -19,7 +17,6 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
 // OrgModel implements read.OrgReadModel in a read-only session (ent global filters + RLS).
@@ -203,76 +200,7 @@ func (m OrgModel) School(ctx context.Context, id uuid.UUID) (out dto.School, err
 	return out, err
 }
 
-// Classes returns the classes of a school ordered by (name, class_id).
-func (m OrgModel) Classes(ctx context.Context, f read.ClassFilter) (out []dto.Class, err error) {
-	err = m.Session.Read(ctx, func(ctx context.Context) error {
-		q := cl(ctx).Class.Query().Where(entclass.SchoolID(f.SchoolID))
-		if f.AcademicYearID != nil {
-			q = q.Where(entclass.AcademicYearID(*f.AcademicYearID))
-		}
-		if f.Grade != 0 {
-			q = q.Where(entclass.GradeLevel(int16(f.Grade)))
-		}
-		if f.After != nil {
-			q = q.Where(predicate.Class(after(entclass.FieldName, entclass.FieldID, f.After)))
-		}
-		q = q.Order(ent.Asc(entclass.FieldName), ent.Asc(entclass.FieldID))
-		if f.Limit > 0 {
-			q = q.Limit(f.Limit + 1)
-		}
-		rows, err := q.All(ctx)
-		for _, r := range rows {
-			y := r.AcademicYearID
-			out = append(out, dto.Class{ClassID: r.ID, SchoolID: r.SchoolID, AcademicYearID: &y, GradeLevel: int(r.GradeLevel), Name: r.Name})
-		}
-		return err
-	})
-	return out, err
-}
-
-// UnassignedStudents returns live students of the scope without an active enrollment (reason missing_class).
-func (m OrgModel) UnassignedStudents(ctx context.Context, schoolID *uuid.UUID, c *page.Cursor, limit int) (out []dto.UnassignedStudent, err error) {
-	err = m.Session.Read(ctx, func(ctx context.Context) error {
-		tx, _ := entx.Tx(ctx)
-		s, _ := tenancy.ScopeFrom(ctx)
-		tenants := []string{}
-		if s != nil {
-			for _, t := range s.TenantIDs() {
-				tenants = append(tenants, t.String())
-			}
-		}
-		var afterID *uuid.UUID
-		if c != nil {
-			afterID = &c.ID
-		}
-		rows, err := tx.QueryContext(ctx, `SELECT st.student_id, coalesce(u.display_name, ''), u.username, st.school_id, st.grade_level, st.updated_at
-			FROM org.students st
-			JOIN identity.users u ON u.user_id = st.student_id AND u.deleted_at IS NULL
-			WHERE st.deleted_at IS NULL AND st.tenant_id = ANY($1::uuid[])
-			  AND ($2::uuid IS NULL OR st.school_id = $2) AND ($3::uuid IS NULL OR st.student_id > $3)
-			  AND NOT EXISTS (SELECT 1 FROM org.enrollments e WHERE e.student_id = st.student_id AND e.status = 'active'
-			                  AND e.deleted_at IS NULL AND e.tenant_id = st.tenant_id)
-			ORDER BY st.student_id LIMIT $4`, tenants, schoolID, afterID, limit+1)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = rows.Close() }()
-		for rows.Next() {
-			var u dto.UnassignedStudent
-			var at time.Time
-			var grade int16
-			if err := rows.Scan(&u.StudentID, &u.DisplayName, &u.Username, &u.SchoolID, &grade, &at); err != nil {
-				return err
-			}
-			u.GradeLevel, u.Reason, u.DetectedAt = int(grade), "missing_class", &at
-			out = append(out, u)
-		}
-		return rows.Err()
-	})
-	return out, err
-}
-
-// StudentSummary returns the student with school and current class (404 outside the scope).
+// StudentSummary returns the student with its school and grade (404 outside the scope; no class — ADR-0095).
 func (m OrgModel) StudentSummary(ctx context.Context, studentID uuid.UUID) (out dto.StudentSummary, err error) {
 	err = m.Session.Read(ctx, func(ctx context.Context) error {
 		c := cl(ctx)
@@ -289,16 +217,6 @@ func (m OrgModel) StudentSummary(ctx context.Context, studentID uuid.UUID) (out 
 		}
 		if sc, err := c.School.Get(ctx, st.SchoolID); err == nil {
 			out.SchoolName = sc.Name
-		}
-		e, err := c.Enrollment.Query().Where(entenroll.StudentID(studentID), entenroll.Status("active")).Only(ctx)
-		if err == nil {
-			id := e.ClassID
-			out.ClassID = &id
-			if k, err := c.Class.Get(ctx, e.ClassID); err == nil {
-				out.ClassName = k.Name
-			}
-		} else if !ent.IsNotFound(err) {
-			return err
 		}
 		return nil
 	})

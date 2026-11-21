@@ -33,16 +33,15 @@
       "additionalProperties": false,
       "properties": {
         "entity_kind": {
+          "description": "Từ 1.3.0 không còn class/enrollment; EduWorld bỏ qua kèm cảnh báo Change mang hai giá trị này (ADR-0095 D6)",
           "enum": [
             "school",
-            "class",
-            "student",
-            "enrollment"
+            "student"
           ],
           "type": "string"
         },
         "external_id": {
-          "description": "Với enrollment là khóa ghép \"student_external_id|class_external_id\".",
+          "description": "school_external_id hoặc student_external_id.",
           "maxLength": 200,
           "type": "string"
         },
@@ -64,13 +63,7 @@
               "$ref": "#/$defs/School"
             },
             {
-              "$ref": "#/$defs/Class"
-            },
-            {
               "$ref": "#/$defs/Student"
-            },
-            {
-              "$ref": "#/$defs/Enrollment"
             }
           ]
         },
@@ -123,124 +116,6 @@
         "data": {
           "items": {
             "$ref": "#/$defs/Change"
-          },
-          "type": "array"
-        },
-        "page": {
-          "$ref": "#/$defs/PageInfo"
-        }
-      },
-      "required": [
-        "data",
-        "page"
-      ],
-      "type": "object"
-    },
-    "Class": {
-      "additionalProperties": false,
-      "properties": {
-        "academic_year": {
-          "maxLength": 32,
-          "pattern": "^[0-9]{4}-[0-9]{4}$",
-          "type": "string"
-        },
-        "class_external_id": {
-          "$ref": "#/$defs/ExternalId"
-        },
-        "grade_level": {
-          "maximum": 9,
-          "minimum": 1,
-          "type": "integer"
-        },
-        "name": {
-          "maxLength": 32,
-          "type": "string"
-        },
-        "school_external_id": {
-          "$ref": "#/$defs/ExternalId"
-        },
-        "updated_at": {
-          "format": "date-time",
-          "type": "string"
-        }
-      },
-      "required": [
-        "class_external_id",
-        "school_external_id",
-        "academic_year",
-        "grade_level",
-        "name",
-        "updated_at"
-      ],
-      "type": "object"
-    },
-    "ClassPage": {
-      "additionalProperties": false,
-      "properties": {
-        "data": {
-          "items": {
-            "$ref": "#/$defs/Class"
-          },
-          "type": "array"
-        },
-        "page": {
-          "$ref": "#/$defs/PageInfo"
-        }
-      },
-      "required": [
-        "data",
-        "page"
-      ],
-      "type": "object"
-    },
-    "Enrollment": {
-      "additionalProperties": false,
-      "properties": {
-        "class_external_id": {
-          "$ref": "#/$defs/ExternalId"
-        },
-        "end_date": {
-          "format": "date",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "start_date": {
-          "format": "date",
-          "type": "string"
-        },
-        "status": {
-          "enum": [
-            "active",
-            "transferred",
-            "ended"
-          ],
-          "type": "string"
-        },
-        "student_external_id": {
-          "$ref": "#/$defs/ExternalId"
-        },
-        "updated_at": {
-          "format": "date-time",
-          "type": "string"
-        }
-      },
-      "required": [
-        "student_external_id",
-        "class_external_id",
-        "start_date",
-        "status",
-        "updated_at"
-      ],
-      "type": "object"
-    },
-    "EnrollmentPage": {
-      "additionalProperties": false,
-      "properties": {
-        "data": {
-          "items": {
-            "$ref": "#/$defs/Enrollment"
           },
           "type": "array"
         },
@@ -475,6 +350,7 @@
           "type": "string"
         },
         "grade_level": {
+          "description": "Khối hiện tại của học sinh; cùng school_external_id xếp học sinh vào trường và khối (ADR-0095)",
           "maximum": 9,
           "minimum": 1,
           "type": "integer"
@@ -538,5 +414,5 @@
   },
   "$id": "https://schemas.eduworld.vn/sis/contract.v1.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "x-contract-version": "1.2.1"
+  "x-contract-version": "1.3.0"
 }

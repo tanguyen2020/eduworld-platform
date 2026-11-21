@@ -70,7 +70,7 @@ func TestCreateCommonStudents(t *testing.T) {
 		t.Fatal(err)
 	}
 	kc := newKCUsers()
-	h := command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, KC: kc,
+	h := command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, Students: write.StudentRepo{}, KC: kc,
 		Events: e.deps.Events, Audit: e.deps.Audit, LocalIssuer: "http://localhost:8180/realms/eduworld"}
 	sa := authztest.Ctx(ctx, authztest.Platform("system_admin"))
 	in := command.CreateCommonStudentsInput{TenantID: tenant.CommonTenantID, Students: []command.CommonStudentInput{
@@ -92,13 +92,20 @@ func TestCreateCommonStudents(t *testing.T) {
 	if tudo.Username != "hs.tudo" || tudo.InitialPassword == "" || lop6.InitialPassword == "" {
 		t.Fatalf("created rows = %+v %+v", tudo, lop6)
 	}
-	// AC-24: user, student in the virtual school, enrollment in common-g4, Keycloak role + membership.
+	// AC-24 (ADR-0095): user, effective student of the virtual school with its grade (no virtual class, no enrollment),
+	// student.placement_changed (source platform_common), Keycloak role + membership.
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users u JOIN org.students s ON s.student_id = u.user_id
-		JOIN org.enrollments en ON en.student_id = u.user_id AND en.status = 'active'
-		WHERE u.user_id = $1 AND u.user_type = 'student' AND u.primary_tenant_id = $2 AND s.school_id = $3
-		AND en.class_id = '0193a000-0000-7000-8000-000000000014' AND en.source = 'platform_common'`,
-		tudo.UserID, tenant.CommonTenantID, tenant.CommonSchoolID); n != 1 {
+		WHERE u.user_id = $1 AND u.user_type = 'student' AND u.primary_tenant_id = $2 AND s.school_id = $3 AND s.grade_level = 4
+		AND s.status = 'active'`, tudo.UserID, tenant.CommonTenantID, tenant.CommonSchoolID); n != 1 {
 		t.Fatal("common student rows missing")
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE student_id = $1`, tudo.UserID); n != 0 {
+		t.Fatal("no enrollment is written any more")
+	}
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'student.placement_changed'
+		AND envelope->'payload'->>'student_id' = $1 AND envelope->'payload'->>'source' = 'platform_common'
+		AND envelope->'payload'->>'grade_level' = '4' AND envelope->'payload'->>'previous_school_id' IS NULL`, tudo.UserID.String()); n != 1 {
+		t.Fatal("student.placement_changed of the common student")
 	}
 	idTudo, id6 := kc.users["hs.tudo"], kc.users["hs.lop6"]
 	// AC-29: grades 6–9 temporary password, grades 1–5 not.

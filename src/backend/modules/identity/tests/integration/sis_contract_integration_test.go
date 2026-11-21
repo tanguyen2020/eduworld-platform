@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -118,7 +119,7 @@ func newSisAPI(ctx context.Context, t *testing.T, e *env) *sisAPI {
 	s.contract = command.SisContract{UoW: e.uow, Connections: write.SisConnectionRepo{}, Repo: write.SisContractRepo{}, Schools: write.SchoolRepo{},
 		Providers: providers, Audit: e.deps.Audit, AllowHTTP: true}
 	run := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{},
+		Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{},
 		Students: write.StudentRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, BatchSize: 2}
 	s.sync = command.SisSync{UoW: e.uow, Connections: write.SisConnectionRepo{}, Repo: write.SisContractRepo{}, Run: run, Providers: providers,
 		Lock: s.lock, Jobs: s.jobs, Metrics: metrics.Sync{}, Observer: metrics.Runs{}}
@@ -306,8 +307,12 @@ func TestSisContractPull(t *testing.T) {
 	if dry["status"] != "succeeded" || dry["dry_run"] != true || users() != 0 || events("student.synced") != 0 {
 		t.Fatalf("dry run = %v, users %d", dry, users())
 	}
-	if n := count(ctx, t, s.platform, `SELECT count(*) FROM sis.staging_records WHERE sync_run_id = $1`, dry["id"]); n != 9 {
-		t.Fatalf("staging of the dry run = %d (1 school + 2 classes + 3 students + 3 enrollments)", n)
+	if n := count(ctx, t, s.platform, `SELECT count(*) FROM sis.staging_records WHERE sync_run_id = $1`, dry["id"]); n != 4 {
+		t.Fatalf("staging of the dry run = %d (1 school + 3 students; SIS contract 1.3.0 has no classes or enrollments)", n)
+	}
+	// ADR-0095 D6: EduWorld stops calling listClasses/listEnrollments, even on a facade that still serves them.
+	if s.fake.CallsOf(fakesis.OpClasses) != 0 || s.fake.CallsOf(fakesis.OpEnrollments) != 0 {
+		t.Fatalf("legacy operations called: classes %d enrollments %d", s.fake.CallsOf(fakesis.OpClasses), s.fake.CallsOf(fakesis.OpEnrollments))
 	}
 	if st := dry["stats"].(map[string]any); st["diff_student_create"] != float64(3) {
 		t.Fatalf("dry run stats = %v", st)
@@ -316,6 +321,11 @@ func TestSisContractPull(t *testing.T) {
 	// AC-05, AC-06, AC-09: one student breaks the enum, unknown fields, an unmapped school.
 	s.fake.Lock()
 	s.fake.Students[schoolExt][2]["status"] = "expelled"
+	// SIS contract 1.3.0 has no classes or enrollments: eight more valid students keep the violation ratio under 10% (AC-06).
+	for i := 1; i <= 8; i++ {
+		n := strconv.Itoa(i)
+		s.fake.Students[schoolExt] = append(s.fake.Students[schoolExt], fakesis.Student(schoolExt+"-X"+n, schoolExt, "X00"+n, "Hoc Sinh X", "xtra."+n, "active"))
+	}
 	s.fake.Extra[fakesis.OpStudents] = map[string]any{"phone": "0900000000"}
 	s.fake.Schools = append(s.fake.Schools, map[string]any{"school_external_id": "TH-LA-999", "school_code": "LA", "name": "TH Lạ",
 		"status": "active", "updated_at": fakesis.T})
@@ -492,9 +502,14 @@ func TestSisContractDelta(t *testing.T) {
 	if n := count(ctx, t, s.platform, `SELECT count(*) FROM identity.users WHERE username = 'hs.chi.thdemo001' AND status = 'locked'`); n != 1 {
 		t.Fatal("suspended student not locked in the same run (AC-17)")
 	}
-	if n := count(ctx, t, s.platform, `SELECT count(*) FROM org.enrollments e JOIN identity.users u ON u.user_id = e.student_id
-		WHERE u.username = 'hs.binh.thdemo001' AND e.status = 'ended'`); n != 1 {
-		t.Fatal("deleted enrollment not ended (AC-17)")
+	// ADR-0095 D6: a Change of kind enrollment (removed by contract 1.3.0) is ignored with a warning, never a violation.
+	if n := count(ctx, t, s.platform, `SELECT count(*) FROM sis.sync_runs WHERE mode = 'delta' AND sis_connection_id = $1
+		AND (stats->>'changes_ignored')::int = 1 AND (stats->>'errors')::int = 0`, conn); n != 1 {
+		t.Fatal("the enrollment change is ignored and counted")
+	}
+	if n := count(ctx, t, s.platform, `SELECT count(*) FROM org.students st JOIN identity.users u ON u.user_id = st.student_id
+		WHERE u.username = 'hs.binh.thdemo001' AND st.status = 'active'`); n != 1 {
+		t.Fatal("an ignored enrollment change never touches the student")
 	}
 	q := s.fake.Queries[fakesis.OpChanges]
 	if len(q) < 2 || !strings.Contains(q[0], "limit=500") || strings.Contains(q[0], "since=") || !strings.Contains(q[1], "since=wm-") {

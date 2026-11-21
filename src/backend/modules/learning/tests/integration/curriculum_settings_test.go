@@ -64,8 +64,9 @@ func TestSchoolCurriculumSettings(t *testing.T) {
 		AND envelope->'payload'->>'action' = 'school_curriculum.set'`); n != 1 {
 		t.Fatal("audit school_curriculum.set")
 	}
-	// T044 (OQ F021-5): the default version of the school follows the academic year of its classes when the projection
-	// still knows it (until WP-I1 stops class.synced, ADR-0095); otherwise the setting of any year applies.
+	// T044 (OQ F021-5, ADR-0095): the default version of the school follows the current academic year of the students of
+	// the school and grade (ref.students.academic_year_id, from student.placement_changed); otherwise the setting of any
+	// year applies.
 	defaultVersion := func() *uuid.UUID {
 		var out *uuid.UUID
 		sctx := authztest.Ctx(ctx, authzPrincipal(c, adA))
@@ -82,13 +83,15 @@ func TestSchoolCurriculumSettings(t *testing.T) {
 	if v := defaultVersion(); v == nil || v.String() != ver2 {
 		t.Fatalf("default without academic year: %v", v)
 	}
-	if _, err := c.platform.ExecContext(ctx, `UPDATE ref.classes SET academic_year_id = $2 WHERE class_id = $1`, k.class, uuid.New()); err != nil {
+	placed := uuid.New()
+	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.students (student_id, tenant_id, school_id, grade_level, status, source_version,
+		academic_year_id) VALUES ($1, $2, $3, 3, 'active', 1, $4)`, placed, c.tenantA, k.school, uuid.New()); err != nil {
 		t.Fatal(err)
 	}
 	if v := defaultVersion(); v != nil {
 		t.Fatalf("setting of another year applied: %v", v)
 	}
-	if _, err := c.platform.ExecContext(ctx, `UPDATE ref.classes SET academic_year_id = $2 WHERE school_id = $1`, k.school, year); err != nil {
+	if _, err := c.platform.ExecContext(ctx, `UPDATE ref.students SET academic_year_id = $2 WHERE school_id = $1`, k.school, year); err != nil {
 		t.Fatal(err)
 	}
 	if v := defaultVersion(); v == nil || v.String() != ver2 {

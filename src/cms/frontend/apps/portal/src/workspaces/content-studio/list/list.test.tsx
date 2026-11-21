@@ -151,7 +151,7 @@ describe('Thùng rác của tenant (F054-AC-26)', () => {
 
   it('AC-28: no Thùng rác menu without tenant.trash.read; restore hidden without tenant.trash.restore', async () => {
     const noRead = TENANT_CONTENT_PERMS.filter((p) => !p.startsWith('tenant.trash.'));
-    await renderPublishing('/school-lms/classes', { account: tenantUser(noRead) });
+    await renderPublishing('/school-lms/students', { account: tenantUser(noRead) });
     await screen.findAllByText(/Lớp/);
     expect(screen.queryByRole('menuitem', { name: /Thùng rác/ })).toBeNull();
     stopPortals();

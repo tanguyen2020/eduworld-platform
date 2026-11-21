@@ -81,7 +81,8 @@ type SisSyncRepository interface {
 	AddErrors(ctx context.Context, runID uuid.UUID, errs []RecordError) error
 	AddStaging(ctx context.Context, runID uuid.UUID, items []StagingItem) error
 
-	// LinkOf returns the EduWorld id and last hash of a school/class/enrollment source key.
+	// LinkOf returns the EduWorld id and last hash of a school source key (links of classes and enrollments are history,
+	// ADR-0095).
 	LinkOf(ctx context.Context, connectionID uuid.UUID, kind, externalID string) (id uuid.UUID, hash string, found bool, err error)
 	SaveLink(ctx context.Context, connectionID uuid.UUID, kind, externalID string, entityID uuid.UUID, schoolID *uuid.UUID, hash string) error
 
@@ -98,23 +99,13 @@ type SisSyncRepository interface {
 	SetUserStatus(ctx context.Context, userID uuid.UUID, status string) (from string, changed bool, err error)
 	SetLoginKey(ctx context.Context, connectionID uuid.UUID, externalID, username string) error
 
-	// AcademicYear finds or creates the academic year of a school by name (YYYY-YYYY).
+	// AcademicYear finds or creates the academic year of a school by name (YYYY-YYYY); the current year of the SIS
+	// becomes the current year of a school that has none (academic_year_id of student.placement_changed).
 	AcademicYear(ctx context.Context, schoolID uuid.UUID, name string) (uuid.UUID, error)
-	// CreateClass / UpdateClass write a class of the SIS and return what class.synced carries (F011 T040).
-	CreateClass(ctx context.Context, id, schoolID, yearID uuid.UUID, grade int, name string) (SyncedClass, error)
-	UpdateClass(ctx context.Context, id uuid.UUID, grade int, name string) (SyncedClass, error)
 	// SchoolVersion is the version of a live school (source_version of school.synced, F011 T040).
 	SchoolVersion(ctx context.Context, schoolID uuid.UUID) (int64, error)
-	ClassSchool(ctx context.Context, classID uuid.UUID) (schoolID uuid.UUID, grade int, err error)
 
 	RaiseIssue(ctx context.Context, i Issue) (uuid.UUID, error)
-}
-
-// SyncedClass is the class row after a SIS write: aggregate version, academic year and the virtual flag (class.synced).
-type SyncedClass struct {
-	Version        int64
-	AcademicYearID uuid.UUID
-	IsVirtual      bool
 }
 
 // PendingStudent is a SIS student waiting for its Keycloak account, with its active SIS link.
@@ -207,7 +198,7 @@ type LoginState struct {
 	SchoolExternalID string // "" when the school has no source key yet
 	Username         string
 	LastSyncedAt     *time.Time
-	ActiveEnrollment bool // active enrollment with school and class
+	Placed           bool // effective student with a school and a grade (org.students active, ADR-0095)
 	StudentLookup    bool // the connection is active and declares the student_lookup capability
 }
 
@@ -228,7 +219,7 @@ type SisImportRow struct {
 	StorageKey   string
 	SHA256       *string
 	Size         int64
-	Kinds        []string // one entity kind of the API (students, classes, enrollments, schools)
+	Kinds        []string // one entity kind of the API (students, schools; classes/enrollments ignored — ADR-0095)
 	Status       string
 	DryRun       bool
 	RunID        *uuid.UUID

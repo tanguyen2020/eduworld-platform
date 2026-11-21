@@ -2,7 +2,9 @@ package http
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -45,7 +47,7 @@ func (h Handlers) listCatalogSchools(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-// ---------- students and classes ----------
+// ---------- students by school and grade (ADR-0095) ----------
 
 func (h Handlers) getMyStudentProfile(w http.ResponseWriter, r *http.Request) {
 	out, err := h.Org.GetMyStudentProfile(r.Context())
@@ -82,71 +84,18 @@ func optUUID(r *http.Request, name string) (*uuid.UUID, error) {
 	return &id, nil
 }
 
-func (h Handlers) listClasses(w http.ResponseWriter, r *http.Request) {
+func (h Handlers) listTenantGradeStudents(w http.ResponseWriter, r *http.Request) {
 	school, err := pathUUID(r, "school_id")
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	year, err := optUUID(r, "academic_year_id")
+	grade, err := strconv.Atoi(chi.URLParam(r, "grade_level"))
 	if err != nil {
-		fail(w, r, err)
+		fail(w, r, problem.Invalid("grade_level", problem.SubInvalid, "must be an integer"))
 		return
 	}
-	out, err := h.Org.ListClasses(r.Context(), school, year, queryInt(r, "grade_level"))
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": out})
-}
-
-func (h Handlers) listTenantSchoolClasses(w http.ResponseWriter, r *http.Request) {
-	school, err := pathUUID(r, "school_id")
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	year, err := optUUID(r, "academic_year")
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	out, err := h.Org.ListTenantSchoolClasses(r.Context(), query.ClassesInput{ListInput: list(r), SchoolID: school, AcademicYearID: year,
-		Grade: queryInt(r, "grade")})
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, out)
-}
-
-func (h Handlers) listUnassignedStudents(w http.ResponseWriter, r *http.Request) {
-	school, err := optUUID(r, "school_id")
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	out, err := h.Org.ListUnassignedStudents(r.Context(), school, list(r))
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, out)
-}
-
-func (h Handlers) listTenantClassStudents(w http.ResponseWriter, r *http.Request) {
-	school, err := pathUUID(r, "school_id")
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	class, err := pathUUID(r, "class_id")
-	if err != nil {
-		fail(w, r, err)
-		return
-	}
-	out, err := h.Org.ListTenantClassStudents(r.Context(), query.ClassStudentsInput{ListInput: list(r), SchoolID: school, ClassID: class,
+	out, err := h.Org.ListTenantGradeStudents(r.Context(), query.GradeStudentsInput{ListInput: list(r), SchoolID: school, Grade: grade,
 		Q: r.URL.Query().Get("q")})
 	if err != nil {
 		fail(w, r, err)

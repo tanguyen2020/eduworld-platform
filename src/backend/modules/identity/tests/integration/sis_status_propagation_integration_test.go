@@ -36,7 +36,7 @@ func TestSisStatusPropagation(t *testing.T) {
 		t.Fatal(err)
 	}
 	run := command.SisRun{UoW: g.uow, Savepoints: g.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{},
+		Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{},
 		Students: write.StudentRepo{}, Events: g.env.deps.Events, Audit: g.env.deps.Audit, History: write.LifecycleRepo{}}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	imp := func(s1, s2 string) {
@@ -99,9 +99,14 @@ func TestSisStatusPropagation(t *testing.T) {
 	if r := g.login(t, "hs.st.an", uuid.New()); r.code != 403 || codeOf(r) != string(problem.AccountLocked) {
 		t.Fatalf("suspended login: %d %v", r.code, r.body)
 	}
-	// AC-08: transferred out → enrollment closed, account untouched; login refused by membership.
-	if count(ctx, t, g.platform, `SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'transferred'`, binh) != 1 {
-		t.Fatal("enrollment not transferred")
+	// AC-08: transferred out → the student is no longer effective (org.students inactive, student.placement_changed —
+	// ADR-0095), account untouched; login refused by membership.
+	if count(ctx, t, g.platform, `SELECT count(*) FROM org.students WHERE student_id = $1 AND status = 'inactive'`, binh) != 1 {
+		t.Fatal("transferred_out student still effective")
+	}
+	if count(ctx, t, g.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'student.placement_changed'
+		AND envelope->'payload'->>'student_id' = $1 AND envelope->'payload'->>'status' = 'inactive'`, binh.String()) != 1 {
+		t.Fatal("student.placement_changed of the transfer out")
 	}
 	r := g.login(t, "hs.st.binh", uuid.New())
 	if c := codeOf(r); r.code != 403 || (c != string(problem.NoActiveEnrollment) && c != string(problem.AccountNotProvisioned)) {

@@ -22,19 +22,15 @@ type rawPage struct {
 }
 
 // entity names of metrics and record errors.
-var entityOf = map[string]string{contract.KindSchool: sis.KindSchool, contract.KindClass: sis.KindClass, contract.KindStudent: sis.KindStudent,
-	contract.KindEnrollment: sis.KindEnrollment, contract.KindAcademicYear: "academic_year"}
+var entityOf = map[string]string{contract.KindSchool: sis.KindSchool, contract.KindStudent: sis.KindStudent,
+	contract.KindAcademicYear: "academic_year"}
 
 func externalIDOf(kind string, r map[string]any) string {
 	switch kind {
 	case contract.KindSchool:
 		return sis.Str(r, "school_external_id")
-	case contract.KindClass:
-		return sis.Str(r, "class_external_id")
 	case contract.KindStudent:
 		return sis.Str(r, "student_external_id")
-	case contract.KindEnrollment:
-		return sis.Str(r, "student_external_id") + "|" + sis.Str(r, "class_external_id")
 	case contract.KindAcademicYear:
 		return sis.Str(r, "academic_year")
 	}
@@ -144,29 +140,19 @@ func (c *Client) ListAcademicYears(ctx context.Context, school string) (port.Sis
 	return out, nil
 }
 
-// ListClasses calls listClasses of an academic year.
-func (c *Client) ListClasses(ctx context.Context, school, year, cursor string) (port.SisPage, error) {
-	return c.list(ctx, "listClasses", contract.KindClass, "/schools/"+url.PathEscape(school)+"/classes", url.Values{"academic_year": {year}}, cursor)
-}
-
 // ListStudents calls listStudents.
 func (c *Client) ListStudents(ctx context.Context, school, cursor string) (port.SisPage, error) {
 	return c.list(ctx, "listStudents", contract.KindStudent, "/schools/"+url.PathEscape(school)+"/students", nil, cursor)
 }
 
-// ListEnrollments calls listEnrollments of an academic year.
-func (c *Client) ListEnrollments(ctx context.Context, school, year, cursor string) (port.SisPage, error) {
-	return c.list(ctx, "listEnrollments", contract.KindEnrollment, "/schools/"+url.PathEscape(school)+"/enrollments",
-		url.Values{"academic_year": {year}}, cursor)
-}
-
 // kindOfChange maps Change.entity_kind to the DTO.
-var kindOfChange = map[string]string{sis.KindSchool: contract.KindSchool, sis.KindClass: contract.KindClass, sis.KindStudent: contract.KindStudent,
-	sis.KindEnrollment: contract.KindEnrollment}
+var kindOfChange = map[string]string{sis.KindSchool: contract.KindSchool, sis.KindStudent: contract.KindStudent}
 
 // ParseChanges validates the Change items of a page or a ChangeBatch (F017-AC-15): sequence ≥ 0,
 // entity_kind, operation, external_id ≤ 200, record required for upsert and valid against the DTO of its
-// kind (unknown fields dropped); the result is sorted by sequence.
+// kind (unknown fields dropped); the result is sorted by sequence. A change of a kind removed by contract 1.3.0
+// (class, enrollment — ADR-0095 D6) is passed through without record so the sync ignores it with a warning; it is
+// never a violation.
 func ParseChanges(v *contract.Validator, items []map[string]any) ([]port.SisChange, []port.SisViolation, int) {
 	var out []port.SisChange
 	var bad []port.SisViolation
@@ -174,6 +160,10 @@ func ParseChanges(v *contract.Validator, items []map[string]any) ([]port.SisChan
 	for _, it := range items {
 		seq, okSeq := it["sequence"].(float64)
 		kind, op, ext := sis.Str(it, "entity_kind"), sis.Str(it, "operation"), sis.Str(it, "external_id")
+		if sis.IgnoredKind(kind) && okSeq && seq >= 0 {
+			out = append(out, port.SisChange{Sequence: int64(seq), Kind: kind, Operation: op, ExternalID: ext})
+			continue
+		}
 		dto, okKind := kindOfChange[kind]
 		short := ext
 		if len(short) > 64 {

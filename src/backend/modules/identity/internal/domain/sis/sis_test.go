@@ -23,11 +23,11 @@ func TestActionFor(t *testing.T) {
 // F011-AC-23.
 func TestStatusEffect(t *testing.T) {
 	cases := map[string]StatusChange{
-		"active":          {UserStatus: "active"},
-		"inactive":        {UserStatus: "deactivated", CloseEnrollment: "ended"},
-		"graduated":       {UserStatus: "deactivated", CloseEnrollment: "ended"},
+		"active":          {UserStatus: "active", StudentStatus: "active"},
+		"inactive":        {UserStatus: "deactivated", StudentStatus: "inactive"},
+		"graduated":       {UserStatus: "deactivated", StudentStatus: "inactive"},
 		"suspended":       {UserStatus: "locked"},
-		"transferred_out": {CloseEnrollment: "transferred"},
+		"transferred_out": {StudentStatus: "inactive"},
 	}
 	for s, want := range cases {
 		got, err := StatusEffect(s)
@@ -67,5 +67,17 @@ func TestNationalIDHash(t *testing.T) {
 	}
 	if NationalIDHash(nil, "0123456") != "" || NationalIDHash(k, " ") != "" || NationalIDHash([]byte("x"), "1") == NationalIDHash(k, "1") {
 		t.Fatal("key")
+	}
+}
+
+// ADR-0095 D6: class and enrollment records are no longer applied.
+func TestIgnoredKinds(t *testing.T) {
+	if !IgnoredKind(KindClass) || !IgnoredKind(KindEnrollment) || IgnoredKind(KindStudent) || IgnoredKind(KindSchool) {
+		t.Fatal("ignored kinds")
+	}
+	for _, k := range ApplyOrder {
+		if IgnoredKind(k) {
+			t.Fatalf("%s is applied", k)
+		}
 	}
 }

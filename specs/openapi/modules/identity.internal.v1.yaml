@@ -18,7 +18,7 @@ tags:
   - name: tenants
     description: Thông tin tenant và trường
   - name: memberships
-    description: Kiểm tra thành viên tenant/trường/lớp
+    description: Kiểm tra thành viên tenant/trường/khối
   - name: projections
     description: Snapshot phân trang để rebuild projection ref.* của module khác (DATABASE_DESIGN §2.17)
 
@@ -109,12 +109,13 @@ paths:
     get:
       tags: [projections]
       operationId: listProjectionSnapshot
-      summary: Trang trạng thái hiện hành của tenant/trường/lớp/học sinh/enrollment để rebuild projection ref.* (F010-AC-27)
+      summary: Trang trạng thái hiện hành của tenant/trường/học sinh để rebuild projection ref.* (F010-AC-27)
       description: |
         Dùng cho job rebuild projection `ref.*` của module nhận (DATABASE_DESIGN §2.17 mục 3, F003-AC-39), gọi trong tiến trình qua `pkg/modcall`.
         Mỗi item là trạng thái hiện hành của một bản ghi, `data` gồm đúng các trường của payload event projection tương ứng
-        (`tenant` → `tenant.updated`, `school` → `school.updated`, `class` → `class.synced`, `student` → `student.synced`,
-        `enrollment` → `enrollment.changed`; `specs/events/payloads/identity/`) kèm `source_version`; bản ghi đã soft-delete trả `deleted = true`.
+        (`tenant` → `tenant.updated`, `school` → `school.updated`, `student` → `student.placement_changed` — trường, khối, trạng thái
+        hiệu lực, ADR-0095; `specs/events/payloads/identity/`) kèm `source_version`; bản ghi đã soft-delete trả `deleted = true`. Không còn
+        `class`/`enrollment` (ADR-0095 mục 2).
         Đọc read model (query, không ghi DB, không phát event); không trả PII ngoài trường của payload event.
         `tenant_id` vắng mặt = phạm vi platform cho job (mọi tenant); có = chỉ tenant đó. Phân trang ổn định theo `cursor`.
       x-allowed-callers: [learning, game, competition, chat]
@@ -122,7 +123,7 @@ paths:
         - name: entity_type
           in: path
           required: true
-          schema: { type: string, enum: [tenant, school, class, student, enrollment] }
+          schema: { type: string, enum: [tenant, school, student] }
         - name: tenant_id
           in: query
           required: false
@@ -146,9 +147,9 @@ paths:
     post:
       tags: [memberships]
       operationId: checkMemberships
-      summary: Kiểm tra hàng loạt người dùng có thuộc tenant/trường/lớp hay không
+      summary: Kiểm tra hàng loạt người dùng có thuộc tenant/trường hay không (khối trả trong grade_level — ADR-0095)
       description: |
-        Dùng khi tạo party, mời bạn, mở channel lớp, giao bài… để xác nhận thành viên theo dữ liệu
+        Dùng khi tạo party, mời bạn, giao bài… để xác nhận thành viên theo dữ liệu
         mới nhất. Tối đa 100 user mỗi lần. Không trả thông tin cá nhân ngoài kết quả kiểm tra.
       x-allowed-callers: [learning, game, competition, chat]
       x-context-required: [tenant_scope]
@@ -221,11 +222,6 @@ components:
         school_ids:
           type: array
           maxItems: 500
-          items: { type: string, format: uuid }
-        class_ids:
-          type: array
-          maxItems: 500
-          description: Lớp học sinh đang theo học (enrollment SIS); rỗng với nhân sự
           items: { type: string, format: uuid }
         grade_level: { type: [integer, 'null'], minimum: 1, maximum: 9 }
         sis_connection_id:
@@ -316,8 +312,8 @@ components:
       type: object
       required: [entity_type, entity_id, tenant_id, source_version, deleted, data]
       properties:
-        entity_type: { type: string, enum: [tenant, school, class, student, enrollment] }
-        entity_id: { type: string, format: uuid, description: 'tenant_id, school_id, class_id, student_id hoặc enrollment_id' }
+        entity_type: { type: string, enum: [tenant, school, student] }
+        entity_id: { type: string, format: uuid, description: 'tenant_id, school_id hoặc student_id' }
         tenant_id: { type: string, format: uuid }
         source_version: { type: integer, minimum: 0, description: Cùng giá trị với source_version của event projection (consumer chỉ áp bản mới hơn) }
         deleted: { type: boolean, description: true nếu bản ghi nguồn đã soft-delete }
@@ -326,7 +322,7 @@ components:
           maxProperties: 50
           description: |
             Các trường payload của event projection tương ứng (`specs/events/payloads/identity/<event>.v1.schema.json`: `tenant.updated`,
-            `school.updated`, `class.synced`, `student.synced`, `enrollment.changed`) theo trạng thái hiện hành; trường chỉ mô tả một lần thay đổi
+            `school.updated`, `student.placement_changed`) theo trạng thái hiện hành; trường chỉ mô tả một lần thay đổi
             (`op`, `action`, `trigger`, `changed_fields`, `sync_run_id`) có thể vắng mặt. Không PII ngoài các trường đó.
     ProjectionSnapshotPage:
       type: object
@@ -348,7 +344,6 @@ components:
           maxItems: 100
           items: { type: string, format: uuid }
         school_id: { type: [string, 'null'], format: uuid }
-        class_id: { type: [string, 'null'], format: uuid }
         require_user_type: { type: [string, 'null'], enum: [student, staff, null] }
 
     MembershipCheckResult:

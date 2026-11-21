@@ -3,8 +3,8 @@ package command
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -393,7 +393,7 @@ func recordErrors(vs []port.SisViolation) []write.RecordError {
 
 func kindOrChange(k string) string {
 	switch k {
-	case sis.KindSchool, sis.KindClass, sis.KindStudent, sis.KindEnrollment:
+	case sis.KindSchool, sis.KindStudent:
 		return k
 	}
 	return truncate(k, 64)
@@ -432,8 +432,9 @@ func allPages(ctx context.Context, f func(ctx context.Context, cursor string) (p
 	}
 }
 
-// full pulls every mapped school (schools → academic year → classes → students → enrollments), checks the
-// violation threshold, then hands each school to the F011 pipeline (F017-AC-05, AC-06, AC-08, AC-09).
+// full pulls every mapped school (schools → academic year → students; SIS contract 1.3.0 has no classes and no
+// enrollments — ADR-0095 D6), checks the violation threshold, then hands each school to the F011 pipeline (F017-AC-05,
+// AC-06, AC-08, AC-09).
 func (h SisSync) full(ctx context.Context, p port.SisProvider, c *write.ContractConnectionRow, run *write.SyncRun) (outcome, error) {
 	o := outcome{status: "succeeded", stats: map[string]int{}}
 	mapped, err := h.schoolMap(ctx, c, run.SchoolID)
@@ -480,23 +481,19 @@ func (h SisSync) full(ctx context.Context, p port.SisProvider, c *write.Contract
 		if year == "" {
 			o.stats["schools_without_current_year"]++
 		} else {
-			classes, cv, err := allPages(ctx, func(ctx context.Context, cur string) (port.SisPage, error) { return p.ListClasses(ctx, ext, year, cur) })
-			if err != nil {
-				return classify(err), nil
+			if !run.DryRun { // the current year of the SIS is the year of the placements of this school (ADR-0095)
+				school := d.schoolID
+				if err := h.UoW.Do(ctx, func(ctx context.Context) error { _, err := h.Run.Sync.AcademicYear(ctx, school, year); return err }); err != nil {
+					return o, err
+				}
 			}
 			students, sv, err := allPages(ctx, func(ctx context.Context, cur string) (port.SisPage, error) { return p.ListStudents(ctx, ext, cur) })
 			if err != nil {
 				return classify(err), nil
 			}
-			enrollments, ev, err := allPages(ctx, func(ctx context.Context, cur string) (port.SisPage, error) {
-				return p.ListEnrollments(ctx, ext, year, cur)
-			})
-			if err != nil {
-				return classify(err), nil
-			}
-			d.files = append(d.files, asFile(sis.KindClass, classes), asFile(sis.KindStudent, students), asFile(sis.KindEnrollment, enrollments))
-			d.violations = append(append(append(d.violations, cv...), sv...), ev...)
-			d.records = len(classes) + len(students) + len(enrollments)
+			d.files = append(d.files, asFile(sis.KindStudent, students))
+			d.violations = append(d.violations, sv...)
+			d.records = len(students)
 		}
 		total += d.records + len(d.violations)
 		violations += len(d.violations)
@@ -627,12 +624,6 @@ func (h SisSync) changes(ctx context.Context, c *write.ContractConnectionRow, ru
 	for i, ch := range changes {
 		last[ch.Kind+"\x00"+ch.ExternalID] = i
 	}
-	classSchool := map[string]string{} // class external id of the batch → school external id
-	for i, ch := range changes {
-		if last[ch.Kind+"\x00"+ch.ExternalID] == i && ch.Kind == sis.KindClass && ch.Operation == "upsert" {
-			classSchool[ch.ExternalID] = sis.Str(ch.Record, "school_external_id")
-		}
-	}
 	groups := map[uuid.UUID]*PulledSchool{}
 	group := func(id uuid.UUID) *PulledSchool {
 		if groups[id] == nil {
@@ -645,11 +636,17 @@ func (h SisSync) changes(ctx context.Context, c *write.ContractConnectionRow, ru
 	seenUnmapped := map[string]bool{}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		for i, ch := range changes {
+			if sis.IgnoredKind(ch.Kind) { // SIS contract 1.3.0 (ADR-0095 D6): ignored with a warning, never rejected
+				o.stats["changes_ignored"]++
+				slog.WarnContext(ctx, "sis: change of a kind removed by the SIS contract 1.3.0 is ignored", "kind", ch.Kind,
+					"sis_connection_id", c.ID.String())
+				continue
+			}
 			if last[ch.Kind+"\x00"+ch.ExternalID] != i {
 				o.stats["changes_superseded"]++
 				continue
 			}
-			schoolExt, err := h.schoolOfChange(ctx, c.ID, ch, classSchool, mapped)
+			schoolExt, err := h.schoolOfChange(ctx, c.ID, ch, mapped)
 			if err != nil {
 				return err
 			}
@@ -710,66 +707,24 @@ func (h SisSync) changes(ctx context.Context, c *write.ContractConnectionRow, ru
 	return o, nil
 }
 
-// schoolOfChange returns the school external id of a change: from its record, from the class of an
-// enrollment (this batch or the stored link) or from the synced student of a delete.
-func (h SisSync) schoolOfChange(ctx context.Context, conn uuid.UUID, ch port.SisChange, classSchool map[string]string,
-	mapped map[string]uuid.UUID) (string, error) {
-	if ch.Operation == "upsert" && ch.Kind != sis.KindEnrollment {
+// schoolOfChange returns the school external id of a change: from its record, or from the synced student of a delete.
+func (h SisSync) schoolOfChange(ctx context.Context, conn uuid.UUID, ch port.SisChange, mapped map[string]uuid.UUID) (string, error) {
+	if ch.Operation == "upsert" {
 		return sis.Str(ch.Record, "school_external_id"), nil
 	}
-	reverse := func(id uuid.UUID) string {
-		for ext, s := range mapped {
-			if s == id {
-				return ext
-			}
-		}
-		return ""
+	if ch.Kind == sis.KindSchool { // school delete: only counted by the pipeline of a mapped school
+		return ch.ExternalID, nil
 	}
-	switch ch.Kind {
-	case sis.KindStudent:
-		s, err := h.Run.Sync.SyncedStudentOf(ctx, conn, ch.ExternalID)
-		if err != nil || s == nil {
-			return "", err
-		}
-		return reverse(s.SchoolID), nil
-	case sis.KindEnrollment:
-		studentExt, classExt, _ := strings.Cut(ch.ExternalID, "|")
-		if ch.Record != nil {
-			classExt = sis.Str(ch.Record, "class_external_id")
-		}
-		if ext, ok := classSchool[classExt]; ok {
+	s, err := h.Run.Sync.SyncedStudentOf(ctx, conn, ch.ExternalID)
+	if err != nil || s == nil {
+		return "", err
+	}
+	for ext, id := range mapped {
+		if id == s.SchoolID {
 			return ext, nil
 		}
-		id, _, found, err := h.Run.Sync.LinkOf(ctx, conn, sis.KindClass, classExt)
-		if err != nil {
-			return "", err
-		}
-		if found {
-			school, _, err := h.Run.Sync.ClassSchool(ctx, id)
-			if err != nil {
-				return "", err
-			}
-			return reverse(school), nil
-		}
-		s, err := h.Run.Sync.SyncedStudentOf(ctx, conn, studentExt)
-		if err != nil || s == nil {
-			return "", err
-		}
-		return reverse(s.SchoolID), nil
-	default: // school/class delete: only counted by the pipeline of a mapped school
-		if ch.Kind == sis.KindSchool {
-			return ch.ExternalID, nil
-		}
-		id, _, found, err := h.Run.Sync.LinkOf(ctx, conn, sis.KindClass, ch.ExternalID)
-		if err != nil || !found {
-			return "", err
-		}
-		school, _, err := h.Run.Sync.ClassSchool(ctx, id)
-		if err != nil {
-			return "", err
-		}
-		return reverse(school), nil
 	}
+	return "", nil
 }
 
 // finish records the run, the connection state (circuit breaker, auth/contract errors, watermark, last

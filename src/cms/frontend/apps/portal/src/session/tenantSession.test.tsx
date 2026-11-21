@@ -60,7 +60,7 @@ describe('switching tenant on the topbar (F051-AC-20)', () => {
     await user.click(screen.getByRole('radio', { name: /TH Demo A/ }));
     await user.click(screen.getByRole('button', { name: 'Vào' }));
     await screen.findByRole('heading', { level: 1, name: 'Tổng quan' });
-    await router.navigate('/school-lms/classes');
+    await router.navigate('/school-lms/students');
     await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     const oldKeys = runtime.queryClient.getQueryCache().getAll().map((q) => JSON.stringify(q.queryKey));
     expect(oldKeys.some((k) => k.includes(TENANTS.thDemoA.tenant_id))).toBe(true);

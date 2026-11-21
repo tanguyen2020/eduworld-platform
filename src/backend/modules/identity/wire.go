@@ -188,9 +188,9 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		return err
 	}
 	engine := saga.Engine{UoW: core.UoW, Repo: write.SagaRepo{}, Metrics: lm}
-	restore := command.StudentRestore{UoW: core.UoW, Repo: write.CleanupRepo{}, Saga: engine, Participants: studentParts,
+	restore := command.StudentRestore{UoW: core.UoW, Repo: write.CleanupRepo{}, Students: write.StudentRepo{}, Saga: engine, Participants: studentParts,
 		Lifecycle: write.LifecycleRepo{}, Events: events, Audit: auditor}
-	cleanup := command.StudentCleanup{UoW: core.UoW, Repo: write.CleanupRepo{}, Settings: write.SettingsRepo{}, Defaults: defaults, Saga: engine,
+	cleanup := command.StudentCleanup{UoW: core.UoW, Repo: write.CleanupRepo{}, Students: write.StudentRepo{}, Settings: write.SettingsRepo{}, Defaults: defaults, Saga: engine,
 		Participants: studentParts, Lifecycle: write.LifecycleRepo{}, Events: events, Audit: auditor, Metrics: lm, Cursors: cursors}
 	anonymize := command.UserAnonymize{UoW: core.UoW, Repo: write.AnonymizeRepo{}, Saga: engine, Participants: anonymizers,
 		Lifecycle: write.LifecycleRepo{}, Events: events, Audit: auditor}
@@ -219,7 +219,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		return err
 	}
 	run := command.SisRun{UoW: core.UoW, Savepoints: core.UoW, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Missing: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
 		Rules: write.SisSyncRepo{}, Events: events, Audit: auditor, Observer: metrics.Runs{}, History: write.LifecycleRepo{}}
 	if k := cfg.String("EW_SIS_ID_HASH_KEY"); k != "" {
 		run.IDHashKey = []byte(k)
@@ -304,7 +304,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		ListTenants:       query.ListTenants{Model: read.TenantModel{Session: core.ReadSession}, Cursors: cursors},
 		CreateAdminSchool: command.CreateAdminTenantSchool{SchoolDeps: sd}, UpdateAdminSchool: command.UpdateAdminTenantSchool{SchoolDeps: sd},
 		UpdateTenantSchool: command.UpdateTenantSchool{SchoolDeps: sd}, ApproveTenantSchool: command.ApproveTenantSchool{SchoolDeps: sd},
-		CreateCommonStudents: command.CreateCommonStudents{UoW: core.UoW, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, KC: kc,
+		CreateCommonStudents: command.CreateCommonStudents{UoW: core.UoW, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, Students: write.StudentRepo{}, KC: kc,
 			Events: events, Audit: auditor, LocalIssuer: localIssuer},
 		Catalog:         command.Catalog{CatalogDeps: command.CatalogDeps{UoW: core.UoW, Catalog: write.CatalogWriter{}, Events: events, Audit: auditor}},
 		Org:             query.Org{Model: read.OrgModel{Session: core.ReadSession}, Cursors: cursors},

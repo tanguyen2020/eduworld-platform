@@ -13,10 +13,9 @@ var ProjectionIdentityStream = natsx.EventStream("identity")
 
 // ProjectionIdentityEvents are the identity events projected into ref.* (F020-AC-01, F020-AC-02; school.updated
 // also feeds ref.schools, DATABASE_DESIGN §2.17; student.placement_changed keeps the school and grade of ref.students —
-// ADR-0095; class.synced and enrollment.changed stay projected until module identity stops producing them, WP-I1).
+// ADR-0095: there is no class.synced and no enrollment.changed any more).
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "school.synced", "school.updated",
-	"class.synced", "student.synced", "student.cleaned_up", "student.restored", "enrollment.changed", "province.updated",
-	"student.placement_changed"}
+	"student.synced", "student.cleaned_up", "student.restored", "province.updated", "student.placement_changed"}
 
 // ProjectionIdentitySubjects are the filter subjects of the consumer (exact subjects, so other identity events
 // are never delivered).
@@ -110,11 +109,10 @@ func AssignmentSubmissionsSubjects() []string {
 // account locks of module identity to the open assignments (F041-AC-16).
 const AssignmentEnrollmentName = "learning.assignment_enrollment"
 
-// AssignmentEnrollmentSubjects are student.placement_changed, student.synced, enrollment.changed (until WP-I1) and
-// user.access_revoked of module identity.
+// AssignmentEnrollmentSubjects are student.placement_changed, student.synced and user.access_revoked of module identity.
 func AssignmentEnrollmentSubjects() []string {
 	out := []string{}
-	for _, e := range []string{"student.placement_changed", "student.synced", "enrollment.changed", "user.access_revoked"} {
+	for _, e := range []string{"student.placement_changed", "student.synced", "user.access_revoked"} {
 		out = append(out, natsx.EventSubject("identity", e))
 	}
 	return out

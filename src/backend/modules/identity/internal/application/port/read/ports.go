@@ -63,41 +63,31 @@ type SchoolFilter struct {
 	Limit        int
 }
 
-// ClassFilter selects classes of one school.
-type ClassFilter struct {
-	SchoolID       uuid.UUID
-	AcademicYearID *uuid.UUID
-	Grade          int
-	After          *page.Cursor
-	Limit          int // 0 = no paging (listClasses)
-}
-
 // OrgReadModel reads the catalog and the organization of the scope (keyset pages return Limit+1 rows).
 type OrgReadModel interface {
 	Countries(ctx context.Context) ([]dto.Country, error)
 	Provinces(ctx context.Context, country, status string) ([]dto.Province, error)
 	Schools(ctx context.Context, f SchoolFilter) ([]dto.School, error)
 	School(ctx context.Context, id uuid.UUID) (dto.School, error)
-	Classes(ctx context.Context, f ClassFilter) ([]dto.Class, error)
 	// AcademicYears returns the live academic years of a school of the scope, newest first (listSchoolAcademicYears).
 	AcademicYears(ctx context.Context, schoolID uuid.UUID) ([]dto.SchoolAcademicYear, error)
-	UnassignedStudents(ctx context.Context, schoolID *uuid.UUID, after *page.Cursor, limit int) ([]dto.UnassignedStudent, error)
 	StudentSummary(ctx context.Context, studentID uuid.UUID) (dto.StudentSummary, error)
-	// ClassStudents returns the students with an active enrollment in a class of the school, ordered by
-	// (display_name, student_id); a class outside the school or the scope is problem NotFound.
-	ClassStudents(ctx context.Context, f ClassStudentFilter) ([]dto.ClassStudent, error)
+	// GradeStudents returns the effective students of one grade of a school (ADR-0095), ordered by
+	// (display_name, student_id); a school outside the scope is problem NotFound.
+	GradeStudents(ctx context.Context, f GradeStudentFilter) ([]dto.GradeStudent, error)
 }
 
-// ClassStudentFilter selects the roster of one class (listTenantClassStudents).
-type ClassStudentFilter struct {
-	SchoolID, ClassID uuid.UUID
-	Q                 string // display name, username or student code (case-insensitive substring)
-	After             *page.Cursor
-	Limit             int
+// GradeStudentFilter selects the students of one grade of one school (listTenantGradeStudents).
+type GradeStudentFilter struct {
+	SchoolID uuid.UUID
+	Grade    int
+	Q        string // display name, username or student code (case-insensitive substring)
+	After    *page.Cursor
+	Limit    int
 }
 
 // SnapshotEntityTypes are the entities of listProjectionSnapshot.
-var SnapshotEntityTypes = map[string]bool{"tenant": true, "school": true, "class": true, "student": true, "enrollment": true}
+var SnapshotEntityTypes = map[string]bool{"tenant": true, "school": true, "student": true}
 
 // SnapshotItem is one ProjectionSnapshotItem: the fields of the projection event payload (no PII beyond
 // them), the aggregate version and whether the source row is soft-deleted.
@@ -159,7 +149,7 @@ type SisConnectionStats interface {
 }
 
 // BootstrapReader builds the PlayerBootstrap of a student in the tenant of the scope (F013 T012): user,
-// student, school (bilingual name, province), active class, tenant. Runs under the TenantScope of the
+// student, school (bilingual name, province), grade, tenant. Runs under the TenantScope of the
 // chosen tenant; nothing from other modules (ADR-0074).
 type BootstrapReader interface {
 	Bootstrap(ctx context.Context, userID uuid.UUID) (dto.PlayerBootstrap, error)

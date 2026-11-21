@@ -12,7 +12,7 @@ afterEach(() => stopPortals());
 
 describe('/login (F051-AC-01, F051-AC-30)', () => {
   it('unauthenticated visit → portal login page with every field; no Keycloak, no tenant step', async () => {
-    const { backend, router } = await renderPortal({ url: '/school-lms/classes' });
+    const { backend, router } = await renderPortal({ url: '/school-lms/students' });
     expect(await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
     expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fclasses');
@@ -92,7 +92,7 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
     expect(router.state.location.pathname).toBe('/select-tenant');
     await user.click(screen.getByRole('radio', { name: /TH Demo A/ }));
     await user.click(screen.getByRole('button', { name: 'Vào' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/classes'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/students'));
   });
 
   it('no tenant and no platform role → "chưa được cấp quyền" + sign out (F051-AC-03)', async () => {

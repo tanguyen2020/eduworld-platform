@@ -3225,18 +3225,6 @@
     ]
   },
   {
-    "operation_id": "listClasses",
-    "module": "identity",
-    "method": "GET",
-    "path": "/schools/{school_id}/classes",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "listClubEvents",
     "module": "chat",
     "method": "GET",
@@ -4259,10 +4247,10 @@
     ]
   },
   {
-    "operation_id": "listTenantClassStudents",
+    "operation_id": "listTenantGradeStudents",
     "module": "identity",
     "method": "GET",
-    "path": "/tenant/schools/{school_id}/classes/{class_id}/students",
+    "path": "/tenant/schools/{school_id}/grades/{grade_level}/students",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -4287,18 +4275,6 @@
     "method": "GET",
     "path": "/tenant/roles",
     "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "listTenantSchoolClasses",
-    "module": "identity",
-    "method": "GET",
-    "path": "/tenant/schools/{school_id}/classes",
-    "tenant_scoped": true,
-    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -4452,17 +4428,6 @@
     "method": "GET",
     "path": "/admin/trash",
     "required": [
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "listUnassignedStudents",
-    "module": "identity",
-    "method": "GET",
-    "path": "/tenant/students/unassigned",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
       "role_denied"
     ]
   },

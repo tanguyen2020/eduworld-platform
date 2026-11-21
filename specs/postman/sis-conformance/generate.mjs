@@ -125,9 +125,6 @@ const required = [
     `pm.test('HTTP 200 + JSON Schema', function () { pm.response.to.have.status(200); pm.response.to.have.jsonSchema(${JSON.stringify(yearsSchema)}); });`,
     `pm.test('Có đúng một năm học hiện hành', function () { pm.expect(((ew.json() || {}).data || []).filter(function (y) { return y.is_current; }).length).to.equal(1); });`,
   ])),
-  request('listClasses', 'GET', `${S}/classes`, [['academic_year', '{{academic_year}}'], ['limit', '{{page_limit}}']], js([
-    `ew.page(${JSON.stringify(schemaOf('ClassPage'))}, Number(pm.environment.get('page_limit')));`,
-  ])),
   request('listStudents — trang đầu và trang kế theo next_cursor', 'GET', `${S}/students`, [['limit', '{{page_limit}}']], js([
     `const b = ew.page(${JSON.stringify(schemaOf('StudentPage'))}, Number(pm.environment.get('page_limit')));`,
     `if (b.page && b.page.has_more) {`,
@@ -137,15 +134,12 @@ const required = [
     `  });`,
     `}`,
   ])),
-  request('listEnrollments', 'GET', `${S}/enrollments`, [['academic_year', '{{academic_year}}'], ['limit', '{{page_limit}}']], js([
-    `ew.page(${JSON.stringify(schemaOf('EnrollmentPage'))}, Number(pm.environment.get('page_limit')));`,
-  ])),
 ];
 
 // Known HMAC vector: the signature EduWorld verifies (X-EduWorld-Signature, SIS_INTEGRATION §5).
 const vector = { secret: 'whsec-conformance', timestamp: '1800000000',
   body: JSON.stringify({ delivery_id: '0193a5f4-6c1e-7b2a-9d1f-0000000000d1', contract_version: contract.info.version, changes: [
-    { sequence: 1, entity_kind: 'enrollment', operation: 'delete', external_id: 'HS-DEMO-0002|C-3A-2026', occurred_at: '2026-11-01T08:00:00Z' }] }) };
+    { sequence: 1, entity_kind: 'student', operation: 'delete', external_id: 'HS-DEMO-0004', occurred_at: '2026-11-01T08:00:00Z' }] }) };
 vector.signature = 'sha256=' + crypto.createHmac('sha256', vector.secret).update(vector.timestamp + '.' + vector.body).digest('hex');
 
 const optional = [

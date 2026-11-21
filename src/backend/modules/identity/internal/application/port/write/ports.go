@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/catalog"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/school"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
@@ -79,42 +79,33 @@ type CatalogRepository interface {
 	Successor(ctx context.Context, provinceID uuid.UUID) (*catalog.Province, error)
 }
 
-// EnrollmentRepository persists enrollments (org.enrollments, T): history kept, at most one active.
-type EnrollmentRepository interface {
-	// LockActive returns the active enrollment of the student locked FOR UPDATE (404 when none), so
-	// concurrent transfers of one student serialize (F010-AC-11).
-	LockActive(ctx context.Context, studentID uuid.UUID) (*enrollment.Enrollment, error)
-	// Close saves the closed enrollment (status, end_date) where version matches.
-	Close(ctx context.Context, e *enrollment.Enrollment) error
-	// Open inserts an active enrollment; a second active one violates enrollments_one_active_uq → 409.
-	Open(ctx context.Context, e *enrollment.Enrollment) error
-	// Placement returns the tenant and school of a live class (404 when unknown in the scope).
-	Placement(ctx context.Context, classID uuid.UUID) (enrollment.Placement, error)
-}
-
-// StudentRepository moves students between schools/tenants (org.students and identity.users).
+// StudentRepository reads and changes the placement of students (org.students: school, grade, effective status —
+// ADR-0095 mục 2) and moves them between schools/tenants (org.students and identity.users).
 type StudentRepository interface {
-	// Move sets the school (and tenant) of the student and the user's primary tenant/school; user_id is kept.
-	Move(ctx context.Context, studentID uuid.UUID, to enrollment.Placement) error
+	// Placement locks the student row FOR UPDATE and returns its placement (soft-deleted rows included, not effective);
+	// nil when the scope has no row for the student. Callers compare it before and after a change (student.placement_changed).
+	Placement(ctx context.Context, studentID uuid.UUID) (*placement.Record, error)
+	// Move sets the tenant, school and grade of a live student and the primary tenant/school of its user; user_id is kept.
+	Move(ctx context.Context, studentID uuid.UUID, to placement.Placement) error
+	// SetStatus sets the effective status of a live student (placement.StatusActive / StatusInactive).
+	SetStatus(ctx context.Context, studentID uuid.UUID, status string) error
 }
 
 // NewStudentAccount is a platform-created student of the common tenant (ACCOUNT_PROVISIONING §3.4).
 type NewStudentAccount struct {
-	UserID       uuid.UUID
-	Username     string // normalized
-	DisplayName  string
-	TenantID     uuid.UUID
-	SchoolID     uuid.UUID
-	ClassID      uuid.UUID
-	Grade        int
-	Issuer       string // OIDC issuer of the local Keycloak realm
-	Subject      string // Keycloak user id
-	ExternalRef  string // optional, stored as issuer platform_common
-	EnrollmentID uuid.UUID
+	UserID      uuid.UUID
+	Username    string // normalized
+	DisplayName string
+	TenantID    uuid.UUID
+	SchoolID    uuid.UUID
+	Grade       int
+	Issuer      string // OIDC issuer of the local Keycloak realm
+	Subject     string // Keycloak user id
+	ExternalRef string // optional, stored as issuer platform_common
 }
 
 // AccountRepository creates platform-provisioned accounts (identity.users, org.students,
-// identity.external_identities, org.enrollments) in the current transaction.
+// identity.external_identities) in the current transaction.
 type AccountRepository interface {
 	// UsernameTaken reports whether lower(username) exists on any row, soft-deleted included (ADR-0069).
 	UsernameTaken(ctx context.Context, username string) (bool, error)

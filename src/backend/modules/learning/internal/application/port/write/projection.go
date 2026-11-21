@@ -65,12 +65,15 @@ type RefClass struct {
 
 // RefStudent is a row of ref.students. Nil fields keep the stored value on update.
 type RefStudent struct {
-	StudentID     uuid.UUID
-	TenantID      uuid.UUID
-	SchoolID      uuid.UUID
-	GradeLevel    *int
-	Status        *string
-	SourceVersion int64
+	StudentID  uuid.UUID
+	TenantID   uuid.UUID
+	SchoolID   uuid.UUID
+	GradeLevel *int
+	Status     *string
+	// AcademicYearID is the current academic year of the school of the student (student.placement_changed, ADR-0095);
+	// nil keeps the stored value.
+	AcademicYearID *uuid.UUID
+	SourceVersion  int64
 }
 
 // RefEnrollment is a row of ref.enrollments.

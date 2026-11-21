@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/messaging"
 )
 
 // columnsOf lists the columns of a ref table.
@@ -43,7 +45,7 @@ func TestProjectionEntities(t *testing.T) {
 		"provinces":   {"code", "country_code", "name_i18n", "source_version", "status"},
 		"schools":     {"is_virtual", "name", "name_i18n", "province_code", "province_name_i18n", "school_id", "school_level", "settings_subset", "source_version", "status", "tenant_id"},
 		"classes":     {"academic_year_id", "class_id", "grade_level", "is_virtual", "name", "school_id", "source_version", "tenant_id"},
-		"students":    {"deleted_at", "grade_level", "school_id", "source_version", "status", "student_id", "tenant_id"},
+		"students":    {"academic_year_id", "deleted_at", "grade_level", "school_id", "source_version", "status", "student_id", "tenant_id"},
 		"enrollments": {"class_id", "end_date", "source_version", "start_date", "status", "student_id", "tenant_id"},
 	}
 	for table, cols := range want {
@@ -53,7 +55,7 @@ func TestProjectionEntities(t *testing.T) {
 	}
 
 	p := startProjection(ctx, t, e)
-	tenant, school, class, student := uuid.New(), uuid.New(), uuid.New(), uuid.New()
+	tenant, school, student := uuid.New(), uuid.New(), uuid.New()
 	p.processed(ctx, t, p.publish(ctx, t, "tenant.created", &tenant, tenantPayload(tenant, "th-demo-a", "active", 1)))
 
 	// province.updated (platform event) → ref.provinces.
@@ -74,32 +76,28 @@ func TestProjectionEntities(t *testing.T) {
 		t.Fatalf("ref.schools: %q %q %q %v", sname, level, prov, err)
 	}
 
-	// class.synced → ref.classes (no source_version: the envelope time orders events).
-	p.processed(ctx, t, p.publish(ctx, t, "class.synced", &tenant, map[string]any{"class_id": class.String(), "school_id": school.String(),
-		"grade_level": 3, "name": "3A", "academic_year": "2026-2027", "status": "active", "op": "created", "trigger": "manual_import"}))
-	if n := count(ctx, t, e.migrator, `SELECT count(*) FROM ref.classes WHERE class_id = $1 AND tenant_id = $2 AND school_id = $3
-		AND grade_level = 3 AND name = '3A'`, class, tenant, school); n != 1 {
-		t.Fatalf("ref.classes rows = %d", n)
-	}
-
-	// student.synced → ref.students; enrollment.changed → ref.enrollments.
+	// student.synced → ref.students; student.placement_changed → school, grade, status and current academic year (ADR-0095).
 	p.processed(ctx, t, p.publish(ctx, t, "student.synced", &tenant, map[string]any{"student_id": student.String(), "school_id": school.String(),
 		"action": "create", "sync_run_id": uuid.NewString(), "grade_level": 3, "source_version": 1}))
-	p.processed(ctx, t, p.publish(ctx, t, "enrollment.changed", &tenant, map[string]any{"student_id": student.String(), "class_id": class.String(),
-		"op": "added", "school_id": school.String(), "status": "active", "start_date": "2026-09-05", "source": "sis", "source_version": 1}))
 	if n := count(ctx, t, e.migrator, `SELECT count(*) FROM ref.students WHERE student_id = $1 AND tenant_id = $2 AND grade_level = 3
 		AND status = 'active' AND deleted_at IS NULL`, student, tenant); n != 1 {
 		t.Fatalf("ref.students rows = %d", n)
 	}
-	if n := count(ctx, t, e.migrator, `SELECT count(*) FROM ref.enrollments WHERE student_id = $1 AND class_id = $2
-		AND start_date = '2026-09-05' AND status = 'active' AND end_date IS NULL`, student, class); n != 1 {
-		t.Fatalf("ref.enrollments rows = %d", n)
+	year := uuid.New()
+	p.processed(ctx, t, p.publish(ctx, t, "student.placement_changed", &tenant, map[string]any{"student_id": student.String(),
+		"tenant_id": tenant.String(), "school_id": school.String(), "grade_level": 4, "status": "active", "previous_grade_level": 3,
+		"changed_fields": []string{"grade_level"}, "academic_year_id": year.String(), "source": "sis", "source_version": 2}))
+	if n := count(ctx, t, e.migrator, `SELECT count(*) FROM ref.students WHERE student_id = $1 AND grade_level = 4 AND academic_year_id = $2`,
+		student, year); n != 1 {
+		t.Fatal("student.placement_changed not projected")
 	}
-	p.processed(ctx, t, p.publish(ctx, t, "enrollment.changed", &tenant, map[string]any{"student_id": student.String(), "class_id": class.String(),
-		"op": "ended", "status": "ended", "start_date": "2026-09-05", "end_date": "2027-05-31", "source_version": 2}))
-	if n := count(ctx, t, e.migrator, `SELECT count(*) FROM ref.enrollments WHERE student_id = $1 AND status = 'ended'
-		AND end_date = '2027-05-31'`, student); n != 1 {
-		t.Fatalf("ended enrollment rows = %d", n)
+	// ADR-0095: class.synced and enrollment.changed are no longer subjects of the consumer (identity stopped them).
+	for _, gone := range []string{"class.synced", "enrollment.changed"} {
+		for _, s := range messaging.ProjectionIdentitySubjects() {
+			if strings.HasSuffix(s, "."+gone) {
+				t.Fatalf("%s is still a subject of the projection", gone)
+			}
+		}
 	}
 
 	// student.cleaned_up / student.restored → deleted_at of the projection.

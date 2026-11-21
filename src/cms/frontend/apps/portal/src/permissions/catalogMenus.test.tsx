@@ -71,11 +71,11 @@ describe('menus from getMyPermissions (F051-AC-09, F051-AC-35)', () => {
 
   it('403 FEATURE_DISABLED → notice with feature key and trace id, no sign-out, permissions reloaded (F051-AC-37)', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
-    const { runtime } = await renderPortal({ url: '/school-lms/classes', backend });
+    const { runtime } = await renderPortal({ url: '/school-lms/students', backend });
     await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     const before = backend.calls('GET', '/me/permissions').length;
-    backend.overrides.push((r) => (r.path === '/auth/me' ? problem(403, 'FEATURE_DISABLED', { feature_key: 'menu.school_lms.classes' }) : undefined));
-    backend.disabledMenus = ['menu.school_lms.classes'];
+    backend.overrides.push((r) => (r.path === '/auth/me' ? problem(403, 'FEATURE_DISABLED', { feature_key: 'menu.school_lms.students' }) : undefined));
+    backend.disabledMenus = ['menu.school_lms.students'];
     await runtime.api.call(runtime.api.client.GET('/auth/me', {})).catch(() => undefined);
     // the notice and the "Tính năng đang tắt" page (permissions reloaded) may render in either order (F052 screen)
     expect((await screen.findAllByText(/Khóa tính năng: menu\.school_lms\.classes/)).length).toBeGreaterThan(0);
@@ -87,7 +87,7 @@ describe('menus from getMyPermissions (F051-AC-09, F051-AC-35)', () => {
 
   it('403 PERMISSION_DENIED → permissions reloaded at once (F051-AC-12)', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
-    const { runtime } = await renderPortal({ url: '/school-lms/classes', backend });
+    const { runtime } = await renderPortal({ url: '/school-lms/students', backend });
     await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     const before = backend.calls('GET', '/me/permissions').length;
     backend.overrides.push((r) => (r.path === '/auth/me' ? problem(403, 'PERMISSION_DENIED') : undefined));

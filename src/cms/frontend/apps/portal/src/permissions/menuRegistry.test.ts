@@ -18,14 +18,14 @@ describe('menuRegistry', () => {
     expect(menuStatus('menu.school_lms.schools', { permissions: ['tenant.school.read'], workspaces: [] })).toBe('forbidden');
     expect(menuStatus('menu.school_lms.schools', { permissions: ['lms.student.read'], workspaces: ['school_lms'] })).toBe('forbidden');
     // any-of: classes accepts tenant.student.read OR lms.student.read
-    expect(menuStatus('menu.school_lms.classes', { permissions: ['lms.student.read'], workspaces: ['school_lms'] })).toBe('visible');
+    expect(menuStatus('menu.school_lms.students', { permissions: ['lms.student.read'], workspaces: ['school_lms'] })).toBe('visible');
   });
 
   it('a turned-off menu is `disabled` (not visible, not 403) (F051-AC-35)', () => {
     const p = { permissions: ['tenant.school.read', 'lms.student.read'], workspaces: ['school_lms'], disabled_menus: ['menu.school_lms.schools'] };
     expect(menuStatus('menu.school_lms.schools', p)).toBe('disabled');
     expect(visibleMenus(school, p).some((m) => m.key === 'menu.school_lms.schools')).toBe(false);
-    expect(visibleMenus(school, p).some((m) => m.key === 'menu.school_lms.classes')).toBe(true);
+    expect(visibleMenus(school, p).some((m) => m.key === 'menu.school_lms.students')).toBe(true);
   });
 
   it('menus keep the catalog order', () => {
@@ -50,8 +50,8 @@ describe('menuRegistry', () => {
   });
 
   it('path lookups follow catalog paths', () => {
-    expect(workspaceForPath('/school-lms/classes/123')?.key).toBe('school_lms');
-    expect(menuForPath('/school-lms/classes/123')?.key).toBe('menu.school_lms.classes');
+    expect(workspaceForPath('/school-lms/students/123')?.key).toBe('school_lms');
+    expect(menuForPath('/school-lms/students/123')?.key).toBe('menu.school_lms.students');
     expect(workspaceForPath('/school-lmsx')).toBeUndefined();
   });
 });

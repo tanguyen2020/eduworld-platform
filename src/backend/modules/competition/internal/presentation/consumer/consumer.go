@@ -118,11 +118,6 @@ func (c IdentityProjection) Handle(ctx context.Context, e outbox.Envelope) error
 	case "student.placement_changed":
 		ok, err := c.placement(ctx, e)
 		return classify("students", e, ok, err)
-	case "enrollment.changed":
-		// ADR-0095: party and matchmaking read school and grade from ref.students; the class of a student is no longer
-		// projected. The event is still acknowledged (with or without class_id) so the durable keeps flowing until
-		// identity stops producing it (WP-I1); ref.enrollments is dropped in WP-R.
-		return nil
 	case "school.updated":
 		ok, err := c.school(ctx, e)
 		return classify("schools", e, ok, err)

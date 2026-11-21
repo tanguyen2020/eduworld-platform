@@ -49,7 +49,7 @@ paths:
       tags:
         - students
       operationId: getStudentProgress
-      x-portal-action: action.school_lms.classes.view
+      x-portal-action: action.school_lms.students.view
       summary: Tiến độ & mastery của một học sinh cho nhân sự nhà trường (school_admin trường mình, academic_manager trong scope)
       description: |
         Nhân sự portal của tenant phiên (học sinh dùng `getMyProgress`). Quyền `analytics.school.read` (ADR-0095 mục 6) trong scope trường của học sinh

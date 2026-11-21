@@ -13,7 +13,7 @@ import { checkCsvFile } from './fileCheck';
 import { SisImportProgress } from './SisImportProgress';
 import { useSisImport, type EntityKind } from './useSisImport';
 
-const KINDS: EntityKind[] = ['students', 'classes', 'enrollments'];
+const KINDS: EntityKind[] = ['students']; // SIS contract 1.3.0 (ADR-0095): no classes, no enrollments
 
 export function SisImportPage({ schoolId }: { schoolId: string }) {
   const { t } = useTranslation();

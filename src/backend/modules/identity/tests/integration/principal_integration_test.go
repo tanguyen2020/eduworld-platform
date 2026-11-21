@@ -127,29 +127,49 @@ func TestResolvePrincipal(t *testing.T) {
 		t.Fatalf("system admin in tenant = %+v", tp)
 	}
 
-	// Student: placement of the active enrollment.
+	// Student (ADR-0095 mục 2): the school and grade of the student row, no enrollment and no class.
 	st := enrolled(ctx, t, e.platform, a, "hs.prin")
 	sp2 := principal(resolve("", "", &st, &a.tenant))
-	if sp2.UserType != "student" || sp2.ClassIds == nil || (*sp2.ClassIds)[0].String() != a.class || sp2.GradeLevel == nil || *sp2.GradeLevel != 3 ||
-		len(sp2.Permissions) != 0 {
+	if sp2.UserType != "student" || sp2.SchoolIds == nil || len(*sp2.SchoolIds) != 1 || (*sp2.SchoolIds)[0].String() != a.school ||
+		sp2.GradeLevel == nil || *sp2.GradeLevel != 3 || len(sp2.Permissions) != 0 {
 		t.Fatalf("student principal = %+v", sp2)
 	}
 
-	// checkMemberships in the TenantScope of the caller.
+	// checkMemberships in the TenantScope of the caller, limited to the school of the student.
 	scope, _ := authz.EventScope(uuid.MustParse(a.tenant))
-	cls := uuid.MustParse(a.class)
-	resp, err := f.CheckMemberships(tenancy.WithScope(ctx, scope), identityapi.CheckMembershipsRequestObject{Body: &identityapi.MembershipCheckRequest{
-		UserIds: []uuid.UUID{st, adm, sa, uuid.New()}, ClassId: &cls}})
-	if err != nil {
+	check := func(school string, users ...uuid.UUID) map[uuid.UUID]bool {
+		t.Helper()
+		sid := uuid.MustParse(school)
+		resp, err := f.CheckMemberships(tenancy.WithScope(ctx, scope), identityapi.CheckMembershipsRequestObject{Body: &identityapi.MembershipCheckRequest{
+			UserIds: users, SchoolId: &sid}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		res := resp.(identityapi.CheckMemberships200JSONResponse)
+		if res.TenantId.String() != a.tenant || len(res.Results) != len(users) {
+			t.Fatalf("checkMemberships = %+v", res)
+		}
+		got := map[uuid.UUID]bool{}
+		for _, r := range res.Results {
+			got[r.UserId] = r.IsMember
+		}
+		return got
+	}
+	if got := check(a.school, st, sa, uuid.New()); !got[st] || got[sa] {
+		t.Fatalf("checkMemberships school = %v", got)
+	}
+	if got := check(a.otherSchool, st); got[st] {
+		t.Fatal("a student is a member of its own school only")
+	}
+	// A student that is no longer effective (SIS inactive) is not a member and has no Principal in the tenant.
+	if _, err := e.platform.ExecContext(ctx, `UPDATE org.students SET status = 'inactive' WHERE student_id = $1`, st); err != nil {
 		t.Fatal(err)
 	}
-	res := resp.(identityapi.CheckMemberships200JSONResponse)
-	got := map[uuid.UUID]bool{}
-	for _, r := range res.Results {
-		got[r.UserId] = r.IsMember
+	if got := check(a.school, st); got[st] {
+		t.Fatal("an inactive student is not a member")
 	}
-	if res.TenantId.String() != a.tenant || len(res.Results) != 4 || !got[st] || got[adm] || got[sa] {
-		t.Fatalf("checkMemberships = %+v", res)
+	if _, ok := resolve("", "", &st, &a.tenant).(identityapi.ResolvePrincipal404ApplicationProblemPlusJSONResponse); !ok {
+		t.Fatal("an inactive student has no membership in the tenant")
 	}
 	if _, err := f.CheckMemberships(ctx, identityapi.CheckMembershipsRequestObject{Body: &identityapi.MembershipCheckRequest{UserIds: []uuid.UUID{st}}}); err == nil {
 		t.Fatal("checkMemberships without a tenant scope must fail")

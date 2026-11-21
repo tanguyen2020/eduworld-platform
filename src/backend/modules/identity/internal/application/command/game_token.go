@@ -133,7 +133,7 @@ func (h GameAuth) refreshLocked(ctx context.Context, cfg GameAuthConfig, in dto.
 		if err != nil {
 			return refreshOutcome{err: unavailable(err), result: refreshUnavailable}
 		}
-		if !boot.IsCommonTenant && !boot.Enrolled {
+		if !boot.IsCommonTenant && !boot.Placed {
 			s.Revoke(gamelogin.RevokeAccessRevoked, now)
 			return refreshOutcome{err: problem.New(problem.NoActiveEnrollment, ""), result: refreshDenied, revoke: s}
 		}

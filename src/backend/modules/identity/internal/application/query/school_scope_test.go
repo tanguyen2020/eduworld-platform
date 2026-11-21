@@ -16,16 +16,18 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
-// fakeRoster is a TEST DOUBLE of the class roster read model (only ClassStudents is used).
+// fakeRoster is a TEST DOUBLE of the grade students read model (only GradeStudents is used).
 type fakeRoster struct {
 	read.OrgReadModel
-	rows  []dto.ClassStudent
+	rows  []dto.GradeStudent
+	got   read.GradeStudentFilter
 	calls int
 }
 
-func (f *fakeRoster) ClassStudents(context.Context, read.ClassStudentFilter) ([]dto.ClassStudent, error) {
+func (f *fakeRoster) GradeStudents(_ context.Context, fl read.GradeStudentFilter) ([]dto.GradeStudent, error) {
 	f.calls++
-	return append([]dto.ClassStudent(nil), f.rows...), nil
+	f.got = fl
+	return append([]dto.GradeStudent(nil), f.rows...), nil
 }
 
 // fakeIssues is a TEST DOUBLE of the issue read model.
@@ -49,39 +51,39 @@ func codeOf(err error) problem.Code {
 	return ""
 }
 
-// F052-1: listTenantClassStudents authorizes on the school of the path (no grant → 403, another school → 404)
-// and computes days_since_last_login on the server.
-func TestListTenantClassStudentsScope(t *testing.T) {
+// ADR-0095: listTenantGradeStudents authorizes on the school of the path (no grant → 403, another school → 404), rejects
+// a grade outside 1…9 (422) and computes days_since_last_login on the server.
+func TestListTenantGradeStudentsScope(t *testing.T) {
 	ctx := context.Background()
 	tenant, school, other := uuid.New(), uuid.New(), uuid.New()
 	now := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
 	last := now.Add(-73 * time.Hour)
-	m := &fakeRoster{rows: []dto.ClassStudent{{StudentID: uuid.New(), DisplayName: "An", LastLoginAt: &last}, {StudentID: uuid.New(), DisplayName: "Binh"}}}
+	m := &fakeRoster{rows: []dto.GradeStudent{{StudentID: uuid.New(), DisplayName: "An", LastLoginAt: &last}, {StudentID: uuid.New(), DisplayName: "Binh"}}}
 	codec, _ := page.NewCodec([]byte("0123456789abcdef0123456789abcdef"))
 	q := query.Org{Model: m, Cursors: codec, Clock: func() time.Time { return now }}
-	in := query.ClassStudentsInput{SchoolID: school, ClassID: uuid.New()}
+	in := query.GradeStudentsInput{SchoolID: school, Grade: 4}
 
-	out, err := q.ListTenantClassStudents(authztest.Ctx(ctx, authztest.Staff(tenant, "school_admin", authztest.AtSchool(school))), in)
+	out, err := q.ListTenantGradeStudents(authztest.Ctx(ctx, authztest.Staff(tenant, "school_admin", authztest.AtSchool(school))), in)
 	if err != nil || len(out.Items) != 2 || out.Items[0].DaysSinceLastLogin == nil || *out.Items[0].DaysSinceLastLogin != 3 ||
 		out.Items[1].DaysSinceLastLogin != nil {
 		t.Fatalf("school admin = %+v %v", out, err)
 	}
-	if _, err := q.ListTenantClassStudents(authztest.Ctx(ctx, authztest.Staff(tenant, "tenant_admin")), in); err != nil {
+	if _, err := q.ListTenantGradeStudents(authztest.Ctx(ctx, authztest.Staff(tenant, "tenant_admin")), in); err != nil {
 		t.Fatalf("tenant admin: %v", err)
 	}
 	calls := m.calls
-	if _, err := q.ListTenantClassStudents(authztest.Ctx(ctx, authztest.Staff(tenant, "school_admin", authztest.AtSchool(other))), in); codeOf(err) != problem.NotFound {
+	if _, err := q.ListTenantGradeStudents(authztest.Ctx(ctx, authztest.Staff(tenant, "school_admin", authztest.AtSchool(other))), in); codeOf(err) != problem.NotFound {
 		t.Fatalf("another school: %v (want 404)", err)
 	}
 	authztest.ExpectDenied(t, func() error {
-		_, err := q.ListTenantClassStudents(authztest.Ctx(ctx, authztest.NoRole(tenant)), in)
+		_, err := q.ListTenantGradeStudents(authztest.Ctx(ctx, authztest.NoRole(tenant)), in)
 		return err
 	}())
 	if m.calls != calls {
 		t.Fatal("the roster is read before the authorization")
 	}
 	in.Q = "a"
-	if _, err := q.ListTenantClassStudents(authztest.Ctx(ctx, authztest.Staff(tenant, "tenant_admin")), in); codeOf(err) != problem.ValidationFailed {
+	if _, err := q.ListTenantGradeStudents(authztest.Ctx(ctx, authztest.Staff(tenant, "tenant_admin")), in); codeOf(err) != problem.ValidationFailed {
 		t.Fatalf("q of one character: %v", err)
 	}
 }

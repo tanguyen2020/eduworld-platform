@@ -21,10 +21,10 @@ import (
 type Org struct {
 	Model   read.OrgReadModel
 	Cursors *page.Codec
-	Clock   func() time.Time // days_since_last_login of listTenantClassStudents; nil = time.Now
+	Clock   func() time.Time // days_since_last_login of listTenantGradeStudents; nil = time.Now
 }
 
-// Page is a keyset page of items (SchoolPage, ClassPage, UnassignedStudentPage).
+// Page is a keyset page of items (SchoolPage, GradeStudentPage).
 type Page[T any] struct {
 	Items []T       `json:"items"`
 	Page  page.Info `json:"page"`
@@ -83,7 +83,6 @@ func tenantRead(ctx context.Context, perm authz.Permission, school *uuid.UUID) (
 }
 
 func schoolKey(s dto.School) (string, uuid.UUID) { return s.Code, s.SchoolID }
-func classKey(c dto.Class) (string, uuid.UUID)   { return c.Name, c.ClassID }
 
 // ListCountries is listCountries (any authenticated user).
 func (q Org) ListCountries(ctx context.Context) (out []dto.Country, err error) {
@@ -246,67 +245,7 @@ func (q Org) ListAdminTenantSchools(ctx context.Context, tenantID uuid.UUID, sta
 	return q.schools(tenancy.WithScope(ctx, sc), &tenantID, nil, status, in)
 }
 
-// ClassesInput filters the class lists.
-type ClassesInput struct {
-	ListInput
-	SchoolID       uuid.UUID
-	AcademicYearID *uuid.UUID
-	Grade          int
-}
-
-// ListTenantSchoolClasses is listTenantSchoolClasses (tenant.class.read on the school).
-func (q Org) ListTenantSchoolClasses(ctx context.Context, in ClassesInput) (out Page[dto.Class], err error) {
-	ctx, done := observability.UseCase(ctx, "identity.query.ListTenantSchoolClasses")
-	defer func() { done(err) }()
-	if ctx, _, err = tenantRead(ctx, authz.PermTenantStudentRead, &in.SchoolID); err != nil {
-		return out, err
-	}
-	after, err := q.cursor(in.Cursor)
-	if err != nil {
-		return out, err
-	}
-	limit := page.Limit(in.Limit)
-	rows, err := q.Model.Classes(ctx, read.ClassFilter{SchoolID: in.SchoolID, AcademicYearID: in.AcademicYearID, Grade: in.Grade, After: after, Limit: limit})
-	if err != nil {
-		return out, err
-	}
-	return pageOf(q.Cursors, rows, limit, classKey), nil
-}
-
-// ListClasses is listClasses (lms.class.read on the school; F010-AC-18: another school → 403).
-func (q Org) ListClasses(ctx context.Context, schoolID uuid.UUID, yearID *uuid.UUID, grade int) (out []dto.Class, err error) {
-	ctx, done := observability.UseCase(ctx, "identity.query.ListClasses")
-	defer func() { done(err) }()
-	if ctx, _, err = tenantRead(ctx, authz.PermLmsStudentRead, &schoolID); err != nil {
-		return nil, err
-	}
-	rows, err := q.Model.Classes(ctx, read.ClassFilter{SchoolID: schoolID, AcademicYearID: yearID, Grade: grade})
-	if rows == nil && err == nil {
-		rows = []dto.Class{}
-	}
-	return rows, err
-}
-
-// ListUnassignedStudents is listUnassignedStudents (tenant.class.read): students without an active enrollment.
-func (q Org) ListUnassignedStudents(ctx context.Context, schoolID *uuid.UUID, in ListInput) (out Page[dto.UnassignedStudent], err error) {
-	ctx, done := observability.UseCase(ctx, "identity.query.ListUnassignedStudents")
-	defer func() { done(err) }()
-	if ctx, _, err = tenantRead(ctx, authz.PermTenantStudentRead, schoolID); err != nil {
-		return out, err
-	}
-	after, err := q.cursor(in.Cursor)
-	if err != nil {
-		return out, err
-	}
-	limit := page.Limit(in.Limit)
-	rows, err := q.Model.UnassignedStudents(ctx, schoolID, after, limit)
-	if err != nil {
-		return out, err
-	}
-	return pageOf(q.Cursors, rows, limit, func(u dto.UnassignedStudent) (string, uuid.UUID) { return u.StudentID.String(), u.StudentID }), nil
-}
-
-// GetMyStudentProfile is getMyStudentProfile: a student reads their own school and class (F010-AC-19).
+// GetMyStudentProfile is getMyStudentProfile: a student reads their own school and grade (F010-AC-19, ADR-0095).
 func (q Org) GetMyStudentProfile(ctx context.Context) (out dto.StudentSummary, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.GetMyStudentProfile")
 	defer func() { done(err) }()

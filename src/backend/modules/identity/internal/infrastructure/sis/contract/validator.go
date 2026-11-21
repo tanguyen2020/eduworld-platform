@@ -22,10 +22,8 @@ var schemaJSON []byte
 
 // Kinds are the DTOs a SIS import carries.
 const (
-	KindSchool     = "School"
-	KindClass      = "Class"
-	KindStudent    = "Student"
-	KindEnrollment = "Enrollment"
+	KindSchool  = "School"
+	KindStudent = "Student"
 	// Kinds of contract_v1 responses (F017).
 	KindAcademicYear = "AcademicYear"
 	KindLogin        = "Login"
@@ -69,7 +67,7 @@ func New() (*Validator, error) {
 		return nil, err
 	}
 	v := &Validator{schemas: map[string]*jsonschema.Schema{}, props: map[string]map[string]bool{}, types: map[string]map[string]string{}, version: raw.Version}
-	for _, k := range []string{KindSchool, KindClass, KindStudent, KindEnrollment, KindAcademicYear, KindLogin} {
+	for _, k := range []string{KindSchool, KindStudent, KindAcademicYear, KindLogin} {
 		s, err := c.Compile(url + "#/$defs/" + k)
 		if err != nil {
 			return nil, fmt.Errorf("contract: compile %s: %w", k, err)

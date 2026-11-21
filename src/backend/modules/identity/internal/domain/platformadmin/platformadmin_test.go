@@ -174,12 +174,15 @@ func TestCheckMerge(t *testing.T) {
 	}
 }
 
-// OQ F045-4: class_template cannot be cloned in Release 1.0 (422 at job creation); tenant_settings clones the
+// ADR-0095: class_template is gone (unknown resource type, never clonable — R22); tenant_settings clones the
 // source tenant itself; school_settings clones one source school.
 func TestPlanCloneSettings(t *testing.T) {
 	src, dst, school := uuid.New(), uuid.New(), uuid.New()
 	if _, err := platformadmin.PlanClone(src, dst, "class_template", []uuid.UUID{uuid.New()}); !errors.Is(err, platformadmin.ErrCloneNotAllowed) {
 		t.Fatalf("class_template: %v", err)
+	}
+	if _, err := platformadmin.Owner("class_template"); !errors.Is(err, platformadmin.ErrUnknownResourceType) {
+		t.Fatalf("class_template owner: %v", err)
 	}
 	if steps, err := platformadmin.PlanClone(src, dst, "tenant_settings", []uuid.UUID{src}); err != nil || len(steps) != 1 ||
 		steps[0].Module != platformadmin.ModuleIdentity {

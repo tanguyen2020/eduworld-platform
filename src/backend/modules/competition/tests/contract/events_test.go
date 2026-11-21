@@ -117,8 +117,6 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 		{"identity", "student.restored", "deleted", id.Handle},
 		// ADR-0095: student.placement_changed carries school and grade level (owner F010).
 		{"identity", "student.placement_changed", "placement", id.Handle},
-		// ADR-0095: enrollment.changed is acknowledged without a projection (no class rule any more) until WP-I1.
-		{"identity", "enrollment.changed", "", id.Handle},
 		{"game", "game_profile.updated", "profile", game.Handle},
 		// F095 T021: the relation events of module chat (spec F091 A-1).
 		{"chat", "friend.added", "friend+", socialP.Handle},
@@ -258,17 +256,12 @@ func TestPartySafetyConsumers(t *testing.T) {
 	}
 }
 
-// ADR-0095: enrollment.changed without class_id (WP-I1 transition) is acknowledged; a placement with a grade outside
-// 1–9 or an unknown status goes to the DLQ at once without touching ref.students.
+// ADR-0095: a placement with a grade outside 1–9 or an unknown status goes to the DLQ at once without touching
+// ref.students.
 func TestIdentityProjectionWithoutClasses(t *testing.T) {
 	refs := &fakeRefs{}
 	id := consumer.IdentityProjection{P: command.Projection{Refs: refs}}
 	tenant := uuid.New()
-	enrollment := `{"student_id":"` + uuid.NewString() + `","school_id":"` + uuid.NewString() + `","op":"added"}`
-	if err := id.Handle(context.Background(), outbox.Envelope{EventType: "enrollment.changed", TenantID: &tenant, OccurredAt: time.Now(),
-		Payload: json.RawMessage(enrollment)}); err != nil {
-		t.Fatalf("enrollment.changed without class_id: %v", err)
-	}
 	for _, bad := range []string{
 		`{"student_id":"` + uuid.NewString() + `","tenant_id":"` + tenant.String() + `","school_id":"` + uuid.NewString() + `","grade_level":10,"status":"active","source":"sis","source_version":1}`,
 		`{"student_id":"` + uuid.NewString() + `","tenant_id":"` + tenant.String() + `","school_id":"` + uuid.NewString() + `","grade_level":3,"status":"locked","source":"sis","source_version":1}`,

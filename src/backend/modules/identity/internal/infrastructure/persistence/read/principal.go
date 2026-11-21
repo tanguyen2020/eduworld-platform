@@ -104,30 +104,18 @@ func (m PrincipalModel) Membership(ctx context.Context, userID, tenantID uuid.UU
 }
 
 func studentPlacement(ctx context.Context, tx *sql.Tx, userID, tenantID uuid.UUID, mem *read.PrincipalMembership) error {
-	// tenancyguard:ok explicit tenant and deleted_at conditions
-	rows, err := tx.QueryContext(ctx, `SELECT school_id, class_id FROM org.enrollments
-		WHERE student_id = $1 AND tenant_id = $2 AND status = 'active' AND deleted_at IS NULL`, userID, tenantID)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = rows.Close() }()
-	for rows.Next() {
-		var school, class uuid.UUID
-		if err := rows.Scan(&school, &class); err != nil {
-			return err
-		}
-		mem.SchoolIDs = append(mem.SchoolIDs, school)
-		mem.ClassIDs = append(mem.ClassIDs, class)
-	}
-	if err := rows.Err(); err != nil {
-		return err
-	}
+	// The school and grade of the student row (ADR-0095 mục 2): the school only when the student is effective
+	// (status active), the grade whenever the row is live.
+	var school uuid.NullUUID
 	var grade sql.NullInt64
 	// tenancyguard:ok explicit tenant and deleted_at conditions
-	err = tx.QueryRowContext(ctx, `SELECT grade_level FROM org.students WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NULL`,
-		userID, tenantID).Scan(&grade)
+	err := tx.QueryRowContext(ctx, `SELECT CASE WHEN status = 'active' THEN school_id END, grade_level FROM org.students
+		WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NULL`, userID, tenantID).Scan(&school, &grade)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
+	}
+	if school.Valid {
+		mem.SchoolIDs = append(mem.SchoolIDs, school.UUID)
 	}
 	if grade.Valid {
 		g := int(grade.Int64)
@@ -217,9 +205,9 @@ func (m PrincipalModel) ActiveTenantType(ctx context.Context, tenantID uuid.UUID
 
 var _ read.MembershipChecker = PrincipalModel{}
 
-// CheckMembers checks users against the tenant (and school/class of an active enrollment, or a school-scoped
-// valid user role for staff). Unknown users are returned as non-members.
-func (m PrincipalModel) CheckMembers(ctx context.Context, tenantID uuid.UUID, userIDs []uuid.UUID, schoolID, classID *uuid.UUID) (out []read.MemberRow, err error) {
+// CheckMembers checks users against the tenant (and the school of an effective student — org.students, ADR-0095 —
+// or a school-scoped valid user role for staff). Unknown users are returned as non-members.
+func (m PrincipalModel) CheckMembers(ctx context.Context, tenantID uuid.UUID, userIDs []uuid.UUID, schoolID *uuid.UUID) (out []read.MemberRow, err error) {
 	err = m.read(ctx, func(tx *sql.Tx) error {
 		ids := make([]string, 0, len(userIDs))
 		for _, id := range userIDs {
@@ -229,18 +217,15 @@ func (m PrincipalModel) CheckMembers(ctx context.Context, tenantID uuid.UUID, us
 		rows, err := tx.QueryContext(ctx, `SELECT u.user_id, u.user_type, u.status, s.grade_level,
 				EXISTS (SELECT 1 FROM identity.tenant_memberships_v m WHERE m.user_id = u.user_id AND m.tenant_id = $2)
 				AND ($3::uuid IS NULL OR EXISTS (
-					SELECT 1 FROM org.enrollments e WHERE e.student_id = u.user_id AND e.tenant_id = $2 AND e.school_id = $3
+					SELECT 1 FROM org.students e WHERE e.student_id = u.user_id AND e.tenant_id = $2 AND e.school_id = $3
 					  AND e.status = 'active' AND e.deleted_at IS NULL
 					UNION ALL
 					SELECT 1 FROM identity.user_roles ur WHERE ur.user_id = u.user_id AND ur.tenant_id = $2 AND ur.deleted_at IS NULL
 					  AND ur.valid_from <= now() AND (ur.valid_to IS NULL OR ur.valid_to > now())
 					  AND (ur.scope_type = 'tenant' OR ur.school_id = $3 OR ur.scope_id = $3)))
-				AND ($4::uuid IS NULL OR EXISTS (
-					SELECT 1 FROM org.enrollments e WHERE e.student_id = u.user_id AND e.tenant_id = $2 AND e.class_id = $4
-					  AND e.status = 'active' AND e.deleted_at IS NULL))
 			FROM identity.users u
 			LEFT JOIN org.students s ON s.student_id = u.user_id AND s.tenant_id = $2 AND s.deleted_at IS NULL
-			WHERE u.user_id = ANY($1::uuid[]) AND u.deleted_at IS NULL`, "{"+strings.Join(ids, ",")+"}", tenantID, schoolID, classID)
+			WHERE u.user_id = ANY($1::uuid[]) AND u.deleted_at IS NULL`, "{"+strings.Join(ids, ",")+"}", tenantID, schoolID)
 		if err != nil {
 			return err
 		}

@@ -355,7 +355,7 @@ msgid "ui.error.NOT_FOUND"
 msgstr "This activity couldn't be found."
 
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
-msgstr "You have not been placed in a class for this school year."
+msgstr "Your school and grade for this school year are not set yet."
 
 msgid "ui.error.RATE_LIMITED"
 msgstr "Too many tries. Please wait a moment and try again."

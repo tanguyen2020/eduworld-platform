@@ -525,11 +525,13 @@ func (SchoolSettings) DefaultVersion(ctx context.Context, schoolID uuid.UUID, gr
 	if gradeLevel != nil {
 		grade = *gradeLevel
 	}
-	// The academic years of the classes of the school (and grade) in the projection (OQ F021-5, F040 T044): when the
-	// projection knows them, only the settings of those years apply; without academic year the previous rule stays.
-	// tenancyguard:ok tenant_id of the session scope and deleted_at IS NULL are in the WHERE clause (RLS T as well); ref.classes of the same tenant
-	rows, err := q.QueryContext(ctx, `WITH years AS (SELECT DISTINCT k.academic_year_id FROM ref.classes k
-			WHERE k.tenant_id = $1 AND k.school_id = $2 AND k.academic_year_id IS NOT NULL AND ($3 = 0 OR k.grade_level = $3))
+	// The current academic years of the students of the school (and grade) in the projection (OQ F021-5; ADR-0095: from
+	// student.placement_changed.academic_year_id, no class): when the projection knows them, only the settings of those
+	// years apply; without academic year the previous rule stays.
+	// tenancyguard:ok tenant_id of the session scope and deleted_at IS NULL are in the WHERE clause (RLS T as well); ref.students of the same tenant
+	rows, err := q.QueryContext(ctx, `WITH years AS (SELECT DISTINCT k.academic_year_id FROM ref.students k
+			WHERE k.tenant_id = $1 AND k.school_id = $2 AND k.academic_year_id IS NOT NULL AND k.deleted_at IS NULL
+				AND ($3 = 0 OR k.grade_level = $3))
 		SELECT curriculum_version_id FROM lms.school_curriculum_settings
 		WHERE tenant_id = $1 AND school_id = $2 AND deleted_at IS NULL AND (grade_level IS NULL OR grade_level = $3)
 			AND (NOT EXISTS (SELECT 1 FROM years) OR academic_year_id IN (SELECT academic_year_id FROM years))

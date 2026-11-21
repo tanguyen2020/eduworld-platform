@@ -1,4 +1,4 @@
-h1:QbhueuRZWKGyVwAxFsKb0dcrNi8DRGLKees1trkdz7k=
+h1:IWyyL4tXPM+35E6mON45nnw8O4jk68oJgouvqhTaK2k=
 00000000000001_baseline.sql h1:mL8cMl2vAGJa3QB6izUDIwZBpoiEr+YbpjQDl/fA6AM=
 20261118000001_infra.sql h1:V50K9lGOLvlg6QWneL/iztcTu/2epvp54pF/M+7Jym4=
 20261119000001_f010_org.sql h1:Tr5cc7N3NPEZRb0GCj1T6gb7+g8D1I7DcNZjRVdmgAk=
@@ -17,3 +17,4 @@ h1:QbhueuRZWKGyVwAxFsKb0dcrNi8DRGLKees1trkdz7k=
 20261128000001_oq17_daily_play_time.sql h1:ucjuczaMyD5110D9w6NuBkaklp/aHQbDzCkkek4YGv4=
 20261129000001_adr0095_lms_permissions.sql h1:HPebC5dMT7C9PbdCEGU67u6c35db1jIVHf8+AdazG4I=
 20261130000001_adr0095_permission_rename.sql h1:3ZMHSvjaxW0A06ddPD5tdCl4/jEz6krFEuRjK7nZ6/g=
+20261130000002_adr0095_membership_from_students.sql h1:8laaL7d6TGh4HzoqStWjFDsNw1+2OK/gti8BdZMVJSs=

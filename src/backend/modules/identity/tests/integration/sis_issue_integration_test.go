@@ -37,13 +37,11 @@ func TestSisIssues(t *testing.T) {
 	}
 	dup := enrolled(ctx, t, e.platform, a, "hs.dup") // the same child, created by hand before the SIS import
 	run := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
+		Students: write.StudentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	files := map[string]string{
-		"classes.csv": "class_external_id,school_external_id,academic_year,grade_level,name\nC-3B,TH-A,2026-2027,3,3B\n",
 		"students.csv": "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username\n" +
-			"HS-1,TH-A,001,An,3,active,hs.i.an\nHS-4,TH-A,004,Dung,3,active,hs.dup\n",
-		"enrollments.csv": "student_external_id,class_external_id,start_date,status\nHS-1,C-3B,2026-09-05,active\nHS-9,C-3B,2026-09-05,active\n",
+			"HS-1,TH-A,001,An,3,active,hs.i.an\nHS-4,TH-A,004,Dung,3,active,hs.dup\nHS-9,TH-A,001,An Copy,3,active,hs.i.copy\n", // HS-9: possible_duplicate
 	}
 	res, err := run.Handle(admin, command.RunImportInput{ConnectionID: conn.ID, SchoolID: school, Files: sisFiles(t, files)})
 	if err != nil || res.Issues != 2 {
@@ -67,7 +65,7 @@ func TestSisIssues(t *testing.T) {
 			if _, ok := i.EntityRefs["user_id"]; ok {
 				t.Fatal("the conflicting account is shown to tenant staff")
 			}
-		case "orphan_enrollment":
+		case "possible_duplicate":
 			orphan = i.IssueID
 		}
 	}
@@ -107,7 +105,7 @@ func TestSisIssues(t *testing.T) {
 		t.Fatalf("other tenant: %v", err)
 	}
 	if _, err := h.Handle(admin, command.ResolveSisIssueInput{IssueID: orphan, Resolution: "same_person"}); code(err) != problem.ValidationFailed {
-		t.Fatalf("same_person on orphan: %v", err)
+		t.Fatalf("same_person on a possible duplicate: %v", err)
 	}
 	ign, err := h.Handle(admin, command.ResolveSisIssueInput{IssueID: orphan, Resolution: "ignore", Note: "test row"})
 	if err != nil || ign.Status != "ignored" || ign.ResolvedBy == nil || ign.ResolvedAt == nil {
@@ -127,7 +125,7 @@ func TestSisIssues(t *testing.T) {
 		t.Fatalf("link of the existing account = %d", n)
 	}
 	again, err := run.Handle(admin, command.RunImportInput{ConnectionID: conn.ID, SchoolID: school, Files: sisFiles(t, files)})
-	if err != nil || again.Diff["student"]["update"] != 1 || again.Issues != 1 { // only the orphan enrollment again
+	if err != nil || again.Diff["student"]["update"] != 1 || again.Issues != 1 { // only the possible duplicate again
 		t.Fatalf("re-import = %+v %v", again, err)
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username IN ('hs.dup', 'hs.i.an')`); n != 2 {

@@ -45,7 +45,7 @@ func (h ProjectionSnapshot) Handle(ctx context.Context, in SnapshotInput) (out S
 	ctx, done := observability.UseCase(ctx, "identity.query.ListProjectionSnapshot")
 	defer func() { done(err) }()
 	if !read.SnapshotEntityTypes[in.EntityType] {
-		return out, problem.Invalid("entity_type", problem.SubInvalid, "tenant, school, class, student or enrollment")
+		return out, problem.Invalid("entity_type", problem.SubInvalid, "tenant, school or student")
 	}
 	limit := in.Limit
 	if limit <= 0 {

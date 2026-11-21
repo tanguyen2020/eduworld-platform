@@ -62,10 +62,10 @@ type CleanupRepository interface {
 	Candidates(ctx context.Context, dueBefore, now time.Time, school *uuid.UUID) ([]CleanupCandidate, error)
 	// StudentCount counts the live students of the tenant scope.
 	StudentCount(ctx context.Context) (int, error)
-	// SoftDeleteStudent soft-deletes the user, the student and the active enrollment (delete_reason
-	// inactive_cleanup); false when the student was already removed.
+	// SoftDeleteStudent soft-deletes the user and the student (delete_reason inactive_cleanup; the student loses its
+	// effective school and grade — ADR-0095); false when the student was already removed.
 	SoftDeleteStudent(ctx context.Context, studentID uuid.UUID) (bool, error)
-	// RestoreStudent clears the inactive_cleanup soft-delete of the user, student and enrollment; returns the
+	// RestoreStudent clears the inactive_cleanup soft-delete of the user and the student; returns the
 	// time of the cleanup (nil when nothing to restore).
 	RestoreStudent(ctx context.Context, studentID uuid.UUID) (*time.Time, error)
 	// CleanedStudent returns the tenant and cleanup time of a student removed by the cleanup (platform scope).

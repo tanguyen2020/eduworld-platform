@@ -12,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/saga"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -38,6 +39,7 @@ type StudentRestore struct {
 	Saga         saga.Engine
 	Participants []port.StudentDataParticipant
 	Lifecycle    write.LifecycleRepository
+	Students     write.StudentRepository // student.placement_changed (source lifecycle, ADR-0095); nil = not published
 	Events       write.EventPublisher
 	Audit        write.Auditor
 }
@@ -91,11 +93,22 @@ func (h StudentRestore) restoreIdentity(ctx context.Context, tenant, student uui
 	}
 	restored := false
 	err = h.UoW.Do(tctx, func(ctx context.Context) error {
+		var tr *placementTracker
+		if h.Students != nil {
+			if tr, err = trackPlacement(ctx, h.Students, h.Events, student); err != nil {
+				return err
+			}
+		}
 		at, err := h.Repo.RestoreStudent(ctx, student)
 		if err != nil || at == nil {
 			return err // already restored: idempotent
 		}
 		restored = true
+		if tr != nil {
+			if err := tr.done(ctx, PlacementChange{Source: placement.SourceLifecycle}); err != nil {
+				return err
+			}
+		}
 		if err := h.Lifecycle.RecordStatusChange(ctx, write.StatusChange{UserID: student, TenantID: &tenant, From: "cleaned_up",
 			To: "active", Source: "restore", Reason: "restored_via_" + via, By: by}); err != nil {
 			return err

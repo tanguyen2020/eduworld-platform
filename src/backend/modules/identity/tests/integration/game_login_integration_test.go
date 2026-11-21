@@ -39,7 +39,6 @@ import (
 const (
 	gamePw       = "Mat-khau-hs-2026" // test password: must never appear in logs (F013-AC-16 is checked in tests/security)
 	commonSchool = "0193a000-0000-7000-8000-000000000002"
-	commonG4     = "0193a000-0000-7000-8000-000000000014"
 )
 
 // extraMembership is a TEST DOUBLE around the real LoginMembershipReader: it adds one membership. A student
@@ -275,14 +274,18 @@ func TestGameLogin(t *testing.T) {
 		t.Fatalf("tokens: %v", tok)
 	}
 	b := r.body["bootstrap"].(map[string]any)
-	class, _ := b["class"].(map[string]any)
 	if ff, _ := b["feature_flags"].(map[string]any); ff["social.friends_enabled"] != true {
 		t.Fatalf("bootstrap feature flags: %v", b["feature_flags"])
 	}
 	school, _ := b["school"].(map[string]any)
+	student, _ := b["student"].(map[string]any)
 	if b["tenant_id"] != a.tenant || b["tenant_type"] != "unit" || b["is_common_tenant"] != false || b["grade_band"] != "g1_3" ||
-		class["class_id"] != a.class || class["name"] != "3A" || school["school_id"] != a.school || school["province"] == nil {
+		school["school_id"] != a.school || school["province"] == nil || student["grade_level"] != float64(3) {
 		t.Fatalf("bootstrap: %v", b)
+	}
+	// ADR-0095: no class in the bootstrap (no class, class_id or class_name anywhere).
+	if raw, _ := json.Marshal(b); b["class"] != nil || strings.Contains(string(raw), "class_id") || strings.Contains(string(raw), "class_name") {
+		t.Fatalf("bootstrap still has a class: %s", raw)
 	}
 	if u := b["user"].(map[string]any); u["user_id"] != an.String() || u["status"] != "active" || u["user_type"] != "student" {
 		t.Fatalf("bootstrap user: %v", u)
@@ -358,13 +361,16 @@ func TestGameLogin(t *testing.T) {
 		t.Fatalf("non-student audits = %d", n)
 	}
 
-	// AC-05: locked, deactivated, no active enrollment.
+	// AC-05: locked, deactivated, no effective school/grade (student inactive — ADR-0095: NO_ACTIVE_ENROLLMENT keeps its code).
 	locked := g.student(ctx, t, a, "hs.khoa")
 	deact := g.student(ctx, t, a, "hs.nghi")
 	_, _ = g.platform.ExecContext(ctx, `UPDATE identity.users SET status = 'locked' WHERE user_id = $1`, locked)
 	_, _ = g.platform.ExecContext(ctx, `UPDATE identity.users SET status = 'deactivated' WHERE user_id = $1`, deact)
 	tx, _ := g.platform.BeginTx(ctx, nil)
 	noClass, err := insertStudent(ctx, tx, a, "hs.chualop")
+	if err == nil {
+		_, err = tx.ExecContext(ctx, `UPDATE org.students SET status = 'inactive' WHERE student_id = $1`, noClass)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -376,7 +382,7 @@ func TestGameLogin(t *testing.T) {
 		}
 	}
 
-	// AC-08: common tenant → is_common_tenant, virtual class by grade.
+	// AC-08: common tenant → is_common_tenant, virtual school with the grade of the student (no virtual class — ADR-0095).
 	common := uuid.New()
 	if _, err := g.platform.ExecContext(ctx, `INSERT INTO identity.users (user_id, created_at, updated_at, user_type, status, username, display_name, primary_tenant_id, provisioned_at)
 		VALUES ($1, now(), now(), 'student', 'active', 'hs.chung', 'hs.chung', $2, now())`, common, commonTenant); err != nil {
@@ -384,10 +390,6 @@ func TestGameLogin(t *testing.T) {
 	}
 	if _, err := g.platform.ExecContext(ctx, `INSERT INTO org.students (student_id, tenant_id, created_at, updated_at, school_id, grade_level, full_name)
 		VALUES ($1, $2, now(), now(), $3, 4, 'Hoc Sinh Chung')`, common, commonTenant, commonSchool); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := g.platform.ExecContext(ctx, `INSERT INTO org.enrollments (enrollment_id, tenant_id, created_at, updated_at, school_id, student_id, class_id, status, start_date, source)
-		VALUES ($1, $2, now(), now(), $3, $4, $5, 'active', current_date, 'platform_common')`, uuid.New(), commonTenant, commonSchool, common, commonG4); err != nil {
 		t.Fatal(err)
 	}
 	g.identity(ctx, t, common, "hs.chung")
@@ -401,7 +403,7 @@ func TestGameLogin(t *testing.T) {
 		t.Fatalf("common bootstrap feature flags: %v", cb["feature_flags"])
 	}
 	if cb["is_common_tenant"] != true || cb["tenant_type"] != "common" || cb["grade_band"] != "g4_5" ||
-		cb["school"].(map[string]any)["is_virtual"] != true || cb["class"].(map[string]any)["class_id"] != commonG4 {
+		cb["school"].(map[string]any)["is_virtual"] != true || cb["student"].(map[string]any)["grade_level"] != float64(4) || cb["class"] != nil {
 		t.Fatalf("common bootstrap: %v", cb)
 	}
 	if n := count(ctx, t, g.platform, `SELECT count(*) FROM identity.login_events WHERE user_id = $1 AND tenant_resolution = 'common'`, common); n != 1 {

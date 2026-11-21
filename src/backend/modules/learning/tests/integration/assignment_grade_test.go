@@ -168,8 +168,8 @@ func (c *curEnv) placementEvent(ctx context.Context, t *testing.T, typ string, t
 }
 
 // F041-AC-16 (ADR-0095 mục 3, mục 7): a student who joins grade 3 of the school while the assignment is open is added
-// (student.placement_changed.v1, also student.synced and enrollment.changed of identity until WP-I1 — its class is
-// ignored); not when the grade target excludes them, not for another grade or school, not when inactive; a placement of
+// (student.placement_changed.v1, also student.synced with a grade; enrollment.changed is gone — WP-I1); not when the
+// grade target excludes them, not for another grade or school, not when inactive; a placement of
 // another tenant is refused; a locked account is excused before the due date.
 func TestAssignmentPlacementChanges(t *testing.T) {
 	ctx := context.Background()
@@ -222,7 +222,7 @@ func TestAssignmentPlacementChanges(t *testing.T) {
 	} else if !errors.Is(err, outbox.ErrPermanent) {
 		t.Fatalf("not a permanent error: %v", err)
 	}
-	// student.synced with the grade and enrollment.changed v1 (its class is ignored) add students too, until WP-I1.
+	// student.synced with the grade adds students too; enrollment.changed (no longer produced, ADR-0095) is ignored.
 	synced := c.placeStudent(ctx, t, "hs.dongbo.3a", k.school, 3)
 	if err := c.placementEvent(ctx, t, "student.synced", c.tenantA, map[string]any{"student_id": synced, "school_id": k.school,
 		"action": "update", "grade_level": 3}); err != nil {
@@ -233,14 +233,12 @@ func TestAssignmentPlacementChanges(t *testing.T) {
 		"op": "added", "status": "active"}); err != nil {
 		t.Fatal(err)
 	}
-	if err := c.placementEvent(ctx, t, "enrollment.changed", c.tenantA, map[string]any{"student_id": uuid.New(), "op": "added"}); err != nil {
-		t.Fatalf("an enrollment without class (WP-I1) must be tolerated: %v", err)
-	}
 	snap = c.targeted(ctx, t, id)
-	for _, s := range []uuid.UUID{synced, enrolled} {
-		if snap[s][0] != "grade_added" {
-			t.Fatalf("%s not added: %v", s, snap)
-		}
+	if snap[synced][0] != "grade_added" {
+		t.Fatalf("%s not added: %v", synced, snap)
+	}
+	if _, ok := snap[enrolled]; ok {
+		t.Fatalf("enrollment.changed must be ignored: %v", snap)
 	}
 	// A locked account is excused before the due date.
 	if err := c.placementEvent(ctx, t, "user.access_revoked", c.tenantA, map[string]any{"user_id": c.users[hsBinh].UserID, "reason": "locked"}); err != nil {

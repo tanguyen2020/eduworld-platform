@@ -1,4 +1,4 @@
-// Screen of `menu.school_lms.classes` — "Học sinh theo khối" (F052 T017, T059; F052-AC-04, F052-AC-06, F052-AC-07,
+// Screen of `menu.school_lms.students` — "Học sinh theo khối" (F052 T017, T059; F052-AC-04, F052-AC-06, F052-AC-07,
 // F052-AC-31; ADR-0095): the class list, a class's students and the "học sinh chưa có lớp" tab are gone with the class
 // concept. Students belong to one school and one grade; the school → grade → students list comes with the
 // `listTenantGradeStudents` operation of WP-I1 (the catalog key is renamed `menu.school_lms.students` there). Until then
@@ -48,7 +48,7 @@ function StudentSearchPage() {
           <ActionGate actionKey="action.school_lms.student_activity.view">
             <Link to={studentActivityPath(s.user_id)}>{t('portal.school_lms.students.activity')}</Link>
           </ActionGate>
-          <ActionGate actionKey="action.school_lms.classes.reset_student_password">
+          <ActionGate actionKey="action.school_lms.students.reset_password">
             <Button size="small" onClick={() => setResetting(s)}>
               {t('portal.school_lms.passwordReset.action')}
             </Button>

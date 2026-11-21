@@ -21,11 +21,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/sis/contract"
 )
 
-// FileKinds maps the file names of an import to the DTO they carry.
-var FileKinds = map[string]string{
-	"schools.csv": contract.KindSchool, "classes.csv": contract.KindClass,
-	"students.csv": contract.KindStudent, "enrollments.csv": contract.KindEnrollment,
-}
+// FileKinds maps the file names of an import to the DTO they carry (SIS contract 1.3.0: schools and students).
+var FileKinds = map[string]string{"schools.csv": contract.KindSchool, "students.csv": contract.KindStudent}
+
+// IgnoredFiles are the files of kinds removed by SIS contract 1.3.0 (ADR-0095 D6) with the record kind they carried:
+// an import that still has them skips them with a warning ("tệp không còn dùng"), never an error.
+var IgnoredFiles = map[string]string{"classes.csv": "class", "enrollments.csv": "enrollment"}
 
 // ErrorCode of a record violation.
 const ErrorCode = "SIS_CONTRACT_VIOLATION"

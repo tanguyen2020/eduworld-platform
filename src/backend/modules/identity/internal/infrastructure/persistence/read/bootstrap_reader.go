@@ -76,15 +76,16 @@ func (r BootstrapReader) student(ctx context.Context, tx *sql.Tx, userID uuid.UU
 		virtual     bool
 		provCode    sql.NullString
 		provI18n    []byte
+		placed      bool
 	)
 	// tenancyguard:ok org.students/org.schools under the TenantScope (RLS); deleted_at filtered; catalog.provinces is global
 	err := tx.QueryRowContext(ctx, `SELECT s.student_id, s.full_name, s.school_id, s.grade_level, sc.name, sc.name_i18n,
-			sc.school_level, sc.is_virtual, p.code, p.name_i18n
+			sc.school_level, sc.is_virtual, p.code, p.name_i18n, s.status = 'active'
 		FROM org.students s
 		JOIN org.schools sc ON sc.school_id = s.school_id AND sc.deleted_at IS NULL
 		LEFT JOIN catalog.provinces p ON p.province_id = sc.province_id AND p.deleted_at IS NULL
 		WHERE s.student_id = $1 AND s.deleted_at IS NULL`, userID).
-		Scan(&st.StudentID, &st.DisplayName, &st.SchoolID, &st.GradeLevel, &st.SchoolName, &schoolI18n, &schoolLevel, &virtual, &provCode, &provI18n)
+		Scan(&st.StudentID, &st.DisplayName, &st.SchoolID, &st.GradeLevel, &st.SchoolName, &schoolI18n, &schoolLevel, &virtual, &provCode, &provI18n, &placed)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil // no student row in this tenant: NO_ACTIVE_ENROLLMENT is decided by the caller
 	}
@@ -99,28 +100,8 @@ func (r BootstrapReader) student(ctx context.Context, tx *sql.Tx, userID uuid.UU
 		n := localized(provI18n, provCode.String)
 		school.Province = &dto.ProvinceRef{Code: provCode.String, Name: map[string]string{"vi": n.VI, "en": orVI(n)}}
 	}
-	var (
-		class dto.PlayerClass
-		year  sql.NullString
-		grade int
-	)
-	// tenancyguard:ok org.enrollments/org.classes/org.academic_years under the TenantScope (RLS); deleted_at filtered
-	err = tx.QueryRowContext(ctx, `SELECT c.class_id, c.name, c.grade_level, y.name
-		FROM org.enrollments e
-		JOIN org.classes c ON c.class_id = e.class_id AND c.deleted_at IS NULL
-		LEFT JOIN org.academic_years y ON y.academic_year_id = c.academic_year_id AND y.deleted_at IS NULL
-		WHERE e.student_id = $1 AND e.status = 'active' AND e.deleted_at IS NULL`, userID).
-		Scan(&class.ClassID, &class.Name, &grade, &year)
-	switch {
-	case errors.Is(err, sql.ErrNoRows):
-	case err != nil:
-		return fmt.Errorf("bootstrap class: %w", err)
-	default:
-		class.GradeLevel, class.AcademicYear = grade, year.String
-		out.Class, out.Enrolled = &class, true
-		id := class.ClassID
-		st.ClassID, st.ClassName, st.GradeLevel = &id, class.Name, grade
-	}
+	// The grade is the grade of the student (ADR-0095 mục 2: no class); an effective student is placed.
+	out.Placed = placed
 	out.Student, out.School = &st, school
 	sid := st.SchoolID
 	out.SchoolID = &sid

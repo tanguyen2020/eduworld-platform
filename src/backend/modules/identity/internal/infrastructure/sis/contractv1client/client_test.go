@@ -82,7 +82,7 @@ func TestClientPagesAndValidation(t *testing.T) {
 	p, _, id := newClient(t, s, "api_key")
 	ctx := context.Background()
 	h, err := p.Health(ctx)
-	if err != nil || h.ContractVersion != "1.2.1" || len(h.Capabilities) != 4 {
+	if err != nil || h.ContractVersion != "1.3.0" || len(h.Capabilities) != 4 {
 		t.Fatalf("health = %+v %v", h, err)
 	}
 	page1, err := p.ListStudents(ctx, "TH-DEMO-001", "")

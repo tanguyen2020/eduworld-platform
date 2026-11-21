@@ -94,12 +94,13 @@ func TestDevSeedIsIdempotent(t *testing.T) {
 		t.Fatalf("first run = %+v, want %+v and 16 grants", first, want)
 	}
 	n := func(q string, args ...any) int { return count(ctx, t, e.platform, q, args...) }
-	// Game login path (F013): every SIS student is linked to its realm-import subject and enrolled.
+	// Game login path (F013): every SIS student is linked to its realm-import subject and placed in its school and grade
+	// (ADR-0095: org.students effective, no enrollment).
 	if c := n(`SELECT count(*) FROM identity.users u JOIN identity.external_identities x ON x.user_id = u.user_id AND x.issuer = $1
 		AND x.subject = 'kc-' || u.username AND x.deleted_at IS NULL
-		JOIN org.enrollments en ON en.student_id = u.user_id AND en.status = 'active' AND en.deleted_at IS NULL
+		JOIN org.students st ON st.student_id = u.user_id AND st.status = 'active' AND st.deleted_at IS NULL
 		WHERE u.user_type = 'student' AND u.deleted_at IS NULL`, issuer); c != 14 {
-		t.Fatalf("linked and enrolled students = %d, want 14", c)
+		t.Fatalf("linked and placed students = %d, want 14", c)
 	}
 	if len(kc.roles["kc-hs.an.3a"]) == 0 {
 		t.Fatal("the provisioning did not give the realm role student")

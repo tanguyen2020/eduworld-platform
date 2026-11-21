@@ -100,7 +100,7 @@ func TestSisImportFlow(t *testing.T) {
 	queue := &queueSpy{}
 	create := command.CreateSisImport{UoW: e.uow, Imports: write.SisSyncRepo{}, Storage: store, Audit: e.deps.Audit}
 	run := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
 		Events: e.deps.Events, Audit: e.deps.Audit}
 	process := command.ProcessSisImport{UoW: e.uow, Imports: write.SisSyncRepo{}, Storage: store, Scanner: eicarScanner{},
 		Parser: csvreader.Parser{V: v}, Run: run, Audit: e.deps.Audit}
@@ -152,7 +152,7 @@ func TestSisImportFlow(t *testing.T) {
 	// Apply.
 	applied := upload(false, good)
 	drain()
-	if got, err = get.Get(admin, school, applied); err != nil || got.Status != "completed_with_issues" || *got.RowsApplied != 2 { // missing_class issues
+	if got, err = get.Get(admin, school, applied); err != nil || got.Status != "completed" || *got.RowsApplied != 2 { // no missing_class any more (ADR-0095)
 		t.Fatalf("apply = %+v %v", got, err)
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username LIKE 'hs.imp.%'`); n != 2 {

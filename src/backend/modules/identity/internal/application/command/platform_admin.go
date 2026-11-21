@@ -487,7 +487,7 @@ func (h RestoreTrashItem) restore(ctx context.Context, p authz.Principal, in Res
 			return err
 		}
 	case module == platformadmin.ModuleIdentity:
-		return problem.New(problem.NotFound, "") // class_template, *_settings have no trash rows (OQ F045-4)
+		return problem.New(problem.NotFound, "") // *_settings have no trash rows (OQ F045-4)
 	default:
 		if err := h.Owners.RestoreTrashItem(sctx, module, in.ResourceType, in.ID, in.Reason); err != nil {
 			return err

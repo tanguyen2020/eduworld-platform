@@ -82,16 +82,21 @@ func TestLoginSync(t *testing.T) {
 		t.Fatal(err)
 	}
 	run := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
 		Events: e.deps.Events, Audit: e.deps.Audit}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	files := map[string]string{
 		"classes.csv":     "class_external_id,school_external_id,academic_year,grade_level,name\nC-3B,TH-A,2026-2027,3,3B\n",
-		"students.csv":    "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username\nHS-1,TH-A,001,An,3,active,hs.l.an\nHS-2,TH-A,002,Binh,3,active,hs.l.binh\n",
+		"students.csv":    "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username\nHS-1,TH-A,001,An,3,active,hs.l.an\nHS-2,TH-A,002,Binh,3,inactive,hs.l.binh\n",
 		"enrollments.csv": "student_external_id,class_external_id,start_date,status\nHS-1,C-3B,2026-09-05,active\n",
 	}
 	if _, err := run.Handle(admin, command.RunImportInput{ConnectionID: csvConn.ID, SchoolID: school, Files: sisFiles(t, files)}); err != nil {
 		t.Fatal(err)
+	}
+	// SIS contract 1.3.0 (ADR-0095 D6): classes.csv and enrollments.csv are ignored with a warning, never applied.
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.sync_runs WHERE sis_connection_id = $1 AND (stats->>'class_ignored')::int = 1
+		AND (stats->>'enrollment_ignored')::int = 1`, csvConn.ID); n != 1 {
+		t.Fatal("ignored class/enrollment records are counted in the run stats")
 	}
 	userOf := func(username string) uuid.UUID {
 		t.Helper()
@@ -115,9 +120,10 @@ func TestLoginSync(t *testing.T) {
 	if testutil.ToFloat64(metrics.LoginSyncCounter().WithLabelValues("fresh", "ok")) != fresh+1 {
 		t.Fatal("metric fresh/ok")
 	}
-	// AC-20: csv_import connection, no class → no lookup, NO_ACTIVE_ENROLLMENT.
-	if _, err := ls.Ensure(inA, userOf("hs.l.binh")); code(err) != problem.NoActiveEnrollment || lookup.calls.Load() != 0 {
-		t.Fatalf("csv_import without class: %v calls=%d", err, lookup.calls.Load())
+	// AC-20: csv_import connection, no effective school/grade (record inactive) → no lookup, NO_ACTIVE_ENROLLMENT.
+	if res, err := ls.Ensure(inA, userOf("hs.l.binh")); code(err) != problem.NoActiveEnrollment || lookup.calls.Load() != 0 ||
+		res.Outcome != loginsync.ResultMissingPlacement {
+		t.Fatalf("csv_import without placement: %+v %v calls=%d", res, err, lookup.calls.Load())
 	}
 
 	// AC-21: stale data → login continues, exactly one job in 10 minutes for repeated logins.
@@ -155,32 +161,34 @@ func TestLoginSync(t *testing.T) {
 		t.Fatalf("job handled = %d lookups = %d", handled.Load(), lookup.calls.Load())
 	}
 
-	// AC-19: a student of a contract_v1 school without class → blocking lookup → pipeline → still no class
-	// → NO_ACTIVE_ENROLLMENT and missing_class.
+	// AC-19: a student of a contract_v1 school without an effective placement → blocking lookup → pipeline → still
+	// inactive → NO_ACTIVE_ENROLLMENT (missing_placement, no issue: there is no missing_class any more — ADR-0095).
 	other := uuid.MustParse(a.otherSchool)
 	lookup.record = map[string]any{"student_external_id": "API-7", "school_external_id": "TH-API", "student_code": "007", "full_name": "Chi",
-		"grade_level": 3, "status": "active", "login": map[string]any{"username": "hs.l.chi"}, "updated_at": "2026-11-20T07:00:00Z"}
+		"grade_level": 3, "status": "inactive", "login": map[string]any{"username": "hs.l.chi"}, "updated_at": "2026-11-20T07:00:00Z"}
 	if _, err := run.ApplyLookup(ctx, ta, apiConn, other, lookup.record); err != nil { // first sync of the record
 		t.Fatal(err)
 	}
 	chi := userOf("hs.l.chi")
-	_, err = ls.Ensure(inA, chi)
-	if code(err) != problem.NoActiveEnrollment || lookup.calls.Load() != 1 {
-		t.Fatalf("blocking without class: %v calls=%d", err, lookup.calls.Load())
+	res, err := ls.Ensure(inA, chi)
+	if code(err) != problem.NoActiveEnrollment || lookup.calls.Load() != 1 || res.Outcome != loginsync.ResultMissingPlacement {
+		t.Fatalf("blocking without placement: %+v %v calls=%d", res, err, lookup.calls.Load())
 	}
-	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_type = 'missing_class' AND entity_refs->>'user_id' = $1`, chi.String()); n < 1 {
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_type = 'missing_class'`); n != 0 {
 		t.Fatalf("missing_class issues = %d", n)
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.sync_runs WHERE mode = 'delta' AND sis_connection_id = $1`, apiConn); n != 2 {
 		t.Fatalf("lookup runs = %d", n)
 	}
-	// With a class the next login is complete (AC-19 ok path through branch A).
-	classOther := addClass(ctx, t, e.platform, a.tenant, a.otherSchool, "3C")
-	if _, err := e.platform.ExecContext(ctx, `INSERT INTO org.enrollments (enrollment_id, tenant_id, created_at, updated_at, school_id, student_id, class_id, status, start_date, source)
-		VALUES ($1, $2, now(), now(), $3, $4, $5, 'active', current_date, 'sis')`, uuid.New(), a.tenant, other, chi, classOther); err != nil {
-		t.Fatal(err)
+	// The SIS now has the student active: the blocking lookup places it (school + grade) and the login continues.
+	lookup.record["status"], lookup.record["updated_at"] = "active", "2026-11-21T07:00:00Z"
+	if res, err := ls.Ensure(inA, chi); err != nil || res.Branch != loginsync.BranchBlocking || lookup.calls.Load() != 2 {
+		t.Fatalf("blocking with placement = %+v %v", res, err)
 	}
-	if res, err := ls.Ensure(inA, chi); err != nil || res.Branch != loginsync.BranchFresh || lookup.calls.Load() != 1 {
-		t.Fatalf("after enrollment = %+v %v", res, err)
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.tenant_memberships_v WHERE user_id = $1 AND school_id = $2`, chi, other); n != 1 {
+		t.Fatal("placed student is a member of the tenant with its school")
+	}
+	if res, err := ls.Ensure(inA, chi); err != nil || res.Branch != loginsync.BranchFresh || lookup.calls.Load() != 2 {
+		t.Fatalf("after placement = %+v %v", res, err)
 	}
 }

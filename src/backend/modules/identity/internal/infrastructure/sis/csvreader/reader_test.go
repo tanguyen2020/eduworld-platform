@@ -76,15 +76,18 @@ func TestReadViolations(t *testing.T) {
 }
 
 func TestReadEmptyAndKinds(t *testing.T) {
-	if _, err := Read(contract.KindClass, strings.NewReader(""), validator(t), now); err == nil {
+	if _, err := Read(contract.KindStudent, strings.NewReader(""), validator(t), now); err == nil {
 		t.Fatal("empty file accepted")
-	}
-	b, err := Read(contract.KindEnrollment, strings.NewReader("student_external_id,class_external_id,start_date,end_date,status\nHS-1,C-1,2026-09-05,,active\n"),
-		validator(t), now)
-	if err != nil || len(b.Records) != 1 || b.Records[0].Data["end_date"] != nil {
-		t.Fatalf("enrollment = %+v %v", b, err)
 	}
 	if FileKinds["students.csv"] != contract.KindStudent {
 		t.Fatal("file kinds")
+	}
+	// SIS contract 1.3.0 (ADR-0095 D6): classes.csv and enrollments.csv are not read; the run ignores them with a warning.
+	if _, ok := FileKinds["classes.csv"]; ok || IgnoredFiles["classes.csv"] != "class" || IgnoredFiles["enrollments.csv"] != "enrollment" {
+		t.Fatal("ignored files")
+	}
+	pf, err := Parser{V: validator(t)}.Parse("enrollments", strings.NewReader("anything"), now)
+	if err != nil || pf.Kind != "enrollment" || len(pf.Records) != 0 || len(pf.Violations) != 0 {
+		t.Fatalf("ignored api kind = %+v %v", pf, err)
 	}
 }

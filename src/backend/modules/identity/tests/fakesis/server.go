@@ -20,9 +20,9 @@ const (
 	OpHealth      = "health"
 	OpSchools     = "schools"
 	OpYears       = "academic-years"
-	OpClasses     = "classes"
+	OpClasses     = "classes" // removed by SIS contract 1.3.0 (ADR-0095 D6): a legacy facade still answers, EduWorld never calls
 	OpStudents    = "students"
-	OpEnrollments = "enrollments"
+	OpEnrollments = "enrollments" // removed by SIS contract 1.3.0, as OpClasses
 	OpChanges     = "changes"
 	OpLookup      = "lookup"
 	OpToken       = "token"
@@ -62,9 +62,10 @@ type Server struct {
 	StuckCursor bool                      // list pages answer has_more with the cursor they received (broken facade)
 }
 
-// New starts a MOCK SIS with the demo data of TH Demo A (one school, two classes, three students).
+// New starts a MOCK SIS with the demo data of TH Demo A (one school, three students of grade 3). It still answers the
+// classes and enrollments of contract 1.2 like a facade that was not updated (ADR-0095 D6): EduWorld must not call them.
 func New() *Server {
-	s := &Server{Version: "1.2.1", Capabilities: []string{"full_sync", "delta", "webhook", "student_lookup"}, HealthStatus: "ok", PageSize: 2,
+	s := &Server{Version: "1.3.0", Capabilities: []string{"full_sync", "delta", "webhook", "student_lookup"}, HealthStatus: "ok", PageSize: 2,
 		Years: map[string][]map[string]any{}, Classes: map[string][]map[string]any{}, Students: map[string][]map[string]any{},
 		Enrollments: map[string][]map[string]any{}, ExpiredFrom: map[string]bool{}, Lookups: map[string]map[string]any{},
 		Fail: map[string][]int{}, Delay: map[string]time.Duration{}, Calls: map[string]int{}, Queries: map[string][]string{},

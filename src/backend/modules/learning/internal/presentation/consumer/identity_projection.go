@@ -110,9 +110,6 @@ func (c IdentityProjection) dispatch(ctx context.Context, e outbox.Envelope) (st
 	case "school.synced", "school.updated":
 		applied, err = c.school(ctx, e)
 		return when(applied, "schools"), err
-	case "class.synced":
-		applied, err = c.class(ctx, e)
-		return when(applied, "classes"), err
 	case "student.synced":
 		applied, err = c.student(ctx, e)
 		return when(applied, "students"), err
@@ -122,9 +119,6 @@ func (c IdentityProjection) dispatch(ctx context.Context, e outbox.Envelope) (st
 	case "student.cleaned_up", "student.restored":
 		applied, err = c.studentDeleted(ctx, e)
 		return when(applied, "students"), err
-	case "enrollment.changed":
-		applied, err = c.enrollment(ctx, e)
-		return when(applied, "enrollments"), err
 	}
 	return "", nil // another identity event: nothing to project
 }
@@ -231,35 +225,6 @@ func (c IdentityProjection) school(ctx context.Context, e outbox.Envelope) (bool
 		SettingsSubset: settings, SourceVersion: version(p.SourceVersion, e)})
 }
 
-// classPayload is class.synced; source_version, academic_year_id and is_virtual are read when module identity sends
-// them (OQ F020-1, F011 T040), the envelope time orders the events otherwise (F020 T044).
-type classPayload struct {
-	ClassID        uuid.UUID  `json:"class_id"`
-	SchoolID       uuid.UUID  `json:"school_id"`
-	GradeLevel     int        `json:"grade_level"`
-	Name           string     `json:"name"`
-	AcademicYearID *uuid.UUID `json:"academic_year_id"`
-	IsVirtual      *bool      `json:"is_virtual"`
-	SourceVersion  *int64     `json:"source_version"`
-}
-
-func (c IdentityProjection) class(ctx context.Context, e outbox.Envelope) (bool, error) {
-	var p classPayload
-	if err := decode(e, &p); err != nil {
-		return false, err
-	}
-	switch {
-	case p.ClassID == uuid.Nil || p.SchoolID == uuid.Nil:
-		return false, invalid(e.EventType, "class_id and school_id are required")
-	case p.GradeLevel < 1 || p.GradeLevel > 9:
-		return false, invalid(e.EventType, "grade_level")
-	case p.Name == "" || utf8.RuneCountInString(p.Name) > 128:
-		return false, invalid(e.EventType, "name")
-	}
-	return c.Upsert.Class(ctx, e.TenantID, write.RefClass{ClassID: p.ClassID, SchoolID: p.SchoolID, GradeLevel: p.GradeLevel,
-		Name: p.Name, AcademicYearID: p.AcademicYearID, IsVirtual: p.IsVirtual, SourceVersion: version(p.SourceVersion, e)})
-}
-
 type studentPayload struct {
 	StudentID     uuid.UUID `json:"student_id"`
 	SchoolID      uuid.UUID `json:"school_id"`
@@ -295,12 +260,13 @@ func (c IdentityProjection) student(ctx context.Context, e outbox.Envelope) (boo
 
 // placementPayload is student.placement_changed.v1 (ADR-0095 mục 2): the school, grade and effective status of a student.
 type placementPayload struct {
-	StudentID     uuid.UUID `json:"student_id"`
-	TenantID      uuid.UUID `json:"tenant_id"`
-	SchoolID      uuid.UUID `json:"school_id"`
-	GradeLevel    int       `json:"grade_level"`
-	Status        string    `json:"status"`
-	SourceVersion *int64    `json:"source_version"`
+	StudentID      uuid.UUID  `json:"student_id"`
+	TenantID       uuid.UUID  `json:"tenant_id"`
+	SchoolID       uuid.UUID  `json:"school_id"`
+	GradeLevel     int        `json:"grade_level"`
+	Status         string     `json:"status"`
+	AcademicYearID *uuid.UUID `json:"academic_year_id"`
+	SourceVersion  *int64     `json:"source_version"`
 }
 
 func (c IdentityProjection) placement(ctx context.Context, e outbox.Envelope) (bool, error) {
@@ -320,7 +286,7 @@ func (c IdentityProjection) placement(ctx context.Context, e outbox.Envelope) (b
 	}
 	grade, status := p.GradeLevel, p.Status
 	return c.Upsert.Student(ctx, e.TenantID, write.RefStudent{StudentID: p.StudentID, SchoolID: p.SchoolID, GradeLevel: &grade,
-		Status: &status, SourceVersion: version(p.SourceVersion, e)})
+		Status: &status, AcademicYearID: p.AcademicYearID, SourceVersion: version(p.SourceVersion, e)})
 }
 
 type studentLifecyclePayload struct {
@@ -337,52 +303,4 @@ func (c IdentityProjection) studentDeleted(ctx context.Context, e outbox.Envelop
 		return false, invalid(e.EventType, "student_id and tenant_id are required")
 	}
 	return c.Upsert.StudentDeleted(ctx, e.TenantID, p.StudentID, p.TenantID, e.EventType == "student.cleaned_up", e.OccurredAt)
-}
-
-type enrollmentPayload struct {
-	StudentID     uuid.UUID `json:"student_id"`
-	ClassID       uuid.UUID `json:"class_id"`
-	Op            string    `json:"op"`
-	Status        *string   `json:"status"`
-	StartDate     *string   `json:"start_date"`
-	EndDate       *string   `json:"end_date"`
-	SourceVersion *int64    `json:"source_version"`
-}
-
-var enrollmentStatus = map[string]string{"added": "active", "ended": "ended", "transferred": "transferred"}
-
-func (c IdentityProjection) enrollment(ctx context.Context, e outbox.Envelope) (bool, error) {
-	var p enrollmentPayload
-	if err := decode(e, &p); err != nil {
-		return false, err
-	}
-	if p.ClassID == uuid.Nil {
-		// ADR-0095: an enrollment without a class (WP-I1 drops the class) carries nothing for ref.enrollments; the school and
-		// grade come with student.placement_changed.
-		return false, nil
-	}
-	status, ok := enrollmentStatus[p.Op]
-	if p.Status != nil {
-		status = *p.Status
-	}
-	if p.StudentID == uuid.Nil || p.ClassID == uuid.Nil || !ok || !slices.Contains([]string{"active", "transferred", "ended"}, status) {
-		return false, invalid(e.EventType, "student_id, class_id, op and status are required")
-	}
-	if p.StartDate == nil {
-		return false, invalid(e.EventType, "start_date is required by the projection key")
-	}
-	start, err := time.Parse(time.DateOnly, *p.StartDate)
-	if err != nil {
-		return false, invalid(e.EventType, "start_date")
-	}
-	r := write.RefEnrollment{StudentID: p.StudentID, ClassID: p.ClassID, StartDate: start, Status: status,
-		SourceVersion: version(p.SourceVersion, e)}
-	if p.EndDate != nil {
-		end, err := time.Parse(time.DateOnly, *p.EndDate)
-		if err != nil {
-			return false, invalid(e.EventType, "end_date")
-		}
-		r.EndDate = &end
-	}
-	return c.Upsert.Enrollment(ctx, e.TenantID, r)
 }

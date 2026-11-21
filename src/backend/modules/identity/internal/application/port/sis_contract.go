@@ -43,7 +43,7 @@ type ContractConnection struct {
 
 // SisViolation is one record of a response that breaks the contract (SIS_CONTRACT_VIOLATION).
 type SisViolation struct {
-	Kind       string // school, class, student, enrollment, academic_year, change
+	Kind       string // school, student, academic_year, change (class/enrollment: ignored, SIS contract 1.3.0)
 	ExternalID string
 	Field      string
 	Message    string
@@ -95,9 +95,7 @@ type SisProvider interface {
 	Health(ctx context.Context) (SisHealth, error)
 	ListSchools(ctx context.Context, cursor string) (SisPage, error)
 	ListAcademicYears(ctx context.Context, schoolExtID string) (SisPage, error)
-	ListClasses(ctx context.Context, schoolExtID, year, cursor string) (SisPage, error)
 	ListStudents(ctx context.Context, schoolExtID, cursor string) (SisPage, error)
-	ListEnrollments(ctx context.Context, schoolExtID, year, cursor string) (SisPage, error)
 	ListChanges(ctx context.Context, since string) (SisChangePage, error)
 	// LookupStudent calls once, without retry (login path, ADR-0061).
 	LookupStudent(ctx context.Context, schoolExtID, loginUsername string) (map[string]any, error)

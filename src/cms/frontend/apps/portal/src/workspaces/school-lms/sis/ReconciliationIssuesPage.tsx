@@ -12,7 +12,7 @@ import { StatusTag } from '../common/ui';
 import { ResolveIssueDialog } from './ResolveIssueDialog';
 import { useReconciliationIssues, type IssueStatus, type IssueType, type ReconciliationIssue } from './useReconciliation';
 
-const TYPES: IssueType[] = ['duplicate_identifier', 'missing_class', 'school_province_missing', 'school_duplicate', 'possible_duplicate', 'transfer_confirmation', 'class_school_mismatch', 'orphan_enrollment', 'multi_school_enrollment', 'grade_mismatch', 'deactivation_review', 'cleaned_up_student_in_sis'];
+const TYPES: IssueType[] = ['duplicate_identifier', 'school_province_missing', 'school_duplicate', 'possible_duplicate', 'transfer_confirmation', 'deactivation_review', 'cleaned_up_student_in_sis'];
 const STATUSES: IssueStatus[] = ['open', 'resolved', 'ignored'];
 
 /** i18n key of the suggested action: the server code when translated, else the default advice of the issue type. */

@@ -46,9 +46,16 @@ func TestValidator(t *testing.T) {
 	if got := v.Validate(KindStudent, extra); len(got) == 0 {
 		t.Fatal("additionalProperties must be rejected by the contract (the reader drops unknown columns first)")
 	}
-	cls := map[string]any{"class_external_id": "C-2026-3A", "school_external_id": "TH-DEMO-001", "academic_year": "2026-27",
-		"grade_level": 3, "name": "3A", "updated_at": "2026-11-01T00:00:00Z"}
-	if got := v.Validate(KindClass, cls); len(got) != 1 || !strings.Contains(got[0].Field, "academic_year") {
-		t.Fatalf("bad academic_year: %+v", got)
+	// SIS contract 1.3.0 (ADR-0095 D6): the Class and Enrollment DTOs are gone; a student needs its school and grade.
+	if got := v.Validate("Class", map[string]any{"class_external_id": "C-2026-3A"}); len(got) != 1 || !strings.Contains(got[0].Message, "unknown record kind") {
+		t.Fatalf("class kind: %+v", got)
+	}
+	noGrade := student()
+	delete(noGrade, "grade_level")
+	if got := v.Validate(KindStudent, noGrade); len(got) != 1 || !strings.Contains(got[0].Field, "grade_level") {
+		t.Fatalf("missing grade_level: %+v", got)
+	}
+	if v.Version() != "1.3.0" {
+		t.Fatalf("contract version %q", v.Version())
 	}
 }

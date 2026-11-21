@@ -355,7 +355,7 @@ msgid "ui.error.NOT_FOUND"
 msgstr "Không tìm thấy bài này."
 
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
-msgstr "Em chưa được xếp lớp trong năm học này."
+msgstr "Em chưa có thông tin trường/khối trong năm học này."
 
 msgid "ui.error.RATE_LIMITED"
 msgstr "Em thao tác hơi nhanh, đợi một chút rồi thử lại nhé."

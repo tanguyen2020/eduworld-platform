@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { loginPath, returnTarget, safeReturnUrl } from './returnUrl';
 
 describe('returnUrl', () => {
-  it.each(['/school-lms/classes?page=2', '/platform-admin/tenants#x'])('%s is kept', (u) => {
+  it.each(['/school-lms/students?page=2', '/platform-admin/tenants#x'])('%s is kept', (u) => {
     expect(safeReturnUrl(u)).toBe(u);
   });
 
@@ -13,9 +13,9 @@ describe('returnUrl', () => {
   });
 
   it('builds /login?returnUrl= and reads it back', () => {
-    expect(loginPath('/school-lms/classes')).toBe('/login?returnUrl=%2Fschool-lms%2Fclasses');
+    expect(loginPath('/school-lms/students')).toBe('/login?returnUrl=%2Fschool-lms%2Fclasses');
     expect(loginPath('/')).toBe('/login');
-    expect(returnTarget('?returnUrl=%2Fschool-lms%2Fclasses')).toBe('/school-lms/classes');
+    expect(returnTarget('?returnUrl=%2Fschool-lms%2Fclasses')).toBe('/school-lms/students');
     expect(returnTarget('?returnUrl=https%3A%2F%2Fevil')).toBe('/');
   });
 });

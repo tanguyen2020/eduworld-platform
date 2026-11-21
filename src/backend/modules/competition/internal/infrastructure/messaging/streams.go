@@ -13,10 +13,10 @@ var (
 // ProjectionIdentityName keeps ref.tenants and ref.students of eduworld_competition (F091 T009).
 const ProjectionIdentityName = "competition.projection_identity"
 
-// ProjectionIdentityEvents are the identity events it projects. enrollment.changed is only acknowledged (no class since
-// ADR-0095) until identity stops producing it (WP-I1); student.placement_changed carries the school and grade level.
+// ProjectionIdentityEvents are the identity events it projects; student.placement_changed carries the school and grade
+// level (ADR-0095: there is no class and no enrollment).
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "student.synced", "user.status_changed",
-	"student.cleaned_up", "student.restored", "student.placement_changed", "enrollment.changed", "school.updated"}
+	"student.cleaned_up", "student.restored", "student.placement_changed", "school.updated"}
 
 // HubAccessRevokedName removes a revoked student from the hub at once (F091 edge case, no grace).
 const HubAccessRevokedName = "competition.hub_access_revoked"

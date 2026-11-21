@@ -102,7 +102,7 @@ func newHTTPEnv(ctx context.Context, t *testing.T, kc *kcUsers) *httpEnv {
 		ListTenants:       query.ListTenants{Model: read.TenantModel{Session: e.read}, Cursors: codec},
 		CreateAdminSchool: command.CreateAdminTenantSchool{SchoolDeps: sd}, UpdateAdminSchool: command.UpdateAdminTenantSchool{SchoolDeps: sd},
 		UpdateTenantSchool: command.UpdateTenantSchool{SchoolDeps: sd}, ApproveTenantSchool: command.ApproveTenantSchool{SchoolDeps: sd},
-		CreateCommonStudents: command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, KC: kc,
+		CreateCommonStudents: command.CreateCommonStudents{UoW: e.uow, Tenants: write.TenantRepo{}, Accounts: write.AccountRepo{}, Students: write.StudentRepo{}, KC: kc,
 			Events: e.deps.Events, Audit: e.deps.Audit, LocalIssuer: "http://localhost:8180/realms/eduworld"},
 		Org: query.Org{Model: read.OrgModel{Session: e.read}, Cursors: codec},
 		// F011

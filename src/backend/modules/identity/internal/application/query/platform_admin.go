@@ -164,7 +164,7 @@ func trashView(res port.TrashPage, limit int) TrashPageView {
 
 // accounts lists the identity-owned trash types: deleted accounts read under tenancy.Bypass(trash) with the
 // explicit tenant list (audit + eduworld_tenant_filter_bypass_total, F045-AC-06). The configuration types
-// class_template / school_settings / tenant_settings have no trash rows (OQ F045-4).
+// school_settings / tenant_settings have no trash rows (OQ F045-4).
 func (q PlatformAdmin) accounts(ctx context.Context, in TrashInput, tenants []uuid.UUID) (TrashPageView, error) {
 	limit := page.Limit(in.Limit)
 	out := TrashPageView{Data: []TrashItemView{}, Page: page.Info{Limit: limit}}

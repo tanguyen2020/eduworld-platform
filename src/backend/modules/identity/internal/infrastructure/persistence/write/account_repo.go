@@ -3,12 +3,10 @@ package write
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent"
 	entext "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/user"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -37,7 +35,7 @@ func (AccountRepo) ExternalRefTaken(ctx context.Context, issuer, subject string)
 	return client(ctx).ExternalIdentity.Query().Where(entext.Issuer(issuer), entext.Subject(subject)).Exist(ctx)
 }
 
-// CreateStudent inserts user, student, identities and the active enrollment.
+// CreateStudent inserts user, student (school and grade — ADR-0095 mục 2) and identities.
 func (AccountRepo) CreateStudent(ctx context.Context, a write.NewStudentAccount) error {
 	c := client(ctx)
 	if _, err := c.User.Create().SetID(a.UserID).SetUserType("student").SetStatus("active").SetUsername(a.Username).
@@ -56,12 +54,7 @@ func (AccountRepo) CreateStudent(ctx context.Context, a write.NewStudentAccount)
 			return mapAccountErr(err)
 		}
 	}
-	e, err := enrollment.Open(a.EnrollmentID, a.UserID, enrollment.Placement{TenantID: a.TenantID, SchoolID: a.SchoolID, ClassID: a.ClassID},
-		entxNow(), enrollment.SourcePlatformCommon)
-	if err != nil {
-		return err
-	}
-	return EnrollmentRepo{}.Open(ctx, e)
+	return nil
 }
 
 func mapAccountErr(err error) error {
@@ -77,5 +70,3 @@ func mapAccountErr(err error) error {
 	}
 	return problem.New(problem.Conflict, "").Wrap(err)
 }
-
-func entxNow() time.Time { return time.Now().UTC() }

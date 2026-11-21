@@ -9,7 +9,7 @@ afterEach(() => stopPortals());
 
 async function qlcmInThDemoA() {
   window.sessionStorage.setItem('ew.portal.sessionTenantId', TENANTS.thDemoA.tenant_id);
-  const r = await renderPortal({ url: '/school-lms/classes', backend: new MockPortalBackend().withSession('qlcm.truong.a') });
+  const r = await renderPortal({ url: '/school-lms/students', backend: new MockPortalBackend().withSession('qlcm.truong.a') });
   await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
   return r;
 }

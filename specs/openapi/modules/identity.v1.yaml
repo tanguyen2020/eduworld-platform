@@ -59,7 +59,7 @@ paths:
         1. **Xác thực SSO:** gọi token endpoint Keycloak bằng client confidential `eduworld-game-backend` (Direct Access Grants;
            secret chỉ ở module identity). Sai username hoặc mật khẩu (kể cả tài khoản đang bị khóa tạm do brute-force) →
            `401 INVALID_CREDENTIALS` với thông điệp chung. Chỉ realm role `student` (khác → `403 GAME_ACCESS_STUDENT_ONLY`).
-        2. **Kiểm tra tài khoản theo `keycloak_sub`** (ADR-0063): `user_type` học sinh, các tenant còn hiệu lực, enrollment,
+        2. **Kiểm tra tài khoản theo `keycloak_sub`** (ADR-0063): `user_type` học sinh, các tenant còn hiệu lực, trường/khối hiệu lực (ADR-0095),
            đồng bộ hồ sơ SIS khi đăng nhập (ADR-0061).
         3. **Quyết định tenant:** **1 tenant** → `200` vào thẳng; **nhiều tenant** → `403 TENANT_NOT_SELECTED` kèm `choices[]` +
            `login_ticket` (dùng một lần, 2 phút) → gọi `/auth/game/tenant:select`, không nhập lại mật khẩu; **chỉ tenant chung** →
@@ -185,7 +185,7 @@ paths:
 
         - `mode = renew` (mặc định): gia hạn access token (5 phút) trong lúc chơi; client gọi **đơn luồng** (single-flight).
         - `mode = resume`: khởi động game bằng refresh token lưu trong kho bảo mật OS (thiết bị cá nhân). module identity kiểm tra
-          lại tài khoản như bước 2 của `gameLogin` (`user_type`, trạng thái, tenant, enrollment, khung giờ) và trả thêm `bootstrap`;
+          lại tài khoản như bước 2 của `gameLogin` (`user_type`, trạng thái, tenant, trường/khối hiệu lực, khung giờ) và trả thêm `bootstrap`;
           game bỏ qua form đăng nhập rồi gọi `createGameSession` (ADR-0083). `client_version` thấp hơn tối thiểu → `426`.
 
         **Xoay vòng (rotation):** mỗi lần thành công trả refresh token **mới**, token cũ hết hiệu lực; client ghi đè token mới vào kho
@@ -854,7 +854,7 @@ paths:
       tags:
         - students
       operationId: getStudentProfile
-      x-portal-action: action.school_lms.classes.view
+      x-portal-action: action.school_lms.students.view
       summary: Hồ sơ học sinh dạng đầy đủ cho quản trị trường (school_admin trường mình, academic_manager trong scope; ghi audit)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
@@ -870,38 +870,6 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /schools/{school_id}/classes:
-    get:
-      x-service: identity
-      tags:
-        - schools
-      operationId: listClasses
-      x-portal-action: action.school_lms.classes.view
-      summary: Lớp của trường theo năm học
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/SchoolId'
-        - name: academic_year_id
-          in: query
-          schema:
-            $ref: '#/components/schemas/Uuid'
-        - $ref: '#/components/parameters/GradeLevelQuery'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Class'
         '404':
           $ref: '#/components/responses/NotFound'
   /schools/{school_id}/academic-years:
@@ -1093,7 +1061,7 @@ paths:
       description: |
         Bản public theo trường của `listSisReconciliationIssues` (gateway nội bộ) cho School Admin/Tenant Admin dùng gateway public
         (F052 Clarification 2026-11-16). Quyền `tenant.sis.read` hoặc `tenant.sis.import` trong scope trường; trường ngoài tenant/scope
-        → `404`. `entity_refs` là ID nội bộ/external, không PII thô. `missing_class` cũng có ở `listUnassignedStudents`.
+        → `404`. `entity_refs` là ID nội bộ/external, không PII thô.
         Contract F052 (T005); backend: owner F011.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
@@ -1183,7 +1151,7 @@ paths:
         - schools
       operationId: listSchoolUserRoles
       x-portal-action: action.school_lms.access_control.view_user_roles
-      summary: UserRole trong phạm vi trường (scope school/class/subject thuộc trường) — thay role-assignments cũ
+      summary: UserRole trong phạm vi trường (scope school/subject thuộc trường) — thay role-assignments cũ
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/SchoolId'
@@ -1986,7 +1954,7 @@ paths:
           (sau chuẩn hóa trim/NFC/chữ thường, ADR-0067, ADR-0069) → `status = failed`, `error_code = USERNAME_TAKEN` (không tạo reconciliation issue).
           Request vi phạm schema (thiếu/ngoài khoảng `grade_level`, quá `common_student_batch_max` dòng) → `422 VALIDATION_FAILED` cho cả request (F010-AC-25).
         - Mỗi học sinh tạo được: Keycloak local user (role `student`, member Organization `common`), `identity.users` (`student`, `primary_tenant_id = common`),
-          `org.students` thuộc School ảo, enrollment lớp ảo `common-g<n>`, audit, event `user.provisioned` (`source = platform_common`) — F010-AC-24.
+          `org.students` thuộc School ảo với khối khai báo (không lớp ảo — ADR-0095), event `student.placement_changed`, audit, event `user.provisioned` (`source = platform_common`) — F010-AC-24.
         - Mật khẩu ban đầu do module identity sinh ngẫu nhiên cho từng dòng, đặt trong Keycloak (khối 6–9: `temporary = true`, đổi khi đăng nhập lần đầu;
           khối 1–5: `temporary = false` [Proposed]) và chỉ trả **một lần** trong `initial_password` để in thẻ đăng nhập; không lưu, không log (R14); `Cache-Control: no-store`.
         - Replay cùng `Idempotency-Key` trả kết quả đã lưu **không có** `initial_password` (`password_redacted = true`); lấy lại mật khẩu bằng đặt lại mật khẩu học sinh.
@@ -3322,65 +3290,29 @@ paths:
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
-  /tenant/schools/{school_id}/classes:
+  /tenant/schools/{school_id}/grades/{grade_level}/students:
     get:
       x-service: identity
       tags:
         - tenant
-      operationId: listTenantSchoolClasses
-      x-portal-action: action.school_lms.classes.view
-      summary: Lớp và sĩ số của trường (tenant.student.read)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/SchoolId'
-        - name: academic_year
-          in: query
-          required: false
-          schema:
-            type: string
-            pattern: ^[0-9]{4}-[0-9]{4}$
-            maxLength: 9
-        - name: grade
-          in: query
-          required: false
-          schema:
-            $ref: '#/components/schemas/GradeLevel'
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Cursor'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ClassPage'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /tenant/schools/{school_id}/classes/{class_id}/students:
-    get:
-      x-service: identity
-      tags:
-        - tenant
-      operationId: listTenantClassStudents
-      x-portal-action: action.school_lms.classes.view
-      summary: Học sinh của lớp, chỉ đọc (tenant.student.read) — danh sách từ SIS/CSV kèm lần đăng nhập game cuối
+      operationId: listTenantGradeStudents
+      x-portal-action: action.school_lms.students.view
+      summary: Học sinh theo khối của trường, chỉ đọc (tenant.student.read hoặc lms.student.read) — kèm lần đăng nhập game cuối
       description: |
-        Quyền `tenant.student.read` trong scope trường (School Admin trường mình; Tenant Admin các trường của tenant). Trường/lớp ngoài
-        tenant hoặc scope → `404` (không tiết lộ tồn tại). Chỉ đọc: học sinh do SIS/CSV sở hữu (ADR-0060); không trả ngày sinh,
-        liên hệ phụ huynh, IP hay mã thiết bị (ADR-0031). `days_since_last_login` do server tính (null khi chưa từng vào game).
-        Contract F052 (T004); backend: owner F010.
+        Học sinh hiệu lực (`org.students.status = active`, chưa xóa mềm) của một khối (`grade_level` 1–9) trong một trường
+        (ADR-0095 mục 2, 7 — thay `listTenantClassStudents`, `listTenantSchoolClasses`, `listClasses`, `listUnassignedStudents`).
+        Quyền `tenant.student.read` (Tenant Admin) hoặc `lms.student.read` (School Admin trường mình, Academic Manager trong scope)
+        trên trường của path; trường ngoài tenant hoặc ngoài scope grant → `404` (không tiết lộ tồn tại); khối ngoài 1–9 → `422`.
+        Chỉ đọc: học sinh do SIS/CSV sở hữu; không trả ngày sinh, liên hệ phụ huynh, IP hay mã thiết bị (ADR-0031, R16).
+        `days_since_last_login` do server tính (null khi chưa từng vào game). Sắp theo (tên hiển thị, student_id), phân trang cursor.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/SchoolId'
-        - name: class_id
+        - name: grade_level
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: '#/components/schemas/GradeLevel'
         - name: q
           in: query
           required: false
@@ -3397,41 +3329,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClassStudentPage'
+                $ref: '#/components/schemas/GradeStudentPage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /tenant/students/unassigned:
-    get:
-      x-service: identity
-      tags:
-        - tenant
-      operationId: listUnassignedStudents
-      x-portal-action: action.school_lms.classes.view
-      summary: Học sinh SIS chưa có lớp hợp lệ (missing_class) — học sinh phải thuộc đúng một trường và một lớp (ADR-0060)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - name: school_id
-          in: query
-          required: false
-          schema:
-            $ref: '#/components/schemas/Uuid'
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Cursor'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnassignedStudentPage'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /tenant/users:
     get:
       x-service: identity
@@ -3847,7 +3753,7 @@ paths:
       tags:
         - tenant
       operationId: resetStudentPassword
-      x-portal-action: action.school_lms.classes.reset_student_password
+      x-portal-action: action.school_lms.students.reset_password
       summary: Đặt lại mật khẩu học sinh — mật khẩu mới sinh ngẫu nhiên, trả một lần (owner F016)
       description: |
         Quyền `lms.student.password_reset`: School Admin của trường học sinh, Tenant Admin của tenant, System Admin (tenant đích qua `X-Tenant-Id`,
@@ -4714,7 +4620,7 @@ paths:
       tags:
         - tenant
       operationId: lockTenantUser
-      x-portal-action: action.school_lms.classes.lock_student
+      x-portal-action: action.school_lms.students.lock
       summary: Khóa tài khoản học sinh của tenant/trường
       description: School Admin (trường của học sinh) hoặc Tenant Admin khóa học sinh (`tenant.user.lock`); nhân sự, trường khác → 403, tenant khác → 404 (F016-AC-05). Học sinh chỉ thấy thông điệp trung tính (F016-AC-06).
       parameters:
@@ -4753,7 +4659,7 @@ paths:
       tags:
         - tenant
       operationId: unlockTenantUser
-      x-portal-action: action.school_lms.classes.lock_student
+      x-portal-action: action.school_lms.students.lock
       summary: Mở khóa tài khoản học sinh của tenant/trường
       description: Cùng quyền và phạm vi như `lockTenantUser`; phát `user.access_restored` (F016-AC-04).
       parameters:
@@ -5000,11 +4906,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
-    GradeLevelQuery:
-      name: grade_level
-      in: query
-      schema:
-        $ref: '#/components/schemas/GradeLevel'
     IfMatch:
       name: If-Match
       in: header
@@ -5210,7 +5111,8 @@ components:
       type: object
       description: |
         Bootstrap phiên người chơi do module identity trả (`gameLogin`, `selectGameLoginTenant`, `refreshGameToken` `mode = resume`, `createAuthSession`).
-        Khi `is_common_tenant = false`, server luôn trả `school`, `class`, `grade_band` (học sinh thuộc đúng một trường, một lớp — ADR-0060).
+        Khi `is_common_tenant = false`, server luôn trả `student`, `school`, `grade_band`: học sinh thuộc đúng một trường với một khối
+        (`student.grade_level`, ADR-0095 — không có lớp).
         `game_profile` tùy chọn: module identity không đọc dữ liệu của module game (ADR-0074); game lấy hồ sơ người chơi từ API của module game.
       required:
         - user
@@ -5237,8 +5139,6 @@ components:
           $ref: '#/components/schemas/StudentSummary'
         school:
           $ref: '#/components/schemas/PlayerSchool'
-        class:
-          $ref: '#/components/schemas/PlayerClass'
         game_profile:
           $ref: '#/components/schemas/GameProfile'
         grade_band:
@@ -5270,8 +5170,6 @@ components:
                   minimum: 2
                   maximum: 8
                   default: 4
-                cross_class_allowed:
-                  type: boolean
             play_time:
               type: object
               properties:
@@ -5366,8 +5264,8 @@ components:
             - platform
             - tenant
             - school
-            - class
             - subject
+          description: Không có scope lớp (ADR-0072, ADR-0095)
         tenant_id:
           description: Tenant của assignment; null với scope platform
           oneOf:
@@ -5411,11 +5309,7 @@ components:
           maxLength: 255
         grade_level:
           $ref: '#/components/schemas/GradeLevel'
-        class_id:
-          $ref: '#/components/schemas/Uuid'
-        class_name:
-          type: string
-          maxLength: 128
+          description: Khối hiện tại của học sinh (org.students — ADR-0095; không có lớp)
     GradeLevel:
       type: integer
       minimum: 1
@@ -5486,25 +5380,6 @@ components:
         - primary
         - lower_secondary
         - multi_level
-    PlayerClass:
-      type: object
-      required:
-        - class_id
-        - name
-        - grade_level
-      properties:
-        class_id:
-          $ref: '#/components/schemas/Uuid'
-        name:
-          type: string
-          maxLength: 255
-        grade_level:
-          $ref: '#/components/schemas/GradeLevel'
-        academic_year:
-          type: string
-          maxLength: 16
-          examples:
-            - 2026-2027
     GameProfile:
       type: object
       description: Hồ sơ game của chính học sinh (F070). Không họ tên, username, trường, lớp (R16, ADR-0054).
@@ -6444,27 +6319,6 @@ components:
           type: boolean
         limit:
           type: integer
-    Class:
-      type: object
-      required:
-        - class_id
-        - school_id
-        - grade_level
-        - name
-      properties:
-        class_id:
-          $ref: '#/components/schemas/Uuid'
-        school_id:
-          $ref: '#/components/schemas/Uuid'
-        academic_year_id:
-          $ref: '#/components/schemas/Uuid'
-        grade_level:
-          $ref: '#/components/schemas/GradeLevel'
-        name:
-          type: string
-          maxLength: 255
-        student_count:
-          type: integer
     SchoolAcademicYear:
       type: object
       additionalProperties: false
@@ -6529,8 +6383,6 @@ components:
         allowed_hours:
           $ref: '#/components/schemas/AllowedHours'
           description: Khung giờ truy cập của trường (chỉ siết chặt hơn tenant)
-        class_leaderboard_enabled:
-          type: boolean
         school_leaderboard_enabled:
           type: boolean
         student_club_creation:
@@ -6654,14 +6506,12 @@ components:
           type: array
           minItems: 1
           maxItems: 1
-          description: Loại bản ghi của file CSV (một file một loại, F011 [Proposed])
+          description: Loại bản ghi của file CSV (một file một loại, F011 [Proposed]); không còn classes/enrollments (SIS contract 1.3.0, ADR-0095)
           items:
             type: string
             enum:
               - schools
               - students
-              - classes
-              - enrollments
         academic_year_id:
           $ref: '#/components/schemas/Uuid'
         dry_run:
@@ -6701,8 +6551,6 @@ components:
             enum:
               - schools
               - students
-              - classes
-              - enrollments
         diff:
           type: object
           description: Số bản ghi theo hành động (create/update/noop/deactivate) của từng loại, sau validate
@@ -6745,7 +6593,7 @@ components:
         entity_kind:
           type: string
           maxLength: 64
-          description: vd. school, class, student, enrollment
+          description: vd. school, student
         external_id:
           type:
             - string
@@ -6777,15 +6625,10 @@ components:
       enum:
         - possible_duplicate
         - transfer_confirmation
-        - missing_class
-        - class_school_mismatch
-        - orphan_enrollment
-        - multi_school_enrollment
         - school_province_missing
         - unmapped_school
         - cleaned_up_student_in_sis
         - duplicate_identifier
-        - grade_mismatch
         - deactivation_review
         - ambiguous_login
         - school_duplicate
@@ -7631,7 +7474,6 @@ components:
         - quest
         - minigame_config
         - item
-        - class_template
         - school_settings
         - tenant_settings
         - user
@@ -8438,7 +8280,7 @@ components:
             - string
             - 'null'
           maxLength: 500
-    ClassPage:
+    GradeStudentPage:
       type: object
       required:
         - items
@@ -8448,31 +8290,19 @@ components:
           type: array
           maxItems: 200
           items:
-            $ref: '#/components/schemas/Class'
+            $ref: '#/components/schemas/GradeStudent'
         page:
           $ref: '#/components/schemas/PageInfo'
-    ClassStudentPage:
+    GradeStudent:
       type: object
-      required:
-        - items
-        - page
-      properties:
-        items:
-          type: array
-          maxItems: 200
-          items:
-            $ref: '#/components/schemas/ClassStudent'
-        page:
-          $ref: '#/components/schemas/PageInfo'
-    ClassStudent:
-      type: object
-      description: Học sinh của lớp (chỉ đọc, dữ liệu SIS/CSV — ADR-0060). Không có ngày sinh, liên hệ phụ huynh, IP, mã thiết bị (ADR-0031).
+      description: Học sinh hiệu lực của một khối trong trường (chỉ đọc, dữ liệu SIS/CSV — ADR-0095). Không có ngày sinh, liên hệ phụ huynh, IP, mã thiết bị (ADR-0031).
       required:
         - student_id
         - display_name
         - username
         - status
         - source
+        - grade_level
       properties:
         student_id:
           $ref: '#/components/schemas/Uuid'
@@ -8494,12 +8324,15 @@ components:
             - active
             - locked
             - deactivated
+          description: Trạng thái tài khoản (identity.users)
         source:
           type: string
           enum:
             - sis
             - manual
             - import
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
         last_login_at:
           oneOf:
             - $ref: '#/components/schemas/Timestamp'
@@ -8509,51 +8342,6 @@ components:
             - integer
             - 'null'
           minimum: 0
-    UnassignedStudentPage:
-      type: object
-      required:
-        - items
-        - page
-      properties:
-        items:
-          type: array
-          maxItems: 200
-          items:
-            $ref: '#/components/schemas/UnassignedStudent'
-        page:
-          $ref: '#/components/schemas/PageInfo'
-    UnassignedStudent:
-      type: object
-      required:
-        - student_id
-        - display_name
-        - school_id
-        - reason
-      properties:
-        student_id:
-          $ref: '#/components/schemas/Uuid'
-        display_name:
-          type: string
-          maxLength: 128
-        username:
-          type: string
-          maxLength: 128
-        school_id:
-          $ref: '#/components/schemas/Uuid'
-        grade_level:
-          $ref: '#/components/schemas/GradeLevel'
-        reason:
-          type: string
-          enum:
-            - missing_class
-            - class_not_found
-            - multiple_classes
-        sis_connection_id:
-          oneOf:
-            - $ref: '#/components/schemas/Uuid'
-            - type: 'null'
-        detected_at:
-          $ref: '#/components/schemas/Timestamp'
     TenantUserCreateRequest:
       type: object
       required:
@@ -8698,9 +8486,8 @@ components:
           maxLength: 128
         school_id:
           $ref: '#/components/schemas/Uuid'
-        class_name:
-          type: string
-          maxLength: 128
+        grade_level:
+          $ref: '#/components/schemas/GradeLevel'
         last_login_at:
           description: null = chưa từng đăng nhập (tính từ provisioned_at)
           oneOf:

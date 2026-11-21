@@ -30,7 +30,6 @@ type Principal struct {
 	Grants            []PrincipalGrant
 	IsSystemAdmin     bool
 	SchoolIDs         []uuid.UUID
-	ClassIDs          []uuid.UUID
 	GradeLevel        *int
 	SisConnectionID   *uuid.UUID
 	StudentExternalID *string

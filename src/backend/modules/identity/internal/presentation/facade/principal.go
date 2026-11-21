@@ -72,7 +72,7 @@ func (f Principals) CheckMemberships(ctx context.Context, req identityapi.CheckM
 	if req.Body == nil {
 		return nil, problem.Invalid("body", problem.SubRequired, "required")
 	}
-	in := query.CheckMembershipsInput{UserIDs: req.Body.UserIds, SchoolID: req.Body.SchoolId, ClassID: req.Body.ClassId}
+	in := query.CheckMembershipsInput{UserIDs: req.Body.UserIds, SchoolID: req.Body.SchoolId}
 	if req.Body.RequireUserType != nil {
 		in.RequireUserType = string(*req.Body.RequireUserType)
 	}
@@ -113,10 +113,6 @@ func toAPI(p dto.Principal) identityapi.Principal {
 	if len(p.SchoolIDs) > 0 {
 		s := append([]uuid.UUID(nil), p.SchoolIDs...)
 		out.SchoolIds = &s
-	}
-	if len(p.ClassIDs) > 0 {
-		c := append([]uuid.UUID(nil), p.ClassIDs...)
-		out.ClassIds = &c
 	}
 	for _, s := range p.Scopes {
 		out.Scopes = append(out.Scopes, identityapi.Scope{ScopeType: identityapi.ScopeScopeType(s.Type), ScopeId: s.ID})

@@ -1,6 +1,6 @@
 // Package loginsync keeps the SIS data of a student fresh at login (SIS_INTEGRATION §4.5, ADR-0061),
-// used by the game login of F013: branch A (complete and fresh: no SIS call), B (missing school/class/
-// enrollment: blocking lookup through SisLookupPort with timeout, per-connection concurrency limit and
+// used by the game login of F013: branch A (complete and fresh: no SIS call), B (no effective school/grade —
+// ADR-0095: blocking lookup through SisLookupPort with timeout, per-connection concurrency limit and
 // circuit breaker, then the SIS pipeline) and C (complete but stale: one deduplicated login_refresh job).
 // There is never a synchronous retry on the login path.
 package loginsync
@@ -26,11 +26,11 @@ const (
 	BranchBlocking   = "blocking"
 	BranchBackground = "background"
 
-	ResultOK           = "ok"
-	ResultTimeout      = "timeout"
-	ResultError        = "error"
-	ResultMissingClass = "missing_class"
-	ResultThrottled    = "throttled"
+	ResultOK               = "ok"
+	ResultTimeout          = "timeout"
+	ResultError            = "error"
+	ResultMissingPlacement = "missing_placement" // no effective school/grade after the lookup (ADR-0095 D6)
+	ResultThrottled        = "throttled"
 )
 
 // Defaults [Proposed] until the tenant/platform settings are read by the caller (CONFIG_DEFAULTS).
@@ -82,7 +82,7 @@ func (s LoginSync) load(ctx context.Context, f func(ctx context.Context) (*write
 }
 
 // Ensure runs login sync for a student. A student without an active SIS link is not synced (fresh, ok).
-// Branch B without an active enrollment afterwards returns NO_ACTIVE_ENROLLMENT.
+// Branch B without an effective school/grade afterwards returns NO_ACTIVE_ENROLLMENT (code kept, ADR-0095).
 func (s LoginSync) Ensure(ctx context.Context, userID uuid.UUID) (res Result, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.loginsync.Ensure")
 	defer func() { done(err) }()
@@ -100,7 +100,7 @@ func (s LoginSync) Ensure(ctx context.Context, userID uuid.UUID) (res Result, er
 	if refresh <= 0 {
 		refresh = DefaultRefreshAfter
 	}
-	if st.ActiveEnrollment {
+	if st.Placed {
 		res.Branch, res.Outcome = BranchFresh, ResultOK
 		if st.LastSyncedAt == nil || start.Sub(*st.LastSyncedAt) > refresh {
 			// C: continue at once; the refresh runs in the background (F011-AC-21).
@@ -119,14 +119,14 @@ func (s LoginSync) Ensure(ctx context.Context, userID uuid.UUID) (res Result, er
 		return res, err
 	}
 	s.observe(res, start)
-	if after != nil && after.ActiveEnrollment {
+	if after != nil && after.Placed {
 		return res, nil
 	}
 	if res.Outcome == ResultOK {
-		res.Outcome = ResultMissingClass
+		res.Outcome = ResultMissingPlacement
 	}
 	msg := ""
-	if res.Outcome != ResultMissingClass {
+	if res.Outcome != ResultMissingPlacement {
 		msg = "retry in a few minutes"
 	}
 	return res, problem.New(problem.NoActiveEnrollment, msg)
@@ -151,7 +151,7 @@ func (s LoginSync) Refresh(ctx context.Context, job port.LoginRefreshJob) (err e
 // lookupAndApply calls the SIS of the student's connection and applies the record.
 func (s LoginSync) lookupAndApply(ctx context.Context, st *write.LoginState) string {
 	if !st.StudentLookup || st.SchoolExternalID == "" {
-		return ResultMissingClass // e.g. csv_import: no student_lookup, use the last synced data (F011-AC-20)
+		return ResultMissingPlacement // e.g. csv_import: no student_lookup, use the last synced data (F011-AC-20)
 	}
 	release, ok := s.Guard.Acquire(st.ConnectionID, s.now())
 	if !ok {
@@ -167,7 +167,7 @@ func (s LoginSync) lookupAndApply(ctx context.Context, st *write.LoginState) str
 	switch {
 	case errors.Is(err, port.ErrSisLookupNotFound):
 		release(true, s.now())
-		return ResultMissingClass
+		return ResultMissingPlacement
 	case errors.Is(err, port.ErrSisLookupTimeout) || errors.Is(err, context.DeadlineExceeded):
 		release(false, s.now())
 		return ResultTimeout

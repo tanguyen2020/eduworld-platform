@@ -562,53 +562,26 @@ func (PlatformAdminRepo) RemoveDefaultAssignment(ctx context.Context, resourceTy
 	return n > 0, nil
 }
 
-// mergeStudentRecord is the org part of the identity step of a merge (OQ F045-6), in the same transaction: the
-// active enrollment of the source moves to the target when the target has none in the tenant (else it ends), and
-// the student record of the source is soft-deleted with delete_reason merged. A second call finds nothing to do.
+// mergeStudentRecord is the org part of the identity step of a merge (OQ F045-6, ADR-0095), in the same transaction:
+// the student record of the source is soft-deleted with delete_reason merged; the target keeps its own school and
+// grade. A second call finds nothing to do.
 func mergeStudentRecord(ctx context.Context, m write.UserMerge, at time.Time, out *write.MergeTransfer) error {
 	tx, err := portalTx(ctx)
 	if err != nil {
 		return err
 	}
-	scan := func(q string, args ...any) ([]write.MergedEnrollment, error) {
-		rows, err := tx.QueryContext(ctx, q, args...)
-		if err != nil {
-			return nil, err
-		}
-		defer func() { _ = rows.Close() }()
-		var list []write.MergedEnrollment
-		for rows.Next() {
-			var e write.MergedEnrollment
-			if err := rows.Scan(&e.EnrollmentID, &e.SchoolID, &e.ClassID, &e.StartDate, &e.Source, &e.Version); err != nil {
-				return nil, err
-			}
-			list = append(list, e)
-		}
-		return list, rows.Err()
-	}
-	// tenancyguard:ok explicit tenant condition (tenant of the merge), deleted_at IS NULL: the active enrollment of the source
-	if out.MovedEnrollments, err = scan(`UPDATE org.enrollments e SET student_id = $2, updated_at = $4, updated_by = $5, version = e.version + 1
-		WHERE e.student_id = $1 AND e.tenant_id = $3 AND e.status = 'active' AND e.deleted_at IS NULL
-			AND EXISTS (SELECT 1 FROM org.students s WHERE s.student_id = $2 AND s.tenant_id = $3 AND s.deleted_at IS NULL)
-			AND NOT EXISTS (SELECT 1 FROM org.enrollments t WHERE t.student_id = $2 AND t.status = 'active' AND t.deleted_at IS NULL)
-		RETURNING e.enrollment_id, e.school_id, e.class_id, e.start_date, e.source, e.version`, m.From, m.Into, m.TenantID, at, m.MergedBy); err != nil {
-		return fmt.Errorf("move enrollment: %w", err)
-	}
-	// tenancyguard:ok explicit tenant condition (tenant of the merge), deleted_at IS NULL: the target keeps its own enrollment
-	if out.EndedEnrollments, err = scan(`UPDATE org.enrollments e SET status = 'ended', end_date = $4::date, updated_at = $4, updated_by = $5,
-			version = e.version + 1
-		WHERE e.student_id = $1 AND e.tenant_id = $3 AND e.status = 'active' AND e.deleted_at IS NULL AND $2::uuid IS NOT NULL
-		RETURNING e.enrollment_id, e.school_id, e.class_id, e.start_date, e.source, e.version`, m.From, m.Into, m.TenantID, at, m.MergedBy); err != nil {
-		return fmt.Errorf("end enrollment: %w", err)
-	}
+	var p write.MergedPlacement
 	// tenancyguard:ok explicit tenant condition (tenant of the merge), deleted_at IS NULL: soft-delete only (R21)
-	r, err := tx.ExecContext(ctx, `UPDATE org.students SET deleted_at = $3, deleted_by = $4, delete_reason = 'merged', updated_at = $3,
-			updated_by = $4, version = version + 1 WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NULL`, m.From, m.TenantID, at, m.MergedBy)
+	err = tx.QueryRowContext(ctx, `UPDATE org.students SET deleted_at = $3, deleted_by = $4, delete_reason = 'merged', updated_at = $3,
+			updated_by = $4, version = version + 1 WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NULL
+		RETURNING school_id, grade_level, status = 'active', version`, m.From, m.TenantID, at, m.MergedBy).Scan(&p.SchoolID, &p.Grade, &p.WasActive, &p.Version)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("soft-delete merged student: %w", err)
 	}
-	n, _ := r.RowsAffected()
-	out.StudentRemoved = n > 0
+	out.StudentRemoved, out.Removed = true, &p
 	return nil
 }
 

@@ -18,7 +18,8 @@ import (
 )
 
 // Keys of the school settings JSON written through updateSchoolSettings.
-var schoolKeys = map[string]bool{"allowed_hours": true, "class_leaderboard_enabled": true, "school_leaderboard_enabled": true,
+// class_leaderboard_enabled is gone with the classes (ADR-0095 D5).
+var schoolKeys = map[string]bool{"allowed_hours": true, "school_leaderboard_enabled": true,
 	"student_club_creation": true, "curfew_window": true, settings.KeyDailyPlayLimit: true}
 
 // CurrentPlatformCurfew returns platform_curfew in force (configured value or CONFIG_DEFAULTS).
@@ -141,9 +142,6 @@ func (h Settings) UpdateSchoolSettings(ctx context.Context, schoolID uuid.UUID, 
 func schoolSubset(out dto.SchoolSettings) map[string]any {
 	subset := map[string]any{"allowed_hours": out.AllowedHours, "curfew_window": out.CurfewWindow, "student_club_creation": out.StudentClubCreation,
 		settings.KeyDailyPlayLimit: out.DailyPlayLimitMinutes} // module game enforces it (F014-AC-27)
-	if out.ClassLeaderboardEnabled != nil {
-		subset["class_leaderboard_enabled"] = *out.ClassLeaderboardEnabled
-	}
 	if out.SchoolLeaderboardEnabled != nil {
 		subset["school_leaderboard_enabled"] = *out.SchoolLeaderboardEnabled
 	}
@@ -181,7 +179,7 @@ func (h Settings) checkSchoolPatch(ctx context.Context, tenant uuid.UUID, patch 
 			}
 		}
 	}
-	for _, k := range []string{"class_leaderboard_enabled", "school_leaderboard_enabled", "student_club_creation"} {
+	for _, k := range []string{"school_leaderboard_enabled", "student_club_creation"} {
 		if raw, ok := patch[k]; ok && !isNull(raw) {
 			var b bool
 			if err := json.Unmarshal(raw, &b); err != nil {

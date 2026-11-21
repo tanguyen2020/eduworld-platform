@@ -74,7 +74,7 @@ func TestPrincipalInvalidator(t *testing.T) {
 		{"tenant_membership.changed", map[string]any{"user_id": user, "tenant_id": tenant}, call{"user", user, &tenant}},
 		{"user.access_revoked", map[string]any{"user_id": user}, call{"user", user, nil}},
 		{"user.status_changed", map[string]any{"user_id": user}, call{"user", user, nil}},
-		{"enrollment.changed", map[string]any{"student_id": user}, call{"user", user, &tenant}},
+		{"student.placement_changed", map[string]any{"student_id": user}, call{"user", user, nil}},
 		{"tenant.updated", map[string]any{"tenant_id": tenant}, call{"tenant", uuid.Nil, &tenant}},
 		{"role.updated", map[string]any{"role_id": uuid.New()}, call{"all", uuid.Nil, nil}},
 	}

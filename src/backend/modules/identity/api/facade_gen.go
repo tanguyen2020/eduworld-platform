@@ -156,20 +156,14 @@ func (e PrincipalGrantRoleScopeKind) Valid() bool {
 
 // Defines values for ProjectionSnapshotItemEntityType.
 const (
-	ProjectionSnapshotItemEntityTypeClass      ProjectionSnapshotItemEntityType = "class"
-	ProjectionSnapshotItemEntityTypeEnrollment ProjectionSnapshotItemEntityType = "enrollment"
-	ProjectionSnapshotItemEntityTypeSchool     ProjectionSnapshotItemEntityType = "school"
-	ProjectionSnapshotItemEntityTypeStudent    ProjectionSnapshotItemEntityType = "student"
-	ProjectionSnapshotItemEntityTypeTenant     ProjectionSnapshotItemEntityType = "tenant"
+	ProjectionSnapshotItemEntityTypeSchool  ProjectionSnapshotItemEntityType = "school"
+	ProjectionSnapshotItemEntityTypeStudent ProjectionSnapshotItemEntityType = "student"
+	ProjectionSnapshotItemEntityTypeTenant  ProjectionSnapshotItemEntityType = "tenant"
 )
 
 // Valid indicates whether the value is a known member of the ProjectionSnapshotItemEntityType enum.
 func (e ProjectionSnapshotItemEntityType) Valid() bool {
 	switch e {
-	case ProjectionSnapshotItemEntityTypeClass:
-		return true
-	case ProjectionSnapshotItemEntityTypeEnrollment:
-		return true
 	case ProjectionSnapshotItemEntityTypeSchool:
 		return true
 	case ProjectionSnapshotItemEntityTypeStudent:
@@ -249,20 +243,14 @@ func (e TenantType) Valid() bool {
 
 // Defines values for ListProjectionSnapshotParamsEntityType.
 const (
-	ListProjectionSnapshotParamsEntityTypeClass      ListProjectionSnapshotParamsEntityType = "class"
-	ListProjectionSnapshotParamsEntityTypeEnrollment ListProjectionSnapshotParamsEntityType = "enrollment"
-	ListProjectionSnapshotParamsEntityTypeSchool     ListProjectionSnapshotParamsEntityType = "school"
-	ListProjectionSnapshotParamsEntityTypeStudent    ListProjectionSnapshotParamsEntityType = "student"
-	ListProjectionSnapshotParamsEntityTypeTenant     ListProjectionSnapshotParamsEntityType = "tenant"
+	ListProjectionSnapshotParamsEntityTypeSchool  ListProjectionSnapshotParamsEntityType = "school"
+	ListProjectionSnapshotParamsEntityTypeStudent ListProjectionSnapshotParamsEntityType = "student"
+	ListProjectionSnapshotParamsEntityTypeTenant  ListProjectionSnapshotParamsEntityType = "tenant"
 )
 
 // Valid indicates whether the value is a known member of the ListProjectionSnapshotParamsEntityType enum.
 func (e ListProjectionSnapshotParamsEntityType) Valid() bool {
 	switch e {
-	case ListProjectionSnapshotParamsEntityTypeClass:
-		return true
-	case ListProjectionSnapshotParamsEntityTypeEnrollment:
-		return true
 	case ListProjectionSnapshotParamsEntityTypeSchool:
 		return true
 	case ListProjectionSnapshotParamsEntityTypeStudent:
@@ -276,7 +264,6 @@ func (e ListProjectionSnapshotParamsEntityType) Valid() bool {
 
 // MembershipCheckRequest defines model for MembershipCheckRequest.
 type MembershipCheckRequest struct {
-	ClassId         *openapi_types.UUID                    `json:"class_id,omitempty"`
 	RequireUserType *MembershipCheckRequestRequireUserType `json:"require_user_type,omitempty"`
 	SchoolId        *openapi_types.UUID                    `json:"school_id,omitempty"`
 	UserIds         []openapi_types.UUID                   `json:"user_ids"`
@@ -305,9 +292,7 @@ type MembershipCheckResultResultsUserType string
 
 // Principal defines model for Principal.
 type Principal struct {
-	// ClassIds Lớp học sinh đang theo học (enrollment SIS); rỗng với nhân sự
-	ClassIds   *[]openapi_types.UUID `json:"class_ids,omitempty"`
-	GradeLevel *int                  `json:"grade_level,omitempty"`
+	GradeLevel *int `json:"grade_level,omitempty"`
 
 	// Grants Mỗi UserRole còn hiệu lực với permission của role và phạm vi gán (F003 Clarifications 2026-11-18). `permissions`/`scopes`
 	// gộp không cho biết permission nào chỉ áp trong trường/môn nào, nên `authz.Require` dựa vào `grants`; bên gọi
@@ -390,14 +375,14 @@ type PrincipalResolveRequest1 = interface{}
 // ProjectionSnapshotItem defines model for ProjectionSnapshotItem.
 type ProjectionSnapshotItem struct {
 	// Data Các trường payload của event projection tương ứng (`specs/events/payloads/identity/<event>.v1.schema.json`: `tenant.updated`,
-	// `school.updated`, `class.synced`, `student.synced`, `enrollment.changed`) theo trạng thái hiện hành; trường chỉ mô tả một lần thay đổi
+	// `school.updated`, `student.placement_changed`) theo trạng thái hiện hành; trường chỉ mô tả một lần thay đổi
 	// (`op`, `action`, `trigger`, `changed_fields`, `sync_run_id`) có thể vắng mặt. Không PII ngoài các trường đó.
 	Data map[string]interface{} `json:"data"`
 
 	// Deleted true nếu bản ghi nguồn đã soft-delete
 	Deleted bool `json:"deleted"`
 
-	// EntityId tenant_id, school_id, class_id, student_id hoặc enrollment_id
+	// EntityId tenant_id, school_id hoặc student_id
 	EntityId   openapi_types.UUID               `json:"entity_id"`
 	EntityType ProjectionSnapshotItemEntityType `json:"entity_type"`
 
@@ -678,7 +663,7 @@ func (t *PrincipalResolveRequest) UnmarshalJSON(b []byte) error {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// CheckMemberships Kiểm tra hàng loạt người dùng có thuộc tenant/trường/lớp hay không
+	// CheckMemberships Kiểm tra hàng loạt người dùng có thuộc tenant/trường hay không (khối trả trong grade_level — ADR-0095)
 	// (POST /internal/v1/memberships:check)
 	CheckMemberships(w http.ResponseWriter, r *http.Request)
 	// GetPrincipal (Alias, deprecated) Lấy Principal theo user_id + tenant_id — dùng resolvePrincipal
@@ -689,7 +674,7 @@ type ServerInterface interface {
 	// ResolvePrincipal Resolve Principal (role, permission, scope) của người dùng trong một tenant — endpoint CHUẨN
 	// (POST /internal/v1/principals:resolve)
 	ResolvePrincipal(w http.ResponseWriter, r *http.Request)
-	// ListProjectionSnapshot Trang trạng thái hiện hành của tenant/trường/lớp/học sinh/enrollment để rebuild projection ref.* (F010-AC-27)
+	// ListProjectionSnapshot Trang trạng thái hiện hành của tenant/trường/học sinh để rebuild projection ref.* (F010-AC-27)
 	// (GET /internal/v1/projection-snapshots/{entity_type})
 	ListProjectionSnapshot(w http.ResponseWriter, r *http.Request, entityType ListProjectionSnapshotParamsEntityType, params ListProjectionSnapshotParams)
 	// GetTenant Lấy thông tin tenant, danh sách trường và cài đặt hiệu lực
@@ -1385,7 +1370,7 @@ func (response GetTenant404ApplicationProblemPlusJSONResponse) VisitGetTenantRes
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// CheckMemberships Kiểm tra hàng loạt người dùng có thuộc tenant/trường/lớp hay không
+	// CheckMemberships Kiểm tra hàng loạt người dùng có thuộc tenant/trường hay không (khối trả trong grade_level — ADR-0095)
 	// (POST /internal/v1/memberships:check)
 	CheckMemberships(ctx context.Context, request CheckMembershipsRequestObject) (CheckMembershipsResponseObject, error)
 	// GetPrincipal (Alias, deprecated) Lấy Principal theo user_id + tenant_id — dùng resolvePrincipal
@@ -1396,7 +1381,7 @@ type StrictServerInterface interface {
 	// ResolvePrincipal Resolve Principal (role, permission, scope) của người dùng trong một tenant — endpoint CHUẨN
 	// (POST /internal/v1/principals:resolve)
 	ResolvePrincipal(ctx context.Context, request ResolvePrincipalRequestObject) (ResolvePrincipalResponseObject, error)
-	// ListProjectionSnapshot Trang trạng thái hiện hành của tenant/trường/lớp/học sinh/enrollment để rebuild projection ref.* (F010-AC-27)
+	// ListProjectionSnapshot Trang trạng thái hiện hành của tenant/trường/học sinh để rebuild projection ref.* (F010-AC-27)
 	// (GET /internal/v1/projection-snapshots/{entity_type})
 	ListProjectionSnapshot(ctx context.Context, request ListProjectionSnapshotRequestObject) (ListProjectionSnapshotResponseObject, error)
 	// GetTenant Lấy thông tin tenant, danh sách trường và cài đặt hiệu lực

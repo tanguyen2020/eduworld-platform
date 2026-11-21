@@ -12,7 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/appscope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/enrollment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/tenant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/user"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
@@ -87,6 +87,7 @@ type CreateCommonStudents struct {
 	UoW         write.UnitOfWork
 	Tenants     write.TenantRepository
 	Accounts    write.AccountRepository
+	Students    write.StudentRepository // placement of the new student (student.placement_changed, ADR-0095)
 	KC          port.KeycloakAdmin
 	Events      write.EventPublisher
 	Audit       write.Auditor
@@ -255,10 +256,8 @@ func (h CreateCommonStudents) createOne(ctx context.Context, r validRow, orgID s
 		_ = h.KC.DisableUser(context.WithoutCancel(ctx), kcID)
 		return failed(r, problem.Unavailable)
 	}
-	classID, _ := tenant.CommonClassID(r.grade)
 	acc := write.NewStudentAccount{UserID: userID, Username: r.username, DisplayName: r.display, TenantID: tenant.CommonTenantID,
-		SchoolID: tenant.CommonSchoolID, ClassID: classID, Grade: r.grade, Issuer: h.LocalIssuer, Subject: kcID, ExternalRef: r.ref,
-		EnrollmentID: ids.New()}
+		SchoolID: tenant.CommonSchoolID, Grade: r.grade, Issuer: h.LocalIssuer, Subject: kcID, ExternalRef: r.ref}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		if err := h.Accounts.CreateStudent(ctx, acc); err != nil {
 			return err
@@ -278,19 +277,20 @@ func (h CreateCommonStudents) createOne(ctx context.Context, r validRow, orgID s
 
 func (h CreateCommonStudents) provisioned(ctx context.Context, a write.NewStudentAccount) error {
 	t, uid := a.TenantID, a.UserID.String()
-	now := time.Now().UTC()
-	if h.Clock != nil {
-		now = h.Clock().UTC()
-	}
 	school, grade := a.SchoolID.String(), a.Grade
 	if err := h.Events.Publish(ctx, write.Event{Type: "user.provisioned", SubjectType: "user", SubjectID: uid, TenantID: &t,
 		Payload: map[string]any{"user_id": uid, "user_type": "student", "source": "platform_common", "school_id": school, "grade_level": grade}}); err != nil {
 		return err
 	}
-	e := &enrollment.Enrollment{ID: a.EnrollmentID, StudentID: a.UserID, Placement: enrollment.Placement{TenantID: t, SchoolID: a.SchoolID, ClassID: a.ClassID},
-		Status: enrollment.StatusActive, StartDate: now, Source: enrollment.SourcePlatformCommon, Version: 1}
-	if err := h.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: a.EnrollmentID.String(), TenantID: &t,
-		Payload: enrollmentPayload(e, "added", nil)}); err != nil {
+	// The student of the common tenant belongs to the virtual school with the declared grade (F010-AC-24, ADR-0095).
+	placed, err := h.Students.Placement(ctx, a.UserID)
+	if err != nil {
+		return err
+	}
+	if placed == nil {
+		return problem.New(problem.Internal, "the new student has no row")
+	}
+	if err := publishPlacement(ctx, h.Events, a.UserID, nil, *placed, PlacementChange{Source: placement.SourcePlatformCommon}); err != nil {
 		return err
 	}
 	if err := h.Events.Publish(ctx, write.Event{Type: "tenant_membership.changed", SubjectType: "tenant_membership", SubjectID: uid, TenantID: &t,

@@ -1,4 +1,4 @@
-h1:xkLekwILMNGtBgXfFppCEfEX+DTJdmWMJySYSltPbuo=
+h1:CVKu5SSv5ZwL3U+PlOXH5ih5mWEY06tt76pmcC8EvFM=
 00000000000001_baseline.sql h1:V+RVDz3UEtGF7iZgjrvxor6e/BKQrfoOtRtOiI3rPRg=
 20261118000001_infra.sql h1:UYIO1YaVfAbTd0wW/x+b2X72bbf64ReWEsVYVT2aJ1M=
 20261119000010_infra_platform_grants.sql h1:7/0pq0LI7ubjoqTTP3umbcLxCUX0+IobbmQVQXbcwzM=
@@ -30,3 +30,4 @@ h1:xkLekwILMNGtBgXfFppCEfEX+DTJdmWMJySYSltPbuo=
 20261229000001_adr0095_assignment_grade_targets.sql h1:6xSbdvmymC9tBMlAzOHvo/s+Vsmq1UR4uN9ohczp5Jc=
 20261229000002_adr0095_grade_at_event.sql h1:nG9I3g1mt5v468KUX6cVPfI7yv/jQ3m5OROvAh1DLwI=
 20261229000003_f105_question_plans.sql h1:lC1zhQSKZH5bpubdVLYUn2t6qqs09uyF58RZzZPpvj8=
+20261229000004_adr0095_student_academic_year.sql h1:ePquHKI1jGBEHXy1uFolWfkFfgXFBZ9wIjMy7k1tU5k=

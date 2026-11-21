@@ -29,8 +29,7 @@ type PrincipalGrantRow struct {
 // PrincipalMembership is the membership of a user in one tenant.
 type PrincipalMembership struct {
 	TenantType string
-	SchoolIDs  []uuid.UUID // schools of the student's active enrollment
-	ClassIDs   []uuid.UUID
+	SchoolIDs  []uuid.UUID // the school of an effective student (org.students — ADR-0095)
 	GradeLevel *int
 	// SIS source of the student (ADR-0046).
 	SisConnectionID   *uuid.UUID
@@ -61,9 +60,9 @@ type MemberRow struct {
 	GradeLevel *int
 }
 
-// MembershipChecker checks many users against a tenant, optionally a school and a class (checkMemberships).
+// MembershipChecker checks many users against a tenant, optionally a school (checkMemberships).
 type MembershipChecker interface {
-	CheckMembers(ctx context.Context, tenantID uuid.UUID, userIDs []uuid.UUID, schoolID, classID *uuid.UUID) ([]MemberRow, error)
+	CheckMembers(ctx context.Context, tenantID uuid.UUID, userIDs []uuid.UUID, schoolID *uuid.UUID) ([]MemberRow, error)
 }
 
 // MyTenantRow is one tenant of the session user (listMyTenants).

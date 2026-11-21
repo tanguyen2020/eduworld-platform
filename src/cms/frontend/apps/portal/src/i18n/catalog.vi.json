@@ -10,7 +10,7 @@
     "school_lms": {
       "overview": "Tổng quan",
       "schools": "Trường",
-      "classes": "Học sinh theo khối",
+      "students": "Học sinh theo khối",
       "sis_sync": "Đồng bộ SIS/CSV",
       "assignments": "Bài tập, đề, bài chẩn đoán",
       "game_activities": "Hoạt động game được gán",

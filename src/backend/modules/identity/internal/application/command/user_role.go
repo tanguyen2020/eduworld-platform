@@ -111,7 +111,7 @@ func requireTenantGrant(ctx context.Context, p authz.Principal, tenant uuid.UUID
 }
 
 var grantErrors = map[error]struct{ field, msg string }{
-	domainauthz.ErrScope:           {"scope_type", "scope not allowed for this role (no class scope; platform roles at platform scope only)"},
+	domainauthz.ErrScope:           {"scope_type", "scope not allowed for this role (platform roles at platform scope only)"},
 	domainauthz.ErrScopeID:         {"scope_id", "required for school/subject scopes, forbidden for tenant/platform"},
 	domainauthz.ErrStudentRole:     {"user_id", "a student cannot hold a portal role"},
 	domainauthz.ErrPlatformStaff:   {"role_id", "platform staff hold platform roles only (ADR-0081)"},

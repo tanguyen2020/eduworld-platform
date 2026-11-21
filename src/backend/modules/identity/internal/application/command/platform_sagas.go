@@ -11,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/saga"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/placement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/platformadmin"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -149,8 +150,7 @@ func (d PlatformAdminDeps) mergeIdentityStep(ctx context.Context, run write.Saga
 		return auditIn(ctx, d.Audit, m.TenantID, audit.Event{Action: "user.merged", TargetType: "user", TargetID: m.Into.String(),
 			Result: audit.ResultSuccess, Reason: m.Reason, Metadata: map[string]any{"merge_id": m.ID.String(), "from_user_id": m.From.String(),
 				"into_user_id": m.Into.String(), "identities_moved": tr.Identities, "identities_superseded": tr.IdentitiesSuperseded,
-				"sis_links_moved": tr.SisLinks, "sis_links_superseded": tr.SisLinksSuperseded, "enrollments_moved": len(tr.MovedEnrollments),
-				"enrollments_ended": len(tr.EndedEnrollments), "student_removed": tr.StudentRemoved}})
+				"sis_links_moved": tr.SisLinks, "sis_links_superseded": tr.SisLinksSuperseded, "student_removed": tr.StudentRemoved}})
 	})
 	if err != nil {
 		return saga.Result{}, err
@@ -287,30 +287,19 @@ func (h PlatformSagas) closeCloneJobs(ctx context.Context, limit int) (int, erro
 	return closed, err
 }
 
-// mergedStudentEvents publishes what the identity step changed in the tenant of the merge (OQ F045-6):
-// enrollment.changed for the enrollment moved to the target (added) or ended for the source, and
-// tenant_membership.changed (removed) for the source whose student record is gone.
+// mergedStudentEvents publishes what the identity step changed in the tenant of the merge (OQ F045-6, ADR-0095): the
+// source student whose record is gone loses its placement (student.placement_changed, status inactive) and its
+// membership (tenant_membership.changed removed). The target keeps its own school and grade.
 func (d PlatformAdminDeps) mergedStudentEvents(ctx context.Context, m write.UserMerge, tr write.MergeTransfer) error {
-	t := m.TenantID
-	publish := func(student uuid.UUID, e write.MergedEnrollment, op, status string, end *string) error {
-		return d.Events.Publish(ctx, write.Event{Type: "enrollment.changed", SubjectType: "enrollment", SubjectID: e.EnrollmentID.String(), TenantID: &t,
-			Payload: EnrollmentPayload{StudentID: student.String(), ClassID: e.ClassID.String(), Op: op, EnrollmentID: e.EnrollmentID.String(),
-				SchoolID: e.SchoolID.String(), Status: status, StartDate: e.StartDate.Format(time.DateOnly), EndDate: end, Source: e.Source,
-				SourceVersion: e.Version}})
-	}
-	for _, e := range tr.MovedEnrollments {
-		if err := publish(m.Into, e, "added", "active", nil); err != nil {
-			return err
-		}
-	}
-	end := d.now().Format(time.DateOnly)
-	for _, e := range tr.EndedEnrollments {
-		if err := publish(m.From, e, "ended", "ended", &end); err != nil {
-			return err
-		}
-	}
-	if !tr.StudentRemoved {
+	if !tr.StudentRemoved || tr.Removed == nil {
 		return nil
+	}
+	t, r := m.TenantID, tr.Removed
+	before := placement.Record{Placement: placement.Placement{TenantID: t, SchoolID: r.SchoolID, Grade: r.Grade, Active: r.WasActive},
+		Version: r.Version - 1}
+	after := placement.Record{Placement: placement.Placement{TenantID: t, SchoolID: r.SchoolID, Grade: r.Grade}, Version: r.Version}
+	if err := publishPlacement(ctx, d.Events, m.From, &before, after, PlacementChange{Source: placement.SourcePlatformSaga}); err != nil {
+		return err
 	}
 	return d.Events.Publish(ctx, write.Event{Type: "tenant_membership.changed", SubjectType: "tenant_membership", SubjectID: m.From.String(),
 		TenantID: &t, Payload: MembershipPayload{UserID: m.From.String(), TenantID: t.String(), Op: "removed", Source: "merge", UserType: "student"}})

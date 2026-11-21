@@ -20,7 +20,7 @@ type PrincipalCache interface {
 // InvalidationSubjects are the identity events that change a Principal (API_DESIGN §12.2, F003-AC-23).
 var InvalidationSubjects = []string{
 	"ew.evt.identity.user_role.changed", "ew.evt.identity.role.updated", "ew.evt.identity.tenant_membership.changed",
-	"ew.evt.identity.user.access_revoked", "ew.evt.identity.user.status_changed", "ew.evt.identity.enrollment.changed", "ew.evt.identity.tenant.updated",
+	"ew.evt.identity.user.access_revoked", "ew.evt.identity.user.status_changed", "ew.evt.identity.student.placement_changed", "ew.evt.identity.tenant.updated",
 }
 
 // PrincipalInvalidator clears the Principal cache of this process on identity events. It uses an
@@ -70,11 +70,11 @@ func (p *PrincipalInvalidator) Apply(ctx context.Context, data []byte) error {
 			return errors.New("natsx: " + e.EventType + " without user_id")
 		}
 		return p.Cache.Invalidate(ctx, *e.Payload.UserID, tenant)
-	case "enrollment.changed":
+	case "student.placement_changed": // school/grade of the Principal (ADR-0095); a move may change the tenant: every tenant
 		if e.Payload.StudentID == nil {
-			return errors.New("natsx: enrollment.changed without student_id")
+			return errors.New("natsx: student.placement_changed without student_id")
 		}
-		return p.Cache.Invalidate(ctx, *e.Payload.StudentID, tenant)
+		return p.Cache.Invalidate(ctx, *e.Payload.StudentID, nil)
 	}
 	return nil
 }

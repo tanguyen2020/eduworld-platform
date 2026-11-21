@@ -37,7 +37,7 @@ postman collection run specs/postman/sis-conformance/sis-conformance.postman_col
 
 - **Bắt buộc** (`full_sync`): `getHealth` (JSON Schema, `contract_version` major 1, ghi lại `capabilities`), `401`
   `application/problem+json` khi thiếu credential, `listSchools`, `listAcademicYears` (đúng một năm `is_current`),
-  `listClasses`, `listStudents` (đi tiếp trang theo `next_cursor`), `listEnrollments`: status, JSON Schema của
+  `listStudents` (đi tiếp trang theo `next_cursor`; SIS contract 1.3.0 không còn `listClasses`, `listEnrollments` — ADR-0095): status, JSON Schema của
   response, phân trang cursor (`has_more` ⇒ `next_cursor` mới, số bản ghi ≤ `limit`), `limit > 1000` → `400` problem+json.
 - **Tùy chọn theo capability** khai báo trong `getHealth`: `delta` → `listChanges` (thứ tự `sequence`, `record` khi
   upsert, `410` với watermark hết hạn); `student_lookup` → `lookupStudent` (200 trong 3 giây, 404 problem+json);

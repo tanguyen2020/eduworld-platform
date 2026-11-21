@@ -32,6 +32,14 @@ func sisFiles(t *testing.T, files map[string]string) []command.SisFile {
 	now := time.Date(2026, 11, 20, 8, 0, 0, 0, time.UTC)
 	var out []command.SisFile
 	for name, body := range files {
+		if k, ok := csvreader.IgnoredFiles[name]; ok { // SIS contract 1.3.0: the run ignores the file with a warning
+			f := command.SisFile{Kind: k}
+			for i := 1; i < len(strings.Split(strings.TrimSpace(body), "\n")); i++ {
+				f.Records = append(f.Records, command.SisRecord{Row: i + 1, Data: map[string]any{}})
+			}
+			out = append(out, f)
+			continue
+		}
 		kind := csvreader.FileKinds[name]
 		b, err := csvreader.Read(kind, strings.NewReader(body), v, now)
 		if err != nil {
@@ -64,7 +72,8 @@ const (
 		"HS-9,C-3B,2026-09-05,active\n"
 )
 
-// F011-AC-01…AC-05, AC-10, AC-14, AC-15, AC-23 on PostgreSQL.
+// F011-AC-01…AC-05, AC-10, AC-14, AC-23 on PostgreSQL; SIS contract 1.3.0 (ADR-0095 D6): classes.csv and enrollments.csv
+// are ignored with a warning, every student record places the student in its school and grade.
 func TestSisImportRun(t *testing.T) {
 	ctx := context.Background()
 	e := setup(ctx, t)
@@ -82,7 +91,7 @@ func TestSisImportRun(t *testing.T) {
 	}
 	enrolled(ctx, t, e.platform, a, "hs.taken") // owner of the username of HS-4
 	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, BatchSize: 2,
+		Students: write.StudentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit, BatchSize: 2,
 		Observer: metrics.Runs{}}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	users := func() int {
@@ -99,14 +108,14 @@ func TestSisImportRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if dry.Status != "partially_failed" || len(dry.Errors) == 0 || dry.Diff["student"]["create"] != 4 || dry.Diff["class"]["create"] != 2 ||
-		dry.Diff["enrollment"]["create"] != 3 || dry.Diff["school"] != nil {
+	if dry.Status != "partially_failed" || len(dry.Errors) == 0 || dry.Diff["student"]["create"] != 4 || dry.Diff["class"] != nil ||
+		dry.Diff["enrollment"] != nil || dry.Diff["school"] != nil {
 		t.Fatalf("dry run = %+v", dry)
 	}
 	if users() != 0 || count(ctx, t, e.platform, `SELECT count(*) FROM org.classes WHERE name IN ('3B', '4A')`) != 0 {
 		t.Fatal("dry run changed business data")
 	}
-	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.staging_records WHERE sync_run_id = $1`, dry.RunID); n != 9 {
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.staging_records WHERE sync_run_id = $1`, dry.RunID); n != 4 {
 		t.Fatalf("staging = %d", n)
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.sync_record_errors WHERE sync_run_id = $1 AND column_name = 'name'`, dry.RunID); n != 1 {
@@ -117,13 +126,13 @@ func TestSisImportRun(t *testing.T) {
 		t.Fatalf("ignored column stored %d times", n)
 	}
 
-	// AC-04, AC-10, AC-14, AC-15: apply in order school → class → student → enrollment.
+	// AC-04, AC-10, AC-14: apply in order school → student; the student record places the student (ADR-0095).
 	files = sisFiles(t, map[string]string{"classes.csv": sisClasses, "students.csv": sisStudents, "enrollments.csv": sisEnrollments})
 	run, err := h.Handle(admin, command.RunImportInput{ConnectionID: conn.ID, SchoolID: school, Files: files})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if run.Status != "succeeded" || run.Issues != 3 {
+	if run.Status != "succeeded" || run.Issues != 1 {
 		t.Fatalf("apply = %+v", run)
 	}
 	if testutil.ToFloat64(metrics.LastSuccess().WithLabelValues(conn.ID.String())) < float64(time.Now().Add(-time.Minute).Unix()) {
@@ -136,17 +145,25 @@ func TestSisImportRun(t *testing.T) {
 		WHERE u.username LIKE 'hs.sis.%' AND u.status = 'pending' AND l.status = 'active' AND l.tenant_id = $1`, a.tenant); n != 3 {
 		t.Fatalf("pending users with identity link = %d", n)
 	}
-	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE source = 'sis' AND status = 'active' AND tenant_id = $1
-		AND class_id IN (SELECT class_id FROM org.classes WHERE name IN ('3B', '4A'))`, a.tenant); n != 2 {
-		t.Fatalf("sis enrollments = %d", n)
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.students s JOIN identity.users u ON u.user_id = s.student_id
+		WHERE u.username LIKE 'hs.sis.%' AND s.status = 'active' AND s.school_id = $1 AND s.tenant_id = $2
+		AND ((u.username = 'hs.sis.binh' AND s.grade_level = 4) OR (u.username <> 'hs.sis.binh' AND s.grade_level = 3))`, a.school, a.tenant); n != 3 {
+		t.Fatalf("placed students = %d", n)
 	}
-	for typ, want := range map[string]int{"duplicate_identifier": 1, "orphan_enrollment": 1, "missing_class": 1} {
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE tenant_id = $1`, a.tenant); n != 0 {
+		t.Fatalf("enrollments written = %d (none since ADR-0095)", n)
+	}
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.sync_runs WHERE sync_run_id = $1 AND (stats->>'class_ignored')::int = 2
+		AND (stats->>'enrollment_ignored')::int = 3`, run.RunID); n != 1 {
+		t.Fatal("ignored class/enrollment records are counted in the run stats (warning)")
+	}
+	for typ, want := range map[string]int{"duplicate_identifier": 1, "orphan_enrollment": 0, "missing_class": 0} {
 		if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_type = $1 AND tenant_id = $2`, typ, a.tenant); n != want {
 			t.Fatalf("issues %s = %d", typ, n)
 		}
 	}
-	for typ, want := range map[string]int{"student.provisioning_requested": 3, "class.synced": 2, "student.synced": 3,
-		"sis.reconciliation_issue_raised": 3, "sis.sync_completed": 2} {
+	for typ, want := range map[string]int{"student.provisioning_requested": 3, "class.synced": 0, "enrollment.changed": 0,
+		"student.synced": 3, "student.placement_changed": 3, "sis.reconciliation_issue_raised": 1, "sis.sync_completed": 2} {
 		if n := events(typ); n != want {
 			t.Fatalf("events %s = %d, want %d", typ, n, want)
 		}
@@ -155,19 +172,16 @@ func TestSisImportRun(t *testing.T) {
 		AND envelope->'payload'->>'action' = 'student.synced'`); n != 3 {
 		t.Fatalf("student.synced audits = %d", n)
 	}
-	// F011 T040 (OQ F020-1): class.synced carries source_version, academic_year_id and is_virtual (schema-valid).
-	classes := syncedPayloads(ctx, t, e, "class.synced", a.tenant)
-	if len(classes) != 2 {
-		t.Fatalf("class.synced payloads = %d", len(classes))
+	// ADR-0095: student.placement_changed of a new SIS student — first placement (every field changed), source sis, the
+	// current academic year of the school, version of the student row (schema-valid).
+	placements := syncedPayloads(ctx, t, e, "student.placement_changed", a.tenant)
+	if len(placements) != 3 {
+		t.Fatalf("student.placement_changed payloads = %d", len(placements))
 	}
-	for _, p := range classes {
-		var year string
-		if err := e.platform.QueryRowContext(ctx, `SELECT academic_year_id::text FROM org.classes WHERE class_id = $1 AND tenant_id = $2`,
-			p["class_id"], a.tenant).Scan(&year); err != nil {
-			t.Fatal(err)
-		}
-		if p["source_version"] != float64(1) || p["academic_year_id"] != year || p["is_virtual"] != false {
-			t.Fatalf("class.synced = %v (year %s)", p, year)
+	for _, p := range placements {
+		if p["source"] != "sis" || p["school_id"] != a.school || p["status"] != "active" || p["previous_school_id"] != nil ||
+			len(p["changed_fields"].([]any)) != 4 || p["academic_year_id"] != a.year || p["sync_run_id"] != run.RunID.String() {
+			t.Fatalf("student.placement_changed = %v", p)
 		}
 	}
 
@@ -176,12 +190,13 @@ func TestSisImportRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if again.Diff["class"]["noop"] != 2 || again.Diff["student"]["noop"] != 3 || again.Diff["student"]["update"] != 0 ||
-		again.Diff["enrollment"]["noop"] != 2 || users() != 3 || events("student.provisioning_requested") != 3 {
+	if again.Diff["student"]["noop"] != 3 || again.Diff["student"]["update"] != 0 || users() != 3 ||
+		events("student.provisioning_requested") != 3 || events("student.placement_changed") != 3 {
 		t.Fatalf("re-import = %+v", again)
 	}
 
-	// AC-23: suspended → locked; graduated → deactivated + enrollment ended, without missing_class.
+	// AC-23: suspended → locked (the student keeps its school and grade); graduated → deactivated + the student is no longer
+	// effective (student.placement_changed status inactive).
 	status := sisFiles(t, map[string]string{"students.csv": "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username\n" +
 		"HS-1,TH-A,001,Nguyễn Văn An,3,suspended,hs.sis.an\n" +
 		"HS-2,TH-A,002,Trần Bình,4,graduated,hs.sis.binh\n"})
@@ -193,9 +208,14 @@ func TestSisImportRun(t *testing.T) {
 		OR (username = 'hs.sis.binh' AND status = 'deactivated')`); n != 2 {
 		t.Fatalf("user statuses = %d", n)
 	}
-	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments e JOIN identity.users u ON u.user_id = e.student_id
-		WHERE u.username = 'hs.sis.binh' AND e.status = 'ended' AND e.tenant_id = $1`, a.tenant); n != 1 {
-		t.Fatalf("ended enrollments = %d", n)
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.students s JOIN identity.users u ON u.user_id = s.student_id
+		WHERE ((u.username = 'hs.sis.binh' AND s.status = 'inactive') OR (u.username = 'hs.sis.an' AND s.status = 'active')) AND s.tenant_id = $1`,
+		a.tenant); n != 2 {
+		t.Fatalf("student statuses = %d", n)
+	}
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'student.placement_changed'
+		AND envelope->'payload'->>'status' = 'inactive' AND envelope->'payload'->>'previous_status' = 'active'`); n != 1 {
+		t.Fatalf("inactive placements = %d", n)
 	}
 	if events("user.status_changed") != 2 || events("user.access_revoked") != 2 {
 		t.Fatalf("status events = %d/%d", events("user.status_changed"), events("user.access_revoked"))
@@ -232,7 +252,7 @@ func TestSisMissingInSource(t *testing.T) {
 		t.Fatal(err)
 	}
 	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
+		Students: write.StudentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	students := func(n int) string {
 		var b strings.Builder
@@ -302,7 +322,7 @@ func TestSisMissingInSource(t *testing.T) {
 }
 
 // F011-AC-16: a student moving between two SIS connections of the same unit tenant keeps its User (link
-// moved, old link superseded, enrollment transferred); a match in another tenant needs a confirmation.
+// moved, old link superseded, school moved — ADR-0095); a match in another tenant needs a confirmation.
 func TestSisTransferBetweenConnections(t *testing.T) {
 	ctx := context.Background()
 	e := setup(ctx, t)
@@ -323,7 +343,7 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 	}
 	c1, c2, c3 := connect(a.tenant, a.school), connect(a.tenant, a.otherSchool), connect(b.tenant, b.school)
 	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
+		Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{}, Students: write.StudentRepo{},
 		Events: e.deps.Events, Audit: e.deps.Audit, IDHashKey: []byte("test-only-key")}
 	run := func(tenant, school string, conn uuid.UUID, files map[string]string) command.RunImportResult {
 		t.Helper()
@@ -338,14 +358,10 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 		return "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username,national_student_id\n" +
 			ext + "," + school + ",001,Nguyen An,3,active," + username + ",0123 4567 8901\n"
 	}
-	files := func(ext, school, class, username string) map[string]string {
-		return map[string]string{
-			"classes.csv":     "class_external_id,school_external_id,academic_year,grade_level,name\n" + class + "," + school + ",2026-2027,3," + class + "\n",
-			"students.csv":    student(ext, school, username),
-			"enrollments.csv": "student_external_id,class_external_id,start_date,status\n" + ext + "," + class + ",2026-09-05,active\n",
-		}
+	files := func(ext, school, username string) map[string]string {
+		return map[string]string{"students.csv": student(ext, school, username)}
 	}
-	if r := run(a.tenant, a.school, c1, files("HS-1", "TH-A", "C-A3", "hs.t.an")); r.Issues != 0 {
+	if r := run(a.tenant, a.school, c1, files("HS-1", "TH-A", "hs.t.an")); r.Issues != 0 {
 		t.Fatalf("first school = %+v", r)
 	}
 	var an uuid.UUID
@@ -357,8 +373,8 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 		t.Fatal("the national id must be stored as a keyed hash only")
 	}
 
-	// Same unit tenant, other SIS: link moved, user kept, enrollment transferred to the new school.
-	if r := run(a.tenant, a.otherSchool, c2, files("HS-77", "TH-B", "C-B3", "hs.t.an.new")); r.Issues != 0 || r.Status != "succeeded" {
+	// Same unit tenant, other SIS: link moved, user kept, student moved to the new school.
+	if r := run(a.tenant, a.otherSchool, c2, files("HS-77", "TH-B", "hs.t.an.new")); r.Issues != 0 || r.Status != "succeeded" {
 		t.Fatalf("second school = %+v", r)
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username = 'hs.t.an.new'`); n != 0 {
@@ -368,8 +384,8 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 		`SELECT count(*) FROM identity.sis_identity_links WHERE user_id = $1 AND status = 'superseded' AND student_external_id = 'HS-1' AND superseded_at IS NOT NULL`: 1,
 		`SELECT count(*) FROM identity.sis_identity_links WHERE user_id = $1 AND status = 'active' AND student_external_id = 'HS-77'`:                                  1,
 		`SELECT count(*) FROM org.students WHERE student_id = $1 AND school_id = '` + a.otherSchool + `'`:                                                              1,
-		`SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'active' AND school_id = '` + a.otherSchool + `'`:                                     1,
-		`SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'transferred'`:                                                                        1,
+		`SELECT count(*) FROM identity.tenant_memberships_v WHERE user_id = $1 AND school_id = '` + a.otherSchool + `'`:                                                1,
+		`SELECT count(*) FROM org.enrollments WHERE student_id = $1`:                                                                                                   0,
 	} {
 		if n := count(ctx, t, e.platform, q, an); n != want {
 			t.Fatalf("%s = %d", q, n)
@@ -380,9 +396,14 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 			t.Fatalf("%s = %d", typ, n)
 		}
 	}
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'student.placement_changed'
+		AND envelope->'payload'->>'student_id' = $1 AND envelope->'payload'->>'previous_school_id' = $2
+		AND envelope->'payload'->>'school_id' = $3`, an.String(), a.school, a.otherSchool); n != 1 {
+		t.Fatal("student.placement_changed of the school move")
+	}
 
 	// Another tenant: no automatic move, transfer_confirmation, no account.
-	if r := run(b.tenant, b.school, c3, files("HS-5", "TH-C", "C-C3", "hs.t.an.other")); r.Issues < 1 {
+	if r := run(b.tenant, b.school, c3, files("HS-5", "TH-C", "hs.t.an.other")); r.Issues < 1 {
 		t.Fatalf("other tenant = %+v", r)
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_type = 'transfer_confirmation' AND tenant_id = $1`, b.tenant); n != 1 {
@@ -393,8 +414,8 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 	}
 }
 
-// F011-AC-14: the remaining types of the conflict matrix: possible_duplicate, school_province_missing,
-// unmapped_school, class_school_mismatch, multi_school_enrollment — each skips the record and raises an issue.
+// F011-AC-14: the remaining types of the conflict matrix: possible_duplicate, school_province_missing, unmapped_school —
+// each skips the record and raises an issue (class_school_mismatch, multi_school_enrollment are gone with ADR-0095).
 func TestSisConflictMatrix(t *testing.T) {
 	ctx := context.Background()
 	e := setup(ctx, t)
@@ -410,7 +431,7 @@ func TestSisConflictMatrix(t *testing.T) {
 		t.Fatal(err)
 	}
 	h := command.SisRun{UoW: e.uow, Savepoints: e.uow, Connections: write.SisConnectionRepo{}, Sync: write.SisSyncRepo{},
-		Enrollments: write.EnrollmentRepo{}, Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{},
+		Missing: write.SisSyncRepo{}, Rules: write.SisSyncRepo{}, Transfers: write.SisSyncRepo{},
 		Students: write.StudentRepo{}, Events: e.deps.Events, Audit: e.deps.Audit}
 	admin := authztest.Ctx(ctx, authztest.Staff(ta, "school_admin"))
 	run := func(school uuid.UUID, files map[string]string) command.RunImportResult {
@@ -426,26 +447,21 @@ func TestSisConflictMatrix(t *testing.T) {
 	}
 	const stHeader = "student_external_id,school_external_id,student_code,full_name,grade_level,status,login_username\n"
 
-	// School A: school, class, student, enrollment.
+	// School A: school and student.
 	run(sA, map[string]string{
-		"schools.csv":     "school_external_id,school_code,name,status,province_code\nTH-A,A,Truong A,active,vn.ha-noi\n",
-		"classes.csv":     "class_external_id,school_external_id,academic_year,grade_level,name\nC-A,TH-A,2026-2027,3,3M\n",
-		"students.csv":    stHeader + "HS-1,TH-A,001,An,3,active,hs.mx.an\n",
-		"enrollments.csv": "student_external_id,class_external_id,start_date,status\nHS-1,C-A,2026-09-05,active\n",
+		"schools.csv":  "school_external_id,school_code,name,status,province_code\nTH-A,A,Truong A,active,vn.ha-noi\n",
+		"students.csv": stHeader + "HS-1,TH-A,001,An,3,active,hs.mx.an\n",
 	})
 	// school_province_missing: an unknown province code.
 	run(sA, map[string]string{"schools.csv": "school_external_id,school_code,name,status,province_code\nTH-A2,A2,Truong A2,active,vn.khong-co\n"})
 	// possible_duplicate: a new source key with the student_code of HS-1 in the same school.
 	run(sA, map[string]string{"students.csv": stHeader + "HS-99,TH-A,001,An Copy,3,active,hs.mx.copy\n"})
-	// School B: unmapped_school (TH-A belongs to school A), class_school_mismatch (C-A is a class of A),
-	// multi_school_enrollment (HS-1 is enrolled in A).
+	// School B: unmapped_school (TH-A belongs to school A).
 	run(sB, map[string]string{
-		"classes.csv":     "class_external_id,school_external_id,academic_year,grade_level,name\nC-B,TH-B,2026-2027,3,3N\n",
-		"students.csv":    stHeader + "HS-2,TH-A,002,Binh,3,active,hs.mx.binh\nHS-3,TH-B,003,Chi,3,active,hs.mx.chi\n",
-		"enrollments.csv": "student_external_id,class_external_id,start_date,status\nHS-3,C-A,2026-09-05,active\nHS-1,C-B,2026-09-05,active\n",
+		"students.csv": stHeader + "HS-2,TH-A,002,Binh,3,active,hs.mx.binh\nHS-3,TH-B,003,Chi,3,active,hs.mx.chi\n",
 	})
 	for typ, want := range map[string]int{"school_province_missing": 1, "possible_duplicate": 1, "unmapped_school": 1,
-		"class_school_mismatch": 1, "multi_school_enrollment": 1} {
+		"class_school_mismatch": 0, "multi_school_enrollment": 0} {
 		if n := issues(typ); n != want {
 			t.Fatalf("%s = %d, want %d", typ, n, want)
 		}
@@ -461,11 +477,11 @@ func TestSisConflictMatrix(t *testing.T) {
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username IN ('hs.mx.copy', 'hs.mx.binh')`); n != 0 {
 		t.Fatalf("skipped records created %d accounts", n)
 	}
-	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments e JOIN identity.users u ON u.user_id = e.student_id
-		WHERE u.username = 'hs.mx.an' AND e.status = 'active' AND e.school_id = $1`, a.school); n != 1 {
-		t.Fatal("the second-school enrollment must not be applied")
+	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.students s JOIN identity.users u ON u.user_id = s.student_id
+		WHERE u.username = 'hs.mx.an' AND s.status = 'active' AND s.school_id = $1`, a.school); n != 1 {
+		t.Fatal("HS-1 stays in school A")
 	}
-	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'sis.reconciliation_issue_raised'`); n < 5 {
+	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'sis.reconciliation_issue_raised'`); n < 3 {
 		t.Fatalf("issue events = %d", n)
 	}
 

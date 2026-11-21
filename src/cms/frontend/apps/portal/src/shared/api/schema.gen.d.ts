@@ -556,7 +556,7 @@ export interface paths {
          *       (sau chuẩn hóa trim/NFC/chữ thường, ADR-0067, ADR-0069) → `status = failed`, `error_code = USERNAME_TAKEN` (không tạo reconciliation issue).
          *       Request vi phạm schema (thiếu/ngoài khoảng `grade_level`, quá `common_student_batch_max` dòng) → `422 VALIDATION_FAILED` cho cả request (F010-AC-25).
          *     - Mỗi học sinh tạo được: Keycloak local user (role `student`, member Organization `common`), `identity.users` (`student`, `primary_tenant_id = common`),
-         *       `org.students` thuộc School ảo, enrollment lớp ảo `common-g<n>`, audit, event `user.provisioned` (`source = platform_common`) — F010-AC-24.
+         *       `org.students` thuộc School ảo với khối khai báo (không lớp ảo — ADR-0095), event `student.placement_changed`, audit, event `user.provisioned` (`source = platform_common`) — F010-AC-24.
          *     - Mật khẩu ban đầu do module identity sinh ngẫu nhiên cho từng dòng, đặt trong Keycloak (khối 6–9: `temporary = true`, đổi khi đăng nhập lần đầu;
          *       khối 1–5: `temporary = false` [Proposed]) và chỉ trả **một lần** trong `initial_password` để in thẻ đăng nhập; không lưu, không log (R14); `Cache-Control: no-store`.
          *     - Replay cùng `Idempotency-Key` trả kết quả đã lưu **không có** `initial_password` (`password_redacted = true`); lấy lại mật khẩu bằng đặt lại mật khẩu học sinh.
@@ -1836,7 +1836,7 @@ export interface paths {
          *     1. **Xác thực SSO:** gọi token endpoint Keycloak bằng client confidential `eduworld-game-backend` (Direct Access Grants;
          *        secret chỉ ở module identity). Sai username hoặc mật khẩu (kể cả tài khoản đang bị khóa tạm do brute-force) →
          *        `401 INVALID_CREDENTIALS` với thông điệp chung. Chỉ realm role `student` (khác → `403 GAME_ACCESS_STUDENT_ONLY`).
-         *     2. **Kiểm tra tài khoản theo `keycloak_sub`** (ADR-0063): `user_type` học sinh, các tenant còn hiệu lực, enrollment,
+         *     2. **Kiểm tra tài khoản theo `keycloak_sub`** (ADR-0063): `user_type` học sinh, các tenant còn hiệu lực, trường/khối hiệu lực (ADR-0095),
          *        đồng bộ hồ sơ SIS khi đăng nhập (ADR-0061).
          *     3. **Quyết định tenant:** **1 tenant** → `200` vào thẳng; **nhiều tenant** → `403 TENANT_NOT_SELECTED` kèm `choices[]` +
          *        `login_ticket` (dùng một lần, 2 phút) → gọi `/auth/game/tenant:select`, không nhập lại mật khẩu; **chỉ tenant chung** →
@@ -1923,7 +1923,7 @@ export interface paths {
          *
          *     - `mode = renew` (mặc định): gia hạn access token (5 phút) trong lúc chơi; client gọi **đơn luồng** (single-flight).
          *     - `mode = resume`: khởi động game bằng refresh token lưu trong kho bảo mật OS (thiết bị cá nhân). module identity kiểm tra
-         *       lại tài khoản như bước 2 của `gameLogin` (`user_type`, trạng thái, tenant, enrollment, khung giờ) và trả thêm `bootstrap`;
+         *       lại tài khoản như bước 2 của `gameLogin` (`user_type`, trạng thái, tenant, trường/khối hiệu lực, khung giờ) và trả thêm `bootstrap`;
          *       game bỏ qua form đăng nhập rồi gọi `createGameSession` (ADR-0083). `client_version` thấp hơn tối thiểu → `426`.
          *
          *     **Xoay vòng (rotation):** mỗi lần thành công trả refresh token **mới**, token cũ hết hiệu lực; client ghi đè token mới vào kho
@@ -7100,23 +7100,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/schools/{school_id}/classes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Lớp của trường theo năm học */
-        get: operations["listClasses"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/schools/{school_id}/reconciliation-issues": {
         parameters: {
             query?: never;
@@ -7128,7 +7111,7 @@ export interface paths {
          * Xung đột đồng bộ SIS/CSV của một trường (tenant.sis.read) — route public cho School Admin
          * @description Bản public theo trường của `listSisReconciliationIssues` (gateway nội bộ) cho School Admin/Tenant Admin dùng gateway public
          *     (F052 Clarification 2026-11-16). Quyền `tenant.sis.read` hoặc `tenant.sis.import` trong scope trường; trường ngoài tenant/scope
-         *     → `404`. `entity_refs` là ID nội bộ/external, không PII thô. `missing_class` cũng có ở `listUnassignedStudents`.
+         *     → `404`. `entity_refs` là ID nội bộ/external, không PII thô.
          *     Contract F052 (T005); backend: owner F011.
          */
         get: operations["listSchoolReconciliationIssues"];
@@ -7234,7 +7217,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** UserRole trong phạm vi trường (scope school/class/subject thuộc trường) — thay role-assignments cũ */
+        /** UserRole trong phạm vi trường (scope school/subject thuộc trường) — thay role-assignments cũ */
         get: operations["listSchoolUserRoles"];
         put?: never;
         /**
@@ -8265,24 +8248,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/tenant/schools/{school_id}/classes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Lớp và sĩ số của trường (tenant.student.read) */
-        get: operations["listTenantSchoolClasses"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/tenant/schools/{school_id}/classes/{class_id}/students": {
+    "/tenant/schools/{school_id}/grades/{grade_level}/students": {
         parameters: {
             query?: never;
             header?: never;
@@ -8290,13 +8256,15 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Học sinh của lớp, chỉ đọc (tenant.student.read) — danh sách từ SIS/CSV kèm lần đăng nhập game cuối
-         * @description Quyền `tenant.student.read` trong scope trường (School Admin trường mình; Tenant Admin các trường của tenant). Trường/lớp ngoài
-         *     tenant hoặc scope → `404` (không tiết lộ tồn tại). Chỉ đọc: học sinh do SIS/CSV sở hữu (ADR-0060); không trả ngày sinh,
-         *     liên hệ phụ huynh, IP hay mã thiết bị (ADR-0031). `days_since_last_login` do server tính (null khi chưa từng vào game).
-         *     Contract F052 (T004); backend: owner F010.
+         * Học sinh theo khối của trường, chỉ đọc (tenant.student.read hoặc lms.student.read) — kèm lần đăng nhập game cuối
+         * @description Học sinh hiệu lực (`org.students.status = active`, chưa xóa mềm) của một khối (`grade_level` 1–9) trong một trường
+         *     (ADR-0095 mục 2, 7 — thay `listTenantClassStudents`, `listTenantSchoolClasses`, `listClasses`, `listUnassignedStudents`).
+         *     Quyền `tenant.student.read` (Tenant Admin) hoặc `lms.student.read` (School Admin trường mình, Academic Manager trong scope)
+         *     trên trường của path; trường ngoài tenant hoặc ngoài scope grant → `404` (không tiết lộ tồn tại); khối ngoài 1–9 → `422`.
+         *     Chỉ đọc: học sinh do SIS/CSV sở hữu; không trả ngày sinh, liên hệ phụ huynh, IP hay mã thiết bị (ADR-0031, R16).
+         *     `days_since_last_login` do server tính (null khi chưa từng vào game). Sắp theo (tên hiển thị, student_id), phân trang cursor.
          */
-        get: operations["listTenantClassStudents"];
+        get: operations["listTenantGradeStudents"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8396,23 +8364,6 @@ export interface paths {
          *     đã lưu không có `initial_password` (`password_redacted = true`).
          */
         post: operations["resetStudentPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/tenant/students/unassigned": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Học sinh SIS chưa có lớp hợp lệ (missing_class) — học sinh phải thuộc đúng một trường và một lớp (ADR-0060) */
-        get: operations["listUnassignedStudents"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -10248,14 +10199,6 @@ export interface components {
             readonly minimum_days?: 3;
             reason: string;
         };
-        Class: {
-            academic_year_id?: components["schemas"]["Uuid"];
-            class_id: components["schemas"]["Uuid"];
-            grade_level: components["schemas"]["GradeLevel"];
-            name: string;
-            school_id: components["schemas"]["Uuid"];
-            student_count?: number;
-        };
         ClassDashboard: components["schemas"]["DashboardMeta"] & {
             accuracy?: number | null;
             active_students_7d?: number;
@@ -10299,27 +10242,6 @@ export interface components {
                 weak_objective_ids?: components["schemas"]["Uuid"][];
             }[];
             subject_id?: components["schemas"]["Uuid"];
-        };
-        ClassPage: {
-            items: components["schemas"]["Class"][];
-            page: components["schemas"]["PageInfo"];
-        };
-        /** @description Học sinh của lớp (chỉ đọc, dữ liệu SIS/CSV — ADR-0060). Không có ngày sinh, liên hệ phụ huynh, IP, mã thiết bị (ADR-0031). */
-        ClassStudent: {
-            days_since_last_login?: number | null;
-            display_name: string;
-            last_login_at?: components["schemas"]["Timestamp"] | null;
-            /** @enum {string} */
-            source: "sis" | "manual" | "import";
-            /** @enum {string} */
-            status: "pending" | "active" | "locked" | "deactivated";
-            student_code?: string | null;
-            student_id: components["schemas"]["Uuid"];
-            username: string;
-        };
-        ClassStudentPage: {
-            items: components["schemas"]["ClassStudent"][];
-            page: components["schemas"]["PageInfo"];
         };
         CleanupExclusionRequest: {
             reason: string;
@@ -11126,8 +11048,11 @@ export interface components {
         EffectiveRole: {
             role: components["schemas"]["RoleCode"];
             scope_id?: components["schemas"]["Uuid"];
-            /** @enum {string} */
-            scope_type: "platform" | "tenant" | "school" | "class" | "subject";
+            /**
+             * @description Không có scope lớp (ADR-0072, ADR-0095)
+             * @enum {string}
+             */
+            scope_type: "platform" | "tenant" | "school" | "subject";
             /** @description Tenant của assignment; null với scope platform */
             tenant_id?: components["schemas"]["Uuid"] | null;
         };
@@ -12021,6 +11946,27 @@ export interface components {
         /** @enum {string} */
         GradeBand: "g1_3" | "g4_5" | "g6_7" | "g8_9";
         GradeLevel: number;
+        /** @description Học sinh hiệu lực của một khối trong trường (chỉ đọc, dữ liệu SIS/CSV — ADR-0095). Không có ngày sinh, liên hệ phụ huynh, IP, mã thiết bị (ADR-0031). */
+        GradeStudent: {
+            days_since_last_login?: number | null;
+            display_name: string;
+            grade_level: components["schemas"]["GradeLevel"];
+            last_login_at?: components["schemas"]["Timestamp"] | null;
+            /** @enum {string} */
+            source: "sis" | "manual" | "import";
+            /**
+             * @description Trạng thái tài khoản (identity.users)
+             * @enum {string}
+             */
+            status: "pending" | "active" | "locked" | "deactivated";
+            student_code?: string | null;
+            student_id: components["schemas"]["Uuid"];
+            username: string;
+        };
+        GradeStudentPage: {
+            items: components["schemas"]["GradeStudent"][];
+            page: components["schemas"]["PageInfo"];
+        };
         /**
          * @description Gợi ý cấp tiếp theo (ACTIVITY_ENGINE §8.3) — `{level, total_levels, hint}`
          * @example {
@@ -13460,11 +13406,11 @@ export interface components {
         };
         /**
          * @description Bootstrap phiên người chơi do module identity trả (`gameLogin`, `selectGameLoginTenant`, `refreshGameToken` `mode = resume`, `createAuthSession`).
-         *     Khi `is_common_tenant = false`, server luôn trả `school`, `class`, `grade_band` (học sinh thuộc đúng một trường, một lớp — ADR-0060).
+         *     Khi `is_common_tenant = false`, server luôn trả `student`, `school`, `grade_band`: học sinh thuộc đúng một trường với một khối
+         *     (`student.grade_level`, ADR-0095 — không có lớp).
          *     `game_profile` tùy chọn: module identity không đọc dữ liệu của module game (ADR-0074); game lấy hồ sơ người chơi từ API của module game.
          */
         PlayerBootstrap: {
-            class?: components["schemas"]["PlayerClass"];
             content_manifest_version?: string;
             /** @description Cờ `feature` hiệu lực của tenant. Luôn có `social.friends_enabled`: `false` ở tenant `common` (kết bạn và mã bạn bè tắt mặc định — ADR-0078, F095-AC-23), client ẩn nút; cờ cùng tên do System Admin đặt (nếu có) quyết định. */
             feature_flags: {
@@ -13483,7 +13429,6 @@ export interface components {
                     direct_message_enabled?: boolean;
                 };
                 party?: {
-                    cross_class_allowed?: boolean;
                     /** @default 4 */
                     max_members: number;
                 };
@@ -13525,13 +13470,6 @@ export interface components {
              */
             presence?: "offline" | "online" | "in_activity" | "in_match" | "away";
             user_id: components["schemas"]["Uuid"];
-        };
-        PlayerClass: {
-            /** @example 2026-2027 */
-            academic_year?: string;
-            class_id: components["schemas"]["Uuid"];
-            grade_level: components["schemas"]["GradeLevel"];
-            name: string;
         };
         /** @description Người mình đã chặn/tắt tiếng (listBlocks, listMutes) — chỉ nickname, avatar, thời điểm (R16, F095-AC-19) */
         PlayerRelation: {
@@ -14257,7 +14195,7 @@ export interface components {
          * @description Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
          * @enum {string}
          */
-        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "class_template" | "school_settings" | "tenant_settings" | "user" | "student";
+        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "school_settings" | "tenant_settings" | "user" | "student";
         /** @description Lý do khôi phục bản ghi từ Thùng rác (F045-AC-20) */
         RestoreRequest: {
             reason: string;
@@ -14616,7 +14554,6 @@ export interface components {
         SchoolSettings: {
             /** @description Khung giờ truy cập của trường (chỉ siết chặt hơn tenant) */
             allowed_hours?: components["schemas"]["AllowedHours"];
-            class_leaderboard_enabled?: boolean;
             /** @description Khung giới nghiêm của trường (chỉ mở rộng, phải chứa trọn platform_curfew); null = chỉ áp platform_curfew */
             curfew_window?: components["schemas"]["CurfewWindow"] | null;
             /** @description Giới hạn chơi/ngày (phút) áp như nhau cho mọi học sinh của trường, tính trên tổng thời gian game session trong ngày (ICT); `null` = tắt (mặc định — CONFIG_DEFAULTS `daily_play_limit_minutes`, CHILD_SAFETY §4, OQ-17). Phát trong `school.updated` cho module game; tenant `common` không áp; khoảng 15–300 phút [Proposed] */
@@ -14966,7 +14903,7 @@ export interface components {
                 };
             };
             dry_run?: boolean;
-            entity_kinds?: ("schools" | "students" | "classes" | "enrollments")[];
+            entity_kinds?: ("schools" | "students")[];
             /** @description Vi phạm contract (SIS_CONTRACT_VIOLATION) theo dòng/cột, tối đa 1000 */
             errors?: components["schemas"]["SyncRecordError"][];
             import_id: components["schemas"]["Uuid"];
@@ -14992,8 +14929,8 @@ export interface components {
              * @default true
              */
             dry_run: boolean;
-            /** @description Loại bản ghi của file CSV (một file một loại, F011 [Proposed]) */
-            entity_kinds: ("schools" | "students" | "classes" | "enrollments")[];
+            /** @description Loại bản ghi của file CSV (một file một loại, F011 [Proposed]); không còn classes/enrollments (SIS contract 1.3.0, ADR-0095) */
+            entity_kinds: ("schools" | "students")[];
             file_name: string;
             sha256?: string;
             size_bytes: number;
@@ -15032,7 +14969,7 @@ export interface components {
          * @description Loại xung đột (conflict matrix SIS_INTEGRATION §6.3, F011-AC-14; `unexpected_org_member`, `school_duplicate` do F010)
          * @enum {string}
          */
-        SisReconciliationIssueType: "possible_duplicate" | "transfer_confirmation" | "missing_class" | "class_school_mismatch" | "orphan_enrollment" | "multi_school_enrollment" | "school_province_missing" | "unmapped_school" | "cleaned_up_student_in_sis" | "duplicate_identifier" | "grade_mismatch" | "deactivation_review" | "ambiguous_login" | "school_duplicate" | "unexpected_org_member";
+        SisReconciliationIssueType: "possible_duplicate" | "transfer_confirmation" | "school_province_missing" | "unmapped_school" | "cleaned_up_student_in_sis" | "duplicate_identifier" | "deactivation_review" | "ambiguous_login" | "school_duplicate" | "unexpected_org_member";
         /** @description `ignore` → issue `ignored`; các giá trị khác → `resolved`. */
         SisReconciliationResolve: {
             /** @enum {string} */
@@ -15071,9 +15008,9 @@ export interface components {
             title?: components["schemas"]["LocalizedName"];
         };
         StudentCleanupCandidate: {
-            class_name?: string;
             display_name: string;
             excluded_until?: components["schemas"]["Timestamp"] | null;
+            grade_level?: components["schemas"]["GradeLevel"];
             /** @description null = chưa từng đăng nhập (tính từ provisioned_at) */
             last_login_at: components["schemas"]["Timestamp"] | null;
             provisioned_at?: components["schemas"]["Timestamp"];
@@ -15177,9 +15114,8 @@ export interface components {
             username: string;
         };
         StudentSummary: {
-            class_id?: components["schemas"]["Uuid"];
-            class_name?: string;
             display_name?: string;
+            /** @description Khối hiện tại của học sinh (org.students — ADR-0095; không có lớp) */
             grade_level: components["schemas"]["GradeLevel"];
             school_id: components["schemas"]["Uuid"];
             school_name?: string;
@@ -15213,7 +15149,7 @@ export interface components {
         /** @description Lỗi theo bản ghi của sync run (sis.sync_record_errors); không chứa payload thô. */
         SyncRecordError: {
             column_name?: string | null;
-            /** @description vd. school, class, student, enrollment */
+            /** @description vd. school, student */
             entity_kind?: string;
             /** @description vd. SIS_CONTRACT_VIOLATION */
             error_code: string;
@@ -15636,21 +15572,6 @@ export interface components {
             statement_values: {
                 [key: string]: boolean;
             };
-        };
-        UnassignedStudent: {
-            detected_at?: components["schemas"]["Timestamp"];
-            display_name: string;
-            grade_level?: components["schemas"]["GradeLevel"];
-            /** @enum {string} */
-            reason: "missing_class" | "class_not_found" | "multiple_classes";
-            school_id: components["schemas"]["Uuid"];
-            sis_connection_id?: components["schemas"]["Uuid"] | null;
-            student_id: components["schemas"]["Uuid"];
-            username?: string;
-        };
-        UnassignedStudentPage: {
-            items: components["schemas"]["UnassignedStudent"][];
-            page: components["schemas"]["PageInfo"];
         };
         /** @description Một điều kiện mở khu (WORLD_DESIGN §7.2) — thông điệp thân thiện, không có điều kiện thanh toán */
         UnlockRequirement: {
@@ -33865,41 +33786,6 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
-    listClasses: {
-        parameters: {
-            query?: {
-                academic_year_id?: components["schemas"]["Uuid"];
-                grade_level?: components["parameters"]["GradeLevelQuery"];
-            };
-            header?: {
-                /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
-            };
-            path: {
-                school_id: components["parameters"]["SchoolId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Class"][];
-                    };
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
     listSchoolReconciliationIssues: {
         parameters: {
             query?: {
@@ -36802,45 +36688,7 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
-    listTenantSchoolClasses: {
-        parameters: {
-            query?: {
-                academic_year?: string;
-                /** @description Cursor opaque từ page.next_cursor */
-                cursor?: components["parameters"]["Cursor"];
-                grade?: components["schemas"]["GradeLevel"];
-                limit?: components["parameters"]["Limit"];
-            };
-            header?: {
-                /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
-            };
-            path: {
-                school_id: components["parameters"]["SchoolId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClassPage"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    listTenantClassStudents: {
+    listTenantGradeStudents: {
         parameters: {
             query?: {
                 /** @description Cursor opaque từ page.next_cursor */
@@ -36858,7 +36706,7 @@ export interface operations {
                 "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
             };
             path: {
-                class_id: components["schemas"]["Uuid"];
+                grade_level: components["schemas"]["GradeLevel"];
                 school_id: components["parameters"]["SchoolId"];
             };
             cookie?: never;
@@ -36871,12 +36719,13 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ClassStudentPage"];
+                    "application/json": components["schemas"]["GradeStudentPage"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     getTenantSettings: {
@@ -37126,40 +36975,6 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
             503: components["responses"]["ServiceUnavailable"];
-        };
-    };
-    listUnassignedStudents: {
-        parameters: {
-            query?: {
-                /** @description Cursor opaque từ page.next_cursor */
-                cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
-                school_id?: components["schemas"]["Uuid"];
-            };
-            header?: {
-                /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UnassignedStudentPage"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
         };
     };
     listTenantTrash: {

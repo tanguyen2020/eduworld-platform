@@ -172,13 +172,14 @@ func TestPlatformAdminMerge(t *testing.T) {
 		count(ctx, t, e.platform, `SELECT count(*) FROM sis.reconciliation_issues WHERE issue_id = $1 AND status = 'resolved' AND resolution = 'merged'`, issue) != 1 {
 		t.Fatal("identity step of the merge")
 	}
-	// OQ F045-6: the target keeps its active enrollment, the one of the source ends; the student record of the
-	// source is soft-deleted (merged) and its membership is removed (tenant_membership.changed).
-	if count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'ended' AND end_date IS NOT NULL`, a2) != 1 ||
-		count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'active' AND deleted_at IS NULL`, a1) != 1 ||
+	// OQ F045-6 (ADR-0095): the target keeps its own school and grade; the student record of the source is soft-deleted
+	// (merged), its placement becomes inactive (student.placement_changed, source platform_saga) and its membership is
+	// removed (tenant_membership.changed). No enrollment is written any more.
+	if count(ctx, t, e.platform, `SELECT count(*) FROM org.students WHERE student_id = $1 AND status = 'active' AND deleted_at IS NULL`, a1) != 1 ||
 		count(ctx, t, e.platform, `SELECT count(*) FROM org.students WHERE student_id = $1 AND deleted_at IS NOT NULL AND delete_reason = 'merged'`, a2) != 1 ||
-		outboxCount(ctx, t, p, "tenant_membership.changed", `"removed"`) != 1 || outboxCount(ctx, t, p, "enrollment.changed", `"ended"`) != 1 {
-		t.Fatal("enrollment/student/membership of the merged source")
+		outboxCount(ctx, t, p, "tenant_membership.changed", `"removed"`) != 1 ||
+		outboxCount(ctx, t, p, "student.placement_changed", `"platform_saga"`) != 1 || outboxCount(ctx, t, p, "enrollment.changed", "") != 0 {
+		t.Fatal("student/placement/membership of the merged source")
 	}
 	// AC-28: every module called once with Idempotency-Key = merge_id and the target tenant scope.
 	for _, m := range []string{"learning", "game", "competition", "chat"} {
@@ -239,22 +240,22 @@ func TestPlatformAdminMerge(t *testing.T) {
 	if owners.calls["learning"] != learningCalls || owners.calls["game"] != 3 {
 		t.Fatalf("done steps re-run: learning %d→%d game %d", learningCalls, owners.calls["learning"], owners.calls["game"])
 	}
-	// OQ F045-6: a target whose enrollment ended before the saga ran receives the active enrollment of the source.
+	// ADR-0095: a source that was already inactive loses nothing more: no student.placement_changed for it, the target
+	// keeps its own placement.
 	d1 := enrolled(ctx, t, e.platform, a, "hs.trung.d1")
 	d2 := enrolled(ctx, t, e.platform, a, "hs.trung.d2")
 	issueD := mergeIssue(ctx, t, e, a, &requested)
 	if r = merge(newKey(), map[string]any{"from_user_id": d2, "into_user_id": d1, "reconciliation_issue_id": issueD, "reason": "trùng tài khoản D"}, sa, inA); r.status != 202 {
 		t.Fatalf("merge D: %d %s", r.status, r.raw)
 	}
-	if _, err := e.platform.ExecContext(ctx, `UPDATE org.enrollments SET status = 'ended', end_date = current_date WHERE student_id = $1`, d1); err != nil {
+	if _, err := e.platform.ExecContext(ctx, `UPDATE org.students SET status = 'inactive' WHERE student_id = $1`, d2); err != nil {
 		t.Fatal(err)
 	}
 	p.runSagas(ctx, t)
-	if count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE student_id = $1 AND status = 'active' AND deleted_at IS NULL`, d1) != 1 ||
-		count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE student_id = $1`, d2) != 0 ||
+	if count(ctx, t, e.platform, `SELECT count(*) FROM org.students WHERE student_id = $1 AND status = 'active' AND deleted_at IS NULL`, d1) != 1 ||
 		count(ctx, t, e.platform, `SELECT count(*) FROM org.students WHERE student_id = $1 AND delete_reason = 'merged'`, d2) != 1 ||
-		outboxCount(ctx, t, p, "enrollment.changed", d1.String()) != 1 {
-		t.Fatal("the enrollment of the source moves to a target without one")
+		outboxCount(ctx, t, p, "student.placement_changed", d2.String()) != 0 {
+		t.Fatal("an inactive source is merged without a placement change")
 	}
 	// SC-006: nothing physically removed.
 	if count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE user_id IN ($1, $2)`, a2, c2) != 2 {

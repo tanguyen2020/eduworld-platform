@@ -49,7 +49,8 @@ func TestListProjectionSnapshot(t *testing.T) {
 	a := seedTenant(ctx, t, e.platform, "pgd-sa")
 	b := seedTenant(ctx, t, e.platform, "pgd-sb")
 	enrolled(ctx, t, e.platform, a, "hs.snap.a")
-	if _, err := e.platform.ExecContext(ctx, `UPDATE org.classes SET deleted_at = now() WHERE class_id = $1 AND tenant_id = $2 AND deleted_at IS NULL`, a.otherClass, a.tenant); err != nil {
+	gone := enrolled(ctx, t, e.platform, a, "hs.snap.gone")
+	if _, err := e.platform.ExecContext(ctx, `UPDATE org.students SET deleted_at = now() WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NULL`, gone, a.tenant); err != nil {
 		t.Fatal(err)
 	}
 	codec, _ := page.NewCodec([]byte(strings.Repeat("k", 32)))
@@ -70,12 +71,12 @@ func TestListProjectionSnapshot(t *testing.T) {
 	}
 	ta := uuid.MustParse(a.tenant)
 
-	// One tenant, stable paging by id: 2 classes of A in pages of 1, the deleted one flagged.
-	p1 := call("class", &ta, nil, 1)
+	// One tenant, stable paging by id: 2 students of A in pages of 1, the deleted one flagged and inactive (ADR-0095).
+	p1 := call("student", &ta, nil, 1)
 	if len(p1.Items) != 1 || !p1.Page.HasMore {
 		t.Fatalf("page 1 = %+v", p1)
 	}
-	p2 := call("class", &ta, p1.Page.NextCursor, 1)
+	p2 := call("student", &ta, p1.Page.NextCursor, 1)
 	if len(p2.Items) != 1 || p2.Page.HasMore || p2.Items[0].EntityId == p1.Items[0].EntityId {
 		t.Fatalf("page 2 = %+v", p2)
 	}
@@ -86,15 +87,24 @@ func TestListProjectionSnapshot(t *testing.T) {
 		}
 		if it.Deleted {
 			deleted++
+			if it.Data["status"] != "inactive" {
+				t.Fatalf("a soft-deleted student is inactive: %+v", it.Data)
+			}
 		}
 	}
 	if deleted != 1 {
-		t.Fatalf("deleted classes = %d, want 1", deleted)
+		t.Fatalf("deleted students = %d, want 1", deleted)
+	}
+	// ADR-0095: there is no class or enrollment snapshot any more.
+	for _, gone := range []string{"class", "enrollment"} {
+		_, err := f.ListProjectionSnapshot(ctx, identityapi.ListProjectionSnapshotRequestObject{EntityType: identityapi.ListProjectionSnapshotParamsEntityType(gone)})
+		if code(err) != "VALIDATION_FAILED" {
+			t.Fatalf("%s snapshot: %v", gone, err)
+		}
 	}
 
 	// Every entity type: data keys are fields of the projection event payload (no PII beyond them).
-	events := map[string]string{"tenant": "tenant.updated", "school": "school.updated", "class": "class.synced",
-		"student": "student.synced", "enrollment": "enrollment.changed"}
+	events := map[string]string{"tenant": "tenant.updated", "school": "school.updated", "student": "student.placement_changed"}
 	for entity, event := range events {
 		props := eventProperties(t, event)
 		resp := call(entity, &ta, nil, 100)
