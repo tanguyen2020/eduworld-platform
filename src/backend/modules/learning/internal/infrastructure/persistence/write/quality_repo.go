@@ -519,63 +519,109 @@ func scanProfile(r interface{ Scan(...any) error }) (write.AssessmentProfileRow,
 	return p, nil
 }
 
-// ReferenceStudents implements write.ReferenceStore.
+// ReferenceStudents implements write.ReferenceStore: the active students with their school and grade (ref.students) and
+// the objectives of each subject of their grade in the curriculum version of the school (the setting of the school for
+// the grade, else for every grade, else the latest published version the tenant sees with the grade) — ADR-0095: no
+// course. The class of the row is the active class of the student while the projection still has one (rollups and
+// reports by class move to the grade in WP-L2); students without an active class are skipped as before.
 func (QualityRepo) ReferenceStudents(ctx context.Context, share float64) ([]write.ReferenceStudent, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
-	type course struct {
-		school, class, subject uuid.UUID
+	type student struct {
+		class, student, school uuid.UUID
 		grade                  int
-		objectives             []uuid.UUID
-	}
-	// tenancyguard:ok courses of the session tenant (explicit tenant_id + RLS), deleted_at IS NULL on courses/topics/objectives (curriculum: RLS content_read)
-	rows, err := tx.QueryContext(ctx, `SELECT c.school_id, c.class_id, c.subject_id, cl.grade_level,
-			ARRAY(SELECT o.objective_id FROM curriculum.learning_objectives o
-				JOIN curriculum.topics t ON t.topic_id = o.topic_id AND t.deleted_at IS NULL
-				WHERE t.curriculum_version_id = c.curriculum_version_id AND t.subject_id = c.subject_id AND t.grade_level = cl.grade_level
-				AND o.deleted_at IS NULL ORDER BY t.sort_order, t.topic_id, o.sort_order, o.objective_id)::text
-		FROM lms.courses c JOIN ref.classes cl ON cl.class_id = c.class_id AND cl.tenant_id = c.tenant_id
-		WHERE c.tenant_id = infra.current_tenant_id() AND c.deleted_at IS NULL AND c.status = 'active' AND cl.grade_level BETWEEN 1 AND 9`)
-	if err != nil {
-		return nil, fmt.Errorf("reference courses: %w", err)
-	}
-	defer func() { _ = rows.Close() }() // fully read below (Next = false closes it) before the next query
-	byClass := map[uuid.UUID][]course{}
-	for rows.Next() {
-		var c course
-		var objs string
-		if err := rows.Scan(&c.school, &c.class, &c.subject, &c.grade, &objs); err != nil {
-			return nil, err
-		}
-		all := parseUUIDArray(objs)
-		c.objectives = all[:int(math.Ceil(share*float64(len(all))))]
-		byClass[c.class] = append(byClass[c.class], c)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
 	}
 	// tenancyguard:ok enrolments and students of the session tenant (explicit tenant_id + RLS); deleted students excluded
-	srows, err := tx.QueryContext(ctx, `SELECT e.class_id, e.student_id FROM ref.enrollments e
-		JOIN ref.students st ON st.student_id = e.student_id AND st.tenant_id = e.tenant_id AND st.deleted_at IS NULL
-		WHERE e.tenant_id = infra.current_tenant_id() AND e.status = 'active' ORDER BY e.class_id, e.student_id`)
+	srows, err := tx.QueryContext(ctx, `SELECT DISTINCT ON (e.student_id) e.class_id, e.student_id, st.school_id, st.grade_level
+		FROM ref.enrollments e JOIN ref.students st ON st.student_id = e.student_id AND st.tenant_id = e.tenant_id AND st.deleted_at IS NULL
+			AND st.status = 'active' AND st.grade_level BETWEEN 1 AND 9
+		WHERE e.tenant_id = infra.current_tenant_id() AND e.status = 'active' ORDER BY e.student_id, e.start_date DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("reference students: %w", err)
 	}
-	defer func() { _ = srows.Close() }()
-	var out []write.ReferenceStudent
+	defer func() { _ = srows.Close() }() // fully read below (Next = false closes it) before the next query
+	var students []student
 	for srows.Next() {
-		var class, student uuid.UUID
-		if err := srows.Scan(&class, &student); err != nil {
+		var s student
+		if err := srows.Scan(&s.class, &s.student, &s.school, &s.grade); err != nil {
 			return nil, err
 		}
-		for _, c := range byClass[class] {
-			out = append(out, write.ReferenceStudent{SchoolID: c.school, ClassID: class, StudentID: student, SubjectID: c.subject,
-				GradeLevel: c.grade, Objectives: c.objectives})
+		students = append(students, s)
+	}
+	if err := srows.Err(); err != nil {
+		return nil, err
+	}
+	scopes := map[[2]string][]referenceSubject{}
+	var out []write.ReferenceStudent
+	for _, s := range students {
+		key := [2]string{s.school.String(), fmt.Sprint(s.grade)}
+		subjects, ok := scopes[key]
+		if !ok {
+			if subjects, err = referenceSubjects(ctx, tx, s.school, s.grade, share); err != nil {
+				return nil, err
+			}
+			scopes[key] = subjects
+		}
+		for _, sub := range subjects {
+			out = append(out, write.ReferenceStudent{SchoolID: s.school, ClassID: s.class, StudentID: s.student, SubjectID: sub.subject,
+				GradeLevel: s.grade, Objectives: sub.objectives})
 		}
 	}
-	return out, srows.Err()
+	return out, nil
+}
+
+// referenceSubject is a subject of a grade with the objectives of the period scope.
+type referenceSubject struct {
+	subject    uuid.UUID
+	objectives []uuid.UUID
+}
+
+// referenceSubjects lists the subjects of a grade with the share of their objectives in the curriculum version of the
+// school (see ReferenceStudents).
+func referenceSubjects(ctx context.Context, tx *sql.Tx, school uuid.UUID, grade int, share float64) ([]referenceSubject, error) {
+	var version uuid.UUID
+	// tenancyguard:ok settings of the session tenant (explicit tenant_id + RLS), deleted_at IS NULL; else the latest published
+	// curriculum version the tenant sees (RLS content_read), deleted_at IS NULL on every curriculum table
+	err := tx.QueryRowContext(ctx, `SELECT COALESCE(
+			(SELECT s.curriculum_version_id FROM lms.school_curriculum_settings s WHERE s.tenant_id = infra.current_tenant_id()
+				AND s.school_id = $1 AND (s.grade_level = $2 OR s.grade_level IS NULL) AND s.deleted_at IS NULL
+				ORDER BY s.grade_level NULLS LAST, s.created_at DESC LIMIT 1),
+			(SELECT v.curriculum_version_id FROM curriculum.curriculum_versions v
+				JOIN curriculum.curricula c ON c.curriculum_id = v.curriculum_id AND c.deleted_at IS NULL
+				WHERE v.status = 'published' AND v.deleted_at IS NULL AND EXISTS (SELECT 1 FROM curriculum.subject_grades g
+					WHERE g.curriculum_version_id = v.curriculum_version_id AND g.grade_level = $2 AND g.deleted_at IS NULL)
+				ORDER BY (c.tenant_id IS NULL), v.published_at DESC NULLS LAST, v.curriculum_version_id LIMIT 1))`, school, grade).Scan(&version)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && version == uuid.Nil) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("reference curriculum version: %w", err)
+	}
+	// tenancyguard:ok curriculum of the version (RLS content_read), deleted_at IS NULL on subject grades, topics and objectives
+	rows, err := tx.QueryContext(ctx, `SELECT g.subject_id,
+			ARRAY(SELECT o.objective_id FROM curriculum.learning_objectives o
+				JOIN curriculum.topics t ON t.topic_id = o.topic_id AND t.deleted_at IS NULL
+				WHERE t.curriculum_version_id = g.curriculum_version_id AND t.subject_id = g.subject_id AND t.grade_level = g.grade_level
+				AND o.deleted_at IS NULL ORDER BY t.sort_order, t.topic_id, o.sort_order, o.objective_id)::text
+		FROM (SELECT DISTINCT curriculum_version_id, subject_id, grade_level FROM curriculum.subject_grades
+			WHERE curriculum_version_id = $1 AND grade_level = $2 AND deleted_at IS NULL) g ORDER BY g.subject_id`, version, grade)
+	if err != nil {
+		return nil, fmt.Errorf("reference subjects: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []referenceSubject
+	for rows.Next() {
+		var subject uuid.UUID
+		var objs string
+		if err := rows.Scan(&subject, &objs); err != nil {
+			return nil, err
+		}
+		all := parseUUIDArray(objs)
+		out = append(out, referenceSubject{subject, all[:int(math.Ceil(share*float64(len(all))))]})
+	}
+	return out, rows.Err()
 }
 
 // ObjectiveLevels implements write.ReferenceStore.

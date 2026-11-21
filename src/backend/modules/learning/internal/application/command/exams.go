@@ -125,9 +125,11 @@ func (h Exams) publish(ctx context.Context, typ, subjectType string, subject uui
 
 // ExamSessionInput is ExamSessionCreate.
 type ExamSessionInput struct {
-	Title              string                  `json:"title"`
-	BlueprintVersionID uuid.UUID               `json:"assessment_blueprint_version_id"`
-	CourseID           *uuid.UUID              `json:"course_id"`
+	Title              string     `json:"title"`
+	BlueprintVersionID uuid.UUID  `json:"assessment_blueprint_version_id"`
+	SchoolID           *uuid.UUID `json:"school_id"`
+	// SubjectID is the subject of the assignment of the session (not a request field).
+	SubjectID          *uuid.UUID              `json:"-"`
 	AssignmentID       *uuid.UUID              `json:"assignment_id"`
 	Type               *string                 `json:"type"`
 	IsOfficial         *bool                   `json:"is_official"`
@@ -352,33 +354,13 @@ func rulePointer(section, rule int) string {
 	return "/definition/sections/" + strconv.Itoa(section) + "/rules/" + strconv.Itoa(rule)
 }
 
-// sessionSchool resolves the school of a new session and the subject of its course: the course or the first class target;
-// otherwise course_id is required. An unknown course or class is 404 (another school or tenant).
+// sessionSchool resolves the school of a new session (ADR-0095: school_id directly, no course) and the subject an
+// assignment requires of the blueprint (nil for a session created from createExamSession).
 func (h Exams) sessionSchool(ctx context.Context, in ExamSessionInput) (uuid.UUID, *uuid.UUID, error) {
-	if in.CourseID != nil {
-		c, err := h.Asg.Store.Course(ctx, *in.CourseID)
-		if err != nil {
-			return uuid.Nil, nil, err
-		}
-		if c == nil {
-			return uuid.Nil, nil, problem.New(problem.NotFound, "")
-		}
-		subject := c.SubjectID
-		return c.SchoolID, &subject, nil
+	if in.SchoolID == nil || *in.SchoolID == uuid.Nil {
+		return uuid.Nil, nil, problem.Invalid("/school_id", problem.SubRequired, "is required")
 	}
-	for _, t := range in.Targets {
-		if t.TargetType == assignment.TargetClass && t.TargetID != nil {
-			c, err := h.Asg.Store.Class(ctx, *t.TargetID)
-			if err != nil {
-				return uuid.Nil, nil, err
-			}
-			if c == nil {
-				return uuid.Nil, nil, problem.New(problem.NotFound, "")
-			}
-			return c.SchoolID, nil, nil
-		}
-	}
-	return uuid.Nil, nil, problem.Invalid("/course_id", problem.SubRequired, "is required without a class target")
+	return *in.SchoolID, in.SubjectID, nil
 }
 
 // newSession is what createSession needs besides the request: the principal and an optional fixed audience (the
@@ -395,21 +377,28 @@ type newSession struct {
 func (h Exams) createSession(ctx context.Context, in ExamSessionInput, ns newSession) (write.ExamSessionRow, error) {
 	p := ns.P
 	var row write.ExamSessionRow
-	school, courseSubject, err := h.sessionSchool(ctx, in)
+	school, asgSubject, err := h.sessionSchool(ctx, in)
 	if err != nil {
 		return row, err
 	}
-	if courseSubject != nil {
-		if err := AuthorizeLMS(ctx, p, authz.PermLmsAssignmentWrite, school, courseSubject); err != nil {
+	// The school first (404 outside every grant, before the blueprint is read: no existence leak), then the subject.
+	if asgSubject != nil {
+		if err := AuthorizeLMS(ctx, p, authz.PermLmsAssignmentWrite, school, asgSubject); err != nil {
 			return row, err
 		}
+	} else if holdsPerm(p, authz.PermLmsAssignmentWrite) && !SchoolCovered(p, authz.PermLmsAssignmentWrite, school) {
+		_ = authz.Require(ctx, p, authz.PermLmsAssignmentWrite, authz.Resource{TenantID: p.TenantID, SchoolID: &school})
+		return row, problem.New(problem.NotFound, "")
+	}
+	if err := h.Asg.schoolOfTenant(ctx, school); err != nil {
+		return row, err
 	}
 	b, err := h.loadBlueprint(ctx, in.BlueprintVersionID)
 	if err != nil {
 		return row, err
 	}
-	if courseSubject != nil && *courseSubject != b.SubjectID {
-		return row, problem.Invalid("/course_id", problem.SubInvalid, "the course is not of the subject of the blueprint")
+	if asgSubject != nil && *asgSubject != b.SubjectID {
+		return row, problem.Invalid("/content_ref", problem.SubInvalid, "the blueprint is not of the subject of the assignment")
 	}
 	if err := AuthorizeLMS(ctx, p, authz.PermLmsAssignmentWrite, school, &b.SubjectID); err != nil {
 		return row, err
@@ -417,6 +406,15 @@ func (h Exams) createSession(ctx context.Context, in ExamSessionInput, ns newSes
 	s := h.settings(in, b)
 	if err := examViolations(s.Validate()); err != nil {
 		return row, err
+	}
+	if ns.Students == nil {
+		ts := make([]assignment.Target, len(in.Targets))
+		for i, t := range in.Targets {
+			ts[i] = t.target()
+		}
+		if err := assignmentViolations(assignment.ValidateTargets(ts)); err != nil {
+			return row, err
+		}
 	}
 	targets, err := h.Asg.targets(ctx, school, in.Targets)
 	if err != nil {
@@ -473,7 +471,7 @@ func (h Exams) createSession(ctx context.Context, in ExamSessionInput, ns newSes
 	sj, _ := json.Marshal(sections)
 	acc, _ := json.Marshal(nonNilAccommodations(s.Accommodations))
 	row = write.ExamSessionRow{ID: ids.New(), TenantID: *p.TenantID, SchoolID: school, SubjectID: b.SubjectID, GradeLevel: b.Grade,
-		CourseID: in.CourseID, AssignmentID: in.AssignmentID, Title: s.Title, Type: string(s.Type), IsOfficial: s.IsOfficial, BlueprintID: b.ItemID,
+		AssignmentID: in.AssignmentID, Title: s.Title, Type: string(s.Type), IsOfficial: s.IsOfficial, BlueprintID: b.ItemID,
 		BlueprintVersionID: b.VersionID, WindowStart: s.WindowStart, WindowEnd: s.WindowEnd, DurationSec: s.DurationSec, Target: target,
 		Sections: sj, Audience: s.Audience, Strategy: s.Strategy, VariantCount: s.VariantCount, FeedbackTiming: s.FeedbackTiming,
 		ResultRelease: s.ResultRelease, ShowCorrect: s.ShowCorrectAnswers, ShowExplanations: s.ShowExplanations, LateStartPolicy: s.LateStartPolicy,
@@ -558,7 +556,7 @@ func blueprintCount(d blueprint.Definition) int {
 // windowPayload is the payload of exam.opened / exam.closed.
 func windowPayload(s write.ExamSessionRow) map[string]any {
 	return map[string]any{"exam_session_id": s.ID, "school_id": s.SchoolID, "exam_type": s.Type, "is_official": s.IsOfficial,
-		"assignment_id": nullableID(s.AssignmentID), "course_id": nullableID(s.CourseID), "window_start": s.WindowStart,
+		"assignment_id": nullableID(s.AssignmentID), "window_start": s.WindowStart,
 		"window_end": s.WindowEnd, "status": s.Status}
 }
 
@@ -570,7 +568,7 @@ func ExamSessionViewOf(s write.ExamSessionRow, now time.Time) dto.ExamSessionVie
 		GradeLevel: s.GradeLevel, WindowStart: s.WindowStart, WindowEnd: s.WindowEnd, DurationSeconds: s.DurationSec,
 		QuestionCount: s.QuestionCount, MaxAttempts: s.MaxAttempts, Status: s.Status, BlueprintVersionID: s.BlueprintVersionID,
 		FeedbackTiming: s.FeedbackTiming, ResultRelease: s.ResultRelease, ResultsReleasedAt: s.ReleasedAt, SchoolID: s.SchoolID,
-		CourseID: s.CourseID, AssignmentID: s.AssignmentID, Audience: s.Audience, VariantStrategy: s.Strategy, VariantCount: s.VariantCount,
+		AssignmentID: s.AssignmentID, Audience: s.Audience, VariantStrategy: s.Strategy, VariantCount: s.VariantCount,
 		LateStartPolicy: s.LateStartPolicy, ScorePolicy: s.ScorePolicy, ShowCorrectAnswers: s.ShowCorrect, ShowExplanations: s.ShowExplanations,
 		Accommodations: acc, ServerTime: now, CreatedAt: s.CreatedAt, Version: s.Version, Navigation: exam.NavigationOf(s.Navigation)}
 }

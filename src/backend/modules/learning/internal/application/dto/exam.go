@@ -36,7 +36,6 @@ type ExamSessionView struct {
 	ResultRelease           string                  `json:"result_release"`
 	ResultsReleasedAt       *time.Time              `json:"results_released_at,omitempty"`
 	SchoolID                uuid.UUID               `json:"school_id"`
-	CourseID                *uuid.UUID              `json:"course_id,omitempty"`
 	AssignmentID            *uuid.UUID              `json:"assignment_id,omitempty"`
 	Audience                string                  `json:"audience"`
 	VariantStrategy         string                  `json:"variant_strategy"`

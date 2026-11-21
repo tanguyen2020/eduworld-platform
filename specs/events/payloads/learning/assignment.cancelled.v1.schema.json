@@ -20,13 +20,6 @@
       "type": "string",
       "format": "uuid"
     },
-    "course_id": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "format": "uuid"
-    },
     "exam_session_id": {
       "type": [
         "string",
@@ -51,7 +44,6 @@
     {
       "assignment_id": "0193a1f0-0000-7000-8000-000000000451",
       "school_id": "0193a1f0-0000-7000-8000-000000000452",
-      "course_id": "0193a1f0-0000-7000-8000-000000000453",
       "exam_session_id": null,
       "cancelled_at": "2026-11-21T03:00:00Z",
       "cancelled_by": "0193a1f0-0000-7000-8000-000000000454",

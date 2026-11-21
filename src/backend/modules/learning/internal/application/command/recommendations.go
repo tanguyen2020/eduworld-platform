@@ -46,7 +46,7 @@ type Recommendations struct {
 	Config    PracticeConfig
 	Clock     func() time.Time
 	Metrics   SelfStudyMetrics
-	// Sources fill the snapshot with the data of the rules of other features (F040 R6, F041 R1, F042 R5).
+	// Sources fill the snapshot with the data of the rules of other features (F041 R1, F042 R5).
 	Sources []SnapshotSource
 	// Experience resolves the live experiment arms of the student (F035-AC-24); nil = no experiment.
 	Experience ExperienceResolver

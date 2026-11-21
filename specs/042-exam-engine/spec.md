@@ -31,11 +31,17 @@
 - `suspicious_speed`: đúng 100 % trên ≥ 10 câu với thời gian trung bình < 1,5 s/câu (CONFIG_DEFAULTS `suspicious_speed_flag`), ghi `assessment.integrity_signals`, không đổi điểm; `score_scale` thang 10 làm tròn 1 chữ số [Confirmed].
 - `ExamAttemptAnalysis.objective_breakdown[].mastery_level` trả `null` trong F042 (mức mastery đọc qua `getMyLearningProgress`); đề xuất ôn tập: 1–3 LO đúng < 60 % (thiếu thì LO có câu sai), `kind = practice` [Confirmed].
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Trường của phiên → **[Confirmed]** `ExamSessionCreate` bỏ `course_id`, thêm `school_id` bắt buộc; môn của phiên là môn của blueprint; quyền `lms.assignment.write` theo trường × môn (ADR-0072); trường ngoài mọi grant → `404`. Phiên tạo từ bài giao `graded` (F042-AC-31) nhận trường và môn của bài; blueprint khác môn của bài → `422` tại `/content_ref`. `ExamSession` không còn `course_id` (cột `assessment.exam_sessions.course_id` không ghi nữa, DROP ở WP-R).
+- Đối tượng → **[Confirmed]** `targets` dùng `AssignmentTarget` mới của F041 (`grade` ± include/exclude, `students`; 1–9 target), cùng kiểm tra và cùng snapshot; học sinh khác trường/tenant → `422`. ExamSession cũ theo lớp/nhóm: `target` thành danh sách học sinh của participations (migration `20261229000001`).
+- Event → **[Confirmed]** `exam.opened`, `exam.closed` bỏ trường tùy chọn `course_id` (sửa tại chỗ v1).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo đề từ blueprint (Priority: P1)
 
-`qlcm.truong.a` chọn blueprint "Phép nhân" đã publish, đặt loại đề, cửa sổ thời gian, đối tượng 3A, gia hạn thời gian cho một học sinh; hệ thống sinh và khóa các biến thể đề để xem trước.
+`qlcm.truong.a` chọn blueprint "Phép nhân" đã publish, đặt loại đề, cửa sổ thời gian, đối tượng khối 3 của trường (ADR-0095), gia hạn thời gian cho một học sinh; hệ thống sinh và khóa các biến thể đề để xem trước.
 
 **Why this priority**: Không có đề thì không có luồng thi; là bước đầu của kịch bản demo M-C3.
 
@@ -50,7 +56,7 @@
 | F042-AC-03 | NẾU blueprint có `feedback_timing = immediate`, tổng điểm lệch `total_points`, pool một rule thiếu câu, câu trùng giữa các rule hoặc loại câu không tự chấm, THÌ HỆ THỐNG PHẢI từ chối bằng `422 VALIDATION_FAILED` chỉ rõ rule; pool thiếu khi sinh đề PHẢI trả `422 QUESTION_POOL_INSUFFICIENT` | [EXAM_ENGINE §3](../../docs/02-learning/EXAM_ENGINE.md#3-assessment-blueprint) · [EXAM_ENGINE §13](../../docs/02-learning/EXAM_ENGINE.md#13-yêu-cầu--acceptance) | — |
 | F042-AC-04 | KHI người tạo đề gọi `listExamSessionPapers`, HỆ THỐNG PHẢI trả các biến thể đã khóa (câu, điểm) chỉ cho người có quyền tạo đề trong phạm vi; học sinh gọi PHẢI nhận `403 PERMISSION_DENIED` | [EXAM_ENGINE §4](../../docs/02-learning/EXAM_ENGINE.md#4-sinh-đề) | — |
 | F042-AC-05 | Ở NƠI session có `accommodations[]`, HỆ THỐNG PHẢI cộng phần trăm gia hạn vào `duration_sec` khi tính `deadline_at` cho đúng học sinh đó, và chỉ chấp nhận học sinh thuộc đối tượng của session | FR-EXM-009 · [EXAM_ENGINE §5](../../docs/02-learning/EXAM_ENGINE.md#5-examsession--cửa-sổ-thời-gian) | — |
-| F042-AC-06 | HỆ THỐNG PHẢI chỉ cho `school_admin` (trường mình) và `academic_manager` (trường × môn được gán) tạo session; `academic_manager` tạo đề môn ngoài phạm vi PHẢI nhận `403 PERMISSION_DENIED`; đối tượng thuộc trường/tenant khác PHẢI nhận `404 NOT_FOUND`; System Admin tạo PHẢI gửi `X-Tenant-Id` tenant đích | AC-ORG-002 · AC-ORG-001 · [SCHOOL_LMS §9](../../docs/04-admin-portal/SCHOOL_LMS.md#9-phạm-vi-dữ-liệu-theo-vai-trò) | TC-TEN-002, TC-TEN-003 |
+| F042-AC-06 | HỆ THỐNG PHẢI chỉ cho `school_admin` (trường mình) và `academic_manager` (trường × môn được gán) tạo session; `academic_manager` tạo đề môn ngoài phạm vi PHẢI nhận `403 PERMISSION_DENIED`; trường của phiên ngoài mọi grant PHẢI nhận `404 NOT_FOUND`; học sinh đối tượng thuộc trường/tenant khác PHẢI nhận `422 VALIDATION_FAILED` (ADR-0095); System Admin tạo PHẢI gửi `X-Tenant-Id` tenant đích | AC-ORG-002 · AC-ORG-001 · [SCHOOL_LMS §9](../../docs/04-admin-portal/SCHOOL_LMS.md#9-phạm-vi-dữ-liệu-theo-vai-trò) | TC-TEN-002, TC-TEN-003 |
 | F042-AC-07 | KHI `createExamSession` được gửi lại cùng `Idempotency-Key`, HỆ THỐNG PHẢI trả cùng session; mọi lần tạo session PHẢI ghi audit `exam_session.created` (actor, tenant, trường, blueprint version) | AGENTS R10 · [API_DESIGN §6](../../docs/07-backend/API_DESIGN.md#6-idempotency) | — |
 | F042-AC-31 | KHI F042 đăng ký adapter `ExamSessionCreator` (port của F041) và người có quyền publish bài giao `mode = graded` với nội dung `assessment_blueprint`, HỆ THỐNG PHẢI gọi `CreateExamSession` trong cùng transaction publish để tạo ExamSession ghim blueprint version cho cùng đối tượng và cửa sổ thời gian (mặc định công bố theo `graded_assignment_release_default`), lưu `exam_session_id` vào bài giao; tạo bài `graded` + blueprint PHẢI không còn bị từ chối `422`; KHI bài đó bị hủy, HỆ THỐNG PHẢI gọi `CancelExamSession` chuyển session `cancelled` | [SCHOOL_LMS §4.1](../../docs/04-admin-portal/SCHOOL_LMS.md#41-tạo-và-giao-bài) · [EXAM_ENGINE §5](../../docs/02-learning/EXAM_ENGINE.md#5-examsession--cửa-sổ-thời-gian) · [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) | — |
 | F042-AC-08 | NẾU `title` vượt `maxLength`, `window_end ≤ window_start`, `max_attempts` ngoài giới hạn hoặc phần trăm gia hạn ngoài miền cho phép, THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` | ADR-0041 | TC-TEN-024 |
@@ -141,7 +147,7 @@ Phát hiện câu sai đáp án sau kỳ kiểm tra, `qlcm.truong.a` tạo yêu 
 
 - NẾU học sinh bắt đầu muộn, THÌ `deadline_at` PHẢI theo `late_start_policy` (mặc định không vượt `window_end`) (F042-AC-09).
 - NẾU blueprint hoặc câu hỏi được publish/rollback trong giờ thi, THÌ mọi học sinh vẫn làm trên version đã ghim của session (F042-AC-02, ADR-0043).
-- NẾU học sinh bị khóa tài khoản hoặc chuyển lớp trong cửa sổ, THÌ attempt đang mở vẫn được auto-submit khi hết giờ; học sinh không còn thuộc đối tượng không start mới được.
+- NẾU học sinh bị khóa tài khoản hoặc chuyển trường/khối trong cửa sổ, THÌ attempt đang mở vẫn được auto-submit khi hết giờ; học sinh không còn thuộc đối tượng không start mới được.
 - NẾU câu trả lời offline đến trễ nhưng `answered_at_client` trước `deadline_at` và server nhận trong ân hạn đồng bộ, THÌ được chấp nhận; ngược lại `EXAM_TIME_OVER` (F042-AC-15).
 - NẾU học sinh không trả lời câu nào khi hết giờ, THÌ attempt vẫn chấm (0 điểm) với `submit_reason = auto_timeout`.
 - NẾU job `exam.autosubmit` chạy trên nhiều instance, THÌ mỗi attempt chỉ được nộp một lần (`FOR UPDATE SKIP LOCKED`).
@@ -165,7 +171,7 @@ Phát hiện câu sai đáp án sau kỳ kiểm tra, `qlcm.truong.a` tạo yêu 
 
 ### Key Entities
 
-- **ExamSession**: một lần tổ chức đề cho đối tượng (lớp/nhóm/danh sách học sinh), ghim blueprint version, loại đề, cửa sổ, thời lượng, chính sách công bố, gia hạn cá nhân, trạng thái `scheduled → open → closed → results_released` (hoặc `cancelled`).
+- **ExamSession**: một lần tổ chức đề cho đối tượng (khối của trường ± học sinh, hoặc danh sách học sinh — ADR-0095), ghim blueprint version, loại đề, cửa sổ, thời lượng, chính sách công bố, gia hạn cá nhân, trạng thái `scheduled → open → closed → results_released` (hoặc `cancelled`).
 - **ExamPaper**: biến thể đề bất biến (danh sách question version theo section + điểm), seed sinh đề.
 - **ExamParticipation**: trạng thái tham gia của từng học sinh trong session (gồm `absent`), số lượt đã dùng.
 - **Attempt (mode exam)**: lượt làm bài, biến thể được chọn, `deadline_at`, lý do nộp, thiết bị đang active.
@@ -217,6 +223,6 @@ Phát hiện câu sai đáp án sau kỳ kiểm tra, `qlcm.truong.a` tạo yêu 
 ## Assumptions
 
 - [Confirmed, OQ-18] Chỉ luyện đề, thi thử và kiểm tra do nhà trường giao; `is_official` chỉ là "kết quả được ghi nhận tham khảo".
-- [Confirmed] Thư viện đề luyện là ExamSession `practice_test`/`mock` không chính thức do nhà trường tạo cho khối/lớp với cửa sổ dài (từ blueprint của tenant hoặc blueprint platform được gán); học sinh không tự tạo session.
+- [Confirmed] Thư viện đề luyện là ExamSession `practice_test`/`mock` không chính thức do nhà trường tạo cho khối với cửa sổ dài (từ blueprint của tenant hoặc blueprint platform được gán); học sinh không tự tạo session.
 - [Confirmed] Permission: tạo/xem trước đề `lms.assignment.write`, xem session `lms.assignment.read`, công bố `lms.result.release`, chấm lại `learning_content.re_evaluate` ([ADMIN_PORTAL §2.2](../../docs/04-admin-portal/ADMIN_PORTAL.md#22-permission-catalog)).
 - Ân hạn đồng bộ offline 30 giây và job auto-submit mỗi 15 giây theo EXAM_ENGINE là [Confirmed].

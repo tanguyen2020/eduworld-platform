@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
@@ -15,10 +16,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 )
 
-// AssignmentTracker applies the attempt events and the enrollment changes to the school assignments (command.Assignments).
+// AssignmentTracker applies the attempt events and the placement changes to the school assignments (command.Assignments).
 type AssignmentTracker interface {
 	ApplyAttemptEvent(ctx context.Context, e command.AttemptEvent) error
-	SyncEnrollment(ctx context.Context, e command.EnrollmentChange) error
+	SyncPlacement(ctx context.Context, e command.PlacementChange) error
+	SyncStudent(ctx context.Context, studentID uuid.UUID) error
 	AccessRevoked(ctx context.Context, studentID uuid.UUID) error
 }
 
@@ -57,8 +59,10 @@ func (c AssignmentSubmissions) Handle(ctx context.Context, e outbox.Envelope) er
 	return c.Tracker.ApplyAttemptEvent(ctx, ev)
 }
 
-// AssignmentEnrollment is the consumer learning.assignment_enrollment (F041-AC-16): a student joining a class is added to
-// the open assignments of the class; a locked account is excused before the due date.
+// AssignmentEnrollment is the consumer learning.assignment_enrollment (F041-AC-16, ADR-0095 mục 3): a student who joins a
+// grade of a school is added to the scheduled and open assignments of that grade (student.placement_changed; until
+// module identity produces it — WP-I1 — student.synced with a grade and enrollment.changed, whose class is ignored, are
+// applied too); a locked account is excused before the due date.
 type AssignmentEnrollment struct {
 	Tracker AssignmentTracker
 }
@@ -74,7 +78,8 @@ func (c AssignmentEnrollment) Handle(ctx context.Context, e outbox.Envelope) err
 	if e.TenantID == nil {
 		return nil // a platform event: no assignment
 	}
-	if e.EventType == "user.access_revoked" {
+	switch e.EventType {
+	case "user.access_revoked":
 		var p struct {
 			UserID uuid.UUID `json:"user_id"`
 		}
@@ -82,15 +87,50 @@ func (c AssignmentEnrollment) Handle(ctx context.Context, e outbox.Envelope) err
 			return invalid(e.EventType, "payload has no user")
 		}
 		return c.Tracker.AccessRevoked(ctx, p.UserID)
+	case "student.placement_changed":
+		var p struct {
+			StudentID  uuid.UUID `json:"student_id"`
+			TenantID   uuid.UUID `json:"tenant_id"`
+			SchoolID   uuid.UUID `json:"school_id"`
+			GradeLevel int       `json:"grade_level"`
+			Status     string    `json:"status"`
+		}
+		if err := json.Unmarshal(e.Payload, &p); err != nil || p.StudentID == uuid.Nil || p.SchoolID == uuid.Nil {
+			return invalid(e.EventType, "payload is not a placement")
+		}
+		if p.TenantID != *e.TenantID {
+			return outbox.Permanent(fmt.Errorf("%w: %s of another tenant", command.ErrProjectionTenantMismatch, e.EventType))
+		}
+		return c.Tracker.SyncPlacement(ctx, command.PlacementChange{StudentID: p.StudentID, SchoolID: p.SchoolID, Grade: p.GradeLevel,
+			Active: p.Status == "active"})
+	case "student.synced":
+		var p struct {
+			StudentID  uuid.UUID `json:"student_id"`
+			SchoolID   uuid.UUID `json:"school_id"`
+			Action     string    `json:"action"`
+			GradeLevel *int      `json:"grade_level"`
+			Status     *string   `json:"status"`
+		}
+		if err := json.Unmarshal(e.Payload, &p); err != nil || p.StudentID == uuid.Nil || p.SchoolID == uuid.Nil {
+			return invalid(e.EventType, "payload is not a student")
+		}
+		if p.GradeLevel == nil || p.Action == "deactivate" || (p.Status != nil && *p.Status != "active") {
+			return nil
+		}
+		return c.Tracker.SyncPlacement(ctx, command.PlacementChange{StudentID: p.StudentID, SchoolID: p.SchoolID, Grade: *p.GradeLevel,
+			Active: true})
 	}
+	// enrollment.changed (deprecated by ADR-0095): the class is ignored; a student added is placed by school and grade.
 	var p struct {
 		StudentID uuid.UUID `json:"student_id"`
-		ClassID   uuid.UUID `json:"class_id"`
 		Op        string    `json:"op"`
 		Status    string    `json:"status"`
 	}
-	if err := json.Unmarshal(e.Payload, &p); err != nil || p.StudentID == uuid.Nil || p.ClassID == uuid.Nil {
+	if err := json.Unmarshal(e.Payload, &p); err != nil || p.StudentID == uuid.Nil {
 		return invalid(e.EventType, "payload is not an enrollment")
 	}
-	return c.Tracker.SyncEnrollment(ctx, command.EnrollmentChange{StudentID: p.StudentID, ClassID: p.ClassID, Op: p.Op, Status: p.Status})
+	if p.Op != "added" && (p.Op != "updated" || p.Status != "active") {
+		return nil
+	}
+	return c.Tracker.SyncStudent(ctx, p.StudentID)
 }

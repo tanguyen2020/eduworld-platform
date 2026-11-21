@@ -23,6 +23,7 @@ type UnitOfWork interface {
 // of the scope.
 type Event struct {
 	Type        string
+	Version     int // schema_version of the payload (0 = 1)
 	SubjectType string
 	SubjectID   string
 	TenantID    *uuid.UUID

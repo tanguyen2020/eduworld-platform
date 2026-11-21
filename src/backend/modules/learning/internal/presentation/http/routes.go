@@ -75,37 +75,37 @@ type CurriculumQueries interface {
 
 // Handlers are the use cases served over HTTP (F021 curriculum, F022 question bank, F027 media and preview).
 type Handlers struct {
-	Commands         CurriculumCommands
-	Queries          CurriculumQueries
-	QuestionCommands QuestionCommands    // F022
-	QuestionQueries  QuestionQueries     // F022
-	Media            MediaCommands       // F027
-	MediaQueries     MediaQueries        // F027
-	Preview          PreviewCommands     // F027
-	Docs             DocCommands         // F024
-	DocQueries       DocQueries          // F024
-	Widgets          WidgetQueries       // F023
-	Workflow         WorkflowCommands    // F025
-	Reviews          ReviewQueries       // F025
-	Translations     TranslationCommands // F025 US5
-	TranslationJobs  TranslationQueries  // F025 US5
-	Releases         ReleaseCommands     // F026
-	ReleaseQueries   ReleaseQueries      // F026
-	CmsActivities    CmsActivityQueries  // F030 US4
-	ActivityTypes    ActivityTypeQueries // F030 US4
-	Attempts         AttemptCommands     // F030 US1–US3, US6
-	AttemptQueries   AttemptQueries      // F030 US1–US3
-	Progress         ProgressQueries     // F031 US3
-	ProfileAudit     ProfileAudit        // F031 US3 (learning.profile_viewed)
-	Regrades         RegradeCommands     // F031 US4
-	RegradeQueries   RegradeQueries      // F031 US4
-	Lessons          LessonCommands      // F031 US6
-	LessonQueries    LessonQueries       // F031 US6
-	Hints            HintCommands        // F032 US2
-	SelfStudy        SelfStudyQueries    // F032 US4, US6
-	Mastery          MasteryQueries      // F032 US7
-	LMSCommands      LMSCommands         // F040
-	LMS              LMSQueries          // F040
+	Commands                CurriculumCommands
+	Queries                 CurriculumQueries
+	QuestionCommands        QuestionCommands         // F022
+	QuestionQueries         QuestionQueries          // F022
+	Media                   MediaCommands            // F027
+	MediaQueries            MediaQueries             // F027
+	Preview                 PreviewCommands          // F027
+	Docs                    DocCommands              // F024
+	DocQueries              DocQueries               // F024
+	Widgets                 WidgetQueries            // F023
+	Workflow                WorkflowCommands         // F025
+	Reviews                 ReviewQueries            // F025
+	Translations            TranslationCommands      // F025 US5
+	TranslationJobs         TranslationQueries       // F025 US5
+	Releases                ReleaseCommands          // F026
+	ReleaseQueries          ReleaseQueries           // F026
+	CmsActivities           CmsActivityQueries       // F030 US4
+	ActivityTypes           ActivityTypeQueries      // F030 US4
+	Attempts                AttemptCommands          // F030 US1–US3, US6
+	AttemptQueries          AttemptQueries           // F030 US1–US3
+	Progress                ProgressQueries          // F031 US3
+	ProfileAudit            ProfileAudit             // F031 US3 (learning.profile_viewed)
+	Regrades                RegradeCommands          // F031 US4
+	RegradeQueries          RegradeQueries           // F031 US4
+	Lessons                 LessonCommands           // F031 US6
+	LessonQueries           LessonQueries            // F031 US6
+	Hints                   HintCommands             // F032 US2
+	SelfStudy               SelfStudyQueries         // F032 US4, US6
+	Mastery                 MasteryQueries           // F032 US7
+	SchoolCurriculum        SchoolCurriculumCommands // F021 FR-CUR-008 (from F040, ADR-0095)
+	SchoolCurriculumQueries SchoolCurriculumQueries
 	// F041: school assignments.
 	AssignmentCommands SchoolAssignmentCommands
 	Assignments        SchoolAssignmentQueries
@@ -227,9 +227,9 @@ func Register(s *httpx.Server, h Handlers) error {
 	for id, fn := range selfStudyRoutes {
 		routes[id] = wiredOr(selfStudyWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
 	}
-	lmsWired := h.LMSCommands != nil && h.LMS != nil
-	for id, fn := range lmsRoutes {
-		routes[id] = wiredOr(lmsWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
+	curriculumWired := h.SchoolCurriculum != nil && h.SchoolCurriculumQueries != nil
+	for id, fn := range schoolCurriculumRoutes {
+		routes[id] = wiredOr(curriculumWired, func(w http.ResponseWriter, r *http.Request) { fn(h, w, r) })
 	}
 	assignmentsWired := h.AssignmentCommands != nil && h.Assignments != nil
 	for id, fn := range schoolAssignmentRoutes {

@@ -8,7 +8,7 @@ import (
 
 func valid() Fields {
 	t0 := time.Date(2026, 11, 23, 1, 0, 0, 0, time.UTC)
-	f := Fields{Title: "Ôn tập chương 3", Mode: ModePractice, Targets: []Target{{Type: TargetClass, HasRef: true}}, OpenAt: t0,
+	f := Fields{Title: "Ôn tập chương 3", Mode: ModePractice, Targets: []Target{{Type: TargetGrade, Grade: 3}}, OpenAt: t0,
 		DueAt: t0.Add(72 * time.Hour)}
 	f.Defaults(FeedbackAfterClose, ReleaseAfterClose)
 	return f
@@ -80,9 +80,50 @@ func TestValidateLimits(t *testing.T) {
 		t.Fatalf("tenant maximum of the late window: %v", got)
 	}
 	f = valid()
-	f.Targets = []Target{{Type: TargetClass}, {Type: TargetStudents}, {Type: TargetStudents, StudentIDs: 201}, {Type: "school", HasRef: true}}
-	if got := fields(f.Validate(168)); len(got) != 4 || got[0] != "/targets/0/target_id" || got[3] != "/targets/3/target_type" {
+	f.Targets = []Target{{Type: TargetGrade}, {Type: TargetStudents}, {Type: TargetStudents, StudentIDs: 201}, {Type: "class", Grade: 3}}
+	if got := fields(f.Validate(168)); len(got) != 5 || got[0] != "/targets/0/grade_level" || got[4] != "/targets/3/target_type" {
 		t.Fatalf("targets: %v", got)
+	}
+}
+
+// ADR-0095 mục 3 (F041-AC-32): grade targets — each grade once, include/exclude only on a grade target (≤ 200 each), one
+// students target at most, 1 to 9 targets.
+func TestGradeTargets(t *testing.T) {
+	ok := []Target{{Type: TargetGrade, Grade: 3, Include: 2, Exclude: 200}, {Type: TargetGrade, Grade: 4}, {Type: TargetStudents, StudentIDs: 5}}
+	if vs := ValidateTargets(ok); len(vs) != 0 {
+		t.Fatalf("valid targets: %v", vs)
+	}
+	bad := []Target{{Type: TargetGrade, Grade: 3}, {Type: TargetGrade, Grade: 3, StudentIDs: 1}, {Type: TargetGrade, Grade: 10},
+		{Type: TargetGrade, Grade: 5, Include: 201, Exclude: 201}, {Type: TargetStudents, StudentIDs: 1, Grade: 2, Include: 1},
+		{Type: TargetStudents, StudentIDs: 1}}
+	got := fields(ValidateTargets(bad))
+	want := []string{"/targets/1/grade_level", "/targets/1/student_ids", "/targets/2/grade_level", "/targets/3/include_student_ids",
+		"/targets/3/exclude_student_ids", "/targets/4/grade_level", "/targets/4", "/targets/5"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("invalid targets: got %v, want %v", got, want)
+	}
+	many := make([]Target, 10)
+	for i := range many {
+		many[i] = Target{Type: TargetGrade, Grade: i%9 + 1}
+	}
+	if got := fields(ValidateTargets(many)); len(got) == 0 || got[0] != "/targets" {
+		t.Fatalf("more than 9 targets: %v", got)
+	}
+	if got := fields(ValidateTargets(nil)); len(got) != 1 || got[0] != "/targets" {
+		t.Fatalf("no target: %v", got)
+	}
+}
+
+// ADR-0095 mục 3 (F041-AC-33): the audience is the grade plus the included students minus the excluded ones (exclude
+// wins over include), plus the listed students, each student once.
+func TestAudience(t *testing.T) {
+	grade := []string{"a", "b", "c"}
+	got := Audience([][]string{grade}, [][]string{{"x", "b", "y"}}, [][]string{{"z", "a"}}, []string{"c", "y"})
+	if strings.Join(got, ",") != "a,b,x,z" {
+		t.Fatalf("audience: %v", got)
+	}
+	if got := Audience[string](nil, nil, nil, nil); len(got) != 0 {
+		t.Fatalf("empty audience: %v", got)
 	}
 }
 

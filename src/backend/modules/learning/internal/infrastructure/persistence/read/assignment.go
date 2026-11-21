@@ -20,7 +20,7 @@ type SchoolAssignmentModel struct{}
 
 var _ read.SchoolAssignmentReadModel = SchoolAssignmentModel{}
 
-const assignmentSelect = `a.assignment_id, a.tenant_id, a.school_id, a.course_id, a.subject_id, a.created_by, a.created_by_role, a.title,
+const assignmentSelect = `a.assignment_id, a.tenant_id, a.school_id, a.subject_id, a.created_by, a.created_by_role, a.title,
 	a.instructions, a.content_type, a.content_id, a.pinned_version_id, a.follow_latest, a.mode, a.open_at, a.due_at, a.allow_late,
 	a.late_window_hours, a.max_attempts, a.score_policy, a.feedback_timing, a.result_release, a.status, a.exam_session_id,
 	a.results_released_at, a.version`
@@ -31,7 +31,7 @@ func scanAssignmentView(row interface{ Scan(...any) error }) (read.AssignmentRec
 	var instructions sql.NullString
 	var pinned, exam uuid.NullUUID
 	var released sql.NullTime
-	err := row.Scan(&v.AssignmentID, &v.TenantID, &v.SchoolID, &v.CourseID, &r.SubjectID, &v.CreatedBy, &v.CreatedByRole, &v.Title,
+	err := row.Scan(&v.AssignmentID, &v.TenantID, &v.SchoolID, &v.SubjectID, &v.CreatedBy, &v.CreatedByRole, &v.Title,
 		&instructions, &v.ContentRef.ContentType, &v.ContentRef.ContentID, &pinned, &v.FollowLatest, &v.Mode, &v.OpenAt, &v.DueAt,
 		&v.LatePolicy.AllowLate, &v.LatePolicy.LateWindowHours, &v.MaxAttempts, &v.ScorePolicy, &v.FeedbackTiming, &v.ResultRelease, &v.Status,
 		&exam, &released, &v.RowVersion)
@@ -45,6 +45,7 @@ func scanAssignmentView(row interface{ Scan(...any) error }) (read.AssignmentRec
 		v.ResultsReleasedAt = &t
 	}
 	v.OpenAt, v.DueAt, v.Targets = v.OpenAt.UTC(), v.DueAt.UTC(), []dto.AssignmentTargetView{}
+	r.SubjectID = v.SubjectID
 	return r, err
 }
 
@@ -58,9 +59,14 @@ func (SchoolAssignmentModel) targets(ctx context.Context, q *sql.Tx, recs []read
 		idx[r.View.AssignmentID], idList[i] = i, r.View.AssignmentID
 	}
 	// tenancyguard:ok tenant of the session (RLS + infra.current_tenant_id()) and deleted_at IS NULL
-	rows, err := q.QueryContext(ctx, `SELECT assignment_id, target_type, target_ref_id, array_to_string(student_ids, ',')
-		FROM lms.assignment_targets WHERE assignment_id = ANY($1::uuid[]) AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL
-		ORDER BY assignment_id, position`, uuidArray(idList))
+	rows, err := q.QueryContext(ctx, `SELECT t.assignment_id, t.target_type, t.grade_level, array_to_string(t.include_student_ids, ','),
+		array_to_string(t.exclude_student_ids, ','), array_to_string(t.student_ids, ','),
+		(SELECT count(*) FROM lms.assignment_target_students s WHERE s.assignment_id = t.assignment_id AND s.deleted_at IS NULL
+			AND s.tenant_id = t.tenant_id AND CASE WHEN t.target_type = 'grade'
+				THEN (s.grade_level = t.grade_level OR s.student_id = ANY(t.include_student_ids)) AND NOT s.student_id = ANY(t.exclude_student_ids)
+				ELSE s.student_id = ANY(t.student_ids) END)
+		FROM lms.assignment_targets t WHERE t.assignment_id = ANY($1::uuid[]) AND t.tenant_id = infra.current_tenant_id() AND t.deleted_at IS NULL
+		ORDER BY t.assignment_id, t.position`, uuidArray(idList))
 	if err != nil {
 		return fmt.Errorf("assignment targets: %w", err)
 	}
@@ -68,21 +74,35 @@ func (SchoolAssignmentModel) targets(ctx context.Context, q *sql.Tx, recs []read
 	for rows.Next() {
 		var id uuid.UUID
 		var t dto.AssignmentTargetView
-		var ref uuid.NullUUID
-		var students string
-		if err := rows.Scan(&id, &t.TargetType, &ref, &students); err != nil {
+		var grade sql.NullInt32
+		var include, exclude, students string
+		var count int
+		if err := rows.Scan(&id, &t.TargetType, &grade, &include, &exclude, &students, &count); err != nil {
 			return err
 		}
-		t.TargetID = nullUUID(ref)
-		for _, s := range strings.Split(students, ",") {
-			if x, err := uuid.Parse(s); err == nil {
-				t.StudentIDs = append(t.StudentIDs, x)
-			}
+		if grade.Valid {
+			g := int(grade.Int32)
+			t.GradeLevel = &g
 		}
+		t.IncludeStudentIDs, t.ExcludeStudentIDs, t.StudentIDs = splitIDs(include), splitIDs(exclude), splitIDs(students)
 		i := idx[id]
+		if recs[i].View.Status != "draft" {
+			t.StudentCount = &count
+		}
 		recs[i].View.Targets = append(recs[i].View.Targets, t)
 	}
 	return rows.Err()
+}
+
+// splitIDs parses a comma-separated list of ids (array_to_string); nil when empty.
+func splitIDs(s string) []uuid.UUID {
+	var out []uuid.UUID
+	for _, x := range strings.Split(s, ",") {
+		if id, err := uuid.Parse(x); err == nil {
+			out = append(out, id)
+		}
+	}
+	return out
 }
 
 // scopeCondition is the OR of the (school, subject) pairs of the reader; "TRUE" when a pair is unlimited.
@@ -120,15 +140,15 @@ func (m SchoolAssignmentModel) Assignments(ctx context.Context, f read.Assignmen
 	if f.Status != "" {
 		status = f.Status
 	}
-	scope, scopeArgs := scopeCondition(f.Scopes, 6)
-	args := append([]any{f.ClassID, f.CourseID, status, f.After, f.Limit}, scopeArgs...)
+	scope, scopeArgs := scopeCondition(f.Scopes, 7)
+	args := append([]any{f.SchoolID, f.SubjectID, status, f.After, f.Limit, f.Grade}, scopeArgs...)
 	// tenancyguard:ok tenant of the session (RLS + infra.current_tenant_id()) and deleted_at IS NULL; scope condition built from fixed column names
 	rows, err := q.QueryContext(ctx, `SELECT `+assignmentSelect+` FROM lms.assignments a
 		WHERE a.tenant_id = infra.current_tenant_id() AND a.deleted_at IS NULL
-			AND ($1::uuid IS NULL OR EXISTS (SELECT 1 FROM lms.assignment_targets t WHERE t.assignment_id = a.assignment_id
-				AND t.target_type = 'class' AND t.target_ref_id = $1::uuid AND t.deleted_at IS NULL)
-				OR EXISTS (SELECT 1 FROM lms.courses c WHERE c.course_id = a.course_id AND c.class_id = $1::uuid AND c.deleted_at IS NULL))
-			AND ($2::uuid IS NULL OR a.course_id = $2::uuid) AND ($3::varchar IS NULL OR a.status = $3::varchar)
+			AND ($1::uuid IS NULL OR a.school_id = $1::uuid) AND ($2::uuid IS NULL OR a.subject_id = $2::uuid)
+			AND ($6::smallint IS NULL OR EXISTS (SELECT 1 FROM lms.assignment_targets t WHERE t.assignment_id = a.assignment_id
+				AND t.target_type = 'grade' AND t.grade_level = $6::smallint AND t.deleted_at IS NULL))
+			AND ($3::varchar IS NULL OR a.status = $3::varchar)
 			AND ($4::uuid IS NULL OR a.assignment_id < $4::uuid) AND `+scope+`
 		ORDER BY a.assignment_id DESC LIMIT $5`, args...)
 	if err != nil {
@@ -226,12 +246,11 @@ func (SchoolAssignmentModel) Submissions(ctx context.Context, f read.SubmissionF
 		status = f.Status
 	}
 	// tenancyguard:ok tenant of the session (RLS + infra.current_tenant_id()) and deleted_at IS NULL
-	rows, err := q.QueryContext(ctx, `SELECT assignment_id, student_id, class_id, status, attempts_used, best_attempt_id, score::float8,
+	rows, err := q.QueryContext(ctx, `SELECT assignment_id, student_id, status, attempts_used, best_attempt_id, score::float8,
 		max_score::float8, rapid_guess_count, due_at_override, submitted_at FROM lms.assignment_submissions
 		WHERE assignment_id = $1 AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL
-			AND ($2::varchar IS NULL OR status = $2::varchar) AND ($3::uuid IS NULL OR class_id = $3::uuid)
-			AND ($4::uuid IS NULL OR student_id > $4::uuid)
-		ORDER BY student_id LIMIT $5`, f.AssignmentID, status, f.ClassID, f.After, f.Limit)
+			AND ($2::varchar IS NULL OR status = $2::varchar) AND ($3::uuid IS NULL OR student_id > $3::uuid)
+		ORDER BY student_id LIMIT $4`, f.AssignmentID, status, f.After, f.Limit)
 	if err != nil {
 		return nil, fmt.Errorf("submissions: %w", err)
 	}
@@ -239,14 +258,14 @@ func (SchoolAssignmentModel) Submissions(ctx context.Context, f read.SubmissionF
 	var out []dto.AssignmentSubmissionView
 	for rows.Next() {
 		var s dto.AssignmentSubmissionView
-		var class, best uuid.NullUUID
+		var best uuid.NullUUID
 		var score, maxScore sql.NullFloat64
 		var due, submitted sql.NullTime
-		if err := rows.Scan(&s.AssignmentID, &s.StudentID, &class, &s.Status, &s.AttemptsUsed, &best, &score, &maxScore, &s.RapidGuessCount,
+		if err := rows.Scan(&s.AssignmentID, &s.StudentID, &s.Status, &s.AttemptsUsed, &best, &score, &maxScore, &s.RapidGuessCount,
 			&due, &submitted); err != nil {
 			return nil, err
 		}
-		s.ClassID, s.BestAttemptID = nullUUID(class), nullUUID(best)
+		s.BestAttemptID = nullUUID(best)
 		if score.Valid {
 			v := score.Float64
 			s.Score = &v
@@ -296,7 +315,7 @@ func (SchoolAssignmentModel) MyAssignments(ctx context.Context, studentID uuid.U
 		var pinned, exam, current uuid.NullUUID
 		var released, due sql.NullTime
 		var name []byte
-		if err := rows.Scan(&v.AssignmentID, &v.TenantID, &v.SchoolID, &v.CourseID, &rec.SubjectID, &v.CreatedBy, &v.CreatedByRole, &v.Title,
+		if err := rows.Scan(&v.AssignmentID, &v.TenantID, &v.SchoolID, &v.SubjectID, &v.CreatedBy, &v.CreatedByRole, &v.Title,
 			&instructions, &v.ContentRef.ContentType, &v.ContentRef.ContentID, &pinned, &v.FollowLatest, &v.Mode, &v.OpenAt, &v.DueAt,
 			&v.LatePolicy.AllowLate, &v.LatePolicy.LateWindowHours, &v.MaxAttempts, &v.ScorePolicy, &v.FeedbackTiming, &v.ResultRelease,
 			&v.Status, &exam, &released, &v.RowVersion, &r.Submission, &r.AttemptsUsed, &current, &due, &name); err != nil {

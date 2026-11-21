@@ -6,6 +6,8 @@
 
 Spec: `specs/openapi/eduworld-api.v1.yaml` (x-service `learning` trừ khi ghi khác). Mọi route gửi `X-Tenant-Id`.
 
+> **ADR-0095 (WP-L1, 2026-11-21):** `createAssignment`/`updateAssignment` nhận `school_id`, `subject_id` (không `course_id`) và `targets[]` mới: `{target_type: grade, grade_level, include_student_ids[], exclude_student_ids[]}` hoặc `{target_type: students, student_ids[]}` (1–9 target, exclude thắng include, học sinh khác trường → 422); `Assignment.targets[].student_count` sau publish; `listAssignments` lọc `school_id`, `subject_id`, `grade_level` (bỏ `class_id`, `course_id`); `listAssignmentSubmissions` bỏ `class_id`; `createExamSession` cần `school_id` (bỏ `course_id`). Wizard portal cập nhật ở WP-P1.
+
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
 | `listAssignments` | `GET /api/v1/lms/assignments` | eduworld-api | `lms.assignment.read` | Có sẵn |
@@ -17,11 +19,11 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (x-service `learning` trừ khi ghi k
 | `remindAssignment` | `POST …:remind` | eduworld-api | `lms.assignment.write` | Có sẵn |
 | `extendAssignmentForStudent` · `excuseAssignmentForStudent` | `POST …/students/{student_id}:extend` · `:excuse` | eduworld-api | `lms.assignment.write` | Có sẵn |
 | `listAssignmentSubmissions` | `GET …/{assignment_id}/submissions` | eduworld-api | `lms.assignment.read` | Có sẵn |
-| `listCourses` · `updateCourse` | `GET /api/v1/lms/courses` · `PATCH …/{course_id}` | eduworld-api | `lms.class.read` / `lms.course.write` | Có sẵn |
-| `listLearningPaths` · `createLearningPath` · `updateLearningPath` | `…/courses/{course_id}/paths[/{path_id}]` | eduworld-api | `lms.learning_path.write` (ghi) | Có sẵn |
-| `unlockPathNodeForStudent` | `POST …/nodes/{node_id}/students/{student_id}:unlock` | eduworld-api | `lms.learning_path.write` | Có sẵn |
-| `listScheduleItems` · `createScheduleItem` · `updateScheduleItem` · `deleteScheduleItem` | `/api/v1/lms/schedules[/{schedule_item_id}]` | eduworld-api | `lms.schedule.write` (ghi) | Có sẵn |
-| `listStudyGroups` · `createStudyGroup` · `getStudyGroup` · `updateStudyGroup` · `deleteStudyGroup` | `/api/v1/lms/schools/{school_id}/study-groups[/{study_group_id}]` | eduworld-api | `lms.study_group.write` (ghi) | Có sẵn |
+| `listCourses` · `updateCourse` | `GET /api/v1/lms/courses` · `PATCH …/{course_id}` | eduworld-api | `lms.class.read` / `lms.course.write` | **Removed (ADR-0095, WP-L1 2026-11-21)** — op đã xóa khỏi OpenAPI; màn hình gỡ ở WP-P1 |
+| `listLearningPaths` · `createLearningPath` · `updateLearningPath` | `…/courses/{course_id}/paths[/{path_id}]` | eduworld-api | `lms.learning_path.write` (ghi) | **Removed (ADR-0095, WP-L1 2026-11-21)** — op đã xóa khỏi OpenAPI; màn hình gỡ ở WP-P1 |
+| `unlockPathNodeForStudent` | `POST …/nodes/{node_id}/students/{student_id}:unlock` | eduworld-api | `lms.learning_path.write` | **Removed (ADR-0095, WP-L1 2026-11-21)** — op đã xóa khỏi OpenAPI; màn hình gỡ ở WP-P1 |
+| `listScheduleItems` · `createScheduleItem` · `updateScheduleItem` · `deleteScheduleItem` | `/api/v1/lms/schedules[/{schedule_item_id}]` | eduworld-api | `lms.schedule.write` (ghi) | **Removed (ADR-0095, WP-L1 2026-11-21)** — op đã xóa khỏi OpenAPI; màn hình gỡ ở WP-P1 |
+| `listStudyGroups` · `createStudyGroup` · `getStudyGroup` · `updateStudyGroup` · `deleteStudyGroup` | `/api/v1/lms/schools/{school_id}/study-groups[/{study_group_id}]` | eduworld-api | `lms.study_group.write` (ghi) | **Removed (ADR-0095, WP-L1 2026-11-21)** — op đã xóa khỏi OpenAPI; màn hình gỡ ở WP-P1 |
 | `listGameActivities` | `GET /api/v1/lms/catalog/game-activities` | eduworld-api | `lms.assignment.write` | Có sẵn |
 | `listCmsActivities` · `listActivityTypes` · `listCmsQuestionSets` · `listCmsAssessmentBlueprints` · `listCmsLessons` · `listCmsObjectives` | `GET /api/v1/cms/learning/…` | eduworld-api | `learning_content.read` | Có sẵn |
 | `listClasses` | `GET /api/v1/schools/{school_id}/classes` | eduworld-api (identity) | `lms.class.read` | Có sẵn |

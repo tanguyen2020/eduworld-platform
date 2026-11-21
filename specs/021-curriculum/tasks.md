@@ -115,6 +115,11 @@
 - [x] T041 [P] Metric/span publish và import — file: `src/backend/modules/learning/internal/infrastructure/observability/metrics.go` — ✅ 2026-11-19: `eduworld_curriculum_publish_total{result}`, `eduworld_import_jobs_total{kind,status}`, `eduworld_import_rows_rejected_total{kind}` (`observability.CurriculumCounter`); span theo `observability.UseCase` (`learning.command.PublishCurriculumVersion`, `learning.command.ImportCurriculum`)
 - [x] T042 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/021-curriculum/quickstart.md` — ✅ 2026-11-19: quickstart §5 bằng chứng (kịch bản 1–16 bằng test tự động)
 
+## ADR-0095 — nhận FR-CUR-008 từ F040 (WP-L1, 2026-11-21)
+
+- [x] T043 Chuyển `lms.school_curriculum_settings` (command `SchoolCurriculum`, query `SchoolCurriculum`, repository `CurriculumSettingsRepo`/`CurriculumSettingsModel`, handler `get/putSchoolCurriculumSettings`) ra khỏi code F040 trước khi xóa F040; integration test `TestSchoolCurriculumSettings` (F021-AC-30) — file: `src/backend/modules/learning/internal/`, `src/backend/modules/learning/tests/integration/curriculum_settings_test.go`
+- [ ] T044 (WP-I1/WP-R) Nguồn năm học hiện tại của trường cho resolver thay `ref.classes.academic_year_id` (Câu hỏi mở của spec)
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 → US3 → US4 / US5 (song song) → US6 → US7 → Polish.

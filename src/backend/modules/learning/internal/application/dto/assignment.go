@@ -16,9 +16,12 @@ type AssignmentContentRefView struct {
 
 // AssignmentTargetView is AssignmentTarget (+ student_count of the snapshot).
 type AssignmentTargetView struct {
-	TargetType string      `json:"target_type"`
-	TargetID   *uuid.UUID  `json:"target_id,omitempty"`
-	StudentIDs []uuid.UUID `json:"student_ids,omitempty"`
+	TargetType        string      `json:"target_type"`
+	GradeLevel        *int        `json:"grade_level,omitempty"`
+	IncludeStudentIDs []uuid.UUID `json:"include_student_ids,omitempty"`
+	ExcludeStudentIDs []uuid.UUID `json:"exclude_student_ids,omitempty"`
+	StudentIDs        []uuid.UUID `json:"student_ids,omitempty"`
+	StudentCount      *int        `json:"student_count,omitempty"`
 }
 
 // LatePolicyView is AssignmentCreate.late_policy.
@@ -42,7 +45,7 @@ type AssignmentView struct {
 	AssignmentID      uuid.UUID                 `json:"assignment_id"`
 	TenantID          uuid.UUID                 `json:"tenant_id"`
 	SchoolID          uuid.UUID                 `json:"school_id"`
-	CourseID          uuid.UUID                 `json:"course_id"`
+	SubjectID         uuid.UUID                 `json:"subject_id"`
 	Title             string                    `json:"title"`
 	Instructions      *string                   `json:"instructions,omitempty"`
 	ContentRef        AssignmentContentRefView  `json:"content_ref"`
@@ -69,7 +72,6 @@ type AssignmentView struct {
 type AssignmentSubmissionView struct {
 	AssignmentID    uuid.UUID  `json:"assignment_id"`
 	StudentID       uuid.UUID  `json:"student_id"`
-	ClassID         *uuid.UUID `json:"class_id,omitempty"`
 	Status          string     `json:"status"`
 	AttemptsUsed    int        `json:"attempts_used"`
 	BestAttemptID   *uuid.UUID `json:"best_attempt_id,omitempty"`

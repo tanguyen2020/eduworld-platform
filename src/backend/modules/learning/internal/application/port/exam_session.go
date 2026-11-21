@@ -16,7 +16,7 @@ type ExamSessionRequest struct {
 	AssignmentID    uuid.UUID
 	TenantID        uuid.UUID
 	SchoolID        uuid.UUID
-	CourseID        uuid.UUID
+	SubjectID       uuid.UUID // subject of the assignment (the blueprint must be of this subject)
 	BlueprintID     uuid.UUID
 	BlueprintVerID  uuid.UUID
 	OpenAt, CloseAt time.Time

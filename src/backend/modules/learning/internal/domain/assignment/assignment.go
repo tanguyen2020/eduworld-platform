@@ -49,16 +49,16 @@ const (
 	ContentQuest       = "quest"
 	ContentMinigame    = "minigame_config"
 
-	TargetClass      = "class"
-	TargetStudyGroup = "study_group"
-	TargetStudents   = "students"
+	// TargetGrade is (school, grade_level) ± students; TargetStudents a list of students of the school (ADR-0095 mục 3).
+	TargetGrade    = "grade"
+	TargetStudents = "students"
 )
 
 // Limits (ADR-0041, AssignmentCreate).
 const (
 	MaxTitle          = 120
 	MaxInstructions   = 2000
-	MaxTargets        = 50
+	MaxTargets        = 9
 	MaxTargetStudents = 200
 	MaxLateHours      = 168
 	MaxAttempts       = 10
@@ -72,10 +72,12 @@ var SupportedActivityTypes = []string{"quiz", "interactive_exercise", "minigame"
 // Violation is one invalid field (JSON pointer of the request).
 type Violation struct{ Field, Reason string }
 
-// Target is one AssignmentTarget.
+// Target is one AssignmentTarget: Grade is 0 when absent; Include, Exclude and StudentIDs are list lengths.
 type Target struct {
 	Type       string
-	HasRef     bool
+	Grade      int
+	Include    int
+	Exclude    int
 	StudentIDs int
 }
 
@@ -150,27 +152,7 @@ func (f Fields) Validate(maxLateHours int) []Violation {
 	if f.Mode == ModeGraded && f.FollowLatest {
 		add("/follow_latest", "is not allowed for a graded assignment")
 	}
-	if len(f.Targets) == 0 || len(f.Targets) > MaxTargets {
-		add("/targets", "must have 1 to 50 targets")
-	}
-	for i, t := range f.Targets {
-		at := "/targets/" + itoa(i)
-		switch t.Type {
-		case TargetClass, TargetStudyGroup:
-			if !t.HasRef {
-				add(at+"/target_id", "is required for a class or a study group")
-			}
-			if t.StudentIDs > 0 {
-				add(at+"/student_ids", "is only for target_type students")
-			}
-		case TargetStudents:
-			if t.StudentIDs == 0 || t.StudentIDs > MaxTargetStudents {
-				add(at+"/student_ids", "must have 1 to 200 students")
-			}
-		default:
-			add(at+"/target_type", "is not class, study_group or students")
-		}
-	}
+	vs = append(vs, ValidateTargets(f.Targets)...)
 	if !f.DueAt.After(f.OpenAt) {
 		add("/due_at", "must be after open_at")
 	}
@@ -195,6 +177,80 @@ func (f Fields) Validate(maxLateHours int) []Violation {
 		add("/feedback_timing", "is earlier than the release of the results")
 	}
 	return vs
+}
+
+// ValidateTargets checks the targets of an assignment or an exam session (ADR-0095 mục 3): 1 to 9 targets; a grade
+// target has grade_level 1–9 (each grade once), at most 200 included and 200 excluded students and no student_ids; at
+// most one students target with 1 to 200 students and no grade, include nor exclude.
+func ValidateTargets(ts []Target) []Violation {
+	var vs []Violation
+	add := func(field, reason string) { vs = append(vs, Violation{field, reason}) }
+	if len(ts) == 0 || len(ts) > MaxTargets {
+		add("/targets", "must have 1 to 9 targets")
+	}
+	grades := map[int]bool{}
+	lists := 0
+	for i, t := range ts {
+		at := "/targets/" + itoa(i)
+		switch t.Type {
+		case TargetGrade:
+			switch {
+			case t.Grade < 1 || t.Grade > 9:
+				add(at+"/grade_level", "must be 1 to 9 for a grade target")
+			case grades[t.Grade]:
+				add(at+"/grade_level", "a grade is targeted once")
+			}
+			grades[t.Grade] = true
+			if t.StudentIDs > 0 {
+				add(at+"/student_ids", "is only for target_type students")
+			}
+			if t.Include > MaxTargetStudents {
+				add(at+"/include_student_ids", "must have at most 200 students")
+			}
+			if t.Exclude > MaxTargetStudents {
+				add(at+"/exclude_student_ids", "must have at most 200 students")
+			}
+		case TargetStudents:
+			lists++
+			if lists > 1 {
+				add(at, "only one students target is allowed")
+			}
+			if t.StudentIDs == 0 || t.StudentIDs > MaxTargetStudents {
+				add(at+"/student_ids", "must have 1 to 200 students")
+			}
+			if t.Grade != 0 {
+				add(at+"/grade_level", "is only for target_type grade")
+			}
+			if t.Include > 0 || t.Exclude > 0 {
+				add(at, "include_student_ids and exclude_student_ids are only for target_type grade")
+			}
+		default:
+			add(at+"/target_type", "is not grade or students")
+		}
+	}
+	return vs
+}
+
+// Audience composes the students an assignment is given to (ADR-0095 mục 3) from the active students of each targeted
+// grade of the school, the included students and the listed students: an excluded student is never targeted (exclude
+// wins over include), a student held by several targets once, in the order of the targets.
+func Audience[ID comparable](grades, includes, lists [][]ID, excludes []ID) []ID {
+	out := []ID{}
+	seen := map[ID]bool{}
+	for _, x := range excludes {
+		seen[x] = true
+	}
+	for _, group := range [][][]ID{grades, includes, lists} {
+		for _, xs := range group {
+			for _, x := range xs {
+				if !seen[x] {
+					seen[x] = true
+					out = append(out, x)
+				}
+			}
+		}
+	}
+	return out
 }
 
 // LateWindow is the late window of the assignment (0 when late submissions are not allowed).

@@ -19,28 +19,26 @@ import (
 
 const assignmentsPath = "/lms/assignments"
 
-// asgKit is the school of the LMS kit with the course of its subject (F041).
+// asgKit is the school of the LMS kit with the subject of its curriculum (F041; ADR-0095: no course).
 type asgKit struct {
 	lmsKit
-	course string
+	subject string
 }
 
 func (c *curEnv) asgSetup(ctx context.Context, t *testing.T) asgKit {
 	t.Helper()
 	k := asgKit{lmsKit: c.lmsSetup(ctx, t)}
-	k.course = k.courses[k.s.qc.subject]
-	if k.course == "" {
-		t.Fatal("no course for the subject")
-	}
+	k.subject = k.s.qc.subject
 	return k
 }
 
-// asgBody is an AssignmentCreate of an activity for class 3A, open from now for 3 days, with extra fields.
+// asgBody is an AssignmentCreate of an activity for grade 3 of the school (ADR-0095), open from now for 3 days, with
+// extra fields.
 func (c *curEnv) asgBody(k asgKit, extra map[string]any) map[string]any {
 	now := c.clk.Now()
-	b := map[string]any{"course_id": k.course, "title": "Ôn tập bảng nhân", "mode": "practice",
+	b := map[string]any{"school_id": k.school.String(), "subject_id": k.subject, "title": "Ôn tập bảng nhân", "mode": "practice",
 		"content_ref": map[string]any{"content_type": "activity", "content_id": k.s.activityID},
-		"targets":     []any{map[string]any{"target_type": "class", "target_id": k.class.String()}},
+		"targets":     []any{map[string]any{"target_type": "grade", "grade_level": 3}},
 		"open_at":     now.Add(-time.Minute).Format(time.RFC3339), "due_at": now.Add(72 * time.Hour).Format(time.RFC3339), "max_attempts": 2}
 	for key, v := range extra {
 		b[key] = v

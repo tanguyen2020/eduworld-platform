@@ -135,6 +135,11 @@
 - [x] T049 [P] Kiểm EXAM_ENGINE §11 và API_DESIGN §9.5 khớp (`/analysis`, `/report`, `/library`, `/papers` đã chốt RB-213); cập nhật CHANGELOG, trạng thái F042 trong CODE_PLAN — file: `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
 - [x] T050 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/042-exam-engine/quickstart.md`
 
+## ADR-0095 — phiên thi theo khối (WP-L1, 2026-11-21)
+
+- [x] T053 Contract `ExamSessionCreate` (`school_id` bắt buộc, bỏ `course_id`; `targets` theo `AssignmentTarget` mới), `ExamSession` bỏ `course_id`; `exam.opened`/`exam.closed` bỏ `course_id` tùy chọn — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/events/payloads/learning/`
+- [x] T054 `sessionSchool` theo `school_id`, môn từ blueprint (bài giao: môn của bài), kiểm tra target bằng `assignment.ValidateTargets`; integration test `TestExam*` dùng target khối — file: `src/backend/modules/learning/internal/application/command/exams.go`, `src/backend/modules/learning/tests/integration/exam_env_test.go`
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T007) → US1 → US2 → US3 → US4, US5 (song song) → Polish.

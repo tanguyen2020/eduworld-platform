@@ -103,7 +103,6 @@ type curEnv struct {
 	lessons command.Lessons         // F031 US6
 	rgd     command.Regrades        // F031 US4
 	recs    command.Recommendations // F032 US6
-	lms     command.LMS             // F040
 	asg     command.Assignments     // F041
 	asgq    query.SchoolAssignments // F041
 	exams   command.Exams           // F042
@@ -257,8 +256,6 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	recs := command.Recommendations{UoW: e.uow, Store: self, Wrong: self, Reader: self, Masteries: write.MasteryRepo{}, Delivery: delivery,
 		Students: read.SchoolSettings{}, Events: write.Publisher{W: e.writer}, Engine: recommendation.Default(), Config: practice, Clock: clk.Now,
 		Metrics: observability.SelfStudyCounter{}}
-	recs.Sources = []command.SnapshotSource{command.LMSUpcoming{Store: write.LMSRepo{}}}
-	recs.Engine.Register(recommendation.R6{})
 	// F041: school assignments with the test clock; F042: the exam engine and its ExamSessionCreator adapter.
 	asg := command.Assignments{UoW: e.uow, Store: write.SchoolAssignmentRepo{}, Read: e.read, Exams: examsession.Unavailable{},
 		Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Metrics: observability.SchoolAssignmentCounter{}}
@@ -282,10 +279,10 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	recs.Engine.Register(recommendation.R1{})
 	asgq := query.SchoolAssignments{Session: e.read, Model: read.SchoolAssignmentModel{}, Cursors: codec, Clock: clk.Now}
 	handlers.AssignmentCommands, handlers.Assignments = asg, asgq
-	lmsCmd := command.LMS{UoW: e.uow, Store: write.LMSRepo{}, Read: e.read, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec},
-		Clock: clk.Now, Metrics: observability.LMSCounter{}}
-	handlers.LMSCommands = lmsCmd
-	handlers.LMS = query.LMS{Session: e.read, Model: read.LMSModel{}, Progress: read.ProgressModel{}, Cursors: codec, Clock: clk.Now}
+	// F021 FR-CUR-008: the curriculum of a school (moved from F040, ADR-0095).
+	handlers.SchoolCurriculum = command.SchoolCurriculum{UoW: e.uow, Store: write.CurriculumSettingsRepo{}, Read: e.read, Audit: write.Auditor{R: e.rec},
+		Clock: clk.Now}
+	handlers.SchoolCurriculumQueries = query.SchoolCurriculum{Session: e.read, Model: read.CurriculumSettingsModel{}}
 	handlers.Hints = att
 	handlers.SelfStudy = query.SelfStudy{Session: e.read, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: codec, Clock: clk.Now}
 	handlers.Mastery = query.Progress{Session: e.read, Model: read.ProgressModel{}, Details: read.SelfStudyModel{}, Clock: clk.Now, Arms: read.ExperimentModel{}}
@@ -333,7 +330,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	t.Cleanup(hs.Close)
 	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
-		lms: lmsCmd, asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq,
+		asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq,
 		reports: reports, quality: quality, reportq: reportq, eff: eff, exps: exps}
 	school := uuid.New()
 	ce.user(cmNoidung, authztest.Platform("content_admin").PrincipalData, true)

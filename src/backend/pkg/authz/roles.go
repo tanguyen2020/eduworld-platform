@@ -74,8 +74,8 @@ func SystemRoles() []RoleDef {
 			"tenant.sis.import", "social.club.approve", "tenant.audit.read", "report.export",
 		})},
 		{Name: "academic_manager", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
-			"curriculum.*", "learning_content.*", "lms.class.read", "lms.course.write", "lms.learning_path.write",
-			"lms.assignment.*", "lms.schedule.write", "lms.study_group.write", "lms.result.release", "lms.report.read",
+			"curriculum.*", "learning_content.*", "lms.class.read",
+			"lms.assignment.*", "lms.result.release", "lms.report.read",
 			"lms.student_activity.read", "analytics.*", "report.export",
 		})},
 		{Name: "tenant_content_editor", ScopeKind: RoleScopeTenant, Permissions: expand([]string{

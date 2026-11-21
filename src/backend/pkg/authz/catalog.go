@@ -65,15 +65,11 @@ const (
 	PermLmsAssignmentWrite                       Permission = "lms.assignment.write"
 	PermLmsChallengeWrite                        Permission = "lms.challenge.write"
 	PermLmsClassRead                             Permission = "lms.class.read"
-	PermLmsCourseWrite                           Permission = "lms.course.write"
-	PermLmsLearningPathWrite                     Permission = "lms.learning_path.write"
 	PermLmsReportRead                            Permission = "lms.report.read"
 	PermLmsResultRelease                         Permission = "lms.result.release"
-	PermLmsScheduleWrite                         Permission = "lms.schedule.write"
 	PermLmsSchoolEventWrite                      Permission = "lms.school_event.write"
 	PermLmsStudentPasswordReset                  Permission = "lms.student.password_reset"
 	PermLmsStudentActivityRead                   Permission = "lms.student_activity.read"
-	PermLmsStudyGroupWrite                       Permission = "lms.study_group.write"
 	PermMediaUpload                              Permission = "media.upload"
 	PermModerationCaseAct                        Permission = "moderation.case.act"
 	PermModerationCaseLead                       Permission = "moderation.case.lead"
@@ -191,15 +187,11 @@ var catalog = []Permission{
 	PermLmsAssignmentWrite,
 	PermLmsChallengeWrite,
 	PermLmsClassRead,
-	PermLmsCourseWrite,
-	PermLmsLearningPathWrite,
 	PermLmsReportRead,
 	PermLmsResultRelease,
-	PermLmsScheduleWrite,
 	PermLmsSchoolEventWrite,
 	PermLmsStudentPasswordReset,
 	PermLmsStudentActivityRead,
-	PermLmsStudyGroupWrite,
 	PermMediaUpload,
 	PermModerationCaseAct,
 	PermModerationCaseLead,

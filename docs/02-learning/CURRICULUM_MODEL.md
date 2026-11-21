@@ -110,7 +110,7 @@ Quy tắc:
 
 ## 5. Đa chương trình & di chuyển phiên bản
 
-- Một trường chọn **curriculum version mặc định** cho mỗi năm học, tùy chọn theo khối; cài đặt lưu ở module learning (`lms.school_curriculum_settings`), do School Admin đặt trên workspace C ([SCHOOL_LMS §3](../04-admin-portal/SCHOOL_LMS.md#3-course-và-learning-path) sở hữu quy tắc chọn và giá trị mặc định khi trường chưa cài đặt) [Confirmed].
+- Một trường chọn **curriculum version mặc định** cho mỗi năm học, tùy chọn theo khối; cài đặt lưu ở module learning (`lms.school_curriculum_settings`), do School Admin đặt trên workspace C ([SCHOOL_LMS §3](../04-admin-portal/SCHOOL_LMS.md#3-curriculum-của-trường) sở hữu quy tắc chọn và giá trị mặc định khi trường chưa cài đặt) [Confirmed].
 - Có thể tồn tại song song nhiều version (vd. khối 1–5 dùng 2018.1, khối 6–9 dùng 2018.2).
 - Khi publish CurriculumVersion mới (có `supersedes_version_id`), mọi LO của version cũ phải có mapping trong `curriculum.lo_version_mappings`: mỗi dòng có khóa riêng `mapping_id`, `curriculum_version_id` (version mới), `from_lo_id`, `to_lo_id` và `relation ∈ {same, split, merge, replaces, removed}`; `to_lo_id` NULL khi và chỉ khi `relation = removed`. Một LO cũ có thể có nhiều dòng (`split`), nhiều LO cũ có thể trỏ một LO mới (`merge`); unique theo `(curriculum_version_id, from_lo_id, to_lo_id)`.
 - Mastery: khi học sinh chuyển sang version mới, mastery được **chiếu** qua mapping `same` (giữ nguyên), `split` (copy giá trị, giảm `evidence_count` một nửa), `merge` (trung bình có trọng số theo evidence), `removed` (giữ lịch sử, không hiển thị). Learning events gốc không bị sửa.

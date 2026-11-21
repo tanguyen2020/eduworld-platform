@@ -184,9 +184,6 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer(messaging.LessonCompletionName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LessonCompletionOptions(consumer.LessonCompletion{Lessons: w.lessons}, core.UoW, core.App, js)
 	})
-	r.Consumer(messaging.LMSCoursesName, func(js jetstream.JetStream) outbox.ConsumerOptions {
-		return consumer.LMSCoursesOptions(consumer.LMSCourses{Courses: w.lms}, core.UoW, core.App, js)
-	})
 	r.Consumer(messaging.AssignmentSubmissionsName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.AssignmentSubmissionsOptions(consumer.AssignmentSubmissions{Tracker: w.assignments}, core.UoW, core.App, js)
 	})
@@ -195,9 +192,6 @@ func Register(r *module.Registry) (*Module, error) {
 	})
 	r.Consumer(messaging.ExamGradeName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.ExamGradeOptions(consumer.ExamGrade{Grader: w.exams}, core.UoW, core.App, js)
-	})
-	r.Consumer(messaging.LMSScheduleName, func(js jetstream.JetStream) outbox.ConsumerOptions {
-		return consumer.LMSScheduleOptions(consumer.LMSSchedule{Schedule: w.lms}, core.UoW, core.App, js)
 	})
 	r.Consumer(messaging.ProgressDailyName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.ProgressDailyOptions(consumer.ProgressDaily{Record: w.progress}, core.UoW, core.App, js)
@@ -255,12 +249,10 @@ type wiring struct {
 	progress     command.Progress
 	regrades     command.Regrades
 	lessons      command.Lessons
-	// F032: the rule engine of the recommendations (R1/R5/R6 are registered here by F041/F042/F040).
+	// F032: the rule engine of the recommendations (R1/R5 are registered here by F041/F042; R6 left with F040, ADR-0095).
 	recommendations command.Recommendations
-	// F040: the school LMS (courses, paths, schedule, study groups).
-	lms         command.LMS
-	assignments command.Assignments
-	exams       command.Exams
+	assignments     command.Assignments
+	exams           command.Exams
 	// F043: the dashboard rollup jobs.
 	dashboards command.Dashboards
 	// F044: exports and quality jobs.
@@ -317,7 +309,6 @@ func build(r *module.Registry) (*wiring, error) {
 	observability.RegisterRegrade(reg)
 	observability.RegisterLessons(reg)
 	observability.RegisterSelfStudy(reg)
-	observability.RegisterLMS(reg)
 	observability.RegisterAssignments(reg)
 	observability.RegisterExams(reg)
 	observability.RegisterDashboards(reg)
@@ -389,9 +380,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Metrics: observability.SelfStudyCounter{}}
 	recs := command.Recommendations{UoW: core.UoW, Store: selfRepo, Wrong: selfRepo, Reader: selfRepo, Masteries: write.MasteryRepo{},
 		Delivery: delivery, Students: read.SchoolSettings{}, Events: events, Engine: recommendation.Default(), Config: practice,
-		Metrics: observability.SelfStudyCounter{}, Sources: []command.SnapshotSource{command.LMSUpcoming{Store: write.LMSRepo{}}}}
-	// F040: R6 (next lesson of the LMS schedule) registers into the engine of F032.
-	recs.Engine.Register(recommendation.R6{})
+		Metrics: observability.SelfStudyCounter{}}
 	// F041: school assignments (ExamSessionCreator "unavailable" until F042), R1 and the gate of the assignment attempts.
 	asg := command.Assignments{UoW: core.UoW, Store: write.SchoolAssignmentRepo{}, Read: core.ReadSession,
 		Events: events, Audit: auditor, Metrics: observability.SchoolAssignmentCounter{}}
@@ -416,8 +405,6 @@ func build(r *module.Registry) (*wiring, error) {
 	recs.Sources = append(recs.Sources, command.ExamFollowups{Store: write.ExamRepo{}})
 	recs.Engine.Register(recommendation.R5{})
 	asgq := query.SchoolAssignments{Session: core.ReadSession, Model: read.SchoolAssignmentModel{}, Cursors: cursors}
-	lmsCmd := command.LMS{UoW: core.UoW, Store: write.LMSRepo{}, Read: core.ReadSession, Events: events, Audit: auditor,
-		Metrics: observability.LMSCounter{}}
 	attq := query.Attempts{Session: core.ReadSession, Model: read.AttemptModel{}, Docs: read.DocModel{}, Delivery: delivery,
 		Registry: activities, Cursors: cursors, Media: read.MediaModel{}, Progress: read.MediaProgressModel{}, Signer: signer, Assignments: asgq, Runs: read.SimulationRunModel{},
 		Recommendations: read.SelfStudyModel{}}
@@ -440,10 +427,11 @@ func build(r *module.Registry) (*wiring, error) {
 		ProfileAudit: command.ProfileViews{UoW: core.UoW, Audit: auditor}}
 	h.Hints, h.Mastery = att, query.Progress{Session: core.ReadSession, Model: read.ProgressModel{}, Details: read.SelfStudyModel{},
 		Arms: read.ExperimentModel{}}
-	h.LMSCommands = lmsCmd
+	// F021 FR-CUR-008: the curriculum of a school (moved from F040 by ADR-0095).
+	h.SchoolCurriculum = command.SchoolCurriculum{UoW: core.UoW, Store: write.CurriculumSettingsRepo{}, Read: core.ReadSession, Audit: auditor}
 	h.AssignmentCommands, h.Assignments = asg, asgq
 	h.ExamCommands, h.ExamQueries = exams, query.Exams{Session: core.ReadSession, Model: read.ExamModel{}, Attempts: attq, Cursors: cursors}
-	h.LMS = query.LMS{Session: core.ReadSession, Model: read.LMSModel{}, Progress: read.ProgressModel{}, Cursors: cursors}
+	h.SchoolCurriculumQueries = query.SchoolCurriculum{Session: core.ReadSession, Model: read.CurriculumSettingsModel{}}
 	h.SelfStudy = query.SelfStudy{Session: core.ReadSession, Model: read.SelfStudyModel{}, Reasons: i18n.MustReasons(), Cursors: cursors}
 	learningRecord := write.MasteryRepo{}
 	mst := command.Mastery{Store: learningRecord, Evidence: learningRecord, Learning: write.LearningEventWriter{}, Events: events,
@@ -509,7 +497,7 @@ func build(r *module.Registry) (*wiring, error) {
 		Cursors: cursors}}
 	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
 		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,
-		lms: lmsCmd, assignments: asg, exams: exams, dashboards: dashboards, reports: reports, quality: quality, efficacy: eff, experiments: exps}, nil
+		assignments: asg, exams: exams, dashboards: dashboards, reports: reports, quality: quality, efficacy: eff, experiments: exps}, nil
 }
 
 // dashboardSession opens the read session of the dashboards (F043-AC-18, F043-AC-21, DASHBOARD_DATA §7): the role

@@ -1,7 +1,7 @@
 # Feature Specification: F041 — Giao bài của nhà trường: assignment, `ResultRelease`, gia hạn/miễn, `my-assignments`
 
-**Feature Branch**: `041-school-assignments` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` (LMS) · **Mốc**: M-C3 · **Phụ thuộc**: F032, F040
-**Input**: School Admin/Academic Manager giao bài tự chấm, đề ôn tập, quest/mini-game đã publish cho lớp, nhóm học tập hoặc danh sách học sinh; học sinh nhận bài trong game ở tab "Nhà trường giao"; nhà trường công bố kết quả, gia hạn, miễn, nhắc (ADR-0072). FR nguồn: FR-LMS-002, FR-LMS-006, FR-LMS-007, FR-LMS-012, FR-EXR-001.
+**Feature Branch**: `041-school-assignments` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `learning` (LMS) · **Mốc**: M-C3 · **Phụ thuộc**: F032 (F040 Removed — ADR-0095)
+**Input**: School Admin/Academic Manager giao bài tự chấm, đề ôn tập, quest/mini-game đã publish cho một khối của trường (± học sinh thêm/bớt) hoặc danh sách học sinh của trường (ADR-0095); học sinh nhận bài trong game ở tab "Nhà trường giao"; nhà trường công bố kết quả, gia hạn, miễn, nhắc (ADR-0072). FR nguồn: FR-LMS-002, FR-LMS-006, FR-LMS-007, FR-LMS-012, FR-EXR-001.
 
 ## Clarifications
 
@@ -38,28 +38,37 @@
 - Công bố → **[Confirmed]** trước khi công bố, `getActivityAttempt` không trả `evaluation`, `listMyActivityAttempts` không trả điểm, `getActivityAttemptReview` chỉ trả `attempt_id` (không câu, điểm, đáp án); sau khi công bố review mở cả với `feedback_timing = after_close`.
 - Danh mục game → `ref.game_activities` có bảng; event `content.published`/`content.rolled_back`/`content.unpublished` của module game và `tenant_data.assigned/unassigned` cho `quest`/`minigame_config` chưa có schema (T005) nên chưa có consumer — danh mục rỗng, không dữ liệu giả; giao quest/mini-game không có trong danh mục → `403 RESOURCE_NOT_ASSIGNED`.
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Đối tượng → **[Confirmed]** `AssignmentTarget.target_type` ∈ {`grade`, `students`}: `grade` = mọi học sinh hiệu lực (`ref.students.status = active`, chưa xóa) của khối `grade_level` trong `school_id` của bài, cộng `include_student_ids` (học sinh khác khối **cùng trường**), trừ `exclude_student_ids`; **exclude thắng include**; `students` = danh sách học sinh hiệu lực của trường. Mỗi khối tối đa một target `grade`, tối đa một target `students`, tổng 1–9 target; include/exclude/danh sách tối đa 200. Học sinh khác trường hoặc khác tenant trong include/danh sách → `422 VALIDATION_FAILED` tại con trỏ của danh sách (thay `404` cũ của lớp/nhóm). Bỏ `class`, `study_group`, `target_id`.
+- Course → **[Confirmed]** `AssignmentCreate` bỏ `course_id`, thêm `school_id` và `subject_id` bắt buộc (gắn trực tiếp); quyền `lms.assignment.write` xét theo trường × môn của bài (ADR-0072, không có scope khối); trường ngoài mọi grant → `404`; môn ngoài grant giới hạn môn → `403`; môn tenant không thấy → `422` tại `/subject_id`; nội dung có môn khác `subject_id` → `422` tại `/subject_id`. `lms.assignments.course_id` thành nullable, không ghi nữa (DROP ở WP-R).
+- Snapshot → **[Confirmed]** khi publish chụp học sinh theo quy tắc trên, ghi `grade_level` của học sinh tại thời điểm giao trên `lms.assignment_target_students` (không suy ngược từ khối hiện tại); `class_id_at_assign` và `assignment_submissions.class_id` không ghi nữa. `student_count` của target (chỉ có sau publish): `grade` = học sinh snapshot có khối đó hoặc thuộc include, trừ exclude; `students` = học sinh snapshot trong danh sách.
+- Học sinh mới vào khối → **[Confirmed]** consumer `learning.assignment_enrollment` nhận `student.placement_changed.v1` (producer identity ở WP-I1), và trong lúc chuyển đổi cả `student.synced` có `grade_level` và `enrollment.changed` (bỏ qua `class_id`, đọc trường/khối từ `ref.students`): học sinh hiệu lực vào (trường, khối) được thêm (`source = grade_added`) vào bài `scheduled`/`open` có target khối đó, trừ khi bị exclude; học sinh rời khối/trường giữ submission (miễn bằng `excuse`). Placement khác tenant của envelope → lỗi vĩnh viễn (DLQ).
+- Bài cũ → **[Confirmed]** target `class`/`study_group` hiện có được migration `20261229000001_adr0095_assignment_grade_targets.sql` chuyển thành `students` với **danh sách đóng băng**: snapshot lúc publish (bài đã publish) hoặc thành viên hiện tại của lớp/nhóm (bài nháp); không mở rộng thành cả khối; `target_ref_id` giữ id cũ làm lịch sử. ExamSession theo lớp/nhóm: `target` thành danh sách học sinh từ participations.
+- Event → **[Confirmed]** `assignment.created` và `assignment.published` phát **v2** (`schema_version = 2`, `subject_id`, target `grade`/`students` với số đếm include/exclude); consumer duy nhất trong repo (lịch F040) đã gỡ nên v1 bị xóa cùng thay đổi này. `assignment.cancelled` bỏ trường tùy chọn `course_id` (sửa tại chỗ v1). `listAssignments` lọc `school_id`, `subject_id`, `grade_level` (bỏ `class_id`, `course_id`); `listAssignmentSubmissions` bỏ lọc `class_id`; `AssignmentSubmission` bỏ `class_id`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo và giao bài (Priority: P1)
 
-Academic Manager chọn bộ câu hỏi chương 3 đã publish, giao cho lớp 4A hạn thứ Sáu, chọn số lần làm, chính sách điểm, thời điểm phản hồi và công bố kết quả (US-LMS-001).
+Academic Manager chọn bộ câu hỏi chương 3 đã publish, giao cho khối 4 của trường (thêm/bớt vài học sinh) hạn thứ Sáu, chọn số lần làm, chính sách điểm, thời điểm phản hồi và công bố kết quả (US-LMS-001).
 
 **Why this priority**: Là vòng lặp School Loop của mốc M-C3.
 
-**Independent Test**: `ad.truong.a` tạo và publish bài giao question set cho 3A → bài `open`, event `assignment.published` có đủ đối tượng; `ad.truong.b` không thấy bài.
+**Independent Test**: `ad.truong.a` tạo và publish bài giao question set cho khối 3 của trường → bài `open`, event `assignment.published` có đủ đối tượng; `ad.truong.b` không thấy bài.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F041-AC-01 | KHI School Admin (trường mình) hoặc Academic Manager (trong scope) gọi `createAssignment` với nội dung đã publish khả dụng cho tenant và `Idempotency-Key`, module learning PHẢI tạo bài `draft` gắn tenant, trường, course, ghim version (mặc định version publish lúc giao) và phát `assignment.created` | FR-LMS-002 · US-LMS-001 · [SCHOOL_LMS §4.1](../../docs/04-admin-portal/SCHOOL_LMS.md#41-tạo-và-giao-bài) | TC-LMS-001 |
+| F041-AC-01 | KHI School Admin (trường mình) hoặc Academic Manager (trong scope) gọi `createAssignment` với nội dung đã publish khả dụng cho tenant và `Idempotency-Key`, module learning PHẢI tạo bài `draft` gắn tenant, trường, môn (`school_id`, `subject_id` — ADR-0095, không course), ghim version (mặc định version publish lúc giao) và phát `assignment.created` | FR-LMS-002 · US-LMS-001 · [SCHOOL_LMS §4.1](../../docs/04-admin-portal/SCHOOL_LMS.md#41-tạo-và-giao-bài) | TC-LMS-001 |
 | F041-AC-02 | NẾU nội dung chưa publish, THÌ HỆ THỐNG PHẢI trả `409 CONTENT_NOT_PUBLISHED`; NẾU là nội dung platform chưa gán cho tenant, THÌ HỆ THỐNG PHẢI trả `403 RESOURCE_NOT_ASSIGNED` | FR-LMS-007 · ADR-0029 | TC-CMS-ASG-01 |
 | F041-AC-03 | NẾU nội dung là activity có `activity_type` ngoài Release (`written_response`, `speaking`, `project`), THÌ HỆ THỐNG PHẢI trả `422 ACTIVITY_TYPE_NOT_SUPPORTED` và không tạo bài | AC-EXR-008 · [SCHOOL_LMS §6](../../docs/04-admin-portal/SCHOOL_LMS.md#6-chỉ-giao-hoạt-động-tự-chấm) | — |
-| F041-AC-04 | NẾU Academic Manager giao bài cho course thuộc môn ngoài scope UserRole, THÌ HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` và ghi audit `authz.denied` | AC-ORG-002 · [SCHOOL_LMS §13](../../docs/04-admin-portal/SCHOOL_LMS.md#13-yêu-cầu-và-nghiệm-thu) (AC-LMS-003) | TC-TEN-002 |
-| F041-AC-05 | NẾU đối tượng giao (lớp, nhóm, học sinh) thuộc trường khác hoặc tenant khác, THÌ HỆ THỐNG PHẢI trả `404 NOT_FOUND` không lộ sự tồn tại | AC-ORG-001 | TC-CMS-AUTHZ-08, TC-LMS-001 |
+| F041-AC-04 | NẾU Academic Manager giao bài thuộc môn ngoài scope UserRole, THÌ HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` và ghi audit `authz.denied` | AC-ORG-002 · [SCHOOL_LMS §13](../../docs/04-admin-portal/SCHOOL_LMS.md#13-yêu-cầu-và-nghiệm-thu) (AC-LMS-003) | TC-TEN-002 |
+| F041-AC-05 | NẾU trường của bài nằm ngoài mọi grant của người giao, THÌ HỆ THỐNG PHẢI trả `404 NOT_FOUND` không lộ sự tồn tại; NẾU học sinh trong `include_student_ids` hoặc `student_ids` thuộc trường khác hoặc tenant khác, THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` tại danh sách đó và không tạo bài (ADR-0095) | AC-ORG-001 · ADR-0095 | TC-CMS-AUTHZ-08, TC-LMS-001 |
 | F041-AC-06 | KHI tạo bài `mode = graded` không chỉ định, HỆ THỐNG PHẢI đặt `feedback_timing` và `result_release` theo `graded_assignment_release_default`; NẾU `mode = graded` kèm `follow_latest = true`, hoặc `feedback_timing` sớm hơn thời điểm công bố của `result_release`, THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` | [SCHOOL_LMS §4.1](../../docs/04-admin-portal/SCHOOL_LMS.md#41-tạo-và-giao-bài) · [ACTIVITY_ENGINE §8.1](../../docs/02-learning/ACTIVITY_ENGINE.md#81-feedbacktiming-và-resultrelease) | — |
-| F041-AC-07 | NẾU `title` vượt 120 ký tự, `instructions` vượt 2000, `targets` vượt 50, `late_policy.late_window_hours` ngoài 0–`late_window_hours` tối đa, `max_attempts` ngoài 1–10 hoặc `due_at ≤ open_at`, THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` chỉ rõ trường | ADR-0041 | TC-TEN-024 |
-| F041-AC-08 | KHI gọi `publishAssignment`, HỆ THỐNG PHẢI chụp snapshot học sinh đối tượng, chuyển `scheduled` (khi `open_at > now`) hoặc `open`, phát `assignment.published` và ghi audit | FR-LMS-002 · [SCHOOL_LMS §4](../../docs/04-admin-portal/SCHOOL_LMS.md#4-assignment) | TC-LMS-001 |
+| F041-AC-07 | NẾU `title` vượt 120 ký tự, `instructions` vượt 2000, `targets` vượt 9 (ADR-0095), `late_policy.late_window_hours` ngoài 0–`late_window_hours` tối đa, `max_attempts` ngoài 1–10 hoặc `due_at ≤ open_at`, THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` chỉ rõ trường | ADR-0041 | TC-TEN-024 |
+| F041-AC-08 | KHI gọi `publishAssignment`, HỆ THỐNG PHẢI chụp snapshot học sinh đối tượng (theo F041-AC-32, kèm khối của học sinh lúc giao), chuyển `scheduled` (khi `open_at > now`) hoặc `open`, phát `assignment.published` và ghi audit | FR-LMS-002 · [SCHOOL_LMS §4](../../docs/04-admin-portal/SCHOOL_LMS.md#4-assignment) | TC-LMS-001 |
 | F041-AC-09 | NẾU gọi `createAssignment` (hoặc `updateAssignment` ở `draft`) với `mode = graded` và nội dung `assessment_blueprint` trong khi port `ExamSessionCreator` chỉ có adapter mặc định "chưa khả dụng", THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` (`errors[].field = content_ref`) và không tạo/sửa bài; việc tạo ExamSession khi publish thuộc F042 (F042-AC-31) | [SCHOOL_LMS §4.1](../../docs/04-admin-portal/SCHOOL_LMS.md#41-tạo-và-giao-bài) · [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) | — |
 | F041-AC-10 | KHI gọi `updateAssignment` với `If-Match` đúng, HỆ THỐNG PHẢI cho sửa mọi trường ở `draft`, chỉ `due_at`/`instructions`/`late_policy` ở `open`; NẾU sửa trường khác hoặc bài đã `closed`/`archived`/`cancelled`, THÌ HỆ THỐNG PHẢI trả `409 ASSIGNMENT_NOT_EDITABLE`; `If-Match` lệch → `412 VERSION_MISMATCH` | [API_DESIGN §9.14](../../docs/07-backend/API_DESIGN.md#914-lms--apiv1lms) | — |
 | F041-AC-11 | KHI gọi `cancelAssignment` cho bài `scheduled` hoặc `open` chưa có lượt nộp, HỆ THỐNG PHẢI chuyển `cancelled`, ghi audit; NẾU đã có lượt nộp, THÌ HỆ THỐNG PHẢI trả `409 ASSIGNMENT_NOT_EDITABLE` | [SCHOOL_LMS §4](../../docs/04-admin-portal/SCHOOL_LMS.md#4-assignment) | — |
@@ -72,7 +81,7 @@ Học sinh thấy bài trong tab "Nhà trường giao", bắt đầu làm trong 
 
 **Why this priority**: Không có phía học sinh thì bài giao không có giá trị (FR-LMS-006).
 
-**Independent Test**: `hs.an.3a` gọi `listMyAssignments` thấy bài của 3A; `hs.chi.3b` không thấy; `hs.an.3a` làm và nộp → `listAssignmentSubmissions` hiện `submitted` với điểm tự chấm.
+**Independent Test**: `hs.an.3a` gọi `listMyAssignments` thấy bài của khối 3; học sinh tenant B không thấy; `hs.an.3a` làm và nộp → `listAssignmentSubmissions` hiện `submitted` với điểm tự chấm.
 
 **Acceptance Criteria (EARS)**:
 
@@ -82,8 +91,8 @@ Học sinh thấy bài trong tab "Nhà trường giao", bắt đầu làm trong 
 | F041-AC-13 | KHI học sinh bắt đầu attempt với `context.assignment_id`, HỆ THỐNG PHẢI tạo attempt `mode = assignment` dùng version đã ghim (hoặc version mới nhất khi `follow_latest`) và `feedback_timing` của bài; NẾU ngoài `open_at`–`due_at` cá nhân cộng cửa sổ nộp muộn, THÌ `403 ASSIGNMENT_NOT_OPEN`; NẾU hết `max_attempts`, THÌ `409 ASSIGNMENT_MAX_ATTEMPTS`; NẾU học sinh không thuộc đối tượng, THÌ `404 NOT_FOUND` | FR-EXR-001 · FR-CNT-011 · [ACTIVITY_ENGINE §9](../../docs/02-learning/ACTIVITY_ENGINE.md#9-api) | TC-LMS-002, TC-CNT-001 |
 | F041-AC-14 | TRONG KHI bài giữ version lúc giao, publish hoặc rollback nội dung PHẢI không đổi version của lượt mới; TRONG KHI bài `follow_latest`, lượt mới PHẢI nhận version mới và lượt đang làm giữ version cũ | [SCHOOL_LMS §13](../../docs/04-admin-portal/SCHOOL_LMS.md#13-yêu-cầu-và-nghiệm-thu) (AC-LMS-002, AC-LMS-016) · ADR-0043 | TC-CNT-001 |
 | F041-AC-15 | KHI nhận `activity.started`, `activity.submitted`, `activity.graded`, `exam.graded` hoặc `attempt.re_evaluated` có `assignment_id`, HỆ THỐNG PHẢI cập nhật `AssignmentSubmission` (trạng thái, `best_attempt_id` và điểm theo `score_policy`, `submitted_at`, `rapid_guess_count`, `late` khi nộp trong cửa sổ muộn) đúng một lần mỗi event và phát `assignment.completed` khi học sinh hoàn thành | [SCHOOL_LMS §4.2](../../docs/04-admin-portal/SCHOOL_LMS.md#42-theo-dõi) · [EVENT_DESIGN §4.3](../../docs/07-backend/EVENT_DESIGN.md#43-assessment-exercise--exam) | TC-LMS-002 |
-| F041-AC-16 | KHI enrollment thay đổi trong lúc bài `open`, HỆ THỐNG PHẢI thêm học sinh mới vào lớp đối tượng (`target_type = class`), giữ submission của học sinh chuyển đi ở lớp cũ, và đặt `excused` cho học sinh bị khóa trước `due_at` | [SCHOOL_LMS §4.3](../../docs/04-admin-portal/SCHOOL_LMS.md#43-enrollment-thay-đổi-khi-bài-đang-mở) | — |
-| F041-AC-17 | KHI bài được publish, payload `assignment.published` PHẢI có đối tượng, nội dung, hạn và trạng thái để module game/thông báo đưa bài vào tab "Nhà trường giao" | FR-LMS-006 · [EVENT_DESIGN §4.3](../../docs/07-backend/EVENT_DESIGN.md#43-assessment-exercise--exam) | — |
+| F041-AC-16 | KHI học sinh hiệu lực vào một khối của trường (`student.placement_changed`; trong đợt chuyển cả `student.synced`, `enrollment.changed`) trong lúc bài `scheduled`/`open` có target khối đó, HỆ THỐNG PHẢI thêm học sinh vào snapshot (`source = grade_added`) trừ khi bị exclude, giữ submission của học sinh rời khối/trường, và đặt `excused` cho học sinh bị khóa trước `due_at` | [SCHOOL_LMS §4.3](../../docs/04-admin-portal/SCHOOL_LMS.md#43-học-sinh-đổi-trườngkhối-khi-bài-đang-mở) · ADR-0095 | — |
+| F041-AC-17 | KHI bài được publish, payload `assignment.published` (schema `assignment.created.v2`) PHẢI có đối tượng (khối/danh sách, số đếm), nội dung, hạn và trạng thái để module game/thông báo đưa bài vào tab "Nhà trường giao" | FR-LMS-006 · [EVENT_DESIGN §4.3](../../docs/07-backend/EVENT_DESIGN.md#43-assessment-exercise--exam) | — |
 
 ---
 
@@ -158,6 +167,9 @@ Academic Manager chọn quest/mini-game đã publish và được gán cho tenan
 |---|---|---|---|
 | F041-AC-30 | KHI gọi `listGameActivities`, HỆ THỐNG PHẢI chỉ trả quest/mini-game đã publish và được gán cho tenant (theo dữ liệu module game phát), lọc theo `objective_ids`; HỆ THỐNG PHẢI không có endpoint sửa cấu hình game trong `/lms/*` | FR-LMS-007 · US-LMS-011 · ADR-0027 | TC-CMS-ASG-01 |
 | F041-AC-31 | KHI học sinh có bài giao chưa nộp với hạn cá nhân còn dưới 48 giờ, rule R1 PHẢI tạo gợi ý "Hoàn thành bài nhà trường giao" với ưu tiên 1 qua rule engine | [LEARNING_ANALYTICS §6](../../docs/02-learning/LEARNING_ANALYTICS.md#6-recommendation-rules) | — |
+| F041-AC-32 | KHI publish bài có target `grade`, HỆ THỐNG PHẢI giao cho mọi học sinh hiệu lực của khối trong trường của bài, cộng học sinh `include_student_ids` (khác khối, cùng trường) và trừ `exclude_student_ids` (exclude thắng include); NẾU một khối có hai target, `grade_level` ngoài 1–9, target `students` có include/exclude/khối hoặc có hai target `students`, THÌ HỆ THỐNG PHẢI trả `422 VALIDATION_FAILED` tại con trỏ của target | FR-LMS-002 · ADR-0095 mục 3 | TC-LMS-001 |
+| F041-AC-33 | KHI ghép đối tượng của bài, HỆ THỐNG PHẢI tính mỗi học sinh một lần theo thứ tự target, không bao giờ đưa học sinh bị exclude vào snapshot, và `listAssignments` PHẢI lọc được theo `school_id`, `subject_id`, `grade_level` trong scope người đọc | ADR-0095 mục 3 | — |
+| F041-AC-34 | KHI migration ADR-0095 chạy, mọi target `class`/`study_group` hiện có PHẢI thành target `students` với danh sách đóng băng (snapshot lúc publish, hoặc thành viên hiện tại với bài nháp), không mở rộng thành cả khối | ADR-0095 mục 3 | — |
 
 ### Edge Cases
 
@@ -165,7 +177,7 @@ Academic Manager chọn quest/mini-game đã publish và được gán cho tenan
 - NẾU nội dung đã giao bị soft-delete hoặc platform gỡ gán, THÌ bài đã giao PHẢI vẫn làm được trên version đã ghim; chỉ không giao mới được (ADMIN_PORTAL §9).
 - NẾU re-evaluate đổi điểm, THÌ submission PHẢI cập nhật theo `score_policy` từ `attempt.re_evaluated` (F041-AC-15).
 - NẾU cùng event attempt giao hai lần, THÌ submission PHẢI chỉ cập nhật một lần (`infra.processed_events`).
-- NẾU học sinh thuộc cả lớp và nhóm đối tượng, THÌ PHẢI chỉ có một submission.
+- NẾU học sinh thuộc cả khối đối tượng và danh sách học sinh (hoặc được include), THÌ PHẢI chỉ có một submission; học sinh bị exclude không có submission dù được include.
 - NẾU projection quest/mini-game rỗng (module game chưa có), THÌ `listGameActivities` trả danh sách rỗng, không lỗi.
 
 ## Requirements *(bắt buộc)*
@@ -174,7 +186,7 @@ Academic Manager chọn quest/mini-game đã publish và được gán cho tenan
 
 | FR (PRD) | Phần feature này làm | Tài liệu sở hữu quy tắc |
 |---|---|---|
-| FR-LMS-002 | Tạo, publish, đóng, công bố kết quả bài giao; đối tượng lớp/nhóm/danh sách; open/due, số lần làm, `ResultRelease` | [SCHOOL_LMS §4](../../docs/04-admin-portal/SCHOOL_LMS.md#4-assignment) |
+| FR-LMS-002 | Tạo, publish, đóng, công bố kết quả bài giao; đối tượng khối của trường ± học sinh, hoặc danh sách học sinh (ADR-0095); open/due, số lần làm, `ResultRelease` | [SCHOOL_LMS §4](../../docs/04-admin-portal/SCHOOL_LMS.md#4-assignment) |
 | FR-LMS-006 | `listMyAssignments` và event `assignment.published` cho tab "Nhà trường giao" (giao diện game ở F062) | [SCHOOL_LMS §4.1](../../docs/04-admin-portal/SCHOOL_LMS.md#41-tạo-và-giao-bài) |
 | FR-LMS-007 | Chỉ chọn quest/mini-game đã publish được gán; danh mục chỉ đọc (thử thách/giải trường ở F107) | [SCHOOL_LMS §6–§7](../../docs/04-admin-portal/SCHOOL_LMS.md#6-chỉ-giao-hoạt-động-tự-chấm) |
 | FR-LMS-012 | Gia hạn, miễn, nhắc từng học sinh, có audit | [SCHOOL_LMS §4.4](../../docs/04-admin-portal/SCHOOL_LMS.md#44-gia-hạn-miễn-nhắc) |
@@ -182,8 +194,8 @@ Academic Manager chọn quest/mini-game đã publish và được gán cho tenan
 
 ### Key Entities
 
-- **Assignment**: bài giao của trường (course, người tạo, nội dung ghim version hoặc `follow_latest`, `mode` practice/graded, open/due, nộp muộn, số lần làm, chính sách điểm, `FeedbackTiming`, `ResultRelease`, trạng thái).
-- **AssignmentTarget**: đối tượng lớp/nhóm học tập/danh sách học sinh, snapshot khi publish.
+- **Assignment**: bài giao của trường (trường, môn — không course, ADR-0095; người tạo, nội dung ghim version hoặc `follow_latest`, `mode` practice/graded, open/due, nộp muộn, số lần làm, chính sách điểm, `FeedbackTiming`, `ResultRelease`, trạng thái).
+- **AssignmentTarget**: đối tượng khối của trường (+ include, − exclude) hoặc danh sách học sinh của trường; snapshot (kèm khối lúc giao) khi publish.
 - **AssignmentSubmission**: trạng thái nộp của từng học sinh (`not_started`, `in_progress`, `submitted`, `late`, `missed`, `excused`), lượt tốt nhất, điểm, số câu "làm quá nhanh".
 - **StudentException**: hạn cá nhân (gia hạn) hoặc miễn, có lý do và người thực hiện.
 - **AssignmentReminder**: lần nhắc của bài trong ngày.
@@ -215,14 +227,14 @@ Academic Manager chọn quest/mini-game đã publish và được gán cho tenan
 
 ### Measurable Outcomes
 
-- **SC-001**: Trong kịch bản demo M-C3, 100% học sinh active của lớp đối tượng thấy bài; 0 học sinh ngoài đối tượng thấy bài.
+- **SC-001**: Trong kịch bản demo M-C3, 100% học sinh hiệu lực của khối đối tượng (trừ exclude, cộng include) thấy bài; 0 học sinh ngoài đối tượng thấy bài.
 - **SC-002**: 100% học sinh chưa nộp, không được miễn có trạng thái `missed` sau khi bài đóng.
 - **SC-003**: 0 trường hợp học sinh thấy đáp án/kết quả trước thời điểm công bố theo `ResultRelease` trong bộ test.
 - **SC-004**: 100% endpoint F041 đạt bộ test phân quyền và cô lập tenant; 100% thao tác ghi có audit.
 
 ## Ngoài phạm vi
 
-- Course, lộ trình, lịch, sở hữu study group — F040; ExamSession, làm đề, chấm đề, adapter `ExamSessionCreator` gọi `CreateExamSession`/`CancelExamSession` và tạo/hủy ExamSession của bài `graded` + blueprint — F042; School Learning Dashboard — F043; xuất báo cáo, bảng kết quả course — F044.
+- Course, lộ trình, lịch, nhóm học tập — bỏ theo ADR-0095 (F040 Removed); ExamSession, làm đề, chấm đề, adapter `ExamSessionCreator` gọi `CreateExamSession`/`CancelExamSession` và tạo/hủy ExamSession của bài `graded` + blueprint — F042; School Learning Dashboard — F043; xuất báo cáo, bảng kết quả course — F044.
 - Wizard giao bài, theo dõi nộp bài trên portal — F055; tab "Nhà trường giao", Bưu tá Nhím trong game — F062; thông báo trong game — F123.
 - Thử thách lớp/giải trường từ template — F107; catalog quest/mini-game phía module game — F078.
 - Bài nói, tự luận, dự án, hàng đợi chấm — deferred (ADR-0082).

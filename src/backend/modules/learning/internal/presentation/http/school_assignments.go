@@ -82,14 +82,15 @@ func assignmentResult(w http.ResponseWriter, r *http.Request, status int, v dto.
 func (h Handlers) listAssignments(w http.ResponseWriter, r *http.Request) {
 	var in query.AssignmentListInput
 	var err error
-	if in.ClassID, err = queryUUID(r, "class_id"); err != nil {
+	if in.SchoolID, err = queryUUID(r, "school_id"); err != nil {
 		fail(w, r, err)
 		return
 	}
-	if in.CourseID, err = queryUUID(r, "course_id"); err != nil {
+	if in.SubjectID, err = queryUUID(r, "subject_id"); err != nil {
 		fail(w, r, err)
 		return
 	}
+	in.Grade = queryInt(r, "grade_level")
 	in.Status = r.URL.Query().Get("status")
 	p, err := h.Assignments.Assignments(r.Context(), in, pageIn(r))
 	if err != nil {
@@ -310,10 +311,6 @@ func (h Handlers) listAssignmentSubmissions(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	in := query.SubmissionListInput{Status: r.URL.Query().Get("status")}
-	if in.ClassID, err = queryUUID(r, "class_id"); err != nil {
-		fail(w, r, err)
-		return
-	}
 	p, err := h.Assignments.Submissions(r.Context(), id, in, pageIn(r))
 	if err != nil {
 		fail(w, r, err)

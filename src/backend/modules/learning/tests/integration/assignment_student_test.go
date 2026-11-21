@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,14 +18,18 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
 
-// payloadSchema compiles a payload schema of module learning with the common enums it references.
+// payloadSchema compiles a payload schema of module learning with the common enums it references; typ may carry its
+// version ("assignment.created.v2"), v1 otherwise.
 func payloadSchema(t *testing.T, typ string) *jsonschema.Schema {
 	t.Helper()
+	if !strings.Contains(typ, ".v") {
+		typ += ".v1"
+	}
 	root := testkit.RepoRoot(t)
 	comp := jsonschema.NewCompiler()
 	for url, path := range map[string]string{
-		"https://schemas.eduworld.vn/common/enums.schema.json":                            filepath.Join(root, "specs", "schemas", "common", "enums.schema.json"),
-		"https://schemas.eduworld.vn/events/payloads/learning/" + typ + ".v1.schema.json": filepath.Join(root, "specs", "events", "payloads", "learning", typ+".v1.schema.json"),
+		"https://schemas.eduworld.vn/common/enums.schema.json":                         filepath.Join(root, "specs", "schemas", "common", "enums.schema.json"),
+		"https://schemas.eduworld.vn/events/payloads/learning/" + typ + ".schema.json": filepath.Join(root, "specs", "events", "payloads", "learning", typ+".schema.json"),
 	} {
 		f, err := os.Open(path)
 		if err != nil {
@@ -39,7 +44,7 @@ func payloadSchema(t *testing.T, typ string) *jsonschema.Schema {
 			t.Fatal(err)
 		}
 	}
-	sch, err := comp.Compile("https://schemas.eduworld.vn/events/payloads/learning/" + typ + ".v1.schema.json")
+	sch, err := comp.Compile("https://schemas.eduworld.vn/events/payloads/learning/" + typ + ".schema.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,8 +55,8 @@ func payloadSchema(t *testing.T, typ string) *jsonschema.Schema {
 func (c *curEnv) validPayloads(ctx context.Context, t *testing.T, typ, assignment string) []map[string]any {
 	t.Helper()
 	schema := typ
-	if typ == "assignment.published" {
-		schema = "assignment.created" // the payload of assignment.published (EVENT_DESIGN §4.3)
+	if typ == "assignment.published" || typ == "assignment.created" {
+		schema = "assignment.created.v2" // also the payload of assignment.published (EVENT_DESIGN §4.3; v2 — ADR-0095)
 	}
 	sch := payloadSchema(t, schema)
 	rows, err := c.relay.QueryContext(ctx, `SELECT envelope->'payload' FROM infra.outbox_events WHERE event_type = $1
@@ -101,7 +106,7 @@ func TestAssignmentStudentFlow(t *testing.T) {
 	authztest.Cover(t, "listAssignmentSubmissions", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "listMyAssignments", authztest.CrossTenant, authztest.RoleDenied)
 	id := c.openAsg(t, k, nil)
-	// AC-17: assignment.published follows assignment.created.v1.
+	// AC-17: assignment.published follows assignment.created.v2 (grade targets, subject_id — ADR-0095).
 	if ps := c.validPayloads(ctx, t, "assignment.published", id); len(ps) != 1 || ps[0]["status"] != "open" {
 		t.Fatalf("published payload: %v", ps)
 	}
@@ -208,31 +213,6 @@ func TestAssignmentVersionPinning(t *testing.T) {
 	if a := must(t, asgStart(c, t, hsBinh, k.s.activityID, latest), http.StatusCreated, "resume"); a.str("attempt_id") != inProgress.str("attempt_id") ||
 		a.str("activity_version_id") != v1 {
 		t.Fatalf("in progress keeps v1: %s", a.raw)
-	}
-}
-
-// F041-AC-16: a student joining the class while the assignment is open is added; a locked account is excused before the
-// due date.
-func TestAssignmentEnrollmentChanges(t *testing.T) {
-	ctx := context.Background()
-	c := newCurEnv(ctx, t)
-	k := c.asgSetup(ctx, t)
-	id := c.openAsg(t, k, nil)
-	c.user("hs.moi.3a", authztest.Student(c.tenantA).PrincipalData, false)
-	c.enrollIn(ctx, t, "hs.moi.3a", k.school, k.class, 3)
-	newcomer := c.users["hs.moi.3a"].UserID
-	payload, _ := json.Marshal(map[string]any{"student_id": newcomer, "class_id": k.class, "op": "added", "status": "active"})
-	c.enrollmentEvent(ctx, t, "enrollment.changed", payload)
-	if st, _, _ := c.submission(ctx, t, id, newcomer); st != "not_started" {
-		t.Fatalf("newcomer: %s", st)
-	}
-	payload, _ = json.Marshal(map[string]any{"user_id": c.users[hsBinh].UserID, "reason": "locked"})
-	c.enrollmentEvent(ctx, t, "user.access_revoked", payload)
-	if st, _, _ := c.submission(ctx, t, id, c.users[hsBinh].UserID); st != "excused" {
-		t.Fatalf("locked: %s", st)
-	}
-	if r := asgStart(c, t, "hs.moi.3a", k.s.activityID, id); r.status != http.StatusCreated {
-		t.Fatalf("newcomer starts: %d %s", r.status, r.raw)
 	}
 }
 

@@ -44,6 +44,11 @@
 - OQ-08 (US7) → đã trả lời (owner 2026-11-20, OPEN_QUESTIONS): mapping bộ sách → LO chỉ lưu metadata bộ sách/tập/bài.
 - Mọi OQ F021-1…9 khác giữ [Confirmed].
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- FR-CUR-008 và `lms.school_curriculum_settings` → **[Confirmed]** chuyển từ F040 (Removed theo ADR-0095) sang F021: `getSchoolCurriculumSettings` (quyền `lms.class.read` ở trường; đổi tên quyền ở WP-I1) và `putSchoolCurriculumSettings` (`school.settings.write`, `If-Match`, chỉ version đã publish của tenant hoặc curriculum platform được gán, audit `school_curriculum.set`) giữ nguyên đường dẫn `/lms/schools/{school_id}/curriculum-settings` và contract; bảng giữ nguyên (không DROP). Code: `command.SchoolCurriculum`, `query.SchoolCurriculum`, `write.CurriculumSettingsRepo`, `read.CurriculumSettingsModel` (F021-AC-30). Không còn course tự tạo theo lớp nên setting chỉ tác động resolver version mặc định của trường (F021-AC-19).
+- Năm học của resolver (OQ F021-5) → **[Confirmed — tạm]** vẫn lấy `academic_year_id` từ projection `ref.classes` khi còn (dữ liệu cũ); khi identity ngừng `class.synced` (WP-I1) resolver áp setting của mọi năm học như quy tắc cũ khi không biết năm học. Nguồn năm học hiện tại của trường thay `ref.classes` là việc của WP-I1/WP-R (ghi ở Câu hỏi mở).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn cấu trúc chương trình (Priority: P1)
@@ -177,6 +182,7 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 |---|---|---|---|
 | F021-AC-28 | KHI Content Admin tạo bộ sách, tập sách, bài sách và gán bài ↔ LO (n–n), HỆ THỐNG PHẢI chỉ lưu metadata (mã, tên, nhà xuất bản, chương, số bài, tiêu đề, trang) và không có trường lưu nguyên văn sách | FR-CUR-012 · [CURRICULUM_MODEL §6](../../docs/02-learning/CURRICULUM_MODEL.md#6-mapping-bộ-sách-giáo-khoa-confirmed-tbd--oq-08) | — |
 | F021-AC-29 | KHI lọc LO theo `textbook_section_id`, HỆ THỐNG PHẢI trả đúng các LO đã gán cho bài sách đó trong phạm vi tenant thấy được | FR-CUR-012 | — |
+| F021-AC-30 | KHI School Admin gọi `putSchoolCurriculumSettings` với `If-Match` đúng, HỆ THỐNG PHẢI lưu version curriculum theo năm học × khối của trường (chỉ version đã publish của tenant hoặc platform đã gán: chưa gán → `403 RESOURCE_NOT_ASSIGNED`, chưa publish → `409 CONTENT_NOT_PUBLISHED`), ghi audit `school_curriculum.set`; `If-Match` thiếu → `428`, lệch → `412`; người không có `school.settings.write` → `403`; trường ngoài grant → `404`; resolver version mặc định của trường dùng setting này (F021-AC-19) | FR-CUR-008 · ADR-0095 (chuyển từ F040-AC-03) | TC-TEN-001 |
 
 ### Edge Cases
 
@@ -248,7 +254,7 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 ## Ngoài phạm vi
 
 - UI cây curriculum, editor LO, so sánh version — F053.
-- Lưu và sửa cấu hình version mặc định của trường — F015 (identity); F021 chỉ đọc.
+- Lưu và sửa cấu hình version mặc định của trường: từ ADR-0095 thuộc F021 (`lms.school_curriculum_settings`, F021-AC-30, chuyển từ F040).
 - Chiếu mastery theo mapping — F031 (tiêu thụ `curriculum.version_published`).
 - LearningUnit, Lesson, LearningActivity (cấp 6–8) — F024, F030.
 - Media upload cho file import qua portal — F027 (`presignMediaUpload`); seed chạy bằng file cục bộ.
@@ -259,4 +265,8 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 - Mã curriculum duy nhất trong phạm vi sở hữu (platform; từng tenant) để không lộ sự tồn tại curriculum của tenant khác qua `409` [Confirmed].
 - Tên topic và mô tả LO lưu theo ngôn ngữ của curriculum (một bản), khớp `TopicInput.name`/`LearningObjectiveInput.description` của OpenAPI; tên curriculum/môn là `LearningName` [Confirmed].
 - Seed dùng mã `GDPT2018_SAMPLE`; file seed ở `src/backend/modules/learning/seed/curriculum/gdpt2018_math_g1_5.yaml` (thay đường dẫn cũ `backend/migrations/...` trong CURRICULUM_MODEL §7) [Confirmed].
-- Cấu hình version mặc định của trường đến module learning qua projection `ref.schools` (cột mới + event của F015) [Confirmed].
+- Cấu hình version mặc định của trường lưu ở `lms.school_curriculum_settings` của module learning (Session 2026-11-19; F021 sở hữu từ ADR-0095) [Confirmed].
+
+## Câu hỏi mở
+
+- ADR-0095 (WP-I1/WP-R): resolver version mặc định lọc năm học qua `ref.classes.academic_year_id`; khi bỏ lớp cần nguồn năm học hiện tại của trường trong module learning (projection năm học của identity hoặc `academic_year_id` của `student.placement_changed`). [Proposed] tạm dùng quy tắc không lọc năm học khi không biết năm học.

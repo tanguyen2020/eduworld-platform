@@ -27,11 +27,11 @@ func (c ExamSessionCreator) Create(ctx context.Context, r port.ExamSessionReques
 	if c.Exams == nil {
 		return uuid.Nil, port.ErrExamSessionUnavailable
 	}
-	course := r.CourseID
+	school, subject := r.SchoolID, r.SubjectID
 	assignmentID := r.AssignmentID
 	official := true
 	typ := string(exam.TypeCustom)
-	in := ExamSessionInput{Title: r.Title, BlueprintVersionID: r.BlueprintVerID, CourseID: &course, AssignmentID: &assignmentID, Type: &typ,
+	in := ExamSessionInput{Title: r.Title, BlueprintVersionID: r.BlueprintVerID, SchoolID: &school, SubjectID: &subject, AssignmentID: &assignmentID, Type: &typ,
 		IsOfficial: &official, WindowStart: r.OpenAt, WindowEnd: r.CloseAt}
 	cfg := c.Exams.config()
 	feedback, release := cfg.GradedFeedback, cfg.GradedRelease

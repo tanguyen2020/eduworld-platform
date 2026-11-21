@@ -4729,14 +4729,21 @@ paths:
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/TenantIds'
-        - name: class_id
+        - name: school_id
           in: query
           schema:
             $ref: '#/components/schemas/Uuid'
-        - name: course_id
+        - name: subject_id
           in: query
           schema:
             $ref: '#/components/schemas/Uuid'
+        - name: grade_level
+          in: query
+          description: Bài có target khối này (ADR-0095)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9
         - name: status
           in: query
           schema:
@@ -5122,10 +5129,6 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/AssignmentSubmissionStatus'
-        - name: class_id
-          in: query
-          schema:
-            $ref: '#/components/schemas/Uuid'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -5151,245 +5154,6 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /lms/courses:
-    get:
-      x-service: learning
-      tags:
-        - lms
-      operationId: listCourses
-      x-portal-action: action.school_lms.courses.view
-      summary: Course (lớp × môn × năm học, tự tạo từ lớp SIS × môn của khối) trong scope
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - name: school_id
-          in: query
-          schema:
-            $ref: '#/components/schemas/Uuid'
-        - name: class_id
-          in: query
-          schema:
-            $ref: '#/components/schemas/Uuid'
-        - $ref: '#/components/parameters/SubjectIdQuery'
-        - name: academic_year_id
-          in: query
-          schema:
-            $ref: '#/components/schemas/Uuid'
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum:
-              - active
-              - hidden
-              - archived
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Cursor'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - data
-                  - page
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Course'
-                  page:
-                    $ref: '#/components/schemas/PageInfo'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-  /lms/courses/{course_id}:
-    patch:
-      x-service: learning
-      tags:
-        - lms
-      operationId: updateCourse
-      x-portal-action: action.school_lms.courses.edit
-      summary: Ẩn/hiện course (status active|hidden) — school_admin (If-Match)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/CourseIdPath'
-        - $ref: '#/components/parameters/IfMatch'
-      requestBody:
-        required: true
-        content:
-          application/merge-patch+json:
-            schema:
-              type: object
-              additionalProperties: false
-              properties:
-                status:
-                  type: string
-                  enum:
-                    - active
-                    - hidden
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Course'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '412':
-          $ref: '#/components/responses/PreconditionFailed'
-  /lms/courses/{course_id}/paths:
-    get:
-      x-service: learning
-      tags:
-        - lms
-      operationId: listLearningPaths
-      x-portal-action: action.school_lms.courses.view
-      summary: Learning path của course (path riêng hoặc path mẫu theo bộ sách)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/CourseIdPath'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    type: array
-                    maxItems: 50
-                    items:
-                      $ref: '#/components/schemas/LearningPath'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    post:
-      x-service: learning
-      tags:
-        - lms
-      operationId: createLearningPath
-      x-portal-action: action.school_lms.courses.edit_paths
-      summary: Tạo learning path từ thư viện nội dung đã publish (school_admin, academic_manager)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/CourseIdPath'
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LearningPathInput'
-      responses:
-        '201':
-          description: Đã tạo
-          headers:
-            Idempotent-Replayed:
-              $ref: '#/components/headers/IdempotentReplayed'
-            ETag:
-              $ref: '#/components/headers/ETag'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LearningPath'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-  /lms/courses/{course_id}/paths/{path_id}:
-    patch:
-      x-service: learning
-      tags:
-        - lms
-      operationId: updateLearningPath
-      x-portal-action: action.school_lms.courses.edit_paths
-      summary: Sửa learning path (If-Match); học sinh giữ tiến độ node đã hoàn thành
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/CourseIdPath'
-        - $ref: '#/components/parameters/PathIdPath'
-        - $ref: '#/components/parameters/IfMatch'
-      requestBody:
-        required: true
-        content:
-          application/merge-patch+json:
-            schema:
-              $ref: '#/components/schemas/LearningPathInput'
-      responses:
-        '200':
-          description: OK
-          headers:
-            ETag:
-              $ref: '#/components/headers/ETag'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LearningPath'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '412':
-          $ref: '#/components/responses/PreconditionFailed'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-  /lms/courses/{course_id}/paths/{path_id}/nodes/{node_id}/students/{student_id}:unlock:
-    post:
-      x-service: learning
-      tags:
-        - lms
-      operationId: unlockPathNodeForStudent
-      x-portal-action: action.school_lms.courses.unlock_node
-      summary: Mở khóa thủ công node mastery_gate cho một học sinh (lý do bắt buộc, audit) [Proposed]
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/CourseIdPath'
-        - $ref: '#/components/parameters/PathIdPath'
-        - $ref: '#/components/parameters/NodeIdPath'
-        - $ref: '#/components/parameters/StudentId'
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReasonRequest'
-      responses:
-        '204':
-          description: Đã mở khóa
-          headers:
-            Idempotent-Replayed:
-              $ref: '#/components/headers/IdempotentReplayed'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
   /lms/courses/{course_id}/results:
     get:
       x-service: learning
@@ -5467,313 +5231,6 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-  /lms/schedules:
-    get:
-      x-service: learning
-      tags:
-        - lms
-      operationId: listScheduleItems
-      x-portal-action: action.school_lms.schedules.view
-      summary: Lịch học/hạn nộp/đề kiểm tra theo course hoặc lớp
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - name: course_id
-          in: query
-          schema:
-            $ref: '#/components/schemas/Uuid'
-        - name: class_id
-          in: query
-          schema:
-            $ref: '#/components/schemas/Uuid'
-        - name: from
-          in: query
-          required: true
-          schema:
-            type: string
-            format: date
-        - name: to
-          in: query
-          required: true
-          schema:
-            type: string
-            format: date
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Cursor'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - data
-                  - page
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ScheduleItem'
-                  page:
-                    $ref: '#/components/schemas/PageInfo'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-    post:
-      x-service: learning
-      tags:
-        - lms
-      operationId: createScheduleItem
-      x-portal-action: action.school_lms.schedules.edit
-      summary: Thêm mục lịch cho course (school_admin, academic_manager)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ScheduleItemInput'
-      responses:
-        '201':
-          description: Đã tạo
-          headers:
-            Idempotent-Replayed:
-              $ref: '#/components/headers/IdempotentReplayed'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScheduleItem'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-  /lms/schedules/{schedule_item_id}:
-    delete:
-      x-service: learning
-      tags:
-        - lms
-      operationId: deleteScheduleItem
-      x-portal-action: action.school_lms.schedules.edit
-      summary: Xóa mục lịch = soft-delete (ADR-0028)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/ScheduleItemIdPath'
-      responses:
-        '204':
-          description: Đã soft-delete
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    patch:
-      x-service: learning
-      tags:
-        - lms
-      operationId: updateScheduleItem
-      x-portal-action: action.school_lms.schedules.edit
-      summary: Sửa mục lịch (If-Match)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/ScheduleItemIdPath'
-        - $ref: '#/components/parameters/IfMatch'
-      requestBody:
-        required: true
-        content:
-          application/merge-patch+json:
-            schema:
-              $ref: '#/components/schemas/ScheduleItemInput'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScheduleItem'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '412':
-          $ref: '#/components/responses/PreconditionFailed'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-  /lms/schools/{school_id}/study-groups:
-    get:
-      x-service: learning
-      tags:
-        - lms
-      operationId: listStudyGroups
-      x-portal-action: action.school_lms.study_groups.view
-      summary: Nhóm học tập (lớp hoặc khối) của trường — đối tượng giao bài; module learning sở hữu (`lms.study_groups`, ADR-0084) · lms.class.read
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/SchoolId'
-        - name: class_id
-          in: query
-          schema:
-            $ref: '#/components/schemas/Uuid'
-        - $ref: '#/components/parameters/GradeLevelQuery'
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Cursor'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - data
-                  - page
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/StudyGroup'
-                  page:
-                    $ref: '#/components/schemas/PageInfo'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-    post:
-      x-service: learning
-      tags:
-        - lms
-      operationId: createStudyGroup
-      x-portal-action: action.school_lms.study_groups.edit
-      summary: Tạo nhóm học tập (school_admin, academic_manager · lms.study_group.write; ADR-0084)
-      description: |
-        Thành viên phải là học sinh active của trường; có `class_id` thì phải đang học lớp đó (sai → 422 VALIDATION_FAILED).
-        Trùng tên trong trường (không phân biệt hoa thường, nhóm chưa xóa) → 409 CONFLICT. Phát `study_group.created` qua outbox;
-        module chat tạo channel `study_group` bằng cách tiêu thụ event (từ M5), module learning không gọi module chat.
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/SchoolId'
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StudyGroupInput'
-      responses:
-        '201':
-          description: Đã tạo
-          headers:
-            Idempotent-Replayed:
-              $ref: '#/components/headers/IdempotentReplayed'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StudyGroup'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-  /lms/schools/{school_id}/study-groups/{study_group_id}:
-    get:
-      x-service: learning
-      tags:
-        - lms
-      operationId: getStudyGroup
-      x-portal-action: action.school_lms.study_groups.view
-      summary: Chi tiết nhóm học tập + thành viên (lms.class.read)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/SchoolId'
-        - $ref: '#/components/parameters/StudyGroupIdPath'
-      responses:
-        '200':
-          description: OK
-          headers:
-            ETag:
-              $ref: '#/components/headers/ETag'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StudyGroup'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    delete:
-      x-service: learning
-      tags:
-        - lms
-      operationId: deleteStudyGroup
-      x-portal-action: action.school_lms.study_groups.edit
-      summary: Xóa nhóm học tập = soft-delete (bài đã giao cho nhóm giữ snapshot đối tượng); phát study_group.deleted (ADR-0084)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/SchoolId'
-        - $ref: '#/components/parameters/StudyGroupIdPath'
-      responses:
-        '204':
-          description: Đã soft-delete
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    patch:
-      x-service: learning
-      tags:
-        - lms
-      operationId: updateStudyGroup
-      x-portal-action: action.school_lms.study_groups.edit
-      summary: Đổi tên/thành viên nhóm học tập (If-Match · lms.study_group.write)
-      description: |
-        `member_ids` thay toàn bộ danh sách thành viên. Phát `study_group.updated` (đổi tên/lớp/khối) và/hoặc
-        `study_group.member_changed` (thêm/bớt thành viên) qua outbox (ADR-0084). Trùng tên → 409 CONFLICT.
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/SchoolId'
-        - $ref: '#/components/parameters/StudyGroupIdPath'
-        - $ref: '#/components/parameters/IfMatch'
-      requestBody:
-        required: true
-        content:
-          application/merge-patch+json:
-            schema:
-              $ref: '#/components/schemas/StudyGroupInput'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StudyGroup'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '412':
-          $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /lms/schools/{school_id}/curriculum-settings:
@@ -7813,70 +7270,6 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
-  /learning/my-learning-paths:
-    get:
-      x-service: learning
-      tags:
-        - learning
-      operationId: listMyLearningPaths
-      summary: Lộ trình học của mình theo course active của lớp (node khóa/mở/hoàn thành tính ở server, F040)
-      description: Học sinh (game_player) đọc lộ trình của các course `active` thuộc lớp đang học trong tenant phiên; course chưa có lộ trình riêng dùng lộ trình mẫu (`is_template`). Trạng thái node theo `unlock_mode` (`mastery_gate` mở khi mọi LO của node trước ≥ `developing` hoặc được nhà trường mở khóa).
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/AcceptLanguage'
-        - $ref: '#/components/parameters/SubjectIdQuery'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MyLearningPathList'
-          headers:
-            Content-Language:
-              $ref: '#/components/headers/ContentLanguage'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-  /learning/my-schedule:
-    get:
-      x-service: learning
-      tags:
-        - learning
-      operationId: listMySchedule
-      summary: Lịch học của mình (bài học, hạn nộp, đề) trong khoảng ngày ≤ 62 ngày (F040)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/AcceptLanguage'
-        - name: from
-          in: query
-          required: true
-          schema:
-            type: string
-            format: date
-        - name: to
-          in: query
-          required: true
-          schema:
-            type: string
-            format: date
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MyScheduleList'
-          headers:
-            Content-Language:
-              $ref: '#/components/headers/ContentLanguage'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
   /learning/my-assignments:
     get:
       x-service: learning
@@ -8415,32 +7808,8 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Uuid'
-    PathIdPath:
-      name: path_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
-    NodeIdPath:
-      name: node_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
     SchoolId:
       name: school_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
-    ScheduleItemIdPath:
-      name: schedule_item_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
-    StudyGroupIdPath:
-      name: study_group_id
       in: path
       required: true
       schema:
@@ -9314,8 +8683,6 @@ components:
           $ref: '#/components/schemas/Timestamp'
         school_id:
           $ref: '#/components/schemas/Uuid'
-        course_id:
-          $ref: '#/components/schemas/Uuid'
         assignment_id:
           $ref: '#/components/schemas/Uuid'
         audience:
@@ -9454,6 +8821,7 @@ components:
       required:
         - title
         - assessment_blueprint_version_id
+        - school_id
         - targets
         - window_start
         - window_end
@@ -9465,8 +8833,9 @@ components:
           maxLength: 255
         assessment_blueprint_version_id:
           $ref: '#/components/schemas/Uuid'
-        course_id:
+        school_id:
           $ref: '#/components/schemas/Uuid'
+          description: Trường của phiên thi; môn = môn của blueprint (ADR-0095, không còn course)
         assignment_id:
           $ref: '#/components/schemas/Uuid'
           description: Có khi tạo từ Assignment mode=graded
@@ -9478,7 +8847,7 @@ components:
         targets:
           type: array
           minItems: 1
-          maxItems: 50
+          maxItems: 9
           items:
             $ref: '#/components/schemas/AssignmentTarget'
         window_start:
@@ -9525,6 +8894,7 @@ components:
             $ref: '#/components/schemas/ExamAccommodation'
     AssignmentTarget:
       type: object
+      description: 'Đối tượng giao (ADR-0095 mục 3): grade = mọi học sinh hiệu lực của khối grade_level trong school_id của bài, cộng include_student_ids (học sinh khác khối cùng trường) trừ exclude_student_ids (exclude thắng include; học sinh mới vào khối sau publish được thêm vào bài còn mở); students = chỉ danh sách học sinh của trường. Mỗi khối tối đa một target grade, tối đa một target students. Học sinh khác trường → 422.'
       required:
         - target_type
       additionalProperties: false
@@ -9532,18 +8902,38 @@ components:
         target_type:
           type: string
           enum:
-            - class
-            - study_group
+            - grade
             - students
-        target_id:
-          $ref: '#/components/schemas/Uuid'
-          description: class_id hoặc study_group_id (bắt buộc trừ target_type = students)
+        grade_level:
+          type: integer
+          minimum: 1
+          maximum: 9
+          description: Bắt buộc khi target_type = grade
+        include_student_ids:
+          type: array
+          maxItems: 200
+          uniqueItems: true
+          description: Chỉ với target_type = grade — học sinh khác khối cùng trường được thêm
+          items:
+            $ref: '#/components/schemas/Uuid'
+        exclude_student_ids:
+          type: array
+          maxItems: 200
+          uniqueItems: true
+          description: Chỉ với target_type = grade — học sinh bị loại (thắng include)
+          items:
+            $ref: '#/components/schemas/Uuid'
         student_ids:
           type: array
           maxItems: 200
           description: Chỉ với target_type = students
           items:
             $ref: '#/components/schemas/Uuid'
+        student_count:
+          type: integer
+          minimum: 0
+          readOnly: true
+          description: Số học sinh trong snapshot lúc publish (chỉ có trong phản hồi)
     ExamAttemptStart:
       type: object
       additionalProperties: false
@@ -13807,7 +13197,8 @@ components:
       description: Bài giao (SCHOOL_LMS §2, §4) — người tạo school_admin/academic_manager; chỉ nội dung đã publish, chỉ hoạt động tự chấm (ADR-0072)
       required:
         - title
-        - course_id
+        - school_id
+        - subject_id
         - content_ref
         - mode
         - targets
@@ -13817,8 +13208,12 @@ components:
         tenant_id:
           description: Tenant đích — bắt buộc khi người gọi là System Admin; người dùng tenant bỏ trống
           $ref: '#/components/schemas/Uuid'
-        course_id:
+        school_id:
           $ref: '#/components/schemas/Uuid'
+          description: Trường của bài giao (trong scope quyền người giao — ADR-0072)
+        subject_id:
+          $ref: '#/components/schemas/Uuid'
+          description: Môn của bài giao, gắn trực tiếp (ADR-0095, không còn course); khác môn của nội dung → 422
         title:
           type: string
           minLength: 1
@@ -13859,7 +13254,7 @@ components:
         targets:
           type: array
           minItems: 1
-          maxItems: 50
+          maxItems: 9
           items:
             $ref: '#/components/schemas/AssignmentTarget'
         open_at:
@@ -13908,7 +13303,7 @@ components:
         targets:
           type: array
           minItems: 1
-          maxItems: 50
+          maxItems: 9
           items:
             $ref: '#/components/schemas/AssignmentTarget'
         open_at:
@@ -13965,8 +13360,6 @@ components:
         display_name:
           type: string
           maxLength: 128
-        class_id:
-          $ref: '#/components/schemas/Uuid'
         status:
           $ref: '#/components/schemas/AssignmentSubmissionStatus'
         attempts_used:
@@ -14000,140 +13393,6 @@ components:
         - late
         - missed
         - excused
-    Course:
-      type: object
-      required:
-        - course_id
-        - school_id
-        - class_id
-        - subject_id
-        - academic_year_id
-        - curriculum_version_id
-        - status
-      properties:
-        course_id:
-          $ref: '#/components/schemas/Uuid'
-        tenant_id:
-          $ref: '#/components/schemas/Uuid'
-        school_id:
-          $ref: '#/components/schemas/Uuid'
-        class_id:
-          $ref: '#/components/schemas/Uuid'
-        class_name:
-          type: string
-          maxLength: 128
-        subject_id:
-          $ref: '#/components/schemas/Uuid'
-        subject_name:
-          $ref: '#/components/schemas/LearningName'
-        academic_year_id:
-          $ref: '#/components/schemas/Uuid'
-        curriculum_version_id:
-          $ref: '#/components/schemas/Uuid'
-        textbook_series_id:
-          $ref: '#/components/schemas/Uuid'
-        status:
-          type: string
-          enum:
-            - active
-            - hidden
-            - archived
-        student_count:
-          type: integer
-          minimum: 0
-        version:
-          type: integer
-          minimum: 1
-          readOnly: true
-          description: Phiên bản hàng — If-Match (W/"n") của updateCourse từ danh sách, không cần GET từng course (F055 delta D1)
-    LearningPath:
-      allOf:
-        - $ref: '#/components/schemas/LearningPathInput'
-        - type: object
-          required:
-            - path_id
-            - course_id
-          properties:
-            path_id:
-              $ref: '#/components/schemas/Uuid'
-            course_id:
-              $ref: '#/components/schemas/Uuid'
-            is_template:
-              type: boolean
-              description: Path mẫu theo bộ sách (khi course chưa có path riêng)
-            textbook_series_id:
-              $ref: '#/components/schemas/Uuid'
-            version:
-              type: integer
-              minimum: 1
-              description: Khóa lạc quan (ETag) — lộ trình không có version nội dung (RB-216)
-            updated_at:
-              $ref: '#/components/schemas/Timestamp'
-    LearningPathInput:
-      type: object
-      required:
-        - title
-        - unlock_mode
-        - nodes
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 255
-        unlock_mode:
-          type: string
-          enum:
-            - sequential
-            - free
-            - mastery_gate
-        nodes:
-          type: array
-          minItems: 1
-          maxItems: 200
-          items:
-            $ref: '#/components/schemas/PathNode'
-    PathNode:
-      type: object
-      required:
-        - position
-        - content_ref
-      properties:
-        node_id:
-          $ref: '#/components/schemas/Uuid'
-          readOnly: true
-        position:
-          type: integer
-          minimum: 1
-        content_ref:
-          type: object
-          required:
-            - content_type
-            - content_version_id
-          properties:
-            content_type:
-              type: string
-              enum:
-                - lesson
-                - activity
-                - question_set
-                - assessment_blueprint
-                - quest
-            content_version_id:
-              $ref: '#/components/schemas/Uuid'
-        unlock_rule:
-          type: object
-          properties:
-            kind:
-              type: string
-              enum:
-                - always
-                - previous_completed
-                - mastery_gate
-                - date
-            min_mastery:
-              $ref: '#/components/schemas/MasteryLevel'
-            unlock_at:
-              $ref: '#/components/schemas/Timestamp'
     CourseResults:
       type: object
       required:
@@ -14294,89 +13553,6 @@ components:
                 minimum: 1
         page:
           $ref: '#/components/schemas/PageInfo'
-    ScheduleItem:
-      allOf:
-        - $ref: '#/components/schemas/ScheduleItemInput'
-        - type: object
-          required:
-            - schedule_item_id
-          properties:
-            schedule_item_id:
-              $ref: '#/components/schemas/Uuid'
-            version:
-              type: integer
-              minimum: 1
-              readOnly: true
-              description: Phiên bản hàng — If-Match (W/"n") của updateScheduleItem từ danh sách (F055 delta D1)
-    ScheduleItemInput:
-      type: object
-      required:
-        - course_id
-        - date
-        - kind
-      properties:
-        course_id:
-          $ref: '#/components/schemas/Uuid'
-        date:
-          type: string
-          format: date
-        period:
-          type: integer
-          minimum: 1
-          maximum: 15
-        kind:
-          type: string
-          enum:
-            - lesson
-            - assignment_due
-            - exam
-            - event
-        ref_id:
-          $ref: '#/components/schemas/Uuid'
-        note:
-          type: string
-          maxLength: 500
-    StudyGroup:
-      allOf:
-        - $ref: '#/components/schemas/StudyGroupInput'
-        - type: object
-          required:
-            - study_group_id
-            - school_id
-          properties:
-            study_group_id:
-              $ref: '#/components/schemas/Uuid'
-            school_id:
-              $ref: '#/components/schemas/Uuid'
-            member_count:
-              type: integer
-              minimum: 0
-              maximum: 100
-            created_by:
-              $ref: '#/components/schemas/Uuid'
-            updated_at:
-              $ref: '#/components/schemas/Timestamp'
-    StudyGroupInput:
-      type: object
-      required:
-        - name
-        - member_ids
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 64
-        class_id:
-          $ref: '#/components/schemas/Uuid'
-          description: Vắng mặt = nhóm theo khối
-        grade_level:
-          $ref: '#/components/schemas/GradeLevel'
-        member_ids:
-          type: array
-          minItems: 1
-          maxItems: 100
-          items:
-            $ref: '#/components/schemas/Uuid'
     SchoolCurriculumSettings:
       type: object
       required:
@@ -16758,130 +15934,6 @@ components:
         next_review_at:
           $ref: '#/components/schemas/Timestamp'
           description: Lịch ôn 1–3–7 ngày (LEARNING_EXPERIENCE)
-    MyLearningPathList:
-      type: object
-      description: Lộ trình của học sinh theo course (listMyLearningPaths, F040)
-      required:
-        - items
-      properties:
-        items:
-          type: array
-          maxItems: 50
-          items:
-            type: object
-            required:
-              - course_id
-              - subject_id
-              - path_id
-              - title
-              - unlock_mode
-              - is_template
-              - nodes
-            properties:
-              course_id:
-                $ref: '#/components/schemas/Uuid'
-              subject_id:
-                $ref: '#/components/schemas/Uuid'
-              subject_name:
-                type: string
-                maxLength: 255
-              path_id:
-                $ref: '#/components/schemas/Uuid'
-              title:
-                type: string
-                maxLength: 255
-              unlock_mode:
-                type: string
-                enum:
-                  - sequential
-                  - free
-                  - mastery_gate
-              is_template:
-                type: boolean
-              nodes:
-                type: array
-                maxItems: 200
-                items:
-                  type: object
-                  required:
-                    - node_id
-                    - position
-                    - content_type
-                    - content_id
-                    - content_version_id
-                    - state
-                  properties:
-                    node_id:
-                      $ref: '#/components/schemas/Uuid'
-                    position:
-                      type: integer
-                      minimum: 1
-                    content_type:
-                      type: string
-                      enum:
-                        - lesson
-                        - activity
-                        - question_set
-                        - assessment_blueprint
-                        - quest
-                    content_id:
-                      $ref: '#/components/schemas/Uuid'
-                    content_version_id:
-                      $ref: '#/components/schemas/Uuid'
-                    title:
-                      type: string
-                      maxLength: 255
-                    state:
-                      type: string
-                      enum:
-                        - locked
-                        - unlocked
-                        - completed
-    MyScheduleList:
-      type: object
-      description: Lịch của học sinh (listMySchedule, F040)
-      required:
-        - items
-      properties:
-        items:
-          type: array
-          maxItems: 1000
-          items:
-            type: object
-            required:
-              - schedule_item_id
-              - course_id
-              - date
-              - kind
-            properties:
-              schedule_item_id:
-                $ref: '#/components/schemas/Uuid'
-              course_id:
-                $ref: '#/components/schemas/Uuid'
-              subject_id:
-                $ref: '#/components/schemas/Uuid'
-              date:
-                type: string
-                format: date
-              period:
-                type: integer
-                minimum: 1
-                maximum: 15
-              kind:
-                type: string
-                enum:
-                  - lesson
-                  - assignment_due
-                  - exam
-                  - event
-              ref_type:
-                type: string
-                maxLength: 64
-              ref_id:
-                $ref: '#/components/schemas/Uuid'
-              title:
-                type: string
-                maxLength: 255
     MyAssignment:
       type: object
       required:

@@ -117,11 +117,14 @@ func TestAssignmentScope(t *testing.T) {
 		t.Fatal("no authz.denied")
 	}
 	must(t, c.createAsg(t, qlcmA, c.asgBody(k, nil)), http.StatusCreated, "academic manager in scope")
-	// AC-05: a class of another school, a student of another school.
-	other := c.asgBody(k, map[string]any{"targets": []any{map[string]any{"target_type": "class", "target_id": k.class.String()},
-		map[string]any{"target_type": "students", "student_ids": []string{c.users[hsDung].UserID.String()}}}})
-	if r := c.createAsg(t, adA, other); r.status != http.StatusNotFound {
+	// AC-05 (ADR-0095): a student of another tenant is 422; a school outside the grants is 404.
+	other := c.asgBody(k, map[string]any{"targets": []any{map[string]any{"target_type": "students",
+		"student_ids": []string{c.users[hsDung].UserID.String()}}}})
+	if r := c.createAsg(t, adA, other); r.status != http.StatusUnprocessableEntity {
 		t.Fatalf("student of another tenant: %d %s", r.status, r.raw)
+	}
+	if r := c.createAsg(t, adA2, c.asgBody(k, nil)); r.status != http.StatusNotFound {
+		t.Fatalf("school outside the grants: %d %s", r.status, r.raw)
 	}
 	r := must(t, c.createAsg(t, adA, c.asgBody(k, nil)), http.StatusCreated, "create")
 	path := assignmentsPath + "/" + r.str("assignment_id")
@@ -145,7 +148,7 @@ func TestAssignmentScope(t *testing.T) {
 	if s := c.do(t, http.MethodGet, assignmentsPath, hsAn, nil, nil); s.status != http.StatusForbidden {
 		t.Fatalf("student on /lms: %d %s", s.status, s.raw)
 	}
-	l := must(t, c.do(t, http.MethodGet, assignmentsPath+"?course_id="+k.course, qlcmA, nil, nil), http.StatusOK, "list in scope")
+	l := must(t, c.do(t, http.MethodGet, assignmentsPath+"?subject_id="+k.subject, qlcmA, nil, nil), http.StatusOK, "list in scope")
 	if len(l.items("data")) != 2 {
 		t.Fatalf("list in scope: %s", l.raw)
 	}
@@ -164,7 +167,7 @@ func TestAssignmentScope(t *testing.T) {
 	}
 }
 
-// F041-AC-08, AC-10, AC-11, AC-17, AC-29: publish snapshots the class (open now or scheduled), emits assignment.published
+// F041-AC-08, AC-10, AC-11, AC-17, AC-29: publish snapshots the grade (open now or scheduled), emits assignment.published
 // with the targets; draft fields edit with If-Match, open only due_at/instructions/late_policy; cancel before any
 // submission; the same Idempotency-Key replays without a second write.
 func TestAssignmentPublishUpdateCancel(t *testing.T) {
@@ -186,7 +189,7 @@ func TestAssignmentPublishUpdateCancel(t *testing.T) {
 	if u.str("title") != "Ôn tập chương 3" || u.body["max_attempts"] != float64(3) {
 		t.Fatalf("draft edit: %s", u.raw)
 	}
-	// AC-08, AC-29: publish (same key twice), snapshot of the class, open now.
+	// AC-08, AC-29: publish (same key twice), snapshot of grade 3 of the school, open now.
 	key := idem()
 	p := must(t, c.do(t, http.MethodPost, path+":publish", adA, merge(key, ifm(u.header.Get("ETag"))), nil), http.StatusOK, "publish")
 	again := must(t, c.do(t, http.MethodPost, path+":publish", adA, merge(key, ifm(u.header.Get("ETag"))), nil), http.StatusOK, "replay")
@@ -198,7 +201,7 @@ func TestAssignmentPublishUpdateCancel(t *testing.T) {
 	}
 	if n := count(ctx, t, c.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'assignment.published'
 		AND envelope->'payload'->>'assignment_id' = $1 AND envelope->'payload'->'targets'->0->>'student_count' = '2'
-		AND envelope->'payload'->>'course_id' = $2`, id, k.course); n != 1 {
+		AND envelope->'payload'->>'subject_id' = $2 AND envelope->'payload'->'targets'->0->>'target_type' = 'grade'`, id, k.subject); n != 1 {
 		t.Fatal("assignment.published payload (AC-17)")
 	}
 	if c.audits(ctx, t, "assignment.published", &c.tenantA) != 1 {

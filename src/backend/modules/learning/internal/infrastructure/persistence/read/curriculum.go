@@ -474,7 +474,7 @@ func (CurriculumModel) ImportJob(ctx context.Context, id uuid.UUID) (dto.ImportJ
 }
 
 // SchoolSettings implements read.SchoolCurriculumSettings with explicit SQL on lms.school_curriculum_settings
-// (owner F040; absent until F040 migrates it) and the projection ref.students, in the tenant of the scope.
+// (owner F021 since ADR-0095, created by the F040 migration) and the projection ref.students, in the tenant of the scope.
 type SchoolSettings struct{}
 
 var _ read.SchoolCurriculumSettings = SchoolSettings{}
@@ -491,7 +491,7 @@ func sessionTenant(ctx context.Context) (uuid.UUID, error) {
 	return id, nil
 }
 
-// settingsTableExists reports whether lms.school_curriculum_settings exists (F040 migrates it).
+// settingsTableExists reports whether lms.school_curriculum_settings exists (created by the F040 migration).
 func settingsTableExists(ctx context.Context, q querier) (bool, error) {
 	rows, err := q.QueryContext(ctx, `SELECT to_regclass('lms.school_curriculum_settings') IS NOT NULL`)
 	if err != nil {

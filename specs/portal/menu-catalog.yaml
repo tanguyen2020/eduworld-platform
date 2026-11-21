@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.20.3"
+catalog_version: "2026.11.21.1"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -111,38 +111,6 @@ workspaces:
             required_permissions: [tenant.sis.import]
             operation_ids: [createSisImport, resolveSchoolReconciliationIssue]
             can_disable: true
-      - key: menu.school_lms.courses
-        label_key: portal.menu.school_lms.courses
-        title: Khóa học & lộ trình học
-        path: /school-lms/courses
-        order: 50
-        required_permissions: [lms.class.read, lms.course.write, lms.learning_path.write]
-        can_disable: true
-        actions:
-          - key: action.school_lms.courses.view
-            label_key: portal.action.school_lms.courses.view
-            title: Xem khóa học và lộ trình
-            required_permissions: [lms.class.read, lms.course.write, lms.learning_path.write]
-            operation_ids: [listCourses, listLearningPaths]
-            can_disable: true
-          - key: action.school_lms.courses.edit
-            label_key: portal.action.school_lms.courses.edit
-            title: Sửa khóa học
-            required_permissions: [lms.course.write]
-            operation_ids: [updateCourse]
-            can_disable: true
-          - key: action.school_lms.courses.edit_paths
-            label_key: portal.action.school_lms.courses.edit_paths
-            title: Tạo/sửa lộ trình học
-            required_permissions: [lms.learning_path.write]
-            operation_ids: [createLearningPath, updateLearningPath]
-            can_disable: true
-          - key: action.school_lms.courses.unlock_node
-            label_key: portal.action.school_lms.courses.unlock_node
-            title: Mở khóa nút lộ trình cho học sinh
-            required_permissions: [lms.learning_path.write]
-            operation_ids: [unlockPathNodeForStudent]
-            can_disable: true
       - key: menu.school_lms.assignments
         label_key: portal.menu.school_lms.assignments
         title: Bài tập / đề / bài chẩn đoán
@@ -188,46 +156,6 @@ workspaces:
             title: Xem quest/mini-game đã publish được gán
             required_permissions: [lms.assignment.read, lms.assignment.write]
             operation_ids: [listGameActivities]
-            can_disable: true
-      - key: menu.school_lms.schedules
-        label_key: portal.menu.school_lms.schedules
-        title: Lịch học
-        path: /school-lms/schedules
-        order: 80
-        required_permissions: [lms.assignment.read, lms.schedule.write]
-        can_disable: true
-        actions:
-          - key: action.school_lms.schedules.view
-            label_key: portal.action.school_lms.schedules.view
-            title: Xem lịch
-            required_permissions: [lms.assignment.read, lms.schedule.write]
-            operation_ids: [listScheduleItems]
-            can_disable: true
-          - key: action.school_lms.schedules.edit
-            label_key: portal.action.school_lms.schedules.edit
-            title: Tạo/sửa/xóa mục lịch
-            required_permissions: [lms.schedule.write]
-            operation_ids: [createScheduleItem, updateScheduleItem, deleteScheduleItem]
-            can_disable: true
-      - key: menu.school_lms.study_groups
-        label_key: portal.menu.school_lms.study_groups
-        title: Nhóm học tập
-        path: /school-lms/study-groups
-        order: 90
-        required_permissions: [lms.class.read, lms.study_group.write]
-        can_disable: true
-        actions:
-          - key: action.school_lms.study_groups.view
-            label_key: portal.action.school_lms.study_groups.view
-            title: Xem nhóm học tập
-            required_permissions: [lms.class.read, lms.study_group.write]
-            operation_ids: [listStudyGroups, getStudyGroup]
-            can_disable: true
-          - key: action.school_lms.study_groups.edit
-            label_key: portal.action.school_lms.study_groups.edit
-            title: Tạo/sửa/xóa nhóm học tập
-            required_permissions: [lms.study_group.write]
-            operation_ids: [createStudyGroup, updateStudyGroup, deleteStudyGroup]
             can_disable: true
       - key: menu.school_lms.challenges
         label_key: portal.menu.school_lms.challenges

@@ -838,18 +838,6 @@
     ]
   },
   {
-    "operation_id": "createLearningPath",
-    "module": "learning",
-    "method": "POST",
-    "path": "/lms/courses/{course_id}/paths",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "createLearningPreviewSession",
     "module": "learning",
     "method": "POST",
@@ -1048,17 +1036,6 @@
     ]
   },
   {
-    "operation_id": "createScheduleItem",
-    "module": "learning",
-    "method": "POST",
-    "path": "/lms/schedules",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "createSchoolEvent",
     "module": "game",
     "method": "POST",
@@ -1131,18 +1108,6 @@
     "method": "POST",
     "path": "/tenant/student-cleanup/exclusions",
     "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "createStudyGroup",
-    "module": "learning",
-    "method": "POST",
-    "path": "/lms/schools/{school_id}/study-groups",
-    "tenant_scoped": true,
-    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -1412,18 +1377,6 @@
     ]
   },
   {
-    "operation_id": "deleteScheduleItem",
-    "module": "learning",
-    "method": "DELETE",
-    "path": "/lms/schedules/{schedule_item_id}",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "deleteSensitiveAllowlistEntry",
     "module": "chat",
     "method": "DELETE",
@@ -1465,18 +1418,6 @@
     "method": "DELETE",
     "path": "/tenant/student-cleanup/exclusions",
     "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "deleteStudyGroup",
-    "module": "learning",
-    "method": "DELETE",
-    "path": "/lms/schools/{school_id}/study-groups/{study_group_id}",
-    "tenant_scoped": true,
-    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"
@@ -2801,18 +2742,6 @@
     ]
   },
   {
-    "operation_id": "getStudyGroup",
-    "module": "learning",
-    "method": "GET",
-    "path": "/lms/schools/{school_id}/study-groups/{study_group_id}",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "getTenantClone",
     "module": "identity",
     "method": "GET",
@@ -3545,17 +3474,6 @@
     ]
   },
   {
-    "operation_id": "listCourses",
-    "module": "learning",
-    "method": "GET",
-    "path": "/lms/courses",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "listCurricula",
     "module": "learning",
     "method": "GET",
@@ -3814,18 +3732,6 @@
     ]
   },
   {
-    "operation_id": "listLearningPaths",
-    "module": "learning",
-    "method": "GET",
-    "path": "/lms/courses/{course_id}/paths",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "listLoginEventsCrossTenant",
     "module": "game",
     "method": "GET",
@@ -3939,32 +3845,10 @@
     ]
   },
   {
-    "operation_id": "listMyLearningPaths",
-    "module": "learning",
-    "method": "GET",
-    "path": "/learning/my-learning-paths",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "listMyMatches",
     "module": "competition",
     "method": "GET",
     "path": "/competition/matches",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "listMySchedule",
-    "module": "learning",
-    "method": "GET",
-    "path": "/learning/my-schedule",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",
@@ -4131,17 +4015,6 @@
     "method": "GET",
     "path": "/admin/moderation/sanctions",
     "required": [
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "listScheduleItems",
-    "module": "learning",
-    "method": "GET",
-    "path": "/lms/schedules",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
       "role_denied"
     ]
   },
@@ -4351,18 +4224,6 @@
     "method": "GET",
     "path": "/admin/student-cleanup/runs",
     "required": [
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "listStudyGroups",
-    "module": "learning",
-    "method": "GET",
-    "path": "/lms/schools/{school_id}/study-groups",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
       "role_denied"
     ]
   },
@@ -5814,18 +5675,6 @@
     ]
   },
   {
-    "operation_id": "unlockPathNodeForStudent",
-    "module": "learning",
-    "method": "POST",
-    "path": "/lms/courses/{course_id}/paths/{path_id}/nodes/{node_id}/students/{student_id}:unlock",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "unlockTenantUser",
     "module": "identity",
     "method": "POST",
@@ -6040,18 +5889,6 @@
     ]
   },
   {
-    "operation_id": "updateCourse",
-    "module": "learning",
-    "method": "PATCH",
-    "path": "/lms/courses/{course_id}",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "updateCurriculum",
     "module": "learning",
     "method": "PATCH",
@@ -6120,18 +5957,6 @@
     ]
   },
   {
-    "operation_id": "updateLearningPath",
-    "module": "learning",
-    "method": "PATCH",
-    "path": "/lms/courses/{course_id}/paths/{path_id}",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "updateObjective",
     "module": "learning",
     "method": "PATCH",
@@ -6192,18 +6017,6 @@
     ]
   },
   {
-    "operation_id": "updateScheduleItem",
-    "module": "learning",
-    "method": "PATCH",
-    "path": "/lms/schedules/{schedule_item_id}",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "updateSchoolEvent",
     "module": "game",
     "method": "PATCH",
@@ -6256,18 +6069,6 @@
     "module": "identity",
     "method": "PATCH",
     "path": "/sis/connections/{connection_id}",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "updateStudyGroup",
-    "module": "learning",
-    "method": "PATCH",
-    "path": "/lms/schools/{school_id}/study-groups/{study_group_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

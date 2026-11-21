@@ -1,4 +1,4 @@
-h1:/n+rTUWbtNOTOAfl1qcnQVYUP3bUz+fUuGEfkKx/4ws=
+h1:tJhiEx1vPbzcSLoVeMgk+Y1ctVpAbiDxzzIk0FMzv00=
 00000000000001_baseline.sql h1:mL8cMl2vAGJa3QB6izUDIwZBpoiEr+YbpjQDl/fA6AM=
 20261118000001_infra.sql h1:V50K9lGOLvlg6QWneL/iztcTu/2epvp54pF/M+7Jym4=
 20261119000001_f010_org.sql h1:Tr5cc7N3NPEZRb0GCj1T6gb7+g8D1I7DcNZjRVdmgAk=
@@ -15,3 +15,4 @@ h1:/n+rTUWbtNOTOAfl1qcnQVYUP3bUz+fUuGEfkKx/4ws=
 20261126000002_f016_data_requests.sql h1:DvGalSlqtMnzSjOCDelRY0YenoO1GlMlbCd7JMRd/W4=
 20261127000001_f016_cleanup_run_cancel.sql h1:6rDs7cMU/AKKWP7WCxEIqNw5Rt/GYsQOIeQcw0mvnlQ=
 20261128000001_oq17_daily_play_time.sql h1:ucjuczaMyD5110D9w6NuBkaklp/aHQbDzCkkek4YGv4=
+20261129000001_adr0095_lms_permissions.sql h1:HPebC5dMT7C9PbdCEGU67u6c35db1jIVHf8+AdazG4I=

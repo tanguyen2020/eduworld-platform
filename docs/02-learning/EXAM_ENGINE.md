@@ -108,7 +108,7 @@ Với `independent_draw`, các biến thể phải tương đương để học 
 | `exam_session_id` | |
 | `blueprint_version_id` | **Ghim lúc tạo ExamSession** (ADR-0043): mọi học sinh cùng một version; publish/rollback blueprint hoặc câu hỏi trong giờ thi không ảnh hưởng. ExamPaper khóa `question_version_id` cụ thể |
 | `exam_type`, `is_official` | Tên cột giữ nguyên trong `assessment.exam_sessions` (không dùng `type`) |
-| `target` | lớp / nhóm học tập / danh sách học sinh (qua LMS Assignment) |
+| `target` | khối của trường ± học sinh thêm/bớt, hoặc danh sách học sinh của trường (qua LMS Assignment — ADR-0095, [SCHOOL_LMS §4.1](../04-admin-portal/SCHOOL_LMS.md#41-tạo-và-giao-bài)); phiên không còn `course_id`, có `school_id` |
 | `window_start`, `window_end` | khoảng được phép bắt đầu |
 | `duration_sec` | thời gian làm bài cho mỗi học sinh (giây; cột `duration_sec`) |
 | `late_start_policy` | `full_duration` / `until_window_end` (mặc định: `deadline = min(start + duration, window_end)`) |

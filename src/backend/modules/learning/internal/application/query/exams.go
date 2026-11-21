@@ -56,7 +56,7 @@ func sessionView(s read.ExamSessionRow, now time.Time) dto.ExamSessionView {
 		GradeLevel: s.GradeLevel, WindowStart: s.WindowStart, WindowEnd: s.WindowEnd, DurationSeconds: s.DurationSec,
 		QuestionCount: s.QuestionCount, MaxAttempts: s.MaxAttempts, Status: s.Status, BlueprintVersionID: s.BlueprintVersionID,
 		FeedbackTiming: s.FeedbackTiming, ResultRelease: s.ResultRelease, ResultsReleasedAt: s.ReleasedAt, SchoolID: s.SchoolID,
-		CourseID: s.CourseID, AssignmentID: s.AssignmentID, Audience: s.Audience, VariantStrategy: s.Strategy, VariantCount: s.VariantCount,
+		AssignmentID: s.AssignmentID, Audience: s.Audience, VariantStrategy: s.Strategy, VariantCount: s.VariantCount,
 		LateStartPolicy: s.LateStartPolicy, ScorePolicy: s.ScorePolicy, ShowCorrectAnswers: s.ShowCorrect, ShowExplanations: s.ShowExplanations,
 		Accommodations: acc, ServerTime: now, CreatedAt: s.CreatedAt, Version: s.Version, IsEfficacy: isEfficacy(s),
 		Navigation: exam.NavigationOf(s.Navigation)}

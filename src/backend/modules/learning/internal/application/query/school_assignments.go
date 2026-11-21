@@ -68,9 +68,10 @@ func scopes(p authz.Principal, perm authz.Permission) []read.AssignmentScope {
 
 // AssignmentListInput are the filters of listAssignments.
 type AssignmentListInput struct {
-	ClassID  *uuid.UUID
-	CourseID *uuid.UUID
-	Status   string
+	SchoolID  *uuid.UUID
+	SubjectID *uuid.UUID
+	Grade     *int
+	Status    string
 }
 
 // Assignments is listAssignments (F041-AC-26): lms.assignment.read; the assignments of the schools and subjects of the
@@ -90,8 +91,8 @@ func (q SchoolAssignments) Assignments(ctx context.Context, in AssignmentListInp
 		return out, err
 	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		recs, err := q.Model.Assignments(ctx, read.AssignmentFilter{Scopes: scopes(p, authz.PermLmsAssignmentRead), ClassID: in.ClassID,
-			CourseID: in.CourseID, Status: in.Status, After: after, Limit: limit + 1})
+		recs, err := q.Model.Assignments(ctx, read.AssignmentFilter{Scopes: scopes(p, authz.PermLmsAssignmentRead), SchoolID: in.SchoolID,
+			SubjectID: in.SubjectID, Grade: in.Grade, Status: in.Status, After: after, Limit: limit + 1})
 		if err != nil {
 			return err
 		}
@@ -163,8 +164,7 @@ func (q SchoolAssignments) Assignment(ctx context.Context, id uuid.UUID) (out dt
 
 // SubmissionListInput are the filters of listAssignmentSubmissions.
 type SubmissionListInput struct {
-	Status  string
-	ClassID *uuid.UUID
+	Status string
 }
 
 // Submissions is listAssignmentSubmissions (F041-AC-25): every targeted student with status, score, attempts, submission
@@ -184,7 +184,7 @@ func (q SchoolAssignments) Submissions(ctx context.Context, id uuid.UUID, in Sub
 		if _, err := q.readable(ctx, p, authz.PermLmsAssignmentRead, id); err != nil {
 			return err
 		}
-		rows, err := q.Model.Submissions(ctx, read.SubmissionFilter{AssignmentID: id, Status: in.Status, ClassID: in.ClassID, After: after,
+		rows, err := q.Model.Submissions(ctx, read.SubmissionFilter{AssignmentID: id, Status: in.Status, After: after,
 			Limit: limit + 1})
 		if err != nil {
 			return err

@@ -12,7 +12,6 @@ type AssignmentRow struct {
 	ID              uuid.UUID
 	TenantID        uuid.UUID
 	SchoolID        uuid.UUID
-	CourseID        uuid.UUID
 	SubjectID       uuid.UUID
 	CreatedBy       uuid.UUID
 	CreatedByRole   string
@@ -44,10 +43,13 @@ type AssignmentRow struct {
 	Targets         []TargetRow
 }
 
-// TargetRow is one row of lms.assignment_targets.
+// TargetRow is one row of lms.assignment_targets (ADR-0095 mục 3): a grade of the school of the assignment with included
+// students of another grade of the school and excluded students, or a list of students of the school.
 type TargetRow struct {
 	Type       string
-	RefID      *uuid.UUID
+	Grade      *int
+	Include    []uuid.UUID
+	Exclude    []uuid.UUID
 	StudentIDs []uuid.UUID
 	// StudentCount is the number of students of the target in the snapshot (filled when read after publish).
 	StudentCount int
@@ -56,8 +58,8 @@ type TargetRow struct {
 // TargetStudent is one student of the snapshot of an assignment.
 type TargetStudent struct {
 	StudentID uuid.UUID
-	ClassID   *uuid.UUID
-	Source    string // publish, enrollment_added
+	Grade     *int   // grade of the student when targeted (ADR-0095: recorded at event time)
+	Source    string // publish, grade_added (enrollment_added: history before ADR-0095)
 }
 
 // SubmissionRow is one row of lms.assignment_submissions.
@@ -66,7 +68,6 @@ type SubmissionRow struct {
 	TenantID         uuid.UUID
 	SchoolID         uuid.UUID
 	StudentID        uuid.UUID
-	ClassID          *uuid.UUID
 	Status           string
 	AttemptsUsed     int
 	CurrentAttemptID *uuid.UUID
@@ -102,7 +103,7 @@ type DueAssignment struct {
 }
 
 // SchoolAssignmentStore persists the assignments of F041 in the TenantScope of ctx (RLS T, soft-delete only) and reads what
-// its commands check (courses, classes and enrollments of the projections, study group members of F040).
+// its commands check (the students of the projection ref.students, subjects and content versions visible to the tenant).
 type SchoolAssignmentStore interface {
 	InsertAssignment(ctx context.Context, a AssignmentRow) error
 	// Assignment reads an assignment with its targets; ForUpdate locks the row in the transaction.
@@ -115,8 +116,9 @@ type SchoolAssignmentStore interface {
 	InsertTargetStudents(ctx context.Context, a AssignmentRow, students []TargetStudent) (int, error)
 	TargetStudents(ctx context.Context, assignmentID uuid.UUID) ([]TargetStudent, error)
 	Targeted(ctx context.Context, assignmentID, studentID uuid.UUID) (bool, error)
-	// OpenClassAssignments lists the open assignments targeting a class (enrollment changes).
-	OpenClassAssignments(ctx context.Context, classID uuid.UUID) ([]AssignmentRow, error)
+	// OpenGradeAssignments lists the open assignments with a grade target of the grade of the school (a student joins the
+	// grade, ADR-0095 mục 3).
+	OpenGradeAssignments(ctx context.Context, schoolID uuid.UUID, grade int) ([]AssignmentRow, error)
 	// OpenAssignmentsOfStudent lists the open assignments a student is targeted by.
 	OpenAssignmentsOfStudent(ctx context.Context, studentID uuid.UUID) ([]AssignmentRow, error)
 
@@ -148,12 +150,16 @@ type SchoolAssignmentStore interface {
 	DueToClose(ctx context.Context, now time.Time, limit int) ([]DueAssignment, error)
 
 	// References.
-	Course(ctx context.Context, id uuid.UUID) (*CourseRow, error)
-	Class(ctx context.Context, classID uuid.UUID) (*ClassRef, error)
-	ClassStudents(ctx context.Context, classID uuid.UUID) ([]uuid.UUID, error)
+	// SchoolOfTenant reports whether a school is a school of the session tenant (ref.schools).
+	SchoolOfTenant(ctx context.Context, schoolID uuid.UUID) (bool, error)
+	// SubjectVisible reports whether a subject is visible to the tenant (its own or a platform subject).
+	SubjectVisible(ctx context.Context, subjectID uuid.UUID) (bool, error)
+	// GradeStudents lists the active students of a grade of a school (ref.students, ordered by id).
+	GradeStudents(ctx context.Context, schoolID uuid.UUID, grade int) ([]uuid.UUID, error)
+	// ActiveStudents keeps the listed students who are active students of the school.
 	ActiveStudents(ctx context.Context, schoolID uuid.UUID, ids []uuid.UUID) ([]uuid.UUID, error)
-	ClassOf(ctx context.Context, studentID uuid.UUID) (*uuid.UUID, error)
-	Group(ctx context.Context, schoolID, id uuid.UUID) (*StudyGroupRow, error)
+	// Placement is the school and grade of an active student (nil when the student is not active in the tenant).
+	Placement(ctx context.Context, studentID uuid.UUID) (*StudentPlacement, error)
 	// CurrentVersion is the current published version of an item visible to the tenant (nil when absent).
 	CurrentVersion(ctx context.Context, contentType string, itemID uuid.UUID) (*VersionAccess, uuid.UUID, error)
 	ContentVersion(ctx context.Context, contentType string, versionID uuid.UUID) (*VersionAccess, error)
@@ -164,6 +170,12 @@ type SchoolAssignmentStore interface {
 	PendingAssignments(ctx context.Context, studentID uuid.UUID) ([]PendingAssignment, error)
 	// GameActivity is the catalog entry of a quest or mini-game for the tenant (nil when absent).
 	GameActivity(ctx context.Context, itemType string, itemID uuid.UUID) (*GameActivityRow, error)
+}
+
+// StudentPlacement is the school and grade of an active student of ref.students.
+type StudentPlacement struct {
+	SchoolID uuid.UUID
+	Grade    int
 }
 
 // GameActivityRow is a row of ref.game_activities.

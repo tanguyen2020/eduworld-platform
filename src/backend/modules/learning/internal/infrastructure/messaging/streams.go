@@ -12,9 +12,11 @@ const ProjectionIdentityName = "learning.projection_identity"
 var ProjectionIdentityStream = natsx.EventStream("identity")
 
 // ProjectionIdentityEvents are the identity events projected into ref.* (F020-AC-01, F020-AC-02; school.updated
-// also feeds ref.schools, DATABASE_DESIGN §2.17).
+// also feeds ref.schools, DATABASE_DESIGN §2.17; student.placement_changed keeps the school and grade of ref.students —
+// ADR-0095; class.synced and enrollment.changed stay projected until module identity stops producing them, WP-I1).
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "school.synced", "school.updated",
-	"class.synced", "student.synced", "student.cleaned_up", "student.restored", "enrollment.changed", "province.updated"}
+	"class.synced", "student.synced", "student.cleaned_up", "student.restored", "enrollment.changed", "province.updated",
+	"student.placement_changed"}
 
 // ProjectionIdentitySubjects are the filter subjects of the consumer (exact subjects, so other identity events
 // are never delivered).
@@ -90,21 +92,6 @@ func LessonCompletionSubjects() []string {
 	return []string{natsx.EventSubject("learning", "activity.graded")}
 }
 
-// LMSCoursesName is the durable consumer that provisions the courses of a class from class.synced (F040-AC-01).
-const LMSCoursesName = "learning.lms_courses"
-
-// LMSCoursesSubjects are the filter subjects of learning.lms_courses (stream EVT_IDENTITY).
-func LMSCoursesSubjects() []string { return []string{natsx.EventSubject("identity", "class.synced")} }
-
-// LMSScheduleName is the durable consumer that adds the due dates and exams of a course to its schedule (F040-AC-15).
-const LMSScheduleName = "learning.lms_schedule"
-
-// LMSScheduleSubjects are the filter subjects of learning.lms_schedule (owner F041, F042).
-func LMSScheduleSubjects() []string {
-	return []string{natsx.EventSubject("learning", "assignment.published"), natsx.EventSubject("learning", "assignment.cancelled"),
-		natsx.EventSubject("learning", "exam.opened")}
-}
-
 // AssignmentSubmissionsName is the durable consumer that keeps the submissions of the school assignments from the attempt
 // events (F041-AC-15).
 const AssignmentSubmissionsName = "learning.assignment_submissions"
@@ -119,13 +106,18 @@ func AssignmentSubmissionsSubjects() []string {
 	return out
 }
 
-// AssignmentEnrollmentName is the durable consumer that applies the enrollment changes and account locks of module
-// identity to the open assignments (F041-AC-16).
+// AssignmentEnrollmentName is the durable consumer that applies the placement changes (school, grade — ADR-0095) and
+// account locks of module identity to the open assignments (F041-AC-16).
 const AssignmentEnrollmentName = "learning.assignment_enrollment"
 
-// AssignmentEnrollmentSubjects are enrollment.changed and user.access_revoked of module identity.
+// AssignmentEnrollmentSubjects are student.placement_changed, student.synced, enrollment.changed (until WP-I1) and
+// user.access_revoked of module identity.
 func AssignmentEnrollmentSubjects() []string {
-	return []string{natsx.EventSubject("identity", "enrollment.changed"), natsx.EventSubject("identity", "user.access_revoked")}
+	out := []string{}
+	for _, e := range []string{"student.placement_changed", "student.synced", "enrollment.changed", "user.access_revoked"} {
+		out = append(out, natsx.EventSubject("identity", e))
+	}
+	return out
 }
 
 // ExamGradeName is the durable consumer that grades the submitted exam attempts (worker exam.grade, F042-AC-19).

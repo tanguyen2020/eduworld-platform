@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"slices"
 	"time"
 	"unicode/utf8"
 
@@ -19,7 +20,7 @@ import (
 
 // SubmissionViewOf is the AssignmentSubmission of a stored row.
 func SubmissionViewOf(s write.SubmissionRow) dto.AssignmentSubmissionView {
-	return dto.AssignmentSubmissionView{AssignmentID: s.AssignmentID, StudentID: s.StudentID, ClassID: s.ClassID, Status: s.Status,
+	return dto.AssignmentSubmissionView{AssignmentID: s.AssignmentID, StudentID: s.StudentID, Status: s.Status,
 		AttemptsUsed: s.AttemptsUsed, BestAttemptID: s.BestAttemptID, Score: s.Score, MaxScore: s.MaxScore, RapidGuessCount: s.RapidGuessCount,
 		DueAtOverride: s.DueAtOverride, SubmittedAt: s.SubmittedAt}
 }
@@ -432,31 +433,41 @@ func (h Assignments) submissionUpdated(ctx context.Context, a write.AssignmentRo
 		"max_score": s.MaxScore, "rapid_guess_count": s.RapidGuessCount})
 }
 
-// ---------- enrollment changes
+// ---------- placement changes (ADR-0095: the school and grade of a student)
 
-// EnrollmentChange is enrollment.changed of module identity.
-type EnrollmentChange struct {
+// PlacementChange is the school and grade of a student after student.placement_changed (or student.synced /
+// enrollment.changed of module identity, read back from ref.students): Active false when the student is no longer an
+// active student of the school.
+type PlacementChange struct {
 	StudentID uuid.UUID
-	ClassID   uuid.UUID
-	Op        string
-	Status    string
+	SchoolID  uuid.UUID
+	Grade     int
+	Active    bool
 }
 
-// SyncEnrollment applies an enrollment change to the open assignments (F041-AC-16): a student who joins a class is added
-// to the open assignments targeting that class; a student who leaves keeps the submissions of the old class.
-func (h Assignments) SyncEnrollment(ctx context.Context, e EnrollmentChange) (err error) {
-	ctx, done := observability.UseCase(ctx, "learning.command.SyncAssignmentEnrollment")
+// SyncPlacement adds a student who joins a grade of a school to the scheduled and open assignments targeting that grade
+// (ADR-0095 mục 3, F041-AC-16): not when the target excludes the student; a student already targeted is left as is; a
+// student who leaves the grade or the school keeps the submissions (excused by the school when needed).
+func (h Assignments) SyncPlacement(ctx context.Context, e PlacementChange) (err error) {
+	ctx, done := observability.UseCase(ctx, "learning.command.SyncAssignmentPlacement")
 	defer func() { done(err) }()
-	if e.Op != "added" && (e.Op != "updated" || e.Status != "active") {
+	if !e.Active || e.Grade < 1 || e.Grade > 9 {
 		return nil
 	}
-	as, err := h.Store.OpenClassAssignments(ctx, e.ClassID)
+	as, err := h.Store.OpenGradeAssignments(ctx, e.SchoolID, e.Grade)
 	if err != nil {
 		return err
 	}
-	class := e.ClassID
-	for _, a := range as {
-		n, err := h.Store.InsertTargetStudents(ctx, a, []write.TargetStudent{{StudentID: e.StudentID, ClassID: &class, Source: "enrollment_added"}})
+	grade := e.Grade
+	for _, open := range as {
+		a, err := h.Store.Assignment(ctx, open.ID, false)
+		if err != nil {
+			return err
+		}
+		if a == nil || excluded(*a, grade, e.StudentID) {
+			continue
+		}
+		n, err := h.Store.InsertTargetStudents(ctx, *a, []write.TargetStudent{{StudentID: e.StudentID, Grade: &grade, Source: "grade_added"}})
 		if err != nil {
 			return err
 		}
@@ -465,12 +476,32 @@ func (h Assignments) SyncEnrollment(ctx context.Context, e EnrollmentChange) (er
 			if err != nil || s == nil {
 				return err
 			}
-			if err := h.submissionUpdated(ctx, a, *s); err != nil {
+			if err := h.submissionUpdated(ctx, *a, *s); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+// excluded reports whether the grade target of the grade excludes the student (exclude wins).
+func excluded(a write.AssignmentRow, grade int, student uuid.UUID) bool {
+	for _, t := range a.Targets {
+		if t.Type == assignment.TargetGrade && t.Grade != nil && *t.Grade == grade && slices.Contains(t.Exclude, student) {
+			return true
+		}
+	}
+	return false
+}
+
+// SyncStudent re-applies the placement of a student read from ref.students (enrollment.changed and student.synced of
+// module identity until its producer moves to student.placement_changed — WP-I1).
+func (h Assignments) SyncStudent(ctx context.Context, studentID uuid.UUID) error {
+	pl, err := h.Store.Placement(ctx, studentID)
+	if err != nil || pl == nil {
+		return err
+	}
+	return h.SyncPlacement(ctx, PlacementChange{StudentID: studentID, SchoolID: pl.SchoolID, Grade: pl.Grade, Active: true})
 }
 
 // AccessRevoked excuses a student whose account is locked before the due date of the open assignments (F041-AC-16).

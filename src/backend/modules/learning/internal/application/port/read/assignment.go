@@ -16,17 +16,19 @@ type AssignmentScope struct {
 	SubjectID *uuid.UUID
 }
 
-// AssignmentFilter filters listAssignments (F041): the scopes of the reader, class, course, status, keyset.
+// AssignmentFilter filters listAssignments (F041): the scopes of the reader, school, subject, targeted grade (ADR-0095),
+// status, keyset.
 type AssignmentFilter struct {
-	Scopes   []AssignmentScope
-	ClassID  *uuid.UUID
-	CourseID *uuid.UUID
-	Status   string
-	After    *uuid.UUID
-	Limit    int
+	Scopes    []AssignmentScope
+	SchoolID  *uuid.UUID
+	SubjectID *uuid.UUID
+	Grade     *int
+	Status    string
+	After     *uuid.UUID
+	Limit     int
 }
 
-// AssignmentRecord is an assignment with the subject of its course (authorization of the reads).
+// AssignmentRecord is an assignment with its subject (authorization of the reads).
 type AssignmentRecord struct {
 	View      dto.AssignmentView
 	SubjectID uuid.UUID
@@ -36,7 +38,6 @@ type AssignmentRecord struct {
 type SubmissionFilter struct {
 	AssignmentID uuid.UUID
 	Status       string
-	ClassID      *uuid.UUID
 	After        *uuid.UUID
 	Limit        int
 }

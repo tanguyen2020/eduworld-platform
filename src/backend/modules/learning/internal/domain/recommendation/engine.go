@@ -1,7 +1,7 @@
 // Package recommendation is the rule engine of the automatic study recommendations (LEARNING_ANALYTICS §6,
 // LEARNING_EXPERIENCE §6.2, F032 US6): each rule reads a snapshot of the learning state of one student and proposes
 // explainable recommendations; the engine merges, filters and orders them. Rules are strategies registered at the
-// composition root, so F040 (R6), F041 (R1) and F042 (R5) add theirs without changing the engine (F032-AC-33). No I/O.
+// composition root, so F041 (R1) and F042 (R5) add theirs without changing the engine (F032-AC-33). No I/O.
 package recommendation
 
 import (
@@ -101,8 +101,6 @@ type Snapshot struct {
 	WrongDue   []WrongDue
 	// LastDiagnostic is the start of the latest diagnostic attempt per subject or topic id.
 	LastDiagnostic map[uuid.UUID]time.Time
-	// Upcoming are the next lessons of the LMS schedule of the student's courses (filled by F040 for R6).
-	Upcoming []Upcoming
 	// Assignments are the open school assignments the student has not submitted (filled by F041 for R1).
 	Assignments []PendingAssignment
 	// ExamResults are the objective results of the student's recent exams whose results are released (filled by F042 for R5).
@@ -127,16 +125,6 @@ type PendingAssignment struct {
 	DueAt        time.Time
 }
 
-// Upcoming is a lesson (or activity) of the LMS schedule of a course of the student.
-type Upcoming struct {
-	ContentType  string
-	ContentID    uuid.UUID
-	SubjectID    uuid.UUID
-	Title        string
-	ObjectiveIDs []uuid.UUID
-	Date         string // YYYY-MM-DD
-}
-
 func (s Snapshot) objective(id uuid.UUID) (Objective, bool) {
 	for _, o := range s.Objectives {
 		if o.ID == id {
@@ -148,7 +136,7 @@ func (s Snapshot) objective(id uuid.UUID) (Objective, bool) {
 
 // tieOrder orders rules of the same priority as Mây presents them (LEARNING_EXPERIENCE §6.2): assignments, warm-up,
 // weak objectives (prerequisites first), exam follow-up, due reviews, decay, interleaving, next topic [Proposed].
-var tieOrder = []string{"R1", "R7", "R3", "R2", "R5", "R9", "R4", "R8", "R6"}
+var tieOrder = []string{"R1", "R7", "R3", "R2", "R5", "R9", "R4", "R8"}
 
 func rank(code string) int {
 	if i := slices.Index(tieOrder, code); i >= 0 {

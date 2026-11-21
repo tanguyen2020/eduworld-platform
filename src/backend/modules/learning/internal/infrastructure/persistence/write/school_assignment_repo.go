@@ -14,13 +14,13 @@ import (
 )
 
 // SchoolAssignmentRepo implements write.SchoolAssignmentStore with explicit SQL in the transaction of ctx (F041): every
-// lms.assignment* table is tenant (RLS T, infra.current_tenant_id()) and soft-delete only (AGENTS R21). The references
-// (courses, projections, study groups, content versions) are those of the LMS of F040.
-type SchoolAssignmentRepo struct{ LMSRepo }
+// lms.assignment* table is tenant (RLS T, infra.current_tenant_id()) and soft-delete only (AGENTS R21). The students come
+// from the projection ref.students (school, grade — ADR-0095).
+type SchoolAssignmentRepo struct{}
 
 var _ write.SchoolAssignmentStore = SchoolAssignmentRepo{}
 
-const assignmentColumns = `a.assignment_id, a.tenant_id, a.school_id, a.course_id, a.subject_id, a.created_by, a.created_by_role, a.title,
+const assignmentColumns = `a.assignment_id, a.tenant_id, a.school_id, a.subject_id, a.created_by, a.created_by_role, a.title,
 	a.instructions, a.content_type, a.content_id, a.pinned_version_id, a.follow_latest, a.activity_type, a.mode, a.open_at, a.due_at,
 	a.allow_late, a.late_window_hours, a.max_attempts, a.score_policy, a.feedback_timing, a.result_release, a.status, a.exam_session_id,
 	array_to_string(a.objective_ids, ','), a.published_at, a.closed_at, a.results_released_at, a.version, a.created_at, a.updated_at,
@@ -33,7 +33,7 @@ func ScanAssignment(row interface{ Scan(...any) error }) (write.AssignmentRow, e
 	var pinned, exam, updatedBy uuid.NullUUID
 	var published, closed, released sql.NullTime
 	var los string
-	err := row.Scan(&a.ID, &a.TenantID, &a.SchoolID, &a.CourseID, &a.SubjectID, &a.CreatedBy, &a.CreatedByRole, &a.Title, &instructions,
+	err := row.Scan(&a.ID, &a.TenantID, &a.SchoolID, &a.SubjectID, &a.CreatedBy, &a.CreatedByRole, &a.Title, &instructions,
 		&a.ContentType, &a.ContentID, &pinned, &a.FollowLatest, &activityType, &a.Mode, &a.OpenAt, &a.DueAt, &a.AllowLate, &a.LateHours,
 		&a.MaxAttempts, &a.ScorePolicy, &a.FeedbackTiming, &a.ResultRelease, &a.Status, &exam, &los, &published, &closed, &released,
 		&a.Version, &a.CreatedAt, &a.UpdatedAt, &updatedBy)
@@ -62,8 +62,9 @@ func insertTargets(ctx context.Context, tx *sql.Tx, a write.AssignmentRow) error
 	for i, t := range a.Targets {
 		// tenancyguard:ok tenant_id of the row is the tenant of the session (RLS tenant_insert WITH CHECK)
 		if _, err := tx.ExecContext(ctx, `INSERT INTO lms.assignment_targets (assignment_target_id, tenant_id, school_id, assignment_id,
-			target_type, target_ref_id, student_ids, position) VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6::uuid[], $7)`,
-			ids.New(), a.SchoolID, a.ID, t.Type, t.RefID, uuidArray(t.StudentIDs), i+1); err != nil {
+			target_type, grade_level, include_student_ids, exclude_student_ids, student_ids, position)
+			VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6::uuid[], $7::uuid[], $8::uuid[], $9)`,
+			ids.New(), a.SchoolID, a.ID, t.Type, t.Grade, uuidArray(t.Include), uuidArray(t.Exclude), uuidArray(t.StudentIDs), i+1); err != nil {
 			return fmt.Errorf("assignment target: %w", err)
 		}
 	}
@@ -77,13 +78,13 @@ func (SchoolAssignmentRepo) InsertAssignment(ctx context.Context, a write.Assign
 		return err
 	}
 	// tenancyguard:ok tenant_id of the row is the tenant of the session (RLS tenant_insert WITH CHECK)
-	if _, err := tx.ExecContext(ctx, `INSERT INTO lms.assignments (assignment_id, tenant_id, school_id, course_id, subject_id, created_by,
+	if _, err := tx.ExecContext(ctx, `INSERT INTO lms.assignments (assignment_id, tenant_id, school_id, subject_id, created_by,
 		created_by_role, title, instructions, content_type, content_id, pinned_version_id, follow_latest, activity_type, mode, open_at, due_at,
 		allow_late, late_window_hours, max_attempts, score_policy, feedback_timing, result_release, status, objective_ids, created_at,
 		updated_at, updated_by)
-		VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22,
-		$23, $24::uuid[], $25, $25, $5)`,
-		a.ID, a.SchoolID, a.CourseID, a.SubjectID, a.CreatedBy, a.CreatedByRole, a.Title, a.Instructions, a.ContentType, a.ContentID,
+		VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21,
+		$22, $23::uuid[], $24, $24, $4)`,
+		a.ID, a.SchoolID, a.SubjectID, a.CreatedBy, a.CreatedByRole, a.Title, a.Instructions, a.ContentType, a.ContentID,
 		a.PinnedVersionID, a.FollowLatest, a.ActivityType, a.Mode, a.OpenAt, a.DueAt, a.AllowLate, a.LateHours, a.MaxAttempts, a.ScorePolicy,
 		a.FeedbackTiming, a.ResultRelease, a.Status, uuidArray(a.ObjectiveIDs), a.UpdatedAt); err != nil {
 		return fmt.Errorf("assignment: %w", err)
@@ -111,14 +112,19 @@ func (SchoolAssignmentRepo) Assignment(ctx context.Context, id uuid.UUID, forUpd
 	return a, err
 }
 
-// AssignmentTargets reads the live targets of an assignment with the number of students of each in the snapshot.
+// AssignmentTargets reads the live targets of an assignment with the number of students of each in the snapshot: the
+// listed students of a students target; the students of the grade (grade when targeted) and the included students of a
+// grade target, excluded students aside.
 func AssignmentTargets(ctx context.Context, q interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }, id uuid.UUID) ([]write.TargetRow, error) {
 	// tenancyguard:ok tenant of the session (RLS + infra.current_tenant_id()) and deleted_at IS NULL on both lms tables
-	rows, err := q.QueryContext(ctx, `SELECT t.target_type, t.target_ref_id, array_to_string(t.student_ids, ','),
+	rows, err := q.QueryContext(ctx, `SELECT t.target_type, t.grade_level, array_to_string(t.include_student_ids, ','),
+		array_to_string(t.exclude_student_ids, ','), array_to_string(t.student_ids, ','),
 		(SELECT count(*) FROM lms.assignment_target_students s WHERE s.assignment_id = t.assignment_id AND s.deleted_at IS NULL
-			AND s.tenant_id = t.tenant_id AND (t.target_type <> 'class' OR s.class_id_at_assign = t.target_ref_id))
+			AND s.tenant_id = t.tenant_id AND CASE WHEN t.target_type = 'grade'
+				THEN (s.grade_level = t.grade_level OR s.student_id = ANY(t.include_student_ids)) AND NOT s.student_id = ANY(t.exclude_student_ids)
+				ELSE s.student_id = ANY(t.student_ids) END)
 		FROM lms.assignment_targets t WHERE t.assignment_id = $1 AND t.tenant_id = infra.current_tenant_id() AND t.deleted_at IS NULL
 		ORDER BY t.position`, id)
 	if err != nil {
@@ -128,12 +134,16 @@ func AssignmentTargets(ctx context.Context, q interface {
 	var out []write.TargetRow
 	for rows.Next() {
 		var t write.TargetRow
-		var ref uuid.NullUUID
-		var students string
-		if err := rows.Scan(&t.Type, &ref, &students, &t.StudentCount); err != nil {
+		var grade sql.NullInt32
+		var include, exclude, students string
+		if err := rows.Scan(&t.Type, &grade, &include, &exclude, &students, &t.StudentCount); err != nil {
 			return nil, err
 		}
-		t.RefID, t.StudentIDs = nullID(ref), parseIDs(students)
+		if grade.Valid {
+			g := int(grade.Int32)
+			t.Grade = &g
+		}
+		t.Include, t.Exclude, t.StudentIDs = parseIDs(include), parseIDs(exclude), parseIDs(students)
 		out = append(out, t)
 	}
 	return out, rows.Err()
@@ -178,9 +188,9 @@ func (SchoolAssignmentRepo) InsertTargetStudents(ctx context.Context, a write.As
 	for _, s := range students {
 		// tenancyguard:ok tenant_id of the row is the tenant of the session (RLS tenant_insert WITH CHECK)
 		ok, err := affected(tx.ExecContext(ctx, `INSERT INTO lms.assignment_target_students (assignment_target_student_id, tenant_id, school_id,
-			assignment_id, student_id, class_id_at_assign, source) VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6)
+			assignment_id, student_id, grade_level, source) VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6)
 			ON CONFLICT (assignment_id, student_id) WHERE deleted_at IS NULL DO NOTHING`,
-			ids.New(), a.SchoolID, a.ID, s.StudentID, s.ClassID, s.Source))
+			ids.New(), a.SchoolID, a.ID, s.StudentID, s.Grade, s.Source))
 		if err != nil {
 			return n, fmt.Errorf("assignment student: %w", err)
 		}
@@ -190,8 +200,8 @@ func (SchoolAssignmentRepo) InsertTargetStudents(ctx context.Context, a write.As
 		n++
 		// tenancyguard:ok tenant_id of the row is the tenant of the session (RLS tenant_insert WITH CHECK)
 		if _, err := tx.ExecContext(ctx, `INSERT INTO lms.assignment_submissions (assignment_submission_id, tenant_id, school_id, assignment_id,
-			student_id, class_id) VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5)
-			ON CONFLICT (assignment_id, student_id) WHERE deleted_at IS NULL DO NOTHING`, ids.New(), a.SchoolID, a.ID, s.StudentID, s.ClassID); err != nil {
+			student_id) VALUES ($1, infra.current_tenant_id(), $2, $3, $4)
+			ON CONFLICT (assignment_id, student_id) WHERE deleted_at IS NULL DO NOTHING`, ids.New(), a.SchoolID, a.ID, s.StudentID); err != nil {
 			return n, fmt.Errorf("assignment submission: %w", err)
 		}
 	}
@@ -205,7 +215,7 @@ func (SchoolAssignmentRepo) TargetStudents(ctx context.Context, assignmentID uui
 		return nil, err
 	}
 	// tenancyguard:ok tenant of the session (RLS + infra.current_tenant_id()) and deleted_at IS NULL
-	rows, err := tx.QueryContext(ctx, `SELECT student_id, class_id_at_assign, source FROM lms.assignment_target_students
+	rows, err := tx.QueryContext(ctx, `SELECT student_id, grade_level, source FROM lms.assignment_target_students
 		WHERE assignment_id = $1 AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL ORDER BY student_id`, assignmentID)
 	if err != nil {
 		return nil, fmt.Errorf("assignment students: %w", err)
@@ -214,11 +224,14 @@ func (SchoolAssignmentRepo) TargetStudents(ctx context.Context, assignmentID uui
 	var out []write.TargetStudent
 	for rows.Next() {
 		var s write.TargetStudent
-		var class uuid.NullUUID
-		if err := rows.Scan(&s.StudentID, &class, &s.Source); err != nil {
+		var grade sql.NullInt32
+		if err := rows.Scan(&s.StudentID, &grade, &s.Source); err != nil {
 			return nil, err
 		}
-		s.ClassID = nullID(class)
+		if grade.Valid {
+			g := int(grade.Int32)
+			s.Grade = &g
+		}
 		out = append(out, s)
 	}
 	return out, rows.Err()
@@ -260,10 +273,11 @@ func (SchoolAssignmentRepo) assignments(ctx context.Context, where string, args 
 	return out, rows.Err()
 }
 
-// OpenClassAssignments implements write.SchoolAssignmentStore.
-func (r SchoolAssignmentRepo) OpenClassAssignments(ctx context.Context, classID uuid.UUID) ([]write.AssignmentRow, error) {
-	return r.assignments(ctx, `a.status = 'open' AND EXISTS (SELECT 1 FROM lms.assignment_targets t WHERE t.assignment_id = a.assignment_id
-		AND t.target_type = 'class' AND t.target_ref_id = $1 AND t.deleted_at IS NULL)`, classID)
+// OpenGradeAssignments implements write.SchoolAssignmentStore: scheduled or open assignments with a grade target of the
+// grade of the school.
+func (r SchoolAssignmentRepo) OpenGradeAssignments(ctx context.Context, schoolID uuid.UUID, grade int) ([]write.AssignmentRow, error) {
+	return r.assignments(ctx, `a.status IN ('scheduled','open') AND a.school_id = $1 AND EXISTS (SELECT 1 FROM lms.assignment_targets t
+		WHERE t.assignment_id = a.assignment_id AND t.target_type = 'grade' AND t.grade_level = $2 AND t.deleted_at IS NULL)`, schoolID, grade)
 }
 
 // OpenAssignmentsOfStudent implements write.SchoolAssignmentStore.
@@ -272,18 +286,18 @@ func (r SchoolAssignmentRepo) OpenAssignmentsOfStudent(ctx context.Context, stud
 		WHERE s.assignment_id = a.assignment_id AND s.student_id = $1 AND s.deleted_at IS NULL)`, studentID)
 }
 
-const submissionColumns = `s.assignment_id, s.tenant_id, s.school_id, s.student_id, s.class_id, s.status, s.attempts_used, s.current_attempt_id,
+const submissionColumns = `s.assignment_id, s.tenant_id, s.school_id, s.student_id, s.status, s.attempts_used, s.current_attempt_id,
 	s.best_attempt_id, s.score::float8, s.max_score::float8, s.submitted_at, s.rapid_guess_count, s.due_at_override, s.completed_at, s.version`
 
 // ScanSubmission scans submissionColumns (shared with the read model).
 func ScanSubmission(row interface{ Scan(...any) error }) (write.SubmissionRow, error) {
 	var s write.SubmissionRow
-	var class, current, best uuid.NullUUID
+	var current, best uuid.NullUUID
 	var score, maxScore sql.NullFloat64
 	var submitted, due, completed sql.NullTime
-	err := row.Scan(&s.AssignmentID, &s.TenantID, &s.SchoolID, &s.StudentID, &class, &s.Status, &s.AttemptsUsed, &current, &best, &score,
+	err := row.Scan(&s.AssignmentID, &s.TenantID, &s.SchoolID, &s.StudentID, &s.Status, &s.AttemptsUsed, &current, &best, &score,
 		&maxScore, &submitted, &s.RapidGuessCount, &due, &completed, &s.Version)
-	s.ClassID, s.CurrentAttemptID, s.BestAttemptID = nullID(class), nullID(current), nullID(best)
+	s.CurrentAttemptID, s.BestAttemptID = nullID(current), nullID(best)
 	if score.Valid {
 		v := score.Float64
 		s.Score = &v
@@ -323,15 +337,15 @@ func (SchoolAssignmentRepo) UpsertSubmission(ctx context.Context, s write.Submis
 	}
 	// tenancyguard:ok tenant_id of the row is the tenant of the session (RLS insert/update policies); live row only (partial unique)
 	_, err = tx.ExecContext(ctx, `INSERT INTO lms.assignment_submissions (assignment_submission_id, tenant_id, school_id, assignment_id,
-		student_id, class_id, status, attempts_used, current_attempt_id, best_attempt_id, score, max_score, submitted_at, rapid_guess_count,
-		due_at_override, completed_at) VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		student_id, status, attempts_used, current_attempt_id, best_attempt_id, score, max_score, submitted_at, rapid_guess_count,
+		due_at_override, completed_at) VALUES ($1, infra.current_tenant_id(), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		ON CONFLICT (assignment_id, student_id) WHERE deleted_at IS NULL DO UPDATE SET status = EXCLUDED.status,
 		attempts_used = EXCLUDED.attempts_used, current_attempt_id = EXCLUDED.current_attempt_id, best_attempt_id = EXCLUDED.best_attempt_id,
 		score = EXCLUDED.score, max_score = EXCLUDED.max_score, submitted_at = EXCLUDED.submitted_at,
 		rapid_guess_count = EXCLUDED.rapid_guess_count, due_at_override = EXCLUDED.due_at_override, completed_at = EXCLUDED.completed_at,
-		class_id = COALESCE(lms.assignment_submissions.class_id, EXCLUDED.class_id), version = lms.assignment_submissions.version + 1,
+		version = lms.assignment_submissions.version + 1,
 		updated_at = now()`,
-		ids.New(), s.SchoolID, s.AssignmentID, s.StudentID, s.ClassID, s.Status, s.AttemptsUsed, s.CurrentAttemptID, s.BestAttemptID, s.Score,
+		ids.New(), s.SchoolID, s.AssignmentID, s.StudentID, s.Status, s.AttemptsUsed, s.CurrentAttemptID, s.BestAttemptID, s.Score,
 		s.MaxScore, s.SubmittedAt, s.RapidGuessCount, s.DueAtOverride, s.CompletedAt)
 	if err != nil {
 		return fmt.Errorf("assignment submission: %w", err)
@@ -549,39 +563,90 @@ func (SchoolAssignmentRepo) DueToClose(ctx context.Context, now time.Time, limit
 		ORDER BY a.due_at LIMIT $2`, now, limit)
 }
 
-// ClassStudents implements write.SchoolAssignmentStore: the active students with an active enrollment in the class.
-func (SchoolAssignmentRepo) ClassStudents(ctx context.Context, classID uuid.UUID) ([]uuid.UUID, error) {
+// SchoolOfTenant implements write.SchoolAssignmentStore.
+func (SchoolAssignmentRepo) SchoolOfTenant(ctx context.Context, schoolID uuid.UUID) (bool, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return false, err
+	}
+	var ok bool
+	// tenancyguard:ok projection ref.schools (no deleted_at) of the session tenant (RLS + infra.current_tenant_id())
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM ref.schools WHERE school_id = $1 AND tenant_id = infra.current_tenant_id())`,
+		schoolID).Scan(&ok); err != nil {
+		return false, fmt.Errorf("school: %w", err)
+	}
+	return ok, nil
+}
+
+// SubjectVisible implements write.SchoolAssignmentStore: a subject of the tenant or of the platform (RLS of curriculum).
+func (SchoolAssignmentRepo) SubjectVisible(ctx context.Context, subjectID uuid.UUID) (bool, error) {
+	tx, err := txOf(ctx)
+	if err != nil {
+		return false, err
+	}
+	var ok bool
+	// tenancyguard:ok hybrid curriculum: RLS content_read keeps tenant rows and platform rows; deleted_at IS NULL
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM curriculum.subjects WHERE subject_id = $1 AND deleted_at IS NULL)`,
+		subjectID).Scan(&ok); err != nil {
+		return false, fmt.Errorf("subject: %w", err)
+	}
+	return ok, nil
+}
+
+// GradeStudents implements write.SchoolAssignmentStore: the active students of a grade of a school (ADR-0095 mục 3).
+func (SchoolAssignmentRepo) GradeStudents(ctx context.Context, schoolID uuid.UUID, grade int) ([]uuid.UUID, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
-	// tenancyguard:ok projections ref.enrollments/ref.students of the session tenant (RLS + infra.current_tenant_id()); deleted_at IS NULL on students
-	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT e.student_id FROM ref.enrollments e JOIN ref.students s ON s.student_id = e.student_id
-		AND s.tenant_id = e.tenant_id AND s.status = 'active' AND s.deleted_at IS NULL
-		WHERE e.class_id = $1 AND e.status = 'active' AND e.tenant_id = infra.current_tenant_id() ORDER BY e.student_id`, classID)
+	// tenancyguard:ok projection ref.students of the session tenant (RLS + infra.current_tenant_id()) and deleted_at IS NULL
+	rows, err := tx.QueryContext(ctx, `SELECT student_id FROM ref.students WHERE school_id = $1 AND grade_level = $2 AND status = 'active'
+		AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL ORDER BY student_id`, schoolID, grade)
 	if err != nil {
-		return nil, fmt.Errorf("students of the class: %w", err)
+		return nil, fmt.Errorf("students of the grade: %w", err)
 	}
 	return scanIDs(rows)
 }
 
-// ClassOf implements write.SchoolAssignmentStore: the active class of a student (one active class, ADR-0060).
-func (SchoolAssignmentRepo) ClassOf(ctx context.Context, studentID uuid.UUID) (*uuid.UUID, error) {
+// ActiveStudents implements write.SchoolAssignmentStore.
+func (SchoolAssignmentRepo) ActiveStudents(ctx context.Context, schoolID uuid.UUID, idList []uuid.UUID) ([]uuid.UUID, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
-	var id uuid.UUID
-	// tenancyguard:ok projection ref.enrollments (no deleted_at, status active) of the session tenant (RLS + infra.current_tenant_id())
-	err = tx.QueryRowContext(ctx, `SELECT class_id FROM ref.enrollments WHERE student_id = $1 AND status = 'active'
-		AND tenant_id = infra.current_tenant_id() ORDER BY start_date DESC LIMIT 1`, studentID).Scan(&id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+	// tenancyguard:ok projection ref.students of the session tenant (RLS + infra.current_tenant_id()) and deleted_at IS NULL
+	rows, err := tx.QueryContext(ctx, `SELECT student_id FROM ref.students WHERE student_id = ANY($2::uuid[]) AND school_id = $1
+		AND status = 'active' AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL ORDER BY student_id`, schoolID, uuidArray(idList))
+	if err != nil {
+		return nil, fmt.Errorf("active students: %w", err)
 	}
+	return scanIDs(rows)
+}
+
+// Placement implements write.SchoolAssignmentStore: the school and grade of an active student of the session tenant.
+func (SchoolAssignmentRepo) Placement(ctx context.Context, studentID uuid.UUID) (*write.StudentPlacement, error) {
+	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &id, nil
+	var p write.StudentPlacement
+	var grade sql.NullInt32
+	// tenancyguard:ok projection ref.students of the session tenant (RLS + infra.current_tenant_id()) and deleted_at IS NULL
+	err = tx.QueryRowContext(ctx, `SELECT school_id, grade_level FROM ref.students WHERE student_id = $1 AND status = 'active'
+		AND tenant_id = infra.current_tenant_id() AND deleted_at IS NULL`, studentID).Scan(&p.SchoolID, &grade)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && !grade.Valid) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("student placement: %w", err)
+	}
+	p.Grade = int(grade.Int32)
+	return &p, nil
+}
+
+// ContentVersion implements write.SchoolAssignmentStore.
+func (SchoolAssignmentRepo) ContentVersion(ctx context.Context, contentType string, versionID uuid.UUID) (*write.VersionAccess, error) {
+	return contentVersion(ctx, contentType, versionID)
 }
 
 // CurrentVersion implements write.SchoolAssignmentStore: the version the item points to, visible in the scope of ctx

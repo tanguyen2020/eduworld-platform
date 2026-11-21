@@ -151,6 +151,17 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 - [ ] T049 **OQ chốt 2026-11-20** (OQ F041-2, phụ thuộc) Consumer projection `ref.game_activities` — làm khi F071/F078 định nghĩa payload `content.published` khối `catalog`, `content.rolled_back`/`content.unpublished` (F078 T006, T034) và `tenant_data.assigned/unassigned` (F045); đến lúc đó `listGameActivities` trả rỗng — file: `src/backend/modules/learning/internal/presentation/consumer/` — kiểm: integration — cỡ S
 - [x] T047 **OQ chốt 2026-11-20** (OQ F062-2) `startAdHocAttempt` nhận `mode = assignment` cho bài `question_set` với kiểm tra F041-AC-13; test cửa sổ/số lần/không thuộc lớp — file: `src/backend/modules/learning/internal/application/command/attempt_commands.go` — kiểm: `make test-integration MOD=learning` — cỡ S — bằng chứng: `startAdHocAttempt` mode `assignment` + `source.kind = question_set` + `context_type = assignment` (`startAssignmentSet`, version ghim); `TestAssignmentQuestionSet` PASS (ngoài đối tượng 404, thiếu context 422, hết lượt 409, quá hạn 403)
 
+## ADR-0095 — giao bài theo khối (WP-L1, 2026-11-21)
+
+Nguồn: Clarifications "Session 2026-11-21 (ADR-0095 — [Confirmed])" của spec; CODE_PLAN §4.2 WP-L1.
+
+- [x] T053 [P] Unit test domain `ValidateTargets`/`Audience` (F041-AC-32, F041-AC-33: một khối một target, include/exclude ≤ 200 chỉ với `grade`, một target `students`, exclude thắng include) — file: `src/backend/modules/learning/internal/domain/assignment/assignment_test.go`
+- [x] T054 [P] Integration test `TestAssignmentGradeTargets` (F041-AC-05, AC-08, AC-17, AC-32, AC-33: snapshot khối + include − exclude, khối lúc giao, payload v2, `schema_version = 2`, 422 học sinh khác trường/tenant, lọc `listAssignments`) và `TestAssignmentPlacementChanges` (F041-AC-16: `student.placement_changed`, `student.synced`, `enrollment.changed` không lớp, exclude, khác tenant → lỗi vĩnh viễn) — file: `src/backend/modules/learning/tests/integration/assignment_grade_test.go`
+- [x] T055 [P] Integration test `TestAssignmentClassTargetsFrozen` (F041-AC-34: chạy lại khối chuyển đổi của migration, danh sách đóng băng, không mở rộng ra cả khối) — file: `src/backend/modules/learning/tests/integration/assignment_freeze_test.go`
+- [x] T056 Contract: `AssignmentTarget` (`grade`/`students`, include/exclude, `student_count`), `AssignmentCreate` (`school_id`, `subject_id`, bỏ `course_id`), lọc `listAssignments`, bỏ `class_id` của submission; event `assignment.created.v2` (xóa v1), `assignment.cancelled` bỏ `course_id` — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/events/payloads/learning/`, `docs/07-backend/EVENT_DESIGN.md`
+- [x] T057 Migration expand `20261229000001_adr0095_assignment_grade_targets.sql` (cột khối/include/exclude, CHECK mới, `course_id` nullable, `grade_level` trên snapshot, chuyển đổi lớp/nhóm → danh sách đóng băng theo từng tenant, index `ref.students`) — file: `src/backend/modules/learning/migrations/`
+- [x] T058 Domain + command + repository + consumer: `schoolSubject`, `targets`, `snapshot`, `SyncPlacement`/`SyncStudent`, consumer `learning.assignment_enrollment` thêm `student.placement_changed`, `student.synced` — file: `src/backend/modules/learning/internal/`
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T007) → US1 → US2 → US3 → US4, US5 (song song) → US6 → Polish.

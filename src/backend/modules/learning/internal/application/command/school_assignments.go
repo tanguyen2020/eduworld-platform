@@ -68,7 +68,7 @@ type SchoolAssignmentMetrics interface {
 // Assignments holds the write use cases of the school assignments (F041): create, update, publish, cancel, archive,
 // release the results, remind, extend and excuse one student, the scheduler that opens and closes, the submission read
 // model fed by the attempt events, the enrollment changes and the gate of the attempts started for an assignment.
-// Every staff use case authorizes explicitly with the school and subject of the course (AuthorizeLMS, R7).
+// Every staff use case authorizes explicitly with the school and subject of the assignment (AuthorizeLMS, R7).
 type Assignments struct {
 	UoW     write.UnitOfWork
 	Store   write.SchoolAssignmentStore
@@ -117,14 +117,31 @@ func (h Assignments) audit(ctx context.Context, action string, a write.Assignmen
 
 func (h Assignments) publish(ctx context.Context, typ string, a write.AssignmentRow, payload any) error {
 	t := a.TenantID
-	return h.Events.Publish(ctx, write.Event{Type: typ, SubjectType: "assignment", SubjectID: a.ID.String(), TenantID: &t, Payload: payload})
+	version := 1
+	if typ == EventAssignmentCreated || typ == EventAssignmentPublished {
+		version = AssignmentCreatedVersion
+	}
+	return h.Events.Publish(ctx, write.Event{Type: typ, Version: version, SubjectType: "assignment", SubjectID: a.ID.String(), TenantID: &t,
+		Payload: payload})
 }
 
 // AssignmentTargetInput is AssignmentTarget.
 type AssignmentTargetInput struct {
-	TargetType string      `json:"target_type"`
-	TargetID   *uuid.UUID  `json:"target_id"`
-	StudentIDs []uuid.UUID `json:"student_ids"`
+	TargetType        string      `json:"target_type"`
+	GradeLevel        *int        `json:"grade_level"`
+	IncludeStudentIDs []uuid.UUID `json:"include_student_ids"`
+	ExcludeStudentIDs []uuid.UUID `json:"exclude_student_ids"`
+	StudentIDs        []uuid.UUID `json:"student_ids"`
+}
+
+// target is the domain view of an AssignmentTarget (list lengths only).
+func (t AssignmentTargetInput) target() assignment.Target {
+	g := 0
+	if t.GradeLevel != nil {
+		g = *t.GradeLevel
+	}
+	return assignment.Target{Type: t.TargetType, Grade: g, Include: len(t.IncludeStudentIDs), Exclude: len(t.ExcludeStudentIDs),
+		StudentIDs: len(t.StudentIDs)}
 }
 
 // LatePolicyInput is AssignmentCreate.late_policy.
@@ -136,7 +153,8 @@ type LatePolicyInput struct {
 // AssignmentInput is AssignmentCreate (and the merge of AssignmentUpdate over a stored assignment).
 type AssignmentInput struct {
 	TenantID   *uuid.UUID `json:"tenant_id"`
-	CourseID   uuid.UUID  `json:"course_id"`
+	SchoolID   uuid.UUID  `json:"school_id"`
+	SubjectID  uuid.UUID  `json:"subject_id"`
 	Title      string     `json:"title"`
 	ContentRef struct {
 		ContentType     string     `json:"content_type"`
@@ -171,7 +189,7 @@ func (in AssignmentInput) fields() assignment.Fields {
 		f.MaxAttempts = *in.MaxAttempts
 	}
 	for _, t := range in.Targets {
-		f.Targets = append(f.Targets, assignment.Target{Type: t.TargetType, HasRef: t.TargetID != nil, StudentIDs: len(t.StudentIDs)})
+		f.Targets = append(f.Targets, t.target())
 	}
 	return f
 }
@@ -189,25 +207,39 @@ func assignmentViolations(vs []assignment.Violation) error {
 
 // AssignmentViewOf is the Assignment of a stored row (completion is added by the queries).
 func AssignmentViewOf(a write.AssignmentRow) dto.AssignmentView {
-	v := dto.AssignmentView{AssignmentID: a.ID, TenantID: a.TenantID, SchoolID: a.SchoolID, CourseID: a.CourseID, Title: a.Title,
+	v := dto.AssignmentView{AssignmentID: a.ID, TenantID: a.TenantID, SchoolID: a.SchoolID, SubjectID: a.SubjectID, Title: a.Title,
 		Instructions: a.Instructions, ContentRef: dto.AssignmentContentRefView{ContentType: a.ContentType, ContentID: a.ContentID,
 			PinnedVersionID: a.PinnedVersionID}, FollowLatest: a.FollowLatest, Mode: a.Mode, Targets: []dto.AssignmentTargetView{}, OpenAt: a.OpenAt,
 		DueAt: a.DueAt, LatePolicy: dto.LatePolicyView{AllowLate: a.AllowLate, LateWindowHours: a.LateHours}, MaxAttempts: a.MaxAttempts,
 		ScorePolicy: a.ScorePolicy, FeedbackTiming: a.FeedbackTiming, ResultRelease: a.ResultRelease, Status: a.Status, CreatedBy: a.CreatedBy,
 		CreatedByRole: a.CreatedByRole, ExamSessionID: a.ExamSessionID, ResultsReleasedAt: a.ReleasedAt, RowVersion: a.Version}
 	for _, t := range a.Targets {
-		v.Targets = append(v.Targets, dto.AssignmentTargetView{TargetType: t.Type, TargetID: t.RefID, StudentIDs: t.StudentIDs})
+		tv := dto.AssignmentTargetView{TargetType: t.Type, GradeLevel: t.Grade, IncludeStudentIDs: t.Include, ExcludeStudentIDs: t.Exclude,
+			StudentIDs: t.StudentIDs}
+		if a.Status != string(assignment.StatusDraft) {
+			n := t.StudentCount
+			tv.StudentCount = &n
+		}
+		v.Targets = append(v.Targets, tv)
 	}
 	return v
 }
 
-// assignmentPayload is payload assignment.created.v1 (also assignment.published).
+// AssignmentCreatedVersion is the schema_version of assignment.created and assignment.published (v2: grade targets and
+// subject_id, ADR-0095 mục 7 — the only consumer in the repo, the LMS schedule of F040, is removed).
+const AssignmentCreatedVersion = 2
+
+// assignmentPayload is payload assignment.created.v2 (also assignment.published): counts only, no student list.
 func assignmentPayload(a write.AssignmentRow) map[string]any {
 	targets := make([]map[string]any, len(a.Targets))
 	for i, t := range a.Targets {
-		targets[i] = map[string]any{"target_type": t.Type, "target_id": t.RefID, "student_count": t.StudentCount}
+		x := map[string]any{"target_type": t.Type, "grade_level": t.Grade, "student_count": t.StudentCount}
+		if t.Type == assignment.TargetGrade {
+			x["included_student_count"], x["excluded_student_count"] = len(t.Include), len(t.Exclude)
+		}
+		targets[i] = x
 	}
-	return map[string]any{"assignment_id": a.ID, "school_id": a.SchoolID, "course_id": a.CourseID, "created_by": a.CreatedBy,
+	return map[string]any{"assignment_id": a.ID, "school_id": a.SchoolID, "subject_id": a.SubjectID, "created_by": a.CreatedBy,
 		"created_by_role": a.CreatedByRole, "content_type": a.ContentType, "content_id": a.ContentID, "pinned_version_id": a.PinnedVersionID,
 		"follow_latest": a.FollowLatest, "mode": a.Mode, "status": a.Status, "targets": targets, "open_at": a.OpenAt, "due_at": a.DueAt,
 		"max_attempts": a.MaxAttempts, "feedback_timing": a.FeedbackTiming, "result_release": a.ResultRelease,
@@ -238,20 +270,41 @@ func roleOf(p authz.Principal, school uuid.UUID) string {
 	return "academic_manager"
 }
 
-// course reads the course of an assignment and authorizes perm on its school and subject (F041-AC-04, AC-05, AC-26):
-// an unknown course or another school is 404, another subject 403.
-func (h Assignments) course(ctx context.Context, p authz.Principal, perm authz.Permission, id uuid.UUID) (*write.CourseRow, error) {
-	c, err := h.Store.Course(ctx, id)
+// schoolOfTenant is 404 for a school that is not a school of the session tenant (R8: no existence leak).
+func (h Assignments) schoolOfTenant(ctx context.Context, school uuid.UUID) error {
+	ok, err := h.Store.SchoolOfTenant(ctx, school)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if c == nil {
-		return nil, problem.New(problem.NotFound, "")
+	if !ok {
+		return problem.New(problem.NotFound, "")
 	}
-	if err := AuthorizeLMS(ctx, p, perm, c.SchoolID, &c.SubjectID); err != nil {
-		return nil, err
+	return nil
+}
+
+// schoolSubject authorizes perm on the school and subject of a new assignment (F041-AC-04, AC-05, AC-26; ADR-0095: no
+// course): a school outside every grant is 404, another subject 403, a subject the tenant cannot see 422 at subject_id.
+func (h Assignments) schoolSubject(ctx context.Context, p authz.Principal, perm authz.Permission, school, subject uuid.UUID) error {
+	if school == uuid.Nil {
+		return problem.Invalid("/school_id", problem.SubRequired, "is required")
 	}
-	return c, nil
+	if subject == uuid.Nil {
+		return problem.Invalid("/subject_id", problem.SubRequired, "is required")
+	}
+	if err := AuthorizeLMS(ctx, p, perm, school, &subject); err != nil {
+		return err
+	}
+	if err := h.schoolOfTenant(ctx, school); err != nil {
+		return err
+	}
+	ok, err := h.Store.SubjectVisible(ctx, subject)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return problem.Invalid("/subject_id", problem.SubInvalid, "is not a subject visible to the tenant")
+	}
+	return nil
 }
 
 // assignment reads an assignment (locked) and authorizes perm on its school and subject.
@@ -365,6 +418,10 @@ func (h Assignments) content(ctx context.Context, a *write.AssignmentRow, pinned
 	if v.Status != "published" || versionID == uuid.Nil {
 		return problem.New(problem.ContentNotPublished, "the content is not published")
 	}
+	if v.SubjectID != nil && *v.SubjectID != a.SubjectID {
+		// ADR-0095: the subject is chosen directly; it must be the subject of the content when the content has one.
+		return problem.Invalid("/subject_id", problem.SubInvalid, "is not the subject of the content")
+	}
 	if a.ContentType == assignment.ContentActivity {
 		typ, err := h.Store.ActivityType(ctx, versionID)
 		if err != nil {
@@ -389,41 +446,53 @@ func limitIDs(xs []uuid.UUID, n int) []uuid.UUID {
 	return xs
 }
 
-// targets checks the targets of an assignment (F041-AC-05): a class, study group or student of another school or tenant
-// is 404 NOT_FOUND (no existence leak).
+// sortedIDs returns the distinct ids in a stable order.
+func sortedIDs(xs []uuid.UUID) []uuid.UUID {
+	out := slices.Clone(xs)
+	slices.SortFunc(out, func(a, b uuid.UUID) int { return strings.Compare(a.String(), b.String()) })
+	return slices.Compact(out)
+}
+
+// schoolStudents checks that every listed student is an active student of the school (ADR-0095 mục 3): a student of
+// another school or tenant is 422 at ptr (the request names the student; nothing about the other school is returned).
+func (h Assignments) schoolStudents(ctx context.Context, school uuid.UUID, ids []uuid.UUID, ptr string) ([]uuid.UUID, error) {
+	uniq := sortedIDs(ids)
+	if len(uniq) == 0 {
+		return uniq, nil
+	}
+	found, err := h.Store.ActiveStudents(ctx, school, uniq)
+	if err != nil {
+		return nil, err
+	}
+	if len(found) != len(uniq) {
+		return nil, problem.Invalid(ptr, problem.SubInvalid, "every student must be an active student of the school of the assignment")
+	}
+	return uniq, nil
+}
+
+// targets checks the targets of an assignment (ADR-0095 mục 3, F041-AC-05): a grade of the school with included students
+// of the school (another grade) and excluded students, or a list of students of the school; a student of another school
+// or tenant is 422.
 func (h Assignments) targets(ctx context.Context, school uuid.UUID, in []AssignmentTargetInput) ([]write.TargetRow, error) {
 	out := make([]write.TargetRow, 0, len(in))
-	for _, t := range in {
-		row := write.TargetRow{Type: t.TargetType, RefID: t.TargetID}
+	for i, t := range in {
+		at := "/targets/" + itoa(i)
+		row := write.TargetRow{Type: t.TargetType}
+		var err error
 		switch t.TargetType {
-		case assignment.TargetClass:
-			c, err := h.Store.Class(ctx, *t.TargetID)
-			if err != nil {
+		case assignment.TargetGrade:
+			g := *t.GradeLevel
+			row.Grade = &g
+			if row.Include, err = h.schoolStudents(ctx, school, t.IncludeStudentIDs, at+"/include_student_ids"); err != nil {
 				return nil, err
 			}
-			if c == nil || c.SchoolID != school {
-				return nil, problem.New(problem.NotFound, "")
-			}
-		case assignment.TargetStudyGroup:
-			g, err := h.Store.Group(ctx, school, *t.TargetID)
-			if err != nil {
-				return nil, err
-			}
-			if g == nil {
-				return nil, problem.New(problem.NotFound, "")
-			}
+			// An excluded student may have left the school since: only the ids are kept (exclude wins).
+			row.Exclude = sortedIDs(t.ExcludeStudentIDs)
 		case assignment.TargetStudents:
-			uniq := slices.Clone(t.StudentIDs)
-			slices.SortFunc(uniq, func(a, b uuid.UUID) int { return strings.Compare(a.String(), b.String()) })
-			uniq = slices.Compact(uniq)
-			found, err := h.Store.ActiveStudents(ctx, school, uniq)
-			if err != nil {
+			if row.StudentIDs, err = h.schoolStudents(ctx, school, t.StudentIDs, at+"/student_ids"); err != nil {
 				return nil, err
 			}
-			if len(found) != len(uniq) {
-				return nil, problem.New(problem.NotFound, "")
-			}
-			row.RefID, row.StudentIDs, row.StudentCount = nil, uniq, len(uniq)
+			row.StudentCount = len(row.StudentIDs)
 		}
 		out = append(out, row)
 	}
@@ -431,7 +500,7 @@ func (h Assignments) targets(ctx context.Context, school uuid.UUID, in []Assignm
 }
 
 // CreateAssignment creates a draft assignment (F041-AC-01…AC-07, AC-09, AC-28): lms.assignment.write in the school and
-// subject of the course, published content visible to the tenant pinned at creation, outbox assignment.created and
+// subject (ADR-0095: chosen directly, no course), published content visible to the tenant pinned at creation, outbox assignment.created and
 // audit in the transaction (Idempotency-Key).
 func (h Assignments) CreateAssignment(ctx context.Context, in AssignmentInput) (out dto.AssignmentView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.CreateAssignment")
@@ -447,16 +516,15 @@ func (h Assignments) CreateAssignment(ctx context.Context, in AssignmentInput) (
 	f := in.fields()
 	f.Defaults(cfg.GradedFeedback, cfg.GradedRelease)
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
-		c, err := h.course(ctx, p, authz.PermLmsAssignmentWrite, in.CourseID)
-		if err != nil {
+		if err := h.schoolSubject(ctx, p, authz.PermLmsAssignmentWrite, in.SchoolID, in.SubjectID); err != nil {
 			return err
 		}
 		if err := assignmentViolations(f.Validate(cfg.MaxLateHours)); err != nil {
 			return err
 		}
 		at := h.now()
-		a := write.AssignmentRow{ID: ids.New(), TenantID: *p.TenantID, SchoolID: c.SchoolID, CourseID: c.ID, SubjectID: c.SubjectID,
-			CreatedBy: p.UserID, CreatedByRole: roleOf(p, c.SchoolID), Title: strings.TrimSpace(f.Title), Instructions: f.Instructions,
+		a := write.AssignmentRow{ID: ids.New(), TenantID: *p.TenantID, SchoolID: in.SchoolID, SubjectID: in.SubjectID,
+			CreatedBy: p.UserID, CreatedByRole: roleOf(p, in.SchoolID), Title: strings.TrimSpace(f.Title), Instructions: f.Instructions,
 			ContentType: in.ContentRef.ContentType, ContentID: in.ContentRef.ContentID, FollowLatest: f.FollowLatest, Mode: f.Mode,
 			OpenAt: f.OpenAt.UTC(), DueAt: f.DueAt.UTC(), AllowLate: f.AllowLate, LateHours: f.LateHours, MaxAttempts: f.MaxAttempts,
 			ScorePolicy: f.ScorePolicy, FeedbackTiming: f.FeedbackTiming, ResultRelease: f.ResultRelease, Status: string(assignment.StatusDraft),
@@ -464,7 +532,7 @@ func (h Assignments) CreateAssignment(ctx context.Context, in AssignmentInput) (
 		if err := h.content(ctx, &a, in.ContentRef.PinnedVersionID); err != nil {
 			return err
 		}
-		if a.Targets, err = h.targets(ctx, c.SchoolID, in.Targets); err != nil {
+		if a.Targets, err = h.targets(ctx, a.SchoolID, in.Targets); err != nil {
 			return err
 		}
 		if err := h.Store.InsertAssignment(ctx, a); err != nil {
@@ -492,13 +560,14 @@ type AssignmentPatch struct {
 
 // inputOf is the AssignmentInput of a stored assignment (the base of a merge patch).
 func inputOf(a write.AssignmentRow) AssignmentInput {
-	in := AssignmentInput{CourseID: a.CourseID, Title: a.Title, Instructions: a.Instructions, FollowLatest: a.FollowLatest, Mode: a.Mode,
+	in := AssignmentInput{SchoolID: a.SchoolID, SubjectID: a.SubjectID, Title: a.Title, Instructions: a.Instructions, FollowLatest: a.FollowLatest, Mode: a.Mode,
 		OpenAt: a.OpenAt, DueAt: a.DueAt, ScorePolicy: a.ScorePolicy, FeedbackTiming: a.FeedbackTiming, ResultRelease: a.ResultRelease}
 	in.ContentRef.ContentType, in.ContentRef.ContentID, in.ContentRef.PinnedVersionID = a.ContentType, a.ContentID, a.PinnedVersionID
 	allow, hours, attempts := a.AllowLate, a.LateHours, a.MaxAttempts
 	in.LatePolicy, in.MaxAttempts = &LatePolicyInput{AllowLate: &allow, LateWindowHours: &hours}, &attempts
 	for _, t := range a.Targets {
-		in.Targets = append(in.Targets, AssignmentTargetInput{TargetType: t.Type, TargetID: t.RefID, StudentIDs: t.StudentIDs})
+		in.Targets = append(in.Targets, AssignmentTargetInput{TargetType: t.Type, GradeLevel: t.Grade, IncludeStudentIDs: t.Include,
+			ExcludeStudentIDs: t.Exclude, StudentIDs: t.StudentIDs})
 	}
 	return in
 }
@@ -583,52 +652,56 @@ func (h Assignments) UpdateAssignment(ctx context.Context, id uuid.UUID, patch A
 	return out, deniedOutside(ctx, err)
 }
 
-// snapshot lists the students targeted by an assignment at publish (F041-AC-08): the active students of each class,
-// the members of each study group, the listed students; a student held by several targets once.
+// snapshot lists the students targeted by an assignment at publish (F041-AC-08, ADR-0095 mục 3): the active students of
+// each targeted grade of the school plus the included students minus the excluded ones (exclude wins over include), and
+// the listed students still active in the school; a student held by several targets once, with the grade the student is
+// in when targeted (recorded at event time).
 func (h Assignments) snapshot(ctx context.Context, a write.AssignmentRow) ([]write.TargetStudent, error) {
-	seen := map[uuid.UUID]bool{}
-	var out []write.TargetStudent
-	add := func(id uuid.UUID, class *uuid.UUID) {
-		if !seen[id] {
-			seen[id] = true
-			out = append(out, write.TargetStudent{StudentID: id, ClassID: class, Source: "publish"})
-		}
-	}
+	var grades, includes, lists [][]uuid.UUID
+	var excludes []uuid.UUID
+	gradeOf := map[uuid.UUID]int{}
 	for _, t := range a.Targets {
 		switch t.Type {
-		case assignment.TargetClass:
-			xs, err := h.Store.ClassStudents(ctx, *t.RefID)
+		case assignment.TargetGrade:
+			xs, err := h.Store.GradeStudents(ctx, a.SchoolID, *t.Grade)
 			if err != nil {
 				return nil, err
 			}
-			class := *t.RefID
 			for _, x := range xs {
-				add(x, &class)
+				gradeOf[x] = *t.Grade
 			}
-		default:
-			members := t.StudentIDs
-			if t.Type == assignment.TargetStudyGroup {
-				g, err := h.Store.Group(ctx, a.SchoolID, *t.RefID)
-				if err != nil {
-					return nil, err
-				}
-				if g == nil {
-					return nil, problem.New(problem.NotFound, "")
-				}
-				members = g.Members
-			}
-			active, err := h.Store.ActiveStudents(ctx, a.SchoolID, members)
+			grades = append(grades, xs)
+			inc, err := h.Store.ActiveStudents(ctx, a.SchoolID, t.Include)
 			if err != nil {
 				return nil, err
 			}
-			for _, x := range active {
-				class, err := h.Store.ClassOf(ctx, x)
-				if err != nil {
-					return nil, err
-				}
-				add(x, class)
+			includes = append(includes, inc)
+			excludes = append(excludes, t.Exclude...)
+		default:
+			xs, err := h.Store.ActiveStudents(ctx, a.SchoolID, t.StudentIDs)
+			if err != nil {
+				return nil, err
+			}
+			lists = append(lists, xs)
+		}
+	}
+	ids := assignment.Audience(grades, includes, lists, excludes)
+	out := make([]write.TargetStudent, 0, len(ids))
+	for _, id := range ids {
+		s := write.TargetStudent{StudentID: id, Source: "publish"}
+		if g, ok := gradeOf[id]; ok {
+			s.Grade = &g
+		} else {
+			pl, err := h.Store.Placement(ctx, id)
+			if err != nil {
+				return nil, err
+			}
+			if pl != nil {
+				g := pl.Grade
+				s.Grade = &g
 			}
 		}
+		out = append(out, s)
 	}
 	return out, nil
 }
@@ -713,7 +786,7 @@ func (h Assignments) examSession(ctx context.Context, a *write.AssignmentRow, st
 	if a.AllowLate {
 		closeAt = closeAt.Add(time.Duration(a.LateHours) * time.Hour)
 	}
-	id, err := h.Exams.Create(ctx, port.ExamSessionRequest{AssignmentID: a.ID, TenantID: a.TenantID, SchoolID: a.SchoolID, CourseID: a.CourseID,
+	id, err := h.Exams.Create(ctx, port.ExamSessionRequest{AssignmentID: a.ID, TenantID: a.TenantID, SchoolID: a.SchoolID, SubjectID: a.SubjectID,
 		BlueprintID: a.ContentID, BlueprintVerID: *a.PinnedVersionID, OpenAt: a.OpenAt, CloseAt: closeAt, StudentIDs: ids,
 		FeedbackTiming: a.FeedbackTiming, ResultRelease: a.ResultRelease, Title: a.Title, MaxAttempts: a.MaxAttempts, ScorePolicy: a.ScorePolicy})
 	if err != nil {
@@ -791,7 +864,7 @@ func (h Assignments) CancelAssignment(ctx context.Context, id uuid.UUID, reason 
 		}
 		a.Status = string(assignment.StatusCancelled)
 		if err := h.publish(ctx, EventAssignmentCancelled, *a, map[string]any{"assignment_id": a.ID, "school_id": a.SchoolID,
-			"course_id": a.CourseID, "exam_session_id": a.ExamSessionID, "cancelled_at": h.now(), "cancelled_by": p.UserID, "reason": reason}); err != nil {
+			"exam_session_id": a.ExamSessionID, "cancelled_at": h.now(), "cancelled_by": p.UserID, "reason": reason}); err != nil {
 			return err
 		}
 		return h.audit(ctx, "assignment.cancelled", *a, reason, nil)

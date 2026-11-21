@@ -54,11 +54,11 @@ func (k examKit) loRule(count int, points float64) map[string]any {
 	return map[string]any{"objective_ids": []string{k.s.qc.lo}, "count": count, "points_each": points}
 }
 
-// sessionBody is an ExamSessionCreate for class 3A, open from a minute ago for an hour, with extra fields.
+// sessionBody is an ExamSessionCreate for grade 3 of the school (ADR-0095), open from a minute ago for an hour, with extra fields.
 func (c *curEnv) sessionBody(k examKit, extra map[string]any) map[string]any {
 	now := c.clk.Now()
-	b := map[string]any{"title": "Kiểm tra chương 2", "assessment_blueprint_version_id": k.version, "course_id": k.course,
-		"targets":      []any{map[string]any{"target_type": "class", "target_id": k.class.String()}},
+	b := map[string]any{"title": "Kiểm tra chương 2", "assessment_blueprint_version_id": k.version, "school_id": k.school.String(),
+		"targets":      []any{map[string]any{"target_type": "grade", "grade_level": 3}},
 		"window_start": now.Add(-time.Minute).Format(time.RFC3339), "window_end": now.Add(time.Hour).Format(time.RFC3339),
 		"duration_seconds": 900}
 	for key, v := range extra {

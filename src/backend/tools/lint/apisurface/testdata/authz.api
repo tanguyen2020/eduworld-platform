@@ -99,15 +99,11 @@ const PermLmsAssignmentRead Permission
 const PermLmsAssignmentWrite Permission
 const PermLmsChallengeWrite Permission
 const PermLmsClassRead Permission
-const PermLmsCourseWrite Permission
-const PermLmsLearningPathWrite Permission
 const PermLmsReportRead Permission
 const PermLmsResultRelease Permission
-const PermLmsScheduleWrite Permission
 const PermLmsSchoolEventWrite Permission
 const PermLmsStudentActivityRead Permission
 const PermLmsStudentPasswordReset Permission
-const PermLmsStudyGroupWrite Permission
 const PermMediaUpload Permission
 const PermModerationCaseAct Permission
 const PermModerationCaseLead Permission
