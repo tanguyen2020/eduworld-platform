@@ -1,0 +1,5 @@
+# ADR-0095 mục 8 — module chat: no table or column is dropped, only CHECK values (read by scripts/db/adr-0095-backup.sh).
+# migration <file> | table <schema.table> | column <schema.table> <pk,cols> <col> | values <schema.table> <col> <v1,v2>
+migration src/backend/modules/chat/migrations/20261231000003_adr0095_check_values.sql
+values chat.channels channel_type class,study_group
+values chat.chat_policies scope_type class
