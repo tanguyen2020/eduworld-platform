@@ -75,10 +75,11 @@ type ExperimentStore interface {
 	InsertAssignment(ctx context.Context, a ExperimentAssignmentRow) (bool, error)
 	// RemoveAssignments moves the active assignments of an experiment (of one tenant when tenant is not nil) to removed.
 	RemoveAssignments(ctx context.Context, experimentID uuid.UUID, tenant *uuid.UUID) (int, error)
-	// StudentClass returns the active class of a student (ref.enrollments) and its arm in the running studies.
-	StudentClass(ctx context.Context, tenant, studentID uuid.UUID) (*uuid.UUID, error)
-	// InterventionClasses lists the intervention classes of a study.
-	InterventionClasses(ctx context.Context, studyID uuid.UUID) ([]uuid.UUID, error)
+	// StudentCohort returns the unit id of the cohort (school, grade) of an active student (ref.students): the stable
+	// md5(school_id:grade_level) UUID, ADR-0095; nil when the student is unknown.
+	StudentCohort(ctx context.Context, tenant, studentID uuid.UUID) (*uuid.UUID, error)
+	// InterventionCohorts lists the unit ids of the intervention cohorts of a study (same derivation).
+	InterventionCohorts(ctx context.Context, studyID uuid.UUID) ([]uuid.UUID, error)
 	// ArmState and UpsertArmState read and write the mastery of a student under the model of an arm.
 	ArmStates(ctx context.Context, tenant, experimentID uuid.UUID, arm string, studentID uuid.UUID) (map[uuid.UUID]mastery.State, error)
 	UpsertArmState(ctx context.Context, tenant, experimentID uuid.UUID, arm string, studentID, objectiveID uuid.UUID, s mastery.State,

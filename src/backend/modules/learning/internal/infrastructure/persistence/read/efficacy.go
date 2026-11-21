@@ -110,9 +110,9 @@ func (EfficacyModel) Studies(ctx context.Context, status string, tenants []uuid.
 	if err != nil {
 		return nil, err
 	}
-	// tenancyguard:ok platform table learning.efficacy_studies (G); the class filter names tenant_id = ANY($2) and deleted_at
+	// tenancyguard:ok platform table learning.efficacy_studies (G); the cohort filter names tenant_id = ANY($2) and deleted_at
 	rows, err := tx.QueryContext(ctx, `SELECT `+studyReadCols+` FROM learning.efficacy_studies s WHERE s.deleted_at IS NULL
-		AND ($1 = '' OR s.status = $1) AND ($2::uuid[] IS NULL OR EXISTS (SELECT 1 FROM learning.efficacy_study_classes c
+		AND ($1 = '' OR s.status = $1) AND ($2::uuid[] IS NULL OR EXISTS (SELECT 1 FROM learning.efficacy_study_cohorts c
 			WHERE c.study_id = s.study_id AND c.tenant_id = ANY($2::uuid[]) AND c.deleted_at IS NULL))
 		ORDER BY s.created_at DESC, s.study_id`, status, idsParam(tenants))
 	if err != nil {
@@ -148,33 +148,33 @@ func (EfficacyModel) Study(ctx context.Context, id uuid.UUID) (*write.StudyRow, 
 	return &s, nil
 }
 
-// StudyClasses implements read.EfficacyReadModel.
-func (EfficacyModel) StudyClasses(ctx context.Context, studyID uuid.UUID, tenants []uuid.UUID) ([]read.StudyClassRead, error) {
+// StudyCohorts implements read.EfficacyReadModel.
+func (EfficacyModel) StudyCohorts(ctx context.Context, studyID uuid.UUID, tenants []uuid.UUID) ([]read.StudyCohortRead, error) {
 	tx, err := sqlTx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// tenancyguard:ok tenant_id = ANY($2) when given, else every tenant of the study under the audited bypass efficacy_study; deleted_at IS NULL
-	rows, err := tx.QueryContext(ctx, `SELECT c.study_id, c.class_id, c.tenant_id, c.school_id, c.grade_level, c.pair_no, c.arm,
-		c.assignment_method, c.form_order, c.status, c.withdrawn_at, c.withdrawal_id, c.added_by, COALESCE(rc.name, ''),
-		(SELECT count(*) FROM learning.efficacy_participants p WHERE p.study_id = c.study_id AND p.class_id = c.class_id
+	rows, err := tx.QueryContext(ctx, `SELECT c.study_id, c.school_id, c.tenant_id, c.grade_level, c.pair_no, c.arm,
+		c.assignment_method, c.form_order, c.status, c.conflict, c.withdrawn_at, c.withdrawal_id, c.added_by,
+		(SELECT count(*) FROM learning.efficacy_participants p WHERE p.study_id = c.study_id AND p.school_id = c.school_id
 			AND p.tenant_id = c.tenant_id AND p.status = 'active' AND p.deleted_at IS NULL)
-		FROM learning.efficacy_study_classes c LEFT JOIN ref.classes rc ON rc.class_id = c.class_id AND rc.tenant_id = c.tenant_id
+		FROM learning.efficacy_study_cohorts c
 		WHERE c.study_id = $1 AND ($2::uuid[] IS NULL OR c.tenant_id = ANY($2::uuid[])) AND c.deleted_at IS NULL
-		ORDER BY c.pair_no NULLS LAST, c.class_id`, studyID, idsParam(tenants))
+		ORDER BY c.pair_no NULLS LAST, c.school_id`, studyID, idsParam(tenants))
 	if err != nil {
-		return nil, fmt.Errorf("study classes: %w", err)
+		return nil, fmt.Errorf("study cohorts: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	var out []read.StudyClassRead
+	var out []read.StudyCohortRead
 	for rows.Next() {
-		var c read.StudyClassRead
+		var c read.StudyCohortRead
 		var pair sql.NullInt64
 		var arm, order sql.NullString
 		var withdrawn sql.NullTime
 		var wid uuid.NullUUID
-		if err := rows.Scan(&c.StudyID, &c.ClassID, &c.TenantID, &c.SchoolID, &c.GradeLevel, &pair, &arm, &c.Method, &order, &c.Status, &withdrawn,
-			&wid, &c.AddedBy, &c.ClassName, &c.Participants); err != nil {
+		if err := rows.Scan(&c.StudyID, &c.SchoolID, &c.TenantID, &c.GradeLevel, &pair, &arm, &c.Method, &order, &c.Status, &c.Conflict,
+			&withdrawn, &wid, &c.AddedBy, &c.Participants); err != nil {
 			return nil, err
 		}
 		c.PairNo, c.Arm, c.FormOrder, c.WithdrawalID = optInt(pair), optStr(arm), optStr(order), nullUUID(wid)
@@ -230,13 +230,13 @@ func (EfficacyModel) WaveSessions(ctx context.Context, waveID uuid.UUID) ([]read
 		return nil, err
 	}
 	// tenancyguard:ok every tenant of the wave under the audited bypass efficacy_study; tenant_id joins and deleted_at IS NULL on each table
-	rows, err := tx.QueryContext(ctx, `SELECT s.wave_id, s.class_id, s.tenant_id, s.school_id, s.exam_session_id, s.form, s.status,
+	rows, err := tx.QueryContext(ctx, `SELECT s.wave_id, s.school_id, s.tenant_id, s.grade_level, s.exam_session_id, s.form, s.status,
 		count(p.student_id), count(p.student_id) FILTER (WHERE p.status IN ('submitted','graded')),
 		count(p.student_id) FILTER (WHERE p.status = 'absent')
-		FROM learning.efficacy_wave_sessions s LEFT JOIN assessment.exam_participations p ON p.exam_session_id = s.exam_session_id
+		FROM learning.efficacy_wave_cohort_sessions s LEFT JOIN assessment.exam_participations p ON p.exam_session_id = s.exam_session_id
 			AND p.tenant_id = s.tenant_id AND p.deleted_at IS NULL
-		WHERE s.wave_id = $1 AND s.deleted_at IS NULL GROUP BY s.wave_id, s.class_id, s.tenant_id, s.school_id, s.exam_session_id, s.form, s.status
-		ORDER BY s.tenant_id, s.class_id`, waveID)
+		WHERE s.wave_id = $1 AND s.deleted_at IS NULL GROUP BY s.wave_id, s.school_id, s.tenant_id, s.grade_level, s.exam_session_id, s.form, s.status
+		ORDER BY s.tenant_id, s.school_id`, waveID)
 	if err != nil {
 		return nil, fmt.Errorf("wave sessions: %w", err)
 	}
@@ -244,7 +244,7 @@ func (EfficacyModel) WaveSessions(ctx context.Context, waveID uuid.UUID) ([]read
 	var out []read.WaveSessionRead
 	for rows.Next() {
 		var s read.WaveSessionRead
-		if err := rows.Scan(&s.WaveID, &s.ClassID, &s.TenantID, &s.SchoolID, &s.ExamSessionID, &s.Form, &s.Status, &s.Invited, &s.Completed,
+		if err := rows.Scan(&s.WaveID, &s.SchoolID, &s.TenantID, &s.GradeLevel, &s.ExamSessionID, &s.Form, &s.Status, &s.Invited, &s.Completed,
 			&s.Absent); err != nil {
 			return nil, err
 		}

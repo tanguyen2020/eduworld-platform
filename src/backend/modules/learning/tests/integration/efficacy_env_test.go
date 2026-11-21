@@ -4,7 +4,9 @@ package integration
 
 import (
 	"context"
+	"crypto/md5" //nolint:gosec // stable unit id of the test, same derivation as SQL md5()
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -17,7 +19,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 )
 
-// F035 demo principals (quickstart §1): a student of 3B, a safety moderator and a second System Admin token
+// F035 demo principals (quickstart §1): a student of grade 3 of the second school, a safety moderator and a second System Admin token
 // (password only like every portal token since ADR-0094).
 const (
 	hsChi      = "hs.chi.3b"
@@ -27,13 +29,14 @@ const (
 	studies    = "/admin/learning/efficacy-studies"
 )
 
-// effKit is the efficacy kit: the LMS kit of tenant A (3A with hs.an, hs.binh), class 3B of the same school with hs.chi,
-// a class of tenant B, two published platform efficacy forms of three questions each on the LO of the kit.
+// effKit is the efficacy kit (ADR-0095: cohorts school × grade): the LMS kit of tenant A (school with hs.an, hs.binh in
+// grade 3), a second school of tenant A with hs.chi in grade 3, a school of tenant B with one grade-3 student, two
+// published platform efficacy forms of three questions each on the LO of the kit.
 type effKit struct {
 	asgKit
-	classB, classOther uuid.UUID
-	qA, qB             []string // efficacy question versions of forms A and B
-	formA, formB       string   // published blueprint versions
+	school2, schoolOther uuid.UUID
+	qA, qB               []string // efficacy question versions of forms A and B
+	formA, formB         string   // published blueprint versions
 }
 
 // tenantHdr is X-Tenant-Id of a System Admin write into a tenant.
@@ -68,17 +71,21 @@ func (c *curEnv) publishForm(ctx context.Context, t *testing.T, qc qbCurriculum,
 
 func (c *curEnv) effSetup(ctx context.Context, t *testing.T) effKit {
 	t.Helper()
-	k := effKit{asgKit: c.asgSetup(ctx, t), classB: uuid.New(), classOther: uuid.New()}
+	k := effKit{asgKit: c.asgSetup(ctx, t), school2: uuid.New(), schoolOther: uuid.New()}
 	c.user(hsChi, authztest.Student(c.tenantA).PrincipalData, false)
 	c.user(smAntoan, authztest.Platform("safety_moderator").PrincipalData, true)
 	d := authztest.Platform("system_admin").PrincipalData
 	c.user(saPwOnly, d, true)
 	c.tokens[saPwOnly] = c.idp.Token(saPwOnly, httpxtest.PortalClient, time.Now())
-	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.classes (class_id, tenant_id, school_id, grade_level, name, source_version)
-		VALUES ($1, $2, $3, 3, '3B', 1), ($4, $5, $6, 3, '3C', 1)`, k.classB, c.tenantA, k.school, k.classOther, c.tenantB, uuid.New()); err != nil {
+	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.schools (school_id, tenant_id, status, source_version)
+		VALUES ($1, $2, 'active', 1), ($3, $4, 'active', 1) ON CONFLICT DO NOTHING`, k.school2, c.tenantA, k.schoolOther, c.tenantB); err != nil {
 		t.Fatal(err)
 	}
-	c.enrollIn(ctx, t, hsChi, k.school, k.classB, 3)
+	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.students (student_id, tenant_id, school_id, grade_level, source_version)
+		VALUES ($1, $2, $3, 3, 1)`, uuid.New(), c.tenantB, k.schoolOther); err != nil {
+		t.Fatal(err)
+	}
+	c.enrollIn(ctx, t, hsChi, k.school2, uuid.New(), 3)
 	for range 3 {
 		k.qA = append(k.qA, c.efficacyQuestion(ctx, t, k.s.qc))
 		k.qB = append(k.qB, c.efficacyQuestion(ctx, t, k.s.qc))
@@ -100,14 +107,15 @@ func (k effKit) studyBody(code string) map[string]any {
 		"min_intervention_weeks": 8}
 }
 
-// activeStudy creates a study with the pair 3A–3B (random arms) after the agreement of tenant A and activates it.
+// activeStudy creates a study with the pair of cohorts school × grade 3 — school2 × grade 3 (random arms) after the
+// agreement of tenant A and activates it.
 func (c *curEnv) activeStudy(t *testing.T, k effKit, code string) string {
 	t.Helper()
 	c.agreement(t, c.tenantA, "HD-"+code, "efficacy_study", "experiment")
 	study := must(t, c.do(t, http.MethodPost, studies, saAdmin, idem(), k.studyBody(code)), http.StatusCreated, "study").str("study_id")
-	for _, cl := range []uuid.UUID{k.class, k.classB} {
-		must(t, c.do(t, http.MethodPost, studies+"/"+study+"/classes", saAdmin, merge(idem(), tenantHdr(c.tenantA)),
-			map[string]any{"class_id": cl, "pair_no": 1}), http.StatusCreated, "class")
+	for _, sc := range []uuid.UUID{k.school, k.school2} {
+		must(t, c.do(t, http.MethodPost, studies+"/"+study+"/cohorts", saAdmin, merge(idem(), tenantHdr(c.tenantA)),
+			map[string]any{"school_id": sc, "pair_no": 1}), http.StatusCreated, "cohort")
 	}
 	must(t, c.do(t, http.MethodPost, studies+"/"+study+":activate", saAdmin, idem(), nil), http.StatusOK, "activate")
 	return study
@@ -132,15 +140,15 @@ func (c *curEnv) runWaves(ctx context.Context, t *testing.T) {
 	}
 }
 
-// sessionOfClass returns the exam session of a class in a wave response.
-func sessionOfClass(t *testing.T, w resp, class uuid.UUID) string {
+// sessionOfCohort returns the exam session of a cohort (school) in a wave response.
+func sessionOfCohort(t *testing.T, w resp, school uuid.UUID) string {
 	t.Helper()
-	for _, cl := range w.items("classes") {
-		if cl["class_id"] == class.String() {
+	for _, cl := range w.items("cohorts") {
+		if cl["school_id"] == school.String() {
 			return cl["exam_session_id"].(string)
 		}
 	}
-	t.Fatalf("no session for class %s: %s", class, w.raw)
+	t.Fatalf("no session for cohort %s: %s", school, w.raw)
 	return ""
 }
 
@@ -153,4 +161,10 @@ func (c *curEnv) realRegistry(t *testing.T) *port.Registry {
 		t.Fatal(err)
 	}
 	return reg
+}
+
+// cohortUnit is the unit id of an experiment with unit school_grade (ADR-0095): md5("<school_id>:<grade>") as a UUID, the
+// derivation of ExperimentRepo.StudentCohort.
+func cohortUnit(school uuid.UUID, grade int) uuid.UUID {
+	return uuid.UUID(md5.Sum([]byte(school.String() + ":" + strconv.Itoa(grade))))
 }

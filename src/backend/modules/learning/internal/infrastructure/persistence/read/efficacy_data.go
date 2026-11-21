@@ -20,8 +20,8 @@ func (m EfficacyModel) StudyOf(ctx context.Context, id uuid.UUID) (*write.StudyR
 }
 
 // ClassesOf implements read.EfficacyDataReader.
-func (m EfficacyModel) ClassesOf(ctx context.Context, studyID uuid.UUID) ([]read.StudyClassRead, error) {
-	return m.StudyClasses(ctx, studyID, nil)
+func (m EfficacyModel) CohortsOf(ctx context.Context, studyID uuid.UUID) ([]read.StudyCohortRead, error) {
+	return m.StudyCohorts(ctx, studyID, nil)
 }
 
 // WavesOf implements read.EfficacyDataReader.
@@ -36,7 +36,7 @@ func (EfficacyModel) ParticipantsOf(ctx context.Context, studyID uuid.UUID) ([]w
 		return nil, err
 	}
 	// tenancyguard:ok every tenant of the study under the audited bypass efficacy_study; deleted_at IS NULL
-	rows, err := tx.QueryContext(ctx, `SELECT study_id, student_id, tenant_id, school_id, class_id, arm, form_order, status, exclusion_reason,
+	rows, err := tx.QueryContext(ctx, `SELECT study_id, student_id, tenant_id, school_id, arm, form_order, status, exclusion_reason,
 		enrolled_at, withdrawn_at FROM learning.efficacy_participants WHERE study_id = $1 AND deleted_at IS NULL ORDER BY student_id`, studyID)
 	if err != nil {
 		return nil, fmt.Errorf("participants: %w", err)
@@ -47,7 +47,7 @@ func (EfficacyModel) ParticipantsOf(ctx context.Context, studyID uuid.UUID) ([]w
 		var p write.ParticipantRow
 		var reason sql.NullString
 		var withdrawn sql.NullTime
-		if err := rows.Scan(&p.StudyID, &p.StudentID, &p.TenantID, &p.SchoolID, &p.ClassID, &p.Arm, &p.FormOrder, &p.Status, &reason, &p.EnrolledAt,
+		if err := rows.Scan(&p.StudyID, &p.StudentID, &p.TenantID, &p.SchoolID, &p.Arm, &p.FormOrder, &p.Status, &reason, &p.EnrolledAt,
 			&withdrawn); err != nil {
 			return nil, err
 		}
@@ -69,15 +69,15 @@ func (EfficacyModel) Answers(ctx context.Context, waveID uuid.UUID) ([]read.Effi
 	}
 	// tenancyguard:ok every tenant of the wave under the audited bypass efficacy_study; tenant_id joins and deleted_at IS NULL on each table
 	rows, err := tx.QueryContext(ctx, `WITH s AS (
-			SELECT ws.exam_session_id, ws.tenant_id, ws.class_id, ws.form, w.kind FROM learning.efficacy_wave_sessions ws
+			SELECT ws.exam_session_id, ws.tenant_id, ws.school_id, ws.form, w.kind FROM learning.efficacy_wave_cohort_sessions ws
 			JOIN learning.efficacy_waves w ON w.wave_id = ws.wave_id AND w.deleted_at IS NULL
 			WHERE ws.wave_id = $1 AND ws.status = 'active' AND ws.deleted_at IS NULL),
 		a AS (
-			SELECT DISTINCT ON (at.student_id, at.context_id) at.attempt_id, at.student_id, at.tenant_id, s.class_id, s.form, s.kind
+			SELECT DISTINCT ON (at.student_id, at.context_id) at.attempt_id, at.student_id, at.tenant_id, s.school_id, s.form, s.kind
 			FROM assessment.attempts at JOIN s ON at.context_id = s.exam_session_id AND at.tenant_id = s.tenant_id
 			WHERE at.mode = 'exam' AND at.status = 'graded' AND at.deleted_at IS NULL
 			ORDER BY at.student_id, at.context_id, at.graded_at DESC, at.attempt_id)
-		SELECT a.student_id, a.tenant_id, a.class_id, a.kind, a.form, i.question_version_id, i.objective_ids, COALESCE(i.final_is_correct, false),
+		SELECT a.student_id, a.tenant_id, a.school_id, a.kind, a.form, i.question_version_id, i.objective_ids, COALESCE(i.final_is_correct, false),
 			COALESCE(i.final_score, 0)::float8, i.max_score::float8
 		FROM a JOIN assessment.attempt_items i ON i.attempt_id = a.attempt_id AND i.tenant_id = a.tenant_id AND i.deleted_at IS NULL
 		ORDER BY a.student_id, i.position`, waveID)
@@ -89,7 +89,7 @@ func (EfficacyModel) Answers(ctx context.Context, waveID uuid.UUID) ([]read.Effi
 	for rows.Next() {
 		var r read.EfficacyAnswerRow
 		var los []byte
-		if err := rows.Scan(&r.StudentID, &r.TenantID, &r.ClassID, &r.WaveKind, &r.Form, &r.QuestionVersionID, &los, &r.Correct, &r.Score,
+		if err := rows.Scan(&r.StudentID, &r.TenantID, &r.SchoolID, &r.WaveKind, &r.Form, &r.QuestionVersionID, &los, &r.Correct, &r.Score,
 			&r.Max); err != nil {
 			return nil, err
 		}

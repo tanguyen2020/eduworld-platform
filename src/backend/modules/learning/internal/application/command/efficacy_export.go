@@ -19,7 +19,7 @@ type PseudonymKeys interface {
 }
 
 // Dataset builds the pseudonymous dataset of a study (F035-AC-32, LEARNING_EFFICACY_PLAN §7): one row per active
-// participant (withdrawn, excluded and anonymized students are left out) with participant_code, class_code and site_code
+// participant (withdrawn, excluded and anonymized students are left out) with participant_code, cohort_code (cluster school × grade, ADR-0095) and site_code
 // = HMAC-SHA256(key, study_id ‖ id) truncated, pair_no, arm, form_order, grade, right/total by wave × objective, M_eff and
 // level by objective, usage; never a student id, a name, a class, a school, a tenant nor a birth date. Read under the
 // audited bypass efficacy_study.
@@ -56,14 +56,14 @@ func (h Efficacy) Dataset(ctx context.Context, studyID uuid.UUID) ([]string, [][
 			return err
 		}
 		grade = s.GradeLevel
-		classes, err := h.Data.ClassesOf(ctx, studyID)
+		cohorts, err := h.Data.CohortsOf(ctx, studyID)
 		if err != nil {
 			return err
 		}
-		for _, c := range classes {
-			pairs[c.ClassID], tenants[c.ClassID] = c.PairNo, c.TenantID
+		for _, c := range cohorts {
+			pairs[c.SchoolID], tenants[c.SchoolID] = c.PairNo, c.TenantID
 			if c.FormOrder != nil {
-				orders[c.ClassID] = *c.FormOrder
+				orders[c.SchoolID] = *c.FormOrder
 			}
 		}
 		return nil
@@ -72,7 +72,7 @@ func (h Efficacy) Dataset(ctx context.Context, studyID uuid.UUID) ([]string, [][
 	}
 	objectives := append([]uuid.UUID(nil), in.Objectives...)
 	sort.Slice(objectives, func(i, j int) bool { return objectives[i].String() < objectives[j].String() })
-	cols := []string{"participant_code", "class_code", "site_code", "pair_no", "arm", "form_order", "grade_level"}
+	cols := []string{"participant_code", "cohort_code", "site_code", "pair_no", "arm", "form_order", "grade_level"}
 	for _, kind := range []string{efficacy.WavePre, efficacy.WavePost} {
 		for _, o := range objectives {
 			cols = append(cols, kind+"_correct_lo_"+o.String(), kind+"_total_lo_"+o.String())
@@ -113,11 +113,11 @@ func (h Efficacy) Dataset(ctx context.Context, studyID uuid.UUID) ([]string, [][
 			continue // F035-AC-19: withdrawn and excluded participants are never exported
 		}
 		pair := ""
-		if n := pairs[p.ClassID]; n != nil {
+		if n := pairs[p.CohortID]; n != nil {
 			pair = strconv.Itoa(*n)
 		}
-		row := []string{ps.Code(studyID, p.StudentID), ps.Code(studyID, p.ClassID), ps.Code(studyID, tenants[p.ClassID]), pair, p.Arm,
-			orders[p.ClassID], strconv.Itoa(grade)}
+		row := []string{ps.Code(studyID, p.StudentID), ps.Code(studyID, p.CohortID), ps.Code(studyID, tenants[p.CohortID]), pair, p.Arm,
+			orders[p.CohortID], strconv.Itoa(grade)}
 		for _, kind := range []string{efficacy.WavePre, efficacy.WavePost} {
 			for _, o := range objectives {
 				c := answers[[3]string{p.StudentID.String(), kind, o.String()}]

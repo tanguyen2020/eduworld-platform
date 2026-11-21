@@ -45,13 +45,14 @@ type StudyRow struct {
 	CreatedAt      time.Time
 }
 
-// StudyClassRow is one row of learning.efficacy_study_classes (T).
-type StudyClassRow struct {
+// StudyCohortRow is one row of learning.efficacy_study_cohorts (T): the cluster (school, grade of the study) of a study
+// (ADR-0095 D3); Conflict marks a cohort migrated from classes in different arms, pairs or form orders.
+type StudyCohortRow struct {
 	StudyID      uuid.UUID
-	ClassID      uuid.UUID
-	TenantID     uuid.UUID
 	SchoolID     uuid.UUID
+	TenantID     uuid.UUID
 	GradeLevel   int
+	Conflict     bool
 	PairNo       *int
 	Arm          *string
 	Method       string
@@ -60,7 +61,7 @@ type StudyClassRow struct {
 	WithdrawnAt  *time.Time
 	WithdrawalID *uuid.UUID
 	AddedBy      uuid.UUID
-	Deleted      bool // a soft-deleted row (removed class), revived when the class is added again
+	Deleted      bool // a soft-deleted row (removed cohort), revived when the cohort is added again
 }
 
 // ParticipantRow is one row of learning.efficacy_participants (T).
@@ -68,8 +69,7 @@ type ParticipantRow struct {
 	StudyID         uuid.UUID
 	StudentID       uuid.UUID
 	TenantID        uuid.UUID
-	SchoolID        uuid.UUID
-	ClassID         uuid.UUID
+	SchoolID        uuid.UUID // the cohort of the participant (school × grade of the study)
 	Arm             string
 	FormOrder       string
 	Status          string
@@ -96,12 +96,12 @@ type WaveRow struct {
 	CreatedAt      time.Time
 }
 
-// WaveSessionRow is one row of learning.efficacy_wave_sessions (T).
+// WaveSessionRow is one row of learning.efficacy_wave_cohort_sessions (T): the exam session of a cohort in a wave.
 type WaveSessionRow struct {
 	WaveID        uuid.UUID
-	ClassID       uuid.UUID
-	TenantID      uuid.UUID
 	SchoolID      uuid.UUID
+	TenantID      uuid.UUID
+	GradeLevel    int
 	ExamSessionID uuid.UUID
 	Form          string
 	Status        string
@@ -114,7 +114,7 @@ type WithdrawalRow struct {
 	StudyID           *uuid.UUID
 	Scope             string
 	SchoolID          *uuid.UUID
-	ClassID           *uuid.UUID
+	GradeLevel        *int // scope cohort: the grade of the study
 	StudentIDs        []uuid.UUID
 	Reason            string
 	SchoolRequestRef  *string
@@ -155,20 +155,18 @@ type EfficacyReportRow struct {
 	CreatedAt       time.Time
 }
 
-// EfficacyClassRef is a class of the identity projection (ref.classes).
-type EfficacyClassRef struct {
-	ClassID    uuid.UUID
-	TenantID   uuid.UUID
-	SchoolID   uuid.UUID
-	GradeLevel int
+// EfficacySchoolRef is a school of the identity projection (ref.schools) with its active students of a grade.
+type EfficacySchoolRef struct {
+	SchoolID uuid.UUID
+	TenantID uuid.UUID
+	Students int // active, not deleted students of the grade asked
 }
 
 // WithdrawScope selects the participants of a withdrawal (zero values = no restriction).
 type WithdrawScope struct {
 	TenantID   uuid.UUID
 	StudyID    *uuid.UUID // nil = every draft/active study of the tenant
-	SchoolID   *uuid.UUID
-	ClassID    *uuid.UUID
+	SchoolID   *uuid.UUID // with StudyID: the cohort of that school
 	StudentIDs []uuid.UUID
 }
 
@@ -190,18 +188,18 @@ type EfficacyStore interface {
 	StudyCodeTaken(ctx context.Context, code string, except uuid.UUID) (bool, error)
 	UpdateStudy(ctx context.Context, s StudyRow, prev int64) (bool, error)
 
-	// Classes.
-	Class(ctx context.Context, tenant, classID uuid.UUID) (*EfficacyClassRef, error)
-	StudyClass(ctx context.Context, studyID, classID uuid.UUID, withDeleted bool) (*StudyClassRow, error)
-	StudyClasses(ctx context.Context, studyID uuid.UUID) ([]StudyClassRow, error)
-	// ClassInOtherStudy reports the class enrolled in another draft or active study.
-	ClassInOtherStudy(ctx context.Context, tenant, classID, studyID uuid.UUID) (bool, error)
-	UpsertStudyClass(ctx context.Context, c StudyClassRow) error
-	UpdateStudyClass(ctx context.Context, c StudyClassRow) error
-	RemoveStudyClass(ctx context.Context, c StudyClassRow, by uuid.UUID) error
-	// ClassStudents lists the active students of a class (ref.enrollments, ref.students status active: anonymized or
+	// Cohorts (school × grade of the study, ADR-0095).
+	School(ctx context.Context, tenant, schoolID uuid.UUID, grade int) (*EfficacySchoolRef, error)
+	StudyCohort(ctx context.Context, studyID, schoolID uuid.UUID, withDeleted bool) (*StudyCohortRow, error)
+	StudyCohorts(ctx context.Context, studyID uuid.UUID) ([]StudyCohortRow, error)
+	// CohortInOtherStudy reports the cohort (school, grade) enrolled in another draft or active study.
+	CohortInOtherStudy(ctx context.Context, tenant, schoolID uuid.UUID, grade int, studyID uuid.UUID) (bool, error)
+	UpsertStudyCohort(ctx context.Context, c StudyCohortRow) error
+	UpdateStudyCohort(ctx context.Context, c StudyCohortRow) error
+	RemoveStudyCohort(ctx context.Context, c StudyCohortRow, by uuid.UUID) error
+	// CohortStudents lists the active students of a grade of a school (ref.students status active: anonymized or
 	// processing-restricted accounts are not active).
-	ClassStudents(ctx context.Context, tenant, classID uuid.UUID) ([]uuid.UUID, error)
+	CohortStudents(ctx context.Context, tenant, schoolID uuid.UUID, grade int) ([]uuid.UUID, error)
 
 	// Waves.
 	InsertWave(ctx context.Context, w WaveRow) error
@@ -217,11 +215,11 @@ type EfficacyStore interface {
 
 	// Participants.
 	InsertParticipants(ctx context.Context, ps []ParticipantRow) (int, error)
-	Participants(ctx context.Context, studyID uuid.UUID, classID *uuid.UUID, status string) ([]ParticipantRow, error)
+	Participants(ctx context.Context, studyID uuid.UUID, schoolID *uuid.UUID, status string) ([]ParticipantRow, error)
 	// Withdraw moves the active participants of the scope to withdrawn and returns them.
 	Withdraw(ctx context.Context, s WithdrawScope, at time.Time, withdrawalID uuid.UUID) ([]ParticipantRow, error)
-	// MarkClassesWithdrawn marks the enrolled classes of the scope withdrawn (scope tenant, school or class).
-	MarkClassesWithdrawn(ctx context.Context, s WithdrawScope, at time.Time, withdrawalID uuid.UUID) ([]StudyClassRow, error)
+	// MarkCohortsWithdrawn marks the enrolled cohorts of the scope withdrawn (scope tenant, school or cohort).
+	MarkCohortsWithdrawn(ctx context.Context, s WithdrawScope, at time.Time, withdrawalID uuid.UUID) ([]StudyCohortRow, error)
 	// ExcludeStudent excludes a student from every study of the tenant (anonymized, processing_restricted).
 	ExcludeStudent(ctx context.Context, tenant, studentID uuid.UUID, reason string, at time.Time) (int, error)
 

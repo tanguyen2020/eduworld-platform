@@ -4,7 +4,7 @@
 > Liên quan: [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) · [LEARNING_ANALYTICS](LEARNING_ANALYTICS.md) · [EXAM_ENGINE](EXAM_ENGINE.md) · [QUESTION_BANK](QUESTION_BANK.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) (PED-01, K1) · [PRODUCT_VISION](../00-overview/PRODUCT_VISION.md) · [ROADMAP](../12-project/ROADMAP.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [OQ-12](../12-project/OPEN_QUESTIONS.md)
 
 > [!IMPORTANT]
-> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Đơn vị nghiên cứu là **cụm (trường, khối)** thay lớp: ghép cặp cụm can thiệp/so sánh cùng khối giữa các trường, rút theo cụm hoặc học sinh, `experiments.unit` ∈ {`student`, `school_grade`}; số cụm khuyến nghị mỗi nhóm `efficacy_recommended_cohorts_per_arm` = **4** cụm (trường, khối) mỗi nhóm [Confirmed] (OQ-25 Answered 2026-11-21; thay `efficacy_recommended_classes_per_arm` = 6 lớp, đổi tên trong code ở WP-L2). Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-L2 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Đơn vị nghiên cứu là **cụm (trường, khối)** thay lớp: ghép cặp cụm can thiệp/so sánh cùng khối giữa các trường, rút theo cụm hoặc học sinh, `experiments.unit` ∈ {`student`, `school_grade`}; số cụm khuyến nghị mỗi nhóm `efficacy_recommended_cohorts_per_arm` = **4** cụm (trường, khối) mỗi nhóm [Confirmed] (OQ-25 Answered 2026-11-21; thay `efficacy_recommended_classes_per_arm` = 6 lớp, đổi tên trong code ở WP-L2). WP-L2 (2026-11-21) đã viết lại §3, §4, §6–§8 và hiện thực trong F035 (`efficacy_study_cohorts`, `efficacy_wave_cohort_sessions`, rút phạm vi `cohort`); lớp ở hai arm trong một cụm khi chuyển dữ liệu cũ được đánh dấu xung đột (`conflict`), không tự gộp.
 
 ADR-0080 đã Accepted (2026-11-17). Thiết kế chi tiết dưới đây vẫn là **[Confirmed]** cho tới khi chuyên gia đánh giá giáo dục/thống kê rà soát; yêu cầu là FR-ANL-017…023 trong [PRD](../00-overview/PRODUCT_REQUIREMENTS.md), triển khai ở [F035](../../specs/035-learning-efficacy-study/spec.md).
 
@@ -14,7 +14,7 @@ EduWorld tuyên bố giúp học sinh tiến bộ. Mastery ([LEARNING_ANALYTICS 
 
 | Trong phạm vi | Ngoài phạm vi |
 |---|---|
-| Nghiên cứu pilot 8 tuần, bài kiểm tra trước/sau, lớp so sánh | Đánh giá chính thức theo thông tư ([ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md)) |
+| Nghiên cứu pilot 8 tuần, bài kiểm tra trước/sau, cụm (trường, khối) so sánh | Đánh giá chính thức theo thông tư ([ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md)) |
 | Chỉ số learning gain, effect size, predictive validity | KPI vận hành game ([GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md)) |
 | Hạ tầng A/B cho `mastery_model_configs` và selection rule | A/B cho kinh tế game, UI thương mại |
 | Đạo đức nghiên cứu và dữ liệu trẻ em | Nghiên cứu dài hạn nhiều năm |
@@ -23,7 +23,7 @@ EduWorld tuyên bố giúp học sinh tiến bộ. Mastery ([LEARNING_ANALYTICS 
 
 | # | Câu hỏi | Chỉ số chính |
 |---|---|---|
-| Q1 | Học sinh dùng EduWorld 8 tuần có tiến bộ hơn lớp so sánh trên bài kiểm tra độc lập không? | Effect size (Hedges' g) của learning gain |
+| Q1 | Học sinh dùng EduWorld 8 tuần có tiến bộ hơn nhóm so sánh trên bài kiểm tra độc lập không? | Effect size (Hedges' g) của learning gain |
 | Q2 | Mastery của hệ thống có dự báo đúng kết quả bài kiểm tra độc lập theo từng LO không? | Tương quan, độ hiệu chuẩn (§5) |
 | Q3 | Học sinh có làm theo gợi ý tự động không, và gợi ý có giúp LO yếu tiến bộ không? | `recommendation_follow_rate`, gain theo LO được gợi ý |
 | Q4 | Thay đổi mô hình mastery/selection rule có cải thiện học tập không? | Kết quả thử nghiệm A/B (§6) |
@@ -32,11 +32,11 @@ EduWorld tuyên bố giúp học sinh tiến bộ. Mastery ([LEARNING_ANALYTICS 
 
 ### 3.1. Thiết kế
 
-- **Loại:** bán thực nghiệm (quasi-experimental) có nhóm so sánh, chia theo **lớp** (không chia học sinh trong cùng lớp để tránh lây nhiễm).
-- **Nhóm can thiệp:** lớp dùng EduWorld theo kế hoạch của trường (khuyến nghị ≥ 3 buổi × 20–30 phút/tuần).
-- **Nhóm so sánh:** lớp cùng khối, cùng trường (hoặc trường tương đồng), học bình thường; chỉ dùng EduWorld để làm bài kiểm tra trước/sau. Được dùng đầy đủ sản phẩm sau khi kết thúc nghiên cứu (waitlist).
+- **Loại:** bán thực nghiệm (quasi-experimental) có nhóm so sánh, chia theo **cụm (trường, khối)** (ADR-0095; không chia học sinh trong cùng cụm để tránh lây nhiễm).
+- **Nhóm can thiệp:** cụm (học sinh một khối của một trường) dùng EduWorld theo kế hoạch của trường (khuyến nghị ≥ 3 buổi × 20–30 phút/tuần).
+- **Nhóm so sánh:** cụm cùng khối ở trường khác tương đồng, học bình thường; chỉ dùng EduWorld để làm bài kiểm tra trước/sau. Được dùng đầy đủ sản phẩm sau khi kết thúc nghiên cứu (waitlist).
 - **Thời lượng:** 8 tuần học, cùng phạm vi chương trình (cùng các topic/LO) ở hai nhóm.
-- **Ghép cặp:** lớp được ghép theo khối, trường và điểm bài kiểm tra trước; phân nhóm ngẫu nhiên trong từng cặp khi trường đồng ý.
+- **Ghép cặp:** cụm được ghép từng đôi cùng khối giữa hai trường (theo điểm bài kiểm tra trước); một cụm có một arm — khi chuyển nghiên cứu cũ theo lớp, cụm có lớp ở hai arm/cặp/thứ tự dạng khác nhau được đánh dấu `conflict` và phải bỏ rồi thêm lại trước khi kích hoạt; phân nhóm ngẫu nhiên trong từng cặp khi trường đồng ý.
 
 ```mermaid
 flowchart LR
@@ -49,9 +49,9 @@ flowchart LR
 
 - **Độc lập với nội dung luyện tập:** ngân hàng câu riêng (`efficacy_instrument`), do EdTech soạn và người thứ hai duyệt, **không** xuất hiện trong practice/quest/minigame/đề thường (cơ chế `exam_only`, [QUESTION_BANK §8](QUESTION_BANK.md#8-chống-lộ-đáp-án)); không dùng câu tham số hóa từ template luyện tập.
 - **Tự chấm trong game:** tổ chức như một ExamSession ([EXAM_ENGINE](EXAM_ENGINE.md)) với `feedback_timing = never`, `result_release = manual` (kết quả không công bố cho học sinh trong thời gian nghiên cứu), không thưởng XP theo điểm, không gợi ý; evidence **không** đưa vào mastery (để không làm nhiễu Q2).
-- **Hai dạng song song A và B** cân bằng độ khó ([EXAM_ENGINE §4.1](EXAM_ENGINE.md#41-cân-bằng-độ-khó-giữa-các-biến-thể-confirmed)); một nửa số lớp làm A trước B sau, nửa còn lại ngược lại (counterbalancing).
+- **Hai dạng song song A và B** cân bằng độ khó ([EXAM_ENGINE §4.1](EXAM_ENGINE.md#41-cân-bằng-độ-khó-giữa-các-biến-thể-confirmed)); một nửa số cụm làm A trước B sau, nửa còn lại ngược lại (counterbalancing).
 - **Phủ LO:** mỗi LO trong phạm vi có ≥ 3 câu mỗi dạng (`efficacy_min_questions_per_lo_per_form`) để tính điểm theo LO; tổng 20–30 câu, ≤ 40 phút (lớp 1–3: ≤ 20 câu, có audio đọc đề).
-- **Kiểm định trước khi dùng:** thử trên một lớp không tham gia, yêu cầu reliability (KR-20) ≥ 0,7 ([EXAM_ENGINE §8.1](EXAM_ENGINE.md#81-độ-tin-cậy-của-đề-chính-thức-confirmed)).
+- **Kiểm định trước khi dùng:** thử trên một cụm không tham gia (arm `validation`), yêu cầu reliability (KR-20) ≥ 0,7 ([EXAM_ENGINE §8.1](EXAM_ENGINE.md#81-độ-tin-cậy-của-đề-chính-thức-confirmed)).
 - Khi trường cho phép, thu thêm điểm bài kiểm tra định kỳ của nhà trường (ẩn danh hóa) làm tiêu chí ngoài thứ hai.
 
 ## 4. Chỉ số
@@ -60,12 +60,12 @@ flowchart LR
 |---|---|---|
 | Learning gain | `post − pre` (tỉ lệ đúng) của từng học sinh | — |
 | Normalized gain | `(post − pre) / (1 − pre)` | Báo cáo kèm |
-| Effect size | Hedges' g của chênh lệch gain giữa hai nhóm; mô hình chính: hồi quy đa mức (học sinh trong lớp) với điểm trước làm biến kiểm soát | g ≥ 0,2 là tín hiệu tích cực tối thiểu cho exit criterion pilot (ADR-0080) |
+| Effect size | Hedges' g của chênh lệch gain giữa hai nhóm; mô hình chính: hồi quy đa mức (học sinh trong cụm trường × khối; ICC và design effect tính theo cụm) với điểm trước làm biến kiểm soát | g ≥ 0,2 là tín hiệu tích cực tối thiểu cho exit criterion pilot (ADR-0080) |
 | Gain theo LO | Gain trên các LO được gợi ý ôn (Q3) so với LO không được gợi ý | — |
 | Mức sử dụng | Thời gian học thực (`active_learning_time_sec`), số buổi, `rapid_guess_rate` | Báo cáo để giải thích kết quả (liều dùng) |
 | Tỉ lệ rời nghiên cứu | Học sinh thiếu bài trước hoặc sau | < 20% (`efficacy_attrition_warn`); báo cáo phân tích độ nhạy nếu cao hơn |
 
-**Cỡ mẫu (ước tính sơ bộ, cần chuyên gia thống kê xác nhận):** phát hiện g = 0,3 với power 0,8, α = 0,05 và hệ số tương quan nội lớp khoảng 0,1–0,2 cần khoảng 6–8 lớp mỗi nhóm (~200 học sinh/nhóm). Số liệu nhỏ hơn chỉ cho kết quả mô tả, không kết luận: báo cáo trong hệ thống gắn nhãn `descriptive_only` khi số lớp mỗi nhóm dưới `efficacy_recommended_classes_per_arm` (6). Theo ADR-0095, đơn vị là cụm (trường, khối): ngưỡng mới `efficacy_recommended_cohorts_per_arm` = 4 cụm mỗi nhóm [Confirmed] (OQ-25), áp cùng code ở WP-L2.
+**Cỡ mẫu (ước tính sơ bộ, cần chuyên gia thống kê xác nhận):** phát hiện g = 0,3 với power 0,8, α = 0,05 và hệ số tương quan nội cụm khoảng 0,1–0,2 cần khoảng 4 cụm (trường, khối) mỗi nhóm (`efficacy_recommended_cohorts_per_arm` = 4, OQ-25; cụm lớn hơn lớp nên ~200 học sinh/nhóm vẫn đạt). Số liệu nhỏ hơn chỉ cho kết quả mô tả, không kết luận: báo cáo trong hệ thống gắn nhãn `descriptive_only` khi số cụm mỗi nhóm dưới `efficacy_recommended_cohorts_per_arm` (4) [Confirmed] (OQ-25).
 
 ## 5. Đối chiếu mastery với bài kiểm tra độc lập (predictive validity)
 
@@ -84,8 +84,8 @@ Kết quả là đầu vào cho việc chỉnh tham số mastery và cho quyết
 
 | Thành phần | Thiết kế [Confirmed] |
 |---|---|
-| Đăng ký thử nghiệm | Bảng `learning.experiments` (`experiment_id`, `code` ≤ 64, `kind` ∈ {`mastery_model`, `selection_rule`, `recommendation_rule`}, `arms` jsonb, `unit` ∈ {`student`, `class`}, `start_at`, `end_at`, `status`, `owner`), phiên bản hóa, thay đổi có audit |
-| Phân nhánh | Hash ổn định `(experiment_id, unit_id) mod 100` → arm; mặc định đơn vị là **lớp** để tránh học sinh cùng lớp nhận trải nghiệm khác nhau; tenant phải đồng ý tham gia |
+| Đăng ký thử nghiệm | Bảng `learning.experiments` (`experiment_id`, `code` ≤ 64, `kind` ∈ {`mastery_model`, `selection_rule`, `recommendation_rule`}, `arms` jsonb, `unit` ∈ {`student`, `school_grade`} (ADR-0095; `class` chỉ còn ở dòng cũ), `start_at`, `end_at`, `status`, `owner`), phiên bản hóa, thay đổi có audit |
+| Phân nhánh | Hash ổn định `(experiment_id, unit_id) mod 100` → arm; mặc định đơn vị là **cụm (trường, khối)** (`school_grade`) để tránh học sinh cùng khối của một trường nhận trải nghiệm khác nhau; tenant phải đồng ý tham gia |
 | Mastery model | Mỗi arm trỏ một `mastery_model_configs` version; arm không phải control **chạy shadow** cho mọi học sinh (tính song song, không hiển thị) trước khi hiển thị cho arm thật |
 | Selection rule | Arm đổi tham số SelectionRule (ví dụ tỉ lệ câu anh em, interleaving, phân bố độ khó) |
 | Luật gợi ý (`recommendation_rule`) | Arm không phải control đổi tham số của rule engine gợi ý ([LEARNING_ANALYTICS §6](LEARNING_ANALYTICS.md#6-recommendation-rules)) trong danh mục có miền giá trị: `review_threshold` 0,10–0,95, `max_recommendations` 1–3 (chỉ giảm), `prerequisite_depth` 1–3, `spaced_review_days` 0–60, `practice_difficulty` −1…+1, `diagnostic_threshold` 1–10; arm control giữ tham số mặc định |
@@ -105,7 +105,7 @@ Kết quả nghiên cứu là điều kiện ra khỏi pilot ([ADR-0080](../adr/
 - **Tham gia:** nhà trường đồng ý tham gia bằng thỏa thuận pilot; khi trường yêu cầu, học sinh được loại khỏi phần phân tích nghiên cứu (xem "Rút khỏi nghiên cứu") và vẫn học bình thường. Mô hình consent và nhận định pháp lý về nghiên cứu trên trẻ em ngoài version này ([ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md)).
 - **Không tước quyền học:** nhóm so sánh học theo chương trình bình thường của trường và được dùng sản phẩm sau nghiên cứu.
 - **Không gây áp lực:** bài kiểm tra trước/sau không tính vào điểm của trường, không công bố điểm cá nhân, không xếp hạng, không thưởng XP theo điểm.
-- **Tối thiểu hóa và giả danh hóa:** bộ dữ liệu phân tích dùng mã giả danh, không tên, không lớp thật (mã lớp giả danh); khóa ánh xạ lưu riêng, chỉ EdTech lead truy cập, có audit; báo cáo chỉ công bố số liệu gộp, ẩn ô < 5 học sinh ([LEARNING_ANALYTICS §5](LEARNING_ANALYTICS.md#5-read-models--aggregation)).
+- **Tối thiểu hóa và giả danh hóa:** bộ dữ liệu phân tích dùng mã giả danh, không tên, không trường/lớp thật (mã cụm `cohort_code` giả danh, không có cột lớp); khóa ánh xạ lưu riêng, chỉ EdTech lead truy cập, có audit; báo cáo chỉ công bố số liệu gộp, ẩn ô < 5 học sinh ([LEARNING_ANALYTICS §5](LEARNING_ANALYTICS.md#5-read-models--aggregation)).
 - **Lưu trữ:** dữ liệu nghiên cứu ở hạ tầng tại Việt Nam, thời hạn theo DATA_PRIVACY; không chia sẻ bên thứ ba.
 - **Rút khỏi nghiên cứu:** dữ liệu của học sinh rút lui bị loại khỏi phân tích kể từ thời điểm rút (ẩn danh hóa theo ADR-0070, không xóa vật lý).
 
@@ -127,7 +127,7 @@ Kết quả nghiên cứu là điều kiện ra khỏi pilot ([ADR-0080](../adr/
 | AC-EFF-001 | Câu `efficacy_instrument` không xuất hiện trong mọi selection của practice/quest/minigame/đề thường |
 | AC-EFF-002 | Bài kiểm tra trước/sau không tạo evidence mastery, không thưởng XP, không hiện kết quả cho học sinh trong thời gian nghiên cứu |
 | AC-EFF-003 | Bộ dữ liệu xuất cho phân tích chỉ có mã giả danh; ô < 5 học sinh bị ẩn trong báo cáo |
-| AC-EFF-004 | Hai học sinh cùng lớp luôn ở cùng arm khi `unit = class`; arm được ghi trong learning event |
+| AC-EFF-004 | Hai học sinh cùng khối của một trường luôn ở cùng arm khi `unit = school_grade` (ADR-0095); arm được ghi trong learning event |
 | AC-EFF-005 | Báo cáo pilot có đủ effect size, khoảng tin cậy, predictive validity theo LO và tỉ lệ rời nghiên cứu |
 
 Hiện thực và kiểm thử: [F035](../../specs/035-learning-efficacy-study/spec.md) (tiêu chí F035-AC-01…AC-37, bằng chứng trong [tasks.md](../../specs/035-learning-efficacy-study/tasks.md)).

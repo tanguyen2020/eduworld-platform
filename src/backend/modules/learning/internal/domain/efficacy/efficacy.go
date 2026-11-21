@@ -1,6 +1,6 @@
 // Package efficacy holds the rules of the learning efficacy study of F035 (LEARNING_EFFICACY_PLAN §3–§8, ADR-0080): the
-// research agreement of a tenant, the study and its two parallel forms, the classes paired into intervention and
-// comparison arms, the validation/pre/post waves, the participants snapshotted at the pre wave, the withdrawals and the
+// research agreement of a tenant, the study and its two parallel forms, the cohorts (school, grade — ADR-0095) paired into
+// intervention and comparison arms, the validation/pre/post waves, the participants snapshotted at the pre wave, the withdrawals and the
 // pseudonymous codes of the exported dataset. Pure Go: thresholds come from the caller (Config), never from settings.
 package efficacy
 
@@ -22,14 +22,14 @@ const (
 	StudyCancelled = "cancelled"
 )
 
-// Arms of a class.
+// Arms of a cohort.
 const (
 	ArmIntervention = "intervention"
 	ArmComparison   = "comparison"
 	ArmValidation   = "validation"
 )
 
-// Form orders of a class (counterbalancing, LEARNING_EFFICACY_PLAN §3.2).
+// Form orders of a cohort (counterbalancing, LEARNING_EFFICACY_PLAN §3.2).
 const (
 	OrderAThenB = "a_then_b"
 	OrderBThenA = "b_then_a"
@@ -83,7 +83,7 @@ const (
 const (
 	ScopeTenant   = "tenant"
 	ScopeSchool   = "school"
-	ScopeClass    = "class"
+	ScopeCohort   = "cohort" // one school of a study (the grade of the study), ADR-0095
 	ScopeStudents = "students"
 )
 
@@ -105,7 +105,7 @@ const (
 type Config struct {
 	MinQuestionsPerObjective int     // efficacy_min_questions_per_lo_per_form (3)
 	AttritionWarn            float64 // efficacy_attrition_warn (0.20)
-	RecommendedClassesPerArm int     // efficacy_recommended_classes_per_arm (6)
+	RecommendedCohortsPerArm int     // efficacy_recommended_cohorts_per_arm (4, ADR-0095 / OQ-25)
 	ValidityRho              float64 // efficacy_validity_rho_min (0.4)
 	ValidityCalibration      float64 // efficacy_validity_calibration_min (0.7)
 	ValidityAUC              float64 // efficacy_validity_auc_min (0.7)
@@ -115,7 +115,7 @@ type Config struct {
 
 // DefaultConfig returns the registered defaults.
 func DefaultConfig() Config {
-	return Config{MinQuestionsPerObjective: 3, AttritionWarn: 0.20, RecommendedClassesPerArm: 6, ValidityRho: 0.4,
+	return Config{MinQuestionsPerObjective: 3, AttritionWarn: 0.20, RecommendedCohortsPerArm: 4, ValidityRho: 0.4,
 		ValidityCalibration: 0.7, ValidityAUC: 0.7, MinCellSize: 5, ReliabilityWarn: 0.7}
 }
 

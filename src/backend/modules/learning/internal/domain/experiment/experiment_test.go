@@ -12,7 +12,7 @@ import (
 
 func def() Definition {
 	now := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
-	return Definition{Code: "mastery-we-1-1", Kind: KindMastery, Unit: UnitClass, TenantIDs: []uuid.UUID{uuid.New()}, StartAt: now,
+	return Definition{Code: "mastery-we-1-1", Kind: KindMastery, Unit: UnitSchoolGrade, TenantIDs: []uuid.UUID{uuid.New()}, StartAt: now,
 		EndAt: now.Add(30 * 24 * time.Hour), ActiveVer: "we-1.0", KnownVers: map[string]bool{"we-1.0": true, "we-1.1": true},
 		Arms: []Arm{{Code: "control", AllocationPct: 50, IsControl: true, ModelVersion: "we-1.0"}, {Code: "we11", AllocationPct: 50, ModelVersion: "we-1.1"}}}
 }
@@ -25,7 +25,7 @@ func fieldsOf(vs []Violation) string {
 	return strings.Join(out, ",")
 }
 
-// F035-AC-21: arms, allocation, control model, rule parameters, consent, comparison classes, window.
+// F035-AC-21: arms, allocation, control model, rule parameters, consent, comparison cohorts, window.
 func TestValidate(t *testing.T) {
 	if vs := def().Validate(); len(vs) != 0 {
 		t.Fatalf("valid: %v", vs)
@@ -77,11 +77,11 @@ func TestValidate(t *testing.T) {
 	}
 }
 
-// F035-AC-22, SC-004: stable buckets; every student of a class gets the arm of the class; allocation respected.
+// F035-AC-22, SC-004: stable buckets; every student of a cohort (school, grade) gets the arm of the cohort; allocation respected.
 func TestAssign(t *testing.T) {
-	exp, class := uuid.New(), uuid.New()
-	b := Bucket(exp, class)
-	if b < 0 || b > 99 || Bucket(exp, class) != b {
+	exp, cohort := uuid.New(), uuid.New()
+	b := Bucket(exp, cohort)
+	if b < 0 || b > 99 || Bucket(exp, cohort) != b {
 		t.Fatal("bucket not stable")
 	}
 	arms := def().Arms
@@ -97,7 +97,7 @@ func TestAssign(t *testing.T) {
 	}
 	same := 0
 	for range 20 {
-		if Bucket(uuid.New(), class) == b {
+		if Bucket(uuid.New(), cohort) == b {
 			same++
 		}
 	}

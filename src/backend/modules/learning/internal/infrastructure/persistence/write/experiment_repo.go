@@ -230,36 +230,40 @@ func (ExperimentRepo) RemoveAssignments(ctx context.Context, experimentID uuid.U
 	return int(n), nil
 }
 
-// StudentClass implements write.ExperimentStore.
-func (ExperimentRepo) StudentClass(ctx context.Context, tenant, studentID uuid.UUID) (*uuid.UUID, error) {
+// cohortUnit is the unit id of a cohort (school, grade) of an experiment with unit school_grade (ADR-0095 D3).
+const cohortUnit = `md5(%s::text || ':' || %s::text)::uuid`
+
+// StudentCohort implements write.ExperimentStore.
+func (ExperimentRepo) StudentCohort(ctx context.Context, tenant, studentID uuid.UUID) (*uuid.UUID, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
 	var id uuid.UUID
-	// tenancyguard:ok projection ref.enrollments (no deleted_at, status active) of the tenant given
-	err = tx.QueryRowContext(ctx, `SELECT class_id FROM ref.enrollments WHERE tenant_id = $1 AND student_id = $2 AND status = 'active'
-		ORDER BY start_date DESC, class_id LIMIT 1`, tenant, studentID).Scan(&id)
+	// tenancyguard:ok projection ref.students of the tenant given, deleted_at IS NULL
+	err = tx.QueryRowContext(ctx, `SELECT `+fmt.Sprintf(cohortUnit, "school_id", "grade_level")+` FROM ref.students
+		WHERE tenant_id = $1 AND student_id = $2 AND status = 'active' AND deleted_at IS NULL AND grade_level IS NOT NULL`,
+		tenant, studentID).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("student class: %w", err)
+		return nil, fmt.Errorf("student cohort: %w", err)
 	}
 	return &id, nil
 }
 
-// InterventionClasses implements write.ExperimentStore.
-func (ExperimentRepo) InterventionClasses(ctx context.Context, studyID uuid.UUID) ([]uuid.UUID, error) {
+// InterventionCohorts implements write.ExperimentStore.
+func (ExperimentRepo) InterventionCohorts(ctx context.Context, studyID uuid.UUID) ([]uuid.UUID, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// tenancyguard:ok every tenant of the study (platform role) or the session tenant (RLS); deleted_at IS NULL
-	rows, err := tx.QueryContext(ctx, `SELECT class_id FROM learning.efficacy_study_classes WHERE study_id = $1 AND arm = 'intervention'
-		AND status = 'enrolled' AND deleted_at IS NULL ORDER BY class_id`, studyID)
+	rows, err := tx.QueryContext(ctx, `SELECT `+fmt.Sprintf(cohortUnit, "school_id", "grade_level")+` FROM learning.efficacy_study_cohorts
+		WHERE study_id = $1 AND arm = 'intervention' AND status = 'enrolled' AND deleted_at IS NULL ORDER BY school_id`, studyID)
 	if err != nil {
-		return nil, fmt.Errorf("intervention classes: %w", err)
+		return nil, fmt.Errorf("intervention cohorts: %w", err)
 	}
 	return scanIDs(rows)
 }

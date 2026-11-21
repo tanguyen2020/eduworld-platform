@@ -34,7 +34,7 @@ type EfficacyStudyView struct {
 	FormB        uuid.UUID   `json:"form_b_blueprint_version_id"`
 	MinWeeks     int         `json:"min_intervention_weeks"`
 	Status       string      `json:"status"`
-	ClassCount   int         `json:"class_count"`
+	CohortCount  int         `json:"cohort_count"`
 	PairCount    int         `json:"pair_count"`
 	TenantIDs    []uuid.UUID `json:"tenant_ids"`
 	CreatedBy    uuid.UUID   `json:"created_by"`
@@ -44,13 +44,12 @@ type EfficacyStudyView struct {
 	Version      int64       `json:"version"`
 }
 
-// EfficacyStudyClassView is EfficacyStudyClass.
-type EfficacyStudyClassView struct {
+// EfficacyStudyCohortView is EfficacyStudyCohort (cluster school × grade of the study, ADR-0095).
+type EfficacyStudyCohortView struct {
 	StudyID          uuid.UUID  `json:"study_id"`
-	ClassID          uuid.UUID  `json:"class_id"`
 	TenantID         uuid.UUID  `json:"tenant_id"`
 	SchoolID         uuid.UUID  `json:"school_id"`
-	ClassName        string     `json:"class_name,omitempty"`
+	Conflict         bool       `json:"conflict"`
 	GradeLevel       int        `json:"grade_level"`
 	PairNo           *int       `json:"pair_no"`
 	Arm              *string    `json:"arm"`
@@ -61,9 +60,10 @@ type EfficacyStudyClassView struct {
 	WithdrawnAt      *time.Time `json:"withdrawn_at"`
 }
 
-// EfficacyWaveClassView is one class of EfficacyWave.classes (counts only, never scores).
-type EfficacyWaveClassView struct {
-	ClassID        uuid.UUID `json:"class_id"`
+// EfficacyWaveCohortView is one cohort of EfficacyWave.cohorts (counts only, never scores).
+type EfficacyWaveCohortView struct {
+	SchoolID       uuid.UUID `json:"school_id"`
+	GradeLevel     int       `json:"grade_level"`
 	TenantID       uuid.UUID `json:"tenant_id"`
 	ExamSessionID  uuid.UUID `json:"exam_session_id"`
 	Form           string    `json:"form"`
@@ -75,17 +75,17 @@ type EfficacyWaveClassView struct {
 
 // EfficacyWaveView is EfficacyWave.
 type EfficacyWaveView struct {
-	WaveID          uuid.UUID               `json:"wave_id"`
-	StudyID         uuid.UUID               `json:"study_id"`
-	Kind            string                  `json:"kind"`
-	Form            *string                 `json:"form"`
-	WindowStart     time.Time               `json:"window_start"`
-	WindowEnd       time.Time               `json:"window_end"`
-	DurationSeconds int                     `json:"duration_seconds"`
-	Status          string                  `json:"status"`
-	OpenedAt        *time.Time              `json:"opened_at"`
-	ClosedAt        *time.Time              `json:"closed_at"`
-	Classes         []EfficacyWaveClassView `json:"classes"`
+	WaveID          uuid.UUID                `json:"wave_id"`
+	StudyID         uuid.UUID                `json:"study_id"`
+	Kind            string                   `json:"kind"`
+	Form            *string                  `json:"form"`
+	WindowStart     time.Time                `json:"window_start"`
+	WindowEnd       time.Time                `json:"window_end"`
+	DurationSeconds int                      `json:"duration_seconds"`
+	Status          string                   `json:"status"`
+	OpenedAt        *time.Time               `json:"opened_at"`
+	ClosedAt        *time.Time               `json:"closed_at"`
+	Cohorts         []EfficacyWaveCohortView `json:"cohorts"`
 }
 
 // EfficacyWithdrawalView is EfficacyWithdrawal.

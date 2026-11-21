@@ -23,8 +23,7 @@ const SnapshotDeleteReason = "efficacy_withdrawn"
 // WithdrawInput is EfficacyWithdrawalCreate.
 type WithdrawInput struct {
 	Scope            string
-	SchoolID         *uuid.UUID
-	ClassID          *uuid.UUID
+	SchoolID         *uuid.UUID // scopes school and cohort (the school of the cohort, the grade of the study)
 	StudentIDs       []uuid.UUID
 	Reason           string
 	SchoolRequestRef *string
@@ -44,16 +43,16 @@ func (in WithdrawInput) validate() error {
 		if in.SchoolID == nil {
 			return problem.Invalid("/school_id", problem.SubRequired, "is required for the scope school")
 		}
-	case efficacy.ScopeClass:
-		if in.ClassID == nil {
-			return problem.Invalid("/class_id", problem.SubRequired, "is required for the scope class")
+	case efficacy.ScopeCohort:
+		if in.SchoolID == nil {
+			return problem.Invalid("/school_id", problem.SubRequired, "is required for the scope cohort")
 		}
 	case efficacy.ScopeStudents:
 		if n := len(in.StudentIDs); n < 1 || n > efficacy.MaxWithdrawStudents {
 			return problem.Invalid("/student_ids", problem.SubRequired, "lists 1 to 500 students for the scope students")
 		}
 	default:
-		return problem.Invalid("/scope", problem.SubInvalid, "must be tenant, school, class or students")
+		return problem.Invalid("/scope", problem.SubInvalid, "must be tenant, school, cohort or students (ADR-0095: no class)")
 	}
 	return nil
 }
@@ -66,7 +65,7 @@ func WithdrawalView(w write.WithdrawalRow) dto.EfficacyWithdrawalView {
 
 // WithdrawEfficacyParticipants withdraws participants of a study at the request of the school (F035-AC-18): the active
 // participants of the scope (tenant of X-Tenant-Id) become withdrawn, leave the audience of the efficacy sessions not
-// opened yet, the sessions not opened of a class withdrawn as a whole are cancelled, their mastery snapshots are
+// opened yet, the sessions not opened of a cohort withdrawn as a whole are cancelled, their mastery snapshots are
 // soft-deleted (F035-AC-19); idempotent by Idempotency-Key (the same key answers the first withdrawal); audit
 // efficacy.participants_withdrawn.
 func (h Efficacy) WithdrawEfficacyParticipants(ctx context.Context, studyID uuid.UUID, in WithdrawInput) (out dto.EfficacyWithdrawalView, err error) {
@@ -102,14 +101,18 @@ func (h Efficacy) WithdrawEfficacyParticipants(ctx context.Context, studyID uuid
 		if s.Status != efficacy.StudyDraft && s.Status != efficacy.StudyActive {
 			return problem.New(problem.InvalidStateTransition, "participants are withdrawn from a running study only")
 		}
-		scope := write.WithdrawScope{TenantID: tenant, StudyID: &studyID, SchoolID: in.SchoolID, ClassID: in.ClassID}
+		scope := write.WithdrawScope{TenantID: tenant, StudyID: &studyID, SchoolID: in.SchoolID}
 		if in.Scope == efficacy.ScopeStudents {
 			scope.StudentIDs = in.StudentIDs
 		}
 		now := h.now()
-		w := write.WithdrawalRow{ID: ids.New(), TenantID: tenant, StudyID: &studyID, Scope: in.Scope, SchoolID: in.SchoolID, ClassID: in.ClassID,
+		w := write.WithdrawalRow{ID: ids.New(), TenantID: tenant, StudyID: &studyID, Scope: in.Scope, SchoolID: in.SchoolID,
 			StudentIDs: scope.StudentIDs, Reason: in.Reason, SchoolRequestRef: in.SchoolRequestRef, RequestedBy: p.UserID,
 			IdempotencyKey: truncateRunes(in.IdempotencyKey, 64), CreatedAt: now}
+		if in.Scope == efficacy.ScopeCohort {
+			g := s.GradeLevel
+			w.GradeLevel = &g
+		}
 		if w.IdempotencyKey == "" {
 			w.IdempotencyKey = w.ID.String()
 		}
@@ -138,7 +141,7 @@ func (h Efficacy) withdraw(ctx context.Context, p authz.Principal, scope write.W
 }
 
 // withdrawWith applies a withdrawal in the transaction of ctx (TenantScope of the tenant of the scope): participants,
-// classes withdrawn as a whole (scopes tenant, school, class), the audience and the sessions not opened yet of the
+// cohorts withdrawn as a whole (scopes tenant, school, cohort), the audience and the sessions not opened yet of the
 // efficacy waves, the mastery snapshots.
 func (h Efficacy) withdrawWith(ctx context.Context, p authz.Principal, scope write.WithdrawScope, kind string, withdrawalID uuid.UUID,
 	at time.Time) (int, int, error) {
@@ -146,9 +149,9 @@ func (h Efficacy) withdrawWith(ctx context.Context, p authz.Principal, scope wri
 	if err != nil {
 		return 0, 0, err
 	}
-	var classes []write.StudyClassRow
+	var cohorts []write.StudyCohortRow
 	if kind != efficacy.ScopeStudents {
-		if classes, err = h.Store.MarkClassesWithdrawn(ctx, scope, at, withdrawalID); err != nil {
+		if cohorts, err = h.Store.MarkCohortsWithdrawn(ctx, scope, at, withdrawalID); err != nil {
 			return 0, 0, err
 		}
 	}
@@ -166,8 +169,8 @@ func (h Efficacy) withdrawWith(ctx context.Context, p authz.Principal, scope wri
 	}
 	whole := map[[2]uuid.UUID]bool{}
 	studies := map[uuid.UUID]bool{}
-	for _, c := range classes {
-		whole[[2]uuid.UUID{c.StudyID, c.ClassID}] = true
+	for _, c := range cohorts {
+		whole[[2]uuid.UUID{c.StudyID, c.SchoolID}] = true
 		studies[c.StudyID] = true
 	}
 	for st := range students {
@@ -191,7 +194,7 @@ func (h Efficacy) withdrawWith(ctx context.Context, p authz.Principal, scope wri
 				if s.TenantID != scope.TenantID || s.Status != "active" {
 					continue
 				}
-				if whole[[2]uuid.UUID{study, s.ClassID}] {
+				if whole[[2]uuid.UUID{study, s.SchoolID}] {
 					if h.Exams != nil {
 						if err := h.Exams.CancelExamSession(ctx, s.ExamSessionID, "efficacy_withdrawn"); err != nil {
 							return 0, 0, err

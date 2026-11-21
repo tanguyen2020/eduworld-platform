@@ -82,7 +82,7 @@ func (q Efficacy) ListResearchAgreements(ctx context.Context, status string, in 
 }
 
 // StudyView is the view of a study with its classes.
-func StudyView(s read.StudyRow, classes []read.StudyClassRead) dto.EfficacyStudyView {
+func StudyView(s read.StudyRow, classes []read.StudyCohortRead) dto.EfficacyStudyView {
 	v := dto.EfficacyStudyView{StudyID: s.ID, Code: s.Code, Title: s.Title, SubjectID: s.SubjectID, GradeLevel: s.GradeLevel,
 		ObjectiveIDs: s.ObjectiveIDs, FormA: s.FormA, FormB: s.FormB, MinWeeks: s.MinWeeks, Status: s.Status, CreatedBy: s.CreatedBy,
 		CreatedAt: s.CreatedAt, ActivatedAt: s.ActivatedAt, CompletedAt: s.CompletedAt, Version: s.Version, TenantIDs: []uuid.UUID{}}
@@ -91,7 +91,7 @@ func StudyView(s read.StudyRow, classes []read.StudyClassRead) dto.EfficacyStudy
 	}
 	pairs := map[int]bool{}
 	for _, c := range classes {
-		v.ClassCount++
+		v.CohortCount++
 		if c.PairNo != nil {
 			pairs[*c.PairNo] = true
 		}
@@ -130,7 +130,7 @@ func (q Efficacy) ListEfficacyStudies(ctx context.Context, status string, in Pag
 			return err
 		}
 		for _, s := range rows {
-			classes, err := q.Model.StudyClasses(ctx, s.ID, tenants)
+			classes, err := q.Model.StudyCohorts(ctx, s.ID, tenants)
 			if err != nil {
 				return err
 			}
@@ -163,7 +163,7 @@ func (q Efficacy) GetEfficacyStudy(ctx context.Context, id uuid.UUID) (out dto.E
 		if s == nil {
 			return problem.New(problem.NotFound, "")
 		}
-		classes, err := q.Model.StudyClasses(ctx, id, nil)
+		classes, err := q.Model.StudyCohorts(ctx, id, nil)
 		if err != nil {
 			return err
 		}
@@ -173,10 +173,10 @@ func (q Efficacy) GetEfficacyStudy(ctx context.Context, id uuid.UUID) (out dto.E
 	return out, err
 }
 
-// ListEfficacyStudyClasses is listEfficacyStudyClasses (F035-AC-11): the classes of the tenants of tenant_ids
+// ListEfficacyStudyCohorts is listEfficacyStudyCohorts (F035-AC-11): the classes of the tenants of tenant_ids
 // (CrossTenantScope) or of every tenant of the study (bypass efficacy_study); each row carries its tenant_id.
-func (q Efficacy) ListEfficacyStudyClasses(ctx context.Context, studyID uuid.UUID, in PageInput) (out Page[dto.EfficacyStudyClassView], err error) {
-	ctx, done := observability.UseCase(ctx, "learning.query.ListEfficacyStudyClasses")
+func (q Efficacy) ListEfficacyStudyCohorts(ctx context.Context, studyID uuid.UUID, in PageInput) (out Page[dto.EfficacyStudyCohortView], err error) {
+	ctx, done := observability.UseCase(ctx, "learning.query.ListEfficacyStudyCohorts")
 	defer func() { done(err) }()
 	if err := efficacyReader(ctx, authz.PermPlatformEfficacyStudyManage); err != nil {
 		return out, err
@@ -188,7 +188,7 @@ func (q Efficacy) ListEfficacyStudyClasses(ctx context.Context, studyID uuid.UUI
 			return out, err
 		}
 	}
-	var views []dto.EfficacyStudyClassView
+	var views []dto.EfficacyStudyCohortView
 	err = q.Session.Read(rctx, func(ctx context.Context) error {
 		s, err := q.Model.Study(ctx, studyID)
 		if err != nil {
@@ -197,13 +197,13 @@ func (q Efficacy) ListEfficacyStudyClasses(ctx context.Context, studyID uuid.UUI
 		if s == nil {
 			return problem.New(problem.NotFound, "")
 		}
-		rows, err := q.Model.StudyClasses(ctx, studyID, tenants)
+		rows, err := q.Model.StudyCohorts(ctx, studyID, tenants)
 		if err != nil {
 			return err
 		}
 		for _, c := range rows {
-			views = append(views, dto.EfficacyStudyClassView{StudyID: c.StudyID, ClassID: c.ClassID, TenantID: c.TenantID, SchoolID: c.SchoolID,
-				ClassName: c.ClassName, GradeLevel: c.GradeLevel, PairNo: c.PairNo, Arm: c.Arm, AssignmentMethod: c.Method, FormOrder: c.FormOrder,
+			views = append(views, dto.EfficacyStudyCohortView{StudyID: c.StudyID, TenantID: c.TenantID, SchoolID: c.SchoolID,
+				Conflict: c.Conflict, GradeLevel: c.GradeLevel, PairNo: c.PairNo, Arm: c.Arm, AssignmentMethod: c.Method, FormOrder: c.FormOrder,
 				Status: c.Status, ParticipantCount: c.Participants, WithdrawnAt: c.WithdrawnAt})
 		}
 		return nil
@@ -211,10 +211,10 @@ func (q Efficacy) ListEfficacyStudyClasses(ctx context.Context, studyID uuid.UUI
 	if err != nil {
 		return out, err
 	}
-	return paginate(views, func(v dto.EfficacyStudyClassView) uuid.UUID { return v.ClassID }, in, q.Cursors)
+	return paginate(views, func(v dto.EfficacyStudyCohortView) uuid.UUID { return v.SchoolID }, in, q.Cursors)
 }
 
-// ListEfficacyWaves is listEfficacyWaves: the waves of a study with the invited, completed and absent counts of each class
+// ListEfficacyWaves is listEfficacyWaves: the waves of a study with the invited, completed and absent counts of each cohort
 // (never a score).
 func (q Efficacy) ListEfficacyWaves(ctx context.Context, studyID uuid.UUID) (out []dto.EfficacyWaveView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.query.ListEfficacyWaves")
@@ -241,13 +241,13 @@ func (q Efficacy) ListEfficacyWaves(ctx context.Context, studyID uuid.UUID) (out
 		}
 		for _, w := range ws {
 			v := dto.EfficacyWaveView{WaveID: w.ID, StudyID: w.StudyID, Kind: w.Kind, Form: w.Form, WindowStart: w.WindowStart, WindowEnd: w.WindowEnd,
-				DurationSeconds: w.DurationSec, Status: w.Status, OpenedAt: w.OpenedAt, ClosedAt: w.ClosedAt, Classes: []dto.EfficacyWaveClassView{}}
+				DurationSeconds: w.DurationSec, Status: w.Status, OpenedAt: w.OpenedAt, ClosedAt: w.ClosedAt, Cohorts: []dto.EfficacyWaveCohortView{}}
 			sessions, err := q.Model.WaveSessions(ctx, w.ID)
 			if err != nil {
 				return err
 			}
 			for _, x := range sessions {
-				v.Classes = append(v.Classes, dto.EfficacyWaveClassView{ClassID: x.ClassID, TenantID: x.TenantID, ExamSessionID: x.ExamSessionID,
+				v.Cohorts = append(v.Cohorts, dto.EfficacyWaveCohortView{SchoolID: x.SchoolID, GradeLevel: x.GradeLevel, TenantID: x.TenantID, ExamSessionID: x.ExamSessionID,
 					Form: x.Form, SessionStatus: x.Status, InvitedCount: x.Invited, CompletedCount: x.Completed, AbsentCount: x.Absent})
 			}
 			out = append(out, v)

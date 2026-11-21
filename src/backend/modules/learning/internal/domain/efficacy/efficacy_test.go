@@ -87,12 +87,12 @@ func TestAgreementRules(t *testing.T) {
 
 func ptr(n int) *int { return &n }
 
-// F035-AC-09: two classes per pair, random arms reproducible from (study_id, pair_no), form order alternating by pair.
+// F035-AC-09 (ADR-0095): two cohorts (schools) per pair, random arms reproducible from (study_id, pair_no), form order alternating by pair.
 func TestActivate(t *testing.T) {
 	study := uuid.New()
-	classes := []Class{{ClassID: uuid.New(), PairNo: ptr(1)}, {ClassID: uuid.New(), PairNo: ptr(1)},
-		{ClassID: uuid.New(), PairNo: ptr(2), Arm: ArmComparison, Method: MethodManual}, {ClassID: uuid.New(), PairNo: ptr(2)},
-		{ClassID: uuid.New(), Arm: ArmValidation, Method: MethodManual}}
+	classes := []Cohort{{SchoolID: uuid.New(), PairNo: ptr(1)}, {SchoolID: uuid.New(), PairNo: ptr(1)},
+		{SchoolID: uuid.New(), PairNo: ptr(2), Arm: ArmComparison, Method: MethodManual}, {SchoolID: uuid.New(), PairNo: ptr(2)},
+		{SchoolID: uuid.New(), Arm: ArmValidation, Method: MethodManual}}
 	out, vs := Activate(study, classes)
 	if len(vs) != 0 {
 		t.Fatalf("violations %v", vs)
@@ -107,7 +107,7 @@ func TestActivate(t *testing.T) {
 	for _, c := range out {
 		if c.PairNo == nil {
 			if c.Arm != ArmValidation || c.FormOrder != OrderAThenB {
-				t.Fatalf("validation class %+v", c)
+				t.Fatalf("validation cohort %+v", c)
 			}
 			continue
 		}
@@ -143,13 +143,16 @@ func TestActivate(t *testing.T) {
 
 func TestActivateRefusals(t *testing.T) {
 	study := uuid.New()
-	cases := map[string][]Class{
-		"single class":   {{ClassID: uuid.New(), PairNo: ptr(1)}},
-		"three classes":  {{ClassID: uuid.New(), PairNo: ptr(1)}, {ClassID: uuid.New(), PairNo: ptr(1)}, {ClassID: uuid.New(), PairNo: ptr(1)}},
-		"same arm":       {{ClassID: uuid.New(), PairNo: ptr(1), Arm: ArmIntervention}, {ClassID: uuid.New(), PairNo: ptr(1), Arm: ArmIntervention}},
-		"no pair":        {{ClassID: uuid.New(), Arm: ArmValidation}},
-		"unpaired armed": {{ClassID: uuid.New(), Arm: ArmIntervention}},
+	sameSchool := uuid.New()
+	cases := map[string][]Cohort{
+		"single cohort":  {{SchoolID: uuid.New(), PairNo: ptr(1)}},
+		"three cohorts":  {{SchoolID: uuid.New(), PairNo: ptr(1)}, {SchoolID: uuid.New(), PairNo: ptr(1)}, {SchoolID: uuid.New(), PairNo: ptr(1)}},
+		"same arm":       {{SchoolID: uuid.New(), PairNo: ptr(1), Arm: ArmIntervention}, {SchoolID: uuid.New(), PairNo: ptr(1), Arm: ArmIntervention}},
+		"no pair":        {{SchoolID: uuid.New(), Arm: ArmValidation}},
+		"unpaired armed": {{SchoolID: uuid.New(), Arm: ArmIntervention}},
 		"empty study":    {},
+		"same school":    {{SchoolID: sameSchool, PairNo: ptr(1)}, {SchoolID: sameSchool, PairNo: ptr(1)}},
+		"conflict":       {{SchoolID: uuid.New(), PairNo: ptr(1), Conflict: true}, {SchoolID: uuid.New(), PairNo: ptr(1)}},
 	}
 	for name, cs := range cases {
 		if _, vs := Activate(study, cs); len(vs) == 0 {
@@ -158,16 +161,16 @@ func TestActivateRefusals(t *testing.T) {
 	}
 }
 
-func TestNewClass(t *testing.T) {
-	if c, vs := NewClass(Class{PairNo: ptr(1)}); len(vs) != 0 || c.Method != MethodRandom {
+func TestNewCohort(t *testing.T) {
+	if c, vs := NewCohort(Cohort{PairNo: ptr(1)}); len(vs) != 0 || c.Method != MethodRandom {
 		t.Fatalf("random: %v %+v", vs, c)
 	}
-	if c, vs := NewClass(Class{PairNo: ptr(1), Arm: ArmIntervention}); len(vs) != 0 || c.Method != MethodManual {
+	if c, vs := NewCohort(Cohort{PairNo: ptr(1), Arm: ArmIntervention}); len(vs) != 0 || c.Method != MethodManual {
 		t.Fatalf("manual: %v", vs)
 	}
-	for _, c := range []Class{{Arm: ArmValidation, PairNo: ptr(1)}, {Arm: ArmIntervention}, {PairNo: ptr(201)}, {PairNo: ptr(1), Arm: "x"},
+	for _, c := range []Cohort{{Arm: ArmValidation, PairNo: ptr(1)}, {Arm: ArmIntervention}, {PairNo: ptr(201)}, {PairNo: ptr(1), Arm: "x"},
 		{PairNo: ptr(1), FormOrder: "x"}} {
-		if _, vs := NewClass(c); len(vs) == 0 {
+		if _, vs := NewCohort(c); len(vs) == 0 {
 			t.Errorf("accepted %+v", c)
 		}
 	}

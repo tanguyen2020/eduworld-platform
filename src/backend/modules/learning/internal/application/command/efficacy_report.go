@@ -148,14 +148,14 @@ func (h Efficacy) reportData(ctx context.Context, studyID uuid.UUID) (efficacy.R
 			return err
 		}
 		in.Objectives = s.ObjectiveIDs
-		classes, err := h.Data.ClassesOf(ctx, studyID)
+		cohorts, err := h.Data.CohortsOf(ctx, studyID)
 		if err != nil {
 			return err
 		}
-		in.Classes = map[string]int{}
-		for _, c := range classes {
+		in.Cohorts = map[string]int{}
+		for _, c := range cohorts {
 			if c.Arm != nil {
-				in.Classes[*c.Arm]++
+				in.Cohorts[*c.Arm]++
 			}
 		}
 		parts, err := h.Data.ParticipantsOf(ctx, studyID)
@@ -164,7 +164,7 @@ func (h Efficacy) reportData(ctx context.Context, studyID uuid.UUID) (efficacy.R
 		}
 		byTenant := map[uuid.UUID][]uuid.UUID{}
 		for _, p := range parts {
-			in.Participants = append(in.Participants, efficacy.Participant{StudentID: p.StudentID, ClassID: p.ClassID, Arm: p.Arm, Status: p.Status})
+			in.Participants = append(in.Participants, efficacy.Participant{StudentID: p.StudentID, CohortID: p.SchoolID, Arm: p.Arm, Status: p.Status})
 			if p.Status == efficacy.ParticipantActive {
 				byTenant[p.TenantID] = append(byTenant[p.TenantID], p.StudentID)
 			}

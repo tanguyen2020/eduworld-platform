@@ -48,7 +48,7 @@ Partial unique `(tenant_id, agreement_ref) WHERE deleted_at IS NULL`.
 | `activated_at`, `completed_at` | timestamptz | NULL | |
 | `idempotency_key` | `varchar(64)` | UNIQUE `(created_by, idempotency_key)` | |
 
-### EfficacyStudyClass — `learning.efficacy_study_classes` (Mới, T)
+### EfficacyStudyClass — `learning.efficacy_study_classes` (Mới, T) — ADR-0095: thay bằng `learning.efficacy_study_cohorts` (PK `(study_id, school_id)`, `grade_level` = khối của study, cờ `conflict`; migration `20261229000007`); bảng lớp không ghi/đọc, DROP ở WP-R
 
 | Trường | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
@@ -69,7 +69,7 @@ Partial unique `(class_id) WHERE status = 'enrolled' AND deleted_at IS NULL` (m�
 | Trường | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
 | `study_id`, `student_id` | uuid | PK `(study_id, student_id)` | |
-| `tenant_id`, `school_id`, `class_id` | uuid | NOT NULL, RLS | `class_id` lúc chụp |
+| `tenant_id`, `school_id`, `class_id` | uuid | NOT NULL, RLS | ADR-0095: `class_id` nullable, không ghi (cụm = `school_id` × khối của study) |
 | `arm`, `form_order` | `varchar(64)` | NOT NULL | sao từ lớp |
 | `status` | `varchar(64)` | `active`/`withdrawn`/`excluded` | |
 | `exclusion_reason` | `varchar(64)` | NULL; `withdrawn`/`anonymized`/`processing_restricted` | |
@@ -80,7 +80,7 @@ Partial unique `(class_id) WHERE status = 'enrolled' AND deleted_at IS NULL` (m�
 
 `efficacy_waves`: `wave_id` PK, `study_id`, `kind varchar(64)` (`validation`/`pre`/`post`), `form varchar(16)` NULL (`a`/`b`, chỉ `validation`), `window_start`, `window_end` (CHECK `>`), `duration_sec int` (> 0, mặc định từ blueprint), `status varchar(64)` (`scheduled`/`open`/`closed`/`cancelled`), `opened_at`, `closed_at`, `created_by`, `idempotency_key varchar(64)`; partial unique `(study_id, kind) WHERE kind IN ('pre','post') AND status <> 'cancelled' AND deleted_at IS NULL`.
 
-`efficacy_wave_sessions`: PK `(wave_id, class_id)`, `tenant_id`, `school_id`, `exam_session_id uuid NOT NULL UNIQUE`, `form varchar(16)` (`a`/`b`), `status varchar(64)` (`active`/`cancelled`).
+`efficacy_wave_sessions` (ADR-0095: thay bằng `efficacy_wave_cohort_sessions`, PK `(wave_id, school_id)` + `grade_level`): PK `(wave_id, class_id)`, `tenant_id`, `school_id`, `exam_session_id uuid NOT NULL UNIQUE`, `form varchar(16)` (`a`/`b`), `status varchar(64)` (`active`/`cancelled`).
 
 ### EfficacyWithdrawal — `learning.efficacy_withdrawals` (Mới, T)
 
@@ -101,7 +101,7 @@ PK `(study_id, student_id, objective_id)`; `tenant_id` (RLS), `m_eff numeric(4,3
 | `experiment_id` | UUIDv7 | PK | |
 | `code` | `varchar(64)` | partial unique `WHERE deleted_at IS NULL`; `^[a-z0-9_-]{1,64}$` | |
 | `kind` | `varchar(64)` | `mastery_model`/`recommendation_rule` | |
-| `unit` | `varchar(64)` | `class`/`student`, DEFAULT `class` | |
+| `unit` | `varchar(64)` | `school_grade`/`student`, DEFAULT `school_grade` (ADR-0095; `class` chỉ còn ở dòng cũ) | |
 | `arms` | jsonb | CHECK ≤ 16384 B | `[{code ≤ 32, allocation_pct, is_control, model_version?, rule_params?}]` 2–5 phần tử |
 | `tenant_ids` | uuid[] | CHECK `cardinality BETWEEN 1 AND 200` | |
 | `study_id` | uuid | NULL | giới hạn đơn vị vào lớp `intervention` |
@@ -113,7 +113,7 @@ PK `(study_id, student_id, objective_id)`; `tenant_id` (RLS), `m_eff numeric(4,3
 
 ### ExperimentAssignment — `learning.experiment_assignments` (Mới, T)
 
-PK `(experiment_id, student_id)`; `tenant_id` (RLS), `unit_id uuid` (class hoặc student), `bucket smallint` (0–99), `arm_code varchar(32)`, `assigned_at`; `status varchar(64)` (`active`/`removed`).
+PK `(experiment_id, student_id)`; `tenant_id` (RLS), `unit_id uuid` (cụm `md5(school_id:grade_level)` hoặc student — ADR-0095), `bucket smallint` (0–99), `arm_code varchar(32)`, `assigned_at`; `status varchar(64)` (`active`/`removed`).
 
 ### ExperimentMasteryState — `learning.experiment_mastery_states` (Mới, T)
 

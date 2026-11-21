@@ -161,3 +161,11 @@
 - [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — MOCK chỉ ở `src/test/research-backend.ts` và fake trong test
 - [x] Tài liệu sở hữu, CONFIG_DEFAULTS, DATABASE_DESIGN, EVENT_DESIGN, ADMIN_PORTAL, CHANGELOG cập nhật
 - [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+
+## ADR-0095 D3 — cụm (trường, khối) thay lớp (WP-L2, 2026-11-21)
+
+- [x] T090 Test trước (domain): `efficacy.Activate` theo cụm — cặp hai cụm ở hai trường khác nhau, cụm `conflict` bị từ chối; báo cáo `cohorts`, `recommended_cohorts_per_arm` = 4 — file: `internal/domain/efficacy/{efficacy_test,report_test}.go` — Bằng chứng: `TestActivateRefusals` ("same school", "conflict"), `TestBuildReport` PASS
+- [x] T091 Migration expand `20261229000007_adr0095_efficacy_cohorts.sql`: `efficacy_study_cohorts`, `efficacy_wave_cohort_sessions`, `efficacy_participants.class_id` nullable, `efficacy_withdrawals.grade_level` + scope `cohort`, `experiments.unit` `school_grade` (mặc định); chuyển lớp → cụm, đánh dấu `conflict` khi lớp ở hai arm/cặp/thứ tự dạng — Bằng chứng: `TestEfficacyCohortBackfillConflict`
+- [x] T092 Code theo cụm: thêm/gỡ/kích hoạt, đợt (ExamSession target khối của trường), participant (học sinh khối của trường), rút `cohort`, báo cáo (ICC/design effect theo cụm, `efficacy.Config.RecommendedCohortsPerArm` = 4 thay `RecommendedClassesPerArm`), dataset `cohort_code`, thử nghiệm A/B `unit = school_grade` — Bằng chứng: `TestEfficacyStudy`, `TestEfficacyWaves`, `TestEfficacyWithdraw`, `TestEfficacyReportAndDataset`, `TestEfficacyExperiments`, `TestEfficacyExperimentJobs`, `TestEfficacyExperimentRuleParams`
+- [x] T093 Contract: `listEfficacyStudyCohorts`, `addEfficacyStudyCohort`, `removeEfficacyStudyCohort` (thay 3 op lớp), `EfficacyStudy.cohort_count`, `EfficacyWave.cohorts`, `EfficacyWithdrawalCreate.scope` `cohort`, `LearningExperiment*.unit` `school_grade`; menu catalog; `pnpm gen:api`
+- [ ] T094 Portal (workspace D — Nghiên cứu hiệu quả) dùng cụm thay lớp — WP-P1 (agent portal)

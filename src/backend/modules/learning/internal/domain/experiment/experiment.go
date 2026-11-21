@@ -23,8 +23,8 @@ const (
 	KindMastery        = "mastery_model"
 	KindRecommendation = "recommendation_rule"
 
-	UnitClass   = "class"
-	UnitStudent = "student"
+	UnitSchoolGrade = "school_grade" // the cluster (school, grade) of the student, ADR-0095 D3
+	UnitStudent     = "student"
 
 	StatusDraft     = "draft"
 	StatusShadow    = "shadow"
@@ -81,7 +81,7 @@ type Definition struct {
 	ActiveVer  string          // version of the active mastery model (control of mastery_model)
 	KnownVers  map[string]bool // versions of mastery_model_configs
 	NoConsent  []uuid.UUID     // tenants without an active agreement covering experiment
-	Comparison bool            // the study given holds comparison/validation classes only (no intervention class)
+	Comparison bool            // the study given holds comparison/validation cohorts only (no intervention cohort)
 }
 
 // Validate applies F035-AC-21.
@@ -93,8 +93,8 @@ func (d Definition) Validate() []Violation {
 	if d.Kind != KindMastery && d.Kind != KindRecommendation {
 		vs = append(vs, Violation{"/kind", "must be mastery_model or recommendation_rule"})
 	}
-	if d.Unit != UnitClass && d.Unit != UnitStudent {
-		vs = append(vs, Violation{"/unit", "must be class or student"})
+	if d.Unit != UnitSchoolGrade && d.Unit != UnitStudent {
+		vs = append(vs, Violation{"/unit", "must be school_grade or student (ADR-0095: no class)"})
 	}
 	if n := len(d.Arms); n < 2 || n > 5 {
 		vs = append(vs, Violation{"/arms", "lists 2 to 5 arms"})
@@ -161,7 +161,7 @@ func (d Definition) Validate() []Violation {
 		vs = append(vs, Violation{"/tenant_ids", "tenant " + t.String() + " has no active agreement covering experiment"})
 	}
 	if d.Comparison {
-		vs = append(vs, Violation{"/study_id", "the study has no intervention class (comparison and validation classes never take part)"})
+		vs = append(vs, Violation{"/study_id", "the study has no intervention cohort (comparison and validation cohorts never take part)"})
 	}
 	if !d.EndAt.After(d.StartAt) {
 		vs = append(vs, Violation{"/end_at", "must be after start_at"})

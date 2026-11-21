@@ -36,7 +36,7 @@ func TestEfficacyWithdraw(t *testing.T) {
 	k := c.effSetup(ctx, t)
 	study := c.activeStudy(t, k, "math-g3-r")
 	pre := must(t, c.wave(t, study, "pre", 0, nil), http.StatusCreated, "pre")
-	sessB, sessA := sessionOfClass(t, pre, k.classB), sessionOfClass(t, pre, k.class)
+	sessB, sessA := sessionOfCohort(t, pre, k.school2), sessionOfCohort(t, pre, k.school)
 	withdraw := studies + "/" + study + ":withdraw"
 	body := map[string]any{"scope": "students", "student_ids": []string{c.users[hsChi].UserID.String()}, "reason": "Phụ huynh xin không tham gia",
 		"school_request_ref": "CV-12/2026"}
@@ -56,8 +56,13 @@ func TestEfficacyWithdraw(t *testing.T) {
 	if c.audits(ctx, t, "efficacy.participants_withdrawn", &c.tenantA) != 1 {
 		t.Fatal("audit efficacy.participants_withdrawn")
 	}
-	cw := must(t, c.do(t, http.MethodPost, withdraw, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"scope": "class",
-		"class_id": k.class, "reason": "Trường rút lớp 3A khỏi nghiên cứu"}), http.StatusOK, "withdraw 3A")
+	cw := must(t, c.do(t, http.MethodPost, withdraw, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"scope": "cohort",
+		"school_id": k.school, "reason": "Trường rút cụm khối 3 khỏi nghiên cứu"}), http.StatusOK, "withdraw cohort A")
+	// ADR-0095: the scope class is refused.
+	if x := c.do(t, http.MethodPost, withdraw, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"scope": "class",
+		"reason": "Trường rút lớp khỏi nghiên cứu"}); x.status != http.StatusUnprocessableEntity {
+		t.Fatalf("scope class: %d %s", x.status, x.raw)
+	}
 	if cw.num("cancelled_exam_session_count") != 1 {
 		t.Fatalf("cancelled sessions %s", cw.raw)
 	}
@@ -65,15 +70,15 @@ func TestEfficacyWithdraw(t *testing.T) {
 		sessA); n != 1 {
 		t.Fatal("session of 3A not cancelled")
 	}
-	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_wave_sessions WHERE exam_session_id = $1 AND status = 'cancelled'`,
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_wave_cohort_sessions WHERE exam_session_id = $1 AND status = 'cancelled'`,
 		sessA); n != 1 {
 		t.Fatal("wave session of 3A not cancelled")
 	}
 	// The pre wave opens: 3A is withdrawn (no participant) and hs.chi, withdrawn by name, never becomes one.
 	c.clk.Advance(2 * time.Minute)
 	c.runWaves(ctx, t)
-	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_participants WHERE study_id = $1 AND class_id = $2`, study,
-		k.class); n != 0 {
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_participants WHERE study_id = $1 AND school_id = $2 AND status = 'active'`, study,
+		k.school); n != 0 {
 		t.Fatalf("participants of the withdrawn 3A: %d", n)
 	}
 	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_participants WHERE study_id = $1`, study); n != 0 {
@@ -95,8 +100,8 @@ func TestEfficacyReportAndDataset(t *testing.T) {
 	pre := must(t, c.wave(t, study, "pre", 0, nil), http.StatusCreated, "pre")
 	c.clk.Advance(2 * time.Minute)
 	c.runWaves(ctx, t)
-	c.takeWave(t, hsAn, sessionOfClass(t, pre, k.class), false)
-	c.takeWave(t, hsChi, sessionOfClass(t, pre, k.classB), false)
+	c.takeWave(t, hsAn, sessionOfCohort(t, pre, k.school), false)
+	c.takeWave(t, hsChi, sessionOfCohort(t, pre, k.school2), false)
 	// hs.binh is withdrawn after the pre wave (AC-18, AC-19).
 	must(t, c.do(t, http.MethodPost, studies+"/"+study+":withdraw", saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"scope": "students",
 		"student_ids": []string{c.users[hsBinh].UserID.String()}, "reason": "Trường yêu cầu loại học sinh"}), http.StatusOK, "withdraw hs.binh")
@@ -106,14 +111,14 @@ func TestEfficacyReportAndDataset(t *testing.T) {
 	c.clk.Advance(8 * 7 * 24 * time.Hour)
 	post := must(t, c.wave(t, study, "post", 0, nil), http.StatusCreated, "post")
 	if n := count(ctx, t, c.platform, `SELECT count(*) FROM assessment.exam_participations WHERE exam_session_id = $1 AND student_id = $2`,
-		sessionOfClass(t, post, k.class), c.users[hsBinh].UserID); n != 0 {
+		sessionOfCohort(t, post, k.school), c.users[hsBinh].UserID); n != 0 {
 		t.Fatal("withdrawn hs.binh in the post audience")
 	}
 	c.clk.Advance(2 * time.Minute)
 	c.runWaves(ctx, t)
 	// AC-28: M_eff snapshot of the active intervention participants on the LO of the study.
 	var interventionClass uuid.UUID
-	if err := c.platform.QueryRowContext(ctx, `SELECT class_id FROM learning.efficacy_study_classes WHERE study_id = $1 AND arm = 'intervention'`,
+	if err := c.platform.QueryRowContext(ctx, `SELECT school_id FROM learning.efficacy_study_cohorts WHERE study_id = $1 AND arm = 'intervention'`,
 		study).Scan(&interventionClass); err != nil {
 		t.Fatal(err)
 	}
@@ -122,8 +127,8 @@ func TestEfficacyReportAndDataset(t *testing.T) {
 		study); n != wantSnaps {
 		t.Fatalf("snapshots %d (intervention %s)", n, interventionClass)
 	}
-	c.takeWave(t, hsAn, sessionOfClass(t, post, k.class), true)
-	c.takeWave(t, hsChi, sessionOfClass(t, post, k.classB), true)
+	c.takeWave(t, hsAn, sessionOfCohort(t, post, k.school), true)
+	c.takeWave(t, hsChi, sessionOfCohort(t, post, k.school2), true)
 	c.clk.Advance(2 * time.Hour)
 	c.runExamWindows(ctx, t)
 	c.runWaves(ctx, t)
@@ -201,7 +206,10 @@ func TestEfficacyReportAndDataset(t *testing.T) {
 	if header == "" {
 		t.Fatalf("no header: %s", csv)
 	}
-	for _, col := range []string{"student_id", "name", "class_id", "school", "tenant", "birth"} {
+	if !slices.Contains(strings.Split(header, ","), "cohort_code") {
+		t.Fatalf("no cohort_code column (ADR-0095): %s", header)
+	}
+	for _, col := range []string{"student_id", "name", "class_id", "class_code", "school", "tenant", "birth"} {
 		if slices.Contains(strings.Split(header, ","), col) {
 			t.Fatalf("identifying column %s", col)
 		}
@@ -211,7 +219,7 @@ func TestEfficacyReportAndDataset(t *testing.T) {
 			t.Fatalf("dataset holds the id of %s", sub)
 		}
 	}
-	for _, id := range []uuid.UUID{k.class, k.classB, c.tenantA, k.school} {
+	for _, id := range []uuid.UUID{k.school, k.school2, c.tenantA, k.school} {
 		if strings.Contains(csv, id.String()) {
 			t.Fatalf("dataset holds the id %s", id)
 		}

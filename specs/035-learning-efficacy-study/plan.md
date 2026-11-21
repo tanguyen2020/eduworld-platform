@@ -116,7 +116,7 @@ src/cms/frontend/apps/portal/src/workspaces/content-studio/…/EfficacyInstrumen
 
 - Route `/api/v1/admin/learning/*`: gateway nội bộ, `azp = eduworld-portal`, MFA, role platform; ghi dữ liệu tenant (agreement, class, withdrawal) bắt buộc `X-Tenant-Id` tenant đích; list dùng `tenant_ids[]` + `CrossTenantScope` + audit `cross_tenant.accessed`; ghi platform (study, wave, experiment) không header.
 - `Idempotency-Key` cho mọi POST tạo/chuyển trạng thái.
-- Audit: `research_agreement.created|revoked`, `efficacy_study.created|updated|class_added|class_removed|activated|completed`, `efficacy_wave.scheduled|opened|closed`, `efficacy.participants_withdrawn`, `efficacy_report.generated`, `efficacy.dataset_exported`, `learning_experiment.created|updated|started|stopped`.
+- Audit: `research_agreement.created|revoked`, `efficacy_study.created|updated|cohort_added|cohort_removed (ADR-0095, thay class_added|class_removed)|activated|completed`, `efficacy_wave.scheduled|opened|closed`, `efficacy.participants_withdrawn`, `efficacy_report.generated`, `efficacy.dataset_exported`, `learning_experiment.created|updated|started|stopped`.
 - Job `efficacy-wave-monitor` tạo/đọc dữ liệu nhiều tenant qua `tenancy.Bypass(ctx, "efficacy_study")` (reason trong danh sách đóng ADR-0089 §3, client `learning_platform`) có metric `eduworld_tenant_filter_bypass_total{module,reason}` và audit `cross_tenant.accessed` theo tenant.
 
 ### Quan sát

@@ -9,10 +9,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
 )
 
-// StudyClassRead is a class of a study with its display name (ref.classes) and its participant count.
-type StudyClassRead struct {
-	write.StudyClassRow
-	ClassName    string
+// StudyCohortRead is a cohort of a study with its participant count.
+type StudyCohortRead struct {
+	write.StudyCohortRow
 	Participants int
 }
 
@@ -28,8 +27,8 @@ type EfficacyReadModel interface {
 	Agreements(ctx context.Context, tenants []uuid.UUID, status string) ([]write.AgreementRow, error)
 	Studies(ctx context.Context, status string, tenants []uuid.UUID) ([]write.StudyRow, error)
 	Study(ctx context.Context, id uuid.UUID) (*write.StudyRow, error)
-	// StudyClasses lists the classes of a study; tenants nil = every tenant of the study.
-	StudyClasses(ctx context.Context, studyID uuid.UUID, tenants []uuid.UUID) ([]StudyClassRead, error)
+	// StudyCohorts lists the cohorts of a study; tenants nil = every tenant of the study.
+	StudyCohorts(ctx context.Context, studyID uuid.UUID, tenants []uuid.UUID) ([]StudyCohortRead, error)
 	Waves(ctx context.Context, studyID uuid.UUID) ([]write.WaveRow, error)
 	WaveSessions(ctx context.Context, waveID uuid.UUID) ([]WaveSessionRead, error)
 	Report(ctx context.Context, studyID, reportID uuid.UUID) (*write.EfficacyReportRow, error)
@@ -53,7 +52,7 @@ type SnapshotRow = write.SnapshotRow
 type EfficacyAnswerRow struct {
 	StudentID         uuid.UUID
 	TenantID          uuid.UUID
-	ClassID           uuid.UUID
+	SchoolID          uuid.UUID // the cohort of the student in the study
 	WaveKind          string
 	Form              string
 	QuestionVersionID uuid.UUID
@@ -84,7 +83,7 @@ type EfficacyRecommendationRow struct {
 // status (the report counts them as attrition, the dataset leaves them out); soft-deleted snapshots are never returned.
 type EfficacyDataReader interface {
 	StudyOf(ctx context.Context, id uuid.UUID) (*write.StudyRow, error)
-	ClassesOf(ctx context.Context, studyID uuid.UUID) ([]StudyClassRead, error)
+	CohortsOf(ctx context.Context, studyID uuid.UUID) ([]StudyCohortRead, error)
 	ParticipantsOf(ctx context.Context, studyID uuid.UUID) ([]ParticipantRow, error)
 	WavesOf(ctx context.Context, studyID uuid.UUID) ([]write.WaveRow, error)
 	// Answers lists the items of the latest graded attempt of every student in the active sessions of a wave.

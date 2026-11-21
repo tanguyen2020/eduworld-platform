@@ -249,79 +249,81 @@ func (EfficacyRepo) UpdateStudy(ctx context.Context, s write.StudyRow, prev int6
 		s.ID, prev, s.Title, uuidArray(s.ObjectiveIDs), s.FormA, s.FormB, s.MinWeeks, s.Status, s.ActivatedAt, s.CompletedAt))
 }
 
-// ---------- classes
+// ---------- cohorts (cluster school × grade of the study, ADR-0095 D3)
 
-// Class implements write.EfficacyStore.
-func (EfficacyRepo) Class(ctx context.Context, tenant, classID uuid.UUID) (*write.EfficacyClassRef, error) {
+// School implements write.EfficacyStore: a school of the tenant given (ref.schools) with its active, not deleted students
+// of the grade (ref.students).
+func (EfficacyRepo) School(ctx context.Context, tenant, schoolID uuid.UUID, grade int) (*write.EfficacySchoolRef, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
-	c := write.EfficacyClassRef{ClassID: classID}
-	// tenancyguard:ok projection ref.classes of the tenant given (no deleted_at: identity removes rows by version)
-	err = tx.QueryRowContext(ctx, `SELECT tenant_id, school_id, grade_level FROM ref.classes WHERE class_id = $1 AND tenant_id = $2`,
-		classID, tenant).Scan(&c.TenantID, &c.SchoolID, &c.GradeLevel)
+	c := write.EfficacySchoolRef{SchoolID: schoolID}
+	// tenancyguard:ok projections ref.schools/ref.students of the tenant given (students: deleted_at IS NULL; schools have none)
+	err = tx.QueryRowContext(ctx, `SELECT sc.tenant_id, (SELECT count(*) FROM ref.students st WHERE st.tenant_id = sc.tenant_id
+			AND st.school_id = sc.school_id AND st.grade_level = $3 AND st.status = 'active' AND st.deleted_at IS NULL)
+		FROM ref.schools sc WHERE sc.school_id = $1 AND sc.tenant_id = $2`, schoolID, tenant, grade).Scan(&c.TenantID, &c.Students)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("class: %w", err)
+		return nil, fmt.Errorf("school: %w", err)
 	}
 	return &c, nil
 }
 
-const studyClassCols = `study_id, class_id, tenant_id, school_id, grade_level, pair_no, arm, assignment_method, form_order, status, withdrawn_at,
-	withdrawal_id, added_by, deleted_at IS NOT NULL`
+const studyCohortCols = `study_id, school_id, tenant_id, grade_level, pair_no, arm, assignment_method, form_order, status, conflict,
+	withdrawn_at, withdrawal_id, added_by, deleted_at IS NOT NULL`
 
-func scanStudyClass(row interface{ Scan(...any) error }) (write.StudyClassRow, error) {
-	var c write.StudyClassRow
+func scanStudyCohort(row interface{ Scan(...any) error }) (write.StudyCohortRow, error) {
+	var c write.StudyCohortRow
 	var pair sql.NullInt64
 	var arm, order sql.NullString
 	var withdrawn sql.NullTime
 	var wid uuid.NullUUID
-	err := row.Scan(&c.StudyID, &c.ClassID, &c.TenantID, &c.SchoolID, &c.GradeLevel, &pair, &arm, &c.Method, &order, &c.Status, &withdrawn,
+	err := row.Scan(&c.StudyID, &c.SchoolID, &c.TenantID, &c.GradeLevel, &pair, &arm, &c.Method, &order, &c.Status, &c.Conflict, &withdrawn,
 		&wid, &c.AddedBy, &c.Deleted)
 	c.PairNo, c.Arm, c.FormOrder, c.WithdrawnAt, c.WithdrawalID = nullInt(pair), nullString(arm), nullString(order), nullTime(withdrawn), nullUUID(wid)
 	return c, err
 }
 
-// StudyClass implements write.EfficacyStore.
-func (EfficacyRepo) StudyClass(ctx context.Context, studyID, classID uuid.UUID, withDeleted bool) (*write.StudyClassRow, error) {
+// StudyCohort implements write.EfficacyStore.
+func (EfficacyRepo) StudyCohort(ctx context.Context, studyID, schoolID uuid.UUID, withDeleted bool) (*write.StudyCohortRow, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
-	q := `SELECT ` + studyClassCols + ` FROM learning.efficacy_study_classes WHERE study_id = $1 AND class_id = $2`
+	q := `SELECT ` + studyCohortCols + ` FROM learning.efficacy_study_cohorts WHERE study_id = $1 AND school_id = $2`
 	if !withDeleted {
 		q += ` AND deleted_at IS NULL`
 	}
-	// tenancyguard:ok the class key (study, class) names one tenant (RLS on learning_app; learning_platform under bypass); deleted_at in q
-	c, err := scanStudyClass(tx.QueryRowContext(ctx, q+` FOR UPDATE`, studyID, classID))
+	// tenancyguard:ok the cohort key (study, school) names one tenant (RLS on learning_app; learning_platform under bypass); deleted_at in q
+	c, err := scanStudyCohort(tx.QueryRowContext(ctx, q+` FOR UPDATE`, studyID, schoolID))
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("study class: %w", err)
+		return nil, fmt.Errorf("study cohort: %w", err)
 	}
 	return &c, nil
 }
 
-// StudyClasses implements write.EfficacyStore.
-func (EfficacyRepo) StudyClasses(ctx context.Context, studyID uuid.UUID) ([]write.StudyClassRow, error) {
+// StudyCohorts implements write.EfficacyStore.
+func (EfficacyRepo) StudyCohorts(ctx context.Context, studyID uuid.UUID) ([]write.StudyCohortRow, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// tenancyguard:ok every tenant of the study: learning_platform under bypass efficacy_study (audited); deleted_at IS NULL
-	rows, err := tx.QueryContext(ctx, `SELECT `+studyClassCols+` FROM learning.efficacy_study_classes WHERE study_id = $1 AND deleted_at IS NULL
-		ORDER BY pair_no NULLS LAST, class_id`, studyID)
+	rows, err := tx.QueryContext(ctx, `SELECT `+studyCohortCols+` FROM learning.efficacy_study_cohorts WHERE study_id = $1 AND deleted_at IS NULL
+		ORDER BY pair_no NULLS LAST, school_id`, studyID)
 	if err != nil {
-		return nil, fmt.Errorf("study classes: %w", err)
+		return nil, fmt.Errorf("study cohorts: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	var out []write.StudyClassRow
+	var out []write.StudyCohortRow
 	for rows.Next() {
-		c, err := scanStudyClass(rows)
+		c, err := scanStudyCohort(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -330,82 +332,86 @@ func (EfficacyRepo) StudyClasses(ctx context.Context, studyID uuid.UUID) ([]writ
 	return out, rows.Err()
 }
 
-// ClassInOtherStudy implements write.EfficacyStore.
-func (EfficacyRepo) ClassInOtherStudy(ctx context.Context, tenant, classID, studyID uuid.UUID) (bool, error) {
+// CohortInOtherStudy implements write.EfficacyStore.
+func (EfficacyRepo) CohortInOtherStudy(ctx context.Context, tenant, schoolID uuid.UUID, grade int, studyID uuid.UUID) (bool, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return false, err
 	}
 	var n int
-	err = tx.QueryRowContext(ctx, `SELECT count(*) FROM learning.efficacy_study_classes c JOIN learning.efficacy_studies s ON s.study_id = c.study_id
+	// tenancyguard:ok cohorts of the tenant given, deleted_at IS NULL on both tables
+	err = tx.QueryRowContext(ctx, `SELECT count(*) FROM learning.efficacy_study_cohorts c JOIN learning.efficacy_studies s ON s.study_id = c.study_id
 		AND s.deleted_at IS NULL AND s.status IN ('draft','active')
-		WHERE c.tenant_id = $1 AND c.class_id = $2 AND c.study_id <> $3 AND c.status = 'enrolled' AND c.deleted_at IS NULL`,
-		tenant, classID, studyID).Scan(&n)
+		WHERE c.tenant_id = $1 AND c.school_id = $2 AND c.grade_level = $3 AND c.study_id <> $4 AND c.status = 'enrolled'
+			AND c.deleted_at IS NULL`, tenant, schoolID, grade, studyID).Scan(&n)
 	return n > 0, err
 }
 
-// UpsertStudyClass implements write.EfficacyStore: a new row, or the revival of a removed one.
-func (EfficacyRepo) UpsertStudyClass(ctx context.Context, c write.StudyClassRow) error {
+// UpsertStudyCohort implements write.EfficacyStore: a new row, or the revival of a removed one (conflict cleared).
+func (EfficacyRepo) UpsertStudyCohort(ctx context.Context, c write.StudyCohortRow) error {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO learning.efficacy_study_classes (study_id, class_id, tenant_id, school_id, grade_level, pair_no,
-		arm, assignment_method, form_order, status, added_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-		ON CONFLICT (study_id, class_id) DO UPDATE SET pair_no = EXCLUDED.pair_no, arm = EXCLUDED.arm,
+	// tenancyguard:ok insert of the session tenant (RLS insert policy); the revival is limited to the same tenant and a deleted row
+	_, err = tx.ExecContext(ctx, `INSERT INTO learning.efficacy_study_cohorts (study_id, school_id, tenant_id, grade_level, pair_no,
+		arm, assignment_method, form_order, status, added_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		ON CONFLICT (study_id, school_id) DO UPDATE SET pair_no = EXCLUDED.pair_no, arm = EXCLUDED.arm,
 			assignment_method = EXCLUDED.assignment_method, form_order = EXCLUDED.form_order, status = EXCLUDED.status, added_by = EXCLUDED.added_by,
-			withdrawn_at = NULL, withdrawal_id = NULL, deleted_at = NULL, deleted_by = NULL, delete_reason = NULL,
-			version = learning.efficacy_study_classes.version + 1, updated_at = now()
-		WHERE learning.efficacy_study_classes.tenant_id = EXCLUDED.tenant_id AND learning.efficacy_study_classes.deleted_at IS NOT NULL`,
-		c.StudyID, c.ClassID, c.TenantID, c.SchoolID, c.GradeLevel, c.PairNo, c.Arm, c.Method, c.FormOrder, c.Status, c.AddedBy)
+			conflict = false, withdrawn_at = NULL, withdrawal_id = NULL, deleted_at = NULL, deleted_by = NULL, delete_reason = NULL,
+			version = learning.efficacy_study_cohorts.version + 1, updated_at = now()
+		WHERE learning.efficacy_study_cohorts.tenant_id = EXCLUDED.tenant_id AND learning.efficacy_study_cohorts.deleted_at IS NOT NULL`,
+		c.StudyID, c.SchoolID, c.TenantID, c.GradeLevel, c.PairNo, c.Arm, c.Method, c.FormOrder, c.Status, c.AddedBy)
 	if err != nil {
-		return fmt.Errorf("upsert study class: %w", err)
+		return fmt.Errorf("upsert study cohort: %w", err)
 	}
 	return nil
 }
 
-// UpdateStudyClass implements write.EfficacyStore.
-func (EfficacyRepo) UpdateStudyClass(ctx context.Context, c write.StudyClassRow) error {
+// UpdateStudyCohort implements write.EfficacyStore.
+func (EfficacyRepo) UpdateStudyCohort(ctx context.Context, c write.StudyCohortRow) error {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `UPDATE learning.efficacy_study_classes SET pair_no = $4, arm = $5, assignment_method = $6, form_order = $7,
+	// tenancyguard:ok one cohort of the tenant given, deleted_at IS NULL
+	_, err = tx.ExecContext(ctx, `UPDATE learning.efficacy_study_cohorts SET pair_no = $4, arm = $5, assignment_method = $6, form_order = $7,
 		status = $8, withdrawn_at = $9, withdrawal_id = $10, version = version + 1, updated_at = now()
-		WHERE study_id = $1 AND class_id = $2 AND tenant_id = $3 AND deleted_at IS NULL`,
-		c.StudyID, c.ClassID, c.TenantID, c.PairNo, c.Arm, c.Method, c.FormOrder, c.Status, c.WithdrawnAt, c.WithdrawalID)
+		WHERE study_id = $1 AND school_id = $2 AND tenant_id = $3 AND deleted_at IS NULL`,
+		c.StudyID, c.SchoolID, c.TenantID, c.PairNo, c.Arm, c.Method, c.FormOrder, c.Status, c.WithdrawnAt, c.WithdrawalID)
 	if err != nil {
-		return fmt.Errorf("update study class: %w", err)
+		return fmt.Errorf("update study cohort: %w", err)
 	}
 	return nil
 }
 
-// RemoveStudyClass implements write.EfficacyStore (soft-delete, ADR-0028).
-func (EfficacyRepo) RemoveStudyClass(ctx context.Context, c write.StudyClassRow, by uuid.UUID) error {
+// RemoveStudyCohort implements write.EfficacyStore (soft-delete, ADR-0028).
+func (EfficacyRepo) RemoveStudyCohort(ctx context.Context, c write.StudyCohortRow, by uuid.UUID) error {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `UPDATE learning.efficacy_study_classes SET deleted_at = now(), deleted_by = $4, delete_reason = 'removed',
-		version = version + 1, updated_at = now() WHERE study_id = $1 AND class_id = $2 AND tenant_id = $3 AND deleted_at IS NULL`,
-		c.StudyID, c.ClassID, c.TenantID, by)
+	// tenancyguard:ok soft-delete of one cohort of the tenant given (deleted_at IS NULL)
+	_, err = tx.ExecContext(ctx, `UPDATE learning.efficacy_study_cohorts SET deleted_at = now(), deleted_by = $4, delete_reason = 'removed',
+		version = version + 1, updated_at = now() WHERE study_id = $1 AND school_id = $2 AND tenant_id = $3 AND deleted_at IS NULL`,
+		c.StudyID, c.SchoolID, c.TenantID, by)
 	if err != nil {
-		return fmt.Errorf("remove study class: %w", err)
+		return fmt.Errorf("remove study cohort: %w", err)
 	}
 	return nil
 }
 
-// ClassStudents implements write.EfficacyStore.
-func (EfficacyRepo) ClassStudents(ctx context.Context, tenant, classID uuid.UUID) ([]uuid.UUID, error) {
+// CohortStudents implements write.EfficacyStore: the active, not deleted students of a grade of a school.
+func (EfficacyRepo) CohortStudents(ctx context.Context, tenant, schoolID uuid.UUID, grade int) ([]uuid.UUID, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT e.student_id FROM ref.enrollments e JOIN ref.students s ON s.student_id = e.student_id
-		AND s.tenant_id = e.tenant_id AND s.status = 'active' AND s.deleted_at IS NULL
-		WHERE e.class_id = $1 AND e.status = 'active' AND e.tenant_id = $2 ORDER BY e.student_id`, classID, tenant)
+	// tenancyguard:ok projection ref.students of the tenant given, deleted_at IS NULL
+	rows, err := tx.QueryContext(ctx, `SELECT student_id FROM ref.students WHERE tenant_id = $1 AND school_id = $2 AND grade_level = $3
+		AND status = 'active' AND deleted_at IS NULL ORDER BY student_id`, tenant, schoolID, grade)
 	if err != nil {
-		return nil, fmt.Errorf("students of the class: %w", err)
+		return nil, fmt.Errorf("students of the cohort: %w", err)
 	}
 	return scanIDs(rows)
 }
@@ -519,8 +525,8 @@ func (EfficacyRepo) InsertWaveSession(ctx context.Context, s write.WaveSessionRo
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO learning.efficacy_wave_sessions (wave_id, class_id, tenant_id, school_id, exam_session_id, form, status)
-		VALUES ($1,$2,$3,$4,$5,$6,$7)`, s.WaveID, s.ClassID, s.TenantID, s.SchoolID, s.ExamSessionID, s.Form, s.Status)
+	_, err = tx.ExecContext(ctx, `INSERT INTO learning.efficacy_wave_cohort_sessions (wave_id, school_id, tenant_id, grade_level, exam_session_id, form,
+		status) VALUES ($1,$2,$3,$4,$5,$6,$7)`, s.WaveID, s.SchoolID, s.TenantID, s.GradeLevel, s.ExamSessionID, s.Form, s.Status)
 	if err != nil {
 		return fmt.Errorf("insert wave session: %w", err)
 	}
@@ -534,8 +540,8 @@ func (EfficacyRepo) WaveSessions(ctx context.Context, waveID uuid.UUID) ([]write
 		return nil, err
 	}
 	// tenancyguard:ok every tenant of the wave: learning_platform under bypass efficacy_study (audited), RLS otherwise; deleted_at IS NULL
-	rows, err := tx.QueryContext(ctx, `SELECT wave_id, class_id, tenant_id, school_id, exam_session_id, form, status
-		FROM learning.efficacy_wave_sessions WHERE wave_id = $1 AND deleted_at IS NULL ORDER BY tenant_id, class_id`, waveID)
+	rows, err := tx.QueryContext(ctx, `SELECT wave_id, school_id, tenant_id, grade_level, exam_session_id, form, status
+		FROM learning.efficacy_wave_cohort_sessions WHERE wave_id = $1 AND deleted_at IS NULL ORDER BY tenant_id, school_id`, waveID)
 	if err != nil {
 		return nil, fmt.Errorf("wave sessions: %w", err)
 	}
@@ -543,7 +549,7 @@ func (EfficacyRepo) WaveSessions(ctx context.Context, waveID uuid.UUID) ([]write
 	var out []write.WaveSessionRow
 	for rows.Next() {
 		var s write.WaveSessionRow
-		if err := rows.Scan(&s.WaveID, &s.ClassID, &s.TenantID, &s.SchoolID, &s.ExamSessionID, &s.Form, &s.Status); err != nil {
+		if err := rows.Scan(&s.WaveID, &s.SchoolID, &s.TenantID, &s.GradeLevel, &s.ExamSessionID, &s.Form, &s.Status); err != nil {
 			return nil, err
 		}
 		out = append(out, s)
@@ -557,8 +563,8 @@ func (EfficacyRepo) CancelWaveSession(ctx context.Context, s write.WaveSessionRo
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `UPDATE learning.efficacy_wave_sessions SET status = 'cancelled', version = version + 1, updated_at = now()
-		WHERE wave_id = $1 AND class_id = $2 AND tenant_id = $3 AND deleted_at IS NULL`, s.WaveID, s.ClassID, s.TenantID)
+	_, err = tx.ExecContext(ctx, `UPDATE learning.efficacy_wave_cohort_sessions SET status = 'cancelled', version = version + 1, updated_at = now()
+		WHERE wave_id = $1 AND school_id = $2 AND tenant_id = $3 AND deleted_at IS NULL`, s.WaveID, s.SchoolID, s.TenantID)
 	if err != nil {
 		return fmt.Errorf("cancel wave session: %w", err)
 	}
@@ -567,7 +573,7 @@ func (EfficacyRepo) CancelWaveSession(ctx context.Context, s write.WaveSessionRo
 
 // ---------- participants (T)
 
-const participantCols = `study_id, student_id, tenant_id, school_id, class_id, arm, form_order, status, exclusion_reason, enrolled_at, withdrawn_at`
+const participantCols = `study_id, student_id, tenant_id, school_id, arm, form_order, status, exclusion_reason, enrolled_at, withdrawn_at`
 
 func participants(ctx context.Context, q string, args ...any) ([]write.ParticipantRow, error) {
 	tx, err := txOf(ctx)
@@ -584,7 +590,7 @@ func participants(ctx context.Context, q string, args ...any) ([]write.Participa
 		var p write.ParticipantRow
 		var reason sql.NullString
 		var withdrawn sql.NullTime
-		if err := rows.Scan(&p.StudyID, &p.StudentID, &p.TenantID, &p.SchoolID, &p.ClassID, &p.Arm, &p.FormOrder, &p.Status, &reason, &p.EnrolledAt,
+		if err := rows.Scan(&p.StudyID, &p.StudentID, &p.TenantID, &p.SchoolID, &p.Arm, &p.FormOrder, &p.Status, &reason, &p.EnrolledAt,
 			&withdrawn); err != nil {
 			return nil, err
 		}
@@ -602,9 +608,9 @@ func (EfficacyRepo) InsertParticipants(ctx context.Context, ps []write.Participa
 	}
 	n := 0
 	for _, p := range ps {
-		res, err := tx.ExecContext(ctx, `INSERT INTO learning.efficacy_participants (study_id, student_id, tenant_id, school_id, class_id, arm,
-			form_order, status, enrolled_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (study_id, student_id) DO NOTHING`,
-			p.StudyID, p.StudentID, p.TenantID, p.SchoolID, p.ClassID, p.Arm, p.FormOrder, p.Status, p.EnrolledAt)
+		res, err := tx.ExecContext(ctx, `INSERT INTO learning.efficacy_participants (study_id, student_id, tenant_id, school_id, arm,
+			form_order, status, enrolled_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (study_id, student_id) DO NOTHING`,
+			p.StudyID, p.StudentID, p.TenantID, p.SchoolID, p.Arm, p.FormOrder, p.Status, p.EnrolledAt)
 		if err != nil {
 			return n, fmt.Errorf("insert participant: %w", err)
 		}
@@ -616,11 +622,11 @@ func (EfficacyRepo) InsertParticipants(ctx context.Context, ps []write.Participa
 }
 
 // Participants implements write.EfficacyStore.
-func (EfficacyRepo) Participants(ctx context.Context, studyID uuid.UUID, classID *uuid.UUID, status string) ([]write.ParticipantRow, error) {
+func (EfficacyRepo) Participants(ctx context.Context, studyID uuid.UUID, schoolID *uuid.UUID, status string) ([]write.ParticipantRow, error) {
 	// tenancyguard:ok every tenant of the study: learning_platform under bypass efficacy_study (audited), RLS otherwise; deleted_at IS NULL
 	return participants(ctx, `SELECT `+participantCols+` FROM learning.efficacy_participants WHERE study_id = $1
-		AND ($2::uuid IS NULL OR class_id = $2) AND ($3 = '' OR status = $3) AND deleted_at IS NULL ORDER BY tenant_id, student_id`,
-		studyID, classID, status)
+		AND ($2::uuid IS NULL OR school_id = $2) AND ($3 = '' OR status = $3) AND deleted_at IS NULL ORDER BY tenant_id, student_id`,
+		studyID, schoolID, status)
 }
 
 // Withdraw implements write.EfficacyStore.
@@ -629,36 +635,36 @@ func (EfficacyRepo) Withdraw(ctx context.Context, s write.WithdrawScope, at time
 	if len(s.StudentIDs) > 0 {
 		students = uuidArray(s.StudentIDs)
 	}
-	return participants(ctx, `UPDATE learning.efficacy_participants p SET status = 'withdrawn', exclusion_reason = 'withdrawn', withdrawn_at = $6,
-		withdrawal_id = $7, version = p.version + 1, updated_at = now()
+	return participants(ctx, `UPDATE learning.efficacy_participants p SET status = 'withdrawn', exclusion_reason = 'withdrawn', withdrawn_at = $5,
+		withdrawal_id = $6, version = p.version + 1, updated_at = now()
 		WHERE p.tenant_id = $1 AND p.status = 'active' AND p.deleted_at IS NULL
-			AND ($2::uuid IS NULL OR p.study_id = $2) AND ($3::uuid IS NULL OR p.school_id = $3) AND ($4::uuid IS NULL OR p.class_id = $4)
-			AND ($5 = '' OR p.student_id = ANY($5::uuid[]))
+			AND ($2::uuid IS NULL OR p.study_id = $2) AND ($3::uuid IS NULL OR p.school_id = $3)
+			AND ($4 = '' OR p.student_id = ANY($4::uuid[]))
 			AND EXISTS (SELECT 1 FROM learning.efficacy_studies st WHERE st.study_id = p.study_id AND st.status IN ('draft','active')
 				AND st.deleted_at IS NULL)
-		RETURNING `+participantCols, s.TenantID, s.StudyID, s.SchoolID, s.ClassID, students, at, withdrawalID)
+		RETURNING `+participantCols, s.TenantID, s.StudyID, s.SchoolID, students, at, withdrawalID)
 }
 
-// MarkClassesWithdrawn implements write.EfficacyStore.
-func (EfficacyRepo) MarkClassesWithdrawn(ctx context.Context, s write.WithdrawScope, at time.Time, withdrawalID uuid.UUID) ([]write.StudyClassRow, error) {
+// MarkCohortsWithdrawn implements write.EfficacyStore.
+func (EfficacyRepo) MarkCohortsWithdrawn(ctx context.Context, s write.WithdrawScope, at time.Time, withdrawalID uuid.UUID) ([]write.StudyCohortRow, error) {
 	tx, err := txOf(ctx)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := tx.QueryContext(ctx, `UPDATE learning.efficacy_study_classes c SET status = 'withdrawn', withdrawn_at = $5, withdrawal_id = $6,
+	rows, err := tx.QueryContext(ctx, `UPDATE learning.efficacy_study_cohorts c SET status = 'withdrawn', withdrawn_at = $4, withdrawal_id = $5,
 		version = c.version + 1, updated_at = now()
 		WHERE c.tenant_id = $1 AND c.status = 'enrolled' AND c.deleted_at IS NULL AND ($2::uuid IS NULL OR c.study_id = $2)
-			AND ($3::uuid IS NULL OR c.school_id = $3) AND ($4::uuid IS NULL OR c.class_id = $4)
+			AND ($3::uuid IS NULL OR c.school_id = $3)
 			AND EXISTS (SELECT 1 FROM learning.efficacy_studies st WHERE st.study_id = c.study_id AND st.status IN ('draft','active')
 				AND st.deleted_at IS NULL)
-		RETURNING `+studyClassCols, s.TenantID, s.StudyID, s.SchoolID, s.ClassID, at, withdrawalID)
+		RETURNING `+studyCohortCols, s.TenantID, s.StudyID, s.SchoolID, at, withdrawalID)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw classes: %w", err)
+		return nil, fmt.Errorf("withdraw cohorts: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	var out []write.StudyClassRow
+	var out []write.StudyCohortRow
 	for rows.Next() {
-		c, err := scanStudyClass(rows)
+		c, err := scanStudyCohort(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -691,10 +697,10 @@ func (EfficacyRepo) InsertWithdrawal(ctx context.Context, w write.WithdrawalRow)
 	if err != nil {
 		return err
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO learning.efficacy_withdrawals (withdrawal_id, tenant_id, study_id, scope, school_id, class_id,
+	_, err = tx.ExecContext(ctx, `INSERT INTO learning.efficacy_withdrawals (withdrawal_id, tenant_id, study_id, scope, school_id, grade_level,
 		student_ids, reason, school_request_ref, affected_count, cancelled_session_count, requested_by, idempotency_key, created_at)
 		VALUES ($1,$2,$3,$4,$5,$6,$7::uuid[],$8,$9,$10,$11,$12,$13,$14)`,
-		w.ID, w.TenantID, w.StudyID, w.Scope, w.SchoolID, w.ClassID, uuidArray(w.StudentIDs), w.Reason, w.SchoolRequestRef, w.Affected,
+		w.ID, w.TenantID, w.StudyID, w.Scope, w.SchoolID, w.GradeLevel, uuidArray(w.StudentIDs), w.Reason, w.SchoolRequestRef, w.Affected,
 		w.CancelledSessions, w.RequestedBy, w.IdempotencyKey, w.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("insert withdrawal: %w", err)
@@ -709,14 +715,15 @@ func (EfficacyRepo) WithdrawalByKey(ctx context.Context, requestedBy uuid.UUID, 
 		return nil, err
 	}
 	var w write.WithdrawalRow
-	var study, school, class uuid.NullUUID
+	var study, school uuid.NullUUID
+	var grade sql.NullInt64
 	var students []byte
 	var ref sql.NullString
 	// tenancyguard:ok append-only learning.efficacy_withdrawals (no deleted_at); the requester's key, tenant by RLS or bypass
-	err = tx.QueryRowContext(ctx, `SELECT withdrawal_id, tenant_id, study_id, scope, school_id, class_id, to_jsonb(student_ids), reason,
+	err = tx.QueryRowContext(ctx, `SELECT withdrawal_id, tenant_id, study_id, scope, school_id, grade_level, to_jsonb(student_ids), reason,
 		school_request_ref, affected_count, cancelled_session_count, requested_by, idempotency_key, created_at
 		FROM learning.efficacy_withdrawals WHERE requested_by = $1 AND idempotency_key = $2`, requestedBy, key).
-		Scan(&w.ID, &w.TenantID, &study, &w.Scope, &school, &class, &students, &w.Reason, &ref, &w.Affected, &w.CancelledSessions, &w.RequestedBy,
+		Scan(&w.ID, &w.TenantID, &study, &w.Scope, &school, &grade, &students, &w.Reason, &ref, &w.Affected, &w.CancelledSessions, &w.RequestedBy,
 			&w.IdempotencyKey, &w.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -724,7 +731,7 @@ func (EfficacyRepo) WithdrawalByKey(ctx context.Context, requestedBy uuid.UUID, 
 	if err != nil {
 		return nil, fmt.Errorf("withdrawal: %w", err)
 	}
-	w.StudyID, w.SchoolID, w.ClassID, w.StudentIDs, w.SchoolRequestRef = nullUUID(study), nullUUID(school), nullUUID(class), jsonUUIDs(students),
+	w.StudyID, w.SchoolID, w.GradeLevel, w.StudentIDs, w.SchoolRequestRef = nullUUID(study), nullUUID(school), nullInt(grade), jsonUUIDs(students),
 		nullString(ref)
 	return &w, nil
 }

@@ -24,7 +24,7 @@ type Answer struct {
 // Participant is a participant as the report sees it.
 type Participant struct {
 	StudentID uuid.UUID
-	ClassID   uuid.UUID
+	CohortID  uuid.UUID // the school of the participant in the study (cluster school × grade, ADR-0095)
 	Arm       string
 	Status    string
 }
@@ -56,7 +56,7 @@ type Recommendation struct {
 // ReportInput is everything the report reads (F035-AC-29…AC-31).
 type ReportInput struct {
 	Objectives      []uuid.UUID
-	Classes         map[string]int // enrolled + withdrawn classes by arm
+	Cohorts         map[string]int // enrolled + withdrawn cohorts (school, grade) by arm
 	Participants    []Participant
 	Answers         []Answer
 	Excluded        []uuid.UUID
@@ -120,10 +120,10 @@ func proportions(answers []Answer, kind string, excluded []uuid.UUID) (map[uuid.
 
 // BuildReport computes the efficacy report (F035-AC-29…AC-31, LEARNING_EFFICACY_PLAN §4–§5): per arm the participants,
 // attrition (missing pre/post, withdrawn), gain and normalized gain; Hedges' g of the gain difference with its 95 % CI
-// corrected by the design effect of the classes; gain by objective; KR-20 per form × wave; usage; the predictive
+// corrected by the design effect of the cohorts (clusters school × grade); gain by objective; KR-20 per form × wave; usage; the predictive
 // validity of M_eff (Spearman ρ by objective, calibration, AUC of "≥ 2/3 of the objective", recommendations). Cells
-// under MinCellSize are hidden (null), aggregates only, no name, class nor ranking; descriptive_only under the
-// recommended number of classes per arm. The output depends on the input only.
+// under MinCellSize are hidden (null), aggregates only, no name, school, class nor ranking; descriptive_only under the
+// recommended number of cohorts per arm. The output depends on the input only.
 func BuildReport(in ReportInput, cfg Config) ReportResult {
 	minCell := cfg.MinCellSize
 	pre, preLO := proportions(in.Answers, WavePre, in.Excluded)
@@ -133,10 +133,10 @@ func BuildReport(in ReportInput, cfg Config) ReportResult {
 	type armData struct {
 		total, withdrawn, missingPre, missingPost int
 		gains, normGains, pres, posts             []float64
-		byClass                                   map[uuid.UUID][]float64
+		byCohort                                  map[uuid.UUID][]float64
 		students                                  []uuid.UUID
 	}
-	arms := map[string]*armData{ArmIntervention: {byClass: map[uuid.UUID][]float64{}}, ArmComparison: {byClass: map[uuid.UUID][]float64{}}}
+	arms := map[string]*armData{ArmIntervention: {byCohort: map[uuid.UUID][]float64{}}, ArmComparison: {byCohort: map[uuid.UUID][]float64{}}}
 	for _, p := range parts {
 		a, ok := arms[p.Arm]
 		if !ok {
@@ -164,7 +164,7 @@ func BuildReport(in ReportInput, cfg Config) ReportResult {
 		if ng, ok := stats.NormalizedGain(x, y); ok {
 			a.normGains = append(a.normGains, ng)
 		}
-		a.byClass[p.ClassID] = append(a.byClass[p.ClassID], g)
+		a.byCohort[p.CohortID] = append(a.byCohort[p.CohortID], g)
 		a.students = append(a.students, p.StudentID)
 	}
 	armOut := map[string]any{}
@@ -180,7 +180,7 @@ func BuildReport(in ReportInput, cfg Config) ReportResult {
 		}
 		attritionWarn = attritionWarn || rate >= cfg.AttritionWarn
 		suppressed[name] = n < minCell
-		m := map[string]any{"classes": in.Classes[name], "participants": cell(a.total, minCell), "analysed": cell(n, minCell),
+		m := map[string]any{"cohorts": in.Cohorts[name], "participants": cell(a.total, minCell), "analysed": cell(n, minCell),
 			"withdrawn": cell(a.withdrawn, minCell), "missing_pre": cell(a.missingPre, minCell), "missing_post": cell(a.missingPost, minCell),
 			"attrition_rate": round(rate), "suppressed": suppressed[name]}
 		if !suppressed[name] {
@@ -193,12 +193,12 @@ func BuildReport(in ReportInput, cfg Config) ReportResult {
 		armOut[name] = m
 	}
 	res := map[string]any{"arms": armOut, "attrition_warning": attritionWarn, "excluded_question_version_ids": sortedIDs(in.Excluded)}
-	// Effect size with the design effect of the classes (both arms pooled).
+	// Effect size with the design effect of the cohorts (both arms pooled).
 	if !suppressed[ArmIntervention] && !suppressed[ArmComparison] {
 		var clusters [][]float64
 		for _, name := range []string{ArmIntervention, ArmComparison} {
-			for _, id := range sortedKeys(arms[name].byClass) {
-				clusters = append(clusters, arms[name].byClass[id])
+			for _, id := range sortedKeys(arms[name].byCohort) {
+				clusters = append(clusters, arms[name].byCohort[id])
 			}
 		}
 		icc, mbar := stats.ICC(clusters)
@@ -234,10 +234,10 @@ func BuildReport(in ReportInput, cfg Config) ReportResult {
 	res["reliability"] = reliability(in.Answers, in.Excluded, cfg)
 	res["usage"] = usage(in, arms[ArmIntervention].students, arms[ArmComparison].students, minCell)
 	res["validity"] = validity(in, arms[ArmIntervention].students, pre, preLO, postLO, cfg)
-	descriptive := in.Classes[ArmIntervention] < cfg.RecommendedClassesPerArm || in.Classes[ArmComparison] < cfg.RecommendedClassesPerArm
+	descriptive := in.Cohorts[ArmIntervention] < cfg.RecommendedCohortsPerArm || in.Cohorts[ArmComparison] < cfg.RecommendedCohortsPerArm
 	res["descriptive_only"] = descriptive
 	res["thresholds"] = map[string]any{"min_cell_size": minCell, "attrition_warn": cfg.AttritionWarn,
-		"recommended_classes_per_arm": cfg.RecommendedClassesPerArm, "validity_rho": cfg.ValidityRho,
+		"recommended_cohorts_per_arm": cfg.RecommendedCohortsPerArm, "validity_rho": cfg.ValidityRho,
 		"validity_calibration": cfg.ValidityCalibration, "validity_auc": cfg.ValidityAUC, "reliability_warn": cfg.ReliabilityWarn}
 	return ReportResult{Results: res, DescriptiveOnly: descriptive}
 }

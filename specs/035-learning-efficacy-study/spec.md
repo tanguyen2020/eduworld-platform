@@ -1,7 +1,7 @@
 # Feature Specification: F035 — Nghiên cứu hiệu quả học tập
 
 **Feature Branch**: `035-learning-efficacy-study` · **Created**: 2026-11-17 · **Status**: Done · **Module**: module `learning` + `src/cms/frontend/apps/portal` · **Mốc**: M-C3 · **Phụ thuộc**: F031, F032, F042
-**Input**: Đo hiệu quả học tập bằng bài kiểm tra độc lập trước/sau có lớp so sánh, kiểm tra mastery có dự báo đúng năng lực thật, hạ tầng A/B cho cấu hình mastery và luật gợi ý, xuất dữ liệu giả danh có kiểm soát; là exit criterion của pilot ([ADR-0080](../../docs/adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)). Thiết kế nghiên cứu do [LEARNING_EFFICACY_PLAN](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) sở hữu. FR chính: FR-ANL-017…023 (PRD).
+**Input**: Đo hiệu quả học tập bằng bài kiểm tra độc lập trước/sau có nhóm so sánh theo cụm (trường, khối) — ADR-0095, kiểm tra mastery có dự báo đúng năng lực thật, hạ tầng A/B cho cấu hình mastery và luật gợi ý, xuất dữ liệu giả danh có kiểm soát; là exit criterion của pilot ([ADR-0080](../../docs/adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md)). Thiết kế nghiên cứu do [LEARNING_EFFICACY_PLAN](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) sở hữu. FR chính: FR-ANL-017…023 (PRD).
 
 ## Clarifications
 
@@ -37,6 +37,12 @@
 - Trải nghiệm theo arm `live` (F035-AC-24): `getMyMastery`, `getMyProgress` đọc mô hình/trạng thái của arm `mastery_model` ngay ở request; gợi ý (`getMyRecommendations`) được **tính và lưu** theo arm (mô hình arm + `rule_params`) ở lần tính lại kế tiếp (sau mỗi attempt được chấm, job `recommendation-nightly`); khi thử nghiệm dừng/thu hồi, danh sách gợi ý trở về engine mặc định ở lần tính lại kế tiếp (≤ 24 giờ), còn mastery/tiến độ hiển thị trở về control từ request kế tiếp. Học sinh ở nhiều thử nghiệm `live` cùng lúc: mô hình mastery lấy từ thử nghiệm bắt đầu sớm nhất; mỗi `rule_params` lấy giá trị của thử nghiệm bắt đầu sớm nhất có đặt tham số đó. Attempt `mode = exam`, ExamSession và `getStudentProgress`/dashboard không đọc arm.
 - Portal US8: đường dẫn màn chi tiết là route con của menu (`/platform-admin/efficacy-studies/:studyId`, `/platform-admin/learning-experiments/:experimentId`) thay cho `/portal/platform-admin/research/*` trong plan (đường dẫn menu do catalog F051 sở hữu); bản dịch `platform.research.*` nằm trong `research/i18n/{vi,en}.json` của chunk workspace D.
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Bỏ khái niệm lớp (D3 của [ADR-0095](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md)) — đơn vị nghiên cứu là gì? → A: [Confirmed] **Cụm (trường, khối)**. Một study nhắm một khối (`efficacy_studies.grade_level`) nên một cụm = một trường của tenant trong study (khóa `(study_id, school_id)`, bảng mới `learning.efficacy_study_cohorts`). Cặp = hai cụm cùng khối ở **hai trường khác nhau**; arm, `form_order`, cách gán như cũ nhưng theo cụm. Contract: `listEfficacyStudyClasses`/`addEfficacyStudyClass`/`removeEfficacyStudyClass` → `listEfficacyStudyCohorts` (`GET …/efficacy-studies/{study_id}/cohorts`), `addEfficacyStudyCohort` (`POST …/cohorts`, body `school_id`, `pair_no`, `arm`, `form_order`), `removeEfficacyStudyCohort` (`DELETE …/cohorts/{school_id}`); `EfficacyStudy.class_count` → `cohort_count`; đợt có `cohorts` (một ExamSession mỗi cụm, target `grade` của trường, bảng `efficacy_wave_cohort_sessions`); participant = học sinh `active` của khối của trường lúc mở đợt `pre`; rút `scope` ∈ {`tenant`, `school`, `cohort`, `students`} (`cohort` = study × trường; `class` bị từ chối `422`).
+- Q: Nghiên cứu cũ theo lớp? → A: [Confirmed] Migration expand `20261229000007` chuyển lớp → cụm (gộp các lớp của cùng trường); trường có lớp ở hai arm/cặp/thứ tự dạng khác nhau được đánh dấu `conflict = true` — **không tự gộp**: `activateEfficacyStudy` trả `422` với lỗi `/cohorts/{school_id}/conflict` cho tới khi nhà nghiên cứu bỏ cụm (`removeEfficacyStudyCohort`) và thêm lại. Bảng `efficacy_study_classes`, `efficacy_wave_sessions` và cột `class_id` không ghi nữa (DROP ở WP-R).
+- Q: Báo cáo, dữ liệu xuất, thử nghiệm A/B? → A: [Confirmed] ICC và design effect tính theo cụm; `descriptive_only` khi một nhóm có dưới `efficacy_recommended_cohorts_per_arm` = 4 cụm (OQ-25, đổi tên từ `efficacy_recommended_classes_per_arm` = 6; kết quả `arms.*.cohorts`, `thresholds.recommended_cohorts_per_arm`). Dataset `efficacy_dataset`: cột `cohort_code` (mã giả danh của cụm) thay `class_code`, không có cột lớp. `experiments.unit` ∈ {`student`, `school_grade`} mặc định `school_grade` (`class` từ chối `422`); đơn vị của `school_grade` = UUID ổn định của (trường, khối) học sinh; study chỉ cho cụm can thiệp tham gia.
+
 ### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F035-AC-10, AC-27: bỏ điều kiện MFA và nhánh `403 MFA_REQUIRED`; người không có `platform.efficacy_study.manage`/`platform.learning_experiment.manage` vẫn `403 PERMISSION_DENIED`. T021 và plan/contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
@@ -63,13 +69,13 @@
 
 ---
 
-### User Story 2 — Thỏa thuận, nghiên cứu và lớp tham gia/so sánh (Priority: P1)
+### User Story 2 — Thỏa thuận, nghiên cứu và cụm (trường, khối) tham gia/so sánh (Priority: P1)
 
-`sa.admin` ghi thỏa thuận pilot của `th-demo-a` và `pgd-demo`, tạo nghiên cứu Toán lớp 3 dùng dạng A/B, thêm 3A (can thiệp) – 3B (so sánh) thành một cặp, kích hoạt.
+`sa.admin` ghi thỏa thuận pilot của `th-demo-a` và `pgd-demo`, tạo nghiên cứu Toán lớp 3 dùng dạng A/B, thêm khối 3 của TH Demo A (can thiệp) – khối 3 của trường thứ hai (so sánh) thành một cặp, kích hoạt (ADR-0095).
 
-**Why this priority**: Thiết kế bán thực nghiệm chia theo lớp là nền của mọi phân tích ([LEARNING_EFFICACY_PLAN §3.1](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md)).
+**Why this priority**: Thiết kế bán thực nghiệm chia theo cụm (trường, khối) là nền của mọi phân tích ([LEARNING_EFFICACY_PLAN §3.1](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md)).
 
-**Independent Test**: Tạo study 2 cặp lớp, một cặp để trống `arm` → `activateEfficacyStudy` gán ngẫu nhiên tái lập được, cặp 1 `a_then_b`, cặp 2 `b_then_a`; sửa arm sau kích hoạt → `409`; `ad.truong.a` gọi API → `403`.
+**Independent Test**: Tạo study 2 cặp cụm, một cặp để trống `arm` → `activateEfficacyStudy` gán ngẫu nhiên tái lập được, cặp 1 `a_then_b`, cặp 2 `b_then_a`; sửa arm sau kích hoạt → `409`; `ad.truong.a` gọi API → `403`.
 
 **Acceptance Criteria (EARS)**:
 
@@ -77,16 +83,16 @@
 |---|---|---|---|
 | F035-AC-06 | KHI System Admin gọi `createResearchAgreement` với `X-Tenant-Id` tenant đích, `agreement_ref` (≤ 128) và `covers` ⊂ {`efficacy_study`, `experiment`}, module learning PHẢI lưu thỏa thuận `active` và ghi audit `research_agreement.created`; thiếu header PHẢI trả `400 TENANT_HEADER_REQUIRED`. | [LEARNING_EFFICACY_PLAN §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · AC-ORG-004 | TC-TEN-011c |
 | F035-AC-07 | KHI `createEfficacyStudy` hợp lệ (`code` ≤ 64 duy nhất, `title` ≤ 255, môn, khối, 1–100 `objective_ids`, hai blueprint version `efficacy_instrument` đã publish khác nhau cùng môn/khối phủ đúng tập LO với số câu tối thiểu mỗi LO mỗi dạng theo LEARNING_EFFICACY_PLAN §3.2, `min_intervention_weeks` ≥ 1), module learning PHẢI tạo study `draft`, idempotent theo `Idempotency-Key`, ghi audit `efficacy_study.created`; vi phạm PHẢI trả `422 VALIDATION_FAILED` chỉ rõ trường. | [LEARNING_EFFICACY_PLAN §3.2](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · R10 | TC-TEN-024 |
-| F035-AC-08 | KHI `addEfficacyStudyClass` (tenant đích) thêm lớp với `pair_no` và `arm` tùy chọn ∈ {`intervention`, `comparison`, `validation`}, module learning PHẢI kiểm lớp thuộc tenant đích (khác → `404 NOT_FOUND`), đúng khối, tenant có thỏa thuận `active` phủ `efficacy_study` (thiếu → `422 VALIDATION_FAILED`), lớp chưa ở study `draft`/`active` khác (→ `409 CONFLICT`), study còn `draft` (→ `422 INVALID_STATE_TRANSITION`). | [LEARNING_EFFICACY_PLAN §3.1](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | TC-TEN-001 |
-| F035-AC-09 | KHI `activateEfficacyStudy`, module learning PHẢI kiểm mỗi `pair_no` có đúng 2 lớp, gán arm còn trống bằng hash ổn định `(study_id, pair_no)` (`assignment_method = random`), bảo đảm mỗi cặp một `intervention` một `comparison`, đặt `form_order` xen kẽ theo cặp (lẻ `a_then_b`, chẵn `b_then_a`) nếu chưa đặt, chuyển `active`, ghi audit; sau đó mọi thay đổi arm/cặp/dạng đề PHẢI trả `422 INVALID_STATE_TRANSITION`. | [LEARNING_EFFICACY_PLAN §3.1, §3.2](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | — |
+| F035-AC-08 | KHI `addEfficacyStudyCohort` (tenant đích) thêm cụm (trường, khối của study — ADR-0095) với `pair_no` và `arm` tùy chọn ∈ {`intervention`, `comparison`, `validation`}, module learning PHẢI kiểm trường thuộc tenant đích (khác → `404 NOT_FOUND`), trường có học sinh khối của study, tenant có thỏa thuận `active` phủ `efficacy_study` (thiếu → `422 VALIDATION_FAILED`), cụm chưa ở study `draft`/`active` khác (→ `409 CONFLICT`), study còn `draft` (→ `422 INVALID_STATE_TRANSITION`). | [LEARNING_EFFICACY_PLAN §3.1](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | TC-TEN-001 |
+| F035-AC-09 | KHI `activateEfficacyStudy`, module learning PHẢI kiểm mỗi `pair_no` có đúng 2 cụm cùng khối ở hai trường khác nhau, không cụm nào `conflict`, gán arm còn trống bằng hash ổn định `(study_id, pair_no)` (`assignment_method = random`), bảo đảm mỗi cặp một `intervention` một `comparison`, đặt `form_order` xen kẽ theo cặp (lẻ `a_then_b`, chẵn `b_then_a`) nếu chưa đặt, chuyển `active`, ghi audit; sau đó mọi thay đổi arm/cặp/dạng đề PHẢI trả `422 INVALID_STATE_TRANSITION`. | [LEARNING_EFFICACY_PLAN §3.1, §3.2](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | — |
 | F035-AC-10 | HỆ THỐNG PHẢI chỉ cho principal có `platform.efficacy_study.manage` qua gateway nội bộ (`azp = eduworld-portal`, MFA) gọi `/admin/learning/research-agreements*` và `/admin/learning/efficacy-studies*`; role tenant, `content_admin`, `safety_moderator` PHẢI nhận `403 PERMISSION_DENIED`; token thiếu MFA PHẢI nhận `403 MFA_REQUIRED`. | R7 · R20 · ADR-0027 | TC-TEN-004 |
-| F035-AC-11 | KHI System Admin liệt kê thỏa thuận, study, lớp, module learning PHẢI dùng `CrossTenantScope` theo `tenant_ids[]`, trả `tenant_id` mỗi dòng và ghi audit `cross_tenant.accessed`. | R8 · AC-ORG-004 | TC-TEN-018 |
+| F035-AC-11 | KHI System Admin liệt kê thỏa thuận, study, cụm, module learning PHẢI dùng `CrossTenantScope` theo `tenant_ids[]`, trả `tenant_id` mỗi dòng và ghi audit `cross_tenant.accessed`. | R8 · AC-ORG-004 | TC-TEN-018 |
 
 ---
 
 ### User Story 3 — Đợt kiểm tra trước/sau không ảnh hưởng học tập (Priority: P1)
 
-`sa.admin` lập lịch đợt `pre` tuần 0 và `post` sau ≥ `min_intervention_weeks`; mỗi lớp nhận một ExamSession đúng dạng đề; học sinh làm trong Exam Zone, không thấy điểm, không được XP, mastery không đổi.
+`sa.admin` lập lịch đợt `pre` tuần 0 và `post` sau ≥ `min_intervention_weeks`; mỗi cụm (trường, khối) nhận một ExamSession đúng dạng đề; học sinh làm trong Exam Zone, không thấy điểm, không được XP, mastery không đổi.
 
 **Why this priority**: Dữ liệu trước/sau là nguồn của effect size và predictive validity.
 
@@ -96,9 +102,9 @@
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F035-AC-12 | KHI `scheduleEfficacyWave` với `kind` ∈ {`validation`, `pre`, `post`} và cửa sổ hợp lệ, module learning PHẢI tạo cho mỗi lớp đích một ExamSession trong tenant của lớp với `exam_type = custom`, `is_official = false`, `feedback_timing = never`, `result_release = manual`, ẩn đáp án/giải thích, `max_attempts = 1`, `efficacy_wave_id`, dạng đề theo `form_order` (`pre` dạng đầu, `post` dạng sau; `validation` theo `form` của request), idempotent, ghi audit `efficacy_wave.scheduled`. | AC-EFF-002 · [LEARNING_EFFICACY_PLAN §3.2](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · FR-EXM-004 | TC-EXM-005 |
+| F035-AC-12 | KHI `scheduleEfficacyWave` với `kind` ∈ {`validation`, `pre`, `post`} và cửa sổ hợp lệ, module learning PHẢI tạo cho mỗi cụm đích một ExamSession (target khối của trường) trong tenant của cụm với `exam_type = custom`, `is_official = false`, `feedback_timing = never`, `result_release = manual`, ẩn đáp án/giải thích, `max_attempts = 1`, `efficacy_wave_id`, dạng đề theo `form_order` (`pre` dạng đầu, `post` dạng sau; `validation` theo `form` của request), idempotent, ghi audit `efficacy_wave.scheduled`. | AC-EFF-002 · [LEARNING_EFFICACY_PLAN §3.2](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · FR-EXM-004 | TC-EXM-005 |
 | F035-AC-13 | NẾU study đã có đợt cùng `kind` (`pre`/`post`) chưa hủy, đợt `post` mở sớm hơn `window_end` của `pre` cộng `min_intervention_weeks`, hoặc đợt `pre`/`post` trên study chưa `active`, THÌ module learning PHẢI từ chối (`422 INVALID_STATE_TRANSITION` hoặc `422 VALIDATION_FAILED`). | [LEARNING_EFFICACY_PLAN §3.1](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | — |
-| F035-AC-14 | KHI đợt `pre` mở, module learning PHẢI chụp danh sách học sinh đang ghi danh của mỗi lớp thành participant (arm, `form_order` của lớp), loại học sinh `processing_restricted` hoặc đã ẩn danh; ExamSession đợt sau chỉ nhắm participant `active` của lớp. | [LEARNING_EFFICACY_PLAN §3.1, §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · NFR-PRIV-002 | — |
+| F035-AC-14 | KHI đợt `pre` mở, module learning PHẢI chụp học sinh `active` của khối của mỗi trường trong cụm thành participant (arm, `form_order` của cụm), loại học sinh `processing_restricted` hoặc đã ẩn danh; ExamSession đợt sau chỉ nhắm participant `active` của cụm. | [LEARNING_EFFICACY_PLAN §3.1, §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · NFR-PRIV-002 | — |
 | F035-AC-15 | KHI attempt của ExamSession có `efficacy_wave_id` được chấm, module learning PHẢI không tạo evidence mastery, không cập nhật `progress_daily`, không đăng ký gợi ý R5, không phát `exam.*` ra outbox (nên không XP, không thông báo, không vào dashboard), và ghi learning event với `context.efficacy_wave_id`; recompute mastery PHẢI bỏ qua các event này. | AC-EFF-002 · FR-ANL-001 · [EXAM_ENGINE §10](../../docs/02-learning/EXAM_ENGINE.md) | TC-LRN-010 |
 | F035-AC-16 | TRONG KHI ExamSession có `efficacy_wave_id`, module learning PHẢI trả `403 EXAM_RESULTS_NOT_RELEASED` cho `getExamResult`/`getExamAttemptAnalysis` của học sinh, `422 INVALID_STATE_TRANSITION` cho `releaseExamResults`, và `403 PERMISSION_DENIED` cho `listExamSessionPapers`, `getExamSessionReport`, `createRegradeRequest` (`scope = exam_session`) của role tenant. | AC-EFF-002 · [LEARNING_EFFICACY_PLAN §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | TC-EXM-005 |
 | F035-AC-17 | HỆ THỐNG PHẢI không trả `efficacy_wave_id`, study, arm hay `form_order` trong response cho học sinh; nhân sự trường thấy ExamSession đo hiệu quả ở `listExamSessions`/`getExamSession` với `is_efficacy = true` chỉ đọc; ExamSession của tenant khác PHẢI trả `404 NOT_FOUND`. | [LEARNING_EFFICACY_PLAN §6](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · R8 | TC-TEN-001 |
@@ -117,7 +123,7 @@ Trường yêu cầu loại 2 học sinh 3A và sau đó rút cả trường; d�
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F035-AC-18 | KHI System Admin gọi `withdrawEfficacyParticipants` (tenant đích, `scope` ∈ {`tenant`, `school`, `class`, `students`}, ≤ 500 `student_ids`, `reason` 10–1.000 ký tự, `school_request_ref` ≤ 128, `Idempotency-Key`), module learning PHẢI chuyển participant phạm vi đó sang `withdrawn` với `withdrawn_at`, loại họ khỏi đối tượng ExamSession đo hiệu quả chưa mở, hủy ExamSession chưa mở của lớp bị rút toàn bộ, ghi audit `efficacy.participants_withdrawn`; gửi lại cùng key PHẢI trả kết quả cũ. | [LEARNING_EFFICACY_PLAN §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · R10 | — |
+| F035-AC-18 | KHI System Admin gọi `withdrawEfficacyParticipants` (tenant đích, `scope` ∈ {`tenant`, `school`, `cohort`, `students`} (`cohort` = study × trường, ADR-0095), ≤ 500 `student_ids`, `reason` 10–1.000 ký tự, `school_request_ref` ≤ 128, `Idempotency-Key`), module learning PHẢI chuyển participant phạm vi đó sang `withdrawn` với `withdrawn_at`, loại họ khỏi đối tượng ExamSession đo hiệu quả chưa mở, hủy ExamSession chưa mở của cụm bị rút toàn bộ, ghi audit `efficacy.participants_withdrawn`; gửi lại cùng key PHẢI trả kết quả cũ. | [LEARNING_EFFICACY_PLAN §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · R10 | — |
 | F035-AC-19 | KHI participant bị rút hoặc bị ẩn danh (`anonymizeUserData`), module learning PHẢI loại họ khỏi mọi báo cáo và bộ dữ liệu xuất tạo sau thời điểm đó và soft-delete dữ liệu dẫn xuất của nghiên cứu (snapshot mastery) với lý do; learning record gốc giữ nguyên; không xóa vật lý. | [LEARNING_EFFICACY_PLAN §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · R21 · ADR-0070 | TC-TEN-022 |
 | F035-AC-20 | KHI `revokeResearchAgreement`, module learning PHẢI rút toàn bộ participant của tenant khỏi mọi study đang chạy (như F035-AC-18) và đưa học sinh của tenant ra khỏi mọi thử nghiệm A/B (trải nghiệm trở về nhánh control từ request kế tiếp), ghi audit. | [LEARNING_EFFICACY_PLAN §6, §8](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | — |
 
@@ -125,18 +131,18 @@ Trường yêu cầu loại 2 học sinh 3A và sau đó rút cả trường; d�
 
 ### User Story 5 — Thử nghiệm A/B cấu hình mastery và luật gợi ý (Priority: P2)
 
-`sa.admin` tạo thử nghiệm `mastery-we-1-1` (control `we-1.0`, nhánh `we-1.1`, đơn vị lớp), chạy shadow 2 tuần rồi bật live; hệ thống tự dừng nếu nhánh làm giảm độ chính xác.
+`sa.admin` tạo thử nghiệm `mastery-we-1-1` (control `we-1.0`, nhánh `we-1.1`, đơn vị cụm trường × khối), chạy shadow 2 tuần rồi bật live; hệ thống tự dừng nếu nhánh làm giảm độ chính xác.
 
 **Why this priority**: Cơ sở cải tiến mô hình mastery (Q4, ADR-0017), không chặn đo hiệu quả chính.
 
-**Independent Test**: Thử nghiệm 50/50 trên 4 lớp → `hs.an.3a` và `hs.binh.3a` cùng arm; shadow không đổi `getMyMastery`; live đổi mức hiển thị cho arm thử nhưng `getStudentProgress` của nhà trường không đổi; event mang `experiment_arms`.
+**Independent Test**: Thử nghiệm 50/50 trên 4 cụm → `hs.an.3a` và `hs.binh.3a` cùng arm; shadow không đổi `getMyMastery`; live đổi mức hiển thị cho arm thử nhưng `getStudentProgress` của nhà trường không đổi; event mang `experiment_arms`.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F035-AC-21 | KHI `createLearningExperiment` hợp lệ (`code` ≤ 64 duy nhất, `kind` ∈ {`mastery_model`, `recommendation_rule`}, `unit` ∈ {`class`, `student`} mặc định `class`, 2–5 arm đúng một `is_control`, tổng `allocation_pct` = 100, arm mastery trỏ `model_version` có trong `mastery_model_configs` (control = `active`), arm luật gợi ý chỉ chứa tham số trong danh mục cho phép, mọi tenant có thỏa thuận phủ `experiment`, không chứa lớp `comparison`/`validation` của study đang chạy), module learning PHẢI tạo `draft` có `revision`, ghi audit; ngược lại `422 VALIDATION_FAILED`; sửa ngoài `draft` PHẢI trả `422 INVALID_STATE_TRANSITION`. | [LEARNING_EFFICACY_PLAN §6](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · FR-PRG-003 | — |
-| F035-AC-22 | HỆ THỐNG PHẢI gán arm bằng `hash(experiment_id, unit_id) mod 100` theo `allocation_pct` cộng dồn, lưu ở lần tiếp xúc đầu và giữ nguyên khi học sinh chuyển lớp; với `unit = class` hai học sinh cùng lớp PHẢI luôn cùng arm. | AC-EFF-004 | — |
+| F035-AC-21 | KHI `createLearningExperiment` hợp lệ (`code` ≤ 64 duy nhất, `kind` ∈ {`mastery_model`, `recommendation_rule`}, `unit` ∈ {`school_grade`, `student`} mặc định `school_grade` (ADR-0095), 2–5 arm đúng một `is_control`, tổng `allocation_pct` = 100, arm mastery trỏ `model_version` có trong `mastery_model_configs` (control = `active`), arm luật gợi ý chỉ chứa tham số trong danh mục cho phép, mọi tenant có thỏa thuận phủ `experiment`, không chứa cụm `comparison`/`validation` của study đang chạy), module learning PHẢI tạo `draft` có `revision`, ghi audit; ngược lại `422 VALIDATION_FAILED`; sửa ngoài `draft` PHẢI trả `422 INVALID_STATE_TRANSITION`. | [LEARNING_EFFICACY_PLAN §6](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · FR-PRG-003 | — |
+| F035-AC-22 | HỆ THỐNG PHẢI gán arm bằng `hash(experiment_id, unit_id) mod 100` theo `allocation_pct` cộng dồn, lưu ở lần tiếp xúc đầu và giữ nguyên khi học sinh đổi khối/trường; với `unit = school_grade` hai học sinh cùng khối của một trường PHẢI luôn cùng arm. | AC-EFF-004 | — |
 | F035-AC-23 | TRONG KHI thử nghiệm `mastery_model` ở `shadow`, consumer mastery PHẢI tính song song mô hình của mọi arm không phải control cho học sinh thuộc đơn vị tham gia từ cùng evidence, không đổi bất kỳ giá trị hiển thị hay gợi ý nào. | FR-PRG-009 · [LEARNING_EFFICACY_PLAN §6](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | TC-LRN-010 |
 | F035-AC-24 | TRONG KHI thử nghiệm ở `live`, module learning PHẢI dùng trạng thái/tham số của arm cho trải nghiệm học sinh thuộc arm (`getMyProgress`, `getMyMastery`, `getMyRecommendations`, độ khó luyện tập) và PHẢI giữ mô hình `active` cho `getStudentProgress`, dashboard/báo cáo nhà trường, mức tham khảo và `learning_objective.mastered`; thử nghiệm PHẢI không tác động attempt `mode = exam`. | [LEARNING_EFFICACY_PLAN §6](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · ADR-0017 · R19 | — |
 | F035-AC-25 | TRONG KHI học sinh thuộc thử nghiệm đang `shadow`/`live`, learning event của học sinh PHẢI mang `context.experiment_arms` (`<code>:<arm>`); không response nào cho học sinh chứa arm. | AC-EFF-004 · FR-ANL-001 | — |
@@ -151,7 +157,7 @@ Sau đợt `post`, `sa.admin` tạo báo cáo: effect size kèm khoảng tin c�
 
 **Why this priority**: Là bằng chứng của exit criterion pilot (ADR-0080 mục 1, 3).
 
-**Independent Test**: Dataset golden 2 nhóm × 4 lớp → `createEfficacyStudyReport` trả Hedges' g, CI, ρ, AUC khớp giá trị tính tay (sai số ≤ 0,001); ô < 5 học sinh bị ẩn.
+**Independent Test**: Dataset golden 2 nhóm × 4 cụm → `createEfficacyStudyReport` trả Hedges' g, CI, ρ, AUC khớp giá trị tính tay (sai số ≤ 0,001); ô < 5 học sinh bị ẩn.
 
 **Acceptance Criteria (EARS)**:
 
@@ -160,7 +166,7 @@ Sau đợt `post`, `sa.admin` tạo báo cáo: effect size kèm khoảng tin c�
 | F035-AC-28 | KHI đợt `post` mở, module learning PHẢI chụp `M_eff` và level (mô hình `active`, sau decay) của mỗi participant `intervention` cho từng LO của study. | [LEARNING_EFFICACY_PLAN §5](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) · FR-PRG-003 | — |
 | F035-AC-29 | KHI `createEfficacyStudyReport` (`Idempotency-Key`, tùy chọn `excluded_question_version_ids`), job PHẢI tính theo arm: số participant, tỉ lệ rời (thiếu pre/post, rút), gain, normalized gain, Hedges' g của chênh lệch gain với CI 95% hiệu chỉnh design effect, gain theo LO, KR-20 từng dạng đề từng đợt (cảnh báo theo `exam_reliability_warn`), mức sử dụng (thời gian học, số ngày học, tỉ lệ `rapid_guess`) và tỉ lệ lớp so sánh có dùng luyện tập; cùng đầu vào PHẢI cho cùng kết quả. | AC-EFF-005 · FR-EXM-010 · [LEARNING_EFFICACY_PLAN §4](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | — |
 | F035-AC-30 | Báo cáo PHẢI có predictive validity cho nhóm can thiệp: Spearman ρ theo LO giữa `M_eff` và tỉ lệ đúng bài sau, tỉ lệ hiệu chuẩn (`mastered` ≥ 80%, `beginning` < 50%), AUC dự đoán "đạt ≥ 2/3 câu của LO", tỉ lệ làm theo gợi ý và gain LO được gợi ý so với LO không được gợi ý; LO dưới ngưỡng tham chiếu PHẢI được đánh dấu. | AC-EFF-005 · [LEARNING_EFFICACY_PLAN §5](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) | — |
-| F035-AC-31 | Báo cáo PHẢI chỉ chứa số liệu gộp, ẩn mọi ô < `analytics_min_cell_size` sao cho tổng không suy ra được ô ẩn, không có tên/lớp thật, không xếp hạng, và gắn nhãn `descriptive_only` khi số lớp mỗi nhóm dưới khuyến nghị cỡ mẫu của LEARNING_EFFICACY_PLAN §4. | AC-EFF-003 · FR-ANL-016 · R16 | TC-DASH-009 |
+| F035-AC-31 | Báo cáo PHẢI chỉ chứa số liệu gộp, ẩn mọi ô < `analytics_min_cell_size` sao cho tổng không suy ra được ô ẩn, không có tên/trường/lớp thật, không xếp hạng, và gắn nhãn `descriptive_only` khi số lớp mỗi nhóm dưới khuyến nghị cỡ mẫu của LEARNING_EFFICACY_PLAN §4. | AC-EFF-003 · FR-ANL-016 · R16 | TC-DASH-009 |
 
 ---
 
@@ -176,7 +182,7 @@ Sau đợt `post`, `sa.admin` tạo báo cáo: effect size kèm khoảng tin c�
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F035-AC-32 | KHI principal có `report.export` và `platform.efficacy_study.export` gọi `createPlatformReport` với `report_type = efficacy_dataset`, `params.study_id`, worker PHẢI xuất CSV mỗi dòng một participant `active` gồm `participant_code` = HMAC-SHA256 theo khóa bí mật và `study_id`, `class_code`, `site_code`, `pair_no`, `arm`, `form_order`, khối, đúng/tổng theo đợt × LO, `M_eff`/level theo LO, mức sử dụng; PHẢI không có `student_id`, tên, mã/ tên lớp, trường, tenant, ngày sinh. | AC-EFF-003 · FR-ANL-014 · NFR-PRIV-002 | — |
+| F035-AC-32 | KHI principal có `report.export` và `platform.efficacy_study.export` gọi `createPlatformReport` với `report_type = efficacy_dataset`, `params.study_id`, worker PHẢI xuất CSV mỗi dòng một participant `active` gồm `participant_code` = HMAC-SHA256 theo khóa bí mật và `study_id`, `cohort_code` (cụm trường × khối, ADR-0095), `site_code`, `pair_no`, `arm`, `form_order`, khối, đúng/tổng theo đợt × LO, `M_eff`/level theo LO, mức sử dụng; PHẢI không có `student_id`, tên, mã/ tên lớp, trường, tenant, ngày sinh. | AC-EFF-003 · FR-ANL-014 · NFR-PRIV-002 | — |
 | F035-AC-33 | `participant_code` PHẢI ổn định trong một study và khác giữa các study; khóa PHẢI chỉ đọc từ secret cấu hình, không log, không trả về; NẾU thiếu khóa, THÌ job PHẢI `failed` mà không xuất. | R3 · R14 · [DATA_PRIVACY §4](../../docs/10-security/DATA_PRIVACY.md) | — |
 | F035-AC-34 | Export đo hiệu quả PHẢI ghi audit `report.exported` và `efficacy.dataset_exported` (study, số dòng, không PII), link hết hạn theo `dashboard_export_link_ttl_minutes`, file giữ theo `dashboard_export_file_retention_days`, giới hạn đồng thời theo `dashboard_export_max_concurrent_per_user`; thiếu permission PHẢI trả `403 PERMISSION_DENIED`. | FR-ANL-014 · FR-AUD-001 | TC-DASH-008, TC-TEN-004 |
 
@@ -188,25 +194,25 @@ System Admin thao tác toàn bộ luồng trên workspace D; Content Admin đặ
 
 **Why this priority**: Vận hành được bằng API (quickstart); UI giảm lỗi thao tác.
 
-**Independent Test**: `sa.admin` tạo study → thêm lớp → kích hoạt → lập đợt → xem báo cáo trên portal; `ad.truong.a` không thấy menu; ô cờ không hiện ở phạm vi tenant.
+**Independent Test**: `sa.admin` tạo study → thêm cụm → kích hoạt → lập đợt → xem báo cáo trên portal; `ad.truong.a` không thấy menu; ô cờ không hiện ở phạm vi tenant.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F035-AC-35 | Portal PHẢI hiện mục "Nghiên cứu hiệu quả" (thỏa thuận, study, lớp/cặp, đợt, rút, báo cáo, xuất, thử nghiệm A/B) trong workspace D chỉ khi `GET /me/permissions` có permission tương ứng, chỉ gọi API (không tính thống kê ở client), style từ token. | R1 · R32 · [ADMIN_PORTAL §2.1](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-UI-003, TC-UI-006 |
+| F035-AC-35 | Portal PHẢI hiện mục "Nghiên cứu hiệu quả" (thỏa thuận, study, cụm/cặp, đợt, rút, báo cáo, xuất, thử nghiệm A/B) trong workspace D chỉ khi `GET /me/permissions` có permission tương ứng, chỉ gọi API (không tính thống kê ở client), style từ token. | R1 · R32 · [ADMIN_PORTAL §2.1](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-UI-003, TC-UI-006 |
 | F035-AC-36 | Content Studio PHẢI hiện ô `efficacy_instrument` và nhãn "Đo hiệu quả" chỉ ở phạm vi platform cho người có `learning_content.write` platform, không bao giờ ở phạm vi tenant. | [ADMIN_PORTAL §3.13](../../docs/04-admin-portal/ADMIN_PORTAL.md) · R20 | — |
 | F035-AC-37 | KHI menu/action của feature đang tắt cho phạm vi phiên (`disabled_menus`/`disabled_actions` của `getMyPermissions`) — khóa: `action.content_studio.question_bank.view`, `action.content_studio.question_bank.edit`, `action.content_studio.assessments.view`, `action.content_studio.assessments.edit`, `action.platform_admin.reports.export`, `menu.platform_admin.efficacy_studies` (action `view`, `manage_agreements`, `edit`, `schedule_waves`, `withdraw`, `report`), `menu.platform_admin.learning_experiments` (action `view`, `edit`, `operate`), Portal PHẢI ẩn menu và ẩn/khóa nút tương ứng; NẾU API trả `403 FEATURE_DISABLED`, Portal PHẢI hiện thông báo tính năng tạm tắt và tải lại quyền | FR-CMS-018 · ADR-0090 | TC-CMS-MENU-02 |
 
 ### Edge Cases
 
-- Học sinh vào lớp sau khi đợt `pre` mở: không là participant, không trong đối tượng đợt sau (F035-AC-14).
-- Học sinh chuyển lớp giữa nghiên cứu: giữ arm và `form_order` lúc chụp; nếu rời mọi lớp tham gia vẫn được mời đợt `post` qua danh sách participant (F035-AC-14).
+- Học sinh vào khối của trường sau khi đợt `pre` mở: không là participant, không trong đối tượng đợt sau (F035-AC-14).
+- Học sinh đổi khối/trường giữa nghiên cứu: giữ arm và `form_order` lúc chụp; nếu rời mọi cụm tham gia vẫn được mời đợt `post` qua danh sách participant (F035-AC-14).
 - Học sinh vắng một đợt: tính vào tỉ lệ rời, không ước lượng thay (F035-AC-29).
-- Lớp so sánh dùng luyện tập trong thời gian can thiệp: hệ thống không chặn, chỉ báo cáo tỉ lệ (F035-AC-29).
+- Cụm so sánh dùng luyện tập trong thời gian can thiệp: hệ thống không chặn, chỉ báo cáo tỉ lệ (F035-AC-29).
 - Câu đề đo hiệu quả bị lỗi sau khi làm: loại câu bằng `excluded_question_version_ids` khi tạo báo cáo; không regrade ExamSession đo hiệu quả (F035-AC-16, F035-AC-29).
 - Học sinh có attempt ở cả hai dạng đề cùng đợt (do tạo lại đợt): chỉ attempt của ExamSession đợt chưa hủy được tính.
-- Thử nghiệm và nghiên cứu cùng lúc: lớp can thiệp được tham gia thử nghiệm; lớp so sánh/validation thì không (F035-AC-21).
+- Thử nghiệm và nghiên cứu cùng lúc: cụm can thiệp được tham gia thử nghiệm; cụm so sánh/validation thì không (F035-AC-21).
 - Tenant QA (`is_qa = true`) không được thêm vào study/thử nghiệm (`422 VALIDATION_FAILED`).
 
 ## Requirements *(bắt buộc)*
@@ -223,7 +229,7 @@ FR chính là FR-ANL-017…023 (PRD cấp ngày 2026-11-17); các dòng sau là 
 | FR-ANL-020 | US5: thử nghiệm A/B mastery/gợi ý, `experiment_arms`, dừng sớm | [LEARNING_EFFICACY_PLAN](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) |
 | FR-ANL-021 | US6: báo cáo effect size, tỉ lệ rời, độ tin cậy dự báo | [LEARNING_EFFICACY_PLAN](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) |
 | FR-ANL-022 | US7: xuất dữ liệu định danh giả | [LEARNING_EFFICACY_PLAN](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) |
-| FR-ANL-023 | US4: rút lớp/học sinh khỏi phân tích | [LEARNING_EFFICACY_PLAN](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) |
+| FR-ANL-023 | US4: rút cụm/học sinh khỏi phân tích (ADR-0095) | [LEARNING_EFFICACY_PLAN](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) |
 | FR-QB-004 | Loại câu `efficacy_instrument` khỏi mọi lần chọn ngẫu nhiên | [QUESTION_BANK §6, §8](../../docs/02-learning/QUESTION_BANK.md) · [LEARNING_EFFICACY_PLAN §3.2](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) |
 | FR-EXM-004 | ExamSession đo hiệu quả: không chính thức, không công bố, không feedback | [EXAM_ENGINE](../../docs/02-learning/EXAM_ENGINE.md) · [LEARNING_EFFICACY_PLAN §3.2](../../docs/02-learning/LEARNING_EFFICACY_PLAN.md) |
 | FR-EXM-010 | KR-20 của dạng đề đo hiệu quả (kiểm định và từng đợt) | [EXAM_ENGINE §8.1](../../docs/02-learning/EXAM_ENGINE.md) |
@@ -242,8 +248,8 @@ FR chính là FR-ANL-017…023 (PRD cấp ngày 2026-11-17); các dòng sau là 
 
 - **ResearchAgreement**: thỏa thuận pilot của một tenant (mã tham chiếu văn bản, phạm vi `efficacy_study`/`experiment`, trạng thái).
 - **EfficacyStudy**: một nghiên cứu (môn, khối, tập LO, hai dạng đề, số tuần can thiệp tối thiểu, trạng thái `draft → active → completed | cancelled`).
-- **EfficacyStudyClass**: lớp tham gia (cặp, arm, thứ tự dạng đề, cách gán). **EfficacyParticipant**: học sinh được chụp khi mở đợt `pre` (arm, trạng thái `active/withdrawn/excluded`).
-- **EfficacyWave**: đợt `validation`/`pre`/`post` và các ExamSession theo lớp. **EfficacyWithdrawal**: yêu cầu rút (phạm vi, lý do, mã yêu cầu của trường).
+- **EfficacyStudyCohort**: cụm (trường, khối) tham gia (cặp, arm, thứ tự dạng đề, cách gán, cờ `conflict` khi chuyển từ lớp) — ADR-0095. **EfficacyParticipant**: học sinh được chụp khi mở đợt `pre` (arm, trạng thái `active/withdrawn/excluded`).
+- **EfficacyWave**: đợt `validation`/`pre`/`post` và các ExamSession theo cụm. **EfficacyWithdrawal**: yêu cầu rút (phạm vi, lý do, mã yêu cầu của trường).
 - **EfficacyMasterySnapshot**: `M_eff`/level của participant × LO lúc mở đợt `post`. **EfficacyReport**: kết quả phân tích đã tính.
 - **LearningExperiment**: thử nghiệm A/B (loại, đơn vị, arm, tenant, `shadow/live`), **ExperimentAssignment** (học sinh → arm), **ExperimentMasteryState** (mastery theo mô hình arm), **ExperimentResult**.
 
@@ -276,7 +282,7 @@ Chưa có tên trong CONFIG_DEFAULTS (giá trị ở [LEARNING_EFFICACY_PLAN](..
 - **SC-001**: 0 lần câu `efficacy_instrument` xuất hiện trong ≥ 10.000 lần chọn câu ngoài ExamSession đo hiệu quả (test thống kê).
 - **SC-002**: 0 thay đổi mastery, XP, dashboard nhà trường do attempt đo hiệu quả.
 - **SC-003**: Báo cáo trên dataset golden khớp giá trị tính tay của mọi chỉ số (sai số ≤ 0,001).
-- **SC-004**: 100% học sinh cùng lớp cùng arm khi `unit = class`; 0 response cho học sinh chứa arm/study.
+- **SC-004**: 100% học sinh cùng khối của một trường cùng arm khi `unit = school_grade`; 0 response cho học sinh chứa arm/study.
 - **SC-005**: Bộ dữ liệu xuất có 0 cột định danh trực tiếp; participant đã rút không xuất hiện trong mọi báo cáo/xuất tạo sau thời điểm rút.
 
 ## Ngoài phạm vi

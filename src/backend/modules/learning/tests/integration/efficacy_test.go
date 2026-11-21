@@ -162,9 +162,9 @@ func TestEfficacyStudy(t *testing.T) {
 	authztest.Cover(t, "createEfficacyStudy", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "getEfficacyStudy", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "updateEfficacyStudy", authztest.CrossTenant, authztest.RoleDenied)
-	authztest.Cover(t, "listEfficacyStudyClasses", authztest.CrossTenant, authztest.RoleDenied)
-	authztest.Cover(t, "addEfficacyStudyClass", authztest.CrossTenant, authztest.RoleDenied)
-	authztest.Cover(t, "removeEfficacyStudyClass", authztest.CrossTenant, authztest.RoleDenied)
+	authztest.Cover(t, "listEfficacyStudyCohorts", authztest.CrossTenant, authztest.RoleDenied)
+	authztest.Cover(t, "addEfficacyStudyCohort", authztest.CrossTenant, authztest.RoleDenied)
+	authztest.Cover(t, "removeEfficacyStudyCohort", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "activateEfficacyStudy", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "completeEfficacyStudy", authztest.CrossTenant, authztest.RoleDenied)
 	// AC-06: X-Tenant-Id required; agreement recorded and audited; the same reference twice → 409.
@@ -218,43 +218,43 @@ func TestEfficacyStudy(t *testing.T) {
 		t.Fatal("audit efficacy_study.created")
 	}
 	study := s.str("study_id")
-	classes := studies + "/" + study + "/classes"
+	classes := studies + "/" + study + "/cohorts" // ADR-0095: cohorts (school × grade of the study)
 	// AC-08: a class of tenant B under the header of tenant A → 404; tenant B without agreement → 422; added once (409 twice).
-	if x := c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"class_id": k.classOther,
+	if x := c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"school_id": k.schoolOther,
 		"pair_no": 1}); x.status != http.StatusNotFound {
 		t.Fatalf("class of tenant B: %d %s", x.status, x.raw)
 	}
-	if x := c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantB)), map[string]any{"class_id": k.classOther,
+	if x := c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantB)), map[string]any{"school_id": k.schoolOther,
 		"pair_no": 2}); x.status != http.StatusUnprocessableEntity {
 		t.Fatalf("no agreement: %d %s", x.status, x.raw)
 	}
-	must(t, c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"class_id": k.class, "pair_no": 1}),
+	must(t, c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"school_id": k.school, "pair_no": 1}),
 		http.StatusCreated, "3A")
-	if x := c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"class_id": k.class, "pair_no": 1}); x.status !=
+	if x := c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"school_id": k.school, "pair_no": 1}); x.status !=
 		http.StatusConflict {
 		t.Fatalf("3A twice: %d %s", x.status, x.raw)
 	}
 	s2 := must(t, c.do(t, http.MethodPost, studies, saAdmin, idem(), k.studyBody("math-g3-b")), http.StatusCreated, "study 2").str("study_id")
-	if x := c.do(t, http.MethodPost, studies+"/"+s2+"/classes", saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"class_id": k.class,
+	if x := c.do(t, http.MethodPost, studies+"/"+s2+"/cohorts", saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"school_id": k.school,
 		"pair_no": 1}); x.status != http.StatusConflict {
 		t.Fatalf("3A in another study: %d %s", x.status, x.raw)
 	}
 	// Remove then add 3B again (soft-delete, revived).
-	must(t, c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"class_id": k.classB, "pair_no": 1}),
+	must(t, c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"school_id": k.school2, "pair_no": 1}),
 		http.StatusCreated, "3B")
-	must(t, c.do(t, http.MethodDelete, classes+"/"+k.classB.String(), saAdmin, tenantHdr(c.tenantA), nil), http.StatusNoContent, "remove 3B")
-	must(t, c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"class_id": k.classB, "pair_no": 1}),
+	must(t, c.do(t, http.MethodDelete, classes+"/"+k.school2.String(), saAdmin, tenantHdr(c.tenantA), nil), http.StatusNoContent, "remove 3B")
+	must(t, c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"school_id": k.school2, "pair_no": 1}),
 		http.StatusCreated, "3B again")
 	// AC-09: activation assigns one intervention and one comparison, a_then_b for pair 1; reproducible; locked afterwards.
 	act := must(t, c.do(t, http.MethodPost, studies+"/"+study+":activate", saAdmin, idem(), nil), http.StatusOK, "activate")
-	if act.str("status") != "active" || act.num("class_count") != 2 || act.num("pair_count") != 1 {
+	if act.str("status") != "active" || act.num("cohort_count") != 2 || act.num("pair_count") != 1 {
 		t.Fatalf("activated %s", act.raw)
 	}
 	list := must(t, c.do(t, http.MethodGet, classes, saAdmin, nil, nil), http.StatusOK, "classes")
 	arms := map[string]string{}
 	for _, cl := range list.items("items") {
-		arms[cl["arm"].(string)] = cl["class_id"].(string)
-		if cl["form_order"] != "a_then_b" || cl["assignment_method"] != "random" || cl["tenant_id"] != c.tenantA.String() || cl["class_name"] == "" {
+		arms[cl["arm"].(string)] = cl["school_id"].(string)
+		if cl["form_order"] != "a_then_b" || cl["assignment_method"] != "random" || cl["tenant_id"] != c.tenantA.String() || cl["conflict"] != false || cl["grade_level"] != 3.0 {
 			t.Fatalf("class %v", cl)
 		}
 	}
@@ -270,11 +270,11 @@ func TestEfficacyStudy(t *testing.T) {
 		http.StatusUnprocessableEntity || x.str("code") != "INVALID_STATE_TRANSITION" {
 		t.Fatalf("patch active: %d %s", x.status, x.raw)
 	}
-	if x := c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"class_id": uuid.New(), "pair_no": 2}); x.status !=
+	if x := c.do(t, http.MethodPost, classes, saAdmin, merge(idem(), tenantHdr(c.tenantA)), map[string]any{"school_id": uuid.New(), "pair_no": 2}); x.status !=
 		http.StatusUnprocessableEntity || x.str("code") != "INVALID_STATE_TRANSITION" {
 		t.Fatalf("add after activation: %d %s", x.status, x.raw)
 	}
-	if x := c.do(t, http.MethodDelete, classes+"/"+k.class.String(), saAdmin, tenantHdr(c.tenantA), nil); x.status != http.StatusUnprocessableEntity {
+	if x := c.do(t, http.MethodDelete, classes+"/"+k.school.String(), saAdmin, tenantHdr(c.tenantA), nil); x.status != http.StatusUnprocessableEntity {
 		t.Fatalf("remove after activation: %d %s", x.status, x.raw)
 	}
 	if x := c.do(t, http.MethodPost, studies+"/"+study+":complete", saAdmin, idem(), nil); x.status != http.StatusUnprocessableEntity {
@@ -314,7 +314,7 @@ func TestEfficacyStudy(t *testing.T) {
 		map[string]any{"reason": "Trường rút khỏi pilot theo văn bản"}); x.status != http.StatusNotFound {
 		t.Fatalf("revoke under tenant B: %d %s", x.status, x.raw)
 	}
-	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_study_classes WHERE study_id = $1 AND status = 'withdrawn'`,
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_study_cohorts WHERE study_id = $1 AND status = 'withdrawn'`,
 		study); n != 2 {
 		t.Fatalf("withdrawn classes %d", n)
 	}
@@ -347,10 +347,10 @@ func TestEfficacyWaves(t *testing.T) {
 		pre.str("wave_id") {
 		t.Fatalf("replay %s", again.raw)
 	}
-	if len(pre.items("classes")) != 2 || pre.str("status") != "scheduled" {
+	if len(pre.items("cohorts")) != 2 || pre.str("status") != "scheduled" {
 		t.Fatalf("pre %s", pre.raw)
 	}
-	for _, cl := range pre.items("classes") {
+	for _, cl := range pre.items("cohorts") {
 		if cl["form"] != "a" { // pair 1: a_then_b
 			t.Fatalf("form %v", cl)
 		}
@@ -358,7 +358,7 @@ func TestEfficacyWaves(t *testing.T) {
 	if c.audits(ctx, t, "efficacy_wave.scheduled", nil) != 1 {
 		t.Fatal("audit efficacy_wave.scheduled")
 	}
-	sessA := sessionOfClass(t, pre, k.class)
+	sessA := sessionOfCohort(t, pre, k.school)
 	sv := must(t, c.do(t, http.MethodGet, examSessionsPath+"/"+sessA, adA, nil, nil), http.StatusOK, "staff view")
 	if sv.body["is_efficacy"] != true || sv.str("feedback_timing") != "never" || sv.str("result_release") != "manual" ||
 		sv.num("max_attempts") != 1 || sv.body["is_official"] != false || sv.str("type") != "custom" || sv.body["show_correct_answers"] != false ||
@@ -385,8 +385,8 @@ func TestEfficacyWaves(t *testing.T) {
 	}
 	// AC-14: the pre wave opens: hs.an, hs.binh (3A) and hs.chi (3B) become participants with the arm of their class.
 	c.runWaves(ctx, t)
-	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_participants p JOIN learning.efficacy_study_classes c
-		ON c.study_id = p.study_id AND c.class_id = p.class_id AND c.arm = p.arm WHERE p.study_id = $1 AND p.status = 'active'`, study); n != 3 {
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.efficacy_participants p JOIN learning.efficacy_study_cohorts c
+		ON c.study_id = p.study_id AND c.school_id = p.school_id AND c.arm = p.arm WHERE p.study_id = $1 AND p.status = 'active'`, study); n != 3 {
 		t.Fatalf("participants %d", n)
 	}
 	// AC-15, SC-002: hs.an takes the test; nothing but learning events with efficacy_wave_id.
@@ -460,9 +460,9 @@ func TestEfficacyWaves(t *testing.T) {
 	if len(ws) != 1 || ws[0]["status"] != "open" {
 		t.Fatalf("waves %s", wl.raw)
 	}
-	for _, cl := range ws[0]["classes"].([]any) {
+	for _, cl := range ws[0]["cohorts"].([]any) {
 		m := cl.(map[string]any)
-		if m["class_id"] == k.class.String() && (m["invited_count"] != float64(2) || m["completed_count"] != float64(1)) {
+		if m["school_id"] == k.school.String() && (m["invited_count"] != float64(2) || m["completed_count"] != float64(1)) {
 			t.Fatalf("3A counts %v", m)
 		}
 		if _, ok := m["score"]; ok {
@@ -477,18 +477,18 @@ func TestEfficacyWaves(t *testing.T) {
 		t.Fatal("pre wave not closed")
 	}
 	if n := count(ctx, t, c.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type LIKE 'exam.%' AND envelope->'payload'->>'exam_session_id'
-		= ANY($1::uuid[]::text[])`, "{"+sessA+","+sessionOfClass(t, pre, k.classB)+"}"); n != 0 {
+		= ANY($1::uuid[]::text[])`, "{"+sessA+","+sessionOfCohort(t, pre, k.school2)+"}"); n != 0 {
 		t.Fatalf("exam.* events of the efficacy sessions: %d", n)
 	}
 	c.clk.Advance(8 * 7 * 24 * time.Hour)
 	post := must(t, c.wave(t, study, "post", 0, nil), http.StatusCreated, "post")
-	for _, cl := range post.items("classes") {
+	for _, cl := range post.items("cohorts") {
 		if cl["form"] != "b" {
 			t.Fatalf("post form %v", cl)
 		}
 	}
 	if n := count(ctx, t, c.platform, `SELECT count(*) FROM assessment.exam_participations WHERE exam_session_id = $1`,
-		sessionOfClass(t, post, k.class)); n != 2 {
+		sessionOfCohort(t, post, k.school)); n != 2 {
 		t.Fatalf("post audience of 3A: %d", n)
 	}
 }

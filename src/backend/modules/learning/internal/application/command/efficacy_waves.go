@@ -32,9 +32,9 @@ type WaveInput struct {
 // WaveViewOf is the view of a wave with its sessions (counts are added by the query).
 func WaveViewOf(w write.WaveRow, sessions []write.WaveSessionRow) dto.EfficacyWaveView {
 	v := dto.EfficacyWaveView{WaveID: w.ID, StudyID: w.StudyID, Kind: w.Kind, Form: w.Form, WindowStart: w.WindowStart, WindowEnd: w.WindowEnd,
-		DurationSeconds: w.DurationSec, Status: w.Status, OpenedAt: w.OpenedAt, ClosedAt: w.ClosedAt, Classes: []dto.EfficacyWaveClassView{}}
+		DurationSeconds: w.DurationSec, Status: w.Status, OpenedAt: w.OpenedAt, ClosedAt: w.ClosedAt, Cohorts: []dto.EfficacyWaveCohortView{}}
 	for _, s := range sessions {
-		v.Classes = append(v.Classes, dto.EfficacyWaveClassView{ClassID: s.ClassID, TenantID: s.TenantID, ExamSessionID: s.ExamSessionID,
+		v.Cohorts = append(v.Cohorts, dto.EfficacyWaveCohortView{SchoolID: s.SchoolID, GradeLevel: s.GradeLevel, TenantID: s.TenantID, ExamSessionID: s.ExamSessionID,
 			Form: s.Form, SessionStatus: s.Status})
 	}
 	return v
@@ -68,8 +68,8 @@ func (h Efficacy) instrument(ctx context.Context, versionID uuid.UUID) (instrume
 }
 
 // ScheduleEfficacyWave schedules a validation, pre or post wave (F035-AC-12, AC-13): the checks of efficacy.CheckWave;
-// one exam session per target class in the tenant of the class with the fixed efficacy settings and the form of the
-// class (pre the first form of its order, post the second, validation the requested one); the audience is the class
+// one exam session per target cohort (school × grade) in the tenant of the cohort with the fixed efficacy settings and the
+// form of the cohort (pre the first form of its order, post the second, validation the requested one); the audience is the cohort
 // (validation, pre) or its active participants (post); idempotent by Idempotency-Key; audit efficacy_wave.scheduled.
 func (h Efficacy) ScheduleEfficacyWave(ctx context.Context, studyID uuid.UUID, in WaveInput) (out dto.EfficacyWaveView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.command.ScheduleEfficacyWave")
@@ -119,18 +119,18 @@ func (h Efficacy) ScheduleEfficacyWave(ctx context.Context, studyID uuid.UUID, i
 		if err := efficacyViolations(vs); err != nil {
 			return err
 		}
-		classes, err := h.Store.StudyClasses(ctx, studyID)
+		cohorts, err := h.Store.StudyCohorts(ctx, studyID)
 		if err != nil {
 			return err
 		}
-		var targets []write.StudyClassRow
-		for _, c := range classes {
+		var targets []write.StudyCohortRow
+		for _, c := range cohorts {
 			if c.Status == "enrolled" && c.Arm != nil && efficacy.TargetsWave(in.Kind, *c.Arm) {
 				targets = append(targets, c)
 			}
 		}
 		if len(targets) == 0 {
-			return problem.Invalid("/kind", problem.SubInvalid, "the study has no enrolled class for this wave")
+			return problem.Invalid("/kind", problem.SubInvalid, "the study has no enrolled cohort for this wave")
 		}
 		forms := map[string]instrument{}
 		for form, id := range map[string]uuid.UUID{efficacy.FormA: s.FormA, efficacy.FormB: s.FormB} {
@@ -162,7 +162,7 @@ func (h Efficacy) ScheduleEfficacyWave(ctx context.Context, studyID uuid.UUID, i
 				return err
 			}
 			row, err := h.Exams.CreateEfficacySession(ctx, EfficacySessionInput{WaveID: w.ID, TenantID: c.TenantID, SchoolID: c.SchoolID,
-				ClassID: c.ClassID, Title: s.Title, Form: forms[form].form, Pool: forms[form].pool, WindowStart: w.WindowStart, WindowEnd: w.WindowEnd,
+				GradeLevel: c.GradeLevel, Title: s.Title, Form: forms[form].form, Pool: forms[form].pool, WindowStart: w.WindowStart, WindowEnd: w.WindowEnd,
 				DurationSec: in.DurationSec, Students: students, CreatedBy: p.UserID})
 			if errors.Is(err, ErrEfficacyPool) {
 				return problem.Invalid("/form", problem.SubInvalid, "a question of the form is no longer published")
@@ -173,7 +173,7 @@ func (h Efficacy) ScheduleEfficacyWave(ctx context.Context, studyID uuid.UUID, i
 			if in.DurationSec == 0 {
 				w.DurationSec = row.DurationSec
 			}
-			sessions = append(sessions, write.WaveSessionRow{WaveID: w.ID, ClassID: c.ClassID, TenantID: c.TenantID, SchoolID: c.SchoolID,
+			sessions = append(sessions, write.WaveSessionRow{WaveID: w.ID, SchoolID: c.SchoolID, TenantID: c.TenantID, GradeLevel: c.GradeLevel,
 				ExamSessionID: row.ID, Form: form, Status: "active"})
 		}
 		if err := h.Store.InsertWave(ctx, w); err != nil {
@@ -198,13 +198,13 @@ func (h Efficacy) ScheduleEfficacyWave(ctx context.Context, studyID uuid.UUID, i
 	return out, err
 }
 
-// waveAudience is the audience of the session of a class: the active students of the class for validation and pre,
-// the active participants snapshotted in that class for post (F035-AC-14).
-func (h Efficacy) waveAudience(ctx context.Context, studyID uuid.UUID, kind string, c write.StudyClassRow) ([]uuid.UUID, error) {
+// waveAudience is the audience of the session of a cohort: the active students of the grade of the school for validation
+// and pre, the active participants snapshotted in that cohort for post (F035-AC-14).
+func (h Efficacy) waveAudience(ctx context.Context, studyID uuid.UUID, kind string, c write.StudyCohortRow) ([]uuid.UUID, error) {
 	if kind != efficacy.WavePost {
-		return h.Store.ClassStudents(ctx, c.TenantID, c.ClassID)
+		return h.Store.CohortStudents(ctx, c.TenantID, c.SchoolID, c.GradeLevel)
 	}
-	ps, err := h.Store.Participants(ctx, studyID, &c.ClassID, efficacy.ParticipantActive)
+	ps, err := h.Store.Participants(ctx, studyID, &c.SchoolID, efficacy.ParticipantActive)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ type WaveMonitorReport struct {
 }
 
 // RunWaveMonitor is the job efficacy-wave-monitor (every minute, plan "Bảo mật"): scheduled waves whose window started
-// open — the pre wave snapshots the participants of each class (F035-AC-14), the post wave the M_eff of the intervention
+// open — the pre wave snapshots the participants of each cohort (F035-AC-14), the post wave the M_eff of the intervention
 // participants (F035-AC-28) — and open waves whose window ended close. Every tenant under the audited bypass
 // efficacy_study; one transaction per wave.
 func (h Efficacy) RunWaveMonitor(ctx context.Context, limit int) (rep WaveMonitorReport, err error) {
@@ -295,28 +295,28 @@ func (h Efficacy) advanceWave(ctx context.Context, id uuid.UUID, rep *WaveMonito
 	return nil
 }
 
-// snapshotParticipants records the active students of every class of the pre wave as participants with the arm and
-// form order of their class (F035-AC-14); accounts that are not active (anonymized, processing restricted) are left out.
+// snapshotParticipants records the active students of every cohort of the pre wave as participants with the arm and
+// form order of their cohort (F035-AC-14); accounts that are not active (anonymized, processing restricted) are left out.
 func (h Efficacy) snapshotParticipants(ctx context.Context, s write.StudyRow, waveID uuid.UUID, now time.Time) (int, error) {
 	sessions, err := h.Store.WaveSessions(ctx, waveID)
 	if err != nil {
 		return 0, err
 	}
-	classes, err := h.Store.StudyClasses(ctx, s.ID)
+	cohorts, err := h.Store.StudyCohorts(ctx, s.ID)
 	if err != nil {
 		return 0, err
 	}
-	byClass := map[uuid.UUID]write.StudyClassRow{}
-	for _, c := range classes {
-		byClass[c.ClassID] = c
+	bySchool := map[uuid.UUID]write.StudyCohortRow{}
+	for _, c := range cohorts {
+		bySchool[c.SchoolID] = c
 	}
 	total := 0
 	for _, ws := range sessions {
-		c, ok := byClass[ws.ClassID]
+		c, ok := bySchool[ws.SchoolID]
 		if !ok || ws.Status != "active" || c.Status != "enrolled" || c.Arm == nil || c.FormOrder == nil {
 			continue
 		}
-		students, err := h.Store.ClassStudents(ctx, c.TenantID, c.ClassID)
+		students, err := h.Store.CohortStudents(ctx, c.TenantID, c.SchoolID, c.GradeLevel)
 		if err != nil {
 			return total, err
 		}
@@ -328,7 +328,7 @@ func (h Efficacy) snapshotParticipants(ctx context.Context, s write.StudyRow, wa
 		students = slices.DeleteFunc(students, func(id uuid.UUID) bool { return slices.Contains(gone, id) })
 		ps := make([]write.ParticipantRow, len(students))
 		for i, st := range students {
-			ps[i] = write.ParticipantRow{StudyID: s.ID, StudentID: st, TenantID: c.TenantID, SchoolID: c.SchoolID, ClassID: c.ClassID, Arm: *c.Arm,
+			ps[i] = write.ParticipantRow{StudyID: s.ID, StudentID: st, TenantID: c.TenantID, SchoolID: c.SchoolID, Arm: *c.Arm,
 				FormOrder: *c.FormOrder, Status: efficacy.ParticipantActive, EnrolledAt: now}
 		}
 		n, err := h.Store.InsertParticipants(ctx, ps)

@@ -15,9 +15,9 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 | `listEfficacyStudies` | `GET /api/v1/admin/learning/efficacy-studies?status=&tenant_ids=` | learning.v1 | ESM | Có sẵn |
 | `getEfficacyStudy` | `GET /api/v1/admin/learning/efficacy-studies/{study_id}` | learning.v1 | ESM | Có sẵn |
 | `updateEfficacyStudy` | `PATCH /api/v1/admin/learning/efficacy-studies/{study_id}` (`If-Match`, chỉ `draft`) | learning.v1 | ESM | Có sẵn |
-| `addEfficacyStudyClass` | `POST /api/v1/admin/learning/efficacy-studies/{study_id}/classes` (`X-Tenant-Id`) | learning.v1 | ESM · `Idempotency-Key` | Có sẵn |
-| `listEfficacyStudyClasses` | `GET /api/v1/admin/learning/efficacy-studies/{study_id}/classes?tenant_ids=` | learning.v1 | ESM | Có sẵn |
-| `removeEfficacyStudyClass` | `DELETE /api/v1/admin/learning/efficacy-studies/{study_id}/classes/{class_id}` (`X-Tenant-Id`, soft-delete, chỉ `draft`) | learning.v1 | ESM | Có sẵn |
+| `addEfficacyStudyCohort` | `POST /api/v1/admin/learning/efficacy-studies/{study_id}/cohorts` (`X-Tenant-Id`, body `school_id`) | learning.v1 | ESM · `Idempotency-Key` | ADR-0095 (WP-L2): thay `addEfficacyStudyClass` |
+| `listEfficacyStudyCohorts` | `GET /api/v1/admin/learning/efficacy-studies/{study_id}/cohorts?tenant_ids=` | learning.v1 | ESM | ADR-0095: thay `listEfficacyStudyClasses` (item có `school_id`, `grade_level`, `conflict`) |
+| `removeEfficacyStudyCohort` | `DELETE /api/v1/admin/learning/efficacy-studies/{study_id}/cohorts/{school_id}` (ADR-0095, thay removeEfficacyStudyClass) (`X-Tenant-Id`, soft-delete, chỉ `draft`) | learning.v1 | ESM | Có sẵn |
 | `activateEfficacyStudy` | `POST /api/v1/admin/learning/efficacy-studies/{study_id}:activate` | learning.v1 | ESM · `Idempotency-Key` | Có sẵn |
 | `scheduleEfficacyWave` | `POST /api/v1/admin/learning/efficacy-studies/{study_id}/waves` | learning.v1 | ESM · `Idempotency-Key` | Có sẵn |
 | `listEfficacyWaves` | `GET /api/v1/admin/learning/efficacy-studies/{study_id}/waves` (số mời/đã làm/vắng theo lớp, không điểm) | learning.v1 | ESM | Có sẵn |

@@ -137,11 +137,11 @@ func (h Experiments) check(ctx context.Context, in ExperimentInput) error {
 		}
 	}
 	if in.StudyID != nil {
-		classes, err := h.Store.InterventionClasses(ctx, *in.StudyID)
+		cohorts, err := h.Store.InterventionCohorts(ctx, *in.StudyID)
 		if err != nil {
 			return err
 		}
-		d.Comparison = len(classes) == 0
+		d.Comparison = len(cohorts) == 0
 	}
 	return experimentViolations(d.Validate())
 }
@@ -156,7 +156,7 @@ func (h Experiments) CreateLearningExperiment(ctx context.Context, in Experiment
 		return out, err
 	}
 	if in.Unit == "" {
-		in.Unit = experiment.UnitClass
+		in.Unit = experiment.UnitSchoolGrade
 	}
 	bctx, err := studyScope(ctx, tenancy.ModeWrite, in.TenantIDs...)
 	if err != nil {
@@ -402,8 +402,8 @@ func (h Experiments) LeaveTenant(ctx context.Context, tenant uuid.UUID, _ time.T
 }
 
 // ArmsOf is Attempts.Arms (F035-AC-22, AC-25): for every running experiment covering the tenant, the arm of the student —
-// stored at the first contact from hash(experiment_id, unit) (unit = the class, or the student) and kept afterwards (a
-// change of class keeps it); a study restricts the units to its intervention classes; a removed assignment is out.
+// stored at the first contact from hash(experiment_id, unit) (unit = the cohort school × grade, or the student) and kept
+// afterwards (a change of grade or school keeps it); a study restricts the units to its intervention cohorts; a removed assignment is out.
 // Returns "<code>:<arm>" labels; runs in the transaction of ctx.
 func (h Experiments) ArmsOf(ctx context.Context, tenant, student uuid.UUID) ([]string, error) {
 	es, err := h.Store.RunningExperiments(ctx, &tenant)
@@ -428,25 +428,25 @@ func (h Experiments) assign(ctx context.Context, e write.ExperimentRow, tenant, 
 	if err != nil || a != nil {
 		return a, err
 	}
-	class, err := h.Store.StudentClass(ctx, tenant, student)
+	cohort, err := h.Store.StudentCohort(ctx, tenant, student)
 	if err != nil {
 		return nil, err
 	}
 	if e.StudyID != nil {
-		classes, err := h.Store.InterventionClasses(ctx, *e.StudyID)
+		cohorts, err := h.Store.InterventionCohorts(ctx, *e.StudyID)
 		if err != nil {
 			return nil, err
 		}
-		if class == nil || !containsID(classes, *class) {
-			return nil, nil // comparison and validation classes never take part (F035-AC-21)
+		if cohort == nil || !containsID(cohorts, *cohort) {
+			return nil, nil // comparison and validation cohorts never take part (F035-AC-21)
 		}
 	}
 	unit := student
-	if e.Unit == experiment.UnitClass {
-		if class == nil {
+	if e.Unit == experiment.UnitSchoolGrade {
+		if cohort == nil {
 			return nil, nil
 		}
-		unit = *class
+		unit = *cohort
 	}
 	var arms []experiment.Arm
 	if err := json.Unmarshal(e.Arms, &arms); err != nil || len(arms) == 0 {

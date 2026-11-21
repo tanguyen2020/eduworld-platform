@@ -32,7 +32,7 @@ func NewPseudonymizer(key []byte) (Pseudonymizer, error) {
 
 var b32 = base32.StdEncoding.WithPadding(base32.NoPadding)
 
-// Code is the pseudonymous code of id (a student, class or tenant) in a study.
+// Code is the pseudonymous code of id (a student, cohort or tenant) in a study.
 func (p Pseudonymizer) Code(studyID, id uuid.UUID) string {
 	m := hmac.New(sha256.New, p.key)
 	m.Write(studyID[:])

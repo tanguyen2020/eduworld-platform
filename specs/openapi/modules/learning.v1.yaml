@@ -6155,17 +6155,17 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
-  /admin/learning/efficacy-studies/{study_id}/classes:
+  /admin/learning/efficacy-studies/{study_id}/cohorts:
     get:
       x-service: learning
       tags:
         - admin
-      operationId: listEfficacyStudyClasses
+      operationId: listEfficacyStudyCohorts
       x-portal-action: action.platform_admin.efficacy_studies.view
       security:
         - keycloakAdminBearer: []
       x-internal: true
-      summary: Lớp tham gia/so sánh/kiểm định của nghiên cứu (cặp, arm, thứ tự dạng đề; liên tenant theo tenant_ids)
+      summary: Cụm (trường, khối) tham gia/so sánh/kiểm định của nghiên cứu (cặp, arm, thứ tự dạng đề, cờ conflict; liên tenant theo tenant_ids — ADR-0095)
       parameters:
         - $ref: '#/components/parameters/EfficacyStudyIdPath'
         - $ref: '#/components/parameters/TenantIds'
@@ -6177,7 +6177,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EfficacyStudyClassPage'
+                $ref: '#/components/schemas/EfficacyStudyCohortPage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -6188,12 +6188,12 @@ paths:
       x-service: learning
       tags:
         - admin
-      operationId: addEfficacyStudyClass
+      operationId: addEfficacyStudyCohort
       x-portal-action: action.platform_admin.efficacy_studies.edit
       security:
         - keycloakAdminBearer: []
       x-internal: true
-      summary: Thêm lớp của tenant đích vào nghiên cứu draft (F035-AC-08)
+      summary: Thêm cụm (một trường của tenant đích, khối của nghiên cứu — ADR-0095) vào nghiên cứu draft (F035-AC-08)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/EfficacyStudyIdPath'
@@ -6203,7 +6203,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EfficacyStudyClassCreate'
+              $ref: '#/components/schemas/EfficacyStudyCohortCreate'
       responses:
         '201':
           description: Đã thêm
@@ -6213,7 +6213,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EfficacyStudyClass'
+                $ref: '#/components/schemas/EfficacyStudyCohort'
         '400':
           $ref: '#/components/responses/Problem'
         '401':
@@ -6228,21 +6228,21 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
-  /admin/learning/efficacy-studies/{study_id}/classes/{class_id}:
+  /admin/learning/efficacy-studies/{study_id}/cohorts/{school_id}:
     delete:
       x-service: learning
       tags:
         - admin
-      operationId: removeEfficacyStudyClass
+      operationId: removeEfficacyStudyCohort
       x-portal-action: action.platform_admin.efficacy_studies.edit
       security:
         - keycloakAdminBearer: []
       x-internal: true
-      summary: Gỡ lớp khỏi nghiên cứu draft (soft-delete, ADR-0028; study không còn draft → 422 INVALID_STATE_TRANSITION)
+      summary: Gỡ cụm (trường) khỏi nghiên cứu draft (soft-delete, ADR-0028; study không còn draft → 422 INVALID_STATE_TRANSITION); cách xử lý cụm conflict là gỡ rồi thêm lại
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/EfficacyStudyIdPath'
-        - $ref: '#/components/parameters/ClassIdPath'
+        - $ref: '#/components/parameters/SchoolId'
       responses:
         '204':
           description: Đã gỡ
@@ -7839,12 +7839,6 @@ components:
         $ref: '#/components/schemas/Uuid'
     EfficacyStudyIdPath:
       name: study_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
-    ClassIdPath:
-      name: class_id
       in: path
       required: true
       schema:
@@ -14772,16 +14766,17 @@ components:
           minimum: 1
         status:
           $ref: '#/components/schemas/EfficacyStudyStatus'
-        class_count:
+        cohort_count:
           type: integer
           minimum: 0
+          description: Số cụm (trường, khối) của study — ADR-0095
         pair_count:
           type: integer
           minimum: 0
         tenant_ids:
           type: array
           maxItems: 200
-          description: Tenant có lớp trong study
+          description: Tenant có cụm trong study
           items:
             $ref: '#/components/schemas/Uuid'
         created_by:
@@ -14866,7 +14861,7 @@ components:
           type: integer
           minimum: 1
           maximum: 52
-    EfficacyStudyClassPage:
+    EfficacyStudyCohortPage:
       type: object
       required:
         - items
@@ -14876,30 +14871,28 @@ components:
           type: array
           maxItems: 100
           items:
-            $ref: '#/components/schemas/EfficacyStudyClass'
+            $ref: '#/components/schemas/EfficacyStudyCohort'
         page:
           $ref: '#/components/schemas/PageInfo'
-    EfficacyStudyClass:
+    EfficacyStudyCohort:
       type: object
       required:
         - study_id
-        - class_id
         - tenant_id
         - school_id
+        - grade_level
         - status
+        - conflict
       properties:
         study_id:
-          $ref: '#/components/schemas/Uuid'
-        class_id:
           $ref: '#/components/schemas/Uuid'
         tenant_id:
           $ref: '#/components/schemas/Uuid'
         school_id:
           $ref: '#/components/schemas/Uuid'
-        class_name:
-          type: string
-          maxLength: 255
-          description: Tên lớp từ projection ref.classes (chỉ hiển thị cho nhân sự platform; không xuất trong báo cáo/bộ dữ liệu)
+        conflict:
+          type: boolean
+          description: 'true: cụm chuyển từ các lớp ở arm/cặp/thứ tự dạng khác nhau — kích hoạt bị từ chối tới khi gỡ và thêm lại (ADR-0095)'
         grade_level:
           $ref: '#/components/schemas/GradeLevel'
         pair_no:
@@ -14944,19 +14937,20 @@ components:
       enum:
         - a_then_b
         - b_then_a
-    EfficacyStudyClassCreate:
+    EfficacyStudyCohortCreate:
       type: object
       required:
-        - class_id
+        - school_id
       additionalProperties: false
+      description: Cụm = một trường của tenant đích × khối của nghiên cứu (ADR-0095); hai cụm một cặp ở hai trường khác nhau
       properties:
-        class_id:
+        school_id:
           $ref: '#/components/schemas/Uuid'
         pair_no:
           type: integer
           minimum: 1
           maximum: 200
-          description: Bỏ trống với lớp validation
+          description: Bỏ trống với cụm validation
         arm:
           $ref: '#/components/schemas/EfficacyArm'
           description: Tùy chọn; bỏ trống thì gán ngẫu nhiên theo cặp khi kích hoạt (assignment_method = random)
@@ -15019,14 +15013,15 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Timestamp'
             - type: 'null'
-        classes:
+        cohorts:
           type: array
           maxItems: 400
-          description: Tiến độ theo lớp — chỉ số mời/đã làm/vắng, không có điểm
+          description: Tiến độ theo cụm (trường, khối) — chỉ số mời/đã làm/vắng, không có điểm (ADR-0095)
           items:
             type: object
             required:
-              - class_id
+              - school_id
+              - grade_level
               - tenant_id
               - exam_session_id
               - form
@@ -15034,8 +15029,10 @@ components:
               - completed_count
               - absent_count
             properties:
-              class_id:
+              school_id:
                 $ref: '#/components/schemas/Uuid'
+              grade_level:
+                $ref: '#/components/schemas/GradeLevel'
               tenant_id:
                 $ref: '#/components/schemas/Uuid'
               exam_session_id:
@@ -15080,7 +15077,7 @@ components:
           enum:
             - a
             - b
-          description: Bắt buộc khi kind = validation; bỏ qua với pre/post (dạng đề theo form_order của lớp)
+          description: Bắt buộc khi kind = validation; bỏ qua với pre/post (dạng đề theo form_order của cụm)
         window_start:
           $ref: '#/components/schemas/Timestamp'
         window_end:
@@ -15096,18 +15093,16 @@ components:
         - scope
         - reason
       additionalProperties: false
-      description: scope = school cần school_id; class cần class_id; students cần student_ids (≤ 500)
+      description: scope = school hoặc cohort cần school_id (cohort = cụm trường × khối của study, ADR-0095); students cần student_ids (≤ 500)
       properties:
         scope:
           type: string
           enum:
             - tenant
             - school
-            - class
+            - cohort
             - students
         school_id:
-          $ref: '#/components/schemas/Uuid'
-        class_id:
           $ref: '#/components/schemas/Uuid'
         student_ids:
           type: array
@@ -15191,7 +15186,7 @@ components:
             - failed
         descriptive_only:
           type: boolean
-          description: true khi số lớp mỗi nhóm dưới khuyến nghị cỡ mẫu (LEARNING_EFFICACY_PLAN §4)
+          description: true khi số cụm (trường, khối) mỗi nhóm dưới efficacy_recommended_cohorts_per_arm (LEARNING_EFFICACY_PLAN §4, ADR-0095)
         excluded_question_version_ids:
           type: array
           maxItems: 100
@@ -15205,7 +15200,7 @@ components:
           maxProperties: 50
           description: |
             Chỉ số liệu gộp (≤ 256 KB), ô < analytics_min_cell_size bị ẩn: theo arm (participant, tỉ lệ rời, gain, normalized gain,
-            Hedges' g + CI 95% hiệu chỉnh design effect, gain theo LO, KR-20 theo dạng × đợt, mức sử dụng) và predictive validity
+            Hedges' g + CI 95% hiệu chỉnh design effect theo cụm trường × khối, gain theo LO, KR-20 theo dạng × đợt, mức sử dụng) và predictive validity
             (Spearman ρ theo LO, hiệu chuẩn, AUC, gợi ý) — LEARNING_EFFICACY_PLAN §4, §5. Không có tên/lớp thật, không xếp hạng.
         error:
           type:
@@ -15275,8 +15270,10 @@ components:
         unit:
           type: string
           enum:
-            - class
+            - school_grade
             - student
+            - class
+          description: class chỉ còn ở thử nghiệm tạo trước ADR-0095
         arms:
           type: array
           maxItems: 5
@@ -15364,9 +15361,10 @@ components:
         unit:
           type: string
           enum:
-            - class
+            - school_grade
             - student
-          default: class
+          default: school_grade
+          description: school_grade = cụm (trường, khối) của học sinh (ADR-0095)
         arms:
           type: array
           minItems: 2
@@ -15397,7 +15395,7 @@ components:
         unit:
           type: string
           enum:
-            - class
+            - school_grade
             - student
         arms:
           type: array

@@ -23,7 +23,7 @@ import (
 
 const experimentsAPI = "/admin/learning/experiments"
 
-// F035-AC-20…AC-27 (US5, SC-004): definition checks, the stable class assignment, the labels of the learning events,
+// F035-AC-20…AC-27 (US5, SC-004): definition checks, the stable cohort assignment, the labels of the learning events,
 // the arm mastery in shadow (nothing displayed changes) and live (only the student experience changes), the results
 // with small cells hidden, stop and revocation back to the control.
 func TestEfficacyExperiments(t *testing.T) {
@@ -68,7 +68,7 @@ func TestEfficacyExperiments(t *testing.T) {
 		t.Fatalf("created %s", e.raw)
 	}
 	// Put the arm under test first when the bucket of 3A falls in the first half (deterministic test, F035-AC-22).
-	b := experiment.Bucket(id, k.class)
+	b := experiment.Bucket(id, cohortUnit(k.school, 3))
 	order := arms
 	if b < 50 {
 		order = []map[string]any{arms[1], arms[0]}
@@ -85,11 +85,11 @@ func TestEfficacyExperiments(t *testing.T) {
 		http.StatusUnprocessableEntity || x.str("code") != "INVALID_STATE_TRANSITION" {
 		t.Fatalf("patch shadow: %d %s", x.status, x.raw)
 	}
-	// AC-22, AC-25: both students of 3A practise: same arm (class unit), learning events labelled, nothing to the student.
+	// AC-22, AC-25: both students of 3A practise: same arm (cohort unit school × grade, ADR-0095), learning events labelled, nothing to the student.
 	an := c.quizRun(t, hsAn, k.s.activityID)
 	binh := c.quizRun(t, hsBinh, k.s.activityID)
 	if n := count(ctx, t, c.platform, `SELECT count(DISTINCT arm_code) FROM learning.experiment_assignments WHERE experiment_id = $1
-		AND unit_id = $2`, id, k.class); n != 1 {
+		AND unit_id = $2`, id, cohortUnit(k.school, 3)); n != 1 {
 		t.Fatalf("arms in 3A: %d", n)
 	}
 	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.experiment_assignments WHERE experiment_id = $1 AND arm_code = 'we11'`,

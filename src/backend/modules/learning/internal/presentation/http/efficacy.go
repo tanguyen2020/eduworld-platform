@@ -21,8 +21,8 @@ type EfficacyCommands interface {
 	RevokeResearchAgreement(ctx context.Context, id uuid.UUID, reason string) (dto.ResearchAgreementView, error)
 	CreateEfficacyStudy(ctx context.Context, in command.StudyInput) (dto.EfficacyStudyView, error)
 	UpdateEfficacyStudy(ctx context.Context, id uuid.UUID, ifMatch int64, in command.StudyPatch) (dto.EfficacyStudyView, error)
-	AddEfficacyStudyClass(ctx context.Context, studyID uuid.UUID, in command.ClassInput) (dto.EfficacyStudyClassView, error)
-	RemoveEfficacyStudyClass(ctx context.Context, studyID, classID uuid.UUID) error
+	AddEfficacyStudyCohort(ctx context.Context, studyID uuid.UUID, in command.CohortInput) (dto.EfficacyStudyCohortView, error)
+	RemoveEfficacyStudyCohort(ctx context.Context, studyID, schoolID uuid.UUID) error
 	ActivateEfficacyStudy(ctx context.Context, id uuid.UUID) (dto.EfficacyStudyView, error)
 	ScheduleEfficacyWave(ctx context.Context, studyID uuid.UUID, in command.WaveInput) (dto.EfficacyWaveView, error)
 	WithdrawEfficacyParticipants(ctx context.Context, studyID uuid.UUID, in command.WithdrawInput) (dto.EfficacyWithdrawalView, error)
@@ -35,7 +35,7 @@ type EfficacyQueries interface {
 	ListResearchAgreements(ctx context.Context, status string, in query.PageInput) (query.Page[dto.ResearchAgreementView], error)
 	ListEfficacyStudies(ctx context.Context, status string, in query.PageInput) (query.Page[dto.EfficacyStudyView], error)
 	GetEfficacyStudy(ctx context.Context, id uuid.UUID) (dto.EfficacyStudyView, error)
-	ListEfficacyStudyClasses(ctx context.Context, studyID uuid.UUID, in query.PageInput) (query.Page[dto.EfficacyStudyClassView], error)
+	ListEfficacyStudyCohorts(ctx context.Context, studyID uuid.UUID, in query.PageInput) (query.Page[dto.EfficacyStudyCohortView], error)
 	ListEfficacyWaves(ctx context.Context, studyID uuid.UUID) ([]dto.EfficacyWaveView, error)
 	GetEfficacyStudyReport(ctx context.Context, studyID, reportID uuid.UUID) (dto.EfficacyReportView, error)
 }
@@ -56,19 +56,19 @@ func init() {
 	// /admin/: internal gateway, platform role (httpx GuardPlatformRole, ADR-0027; no MFA, ADR-0094); platform.efficacy_study.manage in
 	// the use cases. Writes into a tenant take X-Tenant-Id (TenantRequired); platform writes and lists take none.
 	for id, o := range map[string]httpx.Operation{
-		"listResearchAgreements":   op("listResearchAgreements", http.MethodGet, agreementsPath, httpx.TenantNone, httpx.IdempotencyNone, 200),
-		"createResearchAgreement":  op("createResearchAgreement", http.MethodPost, agreementsPath, httpx.TenantRequired, httpx.IdempotencyRequired, 201),
-		"revokeResearchAgreement":  op("revokeResearchAgreement", http.MethodPost, agreementsPath+"/{agreement_id}:revoke", httpx.TenantRequired, httpx.IdempotencyRequired, 200),
-		"listEfficacyStudies":      op("listEfficacyStudies", http.MethodGet, studiesPath, httpx.TenantNone, httpx.IdempotencyNone, 200),
-		"createEfficacyStudy":      op("createEfficacyStudy", http.MethodPost, studiesPath, httpx.TenantNone, httpx.IdempotencyRequired, 201),
-		"getEfficacyStudy":         op("getEfficacyStudy", http.MethodGet, studyPath, httpx.TenantNone, httpx.IdempotencyNone, 200),
-		"updateEfficacyStudy":      op("updateEfficacyStudy", http.MethodPatch, studyPath, httpx.TenantNone, httpx.IdempotencyNone, 200),
-		"listEfficacyStudyClasses": op("listEfficacyStudyClasses", http.MethodGet, studyPath+"/classes", httpx.TenantNone, httpx.IdempotencyNone, 200),
-		"addEfficacyStudyClass":    op("addEfficacyStudyClass", http.MethodPost, studyPath+"/classes", httpx.TenantRequired, httpx.IdempotencyRequired, 201),
-		"removeEfficacyStudyClass": op("removeEfficacyStudyClass", http.MethodDelete, studyPath+"/classes/{class_id}", httpx.TenantRequired, httpx.IdempotencyNone, 204),
-		"activateEfficacyStudy":    op("activateEfficacyStudy", http.MethodPost, studyPath+":activate", httpx.TenantNone, httpx.IdempotencyRequired, 200),
-		"listEfficacyWaves":        op("listEfficacyWaves", http.MethodGet, studyPath+"/waves", httpx.TenantNone, httpx.IdempotencyNone, 200),
-		"scheduleEfficacyWave":     op("scheduleEfficacyWave", http.MethodPost, studyPath+"/waves", httpx.TenantNone, httpx.IdempotencyRequired, 201),
+		"listResearchAgreements":    op("listResearchAgreements", http.MethodGet, agreementsPath, httpx.TenantNone, httpx.IdempotencyNone, 200),
+		"createResearchAgreement":   op("createResearchAgreement", http.MethodPost, agreementsPath, httpx.TenantRequired, httpx.IdempotencyRequired, 201),
+		"revokeResearchAgreement":   op("revokeResearchAgreement", http.MethodPost, agreementsPath+"/{agreement_id}:revoke", httpx.TenantRequired, httpx.IdempotencyRequired, 200),
+		"listEfficacyStudies":       op("listEfficacyStudies", http.MethodGet, studiesPath, httpx.TenantNone, httpx.IdempotencyNone, 200),
+		"createEfficacyStudy":       op("createEfficacyStudy", http.MethodPost, studiesPath, httpx.TenantNone, httpx.IdempotencyRequired, 201),
+		"getEfficacyStudy":          op("getEfficacyStudy", http.MethodGet, studyPath, httpx.TenantNone, httpx.IdempotencyNone, 200),
+		"updateEfficacyStudy":       op("updateEfficacyStudy", http.MethodPatch, studyPath, httpx.TenantNone, httpx.IdempotencyNone, 200),
+		"listEfficacyStudyCohorts":  op("listEfficacyStudyCohorts", http.MethodGet, studyPath+"/cohorts", httpx.TenantNone, httpx.IdempotencyNone, 200),
+		"addEfficacyStudyCohort":    op("addEfficacyStudyCohort", http.MethodPost, studyPath+"/cohorts", httpx.TenantRequired, httpx.IdempotencyRequired, 201),
+		"removeEfficacyStudyCohort": op("removeEfficacyStudyCohort", http.MethodDelete, studyPath+"/cohorts/{school_id}", httpx.TenantRequired, httpx.IdempotencyNone, 204),
+		"activateEfficacyStudy":     op("activateEfficacyStudy", http.MethodPost, studyPath+":activate", httpx.TenantNone, httpx.IdempotencyRequired, 200),
+		"listEfficacyWaves":         op("listEfficacyWaves", http.MethodGet, studyPath+"/waves", httpx.TenantNone, httpx.IdempotencyNone, 200),
+		"scheduleEfficacyWave":      op("scheduleEfficacyWave", http.MethodPost, studyPath+"/waves", httpx.TenantNone, httpx.IdempotencyRequired, 201),
 		"withdrawEfficacyParticipants": op("withdrawEfficacyParticipants", http.MethodPost, studyPath+":withdraw", httpx.TenantRequired,
 			httpx.IdempotencyRequired, 200),
 		"completeEfficacyStudy":     op("completeEfficacyStudy", http.MethodPost, studyPath+":complete", httpx.TenantNone, httpx.IdempotencyRequired, 200),
@@ -87,9 +87,9 @@ var efficacyRoutes = map[string]func(Handlers, http.ResponseWriter, *http.Reques
 	"createEfficacyStudy":          Handlers.createEfficacyStudy,
 	"getEfficacyStudy":             Handlers.getEfficacyStudy,
 	"updateEfficacyStudy":          Handlers.updateEfficacyStudy,
-	"listEfficacyStudyClasses":     Handlers.listEfficacyStudyClasses,
-	"addEfficacyStudyClass":        Handlers.addEfficacyStudyClass,
-	"removeEfficacyStudyClass":     Handlers.removeEfficacyStudyClass,
+	"listEfficacyStudyCohorts":     Handlers.listEfficacyStudyCohorts,
+	"addEfficacyStudyCohort":       Handlers.addEfficacyStudyCohort,
+	"removeEfficacyStudyCohort":    Handlers.removeEfficacyStudyCohort,
 	"activateEfficacyStudy":        Handlers.activateEfficacyStudy,
 	"listEfficacyWaves":            Handlers.listEfficacyWaves,
 	"scheduleEfficacyWave":         Handlers.scheduleEfficacyWave,
@@ -246,13 +246,13 @@ func (h Handlers) updateEfficacyStudy(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-func (h Handlers) listEfficacyStudyClasses(w http.ResponseWriter, r *http.Request) {
+func (h Handlers) listEfficacyStudyCohorts(w http.ResponseWriter, r *http.Request) {
 	id, err := pathUUID(r, "study_id")
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	p, err := h.Efficacy.Queries.ListEfficacyStudyClasses(r.Context(), id, pageIn(r))
+	p, err := h.Efficacy.Queries.ListEfficacyStudyCohorts(r.Context(), id, pageIn(r))
 	if err != nil {
 		fail(w, r, err)
 		return
@@ -260,14 +260,14 @@ func (h Handlers) listEfficacyStudyClasses(w http.ResponseWriter, r *http.Reques
 	listItems(w, p)
 }
 
-func (h Handlers) addEfficacyStudyClass(w http.ResponseWriter, r *http.Request) {
+func (h Handlers) addEfficacyStudyCohort(w http.ResponseWriter, r *http.Request) {
 	id, err := pathUUID(r, "study_id")
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
 	var b struct {
-		ClassID   uuid.UUID `json:"class_id"`
+		SchoolID  uuid.UUID `json:"school_id"`
 		PairNo    *int      `json:"pair_no"`
 		Arm       string    `json:"arm"`
 		FormOrder string    `json:"form_order"`
@@ -276,7 +276,7 @@ func (h Handlers) addEfficacyStudyClass(w http.ResponseWriter, r *http.Request) 
 		fail(w, r, err)
 		return
 	}
-	v, err := h.Efficacy.Commands.AddEfficacyStudyClass(r.Context(), id, command.ClassInput{ClassID: b.ClassID, PairNo: b.PairNo, Arm: b.Arm,
+	v, err := h.Efficacy.Commands.AddEfficacyStudyCohort(r.Context(), id, command.CohortInput{SchoolID: b.SchoolID, PairNo: b.PairNo, Arm: b.Arm,
 		FormOrder: b.FormOrder})
 	if err != nil {
 		fail(w, r, err)
@@ -285,18 +285,18 @@ func (h Handlers) addEfficacyStudyClass(w http.ResponseWriter, r *http.Request) 
 	writeJSON(w, http.StatusCreated, v)
 }
 
-func (h Handlers) removeEfficacyStudyClass(w http.ResponseWriter, r *http.Request) {
+func (h Handlers) removeEfficacyStudyCohort(w http.ResponseWriter, r *http.Request) {
 	id, err := pathUUID(r, "study_id")
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	class, err := pathUUID(r, "class_id")
+	school, err := pathUUID(r, "school_id")
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	if err := h.Efficacy.Commands.RemoveEfficacyStudyClass(r.Context(), id, class); err != nil {
+	if err := h.Efficacy.Commands.RemoveEfficacyStudyCohort(r.Context(), id, school); err != nil {
 		fail(w, r, err)
 		return
 	}
@@ -376,7 +376,6 @@ func (h Handlers) withdrawEfficacyParticipants(w http.ResponseWriter, r *http.Re
 	var b struct {
 		Scope            string      `json:"scope"`
 		SchoolID         *uuid.UUID  `json:"school_id"`
-		ClassID          *uuid.UUID  `json:"class_id"`
 		StudentIDs       []uuid.UUID `json:"student_ids"`
 		Reason           string      `json:"reason"`
 		SchoolRequestRef *string     `json:"school_request_ref"`
@@ -386,7 +385,7 @@ func (h Handlers) withdrawEfficacyParticipants(w http.ResponseWriter, r *http.Re
 		return
 	}
 	v, err := h.Efficacy.Commands.WithdrawEfficacyParticipants(r.Context(), id, command.WithdrawInput{Scope: b.Scope, SchoolID: b.SchoolID,
-		ClassID: b.ClassID, StudentIDs: b.StudentIDs, Reason: b.Reason, SchoolRequestRef: b.SchoolRequestRef,
+		StudentIDs: b.StudentIDs, Reason: b.Reason, SchoolRequestRef: b.SchoolRequestRef,
 		IdempotencyKey: r.Header.Get("Idempotency-Key")})
 	if err != nil {
 		fail(w, r, err)

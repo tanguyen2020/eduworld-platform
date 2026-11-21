@@ -29,8 +29,8 @@ const (
 	ActionAgreementRevoked     = "research_agreement.revoked"
 	ActionStudyCreated         = "efficacy_study.created"
 	ActionStudyUpdated         = "efficacy_study.updated"
-	ActionStudyClassAdded      = "efficacy_study.class_added"
-	ActionStudyClassRemoved    = "efficacy_study.class_removed"
+	ActionStudyCohortAdded     = "efficacy_study.cohort_added"
+	ActionStudyCohortRemoved   = "efficacy_study.cohort_removed"
 	ActionStudyActivated       = "efficacy_study.activated"
 	ActionStudyCompleted       = "efficacy_study.completed"
 	ActionWaveScheduled        = "efficacy_wave.scheduled"
@@ -50,7 +50,7 @@ type EfficacyMetrics interface {
 }
 
 // Efficacy holds the write use cases of the efficacy study (F035 US2–US4, US6): research agreements of the tenants, the
-// study and its classes, the activation, the waves of exam sessions, the participants and their withdrawal, the
+// study and its cohorts (school × grade, ADR-0095), the activation, the waves of exam sessions, the participants and their withdrawal, the
 // mastery snapshots and the report job. Every use case requires a platform permission (authz.Require first, R7); writes
 // into tenants run under the audited bypass efficacy_study.
 type Efficacy struct {
@@ -283,8 +283,8 @@ type StudyInput struct {
 	IdempotencyKey string
 }
 
-// StudyViewOf is the view of a study with its classes.
-func StudyViewOf(s write.StudyRow, classes []write.StudyClassRow) dto.EfficacyStudyView {
+// StudyViewOf is the view of a study with its cohorts.
+func StudyViewOf(s write.StudyRow, cohorts []write.StudyCohortRow) dto.EfficacyStudyView {
 	v := dto.EfficacyStudyView{StudyID: s.ID, Code: s.Code, Title: s.Title, SubjectID: s.SubjectID, GradeLevel: s.GradeLevel,
 		ObjectiveIDs: s.ObjectiveIDs, FormA: s.FormA, FormB: s.FormB, MinWeeks: s.MinWeeks, Status: s.Status, CreatedBy: s.CreatedBy,
 		CreatedAt: s.CreatedAt, ActivatedAt: s.ActivatedAt, CompletedAt: s.CompletedAt, Version: s.Version, TenantIDs: []uuid.UUID{}}
@@ -292,8 +292,8 @@ func StudyViewOf(s write.StudyRow, classes []write.StudyClassRow) dto.EfficacySt
 		v.ObjectiveIDs = []uuid.UUID{}
 	}
 	pairs := map[int]bool{}
-	for _, c := range classes {
-		v.ClassCount++
+	for _, c := range cohorts {
+		v.CohortCount++
 		if c.PairNo != nil {
 			pairs[*c.PairNo] = true
 		}
@@ -480,27 +480,27 @@ func (h Efficacy) UpdateEfficacyStudy(ctx context.Context, id uuid.UUID, ifMatch
 		if err := h.auditPlatform(ctx, ActionStudyUpdated, "efficacy_study", s.ID, "", nil); err != nil {
 			return err
 		}
-		classes, err := h.Store.StudyClasses(ctx, s.ID)
+		cohorts, err := h.Store.StudyCohorts(ctx, s.ID)
 		if err != nil {
 			return err
 		}
-		out = StudyViewOf(*s, classes)
+		out = StudyViewOf(*s, cohorts)
 		return nil
 	})
 	return out, err
 }
 
-// ClassInput is EfficacyStudyClassCreate.
-type ClassInput struct {
-	ClassID   uuid.UUID
+// CohortInput is EfficacyStudyCohortCreate: a school of the target tenant (the grade is the grade of the study).
+type CohortInput struct {
+	SchoolID  uuid.UUID
 	PairNo    *int
 	Arm       string
 	FormOrder string
 }
 
-// StudyClassView is the view of a class row.
-func StudyClassView(c write.StudyClassRow) dto.EfficacyStudyClassView {
-	return dto.EfficacyStudyClassView{StudyID: c.StudyID, ClassID: c.ClassID, TenantID: c.TenantID, SchoolID: c.SchoolID, GradeLevel: c.GradeLevel,
+// StudyCohortView is the view of a cohort row.
+func StudyCohortView(c write.StudyCohortRow) dto.EfficacyStudyCohortView {
+	return dto.EfficacyStudyCohortView{StudyID: c.StudyID, Conflict: c.Conflict, TenantID: c.TenantID, SchoolID: c.SchoolID, GradeLevel: c.GradeLevel,
 		PairNo: c.PairNo, Arm: c.Arm, AssignmentMethod: c.Method, FormOrder: c.FormOrder, Status: c.Status, WithdrawnAt: c.WithdrawnAt}
 }
 
@@ -511,11 +511,12 @@ func optString(s string) *string {
 	return &s
 }
 
-// AddEfficacyStudyClass adds a class of the target tenant to a draft study (F035-AC-08): a class of another tenant → 404,
-// another grade or a tenant without an active agreement covering efficacy_study (or a QA tenant) → 422, a class in
-// another draft or active study or already in this one → 409, a study no longer draft → 422 INVALID_STATE_TRANSITION.
-func (h Efficacy) AddEfficacyStudyClass(ctx context.Context, studyID uuid.UUID, in ClassInput) (out dto.EfficacyStudyClassView, err error) {
-	ctx, done := observability.UseCase(ctx, "learning.command.AddEfficacyStudyClass")
+// AddEfficacyStudyCohort adds a cohort (a school of the target tenant, the grade of the study — ADR-0095 D3) to a draft
+// study (F035-AC-08): a school of another tenant → 404, a school without active student of the grade or a tenant without
+// an active agreement covering efficacy_study (or a QA tenant) → 422, a cohort in another draft or active study or already
+// in this one → 409, a study no longer draft → 422 INVALID_STATE_TRANSITION.
+func (h Efficacy) AddEfficacyStudyCohort(ctx context.Context, studyID uuid.UUID, in CohortInput) (out dto.EfficacyStudyCohortView, err error) {
+	ctx, done := observability.UseCase(ctx, "learning.command.AddEfficacyStudyCohort")
 	defer func() { done(err) }()
 	p, err := efficacyAdmin(ctx, authz.PermPlatformEfficacyStudyManage)
 	if err != nil {
@@ -525,7 +526,7 @@ func (h Efficacy) AddEfficacyStudyClass(ctx context.Context, studyID uuid.UUID, 
 	if err != nil {
 		return out, err
 	}
-	c, vs := efficacy.NewClass(efficacy.Class{ClassID: in.ClassID, TenantID: tenant, PairNo: in.PairNo, Arm: in.Arm, FormOrder: in.FormOrder})
+	c, vs := efficacy.NewCohort(efficacy.Cohort{SchoolID: in.SchoolID, TenantID: tenant, PairNo: in.PairNo, Arm: in.Arm, FormOrder: in.FormOrder})
 	if err := efficacyViolations(vs); err != nil {
 		return out, err
 	}
@@ -538,21 +539,21 @@ func (h Efficacy) AddEfficacyStudyClass(ctx context.Context, studyID uuid.UUID, 
 			return problem.New(problem.NotFound, "")
 		}
 		if s.Status != efficacy.StudyDraft {
-			return problem.New(problem.InvalidStateTransition, "classes are added to a draft study only")
+			return problem.New(problem.InvalidStateTransition, "cohorts are added to a draft study only")
 		}
-		ref, err := h.Store.Class(ctx, tenant, in.ClassID)
+		ref, err := h.Store.School(ctx, tenant, in.SchoolID, s.GradeLevel)
 		if err != nil {
 			return err
 		}
 		if ref == nil {
 			return problem.New(problem.NotFound, "")
 		}
-		if ref.GradeLevel != s.GradeLevel {
-			return problem.Invalid("/class_id", problem.SubInvalid, "the class is not of the grade of the study")
+		if ref.Students == 0 {
+			return problem.Invalid("/school_id", problem.SubInvalid, "the school has no active student of the grade of the study")
 		}
 		if qa, err := h.Store.TenantIsQA(ctx, tenant); err != nil || qa {
 			if err == nil {
-				err = problem.Invalid("/class_id", problem.SubInvalid, "a QA tenant takes no part in research")
+				err = problem.Invalid("/school_id", problem.SubInvalid, "a QA tenant takes no part in research")
 			}
 			return err
 		}
@@ -561,30 +562,30 @@ func (h Efficacy) AddEfficacyStudyClass(ctx context.Context, studyID uuid.UUID, 
 			return err
 		}
 		if !efficacy.Covers(agreementsOf(as), efficacy.CoversStudy) {
-			return problem.Invalid("/class_id", problem.SubInvalid, "the tenant has no active agreement covering efficacy_study")
+			return problem.Invalid("/school_id", problem.SubInvalid, "the tenant has no active agreement covering efficacy_study")
 		}
-		if other, err := h.Store.ClassInOtherStudy(ctx, tenant, in.ClassID, studyID); err != nil || other {
+		if other, err := h.Store.CohortInOtherStudy(ctx, tenant, in.SchoolID, s.GradeLevel, studyID); err != nil || other {
 			if err == nil {
-				err = problem.New(problem.Conflict, "the class takes part in another running study")
+				err = problem.New(problem.Conflict, "the cohort takes part in another running study")
 			}
 			return err
 		}
-		if cur, err := h.Store.StudyClass(ctx, studyID, in.ClassID, false); err != nil || cur != nil {
+		if cur, err := h.Store.StudyCohort(ctx, studyID, in.SchoolID, false); err != nil || cur != nil {
 			if err == nil {
-				err = problem.New(problem.Conflict, "the class is already in the study")
+				err = problem.New(problem.Conflict, "the cohort is already in the study")
 			}
 			return err
 		}
-		row := write.StudyClassRow{StudyID: studyID, ClassID: in.ClassID, TenantID: tenant, SchoolID: ref.SchoolID, GradeLevel: ref.GradeLevel,
+		row := write.StudyCohortRow{StudyID: studyID, SchoolID: in.SchoolID, TenantID: tenant, GradeLevel: s.GradeLevel,
 			PairNo: c.PairNo, Arm: optString(c.Arm), Method: c.Method, FormOrder: optString(c.FormOrder), Status: "enrolled", AddedBy: p.UserID}
-		if err := h.Store.UpsertStudyClass(ctx, row); err != nil {
+		if err := h.Store.UpsertStudyCohort(ctx, row); err != nil {
 			return err
 		}
-		if err := h.auditTenant(ctx, tenant, ActionStudyClassAdded, "efficacy_study", studyID, "", map[string]any{"class_id": in.ClassID,
+		if err := h.auditTenant(ctx, tenant, ActionStudyCohortAdded, "efficacy_study", studyID, "", map[string]any{"school_id": in.SchoolID, "grade_level": s.GradeLevel,
 			"pair_no": c.PairNo, "arm": c.Arm}); err != nil {
 			return err
 		}
-		out = StudyClassView(row)
+		out = StudyCohortView(row)
 		return idempotency.SetResult(ctx, out)
 	})
 	return out, err
@@ -598,9 +599,10 @@ func agreementsOf(rows []write.AgreementRow) []efficacy.Agreement {
 	return out
 }
 
-// RemoveEfficacyStudyClass removes a class of the target tenant from a draft study (soft-delete, ADR-0028).
-func (h Efficacy) RemoveEfficacyStudyClass(ctx context.Context, studyID, classID uuid.UUID) (err error) {
-	ctx, done := observability.UseCase(ctx, "learning.command.RemoveEfficacyStudyClass")
+// RemoveEfficacyStudyCohort removes a cohort (school) of the target tenant from a draft study (soft-delete, ADR-0028);
+// a cohort flagged conflict is resolved this way (removed, then added again with its arm).
+func (h Efficacy) RemoveEfficacyStudyCohort(ctx context.Context, studyID, schoolID uuid.UUID) (err error) {
+	ctx, done := observability.UseCase(ctx, "learning.command.RemoveEfficacyStudyCohort")
 	defer func() { done(err) }()
 	p, err := efficacyAdmin(ctx, authz.PermPlatformEfficacyStudyManage)
 	if err != nil {
@@ -618,7 +620,7 @@ func (h Efficacy) RemoveEfficacyStudyClass(ctx context.Context, studyID, classID
 		if s == nil {
 			return problem.New(problem.NotFound, "")
 		}
-		c, err := h.Store.StudyClass(ctx, studyID, classID, false)
+		c, err := h.Store.StudyCohort(ctx, studyID, schoolID, false)
 		if err != nil {
 			return err
 		}
@@ -626,18 +628,18 @@ func (h Efficacy) RemoveEfficacyStudyClass(ctx context.Context, studyID, classID
 			return problem.New(problem.NotFound, "")
 		}
 		if s.Status != efficacy.StudyDraft {
-			return problem.New(problem.InvalidStateTransition, "classes are removed from a draft study only")
+			return problem.New(problem.InvalidStateTransition, "cohorts are removed from a draft study only")
 		}
-		if err := h.Store.RemoveStudyClass(ctx, *c, p.UserID); err != nil {
+		if err := h.Store.RemoveStudyCohort(ctx, *c, p.UserID); err != nil {
 			return err
 		}
-		return h.auditTenant(ctx, tenant, ActionStudyClassRemoved, "efficacy_study", studyID, "", map[string]any{"class_id": classID})
+		return h.auditTenant(ctx, tenant, ActionStudyCohortRemoved, "efficacy_study", studyID, "", map[string]any{"school_id": schoolID})
 	})
 }
 
-func studyTenants(classes []write.StudyClassRow) []uuid.UUID {
+func studyTenants(cohorts []write.StudyCohortRow) []uuid.UUID {
 	var out []uuid.UUID
-	for _, c := range classes {
+	for _, c := range cohorts {
 		if !slices.Contains(out, c.TenantID) {
 			out = append(out, c.TenantID)
 		}
@@ -669,21 +671,22 @@ func (h Efficacy) ActivateEfficacyStudy(ctx context.Context, id uuid.UUID) (out 
 		if s.Status != efficacy.StudyDraft {
 			return problem.New(problem.InvalidStateTransition, "only a draft study is activated")
 		}
-		rows, err := h.Store.StudyClasses(ctx, id)
+		rows, err := h.Store.StudyCohorts(ctx, id)
 		if err != nil {
 			return err
 		}
-		classes := make([]efficacy.Class, len(rows))
+		cohorts := make([]efficacy.Cohort, len(rows))
 		for i, r := range rows {
-			classes[i] = efficacy.Class{ClassID: r.ClassID, TenantID: r.TenantID, PairNo: r.PairNo, Method: r.Method, GradeLevel: r.GradeLevel}
+			cohorts[i] = efficacy.Cohort{SchoolID: r.SchoolID, TenantID: r.TenantID, Conflict: r.Conflict, PairNo: r.PairNo, Method: r.Method,
+				GradeLevel: r.GradeLevel}
 			if r.Arm != nil {
-				classes[i].Arm = *r.Arm
+				cohorts[i].Arm = *r.Arm
 			}
 			if r.FormOrder != nil {
-				classes[i].FormOrder = *r.FormOrder
+				cohorts[i].FormOrder = *r.FormOrder
 			}
 		}
-		assigned, vs := efficacy.Activate(id, classes)
+		assigned, vs := efficacy.Activate(id, cohorts)
 		if err := efficacyViolations(vs); err != nil {
 			return err
 		}
@@ -691,7 +694,7 @@ func (h Efficacy) ActivateEfficacyStudy(ctx context.Context, id uuid.UUID) (out 
 			r := rows[i]
 			arm, order := c.Arm, c.FormOrder
 			r.Arm, r.FormOrder, r.Method = &arm, &order, c.Method
-			if err := h.Store.UpdateStudyClass(ctx, r); err != nil {
+			if err := h.Store.UpdateStudyCohort(ctx, r); err != nil {
 				return err
 			}
 			rows[i] = r
@@ -706,8 +709,8 @@ func (h Efficacy) ActivateEfficacyStudy(ctx context.Context, id uuid.UUID) (out 
 		}
 		s.Version = prev + 1
 		counts := efficacy.ArmCounts(assigned)
-		if err := h.auditPlatform(ctx, ActionStudyActivated, "efficacy_study", s.ID, "", map[string]any{"intervention_classes": counts[efficacy.ArmIntervention],
-			"comparison_classes": counts[efficacy.ArmComparison], "validation_classes": counts[efficacy.ArmValidation],
+		if err := h.auditPlatform(ctx, ActionStudyActivated, "efficacy_study", s.ID, "", map[string]any{"intervention_cohorts": counts[efficacy.ArmIntervention],
+			"comparison_cohorts": counts[efficacy.ArmComparison], "validation_cohorts": counts[efficacy.ArmValidation],
 			"tenant_ids": studyTenants(rows)}); err != nil {
 			return err
 		}

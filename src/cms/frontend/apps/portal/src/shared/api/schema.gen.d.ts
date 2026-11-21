@@ -801,25 +801,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/learning/efficacy-studies/{study_id}/classes": {
+    "/admin/learning/efficacy-studies/{study_id}/cohorts": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Lớp tham gia/so sánh/kiểm định của nghiên cứu (cặp, arm, thứ tự dạng đề; liên tenant theo tenant_ids) */
-        get: operations["listEfficacyStudyClasses"];
+        /** Cụm (trường, khối) tham gia/so sánh/kiểm định của nghiên cứu (cặp, arm, thứ tự dạng đề, cờ conflict; liên tenant theo tenant_ids — ADR-0095) */
+        get: operations["listEfficacyStudyCohorts"];
         put?: never;
-        /** Thêm lớp của tenant đích vào nghiên cứu draft (F035-AC-08) */
-        post: operations["addEfficacyStudyClass"];
+        /** Thêm cụm (một trường của tenant đích, khối của nghiên cứu — ADR-0095) vào nghiên cứu draft (F035-AC-08) */
+        post: operations["addEfficacyStudyCohort"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/admin/learning/efficacy-studies/{study_id}/classes/{class_id}": {
+    "/admin/learning/efficacy-studies/{study_id}/cohorts/{school_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -829,8 +829,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Gỡ lớp khỏi nghiên cứu draft (soft-delete, ADR-0028; study không còn draft → 422 INVALID_STATE_TRANSITION) */
-        delete: operations["removeEfficacyStudyClass"];
+        /** Gỡ cụm (trường) khỏi nghiên cứu draft (soft-delete, ADR-0028; study không còn draft → 422 INVALID_STATE_TRANSITION); cách xử lý cụm conflict là gỡ rồi thêm lại */
+        delete: operations["removeEfficacyStudyCohort"];
         options?: never;
         head?: never;
         patch?: never;
@@ -10988,7 +10988,7 @@ export interface components {
         EfficacyFormOrder: "a_then_b" | "b_then_a";
         EfficacyReport: {
             created_at: components["schemas"]["Timestamp"];
-            /** @description true khi số lớp mỗi nhóm dưới khuyến nghị cỡ mẫu (LEARNING_EFFICACY_PLAN §4) */
+            /** @description true khi số cụm (trường, khối) mỗi nhóm dưới efficacy_recommended_cohorts_per_arm (LEARNING_EFFICACY_PLAN §4, ADR-0095) */
             descriptive_only?: boolean;
             error?: string | null;
             excluded_question_version_ids?: components["schemas"]["Uuid"][];
@@ -10997,7 +10997,7 @@ export interface components {
             requested_by?: components["schemas"]["Uuid"];
             /**
              * @description Chỉ số liệu gộp (≤ 256 KB), ô < analytics_min_cell_size bị ẩn: theo arm (participant, tỉ lệ rời, gain, normalized gain,
-             *     Hedges' g + CI 95% hiệu chỉnh design effect, gain theo LO, KR-20 theo dạng × đợt, mức sử dụng) và predictive validity
+             *     Hedges' g + CI 95% hiệu chỉnh design effect theo cụm trường × khối, gain theo LO, KR-20 theo dạng × đợt, mức sử dụng) và predictive validity
              *     (Spearman ρ theo LO, hiệu chuẩn, AUC, gợi ý) — LEARNING_EFFICACY_PLAN §4, §5. Không có tên/lớp thật, không xếp hạng.
              */
             results?: {
@@ -11014,8 +11014,9 @@ export interface components {
         };
         EfficacyStudy: {
             activated_at?: components["schemas"]["Timestamp"] | null;
-            class_count?: number;
             code: string;
+            /** @description Số cụm (trường, khối) của study — ADR-0095 */
+            cohort_count?: number;
             completed_at?: components["schemas"]["Timestamp"] | null;
             created_at: components["schemas"]["Timestamp"];
             created_by?: components["schemas"]["Uuid"];
@@ -11028,21 +11029,20 @@ export interface components {
             status: components["schemas"]["EfficacyStudyStatus"];
             study_id: components["schemas"]["Uuid"];
             subject_id: components["schemas"]["Uuid"];
-            /** @description Tenant có lớp trong study */
+            /** @description Tenant có cụm trong study */
             tenant_ids?: components["schemas"]["Uuid"][];
             title: string;
             /** @description Dùng cho ETag/If-Match */
             version: number;
         };
-        EfficacyStudyClass: {
+        EfficacyStudyCohort: {
             arm?: components["schemas"]["EfficacyArm"] | null;
             /** @enum {string} */
             assignment_method?: "manual" | "random";
-            class_id: components["schemas"]["Uuid"];
-            /** @description Tên lớp từ projection ref.classes (chỉ hiển thị cho nhân sự platform; không xuất trong báo cáo/bộ dữ liệu) */
-            class_name?: string;
+            /** @description true: cụm chuyển từ các lớp ở arm/cặp/thứ tự dạng khác nhau — kích hoạt bị từ chối tới khi gỡ và thêm lại (ADR-0095) */
+            conflict: boolean;
             form_order?: components["schemas"]["EfficacyFormOrder"] | null;
-            grade_level?: components["schemas"]["GradeLevel"];
+            grade_level: components["schemas"]["GradeLevel"];
             pair_no?: number | null;
             participant_count?: number;
             school_id: components["schemas"]["Uuid"];
@@ -11052,16 +11052,17 @@ export interface components {
             tenant_id: components["schemas"]["Uuid"];
             withdrawn_at?: components["schemas"]["Timestamp"] | null;
         };
-        EfficacyStudyClassCreate: {
+        /** @description Cụm = một trường của tenant đích × khối của nghiên cứu (ADR-0095); hai cụm một cặp ở hai trường khác nhau */
+        EfficacyStudyCohortCreate: {
             /** @description Tùy chọn; bỏ trống thì gán ngẫu nhiên theo cặp khi kích hoạt (assignment_method = random) */
             arm?: components["schemas"]["EfficacyArm"];
-            class_id: components["schemas"]["Uuid"];
             form_order?: components["schemas"]["EfficacyFormOrder"];
-            /** @description Bỏ trống với lớp validation */
+            /** @description Bỏ trống với cụm validation */
             pair_no?: number;
+            school_id: components["schemas"]["Uuid"];
         };
-        EfficacyStudyClassPage: {
-            items: components["schemas"]["EfficacyStudyClass"][];
+        EfficacyStudyCohortPage: {
+            items: components["schemas"]["EfficacyStudyCohort"][];
             page: components["schemas"]["PageInfo"];
         };
         EfficacyStudyCreate: {
@@ -11090,20 +11091,21 @@ export interface components {
             title?: string;
         };
         EfficacyWave: {
-            /** @description Tiến độ theo lớp — chỉ số mời/đã làm/vắng, không có điểm */
-            classes?: {
+            closed_at?: components["schemas"]["Timestamp"] | null;
+            /** @description Tiến độ theo cụm (trường, khối) — chỉ số mời/đã làm/vắng, không có điểm (ADR-0095) */
+            cohorts?: {
                 absent_count: number;
-                class_id: components["schemas"]["Uuid"];
                 completed_count: number;
                 exam_session_id: components["schemas"]["Uuid"];
                 /** @enum {string} */
                 form: "a" | "b";
+                grade_level: components["schemas"]["GradeLevel"];
                 invited_count: number;
+                school_id: components["schemas"]["Uuid"];
                 /** @enum {string} */
                 session_status?: "active" | "cancelled";
                 tenant_id: components["schemas"]["Uuid"];
             }[];
-            closed_at?: components["schemas"]["Timestamp"] | null;
             duration_seconds: number;
             /** @enum {string|null} */
             form?: "a" | "b" | null;
@@ -11120,7 +11122,7 @@ export interface components {
             /** @description Mặc định theo blueprint */
             duration_seconds?: number;
             /**
-             * @description Bắt buộc khi kind = validation; bỏ qua với pre/post (dạng đề theo form_order của lớp)
+             * @description Bắt buộc khi kind = validation; bỏ qua với pre/post (dạng đề theo form_order của cụm)
              * @enum {string}
              */
             form?: "a" | "b";
@@ -11146,15 +11148,14 @@ export interface components {
             tenant_id: components["schemas"]["Uuid"];
             withdrawal_id: components["schemas"]["Uuid"];
         };
-        /** @description scope = school cần school_id; class cần class_id; students cần student_ids (≤ 500) */
+        /** @description scope = school hoặc cohort cần school_id (cohort = cụm trường × khối của study, ADR-0095); students cần student_ids (≤ 500) */
         EfficacyWithdrawalCreate: {
-            class_id?: components["schemas"]["Uuid"];
             reason: string;
             school_id?: components["schemas"]["Uuid"];
             /** @description Mã văn bản yêu cầu của trường */
             school_request_ref?: string;
             /** @enum {string} */
-            scope: "tenant" | "school" | "class" | "students";
+            scope: "tenant" | "school" | "cohort" | "students";
             student_ids?: components["schemas"]["Uuid"][];
         };
         Evaluation: {
@@ -12106,8 +12107,11 @@ export interface components {
             stop_reason?: "manual" | "guardrail_breach" | "agreement_revoked" | "ended" | null;
             study_id?: components["schemas"]["Uuid"] | null;
             tenant_ids: components["schemas"]["Uuid"][];
-            /** @enum {string} */
-            unit: "class" | "student";
+            /**
+             * @description class chỉ còn ở thử nghiệm tạo trước ADR-0095
+             * @enum {string}
+             */
+            unit: "school_grade" | "student" | "class";
             updated_at?: components["schemas"]["Timestamp"];
         };
         LearningExperimentCreate: {
@@ -12121,10 +12125,11 @@ export interface components {
             /** @description Mọi tenant phải có thỏa thuận active phủ experiment */
             tenant_ids: components["schemas"]["Uuid"][];
             /**
-             * @default class
+             * @description school_grade = cụm (trường, khối) của học sinh (ADR-0095)
+             * @default school_grade
              * @enum {string}
              */
-            unit: "class" | "student";
+            unit: "school_grade" | "student";
         };
         /** @enum {string} */
         LearningExperimentKind: "mastery_model" | "recommendation_rule";
@@ -12152,7 +12157,7 @@ export interface components {
             study_id?: components["schemas"]["Uuid"] | null;
             tenant_ids?: components["schemas"]["Uuid"][];
             /** @enum {string} */
-            unit?: "class" | "student";
+            unit?: "school_grade" | "student";
         };
         LearningMaterialAuthoring: components["schemas"]["ContentVersion"] & components["schemas"]["LearningMaterialAuthoringInput"];
         /** @description Học liệu (F024) — như lesson, không có completion_rule/estimated_minutes, thêm material_kind */
@@ -15942,7 +15947,6 @@ export interface components {
         ChallengeAttemptIdPath: components["schemas"]["Uuid"];
         ChallengeIdPath: components["schemas"]["Uuid"];
         ChannelId: components["schemas"]["Uuid"];
-        ClassIdPath: components["schemas"]["Uuid"];
         ClubIdPath: components["schemas"]["Uuid"];
         ConnectionIdPath: components["schemas"]["Uuid"];
         ContentIdPath: components["schemas"]["Uuid"];
@@ -18097,7 +18101,7 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
-    listEfficacyStudyClasses: {
+    listEfficacyStudyCohorts: {
         parameters: {
             query?: {
                 /** @description Cursor opaque từ page.next_cursor */
@@ -18123,7 +18127,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EfficacyStudyClassPage"];
+                    "application/json": components["schemas"]["EfficacyStudyCohortPage"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
@@ -18131,7 +18135,7 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
-    addEfficacyStudyClass: {
+    addEfficacyStudyCohort: {
         parameters: {
             query?: never;
             header?: {
@@ -18155,7 +18159,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EfficacyStudyClassCreate"];
+                "application/json": components["schemas"]["EfficacyStudyCohortCreate"];
             };
         };
         responses: {
@@ -18166,7 +18170,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EfficacyStudyClass"];
+                    "application/json": components["schemas"]["EfficacyStudyCohort"];
                 };
             };
             400: components["responses"]["Problem"];
@@ -18178,7 +18182,7 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
-    removeEfficacyStudyClass: {
+    removeEfficacyStudyCohort: {
         parameters: {
             query?: never;
             header?: {
@@ -18190,7 +18194,7 @@ export interface operations {
                 "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
             };
             path: {
-                class_id: components["parameters"]["ClassIdPath"];
+                school_id: components["parameters"]["SchoolId"];
                 study_id: components["parameters"]["EfficacyStudyIdPath"];
             };
             cookie?: never;

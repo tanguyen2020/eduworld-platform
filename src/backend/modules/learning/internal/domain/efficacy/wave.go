@@ -81,7 +81,7 @@ func CheckWave(r WaveRequest, studyStatus string, minWeeks int, existing []Wave,
 	return nil, nil
 }
 
-// FormOf is the form a class takes in a wave (F035-AC-12): pre the first form of its order, post the second one,
+// FormOf is the form a cohort takes in a wave (F035-AC-12): pre the first form of its order, post the second one,
 // validation the form of the request.
 func FormOf(kind, order, requested string) string {
 	switch kind {
@@ -99,8 +99,8 @@ func FormOf(kind, order, requested string) string {
 	return FormB
 }
 
-// TargetsWave reports whether a class of an arm sits a wave of a kind: validation classes sit validation waves only,
-// intervention and comparison classes sit pre and post only (data-model §3).
+// TargetsWave reports whether a cohort of an arm sits a wave of a kind: validation cohorts sit validation waves only,
+// intervention and comparison cohorts sit pre and post only (data-model §3).
 func TargetsWave(kind, arm string) bool {
 	if kind == WaveValidation {
 		return arm == ArmValidation

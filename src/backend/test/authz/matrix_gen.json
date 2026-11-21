@@ -155,10 +155,10 @@
     ]
   },
   {
-    "operation_id": "addEfficacyStudyClass",
+    "operation_id": "addEfficacyStudyCohort",
     "module": "learning",
     "method": "POST",
-    "path": "/admin/learning/efficacy-studies/{study_id}/classes",
+    "path": "/admin/learning/efficacy-studies/{study_id}/cohorts",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -3491,10 +3491,10 @@
     ]
   },
   {
-    "operation_id": "listEfficacyStudyClasses",
+    "operation_id": "listEfficacyStudyCohorts",
     "module": "learning",
     "method": "GET",
-    "path": "/admin/learning/efficacy-studies/{study_id}/classes",
+    "path": "/admin/learning/efficacy-studies/{study_id}/cohorts",
     "has_id_param": true,
     "required": [
       "cross_tenant",
@@ -4924,10 +4924,10 @@
     ]
   },
   {
-    "operation_id": "removeEfficacyStudyClass",
+    "operation_id": "removeEfficacyStudyCohort",
     "module": "learning",
     "method": "DELETE",
-    "path": "/admin/learning/efficacy-studies/{study_id}/classes/{class_id}",
+    "path": "/admin/learning/efficacy-studies/{study_id}/cohorts/{school_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

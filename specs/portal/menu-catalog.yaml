@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.21.2"
+catalog_version: "2026.11.21.3"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -2250,7 +2250,7 @@ workspaces:
             label_key: portal.action.platform_admin.efficacy_studies.view
             title: Xem thỏa thuận, nghiên cứu, lớp, đợt
             required_permissions: [platform.efficacy_study.manage]
-            operation_ids: [listResearchAgreements, listEfficacyStudies, getEfficacyStudy, listEfficacyStudyClasses, listEfficacyWaves]
+            operation_ids: [listResearchAgreements, listEfficacyStudies, getEfficacyStudy, listEfficacyStudyCohorts, listEfficacyWaves]
             can_disable: true
           - key: action.platform_admin.efficacy_studies.manage_agreements
             label_key: portal.action.platform_admin.efficacy_studies.manage_agreements
@@ -2262,7 +2262,7 @@ workspaces:
             label_key: portal.action.platform_admin.efficacy_studies.edit
             title: Tạo/sửa nghiên cứu, lớp và cặp, kích hoạt, kết thúc
             required_permissions: [platform.efficacy_study.manage]
-            operation_ids: [createEfficacyStudy, updateEfficacyStudy, addEfficacyStudyClass, removeEfficacyStudyClass, activateEfficacyStudy, completeEfficacyStudy]
+            operation_ids: [createEfficacyStudy, updateEfficacyStudy, addEfficacyStudyCohort, removeEfficacyStudyCohort, activateEfficacyStudy, completeEfficacyStudy]
             can_disable: true
           - key: action.platform_admin.efficacy_studies.schedule_waves
             label_key: portal.action.platform_admin.efficacy_studies.schedule_waves

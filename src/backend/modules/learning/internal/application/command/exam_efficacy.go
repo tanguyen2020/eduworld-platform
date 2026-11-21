@@ -37,12 +37,13 @@ func (h Exams) WaveOf(ctx context.Context, sessionID uuid.UUID) (*uuid.UUID, err
 	return s.EfficacyWaveID, nil
 }
 
-// EfficacySessionInput is what F035 needs to create the exam session of one class in an efficacy wave.
+// EfficacySessionInput is what F035 needs to create the exam session of one cohort (school × grade, ADR-0095) in an
+// efficacy wave.
 type EfficacySessionInput struct {
 	WaveID      uuid.UUID
 	TenantID    uuid.UUID
 	SchoolID    uuid.UUID
-	ClassID     uuid.UUID
+	GradeLevel  int
 	Title       string
 	Form        write.FormVersion // the platform blueprint version of the form
 	Pool        []selection.Candidate
@@ -56,8 +57,8 @@ type EfficacySessionInput struct {
 // ErrEfficacyPool: the pool of the form does not hold every fixed question (an instrument unpublished meanwhile).
 var ErrEfficacyPool = errors.New("efficacy: the form questions are not all published")
 
-// CreateEfficacySession creates the exam session of a class in an efficacy wave (F035-AC-12) in the transaction of
-// ctx, whose session tenant is the tenant of the class: the fixed settings of LEARNING_EFFICACY_PLAN §3.2 (custom, not
+// CreateEfficacySession creates the exam session of a cohort in an efficacy wave (F035-AC-12) in the transaction of
+// ctx, whose session tenant is the tenant of the cohort: the fixed settings of LEARNING_EFFICACY_PLAN §3.2 (custom, not
 // official, feedback never, manual release never done, no answers nor explanations, one attempt), the fixed paper of
 // the form, the students given, efficacy_wave_id set, no exam.* event, audit exam_session.created.
 func (h Exams) CreateEfficacySession(ctx context.Context, in EfficacySessionInput) (write.ExamSessionRow, error) {
@@ -103,7 +104,7 @@ func (h Exams) CreateEfficacySession(ctx context.Context, in EfficacySessionInpu
 	}
 	now := h.now()
 	status := exam.InitialStatus(s.WindowStart, now)
-	target, _ := json.Marshal(map[string]any{"targets": []map[string]any{{"target_type": "class", "target_id": in.ClassID}},
+	target, _ := json.Marshal(map[string]any{"targets": []map[string]any{{"target_type": "grade", "grade_level": in.GradeLevel}},
 		"student_count": len(in.Students)})
 	sections := make([]map[string]any, 0, len(b.Def.Sections))
 	for _, sec := range b.Def.Sections {

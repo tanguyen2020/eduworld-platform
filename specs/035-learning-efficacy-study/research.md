@@ -20,7 +20,7 @@
 
 ## R3. Mã giả danh
 
-- **Decision**: `participant_code = base32(HMAC-SHA256(key, study_id ‖ student_id))[:16]`; `class_code`, `site_code` tương tự với `class_id`, `tenant_id`. Không lưu bảng ánh xạ; tra ngược chỉ khi có khóa (vận hành, audit).
+- **Decision**: `participant_code = base32(HMAC-SHA256(key, study_id ‖ student_id))[:16]`; `cohort_code` (ADR-0095 — thay `class_code`), `site_code` tương tự với `school_id` của cụm, `tenant_id`. Không lưu bảng ánh xạ; tra ngược chỉ khi có khóa (vận hành, audit).
 - **Rationale**: Theo mẫu `player_key` ([GAME_ANALYTICS](../../docs/11-operations/GAME_ANALYTICS.md) A-4); muối `study_id` làm mã không liên kết được giữa các study ([DATA_PRIVACY §4](../../docs/10-security/DATA_PRIVACY.md)).
 - **Alternatives**: UUID ngẫu nhiên lưu bảng ánh xạ — bị loại vì bảng ánh xạ là dữ liệu nhạy cảm thêm cần bảo vệ.
 
