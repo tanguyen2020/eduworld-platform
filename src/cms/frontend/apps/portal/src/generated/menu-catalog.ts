@@ -1206,7 +1206,7 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         path: "/platform-admin/reports",
         labelKey: "portal.menu.platform_admin.reports",
         order: 120,
-        requiredPermissions: ["platform.cross_tenant.read", "report.export"],
+        requiredPermissions: ["platform.cross_tenant.read"],
         actions: [
           { key: "action.platform_admin.reports.view", labelKey: "portal.action.platform_admin.reports.view", requiredPermissions: ["platform.cross_tenant.read"] },
           { key: "action.platform_admin.reports.export", labelKey: "portal.action.platform_admin.reports.export", requiredPermissions: ["report.export"] },

@@ -2186,7 +2186,8 @@ workspaces:
         title: Báo cáo học tập toàn platform
         path: /platform-admin/reports
         order: 120
-        required_permissions: [platform.cross_tenant.read, report.export]
+        # Platform workspace: platform permissions only (ADR-0090, R20); report.export is a tenant permission too.
+        required_permissions: [platform.cross_tenant.read]
         can_disable: true
         actions:
           - key: action.platform_admin.reports.view
