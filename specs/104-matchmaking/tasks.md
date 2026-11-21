@@ -134,8 +134,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F104-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F104-AC-* có test pass (ghi mã test/TC) — 27/27: AC-01/03 `TestMMCreateTicketServerSide`/`TestMMScope`; AC-02 unit H1 + 10.000 cặp; AC-04/05 `TestMMProposalAccept` + unit window/cost; AC-06 `TestMMDeclineTimeoutCooldown`; AC-07 `TestMMOneTicketPerStudent`; AC-08 `TestMMEligibilityAndBlocks`; AC-09 `TestMMParallelMatchmakers`; AC-10 `TestMMCancelAndExpire`; AC-11 `TestMMValkeyReset`; AC-12/13 `TestMMBotAndTicketRate`; AC-14/15 `TestMMPartyTicket`, `TestMMPartyChangedWhileProposed`; AC-16 `TestMMAllowFill` + `TestTeamDraft`; AC-17 `TestMMTeamPolicy`; AC-18/26 `TestMMTypeValidation` + `TestCheckRequestTypes`; AC-19/20 `TestMMDuel`; AC-21/22 `TestMMDirectProposalAndModes`; AC-23 `TestMMRoutesStaffDenied`; AC-24 `TestMMTenantIsolation`, `TestMatchmakingRLS`; AC-25 `TestMMIdempotency`; AC-27 `TestMMQueueLoad` (local; k6 staging chờ môi trường)
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh — chạy từng lệnh tương đương (gofmt, vet -tags integration, golangci-lint + arch, ewlint, entlint, tenancyguard, archgen, routematrix, allowedcallers, facadegen, gen-routes, unit competition/cmd/tools, integration competition qua tc-lock); không có client Godot/web mới (portal chỉ sinh lại kiểu API)
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — test double (`fakeRatings`, presence, push) chỉ trong test, có nhãn TEST DOUBLE
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
