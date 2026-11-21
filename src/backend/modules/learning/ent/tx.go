@@ -58,6 +58,8 @@ type Tx struct {
 	MediaUsage *MediaUsageClient
 	// Question is the client for interacting with the Question builders.
 	Question *QuestionClient
+	// QuestionPlan is the client for interacting with the QuestionPlan builders.
+	QuestionPlan *QuestionPlanClient
 	// QuestionSet is the client for interacting with the QuestionSet builders.
 	QuestionSet *QuestionSetClient
 	// QuestionSetItem is the client for interacting with the QuestionSetItem builders.
@@ -244,6 +246,7 @@ func (tx *Tx) init() {
 	tx.MediaAsset = NewMediaAssetClient(tx.config)
 	tx.MediaUsage = NewMediaUsageClient(tx.config)
 	tx.Question = NewQuestionClient(tx.config)
+	tx.QuestionPlan = NewQuestionPlanClient(tx.config)
 	tx.QuestionSet = NewQuestionSetClient(tx.config)
 	tx.QuestionSetItem = NewQuestionSetItemClient(tx.config)
 	tx.QuestionSetVersion = NewQuestionSetVersionClient(tx.config)

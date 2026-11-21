@@ -285,6 +285,18 @@ func (f QuestionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionMutation", m)
 }
 
+// The QuestionPlanFunc type is an adapter to allow the use of ordinary
+// function as QuestionPlan mutator.
+type QuestionPlanFunc func(context.Context, *ent.QuestionPlanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestionPlanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestionPlanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionPlanMutation", m)
+}
+
 // The QuestionSetFunc type is an adapter to allow the use of ordinary
 // function as QuestionSet mutator.
 type QuestionSetFunc func(context.Context, *ent.QuestionSetMutation) (ent.Value, error)

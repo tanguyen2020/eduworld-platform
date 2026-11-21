@@ -35,6 +35,10 @@ type Facade struct {
 	Merge MergeUserDataHandler
 	// Efficacy is the efficacy step of anonymizeUserData (F035-AC-19); nil = nothing to do.
 	Efficacy EfficacyAnonymizer
+	// Plans and Reveals serve the question plans of competition matches (createQuestionPlan, scorePlanAnswer,
+	// revealPlanItem; caller module competition, F105).
+	Plans   PlanCommands
+	Reveals PlanReveals
 	// Idempotency stores the results of the writing operations (infra.idempotency_records, idempotency_record_ttl).
 	Idempotency *idempotency.Store
 }

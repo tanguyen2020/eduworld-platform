@@ -30,6 +30,7 @@ type SchemaConfig struct {
 	MediaAsset                 string // MediaAsset table.
 	MediaUsage                 string // MediaUsage table.
 	Question                   string // Question table.
+	QuestionPlan               string // QuestionPlan table.
 	QuestionSet                string // QuestionSet table.
 	QuestionSetItem            string // QuestionSetItem table.
 	QuestionSetVersion         string // QuestionSetVersion table.

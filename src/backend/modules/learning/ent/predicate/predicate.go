@@ -75,6 +75,9 @@ type MediaUsage func(*sql.Selector)
 // Question is the predicate function for question builders.
 type Question func(*sql.Selector)
 
+// QuestionPlan is the predicate function for questionplan builders.
+type QuestionPlan func(*sql.Selector)
+
 // QuestionSet is the predicate function for questionset builders.
 type QuestionSet func(*sql.Selector)
 

@@ -35,6 +35,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediaasset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionplan"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetversion"
@@ -134,6 +135,7 @@ func checkColumn(t, c string) error {
 			mediaasset.Table:                 mediaasset.ValidColumn,
 			mediausage.Table:                 mediausage.ValidColumn,
 			question.Table:                   question.ValidColumn,
+			questionplan.Table:               questionplan.ValidColumn,
 			questionset.Table:                questionset.ValidColumn,
 			questionsetitem.Table:            questionsetitem.ValidColumn,
 			questionsetversion.Table:         questionsetversion.ValidColumn,

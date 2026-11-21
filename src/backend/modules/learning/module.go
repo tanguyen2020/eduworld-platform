@@ -103,9 +103,9 @@ const DashboardPoolSize = 10
 
 // Facade is the part of the learning facade (api.StrictServerInterface, specs/openapi/modules/learning.internal.v1.yaml)
 // implemented in this release: the platform-ops operations of F020, the student lifecycle steps of F016 and the
-// attempt operations of F030 US5 (createAttempt, getAttemptResult; caller module game, wired by F072) and the merge
-// step mergeUserData (F030 T056). The question-plan operations (createQuestionPlan, scorePlanAnswer) belong to later
-// features.
+// attempt operations of F030 US5 (createAttempt, getAttemptResult; caller module game, wired by F072), the merge
+// step mergeUserData (F030 T056) and the question plans of competition matches (createQuestionPlan, scorePlanAnswer,
+// revealPlanItem; caller module competition, F105).
 type Facade interface {
 	ApplyTenantAssignments(ctx context.Context, req api.ApplyTenantAssignmentsRequestObject) (api.ApplyTenantAssignmentsResponseObject, error)
 	RevokeTenantAssignments(ctx context.Context, req api.RevokeTenantAssignmentsRequestObject) (api.RevokeTenantAssignmentsResponseObject, error)
@@ -119,6 +119,9 @@ type Facade interface {
 	CreateAttempt(ctx context.Context, req api.CreateAttemptRequestObject) (api.CreateAttemptResponseObject, error)
 	GetAttemptResult(ctx context.Context, req api.GetAttemptResultRequestObject) (api.GetAttemptResultResponseObject, error)
 	MergeUserData(ctx context.Context, req api.MergeUserDataRequestObject) (api.MergeUserDataResponseObject, error)
+	CreateQuestionPlan(ctx context.Context, req api.CreateQuestionPlanRequestObject) (api.CreateQuestionPlanResponseObject, error)
+	ScorePlanAnswer(ctx context.Context, req api.ScorePlanAnswerRequestObject) (api.ScorePlanAnswerResponseObject, error)
+	RevealPlanItem(ctx context.Context, req api.RevealPlanItemRequestObject) (api.RevealPlanItemResponseObject, error)
 }
 
 var _ Facade = facade.Facade{}
@@ -470,6 +473,9 @@ func build(r *module.Registry) (*wiring, error) {
 		AttemptOpener: att, AttemptResults: attq,
 		Merge:       command.MergeUserData{UoW: core.UoW, Store: write.MergeRepo{}, Audit: auditor},
 		Idempotency: core.Idempotency}
+	// F105: question plans of competition matches (createQuestionPlan, scorePlanAnswer, revealPlanItem).
+	f.Plans = command.QuestionPlans{Attempts: att, Plans: write.QuestionPlanRepo{}, Recent: selfRepo, Config: command.DefaultQuestionPlanConfig()}
+	f.Reveals = query.QuestionPlans{Session: core.ReadSession, Model: read.QuestionPlanModel{}, Delivery: delivery}
 	// F044: exports on the dashboard session (replica) in core-api and in the worker, quality jobs and reads.
 	reportCfg := reporting.DefaultConfig()
 	reports := command.Reports{UoW: core.UoW, Jobs: write.ReportRepo{}, Queue: write.ReportRepo{}, Read: core.ReadSession, Scope: read.QualityModel{},

@@ -29,6 +29,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediaasset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/mediausage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/question"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionplan"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetversion"
@@ -1479,6 +1480,45 @@ func init() {
 	questionDescID := questionMixinFields0[0].Descriptor()
 	// question.DefaultID holds the default value on creation for the id field.
 	question.DefaultID = questionDescID.Default.(func() uuid.UUID)
+	questionplanMixin := schema.QuestionPlan{}.Mixin()
+	questionplanMixinHooks0 := questionplanMixin[0].Hooks()
+	questionplan.Hooks[0] = questionplanMixinHooks0[0]
+	questionplanMixinInters0 := questionplanMixin[0].Interceptors()
+	questionplan.Interceptors[0] = questionplanMixinInters0[0]
+	questionplanMixinFields0 := questionplanMixin[0].Fields()
+	_ = questionplanMixinFields0
+	questionplanFields := schema.QuestionPlan{}.Fields()
+	_ = questionplanFields
+	// questionplanDescCreatedAt is the schema descriptor for created_at field.
+	questionplanDescCreatedAt := questionplanMixinFields0[2].Descriptor()
+	// questionplan.DefaultCreatedAt holds the default value on creation for the created_at field.
+	questionplan.DefaultCreatedAt = questionplanDescCreatedAt.Default.(func() time.Time)
+	// questionplanDescUpdatedAt is the schema descriptor for updated_at field.
+	questionplanDescUpdatedAt := questionplanMixinFields0[4].Descriptor()
+	// questionplan.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	questionplan.DefaultUpdatedAt = questionplanDescUpdatedAt.Default.(func() time.Time)
+	// questionplan.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	questionplan.UpdateDefaultUpdatedAt = questionplanDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// questionplanDescDeleteReason is the schema descriptor for delete_reason field.
+	questionplanDescDeleteReason := questionplanMixinFields0[8].Descriptor()
+	// questionplan.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	questionplan.DeleteReasonValidator = questionplanDescDeleteReason.Validators[0].(func(string) error)
+	// questionplanDescVersion is the schema descriptor for version field.
+	questionplanDescVersion := questionplanMixinFields0[9].Descriptor()
+	// questionplan.DefaultVersion holds the default value on creation for the version field.
+	questionplan.DefaultVersion = questionplanDescVersion.Default.(int64)
+	// questionplanDescMode is the schema descriptor for mode field.
+	questionplanDescMode := questionplanFields[1].Descriptor()
+	// questionplan.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	questionplan.ModeValidator = questionplanDescMode.Validators[0].(func(string) error)
+	// questionplanDescPlanVersion is the schema descriptor for plan_version field.
+	questionplanDescPlanVersion := questionplanFields[4].Descriptor()
+	// questionplan.PlanVersionValidator is a validator for the "plan_version" field. It is called by the builders before save.
+	questionplan.PlanVersionValidator = questionplanDescPlanVersion.Validators[0].(func(string) error)
+	// questionplanDescID is the schema descriptor for id field.
+	questionplanDescID := questionplanMixinFields0[0].Descriptor()
+	// questionplan.DefaultID holds the default value on creation for the id field.
+	questionplan.DefaultID = questionplanDescID.Default.(func() uuid.UUID)
 	questionsetMixin := schema.QuestionSet{}.Mixin()
 	questionsetMixinHooks0 := questionsetMixin[0].Hooks()
 	questionset.Hooks[0] = questionsetMixinHooks0[0]

@@ -17,6 +17,7 @@ var AllowedCallers = map[string][]string{
 	"mergeUserData":           {"identity"},
 	"restoreStudentData":      {"identity"},
 	"restoreTrashItem":        {"identity"},
+	"revealPlanItem":          {"competition"},
 	"revokeTenantAssignments": {"identity"},
 	"scorePlanAnswer":         {"competition"},
 }
@@ -34,6 +35,7 @@ var ContextRequired = map[string][]string{
 	"mergeUserData":           {"idempotency_key", "tenant_scope"},
 	"restoreStudentData":      {"idempotency_key", "tenant_scope"},
 	"restoreTrashItem":        {"idempotency_key", "tenant_scope"},
+	"revealPlanItem":          {"tenant_scope"},
 	"revokeTenantAssignments": {"idempotency_key"},
 	"scorePlanAnswer":         {"idempotency_key", "tenant_scope"},
 }

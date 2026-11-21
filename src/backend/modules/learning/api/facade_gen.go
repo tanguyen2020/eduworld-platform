@@ -575,30 +575,58 @@ type PlanItem struct {
 	TimeLimitSeconds int                    `json:"time_limit_seconds"`
 }
 
+// PlanItemReveal defines model for PlanItemReveal.
+type PlanItemReveal struct {
+	// CorrectResponse Câu trả lời thô theo loại câu hỏi — shape y hệt specs/schemas/question.schema.json#/$defs/response và
+	// AsyncAPI `AnswerResponse`, OpenAPI public `QuestionResponse`. Module learning biết loại câu từ plan item; client không gửi điểm (ADR-0016).
+	CorrectResponse *QuestionResponse `json:"correct_response,omitempty"`
+
+	// Explanation Giải thích ngắn theo ngôn ngữ hiển thị.
+	Explanation *struct {
+		Text *string `json:"text,omitempty"`
+	} `json:"explanation,omitempty"`
+	Index  int                `json:"index"`
+	PlanId openapi_types.UUID `json:"plan_id"`
+
+	// Question Render payload của câu (không đáp án, như PlanItem.render_payload) để xem lại trận sau khi kết thúc (F105-AC-23).
+	Question *map[string]interface{} `json:"question,omitempty"`
+
+	// QuestionType Đồng bộ với specs/schemas/common/enums.schema.json#/$defs/QuestionType.
+	QuestionType *QuestionType `json:"question_type,omitempty"`
+}
+
 // QuestionPlan defines model for QuestionPlan.
 type QuestionPlan struct {
 	ExpiresAt time.Time          `json:"expires_at"`
 	Items     []PlanItem         `json:"items"`
 	MatchId   openapi_types.UUID `json:"match_id"`
 	PlanId    openapi_types.UUID `json:"plan_id"`
+
+	// PlanVersion Dấu ghim bộ question_version_id của plan (competition.matches.question_plan_version, ADR-0043).
+	PlanVersion *string `json:"plan_version,omitempty"`
 }
 
 // QuestionPlanRequest defines model for QuestionPlanRequest.
 type QuestionPlanRequest struct {
-	ChallengeTemplateId    *openapi_types.UUID     `json:"challenge_template_id,omitempty"`
-	DifficultyMax          *int                    `json:"difficulty_max,omitempty"`
-	DifficultyMin          *int                    `json:"difficulty_min,omitempty"`
-	GradeLevel             int                     `json:"grade_level"`
-	MatchId                openapi_types.UUID      `json:"match_id"`
-	Mode                   QuestionPlanRequestMode `json:"mode"`
-	Participants           []openapi_types.UUID    `json:"participants"`
-	QuestionCount          int                     `json:"question_count"`
-	SubjectCode            string                  `json:"subject_code"`
-	TimePerQuestionSeconds *int                    `json:"time_per_question_seconds,omitempty"`
-	TopicIds               *[]openapi_types.UUID   `json:"topic_ids,omitempty"`
+	ChallengeTemplateId *openapi_types.UUID `json:"challenge_template_id,omitempty"`
+	DifficultyMax       *int                `json:"difficulty_max,omitempty"`
+	DifficultyMin       *int                `json:"difficulty_min,omitempty"`
+	GradeLevel          int                 `json:"grade_level"`
+	MatchId             openapi_types.UUID  `json:"match_id"`
+
+	// Mode Trận bot luyện tập dùng mode của trận (battle_1v1); bot không phải participant.
+	Mode          QuestionPlanRequestMode `json:"mode"`
+	Participants  []openapi_types.UUID    `json:"participants"`
+	QuestionCount int                     `json:"question_count"`
+	SubjectCode   *string                 `json:"subject_code,omitempty"`
+
+	// SubjectId Môn của trận (competition.matches.subject_id, F105); có subject_id thì không dùng subject_code.
+	SubjectId              *openapi_types.UUID   `json:"subject_id,omitempty"`
+	TimePerQuestionSeconds *int                  `json:"time_per_question_seconds,omitempty"`
+	TopicIds               *[]openapi_types.UUID `json:"topic_ids,omitempty"`
 }
 
-// QuestionPlanRequestMode defines model for QuestionPlanRequest.Mode.
+// QuestionPlanRequestMode Trận bot luyện tập dùng mode của trận (battle_1v1); bot không phải participant.
 type QuestionPlanRequestMode string
 
 // QuestionResponse Câu trả lời thô theo loại câu hỏi — shape y hệt specs/schemas/question.schema.json#/$defs/response và
@@ -944,6 +972,11 @@ type ListTrashParams struct {
 	ResourceType *CommonInternalCommonV1ResourceType `form:"resource_type,omitempty" json:"resource_type,omitempty"`
 	Cursor       *CommonInternalCommonV1Cursor       `form:"cursor,omitempty" json:"cursor,omitempty"`
 	Limit        *CommonInternalCommonV1Limit        `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// RevealPlanItemParams defines parameters for RevealPlanItem.
+type RevealPlanItemParams struct {
+	ClosedAt time.Time `form:"closed_at" json:"closed_at"`
 }
 
 // CreateAttemptJSONRequestBody defines body for CreateAttempt for application/json ContentType.
@@ -1371,6 +1404,9 @@ type ServerInterface interface {
 	// ScorePlanAnswer Chấm một câu trả lời trong trận (server-authoritative) và ghi bằng chứng học tập
 	// (POST /internal/v1/question-plans/{plan_id}/answers:score)
 	ScorePlanAnswer(w http.ResponseWriter, r *http.Request, planId openapi_types.UUID)
+	// RevealPlanItem Đáp án đúng và giải thích của một câu đã đóng trong trận (F105)
+	// (GET /internal/v1/question-plans/{plan_id}/items/{index}/reveal)
+	RevealPlanItem(w http.ResponseWriter, r *http.Request, planId openapi_types.UUID, index int, params RevealPlanItemParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -1799,6 +1835,57 @@ func (siw *ServerInterfaceWrapper) ScorePlanAnswer(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// RevealPlanItem operation middleware
+func (siw *ServerInterfaceWrapper) RevealPlanItem(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "plan_id" -------------
+	var planId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "plan_id", r.PathValue("plan_id"), &planId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "plan_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "index" -------------
+	var index int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "index", r.PathValue("index"), &index, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "index", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RevealPlanItemParams
+
+	// ------------- Required query parameter "closed_at" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "closed_at", r.URL.Query(), &params.ClosedAt, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "closed_at"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "closed_at", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RevealPlanItem(w, r, planId, index, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -1933,6 +2020,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/users/{user_id}:merge-into", wrapper.MergeUserData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/question-plans", wrapper.CreateQuestionPlan)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/question-plans/{plan_id}/answers:score", wrapper.ScorePlanAnswer)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/question-plans/{plan_id}/items/{index}/reveal", wrapper.RevealPlanItem)
 
 	return m
 }
@@ -3115,6 +3203,94 @@ func (response ScorePlanAnswer422ApplicationProblemPlusJSONResponse) VisitScoreP
 	return err
 }
 
+type RevealPlanItemRequestObject struct {
+	PlanId openapi_types.UUID `json:"plan_id"`
+	Index  int                `json:"index"`
+	Params RevealPlanItemParams
+}
+
+type RevealPlanItemResponseObject interface {
+	VisitRevealPlanItemResponse(w http.ResponseWriter) error
+}
+
+type RevealPlanItem200JSONResponse PlanItemReveal
+
+func (response RevealPlanItem200JSONResponse) VisitRevealPlanItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevealPlanItem401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response RevealPlanItem401ApplicationProblemPlusJSONResponse) VisitRevealPlanItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevealPlanItem403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response RevealPlanItem403ApplicationProblemPlusJSONResponse) VisitRevealPlanItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevealPlanItem404ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response RevealPlanItem404ApplicationProblemPlusJSONResponse) VisitRevealPlanItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RevealPlanItem409ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response RevealPlanItem409ApplicationProblemPlusJSONResponse) VisitRevealPlanItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// CreateAttempt Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game)
@@ -3159,6 +3335,9 @@ type StrictServerInterface interface {
 	// ScorePlanAnswer Chấm một câu trả lời trong trận (server-authoritative) và ghi bằng chứng học tập
 	// (POST /internal/v1/question-plans/{plan_id}/answers:score)
 	ScorePlanAnswer(ctx context.Context, request ScorePlanAnswerRequestObject) (ScorePlanAnswerResponseObject, error)
+	// RevealPlanItem Đáp án đúng và giải thích của một câu đã đóng trong trận (F105)
+	// (GET /internal/v1/question-plans/{plan_id}/items/{index}/reveal)
+	RevealPlanItem(ctx context.Context, request RevealPlanItemRequestObject) (RevealPlanItemResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error)
@@ -3634,6 +3813,34 @@ func (sh *strictHandler) ScorePlanAnswer(w http.ResponseWriter, r *http.Request,
 	}
 }
 
+// RevealPlanItem operation middleware
+func (sh *strictHandler) RevealPlanItem(w http.ResponseWriter, r *http.Request, planId openapi_types.UUID, index int, params RevealPlanItemParams) {
+	var request RevealPlanItemRequestObject
+
+	request.PlanId = planId
+	request.Index = index
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RevealPlanItem(ctx, request.(RevealPlanItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RevealPlanItem")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RevealPlanItemResponseObject); ok {
+		if err := validResponse.VisitRevealPlanItemResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ErrNotFaked is returned by Fake for an operation without a func.
 var ErrNotFaked = errors.New("api: operation not faked")
 
@@ -3653,6 +3860,7 @@ type Fake struct {
 	MergeUserDataFunc           func(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
 	CreateQuestionPlanFunc      func(ctx context.Context, request CreateQuestionPlanRequestObject) (CreateQuestionPlanResponseObject, error)
 	ScorePlanAnswerFunc         func(ctx context.Context, request ScorePlanAnswerRequestObject) (ScorePlanAnswerResponseObject, error)
+	RevealPlanItemFunc          func(ctx context.Context, request RevealPlanItemRequestObject) (RevealPlanItemResponseObject, error)
 }
 
 var _ StrictServerInterface = (*Fake)(nil)
@@ -3767,4 +3975,12 @@ func (f *Fake) ScorePlanAnswer(a0 context.Context, a1 ScorePlanAnswerRequestObje
 		return nil, ErrNotFaked
 	}
 	return f.ScorePlanAnswerFunc(a0, a1)
+}
+
+// RevealPlanItem calls RevealPlanItemFunc.
+func (f *Fake) RevealPlanItem(a0 context.Context, a1 RevealPlanItemRequestObject) (RevealPlanItemResponseObject, error) {
+	if f.RevealPlanItemFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.RevealPlanItemFunc(a0, a1)
 }

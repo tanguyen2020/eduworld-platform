@@ -1063,6 +1063,44 @@ var (
 			},
 		},
 	}
+	// QuestionPlansColumns holds the columns for the "question_plans" table.
+	QuestionPlansColumns = []*schema.Column{
+		{Name: "plan_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "match_id", Type: field.TypeUUID},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "grade_level", Type: field.TypeInt16},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "plan_version", Type: field.TypeString, Size: 64},
+		{Name: "seed", Type: field.TypeInt64},
+		{Name: "items", Type: field.TypeJSON},
+		{Name: "participants", Type: field.TypeJSON},
+		{Name: "expires_at", Type: field.TypeTime},
+	}
+	// QuestionPlansTable holds the schema information for the "question_plans" table.
+	QuestionPlansTable = &schema.Table{
+		Name:       "question_plans",
+		Columns:    QuestionPlansColumns,
+		PrimaryKey: []*schema.Column{QuestionPlansColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "question_plans_match_uq",
+				Unique:  true,
+				Columns: []*schema.Column{QuestionPlansColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// QuestionSetsColumns holds the columns for the "question_sets" table.
 	QuestionSetsColumns = []*schema.Column{
 		{Name: "question_set_id", Type: field.TypeUUID},
@@ -1802,6 +1840,7 @@ var (
 		MediaAssetsTable,
 		MediaUsagesTable,
 		QuestionsTable,
+		QuestionPlansTable,
 		QuestionSetsTable,
 		QuestionSetItemsTable,
 		QuestionSetVersionsTable,
@@ -1890,6 +1929,9 @@ func init() {
 	}
 	QuestionsTable.Annotation = &entsql.Annotation{
 		Table: "questions",
+	}
+	QuestionPlansTable.Annotation = &entsql.Annotation{
+		Table: "question_plans",
 	}
 	QuestionSetsTable.Annotation = &entsql.Annotation{
 		Table: "question_sets",
