@@ -1,0 +1,7 @@
+# ADR-0095 mục 8 — objects dropped by the contract migration of module competition (read by scripts/db/adr-0095-backup.sh).
+# migration <file> | table <schema.table> | column <schema.table> <pk,cols> <col> | values <schema.table> <col> <v1,v2>
+migration src/backend/modules/competition/migrations/20261231000004_adr0095_drop_enrollments.sql
+table ref.enrollments
+values multiplayer.parties party_type study_group
+values multiplayer.parties visibility class
+values multiplayer.party_policies scope_type class
