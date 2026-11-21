@@ -32,6 +32,11 @@
 - Delta backend F053 cần (`Topic/LearningObjective.row_version` F021, `outdated_fields`/`audio_exempt_reason` F025, `LessonAuthoringInput.math_assets` F024) → đã áp 2026-11-20 (Session "follow-up OQ F053" của ba feature).
 - E2E backend thật, axe toàn trang và baseline visual story mới (T004, T024–T026, T035, T042, T049, T056, T060) → **Chốt:** chạy khi có môi trường compose/CI có Chromium (OQ F051-9) — không phải câu hỏi mở.
 
+### Session 2026-11-21 (sửa lỗi E2E portal trên stack local)
+
+- Q: `sa.admin` mở "Chương trình học" nhận `422 VALIDATION_FAILED` — bên nào sai contract? → A: Portal: `listCmsTopics`/`listCmsObjectives` gửi `limit=200` trong khi `components/parameters/Limit` là 1–100 (kiểu bị che bằng `as never`). Sửa portal: `limit ≤ 100` (`LIST_LIMIT_MAX`), query có kiểu theo `schema.gen.d.ts`; `listCmsTopics` chỉ gọi khi có `curriculum_version_id` (bắt buộc trong contract). Backend đúng contract, không đổi.
+- **Câu hỏi mở (OQ F053-9):** bộ chọn chủ đề của `DocMetaFields` và `QuestionActivityEditor` chỉ biết môn (± khối), không có `curriculum_version_id` nên `listCmsTopics` không gọi được theo contract (trước đây nhận `422`, nay không gửi request, danh sách chủ đề trống). Cần chốt: contract cho phép `subject_id` thay `curriculum_version_id` (chủ đề của version hiện hành), hay portal tự suy version hiện hành từ `listCmsCurricula`. [Proposed] portal suy version hiện hành theo môn × khối — chưa làm.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn câu hỏi 11 dạng và đưa qua workflow (Priority: P1)

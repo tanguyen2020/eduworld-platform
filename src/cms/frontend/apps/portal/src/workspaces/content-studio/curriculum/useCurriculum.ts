@@ -47,13 +47,22 @@ export function useCurriculumVersions(curriculumId: string | undefined) {
   });
 }
 
+/** components/parameters/Limit of the contract: 1–100 (a larger limit is 422 VALIDATION_FAILED). */
+export const LIST_LIMIT_MAX = 100;
+
+/**
+ * listCmsTopics: curriculum_version_id is required by the contract, so nothing is requested without it (a picker that
+ * only knows the subject gets no topics — OQ F053-9, F053 Clarifications 2026-11-21).
+ */
 export function useTopics(filters: { curriculum_version_id?: string; subject_id?: string; grade_level?: number }, enabled = true) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
+  const version = filters.curriculum_version_id;
   return useQuery({
     queryKey: key(scopeKey, 'topics', filters),
-    queryFn: () => api.call<Page<Topic>>(api.client.GET('/cms/learning/topics', { params: { query: { ...filters, limit: 200 } as never } })),
-    enabled: enabled && !!(filters.curriculum_version_id || filters.subject_id),
+    queryFn: () =>
+      api.call<Page<Topic>>(api.client.GET('/cms/learning/topics', { params: { query: { ...filters, curriculum_version_id: version!, limit: LIST_LIMIT_MAX } } })),
+    enabled: enabled && !!version,
   });
 }
 
@@ -62,7 +71,7 @@ export function useObjectives(filters: { curriculum_version_id?: string; topic_i
   const { scopeKey } = useSession();
   return useQuery({
     queryKey: key(scopeKey, 'objectives', filters),
-    queryFn: () => api.call<Page<LearningObjective>>(api.client.GET('/cms/learning/objectives', { params: { query: { ...filters, limit: 200 } as never } })),
+    queryFn: () => api.call<Page<LearningObjective>>(api.client.GET('/cms/learning/objectives', { params: { query: { ...filters, limit: LIST_LIMIT_MAX } } })),
     enabled: enabled && !!(filters.curriculum_version_id || filters.topic_id || filters.subject_id),
   });
 }

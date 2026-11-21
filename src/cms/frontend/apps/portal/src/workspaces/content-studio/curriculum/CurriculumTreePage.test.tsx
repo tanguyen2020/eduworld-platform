@@ -57,6 +57,24 @@ describe('CurriculumTreePage', () => {
     expect(screen.queryByText('Thêm chủ đề')).toBeNull();
     expect(screen.getByText('Tạo chương trình riêng')).toBeInTheDocument();
   });
+
+  it('list requests stay inside the contract (E2E 2026-11-21: limit=200 → 422 VALIDATION_FAILED)', async () => {
+    const backend = new MockPortalBackend().withSession('qlcm.truong.a');
+    window.sessionStorage.setItem('ew.portal.sessionTenantId', TENANTS.thDemoA.tenant_id);
+    const content = new MockContentBackend();
+    fixtures(content, 'tenant');
+    backend.overrides.push(content.handler);
+    await renderPortal({ url: '/content-studio/curriculum', backend });
+    await waitFor(() => expect(backend.requests.some((r) => r.method === 'GET' && r.path === '/cms/learning/topics')).toBe(true));
+    // components/parameters/Limit is 1–100; listCmsTopics requires curriculum_version_id
+    for (const r of backend.requests.filter((x) => x.method === 'GET' && x.path.startsWith('/cms/learning/'))) {
+      const limit = new URLSearchParams(r.search).get('limit');
+      if (limit !== null) expect(Number(limit), `${r.path}${r.search}`).toBeLessThanOrEqual(100);
+    }
+    const topics = backend.requests.filter((x) => x.method === 'GET' && x.path === '/cms/learning/topics');
+    expect(topics.length).toBeGreaterThan(0);
+    for (const r of topics) expect(new URLSearchParams(r.search).get('curriculum_version_id'), r.search).toBe(U(21));
+  });
 });
 
 async function renderPlain(ui: JSX.Element) {
