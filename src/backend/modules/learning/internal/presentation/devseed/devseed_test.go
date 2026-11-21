@@ -50,7 +50,9 @@ func TestPortalLoginAndAdminAssigner(t *testing.T) {
 		case r.Method == http.MethodPost && r.URL.Path == "/api/v1/auth/portal/login":
 			var in map[string]any
 			_ = json.NewDecoder(r.Body).Decode(&in)
-			if in["password"] != "pw" || in["device_id"] == "" || r.Header.Get("Authorization") != "" {
+			// locale must be a contract Locale (vi-VN|en-US, ADR-0056), not a ContentLanguage
+			if in["password"] != "pw" || in["device_id"] == "" || r.Header.Get("Authorization") != "" ||
+				(in["locale"] != "vi-VN" && in["locale"] != "en-US") {
 				w.WriteHeader(http.StatusUnauthorized)
 				_, _ = w.Write([]byte(`{"code":"INVALID_CREDENTIALS"}`))
 				return

@@ -16,7 +16,7 @@ func PortalLogin(ctx context.Context, hc *http.Client, base, username, password 
 	var out struct {
 		AccessToken string `json:"access_token"`
 	}
-	body := map[string]any{"username": username, "password": password, "device_id": uuid.NewString(), "locale": "vi"}
+	body := map[string]any{"username": username, "password": password, "device_id": uuid.NewString(), "locale": "vi-VN"}
 	if _, err := Do(ctx, hc, base, "", http.MethodPost, "/auth/portal/login", nil, body, &out); err != nil {
 		return "", fmt.Errorf("portal login %s: %w", username, err)
 	}
