@@ -3,6 +3,7 @@ package contract
 import (
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -61,7 +62,10 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 			joined := strings.Join(params, ",")
 			want := httpx.TenantNone
-			if strings.Contains(joined, "TenantIdHeader") {
+			switch {
+			case strings.Contains(joined, "TenantIdHeaderOptional"):
+				want = httpx.TenantOptional
+			case strings.Contains(joined, "TenantIdHeader"):
 				want = httpx.TenantRequired
 			}
 			if o.Tenant != want {
@@ -85,8 +89,30 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(chathttp.Operations) || len(found) != 18 { // 14 social operations (F095), 3 chat (F115), listQuickMessages (F116)
-		t.Fatalf("F095/F115 operations found in the spec: %v", found)
+	// 14 social operations (F095), 3 chat (F115), listQuickMessages (F116 US4), 21 catalogue operations (F116 US2).
+	if len(found) != len(chathttp.Operations) || len(found) != 39 {
+		t.Fatalf("chat operations found in the spec: %d of %d: %v", len(found), len(chathttp.Operations), found)
+	}
+	// F116-AC-18: the catalogue administration is internal-gateway only (x-internal, /admin/), except the read-only
+	// category view of a tenant (/tenant/chat/categories); none is a player route.
+	for _, id := range chathttp.CatalogOperations {
+		o := chathttp.Operations[id]
+		if o.Guard&httpx.GuardGamePlayer != 0 {
+			t.Errorf("%s: a catalogue operation is never a player route", id)
+		}
+		if id != "listTenantSensitiveCategories" && !strings.HasPrefix(o.Pattern, "/admin/chat/") {
+			t.Errorf("%s: %s is not under /admin/chat/", id, o.Pattern)
+		}
+	}
+	for path, item := range doc.Paths.Map() {
+		for _, op := range item.Operations() {
+			if !slices.Contains(chathttp.CatalogOperations, op.OperationID) || op.OperationID == "listTenantSensitiveCategories" {
+				continue
+			}
+			if internal, _ := op.Extensions["x-internal"].(bool); !internal {
+				t.Errorf("%s %s: catalogue write/read operations must be x-internal (no public gateway route)", op.OperationID, path)
+			}
+		}
 	}
 	for _, id := range append(append([]string{"listQuickMessages"}, chathttp.PlayerOperations...), chathttp.ChatOperations...) {
 		if chathttp.Operations[id].Guard&httpx.GuardGamePlayer == 0 {

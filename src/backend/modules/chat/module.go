@@ -19,6 +19,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/persistence"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/realtime"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/regression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/security"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/consumer"
 	chathttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/http"
@@ -133,9 +134,21 @@ func Register(r *module.Registry) (*Module, error) {
 			Audit: persistence.Auditor{R: core.Recorder}, Config: command.SendConfig{RatePerUser: chatCfg.RatePerUser}}
 		reads := query.Chat{Read: core.ReadSession, Reader: persistence.ChatReader{}, Facts: facts, Recent: recent, Fanout: fanout,
 			Config: query.ChatConfig{RecentBuffer: chatCfg.RecentBuffer}}
+		// Sensitive-term catalogue administration (F116 US2): writes stay drafts until a publish passes the regression
+		// suite (embedded placeholder corpus; the operational corpus is a regression.Source outside the repository).
+		corpus, err := regression.LoadEmbedded()
+		if err != nil {
+			return nil, fmt.Errorf("chat: %w", err)
+		}
+		catalogAdmin := command.CatalogAdmin{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Catalog{},
+			Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
+			Regression: regression.Suite{Engine: pipe.Validator.Engine, Source: corpus}, Notifier: cache.Notifier{C: vk},
+			OnPublished: observability.CatalogVersion}
+		catalogReads := query.Catalog{Read: core.ReadSession, Reader: persistence.Catalog{}, Moderation: persistence.ModerationReader{},
+			Engine: pipe.Validator.Engine, Audit: core.Recorder, Cursors: cursors}
 		h := chathttp.Handlers{Commands: social, Queries: query.Social{Read: core.ReadSession, Relations: persistence.Reader{},
 			Presence: presence, Cursors: cursors}, Chat: &chathttp.ChatHandlers{Send: send, Queries: reads,
-			Quick: query.QuickMessages{Catalog: pipe.Quick}}}
+			Quick: query.QuickMessages{Catalog: pipe.Quick}}, Catalog: &chathttp.CatalogHandlers{Commands: catalogAdmin, Queries: catalogReads}}
 		r.HTTP(Name, func(s *httpx.Server) error { return chathttp.Register(s, h) })
 		// Chat commands of the gateway (F115): ew.cmd.chat.message.send, channel.join/leave, history.fetch, channel.sync.
 		if nc := r.NATS(); nc != nil {

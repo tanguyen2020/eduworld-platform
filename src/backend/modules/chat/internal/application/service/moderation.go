@@ -47,25 +47,6 @@ type tenantPart struct {
 	checkedAt time.Time
 }
 
-type categoryLookup struct {
-	cats     map[uuid.UUID]catalog.Category
-	settings map[uuid.UUID]bool
-}
-
-// Lookup implements catalog.Categories: a category is in force when enabled on the platform, unless the tenant
-// setting (allowed only when allow_tenant_toggle) says otherwise.
-func (c categoryLookup) Lookup(id uuid.UUID) (catalog.Category, bool) {
-	cat, ok := c.cats[id]
-	if !ok {
-		return catalog.Category{}, false
-	}
-	on := cat.Enabled
-	if v, set := c.settings[id]; set && cat.AllowTenantToggle {
-		on = v
-	}
-	return cat, on
-}
-
 // Catalogs is the compiled catalogue store of one instance (MODERATION §11.6, F116-AC-15): the platform part and each
 // tenant part are compiled in the background and swapped atomically; a message in flight keeps the view it got.
 // Reconcile re-reads the versions every Refresh (≤ moderation_config_propagation_max); Invalidate (Valkey pub/sub
@@ -209,7 +190,7 @@ func (c *Catalogs) Get(ctx context.Context, tenant uuid.UUID) (CatalogView, erro
 			}
 		}()
 	}
-	v := CatalogView{Categories: categoryLookup{cats: t.platform.cats, settings: t.settings}, PlatformVersion: t.platform.version,
+	v := CatalogView{Categories: catalog.Lookup{Cats: t.platform.cats, Settings: t.settings}, PlatformVersion: t.platform.version,
 		TenantVersion: t.version, Parts: []*catalog.Compiled{t.platform.compiled}}
 	if t.compiled != nil {
 		v.Parts = append(v.Parts, t.compiled)

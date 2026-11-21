@@ -24,13 +24,15 @@ type UnitOfWork interface {
 // AfterCommit registers fn to run after the commit of the transaction of ctx (cache invalidation, best effort).
 type AfterCommit func(ctx context.Context, fn func(ctx context.Context)) error
 
-// Event is a domain event written to the outbox. TenantID nil takes the session tenant of the scope.
+// Event is a domain event written to the outbox. TenantID nil takes the session tenant of the scope; Platform marks a
+// platform event (tenant_id NULL, e.g. a change of the platform catalogue).
 type Event struct {
 	Type         string
 	SubjectType  string
 	SubjectID    string
 	PartitionKey string
 	TenantID     *uuid.UUID
+	Platform     bool
 	OccurredAt   time.Time
 	Payload      any
 }

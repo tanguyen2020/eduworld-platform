@@ -91,7 +91,8 @@ type env struct {
 	tenantA, tenantB, tenantU  uuid.UUID
 	schoolA, schoolA2, schoolB uuid.UUID
 	schoolU1, schoolU2         uuid.UUID
-	chatHandlers               *chathttp.ChatHandlers // F115 routes (setupChat)
+	chatHandlers               *chathttp.ChatHandlers    // F115 routes (setupChat)
+	catalogHandlers            *chathttp.CatalogHandlers // F116 US2 routes (setupChat with the real pipeline)
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -172,7 +173,8 @@ func (e *env) server(ctx context.Context) {
 	if err != nil {
 		e.t.Fatal(err)
 	}
-	if err := chathttp.Register(s, chathttp.Handlers{Commands: e.social, Queries: e.queries, Chat: e.chatHandlers}); err != nil {
+	if err := chathttp.Register(s, chathttp.Handlers{Commands: e.social, Queries: e.queries, Chat: e.chatHandlers,
+		Catalog: e.catalogHandlers}); err != nil {
 		e.t.Fatal(err)
 	}
 	e.srv = httptest.NewServer(s)
@@ -384,6 +386,13 @@ var chatEventTypes = []string{"friend_request.sent", "friend.added", "friend.rem
 // consumers of competition rely on them, T021). Returns the number checked per type.
 func (e *env) checkEventSchemas() map[string]int {
 	e.t.Helper()
+	return e.checkEvents(chatEventTypes...)
+}
+
+// checkEvents validates the outbox events of the given types against the envelope and their payload schema
+// (specs/events/payloads/chat/<type>.v1.schema.json); returns the number checked per type.
+func (e *env) checkEvents(types ...string) map[string]int {
+	e.t.Helper()
 	root := filepath.Join(testkit.RepoRoot(e.t), "specs", "events")
 	c := jsonschema.NewCompiler()
 	c.AssertFormat()
@@ -392,7 +401,7 @@ func (e *env) checkEventSchemas() map[string]int {
 		e.t.Fatal(err)
 	}
 	seen := map[string]int{}
-	for _, typ := range chatEventTypes {
+	for _, typ := range types {
 		payload, err := c.Compile(filepath.Join(root, "payloads", "chat", typ+".v1.schema.json"))
 		if err != nil {
 			e.t.Fatal(err)

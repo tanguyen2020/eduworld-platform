@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -32,9 +33,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/persistence"
 	chatrealtime "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/realtime"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/regression"
 	chathttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/natscmd"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/persister"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
@@ -157,6 +161,7 @@ type chatEnv struct {
 	natsC     testcontainers.Container
 	validator *switchValidator
 	pipe      *moderation.Pipeline // real pipeline (chatOpts.real)
+	catalog   command.CatalogAdmin // F116 US2 catalogue commands (chatOpts.real)
 	// pace advances the test clock before every send (6 s: under the burst window and every per-minute rate of the
 	// platform policy since F116 enforces burst and slow mode); 0 sends at the same instant.
 	pace     time.Duration
@@ -231,6 +236,20 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 	e.chatHandlers = &chathttp.ChatHandlers{Send: c.send, Queries: c.reads}
 	if c.pipe != nil {
 		e.chatHandlers.Quick = query.QuickMessages{Catalog: c.pipe.Quick}
+		corpus, err := regression.LoadEmbedded()
+		if err != nil {
+			t.Fatal(err)
+		}
+		codec, err := page.NewCodec([]byte(strings.Repeat("k", 32)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		c.catalog = command.CatalogAdmin{UoW: e.uow, AfterCommit: entx.AfterCommit, Repo: persistence.Catalog{},
+			Events: persistence.Publisher{W: e.writer}, Audit: persistence.Auditor{R: e.rec},
+			Regression: regression.Suite{Engine: c.pipe.Validator.Engine, Source: corpus}, Notifier: cache.Notifier{C: vk},
+			OnPublished: observability.CatalogVersion, Now: e.clock.Now}
+		e.catalogHandlers = &chathttp.CatalogHandlers{Commands: c.catalog, Queries: query.Catalog{Read: e.read, Reader: persistence.Catalog{},
+			Moderation: persistence.ModerationReader{}, Engine: c.pipe.Validator.Engine, Audit: e.rec, Cursors: codec}}
 	}
 	e.server(ctx)
 	runCtx, stop := context.WithCancel(ctx)

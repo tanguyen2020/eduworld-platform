@@ -197,6 +197,33 @@ const (
 	PropagationMax    = 60 * time.Second     // catalogue/switch change in force on every instance
 )
 
+// filter_quality_gate (MODERATION §11.4, ADR-0030, F116-AC-14): a catalogue version is published only when the
+// regression suite reaches this recall on the high/critical/PII samples and stays at or under this false-positive rate
+// on the clean samples.
+const (
+	RegressionMinRecall = 0.95
+	RegressionMaxFPRate = 0.03
+)
+
+// PassesQualityGate reports a regression result within filter_quality_gate.
+func PassesQualityGate(recall, fpRate float64) bool {
+	return recall >= RegressionMinRecall && fpRate <= RegressionMaxFPRate
+}
+
+// ToggleReasonMin is the shortest reason of a tenant category toggle (F116-AC-17).
+const ToggleReasonMin = 10
+
+// Detected reports a decision that stops a message (block or heavier): a high/critical/PII sample of the regression
+// suite counts as detected only then.
+func Detected(decision string) bool {
+	return Rank(decision) >= Rank(ActionBlock) && decision != DecisionUnchecked
+}
+
+// FalsePositive reports a clean sample that was not delivered as is (mask included).
+func FalsePositive(decision string) bool {
+	return decision != DecisionAllow && decision != DecisionUnchecked
+}
+
 // Reduce applies the formatting spam rules: a shouting text is lowercased, a run of more than 10 emoji is cut to 10.
 // changed reports a reduction (decision mask, code spam).
 func Reduce(text string) (string, bool) {
