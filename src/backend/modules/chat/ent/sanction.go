@@ -57,7 +57,17 @@ type Sanction struct {
 	// EndsAt holds the value of the "ends_at" field.
 	EndsAt *time.Time `json:"ends_at,omitempty"`
 	// RevokedAt holds the value of the "revoked_at" field.
-	RevokedAt    *time.Time `json:"revoked_at,omitempty"`
+	RevokedAt *time.Time `json:"revoked_at,omitempty"`
+	// ReasonCode holds the value of the "reason_code" field.
+	ReasonCode *string `json:"reason_code,omitempty"`
+	// IssuedByKind holds the value of the "issued_by_kind" field.
+	IssuedByKind string `json:"issued_by_kind,omitempty"`
+	// RevokedBy holds the value of the "revoked_by" field.
+	RevokedBy *uuid.UUID `json:"revoked_by,omitempty"`
+	// RevokeReason holds the value of the "revoke_reason" field.
+	RevokeReason *string `json:"revoke_reason,omitempty"`
+	// LiftedAt holds the value of the "lifted_at" field.
+	LiftedAt     *time.Time `json:"lifted_at,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -66,13 +76,13 @@ func (*Sanction) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case sanction.FieldCreatedBy, sanction.FieldUpdatedBy, sanction.FieldDeletedBy, sanction.FieldSchoolID, sanction.FieldChannelID, sanction.FieldCaseID, sanction.FieldIssuedBy:
+		case sanction.FieldCreatedBy, sanction.FieldUpdatedBy, sanction.FieldDeletedBy, sanction.FieldSchoolID, sanction.FieldChannelID, sanction.FieldCaseID, sanction.FieldIssuedBy, sanction.FieldRevokedBy:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case sanction.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case sanction.FieldDeleteReason, sanction.FieldType, sanction.FieldScope, sanction.FieldReason:
+		case sanction.FieldDeleteReason, sanction.FieldType, sanction.FieldScope, sanction.FieldReason, sanction.FieldReasonCode, sanction.FieldIssuedByKind, sanction.FieldRevokeReason:
 			values[i] = new(sql.NullString)
-		case sanction.FieldCreatedAt, sanction.FieldUpdatedAt, sanction.FieldDeletedAt, sanction.FieldStartsAt, sanction.FieldEndsAt, sanction.FieldRevokedAt:
+		case sanction.FieldCreatedAt, sanction.FieldUpdatedAt, sanction.FieldDeletedAt, sanction.FieldStartsAt, sanction.FieldEndsAt, sanction.FieldRevokedAt, sanction.FieldLiftedAt:
 			values[i] = new(sql.NullTime)
 		case sanction.FieldID, sanction.FieldTenantID, sanction.FieldUserID:
 			values[i] = new(uuid.UUID)
@@ -228,6 +238,40 @@ func (_m *Sanction) assignValues(columns []string, values []any) error {
 				_m.RevokedAt = new(time.Time)
 				*_m.RevokedAt = value.Time
 			}
+		case sanction.FieldReasonCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field reason_code", values[i])
+			} else if value.Valid {
+				_m.ReasonCode = new(string)
+				*_m.ReasonCode = value.String
+			}
+		case sanction.FieldIssuedByKind:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field issued_by_kind", values[i])
+			} else if value.Valid {
+				_m.IssuedByKind = value.String
+			}
+		case sanction.FieldRevokedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field revoked_by", values[i])
+			} else if value.Valid {
+				_m.RevokedBy = new(uuid.UUID)
+				*_m.RevokedBy = *value.S.(*uuid.UUID)
+			}
+		case sanction.FieldRevokeReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field revoke_reason", values[i])
+			} else if value.Valid {
+				_m.RevokeReason = new(string)
+				*_m.RevokeReason = value.String
+			}
+		case sanction.FieldLiftedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field lifted_at", values[i])
+			} else if value.Valid {
+				_m.LiftedAt = new(time.Time)
+				*_m.LiftedAt = value.Time
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -343,6 +387,29 @@ func (_m *Sanction) String() string {
 	builder.WriteString(", ")
 	if v := _m.RevokedAt; v != nil {
 		builder.WriteString("revoked_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.ReasonCode; v != nil {
+		builder.WriteString("reason_code=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("issued_by_kind=")
+	builder.WriteString(_m.IssuedByKind)
+	builder.WriteString(", ")
+	if v := _m.RevokedBy; v != nil {
+		builder.WriteString("revoked_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.RevokeReason; v != nil {
+		builder.WriteString("revoke_reason=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.LiftedAt; v != nil {
+		builder.WriteString("lifted_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteByte(')')

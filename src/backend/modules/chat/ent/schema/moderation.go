@@ -230,8 +230,9 @@ func (ModerationSwitchChange) Indexes() []ent.Index {
 	}
 }
 
-// Sanction — chat.sanctions (T, MODERATION §7): a restriction of one student. F116 creates only system mutes
-// (auto_spam, block_and_alert_hold); manual sanctions, revocation and cases come with F121.
+// Sanction — chat.sanctions (T, MODERATION §7): a restriction of one student. F116 creates the system mutes
+// (auto_spam, block_and_alert_hold); F121 adds the case hold (case_hold), the sanctions of the Safety Team, revocation
+// and expiry (reason_code, issued_by_kind, revoked_by, revoke_reason, lifted_at: added by 20261231000001_f121).
 type Sanction struct{ ent.Schema }
 
 func (Sanction) Annotations() []schema.Annotation {
@@ -253,12 +254,19 @@ func (Sanction) Fields() []ent.Field {
 		field.Time("starts_at"),
 		field.Time("ends_at").Optional().Nillable(),
 		field.Time("revoked_at").Optional().Nillable(),
+		field.String("reason_code").MaxLen(64).Optional().Nillable(),
+		field.String("issued_by_kind").MaxLen(16).Default("system"),
+		field.UUID("revoked_by", uuid.UUID{}).Optional().Nillable(),
+		field.String("revoke_reason").MaxLen(1000).Optional().Nillable(),
+		field.Time("lifted_at").Optional().Nillable(),
 	}
 }
 func (Sanction) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("tenant_id", "user_id", "ends_at").StorageKey("sanctions_user_active_idx").
 			Annotations(entsql.IndexWhere("revoked_at IS NULL AND deleted_at IS NULL")),
+		index.Fields("ends_at").StorageKey("sanctions_expiry_idx").
+			Annotations(entsql.IndexWhere("lifted_at IS NULL AND ends_at IS NOT NULL AND deleted_at IS NULL")),
 	}
 }
 

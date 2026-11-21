@@ -150,6 +150,7 @@ Metric bổ sung:
 | `eduworld_client_fps` (histogram từ telemetry, `platform`, `device_tier`) | Hiệu năng client (NFR-PERF-004) |
 | `eduworld_client_crashes_total` (`platform`, `client_version`) | Ổn định client |
 | `eduworld_chat_policy_disabled` (`tenant`, `step`) — gauge 1 khi bước kiểm duyệt đang tắt | Theo dõi tenant đang tắt kiểm duyệt |
+| `eduworld_moderation_cases_open` (`severity`, `assigned`), `eduworld_moderation_case_unclaimed_age_seconds` (`severity`), `eduworld_moderation_case_first_response_seconds` (`severity`), `eduworld_chat_reports_total` (`reason`), `eduworld_moderation_school_notifications_overdue` — F121, không nhãn người dùng/case | Hàng đợi Safety Team, alert `ModerationP1Unclaimed` |
 | `eduworld_chat_unchecked_messages_total` (`tenant`) | Số tin gửi khi kiểm duyệt tắt |
 | `eduworld_chat_sensitive_matches_total` (`category`, `action`), `eduworld_chat_sensitive_catalog_version` (`scope`), `eduworld_chat_sensitive_reload_seconds` | Danh mục từ nhạy cảm: khớp theo nhóm (không nội dung), version đang chạy trên node, thời gian reload |
 | `eduworld_dashboard_query_duration_seconds` (histogram, `module`, `query_id`, `grain`, `cache`), `eduworld_dashboard_cache_requests_total` (`result`), `eduworld_dashboard_rejected_total` (`reason`: range/busy/timeout) | Dashboard ([DASHBOARD_DATA §13](../07-backend/DASHBOARD_DATA.md#13-quan-sát-và-cảnh-báo), ADR-0062) |
@@ -244,6 +245,9 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `JWKSFetchFailing` | Lỗi tải JWKS > 5 phút | Critical | |
 | `SISSyncFailed` | 2 lần sync liên tiếp thất bại cho một connection | Warning | Báo School Admin |
 | `ChatModerationBacklog` | Case `high` chờ > 30 phút | Critical | Báo ca trực Platform Safety Team (ADR-0072); case p1 (grooming, tự hại) theo on-call 24/7 [Confirmed] |
+| `ModerationP1Unclaimed` | `max(eduworld_moderation_case_unclaimed_age_seconds{severity="p1"}) > 900` (case p1 chưa gán quá `p1_unclaimed_alert_minutes`, F121) | Critical | Ca trực Safety Team nhận case p1 cũ nhất ngay; xem [Runbook case p1](#runbook-moderation-p1-unclaimed) |
+| `ModerationSlaBreached` | Case p1 chưa gán quá 1 giờ (`report_sla`, job `moderation-sla-escalator` đã leo thang) | Critical | Trưởng ca nhận case; ghi biên bản |
+| `ModerationSchoolNotificationsOverdue` | `eduworld_moderation_school_notifications_overdue > 0` trong 1 giờ | Warning | Theo dõi trường chưa xác nhận ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md)) |
 | `ChatPIISpike` | Tỷ lệ PII blocked > 5× baseline 15 phút | Warning | Kiểm tra sự cố/chiến dịch spam |
 | `ChatModerationDisabled` | `eduworld_chat_policy_disabled == 1` cho bất kỳ tenant/bước nào | Warning (ngay khi tắt) | Xác nhận với System Admin đã tắt, kiểm tra lý do và `expires_at` (ADR-0030) |
 | `ChatModerationDisabledLong` | `eduworld_chat_policy_disabled == 1` liên tục > 24 h, hoặc bước `pii` tắt > 4 h | Critical | Báo quản lý vận hành và Tenant Admin; đề xuất bật lại |
@@ -265,6 +269,13 @@ Ngưỡng được hiệu chỉnh sau load test và 2 tuần pilot. "Giờ học
 | `DayCloseNotDone` | Job `dashboard-day-close` chưa thành công cho ngày hôm qua lúc 05:00 ICT | Warning | Chạy lại job; dashboard hiển thị "Đang tính" |
 | `DashboardReplicaLag` | Replica dành cho dashboard lag > 60 s trong 10 phút | Warning | Số liệu dashboard bị trễ; không chuyển truy vấn về primary |
 | `LateEventsHigh` | `eduworld_rollup_late_events_total{bucket=">48h"}` > 0,5% event trong ngày | Warning | Kiểm tra client offline/consumer chậm; cân nhắc backfill |
+
+### Runbook moderation-p1-unclaimed
+
+1. Mở hàng đợi Safety Team: `listModerationCases?severity=p1&assignee=unassigned` (portal workspace E, F122).
+2. Người trực nhận case cũ nhất (`assignModerationCase`); case p1 đã có hạn chế tạm thời người bị báo cáo (`case_hold`, F121-AC-04).
+3. Case tự hại có `support_guide = child_protection_111`: làm theo [CHILD_SAFETY §8–§9](../10-security/CHILD_SAFETY.md); gửi thông báo trường (`notifySchoolForCase`).
+4. Quá 1 giờ: `moderation-sla-escalator` đã chuyển `escalated` — trưởng ca nhận; ghi biên bản vào `docs/11-operations/alert-drills/`.
 
 Alert định nghĩa trong `deploy/observability/prometheus/rules/*.yaml`, mỗi alert có `runbook_url` trỏ tới runbook trong `docs/11-operations/runbooks/`; biên bản diễn tập alert lưu ở `docs/11-operations/alert-drills/` ([DEPLOYMENT §15](DEPLOYMENT.md)). Prometheus scrape mỗi task qua cổng quản trị `EW_ADMIN_ADDR` (`tasks.<swarm-service>:9090`, [DEPLOYMENT §14](DEPLOYMENT.md)). Probe synthetic chạy bằng tài khoản `hs.qa.probe` trong tenant QA (`is_qa = true`); số liệu của tenant QA bị loại khỏi analytics và dashboard ([GAME_ANALYTICS](GAME_ANALYTICS.md), [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)).
 

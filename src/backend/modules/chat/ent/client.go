@@ -22,12 +22,17 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendcode"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendship"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationaction"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationcase"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationevidence"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/mute"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/quickmessage"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/report"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sanction"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/schoolsafetynotification"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveallowlistentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitivecatalogversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveterm"
@@ -56,6 +61,12 @@ type Client struct {
 	FriendRequest *FriendRequestClient
 	// Friendship is the client for interacting with the Friendship builders.
 	Friendship *FriendshipClient
+	// ModerationAction is the client for interacting with the ModerationAction builders.
+	ModerationAction *ModerationActionClient
+	// ModerationCase is the client for interacting with the ModerationCase builders.
+	ModerationCase *ModerationCaseClient
+	// ModerationEvidence is the client for interacting with the ModerationEvidence builders.
+	ModerationEvidence *ModerationEvidenceClient
 	// ModerationSwitch is the client for interacting with the ModerationSwitch builders.
 	ModerationSwitch *ModerationSwitchClient
 	// ModerationSwitchChange is the client for interacting with the ModerationSwitchChange builders.
@@ -66,8 +77,12 @@ type Client struct {
 	Mute *MuteClient
 	// QuickMessage is the client for interacting with the QuickMessage builders.
 	QuickMessage *QuickMessageClient
+	// Report is the client for interacting with the Report builders.
+	Report *ReportClient
 	// Sanction is the client for interacting with the Sanction builders.
 	Sanction *SanctionClient
+	// SchoolSafetyNotification is the client for interacting with the SchoolSafetyNotification builders.
+	SchoolSafetyNotification *SchoolSafetyNotificationClient
 	// SensitiveAllowlistEntry is the client for interacting with the SensitiveAllowlistEntry builders.
 	SensitiveAllowlistEntry *SensitiveAllowlistEntryClient
 	// SensitiveCatalogVersion is the client for interacting with the SensitiveCatalogVersion builders.
@@ -96,12 +111,17 @@ func (c *Client) init() {
 	c.FriendCode = NewFriendCodeClient(c.config)
 	c.FriendRequest = NewFriendRequestClient(c.config)
 	c.Friendship = NewFriendshipClient(c.config)
+	c.ModerationAction = NewModerationActionClient(c.config)
+	c.ModerationCase = NewModerationCaseClient(c.config)
+	c.ModerationEvidence = NewModerationEvidenceClient(c.config)
 	c.ModerationSwitch = NewModerationSwitchClient(c.config)
 	c.ModerationSwitchChange = NewModerationSwitchChangeClient(c.config)
 	c.ModerationSwitchRequest = NewModerationSwitchRequestClient(c.config)
 	c.Mute = NewMuteClient(c.config)
 	c.QuickMessage = NewQuickMessageClient(c.config)
+	c.Report = NewReportClient(c.config)
 	c.Sanction = NewSanctionClient(c.config)
+	c.SchoolSafetyNotification = NewSchoolSafetyNotificationClient(c.config)
 	c.SensitiveAllowlistEntry = NewSensitiveAllowlistEntryClient(c.config)
 	c.SensitiveCatalogVersion = NewSensitiveCatalogVersionClient(c.config)
 	c.SensitiveTerm = NewSensitiveTermClient(c.config)
@@ -200,26 +220,31 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                     ctx,
-		config:                  cfg,
-		Block:                   NewBlockClient(cfg),
-		Channel:                 NewChannelClient(cfg),
-		ChannelMember:           NewChannelMemberClient(cfg),
-		ChatPolicy:              NewChatPolicyClient(cfg),
-		FriendCode:              NewFriendCodeClient(cfg),
-		FriendRequest:           NewFriendRequestClient(cfg),
-		Friendship:              NewFriendshipClient(cfg),
-		ModerationSwitch:        NewModerationSwitchClient(cfg),
-		ModerationSwitchChange:  NewModerationSwitchChangeClient(cfg),
-		ModerationSwitchRequest: NewModerationSwitchRequestClient(cfg),
-		Mute:                    NewMuteClient(cfg),
-		QuickMessage:            NewQuickMessageClient(cfg),
-		Sanction:                NewSanctionClient(cfg),
-		SensitiveAllowlistEntry: NewSensitiveAllowlistEntryClient(cfg),
-		SensitiveCatalogVersion: NewSensitiveCatalogVersionClient(cfg),
-		SensitiveTerm:           NewSensitiveTermClient(cfg),
-		SensitiveTermCategory:   NewSensitiveTermCategoryClient(cfg),
-		TenantCategorySetting:   NewTenantCategorySettingClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		Block:                    NewBlockClient(cfg),
+		Channel:                  NewChannelClient(cfg),
+		ChannelMember:            NewChannelMemberClient(cfg),
+		ChatPolicy:               NewChatPolicyClient(cfg),
+		FriendCode:               NewFriendCodeClient(cfg),
+		FriendRequest:            NewFriendRequestClient(cfg),
+		Friendship:               NewFriendshipClient(cfg),
+		ModerationAction:         NewModerationActionClient(cfg),
+		ModerationCase:           NewModerationCaseClient(cfg),
+		ModerationEvidence:       NewModerationEvidenceClient(cfg),
+		ModerationSwitch:         NewModerationSwitchClient(cfg),
+		ModerationSwitchChange:   NewModerationSwitchChangeClient(cfg),
+		ModerationSwitchRequest:  NewModerationSwitchRequestClient(cfg),
+		Mute:                     NewMuteClient(cfg),
+		QuickMessage:             NewQuickMessageClient(cfg),
+		Report:                   NewReportClient(cfg),
+		Sanction:                 NewSanctionClient(cfg),
+		SchoolSafetyNotification: NewSchoolSafetyNotificationClient(cfg),
+		SensitiveAllowlistEntry:  NewSensitiveAllowlistEntryClient(cfg),
+		SensitiveCatalogVersion:  NewSensitiveCatalogVersionClient(cfg),
+		SensitiveTerm:            NewSensitiveTermClient(cfg),
+		SensitiveTermCategory:    NewSensitiveTermCategoryClient(cfg),
+		TenantCategorySetting:    NewTenantCategorySettingClient(cfg),
 	}, nil
 }
 
@@ -237,26 +262,31 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                     ctx,
-		config:                  cfg,
-		Block:                   NewBlockClient(cfg),
-		Channel:                 NewChannelClient(cfg),
-		ChannelMember:           NewChannelMemberClient(cfg),
-		ChatPolicy:              NewChatPolicyClient(cfg),
-		FriendCode:              NewFriendCodeClient(cfg),
-		FriendRequest:           NewFriendRequestClient(cfg),
-		Friendship:              NewFriendshipClient(cfg),
-		ModerationSwitch:        NewModerationSwitchClient(cfg),
-		ModerationSwitchChange:  NewModerationSwitchChangeClient(cfg),
-		ModerationSwitchRequest: NewModerationSwitchRequestClient(cfg),
-		Mute:                    NewMuteClient(cfg),
-		QuickMessage:            NewQuickMessageClient(cfg),
-		Sanction:                NewSanctionClient(cfg),
-		SensitiveAllowlistEntry: NewSensitiveAllowlistEntryClient(cfg),
-		SensitiveCatalogVersion: NewSensitiveCatalogVersionClient(cfg),
-		SensitiveTerm:           NewSensitiveTermClient(cfg),
-		SensitiveTermCategory:   NewSensitiveTermCategoryClient(cfg),
-		TenantCategorySetting:   NewTenantCategorySettingClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		Block:                    NewBlockClient(cfg),
+		Channel:                  NewChannelClient(cfg),
+		ChannelMember:            NewChannelMemberClient(cfg),
+		ChatPolicy:               NewChatPolicyClient(cfg),
+		FriendCode:               NewFriendCodeClient(cfg),
+		FriendRequest:            NewFriendRequestClient(cfg),
+		Friendship:               NewFriendshipClient(cfg),
+		ModerationAction:         NewModerationActionClient(cfg),
+		ModerationCase:           NewModerationCaseClient(cfg),
+		ModerationEvidence:       NewModerationEvidenceClient(cfg),
+		ModerationSwitch:         NewModerationSwitchClient(cfg),
+		ModerationSwitchChange:   NewModerationSwitchChangeClient(cfg),
+		ModerationSwitchRequest:  NewModerationSwitchRequestClient(cfg),
+		Mute:                     NewMuteClient(cfg),
+		QuickMessage:             NewQuickMessageClient(cfg),
+		Report:                   NewReportClient(cfg),
+		Sanction:                 NewSanctionClient(cfg),
+		SchoolSafetyNotification: NewSchoolSafetyNotificationClient(cfg),
+		SensitiveAllowlistEntry:  NewSensitiveAllowlistEntryClient(cfg),
+		SensitiveCatalogVersion:  NewSensitiveCatalogVersionClient(cfg),
+		SensitiveTerm:            NewSensitiveTermClient(cfg),
+		SensitiveTermCategory:    NewSensitiveTermCategoryClient(cfg),
+		TenantCategorySetting:    NewTenantCategorySettingClient(cfg),
 	}, nil
 }
 
@@ -287,10 +317,12 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Block, c.Channel, c.ChannelMember, c.ChatPolicy, c.FriendCode,
-		c.FriendRequest, c.Friendship, c.ModerationSwitch, c.ModerationSwitchChange,
-		c.ModerationSwitchRequest, c.Mute, c.QuickMessage, c.Sanction,
-		c.SensitiveAllowlistEntry, c.SensitiveCatalogVersion, c.SensitiveTerm,
-		c.SensitiveTermCategory, c.TenantCategorySetting,
+		c.FriendRequest, c.Friendship, c.ModerationAction, c.ModerationCase,
+		c.ModerationEvidence, c.ModerationSwitch, c.ModerationSwitchChange,
+		c.ModerationSwitchRequest, c.Mute, c.QuickMessage, c.Report, c.Sanction,
+		c.SchoolSafetyNotification, c.SensitiveAllowlistEntry,
+		c.SensitiveCatalogVersion, c.SensitiveTerm, c.SensitiveTermCategory,
+		c.TenantCategorySetting,
 	} {
 		n.Use(hooks...)
 	}
@@ -301,10 +333,12 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Block, c.Channel, c.ChannelMember, c.ChatPolicy, c.FriendCode,
-		c.FriendRequest, c.Friendship, c.ModerationSwitch, c.ModerationSwitchChange,
-		c.ModerationSwitchRequest, c.Mute, c.QuickMessage, c.Sanction,
-		c.SensitiveAllowlistEntry, c.SensitiveCatalogVersion, c.SensitiveTerm,
-		c.SensitiveTermCategory, c.TenantCategorySetting,
+		c.FriendRequest, c.Friendship, c.ModerationAction, c.ModerationCase,
+		c.ModerationEvidence, c.ModerationSwitch, c.ModerationSwitchChange,
+		c.ModerationSwitchRequest, c.Mute, c.QuickMessage, c.Report, c.Sanction,
+		c.SchoolSafetyNotification, c.SensitiveAllowlistEntry,
+		c.SensitiveCatalogVersion, c.SensitiveTerm, c.SensitiveTermCategory,
+		c.TenantCategorySetting,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -327,6 +361,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.FriendRequest.mutate(ctx, m)
 	case *FriendshipMutation:
 		return c.Friendship.mutate(ctx, m)
+	case *ModerationActionMutation:
+		return c.ModerationAction.mutate(ctx, m)
+	case *ModerationCaseMutation:
+		return c.ModerationCase.mutate(ctx, m)
+	case *ModerationEvidenceMutation:
+		return c.ModerationEvidence.mutate(ctx, m)
 	case *ModerationSwitchMutation:
 		return c.ModerationSwitch.mutate(ctx, m)
 	case *ModerationSwitchChangeMutation:
@@ -337,8 +377,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Mute.mutate(ctx, m)
 	case *QuickMessageMutation:
 		return c.QuickMessage.mutate(ctx, m)
+	case *ReportMutation:
+		return c.Report.mutate(ctx, m)
 	case *SanctionMutation:
 		return c.Sanction.mutate(ctx, m)
+	case *SchoolSafetyNotificationMutation:
+		return c.SchoolSafetyNotification.mutate(ctx, m)
 	case *SensitiveAllowlistEntryMutation:
 		return c.SensitiveAllowlistEntry.mutate(ctx, m)
 	case *SensitiveCatalogVersionMutation:
@@ -1299,6 +1343,411 @@ func (c *FriendshipClient) mutate(ctx context.Context, m *FriendshipMutation) (V
 	}
 }
 
+// ModerationActionClient is a client for the ModerationAction schema.
+type ModerationActionClient struct {
+	config
+}
+
+// NewModerationActionClient returns a client for the ModerationAction from the given config.
+func NewModerationActionClient(c config) *ModerationActionClient {
+	return &ModerationActionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `moderationaction.Hooks(f(g(h())))`.
+func (c *ModerationActionClient) Use(hooks ...Hook) {
+	c.hooks.ModerationAction = append(c.hooks.ModerationAction, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `moderationaction.Intercept(f(g(h())))`.
+func (c *ModerationActionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ModerationAction = append(c.inters.ModerationAction, interceptors...)
+}
+
+// Create returns a builder for creating a ModerationAction entity.
+func (c *ModerationActionClient) Create() *ModerationActionCreate {
+	mutation := newModerationActionMutation(c.config, OpCreate)
+	return &ModerationActionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ModerationAction entities.
+func (c *ModerationActionClient) CreateBulk(builders ...*ModerationActionCreate) *ModerationActionCreateBulk {
+	return &ModerationActionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModerationActionClient) MapCreateBulk(slice any, setFunc func(*ModerationActionCreate, int)) *ModerationActionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModerationActionCreateBulk{err: fmt.Errorf("calling to ModerationActionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModerationActionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModerationActionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ModerationAction.
+func (c *ModerationActionClient) Update() *ModerationActionUpdate {
+	mutation := newModerationActionMutation(c.config, OpUpdate)
+	return &ModerationActionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModerationActionClient) UpdateOne(_m *ModerationAction) *ModerationActionUpdateOne {
+	mutation := newModerationActionMutation(c.config, OpUpdateOne, withModerationAction(_m))
+	return &ModerationActionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModerationActionClient) UpdateOneID(id uuid.UUID) *ModerationActionUpdateOne {
+	mutation := newModerationActionMutation(c.config, OpUpdateOne, withModerationActionID(id))
+	return &ModerationActionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ModerationAction.
+func (c *ModerationActionClient) Delete() *ModerationActionDelete {
+	mutation := newModerationActionMutation(c.config, OpDelete)
+	return &ModerationActionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModerationActionClient) DeleteOne(_m *ModerationAction) *ModerationActionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModerationActionClient) DeleteOneID(id uuid.UUID) *ModerationActionDeleteOne {
+	builder := c.Delete().Where(moderationaction.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModerationActionDeleteOne{builder}
+}
+
+// Query returns a query builder for ModerationAction.
+func (c *ModerationActionClient) Query() *ModerationActionQuery {
+	return &ModerationActionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModerationAction},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ModerationAction entity by its id.
+func (c *ModerationActionClient) Get(ctx context.Context, id uuid.UUID) (*ModerationAction, error) {
+	return c.Query().Where(moderationaction.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModerationActionClient) GetX(ctx context.Context, id uuid.UUID) *ModerationAction {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ModerationActionClient) Hooks() []Hook {
+	hooks := c.hooks.ModerationAction
+	return append(hooks[:len(hooks):len(hooks)], moderationaction.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModerationActionClient) Interceptors() []Interceptor {
+	inters := c.inters.ModerationAction
+	return append(inters[:len(inters):len(inters)], moderationaction.Interceptors[:]...)
+}
+
+func (c *ModerationActionClient) mutate(ctx context.Context, m *ModerationActionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModerationActionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModerationActionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModerationActionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModerationActionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ModerationAction mutation op: %q", m.Op())
+	}
+}
+
+// ModerationCaseClient is a client for the ModerationCase schema.
+type ModerationCaseClient struct {
+	config
+}
+
+// NewModerationCaseClient returns a client for the ModerationCase from the given config.
+func NewModerationCaseClient(c config) *ModerationCaseClient {
+	return &ModerationCaseClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `moderationcase.Hooks(f(g(h())))`.
+func (c *ModerationCaseClient) Use(hooks ...Hook) {
+	c.hooks.ModerationCase = append(c.hooks.ModerationCase, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `moderationcase.Intercept(f(g(h())))`.
+func (c *ModerationCaseClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ModerationCase = append(c.inters.ModerationCase, interceptors...)
+}
+
+// Create returns a builder for creating a ModerationCase entity.
+func (c *ModerationCaseClient) Create() *ModerationCaseCreate {
+	mutation := newModerationCaseMutation(c.config, OpCreate)
+	return &ModerationCaseCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ModerationCase entities.
+func (c *ModerationCaseClient) CreateBulk(builders ...*ModerationCaseCreate) *ModerationCaseCreateBulk {
+	return &ModerationCaseCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModerationCaseClient) MapCreateBulk(slice any, setFunc func(*ModerationCaseCreate, int)) *ModerationCaseCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModerationCaseCreateBulk{err: fmt.Errorf("calling to ModerationCaseClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModerationCaseCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModerationCaseCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ModerationCase.
+func (c *ModerationCaseClient) Update() *ModerationCaseUpdate {
+	mutation := newModerationCaseMutation(c.config, OpUpdate)
+	return &ModerationCaseUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModerationCaseClient) UpdateOne(_m *ModerationCase) *ModerationCaseUpdateOne {
+	mutation := newModerationCaseMutation(c.config, OpUpdateOne, withModerationCase(_m))
+	return &ModerationCaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModerationCaseClient) UpdateOneID(id uuid.UUID) *ModerationCaseUpdateOne {
+	mutation := newModerationCaseMutation(c.config, OpUpdateOne, withModerationCaseID(id))
+	return &ModerationCaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ModerationCase.
+func (c *ModerationCaseClient) Delete() *ModerationCaseDelete {
+	mutation := newModerationCaseMutation(c.config, OpDelete)
+	return &ModerationCaseDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModerationCaseClient) DeleteOne(_m *ModerationCase) *ModerationCaseDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModerationCaseClient) DeleteOneID(id uuid.UUID) *ModerationCaseDeleteOne {
+	builder := c.Delete().Where(moderationcase.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModerationCaseDeleteOne{builder}
+}
+
+// Query returns a query builder for ModerationCase.
+func (c *ModerationCaseClient) Query() *ModerationCaseQuery {
+	return &ModerationCaseQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModerationCase},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ModerationCase entity by its id.
+func (c *ModerationCaseClient) Get(ctx context.Context, id uuid.UUID) (*ModerationCase, error) {
+	return c.Query().Where(moderationcase.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModerationCaseClient) GetX(ctx context.Context, id uuid.UUID) *ModerationCase {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ModerationCaseClient) Hooks() []Hook {
+	hooks := c.hooks.ModerationCase
+	return append(hooks[:len(hooks):len(hooks)], moderationcase.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModerationCaseClient) Interceptors() []Interceptor {
+	inters := c.inters.ModerationCase
+	return append(inters[:len(inters):len(inters)], moderationcase.Interceptors[:]...)
+}
+
+func (c *ModerationCaseClient) mutate(ctx context.Context, m *ModerationCaseMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModerationCaseCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModerationCaseUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModerationCaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModerationCaseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ModerationCase mutation op: %q", m.Op())
+	}
+}
+
+// ModerationEvidenceClient is a client for the ModerationEvidence schema.
+type ModerationEvidenceClient struct {
+	config
+}
+
+// NewModerationEvidenceClient returns a client for the ModerationEvidence from the given config.
+func NewModerationEvidenceClient(c config) *ModerationEvidenceClient {
+	return &ModerationEvidenceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `moderationevidence.Hooks(f(g(h())))`.
+func (c *ModerationEvidenceClient) Use(hooks ...Hook) {
+	c.hooks.ModerationEvidence = append(c.hooks.ModerationEvidence, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `moderationevidence.Intercept(f(g(h())))`.
+func (c *ModerationEvidenceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ModerationEvidence = append(c.inters.ModerationEvidence, interceptors...)
+}
+
+// Create returns a builder for creating a ModerationEvidence entity.
+func (c *ModerationEvidenceClient) Create() *ModerationEvidenceCreate {
+	mutation := newModerationEvidenceMutation(c.config, OpCreate)
+	return &ModerationEvidenceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ModerationEvidence entities.
+func (c *ModerationEvidenceClient) CreateBulk(builders ...*ModerationEvidenceCreate) *ModerationEvidenceCreateBulk {
+	return &ModerationEvidenceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModerationEvidenceClient) MapCreateBulk(slice any, setFunc func(*ModerationEvidenceCreate, int)) *ModerationEvidenceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModerationEvidenceCreateBulk{err: fmt.Errorf("calling to ModerationEvidenceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModerationEvidenceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModerationEvidenceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ModerationEvidence.
+func (c *ModerationEvidenceClient) Update() *ModerationEvidenceUpdate {
+	mutation := newModerationEvidenceMutation(c.config, OpUpdate)
+	return &ModerationEvidenceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModerationEvidenceClient) UpdateOne(_m *ModerationEvidence) *ModerationEvidenceUpdateOne {
+	mutation := newModerationEvidenceMutation(c.config, OpUpdateOne, withModerationEvidence(_m))
+	return &ModerationEvidenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModerationEvidenceClient) UpdateOneID(id uuid.UUID) *ModerationEvidenceUpdateOne {
+	mutation := newModerationEvidenceMutation(c.config, OpUpdateOne, withModerationEvidenceID(id))
+	return &ModerationEvidenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ModerationEvidence.
+func (c *ModerationEvidenceClient) Delete() *ModerationEvidenceDelete {
+	mutation := newModerationEvidenceMutation(c.config, OpDelete)
+	return &ModerationEvidenceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModerationEvidenceClient) DeleteOne(_m *ModerationEvidence) *ModerationEvidenceDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModerationEvidenceClient) DeleteOneID(id uuid.UUID) *ModerationEvidenceDeleteOne {
+	builder := c.Delete().Where(moderationevidence.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModerationEvidenceDeleteOne{builder}
+}
+
+// Query returns a query builder for ModerationEvidence.
+func (c *ModerationEvidenceClient) Query() *ModerationEvidenceQuery {
+	return &ModerationEvidenceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModerationEvidence},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ModerationEvidence entity by its id.
+func (c *ModerationEvidenceClient) Get(ctx context.Context, id uuid.UUID) (*ModerationEvidence, error) {
+	return c.Query().Where(moderationevidence.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModerationEvidenceClient) GetX(ctx context.Context, id uuid.UUID) *ModerationEvidence {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ModerationEvidenceClient) Hooks() []Hook {
+	hooks := c.hooks.ModerationEvidence
+	return append(hooks[:len(hooks):len(hooks)], moderationevidence.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModerationEvidenceClient) Interceptors() []Interceptor {
+	inters := c.inters.ModerationEvidence
+	return append(inters[:len(inters):len(inters)], moderationevidence.Interceptors[:]...)
+}
+
+func (c *ModerationEvidenceClient) mutate(ctx context.Context, m *ModerationEvidenceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModerationEvidenceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModerationEvidenceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModerationEvidenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModerationEvidenceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ModerationEvidence mutation op: %q", m.Op())
+	}
+}
+
 // ModerationSwitchClient is a client for the ModerationSwitch schema.
 type ModerationSwitchClient struct {
 	config
@@ -1974,6 +2423,141 @@ func (c *QuickMessageClient) mutate(ctx context.Context, m *QuickMessageMutation
 	}
 }
 
+// ReportClient is a client for the Report schema.
+type ReportClient struct {
+	config
+}
+
+// NewReportClient returns a client for the Report from the given config.
+func NewReportClient(c config) *ReportClient {
+	return &ReportClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `report.Hooks(f(g(h())))`.
+func (c *ReportClient) Use(hooks ...Hook) {
+	c.hooks.Report = append(c.hooks.Report, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `report.Intercept(f(g(h())))`.
+func (c *ReportClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Report = append(c.inters.Report, interceptors...)
+}
+
+// Create returns a builder for creating a Report entity.
+func (c *ReportClient) Create() *ReportCreate {
+	mutation := newReportMutation(c.config, OpCreate)
+	return &ReportCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Report entities.
+func (c *ReportClient) CreateBulk(builders ...*ReportCreate) *ReportCreateBulk {
+	return &ReportCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ReportClient) MapCreateBulk(slice any, setFunc func(*ReportCreate, int)) *ReportCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ReportCreateBulk{err: fmt.Errorf("calling to ReportClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ReportCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ReportCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Report.
+func (c *ReportClient) Update() *ReportUpdate {
+	mutation := newReportMutation(c.config, OpUpdate)
+	return &ReportUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ReportClient) UpdateOne(_m *Report) *ReportUpdateOne {
+	mutation := newReportMutation(c.config, OpUpdateOne, withReport(_m))
+	return &ReportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ReportClient) UpdateOneID(id uuid.UUID) *ReportUpdateOne {
+	mutation := newReportMutation(c.config, OpUpdateOne, withReportID(id))
+	return &ReportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Report.
+func (c *ReportClient) Delete() *ReportDelete {
+	mutation := newReportMutation(c.config, OpDelete)
+	return &ReportDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ReportClient) DeleteOne(_m *Report) *ReportDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ReportClient) DeleteOneID(id uuid.UUID) *ReportDeleteOne {
+	builder := c.Delete().Where(report.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ReportDeleteOne{builder}
+}
+
+// Query returns a query builder for Report.
+func (c *ReportClient) Query() *ReportQuery {
+	return &ReportQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeReport},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Report entity by its id.
+func (c *ReportClient) Get(ctx context.Context, id uuid.UUID) (*Report, error) {
+	return c.Query().Where(report.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ReportClient) GetX(ctx context.Context, id uuid.UUID) *Report {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ReportClient) Hooks() []Hook {
+	hooks := c.hooks.Report
+	return append(hooks[:len(hooks):len(hooks)], report.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ReportClient) Interceptors() []Interceptor {
+	inters := c.inters.Report
+	return append(inters[:len(inters):len(inters)], report.Interceptors[:]...)
+}
+
+func (c *ReportClient) mutate(ctx context.Context, m *ReportMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ReportCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ReportUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ReportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ReportDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Report mutation op: %q", m.Op())
+	}
+}
+
 // SanctionClient is a client for the Sanction schema.
 type SanctionClient struct {
 	config
@@ -2106,6 +2690,141 @@ func (c *SanctionClient) mutate(ctx context.Context, m *SanctionMutation) (Value
 		return (&SanctionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Sanction mutation op: %q", m.Op())
+	}
+}
+
+// SchoolSafetyNotificationClient is a client for the SchoolSafetyNotification schema.
+type SchoolSafetyNotificationClient struct {
+	config
+}
+
+// NewSchoolSafetyNotificationClient returns a client for the SchoolSafetyNotification from the given config.
+func NewSchoolSafetyNotificationClient(c config) *SchoolSafetyNotificationClient {
+	return &SchoolSafetyNotificationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `schoolsafetynotification.Hooks(f(g(h())))`.
+func (c *SchoolSafetyNotificationClient) Use(hooks ...Hook) {
+	c.hooks.SchoolSafetyNotification = append(c.hooks.SchoolSafetyNotification, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `schoolsafetynotification.Intercept(f(g(h())))`.
+func (c *SchoolSafetyNotificationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SchoolSafetyNotification = append(c.inters.SchoolSafetyNotification, interceptors...)
+}
+
+// Create returns a builder for creating a SchoolSafetyNotification entity.
+func (c *SchoolSafetyNotificationClient) Create() *SchoolSafetyNotificationCreate {
+	mutation := newSchoolSafetyNotificationMutation(c.config, OpCreate)
+	return &SchoolSafetyNotificationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SchoolSafetyNotification entities.
+func (c *SchoolSafetyNotificationClient) CreateBulk(builders ...*SchoolSafetyNotificationCreate) *SchoolSafetyNotificationCreateBulk {
+	return &SchoolSafetyNotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SchoolSafetyNotificationClient) MapCreateBulk(slice any, setFunc func(*SchoolSafetyNotificationCreate, int)) *SchoolSafetyNotificationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SchoolSafetyNotificationCreateBulk{err: fmt.Errorf("calling to SchoolSafetyNotificationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SchoolSafetyNotificationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SchoolSafetyNotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SchoolSafetyNotification.
+func (c *SchoolSafetyNotificationClient) Update() *SchoolSafetyNotificationUpdate {
+	mutation := newSchoolSafetyNotificationMutation(c.config, OpUpdate)
+	return &SchoolSafetyNotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SchoolSafetyNotificationClient) UpdateOne(_m *SchoolSafetyNotification) *SchoolSafetyNotificationUpdateOne {
+	mutation := newSchoolSafetyNotificationMutation(c.config, OpUpdateOne, withSchoolSafetyNotification(_m))
+	return &SchoolSafetyNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SchoolSafetyNotificationClient) UpdateOneID(id uuid.UUID) *SchoolSafetyNotificationUpdateOne {
+	mutation := newSchoolSafetyNotificationMutation(c.config, OpUpdateOne, withSchoolSafetyNotificationID(id))
+	return &SchoolSafetyNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SchoolSafetyNotification.
+func (c *SchoolSafetyNotificationClient) Delete() *SchoolSafetyNotificationDelete {
+	mutation := newSchoolSafetyNotificationMutation(c.config, OpDelete)
+	return &SchoolSafetyNotificationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SchoolSafetyNotificationClient) DeleteOne(_m *SchoolSafetyNotification) *SchoolSafetyNotificationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SchoolSafetyNotificationClient) DeleteOneID(id uuid.UUID) *SchoolSafetyNotificationDeleteOne {
+	builder := c.Delete().Where(schoolsafetynotification.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SchoolSafetyNotificationDeleteOne{builder}
+}
+
+// Query returns a query builder for SchoolSafetyNotification.
+func (c *SchoolSafetyNotificationClient) Query() *SchoolSafetyNotificationQuery {
+	return &SchoolSafetyNotificationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSchoolSafetyNotification},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SchoolSafetyNotification entity by its id.
+func (c *SchoolSafetyNotificationClient) Get(ctx context.Context, id uuid.UUID) (*SchoolSafetyNotification, error) {
+	return c.Query().Where(schoolsafetynotification.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SchoolSafetyNotificationClient) GetX(ctx context.Context, id uuid.UUID) *SchoolSafetyNotification {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SchoolSafetyNotificationClient) Hooks() []Hook {
+	hooks := c.hooks.SchoolSafetyNotification
+	return append(hooks[:len(hooks):len(hooks)], schoolsafetynotification.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SchoolSafetyNotificationClient) Interceptors() []Interceptor {
+	inters := c.inters.SchoolSafetyNotification
+	return append(inters[:len(inters):len(inters)], schoolsafetynotification.Interceptors[:]...)
+}
+
+func (c *SchoolSafetyNotificationClient) mutate(ctx context.Context, m *SchoolSafetyNotificationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SchoolSafetyNotificationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SchoolSafetyNotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SchoolSafetyNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SchoolSafetyNotificationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SchoolSafetyNotification mutation op: %q", m.Op())
 	}
 }
 
@@ -2788,39 +3507,48 @@ func (c *TenantCategorySettingClient) mutate(ctx context.Context, m *TenantCateg
 type (
 	hooks struct {
 		Block, Channel, ChannelMember, ChatPolicy, FriendCode, FriendRequest,
-		Friendship, ModerationSwitch, ModerationSwitchChange, ModerationSwitchRequest,
-		Mute, QuickMessage, Sanction, SensitiveAllowlistEntry, SensitiveCatalogVersion,
-		SensitiveTerm, SensitiveTermCategory, TenantCategorySetting []ent.Hook
+		Friendship, ModerationAction, ModerationCase, ModerationEvidence,
+		ModerationSwitch, ModerationSwitchChange, ModerationSwitchRequest, Mute,
+		QuickMessage, Report, Sanction, SchoolSafetyNotification,
+		SensitiveAllowlistEntry, SensitiveCatalogVersion, SensitiveTerm,
+		SensitiveTermCategory, TenantCategorySetting []ent.Hook
 	}
 	inters struct {
 		Block, Channel, ChannelMember, ChatPolicy, FriendCode, FriendRequest,
-		Friendship, ModerationSwitch, ModerationSwitchChange, ModerationSwitchRequest,
-		Mute, QuickMessage, Sanction, SensitiveAllowlistEntry, SensitiveCatalogVersion,
-		SensitiveTerm, SensitiveTermCategory, TenantCategorySetting []ent.Interceptor
+		Friendship, ModerationAction, ModerationCase, ModerationEvidence,
+		ModerationSwitch, ModerationSwitchChange, ModerationSwitchRequest, Mute,
+		QuickMessage, Report, Sanction, SchoolSafetyNotification,
+		SensitiveAllowlistEntry, SensitiveCatalogVersion, SensitiveTerm,
+		SensitiveTermCategory, TenantCategorySetting []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		Block:                   tableSchemas[1],
-		Channel:                 tableSchemas[0],
-		ChannelMember:           tableSchemas[0],
-		ChatPolicy:              tableSchemas[0],
-		FriendCode:              tableSchemas[1],
-		FriendRequest:           tableSchemas[1],
-		Friendship:              tableSchemas[1],
-		ModerationSwitch:        tableSchemas[0],
-		ModerationSwitchChange:  tableSchemas[0],
-		ModerationSwitchRequest: tableSchemas[0],
-		Mute:                    tableSchemas[1],
-		QuickMessage:            tableSchemas[0],
-		Sanction:                tableSchemas[0],
-		SensitiveAllowlistEntry: tableSchemas[0],
-		SensitiveCatalogVersion: tableSchemas[0],
-		SensitiveTerm:           tableSchemas[0],
-		SensitiveTermCategory:   tableSchemas[0],
-		TenantCategorySetting:   tableSchemas[0],
+		Block:                    tableSchemas[1],
+		Channel:                  tableSchemas[0],
+		ChannelMember:            tableSchemas[0],
+		ChatPolicy:               tableSchemas[0],
+		FriendCode:               tableSchemas[1],
+		FriendRequest:            tableSchemas[1],
+		Friendship:               tableSchemas[1],
+		ModerationAction:         tableSchemas[0],
+		ModerationCase:           tableSchemas[0],
+		ModerationEvidence:       tableSchemas[0],
+		ModerationSwitch:         tableSchemas[0],
+		ModerationSwitchChange:   tableSchemas[0],
+		ModerationSwitchRequest:  tableSchemas[0],
+		Mute:                     tableSchemas[1],
+		QuickMessage:             tableSchemas[0],
+		Report:                   tableSchemas[0],
+		Sanction:                 tableSchemas[0],
+		SchoolSafetyNotification: tableSchemas[0],
+		SensitiveAllowlistEntry:  tableSchemas[0],
+		SensitiveCatalogVersion:  tableSchemas[0],
+		SensitiveTerm:            tableSchemas[0],
+		SensitiveTermCategory:    tableSchemas[0],
+		TenantCategorySetting:    tableSchemas[0],
 	}
 	tableSchemas = [...]string{"chat", "social"}
 )

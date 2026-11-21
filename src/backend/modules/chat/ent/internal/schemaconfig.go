@@ -7,24 +7,29 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	Block                   string // Block table.
-	Channel                 string // Channel table.
-	ChannelMember           string // ChannelMember table.
-	ChatPolicy              string // ChatPolicy table.
-	FriendCode              string // FriendCode table.
-	FriendRequest           string // FriendRequest table.
-	Friendship              string // Friendship table.
-	ModerationSwitch        string // ModerationSwitch table.
-	ModerationSwitchChange  string // ModerationSwitchChange table.
-	ModerationSwitchRequest string // ModerationSwitchRequest table.
-	Mute                    string // Mute table.
-	QuickMessage            string // QuickMessage table.
-	Sanction                string // Sanction table.
-	SensitiveAllowlistEntry string // SensitiveAllowlistEntry table.
-	SensitiveCatalogVersion string // SensitiveCatalogVersion table.
-	SensitiveTerm           string // SensitiveTerm table.
-	SensitiveTermCategory   string // SensitiveTermCategory table.
-	TenantCategorySetting   string // TenantCategorySetting table.
+	Block                    string // Block table.
+	Channel                  string // Channel table.
+	ChannelMember            string // ChannelMember table.
+	ChatPolicy               string // ChatPolicy table.
+	FriendCode               string // FriendCode table.
+	FriendRequest            string // FriendRequest table.
+	Friendship               string // Friendship table.
+	ModerationAction         string // ModerationAction table.
+	ModerationCase           string // ModerationCase table.
+	ModerationEvidence       string // ModerationEvidence table.
+	ModerationSwitch         string // ModerationSwitch table.
+	ModerationSwitchChange   string // ModerationSwitchChange table.
+	ModerationSwitchRequest  string // ModerationSwitchRequest table.
+	Mute                     string // Mute table.
+	QuickMessage             string // QuickMessage table.
+	Report                   string // Report table.
+	Sanction                 string // Sanction table.
+	SchoolSafetyNotification string // SchoolSafetyNotification table.
+	SensitiveAllowlistEntry  string // SensitiveAllowlistEntry table.
+	SensitiveCatalogVersion  string // SensitiveCatalogVersion table.
+	SensitiveTerm            string // SensitiveTerm table.
+	SensitiveTermCategory    string // SensitiveTermCategory table.
+	TenantCategorySetting    string // TenantCategorySetting table.
 }
 
 type schemaCtxKey struct{}

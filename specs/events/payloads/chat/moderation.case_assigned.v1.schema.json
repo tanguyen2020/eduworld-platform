@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/moderation.case_assigned.v1.schema.json",
+  "title": "Payload moderation.case_assigned v1 (module chat, owner F121)",
+  "description": "Case được nhận hoặc gán cho một safety_moderator (assignModerationCase, F121-AC-08). Chỉ mã định danh (R14). Consumer: NTF (người được gán), identity (email gọi trực P1, F124), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "tenant_id",
+    "severity",
+    "assignee_moderator_id",
+    "assigned_via",
+    "assigned_at"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "severity": {
+      "enum": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    "assignee_moderator_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "assigned_via": {
+      "enum": [
+        "manual",
+        "rotation"
+      ]
+    },
+    "assigned_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "severity": "p1",
+      "assignee_moderator_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000aa",
+      "assigned_via": "manual",
+      "assigned_at": "2026-11-21T08:40:00.000Z"
+    }
+  ]
+}

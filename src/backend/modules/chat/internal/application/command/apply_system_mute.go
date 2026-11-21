@@ -90,11 +90,9 @@ func (h ApplySystemMute) Mute(ctx context.Context, tenant uuid.UUID, school *uui
 		if err := h.Repo.Insert(ctx, s); err != nil {
 			return err
 		}
-		payload := map[string]any{"tenant_id": tenant, "sanction_id": s.ID, "user_id": user, "type": s.Type, "scope": s.Scope,
-			"reason": reason, "issued_by": nil, "starts_at": now, "ends_at": nil}
-		if s.EndsAt != nil {
-			payload["ends_at"] = *s.EndsAt
-		}
+		// sanction.applied v1 (EVENT_DESIGN §4.9; schema extended by F121): the reason code, never an internal reason.
+		payload := sanctionAppliedPayload(write.SafetySanction{ID: s.ID, TenantID: tenant, UserID: user, Type: s.Type, Scope: s.Scope,
+			ReasonCode: reason, IssuedByKind: "system", StartsAt: now, EndsAt: s.EndsAt})
 		t := tenant
 		if err := h.Events.Publish(ctx, write.Event{Type: EventSanctionApplied, SubjectType: "chat_sanction", SubjectID: s.ID.String(),
 			PartitionKey: user.String(), TenantID: &t, OccurredAt: now, Payload: payload}); err != nil {
@@ -128,7 +126,7 @@ func (h ApplySystemMute) Mute(ctx context.Context, tenant uuid.UUID, school *uui
 		slog.WarnContext(ctx, "chat: sanction cache not cleared", "error", cerr)
 	}
 	if h.Push != nil {
-		p := map[string]any{"sanction_type": "mute"}
+		p := map[string]any{"sanction_type": "mute", "reason_code": reason}
 		if s.EndsAt != nil {
 			p["until"] = s.EndsAt.UnixMilli()
 		}

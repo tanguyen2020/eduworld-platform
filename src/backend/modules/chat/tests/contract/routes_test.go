@@ -90,8 +90,8 @@ func TestOperationsMatchSpec(t *testing.T) {
 		}
 	}
 	// 14 social operations (F095), 3 chat (F115), listQuickMessages (F116 US4), 21 catalogue operations (F116 US2),
-	// 4 moderation switch operations (F116 US3).
-	if len(found) != len(chathttp.Operations) || len(found) != 43 {
+	// 4 moderation switch operations (F116 US3), 13 Safety Team operations (F121).
+	if len(found) != len(chathttp.Operations) || len(found) != 56 {
 		t.Fatalf("chat operations found in the spec: %d of %d: %v", len(found), len(chathttp.Operations), found)
 	}
 	// F116-AC-18: the catalogue and switch administration is internal-gateway only (x-internal, /admin/), except the
@@ -120,6 +120,63 @@ func TestOperationsMatchSpec(t *testing.T) {
 		if chathttp.Operations[id].Guard&httpx.GuardGamePlayer == 0 {
 			t.Errorf("%s: player operation without game_player", id)
 		}
+	}
+}
+
+// F121-AC-09, AC-25: the Safety Team operations are internal-gateway only (x-internal, /admin/moderation/ or
+// /admin/safety/), never player routes; the school routes are /tenant/safety/ (portal staff); createReport is the only
+// player route (game_player).
+func TestSafetyOperations(t *testing.T) {
+	doc := spec(t)
+	for _, id := range chathttp.SafetyOperations {
+		o := chathttp.Operations[id]
+		switch {
+		case id == "createReport":
+			if o.Guard&httpx.GuardGamePlayer == 0 || o.Pattern != "/chat/reports" {
+				t.Errorf("%s: player route with game_player", id)
+			}
+		case strings.HasPrefix(o.Pattern, "/tenant/safety/"):
+			if o.Guard&httpx.GuardGamePlayer != 0 {
+				t.Errorf("%s: a school route is never a player route", id)
+			}
+		default:
+			if o.Guard&httpx.GuardGamePlayer != 0 || (!strings.HasPrefix(o.Pattern, "/admin/moderation/") && !strings.HasPrefix(o.Pattern, "/admin/safety/")) {
+				t.Errorf("%s: %s must be under /admin/moderation/ or /admin/safety/", id, o.Pattern)
+			}
+			pi := doc.Paths.Find(o.Pattern)
+			if pi == nil || pi.GetOperation(o.Method) == nil {
+				t.Errorf("%s: not in the spec", id)
+				continue
+			}
+			if internal, _ := pi.GetOperation(o.Method).Extensions["x-internal"].(bool); !internal {
+				t.Errorf("%s: must be x-internal (internal gateway only, AGENTS R20)", id)
+			}
+		}
+	}
+}
+
+// F121-AC-25 (TC-CHAT-009, AC-MOD-007): no operation reads or searches chat messages outside a channel the caller belongs
+// to or the context of a moderation case: every chat operation exposing messages is in this closed list.
+func TestNoChatBrowsing(t *testing.T) {
+	allowed := map[string]bool{"listChannelMessages": true, "sendChannelMessage": true, "listQuickMessages": true, "pinMessage": true,
+		"unpinMessage": true, "getMessageReceipts": true, "editMessage": true, "recallMessage": true, "forwardMessage": true,
+		"searchMessages":             true, // member channels only (F120): tenant, membership, deleted_at, recalled_at
+		"listModerationCaseMessages": true} // the case only, assignee or team lead, audited (F121)
+	doc := spec(t)
+	for path, item := range doc.Paths.Map() {
+		for method, op := range item.Operations() {
+			if svc, _ := op.Extensions["x-service"].(string); svc != "chat" {
+				continue
+			}
+			lower := strings.ToLower(op.OperationID + " " + path)
+			if (strings.Contains(lower, "message") || strings.Contains(lower, "search")) && !allowed[op.OperationID] &&
+				!strings.Contains(lower, "quick") {
+				t.Errorf("%s %s (%s): message read/search outside the closed list", method, path, op.OperationID)
+			}
+		}
+	}
+	if o := chathttp.Operations["listModerationCaseMessages"]; !strings.HasPrefix(o.Pattern, "/admin/moderation/cases/{case_id}/") {
+		t.Errorf("case messages must be scoped to one case: %s", o.Pattern)
 	}
 }
 

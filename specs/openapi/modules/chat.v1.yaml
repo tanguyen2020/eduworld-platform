@@ -567,6 +567,7 @@ paths:
                 required:
                   - report_id
                   - status
+                  - message
                 properties:
                   report_id:
                     $ref: '#/components/schemas/Uuid'
@@ -574,6 +575,10 @@ paths:
                     type: string
                     enum:
                       - open
+                  message:
+                    type: string
+                    maxLength: 255
+                    description: Lời cảm ơn theo Accept-Language (không tiết lộ danh tính người báo cáo)
           headers:
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
@@ -581,6 +586,12 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /social/friends:
     get:
       x-service: chat
@@ -2728,8 +2739,9 @@ paths:
                 properties:
                   data:
                     type: array
+                    maxItems: 500
                     items:
-                      $ref: '#/components/schemas/Message'
+                      $ref: '#/components/schemas/ModerationCaseMessage'
                   page:
                     $ref: '#/components/schemas/PageInfo'
         '401':
@@ -4933,15 +4945,28 @@ components:
         reason:
           type: string
           enum:
-            - bad_words
+            - rude_language
             - bullying
-            - personal_info
+            - asked_personal_info
             - spam
-            - inappropriate
+            - inappropriate_content
+            - cheating
             - other
+          description: MODERATION §5 (chọn bằng icon cho lớp 1–5)
         note:
           type: string
           maxLength: 500
+        context:
+          type: object
+          additionalProperties: false
+          description: Ngữ cảnh báo cáo (MODERATION §5) — channel (bắt buộc khi target_type = user và báo cáo từ một cuộc trò chuyện), trận hoặc party
+          properties:
+            channel_id:
+              $ref: '#/components/schemas/Uuid'
+            match_id:
+              $ref: '#/components/schemas/Uuid'
+            party_id:
+              $ref: '#/components/schemas/Uuid'
     FriendRequest:
       type: object
       required:
@@ -5922,12 +5947,13 @@ components:
           minimum: 0
     ModerationCaseStatus:
       type: string
+      description: Trạng thái case theo MODERATION §6.2
       enum:
         - open
-        - in_progress
+        - in_review
         - escalated
         - resolved
-        - dismissed
+        - reopened
     ModerationCase:
       type: object
       required:
@@ -5959,19 +5985,52 @@ components:
         category_code:
           type: string
           maxLength: 64
+        target_type:
+          type: string
+          enum:
+            - message
+            - user
+        target_id:
+          $ref: '#/components/schemas/Uuid'
+        channel_id:
+          $ref: '#/components/schemas/Uuid'
         channel_type:
           $ref: '#/components/schemas/ChannelType'
+        school_ids:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Uuid'
         assignee_moderator_id:
           $ref: '#/components/schemas/Uuid'
         report_count:
           type: integer
           minimum: 0
+        first_response_due_at:
+          $ref: '#/components/schemas/Timestamp'
         sla_due_at:
           $ref: '#/components/schemas/Timestamp'
         school_notified_at:
           $ref: '#/components/schemas/Timestamp'
         school_ack_at:
           $ref: '#/components/schemas/Timestamp'
+        contact_path:
+          type: string
+          enum:
+            - school
+            - platform_direct
+        contact_outcome:
+          type: string
+          enum:
+            - parent_contacted
+            - unable_to_contact
+            - not_needed
+        resolved_at:
+          $ref: '#/components/schemas/Timestamp'
+        version:
+          type: integer
+          minimum: 1
+          description: Giá trị If-Match của actOnModerationCase (ETag W/"<version>")
         created_at:
           $ref: '#/components/schemas/Timestamp'
         updated_at:
@@ -5998,7 +6057,7 @@ components:
                 type: object
                 required:
                   - action
-                  - actor_id
+                  - actor_kind
                   - at
                 properties:
                   action:
@@ -6006,11 +6065,76 @@ components:
                     maxLength: 32
                   actor_id:
                     $ref: '#/components/schemas/Uuid'
+                  actor_kind:
+                    type: string
+                    enum:
+                      - moderator
+                      - system
                   note:
                     type: string
                     maxLength: 1000
+                  sanction_id:
+                    $ref: '#/components/schemas/Uuid'
+                  message_id:
+                    $ref: '#/components/schemas/Uuid'
                   at:
                     $ref: '#/components/schemas/Timestamp'
+            reports:
+              type: array
+              maxItems: 100
+              description: Báo cáo đã gộp vào case (người báo cáo chỉ hiển thị cho Safety Team, không bao giờ cho người bị báo cáo)
+              items:
+                type: object
+                required:
+                  - report_id
+                  - reporter_id
+                  - reason
+                  - status
+                  - created_at
+                properties:
+                  report_id:
+                    $ref: '#/components/schemas/Uuid'
+                  reporter_id:
+                    $ref: '#/components/schemas/Uuid'
+                  reason:
+                    type: string
+                    enum:
+                      - rude_language
+                      - bullying
+                      - asked_personal_info
+                      - spam
+                      - inappropriate_content
+                      - cheating
+                      - other
+                  note:
+                    type: string
+                    maxLength: 500
+                  status:
+                    type: string
+                    enum:
+                      - open
+                      - linked
+                      - dismissed
+                  created_at:
+                    $ref: '#/components/schemas/Timestamp'
+            evidence:
+              type: array
+              maxItems: 50
+              description: Bản bằng chứng bất biến (moderation_evidence); nội dung xem qua listModerationCaseMessages
+              items:
+                type: object
+                required:
+                  - evidence_id
+                  - created_at
+                properties:
+                  evidence_id:
+                    $ref: '#/components/schemas/Uuid'
+                  created_at:
+                    $ref: '#/components/schemas/Timestamp'
+            support_guide:
+              type: string
+              maxLength: 64
+              description: Mã hướng dẫn hỗ trợ cho moderator khi case liên quan tự hại (child_protection_111, CHILD_SAFETY §8)
             school_notifications:
               type: array
               maxItems: 20
@@ -6088,6 +6212,96 @@ components:
         ack_note:
           type: string
           maxLength: 500
+        reminder_count:
+          type: integer
+          minimum: 0
+          description: Số lần job school-notification-reminder đã nhắc lại (quá ack_due_at)
+        last_reminded_at:
+          $ref: '#/components/schemas/Timestamp'
+    ModerationCaseMessage:
+      type: object
+      description: Một tin trong snapshot bằng chứng hoặc ±200 tin ngữ cảnh của case (MODERATION §6.1) — chỉ người được gán và trưởng ca; mỗi lần xem ghi audit
+      required:
+        - message_id
+        - channel_id
+        - sender_id
+        - kind
+        - moderation_state
+        - created_at
+        - in_snapshot
+      properties:
+        message_id:
+          $ref: '#/components/schemas/Uuid'
+        channel_id:
+          $ref: '#/components/schemas/Uuid'
+        channel_type:
+          $ref: '#/components/schemas/ChannelType'
+        seq:
+          type: integer
+          minimum: 1
+        sender_id:
+          $ref: '#/components/schemas/Uuid'
+        sender_nickname:
+          type: string
+          maxLength: 32
+        sender_school_id:
+          $ref: '#/components/schemas/Uuid'
+        kind:
+          type: string
+          enum:
+            - text
+            - emoji
+            - quick
+            - sticker
+            - gif
+            - system
+        body:
+          type: string
+          maxLength: 1000
+          description: Nội dung gốc (bằng chứng)
+        body_display:
+          type: string
+          maxLength: 1000
+        quick_message_id:
+          type: string
+          maxLength: 64
+        revision:
+          type: integer
+          minimum: 1
+        revisions:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required:
+              - revision
+            properties:
+              revision:
+                type: integer
+                minimum: 1
+              body:
+                type: string
+                maxLength: 1000
+              decision:
+                type: string
+                maxLength: 64
+              edited_at:
+                $ref: '#/components/schemas/Timestamp'
+        moderation_state:
+          type: string
+          enum:
+            - allowed
+            - masked
+            - unchecked
+            - held
+            - removed
+        recalled_at:
+          $ref: '#/components/schemas/Timestamp'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        in_snapshot:
+          type: boolean
+          description: true khi tin thuộc snapshot bằng chứng đã lưu
     ModerationActionRequest:
       type: object
       required:
@@ -6105,10 +6319,20 @@ components:
             - escalate
             - dismiss
             - close
+            - reopen
         target_user_id:
           $ref: '#/components/schemas/Uuid'
         message_id:
           $ref: '#/components/schemas/Uuid'
+        sanction_type:
+          type: string
+          enum:
+            - restrict_text
+            - restrict_dm
+            - restrict_multiplayer
+            - restrict_competition
+            - account_lock
+          description: Bắt buộc khi action = restrict (MODERATION §7)
         duration_minutes:
           type: integer
           minimum: 1
@@ -6139,27 +6363,66 @@ components:
           maxLength: 1000
           description: Tóm tắt theo mẫu — không chép nội dung chat
     Sanction:
-      allOf:
-        - $ref: '#/components/schemas/SanctionCreate'
-        - type: object
-          required:
-            - sanction_id
-            - tenant_id
-            - starts_at
-            - created_by
+      type: object
+      required:
+        - sanction_id
+        - tenant_id
+        - user_id
+        - sanction_type
+        - issued_by_kind
+        - starts_at
+      properties:
+        sanction_id:
+          $ref: '#/components/schemas/Uuid'
+        tenant_id:
+          $ref: '#/components/schemas/Uuid'
+        user_id:
+          $ref: '#/components/schemas/Uuid'
+        case_id:
+          $ref: '#/components/schemas/Uuid'
+        sanction_type:
+          $ref: '#/components/schemas/SanctionType'
+        scope:
+          type: object
           properties:
-            sanction_id:
+            channel_id:
               $ref: '#/components/schemas/Uuid'
-            tenant_id:
-              $ref: '#/components/schemas/Uuid'
-            starts_at:
-              $ref: '#/components/schemas/Timestamp'
-            ends_at:
-              $ref: '#/components/schemas/Timestamp'
-            revoked_at:
-              $ref: '#/components/schemas/Timestamp'
-            created_by:
-              $ref: '#/components/schemas/Uuid'
+        reason:
+          type: string
+          maxLength: 1000
+        reason_code:
+          type: string
+          maxLength: 64
+          description: Mã thông điệp hiển thị cho học sinh (ui.sanction.<code>)
+        issued_by_kind:
+          type: string
+          enum:
+            - system
+            - moderator
+        starts_at:
+          $ref: '#/components/schemas/Timestamp'
+        ends_at:
+          $ref: '#/components/schemas/Timestamp'
+        revoked_at:
+          $ref: '#/components/schemas/Timestamp'
+        revoked_by:
+          $ref: '#/components/schemas/Uuid'
+        revoke_reason:
+          type: string
+          maxLength: 1000
+        created_by:
+          $ref: '#/components/schemas/Uuid'
+    SanctionType:
+      type: string
+      description: MODERATION §7
+      enum:
+        - warning
+        - mute
+        - restrict_text
+        - restrict_dm
+        - restrict_multiplayer
+        - restrict_competition
+        - account_lock
     SanctionCreate:
       type: object
       required:
@@ -6173,21 +6436,24 @@ components:
         case_id:
           $ref: '#/components/schemas/Uuid'
         sanction_type:
-          type: string
-          enum:
-            - warning
-            - mute
-            - restrict_social
-            - restrict_multiplayer
-            - suspend_chat
+          $ref: '#/components/schemas/SanctionType'
         duration_minutes:
           type: integer
           minimum: 1
           maximum: 525600
+          description: Mặc định theo MODERATION §7 khi bỏ trống
         reason:
           type: string
           minLength: 3
           maxLength: 1000
+          description: Lý do nội bộ của Safety Team (không gửi cho học sinh)
+        scope:
+          type: object
+          additionalProperties: false
+          description: Bỏ trống = mọi channel; channel_id chỉ cho mute
+          properties:
+            channel_id:
+              $ref: '#/components/schemas/Uuid'
     ReasonRequest:
       type: object
       required:

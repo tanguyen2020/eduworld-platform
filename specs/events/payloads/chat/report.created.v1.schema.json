@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/report.created.v1.schema.json",
+  "title": "Payload report.created v1 (module chat, owner F121)",
+  "description": "Học sinh tạo báo cáo (createReport, F121-AC-02); report đã gắn vào case (mới hoặc gộp trong 24 giờ). Không có danh tính người báo cáo, ghi chú hay nội dung tin (R14, MODERATION §5). Consumer: MOD queue, NTF (safety_moderator), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "report_id",
+    "case_id",
+    "target_type",
+    "target_id",
+    "reason",
+    "severity",
+    "created_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "report_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "target_type": {
+      "enum": [
+        "message",
+        "user"
+      ]
+    },
+    "target_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason": {
+      "enum": [
+        "rude_language",
+        "bullying",
+        "asked_personal_info",
+        "spam",
+        "inappropriate_content",
+        "cheating",
+        "other"
+      ]
+    },
+    "severity": {
+      "enum": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    "merged": {
+      "type": "boolean",
+      "description": "true khi gộp vào case đang mở"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "report_id": "0193a6c1-0000-7000-8000-000000000006",
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "target_type": "message",
+      "target_id": "0193a6b2-0000-7000-8000-000000000010",
+      "reason": "asked_personal_info",
+      "severity": "p1",
+      "merged": false,
+      "created_at": "2026-11-21T08:30:12.345Z"
+    }
+  ]
+}

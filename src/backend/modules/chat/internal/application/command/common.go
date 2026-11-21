@@ -36,6 +36,11 @@ const (
 	AuditUserUnmuted       = "social.user_unmuted"
 )
 
+// HoldChecker reports an active safety hold of a student (case_hold or block_and_alert_hold, MODERATION §6.3).
+type HoldChecker interface {
+	Held(ctx context.Context, tenant, user uuid.UUID) (bool, error)
+}
+
 // RetryAfter wraps a 429 problem with the delay of the Retry-After header.
 type RetryAfter struct {
 	Err   error
@@ -57,8 +62,10 @@ type Social struct {
 	Codes       port.CodeGenerator
 	Friends     port.FriendCache // nil: no cache
 	Metrics     port.Metrics     // nil: no metrics
-	Config      SocialConfig
-	Now         func() time.Time
+	// Holds reports a temporary safety hold of the sender (F121-AC-04: no new friend request while held); nil: none.
+	Holds  HoldChecker
+	Config SocialConfig
+	Now    func() time.Time
 }
 
 func (h Social) now() time.Time {

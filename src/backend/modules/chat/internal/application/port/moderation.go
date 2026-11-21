@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/safety"
 )
 
 // SpamWindow is the Valkey state of the spam step (MODERATION §3.4; VALKEY_DESIGN ew:chat:spam:*): fingerprints only,
@@ -37,6 +38,17 @@ func (s Sanction) Applies(channel uuid.UUID, now time.Time) bool {
 		return false
 	}
 	return s.Scope == "all" || (s.ChannelID != nil && *s.ChannelID == channel)
+}
+
+// Refusal returns the problem code refusing a message of kind in channel (of channelType) at now, "" when the
+// sanction does not restrict it: mute → CHAT_MUTED, restrict_text → CHAT_KIND_NOT_ALLOWED (quick messages only),
+// restrict_dm → CHAT_NOT_ALLOWED in direct channels (F121-AC-14, MODERATION §7). Whatever the switches.
+func (s Sanction) Refusal(channel uuid.UUID, kind, channelType string, now time.Time) string {
+	if s.EndsAt != nil && !now.Before(*s.EndsAt) {
+		return ""
+	}
+	scope := s.Scope == "all" || (s.ChannelID != nil && *s.ChannelID == channel)
+	return string(safety.Refuse(s.Type, scope, kind, channelType))
 }
 
 // SanctionCache is ew:chat:sanction:<user_id> (TTL = ends_at): the active mutes of a user, rebuilt from PostgreSQL.

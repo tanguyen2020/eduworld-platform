@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/moderation.school_acknowledged.v1.schema.json",
+  "title": "Payload moderation.school_acknowledged v1 (module chat, owner F121)",
+  "description": "Nhà trường xác nhận đã liên hệ phụ huynh (acknowledgeSchoolSafetyNotification, F121-AC-19). Không chứa ghi chú (R14). Consumer: NTF (assignee_moderator_id), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "notification_id",
+    "case_id",
+    "tenant_id",
+    "school_id",
+    "school_ack_at",
+    "acknowledged_by",
+    "contact_outcome"
+  ],
+  "properties": {
+    "notification_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_ack_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "acknowledged_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "contact_outcome": {
+      "enum": [
+        "parent_contacted",
+        "unable_to_contact",
+        "not_needed"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "notification_id": "0193a6c1-0000-7000-8000-000000000007",
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009",
+      "school_ack_at": "2026-11-21T15:00:00.000Z",
+      "acknowledged_by": "0193a5f4-6c1e-7b2a-9d1f-0000000000bb",
+      "contact_outcome": "parent_contacted"
+    }
+  ]
+}

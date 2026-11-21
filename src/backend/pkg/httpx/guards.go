@@ -43,7 +43,7 @@ func (s *Server) guards(g Guard, next http.Handler) http.Handler {
 				return
 			}
 			if !p.MFA {
-				WriteError(w, r, problem.New(problem.MfaRequired, ""))
+				deny(problem.MfaRequired, "mfa") // audited like every other guard denial (F121-AC-10, ADR-0027)
 				return
 			}
 		}

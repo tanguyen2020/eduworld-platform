@@ -100,7 +100,7 @@ func TestModerationDecisions(t *testing.T) {
 		AND reason = 'block_and_alert_hold' AND ends_at IS NULL AND issued_by IS NULL`, an.id); n != 1 {
 		t.Fatalf("system mute rows %d", n)
 	}
-	if ev := c.events("sanction.applied"); len(ev) != 1 || ev[0]["reason"] != "block_and_alert_hold" {
+	if ev := c.events("sanction.applied"); len(ev) != 1 || ev[0]["reason_code"] != "block_and_alert_hold" {
 		t.Fatalf("sanction.applied: %v", ev)
 	}
 	if next(anInbox, "chat.sanction.applied", 3*time.Second) == nil {

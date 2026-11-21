@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/moderation.school_notified.v1.schema.json",
+  "title": "Payload moderation.school_notified v1 (module chat, owner F121)",
+  "description": "Safety Team gửi thông báo vụ việc cho một trường (notifySchoolForCase, F121-AC-17, MODERATION §6.4). KHÔNG chứa nội dung chat thô, tên học sinh hay văn bản tóm tắt (R14); tenant common không phát. Consumer: identity (email không nội dung cho school_admin, F124), NTF, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "notification_id",
+    "case_id",
+    "tenant_id",
+    "school_id",
+    "severity",
+    "school_notified_at",
+    "ack_due_at"
+  ],
+  "properties": {
+    "notification_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "severity": {
+      "enum": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    "category_code": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64
+    },
+    "school_notified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ack_due_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "notification_id": "0193a6c1-0000-7000-8000-000000000007",
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009",
+      "severity": "p1",
+      "category_code": "asked_personal_info",
+      "school_notified_at": "2026-11-21T09:00:00.000Z",
+      "ack_due_at": "2026-11-22T09:00:00.000Z"
+    }
+  ]
+}

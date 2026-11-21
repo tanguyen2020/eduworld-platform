@@ -95,6 +95,12 @@ func (r Recent) Push(ctx context.Context, e message.Envelope) error {
 	return nil
 }
 
+// Drop deletes the recent buffer of a channel (a message removed by the Safety Team is never served from Valkey;
+// the next history read falls back to PostgreSQL).
+func (r Recent) Drop(ctx context.Context, channel uuid.UUID) error {
+	return r.C.Do(ctx, r.C.B().Del().Key(recentKey(channel)).Build()).Error()
+}
+
 // List implements port.RecentBuffer (invalid entries are skipped).
 func (r Recent) List(ctx context.Context, channel uuid.UUID) ([]message.Envelope, error) {
 	vals, err := r.C.Do(ctx, r.C.B().Lrange().Key(recentKey(channel)).Start(0).Stop(int64(r.Size-1)).Build()).AsStrSlice()

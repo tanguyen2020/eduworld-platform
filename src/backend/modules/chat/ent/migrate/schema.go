@@ -292,6 +292,126 @@ var (
 			},
 		},
 	}
+	// ModerationActionsColumns holds the columns for the "moderation_actions" table.
+	ModerationActionsColumns = []*schema.Column{
+		{Name: "action_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "case_id", Type: field.TypeUUID},
+		{Name: "action", Type: field.TypeString, Size: 32},
+		{Name: "actor_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "actor_kind", Type: field.TypeString, Size: 16},
+		{Name: "note", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "sanction_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "message_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// ModerationActionsTable holds the schema information for the "moderation_actions" table.
+	ModerationActionsTable = &schema.Table{
+		Name:       "moderation_actions",
+		Columns:    ModerationActionsColumns,
+		PrimaryKey: []*schema.Column{ModerationActionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "moderation_actions_case_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationActionsColumns[4], ModerationActionsColumns[2]},
+			},
+		},
+	}
+	// ModerationCasesColumns holds the columns for the "moderation_cases" table.
+	ModerationCasesColumns = []*schema.Column{
+		{Name: "case_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_ids", Type: field.TypeJSON},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "open"},
+		{Name: "severity", Type: field.TypeString, Size: 4},
+		{Name: "source", Type: field.TypeString, Size: 32},
+		{Name: "category_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "channel_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "channel_type", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "target_type", Type: field.TypeString, Size: 16},
+		{Name: "target_id", Type: field.TypeUUID},
+		{Name: "subject_user_ids", Type: field.TypeJSON},
+		{Name: "assignee_moderator_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "assigned_via", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "report_count", Type: field.TypeInt, Default: 0},
+		{Name: "first_response_due_at", Type: field.TypeTime},
+		{Name: "sla_due_at", Type: field.TypeTime},
+		{Name: "first_response_at", Type: field.TypeTime, Nullable: true},
+		{Name: "escalated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "hold_sanction_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "school_notified_at", Type: field.TypeTime, Nullable: true},
+		{Name: "school_ack_at", Type: field.TypeTime, Nullable: true},
+		{Name: "acknowledged_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "contact_outcome", Type: field.TypeString, Nullable: true, Size: 32},
+		{Name: "contact_path", Type: field.TypeString, Size: 32, Default: "school"},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "source_event_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// ModerationCasesTable holds the schema information for the "moderation_cases" table.
+	ModerationCasesTable = &schema.Table{
+		Name:       "moderation_cases",
+		Columns:    ModerationCasesColumns,
+		PrimaryKey: []*schema.Column{ModerationCasesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "moderation_cases_queue_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationCasesColumns[11], ModerationCasesColumns[12], ModerationCasesColumns[24]},
+			},
+			{
+				Name:    "moderation_cases_target_open_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationCasesColumns[1], ModerationCasesColumns[17], ModerationCasesColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status IN ('open','in_review') AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "moderation_cases_source_event_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ModerationCasesColumns[34]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "source_event_id IS NOT NULL",
+				},
+			},
+		},
+	}
+	// ModerationEvidenceColumns holds the columns for the "moderation_evidence" table.
+	ModerationEvidenceColumns = []*schema.Column{
+		{Name: "evidence_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "case_id", Type: field.TypeUUID},
+		{Name: "report_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "channel_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "snapshot", Type: field.TypeJSON},
+		{Name: "sha256", Type: field.TypeString, Size: 64},
+	}
+	// ModerationEvidenceTable holds the schema information for the "moderation_evidence" table.
+	ModerationEvidenceTable = &schema.Table{
+		Name:       "moderation_evidence",
+		Columns:    ModerationEvidenceColumns,
+		PrimaryKey: []*schema.Column{ModerationEvidenceColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "moderation_evidence_case_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationEvidenceColumns[4], ModerationEvidenceColumns[2]},
+			},
+		},
+	}
 	// ModerationSwitchesColumns holds the columns for the "moderation_switches" table.
 	ModerationSwitchesColumns = []*schema.Column{
 		{Name: "switch_id", Type: field.TypeUUID},
@@ -450,6 +570,57 @@ var (
 		Columns:    QuickMessagesColumns,
 		PrimaryKey: []*schema.Column{QuickMessagesColumns[0]},
 	}
+	// ReportsColumns holds the columns for the "reports" table.
+	ReportsColumns = []*schema.Column{
+		{Name: "report_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reporter_id", Type: field.TypeUUID},
+		{Name: "target_type", Type: field.TypeString, Size: 16},
+		{Name: "target_id", Type: field.TypeUUID},
+		{Name: "target_user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reason", Type: field.TypeString, Size: 32},
+		{Name: "note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "context", Type: field.TypeJSON, Nullable: true},
+		{Name: "case_id", Type: field.TypeUUID},
+		{Name: "weight", Type: field.TypeFloat64, Default: 1, SchemaType: map[string]string{"postgres": "numeric(3,2)"}},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "open"},
+		{Name: "evidence_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// ReportsTable holds the schema information for the "reports" table.
+	ReportsTable = &schema.Table{
+		Name:       "reports",
+		Columns:    ReportsColumns,
+		PrimaryKey: []*schema.Column{ReportsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "reports_target_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ReportsColumns[1], ReportsColumns[12], ReportsColumns[13], ReportsColumns[2]},
+			},
+			{
+				Name:    "reports_reporter_case_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ReportsColumns[11], ReportsColumns[12], ReportsColumns[13], ReportsColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "reports_case_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ReportsColumns[18]},
+			},
+		},
+	}
 	// SanctionsColumns holds the columns for the "sanctions" table.
 	SanctionsColumns = []*schema.Column{
 		{Name: "sanction_id", Type: field.TypeUUID},
@@ -473,6 +644,11 @@ var (
 		{Name: "starts_at", Type: field.TypeTime},
 		{Name: "ends_at", Type: field.TypeTime, Nullable: true},
 		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "reason_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "issued_by_kind", Type: field.TypeString, Size: 16, Default: "system"},
+		{Name: "revoked_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "revoke_reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "lifted_at", Type: field.TypeTime, Nullable: true},
 	}
 	// SanctionsTable holds the schema information for the "sanctions" table.
 	SanctionsTable = &schema.Table{
@@ -487,6 +663,68 @@ var (
 				Annotation: &entsql.IndexAnnotation{
 					Where: "revoked_at IS NULL AND deleted_at IS NULL",
 				},
+			},
+			{
+				Name:    "sanctions_expiry_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SanctionsColumns[19]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "lifted_at IS NULL AND ends_at IS NOT NULL AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// SchoolSafetyNotificationsColumns holds the columns for the "school_safety_notifications" table.
+	SchoolSafetyNotificationsColumns = []*schema.Column{
+		{Name: "notification_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "case_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "severity", Type: field.TypeString, Size: 4},
+		{Name: "category_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "students", Type: field.TypeJSON},
+		{Name: "measures_taken", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "summary", Type: field.TypeString, Size: 1000},
+		{Name: "school_notified_at", Type: field.TypeTime},
+		{Name: "ack_due_at", Type: field.TypeTime},
+		{Name: "reminder_count", Type: field.TypeInt16, Default: 0},
+		{Name: "last_reminded_at", Type: field.TypeTime, Nullable: true},
+		{Name: "school_ack_at", Type: field.TypeTime, Nullable: true},
+		{Name: "acknowledged_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "contact_outcome", Type: field.TypeString, Nullable: true, Size: 32},
+		{Name: "ack_note", Type: field.TypeString, Nullable: true, Size: 500},
+	}
+	// SchoolSafetyNotificationsTable holds the schema information for the "school_safety_notifications" table.
+	SchoolSafetyNotificationsTable = &schema.Table{
+		Name:       "school_safety_notifications",
+		Columns:    SchoolSafetyNotificationsColumns,
+		PrimaryKey: []*schema.Column{SchoolSafetyNotificationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "school_safety_notifications_school_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SchoolSafetyNotificationsColumns[1], SchoolSafetyNotificationsColumns[11], SchoolSafetyNotificationsColumns[21]},
+			},
+			{
+				Name:    "school_safety_notifications_due_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SchoolSafetyNotificationsColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "school_ack_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "school_safety_notifications_case_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SchoolSafetyNotificationsColumns[10]},
 			},
 		},
 	}
@@ -647,12 +885,17 @@ var (
 		FriendCodesTable,
 		FriendRequestsTable,
 		FriendshipsTable,
+		ModerationActionsTable,
+		ModerationCasesTable,
+		ModerationEvidenceTable,
 		ModerationSwitchesTable,
 		ModerationSwitchChangesTable,
 		ModerationSwitchRequestsTable,
 		MutesTable,
 		QuickMessagesTable,
+		ReportsTable,
 		SanctionsTable,
+		SchoolSafetyNotificationsTable,
 		SensitiveAllowlistTable,
 		SensitiveCatalogVersionsTable,
 		SensitiveTermsTable,
@@ -683,6 +926,15 @@ func init() {
 	FriendshipsTable.Annotation = &entsql.Annotation{
 		Table: "friendships",
 	}
+	ModerationActionsTable.Annotation = &entsql.Annotation{
+		Table: "moderation_actions",
+	}
+	ModerationCasesTable.Annotation = &entsql.Annotation{
+		Table: "moderation_cases",
+	}
+	ModerationEvidenceTable.Annotation = &entsql.Annotation{
+		Table: "moderation_evidence",
+	}
 	ModerationSwitchesTable.Annotation = &entsql.Annotation{
 		Table: "moderation_switches",
 	}
@@ -698,8 +950,14 @@ func init() {
 	QuickMessagesTable.Annotation = &entsql.Annotation{
 		Table: "quick_messages",
 	}
+	ReportsTable.Annotation = &entsql.Annotation{
+		Table: "reports",
+	}
 	SanctionsTable.Annotation = &entsql.Annotation{
 		Table: "sanctions",
+	}
+	SchoolSafetyNotificationsTable.Annotation = &entsql.Annotation{
+		Table: "school_safety_notifications",
 	}
 	SensitiveAllowlistTable.Annotation = &entsql.Annotation{
 		Table: "sensitive_allowlist",

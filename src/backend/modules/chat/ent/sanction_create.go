@@ -253,6 +253,76 @@ func (_c *SanctionCreate) SetNillableRevokedAt(v *time.Time) *SanctionCreate {
 	return _c
 }
 
+// SetReasonCode sets the "reason_code" field.
+func (_c *SanctionCreate) SetReasonCode(v string) *SanctionCreate {
+	_c.mutation.SetReasonCode(v)
+	return _c
+}
+
+// SetNillableReasonCode sets the "reason_code" field if the given value is not nil.
+func (_c *SanctionCreate) SetNillableReasonCode(v *string) *SanctionCreate {
+	if v != nil {
+		_c.SetReasonCode(*v)
+	}
+	return _c
+}
+
+// SetIssuedByKind sets the "issued_by_kind" field.
+func (_c *SanctionCreate) SetIssuedByKind(v string) *SanctionCreate {
+	_c.mutation.SetIssuedByKind(v)
+	return _c
+}
+
+// SetNillableIssuedByKind sets the "issued_by_kind" field if the given value is not nil.
+func (_c *SanctionCreate) SetNillableIssuedByKind(v *string) *SanctionCreate {
+	if v != nil {
+		_c.SetIssuedByKind(*v)
+	}
+	return _c
+}
+
+// SetRevokedBy sets the "revoked_by" field.
+func (_c *SanctionCreate) SetRevokedBy(v uuid.UUID) *SanctionCreate {
+	_c.mutation.SetRevokedBy(v)
+	return _c
+}
+
+// SetNillableRevokedBy sets the "revoked_by" field if the given value is not nil.
+func (_c *SanctionCreate) SetNillableRevokedBy(v *uuid.UUID) *SanctionCreate {
+	if v != nil {
+		_c.SetRevokedBy(*v)
+	}
+	return _c
+}
+
+// SetRevokeReason sets the "revoke_reason" field.
+func (_c *SanctionCreate) SetRevokeReason(v string) *SanctionCreate {
+	_c.mutation.SetRevokeReason(v)
+	return _c
+}
+
+// SetNillableRevokeReason sets the "revoke_reason" field if the given value is not nil.
+func (_c *SanctionCreate) SetNillableRevokeReason(v *string) *SanctionCreate {
+	if v != nil {
+		_c.SetRevokeReason(*v)
+	}
+	return _c
+}
+
+// SetLiftedAt sets the "lifted_at" field.
+func (_c *SanctionCreate) SetLiftedAt(v time.Time) *SanctionCreate {
+	_c.mutation.SetLiftedAt(v)
+	return _c
+}
+
+// SetNillableLiftedAt sets the "lifted_at" field if the given value is not nil.
+func (_c *SanctionCreate) SetNillableLiftedAt(v *time.Time) *SanctionCreate {
+	if v != nil {
+		_c.SetLiftedAt(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *SanctionCreate) SetID(v uuid.UUID) *SanctionCreate {
 	_c.mutation.SetID(v)
@@ -322,6 +392,10 @@ func (_c *SanctionCreate) defaults() error {
 		v := sanction.DefaultVersion
 		_c.mutation.SetVersion(v)
 	}
+	if _, ok := _c.mutation.IssuedByKind(); !ok {
+		v := sanction.DefaultIssuedByKind
+		_c.mutation.SetIssuedByKind(v)
+	}
 	if _, ok := _c.mutation.ID(); !ok {
 		if sanction.DefaultID == nil {
 			return fmt.Errorf("ent: uninitialized sanction.DefaultID (forgotten import ent/runtime?)")
@@ -380,6 +454,24 @@ func (_c *SanctionCreate) check() error {
 	}
 	if _, ok := _c.mutation.StartsAt(); !ok {
 		return &ValidationError{Name: "starts_at", err: errors.New(`ent: missing required field "Sanction.starts_at"`)}
+	}
+	if v, ok := _c.mutation.ReasonCode(); ok {
+		if err := sanction.ReasonCodeValidator(v); err != nil {
+			return &ValidationError{Name: "reason_code", err: fmt.Errorf(`ent: validator failed for field "Sanction.reason_code": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.IssuedByKind(); !ok {
+		return &ValidationError{Name: "issued_by_kind", err: errors.New(`ent: missing required field "Sanction.issued_by_kind"`)}
+	}
+	if v, ok := _c.mutation.IssuedByKind(); ok {
+		if err := sanction.IssuedByKindValidator(v); err != nil {
+			return &ValidationError{Name: "issued_by_kind", err: fmt.Errorf(`ent: validator failed for field "Sanction.issued_by_kind": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.RevokeReason(); ok {
+		if err := sanction.RevokeReasonValidator(v); err != nil {
+			return &ValidationError{Name: "revoke_reason", err: fmt.Errorf(`ent: validator failed for field "Sanction.revoke_reason": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -496,6 +588,26 @@ func (_c *SanctionCreate) createSpec() (*Sanction, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.RevokedAt(); ok {
 		_spec.SetField(sanction.FieldRevokedAt, field.TypeTime, value)
 		_node.RevokedAt = &value
+	}
+	if value, ok := _c.mutation.ReasonCode(); ok {
+		_spec.SetField(sanction.FieldReasonCode, field.TypeString, value)
+		_node.ReasonCode = &value
+	}
+	if value, ok := _c.mutation.IssuedByKind(); ok {
+		_spec.SetField(sanction.FieldIssuedByKind, field.TypeString, value)
+		_node.IssuedByKind = value
+	}
+	if value, ok := _c.mutation.RevokedBy(); ok {
+		_spec.SetField(sanction.FieldRevokedBy, field.TypeUUID, value)
+		_node.RevokedBy = &value
+	}
+	if value, ok := _c.mutation.RevokeReason(); ok {
+		_spec.SetField(sanction.FieldRevokeReason, field.TypeString, value)
+		_node.RevokeReason = &value
+	}
+	if value, ok := _c.mutation.LiftedAt(); ok {
+		_spec.SetField(sanction.FieldLiftedAt, field.TypeTime, value)
+		_node.LiftedAt = &value
 	}
 	return _node, _spec
 }

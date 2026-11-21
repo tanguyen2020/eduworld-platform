@@ -1091,7 +1091,7 @@ Các TC ghi "(đổi — ADR-0072)" dùng tác nhân theo role hiện hành (§2
 | TC-CMS-CLN-03 | TA loại trừ học sinh khỏi đợt dọn | Học sinh không bị dọn ở lần chạy kế tiếp; audit |
 | TC-CMS-RET-01 | Đặt `gameplay_chat_retention_days = 2` | 422 `RETENTION_BELOW_MINIMUM` |
 | TC-CMS-GAME-01 | School Admin/TA dùng tài khoản portal đăng nhập game (đổi — ADR-0072) | `403 GAME_ACCESS_STUDENT_ONLY`; không có login event |
-| TC-CMS-SAF-01 | Safety Moderator (`sm.antoan`) liệt kê case không chọn tenant, mở tin nhắn của một case | Trả case mọi tenant; tin nhắn chỉ trong phạm vi case; audit `moderation_case.viewed`/`moderation_case.messages_viewed`; metric bypass tăng |
+| TC-CMS-SAF-01 | Safety Moderator (`sm.antoan`) liệt kê case không chọn tenant, mở tin nhắn của một case | Trả case mọi tenant; tin nhắn chỉ trong phạm vi case; audit `moderation.case.viewed`/`moderation.case.messages_viewed` (MODERATION §6.1); metric bypass tăng |
 | TC-CMS-SAF-02 | Safety Moderator gọi `GET /cms/learning/questions?tenant_ids=…`, `GET /lms/dashboards/school`, `GET /tenant/students/{id}/login-events` | 403 `PERMISSION_DENIED` (ngoài module moderation) |
 | TC-CMS-SAF-03 | School Admin gọi `GET /admin/moderation/cases/{id}/messages` hoặc mở thông báo an toàn | Không có route ở gateway public / 403; payload thông báo không có trường nội dung tin nhắn |
 | TC-CMS-SAF-04 | School Admin trường A xác nhận thông báo của trường B; xác nhận lần hai | 404 / 409 `CONFLICT`; lần đầu lưu thời điểm + người xác nhận, audit `school_notification.acknowledged` |

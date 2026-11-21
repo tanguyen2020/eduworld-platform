@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/report.resolved.v1.schema.json",
+  "title": "Payload report.resolved v1 (module chat, owner F121)",
+  "description": "Case của báo cáo đã xử lý xong (resolved): một event cho mỗi người báo cáo để module thông báo (F123) tạo thông báo moderation_notice 'Báo cáo của em đã được xử lý' — không có chi tiết hình phạt, không có danh tính người bị báo cáo (F121-AC-16, SOCIAL_SYSTEM §8, R16).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "report_id",
+    "case_id",
+    "reporter_id",
+    "kind",
+    "message_code",
+    "resolved_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "report_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reporter_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "kind": {
+      "const": "moderation_notice"
+    },
+    "message_code": {
+      "const": "moderation.report_handled"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "report_id": "0193a6c1-0000-7000-8000-000000000006",
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "reporter_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "kind": "moderation_notice",
+      "message_code": "moderation.report_handled",
+      "resolved_at": "2026-11-21T10:00:00.000Z"
+    }
+  ]
+}

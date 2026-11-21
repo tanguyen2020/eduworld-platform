@@ -298,7 +298,7 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 422 | `CHAT_MENTION_LIMIT` | Hơn 5 mention trong một tin. Mention người không phải thành viên hoặc đã block **không** lỗi: server loại mention đó khỏi tin ([CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md)) |
 | 503 | `CHAT_TEMPORARILY_UNAVAILABLE` | NATS JetStream hoặc cấp `seq` không sẵn sàng; client thử lại (ADR-0035) — có `Retry-After` |
 | 403 | `CHAT_FEATURE_DISABLED` | Tính năng (pin/typing/receipts/forward/search…) không bật cho loại channel này (§7.1 CHAT_SYSTEM) |
-| 409 | `MODERATION_CASE_CLOSED` | Xử lý, gán hoặc gửi thông báo trường cho case đã `resolved`/`dismissed` ([MODERATION](../03-social-multiplayer/MODERATION.md)) |
+| 409 | `MODERATION_CASE_CLOSED` | Xử lý (trừ `reopen`), gán hoặc áp sanction gắn case đã `resolved` ([MODERATION §6.2](../03-social-multiplayer/MODERATION.md)) |
 | 422 | `CHAT_ASSET_NOT_AVAILABLE` | `sticker_id`/`gif_id` không tồn tại, chưa publish, chưa gán cho tenant, hoặc sticker pack chưa mở khóa |
 
 **Dashboard & báo cáo** ([DASHBOARD_DATA](DASHBOARD_DATA.md), ADR-0062)
@@ -666,7 +666,7 @@ Gửi đáp án trong trận **chỉ qua WebSocket** (server-authoritative state
 | GET | `/admin/moderation/cases/{case_id}` | Chi tiết case, bằng chứng, lịch sử, thông báo trường — `getModerationCase` | SM | T | P5 |
 | GET | `/admin/moderation/cases/{case_id}/messages?q=` | Tin trong snapshot + ngữ cảnh của case (không tìm toàn bộ chat; audit mỗi lần xem) — `listModerationCaseMessages` | SM | T | P5 |
 | POST | `/admin/moderation/cases/{case_id}:assign` | Nhận/gán case (`assignee_moderator_id`) — `assignModerationCase` | SM | B | P5 |
-| POST | `/admin/moderation/cases/{case_id}:act` | warn/mute/restrict/remove_message/escalate/dismiss/close (`MODERATION_CASE_CLOSED`) — `actOnModerationCase` | SM · `moderation.case.act` | B | P5 |
+| POST | `/admin/moderation/cases/{case_id}:act` | warn/mute/restrict/remove_message/escalate/dismiss/close/reopen (`If-Match`, `MODERATION_CASE_CLOSED`) — `actOnModerationCase` | SM · `moderation.case.act` | B | P5 |
 | POST | `/admin/moderation/cases/{case_id}:notify-school` | Gửi thông báo vụ việc cho School Admin (`school_notified_at`) — `notifySchoolForCase` | SM · `moderation.school_notification.send` | B | P5 |
 | GET / POST | `/admin/moderation/sanctions` | Danh sách / áp sanction — `listSanctions`, `createSanction` | SM · `moderation.sanction.*` | T / B | P5 |
 | POST | `/admin/moderation/sanctions/{sanction_id}:revoke` | Gỡ sanction trước hạn (lý do) — `revokeSanction` | SM | B | P5 |

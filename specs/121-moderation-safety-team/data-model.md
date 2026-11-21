@@ -48,6 +48,10 @@ Mọi bảng ở DB `eduworld_chat`, schema `chat`, loại T: `tenant_id uuid NO
 | `contact_outcome` | `varchar(32)` | **Thêm cột** CHECK `parent_contacted/unable_to_contact/not_needed` | |
 | `contact_path` | `varchar(32)` | **Thêm cột** CHECK `school/platform_direct` | tenant `common` |
 | `resolved_at` | timestamptz | **Thêm cột** | |
+| `first_response_at`, `escalated_at` | timestamptz | **Thêm cột** | phản hồi đầu tiên (gán), leo thang SLA một lần |
+| `assigned_via` | `varchar(16)` | **Thêm cột** `manual/rotation` | vòng trực F124 |
+| `target_type`, `target_id`, `channel_id` | | | khóa gộp 24 h |
+| `source_event_id` | uuid | **Thêm cột**, UNIQUE khi khác NULL | idempotency consumer `chat.message_held` |
 | `version` | int | `If-Match` | |
 
 **Index**: `(status, severity, sla_due_at)` (hàng đợi liên tenant, đọc qua Bypass); `(tenant_id, target_type, target_id) WHERE status IN ('open','in_review')`.
@@ -70,10 +74,11 @@ Mọi bảng ở DB `eduworld_chat`, schema `chat`, loại T: `tenant_id uuid NO
 | `starts_at`, `ends_at`, `revoked_at` | timestamptz | | |
 | `revoked_by` | uuid | **Thêm cột** | |
 | `revoke_reason` | `varchar(1000)` | **Thêm cột** | |
+| `lifted_at` | timestamptz | **Thêm cột** | đã phát `sanction.lifted` (gỡ/hết hạn; job `sanction-expirer` idempotent) |
 
 **Index**: `(user_id) WHERE revoked_at IS NULL` (nạp cache); `(ends_at) WHERE revoked_at IS NULL`.
 
-### ModerationEvidence — `chat.moderation_evidence` (Có sẵn — DATABASE_DESIGN §2.16)
+### ModerationEvidence — `chat.moderation_evidence` (Có sẵn — DATABASE_DESIGN §2.16; bảng tạo ở migration F121, F117 chỉ ghi thêm bản sao trước purge)
 
 `evidence_id`, `case_id`, `school_id`, `snapshot jsonb`, `sha256`, `created_at`; bất biến, mọi lượt xem audit.
 
@@ -123,10 +128,11 @@ Sanction: hiệu lực từ `starts_at` → hết `ends_at` hoặc `revoked_at`.
 
 | Event | Khi nào | Payload schema |
 |---|---|---|
-| `report.created` | Tạo report | `specs/events/payloads/chat/report.created.v1.schema.json` (Cần thêm) |
-| `moderation.case_assigned` | Gán case | `…/moderation.case_assigned.v1.schema.json` (Cần thêm) |
-| `moderation.school_notified` | Gửi thông báo | `…/moderation.school_notified.v1.schema.json` (Cần thêm) |
-| `moderation.school_acknowledged` | Trường xác nhận | `…/moderation.school_acknowledged.v1.schema.json` (Cần thêm) |
-| `sanction.applied` | Áp sanction thủ công/theo case | `…/sanction.applied.v1.schema.json` — owner F116; F121 thêm `case_id` tương thích |
-| `sanction.lifted` | Gỡ/hết hạn | `…/sanction.lifted.v1.schema.json` (Cần thêm) |
-| `chat.message_removed` | Gỡ tin | `…/chat.message_removed.v1.schema.json` (Cần thêm) |
+| `report.created` | Tạo report | `specs/events/payloads/chat/report.created.v1.schema.json` (Có — F121) |
+| `moderation.case_assigned` | Gán case | `…/moderation.case_assigned.v1.schema.json` (Có — F121) |
+| `moderation.school_notified` | Gửi thông báo | `…/moderation.school_notified.v1.schema.json` (Có — F121) |
+| `moderation.school_acknowledged` | Trường xác nhận | `…/moderation.school_acknowledged.v1.schema.json` (Có — F121) |
+| `sanction.applied` | Áp sanction thủ công/theo case | `…/sanction.applied.v1.schema.json` — owner F116; F121 mở rộng theo EVENT_DESIGN §4.9 (`sanction_type`, `until`, `reason_code`, `issued_by_kind`, `source_version`; bỏ `type`/`ends_at`/`reason` nội bộ) |
+| `sanction.lifted` | Gỡ/hết hạn | `…/sanction.lifted.v1.schema.json` (Có — F121) |
+| `chat.message_removed` | Gỡ tin | `…/chat.message_removed.v1.schema.json` (Có — F121) |
+| `report.resolved` | Case `resolved`: mỗi người báo cáo một event, F123 tạo thông báo `moderation_notice` (F121-AC-16) | `…/report.resolved.v1.schema.json` (Có — F121) |

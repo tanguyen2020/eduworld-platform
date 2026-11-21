@@ -52,6 +52,8 @@ type Handlers struct {
 	Catalog *CatalogHandlers
 	// Switches serves the moderation switch administration (F116 US3, core-api; nil leaves it unmounted).
 	Switches *SwitchHandlers
+	// Safety serves reports, the Safety Team queue, sanctions and school notifications (F121, core-api; nil: unmounted).
+	Safety *SafetyHandlers
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -116,6 +118,11 @@ func Register(s *httpx.Server, h Handlers) error {
 	}
 	if h.Switches != nil {
 		if err := registerSwitches(s, h.Switches); err != nil {
+			return err
+		}
+	}
+	if h.Safety != nil {
+		if err := registerSafety(s, h.Safety); err != nil {
 			return err
 		}
 	}

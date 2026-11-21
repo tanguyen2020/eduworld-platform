@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat.message_removed.v1.schema.json",
+  "title": "Payload chat.message_removed v1 (module chat, owner F121)",
+  "description": "Safety Team gỡ một tin (actOnModerationCase remove_message, F121-AC-12, ADR-0034): tin thành placeholder, nội dung gốc giữ làm bằng chứng. Chỉ mã định danh, không nội dung (R14, R25). Consumer: RT, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "message_id",
+    "channel_id",
+    "by",
+    "case_id",
+    "removed_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "message_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "channel_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "removed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "message_id": "0193a6b2-0000-7000-8000-000000000010",
+      "channel_id": "0193a1aa-0000-7000-8000-000000000020",
+      "by": "0193a5f4-6c1e-7b2a-9d1f-0000000000aa",
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "removed_at": "2026-11-21T09:10:00.000Z"
+    }
+  ]
+}

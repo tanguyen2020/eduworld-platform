@@ -23,7 +23,8 @@ var _ write.SanctionRepository = Sanctions{}
 // Insert implements write.SanctionRepository.
 func (Sanctions) Insert(ctx context.Context, s write.NewSanction) error {
 	_, err := exec(ctx, `INSERT INTO chat.sanctions (sanction_id, tenant_id, created_at, created_by, updated_at, school_id, user_id, type,
-		scope, channel_id, reason, issued_by, starts_at, ends_at) VALUES ($1, $2, now(), NULL, now(), $3, $4, $5, $6, $7, $8, NULL, $9, $10)`,
+		scope, channel_id, reason, issued_by, starts_at, ends_at, reason_code, issued_by_kind)
+		VALUES ($1, $2, now(), NULL, now(), $3, $4, $5, $6, $7, $8, NULL, $9, $10, $8, 'system')`,
 		s.ID, s.TenantID, s.SchoolID, s.UserID, s.Type, s.Scope, s.ChannelID, s.Reason, s.StartsAt, s.EndsAt)
 	if err != nil {
 		return fmt.Errorf("chat: insert sanction: %w", err)

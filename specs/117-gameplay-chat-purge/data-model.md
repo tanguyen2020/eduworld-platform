@@ -24,7 +24,7 @@ Database `eduworld_chat`. Bảng `chat.channels`, `chat.channel_members`, `chat.
 
 `run_id`, `started_at`, `finished_at`, `tenant_id`, `kind varchar(64)` CHECK `gameplay/ephemeral`, `channels_purged int`, `messages_purged bigint`, `partitions_dropped int`, `deferred_open_case int`, `evidence_copied int`, `status varchar(64)` CHECK `succeeded/partial/failed/blocked` (giá trị `blocked` **Mới** — R3 research).
 
-### ModerationEvidence — `chat.moderation_evidence` (Có sẵn, T, bất biến; F117 tạo bảng, F121 đọc)
+### ModerationEvidence — `chat.moderation_evidence` (Có sẵn, T, bất biến; migration F121 tạo bảng và ghi snapshot report, F117 ghi thêm bản sao trước purge + grant `chat_purger`)
 
 | Trường | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|

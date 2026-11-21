@@ -245,6 +245,100 @@ func (_u *SanctionUpdate) ClearRevokedAt() *SanctionUpdate {
 	return _u
 }
 
+// SetReasonCode sets the "reason_code" field.
+func (_u *SanctionUpdate) SetReasonCode(v string) *SanctionUpdate {
+	_u.mutation.SetReasonCode(v)
+	return _u
+}
+
+// SetNillableReasonCode sets the "reason_code" field if the given value is not nil.
+func (_u *SanctionUpdate) SetNillableReasonCode(v *string) *SanctionUpdate {
+	if v != nil {
+		_u.SetReasonCode(*v)
+	}
+	return _u
+}
+
+// ClearReasonCode clears the value of the "reason_code" field.
+func (_u *SanctionUpdate) ClearReasonCode() *SanctionUpdate {
+	_u.mutation.ClearReasonCode()
+	return _u
+}
+
+// SetIssuedByKind sets the "issued_by_kind" field.
+func (_u *SanctionUpdate) SetIssuedByKind(v string) *SanctionUpdate {
+	_u.mutation.SetIssuedByKind(v)
+	return _u
+}
+
+// SetNillableIssuedByKind sets the "issued_by_kind" field if the given value is not nil.
+func (_u *SanctionUpdate) SetNillableIssuedByKind(v *string) *SanctionUpdate {
+	if v != nil {
+		_u.SetIssuedByKind(*v)
+	}
+	return _u
+}
+
+// SetRevokedBy sets the "revoked_by" field.
+func (_u *SanctionUpdate) SetRevokedBy(v uuid.UUID) *SanctionUpdate {
+	_u.mutation.SetRevokedBy(v)
+	return _u
+}
+
+// SetNillableRevokedBy sets the "revoked_by" field if the given value is not nil.
+func (_u *SanctionUpdate) SetNillableRevokedBy(v *uuid.UUID) *SanctionUpdate {
+	if v != nil {
+		_u.SetRevokedBy(*v)
+	}
+	return _u
+}
+
+// ClearRevokedBy clears the value of the "revoked_by" field.
+func (_u *SanctionUpdate) ClearRevokedBy() *SanctionUpdate {
+	_u.mutation.ClearRevokedBy()
+	return _u
+}
+
+// SetRevokeReason sets the "revoke_reason" field.
+func (_u *SanctionUpdate) SetRevokeReason(v string) *SanctionUpdate {
+	_u.mutation.SetRevokeReason(v)
+	return _u
+}
+
+// SetNillableRevokeReason sets the "revoke_reason" field if the given value is not nil.
+func (_u *SanctionUpdate) SetNillableRevokeReason(v *string) *SanctionUpdate {
+	if v != nil {
+		_u.SetRevokeReason(*v)
+	}
+	return _u
+}
+
+// ClearRevokeReason clears the value of the "revoke_reason" field.
+func (_u *SanctionUpdate) ClearRevokeReason() *SanctionUpdate {
+	_u.mutation.ClearRevokeReason()
+	return _u
+}
+
+// SetLiftedAt sets the "lifted_at" field.
+func (_u *SanctionUpdate) SetLiftedAt(v time.Time) *SanctionUpdate {
+	_u.mutation.SetLiftedAt(v)
+	return _u
+}
+
+// SetNillableLiftedAt sets the "lifted_at" field if the given value is not nil.
+func (_u *SanctionUpdate) SetNillableLiftedAt(v *time.Time) *SanctionUpdate {
+	if v != nil {
+		_u.SetLiftedAt(*v)
+	}
+	return _u
+}
+
+// ClearLiftedAt clears the value of the "lifted_at" field.
+func (_u *SanctionUpdate) ClearLiftedAt() *SanctionUpdate {
+	_u.mutation.ClearLiftedAt()
+	return _u
+}
+
 // Mutation returns the SanctionMutation object of the builder.
 func (_u *SanctionUpdate) Mutation() *SanctionMutation {
 	return _u.mutation
@@ -302,6 +396,21 @@ func (_u *SanctionUpdate) check() error {
 	if v, ok := _u.mutation.Reason(); ok {
 		if err := sanction.ReasonValidator(v); err != nil {
 			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "Sanction.reason": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ReasonCode(); ok {
+		if err := sanction.ReasonCodeValidator(v); err != nil {
+			return &ValidationError{Name: "reason_code", err: fmt.Errorf(`ent: validator failed for field "Sanction.reason_code": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.IssuedByKind(); ok {
+		if err := sanction.IssuedByKindValidator(v); err != nil {
+			return &ValidationError{Name: "issued_by_kind", err: fmt.Errorf(`ent: validator failed for field "Sanction.issued_by_kind": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.RevokeReason(); ok {
+		if err := sanction.RevokeReasonValidator(v); err != nil {
+			return &ValidationError{Name: "revoke_reason", err: fmt.Errorf(`ent: validator failed for field "Sanction.revoke_reason": %w`, err)}
 		}
 	}
 	return nil
@@ -390,6 +499,33 @@ func (_u *SanctionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.RevokedAtCleared() {
 		_spec.ClearField(sanction.FieldRevokedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ReasonCode(); ok {
+		_spec.SetField(sanction.FieldReasonCode, field.TypeString, value)
+	}
+	if _u.mutation.ReasonCodeCleared() {
+		_spec.ClearField(sanction.FieldReasonCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.IssuedByKind(); ok {
+		_spec.SetField(sanction.FieldIssuedByKind, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RevokedBy(); ok {
+		_spec.SetField(sanction.FieldRevokedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.RevokedByCleared() {
+		_spec.ClearField(sanction.FieldRevokedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.RevokeReason(); ok {
+		_spec.SetField(sanction.FieldRevokeReason, field.TypeString, value)
+	}
+	if _u.mutation.RevokeReasonCleared() {
+		_spec.ClearField(sanction.FieldRevokeReason, field.TypeString)
+	}
+	if value, ok := _u.mutation.LiftedAt(); ok {
+		_spec.SetField(sanction.FieldLiftedAt, field.TypeTime, value)
+	}
+	if _u.mutation.LiftedAtCleared() {
+		_spec.ClearField(sanction.FieldLiftedAt, field.TypeTime)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Sanction
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -628,6 +764,100 @@ func (_u *SanctionUpdateOne) ClearRevokedAt() *SanctionUpdateOne {
 	return _u
 }
 
+// SetReasonCode sets the "reason_code" field.
+func (_u *SanctionUpdateOne) SetReasonCode(v string) *SanctionUpdateOne {
+	_u.mutation.SetReasonCode(v)
+	return _u
+}
+
+// SetNillableReasonCode sets the "reason_code" field if the given value is not nil.
+func (_u *SanctionUpdateOne) SetNillableReasonCode(v *string) *SanctionUpdateOne {
+	if v != nil {
+		_u.SetReasonCode(*v)
+	}
+	return _u
+}
+
+// ClearReasonCode clears the value of the "reason_code" field.
+func (_u *SanctionUpdateOne) ClearReasonCode() *SanctionUpdateOne {
+	_u.mutation.ClearReasonCode()
+	return _u
+}
+
+// SetIssuedByKind sets the "issued_by_kind" field.
+func (_u *SanctionUpdateOne) SetIssuedByKind(v string) *SanctionUpdateOne {
+	_u.mutation.SetIssuedByKind(v)
+	return _u
+}
+
+// SetNillableIssuedByKind sets the "issued_by_kind" field if the given value is not nil.
+func (_u *SanctionUpdateOne) SetNillableIssuedByKind(v *string) *SanctionUpdateOne {
+	if v != nil {
+		_u.SetIssuedByKind(*v)
+	}
+	return _u
+}
+
+// SetRevokedBy sets the "revoked_by" field.
+func (_u *SanctionUpdateOne) SetRevokedBy(v uuid.UUID) *SanctionUpdateOne {
+	_u.mutation.SetRevokedBy(v)
+	return _u
+}
+
+// SetNillableRevokedBy sets the "revoked_by" field if the given value is not nil.
+func (_u *SanctionUpdateOne) SetNillableRevokedBy(v *uuid.UUID) *SanctionUpdateOne {
+	if v != nil {
+		_u.SetRevokedBy(*v)
+	}
+	return _u
+}
+
+// ClearRevokedBy clears the value of the "revoked_by" field.
+func (_u *SanctionUpdateOne) ClearRevokedBy() *SanctionUpdateOne {
+	_u.mutation.ClearRevokedBy()
+	return _u
+}
+
+// SetRevokeReason sets the "revoke_reason" field.
+func (_u *SanctionUpdateOne) SetRevokeReason(v string) *SanctionUpdateOne {
+	_u.mutation.SetRevokeReason(v)
+	return _u
+}
+
+// SetNillableRevokeReason sets the "revoke_reason" field if the given value is not nil.
+func (_u *SanctionUpdateOne) SetNillableRevokeReason(v *string) *SanctionUpdateOne {
+	if v != nil {
+		_u.SetRevokeReason(*v)
+	}
+	return _u
+}
+
+// ClearRevokeReason clears the value of the "revoke_reason" field.
+func (_u *SanctionUpdateOne) ClearRevokeReason() *SanctionUpdateOne {
+	_u.mutation.ClearRevokeReason()
+	return _u
+}
+
+// SetLiftedAt sets the "lifted_at" field.
+func (_u *SanctionUpdateOne) SetLiftedAt(v time.Time) *SanctionUpdateOne {
+	_u.mutation.SetLiftedAt(v)
+	return _u
+}
+
+// SetNillableLiftedAt sets the "lifted_at" field if the given value is not nil.
+func (_u *SanctionUpdateOne) SetNillableLiftedAt(v *time.Time) *SanctionUpdateOne {
+	if v != nil {
+		_u.SetLiftedAt(*v)
+	}
+	return _u
+}
+
+// ClearLiftedAt clears the value of the "lifted_at" field.
+func (_u *SanctionUpdateOne) ClearLiftedAt() *SanctionUpdateOne {
+	_u.mutation.ClearLiftedAt()
+	return _u
+}
+
 // Mutation returns the SanctionMutation object of the builder.
 func (_u *SanctionUpdateOne) Mutation() *SanctionMutation {
 	return _u.mutation
@@ -698,6 +928,21 @@ func (_u *SanctionUpdateOne) check() error {
 	if v, ok := _u.mutation.Reason(); ok {
 		if err := sanction.ReasonValidator(v); err != nil {
 			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "Sanction.reason": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ReasonCode(); ok {
+		if err := sanction.ReasonCodeValidator(v); err != nil {
+			return &ValidationError{Name: "reason_code", err: fmt.Errorf(`ent: validator failed for field "Sanction.reason_code": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.IssuedByKind(); ok {
+		if err := sanction.IssuedByKindValidator(v); err != nil {
+			return &ValidationError{Name: "issued_by_kind", err: fmt.Errorf(`ent: validator failed for field "Sanction.issued_by_kind": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.RevokeReason(); ok {
+		if err := sanction.RevokeReasonValidator(v); err != nil {
+			return &ValidationError{Name: "revoke_reason", err: fmt.Errorf(`ent: validator failed for field "Sanction.revoke_reason": %w`, err)}
 		}
 	}
 	return nil
@@ -803,6 +1048,33 @@ func (_u *SanctionUpdateOne) sqlSave(ctx context.Context) (_node *Sanction, err 
 	}
 	if _u.mutation.RevokedAtCleared() {
 		_spec.ClearField(sanction.FieldRevokedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ReasonCode(); ok {
+		_spec.SetField(sanction.FieldReasonCode, field.TypeString, value)
+	}
+	if _u.mutation.ReasonCodeCleared() {
+		_spec.ClearField(sanction.FieldReasonCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.IssuedByKind(); ok {
+		_spec.SetField(sanction.FieldIssuedByKind, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RevokedBy(); ok {
+		_spec.SetField(sanction.FieldRevokedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.RevokedByCleared() {
+		_spec.ClearField(sanction.FieldRevokedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.RevokeReason(); ok {
+		_spec.SetField(sanction.FieldRevokeReason, field.TypeString, value)
+	}
+	if _u.mutation.RevokeReasonCleared() {
+		_spec.ClearField(sanction.FieldRevokeReason, field.TypeString)
+	}
+	if value, ok := _u.mutation.LiftedAt(); ok {
+		_spec.SetField(sanction.FieldLiftedAt, field.TypeTime, value)
+	}
+	if _u.mutation.LiftedAtCleared() {
+		_spec.ClearField(sanction.FieldLiftedAt, field.TypeTime)
 	}
 	_spec.Node.Schema = _u.schemaConfig.Sanction
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

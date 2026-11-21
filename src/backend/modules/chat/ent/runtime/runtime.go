@@ -13,13 +13,18 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendcode"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendship"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationaction"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationcase"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationevidence"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/mute"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/quickmessage"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/report"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sanction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/schema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/schoolsafetynotification"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveallowlistentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitivecatalogversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveterm"
@@ -314,6 +319,131 @@ func init() {
 	friendshipDescID := friendshipMixinFields0[0].Descriptor()
 	// friendship.DefaultID holds the default value on creation for the id field.
 	friendship.DefaultID = friendshipDescID.Default.(func() uuid.UUID)
+	moderationactionMixin := schema.ModerationAction{}.Mixin()
+	moderationactionMixinHooks0 := moderationactionMixin[0].Hooks()
+	moderationaction.Hooks[0] = moderationactionMixinHooks0[0]
+	moderationactionMixinInters0 := moderationactionMixin[0].Interceptors()
+	moderationaction.Interceptors[0] = moderationactionMixinInters0[0]
+	moderationactionMixinFields0 := moderationactionMixin[0].Fields()
+	_ = moderationactionMixinFields0
+	moderationactionFields := schema.ModerationAction{}.Fields()
+	_ = moderationactionFields
+	// moderationactionDescCreatedAt is the schema descriptor for created_at field.
+	moderationactionDescCreatedAt := moderationactionMixinFields0[2].Descriptor()
+	// moderationaction.DefaultCreatedAt holds the default value on creation for the created_at field.
+	moderationaction.DefaultCreatedAt = moderationactionDescCreatedAt.Default.(func() time.Time)
+	// moderationactionDescAction is the schema descriptor for action field.
+	moderationactionDescAction := moderationactionFields[1].Descriptor()
+	// moderationaction.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	moderationaction.ActionValidator = moderationactionDescAction.Validators[0].(func(string) error)
+	// moderationactionDescActorKind is the schema descriptor for actor_kind field.
+	moderationactionDescActorKind := moderationactionFields[3].Descriptor()
+	// moderationaction.ActorKindValidator is a validator for the "actor_kind" field. It is called by the builders before save.
+	moderationaction.ActorKindValidator = moderationactionDescActorKind.Validators[0].(func(string) error)
+	// moderationactionDescNote is the schema descriptor for note field.
+	moderationactionDescNote := moderationactionFields[4].Descriptor()
+	// moderationaction.NoteValidator is a validator for the "note" field. It is called by the builders before save.
+	moderationaction.NoteValidator = moderationactionDescNote.Validators[0].(func(string) error)
+	// moderationactionDescID is the schema descriptor for id field.
+	moderationactionDescID := moderationactionMixinFields0[0].Descriptor()
+	// moderationaction.DefaultID holds the default value on creation for the id field.
+	moderationaction.DefaultID = moderationactionDescID.Default.(func() uuid.UUID)
+	moderationcaseMixin := schema.ModerationCase{}.Mixin()
+	moderationcaseMixinHooks0 := moderationcaseMixin[0].Hooks()
+	moderationcase.Hooks[0] = moderationcaseMixinHooks0[0]
+	moderationcaseMixinInters0 := moderationcaseMixin[0].Interceptors()
+	moderationcase.Interceptors[0] = moderationcaseMixinInters0[0]
+	moderationcaseMixinFields0 := moderationcaseMixin[0].Fields()
+	_ = moderationcaseMixinFields0
+	moderationcaseFields := schema.ModerationCase{}.Fields()
+	_ = moderationcaseFields
+	// moderationcaseDescCreatedAt is the schema descriptor for created_at field.
+	moderationcaseDescCreatedAt := moderationcaseMixinFields0[2].Descriptor()
+	// moderationcase.DefaultCreatedAt holds the default value on creation for the created_at field.
+	moderationcase.DefaultCreatedAt = moderationcaseDescCreatedAt.Default.(func() time.Time)
+	// moderationcaseDescUpdatedAt is the schema descriptor for updated_at field.
+	moderationcaseDescUpdatedAt := moderationcaseMixinFields0[4].Descriptor()
+	// moderationcase.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	moderationcase.DefaultUpdatedAt = moderationcaseDescUpdatedAt.Default.(func() time.Time)
+	// moderationcase.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	moderationcase.UpdateDefaultUpdatedAt = moderationcaseDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// moderationcaseDescDeleteReason is the schema descriptor for delete_reason field.
+	moderationcaseDescDeleteReason := moderationcaseMixinFields0[8].Descriptor()
+	// moderationcase.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	moderationcase.DeleteReasonValidator = moderationcaseDescDeleteReason.Validators[0].(func(string) error)
+	// moderationcaseDescVersion is the schema descriptor for version field.
+	moderationcaseDescVersion := moderationcaseMixinFields0[9].Descriptor()
+	// moderationcase.DefaultVersion holds the default value on creation for the version field.
+	moderationcase.DefaultVersion = moderationcaseDescVersion.Default.(int64)
+	// moderationcaseDescStatus is the schema descriptor for status field.
+	moderationcaseDescStatus := moderationcaseFields[1].Descriptor()
+	// moderationcase.DefaultStatus holds the default value on creation for the status field.
+	moderationcase.DefaultStatus = moderationcaseDescStatus.Default.(string)
+	// moderationcase.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	moderationcase.StatusValidator = moderationcaseDescStatus.Validators[0].(func(string) error)
+	// moderationcaseDescSeverity is the schema descriptor for severity field.
+	moderationcaseDescSeverity := moderationcaseFields[2].Descriptor()
+	// moderationcase.SeverityValidator is a validator for the "severity" field. It is called by the builders before save.
+	moderationcase.SeverityValidator = moderationcaseDescSeverity.Validators[0].(func(string) error)
+	// moderationcaseDescSource is the schema descriptor for source field.
+	moderationcaseDescSource := moderationcaseFields[3].Descriptor()
+	// moderationcase.SourceValidator is a validator for the "source" field. It is called by the builders before save.
+	moderationcase.SourceValidator = moderationcaseDescSource.Validators[0].(func(string) error)
+	// moderationcaseDescCategoryCode is the schema descriptor for category_code field.
+	moderationcaseDescCategoryCode := moderationcaseFields[4].Descriptor()
+	// moderationcase.CategoryCodeValidator is a validator for the "category_code" field. It is called by the builders before save.
+	moderationcase.CategoryCodeValidator = moderationcaseDescCategoryCode.Validators[0].(func(string) error)
+	// moderationcaseDescChannelType is the schema descriptor for channel_type field.
+	moderationcaseDescChannelType := moderationcaseFields[6].Descriptor()
+	// moderationcase.ChannelTypeValidator is a validator for the "channel_type" field. It is called by the builders before save.
+	moderationcase.ChannelTypeValidator = moderationcaseDescChannelType.Validators[0].(func(string) error)
+	// moderationcaseDescTargetType is the schema descriptor for target_type field.
+	moderationcaseDescTargetType := moderationcaseFields[7].Descriptor()
+	// moderationcase.TargetTypeValidator is a validator for the "target_type" field. It is called by the builders before save.
+	moderationcase.TargetTypeValidator = moderationcaseDescTargetType.Validators[0].(func(string) error)
+	// moderationcaseDescAssignedVia is the schema descriptor for assigned_via field.
+	moderationcaseDescAssignedVia := moderationcaseFields[11].Descriptor()
+	// moderationcase.AssignedViaValidator is a validator for the "assigned_via" field. It is called by the builders before save.
+	moderationcase.AssignedViaValidator = moderationcaseDescAssignedVia.Validators[0].(func(string) error)
+	// moderationcaseDescReportCount is the schema descriptor for report_count field.
+	moderationcaseDescReportCount := moderationcaseFields[12].Descriptor()
+	// moderationcase.DefaultReportCount holds the default value on creation for the report_count field.
+	moderationcase.DefaultReportCount = moderationcaseDescReportCount.Default.(int)
+	// moderationcaseDescContactOutcome is the schema descriptor for contact_outcome field.
+	moderationcaseDescContactOutcome := moderationcaseFields[21].Descriptor()
+	// moderationcase.ContactOutcomeValidator is a validator for the "contact_outcome" field. It is called by the builders before save.
+	moderationcase.ContactOutcomeValidator = moderationcaseDescContactOutcome.Validators[0].(func(string) error)
+	// moderationcaseDescContactPath is the schema descriptor for contact_path field.
+	moderationcaseDescContactPath := moderationcaseFields[22].Descriptor()
+	// moderationcase.DefaultContactPath holds the default value on creation for the contact_path field.
+	moderationcase.DefaultContactPath = moderationcaseDescContactPath.Default.(string)
+	// moderationcase.ContactPathValidator is a validator for the "contact_path" field. It is called by the builders before save.
+	moderationcase.ContactPathValidator = moderationcaseDescContactPath.Validators[0].(func(string) error)
+	// moderationcaseDescID is the schema descriptor for id field.
+	moderationcaseDescID := moderationcaseMixinFields0[0].Descriptor()
+	// moderationcase.DefaultID holds the default value on creation for the id field.
+	moderationcase.DefaultID = moderationcaseDescID.Default.(func() uuid.UUID)
+	moderationevidenceMixin := schema.ModerationEvidence{}.Mixin()
+	moderationevidenceMixinHooks0 := moderationevidenceMixin[0].Hooks()
+	moderationevidence.Hooks[0] = moderationevidenceMixinHooks0[0]
+	moderationevidenceMixinInters0 := moderationevidenceMixin[0].Interceptors()
+	moderationevidence.Interceptors[0] = moderationevidenceMixinInters0[0]
+	moderationevidenceMixinFields0 := moderationevidenceMixin[0].Fields()
+	_ = moderationevidenceMixinFields0
+	moderationevidenceFields := schema.ModerationEvidence{}.Fields()
+	_ = moderationevidenceFields
+	// moderationevidenceDescCreatedAt is the schema descriptor for created_at field.
+	moderationevidenceDescCreatedAt := moderationevidenceMixinFields0[2].Descriptor()
+	// moderationevidence.DefaultCreatedAt holds the default value on creation for the created_at field.
+	moderationevidence.DefaultCreatedAt = moderationevidenceDescCreatedAt.Default.(func() time.Time)
+	// moderationevidenceDescSha256 is the schema descriptor for sha256 field.
+	moderationevidenceDescSha256 := moderationevidenceFields[5].Descriptor()
+	// moderationevidence.Sha256Validator is a validator for the "sha256" field. It is called by the builders before save.
+	moderationevidence.Sha256Validator = moderationevidenceDescSha256.Validators[0].(func(string) error)
+	// moderationevidenceDescID is the schema descriptor for id field.
+	moderationevidenceDescID := moderationevidenceMixinFields0[0].Descriptor()
+	// moderationevidence.DefaultID holds the default value on creation for the id field.
+	moderationevidence.DefaultID = moderationevidenceDescID.Default.(func() uuid.UUID)
 	moderationswitchMixin := schema.ModerationSwitch{}.Mixin()
 	moderationswitchMixinHooks0 := moderationswitchMixin[0].Hooks()
 	moderationswitch.Hooks[0] = moderationswitchMixinHooks0[0]
@@ -533,6 +663,59 @@ func init() {
 			return nil
 		}
 	}()
+	reportMixin := schema.Report{}.Mixin()
+	reportMixinHooks0 := reportMixin[0].Hooks()
+	report.Hooks[0] = reportMixinHooks0[0]
+	reportMixinInters0 := reportMixin[0].Interceptors()
+	report.Interceptors[0] = reportMixinInters0[0]
+	reportMixinFields0 := reportMixin[0].Fields()
+	_ = reportMixinFields0
+	reportFields := schema.Report{}.Fields()
+	_ = reportFields
+	// reportDescCreatedAt is the schema descriptor for created_at field.
+	reportDescCreatedAt := reportMixinFields0[2].Descriptor()
+	// report.DefaultCreatedAt holds the default value on creation for the created_at field.
+	report.DefaultCreatedAt = reportDescCreatedAt.Default.(func() time.Time)
+	// reportDescUpdatedAt is the schema descriptor for updated_at field.
+	reportDescUpdatedAt := reportMixinFields0[4].Descriptor()
+	// report.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	report.DefaultUpdatedAt = reportDescUpdatedAt.Default.(func() time.Time)
+	// report.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	report.UpdateDefaultUpdatedAt = reportDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// reportDescDeleteReason is the schema descriptor for delete_reason field.
+	reportDescDeleteReason := reportMixinFields0[8].Descriptor()
+	// report.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	report.DeleteReasonValidator = reportDescDeleteReason.Validators[0].(func(string) error)
+	// reportDescVersion is the schema descriptor for version field.
+	reportDescVersion := reportMixinFields0[9].Descriptor()
+	// report.DefaultVersion holds the default value on creation for the version field.
+	report.DefaultVersion = reportDescVersion.Default.(int64)
+	// reportDescTargetType is the schema descriptor for target_type field.
+	reportDescTargetType := reportFields[2].Descriptor()
+	// report.TargetTypeValidator is a validator for the "target_type" field. It is called by the builders before save.
+	report.TargetTypeValidator = reportDescTargetType.Validators[0].(func(string) error)
+	// reportDescReason is the schema descriptor for reason field.
+	reportDescReason := reportFields[5].Descriptor()
+	// report.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	report.ReasonValidator = reportDescReason.Validators[0].(func(string) error)
+	// reportDescNote is the schema descriptor for note field.
+	reportDescNote := reportFields[6].Descriptor()
+	// report.NoteValidator is a validator for the "note" field. It is called by the builders before save.
+	report.NoteValidator = reportDescNote.Validators[0].(func(string) error)
+	// reportDescWeight is the schema descriptor for weight field.
+	reportDescWeight := reportFields[9].Descriptor()
+	// report.DefaultWeight holds the default value on creation for the weight field.
+	report.DefaultWeight = reportDescWeight.Default.(float64)
+	// reportDescStatus is the schema descriptor for status field.
+	reportDescStatus := reportFields[10].Descriptor()
+	// report.DefaultStatus holds the default value on creation for the status field.
+	report.DefaultStatus = reportDescStatus.Default.(string)
+	// report.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	report.StatusValidator = reportDescStatus.Validators[0].(func(string) error)
+	// reportDescID is the schema descriptor for id field.
+	reportDescID := reportMixinFields0[0].Descriptor()
+	// report.DefaultID holds the default value on creation for the id field.
+	report.DefaultID = reportDescID.Default.(func() uuid.UUID)
 	sanctionMixin := schema.Sanction{}.Mixin()
 	sanctionMixinHooks0 := sanctionMixin[0].Hooks()
 	sanction.Hooks[0] = sanctionMixinHooks0[0]
@@ -572,10 +755,83 @@ func init() {
 	sanctionDescReason := sanctionFields[5].Descriptor()
 	// sanction.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
 	sanction.ReasonValidator = sanctionDescReason.Validators[0].(func(string) error)
+	// sanctionDescReasonCode is the schema descriptor for reason_code field.
+	sanctionDescReasonCode := sanctionFields[11].Descriptor()
+	// sanction.ReasonCodeValidator is a validator for the "reason_code" field. It is called by the builders before save.
+	sanction.ReasonCodeValidator = sanctionDescReasonCode.Validators[0].(func(string) error)
+	// sanctionDescIssuedByKind is the schema descriptor for issued_by_kind field.
+	sanctionDescIssuedByKind := sanctionFields[12].Descriptor()
+	// sanction.DefaultIssuedByKind holds the default value on creation for the issued_by_kind field.
+	sanction.DefaultIssuedByKind = sanctionDescIssuedByKind.Default.(string)
+	// sanction.IssuedByKindValidator is a validator for the "issued_by_kind" field. It is called by the builders before save.
+	sanction.IssuedByKindValidator = sanctionDescIssuedByKind.Validators[0].(func(string) error)
+	// sanctionDescRevokeReason is the schema descriptor for revoke_reason field.
+	sanctionDescRevokeReason := sanctionFields[14].Descriptor()
+	// sanction.RevokeReasonValidator is a validator for the "revoke_reason" field. It is called by the builders before save.
+	sanction.RevokeReasonValidator = sanctionDescRevokeReason.Validators[0].(func(string) error)
 	// sanctionDescID is the schema descriptor for id field.
 	sanctionDescID := sanctionMixinFields0[0].Descriptor()
 	// sanction.DefaultID holds the default value on creation for the id field.
 	sanction.DefaultID = sanctionDescID.Default.(func() uuid.UUID)
+	schoolsafetynotificationMixin := schema.SchoolSafetyNotification{}.Mixin()
+	schoolsafetynotificationMixinHooks0 := schoolsafetynotificationMixin[0].Hooks()
+	schoolsafetynotification.Hooks[0] = schoolsafetynotificationMixinHooks0[0]
+	schoolsafetynotificationMixinInters0 := schoolsafetynotificationMixin[0].Interceptors()
+	schoolsafetynotification.Interceptors[0] = schoolsafetynotificationMixinInters0[0]
+	schoolsafetynotificationMixinFields0 := schoolsafetynotificationMixin[0].Fields()
+	_ = schoolsafetynotificationMixinFields0
+	schoolsafetynotificationFields := schema.SchoolSafetyNotification{}.Fields()
+	_ = schoolsafetynotificationFields
+	// schoolsafetynotificationDescCreatedAt is the schema descriptor for created_at field.
+	schoolsafetynotificationDescCreatedAt := schoolsafetynotificationMixinFields0[2].Descriptor()
+	// schoolsafetynotification.DefaultCreatedAt holds the default value on creation for the created_at field.
+	schoolsafetynotification.DefaultCreatedAt = schoolsafetynotificationDescCreatedAt.Default.(func() time.Time)
+	// schoolsafetynotificationDescUpdatedAt is the schema descriptor for updated_at field.
+	schoolsafetynotificationDescUpdatedAt := schoolsafetynotificationMixinFields0[4].Descriptor()
+	// schoolsafetynotification.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	schoolsafetynotification.DefaultUpdatedAt = schoolsafetynotificationDescUpdatedAt.Default.(func() time.Time)
+	// schoolsafetynotification.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	schoolsafetynotification.UpdateDefaultUpdatedAt = schoolsafetynotificationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// schoolsafetynotificationDescDeleteReason is the schema descriptor for delete_reason field.
+	schoolsafetynotificationDescDeleteReason := schoolsafetynotificationMixinFields0[8].Descriptor()
+	// schoolsafetynotification.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	schoolsafetynotification.DeleteReasonValidator = schoolsafetynotificationDescDeleteReason.Validators[0].(func(string) error)
+	// schoolsafetynotificationDescVersion is the schema descriptor for version field.
+	schoolsafetynotificationDescVersion := schoolsafetynotificationMixinFields0[9].Descriptor()
+	// schoolsafetynotification.DefaultVersion holds the default value on creation for the version field.
+	schoolsafetynotification.DefaultVersion = schoolsafetynotificationDescVersion.Default.(int64)
+	// schoolsafetynotificationDescSeverity is the schema descriptor for severity field.
+	schoolsafetynotificationDescSeverity := schoolsafetynotificationFields[2].Descriptor()
+	// schoolsafetynotification.SeverityValidator is a validator for the "severity" field. It is called by the builders before save.
+	schoolsafetynotification.SeverityValidator = schoolsafetynotificationDescSeverity.Validators[0].(func(string) error)
+	// schoolsafetynotificationDescCategoryCode is the schema descriptor for category_code field.
+	schoolsafetynotificationDescCategoryCode := schoolsafetynotificationFields[3].Descriptor()
+	// schoolsafetynotification.CategoryCodeValidator is a validator for the "category_code" field. It is called by the builders before save.
+	schoolsafetynotification.CategoryCodeValidator = schoolsafetynotificationDescCategoryCode.Validators[0].(func(string) error)
+	// schoolsafetynotificationDescMeasuresTaken is the schema descriptor for measures_taken field.
+	schoolsafetynotificationDescMeasuresTaken := schoolsafetynotificationFields[5].Descriptor()
+	// schoolsafetynotification.MeasuresTakenValidator is a validator for the "measures_taken" field. It is called by the builders before save.
+	schoolsafetynotification.MeasuresTakenValidator = schoolsafetynotificationDescMeasuresTaken.Validators[0].(func(string) error)
+	// schoolsafetynotificationDescSummary is the schema descriptor for summary field.
+	schoolsafetynotificationDescSummary := schoolsafetynotificationFields[6].Descriptor()
+	// schoolsafetynotification.SummaryValidator is a validator for the "summary" field. It is called by the builders before save.
+	schoolsafetynotification.SummaryValidator = schoolsafetynotificationDescSummary.Validators[0].(func(string) error)
+	// schoolsafetynotificationDescReminderCount is the schema descriptor for reminder_count field.
+	schoolsafetynotificationDescReminderCount := schoolsafetynotificationFields[9].Descriptor()
+	// schoolsafetynotification.DefaultReminderCount holds the default value on creation for the reminder_count field.
+	schoolsafetynotification.DefaultReminderCount = schoolsafetynotificationDescReminderCount.Default.(int16)
+	// schoolsafetynotificationDescContactOutcome is the schema descriptor for contact_outcome field.
+	schoolsafetynotificationDescContactOutcome := schoolsafetynotificationFields[13].Descriptor()
+	// schoolsafetynotification.ContactOutcomeValidator is a validator for the "contact_outcome" field. It is called by the builders before save.
+	schoolsafetynotification.ContactOutcomeValidator = schoolsafetynotificationDescContactOutcome.Validators[0].(func(string) error)
+	// schoolsafetynotificationDescAckNote is the schema descriptor for ack_note field.
+	schoolsafetynotificationDescAckNote := schoolsafetynotificationFields[14].Descriptor()
+	// schoolsafetynotification.AckNoteValidator is a validator for the "ack_note" field. It is called by the builders before save.
+	schoolsafetynotification.AckNoteValidator = schoolsafetynotificationDescAckNote.Validators[0].(func(string) error)
+	// schoolsafetynotificationDescID is the schema descriptor for id field.
+	schoolsafetynotificationDescID := schoolsafetynotificationMixinFields0[0].Descriptor()
+	// schoolsafetynotification.DefaultID holds the default value on creation for the id field.
+	schoolsafetynotification.DefaultID = schoolsafetynotificationDescID.Default.(func() uuid.UUID)
 	sensitiveallowlistentryMixin := schema.SensitiveAllowlistEntry{}.Mixin()
 	sensitiveallowlistentryMixinHooks0 := sensitiveallowlistentryMixin[0].Hooks()
 	sensitiveallowlistentry.Hooks[0] = sensitiveallowlistentryMixinHooks0[0]

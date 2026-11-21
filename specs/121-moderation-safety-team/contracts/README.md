@@ -40,13 +40,14 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (`x-service: chat`). Route `/
 
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
-| `chat.message_held` | Tiêu thụ (F116) | `specs/events/payloads/chat/chat.message_held.v1.schema.json` | Cần thêm (owner F116) |
-| `report.created` | Phát | `specs/events/payloads/chat/report.created.v1.schema.json` | Cần thêm |
-| `moderation.case_assigned` | Phát | `…/moderation.case_assigned.v1.schema.json` | Cần thêm |
-| `moderation.school_notified` · `moderation.school_acknowledged` | Phát (consumer identity: email) | `…/moderation.school_*.v1.schema.json` | Cần thêm |
-| `sanction.applied` | Phát (consumer identity: `account_lock`; competition: `restrict_*`) | `…/sanction.applied.v1.schema.json` | Có ở F116 (owner F116) — F121 thêm `case_id` tương thích |
-| `sanction.lifted` | Phát (consumer identity, competition) | `…/sanction.lifted.v1.schema.json` | Cần thêm |
-| `chat.message_removed` | Phát | `…/chat.message_removed.v1.schema.json` | Cần thêm |
+| `chat.message_held` | Tiêu thụ (F116; consumer `chat.moderation_cases`) | `specs/events/payloads/chat/chat.message_held.v1.schema.json` | Có (owner F116) |
+| `report.created` | Phát | `specs/events/payloads/chat/report.created.v1.schema.json` | Có (F121) |
+| `moderation.case_assigned` | Phát | `…/moderation.case_assigned.v1.schema.json` | Có (F121) |
+| `moderation.school_notified` · `moderation.school_acknowledged` | Phát (consumer identity: email) | `…/moderation.school_*.v1.schema.json` | Có (F121) |
+| `sanction.applied` | Phát (consumer identity: `account_lock`; competition: `restrict_*`) | `…/sanction.applied.v1.schema.json` | Có ở F116 (owner F116) — F121 mở rộng theo EVENT_DESIGN §4.9 |
+| `report.resolved` | Phát (consumer NTF F123: `moderation_notice` cho người báo cáo) | `…/report.resolved.v1.schema.json` | Có (F121) |
+| `sanction.lifted` | Phát (consumer identity, competition) | `…/sanction.lifted.v1.schema.json` | Có (F121) |
+| `chat.message_removed` | Phát | `…/chat.message_removed.v1.schema.json` | Có (F121) |
 
 ## 5. JSON Schema nội dung
 
@@ -56,7 +57,7 @@ Spec nguồn: `specs/openapi/eduworld-api.v1.yaml` (`x-service: chat`). Route `/
 
 ## 6. Delta cần thực hiện
 
-Task Phase 2: T004–T007.
+Task Phase 2: T004–T007 — **đã thực hiện 2026-11-21** (spec gộp + `split-public.mjs`, 8 payload schema, AsyncAPI `chat.sanction.applied` thêm `reason_code` và enum MODERATION §7; quyết định ở spec Clarifications 2026-11-21).
 
 - **Cần sửa** `ModerationCaseStatus` → `[open, in_review, escalated, resolved, reopened]` (MODERATION §6.2); cập nhật mô tả `MODERATION_CASE_CLOSED` ở API_DESIGN (§4.1 ghi `resolved`/`dismissed`).
 - **Cần sửa** `ReportCreate.reason` → `[rude_language, bullying, asked_personal_info, spam, inappropriate_content, cheating, other]`; thêm `context` {`channel_id` uuid, `match_id` uuid, `party_id` uuid} (`additionalProperties: false`); `note` giữ maxLength 500.

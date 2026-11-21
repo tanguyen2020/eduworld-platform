@@ -13135,20 +13135,33 @@ export interface components {
         };
         ModerationActionRequest: {
             /** @enum {string} */
-            action: "warn" | "mute" | "restrict" | "remove_message" | "escalate" | "dismiss" | "close";
+            action: "warn" | "mute" | "restrict" | "remove_message" | "escalate" | "dismiss" | "close" | "reopen";
             duration_minutes?: number;
             message_id?: components["schemas"]["Uuid"];
             note: string;
+            /**
+             * @description Bắt buộc khi action = restrict (MODERATION §7)
+             * @enum {string}
+             */
+            sanction_type?: "restrict_text" | "restrict_dm" | "restrict_multiplayer" | "restrict_competition" | "account_lock";
             target_user_id?: components["schemas"]["Uuid"];
         };
         ModerationCase: {
             assignee_moderator_id?: components["schemas"]["Uuid"];
             case_id: components["schemas"]["Uuid"];
             category_code?: string;
+            channel_id?: components["schemas"]["Uuid"];
             channel_type?: components["schemas"]["ChannelType"];
+            /** @enum {string} */
+            contact_outcome?: "parent_contacted" | "unable_to_contact" | "not_needed";
+            /** @enum {string} */
+            contact_path?: "school" | "platform_direct";
             created_at: components["schemas"]["Timestamp"];
+            first_response_due_at?: components["schemas"]["Timestamp"];
             report_count?: number;
+            resolved_at?: components["schemas"]["Timestamp"];
             school_ack_at?: components["schemas"]["Timestamp"];
+            school_ids?: components["schemas"]["Uuid"][];
             school_notified_at?: components["schemas"]["Timestamp"];
             /** @enum {string} */
             severity: "p1" | "p2" | "p3";
@@ -13156,22 +13169,81 @@ export interface components {
             /** @enum {string} */
             source?: "report" | "filter_alert" | "async_analysis" | "self_harm_signal";
             status: components["schemas"]["ModerationCaseStatus"];
+            target_id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            target_type?: "message" | "user";
             tenant_id: components["schemas"]["Uuid"];
             updated_at?: components["schemas"]["Timestamp"];
+            /** @description Giá trị If-Match của actOnModerationCase (ETag W/"<version>") */
+            version?: number;
         };
         ModerationCaseDetail: components["schemas"]["ModerationCase"] & {
             actions?: {
                 action: string;
-                actor_id: components["schemas"]["Uuid"];
+                actor_id?: components["schemas"]["Uuid"];
+                /** @enum {string} */
+                actor_kind: "moderator" | "system";
                 at: components["schemas"]["Timestamp"];
+                message_id?: components["schemas"]["Uuid"];
                 note?: string;
+                sanction_id?: components["schemas"]["Uuid"];
+            }[];
+            /** @description Bản bằng chứng bất biến (moderation_evidence); nội dung xem qua listModerationCaseMessages */
+            evidence?: {
+                created_at: components["schemas"]["Timestamp"];
+                evidence_id: components["schemas"]["Uuid"];
             }[];
             evidence_message_ids?: components["schemas"]["Uuid"][];
+            /** @description Báo cáo đã gộp vào case (người báo cáo chỉ hiển thị cho Safety Team, không bao giờ cho người bị báo cáo) */
+            reports?: {
+                created_at: components["schemas"]["Timestamp"];
+                note?: string;
+                /** @enum {string} */
+                reason: "rude_language" | "bullying" | "asked_personal_info" | "spam" | "inappropriate_content" | "cheating" | "other";
+                report_id: components["schemas"]["Uuid"];
+                reporter_id: components["schemas"]["Uuid"];
+                /** @enum {string} */
+                status: "open" | "linked" | "dismissed";
+            }[];
             school_notifications?: components["schemas"]["SchoolSafetyNotification"][];
             subject_user_ids?: components["schemas"]["Uuid"][];
+            /** @description Mã hướng dẫn hỗ trợ cho moderator khi case liên quan tự hại (child_protection_111, CHILD_SAFETY §8) */
+            support_guide?: string;
         };
-        /** @enum {string} */
-        ModerationCaseStatus: "open" | "in_progress" | "escalated" | "resolved" | "dismissed";
+        /** @description Một tin trong snapshot bằng chứng hoặc ±200 tin ngữ cảnh của case (MODERATION §6.1) — chỉ người được gán và trưởng ca; mỗi lần xem ghi audit */
+        ModerationCaseMessage: {
+            /** @description Nội dung gốc (bằng chứng) */
+            body?: string;
+            body_display?: string;
+            channel_id: components["schemas"]["Uuid"];
+            channel_type?: components["schemas"]["ChannelType"];
+            created_at: components["schemas"]["Timestamp"];
+            /** @description true khi tin thuộc snapshot bằng chứng đã lưu */
+            in_snapshot: boolean;
+            /** @enum {string} */
+            kind: "text" | "emoji" | "quick" | "sticker" | "gif" | "system";
+            message_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            moderation_state: "allowed" | "masked" | "unchecked" | "held" | "removed";
+            quick_message_id?: string;
+            recalled_at?: components["schemas"]["Timestamp"];
+            revision?: number;
+            revisions?: {
+                body?: string;
+                decision?: string;
+                edited_at?: components["schemas"]["Timestamp"];
+                revision: number;
+            }[];
+            sender_id: components["schemas"]["Uuid"];
+            sender_nickname?: string;
+            sender_school_id?: components["schemas"]["Uuid"];
+            seq?: number;
+        };
+        /**
+         * @description Trạng thái case theo MODERATION §6.2
+         * @enum {string}
+         */
+        ModerationCaseStatus: "open" | "in_review" | "escalated" | "resolved" | "reopened";
         /**
          * @description Bước có công tắc (MODERATION §12.1). `pii` và grooming luôn chạy, không có công tắc (ADR-0078).
          * @enum {string}
@@ -14341,9 +14413,18 @@ export interface components {
         /** @enum {string} */
         RendererKind: "mobile" | "compatibility" | "forward_plus";
         ReportCreate: {
+            /** @description Ngữ cảnh báo cáo (MODERATION §5) — channel (bắt buộc khi target_type = user và báo cáo từ một cuộc trò chuyện), trận hoặc party */
+            context?: {
+                channel_id?: components["schemas"]["Uuid"];
+                match_id?: components["schemas"]["Uuid"];
+                party_id?: components["schemas"]["Uuid"];
+            };
             note?: string;
-            /** @enum {string} */
-            reason: "bad_words" | "bullying" | "personal_info" | "spam" | "inappropriate" | "other";
+            /**
+             * @description MODERATION §5 (chọn bằng icon cho lớp 1–5)
+             * @enum {string}
+             */
+            reason: "rude_language" | "bullying" | "asked_personal_info" | "spam" | "inappropriate_content" | "cheating" | "other";
             target_id: components["schemas"]["Uuid"];
             /** @enum {string} */
             target_type: "message" | "user";
@@ -14525,22 +14606,45 @@ export interface components {
             /** @enum {string} */
             status: "open" | "running" | "closing" | "closed";
         };
-        Sanction: components["schemas"]["SanctionCreate"] & {
-            created_by: components["schemas"]["Uuid"];
+        Sanction: {
+            case_id?: components["schemas"]["Uuid"];
+            created_by?: components["schemas"]["Uuid"];
             ends_at?: components["schemas"]["Timestamp"];
+            /** @enum {string} */
+            issued_by_kind: "system" | "moderator";
+            reason?: string;
+            /** @description Mã thông điệp hiển thị cho học sinh (ui.sanction.<code>) */
+            reason_code?: string;
+            revoke_reason?: string;
             revoked_at?: components["schemas"]["Timestamp"];
+            revoked_by?: components["schemas"]["Uuid"];
             sanction_id: components["schemas"]["Uuid"];
+            sanction_type: components["schemas"]["SanctionType"];
+            scope?: {
+                channel_id?: components["schemas"]["Uuid"];
+            };
             starts_at: components["schemas"]["Timestamp"];
             tenant_id: components["schemas"]["Uuid"];
+            user_id: components["schemas"]["Uuid"];
         };
         SanctionCreate: {
             case_id?: components["schemas"]["Uuid"];
+            /** @description Mặc định theo MODERATION §7 khi bỏ trống */
             duration_minutes?: number;
+            /** @description Lý do nội bộ của Safety Team (không gửi cho học sinh) */
             reason: string;
-            /** @enum {string} */
-            sanction_type: "warning" | "mute" | "restrict_social" | "restrict_multiplayer" | "suspend_chat";
+            sanction_type: components["schemas"]["SanctionType"];
+            /** @description Bỏ trống = mọi channel; channel_id chỉ cho mute */
+            scope?: {
+                channel_id?: components["schemas"]["Uuid"];
+            };
             user_id: components["schemas"]["Uuid"];
         };
+        /**
+         * @description MODERATION §7
+         * @enum {string}
+         */
+        SanctionType: "warning" | "mute" | "restrict_text" | "restrict_dm" | "restrict_multiplayer" | "restrict_competition" | "account_lock";
         ScheduleItem: components["schemas"]["ScheduleItemInput"] & {
             schedule_item_id: components["schemas"]["Uuid"];
             /** @description Phiên bản hàng — If-Match (W/"n") của updateScheduleItem từ danh sách (F055 delta D1) */
@@ -14740,8 +14844,11 @@ export interface components {
             category_code?: string;
             /** @enum {string} */
             contact_outcome?: "parent_contacted" | "unable_to_contact" | "not_needed";
+            last_reminded_at?: components["schemas"]["Timestamp"];
             measures_taken?: string;
             notification_id: components["schemas"]["Uuid"];
+            /** @description Số lần job school-notification-reminder đã nhắc lại (quá ack_due_at) */
+            reminder_count?: number;
             school_ack_at?: components["schemas"]["Timestamp"];
             school_id: components["schemas"]["Uuid"];
             school_notified_at: components["schemas"]["Timestamp"];
@@ -19189,7 +19296,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["Message"][];
+                        data: components["schemas"]["ModerationCaseMessage"][];
                         page: components["schemas"]["PageInfo"];
                     };
                 };
@@ -22143,6 +22250,8 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Lời cảm ơn theo Accept-Language (không tiết lộ danh tính người báo cáo) */
+                        message: string;
                         report_id: components["schemas"]["Uuid"];
                         /** @enum {string} */
                         status: "open";
@@ -22150,6 +22259,9 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     searchMessages: {

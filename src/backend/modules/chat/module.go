@@ -102,6 +102,7 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.Register(r.Metrics())
 	observability.RegisterChat(r.Metrics())
 	observability.RegisterModeration(r.Metrics())
+	observability.RegisterSafety(r.Metrics())
 	recent := cache.Recent{C: vk, Size: chatCfg.RecentBuffer, TTL: chatCfg.RecentTTL}
 	factsCache := cache.Facts{C: vk, StaleTTL: chatCfg.StaleTTL, OnStale: observability.StaleFacts}
 	// NFR-SAFE-001, F115-AC-06, F116: the send path (core-api) and worker-chat refuse to start without a real
@@ -134,7 +135,13 @@ func Register(r *module.Registry) (*Module, error) {
 		Cache: factsCache, Notifier: cache.Notifier{C: vk}, Gauge: gauge}
 	social := command.Social{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Social{}, Directory: persistence.Directory{},
 		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Codes: security.Codes{},
-		Friends: friends, Metrics: observability.Social{}, Config: cfg.UseCase}
+		Friends: friends, Metrics: observability.Social{}, Holds: persistence.Safety{}, Config: cfg.UseCase}
+	// Platform Safety Team (F121): reports, cases, sanctions, school notifications; cross-tenant reads only in query.Safety
+	// through tenancy.Bypass(moderation_case) (ADR-0072).
+	safetyCmd := command.Safety{UoW: core.UoW, Store: persistence.Safety{}, Events: persistence.Publisher{W: core.Writer},
+		Audit: persistence.Auditor{R: core.Recorder}, Cache: cache.Sanctions{C: vk}, Push: realtime.ChatFanout{P: rt.Publisher{C: vk}},
+		Recent: recent, Metrics: observability.Safety{}, Lock: cache.JobLock{C: vk}, AfterCommit: entx.AfterCommit}
+	safetyReads := query.Safety{Read: core.ReadSession, Reader: persistence.Safety{}, Audit: core.Recorder}
 
 	if r.ServesHTTP() {
 		// The compiled catalogue must be loaded before the instance takes traffic (F116 edge case).
@@ -170,13 +177,15 @@ func Register(r *module.Registry) (*Module, error) {
 			Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
 			Regression: regression.Suite{Engine: pipe.Validator.Engine, Source: corpus}, Notifier: cache.Notifier{C: vk},
 			OnPublished: observability.CatalogVersion}
+		safetyReads.Cursors = cursors
 		catalogReads := query.Catalog{Read: core.ReadSession, Reader: persistence.Catalog{}, Moderation: persistence.ModerationReader{},
 			Engine: pipe.Validator.Engine, Audit: core.Recorder, Cursors: cursors}
 		h := chathttp.Handlers{Commands: social, Queries: query.Social{Read: core.ReadSession, Relations: persistence.Reader{},
 			Presence: presence, Cursors: cursors}, Chat: &chathttp.ChatHandlers{Send: send, Queries: reads,
 			Quick: query.QuickMessages{Catalog: pipe.Quick}}, Catalog: &chathttp.CatalogHandlers{Commands: catalogAdmin, Queries: catalogReads},
 			Switches: &chathttp.SwitchHandlers{Commands: switchAdmin, Queries: query.Switches{Read: core.ReadSession, Reader: persistence.Switches{},
-				Moderation: persistence.ModerationReader{}, Cursors: cursors}}}
+				Moderation: persistence.ModerationReader{}, Cursors: cursors}},
+			Safety: &chathttp.SafetyHandlers{Commands: safetyCmd, Queries: safetyReads}}
 		r.HTTP(Name, func(s *httpx.Server) error { return chathttp.Register(s, h) })
 		// Chat commands of the gateway (F115): ew.cmd.chat.message.send, channel.join/leave, history.fetch, channel.sync.
 		if nc := r.NATS(); nc != nil {
@@ -231,10 +240,19 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("chat.projection_game", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.GameProjectionOptions(consumer.GameProjection{P: projection}, core.UoW, core.App, js)
 	})
+	// chat.moderation_cases (F121-AC-03): chat.message_held opens the case of the held message.
+	r.Consumer("chat.moderation_cases", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.MessageHeldOptions(consumer.MessageHeld{H: safetyCmd}, core.UoW, core.App, js)
+	})
 	expiry := command.Expiry{UoW: core.UoW, Repo: persistence.Expiry{}}
 	r.Job(Name, job.ExpireFriendRequests, cfg.ExpiryInterval, module.JobFunc(job.ExpireFriendRequestsJob(expiry)))
 	// moderation-switch-expirer (F116-AC-25, AC-32): switches back on at expires_at, pending requests expired after 24 h.
 	switchExpiry := command.SwitchExpiry{Admin: switchAdmin, Lock: cache.JobLock{C: vk}}
 	r.Job(Name, job.ModerationSwitchExpirer, command.ExpiryTick, module.JobFunc(job.ModerationSwitchExpirerJob(switchExpiry)))
+	// Safety Team jobs (F121): SLA escalation + queue gauges, school reminders, sanction expiry (≤ 60 s after ends_at).
+	r.Job(Name, job.ModerationSLAEscalator, command.SafetyTick, module.JobFunc(job.SLAEscalatorJob(safetyCmd, observability.Safety{},
+		safetyReads.QueueCounts)))
+	r.Job(Name, job.SchoolNotificationReminder, command.SafetyTick, module.JobFunc(job.ReminderJob(safetyCmd)))
+	r.Job(Name, job.SanctionExpirer, command.SafetyTick, module.JobFunc(job.SanctionExpirerJob(safetyCmd)))
 	return mod, nil
 }

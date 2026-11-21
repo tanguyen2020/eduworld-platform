@@ -27,6 +27,15 @@ type FriendRequest func(*sql.Selector)
 // Friendship is the predicate function for friendship builders.
 type Friendship func(*sql.Selector)
 
+// ModerationAction is the predicate function for moderationaction builders.
+type ModerationAction func(*sql.Selector)
+
+// ModerationCase is the predicate function for moderationcase builders.
+type ModerationCase func(*sql.Selector)
+
+// ModerationEvidence is the predicate function for moderationevidence builders.
+type ModerationEvidence func(*sql.Selector)
+
 // ModerationSwitch is the predicate function for moderationswitch builders.
 type ModerationSwitch func(*sql.Selector)
 
@@ -42,8 +51,14 @@ type Mute func(*sql.Selector)
 // QuickMessage is the predicate function for quickmessage builders.
 type QuickMessage func(*sql.Selector)
 
+// Report is the predicate function for report builders.
+type Report func(*sql.Selector)
+
 // Sanction is the predicate function for sanction builders.
 type Sanction func(*sql.Selector)
+
+// SchoolSafetyNotification is the predicate function for schoolsafetynotification builders.
+type SchoolSafetyNotification func(*sql.Selector)
 
 // SensitiveAllowlistEntry is the predicate function for sensitiveallowlistentry builders.
 type SensitiveAllowlistEntry func(*sql.Selector)

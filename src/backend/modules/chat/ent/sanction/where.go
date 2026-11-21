@@ -155,6 +155,31 @@ func RevokedAt(v time.Time) predicate.Sanction {
 	return predicate.Sanction(sql.FieldEQ(FieldRevokedAt, v))
 }
 
+// ReasonCode applies equality check predicate on the "reason_code" field. It's identical to ReasonCodeEQ.
+func ReasonCode(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldReasonCode, v))
+}
+
+// IssuedByKind applies equality check predicate on the "issued_by_kind" field. It's identical to IssuedByKindEQ.
+func IssuedByKind(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldIssuedByKind, v))
+}
+
+// RevokedBy applies equality check predicate on the "revoked_by" field. It's identical to RevokedByEQ.
+func RevokedBy(v uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldRevokedBy, v))
+}
+
+// RevokeReason applies equality check predicate on the "revoke_reason" field. It's identical to RevokeReasonEQ.
+func RevokeReason(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldRevokeReason, v))
+}
+
+// LiftedAt applies equality check predicate on the "lifted_at" field. It's identical to LiftedAtEQ.
+func LiftedAt(v time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldLiftedAt, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.Sanction {
 	return predicate.Sanction(sql.FieldEQ(FieldTenantID, v))
@@ -1163,6 +1188,321 @@ func RevokedAtIsNil() predicate.Sanction {
 // RevokedAtNotNil applies the NotNil predicate on the "revoked_at" field.
 func RevokedAtNotNil() predicate.Sanction {
 	return predicate.Sanction(sql.FieldNotNull(FieldRevokedAt))
+}
+
+// ReasonCodeEQ applies the EQ predicate on the "reason_code" field.
+func ReasonCodeEQ(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldReasonCode, v))
+}
+
+// ReasonCodeNEQ applies the NEQ predicate on the "reason_code" field.
+func ReasonCodeNEQ(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNEQ(FieldReasonCode, v))
+}
+
+// ReasonCodeIn applies the In predicate on the "reason_code" field.
+func ReasonCodeIn(vs ...string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldIn(FieldReasonCode, vs...))
+}
+
+// ReasonCodeNotIn applies the NotIn predicate on the "reason_code" field.
+func ReasonCodeNotIn(vs ...string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotIn(FieldReasonCode, vs...))
+}
+
+// ReasonCodeGT applies the GT predicate on the "reason_code" field.
+func ReasonCodeGT(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGT(FieldReasonCode, v))
+}
+
+// ReasonCodeGTE applies the GTE predicate on the "reason_code" field.
+func ReasonCodeGTE(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGTE(FieldReasonCode, v))
+}
+
+// ReasonCodeLT applies the LT predicate on the "reason_code" field.
+func ReasonCodeLT(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLT(FieldReasonCode, v))
+}
+
+// ReasonCodeLTE applies the LTE predicate on the "reason_code" field.
+func ReasonCodeLTE(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLTE(FieldReasonCode, v))
+}
+
+// ReasonCodeContains applies the Contains predicate on the "reason_code" field.
+func ReasonCodeContains(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldContains(FieldReasonCode, v))
+}
+
+// ReasonCodeHasPrefix applies the HasPrefix predicate on the "reason_code" field.
+func ReasonCodeHasPrefix(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldHasPrefix(FieldReasonCode, v))
+}
+
+// ReasonCodeHasSuffix applies the HasSuffix predicate on the "reason_code" field.
+func ReasonCodeHasSuffix(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldHasSuffix(FieldReasonCode, v))
+}
+
+// ReasonCodeIsNil applies the IsNil predicate on the "reason_code" field.
+func ReasonCodeIsNil() predicate.Sanction {
+	return predicate.Sanction(sql.FieldIsNull(FieldReasonCode))
+}
+
+// ReasonCodeNotNil applies the NotNil predicate on the "reason_code" field.
+func ReasonCodeNotNil() predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotNull(FieldReasonCode))
+}
+
+// ReasonCodeEqualFold applies the EqualFold predicate on the "reason_code" field.
+func ReasonCodeEqualFold(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEqualFold(FieldReasonCode, v))
+}
+
+// ReasonCodeContainsFold applies the ContainsFold predicate on the "reason_code" field.
+func ReasonCodeContainsFold(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldContainsFold(FieldReasonCode, v))
+}
+
+// IssuedByKindEQ applies the EQ predicate on the "issued_by_kind" field.
+func IssuedByKindEQ(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldIssuedByKind, v))
+}
+
+// IssuedByKindNEQ applies the NEQ predicate on the "issued_by_kind" field.
+func IssuedByKindNEQ(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNEQ(FieldIssuedByKind, v))
+}
+
+// IssuedByKindIn applies the In predicate on the "issued_by_kind" field.
+func IssuedByKindIn(vs ...string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldIn(FieldIssuedByKind, vs...))
+}
+
+// IssuedByKindNotIn applies the NotIn predicate on the "issued_by_kind" field.
+func IssuedByKindNotIn(vs ...string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotIn(FieldIssuedByKind, vs...))
+}
+
+// IssuedByKindGT applies the GT predicate on the "issued_by_kind" field.
+func IssuedByKindGT(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGT(FieldIssuedByKind, v))
+}
+
+// IssuedByKindGTE applies the GTE predicate on the "issued_by_kind" field.
+func IssuedByKindGTE(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGTE(FieldIssuedByKind, v))
+}
+
+// IssuedByKindLT applies the LT predicate on the "issued_by_kind" field.
+func IssuedByKindLT(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLT(FieldIssuedByKind, v))
+}
+
+// IssuedByKindLTE applies the LTE predicate on the "issued_by_kind" field.
+func IssuedByKindLTE(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLTE(FieldIssuedByKind, v))
+}
+
+// IssuedByKindContains applies the Contains predicate on the "issued_by_kind" field.
+func IssuedByKindContains(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldContains(FieldIssuedByKind, v))
+}
+
+// IssuedByKindHasPrefix applies the HasPrefix predicate on the "issued_by_kind" field.
+func IssuedByKindHasPrefix(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldHasPrefix(FieldIssuedByKind, v))
+}
+
+// IssuedByKindHasSuffix applies the HasSuffix predicate on the "issued_by_kind" field.
+func IssuedByKindHasSuffix(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldHasSuffix(FieldIssuedByKind, v))
+}
+
+// IssuedByKindEqualFold applies the EqualFold predicate on the "issued_by_kind" field.
+func IssuedByKindEqualFold(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEqualFold(FieldIssuedByKind, v))
+}
+
+// IssuedByKindContainsFold applies the ContainsFold predicate on the "issued_by_kind" field.
+func IssuedByKindContainsFold(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldContainsFold(FieldIssuedByKind, v))
+}
+
+// RevokedByEQ applies the EQ predicate on the "revoked_by" field.
+func RevokedByEQ(v uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldRevokedBy, v))
+}
+
+// RevokedByNEQ applies the NEQ predicate on the "revoked_by" field.
+func RevokedByNEQ(v uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNEQ(FieldRevokedBy, v))
+}
+
+// RevokedByIn applies the In predicate on the "revoked_by" field.
+func RevokedByIn(vs ...uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldIn(FieldRevokedBy, vs...))
+}
+
+// RevokedByNotIn applies the NotIn predicate on the "revoked_by" field.
+func RevokedByNotIn(vs ...uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotIn(FieldRevokedBy, vs...))
+}
+
+// RevokedByGT applies the GT predicate on the "revoked_by" field.
+func RevokedByGT(v uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGT(FieldRevokedBy, v))
+}
+
+// RevokedByGTE applies the GTE predicate on the "revoked_by" field.
+func RevokedByGTE(v uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGTE(FieldRevokedBy, v))
+}
+
+// RevokedByLT applies the LT predicate on the "revoked_by" field.
+func RevokedByLT(v uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLT(FieldRevokedBy, v))
+}
+
+// RevokedByLTE applies the LTE predicate on the "revoked_by" field.
+func RevokedByLTE(v uuid.UUID) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLTE(FieldRevokedBy, v))
+}
+
+// RevokedByIsNil applies the IsNil predicate on the "revoked_by" field.
+func RevokedByIsNil() predicate.Sanction {
+	return predicate.Sanction(sql.FieldIsNull(FieldRevokedBy))
+}
+
+// RevokedByNotNil applies the NotNil predicate on the "revoked_by" field.
+func RevokedByNotNil() predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotNull(FieldRevokedBy))
+}
+
+// RevokeReasonEQ applies the EQ predicate on the "revoke_reason" field.
+func RevokeReasonEQ(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldRevokeReason, v))
+}
+
+// RevokeReasonNEQ applies the NEQ predicate on the "revoke_reason" field.
+func RevokeReasonNEQ(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNEQ(FieldRevokeReason, v))
+}
+
+// RevokeReasonIn applies the In predicate on the "revoke_reason" field.
+func RevokeReasonIn(vs ...string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldIn(FieldRevokeReason, vs...))
+}
+
+// RevokeReasonNotIn applies the NotIn predicate on the "revoke_reason" field.
+func RevokeReasonNotIn(vs ...string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotIn(FieldRevokeReason, vs...))
+}
+
+// RevokeReasonGT applies the GT predicate on the "revoke_reason" field.
+func RevokeReasonGT(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGT(FieldRevokeReason, v))
+}
+
+// RevokeReasonGTE applies the GTE predicate on the "revoke_reason" field.
+func RevokeReasonGTE(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGTE(FieldRevokeReason, v))
+}
+
+// RevokeReasonLT applies the LT predicate on the "revoke_reason" field.
+func RevokeReasonLT(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLT(FieldRevokeReason, v))
+}
+
+// RevokeReasonLTE applies the LTE predicate on the "revoke_reason" field.
+func RevokeReasonLTE(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLTE(FieldRevokeReason, v))
+}
+
+// RevokeReasonContains applies the Contains predicate on the "revoke_reason" field.
+func RevokeReasonContains(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldContains(FieldRevokeReason, v))
+}
+
+// RevokeReasonHasPrefix applies the HasPrefix predicate on the "revoke_reason" field.
+func RevokeReasonHasPrefix(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldHasPrefix(FieldRevokeReason, v))
+}
+
+// RevokeReasonHasSuffix applies the HasSuffix predicate on the "revoke_reason" field.
+func RevokeReasonHasSuffix(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldHasSuffix(FieldRevokeReason, v))
+}
+
+// RevokeReasonIsNil applies the IsNil predicate on the "revoke_reason" field.
+func RevokeReasonIsNil() predicate.Sanction {
+	return predicate.Sanction(sql.FieldIsNull(FieldRevokeReason))
+}
+
+// RevokeReasonNotNil applies the NotNil predicate on the "revoke_reason" field.
+func RevokeReasonNotNil() predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotNull(FieldRevokeReason))
+}
+
+// RevokeReasonEqualFold applies the EqualFold predicate on the "revoke_reason" field.
+func RevokeReasonEqualFold(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEqualFold(FieldRevokeReason, v))
+}
+
+// RevokeReasonContainsFold applies the ContainsFold predicate on the "revoke_reason" field.
+func RevokeReasonContainsFold(v string) predicate.Sanction {
+	return predicate.Sanction(sql.FieldContainsFold(FieldRevokeReason, v))
+}
+
+// LiftedAtEQ applies the EQ predicate on the "lifted_at" field.
+func LiftedAtEQ(v time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldEQ(FieldLiftedAt, v))
+}
+
+// LiftedAtNEQ applies the NEQ predicate on the "lifted_at" field.
+func LiftedAtNEQ(v time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNEQ(FieldLiftedAt, v))
+}
+
+// LiftedAtIn applies the In predicate on the "lifted_at" field.
+func LiftedAtIn(vs ...time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldIn(FieldLiftedAt, vs...))
+}
+
+// LiftedAtNotIn applies the NotIn predicate on the "lifted_at" field.
+func LiftedAtNotIn(vs ...time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotIn(FieldLiftedAt, vs...))
+}
+
+// LiftedAtGT applies the GT predicate on the "lifted_at" field.
+func LiftedAtGT(v time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGT(FieldLiftedAt, v))
+}
+
+// LiftedAtGTE applies the GTE predicate on the "lifted_at" field.
+func LiftedAtGTE(v time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldGTE(FieldLiftedAt, v))
+}
+
+// LiftedAtLT applies the LT predicate on the "lifted_at" field.
+func LiftedAtLT(v time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLT(FieldLiftedAt, v))
+}
+
+// LiftedAtLTE applies the LTE predicate on the "lifted_at" field.
+func LiftedAtLTE(v time.Time) predicate.Sanction {
+	return predicate.Sanction(sql.FieldLTE(FieldLiftedAt, v))
+}
+
+// LiftedAtIsNil applies the IsNil predicate on the "lifted_at" field.
+func LiftedAtIsNil() predicate.Sanction {
+	return predicate.Sanction(sql.FieldIsNull(FieldLiftedAt))
+}
+
+// LiftedAtNotNil applies the NotNil predicate on the "lifted_at" field.
+func LiftedAtNotNil() predicate.Sanction {
+	return predicate.Sanction(sql.FieldNotNull(FieldLiftedAt))
 }
 
 // And groups predicates with the AND operator between them.

@@ -2,13 +2,23 @@
 // subjects each durable consumer reads. Delivery, idempotency and DLQ are pkg/outbox.Consumer.
 package messaging
 
-import "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/natsx"
+import (
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/natsx"
+)
 
-// IdentityStream and GameStream are the streams of the producers identity and game.
+// IdentityStream, GameStream and ChatStream are the streams of the producers identity, game and chat.
 var (
 	IdentityStream = natsx.EventStream("identity")
 	GameStream     = natsx.EventStream("game")
+	ChatStream     = natsx.EventStream("chat")
 )
+
+// ModerationCasesName opens the cases of the pipeline signals (F121-AC-03): chat.message_held of chat-persister (F116).
+const ModerationCasesName = "chat.moderation_cases"
+
+// ModerationCasesEvents are the chat events it consumes.
+var ModerationCasesEvents = []string{command.EventMessageHeld}
 
 // ProjectionIdentityName keeps ref.tenants and ref.students of eduworld_chat (F095 T007), ref.schools and
 // ref.platform_settings (platform_curfew) for the curfew of the send path (F115 T041).

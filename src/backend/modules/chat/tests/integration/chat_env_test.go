@@ -149,6 +149,7 @@ type chatOpts struct {
 	maxDeliver  int
 	factsFresh  time.Duration
 	store       write.MessageStore // nil: persistence.Messages
+	hook        func(c *chatEnv)   // F121: extra wiring before the HTTP server starts (safety handlers)
 }
 
 // chatEnv is the chat core on the real adapters: PostgreSQL (eduworld_chat), Valkey and NATS JetStream
@@ -261,6 +262,9 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 			Moderation: persistence.ModerationReader{}, Cursors: codec, Now: e.clock.Now}}
 		e.catalogHandlers = &chathttp.CatalogHandlers{Commands: c.catalog, Queries: query.Catalog{Read: e.read, Reader: persistence.Catalog{},
 			Moderation: persistence.ModerationReader{}, Engine: c.pipe.Validator.Engine, Audit: e.rec, Cursors: codec}}
+	}
+	if o.hook != nil {
+		o.hook(c)
 	}
 	e.server(ctx)
 	runCtx, stop := context.WithCancel(ctx)

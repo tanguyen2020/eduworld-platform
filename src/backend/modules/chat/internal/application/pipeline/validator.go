@@ -134,8 +134,8 @@ func (v *Validator) Validate(ctx context.Context, in port.ValidationInput) (verd
 		return port.Verdict{}, err
 	}
 	for _, s := range sanctions {
-		if s.Applies(in.ChannelID, now) {
-			return port.Verdict{}, problem.New(problem.ChatMuted, "")
+		if code := s.Refusal(in.ChannelID, string(in.Kind), in.ChannelType, now); code != "" {
+			return port.Verdict{}, problem.New(problem.Code(code), "")
 		}
 	}
 	text := in.Text

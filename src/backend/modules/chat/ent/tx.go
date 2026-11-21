@@ -26,6 +26,12 @@ type Tx struct {
 	FriendRequest *FriendRequestClient
 	// Friendship is the client for interacting with the Friendship builders.
 	Friendship *FriendshipClient
+	// ModerationAction is the client for interacting with the ModerationAction builders.
+	ModerationAction *ModerationActionClient
+	// ModerationCase is the client for interacting with the ModerationCase builders.
+	ModerationCase *ModerationCaseClient
+	// ModerationEvidence is the client for interacting with the ModerationEvidence builders.
+	ModerationEvidence *ModerationEvidenceClient
 	// ModerationSwitch is the client for interacting with the ModerationSwitch builders.
 	ModerationSwitch *ModerationSwitchClient
 	// ModerationSwitchChange is the client for interacting with the ModerationSwitchChange builders.
@@ -36,8 +42,12 @@ type Tx struct {
 	Mute *MuteClient
 	// QuickMessage is the client for interacting with the QuickMessage builders.
 	QuickMessage *QuickMessageClient
+	// Report is the client for interacting with the Report builders.
+	Report *ReportClient
 	// Sanction is the client for interacting with the Sanction builders.
 	Sanction *SanctionClient
+	// SchoolSafetyNotification is the client for interacting with the SchoolSafetyNotification builders.
+	SchoolSafetyNotification *SchoolSafetyNotificationClient
 	// SensitiveAllowlistEntry is the client for interacting with the SensitiveAllowlistEntry builders.
 	SensitiveAllowlistEntry *SensitiveAllowlistEntryClient
 	// SensitiveCatalogVersion is the client for interacting with the SensitiveCatalogVersion builders.
@@ -186,12 +196,17 @@ func (tx *Tx) init() {
 	tx.FriendCode = NewFriendCodeClient(tx.config)
 	tx.FriendRequest = NewFriendRequestClient(tx.config)
 	tx.Friendship = NewFriendshipClient(tx.config)
+	tx.ModerationAction = NewModerationActionClient(tx.config)
+	tx.ModerationCase = NewModerationCaseClient(tx.config)
+	tx.ModerationEvidence = NewModerationEvidenceClient(tx.config)
 	tx.ModerationSwitch = NewModerationSwitchClient(tx.config)
 	tx.ModerationSwitchChange = NewModerationSwitchChangeClient(tx.config)
 	tx.ModerationSwitchRequest = NewModerationSwitchRequestClient(tx.config)
 	tx.Mute = NewMuteClient(tx.config)
 	tx.QuickMessage = NewQuickMessageClient(tx.config)
+	tx.Report = NewReportClient(tx.config)
 	tx.Sanction = NewSanctionClient(tx.config)
+	tx.SchoolSafetyNotification = NewSchoolSafetyNotificationClient(tx.config)
 	tx.SensitiveAllowlistEntry = NewSensitiveAllowlistEntryClient(tx.config)
 	tx.SensitiveCatalogVersion = NewSensitiveCatalogVersionClient(tx.config)
 	tx.SensitiveTerm = NewSensitiveTermClient(tx.config)

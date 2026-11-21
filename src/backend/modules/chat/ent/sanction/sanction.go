@@ -55,6 +55,16 @@ const (
 	FieldEndsAt = "ends_at"
 	// FieldRevokedAt holds the string denoting the revoked_at field in the database.
 	FieldRevokedAt = "revoked_at"
+	// FieldReasonCode holds the string denoting the reason_code field in the database.
+	FieldReasonCode = "reason_code"
+	// FieldIssuedByKind holds the string denoting the issued_by_kind field in the database.
+	FieldIssuedByKind = "issued_by_kind"
+	// FieldRevokedBy holds the string denoting the revoked_by field in the database.
+	FieldRevokedBy = "revoked_by"
+	// FieldRevokeReason holds the string denoting the revoke_reason field in the database.
+	FieldRevokeReason = "revoke_reason"
+	// FieldLiftedAt holds the string denoting the lifted_at field in the database.
+	FieldLiftedAt = "lifted_at"
 	// Table holds the table name of the sanction in the database.
 	Table = "sanctions"
 )
@@ -82,6 +92,11 @@ var Columns = []string{
 	FieldStartsAt,
 	FieldEndsAt,
 	FieldRevokedAt,
+	FieldReasonCode,
+	FieldIssuedByKind,
+	FieldRevokedBy,
+	FieldRevokeReason,
+	FieldLiftedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -118,6 +133,14 @@ var (
 	ScopeValidator func(string) error
 	// ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
 	ReasonValidator func(string) error
+	// ReasonCodeValidator is a validator for the "reason_code" field. It is called by the builders before save.
+	ReasonCodeValidator func(string) error
+	// DefaultIssuedByKind holds the default value on creation for the "issued_by_kind" field.
+	DefaultIssuedByKind string
+	// IssuedByKindValidator is a validator for the "issued_by_kind" field. It is called by the builders before save.
+	IssuedByKindValidator func(string) error
+	// RevokeReasonValidator is a validator for the "revoke_reason" field. It is called by the builders before save.
+	RevokeReasonValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -228,4 +251,29 @@ func ByEndsAt(opts ...sql.OrderTermOption) OrderOption {
 // ByRevokedAt orders the results by the revoked_at field.
 func ByRevokedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRevokedAt, opts...).ToFunc()
+}
+
+// ByReasonCode orders the results by the reason_code field.
+func ByReasonCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReasonCode, opts...).ToFunc()
+}
+
+// ByIssuedByKind orders the results by the issued_by_kind field.
+func ByIssuedByKind(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIssuedByKind, opts...).ToFunc()
+}
+
+// ByRevokedBy orders the results by the revoked_by field.
+func ByRevokedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRevokedBy, opts...).ToFunc()
+}
+
+// ByRevokeReason orders the results by the revoke_reason field.
+func ByRevokeReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRevokeReason, opts...).ToFunc()
+}
+
+// ByLiftedAt orders the results by the lifted_at field.
+func ByLiftedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLiftedAt, opts...).ToFunc()
 }

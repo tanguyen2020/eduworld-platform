@@ -1,18 +1,20 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/chat/sanction.applied.v1.schema.json",
-  "title": "Payload sanction.applied v1 (module chat, owner F116)",
-  "description": "Một sanction được áp cho học sinh (F116: mute hệ thống auto_spam hoặc block_and_alert_hold, issued_by null; F121 thêm sanction thủ công và case_id tương thích). Không chứa nội dung tin. Consumer: chat (cache), RT, AUD.",
+  "title": "Payload sanction.applied v1 (module chat, owner F116; mở rộng F121)",
+  "description": "Một sanction được áp cho học sinh (F116: mute hệ thống auto_spam/block_and_alert_hold; F121: hold p1 case_hold và sanction của Safety Team gắn case_id). Trường theo EVENT_DESIGN §4.9 (sanction_type, until). Chỉ mã định danh và mã lý do — không có lý do nội bộ hay nội dung tin (R14). Consumer: competition (ref.sanctions), identity (account_lock, F124), RT, AUD.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "tenant_id",
     "sanction_id",
     "user_id",
-    "type",
+    "sanction_type",
     "scope",
-    "reason",
-    "starts_at"
+    "reason_code",
+    "issued_by_kind",
+    "starts_at",
+    "source_version"
   ],
   "properties": {
     "tenant_id": {
@@ -27,7 +29,14 @@
       "type": "string",
       "format": "uuid"
     },
-    "type": {
+    "case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "sanction_type": {
       "enum": [
         "warning",
         "mute",
@@ -51,16 +60,16 @@
       ],
       "format": "uuid"
     },
-    "reason": {
+    "reason_code": {
       "type": "string",
-      "maxLength": 1000
+      "maxLength": 64,
+      "description": "Mã thông điệp cho học sinh: auto_spam, block_and_alert_hold, case_hold, moderation"
     },
-    "case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "format": "uuid"
+    "issued_by_kind": {
+      "enum": [
+        "system",
+        "moderator"
+      ]
     },
     "issued_by": {
       "type": [
@@ -73,12 +82,18 @@
       "type": "string",
       "format": "date-time"
     },
-    "ends_at": {
+    "until": {
       "type": [
         "string",
         "null"
       ],
-      "format": "date-time"
+      "format": "date-time",
+      "description": "ends_at; null = đến khi gỡ"
+    },
+    "source_version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Thời điểm thay đổi (epoch µs): projection chỉ áp bản mới hơn (DATABASE_DESIGN §2.17)"
     }
   },
   "examples": [
@@ -86,12 +101,16 @@
       "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
       "sanction_id": "0193a6c1-0000-7000-8000-000000000004",
       "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
-      "type": "mute",
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "sanction_type": "restrict_multiplayer",
       "scope": "all",
-      "reason": "auto_spam",
-      "issued_by": null,
+      "channel_id": null,
+      "reason_code": "moderation",
+      "issued_by_kind": "moderator",
+      "issued_by": "0193a5f4-6c1e-7b2a-9d1f-0000000000aa",
       "starts_at": "2026-11-21T08:30:12.345Z",
-      "ends_at": "2026-11-21T08:40:12.345Z"
+      "until": "2026-11-28T08:30:12.345Z",
+      "source_version": 1763713812345000
     }
   ]
 }

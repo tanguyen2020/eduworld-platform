@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/sanction.lifted.v1.schema.json",
+  "title": "Payload sanction.lifted v1 (module chat, owner F121)",
+  "description": "Một sanction hết hiệu lực: gỡ trước hạn (revokeSanction), hết ends_at (job sanction-expirer) hoặc hold tạm thời được gỡ khi case kết thúc (F121-AC-04, AC-15). Không có lý do nội bộ hay nội dung tin (R14). Consumer: competition (ref.sanctions), identity (mở khóa nguồn moderation_sanction, F124), RT, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "sanction_id",
+    "user_id",
+    "sanction_type",
+    "lift_reason",
+    "lifted_at",
+    "source_version"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sanction_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "user_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "sanction_type": {
+      "enum": [
+        "warning",
+        "mute",
+        "restrict_text",
+        "restrict_dm",
+        "restrict_multiplayer",
+        "restrict_competition",
+        "account_lock"
+      ]
+    },
+    "lift_reason": {
+      "enum": [
+        "revoked",
+        "expired",
+        "case_resolved"
+      ]
+    },
+    "until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "lifted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Thời điểm thay đổi (epoch µs): projection chỉ áp bản mới hơn (DATABASE_DESIGN §2.17)"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "sanction_id": "0193a6c1-0000-7000-8000-000000000004",
+      "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "case_id": "0193a6c1-0000-7000-8000-000000000005",
+      "sanction_type": "restrict_multiplayer",
+      "lift_reason": "revoked",
+      "until": "2026-11-28T08:30:12.345Z",
+      "lifted_at": "2026-11-22T09:00:00.000Z",
+      "source_version": 1763802000000000
+    }
+  ]
+}

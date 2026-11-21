@@ -56,6 +56,15 @@ func (h Social) send(ctx context.Context, tenant, me, addressee uuid.UUID, sourc
 	if !t.FriendsEnabled() { // F095-AC-23: before anything else, nothing written
 		return RequestResult{}, h.scopeProblem(social.ErrFriendsDisabled, now)
 	}
+	if h.Holds != nil { // F121-AC-04: a held student sends no new friend request (no reason disclosed)
+		held, err := h.Holds.Held(ctx, tenant, me)
+		if err != nil {
+			return RequestResult{}, err
+		}
+		if held {
+			return RequestResult{}, h.scopeProblem(social.ErrBlocked, now)
+		}
+	}
 	from, err := h.caller(ctx, tenant, me)
 	if err != nil {
 		return RequestResult{}, err

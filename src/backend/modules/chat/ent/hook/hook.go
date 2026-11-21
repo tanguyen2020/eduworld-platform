@@ -93,6 +93,42 @@ func (f FriendshipFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FriendshipMutation", m)
 }
 
+// The ModerationActionFunc type is an adapter to allow the use of ordinary
+// function as ModerationAction mutator.
+type ModerationActionFunc func(context.Context, *ent.ModerationActionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModerationActionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModerationActionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModerationActionMutation", m)
+}
+
+// The ModerationCaseFunc type is an adapter to allow the use of ordinary
+// function as ModerationCase mutator.
+type ModerationCaseFunc func(context.Context, *ent.ModerationCaseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModerationCaseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModerationCaseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModerationCaseMutation", m)
+}
+
+// The ModerationEvidenceFunc type is an adapter to allow the use of ordinary
+// function as ModerationEvidence mutator.
+type ModerationEvidenceFunc func(context.Context, *ent.ModerationEvidenceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModerationEvidenceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModerationEvidenceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModerationEvidenceMutation", m)
+}
+
 // The ModerationSwitchFunc type is an adapter to allow the use of ordinary
 // function as ModerationSwitch mutator.
 type ModerationSwitchFunc func(context.Context, *ent.ModerationSwitchMutation) (ent.Value, error)
@@ -153,6 +189,18 @@ func (f QuickMessageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuickMessageMutation", m)
 }
 
+// The ReportFunc type is an adapter to allow the use of ordinary
+// function as Report mutator.
+type ReportFunc func(context.Context, *ent.ReportMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ReportFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ReportMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReportMutation", m)
+}
+
 // The SanctionFunc type is an adapter to allow the use of ordinary
 // function as Sanction mutator.
 type SanctionFunc func(context.Context, *ent.SanctionMutation) (ent.Value, error)
@@ -163,6 +211,18 @@ func (f SanctionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SanctionMutation", m)
+}
+
+// The SchoolSafetyNotificationFunc type is an adapter to allow the use of ordinary
+// function as SchoolSafetyNotification mutator.
+type SchoolSafetyNotificationFunc func(context.Context, *ent.SchoolSafetyNotificationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SchoolSafetyNotificationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SchoolSafetyNotificationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SchoolSafetyNotificationMutation", m)
 }
 
 // The SensitiveAllowlistEntryFunc type is an adapter to allow the use of ordinary

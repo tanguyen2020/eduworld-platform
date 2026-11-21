@@ -1689,7 +1689,8 @@ components:
                 type: object
                 required: [sanction_type]
                 properties:
-                  sanction_type: { type: string, enum: [warning, mute, restrict_quick_only, chat_disabled] }
+                  sanction_type: { type: string, enum: [warning, mute, restrict_text, restrict_dm, restrict_multiplayer, restrict_competition, account_lock], description: MODERATION §7 }
+                  reason_code: { type: string, maxLength: 64, description: 'Mã thông điệp phù hợp lứa tuổi (ui.sanction.<code>): auto_spam, block_and_alert_hold, case_hold, moderation' }
                   until: { $ref: '#/components/schemas/EpochMs' }
                   notice: { type: string, maxLength: 1000 }
 

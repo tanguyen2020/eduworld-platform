@@ -19,6 +19,7 @@ const (
 	TypeMessageHeld    = "chat.message.held"
 	TypeHistoryLoaded  = "chat.history.loaded"
 	TypeSanction       = "chat.sanction.applied"
+	TypeMessageRemoved = "chat.message.removed"
 )
 
 // maxTargets is the bound of target.user_ids of RtPubSubEnvelope.
@@ -144,4 +145,14 @@ func (f ChatFanout) SanctionApplied(ctx context.Context, user uuid.UUID, payload
 		return err
 	}
 	return f.P.ToUser(ctx, user, env)
+}
+
+// MessageRemoved pushes chat.message.removed to the members of the channel (F121-AC-12): the client shows a placeholder;
+// ids only, never the content.
+func (f ChatFanout) MessageRemoved(ctx context.Context, channel, msg uuid.UUID) error {
+	env, err := rt.NewMessage(TypeMessageRemoved, map[string]any{"message_id": msg, "channel_id": channel, "reason": "moderation"}, f.now())
+	if err != nil {
+		return err
+	}
+	return f.P.Publish(ctx, rt.ChatFanoutChannel(channel.String()), env)
 }
