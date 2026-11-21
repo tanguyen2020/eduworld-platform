@@ -1,0 +1,159 @@
+[
+  {
+    "schema_version": 1,
+    "chapter_code": "chapter.0.invitation",
+    "region_code": "central",
+    "title": {
+      "vi": "Lời mời",
+      "en": "The Invitation"
+    },
+    "order": 0,
+    "subject_code": null,
+    "main_quest_ids": [
+      "0193a5f4-6c1e-7b2a-9d1f-000000071101",
+      "0193a5f4-6c1e-7b2a-9d1f-000000071102"
+    ],
+    "boss_id": null,
+    "unlock_rule": {
+      "first_entry": true
+    }
+  },
+  {
+    "schema_version": 1,
+    "chapter_code": "chapter.1.number_kingdom",
+    "region_code": "math_kingdom",
+    "title": {
+      "vi": "Vương quốc Số",
+      "en": "The Number Kingdom"
+    },
+    "boss_name": {
+      "vi": "Rồng Phân Số",
+      "en": "Fraction Dragon"
+    },
+    "order": 1,
+    "subject_code": "math",
+    "main_quest_ids": [
+      "0193a5f4-6c1e-7b2a-9d1f-000000071111",
+      "0193a5f4-6c1e-7b2a-9d1f-000000071112"
+    ],
+    "boss_id": null,
+    "unlock_rule": {
+      "after_chapter": "chapter.0.invitation"
+    }
+  },
+  {
+    "schema_version": 1,
+    "chapter_code": "chapter.2.language_forest",
+    "region_code": "language_forest",
+    "title": {
+      "vi": "Rừng Ngôn Ngữ",
+      "en": "The Language Forest"
+    },
+    "boss_name": {
+      "vi": "Bóng Ma Chính Tả",
+      "en": "Spelling Phantom"
+    },
+    "order": 2,
+    "subject_code": "vietnamese",
+    "main_quest_ids": [
+      "0193a5f4-6c1e-7b2a-9d1f-000000071121",
+      "0193a5f4-6c1e-7b2a-9d1f-000000071122"
+    ],
+    "boss_id": null,
+    "unlock_rule": {
+      "after_chapter": "chapter.0.invitation"
+    }
+  },
+  {
+    "schema_version": 1,
+    "chapter_code": "chapter.3.science_island",
+    "region_code": "science_island",
+    "title": {
+      "vi": "Đảo Khoa Học",
+      "en": "Science Island"
+    },
+    "boss_name": {
+      "vi": "Người Khổng Lồ Bão Tố",
+      "en": "Storm Giant"
+    },
+    "order": 3,
+    "subject_code": "science",
+    "main_quest_ids": [
+      "0193a5f4-6c1e-7b2a-9d1f-000000071131",
+      "0193a5f4-6c1e-7b2a-9d1f-000000071132"
+    ],
+    "boss_id": null,
+    "unlock_rule": {
+      "after_chapter": "chapter.0.invitation"
+    }
+  },
+  {
+    "schema_version": 1,
+    "chapter_code": "chapter.4.history_kingdom",
+    "region_code": "history_kingdom",
+    "title": {
+      "vi": "Vương quốc Lịch Sử",
+      "en": "The History Kingdom"
+    },
+    "boss_name": {
+      "vi": "Người Gác Đồng Hồ Cát",
+      "en": "Hourglass Keeper"
+    },
+    "order": 4,
+    "subject_code": "history",
+    "main_quest_ids": [
+      "0193a5f4-6c1e-7b2a-9d1f-000000071141",
+      "0193a5f4-6c1e-7b2a-9d1f-000000071142"
+    ],
+    "boss_id": null,
+    "unlock_rule": {
+      "after_chapter": "chapter.0.invitation"
+    }
+  },
+  {
+    "schema_version": 1,
+    "chapter_code": "chapter.5.discovery_ocean",
+    "region_code": "discovery_ocean",
+    "title": {
+      "vi": "Đại dương Khám Phá",
+      "en": "The Discovery Ocean"
+    },
+    "boss_name": {
+      "vi": "Bạch Tuộc Câu Đố",
+      "en": "Riddle Octopus"
+    },
+    "order": 5,
+    "subject_code": null,
+    "main_quest_ids": [
+      "0193a5f4-6c1e-7b2a-9d1f-000000071151",
+      "0193a5f4-6c1e-7b2a-9d1f-000000071152"
+    ],
+    "boss_id": null,
+    "unlock_rule": {
+      "min_subject_chapters": 1
+    }
+  },
+  {
+    "schema_version": 1,
+    "chapter_code": "chapter.6.challenge_mountain",
+    "region_code": "challenge_mountain",
+    "title": {
+      "vi": "Núi Thử Thách",
+      "en": "Challenge Mountain"
+    },
+    "boss_name": {
+      "vi": "Tinh Thể Tri Thức",
+      "en": "Crystal of Knowledge"
+    },
+    "order": 6,
+    "subject_code": null,
+    "main_quest_ids": [
+      "0193a5f4-6c1e-7b2a-9d1f-000000071161",
+      "0193a5f4-6c1e-7b2a-9d1f-000000071162"
+    ],
+    "boss_id": null,
+    "unlock_rule": {
+      "min_subject_chapters": 2
+    }
+  }
+]

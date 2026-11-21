@@ -5656,23 +5656,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/game/world/friends/{user_id}:join": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Tham gia khu vực/instance của bạn bè (SOCIAL_SYSTEM "Tham gia bạn"; SOCIAL_SCOPE_VIOLATION khi ngoài phạm vi) */
-        post: operations["joinFriendInWorld"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/game/world/manifest": {
         parameters: {
             query?: never;
@@ -9160,6 +9143,8 @@ export interface components {
         };
         AreaEnterResult: {
             area_id: string;
+            area_version?: number;
+            level_id?: components["schemas"]["Uuid"];
             room_id: components["schemas"]["Uuid"];
             /** @enum {string} */
             room_type: "hub_instance" | "private_instance";
@@ -9169,19 +9154,20 @@ export interface components {
             area_id: string;
             collectibles_found?: number;
             collectibles_total?: number;
+            completed_at?: components["schemas"]["Timestamp"];
             completion_pct: number;
             discoveries_found?: number;
             discoveries_total?: number;
+            name?: components["schemas"]["LocalizedName"];
+            region_code?: string;
             /** @description Điều kiện còn thiếu để mở khu (khi unlocked = false) */
-            unlock_requirements?: {
-                /** @enum {string} */
-                kind: "level" | "quest" | "learning_objective" | "achievement" | "event";
-                label?: string;
-                met?: boolean;
-                ref?: string;
-            }[];
+            unlock_requirements?: components["schemas"]["UnlockRequirement"][];
             unlocked: boolean;
             unlocked_at?: components["schemas"]["Timestamp"];
+        };
+        /** @description Problem AREA_LOCKED kèm điều kiện còn thiếu */
+        AreaLockedProblem: components["schemas"]["Problem"] & {
+            missing_requirements?: components["schemas"]["UnlockRequirement"][];
         };
         AssessmentBlueprintAuthoring: components["schemas"]["ContentVersion"] & components["schemas"]["AssessmentBlueprintAuthoringInput"];
         /** @description Ma trận đề; `definition` validate theo specs/schemas/assessment-blueprint.schema.json */
@@ -10869,6 +10855,8 @@ export interface components {
         };
         ContentManifestItem: {
             activity_type?: components["schemas"]["ActivityType"];
+            /** @description Mã ổn định của item game khóa chuỗi (area_id, chapter_code, npc_id); item_id khi đó là UUIDv5 của <item_type>:<mã> (F071) */
+            item_code?: string;
             item_id: components["schemas"]["Uuid"];
             item_type: string;
             /** @description Phiên bản client tối thiểu của activity_type (ACTIVITY_ENGINE §12, F026-AC-25) */
@@ -13457,6 +13445,28 @@ export interface components {
             ref_type?: string;
             title?: components["schemas"]["LocalizedName"];
         };
+        /** @description NPCDialogueVersion đang publish (specs/schemas/npc-dialogue.schema.json) — điều kiện chỉ để hiển thị; action nghiệp vụ đi qua API server (ADR-0016) */
+        NpcDialogueDelivery: {
+            dialogue_id: components["schemas"]["Uuid"];
+            dialogue_version_id: components["schemas"]["Uuid"];
+            entry_points?: {
+                [key: string]: unknown;
+            }[];
+            grade_levels?: number[];
+            nodes: {
+                [key: string]: unknown;
+            }[];
+            npc_id: string;
+            npc_name?: components["schemas"]["LocalizedName"];
+            /** @enum {string} */
+            owner_scope?: "platform";
+            /** @enum {integer} */
+            schema_version: 1;
+            start_node_id: string;
+            /** @enum {string} */
+            status: "published";
+            version: number;
+        };
         /** @description numeric — chuỗi học sinh nhập (dấu thập phân theo decimal_separator; `a/b` khi allow_fraction_input) */
         NumericResponse: {
             value: string;
@@ -15325,10 +15335,13 @@ export interface components {
             completed_at?: components["schemas"]["Timestamp"];
             main_quests_completed?: number;
             main_quests_total?: number;
+            /** @description Số chương (0 = Lời mời) */
             order?: number;
             region_code: string;
             /** @enum {string} */
             status: "locked" | "available" | "in_progress" | "completed";
+            /** @description Môn của chương môn học (1–4) */
+            subject_code?: string;
             title?: components["schemas"]["LocalizedName"];
         };
         StudentCleanupCandidate: {
@@ -15927,6 +15940,18 @@ export interface components {
             items: components["schemas"]["UnassignedStudent"][];
             page: components["schemas"]["PageInfo"];
         };
+        /** @description Một điều kiện mở khu (WORLD_DESIGN §7.2) — thông điệp thân thiện, không có điều kiện thanh toán */
+        UnlockRequirement: {
+            /** @description Tiến độ hiện tại (vd. số chương đã xong) */
+            current?: number;
+            /** @enum {string} */
+            kind: "level" | "quest" | "learning_objective" | "achievement" | "event" | "chapters_completed";
+            label?: components["schemas"]["LocalizedName"];
+            met: boolean;
+            ref?: string;
+            /** @description Mức cần đạt (vd. 2 chương) */
+            target?: number;
+        };
         /** @description Tài khoản SSO (`identity.users`, liên kết `keycloak_sub`). Một người một tài khoản; username và email duy nhất trên Keycloak và trong module identity (không phân biệt hoa thường), nên không bao giờ trùng trong cùng tenant; thuộc nhiều tenant qua membership/UserRole (ADR-0066, ADR-0069). */
         User: {
             display_name?: string;
@@ -16037,15 +16062,41 @@ export interface components {
         };
         WorldArea: {
             accessible: boolean;
+            /**
+             * @description Loại khu (học tập luôn mở theo khối/môn, FR-GAM-009)
+             * @enum {string}
+             */
+            area_class?: "hub" | "learning" | "practice" | "social" | "quest" | "exam" | "challenge" | "arena";
             area_id: string;
             bundle_id?: string;
             capacity?: number;
-            /** @description vd. outside_allowed_hours, grade_not_allowed */
+            /** @description vd. outside_allowed_hours, grade_not_allowed, requirements_not_met */
             lock_reason?: string;
+            /** @description Vị trí trên World Map S04 (dữ liệu, 0..1) */
+            map?: {
+                icon_key?: string;
+                x: number;
+                y: number;
+            };
             name?: components["schemas"]["LocalizedName"];
+            /** @description Cổng gió của khu (portal_id → area đích) */
+            portals?: {
+                portal_id: string;
+                target_area_id: string;
+                target_spawn_point_id?: string;
+            }[];
             /** @description Vùng đất chứa khu (WORLD_DESIGN §3) */
             region_code?: string;
+            region_name?: components["schemas"]["LocalizedName"];
+            /** @enum {string} */
+            room_type?: "hub_instance" | "private_instance" | "single";
             scene_ref: string;
+            /** @description Môn của khu học tập */
+            subject_code?: string;
+            /** @description Điều kiện mở khu (khi accessible = false vì chưa mở khóa) */
+            unlock_requirements?: components["schemas"]["UnlockRequirement"][];
+            /** @description Version area đang publish */
+            version?: number;
         };
         WorldManifest: {
             areas: components["schemas"]["WorldArea"][];
@@ -30639,8 +30690,17 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
+            /** @description AREA_LOCKED (kèm `missing_requirements` — điều kiện còn thiếu, WORLD_DESIGN §7.2), GAME_ACCESS_STUDENT_ONLY, TENANT_MISMATCH */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["AreaLockedProblem"];
+                };
+            };
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     reportDiscovery: {
@@ -30723,51 +30783,6 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
         };
     };
-    joinFriendInWorld: {
-        parameters: {
-            query?: never;
-            header?: {
-                /**
-                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
-                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
-                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
-                 */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-                /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
-            };
-            path: {
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    game_session_id: components["schemas"]["Uuid"];
-                };
-            };
-        };
-        responses: {
-            /** @description Đã gán instance */
-            200: {
-                headers: {
-                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AreaEnterResult"];
-                };
-            };
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["Conflict"];
-        };
-    };
     getWorldManifest: {
         parameters: {
             query?: never;
@@ -30805,6 +30820,8 @@ export interface operations {
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
                 "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /** @description ETag của manifest client đang có; trùng → 304 */
+                "If-None-Match"?: components["parameters"]["IfNoneMatch"];
                 /**
                  * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
                  *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
@@ -30819,17 +30836,20 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Dialogue graph (JSON theo npc-dialogue.schema.json) */
+            /** @description Dialogue graph version đang publish cho khối của học sinh (JSON theo specs/schemas/npc-dialogue.schema.json); ETag theo dialogue_version_id */
             200: {
                 headers: {
                     "Content-Language": components["headers"]["ContentLanguage"];
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["NpcDialogueDelivery"];
                 };
             };
+            304: components["responses"]["NotModified"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };

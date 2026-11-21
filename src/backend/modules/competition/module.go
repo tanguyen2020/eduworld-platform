@@ -56,6 +56,8 @@ type Facade interface {
 	RestoreStudentData(ctx context.Context, req api.RestoreStudentDataRequestObject) (api.RestoreStudentDataResponseObject, error)
 	AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error)
 	MergeUserData(ctx context.Context, req api.MergeUserDataRequestObject) (api.MergeUserDataResponseObject, error)
+	// GetHubPosition is called by module game (F071 T049) to check the interaction distance of a discovery.
+	GetHubPosition(ctx context.Context, req api.GetHubPositionRequestObject) (api.GetHubPositionResponseObject, error)
 }
 
 // Module is the registered module.
@@ -193,7 +195,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("competition.hub_access_revoked", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.HubAccessRevokedOptions(consumer.HubAccessRevoked{Hub: hub}, core.UoW, core.App, js)
 	})
-	m.facade = facade.Facade{Lifecycle: command.PartyLifecycle{Parties: parties}}
+	m.facade = facade.Facade{Lifecycle: command.PartyLifecycle{Parties: parties}, Hub: &query.HubPosition{Rooms: reg, Positions: reg}}
 	safety := command.PartySafety{Parties: parties, Sanctions: persistence.Sanctions{}}
 	r.Consumer("competition.party_safety_chat", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.PartySafetyChatOptions(consumer.PartySafetyChat{S: safety}, core.UoW, core.App, js)

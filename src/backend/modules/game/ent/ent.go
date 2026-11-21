@@ -15,13 +15,27 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/contentrelease"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/explorationprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/inventoryitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinitionversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/leveldefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapter"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapterversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldunlockfact"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -85,13 +99,27 @@ func checkColumn(t, c string) error {
 			avatarpreset.Table:            avatarpreset.ValidColumn,
 			charactercatalog.Table:        charactercatalog.ValidColumn,
 			charactercatalogversion.Table: charactercatalogversion.ValidColumn,
+			contentrelease.Table:          contentrelease.ValidColumn,
+			explorationprogress.Table:     explorationprogress.ValidColumn,
 			gameprofile.Table:             gameprofile.ValidColumn,
 			gamesession.Table:             gamesession.ValidColumn,
 			inventoryitem.Table:           inventoryitem.ValidColumn,
 			itemdefinition.Table:          itemdefinition.ValidColumn,
 			itemdefinitionversion.Table:   itemdefinitionversion.ValidColumn,
+			leveldefinition.Table:         leveldefinition.ValidColumn,
+			levelsession.Table:            levelsession.ValidColumn,
+			levelversion.Table:            levelversion.ValidColumn,
 			loginevent.Table:              loginevent.ValidColumn,
 			nicknamechange.Table:          nicknamechange.ValidColumn,
+			npcdialogue.Table:             npcdialogue.ValidColumn,
+			npcdialogueversion.Table:      npcdialogueversion.ValidColumn,
+			storychapter.Table:            storychapter.ValidColumn,
+			storychapterversion.Table:     storychapterversion.ValidColumn,
+			storyprogress.Table:           storyprogress.ValidColumn,
+			worldarea.Table:               worldarea.ValidColumn,
+			worldareaunlock.Table:         worldareaunlock.ValidColumn,
+			worldareaversion.Table:        worldareaversion.ValidColumn,
+			worldunlockfact.Table:         worldunlockfact.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

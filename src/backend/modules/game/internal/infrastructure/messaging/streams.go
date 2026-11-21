@@ -57,3 +57,38 @@ const PlatformSettingsName = "game.platform_settings"
 
 // PlatformSettingsEvents are the events it handles (owner F015).
 var PlatformSettingsEvents = []string{"platform_settings.changed"}
+
+// GameStream is the stream of module game itself (EVT_GAME): its own release and progress events (F071).
+var GameStream = natsx.EventStream("game")
+
+// GameSubjects returns the exact subjects of game events.
+func GameSubjects(events []string) []string {
+	out := make([]string, len(events))
+	for i, e := range events {
+		out[i] = natsx.EventSubject("game", e)
+	}
+	return out
+}
+
+// ManifestGameName is the durable consumer that rebuilds the content manifest of every tenant when game content is
+// released (F071-AC-05, the "manifest builder" consumer of EVENT_DESIGN content.published).
+const ManifestGameName = "game.manifest_on_game_content"
+
+// ManifestGameEvents are the release events of game content (owner F071; F078 adds rolled_back/unpublished).
+var ManifestGameEvents = []string{"content.published"}
+
+// UnlockOnEventsName is the durable consumer that records the progress facts of a student and evaluates the unlock rules
+// of the areas and the story chapters (F071 T031, T040): one consumer so that a quest completing a chapter and the
+// unlock that chapter opens are applied in one transaction.
+const UnlockOnEventsName = "game.unlock_on_events"
+
+// UnlockOnEventsGameEvents are the game events it handles (owners F072, F074, F075, F077; story.chapter_completed F071).
+var UnlockOnEventsGameEvents = []string{"quest.completed", "story.chapter_completed", "level.reached", "achievement.unlocked",
+	"event.participation_started"}
+
+// MasteryProjectionName keeps ref.mastery_summary from learning_objective.progressed (owner F031) and re-evaluates the
+// objective_progress unlock rules of the student (F071 T011).
+const MasteryProjectionName = "game.mastery_projection"
+
+// MasteryProjectionEvents are the learning events it handles.
+var MasteryProjectionEvents = []string{"learning_objective.progressed"}

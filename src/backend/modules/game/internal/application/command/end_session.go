@@ -68,7 +68,16 @@ func (h Sessions) Heartbeat(ctx context.Context, id, device uuid.UUID) (err erro
 			}
 			return err
 		}
-		return h.Sessions.Save(ctx, s)
+		if err := h.Sessions.Save(ctx, s); err != nil {
+			return err
+		}
+		if h.Presence != nil {
+			student := s.StudentID
+			h.afterCommit(ctx, func(ctx context.Context) {
+				_ = h.Presence.Touch(ctx, student, h.Config.HeartbeatTimeout) // F071: the presence lives as long as the session
+			})
+		}
+		return nil
 	})
 }
 

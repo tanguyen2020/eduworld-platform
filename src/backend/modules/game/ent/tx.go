@@ -18,6 +18,10 @@ type Tx struct {
 	CharacterCatalog *CharacterCatalogClient
 	// CharacterCatalogVersion is the client for interacting with the CharacterCatalogVersion builders.
 	CharacterCatalogVersion *CharacterCatalogVersionClient
+	// ContentRelease is the client for interacting with the ContentRelease builders.
+	ContentRelease *ContentReleaseClient
+	// ExplorationProgress is the client for interacting with the ExplorationProgress builders.
+	ExplorationProgress *ExplorationProgressClient
 	// GameProfile is the client for interacting with the GameProfile builders.
 	GameProfile *GameProfileClient
 	// GameSession is the client for interacting with the GameSession builders.
@@ -28,10 +32,34 @@ type Tx struct {
 	ItemDefinition *ItemDefinitionClient
 	// ItemDefinitionVersion is the client for interacting with the ItemDefinitionVersion builders.
 	ItemDefinitionVersion *ItemDefinitionVersionClient
+	// LevelDefinition is the client for interacting with the LevelDefinition builders.
+	LevelDefinition *LevelDefinitionClient
+	// LevelSession is the client for interacting with the LevelSession builders.
+	LevelSession *LevelSessionClient
+	// LevelVersion is the client for interacting with the LevelVersion builders.
+	LevelVersion *LevelVersionClient
 	// LoginEvent is the client for interacting with the LoginEvent builders.
 	LoginEvent *LoginEventClient
 	// NicknameChange is the client for interacting with the NicknameChange builders.
 	NicknameChange *NicknameChangeClient
+	// NpcDialogue is the client for interacting with the NpcDialogue builders.
+	NpcDialogue *NpcDialogueClient
+	// NpcDialogueVersion is the client for interacting with the NpcDialogueVersion builders.
+	NpcDialogueVersion *NpcDialogueVersionClient
+	// StoryChapter is the client for interacting with the StoryChapter builders.
+	StoryChapter *StoryChapterClient
+	// StoryChapterVersion is the client for interacting with the StoryChapterVersion builders.
+	StoryChapterVersion *StoryChapterVersionClient
+	// StoryProgress is the client for interacting with the StoryProgress builders.
+	StoryProgress *StoryProgressClient
+	// WorldArea is the client for interacting with the WorldArea builders.
+	WorldArea *WorldAreaClient
+	// WorldAreaUnlock is the client for interacting with the WorldAreaUnlock builders.
+	WorldAreaUnlock *WorldAreaUnlockClient
+	// WorldAreaVersion is the client for interacting with the WorldAreaVersion builders.
+	WorldAreaVersion *WorldAreaVersionClient
+	// WorldUnlockFact is the client for interacting with the WorldUnlockFact builders.
+	WorldUnlockFact *WorldUnlockFactClient
 
 	// lazily loaded.
 	client     *Client
@@ -166,13 +194,27 @@ func (tx *Tx) init() {
 	tx.AvatarPreset = NewAvatarPresetClient(tx.config)
 	tx.CharacterCatalog = NewCharacterCatalogClient(tx.config)
 	tx.CharacterCatalogVersion = NewCharacterCatalogVersionClient(tx.config)
+	tx.ContentRelease = NewContentReleaseClient(tx.config)
+	tx.ExplorationProgress = NewExplorationProgressClient(tx.config)
 	tx.GameProfile = NewGameProfileClient(tx.config)
 	tx.GameSession = NewGameSessionClient(tx.config)
 	tx.InventoryItem = NewInventoryItemClient(tx.config)
 	tx.ItemDefinition = NewItemDefinitionClient(tx.config)
 	tx.ItemDefinitionVersion = NewItemDefinitionVersionClient(tx.config)
+	tx.LevelDefinition = NewLevelDefinitionClient(tx.config)
+	tx.LevelSession = NewLevelSessionClient(tx.config)
+	tx.LevelVersion = NewLevelVersionClient(tx.config)
 	tx.LoginEvent = NewLoginEventClient(tx.config)
 	tx.NicknameChange = NewNicknameChangeClient(tx.config)
+	tx.NpcDialogue = NewNpcDialogueClient(tx.config)
+	tx.NpcDialogueVersion = NewNpcDialogueVersionClient(tx.config)
+	tx.StoryChapter = NewStoryChapterClient(tx.config)
+	tx.StoryChapterVersion = NewStoryChapterVersionClient(tx.config)
+	tx.StoryProgress = NewStoryProgressClient(tx.config)
+	tx.WorldArea = NewWorldAreaClient(tx.config)
+	tx.WorldAreaUnlock = NewWorldAreaUnlockClient(tx.config)
+	tx.WorldAreaVersion = NewWorldAreaVersionClient(tx.config)
+	tx.WorldUnlockFact = NewWorldUnlockFactClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

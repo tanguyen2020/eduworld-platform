@@ -499,43 +499,11 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /game/world/friends/{user_id}:join:
-    post:
-      x-service: game
-      tags:
-        - game
-      operationId: joinFriendInWorld
-      summary: Tham gia khu vực/instance của bạn bè (SOCIAL_SYSTEM "Tham gia bạn"; SOCIAL_SCOPE_VIOLATION khi ngoài phạm vi)
-      parameters:
-        - $ref: '#/components/parameters/TenantIdHeader'
-        - $ref: '#/components/parameters/UserId'
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - game_session_id
-              properties:
-                game_session_id:
-                  $ref: '#/components/schemas/Uuid'
-      responses:
-        '200':
-          description: Đã gán instance
-          headers:
-            Idempotent-Replayed:
-              $ref: '#/components/headers/IdempotentReplayed'
+          description: AREA_LOCKED (kèm `missing_requirements` — điều kiện còn thiếu, WORLD_DESIGN §7.2), GAME_ACCESS_STUDENT_ONLY, TENANT_MISMATCH
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/AreaEnterResult'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: '#/components/schemas/AreaLockedProblem'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -557,18 +525,27 @@ paths:
             type: string
             maxLength: 64
             pattern: ^[a-z0-9_.\-]{1,64}$
+        - $ref: '#/components/parameters/IfNoneMatch'
       responses:
         '200':
-          description: Dialogue graph (JSON theo npc-dialogue.schema.json)
+          description: Dialogue graph version đang publish cho khối của học sinh (JSON theo specs/schemas/npc-dialogue.schema.json); ETag theo dialogue_version_id
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/NpcDialogueDelivery'
           headers:
+            ETag:
+              schema:
+                type: string
+                maxLength: 128
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '304':
+          $ref: '#/components/responses/NotModified'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
   /game/profile/avatar:
@@ -4361,12 +4338,6 @@ components:
         type: string
         maxLength: 64
         pattern: ^[a-z0-9_.]{1,64}$
-    UserId:
-      name: user_id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Uuid'
     Limit:
       name: limit
       in: query
@@ -5277,6 +5248,10 @@ components:
           maxLength: 64
         item_id:
           $ref: '#/components/schemas/Uuid'
+        item_code:
+          type: string
+          maxLength: 64
+          description: Mã ổn định của item game khóa chuỗi (area_id, chapter_code, npc_id); item_id khi đó là UUIDv5 của <item_type>:<mã> (F071)
         version_id:
           $ref: '#/components/schemas/Uuid'
         version_no:
@@ -5519,13 +5494,84 @@ components:
         lock_reason:
           type: string
           maxLength: 1000
-          description: vd. outside_allowed_hours, grade_not_allowed
+          description: vd. outside_allowed_hours, grade_not_allowed, requirements_not_met
         name:
           $ref: '#/components/schemas/LocalizedName'
         region_code:
           type: string
           maxLength: 64
           description: Vùng đất chứa khu (WORLD_DESIGN §3)
+        region_name:
+          $ref: '#/components/schemas/LocalizedName'
+        area_class:
+          type: string
+          enum:
+            - hub
+            - learning
+            - practice
+            - social
+            - quest
+            - exam
+            - challenge
+            - arena
+          description: Loại khu (học tập luôn mở theo khối/môn, FR-GAM-009)
+        subject_code:
+          type: string
+          maxLength: 64
+          description: Môn của khu học tập
+        room_type:
+          type: string
+          enum:
+            - hub_instance
+            - private_instance
+            - single
+        version:
+          type: integer
+          minimum: 1
+          description: Version area đang publish
+        map:
+          type: object
+          description: Vị trí trên World Map S04 (dữ liệu, 0..1)
+          required:
+            - x
+            - 'y'
+          properties:
+            x:
+              type: number
+              minimum: 0
+              maximum: 1
+            'y':
+              type: number
+              minimum: 0
+              maximum: 1
+            icon_key:
+              type: string
+              maxLength: 64
+        portals:
+          type: array
+          maxItems: 20
+          description: Cổng gió của khu (portal_id → area đích)
+          items:
+            type: object
+            required:
+              - portal_id
+              - target_area_id
+            properties:
+              portal_id:
+                type: string
+                maxLength: 64
+              target_area_id:
+                type: string
+                maxLength: 64
+              target_spawn_point_id:
+                type: string
+                maxLength: 64
+        unlock_requirements:
+          type: array
+          maxItems: 10
+          description: Điều kiện mở khu (khi accessible = false vì chưa mở khóa)
+          items:
+            $ref: '#/components/schemas/UnlockRequirement'
     LocalizedName:
       type: object
       description: Tên/nhãn hiển thị song ngữ bắt buộc cả vi và en (văn bản game — ADR-0056 mục 2)
@@ -5542,6 +5588,37 @@ components:
           type: string
           minLength: 1
           maxLength: 255
+    UnlockRequirement:
+      type: object
+      description: Một điều kiện mở khu (WORLD_DESIGN §7.2) — thông điệp thân thiện, không có điều kiện thanh toán
+      required:
+        - kind
+        - met
+      properties:
+        kind:
+          type: string
+          enum:
+            - level
+            - quest
+            - learning_objective
+            - achievement
+            - event
+            - chapters_completed
+        ref:
+          type: string
+          maxLength: 64
+        label:
+          $ref: '#/components/schemas/LocalizedName'
+        met:
+          type: boolean
+        current:
+          type: integer
+          minimum: 0
+          description: Tiến độ hiện tại (vd. số chương đã xong)
+        target:
+          type: integer
+          minimum: 0
+          description: Mức cần đạt (vd. 2 chương)
     AreaEnterResult:
       type: object
       required:
@@ -5562,6 +5639,84 @@ components:
         spawn_point_id:
           type: string
           maxLength: 64
+        level_id:
+          $ref: '#/components/schemas/Uuid'
+        area_version:
+          type: integer
+          minimum: 1
+    AreaLockedProblem:
+      description: Problem AREA_LOCKED kèm điều kiện còn thiếu
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            missing_requirements:
+              type: array
+              maxItems: 10
+              items:
+                $ref: '#/components/schemas/UnlockRequirement'
+    NpcDialogueDelivery:
+      type: object
+      description: NPCDialogueVersion đang publish (specs/schemas/npc-dialogue.schema.json) — điều kiện chỉ để hiển thị; action nghiệp vụ đi qua API server (ADR-0016)
+      required:
+        - schema_version
+        - dialogue_id
+        - dialogue_version_id
+        - npc_id
+        - version
+        - status
+        - start_node_id
+        - nodes
+      properties:
+        schema_version:
+          type: integer
+          enum:
+            - 1
+        dialogue_id:
+          $ref: '#/components/schemas/Uuid'
+        dialogue_version_id:
+          $ref: '#/components/schemas/Uuid'
+        npc_id:
+          type: string
+          maxLength: 64
+        npc_name:
+          $ref: '#/components/schemas/LocalizedName'
+        version:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum:
+            - published
+        owner_scope:
+          type: string
+          enum:
+            - platform
+        grade_levels:
+          type: array
+          maxItems: 9
+          items:
+            type: integer
+            minimum: 1
+            maximum: 9
+        start_node_id:
+          type: string
+          maxLength: 64
+        entry_points:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: true
+            description: entry_point của npc-dialogue.schema.json
+        nodes:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: object
+            additionalProperties: true
+            description: node của npc-dialogue.schema.json (text/choices song ngữ vi, en)
     TelemetryBatch:
       type: object
       required:
@@ -7953,26 +8108,14 @@ components:
           maxItems: 10
           description: Điều kiện còn thiếu để mở khu (khi unlocked = false)
           items:
-            type: object
-            required:
-              - kind
-            properties:
-              kind:
-                type: string
-                enum:
-                  - level
-                  - quest
-                  - learning_objective
-                  - achievement
-                  - event
-              ref:
-                type: string
-                maxLength: 64
-              label:
-                type: string
-                maxLength: 255
-              met:
-                type: boolean
+            $ref: '#/components/schemas/UnlockRequirement'
+        name:
+          $ref: '#/components/schemas/LocalizedName'
+        region_code:
+          type: string
+          maxLength: 64
+        completed_at:
+          $ref: '#/components/schemas/Timestamp'
     StoryChapterProgress:
       type: object
       required:
@@ -7990,7 +8133,12 @@ components:
           $ref: '#/components/schemas/LocalizedName'
         order:
           type: integer
-          minimum: 1
+          minimum: 0
+          description: Số chương (0 = Lời mời)
+        subject_code:
+          type: string
+          maxLength: 64
+          description: Môn của chương môn học (1–4)
         status:
           type: string
           enum:

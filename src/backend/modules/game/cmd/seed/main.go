@@ -1,7 +1,8 @@
-// Command seed loads the dev/pilot seed of module game (F070 T008, LOCAL_DEVELOPMENT §5): the character catalog v1
-// (seed/character_catalog.v1.json: presets, palette, default items and emotes, nickname words vi/en) and the default
-// item definitions (seed/items.default.v1.json) through the publish use case under a PlatformScope — never SQL by
-// hand. Running it again publishes nothing (identical versions are skipped).
+// Command seed loads the dev/pilot seed of module game (F070 T008, F071 T001/T010, LOCAL_DEVELOPMENT §5): the character
+// catalog v1 (seed/character_catalog.v1.json: presets, palette, default items and emotes, nickname words vi/en), the
+// default item definitions (seed/items.default.v1.json) and the world v1 (seed/world: 12 areas of 8 regions, 7 story
+// chapters, 14 dialogues of 13 NPCs, 12 greybox level packages) through the publish use cases under a PlatformScope —
+// never SQL by hand. Running it again publishes nothing (identical versions are skipped).
 //
 //	go -C src/backend run ./modules/game/cmd/seed [-dir modules/game/seed]
 //
@@ -27,7 +28,9 @@ import (
 	_ "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/runtime" // mixin hooks, interceptors
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/catalog"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/seedfiles"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
@@ -118,6 +121,17 @@ func run(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
-	slog.InfoContext(ctx, "game seed done", "catalog_published", res.CatalogPublished, "items_published", res.ItemsPublished)
+	worldItems, err := seedfiles.World(dir)
+	if err != nil {
+		return err
+	}
+	wh := command.PublishGameContent{UoW: uow, Store: write.GameContentRepo{}, Content: worldsql.Content{}, Events: write.Publisher{W: w},
+		Audit: write.Auditor{R: rec}}
+	wres, err := wh.Publish(tenancy.WithScope(ctx, sc), worldItems, "seed world v1", "")
+	if err != nil {
+		return err
+	}
+	slog.InfoContext(ctx, "game seed done", "catalog_published", res.CatalogPublished, "items_published", res.ItemsPublished,
+		"world_published", wres.Published, "world_unchanged", wres.Unchanged)
 	return nil
 }

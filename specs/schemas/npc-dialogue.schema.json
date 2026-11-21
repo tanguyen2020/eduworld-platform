@@ -30,6 +30,10 @@
       "maxLength": 64,
       "pattern": "^npc\\.[a-z0-9_]+$"
     },
+    "npc_name": {
+      "$ref": "#/$defs/localized_text",
+      "description": "Tên hiển thị song ngữ của NPC (WORLD_DESIGN §2.3, F071)"
+    },
     "version": {
       "type": "integer",
       "minimum": 1

@@ -26,3 +26,9 @@ type ManifestStore interface {
 	// manifest_version) and the event is redelivered (rows are immutable: no UPDATE privilege, so no row lock).
 	Insert(ctx context.Context, m ManifestRow) error
 }
+
+// TenantLister lists the active tenants (ref.tenants) under the platform scope of a platform event: platform game
+// content applies to every tenant (F071-AC-05).
+type TenantLister interface {
+	ActiveTenants(ctx context.Context) ([]uuid.UUID, error)
+}

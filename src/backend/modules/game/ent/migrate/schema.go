@@ -107,6 +107,69 @@ var (
 			},
 		},
 	}
+	// ContentReleasesColumns holds the columns for the "content_releases" table.
+	ContentReleasesColumns = []*schema.Column{
+		{Name: "release_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "item_type", Type: field.TypeString, Size: 64},
+		{Name: "item_id", Type: field.TypeString, Size: 64},
+		{Name: "action", Type: field.TypeString, Size: 16},
+		{Name: "from_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "to_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "released_by", Type: field.TypeUUID},
+		{Name: "released_at", Type: field.TypeTime},
+		{Name: "idempotency_key", Type: field.TypeString, Size: 64},
+	}
+	// ContentReleasesTable holds the schema information for the "content_releases" table.
+	ContentReleasesTable = &schema.Table{
+		Name:       "content_releases",
+		Columns:    ContentReleasesColumns,
+		PrimaryKey: []*schema.Column{ContentReleasesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "content_releases_idem_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ContentReleasesColumns[3], ContentReleasesColumns[4], ContentReleasesColumns[11]},
+			},
+		},
+	}
+	// ExplorationProgressColumns holds the columns for the "exploration_progress" table.
+	ExplorationProgressColumns = []*schema.Column{
+		{Name: "exploration_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "area_id", Type: field.TypeString, Size: 64},
+		{Name: "discoveries", Type: field.TypeJSON},
+		{Name: "collectibles", Type: field.TypeJSON},
+		{Name: "completion_pct", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "numeric(5,2)"}},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+	}
+	// ExplorationProgressTable holds the schema information for the "exploration_progress" table.
+	ExplorationProgressTable = &schema.Table{
+		Name:       "exploration_progress",
+		Columns:    ExplorationProgressColumns,
+		PrimaryKey: []*schema.Column{ExplorationProgressColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "exploration_progress_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ExplorationProgressColumns[1], ExplorationProgressColumns[10], ExplorationProgressColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// GameProfilesColumns holds the columns for the "game_profiles" table.
 	GameProfilesColumns = []*schema.Column{
 		{Name: "game_profile_id", Type: field.TypeUUID},
@@ -293,6 +356,117 @@ var (
 			},
 		},
 	}
+	// LevelDefinitionsColumns holds the columns for the "level_definitions" table.
+	LevelDefinitionsColumns = []*schema.Column{
+		{Name: "level_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "area_id", Type: field.TypeString, Size: 64},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// LevelDefinitionsTable holds the schema information for the "level_definitions" table.
+	LevelDefinitionsTable = &schema.Table{
+		Name:       "level_definitions",
+		Columns:    LevelDefinitionsColumns,
+		PrimaryKey: []*schema.Column{LevelDefinitionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "level_definitions_area_uq",
+				Unique:  true,
+				Columns: []*schema.Column{LevelDefinitionsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// LevelSessionsColumns holds the columns for the "level_sessions" table.
+	LevelSessionsColumns = []*schema.Column{
+		{Name: "level_session_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "game_session_id", Type: field.TypeUUID},
+		{Name: "level_id", Type: field.TypeUUID},
+		{Name: "level_version_id", Type: field.TypeUUID},
+		{Name: "level_version_no", Type: field.TypeInt},
+		{Name: "area_id", Type: field.TypeString, Size: 64},
+		{Name: "manifest_version", Type: field.TypeInt64},
+		{Name: "content_versions", Type: field.TypeJSON},
+		{Name: "status", Type: field.TypeString, Size: 32},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+	}
+	// LevelSessionsTable holds the schema information for the "level_sessions" table.
+	LevelSessionsTable = &schema.Table{
+		Name:       "level_sessions",
+		Columns:    LevelSessionsColumns,
+		PrimaryKey: []*schema.Column{LevelSessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "level_sessions_one_active_uq",
+				Unique:  true,
+				Columns: []*schema.Column{LevelSessionsColumns[1], LevelSessionsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'active' AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// LevelVersionsColumns holds the columns for the "level_versions" table.
+	LevelVersionsColumns = []*schema.Column{
+		{Name: "level_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "level_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "bundle_id", Type: field.TypeString, Size: 64},
+		{Name: "bundle_url", Type: field.TypeString, Size: 2048},
+		{Name: "bundle_sha256", Type: field.TypeString, Size: 64},
+		{Name: "size_bytes", Type: field.TypeInt64},
+	}
+	// LevelVersionsTable holds the schema information for the "level_versions" table.
+	LevelVersionsTable = &schema.Table{
+		Name:       "level_versions",
+		Columns:    LevelVersionsColumns,
+		PrimaryKey: []*schema.Column{LevelVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "level_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{LevelVersionsColumns[9], LevelVersionsColumns[10]},
+			},
+		},
+	}
 	// LoginEventsColumns holds the columns for the "login_events" table.
 	LoginEventsColumns = []*schema.Column{
 		{Name: "login_event_id", Type: field.TypeUUID},
@@ -343,18 +517,320 @@ var (
 			},
 		},
 	}
+	// NpcDialoguesColumns holds the columns for the "npc_dialogues" table.
+	NpcDialoguesColumns = []*schema.Column{
+		{Name: "dialogue_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "npc_id", Type: field.TypeString, Size: 64},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// NpcDialoguesTable holds the schema information for the "npc_dialogues" table.
+	NpcDialoguesTable = &schema.Table{
+		Name:       "npc_dialogues",
+		Columns:    NpcDialoguesColumns,
+		PrimaryKey: []*schema.Column{NpcDialoguesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "npc_dialogues_npc_idx",
+				Unique:  false,
+				Columns: []*schema.Column{NpcDialoguesColumns[9]},
+			},
+		},
+	}
+	// NpcDialogueVersionsColumns holds the columns for the "npc_dialogue_versions" table.
+	NpcDialogueVersionsColumns = []*schema.Column{
+		{Name: "dialogue_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "dialogue_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "npc_id", Type: field.TypeString, Size: 64},
+		{Name: "grade_levels", Type: field.TypeJSON},
+	}
+	// NpcDialogueVersionsTable holds the schema information for the "npc_dialogue_versions" table.
+	NpcDialogueVersionsTable = &schema.Table{
+		Name:       "npc_dialogue_versions",
+		Columns:    NpcDialogueVersionsColumns,
+		PrimaryKey: []*schema.Column{NpcDialogueVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "npc_dialogue_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{NpcDialogueVersionsColumns[9], NpcDialogueVersionsColumns[10]},
+			},
+		},
+	}
+	// StoryChaptersColumns holds the columns for the "story_chapters" table.
+	StoryChaptersColumns = []*schema.Column{
+		{Name: "chapter_code", Type: field.TypeString, Size: 64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// StoryChaptersTable holds the schema information for the "story_chapters" table.
+	StoryChaptersTable = &schema.Table{
+		Name:       "story_chapters",
+		Columns:    StoryChaptersColumns,
+		PrimaryKey: []*schema.Column{StoryChaptersColumns[0]},
+	}
+	// StoryChapterVersionsColumns holds the columns for the "story_chapter_versions" table.
+	StoryChapterVersionsColumns = []*schema.Column{
+		{Name: "chapter_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "chapter_code", Type: field.TypeString, Size: 64},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "region_code", Type: field.TypeString, Size: 64},
+		{Name: "order_no", Type: field.TypeInt},
+		{Name: "subject_code", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// StoryChapterVersionsTable holds the schema information for the "story_chapter_versions" table.
+	StoryChapterVersionsTable = &schema.Table{
+		Name:       "story_chapter_versions",
+		Columns:    StoryChapterVersionsColumns,
+		PrimaryKey: []*schema.Column{StoryChapterVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "story_chapter_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{StoryChapterVersionsColumns[9], StoryChapterVersionsColumns[10]},
+			},
+		},
+	}
+	// StoryProgressColumns holds the columns for the "story_progress" table.
+	StoryProgressColumns = []*schema.Column{
+		{Name: "story_progress_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "chapter_code", Type: field.TypeString, Size: 64},
+		{Name: "chapter_version_id", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeString, Size: 32},
+		{Name: "main_quests_completed", Type: field.TypeInt, Default: 0},
+		{Name: "completed_quest_ids", Type: field.TypeJSON},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+	}
+	// StoryProgressTable holds the schema information for the "story_progress" table.
+	StoryProgressTable = &schema.Table{
+		Name:       "story_progress",
+		Columns:    StoryProgressColumns,
+		PrimaryKey: []*schema.Column{StoryProgressColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "story_progress_uq",
+				Unique:  true,
+				Columns: []*schema.Column{StoryProgressColumns[1], StoryProgressColumns[10], StoryProgressColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// WorldAreasColumns holds the columns for the "world_areas" table.
+	WorldAreasColumns = []*schema.Column{
+		{Name: "area_id", Type: field.TypeString, Size: 64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// WorldAreasTable holds the schema information for the "world_areas" table.
+	WorldAreasTable = &schema.Table{
+		Name:       "world_areas",
+		Columns:    WorldAreasColumns,
+		PrimaryKey: []*schema.Column{WorldAreasColumns[0]},
+	}
+	// WorldAreaUnlocksColumns holds the columns for the "world_area_unlocks" table.
+	WorldAreaUnlocksColumns = []*schema.Column{
+		{Name: "area_unlock_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "area_id", Type: field.TypeString, Size: 64},
+		{Name: "rule_version", Type: field.TypeInt},
+		{Name: "unlocked_by", Type: field.TypeString, Size: 64},
+		{Name: "unlocked_at", Type: field.TypeTime},
+	}
+	// WorldAreaUnlocksTable holds the schema information for the "world_area_unlocks" table.
+	WorldAreaUnlocksTable = &schema.Table{
+		Name:       "world_area_unlocks",
+		Columns:    WorldAreaUnlocksColumns,
+		PrimaryKey: []*schema.Column{WorldAreaUnlocksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "world_area_unlocks_uq",
+				Unique:  true,
+				Columns: []*schema.Column{WorldAreaUnlocksColumns[1], WorldAreaUnlocksColumns[10], WorldAreaUnlocksColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// WorldAreaVersionsColumns holds the columns for the "world_area_versions" table.
+	WorldAreaVersionsColumns = []*schema.Column{
+		{Name: "area_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "area_id", Type: field.TypeString, Size: 64},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "region_code", Type: field.TypeString, Size: 64},
+		{Name: "area_class", Type: field.TypeString, Size: 64},
+		{Name: "subject_code", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// WorldAreaVersionsTable holds the schema information for the "world_area_versions" table.
+	WorldAreaVersionsTable = &schema.Table{
+		Name:       "world_area_versions",
+		Columns:    WorldAreaVersionsColumns,
+		PrimaryKey: []*schema.Column{WorldAreaVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "world_area_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{WorldAreaVersionsColumns[9], WorldAreaVersionsColumns[10]},
+			},
+		},
+	}
+	// WorldUnlockFactsColumns holds the columns for the "world_unlock_facts" table.
+	WorldUnlockFactsColumns = []*schema.Column{
+		{Name: "fact_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "fact_kind", Type: field.TypeString, Size: 64},
+		{Name: "fact_ref", Type: field.TypeString, Size: 64},
+		{Name: "fact_value", Type: field.TypeInt, Default: 0},
+		{Name: "occurred_at", Type: field.TypeTime},
+	}
+	// WorldUnlockFactsTable holds the schema information for the "world_unlock_facts" table.
+	WorldUnlockFactsTable = &schema.Table{
+		Name:       "world_unlock_facts",
+		Columns:    WorldUnlockFactsColumns,
+		PrimaryKey: []*schema.Column{WorldUnlockFactsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "world_unlock_facts_uq",
+				Unique:  true,
+				Columns: []*schema.Column{WorldUnlockFactsColumns[1], WorldUnlockFactsColumns[10], WorldUnlockFactsColumns[11], WorldUnlockFactsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AvatarPresetsTable,
 		CharacterCatalogsTable,
 		CharacterCatalogVersionsTable,
+		ContentReleasesTable,
+		ExplorationProgressTable,
 		GameProfilesTable,
 		GameSessionsTable,
 		InventoryItemsTable,
 		ItemDefinitionsTable,
 		ItemDefinitionVersionsTable,
+		LevelDefinitionsTable,
+		LevelSessionsTable,
+		LevelVersionsTable,
 		LoginEventsTable,
 		NicknameChangesTable,
+		NpcDialoguesTable,
+		NpcDialogueVersionsTable,
+		StoryChaptersTable,
+		StoryChapterVersionsTable,
+		StoryProgressTable,
+		WorldAreasTable,
+		WorldAreaUnlocksTable,
+		WorldAreaVersionsTable,
+		WorldUnlockFactsTable,
 	}
 )
 
@@ -367,6 +843,12 @@ func init() {
 	}
 	CharacterCatalogVersionsTable.Annotation = &entsql.Annotation{
 		Table: "character_catalog_versions",
+	}
+	ContentReleasesTable.Annotation = &entsql.Annotation{
+		Table: "content_releases",
+	}
+	ExplorationProgressTable.Annotation = &entsql.Annotation{
+		Table: "exploration_progress",
 	}
 	GameProfilesTable.Annotation = &entsql.Annotation{
 		Table: "game_profiles",
@@ -383,10 +865,46 @@ func init() {
 	ItemDefinitionVersionsTable.Annotation = &entsql.Annotation{
 		Table: "item_definition_versions",
 	}
+	LevelDefinitionsTable.Annotation = &entsql.Annotation{
+		Table: "level_definitions",
+	}
+	LevelSessionsTable.Annotation = &entsql.Annotation{
+		Table: "level_sessions",
+	}
+	LevelVersionsTable.Annotation = &entsql.Annotation{
+		Table: "level_versions",
+	}
 	LoginEventsTable.Annotation = &entsql.Annotation{
 		Table: "login_events",
 	}
 	NicknameChangesTable.Annotation = &entsql.Annotation{
 		Table: "nickname_changes",
+	}
+	NpcDialoguesTable.Annotation = &entsql.Annotation{
+		Table: "npc_dialogues",
+	}
+	NpcDialogueVersionsTable.Annotation = &entsql.Annotation{
+		Table: "npc_dialogue_versions",
+	}
+	StoryChaptersTable.Annotation = &entsql.Annotation{
+		Table: "story_chapters",
+	}
+	StoryChapterVersionsTable.Annotation = &entsql.Annotation{
+		Table: "story_chapter_versions",
+	}
+	StoryProgressTable.Annotation = &entsql.Annotation{
+		Table: "story_progress",
+	}
+	WorldAreasTable.Annotation = &entsql.Annotation{
+		Table: "world_areas",
+	}
+	WorldAreaUnlocksTable.Annotation = &entsql.Annotation{
+		Table: "world_area_unlocks",
+	}
+	WorldAreaVersionsTable.Annotation = &entsql.Annotation{
+		Table: "world_area_versions",
+	}
+	WorldUnlockFactsTable.Annotation = &entsql.Annotation{
+		Table: "world_unlock_facts",
 	}
 }

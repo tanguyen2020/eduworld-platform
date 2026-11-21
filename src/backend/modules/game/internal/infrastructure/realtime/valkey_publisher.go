@@ -12,6 +12,7 @@ import (
 	"github.com/valkey-io/valkey-go"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/world"
 	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
 )
 
@@ -55,4 +56,22 @@ func (p ValkeyPublisher) SessionEnded(ctx context.Context, student, session uuid
 func (p ValkeyPublisher) SessionEndingSoon(ctx context.Context, student, session uuid.UUID, reason string, endsAt time.Time) error {
 	return p.publish(ctx, student, session, "session.session.ending_soon", map[string]any{
 		"game_session_id": session.String(), "reason": reason, "ends_at": endsAt.UnixMilli()}, time.Now())
+}
+
+// WorldPublisher implements port.WorldRealtime: world.area.unlocked to every connection of the student (AsyncAPI
+// WorldAreaUnlocked) through Valkey ew:rt:user:<id>.
+type WorldPublisher struct {
+	C       valkey.Client
+	Timeout time.Duration
+}
+
+var _ port.WorldRealtime = WorldPublisher{}
+
+// AreaUnlocked implements port.WorldRealtime.
+func (p WorldPublisher) AreaUnlocked(ctx context.Context, student uuid.UUID, areaID string, name world.Name, unlockedBy string, at time.Time) error {
+	e, err := rt.NewMessage("world.area.unlocked", map[string]any{"area_id": areaID, "name": name, "unlocked_by": unlockedBy}, at)
+	if err != nil {
+		return err
+	}
+	return rt.Publisher{C: p.C, Timeout: p.Timeout}.ToUser(ctx, student, e)
 }

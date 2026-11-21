@@ -143,7 +143,7 @@ var _ write.EventPublisher = Publisher{}
 // Publish writes e into the outbox of the transaction.
 func (p Publisher) Publish(ctx context.Context, e write.Event) error {
 	_, err := p.W.Publish(ctx, outbox.Message{Type: e.Type, Subject: outbox.Subject{Type: e.SubjectType, ID: e.SubjectID},
-		PartitionKey: e.PartitionKey, TenantID: e.TenantID, OccurredAt: e.OccurredAt, Payload: e.Payload})
+		PartitionKey: e.PartitionKey, TenantID: e.TenantID, Platform: e.Platform, OccurredAt: e.OccurredAt, Payload: e.Payload})
 	return err
 }
 

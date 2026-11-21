@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/world.area_completed.v1.schema.json",
+  "title": "Payload world.area_completed v1 (module game, owner F071)",
+  "description": "Tiến độ khám phá một area đạt 100% lần đầu (WORLD_DESIGN §8). Envelope tenant_id = tenant của phiên. Consumer: achievement, reward.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "student_id",
+    "area_id",
+    "completion_pct",
+    "completed_at"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "area_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+    },
+    "completion_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "area_id": "learning_zone.math",
+      "completion_pct": 100,
+      "completed_at": "2026-11-21T01:00:00Z"
+    }
+  ]
+}

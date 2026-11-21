@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/world-area.schema.json",
+  "title": "WorldAreaVersion v1",
+  "description": "Payload của một version WorldArea (nội dung platform có version, ADR-0043; F071): khu tải trọn gói của một vùng đất (WORLD_DESIGN §3–§9): tên song ngữ, loại khu, môn (khu học tập), scene và bundle, sức chứa, chính sách vào, điều kiện mở khóa (WORLD_DESIGN §7.2) và điểm neo (spawn, cổng, discovery, collectible — WORLD_RENDERING §5). Khu học tập theo khối/môn luôn mở: unlock_rule của khu learning không được chứa min_level/event_participation và không có loại điều kiện thanh toán nào (FR-GAM-009, F071-AC-16). Seed bởi module game; biên tập ở Game Operations Console (F078). Mọi chuỗi có maxLength (ADR-0041).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "area_id", "region_code", "name", "area_class", "scene_ref", "bundle_id", "capacity", "max_speed_mps", "bounds", "access_policy", "layout"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "area_id": { "$ref": "#/$defs/area_id" },
+    "region_code": { "$ref": "#/$defs/code", "description": "Vùng đất chứa khu (WORLD_DESIGN §3): central, math_kingdom, language_forest, science_island, history_kingdom, discovery_ocean, challenge_mountain, champion_arena" },
+    "name": { "$ref": "#/$defs/localized_name" },
+    "region_name": { "$ref": "#/$defs/localized_name" },
+    "area_class": { "type": "string", "enum": ["hub", "learning", "practice", "social", "quest", "exam", "challenge", "arena"] },
+    "subject_code": { "type": ["string", "null"], "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{0,63}$", "description": "Môn của khu học tập (bắt buộc khi area_class = learning): math, vietnamese, english, science, history" },
+    "scene_ref": { "type": "string", "maxLength": 255, "pattern": "^res://[A-Za-z0-9_./-]+\\.tscn$" },
+    "bundle_id": { "$ref": "#/$defs/code" },
+    "capacity": { "type": "integer", "minimum": 1, "maximum": 40, "description": "Sức chứa khai báo của area hub (≤ hub_instance_capacity, WORLD_DESIGN §9)" },
+    "max_speed_mps": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Tốc độ tối đa server chấp nhận (room host F091)" },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": { "min": { "$ref": "#/$defs/vec3" }, "max": { "$ref": "#/$defs/vec3" } }
+    },
+    "access_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["room_type", "public"],
+      "properties": {
+        "room_type": { "type": "string", "enum": ["hub_instance", "private_instance", "single"] },
+        "public": { "type": "boolean", "description": "Khu công khai: ghi last_area_id, spawn lần sau ở khu này (WORLD_DESIGN §6)" },
+        "grade_levels": { "type": "array", "maxItems": 9, "uniqueItems": true, "items": { "type": "integer", "minimum": 1, "maximum": 9 }, "description": "Khối được vào; vắng = mọi khối (khu học tập: bắt buộc)" }
+      }
+    },
+    "unlock_rule": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/rule" }], "description": "null = luôn mở. AND/OR các điều kiện WORLD_DESIGN §7.2" },
+    "map": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Vị trí trên World Map S04 (0..1, dữ liệu — đổi không build lại client)",
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "icon_key": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{0,63}$" }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spawn_points"],
+      "properties": {
+        "spawn_points": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["spawn_point_id", "position"],
+            "properties": { "spawn_point_id": { "$ref": "#/$defs/anchor_id" }, "position": { "$ref": "#/$defs/vec3" } }
+          }
+        },
+        "portals": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["portal_id", "target_area_id"],
+            "properties": {
+              "portal_id": { "$ref": "#/$defs/anchor_id" },
+              "target_area_id": { "$ref": "#/$defs/area_id" },
+              "target_spawn_point_id": { "$ref": "#/$defs/anchor_id" }
+            }
+          }
+        },
+        "interactables": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["interactable_id", "kind"],
+            "properties": {
+              "interactable_id": { "$ref": "#/$defs/anchor_id" },
+              "kind": { "type": "string", "enum": ["npc", "quest_board", "exam_board", "portal", "quest_object", "discovery", "collectible", "info_sign", "minigame_station", "seat"] },
+              "npc_id": { "type": "string", "maxLength": 64, "pattern": "^npc\\.[a-z0-9_]+$" },
+              "collection_id": { "type": "string", "maxLength": 64 },
+              "position": { "$ref": "#/$defs/vec3" },
+              "interact_radius_m": { "type": "number", "exclusiveMinimum": 0, "maximum": 20, "description": "Khoảng cách tương tác có giá trị (server kiểm theo vị trí hub F091 khi có)" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "area_id": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$" },
+    "anchor_id": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9_.-]{1,64}$" },
+    "code": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_.-]{0,63}$" },
+    "vec3": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+    "localized_name": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vi", "en"],
+      "properties": { "vi": { "type": "string", "minLength": 1, "maxLength": 255 }, "en": { "type": "string", "minLength": 1, "maxLength": 255 } }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "all": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "$ref": "#/$defs/rule" } },
+        "any": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "$ref": "#/$defs/rule" } },
+        "quest_completed": {
+          "type": "object", "additionalProperties": false, "required": ["quest_id"],
+          "properties": { "quest_id": { "type": "string", "format": "uuid" }, "label": { "$ref": "#/$defs/localized_name" } }
+        },
+        "chapters_completed": {
+          "type": "object", "additionalProperties": false, "required": ["min"],
+          "properties": {
+            "min": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "subject_chapters_only": { "type": "boolean", "description": "Chỉ đếm chương môn học (1–4)" },
+            "label": { "$ref": "#/$defs/localized_name" }
+          }
+        },
+        "objective_progress": {
+          "type": "object", "additionalProperties": false, "required": ["objective_ids", "min_count", "min_level"],
+          "properties": {
+            "objective_ids": { "type": "array", "minItems": 1, "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+            "min_count": { "type": "integer", "minimum": 1, "maximum": 50 },
+            "min_level": { "type": "string", "enum": ["beginning", "developing", "proficient", "mastered"] },
+            "label": { "$ref": "#/$defs/localized_name" }
+          }
+        },
+        "min_level": {
+          "type": "object", "additionalProperties": false, "required": ["level"],
+          "properties": { "level": { "type": "integer", "minimum": 1, "maximum": 1000 }, "label": { "$ref": "#/$defs/localized_name" } }
+        },
+        "achievement_unlocked": {
+          "type": "object", "additionalProperties": false, "required": ["achievement_id"],
+          "properties": { "achievement_id": { "type": "string", "maxLength": 64 }, "label": { "$ref": "#/$defs/localized_name" } }
+        },
+        "event_participation": {
+          "type": "object", "additionalProperties": false, "required": ["event_id"],
+          "properties": { "event_id": { "type": "string", "maxLength": 64 }, "label": { "$ref": "#/$defs/localized_name" } }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schema_version": 1,
+      "area_id": "learning_zone.math",
+      "region_code": "math_kingdom",
+      "name": { "vi": "Vương quốc Số", "en": "Math Kingdom" },
+      "area_class": "learning",
+      "subject_code": "math",
+      "scene_ref": "res://scenes/world/zones/learning_zone_math/Zone.tscn",
+      "bundle_id": "zone.learning_zone.math",
+      "capacity": 40,
+      "max_speed_mps": 7,
+      "bounds": { "min": [-40, -5, -40], "max": [40, 30, 40] },
+      "access_policy": { "room_type": "hub_instance", "public": true, "grade_levels": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+      "unlock_rule": null,
+      "map": { "x": 0.3, "y": 0.25, "icon_key": "math_kingdom" },
+      "layout": {
+        "spawn_points": [{ "spawn_point_id": "learning_zone.math.default", "position": [0, 0, 0] }],
+        "portals": [{ "portal_id": "portal.math.to_hub", "target_area_id": "main_hub", "target_spawn_point_id": "main_hub.portal.math" }],
+        "interactables": [
+          { "interactable_id": "npc.mr_numbers", "kind": "npc", "npc_id": "npc.mr_numbers", "position": [4, 0, 2] },
+          { "interactable_id": "discovery.math.old_well", "kind": "discovery", "position": [12, 0, -6], "interact_radius_m": 3 }
+        ]
+      }
+    }
+  ]
+}

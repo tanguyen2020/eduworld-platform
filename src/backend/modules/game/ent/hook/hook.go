@@ -45,6 +45,30 @@ func (f CharacterCatalogVersionFunc) Mutate(ctx context.Context, m ent.Mutation)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CharacterCatalogVersionMutation", m)
 }
 
+// The ContentReleaseFunc type is an adapter to allow the use of ordinary
+// function as ContentRelease mutator.
+type ContentReleaseFunc func(context.Context, *ent.ContentReleaseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ContentReleaseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ContentReleaseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContentReleaseMutation", m)
+}
+
+// The ExplorationProgressFunc type is an adapter to allow the use of ordinary
+// function as ExplorationProgress mutator.
+type ExplorationProgressFunc func(context.Context, *ent.ExplorationProgressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ExplorationProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ExplorationProgressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ExplorationProgressMutation", m)
+}
+
 // The GameProfileFunc type is an adapter to allow the use of ordinary
 // function as GameProfile mutator.
 type GameProfileFunc func(context.Context, *ent.GameProfileMutation) (ent.Value, error)
@@ -105,6 +129,42 @@ func (f ItemDefinitionVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ItemDefinitionVersionMutation", m)
 }
 
+// The LevelDefinitionFunc type is an adapter to allow the use of ordinary
+// function as LevelDefinition mutator.
+type LevelDefinitionFunc func(context.Context, *ent.LevelDefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LevelDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LevelDefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LevelDefinitionMutation", m)
+}
+
+// The LevelSessionFunc type is an adapter to allow the use of ordinary
+// function as LevelSession mutator.
+type LevelSessionFunc func(context.Context, *ent.LevelSessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LevelSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LevelSessionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LevelSessionMutation", m)
+}
+
+// The LevelVersionFunc type is an adapter to allow the use of ordinary
+// function as LevelVersion mutator.
+type LevelVersionFunc func(context.Context, *ent.LevelVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LevelVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LevelVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LevelVersionMutation", m)
+}
+
 // The LoginEventFunc type is an adapter to allow the use of ordinary
 // function as LoginEvent mutator.
 type LoginEventFunc func(context.Context, *ent.LoginEventMutation) (ent.Value, error)
@@ -127,6 +187,114 @@ func (f NicknameChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NicknameChangeMutation", m)
+}
+
+// The NpcDialogueFunc type is an adapter to allow the use of ordinary
+// function as NpcDialogue mutator.
+type NpcDialogueFunc func(context.Context, *ent.NpcDialogueMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f NpcDialogueFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.NpcDialogueMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NpcDialogueMutation", m)
+}
+
+// The NpcDialogueVersionFunc type is an adapter to allow the use of ordinary
+// function as NpcDialogueVersion mutator.
+type NpcDialogueVersionFunc func(context.Context, *ent.NpcDialogueVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f NpcDialogueVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.NpcDialogueVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NpcDialogueVersionMutation", m)
+}
+
+// The StoryChapterFunc type is an adapter to allow the use of ordinary
+// function as StoryChapter mutator.
+type StoryChapterFunc func(context.Context, *ent.StoryChapterMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StoryChapterFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StoryChapterMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StoryChapterMutation", m)
+}
+
+// The StoryChapterVersionFunc type is an adapter to allow the use of ordinary
+// function as StoryChapterVersion mutator.
+type StoryChapterVersionFunc func(context.Context, *ent.StoryChapterVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StoryChapterVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StoryChapterVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StoryChapterVersionMutation", m)
+}
+
+// The StoryProgressFunc type is an adapter to allow the use of ordinary
+// function as StoryProgress mutator.
+type StoryProgressFunc func(context.Context, *ent.StoryProgressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StoryProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StoryProgressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StoryProgressMutation", m)
+}
+
+// The WorldAreaFunc type is an adapter to allow the use of ordinary
+// function as WorldArea mutator.
+type WorldAreaFunc func(context.Context, *ent.WorldAreaMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorldAreaFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorldAreaMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorldAreaMutation", m)
+}
+
+// The WorldAreaUnlockFunc type is an adapter to allow the use of ordinary
+// function as WorldAreaUnlock mutator.
+type WorldAreaUnlockFunc func(context.Context, *ent.WorldAreaUnlockMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorldAreaUnlockFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorldAreaUnlockMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorldAreaUnlockMutation", m)
+}
+
+// The WorldAreaVersionFunc type is an adapter to allow the use of ordinary
+// function as WorldAreaVersion mutator.
+type WorldAreaVersionFunc func(context.Context, *ent.WorldAreaVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorldAreaVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorldAreaVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorldAreaVersionMutation", m)
+}
+
+// The WorldUnlockFactFunc type is an adapter to allow the use of ordinary
+// function as WorldUnlockFact mutator.
+type WorldUnlockFactFunc func(context.Context, *ent.WorldUnlockFactMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorldUnlockFactFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorldUnlockFactMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorldUnlockFactMutation", m)
 }
 
 // Condition is a hook condition function.

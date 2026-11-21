@@ -85,7 +85,7 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(gamehttp.Operations) || len(found) != 15 { // 7 of F014 + createRealtimeTicket (F090) + 7 of F070
+	if len(found) != len(gamehttp.Operations) || len(found) != 23 { // 7 of F014 + createRealtimeTicket (F090) + 7 of F070 + 8 of F071
 		t.Fatalf("F014/F090 operations found in the spec: %v", found)
 	}
 	for _, id := range gamehttp.PlayerOperations {

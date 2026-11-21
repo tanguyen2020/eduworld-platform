@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/world.discovery_found.v1.schema.json",
+  "title": "Payload world.discovery_found v1 (module game, owner F071)",
+  "description": "Học sinh tìm thấy một điểm khám phá hoặc vật sưu tầm (reportDiscovery, ghi một lần — WORLD_DESIGN §8). Envelope tenant_id = tenant của phiên. Consumer: quest (F072), achievement, reward (F074/F075).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "student_id",
+    "area_id",
+    "interactable_id",
+    "kind",
+    "completion_pct",
+    "found_at"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "area_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+    },
+    "interactable_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_.-]{1,64}$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "discovery",
+        "collectible"
+      ]
+    },
+    "collection_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64
+    },
+    "level_session_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "completion_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "found_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "area_id": "learning_zone.math",
+      "interactable_id": "discovery.math.old_well",
+      "kind": "discovery",
+      "collection_id": null,
+      "level_session_id": null,
+      "completion_pct": 25,
+      "found_at": "2026-11-21T01:00:00Z"
+    }
+  ]
+}

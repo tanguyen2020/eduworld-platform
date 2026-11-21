@@ -24,6 +24,9 @@ var migrations = map[string][]string{
 	"20261123000001_f014_game_session.sql": {"game_sessions"},
 	"20261224000001_f070_profile.sql": {"game_profiles", "nickname_changes", "avatar_presets", "character_catalogs",
 		"character_catalog_versions", "item_definitions", "item_definition_versions", "inventory_items"},
+	"20261226000001_f071_world.sql": {"world_areas", "world_area_versions", "story_chapters", "story_chapter_versions",
+		"npc_dialogues", "npc_dialogue_versions", "level_definitions", "level_versions", "content_releases", "level_sessions",
+		"world_area_unlocks", "exploration_progress", "story_progress", "world_unlock_facts"},
 }
 
 func schemas() map[string]string {
@@ -31,7 +34,12 @@ func schemas() map[string]string {
 	return map[string]string{"game_sessions": c.GameSession, "login_events": c.LoginEvent, "game_profiles": c.GameProfile,
 		"nickname_changes": c.NicknameChange, "avatar_presets": c.AvatarPreset, "character_catalogs": c.CharacterCatalog,
 		"character_catalog_versions": c.CharacterCatalogVersion, "item_definitions": c.ItemDefinition,
-		"item_definition_versions": c.ItemDefinitionVersion, "inventory_items": c.InventoryItem}
+		"item_definition_versions": c.ItemDefinitionVersion, "inventory_items": c.InventoryItem,
+		"world_areas": c.WorldArea, "world_area_versions": c.WorldAreaVersion, "story_chapters": c.StoryChapter,
+		"story_chapter_versions": c.StoryChapterVersion, "npc_dialogues": c.NpcDialogue, "npc_dialogue_versions": c.NpcDialogueVersion,
+		"level_definitions": c.LevelDefinition, "level_versions": c.LevelVersion, "content_releases": c.ContentRelease,
+		"level_sessions": c.LevelSession, "world_area_unlocks": c.WorldAreaUnlock, "exploration_progress": c.ExplorationProgress,
+		"story_progress": c.StoryProgress, "world_unlock_facts": c.WorldUnlockFact}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

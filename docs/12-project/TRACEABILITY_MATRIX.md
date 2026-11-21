@@ -23,10 +23,10 @@
 | `EXM` Exam & Practice | module learning | 10 | 10 | 1 | 13 | 0 | EXM (6) | 1 | 2 | 0 / 8 |
 | `PRG` Learning Progress & Mastery | module learning | 9 | 9 | 0 | 8 | 0 | LRN (18) | 1 | 2 | 0 / 0 |
 | `ANL` Learning Events & Analytics | module learning · module game | 23 | 23 | 0 | 23 | 0 | ANL (11), DASH (10) | 0 | 0 | 0 / 21 |
-| `GAME` Game World & Character | module game | 18 | 18 | 2 | 21 | 0 | WLD (6), GAM (12) | 2 | 0 | 0 / 9 |
+| `GAME` Game World & Character | module game | 18 | 18 | 2 | 20 | 0 | WLD (6), GAM (12) | 2 | 0 | 0 / 9 |
 | `QST` Quest | module game | 9 | 9 | 0 | 39 | 0 | GAM (12) | 2 | 0 | 0 / 15 |
 | `MG` Mini-game Engine | module learning · game client | 4 | 4 | 0 | 1 | 0 | ACT (5) | 1 | 0 | 0 / 10 |
-| `MP` Multiplayer & Presence | module competition · realtime | 6 | 6 | 0 | 3 | 0 | PTY (14), CMP (10) | 0 | 0 | 0 / 11 |
+| `MP` Multiplayer & Presence | module competition · realtime | 6 | 6 | 0 | 2 | 0 | PTY (14), CMP (10) | 0 | 0 | 0 / 11 |
 | `PTY` Party | module competition | 14 | 14 | 1 | 18 | 0 | PTY (14) | 4 | 13 | 0 / 0 |
 | `MM` Matchmaking | module competition | 6 | 6 | 0 | 4 | 0 | MM (4) | 1 | 0 | 0 / 8 |
 | `CMP` Competition / Battle | module competition | 6 | 6 | 0 | 7 | 0 | CMP (10) | 0 | 6 | 0 / 13 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 47 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 20 | 568 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 20 | 567 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -318,24 +318,24 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 9 AC, 0 US — [GAME_DESIGN](../01
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-GAME-001 | Thế giới 3D stylized/cartoon/low-poly, thân thiện, không bạo lực | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-002 | Thế giới gồm 8 vùng đất có cốt truyện, bao trọn 7 khu chức năng bắt buộc (Main Hub, Learning Zone theo môn,… | P2 (Hub, vùng môn học, Practice, Quest) – P3 (Exam) – P4 (Arena) – P5 (Social) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-003 | Character controller, camera controller, animation state machine, NPC interaction | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-004 | Avatar customization: skin, outfit, hair, accessories, emotes; character level; inventory | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-015 | Luồng tạo avatar lần đầu (preset, dáng người, màu da/tóc, trang phục mặc định, nickname), equipment slot, a… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-016 | Mạch truyện "Thắp lại Tia Sáng" gồm 7 chương gắn vùng; chương môn học mở song song, không khóa học tập theo… | P2–P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-017 | World map, cổng di chuyển, khám phá (discovery point, collectible, % hoàn thành bản đồ), mở khóa vùng theo… | P2–P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-018 | Học tập lồng trong ngữ cảnh game: mỗi khối học tập ngắn rồi xen tương tác thế giới; không biến game thành c… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-005 | Nickname sinh tự động/chọn từ danh sách duyệt; tên thật không hiển thị cho người chơi khác | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-006 | Game client data-driven: quest, mini-game, NPC dialogue, reward, cấu hình khu vực tải từ backend; cập nhật… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-001 | Thế giới 3D stylized/cartoon/low-poly, thân thiện, không bạo lực | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-002 | Thế giới gồm 8 vùng đất có cốt truyện, bao trọn 7 khu chức năng bắt buộc (Main Hub, Learning Zone theo môn,… | P2 (Hub, vùng môn học, Practice, Quest) – P3 (Exam) – P4 (Arena) – P5 (Social) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-003 | Character controller, camera controller, animation state machine, NPC interaction | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-004 | Avatar customization: skin, outfit, hair, accessories, emotes; character level; inventory | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-015 | Luồng tạo avatar lần đầu (preset, dáng người, màu da/tóc, trang phục mặc định, nickname), equipment slot, a… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-016 | Mạch truyện "Thắp lại Tia Sáng" gồm 7 chương gắn vùng; chương môn học mở song song, không khóa học tập theo… | P2–P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-017 | World map, cổng di chuyển, khám phá (discovery point, collectible, % hoàn thành bản đồ), mở khóa vùng theo… | P2–P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-018 | Học tập lồng trong ngữ cảnh game: mỗi khối học tập ngắn rồi xen tương tác thế giới; không biến game thành c… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-005 | Nickname sinh tự động/chọn từ danh sách duyệt; tên thật không hiển thị cho người chơi khác | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-006 | Game client data-driven: quest, mini-game, NPC dialogue, reward, cấu hình khu vực tải từ backend; cập nhật… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
 | FR-GAME-007 | Game session server-side (/api/v1/game/sessions), ghi platform, client version, end reason | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `createGameSession` | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-008 | Kiểm tra phiên bản client tối thiểu; buộc cập nhật khi không tương thích API | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-009 | Chạy được trên máy tầm trung: renderer Mobile/Compatibility, preset Thấp/Trung bình/Cao tự phát hiện, độ ph… | P2–P6 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-010 | UI theo nhóm tuổi: lớp 1–5 trực quan/ít thao tác/chữ to + hỗ trợ đọc âm thanh; lớp 6–9 nhiều thông tin hơn | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-008 | Kiểm tra phiên bản client tối thiểu; buộc cập nhật khi không tương thích API | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-009 | Chạy được trên máy tầm trung: renderer Mobile/Compatibility, preset Thấp/Trung bình/Cao tự phát hiện, độ ph… | P2–P6 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-010 | UI theo nhóm tuổi: lớp 1–5 trực quan/ít thao tác/chữ to + hỗ trợ đọc âm thanh; lớp 6–9 nhiều thông tin hơn | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
 | FR-GAME-011 | Telemetry client (crash, FPS, load time) không chứa PII, rate limit (/api/v1/game/telemetry) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `postTelemetry` | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-012 | Nhắc nghỉ sau thời gian chơi liên tục (mặc định 45 phút), giờ truy cập do trường cấu hình; giờ giới nghiêm… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-013 | Lưu thời gian đăng nhập game: mỗi lần vào game ghi game.login_events (thời điểm vào/ra theo giờ server, nền… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
-| FR-GAME-014 | Game có nút "Đăng xuất" (đóng game session, thu hồi phiên, xóa token khỏi kho bảo mật — ADR-0086); đóng gam… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 21 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-012 | Nhắc nghỉ sau thời gian chơi liên tục (mặc định 45 phút), giờ truy cập do trường cấu hình; giờ giới nghiêm… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-013 | Lưu thời gian đăng nhập game: mỗi lần vào game ghi game.login_events (thời điểm vào/ra theo giờ server, nền… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
+| FR-GAME-014 | Game có nút "Đăng xuất" (đóng game session, thu hồi phiên, xóa token khỏi kho bảo mật — ADR-0086); đóng gam… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 20 op | _suy luận:_ TC-WLD, TC-GAM |
 
 ### 3.12. `QST` Quest
 
@@ -380,12 +380,12 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 11 AC, 0 US — [MULTIPLAYER_GAMEP
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-MP-001 | Hỗ trợ Multiplayer World, Room, Lobby, Team, Match, Session | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-PTY, TC-CMP |
-| FR-MP-002 | Hub instance tối đa 40 người, cấp theo school/grade band; bạn bè/party ưu tiên cùng instance (ADR-0012) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-PTY, TC-CMP |
-| FR-MP-003 | Presence/online status (Valkey), chỉ hiển thị cho bạn bè/party/club theo policy (không theo lớp — ADR-0095) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-PTY, TC-CMP |
-| FR-MP-004 | Đồng bộ vị trí qua WebSocket ≤10 Hz, interpolation, server kiểm tra tốc độ/biên (ADR-0011) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-PTY, TC-CMP |
-| FR-MP-005 | Heartbeat, timeout, reconnect, session recovery, disconnect handling | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-PTY, TC-CMP |
-| FR-MP-006 | Không gửi chuyển động 3D qua REST; Valkey không làm game simulation server | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 3 op | _suy luận:_ TC-PTY, TC-CMP |
+| FR-MP-001 | Hỗ trợ Multiplayer World, Room, Lobby, Team, Match, Session | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-PTY, TC-CMP |
+| FR-MP-002 | Hub instance tối đa 40 người, cấp theo school/grade band; bạn bè/party ưu tiên cùng instance (ADR-0012) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-PTY, TC-CMP |
+| FR-MP-003 | Presence/online status (Valkey), chỉ hiển thị cho bạn bè/party/club theo policy (không theo lớp — ADR-0095) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-PTY, TC-CMP |
+| FR-MP-004 | Đồng bộ vị trí qua WebSocket ≤10 Hz, interpolation, server kiểm tra tốc độ/biên (ADR-0011) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-PTY, TC-CMP |
+| FR-MP-005 | Heartbeat, timeout, reconnect, session recovery, disconnect handling | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-PTY, TC-CMP |
+| FR-MP-006 | Không gửi chuyển động 3D qua REST; Valkey không làm game simulation server | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-PTY, TC-CMP |
 
 ### 3.15. `PTY` Party
 

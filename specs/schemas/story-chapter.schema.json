@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/story-chapter.schema.json",
+  "title": "StoryChapterVersion v1",
+  "description": "Payload của một version chương truyện \"Thắp lại Tia Sáng\" (WORLD_DESIGN §2.2, F071; nội dung platform có version, ADR-0043). Chương 0 mở lần đầu vào game; chương môn học mở song song sau chương 0 (môn bị trường tắt không hiện); chương 5/6 mở khi xong đủ số chương môn học. Tiến độ suy từ quest.completed của các main quest (QUEST_SYSTEM). Không có điều kiện thanh toán. Mọi chuỗi có maxLength (ADR-0041).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "chapter_code", "region_code", "title", "order", "main_quest_ids", "unlock_rule"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "chapter_code": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_.-]{0,63}$" },
+    "region_code": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_.-]{0,63}$" },
+    "title": { "$ref": "#/$defs/localized_name" },
+    "boss_name": { "$ref": "#/$defs/localized_name" },
+    "order": { "type": "integer", "minimum": 0, "maximum": 50, "description": "Số chương (0 = Lời mời)" },
+    "subject_code": { "type": ["string", "null"], "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{0,63}$", "description": "Môn của chương môn học (1–4); null với chương 0, 5, 6" },
+    "main_quest_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" }, "description": "Chuỗi main quest của chương (F072)" },
+    "boss_id": { "type": ["string", "null"], "format": "uuid" },
+    "unlock_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "first_entry = mở lần đầu vào game (chương 0); after_chapter = mở sau khi xong chương đó; min_subject_chapters = mở khi xong ≥ n chương môn học",
+      "properties": {
+        "first_entry": { "type": "boolean" },
+        "after_chapter": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_.-]{0,63}$" },
+        "min_subject_chapters": { "type": "integer", "minimum": 1, "maximum": 10 }
+      }
+    }
+  },
+  "$defs": {
+    "localized_name": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vi", "en"],
+      "properties": { "vi": { "type": "string", "minLength": 1, "maxLength": 255 }, "en": { "type": "string", "minLength": 1, "maxLength": 255 } }
+    }
+  },
+  "examples": [
+    {
+      "schema_version": 1,
+      "chapter_code": "chapter.1.number_kingdom",
+      "region_code": "math_kingdom",
+      "title": { "vi": "Vương quốc Số", "en": "The Number Kingdom" },
+      "boss_name": { "vi": "Rồng Phân Số", "en": "Fraction Dragon" },
+      "order": 1,
+      "subject_code": "math",
+      "main_quest_ids": ["0193a5f4-6c1e-7b2a-9d1f-000000071101", "0193a5f4-6c1e-7b2a-9d1f-000000071102"],
+      "boss_id": null,
+      "unlock_rule": { "after_chapter": "chapter.0.invitation" }
+    }
+  ]
+}

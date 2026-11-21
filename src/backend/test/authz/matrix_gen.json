@@ -3049,18 +3049,6 @@
     ]
   },
   {
-    "operation_id": "joinFriendInWorld",
-    "module": "game",
-    "method": "POST",
-    "path": "/game/world/friends/{user_id}:join",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "joinGameEvent",
     "module": "game",
     "method": "POST",

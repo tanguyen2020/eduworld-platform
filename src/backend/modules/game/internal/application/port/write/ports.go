@@ -29,6 +29,7 @@ type Event struct {
 	SubjectID    string
 	PartitionKey string
 	TenantID     *uuid.UUID
+	Platform     bool // platform event (envelope tenant_id null): game content releases
 	OccurredAt   time.Time
 	Payload      any
 }

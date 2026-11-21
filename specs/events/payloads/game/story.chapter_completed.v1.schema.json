@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/story.chapter_completed.v1.schema.json",
+  "title": "Payload story.chapter_completed v1 (module game, owner F071)",
+  "description": "Học sinh hoàn thành mọi main quest của một chương \"Thắp lại Tia Sáng\" (WORLD_DESIGN §2.2); phát đúng một lần mỗi (học sinh, chương) — event lặp không phát lại. Envelope tenant_id = tenant của học sinh. Consumer: achievement, reward, realtime, analytics, module game (đánh giá mở khóa).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "student_id",
+    "chapter_code",
+    "chapter_version_id",
+    "region_code",
+    "completed_at"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "chapter_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "chapter_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "region_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "chapter_code": "chapter.1.number_kingdom",
+      "chapter_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000071004",
+      "region_code": "math_kingdom",
+      "order": 1,
+      "completed_at": "2026-11-21T01:00:00Z"
+    }
+  ]
+}

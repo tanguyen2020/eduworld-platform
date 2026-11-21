@@ -254,6 +254,16 @@ func (e CommonInternalCommonV1UserLifecycleResultStatus) Valid() bool {
 	}
 }
 
+// HubPosition Examples: {"area_id":"main_hub","position":[1.5,0,-4],"room_id":"0193a5f4-6c1e-7b2a-9d1f-000000000201","student_id":"0193a5f4-6c1e-7b2a-9d1f-000000000101"}
+type HubPosition struct {
+	AreaId string `json:"area_id"`
+
+	// Position Vị trí [x, y, z] (m) room host lưu lần cuối
+	Position  []float64          `json:"position"`
+	RoomId    string             `json:"room_id"`
+	StudentId openapi_types.UUID `json:"student_id"`
+}
+
 // CommonInternalCommonV1PageInfo defines model for common_internal-common.v1_PageInfo.
 type CommonInternalCommonV1PageInfo struct {
 	HasMore    bool    `json:"has_more"`
@@ -542,6 +552,9 @@ type MergeUserDataJSONRequestBody = CommonInternalCommonV1UserMergeRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// GetHubPosition Vị trí hub hiện tại của một học sinh (room host F091) — kiểm khoảng cách tương tác có giá trị (F071)
+	// (GET /internal/v1/hub/students/{student_id}/position)
+	GetHubPosition(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath)
@@ -582,6 +595,32 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetHubPosition operation middleware
+func (siw *ServerInterfaceWrapper) GetHubPosition(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "student_id" -------------
+	var studentId CommonInternalCommonV1StudentIdPath
+
+	err = runtime.BindStyledParameterWithOptions("simple", "student_id", r.PathValue("student_id"), &studentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "student_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetHubPosition(w, r, studentId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // CleanupStudentData operation middleware
 func (siw *ServerInterfaceWrapper) CleanupStudentData(w http.ResponseWriter, r *http.Request) {
@@ -1040,6 +1079,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/hub/students/{student_id}/position", wrapper.GetHubPosition)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:cleanup", wrapper.CleanupStudentData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:restore", wrapper.RestoreStudentData)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/platform/tenant-assignments", wrapper.ListResourceAssignments)
@@ -1067,6 +1107,76 @@ type CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse CommonInte
 type CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
 
 type CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
+
+type GetHubPositionRequestObject struct {
+	StudentId CommonInternalCommonV1StudentIdPath `json:"student_id"`
+}
+
+type GetHubPositionResponseObject interface {
+	VisitGetHubPositionResponse(w http.ResponseWriter) error
+}
+
+type GetHubPosition200JSONResponse HubPosition
+
+func (response GetHubPosition200JSONResponse) VisitGetHubPositionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetHubPosition401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response GetHubPosition401ApplicationProblemPlusJSONResponse) VisitGetHubPositionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetHubPosition403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response GetHubPosition403ApplicationProblemPlusJSONResponse) VisitGetHubPositionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetHubPosition404ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response GetHubPosition404ApplicationProblemPlusJSONResponse) VisitGetHubPositionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type CleanupStudentDataRequestObject struct {
 	StudentId CommonInternalCommonV1StudentIdPath `json:"student_id"`
@@ -1873,6 +1983,9 @@ func (response MergeUserData409ApplicationProblemPlusJSONResponse) VisitMergeUse
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// GetHubPosition Vị trí hub hiện tại của một học sinh (room host F091) — kiểm khoảng cách tương tác có giá trị (F071)
+	// (GET /internal/v1/hub/students/{student_id}/position)
+	GetHubPosition(ctx context.Context, request GetHubPositionRequestObject) (GetHubPositionResponseObject, error)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
@@ -1942,6 +2055,32 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// GetHubPosition operation middleware
+func (sh *strictHandler) GetHubPosition(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath) {
+	var request GetHubPositionRequestObject
+
+	request.StudentId = studentId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetHubPosition(ctx, request.(GetHubPositionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetHubPosition")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetHubPositionResponseObject); ok {
+		if err := validResponse.VisitGetHubPositionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // CleanupStudentData operation middleware
@@ -2262,6 +2401,7 @@ var ErrNotFaked = errors.New("api: operation not faked")
 
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
+	GetHubPositionFunc          func(ctx context.Context, request GetHubPositionRequestObject) (GetHubPositionResponseObject, error)
 	CleanupStudentDataFunc      func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
 	RestoreStudentDataFunc      func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
 	ListResourceAssignmentsFunc func(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
@@ -2275,6 +2415,14 @@ type Fake struct {
 }
 
 var _ StrictServerInterface = (*Fake)(nil)
+
+// GetHubPosition calls GetHubPositionFunc.
+func (f *Fake) GetHubPosition(a0 context.Context, a1 GetHubPositionRequestObject) (GetHubPositionResponseObject, error) {
+	if f.GetHubPositionFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.GetHubPositionFunc(a0, a1)
+}
 
 // CleanupStudentData calls CleanupStudentDataFunc.
 func (f *Fake) CleanupStudentData(a0 context.Context, a1 CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error) {

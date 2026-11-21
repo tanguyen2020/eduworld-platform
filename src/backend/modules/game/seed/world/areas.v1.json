@@ -1,0 +1,1339 @@
+[
+  {
+    "schema_version": 1,
+    "area_id": "main_hub",
+    "region_code": "central",
+    "name": {
+      "vi": "Quảng trường Tia Sáng",
+      "en": "Spark Square"
+    },
+    "region_name": {
+      "vi": "Thị trấn Trung Tâm",
+      "en": "EduWorld Central"
+    },
+    "area_class": "hub",
+    "subject_code": null,
+    "scene_ref": "res://scenes/world/zones/main_hub/Zone.tscn",
+    "bundle_id": "zone.main_hub",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.5,
+      "y": 0.5,
+      "icon_key": "central"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "main_hub.default",
+          "position": [
+            0,
+            0.1,
+            9
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_arena",
+          "position": [
+            12,
+            0.1,
+            -2
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_math",
+          "position": [
+            -20,
+            0.1,
+            -12
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_language",
+          "position": [
+            -15,
+            0.1,
+            -12
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_science",
+          "position": [
+            -10,
+            0.1,
+            -12
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_history",
+          "position": [
+            -5,
+            0.1,
+            -12
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_ocean",
+          "position": [
+            0,
+            0.1,
+            -12
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_mountain",
+          "position": [
+            5,
+            0.1,
+            -12
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_practice",
+          "position": [
+            10,
+            0.1,
+            -12
+          ]
+        },
+        {
+          "spawn_point_id": "main_hub.from_social",
+          "position": [
+            15,
+            0.1,
+            -12
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.hub.to_math",
+          "target_area_id": "learning_zone.math"
+        },
+        {
+          "portal_id": "portal.hub.to_vietnamese",
+          "target_area_id": "learning_zone.vietnamese"
+        },
+        {
+          "portal_id": "portal.hub.to_english",
+          "target_area_id": "learning_zone.english"
+        },
+        {
+          "portal_id": "portal.hub.to_science",
+          "target_area_id": "learning_zone.science"
+        },
+        {
+          "portal_id": "portal.hub.to_history",
+          "target_area_id": "learning_zone.history"
+        },
+        {
+          "portal_id": "portal.hub.to_ocean",
+          "target_area_id": "quest_zone.discovery_ocean"
+        },
+        {
+          "portal_id": "portal.hub.to_mountain",
+          "target_area_id": "challenge_mountain"
+        },
+        {
+          "portal_id": "portal.hub.to_exam",
+          "target_area_id": "exam_zone"
+        },
+        {
+          "portal_id": "portal.hub.to_arena",
+          "target_area_id": "arena"
+        },
+        {
+          "portal_id": "portal.hub.to_practice",
+          "target_area_id": "practice_zone"
+        },
+        {
+          "portal_id": "portal.hub.to_social",
+          "target_area_id": "social_zone"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "board.school_assignments",
+          "kind": "quest_board",
+          "position": [
+            6,
+            0,
+            4
+          ]
+        },
+        {
+          "interactable_id": "board.exam_sessions",
+          "kind": "exam_board",
+          "position": [
+            -6,
+            0,
+            4
+          ]
+        },
+        {
+          "interactable_id": "npc.cloudy",
+          "kind": "npc",
+          "npc_id": "npc.cloudy",
+          "position": [
+            0,
+            0,
+            5
+          ]
+        },
+        {
+          "interactable_id": "npc.postie",
+          "kind": "npc",
+          "npc_id": "npc.postie",
+          "position": [
+            9,
+            0,
+            7
+          ]
+        },
+        {
+          "interactable_id": "npc.cotton",
+          "kind": "npc",
+          "npc_id": "npc.cotton",
+          "position": [
+            -9,
+            0,
+            7
+          ]
+        },
+        {
+          "interactable_id": "discovery.hub.spark_tree",
+          "kind": "discovery",
+          "position": [
+            0,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "practice_zone",
+    "region_code": "central",
+    "name": {
+      "vi": "Thư viện Gió",
+      "en": "Breeze Library"
+    },
+    "region_name": {
+      "vi": "Thị trấn Trung Tâm",
+      "en": "EduWorld Central"
+    },
+    "area_class": "practice",
+    "subject_code": null,
+    "scene_ref": "res://scenes/world/zones/practice_zone/Zone.tscn",
+    "bundle_id": "zone.practice_zone",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.42,
+      "y": 0.6,
+      "icon_key": "practice"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "practice_zone.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.practice.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_practice"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.breeze",
+          "kind": "npc",
+          "npc_id": "npc.breeze",
+          "position": [
+            0,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "station.practice.board",
+          "kind": "minigame_station",
+          "position": [
+            5,
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "social_zone",
+    "region_code": "central",
+    "name": {
+      "vi": "Vườn Bạn Bè",
+      "en": "Friendship Garden"
+    },
+    "region_name": {
+      "vi": "Thị trấn Trung Tâm",
+      "en": "EduWorld Central"
+    },
+    "area_class": "social",
+    "subject_code": null,
+    "scene_ref": "res://scenes/world/zones/social_zone/Zone.tscn",
+    "bundle_id": "zone.social_zone",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.58,
+      "y": 0.6,
+      "icon_key": "social"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "social_zone.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.social.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_social"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.buzzy",
+          "kind": "npc",
+          "npc_id": "npc.buzzy",
+          "position": [
+            0,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "collectible.social.flower_seed",
+          "kind": "collectible",
+          "collection_id": "collection.garden",
+          "position": [
+            8,
+            0,
+            -4
+          ],
+          "interact_radius_m": 2
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "learning_zone.math",
+    "region_code": "math_kingdom",
+    "name": {
+      "vi": "Vương quốc Số",
+      "en": "Math Kingdom"
+    },
+    "region_name": {
+      "vi": "Vương quốc Số",
+      "en": "Math Kingdom"
+    },
+    "area_class": "learning",
+    "subject_code": "math",
+    "scene_ref": "res://scenes/world/zones/learning_zone_math/Zone.tscn",
+    "bundle_id": "zone.learning_zone.math",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true,
+      "grade_levels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.3,
+      "y": 0.25,
+      "icon_key": "math_kingdom"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "learning_zone.math.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.math.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_math"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.mr_numbers",
+          "kind": "npc",
+          "npc_id": "npc.mr_numbers",
+          "position": [
+            0,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "discovery.math.old_well",
+          "kind": "discovery",
+          "position": [
+            12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "discovery.math.number_bridge",
+          "kind": "discovery",
+          "position": [
+            -12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "collectible.math.shell_abacus",
+          "kind": "collectible",
+          "collection_id": "collection.math",
+          "position": [
+            0,
+            0,
+            -14
+          ],
+          "interact_radius_m": 2
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "learning_zone.vietnamese",
+    "region_code": "language_forest",
+    "name": {
+      "vi": "Rừng Chữ",
+      "en": "Letter Woods"
+    },
+    "region_name": {
+      "vi": "Rừng Ngôn Ngữ",
+      "en": "Language Forest"
+    },
+    "area_class": "learning",
+    "subject_code": "vietnamese",
+    "scene_ref": "res://scenes/world/zones/learning_zone_vietnamese/Zone.tscn",
+    "bundle_id": "zone.learning_zone.vietnamese",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true,
+      "grade_levels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.2,
+      "y": 0.45,
+      "icon_key": "language_forest"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "learning_zone.vietnamese.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.vietnamese.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_language"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.mrs_letters",
+          "kind": "npc",
+          "npc_id": "npc.mrs_letters",
+          "position": [
+            0,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "discovery.vietnamese.ancient_letter",
+          "kind": "discovery",
+          "position": [
+            12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "discovery.vietnamese.word_tree",
+          "kind": "discovery",
+          "position": [
+            -12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "collectible.vietnamese.page_lost",
+          "kind": "collectible",
+          "collection_id": "collection.vietnamese",
+          "position": [
+            0,
+            0,
+            -14
+          ],
+          "interact_radius_m": 2
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "learning_zone.english",
+    "region_code": "language_forest",
+    "name": {
+      "vi": "Rừng Tiếng Anh",
+      "en": "English Woods"
+    },
+    "region_name": {
+      "vi": "Rừng Ngôn Ngữ",
+      "en": "Language Forest"
+    },
+    "area_class": "learning",
+    "subject_code": "english",
+    "scene_ref": "res://scenes/world/zones/learning_zone_english/Zone.tscn",
+    "bundle_id": "zone.learning_zone.english",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true,
+      "grade_levels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.22,
+      "y": 0.62,
+      "icon_key": "language_forest"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "learning_zone.english.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.english.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_language"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.robo_ben",
+          "kind": "npc",
+          "npc_id": "npc.robo_ben",
+          "position": [
+            0,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "discovery.english.robot_workshop",
+          "kind": "discovery",
+          "position": [
+            12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "discovery.english.echo_cave",
+          "kind": "discovery",
+          "position": [
+            -12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "collectible.english.gear_word",
+          "kind": "collectible",
+          "collection_id": "collection.english",
+          "position": [
+            0,
+            0,
+            -14
+          ],
+          "interact_radius_m": 2
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "learning_zone.science",
+    "region_code": "science_island",
+    "name": {
+      "vi": "Đảo Khoa Học",
+      "en": "Science Island"
+    },
+    "region_name": {
+      "vi": "Đảo Khoa Học",
+      "en": "Science Island"
+    },
+    "area_class": "learning",
+    "subject_code": "science",
+    "scene_ref": "res://scenes/world/zones/learning_zone_science/Zone.tscn",
+    "bundle_id": "zone.learning_zone.science",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true,
+      "grade_levels": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.75,
+      "y": 0.25,
+      "icon_key": "science_island"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "learning_zone.science.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.science.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_science"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.dr_leaf",
+          "kind": "npc",
+          "npc_id": "npc.dr_leaf",
+          "position": [
+            0,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "discovery.science.weather_station",
+          "kind": "discovery",
+          "position": [
+            12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "discovery.science.tide_pool",
+          "kind": "discovery",
+          "position": [
+            -12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "collectible.science.leaf_fossil",
+          "kind": "collectible",
+          "collection_id": "collection.science",
+          "position": [
+            0,
+            0,
+            -14
+          ],
+          "interact_radius_m": 2
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "learning_zone.history",
+    "region_code": "history_kingdom",
+    "name": {
+      "vi": "Vương quốc Lịch Sử",
+      "en": "History Kingdom"
+    },
+    "region_name": {
+      "vi": "Vương quốc Lịch Sử",
+      "en": "History Kingdom"
+    },
+    "area_class": "learning",
+    "subject_code": "history",
+    "scene_ref": "res://scenes/world/zones/learning_zone_history/Zone.tscn",
+    "bundle_id": "zone.learning_zone.history",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true,
+      "grade_levels": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.8,
+      "y": 0.45,
+      "icon_key": "history_kingdom"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "learning_zone.history.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.history.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_history"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.grandpa_chronicle",
+          "kind": "npc",
+          "npc_id": "npc.grandpa_chronicle",
+          "position": [
+            0,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "discovery.history.old_map",
+          "kind": "discovery",
+          "position": [
+            12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "discovery.history.bronze_drum",
+          "kind": "discovery",
+          "position": [
+            -12,
+            0,
+            -6
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "collectible.history.ancient_coin",
+          "kind": "collectible",
+          "collection_id": "collection.history",
+          "position": [
+            0,
+            0,
+            -14
+          ],
+          "interact_radius_m": 2
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "quest_zone.discovery_ocean",
+    "region_code": "discovery_ocean",
+    "name": {
+      "vi": "Đại dương Khám Phá",
+      "en": "Discovery Ocean"
+    },
+    "region_name": {
+      "vi": "Đại dương Khám Phá",
+      "en": "Discovery Ocean"
+    },
+    "area_class": "quest",
+    "subject_code": null,
+    "scene_ref": "res://scenes/world/zones/quest_zone_discovery_ocean/Zone.tscn",
+    "bundle_id": "zone.quest_zone.discovery_ocean",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true
+    },
+    "unlock_rule": {
+      "chapters_completed": {
+        "min": 1,
+        "subject_chapters_only": true,
+        "label": {
+          "vi": "Hoàn thành 1 chương môn học",
+          "en": "Complete 1 subject chapter"
+        }
+      }
+    },
+    "map": {
+      "x": 0.5,
+      "y": 0.85,
+      "icon_key": "discovery_ocean"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "quest_zone.discovery_ocean.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.ocean.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_ocean"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.cloudy",
+          "kind": "npc",
+          "npc_id": "npc.cloudy",
+          "position": [
+            0,
+            0,
+            3
+          ]
+        },
+        {
+          "interactable_id": "discovery.ocean.shipwreck",
+          "kind": "discovery",
+          "position": [
+            14,
+            0,
+            -8
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "discovery.ocean.coral_cave",
+          "kind": "discovery",
+          "position": [
+            -14,
+            0,
+            -8
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "collectible.ocean.rare_shell",
+          "kind": "collectible",
+          "collection_id": "collection.ocean",
+          "position": [
+            0,
+            0,
+            -16
+          ],
+          "interact_radius_m": 2
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "exam_zone",
+    "region_code": "challenge_mountain",
+    "name": {
+      "vi": "Tháp Thử Thách",
+      "en": "Trial Tower"
+    },
+    "region_name": {
+      "vi": "Núi Thử Thách",
+      "en": "Challenge Mountain"
+    },
+    "area_class": "exam",
+    "subject_code": null,
+    "scene_ref": "res://scenes/world/zones/exam_zone/Zone.tscn",
+    "bundle_id": "zone.exam_zone",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": false
+    },
+    "unlock_rule": null,
+    "map": {
+      "x": 0.62,
+      "y": 0.12,
+      "icon_key": "exam"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "exam_zone.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.exam.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_mountain"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.judge_stone",
+          "kind": "npc",
+          "npc_id": "npc.judge_stone",
+          "position": [
+            0,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "board.exam_sessions",
+          "kind": "exam_board",
+          "position": [
+            4,
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "challenge_mountain",
+    "region_code": "challenge_mountain",
+    "name": {
+      "vi": "Núi Thử Thách",
+      "en": "Challenge Mountain"
+    },
+    "region_name": {
+      "vi": "Núi Thử Thách",
+      "en": "Challenge Mountain"
+    },
+    "area_class": "challenge",
+    "subject_code": null,
+    "scene_ref": "res://scenes/world/zones/challenge_mountain/Zone.tscn",
+    "bundle_id": "zone.challenge_mountain",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true
+    },
+    "unlock_rule": {
+      "chapters_completed": {
+        "min": 2,
+        "subject_chapters_only": true,
+        "label": {
+          "vi": "Hoàn thành 2 chương môn học",
+          "en": "Complete 2 subject chapters"
+        }
+      }
+    },
+    "map": {
+      "x": 0.5,
+      "y": 0.1,
+      "icon_key": "challenge_mountain"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "challenge_mountain.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.mountain.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_mountain"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "discovery.mountain.summit_view",
+          "kind": "discovery",
+          "position": [
+            0,
+            0,
+            -18
+          ],
+          "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "collectible.mountain.crystal_shard",
+          "kind": "collectible",
+          "collection_id": "collection.mountain",
+          "position": [
+            10,
+            0,
+            -10
+          ],
+          "interact_radius_m": 2
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 1,
+    "area_id": "arena",
+    "region_code": "champion_arena",
+    "name": {
+      "vi": "Đấu trường Nhà Vô Địch",
+      "en": "Champion Arena"
+    },
+    "region_name": {
+      "vi": "Đấu trường Nhà Vô Địch",
+      "en": "Champion Arena"
+    },
+    "area_class": "arena",
+    "subject_code": null,
+    "scene_ref": "res://scenes/world/zones/arena/Zone.tscn",
+    "bundle_id": "zone.arena",
+    "capacity": 40,
+    "max_speed_mps": 7,
+    "bounds": {
+      "min": [
+        -30,
+        -5,
+        -30
+      ],
+      "max": [
+        30,
+        25,
+        30
+      ]
+    },
+    "access_policy": {
+      "room_type": "hub_instance",
+      "public": true
+    },
+    "unlock_rule": {
+      "quest_completed": {
+        "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071102",
+        "label": {
+          "vi": "Hoàn thành chương Lời mời",
+          "en": "Finish chapter The Invitation"
+        }
+      }
+    },
+    "map": {
+      "x": 0.82,
+      "y": 0.75,
+      "icon_key": "champion_arena"
+    },
+    "layout": {
+      "spawn_points": [
+        {
+          "spawn_point_id": "arena.default",
+          "position": [
+            0,
+            0.1,
+            8
+          ]
+        }
+      ],
+      "portals": [
+        {
+          "portal_id": "portal.arena.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_arena"
+        }
+      ],
+      "interactables": [
+        {
+          "interactable_id": "npc.referee_thunder",
+          "kind": "npc",
+          "npc_id": "npc.referee_thunder",
+          "position": [
+            3,
+            0,
+            2
+          ]
+        },
+        {
+          "interactable_id": "npc.madam_calendar",
+          "kind": "npc",
+          "npc_id": "npc.madam_calendar",
+          "position": [
+            -3,
+            0,
+            2
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -53,7 +53,11 @@ func Compose(r *module.Registry) (*Composition, error) {
 		return nil, err
 	}
 	lrn.Wire(learning.Imports{})
-	gam.Wire(game.Imports{})
+	gin := game.Imports{}
+	if f := cmp.Facade(); f != nil {
+		gin.Competition = f // getHubPosition: interaction distance of a discovery (F071 T049)
+	}
+	gam.Wire(gin)
 	// Party and team names go through the chat moderation pipeline (moderateDisplayText, F116); without the chat facade
 	// (a binary that does not load the pipeline) they fall back to the generated default name.
 	cin := competition.Imports{}

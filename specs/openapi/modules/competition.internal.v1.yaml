@@ -10,6 +10,8 @@ info:
     name: Proprietary — EduWorld
     identifier: LicenseRef-EduWorld-Proprietary
 tags:
+  - name: hub
+    description: Hub instance của room host F091 (vị trí học sinh cho kiểm tương tác của module game, F071)
   - name: platform-ops
     description: Interface platform ops chuẩn (module identity điều phối Thùng rác, clone tenant, dọn/khôi phục học sinh, gộp/ẩn danh hóa user)
 
@@ -383,3 +385,44 @@ paths:
         '404':
           $ref: common/internal-common.v1.yaml#/components/responses/NotFound
   # END platform-ops
+  /internal/v1/hub/students/{student_id}/position:
+    get:
+      tags: [hub]
+      operationId: getHubPosition
+      summary: Vị trí hub hiện tại của một học sinh (room host F091) — kiểm khoảng cách tương tác có giá trị (F071)
+      description: |
+        Module game gọi trong tiến trình khi kiểm một hành động có giá trị gắn với vị trí (báo điểm khám phá, F071-AC-24,
+        T049) — operation khai báo ở F071, dữ liệu từ room host của F091 (vị trí cuối cùng room host lưu trong Valkey).
+        Chỉ trả vị trí khi học sinh đang ngồi trong một hub instance của tenant của phiên (`TenantScope`); không có thì
+        `404`. Không trả học sinh khác, không PII. Bên gọi coi lỗi/hết deadline là "không biết vị trí" (chỉ kiểm presence).
+      x-allowed-callers: [game]
+      x-context-required: [tenant_scope]
+      parameters:
+        - $ref: common/internal-common.v1.yaml#/components/parameters/StudentIdPath
+      responses:
+        '200':
+          description: Vị trí hub của học sinh
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HubPosition' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '404': { $ref: 'common/internal-common.v1.yaml#/components/responses/NotFound' }
+components:
+  schemas:
+    HubPosition:
+      type: object
+      additionalProperties: false
+      required: [student_id, area_id, room_id, position]
+      properties:
+        student_id: { type: string, format: uuid }
+        area_id: { type: string, maxLength: 64 }
+        room_id: { type: string, maxLength: 64 }
+        position:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { type: number, format: double }
+          description: Vị trí [x, y, z] (m) room host lưu lần cuối
+      examples:
+        - { student_id: 0193a5f4-6c1e-7b2a-9d1f-000000000101, area_id: main_hub, room_id: 0193a5f4-6c1e-7b2a-9d1f-000000000201, position: [1.5, 0, -4] }

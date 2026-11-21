@@ -111,3 +111,36 @@ func (SessionMetrics) Active(byPlatform map[string]int) {
 		active.WithLabelValues(p).Set(float64(byPlatform[p]))
 	}
 }
+
+var (
+	areaEnter = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_game_area_enter_total",
+		Help: "enterWorldArea calls by result (ok or problem code)."}, []string{"result"})
+	areaUnlocked = prometheus.NewCounter(prometheus.CounterOpts{Name: "eduworld_game_area_unlocked_total",
+		Help: "Areas unlocked for a student (first time only)."})
+	discovery = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_game_discovery_total",
+		Help: "reportDiscovery calls by result (ok or problem code)."}, []string{"result"})
+	manifestBuild = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "eduworld_game_manifest_build_seconds",
+		Help: "Time to rebuild the game part of every tenant manifest after a game content release.", Buckets: prometheus.DefBuckets})
+)
+
+// RegisterWorld registers the F071 world metrics (once per registry).
+func RegisterWorld(r prometheus.Registerer) {
+	for _, c := range []prometheus.Collector{areaEnter, areaUnlocked, discovery, manifestBuild} {
+		_ = r.Register(c)
+	}
+}
+
+// WorldMetrics implements command.WorldMetrics.
+type WorldMetrics struct{}
+
+// AreaEnter counts one enterWorldArea.
+func (WorldMetrics) AreaEnter(result string) { areaEnter.WithLabelValues(result).Inc() }
+
+// AreaUnlocked counts one unlock.
+func (WorldMetrics) AreaUnlocked() { areaUnlocked.Inc() }
+
+// Discovery counts one reportDiscovery.
+func (WorldMetrics) Discovery(result string) { discovery.WithLabelValues(result).Inc() }
+
+// ManifestBuild observes one rebuild of the game manifests.
+func ManifestBuild(d float64) { manifestBuild.Observe(d) }

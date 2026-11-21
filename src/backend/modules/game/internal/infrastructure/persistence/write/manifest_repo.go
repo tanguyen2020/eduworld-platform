@@ -50,3 +50,26 @@ func (ManifestRepo) Insert(ctx context.Context, m write.ManifestRow) error {
 	}
 	return nil
 }
+
+// ActiveTenants implements write.TenantLister.
+func (ManifestRepo) ActiveTenants(ctx context.Context) ([]uuid.UUID, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok ref.tenants is the tenant registry (not tenant-scoped, no soft-delete: status mirrors the source)
+	rows, err := t.QueryContext(ctx, `SELECT tenant_id FROM ref.tenants WHERE status = 'active' ORDER BY tenant_id`)
+	if err != nil {
+		return nil, fmt.Errorf("ref tenants: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}

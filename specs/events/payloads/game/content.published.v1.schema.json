@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/content.published.v1.schema.json",
+  "title": "Payload content.published v1 (module game, owner F071, ADR-0043)",
+  "description": "Một item nội dung game platform được publish (lõi phát hành F071; F078 thêm workflow duyệt/rollback trên cùng lõi): con trỏ current_version_id đổi sang to_version_id. Envelope tenant_id = null (nội dung platform áp cho mọi tenant). Consumer: manifest builder của module game (dựng lại game.content_manifests của mọi tenant), projection ref.world_areas của module competition (item_type = world_area: phần runtime world_area), AUD. Không chứa đáp án hay PII.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "item_type",
+    "item_id",
+    "to_version_id",
+    "to_version",
+    "release_id",
+    "owner_scope",
+    "tenant_id",
+    "scheduled",
+    "published_by",
+    "released_at"
+  ],
+  "properties": {
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "world_area",
+        "story_chapter",
+        "npc_dialogue",
+        "level",
+        "character_catalog",
+        "item"
+      ]
+    },
+    "item_id": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "area_id, chapter_code, dialogue_id hoặc level_id"
+    },
+    "from_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "null khi publish lần đầu"
+    },
+    "to_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "to_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "release_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Bản ghi game.content_releases"
+    },
+    "owner_scope": {
+      "type": "string",
+      "enum": [
+        "platform"
+      ]
+    },
+    "tenant_id": {
+      "type": "null",
+      "description": "Nội dung game là platform (ADR-0027)"
+    },
+    "scheduled": {
+      "type": "boolean"
+    },
+    "published_by": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Người/nguồn publish (seed: principal hệ thống)"
+    },
+    "snapshot_sha256": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "world_area": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Chỉ khi item_type = world_area: dữ liệu runtime room host cần (projection ref.world_areas của competition, F091)",
+      "required": [
+        "area_id",
+        "capacity",
+        "max_speed_mps",
+        "bounds",
+        "spawn_points",
+        "allowed_grade_bands",
+        "requires_unlock",
+        "status"
+      ],
+      "properties": {
+        "area_id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40
+        },
+        "max_speed_mps": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 50
+        },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "max": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "spawn_points": {
+          "type": "object",
+          "maxProperties": 50,
+          "propertyNames": {
+            "maxLength": 64
+          },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "allowed_grade_bands": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "g1_3",
+              "g4_5",
+              "g6_7",
+              "g8_9"
+            ]
+          }
+        },
+        "requires_unlock": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "item_type": "world_area",
+      "item_id": "main_hub",
+      "from_version_id": null,
+      "to_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000071001",
+      "to_version": 1,
+      "release_id": "0193a5f4-6c1e-7b2a-9d1f-000000071002",
+      "owner_scope": "platform",
+      "tenant_id": null,
+      "scheduled": false,
+      "published_by": "0193a5f4-6c1e-7b2a-9d1f-000000071003",
+      "snapshot_sha256": "abababababababababababababababababababababababababababababababab",
+      "released_at": "2026-11-21T01:00:00Z",
+      "world_area": {
+        "area_id": "main_hub",
+        "capacity": 40,
+        "max_speed_mps": 7,
+        "bounds": {
+          "min": [
+            -50,
+            -5,
+            -50
+          ],
+          "max": [
+            50,
+            30,
+            50
+          ]
+        },
+        "spawn_points": {
+          "main_hub.default": [
+            0,
+            0,
+            0
+          ]
+        },
+        "allowed_grade_bands": [
+          "g1_3",
+          "g4_5",
+          "g6_7",
+          "g8_9"
+        ],
+        "requires_unlock": false,
+        "status": "active"
+      }
+    }
+  ]
+}

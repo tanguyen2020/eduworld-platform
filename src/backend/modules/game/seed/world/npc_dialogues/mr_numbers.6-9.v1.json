@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "dialogue_id": "0193a5f4-6c1e-7b2a-9d1f-000000071307",
+  "npc_id": "npc.mr_numbers",
+  "npc_name": {
+    "vi": "Ông Số",
+    "en": "Mr. Numbers"
+  },
+  "owner_scope": "platform",
+  "grade_levels": [
+    6,
+    7,
+    8,
+    9
+  ],
+  "start_node_id": "greet",
+  "nodes": [
+    {
+      "node_id": "greet",
+      "speaker": "npc",
+      "text": {
+        "vi": "Phân số đang làm rối cây cầu, cháu tính giúp ông nhé?",
+        "en": "Fractions are tangling the bridge, can you work it out?"
+      },
+      "emotion": "happy",
+      "choices": [
+        {
+          "text": {
+            "vi": "Mình giúp được!",
+            "en": "I can help!"
+          },
+          "next": "accept",
+          "actions": [
+            {
+              "type": "open_minigame",
+              "minigame_config_id": "0193a5f4-6c1e-7b2a-9d1f-000000071401"
+            }
+          ]
+        },
+        {
+          "text": {
+            "vi": "Để lúc khác nhé.",
+            "en": "Maybe later."
+          },
+          "next": "later"
+        }
+      ]
+    },
+    {
+      "node_id": "accept",
+      "speaker": "npc",
+      "text": {
+        "vi": "Tuyệt quá! Cảm ơn cháu.",
+        "en": "Wonderful! Thank you."
+      },
+      "emotion": "excited",
+      "actions": [
+        {
+          "type": "end"
+        }
+      ]
+    },
+    {
+      "node_id": "later",
+      "speaker": "npc",
+      "text": {
+        "vi": "Không sao, khi nào sẵn sàng thì quay lại nhé.",
+        "en": "No problem, come back when you are ready."
+      },
+      "emotion": "encouraging",
+      "actions": [
+        {
+          "type": "end"
+        }
+      ]
+    }
+  ]
+}

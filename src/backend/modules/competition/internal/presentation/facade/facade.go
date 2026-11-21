@@ -9,12 +9,15 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
 // Facade serves the lifecycle operations of module competition (F100 T042, OQ F016-2, F045-3).
 type Facade struct {
 	Lifecycle command.PartyLifecycle
+	// Hub answers getHubPosition (F071 T049); nil in a binary without the room host registry → 503 UNAVAILABLE.
+	Hub *query.HubPosition
 }
 
 // CleanupStudentData implements api.StrictServerInterface (x-allowed-callers: identity).
@@ -55,4 +58,21 @@ func (f Facade) MergeUserData(ctx context.Context, req api.MergeUserDataRequestO
 		return nil, err
 	}
 	return api.MergeUserData200JSONResponse{UserId: req.UserId, Status: api.CommonInternalCommonV1UserLifecycleResultStatus(status)}, nil
+}
+
+// GetHubPosition implements api.StrictServerInterface (x-allowed-callers: game, F071 T049): the last position the room
+// host stored for a student seated in a hub instance of the tenant of the scope; 404 NOT_FOUND otherwise.
+func (f Facade) GetHubPosition(ctx context.Context, req api.GetHubPositionRequestObject) (api.GetHubPositionResponseObject, error) {
+	if f.Hub == nil {
+		return nil, problem.New(problem.Unavailable, "hub registry not loaded in this binary").Retry()
+	}
+	p, err := f.Hub.Get(ctx, req.StudentId)
+	if err != nil {
+		return nil, err
+	}
+	if p == nil {
+		return nil, problem.New(problem.NotFound, "student not in a hub instance of this tenant")
+	}
+	return api.GetHubPosition200JSONResponse{StudentId: req.StudentId, AreaId: p.AreaID, RoomId: p.RoomID,
+		Position: []float64{p.Position[0], p.Position[1], p.Position[2]}}, nil
 }

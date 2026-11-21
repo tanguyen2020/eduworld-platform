@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/world.area_entered.v1.schema.json",
+  "title": "Payload world.area_entered v1 (module game, owner F071)",
+  "description": "Học sinh vào một area (enterWorldArea thành công). Gộp tối đa 1 event/area/phút/học sinh. Envelope tenant_id = tenant của phiên. Không PII (R14, R16). Consumer: analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "student_id",
+    "area_id",
+    "instance_kind",
+    "entered_at"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "area_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+    },
+    "from_area_id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+        }
+      ]
+    },
+    "instance_kind": {
+      "type": "string",
+      "enum": [
+        "hub_instance",
+        "private_instance",
+        "single"
+      ]
+    },
+    "entered_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "area_id": "learning_zone.math",
+      "from_area_id": "main_hub",
+      "instance_kind": "hub_instance",
+      "entered_at": "2026-11-21T01:00:00Z"
+    }
+  ]
+}

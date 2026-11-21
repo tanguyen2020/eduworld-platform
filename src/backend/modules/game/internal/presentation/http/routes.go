@@ -63,6 +63,9 @@ type Handlers struct {
 	// Profiles and ProfileQueries are the F070 profile use cases.
 	Profiles       ProfileCommands
 	ProfileQueries ProfileQueries
+	// World and WorldQueries are the F071 world use cases.
+	World        WorldCommands
+	WorldQueries WorldQueries
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -107,18 +110,36 @@ var Operations = map[string]httpx.Operation{
 		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
 	"getCharacterCatalog": {ID: "getCharacterCatalog", Module: "game", Method: http.MethodGet, Pattern: "/game/character/catalog",
 		Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyNone, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer},
+	// F071 world (game_player, X-Tenant-Id; startLevel, endLevelSession and reportDiscovery take an Idempotency-Key).
+	"getWorldManifest": op("getWorldManifest", http.MethodGet, "/game/world/manifest", httpx.TenantRequired, httpx.IdempotencyNone,
+		http.StatusOK, httpx.GuardGamePlayer),
+	"listWorldAreas": op("listWorldAreas", http.MethodGet, "/game/world/areas", httpx.TenantRequired, httpx.IdempotencyNone,
+		http.StatusOK, httpx.GuardGamePlayer),
+	"enterWorldArea": op("enterWorldArea", http.MethodPost, "/game/world/areas/{area_id}:enter", httpx.TenantRequired,
+		httpx.IdempotencyNone, http.StatusOK, httpx.GuardGamePlayer),
+	"startLevel": op("startLevel", http.MethodPost, "/game/levels/{level_id}:start", httpx.TenantRequired, httpx.IdempotencyRequired,
+		http.StatusCreated, httpx.GuardGamePlayer),
+	"endLevelSession": op("endLevelSession", http.MethodPost, "/game/level-sessions/{level_session_id}:end", httpx.TenantRequired,
+		httpx.IdempotencyRequired, http.StatusOK, httpx.GuardGamePlayer),
+	"getNpcDialogue": op("getNpcDialogue", http.MethodGet, "/game/world/npcs/{npc_id}/dialogue", httpx.TenantRequired,
+		httpx.IdempotencyNone, http.StatusOK, httpx.GuardGamePlayer),
+	"getWorldExploration": op("getWorldExploration", http.MethodGet, "/game/world/exploration", httpx.TenantRequired,
+		httpx.IdempotencyNone, http.StatusOK, httpx.GuardGamePlayer),
+	"reportDiscovery": op("reportDiscovery", http.MethodPost, "/game/world/areas/{area_id}/discoveries/{interactable_id}:discover",
+		httpx.TenantRequired, httpx.IdempotencyRequired, http.StatusOK, httpx.GuardGamePlayer),
 }
 
 // PlayerOperations are the player routes of F014 (F014-AC-18: staff tokens get 403 GAME_ACCESS_STUDENT_ONLY).
 var PlayerOperations = []string{"createGameSession", "endGameSession", "heartbeatGameSession", "getContentManifest",
 	"createRealtimeTicket", "getGameProfile", "updateGameProfile", "suggestNicknames", "updateAvatar", "listAvatarPresets",
-	"saveAvatarPreset", "getCharacterCatalog"}
+	"saveAvatarPreset", "getCharacterCatalog", "getWorldManifest", "listWorldAreas", "enterWorldArea", "startLevel", "endLevelSession",
+	"getNpcDialogue", "getWorldExploration", "reportDiscovery"}
 
 // Register mounts every F014 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
 	if h.Sessions == nil || h.ClientConfig == nil || h.Manifest == nil || h.LoginEvents == nil || h.Tickets == nil ||
-		h.Profiles == nil || h.ProfileQueries == nil {
-		return errors.New("game: every F014/F090/F070 handler is required")
+		h.Profiles == nil || h.ProfileQueries == nil || h.World == nil || h.WorldQueries == nil {
+		return errors.New("game: every F014/F090/F070/F071 handler is required")
 	}
 	routes := map[string]http.HandlerFunc{
 		"createGameSession":            h.createGameSession,
@@ -129,6 +150,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		"getClientConfig":              h.getClientConfig,
 		"listTenantStudentLoginEvents": h.listTenantStudentLoginEvents,
 		"listLoginEventsCrossTenant":   h.listLoginEventsCrossTenant,
+	}
+	for id, fn := range h.worldRoutes() {
+		routes[id] = fn
 	}
 	for id, fn := range h.profileRoutes() {
 		routes[id] = fn

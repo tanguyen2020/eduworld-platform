@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/level-package.schema.json",
+  "title": "LevelPackageVersion v1",
+  "description": "Payload của một version gói level (zone bundle PCK) của một area (F071, ADR-0043; config type level-packages): bundle tải về, checksum, kích thước, nền tảng và client tối thiểu (WORLD_RENDERING §7). startLevel ghim version này cùng version area/chương/NPC dialogue hiện hành; học sinh đang chơi giữ version đã ghim. Mọi chuỗi có maxLength (ADR-0041).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "level_id", "area_id", "bundle_id", "bundle_url", "bundle_sha256", "size_bytes", "platforms"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "level_id": { "type": "string", "format": "uuid" },
+    "area_id": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$" },
+    "bundle_id": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9_.-]{0,63}$" },
+    "bundle_url": { "type": "string", "format": "uri", "maxLength": 2048 },
+    "bundle_sha256": { "type": "string", "maxLength": 64, "pattern": "^[0-9a-f]{64}$" },
+    "size_bytes": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["windows", "android", "ios", "web", "macos", "linux"] }
+    },
+    "requires_client": { "type": "string", "maxLength": 64, "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "placeholder": { "type": "boolean", "description": "true = zone greybox (OQ-16: asset 3D thật chưa có); client hiện nhãn placeholder (R17)" }
+  },
+  "examples": [
+    {
+      "schema_version": 1,
+      "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071202",
+      "area_id": "learning_zone.math",
+      "bundle_id": "zone.learning_zone.math",
+      "bundle_url": "https://cdn.dev.eduworld.example/bundles/zone.learning_zone.math/1/zone.pck",
+      "bundle_sha256": "abababababababababababababababababababababababababababababababab",
+      "size_bytes": 0,
+      "platforms": ["windows", "android", "ios", "web"],
+      "requires_client": "0.1.0",
+      "placeholder": true
+    }
+  ]
+}

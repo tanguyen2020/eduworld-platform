@@ -60,6 +60,7 @@ type Sessions struct {
 	Audit       write.Auditor
 	Realtime    port.RealtimePublisher // nil: no realtime push (tests without Valkey)
 	Metrics     port.SessionMetrics    // nil: no metrics
+	Presence    port.PresenceStore     // nil: no world presence to extend (F071)
 	Config      SessionConfig
 	Now         func() time.Time
 }

@@ -15,6 +15,12 @@ type CharacterCatalog func(*sql.Selector)
 // CharacterCatalogVersion is the predicate function for charactercatalogversion builders.
 type CharacterCatalogVersion func(*sql.Selector)
 
+// ContentRelease is the predicate function for contentrelease builders.
+type ContentRelease func(*sql.Selector)
+
+// ExplorationProgress is the predicate function for explorationprogress builders.
+type ExplorationProgress func(*sql.Selector)
+
 // GameProfile is the predicate function for gameprofile builders.
 type GameProfile func(*sql.Selector)
 
@@ -30,8 +36,44 @@ type ItemDefinition func(*sql.Selector)
 // ItemDefinitionVersion is the predicate function for itemdefinitionversion builders.
 type ItemDefinitionVersion func(*sql.Selector)
 
+// LevelDefinition is the predicate function for leveldefinition builders.
+type LevelDefinition func(*sql.Selector)
+
+// LevelSession is the predicate function for levelsession builders.
+type LevelSession func(*sql.Selector)
+
+// LevelVersion is the predicate function for levelversion builders.
+type LevelVersion func(*sql.Selector)
+
 // LoginEvent is the predicate function for loginevent builders.
 type LoginEvent func(*sql.Selector)
 
 // NicknameChange is the predicate function for nicknamechange builders.
 type NicknameChange func(*sql.Selector)
+
+// NpcDialogue is the predicate function for npcdialogue builders.
+type NpcDialogue func(*sql.Selector)
+
+// NpcDialogueVersion is the predicate function for npcdialogueversion builders.
+type NpcDialogueVersion func(*sql.Selector)
+
+// StoryChapter is the predicate function for storychapter builders.
+type StoryChapter func(*sql.Selector)
+
+// StoryChapterVersion is the predicate function for storychapterversion builders.
+type StoryChapterVersion func(*sql.Selector)
+
+// StoryProgress is the predicate function for storyprogress builders.
+type StoryProgress func(*sql.Selector)
+
+// WorldArea is the predicate function for worldarea builders.
+type WorldArea func(*sql.Selector)
+
+// WorldAreaUnlock is the predicate function for worldareaunlock builders.
+type WorldAreaUnlock func(*sql.Selector)
+
+// WorldAreaVersion is the predicate function for worldareaversion builders.
+type WorldAreaVersion func(*sql.Selector)
+
+// WorldUnlockFact is the predicate function for worldunlockfact builders.
+type WorldUnlockFact func(*sql.Selector)

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/world.area_unlocked.v1.schema.json",
+  "title": "Payload world.area_unlocked v1 (module game, owner F071)",
+  "description": "Một area được mở khóa lần đầu cho học sinh (unlock_rule thỏa — WORLD_DESIGN §7.2); phát đúng một lần mỗi (học sinh, area). Envelope tenant_id = tenant của học sinh. Consumer: realtime (WS world.area.unlocked), thông báo, quest (F072), projection ref.area_unlocks của competition (F091).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "student_id",
+    "area_id",
+    "rule_version",
+    "unlocked_by",
+    "unlocked_at"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "area_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+    },
+    "rule_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Version area có unlock_rule đã thỏa"
+    },
+    "unlocked_by": {
+      "type": "string",
+      "enum": [
+        "level",
+        "quest",
+        "learning_objective",
+        "achievement",
+        "event",
+        "chapters_completed"
+      ]
+    },
+    "unlocked_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "area_id": "quest_zone.discovery_ocean",
+      "rule_version": 1,
+      "unlocked_by": "quest",
+      "unlocked_at": "2026-11-21T01:00:00Z"
+    }
+  ]
+}

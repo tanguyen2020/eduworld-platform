@@ -161,6 +161,11 @@ type env struct {
 	options                        *memOptions
 	tenantA, tenantB               uuid.UUID
 	schoolA, schoolA2, schoolB     uuid.UUID
+	// F071 world doubles (R17): presence, discovery rate limiter, world.area.unlocked pushes, hub positions (nil = none).
+	presence  *memPresence
+	rate      *memRate
+	worldPush *memWorldPush
+	hub       port.HubPositions
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -187,7 +192,8 @@ func setup(ctx context.Context, t *testing.T, o envOpts) *env {
 	e := &env{cl: cl, app: open(t, cl.ModuleDSN("game", "app")), platform: open(t, cl.ModuleDSN("game", "platform")),
 		migrator: open(t, cl.ModuleDSN("game", "migrator")), relay: open(t, cl.ModuleDSN("game", "relay")),
 		tenantA: uuid.New(), tenantB: uuid.New(), schoolA: uuid.New(), schoolA2: uuid.New(), schoolB: uuid.New(),
-		clock: &clock{now: time.Date(2026, 11, 19, 3, 0, 0, 0, time.UTC)}, pushes: &pushes{}}
+		clock: &clock{now: time.Date(2026, 11, 19, 3, 0, 0, 0, time.UTC)}, pushes: &pushes{},
+		presence: &memPresence{m: map[uuid.UUID]port.Presence{}}, rate: &memRate{n: map[string]int{}}, worldPush: &memWorldPush{}}
 	var err error
 	if e.writer, err = outbox.NewWriter("game", "core", nil); err != nil {
 		t.Fatal(err)
@@ -215,7 +221,7 @@ func setup(ctx context.Context, t *testing.T, o envOpts) *env {
 		CurfewLocation: ict, WarningBefore: 10 * time.Minute, Maintenance: command.Maintenance{Active: o.maintenance, Message: "Bảo trì định kỳ"}}
 	e.sessions = command.Sessions{UoW: e.uow, AfterCommit: entx.AfterCommit, Sessions: write.SessionRepo{}, Logins: write.LoginEventRepo{}, Profiles: write.ProfileRepo{},
 		Directory: write.Directory{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Realtime: e.pushes,
-		Metrics: observability.SessionMetrics{}, Config: e.cfg, Now: e.clock.Now}
+		Metrics: observability.SessionMetrics{}, Presence: e.presence, Config: e.cfg, Now: e.clock.Now}
 	wheel := o.emoteWheel
 	if wheel == 0 {
 		wheel = 6
@@ -271,7 +277,8 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 		Tickets: command.RealtimeTickets{Sessions: e.sessions, Store: e.tickets,
 			Config: command.TicketConfig{URL: e.realtimeURL, TTL: time.Minute, Rate: 10, RateWindow: time.Minute}},
 		Profiles: e.profiles, ProfileQueries: query.Profile{Read: e.read, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
-			Options: e.options, TTL: e.profileCfg.SuggestionTTL}}
+			Options: e.options, TTL: e.profileCfg.SuggestionTTL},
+		World: worldProxy{e}, WorldQueries: e.worldQueries()}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

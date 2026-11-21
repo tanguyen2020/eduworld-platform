@@ -1,0 +1,206 @@
+[
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071201",
+    "area_id": "main_hub",
+    "bundle_id": "zone.main_hub",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.main_hub/1/zone.pck",
+    "bundle_sha256": "e61411ec4705e48944e71466b01738f36cb6cef4f60eef39a7991b3673363fc5",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071202",
+    "area_id": "practice_zone",
+    "bundle_id": "zone.practice_zone",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.practice_zone/1/zone.pck",
+    "bundle_sha256": "917e4d049ed722601abab404d71e45b80bc9b1fb81f3777c896583244a1c4933",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071203",
+    "area_id": "social_zone",
+    "bundle_id": "zone.social_zone",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.social_zone/1/zone.pck",
+    "bundle_sha256": "6ac3dbfb2ff889dbe4a380abfbc373a8f69d48124aca888aada05dc305becc58",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071204",
+    "area_id": "learning_zone.math",
+    "bundle_id": "zone.learning_zone.math",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.learning_zone.math/1/zone.pck",
+    "bundle_sha256": "66b05e3e57b17d81a294c21e10445b1f0d55c2c26c930610c9f3f83a15cb5a49",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071205",
+    "area_id": "learning_zone.vietnamese",
+    "bundle_id": "zone.learning_zone.vietnamese",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.learning_zone.vietnamese/1/zone.pck",
+    "bundle_sha256": "6aff9936fdb6919c1f0160bcf31ba5c946c00a9af71d59cb63974a7418844d20",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071206",
+    "area_id": "learning_zone.english",
+    "bundle_id": "zone.learning_zone.english",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.learning_zone.english/1/zone.pck",
+    "bundle_sha256": "5a615ffc770af985c9bbd29d728a785257556e76126224522ae52ac1870b95e1",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071207",
+    "area_id": "learning_zone.science",
+    "bundle_id": "zone.learning_zone.science",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.learning_zone.science/1/zone.pck",
+    "bundle_sha256": "f9e82e33e35163a743f7536cb0279dc64620561f3994179f6acf8c5a2a56bc68",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071208",
+    "area_id": "learning_zone.history",
+    "bundle_id": "zone.learning_zone.history",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.learning_zone.history/1/zone.pck",
+    "bundle_sha256": "031466ee39bf53e6d03c4f45a656e0678e61faccab770bc1b3964850bd7c64fd",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-000000071209",
+    "area_id": "quest_zone.discovery_ocean",
+    "bundle_id": "zone.quest_zone.discovery_ocean",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.quest_zone.discovery_ocean/1/zone.pck",
+    "bundle_sha256": "143e2669658481c9c6629eb7af4990d30659a79b9166fd54b47ae2d741e38cda",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-00000007120a",
+    "area_id": "exam_zone",
+    "bundle_id": "zone.exam_zone",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.exam_zone/1/zone.pck",
+    "bundle_sha256": "92ebf9f2ea4d671dc267fcb20bda59268ae2c928712e99bd00e06192f9bdf7e3",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-00000007120b",
+    "area_id": "challenge_mountain",
+    "bundle_id": "zone.challenge_mountain",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.challenge_mountain/1/zone.pck",
+    "bundle_sha256": "e4d7c0cf4030fa590834d7df76b8e4029532c5c66dd415b48676e7d50364faa4",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  },
+  {
+    "schema_version": 1,
+    "level_id": "0193a5f4-6c1e-7b2a-9d1f-00000007120c",
+    "area_id": "arena",
+    "bundle_id": "zone.arena",
+    "bundle_url": "https://cdn.eduworld.example/bundles/zone.arena/1/zone.pck",
+    "bundle_sha256": "2b03c96f71d2ccd4841f2d2cb0822700b224a2056886288f6f60730f5d50bb06",
+    "size_bytes": 0,
+    "platforms": [
+      "windows",
+      "android",
+      "ios",
+      "web"
+    ],
+    "requires_client": "0.1.0",
+    "placeholder": true
+  }
+]
