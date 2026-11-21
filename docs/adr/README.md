@@ -113,7 +113,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0093](ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md) | Object storage tự host SeaweedFS trước, chuyển S3 managed bằng cấu hình | Accepted · một phần supersedes ADR-0075 | OQ-10, OQ-21 |
 | [0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) | Bỏ MFA (TOTP) cho đăng nhập Admin Portal | Accepted (rủi ro được chấp nhận) · một phần supersedes ADR-0091, 0009, 0022, 0027, 0029, 0063, 0064, 0066, 0067, 0068, 0072, 0086, 0090 · một phần superseded by ADR-0096 | — |
 | [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | Bỏ khái niệm lớp: học sinh thuộc trường theo khối (bỏ enrollment, course, learning path, lịch, nhóm học tập; DROP một lần) | Accepted · supersedes ADR-0084 · một phần supersedes ADR-0005, 0020, 0021, 0026, 0027, 0034, 0043, 0046, 0050, 0060, 0061, 0062, 0063, 0072, 0080 · ngoại lệ mục 2 ADR-0070 | — |
-| [0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md) | Chặn học sinh ở Admin Portal không được tính là đăng nhập sai | Proposed (đã triển khai) · một phần supersedes ADR-0066, 0091, 0094 | — |
+| [0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md) | Chặn học sinh ở Admin Portal không được tính là đăng nhập sai | Accepted · một phần supersedes ADR-0066, 0091, 0094 | — |
 
 ## Quyết định hiện hành theo chủ đề
 
