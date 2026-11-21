@@ -58,7 +58,8 @@ func sessionView(s read.ExamSessionRow, now time.Time) dto.ExamSessionView {
 		FeedbackTiming: s.FeedbackTiming, ResultRelease: s.ResultRelease, ResultsReleasedAt: s.ReleasedAt, SchoolID: s.SchoolID,
 		CourseID: s.CourseID, AssignmentID: s.AssignmentID, Audience: s.Audience, VariantStrategy: s.Strategy, VariantCount: s.VariantCount,
 		LateStartPolicy: s.LateStartPolicy, ScorePolicy: s.ScorePolicy, ShowCorrectAnswers: s.ShowCorrect, ShowExplanations: s.ShowExplanations,
-		Accommodations: acc, ServerTime: now, CreatedAt: s.CreatedAt, Version: s.Version, IsEfficacy: isEfficacy(s)}
+		Accommodations: acc, ServerTime: now, CreatedAt: s.CreatedAt, Version: s.Version, IsEfficacy: isEfficacy(s),
+		Navigation: exam.NavigationOf(s.Navigation)}
 }
 
 // isEfficacy marks a session of an efficacy wave for the staff (F035-AC-17: read-only; never the wave, study nor arm).

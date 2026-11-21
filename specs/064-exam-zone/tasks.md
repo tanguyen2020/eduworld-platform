@@ -4,14 +4,14 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] Khóa dịch `ui.exam.*` (`rules_start`, `flag`, `time_left`, `auto_submitted`, `results_pending`, cảnh báo 5/1 phút, xác nhận nộp), `ui.notification.assignment_new`, `ui.error.EXAM_*` — file: `src/game/locale/vi.po`, `src/game/locale/en.po`
-- [ ] T002 [P] Fixture từ example OpenAPI (`ExamSession` hai kiểu `navigation`, `Attempt` exam có `saved_responses`, `AttemptReview`, Problem `EXAM_*`) — file: `src/game/tests/fixtures/exam/*.json`
-- [ ] T003 [P] Typed model — file: `src/game/scripts/learning/models/exam_session.gd`, `src/game/scripts/learning/models/exam_result.gd`
+- [x] T001 [P] Khóa dịch `ui.exam.*` (`rules_start`, `flag`, `time_left`, `auto_submitted`, `results_pending`, cảnh báo 5/1 phút, xác nhận nộp), `ui.notification.assignment_new`, `ui.error.EXAM_*` — file: `src/game/locale/vi.po`, `src/game/locale/en.po` — bằng chứng: `extract_pot --check` OK; khóa `ui.exam.*`, `ui.hub.board.exam_sessions`, `ui.error.EXAM_*` (vi/en, pot, xx_PS)
+- [x] T002 [P] Fixture từ example OpenAPI (`ExamSession` hai kiểu `navigation`, `Attempt` exam có `saved_responses`, `AttemptReview`, Problem `EXAM_*`) — file: `src/game/tests/fixtures/exam/*.json` — bằng chứng: `gen_fixtures.mjs` thêm `ExamSession` (example mới) + `AttemptResult`; biến thể trong `tests/fakes/exam_fixtures.gd` (TEST-ONLY); `--check` OK
+- [x] T003 [P] Typed model — file: `src/game/scripts/learning/models/exam_session.gd`, `src/game/scripts/learning/models/exam_result.gd` — bằng chứng: `ExamSessionModel`, `ExamResultModel` (+ `scripts/learning/exam_runner_state.gd`)
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T004 Delta contract: `ExamSession.navigation`, body `{takeover}` cho `startExamAttempt` (và xác nhận `MyAssignment.exam_session_id` từ F062 T004) — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/learning.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
-- [ ] T005 `ExamCountdown` thuần (`remaining_ms`, mốc cảnh báo, dạng hiển thị theo grade band) — file: `src/game/scripts/learning/exam_countdown.gd`
+- [x] T004 Delta contract: `ExamSession.navigation`, body `{takeover}` cho `startExamAttempt` (và xác nhận `MyAssignment.exam_session_id` từ F062 T004) — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/openapi/modules/learning.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking` — bằng chứng: `navigation` trong bundle + `split-public.mjs`; backend learning (migration `20261228000001`, `TestNavigationOf`, `TestExamSessionNavigation` integration xanh); `take_over` có sẵn từ F042, `MyAssignment.exam_session_id` có sẵn (F062) — Clarifications 2026-11-21
+- [x] T005 `ExamCountdown` thuần (`remaining_ms`, mốc cảnh báo, dạng hiển thị theo grade band) — file: `src/game/scripts/learning/exam_countdown.gd` — bằng chứng: `scripts/learning/exam_countdown.gd`, test T006
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -23,19 +23,19 @@
 
 ### Tests cho User Story 1
 
-- [ ] T006 [P] [US1] Unit test F064-AC-03, F064-AC-04 với đồng hồ giả (còn lại theo offset, sai lệch ≤ 1 s, toast mỗi mốc một lần, `g1_3` dạng cát chảy) — file: `src/game/tests/unit/exam/test_exam_countdown.gd` — phải FAIL trước khi code
-- [ ] T007 [P] [US1] Unit test `ExamService` F064-AC-02, F064-AC-05, F064-AC-07, F064-AC-08 (`Idempotency-Key` start/submit, `saveExamAnswer` body, 409 → đã nộp) — file: `src/game/tests/unit/exam/test_exam_service.gd`
-- [ ] T008 [P] [US1] Scene test F064-AC-01, F064-AC-06 (màn quy chế; `sequential_no_return` ẩn "Câu trước") — file: `src/game/tests/scene/exam/test_exam_lobby_runner.gd`
-- [ ] T009 [P] [US1] Scene test F064-AC-05, F064-AC-11 (renderer chế độ exam không hiện đúng/sai/gợi ý; giới hạn độ dài; không gửi điểm) — file: `src/game/tests/scene/exam/test_exam_runner_items.gd`
-- [ ] T010 [P] [US1] Unit test F064-AC-09, F064-AC-10 (map `EXAM_NOT_ASSIGNED`/`EXAM_NOT_OPEN`/`EXAM_WINDOW_CLOSED`/`EXAM_MAX_ATTEMPTS`; 404/`GAME_ACCESS_STUDENT_ONLY` không hiển thị dữ liệu) — file: `src/game/tests/unit/exam/test_exam_errors.gd`
-- [ ] T011 [US1] Integration headless với compose: `hs.an.3a` làm và nộp; `hs.chi.3b` bị `EXAM_NOT_ASSIGNED`; `hs.dung.7a` nhận 404 với attempt của th-demo-a (tenant isolation + authorization) — file: `src/game/tests/integration/exam/test_exam_flow.gd`
+- [x] T006 [P] [US1] Unit test F064-AC-03, F064-AC-04 với đồng hồ giả (còn lại theo offset, sai lệch ≤ 1 s, toast mỗi mốc một lần, `g1_3` dạng cát chảy) — file: `src/game/tests/unit/exam/test_exam_countdown.gd` — phải FAIL trước khi code — bằng chứng: FAIL (Parse Error: `ExamCountdown` chưa khai báo) → PASS 11/11
+- [x] T007 [P] [US1] Unit test `ExamService` F064-AC-02, F064-AC-05, F064-AC-07, F064-AC-08 (`Idempotency-Key` start/submit, `saveExamAnswer` body, 409 → đã nộp) — file: `src/game/tests/unit/exam/test_exam_service.gd` — bằng chứng: FAIL (Parse Error) → PASS 11/11
+- [x] T008 [P] [US1] Scene test F064-AC-01, F064-AC-06 (màn quy chế; `sequential_no_return` ẩn "Câu trước") — file: `src/game/tests/scene/exam/test_exam_lobby_runner.gd` — bằng chứng: FAIL (Parse Error) → PASS 10/10
+- [x] T009 [P] [US1] Scene test F064-AC-05, F064-AC-11 (renderer chế độ exam không hiện đúng/sai/gợi ý; giới hạn độ dài; không gửi điểm) — file: `src/game/tests/scene/exam/test_exam_runner_items.gd` — bằng chứng: FAIL (Parse Error) → PASS 5/5
+- [x] T010 [P] [US1] Unit test F064-AC-09, F064-AC-10 (map `EXAM_NOT_ASSIGNED`/`EXAM_NOT_OPEN`/`EXAM_WINDOW_CLOSED`/`EXAM_MAX_ATTEMPTS`; 404/`GAME_ACCESS_STUDENT_ONLY` không hiển thị dữ liệu) — file: `src/game/tests/unit/exam/test_exam_errors.gd` — bằng chứng: FAIL (Parse Error) → PASS 6/6
+- [ ] T011 [US1] Integration headless với compose: `hs.an.3a` làm và nộp; `hs.chi.3b` bị `EXAM_NOT_ASSIGNED`; `hs.dung.7a` nhận 404 với attempt của th-demo-a (tenant isolation + authorization) — file: `src/game/tests/integration/exam/test_exam_flow.gd`  — đã viết `tests/integration/exam/test_exam_flow.gd` (skip khi không có `EDUWORLD_IT_API_BASE_URL`); chờ backend compose + seed đề mở cho 3A
 
 ### Implementation cho User Story 1
 
-- [ ] T012 [US1] `ExamService` (load/list/start/save/submit/result) — file: `src/game/scripts/learning/exam_service.gd`
-- [ ] T013 [US1] `ExamLobby` (danh sách `listExamSessions` + đề từ bài giao, màn quy chế), đăng ký màn `exam_lobby` cho intent F062 — file: `src/game/scenes/exam/ExamLobby.tscn`, `src/game/scenes/exam/exam_lobby.gd`
-- [ ] T014 [US1] `ExamRunner`, `QuestionGrid`, `SubmitConfirm`, `ExamCountdownLabel` (renderer câu hỏi F063 ở chế độ exam, `suspend_world("exam")`) — file: `src/game/scenes/exam/ExamRunner.tscn`, `src/game/scenes/exam/exam_runner.gd`, `src/game/scenes/exam/QuestionGrid.tscn`, `src/game/scenes/exam/SubmitConfirm.tscn`
-- [ ] T015 [P] [US1] `Interactable` `board.exam_sessions` trong Main Hub greybox — file: `src/game/scenes/world/zones/main_hub/Zone.tscn`
+- [x] T012 [US1] `ExamService` (load/list/start/save/submit/result) — file: `src/game/scripts/learning/exam_service.gd` — bằng chứng: `scripts/learning/exam_service.gd` (+ `PendingWrites.enqueue_latest`, header phát lại), test T007/T010
+- [x] T013 [US1] `ExamLobby` (danh sách `listExamSessions` + đề từ bài giao, màn quy chế), đăng ký màn `exam_lobby` cho intent F062 — file: `src/game/scenes/exam/ExamLobby.tscn`, `src/game/scenes/exam/exam_lobby.gd` — bằng chứng: `scenes/exam/ExamLobby.tscn` + `exam_lobby.gd`, `exam_lobby` trong `UiScreenRegistry`, test T008
+- [x] T014 [US1] `ExamRunner`, `QuestionGrid`, `SubmitConfirm`, `ExamCountdownLabel` (renderer câu hỏi F063 ở chế độ exam, `suspend_world("exam")`) — file: `src/game/scenes/exam/ExamRunner.tscn`, `src/game/scenes/exam/exam_runner.gd`, `src/game/scenes/exam/QuestionGrid.tscn`, `src/game/scenes/exam/SubmitConfirm.tscn` — bằng chứng: `ExamRunner`, `QuestionGrid`, `SubmitConfirm`, `ExamCountdownLabel` (+ token `ExamClockWarningLabel`), test T008/T009
+- [x] T015 [P] [US1] `Interactable` `board.exam_sessions` trong Main Hub greybox — file: `src/game/scenes/world/zones/main_hub/Zone.tscn` — bằng chứng: `Interactables/ExamBoard` (`kind = exam_board` → `exam_lobby`), `tests/scene/exam/test_exam_board.gd` PASS (test viết sau phần cảnh — ghi nhận)
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 

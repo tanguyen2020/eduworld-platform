@@ -111,6 +111,8 @@ export function formatTheme(map, band, version, label) {
     ['Button/styles/hover', sub('button_hover')],
     ['Button/styles/normal', sub('button_normal')],
     ['Button/styles/pressed', sub('button_pressed')],
+    ['ExamClockWarningLabel/base_type', '&"Label"'],
+    ['ExamClockWarningLabel/colors/font_color', c('component.exam_clock.warning_text')],
     ['FeedbackCorrectPanel/base_type', '&"PanelContainer"'],
     ['FeedbackCorrectPanel/styles/panel', sub('feedback_correct')],
     ['FeedbackIncorrectPanel/base_type', '&"PanelContainer"'],

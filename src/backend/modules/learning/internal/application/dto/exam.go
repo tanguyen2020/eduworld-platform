@@ -16,21 +16,23 @@ type ExamAccommodationView struct {
 // ExamSessionView is ExamSession (F042): staff see the policies and accommodations, a student sees its own effective
 // duration and attempts used (never the accommodations of others).
 type ExamSessionView struct {
-	ExamSessionID           uuid.UUID               `json:"exam_session_id"`
-	Title                   string                  `json:"title"`
-	Type                    string                  `json:"type"`
-	IsOfficial              bool                    `json:"is_official"`
-	SubjectID               uuid.UUID               `json:"subject_id"`
-	GradeLevel              *int                    `json:"grade_level,omitempty"`
-	WindowStart             time.Time               `json:"window_start"`
-	WindowEnd               time.Time               `json:"window_end"`
-	DurationSeconds         int                     `json:"duration_seconds"`
-	QuestionCount           int                     `json:"question_count"`
-	MaxAttempts             int                     `json:"max_attempts"`
-	AttemptsUsed            *int                    `json:"attempts_used,omitempty"`
-	Status                  string                  `json:"status"`
-	BlueprintVersionID      uuid.UUID               `json:"assessment_blueprint_version_id"`
-	FeedbackTiming          string                  `json:"feedback_timing"`
+	ExamSessionID      uuid.UUID `json:"exam_session_id"`
+	Title              string    `json:"title"`
+	Type               string    `json:"type"`
+	IsOfficial         bool      `json:"is_official"`
+	SubjectID          uuid.UUID `json:"subject_id"`
+	GradeLevel         *int      `json:"grade_level,omitempty"`
+	WindowStart        time.Time `json:"window_start"`
+	WindowEnd          time.Time `json:"window_end"`
+	DurationSeconds    int       `json:"duration_seconds"`
+	QuestionCount      int       `json:"question_count"`
+	MaxAttempts        int       `json:"max_attempts"`
+	AttemptsUsed       *int      `json:"attempts_used,omitempty"`
+	Status             string    `json:"status"`
+	BlueprintVersionID uuid.UUID `json:"assessment_blueprint_version_id"`
+	FeedbackTiming     string    `json:"feedback_timing"`
+	// Navigation is free | sequential_no_return from the pinned blueprint version (F064 T004).
+	Navigation              string                  `json:"navigation"`
 	ResultRelease           string                  `json:"result_release"`
 	ResultsReleasedAt       *time.Time              `json:"results_released_at,omitempty"`
 	SchoolID                uuid.UUID               `json:"school_id"`

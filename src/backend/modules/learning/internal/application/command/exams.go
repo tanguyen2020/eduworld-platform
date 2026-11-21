@@ -478,7 +478,7 @@ func (h Exams) createSession(ctx context.Context, in ExamSessionInput, ns newSes
 		Sections: sj, Audience: s.Audience, Strategy: s.Strategy, VariantCount: s.VariantCount, FeedbackTiming: s.FeedbackTiming,
 		ResultRelease: s.ResultRelease, ShowCorrect: s.ShowCorrectAnswers, ShowExplanations: s.ShowExplanations, LateStartPolicy: s.LateStartPolicy,
 		Accommodations: acc, MaxAttempts: s.MaxAttempts, ScorePolicy: s.ScorePolicy, Status: string(status), CreatedBy: p.UserID,
-		CreatedByRole: roleOf(p, school), Version: 1, CreatedAt: now}
+		CreatedByRole: roleOf(p, school), Version: 1, CreatedAt: now, Navigation: exam.NavigationOf(b.Def.Navigation)}
 	if len(ps) > 0 {
 		row.QuestionCount, row.TotalPoints = len(ps[0].Items), ps[0].TotalPoints
 	} else {
@@ -572,7 +572,7 @@ func ExamSessionViewOf(s write.ExamSessionRow, now time.Time) dto.ExamSessionVie
 		FeedbackTiming: s.FeedbackTiming, ResultRelease: s.ResultRelease, ResultsReleasedAt: s.ReleasedAt, SchoolID: s.SchoolID,
 		CourseID: s.CourseID, AssignmentID: s.AssignmentID, Audience: s.Audience, VariantStrategy: s.Strategy, VariantCount: s.VariantCount,
 		LateStartPolicy: s.LateStartPolicy, ScorePolicy: s.ScorePolicy, ShowCorrectAnswers: s.ShowCorrect, ShowExplanations: s.ShowExplanations,
-		Accommodations: acc, ServerTime: now, CreatedAt: s.CreatedAt, Version: s.Version}
+		Accommodations: acc, ServerTime: now, CreatedAt: s.CreatedAt, Version: s.Version, Navigation: exam.NavigationOf(s.Navigation)}
 }
 
 // CreateExamSession creates an exam session (createExamSession, F042 US1): lms.assignment.write in the school and subject,

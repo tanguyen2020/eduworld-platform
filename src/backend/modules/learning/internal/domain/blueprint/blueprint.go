@@ -86,6 +86,8 @@ type Definition struct {
 	ResultRelease *ResultRelease `json:"result_release,omitempty"`
 	DurationSec   int            `json:"duration_sec,omitempty"`
 	AttemptPolicy *AttemptPolicy `json:"attempt_policy,omitempty"`
+	// Navigation is free or sequential_no_return (copied to the exam session, F064 T004).
+	Navigation string `json:"navigation,omitempty"`
 }
 
 // Parse decodes a definition.

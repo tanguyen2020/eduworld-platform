@@ -291,6 +291,30 @@ msgstr "Đã đến giờ nghỉ. EduWorld sẽ mở lại vào giờ cho phép.
 msgid "ui.error.EQUIP_SLOT_INVALID"
 msgstr "Món đồ này không mặc vào chỗ đó được. Em thử cách khác nhé."
 
+msgid "ui.error.EXAM_ACTIVE_ON_OTHER_DEVICE"
+msgstr "Bài kiểm tra đang được làm trên một thiết bị khác."
+
+msgid "ui.error.EXAM_ALREADY_SUBMITTED"
+msgstr "Em đã nộp bài kiểm tra này."
+
+msgid "ui.error.EXAM_MAX_ATTEMPTS"
+msgstr "Em đã dùng hết số lượt làm bài này."
+
+msgid "ui.error.EXAM_NOT_ASSIGNED"
+msgstr "Bài kiểm tra này không được giao cho em."
+
+msgid "ui.error.EXAM_NOT_OPEN"
+msgstr "Bài kiểm tra chưa mở."
+
+msgid "ui.error.EXAM_RESULTS_NOT_RELEASED"
+msgstr "Nhà trường chưa công bố kết quả."
+
+msgid "ui.error.EXAM_TIME_OVER"
+msgstr "Đã hết giờ làm bài."
+
+msgid "ui.error.EXAM_WINDOW_CLOSED"
+msgstr "Bài kiểm tra đã đóng."
+
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "Tài khoản này dùng cho cán bộ quản lý, không dùng để vào game. Vui lòng dùng trang quản trị EduWorld."
 
@@ -365,6 +389,132 @@ msgstr "Thông tin chưa hợp lệ. Em kiểm tra lại nhé."
 
 msgid "ui.error.generic"
 msgstr "Có lỗi xảy ra. Em thử lại sau nhé."
+
+msgid "ui.exam.auto_submitted"
+msgstr "Hết giờ — bài đã được nộp tự động"
+
+msgid "ui.exam.back"
+msgstr "Quay lại"
+
+msgid "ui.exam.confirm_all_done"
+msgstr "Em đã làm hết các câu."
+
+msgid "ui.exam.confirm_cancel"
+msgstr "Làm tiếp"
+
+msgid "ui.exam.confirm_flagged"
+msgstr "Câu đã đánh dấu: {list}"
+
+msgid "ui.exam.confirm_heading"
+msgstr "Em muốn nộp bài?"
+
+msgid "ui.exam.confirm_submit"
+msgstr "Nộp bài"
+
+msgid "ui.exam.confirm_unanswered"
+msgstr "Câu chưa làm: {list}"
+
+msgid "ui.exam.exit"
+msgstr "Thoát"
+
+msgid "ui.exam.exit_confirm"
+msgstr "Thời gian vẫn chạy khi em rời phòng thi. Em có muốn rời đi không?"
+
+msgid "ui.exam.flag"
+msgstr "🚩 Đánh dấu"
+
+msgid "ui.exam.grid_legend"
+msgstr "● đã làm · ○ chưa làm · 🚩 đánh dấu"
+
+msgid "ui.exam.leave"
+msgstr "Rời đi"
+
+msgid "ui.exam.list_empty"
+msgstr "Hiện chưa có bài kiểm tra nào cho em."
+
+msgid "ui.exam.loading"
+msgstr "Đang tải bài kiểm tra…"
+
+msgid "ui.exam.next"
+msgstr "Câu sau ▶"
+
+msgid "ui.exam.offline"
+msgstr "Đang mất kết nối — câu trả lời được lưu tạm trên máy"
+
+msgid "ui.exam.prev"
+msgstr "◀ Câu trước"
+
+msgid "ui.exam.question_of"
+msgstr "Câu {n}/{total}"
+
+msgid "ui.exam.retry"
+msgstr "Thử lại"
+
+msgid "ui.exam.rules_duration"
+msgstr "Thời gian làm bài: {minutes} phút"
+
+msgid "ui.exam.rules_heading"
+msgstr "Quy chế bài kiểm tra"
+
+msgid "ui.exam.rules_navigation_free"
+msgstr "Em có thể quay lại các câu trước."
+
+msgid "ui.exam.rules_navigation_sequential"
+msgstr "Làm lần lượt từng câu, không quay lại câu trước."
+
+msgid "ui.exam.rules_offline"
+msgstr "Thời gian vẫn chạy nếu mất mạng."
+
+msgid "ui.exam.rules_questions"
+msgstr "Số câu: {count}"
+
+msgid "ui.exam.rules_release_after_close"
+msgstr "Em xem kết quả khi bài kiểm tra kết thúc."
+
+msgid "ui.exam.rules_release_immediate"
+msgstr "Em xem kết quả ngay sau khi nộp bài."
+
+msgid "ui.exam.rules_release_manual"
+msgstr "Em xem kết quả khi nhà trường công bố."
+
+msgid "ui.exam.rules_start"
+msgstr "Bắt đầu"
+
+msgid "ui.exam.stay"
+msgstr "Làm tiếp"
+
+msgid "ui.exam.submit"
+msgstr "Nộp bài"
+
+msgid "ui.exam.submit_failed"
+msgstr "Chưa nộp được vì mất kết nối. Em thử lại nhé."
+
+msgid "ui.exam.submitted"
+msgstr "Em đã nộp bài."
+
+msgid "ui.exam.submitting"
+msgstr "Đang nộp bài…"
+
+msgid "ui.exam.take_over"
+msgstr "Chuyển sang thiết bị này"
+
+msgid "ui.exam.time_left"
+msgstr "⏱ {time}"
+
+msgid "ui.exam.time_warning_1"
+msgstr "Còn 1 phút nữa."
+
+msgid "ui.exam.time_warning_5"
+msgstr "Còn 5 phút nữa."
+
+msgid "ui.exam.title"
+msgstr "Phòng thi"
+
+msgid "ui.exam.unflag"
+msgstr "🚩 Bỏ đánh dấu"
+
+msgid "ui.exam.view_result"
+msgstr "Xem kết quả"
 
 msgid "ui.feedback.correct"
 msgstr "Đúng rồi!"
@@ -530,6 +680,9 @@ msgstr "Nhà trường giao"
 
 msgid "ui.hub.assignments_count"
 msgstr "Nhà trường giao ({count})"
+
+msgid "ui.hub.board.exam_sessions"
+msgstr "Phòng thi"
 
 msgid "ui.hub.board.school_assignments"
 msgstr "Bảng Nhà trường giao"

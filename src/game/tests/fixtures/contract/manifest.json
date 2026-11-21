@@ -73,6 +73,14 @@
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/AvatarPreset",
       "sha256": "4e6409e5733ac11a8cdb61e9d118b40ca544a2ee20f06a13397b4d3f222a3b41"
     },
+    "openapi/ExamSession.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ExamSession",
+      "sha256": "b18301f23572f7a222088fb63bb6ca1b22b95a2ec48deffc079581b4b84265aa"
+    },
+    "openapi/AttemptResult.json": {
+      "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/AttemptResult",
+      "sha256": "4d51eb9ae719aacc927d35edfd2829316bd3d4396b21511095c5b850bdcb454a"
+    },
     "openapi/listMyAssignments.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyAssignments/responses/200/example",
       "sha256": "054178f9c2cf3876d11cdfce9a71c88f7b85e1c243f62e040ebcc4ebb54d9fbd"

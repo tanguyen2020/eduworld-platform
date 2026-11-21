@@ -1,0 +1,23 @@
+{
+  "exam_session_id": "0f640000-0000-4000-8000-000000000001",
+  "title": "Kiểm tra: Phép nhân",
+  "type": "chapter",
+  "is_official": true,
+  "subject_id": "0f640000-0000-4000-8000-0000000000a1",
+  "grade_level": 3,
+  "window_start": "2026-11-20T01:00:00Z",
+  "window_end": "2026-11-20T03:00:00Z",
+  "duration_seconds": 900,
+  "question_count": 15,
+  "max_attempts": 1,
+  "attempts_used": 0,
+  "status": "open",
+  "assessment_blueprint_version_id": "0f640000-0000-4000-8000-0000000000b1",
+  "navigation": "free",
+  "feedback_timing": "after_close",
+  "result_release": "after_close",
+  "assignment_id": "0f640000-0000-4000-8000-0000000000c1",
+  "audience": "assigned",
+  "effective_duration_seconds": 900,
+  "server_time": "2026-11-20T01:30:00Z"
+}

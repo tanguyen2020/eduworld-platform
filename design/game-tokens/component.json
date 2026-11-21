@@ -55,6 +55,17 @@
         "$extensions": { "eduworld": { "contrastWith": [{ "token": "component.voice_caption.bg", "level": "normal" }] } }
       }
     },
+    "exam_clock": {
+      "warning_text": {
+        "$type": "color",
+        "$value": "{color.feedback.incorrect}",
+        "$description": "Exam countdown in the last 5 and 1 minutes: one steady, gentle warning colour, never blinking (STUDENT_GAME_UX_LEARNING §9.4, F064-AC-04).",
+        "$extensions": { "eduworld": { "contrastWith": [
+          { "token": "color.surface.panel", "level": "normal" },
+          { "token": "color.surface.panel_alt", "level": "normal" }
+        ] } }
+      }
+    },
     "badge_xp": {
       "bg": { "$type": "color", "$value": "{color.accent.reward}", "$description": "XP / level badge background." },
       "text": {

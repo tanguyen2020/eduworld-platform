@@ -288,6 +288,30 @@ msgstr ""
 msgid "ui.error.EQUIP_SLOT_INVALID"
 msgstr ""
 
+msgid "ui.error.EXAM_ACTIVE_ON_OTHER_DEVICE"
+msgstr ""
+
+msgid "ui.error.EXAM_ALREADY_SUBMITTED"
+msgstr ""
+
+msgid "ui.error.EXAM_MAX_ATTEMPTS"
+msgstr ""
+
+msgid "ui.error.EXAM_NOT_ASSIGNED"
+msgstr ""
+
+msgid "ui.error.EXAM_NOT_OPEN"
+msgstr ""
+
+msgid "ui.error.EXAM_RESULTS_NOT_RELEASED"
+msgstr ""
+
+msgid "ui.error.EXAM_TIME_OVER"
+msgstr ""
+
+msgid "ui.error.EXAM_WINDOW_CLOSED"
+msgstr ""
+
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr ""
 
@@ -361,6 +385,132 @@ msgid "ui.error.VALIDATION_FAILED"
 msgstr ""
 
 msgid "ui.error.generic"
+msgstr ""
+
+msgid "ui.exam.auto_submitted"
+msgstr ""
+
+msgid "ui.exam.back"
+msgstr ""
+
+msgid "ui.exam.confirm_all_done"
+msgstr ""
+
+msgid "ui.exam.confirm_cancel"
+msgstr ""
+
+msgid "ui.exam.confirm_flagged"
+msgstr ""
+
+msgid "ui.exam.confirm_heading"
+msgstr ""
+
+msgid "ui.exam.confirm_submit"
+msgstr ""
+
+msgid "ui.exam.confirm_unanswered"
+msgstr ""
+
+msgid "ui.exam.exit"
+msgstr ""
+
+msgid "ui.exam.exit_confirm"
+msgstr ""
+
+msgid "ui.exam.flag"
+msgstr ""
+
+msgid "ui.exam.grid_legend"
+msgstr ""
+
+msgid "ui.exam.leave"
+msgstr ""
+
+msgid "ui.exam.list_empty"
+msgstr ""
+
+msgid "ui.exam.loading"
+msgstr ""
+
+msgid "ui.exam.next"
+msgstr ""
+
+msgid "ui.exam.offline"
+msgstr ""
+
+msgid "ui.exam.prev"
+msgstr ""
+
+msgid "ui.exam.question_of"
+msgstr ""
+
+msgid "ui.exam.retry"
+msgstr ""
+
+msgid "ui.exam.rules_duration"
+msgstr ""
+
+msgid "ui.exam.rules_heading"
+msgstr ""
+
+msgid "ui.exam.rules_navigation_free"
+msgstr ""
+
+msgid "ui.exam.rules_navigation_sequential"
+msgstr ""
+
+msgid "ui.exam.rules_offline"
+msgstr ""
+
+msgid "ui.exam.rules_questions"
+msgstr ""
+
+msgid "ui.exam.rules_release_after_close"
+msgstr ""
+
+msgid "ui.exam.rules_release_immediate"
+msgstr ""
+
+msgid "ui.exam.rules_release_manual"
+msgstr ""
+
+msgid "ui.exam.rules_start"
+msgstr ""
+
+msgid "ui.exam.stay"
+msgstr ""
+
+msgid "ui.exam.submit"
+msgstr ""
+
+msgid "ui.exam.submit_failed"
+msgstr ""
+
+msgid "ui.exam.submitted"
+msgstr ""
+
+msgid "ui.exam.submitting"
+msgstr ""
+
+msgid "ui.exam.take_over"
+msgstr ""
+
+msgid "ui.exam.time_left"
+msgstr ""
+
+msgid "ui.exam.time_warning_1"
+msgstr ""
+
+msgid "ui.exam.time_warning_5"
+msgstr ""
+
+msgid "ui.exam.title"
+msgstr ""
+
+msgid "ui.exam.unflag"
+msgstr ""
+
+msgid "ui.exam.view_result"
 msgstr ""
 
 msgid "ui.feedback.correct"
@@ -526,6 +676,9 @@ msgid "ui.hub.assignments"
 msgstr ""
 
 msgid "ui.hub.assignments_count"
+msgstr ""
+
+msgid "ui.hub.board.exam_sessions"
 msgstr ""
 
 msgid "ui.hub.board.school_assignments"

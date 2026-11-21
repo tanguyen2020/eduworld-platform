@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.5.0
+
+- 2026-11-21 — Thêm `component.exam_clock.warning_text` (alias `color.feedback.incorrect`) và biến thể Theme `ExamClockWarningLabel` của game: đồng hồ bài kiểm tra đổi sang một màu cảnh báo nhẹ, cố định khi còn 5 phút và 1 phút (F064-AC-04, STUDENT_GAME_UX_LEARNING §9.4). MINOR vì chỉ thêm token.
+
 ## tokens@0.4.0
 
 - 2026-11-21 — Thêm bảng màu avatar (F070 T041, OQ F070-2): `palette.avatar.*` (6 màu da, 8 màu tóc) trong `game-tokens/primitive.json` và `avatar.skin_tone.<mã>`, `avatar.hair_color.<mã>` trong `game-tokens/art3d.json` — khóa là mã `skin_tones`/`hair_colors` của danh mục nhân vật; sinh `Art3dTokens.AVATAR_SKIN_TONES`/`AVATAR_HAIR_COLORS`, thay resource placeholder `src/game/resources/avatar/{tone_*,hair_col_*}.tres`. Giá trị giữ nguyên màu placeholder [Proposed] đến khi có art thật (OQ-16). MINOR vì chỉ thêm token.

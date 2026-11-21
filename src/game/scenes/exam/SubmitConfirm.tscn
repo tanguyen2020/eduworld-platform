@@ -1,0 +1,55 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/exam/submit_confirm.gd" id="1_script"]
+
+[node name="SubmitConfirm" type="PanelContainer"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Heading" type="Label" parent="Box"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "ui.exam.confirm_heading"
+
+[node name="Unanswered" type="Label" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="Flagged" type="Label" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="AllDone" type="Label" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.exam.confirm_all_done"
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Box"]
+layout_mode = 2
+alignment = 2
+
+[node name="Cancel" type="Button" parent="Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.exam.confirm_cancel"
+
+[node name="Confirm" type="Button" parent="Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.exam.confirm_submit"

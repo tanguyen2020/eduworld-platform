@@ -1,0 +1,16 @@
+{
+  "attempt_id": "00000000-0000-4000-8000-000000000001",
+  "status": "in_progress",
+  "score": 1.5,
+  "max_score": 1.5,
+  "correct_count": 1,
+  "duration_ms": 1,
+  "result_available_at": "2026-11-15T07:30:00Z",
+  "rewards": [
+    {
+      "kind": "xp",
+      "amount": 1,
+      "item_id": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}

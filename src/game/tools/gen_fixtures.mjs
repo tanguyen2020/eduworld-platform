@@ -23,13 +23,14 @@ const OUT_DIR = path.join(root, 'src/game/tests/fixtures/contract');
 // Component schemas the client parses: F060 frame + F061 login, refresh, tenant choice, game session, takeover;
 // F062 school assignments (MyAssignment) and telemetry batches; F063 activity player (Attempt with the 11 question
 // types, ActivityResponseResult, HintResult, AttemptReview — the OpenAPI examples); F070 player profile (GameProfile,
-// CharacterCatalog, NicknameSuggestion, AvatarPreset).
+// CharacterCatalog, NicknameSuggestion, AvatarPreset); F064 exam zone (ExamSession, AttemptResult).
 const SCHEMAS = [
   'ClientConfig', 'Problem',
   'GameLoginResponse', 'GameTokenRefreshResponse', 'GameLoginProblem', 'ClientVersionProblem', 'GameSession',
   'ActiveSessionConflict', 'MyAssignment', 'TelemetryBatch',
   'Attempt', 'ActivityResponseResult', 'HintResult', 'AttemptReview',
   'GameProfile', 'CharacterCatalog', 'NicknameSuggestion', 'AvatarPreset',
+  'ExamSession', 'AttemptResult',
 ];
 // Response examples the client parses as a whole: [operationId, status] → openapi/<operationId>.<status>.json.
 const RESPONSES = [['listMyAssignments', '200']];

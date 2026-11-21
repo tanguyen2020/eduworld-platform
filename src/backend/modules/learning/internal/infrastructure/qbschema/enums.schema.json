@@ -9,6 +9,11 @@
       "description": "Enum presence duy nhất của hệ thống (MULTIPLAYER_GAMEPLAY §5, F091): realtime (AsyncAPI), PlayerCard và REST; người bật ẩn trạng thái hiển thị offline với người không được thấy.",
       "enum": ["offline", "online", "in_activity", "in_match", "away"]
     },
+    "PartyActivityType": {
+      "type": "string",
+      "description": "Một enum loại hoạt động party (PARTY_SYSTEM §5, F101 research R4): REST PartyActivityType, AsyncAPI ActivityRef.kind (party), internal module game và CHECK multiplayer.party_activities.activity_type. Release M4a chỉ bật explore, quest, boss.",
+      "enum": ["explore", "quest", "boss", "learning_challenge", "coop_challenge", "team_battle"]
+    },
     "QuestionType": {
       "type": "string",
       "description": "Loại câu hỏi (QUESTION_BANK).",

@@ -58,6 +58,21 @@ const (
 	FeedbackImmediate   = "immediate"
 )
 
+// Navigation modes of an exam (assessment blueprint `navigation`, EXAM_ENGINE §3): free moves between items, sequential_no_return
+// only forward. The blueprint default is free.
+const (
+	NavigationFree               = "free"
+	NavigationSequentialNoReturn = "sequential_no_return"
+)
+
+// NavigationOf is the navigation of a session from its blueprint value (F064 T004): unknown or absent → free.
+func NavigationOf(v string) string {
+	if v == NavigationSequentialNoReturn {
+		return v
+	}
+	return NavigationFree
+}
+
 // Audiences, late start policies, variant strategies, participation statuses and submit reasons.
 const (
 	AudienceAssigned = "assigned"

@@ -1,4 +1,4 @@
-h1:9aGOtPyvWgprRgK/TjBBBgVfO/Aq8TGk0PVnpevo7qE=
+h1:QJ4xAJCZtqgebe0pVzF1tmho6YPwpKdGXtomSGfMovU=
 00000000000001_baseline.sql h1:V+RVDz3UEtGF7iZgjrvxor6e/BKQrfoOtRtOiI3rPRg=
 20261118000001_infra.sql h1:UYIO1YaVfAbTd0wW/x+b2X72bbf64ReWEsVYVT2aJ1M=
 20261119000010_infra_platform_grants.sql h1:7/0pq0LI7ubjoqTTP3umbcLxCUX0+IobbmQVQXbcwzM=
@@ -26,3 +26,4 @@ h1:9aGOtPyvWgprRgK/TjBBBgVfO/Aq8TGk0PVnpevo7qE=
 20261223000001_f043_dashboard_rollups.sql h1:bI1cPyKVRa8FEVZo3BBg9/0E5f21GD45N4kEiupN3LA=
 20261226000001_f044_reports_quality.sql h1:wo26pPJb7VY4DQdQdZRkYy8yHnggxxsXOd1vkkK8F8k=
 20261227000001_f035_efficacy.sql h1:upLjRFR8YHMnWXRAYQsPzofx8jWvmTN6HWcFW8zJZhQ=
+20261228000001_f064_exam_navigation.sql h1:jA4lgkKjrs/FZ2VLi8lzdsp9I64o6SiUAZ29gJVFK4k=

@@ -290,6 +290,30 @@ msgstr "[!! Ïţ ïš ŕëšţ ţïɱë. ẸđüŴöŕĺđ ŵïĺĺ öþëñ á�
 msgid "ui.error.EQUIP_SLOT_INVALID"
 msgstr "[!! Ţĥïš ïţëɱ çáñ'ţ ğö ţĥëŕë. Pĺëášë ţŕý áñöţĥëŕ ŵáý. ~~~~~~~~~~~~~~~~~~~~ !!]"
 
+msgid "ui.error.EXAM_ACTIVE_ON_OTHER_DEVICE"
+msgstr "[!! Ţĥïš ţëšţ ïš öþëñ öñ áñöţĥëŕ đëvïçë. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.EXAM_ALREADY_SUBMITTED"
+msgstr "[!! Ýöü áĺŕëáđý šüƀɱïţţëđ ţĥïš ţëšţ. ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.EXAM_MAX_ATTEMPTS"
+msgstr "[!! Ýöü ĥávë üšëđ áĺĺ ýöüŕ áţţëɱþţš ƒöŕ ţĥïš ţëšţ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.EXAM_NOT_ASSIGNED"
+msgstr "[!! Ţĥïš ţëšţ ïš ñöţ áššïğñëđ ţö ýöü. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.EXAM_NOT_OPEN"
+msgstr "[!! Ţĥïš ţëšţ ïš ñöţ öþëñ ýëţ. ~~~~~~~~~~~ !!]"
+
+msgid "ui.error.EXAM_RESULTS_NOT_RELEASED"
+msgstr "[!! Ýöüŕ šçĥööĺ ĥáš ñöţ ŕëĺëášëđ ţĥë ŕëšüĺţš ýëţ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.error.EXAM_TIME_OVER"
+msgstr "[!! Ţïɱë ïš üþ. ~~~~~ !!]"
+
+msgid "ui.error.EXAM_WINDOW_CLOSED"
+msgstr "[!! Ţĥïš ţëšţ ïš çĺöšëđ. ~~~~~~~~ !!]"
+
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "[!! Ţĥïš áççöüñţ ïš ƒöŕ šçĥööĺ šţáƒƒ áñđ çáññöţ ƀë üšëđ ţö þĺáý. Pĺëášë üšë ţĥë ẸđüŴöŕĺđ áđɱïñ þöŕţáĺ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
@@ -364,6 +388,132 @@ msgstr "[!! Šöɱë ïñƒöŕɱáţïöñ ïš ñöţ váĺïđ. Pĺëášë �
 
 msgid "ui.error.generic"
 msgstr "[!! Šöɱëţĥïñğ ŵëñţ ŵŕöñğ. Pĺëášë ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.auto_submitted"
+msgstr "[!! Ţïɱë ïš üþ — ýöüŕ ţëšţ ŵáš šüƀɱïţţëđ áüţöɱáţïçáĺĺý ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.back"
+msgstr "[!! Ɓáçķ ~~ !!]"
+
+msgid "ui.exam.confirm_all_done"
+msgstr "[!! Ýöü áñšŵëŕëđ ëvëŕý qüëšţïöñ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.confirm_cancel"
+msgstr "[!! Ķëëþ ğöïñğ ~~~~ !!]"
+
+msgid "ui.exam.confirm_flagged"
+msgstr "[!! Fĺáğğëđ: {list} ~~~~~~ !!]"
+
+msgid "ui.exam.confirm_heading"
+msgstr "[!! Šüƀɱïţ ýöüŕ ţëšţ? ~~~~~~~ !!]"
+
+msgid "ui.exam.confirm_submit"
+msgstr "[!! Šüƀɱïţ ~~~ !!]"
+
+msgid "ui.exam.confirm_unanswered"
+msgstr "[!! Ñöţ áñšŵëŕëđ: {list} ~~~~~~~~ !!]"
+
+msgid "ui.exam.exit"
+msgstr "[!! Ĺëávë ~~ !!]"
+
+msgid "ui.exam.exit_confirm"
+msgstr "[!! Ţïɱë ķëëþš ŕüññïñğ ŵĥïĺë ýöü áŕë áŵáý. Ĺëávë ţĥë ţëšţ? ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.flag"
+msgstr "[!! 🚩 Fĺáğ ~~~ !!]"
+
+msgid "ui.exam.grid_legend"
+msgstr "[!! ● áñšŵëŕëđ · ○ ñöţ áñšŵëŕëđ · 🚩 ƒĺáğğëđ ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.leave"
+msgstr "[!! Ĺëávë ~~ !!]"
+
+msgid "ui.exam.list_empty"
+msgstr "[!! Ţĥëŕë ïš ñö ţëšţ ƒöŕ ýöü ŕïğĥţ ñöŵ. ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.loading"
+msgstr "[!! Ĺöáđïñğ ţĥë ţëšţ… ~~~~~~~ !!]"
+
+msgid "ui.exam.next"
+msgstr "[!! Ñëxţ ▶ ~~~ !!]"
+
+msgid "ui.exam.offline"
+msgstr "[!! Öƒƒĺïñë — ýöüŕ áñšŵëŕš áŕë ķëþţ öñ ţĥïš đëvïçë ƒöŕ ñöŵ ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.prev"
+msgstr "[!! ◀ Pŕëvïöüš ~~~~ !!]"
+
+msgid "ui.exam.question_of"
+msgstr "[!! Qüëšţïöñ {n}/{total} ~~~~~~~~ !!]"
+
+msgid "ui.exam.retry"
+msgstr "[!! Ţŕý áğáïñ ~~~~ !!]"
+
+msgid "ui.exam.rules_duration"
+msgstr "[!! Ţïɱë: {minutes} ɱïñüţëš ~~~~~~~~~~ !!]"
+
+msgid "ui.exam.rules_heading"
+msgstr "[!! Ţëšţ ŕüĺëš ~~~~ !!]"
+
+msgid "ui.exam.rules_navigation_free"
+msgstr "[!! Ýöü çáñ ğö ƀáçķ ţö ëáŕĺïëŕ qüëšţïöñš. ~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.rules_navigation_sequential"
+msgstr "[!! Åñšŵëŕ ïñ öŕđëŕ; ýöü çáññöţ ğö ƀáçķ ţö ëáŕĺïëŕ qüëšţïöñš. ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.rules_offline"
+msgstr "[!! Ţïɱë ķëëþš ŕüññïñğ ïƒ ýöü ĺöšë ţĥë çöññëçţïöñ. ~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.rules_questions"
+msgstr "[!! Qüëšţïöñš: {count} ~~~~~~~~ !!]"
+
+msgid "ui.exam.rules_release_after_close"
+msgstr "[!! Ýöü šëë ýöüŕ ŕëšüĺţ ŵĥëñ ţĥë ţëšţ çĺöšëš. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.rules_release_immediate"
+msgstr "[!! Ýöü šëë ýöüŕ ŕëšüĺţ ŕïğĥţ áƒţëŕ ýöü šüƀɱïţ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.rules_release_manual"
+msgstr "[!! Ýöü šëë ýöüŕ ŕëšüĺţ ŵĥëñ ýöüŕ šçĥööĺ ŕëĺëášëš ïţ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.rules_start"
+msgstr "[!! Šţáŕţ ~~ !!]"
+
+msgid "ui.exam.stay"
+msgstr "[!! Ķëëþ ğöïñğ ~~~~ !!]"
+
+msgid "ui.exam.submit"
+msgstr "[!! Šüƀɱïţ ~~~ !!]"
+
+msgid "ui.exam.submit_failed"
+msgstr "[!! Ñöţ šüƀɱïţţëđ ýëţ: ñö çöññëçţïöñ. Pĺëášë ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.exam.submitted"
+msgstr "[!! Ýöüŕ ţëšţ ïš šüƀɱïţţëđ. ~~~~~~~~~~ !!]"
+
+msgid "ui.exam.submitting"
+msgstr "[!! Šüƀɱïţţïñğ… ~~~~~ !!]"
+
+msgid "ui.exam.take_over"
+msgstr "[!! Çöñţïñüë öñ ţĥïš đëvïçë ~~~~~~~~~~ !!]"
+
+msgid "ui.exam.time_left"
+msgstr "[!! ⏱ {time} ~~~~ !!]"
+
+msgid "ui.exam.time_warning_1"
+msgstr "[!! 1 ɱïñüţë ĺëƒţ. ~~~~~~ !!]"
+
+msgid "ui.exam.time_warning_5"
+msgstr "[!! 5 ɱïñüţëš ĺëƒţ. ~~~~~~ !!]"
+
+msgid "ui.exam.title"
+msgstr "[!! Ẹxáɱ ŕööɱ ~~~~ !!]"
+
+msgid "ui.exam.unflag"
+msgstr "[!! 🚩 Üñƒĺáğ ~~~~ !!]"
+
+msgid "ui.exam.view_result"
+msgstr "[!! Šëë ŕëšüĺţ ~~~~ !!]"
 
 msgid "ui.feedback.correct"
 msgstr "[!! Çöŕŕëçţ! ~~~~ !!]"
@@ -529,6 +679,9 @@ msgstr "[!! Fŕöɱ šçĥööĺ ~~~~~ !!]"
 
 msgid "ui.hub.assignments_count"
 msgstr "[!! Fŕöɱ šçĥööĺ ({count}) ~~~~~~~~~ !!]"
+
+msgid "ui.hub.board.exam_sessions"
+msgstr "[!! Ẹxáɱ Ŕööɱ ~~~~ !!]"
 
 msgid "ui.hub.board.school_assignments"
 msgstr "[!! Šçĥööĺ Åššïğñɱëñţš Ɓöáŕđ ~~~~~~~~~~ !!]"

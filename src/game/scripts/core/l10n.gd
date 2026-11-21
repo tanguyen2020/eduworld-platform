@@ -53,6 +53,14 @@ const ERROR_KEYS: PackedStringArray = [
 	"ui.error.EQUIP_SLOT_INVALID",
 	"ui.error.NICKNAME_UNAVAILABLE",
 	"ui.error.NICKNAME_CHANGE_LIMIT",
+	"ui.error.EXAM_NOT_ASSIGNED",
+	"ui.error.EXAM_NOT_OPEN",
+	"ui.error.EXAM_WINDOW_CLOSED",
+	"ui.error.EXAM_MAX_ATTEMPTS",
+	"ui.error.EXAM_ACTIVE_ON_OTHER_DEVICE",
+	"ui.error.EXAM_TIME_OVER",
+	"ui.error.EXAM_ALREADY_SUBMITTED",
+	"ui.error.EXAM_RESULTS_NOT_RELEASED",
 ]
 
 

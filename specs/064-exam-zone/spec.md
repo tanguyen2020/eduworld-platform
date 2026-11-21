@@ -1,6 +1,6 @@
 # Feature Specification: F064 — Exam Zone: thi có giờ theo server, tự nộp, resume, thông báo bài mới
 
-**Feature Branch**: `064-exam-zone` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M-C3 · **Phụ thuộc**: F042, F063
+**Feature Branch**: `064-exam-zone` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: `src/game/` · **Mốc**: M-C3 · **Phụ thuộc**: F042, F063
 **Input**: Học sinh làm đề kiểm tra/thi thử có giờ theo đồng hồ server, đánh dấu câu, nộp hoặc được tự nộp khi hết giờ, làm tiếp sau rớt mạng, xem kết quả khi được công bố; nhận thông báo trong game khi có bài/đề mới được giao. FR nguồn: FR-EXM-003, FR-EXM-005, FR-NTF-001.
 
 ## Clarifications
@@ -11,6 +11,20 @@
 - Q: Thông báo bài mới khi M-C3 chưa có realtime (F090) và inbox notification (module chat)? → A: Thông báo trong game dựa trên làm mới `listMyAssignments` tại các điểm kích hoạt (vào Hub, đóng màn học tập/thi, mở 🔔); so sánh với danh sách trong RAM của phiên để phát toast + badge. Push realtime và inbox `/notifications`: F092, F115+.
 - Q: Bài giao dạng đề liên kết exam session thế nào? → A: `MyAssignment.exam_session_id` (delta chung với F062); Exam lobby cũng liệt kê `listExamSessions` cho học sinh.
 - Q: "Được quay lại câu trước không"? → A: Theo `navigation` của blueprint (`free`/`sequential_no_return`); `ExamSession` cần trường `navigation` (delta).
+
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+- Delta T004 `ExamSession.navigation`: thêm vào contract (enum `free`/`sequential_no_return`, có `example`) và module `learning` — cột `assessment.exam_sessions.navigation` (migration expand-only `20261228000001_f064_exam_navigation.sql`, mặc định `free`, CHECK, tạo lại view `exam_sessions_live`), chép từ `definition.navigation` của blueprint version đã ghim khi tạo đề (kể cả đề đo hiệu quả F035). Đề tạo trước migration nhận `free` (mặc định của blueprint). Test: `TestNavigationOf` (unit), `TestExamSessionNavigation` (integration testcontainers).
+- Tham số "chuyển sang thiết bị này": contract đã có từ F042 dưới tên `ExamAttemptStart.take_over` (không phải `takeover`) — dùng nguyên, không thêm delta; T031 làm cùng US2 (nút `ui.exam.take_over` gọi lại `startExamAttempt` với `{take_over: true}` và `Idempotency-Key` mới vì body khác).
+- Token thiết bị đề (`X-Exam-Device-Token`, EXAM_ENGINE §12) = mã cài đặt của client (cùng giá trị `X-Device-Id`), gửi ở start/save/submit; không ghi log.
+- Lưu đáp án: câu chọn/kéo thả lưu ngay mỗi lần đổi; câu nhập chữ/số (`fill_in_blank`, `short_answer`, `numeric`) lưu khi rời câu, khi nộp, khi thoát và khi hết giờ (không gửi mỗi lần gõ phím — server có giới hạn tần suất). Body chỉ có `kind`, `position`, `question_version_id`, `response`; **không** gửi `client_elapsed_ms` (F064-AC-11). Khi gửi bù sau mất mạng, câu trong hàng đợi mang `answered_at_client` = thời điểm trả lời theo đồng hồ server (offset `ExamCountdown`) theo contract `ActivityResponseSubmission` và EXAM_ENGINE §6; server tự quyết định nhận hay trả `EXAM_TIME_OVER`.
+- Hàng đợi offline: `PendingWrites.enqueue_latest` nhận `PUT` không có `Idempotency-Key` (ghi đè theo `position` nên idempotent theo method), chỉ giữ bản mới nhất mỗi `position`, phát lại header `X-Exam-Device-Token`; chỉ RAM.
+- Đồng hồ: `server now` = `server_time` của attempt + thời gian đơn điệu (`ClientClock.now_msec`) từ lúc nhận — không dùng giờ hệ điều hành; số giây hiển thị làm tròn lên (lệch ∈ [0, 1) s). Mốc 5/1 phút: mở lại sau mốc thì không hiện lại; vượt cả hai mốc cùng lúc (app ở nền) chỉ hiện mốc nhỏ. Màu cảnh báo: token mới `component.exam_clock.warning_text` (tokens@0.5.0, biến thể `ExamClockWarningLabel`), không nhấp nháy.
+- `sequential_no_return`: lưới câu cho đi tới mọi câu sau câu hiện tại (kể cả bỏ qua), không lùi; mở lại attempt thì đứng ở câu sau câu đã làm cuối cùng.
+- Hết giờ: listener lưu câu đang nhập trước rồi mới khóa nhập; gửi hàng đợi; gọi `submitExamAttempt` một lần (thất bại mạng thì vẫn sang màn chờ — server tự nộp).
+- Kết quả (`getExamResult` → `AttemptReview`): điểm theo thang của trường (`score_scaled`) khi có, nếu không `score/max_score`; `g1_3` chỉ hiện số câu đúng kèm ⭐ như F063. "Kết quả theo LO" = đếm theo `objective_ids` và `is_correct` do server trả (không tính điểm); contract không có tên LO nên dòng hiển thị "Mục tiêu n". Nút "Luyện LO này" cho mỗi `weak_objectives` gọi `startAdHocAttempt` `{mode: practice, source: {kind: selection, objective_id}}` qua intent `activity_host` (`LearningService.start_request` nhận `objective_id`). Mở lại kết quả từ lobby: nút "Xem kết quả" khi bài giao (`MyAssignment`) có `attempt_id` và trạng thái `submitted`/`graded`.
+- Thông báo bài mới: `NotificationService` nghe `AssignmentService.refresh_finished(ok)` (không nghe `assignments_updated` vì `clear()` cũng phát); lần làm mới thành công đầu tiên của phiên → một toast gộp `ui.notification.assignments_pending` + badge = số bài `not_started`; các lần sau → mỗi `assignment_id` mới có `status = not_started` một toast `ui.notification.assignment_new` (tiêu đề bài do trường đặt, không tên học sinh, không điểm), quá 3 bài mới cùng lúc → một toast gộp; `ToastStack` tối đa 3. Điểm kích hoạt làm mới: vào Hub, đóng màn bất kỳ (đã có từ F062 qua `EventBus.ui_closed`), bấm 🔔. Không timer, không làm mới khi app ở nền.
+- Ngoài lề (gate): bản chép `common/enums.schema.json` trong `qbschema` của module learning lệch với `specs/schemas` sau F101 (`PartyActivityType`) làm `TestEmbeddedSchemas` đỏ trên main — chép lại trong cùng MR (không đổi hành vi).
 
 ## User Scenarios & Testing *(bắt buộc)*
 

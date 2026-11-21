@@ -1,0 +1,173 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/exam/exam_runner.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/exam/ExamCountdownLabel.tscn" id="2_clock"]
+[ext_resource type="PackedScene" path="res://scenes/exam/QuestionGrid.tscn" id="3_grid"]
+[ext_resource type="PackedScene" path="res://scenes/exam/SubmitConfirm.tscn" id="4_confirm"]
+
+[node name="ExamRunner" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Window" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Window"]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Window/Box/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeadingLabel"
+auto_translate_mode = 2
+text_overrun_behavior = 3
+
+[node name="Clock" parent="Window/Box/Header" instance=ExtResource("2_clock")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Submit" type="Button" parent="Window/Box/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.exam.submit"
+
+[node name="Exit" type="Button" parent="Window/Box/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.exam.exit"
+
+[node name="Offline" type="Label" parent="Window/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.exam.offline"
+autowrap_mode = 3
+
+[node name="Notice" type="Label" parent="Window/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+auto_translate_mode = 2
+autowrap_mode = 3
+
+[node name="Body" type="HBoxContainer" parent="Window/Box"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Side" type="VBoxContainer" parent="Window/Box/Body"]
+layout_mode = 2
+
+[node name="Legend" type="Label" parent="Window/Box/Body/Side"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "ui.exam.grid_legend"
+autowrap_mode = 3
+
+[node name="Grid" parent="Window/Box/Body/Side" instance=ExtResource("3_grid")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Main" type="VBoxContainer" parent="Window/Box/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Top" type="HBoxContainer" parent="Window/Box/Body/Main"]
+layout_mode = 2
+
+[node name="Position" type="Label" parent="Window/Box/Body/Main/Top"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+auto_translate_mode = 2
+
+[node name="Flag" type="Button" parent="Window/Box/Body/Main/Top"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+toggle_mode = true
+text = "ui.exam.flag"
+
+[node name="Scroll" type="ScrollContainer" parent="Window/Box/Body/Main"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Window/Box/Body/Main/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Nav" type="HBoxContainer" parent="Window/Box/Body/Main"]
+layout_mode = 2
+
+[node name="Prev" type="Button" parent="Window/Box/Body/Main/Nav"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.exam.prev"
+
+[node name="Spacer" type="Control" parent="Window/Box/Body/Main/Nav"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Next" type="Button" parent="Window/Box/Body/Main/Nav"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.exam.next"
+
+[node name="SubmitConfirm" parent="." instance=ExtResource("4_confirm")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="ExitConfirm" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="ExitConfirm"]
+layout_mode = 2
+
+[node name="Message" type="Label" parent="ExitConfirm/Box"]
+layout_mode = 2
+text = "ui.exam.exit_confirm"
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="ExitConfirm/Box"]
+layout_mode = 2
+alignment = 2
+
+[node name="Leave" type="Button" parent="ExitConfirm/Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SecondaryButton"
+text = "ui.exam.leave"
+
+[node name="Stay" type="Button" parent="ExitConfirm/Box/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.exam.stay"

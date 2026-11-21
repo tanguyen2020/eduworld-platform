@@ -116,7 +116,8 @@ func (h Exams) CreateEfficacySession(ctx context.Context, in EfficacySessionInpu
 		WindowEnd: s.WindowEnd, DurationSec: s.DurationSec, Target: target, Sections: sj, Audience: exam.AudienceAssigned, Strategy: s.Strategy,
 		VariantCount: 1, FeedbackTiming: s.FeedbackTiming, ResultRelease: s.ResultRelease, ShowCorrect: false, ShowExplanations: false,
 		LateStartPolicy: s.LateStartPolicy, Accommodations: json.RawMessage(`[]`), MaxAttempts: 1, ScorePolicy: s.ScorePolicy,
-		Status: string(status), CreatedBy: in.CreatedBy, CreatedByRole: "system_admin", Version: 1, CreatedAt: now, EfficacyWaveID: &wave}
+		Status: string(status), CreatedBy: in.CreatedBy, CreatedByRole: "system_admin", Version: 1, CreatedAt: now, EfficacyWaveID: &wave,
+		Navigation: exam.NavigationOf(b.Def.Navigation)}
 	if len(ps) > 0 {
 		row.QuestionCount, row.TotalPoints = len(ps[0].Items), ps[0].TotalPoints
 	}

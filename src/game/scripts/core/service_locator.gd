@@ -12,6 +12,8 @@ var learning: LearningService = null
 var math_svg: MathSvgCache = null
 var media: MediaLoader = null
 var video_files: VideoFileCache = null
+## Timed exams of the Exam Zone (F064): sessions, attempt, server countdown, answers queued in RAM.
+var exam: ExamService = null
 ## Player profile, nickname, avatar and saved outfits (F070); character catalog cache + ownership view (F070/F075).
 var profile: ProfileService = null
 var inventory: InventoryService = null
@@ -32,6 +34,8 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	assignments.access_denied.connect(_on_access_denied)
 	learning = LearningService.new(rest, telemetry, clock)
 	learning.access_denied.connect(_on_access_denied)
+	exam = ExamService.new(rest, clock)
+	exam.access_denied.connect(_on_access_denied)
 	var transport: HttpTransport = rest.transport if rest != null else null
 	math_svg = MathSvgCache.new(transport, _cdn_base_url())
 	math_svg.failure_handler = func(_reason: String) -> void: learning.report_math_failed()
@@ -65,6 +69,7 @@ func start_session(bootstrap: Dictionary) -> void:
 func end_session() -> void:
 	assignments.clear()
 	learning.clear()
+	exam.clear()
 	media.clear()
 	profile.clear()
 	play_time.configure({})

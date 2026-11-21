@@ -56,6 +56,8 @@ type ExamSessionRow struct {
 	// EfficacyWaveID is the efficacy wave of a session created by F035 (no exam.* event, no mastery evidence, never
 	// released, never shown to students as such).
 	EfficacyWaveID *uuid.UUID
+	// Navigation is the blueprint navigation copied at creation (free | sequential_no_return, F064 T004).
+	Navigation string
 }
 
 // ExamPaperRow is one row of assessment.exam_papers (immutable).

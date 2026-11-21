@@ -10,7 +10,8 @@ signal interaction_focus_changed(interactable_id: String, prompt_key: String)
 signal player_spawned(spawn_point_id: String)
 
 ## Screen opened by each Interactable kind (data, not logic: the screen decides what to show).
-const KIND_SCREENS: Dictionary = {"quest_board": &"quest_journal"}
+## `exam_board`: the Exam Zone greybox entry of the Main Hub (F064 T015; the full `exam_zone` scene is F071).
+const KIND_SCREENS: Dictionary = {"quest_board": &"quest_journal", "exam_board": &"exam_lobby"}
 ## Arguments per interactable id (the school assignments board opens the "Nhà trường giao" tab).
 const INTERACTABLE_ARGS: Dictionary = {"board.school_assignments": {"tab": "assigned"}}
 const SCREEN_QUEST_JOURNAL: StringName = &"quest_journal"

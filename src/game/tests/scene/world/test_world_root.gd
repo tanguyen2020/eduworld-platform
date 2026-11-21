@@ -106,8 +106,8 @@ func test_matching_device_profile_replaces_the_benchmark() -> void:
 func test_intent_without_a_screen_shows_update_required() -> void:
 	var r: Array = await _world()
 	var world: Node = r[1] as Node
-	# `activity_host` is registered since F063 (tests/scene/learning/test_activity_host.gd); `exam_lobby` comes with F064.
-	EventBus.ui_requested.emit(&"exam_lobby", {"exam_session_id": "y"})
+	# `activity_host` (F063) and `exam_lobby` (F064) are registered; a screen of a later feature is not.
+	EventBus.ui_requested.emit(&"screen_of_a_later_feature", {"id": "y"})
 	var notice: Control = world.find_child("Notice", true, false) as Control
 	assert_bool(notice.visible).is_true()
 	assert_str((notice.find_child("Body", true, false) as Label).text).is_equal(tr("ui.activity_player.update_required"))

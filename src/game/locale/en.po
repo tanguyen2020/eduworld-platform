@@ -291,6 +291,30 @@ msgstr "It is rest time. EduWorld will open again during the allowed hours."
 msgid "ui.error.EQUIP_SLOT_INVALID"
 msgstr "This item can't go there. Please try another way."
 
+msgid "ui.error.EXAM_ACTIVE_ON_OTHER_DEVICE"
+msgstr "This test is open on another device."
+
+msgid "ui.error.EXAM_ALREADY_SUBMITTED"
+msgstr "You already submitted this test."
+
+msgid "ui.error.EXAM_MAX_ATTEMPTS"
+msgstr "You have used all your attempts for this test."
+
+msgid "ui.error.EXAM_NOT_ASSIGNED"
+msgstr "This test is not assigned to you."
+
+msgid "ui.error.EXAM_NOT_OPEN"
+msgstr "This test is not open yet."
+
+msgid "ui.error.EXAM_RESULTS_NOT_RELEASED"
+msgstr "Your school has not released the results yet."
+
+msgid "ui.error.EXAM_TIME_OVER"
+msgstr "Time is up."
+
+msgid "ui.error.EXAM_WINDOW_CLOSED"
+msgstr "This test is closed."
+
 msgid "ui.error.GAME_ACCESS_STUDENT_ONLY"
 msgstr "This account is for school staff and cannot be used to play. Please use the EduWorld admin portal."
 
@@ -365,6 +389,132 @@ msgstr "Some information is not valid. Please check it."
 
 msgid "ui.error.generic"
 msgstr "Something went wrong. Please try again later."
+
+msgid "ui.exam.auto_submitted"
+msgstr "Time is up — your test was submitted automatically"
+
+msgid "ui.exam.back"
+msgstr "Back"
+
+msgid "ui.exam.confirm_all_done"
+msgstr "You answered every question."
+
+msgid "ui.exam.confirm_cancel"
+msgstr "Keep going"
+
+msgid "ui.exam.confirm_flagged"
+msgstr "Flagged: {list}"
+
+msgid "ui.exam.confirm_heading"
+msgstr "Submit your test?"
+
+msgid "ui.exam.confirm_submit"
+msgstr "Submit"
+
+msgid "ui.exam.confirm_unanswered"
+msgstr "Not answered: {list}"
+
+msgid "ui.exam.exit"
+msgstr "Leave"
+
+msgid "ui.exam.exit_confirm"
+msgstr "Time keeps running while you are away. Leave the test?"
+
+msgid "ui.exam.flag"
+msgstr "🚩 Flag"
+
+msgid "ui.exam.grid_legend"
+msgstr "● answered · ○ not answered · 🚩 flagged"
+
+msgid "ui.exam.leave"
+msgstr "Leave"
+
+msgid "ui.exam.list_empty"
+msgstr "There is no test for you right now."
+
+msgid "ui.exam.loading"
+msgstr "Loading the test…"
+
+msgid "ui.exam.next"
+msgstr "Next ▶"
+
+msgid "ui.exam.offline"
+msgstr "Offline — your answers are kept on this device for now"
+
+msgid "ui.exam.prev"
+msgstr "◀ Previous"
+
+msgid "ui.exam.question_of"
+msgstr "Question {n}/{total}"
+
+msgid "ui.exam.retry"
+msgstr "Try again"
+
+msgid "ui.exam.rules_duration"
+msgstr "Time: {minutes} minutes"
+
+msgid "ui.exam.rules_heading"
+msgstr "Test rules"
+
+msgid "ui.exam.rules_navigation_free"
+msgstr "You can go back to earlier questions."
+
+msgid "ui.exam.rules_navigation_sequential"
+msgstr "Answer in order; you cannot go back to earlier questions."
+
+msgid "ui.exam.rules_offline"
+msgstr "Time keeps running if you lose the connection."
+
+msgid "ui.exam.rules_questions"
+msgstr "Questions: {count}"
+
+msgid "ui.exam.rules_release_after_close"
+msgstr "You see your result when the test closes."
+
+msgid "ui.exam.rules_release_immediate"
+msgstr "You see your result right after you submit."
+
+msgid "ui.exam.rules_release_manual"
+msgstr "You see your result when your school releases it."
+
+msgid "ui.exam.rules_start"
+msgstr "Start"
+
+msgid "ui.exam.stay"
+msgstr "Keep going"
+
+msgid "ui.exam.submit"
+msgstr "Submit"
+
+msgid "ui.exam.submit_failed"
+msgstr "Not submitted yet: no connection. Please try again."
+
+msgid "ui.exam.submitted"
+msgstr "Your test is submitted."
+
+msgid "ui.exam.submitting"
+msgstr "Submitting…"
+
+msgid "ui.exam.take_over"
+msgstr "Continue on this device"
+
+msgid "ui.exam.time_left"
+msgstr "⏱ {time}"
+
+msgid "ui.exam.time_warning_1"
+msgstr "1 minute left."
+
+msgid "ui.exam.time_warning_5"
+msgstr "5 minutes left."
+
+msgid "ui.exam.title"
+msgstr "Exam room"
+
+msgid "ui.exam.unflag"
+msgstr "🚩 Unflag"
+
+msgid "ui.exam.view_result"
+msgstr "See result"
 
 msgid "ui.feedback.correct"
 msgstr "Correct!"
@@ -530,6 +680,9 @@ msgstr "From school"
 
 msgid "ui.hub.assignments_count"
 msgstr "From school ({count})"
+
+msgid "ui.hub.board.exam_sessions"
+msgstr "Exam Room"
 
 msgid "ui.hub.board.school_assignments"
 msgstr "School Assignments Board"

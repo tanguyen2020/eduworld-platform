@@ -180,3 +180,13 @@ func TestValidateAccommodations(t *testing.T) {
 		}
 	}
 }
+
+// F064 T004 (F064-AC-06): the session navigation is the blueprint value; unknown or absent is the blueprint default.
+func TestNavigationOf(t *testing.T) {
+	for in, want := range map[string]string{"": NavigationFree, "free": NavigationFree, "sequential_no_return": NavigationSequentialNoReturn,
+		"backwards": NavigationFree} {
+		if got := NavigationOf(in); got != want {
+			t.Fatalf("%q: %q, want %q", in, got, want)
+		}
+	}
+}
