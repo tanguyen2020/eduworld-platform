@@ -14,6 +14,7 @@
         "layout": { "$value": "{ops.palette.black}", "$description": "Layout background (dark)." }
       },
       "border": { "$value": "{ops.palette.neutral.700}", "$description": "Border (dark)." },
+      "border-subtle": { "$value": "{ops.palette.neutral.800}", "$description": "Subtle border of cards, header and sidebar (dark)." },
       "banner": {
         "info": { "$value": "{ops.palette.banner.info-dark}", "$description": "Info banner (dark)." },
         "warning": { "$value": "{ops.palette.banner.warning-dark}", "$description": "Warning banner (dark)." },

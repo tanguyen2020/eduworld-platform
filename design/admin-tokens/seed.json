@@ -40,6 +40,10 @@
           "$value": "#424242",
           "$description": "Border (dark)."
         },
+        "800": {
+          "$value": "#303030",
+          "$description": "Subtle border (dark)."
+        },
         "850": {
           "$value": "#1F1F1F",
           "$description": "Primary text (light)."
@@ -127,6 +131,24 @@
           "$description": "Chart series 8."
         },
         "$description": "Categorical chart palette (DESIGN_SYSTEM §4.4, max 8, colour-blind friendly — Okabe-Ito order)."
+      },
+      "slate": {
+        "50": {
+          "$value": "#F7F8FA",
+          "$description": "Layout background (light), warm tint of the teacher notebook theme (DESIGN_SYSTEM §4.1)."
+        },
+        "200": {
+          "$value": "#E3E7EE",
+          "$description": "Subtle border of cards, header and sidebar (light)."
+        },
+        "600": {
+          "$value": "#4B5263",
+          "$description": "Secondary text (light)."
+        },
+        "900": {
+          "$value": "#1F2430",
+          "$description": "Primary text (light)."
+        }
       }
     },
     "size": {
@@ -138,17 +160,49 @@
         },
         "14": {
           "$value": "14px",
-          "$description": "Default body font."
+          "$description": "Secondary body font (labels, KPI title)."
+        },
+        "15": {
+          "$value": "15px",
+          "$description": "Default body font (DESIGN_SYSTEM §4.1)."
         },
         "16": {
           "$value": "16px",
-          "$description": "Large body font."
+          "$description": "Large body font; heading 5; sign-in inputs."
+        },
+        "18": {
+          "$value": "18px",
+          "$description": "Card title, heading 4."
+        },
+        "20": {
+          "$value": "20px",
+          "$description": "Heading 3."
+        },
+        "24": {
+          "$value": "24px",
+          "$description": "Heading 2."
+        },
+        "28": {
+          "$value": "28px",
+          "$description": "Heading 1 (page title)."
+        },
+        "30": {
+          "$value": "30px",
+          "$description": "KPI value (Statistic)."
         }
       },
       "radius": {
         "6": {
           "$value": "6px",
-          "$description": "Default border radius."
+          "$description": "Small border radius (kept for compatibility)."
+        },
+        "8": {
+          "$value": "8px",
+          "$description": "Default border radius (buttons, inputs)."
+        },
+        "12": {
+          "$value": "12px",
+          "$description": "Large border radius (cards, modals, sign-in controls)."
         }
       },
       "control": {
@@ -158,7 +212,25 @@
         },
         "32": {
           "$value": "32px",
+          "$description": "Control height (kept for compatibility)."
+        },
+        "36": {
+          "$value": "36px",
           "$description": "Default control height."
+        },
+        "40": {
+          "$value": "40px",
+          "$description": "Menu item height."
+        },
+        "48": {
+          "$value": "48px",
+          "$description": "Sign-in control height."
+        }
+      },
+      "border": {
+        "4": {
+          "$value": "4px",
+          "$description": "Accent border width (top border of KPI cards)."
         }
       }
     },
@@ -261,8 +333,8 @@
     },
     "fontSize": {
       "$type": "dimension",
-      "$value": "{ops.size.font.14}",
-      "$description": "Base font size (compact overrides)."
+      "$value": "{ops.size.font.15}",
+      "$description": "Base font size 15px for content screens (compact overrides to 13px)."
     },
     "fontSizeSM": {
       "$type": "dimension",
@@ -271,13 +343,135 @@
     },
     "borderRadius": {
       "$type": "dimension",
-      "$value": "{ops.size.radius.6}",
-      "$description": "Border radius."
+      "$value": "{ops.size.radius.8}",
+      "$description": "Border radius of buttons and inputs."
     },
     "controlHeight": {
       "$type": "dimension",
-      "$value": "{ops.size.control.32}",
+      "$value": "{ops.size.control.36}",
       "$description": "Control height (compact overrides)."
+    },
+    "colorBgLayout": {
+      "$type": "color",
+      "$value": "{ops.color.bg.layout}",
+      "$description": "Page background (warm tint in light mode)."
+    },
+    "colorBorderSecondary": {
+      "$type": "color",
+      "$value": "{ops.color.border-subtle}",
+      "$description": "1px border of cards, header and sidebar."
+    },
+    "fontSizeHeading1": {
+      "$type": "dimension",
+      "$value": "{ops.size.font.28}",
+      "$description": "Heading 1 (page title)."
+    },
+    "fontSizeHeading2": {
+      "$type": "dimension",
+      "$value": "{ops.size.font.24}",
+      "$description": "Heading 2."
+    },
+    "fontSizeHeading3": {
+      "$type": "dimension",
+      "$value": "{ops.size.font.20}",
+      "$description": "Heading 3."
+    },
+    "fontSizeHeading4": {
+      "$type": "dimension",
+      "$value": "{ops.size.font.18}",
+      "$description": "Heading 4."
+    },
+    "fontSizeHeading5": {
+      "$type": "dimension",
+      "$value": "{ops.size.font.16}",
+      "$description": "Heading 5."
+    },
+    "borderRadiusLG": {
+      "$type": "dimension",
+      "$value": "{ops.size.radius.12}",
+      "$description": "Border radius of cards and modals."
+    },
+    "components": {
+      "$description": "Ant Design component tokens passed to ConfigProvider.components (DESIGN_SYSTEM §4.1). Names follow Ant Design.",
+      "Layout": {
+        "headerBg": {
+          "$type": "color",
+          "$value": "{ops.color.bg.container}",
+          "$description": "Topbar background."
+        },
+        "siderBg": {
+          "$type": "color",
+          "$value": "{ops.color.bg.container}",
+          "$description": "Sidebar background."
+        },
+        "bodyBg": {
+          "$type": "color",
+          "$value": "{ops.color.bg.layout}",
+          "$description": "Page background."
+        }
+      },
+      "Card": {
+        "headerFontSize": {
+          "$type": "dimension",
+          "$value": "{ops.size.font.18}",
+          "$description": "Card title."
+        }
+      },
+      "Menu": {
+        "itemHeight": {
+          "$type": "dimension",
+          "$value": "{ops.size.control.40}",
+          "$description": "Sidebar item height."
+        },
+        "itemBorderRadius": {
+          "$type": "dimension",
+          "$value": "{ops.size.radius.8}",
+          "$description": "Sidebar item radius."
+        }
+      },
+      "Statistic": {
+        "contentFontSize": {
+          "$type": "dimension",
+          "$value": "{ops.size.font.30}",
+          "$description": "KPI value."
+        },
+        "titleFontSize": {
+          "$type": "dimension",
+          "$value": "{ops.size.font.14}",
+          "$description": "KPI label."
+        }
+      }
+    }
+  },
+  "auth": {
+    "antd": {
+      "$description": "Sign-in pages (AuthLayout, ADMIN_PORTAL §1.3b direction A): sizes merged over the active theme by a nested ConfigProvider.",
+      "controlHeight": {
+        "$type": "dimension",
+        "$value": "{ops.size.control.48}",
+        "$description": "Sign-in control height (46–48px)."
+      },
+      "borderRadius": {
+        "$type": "dimension",
+        "$value": "{ops.size.radius.12}",
+        "$description": "Sign-in control radius."
+      },
+      "components": {
+        "Input": {
+          "inputFontSize": {
+            "$type": "dimension",
+            "$value": "{ops.size.font.16}",
+            "$description": "Input text 16px (no zoom on phones)."
+          }
+        },
+        "Button": {
+          "contentFontSize": {
+            "$type": "dimension",
+            "$value": "{ops.size.font.16}",
+            "$description": "Sign-in button text."
+          }
+        }
+      }
     }
   }
 }

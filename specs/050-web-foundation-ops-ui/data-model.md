@@ -13,4 +13,4 @@ Cấu trúc client để tham chiếu khi code:
 | `OperationMeta` (sinh) | `operationId`, `method`, `path`, `service` (`x-service`), `gateway: 'public' \| 'internal'` (theo prefix API_DESIGN §10), `tenantHeader: 'required' \| 'optional' \| 'none'` (từ tham số `TenantIdHeader`/`TenantIdHeaderOptional`), `idempotency: boolean` (tham số `IdempotencyKey`), `ifMatch: boolean` (tham số `IfMatch`) | `specs/openapi/eduworld-api.v1.yaml` |
 | `RuntimeConfig` | `apiBaseUrl`, `apiInternalBaseUrl`, `oidcIssuer`, `oidcClientId`, `env` | `/config.json` |
 | `ApiError` | `status`, `code` (ProblemCode), `title`, `detail`, `fieldErrors: Record<string, {code, message}>`, `traceId` | schema `Problem` |
-| `UserPreference` (localStorage `ew.portal.prefs`) | `theme: light \| dark`, `density: default \| compact`, `locale: vi-VN \| en-US`, `lastWorkspace` | per-viewer |
+| `UserPreference` (localStorage `ew.portal.prefs`) | `theme: light \| dark`, `density: default \| compact` (mặc định `default`; `compact` chỉ khi người dùng tự bật trong menu tài khoản — `densityChosen: true`, DESIGN_SYSTEM §4.1, owner 2026-11-21), `locale: vi-VN \| en-US`, `lastWorkspace` | per-viewer |

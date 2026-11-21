@@ -5,15 +5,16 @@
       "$description": "Light mode values referenced by admin semantic tokens. Same paths as modes/dark.json.",
       "text": {
         "base": { "$value": "{ops.palette.black}", "$description": "Ant Design colorTextBase (light)." },
-        "primary": { "$value": "{ops.palette.neutral.850}", "$description": "Primary text (light)." },
-        "secondary": { "$value": "{ops.palette.neutral.600}", "$description": "Secondary text (light)." }
+        "primary": { "$value": "{ops.palette.slate.900}", "$description": "Primary text (light)." },
+        "secondary": { "$value": "{ops.palette.slate.600}", "$description": "Secondary text (light)." }
       },
       "bg": {
         "base": { "$value": "{ops.palette.white}", "$description": "Ant Design colorBgBase (light)." },
         "container": { "$value": "{ops.palette.white}", "$description": "Container background (light)." },
-        "layout": { "$value": "{ops.palette.neutral.100}", "$description": "Layout background (light)." }
+        "layout": { "$value": "{ops.palette.slate.50}", "$description": "Layout background (light)." }
       },
       "border": { "$value": "{ops.palette.neutral.300}", "$description": "Border (light)." },
+      "border-subtle": { "$value": "{ops.palette.slate.200}", "$description": "Subtle border of cards, header and sidebar (light)." },
       "banner": {
         "info": { "$value": "{ops.palette.banner.info-light}", "$description": "Info banner (light)." },
         "warning": { "$value": "{ops.palette.banner.warning-light}", "$description": "Warning banner (light)." },

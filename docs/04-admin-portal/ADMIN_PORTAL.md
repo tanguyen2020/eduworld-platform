@@ -82,28 +82,51 @@ Responsive: chi tiết ở §1.5.
 
 Admin Portal có **màn đăng nhập riêng do portal tự vẽ** (trang `/login`, Ant Design, theme sinh từ `design/admin-tokens/` — ADR-0047), **không chuyển hướng sang trang Keycloak** (ADR-0091 thay luồng Authorization Code + PKCE của ADR-0066 mục 1). Portal gửi form tới `POST /api/v1/auth/portal/login` (`portalLogin`); module identity gọi token endpoint Keycloak bằng client confidential `eduworld-portal` (Direct Access Grant, cấu hình ở [KEYCLOAK_SSO §3.3](../09-identity/KEYCLOAK_SSO.md)). **Học sinh không đăng nhập được** (chặn hai lớp: flow Keycloak chỉ cho realm role `tenant_staff`/`platform_staff`, và backend `403 PORTAL_ACCESS_STAFF_ONLY`). **Không chọn tenant/trường trước khi đăng nhập**; không có URL theo tenant.
 
-```text
-Desktop (≥ 1200 px)                                         Mobile (< 768 px)
-┌──────────────────────────────────────────────────────────┐ ┌────────────────────────────┐
-│  [Logo EduWorld] Cổng quản trị                  [VI|EN]  │ │ [Logo] Cổng quản trị [VI]  │
-│                                                          │ │                            │
-│        ┌──────────────────────────────────────┐          │ │ Tên đăng nhập hoặc email   │
-│        │ Đăng nhập                            │          │ │ [ ad.truong.a           ]  │
-│        │ Tên đăng nhập hoặc email             │          │ │ Mật khẩu                   │
-│        │ [ qlcm.truong.a@thdemo.edu.vn    ]   │          │ │ [ ••••••••          👁 ]   │
-│        │ Mật khẩu                             │          │ │ Mã xác thực 6 số           │
-│        │ [ ••••••••••                  👁 ]   │          │ │ [ _ _ _ _ _ _ ]            │
-│        │ Mã xác thực 6 số                     │          │ │ [       Đăng nhập       ]  │
-│        │ [ _ _ _ _ _ _ ]                      │          │ │ Quên mật khẩu?             │
-│        │ Bắt buộc với tài khoản vận hành      │          │ │                            │
-│        │ platform; để trống nếu chưa cài.     │          │ │ Dành cho cán bộ nhà trường │
-│        │ [            Đăng nhập           ]   │          │ │ và vận hành. Học sinh vui  │
-│        │ Quên mật khẩu?                       │          │ │ lòng đăng nhập trong game. │
-│        └──────────────────────────────────────┘          │ └────────────────────────────┘
-│  Dành cho cán bộ nhà trường và đội vận hành. Học sinh    │
-│  vui lòng đăng nhập trong game EduWorld.                 │
-└──────────────────────────────────────────────────────────┘
+**Giao diện đăng nhập — hướng A "Sân trường" (owner chốt 2026-11-21, [Confirmed]):** hai cột trên desktop, một cột ở chiều rộng điện thoại (< 768 px). Cột trái là bảng thương hiệu nền `colorPrimary`: logo, "EduWorld" + "Cổng quản trị nhà trường", câu dẫn "Đồng hành cùng thầy cô trên mỗi bài học", một dòng phụ, các chip môn học theo mã màu nghiệp vụ (DESIGN_SYSTEM §6) và hình trang trí SVG đơn giản (trường, sách — `aria-hidden`). Cột phải: chọn ngôn ngữ, thẻ "Chào mừng thầy cô trở lại" với ô nhập cao 48 px, chữ 16 px, bo 12 px (theme `authTheme`, DESIGN_SYSTEM §4.1), hộp gợi ý cho học sinh và dòng cuối về bảo vệ dữ liệu. Link chính sách bảo mật và link mở game chỉ hiện khi cấu hình runtime có URL (R3); hiện chưa có khóa cấu hình nên chỉ giữ câu chữ. Các màn `/forgot-password`, `/reset-password`, `/account-setup`, chọn đơn vị dùng chung khung này.
 
+```text
+Desktop (≥ 768 px)
+┌──────────────────────────────┬───────────────────────────────────────────┐
+│ [■] EduWorld                 │                         Ngôn ngữ [Tiếng Việt ▾] │
+│     Cổng quản trị nhà trường │  ┌─────────────────────────────────────┐  │
+│                              │  │ Chào mừng thầy cô trở lại           │  │
+│ Đồng hành cùng thầy cô       │  │ Đăng nhập để vào lớp học của bạn.   │  │
+│ trên mỗi bài học             │  │ Tên đăng nhập hoặc email            │  │
+│ Giao bài, theo dõi tiến bộ   │  │ [ ad.truong.a                    ]  │  │
+│ và hỗ trợ từng học sinh —    │  │ Mật khẩu                            │  │
+│ tất cả trong một nơi.        │  │ [ ••••••••                    👁 ]  │  │
+│        (hình trường, sách)   │  │ [            Đăng nhập            ] │  │
+│                              │  │ Quên mật khẩu?   Cần hỗ trợ? Liên hệ│  │
+│ (Toán)(Tiếng Việt)           │  │                  quản trị trường    │  │
+│ (Tiếng Anh)(Khoa học)        │  └─────────────────────────────────────┘  │
+│                              │  👤 Em là học sinh? Hãy mở game EduWorld  │
+│                              │     để vào học nhé.                       │
+│                              │  Dữ liệu học sinh được bảo vệ theo Nghị   │
+│                              │  định 13/2023. Nhớ đăng xuất khi dùng máy │
+│                              │  tính chung.                              │
+└──────────────────────────────┴───────────────────────────────────────────┘
+
+Mobile (< 768 px): một cột
+┌────────────────────────────┐
+│ [■] EduWorld               │  ← dải thương hiệu thu gọn
+│     Cổng quản trị nhà trường│
+├────────────────────────────┤
+│        Ngôn ngữ [VI ▾]     │
+│ Chào mừng thầy cô trở lại  │
+│ Tên đăng nhập hoặc email   │
+│ [ ad.truong.a           ]  │
+│ Mật khẩu                   │
+│ [ ••••••••          👁 ]   │
+│ [       Đăng nhập       ]  │
+│ Quên mật khẩu?             │
+│ Cần hỗ trợ? Liên hệ quản   │
+│ trị trường                 │
+│ 👤 Em là học sinh? ...     │
+│ Dữ liệu học sinh được ...  │
+└────────────────────────────┘
+```
+
+```text
 Đổi mật khẩu tạm (ACCOUNT_SETUP_REQUIRED)      Chọn tenant (chỉ khi thuộc nhiều tenant)
 ┌──────────────────────────────────────┐     ┌──────────────────────────────────────────┐
 │ Đặt mật khẩu mới                     │     │ Chọn đơn vị làm việc                     │
@@ -118,10 +141,9 @@ Desktop (≥ 1200 px)                                         Mobile (< 768 px)
 
 **Form đăng nhập (ADR-0091 mục 1):**
 
-- Một form gửi **một lần** cả tên đăng nhập/email, mật khẩu và mã xác thực 6 số (`otp`, tùy chọn), kèm `device_id` (sinh ngẫu nhiên, lưu per-browser) và `locale`. Không có bước hỏi trước "tài khoản này có cần mã xác thực không" để không lộ tài khoản nào là nhân sự platform.
-- Mã xác thực chỉ là **TOTP** từ ứng dụng xác thực; portal không còn khóa bảo mật/WebAuthn.
-- Trình duyệt nhớ (per-viewer, không phải bí mật) rằng lần trước đăng nhập có dùng mã xác thực để làm nổi bật ô mã; không nhớ mật khẩu, không nhớ mã.
-- Mọi lỗi xác thực (sai tên, sai mật khẩu, sai/thiếu mã với tài khoản bắt buộc MFA, tài khoản bị khóa tạm) hiện **một** thông điệp chung (bảng lỗi bên dưới).
+- Một form gửi **một lần** tên đăng nhập/email và mật khẩu, kèm `device_id` (sinh ngẫu nhiên, lưu per-browser) và `locale`. **Không có ô mã xác thực 6 số** (owner chốt 2026-11-21: bỏ MFA của portal — ADR mới thay ADR-0091 mục 2); portal không gửi `otp` và không nhớ cờ "lần trước dùng mã".
+- Không nhớ mật khẩu; trình duyệt chỉ nhớ ngôn ngữ và `device_id`.
+- Mọi lỗi xác thực (sai tên, sai mật khẩu, tài khoản bị khóa tạm) hiện **một** thông điệp chung (bảng lỗi bên dưới).
 - Giới hạn số lần thử theo username, theo `device_id` và toàn cục (không theo IP — R30): tham số `portal_login_rate` ([SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md)).
 
 **Mật khẩu lần đầu và đăng ký mã xác thực (ADR-0091 mục 3):** khi Keycloak báo tài khoản còn bước thiết lập (sau khi mật khẩu đã đúng), API trả `403 ACCOUNT_SETUP_REQUIRED` kèm `setup_ticket` (dùng một lần, hạn `portal_setup_ticket_ttl` — [KEYCLOAK_SSO §3.3](../09-identity/KEYCLOAK_SSO.md)) và `required_steps[]`:
@@ -144,7 +166,7 @@ Desktop (≥ 1200 px)                                         Mobile (< 768 px)
 
 | Trường hợp | Kết quả |
 |---|---|
-| Nhân sự platform (`staff` không có `primary_tenant_id`, chỉ có role platform: System Admin, Content Admin/Reviewer, Game Designer, Live-ops, Competition Admin, Safety Moderator — ADR-0081) | Vào phạm vi platform (bắt buộc mã xác thực ngay ở form đăng nhập). System Admin xem liên tenant bằng bộ lọc tenant (§2.5); khi ghi dữ liệu tenant chọn tenant đích → portal gửi `X-Tenant-Id` = tenant đích |
+| Nhân sự platform (`staff` không có `primary_tenant_id`, chỉ có role platform: System Admin, Content Admin/Reviewer, Game Designer, Live-ops, Competition Admin, Safety Moderator — ADR-0081) | Vào phạm vi platform (đăng nhập bằng tên đăng nhập + mật khẩu như mọi nhân sự; bỏ MFA theo ADR mới thay ADR-0091 mục 2). System Admin xem liên tenant bằng bộ lọc tenant (§2.5); khi ghi dữ liệu tenant chọn tenant đích → portal gửi `X-Tenant-Id` = tenant đích |
 | Nhân sự thuộc đúng 1 tenant | Vào thẳng tenant đó; mọi request gửi `X-Tenant-Id` |
 | Nhân sự thuộc nhiều tenant | Màn "Chọn đơn vị làm việc" (chọn sẵn tenant lần trước nếu đã nhớ, per-viewer); portal gửi `X-Tenant-Id` của tenant đã chọn — **không** xin token mới, không nhập lại mật khẩu; backend kiểm tra membership (ADR-0065, ADR-0091 mục 4) |
 | Không còn UserRole portal hiệu lực ở tenant nào và không có role platform | Màn "Tài khoản chưa được cấp quyền quản trị. Vui lòng liên hệ quản trị trường." (`403 PORTAL_ACCESS_STAFF_ONLY`) + nút Đăng xuất |
@@ -158,7 +180,7 @@ Desktop (≥ 1200 px)                                         Mobile (< 768 px)
 
 | Tình huống | `code` | Thông điệp |
 |---|---|---|
-| Sai tên đăng nhập/email, mật khẩu hoặc mã xác thực; thiếu mã với tài khoản bắt buộc MFA; tài khoản khóa tạm | `401 INVALID_CREDENTIALS` | "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng." (không tiết lộ tài khoản tồn tại, bị khóa hay cần mã) |
+| Sai tên đăng nhập/email hoặc mật khẩu; tài khoản khóa tạm | `401 INVALID_CREDENTIALS` | "Tên đăng nhập hoặc mật khẩu chưa đúng." (không tiết lộ tài khoản tồn tại hay bị khóa) |
 | Tài khoản còn bước thiết lập | `403 ACCOUNT_SETUP_REQUIRED` | Chuyển sang màn "Đặt mật khẩu mới" hoặc "Kiểm tra email để cài ứng dụng xác thực" |
 | Tài khoản bị vô hiệu hóa trong EduWorld (mật khẩu đúng) | `403 ACCOUNT_DEACTIVATED` | "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị." |
 | Học sinh / không còn quyền portal | `403 PORTAL_ACCESS_STAFF_ONLY` | Như bảng trên |
@@ -166,7 +188,7 @@ Desktop (≥ 1200 px)                                         Mobile (< 768 px)
 | Phiên hết hạn (idle 30 phút / tối đa 10 giờ) — `token:refresh` trả `401 REFRESH_TOKEN_INVALID` | — | Hộp "Phiên làm việc đã hết, vui lòng đăng nhập lại"; giữ URL để quay lại sau đăng nhập |
 | Cookie CSRF thiếu/lệch khi làm mới phiên | `403 CSRF_TOKEN_INVALID` | Về `/login` (không hiện chi tiết kỹ thuật) |
 | `403 TENANT_MISMATCH` khi đang dùng | — | "Đơn vị làm việc đã thay đổi quyền truy cập." → về màn chọn tenant |
-| `403 MFA_REQUIRED` ở workspace platform | — | Hộp đăng nhập lại có mã xác thực (step-up) |
+| `403 MFA_REQUIRED` ở workspace platform | — | Hộp đăng nhập lại (tên đăng nhập + mật khẩu, không có ô mã) |
 | `403 FEATURE_DISABLED` khi đang dùng | — | "Tính năng này đang tạm tắt." → tải lại menu (§2.7) |
 
 **Định danh (ADR-0067, [ADR-0069](../adr/ADR-0069-username-email-duy-nhat-theo-tenant-va-dang-nhap-khong-chon-tenant.md)):** đăng nhập portal bằng username **hoặc** email; cả hai là duy nhất trên SSO (một người một tài khoản, không phân biệt hoa thường), nên không trùng trong cùng tenant; Keycloak xác thực trước, module identity kiểm tra tenant sau; nhân sự bắt buộc có email; một người làm nhiều trường dùng **một** tài khoản với nhiều membership và UserRole.
@@ -991,7 +1013,7 @@ Mỗi màn dưới đây áp dụng bố cục §1.3 và editor §1.4. Lỗi API
 | Builder game (quest, challenge, boss, level/XP, achievement, item) | Cấu hình nội dung game | Game Designer, Live-ops | `ContentEditorShell`, graph/kéo-thả, thumbnail 3D, `GamePreviewFrame` | Soạn, preview Godot, gửi duyệt, publish, rollback, gán tenant | Cấu hình version, tham chiếu activity/scene | Như editor | Schema + tham chiếu tồn tại trong client manifest | `PERMISSION_DENIED`, `CONTENT_VERSION_CONFLICT` | `game.*` | Chỉ desktop |
 | Live dashboard | Giám sát vận hành | Live-ops, System Admin | StatisticCard, chart thời gian thực (làm mới 15–30 s), bảng sự kiện | Lọc tenant/khu vực, mở chi tiết, chuyển sang kiểm duyệt | CCU, phiên, trận, hàng chờ, tin bị chặn, lỗi | Bình thường / cảnh báo / sự cố | — | Mất kết nối gateway nội bộ ("Cần VPN") | `game.liveops.read` [Confirmed] | Desktop; tablet xem |
 | Quản lý tenant | Tạo/sửa tenant | System Admin | ProTable + ProForm | Tạo, kích hoạt/tắt, cấu hình SIS, gán nội dung | Mã, loại, trạng thái, số trường/học sinh | Đang hoạt động / tạm tắt | Mã tenant duy nhất, ≤ 64 ký tự | `CONFLICT` | `platform.tenant.manage` | Desktop |
-| Đăng nhập portal (`/login`, §1.3b) | Nhân sự đăng nhập không rời portal | Mọi nhân sự (học sinh bị chặn) | ProForm (username/email, mật khẩu, mã 6 số), chọn ngôn ngữ, link Quên mật khẩu | Đăng nhập (một request), đổi mật khẩu tạm, quên/đặt lại mật khẩu | Không lưu mật khẩu/mã; nhớ per-browser lần trước có dùng mã | Đang gửi, lỗi chung, cần thiết lập tài khoản, bị giới hạn số lần thử | Username/email ≤ 254, mã đúng 6 chữ số | `INVALID_CREDENTIALS`, `ACCOUNT_SETUP_REQUIRED`, `PORTAL_ACCESS_STAFF_ONLY`, `RATE_LIMITED` | Không cần token | Mọi breakpoint |
+| Đăng nhập portal (`/login`, §1.3b) | Nhân sự đăng nhập không rời portal | Mọi nhân sự (học sinh bị chặn) | Bố cục hai cột hướng A "Sân trường" (§1.3b): form username/email + mật khẩu (không ô mã), chọn ngôn ngữ, link Quên mật khẩu, gợi ý cho học sinh | Đăng nhập (một request), đổi mật khẩu tạm, quên/đặt lại mật khẩu | Không lưu mật khẩu | Đang gửi, lỗi chung, cần thiết lập tài khoản, bị giới hạn số lần thử | Username/email ≤ 254 | `INVALID_CREDENTIALS`, `ACCOUNT_SETUP_REQUIRED`, `PORTAL_ACCESS_STAFF_ONLY`, `RATE_LIMITED` | Không cần token | Mọi breakpoint |
 | Bật/tắt menu & action (§3.18) | Ngừng/mở lại menu, action của portal không cần deploy | System Admin | Tree + ProTable, chọn phạm vi platform/tenant, ModalForm lý do | Bật/tắt/kế thừa theo phạm vi, xem nhật ký | Danh mục (workspace → menu → action), mặc định, ghi đè tenant, hiệu lực, version | Bật / tắt / tắt do menu cha / khóa (không tắt được) | Lý do bắt buộc ≤ 1000 ký tự, `If-Match` | `FEATURE_NOT_DISABLEABLE`, `VERSION_MISMATCH`, `PERMISSION_DENIED` | `platform.feature_flag.write` | Desktop |
 
 

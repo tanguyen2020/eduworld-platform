@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.6.0
+
+- 2026-11-21 — Giao diện Admin hướng B "Sổ tay giáo viên" và màn đăng nhập hướng A "Sân trường" (owner chốt, DESIGN_SYSTEM §4.1, ADMIN_PORTAL §1.3b): primitive `ops.palette.slate.{50,200,600,900}`, `ops.palette.neutral.800`, `ops.size.font.{15,18,20,24,28,30}`, `ops.size.radius.{8,12}`, `ops.size.control.{36,40,48}`, `ops.size.border.4`; semantic `ops.color.border-subtle`, `dashboard.accent.width`; seed `antd.colorBgLayout`, `colorBorderSecondary`, `fontSizeHeading1…5`, `borderRadiusLG`; component token `antd.components.{Layout,Card,Menu,Statistic}.*` (sinh vào `ThemeConfig.components`); theme đăng nhập `auth.antd.*` (sinh `authTheme`). Đổi giá trị: `fontSize` 14 → 15, `borderRadius` 6 → 8, `controlHeight` 32 → 36, nền trang sáng `#F5F5F5` → `#F7F8FA`, chữ sáng `#1F1F1F`/`#595959` → `#1F2430`/`#4B5263`; compact giữ 13/28. MINOR vì chỉ thêm token và đổi giá trị.
+
 ## tokens@0.5.0
 
 - 2026-11-21 — Thêm `component.exam_clock.warning_text` (alias `color.feedback.incorrect`) và biến thể Theme `ExamClockWarningLabel` của game: đồng hồ bài kiểm tra đổi sang một màu cảnh báo nhẹ, cố định khi còn 5 phút và 1 phút (F064-AC-04, STUDENT_GAME_UX_LEARNING §9.4). MINOR vì chỉ thêm token.

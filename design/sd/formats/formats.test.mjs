@@ -147,3 +147,33 @@ test('UiTokens and Art3dTokens are typed GDScript classes', async () => {
   assert.match(art, /"legendary": Color\(/);
   assert.equal(formatUiTokens.length, 3);
 });
+
+test('antd-theme: component tokens → ThemeConfig.components, auth.antd.* → authTheme', () => {
+  const withComponents = new Map(light)
+    .set('antd.components.Card.headerFontSize', { value: '18px', type: 'dimension' })
+    .set('antd.components.Layout.bodyBg', { value: '#F7F8FA', type: 'color' })
+    .set('auth.antd.controlHeight', { value: '48px', type: 'dimension' })
+    .set('auth.antd.components.Input.inputFontSize', { value: '16px', type: 'dimension' });
+  const ts = formatAntdTheme({ light: withComponents, dark, compact }, variants, '9.9.9');
+  assert.ok(ts.includes(`  components: {
+    Card: {
+      headerFontSize: 18
+    },
+    Layout: {
+      bodyBg: "#F7F8FA"
+    }
+  },
+};`));
+  assert.ok(ts.includes(`export const authTheme: ThemeConfig = {
+  token: {
+    controlHeight: 48
+  },
+  components: {
+    Input: {
+      inputFontSize: 16
+    }
+  },
+};`));
+  // component and auth tokens never leak into the seed tokens
+  assert.doesNotMatch(ts.slice(0, ts.indexOf('components:')), /headerFontSize|auth/);
+});

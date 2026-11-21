@@ -40,6 +40,10 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (owner 
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: Chỉ plan/contracts nhắc MFA cho đọc liên tenant; đọc là `platform.cross_tenant.read` + client portal + audit, không MFA. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-21 (owner chốt giao diện — [Confirmed])
+
+- Giao diện màn làm việc → **Chốt:** hướng B "Sổ tay giáo viên" áp qua token và component token `ConfigProvider` (DESIGN_SYSTEM §4.1–§4.2): nền trang ngả ấm, thẻ viền 1 px bo 12 px, chữ nội dung 15 px (compact 13 giữ nguyên lựa chọn người dùng), header/sidebar nền thẻ. Trang tổng quan dashboard có lời chào theo buổi ("Chào buổi sáng, thầy cô"), nút chính "+ Giao bài mới" cỡ lớn (vẫn bọc `ActionGate action.school_lms.assignments.edit`), mỗi widget là thẻ KPI có viền trên 4 px theo màu ngữ nghĩa (`DashboardWidget accent`), số KPI 30 px. Dữ liệu và hành vi không đổi: mọi số vẫn từ `getSchoolDashboard`, không số liệu dựng sẵn.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trang tổng quan trường (Priority: P1) 🎯 MVP

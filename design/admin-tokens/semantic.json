@@ -34,7 +34,8 @@
         "container": { "$value": "{ops.mode.bg.container}", "$description": "Card, table, modal background." },
         "layout": { "$value": "{ops.mode.bg.layout}", "$description": "Page layout background." }
       },
-      "border": { "$value": "{ops.mode.border}", "$description": "Default border." }
+      "border": { "$value": "{ops.mode.border}", "$description": "Default border." },
+      "border-subtle": { "$value": "{ops.mode.border-subtle}", "$description": "Subtle border of cards, header and sidebar." }
     }
   },
   "status": {
@@ -80,6 +81,11 @@
       "6": { "$value": "{ops.palette.chart.6}", "$description": "Series 6." },
       "7": { "$value": "{ops.palette.chart.7}", "$description": "Series 7." },
       "8": { "$value": "{ops.palette.chart.8}", "$description": "Series 8." }
+    }
+  },
+  "dashboard": {
+    "accent": {
+      "width": { "$type": "dimension", "$value": "{ops.size.border.4}", "$description": "Top border width of KPI cards and dashboard widgets (DESIGN_SYSTEM §4.1)." }
     }
   },
   "math": {

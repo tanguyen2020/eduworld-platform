@@ -27,7 +27,7 @@ test('repository pairs all pass and the report covers every mode and density', (
 test('a low-contrast admin text color fails and the report shows the pair', () => {
   const dir = copyDesign();
   try {
-    editJson(dir, 'admin-tokens/seed.json', (j) => { j.ops.palette.neutral['600'].$value = '#BFBFBF'; });
+    editJson(dir, 'admin-tokens/seed.json', (j) => { j.ops.palette.slate['600'].$value = '#BFBFBF'; });
     const { errors, report } = checkContrast(loadContexts(dir));
     const e = find(errors, 'contrast', 'ops.color.text.secondary');
     assert.ok(e);
