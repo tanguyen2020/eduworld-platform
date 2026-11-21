@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/identity/student.placement_changed.v1.schema.json",
+  "title": "Payload student.placement_changed v1 (module identity, owner F010)",
+  "description": "Xếp trường/khối hiệu lực của học sinh thay đổi (ADR-0095 mục 2, 7 — thay enrollment.changed). Phát trong cùng transaction với thay đổi org.students (school_id, grade_level, status, deleted_at) từ mọi nguồn: SIS (F011/F017), tạo học sinh tenant chung (F010), saga platform (F045), chuyển trường/lên khối thủ công, vòng đời tài khoản (F016). Học sinh hiệu lực = status 'active' và chưa xóa mềm. Envelope: tenant_id = tenant hiện tại của học sinh (= payload tenant_id), subject {type: 'student', id: student_id}, occurred_at = lúc thay đổi có hiệu lực ở identity. Consumer: learning (ref.students; thêm học sinh mới vào bài giao khối còn mở — F041), competition (ref.students — quy tắc khối của party/matchmaking), game (quy tắc chuyển năm học khi grade_level đổi — PROGRESSION_SYSTEM §5.1), chat (ref.students), cache Principal, AUD. Projection chỉ áp bản có source_version lớn hơn bản đã có (DATABASE_DESIGN §2.17). Không PII (không họ tên, ngày sinh, mã định danh, tên trường).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["student_id", "tenant_id", "school_id", "grade_level", "status", "source", "source_version"],
+  "properties": {
+    "student_id": { "type": "string", "format": "uuid", "description": "= user_id của học sinh" },
+    "tenant_id": { "type": "string", "format": "uuid", "description": "Tenant của school_id (trùng envelope tenant_id)" },
+    "school_id": { "type": "string", "format": "uuid", "description": "Trường hiện tại (org.students.school_id)" },
+    "grade_level": { "type": "integer", "minimum": 1, "maximum": 9, "description": "Khối hiện tại (org.students.grade_level)" },
+    "status": { "type": "string", "enum": ["active", "inactive"], "description": "active = học sinh hiệu lực (status 'active' và chưa xóa mềm); inactive = còn lại (vô hiệu hóa, đã dọn — ADR-0032, xóa mềm). Consumer coi inactive như không còn thuộc trường/khối" },
+    "previous_tenant_id": { "type": ["string", "null"], "format": "uuid", "description": "Tenant trước khi đổi, chỉ khác tenant_id khi chuyển trường giữa hai tenant (kèm student.transferred, tenant_membership.changed); null khi xếp lần đầu" },
+    "previous_school_id": { "type": ["string", "null"], "format": "uuid", "description": "Trường trước khi đổi; null khi xếp lần đầu" },
+    "previous_grade_level": { "type": ["integer", "null"], "minimum": 1, "maximum": 9, "description": "Khối trước khi đổi; null khi xếp lần đầu" },
+    "previous_status": { "type": ["string", "null"], "enum": ["active", "inactive", null], "description": "Trạng thái hiệu lực trước khi đổi; null khi xếp lần đầu" },
+    "changed_fields": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["tenant_id", "school_id", "grade_level", "status"] },
+      "description": "Trường đã đổi so với bản trước; xếp lần đầu = mọi trường"
+    },
+    "academic_year_id": { "type": ["string", "null"], "format": "uuid", "description": "Năm học hiện tại của trường (org.academic_years.is_current) lúc đổi; null nếu trường chưa khai báo năm học" },
+    "effective_from": { "type": ["string", "null"], "format": "date", "description": "Ngày bắt đầu hiệu lực theo nguồn (SIS); null = từ occurred_at của envelope" },
+    "source": { "type": "string", "enum": ["sis", "manual", "platform_common", "platform_saga", "lifecycle"], "description": "sis: apply SIS (CSV/contract_v1/login sync); manual: School Admin/System Admin chuyển trường, lên khối; platform_common: học sinh tenant chung (F010-AC-24); platform_saga: saga gán/gộp của System Admin (F045); lifecycle: khóa, dọn, khôi phục, ẩn danh hóa (F016)" },
+    "sync_run_id": { "type": ["string", "null"], "format": "uuid", "description": "Lần chạy SIS khi source = sis" },
+    "source_version": { "type": "integer", "minimum": 0, "description": "Version của bản ghi org.students (tăng mỗi lần đổi); projection chỉ áp bản mới hơn" }
+  },
+  "examples": [
+    { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "grade_level": 5, "status": "active", "previous_tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "previous_school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "previous_grade_level": 4, "previous_status": "active", "changed_fields": ["grade_level"], "academic_year_id": "0193a5f4-6c1e-7b2a-9d1f-000000000007", "effective_from": "2027-09-05", "source": "sis", "sync_run_id": "0193a5f4-6c1e-7b2a-9d1f-000000000004", "source_version": 3 },
+    { "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000009", "school_id": "0193a5f4-6c1e-7b2a-9d1f-00000000000a", "grade_level": 3, "status": "active", "previous_tenant_id": null, "previous_school_id": null, "previous_grade_level": null, "previous_status": null, "changed_fields": ["tenant_id", "school_id", "grade_level", "status"], "academic_year_id": null, "effective_from": null, "source": "platform_common", "sync_run_id": null, "source_version": 1 }
+  ]
+}

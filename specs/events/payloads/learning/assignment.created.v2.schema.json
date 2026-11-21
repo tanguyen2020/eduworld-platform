@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/learning/assignment.created.v2.schema.json",
+  "title": "Payload assignment.created v2 (module learning, owner F041, ADR-0095)",
+  "description": "Như v1 nhưng giao theo khối (ADR-0095 mục 3): không còn course_id (subject_id gắn trực tiếp, bắt buộc), target là (school_id, grade_level) cộng include học sinh khác khối cùng trường trừ exclude, hoặc chỉ danh sách học sinh của trường; bỏ target_type class/study_group. Envelope schema_version = 2. Cùng payload dùng cho assignment.published (status = scheduled/open). Consumer nhận cả v1 và v2 trong đợt chuyển; producer chỉ phát v2 khi mọi consumer trong repo đã nhận v2; v1 xóa khi hết producer (EVENT_DESIGN §2). Không chứa danh sách học sinh hay nội dung bài (chỉ số đếm).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assignment_id", "school_id", "subject_id", "created_by", "content_type", "content_id", "mode", "status", "targets", "open_at", "due_at", "feedback_timing", "result_release"],
+  "properties": {
+    "assignment_id": { "type": "string", "format": "uuid" },
+    "school_id": { "type": "string", "format": "uuid" },
+    "subject_id": { "type": "string", "format": "uuid", "description": "Môn của bài giao (thay course_id của v1)" },
+    "created_by": { "type": "string", "format": "uuid" },
+    "created_by_role": { "type": "string", "enum": ["school_admin", "academic_manager", "system_admin"] },
+    "content_type": { "type": "string", "enum": ["activity", "question_set", "assessment_blueprint", "lesson", "quest", "minigame_config"] },
+    "content_id": { "type": "string", "format": "uuid" },
+    "pinned_version_id": { "type": ["string", "null"], "format": "uuid", "description": "null khi follow_latest = true" },
+    "follow_latest": { "type": "boolean", "default": false },
+    "mode": { "type": "string", "enum": ["practice", "graded"] },
+    "status": { "type": "string", "enum": ["draft", "scheduled", "open", "closed", "results_released", "archived", "cancelled"] },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 9,
+      "description": "Mỗi khối của trường tối đa một target `grade`; target `students` tối đa một và chỉ học sinh của school_id. Exclude thắng include",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target_type", "student_count"],
+        "properties": {
+          "target_type": { "type": "string", "enum": ["grade", "students"] },
+          "grade_level": { "type": ["integer", "null"], "minimum": 1, "maximum": 9, "description": "Bắt buộc khi target_type = grade; null khi students" },
+          "student_count": { "type": "integer", "minimum": 0, "description": "Số học sinh trong snapshot lúc publish (đã trừ exclude, đã cộng include)" },
+          "included_student_count": { "type": "integer", "minimum": 0, "description": "Số học sinh khác khối cùng trường được thêm (chỉ target grade)" },
+          "excluded_student_count": { "type": "integer", "minimum": 0, "description": "Số học sinh bị loại (chỉ target grade)" }
+        },
+        "if": { "properties": { "target_type": { "const": "grade" } } },
+        "then": { "required": ["grade_level"], "properties": { "grade_level": { "type": "integer" } } }
+      }
+    },
+    "open_at": { "type": "string", "format": "date-time" },
+    "due_at": { "type": "string", "format": "date-time" },
+    "max_attempts": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "feedback_timing": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/FeedbackTiming" },
+    "result_release": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ResultRelease" },
+    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } }
+  },
+  "examples": [
+    { "assignment_id": "0193a1f0-0000-7000-8000-000000000451", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "subject_id": "0193a1f0-0000-7000-8000-000000000101", "created_by": "0193a5f4-6c1e-7b2a-9d1f-000000000008", "created_by_role": "academic_manager", "content_type": "question_set", "content_id": "0193a1f0-0000-7000-8000-000000000301", "pinned_version_id": "0193a1f0-0000-7000-8000-000000000302", "follow_latest": false, "mode": "graded", "status": "scheduled", "targets": [ { "target_type": "grade", "grade_level": 4, "student_count": 118, "included_student_count": 2, "excluded_student_count": 3 } ], "open_at": "2027-03-02T01:00:00Z", "due_at": "2027-03-09T15:00:00Z", "max_attempts": 2, "feedback_timing": "after_submit", "result_release": "immediate", "objective_ids": ["0193a1f0-0000-7000-8000-000000000201"] }
+  ]
+}
