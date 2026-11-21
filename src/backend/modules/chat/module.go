@@ -9,6 +9,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/cache"
@@ -81,17 +82,25 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	observability.Register(r.Metrics())
 	observability.RegisterChat(r.Metrics())
-	// NFR-SAFE-001, F115-AC-06: the send path (core-api) and worker-chat refuse to start without a real ContentValidator
-	// outside EW_ENV=test (F116 wires pipeline.Validator; EW_ENV=test gets the labelled test double).
-	validator := moderation.For(chatCfg.Env)
+	observability.RegisterModeration(r.Metrics())
+	recent := cache.Recent{C: vk, Size: chatCfg.RecentBuffer, TTL: chatCfg.RecentTTL}
+	factsCache := cache.Facts{C: vk, StaleTTL: chatCfg.StaleTTL, OnStale: observability.StaleFacts}
+	// NFR-SAFE-001, F115-AC-06, F116: the send path (core-api) and worker-chat refuse to start without a real
+	// ContentValidator; the real one is the F116 pipeline (compiled catalogue, switches, sanctions, spam, decision log).
+	pipe, err := moderation.Real(moderation.Deps{Read: core.ReadSession, Cache: factsCache, Valkey: vk, UoW: core.UoW,
+		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
+		Push: realtime.ChatFanout{P: rt.Publisher{C: vk}}})
+	if err != nil {
+		return nil, fmt.Errorf("chat: %w", err)
+	}
+	var validator port.ContentValidator = pipe.Validator
 	if r.ServesHTTP() || runsChat {
 		if err := command.RequireValidator(chatCfg.Env, validator); err != nil {
 			return nil, err
 		}
 	}
-	recent := cache.Recent{C: vk, Size: chatCfg.RecentBuffer, TTL: chatCfg.RecentTTL}
 	facts := service.Facts{Read: core.ReadSession, Reader: persistence.ChatReader{}, Recent: recent,
-		Cache: cache.Facts{C: vk, StaleTTL: chatCfg.StaleTTL, OnStale: observability.StaleFacts},
+		Cache: factsCache,
 		Config: service.FactsConfig{FactsFresh: chatCfg.FactsFresh, PolicyCache: chatCfg.PolicyCache, CurfewFresh: chatCfg.CurfewFresh,
 			PlatformCurfew: chatCfg.PlatformCurfew, CurfewLocation: chatCfg.CurfewLocation}}
 	stream := natsstream.StreamOptions{MaxAge: chatCfg.StreamMaxAge, Replicas: chatCfg.StreamReplicas}
@@ -101,6 +110,11 @@ func Register(r *module.Registry) (*Module, error) {
 		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Codes: security.Codes{},
 		Friends: friends, Metrics: observability.Social{}, Config: cfg.UseCase}
 
+	if r.ServesHTTP() {
+		// The compiled catalogue must be loaded before the instance takes traffic (F116 edge case).
+		r.Health().Register("moderation:"+Name, health.Readiness, pipe.Ready)
+		r.Go("chat.moderation", pipe.Run)
+	}
 	if r.ServesHTTP() {
 		cursors, err := r.Cursors()
 		if err != nil {
@@ -120,7 +134,8 @@ func Register(r *module.Registry) (*Module, error) {
 		reads := query.Chat{Read: core.ReadSession, Reader: persistence.ChatReader{}, Facts: facts, Recent: recent, Fanout: fanout,
 			Config: query.ChatConfig{RecentBuffer: chatCfg.RecentBuffer}}
 		h := chathttp.Handlers{Commands: social, Queries: query.Social{Read: core.ReadSession, Relations: persistence.Reader{},
-			Presence: presence, Cursors: cursors}, Chat: &chathttp.ChatHandlers{Send: send, Queries: reads}}
+			Presence: presence, Cursors: cursors}, Chat: &chathttp.ChatHandlers{Send: send, Queries: reads,
+			Quick: query.QuickMessages{Catalog: pipe.Quick}}}
 		r.HTTP(Name, func(s *httpx.Server) error { return chathttp.Register(s, h) })
 		// Chat commands of the gateway (F115): ew.cmd.chat.message.send, channel.join/leave, history.fetch, channel.sync.
 		if nc := r.NATS(); nc != nil {

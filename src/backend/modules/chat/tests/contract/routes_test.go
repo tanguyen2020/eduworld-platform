@@ -85,10 +85,10 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(chathttp.Operations) || len(found) != 17 { // the 14 social operations of F095 + 3 chat operations of F115
+	if len(found) != len(chathttp.Operations) || len(found) != 18 { // 14 social operations (F095), 3 chat (F115), listQuickMessages (F116)
 		t.Fatalf("F095/F115 operations found in the spec: %v", found)
 	}
-	for _, id := range append(append([]string{}, chathttp.PlayerOperations...), chathttp.ChatOperations...) {
+	for _, id := range append(append([]string{"listQuickMessages"}, chathttp.PlayerOperations...), chathttp.ChatOperations...) {
 		if chathttp.Operations[id].Guard&httpx.GuardGamePlayer == 0 {
 			t.Errorf("%s: player operation without game_player", id)
 		}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/sensitive_catalog.published.v1.schema.json",
+  "title": "Payload sensitive_catalog.published v1 (module chat, owner F116)",
+  "description": "Một version danh mục (platform hoặc bổ sung của một tenant) được publish sau khi đạt test hồi quy (F116-AC-14); module chat ở mọi instance nạp lại trong ≤ 60 s (F116-AC-15). Không chứa term. Consumer: chat (reload), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "catalog_version",
+    "published_at",
+    "term_count",
+    "checksum"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "scope": {
+      "enum": [
+        "platform",
+        "tenant"
+      ]
+    },
+    "catalog_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "published_by": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "term_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checksum": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "regression_recall": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "regression_fp_rate": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": null,
+      "scope": "platform",
+      "catalog_version": 4,
+      "published_at": "2026-11-21T08:30:12.345Z",
+      "published_by": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "term_count": 120,
+      "checksum": "9f2c0a",
+      "regression_recall": 0.97,
+      "regression_fp_rate": 0.01
+    }
+  ]
+}

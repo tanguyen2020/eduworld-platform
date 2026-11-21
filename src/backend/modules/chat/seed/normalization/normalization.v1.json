@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "description": "F116 T003 — cấu hình normalize và mẫu PII của pipeline kiểm duyệt (MODERATION §3.1, §3.3). KHÔNG chứa từ nhạy cảm (R15): chỉ teencode trung tính, leetspeak, homoglyph, số đọc bằng chữ, tên ứng dụng mạng xã hội, từ khóa địa chỉ/hẹn gặp. Viết tắt thô tục nhập vào danh mục từ (variants) qua CMS. Nhúng vào binary (internal/infrastructure/moderationcfg); API quản lý bảng ở F122 (contracts §6).",
+  "teencode": {
+    "k": "không", "ko": "không", "kh": "không", "kg": "không", "hok": "không", "khum": "không", "hong": "không",
+    "dc": "được", "đc": "được", "dk": "được", "j": "gì", "ng": "người", "bn": "bạn", "mk": "mình", "mik": "mình",
+    "vs": "với", "ntn": "như thế nào", "lm": "làm", "cx": "cũng", "ns": "nói", "nt": "nhắn tin", "trc": "trước"
+  },
+  "leet": { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b", "@": "a", "$": "s", "!": "i", "|": "l" },
+  "homoglyph": {
+    "а": "a", "в": "b", "е": "e", "ё": "e", "к": "k", "м": "m", "н": "h", "о": "o", "р": "p", "с": "c", "т": "t", "у": "y",
+    "х": "x", "і": "i", "ј": "j", "ѕ": "s", "ԁ": "d", "ɡ": "g", "α": "a", "β": "b", "ε": "e", "ι": "i", "κ": "k", "ν": "v",
+    "ο": "o", "ρ": "p", "τ": "t", "υ": "u", "χ": "x", "ı": "i"
+  },
+  "number_words": {
+    "không": "0", "khong": "0", "linh": "0", "lẻ": "0", "một": "1", "mot": "1", "mốt": "1", "hai": "2", "ba": "3",
+    "bốn": "4", "bon": "4", "tư": "4", "năm": "5", "nam": "5", "lăm": "5", "sáu": "6", "sau": "6", "bảy": "7", "bẩy": "7",
+    "bay": "7", "tám": "8", "tam": "8", "chín": "9", "chin": "9",
+    "zero": "0", "oh": "0", "one": "1", "two": "2", "three": "3", "four": "4", "five": "5", "six": "6", "seven": "7",
+    "eight": "8", "nine": "9"
+  },
+  "phone_min_digits": 9,
+  "social_apps": ["fb", "facebook", "zalo", "tiktok", "insta", "instagram", "ig", "discord", "telegram", "messenger",
+    "snapchat", "skype", "viber", "whatsapp", "wechat", "kakaotalk", "twitter", "threads"],
+  "at_words": ["a còng", "acòng", "a cong", "acong", "at"],
+  "dot_words": ["chấm", "cham", "dot"],
+  "link_tlds": ["com", "vn", "net", "org", "io", "me", "ly", "gl", "co", "info", "xyz", "link", "app", "tk", "gg", "to", "edu", "gov", "biz", "online", "site", "club"],
+  "link_allowlist": [],
+  "address_keywords": ["số nhà", "đường", "phường", "quận", "huyện", "hẻm", "ngõ", "ngách", "thôn", "xóm", "khu phố", "chung cư"],
+  "meetup_phrases": ["gặp ở", "gặp nhau ở", "gặp ngoài", "hẹn gặp", "ra gặp", "nhà mình ở", "nhà tớ ở", "nhà bạn ở đâu",
+    "mấy giờ ra", "đi chơi riêng", "meet me at", "where do you live", "my address"],
+  "bullying_targets": ["mày", "bạn", "cậu", "thằng", "con", "mi", "you", "u"]
+}

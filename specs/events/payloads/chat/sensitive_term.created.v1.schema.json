@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/sensitive_term.created.v1.schema.json",
+  "title": "Payload sensitive_term.created v1 (module chat, owner F116)",
+  "description": "Term của danh mục từ nhạy cảm vừa được thêm (nháp, hiệu lực ở version kế tiếp; F116-AC-12). KHÔNG chứa nội dung term, biến thể hay ghi chú (R14, R15, F116-AC-19). Consumer: AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "term_id",
+    "category_id",
+    "category_code",
+    "scope",
+    "actor_id",
+    "occurred_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "null = danh mục platform"
+    },
+    "term_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "category_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "category_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "scope": {
+      "enum": [
+        "platform",
+        "tenant"
+      ]
+    },
+    "match_type": {
+      "enum": [
+        "word",
+        "phrase",
+        "contains",
+        "pattern"
+      ]
+    },
+    "locale": {
+      "enum": [
+        "vi",
+        "en"
+      ]
+    },
+    "actor_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": null,
+      "term_id": "0193a6c1-0000-7000-8000-000000000001",
+      "category_id": "01936a00-0000-7000-8000-000000000102",
+      "category_code": "insult",
+      "scope": "platform",
+      "match_type": "word",
+      "locale": "vi",
+      "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "occurred_at": "2026-11-21T08:30:12.345Z"
+    }
+  ]
+}

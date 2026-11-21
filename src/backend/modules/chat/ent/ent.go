@@ -19,7 +19,17 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendcode"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendship"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/mute"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/quickmessage"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sanction"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveallowlistentry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitivecatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveterm"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitivetermcategory"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/tenantcategorysetting"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -80,14 +90,24 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			block.Table:         block.ValidColumn,
-			channel.Table:       channel.ValidColumn,
-			channelmember.Table: channelmember.ValidColumn,
-			chatpolicy.Table:    chatpolicy.ValidColumn,
-			friendcode.Table:    friendcode.ValidColumn,
-			friendrequest.Table: friendrequest.ValidColumn,
-			friendship.Table:    friendship.ValidColumn,
-			mute.Table:          mute.ValidColumn,
+			block.Table:                   block.ValidColumn,
+			channel.Table:                 channel.ValidColumn,
+			channelmember.Table:           channelmember.ValidColumn,
+			chatpolicy.Table:              chatpolicy.ValidColumn,
+			friendcode.Table:              friendcode.ValidColumn,
+			friendrequest.Table:           friendrequest.ValidColumn,
+			friendship.Table:              friendship.ValidColumn,
+			moderationswitch.Table:        moderationswitch.ValidColumn,
+			moderationswitchchange.Table:  moderationswitchchange.ValidColumn,
+			moderationswitchrequest.Table: moderationswitchrequest.ValidColumn,
+			mute.Table:                    mute.ValidColumn,
+			quickmessage.Table:            quickmessage.ValidColumn,
+			sanction.Table:                sanction.ValidColumn,
+			sensitiveallowlistentry.Table: sensitiveallowlistentry.ValidColumn,
+			sensitivecatalogversion.Table: sensitivecatalogversion.ValidColumn,
+			sensitiveterm.Table:           sensitiveterm.ValidColumn,
+			sensitivetermcategory.Table:   sensitivetermcategory.ValidColumn,
+			tenantcategorysetting.Table:   tenantcategorysetting.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

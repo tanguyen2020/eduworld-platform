@@ -13,8 +13,18 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendcode"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendship"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/mute"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/quickmessage"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sanction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/schema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveallowlistentry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitivecatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveterm"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitivetermcategory"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/tenantcategorysetting"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -304,6 +314,123 @@ func init() {
 	friendshipDescID := friendshipMixinFields0[0].Descriptor()
 	// friendship.DefaultID holds the default value on creation for the id field.
 	friendship.DefaultID = friendshipDescID.Default.(func() uuid.UUID)
+	moderationswitchMixin := schema.ModerationSwitch{}.Mixin()
+	moderationswitchMixinHooks0 := moderationswitchMixin[0].Hooks()
+	moderationswitch.Hooks[0] = moderationswitchMixinHooks0[0]
+	moderationswitchMixinInters0 := moderationswitchMixin[0].Interceptors()
+	moderationswitch.Interceptors[0] = moderationswitchMixinInters0[0]
+	moderationswitchMixinFields0 := moderationswitchMixin[0].Fields()
+	_ = moderationswitchMixinFields0
+	moderationswitchFields := schema.ModerationSwitch{}.Fields()
+	_ = moderationswitchFields
+	// moderationswitchDescCreatedAt is the schema descriptor for created_at field.
+	moderationswitchDescCreatedAt := moderationswitchMixinFields0[2].Descriptor()
+	// moderationswitch.DefaultCreatedAt holds the default value on creation for the created_at field.
+	moderationswitch.DefaultCreatedAt = moderationswitchDescCreatedAt.Default.(func() time.Time)
+	// moderationswitchDescUpdatedAt is the schema descriptor for updated_at field.
+	moderationswitchDescUpdatedAt := moderationswitchMixinFields0[4].Descriptor()
+	// moderationswitch.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	moderationswitch.DefaultUpdatedAt = moderationswitchDescUpdatedAt.Default.(func() time.Time)
+	// moderationswitch.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	moderationswitch.UpdateDefaultUpdatedAt = moderationswitchDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// moderationswitchDescDeleteReason is the schema descriptor for delete_reason field.
+	moderationswitchDescDeleteReason := moderationswitchMixinFields0[8].Descriptor()
+	// moderationswitch.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	moderationswitch.DeleteReasonValidator = moderationswitchDescDeleteReason.Validators[0].(func(string) error)
+	// moderationswitchDescVersion is the schema descriptor for version field.
+	moderationswitchDescVersion := moderationswitchMixinFields0[9].Descriptor()
+	// moderationswitch.DefaultVersion holds the default value on creation for the version field.
+	moderationswitch.DefaultVersion = moderationswitchDescVersion.Default.(int64)
+	// moderationswitchDescScope is the schema descriptor for scope field.
+	moderationswitchDescScope := moderationswitchFields[0].Descriptor()
+	// moderationswitch.ScopeValidator is a validator for the "scope" field. It is called by the builders before save.
+	moderationswitch.ScopeValidator = moderationswitchDescScope.Validators[0].(func(string) error)
+	// moderationswitchDescEnabledAll is the schema descriptor for enabled_all field.
+	moderationswitchDescEnabledAll := moderationswitchFields[1].Descriptor()
+	// moderationswitch.DefaultEnabledAll holds the default value on creation for the enabled_all field.
+	moderationswitch.DefaultEnabledAll = moderationswitchDescEnabledAll.Default.(bool)
+	// moderationswitchDescReason is the schema descriptor for reason field.
+	moderationswitchDescReason := moderationswitchFields[3].Descriptor()
+	// moderationswitch.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	moderationswitch.ReasonValidator = moderationswitchDescReason.Validators[0].(func(string) error)
+	// moderationswitchDescID is the schema descriptor for id field.
+	moderationswitchDescID := moderationswitchMixinFields0[0].Descriptor()
+	// moderationswitch.DefaultID holds the default value on creation for the id field.
+	moderationswitch.DefaultID = moderationswitchDescID.Default.(func() uuid.UUID)
+	moderationswitchchangeMixin := schema.ModerationSwitchChange{}.Mixin()
+	moderationswitchchangeMixinHooks0 := moderationswitchchangeMixin[0].Hooks()
+	moderationswitchchange.Hooks[0] = moderationswitchchangeMixinHooks0[0]
+	moderationswitchchangeMixinInters0 := moderationswitchchangeMixin[0].Interceptors()
+	moderationswitchchange.Interceptors[0] = moderationswitchchangeMixinInters0[0]
+	moderationswitchchangeMixinFields0 := moderationswitchchangeMixin[0].Fields()
+	_ = moderationswitchchangeMixinFields0
+	moderationswitchchangeFields := schema.ModerationSwitchChange{}.Fields()
+	_ = moderationswitchchangeFields
+	// moderationswitchchangeDescCreatedAt is the schema descriptor for created_at field.
+	moderationswitchchangeDescCreatedAt := moderationswitchchangeMixinFields0[2].Descriptor()
+	// moderationswitchchange.DefaultCreatedAt holds the default value on creation for the created_at field.
+	moderationswitchchange.DefaultCreatedAt = moderationswitchchangeDescCreatedAt.Default.(func() time.Time)
+	// moderationswitchchangeDescScope is the schema descriptor for scope field.
+	moderationswitchchangeDescScope := moderationswitchchangeFields[0].Descriptor()
+	// moderationswitchchange.ScopeValidator is a validator for the "scope" field. It is called by the builders before save.
+	moderationswitchchange.ScopeValidator = moderationswitchchangeDescScope.Validators[0].(func(string) error)
+	// moderationswitchchangeDescReason is the schema descriptor for reason field.
+	moderationswitchchangeDescReason := moderationswitchchangeFields[5].Descriptor()
+	// moderationswitchchange.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	moderationswitchchange.ReasonValidator = moderationswitchchangeDescReason.Validators[0].(func(string) error)
+	// moderationswitchchangeDescSource is the schema descriptor for source field.
+	moderationswitchchangeDescSource := moderationswitchchangeFields[10].Descriptor()
+	// moderationswitchchange.SourceValidator is a validator for the "source" field. It is called by the builders before save.
+	moderationswitchchange.SourceValidator = moderationswitchchangeDescSource.Validators[0].(func(string) error)
+	// moderationswitchchangeDescID is the schema descriptor for id field.
+	moderationswitchchangeDescID := moderationswitchchangeMixinFields0[0].Descriptor()
+	// moderationswitchchange.DefaultID holds the default value on creation for the id field.
+	moderationswitchchange.DefaultID = moderationswitchchangeDescID.Default.(func() uuid.UUID)
+	moderationswitchrequestMixin := schema.ModerationSwitchRequest{}.Mixin()
+	moderationswitchrequestMixinHooks0 := moderationswitchrequestMixin[0].Hooks()
+	moderationswitchrequest.Hooks[0] = moderationswitchrequestMixinHooks0[0]
+	moderationswitchrequestMixinInters0 := moderationswitchrequestMixin[0].Interceptors()
+	moderationswitchrequest.Interceptors[0] = moderationswitchrequestMixinInters0[0]
+	moderationswitchrequestMixinFields0 := moderationswitchrequestMixin[0].Fields()
+	_ = moderationswitchrequestMixinFields0
+	moderationswitchrequestFields := schema.ModerationSwitchRequest{}.Fields()
+	_ = moderationswitchrequestFields
+	// moderationswitchrequestDescCreatedAt is the schema descriptor for created_at field.
+	moderationswitchrequestDescCreatedAt := moderationswitchrequestMixinFields0[2].Descriptor()
+	// moderationswitchrequest.DefaultCreatedAt holds the default value on creation for the created_at field.
+	moderationswitchrequest.DefaultCreatedAt = moderationswitchrequestDescCreatedAt.Default.(func() time.Time)
+	// moderationswitchrequestDescUpdatedAt is the schema descriptor for updated_at field.
+	moderationswitchrequestDescUpdatedAt := moderationswitchrequestMixinFields0[4].Descriptor()
+	// moderationswitchrequest.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	moderationswitchrequest.DefaultUpdatedAt = moderationswitchrequestDescUpdatedAt.Default.(func() time.Time)
+	// moderationswitchrequest.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	moderationswitchrequest.UpdateDefaultUpdatedAt = moderationswitchrequestDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// moderationswitchrequestDescDeleteReason is the schema descriptor for delete_reason field.
+	moderationswitchrequestDescDeleteReason := moderationswitchrequestMixinFields0[8].Descriptor()
+	// moderationswitchrequest.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	moderationswitchrequest.DeleteReasonValidator = moderationswitchrequestDescDeleteReason.Validators[0].(func(string) error)
+	// moderationswitchrequestDescVersion is the schema descriptor for version field.
+	moderationswitchrequestDescVersion := moderationswitchrequestMixinFields0[9].Descriptor()
+	// moderationswitchrequest.DefaultVersion holds the default value on creation for the version field.
+	moderationswitchrequest.DefaultVersion = moderationswitchrequestDescVersion.Default.(int64)
+	// moderationswitchrequestDescScope is the schema descriptor for scope field.
+	moderationswitchrequestDescScope := moderationswitchrequestFields[0].Descriptor()
+	// moderationswitchrequest.ScopeValidator is a validator for the "scope" field. It is called by the builders before save.
+	moderationswitchrequest.ScopeValidator = moderationswitchrequestDescScope.Validators[0].(func(string) error)
+	// moderationswitchrequestDescReason is the schema descriptor for reason field.
+	moderationswitchrequestDescReason := moderationswitchrequestFields[3].Descriptor()
+	// moderationswitchrequest.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	moderationswitchrequest.ReasonValidator = moderationswitchrequestDescReason.Validators[0].(func(string) error)
+	// moderationswitchrequestDescStatus is the schema descriptor for status field.
+	moderationswitchrequestDescStatus := moderationswitchrequestFields[5].Descriptor()
+	// moderationswitchrequest.DefaultStatus holds the default value on creation for the status field.
+	moderationswitchrequest.DefaultStatus = moderationswitchrequestDescStatus.Default.(string)
+	// moderationswitchrequest.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	moderationswitchrequest.StatusValidator = moderationswitchrequestDescStatus.Validators[0].(func(string) error)
+	// moderationswitchrequestDescID is the schema descriptor for id field.
+	moderationswitchrequestDescID := moderationswitchrequestMixinFields0[0].Descriptor()
+	// moderationswitchrequest.DefaultID holds the default value on creation for the id field.
+	moderationswitchrequest.DefaultID = moderationswitchrequestDescID.Default.(func() uuid.UUID)
 	muteMixin := schema.Mute{}.Mixin()
 	muteMixinHooks0 := muteMixin[0].Hooks()
 	mute.Hooks[0] = muteMixinHooks0[0]
@@ -335,6 +462,351 @@ func init() {
 	muteDescID := muteMixinFields0[0].Descriptor()
 	// mute.DefaultID holds the default value on creation for the id field.
 	mute.DefaultID = muteDescID.Default.(func() uuid.UUID)
+	quickmessageMixin := schema.QuickMessage{}.Mixin()
+	quickmessageMixinHooks0 := quickmessageMixin[0].Hooks()
+	quickmessage.Hooks[0] = quickmessageMixinHooks0[0]
+	quickmessageMixinInters0 := quickmessageMixin[0].Interceptors()
+	quickmessage.Interceptors[0] = quickmessageMixinInters0[0]
+	quickmessageMixinFields0 := quickmessageMixin[0].Fields()
+	_ = quickmessageMixinFields0
+	quickmessageFields := schema.QuickMessage{}.Fields()
+	_ = quickmessageFields
+	// quickmessageDescCreatedAt is the schema descriptor for created_at field.
+	quickmessageDescCreatedAt := quickmessageMixinFields0[1].Descriptor()
+	// quickmessage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	quickmessage.DefaultCreatedAt = quickmessageDescCreatedAt.Default.(func() time.Time)
+	// quickmessageDescUpdatedAt is the schema descriptor for updated_at field.
+	quickmessageDescUpdatedAt := quickmessageMixinFields0[3].Descriptor()
+	// quickmessage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	quickmessage.DefaultUpdatedAt = quickmessageDescUpdatedAt.Default.(func() time.Time)
+	// quickmessage.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	quickmessage.UpdateDefaultUpdatedAt = quickmessageDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// quickmessageDescDeleteReason is the schema descriptor for delete_reason field.
+	quickmessageDescDeleteReason := quickmessageMixinFields0[7].Descriptor()
+	// quickmessage.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	quickmessage.DeleteReasonValidator = quickmessageDescDeleteReason.Validators[0].(func(string) error)
+	// quickmessageDescVersion is the schema descriptor for version field.
+	quickmessageDescVersion := quickmessageMixinFields0[8].Descriptor()
+	// quickmessage.DefaultVersion holds the default value on creation for the version field.
+	quickmessage.DefaultVersion = quickmessageDescVersion.Default.(int64)
+	// quickmessageDescCategory is the schema descriptor for category field.
+	quickmessageDescCategory := quickmessageFields[0].Descriptor()
+	// quickmessage.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
+	quickmessage.CategoryValidator = quickmessageDescCategory.Validators[0].(func(string) error)
+	// quickmessageDescTextVi is the schema descriptor for text_vi field.
+	quickmessageDescTextVi := quickmessageFields[1].Descriptor()
+	// quickmessage.TextViValidator is a validator for the "text_vi" field. It is called by the builders before save.
+	quickmessage.TextViValidator = quickmessageDescTextVi.Validators[0].(func(string) error)
+	// quickmessageDescTextEn is the schema descriptor for text_en field.
+	quickmessageDescTextEn := quickmessageFields[2].Descriptor()
+	// quickmessage.TextEnValidator is a validator for the "text_en" field. It is called by the builders before save.
+	quickmessage.TextEnValidator = quickmessageDescTextEn.Validators[0].(func(string) error)
+	// quickmessageDescEmoji is the schema descriptor for emoji field.
+	quickmessageDescEmoji := quickmessageFields[3].Descriptor()
+	// quickmessage.EmojiValidator is a validator for the "emoji" field. It is called by the builders before save.
+	quickmessage.EmojiValidator = quickmessageDescEmoji.Validators[0].(func(string) error)
+	// quickmessageDescSortOrder is the schema descriptor for sort_order field.
+	quickmessageDescSortOrder := quickmessageFields[4].Descriptor()
+	// quickmessage.DefaultSortOrder holds the default value on creation for the sort_order field.
+	quickmessage.DefaultSortOrder = quickmessageDescSortOrder.Default.(int)
+	// quickmessageDescStatus is the schema descriptor for status field.
+	quickmessageDescStatus := quickmessageFields[5].Descriptor()
+	// quickmessage.DefaultStatus holds the default value on creation for the status field.
+	quickmessage.DefaultStatus = quickmessageDescStatus.Default.(string)
+	// quickmessage.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	quickmessage.StatusValidator = quickmessageDescStatus.Validators[0].(func(string) error)
+	// quickmessageDescID is the schema descriptor for id field.
+	quickmessageDescID := quickmessageMixinFields0[0].Descriptor()
+	// quickmessage.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	quickmessage.IDValidator = func() func(string) error {
+		validators := quickmessageDescID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(id string) error {
+			for _, fn := range fns {
+				if err := fn(id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	sanctionMixin := schema.Sanction{}.Mixin()
+	sanctionMixinHooks0 := sanctionMixin[0].Hooks()
+	sanction.Hooks[0] = sanctionMixinHooks0[0]
+	sanctionMixinInters0 := sanctionMixin[0].Interceptors()
+	sanction.Interceptors[0] = sanctionMixinInters0[0]
+	sanctionMixinFields0 := sanctionMixin[0].Fields()
+	_ = sanctionMixinFields0
+	sanctionFields := schema.Sanction{}.Fields()
+	_ = sanctionFields
+	// sanctionDescCreatedAt is the schema descriptor for created_at field.
+	sanctionDescCreatedAt := sanctionMixinFields0[2].Descriptor()
+	// sanction.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sanction.DefaultCreatedAt = sanctionDescCreatedAt.Default.(func() time.Time)
+	// sanctionDescUpdatedAt is the schema descriptor for updated_at field.
+	sanctionDescUpdatedAt := sanctionMixinFields0[4].Descriptor()
+	// sanction.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sanction.DefaultUpdatedAt = sanctionDescUpdatedAt.Default.(func() time.Time)
+	// sanction.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sanction.UpdateDefaultUpdatedAt = sanctionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sanctionDescDeleteReason is the schema descriptor for delete_reason field.
+	sanctionDescDeleteReason := sanctionMixinFields0[8].Descriptor()
+	// sanction.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sanction.DeleteReasonValidator = sanctionDescDeleteReason.Validators[0].(func(string) error)
+	// sanctionDescVersion is the schema descriptor for version field.
+	sanctionDescVersion := sanctionMixinFields0[9].Descriptor()
+	// sanction.DefaultVersion holds the default value on creation for the version field.
+	sanction.DefaultVersion = sanctionDescVersion.Default.(int64)
+	// sanctionDescType is the schema descriptor for type field.
+	sanctionDescType := sanctionFields[2].Descriptor()
+	// sanction.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	sanction.TypeValidator = sanctionDescType.Validators[0].(func(string) error)
+	// sanctionDescScope is the schema descriptor for scope field.
+	sanctionDescScope := sanctionFields[3].Descriptor()
+	// sanction.ScopeValidator is a validator for the "scope" field. It is called by the builders before save.
+	sanction.ScopeValidator = sanctionDescScope.Validators[0].(func(string) error)
+	// sanctionDescReason is the schema descriptor for reason field.
+	sanctionDescReason := sanctionFields[5].Descriptor()
+	// sanction.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	sanction.ReasonValidator = sanctionDescReason.Validators[0].(func(string) error)
+	// sanctionDescID is the schema descriptor for id field.
+	sanctionDescID := sanctionMixinFields0[0].Descriptor()
+	// sanction.DefaultID holds the default value on creation for the id field.
+	sanction.DefaultID = sanctionDescID.Default.(func() uuid.UUID)
+	sensitiveallowlistentryMixin := schema.SensitiveAllowlistEntry{}.Mixin()
+	sensitiveallowlistentryMixinHooks0 := sensitiveallowlistentryMixin[0].Hooks()
+	sensitiveallowlistentry.Hooks[0] = sensitiveallowlistentryMixinHooks0[0]
+	sensitiveallowlistentryMixinInters0 := sensitiveallowlistentryMixin[0].Interceptors()
+	sensitiveallowlistentry.Interceptors[0] = sensitiveallowlistentryMixinInters0[0]
+	sensitiveallowlistentryMixinFields0 := sensitiveallowlistentryMixin[0].Fields()
+	_ = sensitiveallowlistentryMixinFields0
+	sensitiveallowlistentryFields := schema.SensitiveAllowlistEntry{}.Fields()
+	_ = sensitiveallowlistentryFields
+	// sensitiveallowlistentryDescCreatedAt is the schema descriptor for created_at field.
+	sensitiveallowlistentryDescCreatedAt := sensitiveallowlistentryMixinFields0[2].Descriptor()
+	// sensitiveallowlistentry.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sensitiveallowlistentry.DefaultCreatedAt = sensitiveallowlistentryDescCreatedAt.Default.(func() time.Time)
+	// sensitiveallowlistentryDescUpdatedAt is the schema descriptor for updated_at field.
+	sensitiveallowlistentryDescUpdatedAt := sensitiveallowlistentryMixinFields0[4].Descriptor()
+	// sensitiveallowlistentry.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sensitiveallowlistentry.DefaultUpdatedAt = sensitiveallowlistentryDescUpdatedAt.Default.(func() time.Time)
+	// sensitiveallowlistentry.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sensitiveallowlistentry.UpdateDefaultUpdatedAt = sensitiveallowlistentryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sensitiveallowlistentryDescDeleteReason is the schema descriptor for delete_reason field.
+	sensitiveallowlistentryDescDeleteReason := sensitiveallowlistentryMixinFields0[8].Descriptor()
+	// sensitiveallowlistentry.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sensitiveallowlistentry.DeleteReasonValidator = sensitiveallowlistentryDescDeleteReason.Validators[0].(func(string) error)
+	// sensitiveallowlistentryDescVersion is the schema descriptor for version field.
+	sensitiveallowlistentryDescVersion := sensitiveallowlistentryMixinFields0[9].Descriptor()
+	// sensitiveallowlistentry.DefaultVersion holds the default value on creation for the version field.
+	sensitiveallowlistentry.DefaultVersion = sensitiveallowlistentryDescVersion.Default.(int64)
+	// sensitiveallowlistentryDescPhrase is the schema descriptor for phrase field.
+	sensitiveallowlistentryDescPhrase := sensitiveallowlistentryFields[0].Descriptor()
+	// sensitiveallowlistentry.PhraseValidator is a validator for the "phrase" field. It is called by the builders before save.
+	sensitiveallowlistentry.PhraseValidator = sensitiveallowlistentryDescPhrase.Validators[0].(func(string) error)
+	// sensitiveallowlistentryDescLocale is the schema descriptor for locale field.
+	sensitiveallowlistentryDescLocale := sensitiveallowlistentryFields[1].Descriptor()
+	// sensitiveallowlistentry.LocaleValidator is a validator for the "locale" field. It is called by the builders before save.
+	sensitiveallowlistentry.LocaleValidator = sensitiveallowlistentryDescLocale.Validators[0].(func(string) error)
+	// sensitiveallowlistentryDescReason is the schema descriptor for reason field.
+	sensitiveallowlistentryDescReason := sensitiveallowlistentryFields[2].Descriptor()
+	// sensitiveallowlistentry.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	sensitiveallowlistentry.ReasonValidator = sensitiveallowlistentryDescReason.Validators[0].(func(string) error)
+	// sensitiveallowlistentryDescID is the schema descriptor for id field.
+	sensitiveallowlistentryDescID := sensitiveallowlistentryMixinFields0[0].Descriptor()
+	// sensitiveallowlistentry.DefaultID holds the default value on creation for the id field.
+	sensitiveallowlistentry.DefaultID = sensitiveallowlistentryDescID.Default.(func() uuid.UUID)
+	sensitivecatalogversionMixin := schema.SensitiveCatalogVersion{}.Mixin()
+	sensitivecatalogversionMixinHooks0 := sensitivecatalogversionMixin[0].Hooks()
+	sensitivecatalogversion.Hooks[0] = sensitivecatalogversionMixinHooks0[0]
+	sensitivecatalogversionMixinInters0 := sensitivecatalogversionMixin[0].Interceptors()
+	sensitivecatalogversion.Interceptors[0] = sensitivecatalogversionMixinInters0[0]
+	sensitivecatalogversionMixinFields0 := sensitivecatalogversionMixin[0].Fields()
+	_ = sensitivecatalogversionMixinFields0
+	sensitivecatalogversionFields := schema.SensitiveCatalogVersion{}.Fields()
+	_ = sensitivecatalogversionFields
+	// sensitivecatalogversionDescCreatedAt is the schema descriptor for created_at field.
+	sensitivecatalogversionDescCreatedAt := sensitivecatalogversionMixinFields0[2].Descriptor()
+	// sensitivecatalogversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sensitivecatalogversion.DefaultCreatedAt = sensitivecatalogversionDescCreatedAt.Default.(func() time.Time)
+	// sensitivecatalogversionDescScope is the schema descriptor for scope field.
+	sensitivecatalogversionDescScope := sensitivecatalogversionFields[1].Descriptor()
+	// sensitivecatalogversion.ScopeValidator is a validator for the "scope" field. It is called by the builders before save.
+	sensitivecatalogversion.ScopeValidator = sensitivecatalogversionDescScope.Validators[0].(func(string) error)
+	// sensitivecatalogversionDescChangeSummary is the schema descriptor for change_summary field.
+	sensitivecatalogversionDescChangeSummary := sensitivecatalogversionFields[4].Descriptor()
+	// sensitivecatalogversion.ChangeSummaryValidator is a validator for the "change_summary" field. It is called by the builders before save.
+	sensitivecatalogversion.ChangeSummaryValidator = sensitivecatalogversionDescChangeSummary.Validators[0].(func(string) error)
+	// sensitivecatalogversionDescChecksum is the schema descriptor for checksum field.
+	sensitivecatalogversionDescChecksum := sensitivecatalogversionFields[6].Descriptor()
+	// sensitivecatalogversion.ChecksumValidator is a validator for the "checksum" field. It is called by the builders before save.
+	sensitivecatalogversion.ChecksumValidator = sensitivecatalogversionDescChecksum.Validators[0].(func(string) error)
+	// sensitivecatalogversionDescID is the schema descriptor for id field.
+	sensitivecatalogversionDescID := sensitivecatalogversionMixinFields0[0].Descriptor()
+	// sensitivecatalogversion.DefaultID holds the default value on creation for the id field.
+	sensitivecatalogversion.DefaultID = sensitivecatalogversionDescID.Default.(func() uuid.UUID)
+	sensitivetermMixin := schema.SensitiveTerm{}.Mixin()
+	sensitivetermMixinHooks0 := sensitivetermMixin[0].Hooks()
+	sensitiveterm.Hooks[0] = sensitivetermMixinHooks0[0]
+	sensitivetermMixinInters0 := sensitivetermMixin[0].Interceptors()
+	sensitiveterm.Interceptors[0] = sensitivetermMixinInters0[0]
+	sensitivetermMixinFields0 := sensitivetermMixin[0].Fields()
+	_ = sensitivetermMixinFields0
+	sensitivetermFields := schema.SensitiveTerm{}.Fields()
+	_ = sensitivetermFields
+	// sensitivetermDescCreatedAt is the schema descriptor for created_at field.
+	sensitivetermDescCreatedAt := sensitivetermMixinFields0[2].Descriptor()
+	// sensitiveterm.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sensitiveterm.DefaultCreatedAt = sensitivetermDescCreatedAt.Default.(func() time.Time)
+	// sensitivetermDescUpdatedAt is the schema descriptor for updated_at field.
+	sensitivetermDescUpdatedAt := sensitivetermMixinFields0[4].Descriptor()
+	// sensitiveterm.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sensitiveterm.DefaultUpdatedAt = sensitivetermDescUpdatedAt.Default.(func() time.Time)
+	// sensitiveterm.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sensitiveterm.UpdateDefaultUpdatedAt = sensitivetermDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sensitivetermDescDeleteReason is the schema descriptor for delete_reason field.
+	sensitivetermDescDeleteReason := sensitivetermMixinFields0[8].Descriptor()
+	// sensitiveterm.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sensitiveterm.DeleteReasonValidator = sensitivetermDescDeleteReason.Validators[0].(func(string) error)
+	// sensitivetermDescVersion is the schema descriptor for version field.
+	sensitivetermDescVersion := sensitivetermMixinFields0[9].Descriptor()
+	// sensitiveterm.DefaultVersion holds the default value on creation for the version field.
+	sensitiveterm.DefaultVersion = sensitivetermDescVersion.Default.(int64)
+	// sensitivetermDescTerm is the schema descriptor for term field.
+	sensitivetermDescTerm := sensitivetermFields[1].Descriptor()
+	// sensitiveterm.TermValidator is a validator for the "term" field. It is called by the builders before save.
+	sensitiveterm.TermValidator = sensitivetermDescTerm.Validators[0].(func(string) error)
+	// sensitivetermDescMatchType is the schema descriptor for match_type field.
+	sensitivetermDescMatchType := sensitivetermFields[2].Descriptor()
+	// sensitiveterm.MatchTypeValidator is a validator for the "match_type" field. It is called by the builders before save.
+	sensitiveterm.MatchTypeValidator = sensitivetermDescMatchType.Validators[0].(func(string) error)
+	// sensitivetermDescLocale is the schema descriptor for locale field.
+	sensitivetermDescLocale := sensitivetermFields[3].Descriptor()
+	// sensitiveterm.LocaleValidator is a validator for the "locale" field. It is called by the builders before save.
+	sensitiveterm.LocaleValidator = sensitivetermDescLocale.Validators[0].(func(string) error)
+	// sensitivetermDescSeverityOverride is the schema descriptor for severity_override field.
+	sensitivetermDescSeverityOverride := sensitivetermFields[5].Descriptor()
+	// sensitiveterm.SeverityOverrideValidator is a validator for the "severity_override" field. It is called by the builders before save.
+	sensitiveterm.SeverityOverrideValidator = sensitivetermDescSeverityOverride.Validators[0].(func(string) error)
+	// sensitivetermDescActionOverride is the schema descriptor for action_override field.
+	sensitivetermDescActionOverride := sensitivetermFields[6].Descriptor()
+	// sensitiveterm.ActionOverrideValidator is a validator for the "action_override" field. It is called by the builders before save.
+	sensitiveterm.ActionOverrideValidator = sensitivetermDescActionOverride.Validators[0].(func(string) error)
+	// sensitivetermDescEnabled is the schema descriptor for enabled field.
+	sensitivetermDescEnabled := sensitivetermFields[7].Descriptor()
+	// sensitiveterm.DefaultEnabled holds the default value on creation for the enabled field.
+	sensitiveterm.DefaultEnabled = sensitivetermDescEnabled.Default.(bool)
+	// sensitivetermDescStatus is the schema descriptor for status field.
+	sensitivetermDescStatus := sensitivetermFields[8].Descriptor()
+	// sensitiveterm.DefaultStatus holds the default value on creation for the status field.
+	sensitiveterm.DefaultStatus = sensitivetermDescStatus.Default.(string)
+	// sensitiveterm.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	sensitiveterm.StatusValidator = sensitivetermDescStatus.Validators[0].(func(string) error)
+	// sensitivetermDescNote is the schema descriptor for note field.
+	sensitivetermDescNote := sensitivetermFields[9].Descriptor()
+	// sensitiveterm.NoteValidator is a validator for the "note" field. It is called by the builders before save.
+	sensitiveterm.NoteValidator = sensitivetermDescNote.Validators[0].(func(string) error)
+	// sensitivetermDescID is the schema descriptor for id field.
+	sensitivetermDescID := sensitivetermMixinFields0[0].Descriptor()
+	// sensitiveterm.DefaultID holds the default value on creation for the id field.
+	sensitiveterm.DefaultID = sensitivetermDescID.Default.(func() uuid.UUID)
+	sensitivetermcategoryMixin := schema.SensitiveTermCategory{}.Mixin()
+	sensitivetermcategoryMixinHooks0 := sensitivetermcategoryMixin[0].Hooks()
+	sensitivetermcategory.Hooks[0] = sensitivetermcategoryMixinHooks0[0]
+	sensitivetermcategoryMixinInters0 := sensitivetermcategoryMixin[0].Interceptors()
+	sensitivetermcategory.Interceptors[0] = sensitivetermcategoryMixinInters0[0]
+	sensitivetermcategoryMixinFields0 := sensitivetermcategoryMixin[0].Fields()
+	_ = sensitivetermcategoryMixinFields0
+	sensitivetermcategoryFields := schema.SensitiveTermCategory{}.Fields()
+	_ = sensitivetermcategoryFields
+	// sensitivetermcategoryDescCreatedAt is the schema descriptor for created_at field.
+	sensitivetermcategoryDescCreatedAt := sensitivetermcategoryMixinFields0[2].Descriptor()
+	// sensitivetermcategory.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sensitivetermcategory.DefaultCreatedAt = sensitivetermcategoryDescCreatedAt.Default.(func() time.Time)
+	// sensitivetermcategoryDescUpdatedAt is the schema descriptor for updated_at field.
+	sensitivetermcategoryDescUpdatedAt := sensitivetermcategoryMixinFields0[4].Descriptor()
+	// sensitivetermcategory.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sensitivetermcategory.DefaultUpdatedAt = sensitivetermcategoryDescUpdatedAt.Default.(func() time.Time)
+	// sensitivetermcategory.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sensitivetermcategory.UpdateDefaultUpdatedAt = sensitivetermcategoryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// sensitivetermcategoryDescDeleteReason is the schema descriptor for delete_reason field.
+	sensitivetermcategoryDescDeleteReason := sensitivetermcategoryMixinFields0[8].Descriptor()
+	// sensitivetermcategory.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	sensitivetermcategory.DeleteReasonValidator = sensitivetermcategoryDescDeleteReason.Validators[0].(func(string) error)
+	// sensitivetermcategoryDescVersion is the schema descriptor for version field.
+	sensitivetermcategoryDescVersion := sensitivetermcategoryMixinFields0[9].Descriptor()
+	// sensitivetermcategory.DefaultVersion holds the default value on creation for the version field.
+	sensitivetermcategory.DefaultVersion = sensitivetermcategoryDescVersion.Default.(int64)
+	// sensitivetermcategoryDescCode is the schema descriptor for code field.
+	sensitivetermcategoryDescCode := sensitivetermcategoryFields[0].Descriptor()
+	// sensitivetermcategory.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	sensitivetermcategory.CodeValidator = sensitivetermcategoryDescCode.Validators[0].(func(string) error)
+	// sensitivetermcategoryDescName is the schema descriptor for name field.
+	sensitivetermcategoryDescName := sensitivetermcategoryFields[1].Descriptor()
+	// sensitivetermcategory.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	sensitivetermcategory.NameValidator = sensitivetermcategoryDescName.Validators[0].(func(string) error)
+	// sensitivetermcategoryDescDescription is the schema descriptor for description field.
+	sensitivetermcategoryDescDescription := sensitivetermcategoryFields[2].Descriptor()
+	// sensitivetermcategory.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	sensitivetermcategory.DescriptionValidator = sensitivetermcategoryDescDescription.Validators[0].(func(string) error)
+	// sensitivetermcategoryDescSeverity is the schema descriptor for severity field.
+	sensitivetermcategoryDescSeverity := sensitivetermcategoryFields[3].Descriptor()
+	// sensitivetermcategory.SeverityValidator is a validator for the "severity" field. It is called by the builders before save.
+	sensitivetermcategory.SeverityValidator = sensitivetermcategoryDescSeverity.Validators[0].(func(string) error)
+	// sensitivetermcategoryDescDefaultAction is the schema descriptor for default_action field.
+	sensitivetermcategoryDescDefaultAction := sensitivetermcategoryFields[4].Descriptor()
+	// sensitivetermcategory.DefaultActionValidator is a validator for the "default_action" field. It is called by the builders before save.
+	sensitivetermcategory.DefaultActionValidator = sensitivetermcategoryDescDefaultAction.Validators[0].(func(string) error)
+	// sensitivetermcategoryDescEnabled is the schema descriptor for enabled field.
+	sensitivetermcategoryDescEnabled := sensitivetermcategoryFields[5].Descriptor()
+	// sensitivetermcategory.DefaultEnabled holds the default value on creation for the enabled field.
+	sensitivetermcategory.DefaultEnabled = sensitivetermcategoryDescEnabled.Default.(bool)
+	// sensitivetermcategoryDescAllowTenantToggle is the schema descriptor for allow_tenant_toggle field.
+	sensitivetermcategoryDescAllowTenantToggle := sensitivetermcategoryFields[6].Descriptor()
+	// sensitivetermcategory.DefaultAllowTenantToggle holds the default value on creation for the allow_tenant_toggle field.
+	sensitivetermcategory.DefaultAllowTenantToggle = sensitivetermcategoryDescAllowTenantToggle.Default.(bool)
+	// sensitivetermcategoryDescID is the schema descriptor for id field.
+	sensitivetermcategoryDescID := sensitivetermcategoryMixinFields0[0].Descriptor()
+	// sensitivetermcategory.DefaultID holds the default value on creation for the id field.
+	sensitivetermcategory.DefaultID = sensitivetermcategoryDescID.Default.(func() uuid.UUID)
+	tenantcategorysettingMixin := schema.TenantCategorySetting{}.Mixin()
+	tenantcategorysettingMixinHooks0 := tenantcategorysettingMixin[0].Hooks()
+	tenantcategorysetting.Hooks[0] = tenantcategorysettingMixinHooks0[0]
+	tenantcategorysettingMixinInters0 := tenantcategorysettingMixin[0].Interceptors()
+	tenantcategorysetting.Interceptors[0] = tenantcategorysettingMixinInters0[0]
+	tenantcategorysettingMixinFields0 := tenantcategorysettingMixin[0].Fields()
+	_ = tenantcategorysettingMixinFields0
+	tenantcategorysettingFields := schema.TenantCategorySetting{}.Fields()
+	_ = tenantcategorysettingFields
+	// tenantcategorysettingDescCreatedAt is the schema descriptor for created_at field.
+	tenantcategorysettingDescCreatedAt := tenantcategorysettingMixinFields0[2].Descriptor()
+	// tenantcategorysetting.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tenantcategorysetting.DefaultCreatedAt = tenantcategorysettingDescCreatedAt.Default.(func() time.Time)
+	// tenantcategorysettingDescUpdatedAt is the schema descriptor for updated_at field.
+	tenantcategorysettingDescUpdatedAt := tenantcategorysettingMixinFields0[4].Descriptor()
+	// tenantcategorysetting.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tenantcategorysetting.DefaultUpdatedAt = tenantcategorysettingDescUpdatedAt.Default.(func() time.Time)
+	// tenantcategorysetting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tenantcategorysetting.UpdateDefaultUpdatedAt = tenantcategorysettingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// tenantcategorysettingDescDeleteReason is the schema descriptor for delete_reason field.
+	tenantcategorysettingDescDeleteReason := tenantcategorysettingMixinFields0[8].Descriptor()
+	// tenantcategorysetting.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	tenantcategorysetting.DeleteReasonValidator = tenantcategorysettingDescDeleteReason.Validators[0].(func(string) error)
+	// tenantcategorysettingDescVersion is the schema descriptor for version field.
+	tenantcategorysettingDescVersion := tenantcategorysettingMixinFields0[9].Descriptor()
+	// tenantcategorysetting.DefaultVersion holds the default value on creation for the version field.
+	tenantcategorysetting.DefaultVersion = tenantcategorysettingDescVersion.Default.(int64)
+	// tenantcategorysettingDescReason is the schema descriptor for reason field.
+	tenantcategorysettingDescReason := tenantcategorysettingFields[2].Descriptor()
+	// tenantcategorysetting.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	tenantcategorysetting.ReasonValidator = tenantcategorysettingDescReason.Validators[0].(func(string) error)
+	// tenantcategorysettingDescID is the schema descriptor for id field.
+	tenantcategorysettingDescID := tenantcategorysettingMixinFields0[0].Descriptor()
+	// tenantcategorysetting.DefaultID holds the default value on creation for the id field.
+	tenantcategorysetting.DefaultID = tenantcategorysettingDescID.Default.(func() uuid.UUID)
 }
 
 const (

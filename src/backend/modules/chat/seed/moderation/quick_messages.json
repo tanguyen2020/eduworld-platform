@@ -1,0 +1,17 @@
+{
+  "description": "F116 T008 — quick message song ngữ đã duyệt (CHAT_SYSTEM §8.5, ADR-0056): giống nhau cho mọi lớp (R15). {n} là tham số (params.n), qua pipeline như text. Migration 20261230000001_f116_moderation.sql nạp đúng danh sách này (TestSeedModeration).",
+  "quick_messages": [
+    { "quick_message_id": "qm_hello", "category": "greeting", "text_vi": "Xin chào!", "text_en": "Hello!", "emoji": "wave", "sort_order": 10 },
+    { "quick_message_id": "qm_hi_team", "category": "greeting", "text_vi": "Chào cả đội!", "text_en": "Hi team!", "emoji": "wave", "sort_order": 20 },
+    { "quick_message_id": "qm_go_for_it", "category": "encouragement", "text_vi": "Cố lên!", "text_en": "Go for it!", "emoji": "muscle", "sort_order": 30 },
+    { "quick_message_id": "qm_great_job", "category": "encouragement", "text_vi": "Giỏi quá!", "text_en": "Great job!", "emoji": "star", "sort_order": 40 },
+    { "quick_message_id": "qm_thanks", "category": "thanks", "text_vi": "Cảm ơn bạn!", "text_en": "Thank you!", "emoji": "heart", "sort_order": 50 },
+    { "quick_message_id": "qm_together", "category": "teamwork", "text_vi": "Mình cùng làm nhé!", "text_en": "Let's do it together!", "emoji": "handshake", "sort_order": 60 },
+    { "quick_message_id": "qm_need_help", "category": "teamwork", "text_vi": "Bạn cần giúp không?", "text_en": "Do you need help?", "emoji": "raised_hand", "sort_order": 70 },
+    { "quick_message_id": "qm_wait", "category": "strategy", "text_vi": "Chờ mình một chút!", "text_en": "Wait for me!", "emoji": "hourglass", "sort_order": 80 },
+    { "quick_message_id": "qm_follow_me", "category": "strategy", "text_vi": "Đi theo mình!", "text_en": "Follow me!", "emoji": "point_right", "sort_order": 90 },
+    { "quick_message_id": "qm_done_question", "category": "strategy", "text_vi": "Mình làm xong câu {n} rồi!", "text_en": "I finished question {n}!", "emoji": "check", "sort_order": 100 },
+    { "quick_message_id": "qm_dont_like", "category": "safety", "text_vi": "Mình không thích điều đó.", "text_en": "I don't like that.", "emoji": "stop", "sort_order": 110 },
+    { "quick_message_id": "qm_bye", "category": "other", "text_vi": "Tạm biệt!", "text_en": "Goodbye!", "emoji": "wave", "sort_order": 120 }
+  ]
+}

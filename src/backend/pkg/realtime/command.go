@@ -119,6 +119,8 @@ type ReplyProblem struct {
 	Retryable    bool   `json:"retryable"`
 	RetryAfterMs int64  `json:"retry_after_ms,omitempty"`
 	Message      string `json:"message,omitempty"`
+	// Details are the stable details of the failure (CHAT_CONTENT_BLOCKED: category_code only — never a matched term).
+	Details map[string]string `json:"details,omitempty"`
 }
 
 // OK is a successful reply with an optional result object.

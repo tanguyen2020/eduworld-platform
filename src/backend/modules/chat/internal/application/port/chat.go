@@ -22,17 +22,24 @@ type ValidationInput struct {
 	Kind           message.Kind
 	Text           string
 	QuickMessageID string
-	Strictness     string
+	// Params are the parameters of a quick message (checked like a text, F116-AC-28).
+	Params     map[string]string
+	Mentions   int
+	Strictness string
 }
 
 // Verdict is the pipeline result: the decision, the display text (masked when mask) and metadata without content
 // (no matched term or position is ever returned to a client, ADR-0030).
 type Verdict struct {
-	Decision       message.Decision
-	Display        string
-	CategoryCodes  []string
-	StepsSkipped   []string
-	CatalogVersion *int64
+	Decision             message.Decision
+	Display              string
+	CategoryCodes        []string
+	StepsRun             []string
+	StepsSkipped         []string
+	CatalogVersion       *int64
+	CatalogVersionTenant *int64
+	SwitchSnapshotID     *uuid.UUID
+	LatencyMS            int
 }
 
 // ContentValidator is the synchronous moderation pipeline every message goes through before a seq is allocated
@@ -90,10 +97,24 @@ type RecentBuffer interface {
 	List(ctx context.Context, channel uuid.UUID) ([]message.Envelope, error)
 }
 
-// RateLimiter is the sliding window of chat sends (VALKEY_DESIGN §4.5): perChannel messages per minute in one channel
-// and perUser across every channel; ok false returns when the next send is possible.
+// RateLimits are the technical limits of one send (always on, MODERATION §3.4, §12.3): PerChannel messages per minute
+// in the channel and PerUser across every channel; Burst messages per BurstWindow in the channel; SlowMode between two
+// messages of the sender in the channel (F116: burst and slow_mode_seconds of the effective policy).
+type RateLimits struct {
+	PerChannel  int
+	PerUser     int
+	Burst       int
+	BurstWindow time.Duration
+	SlowMode    time.Duration
+}
+
+// BurstWindow is the window of rate.burst [Confirmed 2026-11-21, F116 clarification]: at most burst messages of a sender
+// in a channel within 10 seconds.
+const BurstWindow = 10 * time.Second
+
+// RateLimiter is the sliding window of chat sends (VALKEY_DESIGN §4.5); ok false returns when the next send is possible.
 type RateLimiter interface {
-	Allow(ctx context.Context, user, channel, msg uuid.UUID, perChannel, perUser int, now time.Time) (ok bool, retry time.Duration, err error)
+	Allow(ctx context.Context, user, channel, msg uuid.UUID, l RateLimits, now time.Time) (ok bool, retry time.Duration, err error)
 }
 
 // SendRecord is the idempotency record of one client_message_id (ew:chat:cmid:<sender>:<client_message_id>): pending

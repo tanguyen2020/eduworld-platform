@@ -26,8 +26,28 @@ type Tx struct {
 	FriendRequest *FriendRequestClient
 	// Friendship is the client for interacting with the Friendship builders.
 	Friendship *FriendshipClient
+	// ModerationSwitch is the client for interacting with the ModerationSwitch builders.
+	ModerationSwitch *ModerationSwitchClient
+	// ModerationSwitchChange is the client for interacting with the ModerationSwitchChange builders.
+	ModerationSwitchChange *ModerationSwitchChangeClient
+	// ModerationSwitchRequest is the client for interacting with the ModerationSwitchRequest builders.
+	ModerationSwitchRequest *ModerationSwitchRequestClient
 	// Mute is the client for interacting with the Mute builders.
 	Mute *MuteClient
+	// QuickMessage is the client for interacting with the QuickMessage builders.
+	QuickMessage *QuickMessageClient
+	// Sanction is the client for interacting with the Sanction builders.
+	Sanction *SanctionClient
+	// SensitiveAllowlistEntry is the client for interacting with the SensitiveAllowlistEntry builders.
+	SensitiveAllowlistEntry *SensitiveAllowlistEntryClient
+	// SensitiveCatalogVersion is the client for interacting with the SensitiveCatalogVersion builders.
+	SensitiveCatalogVersion *SensitiveCatalogVersionClient
+	// SensitiveTerm is the client for interacting with the SensitiveTerm builders.
+	SensitiveTerm *SensitiveTermClient
+	// SensitiveTermCategory is the client for interacting with the SensitiveTermCategory builders.
+	SensitiveTermCategory *SensitiveTermCategoryClient
+	// TenantCategorySetting is the client for interacting with the TenantCategorySetting builders.
+	TenantCategorySetting *TenantCategorySettingClient
 
 	// lazily loaded.
 	client     *Client
@@ -166,7 +186,17 @@ func (tx *Tx) init() {
 	tx.FriendCode = NewFriendCodeClient(tx.config)
 	tx.FriendRequest = NewFriendRequestClient(tx.config)
 	tx.Friendship = NewFriendshipClient(tx.config)
+	tx.ModerationSwitch = NewModerationSwitchClient(tx.config)
+	tx.ModerationSwitchChange = NewModerationSwitchChangeClient(tx.config)
+	tx.ModerationSwitchRequest = NewModerationSwitchRequestClient(tx.config)
 	tx.Mute = NewMuteClient(tx.config)
+	tx.QuickMessage = NewQuickMessageClient(tx.config)
+	tx.Sanction = NewSanctionClient(tx.config)
+	tx.SensitiveAllowlistEntry = NewSensitiveAllowlistEntryClient(tx.config)
+	tx.SensitiveCatalogVersion = NewSensitiveCatalogVersionClient(tx.config)
+	tx.SensitiveTerm = NewSensitiveTermClient(tx.config)
+	tx.SensitiveTermCategory = NewSensitiveTermCategoryClient(tx.config)
+	tx.TenantCategorySetting = NewTenantCategorySettingClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

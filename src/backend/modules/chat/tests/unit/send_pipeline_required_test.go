@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/pipeline"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/channel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/message"
@@ -63,11 +64,17 @@ func TestSendPipelineRequired(t *testing.T) {
 	if err := command.RequireValidator("local", moderation.TestDoubleValidator{}); !errors.Is(err, command.ErrNoValidator) {
 		t.Fatalf("local with the test double: %v", err)
 	}
-	if err := command.RequireValidator("test", moderation.For("test")); err != nil {
+	if err := command.RequireValidator("test", moderation.TestDoubleValidator{}); err != nil {
 		t.Fatalf("test env: %v", err)
 	}
-	if moderation.For("staging") != nil {
-		t.Fatal("a validator is wired outside test before F116")
+	// F116: the real pipeline (pipeline.Validator) is accepted everywhere, so core-api starts with EW_ENV=local.
+	for _, env := range []string{"local", "staging", "production", "test"} {
+		if err := command.RequireValidator(env, &pipeline.Validator{}); err != nil {
+			t.Fatalf("%s with the real pipeline: %v", env, err)
+		}
+	}
+	if _, err := moderation.Real(moderation.Deps{}); !errors.Is(err, moderation.ErrMissingDeps) {
+		t.Fatalf("pipeline without stores: %v", err)
 	}
 	var real port.ContentValidator = &realValidator{}
 	if err := command.RequireValidator("production", real); err != nil {

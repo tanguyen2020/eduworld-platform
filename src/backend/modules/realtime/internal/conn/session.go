@@ -507,8 +507,8 @@ func (s *Session) command(env protocol.ClientEnvelope, route router.Route) {
 			out = protocol.Acked(env.ID, reply.Result, now)
 		default:
 			s.m.metrics.CmdFailed.WithLabelValues(route.Module, reply.Problem.Code).Inc()
-			out = protocol.Failed(env.ID, reply.Problem.Code, reply.Problem.Message,
-				time.Duration(reply.Problem.RetryAfterMs)*time.Millisecond, now)
+			out = protocol.FailedWithDetails(env.ID, reply.Problem.Code, reply.Problem.Message,
+				time.Duration(reply.Problem.RetryAfterMs)*time.Millisecond, reply.Problem.Details, now)
 		}
 		if reserved {
 			b, _ := json.Marshal(storedResult{Type: out.Type, Payload: out.Payload})

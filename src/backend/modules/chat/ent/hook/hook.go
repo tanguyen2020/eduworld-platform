@@ -93,6 +93,42 @@ func (f FriendshipFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FriendshipMutation", m)
 }
 
+// The ModerationSwitchFunc type is an adapter to allow the use of ordinary
+// function as ModerationSwitch mutator.
+type ModerationSwitchFunc func(context.Context, *ent.ModerationSwitchMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModerationSwitchFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModerationSwitchMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModerationSwitchMutation", m)
+}
+
+// The ModerationSwitchChangeFunc type is an adapter to allow the use of ordinary
+// function as ModerationSwitchChange mutator.
+type ModerationSwitchChangeFunc func(context.Context, *ent.ModerationSwitchChangeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModerationSwitchChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModerationSwitchChangeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModerationSwitchChangeMutation", m)
+}
+
+// The ModerationSwitchRequestFunc type is an adapter to allow the use of ordinary
+// function as ModerationSwitchRequest mutator.
+type ModerationSwitchRequestFunc func(context.Context, *ent.ModerationSwitchRequestMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModerationSwitchRequestFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModerationSwitchRequestMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModerationSwitchRequestMutation", m)
+}
+
 // The MuteFunc type is an adapter to allow the use of ordinary
 // function as Mute mutator.
 type MuteFunc func(context.Context, *ent.MuteMutation) (ent.Value, error)
@@ -103,6 +139,90 @@ func (f MuteFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MuteMutation", m)
+}
+
+// The QuickMessageFunc type is an adapter to allow the use of ordinary
+// function as QuickMessage mutator.
+type QuickMessageFunc func(context.Context, *ent.QuickMessageMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuickMessageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuickMessageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuickMessageMutation", m)
+}
+
+// The SanctionFunc type is an adapter to allow the use of ordinary
+// function as Sanction mutator.
+type SanctionFunc func(context.Context, *ent.SanctionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SanctionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SanctionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SanctionMutation", m)
+}
+
+// The SensitiveAllowlistEntryFunc type is an adapter to allow the use of ordinary
+// function as SensitiveAllowlistEntry mutator.
+type SensitiveAllowlistEntryFunc func(context.Context, *ent.SensitiveAllowlistEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SensitiveAllowlistEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SensitiveAllowlistEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SensitiveAllowlistEntryMutation", m)
+}
+
+// The SensitiveCatalogVersionFunc type is an adapter to allow the use of ordinary
+// function as SensitiveCatalogVersion mutator.
+type SensitiveCatalogVersionFunc func(context.Context, *ent.SensitiveCatalogVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SensitiveCatalogVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SensitiveCatalogVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SensitiveCatalogVersionMutation", m)
+}
+
+// The SensitiveTermFunc type is an adapter to allow the use of ordinary
+// function as SensitiveTerm mutator.
+type SensitiveTermFunc func(context.Context, *ent.SensitiveTermMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SensitiveTermFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SensitiveTermMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SensitiveTermMutation", m)
+}
+
+// The SensitiveTermCategoryFunc type is an adapter to allow the use of ordinary
+// function as SensitiveTermCategory mutator.
+type SensitiveTermCategoryFunc func(context.Context, *ent.SensitiveTermCategoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SensitiveTermCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SensitiveTermCategoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SensitiveTermCategoryMutation", m)
+}
+
+// The TenantCategorySettingFunc type is an adapter to allow the use of ordinary
+// function as TenantCategorySetting mutator.
+type TenantCategorySettingFunc func(context.Context, *ent.TenantCategorySettingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TenantCategorySettingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TenantCategorySettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantCategorySettingMutation", m)
 }
 
 // Condition is a hook condition function.

@@ -12740,6 +12740,7 @@ export interface components {
             message_id: components["schemas"]["Uuid"];
             /** @enum {string} */
             moderation_state: "allowed" | "masked" | "unchecked" | "held" | "removed";
+            /** @description kind=system: tham số của system_code; kind=quick: tham số của quick message (đã qua pipeline kiểm duyệt, F116-AC-28) */
             params?: {
                 [key: string]: string;
             };
@@ -12766,6 +12767,10 @@ export interface components {
             /** @enum {string} */
             kind: "text" | "emoji" | "quick" | "sticker" | "gif";
             mentions?: components["schemas"]["Uuid"][];
+            /** @description kind=quick: tham số của quick message có chỗ trống ({n}); mỗi giá trị qua pipeline kiểm duyệt như text (F116-AC-28) */
+            params?: {
+                [key: string]: string;
+            };
             /** @description Mã quick message (cùng kiểu với Message.quick_message_id và AsyncAPI) */
             quick_message_id?: string;
             quote?: components["schemas"]["QuoteRef"];
@@ -13466,6 +13471,8 @@ export interface components {
             user_type: "student" | "staff";
         };
         Problem: {
+            /** @description Chỉ có khi `code = CHAT_CONTENT_BLOCKED`/`CHAT_CONTENT_HELD`: mã category của danh mục hoặc `pii`/`spam`/`bullying` — không bao giờ có từ đã khớp hay vị trí (ADR-0030, F116-AC-05) */
+            category_code?: string;
             /** @description Mã ổn định; client phải chấp nhận giá trị chưa biết */
             code: components["schemas"]["ProblemCode"] | string;
             detail?: string;

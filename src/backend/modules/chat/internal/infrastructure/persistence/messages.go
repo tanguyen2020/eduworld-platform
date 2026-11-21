@@ -73,7 +73,8 @@ func (Messages) Insert(ctx context.Context, tenant uuid.UUID, es []message.Envel
 			continue
 		}
 		verdict, _ := json.Marshal(map[string]any{"decision": e.Moderation.Decision, "category_codes": e.Moderation.CategoryCodes,
-			"steps_skipped": e.Moderation.StepsSkipped, "catalog_version": e.Moderation.CatalogVersion})
+			"steps_skipped": e.Moderation.StepsSkipped, "catalog_version": e.Moderation.CatalogVersion,
+			"catalog_version_tenant": e.Moderation.CatalogVersionTenant, "params": e.Params})
 		taken, err := seqTaken(ctx, e, chans[e.ChannelID])
 		if err != nil {
 			return res, err
@@ -101,6 +102,9 @@ func (Messages) Insert(ctx context.Context, tenant uuid.UUID, es []message.Envel
 				res.Orphans = append(res.Orphans, e)
 			}
 			continue
+		}
+		if err := insertDecision(ctx, EnvelopeDecision(e)); err != nil { // decision log of a stored message (F116-AC-09)
+			return res, err
 		}
 		res.Inserted = append(res.Inserted, e)
 		lastSeq[e.ChannelID] = max(lastSeq[e.ChannelID], e.Seq)

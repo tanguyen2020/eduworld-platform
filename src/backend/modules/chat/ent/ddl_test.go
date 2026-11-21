@@ -21,12 +21,20 @@ var printDDL = flag.String("print", "", "print the entddl block of this migratio
 var migrations = map[string][]string{
 	"20261228000001_f095_social.sql":    {"friend_requests", "friendships", "friend_codes", "blocks", "mutes"},
 	"20261229000001_f115_chat_core.sql": {"channels", "channel_members", "chat_policies"},
+	"20261230000001_f116_moderation.sql": {"sensitive_term_categories", "sensitive_terms", "sensitive_allowlist",
+		"sensitive_catalog_versions", "tenant_category_settings", "moderation_switches", "moderation_switch_requests",
+		"moderation_switch_changes", "sanctions", "quick_messages"},
 }
 
 func schemas() map[string]string {
 	c := ent.DefaultSchemaConfig
 	return map[string]string{"friend_requests": c.FriendRequest, "friendships": c.Friendship, "friend_codes": c.FriendCode, "blocks": c.Block, "mutes": c.Mute,
-		"channels": c.Channel, "channel_members": c.ChannelMember, "chat_policies": c.ChatPolicy}
+		"channels": c.Channel, "channel_members": c.ChannelMember, "chat_policies": c.ChatPolicy,
+		"sensitive_term_categories": c.SensitiveTermCategory, "sensitive_terms": c.SensitiveTerm,
+		"sensitive_allowlist": c.SensitiveAllowlistEntry, "sensitive_catalog_versions": c.SensitiveCatalogVersion,
+		"tenant_category_settings": c.TenantCategorySetting, "moderation_switches": c.ModerationSwitch,
+		"moderation_switch_requests": c.ModerationSwitchRequest, "moderation_switch_changes": c.ModerationSwitchChange,
+		"sanctions": c.Sanction, "quick_messages": c.QuickMessage}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

@@ -8,6 +8,7 @@
   "trace_id": "sample",
   "retryable": false,
   "policy_reason": "sample",
+  "category_code": "sample",
   "feature_key": "sample",
   "reopen_at": "2026-11-15T07:30:00Z",
   "choices": [

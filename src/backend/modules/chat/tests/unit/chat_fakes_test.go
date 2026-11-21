@@ -176,9 +176,14 @@ func (recent) List(context.Context, uuid.UUID) ([]message.Envelope, error) { ret
 type rate struct {
 	mu    sync.Mutex
 	count map[uuid.UUID]int
+	last  port.RateLimits
 }
 
-func (r *rate) Allow(_ context.Context, user, ch, _ uuid.UUID, perChannel, perUser int, _ time.Time) (bool, time.Duration, error) {
+func (r *rate) Allow(_ context.Context, user, ch, _ uuid.UUID, l port.RateLimits, _ time.Time) (bool, time.Duration, error) {
+	r.mu.Lock()
+	r.last = l
+	r.mu.Unlock()
+	perChannel := l.PerChannel
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.count == nil {

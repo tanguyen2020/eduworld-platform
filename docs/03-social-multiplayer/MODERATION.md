@@ -110,7 +110,7 @@ Rate limit theo policy (`messages_per_minute` + burst và `chat_rate_per_user`, 
 
 | Quy tắc | Ngưỡng (`chat_spam_thresholds`, [Confirmed — Technical Architect 2026-11-16]) | Hành động |
 |---|---|---|
-| Rate theo policy (luôn chạy, không tắt được) | `messages_per_minute` + burst | `CHAT_RATE_LIMITED` |
+| Rate theo policy (luôn chạy, không tắt được) | `messages_per_minute` + burst trong cửa sổ [`chat_burst_window`](../00-overview/CONFIG_DEFAULTS.md) + `slow_mode_seconds` | `CHAT_RATE_LIMITED` |
 | Lặp tin giống nhau | ≥ 3 tin giống (similarity ≥ 0.9) trong 60 s | block tin lặp |
 | Viết hoa / ký tự lặp / emoji spam | > 70% chữ hoa, > 10 emoji liên tiếp | mask/giảm |
 | Gửi cùng nội dung tới nhiều channel | ≥ 4 channel trong 2 phút | block + tăng điểm spam |

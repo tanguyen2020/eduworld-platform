@@ -298,7 +298,7 @@ func (ChatReader) MyChannels(ctx context.Context, tenant, user uuid.UUID, limit 
 // joined_at, held only for the reader, removed never.
 const messagesSQL = `SELECT m.message_id, m.seq, m.school_id, m.sender_id, m.client_message_id, m.kind, m.body_display,
 	m.quick_message_id, m.sticker_id, m.gif_id, m.reply_to_message_id, array_to_string(m.mentions, ','), m.revision,
-	m.moderation_state, m.created_at, m.recalled_at IS NOT NULL
+	m.moderation_state, m.created_at, m.recalled_at IS NOT NULL, m.filter_verdict->'params'
 	FROM chat.{table} m
 	WHERE m.tenant_id = $1 AND m.channel_id = $2 AND m.deleted_at IS NULL AND m.created_at >= $3
 		AND m.moderation_state <> 'removed' AND (m.moderation_state <> 'held' OR m.sender_id = $4)
@@ -331,14 +331,18 @@ func (ChatReader) Messages(ctx context.Context, q read.MessageQuery) ([]read.Sto
 		var display, quick sql.NullString
 		var mentions, kind, state string
 		var recalled bool
+		var params []byte
 		if err := rows.Scan(&e.MessageID, &e.Seq, &school, &e.SenderID, &cmid, &kind, &display, &quick, &sticker, &gif, &reply,
-			&mentions, &e.Revision, &state, &e.CreatedAt, &recalled); err != nil {
+			&mentions, &e.Revision, &state, &e.CreatedAt, &recalled, &params); err != nil {
 			return nil, fmt.Errorf("chat: messages: %w", err)
 		}
 		e.SchoolID, e.ClientMessageID, e.StickerID, e.GifID, e.ReplyToMessageID = nullUUID(school), nullUUID(cmid), nullUUID(sticker),
 			nullUUID(gif), nullUUID(reply)
 		e.MsgKind, e.Moderation.State, e.CreatedAt = message.Kind(kind), message.State(state), e.CreatedAt.UTC()
 		e.BodyDisplay, e.QuickMessageID = nullString(display), nullString(quick)
+		if len(params) > 0 && string(params) != "null" { // quick message parameters (F116-AC-28)
+			_ = json.Unmarshal(params, &e.Params)
+		}
 		e.Mentions = []uuid.UUID{}
 		for _, s := range strings.Split(mentions, ",") {
 			if u, err := uuid.Parse(s); err == nil {

@@ -18,6 +18,7 @@ const (
 	TypeMessageAcked   = "chat.message.acked"
 	TypeMessageHeld    = "chat.message.held"
 	TypeHistoryLoaded  = "chat.history.loaded"
+	TypeSanction       = "chat.sanction.applied"
 )
 
 // maxTargets is the bound of target.user_ids of RtPubSubEnvelope.
@@ -67,6 +68,9 @@ func ChatMessage(e message.Envelope, sender read.ChatCard, recalled bool) map[st
 	}
 	if e.QuickMessageID != nil {
 		m["quick_message_id"] = *e.QuickMessageID
+	}
+	if len(e.Params) > 0 {
+		m["params"] = e.Params
 	}
 	if e.StickerID != nil {
 		m["sticker_id"] = *e.StickerID
@@ -130,4 +134,14 @@ func (f ChatFanout) History(ctx context.Context, user uuid.UUID, conn string, ch
 		msgs[i] = ChatMessage(it.Envelope, it.Sender, it.Recalled)
 	}
 	return f.toConn(ctx, user, conn, TypeHistoryLoaded, map[string]any{"channel_id": channel, "messages": msgs, "has_more": hasMore})
+}
+
+// SanctionApplied pushes chat.sanction.applied to every connection of the sanctioned student (F116: system mute; the
+// UI locks the input). payload: sanction_type, until (epoch ms) — never the reason content.
+func (f ChatFanout) SanctionApplied(ctx context.Context, user uuid.UUID, payload map[string]any) error {
+	env, err := rt.NewMessage(TypeSanction, payload, f.now())
+	if err != nil {
+		return err
+	}
+	return f.P.ToUser(ctx, user, env)
 }

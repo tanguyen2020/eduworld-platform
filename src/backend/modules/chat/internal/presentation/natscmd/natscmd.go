@@ -63,6 +63,9 @@ func failure(ctx context.Context, err error) rt.Reply {
 	if errors.As(err, &ra) {
 		r.Problem.RetryAfterMs = max(ra.After, time.Second).Milliseconds()
 	}
+	if c, ok := pe.Ext["category_code"].(string); ok && c != "" { // F116-AC-05: the category only, never a matched term
+		r.Problem.Details = map[string]string{"category_code": c}
+	}
 	return r
 }
 
@@ -76,16 +79,17 @@ func ackedResult(e message.Envelope) map[string]any {
 }
 
 type sendPayload struct {
-	ChannelID        uuid.UUID   `json:"channel_id"`
-	ClientMessageID  uuid.UUID   `json:"client_message_id"`
-	Kind             string      `json:"kind"`
-	Body             string      `json:"body"`
-	QuickMessageID   string      `json:"quick_message_id"`
-	Emoji            string      `json:"emoji"`
-	StickerID        *uuid.UUID  `json:"sticker_id"`
-	GifID            *uuid.UUID  `json:"gif_id"`
-	ReplyToMessageID *uuid.UUID  `json:"reply_to_message_id"`
-	Mentions         []uuid.UUID `json:"mentions"`
+	ChannelID        uuid.UUID         `json:"channel_id"`
+	ClientMessageID  uuid.UUID         `json:"client_message_id"`
+	Kind             string            `json:"kind"`
+	Body             string            `json:"body"`
+	QuickMessageID   string            `json:"quick_message_id"`
+	Params           map[string]string `json:"params"`
+	Emoji            string            `json:"emoji"`
+	StickerID        *uuid.UUID        `json:"sticker_id"`
+	GifID            *uuid.UUID        `json:"gif_id"`
+	ReplyToMessageID *uuid.UUID        `json:"reply_to_message_id"`
+	Mentions         []uuid.UUID       `json:"mentions"`
 }
 
 // MessageSend handles ew.cmd.chat.message.send: the same use case as REST sendChannelMessage (F115-AC-05); the result
@@ -98,7 +102,7 @@ func MessageSend(h Sender) rt.CommandHandler {
 		}
 		res, err := h.Send(ctx, command.Sender{TenantID: c.TenantID, UserID: c.UserID, ConnID: c.ConnID}, message.Request{
 			ChannelID: p.ChannelID, ClientMessageID: p.ClientMessageID, Kind: message.Kind(p.Kind), Body: p.Body, Emoji: p.Emoji,
-			QuickMessageID: p.QuickMessageID, StickerID: p.StickerID, GifID: p.GifID, ReplyToMessageID: p.ReplyToMessageID,
+			QuickMessageID: p.QuickMessageID, Params: p.Params, StickerID: p.StickerID, GifID: p.GifID, ReplyToMessageID: p.ReplyToMessageID,
 			Mentions: p.Mentions})
 		if err != nil {
 			return failure(ctx, err)

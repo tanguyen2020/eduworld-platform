@@ -104,9 +104,20 @@ func (o Out) Encode(seq int64) []byte {
 
 // Failure is the payload of system.command.failed.
 type Failure struct {
-	Code         string `json:"code"`
-	Message      string `json:"message"`
-	RetryAfterMs int64  `json:"retry_after_ms,omitempty"`
+	Code         string            `json:"code"`
+	Message      string            `json:"message"`
+	RetryAfterMs int64             `json:"retry_after_ms,omitempty"`
+	Details      map[string]string `json:"details,omitempty"`
+}
+
+// FailedWithDetails is Failed with the stable details of the module (CHAT_CONTENT_BLOCKED: category_code, F116).
+func FailedWithDetails(ref, code, message string, retryAfter time.Duration, details map[string]string, now time.Time) Out {
+	if message == "" {
+		message = code
+	}
+	o := NewOut(TypeFailed, Failure{Code: code, Message: message, RetryAfterMs: retryAfter.Milliseconds(), Details: details}, now)
+	o.Ref = ref
+	return o
 }
 
 // Failed builds system.command.failed for ref (empty when the frame had no usable id).

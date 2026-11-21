@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat_policy.tenant_category_toggled.v1.schema.json",
+  "title": "Payload chat_policy.tenant_category_toggled v1 (module chat, owner F116)",
+  "description": "Safety Team/System Admin bật/tắt một category cho tenant theo yêu cầu của tenant (chỉ khi allow_tenant_toggle; F116-AC-17, ADR-0072). Consumer: chat (invalidate), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "category_id",
+    "category_code",
+    "enabled",
+    "actor_id",
+    "occurred_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "category_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "category_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "actor_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "category_id": "01936a00-0000-7000-8000-000000000108",
+      "category_code": "politics_religion",
+      "enabled": false,
+      "reason": "Trường yêu cầu theo công văn 12/2026",
+      "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "occurred_at": "2026-11-21T08:30:12.345Z"
+    }
+  ]
+}

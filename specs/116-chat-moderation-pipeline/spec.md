@@ -17,6 +17,22 @@
 
 - Q: PII/grooming luôn chạy, công tắc có thời hạn và phê duyệt hai người (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md). Edge case cũ "tắt `pii` vẫn cho phép" (ADR-0030) bị thay bởi ADR-0078.
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+Owner đã duyệt trước các mặc định [Proposed]; khi tài liệu thiếu/mâu thuẫn, chọn phương án an toàn nhất cho trẻ:
+
+- Q: `rate.burst` và `slow_mode_seconds` (F115 để lại cho F116) nghĩa chính xác? → A: Giới hạn kỹ thuật luôn chạy: tối đa `burst` tin của một người gửi trong một channel trong mọi cửa sổ 10 giây; slow mode = khoảng cách tối thiểu giữa hai tin của cùng người gửi trong channel. Vi phạm → `CHAT_RATE_LIMITED` + `Retry-After`; tin bị từ chối không chiếm lượt.
+- Q: "tương tự ≥ 0,9" của bước spam đo thế nào? → A: Bằng nhau sau normalize (dấu, teencode, leetspeak, ký tự lặp, ký tự chen, hoa/thường); Valkey chỉ giữ hash, không giữ nội dung (R14).
+- Q: Bộ đếm "3 lần block trong 10 phút" tính loại block nào, có phụ thuộc công tắc `spam`? → A: Mọi tin bị `block` (danh mục, PII, spam), luôn chạy như sanction (không tắt được); đạt ngưỡng thì đếm lại từ đầu. Tái phạm trong 24 giờ → `auto_mute_spam` 1 giờ.
+- Q: `block_and_alert` hạn chế người gửi bao lâu? → A: Sanction `mute` hệ thống `scope = all`, không có `ends_at` (đến khi Safety Team xử lý ở F121); không tạo trùng khi đã có.
+- Q: "Phát hiện grooming luôn chạy" gồm gì ở F116? → A: Category `grooming_scam` của danh mục (vẫn khớp khi `sensitive_terms` hoặc `enabled_all` tắt) và mẫu hẹn gặp ngoài đời của bước PII (`hold_for_review`, mã `grooming_scam`).
+- Q: Tham số quick message bị `mask`? → A: Chuyển thành `block` (không hiển thị một phần); tham số phải đúng các chỗ trống `{…}` của câu đã duyệt, sai → `VALIDATION_FAILED`.
+- Q: Lưu bản biên dịch/snapshot danh mục ở đâu? → A: Mỗi `chat.sensitive_catalog_versions` có cột `snapshot` (jsonb bất biến: category, term đang bật, allowlist) + `checksum`; mỗi instance biên dịch trong bộ nhớ, hoán đổi nguyên tử, đối chiếu mỗi 30 s + Valkey pub/sub `ew:chat:sensitive:version`; không cache bản biên dịch trong Valkey (biên dịch từ snapshot đủ nhanh). Instance chưa nạp được danh mục platform → readiness fail, tin fail closed.
+- Q: Category mặc định và `allow_tenant_toggle`? → A: 10 category seed (`profanity` low, `insult` medium, `violence` medium, `sexual` high, `drugs` medium, `self_harm` critical, `grooming_scam` critical, `politics_religion` medium, `pii_pattern` medium, `context_watch` watch); chỉ `politics_religion`, `context_watch` cho phép tenant bật/tắt. Version 1 của danh mục platform không có term (R15).
+- Q: Ngưỡng spam, timeout RE2, thời gian lan truyền đọc ở đâu? → A: Hằng số code trong `internal/domain/moderation` (đăng ký CONFIG_DEFAULTS), không có biến môi trường (F116-AC-26).
+- Q: Rule `validation.profanity/pii/…` và `sensitive_term_policy.action_overrides` của ChatPolicy? → A: F116 chỉ áp `validation.strictness` (nâng một mức với `very_strict`); hành động theo severity/override của term; ghi đè theo policy để F120 (mặc định platform hiện trùng ánh xạ severity).
+- Q: Telex/VNI chưa gõ xong và NER tên trường + tên người (MODERATION §3.1, §3.3)? → A: Ngoài các biến thể của F116-AC-02; không làm ở F116, ghi việc tiếp theo.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Mọi tin nhắn được kiểm tra trước khi phát (Priority: P1)

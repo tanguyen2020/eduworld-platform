@@ -114,23 +114,41 @@ func (r Recent) List(ctx context.Context, channel uuid.UUID) ([]message.Envelope
 	return out, nil
 }
 
-// rateCheck is the sliding window of VALKEY_DESIGN §4.5 over two ZSETs (channel and user): both counts are checked
-// before the message is counted, so a refused send consumes nothing. Returns {ok, oldest score in the full window}.
+// rateCheck is the sliding window of VALKEY_DESIGN §4.5 over two ZSETs (channel and user) plus, on the channel ZSET,
+// the slow mode (time since the last message of the sender) and the burst (messages within the burst window; F116).
+// Every limit is checked before the message is counted, so a refused send consumes nothing. Returns {ok, retry_ms}.
+// ARGV: now_ms, msg, per_channel, per_user, burst, burst_window_ms, slow_ms.
 var rateCheck = valkey.NewLuaScript(`
 local now = tonumber(ARGV[1])
-local from = now - 60000
-redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, from)
-redis.call('ZREMRANGEBYSCORE', KEYS[2], 0, from)
+local slow = tonumber(ARGV[7])
+local keep = math.max(60000, slow)
+redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, now - keep)
+redis.call('ZREMRANGEBYSCORE', KEYS[2], 0, now - 60000)
+if slow > 0 then
+  local last = redis.call('ZREVRANGE', KEYS[1], 0, 0, 'WITHSCORES')
+  if #last == 2 and now - tonumber(last[2]) < slow then
+    return {0, tonumber(last[2]) + slow - now}
+  end
+end
+local minute = string.format('(%d', now - 60000)
 local limits = {tonumber(ARGV[3]), tonumber(ARGV[4])}
 for i = 1, 2 do
-  if limits[i] > 0 and redis.call('ZCARD', KEYS[i]) >= limits[i] then
-    local oldest = redis.call('ZRANGE', KEYS[i], 0, 0, 'WITHSCORES')
-    return {0, tonumber(oldest[2])}
+  if limits[i] > 0 and redis.call('ZCOUNT', KEYS[i], minute, '+inf') >= limits[i] then
+    local oldest = redis.call('ZRANGEBYSCORE', KEYS[i], minute, '+inf', 'WITHSCORES', 'LIMIT', 0, 1)
+    return {0, tonumber(oldest[2]) + 60000 - now}
+  end
+end
+local burst, bw = tonumber(ARGV[5]), tonumber(ARGV[6])
+if burst > 0 and bw > 0 then
+  local from = string.format('(%d', now - bw)
+  if redis.call('ZCOUNT', KEYS[1], from, '+inf') >= burst then
+    local oldest = redis.call('ZRANGEBYSCORE', KEYS[1], from, '+inf', 'WITHSCORES', 'LIMIT', 0, 1)
+    return {0, tonumber(oldest[2]) + bw - now}
   end
 end
 redis.call('ZADD', KEYS[1], now, ARGV[2])
 redis.call('ZADD', KEYS[2], now, ARGV[2])
-redis.call('EXPIRE', KEYS[1], 61)
+redis.call('EXPIRE', KEYS[1], math.ceil(keep / 1000) + 1)
 redis.call('EXPIRE', KEYS[2], 61)
 return {1, 0}`)
 
@@ -140,10 +158,11 @@ type Rate struct{ C valkey.Client }
 var _ port.RateLimiter = Rate{}
 
 // Allow implements port.RateLimiter.
-func (r Rate) Allow(ctx context.Context, user, channel, msg uuid.UUID, perChannel, perUser int, now time.Time) (bool, time.Duration, error) {
+func (r Rate) Allow(ctx context.Context, user, channel, msg uuid.UUID, l port.RateLimits, now time.Time) (bool, time.Duration, error) {
 	ms := now.UnixMilli()
 	res, err := rateCheck.Exec(ctx, r.C, []string{rateChannelKey(user, channel), rateUserKey(user)},
-		[]string{strconv.FormatInt(ms, 10), msg.String(), strconv.Itoa(perChannel), strconv.Itoa(perUser)}).ToArray()
+		[]string{strconv.FormatInt(ms, 10), msg.String(), strconv.Itoa(l.PerChannel), strconv.Itoa(l.PerUser), strconv.Itoa(l.Burst),
+			strconv.FormatInt(l.BurstWindow.Milliseconds(), 10), strconv.FormatInt(l.SlowMode.Milliseconds(), 10)}).ToArray()
 	if err != nil || len(res) != 2 {
 		return false, 0, unavailable(errors.Join(err, errors.New("rate script")))
 	}
@@ -151,9 +170,8 @@ func (r Rate) Allow(ctx context.Context, user, channel, msg uuid.UUID, perChanne
 	if ok == 1 {
 		return true, 0, nil
 	}
-	oldest, _ := res[1].AsInt64()
-	retry := time.Duration(oldest+60000-ms) * time.Millisecond
-	return false, max(retry, time.Second), nil
+	retry, _ := res[1].AsInt64()
+	return false, max(time.Duration(retry)*time.Millisecond, time.Second), nil
 }
 
 // Dedupe implements port.SendDedupe on ew:chat:cmid:<sender>:<client_message_id> (SET NX, TTL 10 min, CHAT_SYSTEM §5.2).

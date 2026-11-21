@@ -292,6 +292,104 @@ var (
 			},
 		},
 	}
+	// ModerationSwitchesColumns holds the columns for the "moderation_switches" table.
+	ModerationSwitchesColumns = []*schema.Column{
+		{Name: "switch_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "scope", Type: field.TypeString, Size: 64},
+		{Name: "enabled_all", Type: field.TypeBool, Default: true},
+		{Name: "steps", Type: field.TypeJSON},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+	}
+	// ModerationSwitchesTable holds the schema information for the "moderation_switches" table.
+	ModerationSwitchesTable = &schema.Table{
+		Name:       "moderation_switches",
+		Columns:    ModerationSwitchesColumns,
+		PrimaryKey: []*schema.Column{ModerationSwitchesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "moderation_switches_tenant_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationSwitchesColumns[1]},
+			},
+		},
+	}
+	// ModerationSwitchChangesColumns holds the columns for the "moderation_switch_changes" table.
+	ModerationSwitchChangesColumns = []*schema.Column{
+		{Name: "change_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "scope", Type: field.TypeString, Size: 64},
+		{Name: "enabled_all_before", Type: field.TypeBool},
+		{Name: "enabled_all_after", Type: field.TypeBool},
+		{Name: "before", Type: field.TypeJSON},
+		{Name: "after", Type: field.TypeJSON},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "actor_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "approved_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "request_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "source", Type: field.TypeString, Size: 64},
+	}
+	// ModerationSwitchChangesTable holds the schema information for the "moderation_switch_changes" table.
+	ModerationSwitchChangesTable = &schema.Table{
+		Name:       "moderation_switch_changes",
+		Columns:    ModerationSwitchChangesColumns,
+		PrimaryKey: []*schema.Column{ModerationSwitchChangesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "moderation_switch_changes_tenant_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationSwitchChangesColumns[1], ModerationSwitchChangesColumns[2]},
+			},
+		},
+	}
+	// ModerationSwitchRequestsColumns holds the columns for the "moderation_switch_requests" table.
+	ModerationSwitchRequestsColumns = []*schema.Column{
+		{Name: "request_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "scope", Type: field.TypeString, Size: 64},
+		{Name: "enabled_all", Type: field.TypeBool},
+		{Name: "steps", Type: field.TypeJSON},
+		{Name: "reason", Type: field.TypeString, Size: 1000},
+		{Name: "switch_expires_at", Type: field.TypeTime},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "pending_approval"},
+		{Name: "proposed_by", Type: field.TypeUUID},
+		{Name: "approved_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "decided_at", Type: field.TypeTime, Nullable: true},
+		{Name: "request_expires_at", Type: field.TypeTime},
+	}
+	// ModerationSwitchRequestsTable holds the schema information for the "moderation_switch_requests" table.
+	ModerationSwitchRequestsTable = &schema.Table{
+		Name:       "moderation_switch_requests",
+		Columns:    ModerationSwitchRequestsColumns,
+		PrimaryKey: []*schema.Column{ModerationSwitchRequestsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "moderation_switch_requests_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ModerationSwitchRequestsColumns[15], ModerationSwitchRequestsColumns[19]},
+			},
+		},
+	}
 	// MutesColumns holds the columns for the "mutes" table.
 	MutesColumns = []*schema.Column{
 		{Name: "mute_id", Type: field.TypeUUID},
@@ -328,6 +426,218 @@ var (
 			},
 		},
 	}
+	// QuickMessagesColumns holds the columns for the "quick_messages" table.
+	QuickMessagesColumns = []*schema.Column{
+		{Name: "quick_message_id", Type: field.TypeString, Size: 64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "category", Type: field.TypeString, Size: 64},
+		{Name: "text_vi", Type: field.TypeString, Size: 255},
+		{Name: "text_en", Type: field.TypeString, Size: 255},
+		{Name: "emoji", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "active"},
+	}
+	// QuickMessagesTable holds the schema information for the "quick_messages" table.
+	QuickMessagesTable = &schema.Table{
+		Name:       "quick_messages",
+		Columns:    QuickMessagesColumns,
+		PrimaryKey: []*schema.Column{QuickMessagesColumns[0]},
+	}
+	// SanctionsColumns holds the columns for the "sanctions" table.
+	SanctionsColumns = []*schema.Column{
+		{Name: "sanction_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "type", Type: field.TypeString, Size: 64},
+		{Name: "scope", Type: field.TypeString, Size: 64},
+		{Name: "channel_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reason", Type: field.TypeString, Size: 1000},
+		{Name: "case_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "issued_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "ends_at", Type: field.TypeTime, Nullable: true},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+	}
+	// SanctionsTable holds the schema information for the "sanctions" table.
+	SanctionsTable = &schema.Table{
+		Name:       "sanctions",
+		Columns:    SanctionsColumns,
+		PrimaryKey: []*schema.Column{SanctionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sanctions_user_active_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SanctionsColumns[1], SanctionsColumns[11], SanctionsColumns[19]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "revoked_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// SensitiveAllowlistColumns holds the columns for the "sensitive_allowlist" table.
+	SensitiveAllowlistColumns = []*schema.Column{
+		{Name: "entry_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "phrase", Type: field.TypeString, Size: 255},
+		{Name: "locale", Type: field.TypeString, Size: 64},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 1000},
+	}
+	// SensitiveAllowlistTable holds the schema information for the "sensitive_allowlist" table.
+	SensitiveAllowlistTable = &schema.Table{
+		Name:       "sensitive_allowlist",
+		Columns:    SensitiveAllowlistColumns,
+		PrimaryKey: []*schema.Column{SensitiveAllowlistColumns[0]},
+	}
+	// SensitiveCatalogVersionsColumns holds the columns for the "sensitive_catalog_versions" table.
+	SensitiveCatalogVersionsColumns = []*schema.Column{
+		{Name: "catalog_version_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "catalog_version", Type: field.TypeInt64},
+		{Name: "scope", Type: field.TypeString, Size: 64},
+		{Name: "published_at", Type: field.TypeTime},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "change_summary", Type: field.TypeString, Size: 1000},
+		{Name: "term_count", Type: field.TypeInt},
+		{Name: "checksum", Type: field.TypeString, Size: 128},
+		{Name: "snapshot", Type: field.TypeJSON},
+	}
+	// SensitiveCatalogVersionsTable holds the schema information for the "sensitive_catalog_versions" table.
+	SensitiveCatalogVersionsTable = &schema.Table{
+		Name:       "sensitive_catalog_versions",
+		Columns:    SensitiveCatalogVersionsColumns,
+		PrimaryKey: []*schema.Column{SensitiveCatalogVersionsColumns[0]},
+	}
+	// SensitiveTermsColumns holds the columns for the "sensitive_terms" table.
+	SensitiveTermsColumns = []*schema.Column{
+		{Name: "term_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "category_id", Type: field.TypeUUID},
+		{Name: "term", Type: field.TypeString, Size: 255},
+		{Name: "match_type", Type: field.TypeString, Size: 64},
+		{Name: "locale", Type: field.TypeString, Size: 64},
+		{Name: "variants", Type: field.TypeJSON, Nullable: true},
+		{Name: "severity_override", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "action_override", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "draft"},
+		{Name: "note", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "published_in_version", Type: field.TypeInt64, Nullable: true},
+	}
+	// SensitiveTermsTable holds the schema information for the "sensitive_terms" table.
+	SensitiveTermsTable = &schema.Table{
+		Name:       "sensitive_terms",
+		Columns:    SensitiveTermsColumns,
+		PrimaryKey: []*schema.Column{SensitiveTermsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sensitive_terms_tenant_category_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SensitiveTermsColumns[1], SensitiveTermsColumns[10]},
+			},
+		},
+	}
+	// SensitiveTermCategoriesColumns holds the columns for the "sensitive_term_categories" table.
+	SensitiveTermCategoriesColumns = []*schema.Column{
+		{Name: "category_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeString, Size: 128},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "severity", Type: field.TypeString, Size: 64},
+		{Name: "default_action", Type: field.TypeString, Size: 64},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "allow_tenant_toggle", Type: field.TypeBool, Default: false},
+	}
+	// SensitiveTermCategoriesTable holds the schema information for the "sensitive_term_categories" table.
+	SensitiveTermCategoriesTable = &schema.Table{
+		Name:       "sensitive_term_categories",
+		Columns:    SensitiveTermCategoriesColumns,
+		PrimaryKey: []*schema.Column{SensitiveTermCategoriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sensitive_term_categories_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SensitiveTermCategoriesColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TenantCategorySettingsColumns holds the columns for the "tenant_category_settings" table.
+	TenantCategorySettingsColumns = []*schema.Column{
+		{Name: "setting_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "category_id", Type: field.TypeUUID},
+		{Name: "enabled", Type: field.TypeBool},
+		{Name: "reason", Type: field.TypeString, Size: 1000},
+	}
+	// TenantCategorySettingsTable holds the schema information for the "tenant_category_settings" table.
+	TenantCategorySettingsTable = &schema.Table{
+		Name:       "tenant_category_settings",
+		Columns:    TenantCategorySettingsColumns,
+		PrimaryKey: []*schema.Column{TenantCategorySettingsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tenant_category_settings_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TenantCategorySettingsColumns[1], TenantCategorySettingsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		BlocksTable,
@@ -337,7 +647,17 @@ var (
 		FriendCodesTable,
 		FriendRequestsTable,
 		FriendshipsTable,
+		ModerationSwitchesTable,
+		ModerationSwitchChangesTable,
+		ModerationSwitchRequestsTable,
 		MutesTable,
+		QuickMessagesTable,
+		SanctionsTable,
+		SensitiveAllowlistTable,
+		SensitiveCatalogVersionsTable,
+		SensitiveTermsTable,
+		SensitiveTermCategoriesTable,
+		TenantCategorySettingsTable,
 	}
 )
 
@@ -363,7 +683,37 @@ func init() {
 	FriendshipsTable.Annotation = &entsql.Annotation{
 		Table: "friendships",
 	}
+	ModerationSwitchesTable.Annotation = &entsql.Annotation{
+		Table: "moderation_switches",
+	}
+	ModerationSwitchChangesTable.Annotation = &entsql.Annotation{
+		Table: "moderation_switch_changes",
+	}
+	ModerationSwitchRequestsTable.Annotation = &entsql.Annotation{
+		Table: "moderation_switch_requests",
+	}
 	MutesTable.Annotation = &entsql.Annotation{
 		Table: "mutes",
+	}
+	QuickMessagesTable.Annotation = &entsql.Annotation{
+		Table: "quick_messages",
+	}
+	SanctionsTable.Annotation = &entsql.Annotation{
+		Table: "sanctions",
+	}
+	SensitiveAllowlistTable.Annotation = &entsql.Annotation{
+		Table: "sensitive_allowlist",
+	}
+	SensitiveCatalogVersionsTable.Annotation = &entsql.Annotation{
+		Table: "sensitive_catalog_versions",
+	}
+	SensitiveTermsTable.Annotation = &entsql.Annotation{
+		Table: "sensitive_terms",
+	}
+	SensitiveTermCategoriesTable.Annotation = &entsql.Annotation{
+		Table: "sensitive_term_categories",
+	}
+	TenantCategorySettingsTable.Annotation = &entsql.Annotation{
+		Table: "tenant_category_settings",
 	}
 }

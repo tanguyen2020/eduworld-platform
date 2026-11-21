@@ -10,8 +10,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
 
-// EventMessageCreated is the outbox event of a persisted message (no content, EVENT_DESIGN §4.9).
-const EventMessageCreated = "chat.message_created"
+// Outbox events of a persisted message (no content, EVENT_DESIGN §4.9).
+const (
+	EventMessageCreated = "chat.message_created"
+	// EventMessageHeld: a held message (hold_for_review / block_and_alert) was stored (F116-AC-06); consumed by F121.
+	EventMessageHeld = "chat.message_held"
+)
 
 // Persist is the use case of chat-persister (F115 US3, R25): one batch of envelopes of one tenant is written in one
 // transaction — rows idempotent per message_id, channels.last_seq raised with GREATEST, gameplay partitions recorded —
@@ -40,6 +44,19 @@ func (h Persist) Persist(ctx context.Context, tenant uuid.UUID, es []message.Env
 					"seq": e.Seq, "sender_id": e.SenderID, "kind": string(e.MsgKind), "moderation_state": string(e.Moderation.State),
 					"created_at": e.CreatedAt.UTC()}}); err != nil {
 				return err
+			}
+			if e.Moderation.State == message.StateHeld {
+				reasons := e.Moderation.CategoryCodes
+				if reasons == nil {
+					reasons = []string{}
+				}
+				if err := h.Events.Publish(ctx, write.Event{Type: EventMessageHeld, SubjectType: "chat_message", SubjectID: e.MessageID.String(),
+					PartitionKey: e.ChannelID.String(), TenantID: &t, OccurredAt: e.CreatedAt, Payload: map[string]any{
+						"tenant_id": e.TenantID, "message_id": e.MessageID, "channel_id": e.ChannelID, "channel_type": e.ChannelType,
+						"sender_id": e.SenderID, "decision": string(e.Moderation.Decision), "reasons": reasons,
+						"catalog_version": e.Moderation.CatalogVersion, "created_at": e.CreatedAt.UTC()}}); err != nil {
+					return err
+				}
 			}
 		}
 		return nil

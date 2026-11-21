@@ -22,7 +22,17 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendcode"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/friendship"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitch"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchchange"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/moderationswitchrequest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/mute"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/quickmessage"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sanction"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveallowlistentry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitivecatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitiveterm"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/sensitivetermcategory"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/tenantcategorysetting"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/ent/internal"
 )
@@ -46,8 +56,28 @@ type Client struct {
 	FriendRequest *FriendRequestClient
 	// Friendship is the client for interacting with the Friendship builders.
 	Friendship *FriendshipClient
+	// ModerationSwitch is the client for interacting with the ModerationSwitch builders.
+	ModerationSwitch *ModerationSwitchClient
+	// ModerationSwitchChange is the client for interacting with the ModerationSwitchChange builders.
+	ModerationSwitchChange *ModerationSwitchChangeClient
+	// ModerationSwitchRequest is the client for interacting with the ModerationSwitchRequest builders.
+	ModerationSwitchRequest *ModerationSwitchRequestClient
 	// Mute is the client for interacting with the Mute builders.
 	Mute *MuteClient
+	// QuickMessage is the client for interacting with the QuickMessage builders.
+	QuickMessage *QuickMessageClient
+	// Sanction is the client for interacting with the Sanction builders.
+	Sanction *SanctionClient
+	// SensitiveAllowlistEntry is the client for interacting with the SensitiveAllowlistEntry builders.
+	SensitiveAllowlistEntry *SensitiveAllowlistEntryClient
+	// SensitiveCatalogVersion is the client for interacting with the SensitiveCatalogVersion builders.
+	SensitiveCatalogVersion *SensitiveCatalogVersionClient
+	// SensitiveTerm is the client for interacting with the SensitiveTerm builders.
+	SensitiveTerm *SensitiveTermClient
+	// SensitiveTermCategory is the client for interacting with the SensitiveTermCategory builders.
+	SensitiveTermCategory *SensitiveTermCategoryClient
+	// TenantCategorySetting is the client for interacting with the TenantCategorySetting builders.
+	TenantCategorySetting *TenantCategorySettingClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -66,7 +96,17 @@ func (c *Client) init() {
 	c.FriendCode = NewFriendCodeClient(c.config)
 	c.FriendRequest = NewFriendRequestClient(c.config)
 	c.Friendship = NewFriendshipClient(c.config)
+	c.ModerationSwitch = NewModerationSwitchClient(c.config)
+	c.ModerationSwitchChange = NewModerationSwitchChangeClient(c.config)
+	c.ModerationSwitchRequest = NewModerationSwitchRequestClient(c.config)
 	c.Mute = NewMuteClient(c.config)
+	c.QuickMessage = NewQuickMessageClient(c.config)
+	c.Sanction = NewSanctionClient(c.config)
+	c.SensitiveAllowlistEntry = NewSensitiveAllowlistEntryClient(c.config)
+	c.SensitiveCatalogVersion = NewSensitiveCatalogVersionClient(c.config)
+	c.SensitiveTerm = NewSensitiveTermClient(c.config)
+	c.SensitiveTermCategory = NewSensitiveTermCategoryClient(c.config)
+	c.TenantCategorySetting = NewTenantCategorySettingClient(c.config)
 }
 
 type (
@@ -160,16 +200,26 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		Block:         NewBlockClient(cfg),
-		Channel:       NewChannelClient(cfg),
-		ChannelMember: NewChannelMemberClient(cfg),
-		ChatPolicy:    NewChatPolicyClient(cfg),
-		FriendCode:    NewFriendCodeClient(cfg),
-		FriendRequest: NewFriendRequestClient(cfg),
-		Friendship:    NewFriendshipClient(cfg),
-		Mute:          NewMuteClient(cfg),
+		ctx:                     ctx,
+		config:                  cfg,
+		Block:                   NewBlockClient(cfg),
+		Channel:                 NewChannelClient(cfg),
+		ChannelMember:           NewChannelMemberClient(cfg),
+		ChatPolicy:              NewChatPolicyClient(cfg),
+		FriendCode:              NewFriendCodeClient(cfg),
+		FriendRequest:           NewFriendRequestClient(cfg),
+		Friendship:              NewFriendshipClient(cfg),
+		ModerationSwitch:        NewModerationSwitchClient(cfg),
+		ModerationSwitchChange:  NewModerationSwitchChangeClient(cfg),
+		ModerationSwitchRequest: NewModerationSwitchRequestClient(cfg),
+		Mute:                    NewMuteClient(cfg),
+		QuickMessage:            NewQuickMessageClient(cfg),
+		Sanction:                NewSanctionClient(cfg),
+		SensitiveAllowlistEntry: NewSensitiveAllowlistEntryClient(cfg),
+		SensitiveCatalogVersion: NewSensitiveCatalogVersionClient(cfg),
+		SensitiveTerm:           NewSensitiveTermClient(cfg),
+		SensitiveTermCategory:   NewSensitiveTermCategoryClient(cfg),
+		TenantCategorySetting:   NewTenantCategorySettingClient(cfg),
 	}, nil
 }
 
@@ -187,16 +237,26 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		Block:         NewBlockClient(cfg),
-		Channel:       NewChannelClient(cfg),
-		ChannelMember: NewChannelMemberClient(cfg),
-		ChatPolicy:    NewChatPolicyClient(cfg),
-		FriendCode:    NewFriendCodeClient(cfg),
-		FriendRequest: NewFriendRequestClient(cfg),
-		Friendship:    NewFriendshipClient(cfg),
-		Mute:          NewMuteClient(cfg),
+		ctx:                     ctx,
+		config:                  cfg,
+		Block:                   NewBlockClient(cfg),
+		Channel:                 NewChannelClient(cfg),
+		ChannelMember:           NewChannelMemberClient(cfg),
+		ChatPolicy:              NewChatPolicyClient(cfg),
+		FriendCode:              NewFriendCodeClient(cfg),
+		FriendRequest:           NewFriendRequestClient(cfg),
+		Friendship:              NewFriendshipClient(cfg),
+		ModerationSwitch:        NewModerationSwitchClient(cfg),
+		ModerationSwitchChange:  NewModerationSwitchChangeClient(cfg),
+		ModerationSwitchRequest: NewModerationSwitchRequestClient(cfg),
+		Mute:                    NewMuteClient(cfg),
+		QuickMessage:            NewQuickMessageClient(cfg),
+		Sanction:                NewSanctionClient(cfg),
+		SensitiveAllowlistEntry: NewSensitiveAllowlistEntryClient(cfg),
+		SensitiveCatalogVersion: NewSensitiveCatalogVersionClient(cfg),
+		SensitiveTerm:           NewSensitiveTermClient(cfg),
+		SensitiveTermCategory:   NewSensitiveTermCategoryClient(cfg),
+		TenantCategorySetting:   NewTenantCategorySettingClient(cfg),
 	}, nil
 }
 
@@ -227,7 +287,10 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Block, c.Channel, c.ChannelMember, c.ChatPolicy, c.FriendCode,
-		c.FriendRequest, c.Friendship, c.Mute,
+		c.FriendRequest, c.Friendship, c.ModerationSwitch, c.ModerationSwitchChange,
+		c.ModerationSwitchRequest, c.Mute, c.QuickMessage, c.Sanction,
+		c.SensitiveAllowlistEntry, c.SensitiveCatalogVersion, c.SensitiveTerm,
+		c.SensitiveTermCategory, c.TenantCategorySetting,
 	} {
 		n.Use(hooks...)
 	}
@@ -238,7 +301,10 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Block, c.Channel, c.ChannelMember, c.ChatPolicy, c.FriendCode,
-		c.FriendRequest, c.Friendship, c.Mute,
+		c.FriendRequest, c.Friendship, c.ModerationSwitch, c.ModerationSwitchChange,
+		c.ModerationSwitchRequest, c.Mute, c.QuickMessage, c.Sanction,
+		c.SensitiveAllowlistEntry, c.SensitiveCatalogVersion, c.SensitiveTerm,
+		c.SensitiveTermCategory, c.TenantCategorySetting,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -261,8 +327,28 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.FriendRequest.mutate(ctx, m)
 	case *FriendshipMutation:
 		return c.Friendship.mutate(ctx, m)
+	case *ModerationSwitchMutation:
+		return c.ModerationSwitch.mutate(ctx, m)
+	case *ModerationSwitchChangeMutation:
+		return c.ModerationSwitchChange.mutate(ctx, m)
+	case *ModerationSwitchRequestMutation:
+		return c.ModerationSwitchRequest.mutate(ctx, m)
 	case *MuteMutation:
 		return c.Mute.mutate(ctx, m)
+	case *QuickMessageMutation:
+		return c.QuickMessage.mutate(ctx, m)
+	case *SanctionMutation:
+		return c.Sanction.mutate(ctx, m)
+	case *SensitiveAllowlistEntryMutation:
+		return c.SensitiveAllowlistEntry.mutate(ctx, m)
+	case *SensitiveCatalogVersionMutation:
+		return c.SensitiveCatalogVersion.mutate(ctx, m)
+	case *SensitiveTermMutation:
+		return c.SensitiveTerm.mutate(ctx, m)
+	case *SensitiveTermCategoryMutation:
+		return c.SensitiveTermCategory.mutate(ctx, m)
+	case *TenantCategorySettingMutation:
+		return c.TenantCategorySetting.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -1213,6 +1299,411 @@ func (c *FriendshipClient) mutate(ctx context.Context, m *FriendshipMutation) (V
 	}
 }
 
+// ModerationSwitchClient is a client for the ModerationSwitch schema.
+type ModerationSwitchClient struct {
+	config
+}
+
+// NewModerationSwitchClient returns a client for the ModerationSwitch from the given config.
+func NewModerationSwitchClient(c config) *ModerationSwitchClient {
+	return &ModerationSwitchClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `moderationswitch.Hooks(f(g(h())))`.
+func (c *ModerationSwitchClient) Use(hooks ...Hook) {
+	c.hooks.ModerationSwitch = append(c.hooks.ModerationSwitch, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `moderationswitch.Intercept(f(g(h())))`.
+func (c *ModerationSwitchClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ModerationSwitch = append(c.inters.ModerationSwitch, interceptors...)
+}
+
+// Create returns a builder for creating a ModerationSwitch entity.
+func (c *ModerationSwitchClient) Create() *ModerationSwitchCreate {
+	mutation := newModerationSwitchMutation(c.config, OpCreate)
+	return &ModerationSwitchCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ModerationSwitch entities.
+func (c *ModerationSwitchClient) CreateBulk(builders ...*ModerationSwitchCreate) *ModerationSwitchCreateBulk {
+	return &ModerationSwitchCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModerationSwitchClient) MapCreateBulk(slice any, setFunc func(*ModerationSwitchCreate, int)) *ModerationSwitchCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModerationSwitchCreateBulk{err: fmt.Errorf("calling to ModerationSwitchClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModerationSwitchCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModerationSwitchCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ModerationSwitch.
+func (c *ModerationSwitchClient) Update() *ModerationSwitchUpdate {
+	mutation := newModerationSwitchMutation(c.config, OpUpdate)
+	return &ModerationSwitchUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModerationSwitchClient) UpdateOne(_m *ModerationSwitch) *ModerationSwitchUpdateOne {
+	mutation := newModerationSwitchMutation(c.config, OpUpdateOne, withModerationSwitch(_m))
+	return &ModerationSwitchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModerationSwitchClient) UpdateOneID(id uuid.UUID) *ModerationSwitchUpdateOne {
+	mutation := newModerationSwitchMutation(c.config, OpUpdateOne, withModerationSwitchID(id))
+	return &ModerationSwitchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ModerationSwitch.
+func (c *ModerationSwitchClient) Delete() *ModerationSwitchDelete {
+	mutation := newModerationSwitchMutation(c.config, OpDelete)
+	return &ModerationSwitchDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModerationSwitchClient) DeleteOne(_m *ModerationSwitch) *ModerationSwitchDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModerationSwitchClient) DeleteOneID(id uuid.UUID) *ModerationSwitchDeleteOne {
+	builder := c.Delete().Where(moderationswitch.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModerationSwitchDeleteOne{builder}
+}
+
+// Query returns a query builder for ModerationSwitch.
+func (c *ModerationSwitchClient) Query() *ModerationSwitchQuery {
+	return &ModerationSwitchQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModerationSwitch},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ModerationSwitch entity by its id.
+func (c *ModerationSwitchClient) Get(ctx context.Context, id uuid.UUID) (*ModerationSwitch, error) {
+	return c.Query().Where(moderationswitch.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModerationSwitchClient) GetX(ctx context.Context, id uuid.UUID) *ModerationSwitch {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ModerationSwitchClient) Hooks() []Hook {
+	hooks := c.hooks.ModerationSwitch
+	return append(hooks[:len(hooks):len(hooks)], moderationswitch.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModerationSwitchClient) Interceptors() []Interceptor {
+	inters := c.inters.ModerationSwitch
+	return append(inters[:len(inters):len(inters)], moderationswitch.Interceptors[:]...)
+}
+
+func (c *ModerationSwitchClient) mutate(ctx context.Context, m *ModerationSwitchMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModerationSwitchCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModerationSwitchUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModerationSwitchUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModerationSwitchDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ModerationSwitch mutation op: %q", m.Op())
+	}
+}
+
+// ModerationSwitchChangeClient is a client for the ModerationSwitchChange schema.
+type ModerationSwitchChangeClient struct {
+	config
+}
+
+// NewModerationSwitchChangeClient returns a client for the ModerationSwitchChange from the given config.
+func NewModerationSwitchChangeClient(c config) *ModerationSwitchChangeClient {
+	return &ModerationSwitchChangeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `moderationswitchchange.Hooks(f(g(h())))`.
+func (c *ModerationSwitchChangeClient) Use(hooks ...Hook) {
+	c.hooks.ModerationSwitchChange = append(c.hooks.ModerationSwitchChange, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `moderationswitchchange.Intercept(f(g(h())))`.
+func (c *ModerationSwitchChangeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ModerationSwitchChange = append(c.inters.ModerationSwitchChange, interceptors...)
+}
+
+// Create returns a builder for creating a ModerationSwitchChange entity.
+func (c *ModerationSwitchChangeClient) Create() *ModerationSwitchChangeCreate {
+	mutation := newModerationSwitchChangeMutation(c.config, OpCreate)
+	return &ModerationSwitchChangeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ModerationSwitchChange entities.
+func (c *ModerationSwitchChangeClient) CreateBulk(builders ...*ModerationSwitchChangeCreate) *ModerationSwitchChangeCreateBulk {
+	return &ModerationSwitchChangeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModerationSwitchChangeClient) MapCreateBulk(slice any, setFunc func(*ModerationSwitchChangeCreate, int)) *ModerationSwitchChangeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModerationSwitchChangeCreateBulk{err: fmt.Errorf("calling to ModerationSwitchChangeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModerationSwitchChangeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModerationSwitchChangeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ModerationSwitchChange.
+func (c *ModerationSwitchChangeClient) Update() *ModerationSwitchChangeUpdate {
+	mutation := newModerationSwitchChangeMutation(c.config, OpUpdate)
+	return &ModerationSwitchChangeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModerationSwitchChangeClient) UpdateOne(_m *ModerationSwitchChange) *ModerationSwitchChangeUpdateOne {
+	mutation := newModerationSwitchChangeMutation(c.config, OpUpdateOne, withModerationSwitchChange(_m))
+	return &ModerationSwitchChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModerationSwitchChangeClient) UpdateOneID(id uuid.UUID) *ModerationSwitchChangeUpdateOne {
+	mutation := newModerationSwitchChangeMutation(c.config, OpUpdateOne, withModerationSwitchChangeID(id))
+	return &ModerationSwitchChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ModerationSwitchChange.
+func (c *ModerationSwitchChangeClient) Delete() *ModerationSwitchChangeDelete {
+	mutation := newModerationSwitchChangeMutation(c.config, OpDelete)
+	return &ModerationSwitchChangeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModerationSwitchChangeClient) DeleteOne(_m *ModerationSwitchChange) *ModerationSwitchChangeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModerationSwitchChangeClient) DeleteOneID(id uuid.UUID) *ModerationSwitchChangeDeleteOne {
+	builder := c.Delete().Where(moderationswitchchange.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModerationSwitchChangeDeleteOne{builder}
+}
+
+// Query returns a query builder for ModerationSwitchChange.
+func (c *ModerationSwitchChangeClient) Query() *ModerationSwitchChangeQuery {
+	return &ModerationSwitchChangeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModerationSwitchChange},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ModerationSwitchChange entity by its id.
+func (c *ModerationSwitchChangeClient) Get(ctx context.Context, id uuid.UUID) (*ModerationSwitchChange, error) {
+	return c.Query().Where(moderationswitchchange.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModerationSwitchChangeClient) GetX(ctx context.Context, id uuid.UUID) *ModerationSwitchChange {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ModerationSwitchChangeClient) Hooks() []Hook {
+	hooks := c.hooks.ModerationSwitchChange
+	return append(hooks[:len(hooks):len(hooks)], moderationswitchchange.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModerationSwitchChangeClient) Interceptors() []Interceptor {
+	inters := c.inters.ModerationSwitchChange
+	return append(inters[:len(inters):len(inters)], moderationswitchchange.Interceptors[:]...)
+}
+
+func (c *ModerationSwitchChangeClient) mutate(ctx context.Context, m *ModerationSwitchChangeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModerationSwitchChangeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModerationSwitchChangeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModerationSwitchChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModerationSwitchChangeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ModerationSwitchChange mutation op: %q", m.Op())
+	}
+}
+
+// ModerationSwitchRequestClient is a client for the ModerationSwitchRequest schema.
+type ModerationSwitchRequestClient struct {
+	config
+}
+
+// NewModerationSwitchRequestClient returns a client for the ModerationSwitchRequest from the given config.
+func NewModerationSwitchRequestClient(c config) *ModerationSwitchRequestClient {
+	return &ModerationSwitchRequestClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `moderationswitchrequest.Hooks(f(g(h())))`.
+func (c *ModerationSwitchRequestClient) Use(hooks ...Hook) {
+	c.hooks.ModerationSwitchRequest = append(c.hooks.ModerationSwitchRequest, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `moderationswitchrequest.Intercept(f(g(h())))`.
+func (c *ModerationSwitchRequestClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ModerationSwitchRequest = append(c.inters.ModerationSwitchRequest, interceptors...)
+}
+
+// Create returns a builder for creating a ModerationSwitchRequest entity.
+func (c *ModerationSwitchRequestClient) Create() *ModerationSwitchRequestCreate {
+	mutation := newModerationSwitchRequestMutation(c.config, OpCreate)
+	return &ModerationSwitchRequestCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ModerationSwitchRequest entities.
+func (c *ModerationSwitchRequestClient) CreateBulk(builders ...*ModerationSwitchRequestCreate) *ModerationSwitchRequestCreateBulk {
+	return &ModerationSwitchRequestCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModerationSwitchRequestClient) MapCreateBulk(slice any, setFunc func(*ModerationSwitchRequestCreate, int)) *ModerationSwitchRequestCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModerationSwitchRequestCreateBulk{err: fmt.Errorf("calling to ModerationSwitchRequestClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModerationSwitchRequestCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModerationSwitchRequestCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ModerationSwitchRequest.
+func (c *ModerationSwitchRequestClient) Update() *ModerationSwitchRequestUpdate {
+	mutation := newModerationSwitchRequestMutation(c.config, OpUpdate)
+	return &ModerationSwitchRequestUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModerationSwitchRequestClient) UpdateOne(_m *ModerationSwitchRequest) *ModerationSwitchRequestUpdateOne {
+	mutation := newModerationSwitchRequestMutation(c.config, OpUpdateOne, withModerationSwitchRequest(_m))
+	return &ModerationSwitchRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModerationSwitchRequestClient) UpdateOneID(id uuid.UUID) *ModerationSwitchRequestUpdateOne {
+	mutation := newModerationSwitchRequestMutation(c.config, OpUpdateOne, withModerationSwitchRequestID(id))
+	return &ModerationSwitchRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ModerationSwitchRequest.
+func (c *ModerationSwitchRequestClient) Delete() *ModerationSwitchRequestDelete {
+	mutation := newModerationSwitchRequestMutation(c.config, OpDelete)
+	return &ModerationSwitchRequestDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModerationSwitchRequestClient) DeleteOne(_m *ModerationSwitchRequest) *ModerationSwitchRequestDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModerationSwitchRequestClient) DeleteOneID(id uuid.UUID) *ModerationSwitchRequestDeleteOne {
+	builder := c.Delete().Where(moderationswitchrequest.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModerationSwitchRequestDeleteOne{builder}
+}
+
+// Query returns a query builder for ModerationSwitchRequest.
+func (c *ModerationSwitchRequestClient) Query() *ModerationSwitchRequestQuery {
+	return &ModerationSwitchRequestQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModerationSwitchRequest},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ModerationSwitchRequest entity by its id.
+func (c *ModerationSwitchRequestClient) Get(ctx context.Context, id uuid.UUID) (*ModerationSwitchRequest, error) {
+	return c.Query().Where(moderationswitchrequest.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModerationSwitchRequestClient) GetX(ctx context.Context, id uuid.UUID) *ModerationSwitchRequest {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ModerationSwitchRequestClient) Hooks() []Hook {
+	hooks := c.hooks.ModerationSwitchRequest
+	return append(hooks[:len(hooks):len(hooks)], moderationswitchrequest.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModerationSwitchRequestClient) Interceptors() []Interceptor {
+	inters := c.inters.ModerationSwitchRequest
+	return append(inters[:len(inters):len(inters)], moderationswitchrequest.Interceptors[:]...)
+}
+
+func (c *ModerationSwitchRequestClient) mutate(ctx context.Context, m *ModerationSwitchRequestMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModerationSwitchRequestCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModerationSwitchRequestUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModerationSwitchRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModerationSwitchRequestDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ModerationSwitchRequest mutation op: %q", m.Op())
+	}
+}
+
 // MuteClient is a client for the Mute schema.
 type MuteClient struct {
 	config
@@ -1348,29 +1839,988 @@ func (c *MuteClient) mutate(ctx context.Context, m *MuteMutation) (Value, error)
 	}
 }
 
+// QuickMessageClient is a client for the QuickMessage schema.
+type QuickMessageClient struct {
+	config
+}
+
+// NewQuickMessageClient returns a client for the QuickMessage from the given config.
+func NewQuickMessageClient(c config) *QuickMessageClient {
+	return &QuickMessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `quickmessage.Hooks(f(g(h())))`.
+func (c *QuickMessageClient) Use(hooks ...Hook) {
+	c.hooks.QuickMessage = append(c.hooks.QuickMessage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `quickmessage.Intercept(f(g(h())))`.
+func (c *QuickMessageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.QuickMessage = append(c.inters.QuickMessage, interceptors...)
+}
+
+// Create returns a builder for creating a QuickMessage entity.
+func (c *QuickMessageClient) Create() *QuickMessageCreate {
+	mutation := newQuickMessageMutation(c.config, OpCreate)
+	return &QuickMessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of QuickMessage entities.
+func (c *QuickMessageClient) CreateBulk(builders ...*QuickMessageCreate) *QuickMessageCreateBulk {
+	return &QuickMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QuickMessageClient) MapCreateBulk(slice any, setFunc func(*QuickMessageCreate, int)) *QuickMessageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QuickMessageCreateBulk{err: fmt.Errorf("calling to QuickMessageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QuickMessageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QuickMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for QuickMessage.
+func (c *QuickMessageClient) Update() *QuickMessageUpdate {
+	mutation := newQuickMessageMutation(c.config, OpUpdate)
+	return &QuickMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *QuickMessageClient) UpdateOne(_m *QuickMessage) *QuickMessageUpdateOne {
+	mutation := newQuickMessageMutation(c.config, OpUpdateOne, withQuickMessage(_m))
+	return &QuickMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *QuickMessageClient) UpdateOneID(id string) *QuickMessageUpdateOne {
+	mutation := newQuickMessageMutation(c.config, OpUpdateOne, withQuickMessageID(id))
+	return &QuickMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for QuickMessage.
+func (c *QuickMessageClient) Delete() *QuickMessageDelete {
+	mutation := newQuickMessageMutation(c.config, OpDelete)
+	return &QuickMessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *QuickMessageClient) DeleteOne(_m *QuickMessage) *QuickMessageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *QuickMessageClient) DeleteOneID(id string) *QuickMessageDeleteOne {
+	builder := c.Delete().Where(quickmessage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &QuickMessageDeleteOne{builder}
+}
+
+// Query returns a query builder for QuickMessage.
+func (c *QuickMessageClient) Query() *QuickMessageQuery {
+	return &QuickMessageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeQuickMessage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a QuickMessage entity by its id.
+func (c *QuickMessageClient) Get(ctx context.Context, id string) (*QuickMessage, error) {
+	return c.Query().Where(quickmessage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *QuickMessageClient) GetX(ctx context.Context, id string) *QuickMessage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *QuickMessageClient) Hooks() []Hook {
+	hooks := c.hooks.QuickMessage
+	return append(hooks[:len(hooks):len(hooks)], quickmessage.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *QuickMessageClient) Interceptors() []Interceptor {
+	inters := c.inters.QuickMessage
+	return append(inters[:len(inters):len(inters)], quickmessage.Interceptors[:]...)
+}
+
+func (c *QuickMessageClient) mutate(ctx context.Context, m *QuickMessageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QuickMessageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QuickMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QuickMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QuickMessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown QuickMessage mutation op: %q", m.Op())
+	}
+}
+
+// SanctionClient is a client for the Sanction schema.
+type SanctionClient struct {
+	config
+}
+
+// NewSanctionClient returns a client for the Sanction from the given config.
+func NewSanctionClient(c config) *SanctionClient {
+	return &SanctionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sanction.Hooks(f(g(h())))`.
+func (c *SanctionClient) Use(hooks ...Hook) {
+	c.hooks.Sanction = append(c.hooks.Sanction, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sanction.Intercept(f(g(h())))`.
+func (c *SanctionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Sanction = append(c.inters.Sanction, interceptors...)
+}
+
+// Create returns a builder for creating a Sanction entity.
+func (c *SanctionClient) Create() *SanctionCreate {
+	mutation := newSanctionMutation(c.config, OpCreate)
+	return &SanctionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Sanction entities.
+func (c *SanctionClient) CreateBulk(builders ...*SanctionCreate) *SanctionCreateBulk {
+	return &SanctionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SanctionClient) MapCreateBulk(slice any, setFunc func(*SanctionCreate, int)) *SanctionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SanctionCreateBulk{err: fmt.Errorf("calling to SanctionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SanctionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SanctionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Sanction.
+func (c *SanctionClient) Update() *SanctionUpdate {
+	mutation := newSanctionMutation(c.config, OpUpdate)
+	return &SanctionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SanctionClient) UpdateOne(_m *Sanction) *SanctionUpdateOne {
+	mutation := newSanctionMutation(c.config, OpUpdateOne, withSanction(_m))
+	return &SanctionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SanctionClient) UpdateOneID(id uuid.UUID) *SanctionUpdateOne {
+	mutation := newSanctionMutation(c.config, OpUpdateOne, withSanctionID(id))
+	return &SanctionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Sanction.
+func (c *SanctionClient) Delete() *SanctionDelete {
+	mutation := newSanctionMutation(c.config, OpDelete)
+	return &SanctionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SanctionClient) DeleteOne(_m *Sanction) *SanctionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SanctionClient) DeleteOneID(id uuid.UUID) *SanctionDeleteOne {
+	builder := c.Delete().Where(sanction.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SanctionDeleteOne{builder}
+}
+
+// Query returns a query builder for Sanction.
+func (c *SanctionClient) Query() *SanctionQuery {
+	return &SanctionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSanction},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Sanction entity by its id.
+func (c *SanctionClient) Get(ctx context.Context, id uuid.UUID) (*Sanction, error) {
+	return c.Query().Where(sanction.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SanctionClient) GetX(ctx context.Context, id uuid.UUID) *Sanction {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SanctionClient) Hooks() []Hook {
+	hooks := c.hooks.Sanction
+	return append(hooks[:len(hooks):len(hooks)], sanction.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SanctionClient) Interceptors() []Interceptor {
+	inters := c.inters.Sanction
+	return append(inters[:len(inters):len(inters)], sanction.Interceptors[:]...)
+}
+
+func (c *SanctionClient) mutate(ctx context.Context, m *SanctionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SanctionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SanctionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SanctionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SanctionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Sanction mutation op: %q", m.Op())
+	}
+}
+
+// SensitiveAllowlistEntryClient is a client for the SensitiveAllowlistEntry schema.
+type SensitiveAllowlistEntryClient struct {
+	config
+}
+
+// NewSensitiveAllowlistEntryClient returns a client for the SensitiveAllowlistEntry from the given config.
+func NewSensitiveAllowlistEntryClient(c config) *SensitiveAllowlistEntryClient {
+	return &SensitiveAllowlistEntryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sensitiveallowlistentry.Hooks(f(g(h())))`.
+func (c *SensitiveAllowlistEntryClient) Use(hooks ...Hook) {
+	c.hooks.SensitiveAllowlistEntry = append(c.hooks.SensitiveAllowlistEntry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sensitiveallowlistentry.Intercept(f(g(h())))`.
+func (c *SensitiveAllowlistEntryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SensitiveAllowlistEntry = append(c.inters.SensitiveAllowlistEntry, interceptors...)
+}
+
+// Create returns a builder for creating a SensitiveAllowlistEntry entity.
+func (c *SensitiveAllowlistEntryClient) Create() *SensitiveAllowlistEntryCreate {
+	mutation := newSensitiveAllowlistEntryMutation(c.config, OpCreate)
+	return &SensitiveAllowlistEntryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SensitiveAllowlistEntry entities.
+func (c *SensitiveAllowlistEntryClient) CreateBulk(builders ...*SensitiveAllowlistEntryCreate) *SensitiveAllowlistEntryCreateBulk {
+	return &SensitiveAllowlistEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SensitiveAllowlistEntryClient) MapCreateBulk(slice any, setFunc func(*SensitiveAllowlistEntryCreate, int)) *SensitiveAllowlistEntryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SensitiveAllowlistEntryCreateBulk{err: fmt.Errorf("calling to SensitiveAllowlistEntryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SensitiveAllowlistEntryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SensitiveAllowlistEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SensitiveAllowlistEntry.
+func (c *SensitiveAllowlistEntryClient) Update() *SensitiveAllowlistEntryUpdate {
+	mutation := newSensitiveAllowlistEntryMutation(c.config, OpUpdate)
+	return &SensitiveAllowlistEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SensitiveAllowlistEntryClient) UpdateOne(_m *SensitiveAllowlistEntry) *SensitiveAllowlistEntryUpdateOne {
+	mutation := newSensitiveAllowlistEntryMutation(c.config, OpUpdateOne, withSensitiveAllowlistEntry(_m))
+	return &SensitiveAllowlistEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SensitiveAllowlistEntryClient) UpdateOneID(id uuid.UUID) *SensitiveAllowlistEntryUpdateOne {
+	mutation := newSensitiveAllowlistEntryMutation(c.config, OpUpdateOne, withSensitiveAllowlistEntryID(id))
+	return &SensitiveAllowlistEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SensitiveAllowlistEntry.
+func (c *SensitiveAllowlistEntryClient) Delete() *SensitiveAllowlistEntryDelete {
+	mutation := newSensitiveAllowlistEntryMutation(c.config, OpDelete)
+	return &SensitiveAllowlistEntryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SensitiveAllowlistEntryClient) DeleteOne(_m *SensitiveAllowlistEntry) *SensitiveAllowlistEntryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SensitiveAllowlistEntryClient) DeleteOneID(id uuid.UUID) *SensitiveAllowlistEntryDeleteOne {
+	builder := c.Delete().Where(sensitiveallowlistentry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SensitiveAllowlistEntryDeleteOne{builder}
+}
+
+// Query returns a query builder for SensitiveAllowlistEntry.
+func (c *SensitiveAllowlistEntryClient) Query() *SensitiveAllowlistEntryQuery {
+	return &SensitiveAllowlistEntryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSensitiveAllowlistEntry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SensitiveAllowlistEntry entity by its id.
+func (c *SensitiveAllowlistEntryClient) Get(ctx context.Context, id uuid.UUID) (*SensitiveAllowlistEntry, error) {
+	return c.Query().Where(sensitiveallowlistentry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SensitiveAllowlistEntryClient) GetX(ctx context.Context, id uuid.UUID) *SensitiveAllowlistEntry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SensitiveAllowlistEntryClient) Hooks() []Hook {
+	hooks := c.hooks.SensitiveAllowlistEntry
+	return append(hooks[:len(hooks):len(hooks)], sensitiveallowlistentry.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SensitiveAllowlistEntryClient) Interceptors() []Interceptor {
+	inters := c.inters.SensitiveAllowlistEntry
+	return append(inters[:len(inters):len(inters)], sensitiveallowlistentry.Interceptors[:]...)
+}
+
+func (c *SensitiveAllowlistEntryClient) mutate(ctx context.Context, m *SensitiveAllowlistEntryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SensitiveAllowlistEntryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SensitiveAllowlistEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SensitiveAllowlistEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SensitiveAllowlistEntryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SensitiveAllowlistEntry mutation op: %q", m.Op())
+	}
+}
+
+// SensitiveCatalogVersionClient is a client for the SensitiveCatalogVersion schema.
+type SensitiveCatalogVersionClient struct {
+	config
+}
+
+// NewSensitiveCatalogVersionClient returns a client for the SensitiveCatalogVersion from the given config.
+func NewSensitiveCatalogVersionClient(c config) *SensitiveCatalogVersionClient {
+	return &SensitiveCatalogVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sensitivecatalogversion.Hooks(f(g(h())))`.
+func (c *SensitiveCatalogVersionClient) Use(hooks ...Hook) {
+	c.hooks.SensitiveCatalogVersion = append(c.hooks.SensitiveCatalogVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sensitivecatalogversion.Intercept(f(g(h())))`.
+func (c *SensitiveCatalogVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SensitiveCatalogVersion = append(c.inters.SensitiveCatalogVersion, interceptors...)
+}
+
+// Create returns a builder for creating a SensitiveCatalogVersion entity.
+func (c *SensitiveCatalogVersionClient) Create() *SensitiveCatalogVersionCreate {
+	mutation := newSensitiveCatalogVersionMutation(c.config, OpCreate)
+	return &SensitiveCatalogVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SensitiveCatalogVersion entities.
+func (c *SensitiveCatalogVersionClient) CreateBulk(builders ...*SensitiveCatalogVersionCreate) *SensitiveCatalogVersionCreateBulk {
+	return &SensitiveCatalogVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SensitiveCatalogVersionClient) MapCreateBulk(slice any, setFunc func(*SensitiveCatalogVersionCreate, int)) *SensitiveCatalogVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SensitiveCatalogVersionCreateBulk{err: fmt.Errorf("calling to SensitiveCatalogVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SensitiveCatalogVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SensitiveCatalogVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SensitiveCatalogVersion.
+func (c *SensitiveCatalogVersionClient) Update() *SensitiveCatalogVersionUpdate {
+	mutation := newSensitiveCatalogVersionMutation(c.config, OpUpdate)
+	return &SensitiveCatalogVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SensitiveCatalogVersionClient) UpdateOne(_m *SensitiveCatalogVersion) *SensitiveCatalogVersionUpdateOne {
+	mutation := newSensitiveCatalogVersionMutation(c.config, OpUpdateOne, withSensitiveCatalogVersion(_m))
+	return &SensitiveCatalogVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SensitiveCatalogVersionClient) UpdateOneID(id uuid.UUID) *SensitiveCatalogVersionUpdateOne {
+	mutation := newSensitiveCatalogVersionMutation(c.config, OpUpdateOne, withSensitiveCatalogVersionID(id))
+	return &SensitiveCatalogVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SensitiveCatalogVersion.
+func (c *SensitiveCatalogVersionClient) Delete() *SensitiveCatalogVersionDelete {
+	mutation := newSensitiveCatalogVersionMutation(c.config, OpDelete)
+	return &SensitiveCatalogVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SensitiveCatalogVersionClient) DeleteOne(_m *SensitiveCatalogVersion) *SensitiveCatalogVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SensitiveCatalogVersionClient) DeleteOneID(id uuid.UUID) *SensitiveCatalogVersionDeleteOne {
+	builder := c.Delete().Where(sensitivecatalogversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SensitiveCatalogVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for SensitiveCatalogVersion.
+func (c *SensitiveCatalogVersionClient) Query() *SensitiveCatalogVersionQuery {
+	return &SensitiveCatalogVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSensitiveCatalogVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SensitiveCatalogVersion entity by its id.
+func (c *SensitiveCatalogVersionClient) Get(ctx context.Context, id uuid.UUID) (*SensitiveCatalogVersion, error) {
+	return c.Query().Where(sensitivecatalogversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SensitiveCatalogVersionClient) GetX(ctx context.Context, id uuid.UUID) *SensitiveCatalogVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SensitiveCatalogVersionClient) Hooks() []Hook {
+	hooks := c.hooks.SensitiveCatalogVersion
+	return append(hooks[:len(hooks):len(hooks)], sensitivecatalogversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SensitiveCatalogVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.SensitiveCatalogVersion
+	return append(inters[:len(inters):len(inters)], sensitivecatalogversion.Interceptors[:]...)
+}
+
+func (c *SensitiveCatalogVersionClient) mutate(ctx context.Context, m *SensitiveCatalogVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SensitiveCatalogVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SensitiveCatalogVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SensitiveCatalogVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SensitiveCatalogVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SensitiveCatalogVersion mutation op: %q", m.Op())
+	}
+}
+
+// SensitiveTermClient is a client for the SensitiveTerm schema.
+type SensitiveTermClient struct {
+	config
+}
+
+// NewSensitiveTermClient returns a client for the SensitiveTerm from the given config.
+func NewSensitiveTermClient(c config) *SensitiveTermClient {
+	return &SensitiveTermClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sensitiveterm.Hooks(f(g(h())))`.
+func (c *SensitiveTermClient) Use(hooks ...Hook) {
+	c.hooks.SensitiveTerm = append(c.hooks.SensitiveTerm, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sensitiveterm.Intercept(f(g(h())))`.
+func (c *SensitiveTermClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SensitiveTerm = append(c.inters.SensitiveTerm, interceptors...)
+}
+
+// Create returns a builder for creating a SensitiveTerm entity.
+func (c *SensitiveTermClient) Create() *SensitiveTermCreate {
+	mutation := newSensitiveTermMutation(c.config, OpCreate)
+	return &SensitiveTermCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SensitiveTerm entities.
+func (c *SensitiveTermClient) CreateBulk(builders ...*SensitiveTermCreate) *SensitiveTermCreateBulk {
+	return &SensitiveTermCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SensitiveTermClient) MapCreateBulk(slice any, setFunc func(*SensitiveTermCreate, int)) *SensitiveTermCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SensitiveTermCreateBulk{err: fmt.Errorf("calling to SensitiveTermClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SensitiveTermCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SensitiveTermCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SensitiveTerm.
+func (c *SensitiveTermClient) Update() *SensitiveTermUpdate {
+	mutation := newSensitiveTermMutation(c.config, OpUpdate)
+	return &SensitiveTermUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SensitiveTermClient) UpdateOne(_m *SensitiveTerm) *SensitiveTermUpdateOne {
+	mutation := newSensitiveTermMutation(c.config, OpUpdateOne, withSensitiveTerm(_m))
+	return &SensitiveTermUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SensitiveTermClient) UpdateOneID(id uuid.UUID) *SensitiveTermUpdateOne {
+	mutation := newSensitiveTermMutation(c.config, OpUpdateOne, withSensitiveTermID(id))
+	return &SensitiveTermUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SensitiveTerm.
+func (c *SensitiveTermClient) Delete() *SensitiveTermDelete {
+	mutation := newSensitiveTermMutation(c.config, OpDelete)
+	return &SensitiveTermDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SensitiveTermClient) DeleteOne(_m *SensitiveTerm) *SensitiveTermDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SensitiveTermClient) DeleteOneID(id uuid.UUID) *SensitiveTermDeleteOne {
+	builder := c.Delete().Where(sensitiveterm.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SensitiveTermDeleteOne{builder}
+}
+
+// Query returns a query builder for SensitiveTerm.
+func (c *SensitiveTermClient) Query() *SensitiveTermQuery {
+	return &SensitiveTermQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSensitiveTerm},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SensitiveTerm entity by its id.
+func (c *SensitiveTermClient) Get(ctx context.Context, id uuid.UUID) (*SensitiveTerm, error) {
+	return c.Query().Where(sensitiveterm.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SensitiveTermClient) GetX(ctx context.Context, id uuid.UUID) *SensitiveTerm {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SensitiveTermClient) Hooks() []Hook {
+	hooks := c.hooks.SensitiveTerm
+	return append(hooks[:len(hooks):len(hooks)], sensitiveterm.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SensitiveTermClient) Interceptors() []Interceptor {
+	inters := c.inters.SensitiveTerm
+	return append(inters[:len(inters):len(inters)], sensitiveterm.Interceptors[:]...)
+}
+
+func (c *SensitiveTermClient) mutate(ctx context.Context, m *SensitiveTermMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SensitiveTermCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SensitiveTermUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SensitiveTermUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SensitiveTermDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SensitiveTerm mutation op: %q", m.Op())
+	}
+}
+
+// SensitiveTermCategoryClient is a client for the SensitiveTermCategory schema.
+type SensitiveTermCategoryClient struct {
+	config
+}
+
+// NewSensitiveTermCategoryClient returns a client for the SensitiveTermCategory from the given config.
+func NewSensitiveTermCategoryClient(c config) *SensitiveTermCategoryClient {
+	return &SensitiveTermCategoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sensitivetermcategory.Hooks(f(g(h())))`.
+func (c *SensitiveTermCategoryClient) Use(hooks ...Hook) {
+	c.hooks.SensitiveTermCategory = append(c.hooks.SensitiveTermCategory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sensitivetermcategory.Intercept(f(g(h())))`.
+func (c *SensitiveTermCategoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SensitiveTermCategory = append(c.inters.SensitiveTermCategory, interceptors...)
+}
+
+// Create returns a builder for creating a SensitiveTermCategory entity.
+func (c *SensitiveTermCategoryClient) Create() *SensitiveTermCategoryCreate {
+	mutation := newSensitiveTermCategoryMutation(c.config, OpCreate)
+	return &SensitiveTermCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SensitiveTermCategory entities.
+func (c *SensitiveTermCategoryClient) CreateBulk(builders ...*SensitiveTermCategoryCreate) *SensitiveTermCategoryCreateBulk {
+	return &SensitiveTermCategoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SensitiveTermCategoryClient) MapCreateBulk(slice any, setFunc func(*SensitiveTermCategoryCreate, int)) *SensitiveTermCategoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SensitiveTermCategoryCreateBulk{err: fmt.Errorf("calling to SensitiveTermCategoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SensitiveTermCategoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SensitiveTermCategoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SensitiveTermCategory.
+func (c *SensitiveTermCategoryClient) Update() *SensitiveTermCategoryUpdate {
+	mutation := newSensitiveTermCategoryMutation(c.config, OpUpdate)
+	return &SensitiveTermCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SensitiveTermCategoryClient) UpdateOne(_m *SensitiveTermCategory) *SensitiveTermCategoryUpdateOne {
+	mutation := newSensitiveTermCategoryMutation(c.config, OpUpdateOne, withSensitiveTermCategory(_m))
+	return &SensitiveTermCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SensitiveTermCategoryClient) UpdateOneID(id uuid.UUID) *SensitiveTermCategoryUpdateOne {
+	mutation := newSensitiveTermCategoryMutation(c.config, OpUpdateOne, withSensitiveTermCategoryID(id))
+	return &SensitiveTermCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SensitiveTermCategory.
+func (c *SensitiveTermCategoryClient) Delete() *SensitiveTermCategoryDelete {
+	mutation := newSensitiveTermCategoryMutation(c.config, OpDelete)
+	return &SensitiveTermCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SensitiveTermCategoryClient) DeleteOne(_m *SensitiveTermCategory) *SensitiveTermCategoryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SensitiveTermCategoryClient) DeleteOneID(id uuid.UUID) *SensitiveTermCategoryDeleteOne {
+	builder := c.Delete().Where(sensitivetermcategory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SensitiveTermCategoryDeleteOne{builder}
+}
+
+// Query returns a query builder for SensitiveTermCategory.
+func (c *SensitiveTermCategoryClient) Query() *SensitiveTermCategoryQuery {
+	return &SensitiveTermCategoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSensitiveTermCategory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SensitiveTermCategory entity by its id.
+func (c *SensitiveTermCategoryClient) Get(ctx context.Context, id uuid.UUID) (*SensitiveTermCategory, error) {
+	return c.Query().Where(sensitivetermcategory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SensitiveTermCategoryClient) GetX(ctx context.Context, id uuid.UUID) *SensitiveTermCategory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SensitiveTermCategoryClient) Hooks() []Hook {
+	hooks := c.hooks.SensitiveTermCategory
+	return append(hooks[:len(hooks):len(hooks)], sensitivetermcategory.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SensitiveTermCategoryClient) Interceptors() []Interceptor {
+	inters := c.inters.SensitiveTermCategory
+	return append(inters[:len(inters):len(inters)], sensitivetermcategory.Interceptors[:]...)
+}
+
+func (c *SensitiveTermCategoryClient) mutate(ctx context.Context, m *SensitiveTermCategoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SensitiveTermCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SensitiveTermCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SensitiveTermCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SensitiveTermCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SensitiveTermCategory mutation op: %q", m.Op())
+	}
+}
+
+// TenantCategorySettingClient is a client for the TenantCategorySetting schema.
+type TenantCategorySettingClient struct {
+	config
+}
+
+// NewTenantCategorySettingClient returns a client for the TenantCategorySetting from the given config.
+func NewTenantCategorySettingClient(c config) *TenantCategorySettingClient {
+	return &TenantCategorySettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tenantcategorysetting.Hooks(f(g(h())))`.
+func (c *TenantCategorySettingClient) Use(hooks ...Hook) {
+	c.hooks.TenantCategorySetting = append(c.hooks.TenantCategorySetting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tenantcategorysetting.Intercept(f(g(h())))`.
+func (c *TenantCategorySettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TenantCategorySetting = append(c.inters.TenantCategorySetting, interceptors...)
+}
+
+// Create returns a builder for creating a TenantCategorySetting entity.
+func (c *TenantCategorySettingClient) Create() *TenantCategorySettingCreate {
+	mutation := newTenantCategorySettingMutation(c.config, OpCreate)
+	return &TenantCategorySettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TenantCategorySetting entities.
+func (c *TenantCategorySettingClient) CreateBulk(builders ...*TenantCategorySettingCreate) *TenantCategorySettingCreateBulk {
+	return &TenantCategorySettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TenantCategorySettingClient) MapCreateBulk(slice any, setFunc func(*TenantCategorySettingCreate, int)) *TenantCategorySettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TenantCategorySettingCreateBulk{err: fmt.Errorf("calling to TenantCategorySettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TenantCategorySettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TenantCategorySettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TenantCategorySetting.
+func (c *TenantCategorySettingClient) Update() *TenantCategorySettingUpdate {
+	mutation := newTenantCategorySettingMutation(c.config, OpUpdate)
+	return &TenantCategorySettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TenantCategorySettingClient) UpdateOne(_m *TenantCategorySetting) *TenantCategorySettingUpdateOne {
+	mutation := newTenantCategorySettingMutation(c.config, OpUpdateOne, withTenantCategorySetting(_m))
+	return &TenantCategorySettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TenantCategorySettingClient) UpdateOneID(id uuid.UUID) *TenantCategorySettingUpdateOne {
+	mutation := newTenantCategorySettingMutation(c.config, OpUpdateOne, withTenantCategorySettingID(id))
+	return &TenantCategorySettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TenantCategorySetting.
+func (c *TenantCategorySettingClient) Delete() *TenantCategorySettingDelete {
+	mutation := newTenantCategorySettingMutation(c.config, OpDelete)
+	return &TenantCategorySettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TenantCategorySettingClient) DeleteOne(_m *TenantCategorySetting) *TenantCategorySettingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TenantCategorySettingClient) DeleteOneID(id uuid.UUID) *TenantCategorySettingDeleteOne {
+	builder := c.Delete().Where(tenantcategorysetting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TenantCategorySettingDeleteOne{builder}
+}
+
+// Query returns a query builder for TenantCategorySetting.
+func (c *TenantCategorySettingClient) Query() *TenantCategorySettingQuery {
+	return &TenantCategorySettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTenantCategorySetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TenantCategorySetting entity by its id.
+func (c *TenantCategorySettingClient) Get(ctx context.Context, id uuid.UUID) (*TenantCategorySetting, error) {
+	return c.Query().Where(tenantcategorysetting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TenantCategorySettingClient) GetX(ctx context.Context, id uuid.UUID) *TenantCategorySetting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TenantCategorySettingClient) Hooks() []Hook {
+	hooks := c.hooks.TenantCategorySetting
+	return append(hooks[:len(hooks):len(hooks)], tenantcategorysetting.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TenantCategorySettingClient) Interceptors() []Interceptor {
+	inters := c.inters.TenantCategorySetting
+	return append(inters[:len(inters):len(inters)], tenantcategorysetting.Interceptors[:]...)
+}
+
+func (c *TenantCategorySettingClient) mutate(ctx context.Context, m *TenantCategorySettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TenantCategorySettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TenantCategorySettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TenantCategorySettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TenantCategorySettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TenantCategorySetting mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
 		Block, Channel, ChannelMember, ChatPolicy, FriendCode, FriendRequest,
-		Friendship, Mute []ent.Hook
+		Friendship, ModerationSwitch, ModerationSwitchChange, ModerationSwitchRequest,
+		Mute, QuickMessage, Sanction, SensitiveAllowlistEntry, SensitiveCatalogVersion,
+		SensitiveTerm, SensitiveTermCategory, TenantCategorySetting []ent.Hook
 	}
 	inters struct {
 		Block, Channel, ChannelMember, ChatPolicy, FriendCode, FriendRequest,
-		Friendship, Mute []ent.Interceptor
+		Friendship, ModerationSwitch, ModerationSwitchChange, ModerationSwitchRequest,
+		Mute, QuickMessage, Sanction, SensitiveAllowlistEntry, SensitiveCatalogVersion,
+		SensitiveTerm, SensitiveTermCategory, TenantCategorySetting []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		Block:         tableSchemas[1],
-		Channel:       tableSchemas[0],
-		ChannelMember: tableSchemas[0],
-		ChatPolicy:    tableSchemas[0],
-		FriendCode:    tableSchemas[1],
-		FriendRequest: tableSchemas[1],
-		Friendship:    tableSchemas[1],
-		Mute:          tableSchemas[1],
+		Block:                   tableSchemas[1],
+		Channel:                 tableSchemas[0],
+		ChannelMember:           tableSchemas[0],
+		ChatPolicy:              tableSchemas[0],
+		FriendCode:              tableSchemas[1],
+		FriendRequest:           tableSchemas[1],
+		Friendship:              tableSchemas[1],
+		ModerationSwitch:        tableSchemas[0],
+		ModerationSwitchChange:  tableSchemas[0],
+		ModerationSwitchRequest: tableSchemas[0],
+		Mute:                    tableSchemas[1],
+		QuickMessage:            tableSchemas[0],
+		Sanction:                tableSchemas[0],
+		SensitiveAllowlistEntry: tableSchemas[0],
+		SensitiveCatalogVersion: tableSchemas[0],
+		SensitiveTerm:           tableSchemas[0],
+		SensitiveTermCategory:   tableSchemas[0],
+		TenantCategorySetting:   tableSchemas[0],
 	}
 	tableSchemas = [...]string{"chat", "social"}
 )

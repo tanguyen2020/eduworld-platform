@@ -7,7 +7,7 @@
     },
     "openapi/Problem.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/Problem",
-      "sha256": "4191bb18594b9c33b3facb96817826781315aca146a984dcb2ef9bf6367da2f6"
+      "sha256": "e3e7a06fb12d301286943dc49ee05b1449cbdbdfd17d706545cd17caa7684843"
     },
     "openapi/GameLoginResponse.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameLoginResponse",
@@ -19,11 +19,11 @@
     },
     "openapi/GameLoginProblem.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameLoginProblem",
-      "sha256": "61b24bee0a60e08c593d7e139312d62a25098a632a9afe409e61c7471247d146"
+      "sha256": "7f5b2cf7871334471ace7b3e721ed1d25a17e351922623ac6cba6974bf513967"
     },
     "openapi/ClientVersionProblem.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ClientVersionProblem",
-      "sha256": "83013846e9f80c747510d2b02e6e2ef9a96eed626b1bc59c031055a8a863fe5d"
+      "sha256": "3287102c02518f3d7a802d64e4c99240200801f20592c11d8a20d7ede59a3991"
     },
     "openapi/GameSession.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/GameSession",
@@ -31,7 +31,7 @@
     },
     "openapi/ActiveSessionConflict.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/ActiveSessionConflict",
-      "sha256": "1c210916e4d4c76b7d6815a82873249dc6b86e8bfebfd4c5fe3cb7e6e91bcb5c"
+      "sha256": "69bbcf9c98f6b60e20c9d207a0ad8fc83c54dbd338ea8e48cc5fe7acbd6bad0c"
     },
     "openapi/MyAssignment.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/MyAssignment",

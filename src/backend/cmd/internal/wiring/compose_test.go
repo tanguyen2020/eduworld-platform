@@ -312,10 +312,12 @@ func TestWorkerChatProfileLoadsChatOnly(t *testing.T) {
 	}
 }
 
-// F115-AC-06 (NFR-SAFE-001): outside EW_ENV=test core-api and worker-chat refuse to start while no real ContentValidator
-// is wired (F116); the labelled test double is accepted under EW_ENV=test only.
-func TestChatRefusesToStartWithoutRealValidator(t *testing.T) {
-	for _, c := range []struct{ binary, profile string }{{"core-api", ""}, {"worker", "chat"}, {"worker", "all"}} {
+// F115-AC-06 (NFR-SAFE-001) + F116: the real moderation pipeline (pipeline.Validator) is wired, so core-api and
+// worker-chat start in every environment (local included) — never with the labelled test double, never without a
+// validator (command.RequireValidator, unit test TestSendPipelineRequired).
+func TestChatStartsWithRealValidator(t *testing.T) {
+	for _, c := range []struct{ binary, profile string }{{"core-api", ""}, {"worker", "chat"}, {"worker", "all"}, {"worker", "events"},
+		{"worker", "jobs"}} {
 		for _, env := range []string{"", "local", "staging", "production"} {
 			base := testEnv(t)
 			getenv := func(k string) string {
@@ -324,22 +326,9 @@ func TestChatRefusesToStartWithoutRealValidator(t *testing.T) {
 				}
 				return base(k)
 			}
-			_, err := wiring.Compose(registryWith(t, c.binary, c.profile, getenv))
-			if err == nil || !strings.Contains(err.Error(), "ContentValidator") {
-				t.Errorf("%s %s with EW_ENV=%q: start-up error %v, want the ContentValidator refusal", c.binary, c.profile, env, err)
+			if _, err := wiring.Compose(registryWith(t, c.binary, c.profile, getenv)); err != nil {
+				t.Errorf("%s %s with EW_ENV=%q: %v (the real pipeline must be accepted)", c.binary, c.profile, env, err)
 			}
-		}
-	}
-	for _, c := range []struct{ binary, profile string }{{"worker", "events"}, {"worker", "jobs"}} {
-		base := testEnv(t)
-		getenv := func(k string) string {
-			if k == "EW_ENV" {
-				return "production"
-			}
-			return base(k)
-		}
-		if _, err := wiring.Compose(registryWith(t, c.binary, c.profile, getenv)); err != nil {
-			t.Errorf("%s %s: %v (no send path, no validator needed)", c.binary, c.profile, err)
 		}
 	}
 }

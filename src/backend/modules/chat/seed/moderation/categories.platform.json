@@ -1,0 +1,15 @@
+{
+  "description": "F116 T008 — category mặc định của danh mục từ nhạy cảm platform (MODERATION §11.1, §11.2). Chỉ mã và mức độ, KHÔNG có từ nào (R15): term do System Admin nhập qua CMS rồi publish. Migration 20261230000001_f116_moderation.sql nạp đúng danh sách này; test TestSeedModeration kiểm hai bản khớp nhau.",
+  "categories": [
+    { "category_id": "01936a00-0000-7000-8000-000000000101", "code": "profanity", "name": "Từ thô tục", "severity": "low", "default_action": "mask", "enabled": true, "allow_tenant_toggle": false },
+    { "category_id": "01936a00-0000-7000-8000-000000000102", "code": "insult", "name": "Xúc phạm", "severity": "medium", "default_action": "block", "enabled": true, "allow_tenant_toggle": false },
+    { "category_id": "01936a00-0000-7000-8000-000000000103", "code": "violence", "name": "Bạo lực", "severity": "medium", "default_action": "block", "enabled": true, "allow_tenant_toggle": false },
+    { "category_id": "01936a00-0000-7000-8000-000000000104", "code": "sexual", "name": "Nội dung tình dục", "severity": "high", "default_action": "hold_for_review", "enabled": true, "allow_tenant_toggle": false },
+    { "category_id": "01936a00-0000-7000-8000-000000000105", "code": "drugs", "name": "Chất cấm", "severity": "medium", "default_action": "block", "enabled": true, "allow_tenant_toggle": false },
+    { "category_id": "01936a00-0000-7000-8000-000000000106", "code": "self_harm", "name": "Tự làm hại bản thân", "severity": "critical", "default_action": "block_and_alert", "enabled": true, "allow_tenant_toggle": false },
+    { "category_id": "01936a00-0000-7000-8000-000000000107", "code": "grooming_scam", "name": "Dụ dỗ, lừa đảo", "severity": "critical", "default_action": "block_and_alert", "enabled": true, "allow_tenant_toggle": false },
+    { "category_id": "01936a00-0000-7000-8000-000000000108", "code": "politics_religion", "name": "Chính trị, tôn giáo", "severity": "medium", "default_action": "block", "enabled": true, "allow_tenant_toggle": true },
+    { "category_id": "01936a00-0000-7000-8000-000000000109", "code": "pii_pattern", "name": "Mẫu thông tin cá nhân", "severity": "medium", "default_action": "block", "enabled": true, "allow_tenant_toggle": false },
+    { "category_id": "01936a00-0000-7000-8000-000000000110", "code": "context_watch", "name": "Từ cần theo dõi theo ngữ cảnh", "severity": "watch", "default_action": "allow", "enabled": true, "allow_tenant_toggle": true }
+  ]
+}

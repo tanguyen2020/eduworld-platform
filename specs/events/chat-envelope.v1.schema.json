@@ -23,6 +23,7 @@
     "body_display": { "type": ["string", "null"], "maxLength": 1000, "description": "Nội dung hiển thị đã kiểm duyệt; với kind=emoji là mã emoji" },
     "body_original": { "type": ["string", "null"], "maxLength": 1000, "description": "Nội dung gốc (bằng chứng) khi khác body_display; chỉ persister/moderation đọc" },
     "quick_message_id": { "type": ["string", "null"], "maxLength": 64 },
+    "params": { "type": "object", "maxProperties": 5, "propertyNames": { "maxLength": 32, "pattern": "^[a-z][a-z0-9_]{0,31}$" }, "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 64 }, "description": "Tham số quick message (đã qua pipeline, F116-AC-28)" },
     "sticker_id": { "type": ["string", "null"], "format": "uuid" },
     "gif_id": { "type": ["string", "null"], "format": "uuid" },
     "reply_to_message_id": { "type": ["string", "null"], "format": "uuid" },
@@ -35,8 +36,12 @@
         "decision": { "enum": ["allow", "unchecked", "mask", "hold_for_review", "block_and_alert"] },
         "state": { "enum": ["allowed", "masked", "unchecked", "held"] },
         "category_codes": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } },
+        "steps_run": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 }, "description": "Các bước pipeline đã chạy (F116, decision log)" },
         "steps_skipped": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 64 } },
-        "catalog_version": { "type": ["integer", "null"], "minimum": 0 }
+        "catalog_version": { "type": ["integer", "null"], "minimum": 0, "description": "Version danh mục platform đã dùng" },
+        "catalog_version_tenant": { "type": ["integer", "null"], "minimum": 0, "description": "Version danh mục bổ sung của tenant đã dùng (F116)" },
+        "switch_snapshot_id": { "type": ["string", "null"], "format": "uuid", "description": "Định danh trạng thái công tắc kiểm duyệt đã dùng (F116)" },
+        "latency_ms": { "type": "integer", "minimum": 0, "description": "Độ trễ pipeline (F116)" }
       }
     },
     "created_at": { "type": "string", "format": "date-time" },

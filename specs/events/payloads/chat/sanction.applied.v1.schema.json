@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/sanction.applied.v1.schema.json",
+  "title": "Payload sanction.applied v1 (module chat, owner F116)",
+  "description": "Một sanction được áp cho học sinh (F116: mute hệ thống auto_spam hoặc block_and_alert_hold, issued_by null; F121 thêm sanction thủ công và case_id tương thích). Không chứa nội dung tin. Consumer: chat (cache), RT, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_id",
+    "sanction_id",
+    "user_id",
+    "type",
+    "scope",
+    "reason",
+    "starts_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sanction_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "user_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "type": {
+      "enum": [
+        "warning",
+        "mute",
+        "restrict_text",
+        "restrict_dm",
+        "restrict_multiplayer",
+        "restrict_competition",
+        "account_lock"
+      ]
+    },
+    "scope": {
+      "enum": [
+        "channel",
+        "all"
+      ]
+    },
+    "channel_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "issued_by": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "sanction_id": "0193a6c1-0000-7000-8000-000000000004",
+      "user_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "type": "mute",
+      "scope": "all",
+      "reason": "auto_spam",
+      "issued_by": null,
+      "starts_at": "2026-11-21T08:30:12.345Z",
+      "ends_at": "2026-11-21T08:40:12.345Z"
+    }
+  ]
+}

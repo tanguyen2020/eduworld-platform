@@ -86,6 +86,7 @@ type Request struct {
 	Body             string
 	Emoji            string
 	QuickMessageID   string
+	Params           map[string]string
 	StickerID        *uuid.UUID
 	GifID            *uuid.UUID
 	ReplyToMessageID *uuid.UUID
@@ -137,6 +138,15 @@ func (r Request) Validate(maxText int) error {
 		if r.QuickMessageID == "" || len(r.QuickMessageID) > 64 {
 			return ErrContent
 		}
+		if !validParams(r.Params) {
+			return ErrContent
+		}
+	default:
+		if len(r.Params) > 0 {
+			return ErrContent
+		}
+	}
+	switch r.Kind {
 	case KindSticker:
 		if r.StickerID == nil || *r.StickerID == uuid.Nil {
 			return ErrContent
@@ -151,38 +161,43 @@ func (r Request) Validate(maxText int) error {
 
 // Moderation is the decision part of an envelope (no matched term, position or catalog content: ADR-0030).
 type Moderation struct {
-	Decision       Decision `json:"decision"`
-	State          State    `json:"state"`
-	CategoryCodes  []string `json:"category_codes,omitempty"`
-	StepsSkipped   []string `json:"steps_skipped,omitempty"`
-	CatalogVersion *int64   `json:"catalog_version,omitempty"`
+	Decision             Decision   `json:"decision"`
+	State                State      `json:"state"`
+	CategoryCodes        []string   `json:"category_codes,omitempty"`
+	StepsRun             []string   `json:"steps_run,omitempty"`
+	StepsSkipped         []string   `json:"steps_skipped,omitempty"`
+	CatalogVersion       *int64     `json:"catalog_version,omitempty"`
+	CatalogVersionTenant *int64     `json:"catalog_version_tenant,omitempty"`
+	SwitchSnapshotID     *uuid.UUID `json:"switch_snapshot_id,omitempty"`
+	LatencyMS            int        `json:"latency_ms,omitempty"`
 }
 
 // Envelope is ChatEnvelope v1 (specs/events/chat-envelope.v1.schema.json).
 type Envelope struct {
-	V                int         `json:"v"`
-	Kind             string      `json:"kind"`
-	MessageID        uuid.UUID   `json:"message_id"`
-	TenantID         uuid.UUID   `json:"tenant_id"`
-	SchoolID         *uuid.UUID  `json:"school_id"`
-	ChannelID        uuid.UUID   `json:"channel_id"`
-	ChannelType      string      `json:"channel_type"`
-	IsGameplay       bool        `json:"is_gameplay"`
-	Seq              int64       `json:"seq"`
-	Revision         int         `json:"revision"`
-	SenderID         uuid.UUID   `json:"sender_id"`
-	ClientMessageID  *uuid.UUID  `json:"client_message_id"`
-	MsgKind          Kind        `json:"msg_kind"`
-	BodyDisplay      *string     `json:"body_display"`
-	BodyOriginal     *string     `json:"body_original"`
-	QuickMessageID   *string     `json:"quick_message_id"`
-	StickerID        *uuid.UUID  `json:"sticker_id"`
-	GifID            *uuid.UUID  `json:"gif_id"`
-	ReplyToMessageID *uuid.UUID  `json:"reply_to_message_id"`
-	Mentions         []uuid.UUID `json:"mentions"`
-	Moderation       Moderation  `json:"moderation"`
-	CreatedAt        time.Time   `json:"created_at"`
-	TraceID          *string     `json:"trace_id"`
+	V                int               `json:"v"`
+	Kind             string            `json:"kind"`
+	MessageID        uuid.UUID         `json:"message_id"`
+	TenantID         uuid.UUID         `json:"tenant_id"`
+	SchoolID         *uuid.UUID        `json:"school_id"`
+	ChannelID        uuid.UUID         `json:"channel_id"`
+	ChannelType      string            `json:"channel_type"`
+	IsGameplay       bool              `json:"is_gameplay"`
+	Seq              int64             `json:"seq"`
+	Revision         int               `json:"revision"`
+	SenderID         uuid.UUID         `json:"sender_id"`
+	ClientMessageID  *uuid.UUID        `json:"client_message_id"`
+	MsgKind          Kind              `json:"msg_kind"`
+	BodyDisplay      *string           `json:"body_display"`
+	BodyOriginal     *string           `json:"body_original"`
+	QuickMessageID   *string           `json:"quick_message_id"`
+	Params           map[string]string `json:"params,omitempty"`
+	StickerID        *uuid.UUID        `json:"sticker_id"`
+	GifID            *uuid.UUID        `json:"gif_id"`
+	ReplyToMessageID *uuid.UUID        `json:"reply_to_message_id"`
+	Mentions         []uuid.UUID       `json:"mentions"`
+	Moderation       Moderation        `json:"moderation"`
+	CreatedAt        time.Time         `json:"created_at"`
+	TraceID          *string           `json:"trace_id"`
 }
 
 // EnvelopeKind is envelope.kind of a new message.
@@ -225,4 +240,28 @@ func (e Envelope) Visible(reader uuid.UUID) bool {
 		return reader == e.SenderID
 	}
 	return false
+}
+
+// MaxParams is the largest number of quick message parameters (MessageCreate.params maxProperties).
+const MaxParams = 5
+
+// validParams checks quick message parameters: ≤ 5, key [a-z][a-z0-9_]{0,31}, value 1–64 characters.
+func validParams(p map[string]string) bool {
+	if len(p) > MaxParams {
+		return false
+	}
+	for k, v := range p {
+		if k == "" || len(k) > 32 || k[0] < 'a' || k[0] > 'z' {
+			return false
+		}
+		for _, c := range k {
+			if (c < 'a' || c > 'z') && (c < '0' || c > '9') && c != '_' {
+				return false
+			}
+		}
+		if n := utf8.RuneCountInString(v); n == 0 || n > 64 {
+			return false
+		}
+	}
+	return true
 }

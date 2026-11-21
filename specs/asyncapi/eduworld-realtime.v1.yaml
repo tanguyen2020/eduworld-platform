@@ -618,7 +618,7 @@ components:
           type: object
           maxProperties: 20
           additionalProperties: { type: string, maxLength: 255 }
-          description: Tham số chèn vào chuỗi theo mã (client dựng câu theo locale)
+          description: 'Tham số chèn vào chuỗi theo mã (client dựng câu theo locale): kind=system theo system_code; kind=quick theo quick message (đã qua pipeline kiểm duyệt, F116-AC-28)'
         emoji: { type: string, maxLength: 64 }
         sticker_id: { $ref: '#/components/schemas/Uuid' }
         gif_id: { $ref: '#/components/schemas/Uuid' }
@@ -963,7 +963,11 @@ components:
                   code: { $ref: '#/components/schemas/ErrorCode' }
                   message: { type: string, maxLength: 1000, description: Thông điệp thân thiện (vi-VN) có thể hiển thị. }
                   retry_after_ms: { type: integer }
-                  details: { type: object }
+                  details:
+                    type: object
+                    description: Chi tiết ổn định của lỗi; CHAT_CONTENT_BLOCKED chỉ có category_code (không có từ đã khớp hay vị trí — ADR-0030, F116-AC-05)
+                    properties:
+                      category_code: { type: string, maxLength: 64 }
     SystemSessionResumed:
       name: system.session.resumed
       examples:
@@ -1248,6 +1252,12 @@ components:
                   kind: { type: string, enum: [text, quick, emoji, sticker, gif] }
                   body: { type: string, maxLength: 300 }
                   quick_message_id: { type: string, maxLength: 64 }
+                  params:
+                    type: object
+                    maxProperties: 5
+                    description: "kind=quick: tham số của quick message có chỗ trống ({n}); mỗi giá trị qua pipeline kiểm duyệt như text (F116-AC-28)"
+                    propertyNames: { type: string, maxLength: 32, pattern: '^[a-z][a-z0-9_]{0,31}$' }
+                    additionalProperties: { type: string, minLength: 1, maxLength: 64 }
                   emoji: { type: string, maxLength: 64 }
                   sticker_id: { $ref: '#/components/schemas/Uuid' }
                   gif_id: { $ref: '#/components/schemas/Uuid' }

@@ -27,6 +27,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/message"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/policy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/cache"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/moderation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/natsstream"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/persistence"
@@ -138,6 +139,8 @@ func (s outageStore) Insert(ctx context.Context, tenant uuid.UUID, es []message.
 }
 
 type chatOpts struct {
+	backoff     time.Duration // persister backoff (default 100 ms)
+	real        bool          // F116: the real moderation pipeline instead of the switch validator
 	noPersister bool
 	maxDeliver  int
 	factsFresh  time.Duration
@@ -153,13 +156,17 @@ type chatEnv struct {
 	js        jetstream.JetStream
 	natsC     testcontainers.Container
 	validator *switchValidator
-	outage    *outage
-	send      command.Send
-	reads     query.Chat
-	channels  command.Channels
-	persist   command.Persist
-	facts     service.Facts
-	worker    *persister.Worker
+	pipe      *moderation.Pipeline // real pipeline (chatOpts.real)
+	// pace advances the test clock before every send (6 s: under the burst window and every per-minute rate of the
+	// platform policy since F116 enforces burst and slow mode); 0 sends at the same instant.
+	pace     time.Duration
+	outage   *outage
+	send     command.Send
+	reads    query.Chat
+	channels command.Channels
+	persist  command.Persist
+	facts    service.Facts
+	worker   *persister.Worker
 }
 
 func setupChat(t *testing.T, o chatOpts) *chatEnv {
@@ -185,7 +192,7 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 		t.Fatal(err)
 	}
 	e := setup(t, envOpts{})
-	c := &chatEnv{env: e, vk: vk, nc: nc, js: js, natsC: natsC, validator: &switchValidator{}, outage: &outage{}}
+	c := &chatEnv{env: e, vk: vk, nc: nc, js: js, natsC: natsC, validator: &switchValidator{}, outage: &outage{}, pace: 6 * time.Second}
 	fresh := o.factsFresh
 	if fresh == 0 {
 		fresh = time.Minute
@@ -200,6 +207,17 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 		Stream: natsstream.Publisher{JS: js, Timeout: 2 * time.Second}, Fanout: fanout, Dedupe: cache.Dedupe{C: vk, TTL: 10 * time.Minute},
 		Metrics: observability.Chat{}, UoW: e.uow, Audit: persistence.Auditor{R: e.rec}, Config: command.SendConfig{RatePerUser: 30},
 		Now: e.clock.Now}
+	if o.real {
+		p, err := moderation.Real(moderation.Deps{Read: e.read, Cache: c.facts.Cache, Valkey: vk, UoW: e.uow,
+			Events: persistence.Publisher{W: e.writer}, Audit: persistence.Auditor{R: e.rec}, Push: fanout, Now: e.clock.Now})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := p.Catalogs.Warm(ctx); err != nil {
+			t.Fatal(err)
+		}
+		c.pipe, c.send.Validator = p, p.Validator
+	}
 	c.reads = query.Chat{Read: e.read, Reader: outageReader{ChatReader: persistence.ChatReader{}, o: c.outage}, Facts: c.facts,
 		Recent: recent, Fanout: fanout, Config: query.ChatConfig{RecentBuffer: 200}}
 	c.channels = command.Channels{UoW: e.uow, Repo: persistence.Channels{}, Audit: persistence.Auditor{R: e.rec}, Facts: c.facts,
@@ -211,16 +229,23 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 	c.persist = command.Persist{UoW: e.uow, Store: outageStore{MessageStore: store, o: c.outage},
 		Events: persistence.Publisher{W: e.writer}}
 	e.chatHandlers = &chathttp.ChatHandlers{Send: c.send, Queries: c.reads}
+	if c.pipe != nil {
+		e.chatHandlers.Quick = query.QuickMessages{Catalog: c.pipe.Quick}
+	}
 	e.server(ctx)
 	runCtx, stop := context.WithCancel(ctx)
 	done := make(chan struct{})
 	go func() { defer close(done); _ = natscmd.Serve(runCtx, nc, c.send, c.reads) }()
+	backoff := o.backoff
+	if backoff == 0 {
+		backoff = 100 * time.Millisecond
+	}
 	maxDeliver := o.maxDeliver
 	if maxDeliver == 0 {
 		maxDeliver = 5
 	}
 	c.worker, err = persister.New(ctx, persister.Options{JS: js, Persist: c.persist, DB: e.app, Batch: 500, Wait: 20 * time.Millisecond,
-		MaxDeliver: maxDeliver, AckWait: 5 * time.Second, Backoff: 100 * time.Millisecond,
+		MaxDeliver: maxDeliver, AckWait: 5 * time.Second, Backoff: backoff,
 		Stream: natsstream.StreamOptions{MaxAge: 72 * time.Hour},
 		Health: func(ctx context.Context) error {
 			if c.outage.down() {
@@ -275,6 +300,9 @@ func caller(s student, conn string) rt.Caller {
 // ws sends a command as the gateway does (NATS request ew.cmd.chat.<type> with the Ew-* headers) and returns the reply.
 func (c *chatEnv) ws(s student, conn, typ string, payload any) rt.Reply {
 	c.t.Helper()
+	if typ == "chat.message.send" {
+		c.clock.Add(c.pace)
+	}
 	b, _ := json.Marshal(payload)
 	m := nats.NewMsg(rt.CommandSubject("chat", typ))
 	m.Header = caller(s, conn).Header(context.Background())
@@ -304,6 +332,7 @@ func (c *chatEnv) sendWS(s student, conn string, ch uuid.UUID, body string) rt.R
 
 // sendREST posts a text through sendChannelMessage with a new Idempotency-Key.
 func (c *chatEnv) sendREST(s student, ch uuid.UUID, body map[string]any) resp {
+	c.clock.Add(c.pace)
 	return c.call(s, http.MethodPost, "/chat/channels/"+ch.String()+"/messages", newKey(), body)
 }
 

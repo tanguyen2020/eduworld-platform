@@ -4139,6 +4139,10 @@ components:
         policy_reason:
           type: string
           maxLength: 1000
+        category_code:
+          type: string
+          maxLength: 64
+          description: 'Chỉ có khi `code = CHAT_CONTENT_BLOCKED`/`CHAT_CONTENT_HELD`: mã category của danh mục hoặc `pii`/`spam`/`bullying` — không bao giờ có từ đã khớp hay vị trí (ADR-0030, F116-AC-05)'
         feature_key:
           type: string
           maxLength: 128
@@ -4396,6 +4400,7 @@ components:
           description: 'kind=system: mã thông điệp hệ thống, client dựng câu theo locale'
         params:
           type: object
+          description: 'kind=system: tham số của system_code; kind=quick: tham số của quick message (đã qua pipeline kiểm duyệt, F116-AC-28)'
           maxProperties: 20
           additionalProperties:
             type: string
@@ -4585,6 +4590,18 @@ components:
           type: string
           maxLength: 64
           description: Mã quick message (cùng kiểu với Message.quick_message_id và AsyncAPI)
+        params:
+          type: object
+          maxProperties: 5
+          description: 'kind=quick: tham số của quick message có chỗ trống ({n}); mỗi giá trị qua pipeline kiểm duyệt như text (F116-AC-28)'
+          propertyNames:
+            type: string
+            maxLength: 32
+            pattern: ^[a-z][a-z0-9_]{0,31}$
+          additionalProperties:
+            type: string
+            minLength: 1
+            maxLength: 64
         emoji:
           type: string
           maxLength: 16

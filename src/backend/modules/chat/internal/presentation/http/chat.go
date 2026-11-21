@@ -30,10 +30,16 @@ type ChatQueries interface {
 	ListChannelMessages(ctx context.Context, v query.Viewer, id uuid.UUID, before, after *int64, limit int) (query.MessagePage, error)
 }
 
-// ChatHandlers are the F115 use cases served over HTTP.
+// QuickLister is listQuickMessages (query.QuickMessages, F116 US4).
+type QuickLister interface {
+	List(ctx context.Context, v query.Viewer, channelType string) ([]read.QuickMessageRow, error)
+}
+
+// ChatHandlers are the F115 use cases served over HTTP (and listQuickMessages of F116 when Quick is set).
 type ChatHandlers struct {
 	Send    ChatSender
 	Queries ChatQueries
+	Quick   QuickLister
 }
 
 // ChatOperations are the player routes of F115 (game_player + X-Tenant-Id, F115-AC-12, AC-13).
@@ -45,6 +51,8 @@ func init() {
 	Operations["listChannelMessages"] = httpx.Operation{ID: "listChannelMessages", Module: "chat", Method: http.MethodGet,
 		Pattern: "/chat/channels/{channel_id}/messages", Tenant: httpx.TenantRequired, SuccessStatus: http.StatusOK,
 		Guard: httpx.GuardGamePlayer}
+	Operations["listQuickMessages"] = httpx.Operation{ID: "listQuickMessages", Module: "chat", Method: http.MethodGet,
+		Pattern: "/chat/quick-messages", Tenant: httpx.TenantRequired, SuccessStatus: http.StatusOK, Guard: httpx.GuardGamePlayer}
 	Operations["sendChannelMessage"] = httpx.Operation{ID: "sendChannelMessage", Module: "chat", Method: http.MethodPost,
 		Pattern: "/chat/channels/{channel_id}/messages", Tenant: httpx.TenantRequired, Idempotency: httpx.IdempotencyRequired,
 		SuccessStatus: http.StatusCreated, Guard: httpx.GuardGamePlayer}
@@ -91,6 +99,9 @@ func Message(e message.Envelope, sender read.ChatCard, recalled bool) map[string
 	}
 	if e.QuickMessageID != nil {
 		m["quick_message_id"] = *e.QuickMessageID
+	}
+	if len(e.Params) > 0 {
+		m["params"] = e.Params
 	}
 	if e.StickerID != nil {
 		m["sticker_id"] = *e.StickerID
@@ -163,15 +174,16 @@ func (h ChatHandlers) listChannelMessages(w http.ResponseWriter, r *http.Request
 }
 
 type messageCreate struct {
-	ClientMessageID  uuid.UUID   `json:"client_message_id"`
-	Kind             string      `json:"kind"`
-	Body             string      `json:"body"`
-	QuickMessageID   string      `json:"quick_message_id"`
-	Emoji            string      `json:"emoji"`
-	StickerID        *uuid.UUID  `json:"sticker_id"`
-	GifID            *uuid.UUID  `json:"gif_id"`
-	ReplyToMessageID *uuid.UUID  `json:"reply_to_message_id"`
-	Mentions         []uuid.UUID `json:"mentions"`
+	ClientMessageID  uuid.UUID         `json:"client_message_id"`
+	Kind             string            `json:"kind"`
+	Body             string            `json:"body"`
+	QuickMessageID   string            `json:"quick_message_id"`
+	Params           map[string]string `json:"params"`
+	Emoji            string            `json:"emoji"`
+	StickerID        *uuid.UUID        `json:"sticker_id"`
+	GifID            *uuid.UUID        `json:"gif_id"`
+	ReplyToMessageID *uuid.UUID        `json:"reply_to_message_id"`
+	Mentions         []uuid.UUID       `json:"mentions"`
 }
 
 func (h ChatHandlers) sendChannelMessage(w http.ResponseWriter, r *http.Request) {
@@ -192,7 +204,7 @@ func (h ChatHandlers) sendChannelMessage(w http.ResponseWriter, r *http.Request)
 	}
 	res, err := h.Send.Send(r.Context(), command.Sender{TenantID: tenant, UserID: user}, message.Request{ChannelID: id,
 		ClientMessageID: b.ClientMessageID, Kind: message.Kind(b.Kind), Body: b.Body, Emoji: b.Emoji, QuickMessageID: b.QuickMessageID,
-		StickerID: b.StickerID, GifID: b.GifID, ReplyToMessageID: b.ReplyToMessageID, Mentions: b.Mentions})
+		Params: b.Params, StickerID: b.StickerID, GifID: b.GifID, ReplyToMessageID: b.ReplyToMessageID, Mentions: b.Mentions})
 	if err != nil {
 		var pe *problem.Error
 		if errors.As(err, &pe) && pe.Code == problem.ChatTemporarilyUnavailable {
@@ -218,5 +230,32 @@ func registerChat(s *httpx.Server, h *ChatHandlers) error {
 			return err
 		}
 	}
+	if h.Quick != nil {
+		return s.Handle(Operations["listQuickMessages"], http.HandlerFunc(h.listQuickMessages))
+	}
 	return nil
+}
+
+// listQuickMessages renders QuickMessage: code, category, text {vi, en}, emoji, sort_order (F116-AC-27).
+func (h ChatHandlers) listQuickMessages(w http.ResponseWriter, r *http.Request) {
+	v, err := viewerOf(r)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	rows, err := h.Quick.List(r.Context(), v, r.URL.Query().Get("channel_type"))
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	data := make([]map[string]any, len(rows))
+	for i, q := range rows {
+		m := map[string]any{"quick_message_id": q.ID, "category": q.Category, "text": map[string]string{"vi": q.TextVI, "en": q.TextEN},
+			"sort_order": q.SortOrder}
+		if q.Emoji != nil {
+			m["emoji"] = *q.Emoji
+		}
+		data[i] = m
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": data})
 }

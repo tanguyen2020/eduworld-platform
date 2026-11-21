@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat_policy.moderation_switch_changed.v1.schema.json",
+  "title": "Payload chat_policy.moderation_switch_changed v1 (module chat, owner F116)",
+  "description": "Công tắc kiểm duyệt hiệu lực của platform hoặc một tenant thay đổi (tắt sau phê duyệt hai người, bật lại, tự bật lại khi hết hạn; F116-AC-20, AC-25, AC-32). Không có bước pii/grooming (luôn chạy, ADR-0078). Consumer: chat (invalidate), AUD, MON, NTF (banner Tenant Admin).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "enabled_all_before",
+    "enabled_all_after",
+    "before",
+    "after",
+    "source",
+    "changed_at"
+  ],
+  "properties": {
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "scope": {
+      "enum": [
+        "platform",
+        "tenant"
+      ]
+    },
+    "change_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "request_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "enabled_all_before": {
+      "type": "boolean"
+    },
+    "enabled_all_after": {
+      "type": "boolean"
+    },
+    "before": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sensitive_terms": {
+          "type": "boolean"
+        },
+        "spam": {
+          "type": "boolean"
+        },
+        "bullying": {
+          "type": "boolean"
+        },
+        "async_analysis": {
+          "type": "boolean"
+        }
+      }
+    },
+    "after": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sensitive_terms": {
+          "type": "boolean"
+        },
+        "spam": {
+          "type": "boolean"
+        },
+        "bullying": {
+          "type": "boolean"
+        },
+        "async_analysis": {
+          "type": "boolean"
+        }
+      }
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 1000
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "actor_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "approved_by": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "source": {
+      "enum": [
+        "manual",
+        "approved_request",
+        "auto_expire"
+      ]
+    },
+    "changed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "scope": "tenant",
+      "change_id": "0193a6c1-0000-7000-8000-000000000002",
+      "request_id": "0193a6c1-0000-7000-8000-000000000003",
+      "enabled_all_before": true,
+      "enabled_all_after": true,
+      "before": {
+        "sensitive_terms": true,
+        "spam": true,
+        "bullying": true,
+        "async_analysis": true
+      },
+      "after": {
+        "sensitive_terms": true,
+        "spam": false,
+        "bullying": true,
+        "async_analysis": true
+      },
+      "reason": "Sự kiện thi đấu, tin lặp hợp lệ",
+      "expires_at": "2026-11-21T10:30:12.345Z",
+      "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "approved_by": "0193a5f4-6c1e-7b2a-9d1f-000000000009",
+      "source": "approved_request",
+      "changed_at": "2026-11-21T08:30:12.345Z"
+    }
+  ]
+}

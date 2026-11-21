@@ -34,7 +34,8 @@ func (c *clock) Set(t time.Time) {
 // and WS — answers CHAT_TEMPORARILY_UNAVAILABLE (REST 503 + Retry-After, within chat_publish_ack_timeout), nothing is
 // fanned out nor written; history keeps working; once the stream is back sending works again.
 func TestNATSDown(t *testing.T) {
-	c := setupChat(t, chatOpts{})
+	// The persister recreates a deleted stream after its backoff: 3 s keeps the outage observable under a loaded CI machine.
+	c := setupChat(t, chatOpts{backoff: 3 * time.Second})
 	an, binh := c.student(c.tenantA, c.schoolA), c.student(c.tenantA, c.schoolA)
 	ch := c.open(channel.Party, an, binh)
 	if r := c.sendREST(an, ch, map[string]any{"client_message_id": uuid.New(), "kind": "text", "body": "truoc"}); r.status != http.StatusCreated {

@@ -251,7 +251,8 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 	if eff.GlobalPerMinute > 0 && (perUser <= 0 || eff.GlobalPerMinute < perUser) {
 		perUser = eff.GlobalPerMinute
 	}
-	ok, retry, err := h.Rate.Allow(ctx, s.UserID, ch.ID, msgID, eff.Rate.MessagesPerMinute, perUser, now)
+	ok, retry, err := h.Rate.Allow(ctx, s.UserID, ch.ID, msgID, port.RateLimits{PerChannel: eff.Rate.MessagesPerMinute, PerUser: perUser,
+		Burst: eff.Rate.Burst, BurstWindow: port.BurstWindow, SlowMode: time.Duration(eff.SlowModeSeconds) * time.Second}, now)
 	switch {
 	case err != nil:
 		h.rejected(problem.ChatTemporarilyUnavailable)
@@ -263,7 +264,12 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 	// The pipeline: every kind, every channel (R15). An error fails closed.
 	verdict, err := h.Validator.Validate(ctx, port.ValidationInput{TenantID: s.TenantID, SchoolID: school, ChannelID: ch.ID,
 		ChannelType: string(ch.Type), SenderID: s.UserID, Kind: req.Kind, Text: req.Text(), QuickMessageID: req.QuickMessageID,
-		Strictness: eff.Strictness})
+		Params: req.Params, Mentions: len(req.Mentions), Strictness: eff.Strictness})
+	var rejected *problem.Error
+	if errors.As(err, &rejected) { // CHAT_MUTED (technical gate), VALIDATION_FAILED (quick message)
+		h.rejected(rejected.Code)
+		return SendResult{}, rejected
+	}
 	if err != nil {
 		slog.WarnContext(ctx, "chat: content validator failed", "error", err)
 		h.rejected(problem.ChatTemporarilyUnavailable)
@@ -360,11 +366,15 @@ func envelope(tenant uuid.UUID, school *uuid.UUID, facts *read.ChannelFacts, sen
 		ChannelType: string(ch.Type), IsGameplay: ch.IsGameplay, Seq: seq, Revision: 1, SenderID: sender, ClientMessageID: &cmid,
 		MsgKind: req.Kind, StickerID: req.StickerID, GifID: req.GifID, ReplyToMessageID: req.ReplyToMessageID,
 		Mentions: append([]uuid.UUID{}, req.Mentions...), CreatedAt: now,
-		Moderation: message.Moderation{Decision: v.Decision, State: state, CategoryCodes: v.CategoryCodes, StepsSkipped: v.StepsSkipped,
-			CatalogVersion: v.CatalogVersion}}
+		Moderation: message.Moderation{Decision: v.Decision, State: state, CategoryCodes: v.CategoryCodes, StepsRun: v.StepsRun,
+			StepsSkipped: v.StepsSkipped, CatalogVersion: v.CatalogVersion, CatalogVersionTenant: v.CatalogVersionTenant,
+			SwitchSnapshotID: v.SwitchSnapshotID, LatencyMS: v.LatencyMS}}
 	if req.Kind == message.KindQuick {
 		q := req.QuickMessageID
 		e.QuickMessageID = &q
+		if len(req.Params) > 0 {
+			e.Params = req.Params
+		}
 	}
 	if text := req.Text(); text != "" {
 		display := v.Display

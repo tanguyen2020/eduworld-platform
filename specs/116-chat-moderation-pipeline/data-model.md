@@ -29,7 +29,7 @@ Database `eduworld_chat`, schema `chat`. Độ dài chuỗi theo DATABASE_DESIGN
 
 ### SensitiveCatalogVersion — `chat.sensitive_catalog_versions` (Có sẵn, H append-only)
 
-`catalog_version bigint`, `scope varchar(64)` CHECK `platform/tenant`, `tenant_id?`, `published_at`, `published_by`, `change_summary varchar(1000)`, `term_count int`, `checksum varchar(128)`, `regression_recall numeric(5,4)`, `regression_fp_rate numeric(5,4)`. PK `(coalesce(tenant_id,…), catalog_version)`. Không UPDATE/DELETE (trigger chặn).
+`catalog_version bigint`, `scope varchar(64)` CHECK `platform/tenant`, `tenant_id?`, `published_at`, `published_by`, `change_summary varchar(1000)`, `term_count int`, `checksum varchar(128)`, `regression_recall numeric(5,4)`, `regression_fp_rate numeric(5,4)`, `snapshot jsonb` (bất biến: category, term đang bật, allowlist của version — nguồn biên dịch của mọi instance, Clarifications 2026-11-21). PK `catalog_version_id`, UNIQUE `(scope, coalesce(tenant_id,…), catalog_version)`. Không UPDATE/DELETE (trigger chặn).
 
 ### TenantCategorySetting — `chat.tenant_category_settings` (Có sẵn, T)
 
