@@ -11,7 +11,6 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent"
 	entyear "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
-	entclass "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
 	entenroll "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	entext "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	entprovince "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
@@ -312,18 +311,40 @@ func (SisSyncRepo) AcademicYear(ctx context.Context, school uuid.UUID, name stri
 }
 
 // CreateClass inserts a class.
-func (SisSyncRepo) CreateClass(ctx context.Context, id, school, year uuid.UUID, grade int, name string) error {
-	_, err := client(ctx).Class.Create().SetID(id).SetSchoolID(school).SetAcademicYearID(year).SetGradeLevel(int16(grade)).SetName(name).Save(ctx)
+func (SisSyncRepo) CreateClass(ctx context.Context, id, school, year uuid.UUID, grade int, name string) (write.SyncedClass, error) {
+	c, err := client(ctx).Class.Create().SetID(id).SetSchoolID(school).SetAcademicYearID(year).SetGradeLevel(int16(grade)).SetName(name).Save(ctx)
 	if ent.IsConstraintError(err) {
-		return problem.New(problem.Conflict, "class name exists in this school year").Wrap(err)
+		return write.SyncedClass{}, problem.New(problem.Conflict, "class name exists in this school year").Wrap(err)
 	}
-	return err
+	if err != nil {
+		return write.SyncedClass{}, err
+	}
+	return syncedClass(c), nil
 }
 
-// UpdateClass updates grade and name.
-func (SisSyncRepo) UpdateClass(ctx context.Context, id uuid.UUID, grade int, name string) error {
-	_, err := client(ctx).Class.Update().Where(entclass.ID(id)).SetGradeLevel(int16(grade)).SetName(name).AddVersion(1).Save(ctx)
-	return err
+func syncedClass(c *ent.Class) write.SyncedClass {
+	return write.SyncedClass{Version: c.Version, AcademicYearID: c.AcademicYearID, IsVirtual: c.IsVirtual}
+}
+
+// UpdateClass updates grade and name (version + 1).
+func (SisSyncRepo) UpdateClass(ctx context.Context, id uuid.UUID, grade int, name string) (write.SyncedClass, error) {
+	c, err := client(ctx).Class.UpdateOneID(id).SetGradeLevel(int16(grade)).SetName(name).AddVersion(1).Save(ctx)
+	if ent.IsNotFound(err) { // a soft-deleted class: the record is not applied, never re-projected as active
+		return write.SyncedClass{}, problem.New(problem.NotFound, "the class of this SIS record was removed").Wrap(err)
+	}
+	if err != nil {
+		return write.SyncedClass{}, err
+	}
+	return syncedClass(c), nil
+}
+
+// SchoolVersion implements write.SisSyncRepository (ent filters: tenant + live school).
+func (SisSyncRepo) SchoolVersion(ctx context.Context, schoolID uuid.UUID) (int64, error) {
+	s, err := client(ctx).School.Get(ctx, schoolID)
+	if err != nil {
+		return 0, err
+	}
+	return s.Version, nil
 }
 
 // ClassSchool returns the school and grade of a class.

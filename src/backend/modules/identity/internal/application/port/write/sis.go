@@ -100,11 +100,21 @@ type SisSyncRepository interface {
 
 	// AcademicYear finds or creates the academic year of a school by name (YYYY-YYYY).
 	AcademicYear(ctx context.Context, schoolID uuid.UUID, name string) (uuid.UUID, error)
-	CreateClass(ctx context.Context, id, schoolID, yearID uuid.UUID, grade int, name string) error
-	UpdateClass(ctx context.Context, id uuid.UUID, grade int, name string) error
+	// CreateClass / UpdateClass write a class of the SIS and return what class.synced carries (F011 T040).
+	CreateClass(ctx context.Context, id, schoolID, yearID uuid.UUID, grade int, name string) (SyncedClass, error)
+	UpdateClass(ctx context.Context, id uuid.UUID, grade int, name string) (SyncedClass, error)
+	// SchoolVersion is the version of a live school (source_version of school.synced, F011 T040).
+	SchoolVersion(ctx context.Context, schoolID uuid.UUID) (int64, error)
 	ClassSchool(ctx context.Context, classID uuid.UUID) (schoolID uuid.UUID, grade int, err error)
 
 	RaiseIssue(ctx context.Context, i Issue) (uuid.UUID, error)
+}
+
+// SyncedClass is the class row after a SIS write: aggregate version, academic year and the virtual flag (class.synced).
+type SyncedClass struct {
+	Version        int64
+	AcademicYearID uuid.UUID
+	IsVirtual      bool
 }
 
 // PendingStudent is a SIS student waiting for its Keycloak account, with its active SIS link.

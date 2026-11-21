@@ -608,10 +608,14 @@ func (h SisRun) applySchool(ctx context.Context, st *runState, it write.StagingI
 	if err := h.Sync.SaveLink(ctx, st.in.ConnectionID, sis.KindSchool, it.ExternalID, school, &school, it.Hash); err != nil {
 		return err
 	}
+	version, err := h.Sync.SchoolVersion(ctx, school)
+	if err != nil {
+		return err
+	}
 	t := st.tenantID
 	return h.Events.Publish(ctx, write.Event{Type: "school.synced", SubjectType: "school", SubjectID: school.String(), TenantID: &t,
 		Payload: map[string]any{"school_id": school.String(), "sync_run_id": st.run.ID.String(), "sis_connection_id": st.in.ConnectionID.String(),
-			"name": sis.Str(it.Payload, "name"), "changed_fields": []string{}}})
+			"name": sis.Str(it.Payload, "name"), "changed_fields": []string{}, "source_version": version}})
 }
 
 // schoolOf maps a school_external_id to the import school (unmapped → issue).
@@ -650,11 +654,12 @@ func (h SisRun) applyClass(ctx context.Context, st *runState, it write.StagingIt
 		return err
 	}
 	op := "updated"
+	var synced write.SyncedClass
 	if found {
-		err = h.Sync.UpdateClass(ctx, id, grade, name)
+		synced, err = h.Sync.UpdateClass(ctx, id, grade, name)
 	} else {
 		id, op = ids.New(), "created"
-		err = h.Sync.CreateClass(ctx, id, st.in.SchoolID, year, grade, name)
+		synced, err = h.Sync.CreateClass(ctx, id, st.in.SchoolID, year, grade, name)
 	}
 	if err != nil {
 		return err
@@ -667,7 +672,8 @@ func (h SisRun) applyClass(ctx context.Context, st *runState, it write.StagingIt
 	return h.Events.Publish(ctx, write.Event{Type: "class.synced", SubjectType: "class", SubjectID: id.String(), TenantID: &t,
 		Payload: map[string]any{"class_id": id.String(), "school_id": school.String(), "grade_level": grade, "name": name,
 			"academic_year": sis.Str(d, "academic_year"), "status": "active", "op": op, "trigger": "manual_import",
-			"sis_connection_id": st.in.ConnectionID.String(), "sync_run_id": st.run.ID.String()}})
+			"sis_connection_id": st.in.ConnectionID.String(), "sync_run_id": st.run.ID.String(),
+			"source_version": synced.Version, "academic_year_id": synced.AcademicYearID.String(), "is_virtual": synced.IsVirtual}})
 }
 
 func (h SisRun) applyStudent(ctx context.Context, st *runState, it write.StagingItem) error {

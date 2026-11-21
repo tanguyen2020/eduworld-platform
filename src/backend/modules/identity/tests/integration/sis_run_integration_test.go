@@ -155,6 +155,21 @@ func TestSisImportRun(t *testing.T) {
 		AND envelope->'payload'->>'action' = 'student.synced'`); n != 3 {
 		t.Fatalf("student.synced audits = %d", n)
 	}
+	// F011 T040 (OQ F020-1): class.synced carries source_version, academic_year_id and is_virtual (schema-valid).
+	classes := syncedPayloads(ctx, t, e, "class.synced", a.tenant)
+	if len(classes) != 2 {
+		t.Fatalf("class.synced payloads = %d", len(classes))
+	}
+	for _, p := range classes {
+		var year string
+		if err := e.platform.QueryRowContext(ctx, `SELECT academic_year_id::text FROM org.classes WHERE class_id = $1 AND tenant_id = $2`,
+			p["class_id"], a.tenant).Scan(&year); err != nil {
+			t.Fatal(err)
+		}
+		if p["source_version"] != float64(1) || p["academic_year_id"] != year || p["is_virtual"] != false {
+			t.Fatalf("class.synced = %v (year %s)", p, year)
+		}
+	}
 
 	// AC-05: re-importing the same data changes nothing.
 	again, err := h.Handle(admin, command.RunImportInput{ConnectionID: conn.ID, SchoolID: school, Files: files})
@@ -434,6 +449,14 @@ func TestSisConflictMatrix(t *testing.T) {
 		if n := issues(typ); n != want {
 			t.Fatalf("%s = %d, want %d", typ, n, want)
 		}
+	}
+	// F011 T040: school.synced carries the version of the school (schema-valid).
+	var schoolVersion float64
+	if err := e.platform.QueryRowContext(ctx, `SELECT version FROM org.schools WHERE school_id = $1 AND tenant_id = $2`, sA, a.tenant).Scan(&schoolVersion); err != nil {
+		t.Fatal(err)
+	}
+	if ps := syncedPayloads(ctx, t, e, "school.synced", a.tenant); len(ps) != 1 || ps[0]["source_version"] != schoolVersion {
+		t.Fatalf("school.synced = %v (version %v)", ps, schoolVersion)
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE username IN ('hs.mx.copy', 'hs.mx.binh')`); n != 0 {
 		t.Fatalf("skipped records created %d accounts", n)

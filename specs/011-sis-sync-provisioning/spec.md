@@ -53,6 +53,10 @@ Quyết định khi hiện thực F011; mục [Confirmed] đã được owner ch
 - OQ F010-1 → **Chốt:** F011 làm `importSchools`/`getSchoolImport` bất đồng bộ (task dưới).
 - Mọi mục [Confirmed] của Session 2026-11-18 được owner chốt 2026-11-20.
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+- Q: T040 — giá trị các field mới? → A: [Confirmed] `class.synced.source_version` = `org.classes.version` sau khi ghi (tạo = 1, cập nhật +1), `academic_year_id` = năm học của dòng lớp (khi cập nhật lấy năm học đã lưu, không đổi theo bản ghi SIS), `is_virtual` = cột của dòng (lớp SIS luôn `false`); `school.synced.source_version` = `org.schools.version` hiện tại (apply SIS không sửa dòng trường). Cập nhật bản ghi SIS của lớp đã xóa mềm không còn "cập nhật 0 dòng" rồi phát `class.synced` (projection sẽ hiện lại lớp): bản ghi không được áp (`404 NOT_FOUND` của bản ghi, savepoint hoàn tác).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — School Admin nhập CSV theo contract (Priority: P1)
