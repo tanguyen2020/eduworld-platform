@@ -1,6 +1,9 @@
 # ADR-0084 — Nhóm học tập (study group) thuộc learning-service
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-16 · **OQ:** — · **Thay một phần:** ADR-0050 (study group là một loại club), ADR-0072 (mục 2, câu nhắc ADR-0050) · **Tài liệu:** [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Superseded by ADR-0095 · **Ngày:** 2026-11-16 · **OQ:** — · **Thay một phần:** ADR-0050 (study group là một loại club), ADR-0072 (mục 2, câu nhắc ADR-0050) · **Tài liệu:** [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Đã được thay toàn phần bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md)** (2026-11-21): LMS không còn nhóm học tập (study group); bảng `lms.study_groups`, `lms.study_group_members`, event `study_group.*` và channel chat `study_group` bị bỏ. **Còn hiệu lực:** không — club do học sinh tạo vẫn theo ADR-0050.
 
 ## Bối cảnh
 
@@ -26,3 +29,4 @@ chat-service sở hữu, learning-service làm facade: F040 phải chờ chat-se
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-16 | Tạo ADR | Technical Architect |
+| 2026-11-21 | Superseded by ADR-0095 (bỏ khái niệm lớp, nhóm học tập) | Owner |

@@ -3,6 +3,9 @@
 > Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + UX/UI Designer · Cập nhật: 2026-11-17 (ADR-0078: tenant `common` tắt kết bạn, DM, World chat; 2026-11-16 ADR-0084: study group không còn là loại club)
 > Liên quan: [ADR-0050 Party vs Guild/Club](../adr/ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) · [ADR-0054 Liên trường](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [CHAT_SYSTEM](CHAT_SYSTEM.md) · [PARTY_SYSTEM](PARTY_SYSTEM.md) · [MULTIPLAYER_GAMEPLAY](MULTIPLAYER_GAMEPLAY.md) · [MODERATION](MODERATION.md) · [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md)
 
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Không còn Study Group (ADR-0084 bị thay toàn phần) và club do trường lập không có tùy chọn "thêm cả lớp"; bỏ gợi ý kết bạn "Bạn cùng lớp" (còn "Vừa chơi cùng"); mọi người chơi khác chỉ thấy nickname + avatar (không còn ngoại lệ tên thật cho bạn cùng lớp); presence chỉ cho bạn bè/party/club. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-S ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+
 ## 1. Mục đích & phạm vi
 
 Tài liệu **sở hữu** các quan hệ xã hội bền vững giữa người chơi: **bạn bè**, **block/mute** (quan hệ), **Club/Guild** (nhóm bền vững), **quy tắc liên trường** và **thông báo xã hội**. Không lặp lại:

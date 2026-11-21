@@ -1,9 +1,12 @@
 # ADR-0046 — Nhận biết SIS nguồn của học sinh khi đăng nhập
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-01 · **Tài liệu:** [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md), [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md), [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** OQ-01 · **Tài liệu:** [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md), [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md), [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Nhánh "đăng nhập lần đầu qua IdP của trường" không áp dụng cho Release 1.0** theo ADR-0063 (chỉ username/password). Các nhánh còn lại còn hiệu lực.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md):** "enrollment active" ở mục 4 (hàng "Đã từng đăng nhập") đổi thành "hồ sơ học sinh hiệu lực ở một trường thuộc tenant trong token" (không còn enrollment). **Còn hiệu lực:** toàn bộ phần còn lại.
 
 ## Bối cảnh
 
@@ -39,3 +42,4 @@ Stakeholder hỏi: khi tích hợp nhiều SIS khác nhau, lúc login làm sao b
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-15 | Accepted | Stakeholder |
+| 2026-11-21 | Một phần superseded by ADR-0095 (bỏ khái niệm lớp — học sinh theo khối) | Owner |

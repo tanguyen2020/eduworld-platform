@@ -1,6 +1,9 @@
 # ADR-0060 — Danh mục quốc gia, tỉnh/thành, trường; học sinh thuộc đúng một trường và một lớp
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [DOMAIN_MODEL](../06-architecture/DOMAIN_MODEL.md) · [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [DOMAIN_MODEL](../06-architecture/DOMAIN_MODEL.md) · [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md):** Không còn hiệu lực: mục 3 (học sinh thuộc **một lớp**, enrollment active trỏ lớp, `NO_ACTIVE_ENROLLMENT` khi thiếu lớp, lớp ảo theo khối của tenant chung, chuyển lớp) và chữ "lớp" ở mục 4. **Còn hiệu lực:** danh mục quốc gia/tỉnh thành/trường (mục 1–2); học sinh thuộc **đúng một trường** với **một khối** (`org.students.school_id`, `grade_level`), không có enrollment; hồ sơ chỉ chính học sinh thấy trường, khối, tỉnh/thành; người chơi khác chỉ thấy nickname.
 
 ## Bối cảnh
 
@@ -31,3 +34,4 @@ Stakeholder (người duyệt) yêu cầu: phải có **danh mục trường**; 
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
 | 2026-11-20 | Chốt nguồn `official_code`: nhập từ danh mục chính thức trước khi seed production, NULL tới khi nhập | Owner |
+| 2026-11-21 | Một phần superseded by ADR-0095 (bỏ khái niệm lớp — học sinh theo khối) | Owner |

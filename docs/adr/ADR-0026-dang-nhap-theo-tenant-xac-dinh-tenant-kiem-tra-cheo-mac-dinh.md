@@ -1,9 +1,12 @@
 # ADR-0026 — Đăng nhập theo tenant: xác định tenant, kiểm tra chéo, mặc định tenant chung
 
-> **Trạng thái:** Accepted · supersedes phần ánh xạ Organization của [ADR-0006](ADR-0006-keycloak-mot-realm-dung-organizations-identity-brokering.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md), [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · supersedes phần ánh xạ Organization của [ADR-0006](ADR-0006-keycloak-mot-realm-dung-organizations-identity-brokering.md) · một phần superseded by ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md), [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md), [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay bởi ADR-0063** (2026-11-15): Release 1.0 học sinh chỉ đăng nhập username/password; không tự đưa người dùng vào tenant chung (bỏ JIT vào tenant chung); không thuộc tenant chung và không thuộc tenant SIS nào thì không cho đăng nhập. Nhận diện SSO theo tên miền email không thuộc Release 1.0. **Còn hiệu lực:** Tenant = Keycloak Organization, kiểm tra chéo membership, một tenant mỗi phiên, chọn tenant sau đăng nhập khi thuộc nhiều tenant.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md):** membership tenant của học sinh (mục 2) suy ra từ hồ sơ học sinh hiệu lực ở trường (`org.students`), không từ enrollment; "học sinh tenant thường phải có enrollment active" đổi thành "phải có hồ sơ học sinh hiệu lực ở trường của tenant". **Còn hiệu lực:** phần còn lại (mục 3–4 đã thay bởi ADR-0063).
 
 ## Bối cảnh
 
@@ -44,3 +47,4 @@ Realm riêng cho mỗi tenant (vận hành nặng, khó SSO cho nhân sự nhi�
 | 2026-11-15 | `TENANT_NOT_SELECTED` thống nhất HTTP 403 | Vòng đồng bộ tài liệu |
 | 2026-11-15 | Học sinh không phải chọn trường khi đăng nhập; trường SSO riêng nhận diện theo tên miền email; nhập mã trường chỉ là lối dự phòng | Stakeholder (người duyệt) |
 | 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0095 (bỏ khái niệm lớp — học sinh theo khối) | Owner |

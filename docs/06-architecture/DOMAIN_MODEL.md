@@ -3,6 +3,9 @@
 > Trạng thái: Draft · Phiên bản: 0.6 · Owner: Backend Architect · Cập nhật: 2026-11-17 (ADR-0074: bounded context thuộc module của modular monolith, không còn service riêng)
 > Liên quan: [SYSTEM_ARCHITECTURE](SYSTEM_ARCHITECTURE.md) · [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0037](../adr/ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [GLOSSARY](../00-overview/GLOSSARY.md)
 
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Entity `Class`, `Enrollment`, `Course`, `LearningPath`, `ScheduleItem`, `StudyGroup` bị bỏ; `Student` thuộc một `School` với `grade_level`; `Assignment`/`ExamSession` nhắm (trường, khối) ± học sinh. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-I1, WP-L1 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+
 **Mục đích.** Nguồn chuẩn về **tên entity, aggregate, quan hệ, bất biến và module sở hữu**. Mọi tài liệu, schema DB, API phải dùng đúng tên ở đây.
 **Phạm vi.** Mô hình khái niệm. **Không** chứa cột, kiểu dữ liệu, độ dài, index, DDL: những thứ đó chỉ ở [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md). Quy tắc nghiệp vụ chi tiết nằm ở tài liệu domain được link trong từng mục.
 

@@ -1,9 +1,12 @@
 # ADR-0061 — Đồng bộ dữ liệu học sinh từ SIS khi đăng nhập
 
-> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** OQ-01 · **Tài liệu:** [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · một phần superseded by ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** OQ-01 · **Tài liệu:** [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [ACCOUNT_PROVISIONING](../09-identity/ACCOUNT_PROVISIONING.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: đồng bộ "giáo viên chủ nhiệm" trong phạm vi dữ liệu (mục 2). **Còn hiệu lực:** toàn bộ phần còn lại.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md):** Không còn hiệu lực: "lớp", "enrollment" trong phạm vi dữ liệu đồng bộ (mục 2), "thiếu trường/lớp" (mục 1 — nay là thiếu trường/khối), projection `ref.classes`, "bạn cùng lớp, kênh lớp" và event `enrollment.changed` (mục 3 — nay `student.placement_changed`). **Còn hiệu lực:** cơ chế login sync (blocking khi thiếu dữ liệu, nền khi cũ hơn 24 giờ), giới hạn đồng thời, audit.
 
 ## Bối cảnh
 
@@ -31,3 +34,4 @@ Stakeholder yêu cầu: khi đăng nhập, nếu học sinh thuộc SIS thì **p
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
 | 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0095 (bỏ khái niệm lớp — học sinh theo khối) | Owner |

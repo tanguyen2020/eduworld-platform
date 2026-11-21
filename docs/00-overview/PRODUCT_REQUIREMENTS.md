@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD) — EduWorld
 
-> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Product Manager · Cập nhật: 2026-11-21 (ADR-0094: bỏ MFA/mã xác thực khỏi đăng nhập portal — FR-AUTH-008, 013, 029, FR-MOD-003, FR-CMS-011, AC-AUTH-029, 033, 034) · 2026-11-17 (đăng nhập portal bằng form riêng qua backend ADR-0091, danh mục menu/action portal bật/tắt trong DB ADR-0090; đối soát mã AC/TC và phase theo quyết định Technical Architect 2026-11-16; quyết định 2026-11-17: phát hành theo pilot ADR-0073/0080, an toàn ADR-0078, không QR/PIN ADR-0076 Rejected, Windows máy dùng chung)
+> Trạng thái: Draft · Phiên bản: 0.5 · Owner: Product Manager · Cập nhật: 2026-11-21 (ADR-0095: bỏ khái niệm lớp, enrollment, course, learning path, lịch, nhóm học tập — học sinh theo trường/khối; mã giữ nguyên, đánh dấu Removed hoặc viết lại) · 2026-11-21 (ADR-0094: bỏ MFA/mã xác thực khỏi đăng nhập portal — FR-AUTH-008, 013, 029, FR-MOD-003, FR-CMS-011, AC-AUTH-029, 033, 034) · 2026-11-17 (đăng nhập portal bằng form riêng qua backend ADR-0091, danh mục menu/action portal bật/tắt trong DB ADR-0090; đối soát mã AC/TC và phase theo quyết định Technical Architect 2026-11-16; quyết định 2026-11-17: phát hành theo pilot ADR-0073/0080, an toàn ADR-0078, không QR/PIN ADR-0076 Rejected, Windows máy dùng chung)
 > Liên quan: [PRODUCT_VISION](PRODUCT_VISION.md) · [USER_PERSONAS](USER_PERSONAS.md) · [GLOSSARY](GLOSSARY.md) · [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) · [DOMAIN_MODEL](../06-architecture/DOMAIN_MODEL.md) · [README](../adr/README.md) · [OPEN_QUESTIONS](../12-project/OPEN_QUESTIONS.md) · [ROADMAP](../12-project/ROADMAP.md) · [TEST_STRATEGY](../12-project/TEST_STRATEGY.md)
 
 ## 0. Cách đọc tài liệu
@@ -10,6 +10,7 @@
 - **Mã:** theo [docs/README §3.4](../README.md#34-mã-định-danh). **PRD là nguồn duy nhất cấp mã FR và US** ([ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md) mục 2): tài liệu domain chỉ dùng đúng mã PRD (bảng "Yêu cầu (mã PRD)") cho phần chi tiết, không có bảng FR/US cục bộ; tiêu chí chi tiết của domain dùng mã `AC-<DOMAIN>-NNN` riêng. Thêm yêu cầu mới → thêm mã mới vào PRD trước, không tái sử dụng mã đã xóa.
 - Một yêu cầu chỉ được đánh dấu "Done" khi có test chứng minh (Master Prompt §20, §24) — không chấp nhận giao diện giả lập.
 - **Removed (ADR-0072):** yêu cầu gốc của Master Prompt gắn với vai trò giáo viên hoặc hoạt động chấm tay (tự luận, bài nói, project, rubric, hàng đợi chấm) không còn trong Release 1.0 theo [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md). Mã giữ nguyên để truy vết, không tái sử dụng; chức năng chuyển cho nhà trường (`school_admin`, `academic_manager`) được viết lại ngay trong dòng của mã đó.
+- **Removed / viết lại (ADR-0095):** không còn thực thể lớp (Class), enrollment, course, learning path, lịch, nhóm học tập; học sinh thuộc một trường với một khối. Yêu cầu chỉ gắn với các khái niệm đó ghi **Removed (ADR-0095)**; yêu cầu còn ý nghĩa được viết lại theo trường/khối ngay trong dòng của mã đó ("lớp 1–3", "lớp 6–9"… là cách gọi khối, vẫn giữ).
 - **Deferred (ADR-0082):** yêu cầu thuộc nội dung không làm trong version này theo [ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md) mục 3 — **pháp lý** (rà soát theo luật bảo vệ dữ liệu cá nhân, cơ sở pháp lý xử lý, mô hình consent, DPIA, thời hạn thông báo vi phạm theo luật, quy định game cho người dưới 18 tuổi) và **kỹ năng viết/nói** (`written_response`, `speaking`, `project`, rubric, hàng đợi chấm, AI chấm bài). Mã giữ nguyên, không tái sử dụng, không triển khai; thiết kế (nếu có) ở [docs/99-deferred](../99-deferred/README.md). Nguyên tắc kỹ thuật bảo vệ dữ liệu (tối thiểu hóa, không log PII, định danh giả trong analytics, mã hóa, retention job, soft-delete + ẩn danh hóa, audit, cô lập tenant) vẫn áp dụng.
 
 ## 1. Phạm vi
@@ -30,7 +31,7 @@
 | Quest | Đủ 12 loại (main, side, daily, weekly, learning, exploration, social, party, challenge, seasonal, special event, boss) | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | Challenge & boss | 11 loại challenge, 5 mức độ khó, boss nhiều phase cá nhân/party | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
 | Kinh tế | Xu + sổ cái, Shop đồ trang trí, collection, achievement, badge; trading tắt | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
-| Thi đấu | 8 mode, Glicko-2, tier, season, 13 bảng xếp hạng, tournament (single/double elimination, round robin, team, school, class) | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
+| Thi đấu | 8 mode, Glicko-2, tier, season, 13 bảng xếp hạng, tournament (single/double elimination, round robin, team, school, khối — ADR-0095) | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) |
 | Học tập | Curriculum đa chương trình/phiên bản; 6 loại activity server tự chấm (`quiz`, `interactive_exercise`, `minigame`, `video_lesson`, `audio_lesson`, `simulation`; ngoài Release: `written_response`, `speaking`, `project` — ADR-0072); 11 loại câu hỏi; gợi ý nhiều cấp và gợi ý ôn tập tự động; exam đủ hình thức; mastery; công thức MathJax/MathLive; nội dung 4 môn lớp 1–9 theo OQ-08 | [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md), [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md), [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md), [EXAM_ENGINE](../02-learning/EXAM_ENGINE.md) |
 | Multiplayer | Instance, party (Addendum đầy đủ), lobby, co-op quest/boss, reconnect, đổi thiết bị; matchmaking 8 chế độ | [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md), [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md), [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) |
 | Social & chat | Bạn bè, club/guild, 8 loại channel, chat luôn có trong trận/party, đủ tính năng nhắn tin, kiểm duyệt + danh mục từ nhạy cảm + công tắc, moderation | [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [MODERATION](../03-social-multiplayer/MODERATION.md) |
@@ -64,7 +65,7 @@
 | FR-AUTH-018 | Backend xác định và kiểm tra chéo tenant khi tạo phiên và ở mọi request theo membership trong DB. **Mọi request tenant-scoped mang header `X-Tenant-Id` bắt buộc** (ADR-0065): thiếu → `400 TENANT_HEADER_REQUIRED` (APISIX + `core-api`); header phải khớp tenant của phiên (membership DB, claim nếu có, game session) → không thì `403 TENANT_MISMATCH` + audit; ngoại lệ không cần header: `POST /auth/game/login`, `/auth/game/tenant:select`, `/auth/session`, `GET /me/tenants`, `GET /game/client-config`, health. Có claim → tenant phải thuộc membership (không → `TENANT_MISMATCH` + audit/security event; tenant tắt → `TENANT_ACCESS_DISABLED`); không claim → 1 membership: dùng; nhiều: `TENANT_NOT_SELECTED` kèm danh sách; 0: `ACCOUNT_NOT_PROVISIONED` (ADR-0063) | [Confirmed] | P1 |
 | FR-AUTH-019 | Mỗi phiên có đúng một tenant; người thuộc nhiều tenant đổi tenant bằng header `X-Tenant-Id` mới được kiểm tra với membership (portal không xin token mới — ADR-0091; không nhập lại mật khẩu); WebSocket giữ tenant cố định từ lúc cấp ticket; username/email không dùng để suy ra tenant. System Admin: ghi dữ liệu tenant gửi `X-Tenant-Id` = tenant đích, đọc liên tenant dùng `tenant_ids` (ADR-0065) | [Confirmed] | P1 |
 | FR-AUTH-020 | Trang đăng nhập Keycloak hiển thị tên/logo và IdP của tenant được gợi ý trước đăng nhập — **ngoài Release 1.0** (ADR-0063: không có gợi ý/chọn tenant trước đăng nhập; trang dùng theme `eduworld` chung) | Mở rộng sau | — |
-| FR-AUTH-021 | **Tenant chung**: tài khoản học sinh trong tenant chung `common` chỉ do platform (System Admin) tạo/import có chủ đích, kèm School ảo, khối và lớp ảo theo khối (ADR-0060); bootstrap báo `is_common_tenant`. **Không** tự đưa người dùng không khớp tenant nào vào tenant chung (bỏ JIT, ADR-0063) | [Confirmed] (người duyệt) / chi tiết [Confirmed] | P1 |
+| FR-AUTH-021 | **Tenant chung**: tài khoản học sinh trong tenant chung `common` chỉ do platform (System Admin) tạo/import có chủ đích, kèm School ảo và khối (không có lớp ảo — ADR-0095); bootstrap báo `is_common_tenant`. **Không** tự đưa người dùng không khớp tenant nào vào tenant chung (bỏ JIT, ADR-0063) | [Confirmed] (người duyệt) / chi tiết [Confirmed] | P1 |
 | FR-AUTH-022 | **Chỉ học sinh được đăng nhập game**: đăng nhập qua `/auth/game/login` (client `eduworld-game-backend`) của nhân sự (`user_type = staff`, gồm nhân sự trường và nhân sự platform — ADR-0081) bị từ chối `403 GAME_ACCESS_STUDENT_ONLY` (backend bắt buộc; Keycloak flow điều kiện role `student` là lớp bổ sung); vận hành xem trải nghiệm qua preview trong CMS (ADR-0031) | [Confirmed] | P1 |
 | FR-AUTH-023 | **Một thiết bị cho mỗi tài khoản học sinh**: tối đa 1 game session active; đăng nhập thiết bị khác → hộp thoại xác nhận trên thiết bị mới; đồng ý thì thiết bị cũ tự đăng xuất và hiển thị thông báo; Keycloak session của thiết bị cũ bị thu hồi (ADR-0031) | [Confirmed] | P1 |
 | FR-AUTH-024 | **Dọn học sinh không đăng nhập game**: worker soft-delete học sinh có `last_login_at` (hoặc `provisioned_at` nếu chưa từng) + `inactive_student_cleanup_days` < hiện tại; số ngày cấu hình ở platform (mặc định 180 [Confirmed]) và tenant; báo trước, loại trừ, khôi phục khi đăng nhập lại, xác nhận khi > 10% (ADR-0032) | [Confirmed] cơ chế / [Confirmed] tham số | P2 |
@@ -81,11 +82,11 @@
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-ORG-001 | Phân cấp Platform → Tenant → School → Class. Tenant là **một trường độc lập** (`school`), **một đơn vị nhiều trường** (`unit`) hoặc **tenant chung** (`common`); tenant là đơn vị cô lập dữ liệu (ADR-0005) | [Confirmed] | P1 |
-| FR-ORG-002 | Quản lý AcademicYear, Class (grade_level 1–9), Enrollment có lịch sử | [Confirmed] | P1 |
-| FR-ORG-003 | Phân biệt Keycloak User, EduWorld User, Student, Staff (nhân sự nhà trường/platform), School, Class, Enrollment, External Identity; không có thực thể giáo viên (ADR-0072) | [Confirmed] (viết lại theo ADR-0072) | P1 |
+| FR-ORG-001 | Phân cấp Platform → Tenant → School; học sinh thuộc trường với một khối (`grade_level` 1–9), không có thực thể lớp (ADR-0095). Tenant là **một trường độc lập** (`school`), **một đơn vị nhiều trường** (`unit`) hoặc **tenant chung** (`common`); tenant là đơn vị cô lập dữ liệu (ADR-0005) | [Confirmed] | P1 |
+| FR-ORG-002 | Quản lý AcademicYear của trường và khối (`grade_level` 1–9) của học sinh; không có Class, không có Enrollment; khối tại thời điểm sự kiện được ghi trên dữ liệu học tập để giữ lịch sử, thay đổi trường/khối có audit (ADR-0095) | [Confirmed] (viết lại theo ADR-0095) | P1 |
+| FR-ORG-003 | Phân biệt Keycloak User, EduWorld User, Student, Staff (nhân sự nhà trường/platform), School, External Identity; không có thực thể giáo viên (ADR-0072), không có Class/Enrollment (ADR-0095) | [Confirmed] (viết lại theo ADR-0072, ADR-0095) | P1 |
 | FR-ORG-004 | **Removed (ADR-0072)** — phân công giảng dạy lớp × môn không còn; phạm vi nhân sự là trường hoặc môn qua UserRole (FR-AUTH-016) | Removed | — |
-| FR-ORG-005 | Chuyển lớp, chuyển trường: đóng Enrollment cũ, mở mới, giữ lịch sử học tập gắn trường cũ theo policy | [Confirmed] | P1 |
+| FR-ORG-005 | Chuyển trường và lên khối: cập nhật trường/khối của học sinh trong một transaction, audit, phát event; giữ lịch sử học tập gắn trường/khối cũ theo policy; không còn chuyển lớp (ADR-0095) | [Confirmed] (viết lại theo ADR-0095) | P1 |
 | FR-ORG-006 | Mọi bảng nghiệp vụ có `tenant_id`; **mọi truy vấn phải lọc theo `tenant_id`**, enforcement ở app layer (TenantScope) + RLS; `school_id` là chiều bên trong tenant | [Confirmed] | P1 |
 | FR-ORG-007 | School settings: chính sách chat (gồm preset `quick_message_emote_only` cho cả trường — ADR-0078), giờ truy cập và khung giới nghiêm của trường (chỉ siết thêm so với `platform_curfew`), cho phép liên trường, JIT provisioning (`/api/v1/schools`) | [Confirmed] · preset, giới nghiêm [Confirmed — Technical Architect 2026-11-17] | P1–P5 |
 | FR-ORG-008 | Tại một thời điểm người dùng chỉ làm việc trên **một** tenant. Chỉ System Admin thấy mọi tenant; mỗi màn hình có dữ liệu theo tenant có **dropdown tìm kiếm tenant** để lọc; mọi truy cập liên tenant được audit (ADR-0027 §6) | [Confirmed] | P1 (API) / P3 (CMS) |
@@ -97,15 +98,15 @@
 | FR-ORG-014 | Nghĩa vụ xóa dữ liệu theo luật được đáp ứng bằng ẩn danh hóa; Release 1.0 không xóa vật lý (ngoại lệ duy nhất: purge chat gameplay ADR-0033) | [Confirmed] ADR-0070 | P5 |
 | FR-ORG-015 | **Danh mục quốc gia** (ISO 3166-1) và **danh mục tỉnh/thành** theo quốc gia, có hiệu lực và kế thừa đơn vị cũ → mới; Việt Nam seed 34 đơn vị hiện hành + 63 đơn vị cũ; mã chính thức đối chiếu văn bản trước khi seed production (ADR-0060) | [Confirmed] danh mục, 34 đơn vị; [Confirmed — owner 2026-11-20] mã chính thức nhập từ danh mục mã đơn vị hành chính do cơ quan nhà nước ban hành trước khi seed production, không tự đặt | P1 |
 | FR-ORG-016 | **Danh mục trường**: mỗi trường thuộc một tenant và một tỉnh/thành, có mã ngành (nếu có), cấp học, khối áp dụng, tên song ngữ; quản trị trong Admin Portal (System Admin liên tenant, Tenant Admin trong tenant), import CSV (ADR-0060) | [Confirmed] | P1 |
-| FR-ORG-017 | **Học sinh thuộc đúng một trường và một lớp** tại một thời điểm (một enrollment active); học sinh SIS thiếu lớp không vào game (`NO_ACTIVE_ENROLLMENT`) và tạo issue cho trường; tenant chung dùng lớp ảo theo khối (ADR-0060) | [Confirmed]; lớp ảo [Confirmed] | P1 |
-| FR-ORG-018 | **Đồng bộ SIS khi đăng nhập**: dữ liệu đủ & mới → không gọi SIS; thiếu trường/lớp → tra cứu SIS chặn ≤ 3 s; dữ liệu cũ hơn 24 giờ → làm mới nền; lan dữ liệu trường/lớp/học sinh sang các module game để hiển thị (ADR-0061) | [Confirmed] yêu cầu; tham số [Confirmed] | P1 |
+| FR-ORG-017 | **Học sinh thuộc đúng một trường với một khối** tại một thời điểm (hồ sơ học sinh hiệu lực, không enrollment); học sinh SIS thiếu trường/khối hợp lệ không vào game (`NO_ACTIVE_ENROLLMENT`, giữ mã) và tạo issue cho trường; tenant chung dùng School ảo + khối (ADR-0060, ADR-0095) | [Confirmed] (viết lại theo ADR-0095) | P1 |
+| FR-ORG-018 | **Đồng bộ SIS khi đăng nhập**: dữ liệu đủ & mới → không gọi SIS; thiếu trường/khối → tra cứu SIS chặn ≤ 3 s; dữ liệu cũ hơn 24 giờ → làm mới nền; lan dữ liệu trường/khối/học sinh sang các module game để hiển thị (ADR-0061) | [Confirmed] yêu cầu; tham số [Confirmed] | P1 |
 
 ### 2.3. SIS Integration — `SIS` (§10.5)
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
 | FR-SIS-001 | EduWorld sở hữu DTO/API contract SIS ([EduWorld SIS Contract v1](../../specs/sis/eduworld-sis-contract.v1.yaml)); mỗi trường cung cấp API theo contract; không adapter theo DTO của SIS (ADR-0021) | [Confirmed] | P1 |
-| FR-SIS-002 | Đồng bộ School, Class, Student, Enrollment, Account Status; không đồng bộ giáo viên và phân công giảng dạy (ADR-0072) | [Confirmed] (viết lại theo ADR-0072) | P1 |
+| FR-SIS-002 | Đồng bộ School, AcademicYear, Student (trường + khối), Account Status; không đồng bộ giáo viên, phân công giảng dạy (ADR-0072), lớp và enrollment (SIS contract 1.3.0, ADR-0095) | [Confirmed] (viết lại theo ADR-0072, ADR-0095) | P1 |
 | FR-SIS-003 | Hai cách nhận dữ liệu: `contract_v1` (pull HTTP theo contract) và `csv_import` (cột CSV = tên trường DTO) cho trường chưa có API; dữ liệu vi phạm contract bị từ chối theo bản ghi | [Confirmed] hướng / [Confirmed] chi tiết | P1 |
 | FR-SIS-009 | Bộ conformance test + mock server sinh từ contract để trường tự kiểm tra facade trước khi kết nối | [Confirmed] | P1 |
 | FR-SIS-004 | Full sync định kỳ + delta sync + webhook (khi trường khai báo capability `delta`/`webhook` trong contract) | [Confirmed] | P1–P3 |
@@ -129,7 +130,7 @@
 | FR-CUR-009 | LO bám GDPT 2018: thêm `yccd_ref` (mã yêu cầu cần đạt, ≤ 64 ký tự) và `competency_ids[]` (năng lực/phẩm chất); seed được EdTech review theo văn bản chương trình ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)) | [Confirmed] | P2 |
 | FR-CUR-010 | Import/export curriculum dạng YAML/CSV qua use case CMS (có validate, `Idempotency-Key`, audit; seed cũng đi qua import, không SQL thủ công) ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)) | [Confirmed] | P2 |
 | FR-CUR-011 | Khi publish CurriculumVersion mới: bảng mapping LO giữa hai version (`same`, `split`, `merge`, `replaces`, `removed`) và chiếu mastery sang version mới; learning event gốc không bị sửa ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)) | [Confirmed] | P3 |
-| FR-CUR-012 | Mapping bộ sách giáo khoa → LO (bộ sách, tập, bài, n–n với LO) để lọc nội dung theo bài sách và sắp lịch LMS; không sao chép nguyên văn sách khi chưa có giấy phép ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)); chỉ lưu metadata cho bộ sách trường pilot đang dùng | [Confirmed — owner 2026-11-20, OQ-08] | P3 |
+| FR-CUR-012 | Mapping bộ sách giáo khoa → LO (bộ sách, tập, bài, n–n với LO) để lọc nội dung theo bài sách và chọn nội dung giao bài (không còn lịch LMS — ADR-0095); không sao chép nguyên văn sách khi chưa có giấy phép ([CURRICULUM_MODEL](../02-learning/CURRICULUM_MODEL.md)); chỉ lưu metadata cho bộ sách trường pilot đang dùng | [Confirmed — owner 2026-11-20, OQ-08] | P3 |
 
 ### 2.5. Learning Content — `CNT` (§4.2)
 
@@ -180,7 +181,7 @@
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-EXR-001 | Chế độ: bài cá nhân, theo quest, theo chủ đề, theo lớp, nhà trường giao (`school_admin`/`academic_manager`), tự luyện, làm lại câu sai, chẩn đoán | [Confirmed] (người giao theo ADR-0072) | P2 (nhà trường giao: P3) |
+| FR-EXR-001 | Chế độ: bài cá nhân, theo quest, theo chủ đề, nhà trường giao theo khối (ADR-0095) (`school_admin`/`academic_manager`), tự luyện, làm lại câu sai, chẩn đoán | [Confirmed] (người giao theo ADR-0072) | P2 (nhà trường giao: P3) |
 | FR-EXR-002 | Lưu Attempt, Answer, Correctness, Score, Duration, Submission Time, Content Version, LO | [Confirmed] | P2 |
 | FR-EXR-003 | Practice: phản hồi đúng/sai + giải thích ngay sau từng câu | [Confirmed] | P2 |
 | FR-EXR-004 | Resume attempt chưa hoàn thành theo chính sách (TTL, số lần) | [Confirmed] / tham số [Confirmed] | P2 |
@@ -232,7 +233,7 @@
 |---|---|---|---|
 | FR-ANL-001 | Ghi learning events (activity/question/exercise/exam/lesson/quest/learning_objective.*) với event_id, student_id, school_id, session_id, activity_id, content_id, content_version, type, timestamp, payload, idempotency key | [Confirmed] | P2 |
 | FR-ANL-002 | Lưu bền vững trong `learning.learning_events` (LRS nội bộ), tương thích tư duy xAPI | [Confirmed] / thiết kế [Confirmed] | P2 |
-| FR-ANL-003 | Analytics theo học sinh, lớp, trường, môn, chủ đề, LO (bỏ chiều giáo viên theo ADR-0072) | [Confirmed] (viết lại theo ADR-0072) | P3 |
+| FR-ANL-003 | Analytics theo học sinh, khối, trường, môn, chủ đề, LO (bỏ chiều giáo viên theo ADR-0072, bỏ chiều lớp theo ADR-0095) | [Confirmed] (viết lại theo ADR-0072, ADR-0095) | P3 |
 | FR-ANL-004 | Không dùng dữ liệu hành vi ngoài mục đích đã công bố | [Confirmed] | P1+ |
 | FR-ANL-005 | Aggregation chạy trong worker, dashboard đọc từ read model | [Confirmed] | P3 |
 | FR-ANL-006 | **Game Analytics** tách khỏi Learning Analytics và Monitoring: chỉ số engagement, retention, funnel, tiến trình, kinh tế, xã hội, chơi lành mạnh, hiệu năng theo hạng thiết bị — định nghĩa ở [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) | [Confirmed] tách / chỉ số [Confirmed] | P4 |
@@ -241,18 +242,18 @@
 | FR-ANL-009 | Dashboard Game Analytics trong workspace Game Live Operations (platform); báo cáo tổng hợp cho Tenant/School Admin, ẩn ô < 5 học sinh | [Confirmed] | P4 |
 | FR-ANL-010 | Không dùng thời gian chơi làm thước đo thành công; có chỉ số chơi lành mạnh (vượt mốc nhắc nghỉ, chơi khuya) | [Confirmed] | P4 |
 | FR-ANL-011 | Tenant tắt được telemetry sản phẩm; telemetry ổn định (hiệu năng, crash) vẫn thu (cơ chế kỹ thuật; cơ sở pháp lý/consent: Deferred ADR-0082) | [Confirmed] | P4 |
-| FR-ANL-012 | Có trang dashboard cho trường → lớp → học sinh (School Learning Dashboard), tenant, platform và Game Analytics; số liệu theo ngày/tuần/tháng | [Confirmed — người duyệt] (cấp lớp chuyển cho nhà trường theo ADR-0072) | P3–P4 |
+| FR-ANL-012 | Có trang dashboard cho trường → khối → học sinh (School Learning Dashboard), tenant, platform và Game Analytics; số liệu theo ngày/tuần/tháng | [Confirmed — người duyệt] (dashboard cho nhà trường theo ADR-0072; trường → khối theo ADR-0095) | P3–P4 |
 | FR-ANL-013 | Dashboard chỉ đọc bảng tổng hợp dựng gia tăng; khoảng thời gian tối đa 2 năm, độ hạt tự chọn theo khoảng; hiển thị thời điểm cập nhật và nhãn tạm tính ([DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)) | [Confirmed — ADR-0062] | P3 |
 | FR-ANL-014 | Xuất báo cáo dashboard chạy bất đồng bộ, link tải có hạn, có audit | [Confirmed — ADR-0062] | P3 |
 | FR-ANL-015 | Báo cáo tham khảo theo mức đánh giá TT27/2020 (tiểu học) và TT22/2021 (THCS) từ mastery/kết quả; ghi rõ "chỉ tham khảo", không thay đánh giá chính thức của nhà trường ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)) | [Confirmed] | P3 |
 | FR-ANL-016 | Báo cáo learning analytics cấp tổ chức/tenant/platform chỉ dùng dữ liệu gộp, ẩn ô có < 5 học sinh (k-anonymity tối thiểu) ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)) | [Confirmed] | P3 |
 | FR-ANL-017 | Ngân hàng câu hỏi/đề đo hiệu quả (`efficacy_instrument`) tách khỏi mọi luyện tập, không xuất hiện trong practice, quest hay thi đấu ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
-| FR-ANL-018 | Bài kiểm tra độc lập trước/sau cho lớp tham gia và lớp so sánh; không tạo evidence mastery, không cộng XP, không công bố điểm cho học sinh ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
+| FR-ANL-018 | Bài kiểm tra độc lập trước/sau cho cụm (trường, khối) tham gia và cụm so sánh cùng khối (ADR-0095); không tạo evidence mastery, không cộng XP, không công bố điểm cho học sinh ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
 | FR-ANL-019 | Ghi thỏa thuận tham gia nghiên cứu của tenant (pilot), có thu hồi và audit ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
 | FR-ANL-020 | Thử nghiệm A/B cấu hình mastery và luật gợi ý theo nhánh gán ổn định, ghi `experiment_arms` vào learning event, có ngưỡng dừng sớm ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
 | FR-ANL-021 | Báo cáo hiệu quả: effect size, tỉ lệ học sinh tiến bộ, tỉ lệ rời nghiên cứu, độ tin cậy dự báo của mastery so với kiểm tra độc lập ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
 | FR-ANL-022 | Xuất dữ liệu nghiên cứu định danh giả, chỉ cho nhân sự platform có quyền, áp k-anonymity như FR-ANL-016 ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
-| FR-ANL-023 | Nhà trường rút lớp/học sinh khỏi phần phân tích nghiên cứu; dữ liệu đã rút bị loại khỏi báo cáo và bản xuất sau đó ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
+| FR-ANL-023 | Nhà trường rút cụm (trường, khối) hoặc học sinh khỏi phần phân tích nghiên cứu (ADR-0095); dữ liệu đã rút bị loại khỏi báo cáo và bản xuất sau đó ([LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md), ADR-0080) | [Confirmed] | P3 |
 
 ### 2.11. Game World & Character — `GAME` (§2.3, §3.1–3.3, §13)
 
@@ -281,7 +282,7 @@
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-QST-001 | Quest có: ID, tên, mô tả, loại, lớp, môn, chủ đề, LO, điều kiện bắt đầu, các bước, điều kiện hoàn thành, phần thưởng, thời gian, phiên bản | [Confirmed] | P2 |
+| FR-QST-001 | Quest có: ID, tên, mô tả, loại, khối, môn, chủ đề, LO, điều kiện bắt đầu, các bước, điều kiện hoàn thành, phần thưởng, thời gian, phiên bản | [Confirmed] | P2 |
 | FR-QST-002 | 12 loại quest: Main, Side, Daily, Weekly, Learning, Exploration, Social, Party, Challenge, Seasonal, Special Event, Boss (quest schema v2; thay 7 loại trước đây) | [Confirmed] (Master Prompt mới §7) | P2 (Party/Challenge/Boss: P3–P4) |
 | FR-QST-008 | Quest hỗ trợ narrative, NPC, level requirement, learning requirement, repeatability, cooldown, failure conditions; thất bại mặc định không mất tiến độ | [Confirmed] / chi tiết [Confirmed] | P2 |
 | FR-QST-003 | Quest liên kết nội dung học tập; bước `activity` tạo Attempt trong Activity & Attempt Engine | [Confirmed] | P2 |
@@ -306,7 +307,7 @@
 |---|---|---|---|
 | FR-MP-001 | Hỗ trợ Multiplayer World, Room, Lobby, Team, Match, Session | [Confirmed] | P4 |
 | FR-MP-002 | Hub instance tối đa 40 người, cấp theo school/grade band; bạn bè/party ưu tiên cùng instance (ADR-0012) | [Confirmed] OQ-05 | P4 |
-| FR-MP-003 | Presence/online status (Valkey), chỉ hiển thị cho bạn bè/lớp theo policy | [Confirmed] / hiển thị [Confirmed] | P4 |
+| FR-MP-003 | Presence/online status (Valkey), chỉ hiển thị cho bạn bè/party/club theo policy (không theo lớp — ADR-0095) | [Confirmed] / hiển thị [Confirmed] | P4 |
 | FR-MP-004 | Đồng bộ vị trí qua WebSocket ≤10 Hz, interpolation, server kiểm tra tốc độ/biên (ADR-0011) | [Confirmed] OQ-06 | P4 |
 | FR-MP-005 | Heartbeat, timeout, reconnect, session recovery, disconnect handling | [Confirmed] | P4 |
 | FR-MP-006 | Không gửi chuyển động 3D qua REST; Valkey không làm game simulation server | [Confirmed] | P4 |
@@ -317,14 +318,14 @@
 |---|---|---|---|
 | FR-PTY-001 | Create, Join, Leave, Invite Friend, Accept, Reject, Kick, Transfer Leader, Disband, Settings, Member Status, Party Chat | [Confirmed] | P4 (gồm Party Chat văn bản tự do — channel `party` always-on, FR-CHAT-009) |
 | FR-PTY-002 | Thuộc tính: Party ID, name, leader, members, max members, type, visibility, invitation policy, current activity, current game session, timestamps | [Confirmed] | P4 |
-| FR-PTY-003 | Party types: Friend Party, Study Group, Quest Party, Competition Team, Class Group, Custom Group | [Confirmed] | P4 |
+| FR-PTY-003 | Party types: Friend Party, Study Party (`study_party`, đổi tên từ Study Group), Quest Party, Competition Team, Custom Group; không có Class Group (ADR-0095) | [Confirmed] (viết lại theo ADR-0095) | P4 |
 | FR-PTY-004 | Max members cấu hình được; mặc định 4, cho phép 2–8 | [Confirmed] cấu hình / [Confirmed] giá trị | P4 |
 | FR-PTY-005 | Một học sinh chỉ có một active Party tại một thời điểm (Addendum §6 ghi cho MVP; giữ nguyên cho Release 1.0); chống duplicate membership (unique constraint) | [Confirmed] | P4 |
 | FR-PTY-006 | Party Lobby: danh sách thành viên, avatar, online, Ready/Not Ready, leader controls, chọn activity & game mode, mời, group chat, Start Session | [Confirmed] | P4 |
-| FR-PTY-007 | Start Session: xác nhận leader → kiểm tra thành viên → kiểm tra điều kiện lớp/quyền → tạo Game Session/room → gán thành viên → gửi session info tới clients → đồng bộ trạng thái → theo dõi reconnect/disconnect → kết thúc và lưu kết quả | [Confirmed] | P4 |
+| FR-PTY-007 | Start Session: xác nhận leader → kiểm tra thành viên → kiểm tra điều kiện khối/quyền → tạo Game Session/room → gán thành viên → gửi session info tới clients → đồng bộ trạng thái → theo dõi reconnect/disconnect → kết thúc và lưu kết quả | [Confirmed] | P4 |
 | FR-PTY-008 | Leader disconnect: grace period 60 giây, sau đó tự chuyển leader cho thành viên tham gia sớm nhất còn online | [Confirmed] cơ chế / [Confirmed] tham số | P4 |
 | FR-PTY-009 | Party private cần lời mời/quyền; lời mời hết hạn sau 5 phút; không mời người đã block/bị block | [Confirmed] / tham số [Confirmed] | P4 |
-| FR-PTY-010 | Giới hạn theo school/class/grade/activity; mặc định chỉ cùng trường | [Confirmed] cấu hình / [Confirmed] mặc định | P4 |
+| FR-PTY-010 | Giới hạn theo school/grade/activity; mặc định chỉ cùng trường; lớp 1–3 chỉ `friend`/`quest`, cùng đúng khối, khác trường được trong cùng tenant theo ADR-0054, không liên tenant (ADR-0095) | [Confirmed] cấu hình / [Confirmed] mặc định (viết lại theo ADR-0095) | P4 |
 | FR-PTY-011 | Chống spam lời mời (rate limit), audit log cho create/kick/transfer/disband | [Confirmed] | P4 |
 | FR-PTY-012 | Thành viên mất kết nối: các thành viên khác tiếp tục nếu activity cho phép (`continue_on_disconnect`) | [Confirmed] | P4 |
 | FR-PTY-013 | Không chia sẻ kết quả học tập cá nhân giữa thành viên; mỗi người có attempt riêng | [Confirmed] | P4 |
@@ -345,7 +346,7 @@
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-CMP-001 | Chế độ: 1v1 Knowledge Battle, Team Battle, Co-op Challenge, Timed Quiz, Subject Tournament, Class/School/Seasonal Competition | [Confirmed] | P4 (Seasonal: P6+) |
+| FR-CMP-001 | Chế độ: 1v1 Knowledge Battle, Team Battle, Co-op Challenge, Timed Quiz, Subject Tournament, Grade/School/Seasonal Competition (thi đấu khối thay thi đấu lớp — ADR-0095) | [Confirmed] | P4 (Seasonal: P6+) |
 | FR-CMP-002 | Battle là state machine server-authoritative: question plan do server chọn, chấm và tính điểm thời gian server-side | [Confirmed] | P4 |
 | FR-CMP-003 | Kết quả trận ghi một lần (unique `match_id`), idempotent, audit | [Confirmed] | P4 |
 | FR-CMP-004 | Câu trả lời trong trận ghi learning evidence với context `competition` (trọng số thấp cho mastery) | [Confirmed] | P4 |
@@ -365,17 +366,17 @@
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-LDB-001 | Bảng: Global, School, Class, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season | [Confirmed] | P4 (Global trong Release 1.0; quy tắc hiển thị nickname theo FR-LDB-003) |
+| FR-LDB-001 | Bảng: Global, School, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season | [Confirmed] | P4 (Global trong Release 1.0; quy tắc hiển thị nickname theo FR-LDB-003) |
 | FR-LDB-002 | Leaderboard cache bằng Valkey sorted set, nguồn từ PostgreSQL | [Confirmed] | P4 |
-| FR-LDB-003 | Leaderboard ngoài phạm vi trường chỉ hiển thị nickname, không tên trường/lớp chi tiết | [Confirmed] | P4 |
+| FR-LDB-003 | Leaderboard ngoài phạm vi trường chỉ hiển thị nickname, không tên trường/khối chi tiết | [Confirmed] | P4 |
 | FR-LDB-004 | Trường có thể tắt leaderboard công khai cho lớp 1–3 | [Confirmed] | P4 |
-| FR-LDB-005 | Bảng của lớp xếp theo nỗ lực/tiến bộ hoặc hiển thị mục tiêu tập thể, không xếp theo XP ([COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md)) | [Confirmed] | P4 |
+| FR-LDB-005 | Mục tiêu tập thể của khối trong trường (`grade_goal`) thay bảng của lớp: hiển thị tiến độ chung, không xếp hạng cá nhân, không tên, ẩn ô đóng góp < 5 học sinh ([COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md), ADR-0095) | [Confirmed] (viết lại theo ADR-0095) | P4 |
 
 ### 2.20. Tournament — `TRN` (§5.5)
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-TRN-001 | Format: Single Elimination, Double Elimination, Round Robin, Team, School, Class Tournament | [Confirmed] | P4 (Single elim, Round robin bật mặc định; Double elim, vòng bảng, Team, School, Class xây cùng tournament engine ở P4, tắt theo template tới khi platform bật) |
+| FR-TRN-001 | Format: Single Elimination, Double Elimination, Round Robin, Team, School, Grade Tournament (giải khối của trường thay giải lớp — ADR-0095) | [Confirmed] | P4 (Single elim, Round robin bật mặc định; Double elim, vòng bảng, Team, School, Grade xây cùng tournament engine ở P4, tắt theo template tới khi platform bật) |
 | FR-TRN-002 | Tạo giải, đăng ký, chia bảng, tạo bracket, lên lịch, xác nhận người tham gia, quản lý trận, xác nhận kết quả, trao thưởng, lưu lịch sử | [Confirmed] | P4 |
 | FR-TRN-003 | Bracket lưu PostgreSQL, không chỉ Valkey | [Confirmed] | P4 |
 
@@ -384,25 +385,25 @@
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
 | FR-SOC-001 | Friend list, friend request, invitation; tenant `common` tắt mặc định kết bạn (ADR-0078) | [Confirmed] | P5 (cơ bản cho mời party: P4) |
-| FR-SOC-002 | Mặc định chỉ kết bạn cùng trường (như nhau cho mọi lớp); tenant `unit` có thể mở liên trường trong tenant | [Confirmed] | P5 |
+| FR-SOC-002 | Mặc định chỉ kết bạn cùng trường (như nhau cho mọi khối); tenant `unit` có thể mở liên trường trong tenant | [Confirmed] | P5 |
 | FR-SOC-003 | Block / Mute người dùng; block chặn chat, mời, ghép party | [Confirmed] | P5 (Block: P4 cùng party) |
-| FR-SOC-004 | Study Group (nhóm học tập LMS, module learning sở hữu — ADR-0084) do `school_admin`/`academic_manager` tạo (ADR-0072); Team/club của học sinh theo policy ([SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md)) | [Confirmed] (người tạo theo ADR-0072) | P5 |
+| FR-SOC-004 | Team/club của học sinh theo policy ([SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md)); nhóm học tập LMS (Study Group, ADR-0084) đã bỏ theo ADR-0095 | [Confirmed] (viết lại theo ADR-0095) | P5 |
 
 ### 2.22. Chat — `CHAT` (§6.1–6.2)
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-CHAT-001 | Channel: World, Area, **Match**, Party, Team, Class, Study Group, Direct Message; cấu hình bằng policy | [Confirmed] | P4 (Match/Party/Team theo trận), P5 (còn lại) |
-| FR-CHAT-002 | Không có rule = deny; quyền vào channel theo quan hệ (cùng trường/instance/nhóm/lớp/bạn bè) và policy, như nhau cho mọi lớp (ADR-0020) | [Confirmed] | P5 |
+| FR-CHAT-001 | Channel: World, Area, **Match**, Party, Team, Direct Message; cấu hình bằng policy; không có channel Class/Study Group và không có kênh theo khối (ADR-0095) | [Confirmed] | P4 (Match/Party/Team theo trận), P5 (còn lại) |
+| FR-CHAT-002 | Không có rule = deny; quyền vào channel theo quan hệ (cùng trường/instance/nhóm/bạn bè) và policy, như nhau cho mọi khối (ADR-0020, ADR-0095) | [Confirmed] | P5 |
 | FR-CHAT-003 | Text, emoji, reactions, quick messages, group chat, history, unread count, notifications | [Confirmed] | P4 (channel gameplay), P5 (còn lại) |
 | FR-CHAT-004 | **Một bộ quy tắc chat cho mọi lớp 1–9** (không điều kiện theo `grade_level`/`grade_band`): đủ 7 channel; World = cùng trường (tenant `unit` có thể mở rộng toàn tenant); DM chỉ giữa bạn bè không block nhau; mọi học sinh dùng text, emoji, quick message, reaction (ADR-0020). Tenant `common`: tắt mặc định DM và World chat; trường có thể chọn preset "chỉ quick message + emote" cho cả trường (ADR-0078) | [Confirmed] (giá trị số [Confirmed]) | P5 |
 | FR-CHAT-005 | **Mọi tin nhắn phải hợp lệ**: pipeline đồng bộ phía server cho mọi `kind` — normalize → định dạng/độ dài → profanity (tiếng Việt có/không dấu, teencode, leetspeak, tiếng Anh) → PII → spam/flood → bắt nạt → allow/mask/block/hold_for_review; `block` không lưu nội dung | [Confirmed] chức năng / [Confirmed] chi tiết pipeline | P5 |
 | FR-CHAT-006 | Lịch sử chat theo quyền và retention job (mặc định 180 ngày; rà soát thời hạn theo luật: Deferred ADR-0082) | [Confirmed] / thời hạn [Confirmed] | P5 |
 | FR-CHAT-007 | Không có voice chat trong Release 1.0; điểm mở rộng chỉ ở mức thiết kế, không hiện thực (ADR-0051, ADR-0070) | [Confirmed] | — |
 | FR-CHAT-008 | Giao tin nhắn realtime qua `/realtime/v1`, gửi qua REST hoặc WS có idempotency client message id | [Confirmed] | P4 |
-| FR-CHAT-009 | **Chat gameplay luôn có** (ADR-0020 mục 6): vào trận 1v1 → channel `match`; trận đội → `team` mỗi đội + `match` chung; tạo party → `party`. Tự tạo, tự join, đủ text/emoji/quick/reaction; không tắt được bằng cài đặt tenant/trường/lớp, không áp khung giờ của channel (giờ giới nghiêm platform chặn ở mức phiên chơi); chỉ mute/block cá nhân hoặc sanction ngăn một người gửi; preset "chỉ quick message + emote" của trường thu hẹp loại tin nhưng không tắt channel (ADR-0078) | [Confirmed] | P4 |
+| FR-CHAT-009 | **Chat gameplay luôn có** (ADR-0020 mục 6): vào trận 1v1 → channel `match`; trận đội → `team` mỗi đội + `match` chung; tạo party → `party`. Tự tạo, tự join, đủ text/emoji/quick/reaction; không tắt được bằng cài đặt tenant/trường, không áp khung giờ của channel (giờ giới nghiêm platform chặn ở mức phiên chơi); chỉ mute/block cá nhân hoặc sanction ngăn một người gửi; preset "chỉ quick message + emote" của trường thu hẹp loại tin nhưng không tắt channel (ADR-0078) | [Confirmed] | P4 |
 | FR-CHAT-010 | UI chat trong lobby/trận/party: panel thu gọn được nhưng không tắt; quick message một chạm; tab Đội/Cả trận; menu Tắt tiếng/Chặn/Báo cáo trên từng tin; báo cáo từ màn hình kết quả trận | [Confirmed] tính năng / [Confirmed] UX | P4 |
-| FR-CHAT-011 | **Purge chat gameplay** (ADR-0033): channel `match`, `team` theo trận, `party` (sau giải tán) bị xóa vật lý sau `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3) từ `closed_at`; World/Area sau 24 h; giữ bằng chứng của report/case/sanction trước khi purge; hoãn khi case mở; không áp dụng Class/Study Group/Team cố định/DM; người chơi được thông báo thời hạn lưu | [Confirmed] / [Confirmed] số ngày | P4 |
+| FR-CHAT-011 | **Purge chat gameplay** (ADR-0033): channel `match`, `team` theo trận, `party` (sau giải tán) bị xóa vật lý sau `gameplay_chat_retention_days` (mặc định 7, tối thiểu 3) từ `closed_at`; World/Area sau 24 h; giữ bằng chứng của report/case/sanction trước khi purge; hoãn khi case mở; không áp dụng Team cố định/club/DM; người chơi được thông báo thời hạn lưu | [Confirmed] / [Confirmed] số ngày | P4 |
 | FR-CHAT-012 | Sửa tin trong 15 phút (chạy lại kiểm duyệt, lưu revision) và thu hồi trong 24 giờ (placeholder, giữ bằng chứng, vẫn báo cáo được) — ADR-0034 | [Confirmed] tính năng / [Confirmed] thời hạn | P4 |
 | FR-CHAT-013 | Reply, Quote (trích từ bản đã che), Forward (cùng tenant, ≤ 5 đích, chạy lại kiểm duyệt) — ADR-0034 | [Confirmed] / [Confirmed] giới hạn | P4 |
 | FR-CHAT-014 | Emoji, Sticker (pack platform, có thể mở khóa bằng phần thưởng), GIF (thư viện nội bộ đã duyệt, không dịch vụ bên thứ ba), Reactions (≤ 3/người/tin) — ADR-0034 | [Confirmed] / [Confirmed] nguồn GIF nội bộ | P4 |
@@ -417,7 +418,7 @@
 | FR-MOD-001 | Content/profanity filtering, anti-spam, anti-bullying, PII detection | [Confirmed] | P5 |
 | FR-MOD-002 | Report message, report user, block, mute | [Confirmed] | P5 |
 | FR-MOD-003 | Moderation queue tập trung ở Platform Safety Team (role `safety_moderator`); mọi case gắn tenant/trường; audit mọi hành động (ADR-0072) | [Confirmed] (người xử lý theo ADR-0072) | P5 |
-| FR-MOD-004 | Chat policy theo platform → tenant → school → class (không theo grade — thay mục "Age/Grade-based Policy" của Master Prompt §6.3 theo ADR-0020); cấp dưới chỉ siết chặt hơn cấp trên | [Confirmed] | P5 |
+| FR-MOD-004 | Chat policy theo platform → tenant → school (bỏ cấp class — ADR-0095; không theo grade — thay mục "Age/Grade-based Policy" của Master Prompt §6.3 theo ADR-0020); cấp dưới chỉ siết chặt hơn cấp trên | [Confirmed] | P5 |
 | FR-MOD-005 | Không ai có quyền đọc toàn bộ chat của mọi trường; truy cập chat đều audit | [Confirmed] | P5 |
 | FR-MOD-006 | Sanction: warn, mute có thời hạn, restrict (chỉ quick message), escalate | [Confirmed] | P5 |
 | FR-MOD-007 | **Removed (ADR-0072)** — điều khiển channel lớp của giáo viên; channel lớp chịu chat policy cấp trường do `school_admin` đặt trong giới hạn platform | Removed | — |
@@ -512,16 +513,16 @@ Acceptance criteria: AC-EVT-001…012 ([EVENT_SEASON_SYSTEM §18](../01-game-des
 
 | ID | Yêu cầu | Nhãn | Phase |
 |---|---|---|---|
-| FR-LMS-001 | Module: Course (lớp × môn × năm học, tạo tự động từ lớp SIS và môn theo khối), Learning Path, Enrollment, Assignment, Schedule, Lesson Delivery, Assessment, Learning Progress, Learning Analytics, School Learning Dashboard (thay Teacher Dashboard theo ADR-0072) | [Confirmed] (sửa theo ADR-0072) | P3 |
-| FR-LMS-002 | `school_admin`/`academic_manager` giao bài tập, giao đề ôn tập (target: lớp/nhóm học tập/danh sách HS), đặt open/due, số lần làm, `ResultRelease` | [Confirmed] (người giao theo ADR-0072) | P3 |
+| FR-LMS-001 | Module: Assignment, Lesson Delivery, Assessment, Learning Progress, Learning Analytics, School Learning Dashboard (thay Teacher Dashboard theo ADR-0072); không còn Course, Learning Path, Enrollment, Schedule (ADR-0095) | [Confirmed] (sửa theo ADR-0072, ADR-0095) | P3 |
+| FR-LMS-002 | `school_admin`/`academic_manager` giao bài tập, giao đề ôn tập (target: khối của một trường + thêm học sinh khác khối cùng trường − loại học sinh, hoặc danh sách học sinh; `subject_id` trực tiếp, không course — ADR-0095), đặt open/due, số lần làm, `ResultRelease` | [Confirmed] (người giao theo ADR-0072; target theo ADR-0095) | P3 |
 | FR-LMS-003 | Nhà trường theo dõi kết quả, tiến độ, kỹ năng yếu theo LO qua School Learning Dashboard (FR-LMS-011) | [Confirmed] (người xem theo ADR-0072) | P3 |
-| FR-LMS-004 | `school_admin`/`academic_manager` tạo nhóm học tập; chỉ `school_admin` tổ chức thử thách lớp/giải trường từ template | [Confirmed] (người tạo theo ADR-0072) | P3 (nhóm) – P4 (thử thách) |
+| FR-LMS-004 | Chỉ `school_admin` tổ chức thử thách khối/giải trường từ template; nhóm học tập đã bỏ theo ADR-0095 | [Confirmed] (viết lại theo ADR-0095) | P4 |
 | FR-LMS-005 | Phân quyền theo trường và môn (scope `school`, `subject` của UserRole); không có scope lớp theo phân công giảng dạy (ADR-0072) | [Confirmed] (viết lại theo ADR-0072) | P3 |
 | FR-LMS-006 | Bài được giao xuất hiện trong game như quest/nhiệm vụ đặc biệt, ở tab "Nhà trường giao" | [Confirmed] | P3 |
 | FR-LMS-007 | Nhà trường chỉ **chọn** quest/mini-game đã publish và được gán cho tenant để giao bài; thử thách/giải trường tạo từ template platform, chỉ điền `allowed_params` | [Confirmed] chọn, không cấu hình (ADR-0027) / [Confirmed] `allowed_params` | P2–P4 |
-| FR-LMS-011 | **School Learning Dashboard** cho `school_admin`/`academic_manager`: trường → lớp → học sinh, tiến độ bài giao, LO yếu, cờ "làm quá nhanh", báo cáo tham khảo TT27/TT22; đọc rollup (ADR-0062), API `GET /api/v1/lms/dashboards/school` ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md), [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)) | [Confirmed] ADR-0072 / [Confirmed] chỉ số | P3 |
+| FR-LMS-011 | **School Learning Dashboard** cho `school_admin`/`academic_manager`: trường → khối → học sinh (ADR-0095), tiến độ bài giao, LO yếu, cờ "làm quá nhanh", báo cáo tham khảo TT27/TT22; đọc rollup (ADR-0062), API `GET /api/v1/lms/dashboards/school` ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md), [DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md)) | [Confirmed] ADR-0072 / [Confirmed] chỉ số | P3 |
 | FR-LMS-012 | Thao tác cá nhân trên bài giao: gia hạn `due_at` (`extend`), miễn (`excuse`), nhắc học sinh chưa làm (`remind`, giới hạn `assignment_remind_limit`); mọi thao tác ghi audit ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)) | [Confirmed] | P3 |
-| FR-LMS-013 | Bảng kết quả bài giao/course theo điểm tự chấm (không sổ điểm chấm tay, không cột XP/rating) và xuất XLSX/CSV bằng job nền có watermark, chỉ dữ liệu trong quyền, audit; báo cáo tham khảo TT27/TT22 theo FR-ANL-015 ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)) | [Confirmed] | P3 |
+| FR-LMS-013 | Bảng kết quả bài giao (theo khối, không course — ADR-0095) theo điểm tự chấm (không sổ điểm chấm tay, không cột XP/rating) và xuất XLSX/CSV bằng job nền có watermark, chỉ dữ liệu trong quyền, audit; báo cáo tham khảo TT27/TT22 theo FR-ANL-015 ([SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md)) | [Confirmed] | P3 |
 
 ### 2.28. Audit & Operations — `AUD`, `OPS` (§15, §17, §18)
 
@@ -596,25 +597,25 @@ Giá trị số nhất quán với [SYSTEM_ARCHITECTURE §7](../06-architecture/
 | US-AUTH-001 | Học sinh | đăng nhập bằng username/mật khẩu trường cấp ngay trong game, không phải chọn trường (ADR-0063, ADR-0068, ADR-0069) | vào game mà không cần tạo tài khoản mới | P1 |
 | US-AUTH-002 | Học sinh | mở lại game trên máy của mình mà không phải nhập lại mật khẩu khi phiên còn hạn, và có nút Đăng xuất (ADR-0086) | vào học nhanh mà tài khoản vẫn an toàn; máy dùng chung ở trường luôn hỏi mật khẩu | P1 |
 | US-AUTH-003 | School Admin | khóa tài khoản học sinh đã nghỉ học | học sinh đó không vào được hệ thống | P1 |
-| US-SIS-001 | School Admin | nhập danh sách lớp/học sinh từ SIS (CSV hoặc API) | không phải tạo tay từng tài khoản | P1 |
+| US-SIS-001 | School Admin | nhập danh sách học sinh (trường, khối) từ SIS (CSV hoặc API) | không phải tạo tay từng tài khoản | P1 |
 | US-SIS-002 | School Admin | xem và xử lý các bản ghi xung đột khi đồng bộ | dữ liệu học sinh chính xác | P1 |
 | US-GAME-001 | Học sinh lớp 2 | chọn ngoại hình nhân vật bằng hình ảnh lớn, dễ bấm | có nhân vật của riêng mình | P2 |
 | US-GAME-002 | Học sinh | đi lại trong Main Hub và đến Learning Zone môn Toán | bắt đầu học theo cách của game | P2 |
 | US-QST-001 | Học sinh | nhận nhiệm vụ giúp NPC giải bài toán | học kiến thức thông qua câu chuyện | P2 |
-| US-QST-002 | Học sinh | thấy nhiệm vụ hằng ngày phù hợp lớp mình | có mục tiêu ngắn mỗi ngày | P2 |
+| US-QST-002 | Học sinh | thấy nhiệm vụ hằng ngày phù hợp khối của mình | có mục tiêu ngắn mỗi ngày | P2 |
 | US-MG-001 | Học sinh | chơi mini-game nối từ/kéo thả với câu hỏi đúng chương trình | luyện tập vui hơn | P2 |
 | US-EXR-001 | Học sinh | làm lại các câu đã sai | củng cố kỹ năng còn yếu | P2 |
 | US-EXR-002 | Học sinh | tiếp tục bài đang làm dở khi bị mất mạng | không mất công làm lại | P2 |
 | US-GAM-001 | Học sinh | nhận XP và trang phục mới khi hoàn thành quest | có động lực tiếp tục | P2 |
 | US-EXM-001 | Học sinh lớp 9 | làm đề thi thử có giới hạn thời gian và xem phân tích lỗi sai | chuẩn bị cho kỳ thi | P3 |
-| US-LMS-001 | Academic Manager | giao bộ bài tập chương 3 cho lớp 4A, hạn thứ Sáu | học sinh luyện tập đúng trọng tâm | P3 |
-| US-LMS-002 | School Admin | xem LO nào lớp còn yếu trên School Learning Dashboard | giao thêm bài ôn tập và điều chỉnh kế hoạch của trường | P3 |
+| US-LMS-001 | Academic Manager | giao bộ bài tập chương 3 cho khối 4 của trường (bớt vài học sinh đã học trước), hạn thứ Sáu | học sinh luyện tập đúng trọng tâm | P3 |
+| US-LMS-002 | School Admin | xem LO nào khối còn yếu trên School Learning Dashboard | giao thêm bài ôn tập và điều chỉnh kế hoạch của trường | P3 |
 | US-LMS-003 | School Admin | xem trang tổng quan trường: bài giao đang mở/sắp hạn, LO cần củng cố, học sinh cần chú ý | biết ngay việc cần làm trong tuần | P3 |
-| US-LMS-004 | Academic Manager | theo dõi tiến độ từng bài giao theo lớp (đã nộp, chưa bắt đầu, `missed`) | nhắc hoặc gia hạn kịp thời | P3 |
+| US-LMS-004 | Academic Manager | theo dõi tiến độ từng bài giao theo khối (đã nộp, chưa bắt đầu, `missed`) | nhắc hoặc gia hạn kịp thời | P3 |
 | US-LMS-005 | School Admin | xem hồ sơ học tập của một học sinh trong trường (mastery theo LO, lịch sử bài, gợi ý đã nhận) | hỗ trợ đúng học sinh cần giúp | P3 |
-| US-LMS-006 | Academic Manager | giao bài ôn tập cho lớp/nhóm học sinh yếu một LO trong 2 thao tác từ bản đồ kỹ năng [Confirmed] | củng cố nhanh LO yếu | P3 |
+| US-LMS-006 | Academic Manager | giao bài ôn tập cho khối/danh sách học sinh yếu một LO trong 2 thao tác từ bản đồ kỹ năng [Confirmed] | củng cố nhanh LO yếu | P3 |
 | US-LMS-007 | Academic Manager | xem phân tích đề: phổ điểm, câu nhiều học sinh sai | điều chỉnh nội dung ôn tập | P3 |
-| US-LMS-008 | School Admin | tạo nhóm học tập trong trường (thử thách lớp từ template: US-TRN-001) | giao bài và tổ chức hoạt động theo nhóm | P3 |
+| US-LMS-008 | — | **Removed (ADR-0095)** — nhóm học tập không còn; thử thách khối từ template: US-TRN-001 | — | — |
 | US-LMS-009 | School Admin | xem học sinh có tự học theo gợi ý tự động và tiến bộ sau đó không [Confirmed] | đánh giá hiệu quả tự học | P3 |
 | US-LMS-010 | Academic Manager | xuất báo cáo kết quả, gồm báo cáo tham khảo TT27/TT22 [Confirmed] | dùng trong họp chuyên môn của trường | P3 |
 | US-LMS-011 | Academic Manager | giao quest/mini-game đã publish theo LO yếu [Confirmed] | học sinh ôn tập ngay trong game | P3 |
@@ -627,8 +628,8 @@ Giá trị số nhất quán với [SYSTEM_ARCHITECTURE §7](../06-architecture/
 | US-PTY-003 | Leader | chọn hoạt động và bắt đầu phiên chơi chung | cả nhóm vào cùng instance | P4 |
 | US-PTY-004 | Thành viên party | tiếp tục chơi khi một bạn bị rớt mạng | không bị gián đoạn cả nhóm | P4 |
 | US-MM-001 | Học sinh lớp 5 | tìm đối thủ cùng khối để đấu Toán 1v1 | thi đấu công bằng | P4 |
-| US-LDB-001 | Học sinh | xem bảng xếp hạng tuần của lớp | biết mình đang ở đâu | P4 |
-| US-TRN-001 | School Admin | tổ chức giải đấu kiến thức cấp lớp từ template | tạo thi đua lành mạnh | P4 |
+| US-LDB-001 | Học sinh | xem mục tiêu tập thể tuần của khối mình trong trường (ADR-0095) | biết cả khối đang tiến tới đâu và mình góp phần | P4 |
+| US-TRN-001 | School Admin | tổ chức giải đấu kiến thức cấp khối của trường từ template (ADR-0095) | tạo thi đua lành mạnh | P4 |
 | US-SOC-001 | Học sinh lớp 7 | gửi lời mời kết bạn tới bạn cùng trường | chơi và học cùng nhau | P5 |
 | US-CHAT-001 | Học sinh lớp 2 | gửi tin nhắn nhanh "Cố lên!" cho nhóm | giao tiếp mà không cần gõ chữ | P5 |
 | US-CHAT-002 | Học sinh | báo cáo tin nhắn khiến mình khó chịu | được bảo vệ | P5 |
@@ -645,13 +646,13 @@ Mỗi AC phải được tự động hóa thành test (xem [TEST_STRATEGY](../1
 
 | ID | Tiêu chí | Phase |
 |---|---|---|
-| AC-AUTH-001 | Học sinh có bản ghi SIS hợp lệ đăng nhập bằng form trong game (`/auth/game/login`, ADR-0068) và nhận player bootstrap với đúng school, grade, class | P1 |
+| AC-AUTH-001 | Học sinh có bản ghi SIS hợp lệ đăng nhập bằng form trong game (`/auth/game/login`, ADR-0068) và nhận player bootstrap với đúng school, grade (không có class — ADR-0095) | P1 |
 | AC-AUTH-002 | Access token hết hạn → client tự refresh, request được thử lại một lần, người dùng không bị đẩy ra | P1 |
 | AC-AUTH-003 | Refresh token hết hạn/bị revoke → client quay về màn hình đăng nhập, không crash | P1 |
 | AC-AUTH-004 | Bấm "Đăng xuất" (hoặc thoát game trên máy dùng chung) → game session kết thúc, refresh token bị thu hồi, token bị xóa khỏi kho bảo mật và RAM, kết nối WS đóng; mở lại game → form đăng nhập (ADR-0086) | P1 |
 | AC-AUTH-005 | User đăng nhập Keycloak nhưng không tồn tại trong SIS/dữ liệu đồng bộ → không tạo tài khoản, trả lỗi `ACCOUNT_NOT_PROVISIONED`, ghi audit | P1 |
 | AC-AUTH-006 | Học sinh bị khóa → REST trả 403 `ACCOUNT_LOCKED`, kết nối realtime bị cắt trong ≤ 60 giây | P1 |
-| AC-AUTH-007 | Học sinh chuyển lớp → sau sync, bootstrap trả lớp mới, lịch sử học tập lớp cũ vẫn truy xuất được | P1 |
+| AC-AUTH-007 | Học sinh lên khối hoặc chuyển trường trong tenant → sau sync, bootstrap trả khối/trường mới, lịch sử học tập ghi khối/trường cũ vẫn truy xuất được (ADR-0095) | P1 |
 | AC-AUTH-008 | Học sinh chuyển trường → không còn truy cập dữ liệu/channel trường cũ; dữ liệu trường cũ không lộ cho trường mới ngoài phạm vi policy | P1 |
 | AC-AUTH-009 | Token có `aud` sai hoặc chữ ký sai bị từ chối cả ở APISIX và backend (test gọi thẳng backend) | P1 |
 | AC-AUTH-010 | Token của học sinh tenant A mang claim `organization` của tenant B (giả lập) → backend trả `TENANT_MISMATCH`, có audit; đăng nhập lại bình thường → vào tenant A | P1 |
@@ -732,7 +733,7 @@ Mỗi AC phải được tự động hóa thành test (xem [TEST_STRATEGY](../1
 
 | ID | Tiêu chí | Phase |
 |---|---|---|
-| AC-CHAT-001 | Tạo channel class/party theo policy; thành viên hợp lệ tham gia được | P5 |
+| AC-CHAT-001 | Tạo channel party/club theo policy; thành viên hợp lệ tham gia được; loại channel `class`/`study_group` bị từ chối (ADR-0095) | P5 |
 | AC-CHAT-002 | Gửi/nhận tin nhắn realtime; unread count đúng sau reconnect | P5 |
 | AC-CHAT-003 | Cùng một tin nhắn ở cùng loại channel cho cùng quyết định (`allow`/`mask`/`block`) với học sinh lớp 1–3 và lớp 6–9; tin chứa PII bị chặn như nhau | P5 |
 | AC-CHAT-004 | Tin nhắn chứa số điện thoại/email/link → bị block hoặc mask theo policy | P5 |
@@ -746,8 +747,8 @@ Mỗi AC phải được tự động hóa thành test (xem [TEST_STRATEGY](../1
 | AC-MOD-027 | Case nghiêm trọng gửi thông báo cho School Admin của trường: không chứa nội dung chat thô; trường xác nhận đã liên hệ phụ huynh → case lưu thời điểm xác nhận | P5 |
 | AC-CHAT-007 | Không truy cập channel trái phép; học sinh/nhân sự trường A không đọc được tin nhắn trường B (kể cả qua ID đoán) | P5 |
 | AC-CHAT-008 | Trận 1v1 bắt đầu → hai người chat được ngay trong channel `match`; trận đội → mỗi đội có channel `team` riêng; tạo party → channel `party` có ngay, người vào sau tự là member | P4 |
-| AC-CHAT-009 | Policy trường/lớp không tắt được chat `match`/`team`/`party` (`CHAT_POLICY_ALWAYS_ON`) | P4 |
-| AC-CHAT-010 | Tin trong trận đóng ngày D bị purge sau D + `gameplay_chat_retention_days`; tin đã bị báo cáo vẫn xem được trong moderation case sau purge; channel có case mở không bị purge; channel Class/DM không bao giờ bị purge | P4 |
+| AC-CHAT-009 | Policy tenant/trường không tắt được chat `match`/`team`/`party` (`CHAT_POLICY_ALWAYS_ON`) | P4 |
+| AC-CHAT-010 | Tin trong trận đóng ngày D bị purge sau D + `gameplay_chat_retention_days`; tin đã bị báo cáo vẫn xem được trong moderation case sau purge; channel có case mở không bị purge; channel club/DM không bao giờ bị purge | P4 |
 | AC-CHAT-011 | Người gửi chỉ thấy trạng thái "đã gửi" sau khi NATS JetStream ack; khi NATS lỗi tin hiện "chưa gửi được" và tự gửi lại, không tạo trùng |
 | AC-CHAT-012 | Sửa tin sau 15 phút hoặc thu hồi sau 24 giờ bị từ chối; tin đã thu hồi vẫn báo cáo được và moderator thấy nội dung gốc |
 | AC-CHAT-013 | Forward sang channel của tenant khác bị từ chối; GIF chỉ chọn được từ thư viện nội bộ |
@@ -803,7 +804,7 @@ Mỗi AC phải được tự động hóa thành test (xem [TEST_STRATEGY](../1
 
 | Giả định | Nhãn | Nếu sai thì |
 |---|---|---|
-| Nhà trường cung cấp được danh sách học sinh/lớp (CSV hoặc API) | [Confirmed] | Không thể provisioning → chặn P1 pilot |
+| Nhà trường cung cấp được danh sách học sinh kèm trường, khối (CSV hoặc API) | [Confirmed] | Không thể provisioning → chặn P1 pilot |
 | Trường chấp nhận tài khoản local Keycloak do EduWorld cấp (Release 1.0 không brokering IdP trường, ADR-0063) | [Confirmed — owner 2026-11-20] OQ-02 | Thay đổi login flow cho từng trường |
 | Danh sách thiết bị tham chiếu theo hạng (PERFORMANCE_BUDGET §2) khớp thiết bị thực tế ở trường | [Confirmed — owner 2026-11-20] OQ-04 (khảo sát pilot chỉ cập nhật danh sách máy kiểm thử) | Hạ preset mặc định/ngân sách, không loại hạng Tầm trung (ADR-0057) |
 | Nội dung pilot (Toán + Tiếng Việt 1–5) do EduWorld tự biên soạn theo LO, không sao chép sách giáo khoa khi chưa có giấy phép | [Confirmed — owner 2026-11-20] OQ-08 | Chậm P2 |

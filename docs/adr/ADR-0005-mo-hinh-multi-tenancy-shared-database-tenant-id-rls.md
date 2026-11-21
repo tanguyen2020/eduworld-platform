@@ -1,6 +1,9 @@
 # ADR-0005 — Mô hình multi-tenancy: shared database + `tenant_id` + RLS
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [MULTITENANCY](../06-architecture/MULTITENANCY.md), [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [MULTITENANCY](../06-architecture/MULTITENANCY.md), [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md):** phân cấp ở mục 1 là `Platform → Tenant → School`; học sinh thuộc trường với một khối (`grade_level`), không còn `Class`. **Còn hiệu lực:** toàn bộ mô hình multi-tenancy.
 
 ## Bối cảnh
 
@@ -33,3 +36,4 @@ DB-per-tenant (chi phí vận hành với hàng trăm trường); schema-per-ten
 | 2026-11-15 | Tạo ADR (tenant = School, khóa `school_id`) | Phase 0 |
 | 2026-11-15 | Accepted; tenant = trường/đơn vị/chung, khóa đổi sang `tenant_id`, thay khái niệm Organization | Stakeholder |
 | 2026-11-15 | Áp dụng trong từng database của service; role DB theo service | ADR-0037 |
+| 2026-11-21 | Một phần superseded by ADR-0095 (bỏ khái niệm lớp — học sinh theo khối) | Owner |

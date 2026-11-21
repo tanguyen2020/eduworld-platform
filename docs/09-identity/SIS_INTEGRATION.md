@@ -3,6 +3,9 @@
 > Trạng thái: Draft · Phiên bản: 0.4 · Owner: Backend Architect + Identity & Security Engineer · Cập nhật: 2026-11-15
 > Liên quan: [ADR-0021](../adr/ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md) · [EduWorld SIS Contract v1](../../specs/sis/eduworld-sis-contract.v1.yaml) · [ACCOUNT_PROVISIONING](ACCOUNT_PROVISIONING.md) · [IDENTITY_MAPPING](IDENTITY_MAPPING.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · OQ-01, OQ-12
 
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** EduWorld SIS Contract **1.3.0** bỏ `Class`, `Enrollment`, `ClassPage`, `EnrollmentPage`, op `listClasses`, `listEnrollments`, `Change.entity_kind` `class`/`enrollment`; trường/khối của học sinh lấy từ `Student.school_external_id` + `grade_level`. CSV: `classes.csv`, `enrollments.csv` bị bỏ qua kèm cảnh báo. Issue đối soát `missing_class`, `class_school_mismatch`, `orphan_enrollment`, `multi_school_enrollment`, `grade_mismatch` bị bỏ; login sync dùng `missing_placement` (thiếu trường/khối). Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-I1 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+
 **Mục đích & phạm vi.** Nguồn chuẩn cho tích hợp SIS: contract do EduWorld sở hữu, hai cách nhận dữ liệu, chế độ đồng bộ, staging/reconciliation, lỗi, audit. Cách dùng dữ liệu SIS khi đăng nhập ở IDENTITY_MAPPING §3.2.
 
 ## 1. Nguyên tắc

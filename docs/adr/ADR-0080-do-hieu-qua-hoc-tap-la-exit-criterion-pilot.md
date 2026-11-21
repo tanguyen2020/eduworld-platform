@@ -1,6 +1,9 @@
 # ADR-0080 — Đo hiệu quả học tập là exit criterion của pilot
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [PRODUCT_VISION](../00-overview/PRODUCT_VISION.md) · [ROADMAP](../12-project/ROADMAP.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) · [PRODUCT_VISION](../00-overview/PRODUCT_VISION.md) · [ROADMAP](../12-project/ROADMAP.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md):** Không còn hiệu lực: đơn vị nghiên cứu "lớp" — "lớp so sánh" (mục 1), "rút lớp/học sinh" (mục 4), "đơn vị mặc định là lớp" (mục 5). **Còn hiệu lực:** toàn bộ phần còn lại; đơn vị là **cụm (trường, khối)**, ghép cặp cụm cùng khối giữa các trường, rút theo cụm hoặc học sinh, `experiments.unit` ∈ {`student`, `school_grade`}.
 
 ## Bối cảnh
 
@@ -26,3 +29,4 @@ KPI "mastery gain" trong [PRODUCT_VISION §7](../00-overview/PRODUCT_VISION.md) 
 | 2026-11-17 | Accepted | Technical Architect |
 | 2026-11-20 | Chốt ngưỡng đạt mục 2 theo đề xuất của LEARNING_EFFICACY_PLAN §4 | Owner |
 | 2026-11-21 | Bổ sung mục 5 (hạ tầng A/B, câu hỏi mở 1 của F035 đã chốt 2026-11-20) và mục 6 (đợt kiểm tra không phát `exam.*`) | F035 T008 |
+| 2026-11-21 | Một phần superseded by ADR-0095 (bỏ khái niệm lớp — học sinh theo khối) | Owner |

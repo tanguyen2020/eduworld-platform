@@ -3,6 +3,9 @@
 > Trạng thái: Draft · Phiên bản: 0.2 · Owner: Backend Architect + Data/Analytics · Cập nhật: 2026-11-17 (loại tenant QA; rollup game theo `dims_hash`)
 > Liên quan: [ADR-0062](../adr/ADR-0062-kien-truc-du-lieu-dashboard-khong-truy-van-du-lieu-tho.md) · [ADR-0058](../adr/ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) · [ADR-0037](../adr/ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) · [ADR-0042](../adr/ADR-0042-domain-event-qua-transactional-outbox-nats-jetstream-thay-tr.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [DATABASE_DESIGN](DATABASE_DESIGN.md) · [VALKEY_DESIGN](VALKEY_DESIGN.md) · [MONITORING](../11-operations/MONITORING.md) · [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)
 
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Rollup cấp lớp (`rollup_class_*`, `rm_class_*`) bị bỏ; thêm rollup heatmap LO cấp trường × khối × môn × LO; dashboard trường → khối → học sinh; ô cấp khối che < 5 học sinh. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-L2 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+
 **Mục lục:** 1. Mục đích và phạm vi · 2. Danh mục dashboard · 3. Mô hình rollup chung · 4. Pipeline gia tăng · 5. Dữ liệu đến muộn và backfill · 6. Lưu trữ: partition và index · 7. Bảo vệ database khi truy vấn · 8. Quy tắc truy vấn · 9. Cache · 10. Xuất báo cáo bất đồng bộ · 11. Ước lượng kích thước · 12. Ngưỡng nâng cấp · 13. Quan sát và cảnh báo · 14. API đề xuất · 15. Kiểm thử tải · 16. Tiêu chí nghiệm thu
 
 ## 1. Mục đích và phạm vi

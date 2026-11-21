@@ -1,6 +1,6 @@
 # Glossary — Thuật ngữ
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Technical Writer · Cập nhật: 2026-11-17 (ADR-0074: thêm Module, Facade, Binary/profile, `src/backend/pkg/modcall`, Spec internal, Facade test; Microservice, Typed client, Service-to-service token đánh dấu Superseded; tenant QA, bão đăng nhập theo `login_capacity_target`)
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Technical Writer · Cập nhật: 2026-11-21 (ADR-0095: bỏ Class, Enrollment, lớp ảo; thêm Khối, Hồ sơ học sinh hiệu lực, Mục tiêu tập thể của khối; channel còn 6 loại) · 2026-11-17 (ADR-0074: thêm Module, Facade, Binary/profile, `src/backend/pkg/modcall`, Spec internal, Facade test; Microservice, Typed client, Service-to-service token đánh dấu Superseded; tenant QA, bão đăng nhập theo `login_capacity_target`)
 > Liên quan: [DOMAIN_MODEL](../06-architecture/DOMAIN_MODEL.md) · [CONFIG_DEFAULTS](CONFIG_DEFAULTS.md) · [docs/README](../README.md)
 
 Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "Tên trong code" là tên chuẩn cho entity/field/enum. Glossary chỉ định nghĩa; quy tắc và tham số nằm ở tài liệu sở hữu (xem [CONFIG_DEFAULTS](CONFIG_DEFAULTS.md)).
@@ -11,7 +11,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 |---|---|---|
 | Platform | `platform` | Toàn bộ hệ thống EduWorld do nhà vận hành quản lý |
 | Tenant | `tenant`, `tenant_id` | **Đơn vị cô lập dữ liệu và đơn vị đăng nhập** (ADR-0005, ADR-0026): một trường độc lập (`tenant_type = school`), một đơn vị nhiều trường như Sở/Phòng GD&ĐT, hệ thống trường (`unit`), hoặc tenant chung (`common`). 1 Tenant = 1 Keycloak Organization. Mọi truy vấn lọc theo `tenant_id`; mỗi phiên đúng một tenant |
-| Tenant chung | `common` | Tenant duy nhất chứa học sinh do platform (System Admin) tạo/import có chủ đích; có School ảo "EduWorld chung" và lớp ảo theo khối. Không tự đưa người dùng vào tenant chung — người không thuộc tenant chung và không thuộc tenant SIS nào bị từ chối `ACCOUNT_NOT_PROVISIONED` (ADR-0026, ADR-0063) |
+| Tenant chung | `common` | Tenant duy nhất chứa học sinh do platform (System Admin) tạo/import có chủ đích; có School ảo "EduWorld chung"; học sinh khai báo khối, không có lớp ảo (ADR-0095). Không tự đưa người dùng vào tenant chung — người không thuộc tenant chung và không thuộc tenant SIS nào bị từ chối `ACCOUNT_NOT_PROVISIONED` (ADR-0026, ADR-0063) |
 | Tenant QA | `tenants.is_qa` | Tenant riêng chỉ chứa tài khoản kiểm thử và probe synthetic (vd. `hs.qa.probe`); chỉ System Admin đặt cờ, tenant chung không được đánh dấu; dữ liệu bị loại khỏi analytics và dashboard platform ([DASHBOARD_DATA §3.4](../07-backend/DASHBOARD_DATA.md), [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md)) |
 | Đơn vị (Unit) | `tenant_type = unit` | Tenant gồm nhiều trường; thay cho khái niệm "Organization (Tổ chức)" trước đây. "Keycloak Organization" vẫn là tên tính năng của Keycloak |
 | School (Trường) | `school`, `school_id` | Trường trong **danh mục trường**, thuộc đúng một tenant và một tỉnh/thành; chiều phân loại/báo cáo, **không** phải khóa cô lập (ADR-0060) |
@@ -19,19 +19,20 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Country (Quốc gia) | `country_code` | Mã ISO 3166-1 alpha-2 (vd. `VN`); Release 1.0 chỉ bật Việt Nam |
 | Province (Tỉnh/thành) | `province_id`, `code` | Đơn vị hành chính cấp 1 thuộc một quốc gia; Việt Nam có **34 đơn vị** hiện hành (từ 01/7/2025). `code` là mã nội bộ ổn định (vd. `vn.ha-noi`), `official_code` là mã chính thức (chờ đối chiếu) |
 | Kế thừa đơn vị hành chính | `province_successions` | Ánh xạ đơn vị cũ (đã sáp nhập/đổi tên) → đơn vị hiện hành, dùng để chuyển dữ liệu cũ |
-| Lớp ảo theo khối | `classes.is_virtual` | Lớp "Khối n – chung" của tenant chung, để mọi học sinh luôn thuộc một trường và một lớp |
+| Lớp ảo theo khối | — | **Bỏ (ADR-0095)** — tenant chung chỉ có School ảo + khối của học sinh |
 | Login sync | — | Đồng bộ dữ liệu học sinh từ SIS khi đăng nhập: không gọi SIS nếu dữ liệu đủ và mới; thiếu dữ liệu → tra cứu chặn ≤ 3 s; dữ liệu cũ → làm mới nền (ADR-0061) |
-| Tenant membership | view `identity.tenant_memberships_v` | Tập tenant mà user thuộc về theo dữ liệu (enrollment của học sinh, UserRole của nhân sự), đúng một dòng mỗi `(tenant_id, user_id)`; dùng để xác định tenant khi đăng nhập |
+| Tenant membership | view `identity.tenant_memberships_v` | Tập tenant mà user thuộc về theo dữ liệu (hồ sơ học sinh hiệu lực ở trường của tenant, UserRole của nhân sự — ADR-0095), đúng một dòng mỗi `(tenant_id, user_id)`; dùng để xác định tenant khi đăng nhập |
 | Tenant alias | `keycloak_org_alias` | Mã định danh tenant dạng chữ thường (vd. `th-nghiado-a`), là alias của Keycloak Organization; Release 1.0 không client nào xin scope `organization:{alias}` (game: ADR-0068; portal: ADR-0091) |
 | Mã tenant (đăng nhập) | `login_code` | Mã ngắn 6 ký tự của tenant để nhập trước khi đăng nhập — **ngoài Release 1.0, mở rộng sau** (ADR-0063: không có ô "nhập mã trường" trên UI; học sinh không chọn trường) |
 | Tenant mismatch | `TENANT_MISMATCH` | Lỗi khi tenant đã chọn không nằm trong membership của người đăng nhập; luôn được audit |
 | Soft-delete | `deleted_at`, `deleted_by` | "Xóa" trong ứng dụng = đánh dấu đã xóa; ứng dụng không bao giờ xóa vật lý và mặc định không đọc bản ghi đã xóa (ADR-0028) |
 | Ẩn danh hóa | `anonymize` | Ghi đè dữ liệu cá nhân, giữ bản ghi — cách đáp ứng nghĩa vụ xóa theo luật khi ứng dụng chỉ soft-delete; Release 1.0 không xóa vật lý (ADR-0028, ADR-0070) |
 | Academic Year (Năm học) | `academic_year` | Khoảng thời gian một năm học của trường |
-| Class (Lớp) | `class` | Lớp học thuộc một trường, một năm học, một khối |
-| Grade level (Khối lớp) | `grade_level` | Số nguyên 1–9 |
-| Grade band | `grade_band` | Nhóm khối dùng cho UX, ghép hub/matchmaking, leaderboard: `g1_3`, `g4_5`, `g6_7`, `g8_9`. **Không** dùng cho chat — chat có một bộ quy tắc chung cho mọi lớp (ADR-0020) |
-| Enrollment | `enrollment` | Quan hệ học sinh thuộc lớp trong khoảng thời gian |
+| Class (Lớp) | — | **Bỏ (ADR-0095)** — không còn thực thể lớp học; "lớp 1–3", "lớp 6–9" trong tài liệu là cách gọi **khối** |
+| Hồ sơ học sinh hiệu lực | `org.students` (`status = active`, `deleted_at IS NULL`) | Học sinh thuộc **đúng một trường** (`school_id`) với **một khối** (`grade_level`), cập nhật mỗi năm học từ SIS; thay Enrollment, nguồn của membership tenant và `Principal.school_ids` (ADR-0095) |
+| Grade level (Khối) | `grade_level` | Số nguyên 1–9; đơn vị tổ chức học sinh trong trường (giao bài, dashboard, party lớp 1–3, mục tiêu tập thể). Dữ liệu học tập ghi khối tại thời điểm sự kiện (ADR-0095) |
+| Grade band | `grade_band` | Nhóm khối dùng cho UX, ghép hub/matchmaking, leaderboard: `g1_3`, `g4_5`, `g6_7`, `g8_9`. **Không** dùng cho chat — chat có một bộ quy tắc chung cho mọi khối (ADR-0020) |
+| Enrollment | — | **Bỏ (ADR-0095)** — học sinh thuộc trường trực tiếp qua hồ sơ học sinh hiệu lực; mã lỗi `NO_ACTIVE_ENROLLMENT` giữ tên, nghĩa "không có trường/khối hiệu lực" |
 | User type | `user_type` | `student`, `staff` (nhân sự; nhân sự platform = `staff` có `primary_tenant_id = NULL`, nhân sự trường = `staff` có `primary_tenant_id`); không có `teacher`, không có `admin` (ADR-0072, ADR-0081) |
 | Keycloak User | — | Tài khoản trong Keycloak (định danh xác thực) |
 | EduWorld User | `user` | Tài khoản nội bộ EduWorld |
@@ -50,8 +51,8 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Role scope kind | `role_scope_kind` | `tenant` (gán trong một tenant) hoặc `platform` (chỉ scope platform, đăng nhập Admin Portal `eduworld-portal`; không MFA — ADR-0094) |
 | System Admin | `system_admin` | Role platform duy nhất xem/ghi dữ liệu liên tenant (dropdown tenant, audit) — ADR-0027 §6 |
 | Tenant Admin | `tenant_admin` | Quản trị một tenant (trường độc lập hoặc đơn vị nhiều trường), chỉ Learning Management |
-| School Admin | `school_admin` | Quản trị một trường: SIS, tài khoản, chat policy và khung giờ truy cập cấp trường, giao bài, thử thách lớp/giải trường, nhóm học tập, School Learning Dashboard (ADR-0072) |
-| Academic Manager | `academic_manager` | Quản lý chuyên môn (scope trường/tenant, có thể theo môn): curriculum, blueprint, giao bài/đề, nhóm học tập, School Learning Dashboard, kích hoạt re-evaluate (ADR-0072) |
+| School Admin | `school_admin` | Quản trị một trường: SIS, tài khoản, chat policy và khung giờ truy cập cấp trường, giao bài theo khối, thử thách khối/giải trường, School Learning Dashboard (ADR-0072, ADR-0095) |
+| Academic Manager | `academic_manager` | Quản lý chuyên môn (scope trường/tenant, có thể theo môn): curriculum, blueprint, giao bài/đề theo khối, School Learning Dashboard, kích hoạt re-evaluate (ADR-0072, ADR-0095) |
 | Safety Moderator | `safety_moderator` | Role platform của **Platform Safety Team**: xử lý moderation case và sanction của mọi tenant, đọc chat chỉ trong phạm vi case qua `tenancy.Bypass(ctx, "moderation_case")` có audit, ghi danh mục từ nhạy cảm cấp tenant (ADR-0072) |
 | Nhân sự (staff) | `tenant_staff`, `platform_staff` | Người dùng Admin Portal (realm role tương ứng); học sinh không thuộc nhóm này (ADR-0066) |
 | Admin Portal | `src/cms/frontend/apps/portal`, client `eduworld-portal` | Ứng dụng quản trị web duy nhất (ADR-0027 mục 7) gồm 5 workspace; trang `/login` do portal tự vẽ, đăng nhập qua module identity (client confidential `eduworld-portal`, ADR-0091), học sinh không đăng nhập được (ADR-0066); menu và workspace hiển thị theo permission và trạng thái bật/tắt trong danh mục menu/action (ADR-0090) |
@@ -63,7 +64,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Game Operations Console (Game Studio) | workspace Game Operations Console, `/api/v1/game-admin/*` | Vùng cấu hình game và thi đấu chỉ dành cho đội platform (quest, mini-game, NPC, reward, season, template giải đấu…) |
 | Thùng rác | `trash` | Màn hình/API xem và khôi phục bản ghi đã soft-delete (ADR-0028) |
 | Gán cho tenant / Clone | `tenant_resource_assignments` / `tenant-clones` | System Admin cho tenant dùng dữ liệu platform (chỉ đọc) / sao chép dữ liệu cấu hình giữa tenant (ADR-0029) |
-| Scope (phạm vi quyền) | `scope_type`, `scope_id` | Platform / Tenant / School / Class / Subject |
+| Scope (phạm vi quyền) | `scope_type`, `scope_id` | Platform / Tenant / School / Subject (không có Class — ADR-0072, ADR-0095) |
 | JIT Provisioning | — | Tạo tài khoản nội bộ khi đăng nhập lần đầu, nếu khớp bản ghi SIS và policy cho phép |
 | SIS | `sis` | Student Information System — hệ thống quản lý học sinh của nhà trường/Sở |
 | Reconciliation | — | Đối soát dữ liệu SIS và EduWorld, phát hiện xung đột |
@@ -100,7 +101,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Đoán bừa | `rapid_guess` | Cờ cho response có `response_ms` dưới ngưỡng tối thiểu của item; loại khỏi mastery, báo nhà trường là "làm quá nhanh" |
 | Bài chẩn đoán | `AttemptMode = diagnostic` | Bài ngắn đầu năm học/đầu chủ đề để khởi tạo mastery và chọn điểm bắt đầu |
 | Yêu cầu cần đạt | `yccd_ref` | Mã yêu cầu cần đạt của chương trình GDPT 2018 gắn vào LO (≤ 64 ký tự), kèm `competency_ids[]` |
-| School Learning Dashboard | `GET /lms/dashboards/school` | Dashboard học tập cho `school_admin`/`academic_manager` theo trường → lớp → học sinh, đọc rollup (ADR-0062, ADR-0072); kết quả chỉ tham khảo, không thay đánh giá chính thức |
+| School Learning Dashboard | `GET /lms/dashboards/school` | Dashboard học tập cho `school_admin`/`academic_manager` theo trường → khối → học sinh, đọc rollup (ADR-0062, ADR-0072, ADR-0095); kết quả chỉ tham khảo, không thay đánh giá chính thức |
 | Rubric, hàng đợi chấm | — | Ngoài version này (ADR-0082) |
 | Embedded question (câu hỏi chèn) | `embedded_questions[].cue_id` | Câu hỏi hiện tại một mốc thời gian trong video/audio, video tạm dừng |
 | Simulation template | `simulation_templates` | Scene mô phỏng Godot đóng gói sẵn, chỉ tham số hóa từ CMS; kết quả kiểm chứng bằng checker Go (ADR-0052) |
@@ -162,6 +163,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Thuật ngữ | Tên trong code | Định nghĩa |
 |---|---|---|
 | Party | `party` | Nhóm học sinh chơi cùng nhau, có leader |
+| Study party (Nhóm cùng học) | `party_type = study_party` | Party tạm thời học cùng của học sinh lớp 6–9 (đổi tên từ `study_group` của module competition — ADR-0095); không phải nhóm học tập LMS (đã bỏ) |
 | Party Lobby | — | Màn hình/phòng chờ của party trước khi bắt đầu hoạt động |
 | Lobby (match) | `room` type `lobby` | Phòng chờ trước trận đấu (ready check) |
 | Room | `room` | Không gian realtime có vòng đời (hub instance, private instance, battle, co-op, lobby) |
@@ -174,15 +176,16 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Competition Points | `competition_points` | Điểm tích lũy cho bảng xếp hạng mùa/giải |
 | Season (Mùa) | `season` | Chu kỳ thi đấu có reset/soft-reset |
 | Leaderboard | `leaderboard_definition` | Bảng xếp hạng theo phạm vi & khoảng thời gian |
+| Mục tiêu tập thể của khối | `grade_goal` | Mục tiêu chung của học sinh một khối trong một trường (thay bảng/mục tiêu lớp): chỉ tiến độ chung, không xếp hạng cá nhân, không tên, ẩn ô đóng góp < 5 học sinh ([COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md), ADR-0095) |
 | Tournament / Bracket | `tournament`, `bracket_node` | Giải đấu và nhánh đấu |
 
 ## 5. Social & chat
 
 | Thuật ngữ | Tên trong code | Định nghĩa |
 |---|---|---|
-| Channel | `channel` | Kênh chat: `world`, `area`, `match`, `party`, `team`, `class`, `study_group`, `direct` |
+| Channel | `channel` | Kênh chat: `world`, `area`, `match`, `party`, `team`, `direct` (không có `class`, `study_group`, không có kênh theo khối — ADR-0095) |
 | Match channel | `match` | Channel chat tự tạo cho mọi người chơi của một trận (1v1, trận đội, trận giải); đóng khi trận kết thúc |
-| Chat gameplay (always-on) | — | Channel `match`, `team` theo trận, `party`: tự tạo, tự join, không tắt được bằng cài đặt trường/lớp (ADR-0020 mục 6) |
+| Chat gameplay (always-on) | — | Channel `match`, `team` theo trận, `party`: tự tạo, tự join, không tắt được bằng cài đặt tenant/trường (ADR-0020 mục 6) |
 | Purge (chat gameplay) | — | Xóa vật lý chat gameplay và World/Area sau thời hạn lưu (`gameplay_chat_retention_days`), sau khi đã giữ bằng chứng moderation; ngoại lệ duy nhất của soft-delete (ADR-0033) |
 | Quick Message | `quick_message` | Tin nhắn soạn sẵn, đã duyệt, chọn từ danh sách; mọi học sinh đều dùng được cùng với text tự do |
 | Chat Policy | `chat_policy` | Quy tắc ai được gửi gì ở channel nào |
@@ -193,7 +196,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Sanction | `sanction` | Biện pháp: cảnh báo, mute, hạn chế, khóa chat |
 | Block / Mute | `block`, `mute` | Chặn hoàn toàn / tắt thông báo-hiển thị |
 | Bạn bè | `friendship`, `friend_request` | Quan hệ hai chiều, mặc định trong cùng trường ([SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md)) |
-| Club / Guild | `club` | Nhóm bền vững (Study Group, School Club, Subject Club, Competition Team, Interest Group), có vai trò, mục tiêu, chat bền vững; khác Party tạm thời (ADR-0050) |
+| Club / Guild | `club` | Nhóm bền vững (School Club, Subject Club, Competition Team, Interest Group; không có Study Group — ADR-0095), có vai trò, mục tiêu, chat bền vững; khác Party tạm thời (ADR-0050) |
 | PII | — | Personally Identifiable Information — thông tin định danh cá nhân |
 
 ## 6. Kỹ thuật
@@ -222,7 +225,7 @@ Thuật ngữ dùng thống nhất trong tài liệu, code, API và UI. Cột "T
 | Service-to-service token — **Superseded** | Token client credentials `svc-<service>` giữa service (ADR-0040), đã bỏ (ADR-0074 mục 5); chỉ còn `svc-identity` để module identity gọi Keycloak Admin API |
 | Circuit breaker | Cơ chế ngừng gọi tạm thời một hệ thống bên ngoài đang lỗi (Keycloak Admin, SIS, object storage) để tránh lỗi dây chuyền; không dùng giữa module (`external_api_resilience`, ADR-0074) |
 | Saga | Chuỗi bước liên module (database khác nhau) có trạng thái bền vững, mỗi bước idempotent, có thử lại/bù trừ; module identity điều phối qua facade platform (clone, cleanup, merge, anonymize, khôi phục) |
-| Projection (`ref_*`) | Bản sao tối thiểu dữ liệu của module khác (tenant, học sinh, lớp) trong database của module dùng nó, cập nhật qua event (ADR-0037) |
+| Projection (`ref_*`) | Bản sao tối thiểu dữ liệu của module khác (tenant, trường, học sinh kèm khối) trong database của module dùng nó, cập nhật qua event (ADR-0037) |
 | Eventual consistency | Dữ liệu giữa các module (database khác nhau) khớp nhau sau một độ trễ ngắn, không tức thời |
 | Facade test | Test hợp đồng facade theo spec internal (`make test-contract`): bên nhận chạy ví dụ của spec qua facade thật, bên gọi test adapter với fake sinh từ cùng interface; thay contract test HTTP consumer-driven giữa service (ADR-0074) |
 | Outbox | Bảng event ghi cùng transaction nghiệp vụ trong database của module, relay ra NATS JetStream bởi profile `worker-events` (ADR-0042, thay transport Valkey Streams của ADR-0019) |

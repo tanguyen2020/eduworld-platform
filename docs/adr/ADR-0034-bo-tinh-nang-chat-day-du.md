@@ -1,9 +1,12 @@
 # ADR-0034 — Bộ tính năng chat đầy đủ
 
-> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0072 · một phần superseded by ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md), [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: quyền của giáo viên trong chat (gỡ tin qua moderation, `@all` và ghim tin ở channel lớp); gỡ tin do Platform Safety Team, `@all`/ghim ở channel lớp không còn vai trò giáo viên. **Còn hiệu lực:** toàn bộ bộ tính năng chat.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md):** channel Class và Study Group không còn (bỏ hiển thị "N người đã xem" và quyền pin gắn với hai channel này). **Còn hiệu lực:** toàn bộ bộ tính năng cho các channel còn lại.
 
 ## Bối cảnh
 
@@ -43,3 +46,4 @@ Stakeholder yêu cầu chat có: gửi, nhận, sửa, thu hồi; reply, quote, 
 |---|---|---|
 | 2026-11-15 | Accepted | Stakeholder |
 | 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0095 (bỏ khái niệm lớp — học sinh theo khối) | Owner |

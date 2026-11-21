@@ -3,6 +3,9 @@
 > Trạng thái: Draft · Phiên bản: 0.3 · Owner: EdTech Specialist + Backend Architect · Cập nhật: 2026-11-16
 > Liên quan: [ADR-0017](../adr/ADR-0017-mastery-model-co-the-cau-hinh-mac-dinh-weighted-evidence.md) · [ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [EVENT_DESIGN](../07-backend/EVENT_DESIGN.md) · [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [LEARNING_EFFICACY_PLAN](LEARNING_EFFICACY_PLAN.md) · [ASSESSMENT_REGULATION_PROFILE](ASSESSMENT_REGULATION_PROFILE.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [DOMAIN_MODEL §10](../06-architecture/DOMAIN_MODEL.md#10-phân-biệt-năm-loại-số-liệu-bắt-buộc)
 
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Chiều tổ chức của analytics là học sinh → khối → trường → tenant (không lớp); learning event, `progress_daily` và read model báo cáo ghi `grade_level` **tại thời điểm sự kiện** (không suy ngược từ khối hiện tại); heatmap LO theo khối; mọi ô tổng hợp cấp khối áp quy tắc che ô < 5 học sinh (FR-ANL-016). Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-L2 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+
 ## 1. Phạm vi
 
 - Module `learning_record` (schema `learning`): lưu **learning events** (LRS nội bộ, xAPI-like), tính **ObjectiveMastery**, **ProgressSnapshot**.

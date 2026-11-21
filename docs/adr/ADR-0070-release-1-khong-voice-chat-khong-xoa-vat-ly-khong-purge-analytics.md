@@ -1,6 +1,9 @@
 # ADR-0070 — Release 1.0: không voice chat, không xóa vật lý theo luật, không purge dữ liệu analytics thô
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** OQ-19, OQ-20 · **Bổ sung:** ADR-0028, ADR-0033, ADR-0051, ADR-0058, ADR-0059, ADR-0062 · **Tài liệu:** [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · mục 2 có ngoại lệ DROP một lần theo ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** OQ-19, OQ-20 · **Bổ sung:** ADR-0028, ADR-0033, ADR-0051, ADR-0058, ADR-0059, ADR-0062 · **Tài liệu:** [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Ngoại lệ một lần theo [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) mục 8 (mục 2):** cho phép migration contract **DROP** bảng/cột/view/partition của khái niệm lớp, enrollment, course, learning path, lịch, nhóm học tập và read model cấp lớp, chỉ khi chạy trước lần triển khai staging/production đầu tiên (F130) và có kế hoạch backup R12. **Còn hiệu lực:** toàn bộ mục 1–3; không mở đường xóa vật lý runtime nào (ADR-0033 vẫn là ngoại lệ runtime duy nhất).
 
 ## Bối cảnh
 
@@ -29,3 +32,4 @@ Ba câu hỏi còn mở trước khi chốt phạm vi Release 1.0: voice chat (O
 |---|---|---|
 | 2026-11-15 | Tạo ADR; đóng OQ-19, OQ-20; không làm ngoại lệ purge analytics | Stakeholder (người duyệt) |
 | 2026-11-20 | Nhãn rủi ro pháp lý ở Hệ quả đổi thành Hoãn (ADR-0082), không đổi ý nghĩa quyết định | Owner |
+| 2026-11-21 | Ngoại lệ DROP một lần cho khái niệm lớp theo ADR-0095 mục 8 | Owner |

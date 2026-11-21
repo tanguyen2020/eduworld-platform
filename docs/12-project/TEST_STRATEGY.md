@@ -1,6 +1,6 @@
 # Test Strategy
 
-> Trạng thái: Draft · Phiên bản: 0.8 · Owner: QA Engineer · Cập nhật: 2026-11-17 (ADR-0091: đăng nhập portal bằng form riêng qua backend TC-AUTH-093…101, sửa TC-AUTH-067/070/072/089, TC-TEN-011d; ADR-0090: bật/tắt menu/action TC-CMS-MENU-01…06; ADR-0074: contract test HTTP giữa service thay bằng facade test + kiểm tra kiến trúc, TC-SVC viết lại cho modular monolith, thêm TC-SVC-016/017; TC giờ giới nghiêm, PII/grooming luôn chạy, tenant `common`, preset chat — ADR-0078; "Tiếp tục là…" và Windows máy dùng chung — ADR-0086; bỏ TC QR/PIN — ADR-0076 Rejected; object storage ADR-0075; CI GitHub Actions; mốc pilot ADR-0073/0080)
+> Trạng thái: Draft · Phiên bản: 0.8 · Owner: QA Engineer · Cập nhật: 2026-11-21 (ADR-0095: TC lớp/enrollment/nhóm học tập viết lại theo khối, TC-ORG-105/106 Removed) · 2026-11-17 (ADR-0091: đăng nhập portal bằng form riêng qua backend TC-AUTH-093…101, sửa TC-AUTH-067/070/072/089, TC-TEN-011d; ADR-0090: bật/tắt menu/action TC-CMS-MENU-01…06; ADR-0074: contract test HTTP giữa service thay bằng facade test + kiểm tra kiến trúc, TC-SVC viết lại cho modular monolith, thêm TC-SVC-016/017; TC giờ giới nghiêm, PII/grooming luôn chạy, tenant `common`, preset chat — ADR-0078; "Tiếp tục là…" và Windows máy dùng chung — ADR-0086; bỏ TC QR/PIN — ADR-0076 Rejected; object storage ADR-0075; CI GitHub Actions; mốc pilot ADR-0073/0080)
 > Liên quan: [ROADMAP](ROADMAP.md) · [SYSTEM_ARCHITECTURE §7](../06-architecture/SYSTEM_ARCHITECTURE.md#7-non-functional-baseline) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [LOCAL_DEVELOPMENT](../11-operations/LOCAL_DEVELOPMENT.md)
 
 **Mục đích.** Nguồn duy nhất về chiến lược kiểm thử và ma trận test case của EduWorld.
@@ -195,7 +195,7 @@ Nhóm theo domain của cây tài liệu (game-first). Mỗi ID chỉ xuất hi�
 
 | ID | Kịch bản | Loại | Kết quả mong đợi |
 |---|---|---|---|
-| TC-LRN-001 | Tải bài học/hoạt động theo lớp của học sinh | A, E | Chỉ nội dung published, đúng grade/curriculum |
+| TC-LRN-001 | Tải bài học/hoạt động theo khối của học sinh | A, E | Chỉ nội dung published, đúng grade/curriculum |
 | TC-LRN-002 | Làm bài tập (bắt đầu attempt, trả lời từng câu) | I, A, E | Attempt `in_progress`, item lưu `question_version_id` |
 | TC-LRN-003 | Chấm điểm 11 loại câu hỏi | U, I | Đúng theo scoring rule, bao gồm trường hợp biên |
 | TC-LRN-004 | Nộp bài | A | `submitted`/`graded`, điểm server; event `activity.submitted` rồi `activity.graded` |
@@ -273,7 +273,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-PTY-003 | B, C, D chấp nhận | A, E | 4 thành viên; vượt `max_members` bị từ chối |
 | TC-PTY-004 | Thành viên thấy nhau trong Party Lobby (avatar, online, ready) | E | Trạng thái đồng bộ ≤ 1s |
 | TC-PTY-005 | Leader chọn hoạt động / game mode | E, A | Chỉ leader được chọn; thành viên khác 403 |
-| TC-PTY-006 | Thành viên đủ điều kiện vào cùng Game Session (9 bước party session) | I, E | Thành viên không đủ điều kiện (lớp/quyền) bị loại kèm lý do |
+| TC-PTY-006 | Thành viên đủ điều kiện vào cùng Game Session (9 bước party session) | I, E | Thành viên không đủ điều kiện (khối/quyền) bị loại kèm lý do |
 | TC-PTY-007 | Cùng thực hiện quest co-op, shared progress theo cấu hình | E | Tiến độ chung đúng cấu hình |
 | TC-PTY-008 | Một thành viên mất kết nối | E | Nhóm tiếp tục nếu chế độ cho phép; người đó reconnect quay lại instance |
 | TC-PTY-009 | Leader mất kết nối | E, I | Sau thời gian ân hạn, leader chuyển cho thành viên lâu nhất (hoặc khôi phục nếu quay lại) |
@@ -301,16 +301,16 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-SOC-003 | Mute/unmute: tin và emote của người bị mute bị ẩn với người mute, không ảnh hưởng người khác | E | |
 | TC-SOC-004 | HS tạo club → `pending_approval`; mời/tạo mục tiêu trước khi duyệt → `CLUB_NOT_APPROVED`; nhân sự nhà trường có quyền (`school_admin`) `approveClub` → `active`, channel club được tạo | A, I | |
 | TC-SOC-005 | Club đầy → `CLUB_FULL`; HS đã ở 5 club → `CLUB_LIMIT_REACHED`; xin tham gia hai lần → một yêu cầu pending (unique) | A, I | |
-| TC-SOC-006 | Mời vào club người khác tenant hoặc đã block → `SOCIAL_SCOPE_VIOLATION`; danh sách thành viên chỉ hiện nickname/avatar, không tên thật với người ngoài lớp | A, Security | |
+| TC-SOC-006 | Mời vào club người khác tenant hoặc đã block → `SOCIAL_SCOPE_VIOLATION`; danh sách thành viên chỉ hiện nickname/avatar, không tên thật với người chơi khác (ADR-0095) | A, Security | |
 | TC-SOC-007 | Mục tiêu club: đóng góp đếm từ event học tập; không lộ điểm/mastery cá nhân; đạt mục tiêu → `club.goal_completed` + huy hiệu club | I | |
-| TC-SOC-008 | Nhân sự nhà trường (`school_admin`, `academic_manager` với study group mình tạo) gỡ thành viên, lưu trữ club; khóa chat club do `safety_moderator` thực hiện qua case; audit ghi đủ | A | |
+| TC-SOC-008 | Nhân sự nhà trường (`school_admin`, `academic_manager` với club do trường lập; không còn study group — ADR-0095) gỡ thành viên, lưu trữ club; khóa chat club do `safety_moderator` thực hiện qua case; audit ghi đủ | A | |
 | TC-SOC-009 | Party tạo từ club chỉ mời được thành viên club; chat party vẫn purge, chat club không bị purge (ADR-0033) | I | |
 
 **Chat**
 
 | ID | Kịch bản | Loại | Kết quả mong đợi |
 |---|---|---|---|
-| TC-CHAT-001 | Tạo channel (class/party/study group) theo policy | A | Chỉ vai trò được phép |
+| TC-CHAT-001 | Tạo channel (party/club) theo policy; loại `class`/`study_group` bị từ chối (ADR-0095) | A | Chỉ vai trò được phép |
 | TC-CHAT-002 | Tham gia channel | A, E | Chỉ thành viên hợp lệ |
 | TC-CHAT-003 | Gửi tin nhắn | E | Qua pipeline lọc, trạng thái `allowed/masked/blocked/held` |
 | TC-CHAT-004 | Nhận tin nhắn realtime + history + unread | E, A | Đúng thứ tự `seq` |
@@ -327,13 +327,13 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-CHAT-015 | Phân quyền công tắc và danh mục | A, S | Tenant Admin gọi API công tắc → không route/403; bật category không cho phép → `TENANT_TOGGLE_NOT_ALLOWED`; thiếu lý do → `MODERATION_SWITCH_REASON_REQUIRED`; client game không tải được danh mục |
 | TC-CHAT-016 | `expires_at` và audit | I | Tự bật lại đúng hạn; mọi lần bật/tắt/thay đổi danh mục có audit (actor, lý do, version); alert `ChatModerationDisabled` kích hoạt khi tắt |
 | TC-CHAT-017 | Chat gameplay luôn có: trận 1v1 bắt đầu → channel `match` có ngay, 2 người gửi/nhận text không cần bật; team battle → `team` mỗi đội (đội kia không đọc được) + `match` chung; tạo party → `party`, người vào sau tự là member (ADR-0020 mục 6) | E, A | Channel tạo cùng transaction với trận/party; membership đúng |
-| TC-CHAT-018 | Policy tenant/trường/lớp cố tắt `match`/`team`/`party`, bỏ `text`, đặt `allowed_hours` hoặc slow mode > 10 s | A, U | Bị từ chối `CHAT_POLICY_ALWAYS_ON`; schema chat-policy v5 từ chối |
+| TC-CHAT-018 | Policy tenant/trường cố tắt `match`/`team`/`party`, bỏ `text`, đặt `allowed_hours` hoặc slow mode > 10 s | A, U | Bị từ chối `CHAT_POLICY_ALWAYS_ON`; schema chat-policy v5 từ chối |
 | TC-CHAT-019 | Trong trận: mute, chặn, báo cáo từ menu tin; người bị sanction mute vẫn chơi nhưng không gửi được | E | ≤ 2 chạm; report có `match_id`/`party_id`; audit |
 | TC-CHAT-020 | Đổi thiết bị/reconnect giữa trận (ADR-0031) | E | Vẫn là member channel `match`, nhận tin bỏ lỡ qua resume; trận kết thúc → gửi tin trả `CHAT_CHANNEL_CLOSED` |
 | TC-CHAT-021 | Purge đúng hạn (ADR-0033): channel `match`/`team` theo trận/`party` đóng ngày D → còn xem được tới D+N−1, bị purge sau D+N (N = `gameplay_chat_retention_days`, mặc định 7); World/Area sau 24 h | I, E | Đếm dòng trước/sau; API trả 404 sau purge; metric `eduworld_chat_purge_total` tăng |
 | TC-CHAT-022 | Giữ bằng chứng: tin bị báo cáo trước hạn → sao sang `chat.moderation_evidence` trước purge | I | Moderator vẫn xem được tin trong case sau purge; nội dung khớp bản gốc |
 | TC-CHAT-023 | Hoãn purge khi case mở; case đóng → purge ở lần chạy kế tiếp | I | Job ghi lý do hoãn; không mất bằng chứng |
-| TC-CHAT-024 | Purge không đụng channel bền vững (`class`, `study_group`, `team` cố định, `direct`); cấu hình retention < 3 bị từ chối; role `chat_purger` không DELETE được bảng khác | I, S | 0 dòng bị xóa ngoài phạm vi; lỗi quyền DB khi thử bảng khác |
+| TC-CHAT-024 | Purge không đụng channel bền vững (`team` cố định/club, `direct`); cấu hình retention < 3 bị từ chối; role `chat_purger` không DELETE được bảng khác | I, S | 0 dòng bị xóa ngoài phạm vi; lỗi quyền DB khi thử bảng khác |
 | TC-CHAT-025 | Gửi/nhận qua NATS (ADR-0035): người gửi chỉ nhận `chat.message.acked` sau JetStream ack; người nhận nhận đúng thứ tự `seq` | I (testcontainers NATS + Valkey + PG), E | Không tin nào tới người nhận khi publish thất bại |
 | TC-CHAT-026 | Mất NATS: dừng NATS khi đang chat | Chaos | Gửi trả `CHAT_TEMPORARILY_UNAVAILABLE`; đọc lịch sử vẫn chạy; sau khi NATS trở lại gửi bình thường, không trùng tin (`client_msg_id`) |
 | TC-CHAT-027 | Mất PostgreSQL 10 phút khi đang chat | Chaos | Gửi/nhận realtime vẫn chạy; sau khi DB trở lại, persister ghi bù đủ, không trùng, đúng `seq`; alert `ChatPersistLagHigh` bật rồi tắt |
@@ -347,7 +347,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-CHAT-035 | Mention: > 5 → `CHAT_MENTION_LIMIT`; mention người không là thành viên/đã block bị loại; `unread_mentions` + `chat.mention.created`; payload không chứa username | A, E | |
 | TC-CHAT-036 | Pin ≤ 3; quyền pin theo loại channel; World/Area → `CHAT_FEATURE_DISABLED` | A | |
 | TC-CHAT-037 | Typing: throttle 3 s, hết sau 5 s, không ghi DB, không gửi tới người block | I, E | |
-| TC-CHAT-038 | Receipts: party 4 người hiển thị đúng sent/delivered/read từng người; class hiển thị số đếm; không lộ trạng thái giữa người đã block | E | |
+| TC-CHAT-038 | Receipts: party 4 người hiển thị đúng sent/delivered/read từng người; channel club lớn hơn 8 người chỉ hiển thị số đếm; không lộ trạng thái giữa người đã block | E | |
 | TC-CHAT-039 | Unread + mention count đúng sau khi đọc trên thiết bị khác; badge HUD cập nhật qua `chat.unread.updated` | E | |
 | TC-CHAT-040 | Tìm kiếm: "nhan vat" khớp "nhân vật"; chỉ channel là thành viên, đúng tenant; không trả tin thu hồi/bị chặn; không khớp nội dung gốc bị che; moderator chỉ tìm trong case | A, Security | |
 | TC-CHAT-041 | Copy: clipboard chứa bản đã che / placeholder | E (Godot) | |
@@ -355,7 +355,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-CHAT-043 | [Confirmed] Thông báo vụ việc nghiêm trọng cho nhà trường: case p1 liên quan học sinh trường A | I, A, S | `school_admin` trường A nhận thông báo tóm tắt (loại vụ việc, thời điểm, học sinh liên quan theo phạm vi trường) **không** chứa nội dung chat thô, từ đã khớp hay bằng chứng; trường B không nhận; case lưu thời điểm yêu cầu và thời điểm trường xác nhận đã liên hệ phụ huynh |
 | TC-CHAT-044 | **PII và grooming luôn chạy** (ADR-0078, [Confirmed — Technical Architect 2026-11-17]): System Admin gửi yêu cầu tắt `steps.pii`/grooming ở cấp platform và tenant; tắt `enabled_all` (được duyệt) rồi gửi "0912 345 678", "kết bạn zalo nhé", "nhà mình ở hẻm 12…", tin rủ chuyển app khác | A, S, I | Yêu cầu tắt PII/grooming → `MODERATION_SWITCH_STEP_NOT_ALLOWED`; khi `enabled_all` tắt, tin PII vẫn bị chặn/giữ, tín hiệu grooming vẫn tạo case; decision không ghi `pii` trong `steps_skipped`; không có biến môi trường/cờ nào tắt được |
 | TC-CHAT-045 | **Giới hạn công tắc kiểm duyệt** (ADR-0078): tắt `steps.sensitive_terms` không có `expires_at` / `expires_at` = 25 giờ / hợp lệ 2 giờ nhưng người đề xuất tự duyệt / được System Admin thứ hai duyệt; chờ quá hạn | A, S | Ba trường hợp đầu bị từ chối (`MODERATION_SWITCH_EXPIRY_REQUIRED`, `MODERATION_SWITCH_SELF_APPROVAL`), bước vẫn bật; trường hợp 4 có hiệu lực ≤ 60 s, banner + alert; hết hạn tự bật lại, audit ghi người đề xuất và người duyệt |
-| TC-CHAT-046 | **Giờ giới nghiêm cho chat** (ADR-0078): gửi tin ở `party`, `class`, `direct` lúc 21:31 (giả lập phiên còn sống); `school_admin` đặt `allowed_hours` rộng hơn 06:30–21:30 | A, S | Mọi lệnh gửi bị từ chối trong giờ giới nghiêm ở mọi channel kể cả gameplay; policy nới giờ → `CHAT_POLICY_RELAX_NOT_ALLOWED`; không có nhánh theo khối |
+| TC-CHAT-046 | **Giờ giới nghiêm cho chat** (ADR-0078): gửi tin ở `party`, `direct`, club lúc 21:31 (giả lập phiên còn sống); `school_admin` đặt `allowed_hours` rộng hơn 06:30–21:30 | A, S | Mọi lệnh gửi bị từ chối trong giờ giới nghiêm ở mọi channel kể cả gameplay; policy nới giờ → `CHAT_POLICY_RELAX_NOT_ALLOWED`; không có nhánh theo khối |
 | TC-CHAT-047 | **Tenant `common`** (ADR-0078): học sinh tenant `common` gửi friend request, tạo mã bạn bè, mở DM, gửi tin `world`; vào party/trận | A, E2E | Kết bạn/DM/World bị từ chối (`SOCIAL_SCOPE_VIOLATION`/`CHAT_NOT_ALLOWED`), UI ẩn nút; `match`/`party` vẫn có; System Admin bật lại cho tenant có audit thì hoạt động |
 | TC-CHAT-048 | **Preset "chỉ quick message + emote"** (ADR-0078): trường chọn `quick_message_emote_only`; học sinh lớp 2 và lớp 8 gửi text, sticker, GIF, quick message, emote ở `party`, `match`, `class` | A, E2E (Godot) | Text/sticker/GIF/forward bị từ chối ở mọi channel của trường; quick message + emote gửi được; channel gameplay vẫn tự tạo; Godot ẩn ô nhập; cùng kết quả cho mọi khối; đổi preset có audit |
 
@@ -365,9 +365,9 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 
 | ID | Kịch bản | Loại | Kết quả mong đợi |
 |---|---|---|---|
-| TC-LMS-001 | `school_admin`/`academic_manager` giao activity/quest/đề cho lớp, nhóm học tập hoặc danh sách học sinh (`target_type`: `class`, `study_group`, `students`; chọn giữ version hoặc `follow_latest`; `ResultRelease`: `immediate`, `after_close`, `manual`) | A, E | Assignment tạo đúng tenant/trường; `academic_manager` chỉ giao được trong môn được gán; giao cho lớp trường khác → `404`; `manual` chỉ công bố khi người có quyền bấm công bố |
+| TC-LMS-001 | `school_admin`/`academic_manager` giao activity/quest/đề cho khối của một trường (± thêm học sinh khác khối cùng trường, − loại học sinh) hoặc danh sách học sinh (`target_type`: `grade`, `students` — ADR-0095; chọn giữ version hoặc `follow_latest`; `ResultRelease`: `immediate`, `after_close`, `manual`) | A, E | Assignment tạo đúng tenant/trường; `academic_manager` chỉ giao được trong môn được gán; giao cho trường khác → `404`; thêm học sinh khác trường → `422`; exclude thắng include; học sinh mới vào khối sau publish được thêm vào bài còn mở; `manual` chỉ công bố khi người có quyền bấm công bố |
 | TC-LMS-002 | Học sinh nhận bài trong game ở tab "Nhà trường giao" (thông báo + nhiệm vụ) và hoàn thành | E | Attempt gắn `assignment_id`, trạng thái nộp cập nhật; attempt ngoài hạn theo cấu hình; màn kết quả không có mục nhận xét thủ công |
-| TC-LMS-003 | `school_admin`/`academic_manager` xem School Learning Dashboard (`GET /lms/dashboards/school`) theo trường → lớp → học sinh | A, E | Số liệu khớp truy vấn đối soát rollup; chỉ trong trường (và môn được gán với `academic_manager`); LO yếu và câu sai phổ biến đúng; Learning Score, Mastery, XP hiển thị tách biệt; học sinh liên quan nhận gợi ý ôn tập tự động có giải thích |
+| TC-LMS-003 | `school_admin`/`academic_manager` xem School Learning Dashboard (`GET /lms/dashboards/school`) theo trường → khối → học sinh (ADR-0095) | A, E | Số liệu khớp truy vấn đối soát rollup; chỉ trong trường (và môn được gán với `academic_manager`); LO yếu và câu sai phổ biến đúng; Learning Score, Mastery, XP hiển thị tách biệt; học sinh liên quan nhận gợi ý ôn tập tự động có giải thích |
 
 **Phân quyền portal, Thùng rác, gán/clone (ADR-0027, ADR-0028, ADR-0029)**
 
@@ -429,7 +429,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-AUTH-004 | Logout (`POST /auth/game/logout`) | E, A | module identity revoke refresh token + kết thúc phiên Keycloak theo `sid`; refresh cũ bị từ chối; WS đóng |
 | TC-AUTH-005 | User đăng nhập Keycloak nhưng không tồn tại trong SIS | I, A | Không JIT; trả `ACCOUNT_NOT_PROVISIONED`; audit log; UI thân thiện |
 | TC-AUTH-006 | Student bị khóa (SIS hoặc admin) | I, A, E | Đăng nhập bị từ chối; phiên đang mở bị cắt qua event `user.access_revoked` ≤ 60s |
-| TC-AUTH-007 | Student chuyển lớp | I, A | Enrollment cũ `transferred`, mới `active`; quyền xem lớp cũ bị gỡ; lịch sử học tập giữ nguyên |
+| TC-AUTH-007 | Học sinh lên khối hoặc chuyển trường trong tenant (ADR-0095) | I, A | Hồ sơ học sinh có trường/khối mới trong một transaction, audit + `student.placement_changed`; bootstrap trả trường/khối mới; lịch sử học tập giữ khối/trường cũ |
 | TC-AUTH-008 | Student chuyển trường | I, A | Dữ liệu học tập cũ vẫn thuộc trường cũ theo policy; trường mới không đọc được lịch sử trường cũ nếu policy không cho; tài khoản liên kết đúng |
 | TC-AUTH-009 | Token sai `aud`/`iss`, chữ ký giả, `alg=none` | S, A | 401 tại APISIX và tại backend (kiểm tra cả khi bypass gateway) |
 | TC-AUTH-010 | Build Godot không chứa client secret, không có cấu hình/endpoint token Keycloak (ADR-0068) | S | Quét artifact không thấy secret `eduworld-game-backend` hay URL `/protocol/openid-connect/token` |
@@ -511,14 +511,14 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-ORG-102 | Tạo/sửa trường với tỉnh/thành `inactive` | A | `422 VALIDATION_FAILED`; chỉ chọn được đơn vị `active` |
 | TC-ORG-103 | SIS gửi trường với `province_code` của đơn vị cũ (vd. `vn.old.ha-giang`) | I | Ánh xạ sang `vn.tuyen-quang` qua kế thừa, cảnh báo `province_outdated` |
 | TC-ORG-104 | SIS gửi trường thiếu `province_code` | I | Trường `pending_review`, issue `school_province_missing`; học sinh của trường vẫn đăng nhập được |
-| TC-ORG-105 | Áp hai enrollment active cho cùng học sinh (đồng thời) | I | Chỉ một thành công (unique partial index); bản còn lại lỗi, không có học sinh hai lớp |
-| TC-ORG-106 | Enrollment trỏ lớp thuộc trường khác | I | FK ghép `(class_id, school_id)` từ chối; issue `class_school_mismatch` |
-| TC-ORG-107 | Chuyển lớp trong năm học | I | Đóng enrollment cũ và mở mới trong cùng transaction; truy vấn ở mọi thời điểm thấy đúng một lớp |
-| TC-ORG-108 | Học sinh tenant chung (do System Admin tạo với khối 4) lần đầu vào game | E2E | Vào thẳng lớp ảo "Khối 4 – chung", không có màn chọn khối (ADR-0063) |
-| TC-ORG-109 | Hiển thị trường/lớp/tỉnh trên hồ sơ | E2E | Chính học sinh thấy (song ngữ); người chơi khác lớp/khác trường không thấy (R16) |
-| TC-SIS-101 | Login sync nhánh A: dữ liệu đủ, `last_synced_at` < 24 giờ | I | Không gọi SIS (mock SIS ghi 0 request); bootstrap có trường/lớp |
+| TC-ORG-105 | **Removed (ADR-0095)** — không còn enrollment; mã giữ để truy vết, không tái sử dụng | — | Không chạy |
+| TC-ORG-106 | **Removed (ADR-0095)** — không còn lớp/enrollment; mã giữ để truy vết, không tái sử dụng | — | Không chạy |
+| TC-ORG-107 | Lên khối khi sang năm học (SIS cập nhật `grade_level`, ADR-0095) | I | Học sinh có đúng một trường và một khối ở mọi thời điểm; learning event/`progress_daily` trước thời điểm đổi giữ khối cũ; quy tắc chuyển năm học trong game kích hoạt |
+| TC-ORG-108 | Học sinh tenant chung (do System Admin tạo với khối 4) lần đầu vào game | E2E | Vào thẳng School ảo của tenant chung với khối 4 (không có lớp ảo — ADR-0095), không có màn chọn khối (ADR-0063) |
+| TC-ORG-109 | Hiển thị trường/khối/tỉnh trên hồ sơ | E2E | Chính học sinh thấy (song ngữ); mọi người chơi khác không thấy, chỉ thấy nickname (R16, ADR-0095) |
+| TC-SIS-101 | Login sync nhánh A: dữ liệu đủ, `last_synced_at` < 24 giờ | I | Không gọi SIS (mock SIS ghi 0 request); bootstrap có trường/khối |
 | TC-SIS-102 | Login sync nhánh B: lần đầu đăng nhập, chưa có dữ liệu | I, E2E | Gọi `students/lookup` đúng connection; apply xong mới trả bootstrap; event `student.synced` cập nhật `ref.*` ở game/learning/competition/chat |
-| TC-SIS-103 | Nhánh B, SIS trả học sinh không có lớp | I | `403 NO_ACTIVE_ENROLLMENT`, issue `missing_class`; không tạo enrollment giả |
+| TC-SIS-103 | Nhánh B, SIS trả học sinh thiếu trường hoặc khối hợp lệ (ADR-0095) | I | `403 NO_ACTIVE_ENROLLMENT`, kết quả login sync `missing_placement`; không tự gán trường/khối giả |
 | TC-SIS-104 | Nhánh B, SIS timeout (> 3 s) hoặc lỗi 5xx | I | Dùng dữ liệu đồng bộ gần nhất nếu đủ; không đủ → `NO_ACTIVE_ENROLLMENT` với thông điệp thử lại; không retry đồng bộ |
 | TC-SIS-105 | Nhánh C: dữ liệu cũ hơn 24 giờ | I | Đăng nhập ngay; job `login_refresh` vào `IDENTITY_SIS_JOBS`; đăng nhập lặp lại trong 10 phút không tạo job trùng |
 | TC-SIS-106 | Quá tải: 200 học sinh cùng nhánh B trên một connection | P | Tối đa 20 lookup đồng thời; phần vượt dùng dữ liệu cũ hoặc thông điệp thử lại; circuit breaker mở khi SIS lỗi; metric `eduworld_sis_login_sync_total{result="throttled"}` tăng |
@@ -551,7 +551,7 @@ Chỉ hoạt động server tự chấm nằm trong Release (ADR-0072 mục 3). 
 | TC-TEN-014a | Luồng xác thực từ màn đăng nhập game (S01, ADR-0063, ADR-0068) | E (Godot UI) | Không có bước chọn trường trước khi đăng nhập; game gọi `/auth/game/login` (không mở Keycloak, token không có claim `organization`); không gọi `tenants:resolve` |
 | TC-TEN-014b | Học sinh thuộc 2 tenant đăng nhập game | A, E | `403 TENANT_NOT_SELECTED` kèm `choices[]` + `login_ticket`; `TenantChoice` xuất hiện **sau** xác thực; chọn xong `POST /auth/game/tenant:select` trả token + bootstrap, không nhập lại mật khẩu |
 | TC-TEN-014c | Người không thuộc tenant chung và không thuộc tenant SIS nào nhập đúng username/password (ADR-0063) | A, E | `403 ACCOUNT_NOT_PROVISIONED`; Godot hiện "chưa được kích hoạt", xóa token trong RAM; phiên Keycloak bị thu hồi; audit; không có bản ghi mới trong `common` |
-| TC-TEN-015 | Soft-delete (ADR-0028): xóa lớp, câu hỏi, party | A, I | Không xuất hiện ở mọi API đọc; tạo lại cùng mã được (partial unique); Thùng rác (System Admin) thấy và khôi phục được; audit + event `<entity>.deleted`/`restored` |
+| TC-TEN-015 | Soft-delete (ADR-0028): xóa bài giao, câu hỏi, party | A, I | Không xuất hiện ở mọi API đọc; tạo lại cùng mã được (partial unique); Thùng rác (System Admin) thấy và khôi phục được; audit + event `<entity>.deleted`/`restored` |
 | TC-TEN-016 | Role `<module>_app`/`<module>_platform` thực thi `DELETE`/`TRUNCATE` | I | Lỗi quyền (permission denied) |
 | TC-TEN-017 | Job CI `tenancy-guard`: SQL tường minh thiếu `tenant_id`/`deleted_at IS NULL`, có `DELETE FROM`, ent schema thiếu mixin tenant/soft-delete, bảng thiếu RLS | Static | Build fail với vị trí lỗi |
 | TC-TEN-018 | System Admin lọc dropdown tenant A, B / "tất cả tenant" | A | Chỉ dữ liệu tenant đã chọn; có cột Tenant; audit `cross_tenant.accessed` |
@@ -612,7 +612,7 @@ Hiệu năng server và tải: §8. Hiệu năng client trên máy tầm trung: 
 | TC-DASH-006 | 6 widget mở song song từ một user; 40 truy vấn đồng thời một tenant; truy vấn cố ý chạy > 5 s | A, P | Truy vấn thứ 5 của user nhận 429 `DASHBOARD_BUSY`; tenant > 30 bị từ chối; truy vấn chậm bị hủy 504 `DASHBOARD_QUERY_TIMEOUT`, không giữ connection (AC-DASH-004, 005) |
 | TC-DASH-007 | Mất Valkey; replica trễ > 60 s; replica dừng | Chaos | Dashboard vẫn trả (chậm hơn, không cache); hiển thị dữ liệu kèm cảnh báo trễ; replica dừng → 503 có thông báo, primary không nhận truy vấn dashboard (AC-DASH-012) |
 | TC-DASH-008 | Xuất báo cáo 1 triệu dòng; người dùng mở 3 export cùng lúc; link hết hạn | I, A | Job chạy nền, link 15 phút, file xóa sau 7 ngày, có audit; export thứ 3 nhận 429 `EXPORT_LIMIT_REACHED`; link hết hạn trả 403 (AC-DASH-009) |
-| TC-DASH-009 | Tenant A gọi dashboard với `school_id`/`class_id` của tenant B; nhóm < 5 học sinh; khóa cache của tenant khác | A, S | 404; ô nhỏ hiển thị "< 5"; khóa cache có `tenant_id`, không lộ chéo tenant (AC-DASH-011) |
+| TC-DASH-009 | Tenant A gọi dashboard với `school_id`/`grade_level` của tenant B (không còn `class_id` — ADR-0095); ô khối < 5 học sinh; khóa cache của tenant khác | A, S | 404; ô nhỏ hiển thị "< 5"; khóa cache có `tenant_id`, không lộ chéo tenant (AC-DASH-011) |
 | TC-DASH-010 | Tải dashboard với dữ liệu 2 năm (TC-PERF-025) | P | Xem §8.2 (AC-DASH-010) |
 
 ## 7. Security testing
@@ -663,13 +663,13 @@ Mục tiêu tải Release 1.0: **10.000 CCU** [Confirmed] (NFR-SCAL-002, ADR-004
 | TC-PERF-015 | Benchmark băm mật khẩu Keycloak trên node thật | keycloak-benchmark | Chọn tham số argon2id/pbkdf2 cho ≤ 80 ms/lần; ghi lại tham số + kết quả |
 | TC-PERF-016 | Vượt ngưỡng đăng nhập 2× (200 đăng nhập mật khẩu/giây trong 5 phút) | k6 | Hàng chờ hoạt động: `429 + Retry-After`, không 5xx dây chuyền, mọi client vào được sau khi hết đỉnh |
 | TC-PERF-017 | Warm-up theo lịch học: `ops-scheduler` chạy `docker service scale` 15 phút trước khung giờ cao điểm | staging | Replica đạt số tối thiểu và healthy trước giờ cao điểm; không cold start trong TC-PERF-002 |
-| TC-PERF-025 | **Tải dashboard trên dữ liệu 2 năm** (ADR-0062): sinh dữ liệu 50.000 học sinh × 730 ngày (rollup + `learning_events` tương ứng), 1.500 nhân sự nhà trường mở School Learning Dashboard ở cấp lớp trong 10 phút + 200 phiên trường/tenant chọn khoảng 1–2 năm; chạy cùng lúc với TC-PERF-014; lặp lại với cache lạnh; chạy job chốt ngày và 20 export song song | k6 + script sinh dữ liệu | NFR-PERF-017/018: API dashboard p95 ≤ 2 s, không truy vấn > 5 s; p95 ghi primary tăng < 20%; replica lag < 60 s; chốt ngày < 30 phút cho 50.000 học sinh; error < 0.5% ([DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) §15) |
+| TC-PERF-025 | **Tải dashboard trên dữ liệu 2 năm** (ADR-0062): sinh dữ liệu 50.000 học sinh × 730 ngày (rollup + `learning_events` tương ứng), 1.500 nhân sự nhà trường mở School Learning Dashboard ở cấp khối trong 10 phút + 200 phiên trường/tenant chọn khoảng 1–2 năm; chạy cùng lúc với TC-PERF-014; lặp lại với cache lạnh; chạy job chốt ngày và 20 export song song | k6 + script sinh dữ liệu | NFR-PERF-017/018: API dashboard p95 ≤ 2 s, không truy vấn > 5 s; p95 ghi primary tăng < 20%; replica lag < 60 s; chốt ngày < 30 phút cho 50.000 học sinh; error < 0.5% ([DASHBOARD_DATA](../07-backend/DASHBOARD_DATA.md) §15) |
 
 Kết quả lưu `docs/12-project/perf-reports/<ngày>.md` gồm cấu hình, số liệu, biểu đồ, điểm nghẽn. **Chỉ công bố năng lực đã đo được.**
 
 ## 9. UAT
 
-- UAT lần đầu là điều kiện của **M-P1 Pilot Start** ([ROADMAP §3.4](ROADMAP.md#34-pilot-slice--m-p1-pilot-start)); mỗi giai đoạn Mở rộng/Hoàn thiện có UAT bổ sung cho chức năng mới. Nghiên cứu hiệu quả học tập của pilot (bài kiểm tra độc lập trước/sau, lớp so sánh) theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) là cổng M-P2 (ADR-0080), không thay thế UAT.
+- UAT lần đầu là điều kiện của **M-P1 Pilot Start** ([ROADMAP §3.4](ROADMAP.md#34-pilot-slice--m-p1-pilot-start)); mỗi giai đoạn Mở rộng/Hoàn thiện có UAT bổ sung cho chức năng mới. Nghiên cứu hiệu quả học tập của pilot (bài kiểm tra độc lập trước/sau, cụm (trường, khối) so sánh — ADR-0095) theo [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) là cổng M-P2 (ADR-0080), không thay thế UAT.
 - Thực hiện ở staging với 1–2 trường pilot, mỗi vai trò ≥ 3 người dùng thật (quản trị trường, quản lý chuyên môn) và nhóm học sinh do nhà trường chỉ định (mô hình consent ngoài version này, ADR-0082).
 - Kịch bản UAT lấy từ demo script của [ROADMAP](ROADMAP.md); có phiếu đánh giá dễ dùng (lớp 1–5 dùng biểu tượng mặt cười).
 - Lỗi UAT phân loại Critical/High/Medium/Low; Critical/High phải sửa trước ký nhận.

@@ -3,6 +3,9 @@
 > Trạng thái: Draft · Phiên bản: 0.5 · Owner: Identity & Security Engineer · Cập nhật: 2026-11-17 (ADR-0074: Principal resolve qua facade trong tiến trình, saga gọi facade platform) · 2026-11-16 (ADR-0086: vào lại game bằng refresh token)
 > Liên quan: [DOMAIN_MODEL §2](../06-architecture/DOMAIN_MODEL.md) · [KEYCLOAK_SSO](KEYCLOAK_SSO.md) · [ACCOUNT_PROVISIONING](ACCOUNT_PROVISIONING.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · ADR-0005, ADR-0006, ADR-0008, ADR-0026
 
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Bước kiểm tra "enrollment active" trong chuỗi ánh xạ đổi thành "hồ sơ học sinh hiệu lực ở một trường thuộc tenant"; `Principal` không còn `class_ids`; `NO_ACTIVE_ENROLLMENT` giữ mã, nghĩa "không có trường/khối hiệu lực". Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-I1 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+
 **Mục đích & phạm vi.** Nguồn chuẩn cho thuật toán ánh xạ token → User → tenant → SIS nguồn → Principal, mã lỗi bootstrap theo thứ tự kiểm tra, trạng thái tài khoản và nghiệp vụ chuyển lớp/chuyển trường. Luồng OIDC ở KEYCLOAK_SSO; vòng đời tài khoản ở ACCOUNT_PROVISIONING.
 
 ## 0. Module sở hữu (ADR-0074, ADR-0037)

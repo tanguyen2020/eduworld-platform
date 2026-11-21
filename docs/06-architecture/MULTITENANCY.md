@@ -3,6 +3,9 @@
 > Trạng thái: Draft · Phiên bản: 0.6 · Owner: Solution Architect · Cập nhật: 2026-11-17 (Áp ADR-0074: database theo module trên một cụm, ngữ cảnh tenant giữa module truyền trong tiến trình qua `src/backend/pkg/modcall`; áp ADR-0089: RLS chỉ lọc tenant, quy tắc interceptor theo mixin, ba loại scope, danh sách đóng `tenancy.Bypass`, bảng `infra` không RLS, role `_relay`/`_partition_admin`; làm rõ: mixin `TenantOptionalAppendOnly`, 10 reason kèm quyền DB, audit `cross_tenant.accessed`, hàm `identity.memberships_for_user`)
 > Liên quan: [ADR-0005](../adr/ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) · [ADR-0026](../adr/ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) · [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0029](../adr/ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) · [DOMAIN_MODEL](DOMAIN_MODEL.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md)
 
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Phân cấp là `Platform → Tenant → School`; học sinh thuộc **đúng một trường với một khối** (`org.students.school_id`, `grade_level`), không có Class/Enrollment. Membership tenant (`identity.tenant_memberships_v`, Keycloak Organization) và `Principal.school_ids` của học sinh suy ra từ hồ sơ học sinh hiệu lực; tenant chung có School ảo + khối, không có lớp ảo. Cô lập tenant (R8) không đổi: mọi tương tác học sinh khác trường chỉ trong cùng tenant (ADR-0054). Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-I1 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+
 **Mục đích & phạm vi.** Mô hình tenant (trường / đơn vị / tenant chung), cách cô lập dữ liệu ở tầng ứng dụng và RLS, tenant chung, soft-delete, gán/clone giữa tenant. SQL RLS chuẩn ở DATABASE_DESIGN §4; thuật toán xác định tenant khi đăng nhập ở IDENTITY_MAPPING §3.
 
 > **Thay đổi v0.6 (ADR-0074):** backend là modular monolith; 5 module domain giữ 5 database riêng trên **một cụm** PostgreSQL. Mọi quy tắc cô lập tenant dưới đây giữ nguyên; "giữa service" nay là "giữa module": ngữ cảnh tenant truyền trong tiến trình qua `context.Context` (`src/backend/pkg/modcall`), không qua header HTTP nội bộ hay token service.
@@ -36,16 +39,15 @@ flowchart TD
   T2 --> S3[School: THCS Yên Hòa]
   T3 --> S4[School ảo: EduWorld chung]
   S2 --> AY[AcademicYear 2026–2027]
-  AY --> C1[Class 3A]
-  C1 --> E1[Enrollment → Student]
+  S2 --> ST[Student: grade_level = 3]
 ```
 
 | Cấp | Vai trò trong cô lập | Ví dụ dữ liệu |
 |---|---|---|
 | Platform | Không phải tenant. Dữ liệu `tenant_id = NULL`, `owner_scope = platform`; tenant chỉ thấy khi được gán (ADR-0029) | Curriculum chuẩn, question bank platform, cấu hình game, item definitions, ChatPolicy gốc |
 | **Tenant** | **Đơn vị cô lập dữ liệu (`tenant_id`) và đơn vị đăng nhập** (một Keycloak Organization: `keycloak_org_id`, `keycloak_org_alias`, mã nhập `login_code`) | Mọi dữ liệu học sinh, lớp, attempt, learning event, chat, party, moderation, nội dung riêng của tenant |
-| School | Chiều phân loại **bên trong** tenant (`school_id`): tenant `school` có 1 trường, tenant `unit` có nhiều trường, tenant `common` có 1 trường ảo | Lớp, enrollment, báo cáo theo trường, phạm vi của School Admin |
-| Class | Chiều dữ liệu bên trong trường (không phải phạm vi phân quyền, ADR-0072) | Assignment target, channel lớp, cấp lớp của School Learning Dashboard |
+| School | Chiều phân loại **bên trong** tenant (`school_id`): tenant `school` có 1 trường, tenant `unit` có nhiều trường, tenant `common` có 1 trường ảo | Học sinh (với khối), báo cáo theo trường/khối, phạm vi của School Admin |
+| Khối (`grade_level`) | Thuộc tính của học sinh bên trong trường (không phải phạm vi phân quyền; không có thực thể Class — ADR-0095) | Assignment target (trường, khối), cấp khối của School Learning Dashboard, party lớp 1–3 |
 
 ### 2.1. Loại tenant
 
@@ -266,8 +268,8 @@ Không set `app.tenant_id` → `NULL` → không trả dòng nào. Phiên System
 
 | Tình huống | Xử lý | Nhãn |
 |---|---|---|
-| **Chuyển lớp** trong cùng trường | Enrollment cũ `status=ended/transferred`, tạo enrollment mới; dữ liệu học tập giữ nguyên | [Confirmed] |
-| **Chuyển trường trong cùng tenant `unit`** | Đổi `school_id`, enrollment mới; **không** đổi tenant, không đổi membership Keycloak; lịch sử vẫn trong tenant | [Confirmed] |
+| **Lên khối** (năm học mới) | SIS cập nhật `grade_level` của học sinh; dữ liệu học tập giữ khối tại thời điểm sự kiện; không còn chuyển lớp (ADR-0095) | [Confirmed] |
+| **Chuyển trường trong cùng tenant `unit`** | Đổi `school_id` của học sinh (không có enrollment — ADR-0095); **không** đổi tenant, không đổi membership Keycloak; lịch sử vẫn trong tenant | [Confirmed] |
 | **Chuyển sang trường thuộc tenant khác** | User giữ `user_id`; Student đổi `tenant_id`/`school_id` hiện tại; bản ghi lịch sử **giữ `tenant_id` cũ**. Tenant mới không tự thấy lịch sử cũ. Mastery & Game Profile đi theo học sinh. Không chia sẻ hồ sơ học tập cũ cho tenant mới | [Confirmed] |
 | **Học sinh không thuộc tenant SIS nào** | Chỉ vào tenant `common` nếu platform đã tạo tài khoản ở đó; nếu không → `ACCOUNT_NOT_PROVISIONED`, không cho đăng nhập; xem [§8.3](#83-tenant-chung) | [Confirmed] ADR-0063 |
 | **Xã hội liên trường trong tenant `unit`** | Cài đặt tenant `cross_school_social_enabled` (`platform.tenants.settings`, mặc định tắt, chỉ có nghĩa với tenant `unit`): bật → kết bạn, DM, party, club, World mở rộng, ghép trận giữa các trường trong cùng tenant; không bao giờ mở liên tenant. Quy tắc chi tiết: [SOCIAL_SYSTEM §7](../03-social-multiplayer/SOCIAL_SYSTEM.md#7-quy-tắc-liên-trường--adr-0054) | [Confirmed — Technical Architect 2026-11-16] ADR-0054 |
@@ -301,8 +303,8 @@ Tóm tắt: có claim `organization` thì tenant đó phải thuộc membership 
 
 | Hạng mục | Quy tắc | Nhãn |
 |---|---|---|
-| Ai vào | Chỉ tài khoản do platform (System Admin) **tạo/import có chủ đích** vào tenant chung, kèm khối và lớp ảo theo khối (ADR-0063, ADR-0060). Không có JIT tự đưa người dùng vào tenant chung; người không thuộc tenant chung và không thuộc tenant SIS nào bị từ chối `ACCOUNT_NOT_PROVISIONED` | [Confirmed] |
-| Cấu trúc | Tenant `common`, School ảo "EduWorld chung"; lớp ảo theo khối (`common-g1` … `common-g9`) để mọi chức năng cần lớp vẫn hoạt động; khối lớp do System Admin đặt khi tạo/import tài khoản | [Confirmed] |
+| Ai vào | Chỉ tài khoản do platform (System Admin) **tạo/import có chủ đích** vào tenant chung, kèm khối (không có lớp ảo — ADR-0095; ADR-0063). Không có JIT tự đưa người dùng vào tenant chung; người không thuộc tenant chung và không thuộc tenant SIS nào bị từ chối `ACCOUNT_NOT_PROVISIONED` | [Confirmed] |
+| Cấu trúc | Tenant `common`, School ảo "EduWorld chung"; học sinh có khối do System Admin đặt khi tạo/import tài khoản; không có lớp ảo (9 lớp ảo `common-g1` … `common-g9` bị bỏ — ADR-0095) | [Confirmed] |
 | Nội dung | Chỉ dữ liệu platform được System Admin gán cho `common` | [Confirmed] |
 | Chuyển sang tenant thật | Khi SIS của một tenant đồng bộ bản ghi khớp user → membership tenant đó → lần đăng nhập sau dùng tenant mới; lịch sử ở `common` giữ `tenant_id = common` | [Confirmed] |
 | An toàn (ADR-0078) | Mặc định siết chặt `common_tenant_social_defaults`: **tắt** kết bạn, DM và World chat; giờ giới nghiêm platform `platform_curfew` bắt buộc; kiểm duyệt bởi Platform Safety Team (ADR-0072); consent do platform thu trực tiếp (ADR-0077). Không có nhà trường nhận thông báo vụ việc nên Safety Team tự liên hệ theo quy trình platform. Chính sách chi tiết: [CHILD_SAFETY §3.6](../10-security/CHILD_SAFETY.md#36-tenant-common-adr-0078); chỉ System Admin bật lại từng mục, có lý do + audit | [Confirmed — Technical Architect 2026-11-17] |

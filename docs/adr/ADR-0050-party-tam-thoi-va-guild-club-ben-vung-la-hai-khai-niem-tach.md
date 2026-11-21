@@ -1,9 +1,12 @@
 # ADR-0050 — Party (tạm thời) và Guild/Club (bền vững) là hai khái niệm tách biệt
 
-> **Trạng thái:** Accepted · một phần superseded by ADR-0084 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md), [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0084 · một phần superseded by ADR-0095 · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md), [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay bởi [ADR-0084](ADR-0084-nhom-hoc-tap-thuoc-learning-service.md):** study group không còn là một loại club; study group là nhóm LMS của learning-service. **Còn hiệu lực:** party tạm thời tách biệt club bền vững; club do học sinh tạo thuộc chat-service.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md):** nhóm học tập (Study Group) không còn tồn tại dưới bất kỳ hình thức nào (ADR-0084 bị thay toàn phần); party tạm thời `study_group` của module competition đổi tên `study_party`. **Còn hiệu lực:** party tạm thời tách biệt club bền vững; club do học sinh tạo thuộc module chat.
 
 ## Bối cảnh
 
@@ -28,3 +31,4 @@ Master Prompt "Re-architecture" §13.2–13.3 yêu cầu party tạm thời và 
 | 2026-11-15 | Điều chỉnh theo ADR-0072 (bỏ vai trò giáo viên, bỏ hoạt động chấm tay khỏi Release) | Technical Architect |
 | 2026-11-16 | Một phần superseded by ADR-0084 (study group) | Technical Architect |
 | 2026-11-20 | Owner chốt (Accepted) | Owner |
+| 2026-11-21 | Một phần superseded by ADR-0095 (bỏ khái niệm lớp — học sinh theo khối) | Owner |

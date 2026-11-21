@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-> Trạng thái: Review · Phiên bản: 1.1 · Owner: Solution Architect · Cập nhật: 2026-11-20 (owner chốt toàn bộ ADR còn `Proposed`: chuyển `Accepted`, trừ ADR-0053 và ADR-0077 hoãn theo ADR-0082; ADR-0007 Superseded)
+> Trạng thái: Review · Phiên bản: 1.1 · Owner: Solution Architect · Cập nhật: 2026-11-21 (ADR-0095 bỏ khái niệm lớp; ADR-0084 Superseded) · 2026-11-20 (owner chốt toàn bộ ADR còn `Proposed`: chuyển `Accepted`, trừ ADR-0053 và ADR-0077 hoãn theo ADR-0082; ADR-0007 Superseded)
 > Liên quan: [SYSTEM_ARCHITECTURE](../06-architecture/SYSTEM_ARCHITECTURE.md) · [OPEN_QUESTIONS](../12-project/OPEN_QUESTIONS.md) · [DOCUMENTATION_AUDIT](../12-project/DOCUMENTATION_AUDIT.md)
 
 ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng của EduWorld: bối cảnh, phương án, quyết định, hệ quả và lịch sử thay đổi. Mỗi ADR là một file `ADR-NNNN-<slug>.md`. Người mới nên đọc mục **Quyết định hiện hành theo chủ đề** trước, không cần đọc ADR đã bị thay.
@@ -22,7 +22,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0002](ADR-0002-monorepo.md) | Monorepo | Accepted · cấu trúc thư mục superseded by ADR-0074 và ADR-0092 | — |
 | [0003](ADR-0003-postgresql-la-nguon-du-lieu-ben-vung-duy-nhat-schema-theo-mo.md) | PostgreSQL là nguồn dữ liệu bền vững duy nhất, schema theo module | Accepted · một phần superseded by ADR-0037 và ADR-0039 | OQ-10 |
 | [0004](ADR-0004-valkey-chi-cho-trang-thai-tam-thoi-cache-va-phoi-hop-realtim.md) | Valkey chỉ cho trạng thái tạm thời, cache và phối hợp realtime | Accepted | — |
-| [0005](ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) | Mô hình multi-tenancy: shared database + `tenant_id` + RLS | Accepted | — |
+| [0005](ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) | Mô hình multi-tenancy: shared database + `tenant_id` + RLS | Accepted · một phần superseded by ADR-0095 | — |
 | [0006](ADR-0006-keycloak-mot-realm-dung-organizations-identity-brokering.md) | Keycloak: một Realm dùng Organizations + Identity Brokering | Accepted · một phần superseded by ADR-0026 và ADR-0027 | OQ-02 |
 | [0007](ADR-0007-godot-dang-nhap-bang-oidc-authorization-code-pkce-qua-system.md) | Godot đăng nhập bằng OIDC Authorization Code + PKCE qua system browser | Superseded by ADR-0068 (game) và ADR-0091 (portal) | OQ-04 |
 | [0008](ADR-0008-access-token-cua-keycloak-la-credential-api-realtime-dung-ti.md) | Access token của Keycloak là credential API; realtime dùng ticket ngắn hạn | Accepted | — |
@@ -37,21 +37,21 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0017](ADR-0017-mastery-model-co-the-cau-hinh-mac-dinh-weighted-evidence.md) | Mastery model có thể cấu hình, mặc định Weighted Evidence | Accepted | OQ-08 |
 | [0018](ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) | Glicko-2 cho Game Rating, tách biệt Learning Mastery | Accepted | — |
 | [0019](ADR-0019-transactional-outbox-valkey-streams-cho-domain-events.md) | Transactional Outbox + Valkey Streams cho domain events | Accepted · transport superseded by ADR-0042 | — |
-| [0020](ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) | Chat thống nhất cho mọi lớp, mọi tin nhắn phải qua kiểm tra hợp lệ | Accepted · một phần superseded by ADR-0072 | — |
-| [0021](ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md) | SIS integration theo contract do EduWorld sở hữu | Accepted · một phần superseded by ADR-0072 | OQ-01 |
+| [0020](ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) | Chat thống nhất cho mọi lớp, mọi tin nhắn phải qua kiểm tra hợp lệ | Accepted · một phần superseded by ADR-0072 và ADR-0095 | — |
+| [0021](ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md) | SIS integration theo contract do EduWorld sở hữu | Accepted · một phần superseded by ADR-0072 và ADR-0095 | OQ-01 |
 | [0022](ADR-0022-cms-lms-web-la-react-typescript-spa.md) | Admin Portal (CMS/LMS) là React + TypeScript SPA | Accepted · một phần superseded by ADR-0094 | — |
 | [0023](ADR-0023-observability-bang-opentelemetry-prometheus-grafana-loki-tem.md) | Observability bằng OpenTelemetry + Prometheus + Grafana + Loki + Tempo | Accepted | — |
 | [0024](ADR-0024-chay-tren-docker-compose-cho-local-docker-swarm-cho-staging.md) | Chạy trên Docker: Compose cho local, Docker Swarm cho staging/production, chưa dùng Kubernetes | Accepted | OQ-10 |
 | [0025](ADR-0025-thu-vien-nen-tang-cho-go-backend.md) | Thư viện nền tảng cho Go backend | Accepted · một phần superseded by ADR-0039 và ADR-0040 | — |
-| [0026](ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) | Đăng nhập theo tenant: xác định tenant, kiểm tra chéo, mặc định tenant chung | Accepted · supersedes phần ánh xạ Organization của ADR-0006 | — |
-| [0027](ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) | Admin Portal: một portal 5 workspace; tenant chỉ thao tác Learning Management, cấu hình game chỉ thuộc platform | Accepted · một phần superseded by ADR-0072 · một phần superseded by ADR-0094 | — |
+| [0026](ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) | Đăng nhập theo tenant: xác định tenant, kiểm tra chéo, mặc định tenant chung | Accepted · supersedes phần ánh xạ Organization của ADR-0006 · một phần superseded by ADR-0095 | — |
+| [0027](ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) | Admin Portal: một portal 5 workspace; tenant chỉ thao tác Learning Management, cấu hình game chỉ thuộc platform | Accepted · một phần superseded by ADR-0072 · một phần superseded by ADR-0094 · một phần superseded by ADR-0095 | — |
 | [0028](ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) | Chỉ soft-delete, không hard-delete; mặc định không đọc dữ liệu đã xóa | Accepted | OQ-20 |
 | [0029](ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) | System Admin gán dữ liệu cho tenant và clone dữ liệu giữa tenant | Accepted · một phần superseded by ADR-0094 | — |
 | [0030](ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) | Chính sách từ nhạy cảm trong chat: danh mục quản lý được và công tắc bật/tắt kiểm duyệt | Accepted · một phần superseded by ADR-0078 | — |
 | [0031](ADR-0031-game-chi-danh-cho-hoc-sinh-luu-lich-su-dang-nhap-mot-thiet-b.md) | Game chỉ dành cho học sinh, lưu lịch sử đăng nhập, một thiết bị cho mỗi tài khoản | Accepted | — |
 | [0032](ADR-0032-worker-don-tai-khoan-hoc-sinh-khong-dang-nhap-game.md) | Worker dọn tài khoản học sinh không đăng nhập game | Accepted · một phần superseded by ADR-0085 | — |
 | [0033](ADR-0033-purge-nhom-chat-gameplay-ngoai-le-co-kiem-soat-cua-adr-0028.md) | Purge nhóm chat gameplay (ngoại lệ có kiểm soát của ADR-0028) | Accepted | OQ-20 |
-| [0034](ADR-0034-bo-tinh-nang-chat-day-du.md) | Bộ tính năng chat đầy đủ | Accepted · một phần superseded by ADR-0072 | — |
+| [0034](ADR-0034-bo-tinh-nang-chat-day-du.md) | Bộ tính năng chat đầy đủ | Accepted · một phần superseded by ADR-0072 và ADR-0095 | — |
 | [0035](ADR-0035-duong-truyen-chat-nats-jetstream-valkey-pub-sub-luu-postgres.md) | Đường truyền chat: NATS JetStream + Valkey Pub/Sub, lưu PostgreSQL | Accepted | — |
 | [0036](ADR-0036-microservices-theo-he-thong-lon-thay-adr-0001.md) | Microservices theo hệ thống lớn | Superseded by ADR-0074 | — |
 | [0037](ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) | Mỗi service một database PostgreSQL | Accepted · một phần superseded by ADR-0074 · supersedes phần DB/schema của ADR-0003 | OQ-10 |
@@ -60,14 +60,14 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0040](ADR-0040-goi-service-to-service-bang-typed-rest-client-sinh-tu-openap.md) | Gọi service-to-service bằng typed REST client sinh từ OpenAPI (tương đương Refit) | Accepted · một phần superseded by ADR-0074 | — |
 | [0041](ADR-0041-moi-cot-truong-kieu-chuoi-phai-co-gioi-han-do-dai.md) | Mọi cột/trường kiểu chuỗi phải có giới hạn độ dài | Accepted | — |
 | [0042](ADR-0042-domain-event-qua-transactional-outbox-nats-jetstream-thay-tr.md) | Domain event qua Transactional Outbox → NATS JetStream | Accepted · supersedes transport của ADR-0019 | — |
-| [0043](ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) | Phát hành nội dung: Draft/Publish, con trỏ phiên bản, giữ phiên bản khi đang chơi, rollback, đẩy cache | Accepted · supersedes cách rollback của ADR-0015 · một phần superseded by ADR-0072 | — |
+| [0043](ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) | Phát hành nội dung: Draft/Publish, con trỏ phiên bản, giữ phiên bản khi đang chơi, rollback, đẩy cache | Accepted · supersedes cách rollback của ADR-0015 · một phần superseded by ADR-0072 và ADR-0095 | — |
 | [0044](ADR-0044-luu-tru-hinh-anh-va-media-object-storage-s3-compatible-cdn.md) | Lưu trữ hình ảnh và media: object storage S3-compatible + CDN | Accepted | OQ-10, OQ-12, OQ-21 |
 | [0045](ADR-0045-dang-nhap-nhanh-o-quy-mo-10-000-ccu.md) | Đăng nhập nhanh ở quy mô 10.000 CCU | Accepted · một phần superseded by ADR-0072 | OQ-03 |
-| [0046](ADR-0046-nhan-biet-sis-nguon-cua-hoc-sinh-khi-dang-nhap.md) | Nhận biết SIS nguồn của học sinh khi đăng nhập | Accepted | OQ-01 |
+| [0046](ADR-0046-nhan-biet-sis-nguon-cua-hoc-sinh-khi-dang-nhap.md) | Nhận biết SIS nguồn của học sinh khi đăng nhập | Accepted · một phần superseded by ADR-0095 | OQ-01 |
 | [0047](ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) | Hai hệ thống giao diện: Game (Godot 3D) và Admin/Ops (Admin Portal) | Accepted | — |
 | [0048](ADR-0048-learning-activity-registry-mo-rong-loai-hoat-dong-hoc-tap-kh.md) | Learning Activity Registry: mở rộng loại hoạt động học tập không sửa lõi | Accepted | — |
 | [0049](ADR-0049-so-cai-phan-thuong-va-tien-te-trong-game-reward-currency-led.md) | Sổ cái phần thưởng và tiền tệ trong game (Reward & Currency Ledger) | Accepted | OQ-14 |
-| [0050](ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) | Party (tạm thời) và Guild/Club (bền vững) là hai khái niệm tách biệt | Accepted · một phần superseded by ADR-0084 | — |
+| [0050](ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) | Party (tạm thời) và Guild/Club (bền vững) là hai khái niệm tách biệt | Accepted · một phần superseded by ADR-0084 và ADR-0095 | — |
 | [0051](ADR-0051-pham-vi-voice-chat.md) | Phạm vi voice chat | Accepted (qua 0070) | OQ-19 |
 | [0052](ADR-0052-thuc-thi-mo-phong-simulation-execution.md) | Thực thi mô phỏng (Simulation Execution) | Accepted | — |
 | [0053](ADR-0053-cham-diem-co-ho-tro-ai-ai-assisted-grading.md) | Chấm điểm có hỗ trợ AI (AI-assisted Grading) | Proposed · chưa thuộc Release 1.0 · hoãn (ADR-0082) | OQ-12 |
@@ -77,19 +77,19 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0057](ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) | Chạy được trên máy tầm trung: hạng thiết bị và ngân sách hiệu năng | Accepted | OQ-04 |
 | [0058](ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) | Game Analytics: tổng hợp trong PostgreSQL qua sự kiện NATS | Accepted | — |
 | [0059](ADR-0059-hop-nhat-api-attempt-va-chua-lam-ai-giong-noi.md) | Hợp nhất API attempt; chưa làm AI giọng nói trong Release 1.0 | Accepted · một phần superseded by ADR-0072 | OQ-22 |
-| [0060](ADR-0060-danh-muc-quoc-gia-tinh-thanh-truong-hoc-sinh-thuoc-mot-truong-mot-lop.md) | Danh mục quốc gia, tỉnh/thành, trường; học sinh thuộc một trường một lớp | Accepted | — |
-| [0061](ADR-0061-dong-bo-du-lieu-hoc-sinh-tu-sis-khi-dang-nhap.md) | Đồng bộ dữ liệu học sinh từ SIS khi đăng nhập | Accepted · một phần superseded by ADR-0072 | OQ-01 |
-| [0062](ADR-0062-kien-truc-du-lieu-dashboard-khong-truy-van-du-lieu-tho.md) | Kiến trúc dữ liệu dashboard: chỉ đọc bảng tổng hợp | Accepted · một phần superseded by ADR-0072 | — |
-| [0063](ADR-0063-dang-nhap-release-1-0-username-password-va-quy-tac-tenant.md) | Đăng nhập Release 1.0: username/password và quy tắc tenant | Accepted · một phần superseded by ADR-0094 | — |
+| [0060](ADR-0060-danh-muc-quoc-gia-tinh-thanh-truong-hoc-sinh-thuoc-mot-truong-mot-lop.md) | Danh mục quốc gia, tỉnh/thành, trường; học sinh thuộc một trường một lớp | Accepted · một phần superseded by ADR-0095 | — |
+| [0061](ADR-0061-dong-bo-du-lieu-hoc-sinh-tu-sis-khi-dang-nhap.md) | Đồng bộ dữ liệu học sinh từ SIS khi đăng nhập | Accepted · một phần superseded by ADR-0072 và ADR-0095 | OQ-01 |
+| [0062](ADR-0062-kien-truc-du-lieu-dashboard-khong-truy-van-du-lieu-tho.md) | Kiến trúc dữ liệu dashboard: chỉ đọc bảng tổng hợp | Accepted · một phần superseded by ADR-0072 và ADR-0095 | — |
+| [0063](ADR-0063-dang-nhap-release-1-0-username-password-va-quy-tac-tenant.md) | Đăng nhập Release 1.0: username/password và quy tắc tenant | Accepted · một phần superseded by ADR-0094 · một phần superseded by ADR-0095 | — |
 | [0064](ADR-0064-khong-tu-dang-nhap-khi-mo-lai-game.md) | Không tự đăng nhập khi mở lại game | Accepted · một phần superseded by ADR-0086 · một phần superseded by ADR-0094 | — |
 | [0065](ADR-0065-tenant-id-tren-header-moi-request.md) | tenant_id trên header mọi request, luôn kiểm tra chéo | Accepted | — |
 | [0066](ADR-0066-dang-nhap-rieng-cho-portal-va-phan-quyen-role-userrole.md) | Đăng nhập riêng cho portal; phân quyền Role/UserRole | Accepted · một phần superseded by ADR-0072 · một phần superseded by ADR-0091 · một phần superseded by ADR-0094 | OQ-07 |
 | [0067](ADR-0067-portal-khong-chon-tenant-va-dinh-danh-dang-nhap-duy-nhat.md) | Portal không chọn tenant; username/email duy nhất | Accepted · một phần superseded by ADR-0091 · một phần superseded by ADR-0094 | — |
 | [0068](ADR-0068-dang-nhap-game-bang-form-trong-game-qua-backend.md) | Đăng nhập game bằng form trong game qua backend | Accepted · một phần superseded by ADR-0091 · một phần superseded by ADR-0094 | — |
 | [0069](ADR-0069-username-email-duy-nhat-theo-tenant-va-dang-nhap-khong-chon-tenant.md) | Đăng nhập: SSO xác thực trước, kiểm tra tenant sau; username/email không trùng trong tenant | Accepted | — |
-| [0070](ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md) | Release 1.0: không voice chat, không xóa vật lý theo luật, không purge analytics thô | Accepted | OQ-19, OQ-20 |
+| [0070](ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md) | Release 1.0: không voice chat, không xóa vật lý theo luật, không purge analytics thô | Accepted · mục 2 có ngoại lệ DROP một lần theo ADR-0095 | OQ-19, OQ-20 |
 | [0071](ADR-0071-object-storage-production-dung-floci.md) | Object storage staging/production dùng floci | Accepted (rủi ro được chấp nhận) · superseded by ADR-0075 | OQ-21 |
-| [0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) | Bỏ vai trò giáo viên: học sinh tự học, bỏ hoạt động chấm tay, kiểm duyệt tập trung ở platform | Accepted · một phần superseded by ADR-0081 · một phần superseded by ADR-0084 · một phần superseded by ADR-0094 | OQ-07 |
+| [0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) | Bỏ vai trò giáo viên: học sinh tự học, bỏ hoạt động chấm tay, kiểm duyệt tập trung ở platform | Accepted · một phần superseded by ADR-0081 · một phần superseded by ADR-0084 · một phần superseded by ADR-0094 · một phần superseded by ADR-0095 | OQ-07 |
 | [0073](ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) | Phát hành theo pilot ưu tiên giáo dục | Accepted | OQ-08 |
 | [0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) | Modular monolith có ranh giới cưỡng chế thay cho 6 microservice | Accepted · supersedes ADR-0036 | OQ-10 |
 | [0075](ADR-0075-object-storage-production-khong-dung-floci.md) | Object storage staging/production không dùng floci | Accepted · mục 2, 4 superseded by ADR-0093 | OQ-10, OQ-21 |
@@ -97,11 +97,11 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0077](ADR-0077-mo-hinh-consent-va-vai-tro-du-lieu.md) | Mô hình consent, vai trò xử lý dữ liệu, quy định game cho người dưới 18 tuổi | Proposed · hoãn (ADR-0082) | OQ-12, OQ-17 |
 | [0078](ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) | Mặc định an toàn cho trẻ nhỏ | Accepted | OQ-17 |
 | [0079](ADR-0079-nen-tang-ban-dau-windows-va-android.md) | Nền tảng bản đầu: Windows + Android | Rejected | OQ-04 |
-| [0080](ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) | Đo hiệu quả học tập là exit criterion của pilot | Accepted | — |
+| [0080](ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) | Đo hiệu quả học tập là exit criterion của pilot | Accepted · một phần superseded by ADR-0095 | — |
 | [0081](ADR-0081-user-type-student-staff-phan-biet-bang-tenant.md) | `user_type` chỉ gồm `student` và `staff`; phân biệt nhân sự trường/platform bằng tenant | Accepted | — |
 | [0082](ADR-0082-spec-driven-development-va-noi-dung-deferred.md) | Spec-Driven Development (Spec Kit + EARS); nội dung không làm vào thư mục deferred | Accepted | OQ-12, OQ-24 |
 | [0083](ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md) | Đăng nhập game và tạo game session là hai bước riêng | Accepted | — |
-| [0084](ADR-0084-nhom-hoc-tap-thuoc-learning-service.md) | Nhóm học tập (study group) thuộc learning-service | Accepted | — |
+| [0084](ADR-0084-nhom-hoc-tap-thuoc-learning-service.md) | Nhóm học tập (study group) thuộc learning-service | Superseded by ADR-0095 | — |
 | [0085](ADR-0085-don-hoc-sinh-giu-user-keycloak.md) | Dọn học sinh không đăng nhập: giữ user Keycloak, gỡ membership | Accepted | — |
 | [0086](ADR-0086-giu-phien-game-bang-refresh-token.md) | Giữ phiên game bằng refresh token: còn hạn thì không phải đăng nhập lại | Accepted · một phần superseded by ADR-0094 | — |
 | [0087](ADR-0087-cqrs-tach-read-write-khong-mediator.md) | CQRS tách rõ read/write context, không dùng mediator | Accepted | — |
@@ -112,6 +112,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0092](ADR-0092-to-chuc-ma-nguon-trong-src.md) | Tổ chức mã nguồn trong src/: backend dùng chung, cms/frontend, game | Accepted · một phần supersedes ADR-0074 | — |
 | [0093](ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md) | Object storage tự host SeaweedFS trước, chuyển S3 managed bằng cấu hình | Accepted · một phần supersedes ADR-0075 | OQ-10, OQ-21 |
 | [0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) | Bỏ MFA (TOTP) cho đăng nhập Admin Portal | Accepted (rủi ro được chấp nhận) · một phần supersedes ADR-0091, 0009, 0022, 0027, 0029, 0063, 0064, 0066, 0067, 0068, 0072, 0086, 0090 | — |
+| [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | Bỏ khái niệm lớp: học sinh thuộc trường theo khối (bỏ enrollment, course, learning path, lịch, nhóm học tập; DROP một lần) | Accepted · supersedes ADR-0084 · một phần supersedes ADR-0005, 0020, 0021, 0026, 0027, 0034, 0043, 0046, 0050, 0060, 0061, 0062, 0063, 0072, 0080 · ngoại lệ mục 2 ADR-0070 | — |
 
 ## Quyết định hiện hành theo chủ đề
 
@@ -153,9 +154,10 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0044](ADR-0044-luu-tru-hinh-anh-va-media-object-storage-s3-compatible-cdn.md) | Media trên object storage S3-compatible + CDN (mục 1 staging/production thay bởi 0075) |
 | [0075](ADR-0075-object-storage-production-khong-dung-floci.md) + [0093](ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md) | Local/CI dùng floci; staging/production dùng SeaweedFS tự host (3 node, replication 3 bản), chuyển S3 managed tại VN bằng cấu hình khi có ngân sách; bucket dữ liệu học sinh có RPO như dữ liệu học tập |
 | [0089](ADR-0089-chot-tang-du-lieu-rls-mixin-outbox.md) | RLS chỉ lọc tenant; mixin ent theo loại bảng; scope Tenant/CrossTenant/Platform + `tenancy.Bypass` reason đóng; outbox không RLS; gỡ partition chỉ cho `infra.*` |
-| [0070](ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md) | Release 1.0 không xóa vật lý (chỉ ẩn danh hóa, ngoại lệ 0033); không purge dữ liệu analytics thô |
+| [0070](ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md) | Release 1.0 không xóa vật lý (chỉ ẩn danh hóa, ngoại lệ runtime 0033); không purge dữ liệu analytics thô; ngoại lệ cấu trúc một lần: DROP bảng/cột khái niệm lớp trước lần triển khai staging/production đầu tiên (0095 mục 8) |
 | [0065](ADR-0065-tenant-id-tren-header-moi-request.md) | Header `X-Tenant-Id` bắt buộc trên request tenant-scoped, luôn kiểm tra chéo với token + membership |
-| [0060](ADR-0060-danh-muc-quoc-gia-tinh-thanh-truong-hoc-sinh-thuoc-mot-truong-mot-lop.md) | Danh mục quốc gia / tỉnh thành (34 tỉnh VN) / trường; học sinh thuộc đúng một trường, một lớp |
+| [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | Không có lớp/enrollment: học sinh thuộc đúng một trường với một khối (`org.students.school_id`, `grade_level`); membership tenant suy ra từ học sinh hiệu lực; khối tại thời điểm sự kiện ghi trên dữ liệu học tập; DROP bảng/cột khái niệm lớp kèm backup R12 |
+| [0060](ADR-0060-danh-muc-quoc-gia-tinh-thanh-truong-hoc-sinh-thuoc-mot-truong-mot-lop.md) | Danh mục quốc gia / tỉnh thành (34 tỉnh VN) / trường; học sinh thuộc đúng một trường (mục 3 "một lớp" thay bởi 0095) |
 | [0062](ADR-0062-kien-truc-du-lieu-dashboard-khong-truy-van-du-lieu-tho.md) | Dashboard chỉ đọc bảng rollup trên read replica; giới hạn khoảng thời gian, `statement_timeout`, cache, xuất bất đồng bộ |
 
 ### Identity & SIS
@@ -177,7 +179,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0026](ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) | Kiểm tra chéo tenant của phiên (mục 3–4 thay bởi 0063) |
 | [0008](ADR-0008-access-token-cua-keycloak-la-credential-api-realtime-dung-ti.md) | Access token Keycloak cho REST; realtime dùng ticket ngắn hạn |
 | [0045](ADR-0045-dang-nhap-nhanh-o-quy-mo-10-000-ccu.md) | Năng lực đăng nhập 10.000 CCU, hàng chờ, warm-up (mục 3 thay bởi 0064, mục 4 thay bởi 0063) |
-| [0021](ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md) | SIS integration theo contract do EduWorld sở hữu |
+| [0021](ADR-0021-sis-integration-theo-contract-do-eduworld-so-huu.md) | SIS integration theo contract do EduWorld sở hữu (contract 1.3.0 không còn Class/Enrollment — 0095) |
 | [0046](ADR-0046-nhan-biet-sis-nguon-cua-hoc-sinh-khi-dang-nhap.md) | Nhận biết SIS nguồn của học sinh khi đăng nhập (nhánh IdP thay bởi 0063) |
 | [0061](ADR-0061-dong-bo-du-lieu-hoc-sinh-tu-sis-khi-dang-nhap.md) | Đồng bộ dữ liệu học sinh từ SIS khi đăng nhập: chặn khi thiếu dữ liệu, chạy nền khi dữ liệu cũ hơn 24 giờ |
 | [0031](ADR-0031-game-chi-danh-cho-hoc-sinh-luu-lich-su-dang-nhap-mot-thiet-b.md) | Game chỉ cho học sinh; lịch sử đăng nhập; một thiết bị mỗi tài khoản |
@@ -194,6 +196,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0018](ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) | Glicko-2 cho Game Rating; 5 loại số liệu tách biệt |
 | [0049](ADR-0049-so-cai-phan-thuong-va-tien-te-trong-game-reward-currency-led.md) | Sổ cái phần thưởng và tiền tệ "Xu" |
 | [0050](ADR-0050-party-tam-thoi-va-guild-club-ben-vung-la-hai-khai-niem-tach.md) | Party tạm thời tách biệt Guild/Club bền vững |
+| [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | Party lớp 1–3 chỉ `friend`/`quest`, cùng đúng khối, khác trường được trong cùng tenant (theo 0054); không party liên tenant; party `study_group` → `study_party`; mục tiêu tập thể của khối thay bảng/mục tiêu lớp; thử thách/giải khối thay cấp lớp |
 | [0054](ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) | Quy tắc tương tác xã hội liên trường |
 | [0015](ADR-0015-content-versioning-bat-bien-sau-publish.md) | Version nội dung bất biến sau publish (phần còn hiệu lực) |
 | [0043](ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) | Draft/Publish, release pointer, giữ phiên bản khi đang chơi, rollback, cache |
@@ -216,7 +219,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | ADR | Quyết định hiện hành |
 |---|---|
 | [0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) | Kiểm duyệt tập trung ở Platform Safety Team (`safety_moderator`); nhà trường chỉ nhận thông báo vụ việc để liên hệ phụ huynh |
-| [0020](ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) | Chat như nhau mọi lớp; mọi tin qua kiểm tra hợp lệ; chat gameplay luôn có |
+| [0020](ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) | Chat như nhau mọi khối; mọi tin qua kiểm tra hợp lệ; chat gameplay luôn có; 6 loại channel, không có kênh lớp/khối, policy platform → tenant → school (0095) |
 | [0030](ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) | Danh mục từ nhạy cảm + công tắc kiểm duyệt (bước PII/grooming luôn chạy, tắt bước khác có hạn và hai người duyệt — 0078) |
 | [0078](ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) | Mặc định an toàn: PII/grooming luôn chạy, giờ giới nghiêm platform, siết tenant `common`, preset quick message, Windows mặc định máy dùng chung + màn "Tiếp tục là…" |
 | [0034](ADR-0034-bo-tinh-nang-chat-day-du.md) | Bộ tính năng chat đầy đủ |
@@ -228,7 +231,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 
 | ADR | Quyết định hiện hành |
 |---|---|
-| [0084](ADR-0084-nhom-hoc-tap-thuoc-learning-service.md) | Study group là nhóm LMS của learning-service; chat-service tạo channel theo event |
+| [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | LMS không còn lớp, course, learning path, lịch, nhóm học tập; giao bài/đề theo (trường, khối) ± danh sách học sinh; School Learning Dashboard trường → khối → học sinh; menu "Học sinh theo khối" |
 | [0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) | Không có vai trò giáo viên; học sinh tự học, nhà trường (`school_admin`/`academic_manager`) giao bài và xem School Learning Dashboard; role platform `safety_moderator` |
 | [0027](ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) | Một Admin Portal 5 workspace; tenant chỉ Learning Management; System Admin liên tenant |
 | [0022](ADR-0022-cms-lms-web-la-react-typescript-spa.md) | Portal là React SPA |
@@ -249,7 +252,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0057](ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) | Hạng thiết bị tầm trung, preset chất lượng, ngân sách hiệu năng |
 | [0058](ADR-0058-game-analytics-tong-hop-trong-postgresql-qua-su-kien-nats.md) | Game Analytics trong PostgreSQL qua NATS (raw không purge, 0070) |
 | [0073](ADR-0073-phat-hanh-theo-pilot-uu-tien-giao-duc.md) | Phát hành theo pilot ưu tiên giáo dục rồi mở rộng theo giai đoạn, đủ 4 nền tảng (0013) |
-| [0080](ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) | Báo cáo hiệu quả học tập (kiểm tra độc lập trước/sau, lớp so sánh) là exit criterion của pilot; hạ tầng A/B mô hình mastery và luật gợi ý (mục 5) |
+| [0080](ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) | Báo cáo hiệu quả học tập (kiểm tra độc lập trước/sau, cụm (trường, khối) so sánh — 0095) là exit criterion của pilot; hạ tầng A/B mô hình mastery và luật gợi ý (mục 5) |
 | [0062](ADR-0062-kien-truc-du-lieu-dashboard-khong-truy-van-du-lieu-tho.md) | Job chốt rollup dashboard; không truy vấn dữ liệu thô cho dashboard |
 
 ### Đề xuất hoãn hoặc bị từ chối
@@ -268,3 +271,4 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0036](ADR-0036-microservices-theo-he-thong-lon-thay-adr-0001.md) | [0074](ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) — 6 microservice → modular monolith 3 binary |
 | [0007](ADR-0007-godot-dang-nhap-bang-oidc-authorization-code-pkce-qua-system.md) | [0068](ADR-0068-dang-nhap-game-bang-form-trong-game-qua-backend.md) (game: form trong game qua backend) và [0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) (portal: form riêng qua backend) — bỏ luồng Authorization Code + PKCE qua trình duyệt |
 | [0071](ADR-0071-object-storage-production-dung-floci.md) | [0075](ADR-0075-object-storage-production-khong-dung-floci.md) — floci production → S3 managed/Garage/SeaweedFS |
+| [0084](ADR-0084-nhom-hoc-tap-thuoc-learning-service.md) | [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) — bỏ nhóm học tập cùng khái niệm lớp |
