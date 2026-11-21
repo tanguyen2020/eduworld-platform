@@ -28,7 +28,9 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `private_instance_capacity` | ≤ 8 | người | platform | [Confirmed] | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) |
 | `battle_room_size` | 2–8 | người | platform | [Confirmed] | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) |
 | `area_transition_max` | < 5 | giây | code (NFR) | [Confirmed] | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) |
-| `discovery_report_rate` | ≤ 30 | lần/phút | code | [Confirmed] | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) |
+| `discovery_report_rate` | ≤ 30 | lần/phút | code (env `EW_GAME_DISCOVERY_REPORT_RATE`, 1–120) | [Confirmed] | [WORLD_DESIGN](../01-game-design/WORLD_DESIGN.md) |
+| `interact_radius_default` | 3 | m | code | [Confirmed] (F071, owner chốt 2026-11-20) | [WORLD_DESIGN §8](../01-game-design/WORLD_DESIGN.md#8-khám-phá-và-hoàn-thành-bản-đồ) |
+| `interact_distance_tolerance` | 1,5 | m | code | [Confirmed] (F071, owner chốt 2026-11-20) | [WORLD_DESIGN §8](../01-game-design/WORLD_DESIGN.md#8-khám-phá-và-hoàn-thành-bản-đồ) |
 | `party_seat_hold` | 30 | giây | code | [Confirmed] | [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) |
 
 ## 3. Progression và XP

@@ -1,6 +1,6 @@
 # Feature Specification: F071 — Thế giới: 8 vùng đất, zone, world map, cổng, mở khóa, mạch truyện, NPC và hội thoại
 
-**Feature Branch**: `071-world-areas-npc-story` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` (+ `src/game/`) · **Mốc**: M2 · **Phụ thuộc**: F026, F070, F091
+**Feature Branch**: `071-world-areas-npc-story` · **Created**: 2026-11-16 · **Status**: In progress · **Module**: module `game` (+ `src/game/`) · **Mốc**: M2 · **Phụ thuộc**: F026, F070, F091
 **Input**: Thế giới "Quần đảo Tri Thức" 8 vùng bao trọn 7 khu chức năng; học sinh xem bản đồ, đi qua cổng gió, vào khu theo quyền do server quyết; vùng phiêu lưu mở theo quest/level/LO, khu học tập luôn mở; mạch truyện 7 chương; khám phá và % hoàn thành bản đồ; NPC hội thoại data-driven có version. FR nguồn: FR-GAME-001, FR-GAME-002, FR-GAME-003, FR-GAME-006, FR-GAME-016, FR-GAME-017, FR-GAME-018, FR-GAM-009.
 
 ## Clarifications
@@ -25,6 +25,26 @@
 ### Session 2026-11-20 (owner chốt — vị trí hub)
 
 - Facade vị trí hub (SECURITY_ARCHITECTURE: "competition: vị trí hub — operation khai báo ở F071, dữ liệu từ F091") → **Chốt:** F071 khai báo operation trong spec internal của module competition (bên gọi `game`, kiểm khoảng cách tương tác có giá trị) và hiện thực bên nhận (module competition) cùng adapter phía game; dữ liệu vị trí do room host của F091 cung cấp → F071 phụ thuộc F091.
+
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+Quyết định khi triển khai (owner đã duyệt trước các mặc định đề xuất; phương án bảo thủ nhất):
+
+- **`enterWorldArea` và hub F091** → `room_id` là phòng phân vùng v0 = UUIDv5 của `(tenant, school, area, grade_band)` (ALLOCATOR TẠM, gắn nhãn trong code); instance hub thật do room host F091 gán qua `hub.instance.join` với cùng phân vùng. Không trộn trường (F071-AC-09) được bảo đảm ở cả hai nơi.
+- **Sự kiện điều kiện mở khóa** → bảng mới `game.world_unlock_facts` (T) ghi một lần các sự kiện tiến trình mà module game chưa có bảng sở hữu (quest đã xong — tới F072, huy hiệu — F075, tham gia sự kiện — F077, level cao nhất — F074). Một consumer `game.unlock_on_events` (thay vì hai consumer `unlock_on_events` + `story_on_quest_completed` của plan) để chương truyện và mở khóa do chương đó gây ra được áp trong cùng một transaction.
+- **Payload tiêu thụ chưa có schema** → consumer đọc tối thiểu: `quest.completed` cần `student_id`, `quest_id` (F072 phải có `quest_id` trong payload — Câu hỏi mở F071-2); `level.reached` `to_level`; `achievement.unlocked` `achievement_id`; `event.participation_started` `event_id` hoặc `event_run_id`. Không tạo schema thay feature sở hữu.
+- **Môn bị trường tắt** → đọc khóa `enabled_subject_codes` (mảng mã môn; vắng = mọi môn bật) trong `ref.schools.settings_subset` (đã được `game.projection_identity` chiếu từ `school.updated`). Module identity chưa phát khóa này — Câu hỏi mở F071-1 (F015 thêm cài đặt bật/tắt môn của trường).
+- **Tham chiếu của dialogue** → NPC hợp lệ = NPC đặt trong layout của một area đã publish (hoặc cùng lô); quest hợp lệ (tới khi F072 có bảng quest) = main quest của các chương đã publish. Mỗi NPC chỉ một dialogue publish cho một khối (trùng khối → `422 VALIDATION_FAILED`).
+- **Item khóa chuỗi trong manifest / pin level** → `ContentManifestItem.item_id` là UUID nên area và chương dùng UUIDv5 của `<item_type>:<mã>`, thêm trường tùy chọn `item_code` (mã ổn định). Manifest tenant dựng lại qua consumer `game.manifest_on_game_content` (mọi tenant active), ETag gồm `manifest_version` nên đổi ở mỗi lần publish.
+- **`GameConfigType`** (`progression-levels`, `level-packages`) → không đổi enum ở F071 vì kéo theo danh mục action portal (`x-portal-action.map`) của API `/game-admin/*`; F078 đổi cùng lúc hiện thực API cấu hình.
+- **Bundle zone** → seed dùng URL placeholder `https://cdn.eduworld.example/...`, `size_bytes = 0`, `placeholder: true` (R17, OQ-16); client coi bundle "sẵn sàng" khi scene greybox có trong bản build; tải PCK theo `url`/`sha256` làm cùng asset thật. Snapshot nội dung game chỉ cache Valkey `ew:game:cv:*` (PostgreSQL là nguồn); không upload object storage vì client đọc qua API.
+- **Schema** → `world-area.schema.json` bắt buộc `max_speed_mps`, `bounds` (room host F091 cần), thêm kind `exam_board` (bảng thi F064); `npc-dialogue.schema.json` thêm `npc_name {vi,en}` tùy chọn (tên NPC là dữ liệu).
+- **Khoảng cách tương tác** → `interact_radius_default` 3 m (khi anchor không có `interact_radius_m`), `interact_distance_tolerance` 1,5 m; chỉ áp khi facade vị trí hub (T049) trả vị trí trong cùng area, không có thì chỉ kiểm presence.
+- **Level session** → `startLevel` mới khi còn level session active: phiên cũ chuyển `expired` (một active/học sinh). Cổng gió tới khu bị ẩn (môn tắt) không trả về trong `portals`.
+- **HTTP status của ** → 409 theo bảng mã lỗi sở hữu ở API_DESIGN §4.1 (registry `pkg/problem`); "422" trong F071-AC-25 và WORLD_DESIGN §12 đọc là mã `STEP_PRECONDITION_FAILED` với status của registry (WORLD_DESIGN §12 đã sửa theo).
+- **Câu hỏi mở F071-1** → module identity (F015) chưa có cài đặt bật/tắt môn của trường; F071 đọc khóa `enabled_subject_codes` trong `settings_subset` của `school.updated` khi có (vắng = mọi môn bật). Cần F015/F010 thêm khóa vào cài đặt trường và schema `school.updated`.
+- **Câu hỏi mở F071-2** → payload `quest.completed` (F072) phải mang `quest_id` (EVENT_DESIGN hiện chỉ ghi `quest_version_id`); consumer `game.unlock_on_events` từ chối event thiếu `quest_id` (DLQ).
+- **Test** → test tích hợp nằm phẳng trong `src/backend/modules/game/tests/integration/world_*_test.go` (cùng môi trường testcontainers của module) thay cho thư mục con `world/`, `content/` của tasks.md.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -128,7 +148,7 @@ Chương 0 mở lần đầu vào game; chương môn học 1–4 mở song song
 
 ### User Story 6 — Khám phá và bản đồ thế giới (Priority: P2)
 
-Học sinh tìm điểm khám phá, vật sưu tầm; bản đồ thế giới hiện % khám phá từng vùng, điều kiện mở vùng; lớp 1–3 dịch chuyển bằng bảng chọn hình 1 chạm.
+Học sinh tìm điểm khám phá, vật sưu tầm; bản đồ thế giới hiện % khám phá từng vùng, điều kiện mở vùng; khối 1–3 dịch chuyển bằng bảng chọn hình 1 chạm.
 
 **Why this priority**: Pillar "thế giới đáng khám phá" (FR-GAME-017); phụ thuộc presence (US2).
 
@@ -146,7 +166,7 @@ Học sinh tìm điểm khám phá, vật sưu tầm; bản đồ thế giới h
 ### Edge Cases
 
 - NẾU Valkey mất presence, THÌ `reportDiscovery` trả `422 STEP_PRECONDITION_FAILED`; client gọi lại `enterWorldArea` khi vào lại zone (F071-AC-25).
-- NẾU học sinh lên lớp (năm học mới, `student.synced` đổi `grade_level`), THÌ area học tập theo khối mới mở ngay; unlock vùng phiêu lưu giữ nguyên.
+- NẾU học sinh lên khối (năm học mới, `student.synced` đổi `grade_level`), THÌ area học tập theo khối mới mở ngay; unlock vùng phiêu lưu giữ nguyên.
 - NẾU publish version area làm mất một discovery point đã tìm, THÌ `exploration_progress` giữ ID cũ nhưng % tính theo tổng của version hiện hành, không vượt 100%.
 - NẾU `ref.mastery_summary` chưa bắt kịp, THÌ `objective_progress` được đánh giá lại khi event tới; không khóa khu học tập (F071-AC-02).
 - NẾU NPC dialogue tham chiếu quest chưa gán tenant, THÌ action `give_quest` trả `404` từ F072; client hiện thoại dự phòng.

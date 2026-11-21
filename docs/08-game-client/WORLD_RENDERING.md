@@ -178,7 +178,7 @@ flowchart LR
 ## 10. Kiểm thử & nghiệm thu một zone
 
 1. Benchmark scene đạt ngân sách §6 trên thiết bị chuẩn Android + PC.
-2. Mọi `SpawnPoint`, `Interactable`, `AreaPortal` có ID duy nhất; script lint kiểm tra trùng ID và tham chiếu tới `area_id` hợp lệ.
+2. Mọi `SpawnPoint`, `Interactable`, `AreaPortal` có ID duy nhất; script lint kiểm tra trùng ID và tham chiếu tới `area_id` hợp lệ. Hiện thực: [`src/game/tools/zone_lint.gd`](../../src/game/tools/zone_lint.gd) (luật ở [`tools/lib/zone_rules.gd`](../../src/game/tools/lib/zone_rules.gd): ID, `area_id`/cổng hợp lệ, material chỉ từ preset token, từ khóa an toàn nội dung) và GdUnit [`test_zone_lint.gd`](../../src/game/tests/scene/world/test_zone_lint.gd); zone greybox M2 sinh từ seed thế giới bằng [`tools/gen_greybox_zones.mjs`](../../src/game/tools/gen_greybox_zones.mjs) (F071).
 3. NavMesh bao phủ khu NPC; không có kẹt người chơi (test bot đi ngẫu nhiên 10 phút).
 4. Bundle mount/unmount không rò bộ nhớ (đo sau 20 lần chuyển zone).
 5. Review an toàn nội dung hình ảnh (không biểu tượng/ngôn từ không phù hợp).

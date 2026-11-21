@@ -218,7 +218,7 @@ Vào area chưa mở → `403 AREA_LOCKED` kèm điều kiện còn thiếu (th�
 | **Story chapter** | Chuỗi main quest theo vùng | `story_chapters` cấu hình, tiến độ suy từ quest |
 | **Thành tựu khu vực** | Ví dụ "Khám phá 100% Vương quốc Số" | [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) §7 |
 
-XP cho khám phá (`exploration.discovery`, `exploration.area_completed`) theo catalog ở [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.1. Giới hạn báo khám phá: 30 lần/phút/học sinh [Confirmed].
+XP cho khám phá (`exploration.discovery`, `exploration.area_completed`) theo catalog ở [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.1. Giới hạn báo khám phá: 30 lần/phút/học sinh [Confirmed]. Khi room host của hub (F091) biết vị trí học sinh trong cùng area, server còn kiểm khoảng cách tới điểm neo: bán kính `interact_radius_m` của điểm (mặc định `interact_radius_default` = 3 m) cộng dung sai lấy mẫu `interact_distance_tolerance` = 1,5 m [Confirmed — F071].
 
 ## 9. Capacity và instance (ADR-0012)
 
@@ -276,7 +276,7 @@ Cấu hình (platform-only): `/api/v1/game-admin/{world-areas|story-chapters|eve
 
 **Event:** `world.area_unlocked`, `world.discovery_found`, `world.area_completed`, `story.chapter_completed` (producer module game).
 
-**Lỗi:** `403 AREA_LOCKED`, `409 DISCOVERY_ALREADY_FOUND`, `422 STEP_PRECONDITION_FAILED` (không ở đúng area/instance).
+**Lỗi:** `403 AREA_LOCKED`, `409 DISCOVERY_ALREADY_FOUND`, `409 STEP_PRECONDITION_FAILED` (không ở đúng area/instance; HTTP status theo [API_DESIGN §4.1](../07-backend/API_DESIGN.md)), `429 RATE_LIMITED` (`discovery_report_rate`).
 
 ## 13. Mở rộng
 
