@@ -59,7 +59,9 @@ func PortalConfigFrom(c *config.Config) (PortalConfig, error) {
 	return PortalConfig{
 		TokenURL: realm + "/protocol/openid-connect/token", LogoutURL: realm + "/protocol/openid-connect/logout",
 		ClientID: c.String("EW_KC_PORTAL_CLIENT_ID"), ClientSecret: c.String("EW_KC_PORTAL_CLIENT_SECRET"),
-		Timeout: c.Duration("EW_EXT_CLIENT_TIMEOUT", 2*time.Second), MaxRetries: c.Int("EW_EXT_CLIENT_RETRY_MAX", 2),
+		// keycloak_token_call_timeout (CONFIG_DEFAULTS, 3 s) as for the game client: a password grant hashes the
+		// password and must not be cut by the generic EW_EXT_CLIENT_TIMEOUT of other external calls.
+		Timeout: c.Duration("EW_KC_TOKEN_TIMEOUT", 3*time.Second), MaxRetries: c.Int("EW_EXT_CLIENT_RETRY_MAX", 2),
 		FailureRatio: ratio,
 	}, nil
 }
@@ -267,6 +269,12 @@ func parseTokens(res tokenResult, refresh bool) (port.PortalTokens, error) {
 			Description string `json:"error_description"`
 		}
 		_ = json.Unmarshal(res.body, &e)
+		if res.status == http.StatusUnauthorized && flowDenied(e.Error) {
+			if refresh {
+				return port.PortalTokens{}, grantErr
+			}
+			return port.PortalTokens{}, port.ErrPortalAccessDenied
+		}
 		if e.Error == "invalid_grant" {
 			if !refresh && strings.Contains(strings.ToLower(e.Description), "not fully set up") {
 				return port.PortalTokens{}, port.ErrPortalSetupRequired
@@ -304,6 +312,26 @@ func parseTokens(res tokenResult, refresh bool) (port.PortalTokens, error) {
 		out.IssuedAt = time.Unix(c.Iat, 0).UTC()
 	}
 	return out, nil
+}
+
+// flowDenied reports a JSON 401 written by the deny-access authenticator of the direct grant flow. Keycloak
+// 26.4 answers a request that accepts JSON with {"error": "<localized denyErrorMessage>"}: the member then
+// holds a sentence, not an OAuth error code (RFC 6749 §5.2 codes are lower-case ASCII with underscores).
+// "access_denied" is accepted too. Keycloak only reaches this authenticator after the password step, so
+// this never tells a wrong password apart from an unknown account (ADR-0091).
+func flowDenied(code string) bool {
+	if code == "" {
+		return false
+	}
+	if code == "access_denied" {
+		return true
+	}
+	for _, r := range code {
+		if r != '_' && (r < 'a' || r > 'z') {
+			return true
+		}
+	}
+	return false
 }
 
 // trimCode keeps an OAuth error code printable and short (it goes into an internal error, never a body).

@@ -30,6 +30,15 @@ run('F004-AC-03/25: only students in the game, only staff in the portal; denial 
     body: new URLSearchParams({ grant_type: 'password', client_id: 'eduworld-portal', client_secret: S, username: 'hs.binh.3a', password: P }) });
   assert.equal(studentInPortal.status, 401);
   assert.match(await studentInPortal.text(), /không dùng để đăng nhập trang quản trị/);
+  // Module identity sends Accept: application/json; Keycloak 26.4 then answers the deny step with JSON whose
+  // "error" is the localized message, not an OAuth code (F012 Clarifications 2026-11-21) → PORTAL_ACCESS_STAFF_ONLY.
+  const studentJSON = await fetch(`${KC_URL}/realms/${REALM}/protocol/openid-connect/token`, { method: 'POST',
+    headers: { Accept: 'application/json' },
+    body: new URLSearchParams({ grant_type: 'password', client_id: 'eduworld-portal', client_secret: S, username: 'hs.binh.3a', password: P }) });
+  assert.equal(studentJSON.status, 401);
+  const denied = await studentJSON.json();
+  assert.match(denied.error, /không dùng để đăng nhập trang quản trị/);
+  assert.doesNotMatch(denied.error, /^[a-z_]+$/);
   const wrong = await passwordGrant('eduworld-portal', S, 'ad.truong.b', 'wrong-password');
   assert.equal(wrong.status, 401);
   assert.equal(wrong.json.error, 'invalid_grant');

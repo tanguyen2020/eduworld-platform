@@ -142,6 +142,14 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if u.student == (client == "eduworld-portal") { // portal denies students, the game denies staff
+			// Keycloak 26.4 (deny-access-authenticator): JSON with the localized denyErrorMessage in "error"
+			// when the request accepts JSON (module identity always does), else the theme's HTML error page.
+			if strings.Contains(r.Header.Get("Accept"), "application/json") {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = io.WriteString(w, `{"error":"Tài khoản không dùng được ở cổng này."}`)
+				return
+			}
 			w.Header().Set("Content-Type", "text/html;charset=utf-8")
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = io.WriteString(w, "<html>portalStudentDenied</html>")

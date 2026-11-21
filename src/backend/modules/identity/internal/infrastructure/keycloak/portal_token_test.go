@@ -109,7 +109,8 @@ func TestPortalConfigFrom(t *testing.T) {
 		t.Fatal(err)
 	}
 	if c.TokenURL != "http://kc:8180/realms/eduworld/protocol/openid-connect/token" ||
-		c.LogoutURL != "http://kc:8180/realms/eduworld/protocol/openid-connect/logout" || c.ClientID != "eduworld-portal" {
+		c.LogoutURL != "http://kc:8180/realms/eduworld/protocol/openid-connect/logout" || c.ClientID != "eduworld-portal" ||
+		c.Timeout != 3*time.Second { // keycloak_token_call_timeout, not the generic EW_EXT_CLIENT_TIMEOUT
 		t.Fatalf("config = %+v", c)
 	}
 	t.Setenv("EW_KC_PORTAL_CLIENT_SECRET", "")
@@ -157,6 +158,12 @@ func TestPortalGrantErrors(t *testing.T) {
 		{"locked", 400, "", `{"error":"invalid_grant","error_description":"Account temporarily disabled"}`, port.ErrPortalInvalidCredentials, false},
 		{"setup", 400, "", `{"error":"invalid_grant","error_description":"Account is not fully set up"}`, port.ErrPortalSetupRequired, false},
 		{"student", 401, "text/html;charset=utf-8", `<html>portalStudentDenied</html>`, port.ErrPortalAccessDenied, false},
+		// Keycloak 26.4 answers the deny-access authenticator with JSON when the request accepts JSON: the
+		// "error" member then carries the localized denyErrorMessage instead of an OAuth error code.
+		{"student json", 401, "application/json", `{"error":"Tài khoản học sinh không dùng để đăng nhập trang quản trị."}`, port.ErrPortalAccessDenied, false},
+		{"access_denied code", 401, "application/json", `{"error":"access_denied"}`, port.ErrPortalAccessDenied, false},
+		{"invalid request", 400, "application/json", `{"error":"invalid_request"}`, nil, true},
+		{"message on 400", 400, "application/json", `{"error":"Some message"}`, nil, true},
 		{"bad client", 401, "", `{"error":"invalid_client"}`, nil, true},
 		{"unauthorized client", 400, "", `{"error":"unauthorized_client"}`, nil, true},
 	}
