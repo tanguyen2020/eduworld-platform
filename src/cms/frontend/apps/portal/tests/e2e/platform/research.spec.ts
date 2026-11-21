@@ -1,19 +1,10 @@
 // F035 T064 — F035-AC-35 (TC-UI-003, TC-UI-006), quickstart scenario 22 @F035: on the REAL stack (seed of
 // quickstart §1), sa.admin goes through the research flow of workspace D (agreement → study → classes → activate →
 // wave → report) and the A/B experiment screens; ad.truong.a never sees the research menus; the pages pass a basic
-// accessibility check (labelled controls, one h1). Needs EW_E2E_PORTAL_URL, EW_E2E_PASSWORD, EW_E2E_SA_OTP; skipped
+// accessibility check (labelled controls, one h1). Needs EW_E2E_PORTAL_URL, EW_E2E_PASSWORD (password only, ADR-0094); skipped
 // otherwise (OQ F051-9: no E2E job against a real backend yet).
 import { expect, test, type Page } from '@playwright/test';
-
-const ready = !!process.env.EW_E2E_PORTAL_URL && !!process.env.EW_E2E_PASSWORD;
-
-async function signIn(page: Page, username: string, otp?: string) {
-  await page.goto('/login');
-  await page.getByLabel('Tên đăng nhập hoặc email').fill(username);
-  await page.getByLabel('Mật khẩu').fill(process.env.EW_E2E_PASSWORD ?? '');
-  if (otp) await page.getByLabel('Mã xác thực 6 số').fill(otp);
-  await page.getByRole('button', { name: 'Đăng nhập' }).click();
-}
+import { e2eReady as ready, signIn } from '../support/auth';
 
 /** Accessibility smoke: one h1, every form control has an accessible name. */
 async function a11y(page: Page) {
@@ -28,7 +19,8 @@ test.describe('@F035 Nghiên cứu hiệu quả trên portal', () => {
   test.skip(!ready, 'real stack not configured (EW_E2E_PORTAL_URL, EW_E2E_PASSWORD) — OQ F051-9');
 
   test('sa.admin: agreement, study, class pair, activation, wave and report', async ({ page }) => {
-    await signIn(page, 'sa.admin', process.env.EW_E2E_SA_OTP);
+    await signIn(page, 'sa.admin');
+    await page.goto('/platform-admin'); // sign-in lands on the first workspace (school_lms)
     await page.getByRole('link', { name: 'Nghiên cứu hiệu quả học tập' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Nghiên cứu hiệu quả học tập' })).toBeVisible();
     await a11y(page);
@@ -66,7 +58,8 @@ test.describe('@F035 Nghiên cứu hiệu quả trên portal', () => {
   });
 
   test('sa.admin: experiment list, detail and results by arm', async ({ page }) => {
-    await signIn(page, 'sa.admin', process.env.EW_E2E_SA_OTP);
+    await signIn(page, 'sa.admin');
+    await page.goto('/platform-admin');
     await page.getByRole('link', { name: 'Thử nghiệm A/B' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Thử nghiệm A/B' })).toBeVisible();
     await a11y(page);

@@ -3,19 +3,13 @@
 // flag screen, F059): both menus disappear after the permissions reload and the research API answers
 // 403 FEATURE_DISABLED (notice "Tính năng đang tạm tắt" in the portal); the efficacy box of the question editor still
 // follows action.content_studio.question_bank.edit. Turns both menus back on at the end. Needs EW_E2E_PORTAL_URL,
-// EW_E2E_PASSWORD, EW_E2E_SA_OTP; skipped otherwise (OQ F051-9).
+// EW_E2E_PASSWORD (password only for every account, ADR-0094); skipped otherwise (OQ F051-9).
 import { expect, test, type Page } from '@playwright/test';
+import { e2eReady as ready, signIn as signInAs } from '../support/auth';
 
-const ready = !!process.env.EW_E2E_PORTAL_URL && !!process.env.EW_E2E_PASSWORD;
 const MENUS = ['menu.platform_admin.efficacy_studies', 'menu.platform_admin.learning_experiments'];
 
-async function signIn(page: Page) {
-  await page.goto('/login');
-  await page.getByLabel('Tên đăng nhập hoặc email').fill('sa.admin');
-  await page.getByLabel('Mật khẩu').fill(process.env.EW_E2E_PASSWORD ?? '');
-  await page.getByLabel('Mã xác thực 6 số').fill(process.env.EW_E2E_SA_OTP ?? '');
-  await page.getByRole('button', { name: 'Đăng nhập' }).click();
-}
+const signIn = (page: Page) => signInAs(page, 'sa.admin');
 
 async function setMenu(page: Page, key: string, state: 'Bật' | 'Tắt', reason: string) {
   await page.goto('/platform-admin/feature-toggles');
