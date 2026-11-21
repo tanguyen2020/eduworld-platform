@@ -17,14 +17,17 @@ import (
 var printDDL = flag.String("print", "", "print the entddl block of this migration file")
 
 // migrations lists, per migration file, the ent tables created in its entddl block (in order). Hand-written:
-// the ref.* projections (DATABASE_DESIGN §2.17 rule 5) and competition.integrity_signals (append-only, partitioned).
+// the ref.* projections (DATABASE_DESIGN §2.17 rule 5), competition.integrity_signals and multiplayer.party_histories
+// (append-only, partitioned).
 var migrations = map[string][]string{
-	"20261225000001_f091_hub.sql": {"rooms", "session_memberships"},
+	"20261225000001_f091_hub.sql":   {"rooms", "session_memberships"},
+	"20261229000001_f100_party.sql": {"parties", "party_members", "party_invitations", "party_policies"},
 }
 
 func schemas() map[string]string {
 	c := ent.DefaultSchemaConfig
-	return map[string]string{"rooms": c.Room, "session_memberships": c.SessionMembership}
+	return map[string]string{"rooms": c.Room, "session_memberships": c.SessionMembership, "parties": c.Party,
+		"party_members": c.PartyMember, "party_invitations": c.PartyInvitation, "party_policies": c.PartyPolicy}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.invitation_expired.v1.schema.json",
+  "title": "Payload party.invitation_expired v1 (module competition, owner F100)",
+  "description": "Lời mời hết hiệu lực (F100-AC-14): quá expires_at, party giải tán, invitee vào party khác, hoặc vượt party_pending_invites_max (cũ nhất). Consumer: NTF, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "invitation_id",
+    "party_id",
+    "tenant_id",
+    "inviter_id",
+    "invitee_id",
+    "reason"
+  ],
+  "properties": {
+    "invitation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "inviter_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "invitee_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "ttl",
+        "party_disbanded",
+        "joined_other_party",
+        "pending_overflow"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "invitation_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000b1",
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "inviter_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "invitee_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006",
+      "reason": "ttl"
+    }
+  ]
+}

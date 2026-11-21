@@ -28,8 +28,8 @@ type Composition struct {
 // Compose registers the five domain modules on r and wires their facades in process (BACKEND_DESIGN §3.3, OQ
 // F010-2): learning and game first, then identity, whose sagas and platform operations call them through their
 // generated api packages (pkg/modcall). Each module declares its own routes, relay, consumers and jobs; the role
-// of the binary decides which of them run. Competition and chat only register their health checks (no feature of
-// theirs is Done yet).
+// of the binary decides which of them run. Competition calls the chat facade for party names once module chat
+// offers it (F116).
 func Compose(r *module.Registry) (*Composition, error) {
 	ConfigureHooks(r)
 	idm, err := identity.Register(r)
@@ -44,7 +44,8 @@ func Compose(r *module.Registry) (*Composition, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := competition.Register(r); err != nil {
+	cmp, err := competition.Register(r)
+	if err != nil {
 		return nil, err
 	}
 	if _, err := chat.Register(r); err != nil {
@@ -52,6 +53,8 @@ func Compose(r *module.Registry) (*Composition, error) {
 	}
 	lrn.Wire(learning.Imports{})
 	gam.Wire(game.Imports{})
+	// Module chat offers no moderateDisplayText yet (F116): party names fall back to the generated default name.
+	cmp.Wire(competition.Imports{})
 	in := identity.Imports{}
 	if f := lrn.Facade(); f != nil {
 		in.Learning = f

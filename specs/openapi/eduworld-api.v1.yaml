@@ -2122,6 +2122,11 @@ paths:
       tags: [multiplayer]
       operationId: createParty
       summary: Tạo party
+      description: |
+        Người gọi trở thành leader; `tenant_id`/`school_id`/`grade_band` lấy từ hồ sơ học sinh của phiên. Đã có party active →
+        `409 PARTY_ALREADY_IN_PARTY`; tên/`max_members`/loại party không hợp lệ hoặc bị kiểm duyệt chặn (không kèm từ khớp) →
+        `422`; bị `restrict_multiplayer` → `403 PARTY_POLICY_VIOLATION`; vượt `party_create_rate` → `429 RATE_LIMITED`;
+        hồ sơ học sinh chưa được chiếu → `503` có `Retry-After` (F100-AC-01…05).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2144,12 +2149,18 @@ paths:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /multiplayer/parties/me:
     get:
       x-service: competition
       tags: [multiplayer]
       operationId: getMyParty
       summary: Active party của mình
+      description: |
+        Không có party active → `404 PARTY_NOT_FOUND`. Thành viên chỉ có nickname/avatar/vai trò (R16).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2163,12 +2174,16 @@ paths:
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /multiplayer/parties/{party_id}:
     get:
       x-service: competition
       tags: [multiplayer]
       operationId: getParty
       summary: Chi tiết party và trạng thái thành viên
+      description: |
+        Chỉ thành viên đang ở party; người khác, party của tenant/trường khác → `404 PARTY_NOT_FOUND` (F100-AC-06).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2183,11 +2198,15 @@ paths:
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
     patch:
       x-service: competition
       tags: [multiplayer]
       operationId: updatePartySettings
       summary: Cập nhật party settings
+      description: |
+        Chỉ leader (`403 PARTY_NOT_LEADER`); `max_members` < số thành viên hoặc > trần policy, tên bị kiểm duyệt chặn → `422`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2208,12 +2227,17 @@ paths:
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
   /multiplayer/parties/{party_id}:leave:
     post:
       x-service: competition
       tags: [multiplayer]
       operationId: leaveParty
       summary: Rời party
+      description: |
+        Leader rời → leader mới là thành viên online gia nhập sớm nhất; người cuối rời → party giải tán (F100-AC-17).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2221,12 +2245,16 @@ paths:
       responses:
         '204': { description: 'Đã rời; nếu là leader, leader được chuyển tự động' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /multiplayer/parties/{party_id}:disband:
     post:
       x-service: competition
       tags: [multiplayer]
       operationId: disbandParty
       summary: Giải tán party
+      description: |
+        Chỉ leader (`403 PARTY_NOT_LEADER`); gọi lại sau khi đã giải tán → `204` không phát event lần hai (F100-AC-20).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2234,12 +2262,16 @@ paths:
       responses:
         '204': { description: Đã giải tán }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /multiplayer/parties/{party_id}:transfer-leader:
     post:
       x-service: competition
       tags: [multiplayer]
       operationId: transferPartyLeader
       summary: Chuyển leader
+      description: |
+        Chỉ leader (`403 PARTY_NOT_LEADER`); đích không phải thành viên → `422`; đích không online → `409 PARTY_MEMBER_NOT_ONLINE`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2266,12 +2298,18 @@ paths:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /multiplayer/parties/{party_id}/members/{student_id}:kick:
     post:
       x-service: competition
       tags: [multiplayer]
       operationId: kickPartyMember
       summary: Kick thành viên
+      description: |
+        Chỉ leader (`403 PARTY_NOT_LEADER`); người bị kick không được mời/tham gia lại party này trong `party_kick_reinvite_block`;
+        vượt `party_kick_rate` → `429 RATE_LIMITED` (F100-AC-18).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2280,6 +2318,10 @@ paths:
       responses:
         '204': { description: Đã kick }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /multiplayer/parties/{party_id}/members/me/ready:
     put:
       x-service: competition
@@ -2358,6 +2400,10 @@ paths:
       tags: [multiplayer]
       operationId: inviteToParty
       summary: Mời bạn vào party
+      description: |
+        Người mời không được phép theo `invitation_policy` hoặc hai bên chặn nhau → `403 PARTY_INVITE_NOT_ALLOWED` (không tiết lộ
+        lý do); khác trường/tenant, sanction, vi phạm `party_policies` → `403 PARTY_POLICY_VIOLATION`; đã có lời mời chờ → `409`;
+        vượt `party_invite_rate` hoặc `party_invite_repeat_rules` → `429 PARTY_INVITE_RATE_LIMITED` (F100-AC-07…10).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2385,12 +2431,18 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
         '429': { $ref: '#/components/responses/RateLimited' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /multiplayer/invitations:
     get:
       x-service: competition
       tags: [multiplayer]
       operationId: listMyInvitations
       summary: Lời mời party nhận được
+      description: |
+        Chỉ lời mời gửi tới chính người gọi; inviter chỉ có nickname/avatar (F100-AC-15).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2412,12 +2464,16 @@ paths:
                     items: { $ref: '#/components/schemas/PartyInvitation' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /multiplayer/invitations/{invitation_id}:accept:
     post:
       x-service: competition
       tags: [multiplayer]
       operationId: acceptPartyInvitation
       summary: Chấp nhận lời mời party
+      description: |
+        Kiểm tra lại toàn bộ policy lúc accept. Không phải invitee → `403 PERMISSION_DENIED`; quá hạn → `410`; đủ người →
+        `409 PARTY_FULL`; đang ở party khác → `409 PARTY_ALREADY_IN_PARTY` (F100-AC-11, AC-12).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2435,12 +2491,18 @@ paths:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '409': { $ref: '#/components/responses/Conflict' }
         '410': { $ref: '#/components/responses/Gone' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /multiplayer/invitations/{invitation_id}:reject:
     post:
       x-service: competition
       tags: [multiplayer]
       operationId: rejectPartyInvitation
       summary: Từ chối lời mời party
+      description: |
+        Chỉ invitee; lời mời không còn `pending` của người gọi → `404`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2449,12 +2511,15 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '404': { $ref: '#/components/responses/NotFound' }
         '204': { description: Đã từ chối }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /multiplayer/invitations/{invitation_id}:cancel:
     post:
       x-service: competition
       tags: [multiplayer]
       operationId: cancelPartyInvitation
       summary: Hủy lời mời đã gửi (inviter hoặc leader)
+      description: |
+        Chỉ inviter hoặc leader hiện tại (`403 PERMISSION_DENIED`).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2470,6 +2535,9 @@ paths:
       tags: [multiplayer]
       operationId: joinParty
       summary: Tham gia party visibility class/friends (party private bắt buộc qua invitation)
+      description: |
+        `class`: cùng lớp với leader; `friends`: là bạn của leader; `private` không có lời mời `accepted` còn hạn →
+        `403 PARTY_POLICY_VIOLATION` (F100-AC-16).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2488,6 +2556,8 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /multiplayer/rooms/{room_id}:
     get:
       x-service: competition
@@ -19740,7 +19810,7 @@ components:
         party_type: { $ref: '#/components/schemas/PartyType' }
         visibility: { $ref: '#/components/schemas/PartyVisibility' }
         invitation_policy: { type: string, enum: [leader_only, members], default: leader_only }
-        max_members: { type: integer, minimum: 2, maximum: 8, default: 4 }
+        max_members: { type: integer, minimum: 2, maximum: 8, description: 'Vắng mặt = party_max_members (CONFIG_DEFAULTS), không vượt max_members_cap của party_policies' }
     PartySettingsUpdate:
       type: object
       properties:
@@ -19764,7 +19834,7 @@ components:
       required: [party_id, name, leader_id, party_type, visibility, max_members, status, members]
       properties:
         party_id: { $ref: '#/components/schemas/Uuid' }
-        name: { type: string, maxLength: 255 }
+        name: { type: string, maxLength: 128 }
         leader_id: { $ref: '#/components/schemas/Uuid' }
         party_type: { $ref: '#/components/schemas/PartyType' }
         visibility: { $ref: '#/components/schemas/PartyVisibility' }
@@ -19777,6 +19847,7 @@ components:
           type: array
           items: { $ref: '#/components/schemas/PartyMember' }
         chat_channel_id: { $ref: '#/components/schemas/Uuid' }
+        state_version: { type: integer, minimum: 0, description: 'Tăng 1 mỗi thay đổi thành viên/cài đặt (expected_version của F101)' }
         created_at: { $ref: '#/components/schemas/Timestamp' }
         updated_at: { $ref: '#/components/schemas/Timestamp' }
     PartyActivitySelection:
@@ -19816,6 +19887,7 @@ components:
         inviter: { $ref: '#/components/schemas/PlayerCard' }
         invitee_id: { $ref: '#/components/schemas/Uuid' }
         status: { $ref: '#/components/schemas/InvitationStatus' }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
         expires_at: { $ref: '#/components/schemas/Timestamp' }
     Room:
       type: object

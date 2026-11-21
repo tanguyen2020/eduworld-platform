@@ -12,6 +12,10 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/predicate"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/room"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
@@ -26,9 +30,5605 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
+	TypeParty             = "Party"
+	TypePartyInvitation   = "PartyInvitation"
+	TypePartyMember       = "PartyMember"
+	TypePartyPolicy       = "PartyPolicy"
 	TypeRoom              = "Room"
 	TypeSessionMembership = "SessionMembership"
 )
+
+// PartyMutation represents an operation that mutates the Party nodes in the graph.
+type PartyMutation struct {
+	config
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	tenant_id                *uuid.UUID
+	created_at               *time.Time
+	created_by               *uuid.UUID
+	updated_at               *time.Time
+	updated_by               *uuid.UUID
+	deleted_at               *time.Time
+	deleted_by               *uuid.UUID
+	delete_reason            *string
+	version                  *int64
+	addversion               *int64
+	school_id                *uuid.UUID
+	name                     *string
+	leader_id                *uuid.UUID
+	party_type               *string
+	visibility               *string
+	invitation_policy        *string
+	max_members              *int
+	addmax_members           *int
+	grade_band               *string
+	status                   *string
+	current_activity_id      *uuid.UUID
+	current_game_session_ref *uuid.UUID
+	state_version            *int64
+	addstate_version         *int64
+	disbanded_at             *time.Time
+	clearedFields            map[string]struct{}
+	done                     bool
+	oldValue                 func(context.Context) (*Party, error)
+	predicates               []predicate.Party
+}
+
+var _ ent.Mutation = (*PartyMutation)(nil)
+
+// partyOption allows management of the mutation configuration using functional options.
+type partyOption func(*PartyMutation)
+
+// newPartyMutation creates new mutation for the Party entity.
+func newPartyMutation(c config, op Op, opts ...partyOption) *PartyMutation {
+	m := &PartyMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeParty,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPartyID sets the ID field of the mutation.
+func withPartyID(id uuid.UUID) partyOption {
+	return func(m *PartyMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Party
+		)
+		m.oldValue = func(ctx context.Context) (*Party, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Party.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withParty sets the old Party of the mutation.
+func withParty(node *Party) partyOption {
+	return func(m *PartyMutation) {
+		m.oldValue = func(context.Context) (*Party, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PartyMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PartyMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Party entities.
+func (m *PartyMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PartyMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PartyMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Party.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *PartyMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *PartyMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *PartyMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PartyMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PartyMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PartyMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *PartyMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *PartyMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *PartyMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[party.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *PartyMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[party.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *PartyMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, party.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PartyMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PartyMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PartyMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *PartyMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *PartyMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *PartyMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[party.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *PartyMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[party.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *PartyMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, party.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PartyMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PartyMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *PartyMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[party.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *PartyMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[party.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PartyMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, party.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *PartyMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *PartyMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *PartyMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[party.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *PartyMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[party.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *PartyMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, party.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *PartyMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *PartyMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *PartyMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[party.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *PartyMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[party.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *PartyMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, party.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *PartyMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *PartyMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *PartyMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *PartyMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *PartyMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *PartyMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *PartyMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *PartyMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetName sets the "name" field.
+func (m *PartyMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *PartyMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *PartyMutation) ResetName() {
+	m.name = nil
+}
+
+// SetLeaderID sets the "leader_id" field.
+func (m *PartyMutation) SetLeaderID(u uuid.UUID) {
+	m.leader_id = &u
+}
+
+// LeaderID returns the value of the "leader_id" field in the mutation.
+func (m *PartyMutation) LeaderID() (r uuid.UUID, exists bool) {
+	v := m.leader_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaderID returns the old "leader_id" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldLeaderID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaderID: %w", err)
+	}
+	return oldValue.LeaderID, nil
+}
+
+// ResetLeaderID resets all changes to the "leader_id" field.
+func (m *PartyMutation) ResetLeaderID() {
+	m.leader_id = nil
+}
+
+// SetPartyType sets the "party_type" field.
+func (m *PartyMutation) SetPartyType(s string) {
+	m.party_type = &s
+}
+
+// PartyType returns the value of the "party_type" field in the mutation.
+func (m *PartyMutation) PartyType() (r string, exists bool) {
+	v := m.party_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyType returns the old "party_type" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldPartyType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyType: %w", err)
+	}
+	return oldValue.PartyType, nil
+}
+
+// ResetPartyType resets all changes to the "party_type" field.
+func (m *PartyMutation) ResetPartyType() {
+	m.party_type = nil
+}
+
+// SetVisibility sets the "visibility" field.
+func (m *PartyMutation) SetVisibility(s string) {
+	m.visibility = &s
+}
+
+// Visibility returns the value of the "visibility" field in the mutation.
+func (m *PartyMutation) Visibility() (r string, exists bool) {
+	v := m.visibility
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVisibility returns the old "visibility" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldVisibility(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVisibility is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVisibility requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVisibility: %w", err)
+	}
+	return oldValue.Visibility, nil
+}
+
+// ResetVisibility resets all changes to the "visibility" field.
+func (m *PartyMutation) ResetVisibility() {
+	m.visibility = nil
+}
+
+// SetInvitationPolicy sets the "invitation_policy" field.
+func (m *PartyMutation) SetInvitationPolicy(s string) {
+	m.invitation_policy = &s
+}
+
+// InvitationPolicy returns the value of the "invitation_policy" field in the mutation.
+func (m *PartyMutation) InvitationPolicy() (r string, exists bool) {
+	v := m.invitation_policy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvitationPolicy returns the old "invitation_policy" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldInvitationPolicy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvitationPolicy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvitationPolicy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvitationPolicy: %w", err)
+	}
+	return oldValue.InvitationPolicy, nil
+}
+
+// ResetInvitationPolicy resets all changes to the "invitation_policy" field.
+func (m *PartyMutation) ResetInvitationPolicy() {
+	m.invitation_policy = nil
+}
+
+// SetMaxMembers sets the "max_members" field.
+func (m *PartyMutation) SetMaxMembers(i int) {
+	m.max_members = &i
+	m.addmax_members = nil
+}
+
+// MaxMembers returns the value of the "max_members" field in the mutation.
+func (m *PartyMutation) MaxMembers() (r int, exists bool) {
+	v := m.max_members
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxMembers returns the old "max_members" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldMaxMembers(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxMembers is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxMembers requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxMembers: %w", err)
+	}
+	return oldValue.MaxMembers, nil
+}
+
+// AddMaxMembers adds i to the "max_members" field.
+func (m *PartyMutation) AddMaxMembers(i int) {
+	if m.addmax_members != nil {
+		*m.addmax_members += i
+	} else {
+		m.addmax_members = &i
+	}
+}
+
+// AddedMaxMembers returns the value that was added to the "max_members" field in this mutation.
+func (m *PartyMutation) AddedMaxMembers() (r int, exists bool) {
+	v := m.addmax_members
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxMembers resets all changes to the "max_members" field.
+func (m *PartyMutation) ResetMaxMembers() {
+	m.max_members = nil
+	m.addmax_members = nil
+}
+
+// SetGradeBand sets the "grade_band" field.
+func (m *PartyMutation) SetGradeBand(s string) {
+	m.grade_band = &s
+}
+
+// GradeBand returns the value of the "grade_band" field in the mutation.
+func (m *PartyMutation) GradeBand() (r string, exists bool) {
+	v := m.grade_band
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGradeBand returns the old "grade_band" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldGradeBand(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGradeBand is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGradeBand requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGradeBand: %w", err)
+	}
+	return oldValue.GradeBand, nil
+}
+
+// ResetGradeBand resets all changes to the "grade_band" field.
+func (m *PartyMutation) ResetGradeBand() {
+	m.grade_band = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PartyMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PartyMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PartyMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetCurrentActivityID sets the "current_activity_id" field.
+func (m *PartyMutation) SetCurrentActivityID(u uuid.UUID) {
+	m.current_activity_id = &u
+}
+
+// CurrentActivityID returns the value of the "current_activity_id" field in the mutation.
+func (m *PartyMutation) CurrentActivityID() (r uuid.UUID, exists bool) {
+	v := m.current_activity_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentActivityID returns the old "current_activity_id" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldCurrentActivityID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentActivityID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentActivityID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentActivityID: %w", err)
+	}
+	return oldValue.CurrentActivityID, nil
+}
+
+// ClearCurrentActivityID clears the value of the "current_activity_id" field.
+func (m *PartyMutation) ClearCurrentActivityID() {
+	m.current_activity_id = nil
+	m.clearedFields[party.FieldCurrentActivityID] = struct{}{}
+}
+
+// CurrentActivityIDCleared returns if the "current_activity_id" field was cleared in this mutation.
+func (m *PartyMutation) CurrentActivityIDCleared() bool {
+	_, ok := m.clearedFields[party.FieldCurrentActivityID]
+	return ok
+}
+
+// ResetCurrentActivityID resets all changes to the "current_activity_id" field.
+func (m *PartyMutation) ResetCurrentActivityID() {
+	m.current_activity_id = nil
+	delete(m.clearedFields, party.FieldCurrentActivityID)
+}
+
+// SetCurrentGameSessionRef sets the "current_game_session_ref" field.
+func (m *PartyMutation) SetCurrentGameSessionRef(u uuid.UUID) {
+	m.current_game_session_ref = &u
+}
+
+// CurrentGameSessionRef returns the value of the "current_game_session_ref" field in the mutation.
+func (m *PartyMutation) CurrentGameSessionRef() (r uuid.UUID, exists bool) {
+	v := m.current_game_session_ref
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentGameSessionRef returns the old "current_game_session_ref" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldCurrentGameSessionRef(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentGameSessionRef is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentGameSessionRef requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentGameSessionRef: %w", err)
+	}
+	return oldValue.CurrentGameSessionRef, nil
+}
+
+// ClearCurrentGameSessionRef clears the value of the "current_game_session_ref" field.
+func (m *PartyMutation) ClearCurrentGameSessionRef() {
+	m.current_game_session_ref = nil
+	m.clearedFields[party.FieldCurrentGameSessionRef] = struct{}{}
+}
+
+// CurrentGameSessionRefCleared returns if the "current_game_session_ref" field was cleared in this mutation.
+func (m *PartyMutation) CurrentGameSessionRefCleared() bool {
+	_, ok := m.clearedFields[party.FieldCurrentGameSessionRef]
+	return ok
+}
+
+// ResetCurrentGameSessionRef resets all changes to the "current_game_session_ref" field.
+func (m *PartyMutation) ResetCurrentGameSessionRef() {
+	m.current_game_session_ref = nil
+	delete(m.clearedFields, party.FieldCurrentGameSessionRef)
+}
+
+// SetStateVersion sets the "state_version" field.
+func (m *PartyMutation) SetStateVersion(i int64) {
+	m.state_version = &i
+	m.addstate_version = nil
+}
+
+// StateVersion returns the value of the "state_version" field in the mutation.
+func (m *PartyMutation) StateVersion() (r int64, exists bool) {
+	v := m.state_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStateVersion returns the old "state_version" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldStateVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStateVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStateVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStateVersion: %w", err)
+	}
+	return oldValue.StateVersion, nil
+}
+
+// AddStateVersion adds i to the "state_version" field.
+func (m *PartyMutation) AddStateVersion(i int64) {
+	if m.addstate_version != nil {
+		*m.addstate_version += i
+	} else {
+		m.addstate_version = &i
+	}
+}
+
+// AddedStateVersion returns the value that was added to the "state_version" field in this mutation.
+func (m *PartyMutation) AddedStateVersion() (r int64, exists bool) {
+	v := m.addstate_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStateVersion resets all changes to the "state_version" field.
+func (m *PartyMutation) ResetStateVersion() {
+	m.state_version = nil
+	m.addstate_version = nil
+}
+
+// SetDisbandedAt sets the "disbanded_at" field.
+func (m *PartyMutation) SetDisbandedAt(t time.Time) {
+	m.disbanded_at = &t
+}
+
+// DisbandedAt returns the value of the "disbanded_at" field in the mutation.
+func (m *PartyMutation) DisbandedAt() (r time.Time, exists bool) {
+	v := m.disbanded_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisbandedAt returns the old "disbanded_at" field's value of the Party entity.
+// If the Party object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMutation) OldDisbandedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisbandedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisbandedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisbandedAt: %w", err)
+	}
+	return oldValue.DisbandedAt, nil
+}
+
+// ClearDisbandedAt clears the value of the "disbanded_at" field.
+func (m *PartyMutation) ClearDisbandedAt() {
+	m.disbanded_at = nil
+	m.clearedFields[party.FieldDisbandedAt] = struct{}{}
+}
+
+// DisbandedAtCleared returns if the "disbanded_at" field was cleared in this mutation.
+func (m *PartyMutation) DisbandedAtCleared() bool {
+	_, ok := m.clearedFields[party.FieldDisbandedAt]
+	return ok
+}
+
+// ResetDisbandedAt resets all changes to the "disbanded_at" field.
+func (m *PartyMutation) ResetDisbandedAt() {
+	m.disbanded_at = nil
+	delete(m.clearedFields, party.FieldDisbandedAt)
+}
+
+// Where appends a list predicates to the PartyMutation builder.
+func (m *PartyMutation) Where(ps ...predicate.Party) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PartyMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PartyMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Party, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PartyMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PartyMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Party).
+func (m *PartyMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PartyMutation) Fields() []string {
+	fields := make([]string, 0, 22)
+	if m.tenant_id != nil {
+		fields = append(fields, party.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, party.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, party.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, party.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, party.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, party.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, party.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, party.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, party.FieldVersion)
+	}
+	if m.school_id != nil {
+		fields = append(fields, party.FieldSchoolID)
+	}
+	if m.name != nil {
+		fields = append(fields, party.FieldName)
+	}
+	if m.leader_id != nil {
+		fields = append(fields, party.FieldLeaderID)
+	}
+	if m.party_type != nil {
+		fields = append(fields, party.FieldPartyType)
+	}
+	if m.visibility != nil {
+		fields = append(fields, party.FieldVisibility)
+	}
+	if m.invitation_policy != nil {
+		fields = append(fields, party.FieldInvitationPolicy)
+	}
+	if m.max_members != nil {
+		fields = append(fields, party.FieldMaxMembers)
+	}
+	if m.grade_band != nil {
+		fields = append(fields, party.FieldGradeBand)
+	}
+	if m.status != nil {
+		fields = append(fields, party.FieldStatus)
+	}
+	if m.current_activity_id != nil {
+		fields = append(fields, party.FieldCurrentActivityID)
+	}
+	if m.current_game_session_ref != nil {
+		fields = append(fields, party.FieldCurrentGameSessionRef)
+	}
+	if m.state_version != nil {
+		fields = append(fields, party.FieldStateVersion)
+	}
+	if m.disbanded_at != nil {
+		fields = append(fields, party.FieldDisbandedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PartyMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case party.FieldTenantID:
+		return m.TenantID()
+	case party.FieldCreatedAt:
+		return m.CreatedAt()
+	case party.FieldCreatedBy:
+		return m.CreatedBy()
+	case party.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case party.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case party.FieldDeletedAt:
+		return m.DeletedAt()
+	case party.FieldDeletedBy:
+		return m.DeletedBy()
+	case party.FieldDeleteReason:
+		return m.DeleteReason()
+	case party.FieldVersion:
+		return m.Version()
+	case party.FieldSchoolID:
+		return m.SchoolID()
+	case party.FieldName:
+		return m.Name()
+	case party.FieldLeaderID:
+		return m.LeaderID()
+	case party.FieldPartyType:
+		return m.PartyType()
+	case party.FieldVisibility:
+		return m.Visibility()
+	case party.FieldInvitationPolicy:
+		return m.InvitationPolicy()
+	case party.FieldMaxMembers:
+		return m.MaxMembers()
+	case party.FieldGradeBand:
+		return m.GradeBand()
+	case party.FieldStatus:
+		return m.Status()
+	case party.FieldCurrentActivityID:
+		return m.CurrentActivityID()
+	case party.FieldCurrentGameSessionRef:
+		return m.CurrentGameSessionRef()
+	case party.FieldStateVersion:
+		return m.StateVersion()
+	case party.FieldDisbandedAt:
+		return m.DisbandedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PartyMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case party.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case party.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case party.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case party.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case party.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case party.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case party.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case party.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case party.FieldVersion:
+		return m.OldVersion(ctx)
+	case party.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case party.FieldName:
+		return m.OldName(ctx)
+	case party.FieldLeaderID:
+		return m.OldLeaderID(ctx)
+	case party.FieldPartyType:
+		return m.OldPartyType(ctx)
+	case party.FieldVisibility:
+		return m.OldVisibility(ctx)
+	case party.FieldInvitationPolicy:
+		return m.OldInvitationPolicy(ctx)
+	case party.FieldMaxMembers:
+		return m.OldMaxMembers(ctx)
+	case party.FieldGradeBand:
+		return m.OldGradeBand(ctx)
+	case party.FieldStatus:
+		return m.OldStatus(ctx)
+	case party.FieldCurrentActivityID:
+		return m.OldCurrentActivityID(ctx)
+	case party.FieldCurrentGameSessionRef:
+		return m.OldCurrentGameSessionRef(ctx)
+	case party.FieldStateVersion:
+		return m.OldStateVersion(ctx)
+	case party.FieldDisbandedAt:
+		return m.OldDisbandedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Party field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case party.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case party.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case party.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case party.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case party.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case party.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case party.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case party.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case party.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case party.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case party.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case party.FieldLeaderID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaderID(v)
+		return nil
+	case party.FieldPartyType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyType(v)
+		return nil
+	case party.FieldVisibility:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVisibility(v)
+		return nil
+	case party.FieldInvitationPolicy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvitationPolicy(v)
+		return nil
+	case party.FieldMaxMembers:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxMembers(v)
+		return nil
+	case party.FieldGradeBand:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGradeBand(v)
+		return nil
+	case party.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case party.FieldCurrentActivityID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentActivityID(v)
+		return nil
+	case party.FieldCurrentGameSessionRef:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentGameSessionRef(v)
+		return nil
+	case party.FieldStateVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStateVersion(v)
+		return nil
+	case party.FieldDisbandedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisbandedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Party field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PartyMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, party.FieldVersion)
+	}
+	if m.addmax_members != nil {
+		fields = append(fields, party.FieldMaxMembers)
+	}
+	if m.addstate_version != nil {
+		fields = append(fields, party.FieldStateVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PartyMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case party.FieldVersion:
+		return m.AddedVersion()
+	case party.FieldMaxMembers:
+		return m.AddedMaxMembers()
+	case party.FieldStateVersion:
+		return m.AddedStateVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case party.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case party.FieldMaxMembers:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxMembers(v)
+		return nil
+	case party.FieldStateVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStateVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Party numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PartyMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(party.FieldCreatedBy) {
+		fields = append(fields, party.FieldCreatedBy)
+	}
+	if m.FieldCleared(party.FieldUpdatedBy) {
+		fields = append(fields, party.FieldUpdatedBy)
+	}
+	if m.FieldCleared(party.FieldDeletedAt) {
+		fields = append(fields, party.FieldDeletedAt)
+	}
+	if m.FieldCleared(party.FieldDeletedBy) {
+		fields = append(fields, party.FieldDeletedBy)
+	}
+	if m.FieldCleared(party.FieldDeleteReason) {
+		fields = append(fields, party.FieldDeleteReason)
+	}
+	if m.FieldCleared(party.FieldCurrentActivityID) {
+		fields = append(fields, party.FieldCurrentActivityID)
+	}
+	if m.FieldCleared(party.FieldCurrentGameSessionRef) {
+		fields = append(fields, party.FieldCurrentGameSessionRef)
+	}
+	if m.FieldCleared(party.FieldDisbandedAt) {
+		fields = append(fields, party.FieldDisbandedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PartyMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PartyMutation) ClearField(name string) error {
+	switch name {
+	case party.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case party.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case party.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case party.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case party.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case party.FieldCurrentActivityID:
+		m.ClearCurrentActivityID()
+		return nil
+	case party.FieldCurrentGameSessionRef:
+		m.ClearCurrentGameSessionRef()
+		return nil
+	case party.FieldDisbandedAt:
+		m.ClearDisbandedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Party nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PartyMutation) ResetField(name string) error {
+	switch name {
+	case party.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case party.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case party.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case party.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case party.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case party.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case party.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case party.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case party.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case party.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case party.FieldName:
+		m.ResetName()
+		return nil
+	case party.FieldLeaderID:
+		m.ResetLeaderID()
+		return nil
+	case party.FieldPartyType:
+		m.ResetPartyType()
+		return nil
+	case party.FieldVisibility:
+		m.ResetVisibility()
+		return nil
+	case party.FieldInvitationPolicy:
+		m.ResetInvitationPolicy()
+		return nil
+	case party.FieldMaxMembers:
+		m.ResetMaxMembers()
+		return nil
+	case party.FieldGradeBand:
+		m.ResetGradeBand()
+		return nil
+	case party.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case party.FieldCurrentActivityID:
+		m.ResetCurrentActivityID()
+		return nil
+	case party.FieldCurrentGameSessionRef:
+		m.ResetCurrentGameSessionRef()
+		return nil
+	case party.FieldStateVersion:
+		m.ResetStateVersion()
+		return nil
+	case party.FieldDisbandedAt:
+		m.ResetDisbandedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Party field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PartyMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PartyMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PartyMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PartyMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PartyMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PartyMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PartyMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Party unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PartyMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Party edge %s", name)
+}
+
+// PartyInvitationMutation represents an operation that mutates the PartyInvitation nodes in the graph.
+type PartyInvitationMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	tenant_id     *uuid.UUID
+	created_at    *time.Time
+	created_by    *uuid.UUID
+	updated_at    *time.Time
+	updated_by    *uuid.UUID
+	deleted_at    *time.Time
+	deleted_by    *uuid.UUID
+	delete_reason *string
+	version       *int64
+	addversion    *int64
+	party_id      *uuid.UUID
+	school_id     *uuid.UUID
+	inviter_id    *uuid.UUID
+	invitee_id    *uuid.UUID
+	status        *string
+	expires_at    *time.Time
+	responded_at  *time.Time
+	end_reason    *string
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*PartyInvitation, error)
+	predicates    []predicate.PartyInvitation
+}
+
+var _ ent.Mutation = (*PartyInvitationMutation)(nil)
+
+// partyinvitationOption allows management of the mutation configuration using functional options.
+type partyinvitationOption func(*PartyInvitationMutation)
+
+// newPartyInvitationMutation creates new mutation for the PartyInvitation entity.
+func newPartyInvitationMutation(c config, op Op, opts ...partyinvitationOption) *PartyInvitationMutation {
+	m := &PartyInvitationMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePartyInvitation,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPartyInvitationID sets the ID field of the mutation.
+func withPartyInvitationID(id uuid.UUID) partyinvitationOption {
+	return func(m *PartyInvitationMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PartyInvitation
+		)
+		m.oldValue = func(ctx context.Context) (*PartyInvitation, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PartyInvitation.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPartyInvitation sets the old PartyInvitation of the mutation.
+func withPartyInvitation(node *PartyInvitation) partyinvitationOption {
+	return func(m *PartyInvitationMutation) {
+		m.oldValue = func(context.Context) (*PartyInvitation, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PartyInvitationMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PartyInvitationMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PartyInvitation entities.
+func (m *PartyInvitationMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PartyInvitationMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PartyInvitationMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PartyInvitation.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *PartyInvitationMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *PartyInvitationMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *PartyInvitationMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PartyInvitationMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PartyInvitationMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PartyInvitationMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *PartyInvitationMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *PartyInvitationMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *PartyInvitationMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[partyinvitation.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *PartyInvitationMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[partyinvitation.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *PartyInvitationMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, partyinvitation.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PartyInvitationMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PartyInvitationMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PartyInvitationMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *PartyInvitationMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *PartyInvitationMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *PartyInvitationMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[partyinvitation.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *PartyInvitationMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[partyinvitation.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *PartyInvitationMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, partyinvitation.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PartyInvitationMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PartyInvitationMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *PartyInvitationMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[partyinvitation.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *PartyInvitationMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[partyinvitation.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PartyInvitationMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, partyinvitation.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *PartyInvitationMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *PartyInvitationMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *PartyInvitationMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[partyinvitation.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *PartyInvitationMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[partyinvitation.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *PartyInvitationMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, partyinvitation.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *PartyInvitationMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *PartyInvitationMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *PartyInvitationMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[partyinvitation.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *PartyInvitationMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[partyinvitation.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *PartyInvitationMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, partyinvitation.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *PartyInvitationMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *PartyInvitationMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *PartyInvitationMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *PartyInvitationMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *PartyInvitationMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetPartyID sets the "party_id" field.
+func (m *PartyInvitationMutation) SetPartyID(u uuid.UUID) {
+	m.party_id = &u
+}
+
+// PartyID returns the value of the "party_id" field in the mutation.
+func (m *PartyInvitationMutation) PartyID() (r uuid.UUID, exists bool) {
+	v := m.party_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyID returns the old "party_id" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldPartyID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyID: %w", err)
+	}
+	return oldValue.PartyID, nil
+}
+
+// ResetPartyID resets all changes to the "party_id" field.
+func (m *PartyInvitationMutation) ResetPartyID() {
+	m.party_id = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *PartyInvitationMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *PartyInvitationMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *PartyInvitationMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetInviterID sets the "inviter_id" field.
+func (m *PartyInvitationMutation) SetInviterID(u uuid.UUID) {
+	m.inviter_id = &u
+}
+
+// InviterID returns the value of the "inviter_id" field in the mutation.
+func (m *PartyInvitationMutation) InviterID() (r uuid.UUID, exists bool) {
+	v := m.inviter_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInviterID returns the old "inviter_id" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldInviterID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInviterID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInviterID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInviterID: %w", err)
+	}
+	return oldValue.InviterID, nil
+}
+
+// ResetInviterID resets all changes to the "inviter_id" field.
+func (m *PartyInvitationMutation) ResetInviterID() {
+	m.inviter_id = nil
+}
+
+// SetInviteeID sets the "invitee_id" field.
+func (m *PartyInvitationMutation) SetInviteeID(u uuid.UUID) {
+	m.invitee_id = &u
+}
+
+// InviteeID returns the value of the "invitee_id" field in the mutation.
+func (m *PartyInvitationMutation) InviteeID() (r uuid.UUID, exists bool) {
+	v := m.invitee_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInviteeID returns the old "invitee_id" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldInviteeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInviteeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInviteeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInviteeID: %w", err)
+	}
+	return oldValue.InviteeID, nil
+}
+
+// ResetInviteeID resets all changes to the "invitee_id" field.
+func (m *PartyInvitationMutation) ResetInviteeID() {
+	m.invitee_id = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PartyInvitationMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PartyInvitationMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PartyInvitationMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *PartyInvitationMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *PartyInvitationMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *PartyInvitationMutation) ResetExpiresAt() {
+	m.expires_at = nil
+}
+
+// SetRespondedAt sets the "responded_at" field.
+func (m *PartyInvitationMutation) SetRespondedAt(t time.Time) {
+	m.responded_at = &t
+}
+
+// RespondedAt returns the value of the "responded_at" field in the mutation.
+func (m *PartyInvitationMutation) RespondedAt() (r time.Time, exists bool) {
+	v := m.responded_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRespondedAt returns the old "responded_at" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldRespondedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRespondedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRespondedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRespondedAt: %w", err)
+	}
+	return oldValue.RespondedAt, nil
+}
+
+// ClearRespondedAt clears the value of the "responded_at" field.
+func (m *PartyInvitationMutation) ClearRespondedAt() {
+	m.responded_at = nil
+	m.clearedFields[partyinvitation.FieldRespondedAt] = struct{}{}
+}
+
+// RespondedAtCleared returns if the "responded_at" field was cleared in this mutation.
+func (m *PartyInvitationMutation) RespondedAtCleared() bool {
+	_, ok := m.clearedFields[partyinvitation.FieldRespondedAt]
+	return ok
+}
+
+// ResetRespondedAt resets all changes to the "responded_at" field.
+func (m *PartyInvitationMutation) ResetRespondedAt() {
+	m.responded_at = nil
+	delete(m.clearedFields, partyinvitation.FieldRespondedAt)
+}
+
+// SetEndReason sets the "end_reason" field.
+func (m *PartyInvitationMutation) SetEndReason(s string) {
+	m.end_reason = &s
+}
+
+// EndReason returns the value of the "end_reason" field in the mutation.
+func (m *PartyInvitationMutation) EndReason() (r string, exists bool) {
+	v := m.end_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndReason returns the old "end_reason" field's value of the PartyInvitation entity.
+// If the PartyInvitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyInvitationMutation) OldEndReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndReason: %w", err)
+	}
+	return oldValue.EndReason, nil
+}
+
+// ClearEndReason clears the value of the "end_reason" field.
+func (m *PartyInvitationMutation) ClearEndReason() {
+	m.end_reason = nil
+	m.clearedFields[partyinvitation.FieldEndReason] = struct{}{}
+}
+
+// EndReasonCleared returns if the "end_reason" field was cleared in this mutation.
+func (m *PartyInvitationMutation) EndReasonCleared() bool {
+	_, ok := m.clearedFields[partyinvitation.FieldEndReason]
+	return ok
+}
+
+// ResetEndReason resets all changes to the "end_reason" field.
+func (m *PartyInvitationMutation) ResetEndReason() {
+	m.end_reason = nil
+	delete(m.clearedFields, partyinvitation.FieldEndReason)
+}
+
+// Where appends a list predicates to the PartyInvitationMutation builder.
+func (m *PartyInvitationMutation) Where(ps ...predicate.PartyInvitation) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PartyInvitationMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PartyInvitationMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PartyInvitation, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PartyInvitationMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PartyInvitationMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PartyInvitation).
+func (m *PartyInvitationMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PartyInvitationMutation) Fields() []string {
+	fields := make([]string, 0, 17)
+	if m.tenant_id != nil {
+		fields = append(fields, partyinvitation.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, partyinvitation.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, partyinvitation.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, partyinvitation.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, partyinvitation.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, partyinvitation.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, partyinvitation.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, partyinvitation.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, partyinvitation.FieldVersion)
+	}
+	if m.party_id != nil {
+		fields = append(fields, partyinvitation.FieldPartyID)
+	}
+	if m.school_id != nil {
+		fields = append(fields, partyinvitation.FieldSchoolID)
+	}
+	if m.inviter_id != nil {
+		fields = append(fields, partyinvitation.FieldInviterID)
+	}
+	if m.invitee_id != nil {
+		fields = append(fields, partyinvitation.FieldInviteeID)
+	}
+	if m.status != nil {
+		fields = append(fields, partyinvitation.FieldStatus)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, partyinvitation.FieldExpiresAt)
+	}
+	if m.responded_at != nil {
+		fields = append(fields, partyinvitation.FieldRespondedAt)
+	}
+	if m.end_reason != nil {
+		fields = append(fields, partyinvitation.FieldEndReason)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PartyInvitationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case partyinvitation.FieldTenantID:
+		return m.TenantID()
+	case partyinvitation.FieldCreatedAt:
+		return m.CreatedAt()
+	case partyinvitation.FieldCreatedBy:
+		return m.CreatedBy()
+	case partyinvitation.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case partyinvitation.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case partyinvitation.FieldDeletedAt:
+		return m.DeletedAt()
+	case partyinvitation.FieldDeletedBy:
+		return m.DeletedBy()
+	case partyinvitation.FieldDeleteReason:
+		return m.DeleteReason()
+	case partyinvitation.FieldVersion:
+		return m.Version()
+	case partyinvitation.FieldPartyID:
+		return m.PartyID()
+	case partyinvitation.FieldSchoolID:
+		return m.SchoolID()
+	case partyinvitation.FieldInviterID:
+		return m.InviterID()
+	case partyinvitation.FieldInviteeID:
+		return m.InviteeID()
+	case partyinvitation.FieldStatus:
+		return m.Status()
+	case partyinvitation.FieldExpiresAt:
+		return m.ExpiresAt()
+	case partyinvitation.FieldRespondedAt:
+		return m.RespondedAt()
+	case partyinvitation.FieldEndReason:
+		return m.EndReason()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PartyInvitationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case partyinvitation.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case partyinvitation.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case partyinvitation.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case partyinvitation.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case partyinvitation.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case partyinvitation.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case partyinvitation.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case partyinvitation.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case partyinvitation.FieldVersion:
+		return m.OldVersion(ctx)
+	case partyinvitation.FieldPartyID:
+		return m.OldPartyID(ctx)
+	case partyinvitation.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case partyinvitation.FieldInviterID:
+		return m.OldInviterID(ctx)
+	case partyinvitation.FieldInviteeID:
+		return m.OldInviteeID(ctx)
+	case partyinvitation.FieldStatus:
+		return m.OldStatus(ctx)
+	case partyinvitation.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case partyinvitation.FieldRespondedAt:
+		return m.OldRespondedAt(ctx)
+	case partyinvitation.FieldEndReason:
+		return m.OldEndReason(ctx)
+	}
+	return nil, fmt.Errorf("unknown PartyInvitation field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyInvitationMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case partyinvitation.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case partyinvitation.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case partyinvitation.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case partyinvitation.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case partyinvitation.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case partyinvitation.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case partyinvitation.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case partyinvitation.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case partyinvitation.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case partyinvitation.FieldPartyID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyID(v)
+		return nil
+	case partyinvitation.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case partyinvitation.FieldInviterID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInviterID(v)
+		return nil
+	case partyinvitation.FieldInviteeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInviteeID(v)
+		return nil
+	case partyinvitation.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case partyinvitation.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case partyinvitation.FieldRespondedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRespondedAt(v)
+		return nil
+	case partyinvitation.FieldEndReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndReason(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyInvitation field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PartyInvitationMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, partyinvitation.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PartyInvitationMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case partyinvitation.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyInvitationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case partyinvitation.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyInvitation numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PartyInvitationMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(partyinvitation.FieldCreatedBy) {
+		fields = append(fields, partyinvitation.FieldCreatedBy)
+	}
+	if m.FieldCleared(partyinvitation.FieldUpdatedBy) {
+		fields = append(fields, partyinvitation.FieldUpdatedBy)
+	}
+	if m.FieldCleared(partyinvitation.FieldDeletedAt) {
+		fields = append(fields, partyinvitation.FieldDeletedAt)
+	}
+	if m.FieldCleared(partyinvitation.FieldDeletedBy) {
+		fields = append(fields, partyinvitation.FieldDeletedBy)
+	}
+	if m.FieldCleared(partyinvitation.FieldDeleteReason) {
+		fields = append(fields, partyinvitation.FieldDeleteReason)
+	}
+	if m.FieldCleared(partyinvitation.FieldRespondedAt) {
+		fields = append(fields, partyinvitation.FieldRespondedAt)
+	}
+	if m.FieldCleared(partyinvitation.FieldEndReason) {
+		fields = append(fields, partyinvitation.FieldEndReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PartyInvitationMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PartyInvitationMutation) ClearField(name string) error {
+	switch name {
+	case partyinvitation.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case partyinvitation.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case partyinvitation.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case partyinvitation.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case partyinvitation.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case partyinvitation.FieldRespondedAt:
+		m.ClearRespondedAt()
+		return nil
+	case partyinvitation.FieldEndReason:
+		m.ClearEndReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyInvitation nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PartyInvitationMutation) ResetField(name string) error {
+	switch name {
+	case partyinvitation.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case partyinvitation.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case partyinvitation.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case partyinvitation.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case partyinvitation.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case partyinvitation.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case partyinvitation.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case partyinvitation.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case partyinvitation.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case partyinvitation.FieldPartyID:
+		m.ResetPartyID()
+		return nil
+	case partyinvitation.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case partyinvitation.FieldInviterID:
+		m.ResetInviterID()
+		return nil
+	case partyinvitation.FieldInviteeID:
+		m.ResetInviteeID()
+		return nil
+	case partyinvitation.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case partyinvitation.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case partyinvitation.FieldRespondedAt:
+		m.ResetRespondedAt()
+		return nil
+	case partyinvitation.FieldEndReason:
+		m.ResetEndReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyInvitation field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PartyInvitationMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PartyInvitationMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PartyInvitationMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PartyInvitationMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PartyInvitationMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PartyInvitationMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PartyInvitationMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown PartyInvitation unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PartyInvitationMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown PartyInvitation edge %s", name)
+}
+
+// PartyMemberMutation represents an operation that mutates the PartyMember nodes in the graph.
+type PartyMemberMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	tenant_id     *uuid.UUID
+	created_at    *time.Time
+	created_by    *uuid.UUID
+	updated_at    *time.Time
+	updated_by    *uuid.UUID
+	deleted_at    *time.Time
+	deleted_by    *uuid.UUID
+	delete_reason *string
+	version       *int64
+	addversion    *int64
+	party_id      *uuid.UUID
+	student_id    *uuid.UUID
+	school_id     *uuid.UUID
+	role          *string
+	invitation_id *uuid.UUID
+	joined_at     *time.Time
+	left_at       *time.Time
+	left_reason   *string
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*PartyMember, error)
+	predicates    []predicate.PartyMember
+}
+
+var _ ent.Mutation = (*PartyMemberMutation)(nil)
+
+// partymemberOption allows management of the mutation configuration using functional options.
+type partymemberOption func(*PartyMemberMutation)
+
+// newPartyMemberMutation creates new mutation for the PartyMember entity.
+func newPartyMemberMutation(c config, op Op, opts ...partymemberOption) *PartyMemberMutation {
+	m := &PartyMemberMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePartyMember,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPartyMemberID sets the ID field of the mutation.
+func withPartyMemberID(id uuid.UUID) partymemberOption {
+	return func(m *PartyMemberMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PartyMember
+		)
+		m.oldValue = func(ctx context.Context) (*PartyMember, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PartyMember.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPartyMember sets the old PartyMember of the mutation.
+func withPartyMember(node *PartyMember) partymemberOption {
+	return func(m *PartyMemberMutation) {
+		m.oldValue = func(context.Context) (*PartyMember, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PartyMemberMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PartyMemberMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PartyMember entities.
+func (m *PartyMemberMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PartyMemberMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PartyMemberMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PartyMember.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *PartyMemberMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *PartyMemberMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *PartyMemberMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PartyMemberMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PartyMemberMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PartyMemberMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *PartyMemberMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *PartyMemberMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *PartyMemberMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[partymember.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *PartyMemberMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[partymember.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *PartyMemberMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, partymember.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PartyMemberMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PartyMemberMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PartyMemberMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *PartyMemberMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *PartyMemberMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *PartyMemberMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[partymember.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *PartyMemberMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[partymember.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *PartyMemberMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, partymember.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PartyMemberMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PartyMemberMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *PartyMemberMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[partymember.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *PartyMemberMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[partymember.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PartyMemberMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, partymember.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *PartyMemberMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *PartyMemberMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *PartyMemberMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[partymember.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *PartyMemberMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[partymember.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *PartyMemberMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, partymember.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *PartyMemberMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *PartyMemberMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *PartyMemberMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[partymember.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *PartyMemberMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[partymember.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *PartyMemberMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, partymember.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *PartyMemberMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *PartyMemberMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *PartyMemberMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *PartyMemberMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *PartyMemberMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetPartyID sets the "party_id" field.
+func (m *PartyMemberMutation) SetPartyID(u uuid.UUID) {
+	m.party_id = &u
+}
+
+// PartyID returns the value of the "party_id" field in the mutation.
+func (m *PartyMemberMutation) PartyID() (r uuid.UUID, exists bool) {
+	v := m.party_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPartyID returns the old "party_id" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldPartyID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPartyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPartyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPartyID: %w", err)
+	}
+	return oldValue.PartyID, nil
+}
+
+// ResetPartyID resets all changes to the "party_id" field.
+func (m *PartyMemberMutation) ResetPartyID() {
+	m.party_id = nil
+}
+
+// SetStudentID sets the "student_id" field.
+func (m *PartyMemberMutation) SetStudentID(u uuid.UUID) {
+	m.student_id = &u
+}
+
+// StudentID returns the value of the "student_id" field in the mutation.
+func (m *PartyMemberMutation) StudentID() (r uuid.UUID, exists bool) {
+	v := m.student_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentID returns the old "student_id" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldStudentID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentID: %w", err)
+	}
+	return oldValue.StudentID, nil
+}
+
+// ResetStudentID resets all changes to the "student_id" field.
+func (m *PartyMemberMutation) ResetStudentID() {
+	m.student_id = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *PartyMemberMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *PartyMemberMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *PartyMemberMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetRole sets the "role" field.
+func (m *PartyMemberMutation) SetRole(s string) {
+	m.role = &s
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *PartyMemberMutation) Role() (r string, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldRole(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *PartyMemberMutation) ResetRole() {
+	m.role = nil
+}
+
+// SetInvitationID sets the "invitation_id" field.
+func (m *PartyMemberMutation) SetInvitationID(u uuid.UUID) {
+	m.invitation_id = &u
+}
+
+// InvitationID returns the value of the "invitation_id" field in the mutation.
+func (m *PartyMemberMutation) InvitationID() (r uuid.UUID, exists bool) {
+	v := m.invitation_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvitationID returns the old "invitation_id" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldInvitationID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvitationID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvitationID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvitationID: %w", err)
+	}
+	return oldValue.InvitationID, nil
+}
+
+// ClearInvitationID clears the value of the "invitation_id" field.
+func (m *PartyMemberMutation) ClearInvitationID() {
+	m.invitation_id = nil
+	m.clearedFields[partymember.FieldInvitationID] = struct{}{}
+}
+
+// InvitationIDCleared returns if the "invitation_id" field was cleared in this mutation.
+func (m *PartyMemberMutation) InvitationIDCleared() bool {
+	_, ok := m.clearedFields[partymember.FieldInvitationID]
+	return ok
+}
+
+// ResetInvitationID resets all changes to the "invitation_id" field.
+func (m *PartyMemberMutation) ResetInvitationID() {
+	m.invitation_id = nil
+	delete(m.clearedFields, partymember.FieldInvitationID)
+}
+
+// SetJoinedAt sets the "joined_at" field.
+func (m *PartyMemberMutation) SetJoinedAt(t time.Time) {
+	m.joined_at = &t
+}
+
+// JoinedAt returns the value of the "joined_at" field in the mutation.
+func (m *PartyMemberMutation) JoinedAt() (r time.Time, exists bool) {
+	v := m.joined_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJoinedAt returns the old "joined_at" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldJoinedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJoinedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJoinedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJoinedAt: %w", err)
+	}
+	return oldValue.JoinedAt, nil
+}
+
+// ResetJoinedAt resets all changes to the "joined_at" field.
+func (m *PartyMemberMutation) ResetJoinedAt() {
+	m.joined_at = nil
+}
+
+// SetLeftAt sets the "left_at" field.
+func (m *PartyMemberMutation) SetLeftAt(t time.Time) {
+	m.left_at = &t
+}
+
+// LeftAt returns the value of the "left_at" field in the mutation.
+func (m *PartyMemberMutation) LeftAt() (r time.Time, exists bool) {
+	v := m.left_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeftAt returns the old "left_at" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldLeftAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeftAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeftAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeftAt: %w", err)
+	}
+	return oldValue.LeftAt, nil
+}
+
+// ClearLeftAt clears the value of the "left_at" field.
+func (m *PartyMemberMutation) ClearLeftAt() {
+	m.left_at = nil
+	m.clearedFields[partymember.FieldLeftAt] = struct{}{}
+}
+
+// LeftAtCleared returns if the "left_at" field was cleared in this mutation.
+func (m *PartyMemberMutation) LeftAtCleared() bool {
+	_, ok := m.clearedFields[partymember.FieldLeftAt]
+	return ok
+}
+
+// ResetLeftAt resets all changes to the "left_at" field.
+func (m *PartyMemberMutation) ResetLeftAt() {
+	m.left_at = nil
+	delete(m.clearedFields, partymember.FieldLeftAt)
+}
+
+// SetLeftReason sets the "left_reason" field.
+func (m *PartyMemberMutation) SetLeftReason(s string) {
+	m.left_reason = &s
+}
+
+// LeftReason returns the value of the "left_reason" field in the mutation.
+func (m *PartyMemberMutation) LeftReason() (r string, exists bool) {
+	v := m.left_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeftReason returns the old "left_reason" field's value of the PartyMember entity.
+// If the PartyMember object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyMemberMutation) OldLeftReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeftReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeftReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeftReason: %w", err)
+	}
+	return oldValue.LeftReason, nil
+}
+
+// ClearLeftReason clears the value of the "left_reason" field.
+func (m *PartyMemberMutation) ClearLeftReason() {
+	m.left_reason = nil
+	m.clearedFields[partymember.FieldLeftReason] = struct{}{}
+}
+
+// LeftReasonCleared returns if the "left_reason" field was cleared in this mutation.
+func (m *PartyMemberMutation) LeftReasonCleared() bool {
+	_, ok := m.clearedFields[partymember.FieldLeftReason]
+	return ok
+}
+
+// ResetLeftReason resets all changes to the "left_reason" field.
+func (m *PartyMemberMutation) ResetLeftReason() {
+	m.left_reason = nil
+	delete(m.clearedFields, partymember.FieldLeftReason)
+}
+
+// Where appends a list predicates to the PartyMemberMutation builder.
+func (m *PartyMemberMutation) Where(ps ...predicate.PartyMember) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PartyMemberMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PartyMemberMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PartyMember, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PartyMemberMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PartyMemberMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PartyMember).
+func (m *PartyMemberMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PartyMemberMutation) Fields() []string {
+	fields := make([]string, 0, 17)
+	if m.tenant_id != nil {
+		fields = append(fields, partymember.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, partymember.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, partymember.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, partymember.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, partymember.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, partymember.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, partymember.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, partymember.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, partymember.FieldVersion)
+	}
+	if m.party_id != nil {
+		fields = append(fields, partymember.FieldPartyID)
+	}
+	if m.student_id != nil {
+		fields = append(fields, partymember.FieldStudentID)
+	}
+	if m.school_id != nil {
+		fields = append(fields, partymember.FieldSchoolID)
+	}
+	if m.role != nil {
+		fields = append(fields, partymember.FieldRole)
+	}
+	if m.invitation_id != nil {
+		fields = append(fields, partymember.FieldInvitationID)
+	}
+	if m.joined_at != nil {
+		fields = append(fields, partymember.FieldJoinedAt)
+	}
+	if m.left_at != nil {
+		fields = append(fields, partymember.FieldLeftAt)
+	}
+	if m.left_reason != nil {
+		fields = append(fields, partymember.FieldLeftReason)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PartyMemberMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case partymember.FieldTenantID:
+		return m.TenantID()
+	case partymember.FieldCreatedAt:
+		return m.CreatedAt()
+	case partymember.FieldCreatedBy:
+		return m.CreatedBy()
+	case partymember.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case partymember.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case partymember.FieldDeletedAt:
+		return m.DeletedAt()
+	case partymember.FieldDeletedBy:
+		return m.DeletedBy()
+	case partymember.FieldDeleteReason:
+		return m.DeleteReason()
+	case partymember.FieldVersion:
+		return m.Version()
+	case partymember.FieldPartyID:
+		return m.PartyID()
+	case partymember.FieldStudentID:
+		return m.StudentID()
+	case partymember.FieldSchoolID:
+		return m.SchoolID()
+	case partymember.FieldRole:
+		return m.Role()
+	case partymember.FieldInvitationID:
+		return m.InvitationID()
+	case partymember.FieldJoinedAt:
+		return m.JoinedAt()
+	case partymember.FieldLeftAt:
+		return m.LeftAt()
+	case partymember.FieldLeftReason:
+		return m.LeftReason()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PartyMemberMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case partymember.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case partymember.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case partymember.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case partymember.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case partymember.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case partymember.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case partymember.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case partymember.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case partymember.FieldVersion:
+		return m.OldVersion(ctx)
+	case partymember.FieldPartyID:
+		return m.OldPartyID(ctx)
+	case partymember.FieldStudentID:
+		return m.OldStudentID(ctx)
+	case partymember.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case partymember.FieldRole:
+		return m.OldRole(ctx)
+	case partymember.FieldInvitationID:
+		return m.OldInvitationID(ctx)
+	case partymember.FieldJoinedAt:
+		return m.OldJoinedAt(ctx)
+	case partymember.FieldLeftAt:
+		return m.OldLeftAt(ctx)
+	case partymember.FieldLeftReason:
+		return m.OldLeftReason(ctx)
+	}
+	return nil, fmt.Errorf("unknown PartyMember field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyMemberMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case partymember.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case partymember.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case partymember.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case partymember.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case partymember.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case partymember.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case partymember.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case partymember.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case partymember.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case partymember.FieldPartyID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPartyID(v)
+		return nil
+	case partymember.FieldStudentID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentID(v)
+		return nil
+	case partymember.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case partymember.FieldRole:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	case partymember.FieldInvitationID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvitationID(v)
+		return nil
+	case partymember.FieldJoinedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJoinedAt(v)
+		return nil
+	case partymember.FieldLeftAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeftAt(v)
+		return nil
+	case partymember.FieldLeftReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeftReason(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyMember field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PartyMemberMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, partymember.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PartyMemberMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case partymember.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyMemberMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case partymember.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyMember numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PartyMemberMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(partymember.FieldCreatedBy) {
+		fields = append(fields, partymember.FieldCreatedBy)
+	}
+	if m.FieldCleared(partymember.FieldUpdatedBy) {
+		fields = append(fields, partymember.FieldUpdatedBy)
+	}
+	if m.FieldCleared(partymember.FieldDeletedAt) {
+		fields = append(fields, partymember.FieldDeletedAt)
+	}
+	if m.FieldCleared(partymember.FieldDeletedBy) {
+		fields = append(fields, partymember.FieldDeletedBy)
+	}
+	if m.FieldCleared(partymember.FieldDeleteReason) {
+		fields = append(fields, partymember.FieldDeleteReason)
+	}
+	if m.FieldCleared(partymember.FieldInvitationID) {
+		fields = append(fields, partymember.FieldInvitationID)
+	}
+	if m.FieldCleared(partymember.FieldLeftAt) {
+		fields = append(fields, partymember.FieldLeftAt)
+	}
+	if m.FieldCleared(partymember.FieldLeftReason) {
+		fields = append(fields, partymember.FieldLeftReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PartyMemberMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PartyMemberMutation) ClearField(name string) error {
+	switch name {
+	case partymember.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case partymember.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case partymember.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case partymember.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case partymember.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	case partymember.FieldInvitationID:
+		m.ClearInvitationID()
+		return nil
+	case partymember.FieldLeftAt:
+		m.ClearLeftAt()
+		return nil
+	case partymember.FieldLeftReason:
+		m.ClearLeftReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyMember nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PartyMemberMutation) ResetField(name string) error {
+	switch name {
+	case partymember.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case partymember.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case partymember.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case partymember.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case partymember.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case partymember.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case partymember.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case partymember.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case partymember.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case partymember.FieldPartyID:
+		m.ResetPartyID()
+		return nil
+	case partymember.FieldStudentID:
+		m.ResetStudentID()
+		return nil
+	case partymember.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case partymember.FieldRole:
+		m.ResetRole()
+		return nil
+	case partymember.FieldInvitationID:
+		m.ResetInvitationID()
+		return nil
+	case partymember.FieldJoinedAt:
+		m.ResetJoinedAt()
+		return nil
+	case partymember.FieldLeftAt:
+		m.ResetLeftAt()
+		return nil
+	case partymember.FieldLeftReason:
+		m.ResetLeftReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyMember field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PartyMemberMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PartyMemberMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PartyMemberMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PartyMemberMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PartyMemberMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PartyMemberMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PartyMemberMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown PartyMember unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PartyMemberMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown PartyMember edge %s", name)
+}
+
+// PartyPolicyMutation represents an operation that mutates the PartyPolicy nodes in the graph.
+type PartyPolicyMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	tenant_id     *uuid.UUID
+	created_at    *time.Time
+	created_by    *uuid.UUID
+	updated_at    *time.Time
+	updated_by    *uuid.UUID
+	deleted_at    *time.Time
+	deleted_by    *uuid.UUID
+	delete_reason *string
+	version       *int64
+	addversion    *int64
+	scope_type    *string
+	scope_id      *uuid.UUID
+	school_id     *uuid.UUID
+	rules         *map[string]interface{}
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*PartyPolicy, error)
+	predicates    []predicate.PartyPolicy
+}
+
+var _ ent.Mutation = (*PartyPolicyMutation)(nil)
+
+// partypolicyOption allows management of the mutation configuration using functional options.
+type partypolicyOption func(*PartyPolicyMutation)
+
+// newPartyPolicyMutation creates new mutation for the PartyPolicy entity.
+func newPartyPolicyMutation(c config, op Op, opts ...partypolicyOption) *PartyPolicyMutation {
+	m := &PartyPolicyMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePartyPolicy,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPartyPolicyID sets the ID field of the mutation.
+func withPartyPolicyID(id uuid.UUID) partypolicyOption {
+	return func(m *PartyPolicyMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PartyPolicy
+		)
+		m.oldValue = func(ctx context.Context) (*PartyPolicy, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PartyPolicy.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPartyPolicy sets the old PartyPolicy of the mutation.
+func withPartyPolicy(node *PartyPolicy) partypolicyOption {
+	return func(m *PartyPolicyMutation) {
+		m.oldValue = func(context.Context) (*PartyPolicy, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PartyPolicyMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PartyPolicyMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PartyPolicy entities.
+func (m *PartyPolicyMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PartyPolicyMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PartyPolicyMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PartyPolicy.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *PartyPolicyMutation) SetTenantID(u uuid.UUID) {
+	m.tenant_id = &u
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *PartyPolicyMutation) TenantID() (r uuid.UUID, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldTenantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *PartyPolicyMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PartyPolicyMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PartyPolicyMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PartyPolicyMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *PartyPolicyMutation) SetCreatedBy(u uuid.UUID) {
+	m.created_by = &u
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *PartyPolicyMutation) CreatedBy() (r uuid.UUID, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldCreatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *PartyPolicyMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[partypolicy.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *PartyPolicyMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[partypolicy.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *PartyPolicyMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, partypolicy.FieldCreatedBy)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PartyPolicyMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PartyPolicyMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PartyPolicyMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *PartyPolicyMutation) SetUpdatedBy(u uuid.UUID) {
+	m.updated_by = &u
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *PartyPolicyMutation) UpdatedBy() (r uuid.UUID, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldUpdatedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *PartyPolicyMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[partypolicy.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *PartyPolicyMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[partypolicy.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *PartyPolicyMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, partypolicy.FieldUpdatedBy)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PartyPolicyMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PartyPolicyMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *PartyPolicyMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[partypolicy.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *PartyPolicyMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[partypolicy.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PartyPolicyMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, partypolicy.FieldDeletedAt)
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (m *PartyPolicyMutation) SetDeletedBy(u uuid.UUID) {
+	m.deleted_by = &u
+}
+
+// DeletedBy returns the value of the "deleted_by" field in the mutation.
+func (m *PartyPolicyMutation) DeletedBy() (r uuid.UUID, exists bool) {
+	v := m.deleted_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedBy returns the old "deleted_by" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldDeletedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedBy: %w", err)
+	}
+	return oldValue.DeletedBy, nil
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (m *PartyPolicyMutation) ClearDeletedBy() {
+	m.deleted_by = nil
+	m.clearedFields[partypolicy.FieldDeletedBy] = struct{}{}
+}
+
+// DeletedByCleared returns if the "deleted_by" field was cleared in this mutation.
+func (m *PartyPolicyMutation) DeletedByCleared() bool {
+	_, ok := m.clearedFields[partypolicy.FieldDeletedBy]
+	return ok
+}
+
+// ResetDeletedBy resets all changes to the "deleted_by" field.
+func (m *PartyPolicyMutation) ResetDeletedBy() {
+	m.deleted_by = nil
+	delete(m.clearedFields, partypolicy.FieldDeletedBy)
+}
+
+// SetDeleteReason sets the "delete_reason" field.
+func (m *PartyPolicyMutation) SetDeleteReason(s string) {
+	m.delete_reason = &s
+}
+
+// DeleteReason returns the value of the "delete_reason" field in the mutation.
+func (m *PartyPolicyMutation) DeleteReason() (r string, exists bool) {
+	v := m.delete_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteReason returns the old "delete_reason" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldDeleteReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteReason: %w", err)
+	}
+	return oldValue.DeleteReason, nil
+}
+
+// ClearDeleteReason clears the value of the "delete_reason" field.
+func (m *PartyPolicyMutation) ClearDeleteReason() {
+	m.delete_reason = nil
+	m.clearedFields[partypolicy.FieldDeleteReason] = struct{}{}
+}
+
+// DeleteReasonCleared returns if the "delete_reason" field was cleared in this mutation.
+func (m *PartyPolicyMutation) DeleteReasonCleared() bool {
+	_, ok := m.clearedFields[partypolicy.FieldDeleteReason]
+	return ok
+}
+
+// ResetDeleteReason resets all changes to the "delete_reason" field.
+func (m *PartyPolicyMutation) ResetDeleteReason() {
+	m.delete_reason = nil
+	delete(m.clearedFields, partypolicy.FieldDeleteReason)
+}
+
+// SetVersion sets the "version" field.
+func (m *PartyPolicyMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *PartyPolicyMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *PartyPolicyMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *PartyPolicyMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *PartyPolicyMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetScopeType sets the "scope_type" field.
+func (m *PartyPolicyMutation) SetScopeType(s string) {
+	m.scope_type = &s
+}
+
+// ScopeType returns the value of the "scope_type" field in the mutation.
+func (m *PartyPolicyMutation) ScopeType() (r string, exists bool) {
+	v := m.scope_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScopeType returns the old "scope_type" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldScopeType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScopeType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScopeType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScopeType: %w", err)
+	}
+	return oldValue.ScopeType, nil
+}
+
+// ResetScopeType resets all changes to the "scope_type" field.
+func (m *PartyPolicyMutation) ResetScopeType() {
+	m.scope_type = nil
+}
+
+// SetScopeID sets the "scope_id" field.
+func (m *PartyPolicyMutation) SetScopeID(u uuid.UUID) {
+	m.scope_id = &u
+}
+
+// ScopeID returns the value of the "scope_id" field in the mutation.
+func (m *PartyPolicyMutation) ScopeID() (r uuid.UUID, exists bool) {
+	v := m.scope_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScopeID returns the old "scope_id" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldScopeID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScopeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScopeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScopeID: %w", err)
+	}
+	return oldValue.ScopeID, nil
+}
+
+// ResetScopeID resets all changes to the "scope_id" field.
+func (m *PartyPolicyMutation) ResetScopeID() {
+	m.scope_id = nil
+}
+
+// SetSchoolID sets the "school_id" field.
+func (m *PartyPolicyMutation) SetSchoolID(u uuid.UUID) {
+	m.school_id = &u
+}
+
+// SchoolID returns the value of the "school_id" field in the mutation.
+func (m *PartyPolicyMutation) SchoolID() (r uuid.UUID, exists bool) {
+	v := m.school_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSchoolID returns the old "school_id" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldSchoolID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSchoolID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSchoolID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSchoolID: %w", err)
+	}
+	return oldValue.SchoolID, nil
+}
+
+// ResetSchoolID resets all changes to the "school_id" field.
+func (m *PartyPolicyMutation) ResetSchoolID() {
+	m.school_id = nil
+}
+
+// SetRules sets the "rules" field.
+func (m *PartyPolicyMutation) SetRules(value map[string]interface{}) {
+	m.rules = &value
+}
+
+// Rules returns the value of the "rules" field in the mutation.
+func (m *PartyPolicyMutation) Rules() (r map[string]interface{}, exists bool) {
+	v := m.rules
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRules returns the old "rules" field's value of the PartyPolicy entity.
+// If the PartyPolicy object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartyPolicyMutation) OldRules(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRules is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRules requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRules: %w", err)
+	}
+	return oldValue.Rules, nil
+}
+
+// ResetRules resets all changes to the "rules" field.
+func (m *PartyPolicyMutation) ResetRules() {
+	m.rules = nil
+}
+
+// Where appends a list predicates to the PartyPolicyMutation builder.
+func (m *PartyPolicyMutation) Where(ps ...predicate.PartyPolicy) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PartyPolicyMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PartyPolicyMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PartyPolicy, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PartyPolicyMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PartyPolicyMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PartyPolicy).
+func (m *PartyPolicyMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PartyPolicyMutation) Fields() []string {
+	fields := make([]string, 0, 13)
+	if m.tenant_id != nil {
+		fields = append(fields, partypolicy.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, partypolicy.FieldCreatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, partypolicy.FieldCreatedBy)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, partypolicy.FieldUpdatedAt)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, partypolicy.FieldUpdatedBy)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, partypolicy.FieldDeletedAt)
+	}
+	if m.deleted_by != nil {
+		fields = append(fields, partypolicy.FieldDeletedBy)
+	}
+	if m.delete_reason != nil {
+		fields = append(fields, partypolicy.FieldDeleteReason)
+	}
+	if m.version != nil {
+		fields = append(fields, partypolicy.FieldVersion)
+	}
+	if m.scope_type != nil {
+		fields = append(fields, partypolicy.FieldScopeType)
+	}
+	if m.scope_id != nil {
+		fields = append(fields, partypolicy.FieldScopeID)
+	}
+	if m.school_id != nil {
+		fields = append(fields, partypolicy.FieldSchoolID)
+	}
+	if m.rules != nil {
+		fields = append(fields, partypolicy.FieldRules)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PartyPolicyMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case partypolicy.FieldTenantID:
+		return m.TenantID()
+	case partypolicy.FieldCreatedAt:
+		return m.CreatedAt()
+	case partypolicy.FieldCreatedBy:
+		return m.CreatedBy()
+	case partypolicy.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case partypolicy.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case partypolicy.FieldDeletedAt:
+		return m.DeletedAt()
+	case partypolicy.FieldDeletedBy:
+		return m.DeletedBy()
+	case partypolicy.FieldDeleteReason:
+		return m.DeleteReason()
+	case partypolicy.FieldVersion:
+		return m.Version()
+	case partypolicy.FieldScopeType:
+		return m.ScopeType()
+	case partypolicy.FieldScopeID:
+		return m.ScopeID()
+	case partypolicy.FieldSchoolID:
+		return m.SchoolID()
+	case partypolicy.FieldRules:
+		return m.Rules()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PartyPolicyMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case partypolicy.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case partypolicy.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case partypolicy.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case partypolicy.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case partypolicy.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case partypolicy.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case partypolicy.FieldDeletedBy:
+		return m.OldDeletedBy(ctx)
+	case partypolicy.FieldDeleteReason:
+		return m.OldDeleteReason(ctx)
+	case partypolicy.FieldVersion:
+		return m.OldVersion(ctx)
+	case partypolicy.FieldScopeType:
+		return m.OldScopeType(ctx)
+	case partypolicy.FieldScopeID:
+		return m.OldScopeID(ctx)
+	case partypolicy.FieldSchoolID:
+		return m.OldSchoolID(ctx)
+	case partypolicy.FieldRules:
+		return m.OldRules(ctx)
+	}
+	return nil, fmt.Errorf("unknown PartyPolicy field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyPolicyMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case partypolicy.FieldTenantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case partypolicy.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case partypolicy.FieldCreatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case partypolicy.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case partypolicy.FieldUpdatedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case partypolicy.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case partypolicy.FieldDeletedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedBy(v)
+		return nil
+	case partypolicy.FieldDeleteReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteReason(v)
+		return nil
+	case partypolicy.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case partypolicy.FieldScopeType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScopeType(v)
+		return nil
+	case partypolicy.FieldScopeID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScopeID(v)
+		return nil
+	case partypolicy.FieldSchoolID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSchoolID(v)
+		return nil
+	case partypolicy.FieldRules:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRules(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyPolicy field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PartyPolicyMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, partypolicy.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PartyPolicyMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case partypolicy.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartyPolicyMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case partypolicy.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PartyPolicy numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PartyPolicyMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(partypolicy.FieldCreatedBy) {
+		fields = append(fields, partypolicy.FieldCreatedBy)
+	}
+	if m.FieldCleared(partypolicy.FieldUpdatedBy) {
+		fields = append(fields, partypolicy.FieldUpdatedBy)
+	}
+	if m.FieldCleared(partypolicy.FieldDeletedAt) {
+		fields = append(fields, partypolicy.FieldDeletedAt)
+	}
+	if m.FieldCleared(partypolicy.FieldDeletedBy) {
+		fields = append(fields, partypolicy.FieldDeletedBy)
+	}
+	if m.FieldCleared(partypolicy.FieldDeleteReason) {
+		fields = append(fields, partypolicy.FieldDeleteReason)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PartyPolicyMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PartyPolicyMutation) ClearField(name string) error {
+	switch name {
+	case partypolicy.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case partypolicy.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case partypolicy.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case partypolicy.FieldDeletedBy:
+		m.ClearDeletedBy()
+		return nil
+	case partypolicy.FieldDeleteReason:
+		m.ClearDeleteReason()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyPolicy nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PartyPolicyMutation) ResetField(name string) error {
+	switch name {
+	case partypolicy.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case partypolicy.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case partypolicy.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case partypolicy.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case partypolicy.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case partypolicy.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case partypolicy.FieldDeletedBy:
+		m.ResetDeletedBy()
+		return nil
+	case partypolicy.FieldDeleteReason:
+		m.ResetDeleteReason()
+		return nil
+	case partypolicy.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case partypolicy.FieldScopeType:
+		m.ResetScopeType()
+		return nil
+	case partypolicy.FieldScopeID:
+		m.ResetScopeID()
+		return nil
+	case partypolicy.FieldSchoolID:
+		m.ResetSchoolID()
+		return nil
+	case partypolicy.FieldRules:
+		m.ResetRules()
+		return nil
+	}
+	return fmt.Errorf("unknown PartyPolicy field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PartyPolicyMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PartyPolicyMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PartyPolicyMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PartyPolicyMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PartyPolicyMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PartyPolicyMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PartyPolicyMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown PartyPolicy unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PartyPolicyMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown PartyPolicy edge %s", name)
+}
 
 // RoomMutation represents an operation that mutates the Room nodes in the graph.
 type RoomMutation struct {

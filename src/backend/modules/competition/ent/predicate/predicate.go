@@ -6,6 +6,18 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Party is the predicate function for party builders.
+type Party func(*sql.Selector)
+
+// PartyInvitation is the predicate function for partyinvitation builders.
+type PartyInvitation func(*sql.Selector)
+
+// PartyMember is the predicate function for partymember builders.
+type PartyMember func(*sql.Selector)
+
+// PartyPolicy is the predicate function for partypolicy builders.
+type PartyPolicy func(*sql.Selector)
+
 // Room is the predicate function for room builders.
 type Room func(*sql.Selector)
 

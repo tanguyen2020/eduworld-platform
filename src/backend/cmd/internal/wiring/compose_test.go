@@ -26,10 +26,9 @@ import (
 )
 
 // wiredModules are the modules whose Done features are wired into the binaries (OQ F010-2).
-var wiredModules = []string{"identity", "learning", "game", "chat"}
+var wiredModules = []string{"identity", "learning", "game", "competition", "chat"}
 
-// workerModules are the modules with worker entry points (relay, consumers, jobs): competition has no public HTTP
-// operation yet but runs its consumers and jobs since F091.
+// workerModules are the modules with worker entry points (relay, consumers, jobs).
 var workerModules = []string{"identity", "learning", "game", "competition", "chat"}
 
 // testEnv is a complete configuration of core-api/worker with unreachable endpoints: pools, Valkey and NATS are lazy
@@ -234,7 +233,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 			"recommendation-nightly", "assignment-scheduler", "exam-window", "exam-autosubmit", "dashboard-day-close", "read-model-refresh",
 			"report-jobs", "item-analysis-nightly", "calibration-weekly", "reference-levels-nightly", "efficacy-wave-monitor", "efficacy-reports", "experiment-guardrail", "experiment-lifecycle"},
 		"game":        {"session-timeout", "curfew-session-closer"},
-		"competition": {"close-idle-hub-instances"},
+		"competition": {"close-idle-hub-instances", "party-invitation-expiry"},
 		"chat":        {"expire-friend-requests"},
 	}
 	for _, profile := range []string{"events", "jobs", "all"} {

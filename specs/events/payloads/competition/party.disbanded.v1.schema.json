@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.disbanded.v1.schema.json",
+  "title": "Payload party.disbanded v1 (module competition, owner F100)",
+  "description": "Party giải tán (disbandParty, người cuối rời — F100-AC-17, AC-20; inactivity do F101, moderation do F121). Consumer: chat (đóng channel party, F117), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "party_id",
+    "tenant_id",
+    "reason",
+    "disbanded_at",
+    "state_version"
+  ],
+  "properties": {
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "leader_disbanded",
+        "all_left",
+        "inactivity",
+        "moderation"
+      ]
+    },
+    "actor_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Người giải tán; vắng mặt = hệ thống"
+    },
+    "disbanded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "multiplayer.parties.state_version sau thay đổi (tăng đúng 1 mỗi thay đổi)"
+    }
+  },
+  "examples": [
+    {
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "reason": "leader_disbanded",
+      "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "disbanded_at": "2026-11-21T03:30:00Z",
+      "state_version": 5
+    }
+  ]
+}

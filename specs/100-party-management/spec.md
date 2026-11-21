@@ -21,6 +21,23 @@
 
 - Facade vòng đời học sinh và gộp tài khoản của module competition → **Chốt:** F100 (dữ liệu học sinh đầu tiên của module competition) hiện thực `cleanupStudentData`/`restoreStudentData`/`anonymizeUserData`/`mergeUserData` (cập nhật tham chiếu thành viên party, idempotent theo `merge_id`); feature competition sau mở rộng cho dữ liệu của mình.
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+Quyết định khi triển khai, chọn phương án bảo thủ nhất (owner duyệt trước các đề xuất mặc định):
+
+- Mã `428` khi thiếu `Idempotency-Key` (F100-AC-03) là mã chung của `pkg/httpx`: `428 IDEMPOTENCY_KEY_REQUIRED` (không phải `PRECONDITION_REQUIRED`).
+- `PartyCreate.max_members` bỏ `default: 4` trong OpenAPI (trùng CONFIG_DEFAULTS, R33; validator chèn mặc định làm mất trần policy): vắng mặt = `min(party_max_members, max_members_cap)`.
+- Giới hạn `party_invite_rate` (10/phút, 50/24 h trượt), `party_invite_repeat_rules` (chờ 5 phút sau từ chối, 3 lần từ chối/24 h), `party_create_rate` (tạo + giải tán của người gọi trong 1 h, chỉ chặn ở bước tạo, không bao giờ chặn giải tán) và `party_kick_rate` (mỗi leader/1 h) đếm trên PostgreSQL (`party_invitations`, `party_histories`) dưới khóa advisory theo người gửi — chính xác khi nhiều replica, không phụ thuộc Valkey (thay rate limiter `ew:rl:party_invite:*` của T028; PARTY_SYSTEM §10 cập nhật). Vượt rate → `429` + `Retry-After` + audit (`party.invite_rate_limited`, `party.rate_limited`).
+- Policy mặc định cấp platform theo grade band (`party.PlatformRules`): `g1_3` chỉ `friend`/`quest`, chỉ cùng lớp; `g4_5` thêm `competition_team`; `g6_7`/`g8_9` đủ 5 loại; mọi khối không ghép khác grade band; trần 8. `party_policies` cấp trường và lớp (lớp của người mời/leader và người được mời) chỉ siết thêm. Party `friend`: chỉ mời bạn bè của người mời (PARTY_SYSTEM §4), kiểm lại lúc accept với người mời (hoặc leader nếu người mời đã rời).
+- Invitee không có trong tenant của phiên (tenant khác, chưa chiếu, không hoạt động) → `403 PARTY_POLICY_VIOLATION` (rule `tenant`, không lộ tenant khác); chặn giữa invitee/người tham gia và **bất kỳ** thành viên active → `PARTY_INVITE_NOT_ALLOWED`; người bị kick mời lại/tham gia lại trong `party_kick_reinvite_block` → `403 PARTY_POLICY_VIOLATION` (rule `kick_reinvite`); học sinh chưa có khối → không tạo được party (`403 PARTY_POLICY_VIOLATION`).
+- Hết hạn lời mời (F100-AC-14): `ttl` do job `party-invitation-expiry` (15 s, `EW_PARTY_EXPIRY_INTERVAL`); `party_disbanded`, `joined_other_party` (cả khi tạo party mới) và `pending_overflow` chuyển ngay trong transaction gây ra. Người rời/bị kick/bị loại: lời mời họ đã gửi trong party đó bị hủy (`inviter_left`/`inviter_kicked`/`policy`).
+- Online cho chuyển leader/leader kế tiếp: module competition giữ `ew:party:presence:<user_id>` từ tín hiệu `ew.rt.presence.*` của gateway (subscriber queue `competition.party_presence` trong `core-api`); khóa presence của gateway thuộc module realtime nên không đọc trực tiếp (VALKEY_DESIGN §3.2).
+- Kiểm duyệt tên: thêm `moderateDisplayText` vào `chat.internal.v1.yaml` (`x-allowed-callers: [competition]`); module chat hiện thực ở F116 — tới lúc đó `compose` nối facade rỗng nên **mọi tên tự đặt dùng tên mặc định** "Nhóm của <nickname>" (fallback F100-AC-05); test dùng moderator giả lập có nhãn MOCK (R17).
+- `party_members` có PK kỹ thuật `membership_id` (ent cần một cột id), khóa nghiệp vụ `(party_id, student_id, joined_at)` giữ nguyên; `party_histories` viết tay (phân vùng tháng, append-only) như `competition.integrity_signals`; không tạo `ref.classes` (luật party chỉ cần `class_id` từ `ref.enrollments`).
+- Kick phát `party.member_kicked` (không kèm `party.member_left`); giải tán phát một `party.disbanded` (không phát `party.member_left` từng người); realtime `party.member.left.reason` của loại do policy là `account_disabled` (sanction, khóa, dọn) hoặc `transferred_school`.
+- Consumer `competition.party_safety_chat` (`user.blocked`, `sanction.applied`/`lifted` — đọc payload theo EVENT_DESIGN §4 vì schema thuộc F121 chưa có; chỉ lưu `restrict_multiplayer`, `account_lock`) và `competition.party_safety_identity` (`student.synced` đổi trường/ngừng, `user.status_changed` khóa/ngừng/ẩn danh, `student.cleaned_up`).
+- Cấu hình party đọc từ biến môi trường với mặc định CONFIG_DEFAULTS (như F091/F095), chưa từ `platform_settings`; Principal lấy từ chuỗi `pkg/httpx` nên không cần adapter `resolvePrincipal` riêng (T002). Gauge `eduworld_party_active` chưa làm (nhiều replica — đếm bằng truy vấn khi có dashboard).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo party và xem party của mình (Priority: P1)

@@ -162,7 +162,7 @@ Ký hiệu consumer: GAM = gamification, QST = quest, LR = learning_record, LA =
 | `student.provisioning_requested` | sis | identity (worker tạo user Keycloak qua admin API) | `student_id`, `tenant_id`, `school_id`, `sis_connection_id` |
 | `student.synced` | sis | AUD, cache invalidation, game (quy tắc chuyển năm học khi đổi khối) | `student_id`, `school_id`, `action` (create/update/deactivate), `sync_run_id` |
 | `school.synced` | sis | AUD, cache invalidation | `school_id`, `sync_run_id`, `changed_fields[]` |
-| `enrollment.changed` | organization | identity (cache), LMS, chat (channel lớp), game (chuyển năm học), AUD | `student_id`, `class_id`, `op` (added/ended/transferred) |
+| `enrollment.changed` | organization | identity (cache), LMS, chat (channel lớp), game (chuyển năm học), competition (`ref.enrollments`: luật party cùng lớp, F100), AUD | `student_id`, `class_id`, `op` (added/ended/transferred) |
 | `student.transferred` | organization | chat, party (rời party), LMS, tenancy (đổi membership nếu khác tenant), AUD | `student_id`, `from_tenant_id`, `to_tenant_id`, `from_school_id`, `to_school_id` |
 | `class.created` / `class.updated` | organization | chat (tạo channel lớp), LMS | `class_id`, `grade_level` |
 | `school.updated` | organization (F010) | mọi module (projection `ref.schools` gồm `settings_subset`), AUD | `school_id`, `tenant_id`, `status`, `name?`, `settings_subset` (chỉ khóa module nhận cần: giờ truy cập, `daily_play_limit_minutes` cho module game — F015-AC-30, bảng xếp hạng bị tắt, `allow_cross_school_listing`, chính sách chat cấp trường), `changed_fields[]`, `source_version` — đổi cài đặt trường (F015) phát cùng event và schema |

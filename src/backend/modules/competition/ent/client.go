@@ -15,6 +15,10 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/room"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
 
@@ -26,6 +30,14 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Party is the client for interacting with the Party builders.
+	Party *PartyClient
+	// PartyInvitation is the client for interacting with the PartyInvitation builders.
+	PartyInvitation *PartyInvitationClient
+	// PartyMember is the client for interacting with the PartyMember builders.
+	PartyMember *PartyMemberClient
+	// PartyPolicy is the client for interacting with the PartyPolicy builders.
+	PartyPolicy *PartyPolicyClient
 	// Room is the client for interacting with the Room builders.
 	Room *RoomClient
 	// SessionMembership is the client for interacting with the SessionMembership builders.
@@ -41,6 +53,10 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Party = NewPartyClient(c.config)
+	c.PartyInvitation = NewPartyInvitationClient(c.config)
+	c.PartyMember = NewPartyMemberClient(c.config)
+	c.PartyPolicy = NewPartyPolicyClient(c.config)
 	c.Room = NewRoomClient(c.config)
 	c.SessionMembership = NewSessionMembershipClient(c.config)
 }
@@ -138,6 +154,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:               ctx,
 		config:            cfg,
+		Party:             NewPartyClient(cfg),
+		PartyInvitation:   NewPartyInvitationClient(cfg),
+		PartyMember:       NewPartyMemberClient(cfg),
+		PartyPolicy:       NewPartyPolicyClient(cfg),
 		Room:              NewRoomClient(cfg),
 		SessionMembership: NewSessionMembershipClient(cfg),
 	}, nil
@@ -159,6 +179,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:               ctx,
 		config:            cfg,
+		Party:             NewPartyClient(cfg),
+		PartyInvitation:   NewPartyInvitationClient(cfg),
+		PartyMember:       NewPartyMemberClient(cfg),
+		PartyPolicy:       NewPartyPolicyClient(cfg),
 		Room:              NewRoomClient(cfg),
 		SessionMembership: NewSessionMembershipClient(cfg),
 	}, nil
@@ -167,7 +191,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Room.
+//		Party.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -189,26 +213,582 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Room.Use(hooks...)
-	c.SessionMembership.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Party, c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room,
+		c.SessionMembership,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Room.Intercept(interceptors...)
-	c.SessionMembership.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Party, c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room,
+		c.SessionMembership,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *PartyMutation:
+		return c.Party.mutate(ctx, m)
+	case *PartyInvitationMutation:
+		return c.PartyInvitation.mutate(ctx, m)
+	case *PartyMemberMutation:
+		return c.PartyMember.mutate(ctx, m)
+	case *PartyPolicyMutation:
+		return c.PartyPolicy.mutate(ctx, m)
 	case *RoomMutation:
 		return c.Room.mutate(ctx, m)
 	case *SessionMembershipMutation:
 		return c.SessionMembership.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// PartyClient is a client for the Party schema.
+type PartyClient struct {
+	config
+}
+
+// NewPartyClient returns a client for the Party from the given config.
+func NewPartyClient(c config) *PartyClient {
+	return &PartyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `party.Hooks(f(g(h())))`.
+func (c *PartyClient) Use(hooks ...Hook) {
+	c.hooks.Party = append(c.hooks.Party, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `party.Intercept(f(g(h())))`.
+func (c *PartyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Party = append(c.inters.Party, interceptors...)
+}
+
+// Create returns a builder for creating a Party entity.
+func (c *PartyClient) Create() *PartyCreate {
+	mutation := newPartyMutation(c.config, OpCreate)
+	return &PartyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Party entities.
+func (c *PartyClient) CreateBulk(builders ...*PartyCreate) *PartyCreateBulk {
+	return &PartyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PartyClient) MapCreateBulk(slice any, setFunc func(*PartyCreate, int)) *PartyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PartyCreateBulk{err: fmt.Errorf("calling to PartyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PartyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PartyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Party.
+func (c *PartyClient) Update() *PartyUpdate {
+	mutation := newPartyMutation(c.config, OpUpdate)
+	return &PartyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PartyClient) UpdateOne(_m *Party) *PartyUpdateOne {
+	mutation := newPartyMutation(c.config, OpUpdateOne, withParty(_m))
+	return &PartyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PartyClient) UpdateOneID(id uuid.UUID) *PartyUpdateOne {
+	mutation := newPartyMutation(c.config, OpUpdateOne, withPartyID(id))
+	return &PartyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Party.
+func (c *PartyClient) Delete() *PartyDelete {
+	mutation := newPartyMutation(c.config, OpDelete)
+	return &PartyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PartyClient) DeleteOne(_m *Party) *PartyDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PartyClient) DeleteOneID(id uuid.UUID) *PartyDeleteOne {
+	builder := c.Delete().Where(party.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PartyDeleteOne{builder}
+}
+
+// Query returns a query builder for Party.
+func (c *PartyClient) Query() *PartyQuery {
+	return &PartyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeParty},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Party entity by its id.
+func (c *PartyClient) Get(ctx context.Context, id uuid.UUID) (*Party, error) {
+	return c.Query().Where(party.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PartyClient) GetX(ctx context.Context, id uuid.UUID) *Party {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PartyClient) Hooks() []Hook {
+	hooks := c.hooks.Party
+	return append(hooks[:len(hooks):len(hooks)], party.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PartyClient) Interceptors() []Interceptor {
+	inters := c.inters.Party
+	return append(inters[:len(inters):len(inters)], party.Interceptors[:]...)
+}
+
+func (c *PartyClient) mutate(ctx context.Context, m *PartyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PartyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PartyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PartyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PartyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Party mutation op: %q", m.Op())
+	}
+}
+
+// PartyInvitationClient is a client for the PartyInvitation schema.
+type PartyInvitationClient struct {
+	config
+}
+
+// NewPartyInvitationClient returns a client for the PartyInvitation from the given config.
+func NewPartyInvitationClient(c config) *PartyInvitationClient {
+	return &PartyInvitationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `partyinvitation.Hooks(f(g(h())))`.
+func (c *PartyInvitationClient) Use(hooks ...Hook) {
+	c.hooks.PartyInvitation = append(c.hooks.PartyInvitation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `partyinvitation.Intercept(f(g(h())))`.
+func (c *PartyInvitationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PartyInvitation = append(c.inters.PartyInvitation, interceptors...)
+}
+
+// Create returns a builder for creating a PartyInvitation entity.
+func (c *PartyInvitationClient) Create() *PartyInvitationCreate {
+	mutation := newPartyInvitationMutation(c.config, OpCreate)
+	return &PartyInvitationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PartyInvitation entities.
+func (c *PartyInvitationClient) CreateBulk(builders ...*PartyInvitationCreate) *PartyInvitationCreateBulk {
+	return &PartyInvitationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PartyInvitationClient) MapCreateBulk(slice any, setFunc func(*PartyInvitationCreate, int)) *PartyInvitationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PartyInvitationCreateBulk{err: fmt.Errorf("calling to PartyInvitationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PartyInvitationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PartyInvitationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PartyInvitation.
+func (c *PartyInvitationClient) Update() *PartyInvitationUpdate {
+	mutation := newPartyInvitationMutation(c.config, OpUpdate)
+	return &PartyInvitationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PartyInvitationClient) UpdateOne(_m *PartyInvitation) *PartyInvitationUpdateOne {
+	mutation := newPartyInvitationMutation(c.config, OpUpdateOne, withPartyInvitation(_m))
+	return &PartyInvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PartyInvitationClient) UpdateOneID(id uuid.UUID) *PartyInvitationUpdateOne {
+	mutation := newPartyInvitationMutation(c.config, OpUpdateOne, withPartyInvitationID(id))
+	return &PartyInvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PartyInvitation.
+func (c *PartyInvitationClient) Delete() *PartyInvitationDelete {
+	mutation := newPartyInvitationMutation(c.config, OpDelete)
+	return &PartyInvitationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PartyInvitationClient) DeleteOne(_m *PartyInvitation) *PartyInvitationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PartyInvitationClient) DeleteOneID(id uuid.UUID) *PartyInvitationDeleteOne {
+	builder := c.Delete().Where(partyinvitation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PartyInvitationDeleteOne{builder}
+}
+
+// Query returns a query builder for PartyInvitation.
+func (c *PartyInvitationClient) Query() *PartyInvitationQuery {
+	return &PartyInvitationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePartyInvitation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PartyInvitation entity by its id.
+func (c *PartyInvitationClient) Get(ctx context.Context, id uuid.UUID) (*PartyInvitation, error) {
+	return c.Query().Where(partyinvitation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PartyInvitationClient) GetX(ctx context.Context, id uuid.UUID) *PartyInvitation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PartyInvitationClient) Hooks() []Hook {
+	hooks := c.hooks.PartyInvitation
+	return append(hooks[:len(hooks):len(hooks)], partyinvitation.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PartyInvitationClient) Interceptors() []Interceptor {
+	inters := c.inters.PartyInvitation
+	return append(inters[:len(inters):len(inters)], partyinvitation.Interceptors[:]...)
+}
+
+func (c *PartyInvitationClient) mutate(ctx context.Context, m *PartyInvitationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PartyInvitationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PartyInvitationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PartyInvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PartyInvitationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PartyInvitation mutation op: %q", m.Op())
+	}
+}
+
+// PartyMemberClient is a client for the PartyMember schema.
+type PartyMemberClient struct {
+	config
+}
+
+// NewPartyMemberClient returns a client for the PartyMember from the given config.
+func NewPartyMemberClient(c config) *PartyMemberClient {
+	return &PartyMemberClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `partymember.Hooks(f(g(h())))`.
+func (c *PartyMemberClient) Use(hooks ...Hook) {
+	c.hooks.PartyMember = append(c.hooks.PartyMember, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `partymember.Intercept(f(g(h())))`.
+func (c *PartyMemberClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PartyMember = append(c.inters.PartyMember, interceptors...)
+}
+
+// Create returns a builder for creating a PartyMember entity.
+func (c *PartyMemberClient) Create() *PartyMemberCreate {
+	mutation := newPartyMemberMutation(c.config, OpCreate)
+	return &PartyMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PartyMember entities.
+func (c *PartyMemberClient) CreateBulk(builders ...*PartyMemberCreate) *PartyMemberCreateBulk {
+	return &PartyMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PartyMemberClient) MapCreateBulk(slice any, setFunc func(*PartyMemberCreate, int)) *PartyMemberCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PartyMemberCreateBulk{err: fmt.Errorf("calling to PartyMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PartyMemberCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PartyMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PartyMember.
+func (c *PartyMemberClient) Update() *PartyMemberUpdate {
+	mutation := newPartyMemberMutation(c.config, OpUpdate)
+	return &PartyMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PartyMemberClient) UpdateOne(_m *PartyMember) *PartyMemberUpdateOne {
+	mutation := newPartyMemberMutation(c.config, OpUpdateOne, withPartyMember(_m))
+	return &PartyMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PartyMemberClient) UpdateOneID(id uuid.UUID) *PartyMemberUpdateOne {
+	mutation := newPartyMemberMutation(c.config, OpUpdateOne, withPartyMemberID(id))
+	return &PartyMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PartyMember.
+func (c *PartyMemberClient) Delete() *PartyMemberDelete {
+	mutation := newPartyMemberMutation(c.config, OpDelete)
+	return &PartyMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PartyMemberClient) DeleteOne(_m *PartyMember) *PartyMemberDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PartyMemberClient) DeleteOneID(id uuid.UUID) *PartyMemberDeleteOne {
+	builder := c.Delete().Where(partymember.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PartyMemberDeleteOne{builder}
+}
+
+// Query returns a query builder for PartyMember.
+func (c *PartyMemberClient) Query() *PartyMemberQuery {
+	return &PartyMemberQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePartyMember},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PartyMember entity by its id.
+func (c *PartyMemberClient) Get(ctx context.Context, id uuid.UUID) (*PartyMember, error) {
+	return c.Query().Where(partymember.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PartyMemberClient) GetX(ctx context.Context, id uuid.UUID) *PartyMember {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PartyMemberClient) Hooks() []Hook {
+	hooks := c.hooks.PartyMember
+	return append(hooks[:len(hooks):len(hooks)], partymember.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PartyMemberClient) Interceptors() []Interceptor {
+	inters := c.inters.PartyMember
+	return append(inters[:len(inters):len(inters)], partymember.Interceptors[:]...)
+}
+
+func (c *PartyMemberClient) mutate(ctx context.Context, m *PartyMemberMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PartyMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PartyMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PartyMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PartyMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PartyMember mutation op: %q", m.Op())
+	}
+}
+
+// PartyPolicyClient is a client for the PartyPolicy schema.
+type PartyPolicyClient struct {
+	config
+}
+
+// NewPartyPolicyClient returns a client for the PartyPolicy from the given config.
+func NewPartyPolicyClient(c config) *PartyPolicyClient {
+	return &PartyPolicyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `partypolicy.Hooks(f(g(h())))`.
+func (c *PartyPolicyClient) Use(hooks ...Hook) {
+	c.hooks.PartyPolicy = append(c.hooks.PartyPolicy, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `partypolicy.Intercept(f(g(h())))`.
+func (c *PartyPolicyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PartyPolicy = append(c.inters.PartyPolicy, interceptors...)
+}
+
+// Create returns a builder for creating a PartyPolicy entity.
+func (c *PartyPolicyClient) Create() *PartyPolicyCreate {
+	mutation := newPartyPolicyMutation(c.config, OpCreate)
+	return &PartyPolicyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PartyPolicy entities.
+func (c *PartyPolicyClient) CreateBulk(builders ...*PartyPolicyCreate) *PartyPolicyCreateBulk {
+	return &PartyPolicyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PartyPolicyClient) MapCreateBulk(slice any, setFunc func(*PartyPolicyCreate, int)) *PartyPolicyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PartyPolicyCreateBulk{err: fmt.Errorf("calling to PartyPolicyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PartyPolicyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PartyPolicyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PartyPolicy.
+func (c *PartyPolicyClient) Update() *PartyPolicyUpdate {
+	mutation := newPartyPolicyMutation(c.config, OpUpdate)
+	return &PartyPolicyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PartyPolicyClient) UpdateOne(_m *PartyPolicy) *PartyPolicyUpdateOne {
+	mutation := newPartyPolicyMutation(c.config, OpUpdateOne, withPartyPolicy(_m))
+	return &PartyPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PartyPolicyClient) UpdateOneID(id uuid.UUID) *PartyPolicyUpdateOne {
+	mutation := newPartyPolicyMutation(c.config, OpUpdateOne, withPartyPolicyID(id))
+	return &PartyPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PartyPolicy.
+func (c *PartyPolicyClient) Delete() *PartyPolicyDelete {
+	mutation := newPartyPolicyMutation(c.config, OpDelete)
+	return &PartyPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PartyPolicyClient) DeleteOne(_m *PartyPolicy) *PartyPolicyDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PartyPolicyClient) DeleteOneID(id uuid.UUID) *PartyPolicyDeleteOne {
+	builder := c.Delete().Where(partypolicy.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PartyPolicyDeleteOne{builder}
+}
+
+// Query returns a query builder for PartyPolicy.
+func (c *PartyPolicyClient) Query() *PartyPolicyQuery {
+	return &PartyPolicyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePartyPolicy},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PartyPolicy entity by its id.
+func (c *PartyPolicyClient) Get(ctx context.Context, id uuid.UUID) (*PartyPolicy, error) {
+	return c.Query().Where(partypolicy.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PartyPolicyClient) GetX(ctx context.Context, id uuid.UUID) *PartyPolicy {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PartyPolicyClient) Hooks() []Hook {
+	hooks := c.hooks.PartyPolicy
+	return append(hooks[:len(hooks):len(hooks)], partypolicy.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PartyPolicyClient) Interceptors() []Interceptor {
+	inters := c.inters.PartyPolicy
+	return append(inters[:len(inters):len(inters)], partypolicy.Interceptors[:]...)
+}
+
+func (c *PartyPolicyClient) mutate(ctx context.Context, m *PartyPolicyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PartyPolicyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PartyPolicyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PartyPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PartyPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PartyPolicy mutation op: %q", m.Op())
 	}
 }
 
@@ -485,16 +1065,22 @@ func (c *SessionMembershipClient) mutate(ctx context.Context, m *SessionMembersh
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Room, SessionMembership []ent.Hook
+		Party, PartyInvitation, PartyMember, PartyPolicy, Room,
+		SessionMembership []ent.Hook
 	}
 	inters struct {
-		Room, SessionMembership []ent.Interceptor
+		Party, PartyInvitation, PartyMember, PartyPolicy, Room,
+		SessionMembership []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
+		Party:             tableSchemas[0],
+		PartyInvitation:   tableSchemas[0],
+		PartyMember:       tableSchemas[0],
+		PartyPolicy:       tableSchemas[0],
 		Room:              tableSchemas[0],
 		SessionMembership: tableSchemas[0],
 	}

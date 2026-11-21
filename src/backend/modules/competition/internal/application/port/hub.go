@@ -194,4 +194,7 @@ type ProjectionWriter interface {
 	// Friendship and Block apply friend.added/removed and user.blocked/unblocked of module chat (owner F095).
 	Friendship(ctx context.Context, tenant, low, high uuid.UUID, active bool, version int64) (bool, error)
 	Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, active bool, version int64) (bool, error)
+	// Enrollment applies enrollment.changed of module identity (class of a student, F100).
+	Enrollment(ctx context.Context, tenant, student, class uuid.UUID, school *uuid.UUID, status string, start, end *time.Time,
+		version int64) (bool, error)
 }

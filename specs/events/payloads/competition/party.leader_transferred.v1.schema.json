@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.leader_transferred.v1.schema.json",
+  "title": "Payload party.leader_transferred v1 (module competition, owner F100)",
+  "description": "Đổi leader (thủ công, leader rời — F100-AC-17, AC-19; leader_disconnected do F101). Consumer: chat (vai trò leader channel party), game (F103), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "party_id",
+    "tenant_id",
+    "from",
+    "to",
+    "reason",
+    "state_version"
+  ],
+  "properties": {
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "from": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "to": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "leader_left",
+        "leader_disconnected"
+      ]
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "multiplayer.parties.state_version sau thay đổi (tăng đúng 1 mỗi thay đổi)"
+    }
+  },
+  "examples": [
+    {
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "from": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "to": "0193a5f4-6c1e-7b2a-9d1f-000000000006",
+      "reason": "manual",
+      "state_version": 4
+    }
+  ]
+}

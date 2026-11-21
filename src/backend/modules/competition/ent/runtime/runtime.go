@@ -6,6 +6,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/room"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/schema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
@@ -15,6 +19,190 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	partyMixin := schema.Party{}.Mixin()
+	partyMixinHooks0 := partyMixin[0].Hooks()
+	party.Hooks[0] = partyMixinHooks0[0]
+	partyMixinInters0 := partyMixin[0].Interceptors()
+	party.Interceptors[0] = partyMixinInters0[0]
+	partyMixinFields0 := partyMixin[0].Fields()
+	_ = partyMixinFields0
+	partyFields := schema.Party{}.Fields()
+	_ = partyFields
+	// partyDescCreatedAt is the schema descriptor for created_at field.
+	partyDescCreatedAt := partyMixinFields0[2].Descriptor()
+	// party.DefaultCreatedAt holds the default value on creation for the created_at field.
+	party.DefaultCreatedAt = partyDescCreatedAt.Default.(func() time.Time)
+	// partyDescUpdatedAt is the schema descriptor for updated_at field.
+	partyDescUpdatedAt := partyMixinFields0[4].Descriptor()
+	// party.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	party.DefaultUpdatedAt = partyDescUpdatedAt.Default.(func() time.Time)
+	// party.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	party.UpdateDefaultUpdatedAt = partyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// partyDescDeleteReason is the schema descriptor for delete_reason field.
+	partyDescDeleteReason := partyMixinFields0[8].Descriptor()
+	// party.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	party.DeleteReasonValidator = partyDescDeleteReason.Validators[0].(func(string) error)
+	// partyDescVersion is the schema descriptor for version field.
+	partyDescVersion := partyMixinFields0[9].Descriptor()
+	// party.DefaultVersion holds the default value on creation for the version field.
+	party.DefaultVersion = partyDescVersion.Default.(int64)
+	// partyDescName is the schema descriptor for name field.
+	partyDescName := partyFields[1].Descriptor()
+	// party.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	party.NameValidator = partyDescName.Validators[0].(func(string) error)
+	// partyDescPartyType is the schema descriptor for party_type field.
+	partyDescPartyType := partyFields[3].Descriptor()
+	// party.PartyTypeValidator is a validator for the "party_type" field. It is called by the builders before save.
+	party.PartyTypeValidator = partyDescPartyType.Validators[0].(func(string) error)
+	// partyDescVisibility is the schema descriptor for visibility field.
+	partyDescVisibility := partyFields[4].Descriptor()
+	// party.DefaultVisibility holds the default value on creation for the visibility field.
+	party.DefaultVisibility = partyDescVisibility.Default.(string)
+	// party.VisibilityValidator is a validator for the "visibility" field. It is called by the builders before save.
+	party.VisibilityValidator = partyDescVisibility.Validators[0].(func(string) error)
+	// partyDescInvitationPolicy is the schema descriptor for invitation_policy field.
+	partyDescInvitationPolicy := partyFields[5].Descriptor()
+	// party.DefaultInvitationPolicy holds the default value on creation for the invitation_policy field.
+	party.DefaultInvitationPolicy = partyDescInvitationPolicy.Default.(string)
+	// party.InvitationPolicyValidator is a validator for the "invitation_policy" field. It is called by the builders before save.
+	party.InvitationPolicyValidator = partyDescInvitationPolicy.Validators[0].(func(string) error)
+	// partyDescGradeBand is the schema descriptor for grade_band field.
+	partyDescGradeBand := partyFields[7].Descriptor()
+	// party.GradeBandValidator is a validator for the "grade_band" field. It is called by the builders before save.
+	party.GradeBandValidator = partyDescGradeBand.Validators[0].(func(string) error)
+	// partyDescStatus is the schema descriptor for status field.
+	partyDescStatus := partyFields[8].Descriptor()
+	// party.DefaultStatus holds the default value on creation for the status field.
+	party.DefaultStatus = partyDescStatus.Default.(string)
+	// party.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	party.StatusValidator = partyDescStatus.Validators[0].(func(string) error)
+	// partyDescStateVersion is the schema descriptor for state_version field.
+	partyDescStateVersion := partyFields[11].Descriptor()
+	// party.DefaultStateVersion holds the default value on creation for the state_version field.
+	party.DefaultStateVersion = partyDescStateVersion.Default.(int64)
+	// partyDescID is the schema descriptor for id field.
+	partyDescID := partyMixinFields0[0].Descriptor()
+	// party.DefaultID holds the default value on creation for the id field.
+	party.DefaultID = partyDescID.Default.(func() uuid.UUID)
+	partyinvitationMixin := schema.PartyInvitation{}.Mixin()
+	partyinvitationMixinHooks0 := partyinvitationMixin[0].Hooks()
+	partyinvitation.Hooks[0] = partyinvitationMixinHooks0[0]
+	partyinvitationMixinInters0 := partyinvitationMixin[0].Interceptors()
+	partyinvitation.Interceptors[0] = partyinvitationMixinInters0[0]
+	partyinvitationMixinFields0 := partyinvitationMixin[0].Fields()
+	_ = partyinvitationMixinFields0
+	partyinvitationFields := schema.PartyInvitation{}.Fields()
+	_ = partyinvitationFields
+	// partyinvitationDescCreatedAt is the schema descriptor for created_at field.
+	partyinvitationDescCreatedAt := partyinvitationMixinFields0[2].Descriptor()
+	// partyinvitation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	partyinvitation.DefaultCreatedAt = partyinvitationDescCreatedAt.Default.(func() time.Time)
+	// partyinvitationDescUpdatedAt is the schema descriptor for updated_at field.
+	partyinvitationDescUpdatedAt := partyinvitationMixinFields0[4].Descriptor()
+	// partyinvitation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	partyinvitation.DefaultUpdatedAt = partyinvitationDescUpdatedAt.Default.(func() time.Time)
+	// partyinvitation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	partyinvitation.UpdateDefaultUpdatedAt = partyinvitationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// partyinvitationDescDeleteReason is the schema descriptor for delete_reason field.
+	partyinvitationDescDeleteReason := partyinvitationMixinFields0[8].Descriptor()
+	// partyinvitation.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	partyinvitation.DeleteReasonValidator = partyinvitationDescDeleteReason.Validators[0].(func(string) error)
+	// partyinvitationDescVersion is the schema descriptor for version field.
+	partyinvitationDescVersion := partyinvitationMixinFields0[9].Descriptor()
+	// partyinvitation.DefaultVersion holds the default value on creation for the version field.
+	partyinvitation.DefaultVersion = partyinvitationDescVersion.Default.(int64)
+	// partyinvitationDescStatus is the schema descriptor for status field.
+	partyinvitationDescStatus := partyinvitationFields[4].Descriptor()
+	// partyinvitation.DefaultStatus holds the default value on creation for the status field.
+	partyinvitation.DefaultStatus = partyinvitationDescStatus.Default.(string)
+	// partyinvitation.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	partyinvitation.StatusValidator = partyinvitationDescStatus.Validators[0].(func(string) error)
+	// partyinvitationDescEndReason is the schema descriptor for end_reason field.
+	partyinvitationDescEndReason := partyinvitationFields[7].Descriptor()
+	// partyinvitation.EndReasonValidator is a validator for the "end_reason" field. It is called by the builders before save.
+	partyinvitation.EndReasonValidator = partyinvitationDescEndReason.Validators[0].(func(string) error)
+	// partyinvitationDescID is the schema descriptor for id field.
+	partyinvitationDescID := partyinvitationMixinFields0[0].Descriptor()
+	// partyinvitation.DefaultID holds the default value on creation for the id field.
+	partyinvitation.DefaultID = partyinvitationDescID.Default.(func() uuid.UUID)
+	partymemberMixin := schema.PartyMember{}.Mixin()
+	partymemberMixinHooks0 := partymemberMixin[0].Hooks()
+	partymember.Hooks[0] = partymemberMixinHooks0[0]
+	partymemberMixinInters0 := partymemberMixin[0].Interceptors()
+	partymember.Interceptors[0] = partymemberMixinInters0[0]
+	partymemberMixinFields0 := partymemberMixin[0].Fields()
+	_ = partymemberMixinFields0
+	partymemberFields := schema.PartyMember{}.Fields()
+	_ = partymemberFields
+	// partymemberDescCreatedAt is the schema descriptor for created_at field.
+	partymemberDescCreatedAt := partymemberMixinFields0[2].Descriptor()
+	// partymember.DefaultCreatedAt holds the default value on creation for the created_at field.
+	partymember.DefaultCreatedAt = partymemberDescCreatedAt.Default.(func() time.Time)
+	// partymemberDescUpdatedAt is the schema descriptor for updated_at field.
+	partymemberDescUpdatedAt := partymemberMixinFields0[4].Descriptor()
+	// partymember.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	partymember.DefaultUpdatedAt = partymemberDescUpdatedAt.Default.(func() time.Time)
+	// partymember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	partymember.UpdateDefaultUpdatedAt = partymemberDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// partymemberDescDeleteReason is the schema descriptor for delete_reason field.
+	partymemberDescDeleteReason := partymemberMixinFields0[8].Descriptor()
+	// partymember.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	partymember.DeleteReasonValidator = partymemberDescDeleteReason.Validators[0].(func(string) error)
+	// partymemberDescVersion is the schema descriptor for version field.
+	partymemberDescVersion := partymemberMixinFields0[9].Descriptor()
+	// partymember.DefaultVersion holds the default value on creation for the version field.
+	partymember.DefaultVersion = partymemberDescVersion.Default.(int64)
+	// partymemberDescRole is the schema descriptor for role field.
+	partymemberDescRole := partymemberFields[3].Descriptor()
+	// partymember.RoleValidator is a validator for the "role" field. It is called by the builders before save.
+	partymember.RoleValidator = partymemberDescRole.Validators[0].(func(string) error)
+	// partymemberDescJoinedAt is the schema descriptor for joined_at field.
+	partymemberDescJoinedAt := partymemberFields[5].Descriptor()
+	// partymember.DefaultJoinedAt holds the default value on creation for the joined_at field.
+	partymember.DefaultJoinedAt = partymemberDescJoinedAt.Default.(func() time.Time)
+	// partymemberDescLeftReason is the schema descriptor for left_reason field.
+	partymemberDescLeftReason := partymemberFields[7].Descriptor()
+	// partymember.LeftReasonValidator is a validator for the "left_reason" field. It is called by the builders before save.
+	partymember.LeftReasonValidator = partymemberDescLeftReason.Validators[0].(func(string) error)
+	// partymemberDescID is the schema descriptor for id field.
+	partymemberDescID := partymemberMixinFields0[0].Descriptor()
+	// partymember.DefaultID holds the default value on creation for the id field.
+	partymember.DefaultID = partymemberDescID.Default.(func() uuid.UUID)
+	partypolicyMixin := schema.PartyPolicy{}.Mixin()
+	partypolicyMixinHooks0 := partypolicyMixin[0].Hooks()
+	partypolicy.Hooks[0] = partypolicyMixinHooks0[0]
+	partypolicyMixinInters0 := partypolicyMixin[0].Interceptors()
+	partypolicy.Interceptors[0] = partypolicyMixinInters0[0]
+	partypolicyMixinFields0 := partypolicyMixin[0].Fields()
+	_ = partypolicyMixinFields0
+	partypolicyFields := schema.PartyPolicy{}.Fields()
+	_ = partypolicyFields
+	// partypolicyDescCreatedAt is the schema descriptor for created_at field.
+	partypolicyDescCreatedAt := partypolicyMixinFields0[2].Descriptor()
+	// partypolicy.DefaultCreatedAt holds the default value on creation for the created_at field.
+	partypolicy.DefaultCreatedAt = partypolicyDescCreatedAt.Default.(func() time.Time)
+	// partypolicyDescUpdatedAt is the schema descriptor for updated_at field.
+	partypolicyDescUpdatedAt := partypolicyMixinFields0[4].Descriptor()
+	// partypolicy.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	partypolicy.DefaultUpdatedAt = partypolicyDescUpdatedAt.Default.(func() time.Time)
+	// partypolicy.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	partypolicy.UpdateDefaultUpdatedAt = partypolicyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// partypolicyDescDeleteReason is the schema descriptor for delete_reason field.
+	partypolicyDescDeleteReason := partypolicyMixinFields0[8].Descriptor()
+	// partypolicy.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	partypolicy.DeleteReasonValidator = partypolicyDescDeleteReason.Validators[0].(func(string) error)
+	// partypolicyDescVersion is the schema descriptor for version field.
+	partypolicyDescVersion := partypolicyMixinFields0[9].Descriptor()
+	// partypolicy.DefaultVersion holds the default value on creation for the version field.
+	partypolicy.DefaultVersion = partypolicyDescVersion.Default.(int64)
+	// partypolicyDescScopeType is the schema descriptor for scope_type field.
+	partypolicyDescScopeType := partypolicyFields[0].Descriptor()
+	// partypolicy.ScopeTypeValidator is a validator for the "scope_type" field. It is called by the builders before save.
+	partypolicy.ScopeTypeValidator = partypolicyDescScopeType.Validators[0].(func(string) error)
+	// partypolicyDescID is the schema descriptor for id field.
+	partypolicyDescID := partypolicyMixinFields0[0].Descriptor()
+	// partypolicy.DefaultID holds the default value on creation for the id field.
+	partypolicy.DefaultID = partypolicyDescID.Default.(func() uuid.UUID)
 	roomMixin := schema.Room{}.Mixin()
 	roomMixinHooks0 := roomMixin[0].Hooks()
 	room.Hooks[0] = roomMixinHooks0[0]

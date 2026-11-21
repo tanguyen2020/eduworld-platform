@@ -26,8 +26,6 @@ linters:
         module-competition:
           files: ["**/modules/competition/**"]
           deny:
-            - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/api"
-              desc: "competition is not in x-allowed-callers of chat"
             - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
               desc: "competition is not in x-allowed-callers of game"
             - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/api"

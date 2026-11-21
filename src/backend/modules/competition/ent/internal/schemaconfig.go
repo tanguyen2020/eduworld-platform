@@ -7,6 +7,10 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
+	Party             string // Party table.
+	PartyInvitation   string // PartyInvitation table.
+	PartyMember       string // PartyMember table.
+	PartyPolicy       string // PartyPolicy table.
 	Room              string // Room table.
 	SessionMembership string // SessionMembership table.
 }

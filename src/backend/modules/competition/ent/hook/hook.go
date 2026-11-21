@@ -9,6 +9,54 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent"
 )
 
+// The PartyFunc type is an adapter to allow the use of ordinary
+// function as Party mutator.
+type PartyFunc func(context.Context, *ent.PartyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PartyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PartyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyMutation", m)
+}
+
+// The PartyInvitationFunc type is an adapter to allow the use of ordinary
+// function as PartyInvitation mutator.
+type PartyInvitationFunc func(context.Context, *ent.PartyInvitationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PartyInvitationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PartyInvitationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyInvitationMutation", m)
+}
+
+// The PartyMemberFunc type is an adapter to allow the use of ordinary
+// function as PartyMember mutator.
+type PartyMemberFunc func(context.Context, *ent.PartyMemberMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PartyMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PartyMemberMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyMemberMutation", m)
+}
+
+// The PartyPolicyFunc type is an adapter to allow the use of ordinary
+// function as PartyPolicy mutator.
+type PartyPolicyFunc func(context.Context, *ent.PartyPolicyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PartyPolicyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PartyPolicyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyPolicyMutation", m)
+}
+
 // The RoomFunc type is an adapter to allow the use of ordinary
 // function as Room mutator.
 type RoomFunc func(context.Context, *ent.RoomMutation) (ent.Value, error)

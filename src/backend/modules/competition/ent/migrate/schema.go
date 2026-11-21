@@ -9,6 +9,207 @@ import (
 )
 
 var (
+	// PartiesColumns holds the columns for the "parties" table.
+	PartiesColumns = []*schema.Column{
+		{Name: "party_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Size: 128},
+		{Name: "leader_id", Type: field.TypeUUID},
+		{Name: "party_type", Type: field.TypeString, Size: 64},
+		{Name: "visibility", Type: field.TypeString, Size: 64, Default: "private"},
+		{Name: "invitation_policy", Type: field.TypeString, Size: 64, Default: "leader_only"},
+		{Name: "max_members", Type: field.TypeInt},
+		{Name: "grade_band", Type: field.TypeString, Size: 64},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "open"},
+		{Name: "current_activity_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "current_game_session_ref", Type: field.TypeUUID, Nullable: true},
+		{Name: "state_version", Type: field.TypeInt64, Default: 0},
+		{Name: "disbanded_at", Type: field.TypeTime, Nullable: true},
+	}
+	// PartiesTable holds the schema information for the "parties" table.
+	PartiesTable = &schema.Table{
+		Name:       "parties",
+		Columns:    PartiesColumns,
+		PrimaryKey: []*schema.Column{PartiesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "parties_tenant_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartiesColumns[1], PartiesColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "parties_school_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartiesColumns[10], PartiesColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// PartyInvitationsColumns holds the columns for the "party_invitations" table.
+	PartyInvitationsColumns = []*schema.Column{
+		{Name: "invitation_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "party_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "inviter_id", Type: field.TypeUUID},
+		{Name: "invitee_id", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "pending"},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "responded_at", Type: field.TypeTime, Nullable: true},
+		{Name: "end_reason", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// PartyInvitationsTable holds the schema information for the "party_invitations" table.
+	PartyInvitationsTable = &schema.Table{
+		Name:       "party_invitations",
+		Columns:    PartyInvitationsColumns,
+		PrimaryKey: []*schema.Column{PartyInvitationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "party_invitations_pending_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PartyInvitationsColumns[10], PartyInvitationsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'pending' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "party_invitations_invitee_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartyInvitationsColumns[13], PartyInvitationsColumns[14], PartyInvitationsColumns[15]},
+			},
+			{
+				Name:    "party_invitations_expiry_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartyInvitationsColumns[15]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'pending' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "party_invitations_inviter_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartyInvitationsColumns[1], PartyInvitationsColumns[12], PartyInvitationsColumns[2]},
+			},
+		},
+	}
+	// PartyMembersColumns holds the columns for the "party_members" table.
+	PartyMembersColumns = []*schema.Column{
+		{Name: "membership_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "party_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "role", Type: field.TypeString, Size: 64},
+		{Name: "invitation_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "joined_at", Type: field.TypeTime},
+		{Name: "left_at", Type: field.TypeTime, Nullable: true},
+		{Name: "left_reason", Type: field.TypeString, Nullable: true, Size: 64},
+	}
+	// PartyMembersTable holds the schema information for the "party_members" table.
+	PartyMembersTable = &schema.Table{
+		Name:       "party_members",
+		Columns:    PartyMembersColumns,
+		PrimaryKey: []*schema.Column{PartyMembersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "party_members_one_active_party_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PartyMembersColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "left_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "party_members_one_leader_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PartyMembersColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "left_at IS NULL AND role = 'leader' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "party_members_active_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PartyMembersColumns[10], PartyMembersColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "left_at IS NULL AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "party_members_party_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartyMembersColumns[10], PartyMembersColumns[15]},
+			},
+			{
+				Name:    "party_members_student_left_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartyMembersColumns[1], PartyMembersColumns[11], PartyMembersColumns[17], PartyMembersColumns[16]},
+			},
+		},
+	}
+	// PartyPoliciesColumns holds the columns for the "party_policies" table.
+	PartyPoliciesColumns = []*schema.Column{
+		{Name: "policy_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "scope_type", Type: field.TypeString, Size: 64},
+		{Name: "scope_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "rules", Type: field.TypeJSON},
+	}
+	// PartyPoliciesTable holds the schema information for the "party_policies" table.
+	PartyPoliciesTable = &schema.Table{
+		Name:       "party_policies",
+		Columns:    PartyPoliciesColumns,
+		PrimaryKey: []*schema.Column{PartyPoliciesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "party_policies_scope_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PartyPoliciesColumns[10], PartyPoliciesColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// RoomsColumns holds the columns for the "rooms" table.
 	RoomsColumns = []*schema.Column{
 		{Name: "room_id", Type: field.TypeUUID},
@@ -93,12 +294,28 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		PartiesTable,
+		PartyInvitationsTable,
+		PartyMembersTable,
+		PartyPoliciesTable,
 		RoomsTable,
 		SessionMembershipsTable,
 	}
 )
 
 func init() {
+	PartiesTable.Annotation = &entsql.Annotation{
+		Table: "parties",
+	}
+	PartyInvitationsTable.Annotation = &entsql.Annotation{
+		Table: "party_invitations",
+	}
+	PartyMembersTable.Annotation = &entsql.Annotation{
+		Table: "party_members",
+	}
+	PartyPoliciesTable.Annotation = &entsql.Annotation{
+		Table: "party_policies",
+	}
 	RoomsTable.Annotation = &entsql.Annotation{
 		Table: "rooms",
 	}

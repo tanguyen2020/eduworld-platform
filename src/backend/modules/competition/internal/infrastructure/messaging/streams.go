@@ -15,7 +15,7 @@ const ProjectionIdentityName = "competition.projection_identity"
 
 // ProjectionIdentityEvents are the identity events it projects.
 var ProjectionIdentityEvents = []string{"tenant.created", "tenant.updated", "student.synced", "user.status_changed",
-	"student.cleaned_up", "student.restored"}
+	"student.cleaned_up", "student.restored", "enrollment.changed"}
 
 // HubAccessRevokedName removes a revoked student from the hub at once (F091 edge case, no grace).
 const HubAccessRevokedName = "competition.hub_access_revoked"
@@ -48,3 +48,18 @@ func Subjects(producer string, events []string) []string {
 	}
 	return out
 }
+
+// PartySafetyChatName applies the safety events of module chat to parties (F100-AC-25): user.blocked cancels the
+// pending invitations between the two students; sanction.applied/lifted keep ref.sanctions and a multiplayer sanction
+// takes the student out of its party.
+const PartySafetyChatName = "competition.party_safety_chat"
+
+// PartySafetyChatEvents are the chat events it handles (owners F095, F121).
+var PartySafetyChatEvents = []string{"user.blocked", "sanction.applied", "sanction.lifted"}
+
+// PartySafetyIdentityName takes out of their party the students who changed school, were deactivated, locked or
+// cleaned up (F100 edge cases).
+const PartySafetyIdentityName = "competition.party_safety_identity"
+
+// PartySafetyIdentityEvents are the identity events it handles (owners F010, F016).
+var PartySafetyIdentityEvents = []string{"student.synced", "user.status_changed", "student.cleaned_up"}

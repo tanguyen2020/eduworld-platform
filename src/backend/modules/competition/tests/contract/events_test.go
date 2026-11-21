@@ -53,6 +53,12 @@ func (f *fakeRefs) Block(_ context.Context, _, _, _ uuid.UUID, active bool, _ in
 	return true, nil
 }
 
+func (f *fakeRefs) Enrollment(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, *uuid.UUID, string, *time.Time, *time.Time,
+	int64) (bool, error) {
+	f.calls = append(f.calls, "enrollment")
+	return true, nil
+}
+
 // fakeHub is a TEST DOUBLE of the hub side of the consumers (R17).
 type fakeHub struct{ removed []uuid.UUID }
 
@@ -105,6 +111,8 @@ func TestConsumersAcceptOwnerExamples(t *testing.T) {
 		{"identity", "user.status_changed", "status", id.Handle},
 		{"identity", "student.cleaned_up", "deleted", id.Handle},
 		{"identity", "student.restored", "deleted", id.Handle},
+		// F100 T010: the class of a student (same-class party rules).
+		{"identity", "enrollment.changed", "enrollment", id.Handle},
 		{"game", "game_profile.updated", "profile", game.Handle},
 		// F095 T021: the relation events of module chat (spec F091 A-1).
 		{"chat", "friend.added", "friend+", socialP.Handle},
@@ -154,5 +162,78 @@ func TestSocialProjectionRefusesInvalidPayloads(t *testing.T) {
 	}
 	if len(refs.calls) != 0 {
 		t.Fatalf("invalid payloads reached the projection: %v", refs.calls)
+	}
+}
+
+// fakeSafety is a TEST DOUBLE of consumer.PartySafety (R17): it records which safety change each event reached.
+type fakeSafety struct{ calls []string }
+
+func (f *fakeSafety) Blocked(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) (bool, error) {
+	f.calls = append(f.calls, "blocked")
+	return true, nil
+}
+func (f *fakeSafety) Sanction(_ context.Context, _, _, _ uuid.UUID, typ string, _ *time.Time, active bool, _ int64) (bool, error) {
+	f.calls = append(f.calls, map[bool]string{true: "sanction+", false: "sanction-"}[active]+typ)
+	return true, nil
+}
+func (f *fakeSafety) StudentSynced(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, string) (bool, error) {
+	f.calls = append(f.calls, "synced")
+	return true, nil
+}
+func (f *fakeSafety) StatusChanged(context.Context, *uuid.UUID, uuid.UUID, string) (bool, error) {
+	f.calls = append(f.calls, "status")
+	return true, nil
+}
+func (f *fakeSafety) CleanedUp(context.Context, uuid.UUID, uuid.UUID) (bool, error) {
+	f.calls = append(f.calls, "cleaned")
+	return true, nil
+}
+
+// F100 T037: the party safety consumers accept the examples of the payload schemas of their owners (chat F095,
+// identity F010/F016) and the sanction payload of EVENT_DESIGN §4 (schema owner F121, not written yet); invalid
+// payloads go to the DLQ at once.
+func TestPartySafetyConsumers(t *testing.T) {
+	s := &fakeSafety{}
+	chat, ident := consumer.PartySafetyChat{S: s}, consumer.PartySafetyIdentity{S: s}
+	cases := []struct {
+		producer, event, want string
+		handle                func(context.Context, outbox.Envelope) error
+	}{
+		{"chat", "user.blocked", "blocked", chat.Handle},
+		{"identity", "student.synced", "synced", ident.Handle},
+		{"identity", "user.status_changed", "status", ident.Handle},
+		{"identity", "student.cleaned_up", "cleaned", ident.Handle},
+	}
+	for _, c := range cases {
+		payload, tenant := example(t, c.producer, c.event)
+		s.calls = nil
+		e := outbox.Envelope{EventID: uuid.New(), EventType: c.event, OccurredAt: time.Now(), TenantID: tenant, Payload: payload}
+		if err := c.handle(context.Background(), e); err != nil {
+			t.Errorf("%s: %v", c.event, err)
+			continue
+		}
+		if len(s.calls) != 1 || s.calls[0] != c.want {
+			t.Errorf("%s reached %v, want %s", c.event, s.calls, c.want)
+		}
+	}
+	tenant := uuid.New()
+	sanction := `{"sanction_id":"` + uuid.NewString() + `","user_id":"` + uuid.NewString() + `","tenant_id":"` + tenant.String() +
+		`","case_id":"` + uuid.NewString() + `","sanction_type":"restrict_multiplayer","until":"2026-11-28T03:00:00Z"}`
+	for typ, want := range map[string]string{"sanction.applied": "sanction+restrict_multiplayer", "sanction.lifted": "sanction-restrict_multiplayer"} {
+		s.calls = nil
+		e := outbox.Envelope{EventID: uuid.New(), EventType: typ, OccurredAt: time.Now(), TenantID: &tenant, Payload: json.RawMessage(sanction)}
+		if err := chat.Handle(context.Background(), e); err != nil || len(s.calls) != 1 || s.calls[0] != want {
+			t.Errorf("%s: %v %v", typ, err, s.calls)
+		}
+	}
+	for _, bad := range []struct{ typ, payload string }{
+		{"user.blocked", `{"tenant_id":"` + tenant.String() + `","blocker_id":"` + tenant.String() + `","blocked_id":"` + tenant.String() + `"}`},
+		{"sanction.applied", `{"tenant_id":"` + uuid.NewString() + `","sanction_id":"` + uuid.NewString() + `","user_id":"` + uuid.NewString() + `","sanction_type":"x"}`},
+		{"sanction.applied", `{"tenant_id":"` + tenant.String() + `","user_id":"` + uuid.NewString() + `"}`},
+	} {
+		e := outbox.Envelope{EventType: bad.typ, TenantID: &tenant, OccurredAt: time.Now(), Payload: json.RawMessage(bad.payload)}
+		if err := chat.Handle(context.Background(), e); err == nil || !errors.Is(err, outbox.ErrPermanent) {
+			t.Errorf("%s %s: %v", bad.typ, bad.payload, err)
+		}
 	}
 }

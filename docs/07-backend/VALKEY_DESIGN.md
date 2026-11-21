@@ -66,6 +66,7 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:party:user:<user_id>` | STRING party_id | 24 h | `competition · party` | Rebuildable |
 | `ew:party:invite:<invitation_id>` | HASH | = `expires_at` (mặc định 5 phút) | `competition · party` | Rebuildable |
 | `ew:party:invites:user:<user_id>` | ZSET invitation_id → expires_ms | 10 phút | `competition · party` | Rebuildable |
+| `ew:party:presence:<user_id>` | HASH {status, ts} — presence gần nhất module competition nhận từ tín hiệu `ew.rt.presence.<tenant_id>` (subscriber `competition.party_presence` trong `core-api`), ghi bằng Lua chỉ khi `ts` mới hơn; mất kết nối = `offline` (chuyển leader cho thành viên online, F100) | `presence_ttl` (90 s) | `competition · party` | Ephemeral — hết hạn = offline |
 | `ew:lobby:<room_id>` | HASH {match_id?, state, deadline_ms} | 30 phút | `competition · lobby` | Ephemeral |
 | `ew:lobby:<room_id>:ready` | HASH user_id → 0/1 | 30 phút | `competition · lobby` | Ephemeral |
 | `ew:mm:queue:<mode>:<scope>:<grade_key>:<subject>[:<topic>]` (`<scope>` = phạm vi ghép theo [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md), vd. `school:<school_id>`, `tenant:<tenant_id>`) | ZSET ticket_id → enqueue_ms | Không TTL key; phần tử dọn bởi matchmaker (ticket TTL) | `competition · matchmaking` | Ephemeral |
@@ -129,7 +130,7 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 |---|---|---|
 | `ew:rt:user:<user_id>` | mọi module (`core-api`/`worker`) — sự kiện cho một người | `realtime` node đang giữ kết nối user |
 | `ew:chat:fanout:<channel_id>` | module chat (sau khi tin đã qua moderation **và** NATS JetStream ack — ADR-0035); cũng mang `chat.message.edited/recalled`, `chat.reaction.updated`, `chat.pin.updated`, `chat.typing.updated`, `chat.receipt.updated` | `realtime` node có member online |
-| `ew:rt:party:<party_id>` | module competition · party | `realtime` node có member online |
+| `ew:rt:party:<party_id>` | module competition · party — **không dùng trong Release 1.0**: sự kiện party fan-out tới `ew:rt:user:<member_id>` của từng thành viên (F100 research R1, [REALTIME_ARCHITECTURE §5](../06-architecture/REALTIME_ARCHITECTURE.md)) | `realtime` node có member online |
 | `ew:rt:room:<room_id>:out` | module competition (instance giữ lease room) | `realtime` node có member trong room |
 | `ew:rt:node:<node_id>:in` | realtime node bất kỳ (forward tín hiệu kết nối, vd. takeover) | Node `<node_id>` |
 | `ew:rt:broadcast` | module identity (thông báo bảo trì, admin) | Tất cả node gateway |

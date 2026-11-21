@@ -115,8 +115,56 @@ func (c IdentityProjection) Handle(ctx context.Context, e outbox.Envelope) error
 		}
 		ok, err := c.P.StudentDeleted(ctx, tenant, p.StudentID, e.EventType == "student.cleaned_up", e.OccurredAt)
 		return classify("students", e, ok, err)
+	case "enrollment.changed":
+		ok, err := c.enrollment(ctx, e)
+		return classify("enrollments", e, ok, err)
 	}
 	return nil
+}
+
+// enrollment applies enrollment.changed (owner F010) to ref.enrollments (F100: class of a student).
+func (c IdentityProjection) enrollment(ctx context.Context, e outbox.Envelope) (bool, error) {
+	var p struct {
+		StudentID     uuid.UUID  `json:"student_id"`
+		ClassID       uuid.UUID  `json:"class_id"`
+		Op            string     `json:"op"`
+		SchoolID      *uuid.UUID `json:"school_id"`
+		Status        *string    `json:"status"`
+		StartDate     *string    `json:"start_date"`
+		EndDate       *string    `json:"end_date"`
+		SourceVersion *int64     `json:"source_version"`
+	}
+	if err := decode(e, &p); err != nil {
+		return false, err
+	}
+	tenant, err := envTenant(e)
+	if err != nil {
+		return false, err
+	}
+	status := map[string]string{"added": "active", "ended": "ended", "transferred": "transferred"}[p.Op]
+	if p.Status != nil {
+		status = *p.Status
+	}
+	start, err1 := date(p.StartDate)
+	end, err2 := date(p.EndDate)
+	switch {
+	case p.StudentID == uuid.Nil || p.ClassID == uuid.Nil:
+		return false, invalid(e.EventType, "student_id and class_id are required")
+	case !slices.Contains([]string{"active", "transferred", "ended"}, status), err1 != nil, err2 != nil:
+		return false, invalid(e.EventType, "op/status/dates")
+	}
+	return c.P.Enrollment(ctx, tenant, p.StudentID, p.ClassID, p.SchoolID, status, start, end, version(p.SourceVersion, e))
+}
+
+func date(s *string) (*time.Time, error) {
+	if s == nil || *s == "" {
+		return nil, nil
+	}
+	d, err := time.Parse(time.DateOnly, *s)
+	if err != nil {
+		return nil, err
+	}
+	return &d, nil
 }
 
 func (c IdentityProjection) tenant(ctx context.Context, e outbox.Envelope) (bool, error) {

@@ -73,3 +73,12 @@ func (p Projection) Friendship(ctx context.Context, tenant, low, high uuid.UUID,
 func (p Projection) Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, active bool, version int64) (bool, error) {
 	return p.Refs.Block(ctx, tenant, blocker, blocked, active, version)
 }
+
+// Enrollment applies enrollment.changed (owner F010): the class of a student for the same-class party rules (F100).
+func (p Projection) Enrollment(ctx context.Context, tenant, student, class uuid.UUID, school *uuid.UUID, status string, start, end *time.Time,
+	version int64) (bool, error) {
+	if err := p.owned(ctx, tenant, "students", student); err != nil {
+		return false, err
+	}
+	return p.Refs.Enrollment(ctx, tenant, student, class, school, status, start, end, version)
+}

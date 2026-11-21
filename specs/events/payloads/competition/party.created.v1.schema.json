@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.created.v1.schema.json",
+  "title": "Payload party.created v1 (module competition, owner F100)",
+  "description": "Học sinh tạo party và là leader (createParty, F100-AC-01). Consumer: chat (mở channel party, F117), AUD, ANA.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "party_id",
+    "tenant_id",
+    "school_id",
+    "leader_id",
+    "party_type",
+    "visibility",
+    "invitation_policy",
+    "max_members",
+    "grade_band",
+    "state_version",
+    "created_at"
+  ],
+  "properties": {
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "leader_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "party_type": {
+      "type": "string",
+      "enum": [
+        "friend",
+        "study_group",
+        "quest",
+        "competition_team",
+        "custom"
+      ]
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "friends",
+        "class"
+      ]
+    },
+    "invitation_policy": {
+      "type": "string",
+      "enum": [
+        "leader_only",
+        "members"
+      ]
+    },
+    "max_members": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 8
+    },
+    "grade_band": {
+      "type": "string",
+      "enum": [
+        "g1_3",
+        "g4_5",
+        "g6_7",
+        "g8_9"
+      ]
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "multiplayer.parties.state_version sau thay đổi (tăng đúng 1 mỗi thay đổi)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "leader_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "party_type": "friend",
+      "visibility": "private",
+      "invitation_policy": "leader_only",
+      "max_members": 4,
+      "grade_band": "g1_3",
+      "state_version": 0,
+      "created_at": "2026-11-21T03:00:00Z"
+    }
+  ]
+}

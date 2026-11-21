@@ -248,10 +248,10 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 409 | `PARTY_FULL` | Đạt `max_members` |
 | 404 | `PARTY_NOT_FOUND` | Party không tồn tại/đã giải tán/ngoài scope |
 | 403 | `PARTY_NOT_LEADER` | Thao tác chỉ dành cho leader |
-| 403 | `PARTY_INVITE_NOT_ALLOWED` | Lời mời party bị từ chối vì bất kỳ lý do chính sách nào: `invitation_policy` không cho phép người mời, người được mời ngoài phạm vi trường/lớp/khối cho phép, hoặc hai bên đã chặn nhau |
+| 403 | `PARTY_INVITE_NOT_ALLOWED` | Lời mời/tham gia party bị từ chối vì `invitation_policy` không cho phép người mời, hoặc người được mời và một thành viên đã chặn nhau (một chiều bất kỳ); không tiết lộ lý do (F100-AC-08, RB-405) |
 | 429 | `PARTY_INVITE_RATE_LIMITED` | Vượt giới hạn lời mời |
 | 410 | `PARTY_INVITATION_EXPIRED` | Lời mời hết hạn |
-| 403 | `PARTY_POLICY_VIOLATION` | Vi phạm rule school/class/grade/block khi tham gia party hoặc bắt đầu hoạt động (không dùng cho lời mời) |
+| 403 | `PARTY_POLICY_VIOLATION` | Vi phạm `party_policies`/phạm vi khi tạo, mời, chấp nhận, tham gia party hoặc bắt đầu hoạt động: khác trường (trừ tenant `unit` bật liên trường) hoặc tenant, khác lớp/khối theo policy, sanction `restrict_multiplayer`, chặn mời lại sau kick; có audit (F100-AC-09, AC-16) |
 | 409 | `PARTY_MEMBER_NOT_ONLINE` | Chuyển leader cho member offline |
 | 409 | `PARTY_ACTIVITY_NOT_ELIGIBLE` | Có member không đủ điều kiện activity (trạng thái party/thành viên hiện tại không cho bắt đầu) |
 | 403 | `ROOM_NOT_MEMBER` | Truy cập room không phải thành viên |

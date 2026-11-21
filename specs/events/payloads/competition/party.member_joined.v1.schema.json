@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.member_joined.v1.schema.json",
+  "title": "Payload party.member_joined v1 (module competition, owner F100)",
+  "description": "Thành viên vào party (accept lời mời, joinParty — F100-AC-11, AC-16). Consumer: chat (thêm thành viên channel party, F117), game (F103), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "party_id",
+    "tenant_id",
+    "student_id",
+    "role",
+    "via",
+    "state_version",
+    "joined_at"
+  ],
+  "properties": {
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "leader",
+        "member"
+      ]
+    },
+    "via": {
+      "type": "string",
+      "enum": [
+        "invitation",
+        "join"
+      ]
+    },
+    "invitation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "multiplayer.parties.state_version sau thay đổi (tăng đúng 1 mỗi thay đổi)"
+    },
+    "joined_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006",
+      "role": "member",
+      "via": "invitation",
+      "invitation_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000b1",
+      "state_version": 1,
+      "joined_at": "2026-11-21T03:01:00Z"
+    }
+  ]
+}

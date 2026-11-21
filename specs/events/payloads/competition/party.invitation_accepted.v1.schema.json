@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.invitation_accepted.v1.schema.json",
+  "title": "Payload party.invitation_accepted v1 (module competition, owner F100)",
+  "description": "Invitee chấp nhận lời mời (F100-AC-11); phát cùng transaction với party.member_joined. Consumer: NTF, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "invitation_id",
+    "party_id",
+    "tenant_id",
+    "inviter_id",
+    "invitee_id"
+  ],
+  "properties": {
+    "invitation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "inviter_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "invitee_id": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "examples": [
+    {
+      "invitation_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000b1",
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "inviter_id": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "invitee_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006"
+    }
+  ]
+}

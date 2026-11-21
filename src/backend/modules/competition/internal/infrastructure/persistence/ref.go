@@ -110,3 +110,14 @@ func (Refs) Block(ctx context.Context, tenant, blocker, blocked uuid.UUID, activ
 		ON CONFLICT (blocker_id, blocked_id) DO UPDATE SET active = $4, source_version = $5
 		WHERE b.source_version < $5 AND b.tenant_id = $1`, tenant, blocker, blocked, active, version)
 }
+
+// Enrollment upserts ref.enrollments from enrollment.changed (newer source_version only; never another tenant).
+func (Refs) Enrollment(ctx context.Context, tenant, student, class uuid.UUID, school *uuid.UUID, status string, start, end *time.Time,
+	version int64) (bool, error) {
+	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at (rule 2)
+	return exec(ctx, `INSERT INTO ref.enrollments AS e (student_id, class_id, tenant_id, school_id, status, start_date, end_date, source_version)
+		VALUES ($1, $2, $3, $4, $5, $6::date, $7::date, $8)
+		ON CONFLICT (student_id, class_id) DO UPDATE SET school_id = coalesce($4, e.school_id), status = $5, start_date = coalesce($6::date, e.start_date),
+			end_date = $7::date, source_version = $8
+		WHERE e.source_version < $8 AND e.tenant_id = $3`, student, class, tenant, school, status, start, end, version)
+}

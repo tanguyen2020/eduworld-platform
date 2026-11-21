@@ -23,3 +23,16 @@ type OrphanCloser interface {
 func CloseIdleHubInstancesJob(h OrphanCloser) func(ctx context.Context) (int, error) {
 	return func(ctx context.Context) (int, error) { return h.CloseOrphanRooms(ctx, 200) }
 }
+
+// PartyInvitationExpiry is the job party-invitation-expiry (F100-AC-14, plan: every 15 s): pending party invitations
+// past expires_at become expired (reason ttl) with party.invitation_expired and party.invitation.updated.
+const PartyInvitationExpiry = "party-invitation-expiry"
+
+// InvitationExpirer expires the pending invitations past their expiry (command.Parties.ExpireInvitations bound to its
+// platform repository).
+type InvitationExpirer func(ctx context.Context, batch int) (int, error)
+
+// PartyInvitationExpiryJob returns one run of the job.
+func PartyInvitationExpiryJob(h InvitationExpirer) func(ctx context.Context) (int, error) {
+	return func(ctx context.Context) (int, error) { return h(ctx, 500) }
+}

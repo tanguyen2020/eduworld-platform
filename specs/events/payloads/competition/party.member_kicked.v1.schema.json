@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.member_kicked.v1.schema.json",
+  "title": "Payload party.member_kicked v1 (module competition, owner F100)",
+  "description": "Leader kick thành viên (kickPartyMember, F100-AC-18); người bị kick không được mời lại trong party_kick_reinvite_block. Consumer: chat (F117), game (F103), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "party_id",
+    "tenant_id",
+    "student_id",
+    "kicked_by",
+    "state_version"
+  ],
+  "properties": {
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "kicked_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "multiplayer.parties.state_version sau thay đổi (tăng đúng 1 mỗi thay đổi)"
+    }
+  },
+  "examples": [
+    {
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000006",
+      "kicked_by": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "state_version": 3
+    }
+  ]
+}
