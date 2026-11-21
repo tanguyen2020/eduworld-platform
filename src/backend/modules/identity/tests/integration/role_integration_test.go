@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"testing"
@@ -88,6 +89,55 @@ func TestRoles(t *testing.T) {
 	if r := h.do(t, "GET", "/tenant/roles", taTok, hdr(a.tenant, nil), nil); r.status != 200 || !strings.Contains(r.raw, custom) ||
 		!strings.Contains(r.raw, `"school_admin"`) || strings.Contains(r.raw, `"system_admin"`) {
 		t.Fatalf("list tenant roles: %d %s", r.status, r.raw)
+	}
+	// F012 Clarifications 2026-11-22 (E2E Portal v2): a School Admin (grant limited to its school) reads the role list of
+	// its tenant for the assignment screen — read-only, grants counted in its school only; another tenant is refused;
+	// academic_manager (no tenant.role.read) still gets 403.
+	scA := staffUser(ctx, t, e, "sc.role.a", &a.tenant)
+	link(scA, "kc-sc.role.a")
+	grantRole(ctx, t, e, scA, "school_admin", &a.tenant, "school", &a.school, "NULL")
+	scOther := staffUser(ctx, t, e, "sc.role.other", &a.tenant)
+	grantRole(ctx, t, e, scOther, "school_admin", &a.tenant, "school", &a.otherSchool, "NULL")
+	scTok := idp.Token("kc-sc.role.a", httpxtest.PortalClient, now)
+	countOf := func(raw, code string) float64 {
+		t.Helper()
+		var pg struct {
+			Items []map[string]any `json:"items"`
+		}
+		if err := json.Unmarshal([]byte(raw), &pg); err != nil {
+			t.Fatal(err)
+		}
+		for _, it := range pg.Items {
+			if it["code"] == code {
+				n, _ := it["active_user_role_count"].(float64)
+				return n
+			}
+		}
+		t.Fatalf("role %s not listed: %s", code, raw)
+		return 0
+	}
+	r = h.do(t, "GET", "/tenant/roles?limit=100", scTok, hdr(a.tenant, nil), nil)
+	if r.status != 200 || !strings.Contains(r.raw, custom) || strings.Contains(r.raw, `"system_admin"`) || countOf(r.raw, "school_admin") != 1 {
+		t.Fatalf("school admin list tenant roles: %d %s", r.status, r.raw)
+	}
+	if r = h.do(t, "GET", "/tenant/roles?limit=100", taTok, hdr(a.tenant, nil), nil); r.status != 200 || countOf(r.raw, "school_admin") != 2 {
+		t.Fatalf("tenant admin counts: %d %s", r.status, r.raw)
+	}
+	if r = h.do(t, "GET", "/tenant/roles/"+custom, scTok, hdr(a.tenant, nil), nil); r.status != 200 {
+		t.Fatalf("school admin get role: %d %s", r.status, r.raw)
+	}
+	if r = h.do(t, "GET", "/tenant/permissions", scTok, hdr(a.tenant, nil), nil); r.status != 200 || strings.Contains(r.raw, `"game.`) {
+		t.Fatalf("school admin permissions: %d", r.status)
+	}
+	if r = h.do(t, "GET", "/tenant/roles", scTok, hdr(b.tenant, nil), nil); r.status == 200 {
+		t.Fatalf("school admin of tenant A read tenant B roles: %d %s", r.status, r.raw)
+	}
+	if r = h.do(t, "POST", "/tenant/roles", scTok, key(a.tenant), good); r.status != 403 {
+		t.Fatalf("school admin create role: %d %s", r.status, r.raw)
+	}
+	amTok := admin("am.role.a", &a.tenant, "academic_manager", "tenant")
+	if r = h.do(t, "GET", "/tenant/roles", amTok, hdr(a.tenant, nil), nil); r.status != 403 {
+		t.Fatalf("academic manager list roles: %d %s", r.status, r.raw)
 	}
 
 	// AC-17: system roles are read-only (403), via the tenant and the platform routes.

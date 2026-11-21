@@ -61,6 +61,9 @@ func roleQuery(f read.RoleFilter, extra string, args []any) (string, []any) {
 	if f.ActiveIn != nil {
 		active = "ur.tenant_id = " + arg(*f.ActiveIn)
 	}
+	if len(f.ActiveSchools) > 0 {
+		active += " AND ur.school_id = ANY(" + arg(uuidArray(f.ActiveSchools)) + "::uuid[])"
+	}
 	if extra != "" {
 		conds = append(conds, extra)
 	}

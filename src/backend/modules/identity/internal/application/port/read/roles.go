@@ -43,8 +43,10 @@ type RoleFilter struct {
 	AnyTenant bool // every tenant (platform staff reading one role)
 	ScopeKind string
 	ActiveIn  *uuid.UUID
-	AfterID   *uuid.UUID
-	Limit     int
+	// ActiveSchools limits the counted grants to these schools (reader with a grant limited to schools).
+	ActiveSchools []uuid.UUID
+	AfterID       *uuid.UUID
+	Limit         int
 }
 
 // RoleReader reads roles and the permission catalog copy.

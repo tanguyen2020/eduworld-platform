@@ -59,7 +59,8 @@ func expand(patterns []string, exclude ...Permission) []Permission {
 // tenant_admin, school_admin and academic_manager; school_admin also holds social.club.approve and
 // tenant.audit.read; school_admin and academic_manager read their schools (tenant.school.read, F012 Clarifications
 // 2026-11-21: listTenantSchools keeps a school-limited grant to its schools); every tenant role reads the
-// curriculum (curriculum.read, ADMIN_PORTAL §2.2 "read mọi role"); tenant_admin does not hold learning_content.re_evaluate (§2.4 matrix);
+// curriculum (curriculum.read, ADMIN_PORTAL §2.2 "read mọi role"); school_admin reads the tenant roles it assigns
+// (tenant.role.read, F012 Clarifications 2026-11-22, read-only, grant counts of its schools only); tenant_admin does not hold learning_content.re_evaluate (§2.4 matrix);
 // content_reviewer also holds learning_content.read.
 func SystemRoles() []RoleDef {
 	return []RoleDef{
@@ -70,7 +71,7 @@ func SystemRoles() []RoleDef {
 			"report.export",
 		}, PermLearningContentReEvaluate)},
 		{Name: "school_admin", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
-			"school.*", "tenant.user.read", "tenant.user.lock", "tenant.school.read", "tenant.user_role.write", "lms.*", "curriculum.read",
+			"school.*", "tenant.user.read", "tenant.user.lock", "tenant.school.read", "tenant.role.read", "tenant.user_role.write", "lms.*", "curriculum.read",
 			"learning_content.read",
 			"learning_content.write", "learning_content.review", "learning_content.publish", "analytics.school.read",
 			"moderation.school_notification.read", "moderation.school_notification.acknowledge",

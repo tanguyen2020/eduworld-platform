@@ -31,17 +31,27 @@ type RolePage struct {
 	Page  page.Info       `json:"page"`
 }
 
-// tenantRoleRead authorizes tenant.role.read (or tenant.role.write) in the session tenant.
-func tenantRoleRead(ctx context.Context) (context.Context, authz.Principal, error) {
+// tenantRoleRead authorizes tenant.role.read (or tenant.role.write) in the session tenant. Roles have no school: a
+// grant limited to schools (School Admin, F012 Clarifications 2026-11-22) is checked on one of its schools and the
+// returned schools limit the counted grants to them (nil: every grant of the tenant).
+func tenantRoleRead(ctx context.Context) (context.Context, authz.Principal, []uuid.UUID, error) {
 	p, err := authenticated(ctx)
 	if err != nil {
-		return ctx, p, err
+		return ctx, p, nil, err
 	}
 	perm := authz.PermTenantRoleRead
 	if !p.Has(perm) {
 		perm = authz.PermTenantRoleWrite
 	}
-	return tenantRead(ctx, perm, nil)
+	schools, all := SchoolsWith(p, perm)
+	var school *uuid.UUID
+	if all || len(schools) == 0 {
+		schools = nil
+	} else {
+		school = &schools[0]
+	}
+	ctx, p, err = tenantRead(ctx, perm, school)
+	return ctx, p, schools, err
 }
 
 func platformRoleRead(ctx context.Context) (authz.Principal, error) {
@@ -56,7 +66,7 @@ func platformRoleRead(ctx context.Context) (authz.Principal, error) {
 func (q Roles) ListTenantPermissions(ctx context.Context) (out PermissionList, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListTenantPermissions")
 	defer func() { done(err) }()
-	if ctx, _, err = tenantRoleRead(ctx); err != nil {
+	if ctx, _, _, err = tenantRoleRead(ctx); err != nil {
 		return out, err
 	}
 	items, v, err := q.Model.Permissions(ctx, true)
@@ -96,22 +106,22 @@ func (q Roles) page(ctx context.Context, f read.RoleFilter, in ListInput) (out R
 func (q Roles) ListTenantRoles(ctx context.Context, in ListInput) (out RolePage, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListTenantRoles")
 	defer func() { done(err) }()
-	ctx, p, err := tenantRoleRead(ctx)
+	ctx, p, schools, err := tenantRoleRead(ctx)
 	if err != nil {
 		return out, err
 	}
-	return q.page(ctx, read.RoleFilter{TenantIDs: []uuid.UUID{*p.TenantID}, ScopeKind: "tenant", ActiveIn: p.TenantID}, in)
+	return q.page(ctx, read.RoleFilter{TenantIDs: []uuid.UUID{*p.TenantID}, ScopeKind: "tenant", ActiveIn: p.TenantID, ActiveSchools: schools}, in)
 }
 
 // GetTenantRole is getTenantRole (a platform role or another tenant's role is 404).
 func (q Roles) GetTenantRole(ctx context.Context, id uuid.UUID) (out read.RoleView, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.GetTenantRole")
 	defer func() { done(err) }()
-	ctx, p, err := tenantRoleRead(ctx)
+	ctx, p, schools, err := tenantRoleRead(ctx)
 	if err != nil {
 		return out, err
 	}
-	return q.Model.Role(ctx, id, read.RoleFilter{TenantIDs: []uuid.UUID{*p.TenantID}, ScopeKind: "tenant", ActiveIn: p.TenantID})
+	return q.Model.Role(ctx, id, read.RoleFilter{TenantIDs: []uuid.UUID{*p.TenantID}, ScopeKind: "tenant", ActiveIn: p.TenantID, ActiveSchools: schools})
 }
 
 // ListPlatformRoles is listPlatformRoles: shared roles, plus the custom roles of tenant_ids
