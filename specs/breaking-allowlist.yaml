@@ -1,0 +1,1294 @@
+# Breaking changes of the OpenAPI contracts accepted on purpose (ADR-0095 mục 7). Read by scripts/ci/specs-breaking.mjs
+# (make specs-breaking): oasdiff still reports every breaking change; a change passes only when an entry below names it
+# exactly — spec file(s), oasdiff check id, HTTP method, path and a fragment of the message — and cites an existing ADR.
+# Nothing else is accepted and the check is never disabled. Entries list the change set of ADR-0094 (no MFA on the Admin
+# Portal) and ADR-0095 (no class, enrollment, course, learning path, schedule, study group) measured from c7f84c94, the
+# last commit before both: `BASE_REF=c7f84c94 make specs-breaking` still reports, as it must, the breaking changes of
+# other features (F071 /game/world/*), which no ADR here covers. Add an entry only with the ADR that decides the break;
+# `node scripts/ci/specs-breaking.mjs <base> --suggest` prints candidate entries (adr/reason empty) to review.
+exceptions:
+  - adr: ADR-0094
+    reason: 'Admin Portal không còn MFA (TOTP): bỏ trường mfa/otp khỏi login, refresh, setup password, tổng quan tích hợp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: response-required-property-removed
+    operation: GET
+    path: /admin/integrations
+    text: removed the required property 'keycloak/platform_mfa_required' from the response with the '200' status
+  - adr: ADR-0094
+    reason: 'Admin Portal không còn MFA (TOTP): bỏ trường mfa/otp khỏi login, refresh, setup password, tổng quan tích hợp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /auth/portal/login
+    text: removed the required property 'mfa' from the response with the '200' status
+  - adr: ADR-0094
+    reason: 'Admin Portal không còn MFA (TOTP): bỏ trường mfa/otp khỏi login, refresh, setup password, tổng quan tích hợp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /auth/portal/setup:password
+    text: removed the required property 'otp_setup_email_sent' from the response with the '200' status
+  - adr: ADR-0094
+    reason: 'Admin Portal không còn MFA (TOTP): bỏ trường mfa/otp khỏi login, refresh, setup password, tổng quan tích hợp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /auth/portal/token:refresh
+    text: removed the required property 'mfa' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/learning/efficacy-studies/{study_id}:withdraw
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /admin/learning/efficacy-studies/{study_id}/classes
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /admin/learning/efficacy-studies/{study_id}/classes
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: DELETE
+    path: /admin/learning/efficacy-studies/{study_id}/classes/{class_id}
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/learning/experiments
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: PATCH
+    path: /admin/learning/experiments/{experiment_id}
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/reports
+    text: enum value 'class_progress'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: DELETE
+    path: /admin/tenant-assignments
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: DELETE
+    path: /admin/tenant-assignments
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: DELETE
+    path: /admin/tenant-assignments
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /admin/tenant-assignments
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /admin/tenant-assignments
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /admin/tenant-assignments
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/tenant-assignments
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/tenant-assignments
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/tenant-assignments
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/tenant-clones
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/tenant-clones
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /admin/tenant-clones
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /admin/trash
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /admin/trash
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /admin/trash
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /admin/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /admin/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /admin/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /cms/learning/content/{content_type}/{content_id}:rollback
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /cms/learning/content/{content_type}/{content_id}:unpublish
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /cms/learning/content/{content_type}/{content_id}/releases
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /cms/learning/content/{content_type}/{content_id}/releases/{release_id}:cancel
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /cms/learning/content/{content_type}/{content_id}/usages
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /cms/learning/content/{content_type}/{content_id}/versions
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /cms/learning/content/{content_type}/{content_id}/versions/{version}
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /cms/learning/content/{content_type}/{content_id}/versions/{version}:diff
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /cms/learning/content/{content_type}/{content_id}/versions/{version}:publish
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /cms/learning/content/{content_type}/{content_id}/versions/{version}:transition
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /cms/learning/preview/sessions
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /cms/learning/review-tasks
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: new-required-request-property
+    operation: POST
+    path: /exams/sessions
+    text: added the new required request property 'school_id'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /exams/sessions
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /exams/sessions
+    text: enum value 'study_group'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /internal/v1/platform/tenant-assignments
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /internal/v1/platform/tenant-assignments
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /internal/v1/platform/tenant-assignments
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-assignments:apply
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-assignments:apply
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-assignments:apply
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-assignments:revoke
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-assignments:revoke
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-assignments:revoke
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-clones/{job_id}/steps
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-clones/{job_id}/steps
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/tenant-clones/{job_id}/steps
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /internal/v1/platform/trash
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /internal/v1/platform/trash
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /internal/v1/platform/trash
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/modules/chat.internal.v1.yaml
+      - specs/openapi/modules/competition.internal.v1.yaml
+      - specs/openapi/modules/game.internal.v1.yaml
+      - specs/openapi/modules/learning.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /internal/v1/platform/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/modules/identity.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /internal/v1/projection-snapshots/{entity_type}
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/modules/identity.internal.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /internal/v1/projection-snapshots/{entity_type}
+    text: enum value 'enrollment'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /learning/activities/{activity_id}/attempts
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /learning/my-learning-paths
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: Bỏ lịch học của LMS
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /learning/my-schedule
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: GET
+    path: /lms/assignments
+    text: removed the required property 'data/items/allOf[#/components/schemas/AssignmentCreate]/course_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: new-required-request-property
+    operation: POST
+    path: /lms/assignments
+    text: added the new required request property 'school_id'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: new-required-request-property
+    operation: POST
+    path: /lms/assignments
+    text: added the new required request property 'subject_id'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /lms/assignments
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /lms/assignments
+    text: enum value 'study_group'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /lms/assignments
+    text: removed the required property '/allOf[#/components/schemas/AssignmentCreate]/course_id' from the response with the '201' status
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: GET
+    path: /lms/assignments/{assignment_id}
+    text: removed the required property '/allOf[#/components/schemas/AssignmentCreate]/course_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: PATCH
+    path: /lms/assignments/{assignment_id}
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: PATCH
+    path: /lms/assignments/{assignment_id}
+    text: enum value 'study_group'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: PATCH
+    path: /lms/assignments/{assignment_id}
+    text: removed the required property '/allOf[#/components/schemas/AssignmentCreate]/course_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /lms/assignments/{assignment_id}:archive
+    text: removed the required property '/allOf[#/components/schemas/AssignmentCreate]/course_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /lms/assignments/{assignment_id}:cancel
+    text: removed the required property '/allOf[#/components/schemas/AssignmentCreate]/course_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /lms/assignments/{assignment_id}:publish
+    text: removed the required property '/allOf[#/components/schemas/AssignmentCreate]/course_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /lms/assignments/{assignment_id}:release-results
+    text: removed the required property '/allOf[#/components/schemas/AssignmentCreate]/course_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Thử thách của trường theo khối ± học sinh cùng trường (F107 contracts §6): không còn target lớp/nhóm/trường, participation study_group'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: GET
+    path: /lms/challenges
+    text: removed the required property 'data/items/allOf[#/components/schemas/ChallengeCreate]/targets/items/target_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: 'Thử thách của trường theo khối ± học sinh cùng trường (F107 contracts §6): không còn target lớp/nhóm/trường, participation study_group'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: new-required-request-property
+    operation: POST
+    path: /lms/challenges
+    text: added the new required request property 'school_id'
+  - adr: ADR-0095
+    reason: 'Thử thách của trường theo khối ± học sinh cùng trường (F107 contracts §6): không còn target lớp/nhóm/trường, participation study_group'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /lms/challenges
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: 'Thử thách của trường theo khối ± học sinh cùng trường (F107 contracts §6): không còn target lớp/nhóm/trường, participation study_group'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /lms/challenges
+    text: enum value 'grade_level'
+  - adr: ADR-0095
+    reason: 'Thử thách của trường theo khối ± học sinh cùng trường (F107 contracts §6): không còn target lớp/nhóm/trường, participation study_group'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /lms/challenges
+    text: enum value 'group'
+  - adr: ADR-0095
+    reason: 'Thử thách của trường theo khối ± học sinh cùng trường (F107 contracts §6): không còn target lớp/nhóm/trường, participation study_group'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /lms/challenges
+    text: enum value 'school'
+  - adr: ADR-0095
+    reason: 'Thử thách của trường theo khối ± học sinh cùng trường (F107 contracts §6): không còn target lớp/nhóm/trường, participation study_group'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /lms/challenges
+    text: enum value 'study_group'
+  - adr: ADR-0095
+    reason: 'Thử thách của trường theo khối ± học sinh cùng trường (F107 contracts §6): không còn target lớp/nhóm/trường, participation study_group'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: POST
+    path: /lms/challenges
+    text: removed the required property '/allOf[#/components/schemas/ChallengeCreate]/targets/items/target_id' from the response with the '201' status
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/classes/{class_id}/dashboard
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/courses
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: PATCH
+    path: /lms/courses/{course_id}
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/courses/{course_id}/paths
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /lms/courses/{course_id}/paths
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: PATCH
+    path: /lms/courses/{course_id}/paths/{path_id}
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /lms/courses/{course_id}/paths/{path_id}/nodes/{node_id}/students/{student_id}:unlock
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/courses/{course_id}/results
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /lms/dashboards/school
+    text: 'the ''/allOf[subschema #2]/widgets/active_students'' response''s property type/format changed from ''integer''/'''' to ''integer, null''/'''' for status ''200'''
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /lms/reports
+    text: enum value 'course_results'
+  - adr: ADR-0095
+    reason: Bỏ lịch học của LMS
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/schedules
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: Bỏ lịch học của LMS
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /lms/schedules
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: Bỏ lịch học của LMS
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: DELETE
+    path: /lms/schedules/{schedule_item_id}
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: Bỏ lịch học của LMS
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: PATCH
+    path: /lms/schedules/{schedule_item_id}
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: response-required-property-removed
+    operation: GET
+    path: /lms/schools/{school_id}/reference-levels
+    text: removed the required property 'items/items/class_id' from the response with the '200' status
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/schools/{school_id}/study-groups
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /lms/schools/{school_id}/study-groups
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: DELETE
+    path: /lms/schools/{school_id}/study-groups/{study_group_id}
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /lms/schools/{school_id}/study-groups/{study_group_id}
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: PATCH
+    path: /lms/schools/{school_id}/study-groups/{study_group_id}
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/competition.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /multiplayer/parties
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/competition.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /multiplayer/parties
+    text: enum value 'study_group'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/competition.v1.yaml
+    id: request-property-enum-value-removed
+    operation: PATCH
+    path: /multiplayer/parties/{party_id}
+    text: enum value 'class'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /schools/{school_id}/classes
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /schools/{school_id}/reconciliation-issues
+    text: enum value 'class_school_mismatch'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /schools/{school_id}/reconciliation-issues
+    text: enum value 'grade_mismatch'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /schools/{school_id}/reconciliation-issues
+    text: enum value 'missing_class'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /schools/{school_id}/reconciliation-issues
+    text: enum value 'multi_school_enrollment'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /schools/{school_id}/reconciliation-issues
+    text: enum value 'orphan_enrollment'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /schools/{school_id}/sis-imports
+    text: enum value 'classes'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /schools/{school_id}/sis-imports
+    text: enum value 'enrollments'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /sis/imports
+    text: enum value 'classes'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /sis/imports
+    text: enum value 'enrollments'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /sis/reconciliation-issues
+    text: enum value 'class_school_mismatch'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /sis/reconciliation-issues
+    text: enum value 'grade_mismatch'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /sis/reconciliation-issues
+    text: enum value 'missing_class'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /sis/reconciliation-issues
+    text: enum value 'multi_school_enrollment'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /sis/reconciliation-issues
+    text: enum value 'orphan_enrollment'
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/chat.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /social/clubs
+    text: enum value 'study_group'
+  - adr: ADR-0095
+    reason: Bỏ nhóm học tập (ADR-0084 Superseded); party study_group đổi thành study_party (D7)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/chat.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /social/clubs
+    text: enum value 'study_group'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /tenant/reports
+    text: enum value 'class_progress'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /tenant/schools/{school_id}/classes
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /tenant/schools/{school_id}/classes/{class_id}/students
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /tenant/students/unassigned
+    text: api path removed without deprecation
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /tenant/trash
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /tenant/trash
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /tenant/trash
+    text: enum value 'learning_path'
+  - adr: ADR-0095
+    reason: 'Bỏ lớp và enrollment: học sinh thuộc một trường với một khối; giao bài/đề, dashboard, nghiên cứu theo (trường, khối)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /tenant/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'class_template'
+  - adr: ADR-0095
+    reason: 'Bỏ course: giao bài/đề theo (trường, khối) với subject_id trực tiếp'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /tenant/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'course'
+  - adr: ADR-0095
+    reason: Bỏ learning path (cả loại nội dung learning_path, menu Learning Path Builder)
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /tenant/trash/{resource_type}/{resource_id}:restore
+    text: enum value 'learning_path'

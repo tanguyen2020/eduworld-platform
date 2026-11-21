@@ -40,6 +40,7 @@ jobs:
         with:
           node-version: 20
       - run: make specs-lint
+      - run: node --test scripts/ci/breaking-allowlist.test.mjs
       - run: make specs-breaking
       - name: workflow rules and path filters
         run: |
