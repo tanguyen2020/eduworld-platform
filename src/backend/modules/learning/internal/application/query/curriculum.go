@@ -10,6 +10,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -77,7 +78,7 @@ func (q Curriculum) cms(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return authz.Require(ctx, p, authz.PermCurriculumRead, authz.Resource{})
+	return scope.RequireContent(ctx, p, authz.PermCurriculumRead, nil)
 }
 
 // ListCurricula lists the curricula of the session tenant and the platform curricula assigned to it (platform

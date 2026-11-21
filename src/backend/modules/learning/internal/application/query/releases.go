@@ -12,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/snapshot"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -153,7 +154,7 @@ func (q Releases) authorize(ctx context.Context, typ string) (authz.Principal, c
 	if err != nil {
 		return p, "", err
 	}
-	if err := authz.Require(ctx, p, authz.PermLearningContentRead, authz.Resource{}); err != nil {
+	if err := scope.RequireContent(ctx, p, authz.PermLearningContentRead, nil); err != nil {
 		return p, "", err
 	}
 	t, err := contentmodel.ParseContentType(typ)

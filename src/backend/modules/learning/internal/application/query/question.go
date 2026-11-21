@@ -12,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question/params"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/question/selection"
@@ -53,7 +54,7 @@ func (q Questions) cms(ctx context.Context) (authz.Principal, error) {
 	if err != nil {
 		return p, err
 	}
-	return p, authz.Require(ctx, p, authz.PermLearningContentRead, authz.Resource{})
+	return p, scope.RequireContent(ctx, p, authz.PermLearningContentRead, nil)
 }
 
 // GetQuestion returns a question with its newest version, answer key included (F022-AC-10).

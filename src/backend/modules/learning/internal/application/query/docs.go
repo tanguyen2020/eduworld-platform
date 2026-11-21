@@ -9,6 +9,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/blueprint"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/questionset"
@@ -45,7 +46,7 @@ func (q Docs) authorize(ctx context.Context) (authz.Principal, error) {
 	if err != nil {
 		return p, err
 	}
-	return p, authz.Require(ctx, p, authz.PermLearningContentRead, authz.Resource{})
+	return p, scope.RequireContent(ctx, p, authz.PermLearningContentRead, nil)
 }
 
 // Get returns an item with its newest version.

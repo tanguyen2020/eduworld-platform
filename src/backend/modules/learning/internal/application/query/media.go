@@ -11,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/media"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
@@ -40,7 +41,7 @@ func (q MediaLibrary) authorize(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return authz.Require(ctx, p, authz.PermLearningContentRead, authz.Resource{})
+	return scope.RequireContent(ctx, p, authz.PermLearningContentRead, nil)
 }
 
 // List pages the library newest first, filtered by kind, status and q (F027-AC-09).

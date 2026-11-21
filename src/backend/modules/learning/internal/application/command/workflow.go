@@ -448,7 +448,10 @@ func (h Workflow) Transition(ctx context.Context, in TransitionContentInput) (ou
 		if err != nil {
 			return err
 		}
-		if hasTask && task.SchoolID != nil && (action == contentmodel.ActionApprove || action == contentmodel.ActionReject) {
+		// A decision needs a grant covering the task's school; a tenant-wide task (no school) needs a grant without a
+		// school limit — a school reviewer only decides on its schools' tasks (F025 [Proposed]), even though a school
+		// grant covers the content itself (scope.RequireContent).
+		if hasTask && (action == contentmodel.ActionApprove || action == contentmodel.ActionReject) {
 			if err := authz.Require(ctx, p, perm, authz.Resource{TenantID: s.Owner.TenantID, SchoolID: task.SchoolID}); err != nil {
 				return err
 			}

@@ -9,6 +9,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 )
@@ -30,7 +31,7 @@ func (q TranslationJobs) Get(ctx context.Context, id uuid.UUID) (out dto.Transla
 	if err != nil {
 		return out, err
 	}
-	if err := authz.Require(ctx, p, authz.PermLearningContentTranslate, authz.Resource{}); err != nil {
+	if err := scope.RequireContent(ctx, p, authz.PermLearningContentTranslate, nil); err != nil {
 		return out, err
 	}
 	if err := q.Session.Read(ctx, func(ctx context.Context) error {

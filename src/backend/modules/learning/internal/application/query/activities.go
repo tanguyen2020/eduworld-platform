@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/activity/simulation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
@@ -26,7 +27,7 @@ func (q ActivityTypes) List(ctx context.Context) (out []activity.Info, err error
 	if err != nil {
 		return nil, err
 	}
-	if err := authz.Require(ctx, p, authz.PermLearningContentRead, authz.Resource{}); err != nil {
+	if err := scope.RequireContent(ctx, p, authz.PermLearningContentRead, nil); err != nil {
 		return nil, err
 	}
 	return q.Registry.Infos(), nil
@@ -41,7 +42,7 @@ func (q ActivityTypes) Templates(ctx context.Context) (out []simulation.Descript
 	if err != nil {
 		return nil, err
 	}
-	if err := authz.Require(ctx, p, authz.PermLearningContentRead, authz.Resource{}); err != nil {
+	if err := scope.RequireContent(ctx, p, authz.PermLearningContentRead, nil); err != nil {
 		return nil, err
 	}
 	return simulation.Catalog(), nil

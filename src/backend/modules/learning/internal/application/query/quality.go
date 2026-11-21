@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
@@ -22,7 +23,7 @@ func (q Reports) GetQuestionStats(ctx context.Context, questionID uuid.UUID) (ou
 	if err != nil {
 		return out, err
 	}
-	if err := authz.Require(ctx, p, authz.PermLearningContentRead, authz.Resource{TenantID: p.TenantID}); err != nil {
+	if err := scope.RequireContent(ctx, p, authz.PermLearningContentRead, p.TenantID); err != nil {
 		return out, err
 	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
@@ -64,7 +65,7 @@ func (q Reports) ListCalibrationProposals(ctx context.Context, status string, in
 	if err != nil {
 		return out, err
 	}
-	if err := authz.Require(ctx, p, authz.PermLearningContentReview, authz.Resource{TenantID: p.TenantID}); err != nil {
+	if err := scope.RequireContent(ctx, p, authz.PermLearningContentReview, p.TenantID); err != nil {
 		return out, err
 	}
 	switch status {

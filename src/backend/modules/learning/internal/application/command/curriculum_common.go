@@ -11,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/scope"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/contentmodel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/domain/curriculum"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
@@ -69,7 +70,7 @@ func authorize(ctx context.Context, perm authz.Permission) (authz.Principal, err
 	if err != nil {
 		return p, err
 	}
-	return p, authz.Require(ctx, p, perm, authz.Resource{})
+	return p, scope.RequireContent(ctx, p, perm, nil)
 }
 
 // denied answers 403 PERMISSION_DENIED and records authz.denied (F021-AC-06). The audit is written outside the
@@ -105,7 +106,7 @@ func writable(ctx context.Context, p authz.Principal, perm authz.Permission, o c
 		}
 		return err
 	}
-	return authz.Require(ctx, p, perm, authz.Resource{TenantID: o.TenantID})
+	return scope.RequireContent(ctx, p, perm, o.TenantID)
 }
 
 // curriculumErr maps domain errors of the curriculum to problems.
