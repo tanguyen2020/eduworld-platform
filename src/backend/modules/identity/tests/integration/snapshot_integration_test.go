@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -110,6 +111,14 @@ func TestListProjectionSnapshot(t *testing.T) {
 				}
 			}
 		}
+	}
+	// F015 T044: the tenant snapshot carries settings_subset as tenant.updated publishes it (rebuilt projection).
+	if _, err := e.platform.ExecContext(ctx, `UPDATE platform.tenants SET settings = '{"cross_school_social_enabled": true}' WHERE tenant_id = $1`, a.tenant); err != nil {
+		t.Fatal(err)
+	}
+	if ts := call("tenant", &ta, nil, 1); len(ts.Items) != 1 || fmt.Sprint(ts.Items[0].Data["settings_subset"]) !=
+		"map[common_social_enabled:false cross_school_social_enabled:true]" {
+		t.Fatalf("tenant snapshot settings_subset = %+v", ts.Items)
 	}
 	// Platform scope (no tenant_id): tenants A, B and the seeded common tenant.
 	all := call("tenant", nil, nil, 1000)

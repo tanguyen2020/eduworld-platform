@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/consumer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/testkit"
 )
 
 // handle runs one consumer handler in the transaction the outbox consumer opens (event TenantScope).
@@ -101,6 +104,29 @@ func TestProjections(t *testing.T) {
 		t.Fatal(err)
 	}
 	ab := requestID(e.send(a, b, http.StatusCreated))
+	// F015 T044: the settings_subset identity publishes from updateTenantSettings (example of the payload schema:
+	// both social keys, source_version) replaces the projection and turns cross-school off; an older event cannot
+	// turn it back on; a newer one does.
+	setting := tenantSettingsExample(t)
+	setting["tenant_id"] = tenant
+	if err := e.handle(t, id.Handle, "tenant.updated", tenant, setting); err != nil {
+		t.Fatal(err)
+	}
+	if n := e.count(`SELECT count(*) FROM ref.tenants WHERE tenant_id = $1
+		AND settings_subset = '{"cross_school_social_enabled": false, "common_social_enabled": false}'::jsonb`, tenant); n != 1 {
+		t.Fatal("ref.tenants.settings_subset not replaced by the identity payload")
+	}
+	e.send(c, b, http.StatusForbidden)
+	stale := map[string]any{"tenant_id": tenant, "tenant_type": "unit", "status": "active", "changed_fields": []string{"settings"},
+		"settings_subset": map[string]any{"cross_school_social_enabled": true, "common_social_enabled": false}, "source_version": 3}
+	if err := e.handle(t, id.Handle, "tenant.updated", tenant, stale); err != nil {
+		t.Fatal(err)
+	}
+	e.send(c, b, http.StatusForbidden)
+	stale["source_version"] = 5
+	if err := e.handle(t, id.Handle, "tenant.updated", tenant, stale); err != nil {
+		t.Fatal(err)
+	}
 	if r := e.call(b, http.MethodGet, "/social/friend-requests", "", nil); len(r.data()) != 1 {
 		t.Fatalf("incoming of b: %s", r.raw)
 	}
@@ -126,4 +152,27 @@ func TestProjections(t *testing.T) {
 	if n := e.count(`SELECT count(*) FROM social.friend_requests WHERE request_id = $1 AND status = 'cancelled'`, cb); n != 1 {
 		t.Fatal("request of a deactivated student still pending")
 	}
+}
+
+// tenantSettingsExample returns the example of specs/events/payloads/identity/tenant.updated.v1.schema.json that
+// carries settings_subset (the shape updateTenantSettings of module identity publishes, F015 T044).
+func tenantSettingsExample(t *testing.T) map[string]any {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(testkit.RepoRoot(t), "specs", "events", "payloads", "identity", "tenant.updated.v1.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var s struct {
+		Examples []map[string]any `json:"examples"`
+	}
+	if err := json.Unmarshal(b, &s); err != nil {
+		t.Fatal(err)
+	}
+	for _, x := range s.Examples {
+		if _, ok := x["settings_subset"]; ok {
+			return x
+		}
+	}
+	t.Fatal("no tenant.updated example with settings_subset")
+	return nil
 }

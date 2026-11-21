@@ -75,12 +75,14 @@ func (d PlatformAdminDeps) cloneTenantSettings(ctx context.Context, job write.Cl
 	if len(raw) == 0 {
 		raw = []byte("{}")
 	}
-	if _, err := d.Settings.PutTenant(ctx, job.Target, raw, dst.Version, job.RequestedBy); err != nil {
+	version, err := d.Settings.PutTenant(ctx, job.Target, raw, dst.Version, job.RequestedBy)
+	if err != nil {
 		return port.CloneStepResult{}, err
 	}
 	t := job.Target
 	if err := d.Events.Publish(ctx, write.Event{Type: "tenant.updated", SubjectType: "tenant", SubjectID: t.String(), TenantID: &t,
-		Payload: map[string]any{"tenant_id": t, "tenant_type": dst.TenantType, "status": dst.Status, "changed_fields": []string{"settings"}}}); err != nil {
+		Payload: map[string]any{"tenant_id": t, "tenant_type": dst.TenantType, "status": dst.Status, "changed_fields": []string{"settings"},
+			"settings_subset": settings.TenantSubset(raw), "source_version": version}}); err != nil {
 		return port.CloneStepResult{}, err
 	}
 	var before, after map[string]any

@@ -40,6 +40,7 @@ type TenantSettings struct {
 	EffectiveCleanupDays       *int                   `json:"effective_cleanup_days"`
 	GameplayChatRetentionDays  *int                   `json:"gameplay_chat_retention_days,omitempty"`
 	DefaultLocale              string                 `json:"default_locale,omitempty"`
+	CrossSchoolSocialEnabled   bool                   `json:"cross_school_social_enabled"`
 	Version                    int64                  `json:"-"`
 }
 
@@ -106,6 +107,7 @@ func TenantSettingsOf(value []byte, version int64, cleanup settings.StudentClean
 	if raw, ok := present("default_locale"); ok {
 		_ = json.Unmarshal(raw, &out.DefaultLocale)
 	}
+	out.CrossSchoolSocialEnabled, _ = settings.TenantSubset(value)[settings.KeyCrossSchoolSocial].(bool)
 	out.EffectiveCleanupDays = settings.EffectiveCleanupDays(cleanup, out.InactiveStudentCleanupDays, cleanupSet)
 	return out, nil
 }

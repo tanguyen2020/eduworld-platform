@@ -15291,6 +15291,8 @@ export interface components {
         /** @description Cài đặt tenant (một phần). Trường cleanup chỉ ghi được khi platform cho phép ghi đè (ADR-0032). */
         TenantSettings: {
             allowed_hours?: components["schemas"]["AllowedHours"];
+            /** @description Xã hội liên trường trong tenant `unit` (ADR-0054, SOCIAL_SYSTEM §7; mặc định `false`, CONFIG_DEFAULTS). Chỉ tenant `unit` bật được (tenant khác gửi `true` → 422); `null` = về mặc định tắt. Đổi giá trị phát `tenant.updated` kèm `settings_subset` để module chat/competition áp phạm vi (F015 T044). Phản hồi luôn có giá trị hiệu lực (boolean). */
+            cross_school_social_enabled?: boolean | null;
             /** @description Ngôn ngữ mặc định của tenant cho học sinh mới (ADR-0056) */
             default_locale?: components["schemas"]["Locale"];
             readonly effective_cleanup_days?: number | null;

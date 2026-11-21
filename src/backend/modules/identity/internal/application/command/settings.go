@@ -188,7 +188,7 @@ func (h Settings) PutPlatformCurfew(ctx context.Context, c settings.Curfew, reas
 
 // Keys of the tenant settings JSON written through updateTenantSettings.
 var tenantKeys = map[string]bool{"allowed_hours": true, "inactive_student_cleanup_days": true, "gameplay_chat_retention_days": true,
-	"default_locale": true}
+	"default_locale": true, settings.KeyCrossSchoolSocial: true}
 
 // TenantSettingsOf decodes the stored tenant settings and computes the effective cleanup days.
 func (h Settings) TenantSettingsOf(ctx context.Context, s write.StoredSetting) (dto.TenantSettings, error) {
@@ -245,6 +245,11 @@ func (h Settings) UpdateTenantSettings(ctx context.Context, patch map[string]jso
 		if err := h.checkTenantPatch(ctx, p, patch); err != nil {
 			return err
 		}
+		if raw, ok := patch[settings.KeyCrossSchoolSocial]; ok {
+			if err := settings.ValidateCrossSchoolSocial(cur.TenantType, raw); err != nil {
+				return settingsInvalid(err)
+			}
+		}
 		var m map[string]json.RawMessage
 		if len(cur.Value) > 0 {
 			if err := json.Unmarshal(cur.Value, &m); err != nil {
@@ -278,7 +283,7 @@ func (h Settings) UpdateTenantSettings(ctx context.Context, patch map[string]jso
 		}
 		if err := h.Events.Publish(ctx, write.Event{Type: "tenant.updated", SubjectType: "tenant", SubjectID: tenant.String(),
 			TenantID: &tenant, Payload: map[string]any{"tenant_id": tenant, "tenant_type": cur.TenantType, "status": cur.Status,
-				"changed_fields": prefixed("settings.", changed)}}); err != nil {
+				"changed_fields": prefixed("settings.", changed), "settings_subset": settings.TenantSubset(raw), "source_version": v}}); err != nil {
 			return err
 		}
 		if err := h.Events.Publish(ctx, write.Event{Type: "platform_settings.changed", SubjectType: "tenant", SubjectID: tenant.String(),

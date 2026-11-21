@@ -50,6 +50,12 @@
 - OQ-17 giới hạn chơi/ngày (owner chốt 2026-11-20, CHILD_SAFETY §4, CONFIG_DEFAULTS `daily_play_limit_minutes`) → **Chốt:** cài đặt cấp trường trong `getSchoolSettings`/`updateSchoolSettings` (mặc định tắt = `null`), phát trong `school.updated` cho module game; thêm F015-AC-30.
 - OQ-17 khoảng giá trị → **[Confirmed] (T043, 2026-11-20):** CONFIG_DEFAULTS/CHILD_SAFETY chưa có khoảng cho `daily_play_limit_minutes` → dùng 15–300 phút (`422 VALIDATION_FAILED` ngoài khoảng); đổi lý do (`reason` 3..500) bắt buộc khi đổi giá trị như `curfew_window`. Owner xác nhận khoảng này rồi bỏ nhãn [Confirmed] (CHILD_SAFETY §4 là tài liệu sở hữu).
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+- Q: T044 — `cross_school_social_enabled` ghi qua đâu, ai ghi được? → A: [Confirmed] Khóa mới của `TenantSettings` trong `updateTenantSettings` (merge patch, `boolean|null`, `null` = về mặc định tắt; phản hồi luôn có giá trị hiệu lực boolean); quyền `tenant.settings.write` như các khóa khác; chỉ tenant `unit` được đặt `true` (tenant `school`/`common` → `422 VALIDATION_FAILED`, ADR-0054).
+- Q: T044 — `common_social_enabled`? → A: [Confirmed] Không ghi được qua `updateTenantSettings` (422 — cờ của System Admin, F120 T059); identity chỉ đọc khóa này từ `platform.tenants.settings` khi phát.
+- Q: T044 — nội dung `settings_subset` của `tenant.updated`? → A: [Confirmed] Luôn đủ hai khóa `cross_school_social_enabled`, `common_social_enabled` (vắng/`null`/không phải boolean = `false`) vì consumer thay cả object; phát kèm `source_version` = version dòng tenant sau khi ghi; áp cho `updateTenantSettings` và bước clone `tenant_settings`; `tenant.updated` do sửa tên/trạng thái (F010) không mang `settings_subset` (consumer giữ nguyên). Snapshot `listProjectionSnapshot` (`tenant`) trả cùng `settings_subset` để dựng lại projection không tắt nhầm.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Audit log tập trung, append-only (Priority: P1)

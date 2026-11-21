@@ -23,7 +23,11 @@ var _ read.SnapshotReader = SnapshotModel{}
 var snapshotSQL = map[string]string{
 	"tenant": `SELECT t.tenant_id, t.tenant_id, t.version, t.deleted_at IS NOT NULL,
 		json_build_object('tenant_id', t.tenant_id, 'code', t.code, 'name', t.name, 'tenant_type', t.tenant_type, 'status', t.status,
-			'keycloak_org_alias', t.keycloak_org_alias, 'is_qa', t.is_qa, 'settings_subset', '{}'::json)
+			'keycloak_org_alias', t.keycloak_org_alias, 'is_qa', t.is_qa,
+			-- settings_subset as tenant.updated publishes it (settings.TenantSubset, F015 T044): both social keys, false unless true
+			'settings_subset', json_build_object(
+				'cross_school_social_enabled', coalesce(t.settings->'cross_school_social_enabled' = 'true'::jsonb, false),
+				'common_social_enabled', coalesce(t.settings->'common_social_enabled' = 'true'::jsonb, false)))
 		FROM platform.tenants t
 		WHERE ($1::uuid IS NULL OR t.tenant_id = $1) AND ($2::uuid IS NULL OR t.tenant_id > $2)
 		ORDER BY t.tenant_id LIMIT $3`,
