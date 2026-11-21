@@ -1,6 +1,6 @@
 # Challenge & Boss System
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Systems Designer + EdTech Specialist · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Systems Designer + EdTech Specialist · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [ADR-0016, ADR-0043, ADR-0048, ADR-0049](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -12,9 +12,9 @@
 | Học sinh | Thử thách hấp dẫn, độ khó vừa sức, sai không bị chê bai |
 | Game Designer | Cấu hình loại, độ khó, phase, phần thưởng trong Game Studio |
 | EdTech | Mỗi thử thách gắn LO, kết quả học tập ghi riêng từng học sinh |
-| Nhà trường (`school_admin`, `academic_manager`) | Chọn thử thách đã publish để giao cho lớp qua LMS (không sửa luật chơi, ADR-0027) |
+| Nhà trường (`school_admin`, `academic_manager`) | Chọn thử thách đã publish để giao cho học sinh theo khối của trường (± danh sách học sinh) qua LMS (không sửa luật chơi, ADR-0027, ADR-0095) |
 
-**Phân biệt với competition:** challenge/boss là **PvE** (người chơi đấu với nội dung) thuộc module `game`; trận **PvP** xếp hạng (1v1, Team Battle, giải đấu) thuộc module `competition` ([COMPETITION_SYSTEM](COMPETITION_SYSTEM.md)). `challenge-templates` trong module `competition` là mẫu **thi đấu lớp/trường** do `school_admin` dùng để tạo thử thách lớp và giải trường (ADR-0072), khác `challenges` ở tài liệu này.
+**Phân biệt với competition:** challenge/boss là **PvE** (người chơi đấu với nội dung) thuộc module `game`; trận **PvP** xếp hạng (1v1, Team Battle, giải đấu) thuộc module `competition` ([COMPETITION_SYSTEM](COMPETITION_SYSTEM.md)). `challenge-templates` trong module `competition` là mẫu **thi đấu khối/trường** do `school_admin` dùng để tạo thử thách khối (`grade_challenge`) và giải trường (ADR-0072, ADR-0095), khác `challenges` ở tài liệu này.
 
 ## 2. Challenge Engine
 
@@ -42,7 +42,7 @@ Năm mức: `easy`, `normal`, `hard`, `expert`, `legendary`.
 
 | Yếu tố | Ảnh hưởng |
 |---|---|
-| Grade | Mỗi mức độ khó ánh xạ sang dải độ khó câu hỏi (1–5) **trong phạm vi khối lớp** của học sinh; không lấy nội dung khối khác |
+| Grade | Mỗi mức độ khó ánh xạ sang dải độ khó câu hỏi (1–5) **trong phạm vi khối** của học sinh; không lấy nội dung khối khác |
 | Subject, LO | Bộ câu hỏi/selection rule lọc theo LO |
 | Activity type | Loại activity được dùng (ADR-0048) |
 | Hiệu suất học sinh | Có thể tự điều chỉnh: mastery của LO thấp → gợi ý mức dễ hơn; không tự hạ cấp khi đang chơi [Confirmed] |

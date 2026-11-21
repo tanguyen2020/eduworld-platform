@@ -1,6 +1,6 @@
 # Character System
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Senior Godot Developer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Senior Godot Developer · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [DOMAIN_MODEL §5](../06-architecture/DOMAIN_MODEL.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md)
 
 ## 1. Mục đích và phạm vi
@@ -141,15 +141,14 @@ Server đánh dấu `game_profiles.avatar_created_at`; event `avatar.created` (d
 
 API: `GET /api/v1/game/profile` · `PUT /api/v1/game/profile/avatar` (body = `avatar_config`, server trả 422 `ITEM_NOT_OWNED` nếu vi phạm).
 
-**Thông tin trường/lớp trên hồ sơ người chơi (ADR-0060, ADR-0061):** thẻ hồ sơ hiển thị nickname, avatar, level, danh hiệu, huy hiệu trưng bày cho mọi người theo policy. Thông tin tổ chức (trường — tên song ngữ, tỉnh/thành, lớp, khối) lấy từ dữ liệu SIS đã đồng bộ khi đăng nhập và chỉ hiển thị:
+**Thông tin trường/khối trên hồ sơ người chơi (ADR-0060, ADR-0061, ADR-0095):** thẻ hồ sơ hiển thị nickname, avatar, level, danh hiệu, huy hiệu trưng bày cho mọi người theo policy. Thông tin tổ chức (trường — tên song ngữ, tỉnh/thành, khối; không còn lớp — ADR-0095) lấy từ dữ liệu SIS đã đồng bộ khi đăng nhập và chỉ hiển thị:
 
 | Người xem | Thấy |
 |---|---|
-| Chính học sinh | Trường, tỉnh/thành, lớp, khối (mục "Hồ sơ của em" trong [Cài đặt](../05-ux/STUDENT_GAME_UX_SOCIAL.md)) |
-| Bạn cùng lớp | Lớp (và trường) theo policy trường; không có tên thật nếu trường không bật |
-| Người khác (kể cả cùng trường khác lớp, liên trường) | Không thấy trường/lớp/tỉnh — chỉ nickname và thông tin game (R16, ADR-0054) |
+| Chính học sinh | Trường, tỉnh/thành, khối (mục "Hồ sơ của em" trong [Cài đặt](../05-ux/STUDENT_GAME_UX_SOCIAL.md)) |
+| Mọi người chơi khác (kể cả bạn bè, cùng trường, cùng khối, liên trường) | Không thấy trường/khối/tỉnh — chỉ nickname và thông tin game (R16, ADR-0054; không còn ngoại lệ "bạn cùng lớp" — ADR-0095) |
 
-Học sinh không sửa được trường/lớp trong game (dữ liệu do SIS sở hữu); thông tin sai thì báo nhà trường (văn phòng trường) để sửa ở SIS. Học sinh tenant chung thấy "EduWorld chung · Khối n".
+Học sinh không sửa được trường/khối trong game (dữ liệu do SIS sở hữu); thông tin sai thì báo nhà trường (văn phòng trường) để sửa ở SIS. Học sinh tenant chung thấy "EduWorld chung · Khối n".
 
 ### 5.2. Item definitions & hiển thị
 
@@ -207,7 +206,7 @@ sequenceDiagram
 
 - Snapshot vị trí 10 Hz (`hub.snapshot.updated`, entity `{eid, p, r, a}`) **không** chứa appearance; appearance gửi khi join và khi thay đổi (kèm `avatar_config_hash` để client cache theo hash).
 - `eid` là định danh entity ẩn danh theo room (không phải `student_id`) [Confirmed] — giảm lộ ID ra người chơi khác; xem [REALTIME_ARCHITECTURE §6](../06-architecture/REALTIME_ARCHITECTURE.md).
-- Thông tin hiển thị cho người khác: nickname, avatar, level, badge đang đeo. Không hiển thị trường/lớp với người chơi khác trường (CHILD_SAFETY).
+- Thông tin hiển thị cho người khác: nickname, avatar, level, badge đang đeo. Không hiển thị trường/khối với mọi người chơi khác (CHILD_SAFETY, ADR-0095).
 
 ## 9. Kiểm thử
 

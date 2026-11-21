@@ -1,7 +1,7 @@
 # Feature Specification: F117 — Chat gameplay luôn có (`match`/`team`/`party`) và purge chat gameplay
 
 **Feature Branch**: `117-gameplay-chat-purge` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `chat` · **Mốc**: M4b · **Phụ thuộc**: F101, F105, F116
-**Input**: Khi tạo party, vào trận 1v1 hoặc trận đội, module chat tự tạo channel `party`/`match`/`team` và tự thêm người chơi; ba loại channel này luôn bật, không cấp tenant/trường/lớp nào tắt được; đóng read-only khi trận kết thúc/party giải tán; lịch sử, unread trong channel gameplay; job `gameplay-chat-purge` xóa vật lý chat gameplay sau thời hạn lưu (ngoại lệ duy nhất ADR-0033), giữ bằng chứng trước khi xóa. FR nguồn: FR-CHAT-001, FR-CHAT-003, FR-CHAT-009, FR-CHAT-011, FR-PTY-001.
+**Input**: Khi tạo party, vào trận 1v1 hoặc trận đội, module chat tự tạo channel `party`/`match`/`team` và tự thêm người chơi; ba loại channel này luôn bật, không cấp tenant/trường nào tắt được; đóng read-only khi trận kết thúc/party giải tán; lịch sử, unread trong channel gameplay; job `gameplay-chat-purge` xóa vật lý chat gameplay sau thời hạn lưu (ngoại lệ duy nhất ADR-0033), giữ bằng chứng trước khi xóa. FR nguồn: FR-CHAT-001, FR-CHAT-003, FR-CHAT-009, FR-CHAT-011, FR-PTY-001.
 
 ## Clarifications
 
@@ -16,6 +16,10 @@
 ### Session 2026-11-17
 
 - Q: Preset "chỉ quick message + emote" thu hẹp loại tin của channel always-on (ADR-0078) chưa có tiêu chí — owner nào? → A: Bổ sung theo [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) (lát cắt M-P1); tham số theo tên CONFIG_DEFAULTS, mã lỗi theo [API_DESIGN §4.1](../../docs/07-backend/API_DESIGN.md).
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Bỏ khái niệm lớp ảnh hưởng gì tới chat gameplay và purge? → A: Chỉ phần tham chiếu: không còn channel `class`/`study_group` và không còn cấp chính sách `class` (policy 3 cấp `platform → tenant → school`, FR-MOD-004) — [ADR-0095 §5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md). Danh sách channel không bao giờ purge còn `team` cố định (club) và `direct` (F117-AC-20); always-on chỉ kiểm rule cấp `tenant`/`school` (F117-AC-09, F117-AC-10, F117-AC-24). Hành vi `match`/`team`/`party` và purge không đổi.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -43,7 +47,7 @@ Học sinh tạo party hoặc được ghép trận: khung chat đã sẵn, khô
 
 ### User Story 2 — Không cấp nào tắt được chat gameplay (Priority: P1)
 
-Trường hay lớp có tắt các kênh khác thì chat trong trận/party vẫn hoạt động; chỉ người bị Safety Team tạm khóa chat mới không gửi được, và mỗi học sinh tự tắt tiếng/chặn người khác được.
+Tenant hay trường có tắt các kênh khác thì chat trong trận/party vẫn hoạt động; chỉ người bị Safety Team tạm khóa chat mới không gửi được, và mỗi học sinh tự tắt tiếng/chặn người khác được.
 
 **Why this priority**: Quy tắc always-on (R15, ADR-0020 mục 6) là bất biến an toàn và trải nghiệm.
 
@@ -54,11 +58,11 @@ Trường hay lớp có tắt các kênh khác thì chat trong trận/party vẫ
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F117-AC-08 | KHI resolve effective policy cho `match`/`team`/`party`, module chat PHẢI luôn trả `enabled = true`, `allowed_kinds` gồm `text`, `emoji`, `quick`, `sticker`, `gif` (ngoại lệ duy nhất: preset trường `quick_message_emote_only`, F117-AC-24), mọi tính năng "luôn" của CHAT_SYSTEM §7.1 bật, không `allowed_hours`; cấp dưới chỉ siết được `rate`, `slow_mode_seconds` (≤ 10 s) và `validation.strictness` | FR-CHAT-009 · AC-CHAT-009 · AGENTS R15 | TC-CHAT-018 |
-| F117-AC-09 | NẾU một rule cấp tenant/school/class cho `match`/`team`/`party` có `enabled:false`, thiếu loại tin bắt buộc, có `allowed_hours` hoặc `slow_mode_seconds > 10`, THÌ mọi đường ghi chat policy PHẢI từ chối với `422 CHAT_POLICY_ALWAYS_ON` | FR-CHAT-009 · AC-CHAT-009 | TC-CHAT-018 |
-| F117-AC-10 | HỆ THỐNG PHẢI không có cờ, feature flag, cài đặt tenant/trường/lớp hay biến môi trường nào tắt được chat `match`/`team`/`party` (kiểm bằng test tĩnh và test cấu hình) | FR-CHAT-009 · AGENTS R15 | TC-CHAT-018 |
+| F117-AC-09 | NẾU một rule cấp tenant/school cho `match`/`team`/`party` có `enabled:false`, thiếu loại tin bắt buộc, có `allowed_hours` hoặc `slow_mode_seconds > 10`, THÌ mọi đường ghi chat policy PHẢI từ chối với `422 CHAT_POLICY_ALWAYS_ON` | FR-CHAT-009 · AC-CHAT-009 | TC-CHAT-018 |
+| F117-AC-10 | HỆ THỐNG PHẢI không có cờ, feature flag, cài đặt tenant/trường/khối hay biến môi trường nào tắt được chat `match`/`team`/`party` (kiểm bằng test tĩnh và test cấu hình) | FR-CHAT-009 · AGENTS R15 | TC-CHAT-018 |
 | F117-AC-11 | TRONG KHI học sinh có sanction `mute`, module chat PHẢI giữ học sinh trong channel gameplay và vẫn giao tin cho học sinh đó, chỉ từ chối gửi (`CHAT_MUTED`); người khác chat bình thường | FR-CHAT-009 · [CHAT_SYSTEM §4.1](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-019 |
 | F117-AC-12 | KHI A chặn B, module chat PHẢI ẩn tin hai chiều giữa A và B trong channel gameplay chung (fan-out và lịch sử) mà không đưa ai ra khỏi trận/party; KHI A tắt tiếng B, PHẢI chỉ ẩn tin của B với A | FR-CHAT-009 · AC-CHAT-005 | TC-SOC-003 |
-| F117-AC-24 | KHI resolve effective policy cho `match`/`team`/`party` của học sinh thuộc trường có `chat_policy_preset = quick_message_emote_only` (hoặc mặc định pilot tương đương), module chat PHẢI vẫn trả `enabled = true` và tự tạo/join channel, nhưng `allowed_kinds` PHẢI chỉ còn `quick` + `emoji`; đây PHẢI là đường duy nhất thu hẹp loại tin của channel always-on — rule tenant/school/class bỏ loại tin vẫn bị `422 CHAT_POLICY_ALWAYS_ON` (F117-AC-09) | FR-CHAT-009 · AC-CHAT-015 · [CHILD_SAFETY §3.5](../../docs/10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078) · ADR-0078 · ADR-0020 | TC-CHAT-048 |
+| F117-AC-24 | KHI resolve effective policy cho `match`/`team`/`party` của học sinh thuộc trường có `chat_policy_preset = quick_message_emote_only` (hoặc mặc định pilot tương đương), module chat PHẢI vẫn trả `enabled = true` và tự tạo/join channel, nhưng `allowed_kinds` PHẢI chỉ còn `quick` + `emoji`; đây PHẢI là đường duy nhất thu hẹp loại tin của channel always-on — rule tenant/school bỏ loại tin vẫn bị `422 CHAT_POLICY_ALWAYS_ON` (F117-AC-09) | FR-CHAT-009 · AC-CHAT-015 · [CHILD_SAFETY §3.5](../../docs/10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078) · ADR-0078 · ADR-0020 | TC-CHAT-048 |
 
 ---
 
@@ -85,7 +89,7 @@ Tin trong trận/party tự xóa hẳn sau thời hạn lưu để không tích 
 
 **Why this priority**: ADR-0033 là ngoại lệ hard-delete duy nhất (R21); sai một dòng là mất bằng chứng hoặc xóa nhầm dữ liệu bền vững.
 
-**Independent Test**: Channel `match` đóng ngày D (đồng hồ giả lập), `gameplay_chat_retention_days = N` → chạy job ngày D+N−1: còn; D+N: đã xóa, API `404`; tin có report được sao sang bằng chứng; channel có case mở còn nguyên; channel `class`/`direct` không mất dòng nào.
+**Independent Test**: Channel `match` đóng ngày D (đồng hồ giả lập), `gameplay_chat_retention_days = N` → chạy job ngày D+N−1: còn; D+N: đã xóa, API `404`; tin có report được sao sang bằng chứng; channel có case mở còn nguyên; channel club (`team` cố định)/`direct` không mất dòng nào.
 
 **Acceptance Criteria (EARS)**:
 
@@ -96,7 +100,7 @@ Tin trong trận/party tự xóa hẳn sau thời hạn lưu để không tích 
 | F117-AC-17 | KHI tin trong channel gameplay bị tham chiếu bởi report, moderation case hoặc sanction, job PHẢI sao nội dung gốc, người gửi, thời điểm, `channel_type`, `match_id`/`party_id`, `catalog_version` và revision sang bằng chứng trước khi xóa, và bằng chứng PHẢI còn xem được sau purge | FR-CHAT-011 · AC-CHAT-010 | TC-CHAT-022 |
 | F117-AC-18 | TRONG KHI channel còn report chưa phân loại hoặc case `open`/`in_review`/`escalated`/`reopened`, job PHẢI hoãn purge, ghi lý do hoãn; case đóng thì purge ở lần chạy kế tiếp | FR-CHAT-011 · AC-CHAT-010 | TC-CHAT-023 |
 | F117-AC-19 | NẾU module moderation chưa sẵn sàng (chưa có nguồn report/case) hoặc sao bằng chứng của một channel thất bại, THÌ job PHẢI không xóa channel đó (fail-closed), tăng metric và cảnh báo vận hành | FR-CHAT-011 · AGENTS R21 | TC-CHAT-022 |
-| F117-AC-20 | HỆ THỐNG PHẢI không bao giờ xóa vật lý dữ liệu của channel `class`, `study_group`, `team` cố định, `direct`; role `chat_purger` PHẢI chỉ có `DELETE` trên danh sách bảng gameplay và các role khác PHẢI không có `DELETE`/`TRUNCATE` | FR-CHAT-011 · AC-CHAT-010 · AGENTS R21 | TC-CHAT-024 |
+| F117-AC-20 | HỆ THỐNG PHẢI không bao giờ xóa vật lý dữ liệu của channel `team` cố định (club), `direct`; role `chat_purger` PHẢI chỉ có `DELETE` trên danh sách bảng gameplay và các role khác PHẢI không có `DELETE`/`TRUNCATE` | FR-CHAT-011 · AC-CHAT-010 · AGENTS R21 | TC-CHAT-024 |
 | F117-AC-21 | KHI tin `world`/`area` quá `ephemeral_chat_retention`, job PHẢI sao tin thuộc report/case sang bằng chứng rồi `DETACH` + `DROP` partition ngày của bảng tin ephemeral | FR-CHAT-011 · ADR-0033 | TC-CHAT-021 |
 | F117-AC-22 | KHI một lần chạy kết thúc, job PHẢI ghi bản ghi lượt chạy (số channel, số tin, partition đã drop, số hoãn, số bằng chứng) và audit tổng hợp không nội dung, phát `chat.gameplay_purged`, tăng `eduworld_chat_purge_total{tenant,kind}`; tồn đọng quá 2 ngày PHẢI cảnh báo | FR-CHAT-011 · ADR-0033 | TC-CHAT-021 |
 | F117-AC-23 | HỆ THỐNG PHẢI không có API hay use case nào ngoài job `gameplay-chat-purge` thực hiện xóa vật lý; sau purge, mọi API chat với channel đó PHẢI trả `404` | FR-CHAT-011 · AGENTS R21 | TC-CHAT-021 |

@@ -4,7 +4,7 @@
 
 ## Summary
 
-Xây các màn an toàn chat trong ba chunk workspace của portal (F051): `live-ops/moderation` (hàng đợi case, chi tiết case + bằng chứng, sanction, thông báo nhà trường, từ bổ sung/nhóm từ tenant), `platform-admin/chat-safety` (danh mục từ nhạy cảm, thử chuỗi, publish/version, công tắc kiểm duyệt + lịch sử), `school-lms/safety` (thông báo vụ việc + xác nhận, chính sách chat trường/lớp, nhóm từ chỉ xem, club). Banner "Đang tắt kiểm duyệt" gắn vào `BannerSlot`. Mỗi màn = page Ant Design Pro + hook TanStack Query gọi operationId qua `apiClient` (F050) với `withTenantScope`/`TenantFilter` (F051). Không business logic ở client.
+Xây các màn an toàn chat trong ba chunk workspace của portal (F051): `live-ops/moderation` (hàng đợi case, chi tiết case + bằng chứng, sanction, thông báo nhà trường, từ bổ sung/nhóm từ tenant), `platform-admin/chat-safety` (danh mục từ nhạy cảm, thử chuỗi, publish/version, công tắc kiểm duyệt + lịch sử), `school-lms/safety` (thông báo vụ việc + xác nhận, chính sách chat trường, nhóm từ chỉ xem, club). Banner "Đang tắt kiểm duyệt" gắn vào `BannerSlot`. Mỗi màn = page Ant Design Pro + hook TanStack Query gọi operationId qua `apiClient` (F050) với `withTenantScope`/`TenantFilter` (F051). Không business logic ở client.
 
 ## Technical Context
 

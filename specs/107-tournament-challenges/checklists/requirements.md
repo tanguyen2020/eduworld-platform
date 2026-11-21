@@ -1,4 +1,4 @@
-# Specification Quality Checklist: F107 — Tournament: 6 format, bracket, lịch, thử thách lớp/giải trường từ template
+# Specification Quality Checklist: F107 — Tournament: 6 format, bracket, lịch, thử thách khối/giải trường từ template
 
 **Purpose**: Kiểm chất lượng spec trước khi lập kế hoạch (`/speckit.plan`) · **Created**: 2026-11-16 · **Feature**: [spec.md](../spec.md)
 
@@ -30,3 +30,4 @@
 - Mâu thuẫn chốt [Confirmed]: `/lms/challenges` ghi `x-service: learning` (API_DESIGN §9.14, `learning.v1.yaml`) nhưng SCHOOL_LMS §7 và COMPETITION_SYSTEM §10.2 đặt thực thi + template ở module competition → chuyển route sang module competition.
 - COMPETITION_SYSTEM §10.2 cho Tenant Admin tenant `unit` tạo giải liên trường, trái ADMIN_PORTAL §2.3 (chỉ `school_admin` có `lms.challenge.write`) — spec theo ADMIN_PORTAL/ADR-0072.
 - Format double elim, vòng bảng, giải đội là P6 theo PRD (FR-TRN-001) — để ở US5 (P3).
+- ADR-0095 (2026-11-21, WP-S): thử thách/giải lớp → thử thách khối/giải khối của trường (`grade_challenge`; đối tượng khối ± học sinh cùng trường, exclude thắng, khác trường → `422`); bỏ seeding `separate_class`, `participation = study_group`; US-LMS-008 Removed (thay bằng US-TRN-001). Delta op learning chờ WP-L1 ghi ở contracts §6.

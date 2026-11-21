@@ -6,8 +6,8 @@
 
 - Phụ thuộc đã Done: F061, F063, F092, F102, F105, F106, F107 (trước đó profile `mock` Prism + fixture AsyncAPI, nhãn MOCK; chỉ nghiệm thu `Done` với backend thật).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); chạy hai instance Godot `-- --env=local --device-id=<khác nhau>`.
-- Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (lớp 3, `g1_3`), `hs.chi.3b`, `hs.em.4a` (`g4_5`), `hs.dung.7a` (`g6_7`), `ad.truong.a` (policy trường), `qlcm.truong.a`.
-- Dữ liệu: season đang mở; Class Tournament 3A ở `registration_open` (tạo bằng `ad.truong.a` qua portal từ template đã gán); bảng "Mục tiêu lớp", "Lớp em tuần này", "Xếp hạng rating" có dữ liệu.
+- Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (khối 3, `g1_3`, TH Demo A), `hs.chi.3b` (khối 3, bị loại trừ khỏi giải), `hs.em.4a` (khối 4, `g4_5`), `hs.dung.7a` (`g6_7`), `ad.truong.a` (policy trường), `qlcm.truong.a`.
+- Dữ liệu: season đang mở; giải khối 3 TH Demo A (`grade_challenge`, loại trừ `hs.chi.3b`) ở `registration_open` (tạo bằng `ad.truong.a` qua portal từ template đã gán); "Mục tiêu của khối" (`grade_goal`), "Đấu trường trường", "Xếp hạng rating" có dữ liệu (ADR-0095).
 
 ## 2. Kịch bản kiểm tra
 
@@ -27,8 +27,8 @@
 | 12 | Kết thúc trận; mô phỏng trận `cancelled` | Màn kết quả động viên, points, tier; "Trận đã hủy" | F109-AC-14 |
 | 13 | Báo cáo đối thủ với ghi chú dài; chặn đối thủ | Ô ghi chú giới hạn + bộ đếm; gửi một lần | F109-AC-16 |
 | 14 | Lịch sử trận → chi tiết | Danh sách cursor, đối thủ chỉ nickname/tier | F109-AC-17 |
-| 15 | `hs.an.3a`, `hs.em.4a`, `hs.dung.7a` mở Bảng xếp hạng | Lớp 3: mục tiêu lớp; lớp 4: top + "nhóm X%"; lớp 7: top + quanh mình; chỉ nickname | F109-AC-18, F109-AC-19, F109-AC-20 |
-| 16 | `ad.truong.a` tắt bảng lớp của trường; `hs.an.3a` tải lại; mở `leaderboard_id` của trường B | Bảng biến mất; 404 → "Bảng này hiện không mở" | F109-AC-21, F109-AC-18 |
+| 15 | `hs.an.3a`, `hs.em.4a`, `hs.dung.7a` mở Bảng xếp hạng | Khối 3: `GradeGoalBar` (tiến độ khối + phần em góp, không tên, không hạng); khối 4: top + "nhóm X%"; khối 7: top + quanh mình; chỉ nickname | F109-AC-18, F109-AC-19, F109-AC-20 |
+| 16 | `ad.truong.a` tắt "Mục tiêu của khối" của trường; `hs.an.3a` tải lại; mở `leaderboard_id` của trường B | Bảng biến mất; 404 → "Bảng này hiện không mở" | F109-AC-21, F109-AC-18 |
 | 17 | Xem log thông báo sau khi bị bạn vượt điểm | Không có thông báo "bị vượt qua"; bảng không tự làm mới | F109-AC-22 |
 | 18 | `hs.an.3a` mở Giải đấu → đăng ký → check-in khi mở cửa sổ → xem bracket | Trạng thái cập nhật; bracket "con đường"; `hs.chi.3b` không thấy giải | F109-AC-23, F109-AC-24, F109-AC-25 |
 | 19 | Tới giờ trận giải | Toast thông báo → ready check | F109-AC-26 |

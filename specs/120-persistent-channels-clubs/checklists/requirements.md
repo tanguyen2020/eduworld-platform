@@ -1,4 +1,4 @@
-# Specification Quality Checklist: F120 — Channel bền vững (world, area, class, study group, team, DM), club, chính sách theo cấp, tìm kiếm, retention
+# Specification Quality Checklist: F120 — Channel bền vững (world, area, team, DM), club, chính sách theo cấp, tìm kiếm, retention
 
 **Purpose**: Kiểm chất lượng spec trước khi lập kế hoạch (`/speckit.plan`) · **Created**: 2026-11-16 · **Feature**: [spec.md](../spec.md)
 
@@ -27,5 +27,6 @@
 
 ## Notes
 
-- Spec nhắc vài tên bảng trong Clarifications/AC (`chat.channel_members`, `processed_events`, `chat.ephemeral_messages`) để chỉ rõ ranh giới ADR-0084/ADR-0033; chi tiết ở data-model.md.
-- Tài liệu cần sửa theo ADR-0084 (SOCIAL_SYSTEM §6.1, CHAT_SYSTEM §4, DATABASE_DESIGN §2.11) và tham số `persistent_chat_retention_days` chưa đăng ký — đã báo cáo, có task Polish.
+- Spec nhắc vài tên bảng trong Clarifications/AC (`chat.channel_members`, `processed_events`, `chat.ephemeral_messages`) để chỉ rõ ranh giới ADR-0033; chi tiết ở data-model.md.
+- 2026-11-21 (ADR-0095, WP-S): bỏ channel lớp/nhóm học tập và cấp policy lớp; F120-AC-01…03 giữ mã với nhãn **Removed (ADR-0095)**; checklist vẫn đạt.
+- Tài liệu cần sửa theo ADR-0084/ADR-0095 (SOCIAL_SYSTEM §6.1 — đã sửa WP-S 2026-11-21; CHAT_SYSTEM §4 — WP-C1; DATABASE_DESIGN §2.11) và tham số `persistent_chat_retention_days` chưa đăng ký — đã báo cáo, có task Polish.

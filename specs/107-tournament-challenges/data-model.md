@@ -1,4 +1,4 @@
-# Data Model: F107 — Tournament: 6 format, bracket, lịch, thử thách lớp/giải trường từ template
+# Data Model: F107 — Tournament: 6 format, bracket, lịch, thử thách khối/giải trường từ template
 
 **Spec**: [spec.md](spec.md) · **Plan**: [plan.md](plan.md) · Nguồn sự thật bảng: [DATABASE_DESIGN](../../docs/07-backend/DATABASE_DESIGN.md)
 
@@ -13,10 +13,11 @@ Database `eduworld_competition`, schema `competition`. T = mixin `Base` + RLS; T
 | `challenge_id` | UUIDv7 | PK | |
 | `tenant_id`, `school_id` | uuid | NOT NULL, RLS | |
 | `template_config_id`, `template_version_id` | uuid | NOT NULL | `game_config_versions` (ghim) |
-| `kind` | `varchar(64)` | CHECK `IN ('class_challenge','class_tournament','school_tournament')` | |
+| `kind` | `varchar(64)` | CHECK `IN ('grade_challenge','school_tournament')` | ADR-0095: thay `class_challenge`, `class_tournament` (chưa có dòng nào — feature chưa code) |
 | `name` | `varchar(128)` | NOT NULL | API `maxLength 80` |
-| `targets` | jsonb | ≤ 8192 byte | `[{target_type, target_id}]` (class/group/grade_level/school) |
-| `participation` | `varchar(64)` | CHECK `IN ('individual','study_group')` | |
+| `targets` | jsonb | ≤ 8192 byte | `[{target_type, grade_level?, student_ids?}]` — `target_type` ∈ `grade`, `students`; `student_ids` ≤ 500 — mọi học sinh thuộc `school_id` (ADR-0095 mục 3, 5) |
+| `exclude_student_ids` | uuid[] | ≤ 500, NULL | Loại trừ; **exclude thắng** include |
+| `participation` | `varchar(64)` | CHECK `IN ('individual')` | Bỏ `study_group` (ADR-0095) [Proposed] |
 | `question_set_version_id` | uuid | NULL | |
 | `params` | jsonb | ≤ 8192 byte | Chỉ khóa trong `allowed_params` |
 | `starts_at`, `ends_at` | timestamptz | `ends_at > starts_at` | |
@@ -29,7 +30,7 @@ Index `(tenant_id, school_id, status, starts_at) WHERE deleted_at IS NULL`.
 
 ### Tournament — `competition.tournaments` (Có sẵn tên, Thêm cột, T; giải platform G có `tenant_ids`)
 
-`tournament_id` PK · `tenant_id`, `school_id` · `owner_scope varchar(64)` CHECK `IN ('class','school','tenant','platform')`, `owner_id` · `challenge_id` · `name varchar(128)` · `format varchar(64)` CHECK `IN ('single_elim','double_elim','round_robin','groups_then_single_elim')` · `participant_type varchar(64)` (`individual`/`team`), `team_size smallint` · `mode varchar(64)` (`battle_1v1`/`team_battle`) · `subject_id`, `topic_ids uuid[]` (≤ 50), `grade_levels smallint[]` · `question_policy jsonb` · `registration_open_at`, `registration_close_at`, `check_in_opens_at`, `starts_at` · `max_entries smallint` (2–256) · `seeding_policy varchar(64)` CHECK `IN ('rating','random','manual','separate_class')`, `seed_value bigint` · `auto_confirm boolean` · `reward_rule_refs jsonb` · `status varchar(64)` CHECK `IN ('draft','published','registration_open','registration_closed','seeding','scheduled','in_progress','completed','rewarded','archived','cancelled')` · `rule_version_id` · `tenant_ids uuid[]` · `version`.
+`tournament_id` PK · `tenant_id`, `school_id` · `owner_scope varchar(64)` CHECK `IN ('school','tenant','platform')` (giải khối của trường = `school` + `grade_levels` một phần tử — ADR-0095), `owner_id` · `challenge_id` · `name varchar(128)` · `format varchar(64)` CHECK `IN ('single_elim','double_elim','round_robin','groups_then_single_elim')` · `participant_type varchar(64)` (`individual`/`team`), `team_size smallint` · `mode varchar(64)` (`battle_1v1`/`team_battle`) · `subject_id`, `topic_ids uuid[]` (≤ 50), `grade_levels smallint[]` · `question_policy jsonb` · `registration_open_at`, `registration_close_at`, `check_in_opens_at`, `starts_at` · `max_entries smallint` (2–256) · `seeding_policy varchar(64)` CHECK `IN ('rating','random','manual')` (bỏ `separate_class` — ADR-0095), `seed_value bigint` · `auto_confirm boolean` · `reward_rule_refs jsonb` · `status varchar(64)` CHECK `IN ('draft','published','registration_open','registration_closed','seeding','scheduled','in_progress','completed','rewarded','archived','cancelled')` · `rule_version_id` · `tenant_ids uuid[]` · `version`.
 
 ### TournamentEntry — `competition.tournament_entries` (Có sẵn, T)
 
@@ -61,6 +62,7 @@ Tournament theo [COMPETITION_SYSTEM §10.3](../../docs/01-game-design/COMPETITIO
 ## 3. Quy tắc kiểm tra dữ liệu
 
 - Tối thiểu entry: single elim ≥ 4, double elim ≥ 4, round robin ≥ 3 ([COMPETITION_SYSTEM §10.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#104-đăng-ký-và-xác-nhận-confirmed-trừ-khi-ghi-khác)).
+- Đối tượng ([COMPETITION_SYSTEM §10.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#104-đăng-ký-và-xác-nhận-confirmed-trừ-khi-ghi-khác), ADR-0095): (học sinh hiệu lực của `grade_level` trong `school_id` ∪ `student_ids`) − `exclude_student_ids`; học sinh không thuộc `school_id` → `422`; khối và trường đọc từ `ref.students`.
 - `params` ⊆ `allowed_params` của template version; `reward_rule_refs`, `format`, `mode` chỉ từ template.
 - Bracket sinh trong một transaction; trận giải không đổi rating.
 

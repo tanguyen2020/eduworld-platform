@@ -1,14 +1,14 @@
-# Feature Specification: F111 — Godot — club trong game, Event center, nhóm "Bạn cùng lớp"/"Vừa chơi cùng", nút "Tham gia bạn"
+# Feature Specification: F111 — Godot — club trong game, Event center, nhóm "Vừa chơi cùng", nút "Tham gia bạn"
 
 **Feature Branch**: `111-godot-clubs-events-social` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: `src/game/` · **Mốc**: M5 · **Phụ thuộc**: F077, F110, F120 (và F071 `SceneRouter.request_area`, F072 `QuestService`, F091/F092 `hub.instance.join`/`HubSync`, F095 bạn bè, F119 `ChatDock`, F123 deep link thông báo)
-**Input**: Học sinh "Tham gia bạn" đang ở khu công khai; tìm bạn qua nhóm "Bạn cùng lớp" và "Vừa chơi cùng" (không tìm kiếm tự do); mở Event center xem sự kiện live-ops, mục tiêu cộng đồng, nhiệm vụ ngày/tuần và season track miễn phí, nhận thưởng mốc; xem, xin vào, nhận lời mời và tạo club theo chính sách `student_club_creation` của trường. Màn S11 (phần Tìm bạn, Club, Tham gia bạn) và S14 của [STUDENT_GAME_UX](../../docs/05-ux/STUDENT_GAME_UX.md). FR nguồn (phía client): FR-SOC-001…004, FR-MP-002, FR-MP-003, FR-EVT-001, FR-EVT-003…008, FR-GAM-001, FR-GAME-010.
+**Input**: Học sinh "Tham gia bạn" đang ở khu công khai; tìm bạn qua nhóm "Vừa chơi cùng" (không tìm kiếm tự do, không có nhóm "Bạn cùng lớp" — ADR-0095); mở Event center xem sự kiện live-ops, mục tiêu cộng đồng, nhiệm vụ ngày/tuần và season track miễn phí, nhận thưởng mốc; xem, xin vào, nhận lời mời và tạo club theo chính sách `student_club_creation` của trường. Màn S11 (phần Tìm bạn, Club, Tham gia bạn) và S14 của [STUDENT_GAME_UX](../../docs/05-ux/STUDENT_GAME_UX.md). FR nguồn (phía client): FR-SOC-001…004, FR-MP-002, FR-MP-003, FR-EVT-001, FR-EVT-003…008, FR-GAM-001, FR-GAME-010.
 
 ## Clarifications
 
 ### Session 2026-11-16
 
 - Q: "Tham gia bạn" gọi REST `joinFriendInWorld` hay lệnh WS? → A: Theo F091 (owner gán instance, module competition): `hub.instance.join` có `follow_user_id`; khác khu thì vào khu qua `SceneRouter.request_area` (F071 `enterWorldArea`) trước. Client **không** gọi `joinFriendInWorld`; endpoint này chờ F071/F091 bỏ hoặc đổi nghĩa (contracts §6).
-- Q: Nguồn dữ liệu "Bạn cùng lớp", "Vừa chơi cùng"? → A: Chưa có contract. Đề xuất `listFriendSuggestions` (module chat module social, owner F095) — server lọc phạm vi, chặn, bạn hiện có. "Ở gần đây" và Mã bạn bè giữ nguyên của F110.
+- Q: Nguồn dữ liệu "Bạn cùng lớp", "Vừa chơi cùng"? → A: Chưa có contract. Đề xuất `listFriendSuggestions` (module chat module social, owner F095) — server lọc phạm vi, chặn, bạn hiện có. "Ở gần đây" và Mã bạn bè giữ nguyên của F110. (Nhóm "Bạn cùng lớp" bỏ theo Session 2026-11-21, ADR-0095.)
 - Q: Client biết trường cho học sinh tạo club bằng gì? → A: Đề xuất thêm `PlayerBootstrap.policies.social` (owner F013/F015); chỉ để ẩn/hiện nút, `createClub` vẫn do server kiểm (F120-AC-17).
 - Q: Lớp 1–3 có tab Club? → A: Theo [STUDENT_GAME_UX_SOCIAL §6](../../docs/05-ux/STUDENT_GAME_UX_SOCIAL.md): `g1_3` chỉ xem club của mình (do nhà trường tạo) và nhận lời mời; không có club đề xuất, không tạo club. Khác biệt chỉ ở UX (ADR-0020).
 - Q: "Mục tiêu tuần: học 4/7 ngày" lấy từ đâu? → A: Là tiến độ weekly quest do server tính ([QUEST_SYSTEM §2.4](../../docs/01-game-design/QUEST_SYSTEM.md#24-daily-và-weekly-quest)); client chỉ hiển thị `QuestProgress`, không tự đếm ngày.
@@ -17,6 +17,13 @@
 ### Session 2026-11-17
 
 - Q: Mã lỗi khi trường tắt tạo club (RB-626) và enum presence (RB-404)? → A: `createClub` khi tắt trả `403 PERMISSION_DENIED`; `SOCIAL_SCOPE_VIOLATION` chỉ cho vi phạm phạm vi (khác trường/tenant, chặn). Presence theo enum MULTIPLAYER_GAMEPLAY §5; ẩn trạng thái hiện là `offline`. Thông báo club dùng enum `kind` chung (RB-513).
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Tab Tìm bạn còn nhóm "Bạn cùng lớp"? → A: Không. ADR-0095 §5 bỏ khái niệm lớp và gợi ý kết bạn "Bạn cùng lớp"; chỉ còn "Vừa chơi cùng" (cùng "Ở gần đây" và Mã bạn bè của F110). `listFriendSuggestions` chỉ còn `source = recently_played` (delta F095). User Story 2, F111-AC-06, F111-AC-07 viết lại.
+- Q: Có ngoại lệ hiển thị tên thật cho bạn cùng lớp? → A: Không còn: mọi người chơi khác chỉ thấy nickname + avatar (R16, ADR-0095 §5); thẻ người chơi không hiện tên thật, trường, khối.
+- Q: Event center hiển thị đóng góp theo lớp? → A: Không. `CommunityGoalProgress.by_class` thay bằng `by_grade[] {grade_level, progress}` (chỉ khi sự kiện trường bật `show_grade_contributions`; khối có < 5 học sinh đóng góp bị ẩn, không tên, không xếp hạng) — contract **đã áp 2026-11-21 (WP-S)**. Sự kiện trường nhắm đối tượng theo khối (`audience.grade_levels`, không còn `class_ids`); server lọc, client không tự lọc. F111-AC-09, F111-AC-13 viết lại.
+- Q: Club còn study group hay "thêm cả lớp"? → A: Không (ADR-0095 §5); client vẫn bỏ qua club `study_group` nếu dữ liệu cũ còn trả về.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -40,20 +47,20 @@ An (3A) thấy Bình đang ở Vương quốc Số, bấm "Tham gia bạn" và x
 
 ---
 
-### User Story 2 — Nhóm "Bạn cùng lớp" và "Vừa chơi cùng" (Priority: P2)
+### User Story 2 — Nhóm "Vừa chơi cùng" (Priority: P2)
 
-Học sinh mở tab Tìm bạn, thấy bạn cùng lớp và bạn vừa cùng party/trận/club, bấm "Kết bạn" — không có ô tìm tên.
+Học sinh mở tab Tìm bạn, thấy bạn vừa cùng party/trận/club, bấm "Kết bạn" — không có ô tìm tên, không có nhóm "Bạn cùng lớp" (ADR-0095).
 
 **Why this priority**: FR-SOC-002 chỉ cho tìm bạn trong phạm vi; cần US1 không bắt buộc.
 
-**Independent Test**: `hs.an.3a` mở Tìm bạn: nhóm "Bạn cùng lớp" có `hs.binh.3a` (chưa kết bạn), không có `hs.chi.3b`; sau một party với `hs.chi.3b`, nhóm "Vừa chơi cùng" có `hs.chi.3b` kèm biểu tượng party.
+**Independent Test**: `hs.an.3a` mở Tìm bạn: không có nhóm "Bạn cùng lớp"; trước khi chơi cùng, "Vừa chơi cùng" rỗng (trạng thái rỗng + gợi ý Mã bạn bè); sau một party với `hs.chi.3b` (chưa kết bạn), nhóm "Vừa chơi cùng" có `hs.chi.3b` kèm biểu tượng party.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F111-AC-06 | KHI mở tab "Tìm bạn", game client PHẢI hiển thị nhóm "Ở gần đây" (F110), "Bạn cùng lớp" (`listFriendSuggestions` `source = classmates`), "Vừa chơi cùng" (`source = recently_played`, ngữ cảnh party/trận/club bằng biểu tượng + chữ) và Mã bạn bè (F110); PHẢI không có ô tìm kiếm tự do theo tên/ID | FR-SOC-001 · FR-SOC-002 · AC-SOC-002 · AC-UX-105 | TC-SOC-001 |
-| F111-AC-07 | Mỗi gợi ý PHẢI chỉ hiện nickname, avatar 2D, level; PHẢI không hiện tên thật, trường, lớp; game client PHẢI ẩn thêm người đã là bạn, có lời mời đang chờ hoặc trong danh sách chặn của mình; "Kết bạn" PHẢI gọi `SocialService.send_request` (F110, `Idempotency-Key`) và map `SOCIAL_SCOPE_VIOLATION`, `FRIEND_LIMIT_REACHED`, `RATE_LIMITED` như F110 | FR-SOC-002 · FR-SOC-003 · AGENTS R16 · ADR-0054 | TC-SOC-002 |
+| F111-AC-06 | KHI mở tab "Tìm bạn", game client PHẢI hiển thị nhóm "Ở gần đây" (F110), "Vừa chơi cùng" (`listFriendSuggestions` `source = recently_played`, ngữ cảnh party/trận/club bằng biểu tượng + chữ) và Mã bạn bè (F110); PHẢI không có nhóm "Bạn cùng lớp" hay gợi ý theo lớp/khối (ADR-0095) và không có ô tìm kiếm tự do theo tên/ID | FR-SOC-001 · FR-SOC-002 · AC-SOC-002 · AC-UX-105 · ADR-0095 | TC-SOC-001 |
+| F111-AC-07 | Mỗi gợi ý PHẢI chỉ hiện nickname, avatar 2D, level; PHẢI không hiện tên thật, trường, khối (không ngoại lệ — ADR-0095); game client PHẢI ẩn thêm người đã là bạn, có lời mời đang chờ hoặc trong danh sách chặn của mình; "Kết bạn" PHẢI gọi `SocialService.send_request` (F110, `Idempotency-Key`) và map `SOCIAL_SCOPE_VIOLATION`, `FRIEND_LIMIT_REACHED`, `RATE_LIMITED` như F110 | FR-SOC-002 · FR-SOC-003 · AGENTS R16 · ADR-0054 | TC-SOC-002 |
 | F111-AC-08 | NẾU một nhóm rỗng, THÌ game client PHẢI hiện trạng thái rỗng kèm gợi ý dùng Mã bạn bè; NẾU `listFriendSuggestions` lỗi hoặc chưa có, THÌ PHẢI ẩn nhóm đó và giữ "Ở gần đây", Mã bạn bè; `g1_3` PHẢI chọn bằng chạm avatar lớn | FR-SOC-001 · FR-GAME-010 | — |
 
 ---
@@ -70,11 +77,11 @@ Học sinh mở Event center, thấy "Lễ hội Trăng Rằm · còn 5 ngày", 
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F111-AC-09 | KHI mở Event center (biểu tượng lịch trên HUD, bảng tin Quảng trường Tia Sáng, deep link thông báo), game client PHẢI gọi `listGameEvents` (`status = live,upcoming`) và hiện `EventCard`: tên theo ngôn ngữ (thiếu `en` dùng `vi`), banner, thời gian còn lại dạng số ngày, nhãn "Sắp diễn ra" cho `scheduled`; PHẢI không đếm giờ/phút/giây, không nhấp nháy | FR-EVT-001 · FR-EVT-006 · FR-EVT-007 · [EVENT_SEASON_SYSTEM §9](../../docs/01-game-design/EVENT_SEASON_SYSTEM.md) | TC-EVT-001 |
+| F111-AC-09 | KHI mở Event center (biểu tượng lịch trên HUD, bảng tin Quảng trường Tia Sáng, deep link thông báo), game client PHẢI gọi `listGameEvents` (`status = live,upcoming`; server đã lọc theo phạm vi và đối tượng khối `audience.grade_levels` của sự kiện trường, client không tự lọc) và hiện `EventCard`: tên theo ngôn ngữ (thiếu `en` dùng `vi`), banner, thời gian còn lại dạng số ngày, nhãn "Sắp diễn ra" cho `scheduled`; PHẢI không đếm giờ/phút/giây, không nhấp nháy | FR-EVT-001 · FR-EVT-006 · FR-EVT-007 · [EVENT_SEASON_SYSTEM §9](../../docs/01-game-design/EVENT_SEASON_SYSTEM.md) | TC-EVT-001 |
 | F111-AC-10 | KHI mở chi tiết, game client PHẢI gọi `getGameEvent` và hiện mô tả, quest sự kiện (nút "Đi" giao `QuestService` F072 dẫn đường), mốc thưởng, `daily_points_remaining` bằng lời trung tính; "Tham gia" PHẢI gọi `joinGameEvent` (`Idempotency-Key` giữ khi thử lại); `404 EVENT_NOT_AVAILABLE`/`409 EVENT_ENDED` PHẢI đóng chi tiết hoặc làm mới với thông điệp thân thiện | FR-EVT-001 · AC-EVT-001 | TC-EVT-001 |
 | F111-AC-11 | KHI học sinh bấm "Nhận" ở mốc `reached` chưa `claimed`, game client PHẢI gọi `claimEventMilestone` với `Idempotency-Key` giữ nguyên khi thử lại và chỉ đánh dấu đã nhận khi server trả `RewardClaimResult`, hiển thị `rewards` từ server; `409 EVENT_MILESTONE_NOT_REACHED` PHẢI làm mới chi tiết | FR-EVT-003 · ADR-0049 · AC-EVT-012 | TC-EVT-012 |
 | F111-AC-12 | KHI nhận `event.status.changed`, game client PHẢI làm mới danh sách: `suspended` → ẩn thành phần sự kiện, hiện "Sự kiện tạm dừng"; `ended` → chỉ cho nhận mốc đã đạt tới `claim_deadline_at` và ghi "Phần thưởng chưa nhận sẽ được gửi tự động"; `cancelled` → gỡ thẻ; PHẢI không cắt lượt chơi đang dở | FR-EVT-003 · AC-EVT-003 | TC-EVT-003 |
-| F111-AC-13 | KHI chi tiết có `community_goal` hoặc nhận `event.community_goal.updated`, game client PHẢI hiện `CommunityGoalBar` (tổng/mục tiêu, mốc 25/50/75/100, "Em đã góp sức" theo `my_contributed`); PHẢI không hiện xếp hạng cá nhân; `by_class` chỉ hiện khi server trả và khối không phải `g1_3`, sắp theo tên lớp, không số thứ hạng | FR-EVT-004 · AC-EVT-006 · AGENTS R19 | TC-EVT-006 |
+| F111-AC-13 | KHI chi tiết có `community_goal` hoặc nhận `event.community_goal.updated`, game client PHẢI hiện `CommunityGoalBar` (tổng/mục tiêu, mốc 25/50/75/100, "Em đã góp sức" theo `my_contributed`); PHẢI không hiện xếp hạng cá nhân; đóng góp theo khối `by_grade` (`grade_level`, `progress`) chỉ hiện khi server trả (sự kiện bật `show_grade_contributions`) và khối người xem không phải `g1_3`, sắp theo khối tăng dần, không tên, không số thứ hạng; khối bị server ẩn (< 5 học sinh) PHẢI không được client suy ra hay hiển thị | FR-EVT-004 · AC-EVT-006 · AGENTS R19 · ADR-0095 | TC-EVT-006 |
 | F111-AC-14 | KHI nhận `event.progress.updated`, game client PHẢI thay điểm sự kiện, `daily_points_remaining` bằng giá trị server và đánh dấu mốc vừa đạt bằng huy hiệu tĩnh (không popup chặn); PHẢI không tự cộng điểm | FR-EVT-001 · ADR-0016 | — |
 
 ---
@@ -160,7 +167,7 @@ Học sinh là owner/officer club duyệt yêu cầu xin vào và mời bạn b�
 - NẾU học sinh đang trong party, THÌ instance theo party (MULTIPLAYER_GAMEPLAY §6); client chỉ hiển thị kết quả server.
 - NẾU sự kiện chuyển `ended` khi đang mở chi tiết, THÌ áp F111-AC-12 ngay, không mất mốc đã đạt.
 - NẾU nhận cùng `event.progress.updated` hai lần, THÌ thay giá trị (không cộng dồn).
-- NẾU `ClubType` server còn `study_group`, THÌ client không hiển thị club loại đó trong Club (study group thuộc module learning, ADR-0084).
+- NẾU server còn trả club `club_type = study_group` (dữ liệu cũ trước ADR-0095), THÌ client không hiển thị club đó trong Club.
 - NẾU club bị khóa khi đang mở trang, THÌ lần làm mới kế hiện chế độ chỉ xem (F111-AC-24).
 - NẾU notification deep link trỏ tới club/sự kiện đã không còn, THÌ áp F111-AC-31 (`404`).
 
@@ -190,7 +197,7 @@ NFR: NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-SAFE-003, NFR-COMP-001.
 
 ### Key Entities
 
-- **FriendSuggestion**: thẻ công khai người chơi + nguồn (`classmates`/`recently_played`) + ngữ cảnh chơi cùng.
+- **FriendSuggestion**: thẻ công khai người chơi + nguồn (`recently_played`) + ngữ cảnh chơi cùng.
 - **JoinFriendIntent**: ý định tham gia (bạn, khu đích, trạng thái chờ/thành công/thất bại).
 - **LiveEvent / EventMilestone / CommunityGoal**: sự kiện đang/sắp diễn ra trong phạm vi, mốc thưởng, tiến độ chung.
 - **SeasonTrack / SeasonTier**: track mùa miễn phí, cấp, thưởng, đã nhận.
@@ -228,7 +235,7 @@ NFR: NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-SAFE-003, NFR-COMP-001.
 ### Measurable Outcomes
 
 - **SC-001**: ≥ 95% lượt "Tham gia bạn" hợp lệ (bạn ở khu công khai, còn chỗ, cùng partition) đặt học sinh cùng instance với bạn trong ≤ 5 giây (cùng khu ≤ 2 giây).
-- **SC-002**: 0 màn trong bộ scene test hiển thị tên thật, trường, lớp, điểm học tập của người chơi khác hoặc xếp hạng cá nhân trong sự kiện/club.
+- **SC-002**: 0 màn trong bộ scene test hiển thị tên thật, trường, khối, điểm học tập của người chơi khác hoặc xếp hạng cá nhân trong sự kiện/club.
 - **SC-003**: 0 phần tử đếm ngược theo giây, streak hay track trả phí trong Event center (kiểm bằng quét scene và pseudo-locale).
 - **SC-004**: Học sinh lớp 4–9 tạo được club (khi trường cho phép) trong ≤ 5 thao tác; nhận thưởng mốc/cấp trong ≤ 2 thao tác từ HUD.
 - **SC-005**: Event center, trang club ≥ 30 FPS trên thiết bị Android tầm trung tham chiếu, preset Trung bình.
@@ -236,15 +243,15 @@ NFR: NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-SAFE-003, NFR-COMP-001.
 ## Ngoài phạm vi
 
 - Backend: sự kiện, community goal, season track → F077; club, channel club → F120; bạn bè, gợi ý kết bạn, presence → F095, F091; gán instance theo `follow_user_id` → F091.
-- Danh sách bạn, lời mời, mã bạn bè, chặn/tắt tiếng, "Ở gần đây" → F110; mời party → F102; "Thách đấu" → F109; DM và tab channel bền vững (khu vực, lớp, DM) → F119/F120.
+- Danh sách bạn, lời mời, mã bạn bè, chặn/tắt tiếng, "Ở gần đây" → F110; mời party → F102; "Thách đấu" → F109; DM và tab channel bền vững (khu vực, club, DM) → F119/F120.
 - Owner sửa thông tin club, bổ nhiệm officer, gỡ thành viên, tạo mục tiêu/sự kiện club, lưu trữ club trong game → chưa có feature (nhân sự trường làm ở portal, F122); duyệt club → F122.
 - Boss, shop, bộ sưu tập của sự kiện → F110, F069 (Event center chỉ dẫn tới quest); trang trí thế giới theo sự kiện → F071/F077; sự kiện trường ở portal → F081.
-- Hộp thông báo, toast lời mời club → F123 (F111 chỉ đăng ký deep link); study group LMS → F040.
+- Hộp thông báo, toast lời mời club → F123 (F111 chỉ đăng ký deep link). Nhóm "Bạn cùng lớp", nhóm học tập LMS: không có (ADR-0095).
 
 ## Assumptions
 
 - Trước khi F077, F095, F120 `Done`, client chạy trên Prism mock sinh từ `specs/` (profile `mock`, nhãn MOCK — R17); feature chỉ `Done` với backend thật.
 - Contract "Cần thêm/Cần sửa" ([contracts §6](contracts/README.md)) có trước US tương ứng: `listFriendSuggestions` (US2), `listMyClubInvitations` và `PlayerBootstrap.policies.social` (US5), `hub.instance.join.follow_user_id` (US1).
 - [Confirmed] Cửa sổ "Vừa chơi cùng" là tham số server mới (đề xuất `friend_suggestion_recent_window`, owner SOCIAL_SYSTEM) — client không biết giá trị.
-- [Confirmed] Tên thật của bạn cùng lớp (SOCIAL_SYSTEM §4.1) không hiển thị vì `PlayerCard` chưa có trường; F111 chỉ dùng nickname.
+- [Confirmed] Không hiển thị tên thật của bất kỳ người chơi khác (R16; ADR-0095 bỏ ngoại lệ bạn cùng lớp ở SOCIAL_SYSTEM §4.1); F111 chỉ dùng nickname.
 - `ChatDock` (F119) mở được channel `team` cố định của club theo `channel_id`; khi chưa hỗ trợ, nút "Chat club" ẩn.

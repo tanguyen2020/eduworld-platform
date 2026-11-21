@@ -1,6 +1,6 @@
 # Game Design Document (GDD) — EduWorld
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [LEARNING_MECHANICS](LEARNING_MECHANICS.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · OQ-14, OQ-17
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Bản sắc sản phẩm · 3. Core fantasy · 4. Design pillars · 5. Động lực người chơi · 6. Học tập lồng trong gameplay · 7. Các tầng loop · 8. Loop theo khối lớp · 9. Loop co-op · 10. Ví dụ phiên chơi · 11. Bản đồ hệ thống game · 12. Nguyên tắc gamification · 13. Chống gây nghiện và dark pattern · 14. Data-driven content · 15. Không thuộc Release 1.0 · 16. Chỉ số thành công · 17. Acceptance criteria
@@ -43,7 +43,7 @@ Học sinh là **Nhà Thám Hiểm** của **Quần đảo Tri Thức** — th�
 | P1 | **Thế giới đáng khám phá** | Vùng đất có câu chuyện, bí mật, vật sưu tầm, boss; mở rộng theo mùa | Mỗi vùng có ≥ 1 chương truyện, ≥ 5 điểm khám phá, ≥ 1 boss [Confirmed] |
 | P2 | **Học là hành động của nhân vật** | Câu hỏi/hoạt động là cách mở cổng, sửa cầu, pha thuốc, hạ boss — không phải popup cản đường | Mỗi quest học tập có ≥ 1 LO; ≥ 60% thời gian quest là tương tác học tập [Confirmed]; §6 |
 | P3 | **Tiến bộ nhìn thấy được** | Level, ngoại hình, vùng đất đổi màu theo mastery, bộ sưu tập | Sau mỗi phiên học sinh trả lời được "mình giỏi lên ở đâu" |
-| P4 | **Cùng nhau tốt hơn một mình** | Party, co-op quest, boss nhóm, team battle, mục tiêu lớp | Mỗi vùng chính có hoạt động co-op |
+| P4 | **Cùng nhau tốt hơn một mình** | Party, co-op quest, boss nhóm, team battle, mục tiêu tập thể của khối (`grade_goal`) | Mỗi vùng chính có hoạt động co-op |
 | P5 | **Công bằng và an toàn** | Server-authoritative (ADR-0016); ghép theo khối; chat theo policy, mọi tin qua kiểm tra (ADR-0020, ADR-0030) | Không có cách mua/farm lợi thế học tập |
 | P6 | **Tôn trọng thời gian của trẻ** | Phiên ngắn, điểm dừng tự nhiên, nhắc nghỉ, không FOMO | Không phần thưởng nào mất đi nếu bỏ lỡ một ngày |
 
@@ -81,7 +81,7 @@ Quy tắc bắt buộc để EduWorld không thành "chuỗi quiz có giao diệ
 | Micro loop | 10–60 giây | Giải câu đố/hành động trong thế giới | Luyện một kỹ năng, phản hồi tức thì |
 | Core loop (phiên) | 15–30 phút | Hoàn thành 1–2 quest/thử thách, khám phá, nhận phần thưởng | Tiến bộ 1–3 LO |
 | Daily loop | Ngày | Daily quest, bài nhà trường giao, gợi ý ôn tập của Mây | Luyện tập đều đặn ngắn |
-| Weekly loop | Tuần | Weekly quest, mục tiêu tuần, thử thách lớp | Ôn chủ đề tuần, lấp LO yếu |
+| Weekly loop | Tuần | Weekly quest, mục tiêu tuần, mục tiêu tập thể của khối | Ôn chủ đề tuần, lấp LO yếu |
 | Season loop | 8 tuần | Season track, giải đấu, bộ sưu tập mùa | Ôn tập theo chương/học kỳ |
 
 ### 7.1. Micro loop
@@ -125,7 +125,7 @@ Mỗi hoạt động kết thúc bằng **màn tổng kết** = điểm dừng t
 | Tầng | Thành phần | Quy tắc | Sở hữu |
 |---|---|---|---|
 | Daily | 3 daily quest (1 học tập, 1 khám phá/quest, 1 xã hội hoặc thi đấu tùy chọn); bài được giao ưu tiên đầu; ôn câu sai ≤ 10 câu/ngày (lặp lại cách quãng 1–3–7 ngày) | Reset 04:00 ICT; không làm không bị phạt; deadline thân thiện, không đếm ngược đỏ | [QUEST_SYSTEM](QUEST_SYSTEM.md), [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) |
-| Weekly | Mục tiêu tuần "học 4/7 ngày" (thưởng cosmetic); 3 weekly quest theo chủ đề tuần; thử thách lớp (cùng làm lớn Cây Tia Sáng); báo cáo tuần "em giỏi lên ở…" | Tích lũy trong tuần thay cho streak | [QUEST_SYSTEM](QUEST_SYSTEM.md) |
+| Weekly | Mục tiêu tuần "học 4/7 ngày" (thưởng cosmetic); 3 weekly quest theo chủ đề tuần; mục tiêu tập thể của khối trong trường (cùng làm lớn Cây Tia Sáng, không xếp hạng cá nhân, không tên — ADR-0095); báo cáo tuần "em giỏi lên ở…" | Tích lũy trong tuần thay cho streak | [QUEST_SYSTEM](QUEST_SYSTEM.md) |
 | Season & sự kiện | Mùa gắn chủ đề học kỳ với season track miễn phí; lễ hội, sự kiện trường, community goal xen giữa mùa | Không FOMO, không phạt mất chuỗi | Lịch mùa, rating: [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) §8 · Season track, sự kiện: [EVENT_SEASON_SYSTEM](EVENT_SEASON_SYSTEM.md) |
 
 ## 8. Loop theo khối lớp
@@ -175,7 +175,7 @@ Quy tắc [Confirmed — Addendum §4]: tiến trình quest chia sẻ theo `shar
 | 7:00 | Tổng kết: 7/8 đúng lần đầu, +40 XP, trạm đổi màu nhạt (`developing`) | XP, mastery |
 | 8:00 | Daily quest "Giúp Bác Thợ Cầu": đo cầu bằng phép cộng, tìm được một điểm khám phá giếng cổ | Quest, khám phá |
 | 14:00 | Nhận mũ lá; vào tủ đồ mặc thử | Reward, customization |
-| 16:00 | Gặp bạn cùng lớp ở Quảng trường, vẫy tay + quick message "Chơi vui nhé!" | Emote, quick message |
+| 16:00 | Gặp bạn bè ở Quảng trường, vẫy tay + quick message "Chơi vui nhé!" | Emote, quick message |
 | 18:00 | Mây: "Hôm nay Minh làm rất tốt! Hẹn gặp lại nhé" — điểm dừng tự nhiên | Session summary |
 
 ### 10.2. Lan, lớp 8, 30 phút trên máy tính
@@ -257,7 +257,7 @@ Số liệu cụ thể nằm ở tài liệu sở hữu; GDD chỉ giữ nguyên
 | Thông báo đẩy kéo trẻ vào game | Thông báo trong game (bài nhà trường giao, gợi ý ôn tập); không push marketing |
 | Thưởng phiên dài | Cap XP/ngày ([PROGRESSION_SYSTEM §3.2](PROGRESSION_SYSTEM.md)); nhắc nghỉ theo ngưỡng của [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) (OQ-17) |
 | Xếp hạng công khai thứ hạng thấp | Top N + vị trí của mình; tier thay số; lớp 1–3 không thứ hạng cá nhân |
-| So sánh điểm học tập công khai | Leaderboard chỉ dùng Competition Points, điểm nỗ lực, quest; bảng của lớp không xếp theo XP ([COMPETITION_SYSTEM §9](COMPETITION_SYSTEM.md#9-leaderboard)) |
+| So sánh điểm học tập công khai | Leaderboard chỉ dùng Competition Points, điểm nỗ lực, quest; không bảng nào xếp theo XP; khối dùng mục tiêu tập thể `grade_goal` thay bảng lớp ([COMPETITION_SYSTEM §9](COMPETITION_SYSTEM.md#9-leaderboard)) |
 | Thưởng làm nhanh hơn suy nghĩ | Không XP cho tốc độ/chuỗi đúng; lớp 1–5 không có bonus tốc độ trong trận ([PROGRESSION_SYSTEM §3](PROGRESSION_SYSTEM.md), [COMPETITION_SYSTEM §3.1](COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-confirmed)) |
 
 Chi tiết an toàn: [CHILD_SAFETY](../10-security/CHILD_SAFETY.md).

@@ -25,7 +25,7 @@
 ### Tests cho User Story 1
 
 - [ ] T007 [P] [US1] Unit test F102-AC-01, F102-AC-04, F102-AC-05 với `FakeApiClient`: tạo party giữ key khi retry; `PARTY_ALREADY_IN_PARTY` chỉ leave+accept khi xác nhận; Problem → khóa dịch, không mã thô — file: `src/game/tests/unit/test_party_service.gd` — phải FAIL trước khi code
-- [ ] T008 [P] [US1] Scene test F102-AC-02: picker chỉ hiện danh sách server trả, `g1_3` không có ô nhập — file: `src/game/tests/scene/test_invite_friend_picker.gd`
+- [ ] T008 [P] [US1] Scene test F102-AC-02: picker chỉ hiện danh sách server trả, không nhóm/lọc theo lớp, không tự lọc khối/trường (ADR-0095), `g1_3` không có ô nhập — file: `src/game/tests/scene/test_invite_friend_picker.gd`
 - [ ] T009 [P] [US1] Scene test F102-AC-03: toast đếm ngược theo `expires_at` (Clock giả), tự ẩn 10 s, mở lại từ chuông, hết hạn biến mất; không bật khi đang ở activity player — file: `src/game/tests/scene/test_invitation_toast.gd`
 
 ### Implementation cho User Story 1

@@ -4,7 +4,7 @@
 > Liên quan: [ADR-0080](../adr/ADR-0080-do-hieu-qua-hoc-tap-la-exit-criterion-pilot.md) · [LEARNING_ANALYTICS](LEARNING_ANALYTICS.md) · [EXAM_ENGINE](EXAM_ENGINE.md) · [QUESTION_BANK](QUESTION_BANK.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) (PED-01, K1) · [PRODUCT_VISION](../00-overview/PRODUCT_VISION.md) · [ROADMAP](../12-project/ROADMAP.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [OQ-12](../12-project/OPEN_QUESTIONS.md)
 
 > [!IMPORTANT]
-> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Đơn vị nghiên cứu là **cụm (trường, khối)** thay lớp: ghép cặp cụm can thiệp/so sánh cùng khối giữa các trường, rút theo cụm hoặc học sinh, `experiments.unit` ∈ {`student`, `school_grade`}; số cụm khuyến nghị mỗi nhóm chờ OQ-25. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-L2 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Đơn vị nghiên cứu là **cụm (trường, khối)** thay lớp: ghép cặp cụm can thiệp/so sánh cùng khối giữa các trường, rút theo cụm hoặc học sinh, `experiments.unit` ∈ {`student`, `school_grade`}; số cụm khuyến nghị mỗi nhóm `efficacy_recommended_cohorts_per_arm` = **4** cụm (trường, khối) mỗi nhóm [Confirmed] (OQ-25 Answered 2026-11-21; thay `efficacy_recommended_classes_per_arm` = 6 lớp, đổi tên trong code ở WP-L2). Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-L2 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
 
 ADR-0080 đã Accepted (2026-11-17). Thiết kế chi tiết dưới đây vẫn là **[Confirmed]** cho tới khi chuyên gia đánh giá giáo dục/thống kê rà soát; yêu cầu là FR-ANL-017…023 trong [PRD](../00-overview/PRODUCT_REQUIREMENTS.md), triển khai ở [F035](../../specs/035-learning-efficacy-study/spec.md).
 
@@ -65,7 +65,7 @@ flowchart LR
 | Mức sử dụng | Thời gian học thực (`active_learning_time_sec`), số buổi, `rapid_guess_rate` | Báo cáo để giải thích kết quả (liều dùng) |
 | Tỉ lệ rời nghiên cứu | Học sinh thiếu bài trước hoặc sau | < 20% (`efficacy_attrition_warn`); báo cáo phân tích độ nhạy nếu cao hơn |
 
-**Cỡ mẫu (ước tính sơ bộ, cần chuyên gia thống kê xác nhận):** phát hiện g = 0,3 với power 0,8, α = 0,05 và hệ số tương quan nội lớp khoảng 0,1–0,2 cần khoảng 6–8 lớp mỗi nhóm (~200 học sinh/nhóm). Số liệu nhỏ hơn chỉ cho kết quả mô tả, không kết luận: báo cáo trong hệ thống gắn nhãn `descriptive_only` khi số lớp mỗi nhóm dưới `efficacy_recommended_classes_per_arm` (6).
+**Cỡ mẫu (ước tính sơ bộ, cần chuyên gia thống kê xác nhận):** phát hiện g = 0,3 với power 0,8, α = 0,05 và hệ số tương quan nội lớp khoảng 0,1–0,2 cần khoảng 6–8 lớp mỗi nhóm (~200 học sinh/nhóm). Số liệu nhỏ hơn chỉ cho kết quả mô tả, không kết luận: báo cáo trong hệ thống gắn nhãn `descriptive_only` khi số lớp mỗi nhóm dưới `efficacy_recommended_classes_per_arm` (6). Theo ADR-0095, đơn vị là cụm (trường, khối): ngưỡng mới `efficacy_recommended_cohorts_per_arm` = 4 cụm mỗi nhóm [Confirmed] (OQ-25), áp cùng code ở WP-L2.
 
 ## 5. Đối chiếu mastery với bài kiểm tra độc lập (predictive validity)
 

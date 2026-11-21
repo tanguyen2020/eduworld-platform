@@ -104,7 +104,7 @@
 
 ### Tests cho User Story 7
 
-- [ ] T033 [P] [US7] Test F122-AC-18: danh sách + chi tiết không có vùng chat, badge chờ xác nhận (TC-CHAT-043) — file: `src/workspaces/school-lms/safety/__tests__/NotificationsPage.test.tsx` — phải FAIL trước khi code
+- [ ] T033 [P] [US7] Test F122-AC-18: danh sách + chi tiết không có vùng chat, chi tiết hiện khối (không lớp), badge chờ xác nhận (TC-CHAT-043) — file: `src/workspaces/school-lms/safety/__tests__/NotificationsPage.test.tsx` — phải FAIL trước khi code
 - [ ] T034 [P] [US7] Test F122-AC-19: xác nhận cần `contact_outcome`, ghi chú ≤ 500, `Idempotency-Key`, `409` → "đã được xác nhận" — file: `…/__tests__/NotificationAck.test.tsx`
 - [ ] T035 [P] [US7] E2E F122-AC-20 viewport 390 px dạng thẻ + visual regression (TC-UI-004) — file: `tests/e2e/chat-safety/school-notifications-mobile.spec.ts`
 - [ ] T036 [P] [US7] E2E tenant isolation: `ad.truong.b` không thấy thông báo TH Demo A (TC-CHAT-043) — file: `tests/e2e/chat-safety/school-notifications-isolation.spec.ts`
@@ -113,13 +113,13 @@
 
 - [ ] T037 [US7] Hook `notifications.ts`; `NotificationsPage`, `NotificationDetail`, badge menu — file: `src/workspaces/school-lms/safety/`
 
-## Phase 10: User Story 8 — Chính sách chat trường/lớp (Priority: P2)
+## Phase 10: User Story 8 — Chính sách chat trường (Priority: P2)
 
 ### Tests cho User Story 8
 
-- [ ] T038 [P] [US8] Test F122-AC-21: tải policy + effective, control theo `channel_type`, giới hạn từ cấp trên, nhãn kế thừa (TC-CHAT-018) — file: `src/workspaces/school-lms/safety/__tests__/ChatPolicyPage.test.tsx` — phải FAIL trước khi code
+- [ ] T038 [P] [US8] Test F122-AC-21: tải policy + effective (scope `school`), control theo `channel_type` (không có `class`/`study_group`, không có tên thật), giới hạn từ cấp trên, nhãn kế thừa (TC-CHAT-018) — file: `src/workspaces/school-lms/safety/__tests__/ChatPolicyPage.test.tsx` — phải FAIL trước khi code
 - [ ] T039 [P] [US8] Test F122-AC-22: `match`/`team`/`party` khóa; không control theo khối; `If-Match`, lý do; map lỗi về control (TC-CHAT-018) — file: `…/__tests__/ChatPolicySave.test.tsx`
-- [ ] T053 [P] [US8] Test F122-AC-28: chọn preset cả trường, không có lựa chọn theo khối/lớp, `reason` bắt buộc, lỗi theo `code` — file: `…/school-chat-policy/__tests__/ChatPresetSelector.test.tsx` — phải FAIL trước khi code
+- [ ] T053 [P] [US8] Test F122-AC-28: chọn preset cả trường, không có lựa chọn theo khối, `reason` bắt buộc, lỗi theo `code` — file: `…/school-chat-policy/__tests__/ChatPresetSelector.test.tsx` — phải FAIL trước khi code
 
 ### Implementation cho User Story 8
 

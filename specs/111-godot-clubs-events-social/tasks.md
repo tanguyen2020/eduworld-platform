@@ -1,4 +1,4 @@
-# Tasks: F111 — Godot — club trong game, Event center, nhóm "Bạn cùng lớp"/"Vừa chơi cùng", nút "Tham gia bạn"
+# Tasks: F111 — Godot — club trong game, Event center, nhóm "Vừa chơi cùng", nút "Tham gia bạn"
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
@@ -11,7 +11,7 @@
 ## Phase 2: Foundational (chặn mọi user story)
 
 - [ ] T004 Theo dõi delta F095: `listFriendSuggestions` + tham số `friend_suggestion_recent_window` — owner F095 — file: `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=chat`
-- [ ] T005 Theo dõi delta F120 (`listMyClubInvitations`, `ClubInvitation.club_name`/`inviter_nickname`, `451` cho `createClub`, `ClubType` bỏ `study_group`) và F123 (`kind` thông báo club, `action` deep link) — owner F120, F123 — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/asyncapi/eduworld-realtime.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
+- [ ] T005 Theo dõi delta F120 (`listMyClubInvitations`, `ClubInvitation.club_name`/`inviter_nickname`, `451` cho `createClub`), WP-C1 (`ClubType` bỏ `study_group` — ADR-0095) và F123 (`kind` thông báo club, `action` deep link) — owner F120, F123 — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/asyncapi/eduworld-realtime.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`
 - [ ] T006 Theo dõi delta F013/F015 (`PlayerBootstrap.policies.social`), F091/F071 (`HubInstanceJoin.follow_user_id`, bỏ/đổi `joinFriendInWorld`), F077 (`event.community_goal.updated`, `428` cho `joinGameEvent`) — owner tương ứng — file: `specs/openapi/eduworld-api.v1.yaml`, `specs/asyncapi/eduworld-realtime.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=identity`
 - [ ] T007 Sinh lại fixture sau khi T004–T006 merge + test contract parse mọi example — file: `src/game/tests/contract/test_f111_fixtures.gd` — kiểm: `make godot-test`
 - [ ] T008 Model typed theo data-model (`from_dict` bỏ trường lạ, lọc `study_group`) + test parse — file: `src/game/scripts/social/models/`, `src/game/scripts/liveops/models/`, `src/game/tests/unit/models/test_f111_models.gd`
@@ -33,12 +33,12 @@
 - [ ] T014 [US1] `JoinFriendService`, `JoinAvailability`; `FriendsStore` (F110) lưu `area_id`, `activity` — file: `src/game/scripts/multiplayer/join_friend_service.gd`, `src/game/scripts/social/join_availability.gd`, `src/game/scripts/social/friends_store.gd`
 - [ ] T015 [US1] `JoinFriendButton` gắn vào `FriendProfilePanel`, `FriendRow` (mobile) — file: `src/game/scenes/social/JoinFriendButton.tscn`, `src/game/scenes/social/FriendProfilePanel.tscn`
 
-## Phase 4: User Story 2 — Nhóm "Bạn cùng lớp" và "Vừa chơi cùng" (Priority: P2)
+## Phase 4: User Story 2 — Nhóm "Vừa chơi cùng" (Priority: P2)
 
 ### Tests cho User Story 2
 
 - [ ] T016 [P] [US2] Unit test F111-AC-06, F111-AC-07: `SocialService.list_suggestions(source)` cursor; lọc thêm bạn/lời mời đi/chặn; chỉ nickname/avatar/level; "Kết bạn" dùng key và map lỗi F110 — file: `src/game/tests/unit/social/test_friend_suggestions.gd` — phải FAIL trước khi code
-- [ ] T017 [P] [US2] Scene test F111-AC-06, F111-AC-08: `FindFriendsTab` đủ 4 khối, không có ô nhập tên; nhóm rỗng → trạng thái rỗng; lỗi API → ẩn nhóm; `g1_3` chạm avatar lớn — file: `src/game/tests/scene/test_find_friends_tab.gd`
+- [ ] T017 [P] [US2] Scene test F111-AC-06, F111-AC-08: `FindFriendsTab` đủ 3 nhóm ("Ở gần đây", "Vừa chơi cùng", Mã bạn bè), không có nhóm "Bạn cùng lớp" (ADR-0095), không có ô nhập tên; nhóm rỗng → trạng thái rỗng; lỗi API → ẩn nhóm; `g1_3` chạm avatar lớn — file: `src/game/tests/scene/test_find_friends_tab.gd`
 
 ### Implementation cho User Story 2
 
@@ -50,7 +50,7 @@
 
 - [ ] T019 [P] [US3] Unit test F111-AC-09, F111-AC-10, F111-AC-12: `list` theo `status`; tên thiếu `en` → `vi`; số ngày từ `ends_at` theo `Clock`; `join` giữ key; `404`/`409 EVENT_ENDED` → đóng/làm mới; `event.status.changed` mọi trạng thái — file: `src/game/tests/unit/liveops/test_live_event_service.gd` — phải FAIL trước khi code
 - [ ] T020 [P] [US3] Unit test F111-AC-11, F111-AC-14: `claim_milestone` giữ key khi retry, chỉ `claimed` sau response; `409 EVENT_MILESTONE_NOT_REACHED` → làm mới; `event.progress.updated` thay giá trị, nhận trùng không cộng — file: `src/game/tests/unit/liveops/test_live_event_store.gd`
-- [ ] T021 [P] [US3] Scene test F111-AC-09, F111-AC-12, F111-AC-13: `EventCard` không có giờ/phút/giây; trạng thái tạm dừng/kết thúc; `CommunityGoalBar` mốc, "Em đã góp sức", không xếp hạng, `by_class` sắp theo tên và ẩn với `g1_3` — file: `src/game/tests/scene/test_event_center.gd`
+- [ ] T021 [P] [US3] Scene test F111-AC-09, F111-AC-12, F111-AC-13: `EventCard` không có giờ/phút/giây; trạng thái tạm dừng/kết thúc; `CommunityGoalBar` mốc, "Em đã góp sức", không xếp hạng, `by_grade` sắp theo khối, không tên, ẩn với `g1_3` — file: `src/game/tests/scene/test_event_center.gd`
 
 ### Implementation cho User Story 3
 

@@ -11,7 +11,7 @@
 
 - [ ] T003 Delta internal learning: thêm `revealPlanItem` + `PlanItemReveal` — file: `specs/openapi/modules/learning.internal.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=learning`, `make gen MOD=competition`
 - [ ] T004 [P] Delta public: `Match` (`end_reason`, `rated`, `review[]`, bỏ `rating_delta`, outcome mới) — file: `specs/openapi/modules/competition.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make gen MOD=competition`
-- [ ] T005 [P] Delta AsyncAPI `battle.match.ended` (outcome `abandoned`/`forfeit`, `end_reason`, `top[]`, `my_rank`, `class_goal`) — file: `specs/asyncapi/eduworld-realtime.v1.yaml` — kiểm: `make specs-lint`
+- [ ] T005 [P] Delta AsyncAPI `battle.match.ended` (outcome `abandoned`/`forfeit`, `end_reason`, `top[]`, `my_rank`, `grade_goal` thay `class_goal` — ADR-0095) — file: `specs/asyncapi/eduworld-realtime.v1.yaml` — kiểm: `make specs-lint`
 - [ ] T006 [P] Payload schema `match.started.v1`, `match.completed.v1`, `match.aborted.v1`; cập nhật EVENT_DESIGN §4.8 — file: `specs/events/payloads/competition/`, `docs/07-backend/EVENT_DESIGN.md` — kiểm: `make specs-lint`
 - [ ] T007 ent schema learning `question_plans` (RLS, unique `match_id`) — file: `src/backend/modules/learning/ent/schema/question_plan.go` — kiểm: `make migrate-diff MOD=learning name=f105_question_plans`, `make migrate-lint MOD=learning`
 - [ ] T008 ent schema competition: cột mới `matches`, `match_participants`; bảng `match_results`, `integrity_signals` (partition tháng); cột `rooms`, `session_memberships` — file: `src/backend/modules/competition/ent/schema/` — kiểm: `make migrate-diff MOD=competition name=f105_battle`, `make migrate-lint MOD=competition`
@@ -80,7 +80,7 @@
 
 **Checkpoint**: User Story 3 chạy độc lập.
 
-## Phase 6: User Story 4 — Team Battle, Co-op Challenge, Timed Quiz, bot và Class Challenge (Priority: P2)
+## Phase 6: User Story 4 — Team Battle, Co-op Challenge, Timed Quiz, bot và thử thách khối (Priority: P2)
 
 **Goal**: Luật các mode còn lại.
 
@@ -90,13 +90,13 @@
 
 - [ ] T029 [P] [US4] Unit test F105-AC-17: xoay vòng lượt chính, lượt hỗ trợ theo `team_battle_format`, khối ≥ 4 — file: `src/backend/modules/competition/tests/unit/battle/rules_team_test.go` — phải FAIL trước khi code
 - [ ] T030 [P] [US4] Integration test F105-AC-18: room `coop`, attempt riêng từng người, không thứ hạng — file: `src/backend/modules/competition/tests/integration/battle/coop_test.go`
-- [ ] T031 [P] [US4] Unit + integration test F105-AC-19: timed quiz 40 người, top 5 + `my_rank`, lớp 1–3 chỉ `class_goal`, lớp 1–5 không bonus — file: `src/backend/modules/competition/tests/integration/battle/timed_quiz_test.go`
+- [ ] T031 [P] [US4] Unit + integration test F105-AC-19: timed quiz 40 người, top 5 + `my_rank`, lớp 1–3 chỉ `grade_goal` (không tên, ô < 5 ẩn), lớp 1–5 không bonus — file: `src/backend/modules/competition/tests/integration/battle/timed_quiz_test.go`
 - [ ] T032 [P] [US4] Unit test F105-AC-20, F105-AC-21: bot (nhãn, `rated = false`, độ chính xác cấu hình); trận giải grace 2 lần → `forfeit`, `rated = false` — file: `src/backend/modules/competition/tests/unit/battle/bot_tournament_rules_test.go`
 
 ### Implementation cho User Story 4
 
 - [ ] T033 [P] [US4] Domain `rules_team.go`, `rules_coop.go`, `rules_timed_quiz.go`, `rules_tournament.go`, `bot.go` — file: `src/backend/modules/competition/internal/domain/battle/`
-- [ ] T034 [US4] NATS handler `coop.answer.submit`, `coop.action.perform`; join timed quiz cho Class Challenge (command `JoinTimedQuizRoom` dùng bởi F107) — file: `src/backend/modules/competition/internal/presentation/realtime/coop_cmd.go`, `src/backend/modules/competition/internal/application/command/battle/join_timed_quiz_room.go`
+- [ ] T034 [US4] NATS handler `coop.answer.submit`, `coop.action.perform`; join timed quiz cho thử thách khối (command `JoinTimedQuizRoom` dùng bởi F107) — file: `src/backend/modules/competition/internal/presentation/realtime/coop_cmd.go`, `src/backend/modules/competition/internal/application/command/battle/join_timed_quiz_room.go`
 
 **Checkpoint**: User Story 4 chạy độc lập.
 

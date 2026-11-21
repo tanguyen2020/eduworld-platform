@@ -75,7 +75,7 @@
 - [ ] T027 [P] [US4] Integration F117-AC-16, F117-AC-23: D+N−1 còn, D+N xóa đủ bảng theo lô, partition drop khi mọi channel purge, API `404` sau purge (TC-CHAT-021) — file: `src/backend/modules/chat/tests/integration/gameplay_purge_test.go`
 - [ ] T028 [P] [US4] Integration F117-AC-17, F117-AC-18: sao bằng chứng (report/case/sanction) trước khi xóa; case mở → hoãn, đóng → purge lần sau (TC-CHAT-022, TC-CHAT-023) — file: `src/backend/modules/chat/tests/integration/purge_evidence_test.go`
 - [ ] T029 [P] [US4] Integration F117-AC-19: chưa có bảng moderation hoặc sao bằng chứng lỗi → không xóa, run `blocked`, metric — file: `src/backend/modules/chat/tests/integration/purge_fail_closed_test.go`
-- [ ] T030 [P] [US4] Integration F117-AC-20, F117-AC-21, F117-AC-22: 0 dòng `class`/`study_group`/team cố định/`direct` bị xóa; ephemeral drop partition; run record + audit + `chat.gameplay_purged` + metric (TC-SOC-009) — file: `src/backend/modules/chat/tests/integration/purge_scope_test.go`
+- [ ] T030 [P] [US4] Integration F117-AC-20, F117-AC-21, F117-AC-22: 0 dòng team cố định (club)/`direct` bị xóa; ephemeral drop partition; run record + audit + `chat.gameplay_purged` + metric (TC-SOC-009) — file: `src/backend/modules/chat/tests/integration/purge_scope_test.go`
 - [ ] T031 [P] [US4] Test tĩnh F117-AC-23: `DELETE`/`DROP` chỉ xuất hiện trong `internal/infrastructure/purge` — file: `src/backend/modules/chat/tests/static/hard_delete_scope_test.go`
 
 ### Implementation cho User Story 4

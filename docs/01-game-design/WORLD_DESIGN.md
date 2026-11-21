@@ -1,6 +1,6 @@
 # World Design — Thế giới, vùng đất, khám phá
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [WORLD_RENDERING](../08-game-client/WORLD_RENDERING.md) · [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [ADR-0012](../adr/ADR-0012-the-gioi-game-hybrid-hub-instance-private-instance-match-roo.md) · [ADR-0013](../adr/ADR-0013-nen-tang-client-release-1-0-gom-windows-android-ios-web.md) · OQ-05, OQ-16
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Thế giới và cốt truyện · 3. Bản đồ vùng đất · 4. Chi tiết từng vùng · 5. Cấu trúc kỹ thuật–nội dung của thế giới · 6. Di chuyển, cổng, spawn · 7. Mở khóa và gating · 8. Khám phá và hoàn thành bản đồ · 9. Capacity và instance · 10. World event · 11. Art direction · 12. Dữ liệu, API, event, lỗi · 13. Mở rộng · 14. Acceptance criteria
@@ -127,8 +127,8 @@ flowchart TB
 | Mục | Nội dung |
 |---|---|
 | Mục đích | Điểm vào thế giới, định hướng, gặp bạn, luyện tập tự chọn, tùy biến nhân vật |
-| Điểm nhấn | **Quảng trường Tia Sáng**: bảng nhiệm vụ, bảng tin lớp, cổng gió đi các vùng, Cây Tia Sáng lớn lên theo tổng mastery của **lớp** (hợp tác, không xếp hạng cá nhân). **Thư viện Gió** (Practice Zone): bàn học cá nhân, góc học cùng nhau, luyện theo chủ đề/mức/LO, ôn câu sai. **Vườn Bạn Bè** (Social Zone): danh sách bạn, lập party, emote, mini-game vui chơi nhẹ, góc nhóm học tập |
-| Hoạt động | Nhận daily/weekly quest, bài được giao, tủ đồ, Shop Xu, bảng xếp hạng lớp, lập party |
+| Điểm nhấn | **Quảng trường Tia Sáng**: bảng nhiệm vụ, bảng tin trường, cổng gió đi các vùng, Cây Tia Sáng lớn lên theo tổng mastery của **khối trong trường** (hợp tác, không xếp hạng cá nhân, không tên — ADR-0095). **Thư viện Gió** (Practice Zone): bàn học cá nhân, góc học cùng nhau, luyện theo chủ đề/mức/LO, ôn câu sai. **Vườn Bạn Bè** (Social Zone): danh sách bạn, lập party, emote, mini-game vui chơi nhẹ, góc club |
+| Hoạt động | Nhận daily/weekly quest, bài được giao, tủ đồ, Shop Xu, bảng xếp hạng (cá nhân trường/khối; khối 1–3 xem mục tiêu tập thể `grade_goal`), lập party |
 | An toàn | Mọi tương tác xã hội theo ADR-0020/ADR-0054 và [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
 
 ### 4.2. Các vùng môn học (B)

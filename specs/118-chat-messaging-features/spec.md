@@ -17,6 +17,10 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F118-AC-17: "(gateway nội bộ, MFA)" đọc là gateway nội bộ + `game.chat_assets.write`, không MFA; plan/contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Receipts và ghim còn nhánh cho channel `class`/`study_group`? → A: Không — hai loại channel này bị bỏ ([ADR-0095 §5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md), FR-CHAT-001). `getMessageReceipts` trả danh sách từng người với channel ≤ 8 thành viên (`party`, `match`, `team` theo trận, `direct`) và chỉ số đếm với channel nhiều thành viên còn lại là club (`team` cố định, tới `club_max_members`) [Proposed — WP-S: thay nhánh `class`/`study_group` cũ bằng club; mô tả operation trong `chat.v1` do WP-C1 sửa]. Ghim ở `world`/`area` vẫn `403 CHAT_FEATURE_DISABLED`. F118-AC-20, F118-AC-23 viết lại.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Sửa và thu hồi tin mà không xóa được bằng chứng (Priority: P1)
@@ -95,25 +99,25 @@ Học sinh gọi tên bạn bằng `@nickname`, ghim tin quan trọng của nhó
 |---|---|---|---|
 | F118-AC-18 | NẾU tin có nhiều hơn `chat_mentions_max` mention, THÌ module chat PHẢI trả `422 CHAT_MENTION_LIMIT`; mention tới người không phải thành viên hoặc có quan hệ chặn với người gửi PHẢI bị loại khỏi tin | FR-CHAT-015 · [CHAT_SYSTEM §7.7](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-035 |
 | F118-AC-19 | KHI tin có mention hợp lệ được ack, module chat PHẢI tăng `unread_mentions` của người được mention, gửi `chat.mention.created` (nickname từ hồ sơ game, preview đã che ≤ 80 ký tự) và payload PHẢI không chứa username đăng nhập | FR-CHAT-015 · AGENTS R16 | TC-CHAT-035 |
-| F118-AC-20 | KHI ghim/bỏ ghim (`chat.pin.add/remove`, `pinMessage`/`unpinMessage`), module chat PHẢI kiểm quyền theo loại channel (leader ở `party`; mọi người chơi ở `match`/`team`; cả hai ở `direct`), tối đa `chat_pins_max` (vượt → `409 CHAT_PIN_LIMIT_REACHED`), ghi audit, phát `chat.pin.updated`; ở `world`/`area`/`class`/`study_group` PHẢI trả `403 CHAT_FEATURE_DISABLED` | FR-CHAT-015 · ADR-0072 | TC-CHAT-036 |
+| F118-AC-20 | KHI ghim/bỏ ghim (`chat.pin.add/remove`, `pinMessage`/`unpinMessage`), module chat PHẢI kiểm quyền theo loại channel (leader ở `party`; mọi người chơi ở `match`/`team`; cả hai ở `direct`), tối đa `chat_pins_max` (vượt → `409 CHAT_PIN_LIMIT_REACHED`), ghi audit, phát `chat.pin.updated`; ở `world`/`area` PHẢI trả `403 CHAT_FEATURE_DISABLED` | FR-CHAT-015 · ADR-0072 · ADR-0095 | TC-CHAT-036 |
 | F118-AC-21 | KHI nhận `chat.typing.start/stop`, module chat PHẢI throttle 1 lần/3 giây, tự hết sau 5 giây, phát `chat.typing.updated` (tối đa 3 nickname hiển thị) chỉ qua pub/sub tạm thời, không ghi DB, không gửi tới người có quan hệ chặn, không hỗ trợ ở `world`/`area` | FR-CHAT-015 · [CHAT_SYSTEM §7.10](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-037 |
 
 ---
 
 ### User Story 5 — Đã gửi / đã nhận / đã xem và bộ đếm chưa đọc (Priority: P2)
 
-Trong party 4 người, người gửi thấy ai đã nhận, ai đã xem; trong lớp chỉ thấy "N bạn đã xem"; số chưa đọc và số mention đúng trên mọi thiết bị.
+Trong party 4 người, người gửi thấy ai đã nhận, ai đã xem; trong club đông người chỉ thấy "N bạn đã xem"; số chưa đọc và số mention đúng trên mọi thiết bị.
 
 **Why this priority**: FR-CHAT-016 P4; giữ đúng ranh giới riêng tư (không lộ trạng thái giữa người chặn nhau).
 
-**Independent Test**: Party 4 người: Bình nhận (delivered), Chi đọc (read) → An gọi `getMessageReceipts` thấy đúng từng người; channel `class` chỉ trả số đếm; Dũng chặn An → An không thấy trạng thái của Dũng.
+**Independent Test**: Party 4 người: Bình nhận (delivered), Chi đọc (read) → An gọi `getMessageReceipts` thấy đúng từng người; channel club (> 8 thành viên) chỉ trả số đếm; Dũng chặn An → An không thấy trạng thái của Dũng.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F118-AC-22 | KHI thiết bị gửi `chat.receipt.delivered`/`chat.receipt.read`, module chat PHẢI gộp con trỏ (≤ 1 lần/2 giây/thành viên/channel), lưu `last_delivered_seq`/`last_read_seq` không lùi, không lưu dòng theo từng tin × người, và phát `chat.receipt.updated` cho thành viên channel có receipts | FR-CHAT-016 · [CHAT_SYSTEM §8.1](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-038 |
-| F118-AC-23 | KHI gọi `getMessageReceipts`, module chat PHẢI trả danh sách từng người với channel ≤ 8 người (`party`, `match`, `team`, `direct`), chỉ số đếm với `class`/`study_group`, và `403 CHAT_FEATURE_DISABLED` với `world`/`area` | FR-CHAT-016 · AC-CHAT-014 | TC-CHAT-038 |
+| F118-AC-23 | KHI gọi `getMessageReceipts`, module chat PHẢI trả danh sách từng người với channel ≤ 8 thành viên (`party`, `match`, `team` theo trận, `direct`), chỉ số đếm với channel club (`team` cố định) có > 8 thành viên, và `403 CHAT_FEATURE_DISABLED` với `world`/`area` | FR-CHAT-016 · AC-CHAT-014 · ADR-0095 | TC-CHAT-038 |
 | F118-AC-24 | HỆ THỐNG PHẢI không cho hai người có quan hệ chặn thấy trạng thái nhận/xem hay typing của nhau | FR-CHAT-016 · AGENTS R16 | TC-CHAT-038 |
 | F118-AC-25 | KHI con trỏ đọc thay đổi trên một thiết bị, module chat PHẢI cập nhật `unread_count` và `unread_mentions` (reset mention khi đọc qua tin chứa mention) và phát `chat.unread.updated` tới mọi thiết bị của người đó | FR-CHAT-016 · AC-CHAT-014 | TC-CHAT-039 |
 
@@ -187,7 +191,7 @@ Trong party 4 người, người gửi thấy ai đã nhận, ai đã xem; trong
 
 ## Ngoài phạm vi
 
-- Tìm kiếm full-text, channel bền vững (class, study group, team cố định, DM) → F120; `show_read_receipts` cho DM [Confirmed] → F120.
+- Tìm kiếm full-text, channel bền vững (team cố định của club, DM) → F120; `show_read_receipts` cho DM [Confirmed] → F120.
 - Báo cáo tin (kể cả tin đã thu hồi), moderator xem nội dung gốc/revision, gỡ tin → F121; thông báo mention khi offline → F123.
 - UI Godot (menu thao tác, picker, copy, receipts) → F119; UI Game Studio cho sticker/GIF trong Portal workspace A → chưa có feature trong danh mục (đề xuất bổ sung vào F079).
 - Phần thưởng mở khóa sticker (reward rule, inventory) → F075.

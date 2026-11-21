@@ -16,7 +16,7 @@ Model typed phía client (chỉ RAM, `src/game/scripts/competition/models/`):
 | `BattleView` | `battle.state.snapshot` + message `battle.*` | `match_id`, `mode`, `state`, `state_version`, `question_index`, `question_count`, `current_question` (`QuestionRender`), `deadline_at`, `my_answer_locked`, `participants[]` (player, team, score, connected, `grace_until`), `speed_bonus_enabled` (delta), `primary_user_ids` (delta) | — |
 | `MatchSummary` | `battle.match.ended`, `Match` | `status`, `results[]` (`outcome`, `score`, `correct_count`, `competition_points`), `encouragement` (delta) | `rating_delta` |
 | `TierView` | `Rating` | `mode`, `subject_id`, `season_id`, `tier_code`/`tier_name` (delta; tạm `tier`), `provisional`, `games_played` | `rating`, `rd` |
-| `LeaderboardViewModel` | `LeaderboardPage` | `leaderboard_id`, `period_key`, `display_mode` (delta), `entries[]` (`rank`, `player` `PlayerCard`, `value`, `is_me`), `class_goal` (delta), `highlights` (delta), `stale` (delta), `page` | mọi trường ngoài `PlayerCard` |
+| `LeaderboardViewModel` | `LeaderboardPage` | `leaderboard_id`, `period_key`, `display_mode` (delta), `entries[]` (`rank`, `player` `PlayerCard`, `value`, `is_me`), `grade_goal` (delta: `grade_level`, `current`, `target`, `my_contribution`, `contributors_count?` — ADR-0095), `stale` (delta), `page` | mọi trường ngoài `PlayerCard` |
 | `TournamentViewModel`, `BracketViewModel`, `MyEntry` | `Tournament`, `getTournament`, `getTournamentBracket` (delta) | trạng thái, lịch, cửa sổ check-in, node (`round`, `position`, hai entry nickname/tên đội, `winner`, `status`) | tên thật, trường |
 | `DuelModel` | `Duel` | `duel_id`, `status`, `expires_at`, `match_id` | — |
 

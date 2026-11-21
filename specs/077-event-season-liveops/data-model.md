@@ -42,7 +42,7 @@ Index `(status, starts_at)`, `(status, ends_at)`, `(status, claim_until)`.
 ### CommunityGoal — `game.community_goals`, `community_goal_contributions`, `community_goal_progress` (Có sẵn §2.8c)
 
 - `community_goals` (G/T): `goal_id`, `tenant_id` NULL, `event_run_id`, `goal_code varchar(64)`, `metric varchar(32)`, `scope varchar(16)` (`school`/`tenant`/`platform`), `target bigint`, `per_student_daily_cap int`, `milestones jsonb`. UNIQUE `(event_run_id, goal_code)`.
-- `community_goal_contributions` (TA, P ngày): `tenant_id`, `goal_id`, `scope_id uuid` (school_id / tenant_id / hằng platform), `student_id`, `class_id`, `amount int`, `source_event_id uuid`, `contributed_on date`, `created_at`. UNIQUE `(goal_id, source_event_id, created_at)`; index `(goal_id, student_id, contributed_on)`.
+- `community_goal_contributions` (TA, P ngày): `tenant_id`, `goal_id`, `scope_id uuid` (school_id / tenant_id / hằng platform), `student_id`, `grade_level smallint` (khối tại thời điểm đóng góp, từ `ref.students` — ADR-0095; không `class_id`), `amount int`, `source_event_id uuid`, `contributed_on date`, `created_at`. UNIQUE `(goal_id, source_event_id, created_at)`; index `(goal_id, student_id, contributed_on)`.
 - `community_goal_progress` (T; với scope `platform` ghi một dòng mỗi tenant + tổng tính khi đọc): `goal_id`, `scope_id`, `total bigint`, `milestones_reached smallint[]`, `recomputed_at`. PK `(goal_id, scope_id)`.
 
 ### SeasonTrack — `game.season_tracks`, `game.season_track_versions` (Có sẵn §2.8c, G)

@@ -16,6 +16,10 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F077-AC-06: bỏ điều kiện "thiếu MFA" và mã `403 MFA_REQUIRED`; phần permission/`azp` giữ nguyên. T015, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Bỏ khái niệm lớp ([ADR-0095](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) mục 5, D5) — đối tượng sự kiện và đóng góp community goal đổi thế nào? → A: [Confirmed] `audience` chỉ còn tenant, trường, khối (`grade_levels`), môn; không còn `class_ids`/phạm vi `class` ([event.schema.json](../schemas/event.schema.json), `SchoolEventCreate/Update.audience` — đã áp 2026-11-21, WP-S). Đóng góp community goal hiển thị theo **khối của trường** (`CommunityGoalProgress.by_grade[] {grade_level, progress}` thay `by_class`, cờ cấu hình `show_grade_contributions` thay `show_class_contributions`): không tên, không xếp hạng cá nhân, khối có < `analytics_min_cell_size` (5) học sinh đóng góp bị ẩn (không trả dòng). Lọc `audience` theo `ref.students` (`school_id`, `grade_level` — cập nhật từ `student.placement_changed`, owner F010), không dùng `ref.enrollments`. `community_goal_contributions` ghi `grade_level` tại thời điểm đóng góp (ADR-0095 mục 2), không `class_id`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Vòng đời chạy sự kiện và vận hành khẩn cấp (Priority: P1)
@@ -51,7 +55,7 @@ Học sinh thấy sự kiện đang chạy và sắp diễn ra trong phạm vi c
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F077-AC-07 | KHI học sinh gọi `listGameEvents`/`getGameEvent`, module game PHẢI chỉ trả run `live`, `ended` (trong thời gian nhận thưởng) hoặc `scheduled` trong `event_upcoming_visible_days` mà `audience` (tenant, trường, lớp, khối, môn) chứa học sinh; ngoài phạm vi PHẢI trả `404 EVENT_NOT_AVAILABLE` và manifest PHẢI không chứa sự kiện đó | FR-EVT-001 · AC-EVT-001 | TC-EVT-001 |
+| F077-AC-07 | KHI học sinh gọi `listGameEvents`/`getGameEvent`, module game PHẢI chỉ trả run `live`, `ended` (trong thời gian nhận thưởng) hoặc `scheduled` trong `event_upcoming_visible_days` mà `audience` (tenant, trường, khối, môn — không có lớp, ADR-0095) chứa học sinh; ngoài phạm vi PHẢI trả `404 EVENT_NOT_AVAILABLE` và manifest PHẢI không chứa sự kiện đó | FR-EVT-001 · AC-EVT-001 | TC-EVT-001 |
 | F077-AC-08 | KHI học sinh gọi `joinGameEvent` hoặc hoàn thành hoạt động đầu tiên thuộc sự kiện, module game PHẢI tạo đúng một tham gia, phát `event.participation_started`; bắt đầu hoạt động sự kiện sau `end_at` PHẢI trả `409 EVENT_ENDED` | FR-EVT-001 · [EVENT_SEASON_SYSTEM §4](../../docs/01-game-design/EVENT_SEASON_SYSTEM.md) | — |
 | F077-AC-09 | KHI event server đã kiểm chứng thuộc `event_points.sources` của run `live` đến, module game PHẢI ghi điểm sự kiện idempotent theo `(source_event_id, student_id)`, không vượt `daily_cap` của sự kiện (`event_points_daily_cap`), và đẩy `event.progress.updated` | FR-EVT-001 · FR-EVT-004 | — |
 | F077-AC-10 | KHI học sinh gọi `claimEventMilestone` với `Idempotency-Key` cho mốc đã đạt, module game PHẢI cấp phần thưởng mốc qua Reward Engine đúng một lần, phát `event.milestone_claimed`, ghi audit; mốc chưa đạt PHẢI trả `409 EVENT_MILESTONE_NOT_REACHED`; thiếu key PHẢI trả `428 PRECONDITION_REQUIRED` | FR-EVT-001 · AC-EVT-012 | TC-EVT-012 |
@@ -75,7 +79,7 @@ Cả trường cùng góp sức thắp sáng đèn lồng; mỗi mốc đạt đ
 | F077-AC-13 | KHI event server đã kiểm chứng khớp `metric` của goal đến, module game PHẢI ghi đóng góp append-only theo `scope` (trường/tenant/platform) với khử trùng `source_event_id`, trần `community_goal_contribution_daily_cap` mỗi học sinh, và bỏ đóng góp từ attempt bị cờ `suspicious_speed`/tài khoản có cờ gian lận | FR-EVT-004 · AC-EVT-005 | TC-EVT-005 |
 | F077-AC-14 | HỆ THỐNG PHẢI coi bảng đóng góp PostgreSQL là nguồn sự thật: bộ đếm Valkey mất PHẢI được dựng lại đúng tổng; job tính lại định kỳ PHẢI sửa lệch cache | FR-EVT-004 · AGENTS R9 | TC-EVT-005 |
 | F077-AC-15 | KHI tổng đạt một mốc, module game PHẢI phát `community_goal.milestone_reached` (và `community_goal.completed` ở 100%) một lần, cấp thưởng mốc đúng một lần cho mọi học sinh trong phạm vi có ≥ 1 đóng góp, và không cấp cho học sinh không đóng góp | FR-EVT-004 · AC-EVT-006 | TC-EVT-006 |
-| F077-AC-16 | KHI học sinh gọi `getCommunityGoal`, module game PHẢI trả tiến độ phạm vi của học sinh, các mốc, và đóng góp theo lớp chỉ khi được phép; PHẢI không trả xếp hạng hay danh tính học sinh; cập nhật realtime `event.community_goal.updated` không nhanh hơn `community_goal_progress_flush_seconds` | FR-EVT-004 · AGENTS R16 | — |
+| F077-AC-16 | KHI học sinh gọi `getCommunityGoal`, module game PHẢI trả tiến độ phạm vi của học sinh, các mốc, và đóng góp theo khối của trường (`by_grade`) chỉ khi sự kiện bật `show_grade_contributions`, ẩn khối có < 5 học sinh đóng góp (ADR-0095); PHẢI không trả xếp hạng hay danh tính học sinh; cập nhật realtime `event.community_goal.updated` không nhanh hơn `community_goal_progress_flush_seconds` | FR-EVT-004 · AGENTS R16 | — |
 
 ---
 

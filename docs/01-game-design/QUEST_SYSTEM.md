@@ -1,13 +1,13 @@
 # Quest System
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Backend Architect · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Backend Architect · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [LEARNING_MECHANICS](LEARNING_MECHANICS.md) · [DOMAIN_MODEL §5](../06-architecture/DOMAIN_MODEL.md) · [ADR-0015, ADR-0016](../adr/README.md) · [MINIGAME_ENGINE](../08-game-client/MINIGAME_ENGINE.md) · [quest.schema.json](../../specs/schemas/quest.schema.json) · [Ví dụ quest Toán lớp 3](../../specs/examples/quest.math-g3-multiplication.json) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [GAME_DESIGN](GAME_DESIGN.md)
 
 ## 1. Mục đích và phạm vi
 
 Tài liệu là nguồn duy nhất cho quest: data model, 12 loại quest, bước, điều kiện bắt đầu/hoàn thành/thất bại, lặp lại, daily/weekly, party và shared progress, phần thưởng dự kiến, API. Chương truyện và vùng đất: [WORLD_DESIGN](WORLD_DESIGN.md); XP: [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md); vật phẩm: [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md).
 
-Quest là cầu nối giữa **thế giới game** và **Learning Engine** [Confirmed] (§3.4): học sinh giúp NPC, khám phá, thu thập — và để hoàn thành phải làm hoạt động học tập phù hợp lớp mình. Nguyên tắc:
+Quest là cầu nối giữa **thế giới game** và **Learning Engine** [Confirmed] (§3.4): học sinh giúp NPC, khám phá, thu thập — và để hoàn thành phải làm hoạt động học tập phù hợp khối mình. Nguyên tắc:
 
 | # | Nguyên tắc | Nhãn |
 |---|---|---|
@@ -30,7 +30,7 @@ Entity: `QuestDefinition` (định danh) → `QuestVersion` (nội dung bất bi
 | ID | `quest_id`, `quest_version_id`, `code` | `code` dạng người đọc: `math.g3.market_multiplication` |
 | Tên, Mô tả | `name`, `description` (`localized_text`, **bắt buộc đủ `vi` và `en`** — ADR-0056) | |
 | Loại nhiệm vụ | `quest_type` | 12 loại (schema v2): `main`, `side`, `daily`, `weekly`, `learning`, `exploration`, `social`, `party`, `challenge`, `seasonal`, `special_event`, `boss` — xem §2.3. Ánh xạ từ v1: `educational`→`learning`, `cooperative`→`party`, `competition`→`challenge` |
-| Lớp học áp dụng | `grade_levels[]` | 1–9 |
+| Khối áp dụng | `grade_levels[]` | 1–9 |
 | Môn học, Chủ đề | `subject_id`, `topic_ids[]` | Tham chiếu curriculum |
 | Learning Objective | `objective_ids[]` | Bắt buộc ≥1 cho `learning`, `daily`, `weekly`, `challenge`, `party`, `boss` |
 | Narrative, NPC | `narrative`, `giver_npc_id`, `area_id`, `story_chapter_code` | Lời dẫn truyện, NPC giao quest, khu vực, chương truyện (main quest) |
@@ -86,7 +86,7 @@ Tài liệu này sở hữu các tham số sau [Confirmed]:
 | Tham số | Giá trị |
 |---|---|
 | Số daily quest mỗi ngày | 3 (1 học tập, 1 khám phá/quest, 1 xã hội hoặc thi đấu — tùy chọn) |
-| Số weekly quest mỗi tuần | 3, theo chủ đề tuần (mặc định theo lịch chương trình; nhà trường — `school_admin`/`academic_manager` — có thể chọn chủ đề tuần cho khối/lớp qua LMS) |
+| Số weekly quest mỗi tuần | 3, theo chủ đề tuần (mặc định theo lịch chương trình; nhà trường — `school_admin`/`academic_manager` — có thể chọn chủ đề tuần cho khối của trường qua LMS — không có lớp, ADR-0095) |
 | Giờ reset daily | 04:00 ICT |
 | Giờ reset weekly | Thứ Hai 04:00 ICT |
 | Bỏ lỡ | Không phạt, không streak bị mất; mục tiêu tuần tính "4/7 ngày" |
@@ -143,7 +143,7 @@ Mô tả ở mức schema (bổ sung vào `$defs.step` của [quest.schema.json]
 | `content_ref` | `content_ref` | Câu hỏi/question set **cuối** cần ghép dữ kiện; đáp án ở module learning như mọi câu hỏi (ADR-0016) |
 | `role_assignment` | enum `auto` (mặc định, server chia đều theo thứ tự vào phòng) \| `leader_assigns` | Cách gán role khi bắt đầu bước |
 | `allow_multi_role` | boolean, mặc định `true` | Khi số thành viên online ít hơn số role, một người giữ nhiều role (party nhỏ vẫn chơi được) |
-| `share_mode` | enum `clue_card` (mặc định) \| `clue_card_and_chat` | `clue_card`: thành viên bấm "Chia sẻ dữ kiện" để hiện thẻ dữ kiện (nội dung CMS) lên bảng chung của nhóm; không cần gõ chữ nên dùng được cho mọi lớp. `clue_card_and_chat`: thêm trao đổi qua channel `party` (cùng ChatPolicy và pipeline kiểm duyệt như mọi tin, ADR-0020) |
+| `share_mode` | enum `clue_card` (mặc định) \| `clue_card_and_chat` | `clue_card`: thành viên bấm "Chia sẻ dữ kiện" để hiện thẻ dữ kiện (nội dung CMS) lên bảng chung của nhóm; không cần gõ chữ nên dùng được cho mọi khối. `clue_card_and_chat`: thêm trao đổi qua channel `party` (cùng ChatPolicy và pipeline kiểm duyệt như mọi tin, ADR-0020) |
 | `pass_rule` | như §3.1 | Áp cho attempt của **từng** thành viên ở câu hỏi cuối |
 | `completion` | enum `all_members` (mặc định) \| `min_members` (+ `min_members_count`) | Khi nào bước hoàn thành cho party |
 
@@ -279,7 +279,7 @@ Phần thưởng dự kiến: 120 XP, outfit "Tạp dề chợ phiên", badge "B
 
 - **Platform-only (ADR-0027):** quest được soạn trong **Game Operations Console** (workspace A của Admin Portal, API `/api/v1/game-admin/quests`, chỉ gateway nội bộ, `eduworld-portal`, role `game_designer`/`liveops`/`system_admin`). Vận hành tenant không sửa quest; nhà trường (`school_admin`/`academic_manager`) chỉ **chọn** quest đã publish và được gán cho tenant (ADR-0029) để giao bài qua `POST /api/v1/lms/assignments`.
 - Biên tập quest trong Game Studio bằng form + preview đồ thị bước; validate theo JSON Schema và kiểm tra tham chiếu (`npc_id`, `interactable_id`, `area_id` tồn tại trong manifest area; question set published; LO thuộc grade).
-- Reviewer học thuật kiểm tra sự phù hợp lớp/LO; reviewer game kiểm tra trải nghiệm.
+- Reviewer học thuật kiểm tra sự phù hợp khối/LO; reviewer game kiểm tra trải nghiệm.
 - **Song ngữ (ADR-0056):** mọi văn bản người chơi thấy trong quest (`name`, `description`, `narrative`, `steps[].title`, `steps[].hint`, dòng hội thoại NPC của quest, thông điệp hoàn thành/thất bại) là `localized_text` bắt buộc đủ `vi` và `en`; thiếu bản nào thì không publish được (`422 TRANSLATION_INCOMPLETE`). Hoạt động học tập mà quest tham chiếu tuân theo `content_language` của activity (bản dịch tùy chọn — [CONTENT_MODEL §8](../02-learning/CONTENT_MODEL.md#8-ngôn-ngữ-nội-dung-và-bản-dịch-adr-0056)). Biên tập hai cột vi/en: [ADMIN_PORTAL §1.5](../04-admin-portal/ADMIN_PORTAL.md#15-biên-tập-song-ngữ-adr-0056).
 - **Phát hành (ADR-0043):** Draft/Publish/hẹn giờ, lịch sử version, diff, preview, rollback (đổi con trỏ, lý do bắt buộc) qua `/api/v1/game-admin/quests/{id}/versions`, `.../versions/{v}:publish`, `/quests/{id}:rollback`, `:unpublish`, `/releases`. Publish dựng snapshot bất biến (Valkey `ew:game:cv:quest:<id>:<v>` + CDN) và cập nhật content manifest của các tenant được gán.
 - Publish/rollback quest **không** ảnh hưởng progress đang chạy: `quest_progress.quest_version_id` ghim lúc nhận quest và giữ đến khi hoàn thành/bỏ; học sinh nhận quest mới (hoặc nhận lại sau khi bỏ) nhận version theo con trỏ.

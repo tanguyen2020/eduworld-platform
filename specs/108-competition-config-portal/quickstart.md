@@ -15,7 +15,7 @@
 | 1 | `sa.admin` gọi `listGameConfigs_competition` cho từng loại trong 7 loại | 200, có seed | F108-AC-01 |
 | 2 | Tài khoản platform chỉ có `competition.config.season.write` sửa `ranking-rules`; không có `game.content.publish` gọi publish | `403 PERMISSION_DENIED`, audit `authz.denied` | F108-AC-02 |
 | 3 | `ad.truong.a` gọi `/api/v1/game-admin/ranking-rules` qua gateway public; gọi thẳng backend | 404 tại APISIX; `403 PERMISSION_DENIED` (không còn kiểm MFA — ADR-0094) | F108-AC-03 |
-| 4 | Lưu matchmaking cho phép ghép lớp 3 với lớp 4; ranking-rules tier giảm dần; leaderboard scope `class` metric `xp`; template có `allowed_params` `reward`; bật bonus tốc độ khối 3 | `422 VALIDATION_FAILED` chỉ rõ trường | F108-AC-04 |
+| 4 | Lưu matchmaking cho phép ghép khối 3 với khối 4; ranking-rules tier giảm dần; leaderboard scope `grade` metric `xp`; leaderboard scope `class` hoặc metric `class_goal`; template `kind = class_challenge` hoặc seeding `separate_class`; template có `allowed_params` `reward`; bật bonus tốc độ khối 3 | `422 VALIDATION_FAILED` chỉ rõ trường | F108-AC-04 |
 | 5 | PATCH version đã publish; tạo nháp từ `based_on_version_id`; publish `effective_from` quá khứ; rollback không lý do / về version chưa từng publish | `409 CONTENT_NOT_EDITABLE`; nháp mới; `422`; `422`/`422 ROLLBACK_TARGET_INVALID` | F108-AC-05 |
 | 6 | PATCH không `If-Match`; với `If-Match` cũ | `428 PRECONDITION_REQUIRED`; `412 CONTENT_VERSION_CONFLICT` | F108-AC-06 |
 | 7 | Publish 2 lần cùng `Idempotency-Key` | Một release, một `competition_config.published`, audit | F108-AC-07 |
@@ -25,10 +25,10 @@
 | 11 | Nhập tier giảm dần trên UI; ngắt gateway nội bộ | Lỗi trường từ server + `trace_id`; thông báo "Cần kết nối mạng quản trị (VPN)" | F108-AC-11 |
 | 12 | `make web-lint`, axe trên màn danh sách/editor | 0 hardcode style; 0 lỗi serious/critical | F108-AC-12 |
 | 13 | `qlcm.truong.a`, `ad.donvi` đăng nhập portal; mở `/school-lms/challenges` | Không có menu; trang 403 | F108-AC-13 |
-| 14 | `ad.truong.a` mở wizard, chọn template "Giải Toán lớp", lớp 3A, lịch; bấm tạo 2 lần nhanh | Chỉ trường `allowed_params`; chỉ lớp trường mình; 1 Challenge | F108-AC-14 |
-| 15 | Mở chi tiết giải: đăng ký hộ 3A, xác nhận, tạo bracket, điều chỉnh nút (thiếu lý do → nút khóa), hủy giải khác | Bracket có tên thật học sinh 3A; mỗi thao tác gọi đúng operationId | F108-AC-15 |
+| 14 | `ad.truong.a` mở wizard, chọn template "Giải Toán khối", khối 3 của TH Demo A, thêm `hs.em.4a`, loại trừ `hs.chi.3b`, lịch; tìm học sinh trường khác; bấm tạo 2 lần nhanh | Chỉ trường `allowed_params`; không có bộ chọn lớp; ô tìm học sinh chỉ trả học sinh TH Demo A; xem trước số học sinh hiệu lực; 1 Challenge | F108-AC-14 |
+| 15 | Mở chi tiết giải: đăng ký hộ theo đối tượng (khối 3 + `hs.em.4a` − `hs.chi.3b`), xác nhận, tạo bracket, điều chỉnh nút (thiếu lý do → nút khóa), hủy giải khác | Bracket có tên thật học sinh trường mình; mỗi thao tác gọi đúng operationId | F108-AC-15 |
 | 16 | `sa.admin` vào workspace C không chọn tenant | Nút tạo bị khóa; chọn `th-demo-a` → gửi `X-Tenant-Id` đúng | F108-AC-16 |
-| 17 | `sa.admin` tắt `menu.school_lms.challenges` cho `th-demo-a`; `ad.truong.a` tải lại portal | Menu "Thử thách lớp / giải trường" biến mất; `createChallenge` → `403 FEATURE_DISABLED`; cấu hình thi đấu ở workspace A không bị ảnh hưởng | F108-AC-17 |
+| 17 | `sa.admin` tắt `menu.school_lms.challenges` cho `th-demo-a`; `ad.truong.a` tải lại portal | Menu "Thử thách khối / giải trường" biến mất; `createChallenge` → `403 FEATURE_DISABLED`; cấu hình thi đấu ở workspace A không bị ảnh hưởng | F108-AC-17 |
 
 ## 3. Lệnh test tự động
 

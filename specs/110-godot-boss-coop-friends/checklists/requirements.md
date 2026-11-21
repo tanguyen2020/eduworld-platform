@@ -31,3 +31,4 @@
 - spec.md nêu operationId/message/khóa dịch vì là contract client tiêu thụ; chi tiết scene/script ở plan.md.
 - Authorization/tenant ở client: không hiển thị dữ liệu ngoài phạm vi, `X-Tenant-Id` do `ApiClient`; kiểm tra thật ở F095/F103. Idempotency cho mọi lệnh ghi REST; audit do backend.
 - Mâu thuẫn đã chốt ở Clarifications: wireframe S06 hiện số câu đúng của từng bạn vs CHALLENGE_BOSS_SYSTEM §3.5/F103-AC-09 (chọn chỉ `contribution_met`); `SocialService` F110 tạo, F119 dùng lại.
+- ADR-0095 (2026-11-21, WP-S): không nhóm/gợi ý "Bạn cùng lớp"; danh sách bạn không nhóm theo lớp, không hiện trường/khối; presence chỉ bạn bè/party/club; điều kiện mời party do PARTY_SYSTEM sở hữu.

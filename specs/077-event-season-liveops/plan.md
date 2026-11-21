@@ -102,7 +102,7 @@ Không có — EVENT_SEASON_SYSTEM, DATABASE_DESIGN §2.8c, ADR-0043/0049 đủ.
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Học sinh: `game_player`, lọc `audience` theo `ref.students`/`ref.enrollments`.
+- Học sinh: `game_player`, lọc `audience` theo `ref.students` (`school_id`, `grade_level`; projection cập nhật từ `student.placement_changed` — ADR-0095, không `ref.enrollments`).
 - Tenant: `portal_staff` + `lms.school_event.write`, scope trường; sự kiện tenant `owner_scope = tenant`, `tenant_id` của phiên; template chỉ khi có assignment.
 - Platform: `/game-admin/events/*` gateway nội bộ, MFA, `game.event.operate`/`game.liveops.read`.
 - `Idempotency-Key`: `joinGameEvent`, `claimEventMilestone`, `claimSeasonTier`, `suspend/resume/cancelEventRun`, `create/update/cancelSchoolEvent`. Audit: thao tác vận hành, sự kiện trường, claim, tự cấp.

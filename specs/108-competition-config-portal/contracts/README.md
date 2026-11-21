@@ -49,8 +49,8 @@ Spec: `specs/openapi/modules/competition.v1.yaml` (`x-internal: true`, `security
 | `specs/schemas/ranking-rules.schema.json` | Tham số Glicko-2, provisional, tier, soft reset, bảng Competition Points, trần, `effort_points` | Cần thêm |
 | `specs/schemas/season.schema.json` | Mã, tên vi/en, chủ đề, `starts_at`/`ends_at` | Cần thêm |
 | `specs/schemas/tournament-template.schema.json` | `kind`, format, mode, participant_type, `allowed_params`, `reward_rule_refs`, timers | Cần thêm |
-| `specs/schemas/challenge-template.schema.json` | Class Challenge (Timed Quiz): số câu, thời gian, khung tham gia, `allowed_params` | Cần thêm |
-| `specs/schemas/leaderboard-definition.schema.json` | metric × scope × period × filter, khối, hiển thị | Cần thêm |
+| `specs/schemas/challenge-template.schema.json` | Thử thách khối `grade_challenge` (Timed Quiz): số câu, thời gian, khung tham gia, `grade_levels`, `allowed_params` (không có tham số lớp — ADR-0095) | Cần thêm |
+| `specs/schemas/leaderboard-definition.schema.json` | metric × scope × period × filter, khối, hiển thị (scope không có `class`; metric `grade_goal` + `display.grade_goal_target` — ADR-0095, F106) | Cần thêm |
 | `specs/schemas/competition-reward.schema.json` | Phần thưởng mùa/giải/thử thách theo tier/hạng; `reward_rule_refs` chỉ cosmetic/badge/title | Cần thêm |
 
 ## 6. Delta cần thực hiện
@@ -59,5 +59,6 @@ Spec: `specs/openapi/modules/competition.v1.yaml` (`x-internal: true`, `security
 - `GameConfigType` (phần competition) thêm `competition-rewards`, permission `competition.config.reward.write` (RB-415).
 - 7 JSON Schema mới (§5), mọi string có `maxLength`, enum dùng `specs/schemas/common/enums.schema.json` khi có.
 - Payload `competition_config.published.v1`; catalog EVENT_DESIGN §4.8.
-- Tài liệu: ADMIN_PORTAL §3.4 ghi rõ màn "Thi đấu" (5 nhóm) và màn workspace C "Thử thách lớp / giải trường"; `competition.config.reward.write` dùng cho `competition-rewards` (đã chốt RB-415).
+- ADR-0095: op learning của màn workspace C (`listChallenges` lọc `grade_level`, `ChallengeTemplate.kind` `grade_challenge`, `ChallengeCreate` `school_id`/`targets`/`exclude_student_ids`) — xem [F107 contracts §6](../../107-tournament-challenges/contracts/README.md#6-delta-cần-thực-hiện) (chờ áp sau WP-L1; F108 không định nghĩa lại).
+- Tài liệu: ADMIN_PORTAL §3.4 ghi rõ màn "Thi đấu" (5 nhóm) và màn workspace C "Thử thách khối / giải trường" (nhãn đổi theo ADR-0095, khóa menu giữ); `competition.config.reward.write` dùng cho `competition-rewards` (đã chốt RB-415).
 - APISIX: chỉ route `/api/v1/game-admin/{matchmaking-configs|ranking-rules|seasons|tournament-templates|challenge-templates|leaderboard-definitions|competition-rewards}` tới module competition ở gateway nội bộ.

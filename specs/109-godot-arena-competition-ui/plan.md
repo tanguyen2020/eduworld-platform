@@ -61,7 +61,7 @@ src/game/
 │   ├── MatchmakingPanel.tscn, ReadyCheck.tscn           # ReadyCheckDialog
 │   ├── BattleArena.tscn (+ battle_arena.gd)             # QuestionPanel (F063 registry), AnswerButtons, slot MatchChatStrip (F119)
 │   ├── MatchResult.tscn, MatchHistory.tscn, MatchDetail.tscn
-│   ├── Leaderboard.tscn (+ leaderboard_view.gd), leaderboard/{RankedList,ClassGoalBar,PercentileCard}.tscn
+│   ├── Leaderboard.tscn (+ leaderboard_view.gd), leaderboard/{RankedList,GradeGoalBar,PercentileCard}.tscn (GradeGoalBar thay ClassGoalBar — ADR-0095)
 │   ├── tournament/{TournamentList,TournamentDetail,BracketTree,BracketPath}.tscn
 │   └── DuelInviteDialog.tscn
 ├── scripts/multiplayer/

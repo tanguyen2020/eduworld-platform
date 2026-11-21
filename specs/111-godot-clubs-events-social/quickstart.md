@@ -1,4 +1,4 @@
-# Quickstart: F111 — Godot — club trong game, Event center, nhóm "Bạn cùng lớp"/"Vừa chơi cùng", nút "Tham gia bạn"
+# Quickstart: F111 — Godot — club trong game, Event center, nhóm "Vừa chơi cùng", nút "Tham gia bạn"
 
 **Spec**: [spec.md](spec.md) · **Plan**: [plan.md](plan.md)
 
@@ -6,8 +6,8 @@
 
 - Phụ thuộc đã Done: F077, F095, F120, F091/F092, F071, F072, F110, F119 (cho nghiệm thu Done; trước đó dùng profile `mock` của F060, nhãn MOCK).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md) §6); hai instance Godot `-- --env=local --device-id=<khác nhau>`.
-- Tài khoản demo (mật khẩu seed): `hs.an.3a` (A), `hs.binh.3a` (B) cùng lớp 3A, đã là bạn (fixture `friend.added`); `hs.chi.3b` (C, khác lớp cùng trường TH Demo A); `hs.dung.7a` (D, THCS Demo B, tenant `pgd-demo`); `hs.em.4a` (E, TH Demo C, cùng tenant `unit` với D); `ad.truong.a`, `ad.truong.b` (school_admin).
-- Seed (dữ liệu mẫu): sự kiện `world_festival` "Lễ hội Trăng Rằm" `live` cho TH Demo A có community goal và 2 mốc; season track mùa hiện tại; THCS Demo B đặt `student_club_creation = requires_approval`; TH Demo A giữ `disabled` và có club `school_club` "CLB Toán" do `ad.truong.a` tạo, thêm cả lớp 3A.
+- Tài khoản demo (mật khẩu seed): `hs.an.3a` (A), `hs.binh.3a` (B) khối 3 TH Demo A, đã là bạn (fixture `friend.added`); `hs.chi.3b` (C, khối 3 cùng trường TH Demo A, chưa là bạn); `hs.dung.7a` (D, THCS Demo B, tenant `pgd-demo`); `hs.em.4a` (E, TH Demo C, cùng tenant `unit` với D); `ad.truong.a`, `ad.truong.b` (school_admin).
+- Seed (dữ liệu mẫu): sự kiện `world_festival` "Lễ hội Trăng Rằm" `live` cho TH Demo A có community goal và 2 mốc; season track mùa hiện tại; THCS Demo B đặt `student_club_creation = requires_approval`; TH Demo A giữ `disabled` và có club `school_club` "CLB Toán" do `ad.truong.a` tạo, thành viên là A và B (danh sách học sinh, không "thêm cả lớp" — ADR-0095).
 
 ## 2. Kịch bản kiểm tra
 
@@ -17,12 +17,12 @@
 | 2 | B vào trận Arena; A mở hồ sơ B | Nút "Tham gia bạn" xám + lý do bằng chữ | F111-AC-02 |
 | 3 | Lấp đầy instance của B tới `hub_instance_capacity` bằng bot; A bấm "Tham gia bạn" | A vào instance khác cùng khu, thông điệp "Khu vực của bạn đã đầy", không lộ instance | F111-AC-04 |
 | 4 | B ở `challenge_mountain` (A chưa mở khu); A bấm "Tham gia bạn" | A ở lại khu cũ, thấy điều kiện mở khóa; không gửi `hub.instance.join`; nút khóa khi đang chờ | F111-AC-05 |
-| 5 | A mở tab Tìm bạn | Nhóm "Ở gần đây", "Bạn cùng lớp" (không có B vì đã là bạn), "Vừa chơi cùng", Mã bạn bè; không có ô tìm kiếm; chỉ nickname/avatar/level | F111-AC-06, F111-AC-07 |
+| 5 | A mở tab Tìm bạn | Nhóm "Ở gần đây", "Vừa chơi cùng" (rỗng, có gợi ý Mã bạn bè), Mã bạn bè; không có nhóm "Bạn cùng lớp", không có ô tìm kiếm; chỉ nickname/avatar/level | F111-AC-06, F111-AC-07, F111-AC-08 |
 | 6 | A và C chơi một party, A mở lại Tìm bạn; giả lập lỗi `listFriendSuggestions` | C có trong "Vừa chơi cùng" + biểu tượng party; khi lỗi nhóm ẩn, Mã bạn bè còn | F111-AC-07, F111-AC-08 |
 | 7 | A bấm biểu tượng lịch trên HUD | Thẻ "Lễ hội Trăng Rằm · còn n ngày", không đếm giây; D (tenant khác) không thấy sự kiện | F111-AC-09 |
 | 8 | A mở chi tiết, bấm "Tham gia", làm quest sự kiện, nhận mốc 1 (bấm hai lần khi mạng chậm) | Tham gia một lần; điểm tăng theo `event.progress.updated`; mốc nhận đúng một lần, hiện phần thưởng server | F111-AC-10, F111-AC-11, F111-AC-14 |
 | 9 | Vận hành dừng khẩn cấp run (F079), rồi tiếp tục, rồi kết thúc | Thẻ "Sự kiện tạm dừng" → bình thường → "Phần thưởng chưa nhận sẽ được gửi tự động" | F111-AC-12 |
-| 10 | Đóng góp vào community goal từ hai học sinh | Thanh tổng/mục tiêu cập nhật, "Em đã góp sức"; không xếp hạng; A (`g1_3`) không thấy `by_class` | F111-AC-13 |
+| 10 | Đóng góp vào community goal từ hai học sinh (sự kiện bật `show_grade_contributions`) | Thanh tổng/mục tiêu cập nhật, "Em đã góp sức"; không xếp hạng; A (`g1_3`) không thấy `by_grade`; học sinh khối 4+ thấy `by_grade` không tên, khối < 5 học sinh không có dòng | F111-AC-13 |
 | 11 | A mở tab Hôm nay, làm xong 3 nhiệm vụ ngày | Nút "Đi" dẫn đường; thông điệp nghỉ ngơi, không gợi ý chơi thêm; A chỉ có tab Hôm nay, Sự kiện | F111-AC-15, F111-AC-18 |
 | 12 | D mở tab Mùa, nhận thưởng cấp 1 hai lần cùng key, xem Mùa trước | Một lần cấp; không có track trả phí/giá; thông điệp tự gửi khi hết mùa | F111-AC-16, F111-AC-17 |
 | 13 | A mở tab Club | Thấy "CLB Toán" (club của em), không có club đề xuất, không có "Tạo club"; trang club chỉ nickname/vai trò, mục tiêu tập thể + "Em đã góp …" | F111-AC-19, F111-AC-20 |

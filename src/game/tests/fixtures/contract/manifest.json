@@ -111,7 +111,7 @@
     },
     "examples/event.mid-autumn-festival.json": {
       "source": "specs/examples/event.mid-autumn-festival.json",
-      "sha256": "aee1087ead445add9ffcbc6b990e7c54944e576915c72c6a12d36ecc397249fb"
+      "sha256": "e4a86f4c97f24801764531ac7b51bce8c93eaa8b733b68531c68afb462bd121c"
     },
     "examples/minigame.math-g3-matching.json": {
       "source": "specs/examples/minigame.math-g3-matching.json",

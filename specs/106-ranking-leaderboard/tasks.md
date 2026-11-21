@@ -1,4 +1,4 @@
-# Tasks: F106 — Ranking Glicko-2, tier, season và 13 bảng xếp hạng
+# Tasks: F106 — Ranking Glicko-2, tier, season và 12 bảng xếp hạng
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
@@ -74,22 +74,22 @@
 
 ## Phase 6: User Story 4 — Bảng xếp hạng an toàn theo khối (Priority: P1)
 
-**Goal**: 13 loại bảng, ZSET + sổ cái, visibility theo khối, policy trường, cô lập scope.
+**Goal**: 12 loại bảng + mục tiêu tập thể của khối (`grade_goal`, ADR-0095), ZSET + sổ cái, visibility theo khối, policy trường, cô lập scope.
 
 **Independent Test**: như spec.md US4.
 
 ### Tests cho User Story 4
 
-- [ ] T021 [P] [US4] Unit test F106-AC-12, F106-AC-16: definition hợp lệ (13 loại), từ chối `xp` ở scope class/school/grade; `effort_points` theo bảng, trần ngày, bỏ `rapid_guess` — file: `src/backend/modules/competition/tests/unit/leaderboard/definition_effort_test.go` — phải FAIL trước khi code
-- [ ] T022 [P] [US4] Unit test F106-AC-17: `VisibilityPolicy` lớp 1–3/4–5/6–9 (class goal, highlight ngẫu nhiên trong nhóm đạt ngưỡng, percentile, ±3) — file: `src/backend/modules/competition/tests/unit/leaderboard/visibility_test.go`
+- [ ] T021 [P] [US4] Unit test F106-AC-12, F106-AC-16: definition hợp lệ (12 loại), từ chối `xp` ở scope school/grade, từ chối scope `class`/metric `class_goal`; `effort_points` theo bảng, trần ngày, bỏ `rapid_guess`; `grade_goal` gộp theo (trường, khối tại thời điểm ghi), không rank/nickname, ô < 5 học sinh → `null` — file: `src/backend/modules/competition/tests/unit/leaderboard/definition_effort_test.go` — phải FAIL trước khi code
+- [ ] T022 [P] [US4] Unit test F106-AC-17: `VisibilityPolicy` lớp 1–3/4–5/6–9 (lớp 1–3 chỉ `grade_goal` không tên, percentile, ±3) — file: `src/backend/modules/competition/tests/unit/leaderboard/visibility_test.go`
 - [ ] T023 [P] [US4] Integration test F106-AC-13, F106-AC-14: dedupe `processed_events` trước ZINCRBY; xóa key → `stale = true` → rebuild khớp sổ cái; job đối chiếu sửa lệch — file: `src/backend/modules/competition/tests/integration/leaderboard/zset_rebuild_test.go`
-- [ ] T024 [P] [US4] Integration test (đồng hồ giả) F106-AC-15: đóng kỳ ICT, snapshot top 100 + rank mọi thành viên lớp/trường, `leaderboard.period_closed` idempotent, singleton lock — file: `src/backend/modules/competition/tests/integration/leaderboard/period_close_test.go`
-- [ ] T025 [P] [US4] Integration test F106-AC-18, F106-AC-19: chỉ nickname/avatar/tên lớp; `allow_cross_school_listing`; sanction bị loại; `disabled_leaderboard_definitions` → ẩn + `404` — file: `src/backend/modules/competition/tests/integration/leaderboard/privacy_policy_test.go`
-- [ ] T026 [P] [US4] Test tenant isolation + authorization F106-AC-20, F106-AC-21: học sinh chỉ scope chứa mình; nhân sự `lms.class.read` theo scope; tenant khác → 404; header sai → `403 TENANT_MISMATCH`; nhân sự gọi route game → `403 GAME_ACCESS_STUDENT_ONLY`; tham số vượt `maxLength` → `422` — file: `src/backend/modules/competition/tests/integration/leaderboard/authz_tenant_test.go`
+- [ ] T024 [P] [US4] Integration test (đồng hồ giả) F106-AC-15: đóng kỳ ICT, snapshot top 100 + rank mọi thành viên trường/khối, dòng tổng `grade_goal`, `leaderboard.period_closed` idempotent, singleton lock — file: `src/backend/modules/competition/tests/integration/leaderboard/period_close_test.go`
+- [ ] T025 [P] [US4] Integration test F106-AC-18, F106-AC-19: chỉ nickname/avatar (không tên lớp); `allow_cross_school_listing`; sanction bị loại; `disabled_leaderboard_definitions` → ẩn + `404` — file: `src/backend/modules/competition/tests/integration/leaderboard/privacy_policy_test.go`
+- [ ] T026 [P] [US4] Test tenant isolation + authorization F106-AC-20, F106-AC-21: học sinh chỉ scope chứa mình; nhân sự `lms.student.read` theo scope; tenant khác → 404; header sai → `403 TENANT_MISMATCH`; nhân sự gọi route game → `403 GAME_ACCESS_STUDENT_ONLY`; tham số vượt `maxLength` → `422` — file: `src/backend/modules/competition/tests/integration/leaderboard/authz_tenant_test.go`
 
 ### Implementation cho User Story 4
 
-- [ ] T027 [P] [US4] Domain `LeaderboardDefinition`, `VisibilityPolicy`, `PeriodKey`, `EffortRules` — file: `src/backend/modules/competition/internal/domain/leaderboard/`
+- [ ] T027 [P] [US4] Domain `LeaderboardDefinition`, `VisibilityPolicy`, `GradeGoal` (gộp trường × khối, che ô < `analytics_min_cell_size`), `PeriodKey`, `EffortRules` — file: `src/backend/modules/competition/internal/domain/leaderboard/`
 - [ ] T028 [US4] Adapter Valkey `LeaderboardStore` (ZINCRBY, ZREVRANGE, ZMSCORE friends, meta) — file: `src/backend/modules/competition/internal/infrastructure/cache/leaderboard_store.go`
 - [ ] T029 [US4] Command `RecordContribution`, `ClosePeriod`, `RebuildLeaderboard`, `MaterializeDefinitions`; consumer `activity.graded`, `xp.awarded`, `quest.completed`, cộng điểm từ `competition_points.awarded`; job `period_close`, `leaderboard_rebuild` — file: `src/backend/modules/competition/internal/application/command/leaderboard/`, `src/backend/modules/competition/internal/presentation/consumer/activity_graded_effort.go`, `src/backend/modules/competition/internal/presentation/job/period_close.go`
 - [ ] T030 [US4] Query `ListLeaderboards`, `GetLeaderboard`, `GetMyLeaderboardPosition`, `GetLeaderboardHistory` + handler (port `SchoolPolicyReader` đọc `ref.schools.settings_subset`) — file: `src/backend/modules/competition/internal/application/query/leaderboard/`, `src/backend/modules/competition/internal/presentation/http/public/leaderboard_handler.go`

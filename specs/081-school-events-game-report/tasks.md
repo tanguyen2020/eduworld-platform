@@ -23,14 +23,14 @@
 
 ### Tests cho User Story 1
 
-- [ ] T007 [P] [US1] Unit test F081-AC-01, F081-AC-02: danh sách template, trạng thái rỗng, form chỉ dựng `allowed_params`, picker từ `*_option_items`, đối tượng theo lớp trong scope — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/school-events/CreateSchoolEventWizard.test.tsx` — phải FAIL trước khi code
+- [ ] T007 [P] [US1] Unit test F081-AC-01, F081-AC-02: danh sách template, trạng thái rỗng, form chỉ dựng `allowed_params`, picker từ `*_option_items`, đối tượng theo trường/khối trong scope (ADR-0095) — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/school-events/CreateSchoolEventWizard.test.tsx` — phải FAIL trước khi code
 - [ ] T008 [P] [US1] Unit test F081-AC-03, F081-AC-04: `Idempotency-Key` giữ khi retry; map `EVENT_TEMPLATE_PARAM_NOT_ALLOWED`/`VALIDATION_FAILED` về field, `503` giữ form, `409` thông điệp — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/school-events/createSubmit.test.tsx`
 - [ ] T009 [P] [US1] Unit test F081-AC-05: `vi` bắt buộc, `en` tùy chọn, bộ đếm `maxLength`, ngày ICT — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/school-events/fields.test.tsx`
 
 ### Implementation cho User Story 1
 
 - [ ] T010 [P] [US1] Hook `useEventTemplates`, `useCreateSchoolEvent` (Idempotency-Key một lần/ý định) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/school-events/api/eventTemplates.ts`, `src/cms/frontend/apps/portal/src/workspaces/school-lms/school-events/api/schoolEvents.ts`
-- [ ] T011 [US1] `CreateSchoolEventWizard` + `AllowedParamField`, `AudiencePicker` (`listTenantSchoolClasses`), `TemplateOptionPicker`, `mapProblem.ts` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/school-events/CreateSchoolEventWizard.tsx`
+- [ ] T011 [US1] `CreateSchoolEventWizard` + `AllowedParamField`, `AudiencePicker` (trường + khối từ `grade_levels` của template — ADR-0095), `TemplateOptionPicker`, `mapProblem.ts` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/school-events/CreateSchoolEventWizard.tsx`
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 
@@ -50,16 +50,16 @@
 
 ### Tests cho User Story 3
 
-- [ ] T016 [P] [US3] Integration test F081-AC-10: tổng từ `community_goal_progress` (xóa Valkey không đổi kết quả), `by_class` chỉ dải khối EVENT_SEASON_SYSTEM §6, không `student_id`/tên/hạng trong JSON — file: `src/backend/modules/game/tests/integration/liveops/school_event_progress_test.go` — phải FAIL trước khi code
+- [ ] T016 [P] [US3] Integration test F081-AC-10: tổng từ `community_goal_progress` (xóa Valkey không đổi kết quả), `by_grade` chỉ dải khối EVENT_SEASON_SYSTEM §6, khối < 5 học sinh đóng góp bị ẩn, không `student_id`/tên/hạng trong JSON — file: `src/backend/modules/game/tests/integration/liveops/school_event_progress_test.go` — phải FAIL trước khi code
 - [ ] T017 [P] [US3] Integration test authorization + tenant isolation F081-AC-12: thiếu permission 403; trường khác/tenant khác 404; `X-Tenant-Id` lệch 403 `TENANT_MISMATCH` — file: `src/backend/modules/game/tests/integration/liveops/school_event_progress_authz_test.go`
-- [ ] T018 [P] [US3] Unit test UI F081-AC-11: thanh mốc, bảng lớp sắp theo tên, không cột hạng, "Cập nhật lúc" — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/school-events/SchoolEventProgressPanel.test.tsx`
+- [ ] T018 [P] [US3] Unit test UI F081-AC-11: thanh mốc, bảng khối sắp theo khối, không cột hạng, "Cập nhật lúc" — file: `src/cms/frontend/apps/portal/tests/unit/school-lms/school-events/SchoolEventProgressPanel.test.tsx`
 - [ ] T019 [P] [US3] Contract test provider `getSchoolEventProgress` theo OpenAPI — file: `src/backend/modules/game/tests/contract/school_event_progress_contract_test.go`
 
 ### Implementation cho User Story 3
 
-- [ ] T020 [P] [US3] Domain `ClassBreakdownPolicy` (dải khối, tham chiếu EVENT_SEASON_SYSTEM §6) — file: `src/backend/modules/game/internal/domain/liveops/class_breakdown_policy.go`
-- [ ] T021 [US3] Query `GetSchoolEventProgress` + repo SQL (`tenant_id`, `deleted_at IS NULL`, `GROUP BY class_id` ⨝ `ref.classes`) + handler — file: `src/backend/modules/game/internal/application/query/liveops/get_school_event_progress.go`, `src/backend/modules/game/internal/infrastructure/persistence/liveops/school_event_progress_repo.go`, `src/backend/modules/game/internal/presentation/http/public/school_events.go`
-- [ ] T022 [US3] `SchoolEventProgressPanel`, `ClassContributionTable`, hook `useSchoolEventProgress` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/school-events/progress/SchoolEventProgressPanel.tsx`
+- [ ] T020 [P] [US3] Domain `GradeBreakdownPolicy` (dải khối + ẩn ô < 5, tham chiếu EVENT_SEASON_SYSTEM §6, ADR-0095) — file: `src/backend/modules/game/internal/domain/liveops/grade_breakdown_policy.go`
+- [ ] T021 [US3] Query `GetSchoolEventProgress` + repo SQL (`tenant_id`, `deleted_at IS NULL`, `GROUP BY grade_level`) + handler — file: `src/backend/modules/game/internal/application/query/liveops/get_school_event_progress.go`, `src/backend/modules/game/internal/infrastructure/persistence/liveops/school_event_progress_repo.go`, `src/backend/modules/game/internal/presentation/http/public/school_events.go`
+- [ ] T022 [US3] `SchoolEventProgressPanel`, `GradeContributionTable`, hook `useSchoolEventProgress` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/school-events/progress/SchoolEventProgressPanel.tsx`
 
 ## Phase 6: User Story 4 — Ràng buộc chung của màn (Priority: P2)
 
@@ -68,7 +68,7 @@
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T031 [P] Cập nhật tài liệu: API_DESIGN (`getSchoolEventProgress`), đề xuất đăng ký dải khối xem đóng góp theo lớp vào CONFIG_DEFAULTS, CHANGELOG — file: `docs/07-backend/API_DESIGN.md`, `CHANGELOG.md`
+- [ ] T031 [P] Cập nhật tài liệu: API_DESIGN (`getSchoolEventProgress`), đề xuất đăng ký dải khối xem đóng góp theo khối vào CONFIG_DEFAULTS, CHANGELOG — file: `docs/07-backend/API_DESIGN.md`, `CHANGELOG.md`
 - [ ] T032 [P] Visual regression danh sách/tiến độ sáng/tối (TC-UI-004) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/visual.spec.ts`
 - [ ] T033 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/081-school-events-game-report/quickstart.md`
 - [ ] T034 [P] Test F081-AC-20: tắt `menu.school_lms.school_events` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/school-events-feature-toggle.spec.ts`

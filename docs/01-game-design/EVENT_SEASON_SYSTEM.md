@@ -1,9 +1,12 @@
 # Event & Season System — Sự kiện, Community Goal, Season Track (Live-ops)
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: Game Director + Live-ops Lead · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director + Live-ops Lead · Cập nhật: 2026-11-21 (ADR-0095: đối tượng và đóng góp community goal theo khối, không còn lớp) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [ADMIN_PORTAL §3.14](../04-admin-portal/ADMIN_PORTAL.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [ADR-0043](../adr/ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) · [ADR-0049](../adr/ADR-0049-so-cai-phan-thuong-va-tien-te-trong-game-reward-currency-led.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Nguyên tắc · 3. Loại sự kiện · 4. Mô hình dữ liệu sự kiện · 5. Vòng đời sự kiện · 6. Community goal · 7. Season và season track · 8. Daily/weekly · 9. Quy tắc lành mạnh · 10. Sự kiện của trường (tenant) · 11. Song ngữ · 12. Hiệu năng · 13. Dữ liệu · 14. API · 15. Event NATS · 16. Chỉ số · 17. Lỗi · 18. Acceptance criteria
+
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21; viết lại ở WP-S 2026-11-21).** Đối tượng sự kiện chỉ còn tenant/trường/khối/môn (không `class_ids`, không `audience.scope = class`); đóng góp community goal xem theo **khối của trường** (`by_grade`, cờ `show_grade_contributions`), không tên, không xếp hạng, ẩn khối có < `analytics_min_cell_size` học sinh đóng góp; bảng đóng góp ghi `grade_level` tại thời điểm đóng góp thay `class_id`.
 
 ## 1. Mục đích và phạm vi
 
@@ -39,7 +42,7 @@ Tài liệu này là **nguồn duy nhất** cho: loại sự kiện live-ops, m�
 |---|---|---|---|---|
 | `world_festival` | "Lễ hội Trăng Rằm" (Trung thu), "Chợ Tết Tia Sáng", Ngày Nhà giáo 20/11 | ≥ 7 ngày | Trang trí vùng, NPC lễ hội, quest `special_event`, collection sự kiện, shop vật phẩm lễ hội, community goal | Platform |
 | `weekend` | "Cuối tuần Khám phá Đại dương" | Thứ Bảy 00:00 – Chủ nhật 23:59 ICT | Quest khám phá, nhân đôi điểm mùa (không nhân đôi XP vượt cap) | Platform |
-| `school` | "Tuần lễ Toán học trường Kim Đồng" | 1–4 tuần | Community goal trường, challenge lớp, huy hiệu trường | Tenant từ template (§10) |
+| `school` | "Tuần lễ Toán học trường Kim Đồng" | 1–4 tuần | Community goal trường, thử thách khối (`grade_challenge`), huy hiệu trường | Tenant từ template (§10) |
 | `community_goal` | "Cả trường giải 10.000 phép tính để thắp đèn lồng" | 1–3 tuần | Mục tiêu chung, mốc mở trang trí | Platform hoặc tenant |
 | `learning_campaign` | "Ôn tập học kỳ I", "Tháng đọc sách" | 2–4 tuần | Quest học tập theo LO, challenge ôn tập, gợi ý cá nhân hóa | Platform hoặc tenant |
 | `special_boss` | "Rồng Phân Số trở lại" | 3–7 ngày | Boss đặc biệt solo/party ([CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md)) | Platform |
@@ -56,7 +59,7 @@ Một sự kiện có thể kết hợp nhiều thành phần (ví dụ lễ h�
 | Định danh | `event_id`, `code`, `version`, `status` (workflow nội dung), `owner_scope` (`platform`/`tenant`), `tenant_id`, `template_ref` | Sự kiện tenant luôn tạo từ template (§10) |
 | Mô tả | `event_kind`, `name`, `description`, `short_tagline` (i18n `vi`/`en`), `theme_code`, `banner_asset_id` | Song ngữ (§11) |
 | Lịch | `start_at`, `end_at` (lưu UTC, hiển thị và cấu hình theo `Asia/Ho_Chi_Minh`), `weekday_windows` (tùy chọn, ví dụ chỉ cuối tuần), `claim_grace_hours` | Lịch nằm trong version; đổi lịch khi đang chạy theo §5.3 |
-| Đối tượng | `audience.scope` (`platform`/`tenant`/`school`/`class`), `tenant_ids[]`, `school_ids[]`, `class_ids[]`, `grade_levels[]`, `subject_ids[]` | Học sinh ngoài đối tượng không thấy sự kiện |
+| Đối tượng | `audience.scope` (`platform`/`tenant`/`school`), `tenant_ids[]`, `school_ids[]`, `grade_levels[]`, `subject_ids[]` (không có phạm vi lớp — ADR-0095) | Học sinh ngoài đối tượng không thấy sự kiện |
 | Điều kiện tham gia | `eligibility` (ví dụ đã xong chương 0) | Không dùng để khóa học tập; không dùng level cao làm điều kiện cho sự kiện học tập |
 | Thành phần | `quest_ids[]`, `challenge_ids[]`, `boss_ids[]`, `community_goal`, `shop_item_ids[]`, `collection_id`, `decoration` (`environment_preset_id`, `bundle_id`, `areas[]`) | Tham chiếu nội dung đã publish |
 | Điểm sự kiện | `event_points` (`enabled`, `sources[]`, `daily_cap`) | Tùy chọn; dùng cho mốc thưởng sự kiện |
@@ -115,7 +118,7 @@ stateDiagram-v2
 | Nguồn đóng góp | **Chỉ domain event server đã kiểm chứng** (`activity.graded` qua attempt hợp lệ, `quest.completed`, `world.discovery_found`…); client không gửi số đóng góp | [Confirmed — server-authoritative] |
 | Chống gian lận | Khử trùng theo `source_event_id`; trần đóng góp mỗi học sinh mỗi ngày; bỏ đóng góp từ tài khoản đang bị cờ gian lận ([ANTI_CHEAT](../10-security/ANTI_CHEAT.md)); câu trả lời đúng chỉ tính khi attempt không bị đánh dấu `suspicious_speed` | [Confirmed] |
 | Tổng hợp | Đếm nhanh bằng Valkey (`ew:game:cgoal:<goal_id>:<scope_id>`), ghi bền vững bảng đóng góp append-only; tổng chính thức tính lại từ PostgreSQL định kỳ, mất Valkey thì dựng lại | [Confirmed] |
-| Hiển thị | Thanh tiến độ lớn trong hub (ví dụ cây đèn lồng sáng dần); mốc đạt được đổi trang trí thế giới cho cả trường; **không xếp hạng cá nhân**; trường có thể xem đóng góp theo lớp (lớp 4–9) | [Confirmed] |
+| Hiển thị | Thanh tiến độ lớn trong hub (ví dụ cây đèn lồng sáng dần); mốc đạt được đổi trang trí thế giới cho cả trường; **không xếp hạng cá nhân**; khi sự kiện bật `show_grade_contributions`, nhà trường và học sinh xem được đóng góp theo **khối của trường** (chỉ khối 4–9; không tên, không xếp hạng, khối có < `analytics_min_cell_size` học sinh đóng góp bị ẩn — ADR-0095) | [Confirmed] |
 | Phần thưởng | Mọi học sinh trong phạm vi có **≥ 1 đóng góp** nhận phần thưởng mốc khi mốc đạt; không phụ thuộc lượng đóng góp cá nhân | [Confirmed] |
 
 ## 7. Season và season track
@@ -167,7 +170,7 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 ## 10. Sự kiện của trường (tenant)
 
 - Platform tạo **template sự kiện** (`event-templates`) với `allowed_params` và gán cho tenant (ADR-0029).
-- School Admin/Tenant Admin tạo sự kiện trường ở workspace C (School & Learning Management) chỉ bằng cách điền tham số cho phép: tên (song ngữ: `vi` bắt buộc, `en` tùy chọn), mô tả, ngày bắt đầu/kết thúc (≤ `school_event_max_duration_days`), đối tượng (lớp/khối trong tenant), mục tiêu community goal, chọn quest/challenge **trong danh sách template cho phép**, chọn phần thưởng **trong bộ phần thưởng template cho phép** (thường là huy hiệu trường). Tham số ngoài danh sách → `422`.
+- School Admin/Tenant Admin tạo sự kiện trường ở workspace C (School & Learning Management) chỉ bằng cách điền tham số cho phép: tên (song ngữ: `vi` bắt buộc, `en` tùy chọn), mô tả, ngày bắt đầu/kết thúc (≤ `school_event_max_duration_days`), đối tượng (trường/khối trong tenant — không có lớp, ADR-0095), mục tiêu community goal, chọn quest/challenge **trong danh sách template cho phép**, chọn phần thưởng **trong bộ phần thưởng template cho phép** (thường là huy hiệu trường). Tham số ngoài danh sách → `422`.
 - Văn bản do tenant nhập đi qua kiểm tra từ nhạy cảm (ADR-0030) trước khi lưu [Confirmed].
 - Tenant không đổi được luật chơi, cách tính điểm, phần thưởng ngoài template (ADR-0027).
 - Tối đa `school_events_concurrent_per_tenant` sự kiện đang chạy mỗi tenant.
@@ -195,7 +198,7 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 | `event_participation` | T | `(event_run_id, student_id)` unique; `event_points`, `joined_at` |
 | `event_point_ledger` | T, append-only | Bút toán điểm sự kiện, idempotent theo `source_event_id` |
 | `community_goals` | G/T | Định nghĩa goal theo run, `metric`, `scope`, `target`, mốc |
-| `community_goal_contributions` | T, append-only, partition theo ngày | `goal_id`, `scope_id`, `student_id`, `class_id`, `amount`, `source_event_id` (unique) |
+| `community_goal_contributions` | T, append-only, partition theo ngày | `goal_id`, `scope_id`, `student_id`, `grade_level` (khối tại thời điểm đóng góp — ADR-0095), `amount`, `source_event_id` (unique) |
 | `community_goal_progress` | T | Tổng theo `(goal_id, scope_id)`, `milestones_reached[]` |
 | `season_tracks`, `season_track_versions` | G | Track theo `season_id` (payload theo `season-track.schema.json`) |
 | `season_point_ledger` | T, append-only | Bút toán điểm mùa, `source_code`, `capped` |
@@ -214,7 +217,7 @@ Quy ước cột (varchar(n), `tenant_id`, `deleted_at`, ledger chỉ INSERT): [
 | GET | `/api/v1/game/events/{event_id}` | Chi tiết run hiện tại: thành phần, lịch, phần thưởng, tiến độ của mình |
 | POST | `/api/v1/game/events/{event_id}:join` | Tham gia (idempotent; tự động khi hoàn thành hoạt động đầu tiên) |
 | POST | `/api/v1/game/events/{event_id}/milestones/{milestone_id}:claim` | Nhận thưởng mốc (`Idempotency-Key`) |
-| GET | `/api/v1/game/community-goals/{goal_id}` | Tiến độ theo phạm vi, mốc, đóng góp theo lớp (khi được phép) |
+| GET | `/api/v1/game/community-goals/{goal_id}` | Tiến độ theo phạm vi, mốc, đóng góp theo khối `by_grade` (khi được phép, §6) |
 | GET | `/api/v1/game/season-track` | Track mùa hiện tại: cấp, điểm, trần còn lại hôm nay, phần thưởng, đã nhận |
 | POST | `/api/v1/game/season-track/tiers/{tier}:claim` | Nhận thưởng cấp (`Idempotency-Key`) |
 | GET | `/api/v1/game/season-track/history` | Các mùa trước |

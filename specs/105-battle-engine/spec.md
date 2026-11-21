@@ -1,20 +1,26 @@
 # Feature Specification: F105 — Battle engine server-authoritative và 8 chế độ thi đấu
 
 **Feature Branch**: `105-battle-engine` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `competition` (+ module `learning` internal `question-plans`) · **Mốc**: M4b · **Phụ thuộc**: F030, F104
-**Input**: Trận đấu chạy như state machine phía server: server chọn bộ câu, gửi câu không kèm đáp án, nhận câu trả lời qua WebSocket, chấm và tính điểm theo giờ server, xử lý mất kết nối, ghi kết quả đúng một lần và ghi bằng chứng học tập. FR nguồn: FR-CMP-001…006, FR-MP-001, FR-LMS-004 (phần thực thi thử thách lớp).
+**Input**: Trận đấu chạy như state machine phía server: server chọn bộ câu, gửi câu không kèm đáp án, nhận câu trả lời qua WebSocket, chấm và tính điểm theo giờ server, xử lý mất kết nối, ghi kết quả đúng một lần và ghi bằng chứng học tập. FR nguồn: FR-CMP-001…006, FR-MP-001, FR-LMS-004 (phần thực thi thử thách khối — ADR-0095).
 
 ## Clarifications
 
 ### Session 2026-11-16
 
 - Q: Endpoint `createQuestionPlan`/`scorePlanAnswer` do feature nào làm? → A: F105 làm cả bên nhận ở module learning (dùng port `Delivery` của F022) trước, rồi bên gọi ở module competition (AGENTS §3 bước 3).
-- Q: "8 chế độ" gồm gì? → A: Room state machine cho `battle_1v1`, `team_battle`, `coop_challenge`, `timed_quiz`, trận giải (`tournament`), trận bot luyện tập, trận thách đấu bạn (unranked) và Class Challenge (timed quiz từ template). Seasonal Competition là mùa giải (F106); tạo giải và Class Challenge thuộc F107.
+- Q: "8 chế độ" gồm gì? → A: Room state machine cho `battle_1v1`, `team_battle`, `coop_challenge`, `timed_quiz`, trận giải (`tournament`), trận bot luyện tập, trận thách đấu bạn (unranked) và thử thách khối `grade_challenge` (timed quiz từ template; trước ADR-0095 là Class Challenge). Seasonal Competition là mùa giải (F106); tạo giải và thử thách khối thuộc F107.
 - Q: Hết grace 1v1 thì kết thúc trận ngay hay chơi tiếp tới hết? → A: Kết thúc ngay: người rời `abandoned`, đối thủ thắng, tính rating ([MULTIPLAYER_GAMEPLAY §9.2](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị) sở hữu giá trị; AC-MP-005).
 - Q: Đáp án đúng để reveal lấy ở đâu? → A: Từ module learning sau khi câu đóng, qua internal `revealPlanItem` (Cần thêm); module competition không lưu answer key bền vững.
 
 ### Session 2026-11-17
 
 - Q: Thời điểm tạo question plan (RB-414) và event kết thúc trận (RB-507)? → A: Question plan tạo **khi tạo trận** (mở room từ proposal/ticket), không đợi `countdown` ([REALTIME_ARCHITECTURE §7.1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md)); plan lỗi → trận `aborted` trước khi đếm ngược. Domain event kết thúc là `match.completed` (WS `battle.match.ended` chỉ là message realtime).
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Thi đấu lớp/thử thách lớp còn không? → A: Không. FR-CMP-001 (PRD viết lại): Grade/School/Seasonal Competition — **thi đấu khối thay thi đấu lớp** ([ADR-0095 mục 5 (D5)](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21)). Chế độ thứ 8 của F105 là thử thách khối `grade_challenge` (Timed Quiz từ template, đối tượng khối ± học sinh cùng trường do F107 quản lý); luật trận không đổi.
+- Q: Lớp 1–3 ở Timed Quiz thấy gì thay "mục tiêu lớp"? → A: Kết quả của chính em và tiến độ tập thể `grade_goal` của thử thách (tổng câu đúng của người tham gia so với mục tiêu trong template): không thứ hạng cá nhân, không nickname người khác, ô đóng góp < 5 học sinh bị ẩn ([COMPETITION_SYSTEM §3.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#34-timed-quiz), §9.2). Field `class_goal` trong delta `battle.match.ended` đổi thành `grade_goal` [Proposed — tên field theo ADR-0095; cách tính tiến độ theo template].
+- Q: Nhân sự xem trận bằng quyền nào? → A: `lms.student.read` (đổi tên từ `lms.class.read`, ADR-0095 mục 6).
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -79,13 +85,13 @@ Mạng nhà `hs.binh.3a` chập chờn; em quay lại trong 30 giây và chơi t
 
 ---
 
-### User Story 4 — Team Battle, Co-op Challenge, Timed Quiz, bot và Class Challenge (Priority: P2)
+### User Story 4 — Team Battle, Co-op Challenge, Timed Quiz, bot và thử thách khối (Priority: P2)
 
-Học sinh lớp 6 đấu đội 3v3 xoay vòng lượt chính; party lớp 2 cùng "dập lửa" trước khi hết giờ; cả lớp 4A làm Timed Quiz thử thách lớp do nhà trường tạo; học sinh một mình đấu với Robot Học Giỏi.
+Học sinh lớp 6 đấu đội 3v3 xoay vòng lượt chính; party lớp 2 cùng "dập lửa" trước khi hết giờ; học sinh khối 4 của trường làm Timed Quiz thử thách khối do nhà trường tạo; học sinh một mình đấu với Robot Học Giỏi.
 
 **Why this priority**: Hoàn thiện các chế độ FR-CMP-001 sau khi lõi 1v1 ổn định.
 
-**Independent Test**: Trận `team_battle` 10 câu: mỗi câu đúng một người lượt chính, lượt hỗ trợ nhận 30%; Timed Quiz lớp 2 trả `class_goal`, không trả thứ hạng cá nhân; trận bot gắn nhãn Robot, `rated = false`.
+**Independent Test**: Trận `team_battle` 10 câu: mỗi câu đúng một người lượt chính, lượt hỗ trợ nhận 30%; Timed Quiz lớp 2 trả kết quả của chính em + `grade_goal` (tiến độ tập thể), không trả thứ hạng cá nhân, không nickname người khác; trận bot gắn nhãn Robot, `rated = false`.
 
 **Acceptance Criteria (EARS)**:
 
@@ -93,7 +99,7 @@ Học sinh lớp 6 đấu đội 3v3 xoay vòng lượt chính; party lớp 2 c�
 |---|---|---|---|
 | F105-AC-17 | Ở NƠI mode là `team_battle`, HỆ THỐNG PHẢI xoay vòng thành viên trả lời lượt chính mỗi câu, cho thành viên khác lượt hỗ trợ theo `team_battle_format`, tính tổng điểm đội và chỉ mở cho khối ≥ 4 | FR-CMP-001 · [COMPETITION_SYSTEM §3.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#32-team-battle-confirmed) | TC-MM-004 |
 | F105-AC-18 | Ở NƠI mode là `coop_challenge`, HỆ THỐNG PHẢI chạy room `coop` với mục tiêu tập thể và đồng hồ server, ghi mỗi câu trả lời vào attempt của chính học sinh đó, không xếp hạng cá nhân và không có rating | FR-CMP-001 · [COMPETITION_SYSTEM §3.3](../../docs/01-game-design/COMPETITION_SYSTEM.md#33-co-op-challenge) | TC-PTY-010 |
-| F105-AC-19 | Ở NƠI mode là `timed_quiz` (gồm Class Challenge tạo từ template), HỆ THỐNG PHẢI cho 1–40 học sinh cùng bộ câu, áp luật điểm 1v1 (lớp 1–5 không bonus tốc độ), trả top 5 + vị trí của chính mình; lớp 1–3 PHẢI chỉ nhận tiến độ mục tiêu lớp, không thứ hạng cá nhân | FR-CMP-001 · FR-LMS-004 · [COMPETITION_SYSTEM §3.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#34-timed-quiz) | — |
+| F105-AC-19 | Ở NƠI mode là `timed_quiz` (gồm thử thách khối `grade_challenge` tạo từ template), HỆ THỐNG PHẢI cho 1–40 học sinh cùng bộ câu, áp luật điểm 1v1 (lớp 1–5 không bonus tốc độ), trả top 5 + vị trí của chính mình; lớp 1–3 PHẢI chỉ nhận kết quả của chính em và tiến độ tập thể `grade_goal` của thử thách (không thứ hạng cá nhân, không nickname người khác, ô < 5 học sinh ẩn — ADR-0095) | FR-CMP-001 · FR-LMS-004 · [COMPETITION_SYSTEM §3.4](../../docs/01-game-design/COMPETITION_SYSTEM.md#34-timed-quiz) | — |
 | F105-AC-20 | Ở NƠI trận `is_bot = true`, HỆ THỐNG PHẢI chạy bot có độ chính xác và thời gian trả lời theo cấu hình, hiển thị nhãn "Robot", `rated = false`, không cộng Competition Points/leaderboard, vẫn ghi bằng chứng học tập của học sinh | [MATCHMAKING §9](../../docs/03-social-multiplayer/MATCHMAKING.md#9-bot-luyện-tập-fallback) | — |
 | F105-AC-21 | Ở NƠI trận thuộc giải (`tournament_node_id`), HỆ THỐNG PHẢI dùng luật 1v1/đội của giải, grace trận giải (tối đa 2 lần/trận), xử thua `forfeit` khi vượt, và luôn `rated = false` | [COMPETITION_SYSTEM §10.7](../../docs/01-game-design/COMPETITION_SYSTEM.md#107-no-show-disconnect-forfeit-kết-quả-confirmed) | — |
 
@@ -112,7 +118,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F105-AC-22 | HỆ THỐNG PHẢI tạo room `lobby` → `battle`/`coop` với bản ghi tóm tắt và `session_memberships` (`joined_at`, `left_at`, `leave_reason`, `match_id`, `game_session_id`); lệnh WS từ người không phải thành viên PHẢI nhận `ROOM_NOT_MEMBER`; ticket WS của tenant khác PHẢI nhận `PERMISSION_DENIED` | FR-MP-001 · AC-MP-008 · [MULTIPLAYER_GAMEPLAY §4, §10](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#10-session-membership) | TC-TEN-012 |
-| F105-AC-23 | KHI người tham gia gọi `getMatch`/`listMyMatches`, HỆ THỐNG PHẢI trả trạng thái, kết quả, và sau khi trận kết thúc là câu hỏi + đáp án + giải thích; người không tham gia PHẢI nhận `404 NOT_FOUND`; nhân sự có `lms.class.read` trong trường của học sinh PHẢI xem được qua portal; đối thủ chỉ hiển thị nickname/avatar, không trả số rating | AGENTS R16 · [API_DESIGN §9.7](../../docs/07-backend/API_DESIGN.md#97-competition--apiv1competition) | TC-TEN-001 |
+| F105-AC-23 | KHI người tham gia gọi `getMatch`/`listMyMatches`, HỆ THỐNG PHẢI trả trạng thái, kết quả, và sau khi trận kết thúc là câu hỏi + đáp án + giải thích; người không tham gia PHẢI nhận `404 NOT_FOUND`; nhân sự có `lms.student.read` (ADR-0095 mục 6) trong trường của học sinh PHẢI xem được qua portal; đối thủ chỉ hiển thị nickname/avatar, không trả số rating | AGENTS R16 · [API_DESIGN §9.7](../../docs/07-backend/API_DESIGN.md#97-competition--apiv1competition) | TC-TEN-001 |
 | F105-AC-24 | KHI học sinh trả lời nhanh hơn `cheat_fast_answer_flag` liên tiếp ≥ 3 câu, HỆ THỐNG PHẢI ghi `integrity_signals` và bỏ bonus tốc độ của các câu đó, không tự hủy kết quả hay phạt | [ANTI_CHEAT §6](../../docs/10-security/ANTI_CHEAT.md#6-anomaly-detection-confirmed) · [COMPETITION_SYSTEM §4](../../docs/01-game-design/COMPETITION_SYSTEM.md#4-chấm-điểm-phía-server) | — |
 | F105-AC-25 | HỆ THỐNG PHẢI chỉ cho principal qua `game_player` gọi `getMatch`/`listMyMatches` phía game và lệnh `battle.*`/`coop.*`; nhân sự gọi route người chơi PHẢI nhận `403 GAME_ACCESS_STUDENT_ONLY`; `X-Tenant-Id` khác tenant phiên PHẢI nhận `403 TENANT_MISMATCH` | AGENTS R23 · ADR-0031 | TC-AUTH-014, TC-TEN-011 |
 | F105-AC-26 | HỆ THỐNG PHẢI phát `match.started`, `match.completed`, `match.aborted` kèm danh sách người tham gia/đội để module chat mở/đóng channel `match`/`team`, và PHẢI không có cờ hay tham số nào tắt chat trận | ADR-0020 · AGENTS R15 · [EVENT_DESIGN §4.8](../../docs/07-backend/EVENT_DESIGN.md#48-competition) | — |
@@ -140,7 +146,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 | FR-CMP-005 | Grace và forfeit theo mode | [MULTIPLAYER_GAMEPLAY §9.2](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị) |
 | FR-CMP-006 | Không bonus tốc độ khối < `speed_bonus_min_grade` | [COMPETITION_SYSTEM §3.1](../../docs/01-game-design/COMPETITION_SYSTEM.md#31-1v1-knowledge-battle-confirmed) |
 | FR-MP-001 | Room `lobby`/`battle`/`coop`, team, match, session membership | [MULTIPLAYER_GAMEPLAY §4, §10](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md#4-không-gian-chơi-chung-room) |
-| FR-LMS-004 | Thực thi Class Challenge (Timed Quiz) do School Admin tạo | [SCHOOL_LMS §7](../../docs/04-admin-portal/SCHOOL_LMS.md#7-thử-thách-lớp-và-giải-trường) |
+| FR-LMS-004 | Thực thi thử thách khối (Timed Quiz) do School Admin tạo | [SCHOOL_LMS §7](../../docs/04-admin-portal/SCHOOL_LMS.md#7-thử-thách-lớp-và-giải-trường) |
 
 ### Key Entities
 
@@ -190,7 +196,7 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 
 - Ghép trận, ready check, duel, proposal giải — F104.
 - Rating, Competition Points, leaderboard, mùa — F106 (tiêu thụ `match.completed`).
-- Tạo giải/Class Challenge, bracket — F107; giao diện trận trong Godot — F109.
+- Tạo giải/thử thách khối, bracket — F107; giao diện trận trong Godot — F109.
 - XP/phần thưởng thi đấu — module game (F074); mở/đóng channel chat trận, purge — F117.
 - Vô hiệu trận (`voided`) và hoàn tác rating khi có bằng chứng gian lận mạnh (ANTI_CHEAT §9 mức 2) — feature xử lý vi phạm sau này.
 
@@ -198,5 +204,5 @@ Học sinh xem lại trận của mình với câu hỏi và giải thích; Scho
 
 - [Confirmed] `src/backend/pkg/roomhost` (lease, checkpoint, input `ew.in.room.<room_id>`) có sẵn từ F091/F101; nếu chưa, F105 tạo trong `src/backend/pkg/roomhost` với review Backend Architect.
 - [Confirmed] Bot luyện tập: độ chính xác và phân bố thời gian trả lời là cấu hình trong payload matchmaking config (`bot_profiles`), mặc định theo [MATCHMAKING §9](../../docs/03-social-multiplayer/MATCHMAKING.md#9-bot-luyện-tập-fallback).
-- [Confirmed] Class Challenge Timed Quiz: học sinh vào phòng trong khung từ `starts_at` trừ 5 phút tới câu cuối (`joinChallenge` của F107).
+- [Confirmed] Thử thách khối Timed Quiz: học sinh thuộc đối tượng (khối ± học sinh, F107) vào phòng trong khung từ `starts_at` trừ 5 phút tới câu cuối (`joinChallenge` của F107).
 - Trọng số mastery cho `competition` theo ADR-0017 (cấu hình mastery của module learning).

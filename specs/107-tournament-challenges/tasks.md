@@ -1,4 +1,4 @@
-# Tasks: F107 — Tournament: 6 format, bracket, lịch, thử thách lớp/giải trường từ template
+# Tasks: F107 — Tournament: 6 format, bracket, lịch, thử thách khối/giải trường từ template
 
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [contracts/](contracts/README.md), [quickstart.md](quickstart.md)
 
@@ -9,7 +9,7 @@
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T003 Delta OpenAPI: chuyển `/lms/challenges`, `/lms/catalog/challenge-templates` sang `competition.v1.yaml` (`x-service: competition`), sửa `ChallengeCreate`/`Challenge`/`Tournament`; thêm `getChallenge`, `cancelChallenge`, `listMyChallenges`, `joinChallenge`, endpoint tournament (contracts §1) — file: `specs/openapi/modules/competition.v1.yaml`, `specs/openapi/modules/learning.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=competition`, `make gen MOD=learning`
+- [ ] T003 Delta OpenAPI: chuyển `/lms/challenges`, `/lms/catalog/challenge-templates` sang `competition.v1.yaml` (`x-service: competition`), sửa `ChallengeCreate`/`Challenge`/`Tournament` (gồm delta ADR-0095: `school_id`, `targets` khối ± học sinh, `exclude_student_ids`, `kind` `grade_challenge`, `listChallenges` lọc `grade_level` — sau khi WP-L1 merge, contracts §6); thêm `getChallenge`, `cancelChallenge`, `listMyChallenges`, `joinChallenge`, endpoint tournament (contracts §1) — file: `specs/openapi/modules/competition.v1.yaml`, `specs/openapi/modules/learning.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=competition`, `make gen MOD=learning`
 - [ ] T004 [P] Route ngoại lệ APISIX `/api/v1/lms/challenges*`, `/api/v1/lms/catalog/challenge-templates` → module competition; API_DESIGN §9.14 — file: `deploy/apisix/routes/competition.yaml`, `docs/07-backend/API_DESIGN.md`
 - [ ] T005 [P] AsyncAPI `tournament.match.scheduled`, `tournament.bracket.updated`; payload schema `tournament.match_scheduled.v1`, `tournament.completed.v1`, `tournament.rewarded.v1`; catalog EVENT_DESIGN §4.8 — file: `specs/asyncapi/eduworld-realtime.v1.yaml`, `specs/events/payloads/competition/`, `docs/07-backend/EVENT_DESIGN.md` — kiểm: `make specs-lint`
 - [ ] T006 ent schema `challenges`, `tournaments`, `tournament_entries`, `tournament_groups`, `bracket_nodes`, `tournament_results`, `tournament_rewards` (mọi chuỗi `MaxLen`, partial unique) — file: `src/backend/modules/competition/ent/schema/` — kiểm: `make migrate-diff MOD=competition name=f107_tournament`, `make migrate-lint MOD=competition`
@@ -17,7 +17,7 @@
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
-## Phase 3: User Story 1 — School Admin tạo thử thách lớp/giải trường từ template (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 — School Admin tạo thử thách khối/giải trường từ template (Priority: P1) 🎯 MVP
 
 **Goal**: Tạo/xem/hủy Challenge từ template đã gán.
 
@@ -25,13 +25,13 @@
 
 ### Tests cho User Story 1
 
-- [ ] T008 [P] [US1] Unit test F107-AC-01, F107-AC-02, F107-AC-05: `ParamFilter` (`allowed_params`, `reward` → lỗi), ghim version, kind → Tournament/Timed Quiz, validate lịch/maxLength — file: `src/backend/modules/competition/tests/unit/challenge/challenge_test.go` — phải FAIL trước khi code
-- [ ] T009 [P] [US1] Integration test F107-AC-02, F107-AC-03 (TC-CMS-AUTHZ-07, TC-CMS-ASG-01): chưa gán → `403 RESOURCE_NOT_ASSIGNED`; AM/TA → `403`; lớp trường khác → `404`; System Admin thiếu tenant → `422` — file: `src/backend/modules/competition/tests/integration/challenge/create_authz_test.go`
+- [ ] T008 [P] [US1] Unit test F107-AC-01, F107-AC-02, F107-AC-05: `ParamFilter` (`allowed_params`, `reward` → lỗi), ghim version, kind `grade_challenge`/`school_tournament` → Tournament/Timed Quiz (từ chối `class_*`), validate lịch/maxLength, `TargetResolver` (khối ± `student_ids` − `exclude_student_ids`, exclude thắng, ≤ 500, học sinh khác trường → `422`) — file: `src/backend/modules/competition/tests/unit/challenge/challenge_test.go` — phải FAIL trước khi code
+- [ ] T009 [P] [US1] Integration test F107-AC-02, F107-AC-03 (TC-CMS-AUTHZ-07, TC-CMS-ASG-01): chưa gán → `403 RESOURCE_NOT_ASSIGNED`; AM/TA → `403`; `school_id` trường khác → `404`; System Admin thiếu tenant → `422` — file: `src/backend/modules/competition/tests/integration/challenge/create_authz_test.go`
 - [ ] T010 [P] [US1] Integration test F107-AC-04, F107-AC-06: idempotent + audit; list/get/cancel đúng phạm vi — file: `src/backend/modules/competition/tests/integration/challenge/lifecycle_test.go`
 
 ### Implementation cho User Story 1
 
-- [ ] T011 [P] [US1] Domain `Challenge`, `ParamFilter` — file: `src/backend/modules/competition/internal/domain/challenge/challenge.go`, `src/backend/modules/competition/internal/domain/challenge/params.go`
+- [ ] T011 [P] [US1] Domain `Challenge`, `ParamFilter`, `TargetResolver` (đối tượng khối ± học sinh, ADR-0095; dữ liệu học sinh qua port `StudentReader` đọc `ref.students`) — file: `src/backend/modules/competition/internal/domain/challenge/challenge.go`, `src/backend/modules/competition/internal/domain/challenge/params.go`
 - [ ] T012 [US1] Port `TemplateReader` (version published + assignment) + command `CreateChallenge`, `CancelChallenge` — file: `src/backend/modules/competition/internal/application/port/template.go`, `src/backend/modules/competition/internal/application/command/challenge/`
 - [ ] T013 [US1] Query `ListChallenges`, `GetChallenge`, `ListChallengeTemplates` + handler — file: `src/backend/modules/competition/internal/application/query/`, `src/backend/modules/competition/internal/presentation/http/public/challenge_handler.go`
 
@@ -65,7 +65,7 @@
 ### Tests cho User Story 3
 
 - [ ] T019 [P] [US3] Property test F107-AC-11, F107-AC-12: single elim và round robin N = 2..64 (slot, bye, hạt giống 1/2, không trùng cặp, standings) — file: `src/backend/modules/competition/tests/unit/tournament/bracket_test.go` — phải FAIL trước khi code
-- [ ] T020 [P] [US3] Unit test F107-AC-13: seeding `rating`/`random` (seed tái lập)/`manual`/`separate_class` — file: `src/backend/modules/competition/tests/unit/tournament/seeding_test.go`
+- [ ] T020 [P] [US3] Unit test F107-AC-13: seeding `rating`/`random` (seed tái lập)/`manual`; `separate_class` bị từ chối (ADR-0095) — file: `src/backend/modules/competition/tests/unit/tournament/seeding_test.go`
 - [ ] T021 [P] [US3] Integration test F107-AC-14: một transaction, idempotent, `409` sau khi `scheduled`, `422` dưới tối thiểu, audit — file: `src/backend/modules/competition/tests/integration/tournament/generate_bracket_test.go`
 
 ### Implementation cho User Story 3
@@ -112,7 +112,7 @@
 
 **Checkpoint**: User Story 5 chạy độc lập.
 
-## Phase 8: User Story 6 — Học sinh xem giải, tham gia Class Challenge; gán template (Priority: P1)
+## Phase 8: User Story 6 — Học sinh xem giải, tham gia thử thách khối; gán template (Priority: P1)
 
 **Goal**: View học sinh, join Timed Quiz, phân quyền, gán template.
 

@@ -31,7 +31,7 @@ Hai phần, backend trước. (1) **module competition**: phía ghi của bảng
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Cấu hình là G (platform); workspace C luôn một tenant (System Admin chọn tenant đích); không hard-delete |
 | IV Server-authoritative | ✅ | Validation và invariant ở server; publish idempotent + audit |
 | V Xác thực, phân quyền | ✅ | `competition.config.*` theo loại, `game.content.review/publish`, MFA + gateway nội bộ; `lms.challenge.write` cho workspace C |
-| VI An toàn trẻ em | ✅ | Invariant chặn nới ràng buộc khối, bonus tốc độ lớp nhỏ, XP ở bảng lớp, phần thưởng trả tiền |
+| VI An toàn trẻ em | ✅ | Invariant chặn nới ràng buộc khối, bonus tốc độ khối nhỏ (lớp 1–5), XP ở bảng trường/khối, scope `class`/metric `class_goal` (ADR-0095), phần thưởng trả tiền |
 | VII Một nguồn sự thật, cấu hình | ✅ | Giá trị khởi tạo theo tên CONFIG_DEFAULTS; schema `maxLength` |
 | VIII UI tách logic, token | ✅ | Hook `api/` là lớp duy nhất gọi mạng; style từ token admin |
 | IX Test có bằng chứng | ✅ | Mỗi `F108-AC-*` có task test viết trước (Go + Vitest/Playwright) |
@@ -57,7 +57,7 @@ specs/108-competition-config-portal/
 src/backend/modules/competition/
 ├── internal/domain/config/
 │   ├── workflow.go           # draft → in_review → approved → published → archived; rejected
-│   ├── invariants.go         # ràng buộc khối, bonus tốc độ, tier tăng dần, xp ở scope lớp, allowed_params, phần thưởng
+│   ├── invariants.go         # ràng buộc khối, bonus tốc độ, tier tăng dần, xp ở scope trường/khối, không scope class (ADR-0095), allowed_params, phần thưởng
 │   └── effective.go          # effective_from ≥ now, mùa không chồng
 ├── internal/application/command/config/  # create_config.go, update_draft.go, transition.go, publish.go, rollback.go, unpublish.go, apply_published.go
 ├── internal/application/query/config/    # list_configs.go, get_version.go, list_versions.go, diff_versions.go, list_releases.go

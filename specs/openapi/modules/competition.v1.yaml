@@ -3299,7 +3299,9 @@ components:
               type: integer
     TournamentCreate:
       type: object
-      description: Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027).
+      description: |
+        Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027).
+        Không có giải cấp lớp (ADR-0095): giải khối của trường = `scope_type = school` + `grade_level`.
       required:
         - template_id
         - name
@@ -3324,7 +3326,6 @@ components:
         scope_type:
           type: string
           enum:
-            - class
             - school
             - organization
         scope_id:
@@ -3332,6 +3333,7 @@ components:
         subject_id:
           $ref: '#/components/schemas/Uuid'
         grade_level:
+          description: Khối của giải (giải khối của trường khi `scope_type = school`)
           $ref: '#/components/schemas/GradeLevel'
         registration_closes_at:
           $ref: '#/components/schemas/Timestamp'
@@ -3356,13 +3358,13 @@ components:
             - global
             - organization
             - school
-            - class
             - grade
             - subject
             - topic
             - game_mode
             - friends
             - team
+          description: Không có bảng cấp lớp (ADR-0095); mục tiêu tập thể của khối (`grade_goal`) không phải bảng xếp hạng
         metric:
           type: string
           enum:

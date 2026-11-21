@@ -25,7 +25,7 @@
 
 ### Tests cho User Story 1
 
-- [ ] T008 [P] [US1] Unit test F108-AC-04: invariant theo loại (ràng buộc khối, bonus tốc độ dưới `speed_bonus_min_grade`, tier tăng dần, `xp` ở scope lớp, `allowed_params`, phần thưởng) + validate JSON Schema — file: `src/backend/modules/competition/tests/unit/config/invariants_test.go` — phải FAIL trước khi code
+- [ ] T008 [P] [US1] Unit test F108-AC-04: invariant theo loại (ràng buộc khối, bonus tốc độ dưới `speed_bonus_min_grade`, tier tăng dần, `xp` ở scope trường/khối, từ chối scope `class`/metric `class_goal`/`kind` `class_challenge`/seeding `separate_class` — ADR-0095, `allowed_params`, phần thưởng) + validate JSON Schema — file: `src/backend/modules/competition/tests/unit/config/invariants_test.go` — phải FAIL trước khi code
 - [ ] T009 [P] [US1] Unit test F108-AC-05: workflow, bất biến version publish, `effective_from` ≥ now, mùa không chồng, rollback target — file: `src/backend/modules/competition/tests/unit/config/workflow_test.go`
 - [ ] T010 [P] [US1] Integration test F108-AC-01, F108-AC-06, F108-AC-07 (TC-CMS-001…004): 11 operationId × 7 loại; `If-Match` thiếu/lệch; idempotent publish; audit; `content_releases` — file: `src/backend/modules/competition/tests/integration/config/game_admin_api_test.go`
 - [ ] T011 [P] [US1] Test authorization F108-AC-02, F108-AC-03 (TC-CMS-AUTHZ-01, TC-CMS-AUTHZ-02, TC-CMS-WS-02, TC-CMS-WS-03): permission theo loại, review/publish; role tenant → `403`; thiếu MFA → `403 MFA_REQUIRED`; route không có ở gateway public — file: `src/backend/modules/competition/tests/integration/config/authz_test.go`
@@ -60,7 +60,7 @@
 
 **Checkpoint**: User Story 2 chạy độc lập.
 
-## Phase 5: User Story 3 — School Admin tổ chức thử thách lớp/giải trường (workspace C) (Priority: P1)
+## Phase 5: User Story 3 — School Admin tổ chức thử thách khối/giải trường (workspace C) (Priority: P1)
 
 **Goal**: Wizard tạo từ template, quản lý giải, bracket.
 
@@ -69,20 +69,20 @@
 ### Tests cho User Story 3
 
 - [ ] T023 [P] [US3] E2E F108-AC-13 (TC-CMS-AUTHZ-06): `qlcm.truong.a`, `ad.donvi` không có menu, URL → 403; `ad.truong.a` thấy — file: `src/cms/frontend/apps/portal/e2e/school-lms-challenges.spec.ts` — phải FAIL trước khi code
-- [ ] T024 [P] [US3] Component + E2E F108-AC-14 (TC-CMS-AUTHZ-07): wizard chỉ `allowed_params`, đối tượng trong trường, một `Idempotency-Key`/lần bấm, hiển thị `RESOURCE_NOT_ASSIGNED`/`VALIDATION_FAILED` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/__tests__/wizard.test.tsx`
+- [ ] T024 [P] [US3] Component + E2E F108-AC-14 (TC-CMS-AUTHZ-07): wizard chỉ `allowed_params`, đối tượng một trường: khối ± học sinh thêm/loại trừ cùng trường (≤ 500, không bộ chọn lớp — ADR-0095), một `Idempotency-Key`/lần bấm, hiển thị `RESOURCE_NOT_ASSIGNED`/`VALIDATION_FAILED` — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/__tests__/wizard.test.tsx`
 - [ ] T025 [P] [US3] Component test F108-AC-15: chi tiết giải, bracket tên thật, thao tác gọi đúng operationId F107, override cần lý do + xác nhận 2 bước — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/__tests__/detail.test.tsx`
 - [ ] T026 [P] [US3] Test tenant F108-AC-16 (TC-CMS-TEN-03): System Admin chưa chọn tenant → nút khóa; chọn → `X-Tenant-Id` đúng; đổi tenant khi wizard mở → reset — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/__tests__/tenant_scope.test.tsx`
 
 ### Implementation cho User Story 3
 
 - [ ] T027 [P] [US3] Hook `api/challenges.ts` (F107 operationId, `withTenantScope` của F051) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/api/challenges.ts`
-- [ ] T028 [US3] Wizard (`StepTemplate`, `StepParams` dựng từ `allowed_params`, `StepTargets`, `StepReview`), `ChallengeListPage`, `ChallengeDetailPage`, `BracketView`, i18n — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/wizard/`, `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/pages/`, `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/bracket/BracketView.tsx`
+- [ ] T028 [US3] Wizard (`StepTemplate`, `StepParams` dựng từ `allowed_params`, `StepTargets` (trường → khối, thêm/loại trừ học sinh cùng trường, xem trước số học sinh — ADR-0095), `StepReview`), `ChallengeListPage`, `ChallengeDetailPage`, `BracketView`, i18n — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/wizard/`, `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/pages/`, `src/cms/frontend/apps/portal/src/workspaces/school-lms/challenges/bracket/BracketView.tsx`
 
 **Checkpoint**: User Story 3 chạy độc lập.
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T029 [P] Cập nhật ADMIN_PORTAL §3.4/§10 (màn "Thi đấu", "Thử thách lớp / giải trường"), ghi `competition.config.reward.write` cho `competition-rewards`; đề xuất tài khoản demo `competition_admin` trong LOCAL_DEVELOPMENT — file: `docs/04-admin-portal/ADMIN_PORTAL.md`, `docs/11-operations/LOCAL_DEVELOPMENT.md`
+- [ ] T029 [P] Cập nhật ADMIN_PORTAL §3.4/§10 (màn "Thi đấu", "Thử thách khối / giải trường" — nhãn theo ADR-0095), ghi `competition.config.reward.write` cho `competition-rewards`; đề xuất tài khoản demo `competition_admin` trong LOCAL_DEVELOPMENT — file: `docs/04-admin-portal/ADMIN_PORTAL.md`, `docs/11-operations/LOCAL_DEVELOPMENT.md`
 - [ ] T030 [P] CHANGELOG; trạng thái F108 và cột FR chính (thêm FR-LMS-004) trong CODE_PLAN — file: `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
 - [ ] T031 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/108-competition-config-portal/quickstart.md`
 - [ ] T032 [P] Test F108-AC-17: tắt `menu.school_lms.challenges` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/competition/feature-toggle.spec.ts`

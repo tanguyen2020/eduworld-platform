@@ -61,7 +61,7 @@ Closed → Purged (job gameplay-chat-purge, role chat_purger)
 - `purge_after = closed_at + max(gameplay_chat_retention_days hiệu lực, 3 ngày)`.
 - Role `chat_purger`: `SELECT, UPDATE, DELETE` chỉ trên `chat.gameplay_messages`, `chat.channels`, `chat.channel_members`, `chat.ephemeral_messages`, `chat.message_revisions`, `chat.message_reactions`, `chat.pinned_messages`, `chat.gameplay_partition_channels`; `INSERT` trên `chat.moderation_evidence`, `chat.gameplay_chat_daily_stats`, `chat.gameplay_purge_runs`, `infra.outbox_events`; RLS `purger_gameplay_only` (DATABASE_DESIGN §3.0).
 - Xóa revision/reaction/pin chỉ của `message_id` thuộc channel gameplay đã hết hạn (điều kiện trong query).
-- Validator always-on: rule cấp `tenant/school/class` cho `match/team/party` phải `enabled = true`, đủ 5 `allowed_kinds`, không `allowed_hours`, `slow_mode_seconds ≤ 10`.
+- Validator always-on: rule cấp `tenant/school` (không còn cấp `class` — ADR-0095) cho `match/team/party` phải `enabled = true`, đủ 5 `allowed_kinds`, không `allowed_hours`, `slow_mode_seconds ≤ 10`.
 
 ## 4. Event / outbox
 

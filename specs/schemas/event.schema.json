@@ -165,9 +165,9 @@
           "enum": [
             "platform",
             "tenant",
-            "school",
-            "class"
-          ]
+            "school"
+          ],
+          "description": "Không có phạm vi lớp (ADR-0095): sự kiện cho một khối dùng grade_levels"
         },
         "tenant_ids": {
           "type": "array",
@@ -180,14 +180,6 @@
         "school_ids": {
           "type": "array",
           "maxItems": 1000,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/uuid"
-          }
-        },
-        "class_ids": {
-          "type": "array",
-          "maxItems": 500,
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/uuid"
@@ -464,8 +456,7 @@
               "scope": {
                 "enum": [
                   "tenant",
-                  "school",
-                  "class"
+                  "school"
                 ]
               }
             },
@@ -601,9 +592,10 @@
           "maximum": 10000,
           "default": 50
         },
-        "show_class_contributions": {
+        "show_grade_contributions": {
           "type": "boolean",
-          "default": true
+          "default": true,
+          "description": "Hiện đóng góp theo khối của trường (ADR-0095 — thay show_class_contributions): không tên, không xếp hạng cá nhân, khối < 5 học sinh đóng góp bị ẩn"
         },
         "milestones": {
           "type": "array",

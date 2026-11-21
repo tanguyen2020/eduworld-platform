@@ -30,3 +30,4 @@
 - Quyết định lệch tài liệu, cần sửa ở Polish: CHALLENGE_BOSS_SYSTEM §7 cho leader tạo encounter `party` trực tiếp (feature chuyển qua Party Lobby); REALTIME §4.1 chưa định tuyến `boss.*`; VALKEY_DESIGN ghi `ew:rt:room:*` chỉ thuộc competition.
 - Phụ thuộc delta contract của nhóm D (learning internal) — rủi ro lịch nếu module learning chưa thêm `game` vào `x-allowed-callers`.
 - Thiếu feature Godot cho màn boss/thẻ dữ kiện — báo lên danh mục.
+- ADR-0095 (2026-11-21, WP-S): không đổi hành vi; điều kiện party theo khối/grade band (không theo lớp); guard R16 "không trả khối/trường thực".

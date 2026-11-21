@@ -1,10 +1,10 @@
-# Implementation Plan: F111 — Godot — club trong game, Event center, nhóm "Bạn cùng lớp"/"Vừa chơi cùng", nút "Tham gia bạn"
+# Implementation Plan: F111 — Godot — club trong game, Event center, nhóm "Vừa chơi cùng", nút "Tham gia bạn"
 
 **Branch**: `111-godot-clubs-events-social` · **Date**: 2026-11-16 · **Spec**: [spec.md](spec.md)
 
 ## Summary
 
-Mở rộng tầng xã hội và thêm tầng live-ops của game client theo [GODOT_ARCHITECTURE §3, §4, §6](../../docs/08-game-client/GODOT_ARCHITECTURE.md): (1) `JoinFriendService` điều phối "Tham gia bạn" qua `SceneRouter.request_area` (F071) và `HubSync.join(area_id, spawn_point, follow_user_id)` (F092) — không REST; (2) `SocialService` (F110) thêm `list_suggestions(source)` cho nhóm "Bạn cùng lớp"/"Vừa chơi cùng" trong `FindFriendsTab`; (3) `ClubService` + `ClubStore` (REST `/social/clubs*`, `/social/club-*`) với tab Club, `ClubPage`, `ClubCreateDialog`, tab Yêu cầu cho owner/officer; (4) `LiveEventService` + `LiveEventStore` (REST `/game/events*`, `/game/community-goals/*`, message `event.*`) và `SeasonTrackService` (REST `/game/season-track*`, message `season.track.updated`) với `EventCenterScreen` 4 tab, tab Hôm nay/Tuần này đọc `QuestService` (F072). Service là `RefCounted` do `ServiceLocator` tạo, nhận `ApiClient`/`RealtimeClient` qua constructor; UI chỉ đọc store. Phát triển trên Prism mock (nhãn MOCK) tới khi F077/F095/F120 `Done`.
+Mở rộng tầng xã hội và thêm tầng live-ops của game client theo [GODOT_ARCHITECTURE §3, §4, §6](../../docs/08-game-client/GODOT_ARCHITECTURE.md): (1) `JoinFriendService` điều phối "Tham gia bạn" qua `SceneRouter.request_area` (F071) và `HubSync.join(area_id, spawn_point, follow_user_id)` (F092) — không REST; (2) `SocialService` (F110) thêm `list_suggestions(source)` cho nhóm "Vừa chơi cùng" trong `FindFriendsTab` (không có nhóm "Bạn cùng lớp" — ADR-0095); (3) `ClubService` + `ClubStore` (REST `/social/clubs*`, `/social/club-*`) với tab Club, `ClubPage`, `ClubCreateDialog`, tab Yêu cầu cho owner/officer; (4) `LiveEventService` + `LiveEventStore` (REST `/game/events*`, `/game/community-goals/*`, message `event.*`) và `SeasonTrackService` (REST `/game/season-track*`, message `season.track.updated`) với `EventCenterScreen` 4 tab, tab Hôm nay/Tuần này đọc `QuestService` (F072). Service là `RefCounted` do `ServiceLocator` tạo, nhận `ApiClient`/`RealtimeClient` qua constructor; UI chỉ đọc store. Phát triển trên Prism mock (nhãn MOCK) tới khi F077/F095/F120 `Done`.
 
 ## Technical Context
 

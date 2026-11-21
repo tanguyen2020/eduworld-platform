@@ -40,7 +40,7 @@
 | 25 | Tắt gateway nội bộ (không còn step-up MFA — ADR-0094) | "Cần kết nối mạng quản trị (VPN)" | F122-AC-25 |
 | 26 | Dán chuỗi dài vào lý do/tóm tắt/ghi chú; ngắt mạng giữa lúc xác nhận rồi thử lại | Bị giới hạn có bộ đếm; cùng `Idempotency-Key` | F122-AC-26 |
 | 27 | `sa.admin` gửi yêu cầu tắt `spam`; `sa.admin` mở danh sách chờ; `sa.admin2` phê duyệt | "Chờ phê duyệt"; người đề xuất không có nút duyệt; sau duyệt công tắc hiệu lực; PII/grooming "Luôn bật" | F122-AC-27 |
-| 28 | `ad.truong.a` chọn preset `quick_message_emote_only` cho trường có lý do | Không có lựa chọn theo khối/lớp; lưu thành công | F122-AC-28 |
+| 28 | `ad.truong.a` chọn preset `quick_message_emote_only` cho trường có lý do | Không có lựa chọn theo khối; lưu thành công | F122-AC-28 |
 | 29 | `sa.admin` tắt mặc định platform `menu.live_ops.tenant_terms`; `sm.antoan` tải lại portal; `sa.admin` thử tắt `menu.live_ops.moderation_cases` | Menu "Từ bổ sung / nhóm từ của tenant" biến mất, `createTenantSensitiveTerm` → `403 FEATURE_DISABLED`; tắt hàng đợi case → `422 FEATURE_NOT_DISABLEABLE`, hàng đợi case vẫn hiện | F122-AC-29 |
 
 ## 3. Lệnh test tự động

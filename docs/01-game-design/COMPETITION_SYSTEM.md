@@ -1,10 +1,10 @@
 # Competition System — Thi đấu, Ranking, Leaderboard, Tournament
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director + Multiplayer Engineer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Multiplayer Engineer · Cập nhật: 2026-11-21 (ADR-0095 WP-S: mục tiêu tập thể khối `grade_goal` thay bảng lớp, 12 loại bảng xếp hạng, thử thách khối/giải khối của trường) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) · [MULTIPLAYER_GAMEPLAY](../03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [ADR-0011](../adr/ADR-0011-realtime-transport-websocket-qua-go-realtime-server.md) · [ADR-0016](../adr/ADR-0016-server-authoritative-scoring-answer-key-khong-bao-gio-roi-se.md) · [ADR-0018](../adr/ADR-0018-glicko-2-cho-game-rating-tach-biet-learning-mastery.md) · [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md)
 
 > [!IMPORTANT]
-> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Bỏ bảng xếp hạng lớp, "Nhiệm vụ của lớp", "Mục tiêu lớp" và cài đặt `class_leaderboard_enabled`; thay bằng **mục tiêu tập thể của khối trong trường** (`grade_goal`: không xếp hạng cá nhân, không tên, ẩn ô đóng góp < 5 học sinh) cho lớp 1–9. Thi đấu/giải/thử thách cấp lớp → cấp khối của trường (`grade_challenge`, đăng ký theo khối ± học sinh), chỉ `school_admin` tạo từ template. `LeaderboardPage.scope_type`, `TournamentCreate.scope_type` bỏ `class`. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-S ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Bỏ bảng xếp hạng lớp, "Nhiệm vụ của lớp", "Mục tiêu lớp" và cài đặt `class_leaderboard_enabled`; thay bằng **mục tiêu tập thể của khối trong trường** (`grade_goal`: không xếp hạng cá nhân, không tên, ẩn ô đóng góp < 5 học sinh) cho lớp 1–9. Thi đấu/giải/thử thách cấp lớp → cấp khối của trường (`grade_challenge`, đăng ký theo khối ± học sinh), chỉ `school_admin` tạo từ template. `LeaderboardPage.scope_type`, `TournamentCreate.scope_type` bỏ `class`. **Đã viết lại theo ADR-0095 ở WP-S (2026-11-21)** ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)): §2–§3 (thi đấu khối thay thi đấu lớp), §9 (12 loại bảng, `grade_goal` §9.2), §10 (giải khối, thử thách khối, bỏ seeding `separate_class`), §14–§15. "Lớp 1–3", "lớp 4–5", "lớp 6–9" trong tài liệu là cách gọi **khối** (GDPT), không phải thực thể lớp.
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Các mode thi đấu · 3. Luật chơi từng mode · 4. Chấm điểm phía server · 5. Công bằng theo khối lớp · 6. Năm loại số liệu · 7. Game Rating (Glicko-2) · 8. Season, tier, Competition Points · 9. Leaderboard · 10. Tournament · 11. Phần thưởng · 12. Giảm áp lực tiêu cực · 13. Cấu hình · 14. Dữ liệu, API, event · 15. Acceptance criteria
 
@@ -29,8 +29,8 @@ Kiến trúc: state machine trận trong **module competition** (room host), câ
 | 1v1 Knowledge Battle | `battle_1v1` | 2 | 3–5 phút | Tất cả | Glicko-2 |
 | Team Battle | `team_battle` | 2v2 – 4v4 | 5–7 phút | Lớp 4 trở lên | Glicko-2 (cá nhân, tính theo kết quả đội) |
 | Co-op Challenge | `coop_challenge` | 2–4 (party) | 5–10 phút | Tất cả | Không |
-| Timed Quiz | `timed_quiz` | 1–40 (cùng instance/lớp) | 2–5 phút | Tất cả | Không (rating `timed_quiz` chỉ dùng nội bộ, không hiển thị) |
-| Subject / Class / School Tournament | `tournament` | 8–64 hoặc cả lớp/trường | Nhiều ngày hoặc một buổi | Theo giải | Không đổi rating, dùng rating để seed |
+| Timed Quiz | `timed_quiz` | 1–40 (cùng instance hoặc cùng thử thách khối) | 2–5 phút | Tất cả | Không (rating `timed_quiz` chỉ dùng nội bộ, không hiển thị) |
+| Subject / Grade / School Tournament | `tournament` | 8–64 hoặc cả khối/trường | Nhiều ngày hoặc một buổi | Theo giải | Không đổi rating, dùng rating để seed |
 | Seasonal Competition | Season | Tất cả | 8 tuần | Tất cả | Season rating |
 
 Thi đấu luôn **tùy chọn**: không quest học tập bắt buộc nào yêu cầu thắng trận.
@@ -58,15 +58,15 @@ Thi đấu luôn **tùy chọn**: không quest học tập bắt buộc nào yê
 | Cấu trúc | 10 câu; mỗi câu một thành viên trả lời "lượt chính" (xoay vòng), thành viên khác trả lời "lượt hỗ trợ" nhận 30% điểm |
 | Mục đích | Mọi thành viên đều tham gia, tránh một bạn giỏi gánh cả đội |
 | Thắng | Tổng điểm đội |
-| Chat | **Luôn có**: tab "Đội" (channel `team`) và tab "Cả trận" (channel `match`); không tắt được bằng cài đặt trường/lớp |
+| Chat | **Luôn có**: tab "Đội" (channel `team`) và tab "Cả trận" (channel `match`); không tắt được bằng cài đặt tenant/trường |
 
 ### 3.3. Co-op Challenge
 
-Party cùng chống "thử thách thời gian" (ví dụ dập tắt 10 ngọn lửa bằng câu trả lời đúng trước khi hết 5 phút). Không có đối thủ; mục tiêu tập thể; xếp hạng theo "kỷ lục lớp", không xếp hạng cá nhân. Mỗi thành viên có attempt riêng [Confirmed — Addendum §4].
+Party cùng chống "thử thách thời gian" (ví dụ dập tắt 10 ngọn lửa bằng câu trả lời đúng trước khi hết 5 phút). Không có đối thủ; mục tiêu tập thể; chỉ ghi kỷ lục tập thể của party (thời gian hoàn thành tốt nhất), không xếp hạng cá nhân, không so sánh theo lớp (ADR-0095). Mỗi thành viên có attempt riêng [Confirmed — Addendum §4].
 
 ### 3.4. Timed Quiz
 
-Thử thách lớp do nhà trường tạo từ template qua LMS (chỉ `school_admin`, ADR-0072) hoặc sự kiện tổ chức trong một instance/lớp: tất cả trả lời cùng bộ câu; kết quả hiển thị top 5 + vị trí của chính mình (lớp 1–3 chỉ hiển thị mục tiêu lớp, §9.4). Điểm theo §3.1, lớp 1–5 không có bonus tốc độ.
+Thử thách khối (`grade_challenge`) do nhà trường tạo từ template qua LMS (chỉ `school_admin`, ADR-0072) cho một khối của trường ± danh sách học sinh (§10.4), hoặc sự kiện tổ chức trong một instance: tất cả trả lời cùng bộ câu; kết quả hiển thị top 5 + vị trí của chính mình (lớp 1–3 không có thứ hạng cá nhân: chỉ kết quả của chính em và tiến độ tập thể của khối, §9.4). Điểm theo §3.1, lớp 1–5 không có bonus tốc độ.
 
 ### 3.5. Tournament
 
@@ -163,7 +163,7 @@ r' = 173.7178 μ' + 1500 ;  RD' = 173.7178 φ'
 | Lịch sử | Rating cuối mùa + tier cao nhất lưu `season_results` (không xóa) [Confirmed: lưu lịch sử] |
 | Season track | Miễn phí, không premium track; cách tính điểm mùa, cấp và phần thưởng do [EVENT_SEASON_SYSTEM §7](EVENT_SEASON_SYSTEM.md#7-season-và-season-track) sở hữu (module game); module competition phát `season.started`/`season.ended` |
 | Thưởng cuối mùa | Cosmetic theo **tier cao nhất đạt được**, không theo thứ hạng tuyệt đối |
-| Giải trong mùa | Tournament lớp/trường trong 2 tuần cuối mùa |
+| Giải trong mùa | Tournament khối/trường trong 2 tuần cuối mùa |
 | Vật phẩm mùa | Có thể quay lại ở mùa sau (không FOMO) |
 
 ### 8.2. Tier hiển thị
@@ -201,26 +201,24 @@ Thua không bị trừ điểm. Ghi `competition_point_ledger` append-only, uniq
 
 ### 9.1. Mô hình: Metric × Scope × Period (+ filter)
 
-Bảng xếp hạng yêu cầu [Confirmed]: Global, School, Class, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season. `LeaderboardDefinition` cấu hình trong Game Operations Console (platform-only, ADR-0027); tenant chỉ xem trong phạm vi của mình.
+Bảng xếp hạng yêu cầu [Confirmed] (FR-LDB-001, 12 loại — bỏ Class theo ADR-0095): Global, School, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season. `LeaderboardDefinition` cấu hình trong Game Operations Console (platform-only, ADR-0027); tenant chỉ xem trong phạm vi của mình. Không có bảng cấp lớp; **mục tiêu tập thể của khối** (`grade_goal`, §9.2) dùng cùng `LeaderboardDefinition` nhưng không phải bảng xếp hạng (không có thứ hạng, không tên).
 
 | Trục | Giá trị | Nhãn |
 |---|---|---|
-| Metric | `competition_points`, `effort_points` (§9.2), `class_goal` (tiến độ tập thể của lớp, không có thứ hạng cá nhân), `xp` (chỉ scope `friends`; không dùng cho `class`/`school`/`grade`), `quest_completed`, `rating` (lớp 6–9, không provisional, hiển thị tier + thứ hạng, không số rating), `team_points` | [Confirmed] |
-| Scope | `global` (chỉ nickname), `tenant`, `school`, `class`, `grade`, `friends`, `team` | [Confirmed] |
+| Metric | `competition_points`, `effort_points` (§9.2), `grade_goal` (tiến độ tập thể của khối trong trường, không có thứ hạng cá nhân — §9.2), `xp` (chỉ scope `friends`; không dùng cho `school`/`grade`), `quest_completed`, `rating` (lớp 6–9, không provisional, hiển thị tier + thứ hạng, không số rating), `team_points` | [Confirmed] (`grade_goal` thay `class_goal` — ADR-0095) |
+| Scope | `global` (chỉ nickname), `tenant`, `school`, `grade` (khối của người xem — `grade_level`; kết hợp với `school`/`global` như cột Scope ở §9.2, ví dụ "school + grade" = một khối trong một trường), `friends`, `team` | [Confirmed] (bỏ `class` — ADR-0095) |
 | Period | `daily`, `weekly` (thứ Hai 00:00 ICT), `monthly`, `season`, `all_time` (chỉ XP/quest) | [Confirmed] / `all_time` [Confirmed] |
 | Filter | `subject_id`, `topic_id`, `mode` | [Confirmed] |
 
-**Không** có leaderboard theo Learning Score hoặc Mastery [Confirmed]; nhà trường (`school_admin`/`academic_manager`) xem tiến độ học tập của lớp trong School Learning Dashboard, không công khai cho học sinh.
+**Không** có leaderboard theo Learning Score hoặc Mastery [Confirmed]; nhà trường (`school_admin`/`academic_manager`) xem tiến độ học tập theo trường → khối → học sinh trong School Learning Dashboard, không công khai cho học sinh.
 
-**Bảng của lớp không xếp theo XP** [Confirmed]: XP chủ yếu đến từ câu đúng ([PROGRESSION_SYSTEM §3](PROGRESSION_SYSTEM.md)), nên bảng XP trong phạm vi lớp/trường vô tình công khai thứ hạng năng lực giữa các bạn. Bảng scope `class` chỉ dùng **nỗ lực** (`effort_points`) hoặc **mục tiêu tập thể** (`class_goal`). **Tiến bộ** cá nhân (so với chính em tuần trước) chỉ hiển thị cho riêng học sinh đó, không xếp hạng.
+**Bảng trong trường không xếp theo XP** [Confirmed]: XP chủ yếu đến từ câu đúng ([PROGRESSION_SYSTEM §3](PROGRESSION_SYSTEM.md)), nên bảng XP trong phạm vi trường/khối vô tình công khai thứ hạng năng lực giữa các bạn. Mục tiêu tập thể của khối chỉ dùng **nỗ lực** (`effort_points`) qua metric `grade_goal`. **Tiến bộ** cá nhân (so với chính em tuần trước) chỉ hiển thị cho riêng học sinh đó, không xếp hạng.
 
 ### 9.2. Danh mục bảng mặc định [Confirmed]
 
-| Bảng | Metric | Scope | Period | Lớp |
+| Bảng | Metric | Scope | Period | Khối |
 |---|---|---|---|---|
-| Mục tiêu lớp | `class_goal` (tổng `effort_points` của lớp so với mục tiêu tuần) | class | weekly | 1–9 (lớp 1–3 chỉ có bảng này, §9.4) |
-| Lớp em tuần này | `effort_points` | class | weekly | 4–9 |
-| Nhiệm vụ của lớp | `quest_completed` (hiển thị tổng của lớp) | class | weekly | 1–9 |
+| Mục tiêu của khối | `grade_goal` (tổng `effort_points` của học sinh cùng khối trong trường so với mục tiêu tuần) | school + grade | weekly | 1–9 (lớp 1–3 chỉ có mục này, §9.4) |
 | Đấu trường trường | `competition_points` | school + grade | weekly, season | 4–9 |
 | Đấu trường môn | `competition_points` + `subject_id` | school + grade | season | 4–9 |
 | Bạn bè | `competition_points`, `effort_points`, `xp` | friends | weekly | 4–9 |
@@ -231,7 +229,16 @@ Bảng xếp hạng yêu cầu [Confirmed]: Global, School, Class, Grade, Subjec
 
 Bảng ngoài trường (tenant đơn vị/global) chỉ bật khi platform cho phép **và** policy trường cho phép học sinh xuất hiện ngoài trường (`allow_cross_school_listing`, mặc định `false`) [Confirmed].
 
-`school_admin` có thể **tắt** từng bảng scope `class`/`school` cho trường mình (policy trường `disabled_leaderboard_definitions`); chỉ tắt được, không đổi metric hay tham số (cấu hình vẫn platform-only, §13) [Confirmed — Technical Architect 2026-11-15].
+**Mục tiêu tập thể của khối (`grade_goal`)** [Confirmed — ADR-0095 mục 5, owner 2026-11-21] thay "Mục tiêu lớp", "Lớp em tuần này" và "Nhiệm vụ của lớp" (bỏ cùng cài đặt trường `class_leaderboard_enabled`):
+
+| Quy tắc | Nội dung |
+|---|---|
+| Phạm vi | Học sinh hiệu lực cùng `school_id` và `grade_level` (khối 1–9) trong tenant; khối của mỗi đóng góp là khối **tại thời điểm** ghi điểm (chuyển trường/lên khối giữa kỳ: phần đã góp ở lại khối cũ) |
+| Hiển thị cho học sinh | Thanh tiến độ chung `current/target` (mục tiêu tuần trong payload definition, không hardcode) và phần đóng góp của **chính em**; **không** thứ hạng cá nhân, **không** nickname/tên của học sinh khác |
+| Ô đóng góp | Mọi ô tổng hợp theo nhóm học sinh (ví dụ số học sinh đã góp sức) có < `analytics_min_cell_size` (5) học sinh bị ẩn — cùng ngưỡng che ô nhỏ FR-ANL-016 [Proposed — dùng lại tham số `analytics_min_cell_size` của [CONFIG_DEFAULTS](../00-overview/CONFIG_DEFAULTS.md)] |
+| Đạt mục tiêu | Thưởng theo **ngưỡng** như §9.5; không thưởng theo thứ hạng |
+
+`school_admin` có thể **tắt** từng bảng scope `school`/`grade` (kể cả mục tiêu của khối) cho trường mình (policy trường `disabled_leaderboard_definitions`); chỉ tắt được, không đổi metric hay tham số (cấu hình vẫn platform-only, §13) [Confirmed — Technical Architect 2026-11-15].
 
 **`effort_points`** [Confirmed — Technical Architect 2026-11-15] — điểm nỗ lực, không phụ thuộc đúng/sai, tính từ learning event (đã loại attempt gắn cờ `rapid_guess`, [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)):
 
@@ -261,18 +268,18 @@ flowchart LR
 - Valkey sorted set cho period đang mở, key theo [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) (`ew:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>`), member = `student_id`, TTL = hết period + 7 ngày. Bằng điểm → ai đạt trước xếp trên.
 - `ZINCRBY` không idempotent: consumer kiểm tra `processed_events` trước khi cộng (ADR-0042); job rebuild định kỳ (mỗi giờ, so checksum) sửa lệch [Confirmed].
 - Friends: tính lúc đọc bằng `ZMSCORE` trên bảng school của từng bạn (≤ 200 bạn).
-- Đóng period: worker ghi `leaderboard_snapshots` (top 100 + rank của mọi member scope class/school), partition theo tháng; key Valkey mất → dựng lại từ ledger, API trả `stale=true` trong lúc dựng.
+- Đóng period: worker ghi `leaderboard_snapshots` (top 100 + rank của mọi member scope school/grade; `grade_goal` chỉ ghi tổng tập thể và trạng thái đạt mục tiêu, không rank), partition theo tháng; key Valkey mất → dựng lại từ ledger, API trả `stale=true` trong lúc dựng.
 
 ### 9.4. Privacy và an toàn trẻ em
 
 | Quy tắc | Nhãn |
 |---|---|
-| Hiển thị nickname + avatar + (tùy scope) tên lớp; **không** tên thật, mã học sinh, tên trường ở scope liên trường | [Confirmed] |
-| `school_admin`/`academic_manager` xem bảng lớp trong portal có thể bật tên thật cho chính mình (theo quyền xem danh sách học sinh của trường) | [Confirmed] |
-| **Lớp 1–3**: không có thứ hạng cá nhân; thay bằng "mục tiêu lớp" (thanh tiến độ tập thể) và "Bạn nổi bật tuần này" ngẫu nhiên trong những người đạt ngưỡng | [Confirmed] |
+| Hiển thị nickname + avatar; **không** tên thật, mã học sinh, tên lớp; **không** tên trường/khối chi tiết ở scope liên trường (FR-LDB-003) | [Confirmed] (bỏ tên lớp — ADR-0095) |
+| `school_admin`/`academic_manager` xem bảng trường/khối trong portal có thể bật tên thật cho chính mình (theo quyền xem danh sách học sinh của trường `lms.student.read`) | [Confirmed] |
+| **Lớp 1–3**: không có thứ hạng cá nhân; chỉ có "Mục tiêu của khối" (`grade_goal`, thanh tiến độ tập thể, không tên — §9.2). "Bạn nổi bật tuần này" (nickname ngẫu nhiên trong nhóm đạt ngưỡng, gắn với mục tiêu lớp cũ) bị bỏ vì `grade_goal` không hiển thị tên [Proposed — WP-S 2026-11-21] | [Confirmed] (ADR-0095) |
 | **Lớp 4–5**: top 10 + vị trí của mình; người ngoài top 10 thấy "Em đang ở nhóm X%"; không hiển thị người xếp cuối | [Confirmed] |
 | **Lớp 6–9**: top 50 + `around_me` (±3) | [Confirmed] |
-| Học sinh có thể ẩn tên khỏi bảng ngoài lớp (opt-out), vẫn được tính điểm | [Confirmed] |
+| Học sinh có thể ẩn tên khỏi bảng ngoài trường (opt-out), vẫn được tính điểm | [Confirmed] |
 | Học sinh bị sanction gian lận bị loại khỏi period hiện tại | [Confirmed] |
 | Không thông báo đẩy kiểu "bạn bị vượt qua" | [Confirmed] |
 
@@ -284,19 +291,19 @@ Period key theo `Asia/Ho_Chi_Minh`. Job đóng period (Valkey lock singleton) ch
 
 ### 10.1. Yêu cầu nguồn [Confirmed]
 
-Định dạng: Single Elimination, Double Elimination, Round Robin, Team, School, Class Tournament. Chức năng: tạo giải, đăng ký, chia bảng, tạo bracket, lên lịch, xác nhận người tham gia, quản lý trận, xác nhận kết quả, trao thưởng, lưu lịch sử. Bracket là dữ liệu bền vững trong PostgreSQL (ADR-0004).
+Định dạng: Single Elimination, Double Elimination, Round Robin, Team, School, Grade Tournament (giải khối của trường thay giải lớp — ADR-0095). Chức năng: tạo giải, đăng ký, chia bảng, tạo bracket, lên lịch, xác nhận người tham gia, quản lý trận, xác nhận kết quả, trao thưởng, lưu lịch sử. Bracket là dữ liệu bền vững trong PostgreSQL (ADR-0004).
 
 ### 10.2. Mô hình
 
 | Entity | Thuộc tính chính |
 |---|---|
-| `tournament` | `tournament_id`, `tenant_id`, `owner_scope` (`class`/`school`/`tenant`/`platform`), `owner_id`, `name`, `format` (`single_elim`, `double_elim`, `round_robin`, `groups_then_single_elim`), `participant_type` (`individual`/`team`), `team_size`, `mode`, `subject_id`, `topic_ids[]`, `grade_levels[]`, `question_policy`, `registration_open_at/close_at`, `check_in_window`, `starts_at`, `max_entries`, `seeding_policy`, `reward_rule_refs`, `status`, `rule_version` |
+| `tournament` | `tournament_id`, `tenant_id`, `owner_scope` (`school`/`tenant`/`platform`; giải khối của trường = `school` + một khối trong `grade_levels[]` — không có `class`, ADR-0095), `owner_id`, `name`, `format` (`single_elim`, `double_elim`, `round_robin`, `groups_then_single_elim`), `participant_type` (`individual`/`team`), `team_size`, `mode`, `subject_id`, `topic_ids[]`, `grade_levels[]`, `question_policy`, `registration_open_at/close_at`, `check_in_window`, `starts_at`, `max_entries`, `seeding_policy`, `reward_rule_refs`, `status`, `rule_version` |
 | `tournament_entry` | `entry_id`, `tournament_id`, `student_id` hoặc `team_ref`, `seed`, `status` (`registered`/`confirmed`/`checked_in`/`withdrawn`/`disqualified`/`eliminated`/`champion`), `group_id?` |
 | `tournament_group` | Bảng đấu cho round robin/vòng bảng |
 | `bracket_node` | `node_id`, `bracket` (`winners`/`losers`/`grand_final`/`group`), `round`, `position`, `entry_a_id`, `entry_b_id`, `match_id?`, `scheduled_at`, `winner_entry_id`, `next_win_node_id`, `next_lose_node_id`, `status` |
 | `tournament_result` | Thứ hạng cuối, points, thưởng đã trao |
 
-**Giải luôn tạo từ template (ADR-0027).** Luật chơi, phần thưởng và ràng buộc nằm trong tournament/challenge template do platform soạn (`/api/v1/game-admin/tournament-templates`, `challenge-templates`) và được **gán cho tenant** (ADR-0029). Vận hành tenant tạo giải bằng `POST /api/v1/lms/challenges` (endpoint của **module competition**, dù có tiền tố `/lms`): School Admin tạo Class Tournament và School Tournament cho trường mình (ADR-0072) — chỉ điền `allowed_params` (tên, lớp/khối, lịch, question set); template chưa gán → `403 RESOURCE_NOT_ASSIGNED`. Tenant Admin không tạo giải (ma trận quyền ở [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md)). System Admin tạo giải cho tenant đích hoặc giải platform [Confirmed].
+**Giải luôn tạo từ template (ADR-0027).** Luật chơi, phần thưởng và ràng buộc nằm trong tournament/challenge template do platform soạn (`/api/v1/game-admin/tournament-templates`, `challenge-templates`) và được **gán cho tenant** (ADR-0029). Vận hành tenant tạo giải bằng `POST /api/v1/lms/challenges` (endpoint của **module competition**, dù có tiền tố `/lms`): School Admin tạo thử thách khối/Grade Tournament (template `grade_challenge`) và School Tournament (template `school_tournament`) cho trường mình (ADR-0072, ADR-0095) — chỉ điền `allowed_params` (tên, khối và danh sách học sinh theo §10.4, lịch, question set); template chưa gán → `403 RESOURCE_NOT_ASSIGNED`. Tenant Admin không tạo giải (ma trận quyền ở [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md)). System Admin tạo giải cho tenant đích hoặc giải platform [Confirmed].
 
 ### 10.3. Vòng đời
 
@@ -323,7 +330,7 @@ stateDiagram-v2
 | Bước | Quy tắc |
 |---|---|
 | Đăng ký | Học sinh/đội thỏa `grade_levels`, scope, không bị sanction `restrict_competition`; team: mọi thành viên đủ điều kiện, cùng trường |
-| Đăng ký hộ | School Admin đăng ký cả lớp (Class Tournament) |
+| Đăng ký hộ (thử thách khối/Grade Tournament) | School Admin chọn đối tượng trong **một trường**: cả khối (`grade_level`) và/hoặc danh sách học sinh cùng trường (≤ 500), trừ danh sách loại trừ (≤ 500); **loại trừ thắng** bao gồm; học sinh trường khác → `422`. Danh sách chốt khi đóng đăng ký (ADR-0095 mục 5; cùng quy tắc đối tượng với giao bài theo khối, mục 3) |
 | Xác nhận người tham gia | Người tổ chức duyệt danh sách hoặc auto-confirm [Confirmed] |
 | Check-in | Mở 15 phút trước `starts_at`; không check-in → `withdrawn`, bracket điều chỉnh (bye) trước khi khóa |
 | Tối thiểu | Single elim ≥ 4, double elim ≥ 4, round robin ≥ 3 |
@@ -333,9 +340,10 @@ stateDiagram-v2
 | `seeding_policy` | Cách tính |
 |---|---|
 | `rating` (mặc định ranked) | Theo μ Glicko-2 mode/subject của season hiện tại; provisional xếp sau |
-| `random` (mặc định Class Tournament lớp 1–5) | Xáo trộn có seed lưu để audit |
+| `random` (mặc định Grade Tournament lớp 1–5) | Xáo trộn có seed lưu để audit |
 | `manual` | Người tổ chức sắp xếp |
-| `separate_class` | Như `rating` nhưng tránh hai người cùng lớp gặp ở vòng 1 |
+
+Seeding `separate_class` (tránh hai người cùng lớp gặp ở vòng 1) đã bỏ theo ADR-0095 (không còn lớp).
 
 - **Single elimination**: số slot = lũy thừa của 2 ≥ N; bye cho seed cao; vị trí bracket chuẩn để seed 1 và 2 chỉ gặp ở chung kết.
 - **Double elimination**: người thua rơi xuống losers bracket theo bảng ánh xạ chuẩn; "bracket reset" ở chung kết mặc định **tắt** để giới hạn thời lượng [Confirmed].
@@ -345,7 +353,7 @@ stateDiagram-v2
 
 ### 10.6. Lịch thi đấu
 
-- Round liên tiếp cách nhau 5 phút trong cùng buổi (Class Tournament) hoặc theo ngày (School/tenant) [Confirmed]; tôn trọng khung giờ truy cập của trường và giờ giới nghiêm platform ([CHILD_SAFETY §4](../10-security/CHILD_SAFETY.md#4-thời-gian-chơi-và-sức-khỏe-oq-17), OQ-17) [Confirmed — owner 2026-11-20].
+- Round liên tiếp cách nhau 5 phút trong cùng buổi (Grade Tournament/thử thách khối) hoặc theo ngày (School/tenant) [Confirmed]; tôn trọng khung giờ truy cập của trường và giờ giới nghiêm platform ([CHILD_SAFETY §4](../10-security/CHILD_SAFETY.md#4-thời-gian-chơi-và-sức-khỏe-oq-17), OQ-17) [Confirmed — owner 2026-11-20].
 - Tới giờ và đủ hai entry: worker tạo trận qua proposal/ready check của [MATCHMAKING](../03-social-multiplayer/MATCHMAKING.md) (không qua queue), `match.tournament_node_id` liên kết node.
 - Thông báo trận sắp đấu 10 phút và 1 phút trước giờ (event `tournament.match_scheduled`).
 
@@ -418,13 +426,13 @@ Matchmaking configuration, Ranking Rules (tham số Glicko, ngưỡng provisiona
 | `GET /api/v1/leaderboards` | Bảng học sinh được xem (đã lọc khối/policy) |
 | `GET /api/v1/leaderboards/{leaderboard_id}?scope_id=&period=&limit=&cursor=` | Top N + `me` + `around_me` |
 | `GET /api/v1/leaderboards/{leaderboard_id}/history?scope_id=` | Period đã đóng |
-| `POST /api/v1/lms/challenges` (template `class_tournament`/`school_tournament`) | module competition; School Admin (trường mình)/System Admin (tenant đích) — không có `POST /competition/tournaments` |
+| `POST /api/v1/lms/challenges` (template `grade_challenge`/`school_tournament`) | module competition; School Admin (trường mình)/System Admin (tenant đích) — không có `POST /competition/tournaments` |
 | `GET /api/v1/competition/tournaments?scope=&status=` | Học sinh (trong phạm vi), staff |
 | `POST /api/v1/competition/tournaments/{id}:publish` / `:cancel` | Người tổ chức |
 | `POST /api/v1/competition/tournaments/{id}/entries` (`Idempotency-Key`), `DELETE .../entries/{entry_id}`, `POST .../entries:confirm`, `POST .../entries/{entry_id}:check-in` | Học sinh/leader/người tổ chức (School Admin) |
 | `POST /api/v1/competition/tournaments/{id}:generate-bracket`, `GET .../bracket`, `POST .../nodes/{node_id}:confirm` / `:override` | Người tổ chức (audit) |
 
-Phân quyền leaderboard: học sinh chỉ đọc scope chứa mình; School Admin/Academic Manager đọc các lớp trong trường mình. Scope ngoài phạm vi → 404 ([MULTITENANCY](../06-architecture/MULTITENANCY.md)).
+Phân quyền leaderboard: học sinh chỉ đọc scope chứa mình; School Admin/Academic Manager đọc bảng trường/khối và mục tiêu của khối trong trường mình. Scope ngoài phạm vi → 404 ([MULTITENANCY](../06-architecture/MULTITENANCY.md)).
 
 ### 14.3. Event
 
@@ -440,20 +448,20 @@ Phân quyền leaderboard: học sinh chỉ đọc scope chứa mình; School Ad
 | AC-RNK-004 | Soft reset cuối mùa đúng công thức; lịch sử mùa cũ còn truy vấn được |
 | AC-RNK-005 | API School Learning Dashboard (`GET /lms/dashboards/school`) không trả Game Rating |
 | AC-RNK-006 | Points vượt cap ngày không được cộng |
-| AC-LDB-001 | Học sinh trường A không đọc được leaderboard class/school của trường B (404) |
+| AC-LDB-001 | Học sinh trường A không đọc được leaderboard school/grade hay mục tiêu của khối của trường B (404) |
 | AC-LDB-002 | Xóa toàn bộ key Valkey → leaderboard được dựng lại đúng từ ledger |
-| AC-LDB-003 | Period tuần đóng lúc 00:00 thứ Hai ICT; snapshot có rank của mọi học sinh trong lớp |
-| AC-LDB-004 | Học sinh lớp 2 không nhận được bảng thứ hạng cá nhân |
+| AC-LDB-003 | Period tuần đóng lúc 00:00 thứ Hai ICT; snapshot có rank của mọi học sinh trong scope trường/khối; snapshot `grade_goal` chỉ có tổng tập thể |
+| AC-LDB-004 | Học sinh lớp 2 không nhận được bảng thứ hạng cá nhân; mục tiêu của khối không chứa nickname/tên học sinh khác và ẩn ô đóng góp < 5 học sinh |
 | AC-LDB-005 | Response leaderboard không chứa tên thật hay `student_code` |
 | AC-LDB-006 | `match.completed` lặp lại không cộng điểm leaderboard hai lần |
-| AC-LDB-007 | Không có leaderboard definition scope `class`/`school`/`grade` nào dùng metric `xp`; attempt gắn cờ `rapid_guess` không cộng `effort_points` |
+| AC-LDB-007 | Không có leaderboard definition scope `school`/`grade` nào dùng metric `xp`; attempt gắn cờ `rapid_guess` không cộng `effort_points` |
 | AC-CMP-103 | Trận 1v1/Timed Quiz lớp 1–5: điểm mỗi câu đúng luôn bằng 100, không có bonus tốc độ |
 | AC-TRN-001 | Bracket single elim N = 5 → 8 slot, 3 bye cho seed 1–3; seed 1 và 2 ở hai nửa bracket |
 | AC-TRN-002 | Double elim: người thua winners round 1 vào đúng vị trí losers bracket |
 | AC-TRN-003 | Round robin N = 5: mỗi entry đấu 4 trận, không trùng cặp |
 | AC-TRN-004 | Kết quả trận xử lý lặp → winner chỉ được đẩy lên một lần |
 | AC-TRN-005 | No-show quá 3 phút → forfeit tự động, đối thủ đi tiếp |
-| AC-TRN-006 | Học sinh trường khác không đăng ký được School Tournament của trường A |
+| AC-TRN-006 | Học sinh trường khác không đăng ký được School Tournament/Grade Tournament của trường A; School Admin đưa học sinh trường khác vào danh sách thử thách khối → `422` |
 | AC-TRN-007 | Override kết quả ghi audit với actor và lý do; không override sau khi node kế đã bắt đầu |
 | AC-TRN-008 | Trao thưởng chạy 2 lần → mỗi entry nhận thưởng đúng 1 lần |
 | AC-CMP-101 | Không có cặp đấu ranked nào chênh quá 1 khối; lớp 1–5 luôn cùng khối |

@@ -75,14 +75,14 @@
 ### Tests cho User Story 4
 
 - [ ] T031 [P] [US4] Unit test F109-AC-18: chỉ bảng `listLeaderboards` trả, rỗng → trạng thái rỗng — file: `src/game/tests/unit/competition/test_leaderboard_service.gd` — phải FAIL trước khi code
-- [ ] T032 [P] [US4] Scene test F109-AC-19: 4 `display_mode`; `class_goal` không có thứ hạng cá nhân; client không cắt/tính hạng — file: `src/game/tests/scene/competition/test_leaderboard_view.gd`
-- [ ] T033 [P] [US4] Scene test F109-AC-20: dòng chỉ nickname, avatar, lớp (scope lớp) — file: `src/game/tests/scene/competition/test_leaderboard_privacy.gd`
+- [ ] T032 [P] [US4] Scene test F109-AC-19: 4 `display_mode`; `grade_goal` (`GradeGoalBar`) không thứ hạng cá nhân, không nickname người khác, `contributors_count` ẩn → không hiện ô; client không cắt/tính hạng — file: `src/game/tests/scene/competition/test_leaderboard_view.gd`
+- [ ] T033 [P] [US4] Scene test F109-AC-20: dòng chỉ nickname, avatar (không tên lớp, không tên thật) — file: `src/game/tests/scene/competition/test_leaderboard_privacy.gd`
 - [ ] T034 [P] [US4] Unit test F109-AC-21: `404` → "Bảng này hiện không mở" + bỏ tab, `stale`, chỉ gửi id server cấp (TC-TEN-001) — file: `src/game/tests/unit/competition/test_leaderboard_errors.gd`
 - [ ] T035 [P] [US4] Unit test F109-AC-22: không timer làm mới, không xử lý thông báo "bị vượt qua" — file: `src/game/tests/unit/competition/test_leaderboard_no_pressure.gd`
 
 ### Implementation cho User Story 4
 
-- [ ] T036 [US4] `LeaderboardService` + `Leaderboard`, `RankedList`, `ClassGoalBar`, `PercentileCard` — file: `src/game/scripts/competition/leaderboard_service.gd`, `src/game/scenes/competition/Leaderboard.tscn`, `leaderboard/*.tscn`
+- [ ] T036 [US4] `LeaderboardService` + `Leaderboard`, `RankedList`, `GradeGoalBar` (thay `ClassGoalBar` — ADR-0095), `PercentileCard` — file: `src/game/scripts/competition/leaderboard_service.gd`, `src/game/scenes/competition/Leaderboard.tscn`, `leaderboard/*.tscn`
 
 ## Phase 7: User Story 5 — Giải đấu (Priority: P2)
 

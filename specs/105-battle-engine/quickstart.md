@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F104 (matchmaking), F030/F022 (grader), F090 (gateway), F014 (game session); question bank Toán lớp 3 và lớp 7 đã publish, gán cho `th-demo-a`/`pgd-demo`.
 - Lệnh: `make up`, `make seed`, `make run-core-api`, `make run-worker PROFILE=events`, `make run-realtime` (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); `EW_BATTLE_ROOM_CHECKPOINT=5s`.
-- Tài khoản demo: `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b` (TH Demo A), `hs.dung.7a` (lớp 7, `pgd-demo`), `ad.truong.a`, `ad.truong.b`. Trận lớp 7 với 2 người, đội 3v3, Timed Quiz 20 người: bot WS + fixture `testkit`.
+- Tài khoản demo: `hs.an.3a`, `hs.binh.3a`, `hs.chi.3b` (khối 3, TH Demo A), `hs.dung.7a` (khối 7, `pgd-demo`), `ad.truong.a`, `ad.truong.b`. Trận lớp 7 với 2 người, đội 3v3, Timed Quiz 20 người: bot WS + fixture `testkit`.
 
 ## 2. Kịch bản kiểm tra
 
@@ -28,7 +28,7 @@
 | 14 | Fixture học sinh bỏ 3 trận trong 24 h | Dòng `competition_restrictions` `abandon_penalty` + audit; F104 ticket → `403 POLICY_DENIED` | F105-AC-16 |
 | 15 | Trận `team_battle` lớp 6 (fixture) | Lượt chính xoay vòng, lượt hỗ trợ 30% | F105-AC-17 |
 | 16 | Party lớp 2 vào Co-op Challenge | Mục tiêu tập thể; mỗi câu trả lời vào attempt riêng; không thứ hạng | F105-AC-18 |
-| 17 | Class Challenge Timed Quiz 4A (fixture, F107) và lớp 2 | Lớp 4: top 5 + vị trí mình; lớp 2: chỉ `class_goal` | F105-AC-19 |
+| 17 | Thử thách khối Timed Quiz khối 4 (fixture, F107) và khối 2 | Khối 4: top 5 + vị trí mình; khối 2: chỉ kết quả của em + `grade_goal`, không `top[]`, không nickname người khác | F105-AC-19 |
 | 18 | `startBotMatch` (F104) | Bot nhãn "Robot", `rated = false`, có attempt học tập | F105-AC-20 |
 | 19 | Trận giải (F107 fixture) ngắt 2 lần > 60 s | `forfeit`, `rated = false` | F105-AC-21 |
 | 20 | Kiểm `multiplayer.rooms`, `session_memberships`; bot gửi lệnh vào room không phải của mình; ticket tenant B vào room tenant A | Bản ghi đầy đủ; `ROOM_NOT_MEMBER`; `PERMISSION_DENIED` | F105-AC-22 |

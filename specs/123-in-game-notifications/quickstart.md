@@ -14,10 +14,10 @@
 |---|---|---|---|
 | 1 | `hs.binh.3a` trong game; `hs.an.3a` gửi lời mời kết bạn (F095) | `hs.binh.3a` nhận `notification.item.created` (`kind=friend_request`) ≤ 2 s, badge +1, toast hiện | F123-AC-01, F123-AC-04, F123-AC-15, F123-AC-16 |
 | 2 | Phát lại event `friend_request.sent` cùng `event_id` qua NATS | Không có thông báo thứ hai | F123-AC-03 |
-| 3 | `qlcm.truong.a` giao bài Toán cho lớp 3A, miễn `hs.binh.3a` (F041) | `hs.an.3a` có thông báo `assignment_new`; `hs.binh.3a` không có | F123-AC-02 |
-| 4 | Dừng module learning khi giao bài lớp 3B | Consumer thử lại, không tạo thông báo thiếu; bật lại → `hs.chi.3b` nhận | F123-AC-07 |
-| 5 | Kiểm `params` các thông báo trên trong DB và WS | Chỉ nickname, tên bài, ID; không tên thật/trường/lớp | F123-AC-05 |
-| 6 | Phát `assignment.published` với `tenant_id` của `pgd-demo` nhưng đích lớp 3A | Không thông báo nào cho học sinh `th-demo-a` | F123-AC-06 |
+| 3 | `qlcm.truong.a` giao bài Toán cho khối 3 của TH Demo A, exclude `hs.binh.3a` (F041) | `hs.an.3a` có thông báo `assignment_new`; `hs.binh.3a` không có | F123-AC-02 |
+| 4 | Dừng module learning khi giao bài cho danh sách học sinh gồm `hs.chi.3b` | Consumer thử lại, không tạo thông báo thiếu; bật lại → `hs.chi.3b` nhận | F123-AC-07 |
+| 5 | Kiểm `params` các thông báo trên trong DB và WS | Chỉ nickname, tên bài, ID; không tên thật/trường/khối | F123-AC-05 |
+| 6 | Phát `assignment.published` với `tenant_id` của `pgd-demo` nhưng đích khối 3 của TH Demo A | Không thông báo nào cho học sinh `th-demo-a` | F123-AC-06 |
 | 7 | `hs.an.3a` `listNotifications?unread=true`; `hs.dung.7a` gọi `markNotificationRead` với id của `hs.an.3a` | Danh sách đúng + `unread_count`; `404` | F123-AC-08, F123-AC-09 |
 | 8 | `hs.an.3a` mở inbox (Godot) và bấm thông báo bài giao | `notification.item.mark_read` gửi; mở tab "Nhà trường giao"; `unread_count` giảm | F123-AC-09, F123-AC-18 |
 | 9 | `markAllNotificationsRead` | `unread_count = 0` | F123-AC-10 |

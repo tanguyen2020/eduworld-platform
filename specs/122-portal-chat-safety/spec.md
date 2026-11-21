@@ -24,6 +24,11 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F122-AC-25: nhánh "`403 MFA_REQUIRED` → step-up MFA" bỏ; nhánh gateway nội bộ không kết nối được giữ nguyên. T002, T044, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Màn chính sách chat trường còn cấp lớp và channel lớp? → A: Không. Chính sách chat còn 3 cấp `platform → tenant → school` (FR-MOD-004); không có channel `class`/`study_group`, không có control theo khối hay theo lớp, không có lựa chọn "hiển thị tên thật cho bạn cùng lớp" (mọi người chơi khác chỉ thấy nickname + avatar) — [ADR-0095 §5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md). User Story 8, F122-AC-21, F122-AC-22, F122-AC-28 viết lại.
+- Q: Thông báo vụ việc cho trường còn hiển thị lớp của học sinh? → A: Không; hiển thị khối. `SchoolSafetyNotification.students[].class_name` → `grade_level` là delta của WP-C1 (F121, **chờ áp**) [Proposed — tên trường theo đề xuất WP-S]; bộ lọc danh sách chỉ theo trạng thái và thời gian (contract không có lọc lớp). F122-AC-18 viết lại.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Hàng đợi case của Platform Safety Team (Priority: P1) 🎯 MVP
@@ -146,15 +151,15 @@ Theo yêu cầu của `ad.donvi`, `sm.antoan` thêm term bổ sung cho `pgd-demo
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F122-AC-18 | KHI người có `moderation.school_notification.read` mở C → An toàn → Thông báo vụ việc, Portal PHẢI hiển thị `listSchoolSafetyNotifications` (lọc trạng thái, lớp, khoảng 30 ngày) với panel chi tiết (học sinh, lớp, vai trò, loại, mức, biện pháp, tóm tắt, thời điểm yêu cầu, hạn SLA) — không có khu vực nội dung chat; badge số chờ xác nhận trên menu | FR-MOD-017 · [ADMIN_PORTAL §1.5.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CHAT-043 |
+| F122-AC-18 | KHI người có `moderation.school_notification.read` mở C → An toàn → Thông báo vụ việc, Portal PHẢI hiển thị `listSchoolSafetyNotifications` (lọc trạng thái, khoảng 30 ngày) với panel chi tiết (học sinh, khối, vai trò, loại, mức, biện pháp, tóm tắt, thời điểm yêu cầu, hạn SLA) — không có khu vực nội dung chat; badge số chờ xác nhận trên menu | FR-MOD-017 · [ADMIN_PORTAL §1.5.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | TC-CHAT-043 |
 | F122-AC-19 | KHI bấm "Xác nhận đã liên hệ phụ huynh", Portal PHẢI bắt buộc chọn `contact_outcome`, ghi chú ≤ 500 (bộ đếm), gọi `acknowledgeSchoolSafetyNotification` với `Idempotency-Key`; NẾU `409 CONFLICT`, THÌ hiển thị "Thông báo đã được xác nhận" và tải lại | FR-MOD-017 · AC-MOD-027 | TC-CHAT-043 |
 | F122-AC-20 | Ở NƠI màn hình < 768 px, Portal PHẢI hiển thị danh sách dạng thẻ và màn chi tiết riêng có nút xác nhận như [ADMIN_PORTAL §1.5.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) | FR-MOD-017 · NFR-A11Y-003 | TC-UI-004 |
 
 ---
 
-### User Story 8 — Chính sách chat cấp trường và lớp (Priority: P2)
+### User Story 8 — Chính sách chat cấp trường (Priority: P2)
 
-`ad.truong.a` thu hẹp giờ chat trường, tắt DM, tắt channel lớp 3B; thấy `match`/`team`/`party` khóa "luôn bật".
+`ad.truong.a` thu hẹp giờ chat trường, tắt DM; thấy `match`/`team`/`party` khóa "luôn bật". (Không có cấp lớp — ADR-0095.)
 
 **Why this priority**: FR-MOD-004 phía nhà trường; mặc định platform đã an toàn nên không chặn vận hành.
 
@@ -164,9 +169,9 @@ Theo yêu cầu của `ad.donvi`, `sm.antoan` thêm term bổ sung cho `pgd-demo
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F122-AC-21 | KHI người có `school.settings.write` mở C → Cài đặt trường → Chat policy, Portal PHẢI tải `getChatPolicy` (school hoặc class) và `getEffectiveChatPolicy`, hiển thị theo `channel_type`: bật/tắt `direct`, `world`, `class`, `study_group`; thu hẹp giờ; nâng `strictness`; slow mode; hiển thị tên thật cho bạn cùng lớp; giá trị cấp trên làm giới hạn của control | FR-MOD-004 · [MODERATION §8](../../docs/03-social-multiplayer/MODERATION.md) · [CHAT_SYSTEM §3](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-018 |
-| F122-AC-22 | HỆ THỐNG PHẢI hiển thị `match`/`team`/`party` khóa "Luôn bật" (chỉ cho siết rate, slow mode ≤ 10 s, strictness) và không có bất kỳ control nào theo khối/lớp tuổi; KHI lưu, Portal PHẢI gửi `putChatPolicy` với `If-Match`, `reason` bắt buộc, map `CHAT_POLICY_RELAX_NOT_ALLOWED`/`CHAT_POLICY_ALWAYS_ON`/`VALIDATION_FAILED` về control tương ứng | FR-MOD-004 · ADR-0020 · AGENTS R15 | TC-CHAT-018 |
-| F122-AC-28 | KHI School Admin mở Chính sách chat của trường, Portal PHẢI cho chọn `chat_policy_preset` (`standard` hoặc `quick_message_emote_only`) áp cho cả trường kèm mô tả tác động (mọi channel kể cả trận/party chỉ còn quick message + emote), không có lựa chọn theo khối/lớp, bắt buộc `reason`, gọi API ghi preset của F120 và hiển thị lỗi theo `code` | FR-ORG-007 · AC-CHAT-015 · [CHILD_SAFETY §3.5](../../docs/10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078) · AGENTS R15 | TC-CHAT-048 |
+| F122-AC-21 | KHI người có `school.settings.write` mở C → Cài đặt trường → Chat policy, Portal PHẢI tải `getChatPolicy` (scope `school`) và `getEffectiveChatPolicy`, hiển thị theo `channel_type`: bật/tắt `direct`, `world`; thu hẹp giờ; nâng `strictness`; slow mode; giá trị cấp trên làm giới hạn của control; PHẢI không có control cho channel `class`/`study_group` hay hiển thị tên thật (ADR-0095) | FR-MOD-004 · ADR-0095 · [MODERATION §8](../../docs/03-social-multiplayer/MODERATION.md) · [CHAT_SYSTEM §3](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-018 |
+| F122-AC-22 | HỆ THỐNG PHẢI hiển thị `match`/`team`/`party` khóa "Luôn bật" (chỉ cho siết rate, slow mode ≤ 10 s, strictness) và không có bất kỳ control nào theo khối hay độ tuổi; KHI lưu, Portal PHẢI gửi `putChatPolicy` với `If-Match`, `reason` bắt buộc, map `CHAT_POLICY_RELAX_NOT_ALLOWED`/`CHAT_POLICY_ALWAYS_ON`/`VALIDATION_FAILED` về control tương ứng | FR-MOD-004 · ADR-0020 · AGENTS R15 | TC-CHAT-018 |
+| F122-AC-28 | KHI School Admin mở Chính sách chat của trường, Portal PHẢI cho chọn `chat_policy_preset` (`standard` hoặc `quick_message_emote_only`) áp cho cả trường kèm mô tả tác động (mọi channel kể cả trận/party chỉ còn quick message + emote), không có lựa chọn theo khối, bắt buộc `reason`, gọi API ghi preset của F120 và hiển thị lỗi theo `code` | FR-ORG-007 · AC-CHAT-015 · [CHILD_SAFETY §3.5](../../docs/10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078) · AGENTS R15 | TC-CHAT-048 |
 
 ---
 
@@ -217,7 +222,7 @@ Theo yêu cầu của `ad.donvi`, `sm.antoan` thêm term bổ sung cho `pgd-demo
 | FR (PRD) | Phần feature này làm | Tài liệu sở hữu quy tắc |
 |---|---|---|
 | FR-MOD-003 | UI hàng đợi case liên tenant, xử lý, sanction | [MODERATION §6](../../docs/03-social-multiplayer/MODERATION.md) · [ADMIN_PORTAL §3.9](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
-| FR-MOD-004 | UI chính sách chat cấp trường/lớp | [CHAT_SYSTEM §3](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) · [MODERATION §8](../../docs/03-social-multiplayer/MODERATION.md) |
+| FR-MOD-004 | UI chính sách chat cấp trường | [CHAT_SYSTEM §3](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) · [MODERATION §8](../../docs/03-social-multiplayer/MODERATION.md) |
 | FR-MOD-009 | UI danh mục từ nhạy cảm (platform, tenant, chỉ xem) | [MODERATION §11](../../docs/03-social-multiplayer/MODERATION.md) |
 | FR-MOD-011 | UI công tắc kiểm duyệt + banner | [MODERATION §12](../../docs/03-social-multiplayer/MODERATION.md) |
 | FR-MOD-017 | UI gửi/nhận/xác nhận thông báo nhà trường | [MODERATION §6.4](../../docs/03-social-multiplayer/MODERATION.md) · [ADMIN_PORTAL §1.5.2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
@@ -232,7 +237,7 @@ Theo yêu cầu của `ad.donvi`, `sm.antoan` thêm term bổ sung cho `pgd-demo
 - **SchoolSafetyNotification**: tóm tắt cho trường, hạn, kết quả liên hệ.
 - **SensitiveTermCategory / SensitiveTerm / AllowlistEntry / CatalogVersion**: danh mục và phiên bản.
 - **ModerationSwitch**: trạng thái bật/tắt theo platform/tenant, lý do, thời hạn, lịch sử.
-- **ChatPolicy (trường/lớp)**: rule theo loại channel trong giới hạn cấp trên.
+- **ChatPolicy (trường)**: rule theo loại channel trong giới hạn cấp trên.
 
 ### Tham số
 

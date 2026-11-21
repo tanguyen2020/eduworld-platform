@@ -24,7 +24,7 @@
 
 ### Tests cho User Story 1
 
-- [ ] T011 [P] [US1] Unit `MessageCatalog`, `RecipientPolicy` F123-AC-01, F123-AC-05, F123-AC-06: ánh xạ event → kind/message_code/action; whitelist `params` không tên thật/trường/lớp; người nhận khác tenant/không hoạt động bị loại — file: `src/backend/modules/chat/tests/unit/notification_catalog_test.go` — phải FAIL trước khi code
+- [ ] T011 [P] [US1] Unit `MessageCatalog`, `RecipientPolicy` F123-AC-01, F123-AC-05, F123-AC-06: ánh xạ event → kind/message_code/action; whitelist `params` không tên thật/trường/khối; người nhận khác tenant/không hoạt động bị loại — file: `src/backend/modules/chat/tests/unit/notification_catalog_test.go` — phải FAIL trước khi code
 - [ ] T012 [P] [US1] Integration F123-AC-01, F123-AC-03, F123-AC-04: event → một dòng `social.notifications` → publish `ew:rt:user:<id>` sau commit (không droppable); giao lại event → không trùng (TC-SVC-003) — file: `src/backend/modules/chat/tests/integration/notification_create_test.go`
 - [ ] T013 [P] [US1] Integration F123-AC-02, F123-AC-07: `assignment.published` → recipients từ learning (container thật), trừ học sinh miễn; learning down → không ack, retry, DLQ sau ngưỡng (TC-SVC-004) — file: `src/backend/modules/chat/tests/integration/notification_assignment_test.go`
 - [ ] T014 [P] [US1] Facade test chat ↔ learning `listAssignmentRecipients` (fake facade + ví dụ spec) và contract test payload các event tiêu thụ — file: `src/backend/modules/chat/tests/contract/notification_sources_test.go`

@@ -8,7 +8,7 @@ Spec: `specs/openapi/modules/competition.v1.yaml`, `x-service: competition`.
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| `getMatch` | `GET /api/v1/competition/matches/{match_id}` | `competition.v1.yaml` (`Match`) | học sinh participant (`game_player`) / nhân sự `lms.class.read` (portal, trường trong scope) | Cần sửa |
+| `getMatch` | `GET /api/v1/competition/matches/{match_id}` | `competition.v1.yaml` (`Match`) | học sinh participant (`game_player`) / nhân sự `lms.student.read` (portal, trường trong scope; đổi tên theo ADR-0095) | Cần sửa |
 | `listMyMatches` | `GET /api/v1/competition/matches?mode=` | `competition.v1.yaml` | học sinh (self) | Có sẵn |
 | `getRoom` | `GET /api/v1/multiplayer/rooms/{room_id}` | `competition.v1.yaml` (`Room`) | thành viên room | Có sẵn (dùng lại) |
 
@@ -30,7 +30,7 @@ Spec: `specs/asyncapi/eduworld-realtime.v1.yaml`; gateway định tuyến `battl
 |---|---|---|
 | `battle.answer.submit`, `battle.state.request` | client → server | Có sẵn |
 | `battle.state.snapshot`, `battle.countdown.started`, `battle.question.shown`, `battle.answer.recorded`, `battle.answer.evaluated`, `battle.question.revealed`, `battle.round.ended`, `battle.participant.status_changed`, `battle.match.paused`, `battle.match.resumed` | server → client | Có sẵn |
-| `battle.match.ended` | server → client | Cần sửa (`outcome` thêm `abandoned`, `forfeit`; thêm `end_reason`; `timed_quiz` thêm `top[]`, `my_rank`, `class_goal`) |
+| `battle.match.ended` | server → client | Cần sửa (`outcome` thêm `abandoned`, `forfeit`; thêm `end_reason`; `timed_quiz` thêm `top[]`, `my_rank`, `grade_goal {current, target, contributors_count?}` — lớp 1–3 chỉ `grade_goal`, không `top[]`; thay `class_goal` theo ADR-0095) |
 | `coop.action.perform`, `coop.answer.submit` / `coop.state.snapshot`, `coop.state.updated`, `coop.task.assigned`, `coop.answer.evaluated`, `coop.progress.updated`, `coop.session.ended` | hai chiều | Có sẵn |
 | `ErrorCode` `ANSWER_LATE`, `ANSWER_ALREADY_SUBMITTED`, `MATCH_NOT_ACTIVE`, `ROOM_NOT_MEMBER`, `ROOM_FULL`, `PERMISSION_DENIED`, `VALIDATION_FAILED` | server → client | Có sẵn |
 

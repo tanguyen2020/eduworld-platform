@@ -30,8 +30,8 @@ Hai phần theo thứ tự bên nhận → bên gọi. (1) **module learning**: 
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Phần learning nằm trong module learning; competition gọi facade `learning` (`x-allowed-callers: [competition]`); phản ứng phụ (XP, chat, evidence projection) qua event |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | `match_participants`, `session_memberships`, `integrity_signals` có `tenant_id` + RLS; không hard-delete |
 | IV Server-authoritative | ✅ | Giờ server, chấm ở learning, đáp án chỉ sau khi câu đóng; kết quả unique `match_id` |
-| V Xác thực, phân quyền | ✅ | `game_player` cho lệnh/route người chơi; `lms.class.read` cho nhân sự xem trận |
-| VI An toàn trẻ em | ✅ | Chỉ nickname/avatar; lớp 1–3 không thứ hạng cá nhân ở timed quiz; chat trận always-on; không log câu trả lời |
+| V Xác thực, phân quyền | ✅ | `game_player` cho lệnh/route người chơi; `lms.student.read` (ADR-0095) cho nhân sự xem trận |
+| VI An toàn trẻ em | ✅ | Chỉ nickname/avatar; lớp 1–3 không thứ hạng cá nhân ở timed quiz (chỉ `grade_goal`, không tên); chat trận always-on; không log câu trả lời |
 | VII Một nguồn sự thật, cấu hình | ✅ | Luật mode đọc từ cấu hình đã publish (tên CONFIG_DEFAULTS); grace theo MULTIPLAYER_GAMEPLAY |
 | VIII UI tách logic, token | ✅ | Không có UI |
 | IX Test có bằng chứng | ✅ | Mỗi `F105-AC-*` có task test viết trước; facade test hai phía |
@@ -114,7 +114,7 @@ Không có. State machine, chấm, checkpoint, grace đã định ở REALTIME_A
 ### Bảo mật, tenant, idempotency, audit
 
 - Lệnh WS: principal từ gateway; kiểm member room + tenant room = tenant ticket (`PERMISSION_DENIED`).
-- `getMatch`/`listMyMatches`: học sinh participant; nhân sự `lms.class.read` (portal) với participant thuộc trường trong scope.
+- `getMatch`/`listMyMatches`: học sinh participant; nhân sự `lms.student.read` (portal, ADR-0095) với participant thuộc trường trong scope.
 - Idempotency: `RecordMatchResult` theo `match_id` (PK); `scorePlanAnswer` theo `(plan_id, index, student_id)`.
 - Audit: `match_result.recorded`, `match.aborted`, `competition_restriction.created`.
 

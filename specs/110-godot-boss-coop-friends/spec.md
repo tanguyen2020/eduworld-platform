@@ -11,11 +11,17 @@
 - Q: Wireframe S06 hiện số câu đúng từng bạn ("Cú(✓4) Mèo(✓3)") nhưng F103-AC-09 và AsyncAPI chỉ có `contribution_met`? → A: Theo [CHALLENGE_BOSS_SYSTEM §3.5](../../docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md) và contract: với bạn chỉ hiện ✓ "đã đạt đóng góp" hoặc biểu tượng đồng hồ; số câu đúng chỉ hiện của chính mình. Sửa wireframe S06 ở task Polish.
 - Q: Câu hỏi boss render bằng gì? → A: `QuestionRendererRegistry` của F063 trong `QuestionPanelHost` (Control 2D), trả lời bằng lệnh WS `boss.answer.submit` (không qua API attempt public).
 - Q: `SocialService` do F110 hay F119 tạo? → A: F110 (M4a, trước F119) tạo `scripts/social/social_service.gd` đủ API bạn bè/chặn/tắt tiếng; F119 dùng lại cho menu tin nhắn. Nút "Báo cáo" mở `ReportDialog` của F119, ẩn khi F119 chưa có.
-- Q: Tab "Tìm bạn" có "Bạn cùng lớp", "Vừa chơi cùng", club, "Tham gia bạn", "Thách đấu", "Nhắn tin"? → A: Không ở F110 (chưa có API hoặc thuộc feature khác — xem Ngoài phạm vi). Tab "Tìm bạn" gồm nhóm "Ở gần đây" (người chơi cùng hub instance do F092 cung cấp) và Mã bạn bè; không có ô tìm kiếm tự do.
+- Q: Tab "Tìm bạn" có "Bạn cùng lớp" (đã bỏ theo ADR-0095, xem Session 2026-11-21), "Vừa chơi cùng", club, "Tham gia bạn", "Thách đấu", "Nhắn tin"? → A: Không ở F110 (chưa có API hoặc thuộc feature khác — xem Ngoài phạm vi). Tab "Tìm bạn" gồm nhóm "Ở gần đây" (người chơi cùng hub instance do F092 cung cấp) và Mã bạn bè; không có ô tìm kiếm tự do.
 
 ### Session 2026-11-17
 
 - Q: Enum presence và ẩn trạng thái sau đối soát (RB-404)? → A: Enum chung theo [MULTIPLAYER_GAMEPLAY §5](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md); "Ẩn trạng thái" là cờ `hidden` của `presence.status.set` (delta F091), không phải giá trị `invisible`.
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Danh sách bạn và tab "Tìm bạn" đổi gì? → A: Theo [ADR-0095 mục 5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21): không còn nhóm/gợi ý "Bạn cùng lớp" (gợi ý chỉ còn "Vừa chơi cùng" — thuộc feature khác); `FriendsScreen` nhóm Online/Offline, không nhóm theo lớp; người khác chỉ thấy nickname + avatar (+ level), không trường/khối (R16) — F110-AC-19.
+- Q: Presence của ai được hiện? → A: Chỉ bạn bè/party/club theo policy (FR-MP-003 viết lại — không theo lớp); F110 chỉ hiện presence bạn bè do server trả.
+- Q: "Mời party" từ hồ sơ bạn? → A: Giữ nút; điều kiện mời (lớp 1–3 cùng khối với leader, cùng tenant, liên trường theo ADR-0054, party `friend` chỉ mời bạn bè) do server áp theo [PARTY_SYSTEM](../../docs/03-social-multiplayer/PARTY_SYSTEM.md); lỗi hiển thị thân thiện như F102-AC-05.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -94,7 +100,7 @@ Học sinh mở Bạn bè (phím `F`), thấy ai đang online, gửi/nhận lờ
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F110-AC-19 | KHI học sinh mở `FriendsScreen` (phím `F`, NPC Chú Ong Kết Nối, HUD), game client PHẢI hiển thị `listFriends` (cursor, ảo hóa) nhóm Online/Offline với nickname, avatar 2D, level, trạng thái bằng biểu tượng + chữ; PHẢI không hiển thị tên thật, trường, lớp, điểm học tập | FR-SOC-001 · AGENTS R16 · AC-SOC-010 | — |
+| F110-AC-19 | KHI học sinh mở `FriendsScreen` (phím `F`, NPC Chú Ong Kết Nối, HUD), game client PHẢI hiển thị `listFriends` (cursor, ảo hóa) nhóm Online/Offline với nickname, avatar 2D, level, trạng thái bằng biểu tượng + chữ; PHẢI không hiển thị tên thật, trường, khối, điểm học tập; danh sách PHẢI không nhóm theo lớp (ADR-0095) | FR-SOC-001 · AGENTS R16 · AC-SOC-010 | — |
 | F110-AC-20 | KHI nhận `presence.friend.updated`, game client PHẢI cập nhật trạng thái bạn, gộp tối đa 1 lần/giây cho danh sách; bạn không có dữ liệu PHẢI hiện offline; TRONG KHI mất mạng, trạng thái PHẢI hiện "—" | FR-MP-003 · [STUDENT_GAME_UX_SOCIAL §6](../../docs/05-ux/STUDENT_GAME_UX_SOCIAL.md) | — |
 | F110-AC-21 | KHI mở tab Lời mời, game client PHẢI hiển thị `listFriendRequests` (`incoming`, `outgoing`); chấp nhận gọi `acceptFriendRequest` (`Idempotency-Key`), từ chối gọi `rejectFriendRequest`; lời mời đi PHẢI luôn hiện "Đang chờ" (không bao giờ "bị từ chối") tới khi biến mất | FR-SOC-001 · AC-SOC-003 · AC-UX-105 | — |
 | F110-AC-22 | KHI học sinh bấm "Kết bạn" trên thẻ người chơi trong Hub hoặc nhóm "Ở gần đây", game client PHẢI gọi `sendFriendRequest` (`addressee_id`, `Idempotency-Key`); `403 SOCIAL_SCOPE_VIOLATION` PHẢI hiện "Em chỉ kết bạn được với bạn cùng trường", `409 FRIEND_LIMIT_REACHED`/`429 RATE_LIMITED` (theo `Retry-After`) PHẢI hiện thông điệp thân thiện; PHẢI không có ô tìm người theo tên/ID | FR-SOC-001 · FR-SOC-002 · AC-SOC-002 | TC-SOC-002 |
@@ -193,7 +199,7 @@ NFR: NFR-I18N-001, NFR-I18N-003, NFR-A11Y-001, NFR-COMP-001.
 - Backend boss/quest co-op/party-activity → F103; bạn bè/chặn/tắt tiếng/presence → F095, F091; party, lobby, `InviteFriendPicker` → F100, F101, F102.
 - Renderer câu hỏi, `ActivityHost` → F063; quest tracker/journal nền → F072; challenge solo, HUD tiến trình, `LevelUpQueue` → F069.
 - Chat party, `ReportDialog`, quick message → F119; báo cáo/sanction backend → F121; thông báo lời mời khi offline → F123.
-- Club/study group trong game → F120 (chưa có feature Godot); "Bạn cùng lớp", "Vừa chơi cùng", "Tham gia bạn" (endpoint đề xuất ở STUDENT_GAME_UX_SOCIAL §11 chưa có trong spec) — chưa có feature; "Thách đấu" → F109; tin nhắn trực tiếp → F118/F119.
+- Club trong game → F120 (chưa có feature Godot; nhóm học tập LMS đã bỏ theo ADR-0095); "Vừa chơi cùng", "Tham gia bạn" (endpoint đề xuất ở STUDENT_GAME_UX_SOCIAL §11 chưa có trong spec) — chưa có feature; "Thách đấu" → F109; tin nhắn trực tiếp → F118/F119.
 - Room `coop` puzzle và `coop_challenge` của module competition → F105/F109.
 
 ## Assumptions

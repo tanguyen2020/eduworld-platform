@@ -30,3 +30,4 @@
 - spec.md nêu tên scene/script ở Clarifications để chốt mâu thuẫn đặt tên PARTY_SYSTEM §12.4 vs GODOT_ARCHITECTURE §3 (chọn GODOT_ARCHITECTURE).
 - Authorization/tenant ở client: không hiển thị dữ liệu ngoài phạm vi, `X-Tenant-Id` do `ApiClient`; kiểm tra thật ở F100/F101.
 - Thiếu feature Godot cho màn boss S06 và thẻ dữ kiện `interdependent` — báo lên danh mục.
+- ADR-0095 (2026-11-21, WP-S): picker không nhóm theo lớp, không ngoại lệ "bạn cùng lớp"; quy tắc party (lớp 1–3 cùng khối, cùng tenant, liên trường theo ADR-0054, `visibility` `private`/`friends`, `study_party`) do PARTY_SYSTEM sở hữu, client không tự kiểm.

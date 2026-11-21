@@ -12,13 +12,13 @@ Frontend: thêm module `school-events/` vào chunk workspace C (`src/cms/fronten
 |---|---|
 | Language/Version | TypeScript strict (React 18, Vite) · Go ≥ 1.24 (module game) |
 | Primary Dependencies | Ant Design 5 + Pro (ProTable, StepsForm, StatisticCard), TanStack Query, openapi-fetch + `apiClient` (F050), `withTenantScope`/`TenantTargetField` (F051), chart theo DESIGN_SYSTEM §4.4, i18next · ent, `src/backend/pkg/tenancy`, `src/backend/pkg/authz` |
-| Storage | Không bảng mới. Đọc `eduworld_game`: `game.event_runs`, `game.event_participation`, `game.community_goals`, `game.community_goal_progress`, `game.community_goal_contributions`, `ref.classes` |
+| Storage | Không bảng mới. Đọc `eduworld_game`: `game.event_runs`, `game.event_participation`, `game.community_goals`, `game.community_goal_progress`, `game.community_goal_contributions` (không `ref.classes` — ADR-0095) |
 | Testing | Vitest + Testing Library + MSW (chỉ trong test, nhãn `MOCK`), Playwright E2E với backend compose, axe · go test + testcontainers (PostgreSQL) |
 | Target Platform | Trình duyệt desktop/tablet (form), điện thoại chỉ xem · Linux container |
 | Project Type | web app (workspace C) + mở rộng backend module |
 | Performance Goals | Trang danh sách/tiến độ theo budget API portal; không có truy vấn dashboard |
 | Constraints | AGENTS R1, R7, R8, R10, R15, R16, R19, R27, R32; ADR-0027, ADR-0029 |
-| Scale/Scope | ≤ `school_events_concurrent_per_tenant` sự kiện chạy/tenant; ≤ 500 lớp/sự kiện (`SchoolEventCreate.audience.class_ids`) |
+| Scale/Scope | ≤ `school_events_concurrent_per_tenant` sự kiện chạy/tenant; ≤ 9 khối/sự kiện (`SchoolEventCreate.audience.grade_levels`) |
 
 ## Constitution Check
 
@@ -61,7 +61,7 @@ src/cms/frontend/apps/portal/src/workspaces/school-lms/
 │   ├── CreateSchoolEventWizard.tsx        # bước: chọn template → thông tin → đối tượng → nội dung/thưởng → lịch → xác nhận
 │   ├── fields/{AllowedParamField.tsx,AudiencePicker.tsx,TemplateOptionPicker.tsx}
 │   ├── SchoolEventDetailPage.tsx · EditSchoolEventForm.tsx · CancelSchoolEventDialog.tsx
-│   ├── progress/{SchoolEventProgressPanel.tsx,ClassContributionTable.tsx}
+│   ├── progress/{SchoolEventProgressPanel.tsx,GradeContributionTable.tsx}
 │   ├── api/{eventTemplates.ts,schoolEvents.ts,schoolEventProgress.ts}
 │   └── mapProblem.ts                      # code → khóa i18n, errors[].field → field form
 ├── routes.tsx                             # route cho `menu.school_lms.school_events` của catalog (ADR-0090)
@@ -91,16 +91,16 @@ Không có — ADR và tài liệu sở hữu đủ; delta contract đã xác đ
 
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
-| domain | `liveops.ClassBreakdownPolicy` (dải khối được xem đóng góp theo lớp — EVENT_SEASON_SYSTEM §6) | Hàm thuần, test unit |
+| domain | `liveops.GradeBreakdownPolicy` (dải khối được xem đóng góp theo khối + ẩn khối < 5 học sinh — EVENT_SEASON_SYSTEM §6, ADR-0095) | Hàm thuần, test unit |
 | application | Query `GetSchoolEventProgress` (permission `lms.school_event.write`, scope trường) | authz `authz.Require` tường minh đầu handler; tracing `src/backend/pkg/observability`; validation trong DTO/handler |
-| infrastructure | `SchoolEventProgressRepo` (ent + SQL tường minh `GROUP BY class_id` có `tenant_id`) | R27 |
-| presentation | Handler `getSchoolEventProgress` · Portal gọi `listEventTemplates`, `listSchoolEvents`, `createSchoolEvent`, `getSchoolEvent`, `updateSchoolEvent`, `cancelSchoolEvent`, `getSchoolEventProgress`, `listTenantSchoolClasses`, `getMyPermissions` | |
+| infrastructure | `SchoolEventProgressRepo` (ent + SQL tường minh `GROUP BY grade_level` có `tenant_id`) | R27 |
+| presentation | Handler `getSchoolEventProgress` · Portal gọi `listEventTemplates`, `listSchoolEvents`, `createSchoolEvent`, `getSchoolEvent`, `updateSchoolEvent`, `cancelSchoolEvent`, `getSchoolEventProgress`, `getMyPermissions` | |
 
 **Màn → operationId → permission (ẩn/hiện; server vẫn kiểm):**
 
 | Màn | Đọc | Ghi | Permission |
 |---|---|---|---|
-| Sự kiện trường | `listSchoolEvents`, `getSchoolEvent`, `listEventTemplates`, `listTenantSchoolClasses` | `createSchoolEvent`, `updateSchoolEvent`, `cancelSchoolEvent` | `lms.school_event.write` |
+| Sự kiện trường | `listSchoolEvents`, `getSchoolEvent`, `listEventTemplates` | `createSchoolEvent`, `updateSchoolEvent`, `cancelSchoolEvent` | `lms.school_event.write` |
 | Tiến độ sự kiện | `getSchoolEventProgress` | — | `lms.school_event.write` |
 
 ### Tích hợp và phụ thuộc

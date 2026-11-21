@@ -25,7 +25,7 @@
 | 10 | Chưa có F121: chạy purge với `--now = purge_after + 1h` | Không xóa; run `blocked`; metric `purge_blocked` = 1 | F117-AC-19 |
 | 11 | Có F121: An báo cáo một tin trận ngày D+2; chạy purge D+N−1 rồi D+N | D+N−1 còn; D+N xóa channel, API `404`; `sm.antoan` thấy tin trong bằng chứng | F117-AC-16, F117-AC-17, F117-AC-23 |
 | 12 | Channel có case `open` quá hạn | Hoãn, ghi lý do; đóng case → purge lần sau | F117-AC-18 |
-| 13 | Đếm dòng `class`/`direct` trước/sau purge; thử `DELETE` bằng role `chat_app` và `chat_purger` trên `chat.messages` | Không đổi; lỗi quyền | F117-AC-20 |
+| 13 | Đếm dòng channel club (`team` cố định)/`direct` trước/sau purge; thử `DELETE` bằng role `chat_app` và `chat_purger` trên `chat.messages` | Không đổi; lỗi quyền | F117-AC-20 |
 | 14 | Tin `world`/`area` > `ephemeral_chat_retention` | Partition ngày bị drop sau khi sao bằng chứng | F117-AC-21 |
 | 15 | Xem `chat.gameplay_purge_runs`, audit, metric | Có số liệu, không nội dung | F117-AC-22 |
 | 16 | Trường TH Demo A bật preset; tạo party An + Bình; An gửi `text` rồi `quick` | Channel `party` tự tạo; `text` → `CHAT_KIND_NOT_ALLOWED`; `quick` gửi được | F117-AC-24 |

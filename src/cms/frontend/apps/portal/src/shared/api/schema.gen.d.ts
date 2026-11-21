@@ -4980,7 +4980,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Tiến độ community goal theo phạm vi, mốc; đóng góp theo lớp khi được phép (không xếp hạng cá nhân) */
+        /** Tiến độ community goal theo phạm vi, mốc; đóng góp theo khối khi được phép (không xếp hạng cá nhân, ẩn khối < 5 học sinh — ADR-0095) */
         get: operations["getCommunityGoal"];
         put?: never;
         post?: never;
@@ -10734,11 +10734,14 @@ export interface components {
             total: number;
         };
         CommunityGoalProgress: {
-            /** @description Chỉ khi trường cho phép (lớp 4–9) */
-            by_class?: {
-                class_id?: components["schemas"]["Uuid"];
-                class_name?: string;
-                progress?: number;
+            /**
+             * @description Đóng góp theo khối của trường (ADR-0095 — thay `by_class`), chỉ khi sự kiện bật `show_grade_contributions`
+             *     và chỉ khối 4–9 (EVENT_SEASON_SYSTEM §6).
+             *     Không tên, không xếp hạng cá nhân; khối có < 5 học sinh đóng góp bị ẩn (không trả dòng — FR-ANL-016).
+             */
+            by_grade?: {
+                grade_level: components["schemas"]["GradeLevel"];
+                progress: number;
             }[];
             event_run_id?: components["schemas"]["Uuid"];
             goal_id: components["schemas"]["Uuid"];
@@ -12376,8 +12379,11 @@ export interface components {
             /** @enum {string} */
             period?: "daily" | "weekly" | "monthly" | "season" | "all_time";
             period_key: string;
-            /** @enum {string} */
-            scope_type?: "global" | "organization" | "school" | "class" | "grade" | "subject" | "topic" | "game_mode" | "friends" | "team";
+            /**
+             * @description Không có bảng cấp lớp (ADR-0095); mục tiêu tập thể của khối (`grade_goal`) không phải bảng xếp hạng
+             * @enum {string}
+             */
+            scope_type?: "global" | "organization" | "school" | "grade" | "subject" | "topic" | "game_mode" | "friends" | "team";
         };
         /** @enum {string} */
         LearningContentType: "question" | "question_set" | "assessment_blueprint" | "lesson" | "learning_material" | "learning_path" | "activity";
@@ -14763,7 +14769,6 @@ export interface components {
         /** @description Chỉ tham số trong allowed_params của template; ngoài danh sách → 422 EVENT_TEMPLATE_PARAM_NOT_ALLOWED */
         SchoolEventCreate: {
             audience: {
-                class_ids?: components["schemas"]["Uuid"][];
                 grade_levels?: number[];
                 school_ids?: components["schemas"]["Uuid"][];
             };
@@ -14779,7 +14784,6 @@ export interface components {
         };
         SchoolEventUpdate: {
             audience?: {
-                class_ids?: components["schemas"]["Uuid"][];
                 grade_levels?: number[];
                 school_ids?: components["schemas"]["Uuid"][];
             };
@@ -15819,17 +15823,21 @@ export interface components {
             status: "draft" | "registration" | "seeded" | "running" | "completed" | "cancelled";
             tournament_id: components["schemas"]["Uuid"];
         };
-        /** @description Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027). */
+        /**
+         * @description Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027).
+         *     Không có giải cấp lớp (ADR-0095): giải khối của trường = `scope_type = school` + `grade_level`.
+         */
         TournamentCreate: {
             /** @enum {string} */
             format: "single_elim" | "double_elim" | "round_robin" | "team";
+            /** @description Khối của giải (giải khối của trường khi `scope_type = school`) */
             grade_level?: components["schemas"]["GradeLevel"];
             max_entries?: number;
             name: string;
             registration_closes_at: components["schemas"]["Timestamp"];
             scope_id: components["schemas"]["Uuid"];
             /** @enum {string} */
-            scope_type: "class" | "school" | "organization";
+            scope_type: "school" | "organization";
             starts_at?: components["schemas"]["Timestamp"];
             subject_id: components["schemas"]["Uuid"];
             template_id: components["schemas"]["Uuid"];

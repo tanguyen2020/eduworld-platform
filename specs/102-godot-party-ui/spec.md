@@ -12,6 +12,12 @@
 - Q: Ô "Độ khó" trong mockup lobby? → A: Boss/quest không có tham số độ khó (`boss.schema.json`, `quest.schema.json`); `DifficultySelector` chỉ hiện với `coop_challenge`/`learning_challenge` (F105). M4a ẩn.
 - Q: Màn chơi boss/quest co-op (thanh năng lượng, thẻ dữ kiện) có thuộc F102? → A: Không. F102 chỉ chuyển cảnh theo `party.session.started`; màn boss S06 và thẻ dữ kiện `interdependent` chưa có feature Godot trong danh mục (ghi Ngoài phạm vi).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Picker mời còn "bạn cùng lớp"? → A: Không. Theo [ADR-0095 mục 5 (D2)](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21) `InviteFriendPicker` không nhóm/lọc theo lớp, chỉ hiển thị danh sách server trả (nickname + avatar); không còn ngoại lệ hiển thị nào cho "bạn cùng lớp" (R16).
+- Q: Quy tắc party mới ảnh hưởng client thế nào? → A: Quy tắc do [PARTY_SYSTEM](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) sở hữu (lớp 1–3 chỉ `friend`/`quest`, cùng đúng khối với leader, luôn cùng tenant, khác trường chỉ khi tenant bật liên trường ADR-0054; party `friend` chỉ mời bạn bè; `visibility` chỉ `private`/`friends`; loại `study_group` đổi tên `study_party`). Client **không** tự kiểm các điều kiện này; vi phạm hiển thị thông điệp thân thiện theo F102-AC-05 (`PARTY_POLICY_VIOLATION`, `PARTY_INVITE_NOT_ALLOWED`).
+- Q: Ô "Ai được vào" trong cài đặt party? → A: Chỉ hai lựa chọn `private`/`friends`, không có "Cả lớp" (nếu màn cài đặt hiển thị visibility — nhãn theo file dịch).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Tạo nhóm, mời bạn, nhận lời mời (Priority: P1)
@@ -27,7 +33,7 @@ Từ HUD (phím `P`) hoặc danh sách bạn bè, học sinh tạo nhóm và m�
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F102-AC-01 | KHI học sinh chưa có party mở màn Party (phím `P`, nút `PartyChip` hoặc "Mời vào party" từ bạn bè), game client PHẢI hiện trạng thái "Một mình" với nút Mời lớn và tạo party qua `PartyService` (`createParty`, một `Idempotency-Key` cho mỗi ý định, giữ nguyên key khi thử lại) | FR-PTY-001 · [STUDENT_GAME_UX_SOCIAL §5](../../docs/05-ux/STUDENT_GAME_UX_SOCIAL.md) | TC-PTY-001 |
-| F102-AC-02 | game client PHẢI cho mời bạn từ `InviteFriendPicker` chỉ liệt kê bạn bè/bạn cùng lớp do server trả (nickname + avatar); lớp 1–3 PHẢI mời bằng chạm avatar, không có ô gõ tên tự do | FR-PTY-001 · [PARTY_SYSTEM §5](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-002 |
+| F102-AC-02 | game client PHẢI cho mời bạn từ `InviteFriendPicker` chỉ liệt kê người được phép mời do server trả (bạn bè; với loại party không phải `friend` có thể thêm người chơi khác server cho phép), chỉ nickname + avatar, không nhóm hay lọc theo lớp và client không tự lọc theo khối/trường (điều kiện party do server áp — ADR-0095, [PARTY_SYSTEM §8](../../docs/03-social-multiplayer/PARTY_SYSTEM.md)); lớp 1–3 PHẢI mời bằng chạm avatar, không có ô gõ tên tự do | FR-PTY-001 · [PARTY_SYSTEM §5](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-002 |
 | F102-AC-03 | KHI nhận `party.invitation.received`, game client PHẢI hiện `InvitationToast` góc phải với nickname người mời, số thành viên và đếm ngược theo `expires_at` của server, tự ẩn sau 10 giây và mở lại được từ chuông thông báo; lời mời hết hạn PHẢI biến mất khỏi danh sách | FR-PTY-001 · AC-PTY-002 | TC-PTY-002 |
 | F102-AC-04 | KHI người được mời bấm Chấp nhận mà đang ở party khác (`409 PARTY_ALREADY_IN_PARTY`), game client PHẢI hỏi "Rời nhóm hiện tại và tham gia?" và chỉ gọi `leaveParty` rồi `acceptPartyInvitation` khi học sinh xác nhận | FR-PTY-001 · [PARTY_SYSTEM §13.2](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-003 |
 | F102-AC-05 | NẾU API party trả Problem, THÌ game client PHẢI hiển thị thông điệp thân thiện theo khóa `ui.party.error.<CODE>` (`PARTY_FULL` "Nhóm đã đủ người", `PARTY_INVITATION_EXPIRED` "Lời mời đã hết hạn", `PARTY_INVITE_RATE_LIMITED`, `PARTY_INVITE_NOT_ALLOWED`, `PARTY_POLICY_VIOLATION`, `PARTY_NOT_LEADER`, `PARTY_ACTIVITY_NOT_ELIGIBLE`, `PARTY_NOT_READY`) và không hiển thị mã thô | FR-PTY-001 · [STUDENT_GAME_UX_SOCIAL §5](../../docs/05-ux/STUDENT_GAME_UX_SOCIAL.md) | — |
@@ -87,7 +93,7 @@ Bạn rớt mạng thì thẻ mờ đi; leader rớt mạng thì có băng "Trư
 | F102-AC-16 | Mọi chuỗi UI party PHẢI đi qua khóa `ui.party.*` trong `vi.po`/`en.po`, đổi ngôn ngữ áp dụng ngay; bố cục PHẢI chịu chuỗi dài hơn 35% (tối đa 2 dòng rồi rút gọn có tooltip) | NFR-I18N-001 · ADR-0056 | — |
 | F102-AC-17 | game client PHẢI lấy màu, font, cỡ chữ, khoảng cách từ Theme sinh từ `design/game-tokens` theo density grade band (vùng chạm ≥ 48 dp, lớp 1–3 ≥ 64 dp), không override trong `.tscn` | NFR-A11Y-001 · ADR-0047 · AGENTS R32 | TC-UI-001, TC-UI-003 |
 | F102-AC-18 | game client PHẢI có bố cục mobile ngang (thẻ thành viên ngang, nút Sẵn sàng/Bắt đầu lớn ở dưới, chat trượt từ phải 45% chiều rộng) và PC (hai cột, chat bên phải); trạng thái Ready có biểu tượng + chữ và thông báo vào/ra được đọc khi bật giọng đọc | FR-PTY-006 · NFR-A11Y-001 | — |
-| F102-AC-19 | game client PHẢI chỉ hiển thị nickname/avatar/level của người khác (không tên thật, trường, lớp), không ghi dữ liệu party xuống đĩa, và xóa `PartyStore` khi đăng xuất hoặc nhận `session.session.replaced` | AGENTS R16 · ADR-0064 | — |
+| F102-AC-19 | game client PHẢI chỉ hiển thị nickname/avatar/level của người khác (không tên thật, trường, khối), không ghi dữ liệu party xuống đĩa, và xóa `PartyStore` khi đăng xuất hoặc nhận `session.session.replaced` | AGENTS R16 · ADR-0064 | — |
 | F102-AC-20 | Script trong `scenes/**` PHẢI chỉ gọi method public của `PartyService` và đọc `AppState.party`/`PartyStore`; mọi gọi API/WS nằm trong `PartyService` (RefCounted, nhận `ApiClient`/`RealtimeClient` qua constructor) | AGENTS R1 · [GODOT_ARCHITECTURE §6](../../docs/08-game-client/GODOT_ARCHITECTURE.md) | — |
 
 ### Edge Cases
@@ -132,7 +138,7 @@ Bạn rớt mạng thì thẻ mờ đi; leader rớt mạng thì có băng "Trư
 | Không business logic trong UI; service → state → UI | AGENTS R1 · [GODOT_ARCHITECTURE §6](../../docs/08-game-client/GODOT_ARCHITECTURE.md) |
 | Theme/token, không hardcode style | AGENTS R32 · ADR-0047 |
 | Không hardcode chuỗi; song ngữ | AGENTS §7 · ADR-0056 |
-| Không hiển thị tên thật/trường/lớp người khác | AGENTS R16 |
+| Không hiển thị tên thật/trường/khối người khác | AGENTS R16 |
 
 ## Success Criteria *(bắt buộc)*
 
@@ -141,7 +147,7 @@ Bạn rớt mạng thì thẻ mờ đi; leader rớt mạng thì có băng "Trư
 - **SC-001**: Học sinh lớp 1–3 tạo nhóm và mời một bạn trong ≤ 3 thao tác từ HUD (thử nghiệm với kịch bản mẫu).
 - **SC-002**: Thay đổi Ready của bạn hiển thị trong ≤ 1 giây (p95) trên thiết bị Android tầm trung tham chiếu.
 - **SC-003**: Lobby 4 thành viên giữ ≥ 30 FPS trên thiết bị tầm trung tham chiếu (không render 3D trong lobby).
-- **SC-004**: 0 màn party hiển thị mã lỗi thô hoặc tên thật/trường/lớp của người khác trong bộ scene test.
+- **SC-004**: 0 màn party hiển thị mã lỗi thô hoặc tên thật/trường/khối của người khác trong bộ scene test.
 
 ## Ngoài phạm vi
 
@@ -154,5 +160,5 @@ Bạn rớt mạng thì thẻ mờ đi; leader rớt mạng thì có băng "Trư
 ## Assumptions
 
 - `listPartyEligibleActivities`, `expected_version`, `PARTY_NOT_READY` là delta contract của F101; trước khi F101 Done, client chạy trên Prism mock sinh từ `specs/` (profile `mock`, nhãn MOCK — R17).
-- Danh sách bạn trong `InviteFriendPicker` lấy từ `listFriends` (F095) và bạn cùng lớp theo policy; server vẫn kiểm tra khi mời.
+- Danh sách bạn trong `InviteFriendPicker` lấy từ `listFriends` (F095); không còn nhóm "bạn cùng lớp" (ADR-0095). Server vẫn kiểm tra khi mời (loại party, cùng khối với leader cho lớp 1–3, cùng tenant, khác trường chỉ khi tenant bật liên trường — [PARTY_SYSTEM](../../docs/03-social-multiplayer/PARTY_SYSTEM.md)); client không tự suy ra.
 - Thumbnail avatar 2D lấy theo cấu hình avatar (cache) như F092/F070.

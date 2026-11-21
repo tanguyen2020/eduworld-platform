@@ -1,10 +1,10 @@
-# Implementation Plan: F107 — Tournament: 6 format, bracket, lịch, thử thách lớp/giải trường từ template
+# Implementation Plan: F107 — Tournament: 6 format, bracket, lịch, thử thách khối/giải trường từ template
 
 **Branch**: `107-tournament-challenges` · **Date**: 2026-11-16 · **Spec**: [spec.md](spec.md)
 
 ## Summary
 
-Module `tournament` và `challenge` trong module `competition`. `CreateChallenge` (route `/lms/challenges`, chuyển sang module competition) kiểm tra template đã publish + gán (`infra.tenant_resource_assignments`), lọc `params` theo `allowed_params`, ghim `template_version_id` (bảng `game_config_versions` của F104/F108) và tạo `Tournament` hoặc thử thách Timed Quiz. Thuật toán bracket (single/double elim, round robin, vòng bảng, seeding) là hàm thuần trong `domain/tournament/bracket`. Job `tournament-scheduler` chuyển trạng thái theo thời gian, check-in, gọi `CreateDirectProposal` (F104) cho nút tới giờ, xử no-show. Consumer `match.completed` đẩy người thắng (idempotent theo `match_id`). Hoàn thành giải → `tournament_results`, Competition Points `source_type = tournament` (port của F106), `tournament_rewards` + outbox `tournament.rewarded`. Bên nhận internal `assignTenantResources` cho template.
+Module `tournament` và `challenge` trong module `competition`. `CreateChallenge` (route `/lms/challenges`, chuyển sang module competition) kiểm tra template đã publish + gán (`infra.tenant_resource_assignments`), lọc `params` theo `allowed_params`, kiểm tra đối tượng trong một trường (khối ± `student_ids` − `exclude_student_ids`, học sinh khác trường → `422`; template `grade_challenge`/`school_tournament` — ADR-0095), ghim `template_version_id` (bảng `game_config_versions` của F104/F108) và tạo `Tournament` hoặc thử thách Timed Quiz. Thuật toán bracket (single/double elim, round robin, vòng bảng, seeding) là hàm thuần trong `domain/tournament/bracket`. Job `tournament-scheduler` chuyển trạng thái theo thời gian, check-in, gọi `CreateDirectProposal` (F104) cho nút tới giờ, xử no-show. Consumer `match.completed` đẩy người thắng (idempotent theo `match_id`). Hoàn thành giải → `tournament_results`, Competition Points `source_type = tournament` (port của F106), `tournament_rewards` + outbox `tournament.rewarded`. Bên nhận internal `assignTenantResources` cho template.
 
 ## Technical Context
 
@@ -82,7 +82,7 @@ src/backend/modules/competition/
 └── tests/{unit,integration,contract}/tournament/
 ```
 
-**Structure Decision**: Thuật toán bracket thuần (property test) tách khỏi lịch/trận; Challenge là aggregate riêng vì Class Challenge Timed Quiz không có bracket.
+**Structure Decision**: Thuật toán bracket thuần (property test) tách khỏi lịch/trận; Challenge là aggregate riêng vì thử thách khối dạng Timed Quiz không có bracket.
 
 ## Phase 0: Research
 
@@ -105,14 +105,14 @@ Không có. Thuật toán và luật đã định ở [COMPETITION_SYSTEM §10](
 
 ### Tích hợp và phụ thuộc
 
-- Feature phụ thuộc: F104 (`CreateDirectProposal`), F105 (`JoinTimedQuizRoom`, luật trận giải, `match.completed`), F106 (`RatingReader`, ghi points `tournament`), F045 (bên gọi assignment), F010 (`ref.classes`, `ref.enrollments`).
+- Feature phụ thuộc: F104 (`CreateDirectProposal`), F105 (`JoinTimedQuizRoom`, luật trận giải, `match.completed`), F106 (`RatingReader`, ghi points `tournament`), F045 (bên gọi assignment), F010 (`ref.students(school_id, grade_level)` cập nhật theo `student.placement_changed` — ADR-0095; không còn `ref.classes`, `ref.enrollments`).
 - Facade: không gọi (bên nhận: hiện thực facade assignment).
 - Event phát: `tournament.match_scheduled`, `tournament.completed`, `tournament.rewarded`, `audit.recorded`. Tiêu thụ: `match.completed`, `student.cleaned_up`.
 
 ### Bảo mật, tenant, idempotency, audit
 
 - Người tổ chức: `lms.challenge.write`, scope trường của UserRole; System Admin cần tenant đích.
-- Học sinh: `game_player`, phạm vi giải (lớp/trường/tenant) từ `ref.enrollments`/`ref.students`.
+- Học sinh: `game_player`, phạm vi giải (đối tượng khối ± học sinh của thử thách, trường, tenant) từ `ref.students` (ADR-0095).
 - Internal: `x-allowed-callers: [identity]`.
 - `Idempotency-Key`: `createChallenge`, `registerTournamentEntry`, `confirmTournamentEntries`, `generateTournamentBracket`, `overrideBracketNode`, `joinChallenge`, `assignTenantResources`.
 - Audit: `challenge.created/cancelled`, `tournament.published/cancelled/bracket_generated/node_overridden/rewarded`, `tenant_resource.assigned/unassigned`.

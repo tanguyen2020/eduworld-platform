@@ -8,13 +8,17 @@
 ### Session 2026-11-16
 
 - Q: `createReport` do F121 (M5) làm, F119 ở M4b? → A: F119 gọi `createReport` theo contract có sẵn; trước khi F121 Done chạy trên Prism mock gắn nhãn MOCK (CODE_PLAN §2, R17); F119 chỉ `Done` khi chạy với backend thật.
-- Q: Panel chat ngoài trận (HUD, tab Khu vực/Lớp/Bạn bè, tìm kiếm)? → A: Các channel bền vững và tìm kiếm thuộc F120; F119 dựng thành phần dùng chung (`ChatPanel`, `ChatStore`, `ChatService`) và áp cho channel gameplay; tab channel bền vững bật khi F120 Done.
-- Q: STUDENT_GAME_UX_SOCIAL §7 vẽ tin ghim "Nhà trường: …" trong chat? → A: Không làm: nhân sự không là thành viên channel (ADR-0072, CHAT_SYSTEM §2); thông báo nhà trường đi qua bảng tin lớp. Cần sửa wireframe.
+- Q: Panel chat ngoài trận (HUD, tab Khu vực/Club/Bạn bè, tìm kiếm — tab "Lớp" cũ bỏ theo ADR-0095)? → A: Các channel bền vững và tìm kiếm thuộc F120; F119 dựng thành phần dùng chung (`ChatPanel`, `ChatStore`, `ChatService`) và áp cho channel gameplay; tab channel bền vững bật khi F120 Done.
+- Q: STUDENT_GAME_UX_SOCIAL §7 vẽ tin ghim "Nhà trường: …" trong chat? → A: Không làm: nhân sự không là thành viên channel (ADR-0072, CHAT_SYSTEM §2); thông báo nhà trường đi qua bảng tin trường và hộp thông báo (ADR-0095 bỏ "bảng tin lớp"). Cần sửa wireframe.
 - Q: Client có ẩn/che tin theo danh mục không? → A: Không. Mọi quyết định kiểm duyệt ở server; client chỉ hiển thị kết quả (CHILD_SAFETY §6).
 
 ### Session 2026-11-17
 
 - Q: Tên khóa idempotency tin nhắn (RB-508)? → A: `client_message_id` (một tên cho REST, realtime, DB) thay `client_msg_id`.
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: `ChatDock` còn tab "Lớp"/"Nhóm học tập"? → A: Không. Channel `class`/`study_group` bị bỏ, không có kênh theo khối ([ADR-0095 §5](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md)); tab kênh lấy từ `listMyChannels` nên chỉ có `world`, `area`, `match`, `party`, `team` (trận hoặc club), `direct`. Nếu server cũ còn trả `channel_type` lạ, client bỏ qua channel đó. Wireframe STUDENT_GAME_UX_SOCIAL §7 đã đổi tab "Lớp" thành "Club" (WP-S). Không đổi tiêu chí F119-AC-*.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -170,7 +174,7 @@ Chat chạy mượt trên máy tầm trung, đủ tiếng Việt/Anh, không ch�
 ## Ngoài phạm vi
 
 - Backend gửi/nhận, kiểm duyệt, channel gameplay, tính năng tin → F115–F118; xử lý báo cáo/case → F121.
-- Tab channel bền vững (Khu vực, Lớp, Bạn bè, DM), tìm kiếm, cài đặt thông báo channel → F120 (+ UI phần đó khi F120 Done).
+- Tab channel bền vững (Khu vực, Club, Bạn bè, DM), tìm kiếm, cài đặt thông báo channel → F120 (+ UI phần đó khi F120 Done).
 - Hộp thông báo trong game → F123; UI party lobby/arena (khung chứa panel) → F102, F109; `RealtimeClient` → F092.
 
 ## Assumptions

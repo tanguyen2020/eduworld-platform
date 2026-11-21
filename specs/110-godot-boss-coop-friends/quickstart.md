@@ -6,8 +6,8 @@
 
 - Phụ thuộc đã Done: F095, F101, F102, F103 (cho nghiệm thu Done; trước đó dùng profile `mock` của F060, nhãn MOCK), F063, F069, F072, F092.
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md) §6); hai instance Godot `-- --env=local --device-id=<khác nhau>`.
-- Tài khoản demo (mật khẩu seed): `hs.an.3a` (A), `hs.binh.3a` (B) cùng lớp 3A; `hs.chi.3b` (C, khác lớp cùng trường); `hs.dung.7a` (D, khác tenant); `ad.truong.a` (nhân sự).
-- Dữ liệu seed module game (dữ liệu mẫu): boss lớp 3 hai phase (`solo` + `party`), quest co-op lớp 3 `collective_count` có một bước `interdependent` 2 vai.
+- Tài khoản demo (mật khẩu seed): `hs.an.3a` (A), `hs.binh.3a` (B) cùng khối 3 cùng trường; `hs.chi.3b` (C, cùng khối 3 cùng trường, chưa là bạn); `hs.dung.7a` (D, khác tenant); `ad.truong.a` (nhân sự).
+- Dữ liệu seed module game (dữ liệu mẫu): boss khối 3 hai phase (`solo` + `party`), quest co-op khối 3 `collective_count` có một bước `interdependent` 2 vai.
 
 ## 2. Kịch bản kiểm tra
 
@@ -26,7 +26,7 @@
 | 11 | Bước `interdependent` bắt đầu | A thấy vai + thẻ của A, chỉ thấy tên vai của B; A chia sẻ → thẻ hiện ở B ≤ 1 s | F110-AC-14, F110-AC-15, F110-AC-16 |
 | 12 | Mỗi người bấm "Trả lời câu cuối" | Hai activity riêng | F110-AC-17 |
 | 13 | Ngắt mạng B quá grace | A nhận toast "Em giữ thêm vai…", thẻ đã chia sẻ còn | F110-AC-18 |
-| 14 | A bấm `F` | Danh sách bạn có B online (biểu tượng + chữ), không tên thật/lớp | F110-AC-19, F110-AC-20 |
+| 14 | A bấm `F` | Danh sách bạn có B online (biểu tượng + chữ), không tên thật/trường/khối, không nhóm "bạn cùng lớp" | F110-AC-19, F110-AC-20 |
 | 15 | A tạo mã bạn bè; C nhập mã chữ thường | Ô tự viết hoa; lời mời tạo; A thấy ở tab Lời mời; C từ chối → A vẫn thấy "Đang chờ" | F110-AC-21, F110-AC-23 |
 | 16 | A bấm "Kết bạn" trên D (qua mock — khác tenant) | Thông điệp "Em chỉ kết bạn được với bạn cùng trường" hoặc lỗi chung, không lộ thông tin D | F110-AC-22 |
 | 17 | A mở hồ sơ B: Mời party, Tắt tiếng, Chặn | ≤ 2 chạm mỗi thao tác; sau chặn B biến khỏi danh sách; tab Đã chặn có B, bỏ chặn được | F110-AC-24, F110-AC-25 |

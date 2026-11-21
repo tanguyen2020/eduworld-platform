@@ -24,7 +24,7 @@
 | 10 | An gửi tin 6 mention; tin mention Bình + một học sinh không thuộc party | `CHAT_MENTION_LIMIT`; chỉ Bình nhận `chat.mention.created` (nickname, không username) | F118-AC-18, F118-AC-19 |
 | 11 | Chi (không leader) ghim tin party; An ghim tin thứ 4 | `403`; `CHAT_PIN_LIMIT_REACHED` | F118-AC-20 |
 | 12 | Bình gõ phím liên tục 10 s rồi dừng | Typing tối đa 1 lần/3 s, tự tắt sau 5 s, không có dòng DB | F118-AC-21 |
-| 13 | Bình nhận, Chi đọc; An gọi `getMessageReceipts` | Từng người đúng trạng thái; channel `class` (F120) chỉ số đếm | F118-AC-22, F118-AC-23 |
+| 13 | Bình nhận, Chi đọc; An gọi `getMessageReceipts` | Từng người đúng trạng thái; channel club > 8 thành viên (F120) chỉ số đếm | F118-AC-22, F118-AC-23 |
 | 14 | Chi đọc trên thiết bị 2 | Thiết bị 1 nhận `chat.unread.updated`, mention reset | F118-AC-25 |
 | 15 | `hs.dung.7a` gọi `editMessage`/`getMessageReceipts` tin của party; token `ad.truong.a` gọi `forwardMessage` | `404`; `403 GAME_ACCESS_STUDENT_ONLY` | F118-AC-26 |
 

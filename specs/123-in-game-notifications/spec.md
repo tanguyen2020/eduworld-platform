@@ -8,7 +8,7 @@
 ### Session 2026-11-16
 
 - Q: "Thông báo trường" gồm gì khi chưa có contract soạn thông báo? → A: Trong Release 1.0 là thông báo phát sinh từ hoạt động của nhà trường: bài được giao (`assignment.published`) và kết quả được công bố (`assignment.results_released`). Soạn thông báo tự do của nhà trường chưa có FR/contract — ngoài phạm vi.
-- Q: Danh sách học sinh nhận thông báo bài giao lấy ở đâu khi payload `assignment.published` không chứa danh sách học sinh? → A: Facade `learning` `listAssignmentRecipients` (operation mới) gọi từ profile `worker-chat` — learning là nguồn duy nhất về đối tượng giao bài (lớp, nhóm, học sinh, miễn làm); không dựng lại từ projection (AGENTS R29, chỉ đọc).
+- Q: Danh sách học sinh nhận thông báo bài giao lấy ở đâu khi payload `assignment.published` không chứa danh sách học sinh? → A: Facade `learning` `listAssignmentRecipients` (operation mới) gọi từ profile `worker-chat` — learning là nguồn duy nhất về đối tượng giao bài (khối của trường, danh sách học sinh include/exclude, miễn làm — ADR-0095 §3); không dựng lại từ projection (AGENTS R29, chỉ đọc).
 - Q: Enum loại thông báo khác nhau: REST `Notification.kind` vs WS `notification.item.created.category`? → A: Thay bởi Session 2026-11-17 (một enum `kind`).
 - Q: "Kết quả" là sự kiện nào? → A: `assignment.results_released` (kết quả bài giao được công bố theo `ResultRelease`); kết quả trận/giải → F106/F107 bổ sung nguồn sau. Phần thưởng: `level.reached`, `achievement.unlocked` (consumer NTF trong EVENT_DESIGN §4.6).
 - Q: Thông báo kết quả xử lý báo cáo (SOCIAL_SYSTEM §8)? → A: F121 phát event khi có; F123 cung cấp cơ chế (giá trị `kind` tương ứng thêm khi có event), không tự thêm nguồn.
@@ -16,6 +16,10 @@
 ### Session 2026-11-17
 
 - Q: Enum loại thông báo sau đối soát (RB-513)? → A: **Một enum `kind`** dùng chung REST (`Notification.kind`) và WS (`notification.item.created`) theo [API_DESIGN §9.11](../../docs/07-backend/API_DESIGN.md); bỏ `category`. Delta contract: gỡ `category` khỏi AsyncAPI, thêm `kind` (contracts §6).
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Thông báo bài giao còn nhắm theo lớp/nhóm học tập? → A: Không. Bài giao nhắm (trường, khối) ± danh sách học sinh include/exclude ([ADR-0095 §3](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md)); F123 vẫn lấy người nhận từ facade `listAssignmentRecipients` (đã trừ học sinh miễn/exclude), không tự mở rộng theo khối. Học sinh mới vào khối sau publish được learning thêm vào bài còn mở; F123 không phát thông báo bù cho họ trong phạm vi feature này [Proposed — chưa có event nguồn]. Payload `assignment.created` có v1 và v2 (targets `grade|students`) trong đợt chuyển đổi; consumer chỉ đọc `assignment_id`, `tenant_id`, trạng thái nên chấp nhận cả hai. Không có thông báo hay "bảng tin" cấp lớp. F123-AC-02, F123-AC-05 giữ nghĩa, chỉ đổi chữ.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -35,7 +39,7 @@ Bạn gửi lời mời kết bạn, trưởng nhóm mời vào party, nhà trư
 | F123-AC-02 | KHI nhận `assignment.published` (trạng thái `open`) hoặc `assignment.results_released`, module chat PHẢI lấy danh sách học sinh nhận từ module learning và tạo một thông báo `kind` = `assignment_new`/`assignment_results_released` cho mỗi học sinh, bỏ qua học sinh được miễn | FR-NTF-001 · FR-LMS-006 · [EVENT_DESIGN §4.3](../../docs/07-backend/EVENT_DESIGN.md) | — |
 | F123-AC-03 | NẾU cùng một event được giao lại, THÌ module chat PHẢI không tạo thông báo thứ hai (khóa người nhận + `event_id` + `kind`) | FR-NTF-002 · NFR-SEC-004 | TC-SVC-003 |
 | F123-AC-04 | KHI thông báo được ghi, module chat PHẢI đẩy `notification.item.created` tới học sinh qua kênh realtime của người đó (không droppable, được giữ trong buffer resume) | FR-NTF-002 · [REALTIME_ARCHITECTURE §1](../../docs/06-architecture/REALTIME_ARCHITECTURE.md) | — |
-| F123-AC-05 | `params` và nội dung thông báo PHẢI chỉ chứa nickname, tên nội dung và mã định danh cần cho deep link; PHẢI không chứa tên thật, trường, lớp của học sinh khác, nội dung chat, điểm của người khác hay chi tiết hình phạt; mọi chuỗi PHẢI trong `maxLength` của contract | AGENTS R14, R16 · ADR-0041 | — |
+| F123-AC-05 | `params` và nội dung thông báo PHẢI chỉ chứa nickname, tên nội dung và mã định danh cần cho deep link; PHẢI không chứa tên thật, trường, khối của học sinh khác, nội dung chat, điểm của người khác hay chi tiết hình phạt; mọi chuỗi PHẢI trong `maxLength` của contract | AGENTS R14, R16 · ADR-0041 | — |
 | F123-AC-06 | NẾU người nhận không còn là học sinh hoạt động trong tenant của event, hoặc event thuộc tenant khác tenant của người nhận, THÌ module chat PHẢI không tạo thông báo | NFR-SEC-006 · AGENTS R8 | TC-TEN-001 |
 | F123-AC-07 | NẾU module learning không phản hồi khi lấy người nhận, THÌ consumer PHẢI thử lại theo chính sách consumer (không ack) và chuyển DLQ sau số lần quy định, không tạo thông báo thiếu người | FR-NTF-002 · NFR-AVAIL-005 | TC-SVC-004 |
 
@@ -101,7 +105,7 @@ Học sinh thấy badge số chưa đọc trên HUD, popup ngắn (tắt đượ
 - NẾU học sinh offline lâu, THÌ khi vào game chỉ tải trang đầu (cursor) và badge theo `unread_count`; không phát toast hàng loạt cho thông báo cũ.
 - NẾU lời mời party đã hết hạn khi học sinh bấm thông báo, THÌ màn đích hiển thị trạng thái hết hạn từ API của F100 (thông báo không tự xóa).
 - NẾU Valkey mất, THÌ thông báo vẫn ghi PostgreSQL; client lấy qua REST khi nhận `system.service.degraded` hoặc khi resync.
-- NẾU một bài giao nhắm 1 lớp 40 học sinh, THÌ tạo 40 thông báo trong một lô; lặp event không nhân đôi (F123-AC-03).
+- NẾU một bài giao nhắm 1 khối 120 học sinh của trường, THÌ tạo 120 thông báo theo lô (trang ≤ 500 của facade); lặp event không nhân đôi (F123-AC-03).
 
 ## Requirements *(bắt buộc)*
 
@@ -149,7 +153,7 @@ Học sinh thấy badge số chưa đọc trên HUD, popup ngắn (tắt đượ
 
 - Nguồn sự kiện: lời mời kết bạn (F095), lời mời party (F100), bài giao/kết quả (F041), level/achievement (F074, F075); toast lời mời party trong lobby → F102; thông báo bài thi mới ở Exam Zone → F064.
 - Thông báo vụ việc an toàn cho School Admin trong portal → F121/F122; thông báo kết quả xử lý báo cáo (nguồn) → F121; badge tin chat/mention → F118/F119.
-- Soạn thông báo tự do của nhà trường/bảng tin lớp; trung tâm thông báo cho nhân sự trong Admin Portal; push ngoài game (cần ADR mới, OQ-17).
+- Soạn thông báo tự do của nhà trường/bảng tin trường; trung tâm thông báo cho nhân sự trong Admin Portal; push ngoài game (cần ADR mới, OQ-17).
 
 ## Assumptions
 

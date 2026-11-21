@@ -10,12 +10,18 @@
 - Q: Client biết chế độ nào mở cho học sinh (theo khối) bằng cách nào mà không hardcode bảng khối của COMPETITION_SYSTEM §2? → A: Server trả danh sách chế độ khả dụng (`listArenaModes`, delta owner F105); client chỉ hiển thị. Grade band chỉ dùng cho density và cách trình bày UX.
 - Q: Ẩn nội dung "trả lời nhanh được thêm điểm" với lớp 1–5 dựa vào đâu? → A: Cờ `speed_bonus_enabled` trong `battle.countdown.started`/`battle.state.snapshot` (delta owner F105); client không so `grade_level` với `speed_bonus_min_grade`.
 - Q: `Rating` và `Match.participants[].rating_delta` hiện chứa số rating thô — client xử lý thế nào? → A: Theo COMPETITION_SYSTEM §8.2 (mọi khối chỉ thấy tier): client bỏ các trường này khi parse; delta sửa schema (owner F106).
-- Q: Cách hiển thị bảng theo khối (lớp 1–3 mục tiêu lớp, 4–5 top 10, 6–9 top 50 ± quanh mình) do ai quyết? → A: Server (F106) quyết theo `leaderboard_visibility` và trả `display_mode`; client chỉ render theo `display_mode`.
+- Q: Cách hiển thị bảng theo khối (lớp 1–3 mục tiêu tập thể, 4–5 top 10, 6–9 top 50 ± quanh mình) do ai quyết? → A: Server (F106) quyết theo `leaderboard_visibility` và trả `display_mode`; client chỉ render theo `display_mode`.
 - Q: Chi tiết giải, bracket, đăng ký, check-in có contract chưa? → A: Chỉ có `listTournaments`; các operation còn lại là delta theo COMPETITION_SYSTEM §14.2 (owner F107).
 
 ### Session 2026-11-17
 
 - Q: Loại thông báo giải sau đối soát (RB-513)? → A: Thông báo dùng một enum `kind` chung REST/WS (F123); giải dùng `kind = tournament_update`, không còn `category`.
+
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Bảng lớp trong game đổi thế nào? → A: Theo [ADR-0095 mục 5 (D5)](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21) không còn "Mục tiêu lớp", "Lớp em tuần này", "Nhiệm vụ của lớp"; thay bằng "Mục tiêu của khối" — `display_mode = grade_goal` render bằng **`GradeGoalBar`** (thay `ClassGoalBar`): tiến độ tập thể của khối trong trường, phần em đã góp, số bạn đã góp sức (ẩn khi < 5); không thứ hạng cá nhân, không nickname người khác ([COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-confirmed), FR-LDB-005). "Bạn nổi bật tuần này" (`highlights`) bị bỏ theo F106 [Proposed].
+- Q: Dòng bảng còn tên lớp? → A: Không — chỉ nickname + avatar (R16, FR-LDB-003).
+- Q: Giải trong game? → A: Giải khối/thử thách khối của trường (`grade_challenge`, F107) thay giải lớp; học sinh chỉ thấy giải mà mình thuộc đối tượng (khối ± học sinh, trừ danh sách loại trừ) — server lọc, client không tự lọc theo khối.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -83,19 +89,19 @@ Sau trận học sinh thấy Thắng/Hòa/"Chưa thắng lần này", câu cần
 
 ### User Story 4 — Bảng xếp hạng theo khối và chính sách trường (Priority: P1)
 
-Học sinh lớp 3 mở Bảng xếp hạng thấy "Mục tiêu lớp" (không thứ hạng cá nhân); học sinh lớp 7 thấy top + vị trí quanh mình; trường tắt một bảng thì bảng biến mất (US-LDB-001).
+Học sinh lớp 3 mở Bảng xếp hạng thấy "Mục tiêu của khối" — thanh tiến độ tập thể của khối mình trong trường và phần em đã góp (không thứ hạng cá nhân, không tên bạn nào); học sinh lớp 7 thấy top + vị trí quanh mình; trường tắt một bảng thì bảng biến mất (US-LDB-001).
 
 **Why this priority**: Rủi ro an toàn trẻ em cao nhất trong feature (so sánh công khai, lộ danh tính).
 
-**Independent Test**: `hs.an.3a`, `hs.em.4a`, `hs.dung.7a` mở cùng màn; `ad.truong.a` tắt bảng lớp 3A trong policy trường → `hs.an.3a` không còn thấy bảng.
+**Independent Test**: `hs.an.3a`, `hs.em.4a`, `hs.dung.7a` mở cùng màn; `ad.truong.a` tắt "Mục tiêu của khối" trong policy trường → `hs.an.3a` không còn thấy bảng.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F109-AC-18 | KHI mở Bảng xếp hạng, `LeaderboardService` PHẢI lấy danh sách bảng từ server (`listLeaderboards`, delta) và chỉ hiển thị bảng server trả (đã lọc khối và `disabled_leaderboard_definitions`); danh sách rỗng PHẢI hiện trạng thái rỗng thân thiện | FR-LDB-004 · [COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md) | — |
-| F109-AC-19 | `LeaderboardView` PHẢI render theo `display_mode` server trả: `class_goal` → thanh tiến độ tập thể + "Bạn nổi bật tuần này", không thứ hạng cá nhân; `top_n` → top N + dòng của em; `percentile` → "Em đang ở nhóm X%"; `ranked_around_me` → top + quanh em; client PHẢI không tự tính hạng hay cắt danh sách | FR-LDB-004 · FR-LDB-005 · [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md) | — |
-| F109-AC-20 | Mỗi dòng bảng PHẢI chỉ hiển thị nickname, avatar và (khi scope là lớp) tên lớp; PHẢI không hiển thị tên thật, mã học sinh, tên trường ở scope liên trường | FR-LDB-003 · AGENTS R16 · [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md) | — |
+| F109-AC-19 | `LeaderboardView` PHẢI render theo `display_mode` server trả: `grade_goal` → `GradeGoalBar` (thanh tiến độ tập thể của khối + phần em đã góp + số bạn đã góp sức khi server trả), không thứ hạng cá nhân, không nickname người khác (ADR-0095); `top_n` → top N + dòng của em; `percentile` → "Em đang ở nhóm X%"; `ranked_around_me` → top + quanh em; client PHẢI không tự tính hạng hay cắt danh sách | FR-LDB-004 · FR-LDB-005 · [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md) | — |
+| F109-AC-20 | Mỗi dòng bảng PHẢI chỉ hiển thị nickname, avatar; PHẢI không hiển thị tên thật, mã học sinh, tên lớp, và không tên trường/khối chi tiết ở scope liên trường | FR-LDB-003 · AGENTS R16 · [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md) | — |
 | F109-AC-21 | NẾU `getLeaderboard` trả `404`, THÌ game client PHẢI hiện "Bảng này hiện không mở" và bỏ tab đó; NẾU `stale = true`, THÌ PHẢI gắn nhãn "Đang cập nhật"; client PHẢI chỉ gửi `leaderboard_id`/`period_key` do server cung cấp | FR-LDB-004 · AGENTS R8 | TC-TEN-001 |
 | F109-AC-22 | HỆ THỐNG PHẢI không có thông báo kiểu "bạn bị vượt qua" và không tự làm mới bảng định kỳ (chỉ khi mở hoặc kéo làm mới) | NFR-SAFE-003 · AGENTS R19 · [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md) | — |
 
@@ -103,11 +109,11 @@ Học sinh lớp 3 mở Bảng xếp hạng thấy "Mục tiêu lớp" (không t
 
 ### User Story 5 — Giải đấu: xem, đăng ký, check-in, bracket (Priority: P2)
 
-Học sinh xem giải lớp do nhà trường tạo, đăng ký, check-in khi mở cửa sổ, xem bracket, nhận thông báo trận giải và vào qua ready check.
+Học sinh xem giải khối/thử thách khối do nhà trường tạo, đăng ký, check-in khi mở cửa sổ, xem bracket, nhận thông báo trận giải và vào qua ready check.
 
 **Why this priority**: Giải chạy theo lịch, không chặn trận thường.
 
-**Independent Test**: Seed một Class Tournament 3A ở `registration_open`; `hs.an.3a` đăng ký, check-in, xem "con đường" bracket; `hs.chi.3b` không thấy giải.
+**Independent Test**: Seed một giải khối 3 của TH Demo A (`grade_challenge`, loại trừ `hs.chi.3b`) ở `registration_open`; `hs.an.3a` đăng ký, check-in, xem "con đường" bracket; `hs.chi.3b` (bị loại trừ) và `hs.em.4a` (khối 4) không thấy giải.
 
 **Acceptance Criteria (EARS)**:
 
@@ -157,7 +163,7 @@ Học sinh thách đấu một bạn (unranked); bạn nhận lời mời, chấ
 - NẾU `battle.match.resumed` có `replay_current_question = true`, THÌ mở khóa và hiển thị lại câu hiện tại.
 - NẾU tên tier/nickname dài, THÌ rút gọn có tooltip/nhấn giữ (F109-AC-30).
 - NẾU học sinh đóng app giữa trận rồi mở lại trong grace, THÌ sau đăng nhập và `battle.state.request` vào lại trận (F109-AC-11).
-- NẾU bảng `class_goal` có `highlights` rỗng, THÌ chỉ hiện thanh tiến độ, không hiện ô trống.
+- NẾU `grade_goal.contributors_count` bị server ẩn (< 5 học sinh góp sức), THÌ chỉ hiện thanh tiến độ và phần của em, không hiện ô trống hay số 0.
 
 ## Requirements *(bắt buộc)*
 
@@ -168,9 +174,9 @@ Học sinh thách đấu một bạn (unranked); bạn nhận lời mời, chấ
 | FR-CMP-001 | UI các chế độ 1v1, đội, co-op, giải; lịch sử trận; thách đấu bạn | [COMPETITION_SYSTEM §2–§3](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
 | FR-CMP-006 | Không hiển thị/khuyến khích tốc độ khi server tắt bonus; `g1_3` không đếm số giây | [COMPETITION_SYSTEM §3.1](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
 | FR-RNK-003 | Chỉ hiển thị tier, không số rating (mọi khối) | [COMPETITION_SYSTEM §8.2](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
-| FR-LDB-003 | Bảng/bracket chỉ nickname, không trường/lớp chi tiết liên trường | [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
+| FR-LDB-003 | Bảng/bracket chỉ nickname, không trường/khối chi tiết liên trường | [COMPETITION_SYSTEM §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
 | FR-LDB-004 | Hiển thị đúng bảng server trả theo khối và policy trường | [COMPETITION_SYSTEM §9.2, §9.4](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
-| FR-LDB-005 | Hiển thị mục tiêu lớp/nỗ lực theo `display_mode` | [COMPETITION_SYSTEM §9.1](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
+| FR-LDB-005 | Hiển thị mục tiêu tập thể của khối (`grade_goal`)/nỗ lực theo `display_mode` | [COMPETITION_SYSTEM §9.1](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
 | FR-RNK-002 | Không trộn rating với số liệu học tập trên UI | [COMPETITION_SYSTEM §6](../../docs/01-game-design/COMPETITION_SYSTEM.md) |
 | FR-MM-004, FR-MM-005 | Hàng chờ, ready check, gợi ý khi chờ lâu (phía client) | [MATCHMAKING](../../docs/03-social-multiplayer/MATCHMAKING.md) |
 | FR-CMP-005, FR-MP-005 | Hiển thị mất kết nối, resume trận | [MULTIPLAYER_GAMEPLAY](../../docs/03-social-multiplayer/MULTIPLAYER_GAMEPLAY.md) |
@@ -184,7 +190,7 @@ Học sinh thách đấu một bạn (unranked); bạn nhận lời mời, chấ
 - **BattleView**: trạng thái hiển thị trận dựng từ snapshot/message server (câu hiện tại, hạn, điểm, kết nối).
 - **MatchSummary**: kết quả trận (kết cục, điểm, Competition Points), không rating.
 - **TierView**: mã + tên tier, provisional.
-- **LeaderboardView**: bảng, kỳ, chế độ hiển thị, các dòng (nickname, avatar, giá trị), mục tiêu lớp.
+- **LeaderboardView**: bảng, kỳ, chế độ hiển thị, các dòng (nickname, avatar, giá trị), mục tiêu tập thể của khối (không tên).
 - **TournamentView / BracketView / MyEntry**: giải, cây đấu, lượt đăng ký của em.
 - **Duel**: lời thách đấu bạn có hạn.
 

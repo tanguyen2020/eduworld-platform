@@ -1,4 +1,4 @@
-# Implementation Plan: F106 — Ranking Glicko-2, tier, season và 13 bảng xếp hạng
+# Implementation Plan: F106 — Ranking Glicko-2, tier, season và 12 bảng xếp hạng
 
 **Branch**: `106-ranking-leaderboard` · **Date**: 2026-11-16 · **Spec**: [spec.md](spec.md)
 
@@ -30,8 +30,8 @@ Ba module trong module `competition`: `ranking` (hàm thuần `glicko2.Update`, 
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Chỉ module competition; dữ liệu module khác qua event (`activity.graded`, `xp.awarded`, `quest.completed`, `school.updated`) |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | Bảng mới T/TA có `tenant_id` + RLS; key Valkey bắt đầu bằng tenant; không hard-delete |
 | IV Server-authoritative | ✅ | Rating/points chỉ từ event server; consumer idempotent; không endpoint nhận điểm |
-| V Xác thực, phân quyền | ✅ | Học sinh qua `game_player` chỉ scope chứa mình; nhân sự `lms.class.read` theo scope |
-| VI An toàn trẻ em | ✅ | Tier thay số; lớp 1–3 không thứ hạng; chỉ nickname; không XP ở bảng lớp; không thông báo "bị vượt" |
+| V Xác thực, phân quyền | ✅ | Học sinh qua `game_player` chỉ scope chứa mình; nhân sự `lms.student.read` theo scope (ADR-0095) |
+| VI An toàn trẻ em | ✅ | Tier thay số; lớp 1–3 không thứ hạng; chỉ nickname; mục tiêu của khối `grade_goal` không tên, ẩn ô < 5 học sinh; không XP ở bảng trường/khối; không thông báo "bị vượt" |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số Ranking Rules/definition từ cấu hình publish, tên theo CONFIG_DEFAULTS |
 | VIII UI tách logic, token | ✅ | Không có UI |
 | IX Test có bằng chứng | ✅ | Mỗi `F106-AC-*` có task test viết trước |
@@ -96,7 +96,7 @@ Không có. Công thức Glicko-2, tier, point table, effort points, visibility,
 
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
-| domain | `glicko2.Update`, `TierPolicy`, `ProvisionalPolicy`, `PointTable`, `EffortRules`, `LeaderboardDefinition` (invariant: scope class/school/grade ≠ `xp`), `VisibilityPolicy`, `PeriodKey` (ICT), `SoftReset` | Thuần |
+| domain | `glicko2.Update`, `TierPolicy`, `ProvisionalPolicy`, `PointTable`, `EffortRules`, `LeaderboardDefinition` (invariant: scope school/grade ≠ `xp`; không scope `class`), `VisibilityPolicy`, `GradeGoal` (gộp + che ô < 5), `PeriodKey` (ICT), `SoftReset` | Thuần |
 | application | Command `ApplyMatchRating`, `InflateInactiveRD`, `AwardMatchPoints`, `RecordContribution`, `ClosePeriod`, `RebuildLeaderboard`, `MaterializeDefinitions`, `StartSeason`, `EndSeason` · Query `GetMyRatings`, `ListLeaderboards`, `GetLeaderboard`, `GetMyLeaderboardPosition`, `GetLeaderboardHistory`, `ListSeasons`, `GetSeason` | Command (`command/`, `UnitOfWork`) / query (`query/`, chỉ đọc) tách, gọi qua interface có kiểu |
 | infrastructure | ent repo; Valkey store; SQL đọc snapshot | Key `ew:competition:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>` |
 | presentation | Handler `getMyRatings`, `listLeaderboards`, `getLeaderboard`, `getMyLeaderboardPosition`, `getLeaderboardHistory`, `listSeasons`, `getSeason`; consumer; job | |
@@ -110,8 +110,8 @@ Không có. Công thức Glicko-2, tier, point table, effort points, visibility,
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Học sinh: `game_player`, chỉ scope chứa mình (lớp từ `ref.enrollments`, trường từ `ref.students`, friends từ projection bạn bè).
-- Nhân sự: `lms.class.read`, scope trường/tenant của UserRole; `show_real_names` chỉ trong trường thuộc scope, audit `leaderboard.real_names_viewed`.
+- Học sinh: `game_player`, chỉ scope chứa mình (trường và khối từ `ref.students` cập nhật theo `student.placement_changed` — ADR-0095; friends từ projection bạn bè).
+- Nhân sự: `lms.student.read` (ADR-0095 mục 6), scope trường/tenant của UserRole; `show_real_names` chỉ trong trường thuộc scope, audit `leaderboard.real_names_viewed`.
 - Idempotency: consumer qua `processed_events`; sổ cái unique theo nguồn; snapshot unique `(leaderboard_id, scope_id, period_key, student_id)`.
 - Audit: `season.started/ended`, `leaderboard.period_closed` (hệ thống).
 

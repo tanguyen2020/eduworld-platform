@@ -1,7 +1,10 @@
 # Student Game UX — Kinh tế, xã hội, thi đấu, sự kiện, cài đặt
 
-> Trạng thái: Draft · Phiên bản: 0.1 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.2 · Owner: UX/UI Designer + Game Director · Cập nhật: 2026-11-21 (ADR-0095 — WP-S: bỏ lớp: không nhóm "Bạn cùng lớp", không tab chat Lớp, hồ sơ hiện khối, mục tiêu khối thay mục tiêu lớp) · 2026-11-15
 > Liên quan: [STUDENT_GAME_UX](STUDENT_GAME_UX.md) (quy ước chung, màn lõi) · [DESIGN_SYSTEM](DESIGN_SYSTEM.md) · [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) · [ADR-0056 song ngữ](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057 máy tầm trung](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md)
+
+> [!IMPORTANT]
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Đã viết lại ở WP-S (2026-11-21): học sinh thuộc một trường với một khối; người chơi khác chỉ thấy nickname + avatar (không ngoại lệ "bạn cùng lớp"); Tìm bạn không có nhóm "Bạn cùng lớp"; chat không có tab/kênh lớp, nhóm học tập hay khối; hồ sơ hiện khối; lớp 1–3 thấy mục tiêu tập thể của khối (`grade_goal`) thay thứ hạng. "Lớp 1–3", "lớp 4+"… là cách gọi **khối**.
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Quy ước áp dụng · 3. Inventory / Shop · 4. Achievement / Collection · 5. Party lobby · 6. Bạn bè & Club · 7. Chat · 8. Competition Arena · 9. Event center · 10. Cài đặt · 11. Khóa dịch và endpoint đề xuất · 12. Acceptance criteria
 
@@ -27,7 +30,7 @@ Quy ước chung (nền tảng, khung màn hình, vùng HUD, vùng chạm, phím
 - **Thế giới 3D khi mở màn phụ:** tạm dừng render độ phân giải đầy đủ — giảm render scale và tần số cập nhật thế giới nền (ví dụ 15 FPS) để dành tài nguyên cho UI ([PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md)). Nhân vật vẫn đứng yên an toàn; hub sync vẫn chạy.
 - **Song ngữ:** mọi chuỗi qua khóa `ui.<screen>.<element>` (gettext `.po`, ADR-0056); dữ liệu từ backend dùng `i18nText`. Bố cục chịu được chuỗi dài hơn 35%: nút co giãn theo chữ, tối đa 2 dòng rồi rút gọn có tooltip/nhấn giữ để xem đủ.
 - **Grade band:** cỡ chữ/nút theo `density/{g1_3,g4_5,g6_7,g8_9}` ([DESIGN_SYSTEM §5](DESIGN_SYSTEM.md)); lớp 1–3 ưu tiên icon kèm chữ ngắn và giọng đọc tùy chọn.
-- **Riêng tư:** người chơi khác chỉ thấy nickname, avatar, level, danh hiệu, huy hiệu công khai; không bao giờ thấy tên thật (trừ bạn cùng lớp theo [SOCIAL_SYSTEM §4.1](../03-social-multiplayer/SOCIAL_SYSTEM.md)), trường, điểm học tập, mastery.
+- **Riêng tư:** người chơi khác chỉ thấy nickname, avatar, level, danh hiệu, huy hiệu công khai; không bao giờ thấy tên thật, trường, khối, điểm học tập, mastery ([SOCIAL_SYSTEM §4.1](../03-social-multiplayer/SOCIAL_SYSTEM.md), không có ngoại lệ — ADR-0095).
 - **Trạng thái mẫu dùng chung:** Đang tải (skeleton, không spinner toàn màn quá 300 ms), Rỗng (minh họa + lời gợi ý hành động), Lỗi (thông điệp thân thiện + Thử lại), Mất mạng (băng vàng trên cùng "Đang kết nối lại…", thao tác ghi bị khóa, dữ liệu cache vẫn xem được), Khóa (ổ khóa + "Cách mở khóa"), Thành công (toast 2 giây + âm thanh ngắn).
 
 ## 3. Inventory / Shop
@@ -224,7 +227,7 @@ Chat nhóm mở bằng nút `💬` (trượt từ phải, chiếm 45% chiều r�
 
 **Hiệu năng.** Avatar thành viên là ảnh 2D render sẵn (thumbnail theo cấu hình avatar, cache), **không** render 4 nhân vật 3D trong lobby. Snapshot WS áp vào state store, chỉ vẽ lại thẻ thay đổi.
 
-**An toàn/riêng tư.** Mời chỉ từ danh sách được phép (bạn bè, cùng lớp, club, người vừa chơi cùng trong phạm vi ADR-0054). Mỗi tin chat nhóm có Tắt tiếng/Chặn/Báo cáo. Kết quả học tập trong hoạt động chung luôn riêng từng người (không hiển thị điểm của bạn khác).
+**An toàn/riêng tư.** Mời chỉ từ danh sách được phép (bạn bè, club, người vừa chơi cùng — trong phạm vi ADR-0054 và điều kiện loại party/khối của [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md)). Mỗi tin chat nhóm có Tắt tiếng/Chặn/Báo cáo. Kết quả học tập trong hoạt động chung luôn riêng từng người (không hiển thị điểm của bạn khác).
 
 ## 6. Bạn bè & Club
 
@@ -247,7 +250,7 @@ Chat nhóm mở bằng nút `💬` (trượt từ phải, chiếm 45% chiều r�
 └──────────────────────────────────────┴────────────────────────────────────────────┘
 ```
 
-Tab **Tìm bạn** không có ô tìm tự do: ba nhóm "Người chơi gần đây", "Bạn cùng lớp", "Vừa chơi cùng" + khối **Mã bạn bè** ([Tạo mã] hiển thị mã 6 ký tự đếm ngược; [Nhập mã]). Tab **Club**: club của em (tối đa theo SOCIAL_SYSTEM), club đề xuất trong trường, [Tạo club] (cần nhà trường duyệt); trang club gồm thành viên + vai trò, mục tiêu tuần (thanh tiến độ tập thể), sự kiện club, nút chat club.
+Tab **Tìm bạn** không có ô tìm tự do: hai nhóm "Người chơi gần đây", "Vừa chơi cùng" (không có nhóm "Bạn cùng lớp" — ADR-0095) + mục **Mã bạn bè** ([Tạo mã] hiển thị mã 6 ký tự đếm ngược; [Nhập mã]). Tab **Club**: club của em (tối đa theo SOCIAL_SYSTEM), club đề xuất trong trường, [Tạo club] (cần nhà trường duyệt); trang club gồm thành viên + vai trò, mục tiêu tuần (thanh tiến độ tập thể), sự kiện club, nút chat club.
 
 **Bố cục Mobile**
 
@@ -287,11 +290,11 @@ Chạm `›` mở trang hồ sơ bạn toàn màn với các nút hành động 
 
 **Hiệu năng.** Danh sách ảo hóa; ảnh đại diện 2D 64×64 cache; presence cập nhật theo lô (gộp sự kiện tối đa 1 lần/giây cho danh sách).
 
-**An toàn/riêng tư.** Không tìm kiếm theo tên/ID; hồ sơ bạn không hiện điểm học tập, mastery, kết quả kiểm tra; tên thật chỉ hiện với bạn cùng lớp. Báo cáo gắn ngữ cảnh (người, tin, trận).
+**An toàn/riêng tư.** Không tìm kiếm theo tên/ID; hồ sơ bạn không hiện điểm học tập, mastery, kết quả kiểm tra; không hiện tên thật, trường, khối với bất kỳ ai (R16, ADR-0095). Báo cáo gắn ngữ cảnh (người, tin, trận).
 
 ## 7. Chat
 
-**Mục đích.** Giao tiếp an toàn trong các kênh: World, Area, Match, Party, Team, Class, Study group/Club, Direct. Nghiệp vụ và mọi giới hạn: [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) (§3.1 bảng kênh, §4.2–§4.3 trải nghiệm, §7 tính năng); kiểm duyệt: [MODERATION](../03-social-multiplayer/MODERATION.md).
+**Mục đích.** Giao tiếp an toàn trong các kênh: World, Area, Match, Party, Team, Club (team cố định), Direct — không có kênh lớp, nhóm học tập hay khối (ADR-0095). Nghiệp vụ và mọi giới hạn: [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) (§3.1 bảng kênh, §4.2–§4.3 trải nghiệm, §7 tính năng); kiểm duyệt: [MODERATION](../03-social-multiplayer/MODERATION.md).
 
 **Điểm vào/ra.** PC: khung chat dưới-trái của HUD (thu gọn/mở rộng bằng `Enter` hoặc `T`); mobile: nút chat dưới-trái có badge. Trong party lobby, trận, boss: panel nhúng luôn có (always-on, thu gọn được).
 
@@ -299,7 +302,7 @@ Chạm `›` mở trang hồ sơ bạn toàn màn với các nút hành động 
 
 ```text
 ┌ Chat ───────────────────────────────────────────── [🔍] [‒] ┐
-│ [Khu vực] [Nhóm 2] [Lớp] [@1 Bạn bè ▾]                       │ ← tab kênh, badge chưa đọc
+│ [Khu vực] [Nhóm 2] [Club] [@1 Bạn bè ▾]                      │ ← tab kênh, badge chưa đọc
 │ 📌 CáHeoVui07: Hẹn 19h vào boss Rừng Phiêu Lưu nhé!           │ ← tin ghim của thành viên (≤ 3)
 │ CáHeoVui07: Ai đi boss không?                    10:21       │
 │   ↳ trả lời MèoXanh42: "Đi thôi!"                             │
@@ -316,7 +319,7 @@ Nhấp chuột phải hoặc nút `⋯` trên tin mở menu thao tác (Trả l�
 
 ```text
 ┌ ←  Chat · Nhóm Sao Băng                        [🔍] [⋯] ┐
-│ [Khu vực][Nhóm 2][Lớp][Bạn bè] ⇄                         │
+│ [Khu vực][Nhóm 2][Club][Bạn bè] ⇄                        │
 │ CáHeoVui07: Ai đi boss không?                            │
 │ MèoXanh42 (em): Tớ đi!                          ✓✓       │
 │ ─────────────────────────────────────────────────────── │
@@ -346,7 +349,7 @@ Nhấn giữ tin để mở menu thao tác dạng bảng dưới. Trong **trận
 
 **Tương tác & phản hồi.** `Enter` gửi, `Shift+Enter` xuống dòng (PC); mũi tên lên sửa tin vừa gửi (trong thời hạn). Gõ `@` mở danh sách nickname thành viên kênh. Thu hồi luôn hỏi lại. Báo cáo một bước: chọn lý do → gửi → "Cảm ơn em đã báo, đội an toàn EduWorld sẽ xem xét".
 
-**Khác biệt grade band.** Quy tắc chat như nhau mọi lớp (ADR-0020). Khác biệt chỉ ở trình bày: `g1_3` quick message to, nằm trên ô nhập và luôn hiện; bảng emoji/sticker mở mặc định thay vì bàn phím; cỡ chữ 24 px.
+**Khác biệt grade band.** Quy tắc chat như nhau mọi khối (ADR-0020). Khác biệt chỉ ở trình bày: `g1_3` quick message to, nằm trên ô nhập và luôn hiện; bảng emoji/sticker mở mặc định thay vì bàn phím; cỡ chữ 24 px.
 
 **Song ngữ.** Khóa giao diện `ui.chat.*` (ví dụ `ui.chat.typing` "{nickname} đang soạn tin…" / "{nickname} is typing…", `ui.chat.recalled` "Tin nhắn đã được thu hồi" / "This message was unsent", `ui.chat.feedback.pii_blocked` — chuỗi dài nhất). Quick message là nội dung cấu hình song ngữ: người gửi chọn câu theo ngôn ngữ của mình, **người nhận thấy câu đó theo ngôn ngữ của người nhận** (quick message gửi bằng `quick_message_id`). Tin nhập tự do **không dịch** (ADR-0056).
 
@@ -408,7 +411,7 @@ Màn kết quả: Thắng/Hòa/Chưa thắng (từ ngữ động viên), điểm
 
 Chọn chế độ trên mobile: thẻ chế độ cuộn ngang, nút Tìm trận cố định dưới phải. Tablet: như PC.
 
-**Thành phần.** `ModeCard`, `SubjectTopicPicker`, `QueueStatusBar`, `ReadyCheckDialog` (đếm ngược), `MatchHeader` (điểm hai bên/đội, tiến độ câu), `QuestionPanel` (renderer hoạt động — [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)), `AnswerButtons`, `AnswerRevealOverlay`, `MatchChatStrip` (channel `match`/`team`, always-on), `ResultScreen`, `TierBadge`, `LeaderboardView` (theo scope/period; lớp 1–3 hiển thị mục tiêu lớp thay thứ hạng), `MatchHistoryList`.
+**Thành phần.** `ModeCard`, `SubjectTopicPicker`, `QueueStatusBar`, `ReadyCheckDialog` (đếm ngược), `MatchHeader` (điểm hai bên/đội, tiến độ câu), `QuestionPanel` (renderer hoạt động — [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md)), `AnswerButtons`, `AnswerRevealOverlay`, `MatchChatStrip` (channel `match`/`team`, always-on), `ResultScreen`, `TierBadge`, `LeaderboardView` (theo scope/period; lớp 1–3 hiển thị mục tiêu tập thể của khối trong trường — `grade_goal`, không tên — thay thứ hạng), `MatchHistoryList`.
 
 **Dữ liệu & API.** REST: `createMatchmakingTicket`, `getMatchmakingTicket`, `cancelMatchmakingTicket`, `acceptMatchProposal`, `createDuel`/`acceptDuel`/`declineDuel`, `getMatch`, `listMyMatches`, `getMyRatings` (chỉ dùng tier), `getLeaderboard`, `getMyLeaderboardPosition`, `listTournaments`. WS: `matchmaking.ticket.updated`, `matchmaking.proposal.created`/`updated`/`cancelled`, `matchmaking.proposal.accept`/`decline`, `matchmaking.match.assigned`, `battle.countdown.started`, `battle.question.shown`, `battle.answer.submit`, `battle.answer.recorded`, `battle.answer.evaluated`, `battle.question.revealed`, `battle.round.ended`, `battle.participant.status_changed`, `battle.match.paused`/`resumed`, `battle.match.ended`, `battle.state.request`/`snapshot`.
 
@@ -531,13 +534,13 @@ Mỗi mục mở trang con toàn màn. Tablet: hai cột như PC.
 
 | Nhóm | Thiết lập | Ghi chú |
 |---|---|---|
-| Hồ sơ của em | Chỉ xem: nickname, trường (tên song ngữ), tỉnh/thành, lớp, khối — lấy từ PlayerBootstrap (dữ liệu SIS đồng bộ khi đăng nhập, ADR-0061); nút "Thông tin chưa đúng? Báo nhà trường" (mở hướng dẫn, không sửa được trong game) | Chỉ chính học sinh thấy; người khác không thấy trường/lớp (ADR-0060, [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md)); khóa dịch `ui.settings.profile.*` |
+| Hồ sơ của em | Chỉ xem: nickname, trường (tên song ngữ), tỉnh/thành, khối — lấy từ PlayerBootstrap (dữ liệu SIS đồng bộ khi đăng nhập, ADR-0061); nút "Thông tin chưa đúng? Báo nhà trường" (mở hướng dẫn, không sửa được trong game) | Chỉ chính học sinh thấy; người khác không thấy trường/khối (ADR-0060, ADR-0095, [CHARACTER_SYSTEM](../01-game-design/CHARACTER_SYSTEM.md)); khóa dịch `ui.settings.profile.*` |
 | Ngôn ngữ | Tiếng Việt / English; hiển thị song song tên riêng & từ vựng chủ chốt | Đổi ngay, không khởi động lại; lưu vào hồ sơ (`updateGameProfile`) để đồng bộ thiết bị; mặc định theo tenant |
 | Đồ họa | Preset Thấp / Trung bình / Cao; Tự phát hiện lại (benchmark 5 giây); độ phân giải động; giới hạn FPS (30/60; mobile mặc định 30); số người chơi hiển thị (Ít/Vừa/Nhiều); hiện FPS | Preset và giá trị theo [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md); máy không đủ cho preset đã chọn → gợi ý hạ preset (không tự ép) ; lưu cục bộ theo thiết bị |
 | Âm thanh | Âm lượng tổng, nhạc, hiệu ứng, giọng NPC; giọng đọc (TTS) cho câu hỏi/chat | TTS mặc định bật cho `g1_3` |
 | Điều khiển | PC: gán phím, độ nhạy chuột, đảo trục; Mobile: vị trí/kích thước joystick và nút, rung | Đặt lại mặc định |
 | Trợ năng | Cỡ chữ (+0/+1/+2 bậc theo density), tương phản cao, giảm chuyển động, phụ đề hội thoại NPC (luôn bật mặc định), chế độ màu cho người mù màu | Áp dụng toàn bộ UI game |
-| Riêng tư | Ẩn tên khỏi bảng xếp hạng ngoài lớp; ai được gửi lời mời kết bạn (theo phạm vi cho phép, chỉ siết chặt hơn); hiển thị "đã xem" ở tin nhắn riêng; danh sách đã chặn | Không cho nới quá chính sách trường |
+| Riêng tư | Ẩn nickname khỏi bảng xếp hạng ngoài trường (bảng toàn platform) [Proposed — ADR-0095 bỏ bảng lớp]; ai được gửi lời mời kết bạn (theo phạm vi cho phép, chỉ siết chặt hơn); hiển thị "đã xem" ở tin nhắn riêng; danh sách đã chặn | Không cho nới quá chính sách trường |
 | Tài khoản | Nickname (chỉ xem), trường (chỉ xem), thời gian chơi hôm nay (thông tin, kèm nhắc nghỉ), **Đăng xuất**, Đăng xuất trên mọi thiết bị | Đăng xuất hỏi xác nhận; trên máy dùng chung luôn hiện nút Đăng xuất to |
 
 **Dữ liệu & API.** `getGameProfile`, `updateGameProfile` (ngôn ngữ, cài đặt đồng bộ như trợ năng/riêng tư), `logout`, `endGameSession`, `postTelemetry` (kết quả tự phát hiện preset, FPS trung bình — không chứa PII). Đăng xuất mọi thiết bị: **đề xuất** `POST /api/v1/auth/sessions:revoke-all` nếu chưa có (cần fork spec xác nhận).

@@ -10,7 +10,7 @@
 
 ## R2. Receipts không lưu theo tin × người
 
-- **Decision**: Lưu con trỏ `last_delivered_seq`, `last_read_seq` mỗi thành viên (gộp ở `ew:chat:cursor_buf`, flush ≤ 1 lần/2 s qua JetStream `cursor`). `getMessageReceipts(seq)` tính: Read nếu `last_read_seq ≥ seq`, Delivered nếu `last_delivered_seq ≥ seq`; `class`/`study_group` chỉ trả số đếm; ẩn thành viên có quan hệ chặn với người gọi.
+- **Decision**: Lưu con trỏ `last_delivered_seq`, `last_read_seq` mỗi thành viên (gộp ở `ew:chat:cursor_buf`, flush ≤ 1 lần/2 s qua JetStream `cursor`). `getMessageReceipts(seq)` tính: Read nếu `last_read_seq ≥ seq`, Delivered nếu `last_delivered_seq ≥ seq`; channel > 8 thành viên (club — `team` cố định; `class`/`study_group` đã bỏ theo ADR-0095) chỉ trả số đếm; ẩn thành viên có quan hệ chặn với người gọi.
 - **Rationale**: CHAT_SYSTEM §8.1; tránh bảng bùng nổ dòng.
 
 ## R3. Version sticker pack/GIF

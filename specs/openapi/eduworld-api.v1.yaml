@@ -15073,7 +15073,7 @@ paths:
       x-service: game
       tags: [game]
       operationId: getCommunityGoal
-      summary: Tiến độ community goal theo phạm vi, mốc; đóng góp theo lớp khi được phép (không xếp hạng cá nhân)
+      summary: Tiến độ community goal theo phạm vi, mốc; đóng góp theo khối khi được phép (không xếp hạng cá nhân, ẩn khối < 5 học sinh — ADR-0095)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/GoalIdPath'
@@ -20457,16 +20457,20 @@ components:
         games_played: { type: integer }
     TournamentCreate:
       type: object
-      description: Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027).
+      description: |
+        Giải đấu luôn được tạo từ tournament template của platform; tenant tạo qua POST /lms/challenges (ADR-0027).
+        Không có giải cấp lớp (ADR-0095): giải khối của trường = `scope_type = school` + `grade_level`.
       required: [template_id, name, format, scope_type, scope_id, subject_id, registration_closes_at]
       properties:
         template_id: { $ref: '#/components/schemas/Uuid' }
         name: { type: string, maxLength: 80 }
         format: { type: string, enum: [single_elim, double_elim, round_robin, team] }
-        scope_type: { type: string, enum: [class, school, organization] }
+        scope_type: { type: string, enum: [school, organization] }
         scope_id: { $ref: '#/components/schemas/Uuid' }
         subject_id: { $ref: '#/components/schemas/Uuid' }
-        grade_level: { $ref: '#/components/schemas/GradeLevel' }
+        grade_level:
+          description: Khối của giải (giải khối của trường khi `scope_type = school`)
+          $ref: '#/components/schemas/GradeLevel'
         registration_closes_at: { $ref: '#/components/schemas/Timestamp' }
         starts_at: { $ref: '#/components/schemas/Timestamp' }
         max_entries: { type: integer, minimum: 2, maximum: 256 }
@@ -20484,7 +20488,7 @@ components:
       required: [leaderboard_id, period_key, entries]
       properties:
         leaderboard_id: { $ref: '#/components/schemas/Uuid' }
-        scope_type: { type: string, enum: [global, organization, school, class, grade, subject, topic, game_mode, friends, team] }
+        scope_type: { type: string, enum: [global, organization, school, grade, subject, topic, game_mode, friends, team], description: 'Không có bảng cấp lớp (ADR-0095); mục tiêu tập thể của khối (`grade_goal`) không phải bảng xếp hạng' }
         metric: { type: string, enum: [competition_points, xp, quests_completed, rating] }
         period: { type: string, enum: [daily, weekly, monthly, season, all_time] }
         period_key: { type: string, maxLength: 64 }
@@ -24578,15 +24582,18 @@ components:
         my_contributed:
           type: boolean
           description: Học sinh đã có ≥ 1 đóng góp (điều kiện nhận thưởng mốc) — không có xếp hạng cá nhân
-        by_class:
+        by_grade:
           type: array
-          maxItems: 200
-          description: Chỉ khi trường cho phép (lớp 4–9)
+          maxItems: 9
+          description: |
+            Đóng góp theo khối của trường (ADR-0095 — thay `by_class`), chỉ khi sự kiện bật `show_grade_contributions`
+            và chỉ khối 4–9 (EVENT_SEASON_SYSTEM §6).
+            Không tên, không xếp hạng cá nhân; khối có < 5 học sinh đóng góp bị ẩn (không trả dòng — FR-ANL-016).
           items:
             type: object
+            required: [grade_level, progress]
             properties:
-              class_id: { $ref: '#/components/schemas/Uuid' }
-              class_name: { type: string, maxLength: 64 }
+              grade_level: { $ref: '#/components/schemas/GradeLevel' }
               progress: { type: integer, minimum: 0 }
         updated_at: { $ref: '#/components/schemas/Timestamp' }
     GameEventDetail:
@@ -24727,10 +24734,6 @@ components:
               type: array
               maxItems: 100
               items: { $ref: '#/components/schemas/Uuid' }
-            class_ids:
-              type: array
-              maxItems: 500
-              items: { $ref: '#/components/schemas/Uuid' }
             grade_levels:
               type: array
               maxItems: 9
@@ -24758,10 +24761,6 @@ components:
             school_ids:
               type: array
               maxItems: 100
-              items: { $ref: '#/components/schemas/Uuid' }
-            class_ids:
-              type: array
-              maxItems: 500
               items: { $ref: '#/components/schemas/Uuid' }
             grade_levels:
               type: array

@@ -27,6 +27,7 @@
 
 ## Notes
 
-- Phạm vi bổ sung theo điều phối: màn workspace C "Thử thách lớp / giải trường" (FR-LMS-004); CODE_PLAN §4 chỉ ghi FR-CMS-005 — cần cập nhật cột FR chính.
+- Phạm vi bổ sung theo điều phối: màn workspace C "Thử thách khối / giải trường" (FR-LMS-004; nhãn đổi theo ADR-0095); CODE_PLAN §4 chỉ ghi FR-CMS-005 — cần cập nhật cột FR chính.
 - `competition.config.reward.write` dùng cho `config_type = competition-rewards` (RB-415, API_DESIGN §9.13).
 - Không có tài khoản demo `competition_admin` trong LOCAL_DEVELOPMENT; quickstart dùng `sa.admin`.
+- ADR-0095 (2026-11-21, WP-S): invariant chặn scope `class`, metric `class_goal`, template `class_challenge`, seeding `separate_class`; wizard workspace C chọn trường → khối ± học sinh (delta op ở F107 contracts §6).

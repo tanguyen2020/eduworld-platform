@@ -1,6 +1,6 @@
 # Progression System — XP, Level, phần thưởng lên cấp
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director + Game Systems Designer · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Game Systems Designer · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [ADR-0018, ADR-0043, ADR-0049](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -167,7 +167,7 @@ Mở khóa vùng, điểm khám phá, vật sưu tầm, secret quest, hoàn thà
 
 ### 5.1. Chuyển năm học (lên lớp) [Confirmed]
 
-Khi học sinh lên lớp, module game nhận `student.synced` (đổi `grade_level`) / `enrollment.changed` từ module identity và áp các quy tắc sau trong một command idempotent theo `(student_id, school_year)`:
+Khi học sinh lên khối, module game nhận `student.placement_changed` (đổi `grade_level` — ADR-0095, thay `enrollment.changed`) hoặc `student.synced` (đổi `grade_level`) từ module identity và áp các quy tắc sau trong một command idempotent theo `(student_id, school_year)`:
 
 | Thành phần | Quy tắc |
 |---|---|
@@ -175,12 +175,12 @@ Khi học sinh lên lớp, module game nhận `student.synced` (đổi `grade_le
 | Vùng đã mở, điểm khám phá, vật sưu tầm, cosmetic, inventory | Giữ nguyên ([WORLD_DESIGN](WORLD_DESIGN.md) §7–8, [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md)) |
 | Mạch truyện chính (`main`, `repeatability = once`) | Chương đã hoàn thành giữ trạng thái; vì câu hỏi trong chương theo khối của học sinh ([WORLD_DESIGN §2.2](WORLD_DESIGN.md#22-mạch-truyện-chính-confirmed--người-duyệt-2026-11-15-adr-0056)), mỗi chương môn học mở thêm một **"Hành trình khối mới"** (chuỗi quest `side`/`learning` của khối mới, cùng NPC và bối cảnh) thay vì bắt chơi lại chương cũ |
 | Quest đang `active` của khối cũ | Quest `learning`/`daily`/`weekly` có `grade_levels` không chứa khối mới → `expired` (không phạt); quest khám phá/xã hội không gắn khối giữ nguyên |
-| Quest do nhà trường giao (`start_trigger = assignment`) | Theo trạng thái assignment của lớp cũ (LMS đóng khi hết năm học); kết quả đã nộp vẫn xem được |
+| Quest do nhà trường giao (`start_trigger = assignment`) | Theo trạng thái assignment đã giao cho học sinh (bài giao theo khối cũ do LMS đóng khi hết năm học); kết quả đã nộp vẫn xem được |
 | Cap XP ngày, giảm dần khi lặp | Không đổi; cửa sổ 7 ngày tính tiếp |
 | Learning mastery | Thuộc module learning, không reset ([LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md)) |
 | Thông báo | Màn chào năm học mới trong game (cutscene ngắn của Mây), liệt kê hành trình khối mới; không thông báo đẩy |
 
-Học sinh ở lại lớp: không có thay đổi nào; không hiển thị thông điệp gợi ý việc lên/ở lại lớp cho học sinh khác.
+Học sinh ở lại khối (`grade_level` không đổi): không có thay đổi nào; không hiển thị thông điệp gợi ý việc lên/ở lại lớp cho học sinh khác.
 
 ## 6. Dữ liệu (module game, `eduworld_game`)
 
@@ -227,6 +227,6 @@ Không có mã lỗi riêng: XP/level chỉ đọc qua API, mọi thay đổi do
 | AC-GAM-007 | School Learning Dashboard không hiển thị game level như chỉ số học tập |
 | AC-GAM-014 | Attempt ôn LO tiên quyết thấp hơn ≥ 2 khối có `recommendation_id` hoặc mode `assignment` nhận XP đầy đủ (không × 0,25) |
 | AC-GAM-015 | `learning_objective.mastered` giao lặp hoặc LO đạt lại sau decay → XP `mastery.objective_mastered` chỉ cộng một lần |
-| AC-GAM-016 | Học sinh lên lớp: level, XP, vùng đã mở giữ nguyên; quest `learning` khối cũ chuyển `expired`; xử lý lặp event không áp hai lần |
+| AC-GAM-016 | Học sinh lên khối: level, XP, vùng đã mở giữ nguyên; quest `learning` khối cũ chuyển `expired`; xử lý lặp event không áp hai lần |
 
 AC-GAM-008…010 (mở vùng, khám phá) ở [WORLD_DESIGN](WORLD_DESIGN.md) §14. Test case: TC-GAM-004…010 trong [TEST_STRATEGY](../12-project/TEST_STRATEGY.md).

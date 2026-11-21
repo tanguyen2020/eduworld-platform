@@ -7,14 +7,14 @@
 - Phụ thuộc đã Done: F076, F072, F074, F101 (và F100, F090); module learning đã thêm `game` vào `x-allowed-callers` của question plan (delta R1).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Tài khoản demo: `hs.an.3a` (A, leader), `hs.binh.3a` (B) cùng party; `hs.dung.7a` (tenant khác); `ad.truong.a` (nhân sự).
-- Dữ liệu mẫu (seed module game, không phải nội dung thật): boss lớp 3 hai phase (`collective_count`, `min_contribution`), `max_phase_retries` nhỏ; quest party lớp 3 `shared_steps` gồm `go_to` → `activity` → bước `interdependent` 2 role; quest `collective_count`.
+- Dữ liệu mẫu (seed module game, không phải nội dung thật): boss khối 3 hai phase (`collective_count`, `min_contribution`), `max_phase_retries` nhỏ; quest party khối 3 `shared_steps` gồm `go_to` → `activity` → bước `interdependent` 2 role; quest `collective_count`.
 
 ## 2. Kịch bản kiểm tra
 
 | # | Bước | Kết quả mong đợi | Tiêu chí |
 |---|---|---|---|
-| 1 | A `createBossEncounter` `mode = solo` boss lớp 3; thử boss lớp 4; thử `mode = party` | `201 lobby`; `403 CHALLENGE_NOT_ELIGIBLE`; `422` | F103-AC-01 |
-| 2 | Party A+B mở danh sách hoạt động (F101) | Boss/quest lớp 3 đủ điều kiện, lý do dạng mã | F103-AC-02 |
+| 1 | A `createBossEncounter` `mode = solo` boss khối 3; thử boss khối 4; thử `mode = party` | `201 lobby`; `403 CHALLENGE_NOT_ELIGIBLE`; `422` | F103-AC-01 |
+| 2 | Party A+B mở danh sách hoạt động (F101) | Boss/quest khối 3 đủ điều kiện, lý do dạng mã | F103-AC-02 |
 | 3 | A start boss trong lobby (F101), gửi lại cùng key | Một encounter `party`, `external_ref` giống nhau | F103-AC-03 |
 | 4 | A, B gửi `boss.encounter.ready` | `boss.phase.started`; mỗi người nhận `boss.question.assigned` riêng, không có đáp án | F103-AC-04 |
 | 5 | B trả lời đúng (gửi 2 lần); A trả lời sai | Một lần tính cho B; learning record B `mode = challenge`; A chỉ thấy hiệu ứng, B không biết A sai | F103-AC-05, F103-AC-09 |

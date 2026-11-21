@@ -29,3 +29,4 @@
 
 - AC-01, AC-09, AC-10, AC-15, AC-16, AC-18, AC-19, AC-21, AC-23…25 phụ thuộc delta contract (contracts §6, owner F105/F106/F107); trước đó dùng Prism mock có nhãn.
 - Audit thao tác ghi (đăng ký giải, báo cáo) do backend ghi; client chỉ đảm bảo `Idempotency-Key`.
+- ADR-0095 (2026-11-21, WP-S): `display_mode` `grade_goal` + `GradeGoalBar` thay `class_goal` + `ClassGoalBar`; bỏ `highlights` ("Bạn nổi bật tuần này"); dòng bảng không tên lớp; giải khối thay giải lớp.

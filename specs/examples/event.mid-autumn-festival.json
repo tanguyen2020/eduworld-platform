@@ -38,7 +38,7 @@
       "scope": "school",
       "target": 10000,
       "per_student_daily_cap": 50,
-      "show_class_contributions": true,
+      "show_grade_contributions": true,
       "milestones": [
         { "percent": 25, "rewards": [{ "type": "badge", "badge_id": "badge.lantern_bronze" }], "world_change_code": "lanterns_stage_1" },
         { "percent": 50, "rewards": [{ "type": "currency", "currency_code": "xu", "amount": 50 }], "world_change_code": "lanterns_stage_2" },

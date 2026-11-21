@@ -1,4 +1,4 @@
-# Data Model: F120 — Channel bền vững (world, area, class, study group, team, DM), club, chính sách theo cấp, tìm kiếm, retention
+# Data Model: F120 — Channel bền vững (world, area, team, DM), club, chính sách theo cấp, tìm kiếm, retention
 
 **Spec**: [spec.md](spec.md) · **Plan**: [plan.md](plan.md) · Nguồn sự thật bảng: [DATABASE_DESIGN](../../docs/07-backend/DATABASE_DESIGN.md)
 
@@ -11,13 +11,13 @@ Mọi bảng dưới đây: mixin `Base` (UUIDv7 `id`), `tenant_id uuid NOT NULL
 | Trường | Kiểu (ent / SQL) | Ràng buộc | Ghi chú |
 |---|---|---|---|
 | `channel_id` | uuid | PK | |
-| `channel_type` | `varchar(16)` | CHECK enum 8 loại | F120 dùng `world`, `area`, `class`, `study_group`, `team` (cố định), `direct` |
+| `channel_type` | `varchar(16)` | CHECK enum 6 loại `world/area/match/party/team/direct` (ADR-0095: `class`/`study_group` bỏ khỏi CHECK khi không còn dòng — ADR-0095 §8, owner lõi F115) | F120 dùng `world`, `area`, `team` (cố định, club), `direct` |
 | `is_gameplay` | bool | CHECK DATABASE_DESIGN §2.12 | `false` cho mọi channel của F120 |
-| `scope_ref` | jsonb | | `{class_id}` · `{study_group_id}` · `{club_id}` · `{school_id}` hoặc `{tenant_id}` (world) · `{room_id}` (area) · `{user_low_id,user_high_id}` (direct) |
+| `scope_ref` | jsonb | | `{club_id}` · `{school_id}` hoặc `{tenant_id}` (world) · `{room_id}` (area) · `{user_low_id,user_high_id}` (direct) |
 | `school_id` | uuid | NULL với world toàn tenant/direct liên trường | |
-| `policy_id` | uuid | | policy cấp lớp nếu có |
+| `policy_id` | uuid | | F120 không dùng (không còn policy dưới cấp trường — ADR-0095); effective policy tính theo trường/tenant của channel |
 | `retention_days` | int | | từ cấu hình (Assumptions spec) |
-| `status` | `varchar(16)` (`MaxLen(16)`) | **Thêm cột** CHECK `open/read_only/frozen/archived` | CHAT_SYSTEM §6 có `status` |
+| `status` | `varchar(16)` (`MaxLen(16)`) | **Thêm cột** CHECK `open/read_only/frozen` | CHAT_SYSTEM §6 có `status`; `archived` (study group bị xóa) bỏ theo ADR-0095 [Proposed] |
 | `capabilities` | jsonb | **Thêm cột**, CHECK `(capabilities->>'voice')::bool IS NOT TRUE` | FR-CHAT-007 |
 | `last_seq`, `opened_at`, `closed_at`, `purge_after` | | | có sẵn |
 
@@ -30,8 +30,8 @@ Mọi bảng dưới đây: mixin `Base` (UUIDv7 `id`), `tenant_id uuid NOT NULL
 | `channel_id`, `user_id` | uuid | PK | |
 | `school_id`, `role` (`varchar(16)`), `muted_until`, `last_delivered_seq`, `last_read_seq`, `unread_mentions`, `show_read_receipts`, `notification_level` (`varchar(16)`) | | | có sẵn |
 | `joined_at` | timestamptz | **Thêm cột** NOT NULL | quyền xem từ `joined_at` |
-| `left_at` | timestamptz | **Thêm cột** | rời lớp/nhóm/club |
-| `source_event_id` | uuid | **Thêm cột** | truy vết event membership |
+| `left_at` | timestamptz | **Thêm cột** | rời/bị gỡ khỏi club |
+| `source_event_id` | uuid | **Thêm cột** | truy vết lệnh/event gây thay đổi thành viên (club, `user.blocked`) |
 
 ### Message — `chat.messages` (Có sẵn · Thêm cột) · `chat.message_revisions` (Có sẵn) · `chat.ephemeral_messages` (Có sẵn)
 
@@ -46,9 +46,9 @@ Mọi bảng dưới đây: mixin `Base` (UUIDv7 `id`), `tenant_id uuid NOT NULL
 |---|---|---|---|
 | `policy_id` | uuid | PK | |
 | `tenant_id` | uuid | NULL = platform (bảng T*) | RLS cho phép đọc dòng platform |
-| `scope_type` | `varchar(16)` | CHECK `platform/tenant/school/class` | |
+| `scope_type` | `varchar(16)` | CHECK `platform/tenant/school` | bỏ `class` (ADR-0095, FR-MOD-004) |
 | `scope_id` | uuid | NULL khi platform | |
-| `school_id` | uuid | | scope school/class |
+| `school_id` | uuid | | scope school |
 | `rules` | jsonb | validate `chat-policy.schema.json` v5 ở use case; CHECK `octet_length(rules::text) <= 65536` | |
 | `version` | int | `If-Match` | |
 | `reason` | `varchar(500)` | **Thêm cột** NOT NULL | |
@@ -64,7 +64,7 @@ Mọi bảng dưới đây: mixin `Base` (UUIDv7 `id`), `tenant_id uuid NOT NULL
 
 Cột và độ dài giữ nguyên DATABASE_DESIGN §2.11 (`name varchar(64)`, `description varchar(500)`, `icon_id varchar(64)`, `club_type varchar(32)`, `status varchar(32)`, `title varchar(128)`, `metric varchar(64)`, `description varchar(1000)` cho event…). Thay đổi:
 
-- `clubs.club_type` CHECK bỏ `study_group` (Cần sửa theo ADR-0084; bảng mới chưa có dữ liệu nên đổi trực tiếp trong migration đầu).
+- `clubs.club_type` CHECK bỏ `study_group` (Cần sửa theo ADR-0084/ADR-0095; bảng mới chưa có dữ liệu nên đổi trực tiếp trong migration đầu). Không có cột/lựa chọn thêm cả lớp (ADR-0095).
 - `clubs.chat_channel_id` → channel `team` cố định.
 - `club_goal_progress`: thêm `last_event_id uuid` (Thêm cột) để idempotent theo event cùng `infra.processed_events`.
 
@@ -76,7 +76,7 @@ Cột và độ dài giữ nguyên DATABASE_DESIGN §2.11 (`name varchar(64)`, `
 
 | Entity | Chuyển trạng thái |
 |---|---|
-| Channel bền vững | `open` → `read_only` (lớp đóng, club khóa/lưu trữ) · `open` ↔ `frozen` (direct, block/unblock) · `open` → `archived` (study group bị xóa) |
+| Channel bền vững | `open` → `read_only` (club khóa/lưu trữ) · `open` ↔ `frozen` (direct, block/unblock) |
 | ChannelMember | thêm (`joined_at`) → rời (`left_at`); vào lại tạo dòng hiệu lực mới (cập nhật `joined_at`, xóa `left_at`) |
 | Club | `pending_approval` → `active` → `locked` ↔ `active` → `archived` |
 | Message (bền vững) | bình thường → `anonymized_at` (retention) |

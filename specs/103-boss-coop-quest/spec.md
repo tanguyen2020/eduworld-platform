@@ -13,6 +13,10 @@
 - Q: Tiến độ chung của quest co-op lưu ở đâu? → A: Bản ghi phiên quest chung của party trong `eduworld_game` (mới), cạnh `QuestProgress` cá nhân — research R4.
 - Q: `allow_continue_on_disconnect` của quest (MULTIPLAYER_GAMEPLAY §9.2) không có trong `quest.schema.json`? → A: Dùng quy tắc QUEST_SYSTEM §6: tiếp tục nếu `party_mode ≠ party_required` hoặc số người còn lại ≥ `party_size.min`.
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Bỏ khái niệm lớp ảnh hưởng F103? → A: Gần như không: điều kiện hoạt động party xét theo khối/grade band của từng thành viên (không theo lớp); party lớp 1–3 cùng khối với leader theo [PARTY_SYSTEM](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) ([ADR-0095 mục 5 (D2)](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21)). F103-AC-02 đổi chữ "khối/lớp thực" thành "khối/trường thực" (guard R16), không đổi hành vi.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Boss nhiều phase, solo và party (Priority: P1)
@@ -28,7 +32,7 @@ Học sinh (một mình hoặc cùng party) đánh boss của khu: mỗi phase t
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
 | F103-AC-01 | KHI học sinh gọi `createBossEncounter` (`mode = solo`, `Idempotency-Key`) với boss khả dụng (khối thuộc `grade_levels`, khu đã mở, boss không `party_required`), module game PHẢI tạo encounter `lobby` ghim `boss_version_id`, đặt hạn tổng theo giờ server và trả `201`; NẾU không đủ điều kiện, THÌ PHẢI trả `403 CHALLENGE_NOT_ELIGIBLE`; `mode = party` qua route này PHẢI trả `422 VALIDATION_FAILED` | FR-CHL-002 · [CHALLENGE_BOSS_SYSTEM §3.3, §3.6](../../docs/01-game-design/CHALLENGE_BOSS_SYSTEM.md) | — |
-| F103-AC-02 | KHI module competition gọi `listPartyActivityCandidates`/`checkPartyActivityEligibility`, module game PHẢI trả theo từng thành viên `eligible` + `reason_code` (khối, grade band, tiên quyết, khu chưa mở, hết lượt), `min_members`/`max_members` theo `party_size`, không trả khối/lớp thực của học sinh | FR-CHL-002 · FR-QST-007 · AC-PTY-005 | TC-PTY-006 |
+| F103-AC-02 | KHI module competition gọi `listPartyActivityCandidates`/`checkPartyActivityEligibility`, module game PHẢI trả theo từng thành viên `eligible` + `reason_code` (khối, grade band, tiên quyết, khu chưa mở, hết lượt), `min_members`/`max_members` theo `party_size`, không trả khối/trường thực của học sinh (ADR-0095: không còn lớp) | FR-CHL-002 · FR-QST-007 · AC-PTY-005 | TC-PTY-006 |
 | F103-AC-03 | KHI module competition gọi `startPartyActivity` loại `boss` (`Idempotency-Key = party_activity_id`), module game PHẢI kiểm lại điều kiện mọi thành viên, tạo encounter `party` với danh sách thành viên và trả `external_ref = encounter_id`, `room_type = boss`, `scene_ref`; gọi lại cùng key PHẢI trả cùng encounter | FR-CHL-002 · [PARTY_SYSTEM §6.1](../../docs/03-social-multiplayer/PARTY_SYSTEM.md) | TC-PTY-006 |
 | F103-AC-04 | KHI mọi thành viên đã gửi `boss.encounter.ready` (người chưa sẵn sàng quá `boss_reconnect_grace` coi là vắng, còn lại ≥ `party_size.min`), module game PHẢI vào phase tiếp theo, tạo bộ câu hỏi riêng cho từng thành viên theo khối của chính người đó (`per_grade`), gửi câu hỏi không có đáp án tới từng người và đẩy `boss.phase.started` có `deadline_at` giờ server | FR-CHL-002 · FR-CHL-003 · ADR-0016 | TC-CHL-002 |
 | F103-AC-05 | KHI thành viên gửi `boss.answer.submit`, module game PHẢI lấy người trả lời từ phiên (không từ payload), đóng dấu thời điểm server, chuyển module learning chấm và ghi vào learning record của chính người đó, cập nhật đóng góp và năng lượng boss, đẩy `boss.encounter.updated`; gửi lặp cùng câu PHẢI chỉ tính một lần | FR-CHL-003 · FR-PTY-013 · AC-CHL-003 | TC-CHL-003 |

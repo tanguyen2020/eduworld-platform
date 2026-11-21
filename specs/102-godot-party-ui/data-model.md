@@ -8,7 +8,7 @@ Không áp dụng — game client không có dữ liệu bền vững cho party 
 
 | Model (RefCounted) | Trường | Nguồn contract |
 |---|---|---|
-| `PartyModel` | `party_id`, `name`, `leader_id`, `party_type`, `visibility`, `invitation_policy`, `max_members`, `status`, `state_version`, `members: Array[PartyMemberModel]`, `current_activity`, `chat_channel_id` | OpenAPI `Party`, AsyncAPI `party.state.snapshot` |
+| `PartyModel` | `party_id`, `name`, `leader_id`, `party_type` (`study_party` thay `study_group` — ADR-0095), `visibility` (`private`/`friends`; không `class` — ADR-0095), `invitation_policy`, `max_members`, `status`, `state_version`, `members: Array[PartyMemberModel]`, `current_activity`, `chat_channel_id` | OpenAPI `Party`, AsyncAPI `party.state.snapshot` |
 | `PartyMemberModel` | `student_id`, `nickname`, `avatar_config`, `level`, `role`, `ready`, `presence` (`online`/`away`/`in_activity`/`disconnected`/`offline`), `joined_at` | OpenAPI `PartyMember`, AsyncAPI `PartyMemberState` |
 | `InvitationModel` | `invitation_id`, `party_id`, `party_name`, `inviter` (nickname, avatar), `member_count`, `status`, `expires_at` (giờ server) | OpenAPI `PartyInvitation`, AsyncAPI `party.invitation.received` |
 | `EligibleActivityModel` | `activity_type`, `activity_ref`, `title`, `min_members`, `max_members`, `all_eligible`, `members[{student_id, eligible, reason_code}]` | `listPartyEligibleActivities` (Cần thêm — F101) |
