@@ -1,24 +1,27 @@
-// F051 T055 (+T015 at unit level) — F051-AC-01, F051-AC-03, F051-AC-04, F051-AC-30 (TC-AUTH-070/071/072/093/094/095,
-// TC-CMS-LOGIN-01): the portal's own /login (no Keycloak request, no tenant before sign-in), one `portalLogin` request,
-// one generic error clearing password and code, 429 waiting time, OTP hint flag, routing of the demo accounts.
+// F051 T055 (+T015 at unit level), T062 — F051-AC-01, F051-AC-03, F051-AC-04, F051-AC-30 (TC-AUTH-070/071/072/093/094/095,
+// TC-CMS-LOGIN-01): the portal's own /login (no Keycloak request, no tenant before sign-in), one `portalLogin` request
+// without any code (portal MFA removed, owner 2026-11-21), one generic error clearing the password, 429 waiting time,
+// routing of the demo accounts; layout of direction A "Sân trường" (landmarks, labels, one column on phones).
 // Backend = MOCK harness (contract stand-in), not a live integration.
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { TEST_CONFIG } from '../shared/api/test-utils';
-import { MockPortalBackend, problem, renderPortal, signIn, stopPortals } from '../test/portal-harness';
+import { MockPortalBackend, problem, renderPortal, setViewportWidth, signIn, stopPortals } from '../test/portal-harness';
 
 afterEach(() => stopPortals());
 
 describe('/login (F051-AC-01, F051-AC-30)', () => {
   it('unauthenticated visit → portal login page with every field; no Keycloak, no tenant step', async () => {
     const { backend, router } = await renderPortal({ url: '/school-lms/classes' });
-    expect(await screen.findByRole('heading', { name: 'Đăng nhập' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
     expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fclasses');
     expect(screen.getByLabelText('Tên đăng nhập hoặc email')).toHaveAttribute('maxlength', '254');
     expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('type', 'password');
-    expect(screen.getByLabelText('Mã xác thực 6 số')).toHaveAttribute('maxlength', '6');
-    expect(screen.getByText('Bắt buộc với tài khoản vận hành platform; để trống nếu chưa cài.')).toBeInTheDocument();
+    // no 6-digit code anywhere (owner 2026-11-21)
+    expect(screen.queryByLabelText(/mã xác thực/i)).toBeNull();
+    expect(screen.queryByText(/mã xác thực/i)).toBeNull();
+    expect(document.querySelector('input[autocomplete="one-time-code"]')).toBeNull();
     expect(screen.getByRole('link', { name: 'Quên mật khẩu?' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Ngôn ngữ' })).toBeInTheDocument();
     expect(screen.queryByText(/trường|đơn vị/i, { selector: 'label' })).toBeNull();
@@ -41,12 +44,11 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
     expect(TEST_CONFIG.apiBaseUrl).not.toMatch(/realms|keycloak/);
   });
 
-  it('401 INVALID_CREDENTIALS → one generic message, password and code cleared, no hint about OTP', async () => {
+  it('401 INVALID_CREDENTIALS → one generic message, password cleared, no hint about the account', async () => {
     const { user } = await renderPortal({ url: '/login' });
-    await signIn(user, 'sa.admin', 'Demo@12345', '000000');
-    expect(await screen.findByText('Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng.')).toBeInTheDocument();
+    await signIn(user, 'sa.admin', 'Sai@12345');
+    expect(await screen.findByText('Tên đăng nhập hoặc mật khẩu chưa đúng.')).toBeInTheDocument();
     expect(screen.getByLabelText('Mật khẩu')).toHaveValue('');
-    expect(screen.getByLabelText('Mã xác thực 6 số')).toHaveValue('');
     expect(screen.getByLabelText('Tên đăng nhập hoặc email')).toHaveValue('sa.admin');
     expect(screen.queryByText(/bắt buộc mã|cần mã/i, { selector: '[role=alert] *' })).toBeNull();
   });
@@ -63,13 +65,16 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
     expect(await screen.findByText('Bạn đã thử quá nhiều lần, vui lòng đợi 30 giây.')).toBeInTheDocument();
   });
 
-  it('platform account with code → platform scope; the "code used last time" flag is the only thing remembered', async () => {
+  it('platform account with username + password only → platform scope; one request without otp; stale code flag cleared', async () => {
+    window.localStorage.setItem('ew.portal.otpHint', 'true');
     const { backend, user, router } = await renderPortal({ url: '/login' });
-    await signIn(user, 'sa.admin', 'Demo@12345', '123456');
+    await signIn(user, 'sa.admin');
     await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/overview'));
-    expect(backend.calls('POST', '/auth/portal/login')[0]!.body).toMatchObject({ otp: '123456' });
+    const logins = backend.calls('POST', '/auth/portal/login');
+    expect(logins).toHaveLength(1);
+    expect(logins[0]!.body).not.toHaveProperty('otp');
     expect(backend.calls('GET', '/me/permissions')[0]!.headers['x-tenant-id']).toBeUndefined();
-    expect(window.localStorage.getItem('ew.portal.otpHint')).toBe('true');
+    expect(window.localStorage.getItem('ew.portal.otpHint')).toBeNull();
   });
 
   it('student account → student message, no workspace, no /me call (F051-AC-04)', async () => {
@@ -95,5 +100,48 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
     await signIn(user, 'gv.moi', 'Temp@12345');
     expect(await screen.findByText('Tài khoản chưa được cấp quyền quản trị')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument();
+  });
+});
+
+describe('/login layout — direction A "Sân trường" (ADMIN_PORTAL §1.3b, owner 2026-11-21)', () => {
+  it('desktop: brand panel (complementary) + main with labelled form, subject chips, hints; decoration hidden', async () => {
+    await renderPortal({ url: '/login' });
+    await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' });
+    expect(screen.getByTestId('auth-layout')).toHaveAttribute('data-layout', 'two-columns');
+    const brand = screen.getByRole('complementary', { name: 'Giới thiệu EduWorld' });
+    expect(within(brand).getByText('Cổng quản trị nhà trường')).toBeInTheDocument();
+    expect(within(brand).getByText('Đồng hành cùng thầy cô trên mỗi bài học')).toBeInTheDocument();
+    const chips = within(brand).getByRole('list', { name: 'Các môn học' });
+    expect(within(chips).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Toán', 'Tiếng Việt', 'Tiếng Anh', 'Khoa học']);
+    for (const svg of brand.querySelectorAll('svg')) expect(svg.closest('[aria-hidden="true"]')).not.toBeNull();
+    const main = screen.getByRole('main');
+    expect(within(main).getByRole('form', { name: 'Đăng nhập' })).toBeInTheDocument();
+    expect(within(main).getByText('Đăng nhập để vào lớp học của bạn.')).toBeInTheDocument();
+    expect(within(main).getByText('Cần hỗ trợ? Liên hệ quản trị trường')).toBeInTheDocument();
+    expect(within(main).getByTestId('student-hint')).toHaveTextContent('Em là học sinh? Hãy mở game EduWorld để vào học nhé.');
+    expect(within(main).getByText(/Nghị định 13\/2023/)).toBeInTheDocument();
+    // no URL is hardcoded for the privacy policy or the game (AGENTS R3)
+    expect(within(main).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['/forgot-password']);
+    for (const input of within(main).getAllByRole('textbox')) expect(input).toHaveAccessibleName();
+    expect(within(main).getByLabelText('Mật khẩu')).toHaveAttribute('type', 'password');
+    expect(within(main).getByRole('button', { name: 'Đăng nhập' })).toHaveAttribute('type', 'submit');
+  });
+
+  it('phone width: one column, compact brand band without headline and chips', async () => {
+    setViewportWidth(390);
+    await renderPortal({ url: '/login' });
+    await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' });
+    expect(screen.getByTestId('auth-layout')).toHaveAttribute('data-layout', 'one-column');
+    const brand = screen.getByRole('complementary', { name: 'Giới thiệu EduWorld' });
+    expect(within(brand).getByText('Cổng quản trị nhà trường')).toBeInTheDocument();
+    expect(within(brand).queryByText('Đồng hành cùng thầy cô trên mỗi bài học')).toBeNull();
+    expect(within(brand).queryByRole('list')).toBeNull();
+    expect(screen.getByLabelText('Tên đăng nhập hoặc email')).toBeInTheDocument();
+  });
+
+  it('forgot-password page uses the same frame', async () => {
+    await renderPortal({ url: '/forgot-password' });
+    expect(await screen.findByRole('heading', { level: 1, name: 'Quên mật khẩu' })).toBeInTheDocument();
+    expect(screen.getByRole('complementary', { name: 'Giới thiệu EduWorld' })).toBeInTheDocument();
   });
 });

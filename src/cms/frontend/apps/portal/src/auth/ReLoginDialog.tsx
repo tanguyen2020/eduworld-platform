@@ -1,6 +1,6 @@
 // ReLoginDialog (F051 T034, F051-AC-13, ADR-0091 mục 4): on `403 MFA_REQUIRED` (auth_time older than 8 h or no MFA on a
 // platform route) the apiClient asks the session to re-authenticate. This dialog opens on the current page (URL kept):
-// username, password and code → `portalLogin`; success replaces the access token and the pending request is retried
+// username and password → `portalLogin` (no 6-digit code: portal MFA removed by the owner on 2026-11-21); success replaces the access token and the pending request is retried
 // once; cancel → back to /login. A sign-in as another user is refused (the session would mix two identities).
 import { Alert, Form, Input, Modal, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -10,14 +10,13 @@ import { usePortalRuntime } from '../app/runtime';
 import type { Locale } from '../i18n';
 import { useSession } from '../session/SessionProvider';
 import { deviceId } from './deviceId';
-import { LOGIN_LIMITS, OTP_PATTERN } from './LoginPage';
+import { LOGIN_LIMITS } from './LoginPage';
 import { loginPath } from './returnUrl';
 import { tokenSubject } from './tokenStore';
 
 interface Values {
   username: string;
   password: string;
-  otp: string;
 }
 
 export function ReLoginHost() {
@@ -66,17 +65,17 @@ export function ReLoginHost() {
     setSubmitting(true);
     setError(null);
     const before = rt.tokens.get();
-    const r = await rt.authApi.login({ username: v.username.trim(), password: v.password, otp: v.otp, device_id: deviceId(), locale: i18n.language as Locale });
+    const r = await rt.authApi.login({ username: v.username.trim(), password: v.password, device_id: deviceId(), locale: i18n.language as Locale });
     setSubmitting(false);
     if (!r.ok) {
-      form.setFieldsValue({ password: '', otp: '' });
+      form.setFieldsValue({ password: '' });
       setError(r.error.code === 'INVALID_CREDENTIALS' ? t('shell.login.invalidCredentials') : t(r.error.i18nKey));
       return;
     }
     const prevSub = before ? tokenSubject(before.token) : null;
     const nextSub = tokenSubject(r.data.access_token);
     if (prevSub && nextSub && prevSub !== nextSub) {
-      form.setFieldsValue({ password: '', otp: '' });
+      form.setFieldsValue({ password: '' });
       setError(t('shell.login.invalidCredentials'));
       return;
     }
@@ -105,9 +104,6 @@ export function ReLoginHost() {
         </Form.Item>
         <Form.Item name="password" label={t('shell.login.password')} rules={[{ required: true, message: t('shell.login.passwordRequired') }]}>
           <Input.Password autoComplete="current-password" maxLength={LOGIN_LIMITS.password} />
-        </Form.Item>
-        <Form.Item name="otp" label={t('shell.login.otp')} rules={[{ required: true, pattern: OTP_PATTERN, message: t('shell.login.otpFormat') }]}>
-          <Input inputMode="numeric" autoComplete="one-time-code" maxLength={LOGIN_LIMITS.otp} />
         </Form.Item>
       </Form>
     </Modal>

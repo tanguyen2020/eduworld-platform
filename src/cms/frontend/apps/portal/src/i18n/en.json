@@ -17,18 +17,18 @@
     },
     "login": {
       "title": "Sign in",
+      "welcome": "Welcome back, teachers",
+      "subtitle": "Sign in to reach your classes.",
       "username": "Username or email",
       "usernameRequired": "Enter your username or email.",
       "password": "Password",
       "passwordRequired": "Enter your password.",
-      "otp": "6-digit authentication code",
-      "otpHelp": "Required for platform operations accounts; leave empty if not set up.",
-      "otpRemembered": "Last time you signed in with an authentication code.",
-      "otpFormat": "The authentication code has exactly 6 digits.",
       "submit": "Sign in",
       "forgot": "Forgot password?",
-      "audience": "For school staff and the operations team. Students, please sign in inside the EduWorld game.",
-      "invalidCredentials": "The username, password or authentication code is not correct.",
+      "support": "Need help? Contact your school administrator",
+      "studentHint": "Are you a student? Open the EduWorld game to start learning.",
+      "privacy": "Student data is protected under Decree 13/2023. Remember to sign out on shared computers.",
+      "invalidCredentials": "The username or password is not correct.",
       "rateLimited": "Too many attempts, please wait {{seconds}} seconds.",
       "rateLimitedNoTime": "Too many attempts, please wait a few minutes.",
       "accountDeactivated": "This account has been deactivated. Please contact an administrator.",
@@ -96,7 +96,7 @@
     },
     "relogin": {
       "title": "Sign in again",
-      "description": "This action needs a new sign-in with your authentication code.",
+      "description": "This action needs you to sign in again.",
       "submit": "Confirm",
       "cancel": "Cancel"
     },
@@ -162,6 +162,14 @@
       "ok": "Confirm",
       "cancel": "Cancel",
       "minLength": "At least {{min}} characters."
+    },
+    "brand": {
+      "panel": "About EduWorld",
+      "name": "EduWorld",
+      "tagline": "School administration portal",
+      "headline": "Supporting teachers in every lesson",
+      "lead": "Assign work, follow progress and support every student — all in one place.",
+      "subjects": "Subjects"
     }
   },
   "error": {
@@ -193,7 +201,7 @@
     "FEATURE_DISABLED": "This feature is temporarily turned off.",
     "RETENTION_BELOW_MINIMUM": "The value is below the allowed minimum.",
     "PORTAL_ACCESS_STAFF_ONLY": "The admin portal is for staff only.",
-    "INVALID_CREDENTIALS": "The username, password or authentication code is not correct.",
+    "INVALID_CREDENTIALS": "The username or password is not correct.",
     "ACCOUNT_SETUP_REQUIRED": "The account setup must be completed.",
     "SETUP_TICKET_INVALID": "The account setup has expired. Please sign in again.",
     "PASSWORD_RESET_TOKEN_INVALID": "This password reset link is no longer valid.",

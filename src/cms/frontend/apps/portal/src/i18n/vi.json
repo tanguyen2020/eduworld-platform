@@ -17,18 +17,18 @@
     },
     "login": {
       "title": "Đăng nhập",
+      "welcome": "Chào mừng thầy cô trở lại",
+      "subtitle": "Đăng nhập để vào lớp học của bạn.",
       "username": "Tên đăng nhập hoặc email",
       "usernameRequired": "Vui lòng nhập tên đăng nhập hoặc email.",
       "password": "Mật khẩu",
       "passwordRequired": "Vui lòng nhập mật khẩu.",
-      "otp": "Mã xác thực 6 số",
-      "otpHelp": "Bắt buộc với tài khoản vận hành platform; để trống nếu chưa cài.",
-      "otpRemembered": "Lần trước bạn đã đăng nhập bằng mã xác thực.",
-      "otpFormat": "Mã xác thực gồm đúng 6 chữ số.",
       "submit": "Đăng nhập",
       "forgot": "Quên mật khẩu?",
-      "audience": "Dành cho cán bộ nhà trường và đội vận hành. Học sinh vui lòng đăng nhập trong game EduWorld.",
-      "invalidCredentials": "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng.",
+      "support": "Cần hỗ trợ? Liên hệ quản trị trường",
+      "studentHint": "Em là học sinh? Hãy mở game EduWorld để vào học nhé.",
+      "privacy": "Dữ liệu học sinh được bảo vệ theo Nghị định 13/2023. Nhớ đăng xuất khi dùng máy tính chung.",
+      "invalidCredentials": "Tên đăng nhập hoặc mật khẩu chưa đúng.",
       "rateLimited": "Bạn đã thử quá nhiều lần, vui lòng đợi {{seconds}} giây.",
       "rateLimitedNoTime": "Bạn đã thử quá nhiều lần, vui lòng đợi ít phút.",
       "accountDeactivated": "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị.",
@@ -96,7 +96,7 @@
     },
     "relogin": {
       "title": "Đăng nhập lại",
-      "description": "Thao tác này cần đăng nhập lại với mã xác thực.",
+      "description": "Thao tác này cần đăng nhập lại.",
       "submit": "Xác nhận",
       "cancel": "Hủy"
     },
@@ -162,6 +162,14 @@
       "ok": "Xác nhận",
       "cancel": "Hủy",
       "minLength": "Tối thiểu {{min}} ký tự."
+    },
+    "brand": {
+      "panel": "Giới thiệu EduWorld",
+      "name": "EduWorld",
+      "tagline": "Cổng quản trị nhà trường",
+      "headline": "Đồng hành cùng thầy cô trên mỗi bài học",
+      "lead": "Giao bài, theo dõi tiến bộ và hỗ trợ từng học sinh — tất cả trong một nơi.",
+      "subjects": "Các môn học"
     }
   },
   "error": {
@@ -193,7 +201,7 @@
     "FEATURE_DISABLED": "Tính năng này đang tạm tắt.",
     "RETENTION_BELOW_MINIMUM": "Giá trị thấp hơn mức tối thiểu cho phép.",
     "PORTAL_ACCESS_STAFF_ONLY": "Cổng quản trị chỉ dành cho nhân sự.",
-    "INVALID_CREDENTIALS": "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng.",
+    "INVALID_CREDENTIALS": "Tên đăng nhập hoặc mật khẩu chưa đúng.",
     "ACCOUNT_SETUP_REQUIRED": "Tài khoản cần hoàn tất thiết lập.",
     "SETUP_TICKET_INVALID": "Phiên thiết lập tài khoản đã hết hạn. Vui lòng đăng nhập lại.",
     "PASSWORD_RESET_TOKEN_INVALID": "Link đặt lại mật khẩu không còn hiệu lực.",

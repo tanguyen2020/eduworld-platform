@@ -28,7 +28,7 @@ describe('reload while the session is valid (F051-AC-28)', () => {
     expect(router.state.location.pathname + router.state.location.search).toBe('/school-lms/classes?page=2');
     expect(backend.calls('POST', '/auth/portal/token:refresh')[0]!.headers['x-ew-csrf']).toBe(csrf);
     expect(backend.calls('GET', '/me/permissions')[0]!.headers['x-tenant-id']).toBe(TENANTS.pgdDemo.tenant_id);
-    expect(screen.queryByRole('heading', { name: 'Đăng nhập' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Chào mừng thầy cô trở lại' })).toBeNull();
     expect(storageDump()).not.toContain(runtime.tokens.get()!.token);
   });
 
@@ -36,7 +36,7 @@ describe('reload while the session is valid (F051-AC-28)', () => {
     const backend = new MockPortalBackend();
     backend.csrf = 'stale-csrf-value'.padEnd(43, 'x');
     const { router } = await renderPortal({ url: '/school-lms/classes', backend });
-    expect(await screen.findByRole('heading', { name: 'Đăng nhập' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
     expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fclasses');
   });
 });
@@ -46,7 +46,7 @@ describe('idle limit (F051-AC-29)', () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
     window.localStorage.setItem('ew.portal.lastActivityAt', new Date(Date.now() - 31 * 60 * 1000).toISOString());
     const { router } = await renderPortal({ url: '/school-lms/classes', backend });
-    expect(await screen.findByRole('heading', { name: 'Đăng nhập' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
     expect(backend.calls('POST', '/auth/portal/token:refresh')).toHaveLength(0);
     expect(backend.calls('POST', '/auth/portal/logout')).toHaveLength(1);
     expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fclasses');

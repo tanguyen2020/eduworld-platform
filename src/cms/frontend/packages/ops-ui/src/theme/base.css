@@ -4,3 +4,8 @@
   color: var(--ew-ops-color-text-primary);
   font-family: var(--ew-antd-font-family);
 }
+
+/* The page itself has no browser margin: the layout background reaches the window edges (Ant Design ships no reset). */
+body {
+  margin: 0;
+}

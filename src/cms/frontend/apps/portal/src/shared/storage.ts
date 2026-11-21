@@ -4,7 +4,8 @@
 
 export const STORAGE_KEYS = {
   deviceId: 'ew.portal.deviceId',
-  otpHint: 'ew.portal.otpHint',
+  /** Flag of the removed 6-digit code field (owner 2026-11-21): only cleared after a sign-in, never read. */
+  legacyOtpHint: 'ew.portal.otpHint',
   lastActivityAt: 'ew.portal.lastActivityAt',
   sessionTenantId: 'ew.portal.sessionTenantId',
   tenantFilter: 'ew.portal.tenantFilter',

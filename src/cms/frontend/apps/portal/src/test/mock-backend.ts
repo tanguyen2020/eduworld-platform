@@ -36,8 +36,6 @@ export interface MockAccount {
   sub: string;
   displayName: string;
   student?: boolean;
-  /** Platform staff: OTP mandatory (ADR-0091). */
-  otp?: string;
   platform?: boolean;
   tenants: Tenant[];
   /** Permission set per tenant id, or `platform`. */
@@ -74,7 +72,6 @@ export const ACCOUNTS: Record<string, MockAccount> = {
     username: 'sa.admin',
     email: 'sa.admin@eduworld.test',
     password: 'Demo@12345',
-    otp: '123456',
     platform: true,
     sub: '0193a4d2-1111-7000-8000-000000000003',
     displayName: 'System Admin',
@@ -85,7 +82,6 @@ export const ACCOUNTS: Record<string, MockAccount> = {
     username: 'cm.noidung',
     email: 'cm.noidung@eduworld.test',
     password: 'Demo@12345',
-    otp: '654321',
     platform: true,
     sub: '0193a4d2-1111-7000-8000-000000000004',
     displayName: 'Content Admin',
@@ -227,7 +223,6 @@ export class MockPortalBackend {
         const account = Object.values(ACCOUNTS).find((a) => a.username === id || a.email === id);
         if (!account || account.password !== body.password) return problem(401, 'INVALID_CREDENTIALS');
         if (account.student) return problem(403, 'PORTAL_ACCESS_STAFF_ONLY');
-        if (account.otp && account.otp !== body.otp) return problem(401, 'INVALID_CREDENTIALS');
         if (account.setupRequired) {
           return problem(403, 'ACCOUNT_SETUP_REQUIRED', {
             setup_ticket: 'setup-ticket-0123456789abcdef0123456789abcdef',
@@ -236,12 +231,12 @@ export class MockPortalBackend {
           });
         }
         this.user = account;
-        return this.issue(account, !!body.otp);
+        return this.issue(account, false);
       }
       case 'POST /auth/portal/token:refresh': {
         if (!this.csrf || rec.headers['x-ew-csrf'] !== this.csrf) return problem(403, 'CSRF_TOKEN_INVALID');
         if (!this.refreshAlive || !this.user) return problem(401, 'REFRESH_TOKEN_INVALID');
-        return this.issue(this.user, !!this.user.otp);
+        return this.issue(this.user, false);
       }
       case 'POST /auth/portal/logout': {
         if (this.refreshAlive && rec.headers['x-ew-csrf'] !== this.csrf) return problem(403, 'CSRF_TOKEN_INVALID');

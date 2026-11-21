@@ -110,7 +110,6 @@ describe('Lỗi quyền, MFA (F059-AC-25)', () => {
     const dialog = await screen.findByRole('dialog');
     fireEvent.change(within(dialog).getByLabelText('Tên đăng nhập hoặc email'), { target: { value: 'sa.admin' } });
     fireEvent.change(within(dialog).getByLabelText('Mật khẩu'), { target: { value: 'Demo@12345' } });
-    fireEvent.change(within(dialog).getByLabelText('Mã xác thực 6 số'), { target: { value: '123456' } });
     await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
     expect(await screen.findByText('Đăng nhập trên thiết bị khác')).toBeInTheDocument();
     expect(backend.calls('GET', '/admin/login-events').length).toBeGreaterThanOrEqual(2);

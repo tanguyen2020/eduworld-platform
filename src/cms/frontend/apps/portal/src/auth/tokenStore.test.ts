@@ -39,7 +39,7 @@ describe('token store and portal session API (F051-AC-02)', () => {
     const setItem = vi.spyOn(Storage.prototype, 'setItem');
     const api = createAuthApi({ config: TEST_CONFIG, getLocale: () => 'vi-VN', hasTranslation: () => true, fetch: backend.fetch });
     const store = new TokenStore();
-    const login = await api.login({ username: 'sa.admin', password: 'Demo@12345', otp: '123456', device_id: deviceId() });
+    const login = await api.login({ username: 'sa.admin', password: 'Demo@12345', device_id: deviceId() });
     expect(login.ok).toBe(true);
     if (login.ok) store.setFromResponse(login.data);
     const refreshed = await api.refresh(backend.csrf);

@@ -1,7 +1,9 @@
 // @eduworld/ops-ui — Admin/Ops design system (ADR-0047). No API calls here (ADMIN_PORTAL §1.1).
 export { OpsThemeProvider, useOpsTheme, resolveThemeConfig, DAYJS_LOCALES } from './theme/OpsThemeProvider';
 export type { ThemeMode, Density, OpsLocale, OpsThemeState, OpsThemeProviderProps } from './theme/OpsThemeProvider';
-export { lightTheme, darkTheme, compactTheme, compactOverrides, domainColors, TOKENS_VERSION } from './theme/antd-theme';
+export { lightTheme, darkTheme, compactTheme, compactOverrides, authTheme, domainColors, TOKENS_VERSION } from './theme/antd-theme';
+export { useAccentColor, ACCENT_BORDER_WIDTH } from './theme/accent';
+export type { Accent } from './theme/accent';
 export { DomainTag, domainTokenName } from './components/DomainTag/DomainTag';
 export type { DomainKind, DomainTagProps } from './components/DomainTag/DomainTag';
 export { openapiRules } from './forms/openapiRules';

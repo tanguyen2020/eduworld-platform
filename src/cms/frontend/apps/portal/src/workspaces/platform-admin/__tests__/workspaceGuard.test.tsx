@@ -41,16 +41,15 @@ describe('Bảo vệ workspace D (F057-AC-18)', () => {
 });
 
 describe('MFA step-up và VPN (F057-AC-19)', () => {
-  it('403 MFA_REQUIRED on a D list → re-login with code, request retried, URL kept', async () => {
+  it('403 MFA_REQUIRED on a D list → re-login (username + password), request retried, URL kept', async () => {
     const backend = backendFor('sa.admin');
     let first = true;
     backend.overrides.unshift((r) => (r.path === '/admin/trash' && first ? ((first = false), problem(403, 'MFA_REQUIRED')) : undefined));
     const { router, user } = await renderPortal({ url: '/platform-admin/trash', backend });
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Thao tác này cần đăng nhập lại với mã xác thực.')).toBeInTheDocument();
+    expect(within(dialog).getByText('Thao tác này cần đăng nhập lại.')).toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText('Tên đăng nhập hoặc email'), { target: { value: 'sa.admin' } });
     fireEvent.change(within(dialog).getByLabelText('Mật khẩu'), { target: { value: 'Demo@12345' } });
-    fireEvent.change(within(dialog).getByLabelText('Mã xác thực 6 số'), { target: { value: '123456' } });
     await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
     expect(await screen.findByText('Câu hỏi bảng nhân 7')).toBeInTheDocument();
     expect(backend.calls('GET', '/admin/trash').length).toBeGreaterThanOrEqual(2);

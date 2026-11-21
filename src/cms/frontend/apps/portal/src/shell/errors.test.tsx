@@ -1,5 +1,5 @@
 // F051 T026 — F051-AC-13, F051-AC-14, F051-AC-15 (TC-CMS-WS-02, TC-AUTH-101): `403 MFA_REQUIRED` opens the re-login
-// dialog on the current page (portalLogin with code), the request is retried once and the URL kept, cancel → /login;
+// dialog on the current page (portalLogin, username + password), the request is retried once and the URL kept, cancel → /login;
 // network failure of the internal gateway in game_ops/live_ops/platform_admin → "Cần kết nối mạng quản trị (VPN)";
 // Problem Details → translated message by `code` + trace_id, unknown code → generic message. MOCK backend.
 import { OpsThemeProvider } from '@eduworld/ops-ui';
@@ -22,10 +22,9 @@ describe('MFA re-login (F051-AC-13)', () => {
     backend.overrides.push((r) => (r.path === '/admin/tenants' && r.headers.authorization === `Bearer ${oldToken}` ? problem(403, 'MFA_REQUIRED') : undefined));
     const pending = runtime.api.call<{ data: unknown[] }>(runtime.api.client.GET('/admin/tenants', {}));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Thao tác này cần đăng nhập lại với mã xác thực.')).toBeInTheDocument();
+    expect(within(dialog).getByText('Thao tác này cần đăng nhập lại.')).toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText('Tên đăng nhập hoặc email'), { target: { value: 'sa.admin' } });
     fireEvent.change(within(dialog).getByLabelText('Mật khẩu'), { target: { value: 'Demo@12345' } });
-    fireEvent.change(within(dialog).getByLabelText('Mã xác thực 6 số'), { target: { value: '123456' } });
     await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
     const res = await pending;
     expect(res.data.length).toBeGreaterThan(0);

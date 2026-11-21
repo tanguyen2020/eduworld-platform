@@ -94,9 +94,8 @@ export function stopPortals(): void {
 }
 
 /** Fills and submits the /login form of the portal. */
-export async function signIn(user: ReturnType<typeof userEvent.setup>, username: string, password = 'Demo@12345', otp?: string): Promise<void> {
+export async function signIn(user: ReturnType<typeof userEvent.setup>, username: string, password = 'Demo@12345'): Promise<void> {
   fireEvent.change(await screen.findByLabelText('Tên đăng nhập hoặc email'), { target: { value: username } });
   fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: password } });
-  if (otp) fireEvent.change(screen.getByLabelText('Mã xác thực 6 số'), { target: { value: otp } });
   await user.click(screen.getByRole('button', { name: 'Đăng nhập' }));
 }
