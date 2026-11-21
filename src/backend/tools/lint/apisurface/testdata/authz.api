@@ -19,7 +19,7 @@ type Channel string
 const ChannelGame Channel
 const ChannelPortal Channel
 const ChannelUnknown Channel
-type Claims struct{Issuer string; Subject string; AZP string; SessionID string; ACR string; AMR []string; AuthTime time.Time; Expiry time.Time}
+type Claims struct{Issuer string; Subject string; AZP string; SessionID string; ACR string; AMR []string; AuthTime time.Time; Expiry time.Time; Organizations []string}
   func (Claims).SubjectRef() SubjectRef
   field Issuer string
   field Subject string
@@ -29,6 +29,7 @@ type Claims struct{Issuer string; Subject string; AZP string; SessionID string; 
   field AMR []string
   field AuthTime time.Time
   field Expiry time.Time
+  field Organizations []string
 func ClaimsFrom(ctx context.Context) (Claims, bool)
 func Configure(h Hooks)
 func CrossTenantScope(p Principal, ids []github.com/google/uuid.UUID, reason github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.BypassReason) (github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy.CrossTenantScope, error)
@@ -141,6 +142,7 @@ const PermPlatformTenantManage Permission
 const PermPlatformTrashRead Permission
 const PermPlatformTrashRestore Permission
 const PermPlatformUserManage Permission
+const PermPlatformUserMerge Permission
 const PermPlatformUserRoleWrite Permission
 const PermReportExport Permission
 const PermSchoolPeopleRead Permission
@@ -164,6 +166,7 @@ const PermTenantStudentCleanupExclude Permission
 const PermTenantStudentCleanupRead Permission
 const PermTenantTrashRead Permission
 const PermTenantTrashRestore Permission
+const PermTenantUserLock Permission
 const PermTenantUserRead Permission
 const PermTenantUserRoleWrite Permission
 const PermTenantUserWrite Permission
