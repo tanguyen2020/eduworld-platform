@@ -327,7 +327,9 @@
     },
     "meta": {
       "updatedAt": "Cập nhật lúc {{time}}",
-      "partial": "Tạm tính"
+      "partial": "Tạm tính",
+      "availableFrom": "Chưa có số liệu trước ngày {{date}}",
+      "replicaLag": "Số liệu có thể chậm do đồng bộ trễ"
     },
     "grain": {
       "day": "Theo ngày",

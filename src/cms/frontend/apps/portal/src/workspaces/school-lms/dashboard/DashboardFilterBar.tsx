@@ -1,4 +1,4 @@
-// Filter bar of the School Learning Dashboard (F056 T018, F056-AC-01, F056-AC-03, F056-AC-08, F056-AC-19): school,
+// Filter bar of the School Learning Dashboard (F056 T018, T052, F056-AC-01, F056-AC-03, F056-AC-08, F056-AC-19): school,
 // grade, class, subject (only the subjects of the session's scope) and the range picker of ops-ui. Filters live in the
 // URL (drill-down keeps them) and the last grade/subject/preset is remembered per viewer and tenant.
 import { DashboardRangePicker } from '@eduworld/ops-ui/dashboard';
@@ -11,7 +11,8 @@ import { useSession } from '../../../session/SessionProvider';
 import { useSchoolClasses } from '../classes/useClasses';
 import { SchoolSelect } from '../common/SchoolSelect';
 import { useSchoolLmsScope } from '../common/scope';
-import { useSubjects } from './api/dashboardApi';
+import { useSchoolAcademicYears, useSubjects } from './api/dashboardApi';
+import { schoolCalendar } from './model/calendar';
 import { filtersFromSearch, filtersToSearch, recalledSearch, rememberFilters, subjectLabel, subjectsInScope, todayIso, type DashboardFilters } from './model/filters';
 import { RANGE_LIMITS } from './model/limits';
 
@@ -48,6 +49,8 @@ export function DashboardFilterBar({ filters, onChange, showClass = true }: { fi
   const { t, i18n } = useTranslation();
   const perms = useMyPermissions();
   const subjects = useSubjects();
+  const years = useSchoolAcademicYears(filters.schoolId);
+  const calendar = useMemo(() => schoolCalendar(years.data, todayIso()), [years.data]);
   const classes = useSchoolClasses(filters.schoolId, filters.grade ? { grade: filters.grade } : {});
   const subjectOptions = subjectsInScope(subjects.data ?? [], perms.data?.roles ?? []).map((s) => ({ value: s.subject_id, label: subjectLabel(s, i18n.language) }));
   const set = (p: Partial<DashboardFilters>) => onChange({ ...filters, ...p });
@@ -94,7 +97,7 @@ export function DashboardFilterBar({ filters, onChange, showClass = true }: { fi
           popupMatchSelectWidth={false}
         />
       </Form.Item>
-      <DashboardRangePicker value={filters.range} limits={RANGE_LIMITS} onChange={(range) => set({ range })} />
+      <DashboardRangePicker value={filters.range} limits={RANGE_LIMITS} calendar={calendar} onChange={(range) => set({ range })} />
     </Flex>
   );
 }

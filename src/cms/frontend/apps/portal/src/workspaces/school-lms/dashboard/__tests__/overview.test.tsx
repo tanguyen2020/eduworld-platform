@@ -2,11 +2,11 @@
 // order of the 5 questions), F056-AC-02 (updated-at, grain, "Tạm tính", "Đang tính số liệu…" instead of 0), F056-AC-04
 // (DASHBOARD_* hints, BUSY retried by the apiClient, at most dashboard_max_concurrent_per_user in flight), F056-AC-05
 // (neutral reason labels, "làm quá nhanh", no ranking), F056-AC-07 (safety: count + link only, no chat content).
-// Backend = MOCK.
+// F056 T052: school calendar presets (listSchoolAcademicYears) and available_from / replica lag. Backend = MOCK.
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import dayjs from 'dayjs';
 import { afterEach, describe, expect, it } from 'vitest';
-import { AS_OF, IDS, problem, renderDashboard, schoolDashboardFixture, stopPortals } from '../../../../test/dashboard-harness';
+import { AS_OF, academicYearsFixture, IDS, problem, renderDashboard, schoolDashboardFixture, stopPortals } from '../../../../test/dashboard-harness';
 
 afterEach(() => {
   stopPortals();
@@ -103,5 +103,38 @@ describe('Tổng quan trường (US1)', () => {
     await waitFor(() => expect(screen.getByTestId('metric-assignments-open')).toHaveTextContent('2'), { timeout: 15_000 });
     expect(Date.now() - started).toBeGreaterThanOrEqual(1900);
     expect(backend.calls('GET', '/lms/dashboards/school').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('F056 T052: "Năm học này" from listSchoolAcademicYears (school of the filter); "Học kỳ này" disabled while terms are empty', async () => {
+    const { backend } = await renderDashboard(URL);
+    await screen.findAllByTestId(/^widget-/);
+    await waitFor(() => expect(backend.calls('GET', `/schools/${IDS.schoolA}/academic-years`).length).toBeGreaterThan(0));
+    expect(backend.calls('GET', `/schools/${IDS.schoolA}/academic-years`).at(-1)!.headers['x-tenant-id']).toBe('0193a4d2-0000-7000-8000-00000000000a');
+    const yearStart = academicYearsFixture()[0]!.start_date as string;
+    const term = screen.getByText('Học kỳ này').closest('.ant-segmented-item');
+    expect(term).toHaveClass('ant-segmented-item-disabled');
+    await waitFor(() => expect(screen.getByText('Năm học này').closest('.ant-segmented-item')).not.toHaveClass('ant-segmented-item-disabled'));
+    fireEvent.click(screen.getByText('Năm học này'));
+    await waitFor(() => {
+      const last = new URLSearchParams(backend.calls('GET', '/lms/dashboards/school').at(-1)!.search);
+      expect(last.get('from')).toBe(yearStart);
+      expect(last.get('to')).toBe(dayjs().format('YYYY-MM-DD'));
+    });
+  });
+
+  it('F056 T052: a term of the current year enables "Học kỳ này"; DashboardMeta available_from / replica_lag_warning are shown', async () => {
+    const d = (n: number) => dayjs().add(n, 'day').format('YYYY-MM-DD');
+    const { backend } = await renderDashboard(URL, {
+      setup: (s) => {
+        s.academicYears = () => [{ ...academicYearsFixture()[0]!, terms: [{ name: 'Học kỳ I', start_date: d(-20), end_date: d(40) }] }];
+        s.school = () => ({ ...schoolDashboardFixture(), available_from: d(-3), replica_lag_warning: true });
+      },
+    });
+    const w = await screen.findByTestId('widget-assignments');
+    await waitFor(() => expect(within(w).getByTestId('dashboard-meta')).toHaveTextContent(`Chưa có số liệu trước ngày ${dayjs().add(-3, 'day').format('DD/MM/YYYY')}`));
+    expect(within(w).getByTestId('dashboard-meta')).toHaveTextContent('Số liệu có thể chậm do đồng bộ trễ');
+    await waitFor(() => expect(screen.getByText('Học kỳ này').closest('.ant-segmented-item')).not.toHaveClass('ant-segmented-item-disabled'));
+    fireEvent.click(screen.getByText('Học kỳ này'));
+    await waitFor(() => expect(new URLSearchParams(backend.calls('GET', '/lms/dashboards/school').at(-1)!.search).get('from')).toBe(d(-20)));
   });
 });

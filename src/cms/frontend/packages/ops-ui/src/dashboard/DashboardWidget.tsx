@@ -18,6 +18,12 @@ export interface DashboardMetaView {
   data_as_of: string;
   grain: DashboardGrain;
   is_partial: boolean;
+  /** Range start asked (YYYY-MM-DD); with `available_from` decides "Chưa có số liệu trước ngày …". */
+  from?: string;
+  /** Earliest day with data of the scope (F043 T042); after `from` → "Chưa có số liệu trước ngày …" (F056-AC-02). */
+  available_from?: string | null;
+  /** The dashboard replica lags (F043 T042): numbers may be late. */
+  replica_lag_warning?: boolean;
 }
 
 /** Problem `code`s a widget explains itself; any other error shows `message`. */
@@ -56,6 +62,10 @@ function DashboardMetaLine({ meta }: { meta: DashboardMetaView }) {
       <Typography.Text type="secondary">{t('dashboard.meta.updatedAt', { time: dayjs(meta.data_as_of).format('HH:mm') })}</Typography.Text>
       <Tag>{t(`dashboard.grain.${meta.grain}`)}</Tag>
       {meta.is_partial ? <Tag color="warning">{t('dashboard.meta.partial')}</Tag> : null}
+      {meta.replica_lag_warning ? <Tag color="warning">{t('dashboard.meta.replicaLag')}</Tag> : null}
+      {meta.available_from && (!meta.from || meta.available_from > meta.from) ? (
+        <Typography.Text type="secondary">{t('dashboard.meta.availableFrom', { date: dayjs(meta.available_from).format('DD/MM/YYYY') })}</Typography.Text>
+      ) : null}
     </Flex>
   );
 }

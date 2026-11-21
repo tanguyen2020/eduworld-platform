@@ -327,7 +327,9 @@
     },
     "meta": {
       "updatedAt": "Updated at {{time}}",
-      "partial": "Provisional"
+      "partial": "Provisional",
+      "availableFrom": "No data before {{date}}",
+      "replicaLag": "Numbers may be delayed (replication lag)"
     },
     "grain": {
       "day": "Daily",

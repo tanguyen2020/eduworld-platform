@@ -140,3 +140,19 @@ export function useRegulationReference(f: ReferenceFilters) {
     error: q.error,
   };
 }
+
+/** listSchoolAcademicYears (module identity, F010 T047): school years and terms of the "Năm học này" / "Học kỳ này" presets. */
+export function useSchoolAcademicYears(schoolId: string | undefined) {
+  const { api, scope } = useDashboardContext();
+  return useQuery({
+    queryKey: dashKey('academic-years', scope, schoolId),
+    queryFn: async () =>
+      (
+        await api.call<{ data: Schemas['SchoolAcademicYear'][] }>(
+          api.client.GET('/schools/{school_id}/academic-years', { params: { path: { school_id: schoolId! } }, headers: scope.headers } as never),
+        )
+      ).data,
+    enabled: scope.ready && !!schoolId,
+    staleTime: 60 * 60_000,
+  });
+}

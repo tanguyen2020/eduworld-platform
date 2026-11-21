@@ -65,7 +65,7 @@ export async function renderDashboard(url: string, opts: RenderDashboardOptions 
   return { ...r, dash, lms };
 }
 
-export { DASH_IDS, AS_OF, schoolDashboardFixture } from './dashboard-mock';
+export { DASH_IDS, AS_OF, academicYearsFixture, schoolDashboardFixture } from './dashboard-mock';
 export { LMS_IDS, lmsAssignment } from './lms-mock';
 export { IDS, accountWith } from './school-lms-mock';
 export { problem, spyLoaders, stopPortals, TENANTS } from './portal-harness';

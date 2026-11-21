@@ -120,7 +120,7 @@
 
 ## Việc nhận sau khi chốt câu hỏi mở (owner chốt 2026-11-21)
 
-- [ ] T052 Truyền lịch năm học/học kỳ từ `listSchoolAcademicYears` (F010 T047) vào `DashboardRangePicker` để bật preset "Học kỳ này"/"Năm học này"; hiện `available_from` ("Chưa có số liệu trước ngày …") và cảnh báo trễ replica từ `DashboardMeta` (F043 T042) trong `DashboardWidget` — chờ F010 T047, F043 T042 — kiểm: `pnpm lint`, `pnpm typecheck`, vitest dashboard — cỡ S
+- [x] T052 Truyền lịch năm học/học kỳ từ `listSchoolAcademicYears` (F010 T047) vào `DashboardRangePicker` để bật preset "Học kỳ này"/"Năm học này"; hiện `available_from` ("Chưa có số liệu trước ngày …") và cảnh báo trễ replica từ `DashboardMeta` (F043 T042) trong `DashboardWidget` — chờ F010 T047, F043 T042 — kiểm: `pnpm lint`, `pnpm typecheck`, vitest dashboard — cỡ S — ✅ 2026-11-21: `useSchoolAcademicYears` + `model/calendar.ts` (`schoolCalendar`) → `DashboardRangePicker calendar`; `DashboardMetaView` thêm `from`, `available_from`, `replica_lag_warning` và dòng meta "Chưa có số liệu trước ngày …" / "Số liệu có thể chậm do đồng bộ trễ" (ops-ui vi/en); "Học kỳ này" vẫn vô hiệu tới khi có học kỳ (OQ F010-4); test: `DashboardWidget.test` (ops-ui, FAIL → PASS), `calendar.test.ts`, `overview.test.tsx` T052 ×2 (FAIL → PASS), vitest dashboard 7 file/41 test PASS; eslint, typecheck PASS
 
 ## Câu hỏi mở (Clarifications 2026-11-21)
 

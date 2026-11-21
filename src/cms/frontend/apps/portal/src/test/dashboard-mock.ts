@@ -1,6 +1,6 @@
 // MOCK (test only, AGENTS R17): in-memory stand-in of the learning-module dashboard and report operations used by the
 // F056 screens — getSchoolDashboard, getClassDashboard, getStudentLearningProfile, getRegulationReferenceReport,
-// getCourseResults, getExamSessionReport, createLmsReport/getLmsReport, getTenantLearningSummary,
+// getCourseResults, getExamSessionReport, listSchoolAcademicYears (module identity), listSchoolAcademicYears (module identity), createLmsReport/getLmsReport, getTenantLearningSummary,
 // createTenantReport/getTenantReport, getPlatformLearningSummary, createPlatformReport/getPlatformReport and
 // listSubjects — answering per specs/openapi/eduworld-api.v1.yaml (golden data of TH Demo A). Tenant isolation is
 // simulated: another tenant's X-Tenant-Id gets 404 (F056-AC-21); a forbidden subject gets 403 PERMISSION_DENIED.
@@ -178,13 +178,24 @@ export interface DashboardMockState {
   /** Seconds before a succeeded link expires (relative to now). */
   linkTtlSeconds: number;
   idem: Map<string, Row>;
+  /** listSchoolAcademicYears of school A (module identity, F010 T047). */
+  academicYears: () => Row[];
+}
+
+/** Current school year around today and the previous one; `terms` empty as the real backend today (OQ F010-4). */
+export function academicYearsFixture(): Row[] {
+  const d = (offset: number) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+  return [
+    { academic_year_id: '0193a4d2-af00-7000-8000-000000000001', name: 'Năm hiện tại', start_date: d(-60), end_date: d(200), is_current: true, terms: [] },
+    { academic_year_id: '0193a4d2-af00-7000-8000-000000000002', name: 'Năm trước', start_date: d(-430), end_date: d(-70), is_current: false, terms: [] },
+  ];
 }
 
 let seq = 0;
 
 /** Installs the MOCK dashboard handlers (first override) and returns their state. */
 export function installDashboardMock(backend: MockPortalBackend): DashboardMockState {
-  const state: DashboardMockState = { next: {}, school: schoolDashboardFixture, forbiddenSubjects: new Set(), jobs: new Map(), exportLimit: false, linkTtlSeconds: 900, idem: new Map() };
+  const state: DashboardMockState = { next: {}, school: schoolDashboardFixture, forbiddenSubjects: new Set(), jobs: new Map(), exportLimit: false, linkTtlSeconds: 900, idem: new Map(), academicYears: academicYearsFixture };
   const tenantOf = (r: RecordedRequest) => r.headers['x-tenant-id'];
   const q = (r: RecordedRequest) => new URLSearchParams(r.search);
   const queued = (op: string) => state.next[op]?.shift();
@@ -230,6 +241,10 @@ export function installDashboardMock(backend: MockPortalBackend): DashboardMockS
           { subject_id: LMS_IDS.subjectViet, code: 'vietnamese', name: { vi: 'Tiếng Việt', en: 'Vietnamese' } },
         ],
       });
+    }
+    if ((x = /^\/schools\/([^/]+)\/academic-years$/.exec(p)) && m === 'GET') {
+      if (tenantOf(r) !== T_A || x[1] !== IDS.schoolA) return problem(404, 'NOT_FOUND');
+      return json(200, { data: state.academicYears() });
     }
     if (m === 'GET' && p === '/lms/dashboards/school') {
       const n = queued('school');

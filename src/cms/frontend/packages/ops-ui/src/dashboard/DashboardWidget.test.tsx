@@ -22,6 +22,19 @@ describe('DashboardWidget (F056-AC-02, F056-AC-04)', () => {
     expect(meta).toHaveTextContent('Tạm tính');
   });
 
+  it('F056 T052: "Chưa có số liệu trước ngày …" when available_from is after the range start; replica lag warning', async () => {
+    const r = await renderOps(
+      <DashboardWidget title="A" meta={{ data_as_of: asOf, grain: 'day', is_partial: false, from: '2026-09-01', available_from: '2026-10-15', replica_lag_warning: true }} />,
+    );
+    const meta = screen.getByTestId('dashboard-meta');
+    expect(meta).toHaveTextContent('Chưa có số liệu trước ngày 15/10/2026');
+    expect(meta).toHaveTextContent('Số liệu có thể chậm');
+    r.unmount();
+    await renderOps(<DashboardWidget title="A" meta={{ data_as_of: asOf, grain: 'day', is_partial: false, from: '2026-11-01', available_from: '2026-10-15', replica_lag_warning: false }} />);
+    expect(screen.getByTestId('dashboard-meta')).not.toHaveTextContent('Chưa có số liệu trước ngày');
+    expect(screen.getByTestId('dashboard-meta')).not.toHaveTextContent('Số liệu có thể chậm');
+  });
+
   it('no "Tạm tính" when the data is final; daily/monthly labels', async () => {
     const { unmount } = await renderOps(<DashboardWidget title="A" meta={{ data_as_of: asOf, grain: 'day', is_partial: false }} />);
     expect(screen.getByTestId('dashboard-meta')).toHaveTextContent('Theo ngày');

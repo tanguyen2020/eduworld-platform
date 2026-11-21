@@ -20,7 +20,8 @@ import { filtersToSearch, type DashboardFilters } from '../model/filters';
 
 type Widgets = SchoolDashboard['widgets'];
 
-const metaOf = (d: SchoolDashboard | undefined): DashboardMetaView | undefined => (d ? { data_as_of: d.data_as_of, grain: d.grain, is_partial: d.is_partial } : undefined);
+const metaOf = (d: SchoolDashboard | undefined): DashboardMetaView | undefined =>
+  d ? { data_as_of: d.data_as_of, grain: d.grain, is_partial: d.is_partial, from: d.from, available_from: d.available_from, replica_lag_warning: d.replica_lag_warning } : undefined;
 
 /** Link to a class page keeping range, subject and grade (F056-AC-08). */
 export function classHref(f: DashboardFilters, classId: string): string {
