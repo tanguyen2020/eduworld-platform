@@ -25,6 +25,10 @@ Ngày 2026-11-21 owner dự án quyết định **bỏ hoàn toàn xác thực h
 - Bỏ mã lỗi `MFA_REQUIRED` khỏi catalog Problem Details và mọi contract; portal bỏ hộp "đăng nhập lại" (step-up).
 - Giữ **giới hạn tuổi phiên của nhân sự platform** như một kiểm soát độc lập với MFA: module `identity` nhớ thời điểm nhập mật khẩu của phiên (Valkey, theo `sid`) và từ chối `token:refresh` (`401 REFRESH_TOKEN_INVALID`) của phiên có realm role `platform_staff` khi đã quá `EW_OIDC_PLATFORM_MAX_AUTH_AGE` (mặc định 8 giờ) hoặc không còn bản ghi phiên; người dùng nhập lại mật khẩu. Phiên nhân sự tenant theo client session của `eduworld-portal` (idle 30 phút, tối đa 10 giờ).
 
+### 2b. Công cụ vận hành
+
+- Grafana, GlitchTip, Prometheus, Alertmanager, Loki, Tempo cũng **không** dùng MFA (owner chốt 2026-11-21): chỉ truy cập qua network `admin` (VPN) và đăng nhập Keycloak bằng tài khoản có role vận hành platform; tài khoản tenant/học sinh bị từ chối; truy vấn Loki production vẫn ghi nhật ký truy cập ([F131](../../specs/131-observability-alerting-runbooks/spec.md) F131-AC-07).
+
 ### 3. Kiểm soát bù trừ (đã có và được giữ)
 
 | Kiểm soát | Hiện trạng đã kiểm chứng trong repo |
@@ -59,3 +63,4 @@ Ngày 2026-11-21 owner dự án quyết định **bỏ hoàn toàn xác thực h
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-21 | Tạo ADR (Accepted, rủi ro được chấp nhận sau cảnh báo) | Owner dự án |
+| 2026-11-21 | Mở rộng cho công cụ vận hành (Grafana, GlitchTip…): không MFA, chỉ VPN + role vận hành | Owner dự án |

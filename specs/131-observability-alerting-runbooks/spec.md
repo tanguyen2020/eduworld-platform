@@ -14,7 +14,7 @@
 
 ### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
 
-- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: ADR-0094 bỏ OTP và mapper AMR/LoA khỏi realm `eduworld`, nên yêu cầu "đăng nhập Keycloak có MFA" của F131-AC-07 (Grafana/GlitchTip qua client `eduworld-ops-tools`, T005, T012, plan) không còn đạt được bằng realm này. [Proposed] Giữ chặn bằng network `admin` (VPN) + role vận hành platform, bỏ yêu cầu `acr` MFA; **Câu hỏi mở** cho owner: có muốn giữ MFA riêng cho công cụ vận hành (ngoài Admin Portal) hay không — nếu có cần ADR mới.
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: ADR-0094 bỏ OTP và mapper AMR/LoA khỏi realm `eduworld`, nên yêu cầu "đăng nhập Keycloak có MFA" của F131-AC-07 (Grafana/GlitchTip qua client `eduworld-ops-tools`, T005, T012, plan) không còn đạt được bằng realm này. [Confirmed] Giữ chặn bằng network `admin` (VPN) + role vận hành platform, bỏ yêu cầu `acr` MFA. **Owner chốt 2026-11-21:** không giữ MFA riêng cho công cụ vận hành (Grafana, GlitchTip, Prometheus, Alertmanager, Loki, Tempo) — cùng phạm vi ADR-0094; F131-AC-07 viết lại theo đó.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -36,7 +36,7 @@ Người trực vận hành mở Grafana thấy mọi Swarm service (`core-api`,
 | F131-AC-04 | Ở NƠI môi trường là staging/production, Collector PHẢI head sampling 10% và tail sampling giữ 100% trace lỗi và trace > 1 s; local/dev PHẢI giữ 100% | [MONITORING §7](../../docs/11-operations/MONITORING.md) | — |
 | F131-AC-05 | Loki PHẢI giữ log theo `app_log_retention`; Collector PHẢI có processor `redaction` che token/JWT/email/SĐT; NẾU log hoặc thuộc tính span chứa mẫu cấm ([MONITORING §8](../../docs/11-operations/MONITORING.md)), THÌ giá trị PHẢI bị che trước khi lưu | NFR-OBS-002 · AGENTS R14 · [MONITORING §8](../../docs/11-operations/MONITORING.md) | TC-AUTH-060 |
 | F131-AC-06 | NẾU rule Prometheus, dashboard hoặc metric scrape được có label thuộc danh sách cấm (`user_id`, `student_id`, `school_id`, `ip`, `email`, `username`, `message`, nội dung) hoặc label `route` không phải template, THÌ job `obs-label-policy` PHẢI fail | [MONITORING §2](../../docs/11-operations/MONITORING.md) · AGENTS R14 | — |
-| F131-AC-07 | Grafana, Prometheus, Alertmanager, Loki, Tempo, GlitchTip PHẢI chỉ truy cập qua network `admin` (VPN) với đăng nhập Keycloak có MFA; chỉ nhân sự có role vận hành platform được vào; NẾU tài khoản role tenant hoặc học sinh đăng nhập, THÌ HỆ THỐNG PHẢI từ chối; mọi truy vấn Loki production PHẢI được ghi nhật ký truy cập | [MONITORING §8](../../docs/11-operations/MONITORING.md) · [SECURITY_ARCHITECTURE §8](../../docs/10-security/SECURITY_ARCHITECTURE.md) · AGENTS R20 | — |
+| F131-AC-07 | Grafana, Prometheus, Alertmanager, Loki, Tempo, GlitchTip PHẢI chỉ truy cập qua network `admin` (VPN) với đăng nhập Keycloak bằng tài khoản platform (không MFA, ADR-0094); chỉ nhân sự có role vận hành platform được vào; NẾU tài khoản role tenant hoặc học sinh đăng nhập, THÌ HỆ THỐNG PHẢI từ chối; mọi truy vấn Loki production PHẢI được ghi nhật ký truy cập | [MONITORING §8](../../docs/11-operations/MONITORING.md) · [SECURITY_ARCHITECTURE §8](../../docs/10-security/SECURITY_ARCHITECTURE.md) · AGENTS R20 | — |
 
 ---
 
