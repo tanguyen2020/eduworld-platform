@@ -3,7 +3,7 @@
 // update/createObjective with If-Match (`W/"<row_version>"` of the list item, contract delta of F053); createTopic,
 // createObjective, createCurriculum (Idempotency-Key); curriculum version workflow (transitionCurriculumVersion,
 // publishCurriculumVersion — If-Match + Idempotency-Key).
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
 import type { components } from '../../../shared/api/schema.gen';
@@ -31,10 +31,67 @@ export function useSubjects() {
   return useQuery({ queryKey: key(scopeKey, 'subjects'), queryFn: () => api.call<Page<Subject>>(api.client.GET('/cms/learning/subjects', { params: { query: { limit: 100 } as never } })) });
 }
 
-export function useCurricula() {
+export function useCurricula(enabled = true) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useQuery({ queryKey: key(scopeKey, 'curricula'), queryFn: () => api.call<Page<Curriculum>>(api.client.GET('/cms/learning/curricula', { params: { query: { limit: 100 } as never } })) });
+  return useQuery({ queryKey: key(scopeKey, 'curricula'), queryFn: () => api.call<Page<Curriculum>>(api.client.GET('/cms/learning/curricula', { params: { query: { limit: 100 } as never } })), enabled });
+}
+
+/** Current curriculum version picked for a subject × grade (khối). */
+export interface CurrentVersionPick {
+  curriculum: Curriculum;
+  version: CurriculumVersion;
+}
+
+/**
+ * F053 T066 (OQ F053-9): the current version (`Curriculum.current_version`, the published pointer) whose
+ * `subject_grades` covers the subject and, when one grade is known, that grade. The tenant's own curriculum wins over
+ * a platform one assigned to the tenant; otherwise the first in the listCmsCurricula order. Pure (tested alone).
+ */
+export function pickCurrentVersion(curricula: readonly Curriculum[], versions: readonly CurriculumVersion[], subjectId: string, grade?: number): CurrentVersionPick | undefined {
+  const matches: CurrentVersionPick[] = [];
+  for (const c of curricula) {
+    const currentId = c.current_version?.curriculum_version_id;
+    const v = currentId ? versions.find((x) => x.curriculum_version_id === currentId) : undefined;
+    if (v?.subject_grades?.some((sg) => sg.subject_id === subjectId && (grade === undefined || sg.grade_level === grade))) matches.push({ curriculum: c, version: v });
+  }
+  return matches.find((m) => m.curriculum.owner_scope === 'tenant') ?? matches[0];
+}
+
+/**
+ * Topics of the current curriculum version for subject × grade (F053 T066): listCmsCurricula, then
+ * getCurriculumVersion of each current version (its subject_grades), then listCmsTopics with the inferred
+ * curriculum_version_id (required by the contract). `none` = settled without a current version: the picker explains it.
+ */
+export function useCurrentTopics(subjectId: string | undefined, grade: number | undefined, enabled = true) {
+  const { api } = usePortalRuntime();
+  const { scopeKey } = useSession();
+  const on = enabled && !!subjectId;
+  const curricula = useCurricula(on);
+  const current = (curricula.data?.data ?? []).filter((c) => !!c.current_version);
+  const versions = useQueries({
+    queries: current.map((c) => ({
+      queryKey: key(scopeKey, 'curriculum-version', c.curriculum_id, c.current_version!.version),
+      queryFn: () =>
+        api.call<CurriculumVersion>(api.client.GET('/cms/learning/curricula/{curriculum_id}/versions/{version}', { params: { path: { curriculum_id: c.curriculum_id, version: c.current_version!.version } } })),
+      enabled: on,
+    })),
+  });
+  const loaded = versions.flatMap((q) => (q.data ? [q.data] : []));
+  const settled = curricula.isFetched && versions.every((q) => q.isFetched || q.isError);
+  const pick = on ? pickCurrentVersion(current, loaded, subjectId!, grade) : undefined;
+  const vid = pick?.version.curriculum_version_id;
+  const topics = useTopics({ curriculum_version_id: vid, subject_id: subjectId, ...(grade ? { grade_level: grade } : {}) }, on && !!vid);
+  return { topics, pick, none: on && settled && !pick, loading: on && (!settled || topics.isFetching) };
+}
+
+/** Help line of a topic picker (T066): the curriculum version the topics come from, or why there are none. */
+export function topicPickerHelp(t: (k: string, o?: Record<string, unknown>) => string, current: ReturnType<typeof useCurrentTopics>, lang: string): string | undefined {
+  if (current.none) return t('content_studio.topicPicker.none');
+  if (!current.pick) return undefined;
+  const n = current.pick.curriculum.name as { vi?: string; en?: string };
+  const name = (lang.startsWith('en') ? (n.en ?? n.vi) : (n.vi ?? n.en)) ?? current.pick.curriculum.code;
+  return t('content_studio.topicPicker.from', { name, version: current.pick.version.version_label });
 }
 
 export function useCurriculumVersions(curriculumId: string | undefined) {

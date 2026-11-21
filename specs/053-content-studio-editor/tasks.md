@@ -152,7 +152,7 @@ Viết tắt: `OPS/` = `src/cms/frontend/packages/ops-ui/src/`, `WS/` = `src/cms
 
 ## Nhận sau E2E portal (owner chốt 2026-11-21)
 
-- [ ] T066 (OQ F053-9) Bộ chọn chủ đề trong `DocMetaFields`/`QuestionActivityEditor` tự suy `curriculum_version_id` hiện hành theo môn × khối (curriculum của trường/tenant đang dùng) rồi gọi `listCmsTopics` theo contract; không có version hiện hành thì hiện trạng thái rỗng có giải thích — vitest — cỡ S
+- [x] T066 (OQ F053-9) Bộ chọn chủ đề trong `DocMetaFields`/`QuestionActivityEditor` tự suy `curriculum_version_id` hiện hành theo môn × khối (curriculum của trường/tenant đang dùng) rồi gọi `listCmsTopics` theo contract; không có version hiện hành thì hiện trạng thái rỗng có giải thích — vitest — cỡ S — ✅ 2026-11-22: `pickCurrentVersion` + `useCurrentTopics` (`listCmsCurricula` → `getCurriculumVersion` của `current_version` → `listCmsTopics` với `curriculum_version_id`), dòng nguồn chương trình và giải thích khi không có version (Clarifications Session 2026-11-22); vitest `curriculum/topicPicker.test.tsx` 5/5 (3 unit chọn version, 2 portal: cả `DocMetaFields` và luật chọn câu của `QuestionActivityEditor` gửi `curriculum_version_id`; không version → không gọi `listCmsTopics`, hiện giải thích)
 - [ ] T067 Sửa test đang đỏ trên main: `CurriculumTreePage.test.tsx` AC-26 (phiên `cm.noidung`, "Toán" không hiện) — tìm nguyên nhân (test hay code), sửa phía sai — vitest — cỡ S
 
 ## Dependencies & Execution Order

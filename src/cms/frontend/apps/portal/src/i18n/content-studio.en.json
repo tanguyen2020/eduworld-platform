@@ -468,6 +468,10 @@
       "importOk": "Import",
       "newDraft": "A new draft was created from the translation file."
     },
+    "topicPicker": {
+      "from": "Topics of curriculum {{name}}, version {{version}}",
+      "none": "No published curriculum covers this subject and grade yet, so there are no topics to pick. Publish one under Curriculum."
+    },
     "curriculum": {
       "grade": "Grade {{grade}}",
       "empty": "The curriculum has no topic yet.",

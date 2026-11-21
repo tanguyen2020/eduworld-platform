@@ -85,6 +85,9 @@ export class MockPublishing {
   /** Attempts / learning events created by preview (must stay 0, ADR-0031). */
   attempts = 0;
   trash: Record<string, unknown>[] = [];
+  /** listCmsCurricula / getCurriculumVersion of the topic pickers (F053 T066); none by default. */
+  curricula: Record<string, unknown>[] = [];
+  curriculumVersions: Record<string, unknown>[] = [];
   imports = new Map<string, Record<string, unknown>>();
   importErrors: Record<string, unknown>[] = [];
   readonly fail: { method: string; path: RegExp; response: () => Response; once?: boolean }[] = [];
@@ -417,6 +420,11 @@ export class MockPublishing {
 
     // ---- curriculum lists used by the filters / builders ----
     if (p === '/cms/learning/subjects') return json(200, { data: [{ subject_id: P(10), code: 'MATH', name: { vi: 'Toán', en: 'Math' } }], page: { has_more: false, limit: 100 } });
+    if (p === '/cms/learning/curricula' && r.method === 'GET') return json(200, { data: this.curricula, page: { has_more: false, limit: 100 } });
+    if ((m = p.match(/^\/cms\/learning\/curricula\/([^/]+)\/versions\/(\d+)$/)) && r.method === 'GET') {
+      const v = this.curriculumVersions.find((x) => x.curriculum_id === m![1] && x.version === Number(m![2]));
+      return v ? json(200, v) : problem(404, 'NOT_FOUND');
+    }
     if (p === '/cms/learning/topics') return json(200, { data: [{ topic_id: P(20), code: 'T1', name: 'Phép nhân', sort_order: 1 }], page: { has_more: false, limit: 200 } });
     if (p === '/cms/learning/objectives')
       return json(200, {

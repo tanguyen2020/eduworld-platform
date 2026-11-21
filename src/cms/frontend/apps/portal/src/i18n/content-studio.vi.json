@@ -468,6 +468,10 @@
       "importOk": "Nhập",
       "newDraft": "Đã tạo bản nháp mới từ file dịch."
     },
+    "topicPicker": {
+      "from": "Chủ đề theo chương trình {{name}}, phiên bản {{version}}",
+      "none": "Chưa có chương trình học đã xuất bản cho môn và khối này nên chưa có chủ đề để chọn. Xuất bản chương trình ở mục Chương trình học."
+    },
     "curriculum": {
       "grade": "Khối {{grade}}",
       "empty": "Chương trình chưa có chủ đề.",

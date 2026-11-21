@@ -7,7 +7,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Checkbox, Flex, Form, Input, InputNumber, List, Segmented, Select, Switch, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useObjectives, useTopics } from '../../curriculum/useCurriculum';
+import { topicPickerHelp, useCurrentTopics, useObjectives } from '../../curriculum/useCurriculum';
 import { QuestionPicker } from '../../question-sets/SelectionRuleEditor';
 import { allowedTypesOf, COMPLETION_MODES, FEEDBACK_TIMINGS, type ActivityType, type Config } from '../activityModel';
 import type { ActivityEditorProps } from '../editorRegistry';
@@ -25,8 +25,8 @@ export function questionConfig(type: ActivityType, strategies: string[] = ['auto
   };
 }
 
-export function QuestionActivityEditor({ config, onChange, readOnly, errors, typeInfo, subjectId }: ActivityEditorProps) {
-  const { t } = useTranslation();
+export function QuestionActivityEditor({ config, onChange, readOnly, errors, typeInfo, subjectId, gradeLevels }: ActivityEditorProps) {
+  const { t, i18n } = useTranslation();
   const type = (typeInfo?.activity_type ?? 'quiz') as ActivityType;
   const content = obj(config.content);
   const source = (content.question_source as QuestionSource | undefined) ?? { kind: 'questions', questions: [] };
@@ -37,7 +37,10 @@ export function QuestionActivityEditor({ config, onChange, readOnly, errors, typ
   const timed = content.timed as { total_seconds: number; show_timer?: boolean } | undefined;
   const [picking, setPicking] = useState(false);
   const [refused, setRefused] = useState<string | null>(null);
-  const topics = useTopics({ subject_id: subjectId }, !!subjectId && source.kind === 'selection');
+  // F053 T066: topics of the current curriculum version of subject × khối (one grade → that grade, else the subject)
+  const currentTopics = useCurrentTopics(subjectId, gradeLevels.length === 1 ? gradeLevels[0] : undefined, source.kind === 'selection');
+  const topics = currentTopics.topics;
+  const topicHelp = topicPickerHelp(t, currentTopics, i18n.language);
   const objectives = useObjectives({ subject_id: subjectId }, !!subjectId && source.kind === 'selection');
   const setContent = (patch: Record<string, unknown>) => onChange({ ...config, content: { ...content, ...patch } });
   const setSource = (s: QuestionSource) => setContent({ question_source: s });
@@ -122,8 +125,8 @@ export function QuestionActivityEditor({ config, onChange, readOnly, errors, typ
           )}
           {source.kind === 'selection' && (
             <Flex vertical gap="small">
-              <Form.Item label={t('content_studio.question.topic')}>
-                <Select mode="multiple" aria-label={t('content_studio.question.topic')} maxCount={20} value={selection.topic_ids ?? []} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: x.name }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, topic_ids: v } })} />
+              <Form.Item label={t('content_studio.question.topic')} extra={topicHelp}>
+                <Select mode="multiple" aria-label={t('content_studio.question.topic')} maxCount={20} loading={currentTopics.loading} notFoundContent={currentTopics.none ? topicHelp : undefined} value={selection.topic_ids ?? []} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: x.name }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, topic_ids: v } })} />
               </Form.Item>
               <Form.Item label={t('content_studio.question.objectives')}>
                 <Select mode="multiple" aria-label={t('content_studio.question.objectives')} maxCount={20} value={selection.objective_ids ?? []} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: `${o.code} — ${o.description}` }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, objective_ids: v } })} />

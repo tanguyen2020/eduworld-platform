@@ -1,10 +1,11 @@
 // DocMetaFields (F054 US4): metadata shared by the builders — bilingual title (LearningName ≤ 255 per language,
 // original language first), original language (chosen at creation), subject, grade(s), topic(s), LOs (curriculum
-// lists of F053). Every text is capped by its OpenAPI maxLength (ADR-0041).
+// lists of F053). Every text is capped by its OpenAPI maxLength (ADR-0041). The topics come from the current curriculum
+// version of subject × khối (F053 T066, OQ F053-9); none → the picker explains why.
 import { BilingualField } from '@eduworld/ops-ui/content';
 import { Form, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { useObjectives, useSubjects, useTopics } from '../curriculum/useCurriculum';
+import { topicPickerHelp, useCurrentTopics, useObjectives, useSubjects } from '../curriculum/useCurriculum';
 import { LIMITS } from '../shared/config';
 
 export interface DocMeta {
@@ -25,7 +26,9 @@ export function DocMetaFields<T extends DocMeta>({ value, onChange, readOnly, la
   const { t, i18n } = useTranslation();
   const subjects = useSubjects();
   const grade = value.grade_levels.length === 1 ? value.grade_levels[0] : undefined;
-  const topics = useTopics({ subject_id: value.subject_id, ...(grade ? { grade_level: grade } : {}) }, !!value.subject_id);
+  const current = useCurrentTopics(value.subject_id, grade);
+  const topics = current.topics;
+  const topicHelp = topicPickerHelp(t, current, i18n.language);
   const objectives = useObjectives(value.topic_ids.length === 1 ? { topic_id: value.topic_ids[0] } : { subject_id: value.subject_id }, !!value.subject_id);
   const label = (n: { vi?: string; en?: string }) => (i18n.language.startsWith('en') ? (n.en ?? n.vi) : (n.vi ?? n.en)) ?? '';
   const set = (patch: Partial<DocMeta>) => onChange({ ...value, ...patch });
@@ -58,13 +61,14 @@ export function DocMetaFields<T extends DocMeta>({ value, onChange, readOnly, la
           allowClear={singleGrade}
         />
       </Form.Item>
-      <Form.Item label={t('content_studio.question.topic')} {...err(F.topics)}>
+      <Form.Item label={t('content_studio.question.topic')} {...err(F.topics)} extra={topicHelp}>
         <Select
           mode={singleTopic ? undefined : 'multiple'}
           allowClear
           aria-label={t('content_studio.question.topic')}
           value={singleTopic ? value.topic_ids[0] : value.topic_ids}
-          loading={topics.isFetching}
+          loading={current.loading}
+          notFoundContent={current.none ? topicHelp : undefined}
           options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: `${x.code ?? ''} ${x.name}`.trim() }))}
           onChange={(v: string | string[] | undefined) => set({ topic_ids: v === undefined ? [] : Array.isArray(v) ? v : [v] })}
         />
