@@ -18,11 +18,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
-// reportedCase makes reporter report a message of sender (seq 13 of 25 placeholder messages of a class channel) and
+// reportedCase makes reporter report a message of sender (seq 13 of 25 placeholder messages of a direct channel) and
 // returns the case, the channel and the message.
 func (s *safetyEnv) reportedCase(sender, reporter student, reason string) (uuid.UUID, uuid.UUID, uuid.UUID) {
 	s.t.Helper()
-	ch := s.open(channel.Class, sender, reporter)
+	ch := s.open(channel.Direct, sender, reporter)
 	var target uuid.UUID
 	for seq := int64(1); seq <= 25; seq++ {
 		who := reporter

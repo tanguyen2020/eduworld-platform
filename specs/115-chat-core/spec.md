@@ -39,6 +39,10 @@ Quyết định khi triển khai (đề xuất bảo thủ nhất, phù hợp AD
 - `chat.sync` → **Chốt:** `chat.channel.sync` (T043, OQ F090-1); `client_message_id` bắt buộc trong `chat.message.send`.
 - Envelope JetStream → **Chốt:** schema ở `specs/events/chat-envelope.v1.schema.json` (không phải payload outbox, `check-cross-features` chỉ nhận `payloads/<module>/<event_type>`); DLQ dùng stream `DLQ_CHAT` subject `ew.dlq.chat.persister` (EVENT_DESIGN §4.10); `infra.dead_letters` chỉ giữ id, không nội dung (R14).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Channel `class`, `study_group` và cấp policy `class`? → A: bỏ (ADR-0095 mục 5, FR-CHAT-001, FR-MOD-004); không tạo kênh khối (R15 không đổi). Còn 6 loại channel `world`, `area`, `match`, `party`, `team`, `direct`; policy 3 cấp platform → tenant → school; khóa cache `chat_policy_cache` theo `(tenant, school, channel_type)`. `channel.New` từ chối `class`/`study_group` (`ErrType`); seed policy platform **version 2** không còn rule `class`/`study_group` (migration `20261231000002_adr0095_noclass.sql`, `chat-policy.schema.json` v5 sửa tại chỗ vì chỉ seed platform từng mang các giá trị này). Channel `class`/`study_group` còn sót (nếu có) bị soft-delete giữ tin làm bằng chứng; dòng policy cấp `class` bị soft-delete; giá trị cũ trong CHECK bỏ ở WP-R khi 0 dòng. Enum `channel_type` của `chat-envelope`, `chat.message_created`, `chat.message_held` thu hẹp tại chỗ (v1, tương thích ngược). AC giữ mã; F115-AC-08, AC-14, AC-22 sửa chữ/test.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Gửi và nhận tin realtime, bền vững trước khi "Sent" (Priority: P1)
@@ -75,13 +79,13 @@ Chỉ member hợp lệ mới gửi/đọc/subscribe được; channel loại n�
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F115-AC-08 | KHI resolve effective policy, module chat PHẢI giao các cấp platform → tenant → school → class (giá trị chặt hơn thắng) và NẾU không có rule cho `channel_type` ở bất kỳ cấp nào, THÌ PHẢI coi là deny (`CHAT_NOT_ALLOWED`) | FR-CHAT-002 · [CHAT_SYSTEM §3](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-002 |
+| F115-AC-08 | KHI resolve effective policy, module chat PHẢI giao các cấp platform → tenant → school (giá trị chặt hơn thắng; không còn cấp class, không có channel `class`/`study_group` — ADR-0095) và NẾU không có rule cho `channel_type` ở bất kỳ cấp nào, THÌ PHẢI coi là deny (`CHAT_NOT_ALLOWED`) | FR-CHAT-002 · [CHAT_SYSTEM §3](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | TC-CHAT-002 |
 | F115-AC-09 | HỆ THỐNG PHẢI cho cùng một tin ở cùng loại channel cùng quyết định với học sinh lớp 1–3 và lớp 6–9; mã nguồn policy/pipeline chat PHẢI không đọc `grade_level`/`grade_band` (kiểm bằng test tĩnh) | FR-CHAT-002 · AC-CHAT-003 · AGENTS R15 | TC-CHAT-010 |
 | F115-AC-10 | NẾU người gọi không phải member của channel (đoán `channel_id`, subscribe WS, đọc lịch sử, gửi tin), THÌ module chat PHẢI trả `404 NOT_FOUND` (WS `NOT_FOUND`), không lộ channel có tồn tại | FR-CHAT-002 · AC-CHAT-007 | TC-CHAT-008 |
 | F115-AC-11 | NẾU học sinh hoặc nhân sự tenant A truy cập channel tenant B (qua API, WS ticket hoặc repository bỏ điều kiện tenant), THÌ module chat PHẢI từ chối ở tầng ứng dụng và RLS PHẢI trả 0 dòng | AC-CHAT-007 · NFR-SEC-006 · AGENTS R8 | TC-CHAT-009 |
 | F115-AC-12 | KHI `X-Tenant-Id` (REST) khác tenant của phiên, module chat PHẢI trả `403 TENANT_MISMATCH`; header tenant của lệnh WS chỉ lấy từ gateway (`Ew-Tenant-Id`) | NFR-SEC-006 · ADR-0065 | TC-TEN-011 |
 | F115-AC-13 | HỆ THỐNG PHẢI cho mọi route `/chat/*` của feature trả `403 GAME_ACCESS_STUDENT_ONLY` với token nhân sự (`school_admin`, `academic_manager`, `tenant_admin`, `safety_moderator`, `system_admin`); nhân sự không là member channel nào | AGENTS R23 · ADR-0072 | TC-AUTH-014 |
-| F115-AC-14 | KHI channel có cờ liên tenant hoặc liên trường, module chat PHẢI chỉ trả nickname/avatar của người gửi (`PlayerCard`), không tên thật, trường, lớp | AGENTS R16 · [CHAT_SYSTEM §2](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | — |
+| F115-AC-14 | KHI channel có cờ liên tenant hoặc liên trường, module chat PHẢI chỉ trả nickname/avatar của người gửi (`PlayerCard`), không tên thật, trường, khối | AGENTS R16 · [CHAT_SYSTEM §2](../../docs/03-social-multiplayer/CHAT_SYSTEM.md) | — |
 | F115-AC-22 | TRONG KHI thời điểm server nằm trong giới nghiêm hiệu lực của người gửi, module chat PHẢI từ chối mọi lệnh gửi (REST và WS `chat.message.send`) ở mọi channel kể cả `match`/`team`/`party` bằng `403 CURFEW_ACTIVE` (WS: `system.command.failed` cùng mã) trước khi cấp `seq`; channel không bị đóng hay xóa | NFR-SAFE-005 · AC-CHAT-015 · [CHILD_SAFETY §4.1](../../docs/10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078) · ADR-0078 | TC-CHAT-046 |
 | F115-AC-23 | TRONG KHI trường của người gửi có `chat_policy_preset = quick_message_emote_only` (hoặc mặc định pilot tương đương), module chat PHẢI chỉ nhận `kind` `quick` và `emoji` (emote/reaction) ở mọi channel của trường kể cả `party`/`match`/`team`, từ chối `text`, `sticker`, `gif`, forward bằng `403 CHAT_KIND_NOT_ALLOWED`, như nhau cho mọi khối; channel gameplay vẫn tự tạo | AC-CHAT-015 · [CHILD_SAFETY §3.5](../../docs/10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078) · ADR-0078 · AGENTS R15 | TC-CHAT-048 |
 
@@ -131,7 +135,7 @@ Mở channel thấy lịch sử; mất mạng hay mất gói fan-out thì tự b
 - **Channel**: không gian hội thoại có loại (`world`…`direct`), phạm vi (`scope_ref`), tenant, trường, trạng thái mở/đóng, `last_seq`.
 - **ChannelMember**: quan hệ học sinh–channel (vai trò, thời điểm vào/rời, con trỏ đọc).
 - **Message**: tin có `seq` theo channel, `kind`, nội dung gốc (bằng chứng) và nội dung hiển thị (đã che), trạng thái kiểm duyệt.
-- **ChatPolicy / EffectivePolicy**: rule theo cấp platform/tenant/school/class và kết quả giao cho một người trong một channel.
+- **ChatPolicy / EffectivePolicy**: rule theo cấp platform/tenant/school (ADR-0095) và kết quả giao cho một người trong một channel.
 - **ChatEnvelope**: bản ghi tin trong stream bền vững (`message_id`, `seq`, `tenant_id`, nội dung đã kiểm duyệt, quyết định kiểm duyệt).
 
 ### Tham số
@@ -165,13 +169,13 @@ Mở channel thấy lịch sử; mất mạng hay mất gói fan-out thì tự b
 ## Ngoài phạm vi
 
 - Bước kiểm tra nội dung, danh mục, công tắc, sanction, quick message → F116.
-- Tạo/đóng channel gameplay, unread count, purge → F117; channel bền vững (world/area/class/study group/team cố định/DM), API ghi chat policy, tìm kiếm, retention ẩn danh hóa → F120.
+- Tạo/đóng channel gameplay, unread count, purge → F117; channel bền vững (world/area/team cố định/DM/club; không còn class/study group — ADR-0095), API ghi chat policy, tìm kiếm, retention ẩn danh hóa → F120.
 - Sửa/thu hồi/reply/forward/reaction/pin/mention/typing/receipts/sticker/GIF → F118; UI Godot → F119.
 - Report, moderation case, đọc chat của Safety Team → F121; Portal chat policy → F122; ticket WS, định tuyến lệnh → F090.
 
 ## Assumptions
 
-- F095 đã dựng skeleton module chat (cmd, cấu hình, outbox relay, projection `ref.tenants`, `ref.schools`, `ref.classes`, `ref.students`, `ref.enrollments`, `ref.player_profiles`) và bảng `social.blocks`/`social.mutes`; F115 không tạo lại.
+- F095 đã dựng skeleton module chat (cmd, cấu hình, outbox relay, projection `ref.tenants`, `ref.schools`, `ref.students`, `ref.player_profiles`; `ref.classes`/`ref.enrollments` không còn dùng — ADR-0095) và bảng `social.blocks`/`social.mutes`; F115 không tạo lại.
 - F090 đã định tuyến `chat.*` → NATS request `ew.cmd.chat.<type>` kèm header `Ew-Tenant-Id`, `Ew-User-Id` và subscribe `ew:chat:fanout:<channel_id>` khi reply có `subscribe`.
 - Seed platform `chat_policies` (8 loại channel, mặc định CHAT_SYSTEM §3.1) được nạp bằng `src/backend/modules/chat/seed/` [Confirmed — giá trị số].
 - Timeout ack 2 s, lô persister (500 sự kiện/50 ms), `max_deliver` 5 chưa có tên trong CONFIG_DEFAULTS; giữ là hằng số cấu hình code, task Polish đề xuất đăng ký [Confirmed].

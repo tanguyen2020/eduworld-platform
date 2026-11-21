@@ -47,8 +47,8 @@ type Facts struct {
 // Cache keys (logical; the Valkey adapter prefixes ew:chat:).
 func channelKey(tenant, id uuid.UUID) string { return "chan:" + tenant.String() + ":" + id.String() }
 
-func policyKey(tenant uuid.UUID, school, class *uuid.UUID, t channel.Type) string {
-	return "policy:" + tenant.String() + ":" + idOr(school) + ":" + idOr(class) + ":" + string(t)
+func policyKey(tenant uuid.UUID, school *uuid.UUID, t channel.Type) string {
+	return "policy:" + tenant.String() + ":" + idOr(school) + ":" + string(t)
 }
 
 func curfewKey(tenant uuid.UUID, school *uuid.UUID) string {
@@ -111,15 +111,14 @@ type effectiveEntry struct {
 }
 
 // Effective is the PolicyResolver (T025): the effective policy of a channel for a sender of school (school level and
-// preset of the sender's school, class level of a class channel), cached chat_policy_cache. policy.ErrDenied when no
+// preset of the sender's school; no class level since ADR-0095), cached chat_policy_cache. policy.ErrDenied when no
 // rule allows the channel type (F115-AC-08). The result is the same for every grade (R15).
 func (f Facts) Effective(ctx context.Context, tenant uuid.UUID, school *uuid.UUID, ch channel.Channel) (policy.Effective, error) {
-	class := ch.ClassID()
-	raw, err := f.Cache.Get(ctx, policyKey(tenant, school, class, ch.Type), f.Config.PolicyCache, func(ctx context.Context) ([]byte, error) {
+	raw, err := f.Cache.Get(ctx, policyKey(tenant, school, ch.Type), f.Config.PolicyCache, func(ctx context.Context) ([]byte, error) {
 		var levels policy.Levels
 		err := f.read(ctx, tenant, func(ctx context.Context) error {
 			var err error
-			levels, err = f.Reader.PolicyLevels(ctx, tenant, school, class)
+			levels, err = f.Reader.PolicyLevels(ctx, tenant, school)
 			return err
 		})
 		if err != nil {

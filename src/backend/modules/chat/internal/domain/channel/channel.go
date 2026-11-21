@@ -12,20 +12,18 @@ import (
 // Type is channel_type.
 type Type string
 
-// Channel types (DATABASE_DESIGN §2.12).
+// Channel types (DATABASE_DESIGN §2.12); no class or study_group channel since ADR-0095 (and no grade channel).
 const (
-	World      Type = "world"
-	Area       Type = "area"
-	Match      Type = "match"
-	Party      Type = "party"
-	Team       Type = "team"
-	Class      Type = "class"
-	StudyGroup Type = "study_group"
-	Direct     Type = "direct"
+	World  Type = "world"
+	Area   Type = "area"
+	Match  Type = "match"
+	Party  Type = "party"
+	Team   Type = "team"
+	Direct Type = "direct"
 )
 
 // Types lists every channel type.
-var Types = []Type{World, Area, Match, Party, Team, Class, StudyGroup, Direct}
+var Types = []Type{World, Area, Match, Party, Team, Direct}
 
 // Valid reports a known channel type.
 func (t Type) Valid() bool {
@@ -37,7 +35,7 @@ func (t Type) Valid() bool {
 	return false
 }
 
-// AlwaysOn reports the gameplay channel types that tenant/school/class settings cannot turn off (ADR-0020 §6).
+// AlwaysOn reports the gameplay channel types that tenant/school settings cannot turn off (ADR-0020 §6).
 func (t Type) AlwaysOn() bool { return t == Match || t == Party || t == Team }
 
 // Implicit reports world/area: membership is implicit (no channel_members, F120).
@@ -97,23 +95,12 @@ func New(id, tenant uuid.UUID, school *uuid.UUID, t Type, scope map[string]strin
 			return Channel{}, ErrScope
 		}
 	}
-	if t == Class && scope["class_id"] == "" {
-		return Channel{}, ErrScope
-	}
 	return Channel{ID: id, TenantID: tenant, SchoolID: school, Type: t, IsGameplay: Gameplay(t, scope), ScopeRef: scope,
 		Status: StatusOpen, OpenedAt: now.UTC()}, nil
 }
 
 // Open reports an open channel (sending into a closed one is CHAT_CHANNEL_CLOSED, F117).
 func (c Channel) Open() bool { return c.Status == StatusOpen }
-
-// ClassID returns the class of a class channel (class level of the policy), nil otherwise.
-func (c Channel) ClassID() *uuid.UUID {
-	if v, err := uuid.Parse(c.ScopeRef["class_id"]); err == nil {
-		return &v
-	}
-	return nil
-}
 
 // Member is one student in one channel.
 type Member struct {

@@ -51,7 +51,7 @@
 - [x] T021 [P] [US2] Test tĩnh F115-AC-09: package `domain/policy`, `application/command` không tham chiếu `grade_level`/`grade_band`; cùng tin lớp 2 và lớp 8 cùng quyết định — file: `src/backend/modules/chat/tests/static/no_grade_condition_test.go` — ✅ `tests/static/static_test.go` `TestNoGradeCondition` + integration `TestSendPresetAndSameRulesForEveryGrade` (lớp 1 và lớp 9) pass
 - [x] T022 [P] [US2] Test tenant isolation + authorization F115-AC-10, F115-AC-11, F115-AC-12, F115-AC-13: không member → 404; tenant khác → 404 + RLS; header lệch → `TENANT_MISMATCH`; 5 role nhân sự → `GAME_ACCESS_STUDENT_ONLY` (TC-AUTH-014, TC-TEN-012) — file: `src/backend/modules/chat/tests/integration/chat_access_test.go` — ✅ `tests/integration/chat_access_test.go` `TestChatAccess` (+ `authztest.Cover` 3 operation; routematrix 0 problems) pass
 - [x] T023 [P] [US2] Test F115-AC-14: channel liên trường chỉ trả `PlayerCard` (nickname, avatar) — file: `src/backend/modules/chat/tests/integration/player_card_privacy_test.go` — ✅ thẻ người gửi chỉ `user_id`/`nickname`/`level`/`avatar_config`, kiểm trong `TestSendAndReceive` (party liên trường) và `TestSendIdempotency` (REST)
-- [x] T039 [P] [US2] Test F115-AC-22 (Clock giả 21:31): gửi ở `party`, `class`, `direct` qua REST và WS → `CURFEW_ACTIVE`, không cấp `seq`, không publish JetStream; 06:31 gửi được — file: `src/backend/modules/chat/tests/integration/send_curfew_test.go` — phải FAIL trước khi code — ✅ `TestSendCurfew` (`tests/integration/chat_access_test.go`) pass
+- [x] T039 [P] [US2] Test F115-AC-22 (Clock giả 21:31): gửi ở `party`, `team`, `direct` (ADR-0095: không còn `class`) qua REST và WS → `CURFEW_ACTIVE`, không cấp `seq`, không publish JetStream; 06:31 gửi được — file: `src/backend/modules/chat/tests/integration/send_curfew_test.go` — phải FAIL trước khi code — ✅ `TestSendCurfew` (`tests/integration/chat_access_test.go`) pass
 - [x] T040 [P] [US2] Test F115-AC-23: trường preset `quick_message_emote_only` → `text`/`sticker`/`gif` bị `CHAT_KIND_NOT_ALLOWED` ở `party`, `quick`/`emoji` gửi được; trường khác không ảnh hưởng; cùng kết quả lớp 1 và lớp 9 — file: `src/backend/modules/chat/tests/integration/send_preset_test.go` — ✅ `TestSendPresetAndSameRulesForEveryGrade` pass
 
 ### Implementation cho User Story 2
@@ -90,6 +90,11 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 - [ ] T042 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) Facade vòng đời/gộp của module chat; facade test với identity — file: `src/backend/modules/chat/internal/presentation/facade/` — kiểm: `make test-contract`, integration — cỡ M — **Chưa làm** (việc tiếp theo): cần `Facade()` của module chat + participant chat trong saga identity (F016/F045)
 - [x] T043 **OQ chốt 2026-11-20** (OQ F090-1) Đổi tên lệnh `chat.sync` thành tên 3 đoạn khớp pattern `type` của `ClientEnvelope` (đề xuất `chat.channel.sync`), cập nhật AsyncAPI `x-routing` + chạy `scripts/realtime/gen-routes.mjs`; test gateway định tuyến được lệnh — file: `specs/asyncapi/eduworld-realtime.v1.yaml`, `src/backend/modules/chat/` — ✅ AsyncAPI `chat.channel.sync`, `gen-routes.mjs` chỉ nhận `type` 3 đoạn; `TestChatChannelSyncRouted` (`modules/realtime/internal/protocol`) pass
+
+## ADR-0095 — bỏ channel/policy lớp (WP-C1, 2026-11-21)
+
+- [x] T060 Bỏ channel `class`/`study_group` và cấp policy `class`: `channel.Types` 6 loại, `policy.Levels` 3 cấp, `PolicyLevels`/`policyKey` không `class_id`; seed platform version 2; migration `20261231000002_adr0095_noclass.sql`; OpenAPI `ChannelType`, AsyncAPI `ChatChannelType`, event schema chat thu hẹp — test `TestChannelTypesWithoutClass`, `TestPolicyIntersect` (3 cấp; `class`/`study_group` bị deny) (unit), `TestSeedPlatformPolicy` (6 loại), test integration chat đổi channel mẫu `class` → `direct`/`team` pass
+- [ ] T061 (WP-R) bỏ `class`, `study_group` khỏi `channels_type_chk` và `class` khỏi `chat_policies_scope_chk` khi 0 dòng mang giá trị cũ (kể cả đã soft-delete)
 
 ## Dependencies & Execution Order
 

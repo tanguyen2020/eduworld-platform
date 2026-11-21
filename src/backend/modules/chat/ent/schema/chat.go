@@ -14,8 +14,8 @@ import (
 )
 
 // Channel — chat.channels (T, DATABASE_DESIGN §2.12, F115): a conversation space of one tenant. channel_type is one of
-// world/area/match/party/team/class/study_group/direct; is_gameplay is true for match, party and team bound to a match
-// (CHECK in the migration). last_seq only grows (chat-persister, GREATEST); seq itself is allocated in Valkey before the
+// world/area/match/party/team/direct (no class/study_group — ADR-0095); is_gameplay is true for match, party and team
+// bound to a match (CHECK in the migration). last_seq only grows (chat-persister, GREATEST); seq itself is allocated in Valkey before the
 // JetStream publish (ADR-0035). Gameplay channels are purged by gameplay-chat-purge only (ADR-0033, F117).
 type Channel struct{ ent.Schema }
 
@@ -82,7 +82,7 @@ func (ChannelMember) Indexes() []ent.Index {
 }
 
 // ChatPolicy — chat.chat_policies (T*, DATABASE_DESIGN §2.12, CHAT_SYSTEM §3): the policy document of one level
-// (platform → tenant → school → class) validated against specs/schemas/chat-policy.schema.json v5. Platform rows have no
+// (platform → tenant → school, ADR-0095) validated against specs/schemas/chat-policy.schema.json v5. Platform rows have no
 // tenant (written by chat_platform only: the seed migration, F120). No grade condition exists (ADR-0020, R15).
 type ChatPolicy struct{ ent.Schema }
 

@@ -109,11 +109,11 @@ func (r outageReader) ChannelFacts(ctx context.Context, tenant, id uuid.UUID) (*
 	return r.ChatReader.ChannelFacts(ctx, tenant, id)
 }
 
-func (r outageReader) PolicyLevels(ctx context.Context, tenant uuid.UUID, school, class *uuid.UUID) (policy.Levels, error) {
+func (r outageReader) PolicyLevels(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (policy.Levels, error) {
 	if r.o.down() {
 		return policy.Levels{}, errPGDown
 	}
-	return r.ChatReader.PolicyLevels(ctx, tenant, school, class)
+	return r.ChatReader.PolicyLevels(ctx, tenant, school)
 }
 
 func (r outageReader) CurfewWindows(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (*read.CurfewWindow, *read.CurfewWindow, error) {
@@ -308,8 +308,6 @@ func (c *chatEnv) open(t channel.Type, members ...student) uuid.UUID {
 	school := members[0].school
 	scope := map[string]string{"party_id": id.String()[:8]}
 	switch t {
-	case channel.Class:
-		scope = map[string]string{"class_id": uuid.NewString()}
 	case channel.Match:
 		scope = map[string]string{"match_id": id.String()[:8]}
 	case channel.Direct:

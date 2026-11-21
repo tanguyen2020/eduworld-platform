@@ -4,7 +4,7 @@
 > Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [CHAT_SYSTEM](CHAT_SYSTEM.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [DATA_PRIVACY](../10-security/DATA_PRIVACY.md) · [OPEN_QUESTIONS OQ-09, OQ-12](../12-project/OPEN_QUESTIONS.md)
 
 > [!IMPORTANT]
-> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Chat policy còn 3 cấp platform → tenant → school (bỏ cấp `class`); không có channel `class`/`study_group`; thông báo vụ việc cho trường không kèm tên lớp. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-C1 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Chat policy còn 3 cấp platform → tenant → school (bỏ cấp `class`); không có channel `class`/`study_group`; thông báo vụ việc cho trường không kèm tên lớp. Đã áp ở WP-C1 (2026-11-21) cho chat policy cấp trường (§ chính sách nhà trường); nhắc lớp còn lại (nếu có) theo ADR-0095 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
 
 ## 0. Mục đích & phạm vi
 
@@ -257,10 +257,10 @@ Nhà trường không xử lý case nhưng là đầu mối liên hệ phụ huy
 ## 8. Kiểm soát an toàn cấp trường
 
 `school_admin` (Admin Portal, workspace C) đặt **chat policy cấp trường** trong giới hạn platform (ADR-0020, ADR-0030; chỉ siết chặt hơn, áp như nhau cho mọi học sinh của trường — không có điều kiện theo khối, R15):
-- Bật/tắt DM, world chat, channel lớp và study group; nâng `validation.strictness`; mở rộng khung giới nghiêm của trường (không thu hẹp được giờ giới nghiêm platform `platform_curfew`, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)); bật hiển thị tên thật cho bạn cùng lớp.
+- Bật/tắt DM, world chat (không còn channel lớp/study group — ADR-0095); nâng `validation.strictness`; mở rộng khung giới nghiêm của trường (không thu hẹp được giờ giới nghiêm platform `platform_curfew`, [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078)). Không còn tùy chọn tên thật cho bạn cùng lớp (ADR-0095).
 - Chọn preset `chat_policy_preset = quick_message_emote_only` (chỉ quick message + emote cho cả trường, kể cả channel gameplay; [CHILD_SAFETY §3.5](../10-security/CHILD_SAFETY.md#35-preset-chỉ-quick-message--emote-adr-0078)).
 - Không tắt được chat `match`/`team`/`party` (ADR-0020 mục 6).
-- Channel lớp chỉ gồm học sinh của lớp; không có người điều khiển riêng của lớp. Thông báo của nhà trường đến học sinh đi qua bảng tin lớp ([SOCIAL_SYSTEM §8](SOCIAL_SYSTEM.md#8-thông-báo-xã-hội)), không qua chat.
+- Không có channel lớp/khối (ADR-0095). Thông báo của nhà trường đến học sinh đi qua bảng tin của trường ([SOCIAL_SYSTEM §8](SOCIAL_SYSTEM.md#8-thông-báo-xã-hội)), không qua chat.
 - Khung giờ truy cập game cấp trường ([CHILD_SAFETY §4](../10-security/CHILD_SAFETY.md#4-thời-gian-chơi-và-sức-khỏe-oq-17)).
 - Nhận và xác nhận thông báo vụ việc (§6.4); xem báo cáo tháng tổng hợp (không nội dung).
 - Đề nghị thêm từ nhạy cảm cho tenant qua Tenant Admin → Safety Team (§11.3).

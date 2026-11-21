@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/content/chat-policy.schema.json",
   "title": "ChatPolicy",
-  "description": "Chính sách chat ở một cấp (platform → tenant → school → class; cấp school và class do school_admin đặt — ADR-0072). Một bộ quy tắc cho MỌI lớp 1–9: rule không có điều kiện theo grade_band/grade_level (ADR-0020, Accepted). Cấp dưới chỉ được siết chặt hơn cấp trên trừ khi rule cấp trên có allow_override_relax=true. Thiếu rule cho channel_type = deny. Pipeline kiểm tra hợp lệ (validation) bật mặc định; danh mục từ nhạy cảm và công tắc kiểm duyệt theo ADR-0030 (moderation_switches chỉ ở cấp platform/tenant, chỉ System Admin đổi). Channel gameplay match/team/party là always-on (ADR-0020 mục 6): ở mọi cấp phải enabled=true, đủ text/emoji/quick, không có allowed_hours, slow_mode ≤ 10 s; chỉ mute/block cá nhân hoặc sanction mới ngăn một người gửi. Xem docs/03-social-multiplayer/CHAT_SYSTEM.md §3 và MODERATION.md §3, §11, §12.",
+  "description": "Chính sách chat ở một cấp (platform → tenant → school; cấp school do school_admin đặt — ADR-0072; không còn cấp class — ADR-0095). Một bộ quy tắc cho MỌI khối 1–9: rule không có điều kiện theo grade_band/grade_level (ADR-0020, Accepted). Cấp dưới chỉ được siết chặt hơn cấp trên trừ khi rule cấp trên có allow_override_relax=true. Thiếu rule cho channel_type = deny. Pipeline kiểm tra hợp lệ (validation) bật mặc định; danh mục từ nhạy cảm và công tắc kiểm duyệt theo ADR-0030 (moderation_switches chỉ ở cấp platform/tenant, chỉ System Admin đổi). Channel gameplay match/team/party là always-on (ADR-0020 mục 6): ở mọi cấp phải enabled=true, đủ text/emoji/quick, không có allowed_hours, slow_mode ≤ 10 s; chỉ mute/block cá nhân hoặc sanction mới ngăn một người gửi. Xem docs/03-social-multiplayer/CHAT_SYSTEM.md §3 và MODERATION.md §3, §11, §12.",
   "type": "object",
   "required": [
     "schema_version",
@@ -13,7 +13,7 @@
   "properties": {
     "schema_version": {
       "const": 5,
-      "description": "v5 thêm sticker/gif và features theo ADR-0034; v4 thêm channel match và ràng buộc always-on (ADR-0020 mục 6); v3 thêm moderation_switches và sensitive_term_policy (ADR-0030)"
+      "description": "v5 thêm sticker/gif và features theo ADR-0034 (sửa tại chỗ theo ADR-0095: bỏ scope_type class và channel_type class/study_group — chỉ seed platform từng mang các giá trị này và được thay cùng migration); v4 thêm channel match và ràng buộc always-on (ADR-0020 mục 6); v3 thêm moderation_switches và sensitive_term_policy (ADR-0030)"
     },
     "policy_id": {
       "type": "string",
@@ -23,8 +23,7 @@
       "enum": [
         "platform",
         "tenant",
-        "school",
-        "class"
+        "school"
       ]
     },
     "scope_id": {
@@ -93,10 +92,7 @@
       "if": {
         "properties": {
           "scope_type": {
-            "enum": [
-              "school",
-              "class"
-            ]
+            "const": "school"
           }
         }
       },
@@ -139,8 +135,7 @@
           "scope_type": {
             "enum": [
               "platform",
-              "tenant",
-              "class"
+              "tenant"
             ]
           }
         }
@@ -157,8 +152,7 @@
           "scope_type": {
             "enum": [
               "platform",
-              "tenant",
-              "class"
+              "tenant"
             ]
           }
         }
@@ -178,8 +172,6 @@
         "match",
         "party",
         "team",
-        "class",
-        "study_group",
         "direct"
       ]
     },

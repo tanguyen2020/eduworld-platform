@@ -10,7 +10,7 @@
     "tenant_id": { "type": "string", "format": "uuid" },
     "message_id": { "type": "string", "format": "uuid" },
     "channel_id": { "type": "string", "format": "uuid" },
-    "channel_type": { "enum": ["world", "area", "match", "party", "team", "class", "study_group", "direct"] },
+    "channel_type": { "enum": ["world", "area", "match", "party", "team", "direct"], "description": "Không còn class, study_group (ADR-0095 — chỉ thu hẹp giá trị phát ra, tương thích ngược)" },
     "seq": { "type": "integer", "minimum": 1 },
     "sender_id": { "type": "string", "format": "uuid" },
     "kind": { "enum": ["text", "emoji", "quick", "sticker", "gif", "system"] },

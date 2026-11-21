@@ -4,7 +4,7 @@
 > Liên quan: [ADR-0020](../adr/ADR-0020-chat-thong-nhat-cho-moi-lop-moi-tin-nhan-phai-qua-kiem-tra-h.md) · [ADR-0030](../adr/ADR-0030-chinh-sach-tu-nhay-cam-trong-chat-danh-muc-quan-ly-duoc-va-c.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0078](../adr/ADR-0078-mac-dinh-an-toan-cho-tre-nho.md) · [ADR-0054](../adr/ADR-0054-tuong-tac-xa-hoi-lien-truong-cross-school-social-interaction.md) · [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md) · [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [MODERATION](../03-social-multiplayer/MODERATION.md) · [DATA_PRIVACY](DATA_PRIVACY.md) · [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md) · OQ-09, OQ-12, OQ-17
 
 > [!IMPORTANT]
-> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Không có channel `class`/`study_group` và **không** tạo kênh theo khối; chat policy 3 cấp platform → tenant → school; mọi người chơi khác chỉ thấy nickname + avatar (bỏ ngoại lệ "bạn cùng lớp"); party lớp 1–3 chỉ `friend`/`quest`, thành viên cùng đúng khối, khác trường được trong cùng tenant theo ADR-0054, không liên tenant ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) R12). R15 không đổi. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-C1 (cùng MR với CHAT_SYSTEM theo R15) ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Không có channel `class`/`study_group` và **không** tạo kênh theo khối; chat policy 3 cấp platform → tenant → school; mọi người chơi khác chỉ thấy nickname + avatar (bỏ ngoại lệ "bạn cùng lớp"); party lớp 1–3 chỉ `friend`/`quest`, thành viên cùng đúng khối, khác trường được trong cùng tenant theo ADR-0054, không liên tenant ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) R12). R15 không đổi. Đã áp ở WP-C1 (2026-11-21): bảng channel §3, tên thật, mời party, sơ đồ policy, EP-04, cache policy, quyền School Admin. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-C1 (cùng MR với CHAT_SYSTEM theo R15) ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
 
 **Mục đích.** Nguồn duy nhất về **chính sách an toàn trẻ em** (cái gì được phép, mặc định ra sao) và **nơi hệ thống thực thi** chính sách đó (đã gộp tài liệu bảo vệ trẻ em cũ vào đây, 2026-11-15).
 
@@ -34,7 +34,7 @@
 | Quy tắc | Chi tiết | Nhãn |
 |---|---|---|
 | Nickname | Sinh tự động dạng `<Tính từ/Màu><Con vật><2 số>` (vd. "MèoXanh42") từ danh sách đã duyệt; học sinh được đổi bằng cách chọn lại từ bộ sinh, **không gõ tự do** | [Confirmed] |
-| Tên thật | Chỉ hiển thị cho nhân sự nhà trường có quyền trong portal (`school_admin`, `academic_manager`); bạn cùng lớp thấy tên thật nếu trường bật | [Confirmed] |
+| Tên thật | Chỉ hiển thị cho nhân sự nhà trường có quyền trong portal (`school_admin`, `academic_manager`); người chơi khác (kể cả cùng khối) chỉ thấy nickname + avatar — bỏ ngoại lệ "bạn cùng lớp" (ADR-0095) | [Confirmed] |
 | Avatar | Chỉ từ bộ customization; không upload ảnh | [Confirmed] |
 | Hồ sơ người chơi khác | Nickname, avatar, level, badge công khai; không trường, lớp, tuổi, ngày sinh | [Confirmed] |
 | Liên trường | Hiển thị "Trường khác" thay tên trường | [Confirmed] |
@@ -46,7 +46,7 @@
 
 ### 3.1. Nội dung được phép (như nhau cho học sinh lớp 1–9)
 
-Giá trị khởi tạo của `chat_policy` cấp platform. Cấp tenant/school/class chỉ được siết chặt hơn (ADR-0020); khi siết chặt, quy tắc áp dụng cho **mọi** học sinh trong phạm vi đó.
+Giá trị khởi tạo của `chat_policy` cấp platform. Cấp tenant/school chỉ được siết chặt hơn (ADR-0020; không còn cấp class — ADR-0095); khi siết chặt, quy tắc áp dụng cho **mọi** học sinh trong phạm vi đó.
 
 | Channel | Ai gửi được | Loại tin |
 |---|---|---|
@@ -54,8 +54,6 @@ Giá trị khởi tạo của `chat_policy` cấp platform. Cấp tenant/school/
 | `area` | Người trong cùng instance | Text, emoji, quick message, sticker, GIF (thư viện nội bộ đã duyệt), reaction |
 | `match` **(luôn có)** | Người chơi cùng trận 1v1/đội/giải | Text, emoji, quick message, sticker, GIF (thư viện nội bộ đã duyệt), reaction |
 | `party` **(luôn có)** / `team` (team trong trận luôn có) | Thành viên nhóm/đội | Text, emoji, quick message, sticker, GIF (thư viện nội bộ đã duyệt), reaction |
-| `class` | Học sinh của lớp | Text, emoji, quick message, sticker, GIF (thư viện nội bộ đã duyệt), reaction |
-| `study_group` | Thành viên nhóm | Text, emoji, quick message, sticker, GIF (thư viện nội bộ đã duyệt), reaction |
 | `direct` | Hai người đã là bạn bè, không block nhau | Text, emoji, quick message, sticker, GIF (thư viện nội bộ đã duyệt), reaction |
 | Liên trường | Theo channel ở trên | Như trên; chỉ hiện nickname/avatar |
 
@@ -67,7 +65,7 @@ Giá trị khởi tạo của `chat_policy` cấp platform. Cấp tenant/school/
 | Danh mục từ nhạy cảm | Quản lý trong CMS theo nhóm và mức độ; tenant chỉ thêm từ, không nới danh mục platform ([MODERATION](../03-social-multiplayer/MODERATION.md) §11) |
 | Mức nghiêm bộ lọc | `strict`; trường/lớp có thể nâng lên `very_strict` |
 | Rate limit | Theo channel (6–15 tin/phút), tổng ≤ 30 tin/phút/người ([CHAT_SYSTEM §3.1](../03-social-multiplayer/CHAT_SYSTEM.md)) |
-| Độ dài text tối đa | World/Area 120 · Party/Team 200 · Class/Study Group/DM 300 |
+| Độ dài text tối đa | World/Area 120 · Party/Team 200 · DM 300 |
 | Link/URL | Chặn, trừ link nội bộ EduWorld trong allowlist |
 | Số điện thoại/email/địa chỉ/mạng xã hội | Chặn |
 | Giờ chat | Ngoài giờ giới nghiêm `platform_curfew` (§4.1); trường chỉ mở rộng khung giới nghiêm, không thu hẹp |
@@ -121,7 +119,7 @@ Khuyến nghị vận hành [Confirmed]: chỉ tắt từng bước có lý do c
 | Hành động | Mặc định |
 |---|---|
 | Kết bạn | Cùng trường (như nhau cho mọi lớp); tenant `common`: tắt mặc định (§3.6) |
-| Mời party | Bạn bè hoặc bạn cùng lớp; không mời người lạ |
+| Mời party | Bạn bè (party `friend`) hoặc học sinh cùng trường theo luật party (lớp 1–3 cùng đúng khối, khác trường chỉ trong tenant bật liên trường — ADR-0095, ADR-0054); không mời người lạ ngoài tenant |
 | Party liên trường | Không (mặc định Release 1.0) [Confirmed] |
 | Party khác grade band | Được nếu cùng trường và thỏa điều kiện ghép nhóm ([PARTY_SYSTEM §6.2](../03-social-multiplayer/PARTY_SYSTEM.md#62-kiểm-tra-ở-bước-3--eligibility): cùng band hoặc band liền kề khi activity cho phép); câu hỏi theo khối thấp hơn của nhóm ([COMPETITION_SYSTEM §5](../01-game-design/COMPETITION_SYSTEM.md#5-công-bằng-theo-khối-lớp)). Đây là điều kiện ghép **hoạt động học tập**, không áp vào chat (ADR-0020) |
 | Block | Chặn mọi tương tác (chat, mời, ghép party, ghép trận nếu còn lựa chọn khác) |
@@ -215,7 +213,7 @@ flowchart LR
     rl[Rate limit / size limit]
   end
   subgraph Backend
-    pol["PolicyService\nresolve policy theo\nplatform→tenant→school→class\n(không theo lớp/khối)"]
+    pol["PolicyService\nresolve policy theo\nplatform→tenant→school\n(không theo khối)"]
     chat["chat: pre-send pipeline"]
     soc["social: friend/DM/invite gate"]
     mp["multiplayer: party/matchmaking gate"]
@@ -234,7 +232,7 @@ flowchart LR
 | EP-01 | Gửi tin nhắn | `chat` | ChatPolicy theo channel (không theo grade, ADR-0020); **mọi tin** qua pipeline kiểm tra hợp lệ normalize → định dạng → danh mục từ nhạy cảm → PII → spam → bắt nạt → allow/mask/block/hold/block_and_alert; PII và grooming luôn chạy, bước khác System Admin tắt được có thời hạn + hai người duyệt (§3.3); giờ giới nghiêm (§4.1), preset (§3.5) — giới hạn độ dài, rate limit, quyền channel, sanction luôn chạy | ADR-0020, ADR-0030, ADR-0078 |
 | EP-02 | Tạo DM channel | `chat`, `social` | Chỉ khi hai người là bạn bè, không block nhau, trường không tắt DM; tenant `common` tắt mặc định (§3.6) | Như nhau cho mọi lớp |
 | EP-03 | Gửi friend request | `social` | Cùng trường (mặc định); rate limit; không với người đã block/bị block; tenant `common` tắt mặc định (§3.6) | Cùng trường, như nhau cho mọi lớp |
-| EP-04 | Mời vào party / join party | `multiplayer/party` | Party policy: school/class/grade, private cần lời mời; chặn người đã block; rate limit lời mời | Cùng trường |
+| EP-04 | Mời vào party / join party | `multiplayer/party` | Party policy: school/grade (lớp 1–3 cùng đúng khối — ADR-0095), private cần lời mời; chặn người đã block; rate limit lời mời | Cùng trường |
 | EP-05 | Matchmaking | `multiplayer/matchmaking` | Ràng buộc cứng grade (không ghép lớp 1 với lớp 9); cross-school chỉ hiển thị nickname; chat sau trận theo ChatPolicy chung | Grade exact (1–5), ±1 (6–9) |
 | EP-06 | Nickname & tên party | `game`, `party` | Nickname sinh tự động hoặc chọn từ danh sách duyệt; tên party qua pipeline lọc + danh sách gợi ý cho lớp 1–3 | Không gõ tự do lớp 1–5 |
 | EP-07 | Hồ sơ người chơi | `game` | Người khác chỉ thấy nickname, avatar, level, badge; không tên thật/trường/lớp với người khác trường | — |
@@ -244,7 +242,7 @@ flowchart LR
 | EP-11 | Nội dung học tập/NPC | `cms` | Workflow duyệt; reviewer kiểm tra phù hợp lứa tuổi | — |
 | EP-12 | Upload media | `cms`, `learning` | Chỉ vai trò nội dung (platform/tenant) upload media. Học sinh **không upload** trong version này (hoạt động nộp bài ngoài version này, ADR-0072, ADR-0082) | Không có upload của học sinh |
 
-Policy resolution: cấp dưới chỉ **siết chặt hơn** (ADR-0020). Kết quả resolve được cache theo `(school_id, class_id)` trong `chat_policy_cache` (5 phút) [Confirmed — Technical Architect 2026-11-16], invalidate qua pub/sub khi policy đổi, và gửi xuống client trong bootstrap để ẩn UI.
+Policy resolution: cấp dưới chỉ **siết chặt hơn** (ADR-0020). Kết quả resolve được cache theo `(school_id, channel_type)` trong `chat_policy_cache` (không còn `class_id` — ADR-0095) (5 phút) [Confirmed — Technical Architect 2026-11-16], invalidate qua pub/sub khi policy đổi, và gửi xuống client trong bootstrap để ẩn UI.
 
 ## 7. Vai trò và quyền an toàn của nhà trường và platform
 
@@ -252,7 +250,7 @@ Kiểm duyệt tập trung theo ADR-0072. Nhân sự nhà trường không vào 
 
 | Vai trò | Quyền an toàn (chỉ trong phạm vi được giao) |
 |---|---|
-| School Admin | Cấu hình `chat_policy` cấp trường và cấp lớp (chỉ siết chặt, áp như nhau cho mọi học sinh trong phạm vi): bật/tắt DM, world chat, channel lớp, study group, tên thật cho bạn cùng lớp, mở rộng khung giới nghiêm (không nới quá giờ giới nghiêm platform, §4.1); chọn preset "chỉ quick message + emote" cho cả trường (§3.5) (không tắt được chat trận/party — ADR-0020 mục 6); cấu hình khung giờ truy cập; tạo study group; nhận và xác nhận thông báo vụ việc nghiêm trọng để liên hệ phụ huynh ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed)) |
+| School Admin | Cấu hình `chat_policy` cấp trường (chỉ siết chặt, áp như nhau cho mọi học sinh trong phạm vi; không còn cấp lớp, channel lớp, study group, tên thật cho bạn cùng lớp — ADR-0095): bật/tắt DM, world chat, mở rộng khung giới nghiêm (không nới quá giờ giới nghiêm platform, §4.1); chọn preset "chỉ quick message + emote" cho cả trường (§3.5) (không tắt được chat trận/party — ADR-0020 mục 6); cấu hình khung giờ truy cập; nhận và xác nhận thông báo vụ việc nghiêm trọng để liên hệ phụ huynh ([MODERATION §6.4](../03-social-multiplayer/MODERATION.md#64-thông-báo-vụ-việc-cho-nhà-trường-confirmed)) |
 | Academic Manager | Tạo study group cho môn trong phạm vi; không có quyền an toàn khác |
 | Tenant Admin | Chính sách liên trường trong tenant; báo cáo tổng hợp ẩn danh; gửi yêu cầu thêm từ nhạy cảm cho Safety Team |
 | Platform Safety Team (`safety_moderator`; đăng nhập portal không MFA — ADR-0094) | Xử lý mọi moderation case của mọi tenant, đọc nội dung chỉ trong ngữ cảnh case qua `tenancy.Bypass(ctx, "moderation_case")` có audit và metric `eduworld_tenant_filter_bypass_total`; áp/thu hồi sanction; ghi mục từ bổ sung và bật/tắt nhóm từ của tenant; gửi thông báo nhà trường |
@@ -264,11 +262,11 @@ Không có vai trò nào đọc được toàn bộ chat mọi trường [Confir
 
 | Hành động | School Admin | Tenant Admin | Platform Safety Team (`safety_moderator`) | System Admin |
 |---|---|---|---|---|
-| Đọc Class/Study Group/Team chat | ✘ | ✘ | Chỉ trong case được giao | Chỉ break-glass |
+| Đọc Team/DM chat | ✘ | ✘ | Chỉ trong case được giao | Chỉ break-glass |
 | Đọc DM/Party/Match chat | ✘ | ✘ | Chỉ trong case được giao | Chỉ break-glass |
 | Mute / hạn chế chat học sinh | ✘ | ✘ | ✔ | ✘ |
 | Khóa tài khoản do vi phạm | ✘ (chỉ khóa/mở vì lý do quản trị: nghỉ học, chuyển trường) | ✘ | ✔ (trưởng ca, lý do + audit) | ✔ (yêu cầu pháp lý) |
-| Bật/tắt channel lớp, DM, world chat của trường | ✔ (trong giới hạn platform) | ✘ | ✘ | Platform defaults |
+| Bật/tắt DM, world chat của trường | ✔ (trong giới hạn platform) | ✘ | ✘ | Platform defaults |
 | Cấu hình giờ chat, giờ truy cập | ✔ (chỉ siết thêm so với giờ giới nghiêm platform) | ✘ | ✘ | `platform_curfew` |
 | Chọn preset "chỉ quick message + emote" | ✔ (cả trường) | ✘ | ✘ | Định nghĩa preset |
 | Danh mục từ nhạy cảm | ✘ | Gửi yêu cầu | Ghi mục từ bổ sung của tenant | Danh mục platform |

@@ -52,6 +52,10 @@ Owner đã duyệt trước các mặc định [Proposed]; khi tài liệu thi�
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F116-AC-12: "System Admin (`chat.sensitive_terms.write`, gateway nội bộ, MFA)" đọc là không MFA; test authz của danh mục từ nhạy cảm kiểm `403 PERMISSION_DENIED` cho người thiếu permission, không còn kiểm `MFA_REQUIRED`. T025, T041, plan, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Pipeline có đổi khi bỏ lớp? → A: không đổi hành vi: pipeline vẫn không nhận tham số khối (R15); policy hiệu lực đọc 3 cấp platform → tenant → school (F115), không còn channel `class`/`study_group`. AC giữ mã, chỉ sửa chữ F116-AC-11.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Mọi tin nhắn được kiểm tra trước khi phát (Priority: P1)
@@ -76,7 +80,7 @@ Học sinh gửi tin; tin bình thường đi ngay, từ thô bị che, số đi
 | F116-AC-08 | TRONG KHI người gửi có sanction `mute` còn hiệu lực, module chat PHẢI từ chối mọi tin với `CHAT_MUTED` ở bước giới hạn kỹ thuật, kể cả khi công tắc kiểm duyệt tắt | FR-MOD-012 · AC-MOD-021 | TC-CHAT-014 |
 | F116-AC-09 | HỆ THỐNG PHẢI ghi một decision log cho mọi tin (`decision`, `category_codes`, `steps_run`, `steps_skipped`, `catalog_version_platform`, `catalog_version_tenant`, `switch_snapshot_id`, `latency_ms`), không chứa nội dung tin | FR-MOD-011 · [MODERATION §12.4](../../docs/03-social-multiplayer/MODERATION.md) · AGENTS R14 | TC-CHAT-013 |
 | F116-AC-10 | HỆ THỐNG PHẢI giữ p95 toàn pipeline dưới ngưỡng `moderation_pipeline_latency` với tin 200 ký tự trên benchmark CI | NFR-SAFE-002 · AC-MOD-004 | TC-CHAT-012 |
-| F116-AC-11 | HỆ THỐNG PHẢI cho cùng nội dung ở cùng loại channel và cùng policy cùng quyết định với mọi học sinh; pipeline PHẢI không nhận tham số khối/lớp | FR-CHAT-005 · AC-CHAT-003 · AGENTS R15 | TC-CHAT-010 |
+| F116-AC-11 | HỆ THỐNG PHẢI cho cùng nội dung ở cùng loại channel và cùng policy cùng quyết định với mọi học sinh; pipeline PHẢI không nhận tham số khối (không còn lớp — ADR-0095) | FR-CHAT-005 · AC-CHAT-003 · AGENTS R15 | TC-CHAT-010 |
 
 ---
 

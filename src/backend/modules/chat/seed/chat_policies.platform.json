@@ -3,7 +3,7 @@
   "policy_id": "01936a00-0000-7000-8000-000000000001",
   "scope_type": "platform",
   "scope_id": null,
-  "version": 1,
+  "version": 2,
   "timezone": "Asia/Ho_Chi_Minh",
   "global_rate": {
     "messages_per_minute": 30,
@@ -270,116 +270,6 @@
         "pin": true,
         "typing": true,
         "receipts": "per_member",
-        "search": true,
-        "edit_window_minutes": 15,
-        "recall_window_hours": 24,
-        "max_pins": 3,
-        "max_mentions": 5,
-        "max_forward_targets": 5,
-        "max_reactions_per_user": 3
-      }
-    },
-    {
-      "channel_type": "class",
-      "enabled": true,
-      "allowed_kinds": [
-        "text",
-        "emoji",
-        "quick",
-        "sticker",
-        "gif"
-      ],
-      "reactions": true,
-      "max_text_length": 300,
-      "rate": {
-        "messages_per_minute": 10,
-        "burst": 3
-      },
-      "slow_mode_seconds": 0,
-      "allowed_hours": [
-        {
-          "days": "mon-sun",
-          "from": "06:30",
-          "to": "21:30"
-        }
-      ],
-      "validation": {
-        "strictness": "strict",
-        "profanity": "mask",
-        "pii": "block",
-        "unknown_link": "block",
-        "spam": "block",
-        "bullying_suspected": "hold_for_review"
-      },
-      "retention_days": 180,
-      "features": {
-        "edit": true,
-        "recall": true,
-        "reply": true,
-        "quote": true,
-        "forward": true,
-        "sticker": true,
-        "gif": true,
-        "reaction": true,
-        "mention": true,
-        "pin": true,
-        "typing": true,
-        "receipts": "count",
-        "search": true,
-        "edit_window_minutes": 15,
-        "recall_window_hours": 24,
-        "max_pins": 3,
-        "max_mentions": 5,
-        "max_forward_targets": 5,
-        "max_reactions_per_user": 3
-      }
-    },
-    {
-      "channel_type": "study_group",
-      "enabled": true,
-      "allowed_kinds": [
-        "text",
-        "emoji",
-        "quick",
-        "sticker",
-        "gif"
-      ],
-      "reactions": true,
-      "max_text_length": 300,
-      "rate": {
-        "messages_per_minute": 10,
-        "burst": 3
-      },
-      "slow_mode_seconds": 0,
-      "allowed_hours": [
-        {
-          "days": "mon-sun",
-          "from": "06:30",
-          "to": "21:30"
-        }
-      ],
-      "validation": {
-        "strictness": "strict",
-        "profanity": "mask",
-        "pii": "block",
-        "unknown_link": "block",
-        "spam": "block",
-        "bullying_suspected": "hold_for_review"
-      },
-      "retention_days": 180,
-      "features": {
-        "edit": true,
-        "recall": true,
-        "reply": true,
-        "quote": true,
-        "forward": true,
-        "sticker": true,
-        "gif": true,
-        "reaction": true,
-        "mention": true,
-        "pin": true,
-        "typing": true,
-        "receipts": "count",
         "search": true,
         "edit_window_minutes": 15,
         "recall_window_hours": 24,

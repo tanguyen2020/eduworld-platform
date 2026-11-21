@@ -86,7 +86,7 @@ src/backend/modules/chat/
 
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
-| domain | `Normalizer`, `CompiledCatalog.Match(views) []Hit`, `PIIDetector`, `SpamRules`, `BullyingRules`, `ContextRules`, `Decide(hits, strictness)`, `EffectiveSwitches` | Không tham số khối/lớp |
+| domain | `Normalizer`, `CompiledCatalog.Match(views) []Hit`, `PIIDetector`, `SpamRules`, `BullyingRules`, `ContextRules`, `Decide(hits, strictness)`, `EffectiveSwitches` | Không tham số khối (không còn lớp — ADR-0095) |
 | application | `pipeline.Validator` (port F115); Command: `CreateSensitiveCategory`, `UpdateSensitiveCategory`, `DeleteSensitiveCategory`, `CreateSensitiveTerm`, `UpdateSensitiveTerm`, `DeleteSensitiveTerm`, `CreateAllowlistEntry`, `DeleteAllowlistEntry`, `PublishSensitiveCatalog`, `CreateTenantSensitiveTerm`, `UpdateTenantSensitiveTerm`, `DeleteTenantSensitiveTerm`, `PublishTenantSensitiveCatalog`, `ToggleTenantSensitiveCategory`, `SetModerationSwitches`, `ExpireModerationSwitches`, `ApplySystemMute`; Query: `ListSensitiveCategories`, `ListSensitiveTerms`, `TestSensitiveTerms`, `ListSensitiveAllowlist`, `ListSensitiveCatalogVersions`, `ListModerationSwitches`, `ListModerationSwitchHistory`, `ListTenantSensitiveTerms`, `ListTenantSensitiveCategories`, `ListQuickMessages` | Permission theo [contracts §1](contracts/README.md) |
 | infrastructure | ent repo; Valkey compiled cache + pub/sub `ew:chat:sensitive:version`, `ew:chat:switches:changed`; spam window; regression runner | |
 | presentation | 20 handler `/admin/chat/*`, `/tenant/chat/categories`, `listQuickMessages`; job `moderation-switch-expirer` (worker) | |

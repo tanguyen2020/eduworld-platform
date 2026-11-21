@@ -10,7 +10,7 @@
 
 ## R2. Kiểm tra policy trên đường gửi
 
-- **Decision**: `PolicyResolver` đọc rule 4 cấp từ `chat.chat_policies` (theo `tenant_id`, `school_id`, `class_id` của channel), giao bằng `policy.Intersect`, cache kết quả theo `(tenant_id, school_id, class_id?, channel_type)` ở Valkey với TTL `chat_policy_cache`; invalidate bằng event `chat_policy.updated` (F120). Thiếu rule ở bất kỳ cấp → `ErrDenied`.
+- **Decision**: `PolicyResolver` đọc rule 3 cấp từ `chat.chat_policies` (theo `tenant_id`, `school_id`; cấp class bỏ theo ADR-0095), giao bằng `policy.Intersect`, cache kết quả theo `(tenant_id, school_id, channel_type)` ở Valkey với TTL `chat_policy_cache`; invalidate bằng event `chat_policy.updated` (F120). Thiếu rule ở bất kỳ cấp → `ErrDenied`.
 - **Rationale**: ngân sách độ trễ gửi (send p95 < 300 ms) không cho phép đọc PG mỗi tin; CHAT_SYSTEM §3 (cache) và CONFIG_DEFAULTS `chat_policy_cache`.
 - **Alternatives**: resolve trong gateway — loại vì gateway không có logic nghiệp vụ (ADR-0074).
 - **Ghi chú**: CHAT_SYSTEM §3 ghi "cache 60 s" còn VALKEY_DESIGN/CONFIG_DEFAULTS ghi 5 phút → dùng tên `chat_policy_cache` (giá trị CONFIG_DEFAULTS); báo cáo mâu thuẫn.

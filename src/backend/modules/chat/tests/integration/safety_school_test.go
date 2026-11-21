@@ -41,7 +41,7 @@ func (s *safetyEnv) tenantPost(token string, tenant uuid.UUID, path string, body
 func (s *safetyEnv) multiCase() (uuid.UUID, student, student, student) {
 	s.t.Helper()
 	an, binh, chi := s.student(s.tenantA, s.schoolA), s.student(s.tenantA, s.schoolA), s.student(s.tenantA, s.schoolA2)
-	ch := s.open(channel.Class, an, binh, chi)
+	ch := s.open(channel.Team, an, binh, chi)
 	target := s.msg(ch, false, an, 1, "zqxin so dien thoai")
 	for _, rep := range []student{binh, chi} {
 		if r := s.report(rep, newKey(), "vi", map[string]any{"target_type": "message", "target_id": target, "reason": "asked_personal_info"}); r.status != http.StatusCreated {

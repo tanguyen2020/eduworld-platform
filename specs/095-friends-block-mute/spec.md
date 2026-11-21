@@ -31,6 +31,10 @@
 - Q: Lời mời/ngày đếm ở đâu? → A: Đếm trong `social.friend_requests` (mọi lời mời đã tạo từ đầu ngày platform `Asia/Ho_Chi_Minh`), không dùng counter Valkey; `Retry-After` = số giây tới ngày mới [Confirmed].
 - Q: Hủy lời mời khi học sinh bị dọn/chuyển? → A: Consumer `chat.projection_identity` hủy lời mời `pending` của học sinh khi nhận `student.cleaned_up` hoặc `student.synced` có `status` khác `active` (module identity chưa gọi facade `cleanupStudentData` của chat) [Confirmed].
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed])
+
+- Q: Gợi ý "Bạn cùng lớp" và ngoại lệ tên thật cho bạn cùng lớp? → A: bỏ (ADR-0095 mục 5); `PlayerCard` giữ nguyên chỉ nickname/avatar/level/presence; không thêm gợi ý theo khối. Không đổi code/AC của F095 (chưa từng hiện thực ngoại lệ này).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Gửi và nhận lời mời kết bạn trong phạm vi trường (Priority: P1)
@@ -175,7 +179,7 @@ Học sinh thấy bạn nào đang online, đang học hay đang thi đấu đ�
 - Thông báo trong game cho lời mời kết bạn → F123; báo cáo người dùng → F121.
 - Club/guild, study group → F120 (FR-SOC-004).
 - UI bạn bè trong Godot: chưa có feature trong danh mục (đề xuất gắn F102 hoặc thêm feature mới).
-- Hiển thị tên thật cho bạn cùng lớp (SOCIAL_SYSTEM §4.1 [Confirmed]) — contract `PlayerCard` chưa có trường; không làm ở F095.
+- ~~Hiển thị tên thật cho bạn cùng lớp~~ — bỏ theo ADR-0095 (không còn ngoại lệ hiển thị cho "bạn cùng lớp"; mọi người chơi khác chỉ thấy nickname + avatar, R16).
 
 ## Assumptions
 

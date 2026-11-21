@@ -54,7 +54,7 @@ func TestTechnicalLimits(t *testing.T) {
 	// Content not matching the kind is VALIDATION_FAILED, before any seq.
 	bad := h.req(message.KindSticker)
 	bad.StickerID = nil
-	h2 := newHarness(channel.Class)
+	h2 := newHarness(channel.Direct)
 	if _, err := h2.send.Send(ctx, command.Sender{TenantID: h2.tenant, UserID: h2.sender}, func() message.Request {
 		r := h2.req(message.KindSticker)
 		r.StickerID = nil

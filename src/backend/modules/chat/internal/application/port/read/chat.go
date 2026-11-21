@@ -85,8 +85,8 @@ type StoredMessage struct {
 type ChatReader interface {
 	// ChannelFacts returns the channel of tenant with its members, cards and blocks; nil when unknown or deleted.
 	ChannelFacts(ctx context.Context, tenant, channel uuid.UUID) (*ChannelFacts, error)
-	// PolicyLevels returns the live documents of the levels platform, tenant, school (when school is set) and class.
-	PolicyLevels(ctx context.Context, tenant uuid.UUID, school, class *uuid.UUID) (policy.Levels, error)
+	// PolicyLevels returns the live documents of the levels platform, tenant and school (when school is set).
+	PolicyLevels(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (policy.Levels, error)
 	// CurfewWindows returns platform_curfew projected from identity (nil: not projected) and the curfew_window of the
 	// school (nil: none).
 	CurfewWindows(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (platform, schoolWindow *CurfewWindow, err error)

@@ -36,7 +36,7 @@ type reader struct {
 func (r *reader) ChannelFacts(context.Context, uuid.UUID, uuid.UUID) (*read.ChannelFacts, error) {
 	return r.facts, nil
 }
-func (r *reader) PolicyLevels(context.Context, uuid.UUID, *uuid.UUID, *uuid.UUID) (policy.Levels, error) {
+func (r *reader) PolicyLevels(context.Context, uuid.UUID, *uuid.UUID) (policy.Levels, error) {
 	return r.levels, nil
 }
 func (r *reader) CurfewWindows(context.Context, uuid.UUID, *uuid.UUID) (*read.CurfewWindow, *read.CurfewWindow, error) {
@@ -234,7 +234,7 @@ func platformDoc() *policy.Document {
 	_ = json.Unmarshal([]byte(`{"scope_type":"platform","global_rate":{"messages_per_minute":30,"burst":5},"rules":[
 		{"channel_type":"party","enabled":true,"allowed_kinds":["text","emoji","quick","sticker","gif"],"max_text_length":200,
 		 "rate":{"messages_per_minute":12,"burst":3},"validation":{"strictness":"strict"}},
-		{"channel_type":"class","enabled":true,"allowed_kinds":["text","emoji","quick","sticker","gif"],"max_text_length":300,
+		{"channel_type":"direct","enabled":true,"allowed_kinds":["text","emoji","quick","sticker","gif"],"max_text_length":300,
 		 "rate":{"messages_per_minute":10,"burst":3},"validation":{"strictness":"strict"}}]}`), &d)
 	return &d
 }
@@ -256,8 +256,8 @@ func newHarness(t channel.Type) *harness {
 		other: uuid.New(), channel: uuid.New()}
 	school := uuid.New()
 	scope := map[string]string{"party_id": "p1"}
-	if t == channel.Class {
-		scope = map[string]string{"class_id": uuid.NewString()}
+	if t == channel.Direct {
+		scope = map[string]string{"pair": "d1"}
 	}
 	ch, _ := channel.New(h.channel, h.tenant, &school, t, scope, time.Now().Add(-time.Hour))
 	facts := &read.ChannelFacts{Channel: ch, Cards: map[uuid.UUID]read.ChatCard{}, Members: channel.Members{

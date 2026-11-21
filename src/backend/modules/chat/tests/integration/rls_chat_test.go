@@ -74,8 +74,9 @@ func TestChatRLSAndPrivileges(t *testing.T) {
 	}
 }
 
-// T009: the platform default policy seeded by the migration equals modules/chat/seed/chat_policies.platform.json, which
-// is valid against specs/schemas/chat-policy.schema.json v5 and has the 8 channel types of CHAT_SYSTEM §3.1.
+// T009: the platform default policy seeded by the migrations equals modules/chat/seed/chat_policies.platform.json, which
+// is valid against specs/schemas/chat-policy.schema.json v5 and has the 6 channel types of CHAT_SYSTEM §3.1 (no
+// class/study_group since ADR-0095).
 func TestSeedPlatformPolicy(t *testing.T) {
 	e := setup(t, envOpts{})
 	root := testkit.RepoRoot(t)
@@ -111,7 +112,7 @@ func TestSeedPlatformPolicy(t *testing.T) {
 	for _, r := range want["rules"].([]any) {
 		types[r.(map[string]any)["channel_type"].(string)] = true
 	}
-	if len(types) != 8 {
+	if len(types) != 6 || types["class"] || types["study_group"] {
 		t.Fatalf("channel types %v", types)
 	}
 	if regexp.MustCompile(`(?i)grade`).Match(seed) {

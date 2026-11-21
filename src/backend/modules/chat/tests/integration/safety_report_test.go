@@ -25,7 +25,7 @@ func TestSafetyReportCreatesCase(t *testing.T) {
 	authztest.Cover(t, "createReport", authztest.CrossTenant, authztest.RoleDenied)
 	s := setupSafety(t)
 	an, binh, chi := s.student(s.tenantA, s.schoolA), s.student(s.tenantA, s.schoolA), s.student(s.tenantA, s.schoolA2)
-	ch := s.open(channel.Class, an, binh, chi)
+	ch := s.open(channel.Team, an, binh, chi)
 	var target uuid.UUID
 	for seq := int64(1); seq <= 25; seq++ {
 		sender := binh
@@ -135,10 +135,10 @@ func TestSafetyReportCreatesCase(t *testing.T) {
 		t.Fatalf("own message: %d %s", v.status, v.raw)
 	}
 	// F121-AC-05: 404 for a message of a channel the reporter never joined, of another tenant, unknown ids, users elsewhere.
-	other := s.open(channel.Class, an, chi)
+	other := s.open(channel.Direct, an, chi)
 	foreign := s.msg(other, false, an, 1, "zqkhac")
 	bStudent, bFriend := s.student(s.tenantB, s.schoolB), s.student(s.tenantB, s.schoolB)
-	bCh := s.open(channel.Class, bStudent, bFriend)
+	bCh := s.open(channel.Direct, bStudent, bFriend)
 	bMsg := s.msg(bCh, false, bStudent, 1, "zqtenantb")
 	for name, b := range map[string]map[string]any{
 		"foreign channel": {"target_type": "message", "target_id": foreign, "reason": "spam"},

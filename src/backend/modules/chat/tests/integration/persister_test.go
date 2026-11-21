@@ -100,7 +100,7 @@ func TestNATSDown(t *testing.T) {
 func TestPGDown(t *testing.T) {
 	c := setupChat(t, chatOpts{factsFresh: 200 * time.Millisecond})
 	an, binh := c.student(c.tenantA, c.schoolA), c.student(c.tenantA, c.schoolA)
-	ch := c.open(channel.Class, an, binh)
+	ch := c.open(channel.Direct, an, binh)
 	send := func(n int) {
 		for i := 0; i < n; i++ {
 			s := an
@@ -120,7 +120,7 @@ func TestPGDown(t *testing.T) {
 	time.Sleep(300 * time.Millisecond) // facts are now stale: reloads fail, stale values serve
 	fan := channelInbox(t, c.vk, ch)
 	time.Sleep(100 * time.Millisecond)
-	send(16) // 10/min/channel per sender (class) → 8 each
+	send(16) // 15/min/channel per sender (direct) → 8 each
 	if env := next(fan, "chat.message.created", 2*time.Second); env == nil {
 		t.Fatal("no realtime delivery during the outage")
 	}
@@ -172,7 +172,7 @@ func TestPersisterIdempotentAndDLQ(t *testing.T) {
 	poisonID := uuid.Must(uuid.NewV7())
 	c := setupChat(t, chatOpts{maxDeliver: 2, store: failingStore{inner: persistence.Messages{}, poison: poisonID}})
 	an, binh := c.student(c.tenantA, c.schoolA), c.student(c.tenantA, c.schoolA)
-	ch := c.open(channel.Class, an, binh)
+	ch := c.open(channel.Direct, an, binh)
 	for i := 0; i < 3; i++ {
 		if r := c.sendWS(an, "c", ch, "ok"); !r.OK {
 			t.Fatalf("send: %+v", r.Problem)
@@ -185,7 +185,7 @@ func TestPersisterIdempotentAndDLQ(t *testing.T) {
 	rows := c.call(an, http.MethodGet, "/chat/channels/"+ch.String()+"/messages?after_seq=0&limit=1", "", nil)
 	first := rows.data()[0]
 	env := message.Envelope{V: 1, Kind: "msg", MessageID: uuid.MustParse(first["message_id"].(string)), TenantID: c.tenantA,
-		ChannelID: ch, ChannelType: "class", Seq: 1, Revision: 1, SenderID: an.id, MsgKind: message.KindText,
+		ChannelID: ch, ChannelType: "direct", Seq: 1, Revision: 1, SenderID: an.id, MsgKind: message.KindText,
 		Moderation: message.Moderation{Decision: message.Allow, State: message.StateAllowed}, CreatedAt: c.clock.Now().UTC()}
 	body := "ok"
 	env.BodyDisplay = &body

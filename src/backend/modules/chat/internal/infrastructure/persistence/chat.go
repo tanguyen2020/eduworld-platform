@@ -161,9 +161,9 @@ func (ChatReader) ChannelFacts(ctx context.Context, tenant, id uuid.UUID) (*read
 	return f, blocks.Err()
 }
 
-// PolicyLevels implements read.ChatReader: the platform document (tenant NULL) and the tenant, school and class
-// documents of the session tenant.
-func (ChatReader) PolicyLevels(ctx context.Context, tenant uuid.UUID, school, class *uuid.UUID) (policy.Levels, error) {
+// PolicyLevels implements read.ChatReader: the platform document (tenant NULL) and the tenant and school documents of
+// the session tenant (no class level since ADR-0095; class rows are soft-deleted).
+func (ChatReader) PolicyLevels(ctx context.Context, tenant uuid.UUID, school *uuid.UUID) (policy.Levels, error) {
 	t, err := anyTx(ctx)
 	if err != nil {
 		return policy.Levels{}, err
@@ -172,8 +172,7 @@ func (ChatReader) PolicyLevels(ctx context.Context, tenant uuid.UUID, school, cl
 	rows, err := t.QueryContext(ctx, `SELECT p.scope_type, p.rules FROM chat.chat_policies p
 		WHERE p.deleted_at IS NULL AND ((p.scope_type = 'platform' AND p.tenant_id IS NULL)
 			OR (p.tenant_id = $1 AND (p.scope_type = 'tenant'
-				OR (p.scope_type = 'school' AND p.scope_id = $2::uuid)
-				OR (p.scope_type = 'class' AND p.scope_id = $3::uuid))))`, tenant, school, class)
+				OR (p.scope_type = 'school' AND p.scope_id = $2::uuid))))`, tenant, school)
 	if err != nil {
 		return policy.Levels{}, fmt.Errorf("chat: policies: %w", err)
 	}
@@ -196,8 +195,6 @@ func (ChatReader) PolicyLevels(ctx context.Context, tenant uuid.UUID, school, cl
 			l.Tenant = &d
 		case "school":
 			l.School = &d
-		case "class":
-			l.Class = &d
 		}
 	}
 	return l, rows.Err()

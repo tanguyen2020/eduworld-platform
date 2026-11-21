@@ -13,7 +13,7 @@
     "tenant_id": { "type": "string", "format": "uuid", "description": "Tenant của channel; persister đối chiếu với chat.channels và bỏ envelope lệch tenant" },
     "school_id": { "type": ["string", "null"], "format": "uuid" },
     "channel_id": { "type": "string", "format": "uuid" },
-    "channel_type": { "enum": ["world", "area", "match", "party", "team", "class", "study_group", "direct"] },
+    "channel_type": { "enum": ["world", "area", "match", "party", "team", "direct"], "description": "Không còn class, study_group (ADR-0095 — chỉ thu hẹp giá trị phát ra, tương thích ngược)" },
     "is_gameplay": { "type": "boolean", "description": "true → chat.gameplay_messages (purge ADR-0033); false → chat.messages" },
     "seq": { "type": "integer", "minimum": 1 },
     "revision": { "type": "integer", "minimum": 1 },

@@ -1,5 +1,5 @@
 // Package policy resolves the effective ChatPolicy of a channel (F115-AC-08, CHAT_SYSTEM §3): the levels platform →
-// tenant → school → class are intersected, the stricter value wins, and a channel type without a platform rule is
+// tenant → school are intersected (no class level since ADR-0095), the stricter value wins, and a channel type without a platform rule is
 // denied. There is deliberately no grade field anywhere in this package: one rule set for every grade (ADR-0020, R15,
 // F115-AC-09 static test).
 package policy
@@ -88,16 +88,15 @@ func (d Document) rule(channelType string) (Rule, bool) {
 	return Rule{}, false
 }
 
-// Levels are the documents of one resolution: Platform is required; Tenant, School and Class are nil when the level
-// has no policy.
+// Levels are the documents of one resolution: Platform is required; Tenant and School are nil when the level has no
+// policy (platform → tenant → school, ADR-0095).
 type Levels struct {
 	Platform *Document
 	Tenant   *Document
 	School   *Document
-	Class    *Document
 }
 
-// Effective is the policy in force for a channel of one school/class: the same for every member, whatever the grade.
+// Effective is the policy in force for a channel of one school: the same for every member, whatever the grade.
 type Effective struct {
 	ChannelType     string `json:"channel_type"`
 	AllowedKinds    []Kind `json:"allowed_kinds"`
@@ -145,7 +144,7 @@ func Intersect(channelType string, alwaysOn bool, l Levels) (Effective, error) {
 	if l.Platform.GlobalRate != nil {
 		e.GlobalPerMinute = l.Platform.GlobalRate.MessagesPerMinute
 	}
-	for _, d := range []*Document{l.Tenant, l.School, l.Class} {
+	for _, d := range []*Document{l.Tenant, l.School} {
 		if d == nil {
 			continue
 		}

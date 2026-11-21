@@ -81,7 +81,7 @@ func TestChatAccess(t *testing.T) {
 	an, binh := c.student(c.tenantA, c.schoolA), c.student(c.tenantA, c.schoolA)
 	chi := c.student(c.tenantA, c.schoolA2) // same tenant, not a member
 	dung := c.student(c.tenantB, c.schoolB) // other tenant
-	ch := c.open(channel.Class, an, binh)
+	ch := c.open(channel.Direct, an, binh)
 	if r := c.sendWS(an, "c1", ch, "xin chao lop"); !r.OK {
 		t.Fatalf("member send: %+v", r.Problem)
 	}
@@ -183,12 +183,12 @@ func containsAudit(actions []string, a string) bool {
 	return false
 }
 
-// T039 — F115-AC-22 (TC-CHAT-046): during the curfew (clock 21:31 ICT) every send — party, class, direct; REST and WS —
+// T039 — F115-AC-22 (TC-CHAT-046): during the curfew (clock 21:31 ICT) every send — party, team, direct; REST and WS —
 // is CURFEW_ACTIVE with reopen_at, before any seq or publish; at 06:31 sending works again; the channel stays.
 func TestSendCurfew(t *testing.T) {
 	c := setupChat(t, chatOpts{})
 	an, binh := c.student(c.tenantA, c.schoolA), c.student(c.tenantA, c.schoolA)
-	chans := []uuid.UUID{c.open(channel.Party, an, binh), c.open(channel.Class, an, binh), c.open(channel.Direct, an, binh)}
+	chans := []uuid.UUID{c.open(channel.Party, an, binh), c.open(channel.Team, an, binh), c.open(channel.Direct, an, binh)}
 	c.clock.Set(time.Date(2026, 11, 21, 21, 31, 0, 0, ict))
 	before := c.validator.count()
 	for _, ch := range chans {
@@ -246,7 +246,7 @@ func TestSendPresetAndSameRulesForEveryGrade(t *testing.T) {
 	c.exec(`INSERT INTO chat.chat_policies (policy_id, tenant_id, scope_type, scope_id, school_id, rules)
 		VALUES ($1, $2, 'school', $3, $3, '{"schema_version":5,"scope_type":"school","scope_id":"`+c.schoolA.String()+`",
 		"chat_policy_preset":"quick_message_emote_only","rules":[]}')`, uuid.New(), c.tenantA, c.schoolA)
-	_ = c.facts.Cache.Invalidate(context.Background(), "policy:"+c.tenantA.String()+":"+c.schoolA.String()+":-:party")
+	_ = c.facts.Cache.Invalidate(context.Background(), "policy:"+c.tenantA.String()+":"+c.schoolA.String()+":party") // no class segment since ADR-0095
 	sticker := uuid.New()
 	refused := []map[string]any{{"kind": "text", "body": "chao"}, {"kind": "sticker", "sticker_id": sticker}, {"kind": "gif", "gif_id": sticker}}
 	allowed := []map[string]any{{"kind": "quick", "quick_message_id": "qm.good_luck"}, {"kind": "emoji", "emoji": "smile"}}
@@ -276,7 +276,7 @@ func TestSendPresetAndSameRulesForEveryGrade(t *testing.T) {
 	// F115-AC-08: remove the platform party rule (fixture) → CHAT_NOT_ALLOWED for everyone.
 	c.exec(`UPDATE chat.chat_policies SET rules = jsonb_set(rules, '{rules}', (SELECT jsonb_agg(r) FROM jsonb_array_elements(rules->'rules') r
 		WHERE r->>'channel_type' <> 'party')) WHERE scope_type = 'platform' AND deleted_at IS NULL`)
-	_ = c.facts.Cache.Invalidate(context.Background(), "policy:"+c.tenantA.String()+":"+c.schoolA2.String()+":-:party")
+	_ = c.facts.Cache.Invalidate(context.Background(), "policy:"+c.tenantA.String()+":"+c.schoolA2.String()+":party") // no class segment since ADR-0095
 	if r := c.sendWS(other, "c", otherParty, "khong duoc"); r.OK || replyCode(r) != "CHAT_NOT_ALLOWED" {
 		t.Fatalf("no platform party rule: %+v", r)
 	}

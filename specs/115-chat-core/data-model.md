@@ -14,10 +14,10 @@ Database `eduworld_chat`, schema `chat`. Mọi bảng T có `tenant_id` (FK `ref
 | `tenant_id` | uuid | NOT NULL, RLS | |
 | `tenant_ids` | `uuid[]` | | chỉ channel liên tenant do platform tạo (F107/F117) |
 | `school_id` | uuid | | |
-| `channel_type` | `varchar(64)` | CHECK 8 giá trị `world/area/match/party/team/class/study_group/direct` | |
+| `channel_type` | `varchar(64)` | `world/area/match/party/team/direct` (ADR-0095; `class`/`study_group` còn trong CHECK tới WP-R, không được ghi) | |
 | `is_gameplay` | bool | CHECK theo DATABASE_DESIGN §2.12 | |
-| `scope_ref` | jsonb | CHECK `octet_length ≤ 2048` | `{match_id}`, `{party_id}`, `{match_id, team_id}`, `{class_id}`… |
-| `policy_id` | uuid | | rule cấp class nếu có |
+| `scope_ref` | jsonb | CHECK `octet_length ≤ 2048` | `{match_id}`, `{party_id}`, `{match_id, team_id}`, `{pair}`… |
+| `policy_id` | uuid | | policy cấp trường nếu có (không còn cấp class — ADR-0095) |
 | `retention_days` | int | | channel bền vững (F120) |
 | `last_seq` | bigint | NOT NULL DEFAULT 0 | persister `GREATEST` |
 | `status` | `varchar(64)` | CHECK `open/closed` | |
@@ -55,7 +55,7 @@ Cột đúng DDL DATABASE_DESIGN §3.8: `message_id` (UUIDv7 = `Nats-Msg-Id`), `
 |---|---|---|---|
 | `policy_id` | UUIDv7 | PK | |
 | `tenant_id` | uuid | NULL khi `scope_type = platform` | T* |
-| `scope_type` | `varchar(64)` | CHECK `platform/tenant/school/class` | |
+| `scope_type` | `varchar(64)` | `platform/tenant/school` (ADR-0095; `class` còn trong CHECK tới WP-R, dòng cũ đã soft-delete) | |
 | `scope_id`, `school_id` | uuid | UNIQUE `(scope_type, coalesce(scope_id,…)) WHERE deleted_at IS NULL` | |
 | `rules` | jsonb | validate theo `chat-policy.schema.json` v5; CHECK `octet_length ≤ 65536` | không có trường `grade_*` |
 | `version` | int | optimistic concurrency | |

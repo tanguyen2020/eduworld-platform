@@ -31,33 +31,39 @@ func seedPlatform(t *testing.T) *policy.Document {
 	return doc(t, string(b))
 }
 
-// T020 / F115-AC-08: levels platform → tenant → school → class intersect (kinds ∩, numbers min, enabled AND, strictness
-// max); a channel type without a platform rule is denied whatever the lower levels say.
+// T020 / F115-AC-08: levels platform → tenant → school intersect (kinds ∩, numbers min, enabled AND, strictness max);
+// a channel type without a platform rule is denied whatever the lower levels say. ADR-0095: no class level and no
+// class/study_group channel (no platform rule → denied).
 func TestPolicyIntersect(t *testing.T) {
 	platform := seedPlatform(t)
-	e, err := policy.Intersect("class", false, policy.Levels{Platform: platform})
-	if err != nil || e.MaxTextLength != 300 || e.Rate.MessagesPerMinute != 10 || e.GlobalPerMinute != 30 || len(e.AllowedKinds) != 5 {
-		t.Fatalf("platform default class: %+v %v", e, err)
+	e, err := policy.Intersect("direct", false, policy.Levels{Platform: platform})
+	if err != nil || e.MaxTextLength != 300 || e.Rate.MessagesPerMinute != 15 || e.GlobalPerMinute != 30 || len(e.AllowedKinds) != 5 {
+		t.Fatalf("platform default direct: %+v %v", e, err)
 	}
-	tenant := doc(t, `{"scope_type":"tenant","global_rate":{"messages_per_minute":20},"rules":[{"channel_type":"class","enabled":true,
+	tenant := doc(t, `{"scope_type":"tenant","global_rate":{"messages_per_minute":20},"rules":[{"channel_type":"direct","enabled":true,
 		"allowed_kinds":["text","emoji","quick"],"max_text_length":500,"rate":{"messages_per_minute":8}}]}`)
-	school := doc(t, `{"scope_type":"school","rules":[{"channel_type":"class","enabled":true,"allowed_kinds":["text","quick","gif"],
-		"max_text_length":150,"slow_mode_seconds":3,"validation":{"strictness":"very_strict"}}]}`)
-	class := doc(t, `{"scope_type":"class","rules":[{"channel_type":"class","enabled":true,"allowed_kinds":["text","quick"],
-		"rate":{"messages_per_minute":20,"burst":2}}]}`)
-	e, err = policy.Intersect("class", false, policy.Levels{Platform: platform, Tenant: tenant, School: school, Class: class})
+	school := doc(t, `{"scope_type":"school","rules":[{"channel_type":"direct","enabled":true,"allowed_kinds":["text","quick","gif"],
+		"max_text_length":150,"slow_mode_seconds":3,"rate":{"burst":2},"validation":{"strictness":"very_strict"}}]}`)
+	e, err = policy.Intersect("direct", false, policy.Levels{Platform: platform, Tenant: tenant, School: school})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := policy.Effective{ChannelType: "class", AllowedKinds: []policy.Kind{"text", "quick"}, MaxTextLength: 150,
+	want := policy.Effective{ChannelType: "direct", AllowedKinds: []policy.Kind{"text", "quick"}, MaxTextLength: 150,
 		Rate: policy.Rate{MessagesPerMinute: 8, Burst: 2}, GlobalPerMinute: 20, SlowModeSeconds: 3, Strictness: "very_strict"}
 	if !reflect.DeepEqual(e, want) {
 		t.Fatalf("intersection:\n got %+v\nwant %+v", e, want)
 	}
 	// enabled false at the school level denies a non always-on channel.
-	off := doc(t, `{"scope_type":"school","rules":[{"channel_type":"class","enabled":false,"allowed_kinds":[]}]}`)
-	if _, err := policy.Intersect("class", false, policy.Levels{Platform: platform, School: off}); !errors.Is(err, policy.ErrDenied) {
-		t.Fatalf("school disabled class: %v", err)
+	off := doc(t, `{"scope_type":"school","rules":[{"channel_type":"direct","enabled":false,"allowed_kinds":[]}]}`)
+	if _, err := policy.Intersect("direct", false, policy.Levels{Platform: platform, School: off}); !errors.Is(err, policy.ErrDenied) {
+		t.Fatalf("school disabled direct: %v", err)
+	}
+	// ADR-0095: the platform seed has no class/study_group rule, so such a channel is denied even with a lower-level rule.
+	for _, ct := range []string{"class", "study_group"} {
+		lower := doc(t, `{"scope_type":"school","rules":[{"channel_type":"`+ct+`","enabled":true,"allowed_kinds":["text"]}]}`)
+		if _, err := policy.Intersect(ct, false, policy.Levels{Platform: platform, School: lower}); !errors.Is(err, policy.ErrDenied) {
+			t.Fatalf("%s channel not denied: %v", ct, err)
+		}
 	}
 	// No platform rule = deny, even with a tenant rule (quickstart #9: party rule removed at platform level).
 	var noParty policy.Document
@@ -86,8 +92,8 @@ func TestPolicyIntersect(t *testing.T) {
 	}
 	// The preset quick_message_emote_only narrows every channel of the school to quick + emoji, gameplay included.
 	preset := doc(t, `{"scope_type":"school","chat_policy_preset":"quick_message_emote_only","rules":[]}`)
-	for _, ct := range []string{"party", "class", "match", "direct"} {
-		e, err := policy.Intersect(ct, ct == "party" || ct == "match", policy.Levels{Platform: platform, School: preset})
+	for _, ct := range []string{"party", "team", "match", "direct"} {
+		e, err := policy.Intersect(ct, ct == "party" || ct == "match" || ct == "team", policy.Levels{Platform: platform, School: preset})
 		if err != nil || !reflect.DeepEqual(e.AllowedKinds, []policy.Kind{"emoji", "quick"}) || e.Preset != policy.PresetQuickEmote {
 			t.Fatalf("preset %s: %+v %v", ct, e, err)
 		}

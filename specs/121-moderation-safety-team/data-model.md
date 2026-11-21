@@ -90,7 +90,7 @@ Mọi bảng ở DB `eduworld_chat`, schema `chat`, loại T: `tenant_id uuid NO
 | `tenant_id`, `case_id`, `school_id` | uuid | NOT NULL | |
 | `severity` | `varchar(4)` | | |
 | `category_code` | `varchar(64)` | | |
-| `students` | jsonb | ≤ 20 phần tử `{student_id, role}` | tên/lớp đọc từ `ref.students` lúc trả |
+| `students` | jsonb | ≤ 20 phần tử `{student_id, role}` | tên/khối đọc từ `ref.students`/identity lúc trả (không còn lớp — ADR-0095) |
 | `measures_taken` | `varchar(500)` | | |
 | `summary` | `varchar(1000)` | NOT NULL | tóm tắt theo mẫu, không chat |
 | `school_notified_at`, `ack_due_at` | timestamptz | NOT NULL | |
