@@ -82,34 +82,36 @@ Responsive: chi tiết ở §1.5.
 
 Admin Portal có **màn đăng nhập riêng do portal tự vẽ** (trang `/login`, Ant Design, theme sinh từ `design/admin-tokens/` — ADR-0047), **không chuyển hướng sang trang Keycloak** (ADR-0091 thay luồng Authorization Code + PKCE của ADR-0066 mục 1). Portal gửi form tới `POST /api/v1/auth/portal/login` (`portalLogin`); module identity gọi token endpoint Keycloak bằng client confidential `eduworld-portal` (Direct Access Grant, cấu hình ở [KEYCLOAK_SSO §3.3](../09-identity/KEYCLOAK_SSO.md)). **Học sinh không đăng nhập được** (chặn hai lớp: flow Keycloak chỉ cho realm role `tenant_staff`/`platform_staff`, và backend `403 PORTAL_ACCESS_STAFF_ONLY`). **Không chọn tenant/trường trước khi đăng nhập**; không có URL theo tenant.
 
-**Giao diện đăng nhập — hướng A "Sân trường" (owner chốt 2026-11-21, [Confirmed]):** hai cột trên desktop, một cột ở chiều rộng điện thoại (< 768 px). Cột trái là bảng thương hiệu nền `colorPrimary`: logo, "EduWorld" + "Cổng quản trị nhà trường", câu dẫn "Đồng hành cùng thầy cô trên mỗi bài học", một dòng phụ, các chip môn học theo mã màu nghiệp vụ (DESIGN_SYSTEM §6) và hình trang trí SVG đơn giản (trường, sách — `aria-hidden`). Cột phải: chọn ngôn ngữ, thẻ "Chào mừng thầy cô trở lại" với ô nhập cao 48 px, chữ 16 px, bo 12 px (theme `authTheme`, DESIGN_SYSTEM §4.1), hộp gợi ý cho học sinh và dòng cuối về bảo vệ dữ liệu. Link chính sách bảo mật và link mở game chỉ hiện khi cấu hình runtime có URL (R3); hiện chưa có khóa cấu hình nên chỉ giữ câu chữ. Các màn `/forgot-password`, `/reset-password`, `/account-setup`, chọn đơn vị dùng chung khung này.
+**Giao diện đăng nhập — hướng A "Sân trường" (owner chốt 2026-11-21, [Confirmed]):** hai cột trên desktop, một cột ở chiều rộng điện thoại (< 768 px). Cột trái là **banner** nền `colorPrimary` nói rõ cổng quản trị vận hành **toàn bộ nền tảng EduWorld**, không chỉ việc dạy học của trường: logo + "EduWorld" + "Nền tảng học tập và game giáo dục", tiêu đề "Cổng quản trị EduWorld", dòng phụ "Soạn nội dung học tập, quản lý thế giới game và theo dõi học sinh — trong một nơi.", hình minh họa ghép từ hình khối đơn giản (thẻ câu hỏi, sách bài học, ghim bản đồ có ngôi sao của thế giới game, biểu đồ tiến bộ — màu lấy từ token: nền thẻ, `color.brand.secondary`, màu môn học; `aria-hidden`, không emoji, không tài sản art của game — R32) và danh sách 5 năng lực có icon nét nhỏ (`aria-hidden`): "Ngân hàng câu hỏi & đề thi", "Bài học & hoạt động tương tác", "Thế giới game: nhiệm vụ, vật phẩm, sự kiện", "Giao bài theo khối & theo dõi tiến bộ", "An toàn & kiểm duyệt cộng đồng" (dùng "khối", không "lớp" — ADR-0095). Cột phải: chọn ngôn ngữ, thẻ "Chào mừng thầy cô trở lại" / "Đăng nhập để tiếp tục công việc của bạn." với ô nhập cao 48 px, chữ 16 px, bo 12 px (theme `authTheme`, DESIGN_SYSTEM §4.1), hộp gợi ý cho học sinh và dòng cuối về bảo vệ dữ liệu. Link chính sách bảo mật và link mở game chỉ hiện khi cấu hình runtime có URL (R3); hiện chưa có khóa cấu hình nên chỉ giữ câu chữ. Điện thoại: banner thu thành dải đầu trang chỉ có logo và tiêu đề. Các màn `/forgot-password`, `/reset-password`, `/account-setup`, chọn đơn vị dùng chung khung này.
 
 ```text
 Desktop (≥ 768 px)
-┌──────────────────────────────┬───────────────────────────────────────────┐
-│ [■] EduWorld                 │                         Ngôn ngữ [Tiếng Việt ▾] │
-│     Cổng quản trị nhà trường │  ┌─────────────────────────────────────┐  │
-│                              │  │ Chào mừng thầy cô trở lại           │  │
-│ Đồng hành cùng thầy cô       │  │ Đăng nhập để vào lớp học của bạn.   │  │
-│ trên mỗi bài học             │  │ Tên đăng nhập hoặc email            │  │
-│ Giao bài, theo dõi tiến bộ   │  │ [ ad.truong.a                    ]  │  │
-│ và hỗ trợ từng học sinh —    │  │ Mật khẩu                            │  │
-│ tất cả trong một nơi.        │  │ [ ••••••••                    👁 ]  │  │
-│        (hình trường, sách)   │  │ [            Đăng nhập            ] │  │
-│                              │  │ Quên mật khẩu?   Cần hỗ trợ? Liên hệ│  │
-│ (Toán)(Tiếng Việt)           │  │                  quản trị trường    │  │
-│ (Tiếng Anh)(Khoa học)        │  └─────────────────────────────────────┘  │
-│                              │  👤 Em là học sinh? Hãy mở game EduWorld  │
-│                              │     để vào học nhé.                       │
-│                              │  Dữ liệu học sinh được bảo vệ theo Nghị   │
-│                              │  định 13/2023. Nhớ đăng xuất khi dùng máy │
-│                              │  tính chung.                              │
-└──────────────────────────────┴───────────────────────────────────────────┘
+┌────────────────────────────────┬─────────────────────────────────────────┐
+│ [■] EduWorld                   │                Ngôn ngữ [Tiếng Việt ▾]  │
+│     Nền tảng học tập và game   │  ┌───────────────────────────────────┐  │
+│     giáo dục                   │  │ Chào mừng thầy cô trở lại         │  │
+│                                │  │ Đăng nhập để tiếp tục công việc   │  │
+│ Cổng quản trị EduWorld         │  │ của bạn.                          │  │
+│ Soạn nội dung học tập, quản lý │  │ Tên đăng nhập hoặc email          │  │
+│ thế giới game và theo dõi học  │  │ [ ad.truong.a                  ]  │  │
+│ sinh — trong một nơi.          │  │ Mật khẩu                          │  │
+│  (thẻ câu hỏi, sách, ghim bản  │  │ [ ••••••••                  👁 ]  │  │
+│   đồ ★, biểu đồ tiến bộ)       │  │ [           Đăng nhập           ] │  │
+│ [?] Ngân hàng câu hỏi & đề thi │  │ Quên mật khẩu?  Cần hỗ trợ? Liên  │  │
+│ [▭] Bài học & hoạt động tương  │  │                 hệ quản trị trường│  │
+│     tác                        │  └───────────────────────────────────┘  │
+│ [⌖] Thế giới game: nhiệm vụ,   │  👤 Em là học sinh? Hãy mở game         │
+│     vật phẩm, sự kiện          │     EduWorld để vào học nhé.            │
+│ [▥] Giao bài theo khối & theo  │  Dữ liệu học sinh được bảo vệ theo Nghị │
+│     dõi tiến bộ                │  định 13/2023. Nhớ đăng xuất khi dùng   │
+│ [⛉] An toàn & kiểm duyệt cộng  │  máy tính chung.                        │
+│     đồng                       │                                         │
+└────────────────────────────────┴─────────────────────────────────────────┘
 
 Mobile (< 768 px): một cột
 ┌────────────────────────────┐
-│ [■] EduWorld               │  ← dải thương hiệu thu gọn
-│     Cổng quản trị nhà trường│
+│ [■] EduWorld               │  ← banner thu gọn: logo + tiêu đề
+│ Cổng quản trị EduWorld     │
 ├────────────────────────────┤
 │        Ngôn ngữ [VI ▾]     │
 │ Chào mừng thầy cô trở lại  │

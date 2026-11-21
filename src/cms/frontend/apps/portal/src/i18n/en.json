@@ -18,7 +18,7 @@
     "login": {
       "title": "Sign in",
       "welcome": "Welcome back, teachers",
-      "subtitle": "Sign in to reach your classes.",
+      "subtitle": "Sign in to continue your work.",
       "username": "Username or email",
       "usernameRequired": "Enter your username or email.",
       "password": "Password",
@@ -157,10 +157,17 @@
     "brand": {
       "panel": "About EduWorld",
       "name": "EduWorld",
-      "tagline": "School administration portal",
-      "headline": "Supporting teachers in every lesson",
-      "lead": "Assign work, follow progress and support every student — all in one place.",
-      "subjects": "Subjects"
+      "tagline": "Learning and educational game platform",
+      "headline": "EduWorld administration portal",
+      "lead": "Author learning content, run the game world and follow students — all in one place.",
+      "capabilities": "What the portal covers",
+      "capability": {
+        "questionBank": "Question bank & exams",
+        "lessons": "Lessons & interactive activities",
+        "gameWorld": "Game world: quests, items, events",
+        "gradeProgress": "Assign work by grade & follow progress",
+        "safety": "Safety & community moderation"
+      }
     }
   },
   "error": {

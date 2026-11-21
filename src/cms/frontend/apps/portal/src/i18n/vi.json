@@ -18,7 +18,7 @@
     "login": {
       "title": "Đăng nhập",
       "welcome": "Chào mừng thầy cô trở lại",
-      "subtitle": "Đăng nhập để vào lớp học của bạn.",
+      "subtitle": "Đăng nhập để tiếp tục công việc của bạn.",
       "username": "Tên đăng nhập hoặc email",
       "usernameRequired": "Vui lòng nhập tên đăng nhập hoặc email.",
       "password": "Mật khẩu",
@@ -157,10 +157,17 @@
     "brand": {
       "panel": "Giới thiệu EduWorld",
       "name": "EduWorld",
-      "tagline": "Cổng quản trị nhà trường",
-      "headline": "Đồng hành cùng thầy cô trên mỗi bài học",
-      "lead": "Giao bài, theo dõi tiến bộ và hỗ trợ từng học sinh — tất cả trong một nơi.",
-      "subjects": "Các môn học"
+      "tagline": "Nền tảng học tập và game giáo dục",
+      "headline": "Cổng quản trị EduWorld",
+      "lead": "Soạn nội dung học tập, quản lý thế giới game và theo dõi học sinh — trong một nơi.",
+      "capabilities": "Những việc cổng quản trị hỗ trợ",
+      "capability": {
+        "questionBank": "Ngân hàng câu hỏi & đề thi",
+        "lessons": "Bài học & hoạt động tương tác",
+        "gameWorld": "Thế giới game: nhiệm vụ, vật phẩm, sự kiện",
+        "gradeProgress": "Giao bài theo khối & theo dõi tiến bộ",
+        "safety": "An toàn & kiểm duyệt cộng đồng"
+      }
     }
   },
   "error": {

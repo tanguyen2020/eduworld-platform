@@ -104,19 +104,29 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
 });
 
 describe('/login layout — direction A "Sân trường" (ADMIN_PORTAL §1.3b, owner 2026-11-21)', () => {
-  it('desktop: brand panel (complementary) + main with labelled form, subject chips, hints; decoration hidden', async () => {
+  it('desktop: platform banner (complementary: headline, capability list, hidden illustration) + main with labelled form, hints', async () => {
     await renderPortal({ url: '/login' });
     await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' });
     expect(screen.getByTestId('auth-layout')).toHaveAttribute('data-layout', 'two-columns');
     const brand = screen.getByRole('complementary', { name: 'Giới thiệu EduWorld' });
-    expect(within(brand).getByText('Cổng quản trị nhà trường')).toBeInTheDocument();
-    expect(within(brand).getByText('Đồng hành cùng thầy cô trên mỗi bài học')).toBeInTheDocument();
-    const chips = within(brand).getByRole('list', { name: 'Các môn học' });
-    expect(within(chips).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Toán', 'Tiếng Việt', 'Tiếng Anh', 'Khoa học']);
+    // the banner says the portal runs the whole platform, not only school teaching (owner 2026-11-21)
+    expect(within(brand).getByText('Cổng quản trị EduWorld')).toBeInTheDocument();
+    expect(within(brand).getByText('Soạn nội dung học tập, quản lý thế giới game và theo dõi học sinh — trong một nơi.')).toBeInTheDocument();
+    const caps = within(brand).getByRole('list', { name: 'Những việc cổng quản trị hỗ trợ' });
+    expect(within(caps).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'Ngân hàng câu hỏi & đề thi',
+      'Bài học & hoạt động tương tác',
+      'Thế giới game: nhiệm vụ, vật phẩm, sự kiện',
+      'Giao bài theo khối & theo dõi tiến bộ',
+      'An toàn & kiểm duyệt cộng đồng',
+    ]);
+    // grade wording only (ADR-0095), every picture decorative
+    expect(brand).not.toHaveTextContent(/lớp/i);
+    expect(within(brand).getByTestId('banner-illustration')).toHaveAttribute('aria-hidden', 'true');
     for (const svg of brand.querySelectorAll('svg')) expect(svg.closest('[aria-hidden="true"]')).not.toBeNull();
     const main = screen.getByRole('main');
     expect(within(main).getByRole('form', { name: 'Đăng nhập' })).toBeInTheDocument();
-    expect(within(main).getByText('Đăng nhập để vào lớp học của bạn.')).toBeInTheDocument();
+    expect(within(main).getByText('Đăng nhập để tiếp tục công việc của bạn.')).toBeInTheDocument();
     expect(within(main).getByText('Cần hỗ trợ? Liên hệ quản trị trường')).toBeInTheDocument();
     expect(within(main).getByTestId('student-hint')).toHaveTextContent('Em là học sinh? Hãy mở game EduWorld để vào học nhé.');
     expect(within(main).getByText(/Nghị định 13\/2023/)).toBeInTheDocument();
@@ -127,15 +137,16 @@ describe('/login layout — direction A "Sân trường" (ADMIN_PORTAL §1.3b, o
     expect(within(main).getByRole('button', { name: 'Đăng nhập' })).toHaveAttribute('type', 'submit');
   });
 
-  it('phone width: one column, compact brand band without headline and chips', async () => {
+  it('phone width: one column, compact banner header with the headline only', async () => {
     setViewportWidth(390);
     await renderPortal({ url: '/login' });
     await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' });
     expect(screen.getByTestId('auth-layout')).toHaveAttribute('data-layout', 'one-column');
     const brand = screen.getByRole('complementary', { name: 'Giới thiệu EduWorld' });
-    expect(within(brand).getByText('Cổng quản trị nhà trường')).toBeInTheDocument();
-    expect(within(brand).queryByText('Đồng hành cùng thầy cô trên mỗi bài học')).toBeNull();
+    expect(within(brand).getByText('Cổng quản trị EduWorld')).toBeInTheDocument();
+    expect(within(brand).queryByText('Soạn nội dung học tập, quản lý thế giới game và theo dõi học sinh — trong một nơi.')).toBeNull();
     expect(within(brand).queryByRole('list')).toBeNull();
+    expect(within(brand).queryByTestId('banner-illustration')).toBeNull();
     expect(screen.getByLabelText('Tên đăng nhập hoặc email')).toBeInTheDocument();
   });
 
