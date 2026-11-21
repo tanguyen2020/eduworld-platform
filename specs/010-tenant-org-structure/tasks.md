@@ -128,7 +128,7 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 ## Nhận từ F056 (OQ F056-2, owner chốt 2026-11-21)
 
-- [ ] T047 Operation công khai chỉ đọc `listSchoolAcademicYears` (năm học + học kỳ của trường: `academic_year_id`, `name`, `start_date`, `end_date`, `terms[]`), `x-portal-action` của dashboard trường, `TenantScope` + `deleted_at IS NULL`, test authz/tenant isolation — file: `specs/openapi/eduworld-api.v1.yaml`, `src/backend/modules/identity/internal/application/query/` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ S
+- [x] T047 Operation công khai chỉ đọc `listSchoolAcademicYears` (năm học + học kỳ của trường: `academic_year_id`, `name`, `start_date`, `end_date`, `terms[]`), `x-portal-action` của dashboard trường, `TenantScope` + `deleted_at IS NULL`, test authz/tenant isolation — file: `specs/openapi/eduworld-api.v1.yaml`, `src/backend/modules/identity/internal/application/query/` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ S — ✅ 2026-11-21: `GET /schools/{school_id}/academic-years` (`query.Org.ListSchoolAcademicYears`, `OrgModel.AcademicYears`, guard `portal_staff`, `analytics.school.read`|`analytics.class.read` qua `schoolScoped`, năm học sống mới nhất trước, `terms` luôn rỗng — OQ F010-4), `x-portal-action: action.school_lms.school_dashboard.view` + `menu-catalog.yaml`; test `TestListSchoolAcademicYears` (đọc đúng trường, 403 không quyền, 404 trường khác/tenant B/xóa mềm, năm xóa mềm không hiện, `authztest.Cover` cross_tenant + role_denied) FAIL trước khi nối handler → PASS; `TestSchoolScopedRoutes` PASS
 
 ## Dependencies & Execution Order
 

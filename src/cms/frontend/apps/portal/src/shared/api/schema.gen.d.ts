@@ -7210,6 +7210,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schools/{school_id}/academic-years": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Năm học và học kỳ của trường (chỉ đọc; preset "Năm học này"/"Học kỳ này" của dashboard trường)
+         * @description Năm học còn hiệu lực (`deleted_at IS NULL`) của trường trong tenant phiên (`TenantScope`), mới nhất trước (theo
+         *     `start_date` giảm dần). Quyền `analytics.school.read` hoặc `analytics.class.read` trên trường (hai quyền của
+         *     `action.school_lms.school_dashboard.view`); không quyền → 403; trường ngoài tenant hoặc ngoài phạm vi grant → 404
+         *     (F010 T047, F056-2). `terms` là học kỳ của năm học; module identity chưa lưu học kỳ nên hiện luôn rỗng (preset
+         *     "Học kỳ này" bị vô hiệu tới khi có nguồn — câu hỏi mở F010-4).
+         */
+        get: operations["listSchoolAcademicYears"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/schools/{school_id}/classes": {
         parameters: {
             query?: never;
@@ -8689,6 +8713,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Học kỳ trong một năm học (khoảng ngày nằm trong năm học). */
+        AcademicTerm: {
+            /** Format: date */
+            end_date: string;
+            /** @description Vd. "Học kỳ I" */
+            name: string;
+            /** Format: date */
+            start_date: string;
+        };
         /** @enum {string} */
         AchievementCategory: "first_time" | "progress" | "learning" | "exploration" | "social" | "team" | "competition" | "seasonal" | "hidden";
         AchievementProgress: {
@@ -14414,6 +14447,20 @@ export interface components {
             status: "pending_review" | "active" | "disabled";
             tenant_id: components["schemas"]["Uuid"];
             version?: number;
+        };
+        /** @description Năm học của trường (`org.academic_years`, F010 T047); `end_date` > `start_date`. */
+        SchoolAcademicYear: {
+            academic_year_id: components["schemas"]["Uuid"];
+            /** Format: date */
+            end_date: string;
+            /** @description Năm học hiện hành của trường (tối đa một) */
+            is_current: boolean;
+            /** @description Vd. "2026-2027" */
+            name: string;
+            /** Format: date */
+            start_date: string;
+            /** @description Học kỳ của năm học theo thứ tự thời gian; hiện luôn rỗng (chưa có nguồn dữ liệu học kỳ — câu hỏi mở F010-4) */
+            terms: components["schemas"]["AcademicTerm"][];
         };
         SchoolCurriculumSettings: {
             items: {
@@ -34338,6 +34385,40 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+        };
+    };
+    listSchoolAcademicYears: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                school_id: components["parameters"]["SchoolId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SchoolAcademicYear"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listClasses: {

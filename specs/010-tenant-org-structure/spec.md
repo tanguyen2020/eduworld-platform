@@ -62,6 +62,11 @@
 - Audit lần đọc hồ sơ học sinh ([TBD] Session 2026-11-19) → **Chốt:** `getStudentProfile` ghi audit `student_profile.viewed` (actor, `student_id`, `school_id`, không PII) qua `audit.Recorder` của module — cùng cơ chế `cross_tenant.accessed` ở read context (chỉ ghi outbox audit trong transaction riêng, không ghi dữ liệu nghiệp vụ, không phát domain event), đúng SCHOOL_LMS "xem hồ sơ học sinh ghi audit" [Confirmed]. Ghi chú ngoại lệ audit đọc vào ADR-0087 do agent docs làm.
 - T034 `org-membership-reconcile` → **Chốt:** lịch 24 h đã nối (OQ F010-2); còn lệnh chạy một lần (`worker --job org-membership-reconcile --once`) và ghi issue `unexpected_org_member` thẳng vào `sis.reconciliation_issues` (cùng module identity, qua repository của F011) thay vì chỉ audit, để School Admin/System Admin xử lý trên màn xung đột.
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+- Q: T047 `listSchoolAcademicYears` — quyền, phạm vi và thứ tự? → A: [Confirmed] `GET /schools/{school_id}/academic-years` (guard `portal_staff`, `X-Tenant-Id` bắt buộc), quyền `analytics.school.read` hoặc `analytics.class.read` trên trường của path (đúng hai quyền của `action.school_lms.school_dashboard.view`; Tenant Admin không có → 403); trường ngoài phạm vi grant, khác tenant hoặc đã xóa mềm → 404 (cùng helper `schoolScoped` của F052-1); chỉ năm học `deleted_at IS NULL`, mới nhất trước (`start_date` giảm dần), tối đa 100; trả `academic_year_id`, `name`, `start_date`, `end_date`, `is_current`, `terms`.
+- Q: T047 — `terms[]` lấy từ đâu? → A: [Confirmed] Module identity chưa lưu học kỳ (`org.academic_years` chỉ có khoảng ngày năm học, SIS chưa gửi học kỳ); không tự chia học kỳ theo ngày (sẽ là dữ liệu bịa). `terms` luôn `[]` → preset "Học kỳ này" của F056 vẫn vô hiệu, "Năm học này" bật được. **Câu hỏi mở F010-4:** nguồn học kỳ của trường (SIS `contract_v1`, nhập tay ở Workspace C hay cấu hình tenant) — cần feature riêng, không mở rộng phạm vi T047.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin tạo và quản lý tenant (Priority: P1)

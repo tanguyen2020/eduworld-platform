@@ -77,3 +77,20 @@ type StudentSummary struct {
 	ClassID     *uuid.UUID `json:"class_id,omitempty"`
 	ClassName   string     `json:"class_name,omitempty"`
 }
+
+// SchoolAcademicYear is the SchoolAcademicYear schema (listSchoolAcademicYears, F010 T047).
+type SchoolAcademicYear struct {
+	AcademicYearID uuid.UUID      `json:"academic_year_id"`
+	Name           string         `json:"name"`
+	StartDate      string         `json:"start_date"`
+	EndDate        string         `json:"end_date"`
+	IsCurrent      bool           `json:"is_current"`
+	Terms          []AcademicTerm `json:"terms"`
+}
+
+// AcademicTerm is the AcademicTerm schema (no term is stored yet: always empty, OQ F010-4).
+type AcademicTerm struct {
+	Name      string `json:"name"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+}

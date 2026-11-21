@@ -358,3 +358,17 @@ var commonTenant = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduwor
 
 // CommonTenantCounter exposes eduworld_auth_common_tenant_total for registration by the composition root.
 func CommonTenantCounter() *prometheus.CounterVec { return commonTenant }
+
+func (h Handlers) listSchoolAcademicYears(w http.ResponseWriter, r *http.Request) {
+	school, err := pathUUID(r, "school_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	out, err := h.Org.ListSchoolAcademicYears(r.Context(), school)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": out})
+}

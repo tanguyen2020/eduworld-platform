@@ -78,6 +78,8 @@ type OrgReadModel interface {
 	Schools(ctx context.Context, f SchoolFilter) ([]dto.School, error)
 	School(ctx context.Context, id uuid.UUID) (dto.School, error)
 	Classes(ctx context.Context, f ClassFilter) ([]dto.Class, error)
+	// AcademicYears returns the live academic years of a school of the scope, newest first (listSchoolAcademicYears).
+	AcademicYears(ctx context.Context, schoolID uuid.UUID) ([]dto.SchoolAcademicYear, error)
 	UnassignedStudents(ctx context.Context, schoolID *uuid.UUID, after *page.Cursor, limit int) ([]dto.UnassignedStudent, error)
 	StudentSummary(ctx context.Context, studentID uuid.UUID) (dto.StudentSummary, error)
 	// ClassStudents returns the students with an active enrollment in a class of the school, ordered by

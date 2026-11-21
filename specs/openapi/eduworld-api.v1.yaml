@@ -4329,6 +4329,38 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Class' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /schools/{school_id}/academic-years:
+    get:
+      x-service: identity
+      tags: [schools]
+      operationId: listSchoolAcademicYears
+      x-portal-action: action.school_lms.school_dashboard.view
+      summary: Năm học và học kỳ của trường (chỉ đọc; preset "Năm học này"/"Học kỳ này" của dashboard trường)
+      description: |
+        Năm học còn hiệu lực (`deleted_at IS NULL`) của trường trong tenant phiên (`TenantScope`), mới nhất trước (theo
+        `start_date` giảm dần). Quyền `analytics.school.read` hoặc `analytics.class.read` trên trường (hai quyền của
+        `action.school_lms.school_dashboard.view`); không quyền → 403; trường ngoài tenant hoặc ngoài phạm vi grant → 404
+        (F010 T047, F056-2). `terms` là học kỳ của năm học; module identity chưa lưu học kỳ nên hiện luôn rỗng (preset
+        "Học kỳ này" bị vô hiệu tới khi có nguồn — câu hỏi mở F010-4).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/SchoolId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 100
+                    items: { $ref: '#/components/schemas/SchoolAcademicYear' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /schools/{school_id}/settings:
     get:
       x-service: identity
@@ -18320,6 +18352,31 @@ components:
         grade_level: { $ref: '#/components/schemas/GradeLevel' }
         name: { type: string, maxLength: 255 }
         student_count: { type: integer }
+    SchoolAcademicYear:
+      type: object
+      additionalProperties: false
+      description: Năm học của trường (`org.academic_years`, F010 T047); `end_date` > `start_date`.
+      required: [academic_year_id, name, start_date, end_date, is_current, terms]
+      properties:
+        academic_year_id: { $ref: '#/components/schemas/Uuid' }
+        name: { type: string, maxLength: 32, description: 'Vd. "2026-2027"' }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        is_current: { type: boolean, description: Năm học hiện hành của trường (tối đa một) }
+        terms:
+          type: array
+          maxItems: 4
+          description: Học kỳ của năm học theo thứ tự thời gian; hiện luôn rỗng (chưa có nguồn dữ liệu học kỳ — câu hỏi mở F010-4)
+          items: { $ref: '#/components/schemas/AcademicTerm' }
+    AcademicTerm:
+      type: object
+      additionalProperties: false
+      description: Học kỳ trong một năm học (khoảng ngày nằm trong năm học).
+      required: [name, start_date, end_date]
+      properties:
+        name: { type: string, maxLength: 32, description: 'Vd. "Học kỳ I"' }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
     PlayerBootstrap:
       type: object
       description: |
