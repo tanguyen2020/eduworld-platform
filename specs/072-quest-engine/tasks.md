@@ -113,6 +113,10 @@
 - [ ] T047 [P] Kịch bản tải luồng quest game → learning (TC-PERF-013) — file: `tests/perf/k6/quest_flow.js`
 - [ ] T048 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng
 
+## Nhận từ F071 (OQ F071-2, owner chốt 2026-11-21)
+
+- [ ] T049 Payload `quest.completed` PHẢI có `quest_id` (consumer `game.unlock_on_events` của F071 đưa event thiếu trường này vào DLQ) — schema + producer + contract test — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T010) → US1 → US2, US3 song song → US4 → US5, US6 song song → Polish.

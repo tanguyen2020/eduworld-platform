@@ -73,6 +73,10 @@
 - [x] T033 [P] Contract test consumer với schema event game/chat/identity — file: `src/backend/modules/competition/tests/contract/events_test.go` — **Bằng chứng (2026-11-21):** `tests/contract/events_test.go` pass
 - [ ] T034 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — một phần: kịch bản 1–15 có test tự động tương ứng (integration + load); chạy tay trên stack `make up` chờ seed area của F071
 
+## Nhận từ F071 (owner chốt 2026-11-21)
+
+- [ ] T035 Consumer competition chiếu `content.published` (khối `world_area`) vào `ref.world_areas` và `world.area_unlocked` vào `ref.area_unlocks` (schema payload đã có ở `specs/events/payloads/game/`, F071); room host dùng area thật từ seed thay cho dữ liệu tạm — kiểm: `make test-integration MOD=competition`, `make test-contract` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T009 projection trước mọi story) → US1 → US2 → US3 → Polish. US3 phần gateway (T027, T029) song song được với US1.

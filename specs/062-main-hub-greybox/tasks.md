@@ -107,6 +107,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 - [ ] T036 **OQ chốt 2026-11-20** (F062-1) Hàng bài giao hiện `subject_name`; test scene với fixture có/không có field — file: `src/game/scripts/learning/`, `src/game/tests/scene/test_quest_journal_assigned.gd` — kiểm: `make godot-test` — cỡ S
 - [ ] T037 **OQ chốt 2026-11-20** (F062-2) Ánh xạ `question_set` → intent `activity_host {question_set_id, mode: "assignment", context_type, context_id}` thay `update_required`; test scene — file: `src/game/scripts/learning/`, `src/game/tests/scene/test_quest_journal_assigned.gd` — kiểm: `make godot-test` — cỡ S
 
+## Nhận từ ADR-0095 (owner chốt 2026-11-21)
+
+- [ ] T038 Đổi chuỗi grade band "Lớp 1–3 / 4–5 / 6–9" trong `src/game/locale/*.po` (HUD, F062) thành "Khối 1–3 / 4–5 / 6–9"; `extract_pot --check`, `pseudo_locale --check`, GdUnit4 — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → (US2 ∥ US3) → US4 → Polish.
