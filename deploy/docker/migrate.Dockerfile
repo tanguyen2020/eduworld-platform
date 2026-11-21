@@ -35,5 +35,8 @@ COPY --from=build /out/migrate /app/migrate
 COPY --from=build /out/modules /app/modules
 ENV EW_ATLAS_BIN=/app/atlas \
     EW_MIGRATIONS_ROOT=/app
+# distroless:nonroot defaults to WORKDIR /home/nonroot (mode 700, uid 65532); uid 10001 cannot enter it and
+# runtimes that chdir after dropping privileges (Kiri, some containerd setups) refuse to start. /app is readable.
+WORKDIR /app
 USER 10001:10001
 ENTRYPOINT ["/app/migrate"]

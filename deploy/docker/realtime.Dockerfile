@@ -25,6 +25,9 @@ LABEL org.opencontainers.image.title="eduworld/realtime" \
       org.opencontainers.image.revision="${COMMIT}" \
       org.opencontainers.image.source="https://github.com/tanguyen2020/eduworld-platform"
 COPY --from=build /out/realtime /app/realtime
+# distroless:nonroot defaults to WORKDIR /home/nonroot (mode 700, uid 65532); uid 10001 cannot enter it and
+# runtimes that chdir after dropping privileges (Kiri, some containerd setups) refuse to start. /app is readable.
+WORKDIR /app
 USER 10001:10001
 EXPOSE 8106 9090
 ENTRYPOINT ["/app/realtime"]

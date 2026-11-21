@@ -30,6 +30,9 @@ COPY --from=build /out/core-api /app/core-api
 # workspaces and feature gate) — OQ F010-2.
 COPY specs/openapi/eduworld-api.v1.yaml /app/specs/openapi/eduworld-api.v1.yaml
 COPY specs/portal/menu-catalog.yaml /app/specs/portal/menu-catalog.yaml
+# distroless:nonroot defaults to WORKDIR /home/nonroot (mode 700, uid 65532); uid 10001 cannot enter it and
+# runtimes that chdir after dropping privileges (Kiri, some containerd setups) refuse to start. /app is readable.
+WORKDIR /app
 USER 10001:10001
 EXPOSE 8100 9090
 ENTRYPOINT ["/app/core-api"]
