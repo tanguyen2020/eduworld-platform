@@ -4,7 +4,7 @@
 > Liên quan: [SYSTEM_ARCHITECTURE](SYSTEM_ARCHITECTURE.md) · [ADR-0074](../adr/ADR-0074-modular-monolith-co-ranh-gioi-cuong-che.md) · [ADR-0037](../adr/ADR-0037-moi-service-mot-database-postgresql-thay-mot-phan-adr-0003.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [GLOSSARY](../00-overview/GLOSSARY.md)
 
 > [!IMPORTANT]
-> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Entity `Class`, `Enrollment`, `Course`, `LearningPath`, `ScheduleItem`, `StudyGroup` bị bỏ; `Student` thuộc một `School` với `grade_level`; `Assignment`/`ExamSession` nhắm (trường, khối) ± học sinh. Nội dung bên dưới còn nhắc lớp/enrollment/course/learning path/lịch/nhóm học tập sẽ được viết lại ở WP-I1, WP-L1 ([CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); khi mâu thuẫn, ADR-0095 và đoạn này thắng.
+> **Bỏ khái niệm lớp — [ADR-0095](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) (owner chốt 2026-11-21).** Entity `Class`, `Enrollment`, `Course`, `LearningPath`, `ScheduleItem`, `StudyGroup` bị bỏ; `Student` thuộc một `School` với `grade_level`; `Assignment`/`ExamSession` nhắm (trường, khối) ± học sinh. Cấu trúc dữ liệu của các entity này đã DROP (WP-R, [CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)); "lớp 1–3", "lớp 6–9" trong tài liệu là cách gọi khối.
 
 **Mục đích.** Nguồn chuẩn về **tên entity, aggregate, quan hệ, bất biến và module sở hữu**. Mọi tài liệu, schema DB, API phải dùng đúng tên ở đây.
 **Phạm vi.** Mô hình khái niệm. **Không** chứa cột, kiểu dữ liệu, độ dài, index, DDL: những thứ đó chỉ ở [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md). Quy tắc nghiệp vụ chi tiết nằm ở tài liệu domain được link trong từng mục.
@@ -16,13 +16,13 @@ Mỗi bounded context thuộc đúng **một module** của modular monolith và
 | Context | Module · Database | Package domain | Schema | Aggregate chính | Sở hữu dữ liệu |
 |---|---|---|---|---|---|
 | Identity & Access | module identity · `eduworld_identity` | `identity`, `authorization` | `identity` | User, ExternalIdentity, Role, UserRole | Ai là ai, có quyền gì ở phạm vi nào |
-| Tenancy & Organization | module identity · `eduworld_identity` | `tenancy`, `organization`, `student` | `platform`, `org` | **Tenant**, School, AcademicYear, Class, Student, Enrollment | Tenant và cấu trúc trường học (đồng bộ từ SIS); không có giáo viên/phân công giảng dạy (ADR-0072) |
+| Tenancy & Organization | module identity · `eduworld_identity` | `tenancy`, `organization`, `student` | `platform`, `org` | **Tenant**, School, AcademicYear, Student | Tenant và cấu trúc trường học — học sinh thuộc một trường với một khối (đồng bộ từ SIS, ADR-0095); không có giáo viên/phân công giảng dạy (ADR-0072) |
 | SIS Integration | module identity · `eduworld_identity` | `sis` | `sis` | SISConnection, SyncRun, SyncedStudent, ReconciliationIssue | Trạng thái và nguồn đồng bộ |
 | Curriculum | module learning · `eduworld_learning` | `curriculum` | `curriculum` | Curriculum(+Version), Subject, Topic, LearningObjective | Khung chương trình |
 | Content | module learning · `eduworld_learning` | `content`, `question_bank` | `content` | Lesson, Question, QuestionSet, AssessmentBlueprint, LearningActivity, MediaAsset, ContentRelease | Nội dung học tập phiên bản hóa |
 | Assessment | module learning · `eduworld_learning` | `exercise`, `exam`, `assessment` | `assessment` | Attempt, Evaluation, ExamSession, ExamPaper | Lượt làm bài và kết quả |
 | Learning Record | module learning · `eduworld_learning` | `learning_record`, `learning_analytics` | `learning` | LearningEvent, ObjectiveMastery | Bằng chứng học tập, mastery |
-| LMS | module learning · `eduworld_learning` | `lms` | `lms` | Course, LearningPath, Assignment, Schedule | Triển khai hoạt động học do nhà trường giao (`school_admin`/`academic_manager`, ADR-0072) |
+| LMS | module learning · `eduworld_learning` | `lms` | `lms` | Assignment, ExamSession (giao theo trường × khối ± học sinh) | Triển khai hoạt động học do nhà trường giao (`school_admin`/`academic_manager`, ADR-0072) |
 | Game | module game · `eduworld_game` | `game`, `quest`, `minigame`, `game_session` | `game` | GameProfile, WorldArea, QuestDefinition, QuestProgress, Challenge, BossEncounter, LevelDefinition, LevelSession, GameSession | Trạng thái và nội dung game |
 | Progression & Economy | module game · `eduworld_game` | `gamification`, `reward`, `economy` | `gamification` | XPLedger, ProgressionCurve, Wallet, CurrencyLedger, Achievement, Collection, ShopItem | Động lực, phần thưởng, kinh tế |
 | Multiplayer | module competition · `eduworld_competition` | `multiplayer/*` | `multiplayer` | Party, Room, MatchmakingTicket (Valkey) | Nhóm tạm thời, phòng, phiên chơi chung |
@@ -51,7 +51,7 @@ Module dùng dữ liệu của module khác qua **projection chỉ đọc** cậ
 
 | Projection | Nguồn sự thật | Có ở module |
 |---|---|---|
-| Tenant, School, Class, Student, Enrollment (rút gọn) | module identity | learning, game, competition, chat |
+| Tenant, School, Student (trường + khối, rút gọn) | module identity | learning, game, competition, chat |
 | PlayerProfile (nickname, avatar thumbnail, level) | module game | competition, chat |
 | Party (thành viên, trạng thái) | module competition | chat |
 | Login activity (lần vào game, số phiên) | module game | learning (School Learning Dashboard) |
@@ -65,10 +65,6 @@ erDiagram
   TENANT ||--|{ SCHOOL : contains
   TENANT ||--o{ TENANT_RESOURCE_ASSIGNMENT : "được gán"
   SCHOOL ||--o{ ACADEMIC_YEAR : has
-  SCHOOL ||--o{ CLASS : has
-  ACADEMIC_YEAR ||--o{ CLASS : "scoped to"
-  CLASS ||--o{ ENROLLMENT : has
-  STUDENT ||--o{ ENROLLMENT : "enrolled via"
   SCHOOL ||--o{ STUDENT : "belongs to"
   USER ||--o| STUDENT : "is"
   USER ||--o{ EXTERNAL_IDENTITY : "linked to"
@@ -91,10 +87,9 @@ erDiagram
 | **Province** (danh mục platform) | Tỉnh/thành cấp 1 thuộc một Country: mã nội bộ ổn định, `official_code` (TBD), tên song ngữ, loại (thành phố trực thuộc trung ương/tỉnh), hiệu lực `effective_from/to`. Seed: 34 đơn vị VN đang hiệu lực + 63 đơn vị cũ inactive ([reference-data](../../specs/reference-data/provinces.vn.json)) | Không xóa; đơn vị hết hiệu lực chuyển `inactive` và có kế thừa |
 | **ProvinceSuccession** | Ánh xạ đơn vị cũ → đơn vị mới (sáp nhập, giữ nguyên, đổi tên) | Mọi đơn vị inactive kế thừa tới đúng một đơn vị active |
 | **School** | Trường trong danh mục trường: thuộc đúng một tenant và một Province; mã ngành (`moet_code` nếu có), cấp học, khối áp dụng, tên song ngữ; tenant `common` có một School ảo | Chiều phân loại trong tenant, không phải khóa cô lập |
-| **AcademicYear · Class** | Năm học và lớp (khối 1–9) của trường; tenant `common` có **lớp ảo theo khối** ("Khối 3 – chung") | Lớp thuộc đúng một trường |
-| **Student** | Vai trò học sinh của User trong một trường; nhân sự nhà trường là User `staff` có UserRole, không có entity riêng | Tối thiểu hóa dữ liệu cá nhân |
-| **Enrollment** | Học sinh thuộc lớp trong một khoảng thời gian | **Mỗi học sinh có đúng một enrollment active** (một trường, một lớp) tại một thời điểm; chuyển lớp/trường đóng cũ và mở mới trong cùng transaction; học sinh SIS thiếu lớp không vào game (ADR-0060) |
-| **TenantMembership** (view) | User thuộc tenant nào, suy ra từ enrollment (học sinh) và UserRole (nhân sự) | Không nhập tay; mỗi `(tenant_id, user_id)` đúng một dòng (ADR-0067, ADR-0069); nguồn đồng bộ membership Keycloak và kiểm tra `X-Tenant-Id` (ADR-0065) |
+| **AcademicYear** | Năm học của trường (một năm hiện hành) | Thuộc đúng một trường |
+| **Student** | Vai trò học sinh của User: thuộc **đúng một trường** (`school_id`) với **một khối** (`grade_level` 1–9) — không có lớp hay enrollment (ADR-0095); hiệu lực khi `status = active` và chưa soft-delete; nhân sự nhà trường là User `staff` có UserRole, không có entity riêng | Tối thiểu hóa dữ liệu cá nhân; đổi trường/khối có audit và phát `student.placement_changed`; lịch sử học tập giữ khối tại thời điểm sự kiện |
+| **TenantMembership** (view) | User thuộc tenant nào, suy ra từ học sinh hiệu lực (trường còn sống của tenant) và UserRole (nhân sự) | Không nhập tay; mỗi `(tenant_id, user_id)` đúng một dòng (ADR-0067, ADR-0069); nguồn đồng bộ membership Keycloak và kiểm tra `X-Tenant-Id` (ADR-0065) |
 | **SISIdentityLink · SISLink** | Liên kết User/entity nội bộ ↔ bản ghi SIS `(sis_connection_id, external_id)` | Khóa nguồn duy nhất theo connection (ADR-0046) |
 | **TenantResourceAssignment** | Dữ liệu platform được gán cho tenant | Tenant chỉ đọc (ADR-0029) |
 | **TenantCloneJob** | Clone sâu dữ liệu cấu hình/nội dung giữa tenant | Không bao giờ clone dữ liệu học sinh |
@@ -246,9 +241,7 @@ Phần thưởng game **không** ảnh hưởng điểm, mastery hay kết quả
 
 | Entity | Định nghĩa & quan hệ | Tài liệu |
 |---|---|---|
-| **Course · LearningPath** | Course = lớp × môn × năm học, tạo tự động từ lớp (SIS) và môn theo khối của curriculum; chuỗi hoạt động có điều kiện mở khóa | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) |
-| **Assignment · AssignmentTarget · AssignmentSubmission** | Bài do `school_admin`/`academic_manager` giao; `target_type` `class`/`study_group`/`students`; `status` `draft`/`scheduled`/`open`/`closed`/`results_released`/`archived`/`cancelled`; trạng thái nộp từng học sinh | Mặc định ghim version lúc giao (ADR-0043) |
-| **Schedule** | Lịch học/kiểm tra | — |
+| **Assignment · AssignmentTarget · AssignmentSubmission** | Bài do `school_admin`/`academic_manager` giao; `target_type` `grade` (trường × khối, thêm học sinh khác khối cùng trường − loại trừ) hoặc `students`, `subject_id` trực tiếp (ADR-0095); `status` `draft`/`scheduled`/`open`/`closed`/`results_released`/`archived`/`cancelled`; trạng thái nộp từng học sinh | Mặc định ghim version lúc giao (ADR-0043) |
 
 ## 10. Phân biệt năm loại số liệu (bắt buộc)
 

@@ -8,8 +8,8 @@ Spec: `specs/openapi/modules/competition.v1.yaml` (route `/lms/challenges*` hi�
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| `createChallenge` | `POST /api/v1/lms/challenges` | `learning.v1.yaml` (`ChallengeCreate`, `Challenge`) | `lms.challenge.write` · `Idempotency-Key` | Cần sửa (`x-service: competition`; đối tượng khối ± học sinh chờ áp sau WP-L1, §6) |
-| `listChallenges` | `GET /api/v1/lms/challenges?grade_level=&status=` | `learning.v1.yaml` | `lms.challenge.write` (scope trường) | Cần sửa (`x-service`; query `class_id` → `grade_level` chờ áp sau WP-L1, §6) |
+| `createChallenge` | `POST /api/v1/lms/challenges` | `learning.v1.yaml` (`ChallengeCreate`, `Challenge`) | `lms.challenge.write` · `Idempotency-Key` | Cần sửa (`x-service: competition`; đối tượng khối ± học sinh đã áp 2026-11-22, §6) |
+| `listChallenges` | `GET /api/v1/lms/challenges?grade_level=&status=` | `learning.v1.yaml` | `lms.challenge.write` (scope trường) | Cần sửa (`x-service`; query `class_id` → `grade_level` đã áp 2026-11-22, §6) |
 | `listChallengeTemplates` | `GET /api/v1/lms/catalog/challenge-templates` | `learning.v1.yaml` (`ChallengeTemplate`) | `lms.challenge.write` | Cần sửa (`x-service`) |
 | `getChallenge` | `GET /api/v1/lms/challenges/{challenge_id}` | — | `lms.challenge.write` | Cần thêm |
 | `cancelChallenge` | `POST /api/v1/lms/challenges/{challenge_id}:cancel` | — | `lms.challenge.write` · `Idempotency-Key` | Cần thêm |
@@ -62,7 +62,7 @@ Spec: `specs/openapi/modules/competition.v1.yaml` (route `/lms/challenges*` hi�
 ## 6. Delta cần thực hiện
 
 - Chuyển `/lms/challenges`, `/lms/catalog/challenge-templates` sang `competition.v1.yaml` với `x-service: competition` (xóa khỏi `learning.v1.yaml`), thêm route ngoại lệ APISIX; cập nhật API_DESIGN §9.14 (ghi "Route ngoại lệ → module competition").
-- **Delta ADR-0095 cho op learning (chờ áp sau khi WP-L1 merge — lead áp, F108 link tới mục này)** trên `learning.v1.yaml` (và bundle) trước khi chuyển sang `competition.v1.yaml`:
+- **Delta ADR-0095 cho op learning — Đã áp 2026-11-22 (WP-R) trong bundle và `learning.v1.yaml`, ngoại lệ breaking ở `specs/breaking-allowlist.yaml` (F108 link tới mục này)** trên `learning.v1.yaml` (và bundle) trước khi chuyển sang `competition.v1.yaml`:
   - `listChallenges`: query `class_id` → `grade_level` (`GradeLevel`, 1–9); giữ `status`.
   - `ChallengeTemplate.kind` enum [`class_challenge`, `school_tournament`] → [`grade_challenge`, `school_tournament`].
   - `ChallengeCreate`: thêm `school_id` (Uuid, **bắt buộc**); `targets[]` (minItems 1, maxItems 2) item `{target_type: enum [grade, students], grade_level? (GradeLevel; bắt buộc khi `grade`), student_ids? (Uuid[], maxItems 500; bắt buộc khi `students`)}` thay `{target_type: class|group|grade_level|school, target_id}`; thêm `exclude_student_ids` (Uuid[], maxItems 500); mô tả: exclude thắng include, học sinh không thuộc `school_id` → `422 VALIDATION_FAILED`.

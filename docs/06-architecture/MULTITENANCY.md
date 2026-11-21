@@ -61,7 +61,7 @@ flowchart TD
 
 | Loại | Cột bắt buộc | RLS | Ví dụ |
 |---|---|---|---|
-| **Tenant-scoped** | `tenant_id uuid NOT NULL`, `deleted_at`, `deleted_by` (+ `school_id` nếu dữ liệu gắn trường) | Bật | `org.classes`, `org.enrollments`, `assessment.attempts`, `learning.objective_masteries`, `game.quest_progress`, `multiplayer.parties`, `chat.messages`, `lms.assignments` |
+| **Tenant-scoped** | `tenant_id uuid NOT NULL`, `deleted_at`, `deleted_by` (+ `school_id` nếu dữ liệu gắn trường) | Bật | `org.students`, `assessment.attempts`, `learning.objective_masteries`, `game.quest_progress`, `multiplayer.parties`, `chat.messages`, `lms.assignments` |
 | **Tenant-scoped append-only** | `tenant_id NOT NULL` (không có `deleted_at`, không xóa) | Bật | `learning.learning_events`, `assessment.attempt_answers`, `gamification.xp_ledger`, `audit.audit_logs` (đọc qua API có scope) |
 | **Nội dung lai** | `tenant_id uuid NULL` (NULL = platform), `owner_scope ∈ {platform, tenant}`, `deleted_at` | Bật (policy có nhánh assignment) | `content.questions`, `content.question_sets`, `content.lessons`, `lms.challenge_templates` |
 | **Global/platform** | `deleted_at` | Tắt; chỉ ghi qua `/api/v1/game-admin/*`, `/api/v1/admin/*` | `curriculum.subjects`, `game.item_definitions`, `game.quest_definitions`, `platform.feature_flags`, **danh mục `catalog.countries`, `catalog.provinces`, `catalog.province_successions`** (ADR-0060: dùng chung mọi tenant, chỉ System Admin sửa, mọi người dùng đã đăng nhập được đọc) |

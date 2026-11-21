@@ -244,7 +244,7 @@ sequenceDiagram
   DB-->>SVC: student.synced / student.placement_changed / school.synced qua NATS → ref.*
 ```
 
-- **Bootstrap trả về trường, lớp, khối, tỉnh/thành từ module identity**, nên lần đăng nhập đầu hiển thị đúng ngay; các module khác cập nhật projection `ref.students`, `ref.schools`, `ref.classes`, `ref.enrollments` qua event ([DATABASE_DESIGN §2.17](../07-backend/DATABASE_DESIGN.md)).
+- **Bootstrap trả về trường, khối, tỉnh/thành từ module identity** (không còn lớp — ADR-0095), nên lần đăng nhập đầu hiển thị đúng ngay; các module khác cập nhật projection `ref.students`, `ref.schools` qua event ([DATABASE_DESIGN §2.17](../07-backend/DATABASE_DESIGN.md)).
 - **Bảo vệ khi tải cao:** tối đa `sis_login_sync_concurrency` (20) lookup đồng thời mỗi connection; vượt giới hạn hoặc circuit breaker connection đang mở → nhánh B dùng dữ liệu đồng bộ gần nhất (nếu đủ) hoặc trả `NO_ACTIVE_ENROLLMENT` kèm thông điệp "thử lại sau ít phút"; nhánh C chỉ xếp job. Không có retry đồng bộ trên đường đăng nhập.
 - **Circuit breaker theo connection** (`sis_login_sync_breaker`): 5 lookup lỗi liên tiếp mở mạch 30 giây [Confirmed]; khi mở, nhánh B xử lý như vượt giới hạn.
 - **Quan sát:** metric `eduworld_sis_login_sync_total{branch,result}` (`branch` = `fresh`/`blocking`/`background`; `result` = `ok`/`timeout`/`error`/`missing_placement`/`throttled`), `eduworld_sis_login_sync_duration_seconds`; cảnh báo khi tỷ lệ `timeout` nhánh B > 5% trong 10 phút ([MONITORING](../11-operations/MONITORING.md)).

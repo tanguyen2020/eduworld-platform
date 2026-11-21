@@ -94,7 +94,7 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 ## ADR-0095 — bỏ channel/policy lớp (WP-C1, 2026-11-21)
 
 - [x] T060 Bỏ channel `class`/`study_group` và cấp policy `class`: `channel.Types` 6 loại, `policy.Levels` 3 cấp, `PolicyLevels`/`policyKey` không `class_id`; seed platform version 2; migration `20261231000002_adr0095_noclass.sql`; OpenAPI `ChannelType`, AsyncAPI `ChatChannelType`, event schema chat thu hẹp — test `TestChannelTypesWithoutClass`, `TestPolicyIntersect` (3 cấp; `class`/`study_group` bị deny) (unit), `TestSeedPlatformPolicy` (6 loại), test integration chat đổi channel mẫu `class` → `direct`/`team` pass
-- [ ] T061 (WP-R) bỏ `class`, `study_group` khỏi `channels_type_chk` và `class` khỏi `chat_policies_scope_chk` khi 0 dòng mang giá trị cũ (kể cả đã soft-delete)
+- [x] T061 (WP-R) bỏ `class`, `study_group` khỏi `channels_type_chk` và `class` khỏi `chat_policies_scope_chk` khi 0 dòng mang giá trị cũ (kể cả đã soft-delete) — **xong 2026-11-22** — `20261231000003_adr0095_check_values.sql`; `TestADR0095RollbackRoundTrip` + toàn bộ integration chat pass
 
 ## Dependencies & Execution Order
 

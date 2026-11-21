@@ -578,7 +578,7 @@ Một tính năng chạm nhiều module domain được phát hành trong cùng 
 3. Migration nặng dùng `CREATE INDEX CONCURRENTLY` trong file không-transaction riêng.
 4. Partition theo tháng/ngày được tạo trước bởi job `partition-maintainer` của từng module (profile `worker-jobs`).
 5. Thất bại migration của bất kỳ module nào → dừng pipeline, không rollout code mới (cả 5 module nằm chung image).
-6. Không auto-migrate khi binary khởi động. Cấm xóa migration đã chạy trên staging/production.
+. Migration contract một lần của ADR-0095 (DROP cấu trúc lớp/enrollment/course/learning path/lịch/nhóm học tập: identity `20261201000001`, learning `20261230000001`, competition `20261231000004`, chat `20261231000003`) đã nằm trong chuỗi migration **trước** lần triển khai staging/production đầu tiên (F130): trên database mới chúng chỉ xóa cấu trúc rỗng. Môi trường đã có dữ liệu chạy theo quy trình backup → thử rollback → migrate → đếm dòng ở [LOCAL_DEVELOPMENT §5.1](LOCAL_DEVELOPMENT.md#51-chuyển-đổi-một-lần-adr-0095-drop-lớp-enrollment-course-learning-path-lịch-nhóm-học-tập-wp-r) (`scripts/db/adr-0095-backup.sh`); không áp ngoại lệ này cho môi trường đã có dữ liệu thật — khi đó cần ADR mới (ADR-0095 mục 8).
 
 ## 13. Secret management
 

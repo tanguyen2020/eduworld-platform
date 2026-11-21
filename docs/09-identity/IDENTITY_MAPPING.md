@@ -39,8 +39,6 @@
 | **Nhân sự nhà trường** | `identity.users` (`user_type = staff`, `primary_tenant_id` có giá trị) + `identity.user_roles` | `user_id` | Không có bảng giáo viên/phân công giảng dạy (ADR-0072); chỉ nhận role tenant, phạm vi qua UserRole scope `tenant`/`school`/`subject` (ADR-0081) | `qlcm.truong.a` |
 | **Nhân sự platform** | `identity.users` (`user_type = staff`, `primary_tenant_id = NULL`) + `identity.user_roles` | `user_id` | Chỉ nhận role platform (`tenant_id = NULL`, ADR-0081); một người làm cả việc trường và platform dùng hai tài khoản | `sa.admin` |
 | **School** | `org.schools` | `school_id`, `tenant_id` | Chiều bên trong tenant; tenant `common` có School ảo | THCS Yên Hòa ∈ tenant `pgd-caugiay` |
-| **Class** | `org.classes` | `class_id` | Theo năm học | 6A 2026–2027 |
-| **Enrollment** | `org.enrollments` | `enrollment_id` | Có `start_date/end_date`, lưu lịch sử | HS X ∈ 6A |
 | **SISLink** | `sis.sis_links` | `(sis_connection_id, entity_type, external_id)` | Đồng bộ | mã HS trong SIS |
 | **Role** | `identity.roles` + `identity.role_permissions` | `role_id`; `code` duy nhất trong phạm vi (dùng chung hoặc tenant) | Role hệ thống seed (`is_system`), role tùy biến của tenant [Confirmed] | `school_admin`, `academic_manager`, `safety_moderator` |
 | **UserRole** | `identity.user_roles` (thay `role_assignments`, ADR-0066) | `(user_id, role_id, scope_type, scope_id)` | Có `valid_from/valid_to`, `source = manual` (SIS không cấp UserRole, ADR-0072), `granted_by`, soft-delete | academic_manager @ school X, subject Toán |

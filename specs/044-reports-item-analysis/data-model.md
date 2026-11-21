@@ -44,7 +44,7 @@ Database `eduworld_learning`. Bảng T dùng mixin `Base` (`tenant_id`, `created
 
 | Trường | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|
-| `tenant_id`, `school_id`, `class_id`, `student_id`, `subject_id` | uuid | NOT NULL | ADR-0095: `class_id` nullable, không ghi (DROP ở WP-R); thêm `grade_level` = khối lúc tính |
+| `tenant_id`, `school_id`, `class_id`, `student_id`, `subject_id` | uuid | NOT NULL | ADR-0095: `class_id` đã DROP (`20261230000001_adr0095_drop_class_course`); thêm `grade_level` = khối lúc tính |
 | `academic_year_id` | uuid | NOT NULL | |
 | `period` | `varchar(64)` | CHECK `IN ('mid_term_1','end_term_1','mid_term_2','end_term_2')` | |
 | `profile_id`, `profile_version` | uuid, `int` | NOT NULL | Giữ version đã dùng |

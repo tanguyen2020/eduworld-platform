@@ -36,7 +36,7 @@ var ErrUnknownResourceType = errors.New("platformadmin: unknown resource_type")
 var owners = map[string]string{
 	"curriculum": ModuleLearning, "lesson": ModuleLearning, "learning_material": ModuleLearning, "question": ModuleLearning,
 	"question_set": ModuleLearning, "assessment_blueprint": ModuleLearning, "media": ModuleLearning, "assignment": ModuleLearning,
-	"activity": ModuleLearning, // activity: F030, OQ F030; no course nor learning_path (ADR-0095)
+	"activity":  ModuleLearning, // activity: F030, OQ F030; no course nor learning_path (ADR-0095)
 	"challenge": ModuleGame, "challenge_template": ModuleGame, "quest": ModuleGame, "minigame_config": ModuleGame, "item": ModuleGame,
 	"tournament_template": ModuleCompetition,
 	"school_settings":     ModuleIdentity, "tenant_settings": ModuleIdentity, // no class_template (ADR-0095)

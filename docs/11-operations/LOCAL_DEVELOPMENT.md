@@ -223,13 +223,13 @@ Toàn bộ dữ liệu seed là **giả**, không dùng thông tin học sinh th
 | Seed | Vị trí | Nội dung |
 |---|---|---|
 | Realm Keycloak | `deploy/keycloak/realm-eduworld.dev.json` | Realm `eduworld`; client `eduworld-game-backend` (confidential, chỉ Direct Access Grants, secret local `change-me-local` chỉ dùng trong `core-api` cho module identity — ADR-0068), `eduworld-portal` (confidential, chỉ Direct Access Grants, flow `eduworld-portal-direct-grant` chỉ username + mật khẩu (không OTP — ADR-0094), secret local `change-me-local` chỉ dùng trong `core-api` cho module identity — ADR-0091; theme `eduworld-ops` chỉ cho trang action-token `UPDATE_PASSWORD` và email của Keycloak; tài khoản dev không có OTP; tài khoản dev platform có OTP seed sẵn), `eduworld-api`; client `svc-identity` (chỉ Keycloak Admin API, secret local `change-me-local` — ADR-0074 mục 5) và client provisioning của module identity; realm roles; mỗi tenant seed là một Keycloak Organization: `th-demo-a` (trường `DEMOA1`), `pgd-demo` (2 trường `DEMOB1`, `DEMOC1`), `common`, `qa-probe` (tenant QA `is_qa = true`, chỉ chứa tài khoản synthetic) |
-| module identity | `src/backend/modules/identity/seed/` (`dev.yaml` + `sis/<mã trường>/{classes,students,enrollments}.csv`, cột = tên trường DTO của EduWorld SIS Contract v1) | System Admin bootstrap `sa.admin` + nhân sự platform; tenant `th-demo-a` (trường `DEMOA1`), `pgd-demo` (trường `DEMOB1`, `DEMOC1`); 1 `sis_connection` `csv_import` mỗi tenant; lớp/năm học/học sinh/enrollment qua import CSV; nhân sự trường/đơn vị + `user_roles`; khóa `hs.locked`. Tenant chung `common` + trường ảo "EduWorld chung" có sẵn từ migration |
+| module identity | `src/backend/modules/identity/seed/` (`dev.yaml` + `sis/<mã trường>/students.csv`, cột = tên trường DTO của EduWorld SIS Contract 1.3.0 — không còn `classes.csv`/`enrollments.csv`, ADR-0095) | System Admin bootstrap `sa.admin` + nhân sự platform; tenant `th-demo-a` (trường `DEMOA1`), `pgd-demo` (trường `DEMOB1`, `DEMOC1`); 1 `sis_connection` `csv_import` mỗi tenant; năm học/học sinh (trường + khối) qua import CSV; nhân sự trường/đơn vị + `user_roles`; khóa `hs.locked`. Tenant chung `common` + trường ảo "EduWorld chung" có sẵn từ migration |
 | module learning | `src/backend/modules/learning/seed/` (theo `specs/schemas`) | Curriculum `GDPT2018_SAMPLE` (GDPT 2018 Toán lớp 1–5 rút gọn, file `seed/curriculum/gdpt2018_math_g1_5.yaml`; publish được dù thiếu `yccd_ref`), ~200 câu hỏi, assignment nội dung platform cho 3 tenant (ADR-0029) |
 | module game | `src/backend/modules/game/seed/` | 3 quest, 2 mini-game config, item cosmetic, reward rule |
 | module competition | `src/backend/modules/competition/seed/` | Cấu hình matchmaking/ranking mặc định, 1 season, tournament template |
 | module chat | `src/backend/modules/chat/seed/` | Chat policy mặc định platform, quick messages, danh mục từ nhạy cảm placeholder, 1 sticker pack mẫu |
 
-Projection `ref_*` (tenant, học sinh, lớp) ở các module được nạp **qua event** sau khi module identity sync SIS. Không seed trực tiếp vào bảng `ref_*`, để kiểm thử luôn đường event thật.
+Projection `ref_*` (tenant, trường, học sinh) ở các module được nạp **qua event** sau khi module identity sync SIS. Không seed trực tiếp vào bảng `ref_*`, để kiểm thử luôn đường event thật.
 
 Tài khoản demo (mật khẩu chung `Demo@12345`, **chỉ local**):
 
@@ -266,6 +266,57 @@ Mọi tài khoản không phải học sinh có `user_type = staff` (ADR-0081): 
 Kịch bản tenant ở local (đăng nhập username/password, không chọn trường — ADR-0063): `hs.an.3a` → vào thẳng `th-demo-a`; `qlcm.truong.a` đăng nhập portal → hộp chọn 2 tenant sau đăng nhập, mở game → `GAME_ACCESS_STUDENT_ONLY`; `ad.truong.b` gọi dữ liệu của `th-demo-a` → 404; `hs.tudo` → tenant chung; `hs.nosis` → `ACCOUNT_NOT_PROVISIONED`; thoát rồi mở lại game trên máy dev (thiết bị cá nhân) → tự vào lại bằng refresh token, không hiện form (ADR-0086); chạy với `device.cfg` `shared_device: true` hoặc bản Web → phải nhập lại mật khẩu; bấm Đăng xuất → token bị xóa, mở lại phải đăng nhập; `sa.admin` thấy cả 4 tenant với dropdown lọc (`qa-probe` gắn nhãn "QA"). Thử một thiết bị: chạy hai instance Godot với `--device-id` khác nhau cùng tài khoản.
 
 Lệnh seed: `make seed` = import realm (`make keycloak-import`) → `make migrate` (mọi module) → seed từng module: `make seed-identity` (`go -C src/backend run ./modules/identity/cmd/seed`: tạo System Admin đầu tiên `sa.admin` qua use case bootstrap, rồi thay mặt `sa.admin` gọi các use case `createTenant`, `createAdminTenantSchool`, `createSisConnection`, import CSV của SIS bằng đúng pipeline `SisRun` của job import, `ProvisionStudentAccount`, `createTenantUser`, `grantTenantUserRole`, `lockTenantUser`; tài khoản Keycloak **không** được tạo mới mà gắn với user cùng username của realm import — `keycloak.DevAdopter`, chỉ khi `EW_ENV=local`; chạy lại không thay đổi gì) → `make seed-learning` → `make seed-game` (`go -C src/backend run ./modules/game/cmd/seed`: danh mục tạo nhân vật v1 và item mặc định qua use case publish dưới PlatformScope, F070; chạy lại không tạo version mới) → sau `make up-app`, `make seed-check` chờ worker phát event và projection `ref.students` của learning, game có đủ học sinh đã seed (không cần `make sis-sync`: import CSV chạy đồng bộ trong seed). Chưa seed [Confirmed]: `qa-probe`/`hs.qa.probe` (`createTenant` chưa đặt được `is_qa`), `hs.tudo` (`createCommonStudents` sinh mật khẩu mới), `sa.moi`; `hs.nosis` cố ý không có tài khoản; `qlcm.truong.a` giữ `academic_manager` toàn tenant (chưa có scope môn vì môn học thuộc module learning).
+
+### 5.1. Chuyển đổi một lần ADR-0095: DROP lớp, enrollment, course, learning path, lịch, nhóm học tập (WP-R)
+
+Migration contract của [ADR-0095 mục 8](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) xóa cấu trúc (bảng/cột/view/CHECK) của các khái niệm đã bỏ — ngoại lệ một lần của ADR-0070 mục 2, **chỉ hợp lệ trước lần triển khai staging/production đầu tiên** (F130 chưa triển khai; nếu đã triển khai thì không chạy, quay về phương án `retired` của ADR). Danh sách đóng ở [CODE_PLAN §4.2](../12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095).
+
+| Module | Migration contract | Đối tượng |
+|---|---|---|
+| identity | `20261201000001_adr0095_drop_class_enrollment.sql` | DROP `org.classes`, `org.enrollments` (+ `_live`, RLS, FK, GRANT, 9 lớp ảo); CHECK `sis_links_type_chk`, `staging_records_entity_kind_check` bỏ `class`/`enrollment` nếu 0 dòng |
+| learning | `20261230000001_adr0095_drop_class_course.sql` | DROP `ref.classes`, `ref.enrollments`, bảng F040 (`lms.courses`, `learning_paths`, `path_nodes`, `path_node_unlocks`, `schedule_items`, `study_groups`, `study_group_members`), `rollup_class_*`, `rollup_class_objective_weekly`, `rm_class_*`, `efficacy_study_classes`, `efficacy_wave_sessions`; cột `class_id`/`course_id`/`learning_path_id`/`class_id_at_assign`/`target_ref_id`/`active_classes`; dựng lại `_live` của bảng mất cột; 10 CHECK bỏ giá trị cũ nếu 0 dòng |
+| competition | `20261231000004_adr0095_drop_enrollments.sql` | DROP `ref.enrollments`; CHECK `parties_type_chk` (`study_group`), `parties_visibility_chk` (`class`), `party_policies_scope_chk` (`class`) nếu 0 dòng |
+| chat | `20261231000003_adr0095_check_values.sql` | Không xóa gì; CHECK `channels_type_chk` (`class`, `study_group`), `chat_policies_scope_chk` (`class`) nếu 0 dòng |
+
+CHECK chỉ được thu hẹp khi **không còn dòng nào** (kể cả đã soft-delete) mang giá trị cũ; ngược lại migration giữ CHECK và in `NOTICE: ADR-0095: <constraint> keeps …` — domain và OpenAPI đã chặn giá trị đó, không cần làm gì thêm.
+
+Chạy trên stack local dùng chung (container `postgres`, `EW_ENV=local`), **tuần tự từng module identity → learning → competition → chat**; mỗi module:
+
+```bash
+# 0. Dừng ghi: không chạy core-api/worker/realtime trong lúc chuyển đổi
+docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.app.yml --profile app stop core-api worker realtime
+
+# 1–3. Backup (R12): pg_dump -Fc + SHA-256, thử pg_restore vào eduworld_<module>_restore_check, đếm dòng trước
+bash scripts/db/adr-0095-backup.sh identity
+#    → data/backups/pre-adr0095-eduworld_identity-<YYYYMMDD>.dump (+ .sha256, .counts-before.txt)
+
+# 4. Thử rollback trên bản sao tạm (migration → script rollback → dữ liệu từ dump; số dòng phải bằng trước)
+bash scripts/db/adr-0095-backup.sh identity --verify-rollback data/backups/pre-adr0095-eduworld_identity-<YYYYMMDD>.dump
+
+# 5. Áp migration (Atlas, role identity_migrator), rồi đếm dòng sau
+make migrate-identity
+bash scripts/db/adr-0095-backup.sh identity --after data/backups/pre-adr0095-eduworld_identity-<YYYYMMDD>.dump
+#    → <dump>.counts-after.txt; cột trái = trước, cột phải = sau ("dropped" = bảng/cột không còn) → dán vào báo cáo
+```
+
+Lặp lại với `learning`, `competition`, `chat`. Sau module learning, xóa hai durable consumer JetStream của F040 không còn code (`nats-box`, profile `tools`):
+
+```bash
+docker compose -f deploy/compose/docker-compose.yml --profile tools run --rm nats-box nats consumer rm EVT_IDENTITY learning_lms_courses -f
+docker compose -f deploy/compose/docker-compose.yml --profile tools run --rm nats-box nats consumer rm EVT_LEARNING learning_lms_schedule -f
+```
+
+(Bỏ qua lỗi "consumer not found" nếu stack chưa từng chạy F040.) Cuối cùng `make up-app` và `make seed-check`. Bản dump, `.sha256` và các file đếm dòng nằm trong `data/backups/` (không commit); giữ tới khi Release 1.0 ổn định.
+
+**Rollback (chỉ khi cần, không tự động):** khôi phục cấu trúc rỗng rồi dữ liệu từ bản dump, ví dụ module learning:
+
+```bash
+docker compose -f deploy/compose/docker-compose.yml exec -T postgres psql -U postgres -v ON_ERROR_STOP=1 --single-transaction \
+  -d eduworld_learning -c 'SET ROLE learning_migrator' -f - < scripts/db/rollback/adr-0095-learning.sql
+bash scripts/db/adr-0095-backup.sh learning --restore-data data/backups/pre-adr0095-eduworld_learning-<YYYYMMDD>.dump
+```
+
+Script rollback (`scripts/db/rollback/adr-0095-<module>.sql`) tạo lại bảng/cột/view/policy/GRANT theo DDL của migration gốc; `--restore-data` nạp dữ liệu bảng bằng `pg_restore --data-only` và giá trị cột theo khóa chính từ `eduworld_<module>_restore_check`. Round trip rollback → migration được kiểm bằng integration test `TestADR0095RollbackRoundTrip` của từng module. Code hiện tại không đọc các đối tượng này: rollback chỉ để giữ dữ liệu cho tra cứu/phân tích.
 
 ## 6. Chạy từng phần
 
