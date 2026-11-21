@@ -9,6 +9,7 @@ Nhóm mục: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `
 ## [Unreleased]
 
 ### Fixed
+- 2026-11-22 — **Test `CurriculumTreePage` AC-26 không còn đỏ khi máy tải nặng** (portal, F053 T067): lỗi ở test — lần import lạnh chunk lazy Content Studio (~9–10 s) nằm trong `findByText` có timeout 10 s; test nạp chunk trong `beforeAll`. Code trang không đổi.
 - 2026-11-21 — **Portal E2E: học sinh đăng nhập portal nhận `403 PORTAL_ACCESS_STAFF_ONLY` thay vì `503`** (module `identity`, F012-AC-29): Keycloak 26.4 trả bước từ chối của flow direct grant dạng `401` JSON `{"error": "<thông điệp>"}` khi request đòi JSON; adapter token coi `error` không phải mã OAuth (hoặc `access_denied`) là flow từ chối (portal → `PORTAL_ACCESS_STAFF_ONLY`, game → `GAME_ACCESS_STUDENT_ONLY`); sai mật khẩu vẫn `401 INVALID_CREDENTIALS`. Client portal dùng `keycloak_token_call_timeout` (`EW_KC_TOKEN_TIMEOUT`, 3 s).
 - 2026-11-21 — **Portal E2E: `school_admin`/`academic_manager` đọc trường của mình** (`tenant.school.read`, F012 Clarifications): bộ chọn trường của School Learning Dashboard, SIS, hoạt động học sinh, cài đặt, nhật ký không còn `403`; grant giới hạn trường chỉ thấy trường đó.
 - 2026-11-21 — **Portal E2E: School Admin dùng được Content Studio** (module `learning`): `scope.RequireContent` cho grant giới hạn trường phủ nội dung của tenant (nội dung không có chiều trường — CONTENT_MODEL §4, ADMIN_PORTAL §2.3); thêm `curriculum.read` cho `school_admin`, `tenant_content_editor`, `tenant_content_reviewer` (§2.2).

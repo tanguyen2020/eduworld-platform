@@ -5,7 +5,7 @@
 //   AC-29 platform curriculum read only for a tenant user; "Tạo chương trình riêng" for curriculum.write in a tenant
 //   AC-30 publish refused for LOs without yccd_ref → LO codes listed
 import { render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { I18nextProvider } from 'react-i18next';
 import { OpsThemeProvider } from '@eduworld/ops-ui';
 import { createI18n } from '../../../i18n';
@@ -15,6 +15,13 @@ import { MockContentBackend, U } from '../../../test/mock-content';
 import { CurriculumVersionPanel, missingYccd } from './CurriculumVersionPanel';
 import { ObjectiveForm } from './ObjectiveForm';
 
+// F053 T067: the workspace is a lazy chunk (F050-AC-02). Cold, its first import (transform of the whole content studio)
+// took ~9–10 s inside the first findByText of AC-26 (asyncUtilTimeout 10 s) and made AC-26 fail under load while the
+// page itself was right (AC-29, run warm, renders in < 1 s). Import the chunk once before the tests so each findBy
+// only measures the page.
+beforeAll(async () => {
+  await import('..');
+}, 60_000);
 afterEach(() => stopPortals());
 
 const MATH = U(10);
