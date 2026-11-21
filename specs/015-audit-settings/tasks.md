@@ -111,7 +111,7 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 ## Nhận từ F071 (OQ F071-1, owner chốt 2026-11-21)
 
-- [ ] T054 `school.updated.settings_subset` mang `enabled_subject_codes` (môn trường bật; vắng = mọi môn bật) — contract + emit + test; F071 đã đọc khóa này khi có — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ S
+- [x] T054 `school.updated.settings_subset` mang `enabled_subject_codes` (môn trường bật; vắng = mọi môn bật) — contract + emit + test; F071 đã đọc khóa này khi có — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ S — ✅ 2026-11-22: `SchoolSettings.enabled_subject_codes` (mảng 1–50 mã, `null` = mọi môn bật) trong `updateSchoolSettings`, `school.updated.settings_subset` mang khóa khi đặt, vắng khi `null` (Clarifications Session 2026-11-22); schema event + OpenAPI; `settings.ValidateEnabledSubjects` (unit `TestValidateEnabledSubjects`); integration identity `TestSchoolEnabledSubjects` (payload hợp lệ theo schema, 422, audit, đặt lại `null`) + `TestSchoolSettings` pass (85 s); module game `TestSubjectDisabledFromSchoolUpdated` (event qua consumer `game.projection_identity` ẩn/hiện môn) + `TestSubjectDisabledHidden` + `TestProjectionIdentity` pass (46 s); specs-lint (7 script + split-public/sync `--check`) pass
 
 ## Dependencies & Execution Order
 

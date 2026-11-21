@@ -120,6 +120,7 @@ type SchoolSettings struct {
 	StudentClubCreation      bool                   `json:"student_club_creation"`
 	CurfewWindow             *settings.Curfew       `json:"curfew_window"`
 	DailyPlayLimitMinutes    *int                   `json:"daily_play_limit_minutes"` // OQ-17; nil = off
+	EnabledSubjectCodes      []string               `json:"enabled_subject_codes"`    // F015 T054; nil = every subject on
 	PlatformCurfew           settings.Curfew        `json:"platform_curfew"`
 	EffectiveCurfew          settings.Curfew        `json:"effective_curfew"`
 	UpdatedAt                *time.Time             `json:"updated_at,omitempty"`
@@ -154,6 +155,10 @@ func SchoolSettingsOf(schoolID uuid.UUID, value []byte, version int64, updatedAt
 	var limit int
 	if get(settings.KeyDailyPlayLimit, &limit) {
 		out.DailyPlayLimitMinutes = &limit
+	}
+	var subjects []string
+	if get(settings.KeyEnabledSubjects, &subjects) && len(subjects) > 0 {
+		out.EnabledSubjectCodes = subjects
 	}
 	var c settings.Curfew
 	if get("curfew_window", &c) {

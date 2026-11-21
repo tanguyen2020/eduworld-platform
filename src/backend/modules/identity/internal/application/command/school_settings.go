@@ -20,7 +20,7 @@ import (
 // Keys of the school settings JSON written through updateSchoolSettings.
 // class_leaderboard_enabled is gone with the classes (ADR-0095 D5).
 var schoolKeys = map[string]bool{"allowed_hours": true, "school_leaderboard_enabled": true,
-	"student_club_creation": true, "curfew_window": true, settings.KeyDailyPlayLimit: true}
+	"student_club_creation": true, "curfew_window": true, settings.KeyDailyPlayLimit: true, settings.KeyEnabledSubjects: true}
 
 // CurrentPlatformCurfew returns platform_curfew in force (configured value or CONFIG_DEFAULTS).
 func (h Settings) CurrentPlatformCurfew(ctx context.Context) (settings.Curfew, error) {
@@ -145,6 +145,9 @@ func schoolSubset(out dto.SchoolSettings) map[string]any {
 	if out.SchoolLeaderboardEnabled != nil {
 		subset["school_leaderboard_enabled"] = *out.SchoolLeaderboardEnabled
 	}
+	if out.EnabledSubjectCodes != nil { // absent = every subject on (module game F071-AC-03, F015 T054)
+		subset[settings.KeyEnabledSubjects] = out.EnabledSubjectCodes
+	}
 	return subset
 }
 
@@ -193,6 +196,15 @@ func (h Settings) checkSchoolPatch(ctx context.Context, tenant uuid.UUID, patch 
 			return problem.Invalid(settings.KeyDailyPlayLimit, problem.SubInvalid, "integer minutes or null")
 		}
 		if err := settings.ValidateDailyPlayLimit(minutes); err != nil {
+			return settingsInvalid(err)
+		}
+	}
+	if raw, ok := patch[settings.KeyEnabledSubjects]; ok && !isNull(raw) {
+		var codes []string
+		if err := json.Unmarshal(raw, &codes); err != nil {
+			return problem.Invalid(settings.KeyEnabledSubjects, problem.SubInvalid, "array of subject codes or null")
+		}
+		if err := settings.ValidateEnabledSubjects(codes); err != nil {
 			return settingsInvalid(err)
 		}
 	}

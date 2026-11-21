@@ -60,6 +60,11 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F015-AC-21, AC-25, AC-26, AC-28: "System Admin, MFA" đọc là System Admin qua gateway nội bộ; nhánh "token thiếu MFA → `403 MFA_REQUIRED`" bỏ, thay bằng người không có role platform → `403 PERMISSION_DENIED`. T005, T037 và contracts/plan nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-22 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+- Q: T054 — `enabled_subject_codes` (môn trường bật, OQ F071-1) ghi qua đâu, ràng buộc gì? → A: [Confirmed] Khóa mới của `SchoolSettings` trong `getSchoolSettings`/`updateSchoolSettings` (merge patch, quyền `school.settings.write` như các khóa khác, audit before/after; không bắt buộc `reason` vì không phải giới hạn an toàn): mảng 1–50 mã môn khác nhau, mỗi mã 1–64 ký tự (ADR-0041, `Subject.code`), hoặc `null` = mọi môn bật (mặc định; phản hồi luôn có khóa). Danh sách rỗng bị từ chối (`422 VALIDATION_FAILED`) vì sẽ ẩn mọi vùng học tập (phương án bảo thủ: không cho tắt mọi môn qua khóa này). Identity không đối chiếu danh mục môn của module learning (không gọi đồng bộ; mã lạ không bật gì ở module game).
+- Q: T054 — `settings_subset` của `school.updated`? → A: [Confirmed] Mang `enabled_subject_codes` khi đã đặt; **vắng** khi `null` (vắng = mọi môn bật). Consumer module game thay cả object `ref.schools.settings_subset` nên đặt lại `null` làm khóa biến mất ở game; bước clone cài đặt trường giữa tenant (ADR-0029) dùng cùng hàm dựng `settings_subset` nên mang theo khóa.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Audit log tập trung, append-only (Priority: P1)

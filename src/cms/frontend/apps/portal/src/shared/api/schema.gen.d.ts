@@ -14547,6 +14547,8 @@ export interface components {
             daily_play_limit_minutes?: number | null;
             /** @description Giới nghiêm hiệu lực của học sinh trường = hợp platform_curfew và curfew_window */
             readonly effective_curfew?: components["schemas"]["CurfewWindow"];
+            /** @description Mã môn trường đang bật (mã `Subject.code` của module learning); `null` = mọi môn bật (mặc định). Danh sách rỗng, trùng mã hoặc mã rỗng → `422 VALIDATION_FAILED`; không đối chiếu danh mục môn (mã lạ không bật gì). Phát trong `school.updated` (`settings_subset`, khóa vắng khi `null`) để module game ẩn vùng học tập của môn bị tắt (F071-AC-03, F015 T054). Không cần `reason`; audit before/after như các khóa khác */
+            enabled_subject_codes?: string[] | null;
             readonly platform_curfew?: components["schemas"]["CurfewWindow"];
             /** @description Bắt buộc khi đổi curfew_window hoặc daily_play_limit_minutes (audit) */
             reason?: string;

@@ -6395,6 +6395,18 @@ components:
               minimum: 15
               maximum: 300
             - type: 'null'
+        enabled_subject_codes:
+          description: Mã môn trường đang bật (mã `Subject.code` của module learning); `null` = mọi môn bật (mặc định). Danh sách rỗng, trùng mã hoặc mã rỗng → `422 VALIDATION_FAILED`; không đối chiếu danh mục môn (mã lạ không bật gì). Phát trong `school.updated` (`settings_subset`, khóa vắng khi `null`) để module game ẩn vùng học tập của môn bị tắt (F071-AC-03, F015 T054). Không cần `reason`; audit before/after như các khóa khác
+          oneOf:
+            - type: array
+              minItems: 1
+              maxItems: 50
+              uniqueItems: true
+              items:
+                type: string
+                minLength: 1
+                maxLength: 64
+            - type: 'null'
         curfew_window:
           description: Khung giới nghiêm của trường (chỉ mở rộng, phải chứa trọn platform_curfew); null = chỉ áp platform_curfew
           oneOf:

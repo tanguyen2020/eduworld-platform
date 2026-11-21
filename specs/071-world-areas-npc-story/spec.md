@@ -46,6 +46,10 @@ Quyết định khi triển khai (owner đã duyệt trước các mặc định
 - **Câu hỏi mở F071-2** → payload `quest.completed` (F072) phải mang `quest_id` (EVENT_DESIGN hiện chỉ ghi `quest_version_id`); consumer `game.unlock_on_events` từ chối event thiếu `quest_id` (DLQ).
 - **Test** → test tích hợp nằm phẳng trong `src/backend/modules/game/tests/integration/world_*_test.go` (cùng môi trường testcontainers của module) thay cho thư mục con `world/`, `content/` của tasks.md.
 
+### Session 2026-11-22 (triển khai F015 T054 — [Confirmed])
+
+- Q: Câu hỏi mở F071-1 đã đóng chưa? → A: [Confirmed] Đóng: F015 T054 thêm `enabled_subject_codes` vào cài đặt trường (`updateSchoolSettings`) và `school.updated.settings_subset` (vắng = mọi môn bật). Test module game `TestSubjectDisabledFromSchoolUpdated` cho `school.updated` đúng dạng identity phát đi qua consumer `game.projection_identity`: môn bị tắt bị ẩn khỏi `listWorldAreas`, event sau không còn khóa thì hiện lại.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Danh sách vùng đất và quyền vào theo học sinh (Priority: P1)
