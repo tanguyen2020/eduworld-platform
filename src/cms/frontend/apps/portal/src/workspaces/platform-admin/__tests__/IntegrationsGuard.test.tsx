@@ -29,7 +29,8 @@ describe('Tích hợp chỉ xem (F059-AC-22/23)', () => {
     expect(backend.calls('GET', '/admin/integrations')[0]!.headers['x-tenant-id']).toBeUndefined();
     expect(screen.getByText('eduworld-portal')).toBeInTheDocument();
     expect(screen.getByText('Admin API (module identity)')).toBeInTheDocument();
-    expect(screen.getByText('Bắt buộc')).toBeInTheDocument();
+    // no 'MFA cho role platform' row any more (ADR-0094)
+    expect(screen.queryByText('MFA cho role platform')).toBeNull();
     expect(screen.getByText('900 giây')).toBeInTheDocument();
     expect(screen.getByText('https://api.eduworld.local')).toBeInTheDocument();
     expect(screen.getByText('Chưa cấu hình')).toBeInTheDocument();
