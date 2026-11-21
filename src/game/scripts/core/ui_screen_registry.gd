@@ -8,9 +8,11 @@ extends RefCounted
 const SCREENS: Dictionary = {
 	&"activity_host": "res://scenes/learning/ActivityHost.tscn",
 	&"exam_lobby": "res://scenes/exam/ExamLobby.tscn",
+	&"npc_dialogue": "res://scenes/npc/DialogueBubble.tscn",
 	&"quest_journal": "res://scenes/quest/QuestJournal.tscn",
 	&"settings": "res://scenes/ui/settings/SettingsPanel.tscn",
 	&"wardrobe": "res://scenes/character/CustomizationStudio.tscn",
+	&"world_map": "res://scenes/world/WorldMap.tscn",
 }
 
 

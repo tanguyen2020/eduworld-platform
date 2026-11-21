@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/npc_anchor.gd" id="1_script"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_talk"]
+height = 2.5
+radius = 2.2
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_npc"]
+radius = 0.4
+height = 1.4
+
+[node name="NPC" type="Area3D"]
+script = ExtResource("1_script")
+kind = "npc"
+prompt_key = "ui.world.npc.talk"
+
+[node name="Trigger" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("CylinderShape3D_talk")
+
+[node name="PlaceholderBody" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("CapsuleMesh_npc")

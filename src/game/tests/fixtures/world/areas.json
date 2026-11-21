@@ -1,0 +1,461 @@
+{
+  "data": [
+    {
+      "area_id": "main_hub",
+      "scene_ref": "res://scenes/world/zones/main_hub/Zone.tscn",
+      "bundle_id": "zone.main_hub",
+      "capacity": 40,
+      "accessible": true,
+      "name": {
+        "vi": "Quảng trường Tia Sáng",
+        "en": "Spark Square"
+      },
+      "region_code": "central",
+      "region_name": {
+        "vi": "Thị trấn Trung Tâm",
+        "en": "EduWorld Central"
+      },
+      "area_class": "hub",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.5,
+        "y": 0.5,
+        "icon_key": "central"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.hub.to_math",
+          "target_area_id": "learning_zone.math"
+        },
+        {
+          "portal_id": "portal.hub.to_vietnamese",
+          "target_area_id": "learning_zone.vietnamese"
+        },
+        {
+          "portal_id": "portal.hub.to_english",
+          "target_area_id": "learning_zone.english"
+        },
+        {
+          "portal_id": "portal.hub.to_science",
+          "target_area_id": "learning_zone.science"
+        },
+        {
+          "portal_id": "portal.hub.to_history",
+          "target_area_id": "learning_zone.history"
+        },
+        {
+          "portal_id": "portal.hub.to_ocean",
+          "target_area_id": "quest_zone.discovery_ocean"
+        },
+        {
+          "portal_id": "portal.hub.to_mountain",
+          "target_area_id": "challenge_mountain"
+        },
+        {
+          "portal_id": "portal.hub.to_exam",
+          "target_area_id": "exam_zone"
+        },
+        {
+          "portal_id": "portal.hub.to_arena",
+          "target_area_id": "arena"
+        },
+        {
+          "portal_id": "portal.hub.to_practice",
+          "target_area_id": "practice_zone"
+        },
+        {
+          "portal_id": "portal.hub.to_social",
+          "target_area_id": "social_zone"
+        }
+      ]
+    },
+    {
+      "area_id": "practice_zone",
+      "scene_ref": "res://scenes/world/zones/practice_zone/Zone.tscn",
+      "bundle_id": "zone.practice_zone",
+      "capacity": 40,
+      "accessible": true,
+      "name": {
+        "vi": "Thư viện Gió",
+        "en": "Breeze Library"
+      },
+      "region_code": "central",
+      "region_name": {
+        "vi": "Thị trấn Trung Tâm",
+        "en": "EduWorld Central"
+      },
+      "area_class": "practice",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.42,
+        "y": 0.6,
+        "icon_key": "practice"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.practice.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_practice"
+        }
+      ]
+    },
+    {
+      "area_id": "social_zone",
+      "scene_ref": "res://scenes/world/zones/social_zone/Zone.tscn",
+      "bundle_id": "zone.social_zone",
+      "capacity": 40,
+      "accessible": true,
+      "name": {
+        "vi": "Vườn Bạn Bè",
+        "en": "Friendship Garden"
+      },
+      "region_code": "central",
+      "region_name": {
+        "vi": "Thị trấn Trung Tâm",
+        "en": "EduWorld Central"
+      },
+      "area_class": "social",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.58,
+        "y": 0.6,
+        "icon_key": "social"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.social.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_social"
+        }
+      ]
+    },
+    {
+      "area_id": "learning_zone.math",
+      "scene_ref": "res://scenes/world/zones/learning_zone_math/Zone.tscn",
+      "bundle_id": "zone.learning_zone.math",
+      "capacity": 40,
+      "accessible": true,
+      "name": {
+        "vi": "Vương quốc Số",
+        "en": "Math Kingdom"
+      },
+      "region_code": "math_kingdom",
+      "region_name": {
+        "vi": "Vương quốc Số",
+        "en": "Math Kingdom"
+      },
+      "area_class": "learning",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.3,
+        "y": 0.25,
+        "icon_key": "math_kingdom"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.math.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_math"
+        }
+      ],
+      "subject_code": "math"
+    },
+    {
+      "area_id": "learning_zone.vietnamese",
+      "scene_ref": "res://scenes/world/zones/learning_zone_vietnamese/Zone.tscn",
+      "bundle_id": "zone.learning_zone.vietnamese",
+      "capacity": 40,
+      "accessible": true,
+      "name": {
+        "vi": "Rừng Chữ",
+        "en": "Letter Woods"
+      },
+      "region_code": "language_forest",
+      "region_name": {
+        "vi": "Rừng Ngôn Ngữ",
+        "en": "Language Forest"
+      },
+      "area_class": "learning",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.2,
+        "y": 0.45,
+        "icon_key": "language_forest"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.vietnamese.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_language"
+        }
+      ],
+      "subject_code": "vietnamese"
+    },
+    {
+      "area_id": "learning_zone.english",
+      "scene_ref": "res://scenes/world/zones/learning_zone_english/Zone.tscn",
+      "bundle_id": "zone.learning_zone.english",
+      "capacity": 40,
+      "accessible": true,
+      "name": {
+        "vi": "Rừng Tiếng Anh",
+        "en": "English Woods"
+      },
+      "region_code": "language_forest",
+      "region_name": {
+        "vi": "Rừng Ngôn Ngữ",
+        "en": "Language Forest"
+      },
+      "area_class": "learning",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.22,
+        "y": 0.62,
+        "icon_key": "language_forest"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.english.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_language"
+        }
+      ],
+      "subject_code": "english"
+    },
+    {
+      "area_id": "learning_zone.science",
+      "scene_ref": "res://scenes/world/zones/learning_zone_science/Zone.tscn",
+      "bundle_id": "zone.learning_zone.science",
+      "capacity": 40,
+      "accessible": true,
+      "name": {
+        "vi": "Đảo Khoa Học",
+        "en": "Science Island"
+      },
+      "region_code": "science_island",
+      "region_name": {
+        "vi": "Đảo Khoa Học",
+        "en": "Science Island"
+      },
+      "area_class": "learning",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.75,
+        "y": 0.25,
+        "icon_key": "science_island"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.science.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_science"
+        }
+      ],
+      "subject_code": "science"
+    },
+    {
+      "area_id": "learning_zone.history",
+      "scene_ref": "res://scenes/world/zones/learning_zone_history/Zone.tscn",
+      "bundle_id": "zone.learning_zone.history",
+      "capacity": 40,
+      "accessible": false,
+      "name": {
+        "vi": "Vương quốc Lịch Sử",
+        "en": "History Kingdom"
+      },
+      "region_code": "history_kingdom",
+      "region_name": {
+        "vi": "Vương quốc Lịch Sử",
+        "en": "History Kingdom"
+      },
+      "area_class": "learning",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.8,
+        "y": 0.45,
+        "icon_key": "history_kingdom"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.history.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_history"
+        }
+      ],
+      "subject_code": "history",
+      "lock_reason": "grade_not_allowed"
+    },
+    {
+      "area_id": "quest_zone.discovery_ocean",
+      "scene_ref": "res://scenes/world/zones/quest_zone_discovery_ocean/Zone.tscn",
+      "bundle_id": "zone.quest_zone.discovery_ocean",
+      "capacity": 40,
+      "accessible": false,
+      "name": {
+        "vi": "Đại dương Khám Phá",
+        "en": "Discovery Ocean"
+      },
+      "region_code": "discovery_ocean",
+      "region_name": {
+        "vi": "Đại dương Khám Phá",
+        "en": "Discovery Ocean"
+      },
+      "area_class": "quest",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.5,
+        "y": 0.85,
+        "icon_key": "discovery_ocean"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.ocean.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_ocean"
+        }
+      ],
+      "lock_reason": "requirements_not_met",
+      "unlock_requirements": [
+        {
+          "kind": "chapters_completed",
+          "label": {
+            "vi": "Hoàn thành 1 chương môn học",
+            "en": "Complete 1 subject chapter"
+          },
+          "met": false,
+          "current": 0,
+          "target": 1
+        }
+      ]
+    },
+    {
+      "area_id": "exam_zone",
+      "scene_ref": "res://scenes/world/zones/exam_zone/Zone.tscn",
+      "bundle_id": "zone.exam_zone",
+      "capacity": 40,
+      "accessible": true,
+      "name": {
+        "vi": "Tháp Thử Thách",
+        "en": "Trial Tower"
+      },
+      "region_code": "challenge_mountain",
+      "region_name": {
+        "vi": "Núi Thử Thách",
+        "en": "Challenge Mountain"
+      },
+      "area_class": "exam",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.62,
+        "y": 0.12,
+        "icon_key": "exam"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.exam.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_mountain"
+        }
+      ]
+    },
+    {
+      "area_id": "challenge_mountain",
+      "scene_ref": "res://scenes/world/zones/challenge_mountain/Zone.tscn",
+      "bundle_id": "zone.challenge_mountain",
+      "capacity": 40,
+      "accessible": false,
+      "name": {
+        "vi": "Núi Thử Thách",
+        "en": "Challenge Mountain"
+      },
+      "region_code": "challenge_mountain",
+      "region_name": {
+        "vi": "Núi Thử Thách",
+        "en": "Challenge Mountain"
+      },
+      "area_class": "challenge",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.5,
+        "y": 0.1,
+        "icon_key": "challenge_mountain"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.mountain.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_mountain"
+        }
+      ],
+      "lock_reason": "requirements_not_met",
+      "unlock_requirements": [
+        {
+          "kind": "chapters_completed",
+          "label": {
+            "vi": "Hoàn thành 2 chương môn học",
+            "en": "Complete 2 subject chapters"
+          },
+          "met": false,
+          "current": 0,
+          "target": 2
+        }
+      ]
+    },
+    {
+      "area_id": "arena",
+      "scene_ref": "res://scenes/world/zones/arena/Zone.tscn",
+      "bundle_id": "zone.arena",
+      "capacity": 40,
+      "accessible": false,
+      "name": {
+        "vi": "Đấu trường Nhà Vô Địch",
+        "en": "Champion Arena"
+      },
+      "region_code": "champion_arena",
+      "region_name": {
+        "vi": "Đấu trường Nhà Vô Địch",
+        "en": "Champion Arena"
+      },
+      "area_class": "arena",
+      "room_type": "hub_instance",
+      "version": 1,
+      "map": {
+        "x": 0.82,
+        "y": 0.75,
+        "icon_key": "champion_arena"
+      },
+      "portals": [
+        {
+          "portal_id": "portal.arena.to_hub",
+          "target_area_id": "main_hub",
+          "target_spawn_point_id": "main_hub.from_arena"
+        }
+      ],
+      "lock_reason": "requirements_not_met",
+      "unlock_requirements": [
+        {
+          "kind": "quest",
+          "ref": "0193a5f4-6c1e-7b2a-9d1f-000000071102",
+          "label": {
+            "vi": "Hoàn thành chương Lời mời",
+            "en": "Finish chapter The Invitation"
+          },
+          "met": false,
+          "current": 0,
+          "target": 1
+        }
+      ]
+    }
+  ]
+}

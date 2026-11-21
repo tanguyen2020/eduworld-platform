@@ -750,6 +750,12 @@ msgstr "Quests (J)"
 msgid "ui.hub.journal.tooltip"
 msgstr "Open the quest journal"
 
+msgid "ui.hub.map"
+msgstr "Map"
+
+msgid "ui.hub.map.tooltip"
+msgstr "World map (M)"
+
 msgid "ui.hub.player_default"
 msgstr "Explorer"
 
@@ -1262,3 +1268,66 @@ msgstr "Wardrobe"
 
 msgid "ui.wardrobe.wear_preset"
 msgstr "Wear outfit {n}"
+
+msgid "ui.world.action.inspect"
+msgstr "Look closer"
+
+msgid "ui.world.action.interact"
+msgstr "Use"
+
+msgid "ui.world.area_locked"
+msgstr "This area is not open yet: {requirements}"
+
+msgid "ui.world.area_unavailable"
+msgstr "This area is not available right now, try again later."
+
+msgid "ui.world.area_unlocked"
+msgstr "New area unlocked: {name}!"
+
+msgid "ui.world.dialogue.next"
+msgstr "Next"
+
+msgid "ui.world.dialogue.unavailable"
+msgstr "That is not possible right now, come back later."
+
+msgid "ui.world.discovery_already_found"
+msgstr "You already found this spot."
+
+msgid "ui.world.discovery_found"
+msgstr "Found it! Area explored: {pct}%"
+
+msgid "ui.world.npc.talk"
+msgstr "Talk"
+
+msgid "ui.world.portal.travel"
+msgstr "Use the wind gate"
+
+msgid "ui.worldmap.locked"
+msgstr "Locked"
+
+msgid "ui.worldmap.progress"
+msgstr "{pct}% explored"
+
+msgid "ui.worldmap.req.achievement"
+msgstr "Earn a badge"
+
+msgid "ui.worldmap.req.chapters_completed"
+msgstr "Finish {current}/{target} chapters"
+
+msgid "ui.worldmap.req.event"
+msgstr "Join an event"
+
+msgid "ui.worldmap.req.learning_objective"
+msgstr "Practise {current}/{target} learning goals"
+
+msgid "ui.worldmap.req.level"
+msgstr "Reach level {target}"
+
+msgid "ui.worldmap.req.quest"
+msgstr "Finish a quest"
+
+msgid "ui.worldmap.title"
+msgstr "World map"
+
+msgid "ui.worldmap.travel"
+msgstr "Go"

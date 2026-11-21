@@ -1,0 +1,19 @@
+{
+  "type": "https://errors.eduworld.vn/area-locked",
+  "title": "Forbidden",
+  "status": 403,
+  "code": "AREA_LOCKED",
+  "detail": "requirements_not_met",
+  "missing_requirements": [
+    {
+      "kind": "chapters_completed",
+      "label": {
+        "vi": "Hoàn thành 2 chương môn học",
+        "en": "Complete 2 subject chapters"
+      },
+      "met": false,
+      "current": 0,
+      "target": 2
+    }
+  ]
+}

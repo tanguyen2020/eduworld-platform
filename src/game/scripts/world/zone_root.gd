@@ -8,6 +8,10 @@ extends Node3D
 
 signal interaction_focus_changed(interactable_id: String, prompt_key: String)
 signal player_spawned(spawn_point_id: String)
+## F071: intents of the world anchors, handled by WorldRoot through the services (the zone decides nothing).
+signal portal_requested(portal_id: String, target_area_id: String)
+signal npc_requested(npc_id: String, interactable_id: String)
+signal discovery_requested(interactable_id: String)
 
 ## Screen opened by each Interactable kind (data, not logic: the screen decides what to show).
 ## `exam_board`: the Exam Zone greybox entry of the Main Hub (F064 T015; the full `exam_zone` scene is F071).
@@ -150,6 +154,17 @@ func _set_focus(item: Interactable) -> void:
 
 
 func _on_interacted(interactable_id: String, item: Interactable) -> void:
+	match item.kind:
+		"portal":
+			portal_requested.emit(interactable_id, String(item.get("target_area_id")) if item is AreaPortal else "")
+			return
+		"npc":
+			var npc_id: String = (item as NpcAnchor).npc_id if item is NpcAnchor else interactable_id
+			npc_requested.emit(npc_id, interactable_id)
+			return
+		"discovery", "collectible":
+			discovery_requested.emit(interactable_id)
+			return
 	var screen: StringName = KIND_SCREENS.get(item.kind, &"") as StringName
 	if screen.is_empty():
 		Log.debug("interactable_without_screen", {"interactable_id": interactable_id})

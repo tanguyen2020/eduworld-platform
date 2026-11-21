@@ -750,6 +750,12 @@ msgstr "Nhiệm vụ (J)"
 msgid "ui.hub.journal.tooltip"
 msgstr "Mở Nhật ký nhiệm vụ"
 
+msgid "ui.hub.map"
+msgstr "Bản đồ"
+
+msgid "ui.hub.map.tooltip"
+msgstr "Bản đồ thế giới (M)"
+
 msgid "ui.hub.player_default"
 msgstr "Bạn nhỏ"
 
@@ -1262,3 +1268,66 @@ msgstr "Tủ đồ"
 
 msgid "ui.wardrobe.wear_preset"
 msgstr "Mặc bộ {n}"
+
+msgid "ui.world.action.inspect"
+msgstr "Xem kỹ"
+
+msgid "ui.world.action.interact"
+msgstr "Dùng"
+
+msgid "ui.world.area_locked"
+msgstr "Khu này chưa mở: {requirements}"
+
+msgid "ui.world.area_unavailable"
+msgstr "Chưa vào được khu này, em thử lại sau nhé."
+
+msgid "ui.world.area_unlocked"
+msgstr "Vùng mới đã mở: {name}!"
+
+msgid "ui.world.dialogue.next"
+msgstr "Tiếp"
+
+msgid "ui.world.dialogue.unavailable"
+msgstr "Việc này chưa làm được lúc này, em quay lại sau nhé."
+
+msgid "ui.world.discovery_already_found"
+msgstr "Em đã tìm thấy điểm này rồi."
+
+msgid "ui.world.discovery_found"
+msgstr "Tìm thấy rồi! Khám phá khu này: {pct}%"
+
+msgid "ui.world.npc.talk"
+msgstr "Trò chuyện"
+
+msgid "ui.world.portal.travel"
+msgstr "Đi qua cổng gió"
+
+msgid "ui.worldmap.locked"
+msgstr "Chưa mở"
+
+msgid "ui.worldmap.progress"
+msgstr "Đã khám phá {pct}%"
+
+msgid "ui.worldmap.req.achievement"
+msgstr "Nhận huy hiệu"
+
+msgid "ui.worldmap.req.chapters_completed"
+msgstr "Hoàn thành {current}/{target} chương"
+
+msgid "ui.worldmap.req.event"
+msgstr "Tham gia sự kiện"
+
+msgid "ui.worldmap.req.learning_objective"
+msgstr "Luyện {current}/{target} mục tiêu học tập"
+
+msgid "ui.worldmap.req.level"
+msgstr "Đạt cấp {target}"
+
+msgid "ui.worldmap.req.quest"
+msgstr "Hoàn thành nhiệm vụ"
+
+msgid "ui.worldmap.title"
+msgstr "Bản đồ thế giới"
+
+msgid "ui.worldmap.travel"
+msgstr "Đến đây"

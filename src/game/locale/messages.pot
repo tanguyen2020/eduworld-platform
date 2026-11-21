@@ -747,6 +747,12 @@ msgstr ""
 msgid "ui.hub.journal.tooltip"
 msgstr ""
 
+msgid "ui.hub.map"
+msgstr ""
+
+msgid "ui.hub.map.tooltip"
+msgstr ""
+
 msgid "ui.hub.player_default"
 msgstr ""
 
@@ -1246,4 +1252,49 @@ msgid "ui.wardrobe.title"
 msgstr ""
 
 msgid "ui.wardrobe.wear_preset"
+msgstr ""
+
+msgid "ui.world.action.inspect"
+msgstr ""
+
+msgid "ui.world.action.interact"
+msgstr ""
+
+msgid "ui.world.area_locked"
+msgstr ""
+
+msgid "ui.world.area_unavailable"
+msgstr ""
+
+msgid "ui.world.area_unlocked"
+msgstr ""
+
+msgid "ui.world.dialogue.next"
+msgstr ""
+
+msgid "ui.world.dialogue.unavailable"
+msgstr ""
+
+msgid "ui.world.discovery_already_found"
+msgstr ""
+
+msgid "ui.world.discovery_found"
+msgstr ""
+
+msgid "ui.world.npc.talk"
+msgstr ""
+
+msgid "ui.world.portal.travel"
+msgstr ""
+
+msgid "ui.worldmap.locked"
+msgstr ""
+
+msgid "ui.worldmap.progress"
+msgstr ""
+
+msgid "ui.worldmap.title"
+msgstr ""
+
+msgid "ui.worldmap.travel"
 msgstr ""

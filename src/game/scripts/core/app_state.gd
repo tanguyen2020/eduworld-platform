@@ -26,6 +26,8 @@ var assignments: Array[MyAssignmentModel] = []
 ## Zone currently loaded (`world_area.area_id`) and the spawn point the server chose for it (empty = zone default).
 var current_zone: String = ""
 var spawn_point_id: String = ""
+## World summary of the session (F071, WorldService): area count and the last `getWorldExploration`; RAM only.
+var world: Dictionary = {}
 ## Domain services (created on first use after bootstrap; tests assign their own).
 var services: ServiceLocator = null
 ## Realtime network counters (RTT p50/p95, reconnects, resume results) for the batched telemetry of F080 (F092 T028).
@@ -143,3 +145,8 @@ func _on_density_changed(band: String) -> void:
 static func _connect_once(source: Object, signal_name: StringName, target: Callable) -> void:
 	if not source.is_connected(signal_name, target):
 		source.connect(signal_name, target)
+
+
+## WorldService publishes its state here (F071); never written to disk.
+func set_world(state: Dictionary) -> void:
+	world = state

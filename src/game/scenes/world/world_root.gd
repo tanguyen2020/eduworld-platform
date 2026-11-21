@@ -6,13 +6,17 @@ extends Node
 ## (F061-AC-36) and the periodic telemetry flush (F062-AC-24); F070: the local avatar drawn from the profile, the
 ## emote wheel with the equipped emotes and the wardrobe (HUD button / I); F092: the hub instance through HubSync —
 ## join on entering, the local state sent by the service, the other players (RemotePlayerSync), server corrections
-## blended in 200 ms, emotes to the others, hub notices, presence (activity screens, idle). Glue only: no business
-## rule, no network call (services do the work, AGENTS R1).
+## blended in 200 ms, emotes to the others, hub notices, presence (activity screens, idle). F071: zone changes through
+## wind gates, the World Map and "Về Quảng trường" (SceneRouter.request_area → ZoneLoader swap, area_transition_max),
+## NPC dialogues, discoveries, the area unlocked notice and the return next to the NPC after a learning activity. Glue
+## only: no business rule, no network call (services do the work, AGENTS R1).
 
 ## Screens that hold the break reminder while open (F062-AC-22): a panel sets `blocks_break_reminder = true`.
 const HOLD_PROPERTY: StringName = &"blocks_break_reminder"
 const BENCHMARK_HOLD: StringName = &"quality_benchmark"
 const UPDATE_REQUIRED_KEY: String = "ui.activity_player.update_required"
+## Stable area_id of Quảng trường Tia Sáng (WORLD_DESIGN §3, the spawn of a first entry).
+const HUB_AREA_ID: String = "main_hub"
 
 var zone: ZoneRoot = null
 var panels: Dictionary = {}
@@ -21,6 +25,9 @@ var open_screen: StringName = &""
 var remote_players: RemotePlayerSync = null
 var correction: PositionCorrection = PositionCorrection.new()
 var hub: HubSync = null
+## F071: return point of a learning activity opened from an NPC/station and the start of a zone change.
+var activity_return: ActivityReturn = ActivityReturn.new()
+var _area_started_ms: int = 0
 
 @onready var _hud: CanvasLayer = %MainHud
 @onready var _panel_root: Control = %PanelRoot
@@ -36,15 +43,20 @@ func _ready() -> void:
 	_hud.connect("journal_pressed", _on_journal_pressed)
 	_hud.connect("settings_pressed", _on_settings_pressed)
 	_hud.connect("wardrobe_pressed", _on_wardrobe_pressed)
-	_hud.connect("home_pressed", zone.return_home)
+	_hud.connect("home_pressed", _on_home_pressed)
+	_hud.connect("map_pressed", _on_map_pressed)
 	_hud.connect("joystick_moved", _on_joystick_moved)
 	_hud.connect("notifications_pressed", _on_notifications_pressed)
-	zone.interaction_focus_changed.connect(_on_focus_changed)
+	_bind_zone(zone)
+	SceneRouter.area_entered.connect(_on_area_entered)
+	SceneRouter.area_change_failed.connect(_on_area_change_failed)
 	EventBus.ui_requested.connect(_on_ui_requested)
 	AuthService.curfew_warning_raised.connect(_on_curfew_warning_raised)
 	var services: ServiceLocator = AppState.get_services()
 	services.play_time.break_reminder_shown.connect(_on_break_reminder_shown)
 	services.profile.avatar_saved.connect(_on_avatar_saved)
+	if services.world != null:
+		services.world.area_unlocked.connect(_on_area_unlocked)
 	var local: PlayerController = zone.player as PlayerController
 	# Emotes play locally at once; HubSync sends `hub.player.emote` to the others (F092-AC-16).
 	_emotes.anim_driver = local.anim_driver if local != null else null
@@ -57,6 +69,12 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_stop_hub()
+	for pair: Array in [[SceneRouter.area_entered, _on_area_entered], [SceneRouter.area_change_failed, _on_area_change_failed]]:
+		if (pair[0] as Signal).is_connected(pair[1] as Callable):
+			(pair[0] as Signal).disconnect(pair[1] as Callable)
+	var world: WorldService = AppState.services.world if AppState.services != null else null
+	if world != null and world.area_unlocked.is_connected(_on_area_unlocked):
+		world.area_unlocked.disconnect(_on_area_unlocked)
 	var locator: ServiceLocator = AppState.services
 	if locator != null and locator.profile.avatar_saved.is_connected(_on_avatar_saved):
 		locator.profile.avatar_saved.disconnect(_on_avatar_saved)
@@ -95,6 +113,8 @@ func _on_ui_requested(screen_id: StringName, args: Dictionary) -> void:
 	if panel == null:
 		panel = (load(path) as PackedScene).instantiate() as Control
 		panel.connect("closed", _on_panel_closed.bind(screen_id))
+		if panel.has_signal("travel_requested"):
+			panel.connect("travel_requested", _on_travel_requested)
 		_panel_root.add_child(panel)
 		panels[screen_id] = panel
 	open_screen = screen_id
@@ -117,6 +137,8 @@ func _on_panel_closed(screen_id: StringName) -> void:
 	AppState.get_services().play_time.release(screen_id)
 	AppState.get_services().presence.screen_closed(screen_id)
 	EventBus.ui_closed.emit(screen_id)
+	if activity_return.on_closed(screen_id, zone.area_id) and zone.player != null:
+		zone.player.global_position = activity_return.position # F071-AC-20: back next to the NPC, nothing chained
 
 
 func _start_quality() -> void:
@@ -177,6 +199,9 @@ func _input(event: InputEvent) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if open_screen.is_empty() and event.is_action_pressed("open_wardrobe"):
 		_on_wardrobe_pressed()
+		get_viewport().set_input_as_handled()
+	elif open_screen.is_empty() and event.is_action_pressed("open_world_map"):
+		_on_map_pressed()
 		get_viewport().set_input_as_handled()
 
 
@@ -287,3 +312,95 @@ func _on_break_reminder_shown(_reminder_no: int, minutes_played: int) -> void:
 
 func _on_curfew_warning_raised(minutes_left: int) -> void:
 	_hud.call("show_banner", "ui.login.curfew_warning", {"minutes": minutes_left})
+
+
+# ---------- F071 world: zones, portals, NPCs, discoveries ----------
+
+func _bind_zone(z: ZoneRoot) -> void:
+	z.interaction_focus_changed.connect(_on_focus_changed)
+	z.portal_requested.connect(_on_portal_requested)
+	z.npc_requested.connect(_on_npc_requested)
+	z.discovery_requested.connect(_on_discovery_requested)
+
+
+## "Về Quảng trường" (≤ 1 action from any area, WORLD_DESIGN §6): the hub spawn, or a zone change back to main_hub.
+func _on_home_pressed() -> void:
+	if zone.area_id == HUB_AREA_ID:
+		zone.return_home()
+	else:
+		_request_area(HUB_AREA_ID, "")
+
+
+func _on_map_pressed() -> void:
+	EventBus.ui_requested.emit(&"world_map", {})
+
+
+func _on_portal_requested(portal_id: String, target_area_id: String) -> void:
+	_request_area(target_area_id, portal_id)
+
+
+func _on_travel_requested(area_id: String) -> void:
+	_request_area(area_id, "")
+
+
+func _request_area(area_id: String, portal_id: String) -> void:
+	if area_id.is_empty() or SceneRouter.is_changing_area():
+		return
+	_area_started_ms = Time.get_ticks_msec()
+	_set_player_input(false)
+	await SceneRouter.request_area(area_id, portal_id)
+
+
+## The server accepted the area: swap the zone scene, place the player, join the hub of the new area (F071-AC-12).
+func _on_area_entered(area_id: String, scene_ref: String, _spawn_point_id: String, _enter: Dictionary) -> void:
+	var next: ZoneRoot = ZoneLoader.instantiate(scene_ref)
+	if next == null:
+		_on_area_change_failed(area_id, SceneRouter.CODE_BUNDLE_MISSING, [])
+		return
+	_stop_hub()
+	var parent: Node = zone.get_parent()
+	var index: int = zone.get_index()
+	parent.remove_child(zone)
+	zone.queue_free()
+	next.name = "Zone"
+	parent.add_child(next)
+	parent.move_child(next, index)
+	zone = next
+	_bind_zone(zone)
+	_set_player_input(true)
+	var services: ServiceLocator = AppState.get_services()
+	_apply_avatar(services.profile.avatar_config())
+	_emotes.anim_driver = (zone.player as PlayerController).anim_driver if zone.player is PlayerController else null
+	_start_hub(services)
+	ZoneLoader.check_budget(area_id, Time.get_ticks_msec() - _area_started_ms)
+
+
+func _on_area_change_failed(_area_id: String, code: String, missing: Array) -> void:
+	_set_player_input(true)
+	if code == WorldService.CODE_AREA_LOCKED:
+		var words: PackedStringArray = []
+		for r: Variant in missing:
+			if r is Dictionary:
+				words.append(WorldMapModel.requirement_text(r as Dictionary))
+		_hud.call("show_banner", "ui.world.area_locked", {"requirements": ", ".join(words)})
+	else:
+		_notice.call("open", "ui.world.area_unavailable")
+
+
+func _on_npc_requested(npc_id: String, _interactable_id: String) -> void:
+	if zone.player != null:
+		activity_return.remember(zone.area_id, zone.player.global_position)
+	EventBus.ui_requested.emit(&"npc_dialogue", {"npc_id": npc_id})
+
+
+func _on_discovery_requested(interactable_id: String) -> void:
+	var world: WorldService = AppState.get_services().world
+	var result: ApiResult = await world.report_discovery(zone.area_id, interactable_id)
+	if result.ok:
+		_hud.call("show_banner", "ui.world.discovery_found", {"pct": int(round(float(result.body().get("area_completion_pct", 0.0))))})
+	elif result.code == WorldService.CODE_ALREADY_FOUND:
+		_hud.call("show_banner", "ui.world.discovery_already_found", {})
+
+
+func _on_area_unlocked(_area_id: String, area_name: Dictionary) -> void:
+	_hud.call("show_banner", "ui.world.area_unlocked", {"name": L10n.pick(area_name)})

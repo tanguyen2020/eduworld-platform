@@ -61,3 +61,62 @@ func _process(_delta: float) -> void:
 			_pending_path = ""
 			set_process(false)
 			scene_load_failed.emit(failed)
+
+
+# ---------- F071: zones of the world (WORLD_RENDERING §3) ----------
+
+## A zone change was accepted by the server: WorldRoot swaps the zone (ZoneLoader) and places the player at `spawn`.
+signal area_entered(area_id: String, scene_ref: String, spawn_point_id: String, enter: Dictionary)
+## The server refused the area (`AREA_LOCKED` with `missing`, `CONFLICT`, `NOT_FOUND`…) or its bundle is not available.
+signal area_change_failed(area_id: String, code: String, missing: Array)
+
+## CONFIG_DEFAULTS `area_transition_max` (< 5 s on a Mid-tier device, NFR-PERF-005, scope code): checked and logged by
+## WorldRoot once the zone is placed.
+const AREA_TRANSITION_MAX_SEC: float = 5.0
+const CODE_BUNDLE_MISSING: String = "BUNDLE_MISSING"
+
+var _area_pending: String = ""
+
+
+func is_changing_area() -> bool:
+	return not _area_pending.is_empty()
+
+
+## Coroutine (F071-AC-12): `enterWorldArea` through WorldService → `ensure_bundle` → `area_entered`. Returns OK when the
+## zone may be swapped; the refusal goes to `area_change_failed` (the HUD explains it, never the scene).
+func request_area(area_id: String, portal_id: String = "", world: WorldService = null) -> Error:
+	if not _area_pending.is_empty():
+		return ERR_BUSY
+	if world == null:
+		var services: Object = AppState.services
+		world = services.get("world") as WorldService if services != null else null
+	if world == null:
+		area_change_failed.emit(area_id, ApiResult.CODE_NETWORK_ERROR, [])
+		return ERR_UNAVAILABLE
+	_area_pending = area_id
+	var result: ApiResult = await world.enter_area(area_id, portal_id)
+	if not result.ok:
+		_area_pending = ""
+		area_change_failed.emit(area_id, result.code, WorldService.missing_requirements(result))
+		return FAILED
+	var area: WorldAreaModel = world.area(area_id)
+	if area == null:
+		await world.fetch_areas()
+		area = world.area(area_id)
+	var scene_ref: String = area.scene_ref if area != null else ""
+	if not ensure_bundle(scene_ref):
+		_area_pending = ""
+		area_change_failed.emit(area_id, CODE_BUNDLE_MISSING, [])
+		return ERR_FILE_NOT_FOUND
+	var enter: Dictionary = result.body()
+	AppState.current_zone = area_id
+	AppState.spawn_point_id = String(enter.get("spawn_point_id", ""))
+	_area_pending = ""
+	area_entered.emit(area_id, scene_ref, AppState.spawn_point_id, enter)
+	return OK
+
+
+## The zone scene of a level bundle is loadable. PLACEHOLDER (R17, OQ-16): the greybox zones of M2 ship inside the
+## client, so a bundle is "ready" when its scene exists; downloading PCK bundles by url/sha256 comes with the real art.
+static func ensure_bundle(scene_ref: String) -> bool:
+	return not scene_ref.is_empty() and ResourceLoader.exists(scene_ref)

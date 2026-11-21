@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "dialogue_id": "0193a5f4-6c1e-7b2a-9d1f-000000071306",
+  "npc_id": "npc.mr_numbers",
+  "npc_name": {
+    "vi": "Ông Số",
+    "en": "Mr. Numbers"
+  },
+  "owner_scope": "platform",
+  "grade_levels": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "start_node_id": "greet",
+  "nodes": [
+    {
+      "node_id": "greet",
+      "speaker": "npc",
+      "text": {
+        "vi": "Cây cầu số bị gãy rồi, cháu giúp ông nhé?",
+        "en": "The number bridge is broken, will you help me?"
+      },
+      "emotion": "happy",
+      "choices": [
+        {
+          "text": {
+            "vi": "Mình giúp được!",
+            "en": "I can help!"
+          },
+          "next": "accept",
+          "actions": [
+            {
+              "type": "give_quest",
+              "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071111"
+            }
+          ]
+        },
+        {
+          "text": {
+            "vi": "Để lúc khác nhé.",
+            "en": "Maybe later."
+          },
+          "next": "later"
+        }
+      ]
+    },
+    {
+      "node_id": "accept",
+      "speaker": "npc",
+      "text": {
+        "vi": "Tuyệt quá! Cảm ơn cháu.",
+        "en": "Wonderful! Thank you."
+      },
+      "emotion": "excited",
+      "actions": [
+        {
+          "type": "end"
+        }
+      ]
+    },
+    {
+      "node_id": "later",
+      "speaker": "npc",
+      "text": {
+        "vi": "Không sao, khi nào sẵn sàng thì quay lại nhé.",
+        "en": "No problem, come back when you are ready."
+      },
+      "emotion": "encouraging",
+      "actions": [
+        {
+          "type": "end"
+        }
+      ]
+    }
+  ],
+  "dialogue_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000071501",
+  "version": 1,
+  "status": "published"
+}

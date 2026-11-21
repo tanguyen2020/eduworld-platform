@@ -23,6 +23,8 @@ var inventory: InventoryService = null
 var realtime: GameRealtimeClient = null
 var hub: HubSync = null
 var presence: PresenceService = null
+## World of the student: areas, exploration, chapters, level sessions, discoveries, NPC dialogues (F071).
+var world: WorldService = null
 ## `(code: String) -> void` for session-ending refusals; default `AuthService.handle_access_denied` (F062-AC-12/23).
 var access_denied_handler: Callable = Callable()
 
@@ -51,6 +53,8 @@ func _init(rest: RestApiClient = null, app_state: Node = null, clock: ClientCloc
 	realtime = realtime_client if realtime_client != null else _realtime_autoload()
 	hub = HubSync.new(realtime)
 	presence = PresenceService.new(realtime, clock)
+	world = WorldService.new(rest, app_state, realtime)
+	world.access_denied.connect(_on_access_denied)
 	if realtime != null:
 		realtime.resync_required.connect(resync)
 		if app_state != null:
@@ -78,6 +82,7 @@ func end_session() -> void:
 	exam.clear()
 	media.clear()
 	profile.clear()
+	world.clear()
 	play_time.configure({})
 	telemetry.clear()
 	hub.leave_area()

@@ -99,6 +99,14 @@ tooltip_text = "ui.hub.wardrobe.tooltip"
 theme_type_variation = &"SecondaryButton"
 text = "ui.hub.wardrobe"
 
+[node name="MapButton" type="Button" parent="Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "ui.hub.map.tooltip"
+theme_type_variation = &"SecondaryButton"
+text = "ui.hub.map"
+
 [node name="SystemBanner" type="PanelContainer" parent="Root"]
 unique_name_in_owner = true
 visible = false

@@ -1,0 +1,299 @@
+{
+  "areas": [
+    {
+      "area_id": "main_hub",
+      "name": {
+        "vi": "Quảng trường Tia Sáng",
+        "en": "Spark Square"
+      },
+      "region_code": "central",
+      "unlocked": true,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "practice_zone",
+      "name": {
+        "vi": "Thư viện Gió",
+        "en": "Breeze Library"
+      },
+      "region_code": "central",
+      "unlocked": true,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "social_zone",
+      "name": {
+        "vi": "Vườn Bạn Bè",
+        "en": "Friendship Garden"
+      },
+      "region_code": "central",
+      "unlocked": true,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "learning_zone.math",
+      "name": {
+        "vi": "Vương quốc Số",
+        "en": "Math Kingdom"
+      },
+      "region_code": "math_kingdom",
+      "unlocked": true,
+      "completion_pct": 33.33,
+      "discoveries_found": 1,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "learning_zone.vietnamese",
+      "name": {
+        "vi": "Rừng Chữ",
+        "en": "Letter Woods"
+      },
+      "region_code": "language_forest",
+      "unlocked": true,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "learning_zone.english",
+      "name": {
+        "vi": "Rừng Tiếng Anh",
+        "en": "English Woods"
+      },
+      "region_code": "language_forest",
+      "unlocked": true,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "learning_zone.science",
+      "name": {
+        "vi": "Đảo Khoa Học",
+        "en": "Science Island"
+      },
+      "region_code": "science_island",
+      "unlocked": true,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "learning_zone.history",
+      "name": {
+        "vi": "Vương quốc Lịch Sử",
+        "en": "History Kingdom"
+      },
+      "region_code": "history_kingdom",
+      "unlocked": false,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "quest_zone.discovery_ocean",
+      "name": {
+        "vi": "Đại dương Khám Phá",
+        "en": "Discovery Ocean"
+      },
+      "region_code": "discovery_ocean",
+      "unlocked": false,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1,
+      "unlock_requirements": [
+        {
+          "kind": "chapters_completed",
+          "label": {
+            "vi": "Hoàn thành 1 chương môn học",
+            "en": "Complete 1 subject chapter"
+          },
+          "met": false,
+          "current": 0,
+          "target": 1
+        }
+      ]
+    },
+    {
+      "area_id": "exam_zone",
+      "name": {
+        "vi": "Tháp Thử Thách",
+        "en": "Trial Tower"
+      },
+      "region_code": "challenge_mountain",
+      "unlocked": true,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1
+    },
+    {
+      "area_id": "challenge_mountain",
+      "name": {
+        "vi": "Núi Thử Thách",
+        "en": "Challenge Mountain"
+      },
+      "region_code": "challenge_mountain",
+      "unlocked": false,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1,
+      "unlock_requirements": [
+        {
+          "kind": "chapters_completed",
+          "label": {
+            "vi": "Hoàn thành 2 chương môn học",
+            "en": "Complete 2 subject chapters"
+          },
+          "met": false,
+          "current": 0,
+          "target": 2
+        }
+      ]
+    },
+    {
+      "area_id": "arena",
+      "name": {
+        "vi": "Đấu trường Nhà Vô Địch",
+        "en": "Champion Arena"
+      },
+      "region_code": "champion_arena",
+      "unlocked": false,
+      "completion_pct": 0,
+      "discoveries_found": 0,
+      "discoveries_total": 2,
+      "collectibles_found": 0,
+      "collectibles_total": 1,
+      "unlock_requirements": [
+        {
+          "kind": "quest",
+          "ref": "0193a5f4-6c1e-7b2a-9d1f-000000071102",
+          "label": {
+            "vi": "Hoàn thành chương Lời mời",
+            "en": "Finish chapter The Invitation"
+          },
+          "met": false,
+          "current": 0,
+          "target": 1
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "chapter_code": "chapter.0.invitation",
+      "region_code": "central",
+      "title": {
+        "vi": "Lời mời",
+        "en": "The Invitation"
+      },
+      "order": 0,
+      "status": "available",
+      "main_quests_completed": 0,
+      "main_quests_total": 2
+    },
+    {
+      "chapter_code": "chapter.1.number_kingdom",
+      "region_code": "math_kingdom",
+      "title": {
+        "vi": "Vương quốc Số",
+        "en": "The Number Kingdom"
+      },
+      "order": 1,
+      "subject_code": "math",
+      "status": "locked",
+      "main_quests_completed": 0,
+      "main_quests_total": 2
+    },
+    {
+      "chapter_code": "chapter.2.language_forest",
+      "region_code": "language_forest",
+      "title": {
+        "vi": "Rừng Ngôn Ngữ",
+        "en": "The Language Forest"
+      },
+      "order": 2,
+      "subject_code": "vietnamese",
+      "status": "locked",
+      "main_quests_completed": 0,
+      "main_quests_total": 2
+    },
+    {
+      "chapter_code": "chapter.3.science_island",
+      "region_code": "science_island",
+      "title": {
+        "vi": "Đảo Khoa Học",
+        "en": "Science Island"
+      },
+      "order": 3,
+      "subject_code": "science",
+      "status": "locked",
+      "main_quests_completed": 0,
+      "main_quests_total": 2
+    },
+    {
+      "chapter_code": "chapter.4.history_kingdom",
+      "region_code": "history_kingdom",
+      "title": {
+        "vi": "Vương quốc Lịch Sử",
+        "en": "The History Kingdom"
+      },
+      "order": 4,
+      "subject_code": "history",
+      "status": "locked",
+      "main_quests_completed": 0,
+      "main_quests_total": 2
+    },
+    {
+      "chapter_code": "chapter.5.discovery_ocean",
+      "region_code": "discovery_ocean",
+      "title": {
+        "vi": "Đại dương Khám Phá",
+        "en": "The Discovery Ocean"
+      },
+      "order": 5,
+      "status": "locked",
+      "main_quests_completed": 0,
+      "main_quests_total": 2
+    },
+    {
+      "chapter_code": "chapter.6.challenge_mountain",
+      "region_code": "challenge_mountain",
+      "title": {
+        "vi": "Núi Thử Thách",
+        "en": "Challenge Mountain"
+      },
+      "order": 6,
+      "status": "locked",
+      "main_quests_completed": 0,
+      "main_quests_total": 2
+    }
+  ]
+}

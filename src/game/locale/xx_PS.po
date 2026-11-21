@@ -749,6 +749,12 @@ msgstr "[!! Qüëšţš (Ĵ) ~~~~ !!]"
 msgid "ui.hub.journal.tooltip"
 msgstr "[!! Öþëñ ţĥë qüëšţ ĵöüŕñáĺ ~~~~~~~~~ !!]"
 
+msgid "ui.hub.map"
+msgstr "[!! Máþ ~~ !!]"
+
+msgid "ui.hub.map.tooltip"
+msgstr "[!! Ŵöŕĺđ ɱáþ (M) ~~~~~~ !!]"
+
 msgid "ui.hub.player_default"
 msgstr "[!! Ẹxþĺöŕëŕ ~~~~ !!]"
 
@@ -1261,3 +1267,66 @@ msgstr "[!! Ŵáŕđŕöƀë ~~~~ !!]"
 
 msgid "ui.wardrobe.wear_preset"
 msgstr "[!! Ŵëáŕ öüţƒïţ {n} ~~~~~~ !!]"
+
+msgid "ui.world.action.inspect"
+msgstr "[!! Ĺööķ çĺöšëŕ ~~~~~ !!]"
+
+msgid "ui.world.action.interact"
+msgstr "[!! Üšë ~~ !!]"
+
+msgid "ui.world.area_locked"
+msgstr "[!! Ţĥïš áŕëá ïš ñöţ öþëñ ýëţ: {requirements} ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.world.area_unavailable"
+msgstr "[!! Ţĥïš áŕëá ïš ñöţ áváïĺáƀĺë ŕïğĥţ ñöŵ, ţŕý áğáïñ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.world.area_unlocked"
+msgstr "[!! Ñëŵ áŕëá üñĺöçķëđ: {name}! ~~~~~~~~~~~ !!]"
+
+msgid "ui.world.dialogue.next"
+msgstr "[!! Ñëxţ ~~ !!]"
+
+msgid "ui.world.dialogue.unavailable"
+msgstr "[!! Ţĥáţ ïš ñöţ þöššïƀĺë ŕïğĥţ ñöŵ, çöɱë ƀáçķ ĺáţëŕ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.world.discovery_already_found"
+msgstr "[!! Ýöü áĺŕëáđý ƒöüñđ ţĥïš šþöţ. ~~~~~~~~~~~~ !!]"
+
+msgid "ui.world.discovery_found"
+msgstr "[!! Föüñđ ïţ! Åŕëá ëxþĺöŕëđ: {pct}% ~~~~~~~~~~~~~ !!]"
+
+msgid "ui.world.npc.talk"
+msgstr "[!! Ţáĺķ ~~ !!]"
+
+msgid "ui.world.portal.travel"
+msgstr "[!! Üšë ţĥë ŵïñđ ğáţë ~~~~~~~ !!]"
+
+msgid "ui.worldmap.locked"
+msgstr "[!! Ĺöçķëđ ~~~ !!]"
+
+msgid "ui.worldmap.progress"
+msgstr "[!! {pct}% ëxþĺöŕëđ ~~~~~~ !!]"
+
+msgid "ui.worldmap.req.achievement"
+msgstr "[!! Ẹáŕñ á ƀáđğë ~~~~~ !!]"
+
+msgid "ui.worldmap.req.chapters_completed"
+msgstr "[!! Fïñïšĥ {current}/{target} çĥáþţëŕš ~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.worldmap.req.event"
+msgstr "[!! Ĵöïñ áñ ëvëñţ ~~~~~~ !!]"
+
+msgid "ui.worldmap.req.learning_objective"
+msgstr "[!! Pŕáçţïšë {current}/{target} ĺëáŕñïñğ ğöáĺš ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.worldmap.req.level"
+msgstr "[!! Ŕëáçĥ ĺëvëĺ {target} ~~~~~~~~ !!]"
+
+msgid "ui.worldmap.req.quest"
+msgstr "[!! Fïñïšĥ á qüëšţ ~~~~~~ !!]"
+
+msgid "ui.worldmap.title"
+msgstr "[!! Ŵöŕĺđ ɱáþ ~~~~ !!]"
+
+msgid "ui.worldmap.travel"
+msgstr "[!! Ğö ~ !!]"

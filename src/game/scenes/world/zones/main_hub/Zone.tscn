@@ -5,6 +5,9 @@
 [ext_resource type="Script" path="res://scripts/world/spawn_point.gd" id="3_spawn"]
 [ext_resource type="Script" path="res://scripts/world/interactable.gd" id="4_interactable"]
 [ext_resource type="PackedScene" path="res://scenes/character/Player.tscn" id="5_player"]
+[ext_resource type="PackedScene" path="res://scenes/world/AreaPortal.tscn" id="6_portal"]
+[ext_resource type="PackedScene" path="res://scenes/npc/NPC.tscn" id="7_npc"]
+[ext_resource type="PackedScene" path="res://scenes/world/WorldAnchor.tscn" id="8_anchor"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(60, 1, 60)
@@ -41,6 +44,8 @@ size = Vector3(1, 5, 1)
 
 [node name="Zone" type="Node3D"]
 script = ExtResource("1_zone")
+area_id = "main_hub"
+default_spawn = "main_hub.default"
 player_scene = ExtResource("5_player")
 
 [node name="Environment" type="Node3D" parent="."]
@@ -180,3 +185,131 @@ pixel_size = 0.01
 [node name="Players" type="Node3D" parent="."]
 
 [node name="Ambient" type="Node3D" parent="."]
+
+; BEGIN F071 generated anchors (tools/gen_greybox_zones.mjs)
+
+[node name="MainHubFromMath" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.1, -12)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_math"
+radius = 1.0
+
+[node name="MainHubFromLanguage" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.1, -12)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_language"
+radius = 1.0
+
+[node name="MainHubFromScience" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.1, -12)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_science"
+radius = 1.0
+
+[node name="MainHubFromHistory" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.1, -12)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_history"
+radius = 1.0
+
+[node name="MainHubFromOcean" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -12)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_ocean"
+radius = 1.0
+
+[node name="MainHubFromMountain" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, -12)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_mountain"
+radius = 1.0
+
+[node name="MainHubFromPractice" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.1, -12)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_practice"
+radius = 1.0
+
+[node name="MainHubFromSocial" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.1, -12)
+script = ExtResource("3_spawn")
+spawn_point_id = "main_hub.from_social"
+radius = 1.0
+
+[node name="PortalHubToMath" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0, -20)
+interactable_id = "portal.hub.to_math"
+target_area_id = "learning_zone.math"
+
+[node name="PortalHubToVietnamese" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, -20)
+interactable_id = "portal.hub.to_vietnamese"
+target_area_id = "learning_zone.vietnamese"
+
+[node name="PortalHubToEnglish" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -20)
+interactable_id = "portal.hub.to_english"
+target_area_id = "learning_zone.english"
+
+[node name="PortalHubToScience" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -20)
+interactable_id = "portal.hub.to_science"
+target_area_id = "learning_zone.science"
+
+[node name="PortalHubToHistory" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -20)
+interactable_id = "portal.hub.to_history"
+target_area_id = "learning_zone.history"
+
+[node name="PortalHubToOcean" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -20)
+interactable_id = "portal.hub.to_ocean"
+target_area_id = "quest_zone.discovery_ocean"
+
+[node name="PortalHubToMountain" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -20)
+interactable_id = "portal.hub.to_mountain"
+target_area_id = "challenge_mountain"
+
+[node name="PortalHubToExam" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -20)
+interactable_id = "portal.hub.to_exam"
+target_area_id = "exam_zone"
+
+[node name="PortalHubToArena" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -20)
+interactable_id = "portal.hub.to_arena"
+target_area_id = "arena"
+
+[node name="PortalHubToPractice" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, -20)
+interactable_id = "portal.hub.to_practice"
+target_area_id = "practice_zone"
+
+[node name="PortalHubToSocial" parent="Portals" instance=ExtResource("6_portal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0, -20)
+interactable_id = "portal.hub.to_social"
+target_area_id = "social_zone"
+
+[node name="NpcCloudy" parent="Interactables" instance=ExtResource("7_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+interactable_id = "npc.cloudy"
+npc_id = "npc.cloudy"
+
+[node name="NpcPostie" parent="Interactables" instance=ExtResource("7_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 7)
+interactable_id = "npc.postie"
+npc_id = "npc.postie"
+
+[node name="NpcCotton" parent="Interactables" instance=ExtResource("7_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, 7)
+interactable_id = "npc.cotton"
+npc_id = "npc.cotton"
+
+[node name="DiscoveryHubSparkTree" parent="Interactables" instance=ExtResource("8_anchor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6)
+interactable_id = "discovery.hub.spark_tree"
+kind = "discovery"
+prompt_key = "ui.world.action.inspect"
+
+; END F071 generated anchors

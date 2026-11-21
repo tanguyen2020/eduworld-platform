@@ -10,7 +10,7 @@ signal player_entered(interactable_id: String)
 signal player_exited(interactable_id: String)
 
 const KINDS: PackedStringArray = [
-	"npc", "quest_board", "portal", "quest_object", "discovery", "collectible", "info_sign", "minigame_station", "seat",
+	"npc", "quest_board", "portal", "quest_object", "discovery", "collectible", "info_sign", "minigame_station", "seat", "exam_board",
 ]
 ## Group of the local player's body (PlayerController).
 const PLAYER_GROUP: StringName = &"local_player"

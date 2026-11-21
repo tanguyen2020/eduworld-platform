@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/interactable.gd" id="1_script"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_reach"]
+radius = 2.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_marker"]
+radius = 0.35
+height = 0.7
+
+[node name="WorldAnchor" type="Area3D"]
+script = ExtResource("1_script")
+
+[node name="Trigger" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("SphereShape3D_reach")
+
+[node name="PlaceholderMarker" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("SphereMesh_marker")
