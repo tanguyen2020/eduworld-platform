@@ -18,8 +18,8 @@ type RoomOpener interface {
 }
 
 // BattleOpen is the consumer competition.battle_open (F105-AC-01, F104 hand-off): match.created → the room host opens
-// the match room (question plan pinned before the countdown); a match of several tenants (platform) carries no tenant
-// in its envelope and is aborted by the host (F107).
+// the match room (question plan pinned before the countdown). A platform match of several tenants (F107 only) carries
+// no tenant in its envelope: it is refused as permanent (DLQ) until F107 brings the platform question pool.
 type BattleOpen struct{ R RoomOpener }
 
 // BattleOpenOptions returns its options (payload match.created.v1, owner F104).
