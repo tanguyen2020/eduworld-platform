@@ -34,6 +34,10 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F050-AC-15: nhánh "`403 MFA_REQUIRED` phát `mfa_required`" không còn áp dụng (mã đã bỏ khỏi catalog); T027 và quickstart nhắc `mfa_required` là lịch sử, phía UI do đợt sửa portal của ADR-0094 xử lý. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-21 (sửa lỗi E2E portal trên stack local)
+
+- Q: Ở local mọi màn của gateway nội bộ báo "Cần kết nối mạng quản trị (VPN)" vì `:9180` không trả CORS cho origin `:5173` — mở CORS hay proxy? → A: Giữ bất biến F004-AC-21 (gateway nội bộ không CORS ở mọi môi trường). **Chỉ dev server Vite** proxy tiền tố cùng origin `/__internal` sang origin trong biến `EW_PORTAL_DEV_INTERNAL_GATEWAY` (local `http://localhost:9180`; chỉ origin http(s), không user/path/query); `public/config.example.json` đặt `apiInternalBaseUrl = http://localhost:5173/__internal/api/v1` (vẫn là URL đầy đủ nên `validateRuntimeConfig` không đổi). Không có URL trong mã nguồn (R3); thiếu biến → không proxy, request `/__internal` bị ngắt như gateway không tới được (thông báo VPN của F050-AC-13 giữ nguyên). Build production và `config.json` deploy không đổi. Tài liệu: [LOCAL_DEVELOPMENT §6.4](../../docs/11-operations/LOCAL_DEVELOPMENT.md#64-web-cmslms).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khung Admin Portal một ứng dụng, 5 workspace (Priority: P1)
