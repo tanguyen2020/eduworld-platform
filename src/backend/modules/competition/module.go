@@ -38,10 +38,13 @@ import (
 // Name is the module name used for its database (eduworld_competition), env prefix and checks.
 const Name = "competition"
 
-// Imports are the facades module competition calls: moderateDisplayText of module chat (party names, F100-AC-05).
-// Chat nil (module chat implements it with F116): every typed name falls back to the generated default name.
+// Imports are the facades module competition calls: moderateDisplayText of module chat (party names, F100-AC-05) and
+// the party activities of module game (quest/boss sessions, F101 research R1). Chat nil (module chat implements it with
+// F116): every typed name falls back to the generated default name. Game nil (module game implements it with F103):
+// quest and boss are not offered and answer 503 UNAVAILABLE; explore needs no facade.
 type Imports struct {
 	Chat modules.ChatModeration
+	Game modules.GameActivities
 }
 
 // Facade is the part of the competition facade (api.StrictServerInterface, specs/openapi/modules/competition.internal.v1.yaml)
@@ -58,6 +61,7 @@ type Facade interface {
 // Module is the registered module.
 type Module struct {
 	moderator *modules.LateModerator
+	game      *modules.LateGame
 	facade    Facade
 }
 
@@ -68,6 +72,9 @@ func (m *Module) Facade() Facade { return m.facade }
 func (m *Module) Wire(in Imports) {
 	if m.moderator != nil {
 		m.moderator.Set(in.Chat)
+	}
+	if m.game != nil {
+		m.game.Set(in.Game)
 	}
 }
 
@@ -84,7 +91,7 @@ func Register(r *module.Registry) (*Module, error) {
 	}
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(db))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(db, migrations.Latest()))
-	m := &Module{moderator: &modules.LateModerator{}}
+	m := &Module{moderator: &modules.LateModerator{}, game: &modules.LateGame{}}
 	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
 		return m, nil
 	}
@@ -104,8 +111,13 @@ func Register(r *module.Registry) (*Module, error) {
 	if err != nil {
 		return nil, fmt.Errorf("competition: %w", err)
 	}
+	lobbyCfg, err := hubconfig.LobbyFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("competition: %w", err)
+	}
 	observability.Register(r.Metrics())
 	observability.RegisterParty(r.Metrics())
+	observability.RegisterLobby(r.Metrics())
 	reg := cache.HubRegistry{C: vk}
 	pub := rt.Publisher{C: vk}
 	host := roomhost.New(roomhost.Config{InstanceID: cfg.InstanceID, TickHz: cfg.TickHz, Grace: cfg.Grace, IdleClose: cfg.IdleClose,
@@ -113,18 +125,22 @@ func Register(r *module.Registry) (*Module, error) {
 		ClientOnly: !r.ServesHTTP()}, r.NATS(), reg, pub, nil, nil, nil)
 	hub := command.Hub{UoW: core.UoW, Directory: persistence.Directory{}, Store: persistence.Store{}, Registry: reg, Rooms: host,
 		Presence: realtime.Presence{P: pub}, Audit: persistence.Auditor{R: core.Recorder}, Metrics: observability.Hub{},
-		Config: command.HubConfig{Capacity: cfg.Capacity, TickHz: cfg.TickHz, Grace: cfg.Grace, IdleClose: cfg.IdleClose, EmoteRate: cfg.EmoteRate}}
+		Config:     command.HubConfig{Capacity: cfg.Capacity, TickHz: cfg.TickHz, Grace: cfg.Grace, IdleClose: cfg.IdleClose, EmoteRate: cfg.EmoteRate},
+		PartyRooms: persistence.Activities{}}
 	host.SetApp(hub, hub.LoadArea)
 
 	presence := cache.PartyPresence{C: vk, TTL: partyCfg.PresenceTTL}
+	lobbies := cache.LobbyStore{C: vk}
 	parties := command.Parties{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Parties{}, Directory: persistence.PartyDirectory{},
 		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Moderator: m.moderator,
 		Presence: presence, Realtime: realtime.PartyPublisher{P: pub}, Cache: cache.PartyState{C: vk}, Metrics: observability.Party{},
-		Config: partyCfg.UseCase}
+		Config: partyCfg.UseCase,
+		Lobby:  lobbies, Activities: persistence.Activities{}, Areas: persistence.Areas{}, Game: m.game, Statuses: presence,
+		LobbyMetrics: observability.Lobby{}, LobbyConfig: lobbyCfg, Sweeps: persistence.Sweeps{}, Locks: lobbies}
 
 	if r.ServesHTTP() {
 		h := competitionhttp.Handlers{Commands: parties, Queries: query.Parties{Read: core.ReadSession, Reader: persistence.Parties{},
-			Presence: presence}}
+			Presence: presence, Lobby: lobbies, LobbyReader: persistence.LobbyRead{}, Game: m.game, PrivateCapacity: lobbyCfg.PrivateCapacity}}
 		r.HTTP(Name, func(s *httpx.Server) error { return competitionhttp.Register(s, h) })
 	}
 	// Room host, realtime commands (F091 US1, US2) and the party presence store (F100): core-api.
@@ -137,6 +153,11 @@ func Register(r *module.Registry) (*Module, error) {
 			return rt.ServeCommand(ctx, nc, natscmd.Module, natscmd.TypePlayerEmote, natscmd.PlayerEmote(hub), 0)
 		})
 		r.Go("competition.party_presence", func(ctx context.Context) error { return subscriber.PartyPresence(ctx, nc, presence) })
+		// Party Lobby commands of the realtime gateway (F101): the same use cases as REST.
+		for typ, h := range map[string]rt.CommandHandler{natscmd.TypeReadySet: natscmd.ReadySet(parties),
+			natscmd.TypeActivitySelect: natscmd.ActivitySelect(parties), natscmd.TypeSessionStart: natscmd.SessionStart(parties)} {
+			r.Go("competition.cmd."+typ, func(ctx context.Context) error { return rt.ServeCommand(ctx, nc, natscmd.Module, typ, h, 0) })
+		}
 	}
 
 	// Outbox relay (worker events): EVT_COMPETITION (party.*, audit.recorded).
@@ -164,10 +185,15 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("competition.party_safety_identity", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.PartySafetyIdentityOptions(consumer.PartySafetyIdentity{S: safety}, core.UoW, core.App, js)
 	})
+	r.Consumer("competition.party_activity_end", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.PartyActivityEndOptions(consumer.PartyActivityEnd{H: parties}, core.UoW, core.App, js)
+	})
 	r.Job(Name, job.CloseIdleHubInstances, job.CloseIdleInterval, module.JobFunc(job.CloseIdleHubInstancesJob(hub)))
 	expire := func(ctx context.Context, batch int) (int, error) {
 		return parties.ExpireInvitations(ctx, persistence.Expiry{}, batch)
 	}
 	r.Job(Name, job.PartyInvitationExpiry, partyCfg.ExpiryInterval, module.JobFunc(job.PartyInvitationExpiryJob(expire)))
+	r.Job(Name, job.PartyPresenceSweeper, job.SweepInterval,
+		module.JobFunc(job.PartyPresenceSweeperJob(command.NewSweeper(parties, job.SweepInterval))))
 	return m, nil
 }

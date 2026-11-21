@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.activity_selected.v1.schema.json",
+  "title": "Payload party.activity_selected v1 (module competition, owner F101)",
+  "description": "Leader chọn hoạt động trong Party Lobby (F101-AC-03); Ready của mọi thành viên reset. Consumer: AUD, ANA.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "party_id",
+    "tenant_id",
+    "activity_type",
+    "activity_ref",
+    "selected_by",
+    "state_version"
+  ],
+  "properties": {
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/PartyActivityType"
+    },
+    "activity_ref": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_.-]{1,64}$",
+      "description": "area_id (explore) / quest_id (quest) / boss_id (boss)"
+    },
+    "game_mode": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "selected_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "examples": [
+    {
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "activity_type": "quest",
+      "activity_ref": "q-bridge-fix",
+      "selected_by": "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+      "state_version": 3
+    }
+  ]
+}

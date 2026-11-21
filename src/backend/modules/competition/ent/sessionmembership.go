@@ -45,13 +45,15 @@ type SessionMembership struct {
 	// StudentID holds the value of the "student_id" field.
 	StudentID uuid.UUID `json:"student_id,omitempty"`
 	// GameSessionID holds the value of the "game_session_id" field.
-	GameSessionID uuid.UUID `json:"game_session_id,omitempty"`
+	GameSessionID *uuid.UUID `json:"game_session_id,omitempty"`
 	// PartyID holds the value of the "party_id" field.
 	PartyID *uuid.UUID `json:"party_id,omitempty"`
 	// MatchID holds the value of the "match_id" field.
 	MatchID *uuid.UUID `json:"match_id,omitempty"`
 	// EncounterID holds the value of the "encounter_id" field.
 	EncounterID *uuid.UUID `json:"encounter_id,omitempty"`
+	// PartyActivityID holds the value of the "party_activity_id" field.
+	PartyActivityID *uuid.UUID `json:"party_activity_id,omitempty"`
 	// JoinedAt holds the value of the "joined_at" field.
 	JoinedAt time.Time `json:"joined_at,omitempty"`
 	// LeftAt holds the value of the "left_at" field.
@@ -68,7 +70,7 @@ func (*SessionMembership) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case sessionmembership.FieldCreatedBy, sessionmembership.FieldUpdatedBy, sessionmembership.FieldDeletedBy, sessionmembership.FieldSchoolID, sessionmembership.FieldPartyID, sessionmembership.FieldMatchID, sessionmembership.FieldEncounterID:
+		case sessionmembership.FieldCreatedBy, sessionmembership.FieldUpdatedBy, sessionmembership.FieldDeletedBy, sessionmembership.FieldSchoolID, sessionmembership.FieldGameSessionID, sessionmembership.FieldPartyID, sessionmembership.FieldMatchID, sessionmembership.FieldEncounterID, sessionmembership.FieldPartyActivityID:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case sessionmembership.FieldVersion, sessionmembership.FieldDisconnects:
 			values[i] = new(sql.NullInt64)
@@ -76,7 +78,7 @@ func (*SessionMembership) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case sessionmembership.FieldCreatedAt, sessionmembership.FieldUpdatedAt, sessionmembership.FieldDeletedAt, sessionmembership.FieldJoinedAt, sessionmembership.FieldLeftAt:
 			values[i] = new(sql.NullTime)
-		case sessionmembership.FieldID, sessionmembership.FieldTenantID, sessionmembership.FieldRoomID, sessionmembership.FieldStudentID, sessionmembership.FieldGameSessionID:
+		case sessionmembership.FieldID, sessionmembership.FieldTenantID, sessionmembership.FieldRoomID, sessionmembership.FieldStudentID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -184,10 +186,11 @@ func (_m *SessionMembership) assignValues(columns []string, values []any) error 
 				_m.StudentID = *value
 			}
 		case sessionmembership.FieldGameSessionID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field game_session_id", values[i])
-			} else if value != nil {
-				_m.GameSessionID = *value
+			} else if value.Valid {
+				_m.GameSessionID = new(uuid.UUID)
+				*_m.GameSessionID = *value.S.(*uuid.UUID)
 			}
 		case sessionmembership.FieldPartyID:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -209,6 +212,13 @@ func (_m *SessionMembership) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.EncounterID = new(uuid.UUID)
 				*_m.EncounterID = *value.S.(*uuid.UUID)
+			}
+		case sessionmembership.FieldPartyActivityID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field party_activity_id", values[i])
+			} else if value.Valid {
+				_m.PartyActivityID = new(uuid.UUID)
+				*_m.PartyActivityID = *value.S.(*uuid.UUID)
 			}
 		case sessionmembership.FieldJoinedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -323,8 +333,10 @@ func (_m *SessionMembership) String() string {
 	builder.WriteString("student_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.StudentID))
 	builder.WriteString(", ")
-	builder.WriteString("game_session_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.GameSessionID))
+	if v := _m.GameSessionID; v != nil {
+		builder.WriteString("game_session_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	if v := _m.PartyID; v != nil {
 		builder.WriteString("party_id=")
@@ -338,6 +350,11 @@ func (_m *SessionMembership) String() string {
 	builder.WriteString(", ")
 	if v := _m.EncounterID; v != nil {
 		builder.WriteString("encounter_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.PartyActivityID; v != nil {
+		builder.WriteString("party_activity_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

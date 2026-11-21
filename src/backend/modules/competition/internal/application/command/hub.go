@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/hub"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -70,6 +71,14 @@ type Hub struct {
 	Config    HubConfig
 	Now       func() time.Time
 	NewID     func() uuid.UUID
+	// PartyRooms places the participants of a party session in their private_instance (F101-AC-11, AC-17); nil: none.
+	PartyRooms PartyRooms
+}
+
+// PartyRooms reads the open party room of a student (session membership of a running party activity, F101).
+type PartyRooms interface {
+	RoomOf(ctx context.Context, tenant, student uuid.UUID, area string) (*write.PartyRoom, error)
+	SetGameSession(ctx context.Context, tenant, room, student, session uuid.UUID) error
 }
 
 func (h Hub) now() time.Time {
@@ -148,7 +157,19 @@ func (h Hub) JoinHubInstance(ctx context.Context, c Caller, in JoinInput) (a *As
 	if err != nil {
 		return nil, fmt.Errorf("hub: user room: %w", err)
 	}
-	if current != nil && current.AreaID == in.AreaID && in.Follow == nil {
+	if in.Follow == nil {
+		if a, ok, err := h.joinPartyRoom(ctx, j, seat, current, start); ok || err != nil {
+			return a, err
+		}
+	}
+	reuse := current != nil && current.AreaID == in.AreaID && in.Follow == nil
+	if reuse && h.PartyRooms != nil {
+		// The private_instance of a party session that ended (or that the student left) is never a held hub seat.
+		if m, err := h.Registry.Meta(ctx, current.RoomID); err == nil && m != nil && m.Private {
+			reuse = false
+		}
+	}
+	if reuse {
 		// Back to the held seat of the same area (F091-AC-09), even when the instance is full.
 		if res, err := h.Rooms.Join(ctx, current.RoomID, port.JoinRequest{Seat: seat, Spawn: in.SpawnPoint}); err == nil {
 			return h.assigned(ctx, j, current.RoomID, res, "", start)
@@ -333,7 +354,7 @@ func (h Hub) follow(ctx context.Context, j *joinCtx, seat hub.Seat, friend uuid.
 			return "", nil, fmt.Errorf("hub: friend room meta: %w", err)
 		}
 	}
-	samePartition := meta != nil && meta.Partition == j.partition && meta.AreaID == j.area.ID
+	samePartition := meta != nil && !meta.Private && meta.Partition == j.partition && meta.AreaID == j.area.ID
 	switch hub.Follow(j.friends[friend], j.blocks[friend], samePartition, meta != nil, true) {
 	case hub.FollowDenied:
 		return "", nil, fail(CodeDenied, "follow")
@@ -440,6 +461,9 @@ func (h Hub) MemberRemoved(ctx context.Context, m port.RoomMeta, user, _ uuid.UU
 	if h.Presence != nil {
 		_ = h.Presence.Update(ctx, user, "", "")
 	}
+	if m.Private {
+		return nil // the session membership of a party room follows the party session (disconnect_grace, F101-AC-17)
+	}
 	room, err := uuid.Parse(m.RoomID)
 	if err != nil {
 		return err
@@ -458,6 +482,9 @@ func (h Hub) MemberRemoved(ctx context.Context, m port.RoomMeta, user, _ uuid.UU
 func (h Hub) RoomClosed(ctx context.Context, m port.RoomMeta) (err error) {
 	ctx, done := observability.UseCase(ctx, "competition.command.CloseHubInstance")
 	defer func() { done(err) }()
+	if m.Private {
+		return nil // the room of a party session closes with the session (F101); an idle host instance reopens on the next entry
+	}
 	room, err := uuid.Parse(m.RoomID)
 	if err != nil {
 		return err

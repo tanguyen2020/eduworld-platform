@@ -21,6 +21,18 @@ func (f PartyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyMutation", m)
 }
 
+// The PartyActivityFunc type is an adapter to allow the use of ordinary
+// function as PartyActivity mutator.
+type PartyActivityFunc func(context.Context, *ent.PartyActivityMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PartyActivityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PartyActivityMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyActivityMutation", m)
+}
+
 // The PartyInvitationFunc type is an adapter to allow the use of ordinary
 // function as PartyInvitation mutator.
 type PartyInvitationFunc func(context.Context, *ent.PartyInvitationMutation) (ent.Value, error)

@@ -46,7 +46,9 @@ func (Room) Indexes() []ent.Index {
 
 // SessionMembership — multiplayer.session_memberships (T, DATABASE_DESIGN §2.9, MULTIPLAYER_GAMEPLAY §10): who was in
 // which room and when, to investigate behaviour reports. For hub_instance it is written only while
-// audit_hub_membership is on for the tenant (F091-AC-11). left_at and leave_reason are set once.
+// audit_hub_membership is on for the tenant (F091-AC-11). left_at and leave_reason are set once. F101: a party session
+// (private_instance, boss) writes one row per participant at start (party_activity_id); game_session_id is set when
+// the student enters the room (nullable since F101: the other members' sessions are unknown at start).
 type SessionMembership struct{ ent.Schema }
 
 func (SessionMembership) Annotations() []schema.Annotation {
@@ -61,10 +63,11 @@ func (SessionMembership) Fields() []ent.Field {
 		field.String("room_type").MaxLen(64).Immutable(),
 		field.UUID("school_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 		field.UUID("student_id", uuid.UUID{}).Immutable(),
-		field.UUID("game_session_id", uuid.UUID{}).Immutable(),
+		field.UUID("game_session_id", uuid.UUID{}).Optional().Nillable(),
 		field.UUID("party_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 		field.UUID("match_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 		field.UUID("encounter_id", uuid.UUID{}).Optional().Nillable().Immutable(),
+		field.UUID("party_activity_id", uuid.UUID{}).Optional().Nillable().Immutable(),
 		field.Time("joined_at").Default(nowUTC).Immutable(),
 		field.Time("left_at").Optional().Nillable(),
 		field.String("leave_reason").MaxLen(64).Optional().Nillable(),
@@ -76,5 +79,7 @@ func (SessionMembership) Indexes() []ent.Index {
 		index.Fields("room_id", "student_id").Unique().StorageKey("session_memberships_active_uq").
 			Annotations(entsql.IndexWhere("left_at IS NULL AND deleted_at IS NULL")),
 		index.Fields("tenant_id", "student_id", "joined_at").StorageKey("session_memberships_student_idx"),
+		index.Fields("party_activity_id", "student_id").StorageKey("session_memberships_activity_idx").
+			Annotations(entsql.IndexWhere("party_activity_id IS NOT NULL AND deleted_at IS NULL")),
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -66,6 +67,21 @@ func (r HubRegistry) do(ctx context.Context, cmds ...valkey.Completed) error {
 // Register records a new room (meta HASH, area ZSET with 0 seats, rooms index).
 func (r HubRegistry) Register(ctx context.Context, m port.RoomMeta, owner string, now time.Time) error {
 	p := m.Partition
+	if m.Private {
+		// A private_instance of a party session (F101) is never listed in the area: nobody is placed there but its
+		// participants.
+		allowed := make([]string, len(m.Allowed))
+		for i, id := range m.Allowed {
+			allowed[i] = id.String()
+		}
+		return r.do(ctx,
+			r.C.B().Hset().Key(roomKey(m.RoomID)).FieldValue().FieldValue("owner", owner).FieldValue("type", hub.RoomTypePrivate).
+				FieldValue("tenant_id", p.TenantID.String()).FieldValue("school_id", p.SchoolID.String()).FieldValue("grade_band", p.GradeBand).
+				FieldValue("area_id", m.AreaID).FieldValue("capacity", strconv.Itoa(m.Capacity)).FieldValue("members", "0").
+				FieldValue("allowed", strings.Join(allowed, ",")).FieldValue("state_version", "1").Build(),
+			r.C.B().Expire().Key(roomKey(m.RoomID)).Seconds(int64(roomTTL/time.Second)).Build(),
+			r.C.B().Zadd().Key(roomsKey).ScoreMember().ScoreMember(float64(now.UnixMilli()), m.RoomID).Build())
+	}
 	return r.do(ctx,
 		r.C.B().Hset().Key(roomKey(m.RoomID)).FieldValue().FieldValue("owner", owner).FieldValue("type", hub.RoomTypeHub).
 			FieldValue("tenant_id", p.TenantID.String()).FieldValue("school_id", p.SchoolID.String()).FieldValue("grade_band", p.GradeBand).
@@ -80,8 +96,8 @@ func (r HubRegistry) Register(ctx context.Context, m port.RoomMeta, owner string
 // Meta implements port.Registry.
 func (r HubRegistry) Meta(ctx context.Context, room string) (*port.RoomMeta, error) {
 	h, err := r.C.Do(ctx, r.C.B().Hgetall().Key(roomKey(room)).Build()).AsStrMap()
-	if err != nil || len(h) == 0 {
-		return nil, err
+	if err != nil || len(h) == 0 || h["tenant_id"] == "" {
+		return nil, err // unknown room (or only the owner field of a lease taken on a room never registered)
 	}
 	tenant, err1 := uuid.Parse(h["tenant_id"])
 	school, err2 := uuid.Parse(h["school_id"])
@@ -89,8 +105,17 @@ func (r HubRegistry) Meta(ctx context.Context, room string) (*port.RoomMeta, err
 	if err := errors.Join(err1, err2, err3); err != nil {
 		return nil, fmt.Errorf("hub registry: meta of %s: %w", room, err)
 	}
-	return &port.RoomMeta{RoomID: room, AreaID: h["area_id"], Capacity: capacity,
-		Partition: hub.Partition{TenantID: tenant, SchoolID: school, GradeBand: h["grade_band"]}}, nil
+	m := &port.RoomMeta{RoomID: room, AreaID: h["area_id"], Capacity: capacity,
+		Partition: hub.Partition{TenantID: tenant, SchoolID: school, GradeBand: h["grade_band"]}, Private: h["type"] == hub.RoomTypePrivate}
+	if m.Private {
+		m.Allowed = []uuid.UUID{}
+		for _, s := range strings.Split(h["allowed"], ",") {
+			if id, err := uuid.Parse(s); err == nil {
+				m.Allowed = append(m.Allowed, id)
+			}
+		}
+	}
+	return m, nil
 }
 
 // Instances implements port.Registry: the open instances of a partition with their seated students.

@@ -253,7 +253,8 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 410 | `PARTY_INVITATION_EXPIRED` | Lời mời hết hạn |
 | 403 | `PARTY_POLICY_VIOLATION` | Vi phạm `party_policies`/phạm vi khi tạo, mời, chấp nhận, tham gia party hoặc bắt đầu hoạt động: khác trường (trừ tenant `unit` bật liên trường) hoặc tenant, khác lớp/khối theo policy, sanction `restrict_multiplayer`, chặn mời lại sau kick; có audit (F100-AC-09, AC-16) |
 | 409 | `PARTY_MEMBER_NOT_ONLINE` | Chuyển leader cho member offline |
-| 409 | `PARTY_ACTIVITY_NOT_ELIGIBLE` | Có member không đủ điều kiện activity (trạng thái party/thành viên hiện tại không cho bắt đầu) |
+| 409 | `PARTY_ACTIVITY_NOT_ELIGIBLE` | Có member không đủ điều kiện activity (trạng thái party/thành viên hiện tại không cho bắt đầu); kèm `ineligible_members` (mã lý do) (F101-AC-08) |
+| 409 | `PARTY_NOT_READY` | Bắt đầu phiên party khi còn thành viên online chưa Ready hoặc số thành viên online ngoài khoảng tối thiểu–tối đa của hoạt động (F101-AC-09) |
 | 403 | `ROOM_NOT_MEMBER` | Truy cập room không phải thành viên |
 | 409 | `MM_TICKET_ALREADY_ACTIVE` | Đã có matchmaking ticket |
 | 409 | `MATCH_RESULT_ALREADY_RECORDED` | Ghi kết quả trận lần 2 |
@@ -311,7 +312,7 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 
 **Sub-code trong `errors[]`** (không phải `code` cấp Problem, không có trong `ProblemCode`): `PASSWORD_POLICY_VIOLATION` — trong `422 VALIDATION_FAILED` của `setup:password`/`password:reset` khi mật khẩu mới không đạt password policy của realm (ADR-0091); `PERMISSION_NOT_ALLOWED_FOR_SCOPE` — trong `422 VALIDATION_FAILED` khi lưu role `tenant` chứa permission `platform.*`/`game.*`/`competition.config.*` (ADR-0066); `REQUIRED`, `TOO_LONG`, `PATTERN_MISMATCH`… — lỗi validate field.
 
-WebSocket dùng enum `ErrorCode` riêng trong [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml) (trả qua `system.command.failed`). Mã nào có ở cả hai kênh thì **trùng tên** với `ProblemCode` (vd. `CHAT_CONTENT_BLOCKED`, `PARTY_NOT_LEADER`, `ROOM_NOT_MEMBER`). Các mã chỉ có trên WS: `UNKNOWN_TYPE`, `PARTY_NOT_READY`, `ROOM_FULL`, `ANSWER_LATE`, `ANSWER_ALREADY_SUBMITTED`, `MATCH_NOT_ACTIVE`, `PROPOSAL_EXPIRED`.
+WebSocket dùng enum `ErrorCode` riêng trong [AsyncAPI](../../specs/asyncapi/eduworld-realtime.v1.yaml) (trả qua `system.command.failed`). Mã nào có ở cả hai kênh thì **trùng tên** với `ProblemCode` (vd. `CHAT_CONTENT_BLOCKED`, `PARTY_NOT_LEADER`, `ROOM_NOT_MEMBER`). Các mã chỉ có trên WS: `UNKNOWN_TYPE`, `ROOM_FULL`, `ANSWER_LATE`, `ANSWER_ALREADY_SUBMITTED`, `MATCH_NOT_ACTIVE`, `PROPOSAL_EXPIRED`.
 
 Thêm mã mới → cập nhật bảng này + `specs` (enum `ProblemCode`) trong cùng MR. CI chạy `node scripts/specs/check-problem-codes.mjs`: so bảng §4.1 với enum `ProblemCode` (OpenAPI) và enum `ErrorCode` (AsyncAPI) cùng danh sách mã chỉ-WS ở trên.
 

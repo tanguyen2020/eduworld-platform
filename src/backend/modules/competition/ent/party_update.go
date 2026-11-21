@@ -268,6 +268,66 @@ func (_u *PartyUpdate) ClearCurrentGameSessionRef() *PartyUpdate {
 	return _u
 }
 
+// SetSelectedActivityType sets the "selected_activity_type" field.
+func (_u *PartyUpdate) SetSelectedActivityType(v string) *PartyUpdate {
+	_u.mutation.SetSelectedActivityType(v)
+	return _u
+}
+
+// SetNillableSelectedActivityType sets the "selected_activity_type" field if the given value is not nil.
+func (_u *PartyUpdate) SetNillableSelectedActivityType(v *string) *PartyUpdate {
+	if v != nil {
+		_u.SetSelectedActivityType(*v)
+	}
+	return _u
+}
+
+// ClearSelectedActivityType clears the value of the "selected_activity_type" field.
+func (_u *PartyUpdate) ClearSelectedActivityType() *PartyUpdate {
+	_u.mutation.ClearSelectedActivityType()
+	return _u
+}
+
+// SetSelectedActivityRef sets the "selected_activity_ref" field.
+func (_u *PartyUpdate) SetSelectedActivityRef(v string) *PartyUpdate {
+	_u.mutation.SetSelectedActivityRef(v)
+	return _u
+}
+
+// SetNillableSelectedActivityRef sets the "selected_activity_ref" field if the given value is not nil.
+func (_u *PartyUpdate) SetNillableSelectedActivityRef(v *string) *PartyUpdate {
+	if v != nil {
+		_u.SetSelectedActivityRef(*v)
+	}
+	return _u
+}
+
+// ClearSelectedActivityRef clears the value of the "selected_activity_ref" field.
+func (_u *PartyUpdate) ClearSelectedActivityRef() *PartyUpdate {
+	_u.mutation.ClearSelectedActivityRef()
+	return _u
+}
+
+// SetSelectedGameMode sets the "selected_game_mode" field.
+func (_u *PartyUpdate) SetSelectedGameMode(v string) *PartyUpdate {
+	_u.mutation.SetSelectedGameMode(v)
+	return _u
+}
+
+// SetNillableSelectedGameMode sets the "selected_game_mode" field if the given value is not nil.
+func (_u *PartyUpdate) SetNillableSelectedGameMode(v *string) *PartyUpdate {
+	if v != nil {
+		_u.SetSelectedGameMode(*v)
+	}
+	return _u
+}
+
+// ClearSelectedGameMode clears the value of the "selected_game_mode" field.
+func (_u *PartyUpdate) ClearSelectedGameMode() *PartyUpdate {
+	_u.mutation.ClearSelectedGameMode()
+	return _u
+}
+
 // SetStateVersion sets the "state_version" field.
 func (_u *PartyUpdate) SetStateVersion(v int64) *PartyUpdate {
 	_u.mutation.ResetStateVersion()
@@ -383,6 +443,21 @@ func (_u *PartyUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Party.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SelectedActivityType(); ok {
+		if err := party.SelectedActivityTypeValidator(v); err != nil {
+			return &ValidationError{Name: "selected_activity_type", err: fmt.Errorf(`ent: validator failed for field "Party.selected_activity_type": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.SelectedActivityRef(); ok {
+		if err := party.SelectedActivityRefValidator(v); err != nil {
+			return &ValidationError{Name: "selected_activity_ref", err: fmt.Errorf(`ent: validator failed for field "Party.selected_activity_ref": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.SelectedGameMode(); ok {
+		if err := party.SelectedGameModeValidator(v); err != nil {
+			return &ValidationError{Name: "selected_game_mode", err: fmt.Errorf(`ent: validator failed for field "Party.selected_game_mode": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -466,6 +541,24 @@ func (_u *PartyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.CurrentGameSessionRefCleared() {
 		_spec.ClearField(party.FieldCurrentGameSessionRef, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.SelectedActivityType(); ok {
+		_spec.SetField(party.FieldSelectedActivityType, field.TypeString, value)
+	}
+	if _u.mutation.SelectedActivityTypeCleared() {
+		_spec.ClearField(party.FieldSelectedActivityType, field.TypeString)
+	}
+	if value, ok := _u.mutation.SelectedActivityRef(); ok {
+		_spec.SetField(party.FieldSelectedActivityRef, field.TypeString, value)
+	}
+	if _u.mutation.SelectedActivityRefCleared() {
+		_spec.ClearField(party.FieldSelectedActivityRef, field.TypeString)
+	}
+	if value, ok := _u.mutation.SelectedGameMode(); ok {
+		_spec.SetField(party.FieldSelectedGameMode, field.TypeString, value)
+	}
+	if _u.mutation.SelectedGameModeCleared() {
+		_spec.ClearField(party.FieldSelectedGameMode, field.TypeString)
 	}
 	if value, ok := _u.mutation.StateVersion(); ok {
 		_spec.SetField(party.FieldStateVersion, field.TypeInt64, value)
@@ -739,6 +832,66 @@ func (_u *PartyUpdateOne) ClearCurrentGameSessionRef() *PartyUpdateOne {
 	return _u
 }
 
+// SetSelectedActivityType sets the "selected_activity_type" field.
+func (_u *PartyUpdateOne) SetSelectedActivityType(v string) *PartyUpdateOne {
+	_u.mutation.SetSelectedActivityType(v)
+	return _u
+}
+
+// SetNillableSelectedActivityType sets the "selected_activity_type" field if the given value is not nil.
+func (_u *PartyUpdateOne) SetNillableSelectedActivityType(v *string) *PartyUpdateOne {
+	if v != nil {
+		_u.SetSelectedActivityType(*v)
+	}
+	return _u
+}
+
+// ClearSelectedActivityType clears the value of the "selected_activity_type" field.
+func (_u *PartyUpdateOne) ClearSelectedActivityType() *PartyUpdateOne {
+	_u.mutation.ClearSelectedActivityType()
+	return _u
+}
+
+// SetSelectedActivityRef sets the "selected_activity_ref" field.
+func (_u *PartyUpdateOne) SetSelectedActivityRef(v string) *PartyUpdateOne {
+	_u.mutation.SetSelectedActivityRef(v)
+	return _u
+}
+
+// SetNillableSelectedActivityRef sets the "selected_activity_ref" field if the given value is not nil.
+func (_u *PartyUpdateOne) SetNillableSelectedActivityRef(v *string) *PartyUpdateOne {
+	if v != nil {
+		_u.SetSelectedActivityRef(*v)
+	}
+	return _u
+}
+
+// ClearSelectedActivityRef clears the value of the "selected_activity_ref" field.
+func (_u *PartyUpdateOne) ClearSelectedActivityRef() *PartyUpdateOne {
+	_u.mutation.ClearSelectedActivityRef()
+	return _u
+}
+
+// SetSelectedGameMode sets the "selected_game_mode" field.
+func (_u *PartyUpdateOne) SetSelectedGameMode(v string) *PartyUpdateOne {
+	_u.mutation.SetSelectedGameMode(v)
+	return _u
+}
+
+// SetNillableSelectedGameMode sets the "selected_game_mode" field if the given value is not nil.
+func (_u *PartyUpdateOne) SetNillableSelectedGameMode(v *string) *PartyUpdateOne {
+	if v != nil {
+		_u.SetSelectedGameMode(*v)
+	}
+	return _u
+}
+
+// ClearSelectedGameMode clears the value of the "selected_game_mode" field.
+func (_u *PartyUpdateOne) ClearSelectedGameMode() *PartyUpdateOne {
+	_u.mutation.ClearSelectedGameMode()
+	return _u
+}
+
 // SetStateVersion sets the "state_version" field.
 func (_u *PartyUpdateOne) SetStateVersion(v int64) *PartyUpdateOne {
 	_u.mutation.ResetStateVersion()
@@ -867,6 +1020,21 @@ func (_u *PartyUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Party.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SelectedActivityType(); ok {
+		if err := party.SelectedActivityTypeValidator(v); err != nil {
+			return &ValidationError{Name: "selected_activity_type", err: fmt.Errorf(`ent: validator failed for field "Party.selected_activity_type": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.SelectedActivityRef(); ok {
+		if err := party.SelectedActivityRefValidator(v); err != nil {
+			return &ValidationError{Name: "selected_activity_ref", err: fmt.Errorf(`ent: validator failed for field "Party.selected_activity_ref": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.SelectedGameMode(); ok {
+		if err := party.SelectedGameModeValidator(v); err != nil {
+			return &ValidationError{Name: "selected_game_mode", err: fmt.Errorf(`ent: validator failed for field "Party.selected_game_mode": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -967,6 +1135,24 @@ func (_u *PartyUpdateOne) sqlSave(ctx context.Context) (_node *Party, err error)
 	}
 	if _u.mutation.CurrentGameSessionRefCleared() {
 		_spec.ClearField(party.FieldCurrentGameSessionRef, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.SelectedActivityType(); ok {
+		_spec.SetField(party.FieldSelectedActivityType, field.TypeString, value)
+	}
+	if _u.mutation.SelectedActivityTypeCleared() {
+		_spec.ClearField(party.FieldSelectedActivityType, field.TypeString)
+	}
+	if value, ok := _u.mutation.SelectedActivityRef(); ok {
+		_spec.SetField(party.FieldSelectedActivityRef, field.TypeString, value)
+	}
+	if _u.mutation.SelectedActivityRefCleared() {
+		_spec.ClearField(party.FieldSelectedActivityRef, field.TypeString)
+	}
+	if value, ok := _u.mutation.SelectedGameMode(); ok {
+		_spec.SetField(party.FieldSelectedGameMode, field.TypeString, value)
+	}
+	if _u.mutation.SelectedGameModeCleared() {
+		_spec.ClearField(party.FieldSelectedGameMode, field.TypeString)
 	}
 	if value, ok := _u.mutation.StateVersion(); ok {
 		_spec.SetField(party.FieldStateVersion, field.TypeInt64, value)

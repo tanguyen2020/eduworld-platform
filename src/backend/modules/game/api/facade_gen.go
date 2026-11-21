@@ -20,72 +20,153 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for PartyActivityMemberCheckReasonCode.
+const (
+	AreaLocked          PartyActivityMemberCheckReasonCode = "area_locked"
+	AttemptLimit        PartyActivityMemberCheckReasonCode = "attempt_limit"
+	GradeBandMismatch   PartyActivityMemberCheckReasonCode = "grade_band_mismatch"
+	GradeNotAllowed     PartyActivityMemberCheckReasonCode = "grade_not_allowed"
+	NotOnline           PartyActivityMemberCheckReasonCode = "not_online"
+	PrerequisiteMissing PartyActivityMemberCheckReasonCode = "prerequisite_missing"
+	Sanctioned          PartyActivityMemberCheckReasonCode = "sanctioned"
+)
+
+// Valid indicates whether the value is a known member of the PartyActivityMemberCheckReasonCode enum.
+func (e PartyActivityMemberCheckReasonCode) Valid() bool {
+	switch e {
+	case AreaLocked:
+		return true
+	case AttemptLimit:
+		return true
+	case GradeBandMismatch:
+		return true
+	case GradeNotAllowed:
+		return true
+	case NotOnline:
+		return true
+	case PrerequisiteMissing:
+		return true
+	case Sanctioned:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PartyActivityStartedRoomType.
+const (
+	PartyActivityStartedRoomTypeBoss            PartyActivityStartedRoomType = "boss"
+	PartyActivityStartedRoomTypePrivateInstance PartyActivityStartedRoomType = "private_instance"
+)
+
+// Valid indicates whether the value is a known member of the PartyActivityStartedRoomType enum.
+func (e PartyActivityStartedRoomType) Valid() bool {
+	switch e {
+	case PartyActivityStartedRoomTypeBoss:
+		return true
+	case PartyActivityStartedRoomTypePrivateInstance:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PartyActivityType.
+const (
+	PartyActivityTypeBoss              PartyActivityType = "boss"
+	PartyActivityTypeCoopChallenge     PartyActivityType = "coop_challenge"
+	PartyActivityTypeExplore           PartyActivityType = "explore"
+	PartyActivityTypeLearningChallenge PartyActivityType = "learning_challenge"
+	PartyActivityTypeQuest             PartyActivityType = "quest"
+	PartyActivityTypeTeamBattle        PartyActivityType = "team_battle"
+)
+
+// Valid indicates whether the value is a known member of the PartyActivityType enum.
+func (e PartyActivityType) Valid() bool {
+	switch e {
+	case PartyActivityTypeBoss:
+		return true
+	case PartyActivityTypeCoopChallenge:
+		return true
+	case PartyActivityTypeExplore:
+		return true
+	case PartyActivityTypeLearningChallenge:
+		return true
+	case PartyActivityTypeQuest:
+		return true
+	case PartyActivityTypeTeamBattle:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CommonInternalCommonV1ResourceType.
 const (
-	Activity            CommonInternalCommonV1ResourceType = "activity"
-	AssessmentBlueprint CommonInternalCommonV1ResourceType = "assessment_blueprint"
-	Assignment          CommonInternalCommonV1ResourceType = "assignment"
-	Challenge           CommonInternalCommonV1ResourceType = "challenge"
-	ChallengeTemplate   CommonInternalCommonV1ResourceType = "challenge_template"
-	ClassTemplate       CommonInternalCommonV1ResourceType = "class_template"
-	Course              CommonInternalCommonV1ResourceType = "course"
-	Curriculum          CommonInternalCommonV1ResourceType = "curriculum"
-	Item                CommonInternalCommonV1ResourceType = "item"
-	LearningMaterial    CommonInternalCommonV1ResourceType = "learning_material"
-	LearningPath        CommonInternalCommonV1ResourceType = "learning_path"
-	Lesson              CommonInternalCommonV1ResourceType = "lesson"
-	Media               CommonInternalCommonV1ResourceType = "media"
-	MinigameConfig      CommonInternalCommonV1ResourceType = "minigame_config"
-	Quest               CommonInternalCommonV1ResourceType = "quest"
-	Question            CommonInternalCommonV1ResourceType = "question"
-	QuestionSet         CommonInternalCommonV1ResourceType = "question_set"
-	SchoolSettings      CommonInternalCommonV1ResourceType = "school_settings"
-	TenantSettings      CommonInternalCommonV1ResourceType = "tenant_settings"
-	TournamentTemplate  CommonInternalCommonV1ResourceType = "tournament_template"
+	CommonInternalCommonV1ResourceTypeActivity            CommonInternalCommonV1ResourceType = "activity"
+	CommonInternalCommonV1ResourceTypeAssessmentBlueprint CommonInternalCommonV1ResourceType = "assessment_blueprint"
+	CommonInternalCommonV1ResourceTypeAssignment          CommonInternalCommonV1ResourceType = "assignment"
+	CommonInternalCommonV1ResourceTypeChallenge           CommonInternalCommonV1ResourceType = "challenge"
+	CommonInternalCommonV1ResourceTypeChallengeTemplate   CommonInternalCommonV1ResourceType = "challenge_template"
+	CommonInternalCommonV1ResourceTypeClassTemplate       CommonInternalCommonV1ResourceType = "class_template"
+	CommonInternalCommonV1ResourceTypeCourse              CommonInternalCommonV1ResourceType = "course"
+	CommonInternalCommonV1ResourceTypeCurriculum          CommonInternalCommonV1ResourceType = "curriculum"
+	CommonInternalCommonV1ResourceTypeItem                CommonInternalCommonV1ResourceType = "item"
+	CommonInternalCommonV1ResourceTypeLearningMaterial    CommonInternalCommonV1ResourceType = "learning_material"
+	CommonInternalCommonV1ResourceTypeLearningPath        CommonInternalCommonV1ResourceType = "learning_path"
+	CommonInternalCommonV1ResourceTypeLesson              CommonInternalCommonV1ResourceType = "lesson"
+	CommonInternalCommonV1ResourceTypeMedia               CommonInternalCommonV1ResourceType = "media"
+	CommonInternalCommonV1ResourceTypeMinigameConfig      CommonInternalCommonV1ResourceType = "minigame_config"
+	CommonInternalCommonV1ResourceTypeQuest               CommonInternalCommonV1ResourceType = "quest"
+	CommonInternalCommonV1ResourceTypeQuestion            CommonInternalCommonV1ResourceType = "question"
+	CommonInternalCommonV1ResourceTypeQuestionSet         CommonInternalCommonV1ResourceType = "question_set"
+	CommonInternalCommonV1ResourceTypeSchoolSettings      CommonInternalCommonV1ResourceType = "school_settings"
+	CommonInternalCommonV1ResourceTypeTenantSettings      CommonInternalCommonV1ResourceType = "tenant_settings"
+	CommonInternalCommonV1ResourceTypeTournamentTemplate  CommonInternalCommonV1ResourceType = "tournament_template"
 )
 
 // Valid indicates whether the value is a known member of the CommonInternalCommonV1ResourceType enum.
 func (e CommonInternalCommonV1ResourceType) Valid() bool {
 	switch e {
-	case Activity:
+	case CommonInternalCommonV1ResourceTypeActivity:
 		return true
-	case AssessmentBlueprint:
+	case CommonInternalCommonV1ResourceTypeAssessmentBlueprint:
 		return true
-	case Assignment:
+	case CommonInternalCommonV1ResourceTypeAssignment:
 		return true
-	case Challenge:
+	case CommonInternalCommonV1ResourceTypeChallenge:
 		return true
-	case ChallengeTemplate:
+	case CommonInternalCommonV1ResourceTypeChallengeTemplate:
 		return true
-	case ClassTemplate:
+	case CommonInternalCommonV1ResourceTypeClassTemplate:
 		return true
-	case Course:
+	case CommonInternalCommonV1ResourceTypeCourse:
 		return true
-	case Curriculum:
+	case CommonInternalCommonV1ResourceTypeCurriculum:
 		return true
-	case Item:
+	case CommonInternalCommonV1ResourceTypeItem:
 		return true
-	case LearningMaterial:
+	case CommonInternalCommonV1ResourceTypeLearningMaterial:
 		return true
-	case LearningPath:
+	case CommonInternalCommonV1ResourceTypeLearningPath:
 		return true
-	case Lesson:
+	case CommonInternalCommonV1ResourceTypeLesson:
 		return true
-	case Media:
+	case CommonInternalCommonV1ResourceTypeMedia:
 		return true
-	case MinigameConfig:
+	case CommonInternalCommonV1ResourceTypeMinigameConfig:
 		return true
-	case Quest:
+	case CommonInternalCommonV1ResourceTypeQuest:
 		return true
-	case Question:
+	case CommonInternalCommonV1ResourceTypeQuestion:
 		return true
-	case QuestionSet:
+	case CommonInternalCommonV1ResourceTypeQuestionSet:
 		return true
-	case SchoolSettings:
+	case CommonInternalCommonV1ResourceTypeSchoolSettings:
 		return true
-	case TenantSettings:
+	case CommonInternalCommonV1ResourceTypeTenantSettings:
 		return true
-	case TournamentTemplate:
+	case CommonInternalCommonV1ResourceTypeTournamentTemplate:
 		return true
 	default:
 		return false
@@ -253,6 +334,109 @@ func (e CommonInternalCommonV1UserLifecycleResultStatus) Valid() bool {
 		return false
 	}
 }
+
+// PartyActivityCandidate defines model for PartyActivityCandidate.
+type PartyActivityCandidate struct {
+	ActivityRef string `json:"activity_ref"`
+
+	// ActivityType Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. Module game chỉ nhận quest, boss.
+	ActivityType PartyActivityType          `json:"activity_type"`
+	AllEligible  bool                       `json:"all_eligible"`
+	MaxMembers   int                        `json:"max_members"`
+	Members      []PartyActivityMemberCheck `json:"members"`
+	MinMembers   int                        `json:"min_members"`
+	Title        *struct {
+		En *string `json:"en,omitempty"`
+		Vi string  `json:"vi"`
+	} `json:"title,omitempty"`
+}
+
+// PartyActivityCandidates Examples: {"data":[{"activity_ref":"q-bridge-fix","activity_type":"quest","all_eligible":true,"max_members":4,"members":[{"eligible":true,"student_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005"}],"min_members":2,"title":{"vi":"Sửa cầu"}}]}
+type PartyActivityCandidates struct {
+	Data []PartyActivityCandidate `json:"data"`
+}
+
+// PartyActivityCandidatesRequest Examples: {"members":[{"student_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005"}],"party_id":"0193a5f4-6c1e-7b2a-9d1f-0000000000a1"}
+type PartyActivityCandidatesRequest struct {
+	AreaId  *string               `json:"area_id,omitempty"`
+	Members []PartyActivityMember `json:"members"`
+	PartyId openapi_types.UUID    `json:"party_id"`
+}
+
+// PartyActivityCheckRequest Examples: {"activity_ref":"q-bridge-fix","activity_type":"quest","members":[{"student_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005"}],"party_id":"0193a5f4-6c1e-7b2a-9d1f-0000000000a1"}
+type PartyActivityCheckRequest struct {
+	ActivityRef string `json:"activity_ref"`
+
+	// ActivityType Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. Module game chỉ nhận quest, boss.
+	ActivityType PartyActivityType     `json:"activity_type"`
+	Members      []PartyActivityMember `json:"members"`
+	PartyId      openapi_types.UUID    `json:"party_id"`
+}
+
+// PartyActivityEligibility Examples: {"allow_continue_on_disconnect":true,"area_id":"forest_bridge","eligible":true,"max_members":4,"members":[{"eligible":true,"student_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005"}],"min_members":2}
+type PartyActivityEligibility struct {
+	AllowContinueOnDisconnect bool `json:"allow_continue_on_disconnect"`
+
+	// AreaId Khu của private_instance (quest)
+	AreaId     *string                    `json:"area_id,omitempty"`
+	Eligible   bool                       `json:"eligible"`
+	MaxMembers int                        `json:"max_members"`
+	Members    []PartyActivityMemberCheck `json:"members"`
+	MinMembers int                        `json:"min_members"`
+}
+
+// PartyActivityMember defines model for PartyActivityMember.
+type PartyActivityMember struct {
+	StudentId openapi_types.UUID `json:"student_id"`
+}
+
+// PartyActivityMemberCheck defines model for PartyActivityMemberCheck.
+type PartyActivityMemberCheck struct {
+	Eligible   bool                                `json:"eligible"`
+	ReasonCode *PartyActivityMemberCheckReasonCode `json:"reason_code,omitempty"`
+
+	// Requirement Yêu cầu của hoạt động (vd. "grade_levels:4"), không phải dữ liệu của học sinh (R16)
+	Requirement *string            `json:"requirement,omitempty"`
+	StudentId   openapi_types.UUID `json:"student_id"`
+}
+
+// PartyActivityMemberCheckReasonCode defines model for PartyActivityMemberCheck.ReasonCode.
+type PartyActivityMemberCheckReasonCode string
+
+// PartyActivityStartMember defines model for PartyActivityStartMember.
+type PartyActivityStartMember struct {
+	GameSessionId *openapi_types.UUID `json:"game_session_id,omitempty"`
+	StudentId     openapi_types.UUID  `json:"student_id"`
+}
+
+// PartyActivityStartRequest Examples: {"activity_ref":"boss-forest-golem","activity_type":"boss","leader_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005","members":[{"student_id":"0193a5f4-6c1e-7b2a-9d1f-000000000005"}],"party_activity_id":"0193a5f4-6c1e-7b2a-9d1f-0000000000b1","party_id":"0193a5f4-6c1e-7b2a-9d1f-0000000000a1"}
+type PartyActivityStartRequest struct {
+	ActivityRef string `json:"activity_ref"`
+
+	// ActivityType Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. Module game chỉ nhận quest, boss.
+	ActivityType    PartyActivityType          `json:"activity_type"`
+	GameMode        *string                    `json:"game_mode,omitempty"`
+	LeaderId        openapi_types.UUID         `json:"leader_id"`
+	Members         []PartyActivityStartMember `json:"members"`
+	PartyActivityId openapi_types.UUID         `json:"party_activity_id"`
+	PartyId         openapi_types.UUID         `json:"party_id"`
+}
+
+// PartyActivityStarted Examples: {"external_ref":"0193a5f4-6c1e-7b2a-9d1f-0000000000c1","room_type":"boss","scene_ref":"boss/forest_golem"}
+type PartyActivityStarted struct {
+	AreaId *string `json:"area_id,omitempty"`
+
+	// ExternalRef encounter_id (boss) / party_quest_session_id (quest)
+	ExternalRef openapi_types.UUID           `json:"external_ref"`
+	RoomType    PartyActivityStartedRoomType `json:"room_type"`
+	SceneRef    *string                      `json:"scene_ref,omitempty"`
+}
+
+// PartyActivityStartedRoomType defines model for PartyActivityStarted.RoomType.
+type PartyActivityStartedRoomType string
+
+// PartyActivityType Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. Module game chỉ nhận quest, boss.
+type PartyActivityType string
 
 // CommonInternalCommonV1PageInfo defines model for common_internal-common.v1_PageInfo.
 type CommonInternalCommonV1PageInfo struct {
@@ -516,6 +700,15 @@ type ListTrashParams struct {
 	Limit        *CommonInternalCommonV1Limit        `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// ListPartyActivityCandidatesJSONRequestBody defines body for ListPartyActivityCandidates for application/json ContentType.
+type ListPartyActivityCandidatesJSONRequestBody = PartyActivityCandidatesRequest
+
+// CheckPartyActivityEligibilityJSONRequestBody defines body for CheckPartyActivityEligibility for application/json ContentType.
+type CheckPartyActivityEligibilityJSONRequestBody = PartyActivityCheckRequest
+
+// StartPartyActivityJSONRequestBody defines body for StartPartyActivity for application/json ContentType.
+type StartPartyActivityJSONRequestBody = PartyActivityStartRequest
+
 // CleanupStudentDataJSONRequestBody defines body for CleanupStudentData for application/json ContentType.
 type CleanupStudentDataJSONRequestBody = CommonInternalCommonV1StudentCleanupRequest
 
@@ -542,6 +735,15 @@ type MergeUserDataJSONRequestBody = CommonInternalCommonV1UserMergeRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ListPartyActivityCandidates Hoạt động quest/boss có thể chơi theo party và điều kiện của từng thành viên
+	// (POST /internal/v1/party-activities/candidates:list)
+	ListPartyActivityCandidates(w http.ResponseWriter, r *http.Request)
+	// CheckPartyActivityEligibility Kiểm điều kiện một hoạt động quest/boss cho các thành viên party
+	// (POST /internal/v1/party-activities/eligibility:check)
+	CheckPartyActivityEligibility(w http.ResponseWriter, r *http.Request)
+	// StartPartyActivity Tạo encounter boss hoặc phiên quest chung cho một party activity
+	// (POST /internal/v1/party-activities:start)
+	StartPartyActivity(w http.ResponseWriter, r *http.Request)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath)
@@ -582,6 +784,48 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// ListPartyActivityCandidates operation middleware
+func (siw *ServerInterfaceWrapper) ListPartyActivityCandidates(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPartyActivityCandidates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CheckPartyActivityEligibility operation middleware
+func (siw *ServerInterfaceWrapper) CheckPartyActivityEligibility(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CheckPartyActivityEligibility(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StartPartyActivity operation middleware
+func (siw *ServerInterfaceWrapper) StartPartyActivity(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartPartyActivity(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // CleanupStudentData operation middleware
 func (siw *ServerInterfaceWrapper) CleanupStudentData(w http.ResponseWriter, r *http.Request) {
@@ -1040,6 +1284,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/party-activities/candidates:list", wrapper.ListPartyActivityCandidates)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/party-activities/eligibility:check", wrapper.CheckPartyActivityEligibility)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/party-activities:start", wrapper.StartPartyActivity)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:cleanup", wrapper.CleanupStudentData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:restore", wrapper.RestoreStudentData)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/platform/tenant-assignments", wrapper.ListResourceAssignments)
@@ -1067,6 +1314,312 @@ type CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse CommonInte
 type CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
 
 type CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse CommonInternalCommonV1Problem
+
+type ListPartyActivityCandidatesRequestObject struct {
+	Body *ListPartyActivityCandidatesJSONRequestBody
+}
+
+type ListPartyActivityCandidatesResponseObject interface {
+	VisitListPartyActivityCandidatesResponse(w http.ResponseWriter) error
+}
+
+type ListPartyActivityCandidates200JSONResponse PartyActivityCandidates
+
+func (response ListPartyActivityCandidates200JSONResponse) VisitListPartyActivityCandidatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPartyActivityCandidates401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ListPartyActivityCandidates401ApplicationProblemPlusJSONResponse) VisitListPartyActivityCandidatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPartyActivityCandidates403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ListPartyActivityCandidates403ApplicationProblemPlusJSONResponse) VisitListPartyActivityCandidatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPartyActivityCandidates422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ListPartyActivityCandidates422ApplicationProblemPlusJSONResponse) VisitListPartyActivityCandidatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPartyActivityCandidates503ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1DependencyUnavailableApplicationProblemPlusJSONResponse
+}
+
+func (response ListPartyActivityCandidates503ApplicationProblemPlusJSONResponse) VisitListPartyActivityCandidatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPartyActivityEligibilityRequestObject struct {
+	Body *CheckPartyActivityEligibilityJSONRequestBody
+}
+
+type CheckPartyActivityEligibilityResponseObject interface {
+	VisitCheckPartyActivityEligibilityResponse(w http.ResponseWriter) error
+}
+
+type CheckPartyActivityEligibility200JSONResponse PartyActivityEligibility
+
+func (response CheckPartyActivityEligibility200JSONResponse) VisitCheckPartyActivityEligibilityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPartyActivityEligibility401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response CheckPartyActivityEligibility401ApplicationProblemPlusJSONResponse) VisitCheckPartyActivityEligibilityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPartyActivityEligibility403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response CheckPartyActivityEligibility403ApplicationProblemPlusJSONResponse) VisitCheckPartyActivityEligibilityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPartyActivityEligibility404ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response CheckPartyActivityEligibility404ApplicationProblemPlusJSONResponse) VisitCheckPartyActivityEligibilityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPartyActivityEligibility422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response CheckPartyActivityEligibility422ApplicationProblemPlusJSONResponse) VisitCheckPartyActivityEligibilityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckPartyActivityEligibility503ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1DependencyUnavailableApplicationProblemPlusJSONResponse
+}
+
+func (response CheckPartyActivityEligibility503ApplicationProblemPlusJSONResponse) VisitCheckPartyActivityEligibilityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartPartyActivityRequestObject struct {
+	Body *StartPartyActivityJSONRequestBody
+}
+
+type StartPartyActivityResponseObject interface {
+	VisitStartPartyActivityResponse(w http.ResponseWriter) error
+}
+
+type StartPartyActivity201JSONResponse PartyActivityStarted
+
+func (response StartPartyActivity201JSONResponse) VisitStartPartyActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartPartyActivity401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response StartPartyActivity401ApplicationProblemPlusJSONResponse) VisitStartPartyActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartPartyActivity403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response StartPartyActivity403ApplicationProblemPlusJSONResponse) VisitStartPartyActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartPartyActivity404ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1NotFoundApplicationProblemPlusJSONResponse
+}
+
+func (response StartPartyActivity404ApplicationProblemPlusJSONResponse) VisitStartPartyActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartPartyActivity409ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ConflictApplicationProblemPlusJSONResponse
+}
+
+func (response StartPartyActivity409ApplicationProblemPlusJSONResponse) VisitStartPartyActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartPartyActivity422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response StartPartyActivity422ApplicationProblemPlusJSONResponse) VisitStartPartyActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartPartyActivity503ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1DependencyUnavailableApplicationProblemPlusJSONResponse
+}
+
+func (response StartPartyActivity503ApplicationProblemPlusJSONResponse) VisitStartPartyActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type CleanupStudentDataRequestObject struct {
 	StudentId CommonInternalCommonV1StudentIdPath `json:"student_id"`
@@ -1873,6 +2426,15 @@ func (response MergeUserData409ApplicationProblemPlusJSONResponse) VisitMergeUse
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// ListPartyActivityCandidates Hoạt động quest/boss có thể chơi theo party và điều kiện của từng thành viên
+	// (POST /internal/v1/party-activities/candidates:list)
+	ListPartyActivityCandidates(ctx context.Context, request ListPartyActivityCandidatesRequestObject) (ListPartyActivityCandidatesResponseObject, error)
+	// CheckPartyActivityEligibility Kiểm điều kiện một hoạt động quest/boss cho các thành viên party
+	// (POST /internal/v1/party-activities/eligibility:check)
+	CheckPartyActivityEligibility(ctx context.Context, request CheckPartyActivityEligibilityRequestObject) (CheckPartyActivityEligibilityResponseObject, error)
+	// StartPartyActivity Tạo encounter boss hoặc phiên quest chung cho một party activity
+	// (POST /internal/v1/party-activities:start)
+	StartPartyActivity(ctx context.Context, request StartPartyActivityRequestObject) (StartPartyActivityResponseObject, error)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
@@ -1942,6 +2504,99 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// ListPartyActivityCandidates operation middleware
+func (sh *strictHandler) ListPartyActivityCandidates(w http.ResponseWriter, r *http.Request) {
+	var request ListPartyActivityCandidatesRequestObject
+
+	var body ListPartyActivityCandidatesJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListPartyActivityCandidates(ctx, request.(ListPartyActivityCandidatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListPartyActivityCandidates")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListPartyActivityCandidatesResponseObject); ok {
+		if err := validResponse.VisitListPartyActivityCandidatesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CheckPartyActivityEligibility operation middleware
+func (sh *strictHandler) CheckPartyActivityEligibility(w http.ResponseWriter, r *http.Request) {
+	var request CheckPartyActivityEligibilityRequestObject
+
+	var body CheckPartyActivityEligibilityJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CheckPartyActivityEligibility(ctx, request.(CheckPartyActivityEligibilityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CheckPartyActivityEligibility")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CheckPartyActivityEligibilityResponseObject); ok {
+		if err := validResponse.VisitCheckPartyActivityEligibilityResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StartPartyActivity operation middleware
+func (sh *strictHandler) StartPartyActivity(w http.ResponseWriter, r *http.Request) {
+	var request StartPartyActivityRequestObject
+
+	var body StartPartyActivityJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StartPartyActivity(ctx, request.(StartPartyActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StartPartyActivity")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StartPartyActivityResponseObject); ok {
+		if err := validResponse.VisitStartPartyActivityResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // CleanupStudentData operation middleware
@@ -2262,19 +2917,46 @@ var ErrNotFaked = errors.New("api: operation not faked")
 
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
-	CleanupStudentDataFunc      func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
-	RestoreStudentDataFunc      func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
-	ListResourceAssignmentsFunc func(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
-	ApplyTenantAssignmentsFunc  func(ctx context.Context, request ApplyTenantAssignmentsRequestObject) (ApplyTenantAssignmentsResponseObject, error)
-	RevokeTenantAssignmentsFunc func(ctx context.Context, request RevokeTenantAssignmentsRequestObject) (RevokeTenantAssignmentsResponseObject, error)
-	ExecuteTenantCloneStepFunc  func(ctx context.Context, request ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error)
-	ListTrashFunc               func(ctx context.Context, request ListTrashRequestObject) (ListTrashResponseObject, error)
-	RestoreTrashItemFunc        func(ctx context.Context, request RestoreTrashItemRequestObject) (RestoreTrashItemResponseObject, error)
-	AnonymizeUserDataFunc       func(ctx context.Context, request AnonymizeUserDataRequestObject) (AnonymizeUserDataResponseObject, error)
-	MergeUserDataFunc           func(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
+	ListPartyActivityCandidatesFunc   func(ctx context.Context, request ListPartyActivityCandidatesRequestObject) (ListPartyActivityCandidatesResponseObject, error)
+	CheckPartyActivityEligibilityFunc func(ctx context.Context, request CheckPartyActivityEligibilityRequestObject) (CheckPartyActivityEligibilityResponseObject, error)
+	StartPartyActivityFunc            func(ctx context.Context, request StartPartyActivityRequestObject) (StartPartyActivityResponseObject, error)
+	CleanupStudentDataFunc            func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
+	RestoreStudentDataFunc            func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
+	ListResourceAssignmentsFunc       func(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
+	ApplyTenantAssignmentsFunc        func(ctx context.Context, request ApplyTenantAssignmentsRequestObject) (ApplyTenantAssignmentsResponseObject, error)
+	RevokeTenantAssignmentsFunc       func(ctx context.Context, request RevokeTenantAssignmentsRequestObject) (RevokeTenantAssignmentsResponseObject, error)
+	ExecuteTenantCloneStepFunc        func(ctx context.Context, request ExecuteTenantCloneStepRequestObject) (ExecuteTenantCloneStepResponseObject, error)
+	ListTrashFunc                     func(ctx context.Context, request ListTrashRequestObject) (ListTrashResponseObject, error)
+	RestoreTrashItemFunc              func(ctx context.Context, request RestoreTrashItemRequestObject) (RestoreTrashItemResponseObject, error)
+	AnonymizeUserDataFunc             func(ctx context.Context, request AnonymizeUserDataRequestObject) (AnonymizeUserDataResponseObject, error)
+	MergeUserDataFunc                 func(ctx context.Context, request MergeUserDataRequestObject) (MergeUserDataResponseObject, error)
 }
 
 var _ StrictServerInterface = (*Fake)(nil)
+
+// ListPartyActivityCandidates calls ListPartyActivityCandidatesFunc.
+func (f *Fake) ListPartyActivityCandidates(a0 context.Context, a1 ListPartyActivityCandidatesRequestObject) (ListPartyActivityCandidatesResponseObject, error) {
+	if f.ListPartyActivityCandidatesFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ListPartyActivityCandidatesFunc(a0, a1)
+}
+
+// CheckPartyActivityEligibility calls CheckPartyActivityEligibilityFunc.
+func (f *Fake) CheckPartyActivityEligibility(a0 context.Context, a1 CheckPartyActivityEligibilityRequestObject) (CheckPartyActivityEligibilityResponseObject, error) {
+	if f.CheckPartyActivityEligibilityFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.CheckPartyActivityEligibilityFunc(a0, a1)
+}
+
+// StartPartyActivity calls StartPartyActivityFunc.
+func (f *Fake) StartPartyActivity(a0 context.Context, a1 StartPartyActivityRequestObject) (StartPartyActivityResponseObject, error) {
+	if f.StartPartyActivityFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.StartPartyActivityFunc(a0, a1)
+}
 
 // CleanupStudentData calls CleanupStudentDataFunc.
 func (f *Fake) CleanupStudentData(a0 context.Context, a1 CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error) {

@@ -108,6 +108,17 @@ type Parties struct {
 	Metrics     port.PartyMetrics    // nil: no metrics
 	Config      PartyConfig
 	Now         func() time.Time
+
+	// F101 — Party Lobby and party sessions.
+	Lobby        port.LobbyStore          // nil: no lobby state (Ready unavailable)
+	Activities   write.ActivityRepository // nil: no party sessions
+	Areas        write.AreaDirectory      // explore eligibility (ref.world_areas)
+	Game         port.GameActivities      // nil: quest/boss unavailable (module game facade, F103)
+	Statuses     port.PresenceStatuses    // nil: presence of Presence only
+	LobbyMetrics port.LobbyMetrics        // nil: no metrics
+	LobbyConfig  LobbyConfig
+	Sweeps       write.SweepRepository // presence sweeper reconciliation
+	Locks        port.JobLock          // nil: the sweeper runs on every replica
 }
 
 func (h Parties) now() time.Time {
@@ -235,7 +246,12 @@ func (h Parties) view(ctx context.Context, p *party.Party) (view.Party, error) {
 	if err != nil {
 		return view.Party{}, err
 	}
-	return view.NewParty(*p, cards, h.online(ctx, p.MemberIDs())), nil
+	v := view.NewParty(*p, cards, h.online(ctx, p.MemberIDs()))
+	if h.Lobby != nil {
+		l := h.lobby(ctx, p.ID)
+		v.Lobby = &l
+	}
+	return v, nil
 }
 
 func ptr[T any](v T) *T { return &v }
@@ -275,9 +291,10 @@ func (h Parties) recordResult(ctx context.Context, action string, result audit.R
 
 // effects are what follows the commit: realtime pushes and the Valkey state (best effort, ADR-0004).
 type effects struct {
-	pushes []push
-	sync   *port.PartySnapshot
-	drop   *dropState
+	pushes     []push
+	sync       *port.PartySnapshot
+	drop       *dropState
+	resetReady []uuid.UUID // parties whose Ready flags reset after the commit (F101)
 }
 
 type push struct {
@@ -287,6 +304,7 @@ type push struct {
 }
 
 type dropState struct {
+	tenant   uuid.UUID
 	party    uuid.UUID
 	students []uuid.UUID
 }
@@ -303,7 +321,7 @@ func snapshot(p *party.Party) *port.PartySnapshot {
 	for _, m := range p.Members {
 		roles[m.StudentID] = m.Role
 	}
-	return &port.PartySnapshot{PartyID: p.ID, LeaderID: p.LeaderID, Type: p.Type, MaxMembers: p.MaxMembers, Status: p.Status,
+	return &port.PartySnapshot{TenantID: p.TenantID, PartyID: p.ID, LeaderID: p.LeaderID, Type: p.Type, MaxMembers: p.MaxMembers, Status: p.Status,
 		StateVersion: p.StateVersion, Members: roles}
 }
 
@@ -318,7 +336,7 @@ func (fx *effects) state(p *party.Party, left ...uuid.UUID) {
 		return
 	}
 	fx.sync = nil
-	fx.drop = &dropState{party: p.ID, students: left}
+	fx.drop = &dropState{tenant: p.TenantID, party: p.ID, students: left}
 }
 
 // after registers the effects to run after the commit of the transaction of ctx.
@@ -334,6 +352,7 @@ func (h Parties) after(ctx context.Context, fx *effects) error {
 				}
 			}
 		}
+		h.afterLobby(ctx, fx)
 		if h.Cache == nil {
 			return
 		}
@@ -413,7 +432,7 @@ func mapError(err error) error {
 	case errors.Is(err, write.ErrPendingExists):
 		return problem.New(problem.Conflict, "a pending invitation exists")
 	}
-	return err
+	return mapLobbyError(err)
 }
 
 // policyDenied wraps a policy refusal of an invitation or join with its audit and metric (F100-AC-09).

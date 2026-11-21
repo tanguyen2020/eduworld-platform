@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyactivity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
@@ -76,14 +77,83 @@ func init() {
 	party.DefaultStatus = partyDescStatus.Default.(string)
 	// party.StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	party.StatusValidator = partyDescStatus.Validators[0].(func(string) error)
+	// partyDescSelectedActivityType is the schema descriptor for selected_activity_type field.
+	partyDescSelectedActivityType := partyFields[11].Descriptor()
+	// party.SelectedActivityTypeValidator is a validator for the "selected_activity_type" field. It is called by the builders before save.
+	party.SelectedActivityTypeValidator = partyDescSelectedActivityType.Validators[0].(func(string) error)
+	// partyDescSelectedActivityRef is the schema descriptor for selected_activity_ref field.
+	partyDescSelectedActivityRef := partyFields[12].Descriptor()
+	// party.SelectedActivityRefValidator is a validator for the "selected_activity_ref" field. It is called by the builders before save.
+	party.SelectedActivityRefValidator = partyDescSelectedActivityRef.Validators[0].(func(string) error)
+	// partyDescSelectedGameMode is the schema descriptor for selected_game_mode field.
+	partyDescSelectedGameMode := partyFields[13].Descriptor()
+	// party.SelectedGameModeValidator is a validator for the "selected_game_mode" field. It is called by the builders before save.
+	party.SelectedGameModeValidator = partyDescSelectedGameMode.Validators[0].(func(string) error)
 	// partyDescStateVersion is the schema descriptor for state_version field.
-	partyDescStateVersion := partyFields[11].Descriptor()
+	partyDescStateVersion := partyFields[14].Descriptor()
 	// party.DefaultStateVersion holds the default value on creation for the state_version field.
 	party.DefaultStateVersion = partyDescStateVersion.Default.(int64)
 	// partyDescID is the schema descriptor for id field.
 	partyDescID := partyMixinFields0[0].Descriptor()
 	// party.DefaultID holds the default value on creation for the id field.
 	party.DefaultID = partyDescID.Default.(func() uuid.UUID)
+	partyactivityMixin := schema.PartyActivity{}.Mixin()
+	partyactivityMixinHooks0 := partyactivityMixin[0].Hooks()
+	partyactivity.Hooks[0] = partyactivityMixinHooks0[0]
+	partyactivityMixinInters0 := partyactivityMixin[0].Interceptors()
+	partyactivity.Interceptors[0] = partyactivityMixinInters0[0]
+	partyactivityMixinFields0 := partyactivityMixin[0].Fields()
+	_ = partyactivityMixinFields0
+	partyactivityFields := schema.PartyActivity{}.Fields()
+	_ = partyactivityFields
+	// partyactivityDescCreatedAt is the schema descriptor for created_at field.
+	partyactivityDescCreatedAt := partyactivityMixinFields0[2].Descriptor()
+	// partyactivity.DefaultCreatedAt holds the default value on creation for the created_at field.
+	partyactivity.DefaultCreatedAt = partyactivityDescCreatedAt.Default.(func() time.Time)
+	// partyactivityDescUpdatedAt is the schema descriptor for updated_at field.
+	partyactivityDescUpdatedAt := partyactivityMixinFields0[4].Descriptor()
+	// partyactivity.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	partyactivity.DefaultUpdatedAt = partyactivityDescUpdatedAt.Default.(func() time.Time)
+	// partyactivity.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	partyactivity.UpdateDefaultUpdatedAt = partyactivityDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// partyactivityDescDeleteReason is the schema descriptor for delete_reason field.
+	partyactivityDescDeleteReason := partyactivityMixinFields0[8].Descriptor()
+	// partyactivity.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	partyactivity.DeleteReasonValidator = partyactivityDescDeleteReason.Validators[0].(func(string) error)
+	// partyactivityDescVersion is the schema descriptor for version field.
+	partyactivityDescVersion := partyactivityMixinFields0[9].Descriptor()
+	// partyactivity.DefaultVersion holds the default value on creation for the version field.
+	partyactivity.DefaultVersion = partyactivityDescVersion.Default.(int64)
+	// partyactivityDescActivityType is the schema descriptor for activity_type field.
+	partyactivityDescActivityType := partyactivityFields[2].Descriptor()
+	// partyactivity.ActivityTypeValidator is a validator for the "activity_type" field. It is called by the builders before save.
+	partyactivity.ActivityTypeValidator = partyactivityDescActivityType.Validators[0].(func(string) error)
+	// partyactivityDescActivityRef is the schema descriptor for activity_ref field.
+	partyactivityDescActivityRef := partyactivityFields[3].Descriptor()
+	// partyactivity.ActivityRefValidator is a validator for the "activity_ref" field. It is called by the builders before save.
+	partyactivity.ActivityRefValidator = partyactivityDescActivityRef.Validators[0].(func(string) error)
+	// partyactivityDescGameMode is the schema descriptor for game_mode field.
+	partyactivityDescGameMode := partyactivityFields[4].Descriptor()
+	// partyactivity.GameModeValidator is a validator for the "game_mode" field. It is called by the builders before save.
+	partyactivity.GameModeValidator = partyactivityDescGameMode.Validators[0].(func(string) error)
+	// partyactivityDescRoomType is the schema descriptor for room_type field.
+	partyactivityDescRoomType := partyactivityFields[6].Descriptor()
+	// partyactivity.RoomTypeValidator is a validator for the "room_type" field. It is called by the builders before save.
+	partyactivity.RoomTypeValidator = partyactivityDescRoomType.Validators[0].(func(string) error)
+	// partyactivityDescStatus is the schema descriptor for status field.
+	partyactivityDescStatus := partyactivityFields[8].Descriptor()
+	// partyactivity.DefaultStatus holds the default value on creation for the status field.
+	partyactivity.DefaultStatus = partyactivityDescStatus.Default.(string)
+	// partyactivity.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	partyactivity.StatusValidator = partyactivityDescStatus.Validators[0].(func(string) error)
+	// partyactivityDescEndReason is the schema descriptor for end_reason field.
+	partyactivityDescEndReason := partyactivityFields[14].Descriptor()
+	// partyactivity.EndReasonValidator is a validator for the "end_reason" field. It is called by the builders before save.
+	partyactivity.EndReasonValidator = partyactivityDescEndReason.Validators[0].(func(string) error)
+	// partyactivityDescID is the schema descriptor for id field.
+	partyactivityDescID := partyactivityMixinFields0[0].Descriptor()
+	// partyactivity.DefaultID holds the default value on creation for the id field.
+	partyactivity.DefaultID = partyactivityDescID.Default.(func() uuid.UUID)
 	partyinvitationMixin := schema.PartyInvitation{}.Mixin()
 	partyinvitationMixinHooks0 := partyinvitationMixin[0].Hooks()
 	partyinvitation.Hooks[0] = partyinvitationMixinHooks0[0]
@@ -284,15 +354,15 @@ func init() {
 	// sessionmembership.RoomTypeValidator is a validator for the "room_type" field. It is called by the builders before save.
 	sessionmembership.RoomTypeValidator = sessionmembershipDescRoomType.Validators[0].(func(string) error)
 	// sessionmembershipDescJoinedAt is the schema descriptor for joined_at field.
-	sessionmembershipDescJoinedAt := sessionmembershipFields[8].Descriptor()
+	sessionmembershipDescJoinedAt := sessionmembershipFields[9].Descriptor()
 	// sessionmembership.DefaultJoinedAt holds the default value on creation for the joined_at field.
 	sessionmembership.DefaultJoinedAt = sessionmembershipDescJoinedAt.Default.(func() time.Time)
 	// sessionmembershipDescLeaveReason is the schema descriptor for leave_reason field.
-	sessionmembershipDescLeaveReason := sessionmembershipFields[10].Descriptor()
+	sessionmembershipDescLeaveReason := sessionmembershipFields[11].Descriptor()
 	// sessionmembership.LeaveReasonValidator is a validator for the "leave_reason" field. It is called by the builders before save.
 	sessionmembership.LeaveReasonValidator = sessionmembershipDescLeaveReason.Validators[0].(func(string) error)
 	// sessionmembershipDescDisconnects is the schema descriptor for disconnects field.
-	sessionmembershipDescDisconnects := sessionmembershipFields[11].Descriptor()
+	sessionmembershipDescDisconnects := sessionmembershipFields[12].Descriptor()
 	// sessionmembership.DefaultDisconnects holds the default value on creation for the disconnects field.
 	sessionmembership.DefaultDisconnects = sessionmembershipDescDisconnects.Default.(int)
 	// sessionmembershipDescID is the schema descriptor for id field.

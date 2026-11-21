@@ -23,6 +23,12 @@ func partyBody(id string, target uuid.UUID) any {
 		return map[string]any{"invitee_id": target}
 	case "transferPartyLeader":
 		return map[string]any{"new_leader_id": target}
+	case "setPartyReady":
+		return map[string]any{"ready": true}
+	case "selectPartyActivity":
+		return map[string]any{"activity_type": "explore", "activity_ref": "meadow", "expected_version": 0}
+	case "startPartySession":
+		return map[string]any{"expected_version": 0}
 	}
 	return nil
 }

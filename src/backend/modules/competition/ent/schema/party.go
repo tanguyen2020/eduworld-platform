@@ -14,7 +14,7 @@ import (
 // Party — multiplayer.parties (T, DATABASE_DESIGN §2.9, §3.7, F100): a temporary play group of students of one
 // tenant and school (PARTY_SYSTEM §3). Disbanding sets status, never deletes (ADR-0028); deleted_at is only for rows
 // created by mistake. state_version grows by exactly one with every membership or settings change (expected_version
-// of F101).
+// of F101). The activity chosen in the Party Lobby (selected_activity_*) is durable (F101-AC-06); Ready is ephemeral.
 type Party struct{ ent.Schema }
 
 func (Party) Annotations() []schema.Annotation {
@@ -36,6 +36,9 @@ func (Party) Fields() []ent.Field {
 		field.String("status").MaxLen(64).Default("open"),
 		field.UUID("current_activity_id", uuid.UUID{}).Optional().Nillable(),
 		field.UUID("current_game_session_ref", uuid.UUID{}).Optional().Nillable(),
+		field.String("selected_activity_type").MaxLen(64).Optional().Nillable(),
+		field.String("selected_activity_ref").MaxLen(64).Optional().Nillable(),
+		field.String("selected_game_mode").MaxLen(64).Optional().Nillable(),
 		field.Int64("state_version").Default(0),
 		field.Time("disbanded_at").Optional().Nillable(),
 	}

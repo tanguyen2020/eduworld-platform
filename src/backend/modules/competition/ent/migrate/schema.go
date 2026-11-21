@@ -32,6 +32,9 @@ var (
 		{Name: "status", Type: field.TypeString, Size: 64, Default: "open"},
 		{Name: "current_activity_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "current_game_session_ref", Type: field.TypeUUID, Nullable: true},
+		{Name: "selected_activity_type", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "selected_activity_ref", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "selected_game_mode", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "state_version", Type: field.TypeInt64, Default: 0},
 		{Name: "disbanded_at", Type: field.TypeTime, Nullable: true},
 	}
@@ -56,6 +59,61 @@ var (
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
+			},
+		},
+	}
+	// PartyActivitiesColumns holds the columns for the "party_activities" table.
+	PartyActivitiesColumns = []*schema.Column{
+		{Name: "party_activity_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "party_id", Type: field.TypeUUID},
+		{Name: "activity_type", Type: field.TypeString, Size: 64},
+		{Name: "activity_ref", Type: field.TypeString, Size: 64},
+		{Name: "game_mode", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "room_id", Type: field.TypeUUID},
+		{Name: "room_type", Type: field.TypeString, Size: 64},
+		{Name: "external_ref", Type: field.TypeUUID, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "running"},
+		{Name: "min_members", Type: field.TypeInt},
+		{Name: "max_members", Type: field.TypeInt},
+		{Name: "allow_continue_on_disconnect", Type: field.TypeBool},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+		{Name: "end_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "result_summary", Type: field.TypeJSON, Nullable: true},
+	}
+	// PartyActivitiesTable holds the schema information for the "party_activities" table.
+	PartyActivitiesTable = &schema.Table{
+		Name:       "party_activities",
+		Columns:    PartyActivitiesColumns,
+		PrimaryKey: []*schema.Column{PartyActivitiesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "party_activities_one_running_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PartyActivitiesColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'running' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "party_activities_room_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartyActivitiesColumns[15]},
+			},
+			{
+				Name:    "party_activities_party_idx",
+				Unique:  false,
+				Columns: []*schema.Column{PartyActivitiesColumns[1], PartyActivitiesColumns[11], PartyActivitiesColumns[22]},
 			},
 		},
 	}
@@ -262,10 +320,11 @@ var (
 		{Name: "room_type", Type: field.TypeString, Size: 64},
 		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "student_id", Type: field.TypeUUID},
-		{Name: "game_session_id", Type: field.TypeUUID},
+		{Name: "game_session_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "party_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "match_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "encounter_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "party_activity_id", Type: field.TypeUUID, Nullable: true},
 		{Name: "joined_at", Type: field.TypeTime},
 		{Name: "left_at", Type: field.TypeTime, Nullable: true},
 		{Name: "leave_reason", Type: field.TypeString, Nullable: true, Size: 64},
@@ -288,13 +347,22 @@ var (
 			{
 				Name:    "session_memberships_student_idx",
 				Unique:  false,
-				Columns: []*schema.Column{SessionMembershipsColumns[1], SessionMembershipsColumns[13], SessionMembershipsColumns[18]},
+				Columns: []*schema.Column{SessionMembershipsColumns[1], SessionMembershipsColumns[13], SessionMembershipsColumns[19]},
+			},
+			{
+				Name:    "session_memberships_activity_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SessionMembershipsColumns[18], SessionMembershipsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "party_activity_id IS NOT NULL AND deleted_at IS NULL",
+				},
 			},
 		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		PartiesTable,
+		PartyActivitiesTable,
 		PartyInvitationsTable,
 		PartyMembersTable,
 		PartyPoliciesTable,
@@ -306,6 +374,9 @@ var (
 func init() {
 	PartiesTable.Annotation = &entsql.Annotation{
 		Table: "parties",
+	}
+	PartyActivitiesTable.Annotation = &entsql.Annotation{
+		Table: "party_activities",
 	}
 	PartyInvitationsTable.Annotation = &entsql.Annotation{
 		Table: "party_invitations",

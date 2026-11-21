@@ -170,6 +170,11 @@ type popts struct {
 	realtime port.PartyRealtime   // nil: the recording double
 	cache    port.PartyStateCache // nil: none
 	presence port.PartyPresence   // nil: the settable double
+	// F101
+	lobby    port.LobbyStore      // nil: no lobby state
+	game     port.GameActivities  // nil: module game offers no party activities
+	lobbyCfg *command.LobbyConfig // nil: lobbyConfig
+	statuses port.PresenceStatuses
 }
 
 func setupParty(t *testing.T, o popts) *penv {
@@ -219,8 +224,18 @@ func setupParty(t *testing.T, o popts) *penv {
 	}
 	e.parties = command.Parties{UoW: e.uow, AfterCommit: entx.AfterCommit, Repo: persistence.Parties{}, Directory: persistence.PartyDirectory{},
 		Events: persistence.Publisher{W: w}, Audit: persistence.Auditor{R: e.rec}, Moderator: e.mod, Presence: pres, Realtime: rtp,
-		Cache: o.cache, Metrics: observability.Party{}, Config: cfg, Now: e.clock.Now}
-	e.queries = query.Parties{Read: e.read, Reader: persistence.Parties{}, Presence: pres, Now: e.clock.Now}
+		Cache: o.cache, Metrics: observability.Party{}, Config: cfg, Now: e.clock.Now,
+		Lobby: o.lobby, Activities: persistence.Activities{}, Areas: persistence.Areas{}, Game: o.game, LobbyMetrics: observability.Lobby{},
+		LobbyConfig: lobbyConfig, Sweeps: persistence.Sweeps{}}
+	if o.lobbyCfg != nil {
+		e.parties.LobbyConfig = *o.lobbyCfg
+	}
+	e.parties.Statuses = e.online
+	if o.statuses != nil {
+		e.parties.Statuses = o.statuses
+	}
+	e.queries = query.Parties{Read: e.read, Reader: persistence.Parties{}, Presence: pres, Now: e.clock.Now, Lobby: o.lobby,
+		LobbyReader: persistence.LobbyRead{}, Game: o.game, PrivateCapacity: lobbyConfig.PrivateCapacity}
 	spec, err := httpx.LoadSpec(ctx, testkit.RepoRoot(t)+"/specs/openapi/eduworld-api.v1.yaml")
 	if err != nil {
 		t.Fatal(err)

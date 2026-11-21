@@ -79,11 +79,14 @@ func (m *Member) Entity() Entity {
 
 // Instance is the in-memory state of one hub instance, owned by the room host holding its lease.
 type Instance struct {
-	RoomID     string
-	Area       Area
-	Partition  Partition
-	Capacity   int
-	members    map[uuid.UUID]*Member
+	RoomID    string
+	Area      Area
+	Partition Partition
+	Capacity  int
+	members   map[uuid.UUID]*Member
+	// Allowed restricts the seats of a private_instance to the participants of a party session (F101-AC-11); nil = a
+	// public hub instance partitioned by school and grade band.
+	Allowed    map[uuid.UUID]bool
 	nextEID    int
 	tick       int64
 	emptySince time.Time
@@ -116,7 +119,11 @@ func (in *Instance) Members() []*Member {
 // Join seats a student (F091-AC-01, AC-02, AC-04, AC-09): a member coming back takes back the held seat even when the
 // instance is full; a new member needs a free seat and the partition of the instance.
 func (in *Instance) Join(s Seat, spawn Vec3, now time.Time) (m *Member, rejoined bool, err error) {
-	if s.TenantID != in.Partition.TenantID || s.SchoolID != in.Partition.SchoolID || s.GradeBand != in.Partition.GradeBand {
+	if in.Allowed != nil {
+		if s.TenantID != in.Partition.TenantID || !in.Allowed[s.Player.UserID] {
+			return nil, false, ErrNotMember
+		}
+	} else if s.TenantID != in.Partition.TenantID || s.SchoolID != in.Partition.SchoolID || s.GradeBand != in.Partition.GradeBand {
 		return nil, false, ErrWrongPartition
 	}
 	if m, ok := in.members[s.Player.UserID]; ok {

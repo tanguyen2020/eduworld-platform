@@ -33,7 +33,7 @@ const (
 	InviteMembers    = "members"
 )
 
-// Party status (PARTY_SYSTEM §13.1); in_activity is written by F101.
+// Party status (PARTY_SYSTEM §13.1); in_activity while a party activity runs (F101).
 const (
 	StatusOpen       = "open"
 	StatusInActivity = "in_activity"
@@ -134,6 +134,7 @@ type Party struct {
 	GradeBand        string
 	Status           string
 	StateVersion     int64
+	Selected         *Selection // activity chosen in the Party Lobby (F101), nil: none
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	DisbandedAt      *time.Time

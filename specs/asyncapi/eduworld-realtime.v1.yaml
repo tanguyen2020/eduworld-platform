@@ -653,12 +653,23 @@ components:
         status: { type: string, enum: [online, away, in_activity, disconnected] }
         ready: { type: boolean }
         joined_at: { $ref: '#/components/schemas/EpochMs' }
+    PartyActivityType:
+      type: string
+      description: 'Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. M4a chỉ bật explore, quest, boss.'
+      enum: [explore, quest, boss, learning_challenge, coop_challenge, team_battle]
+    PartyIneligibleMember:
+      type: object
+      required: [user_id, reason_code]
+      properties:
+        user_id: { $ref: '#/components/schemas/Uuid' }
+        reason_code: { type: string, enum: [grade_not_allowed, grade_band_mismatch, prerequisite_missing, area_locked, attempt_limit, sanctioned, not_online] }
+        requirement: { type: string, maxLength: 255, description: 'Yêu cầu của hoạt động (vd. "grade_levels:4"), không phải dữ liệu của học sinh' }
     ActivityRef:
       type: object
       required: [kind, id]
       properties:
-        kind: { type: string, enum: [quest, minigame, learning_challenge, team_competition, free_explore] }
-        id: { type: string, maxLength: 64, description: 'quest_version_id / minigame_version_id / ...' }
+        kind: { $ref: '#/components/schemas/PartyActivityType' }
+        id: { type: string, maxLength: 64, pattern: '^[a-z0-9_.-]{1,64}$', description: 'area_id (explore) / quest_id (quest) / boss_id (boss)' }
         title: { type: string, maxLength: 255 }
     QuestionRender:
       type: object
@@ -1752,11 +1763,12 @@ components:
               type: { const: party.activity.select }
               payload:
                 type: object
-                required: [party_id, activity]
+                required: [party_id, activity, expected_version]
                 properties:
                   party_id: { $ref: '#/components/schemas/Uuid' }
                   activity: { $ref: '#/components/schemas/ActivityRef' }
                   game_mode: { type: string, maxLength: 64 }
+                  expected_version: { type: integer, minimum: 0, description: 'state_version client đang thấy; lệch → CONFLICT, client tải lại snapshot (F101-AC-04)' }
     PartySessionStart:
       name: party.session.start
       summary: Chỉ leader; mọi thành viên online phải ready. Server tạo Game Session/room và gửi party.session.started.
@@ -1768,9 +1780,10 @@ components:
               type: { const: party.session.start }
               payload:
                 type: object
-                required: [party_id]
+                required: [party_id, expected_version]
                 properties:
                   party_id: { $ref: '#/components/schemas/Uuid' }
+                  expected_version: { type: integer, minimum: 0, description: 'state_version client đang thấy (F101-AC-07)' }
     PartyStateSnapshot:
       name: party.state.snapshot
       summary: Gửi khi kết nối/resume hoặc khi client lệch state_version.
@@ -1794,6 +1807,8 @@ components:
                   status: { type: string, enum: [open, in_activity, disbanded] }
                   members: { type: array, items: { $ref: '#/components/schemas/PartyMemberState' } }
                   current_activity: { $ref: '#/components/schemas/ActivityRef' }
+                  leader_reconnecting: { type: boolean, description: 'Leader đang trong grace party_leader_grace (F101-AC-15)' }
+                  room_id: { type: string, maxLength: 64, description: 'Phòng của phiên đang chạy (status in_activity), để quay lại đúng phòng (F101-AC-17)' }
                   chat_channel_id: { $ref: '#/components/schemas/Uuid' }
     PartyInvitationReceived:
       name: party.invitation.received
@@ -1920,14 +1935,13 @@ components:
                 properties:
                   party_id: { $ref: '#/components/schemas/Uuid' }
                   activity: { $ref: '#/components/schemas/ActivityRef' }
+                  game_mode: { type: string, maxLength: 64 }
+                  state_version: { type: integer, minimum: 0 }
                   ineligible_members:
                     type: array
-                    description: Thành viên không đủ điều kiện (vd. sai khối lớp) — leader phải đổi hoạt động hoặc thành viên rời.
-                    items:
-                      type: object
-                      properties:
-                        user_id: { $ref: '#/components/schemas/Uuid' }
-                        reason: { type: string, maxLength: 1000 }
+                    maxItems: 8
+                    description: Thành viên không đủ điều kiện — chỉ mã lý do và yêu cầu của hoạt động, không lộ khối/lớp thực (R16); leader phải đổi hoạt động hoặc thành viên rời.
+                    items: { $ref: '#/components/schemas/PartyIneligibleMember' }
     PartySessionStarted:
       name: party.session.started
       payload:
@@ -1942,7 +1956,8 @@ components:
                 properties:
                   party_id: { $ref: '#/components/schemas/Uuid' }
                   room_id: { type: string, maxLength: 64 }
-                  room_type: { type: string, enum: [private_instance, coop, battle] }
+                  room_type: { type: string, enum: [private_instance, boss, coop, battle] }
+                  party_activity_id: { $ref: '#/components/schemas/Uuid' }
                   activity: { $ref: '#/components/schemas/ActivityRef' }
                   scene_ref: { type: string, maxLength: 255, description: 'Scene/area Godot cần tải.' }
                   member_ids: { type: array, items: { $ref: '#/components/schemas/Uuid' } }
@@ -1959,8 +1974,10 @@ components:
                 required: [party_id, outcome]
                 properties:
                   party_id: { $ref: '#/components/schemas/Uuid' }
-                  outcome: { type: string, enum: [completed, abandoned, failed, aborted] }
-                  summary: { type: object, description: 'Tóm tắt tiến độ chung; kết quả học tập cá nhân lấy qua REST.' }
+                  party_activity_id: { $ref: '#/components/schemas/Uuid' }
+                  outcome: { type: string, enum: [completed, abandoned, failed, aborted], description: 'completed ← completed; abandoned ← timeout, all_left; aborted ← disbanded; failed ← server_failure' }
+                  reason: { type: string, enum: [completed, timeout, all_left, disbanded, server_failure], description: 'end_reason của party activity (PARTY_SYSTEM §6.3)' }
+                  summary: { type: object, maxProperties: 10, description: 'Tóm tắt tiến độ chung (vd. result, outcome); không bao giờ có điểm, kết quả hay mastery của từng người (FR-PTY-013) — kết quả học tập cá nhân lấy qua REST của chính học sinh.' }
     PartyDisbanded:
       name: party.party.disbanded
       summary: Type theo mẫu 3 phần `party.party.disbanded`.

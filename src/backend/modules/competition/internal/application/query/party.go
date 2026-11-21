@@ -27,6 +27,12 @@ type Parties struct {
 	Reader   read.PartyReader
 	Presence port.PartyPresence // nil: presence unknown
 	Now      func() time.Time
+
+	// F101: lobby state (Ready, leader grace), running room, eligible activities.
+	Lobby           port.LobbyStore     // nil: lobby not shown
+	LobbyReader     read.LobbyReader    // nil: no running room, no eligible activities
+	Game            port.GameActivities // nil: quest/boss not offered
+	PrivateCapacity int
 }
 
 func (q Parties) now() time.Time {
@@ -59,7 +65,21 @@ func (q Parties) view(ctx context.Context, tenant uuid.UUID, p *party.Party) (vi
 			online = nil
 		}
 	}
-	return view.NewParty(*p, cards, online), nil
+	v := view.NewParty(*p, cards, online)
+	if q.Lobby != nil {
+		l, err := q.Lobby.Load(ctx, p.ID)
+		if err != nil {
+			slog.WarnContext(ctx, "competition: lobby state unavailable", "error", err) // rebuilt: Ready false (F101-AC-06)
+			l = party.Lobby{}
+		}
+		v.Lobby = &l
+	}
+	if q.LobbyReader != nil && p.Status == party.StatusInActivity {
+		if v.Room, err = q.LobbyReader.RunningRoom(ctx, tenant, p.ID); err != nil {
+			return view.Party{}, err
+		}
+	}
+	return v, nil
 }
 
 // GetMyParty implements getMyParty: the active party of the caller, 404 PARTY_NOT_FOUND when none.

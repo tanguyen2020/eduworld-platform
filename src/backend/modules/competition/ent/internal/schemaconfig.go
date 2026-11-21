@@ -8,6 +8,7 @@ import "context"
 // that can be passed at runtime.
 type SchemaConfig struct {
 	Party             string // Party table.
+	PartyActivity     string // PartyActivity table.
 	PartyInvitation   string // PartyInvitation table.
 	PartyMember       string // PartyMember table.
 	PartyPolicy       string // PartyPolicy table.

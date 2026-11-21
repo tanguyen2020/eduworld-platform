@@ -49,6 +49,8 @@ const (
 	FieldMatchID = "match_id"
 	// FieldEncounterID holds the string denoting the encounter_id field in the database.
 	FieldEncounterID = "encounter_id"
+	// FieldPartyActivityID holds the string denoting the party_activity_id field in the database.
+	FieldPartyActivityID = "party_activity_id"
 	// FieldJoinedAt holds the string denoting the joined_at field in the database.
 	FieldJoinedAt = "joined_at"
 	// FieldLeftAt holds the string denoting the left_at field in the database.
@@ -81,6 +83,7 @@ var Columns = []string{
 	FieldPartyID,
 	FieldMatchID,
 	FieldEncounterID,
+	FieldPartyActivityID,
 	FieldJoinedAt,
 	FieldLeftAt,
 	FieldLeaveReason,
@@ -218,6 +221,11 @@ func ByMatchID(opts ...sql.OrderTermOption) OrderOption {
 // ByEncounterID orders the results by the encounter_id field.
 func ByEncounterID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEncounterID, opts...).ToFunc()
+}
+
+// ByPartyActivityID orders the results by the party_activity_id field.
+func ByPartyActivityID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPartyActivityID, opts...).ToFunc()
 }
 
 // ByJoinedAt orders the results by the joined_at field.

@@ -155,6 +155,21 @@ func CurrentGameSessionRef(v uuid.UUID) predicate.Party {
 	return predicate.Party(sql.FieldEQ(FieldCurrentGameSessionRef, v))
 }
 
+// SelectedActivityType applies equality check predicate on the "selected_activity_type" field. It's identical to SelectedActivityTypeEQ.
+func SelectedActivityType(v string) predicate.Party {
+	return predicate.Party(sql.FieldEQ(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityRef applies equality check predicate on the "selected_activity_ref" field. It's identical to SelectedActivityRefEQ.
+func SelectedActivityRef(v string) predicate.Party {
+	return predicate.Party(sql.FieldEQ(FieldSelectedActivityRef, v))
+}
+
+// SelectedGameMode applies equality check predicate on the "selected_game_mode" field. It's identical to SelectedGameModeEQ.
+func SelectedGameMode(v string) predicate.Party {
+	return predicate.Party(sql.FieldEQ(FieldSelectedGameMode, v))
+}
+
 // StateVersion applies equality check predicate on the "state_version" field. It's identical to StateVersionEQ.
 func StateVersion(v int64) predicate.Party {
 	return predicate.Party(sql.FieldEQ(FieldStateVersion, v))
@@ -1208,6 +1223,231 @@ func CurrentGameSessionRefIsNil() predicate.Party {
 // CurrentGameSessionRefNotNil applies the NotNil predicate on the "current_game_session_ref" field.
 func CurrentGameSessionRefNotNil() predicate.Party {
 	return predicate.Party(sql.FieldNotNull(FieldCurrentGameSessionRef))
+}
+
+// SelectedActivityTypeEQ applies the EQ predicate on the "selected_activity_type" field.
+func SelectedActivityTypeEQ(v string) predicate.Party {
+	return predicate.Party(sql.FieldEQ(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeNEQ applies the NEQ predicate on the "selected_activity_type" field.
+func SelectedActivityTypeNEQ(v string) predicate.Party {
+	return predicate.Party(sql.FieldNEQ(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeIn applies the In predicate on the "selected_activity_type" field.
+func SelectedActivityTypeIn(vs ...string) predicate.Party {
+	return predicate.Party(sql.FieldIn(FieldSelectedActivityType, vs...))
+}
+
+// SelectedActivityTypeNotIn applies the NotIn predicate on the "selected_activity_type" field.
+func SelectedActivityTypeNotIn(vs ...string) predicate.Party {
+	return predicate.Party(sql.FieldNotIn(FieldSelectedActivityType, vs...))
+}
+
+// SelectedActivityTypeGT applies the GT predicate on the "selected_activity_type" field.
+func SelectedActivityTypeGT(v string) predicate.Party {
+	return predicate.Party(sql.FieldGT(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeGTE applies the GTE predicate on the "selected_activity_type" field.
+func SelectedActivityTypeGTE(v string) predicate.Party {
+	return predicate.Party(sql.FieldGTE(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeLT applies the LT predicate on the "selected_activity_type" field.
+func SelectedActivityTypeLT(v string) predicate.Party {
+	return predicate.Party(sql.FieldLT(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeLTE applies the LTE predicate on the "selected_activity_type" field.
+func SelectedActivityTypeLTE(v string) predicate.Party {
+	return predicate.Party(sql.FieldLTE(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeContains applies the Contains predicate on the "selected_activity_type" field.
+func SelectedActivityTypeContains(v string) predicate.Party {
+	return predicate.Party(sql.FieldContains(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeHasPrefix applies the HasPrefix predicate on the "selected_activity_type" field.
+func SelectedActivityTypeHasPrefix(v string) predicate.Party {
+	return predicate.Party(sql.FieldHasPrefix(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeHasSuffix applies the HasSuffix predicate on the "selected_activity_type" field.
+func SelectedActivityTypeHasSuffix(v string) predicate.Party {
+	return predicate.Party(sql.FieldHasSuffix(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeIsNil applies the IsNil predicate on the "selected_activity_type" field.
+func SelectedActivityTypeIsNil() predicate.Party {
+	return predicate.Party(sql.FieldIsNull(FieldSelectedActivityType))
+}
+
+// SelectedActivityTypeNotNil applies the NotNil predicate on the "selected_activity_type" field.
+func SelectedActivityTypeNotNil() predicate.Party {
+	return predicate.Party(sql.FieldNotNull(FieldSelectedActivityType))
+}
+
+// SelectedActivityTypeEqualFold applies the EqualFold predicate on the "selected_activity_type" field.
+func SelectedActivityTypeEqualFold(v string) predicate.Party {
+	return predicate.Party(sql.FieldEqualFold(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityTypeContainsFold applies the ContainsFold predicate on the "selected_activity_type" field.
+func SelectedActivityTypeContainsFold(v string) predicate.Party {
+	return predicate.Party(sql.FieldContainsFold(FieldSelectedActivityType, v))
+}
+
+// SelectedActivityRefEQ applies the EQ predicate on the "selected_activity_ref" field.
+func SelectedActivityRefEQ(v string) predicate.Party {
+	return predicate.Party(sql.FieldEQ(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefNEQ applies the NEQ predicate on the "selected_activity_ref" field.
+func SelectedActivityRefNEQ(v string) predicate.Party {
+	return predicate.Party(sql.FieldNEQ(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefIn applies the In predicate on the "selected_activity_ref" field.
+func SelectedActivityRefIn(vs ...string) predicate.Party {
+	return predicate.Party(sql.FieldIn(FieldSelectedActivityRef, vs...))
+}
+
+// SelectedActivityRefNotIn applies the NotIn predicate on the "selected_activity_ref" field.
+func SelectedActivityRefNotIn(vs ...string) predicate.Party {
+	return predicate.Party(sql.FieldNotIn(FieldSelectedActivityRef, vs...))
+}
+
+// SelectedActivityRefGT applies the GT predicate on the "selected_activity_ref" field.
+func SelectedActivityRefGT(v string) predicate.Party {
+	return predicate.Party(sql.FieldGT(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefGTE applies the GTE predicate on the "selected_activity_ref" field.
+func SelectedActivityRefGTE(v string) predicate.Party {
+	return predicate.Party(sql.FieldGTE(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefLT applies the LT predicate on the "selected_activity_ref" field.
+func SelectedActivityRefLT(v string) predicate.Party {
+	return predicate.Party(sql.FieldLT(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefLTE applies the LTE predicate on the "selected_activity_ref" field.
+func SelectedActivityRefLTE(v string) predicate.Party {
+	return predicate.Party(sql.FieldLTE(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefContains applies the Contains predicate on the "selected_activity_ref" field.
+func SelectedActivityRefContains(v string) predicate.Party {
+	return predicate.Party(sql.FieldContains(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefHasPrefix applies the HasPrefix predicate on the "selected_activity_ref" field.
+func SelectedActivityRefHasPrefix(v string) predicate.Party {
+	return predicate.Party(sql.FieldHasPrefix(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefHasSuffix applies the HasSuffix predicate on the "selected_activity_ref" field.
+func SelectedActivityRefHasSuffix(v string) predicate.Party {
+	return predicate.Party(sql.FieldHasSuffix(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefIsNil applies the IsNil predicate on the "selected_activity_ref" field.
+func SelectedActivityRefIsNil() predicate.Party {
+	return predicate.Party(sql.FieldIsNull(FieldSelectedActivityRef))
+}
+
+// SelectedActivityRefNotNil applies the NotNil predicate on the "selected_activity_ref" field.
+func SelectedActivityRefNotNil() predicate.Party {
+	return predicate.Party(sql.FieldNotNull(FieldSelectedActivityRef))
+}
+
+// SelectedActivityRefEqualFold applies the EqualFold predicate on the "selected_activity_ref" field.
+func SelectedActivityRefEqualFold(v string) predicate.Party {
+	return predicate.Party(sql.FieldEqualFold(FieldSelectedActivityRef, v))
+}
+
+// SelectedActivityRefContainsFold applies the ContainsFold predicate on the "selected_activity_ref" field.
+func SelectedActivityRefContainsFold(v string) predicate.Party {
+	return predicate.Party(sql.FieldContainsFold(FieldSelectedActivityRef, v))
+}
+
+// SelectedGameModeEQ applies the EQ predicate on the "selected_game_mode" field.
+func SelectedGameModeEQ(v string) predicate.Party {
+	return predicate.Party(sql.FieldEQ(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeNEQ applies the NEQ predicate on the "selected_game_mode" field.
+func SelectedGameModeNEQ(v string) predicate.Party {
+	return predicate.Party(sql.FieldNEQ(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeIn applies the In predicate on the "selected_game_mode" field.
+func SelectedGameModeIn(vs ...string) predicate.Party {
+	return predicate.Party(sql.FieldIn(FieldSelectedGameMode, vs...))
+}
+
+// SelectedGameModeNotIn applies the NotIn predicate on the "selected_game_mode" field.
+func SelectedGameModeNotIn(vs ...string) predicate.Party {
+	return predicate.Party(sql.FieldNotIn(FieldSelectedGameMode, vs...))
+}
+
+// SelectedGameModeGT applies the GT predicate on the "selected_game_mode" field.
+func SelectedGameModeGT(v string) predicate.Party {
+	return predicate.Party(sql.FieldGT(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeGTE applies the GTE predicate on the "selected_game_mode" field.
+func SelectedGameModeGTE(v string) predicate.Party {
+	return predicate.Party(sql.FieldGTE(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeLT applies the LT predicate on the "selected_game_mode" field.
+func SelectedGameModeLT(v string) predicate.Party {
+	return predicate.Party(sql.FieldLT(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeLTE applies the LTE predicate on the "selected_game_mode" field.
+func SelectedGameModeLTE(v string) predicate.Party {
+	return predicate.Party(sql.FieldLTE(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeContains applies the Contains predicate on the "selected_game_mode" field.
+func SelectedGameModeContains(v string) predicate.Party {
+	return predicate.Party(sql.FieldContains(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeHasPrefix applies the HasPrefix predicate on the "selected_game_mode" field.
+func SelectedGameModeHasPrefix(v string) predicate.Party {
+	return predicate.Party(sql.FieldHasPrefix(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeHasSuffix applies the HasSuffix predicate on the "selected_game_mode" field.
+func SelectedGameModeHasSuffix(v string) predicate.Party {
+	return predicate.Party(sql.FieldHasSuffix(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeIsNil applies the IsNil predicate on the "selected_game_mode" field.
+func SelectedGameModeIsNil() predicate.Party {
+	return predicate.Party(sql.FieldIsNull(FieldSelectedGameMode))
+}
+
+// SelectedGameModeNotNil applies the NotNil predicate on the "selected_game_mode" field.
+func SelectedGameModeNotNil() predicate.Party {
+	return predicate.Party(sql.FieldNotNull(FieldSelectedGameMode))
+}
+
+// SelectedGameModeEqualFold applies the EqualFold predicate on the "selected_game_mode" field.
+func SelectedGameModeEqualFold(v string) predicate.Party {
+	return predicate.Party(sql.FieldEqualFold(FieldSelectedGameMode, v))
+}
+
+// SelectedGameModeContainsFold applies the ContainsFold predicate on the "selected_game_mode" field.
+func SelectedGameModeContainsFold(v string) predicate.Party {
+	return predicate.Party(sql.FieldContainsFold(FieldSelectedGameMode, v))
 }
 
 // StateVersionEQ applies the EQ predicate on the "state_version" field.

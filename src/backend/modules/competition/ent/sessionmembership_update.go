@@ -137,6 +137,26 @@ func (_u *SessionMembershipUpdate) AddVersion(v int64) *SessionMembershipUpdate 
 	return _u
 }
 
+// SetGameSessionID sets the "game_session_id" field.
+func (_u *SessionMembershipUpdate) SetGameSessionID(v uuid.UUID) *SessionMembershipUpdate {
+	_u.mutation.SetGameSessionID(v)
+	return _u
+}
+
+// SetNillableGameSessionID sets the "game_session_id" field if the given value is not nil.
+func (_u *SessionMembershipUpdate) SetNillableGameSessionID(v *uuid.UUID) *SessionMembershipUpdate {
+	if v != nil {
+		_u.SetGameSessionID(*v)
+	}
+	return _u
+}
+
+// ClearGameSessionID clears the value of the "game_session_id" field.
+func (_u *SessionMembershipUpdate) ClearGameSessionID() *SessionMembershipUpdate {
+	_u.mutation.ClearGameSessionID()
+	return _u
+}
+
 // SetLeftAt sets the "left_at" field.
 func (_u *SessionMembershipUpdate) SetLeftAt(v time.Time) *SessionMembershipUpdate {
 	_u.mutation.SetLeftAt(v)
@@ -311,6 +331,12 @@ func (_u *SessionMembershipUpdate) sqlSave(ctx context.Context) (_node int, err 
 	if _u.mutation.SchoolIDCleared() {
 		_spec.ClearField(sessionmembership.FieldSchoolID, field.TypeUUID)
 	}
+	if value, ok := _u.mutation.GameSessionID(); ok {
+		_spec.SetField(sessionmembership.FieldGameSessionID, field.TypeUUID, value)
+	}
+	if _u.mutation.GameSessionIDCleared() {
+		_spec.ClearField(sessionmembership.FieldGameSessionID, field.TypeUUID)
+	}
 	if _u.mutation.PartyIDCleared() {
 		_spec.ClearField(sessionmembership.FieldPartyID, field.TypeUUID)
 	}
@@ -319,6 +345,9 @@ func (_u *SessionMembershipUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if _u.mutation.EncounterIDCleared() {
 		_spec.ClearField(sessionmembership.FieldEncounterID, field.TypeUUID)
+	}
+	if _u.mutation.PartyActivityIDCleared() {
+		_spec.ClearField(sessionmembership.FieldPartyActivityID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.LeftAt(); ok {
 		_spec.SetField(sessionmembership.FieldLeftAt, field.TypeTime, value)
@@ -464,6 +493,26 @@ func (_u *SessionMembershipUpdateOne) SetNillableVersion(v *int64) *SessionMembe
 // AddVersion adds value to the "version" field.
 func (_u *SessionMembershipUpdateOne) AddVersion(v int64) *SessionMembershipUpdateOne {
 	_u.mutation.AddVersion(v)
+	return _u
+}
+
+// SetGameSessionID sets the "game_session_id" field.
+func (_u *SessionMembershipUpdateOne) SetGameSessionID(v uuid.UUID) *SessionMembershipUpdateOne {
+	_u.mutation.SetGameSessionID(v)
+	return _u
+}
+
+// SetNillableGameSessionID sets the "game_session_id" field if the given value is not nil.
+func (_u *SessionMembershipUpdateOne) SetNillableGameSessionID(v *uuid.UUID) *SessionMembershipUpdateOne {
+	if v != nil {
+		_u.SetGameSessionID(*v)
+	}
+	return _u
+}
+
+// ClearGameSessionID clears the value of the "game_session_id" field.
+func (_u *SessionMembershipUpdateOne) ClearGameSessionID() *SessionMembershipUpdateOne {
+	_u.mutation.ClearGameSessionID()
 	return _u
 }
 
@@ -671,6 +720,12 @@ func (_u *SessionMembershipUpdateOne) sqlSave(ctx context.Context) (_node *Sessi
 	if _u.mutation.SchoolIDCleared() {
 		_spec.ClearField(sessionmembership.FieldSchoolID, field.TypeUUID)
 	}
+	if value, ok := _u.mutation.GameSessionID(); ok {
+		_spec.SetField(sessionmembership.FieldGameSessionID, field.TypeUUID, value)
+	}
+	if _u.mutation.GameSessionIDCleared() {
+		_spec.ClearField(sessionmembership.FieldGameSessionID, field.TypeUUID)
+	}
 	if _u.mutation.PartyIDCleared() {
 		_spec.ClearField(sessionmembership.FieldPartyID, field.TypeUUID)
 	}
@@ -679,6 +734,9 @@ func (_u *SessionMembershipUpdateOne) sqlSave(ctx context.Context) (_node *Sessi
 	}
 	if _u.mutation.EncounterIDCleared() {
 		_spec.ClearField(sessionmembership.FieldEncounterID, field.TypeUUID)
+	}
+	if _u.mutation.PartyActivityIDCleared() {
+		_spec.ClearField(sessionmembership.FieldPartyActivityID, field.TypeUUID)
 	}
 	if value, ok := _u.mutation.LeftAt(); ok {
 		_spec.SetField(sessionmembership.FieldLeftAt, field.TypeTime, value)

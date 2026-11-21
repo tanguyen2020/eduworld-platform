@@ -55,6 +55,12 @@ const (
 	FieldCurrentActivityID = "current_activity_id"
 	// FieldCurrentGameSessionRef holds the string denoting the current_game_session_ref field in the database.
 	FieldCurrentGameSessionRef = "current_game_session_ref"
+	// FieldSelectedActivityType holds the string denoting the selected_activity_type field in the database.
+	FieldSelectedActivityType = "selected_activity_type"
+	// FieldSelectedActivityRef holds the string denoting the selected_activity_ref field in the database.
+	FieldSelectedActivityRef = "selected_activity_ref"
+	// FieldSelectedGameMode holds the string denoting the selected_game_mode field in the database.
+	FieldSelectedGameMode = "selected_game_mode"
 	// FieldStateVersion holds the string denoting the state_version field in the database.
 	FieldStateVersion = "state_version"
 	// FieldDisbandedAt holds the string denoting the disbanded_at field in the database.
@@ -86,6 +92,9 @@ var Columns = []string{
 	FieldStatus,
 	FieldCurrentActivityID,
 	FieldCurrentGameSessionRef,
+	FieldSelectedActivityType,
+	FieldSelectedActivityRef,
+	FieldSelectedGameMode,
 	FieldStateVersion,
 	FieldDisbandedAt,
 }
@@ -136,6 +145,12 @@ var (
 	DefaultStatus string
 	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	StatusValidator func(string) error
+	// SelectedActivityTypeValidator is a validator for the "selected_activity_type" field. It is called by the builders before save.
+	SelectedActivityTypeValidator func(string) error
+	// SelectedActivityRefValidator is a validator for the "selected_activity_ref" field. It is called by the builders before save.
+	SelectedActivityRefValidator func(string) error
+	// SelectedGameModeValidator is a validator for the "selected_game_mode" field. It is called by the builders before save.
+	SelectedGameModeValidator func(string) error
 	// DefaultStateVersion holds the default value on creation for the "state_version" field.
 	DefaultStateVersion int64
 	// DefaultID holds the default value on creation for the "id" field.
@@ -248,6 +263,21 @@ func ByCurrentActivityID(opts ...sql.OrderTermOption) OrderOption {
 // ByCurrentGameSessionRef orders the results by the current_game_session_ref field.
 func ByCurrentGameSessionRef(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCurrentGameSessionRef, opts...).ToFunc()
+}
+
+// BySelectedActivityType orders the results by the selected_activity_type field.
+func BySelectedActivityType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSelectedActivityType, opts...).ToFunc()
+}
+
+// BySelectedActivityRef orders the results by the selected_activity_ref field.
+func BySelectedActivityRef(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSelectedActivityRef, opts...).ToFunc()
+}
+
+// BySelectedGameMode orders the results by the selected_game_mode field.
+func BySelectedGameMode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSelectedGameMode, opts...).ToFunc()
 }
 
 // ByStateVersion orders the results by the state_version field.

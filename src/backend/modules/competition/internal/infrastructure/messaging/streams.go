@@ -63,3 +63,10 @@ const PartySafetyIdentityName = "competition.party_safety_identity"
 
 // PartySafetyIdentityEvents are the identity events it handles (owners F010, F016).
 var PartySafetyIdentityEvents = []string{"student.synced", "user.status_changed", "student.cleaned_up"}
+
+// PartyActivityEndName ends the party activities when module game reports the end of their session (F101-AC-12):
+// boss.encounter_completed (party_activity_id, result) and quest.party_completed (owner F103).
+const PartyActivityEndName = "competition.party_activity_end"
+
+// PartyActivityEndEvents are the game events it handles.
+var PartyActivityEndEvents = []string{"boss.encounter_completed", "quest.party_completed"}

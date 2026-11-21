@@ -16,6 +16,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyactivity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
@@ -32,6 +33,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Party is the client for interacting with the Party builders.
 	Party *PartyClient
+	// PartyActivity is the client for interacting with the PartyActivity builders.
+	PartyActivity *PartyActivityClient
 	// PartyInvitation is the client for interacting with the PartyInvitation builders.
 	PartyInvitation *PartyInvitationClient
 	// PartyMember is the client for interacting with the PartyMember builders.
@@ -54,6 +57,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Party = NewPartyClient(c.config)
+	c.PartyActivity = NewPartyActivityClient(c.config)
 	c.PartyInvitation = NewPartyInvitationClient(c.config)
 	c.PartyMember = NewPartyMemberClient(c.config)
 	c.PartyPolicy = NewPartyPolicyClient(c.config)
@@ -155,6 +159,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:               ctx,
 		config:            cfg,
 		Party:             NewPartyClient(cfg),
+		PartyActivity:     NewPartyActivityClient(cfg),
 		PartyInvitation:   NewPartyInvitationClient(cfg),
 		PartyMember:       NewPartyMemberClient(cfg),
 		PartyPolicy:       NewPartyPolicyClient(cfg),
@@ -180,6 +185,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:               ctx,
 		config:            cfg,
 		Party:             NewPartyClient(cfg),
+		PartyActivity:     NewPartyActivityClient(cfg),
 		PartyInvitation:   NewPartyInvitationClient(cfg),
 		PartyMember:       NewPartyMemberClient(cfg),
 		PartyPolicy:       NewPartyPolicyClient(cfg),
@@ -214,8 +220,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Party, c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room,
-		c.SessionMembership,
+		c.Party, c.PartyActivity, c.PartyInvitation, c.PartyMember, c.PartyPolicy,
+		c.Room, c.SessionMembership,
 	} {
 		n.Use(hooks...)
 	}
@@ -225,8 +231,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Party, c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room,
-		c.SessionMembership,
+		c.Party, c.PartyActivity, c.PartyInvitation, c.PartyMember, c.PartyPolicy,
+		c.Room, c.SessionMembership,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -237,6 +243,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *PartyMutation:
 		return c.Party.mutate(ctx, m)
+	case *PartyActivityMutation:
+		return c.PartyActivity.mutate(ctx, m)
 	case *PartyInvitationMutation:
 		return c.PartyInvitation.mutate(ctx, m)
 	case *PartyMemberMutation:
@@ -384,6 +392,141 @@ func (c *PartyClient) mutate(ctx context.Context, m *PartyMutation) (Value, erro
 		return (&PartyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Party mutation op: %q", m.Op())
+	}
+}
+
+// PartyActivityClient is a client for the PartyActivity schema.
+type PartyActivityClient struct {
+	config
+}
+
+// NewPartyActivityClient returns a client for the PartyActivity from the given config.
+func NewPartyActivityClient(c config) *PartyActivityClient {
+	return &PartyActivityClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `partyactivity.Hooks(f(g(h())))`.
+func (c *PartyActivityClient) Use(hooks ...Hook) {
+	c.hooks.PartyActivity = append(c.hooks.PartyActivity, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `partyactivity.Intercept(f(g(h())))`.
+func (c *PartyActivityClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PartyActivity = append(c.inters.PartyActivity, interceptors...)
+}
+
+// Create returns a builder for creating a PartyActivity entity.
+func (c *PartyActivityClient) Create() *PartyActivityCreate {
+	mutation := newPartyActivityMutation(c.config, OpCreate)
+	return &PartyActivityCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PartyActivity entities.
+func (c *PartyActivityClient) CreateBulk(builders ...*PartyActivityCreate) *PartyActivityCreateBulk {
+	return &PartyActivityCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PartyActivityClient) MapCreateBulk(slice any, setFunc func(*PartyActivityCreate, int)) *PartyActivityCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PartyActivityCreateBulk{err: fmt.Errorf("calling to PartyActivityClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PartyActivityCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PartyActivityCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PartyActivity.
+func (c *PartyActivityClient) Update() *PartyActivityUpdate {
+	mutation := newPartyActivityMutation(c.config, OpUpdate)
+	return &PartyActivityUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PartyActivityClient) UpdateOne(_m *PartyActivity) *PartyActivityUpdateOne {
+	mutation := newPartyActivityMutation(c.config, OpUpdateOne, withPartyActivity(_m))
+	return &PartyActivityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PartyActivityClient) UpdateOneID(id uuid.UUID) *PartyActivityUpdateOne {
+	mutation := newPartyActivityMutation(c.config, OpUpdateOne, withPartyActivityID(id))
+	return &PartyActivityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PartyActivity.
+func (c *PartyActivityClient) Delete() *PartyActivityDelete {
+	mutation := newPartyActivityMutation(c.config, OpDelete)
+	return &PartyActivityDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PartyActivityClient) DeleteOne(_m *PartyActivity) *PartyActivityDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PartyActivityClient) DeleteOneID(id uuid.UUID) *PartyActivityDeleteOne {
+	builder := c.Delete().Where(partyactivity.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PartyActivityDeleteOne{builder}
+}
+
+// Query returns a query builder for PartyActivity.
+func (c *PartyActivityClient) Query() *PartyActivityQuery {
+	return &PartyActivityQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePartyActivity},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PartyActivity entity by its id.
+func (c *PartyActivityClient) Get(ctx context.Context, id uuid.UUID) (*PartyActivity, error) {
+	return c.Query().Where(partyactivity.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PartyActivityClient) GetX(ctx context.Context, id uuid.UUID) *PartyActivity {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PartyActivityClient) Hooks() []Hook {
+	hooks := c.hooks.PartyActivity
+	return append(hooks[:len(hooks):len(hooks)], partyactivity.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PartyActivityClient) Interceptors() []Interceptor {
+	inters := c.inters.PartyActivity
+	return append(inters[:len(inters):len(inters)], partyactivity.Interceptors[:]...)
+}
+
+func (c *PartyActivityClient) mutate(ctx context.Context, m *PartyActivityMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PartyActivityCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PartyActivityUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PartyActivityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PartyActivityDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PartyActivity mutation op: %q", m.Op())
 	}
 }
 
@@ -1065,11 +1208,11 @@ func (c *SessionMembershipClient) mutate(ctx context.Context, m *SessionMembersh
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Party, PartyInvitation, PartyMember, PartyPolicy, Room,
+		Party, PartyActivity, PartyInvitation, PartyMember, PartyPolicy, Room,
 		SessionMembership []ent.Hook
 	}
 	inters struct {
-		Party, PartyInvitation, PartyMember, PartyPolicy, Room,
+		Party, PartyActivity, PartyInvitation, PartyMember, PartyPolicy, Room,
 		SessionMembership []ent.Interceptor
 	}
 )
@@ -1078,6 +1221,7 @@ var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
 		Party:             tableSchemas[0],
+		PartyActivity:     tableSchemas[0],
 		PartyInvitation:   tableSchemas[0],
 		PartyMember:       tableSchemas[0],
 		PartyPolicy:       tableSchemas[0],

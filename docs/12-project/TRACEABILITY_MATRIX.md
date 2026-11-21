@@ -19,7 +19,7 @@
 | `CUR` Curriculum | module learning | 12 | 12 | 1 | 7 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
 | `CNT` Learning Content | module learning | 21 | 21 | 0 | 17 | 0 | CNT (10) | 0 | 8 | 0 / 0 |
 | `QB` Question Bank | module learning | 14 | 14 | 0 | 17 | 0 | LRN (18) | 0 | 0 | 0 / 0 |
-| `EXR` Activity & Attempt Engine | module learning | 16 | 16 | 2 | 34 | 0 | ACT (5), LRN (18), VID (5), SIM (5), MATH (3) | 3 | 8 | 0 / 25 |
+| `EXR` Activity & Attempt Engine | module learning | 16 | 16 | 2 | 35 | 0 | ACT (5), LRN (18), VID (5), SIM (5), MATH (3) | 3 | 8 | 0 / 25 |
 | `EXM` Exam & Practice | module learning | 10 | 10 | 1 | 13 | 0 | EXM (6) | 1 | 2 | 0 / 8 |
 | `PRG` Learning Progress & Mastery | module learning | 9 | 9 | 0 | 8 | 0 | LRN (18) | 1 | 2 | 0 / 0 |
 | `ANL` Learning Events & Analytics | module learning · module game | 23 | 23 | 0 | 23 | 0 | ANL (11), DASH (10) | 0 | 0 | 0 / 21 |
@@ -27,7 +27,7 @@
 | `QST` Quest | module game | 9 | 9 | 0 | 38 | 0 | GAM (12) | 2 | 0 | 0 / 15 |
 | `MG` Mini-game Engine | module learning · game client | 4 | 4 | 0 | 1 | 0 | ACT (5) | 1 | 0 | 0 / 10 |
 | `MP` Multiplayer & Presence | module competition · realtime | 6 | 6 | 0 | 3 | 0 | PTY (14), CMP (10) | 0 | 0 | 0 / 11 |
-| `PTY` Party | module competition | 14 | 14 | 1 | 17 | 0 | PTY (14) | 4 | 13 | 0 / 0 |
+| `PTY` Party | module competition | 14 | 14 | 1 | 18 | 0 | PTY (14) | 4 | 13 | 0 / 0 |
 | `MM` Matchmaking | module competition | 6 | 6 | 0 | 3 | 0 | MM (4) | 1 | 0 | 0 / 8 |
 | `CMP` Competition / Battle | module competition | 6 | 6 | 0 | 6 | 0 | CMP (10) | 0 | 6 | 0 / 13 |
 | `RNK` Ranking | module competition | 4 | 4 | 0 | 1 | 0 | CMP (10) | 0 | 0 | 0 / 6 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 47 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 20 | 562 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 20 | 563 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -220,22 +220,22 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 25 AC, 0 US — [ACTIVITY_ENGINE](
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-EXR-001 | Chế độ: bài cá nhân, theo quest, theo chủ đề, theo lớp, nhà trường giao (school_admin/academic_manager), tự… | P2 (nhà trường giao: P3) | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-002 | Lưu Attempt, Answer, Correctness, Score, Duration, Submission Time, Content Version, LO | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-003 | Practice: phản hồi đúng/sai + giải thích ngay sau từng câu | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-004 | Resume attempt chưa hoàn thành theo chính sách (TTL, số lần) | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-005 | Submit idempotent (Idempotency-Key), một attempt chỉ submit một lần | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-006 | Thời gian tính theo server timestamp; client elapsed chỉ tham khảo | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-001 | Chế độ: bài cá nhân, theo quest, theo chủ đề, theo lớp, nhà trường giao (school_admin/academic_manager), tự… | P2 (nhà trường giao: P3) | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-002 | Lưu Attempt, Answer, Correctness, Score, Duration, Submission Time, Content Version, LO | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-003 | Practice: phản hồi đúng/sai + giải thích ngay sau từng câu | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-004 | Resume attempt chưa hoàn thành theo chính sách (TTL, số lần) | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [VIDEO_LEARNING](../02-learning/VIDEO_LEARNING.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-005 | Submit idempotent (Idempotency-Key), một attempt chỉ submit một lần | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-006 | Thời gian tính theo server timestamp; client elapsed chỉ tham khảo | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
 | FR-EXR-007 | Một họ API attempt /api/v1/learning/activity-attempts cho mọi loại hoạt động (start, responses, progress, s… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `listMyActivityAttempts` · `startAdHocAttempt` | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-008 | Evaluation tách khỏi Attempt: chiến lược chấm chỉ là tự động; đúng một evaluation có hiệu lực; re-evaluate… | P3 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-009 | Removed (ADR-0072) — tự luận chấm rubric, hàng đợi chấm, trả bài, chấm lại thủ công ngoài Release; ngoài ve… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-010 | Removed (ADR-0072) — activity project (dự án nhiều bước chấm tay) ngoài Release | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-011 | Removed (ADR-0072) — AI hỗ trợ chấm bài viết/nói phụ thuộc người duyệt chấm; mở lại cần ADR mới (ADR-0053 P… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-008 | Evaluation tách khỏi Attempt: chiến lược chấm chỉ là tự động; đúng một evaluation có hiệu lực; re-evaluate… | P3 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-009 | Removed (ADR-0072) — tự luận chấm rubric, hàng đợi chấm, trả bài, chấm lại thủ công ngoài Release; ngoài ve… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-010 | Removed (ADR-0072) — activity project (dự án nhiều bước chấm tay) ngoài Release | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-011 | Removed (ADR-0072) — AI hỗ trợ chấm bài viết/nói phụ thuộc người duyệt chấm; mở lại cần ADR mới (ADR-0053 P… | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
 | FR-EXR-012 | Gợi ý nhiều cấp: hints[] trong câu hỏi; POST /api/v1/learning/activity-attempts/{attempt_id}/items/{positio… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `revealNextHint` | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-013 | retry_wrong ưu tiên câu "anh em" (cùng LO, cùng loại/độ khó, khác question_id) thay vì lặp lại đúng câu đã… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-014 | Chế độ luyện trộn chủ đề (interleaving): bộ câu luyện tập trộn nhiều LO đã học theo tỷ lệ cấu hình (LEARNIN… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-015 | Content manifest mang min_client_version theo activity_type; client cũ không nhận activity có loại chưa hỗ… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
-| FR-EXR-016 | Attempt quá deadline_at chuyển expired; worker tự nộp (auto-submit) nếu đã có câu trả lời; phản hồi đến sau… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 34 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-013 | retry_wrong ưu tiên câu "anh em" (cùng LO, cùng loại/độ khó, khác question_id) thay vì lặp lại đúng câu đã… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-014 | Chế độ luyện trộn chủ đề (interleaving): bộ câu luyện tập trộn nhiều LO đã học theo tỷ lệ cấu hình (LEARNIN… | P3 | [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [LEARNING_EXPERIENCE](../02-learning/LEARNING_EXPERIENCE.md) · [QUESTION_BANK](../02-learning/QUESTION_BANK.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-015 | Content manifest mang min_client_version theo activity_type; client cũ không nhận activity có loại chưa hỗ… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
+| FR-EXR-016 | Attempt quá deadline_at chuyển expired; worker tự nộp (auto-submit) nếu đã có câu trả lời; phản hồi đến sau… | P2 | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 35 op | _suy luận:_ TC-ACT, TC-LRN, TC-VID, TC-SIM, TC-MATH |
 
 ### 3.8. `EXM` Exam & Practice
 
@@ -395,19 +395,19 @@ AC: AC-PTY-001, AC-PTY-002, AC-PTY-003, AC-PTY-004, AC-PTY-005, AC-PTY-006, AC-P
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-PTY-001 | Create, Join, Leave, Invite Friend, Accept, Reject, Kick, Transfer Leader, Disband, Settings, Member Status… | P4 (gồm Party Chat văn bản tự do — channel `party` always-on, FR-CHAT-009) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-002 | Thuộc tính: Party ID, name, leader, members, max members, type, visibility, invitation policy, current acti… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-003 | Party types: Friend Party, Study Group, Quest Party, Competition Team, Class Group, Custom Group | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-004 | Max members cấu hình được; mặc định 4, cho phép 2–8 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-005 | Một học sinh chỉ có một active Party tại một thời điểm (Addendum §6 ghi cho MVP; giữ nguyên cho Release 1.0… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-006 | Party Lobby: danh sách thành viên, avatar, online, Ready/Not Ready, leader controls, chọn activity & game m… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-007 | Start Session: xác nhận leader → kiểm tra thành viên → kiểm tra điều kiện lớp/quyền → tạo Game Session/room… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-008 | Leader disconnect: grace period 60 giây, sau đó tự chuyển leader cho thành viên tham gia sớm nhất còn online | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-009 | Party private cần lời mời/quyền; lời mời hết hạn sau 5 phút; không mời người đã block/bị block | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-010 | Giới hạn theo school/class/grade/activity; mặc định chỉ cùng trường | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-011 | Chống spam lời mời (rate limit), audit log cho create/kick/transfer/disband | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-012 | Thành viên mất kết nối: các thành viên khác tiếp tục nếu activity cho phép (continue_on_disconnect) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
-| FR-PTY-013 | Không chia sẻ kết quả học tập cá nhân giữa thành viên; mỗi người có attempt riêng | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 17 op | _suy luận:_ TC-PTY |
+| FR-PTY-001 | Create, Join, Leave, Invite Friend, Accept, Reject, Kick, Transfer Leader, Disband, Settings, Member Status… | P4 (gồm Party Chat văn bản tự do — channel `party` always-on, FR-CHAT-009) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-002 | Thuộc tính: Party ID, name, leader, members, max members, type, visibility, invitation policy, current acti… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-003 | Party types: Friend Party, Study Group, Quest Party, Competition Team, Class Group, Custom Group | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-004 | Max members cấu hình được; mặc định 4, cho phép 2–8 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-005 | Một học sinh chỉ có một active Party tại một thời điểm (Addendum §6 ghi cho MVP; giữ nguyên cho Release 1.0… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-006 | Party Lobby: danh sách thành viên, avatar, online, Ready/Not Ready, leader controls, chọn activity & game m… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-007 | Start Session: xác nhận leader → kiểm tra thành viên → kiểm tra điều kiện lớp/quyền → tạo Game Session/room… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-008 | Leader disconnect: grace period 60 giây, sau đó tự chuyển leader cho thành viên tham gia sớm nhất còn online | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-009 | Party private cần lời mời/quyền; lời mời hết hạn sau 5 phút; không mời người đã block/bị block | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-010 | Giới hạn theo school/class/grade/activity; mặc định chỉ cùng trường | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-011 | Chống spam lời mời (rate limit), audit log cho create/kick/transfer/disband | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-012 | Thành viên mất kết nối: các thành viên khác tiếp tục nếu activity cho phép (continue_on_disconnect) | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
+| FR-PTY-013 | Không chia sẻ kết quả học tập cá nhân giữa thành viên; mỗi người có attempt riêng | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 18 op | _suy luận:_ TC-PTY |
 | FR-PTY-014 | API /api/v1/multiplayer/parties, /api/v1/multiplayer/invitations; realtime event qua /realtime/v1 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `createParty` · `listMyInvitations` | _suy luận:_ TC-PTY |
 
 ### 3.16. `MM` Matchmaking

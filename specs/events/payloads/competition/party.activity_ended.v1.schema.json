@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.activity_ended.v1.schema.json",
+  "title": "Payload party.activity_ended v1 (module competition, owner F101)",
+  "description": "Phiên chơi chung kết thúc (F101-AC-12): hoàn thành, hết giờ/thiếu người, mọi người rời, giải tán hoặc lỗi phòng. Không có điểm/kết quả học tập của học sinh (FR-PTY-013). Consumer: game, AUD, ANA.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "party_activity_id",
+    "party_id",
+    "tenant_id",
+    "activity_type",
+    "activity_ref",
+    "end_reason",
+    "outcome",
+    "ended_at"
+  ],
+  "properties": {
+    "party_activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/PartyActivityType"
+    },
+    "activity_ref": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_.-]{1,64}$",
+      "description": "area_id (explore) / quest_id (quest) / boss_id (boss)"
+    },
+    "end_reason": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "timeout",
+        "all_left",
+        "disbanded",
+        "server_failure"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed",
+        "abandoned",
+        "aborted"
+      ],
+      "description": "completed ← completed; abandoned ← timeout, all_left; aborted ← disbanded; failed ← server_failure"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "state_version": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "examples": [
+    {
+      "party_activity_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000b1",
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "activity_type": "quest",
+      "activity_ref": "q-bridge-fix",
+      "end_reason": "timeout",
+      "outcome": "abandoned",
+      "ended_at": "2026-11-21T03:20:00Z",
+      "state_version": 6
+    }
+  ]
+}

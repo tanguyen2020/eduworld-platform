@@ -3980,6 +3980,18 @@
     ]
   },
   {
+    "operation_id": "listPartyEligibleActivities",
+    "module": "competition",
+    "method": "GET",
+    "path": "/multiplayer/parties/{party_id}/eligible-activities",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listPlatformAuditLogs",
     "module": "identity",
     "method": "GET",

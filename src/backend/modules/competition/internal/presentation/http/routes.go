@@ -34,6 +34,10 @@ type Commands interface {
 	KickPartyMember(ctx context.Context, partyID, student uuid.UUID) error
 	TransferPartyLeader(ctx context.Context, partyID, to uuid.UUID) (view.Party, error)
 	DisbandParty(ctx context.Context, partyID uuid.UUID) error
+	// F101
+	SetReady(ctx context.Context, partyID uuid.UUID, ready bool) error
+	SelectActivity(ctx context.Context, partyID uuid.UUID, in command.SelectInput) (view.Party, error)
+	StartPartySession(ctx context.Context, partyID uuid.UUID, in command.StartInput) (view.SessionStart, error)
 }
 
 // Queries are the F100 read use cases (query.Parties).
@@ -41,6 +45,8 @@ type Queries interface {
 	GetMyParty(ctx context.Context) (view.Party, error)
 	GetParty(ctx context.Context, id uuid.UUID) (view.Party, error)
 	ListMyInvitations(ctx context.Context, status string) ([]view.Invitation, error)
+	// F101
+	ListEligibleActivities(ctx context.Context, partyID uuid.UUID) ([]view.Eligible, error)
 }
 
 // Handlers are the F100 use cases served over HTTP.
@@ -71,33 +77,42 @@ var Operations = map[string]httpx.Operation{
 	"rejectPartyInvitation": op("rejectPartyInvitation", http.MethodPost, "/multiplayer/invitations/{invitation_id}:reject", httpx.IdempotencyNone, http.StatusNoContent),
 	"cancelPartyInvitation": op("cancelPartyInvitation", http.MethodPost, "/multiplayer/invitations/{invitation_id}:cancel", httpx.IdempotencyNone, http.StatusNoContent),
 	"joinParty":             op("joinParty", http.MethodPost, "/multiplayer/parties/{party_id}:join", httpx.IdempotencyRequired, http.StatusOK),
+	// F101 — Party Lobby and party sessions.
+	"setPartyReady":               op("setPartyReady", http.MethodPut, "/multiplayer/parties/{party_id}/members/me/ready", httpx.IdempotencyNone, http.StatusNoContent),
+	"selectPartyActivity":         op("selectPartyActivity", http.MethodPut, "/multiplayer/parties/{party_id}/activity", httpx.IdempotencyNone, http.StatusOK),
+	"startPartySession":           op("startPartySession", http.MethodPost, "/multiplayer/parties/{party_id}:start", httpx.IdempotencyRequired, http.StatusCreated),
+	"listPartyEligibleActivities": op("listPartyEligibleActivities", http.MethodGet, "/multiplayer/parties/{party_id}/eligible-activities", httpx.IdempotencyNone, http.StatusOK),
 }
 
-// PlayerOperations are the player routes of F100 (all of them).
+// PlayerOperations are the player routes of F100 and F101 (all of them).
 var PlayerOperations = []string{"createParty", "getMyParty", "getParty", "updatePartySettings", "leaveParty", "disbandParty",
 	"transferPartyLeader", "kickPartyMember", "inviteToParty", "listMyInvitations", "acceptPartyInvitation", "rejectPartyInvitation",
-	"cancelPartyInvitation", "joinParty"}
+	"cancelPartyInvitation", "joinParty", "setPartyReady", "selectPartyActivity", "startPartySession", "listPartyEligibleActivities"}
 
-// Register mounts every F100 operation on the server.
+// Register mounts every F100 and F101 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
 	if h.Commands == nil || h.Queries == nil {
 		return errors.New("competition: the F100 handlers are required")
 	}
 	routes := map[string]http.HandlerFunc{
-		"createParty":           h.createParty,
-		"getMyParty":            h.getMyParty,
-		"getParty":              h.partyView(h.Queries.GetParty),
-		"updatePartySettings":   h.updatePartySettings,
-		"leaveParty":            h.partyAction(h.Commands.LeaveParty),
-		"disbandParty":          h.partyAction(h.Commands.DisbandParty),
-		"transferPartyLeader":   h.transferPartyLeader,
-		"kickPartyMember":       h.kickPartyMember,
-		"inviteToParty":         h.inviteToParty,
-		"listMyInvitations":     h.listMyInvitations,
-		"acceptPartyInvitation": h.acceptPartyInvitation,
-		"rejectPartyInvitation": h.invitationAction(h.Commands.RejectPartyInvitation),
-		"cancelPartyInvitation": h.invitationAction(h.Commands.CancelPartyInvitation),
-		"joinParty":             h.partyView(h.Commands.JoinParty),
+		"createParty":                 h.createParty,
+		"getMyParty":                  h.getMyParty,
+		"getParty":                    h.partyView(h.Queries.GetParty),
+		"updatePartySettings":         h.updatePartySettings,
+		"leaveParty":                  h.partyAction(h.Commands.LeaveParty),
+		"disbandParty":                h.partyAction(h.Commands.DisbandParty),
+		"transferPartyLeader":         h.transferPartyLeader,
+		"kickPartyMember":             h.kickPartyMember,
+		"inviteToParty":               h.inviteToParty,
+		"listMyInvitations":           h.listMyInvitations,
+		"acceptPartyInvitation":       h.acceptPartyInvitation,
+		"rejectPartyInvitation":       h.invitationAction(h.Commands.RejectPartyInvitation),
+		"cancelPartyInvitation":       h.invitationAction(h.Commands.CancelPartyInvitation),
+		"joinParty":                   h.partyView(h.Commands.JoinParty),
+		"setPartyReady":               h.setPartyReady,
+		"selectPartyActivity":         h.selectPartyActivity,
+		"startPartySession":           h.startPartySession,
+		"listPartyEligibleActivities": h.listPartyEligibleActivities,
 	}
 	for _, id := range PlayerOperations {
 		if err := s.Handle(Operations[id], routes[id]); err != nil {
@@ -120,7 +135,7 @@ func fail(w http.ResponseWriter, r *http.Request, err error) {
 		w.Header().Set("Retry-After", strconv.Itoa(max(secs, 1)))
 	}
 	var pe *problem.Error
-	if errors.As(err, &pe) && pe.Code == problem.Unavailable {
+	if errors.As(err, &pe) && pe.Code == problem.Unavailable && w.Header().Get("Retry-After") == "" {
 		w.Header().Set("Retry-After", "1")
 	}
 	httpx.WriteError(w, r, err)

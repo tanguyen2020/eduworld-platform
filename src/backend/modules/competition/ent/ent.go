@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/party"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyactivity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
@@ -79,6 +80,7 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			party.Table:             party.ValidColumn,
+			partyactivity.Table:     partyactivity.ValidColumn,
 			partyinvitation.Table:   partyinvitation.ValidColumn,
 			partymember.Table:       partymember.ValidColumn,
 			partypolicy.Table:       partypolicy.ValidColumn,

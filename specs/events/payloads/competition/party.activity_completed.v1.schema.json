@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.activity_completed.v1.schema.json",
+  "title": "Payload party.activity_completed v1 (module competition, owner F101)",
+  "description": "Phát thêm khi party.activity_ended có end_reason completed (EVENT_DESIGN §4): trigger reward rule co-op; kết quả học tập vẫn ghi riêng từng học sinh. Consumer: game (reward co-op), QST, LA.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "party_activity_id",
+    "party_id",
+    "tenant_id",
+    "activity_type",
+    "activity_ref",
+    "member_ids",
+    "completed_at"
+  ],
+  "properties": {
+    "party_activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/PartyActivityType"
+    },
+    "activity_ref": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_.-]{1,64}$",
+      "description": "area_id (explore) / quest_id (quest) / boss_id (boss)"
+    },
+    "member_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "description": "Thành viên tham gia phiên"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "party_activity_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000b1",
+      "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "activity_type": "boss",
+      "activity_ref": "boss-forest-golem",
+      "member_ids": [
+        "0193a5f4-6c1e-7b2a-9d1f-000000000005",
+        "0193a5f4-6c1e-7b2a-9d1f-000000000006"
+      ],
+      "completed_at": "2026-11-21T03:20:00Z"
+    }
+  ]
+}

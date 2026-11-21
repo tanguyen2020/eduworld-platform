@@ -127,6 +127,7 @@ const (
 	PartyMemberNotOnline             Code = "PARTY_MEMBER_NOT_ONLINE"
 	PartyNotFound                    Code = "PARTY_NOT_FOUND"
 	PartyNotLeader                   Code = "PARTY_NOT_LEADER"
+	PartyNotReady                    Code = "PARTY_NOT_READY"
 	PartyPolicyViolation             Code = "PARTY_POLICY_VIOLATION"
 	PasswordResetTokenInvalid        Code = "PASSWORD_RESET_TOKEN_INVALID"
 	PermissionDenied                 Code = "PERMISSION_DENIED"
@@ -302,6 +303,7 @@ var statusByCode = map[Code]int{
 	PartyMemberNotOnline:             409,
 	PartyNotFound:                    404,
 	PartyNotLeader:                   403,
+	PartyNotReady:                    409,
 	PartyPolicyViolation:             403,
 	PasswordResetTokenInvalid:        401,
 	PermissionDenied:                 403,
@@ -477,6 +479,7 @@ var allCodes = []Code{
 	PartyMemberNotOnline,
 	PartyNotFound,
 	PartyNotLeader,
+	PartyNotReady,
 	PartyPolicyViolation,
 	PasswordResetTokenInvalid,
 	PermissionDenied,

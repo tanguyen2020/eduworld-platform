@@ -31,6 +31,7 @@ type PartyRealtime interface {
 // PartySnapshot is the realtime state of a party kept in Valkey (ew:party:*, VALKEY_DESIGN §3.2): rebuildable from
 // PostgreSQL, never the source of truth (ADR-0004).
 type PartySnapshot struct {
+	TenantID     uuid.UUID
 	PartyID      uuid.UUID
 	LeaderID     uuid.UUID
 	Type         string

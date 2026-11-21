@@ -307,7 +307,7 @@ func (r Parties) Create(ctx context.Context, p *party.Party) error {
 }
 
 const partyColumns = `party_id, tenant_id, school_id, name, leader_id, party_type, visibility, invitation_policy, max_members, grade_band,
-	status, state_version, created_at, updated_at, disbanded_at`
+	status, state_version, created_at, updated_at, disbanded_at, selected_activity_type, selected_activity_ref, selected_game_mode`
 
 // Load implements write.PartyRepository.
 func (Parties) Load(ctx context.Context, tenant, id uuid.UUID, lock bool) (*party.Party, error) {
@@ -321,8 +321,10 @@ func (Parties) Load(ctx context.Context, tenant, id uuid.UUID, lock bool) (*part
 	}
 	var p party.Party
 	var disbanded sql.NullTime
+	var selType, selRef, selMode sql.NullString
 	err = t.QueryRowContext(ctx, q, tenant, id).Scan(&p.ID, &p.TenantID, &p.SchoolID, &p.Name, &p.LeaderID, &p.Type, &p.Visibility,
-		&p.InvitationPolicy, &p.MaxMembers, &p.GradeBand, &p.Status, &p.StateVersion, &p.CreatedAt, &p.UpdatedAt, &disbanded)
+		&p.InvitationPolicy, &p.MaxMembers, &p.GradeBand, &p.Status, &p.StateVersion, &p.CreatedAt, &p.UpdatedAt, &disbanded,
+		&selType, &selRef, &selMode)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -333,6 +335,9 @@ func (Parties) Load(ctx context.Context, tenant, id uuid.UUID, lock bool) (*part
 	if disbanded.Valid {
 		at := disbanded.Time.UTC()
 		p.DisbandedAt = &at
+	}
+	if selType.Valid {
+		p.Selected = &party.Selection{Type: selType.String, Ref: selRef.String, GameMode: selMode.String}
 	}
 	rows, err := t.QueryContext(ctx, `SELECT student_id, school_id, role, joined_at, invitation_id FROM multiplayer.party_members
 		WHERE tenant_id = $1 AND party_id = $2 AND left_at IS NULL AND deleted_at IS NULL ORDER BY joined_at, membership_id`, tenant, id)
@@ -358,10 +363,15 @@ func (Parties) Load(ctx context.Context, tenant, id uuid.UUID, lock bool) (*part
 
 // Save implements write.PartyRepository.
 func (Parties) Save(ctx context.Context, p *party.Party) error {
+	var selType, selRef, selMode any
+	if p.Selected != nil {
+		selType, selRef, selMode = p.Selected.Type, p.Selected.Ref, nullString(p.Selected.GameMode)
+	}
 	_, err := run(ctx, `UPDATE multiplayer.parties SET name = $3, leader_id = $4, visibility = $5, invitation_policy = $6, max_members = $7,
-		status = $8, state_version = $9, disbanded_at = $10, updated_at = $11, updated_by = $12, version = version + 1
+		status = $8, state_version = $9, disbanded_at = $10, updated_at = $11, updated_by = $12, version = version + 1,
+		selected_activity_type = $13, selected_activity_ref = $14, selected_game_mode = $15
 		WHERE tenant_id = $1 AND party_id = $2 AND deleted_at IS NULL`, p.TenantID, p.ID, p.Name, p.LeaderID, p.Visibility,
-		p.InvitationPolicy, p.MaxMembers, p.Status, p.StateVersion, p.DisbandedAt, p.UpdatedAt, actor(ctx))
+		p.InvitationPolicy, p.MaxMembers, p.Status, p.StateVersion, p.DisbandedAt, p.UpdatedAt, actor(ctx), selType, selRef, selMode)
 	if err != nil {
 		return fmt.Errorf("party: save: %w", err)
 	}

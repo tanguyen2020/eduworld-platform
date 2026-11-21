@@ -58,6 +58,12 @@ type Party struct {
 	CurrentActivityID *uuid.UUID `json:"current_activity_id,omitempty"`
 	// CurrentGameSessionRef holds the value of the "current_game_session_ref" field.
 	CurrentGameSessionRef *uuid.UUID `json:"current_game_session_ref,omitempty"`
+	// SelectedActivityType holds the value of the "selected_activity_type" field.
+	SelectedActivityType *string `json:"selected_activity_type,omitempty"`
+	// SelectedActivityRef holds the value of the "selected_activity_ref" field.
+	SelectedActivityRef *string `json:"selected_activity_ref,omitempty"`
+	// SelectedGameMode holds the value of the "selected_game_mode" field.
+	SelectedGameMode *string `json:"selected_game_mode,omitempty"`
 	// StateVersion holds the value of the "state_version" field.
 	StateVersion int64 `json:"state_version,omitempty"`
 	// DisbandedAt holds the value of the "disbanded_at" field.
@@ -74,7 +80,7 @@ func (*Party) scanValues(columns []string) ([]any, error) {
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case party.FieldVersion, party.FieldMaxMembers, party.FieldStateVersion:
 			values[i] = new(sql.NullInt64)
-		case party.FieldDeleteReason, party.FieldName, party.FieldPartyType, party.FieldVisibility, party.FieldInvitationPolicy, party.FieldGradeBand, party.FieldStatus:
+		case party.FieldDeleteReason, party.FieldName, party.FieldPartyType, party.FieldVisibility, party.FieldInvitationPolicy, party.FieldGradeBand, party.FieldStatus, party.FieldSelectedActivityType, party.FieldSelectedActivityRef, party.FieldSelectedGameMode:
 			values[i] = new(sql.NullString)
 		case party.FieldCreatedAt, party.FieldUpdatedAt, party.FieldDeletedAt, party.FieldDisbandedAt:
 			values[i] = new(sql.NullTime)
@@ -228,6 +234,27 @@ func (_m *Party) assignValues(columns []string, values []any) error {
 				_m.CurrentGameSessionRef = new(uuid.UUID)
 				*_m.CurrentGameSessionRef = *value.S.(*uuid.UUID)
 			}
+		case party.FieldSelectedActivityType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field selected_activity_type", values[i])
+			} else if value.Valid {
+				_m.SelectedActivityType = new(string)
+				*_m.SelectedActivityType = value.String
+			}
+		case party.FieldSelectedActivityRef:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field selected_activity_ref", values[i])
+			} else if value.Valid {
+				_m.SelectedActivityRef = new(string)
+				*_m.SelectedActivityRef = value.String
+			}
+		case party.FieldSelectedGameMode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field selected_game_mode", values[i])
+			} else if value.Valid {
+				_m.SelectedGameMode = new(string)
+				*_m.SelectedGameMode = value.String
+			}
 		case party.FieldStateVersion:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field state_version", values[i])
@@ -349,6 +376,21 @@ func (_m *Party) String() string {
 	if v := _m.CurrentGameSessionRef; v != nil {
 		builder.WriteString("current_game_session_ref=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.SelectedActivityType; v != nil {
+		builder.WriteString("selected_activity_type=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.SelectedActivityRef; v != nil {
+		builder.WriteString("selected_activity_ref=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.SelectedGameMode; v != nil {
+		builder.WriteString("selected_game_mode=")
+		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
 	builder.WriteString("state_version=")

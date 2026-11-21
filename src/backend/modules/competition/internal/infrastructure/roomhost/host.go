@@ -277,6 +277,12 @@ func (h *Host) start(ctx context.Context, m port.RoomMeta) (*room, error) {
 	rctx, cancel := context.WithCancel(context.WithoutCancel(base))
 	r := &room{h: h, meta: m, in: hub.NewInstance(m.RoomID, *area, m.Partition, m.Capacity, h.now()), cancel: cancel,
 		notices: map[uuid.UUID]time.Time{}}
+	if m.Private {
+		r.in.Allowed = make(map[uuid.UUID]bool, len(m.Allowed))
+		for _, id := range m.Allowed {
+			r.in.Allowed[id] = true
+		}
+	}
 	in, err := h.nc.Subscribe(rt.RoomInputSubject(m.RoomID), r.onInput)
 	if err != nil {
 		cancel()

@@ -245,6 +245,48 @@ func (_c *PartyCreate) SetNillableCurrentGameSessionRef(v *uuid.UUID) *PartyCrea
 	return _c
 }
 
+// SetSelectedActivityType sets the "selected_activity_type" field.
+func (_c *PartyCreate) SetSelectedActivityType(v string) *PartyCreate {
+	_c.mutation.SetSelectedActivityType(v)
+	return _c
+}
+
+// SetNillableSelectedActivityType sets the "selected_activity_type" field if the given value is not nil.
+func (_c *PartyCreate) SetNillableSelectedActivityType(v *string) *PartyCreate {
+	if v != nil {
+		_c.SetSelectedActivityType(*v)
+	}
+	return _c
+}
+
+// SetSelectedActivityRef sets the "selected_activity_ref" field.
+func (_c *PartyCreate) SetSelectedActivityRef(v string) *PartyCreate {
+	_c.mutation.SetSelectedActivityRef(v)
+	return _c
+}
+
+// SetNillableSelectedActivityRef sets the "selected_activity_ref" field if the given value is not nil.
+func (_c *PartyCreate) SetNillableSelectedActivityRef(v *string) *PartyCreate {
+	if v != nil {
+		_c.SetSelectedActivityRef(*v)
+	}
+	return _c
+}
+
+// SetSelectedGameMode sets the "selected_game_mode" field.
+func (_c *PartyCreate) SetSelectedGameMode(v string) *PartyCreate {
+	_c.mutation.SetSelectedGameMode(v)
+	return _c
+}
+
+// SetNillableSelectedGameMode sets the "selected_game_mode" field if the given value is not nil.
+func (_c *PartyCreate) SetNillableSelectedGameMode(v *string) *PartyCreate {
+	if v != nil {
+		_c.SetSelectedGameMode(*v)
+	}
+	return _c
+}
+
 // SetStateVersion sets the "state_version" field.
 func (_c *PartyCreate) SetStateVersion(v int64) *PartyCreate {
 	_c.mutation.SetStateVersion(v)
@@ -444,6 +486,21 @@ func (_c *PartyCreate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Party.status": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.SelectedActivityType(); ok {
+		if err := party.SelectedActivityTypeValidator(v); err != nil {
+			return &ValidationError{Name: "selected_activity_type", err: fmt.Errorf(`ent: validator failed for field "Party.selected_activity_type": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.SelectedActivityRef(); ok {
+		if err := party.SelectedActivityRefValidator(v); err != nil {
+			return &ValidationError{Name: "selected_activity_ref", err: fmt.Errorf(`ent: validator failed for field "Party.selected_activity_ref": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.SelectedGameMode(); ok {
+		if err := party.SelectedGameModeValidator(v); err != nil {
+			return &ValidationError{Name: "selected_game_mode", err: fmt.Errorf(`ent: validator failed for field "Party.selected_game_mode": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.StateVersion(); !ok {
 		return &ValidationError{Name: "state_version", err: errors.New(`ent: missing required field "Party.state_version"`)}
 	}
@@ -562,6 +619,18 @@ func (_c *PartyCreate) createSpec() (*Party, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.CurrentGameSessionRef(); ok {
 		_spec.SetField(party.FieldCurrentGameSessionRef, field.TypeUUID, value)
 		_node.CurrentGameSessionRef = &value
+	}
+	if value, ok := _c.mutation.SelectedActivityType(); ok {
+		_spec.SetField(party.FieldSelectedActivityType, field.TypeString, value)
+		_node.SelectedActivityType = &value
+	}
+	if value, ok := _c.mutation.SelectedActivityRef(); ok {
+		_spec.SetField(party.FieldSelectedActivityRef, field.TypeString, value)
+		_node.SelectedActivityRef = &value
+	}
+	if value, ok := _c.mutation.SelectedGameMode(); ok {
+		_spec.SetField(party.FieldSelectedGameMode, field.TypeString, value)
+		_node.SelectedGameMode = &value
 	}
 	if value, ok := _c.mutation.StateVersion(); ok {
 		_spec.SetField(party.FieldStateVersion, field.TypeInt64, value)

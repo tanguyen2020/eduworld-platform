@@ -177,6 +177,14 @@ func (_c *SessionMembershipCreate) SetGameSessionID(v uuid.UUID) *SessionMembers
 	return _c
 }
 
+// SetNillableGameSessionID sets the "game_session_id" field if the given value is not nil.
+func (_c *SessionMembershipCreate) SetNillableGameSessionID(v *uuid.UUID) *SessionMembershipCreate {
+	if v != nil {
+		_c.SetGameSessionID(*v)
+	}
+	return _c
+}
+
 // SetPartyID sets the "party_id" field.
 func (_c *SessionMembershipCreate) SetPartyID(v uuid.UUID) *SessionMembershipCreate {
 	_c.mutation.SetPartyID(v)
@@ -215,6 +223,20 @@ func (_c *SessionMembershipCreate) SetEncounterID(v uuid.UUID) *SessionMembershi
 func (_c *SessionMembershipCreate) SetNillableEncounterID(v *uuid.UUID) *SessionMembershipCreate {
 	if v != nil {
 		_c.SetEncounterID(*v)
+	}
+	return _c
+}
+
+// SetPartyActivityID sets the "party_activity_id" field.
+func (_c *SessionMembershipCreate) SetPartyActivityID(v uuid.UUID) *SessionMembershipCreate {
+	_c.mutation.SetPartyActivityID(v)
+	return _c
+}
+
+// SetNillablePartyActivityID sets the "party_activity_id" field if the given value is not nil.
+func (_c *SessionMembershipCreate) SetNillablePartyActivityID(v *uuid.UUID) *SessionMembershipCreate {
+	if v != nil {
+		_c.SetPartyActivityID(*v)
 	}
 	return _c
 }
@@ -398,9 +420,6 @@ func (_c *SessionMembershipCreate) check() error {
 	if _, ok := _c.mutation.StudentID(); !ok {
 		return &ValidationError{Name: "student_id", err: errors.New(`ent: missing required field "SessionMembership.student_id"`)}
 	}
-	if _, ok := _c.mutation.GameSessionID(); !ok {
-		return &ValidationError{Name: "game_session_id", err: errors.New(`ent: missing required field "SessionMembership.game_session_id"`)}
-	}
 	if _, ok := _c.mutation.JoinedAt(); !ok {
 		return &ValidationError{Name: "joined_at", err: errors.New(`ent: missing required field "SessionMembership.joined_at"`)}
 	}
@@ -502,7 +521,7 @@ func (_c *SessionMembershipCreate) createSpec() (*SessionMembership, *sqlgraph.C
 	}
 	if value, ok := _c.mutation.GameSessionID(); ok {
 		_spec.SetField(sessionmembership.FieldGameSessionID, field.TypeUUID, value)
-		_node.GameSessionID = value
+		_node.GameSessionID = &value
 	}
 	if value, ok := _c.mutation.PartyID(); ok {
 		_spec.SetField(sessionmembership.FieldPartyID, field.TypeUUID, value)
@@ -515,6 +534,10 @@ func (_c *SessionMembershipCreate) createSpec() (*SessionMembership, *sqlgraph.C
 	if value, ok := _c.mutation.EncounterID(); ok {
 		_spec.SetField(sessionmembership.FieldEncounterID, field.TypeUUID, value)
 		_node.EncounterID = &value
+	}
+	if value, ok := _c.mutation.PartyActivityID(); ok {
+		_spec.SetField(sessionmembership.FieldPartyActivityID, field.TypeUUID, value)
+		_node.PartyActivityID = &value
 	}
 	if value, ok := _c.mutation.JoinedAt(); ok {
 		_spec.SetField(sessionmembership.FieldJoinedAt, field.TypeTime, value)

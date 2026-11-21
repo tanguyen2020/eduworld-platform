@@ -120,6 +120,11 @@ func (h Parties) remove(ctx context.Context, fx *effects, p *party.Party, r remo
 	if err := h.Repo.EndMember(ctx, p.TenantID, p.ID, r.student, r.reason, now); err != nil {
 		return err
 	}
+	if !out.Disbanded {
+		if err := h.leftSession(ctx, fx, p, r.student, now); err != nil {
+			return err
+		}
+	}
 	if out.NewLeader != uuid.Nil {
 		if err := h.Repo.SetRoles(ctx, p); err != nil {
 			return err
@@ -185,6 +190,9 @@ func (h Parties) transferred(ctx context.Context, fx *effects, p *party.Party, f
 // every former member (left: those who already left in this command).
 func (h Parties) disbanded(ctx context.Context, fx *effects, p *party.Party, reason string, actor *uuid.UUID, left []uuid.UUID,
 	now time.Time) error {
+	if err := h.disbandedSession(ctx, fx, p, now); err != nil {
+		return err
+	}
 	if err := h.Repo.Save(ctx, p); err != nil {
 		return err
 	}

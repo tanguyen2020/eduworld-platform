@@ -9,6 +9,9 @@ import (
 // Party is the predicate function for party builders.
 type Party func(*sql.Selector)
 
+// PartyActivity is the predicate function for partyactivity builders.
+type PartyActivity func(*sql.Selector)
+
 // PartyInvitation is the predicate function for partyinvitation builders.
 type PartyInvitation func(*sql.Selector)
 

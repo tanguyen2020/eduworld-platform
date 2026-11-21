@@ -59,10 +59,11 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:chat:social:presence:<user_id>` | HASH {status, activity, area_id, hidden, ts} — presence gần nhất module chat nhận từ tín hiệu `ew.rt.presence.<tenant_id>` (gateway phát lại `refresh` tối đa mỗi `presence_ttl`/3 khi kết nối còn sống); ghi bằng Lua chỉ khi `ts` mới hơn | `presence_ttl` (90 s) | `chat · social` (F095) | Ephemeral — hết hạn = `offline` trong `listFriends` |
 | `ew:chat:social:friends:<user_id>` | SET user_id bạn bè (không chặn nhau) + phần tử `-` cho danh sách rỗng — fan-out `presence.friend.updated` | 10 phút; xóa khi đổi quan hệ (kết bạn, hủy, chặn) | `chat · social` (F095) | Rebuildable từ `social.friendships` |
 | `ew:party:<party_id>` | HASH (state realtime) | 24 h (gia hạn khi hoạt động) | `competition · party` | Rebuildable |
-| `ew:party:<party_id>:members` | HASH user_id → JSON {role, ready, status, joined_at} | 24 h | `competition · party` | Rebuildable |
-| `ew:party:<party_id>:lock` | STRING owner (`SET NX`) — tuần tự hóa lệnh lobby (bắt đầu hoạt động, chuyển leader) | 5 s | `competition · party` | Ephemeral — PG `SELECT … FOR UPDATE` vẫn là chốt chặn |
-| `ew:party:<party_id>:leader_grace` | STRING leader_id | `party_leader_grace` | `competition · party` | Ephemeral — hết hạn thì worker tự chuyển leader ([PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md)) |
-| `ew:party:active` | ZSET party_id → last_online_ms | Không TTL; worker `party-presence-sweeper` dọn | `competition · party` | Rebuildable từ `multiplayer.parties` |
+| `ew:party:<party_id>:members` | HASH user_id → role (F100; ghi lại toàn bộ mỗi thay đổi thành viên) | 24 h | `competition · party` | Rebuildable |
+| `ew:party:<party_id>:lobby` | HASH lobby (F101): `r:<user_id>` Ready, `s:<user_id>` trạng thái thành viên, `g:<user_id>` mất kết nối từ (ms), `leader_gone` (grace `party_leader_grace`), `last_online` (`party_dormant_timeout`), `below_min` (`party_activity_min_members_timeout`) — tách khỏi `:members` để lệnh F100 không xóa Ready | 24 h | `competition · party` | Rebuildable — mất = Ready false, timer bắt đầu lại ([F101 spec](../../specs/101-party-lobby-session/spec.md) Clarifications 2026-11-21) |
+| `ew:party:active` | ZSET `<tenant_id>:<party_id>` → thời điểm bắt đầu theo dõi (ms) | Không TTL; worker `party-presence-sweeper` dọn party giải tán | `competition · party` | Rebuildable từ `multiplayer.parties` (sweeper đối soát mỗi 12 chu kỳ) |
+| `ew:rl:party_lobby:<user_id>` | STRING counter cửa sổ 1 s — `party_lobby_cmd_rate` (Ready, chọn hoạt động) | 1 s | `competition · party` | Ephemeral |
+| `ew:lock:job:party-presence-sweeper` | STRING `SET NX PX` — một replica chạy mỗi chu kỳ 5 s | = chu kỳ | `competition · party` | Ephemeral |
 | `ew:party:user:<user_id>` | STRING party_id | 24 h | `competition · party` | Rebuildable |
 | `ew:party:invite:<invitation_id>` | HASH | = `expires_at` (mặc định 5 phút) | `competition · party` | Rebuildable |
 | `ew:party:invites:user:<user_id>` | ZSET invitation_id → expires_ms | 10 phút | `competition · party` | Rebuildable |

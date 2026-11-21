@@ -6780,7 +6780,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lời mời party nhận được */
+        /**
+         * Lời mời party nhận được
+         * @description Chỉ lời mời gửi tới chính người gọi; inviter chỉ có nickname/avatar (F100-AC-15).
+         */
         get: operations["listMyInvitations"];
         put?: never;
         post?: never;
@@ -6799,7 +6802,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Chấp nhận lời mời party */
+        /**
+         * Chấp nhận lời mời party
+         * @description Kiểm tra lại toàn bộ policy lúc accept. Không phải invitee → `403 PERMISSION_DENIED`; quá hạn → `410`; đủ người →
+         *     `409 PARTY_FULL`; đang ở party khác → `409 PARTY_ALREADY_IN_PARTY` (F100-AC-11, AC-12).
+         */
         post: operations["acceptPartyInvitation"];
         delete?: never;
         options?: never;
@@ -6816,7 +6823,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hủy lời mời đã gửi (inviter hoặc leader) */
+        /**
+         * Hủy lời mời đã gửi (inviter hoặc leader)
+         * @description Chỉ inviter hoặc leader hiện tại (`403 PERMISSION_DENIED`).
+         */
         post: operations["cancelPartyInvitation"];
         delete?: never;
         options?: never;
@@ -6833,7 +6843,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Từ chối lời mời party */
+        /**
+         * Từ chối lời mời party
+         * @description Chỉ invitee; lời mời không còn `pending` của người gọi → `404`.
+         */
         post: operations["rejectPartyInvitation"];
         delete?: never;
         options?: never;
@@ -6850,7 +6863,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Tạo party */
+        /**
+         * Tạo party
+         * @description Người gọi trở thành leader; `tenant_id`/`school_id`/`grade_band` lấy từ hồ sơ học sinh của phiên. Đã có party active →
+         *     `409 PARTY_ALREADY_IN_PARTY`; tên/`max_members`/loại party không hợp lệ hoặc bị kiểm duyệt chặn (không kèm từ khớp) →
+         *     `422`; bị `restrict_multiplayer` → `403 PARTY_POLICY_VIOLATION`; vượt `party_create_rate` → `429 RATE_LIMITED`;
+         *     hồ sơ học sinh chưa được chiếu → `503` có `Retry-After` (F100-AC-01…05).
+         */
         post: operations["createParty"];
         delete?: never;
         options?: never;
@@ -6865,14 +6884,20 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Chi tiết party và trạng thái thành viên */
+        /**
+         * Chi tiết party và trạng thái thành viên
+         * @description Chỉ thành viên đang ở party; người khác, party của tenant/trường khác → `404 PARTY_NOT_FOUND` (F100-AC-06).
+         */
         get: operations["getParty"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Cập nhật party settings */
+        /**
+         * Cập nhật party settings
+         * @description Chỉ leader (`403 PARTY_NOT_LEADER`); `max_members` < số thành viên hoặc > trần policy, tên bị kiểm duyệt chặn → `422`.
+         */
         patch: operations["updatePartySettings"];
         trace?: never;
     };
@@ -6885,7 +6910,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Giải tán party */
+        /**
+         * Giải tán party
+         * @description Chỉ leader (`403 PARTY_NOT_LEADER`); gọi lại sau khi đã giải tán → `204` không phát event lần hai (F100-AC-20).
+         */
         post: operations["disbandParty"];
         delete?: never;
         options?: never;
@@ -6902,7 +6930,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Tham gia party visibility class/friends (party private bắt buộc qua invitation) */
+        /**
+         * Tham gia party visibility class/friends (party private bắt buộc qua invitation)
+         * @description `class`: cùng lớp với leader; `friends`: là bạn của leader; `private` không có lời mời `accepted` còn hạn →
+         *     `403 PARTY_POLICY_VIOLATION` (F100-AC-16).
+         */
         post: operations["joinParty"];
         delete?: never;
         options?: never;
@@ -6919,7 +6951,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rời party */
+        /**
+         * Rời party
+         * @description Leader rời → leader mới là thành viên online gia nhập sớm nhất; người cuối rời → party giải tán (F100-AC-17).
+         */
         post: operations["leaveParty"];
         delete?: never;
         options?: never;
@@ -6936,7 +6971,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Leader bắt đầu — kiểm tra member, policy lớp, tạo room/GameSession chung */
+        /**
+         * Leader bắt đầu — kiểm tra member, policy lớp, tạo room/GameSession chung
+         * @description Luồng 9 bước (PARTY_SYSTEM §6.1): chỉ leader (`403 PARTY_NOT_LEADER`); `expected_version` lệch → `412 VERSION_MISMATCH`;
+         *     party không `open` hoặc chưa chọn hoạt động → `422 INVALID_STATE_TRANSITION`; còn thành viên online chưa Ready hoặc số
+         *     thành viên online ngoài khoảng của hoạt động → `409 PARTY_NOT_READY`; có thành viên không đủ điều kiện →
+         *     `409 PARTY_ACTIVITY_NOT_ELIGIBLE` kèm `ineligible_members`, không ai vào phiên (F101-AC-07…AC-09); module game lỗi/quá
+         *     thời gian (`quest`/`boss`) → `503 UNAVAILABLE` + `Retry-After`, party không đổi (F101-AC-10). Thành viên offline không
+         *     tham gia phiên và có trong `excluded_members` (`not_online`). Gửi lại cùng `Idempotency-Key` → cùng kết quả, một activity.
+         */
         post: operations["startPartySession"];
         delete?: never;
         options?: never;
@@ -6953,7 +6996,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Chuyển leader */
+        /**
+         * Chuyển leader
+         * @description Chỉ leader (`403 PARTY_NOT_LEADER`); đích không phải thành viên → `422`; đích không online → `409 PARTY_MEMBER_NOT_ONLINE`.
+         */
         post: operations["transferPartyLeader"];
         delete?: never;
         options?: never;
@@ -6969,8 +7015,36 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Chọn activity / game mode (fallback của WS party.activity.select) */
+        /**
+         * Chọn activity / game mode (fallback của WS party.activity.select)
+         * @description Chỉ leader (`403 PARTY_NOT_LEADER`); `expected_version` lệch `state_version` → `412 VERSION_MISMATCH` kèm `state_version`
+         *     hiện tại; party không `open` → `422 INVALID_STATE_TRANSITION`. Thành công: lưu lựa chọn, reset Ready của mọi thành viên,
+         *     tăng `state_version`, phát `party.activity_selected`, đẩy `party.activity.selected` kèm `ineligible_members` (mã lý do)
+         *     (F101-AC-03, AC-04). `quest`/`boss` cần module game; không trả lời → `503 UNAVAILABLE` + `Retry-After`.
+         */
         put: operations["selectPartyActivity"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/multiplayer/parties/{party_id}/eligible-activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hoạt động party đủ điều kiện của cả nhóm
+         * @description Chỉ thành viên (`404 PARTY_NOT_FOUND`). Trả hoạt động mà mọi thành viên đủ điều kiện (`all_eligible`) và hoạt động chỉ một
+         *     số đủ điều kiện kèm cảnh báo theo thành viên: mã lý do + yêu cầu của hoạt động, không bao giờ khối/lớp thực của bạn khác
+         *     (F101-AC-05, R16). `quest`/`boss` lấy từ module game; khi module game không trả lời chỉ trả `explore`.
+         */
+        get: operations["listPartyEligibleActivities"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -6987,7 +7061,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mời bạn vào party */
+        /**
+         * Mời bạn vào party
+         * @description Người mời không được phép theo `invitation_policy` hoặc hai bên chặn nhau → `403 PARTY_INVITE_NOT_ALLOWED` (không tiết lộ
+         *     lý do); khác trường/tenant, sanction, vi phạm `party_policies` → `403 PARTY_POLICY_VIOLATION`; đã có lời mời chờ → `409`;
+         *     vượt `party_invite_rate` hoặc `party_invite_repeat_rules` → `429 PARTY_INVITE_RATE_LIMITED` (F100-AC-07…10).
+         */
         post: operations["inviteToParty"];
         delete?: never;
         options?: never;
@@ -7004,7 +7083,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Kick thành viên */
+        /**
+         * Kick thành viên
+         * @description Chỉ leader (`403 PARTY_NOT_LEADER`); người bị kick không được mời/tham gia lại party này trong `party_kick_reinvite_block`;
+         *     vượt `party_kick_rate` → `429 RATE_LIMITED` (F100-AC-18).
+         */
         post: operations["kickPartyMember"];
         delete?: never;
         options?: never;
@@ -7020,7 +7103,12 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Đặt Ready / Not ready (fallback của WS party.member.ready_set) */
+        /**
+         * Đặt Ready / Not ready (fallback của WS party.member.ready_set)
+         * @description Thành viên của party `open`; lưu ở lobby state (Valkey), đẩy `party.member.ready_changed` (kèm `all_ready`) tới mọi
+         *     thành viên, không phát domain event (F101-AC-01). Party không `open` → `422 INVALID_STATE_TRANSITION`; không là thành viên,
+         *     party của tenant/trường khác → `404 PARTY_NOT_FOUND`; vượt `party_lobby_cmd_rate` → `429 RATE_LIMITED` (F101-AC-02).
+         */
         put: operations["setPartyReady"];
         post?: never;
         delete?: never;
@@ -7036,7 +7124,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Active party của mình */
+        /**
+         * Active party của mình
+         * @description Không có party active → `404 PARTY_NOT_FOUND`. Thành viên chỉ có nickname/avatar/vai trò (R16).
+         */
         get: operations["getMyParty"];
         put?: never;
         post?: never;
@@ -13050,38 +13141,79 @@ export interface components {
             created_at?: components["schemas"]["Timestamp"];
             current_activity?: components["schemas"]["PartyActivitySelection"];
             current_game_session_ref?: components["schemas"]["Uuid"];
+            current_room_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
             invitation_policy?: "leader_only" | "members";
             leader_id: components["schemas"]["Uuid"];
+            /** @description Leader đang trong grace party_leader_grace (F101-AC-15) */
+            leader_reconnecting?: boolean;
             max_members: number;
             members: components["schemas"]["PartyMember"][];
             name: string;
             party_id: components["schemas"]["Uuid"];
             party_type: components["schemas"]["PartyType"];
+            /** @description Tăng 1 mỗi thay đổi thành viên/cài đặt/hoạt động (expected_version của F101) */
+            state_version?: number;
             /** @enum {string} */
             status: "open" | "in_activity" | "disbanded";
             updated_at?: components["schemas"]["Timestamp"];
             visibility: components["schemas"]["PartyVisibility"];
         };
-        PartyActivitySelection: {
-            activity_ref?: components["schemas"]["Uuid"];
-            /** @enum {string} */
-            activity_type: "explore" | "quest" | "learning_challenge" | "coop_challenge" | "team_battle";
+        /** @description area_id (explore) / quest_id (quest) / boss_id (boss) */
+        PartyActivityRef: string;
+        PartyActivitySelect: {
+            activity_ref: components["schemas"]["PartyActivityRef"];
+            activity_type: components["schemas"]["PartyActivityType"];
+            /** @description state_version client đang thấy (F101-AC-04) */
+            expected_version: number;
             game_mode?: string;
         };
+        PartyActivitySelection: {
+            activity_ref?: components["schemas"]["PartyActivityRef"];
+            activity_type: components["schemas"]["PartyActivityType"];
+            game_mode?: string;
+        };
+        /**
+         * @description Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. M4a chỉ bật explore, quest, boss.
+         * @enum {string}
+         */
+        PartyActivityType: "explore" | "quest" | "boss" | "learning_challenge" | "coop_challenge" | "team_battle";
         PartyCreate: {
             /**
              * @default leader_only
              * @enum {string}
              */
             invitation_policy: "leader_only" | "members";
-            /** @default 4 */
-            max_members: number;
+            /** @description Vắng mặt = party_max_members (CONFIG_DEFAULTS), không vượt max_members_cap của party_policies */
+            max_members?: number;
             name: string;
             party_type: components["schemas"]["PartyType"];
             visibility?: components["schemas"]["PartyVisibility"];
         };
+        PartyEligibleActivity: {
+            activity_ref: components["schemas"]["PartyActivityRef"];
+            activity_type: components["schemas"]["PartyActivityType"];
+            all_eligible: boolean;
+            max_members: number;
+            members: {
+                eligible: boolean;
+                /** @enum {string} */
+                reason_code?: "grade_not_allowed" | "grade_band_mismatch" | "prerequisite_missing" | "area_locked" | "attempt_limit" | "sanctioned" | "not_online";
+                requirement?: string;
+                student_id: components["schemas"]["Uuid"];
+            }[];
+            min_members: number;
+            title?: components["schemas"]["LocalizedName"];
+        };
+        PartyIneligibleMember: {
+            /** @enum {string} */
+            reason_code: "grade_not_allowed" | "grade_band_mismatch" | "prerequisite_missing" | "area_locked" | "attempt_limit" | "sanctioned" | "not_online";
+            /** @description Yêu cầu của hoạt động (vd. "grade_levels:4"), không phải dữ liệu của học sinh (R16) */
+            requirement?: string;
+            student_id: components["schemas"]["Uuid"];
+        };
         PartyInvitation: {
+            created_at?: components["schemas"]["Timestamp"];
             expires_at: components["schemas"]["Timestamp"];
             invitation_id: components["schemas"]["Uuid"];
             invitee_id?: components["schemas"]["Uuid"];
@@ -13102,6 +13234,8 @@ export interface components {
             student_id: components["schemas"]["Uuid"];
         };
         PartySessionStart: {
+            activity_ref?: components["schemas"]["PartyActivityRef"];
+            activity_type?: components["schemas"]["PartyActivityType"];
             /** @description Thành viên không đủ điều kiện (policy) kèm lý do */
             excluded_members?: {
                 reason?: string;
@@ -13109,7 +13243,14 @@ export interface components {
             }[];
             game_session_ref: components["schemas"]["Uuid"];
             members: components["schemas"]["Uuid"][];
+            party_activity_id?: components["schemas"]["Uuid"];
             room_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            room_type?: "private_instance" | "boss";
+            scene_ref?: string;
+        };
+        PartySessionStartRequest: {
+            expected_version: number;
         };
         PartySettingsUpdate: {
             /** @enum {string} */
@@ -13117,6 +13258,9 @@ export interface components {
             max_members?: number;
             name?: string;
             visibility?: components["schemas"]["PartyVisibility"];
+        };
+        PartyStartProblem: components["schemas"]["Problem"] & {
+            ineligible_members?: components["schemas"]["PartyIneligibleMember"][];
         };
         /** @enum {string} */
         PartyType: "friend" | "study_group" | "quest" | "competition_team" | "custom";
@@ -13497,7 +13641,7 @@ export interface components {
          * @description Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
          * @enum {string}
          */
-        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "MFA_REQUIRED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
+        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "MFA_REQUIRED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
         ProgressionLevel: {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
@@ -33275,6 +33419,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     acceptPartyInvitation: {
@@ -33314,8 +33459,12 @@ export interface operations {
                     "application/json": components["schemas"]["Party"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             410: components["responses"]["Gone"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     cancelPartyInvitation: {
@@ -33378,6 +33527,7 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -33420,8 +33570,12 @@ export interface operations {
                     "application/json": components["schemas"]["Party"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     getParty: {
@@ -33454,6 +33608,8 @@ export interface operations {
                     "application/json": components["schemas"]["Party"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -33491,7 +33647,10 @@ export interface operations {
                     "application/json": components["schemas"]["Party"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     disbandParty: {
@@ -33521,7 +33680,9 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     joinParty: {
@@ -33561,9 +33722,11 @@ export interface operations {
                     "application/json": components["schemas"]["Party"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     leaveParty: {
@@ -33593,6 +33756,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -33620,7 +33785,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartySessionStartRequest"];
+            };
+        };
         responses: {
             /** @description Session bắt đầu */
             201: {
@@ -33633,8 +33802,22 @@ export interface operations {
                     "application/json": components["schemas"]["PartySessionStart"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
-            409: components["responses"]["Conflict"];
+            404: components["responses"]["NotFound"];
+            /** @description PARTY_NOT_READY, PARTY_ACTIVITY_NOT_ELIGIBLE (kèm ineligible_members) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PartyStartProblem"];
+                };
+            };
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     transferPartyLeader: {
@@ -33680,7 +33863,10 @@ export interface operations {
                     "application/json": components["schemas"]["Party"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
         };
     };
@@ -33704,7 +33890,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PartyActivitySelection"];
+                "application/json": components["schemas"]["PartyActivitySelect"];
             };
         };
         responses: {
@@ -33718,7 +33904,50 @@ export interface operations {
                     "application/json": components["schemas"]["Party"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    listPartyEligibleActivities: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                party_id: components["parameters"]["PartyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PartyEligibleActivity"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     inviteToParty: {
@@ -33764,9 +33993,13 @@ export interface operations {
                     "application/json": components["schemas"]["PartyInvitation"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
             429: components["responses"]["RateLimited"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     kickPartyMember: {
@@ -33797,7 +34030,11 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
         };
     };
     setPartyReady: {
@@ -33834,7 +34071,10 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
         };
     };
     getMyParty: {
@@ -33865,6 +34105,8 @@ export interface operations {
                     "application/json": components["schemas"]["Party"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };

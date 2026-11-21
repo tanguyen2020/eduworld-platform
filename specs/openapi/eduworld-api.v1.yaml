@@ -2328,6 +2328,10 @@ paths:
       tags: [multiplayer]
       operationId: setPartyReady
       summary: Đặt Ready / Not ready (fallback của WS party.member.ready_set)
+      description: |
+        Thành viên của party `open`; lưu ở lobby state (Valkey), đẩy `party.member.ready_changed` (kèm `all_ready`) tới mọi
+        thành viên, không phát domain event (F101-AC-01). Party không `open` → `422 INVALID_STATE_TRANSITION`; không là thành viên,
+        party của tenant/trường khác → `404 PARTY_NOT_FOUND`; vượt `party_lobby_cmd_rate` → `429 RATE_LIMITED` (F101-AC-02).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2342,15 +2346,23 @@ paths:
               properties:
                 ready: { type: boolean }
       responses:
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '404': { $ref: '#/components/responses/NotFound' }
         '204': { description: OK }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /multiplayer/parties/{party_id}/activity:
     put:
       x-service: competition
       tags: [multiplayer]
       operationId: selectPartyActivity
       summary: Chọn activity / game mode (fallback của WS party.activity.select)
+      description: |
+        Chỉ leader (`403 PARTY_NOT_LEADER`); `expected_version` lệch `state_version` → `412 VERSION_MISMATCH` kèm `state_version`
+        hiện tại; party không `open` → `422 INVALID_STATE_TRANSITION`. Thành công: lưu lựa chọn, reset Ready của mọi thành viên,
+        tăng `state_version`, phát `party.activity_selected`, đẩy `party.activity.selected` kèm `ineligible_members` (mã lý do)
+        (F101-AC-03, AC-04). `quest`/`boss` cần module game; không trả lời → `503 UNAVAILABLE` + `Retry-After`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -2360,7 +2372,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PartyActivitySelection'
+              $ref: '#/components/schemas/PartyActivitySelect'
       responses:
         '200':
           description: OK
@@ -2370,18 +2382,37 @@ paths:
                 $ref: '#/components/schemas/Party'
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /multiplayer/parties/{party_id}:start:
     post:
       x-service: competition
       tags: [multiplayer]
       operationId: startPartySession
       summary: Leader bắt đầu — kiểm tra member, policy lớp, tạo room/GameSession chung
+      description: |
+        Luồng 9 bước (PARTY_SYSTEM §6.1): chỉ leader (`403 PARTY_NOT_LEADER`); `expected_version` lệch → `412 VERSION_MISMATCH`;
+        party không `open` hoặc chưa chọn hoạt động → `422 INVALID_STATE_TRANSITION`; còn thành viên online chưa Ready hoặc số
+        thành viên online ngoài khoảng của hoạt động → `409 PARTY_NOT_READY`; có thành viên không đủ điều kiện →
+        `409 PARTY_ACTIVITY_NOT_ELIGIBLE` kèm `ineligible_members`, không ai vào phiên (F101-AC-07…AC-09); module game lỗi/quá
+        thời gian (`quest`/`boss`) → `503 UNAVAILABLE` + `Retry-After`, party không đổi (F101-AC-10). Thành viên offline không
+        tham gia phiên và có trong `excluded_members` (`not_online`). Gửi lại cùng `Idempotency-Key` → cùng kết quả, một activity.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
         - $ref: '#/components/parameters/PartyId'
         - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartySessionStartRequest'
       responses:
         '201':
           description: Session bắt đầu
@@ -2392,8 +2423,50 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
-        '409': { $ref: '#/components/responses/Conflict' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: PARTY_NOT_READY, PARTY_ACTIVITY_NOT_ELIGIBLE (kèm ineligible_members)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/PartyStartProblem' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /multiplayer/parties/{party_id}/eligible-activities:
+    get:
+      x-service: competition
+      tags: [multiplayer]
+      operationId: listPartyEligibleActivities
+      summary: Hoạt động party đủ điều kiện của cả nhóm
+      description: |
+        Chỉ thành viên (`404 PARTY_NOT_FOUND`). Trả hoạt động mà mọi thành viên đủ điều kiện (`all_eligible`) và hoạt động chỉ một
+        số đủ điều kiện kèm cảnh báo theo thành viên: mã lý do + yêu cầu của hoạt động, không bao giờ khối/lớp thực của bạn khác
+        (F101-AC-05, R16). `quest`/`boss` lấy từ module game; khi module game không trả lời chỉ trả `explore`.
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/PartyId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 100
+                    items: { $ref: '#/components/schemas/PartyEligibleActivity' }
+          headers:
+            Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /multiplayer/parties/{party_id}/invitations:
     post:
       x-service: competition
@@ -17744,6 +17817,7 @@ components:
         - PARTY_POLICY_VIOLATION
         - PARTY_MEMBER_NOT_ONLINE
         - PARTY_ACTIVITY_NOT_ELIGIBLE
+        - PARTY_NOT_READY
         - ROOM_NOT_MEMBER
         # Competition
         - MM_TICKET_ALREADY_ACTIVE
@@ -19848,21 +19922,87 @@ components:
           type: array
           items: { $ref: '#/components/schemas/PartyMember' }
         chat_channel_id: { $ref: '#/components/schemas/Uuid' }
-        state_version: { type: integer, minimum: 0, description: 'Tăng 1 mỗi thay đổi thành viên/cài đặt (expected_version của F101)' }
+        leader_reconnecting: { type: boolean, description: 'Leader đang trong grace party_leader_grace (F101-AC-15)' }
+        current_room_id: { $ref: '#/components/schemas/Uuid' }
+        state_version: { type: integer, minimum: 0, description: 'Tăng 1 mỗi thay đổi thành viên/cài đặt/hoạt động (expected_version của F101)' }
         created_at: { $ref: '#/components/schemas/Timestamp' }
         updated_at: { $ref: '#/components/schemas/Timestamp' }
+    PartyActivityType:
+      type: string
+      description: 'Một enum loại hoạt động party (PARTY_SYSTEM §5); nguồn specs/schemas/common/enums.schema.json. M4a chỉ bật explore, quest, boss.'
+      enum: [explore, quest, boss, learning_challenge, coop_challenge, team_battle]
+    PartyActivityRef:
+      type: string
+      maxLength: 64
+      pattern: '^[a-z0-9_.-]{1,64}$'
+      description: 'area_id (explore) / quest_id (quest) / boss_id (boss)'
     PartyActivitySelection:
       type: object
       required: [activity_type]
       properties:
-        activity_type: { type: string, enum: [explore, quest, learning_challenge, coop_challenge, team_battle] }
-        activity_ref: { $ref: '#/components/schemas/Uuid' }
+        activity_type: { $ref: '#/components/schemas/PartyActivityType' }
+        activity_ref: { $ref: '#/components/schemas/PartyActivityRef' }
         game_mode: { type: string, maxLength: 64 }
+    PartyActivitySelect:
+      type: object
+      required: [activity_type, activity_ref, expected_version]
+      properties:
+        activity_type: { $ref: '#/components/schemas/PartyActivityType' }
+        activity_ref: { $ref: '#/components/schemas/PartyActivityRef' }
+        game_mode: { type: string, maxLength: 64, pattern: '^[a-z0-9_]{1,64}$' }
+        expected_version: { type: integer, minimum: 0, description: 'state_version client đang thấy (F101-AC-04)' }
+    PartySessionStartRequest:
+      type: object
+      required: [expected_version]
+      properties:
+        expected_version: { type: integer, minimum: 0 }
+    PartyIneligibleMember:
+      type: object
+      required: [student_id, reason_code]
+      properties:
+        student_id: { $ref: '#/components/schemas/Uuid' }
+        reason_code: { type: string, enum: [grade_not_allowed, grade_band_mismatch, prerequisite_missing, area_locked, attempt_limit, sanctioned, not_online] }
+        requirement: { type: string, maxLength: 255, description: 'Yêu cầu của hoạt động (vd. "grade_levels:4"), không phải dữ liệu của học sinh (R16)' }
+    PartyStartProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            ineligible_members:
+              type: array
+              maxItems: 8
+              items: { $ref: '#/components/schemas/PartyIneligibleMember' }
+    PartyEligibleActivity:
+      type: object
+      required: [activity_type, activity_ref, min_members, max_members, all_eligible, members]
+      properties:
+        activity_type: { $ref: '#/components/schemas/PartyActivityType' }
+        activity_ref: { $ref: '#/components/schemas/PartyActivityRef' }
+        title: { $ref: '#/components/schemas/LocalizedName' }
+        min_members: { type: integer, minimum: 1, maximum: 8 }
+        max_members: { type: integer, minimum: 1, maximum: 8 }
+        all_eligible: { type: boolean }
+        members:
+          type: array
+          maxItems: 8
+          items:
+            type: object
+            required: [student_id, eligible]
+            properties:
+              student_id: { $ref: '#/components/schemas/Uuid' }
+              eligible: { type: boolean }
+              reason_code: { type: string, enum: [grade_not_allowed, grade_band_mismatch, prerequisite_missing, area_locked, attempt_limit, sanctioned, not_online] }
+              requirement: { type: string, maxLength: 255 }
     PartySessionStart:
       type: object
       required: [room_id, game_session_ref, members]
       properties:
         room_id: { $ref: '#/components/schemas/Uuid' }
+        room_type: { type: string, enum: [private_instance, boss] }
+        party_activity_id: { $ref: '#/components/schemas/Uuid' }
+        activity_type: { $ref: '#/components/schemas/PartyActivityType' }
+        activity_ref: { $ref: '#/components/schemas/PartyActivityRef' }
+        scene_ref: { type: string, maxLength: 255 }
         game_session_ref: { $ref: '#/components/schemas/Uuid' }
         members:
           type: array

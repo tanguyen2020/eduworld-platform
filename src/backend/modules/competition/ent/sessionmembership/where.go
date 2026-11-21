@@ -140,6 +140,11 @@ func EncounterID(v uuid.UUID) predicate.SessionMembership {
 	return predicate.SessionMembership(sql.FieldEQ(FieldEncounterID, v))
 }
 
+// PartyActivityID applies equality check predicate on the "party_activity_id" field. It's identical to PartyActivityIDEQ.
+func PartyActivityID(v uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldEQ(FieldPartyActivityID, v))
+}
+
 // JoinedAt applies equality check predicate on the "joined_at" field. It's identical to JoinedAtEQ.
 func JoinedAt(v time.Time) predicate.SessionMembership {
 	return predicate.SessionMembership(sql.FieldEQ(FieldJoinedAt, v))
@@ -830,6 +835,16 @@ func GameSessionIDLTE(v uuid.UUID) predicate.SessionMembership {
 	return predicate.SessionMembership(sql.FieldLTE(FieldGameSessionID, v))
 }
 
+// GameSessionIDIsNil applies the IsNil predicate on the "game_session_id" field.
+func GameSessionIDIsNil() predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldIsNull(FieldGameSessionID))
+}
+
+// GameSessionIDNotNil applies the NotNil predicate on the "game_session_id" field.
+func GameSessionIDNotNil() predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldNotNull(FieldGameSessionID))
+}
+
 // PartyIDEQ applies the EQ predicate on the "party_id" field.
 func PartyIDEQ(v uuid.UUID) predicate.SessionMembership {
 	return predicate.SessionMembership(sql.FieldEQ(FieldPartyID, v))
@@ -978,6 +993,56 @@ func EncounterIDIsNil() predicate.SessionMembership {
 // EncounterIDNotNil applies the NotNil predicate on the "encounter_id" field.
 func EncounterIDNotNil() predicate.SessionMembership {
 	return predicate.SessionMembership(sql.FieldNotNull(FieldEncounterID))
+}
+
+// PartyActivityIDEQ applies the EQ predicate on the "party_activity_id" field.
+func PartyActivityIDEQ(v uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldEQ(FieldPartyActivityID, v))
+}
+
+// PartyActivityIDNEQ applies the NEQ predicate on the "party_activity_id" field.
+func PartyActivityIDNEQ(v uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldNEQ(FieldPartyActivityID, v))
+}
+
+// PartyActivityIDIn applies the In predicate on the "party_activity_id" field.
+func PartyActivityIDIn(vs ...uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldIn(FieldPartyActivityID, vs...))
+}
+
+// PartyActivityIDNotIn applies the NotIn predicate on the "party_activity_id" field.
+func PartyActivityIDNotIn(vs ...uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldNotIn(FieldPartyActivityID, vs...))
+}
+
+// PartyActivityIDGT applies the GT predicate on the "party_activity_id" field.
+func PartyActivityIDGT(v uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldGT(FieldPartyActivityID, v))
+}
+
+// PartyActivityIDGTE applies the GTE predicate on the "party_activity_id" field.
+func PartyActivityIDGTE(v uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldGTE(FieldPartyActivityID, v))
+}
+
+// PartyActivityIDLT applies the LT predicate on the "party_activity_id" field.
+func PartyActivityIDLT(v uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldLT(FieldPartyActivityID, v))
+}
+
+// PartyActivityIDLTE applies the LTE predicate on the "party_activity_id" field.
+func PartyActivityIDLTE(v uuid.UUID) predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldLTE(FieldPartyActivityID, v))
+}
+
+// PartyActivityIDIsNil applies the IsNil predicate on the "party_activity_id" field.
+func PartyActivityIDIsNil() predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldIsNull(FieldPartyActivityID))
+}
+
+// PartyActivityIDNotNil applies the NotNil predicate on the "party_activity_id" field.
+func PartyActivityIDNotNil() predicate.SessionMembership {
+	return predicate.SessionMembership(sql.FieldNotNull(FieldPartyActivityID))
 }
 
 // JoinedAtEQ applies the EQ predicate on the "joined_at" field.

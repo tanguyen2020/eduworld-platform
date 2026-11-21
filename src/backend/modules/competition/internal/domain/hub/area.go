@@ -21,6 +21,10 @@ const (
 // RoomTypeHub is the room_type of a hub instance.
 const RoomTypeHub = "hub_instance"
 
+// RoomTypePrivate is the room_type of the private_instance of a party session (F101): only the students of its session
+// memberships may take a seat.
+const RoomTypePrivate = "private_instance"
+
 // BandOf maps a grade level (1–9) to its grade band.
 func BandOf(grade int) (string, bool) {
 	switch {

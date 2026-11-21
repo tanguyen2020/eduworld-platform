@@ -98,7 +98,7 @@ Trải nghiệm: tạo party từ Social Zone/menu/danh sách bạn bè/club; m�
 | Group Chat | Channel `party` nhúng, **luôn có** (thu gọn được, không tắt được); quick message + text; menu Tắt tiếng / Chặn / Báo cáo trên từng tin | CHAT (ADR-0020 mục 6) |
 | Start Session | Nút Start chỉ active khi: leader, ≥ `min_members` của activity, tất cả member online đều `ready` | |
 
-Lobby state trong Valkey (key do [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) sở hữu: `ew:party:<party_id>` hash có `activity_type`, `activity_ref`, `game_mode`, `state_version`; `ew:party:<party_id>:members` giữ `ready`). Mỗi thay đổi tăng `version`; client gửi `expected_version` cho lệnh leader để tránh race.
+Lobby state: Ready, trạng thái thành viên và các timer ở Valkey (key do [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md) sở hữu: `ew:party:<party_id>:lobby`); hoạt động leader chọn lưu bền vững ở `multiplayer.parties` ([DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md)). Mỗi thay đổi tăng `state_version`; client gửi `expected_version` cho lệnh leader để tránh race (lệch → `412 VERSION_MISMATCH`, WS `CONFLICT`). Hiện thực và quyết định triển khai: [F101](../../specs/101-party-lobby-session/spec.md).
 
 ## 6. Party Session
 
@@ -221,7 +221,7 @@ stateDiagram-v2
 | Member mất kết nối trong activity | Grace theo mode ([MULTIPLAYER_GAMEPLAY §9.2](MULTIPLAYER_GAMEPLAY.md#92-grace-theo-chế-độ-tài-liệu-này-sở-hữu-giá-trị)); người còn lại tiếp tục theo quy tắc disconnect của activity (quest: [QUEST_SYSTEM §6](../01-game-design/QUEST_SYSTEM.md#6-party--shared-progress); boss: [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)) [Confirmed]; nếu số member online < `min_members` quá `party_activity_min_members_timeout` (120 s) → activity kết thúc `timeout` | [Confirmed] |
 | Member mất kết nối ở Party Lobby | Hiện "đang kết nối lại"; ready reset; vẫn là member đến khi party dormant/disband | [Confirmed] |
 
-Grace timer do module competition quản lý (không phụ thuộc node gateway giữ kết nối leader); dùng Valkey key TTL (`ew:party:<party_id>:leader_grace`) + keyspace-independent sweeper trong worker (quét mỗi 5 s) để không phụ thuộc node.
+Grace timer do module competition quản lý (không phụ thuộc node gateway giữ kết nối leader): thời điểm mất kết nối lưu trong lobby state (`ew:party:<party_id>:lobby`, [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md)) và job `party-presence-sweeper` trong worker quét mỗi 5 s, đọc presence của module competition (`ew:party:presence:<user_id>`) — không phụ thuộc node ([F101](../../specs/101-party-lobby-session/spec.md)).
 
 ## 10. Rate limit & chống spam
 
@@ -260,12 +260,11 @@ Phụ thuộc (ADR-0036, ADR-0040): projection `ref_*` học sinh/lớp/khối v
 
 | Mục đích | Key đề xuất | Kiểu | TTL |
 |---|---|---|---|
-| Realtime Party State + lobby | `ew:party:<party_id>` | hash (leader, status, `state_version`, activity, mode) | 24 h, tái tạo từ PG |
-| Thành viên, ready, trạng thái | `ew:party:<party_id>:members` | hash `user_id → {role, ready, status, joined_at}` | 24 h |
+| Realtime Party State | `ew:party:<party_id>`, `ew:party:<party_id>:members` | hash (leader, status, `state_version`; thành viên → vai trò) | 24 h, tái tạo từ PG |
+| Lobby: Ready, trạng thái thành viên, timer grace/dormant | `ew:party:<party_id>:lobby` (F101) | hash | 24 h |
 | Party của học sinh | `ew:party:user:<user_id>` | string | 24 h |
 | Invitation Cache | `ew:party:invite:<invitation_id>`, `ew:party:invites:user:<user_id>` | hash / sorted set theo `expires_at` | `party_invite_ttl` |
-| Lock thao tác leader | `ew:party:<party_id>:lock` | string NX | 5 s |
-| Leader grace | `ew:party:<party_id>:leader_grace` | string | `party_leader_grace` |
+| Party đang theo dõi (sweeper), giới hạn lệnh lobby, khóa job | `ew:party:active`, `ew:rl:party_lobby:<user_id>`, `ew:lock:job:party-presence-sweeper` (F101) | zset / string | — |
 | Realtime Event Distribution | Không có topic party: fan-out tới `ew:rt:user:<member_id>` của từng thành viên ([REALTIME_ARCHITECTURE §5](../06-architecture/REALTIME_ARCHITECTURE.md#5-routing-sự-kiện-và-room)) | pub/sub | — |
 
 ### 12.3. PostgreSQL — database `eduworld_competition`, schema `multiplayer` [Confirmed]

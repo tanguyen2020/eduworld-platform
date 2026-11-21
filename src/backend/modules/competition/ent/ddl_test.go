@@ -20,14 +20,64 @@ var printDDL = flag.String("print", "", "print the entddl block of this migratio
 // the ref.* projections (DATABASE_DESIGN §2.17 rule 5), competition.integrity_signals and multiplayer.party_histories
 // (append-only, partitioned).
 var migrations = map[string][]string{
-	"20261225000001_f091_hub.sql":   {"rooms", "session_memberships"},
-	"20261229000001_f100_party.sql": {"parties", "party_members", "party_invitations", "party_policies"},
+	"20261225000001_f091_hub.sql":           {"rooms", "session_memberships"},
+	"20261229000001_f100_party.sql":         {"parties", "party_members", "party_invitations", "party_policies"},
+	"20261230000001_f101_lobby_session.sql": {"party_activities"},
+}
+
+// added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
+// (ALTER TABLE … ADD COLUMN in its entddl block); earlier blocks are checked without them.
+type addition struct {
+	table            string
+	columns, indexes []string
+}
+
+var added = map[string][]addition{
+	"20261230000001_f101_lobby_session.sql": {
+		{"parties", []string{"selected_activity_type", "selected_activity_ref", "selected_game_mode"}, nil},
+		{"session_memberships", []string{"party_activity_id"}, []string{"session_memberships_activity_idx"}},
+	},
+}
+
+// relaxed lists columns made nullable by a later migration (ALTER COLUMN … DROP NOT NULL, hand-written outside the
+// entddl block): the block of the file that created them still declares NOT NULL.
+var relaxed = map[string]map[string][]string{
+	"20261225000001_f091_hub.sql": {"session_memberships": {"game_session_id"}},
+}
+
+// before returns tables as file created them: without the columns/indexes added later, with the relaxed columns NOT NULL.
+func before(file string, tbs []*schema.Table) []*schema.Table {
+	out := make([]*schema.Table, 0, len(tbs))
+	for _, tb := range tbs {
+		for f, as := range added {
+			for _, a := range as {
+				if f != file && a.table == tb.Name {
+					tb = entx.Without(tb, a.columns, a.indexes)
+				}
+			}
+		}
+		if cols := relaxed[file][tb.Name]; len(cols) > 0 {
+			tb = entx.Without(tb, nil, nil)
+			for i, c := range tb.Columns {
+				for _, n := range cols {
+					if c.Name == n {
+						cc := *c
+						cc.Nullable = false
+						tb.Columns[i] = &cc
+					}
+				}
+			}
+		}
+		out = append(out, tb)
+	}
+	return out
 }
 
 func schemas() map[string]string {
 	c := ent.DefaultSchemaConfig
 	return map[string]string{"rooms": c.Room, "session_memberships": c.SessionMembership, "parties": c.Party,
-		"party_members": c.PartyMember, "party_invitations": c.PartyInvitation, "party_policies": c.PartyPolicy}
+		"party_members": c.PartyMember, "party_invitations": c.PartyInvitation, "party_policies": c.PartyPolicy,
+		"party_activities": c.PartyActivity}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {
@@ -64,9 +114,16 @@ func TestMigrationMatchesEnt(t *testing.T) {
 		}
 	}
 	for file, names := range migrations {
-		want, err := entx.DDL(tablesOf(t, names), func(table string) string { return sc[table] })
+		want, err := entx.DDL(before(file, tablesOf(t, names)), func(table string) string { return sc[table] })
 		if err != nil {
 			t.Fatal(err)
+		}
+		for _, a := range added[file] {
+			alter, err := entx.AddedDDL(tablesOf(t, []string{a.table})[0], a.columns, a.indexes, func(table string) string { return sc[table] })
+			if err != nil {
+				t.Fatal(err)
+			}
+			want += alter
 		}
 		if *printDDL == file {
 			_, _ = os.Stdout.WriteString(want)

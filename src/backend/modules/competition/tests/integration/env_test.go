@@ -131,7 +131,8 @@ func (e *env) node(id string) *node {
 		e.nc, reg, pub, nil, nil, nil)
 	hub := command.Hub{UoW: e.uow, Directory: persistence.Directory{}, Store: persistence.Store{}, Registry: reg, Rooms: h,
 		Presence: realtime.Presence{P: pub}, Audit: persistence.Auditor{R: e.rec}, Metrics: observability.Hub{},
-		Config: command.HubConfig{Capacity: 40, TickHz: 10, Grace: e.opts.grace, IdleClose: e.opts.idle, EmoteRate: 2 * time.Second}}
+		Config:     command.HubConfig{Capacity: 40, TickHz: 10, Grace: e.opts.grace, IdleClose: e.opts.idle, EmoteRate: 2 * time.Second},
+		PartyRooms: persistence.Activities{}}
 	h.SetApp(hub, hub.LoadArea)
 	ctx, cancel := context.WithCancel(context.Background())
 	n := &node{id: id, host: h, hub: hub, cancel: cancel, done: make(chan struct{})}

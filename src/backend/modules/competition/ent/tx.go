@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Party is the client for interacting with the Party builders.
 	Party *PartyClient
+	// PartyActivity is the client for interacting with the PartyActivity builders.
+	PartyActivity *PartyActivityClient
 	// PartyInvitation is the client for interacting with the PartyInvitation builders.
 	PartyInvitation *PartyInvitationClient
 	// PartyMember is the client for interacting with the PartyMember builders.
@@ -156,6 +158,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Party = NewPartyClient(tx.config)
+	tx.PartyActivity = NewPartyActivityClient(tx.config)
 	tx.PartyInvitation = NewPartyInvitationClient(tx.config)
 	tx.PartyMember = NewPartyMemberClient(tx.config)
 	tx.PartyPolicy = NewPartyPolicyClient(tx.config)

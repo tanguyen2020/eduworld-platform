@@ -95,6 +95,9 @@ type RoomMeta struct {
 	AreaID    string
 	Partition hub.Partition
 	Capacity  int
+	// Private marks the private_instance of a party session (F101): never offered to other students, seats for Allowed only.
+	Private bool
+	Allowed []uuid.UUID
 }
 
 // InstanceInfo is an open instance of a partition with its seated students.
