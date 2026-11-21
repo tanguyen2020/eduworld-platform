@@ -93,6 +93,7 @@ type env struct {
 	schoolU1, schoolU2         uuid.UUID
 	chatHandlers               *chathttp.ChatHandlers    // F115 routes (setupChat)
 	catalogHandlers            *chathttp.CatalogHandlers // F116 US2 routes (setupChat with the real pipeline)
+	switchHandlers             *chathttp.SwitchHandlers  // F116 US3 routes (setupChat with the real pipeline)
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -174,7 +175,7 @@ func (e *env) server(ctx context.Context) {
 		e.t.Fatal(err)
 	}
 	if err := chathttp.Register(s, chathttp.Handlers{Commands: e.social, Queries: e.queries, Chat: e.chatHandlers,
-		Catalog: e.catalogHandlers}); err != nil {
+		Catalog: e.catalogHandlers, Switches: e.switchHandlers}); err != nil {
 		e.t.Fatal(err)
 	}
 	e.srv = httptest.NewServer(s)

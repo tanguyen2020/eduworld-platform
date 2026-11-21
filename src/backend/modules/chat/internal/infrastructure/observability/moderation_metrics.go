@@ -82,7 +82,18 @@ func PolicyDisabled(tenant, step string, off bool) {
 		v = 1
 	}
 	policyDisabled.WithLabelValues(tenant, step).Set(v)
+	policyDisabledValues.Store([2]string{tenant, step}, v)
 }
 
 // CatalogVersion sets eduworld_chat_sensitive_catalog_version{scope}.
 func CatalogVersion(scope string, v int64) { catalogVersion.WithLabelValues(scope).Set(float64(v)) }
+
+// policyDisabledValues mirrors the gauge values set by this process (PolicyDisabledValue).
+var policyDisabledValues sync.Map // [2]string{tenant, step} → float64
+
+// PolicyDisabledValue reads eduworld_chat_policy_disabled{tenant,step} as set by this process (checks and tests).
+func PolicyDisabledValue(tenant, step string) float64 {
+	v, _ := policyDisabledValues.Load([2]string{tenant, step})
+	f, _ := v.(float64)
+	return f
+}

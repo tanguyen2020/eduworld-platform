@@ -228,11 +228,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Trạng thái công tắc kiểm duyệt (platform và từng tenant, kèm giá trị hiệu lực) */
+        /**
+         * Trạng thái công tắc kiểm duyệt (platform và từng tenant, kèm giá trị hiệu lực)
+         * @description `platform` luôn có; `tenants` gồm các tenant của `tenant_ids` (System Admin, đọc liên tenant có audit) — không có
+         *     `tenant_ids` thì rỗng. Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
+         */
         get: operations["listModerationSwitches"];
         /**
          * Bật/tắt công tắc kiểm duyệt (tổng hoặc từng bước) cho platform hoặc một tenant
-         * @description Chỉ System Admin (chat.policy.toggle). Thiếu reason → MODERATION_SWITCH_REASON_REQUIRED. Ghi audit và phát chat_policy.moderation_switch_changed.
+         * @description Chỉ System Admin (`chat.policy.toggle`, MFA). Body là cấu hình đầy đủ của cấp `scope` (`scope = tenant`: `tenant_id`
+         *     bắt buộc; nếu có `X-Tenant-Id` thì phải trùng). `reason` ≥ 10 ký tự cho mọi thay đổi (thiếu/ngắn →
+         *     `422 MODERATION_SWITCH_REASON_REQUIRED`). `pii` và grooming luôn chạy, không có công tắc (ADR-0078): gửi
+         *     `steps.pii = false` hoặc `steps.grooming = false` → `422 MODERATION_SWITCH_STEP_NOT_ALLOWED`.
+         *     Yêu cầu **tắt** (bất kỳ bước nào hoặc `enabled_all`, kể cả gia hạn `expires_at`) bắt buộc `expires_at` trong
+         *     (now, now + `moderation_switch_max_duration` = 24 giờ] (thiếu/quá → `422 MODERATION_SWITCH_EXPIRY_REQUIRED`) và chỉ tạo
+         *     yêu cầu `pending_approval` (`202`) — giá trị hiệu lực không đổi cho tới khi một System Admin khác gọi
+         *     `approveModerationSwitchChange`; yêu cầu không được duyệt trong 24 giờ tự hết hạn. Thay đổi chỉ **bật lại** (mọi giá trị tắt
+         *     trong body đang tắt sẵn, không gia hạn) có hiệu lực ngay (`200`), ghi `moderation_switch_changes` (`source = manual`),
+         *     audit và phát `chat_policy.moderation_switch_changed`; mọi instance áp dụng trong ≤ 60 giây.
+         *     Thay đổi so với bản trước F116 (ADR-0078, có chủ đích): `ModerationSwitchSteps` bỏ `pii`, thêm response `202`.
          */
         put: operations["setModerationSwitches"];
         post?: never;
@@ -253,6 +267,31 @@ export interface paths {
         get: operations["listModerationSwitchHistory"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/chat/moderation-switches/requests/{request_id}:approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Phê duyệt yêu cầu tắt công tắc kiểm duyệt (System Admin thứ hai)
+         * @description Chỉ System Admin (`chat.policy.toggle`, MFA) **khác** người đề xuất (`moderation_switch_approvals` = 2, ADR-0078); người
+         *     đề xuất tự duyệt → `403 MODERATION_SWITCH_SELF_APPROVAL`. Yêu cầu của tenant: gửi `X-Tenant-Id` = tenant của yêu cầu
+         *     (không có → chỉ tìm yêu cầu platform); không thấy → `404`. Yêu cầu không còn `pending_approval` hoặc đã quá
+         *     `request_expires_at` → `409 CONFLICT`. Áp giá trị yêu cầu (lý do, `expires_at`), ghi `moderation_switch_changes`
+         *     (`source = approved_request`, người đề xuất + người duyệt), audit hai người, phát `chat_policy.moderation_switch_changed`;
+         *     mọi instance áp dụng trong ≤ 60 giây.
+         */
+        post: operations["approveModerationSwitchChange"];
         delete?: never;
         options?: never;
         head?: never;
@@ -12972,11 +13011,16 @@ export interface components {
         };
         /** @enum {string} */
         ModerationCaseStatus: "open" | "in_progress" | "escalated" | "resolved" | "dismissed";
-        /** @enum {string} */
-        ModerationStep: "sensitive_terms" | "pii" | "spam" | "bullying" | "async_analysis";
+        /**
+         * @description Bước có công tắc (MODERATION §12.1). `pii` và grooming luôn chạy, không có công tắc (ADR-0078).
+         * @enum {string}
+         */
+        ModerationStep: "sensitive_terms" | "spam" | "bullying" | "async_analysis";
         ModerationSwitchChange: {
-            actor_id: components["schemas"]["Uuid"];
+            /** @description Người thay đổi (người đề xuất với source = approved_request; null với auto_expire) */
+            actor_id: components["schemas"]["Uuid"] | null;
             after: components["schemas"]["ModerationSwitchSteps"];
+            approved_by?: components["schemas"]["Uuid"] | null;
             before: components["schemas"]["ModerationSwitchSteps"];
             change_id: components["schemas"]["Uuid"];
             changed_at: components["schemas"]["Timestamp"];
@@ -12984,8 +13028,31 @@ export interface components {
             enabled_all_before?: boolean;
             expires_at?: components["schemas"]["Timestamp"] | null;
             reason: string;
+            request_id?: components["schemas"]["Uuid"] | null;
             /** @enum {string} */
             scope: "platform" | "tenant";
+            /** @enum {string} */
+            source?: "manual" | "approved_request" | "auto_expire";
+            tenant_id?: components["schemas"]["Uuid"] | null;
+        };
+        /** @description Yêu cầu tắt công tắc kiểm duyệt chờ phê duyệt hai người (ADR-0078, F116-AC-32) */
+        ModerationSwitchRequest: {
+            approved_by?: components["schemas"]["Uuid"] | null;
+            created_at: components["schemas"]["Timestamp"];
+            decided_at?: components["schemas"]["Timestamp"] | null;
+            enabled_all: boolean;
+            /** @description Thời điểm tự bật lại nếu được duyệt */
+            expires_at: components["schemas"]["Timestamp"];
+            proposed_by: components["schemas"]["Uuid"];
+            reason: string;
+            /** @description Hết hạn chờ duyệt (≤ 24 giờ sau khi tạo, không muộn hơn expires_at) */
+            request_expires_at: components["schemas"]["Timestamp"];
+            request_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            scope: "platform" | "tenant";
+            /** @enum {string} */
+            status: "pending_approval" | "approved" | "rejected" | "expired";
+            steps: components["schemas"]["ModerationSwitchSteps"];
             tenant_id?: components["schemas"]["Uuid"] | null;
         };
         ModerationSwitchState: {
@@ -13001,6 +13068,8 @@ export interface components {
                 enabled_all: boolean;
                 steps: components["schemas"]["ModerationSwitchSteps"];
             };
+            /** @description Yêu cầu tắt của cấp này đang chờ System Admin thứ hai phê duyệt (chỉ có ở listModerationSwitches) */
+            pending_requests?: components["schemas"]["ModerationSwitchRequest"][];
             /** @enum {string} */
             scope: "platform" | "tenant";
             tenant_id?: components["schemas"]["Uuid"] | null;
@@ -13008,18 +13077,25 @@ export interface components {
             updated_at?: components["schemas"]["Timestamp"];
             updated_by?: components["schemas"]["Uuid"];
         };
+        /**
+         * @description Các bước tắt được (MODERATION §12.1). `pii` và grooming luôn chạy, không có công tắc (ADR-0078, bỏ khỏi schema từ F116):
+         *     yêu cầu `pii: false`/`grooming: false` → `422 MODERATION_SWITCH_STEP_NOT_ALLOWED`; khóa `pii` cũ bị bỏ qua khi resolve.
+         */
         ModerationSwitchSteps: {
             async_analysis: boolean;
             bullying: boolean;
-            pii: boolean;
             sensitive_terms: boolean;
             spam: boolean;
         };
         ModerationSwitchUpdate: {
             enabled_all: boolean;
-            /** @description Thời điểm tự bật lại (tùy chọn) */
+            /**
+             * @description Thời điểm tự bật lại. Bắt buộc khi tắt bất kỳ bước nào hoặc `enabled_all`, trong (now, now + 24 giờ]
+             *     (`moderation_switch_max_duration`); thiếu/quá hạn → MODERATION_SWITCH_EXPIRY_REQUIRED. Bỏ qua khi chỉ bật lại.
+             */
             expires_at?: components["schemas"]["Timestamp"];
-            reason: string;
+            /** @description Bắt buộc, ≥ 10 ký tự (thiếu/ngắn → MODERATION_SWITCH_REASON_REQUIRED) */
+            reason?: string;
             /** @enum {string} */
             scope: "platform" | "tenant";
             steps: components["schemas"]["ModerationSwitchSteps"];
@@ -16702,7 +16778,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Trạng thái mới */
+            /** @description Chỉ bật lại — trạng thái mới của cấp đó, đã có hiệu lực */
             200: {
                 headers: {
                     "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
@@ -16712,7 +16788,18 @@ export interface operations {
                     "application/json": components["schemas"]["ModerationSwitchState"];
                 };
             };
+            /** @description Yêu cầu tắt đã lưu `pending_approval`, chưa có hiệu lực (cần System Admin thứ hai phê duyệt) */
+            202: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModerationSwitchRequest"];
+                };
+            };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationFailed"];
         };
     };
@@ -16747,6 +16834,45 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+        };
+    };
+    approveModerationSwitchChange: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
+                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
+                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
+            };
+            path: {
+                request_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Yêu cầu đã duyệt — trạng thái mới của cấp đó */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModerationSwitchState"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     listSensitiveAllowlist: {

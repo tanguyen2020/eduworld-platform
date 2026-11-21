@@ -89,13 +89,15 @@ func TestOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	// 14 social operations (F095), 3 chat (F115), listQuickMessages (F116 US4), 21 catalogue operations (F116 US2).
-	if len(found) != len(chathttp.Operations) || len(found) != 39 {
+	// 14 social operations (F095), 3 chat (F115), listQuickMessages (F116 US4), 21 catalogue operations (F116 US2),
+	// 4 moderation switch operations (F116 US3).
+	if len(found) != len(chathttp.Operations) || len(found) != 43 {
 		t.Fatalf("chat operations found in the spec: %d of %d: %v", len(found), len(chathttp.Operations), found)
 	}
-	// F116-AC-18: the catalogue administration is internal-gateway only (x-internal, /admin/), except the read-only
-	// category view of a tenant (/tenant/chat/categories); none is a player route.
-	for _, id := range chathttp.CatalogOperations {
+	// F116-AC-18: the catalogue and switch administration is internal-gateway only (x-internal, /admin/), except the
+	// read-only category view of a tenant (/tenant/chat/categories); none is a player route.
+	admin := append(append([]string{}, chathttp.CatalogOperations...), chathttp.SwitchOperations...)
+	for _, id := range admin {
 		o := chathttp.Operations[id]
 		if o.Guard&httpx.GuardGamePlayer != 0 {
 			t.Errorf("%s: a catalogue operation is never a player route", id)
@@ -106,7 +108,7 @@ func TestOperationsMatchSpec(t *testing.T) {
 	}
 	for path, item := range doc.Paths.Map() {
 		for _, op := range item.Operations() {
-			if !slices.Contains(chathttp.CatalogOperations, op.OperationID) || op.OperationID == "listTenantSensitiveCategories" {
+			if !slices.Contains(admin, op.OperationID) || op.OperationID == "listTenantSensitiveCategories" {
 				continue
 			}
 			if internal, _ := op.Extensions["x-internal"].(bool); !internal {

@@ -156,12 +156,16 @@ type chatOpts struct {
 type chatEnv struct {
 	*env
 	vk        valkey.Client
+	vkAddr    string
 	nc        *nats.Conn
 	js        jetstream.JetStream
 	natsC     testcontainers.Container
 	validator *switchValidator
 	pipe      *moderation.Pipeline // real pipeline (chatOpts.real)
 	catalog   command.CatalogAdmin // F116 US2 catalogue commands (chatOpts.real)
+	switches  command.SwitchAdmin  // F116 US3 switch commands (chatOpts.real)
+	expiry    command.SwitchExpiry // F116 US3 job moderation-switch-expirer (chatOpts.real; no lease, test clock)
+	gauge     *service.SwitchGauge // eduworld_chat_policy_disabled of the test process
 	// pace advances the test clock before every send (6 s: under the burst window and every per-minute rate of the
 	// platform policy since F116 enforces burst and slow mode); 0 sends at the same instant.
 	pace     time.Duration
@@ -197,7 +201,7 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 		t.Fatal(err)
 	}
 	e := setup(t, envOpts{})
-	c := &chatEnv{env: e, vk: vk, nc: nc, js: js, natsC: natsC, validator: &switchValidator{}, outage: &outage{}, pace: 6 * time.Second}
+	c := &chatEnv{env: e, vk: vk, vkAddr: vkAddr, nc: nc, js: js, natsC: natsC, validator: &switchValidator{}, outage: &outage{}, pace: 6 * time.Second}
 	fresh := o.factsFresh
 	if fresh == 0 {
 		fresh = time.Minute
@@ -248,6 +252,13 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 			Events: persistence.Publisher{W: e.writer}, Audit: persistence.Auditor{R: e.rec},
 			Regression: regression.Suite{Engine: c.pipe.Validator.Engine, Source: corpus}, Notifier: cache.Notifier{C: vk},
 			OnPublished: observability.CatalogVersion, Now: e.clock.Now}
+		c.gauge = &service.SwitchGauge{Read: e.read, Reader: persistence.Switches{}, Set: observability.PolicyDisabled, Now: e.clock.Now}
+		c.switches = command.SwitchAdmin{UoW: e.uow, AfterCommit: entx.AfterCommit, Repo: persistence.Switches{},
+			Reader: persistence.ModerationReader{}, Events: persistence.Publisher{W: e.writer}, Audit: persistence.Auditor{R: e.rec},
+			Cache: c.facts.Cache, Notifier: cache.Notifier{C: vk}, Gauge: c.gauge, Now: e.clock.Now}
+		c.expiry = command.SwitchExpiry{Admin: c.switches}
+		e.switchHandlers = &chathttp.SwitchHandlers{Commands: c.switches, Queries: query.Switches{Read: e.read, Reader: persistence.Switches{},
+			Moderation: persistence.ModerationReader{}, Cursors: codec, Now: e.clock.Now}}
 		e.catalogHandlers = &chathttp.CatalogHandlers{Commands: c.catalog, Queries: query.Catalog{Read: e.read, Reader: persistence.Catalog{},
 			Moderation: persistence.ModerationReader{}, Engine: c.pipe.Validator.Engine, Audit: e.rec, Cursors: codec}}
 	}

@@ -50,6 +50,8 @@ type Handlers struct {
 	Chat     *ChatHandlers
 	// Catalog serves the sensitive-term catalogue administration (F116 US2, core-api; nil leaves it unmounted).
 	Catalog *CatalogHandlers
+	// Switches serves the moderation switch administration (F116 US3, core-api; nil leaves it unmounted).
+	Switches *SwitchHandlers
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -109,6 +111,11 @@ func Register(s *httpx.Server, h Handlers) error {
 	}
 	if h.Catalog != nil {
 		if err := registerCatalog(s, h.Catalog); err != nil {
+			return err
+		}
+	}
+	if h.Switches != nil {
+		if err := registerSwitches(s, h.Switches); err != nil {
 			return err
 		}
 	}

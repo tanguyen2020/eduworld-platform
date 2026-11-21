@@ -7,6 +7,7 @@ package moderation
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/valkey-io/valkey-go"
@@ -93,8 +94,19 @@ func (p *Pipeline) Run(ctx context.Context) error {
 			case cache.SensitiveVersionChannel:
 				p.Catalogs.Invalidate(ctx, n.TenantID)
 			case cache.SwitchesChangedChannel:
-				if n.TenantID != nil { // a category setting of the tenant may have changed
+				// A switch change: drop the cached switches of the tenant (platform: of every tenant this instance serves) so
+				// the next message re-reads PostgreSQL; the cache freshness (≤ 30 s) bounds the effect anyway (F116-AC-20).
+				var keys []string
+				if n.TenantID != nil { // a category setting of the tenant may have changed too
 					p.Catalogs.Invalidate(ctx, n.TenantID)
+					keys = append(keys, service.SwitchKey(*n.TenantID))
+				} else {
+					for _, t := range p.Catalogs.Tenants() {
+						keys = append(keys, service.SwitchKey(t))
+					}
+				}
+				if err := p.Switches.Cache.Invalidate(ctx, keys...); err != nil {
+					slog.WarnContext(ctx, "chat: cached switches not dropped (freshness bounds the effect)", "error", err)
 				}
 			}
 		})

@@ -79,3 +79,8 @@ type ModerationMetrics interface {
 	RE2Timeouts(n int)
 	DecisionDropped()
 }
+
+// JobLock is a lease taken by one replica for one run of a job (ew:lock:job:<name>).
+type JobLock interface {
+	Acquire(ctx context.Context, name string, ttl time.Duration) (bool, error)
+}

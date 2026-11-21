@@ -234,7 +234,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 			"report-jobs", "item-analysis-nightly", "calibration-weekly", "reference-levels-nightly", "efficacy-wave-monitor", "efficacy-reports", "experiment-guardrail", "experiment-lifecycle"},
 		"game":        {"session-timeout", "curfew-session-closer"},
 		"competition": {"close-idle-hub-instances", "party-invitation-expiry", "party-presence-sweeper"},
-		"chat":        {"expire-friend-requests"},
+		"chat":        {"expire-friend-requests", "moderation-switch-expirer"},
 	}
 	for _, profile := range []string{"events", "jobs", "all"} {
 		t.Run(profile, func(t *testing.T) {

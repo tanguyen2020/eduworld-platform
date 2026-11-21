@@ -191,6 +191,18 @@
     ]
   },
   {
+    "operation_id": "approveModerationSwitchChange",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/moderation-switches/requests/{request_id}:approve",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "approveStudentCleanupRun",
     "module": "identity",
     "method": "POST",

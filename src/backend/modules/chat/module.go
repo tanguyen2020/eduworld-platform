@@ -66,7 +66,8 @@ func (m *Module) Facade() Facade {
 // the chat routes and the NATS chat commands of the gateway (F115: one send use case, JetStream before "Sent") and the
 // presence fan-out subscriber (ew.rt.presence.*, queue group chat.presence_fanout); in worker events the outbox relay
 // and the consumers chat.projection_identity and chat.projection_game; in worker jobs the job expire-friend-requests;
-// in worker chat (and all) chat-persister (F115). Gameplay purge comes with F117.
+// in worker chat (and all) chat-persister (F115); in worker jobs moderation-switch-expirer (F116). Gameplay purge comes
+// with F117.
 func Register(r *module.Registry) (*Module, error) {
 	db, err := r.Database(Name)
 	if err != nil {
@@ -125,6 +126,12 @@ func Register(r *module.Registry) (*Module, error) {
 	stream := natsstream.StreamOptions{MaxAge: chatCfg.StreamMaxAge, Replicas: chatCfg.StreamReplicas}
 	friends := cache.Friends{C: vk, TTL: cache.FriendsTTL}
 	presence := cache.Presence{C: vk, TTL: cfg.PresenceTTL}
+	// Moderation switches (F116 US3): the gauge eduworld_chat_policy_disabled{tenant,step} of this process follows the
+	// stored switches (synced after each change, by the expirer and every 30 s in core-api).
+	gauge := &service.SwitchGauge{Read: core.ReadSession, Reader: persistence.Switches{}, Set: observability.PolicyDisabled}
+	switchAdmin := command.SwitchAdmin{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Switches{},
+		Reader: persistence.ModerationReader{}, Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
+		Cache: factsCache, Notifier: cache.Notifier{C: vk}, Gauge: gauge}
 	social := command.Social{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Social{}, Directory: persistence.Directory{},
 		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Codes: security.Codes{},
 		Friends: friends, Metrics: observability.Social{}, Config: cfg.UseCase}
@@ -133,6 +140,7 @@ func Register(r *module.Registry) (*Module, error) {
 		// The compiled catalogue must be loaded before the instance takes traffic (F116 edge case).
 		r.Health().Register("moderation:"+Name, health.Readiness, pipe.Ready)
 		r.Go("chat.moderation", pipe.Run)
+		r.Go("chat.switch_gauge", gauge.Run)
 	}
 	if r.ServesHTTP() {
 		cursors, err := r.Cursors()
@@ -166,7 +174,9 @@ func Register(r *module.Registry) (*Module, error) {
 			Engine: pipe.Validator.Engine, Audit: core.Recorder, Cursors: cursors}
 		h := chathttp.Handlers{Commands: social, Queries: query.Social{Read: core.ReadSession, Relations: persistence.Reader{},
 			Presence: presence, Cursors: cursors}, Chat: &chathttp.ChatHandlers{Send: send, Queries: reads,
-			Quick: query.QuickMessages{Catalog: pipe.Quick}}, Catalog: &chathttp.CatalogHandlers{Commands: catalogAdmin, Queries: catalogReads}}
+			Quick: query.QuickMessages{Catalog: pipe.Quick}}, Catalog: &chathttp.CatalogHandlers{Commands: catalogAdmin, Queries: catalogReads},
+			Switches: &chathttp.SwitchHandlers{Commands: switchAdmin, Queries: query.Switches{Read: core.ReadSession, Reader: persistence.Switches{},
+				Moderation: persistence.ModerationReader{}, Cursors: cursors}}}
 		r.HTTP(Name, func(s *httpx.Server) error { return chathttp.Register(s, h) })
 		// Chat commands of the gateway (F115): ew.cmd.chat.message.send, channel.join/leave, history.fetch, channel.sync.
 		if nc := r.NATS(); nc != nil {
@@ -223,5 +233,8 @@ func Register(r *module.Registry) (*Module, error) {
 	})
 	expiry := command.Expiry{UoW: core.UoW, Repo: persistence.Expiry{}}
 	r.Job(Name, job.ExpireFriendRequests, cfg.ExpiryInterval, module.JobFunc(job.ExpireFriendRequestsJob(expiry)))
+	// moderation-switch-expirer (F116-AC-25, AC-32): switches back on at expires_at, pending requests expired after 24 h.
+	switchExpiry := command.SwitchExpiry{Admin: switchAdmin, Lock: cache.JobLock{C: vk}}
+	r.Job(Name, job.ModerationSwitchExpirer, command.ExpiryTick, module.JobFunc(job.ModerationSwitchExpirerJob(switchExpiry)))
 	return mod, nil
 }

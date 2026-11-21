@@ -2223,6 +2223,9 @@ paths:
       operationId: listModerationSwitches
       x-portal-action: action.platform_admin.moderation_switches.view
       summary: Trạng thái công tắc kiểm duyệt (platform và từng tenant, kèm giá trị hiệu lực)
+      description: |
+        `platform` luôn có; `tenants` gồm các tenant của `tenant_ids` (System Admin, đọc liên tenant có audit) — không có
+        `tenant_ids` thì rỗng. Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -2254,7 +2257,18 @@ paths:
       operationId: setModerationSwitches
       x-portal-action: action.platform_admin.moderation_switches.toggle
       summary: Bật/tắt công tắc kiểm duyệt (tổng hoặc từng bước) cho platform hoặc một tenant
-      description: Chỉ System Admin (chat.policy.toggle). Thiếu reason → MODERATION_SWITCH_REASON_REQUIRED. Ghi audit và phát chat_policy.moderation_switch_changed.
+      description: |
+        Chỉ System Admin (`chat.policy.toggle`, MFA). Body là cấu hình đầy đủ của cấp `scope` (`scope = tenant`: `tenant_id`
+        bắt buộc; nếu có `X-Tenant-Id` thì phải trùng). `reason` ≥ 10 ký tự cho mọi thay đổi (thiếu/ngắn →
+        `422 MODERATION_SWITCH_REASON_REQUIRED`). `pii` và grooming luôn chạy, không có công tắc (ADR-0078): gửi
+        `steps.pii = false` hoặc `steps.grooming = false` → `422 MODERATION_SWITCH_STEP_NOT_ALLOWED`.
+        Yêu cầu **tắt** (bất kỳ bước nào hoặc `enabled_all`, kể cả gia hạn `expires_at`) bắt buộc `expires_at` trong
+        (now, now + `moderation_switch_max_duration` = 24 giờ] (thiếu/quá → `422 MODERATION_SWITCH_EXPIRY_REQUIRED`) và chỉ tạo
+        yêu cầu `pending_approval` (`202`) — giá trị hiệu lực không đổi cho tới khi một System Admin khác gọi
+        `approveModerationSwitchChange`; yêu cầu không được duyệt trong 24 giờ tự hết hạn. Thay đổi chỉ **bật lại** (mọi giá trị tắt
+        trong body đang tắt sẵn, không gia hạn) có hiệu lực ngay (`200`), ghi `moderation_switch_changes` (`source = manual`),
+        audit và phát `chat_policy.moderation_switch_changed`; mọi instance áp dụng trong ≤ 60 giây.
+        Thay đổi so với bản trước F116 (ADR-0078, có chủ đích): `ModerationSwitchSteps` bỏ `pii`, thêm response `202`.
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -2269,7 +2283,58 @@ paths:
               $ref: '#/components/schemas/ModerationSwitchUpdate'
       responses:
         '200':
-          description: Trạng thái mới
+          description: Chỉ bật lại — trạng thái mới của cấp đó, đã có hiệu lực
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerationSwitchState'
+        '202':
+          description: Yêu cầu tắt đã lưu `pending_approval`, chưa có hiệu lực (cần System Admin thứ hai phê duyệt)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerationSwitchRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /admin/chat/moderation-switches/requests/{request_id}:approve:
+    post:
+      x-service: chat
+      tags:
+        - admin
+      operationId: approveModerationSwitchChange
+      x-portal-action: action.platform_admin.moderation_switches.toggle
+      summary: Phê duyệt yêu cầu tắt công tắc kiểm duyệt (System Admin thứ hai)
+      description: |
+        Chỉ System Admin (`chat.policy.toggle`, MFA) **khác** người đề xuất (`moderation_switch_approvals` = 2, ADR-0078); người
+        đề xuất tự duyệt → `403 MODERATION_SWITCH_SELF_APPROVAL`. Yêu cầu của tenant: gửi `X-Tenant-Id` = tenant của yêu cầu
+        (không có → chỉ tìm yêu cầu platform); không thấy → `404`. Yêu cầu không còn `pending_approval` hoặc đã quá
+        `request_expires_at` → `409 CONFLICT`. Áp giá trị yêu cầu (lý do, `expires_at`), ghi `moderation_switch_changes`
+        (`source = approved_request`, người đề xuất + người duyệt), audit hai người, phát `chat_policy.moderation_switch_changed`;
+        mọi instance áp dụng trong ≤ 60 giây.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeaderOptional'
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Yêu cầu đã duyệt — trạng thái mới của cấp đó
           headers:
             Idempotent-Replayed:
               $ref: '#/components/headers/IdempotentReplayed'
@@ -2279,8 +2344,10 @@ paths:
                 $ref: '#/components/schemas/ModerationSwitchState'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /admin/chat/moderation-switches/history:
     get:
       x-service: chat
@@ -5642,18 +5709,24 @@ components:
           $ref: '#/components/schemas/Uuid'
         updated_at:
           $ref: '#/components/schemas/Timestamp'
+        pending_requests:
+          description: Yêu cầu tắt của cấp này đang chờ System Admin thứ hai phê duyệt (chỉ có ở listModerationSwitches)
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ModerationSwitchRequest'
     ModerationSwitchSteps:
       type: object
+      description: |
+        Các bước tắt được (MODERATION §12.1). `pii` và grooming luôn chạy, không có công tắc (ADR-0078, bỏ khỏi schema từ F116):
+        yêu cầu `pii: false`/`grooming: false` → `422 MODERATION_SWITCH_STEP_NOT_ALLOWED`; khóa `pii` cũ bị bỏ qua khi resolve.
       required:
         - sensitive_terms
-        - pii
         - spam
         - bullying
         - async_analysis
       properties:
         sensitive_terms:
-          type: boolean
-        pii:
           type: boolean
         spam:
           type: boolean
@@ -5663,19 +5736,78 @@ components:
           type: boolean
     ModerationStep:
       type: string
+      description: Bước có công tắc (MODERATION §12.1). `pii` và grooming luôn chạy, không có công tắc (ADR-0078).
       enum:
         - sensitive_terms
-        - pii
         - spam
         - bullying
         - async_analysis
+    ModerationSwitchRequest:
+      type: object
+      description: Yêu cầu tắt công tắc kiểm duyệt chờ phê duyệt hai người (ADR-0078, F116-AC-32)
+      required:
+        - request_id
+        - scope
+        - enabled_all
+        - steps
+        - reason
+        - expires_at
+        - status
+        - proposed_by
+        - created_at
+        - request_expires_at
+      properties:
+        request_id:
+          $ref: '#/components/schemas/Uuid'
+        scope:
+          type: string
+          enum:
+            - platform
+            - tenant
+        tenant_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        enabled_all:
+          type: boolean
+        steps:
+          $ref: '#/components/schemas/ModerationSwitchSteps'
+        reason:
+          type: string
+          maxLength: 1000
+        expires_at:
+          description: Thời điểm tự bật lại nếu được duyệt
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+        status:
+          type: string
+          enum:
+            - pending_approval
+            - approved
+            - rejected
+            - expired
+        proposed_by:
+          $ref: '#/components/schemas/Uuid'
+        approved_by:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        decided_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        request_expires_at:
+          description: Hết hạn chờ duyệt (≤ 24 giờ sau khi tạo, không muộn hơn expires_at)
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
     ModerationSwitchUpdate:
       type: object
       required:
         - scope
         - enabled_all
         - steps
-        - reason
       properties:
         scope:
           type: string
@@ -5691,11 +5823,13 @@ components:
         steps:
           $ref: '#/components/schemas/ModerationSwitchSteps'
         reason:
+          description: Bắt buộc, ≥ 10 ký tự (thiếu/ngắn → MODERATION_SWITCH_REASON_REQUIRED)
           type: string
-          minLength: 10
           maxLength: 1000
         expires_at:
-          description: Thời điểm tự bật lại (tùy chọn)
+          description: |
+            Thời điểm tự bật lại. Bắt buộc khi tắt bất kỳ bước nào hoặc `enabled_all`, trong (now, now + 24 giờ]
+            (`moderation_switch_max_duration`); thiếu/quá hạn → MODERATION_SWITCH_EXPIRY_REQUIRED. Bỏ qua khi chỉ bật lại.
           allOf:
             - $ref: '#/components/schemas/Timestamp'
     ModerationSwitchChange:
@@ -5736,7 +5870,24 @@ components:
             - $ref: '#/components/schemas/Timestamp'
             - type: 'null'
         actor_id:
-          $ref: '#/components/schemas/Uuid'
+          description: Người thay đổi (người đề xuất với source = approved_request; null với auto_expire)
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        approved_by:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        request_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        source:
+          type: string
+          enum:
+            - manual
+            - approved_request
+            - auto_expire
         changed_at:
           $ref: '#/components/schemas/Timestamp'
     TenantSensitiveCategory:

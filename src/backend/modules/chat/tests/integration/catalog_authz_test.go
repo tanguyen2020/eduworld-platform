@@ -198,7 +198,9 @@ func TestCatalogAuthz(t *testing.T) {
 	}
 	sw, _ := r.body["moderation_switches"].(map[string]any)
 	eff, _ := sw["effective"].(map[string]any)
-	if sw["scope"] != "tenant" || sw["configured"] != nil || eff["enabled_all"] != true || eff["steps"].(map[string]any)["pii"] != true {
+	effSteps, _ := eff["steps"].(map[string]any)
+	if _, hasPII := effSteps["pii"]; sw["scope"] != "tenant" || sw["configured"] != nil || eff["enabled_all"] != true || hasPII ||
+		effSteps["spam"] != true || len(effSteps) != 4 { // pii and grooming have no switch (ADR-0078)
 		t.Fatalf("switch state: %v", sw)
 	}
 	r = c.do(http.MethodGet, "/tenant/chat/categories", c.staff(c.tenantB, "tenant_admin"), map[string]string{"X-Tenant-Id": c.tenantB.String()}, nil)

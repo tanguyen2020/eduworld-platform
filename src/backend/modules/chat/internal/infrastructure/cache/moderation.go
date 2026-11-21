@@ -162,3 +162,23 @@ func Subscribe(ctx context.Context, c valkey.Client, fn func(Notification)) erro
 	}
 	return nil
 }
+
+// JobLockKey is ew:lock:job:<name> (STRING NX PX): one replica runs a cycle of a job.
+func JobLockKey(name string) string { return "ew:lock:job:" + name }
+
+// JobLock implements port.JobLock on Valkey.
+type JobLock struct{ C valkey.Client }
+
+var _ port.JobLock = JobLock{}
+
+// Acquire takes the lease of name for ttl (false: another replica holds it).
+func (l JobLock) Acquire(ctx context.Context, name string, ttl time.Duration) (bool, error) {
+	err := l.C.Do(ctx, l.C.B().Set().Key(JobLockKey(name)).Value(ids.New().String()).Nx().Px(ttl).Build()).Error()
+	if valkey.IsValkeyNil(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

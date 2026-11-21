@@ -1,0 +1,12 @@
+# Alert rules of module chat (F116 T035, MODERATION §12.2, ADR-0030, ADR-0078): a moderation step switched off for the
+# platform or a tenant raises a warning for operations at once (eduworld_chat_policy_disabled{tenant,step} = 1 while the
+# step is off; tenant="platform" for the platform level). Loaded by prometheus.yml (rule_files).
+groups:
+  - name: chat-moderation
+    rules:
+      - alert: ChatModerationDisabled
+        expr: max by (tenant, step) (eduworld_chat_policy_disabled) == 1
+        labels: { severity: warning, module: chat }
+        annotations:
+          summary: "Moderation step {{ $labels.step }} switched off ({{ $labels.tenant }})"
+          description: "Approved by two System Admins with a reason and expires_at ≤ 24 h (ADR-0078); pii and grooming always run. Check the reason and expiry in listModerationSwitches; it switches back on at expires_at (moderation-switch-expirer)."

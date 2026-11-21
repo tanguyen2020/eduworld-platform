@@ -2214,7 +2214,7 @@ workspaces:
             label_key: portal.action.platform_admin.moderation_switches.toggle
             title: Bật/tắt công tắc kiểm duyệt
             required_permissions: [chat.policy.toggle]
-            operation_ids: [setModerationSwitches]
+            operation_ids: [setModerationSwitches, approveModerationSwitchChange]
             can_disable: true
       - key: menu.platform_admin.break_glass
         label_key: portal.menu.platform_admin.break_glass

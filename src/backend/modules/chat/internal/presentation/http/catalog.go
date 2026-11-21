@@ -14,7 +14,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/catalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
@@ -535,33 +535,10 @@ func tenantCategoryBody(v query.TenantCategoryView) map[string]any {
 	return m
 }
 
-// steps renders ModerationSwitchSteps: pii is always on (ADR-0078).
-func steps(on func(step string) bool) map[string]bool {
-	out := map[string]bool{moderation.StepPII: true}
-	for _, s := range moderation.SwitchableSteps {
-		out[s] = on(s)
-	}
-	return out
-}
-
+// switchState renders ModerationSwitchState of the tenant (pii and grooming have no switch, ADR-0078).
 func switchState(s query.SwitchState) map[string]any {
-	e := s.Effective
-	disabled := e.Disabled()
-	if disabled == nil {
-		disabled = []string{}
-	}
-	m := map[string]any{"scope": "tenant", "tenant_id": s.TenantID, "configured": nil,
-		"effective": map[string]any{"enabled_all": e.AllEnabled(), "steps": steps(e.On)}, "disabled_steps": disabled}
-	if c := s.Configured; c != nil {
-		sw := e.Tenant
-		m["configured"] = map[string]any{"enabled_all": c.EnabledAll, "expires_at": c.ExpiresAt,
-			"steps": steps(func(step string) bool { v, ok := sw.Steps[step]; return !ok || v })}
-		if c.UpdatedBy != nil {
-			m["updated_by"] = *c.UpdatedBy
-		}
-		m["updated_at"] = c.UpdatedAt.UTC()
-	}
-	return m
+	t := s.TenantID
+	return service.StateBody(&t, s.Configured, s.Effective, nil)
 }
 
 func (h CatalogHandlers) listTenantCategories(w http.ResponseWriter, r *http.Request) {
