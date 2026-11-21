@@ -26,7 +26,7 @@ type Composition struct {
 }
 
 // Compose registers the five domain modules on r and wires their facades in process (BACKEND_DESIGN §3.3, OQ
-// F010-2): learning and game first, then identity, whose sagas and platform operations call them through their
+// F010-2): learning, game and competition first, then identity, whose sagas and platform operations call them through their
 // generated api packages (pkg/modcall). Each module declares its own routes, relay, consumers and jobs; the role
 // of the binary decides which of them run. Competition calls the chat facade for party names once module chat
 // offers it (F116).
@@ -61,6 +61,9 @@ func Compose(r *module.Registry) (*Composition, error) {
 	}
 	if f := gam.Facade(); f != nil {
 		in.Game = f
+	}
+	if f := cmp.Facade(); f != nil {
+		in.Competition = f
 	}
 	if err := idm.Wire(in); err != nil {
 		return nil, err

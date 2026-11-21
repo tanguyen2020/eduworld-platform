@@ -135,6 +135,8 @@ type PartyRepository interface {
 	RejectionsSince(ctx context.Context, tenant, inviter, invitee uuid.UUID, since time.Time) ([]time.Time, error)
 	// AcceptedInvitation reports an accepted invitation of partyID to student that has not expired at now.
 	AcceptedInvitation(ctx context.Context, tenant, partyID, student uuid.UUID, now time.Time) (bool, error)
+	// RenameLed overwrites the name of the live parties led or created by user (anonymization); returns how many.
+	RenameLed(ctx context.Context, tenant, user uuid.UUID, name string) (int, error)
 	// MembershipsOf returns the active memberships of student (normally at most one) with their party ids.
 	MembershipsOf(ctx context.Context, tenant, student uuid.UUID) ([]uuid.UUID, error)
 }

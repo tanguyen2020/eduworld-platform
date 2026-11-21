@@ -403,3 +403,26 @@ func (p *Party) Update(s Settings, capacity int, now time.Time) ([]string, error
 	p.bump(now)
 	return changed, nil
 }
+
+// Reassign moves the active membership of from to into (user merge, F100 T042): same role and joined_at, the leader
+// follows. Returns the new membership.
+func (p *Party) Reassign(from, into uuid.UUID, now time.Time) (Member, error) {
+	if !p.Active() {
+		return Member{}, ErrDisbanded
+	}
+	if _, ok := p.Member(into); ok {
+		return Member{}, ErrAlreadyMember
+	}
+	for i, m := range p.Members {
+		if m.StudentID == from {
+			m.StudentID = into
+			p.Members[i] = m
+			if p.LeaderID == from {
+				p.LeaderID = into
+			}
+			p.bump(now)
+			return m, nil
+		}
+	}
+	return Member{}, ErrNotMember
+}

@@ -96,7 +96,7 @@
 
 Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Clarifications "Session 2026-11-20 (owner chốt)" của feature này hoặc feature ghi trong ngoặc). Chưa làm.
 
-- [ ] T042 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) Facade vòng đời/gộp của module competition; facade test với identity — file: `src/backend/modules/competition/internal/presentation/facade/` — kiểm: `make test-contract`, integration — cỡ M
+- [x] T042 **OQ chốt 2026-11-20** (OQ F016-2, F045-3) Facade vòng đời/gộp của module competition; facade test với identity — file: `src/backend/modules/competition/internal/presentation/facade/` — kiểm: `make test-contract`, integration — cỡ M — xong: `command/student_lifecycle.go` (`PartyLifecycle`: cleanup → rời party + kết thúc lời mời; restore → `nothing_to_do`; anonymize → rời party + đặt lại tên party đã lập/làm leader; merge → chuyển membership sang user đích giữ vai trò, hoặc rời khi đích đã có party; idempotent), `presentation/facade/facade.go`, `Module.Facade()`; identity: `participants/competition.go`, `Gateway.CompetitionMerge`, `wire.go` (`Imports.Competition`), compose nối facade; test `TestPartyLifecycleFacade` (integration), `TestOwnerGatewayCompetition` (contract bên gọi)
 
 ## Dependencies & Execution Order
 
@@ -105,8 +105,8 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F100-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make migrate-lint` xanh cho module `competition`; `make test-contract` xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F100-AC-* có test pass (ghi mã test/TC) — 25/25, mã test ở từng task
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make migrate-lint` xanh cho module `competition`; `make test-contract` xanh — tương đương đã chạy: facadegen/allowedcallers/archgen --check, golangci-lint (+arch), tenancyguard, ewlint, entlint, routematrix, unit + integration competition (tc-lock), TestMigrationMatchesEnt; `atlas migrate validate` chạy trong testkit khi migrate DB test
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — moderator/fake chỉ trong test (nhãn TEST DOUBLE/MOCK); đường chạy thật dùng facade chat (rỗng tới F116 → tên mặc định)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật

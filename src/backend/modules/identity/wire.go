@@ -92,11 +92,20 @@ type GameFacade interface {
 	MergeUserData(ctx context.Context, req gameapi.MergeUserDataRequestObject) (gameapi.MergeUserDataResponseObject, error)
 }
 
+// CompetitionFacade is what module identity calls on module competition (x-allowed-callers: identity, F100 T042).
+type CompetitionFacade interface {
+	participants.CompetitionFacade
+	participants.CompetitionAnonymizer
+	modules.CompetitionMergeOps
+}
+
 // Imports are the facades of the other modules called by the sagas and platform operations of identity.
-// Competition and chat implement no facade operation yet (OQ F045-3): their steps answer 503 UNAVAILABLE.
+// Chat implements no facade operation yet (OQ F045-3): its steps answer 503 UNAVAILABLE. Competition nil (a binary
+// without its use cases): its merge step answers 503 and the lifecycle sagas skip it.
 type Imports struct {
-	Learning LearningFacade
-	Game     GameFacade
+	Learning    LearningFacade
+	Game        GameFacade
+	Competition CompetitionFacade
 }
 
 // build constructs every use case of module identity on the real adapters and declares its entry points.
@@ -168,6 +177,11 @@ func build(r *module.Registry, m *Module, in Imports) error {
 	gw := modules.Gateway{Learning: in.Learning, LearningMerge: in.Learning, GameMerge: in.Game}
 	studentParts := []port.StudentDataParticipant{participants.Game{F: in.Game}, participants.Learning{F: in.Learning}}
 	anonymizers := []port.UserDataAnonymizer{participants.GameAnonymize{F: in.Game}, participants.LearningAnonymize{F: in.Learning}}
+	if in.Competition != nil {
+		gw.CompetitionMerge = in.Competition
+		studentParts = append(studentParts, participants.Competition{F: in.Competition})
+		anonymizers = append(anonymizers, participants.CompetitionAnonymize{F: in.Competition})
+	}
 
 	lm, err := lifecyclemetrics.New(reg)
 	if err != nil {

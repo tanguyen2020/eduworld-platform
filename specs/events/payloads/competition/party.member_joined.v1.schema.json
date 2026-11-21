@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/competition/party.member_joined.v1.schema.json",
   "title": "Payload party.member_joined v1 (module competition, owner F100)",
-  "description": "Thành viên vào party (accept lời mời, joinParty — F100-AC-11, AC-16). Consumer: chat (thêm thành viên channel party, F117), game (F103), AUD.",
+  "description": "Thành viên vào party (accept lời mời, joinParty — F100-AC-11, AC-16; gộp tài khoản chuyển membership — via merge, T042). Consumer: chat (thêm thành viên channel party, F117), game (F103), AUD.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -38,7 +38,8 @@
       "type": "string",
       "enum": [
         "invitation",
-        "join"
+        "join",
+        "merge"
       ]
     },
     "invitation_id": {

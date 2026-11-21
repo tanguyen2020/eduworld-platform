@@ -8,6 +8,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/cache"
@@ -18,6 +19,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/realtime"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/roomhost"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/presentation/consumer"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/presentation/facade"
 	competitionhttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/presentation/job"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/presentation/natscmd"
@@ -42,10 +44,25 @@ type Imports struct {
 	Chat modules.ChatModeration
 }
 
+// Facade is the part of the competition facade (api.StrictServerInterface, specs/openapi/modules/competition.internal.v1.yaml)
+// implemented in this release: the student lifecycle and user merge operations of the identity sagas (F100 T042, OQ
+// F016-2, F045-3). The other platform-ops operations (assignments, trash, clone) are not implemented yet: the identity
+// gateway answers 503 UNAVAILABLE for them, never a silent success.
+type Facade interface {
+	CleanupStudentData(ctx context.Context, req api.CleanupStudentDataRequestObject) (api.CleanupStudentDataResponseObject, error)
+	RestoreStudentData(ctx context.Context, req api.RestoreStudentDataRequestObject) (api.RestoreStudentDataResponseObject, error)
+	AnonymizeUserData(ctx context.Context, req api.AnonymizeUserDataRequestObject) (api.AnonymizeUserDataResponseObject, error)
+	MergeUserData(ctx context.Context, req api.MergeUserDataRequestObject) (api.MergeUserDataResponseObject, error)
+}
+
 // Module is the registered module.
 type Module struct {
 	moderator *modules.LateModerator
+	facade    Facade
 }
+
+// Facade returns the in-process facade of module competition (nil in a binary that does not load its use cases).
+func (m *Module) Facade() Facade { return m.facade }
 
 // Wire connects the facades of other modules (in process, pkg/modcall).
 func (m *Module) Wire(in Imports) {
@@ -139,6 +156,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("competition.hub_access_revoked", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.HubAccessRevokedOptions(consumer.HubAccessRevoked{Hub: hub}, core.UoW, core.App, js)
 	})
+	m.facade = facade.Facade{Lifecycle: command.PartyLifecycle{Parties: parties}}
 	safety := command.PartySafety{Parties: parties, Sanctions: persistence.Sanctions{}}
 	r.Consumer("competition.party_safety_chat", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.PartySafetyChatOptions(consumer.PartySafetyChat{S: safety}, core.UoW, core.App, js)

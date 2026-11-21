@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 
+	competitionapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/api"
 	gameapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
 	learningapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/api"
@@ -37,6 +38,11 @@ type LearningMergeOps interface {
 	MergeUserData(ctx context.Context, req learningapi.MergeUserDataRequestObject) (learningapi.MergeUserDataResponseObject, error)
 }
 
+// CompetitionMergeOps is mergeUserData of module competition (F100 T042, OQ F016-2, F045-3).
+type CompetitionMergeOps interface {
+	MergeUserData(ctx context.Context, req competitionapi.MergeUserDataRequestObject) (competitionapi.MergeUserDataResponseObject, error)
+}
+
 // GameMergeOps is mergeUserData of module game (F070 T039, OQ F016-2, F045-3).
 type GameMergeOps interface {
 	MergeUserData(ctx context.Context, req gameapi.MergeUserDataRequestObject) (gameapi.MergeUserDataResponseObject, error)
@@ -44,11 +50,13 @@ type GameMergeOps interface {
 
 // Gateway implements port.OwnerServiceGateway. A nil facade means the module is not wired in this binary:
 // every call to it is 503 UNAVAILABLE, never a silent success (F045-AC-25). Module learning has every adapter; module game
-// serves mergeUserData only (F070); competition and chat implement no platform-ops facade yet (OQ F045-3).
+// and competition serve mergeUserData only (F070, F100); chat implements no platform-ops facade yet (OQ F045-3).
 type Gateway struct {
 	Learning      LearningPlatformOps
 	LearningMerge LearningMergeOps
 	GameMerge     GameMergeOps
+	// CompetitionMerge is mergeUserData of module competition (F100 T042).
+	CompetitionMerge CompetitionMergeOps
 	// Deadlines override module_call_deadline per kind (configuration, tests); zero = modcall defaults.
 	Deadlines map[modcall.Kind]time.Duration
 }
@@ -260,6 +268,9 @@ func (g Gateway) MergeUserData(ctx context.Context, module string, from uuid.UUI
 	if module == "game" {
 		return g.gameMerge(ctx, from, req)
 	}
+	if module == "competition" {
+		return g.competitionMerge(ctx, from, req)
+	}
 	if module != "learning" || g.LearningMerge == nil {
 		return port.MergeUserDataResult{}, notWired(module, "mergeUserData")
 	}
@@ -297,6 +308,30 @@ func (g Gateway) gameMerge(ctx context.Context, from uuid.UUID, req port.MergeUs
 	r, ok := res.(gameapi.MergeUserData200JSONResponse)
 	if !ok {
 		return port.MergeUserDataResult{}, unexpected("game", "mergeUserData", res)
+	}
+	out := port.MergeUserDataResult{Status: string(r.Status)}
+	if r.BlockedReason != nil {
+		out.BlockedReason = *r.BlockedReason
+	}
+	return out, nil
+}
+
+func (g Gateway) competitionMerge(ctx context.Context, from uuid.UUID, req port.MergeUserDataRequest) (port.MergeUserDataResult, error) {
+	if g.CompetitionMerge == nil {
+		return port.MergeUserDataResult{}, notWired("competition", "mergeUserData")
+	}
+	op := modcall.Op{Caller: caller, Callee: "competition", Operation: "mergeUserData", Kind: modcall.Saga, Deadline: g.Deadlines[modcall.Saga],
+		AllowedCallers: competitionapi.AllowedCallers["mergeUserData"], ContextRequired: competitionapi.ContextRequired["mergeUserData"]}
+	res, err := call(ctx, op, func(ctx context.Context) (competitionapi.MergeUserDataResponseObject, error) {
+		return g.CompetitionMerge.MergeUserData(ctx, competitionapi.MergeUserDataRequestObject{UserId: from,
+			Body: &competitionapi.MergeUserDataJSONRequestBody{MergeId: req.MergeID, TargetUserId: req.Into, Reason: req.Reason}})
+	})
+	if err != nil {
+		return port.MergeUserDataResult{}, err
+	}
+	r, ok := res.(competitionapi.MergeUserData200JSONResponse)
+	if !ok {
+		return port.MergeUserDataResult{}, unexpected("competition", "mergeUserData", res)
 	}
 	out := port.MergeUserDataResult{Status: string(r.Status)}
 	if r.BlockedReason != nil {

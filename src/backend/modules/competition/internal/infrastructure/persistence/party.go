@@ -460,6 +460,16 @@ func (Parties) MembershipsOf(ctx context.Context, tenant, student uuid.UUID) ([]
 	return out, rows.Err()
 }
 
+// RenameLed implements write.PartyRepository.
+func (Parties) RenameLed(ctx context.Context, tenant, user uuid.UUID, name string) (int, error) {
+	n, err := run(ctx, `UPDATE multiplayer.parties SET name = $3, updated_at = now(), version = version + 1
+		WHERE tenant_id = $1 AND (leader_id = $2 OR created_by = $2) AND name <> $3 AND deleted_at IS NULL`, tenant, user, name)
+	if err != nil {
+		return 0, fmt.Errorf("party: rename: %w", err)
+	}
+	return int(n), nil
+}
+
 // ---------- Invitations ----------
 
 const invitationColumns = `invitation_id, tenant_id, school_id, party_id, inviter_id, invitee_id, status, created_at, expires_at,
