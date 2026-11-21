@@ -749,6 +749,19 @@
       "noLo": "No learning objective yet.",
       "totals": "Total: {{questions}} questions · {{points}} points (expected {{target}})",
       "pointsMismatch": "The matrix totals {{points}} points but the exam is worth {{target}}.",
+      "fixedPointsMismatch": "The fixed questions total {{points}} points but the exam is worth {{target}}.",
+      "mode": { "label": "Question selection", "matrix": "LO × difficulty matrix (random draw)", "fixed": "Fixed form (same questions for every student)" },
+      "fixed": {
+        "title": "Questions of the fixed form",
+        "hint": "Pick published questions from the bank in exam order; every student gets the same questions. An efficacy instrument only uses questions flagged as efficacy instruments.",
+        "empty": "No question yet.",
+        "item": "Question {{n}} · …{{id}}",
+        "points": "Points of question {{n}}",
+        "up": "Move question {{n}} up",
+        "down": "Move question {{n}} down",
+        "remove": "Remove question {{n}}",
+        "add": "Add a question from the bank"
+      },
       "poolInsufficient": "The bank lacks questions for the red cells; lower the counts or add questions.",
       "sample": "Sample exam",
       "generate": "Generate a sample exam",
@@ -759,7 +772,10 @@
         "empty": "The matrix needs at least 1 cell with questions.",
         "grades": "Choose the grades.",
         "subject": "Choose the subject.",
-        "duration": "Duration must be 1 to 240 minutes."
+        "duration": "Duration must be 1 to 240 minutes.",
+        "fixedEmpty": "A fixed form needs at least 1 question.",
+        "fixedDuplicate": "A question can only be picked once in a fixed form.",
+        "efficacyFixed": "An efficacy instrument must be a fixed form."
       }
     },
     "list": {

@@ -36,6 +36,10 @@
 - OQ F054-3 → **Chốt:** "Đang dùng ở đâu" thêm quest/mini-game/challenge/thi đấu qua projection tham chiếu ngoài của module learning (Session owner chốt của F026); producer F078/F108. Portal hiển thị `ref_type` mới khi contract có (không cần task riêng nếu bảng dùng nhãn theo `ref_type`; nhãn dịch thêm cùng task F078).
 - E2E backend thật, axe, baseline visual (OQ F051-9) → chạy khi có môi trường compose — không phải câu hỏi mở.
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+- Q: T071 — đề cố định biểu diễn thế nào trong editor và body? → A: [Confirmed] Editor ma trận có bộ chọn "Cách chọn câu": "Ma trận LO × độ khó (rút ngẫu nhiên)" hoặc "Đề cố định (cùng câu cho mọi học sinh)". Đề cố định = danh sách câu đã xuất bản (chọn bằng `QuestionPicker` của ngân hàng, mỗi câu một lần, có thứ tự, điểm từng câu bước 0,25); body gửi `definition.variants = { strategy: "fixed" }` và rule của section đầu = các đoạn câu liên tiếp cùng điểm (`fixed_question_version_ids`, `count` = số câu, ≤ 100 câu/rule, ≤ 20 rule); mở blueprint có `strategy = fixed` và mọi rule là câu cố định → chế độ đề cố định, ngược lại ma trận (giữ nguyên `variants` vốn có, kể cả `fixed` với rule rút ngẫu nhiên). Đề đánh dấu đo hiệu quả (`efficacy_instrument`) ở chế độ ma trận bị chặn lưu ("Đề đo hiệu quả học tập phải là đề cố định."); việc câu có phải câu đo hiệu quả hay không vẫn do backend kiểm (422).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Lịch sử version, xuất bản hẹn giờ, rollback, preview (Priority: P1)

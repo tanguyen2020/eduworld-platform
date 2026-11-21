@@ -749,6 +749,19 @@
       "noLo": "Chưa có mục tiêu học tập nào.",
       "totals": "Tổng: {{questions}} câu · {{points}} điểm (cần {{target}})",
       "pointsMismatch": "Tổng điểm của ma trận ({{points}}) khác tổng điểm đề ({{target}}).",
+      "fixedPointsMismatch": "Tổng điểm các câu cố định ({{points}}) khác tổng điểm đề ({{target}}).",
+      "mode": { "label": "Cách chọn câu", "matrix": "Ma trận LO × độ khó (rút ngẫu nhiên)", "fixed": "Đề cố định (cùng câu cho mọi học sinh)" },
+      "fixed": {
+        "title": "Câu hỏi của đề cố định",
+        "hint": "Chọn câu đã xuất bản từ ngân hàng theo đúng thứ tự làm bài; mọi học sinh nhận cùng các câu. Đề đo hiệu quả học tập chỉ dùng câu được đánh dấu đo hiệu quả.",
+        "empty": "Chưa có câu nào.",
+        "item": "Câu {{n}} · …{{id}}",
+        "points": "Điểm câu {{n}}",
+        "up": "Đưa câu {{n}} lên",
+        "down": "Đưa câu {{n}} xuống",
+        "remove": "Bỏ câu {{n}}",
+        "add": "Thêm câu từ ngân hàng"
+      },
       "poolInsufficient": "Ngân hàng không đủ câu cho các ô tô đỏ; giảm số câu hoặc bổ sung câu hỏi.",
       "sample": "Đề mẫu",
       "generate": "Sinh đề mẫu",
@@ -759,7 +772,10 @@
         "empty": "Ma trận cần ít nhất 1 ô có số câu.",
         "grades": "Chọn khối lớp.",
         "subject": "Chọn môn học.",
-        "duration": "Thời gian từ 1 đến 240 phút."
+        "duration": "Thời gian từ 1 đến 240 phút.",
+        "fixedEmpty": "Đề cố định cần ít nhất 1 câu.",
+        "fixedDuplicate": "Một câu chỉ được chọn một lần trong đề cố định.",
+        "efficacyFixed": "Đề đo hiệu quả học tập phải là đề cố định."
       }
     },
     "list": {

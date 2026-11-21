@@ -1,10 +1,10 @@
-// BlueprintEditorPage (F054-AC-22, AC-23, ADMIN_PORTAL §3.2, §5): Assessment Blueprint editor on the shared builder
+// BlueprintEditorPage (F054-AC-22, AC-23, T071, ADMIN_PORTAL §3.2, §5): Assessment Blueprint editor on the shared builder
 // frame — metadata, exam type, duration, total points, attempts, result release and the LO × difficulty matrix with
 // the pool of each cell; "Sinh đề mẫu" draws a sample exam through createLearningPreviewSession (nothing saved, no
 // exam session); QUESTION_POOL_INSUFFICIENT refreshes the pool stats and highlights the cells lacking questions.
 import { QuestionPreview, type RichContent } from '@eduworld/ops-ui/content';
 import { useMutation } from '@tanstack/react-query';
-import { Alert, Button, Card, Flex, Form, InputNumber, List, Select, Typography } from 'antd';
+import { Alert, Button, Card, Flex, Form, InputNumber, List, Segmented, Select, Typography } from 'antd';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePortalRuntime } from '../../../app/runtime';
@@ -19,7 +19,8 @@ import { EfficacyInstrumentField } from '../questions/EfficacyInstrumentField';
 import type { PreviewSession } from '../preview/usePreview';
 import { cellPools } from './matrixModel';
 import { BlueprintMatrix } from './BlueprintMatrix';
-import { blueprintIssues, emptyBlueprint, EXAM_TYPES, fromBlueprint, toBlueprintBody, type BlueprintState, type ExamType, type ReleaseMode } from './blueprintModel';
+import { blueprintIssues, emptyBlueprint, EXAM_TYPES, fromBlueprint, toBlueprintBody, type BlueprintState, type ExamType, type ReleaseMode, type SelectionMode } from './blueprintModel';
+import { FixedForm } from './FixedForm';
 
 function SampleExam({ id, version, onInsufficient }: { id: string; version: number; onInsufficient: () => void }) {
   const { t } = useTranslation();
@@ -87,16 +88,30 @@ function BlueprintBody({ state, onChange, readOnly, errors, server, id }: Builde
         </Flex>
       </Form>
       <EfficacyInstrumentField kind="blueprint" actionKey="action.content_studio.assessments.edit" checked={!!state.efficacy_instrument} disabled={readOnly} onChange={(v) => onChange({ ...state, efficacy_instrument: v })} />
-      <BlueprintMatrix
-        matrix={state.matrix}
-        onChange={(matrix) => onChange({ ...state, matrix })}
-        objectiveLabels={labels}
-        objectiveOptions={loOptions}
-        targetPoints={state.total_points}
-        pools={cellPools(state.matrix, pool.data, state.section.id)}
-        highlightInsufficient={highlight}
-        readOnly={readOnly}
-      />
+      <Form layout="vertical" component="div" disabled={readOnly}>
+        <Form.Item label={t('content_studio.blueprint.mode.label')} extra={state.efficacy_instrument && state.mode !== 'fixed' ? t('content_studio.blueprint.issue.efficacyFixed') : undefined}>
+          <Segmented<SelectionMode>
+            aria-label={t('content_studio.blueprint.mode.label')}
+            value={state.mode}
+            options={(['matrix', 'fixed'] as const).map((m) => ({ value: m, label: t(`content_studio.blueprint.mode.${m}`) }))}
+            onChange={(mode) => onChange({ ...state, mode })}
+          />
+        </Form.Item>
+      </Form>
+      {state.mode === 'fixed' ? (
+        <FixedForm items={state.fixed} onChange={(fixed) => onChange({ ...state, fixed })} targetPoints={state.total_points} readOnly={readOnly} />
+      ) : (
+        <BlueprintMatrix
+          matrix={state.matrix}
+          onChange={(matrix) => onChange({ ...state, matrix })}
+          objectiveLabels={labels}
+          objectiveOptions={loOptions}
+          targetPoints={state.total_points}
+          pools={cellPools(state.matrix, pool.data, state.section.id)}
+          highlightInsufficient={highlight}
+          readOnly={readOnly}
+        />
+      )}
       {id && server && (
         <SampleExam
           id={id}

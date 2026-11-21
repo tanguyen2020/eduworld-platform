@@ -1,6 +1,6 @@
 // F054 T043–T047, T060 (whole portal + MOCK backend; Playwright with the real backend pending — OQ F051-9):
 //   AC-20 question set rule editor with pool size per rule · AC-21 Lesson Builder blocks, completion rule, math_assets
-//   · AC-22 blueprint matrix, total points, sample exam → QUESTION_POOL_INSUFFICIENT highlights the cells ·
+//   · AC-22 blueprint matrix, total points, sample exam → QUESTION_POOL_INSUFFICIENT highlights the cells · T071 fixed forms ·
 //   AC-23 draft saved with If-Match; CONTENT_NOT_EDITABLE → read only + "Tạo bản nháp" · AC-28 reviewer cannot create
 //   · AC-27 import: formula errors by row before sending, dry run with row errors, real run.
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -78,6 +78,39 @@ describe('Question Set / Lesson / Blueprint builders (F054 US4)', () => {
     await waitFor(() => expect(document.querySelector(`[data-cell="${LO2}:2"]`)?.getAttribute('data-insufficient')).toBe('true'));
     expect(screen.getByText('Ngân hàng không đủ câu cho các ô tô đỏ; giảm số câu hoặc bổ sung câu hỏi.')).toBeInTheDocument();
     expect(document.querySelector(`[data-cell="${LO1}:1"]`)?.getAttribute('data-insufficient')).toBeNull();
+  });
+
+  it('T071 (F035): a fixed-form blueprint opens in "Đề cố định"; points/order edits save variants.strategy fixed and fixed rules; a matrix efficacy blueprint is blocked', async () => {
+    const BP = P(611);
+    const Q1 = P(901);
+    const Q2 = P(902);
+    const Q3 = P(903);
+    const rules = [
+      { fixed_question_version_ids: [Q1, Q2], count: 2, points_each: 1 },
+      { fixed_question_version_ids: [Q3], count: 1, points_each: 2 },
+    ];
+    const { backend } = await renderPublishing(`/content-studio/assessments/${BP}`, {
+      setup: (m) => {
+        m.add({ id: BP, type: 'assessment_blueprint', tenant_id: null, title: { vi: 'Đề đo đầu kỳ' }, versions: [{ status: 'draft', content: { title: { vi: 'Đề đo đầu kỳ' }, subject_id: P(10), grade_levels: [4], efficacy_instrument: true, definition: { duration_sec: 1800, total_points: 4, variants: { strategy: 'fixed' }, sections: [{ id: 'sec_main', title: { vi: 'P1' }, rules }], attempt_policy: { max_attempts: 1, score_policy: 'first' }, result_release: { mode: 'manual' } } } }] });
+      },
+    });
+    const list = await screen.findByTestId('fixed-items');
+    expect(within(list).getByText('Câu 3 · …' + Q3.slice(-8))).toBeInTheDocument();
+    expect(screen.getByTestId('fixed-totals')).toHaveTextContent('Tổng: 3 câu · 4 điểm (cần 4)');
+    expect(document.querySelector('[data-cell]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Đưa câu 3 lên' }));
+    fireEvent.change(screen.getByLabelText('Tổng điểm'), { target: { value: '5' } });
+    fireEvent.change(screen.getByLabelText('Điểm câu 1'), { target: { value: '2' } });
+    await waitFor(() => expect(backend.calls('PATCH', `/cms/learning/assessment-blueprints/${BP}/versions/1`).length).toBeGreaterThan(0), { timeout: 60_000 });
+    const body = backend.calls('PATCH', `/cms/learning/assessment-blueprints/${BP}/versions/1`).at(-1)!.body as { definition: { variants: unknown; sections: { rules: unknown[] }[] } };
+    expect(body.definition.variants).toEqual({ strategy: 'fixed' });
+    expect(body.definition.sections[0]!.rules).toEqual([
+      { fixed_question_version_ids: [Q1, Q3], count: 2, points_each: 2 },
+      { fixed_question_version_ids: [Q2], count: 1, points_each: 1 },
+    ]);
+    // Back to the matrix while flagged as an efficacy instrument → blocked with the explanation.
+    fireEvent.click(screen.getByText('Ma trận LO × độ khó (rút ngẫu nhiên)'));
+    expect((await screen.findAllByText('Đề đo hiệu quả học tập phải là đề cố định.')).length).toBeGreaterThan(0);
   });
 
   it('AC-23: CONTENT_NOT_EDITABLE on save → read only with "Tạo bản nháp từ phiên bản"; AC-28 a reviewer cannot create', async () => {
