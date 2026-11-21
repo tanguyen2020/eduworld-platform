@@ -125,8 +125,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F121-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make test-contract`, `make migrate-lint` (MOD=chat) xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F121-AC-* có test pass (ghi mã test/TC) — 26/26: 13 `TestSafety*` tích hợp, unit `TestSafety*`, static, contract (xem từng task)
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration`, `make test-contract`, `make migrate-lint` (MOD=chat) xanh — local 2026-11-21: vet, golangci (+arch), tenancyguard, ewlint, entlint, archgen, routematrix, allowedcallers, facadegen, `TestMigrationMatchesEnt`, unit, integration chat (58 test) + cmd; `migrate-lint` (Atlas) chưa chạy local
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi (CONFIG_DEFAULTS: tham số đã có, không đổi giá trị)
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
