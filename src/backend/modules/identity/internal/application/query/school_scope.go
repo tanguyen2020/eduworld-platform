@@ -57,7 +57,7 @@ type ClassStudentsInput struct {
 func (q Org) ListTenantClassStudents(ctx context.Context, in ClassStudentsInput) (out Page[dto.ClassStudent], err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListTenantClassStudents")
 	defer func() { done(err) }()
-	if ctx, _, err = schoolScoped(ctx, in.SchoolID, authz.PermTenantClassRead, authz.PermLmsClassRead); err != nil {
+	if ctx, _, err = schoolScoped(ctx, in.SchoolID, authz.PermTenantStudentRead, authz.PermLmsStudentRead); err != nil {
 		return out, err
 	}
 	if n := utf8.RuneCountInString(in.Q); in.Q != "" && (n < 2 || n > 100) {

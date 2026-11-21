@@ -14,7 +14,7 @@ vi.setConfig({ testTimeout: 240_000 });
 export const LMS_PERMS = [...SCHOOL_PERMS, 'learning_content.read'];
 export const adTruongA = (perms: string[] = LMS_PERMS): MockAccount => accountWith('ad.truong.a', TENANTS.thDemoA, perms, '0193a4d2-1111-7000-8000-000000000001');
 /** Tenant admin: LMS read only (ADMIN_PORTAL §2.3: no assignment write). */
-export const TENANT_ADMIN_PERMS = ['lms.class.read', 'lms.assignment.read', 'tenant.school.read', 'tenant.class.read', 'learning_content.read'];
+export const TENANT_ADMIN_PERMS = ['lms.student.read', 'lms.assignment.read', 'tenant.school.read', 'tenant.student.read', 'learning_content.read'];
 
 export interface RenderLmsOptions {
   as?: string;

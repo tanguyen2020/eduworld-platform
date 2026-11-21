@@ -9,7 +9,7 @@ Spec nguồn: `specs/openapi/modules/learning.v1.yaml` (gộp trong `specs/opena
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
 | `getMyProgress` | `GET /api/v1/learning/progress/me` | learning.v1 | `game_player` (self) | Có sẵn (`LearningProgress`) |
-| `getStudentProgress` | `GET /api/v1/students/{student_id}/progress` | learning.v1 | `analytics.class.read` + scope trường/môn [Confirmed] | Có sẵn |
+| `getStudentProgress` | `GET /api/v1/students/{student_id}/progress` | learning.v1 | `analytics.school.read` (gộp analytics.class.read — ADR-0095 mục 6) + scope trường/môn [Confirmed] | Có sẵn |
 | `createRegradeRequest` | `POST /api/v1/cms/learning/regrade-requests` | learning.v1 | `learning_content.re_evaluate` | Có sẵn (`RegradeRequestCreate`, `RegradeRequest`) |
 | `getLesson` | `GET /api/v1/learning/lessons/{lesson_id}` | learning.v1 | học sinh (self; nhân sự `403 PERMISSION_DENIED`) | Có sẵn (`Lesson` — version ghim theo lesson session, `activities[].completed`, `completed_at`) |
 | `completeLesson` | `POST /api/v1/learning/lessons/{lesson_id}:complete` | learning.v1 | học sinh (self), `Idempotency-Key` | Có sẵn (`LessonCompletion`, mô tả `409`) |

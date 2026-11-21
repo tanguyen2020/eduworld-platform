@@ -114,7 +114,7 @@ Không có. Chọn ECharts theo [SCHOOL_LMS §8.7](../../docs/04-admin-portal/SC
 
 ### Bảo mật, tenant, idempotency, audit
 
-- Permission: `analytics.school.read`, `analytics.class.read`, `analytics.tenant.read`, `report.export`, `lms.student_activity.read` (tab đăng nhập), `lms.assignment.write` (nút giao ôn tập); System Admin: platform summary (gateway nội bộ, MFA).
+- Permission: `analytics.school.read` (gộp analytics.class.read — ADR-0095), `analytics.tenant.read`, `report.export`, `lms.student_activity.read` (tab đăng nhập), `lms.assignment.write` (nút giao ôn tập); System Admin: platform summary (gateway nội bộ, MFA).
 - Idempotency-Key cho `createLmsReport`, `createTenantReport`, `createPlatformReport`; audit `report.exported`, `cross_tenant.accessed` ghi ở backend.
 
 ### Quan sát

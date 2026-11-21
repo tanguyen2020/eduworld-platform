@@ -172,7 +172,7 @@ func TestSchoolScopedRoutes(t *testing.T) {
 	if s := h.do(t, "GET", students+"?q=%25%25", tenantAdminA, hdr(a.tenant), nil); s.status != 200 || len(s.body["items"].([]any)) != 0 {
 		t.Fatalf("LIKE wildcards must be literal: %d %s", s.status, s.raw)
 	}
-	// School Admin of the school (lms.class.read) reads it; of another school → 404; tenant B → 404; no role → 403.
+	// School Admin of the school (lms.student.read) reads it; of another school → 404; tenant B → 404; no role → 403.
 	if r := h.do(t, "GET", students, schoolAdminA1, hdr(a.tenant), nil); r.status != 200 || len(r.body["items"].([]any)) != 2 {
 		t.Fatalf("school admin A1: %d %s", r.status, r.raw)
 	}

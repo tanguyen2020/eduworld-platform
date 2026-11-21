@@ -52,7 +52,7 @@ paths:
       x-portal-action: action.school_lms.classes.view
       summary: Tiến độ & mastery của một học sinh cho nhân sự nhà trường (school_admin trường mình, academic_manager trong scope)
       description: |
-        Nhân sự portal của tenant phiên (học sinh dùng `getMyProgress`). Quyền `analytics.class.read` [Proposed] trong scope trường của học sinh
+        Nhân sự portal của tenant phiên (học sinh dùng `getMyProgress`). Quyền `analytics.school.read` (ADR-0095 mục 6) trong scope trường của học sinh
         (`school_admin`) hoặc toàn tenant (`academic_manager`); grant chỉ ở trường khác hoặc học sinh không thuộc tenant phiên → `404`
         (không lộ học sinh, vẫn audit `authz.denied`); không có quyền, hoặc grant giới hạn theo môn mà `subject_id` vắng/ngoài scope →
         `403 PERMISSION_DENIED`. Mỗi lần đọc thành công ghi audit `learning.profile_viewed` (LEARNING_ANALYTICS §9). Level tính sau decay
@@ -5240,7 +5240,7 @@ paths:
         - lms
       operationId: getSchoolCurriculumSettings
       x-portal-action: action.school_lms.settings.view
-      summary: Curriculum version mặc định của trường theo năm học (và khối) — dùng khi tạo course (FR-CUR-008, F040) · lms.class.read
+      summary: Curriculum version mặc định của trường theo năm học (và khối) — FR-CUR-008 · lms.student.read
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/SchoolId'

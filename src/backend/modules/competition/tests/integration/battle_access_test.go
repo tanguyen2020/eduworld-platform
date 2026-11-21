@@ -20,7 +20,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 )
 
-// staffAt is a token of school staff of tenant limited to school (school_admin holds lms.class.read).
+// staffAt is a token of school staff of tenant limited to school (school_admin holds lms.student.read).
 func (b *benv) staffAt(tenant, school uuid.UUID, client string) string {
 	sub := "kc-staff-" + uuid.NewString()
 	b.res.Set(sub, authztest.Staff(tenant, "school_admin", authztest.AtSchool(school)).PrincipalData)
@@ -54,7 +54,7 @@ func (b *benv) finished(a, c kid) uuid.UUID {
 }
 
 // T036 — F105-AC-23, AC-25 (TC-TEN-001, TC-AUTH-014, TC-TEN-011): getMatch for a participant (review after the match,
-// opponent as nickname only, no rating), another student of the tenant → 404, staff with lms.class.read of the school of
+// opponent as nickname only, no rating), another student of the tenant → 404, staff with lms.student.read of the school of
 // a participant → 200, of another school → 404, staff with a game token → 403 GAME_ACCESS_STUDENT_ONLY, X-Tenant-Id of
 // another tenant → 403 TENANT_MISMATCH; listMyMatches lists the student's own matches only.
 func TestBattleMatchAuthzTenant(t *testing.T) {
@@ -109,7 +109,7 @@ func TestBattleMatchAuthzTenant(t *testing.T) {
 	}
 	authztest.Cover(t, "getMatch", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "listMyMatches", authztest.CrossTenant, authztest.RoleDenied)
-	_ = authz.PermLmsClassRead
+	_ = authz.PermLmsStudentRead
 }
 
 // T038 — F105-AC-26, AC-27 (TC-TEN-024, R5): an answer with a score field, an instance id over maxLength, a response of

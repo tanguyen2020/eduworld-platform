@@ -42,7 +42,7 @@ const PERMISSIONS = [
   { code: 'game.quest.write', scope_kind: 'platform', group_code: 'game_ops', name: { vi: 'Sửa quest', en: 'Write quests' } },
   { code: 'game.event.write', scope_kind: 'platform', group_code: 'game_ops', name: { vi: 'Sửa sự kiện', en: 'Write events' } },
   { code: 'tenant.user.read', scope_kind: 'tenant', group_code: 'school_access', name: { vi: 'Xem người dùng', en: 'Read users' } },
-  { code: 'lms.class.read', scope_kind: 'tenant', group_code: 'school_lms', name: { vi: 'Xem lớp', en: 'Read classes' } },
+  { code: 'lms.student.read', scope_kind: 'tenant', group_code: 'school_lms', name: { vi: 'Xem lớp', en: 'Read classes' } },
 ];
 
 const role = (id: string, code: string, kind: string, extra: Obj = {}) => ({
@@ -83,9 +83,9 @@ export function accessState(): AccessState {
       role(AIDS.roleSystemAdmin, 'system_admin', 'platform', { is_system: true, permission_codes: ['platform.role.read', 'platform.role.write'], active_user_role_count: 1 }),
       role(AIDS.roleLiveops, 'liveops', 'platform', { is_system: true, permission_codes: ['game.quest.write', 'game.event.write'], active_user_role_count: 2 }),
       role(AIDS.roleSafety, 'safety_moderator', 'platform', { is_system: true, permission_codes: ['platform.role.read'] }),
-      role(AIDS.roleTenantAdmin, 'tenant_admin', 'tenant', { is_system: true, permission_codes: ['tenant.user.read', 'lms.class.read'], active_user_role_count: 3 }),
+      role(AIDS.roleTenantAdmin, 'tenant_admin', 'tenant', { is_system: true, permission_codes: ['tenant.user.read', 'lms.student.read'], active_user_role_count: 3 }),
       role(AIDS.roleShared, 'liveops_lead', 'platform', { permission_codes: ['game.quest.write'], active_user_role_count: 1, version: 3 }),
-      role(AIDS.roleTenantCustom, 'gv_chu_nhiem', 'tenant', { tenant_id: TENANTS.thDemoA.tenant_id, permission_codes: ['lms.class.read'] }),
+      role(AIDS.roleTenantCustom, 'gv_chu_nhiem', 'tenant', { tenant_id: TENANTS.thDemoA.tenant_id, permission_codes: ['lms.student.read'] }),
       role(AIDS.roleUnused, 'qa_reader', 'platform', { permission_codes: ['platform.role.read'], version: 2 }),
     ],
     userRoles: [

@@ -3941,7 +3941,7 @@ export interface paths {
         };
         /**
          * Trạng thái và kết quả trận
-         * @description Học sinh tham gia trận (token game, `game_player`) hoặc nhân sự có `lms.class.read` (sẽ đổi tên `lms.student.read`, ADR-0095 mục 6) trong trường của một người
+         * @description Học sinh tham gia trận (token game, `game_player`) hoặc nhân sự có `lms.student.read` (ADR-0095 mục 6) trong trường của một người
          *     tham gia (token portal) — API_DESIGN §9.7 "STU (participant), SA (school)". Người khác → `404`; nhân sự gọi bằng
          *     token game → `403 GAME_ACCESS_STUDENT_ONLY`. Đối thủ chỉ có nickname/avatar, không số rating (R16, F105-AC-23).
          */
@@ -6571,7 +6571,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Curriculum version mặc định của trường theo năm học (và khối) — dùng khi tạo course (FR-CUR-008, F040) · lms.class.read */
+        /** Curriculum version mặc định của trường theo năm học (và khối) — FR-CUR-008 · lms.student.read */
         get: operations["getSchoolCurriculumSettings"];
         /**
          * Đặt curriculum version mặc định của trường theo năm học × khối (school.settings.write, If-Match) — chỉ áp cho course tạo sau (F040)
@@ -7086,7 +7086,7 @@ export interface paths {
         /**
          * Năm học và học kỳ của trường (chỉ đọc; preset "Năm học này"/"Học kỳ này" của dashboard trường)
          * @description Năm học còn hiệu lực (`deleted_at IS NULL`) của trường trong tenant phiên (`TenantScope`), mới nhất trước (theo
-         *     `start_date` giảm dần). Quyền `analytics.school.read` hoặc `analytics.class.read` trên trường (hai quyền của
+         *     `start_date` giảm dần). Quyền `analytics.school.read` trên trường (quyền của
          *     `action.school_lms.school_dashboard.view`); không quyền → 403; trường ngoài tenant hoặc ngoài phạm vi grant → 404
          *     (F010 T047, F056-2). `terms` là học kỳ của năm học; module identity chưa lưu học kỳ nên hiện luôn rỗng (preset
          *     "Học kỳ này" bị vô hiệu tới khi có nguồn — câu hỏi mở F010-4).
@@ -7980,7 +7980,7 @@ export interface paths {
         };
         /**
          * Tiến độ & mastery của một học sinh cho nhân sự nhà trường (school_admin trường mình, academic_manager trong scope)
-         * @description Nhân sự portal của tenant phiên (học sinh dùng `getMyProgress`). Quyền `analytics.class.read` [Proposed] trong scope trường của học sinh
+         * @description Nhân sự portal của tenant phiên (học sinh dùng `getMyProgress`). Quyền `analytics.school.read` (ADR-0095 mục 6) trong scope trường của học sinh
          *     (`school_admin`) hoặc toàn tenant (`academic_manager`); grant chỉ ở trường khác hoặc học sinh không thuộc tenant phiên → `404`
          *     (không lộ học sinh, vẫn audit `authz.denied`); không có quyền, hoặc grant giới hạn theo môn mà `subject_id` vắng/ngoài scope →
          *     `403 PERMISSION_DENIED`. Mỗi lần đọc thành công ghi audit `learning.profile_viewed` (LEARNING_ANALYTICS §9). Level tính sau decay
@@ -8272,7 +8272,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lớp và sĩ số của trường (tenant.class.read) */
+        /** Lớp và sĩ số của trường (tenant.student.read) */
         get: operations["listTenantSchoolClasses"];
         put?: never;
         post?: never;
@@ -8290,8 +8290,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Học sinh của lớp, chỉ đọc (tenant.class.read) — danh sách từ SIS/CSV kèm lần đăng nhập game cuối
-         * @description Quyền `tenant.class.read` trong scope trường (School Admin trường mình; Tenant Admin các trường của tenant). Trường/lớp ngoài
+         * Học sinh của lớp, chỉ đọc (tenant.student.read) — danh sách từ SIS/CSV kèm lần đăng nhập game cuối
+         * @description Quyền `tenant.student.read` trong scope trường (School Admin trường mình; Tenant Admin các trường của tenant). Trường/lớp ngoài
          *     tenant hoặc scope → `404` (không tiết lộ tồn tại). Chỉ đọc: học sinh do SIS/CSV sở hữu (ADR-0060); không trả ngày sinh,
          *     liên hệ phụ huynh, IP hay mã thiết bị (ADR-0031). `days_since_last_login` do server tính (null khi chưa từng vào game).
          *     Contract F052 (T004); backend: owner F010.
@@ -12670,7 +12670,7 @@ export interface components {
             ranked?: boolean;
             /** @description Kết quả có tính rating (F106) hay không: ranked, completed, không bot, không trận giải, không sự cố server. */
             rated?: boolean;
-            /** @description Xem lại câu hỏi sau trận (F105-AC-23): chỉ khi status = completed và người gọi là người tham gia hoặc nhân sự có lms.class.read trong trường của người tham gia; câu hỏi, đáp án đúng, giải thích lấy từ module learning (revealPlanItem), không bao giờ trước khi trận kết thúc (ADR-0016). */
+            /** @description Xem lại câu hỏi sau trận (F105-AC-23): chỉ khi status = completed và người gọi là người tham gia hoặc nhân sự có lms.student.read trong trường của người tham gia; câu hỏi, đáp án đúng, giải thích lấy từ module learning (revealPlanItem), không bao giờ trước khi trận kết thúc (ADR-0016). */
             review?: {
                 /** @description Đáp án đúng (shape QuestionResponse) khi loại câu có đáp án cố định. */
                 correct_response?: Record<string, never> | null;

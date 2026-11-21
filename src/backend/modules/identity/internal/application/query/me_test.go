@@ -35,7 +35,7 @@ func (f togglesFake) Disabled(_ context.Context, tenant *uuid.UUID) ([]string, [
 type workspacesFake struct{}
 
 func (workspacesFake) Workspaces(perms []string) []string {
-	if slices.Contains(perms, "lms.class.read") {
+	if slices.Contains(perms, "lms.student.read") {
 		return []string{"school_lms"}
 	}
 	return []string{}

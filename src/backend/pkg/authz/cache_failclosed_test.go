@@ -62,7 +62,7 @@ func TestCacheFailsClosed(t *testing.T) {
 func TestCacheServesWhileIdentityDown(t *testing.T) {
 	tid := uuid.New()
 	want := authz.NewPrincipal(authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, TenantID: &tid,
-		Grants: []authz.Grant{{Role: "school_admin", Permissions: []authz.Permission{authz.PermLmsClassRead}}}})
+		Grants: []authz.Grant{{Role: "school_admin", Permissions: []authz.Permission{authz.PermLmsStudentRead}}}})
 	next := &fakeResolver{p: want}
 	clk := clock.NewFake(time.Date(2026, 11, 17, 8, 0, 0, 0, time.UTC))
 	c := newCache(t, next, clk)
@@ -72,7 +72,7 @@ func TestCacheServesWhileIdentityDown(t *testing.T) {
 	}
 	next.err = errors.New("down")
 	got, err := c.Resolve(context.Background(), req)
-	if err != nil || got.UserID != want.UserID || !got.Has(authz.PermLmsClassRead) || got.ClientID != "eduworld-portal" {
+	if err != nil || got.UserID != want.UserID || !got.Has(authz.PermLmsStudentRead) || got.ClientID != "eduworld-portal" {
 		t.Fatalf("cached principal not served: %+v %v", got, err)
 	}
 	if next.calls.Load() != 1 {

@@ -47,11 +47,11 @@ func TestFixtures(t *testing.T) {
 	}
 	school := uuid.New()
 	limited := authztest.Staff(authztest.TenantA, "school_admin", authztest.AtSchool(school))
-	if err := authz.Require(context.Background(), limited, authz.PermLmsClassRead, authz.Resource{TenantID: &authztest.TenantA, SchoolID: &school}); err != nil {
+	if err := authz.Require(context.Background(), limited, authz.PermLmsStudentRead, authz.Resource{TenantID: &authztest.TenantA, SchoolID: &school}); err != nil {
 		t.Fatal(err)
 	}
 	other := uuid.New()
-	authztest.ExpectDenied(t, authz.Require(context.Background(), limited, authz.PermLmsClassRead, authz.Resource{TenantID: &authztest.TenantA, SchoolID: &other}))
+	authztest.ExpectDenied(t, authz.Require(context.Background(), limited, authz.PermLmsStudentRead, authz.Resource{TenantID: &authztest.TenantA, SchoolID: &other}))
 }
 
 type fakeTB struct {

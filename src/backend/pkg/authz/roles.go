@@ -63,7 +63,7 @@ func expand(patterns []string, exclude ...Permission) []Permission {
 func SystemRoles() []RoleDef {
 	return []RoleDef{
 		{Name: "tenant_admin", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
-			"tenant.*", "school.*", "lms.class.read", "lms.assignment.read", "lms.report.read", "lms.school_event.write",
+			"tenant.*", "school.*", "lms.student.read", "lms.assignment.read", "lms.report.read", "lms.school_event.write",
 			"lms.student.password_reset", "learning_content.*", "curriculum.read", "analytics.tenant.read",
 			"moderation.school_notification.read", "moderation.school_notification.acknowledge", "chat.sensitive_terms.read",
 			"report.export",
@@ -71,11 +71,11 @@ func SystemRoles() []RoleDef {
 		{Name: "school_admin", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
 			"school.*", "tenant.user.read", "tenant.user.lock", "tenant.school.read", "tenant.user_role.write", "lms.*", "learning_content.read",
 			"learning_content.write", "learning_content.review", "learning_content.publish", "analytics.school.read",
-			"analytics.class.read", "moderation.school_notification.read", "moderation.school_notification.acknowledge",
+			"moderation.school_notification.read", "moderation.school_notification.acknowledge",
 			"tenant.sis.import", "social.club.approve", "tenant.audit.read", "report.export",
 		})},
 		{Name: "academic_manager", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
-			"curriculum.*", "learning_content.*", "tenant.school.read", "lms.class.read",
+			"curriculum.*", "learning_content.*", "tenant.school.read", "lms.student.read",
 			"lms.assignment.*", "lms.result.release", "lms.report.read",
 			"lms.student_activity.read", "analytics.*", "report.export",
 		})},

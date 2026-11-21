@@ -47,7 +47,7 @@ describe('grant helpers (pure)', () => {
     const i18n = await createI18n('vi-VN');
     render(
       <I18nextProvider i18n={i18n}>
-        <PermissionPicker permissions={[perm('tenant.class.read', 'tenant', 'lms')]} value={['tenant.class.read']} invalid={new Set(['tenant.class.read'])} />
+        <PermissionPicker permissions={[perm('tenant.student.read', 'tenant', 'lms')]} value={['tenant.student.read']} invalid={new Set(['tenant.student.read'])} />
       </I18nextProvider>,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Permission này không được dùng cho role của tenant.');
@@ -55,7 +55,7 @@ describe('grant helpers (pure)', () => {
 });
 
 describe('Người dùng & phân quyền', () => {
-  const unitAdmin = () => accountWith('ad.donvi', TENANTS.thDemoA, [...READ_ONLY_PERMS, 'tenant.user.write', 'tenant.role.write', 'tenant.user_role.write', 'tenant.class.read', 'lms.report.read']);
+  const unitAdmin = () => accountWith('ad.donvi', TENANTS.thDemoA, [...READ_ONLY_PERMS, 'tenant.user.write', 'tenant.role.write', 'tenant.user_role.write', 'tenant.student.read', 'lms.report.read']);
 
   it('students are read-only with the SIS tag and no role action (F052-AC-12, TC-CMS-RBAC-02)', async () => {
     await renderSchoolLms('/school-lms/access-control', { account: unitAdmin() });

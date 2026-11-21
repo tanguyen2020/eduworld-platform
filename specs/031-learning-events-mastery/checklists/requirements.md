@@ -27,5 +27,5 @@
 
 ## Notes
 
-- Permission `getStudentProgress` (`analytics.class.read` + scope) và lệnh kích hoạt mô hình qua CLI là [Confirmed].
+- Permission `getStudentProgress` (`analytics.school.read` (gộp analytics.class.read — ADR-0095 mục 6) + scope) và lệnh kích hoạt mô hình qua CLI là [Confirmed].
 - Mâu thuẫn cần sửa ở tài liệu: `evaluations.source` (`system_reevaluation` vs `re_evaluation`), `regrade_requests` T → H.

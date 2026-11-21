@@ -25,7 +25,7 @@ workspaces:
         path: /school-lms/overview
         order: 10
         required_permissions:
-          - lms.class.read
+          - lms.student.read
           - lms.assignment.read
           - analytics.school.read
           - tenant.settings.read
@@ -37,7 +37,7 @@ workspaces:
             label_key: portal.action.school_lms.overview.view
             title: Xem việc cần làm
             required_permissions:
-              - lms.class.read
+              - lms.student.read
               - lms.assignment.read
               - analytics.school.read
               - tenant.settings.read
@@ -70,13 +70,13 @@ workspaces:
         title: Lớp & học sinh
         path: /school-lms/classes
         order: 30
-        required_permissions: [tenant.class.read, lms.class.read]
+        required_permissions: [tenant.student.read, lms.student.read]
         can_disable: true
         actions:
           - key: action.school_lms.classes.view
             label_key: portal.action.school_lms.classes.view
             title: Xem lớp, sĩ số, học sinh, hồ sơ và tiến độ học sinh
-            required_permissions: [tenant.class.read, lms.class.read]
+            required_permissions: [tenant.student.read, lms.student.read]
             operation_ids: [listClasses, listTenantSchoolClasses, listTenantClassStudents, listUnassignedStudents, getStudentProfile, getStudentProgress]
             can_disable: true
           - key: action.school_lms.classes.reset_student_password
@@ -234,13 +234,13 @@ workspaces:
         title: School Learning Dashboard
         path: /school-lms/school-dashboard
         order: 130
-        required_permissions: [analytics.school.read, analytics.class.read]
+        required_permissions: [analytics.school.read]
         can_disable: true
         actions:
           - key: action.school_lms.school_dashboard.view
             label_key: portal.action.school_lms.school_dashboard.view
             title: Xem dashboard trường → lớp → học sinh
-            required_permissions: [analytics.school.read, analytics.class.read]
+            required_permissions: [analytics.school.read]
             operation_ids: [getSchoolDashboard, getClassDashboard, getSchoolAnalyticsSeries, getStudentLearningProfile, getRegulationReferenceReport, listSchoolAcademicYears]
             can_disable: true
       - key: menu.school_lms.results

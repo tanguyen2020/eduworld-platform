@@ -26,7 +26,7 @@ describe('Phân quyền và cô lập tenant (US6)', () => {
     stopPortals();
     cleanup();
     // a school user without analytics.* does not see the dashboard menu
-    await renderDashboard('/school-lms/classes', { account: adTruongA(['tenant.school.read', 'tenant.class.read', 'lms.class.read']) });
+    await renderDashboard('/school-lms/classes', { account: adTruongA(['tenant.school.read', 'tenant.student.read', 'lms.student.read']) });
     const nav2 = await screen.findByRole('navigation', { name: 'Menu điều hướng' });
     await within(nav2).findByText('Lớp & học sinh');
     expect(within(nav2).queryByText('School Learning Dashboard')).toBeNull();

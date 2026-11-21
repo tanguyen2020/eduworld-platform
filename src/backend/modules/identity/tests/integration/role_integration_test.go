@@ -57,7 +57,7 @@ func TestRoles(t *testing.T) {
 
 	// Catalogs: tenant permissions never include platform ones.
 	if r := h.do(t, "GET", "/tenant/permissions", taTok, hdr(a.tenant, nil), nil); r.status != 200 || strings.Contains(r.raw, `"game.`) ||
-		strings.Contains(r.raw, `"scope_kind":"platform"`) || !strings.Contains(r.raw, `"lms.class.read"`) {
+		strings.Contains(r.raw, `"scope_kind":"platform"`) || !strings.Contains(r.raw, `"lms.student.read"`) {
 		t.Fatalf("tenant permissions: %d", r.status)
 	}
 	if r := h.do(t, "GET", "/admin/permissions", saTok, nil, nil); r.status != 200 || !strings.Contains(r.raw, `"game.quest.write"`) {
@@ -65,11 +65,11 @@ func TestRoles(t *testing.T) {
 	}
 
 	// AC-16: a custom tenant role with a platform permission → 422 PERMISSION_NOT_ALLOWED_FOR_SCOPE.
-	bad := map[string]any{"code": "gv_bo_mon", "name": map[string]any{"vi": "GV bộ môn"}, "permission_codes": []string{"lms.class.read", "game.quest.write"}}
+	bad := map[string]any{"code": "gv_bo_mon", "name": map[string]any{"vi": "GV bộ môn"}, "permission_codes": []string{"lms.student.read", "game.quest.write"}}
 	if r := h.do(t, "POST", "/tenant/roles", taTok, key(a.tenant), bad); r.status != 422 || !strings.Contains(r.raw, "PERMISSION_NOT_ALLOWED_FOR_SCOPE") {
 		t.Fatalf("platform permission in a tenant role: %d %s", r.status, r.raw)
 	}
-	good := map[string]any{"code": "gv_bo_mon", "name": map[string]any{"vi": "GV bộ môn"}, "permission_codes": []string{"lms.class.read", "lms.assignment.read"}}
+	good := map[string]any{"code": "gv_bo_mon", "name": map[string]any{"vi": "GV bộ môn"}, "permission_codes": []string{"lms.student.read", "lms.assignment.read"}}
 	r := h.do(t, "POST", "/tenant/roles", taTok, key(a.tenant), good)
 	if r.status != 201 || r.body["tenant_id"] != a.tenant || r.body["role_scope_kind"] != "tenant" || r.body["is_system"] != false {
 		t.Fatalf("create custom role: %d %s", r.status, r.raw)
@@ -93,7 +93,7 @@ func TestRoles(t *testing.T) {
 	// AC-17: system roles are read-only (403), via the tenant and the platform routes.
 	sys := seed.RoleID("school_admin").String()
 	if r := h.do(t, "PATCH", "/tenant/roles/"+sys, taTok, hdr(a.tenant, float64(1)), map[string]any{"code": "school_admin", "name": map[string]any{"vi": "x"},
-		"permission_codes": []string{"lms.class.read"}}); r.status != 403 {
+		"permission_codes": []string{"lms.student.read"}}); r.status != 403 {
 		t.Fatalf("update system role: %d %s", r.status, r.raw)
 	}
 	if r := h.do(t, "DELETE", "/admin/roles/"+sys+"?reason=cleanup", saTok, map[string]string{"If-Match": `W/"1"`}, nil); r.status != 403 {
@@ -110,7 +110,7 @@ func TestRoles(t *testing.T) {
 	if p := h.do(t, "GET", "/me/permissions", gvTok, hdr(a.tenant, nil), nil); !strings.Contains(p.raw, `"lms.assignment.read"`) {
 		t.Fatalf("custom role permissions: %s", p.raw)
 	}
-	upd := map[string]any{"code": "gv_bo_mon", "name": map[string]any{"vi": "GV bộ môn"}, "permission_codes": []string{"lms.class.read", "lms.report.read"}}
+	upd := map[string]any{"code": "gv_bo_mon", "name": map[string]any{"vi": "GV bộ môn"}, "permission_codes": []string{"lms.student.read", "lms.report.read"}}
 	if r := h.do(t, "PATCH", "/tenant/roles/"+custom, taTok, map[string]string{"X-Tenant-Id": a.tenant}, upd); r.status != 428 {
 		t.Fatalf("no If-Match: %d", r.status)
 	}

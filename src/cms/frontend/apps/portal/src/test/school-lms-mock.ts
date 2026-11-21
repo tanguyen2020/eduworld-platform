@@ -210,16 +210,16 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
       return json(200, {
         catalog_version: 'mock',
         items: [
-          { code: 'tenant.class.read', scope_kind: 'tenant', group_code: 'school_lms', name: { vi: 'Xem lớp', en: 'Read classes' } },
+          { code: 'tenant.student.read', scope_kind: 'tenant', group_code: 'school_lms', name: { vi: 'Xem lớp', en: 'Read classes' } },
           { code: 'lms.report.read', scope_kind: 'tenant', group_code: 'school_lms', name: { vi: 'Xem báo cáo', en: 'Read reports' } },
           { code: 'game.quest.write', scope_kind: 'platform', group_code: 'game_ops', name: { vi: 'Sửa quest', en: 'Edit quests' } },
         ],
       });
     }
     const roles = [
-      { role_id: IDS.roleSchoolAdmin, code: 'school_admin', name: { vi: 'Quản trị trường' }, role_scope_kind: 'tenant', is_system: true, permission_codes: ['tenant.class.read'], active_user_role_count: 12, version: 1 },
-      { role_id: IDS.roleAcademic, code: 'academic_manager', name: { vi: 'Quản lý chuyên môn' }, role_scope_kind: 'tenant', is_system: true, permission_codes: ['tenant.class.read', 'lms.report.read'], active_user_role_count: 3, version: 1 },
-      { role_id: IDS.roleCustom, code: 'to_truong_toan', name: { vi: 'Tổ trưởng Toán' }, role_scope_kind: 'tenant', is_system: false, permission_codes: ['tenant.class.read'], active_user_role_count: 5, version: 2, updated_at: '2026-11-12T08:00:00Z' },
+      { role_id: IDS.roleSchoolAdmin, code: 'school_admin', name: { vi: 'Quản trị trường' }, role_scope_kind: 'tenant', is_system: true, permission_codes: ['tenant.student.read'], active_user_role_count: 12, version: 1 },
+      { role_id: IDS.roleAcademic, code: 'academic_manager', name: { vi: 'Quản lý chuyên môn' }, role_scope_kind: 'tenant', is_system: true, permission_codes: ['tenant.student.read', 'lms.report.read'], active_user_role_count: 3, version: 1 },
+      { role_id: IDS.roleCustom, code: 'to_truong_toan', name: { vi: 'Tổ trưởng Toán' }, role_scope_kind: 'tenant', is_system: false, permission_codes: ['tenant.student.read'], active_user_role_count: 5, version: 2, updated_at: '2026-11-12T08:00:00Z' },
     ];
     if (m === 'GET' && p === '/tenant/roles') return json(200, page(roles));
     if (m === 'POST' && p === '/tenant/roles') {

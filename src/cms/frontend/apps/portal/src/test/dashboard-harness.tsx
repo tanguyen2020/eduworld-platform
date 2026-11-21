@@ -16,16 +16,16 @@ vi.setConfig({ testTimeout: 240_000 });
 /** School admin of TH Demo A (ADMIN_PORTAL §2.3): dashboard, reports export, LMS writes, login activity. */
 export const SCHOOL_ADMIN_DASH_PERMS = [
   'analytics.school.read',
-  'analytics.class.read',
+  'analytics.school.read',
   'lms.report.read',
   'report.export',
   'lms.assignment.read',
   'lms.assignment.write',
   'lms.course.read',
-  'lms.class.read',
+  'lms.student.read',
   'lms.student_activity.read',
   'tenant.school.read',
-  'tenant.class.read',
+  'tenant.student.read',
   'learning_content.read',
   'moderation.school_notification.read',
 ];

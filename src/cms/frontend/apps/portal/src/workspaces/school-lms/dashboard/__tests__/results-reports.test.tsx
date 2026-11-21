@@ -116,7 +116,7 @@ describe('Xuất báo cáo (US4)', () => {
 });
 
 describe('Tổng hợp đơn vị và platform (US5)', () => {
-  const TENANT_ADMIN = ['analytics.tenant.read', 'report.export', 'lms.report.read', 'tenant.school.read', 'tenant.class.read'];
+  const TENANT_ADMIN = ['analytics.tenant.read', 'report.export', 'lms.report.read', 'tenant.school.read', 'tenant.student.read'];
 
   it('F056-AC-17: getTenantLearningSummary by school × grade × subject, "< 5" for suppressed cells, export via createTenantReport', async () => {
     const { backend } = await renderDashboard('/school-lms/reports', { account: adTruongA(TENANT_ADMIN) });

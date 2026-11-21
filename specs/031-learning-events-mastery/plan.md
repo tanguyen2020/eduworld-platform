@@ -30,7 +30,7 @@ Module `learning_record` trong module `learning`: `LearningEventRecorder` chuẩ
 | II Ranh giới module, Clean Architecture + CQRS | ✅ | Consumer nội bộ module learning; event ra ngoài qua outbox; domain mastery thuần |
 | III Cô lập tenant, an toàn dữ liệu | ✅ | RLS, append-only, Bypass có audit chỉ cho job re-evaluate platform; không hard-delete |
 | IV Server-authoritative | ✅ | Mastery/evaluation/hoàn thành bài do server; bài ghim version khi bắt đầu (R31); regrade, `completeLesson` có Idempotency-Key |
-| V Xác thực, phân quyền | ✅ | `learning_content.re_evaluate` (content_admin, academic_manager scope); progress: owner hoặc `analytics.class.read` trong scope |
+| V Xác thực, phân quyền | ✅ | `learning_content.re_evaluate` (content_admin, academic_manager scope); progress: owner hoặc `analytics.school.read` trong scope |
 | VI An toàn trẻ em | ✅ | Purpose limitation, không PII trong event, không so sánh học sinh |
 | VII Một nguồn sự thật, cấu hình | ✅ | Tham số lấy từ `mastery_model_configs` theo tên CONFIG_DEFAULTS |
 | VIII UI tách logic, token | ✅ | Không UI |
@@ -83,7 +83,7 @@ Không có — công thức, tham số và ví dụ tính ở LEARNING_ANALYTICS
 | Tầng | Thành phần | Ghi chú |
 |---|---|---|
 | domain | `mastery.WeightedEvidence.Apply/Effective` (§3.2: `w = w_ctx·w_diff·w_rep·w_hint·w_guess`, `α = max(min(α_max, α_base·w), 1/(n+3))`, decay khi đọc), `Level` (§3.2 bảng), `evaluation.Regrade(action)` | Tham số truyền vào, không đọc config trong domain |
-| application | Command `ApplyMasteryEvidence`, `UpsertProgressDaily`, `PinLessonSession`, `CompleteLesson`, `CreateRegradeRequest`, `RunRegradeRequest`, `RecomputeMastery`, `ActivateMasteryModel` · Query `GetMyProgress`, `GetStudentProgress` | Permission: regrade `learning_content.re_evaluate`; `GetStudentProgress` `analytics.class.read` + scope trường/môn [Confirmed] |
+| application | Command `ApplyMasteryEvidence`, `UpsertProgressDaily`, `PinLessonSession`, `CompleteLesson`, `CreateRegradeRequest`, `RunRegradeRequest`, `RecomputeMastery`, `ActivateMasteryModel` · Query `GetMyProgress`, `GetStudentProgress` | Permission: regrade `learning_content.re_evaluate`; `GetStudentProgress` `analytics.school.read` + scope trường/môn [Confirmed] |
 | infrastructure | ent repo (UPDATE `WHERE version=$v`), `LearningEventReader` (SQL tường minh có `tenant_id`), `SchemaValidator`, outbox | |
 | presentation | `getMyProgress`, `getStudentProgress`, `createRegradeRequest`, `getLesson`, `completeLesson`; consumer `learning.mastery_on_graded`, `learning.progress_daily`, `learning.lesson_completion`; job `learning-events-partitions` (hằng ngày), `regrade-runner`, `mastery-recompute` (CLI) | |
 

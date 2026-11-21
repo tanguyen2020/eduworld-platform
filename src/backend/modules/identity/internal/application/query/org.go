@@ -258,7 +258,7 @@ type ClassesInput struct {
 func (q Org) ListTenantSchoolClasses(ctx context.Context, in ClassesInput) (out Page[dto.Class], err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListTenantSchoolClasses")
 	defer func() { done(err) }()
-	if ctx, _, err = tenantRead(ctx, authz.PermTenantClassRead, &in.SchoolID); err != nil {
+	if ctx, _, err = tenantRead(ctx, authz.PermTenantStudentRead, &in.SchoolID); err != nil {
 		return out, err
 	}
 	after, err := q.cursor(in.Cursor)
@@ -277,7 +277,7 @@ func (q Org) ListTenantSchoolClasses(ctx context.Context, in ClassesInput) (out 
 func (q Org) ListClasses(ctx context.Context, schoolID uuid.UUID, yearID *uuid.UUID, grade int) (out []dto.Class, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListClasses")
 	defer func() { done(err) }()
-	if ctx, _, err = tenantRead(ctx, authz.PermLmsClassRead, &schoolID); err != nil {
+	if ctx, _, err = tenantRead(ctx, authz.PermLmsStudentRead, &schoolID); err != nil {
 		return nil, err
 	}
 	rows, err := q.Model.Classes(ctx, read.ClassFilter{SchoolID: schoolID, AcademicYearID: yearID, Grade: grade})
@@ -291,7 +291,7 @@ func (q Org) ListClasses(ctx context.Context, schoolID uuid.UUID, yearID *uuid.U
 func (q Org) ListUnassignedStudents(ctx context.Context, schoolID *uuid.UUID, in ListInput) (out Page[dto.UnassignedStudent], err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListUnassignedStudents")
 	defer func() { done(err) }()
-	if ctx, _, err = tenantRead(ctx, authz.PermTenantClassRead, schoolID); err != nil {
+	if ctx, _, err = tenantRead(ctx, authz.PermTenantStudentRead, schoolID); err != nil {
 		return out, err
 	}
 	after, err := q.cursor(in.Cursor)

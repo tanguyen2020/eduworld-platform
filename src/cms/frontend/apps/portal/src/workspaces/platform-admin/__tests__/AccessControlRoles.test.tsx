@@ -34,7 +34,7 @@ describe('Permission catalog (F059-AC-01)', () => {
     await user.click(screen.getByRole('combobox', { name: 'Phạm vi' }));
     await user.click((await screen.findAllByTitle('Tenant')).at(-1)!);
     await waitFor(() => expect(screen.queryByText('platform.role.read')).toBeNull());
-    expect(screen.getByText('lms.class.read')).toBeInTheDocument();
+    expect(screen.getByText('lms.student.read')).toBeInTheDocument();
     for (const name of ['Sửa', 'Xóa', 'Thêm', 'Tạo role']) expect(screen.queryByRole('button', { name })).toBeNull();
   });
 });
@@ -79,7 +79,7 @@ describe('Role platform / dùng chung (F059-AC-02…05)', () => {
     await user.click(within(dialog).getByText('game.event.write — Sửa sự kiện'));
     // switch to tenant: platform/game permissions disappear from the picker
     await user.click(within(dialog).getByLabelText('Tenant'));
-    expect(await within(dialog).findByText('lms.class.read — Xem lớp')).toBeInTheDocument();
+    expect(await within(dialog).findByText('lms.student.read — Xem lớp')).toBeInTheDocument();
     expect(within(dialog).queryByText(/game\.quest\.write/)).toBeNull();
     expect(within(dialog).queryByText(/platform\.role/)).toBeNull();
     await user.click(within(dialog).getByLabelText('Platform'));
@@ -106,15 +106,15 @@ describe('Role platform / dùng chung (F059-AC-02…05)', () => {
     fireEvent.change(within(dialog).getByLabelText('Mã role'), { target: { value: 'gv_bo_mon' } });
     fireEvent.change(within(dialog).getByLabelText('Tên (tiếng Việt)'), { target: { value: 'Giáo viên bộ môn' } });
     await user.click(within(dialog).getByLabelText('Tenant'));
-    await user.click(await within(dialog).findByText('lms.class.read — Xem lớp'));
+    await user.click(await within(dialog).findByText('lms.student.read — Xem lớp'));
     await user.click(within(dialog).getByRole('button', { name: 'Lưu' }));
-    expect(await within(dialog).findByText('Permission không hợp lệ với phạm vi của role: lms.class.read')).toBeInTheDocument();
+    expect(await within(dialog).findByText('Permission không hợp lệ với phạm vi của role: lms.student.read')).toBeInTheDocument();
     expect(within(dialog).getByLabelText('Mã role')).toHaveValue('gv_bo_mon');
     await user.click(within(dialog).getByRole('button', { name: 'Lưu' }));
     await waitFor(() => expect(backend.calls('POST', '/admin/roles')).toHaveLength(2));
     const [a, b] = backend.calls('POST', '/admin/roles');
     expect(b!.headers['idempotency-key']).toBe(a!.headers['idempotency-key']);
-    expect(b!.body).toMatchObject({ role_scope_kind: 'tenant', permission_codes: ['lms.class.read'] });
+    expect(b!.body).toMatchObject({ role_scope_kind: 'tenant', permission_codes: ['lms.student.read'] });
   });
 
   it('edit: getPlatformRole then If-Match + mandatory reason; 412 and 403 shown by code keeping the form', async () => {

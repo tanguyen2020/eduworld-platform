@@ -21,7 +21,7 @@ const IMPORT = {
   errors: [{ row_no: 12, column_name: 'username', error_code: 'DUPLICATE_IDENTIFIER', message: 'Trùng tên đăng nhập', occurred_at: '2026-11-19T08:00:01Z' }],
 };
 const PERMISSIONS = [
-  { code: 'tenant.class.read', scope_kind: 'tenant' as const, group_code: 'school_lms', name: { vi: 'Xem lớp', en: 'Read classes' } },
+  { code: 'tenant.student.read', scope_kind: 'tenant' as const, group_code: 'school_lms', name: { vi: 'Xem lớp', en: 'Read classes' } },
   { code: 'lms.report.read', scope_kind: 'tenant' as const, group_code: 'school_lms', name: { vi: 'Xem báo cáo', en: 'Read reports' } },
 ];
 const EVENTS = [
@@ -33,7 +33,7 @@ function Gallery() {
   return (
     <Flex vertical gap="large">
       <SisImportProgress value={IMPORT} onRetry={() => undefined} />
-      <PermissionPicker permissions={PERMISSIONS} value={['tenant.class.read']} invalid={new Set(['lms.report.read'])} />
+      <PermissionPicker permissions={PERMISSIONS} value={['tenant.student.read']} invalid={new Set(['lms.report.read'])} />
       <StudentLoginTable events={EVENTS} />
     </Flex>
   );

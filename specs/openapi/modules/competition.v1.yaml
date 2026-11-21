@@ -1043,7 +1043,7 @@ paths:
       operationId: getMatch
       summary: Trạng thái và kết quả trận
       description: |
-        Học sinh tham gia trận (token game, `game_player`) hoặc nhân sự có `lms.class.read` (sẽ đổi tên `lms.student.read`, ADR-0095 mục 6) trong trường của một người
+        Học sinh tham gia trận (token game, `game_player`) hoặc nhân sự có `lms.student.read` (ADR-0095 mục 6) trong trường của một người
         tham gia (token portal) — API_DESIGN §9.7 "STU (participant), SA (school)". Người khác → `404`; nhân sự gọi bằng
         token game → `403 GAME_ACCESS_STUDENT_ONLY`. Đối thủ chỉ có nickname/avatar, không số rating (R16, F105-AC-23).
       parameters:
@@ -3224,7 +3224,7 @@ components:
         review:
           type: array
           maxItems: 30
-          description: 'Xem lại câu hỏi sau trận (F105-AC-23): chỉ khi status = completed và người gọi là người tham gia hoặc nhân sự có lms.class.read trong trường của người tham gia; câu hỏi, đáp án đúng, giải thích lấy từ module learning (revealPlanItem), không bao giờ trước khi trận kết thúc (ADR-0016).'
+          description: 'Xem lại câu hỏi sau trận (F105-AC-23): chỉ khi status = completed và người gọi là người tham gia hoặc nhân sự có lms.student.read trong trường của người tham gia; câu hỏi, đáp án đúng, giải thích lấy từ module learning (revealPlanItem), không bao giờ trước khi trận kết thúc (ADR-0016).'
           items:
             type: object
             required:

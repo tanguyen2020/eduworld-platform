@@ -45,9 +45,9 @@ func TestPrincipalResolver(t *testing.T) {
 	tid, sid := tenant, school
 	tt := identityapi.TenantType("school")
 	grants := []identityapi.PrincipalGrant{{RoleCode: "school_admin", RoleScopeKind: "tenant", SchoolId: &sid,
-		Permissions: []string{"lms.class.read", "not.a.permission"}}}
+		Permissions: []string{"lms.student.read", "not.a.permission"}}}
 	ok := identityapi.ResolvePrincipal200JSONResponse{UserId: uuid.New(), TenantId: &tid, TenantType: &tt, UserType: "staff",
-		Status: identityapi.PrincipalStatusActive, Grants: &grants, Roles: []string{"school_admin"}, Permissions: []string{"lms.class.read"}}
+		Status: identityapi.PrincipalStatusActive, Grants: &grants, Roles: []string{"school_admin"}, Permissions: []string{"lms.student.read"}}
 	fake := &fakeIdentity{resp: ok}
 	r := wiring.PrincipalResolver{Identity: fake}
 	ctx := tenancy.WithModule(context.Background(), "learning")
@@ -57,7 +57,7 @@ func TestPrincipalResolver(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if *p.TenantID != tenant || len(p.Grants) != 1 || *p.Grants[0].SchoolID != school || len(p.Grants[0].Permissions) != 1 || !p.Has(authz.PermLmsClassRead) {
+	if *p.TenantID != tenant || len(p.Grants) != 1 || *p.Grants[0].SchoolID != school || len(p.Grants[0].Permissions) != 1 || !p.Has(authz.PermLmsStudentRead) {
 		t.Fatalf("principal: %+v", p.PrincipalData)
 	}
 	if *fake.got.Body.Issuer != req.Subject.Issuer || *fake.got.Body.Subject != "kc-1" || *fake.got.Body.TenantId != tenant {

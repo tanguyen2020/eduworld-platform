@@ -10,7 +10,6 @@ type Permission string
 
 // Permission catalog.
 const (
-	PermAnalyticsClassRead                       Permission = "analytics.class.read"
 	PermAnalyticsSchoolRead                      Permission = "analytics.school.read"
 	PermAnalyticsTenantRead                      Permission = "analytics.tenant.read"
 	PermChatPolicyToggle                         Permission = "chat.policy.toggle"
@@ -64,7 +63,7 @@ const (
 	PermLmsAssignmentRead                        Permission = "lms.assignment.read"
 	PermLmsAssignmentWrite                       Permission = "lms.assignment.write"
 	PermLmsChallengeWrite                        Permission = "lms.challenge.write"
-	PermLmsClassRead                             Permission = "lms.class.read"
+	PermLmsStudentRead                           Permission = "lms.student.read"
 	PermLmsReportRead                            Permission = "lms.report.read"
 	PermLmsResultRelease                         Permission = "lms.result.release"
 	PermLmsSchoolEventWrite                      Permission = "lms.school_event.write"
@@ -110,7 +109,7 @@ const (
 	PermSocialClubApprove                        Permission = "social.club.approve"
 	PermTenantAuditRead                          Permission = "tenant.audit.read"
 	PermTenantChatRetentionConfigure             Permission = "tenant.chat_retention.configure"
-	PermTenantClassRead                          Permission = "tenant.class.read"
+	PermTenantStudentRead                        Permission = "tenant.student.read"
 	PermTenantRoleRead                           Permission = "tenant.role.read"
 	PermTenantRoleWrite                          Permission = "tenant.role.write"
 	PermTenantRolesAssign                        Permission = "tenant.roles.assign"
@@ -132,7 +131,6 @@ const (
 )
 
 var catalog = []Permission{
-	PermAnalyticsClassRead,
 	PermAnalyticsSchoolRead,
 	PermAnalyticsTenantRead,
 	PermChatPolicyToggle,
@@ -186,7 +184,7 @@ var catalog = []Permission{
 	PermLmsAssignmentRead,
 	PermLmsAssignmentWrite,
 	PermLmsChallengeWrite,
-	PermLmsClassRead,
+	PermLmsStudentRead,
 	PermLmsReportRead,
 	PermLmsResultRelease,
 	PermLmsSchoolEventWrite,
@@ -232,7 +230,7 @@ var catalog = []Permission{
 	PermSocialClubApprove,
 	PermTenantAuditRead,
 	PermTenantChatRetentionConfigure,
-	PermTenantClassRead,
+	PermTenantStudentRead,
 	PermTenantRoleRead,
 	PermTenantRoleWrite,
 	PermTenantRolesAssign,

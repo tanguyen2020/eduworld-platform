@@ -72,7 +72,7 @@ func (q Progress) liveArm(ctx context.Context, p authz.Principal, m mastery.Weig
 	return mastery.WeightedEvidence{ModelVersion: arm.ModelVersion, P: params}, arm.States, nil
 }
 
-// Student is getStudentProgress (F031-AC-16): analytics.class.read in the school of the student (a grant limited to
+// Student is getStudentProgress (F031-AC-16): analytics.school.read in the school of the student (a grant limited to
 // another school answers 404, no existence leak) and in the subject when the grant is subject-limited (403
 // PERMISSION_DENIED; a subject-limited grant must name its subject) [Proposed]. The caller records the audit
 // learning.profile_viewed through command.ProfileViews after a successful read.
@@ -86,8 +86,8 @@ func (q Progress) Student(ctx context.Context, studentID uuid.UUID, subjectID *u
 	if p.TenantID == nil || p.UserType == authz.UserTypeStudent {
 		return out, problem.New(problem.PermissionDenied, "")
 	}
-	if !holds(p, authz.PermAnalyticsClassRead) {
-		return out, authz.Require(ctx, p, authz.PermAnalyticsClassRead, authz.Resource{TenantID: p.TenantID})
+	if !holds(p, authz.PermAnalyticsSchoolRead) {
+		return out, authz.Require(ctx, p, authz.PermAnalyticsSchoolRead, authz.Resource{TenantID: p.TenantID})
 	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
 		s, err := q.Model.Student(ctx, studentID)
@@ -98,11 +98,11 @@ func (q Progress) Student(ctx context.Context, studentID uuid.UUID, subjectID *u
 			return problem.New(problem.NotFound, "")
 		}
 		school := s.SchoolID
-		if !coversSchool(p, authz.PermAnalyticsClassRead, school) {
-			_ = authz.Require(ctx, p, authz.PermAnalyticsClassRead, authz.Resource{TenantID: p.TenantID, SchoolID: &school})
+		if !coversSchool(p, authz.PermAnalyticsSchoolRead, school) {
+			_ = authz.Require(ctx, p, authz.PermAnalyticsSchoolRead, authz.Resource{TenantID: p.TenantID, SchoolID: &school})
 			return problem.New(problem.NotFound, "")
 		}
-		if err := authz.Require(ctx, p, authz.PermAnalyticsClassRead, authz.Resource{TenantID: p.TenantID, SchoolID: &school,
+		if err := authz.Require(ctx, p, authz.PermAnalyticsSchoolRead, authz.Resource{TenantID: p.TenantID, SchoolID: &school,
 			SubjectID: subjectID}); err != nil {
 			return err
 		}

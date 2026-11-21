@@ -353,9 +353,9 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         path: "/school-lms/overview",
         labelKey: "portal.menu.school_lms.overview",
         order: 10,
-        requiredPermissions: ["lms.class.read", "lms.assignment.read", "analytics.school.read", "tenant.settings.read", "school.settings.read", "moderation.school_notification.read"],
+        requiredPermissions: ["lms.student.read", "lms.assignment.read", "analytics.school.read", "tenant.settings.read", "school.settings.read", "moderation.school_notification.read"],
         actions: [
-          { key: "action.school_lms.overview.view", labelKey: "portal.action.school_lms.overview.view", requiredPermissions: ["lms.class.read", "lms.assignment.read", "analytics.school.read", "tenant.settings.read", "school.settings.read", "moderation.school_notification.read"] },
+          { key: "action.school_lms.overview.view", labelKey: "portal.action.school_lms.overview.view", requiredPermissions: ["lms.student.read", "lms.assignment.read", "analytics.school.read", "tenant.settings.read", "school.settings.read", "moderation.school_notification.read"] },
         ],
       },
       {
@@ -374,9 +374,9 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         path: "/school-lms/classes",
         labelKey: "portal.menu.school_lms.classes",
         order: 30,
-        requiredPermissions: ["tenant.class.read", "lms.class.read"],
+        requiredPermissions: ["tenant.student.read", "lms.student.read"],
         actions: [
-          { key: "action.school_lms.classes.view", labelKey: "portal.action.school_lms.classes.view", requiredPermissions: ["tenant.class.read", "lms.class.read"] },
+          { key: "action.school_lms.classes.view", labelKey: "portal.action.school_lms.classes.view", requiredPermissions: ["tenant.student.read", "lms.student.read"] },
           { key: "action.school_lms.classes.reset_student_password", labelKey: "portal.action.school_lms.classes.reset_student_password", requiredPermissions: ["lms.student.password_reset"] },
           { key: "action.school_lms.classes.lock_student", labelKey: "portal.action.school_lms.classes.lock_student", requiredPermissions: ["tenant.user.lock"] },
         ],
@@ -455,9 +455,9 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         path: "/school-lms/school-dashboard",
         labelKey: "portal.menu.school_lms.school_dashboard",
         order: 130,
-        requiredPermissions: ["analytics.school.read", "analytics.class.read"],
+        requiredPermissions: ["analytics.school.read"],
         actions: [
-          { key: "action.school_lms.school_dashboard.view", labelKey: "portal.action.school_lms.school_dashboard.view", requiredPermissions: ["analytics.school.read", "analytics.class.read"] },
+          { key: "action.school_lms.school_dashboard.view", labelKey: "portal.action.school_lms.school_dashboard.view", requiredPermissions: ["analytics.school.read"] },
         ],
       },
       {

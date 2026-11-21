@@ -351,7 +351,7 @@ func TestStudentProgressAuthz(t *testing.T) {
 		{qlcmB, "", http.StatusNotFound},                                           // tenant B
 		{"qlcm.mon.khac", "?subject_id=" + subject.String(), http.StatusForbidden}, // subject outside the grant
 		{"qlcm.mon.toan", "", http.StatusForbidden},                                // subject-limited grant without subject_id
-		{noRoleA, "", http.StatusForbidden},                                        // no analytics.class.read
+		{noRoleA, "", http.StatusForbidden},                                        // no analytics.school.read
 		{hsAn, "", http.StatusForbidden},                                           // student token on a portal route
 	} {
 		if got := c.do(t, http.MethodGet, path+tc.query, tc.sub, nil, nil); got.status != tc.want {

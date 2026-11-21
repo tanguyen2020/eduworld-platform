@@ -18,7 +18,7 @@ type SchoolCurriculum struct {
 	Model   read.CurriculumSettingsReadModel
 }
 
-// CurriculumSettings is getSchoolCurriculumSettings (F021-AC-30): lms.class.read in the school.
+// CurriculumSettings is getSchoolCurriculumSettings (F021-AC-30): lms.student.read in the school.
 func (q SchoolCurriculum) CurriculumSettings(ctx context.Context, school uuid.UUID, yearID *uuid.UUID) (out dto.CurriculumSettingsView, err error) {
 	ctx, done := observability.UseCase(ctx, "learning.query.GetSchoolCurriculum")
 	defer func() { done(err) }()
@@ -27,7 +27,7 @@ func (q SchoolCurriculum) CurriculumSettings(ctx context.Context, school uuid.UU
 		return out, err
 	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		if err := authorizeSchool(ctx, p, authz.PermLmsClassRead, school, nil); err != nil {
+		if err := authorizeSchool(ctx, p, authz.PermLmsStudentRead, school, nil); err != nil {
 			return err
 		}
 		out, err = q.Model.CurriculumSettings(ctx, school, yearID)

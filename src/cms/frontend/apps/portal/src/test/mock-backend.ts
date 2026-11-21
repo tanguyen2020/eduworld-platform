@@ -65,7 +65,7 @@ export const ACCOUNTS: Record<string, MockAccount> = {
     tenants: [TENANTS.thDemoA, TENANTS.pgdDemo],
     perms: {
       [TENANTS.thDemoA.tenant_id]: { workspaces: ['school_lms', 'content_studio'], permissions: [...SCHOOL, ...CONTENT] },
-      [TENANTS.pgdDemo.tenant_id]: { workspaces: ['school_lms'], permissions: ['lms.class.read', 'tenant.class.read'] },
+      [TENANTS.pgdDemo.tenant_id]: { workspaces: ['school_lms'], permissions: ['lms.student.read', 'tenant.student.read'] },
     },
   },
   'sa.admin': {

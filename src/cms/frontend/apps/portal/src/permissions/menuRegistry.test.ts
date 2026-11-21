@@ -16,13 +16,13 @@ describe('menuRegistry', () => {
   it('a menu needs its workspace in workspaces[] and one required permission (F051-AC-09)', () => {
     expect(menuStatus('menu.school_lms.schools', { permissions: ['tenant.school.read'], workspaces: ['school_lms'] })).toBe('visible');
     expect(menuStatus('menu.school_lms.schools', { permissions: ['tenant.school.read'], workspaces: [] })).toBe('forbidden');
-    expect(menuStatus('menu.school_lms.schools', { permissions: ['lms.class.read'], workspaces: ['school_lms'] })).toBe('forbidden');
-    // any-of: classes accepts tenant.class.read OR lms.class.read
-    expect(menuStatus('menu.school_lms.classes', { permissions: ['lms.class.read'], workspaces: ['school_lms'] })).toBe('visible');
+    expect(menuStatus('menu.school_lms.schools', { permissions: ['lms.student.read'], workspaces: ['school_lms'] })).toBe('forbidden');
+    // any-of: classes accepts tenant.student.read OR lms.student.read
+    expect(menuStatus('menu.school_lms.classes', { permissions: ['lms.student.read'], workspaces: ['school_lms'] })).toBe('visible');
   });
 
   it('a turned-off menu is `disabled` (not visible, not 403) (F051-AC-35)', () => {
-    const p = { permissions: ['tenant.school.read', 'lms.class.read'], workspaces: ['school_lms'], disabled_menus: ['menu.school_lms.schools'] };
+    const p = { permissions: ['tenant.school.read', 'lms.student.read'], workspaces: ['school_lms'], disabled_menus: ['menu.school_lms.schools'] };
     expect(menuStatus('menu.school_lms.schools', p)).toBe('disabled');
     expect(visibleMenus(school, p).some((m) => m.key === 'menu.school_lms.schools')).toBe(false);
     expect(visibleMenus(school, p).some((m) => m.key === 'menu.school_lms.classes')).toBe(true);

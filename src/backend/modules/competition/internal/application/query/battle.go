@@ -21,8 +21,8 @@ import (
 )
 
 // MatchStaffPermission lets school staff read the matches of the students of their school (API_DESIGN §9.7 "SA
-// (school)"). ADR-0095 §6 renames it lms.student.read; the catalog keeps lms.class.read until that rename lands.
-const MatchStaffPermission = authz.PermLmsClassRead
+// (school)"): lms.student.read since ADR-0095 §6 (formerly lms.class.read).
+const MatchStaffPermission = authz.PermLmsStudentRead
 
 // Battles are the read use cases of the battle engine (F105 US5): getMatch and listMyMatches, plus the review of a
 // completed match read from module learning (revealPlanItem: question, correct answer, explanation — ADR-0016).

@@ -1,5 +1,5 @@
 // Screen of `menu.school_lms.school_dashboard` (F056 T001, T045, T051; ADMIN_PORTAL §1.2, SCHOOL_LMS §8): the menu, its
-// path and permissions (analytics.school.read / analytics.class.read, any-of) come from the generated catalog — the
+// path and permissions (analytics.school.read / analytics.school.read, any-of) come from the generated catalog — the
 // MenuGate shows the portal 403 / "tính năng tạm tắt" page and never mounts this screen (no dashboard request,
 // F056-AC-20). Routes: overview (index), class (`classes/:classId`), student (`students/:studentId`), reference levels
 // TT27/TT22 (`reference`). One DashboardQueue per screen limits concurrent queries (F056-AC-04). A System Admin works on

@@ -13,14 +13,14 @@ import { groupByTenant } from '../../workspaces/platform-admin/api/userRoles';
 import { filterPermissions, groupPermissions, pickablePermissions, rolesByPermission, type Permission } from './groupPermissions';
 
 const p = (code: string, scope_kind: 'platform' | 'tenant', group_code: string): Permission => ({ code, scope_kind, group_code, name: { vi: code, en: code } });
-const CATALOG = [p('platform.role.write', 'platform', 'access'), p('game.quest.write', 'platform', 'game'), p('platform.role.read', 'platform', 'access'), p('lms.class.read', 'tenant', 'lms')];
+const CATALOG = [p('platform.role.write', 'platform', 'access'), p('game.quest.write', 'platform', 'game'), p('platform.role.read', 'platform', 'access'), p('lms.student.read', 'tenant', 'lms')];
 
 describe('permission catalog (F059-AC-01/03)', () => {
   it('groups by group_code, sorted, after filter', () => {
     expect(groupPermissions(CATALOG).map((g) => [g.groupCode, g.items.map((x) => x.code)])).toEqual([
       ['access', ['platform.role.read', 'platform.role.write']],
       ['game', ['game.quest.write']],
-      ['lms', ['lms.class.read']],
+      ['lms', ['lms.student.read']],
     ]);
     expect(groupPermissions(CATALOG, { scopeKind: 'tenant' }).map((g) => g.groupCode)).toEqual(['lms']);
     expect(filterPermissions(CATALOG, { text: 'ROLE.R' }).map((x) => x.code)).toEqual(['platform.role.read']);
@@ -28,7 +28,7 @@ describe('permission catalog (F059-AC-01/03)', () => {
 
   it('a tenant role is never offered platform.*, game.* permissions', () => {
     const offered = pickablePermissions(CATALOG, 'tenant').map((x) => x.code);
-    expect(offered).toEqual(['lms.class.read']);
+    expect(offered).toEqual(['lms.student.read']);
     expect(offered.some((c) => /^(platform|game|competition\.config)\./.test(c))).toBe(false);
   });
 
@@ -43,7 +43,7 @@ describe('permission catalog (F059-AC-01/03)', () => {
 
   it('422 PERMISSION_NOT_ALLOWED_FOR_SCOPE → the rejected codes', () => {
     const e = new ApiError({ status: 422, code: 'VALIDATION_FAILED', i18nKey: 'error.VALIDATION_FAILED', fieldErrors: { 'permission_codes[1]': { code: 'PERMISSION_NOT_ALLOWED_FOR_SCOPE' } } as never });
-    expect(rejectedPermissions(e, ['lms.class.read', 'game.quest.write'])).toEqual(['game.quest.write']);
+    expect(rejectedPermissions(e, ['lms.student.read', 'game.quest.write'])).toEqual(['game.quest.write']);
     expect(rejectedPermissions(new Error('x'), ['a'])).toEqual([]);
   });
 });
