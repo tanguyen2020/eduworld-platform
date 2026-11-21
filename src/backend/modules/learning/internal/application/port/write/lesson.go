@@ -19,7 +19,6 @@ type LessonSession struct {
 	Status               string
 	ContextMode          string
 	AssignmentID         *uuid.UUID
-	LearningPathID       *uuid.UUID
 	RecommendationID     *uuid.UUID
 	CompletedActivityIDs []uuid.UUID
 	CompletedAttemptIDs  []uuid.UUID

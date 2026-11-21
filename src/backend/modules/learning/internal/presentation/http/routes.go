@@ -114,7 +114,7 @@ type Handlers struct {
 	ExamQueries  ExamQueries
 	// Dashboards serve the School Learning Dashboard and the learning summaries (F043).
 	Dashboards DashboardQueries
-	// Reports serve the exports, course results, reference report, item analysis, calibration and exam report (F044).
+	// Reports serve the exports, reference report, item analysis, calibration and exam report (F044; no course results, ADR-0095).
 	Reports ReportHandlers
 	// Efficacy serves the efficacy study of F035 (System Admin, /admin/learning/*).
 	Efficacy EfficacyHandlers

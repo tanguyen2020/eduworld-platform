@@ -23,7 +23,7 @@ export type TrashItem = components['schemas']['TrashItem'];
 export type ResourceType = components['schemas']['ResourceType'];
 
 /** Tenant-owned resource types (platform-only types live in the platform Thùng rác, F057). */
-export const TENANT_TRASH_TYPES: readonly ResourceType[] = ['question', 'question_set', 'lesson', 'learning_material', 'assessment_blueprint', 'curriculum', 'media', 'assignment', 'course', 'learning_path', 'challenge', 'student'];
+export const TENANT_TRASH_TYPES: readonly ResourceType[] = ['question', 'question_set', 'lesson', 'learning_material', 'assessment_blueprint', 'curriculum', 'media', 'assignment', 'challenge', 'student'];
 
 /** RestoreRequest.reason (OpenAPI). */
 export const RESTORE_REASON = { min: 3, max: 1000 } as const;

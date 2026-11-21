@@ -512,7 +512,6 @@
       "assessment_blueprint": "Ma trận đề",
       "lesson": "Bài học",
       "learning_material": "Học liệu",
-      "learning_path": "Lộ trình học",
       "activity": "Hoạt động học tập"
     },
     "translation": { "complete": "Đủ bản dịch", "partial": "Thiếu bản dịch", "outdated": "Bản dịch lỗi thời" },
@@ -835,8 +834,7 @@
         "MATH_FORBIDDEN_COMMAND": "Công thức dùng lệnh bị cấm",
         "MATH_SVG_TOO_LARGE": "Hình công thức quá lớn"
       }
-    },
-    "learningPath": { "help": "Mở lộ trình học theo mã để xem phiên bản, phát hành, nơi sử dụng và xem trước.", "openById": "Mã lộ trình học" }
+    }
   },
   "error": {
     "VIDEO_NOT_READY": "Video chưa xử lý xong.",

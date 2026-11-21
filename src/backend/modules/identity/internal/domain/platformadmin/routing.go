@@ -36,7 +36,7 @@ var ErrUnknownResourceType = errors.New("platformadmin: unknown resource_type")
 var owners = map[string]string{
 	"curriculum": ModuleLearning, "lesson": ModuleLearning, "learning_material": ModuleLearning, "question": ModuleLearning,
 	"question_set": ModuleLearning, "assessment_blueprint": ModuleLearning, "media": ModuleLearning, "assignment": ModuleLearning,
-	"course": ModuleLearning, "learning_path": ModuleLearning, "activity": ModuleLearning, // activity: F030, OQ F030
+	"activity": ModuleLearning, // activity: F030, OQ F030; no course nor learning_path (ADR-0095)
 	"challenge": ModuleGame, "challenge_template": ModuleGame, "quest": ModuleGame, "minigame_config": ModuleGame, "item": ModuleGame,
 	"tournament_template": ModuleCompetition,
 	"school_settings":     ModuleIdentity, "tenant_settings": ModuleIdentity, // no class_template (ADR-0095)
@@ -46,7 +46,7 @@ var owners = map[string]string{
 // cloneAllowlist are the types a clone job may copy (data-model §3): configuration and content only, never
 // student data (AGENTS R22).
 var cloneAllowlist = []string{"curriculum", "lesson", "learning_material", "question", "question_set", "assessment_blueprint", "media",
-	"learning_path", "assignment", "challenge_template", "school_settings", "tenant_settings"}
+	"assignment", "challenge_template", "school_settings", "tenant_settings"}
 
 // Owner returns the module owning rt.
 func Owner(rt string) (string, error) {

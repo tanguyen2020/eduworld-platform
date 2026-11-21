@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "required": ["resource_type", "resource_id", "tenant_id", "deleted_by"],
   "properties": {
-    "resource_type": { "type": "string", "enum": ["curriculum", "lesson", "learning_material", "question", "question_set", "assessment_blueprint", "media", "assignment", "course", "learning_path"] },
+    "resource_type": { "type": "string", "enum": ["curriculum", "lesson", "learning_material", "question", "question_set", "assessment_blueprint", "media", "assignment"] },
     "resource_id": { "type": "string", "format": "uuid" },
     "tenant_id": { "type": ["string", "null"], "format": "uuid" },
     "deleted_by": { "type": ["string", "null"], "format": "uuid" },

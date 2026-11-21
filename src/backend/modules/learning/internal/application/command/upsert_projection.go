@@ -27,10 +27,8 @@ type UpsertProjectionHandler interface {
 	Tenant(ctx context.Context, envTenant *uuid.UUID, r write.RefTenant) (bool, error)
 	Province(ctx context.Context, r write.RefProvince) (bool, error)
 	School(ctx context.Context, envTenant *uuid.UUID, r write.RefSchool) (bool, error)
-	Class(ctx context.Context, envTenant *uuid.UUID, r write.RefClass) (bool, error)
 	Student(ctx context.Context, envTenant *uuid.UUID, r write.RefStudent) (bool, error)
 	StudentDeleted(ctx context.Context, envTenant *uuid.UUID, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
-	Enrollment(ctx context.Context, envTenant *uuid.UUID, r write.RefEnrollment) (bool, error)
 }
 
 // UpsertProjection implements UpsertProjectionHandler.
@@ -104,21 +102,6 @@ func (h UpsertProjection) School(ctx context.Context, envTenant *uuid.UUID, r wr
 	})
 }
 
-// Class applies class.synced.
-func (h UpsertProjection) Class(ctx context.Context, envTenant *uuid.UUID, r write.RefClass) (bool, error) {
-	return run(ctx, "Class", func(ctx context.Context) (bool, error) {
-		t, err := sameTenant(envTenant, r.TenantID)
-		if err != nil {
-			return false, err
-		}
-		r.TenantID = t
-		if err := h.owned(ctx, t, map[write.RefTable]uuid.UUID{write.RefSchools: r.SchoolID, write.RefClasses: r.ClassID}); err != nil {
-			return false, err
-		}
-		return h.Refs.UpsertClass(ctx, r)
-	})
-}
-
 // Student applies student.synced.
 func (h UpsertProjection) Student(ctx context.Context, envTenant *uuid.UUID, r write.RefStudent) (bool, error) {
 	return run(ctx, "Student", func(ctx context.Context) (bool, error) {
@@ -145,20 +128,5 @@ func (h UpsertProjection) StudentDeleted(ctx context.Context, envTenant *uuid.UU
 			return false, err
 		}
 		return h.Refs.MarkStudentDeleted(ctx, student, t, deleted, at)
-	})
-}
-
-// Enrollment applies enrollment.changed.
-func (h UpsertProjection) Enrollment(ctx context.Context, envTenant *uuid.UUID, r write.RefEnrollment) (bool, error) {
-	return run(ctx, "Enrollment", func(ctx context.Context) (bool, error) {
-		t, err := sameTenant(envTenant, r.TenantID)
-		if err != nil {
-			return false, err
-		}
-		r.TenantID = t
-		if err := h.owned(ctx, t, map[write.RefTable]uuid.UUID{write.RefStudents: r.StudentID, write.RefClasses: r.ClassID}); err != nil {
-			return false, err
-		}
-		return h.Refs.UpsertEnrollment(ctx, r)
 	})
 }

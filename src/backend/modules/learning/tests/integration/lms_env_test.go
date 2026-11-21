@@ -23,8 +23,8 @@ const (
 )
 
 // lmsKit is the school of the LMS tests: the school of adA with grade 3 (hs.an.3a, hs.binh.3a in ref.students) and a
-// published curriculum version with the subject of grade 3 (ADR-0095: no course). The class 3A of the projection
-// ref.classes/ref.enrollments stays for the efficacy study (F035, cụm trường × khối in WP-L2).
+// published curriculum version with the subject of grade 3 (ADR-0095: no course, no class). class is the id of a legacy
+// class 3A, written only by the tests of the earlier migration blocks (preADR0095Schema).
 type lmsKit struct {
 	s      attSetup
 	school uuid.UUID
@@ -40,17 +40,13 @@ func (c *curEnv) schoolOf(sub string) uuid.UUID {
 	return uuid.Nil
 }
 
-// enrollIn puts a student into ref.students of the school and ref.enrollments of the class (projection of F020).
-func (c *curEnv) enrollIn(ctx context.Context, t *testing.T, sub string, school, class uuid.UUID, grade int) {
+// placeIn puts a student into ref.students of the school with a grade (projection of F020).
+func (c *curEnv) placeIn(ctx context.Context, t *testing.T, sub string, school uuid.UUID, grade int) {
 	t.Helper()
 	d := c.users[sub]
 	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.students (student_id, tenant_id, school_id, grade_level, source_version)
 		VALUES ($1, $2, $3, $4, 1) ON CONFLICT (student_id) DO UPDATE SET school_id = EXCLUDED.school_id,
 		grade_level = EXCLUDED.grade_level`, d.UserID, *d.TenantID, school, grade); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.enrollments (student_id, class_id, start_date, tenant_id, status, source_version)
-		VALUES ($1, $2, current_date, $3, 'active', 1)`, d.UserID, class, *d.TenantID); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -79,12 +75,8 @@ func (c *curEnv) lmsSetup(ctx context.Context, t *testing.T) lmsKit {
 		ON CONFLICT (school_id) DO NOTHING`, k.school, c.tenantA); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.classes (class_id, tenant_id, school_id, grade_level, name, source_version)
-		VALUES ($1, $2, $3, 3, '3A', 1)`, k.class, c.tenantA, k.school); err != nil {
-		t.Fatal(err)
-	}
-	c.enrollIn(ctx, t, hsAn, k.school, k.class, 3)
-	c.enrollIn(ctx, t, hsBinh, k.school, k.class, 3)
+	c.placeIn(ctx, t, hsAn, k.school, 3)
+	c.placeIn(ctx, t, hsBinh, k.school, 3)
 	return k
 }
 

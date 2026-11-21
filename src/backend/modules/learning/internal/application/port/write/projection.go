@@ -13,7 +13,6 @@ type RefTable string
 // Tenant projections with an owning tenant.
 const (
 	RefSchools  RefTable = "schools"
-	RefClasses  RefTable = "classes"
 	RefStudents RefTable = "students"
 )
 
@@ -51,18 +50,6 @@ type RefSchool struct {
 	SourceVersion  int64
 }
 
-// RefClass is a row of ref.classes.
-type RefClass struct {
-	ClassID        uuid.UUID
-	TenantID       uuid.UUID
-	SchoolID       uuid.UUID
-	GradeLevel     int
-	Name           string
-	AcademicYearID *uuid.UUID
-	IsVirtual      *bool
-	SourceVersion  int64
-}
-
 // RefStudent is a row of ref.students. Nil fields keep the stored value on update.
 type RefStudent struct {
 	StudentID  uuid.UUID
@@ -76,17 +63,6 @@ type RefStudent struct {
 	SourceVersion  int64
 }
 
-// RefEnrollment is a row of ref.enrollments.
-type RefEnrollment struct {
-	StudentID     uuid.UUID
-	ClassID       uuid.UUID
-	StartDate     time.Time
-	TenantID      uuid.UUID
-	Status        string
-	EndDate       *time.Time
-	SourceVersion int64
-}
-
 // ProjectionWriter writes the ref.* projections of module identity (DATABASE_DESIGN §2.17). Only the command
 // UpsertProjection, called by the consumer learning.projection_identity, uses it (F020-AC-05). Every upsert
 // applies the row only when its source_version is newer than the stored one (applied = false otherwise).
@@ -97,10 +73,8 @@ type ProjectionWriter interface {
 	UpsertTenant(ctx context.Context, r RefTenant) (bool, error)
 	UpsertProvince(ctx context.Context, r RefProvince) (bool, error)
 	UpsertSchool(ctx context.Context, r RefSchool) (bool, error)
-	UpsertClass(ctx context.Context, r RefClass) (bool, error)
 	UpsertStudent(ctx context.Context, r RefStudent) (bool, error)
 	// MarkStudentDeleted sets (at != nil) or clears (at == nil) deleted_at of a projected student, ordered by
 	// the event time.
 	MarkStudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)
-	UpsertEnrollment(ctx context.Context, r RefEnrollment) (bool, error)
 }

@@ -221,7 +221,7 @@ func (h Lessons) completed(ctx context.Context, l PinnedLesson, s write.LessonSe
 		Payload: map[string]any{"lesson_session_id": s.ID, "lesson_id": s.LessonID, "lesson_version_id": v.ID, "lesson_version": v.VersionNo,
 			"student_id": s.StudentID, "subject_id": nullableID(v.SubjectID), "grade_levels": gradeLevels,
 			"completion_rule": l.Body.CompletionRule, "mode": s.ContextMode, "assignment_id": nullableID(s.AssignmentID),
-			"learning_path_id": nullableID(s.LearningPathID), "recommendation_id": nullableID(s.RecommendationID),
+			"recommendation_id":       nullableID(s.RecommendationID),
 			"required_activity_count": required, "completed_activity_count": len(s.CompletedActivityIDs),
 			"attempt_ids": nonNilUUIDs(s.CompletedAttemptIDs), "objective_ids": nonNilUUIDs(uniqueUUIDs(v.ObjectiveIDs)),
 			"started_at": s.StartedAt, "completed_at": *s.EndedAt, "duration_ms": s.ActiveMS}}); err != nil {

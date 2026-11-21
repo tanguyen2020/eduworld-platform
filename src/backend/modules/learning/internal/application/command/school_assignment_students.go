@@ -435,8 +435,8 @@ func (h Assignments) submissionUpdated(ctx context.Context, a write.AssignmentRo
 
 // ---------- placement changes (ADR-0095: the school and grade of a student)
 
-// PlacementChange is the school and grade of a student after student.placement_changed (or student.synced /
-// enrollment.changed of module identity, read back from ref.students): Active false when the student is no longer an
+// PlacementChange is the school and grade of a student after student.placement_changed (or student.synced of module
+// identity, read back from ref.students): Active false when the student is no longer an
 // active student of the school.
 type PlacementChange struct {
 	StudentID uuid.UUID
@@ -494,8 +494,7 @@ func excluded(a write.AssignmentRow, grade int, student uuid.UUID) bool {
 	return false
 }
 
-// SyncStudent re-applies the placement of a student read from ref.students (enrollment.changed and student.synced of
-// module identity until its producer moves to student.placement_changed — WP-I1).
+// SyncStudent re-applies the placement of a student read from ref.students (student.synced of module identity).
 func (h Assignments) SyncStudent(ctx context.Context, studentID uuid.UUID) error {
 	pl, err := h.Store.Placement(ctx, studentID)
 	if err != nil || pl == nil {

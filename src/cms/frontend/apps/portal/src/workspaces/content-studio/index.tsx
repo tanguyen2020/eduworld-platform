@@ -9,7 +9,7 @@ import { QuestionBankScreen } from './questions/QuestionBankScreen';
 import { RegradeScreen } from './regrade/RegradeScreen';
 import { SimulationTemplatesScreen } from './simulations/SimulationTemplatesScreen';
 import { ReviewsScreen } from './review/ReviewQueuePage';
-import { AssessmentsScreen, LearningPathsScreen, LessonsScreen, QuestionSetsScreen } from './screens';
+import { AssessmentsScreen, LessonsScreen, QuestionSetsScreen } from './screens';
 
 export const screens = {
   'menu.content_studio.curriculum': CurriculumTreePage, // F053 US4
@@ -21,7 +21,6 @@ export const screens = {
   'menu.content_studio.assessments': AssessmentsScreen, // F054 US4
   'menu.content_studio.regrade': RegradeScreen, // F058 US4
   'menu.content_studio.media': MediaLibraryPage, // F054 US3
-  'menu.content_studio.learning_paths': LearningPathsScreen, // F054 US1 (versions / releases)
   'menu.content_studio.reviews': ReviewsScreen, // F054 US2
   'menu.content_studio.translations': placeholderScreen,
 } satisfies MenuScreens<'content_studio'>;

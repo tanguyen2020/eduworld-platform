@@ -85,7 +85,7 @@ func (c *curEnv) effSetup(ctx context.Context, t *testing.T) effKit {
 		VALUES ($1, $2, $3, 3, 1)`, uuid.New(), c.tenantB, k.schoolOther); err != nil {
 		t.Fatal(err)
 	}
-	c.enrollIn(ctx, t, hsChi, k.school2, uuid.New(), 3)
+	c.placeIn(ctx, t, hsChi, k.school2, 3)
 	for range 3 {
 		k.qA = append(k.qA, c.efficacyQuestion(ctx, t, k.s.qc))
 		k.qB = append(k.qB, c.efficacyQuestion(ctx, t, k.s.qc))

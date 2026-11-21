@@ -15,7 +15,7 @@ export type TenantCloneJob = Schemas['TenantCloneJob'];
  * (platformadmin.Clonable) stays the authority and answers 422 for anything else.
  */
 export const CLONABLE_TYPES: readonly ResourceType[] = [
-  'curriculum', 'lesson', 'question', 'question_set', 'assessment_blueprint', 'media', 'learning_path', 'assignment',
+  'curriculum', 'lesson', 'question', 'question_set', 'assessment_blueprint', 'media', 'assignment',
   'challenge_template', 'school_settings', 'tenant_settings', // no class_template in Release 1.0 (OQ F045-4)
 ];
 

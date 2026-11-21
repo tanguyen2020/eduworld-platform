@@ -6368,7 +6368,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Thử thách lớp / giải trường trong scope */
+        /** Thử thách khối / giải trường trong scope */
         get: operations["listChallenges"];
         put?: never;
         /**
@@ -8553,7 +8553,7 @@ export interface components {
         ActivityAttemptStart: {
             context_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
-            context_type?: "free_play" | "assignment" | "lesson" | "learning_path" | "recommendation";
+            context_type?: "free_play" | "assignment" | "lesson" | "recommendation";
             /**
              * @description quest/challenge/competition do service khác tạo qua internal API; exam dùng /exams/*
              * @default practice
@@ -10075,19 +10075,29 @@ export interface components {
         };
         ChallengeCreate: {
             ends_at?: components["schemas"]["Timestamp"];
+            exclude_student_ids?: components["schemas"]["Uuid"][];
             name: string;
             /** @description Chỉ các khóa nằm trong ChallengeTemplate.allowed_params; khóa khác → 422 */
             params?: {
                 [key: string]: unknown;
             };
-            /** @enum {string} */
-            participation?: "individual" | "study_group";
+            /**
+             * @description Không còn study_group (nhóm học tập LMS đã bỏ — ADR-0095) [Proposed]
+             * @enum {string}
+             */
+            participation?: "individual";
             question_set_version_id?: components["schemas"]["Uuid"];
+            /** @description Trường của thử thách (ADR-0095 mục 3); học sinh không thuộc trường này → 422 VALIDATION_FAILED */
+            school_id: components["schemas"]["Uuid"];
             starts_at: components["schemas"]["Timestamp"];
+            /** @description Khối của trường (grade) và/hoặc danh sách học sinh cùng trường (students); exclude_student_ids thắng (ADR-0095 — không còn lớp, nhóm) */
             targets: {
-                target_id: components["schemas"]["Uuid"];
+                /** @description Bắt buộc khi target_type = grade */
+                grade_level?: components["schemas"]["GradeLevel"];
+                /** @description Bắt buộc khi target_type = students */
+                student_ids?: components["schemas"]["Uuid"][];
                 /** @enum {string} */
-                target_type: "class" | "group" | "grade_level" | "school";
+                target_type: "grade" | "students";
             }[];
             /** @description Template phải được gán cho tenant (nếu không → RESOURCE_NOT_ASSIGNED) */
             template_id: components["schemas"]["Uuid"];
@@ -10108,7 +10118,7 @@ export interface components {
             description?: string;
             grade_levels?: components["schemas"]["GradeLevel"][];
             /** @enum {string} */
-            kind: "class_challenge" | "school_tournament";
+            kind: "grade_challenge" | "school_tournament";
             mode?: components["schemas"]["MatchMode"];
             name: string;
             /** @description Mô tả phần thưởng cố định của template (tenant không sửa) */
@@ -12090,7 +12100,7 @@ export interface components {
             scope_type?: "global" | "organization" | "school" | "grade" | "subject" | "topic" | "game_mode" | "friends" | "team";
         };
         /** @enum {string} */
-        LearningContentType: "question" | "question_set" | "assessment_blueprint" | "lesson" | "learning_material" | "learning_path" | "activity";
+        LearningContentType: "question" | "question_set" | "assessment_blueprint" | "lesson" | "learning_material" | "activity";
         LearningExperiment: {
             arms: components["schemas"]["ExperimentArm"][];
             code: string;
@@ -14178,7 +14188,7 @@ export interface components {
          * @description Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
          * @enum {string}
          */
-        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "course" | "learning_path" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "school_settings" | "tenant_settings" | "user" | "student";
+        ResourceType: "curriculum" | "lesson" | "learning_material" | "question" | "question_set" | "assessment_blueprint" | "media" | "assignment" | "activity" | "challenge" | "challenge_template" | "tournament_template" | "quest" | "minigame_config" | "item" | "school_settings" | "tenant_settings" | "user" | "student";
         /** @description Lý do khôi phục bản ghi từ Thùng rác (F045-AC-20) */
         RestoreRequest: {
             reason: string;
@@ -32157,9 +32167,10 @@ export interface operations {
     listChallenges: {
         parameters: {
             query?: {
-                class_id?: components["schemas"]["Uuid"];
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
+                /** @description Khối của thử thách (ADR-0095 — thay class_id) */
+                grade_level?: components["schemas"]["GradeLevel"];
                 limit?: components["parameters"]["Limit"];
                 status?: "scheduled" | "running" | "completed" | "cancelled";
                 /**

@@ -63,12 +63,9 @@ const (
 	Assignment          CommonInternalCommonV1ResourceType = "assignment"
 	Challenge           CommonInternalCommonV1ResourceType = "challenge"
 	ChallengeTemplate   CommonInternalCommonV1ResourceType = "challenge_template"
-	ClassTemplate       CommonInternalCommonV1ResourceType = "class_template"
-	Course              CommonInternalCommonV1ResourceType = "course"
 	Curriculum          CommonInternalCommonV1ResourceType = "curriculum"
 	Item                CommonInternalCommonV1ResourceType = "item"
 	LearningMaterial    CommonInternalCommonV1ResourceType = "learning_material"
-	LearningPath        CommonInternalCommonV1ResourceType = "learning_path"
 	Lesson              CommonInternalCommonV1ResourceType = "lesson"
 	Media               CommonInternalCommonV1ResourceType = "media"
 	MinigameConfig      CommonInternalCommonV1ResourceType = "minigame_config"
@@ -93,17 +90,11 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 		return true
 	case ChallengeTemplate:
 		return true
-	case ClassTemplate:
-		return true
-	case Course:
-		return true
 	case Curriculum:
 		return true
 	case Item:
 		return true
 	case LearningMaterial:
-		return true
-	case LearningPath:
 		return true
 	case Lesson:
 		return true

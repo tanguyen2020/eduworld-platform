@@ -512,7 +512,6 @@
       "assessment_blueprint": "Assessment blueprint",
       "lesson": "Lesson",
       "learning_material": "Learning material",
-      "learning_path": "Learning path",
       "activity": "Learning activity"
     },
     "translation": { "complete": "Translated", "partial": "Translation missing", "outdated": "Translation outdated" },
@@ -835,8 +834,7 @@
         "MATH_FORBIDDEN_COMMAND": "Forbidden formula command",
         "MATH_SVG_TOO_LARGE": "Formula image too large"
       }
-    },
-    "learningPath": { "help": "Open a learning path by id to see its versions, releases, usages and preview.", "openById": "Learning path id" }
+    }
   },
   "error": {
     "VIDEO_NOT_READY": "The video is not ready yet.",

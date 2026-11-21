@@ -83,7 +83,7 @@ type TransitionContentInput struct {
 	FieldComments []workflow.FieldComment
 }
 
-// WorkflowTypes are the content types with a workflow in this release (activity: F030; learning_path: F040).
+// WorkflowTypes are the content types with a workflow in this release (activity: F030; no learning_path, ADR-0095).
 var WorkflowTypes = []contentmodel.ContentType{contentmodel.TypeQuestion, contentmodel.TypeQuestionSet, contentmodel.TypeLesson,
 	contentmodel.TypeLearningMaterial, contentmodel.TypeAssessmentBlueprint, contentmodel.TypeActivity}
 

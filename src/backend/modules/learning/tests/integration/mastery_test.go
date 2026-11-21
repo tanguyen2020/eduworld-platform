@@ -131,7 +131,7 @@ func (c *curEnv) masteryOf(ctx context.Context, t *testing.T, student uuid.UUID,
 // (F031-AC-01).
 func (c *curEnv) validateStoredEvents(ctx context.Context, t *testing.T, attemptID string) map[string]int {
 	t.Helper()
-	rows, err := c.platform.QueryContext(ctx, `SELECT event_id, occurred_at, event_type, student_id, tenant_id, school_id, class_id,
+	rows, err := c.platform.QueryContext(ctx, `SELECT event_id, occurred_at, event_type, student_id, tenant_id, school_id,
 		game_session_id, activity_id, content_id, content_version_id, array_to_string(objective_ids, ','), context, actor_type, payload,
 		idempotency_key FROM learning.learning_events WHERE payload->>'attempt_id' = $1`, attemptID)
 	if err != nil {
@@ -141,15 +141,12 @@ func (c *curEnv) validateStoredEvents(ctx context.Context, t *testing.T, attempt
 	types := map[string]int{}
 	for rows.Next() {
 		var e portwrite.LearningEvent
-		var class, session, act, content, cv uuid.NullUUID // class_id is always NULL (ADR-0095)
+		var session, act, content, cv uuid.NullUUID
 		var objectives string
 		var payload []byte
-		if err := rows.Scan(&e.ID, &e.OccurredAt, &e.Type, &e.StudentID, &e.TenantID, &e.SchoolID, &class, &session, &act, &content, &cv,
+		if err := rows.Scan(&e.ID, &e.OccurredAt, &e.Type, &e.StudentID, &e.TenantID, &e.SchoolID, &session, &act, &content, &cv,
 			&objectives, &e.Context, &e.ActorType, &payload, &e.IdempotencyKey); err != nil {
 			t.Fatal(err)
-		}
-		if class.Valid {
-			t.Fatalf("learning event %s carries a class (ADR-0095)", e.ID)
 		}
 		for _, p := range []struct {
 			n   uuid.NullUUID

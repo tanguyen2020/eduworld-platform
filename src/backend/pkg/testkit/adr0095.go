@@ -7,15 +7,14 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
-	"runtime"
+	"strings"
 	"testing"
 )
 
 // RepoFile returns the content of a file given relative to the repository root (scripts, migrations).
 func RepoFile(t testing.TB, rel string) string {
 	t.Helper()
-	_, here, _, _ := runtime.Caller(0) // src/backend/pkg/testkit/adr0095.go
-	b, err := os.ReadFile(filepath.Join(filepath.Dir(here), "..", "..", "..", "..", filepath.FromSlash(rel)))
+	b, err := os.ReadFile(filepath.Join(RepoRoot(t), filepath.FromSlash(rel)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,8 +24,10 @@ func RepoFile(t testing.TB, rel string) string {
 // RollbackRoundTrip checks the backup plan of ADR-0095 mục 8 (step 4) on an isolated database of module where every
 // migration is applied: the hand-written rollback script recreates the dropped objects (relations: regclass names;
 // columns: "schema.table.column"), then the contract migration applies again and drops them all. Both files run as
-// the module's migrator role, exactly as the runbook does.
-func RollbackRoundTrip(ctx context.Context, t testing.TB, module, migration, rollback string, relations, columns []string) {
+// the module's migrator role, exactly as the runbook does. narrowed maps a CHECK constraint to the old values it must no
+// longer accept once the migration ran on this database, where no row carries them.
+func RollbackRoundTrip(ctx context.Context, t testing.TB, module, migration, rollback string, relations, columns []string,
+	narrowed map[string][]string) {
 	t.Helper()
 	cl := Isolated(ctx, t)
 	db := open(t, cl.ModuleDSN(module, "migrator"))
@@ -75,5 +76,16 @@ func RollbackRoundTrip(ctx context.Context, t testing.TB, module, migration, rol
 	apply("contract migration", migration)
 	if r, c := exists(); r != 0 || c != 0 {
 		t.Fatalf("re-applied migration left %d relations and %d columns", r, c)
+	}
+	for con, old := range narrowed {
+		var def string
+		if err := db.QueryRowContext(ctx, `SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = $1 LIMIT 1`, con).Scan(&def); err != nil {
+			t.Fatalf("constraint %s: %v", con, err)
+		}
+		for _, v := range old {
+			if strings.Contains(def, "'"+v+"'") {
+				t.Errorf("%s still accepts %q: %s", con, v, def)
+			}
+		}
 	}
 }

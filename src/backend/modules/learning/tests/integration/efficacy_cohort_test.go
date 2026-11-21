@@ -55,6 +55,7 @@ func TestEfficacyCohortBackfillConflict(t *testing.T) {
 			t.Fatalf("%v: %s", err, q)
 		}
 	}
+	preADR0095Schema(ctx, t, tx)
 	exec(`SELECT set_config('app.tenant_id', $1, true)`, c.tenantA.String())
 	legacy := func(school uuid.UUID, arm string, pair int) {
 		exec(`INSERT INTO learning.efficacy_study_classes (study_id, class_id, tenant_id, school_id, grade_level, pair_no, arm, assignment_method,

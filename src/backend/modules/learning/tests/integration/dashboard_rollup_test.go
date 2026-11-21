@@ -68,13 +68,9 @@ func TestDashboardRollupGolden(t *testing.T) {
 	if r.final || r.active.Valid || r.acts != 3 || r.accNum != 12 || r.accDen != 14 || r.rapidNum != 5 || r.rapidDen != 19 || r.sec != 960 {
 		t.Fatalf("provisional school × grade row: %s", r)
 	}
-	// ADR-0095: nothing is written at the class level any more (class_id neither on progress_daily nor on the events).
-	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.rollup_class_daily WHERE tenant_id = $1`, A); n != 0 {
-		t.Fatalf("class rollup rows written: %d", n)
-	}
-	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.progress_daily WHERE tenant_id = $1 AND (class_id IS NOT NULL OR grade_level IS NULL)`,
-		A); n != 0 {
-		t.Fatalf("progress_daily rows with a class or without a grade: %d", n)
+	// ADR-0095: every progress row records the grade of the student at event time (the class level is dropped, WP-R).
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM learning.progress_daily WHERE tenant_id = $1 AND grade_level IS NULL`, A); n != 0 {
+		t.Fatalf("progress_daily rows without a grade: %d", n)
 	}
 	r = k.rollup(ctx, t, "rollup_tenant_daily", "tenant_id = $1 AND grade_level = 3 AND subject_id = $2 AND bucket_date = $3", A, k.subjM, d1)
 	if r.final || r.acts != 3 || r.accNum != 12 {
@@ -236,7 +232,7 @@ func TestDashboardReadModelRefresh(t *testing.T) {
 		t.Fatalf("school × grade 3 × V completion %d/%d", compNum, compDen)
 	}
 	reasons := map[uuid.UUID]string{}
-	rows, err := c.platform.QueryContext(ctx, `SELECT student_id, array_to_string(reasons, ','), class_id IS NULL FROM learning.rm_student_attention
+	rows, err := c.platform.QueryContext(ctx, `SELECT student_id, array_to_string(reasons, ',') FROM learning.rm_student_attention
 		WHERE tenant_id = $1`, A)
 	if err != nil {
 		t.Fatal(err)
@@ -244,12 +240,8 @@ func TestDashboardReadModelRefresh(t *testing.T) {
 	for rows.Next() {
 		var id uuid.UUID
 		var r string
-		var noClass bool
-		if err := rows.Scan(&id, &r, &noClass); err != nil {
+		if err := rows.Scan(&id, &r); err != nil {
 			t.Fatal(err)
-		}
-		if !noClass {
-			t.Fatalf("attention row of %s keeps a class", id)
 		}
 		reasons[id] = r
 	}

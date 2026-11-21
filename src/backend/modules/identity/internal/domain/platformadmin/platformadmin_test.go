@@ -29,7 +29,7 @@ func TestRouting(t *testing.T) {
 	if !platformadmin.Assignable("question_set") || platformadmin.Assignable("user") || platformadmin.Assignable("tenant_settings") {
 		t.Fatal("assignable")
 	}
-	for _, rt := range []string{"student", "user", "challenge", "quest", "item", "course", "attempt", "enrollment"} {
+	for _, rt := range []string{"student", "user", "challenge", "quest", "item", "attempt", "enrollment"} {
 		if platformadmin.Clonable(rt) {
 			t.Fatalf("%s must not be clonable", rt)
 		}

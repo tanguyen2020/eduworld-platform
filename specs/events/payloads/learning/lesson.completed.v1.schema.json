@@ -26,7 +26,6 @@
       "description": "practice khi tự học, assignment khi bài do nhà trường giao (EVENT_DESIGN §5.2)"
     },
     "assignment_id": { "type": ["string", "null"], "format": "uuid" },
-    "learning_path_id": { "type": ["string", "null"], "format": "uuid" },
     "recommendation_id": { "type": ["string", "null"], "format": "uuid", "description": "Khi bài được mở từ gợi ý tự động (LEARNING_ANALYTICS §6)" },
     "required_activity_count": { "type": "integer", "minimum": 0, "maximum": 50 },
     "completed_activity_count": { "type": "integer", "minimum": 1, "maximum": 50 },

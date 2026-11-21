@@ -41,12 +41,10 @@ func TestProjectionEntities(t *testing.T) {
 	e := setup(ctx, t, false)
 
 	want := map[string][]string{
-		"tenants":     {"code", "is_qa", "settings_subset", "source_version", "status", "tenant_id", "tenant_type"},
-		"provinces":   {"code", "country_code", "name_i18n", "source_version", "status"},
-		"schools":     {"is_virtual", "name", "name_i18n", "province_code", "province_name_i18n", "school_id", "school_level", "settings_subset", "source_version", "status", "tenant_id"},
-		"classes":     {"academic_year_id", "class_id", "grade_level", "is_virtual", "name", "school_id", "source_version", "tenant_id"},
-		"students":    {"academic_year_id", "deleted_at", "grade_level", "school_id", "source_version", "status", "student_id", "tenant_id"},
-		"enrollments": {"class_id", "end_date", "source_version", "start_date", "status", "student_id", "tenant_id"},
+		"tenants":   {"code", "is_qa", "settings_subset", "source_version", "status", "tenant_id", "tenant_type"},
+		"provinces": {"code", "country_code", "name_i18n", "source_version", "status"},
+		"schools":   {"is_virtual", "name", "name_i18n", "province_code", "province_name_i18n", "school_id", "school_level", "settings_subset", "source_version", "status", "tenant_id"},
+		"students":  {"academic_year_id", "deleted_at", "grade_level", "school_id", "source_version", "status", "student_id", "tenant_id"},
 	}
 	for table, cols := range want {
 		if got := columnsOf(ctx, t, e.migrator, table); !slices.Equal(got, cols) {

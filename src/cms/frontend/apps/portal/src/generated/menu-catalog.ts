@@ -41,7 +41,6 @@ export type MenuKey =
   | "menu.content_studio.assessments"
   | "menu.content_studio.regrade"
   | "menu.content_studio.media"
-  | "menu.content_studio.learning_paths"
   | "menu.content_studio.reviews"
   | "menu.content_studio.translations"
   | "menu.game_ops.dashboard"
@@ -170,10 +169,6 @@ export type ActionKey =
   | "action.content_studio.regrade.request"
   | "action.content_studio.media.view"
   | "action.content_studio.media.upload"
-  | "action.content_studio.learning_paths.view"
-  | "action.content_studio.learning_paths.workflow"
-  | "action.content_studio.learning_paths.publish"
-  | "action.content_studio.learning_paths.rollback"
   | "action.content_studio.reviews.view"
   | "action.content_studio.reviews.preview"
   | "action.content_studio.translations.translate"
@@ -694,19 +689,6 @@ export const WORKSPACE_CATALOG: readonly WorkspaceDef[] = [
         actions: [
           { key: "action.content_studio.media.view", labelKey: "portal.action.content_studio.media.view", requiredPermissions: ["learning_content.read", "media.upload"] },
           { key: "action.content_studio.media.upload", labelKey: "portal.action.content_studio.media.upload", requiredPermissions: ["media.upload"] },
-        ],
-      },
-      {
-        key: "menu.content_studio.learning_paths",
-        path: "/content-studio/learning-paths",
-        labelKey: "portal.menu.content_studio.learning_paths",
-        order: 100,
-        requiredPermissions: ["learning_content.read"],
-        actions: [
-          { key: "action.content_studio.learning_paths.view", labelKey: "portal.action.content_studio.learning_paths.view", requiredPermissions: ["learning_content.read"] },
-          { key: "action.content_studio.learning_paths.workflow", labelKey: "portal.action.content_studio.learning_paths.workflow", requiredPermissions: ["learning_content.write", "learning_content.review"] },
-          { key: "action.content_studio.learning_paths.publish", labelKey: "portal.action.content_studio.learning_paths.publish", requiredPermissions: ["learning_content.publish"] },
-          { key: "action.content_studio.learning_paths.rollback", labelKey: "portal.action.content_studio.learning_paths.rollback", requiredPermissions: ["content.release.rollback"] },
         ],
       },
       {

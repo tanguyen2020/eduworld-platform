@@ -830,43 +830,6 @@ workspaces:
             required_permissions: [media.upload]
             operation_ids: [presignMediaUpload, completeMediaUpload]
             can_disable: true
-      - key: menu.content_studio.learning_paths
-        label_key: portal.menu.content_studio.learning_paths
-        title: Lộ trình học (Learning Path Builder)
-        path: /content-studio/learning-paths
-        order: 100
-        required_permissions: [learning_content.read]
-        can_disable: true
-        actions:
-          - key: action.content_studio.learning_paths.view
-            label_key: portal.action.content_studio.learning_paths.view
-            title: Xem danh sách, chi tiết, version
-            required_permissions: [learning_content.read]
-            operation_ids:
-              - "listContentVersions[content_type=learning_path]"
-              - "getContentVersion[content_type=learning_path]"
-              - "getContentUsages[content_type=learning_path]"
-              - "diffContentVersions[content_type=learning_path]"
-              - "listContentReleases[content_type=learning_path]"
-            can_disable: true
-          - key: action.content_studio.learning_paths.workflow
-            label_key: portal.action.content_studio.learning_paths.workflow
-            title: Gửi duyệt / duyệt / từ chối
-            required_permissions: [learning_content.write, learning_content.review]
-            operation_ids: ["transitionContentVersion[content_type=learning_path]"]
-            can_disable: true
-          - key: action.content_studio.learning_paths.publish
-            label_key: portal.action.content_studio.learning_paths.publish
-            title: Xuất bản (ngay hoặc hẹn giờ)
-            required_permissions: [learning_content.publish]
-            operation_ids: ["publishContentVersion[content_type=learning_path]", "cancelScheduledPublication[content_type=learning_path]"]
-            can_disable: true
-          - key: action.content_studio.learning_paths.rollback
-            label_key: portal.action.content_studio.learning_paths.rollback
-            title: Rollback / gỡ xuất bản
-            required_permissions: [content.release.rollback]
-            operation_ids: ["rollbackContent[content_type=learning_path]", "unpublishContent[content_type=learning_path]"]
-            can_disable: true
       - key: menu.content_studio.reviews
         label_key: portal.menu.content_studio.reviews
         title: Duyệt nội dung · Preview

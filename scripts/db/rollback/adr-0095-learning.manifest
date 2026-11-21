@@ -1,0 +1,48 @@
+# ADR-0095 mục 8 — objects dropped by the contract migration of module learning (read by scripts/db/adr-0095-backup.sh).
+# migration <file> | table <schema.table> | column <schema.table> <pk,cols> <col> | values <schema.table> <col> <v1,v2>
+migration src/backend/modules/learning/migrations/20261230000001_adr0095_drop_class_course.sql
+table ref.classes
+table ref.enrollments
+table lms.courses
+table lms.learning_paths
+table lms.path_nodes
+table lms.path_node_unlocks
+table lms.schedule_items
+table lms.study_groups
+table lms.study_group_members
+table learning.rollup_class_daily
+table learning.rollup_class_weekly
+table learning.rollup_class_monthly
+table learning.rollup_class_objective_weekly
+table learning.rm_class_objective_stats
+table learning.rm_class_subject_summary
+table learning.efficacy_study_classes
+table learning.efficacy_wave_sessions
+column learning.learning_events event_id,occurred_at class_id
+column learning.progress_daily tenant_id,student_id,subject_id,bucket_date,metric_version class_id
+column learning.lesson_sessions lesson_session_id learning_path_id
+column lms.assignments assignment_id course_id
+column lms.assignment_targets assignment_target_id target_ref_id
+column lms.assignment_target_students assignment_target_student_id class_id_at_assign
+column lms.assignment_submissions assignment_submission_id class_id
+column assessment.exam_sessions exam_session_id course_id
+column learning.rm_student_attention tenant_id,student_id class_id
+column learning.rm_student_subject_reference_levels tenant_id,student_id,subject_id,academic_year,period,profile_version class_id
+column learning.efficacy_participants study_id,student_id class_id
+column learning.efficacy_withdrawals withdrawal_id class_id
+column learning.rollup_school_daily tenant_id,school_id,grade_level,subject_id,bucket_date,metric_version active_classes
+column learning.rollup_school_weekly tenant_id,school_id,grade_level,subject_id,bucket_date,metric_version active_classes
+column learning.rollup_school_monthly tenant_id,school_id,grade_level,subject_id,bucket_date,metric_version active_classes
+column learning.rollup_tenant_daily tenant_id,grade_level,subject_id,bucket_date,metric_version active_classes
+column learning.rollup_tenant_weekly tenant_id,grade_level,subject_id,bucket_date,metric_version active_classes
+column learning.rollup_tenant_monthly tenant_id,grade_level,subject_id,bucket_date,metric_version active_classes
+values content.content_releases item_type learning_path
+values content.content_transitions content_type learning_path
+values content.media_usages item_type learning_path
+values content.review_tasks content_type learning_path
+values content.scheduled_publications item_type learning_path
+values infra.tenant_resource_assignments resource_type course,learning_path
+values assessment.attempts context_type learning_path
+values learning.report_jobs report_type course_results,class_progress
+values learning.efficacy_withdrawals scope class
+values learning.experiments unit class

@@ -15,5 +15,6 @@ func TestADR0095RollbackRoundTrip(t *testing.T) {
 	testkit.RollbackRoundTrip(context.Background(), t, "identity",
 		"src/backend/modules/identity/migrations/20261201000001_adr0095_drop_class_enrollment.sql",
 		"scripts/db/rollback/adr-0095-identity.sql",
-		[]string{"org.classes", "org.enrollments", "org.classes_live", "org.enrollments_live"}, nil)
+		[]string{"org.classes", "org.enrollments", "org.classes_live", "org.enrollments_live"}, nil,
+		map[string][]string{"sis_links_type_chk": {"class", "enrollment"}, "staging_records_entity_kind_check": {"class", "enrollment"}})
 }

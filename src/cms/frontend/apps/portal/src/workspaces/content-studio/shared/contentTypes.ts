@@ -74,14 +74,6 @@ export const CONTENT_TYPES: Record<ContentType, ContentTypeDef> = {
     },
     base: '/cms/learning/activities',
   },
-  learning_path: {
-    actions: {
-      view: 'action.content_studio.learning_paths.view',
-      workflow: 'action.content_studio.learning_paths.workflow',
-      publish: 'action.content_studio.learning_paths.publish',
-      rollback: 'action.content_studio.learning_paths.rollback',
-    },
-  },
 };
 
 export const ALL_CONTENT_TYPES = Object.keys(CONTENT_TYPES) as ContentType[];

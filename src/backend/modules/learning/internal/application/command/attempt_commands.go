@@ -36,7 +36,7 @@ type StartActivityInput struct {
 // diagnostic F032; quest and challenge through the facade of module game).
 var publicStartModes = []attempt.Mode{attempt.ModePractice, attempt.ModeMinigame, attempt.ModeAssignment}
 
-var practiceContexts = []string{"free_play", "lesson", "learning_path", "recommendation"}
+var practiceContexts = []string{"free_play", "lesson", "recommendation"}
 
 func (h Attempts) studentSchool(ctx context.Context, p authz.Principal) (uuid.UUID, *int, error) {
 	school, grade, err := h.Students.StudentSchool(ctx, p.UserID)

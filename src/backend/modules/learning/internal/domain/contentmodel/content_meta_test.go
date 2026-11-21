@@ -14,24 +14,24 @@ func ptr[T any](v T) *T { return &v }
 // F020-AC-06: only LearningContentType (+ curriculum) and the resource types of module learning are accepted.
 func TestContentAndResourceTypes(t *testing.T) {
 	for _, s := range []string{"curriculum", "question", "question_set", "assessment_blueprint", "lesson", "learning_material",
-		"learning_path", "activity"} {
+		"activity"} {
 		if _, err := ParseContentType(s); err != nil {
 			t.Errorf("%s refused: %v", s, err)
 		}
 	}
-	for _, s := range []string{"", "quest", "media", "written_response", "QUESTION"} {
+	for _, s := range []string{"", "quest", "media", "written_response", "QUESTION", "learning_path"} {
 		var e ErrInvalid
 		if _, err := ParseContentType(s); !errors.As(err, &e) || e.Field != "content_type" {
 			t.Errorf("%q accepted or wrong error: %v", s, err)
 		}
 	}
 	for _, s := range []string{"curriculum", "lesson", "question", "question_set", "assessment_blueprint", "media", "assignment",
-		"course", "learning_path", "activity"} {
+		"activity"} {
 		if _, err := ParseResourceType(s); err != nil {
 			t.Errorf("resource %s refused: %v", s, err)
 		}
 	}
-	for _, s := range []string{"quest", "item", "tournament_template", "class_template"} {
+	for _, s := range []string{"quest", "item", "tournament_template", "class_template", "course", "learning_path"} {
 		if _, err := ParseResourceType(s); err == nil {
 			t.Errorf("resource %s of another module accepted", s)
 		}

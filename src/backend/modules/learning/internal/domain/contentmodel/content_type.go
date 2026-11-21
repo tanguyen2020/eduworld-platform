@@ -18,12 +18,11 @@ const (
 	TypeAssessmentBlueprint ContentType = "assessment_blueprint"
 	TypeLesson              ContentType = "lesson"
 	TypeLearningMaterial    ContentType = "learning_material"
-	TypeLearningPath        ContentType = "learning_path"
 	TypeActivity            ContentType = "activity"
 )
 
 var contentTypes = []ContentType{TypeCurriculum, TypeQuestion, TypeQuestionSet, TypeAssessmentBlueprint, TypeLesson,
-	TypeLearningMaterial, TypeLearningPath, TypeActivity}
+	TypeLearningMaterial, TypeActivity}
 
 // ContentTypes returns the accepted content types.
 func ContentTypes() []ContentType { return slices.Clone(contentTypes) }
@@ -39,7 +38,7 @@ func ParseContentType(s string) (ContentType, error) {
 // ResourceType is the ResourceType of the trash, assignment and clone operations
 // (specs/openapi/modules/common/internal-common.v1.yaml) restricted to the resources owned by module
 // learning (DATABASE_DESIGN §2.17: curriculum, lesson, question, question set, blueprint, activity, plus media
-// and the LMS resources).
+// and the assignment; ADR-0095: no course nor learning path).
 type ResourceType string
 
 // Resource types owned by module learning.
@@ -52,13 +51,11 @@ const (
 	ResourceAssessmentBlueprint ResourceType = "assessment_blueprint"
 	ResourceMedia               ResourceType = "media"
 	ResourceAssignment          ResourceType = "assignment"
-	ResourceCourse              ResourceType = "course"
-	ResourceLearningPath        ResourceType = "learning_path"
 	ResourceActivity            ResourceType = "activity" // OQ F030 owner 2026-11-20
 )
 
 var resourceTypes = []ResourceType{ResourceCurriculum, ResourceLesson, ResourceLearningMaterial, ResourceQuestion, ResourceQuestionSet,
-	ResourceAssessmentBlueprint, ResourceMedia, ResourceAssignment, ResourceCourse, ResourceLearningPath, ResourceActivity}
+	ResourceAssessmentBlueprint, ResourceMedia, ResourceAssignment, ResourceActivity}
 
 // ParseResourceType accepts only the resource types owned by module learning (F020-AC-06).
 func ParseResourceType(s string) (ResourceType, error) {
@@ -71,15 +68,14 @@ func ParseResourceType(s string) (ResourceType, error) {
 // ResourceOf maps a content type to its ResourceType (every content type is a trash/assignment/clone resource).
 func ResourceOf(t ContentType) (ResourceType, bool) {
 	switch t {
-	case TypeCurriculum, TypeQuestion, TypeQuestionSet, TypeAssessmentBlueprint, TypeLesson, TypeLearningMaterial, TypeLearningPath,
-		TypeActivity:
+	case TypeCurriculum, TypeQuestion, TypeQuestionSet, TypeAssessmentBlueprint, TypeLesson, TypeLearningMaterial, TypeActivity:
 		return ResourceType(t), true
 	}
 	return "", false
 }
 
 // ContentOf maps a resource type to its content type; ok is false for resources without versions
-// (media, assignment, course).
+// (media, assignment).
 func ContentOf(r ResourceType) (ContentType, bool) {
 	t := ContentType(r)
 	if slices.Contains(contentTypes, t) {

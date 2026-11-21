@@ -18,7 +18,7 @@ type LessonRepo struct{}
 var _ write.LessonStore = LessonRepo{}
 
 const sessionColumns = `lesson_session_id, tenant_id, school_id, student_id, lesson_id, lesson_version_id, lesson_version, status, context_mode,
-	assignment_id, learning_path_id, recommendation_id, array_to_string(completed_activity_ids, ','), array_to_string(completed_attempt_ids, ','),
+	assignment_id, recommendation_id, array_to_string(completed_activity_ids, ','), array_to_string(completed_attempt_ids, ','),
 	active_ms, started_at, ended_at, version`
 
 func splitIDs(s string) []uuid.UUID {
@@ -33,18 +33,18 @@ func splitIDs(s string) []uuid.UUID {
 
 func scanSession(row interface{ Scan(...any) error }) (*write.LessonSession, error) {
 	var s write.LessonSession
-	var asg, path, rec uuid.NullUUID
+	var asg, rec uuid.NullUUID
 	var acts, atts string
 	var ended sql.NullTime
 	err := row.Scan(&s.ID, &s.TenantID, &s.SchoolID, &s.StudentID, &s.LessonID, &s.LessonVersionID, &s.LessonVersion, &s.Status, &s.ContextMode,
-		&asg, &path, &rec, &acts, &atts, &s.ActiveMS, &s.StartedAt, &ended, &s.Version)
+		&asg, &rec, &acts, &atts, &s.ActiveMS, &s.StartedAt, &ended, &s.Version)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("lesson session: %w", err)
 	}
-	s.AssignmentID, s.LearningPathID, s.RecommendationID = nullUUID(asg), nullUUID(path), nullUUID(rec)
+	s.AssignmentID, s.RecommendationID = nullUUID(asg), nullUUID(rec)
 	s.CompletedActivityIDs, s.CompletedAttemptIDs, s.EndedAt = splitIDs(acts), splitIDs(atts), nullTime(ended)
 	s.StartedAt = s.StartedAt.UTC()
 	return &s, nil
@@ -103,11 +103,11 @@ func (LessonRepo) InsertSession(ctx context.Context, s write.LessonSession) (boo
 	}
 	// tenancyguard:ok insert of the session tenant (RLS insert policy); conflict on the open-session unique
 	res, err := tx.ExecContext(ctx, `INSERT INTO learning.lesson_sessions (lesson_session_id, tenant_id, school_id, student_id, lesson_id,
-		lesson_version_id, lesson_version, status, context_mode, assignment_id, learning_path_id, recommendation_id, started_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, 'in_progress', $8, $9, $10, $11, $12)
+		lesson_version_id, lesson_version, status, context_mode, assignment_id, recommendation_id, started_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, 'in_progress', $8, $9, $10, $11)
 		ON CONFLICT (tenant_id, student_id, lesson_id) WHERE status = 'in_progress' AND deleted_at IS NULL DO NOTHING`,
 		s.ID, s.TenantID, s.SchoolID, s.StudentID, s.LessonID, s.LessonVersionID, s.LessonVersion, s.ContextMode, s.AssignmentID,
-		s.LearningPathID, s.RecommendationID, s.StartedAt.UTC())
+		s.RecommendationID, s.StartedAt.UTC())
 	if err != nil {
 		return false, fmt.Errorf("insert lesson session: %w", err)
 	}

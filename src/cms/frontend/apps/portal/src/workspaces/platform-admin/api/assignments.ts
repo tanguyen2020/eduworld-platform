@@ -20,7 +20,7 @@ export interface UnassignRequest {
  * A UI choice list only — the backend decides what is assignable (platformadmin.Assignable).
  */
 export const ASSIGNABLE_TYPES: readonly ResourceType[] = [
-  'curriculum', 'lesson', 'question', 'question_set', 'assessment_blueprint', 'media', 'assignment', 'course', 'learning_path',
+  'curriculum', 'lesson', 'question', 'question_set', 'assessment_blueprint', 'media', 'assignment',
   'challenge', 'challenge_template', 'tournament_template', 'quest', 'minigame_config', 'item',
 ];
 

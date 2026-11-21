@@ -249,10 +249,10 @@ func (RollupRepo) Recompute(ctx context.Context, p write.Period) error {
 	b, window, final := dateParam(p.Bucket), []any{dateParam(p.Bucket), dateParam(p.From), dateParam(p.To), p.Final}, p.Final
 	ss := []stmt{
 		// tenancyguard:ok derived rollup (no deleted_at); update of the session tenant (RLS)
-		{fmt.Sprintf(`UPDATE learning.rollup_school_%s SET %s, active_classes = NULL WHERE tenant_id = infra.current_tenant_id()
+		{fmt.Sprintf(`UPDATE learning.rollup_school_%s SET %s WHERE tenant_id = infra.current_tenant_id()
 			AND bucket_date = $1::date AND metric_version = 1`, p.Suffix, resetCounters), []any{b}},
 		// tenancyguard:ok derived rollup (no deleted_at); update of the session tenant (RLS)
-		{fmt.Sprintf(`UPDATE learning.rollup_tenant_%s SET %s, active_classes = NULL, active_schools = NULL
+		{fmt.Sprintf(`UPDATE learning.rollup_tenant_%s SET %s, active_schools = NULL
 			WHERE tenant_id = infra.current_tenant_id() AND bucket_date = $1::date AND metric_version = 1`, p.Suffix, resetCounters), []any{b}},
 		{fmt.Sprintf(progressRows+`, a AS (SELECT school_id, grade_level, count(DISTINCT student_id) AS n FROM s GROUP BY school_id, grade_level)
 			INSERT INTO learning.rollup_school_%s AS r (tenant_id, school_id, grade_level, subject_id, bucket_date, metric_version,
@@ -546,8 +546,8 @@ func (RollupRepo) AttentionSignals(ctx context.Context, now, today time.Time, th
 
 const attentionBatch = 1000
 
-// SaveAttention implements write.RollupJobs: upsert by batch (class_id cleared: the grade of a student is read from
-// ref.students, ADR-0095), then every row not written in this transaction (student gone, deleted or inactive) loses its
+// SaveAttention implements write.RollupJobs: upsert by batch (the grade of a student is read from ref.students,
+// ADR-0095), then every row not written in this transaction (student gone, deleted or inactive) loses its
 // reasons.
 func (RollupRepo) SaveAttention(ctx context.Context, rows []write.AttentionRow) error {
 	tx, err := txOf(ctx)
@@ -568,13 +568,13 @@ func (RollupRepo) SaveAttention(ctx context.Context, rows []write.AttentionRow) 
 			missed[i], beginning[i], rnum[i], rden[i] = int64(r.Signals.Missed), int64(r.Signals.Beginning), r.Signals.RapidNum, r.Signals.RapidDen
 		}
 		// tenancyguard:ok derived read model (no deleted_at); insert/update of the session tenant (RLS)
-		if _, err := tx.ExecContext(ctx, `INSERT INTO learning.rm_student_attention AS a (tenant_id, student_id, school_id, class_id, reasons,
+		if _, err := tx.ExecContext(ctx, `INSERT INTO learning.rm_student_attention AS a (tenant_id, student_id, school_id, reasons,
 				missed_assignments, beginning_objectives, rapid_guess_num, rapid_guess_den, computed_at)
-			SELECT infra.current_tenant_id(), x.s::uuid, x.sc::uuid, NULL,
+			SELECT infra.current_tenant_id(), x.s::uuid, x.sc::uuid,
 				CASE WHEN x.r = '' THEN '{}'::varchar(64)[] ELSE string_to_array(x.r, ',')::varchar(64)[] END, x.m, x.b, x.rn, x.rd, now()
 			FROM unnest($1::text[], $2::text[], $3::text[], $4::bigint[], $5::bigint[], $6::bigint[], $7::bigint[])
 				AS x(s, sc, r, m, b, rn, rd)
-			ON CONFLICT (tenant_id, student_id) DO UPDATE SET school_id = EXCLUDED.school_id, class_id = NULL,
+			ON CONFLICT (tenant_id, student_id) DO UPDATE SET school_id = EXCLUDED.school_id,
 				reasons = EXCLUDED.reasons, missed_assignments = EXCLUDED.missed_assignments, beginning_objectives = EXCLUDED.beginning_objectives,
 				rapid_guess_num = EXCLUDED.rapid_guess_num, rapid_guess_den = EXCLUDED.rapid_guess_den, computed_at = now()`,
 			students, schools, reasons, missed, beginning, rnum, rden); err != nil {

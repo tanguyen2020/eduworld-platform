@@ -51,6 +51,7 @@ func TestAssignmentClassTargetsFrozen(t *testing.T) {
 			t.Fatalf("%v: %s", err, q)
 		}
 	}
+	preADR0095Schema(ctx, t, tx)
 	exec(`ALTER TABLE lms.assignment_targets DROP CONSTRAINT assignment_targets_type_ck`)
 	exec(`SELECT set_config('app.tenant_id', $1, true)`, c.tenantA.String())
 	an, binh := c.users[hsAn].UserID, c.users[hsBinh].UserID
@@ -79,6 +80,13 @@ func TestAssignmentClassTargetsFrozen(t *testing.T) {
 	snapshot := func(asg, student uuid.UUID, class *uuid.UUID) {
 		exec(`INSERT INTO lms.assignment_target_students (assignment_target_student_id, tenant_id, school_id, assignment_id, student_id,
 			class_id_at_assign, source) VALUES ($1, $2, $3, $4, $5, $6, 'publish')`, uuid.New(), c.tenantA, k.school, asg, student, class)
+	}
+	// Legacy class 3A of the projection with the active enrollments of An and Bình (tables of the pre-drop schema).
+	exec(`INSERT INTO ref.classes (class_id, tenant_id, school_id, grade_level, name, source_version) VALUES ($1, $2, $3, 3, '3A', 1)`,
+		k.class, c.tenantA, k.school)
+	for _, s := range []uuid.UUID{an, binh} {
+		exec(`INSERT INTO ref.enrollments (student_id, class_id, start_date, tenant_id, status, source_version)
+			VALUES ($1, $2, current_date, $3, 'active', 1)`, s, k.class, c.tenantA)
 	}
 	// Published: class 3A (snapshot An, Bình) + study group (snapshot Bình); the grade-3 outsider is not in the snapshot.
 	pub := newAsg("open")

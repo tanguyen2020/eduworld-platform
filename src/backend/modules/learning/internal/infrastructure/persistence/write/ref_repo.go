@@ -19,7 +19,7 @@ import (
 // aggregate versions stay far below it, any event time after 1970-01-12 is above it.
 const timeOrdered = 1_000_000_000_000
 
-// newerVersion is the condition of the ref.schools / ref.classes upserts on the stored row alias and the argument
+// newerVersion is the condition of the ref.schools upsert on the stored row alias and the argument
 // $arg of the incoming version (F020 T044, OQ F020-1): within one kind (source_version or envelope time) only a newer
 // value applies; a source_version replaces a time-ordered row, a time-ordered event never replaces a row ordered by
 // source_version.
@@ -118,17 +118,6 @@ func (RefRepo) UpsertSchool(ctx context.Context, r write.RefSchool) (bool, error
 		jsonOrNil(r.SettingsSubset), r.SourceVersion)
 }
 
-// UpsertClass implements write.ProjectionWriter.
-func (RefRepo) UpsertClass(ctx context.Context, r write.RefClass) (bool, error) {
-	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at
-	return exec(ctx, `INSERT INTO ref.classes AS c (class_id, tenant_id, school_id, grade_level, name, academic_year_id, is_virtual, source_version)
-		VALUES ($1, $2, $3, $4, $5, $6::uuid, coalesce($7::boolean, false), $8)
-		ON CONFLICT (class_id) DO UPDATE SET school_id = $3, grade_level = $4, name = $5,
-			academic_year_id = coalesce($6, c.academic_year_id), is_virtual = coalesce($7, c.is_virtual), source_version = $8
-		WHERE c.tenant_id = $2 AND `+newerVersion("c", 8),
-		r.ClassID, r.TenantID, r.SchoolID, r.GradeLevel, r.Name, r.AcademicYearID, r.IsVirtual, r.SourceVersion)
-}
-
 // UpsertStudent implements write.ProjectionWriter.
 func (RefRepo) UpsertStudent(ctx context.Context, r write.RefStudent) (bool, error) {
 	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); deleted_at mirrors the source (cleanup)
@@ -151,21 +140,4 @@ func (RefRepo) MarkStudentDeleted(ctx context.Context, student, tenant uuid.UUID
 	// tenancyguard:ok projection of student.restored under the event TenantScope; deleted_at is the projected source state
 	return exec(ctx, `UPDATE ref.students SET deleted_at = NULL
 		WHERE student_id = $1 AND tenant_id = $2 AND deleted_at IS NOT NULL AND deleted_at <= $3`, student, tenant, at.UTC())
-}
-
-// UpsertEnrollment implements write.ProjectionWriter.
-func (RefRepo) UpsertEnrollment(ctx context.Context, r write.RefEnrollment) (bool, error) {
-	// tenancyguard:ok projection upsert under the event TenantScope (RLS on tenant_id); ref.* has no deleted_at
-	return exec(ctx, `INSERT INTO ref.enrollments AS e (student_id, class_id, start_date, tenant_id, status, end_date, source_version)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		ON CONFLICT (student_id, class_id, start_date) DO UPDATE SET status = $5, end_date = $6, source_version = $7
-		WHERE e.source_version < $7 AND e.tenant_id = $4`,
-		r.StudentID, r.ClassID, r.StartDate.Format(time.DateOnly), r.TenantID, r.Status, dateOrNil(r.EndDate), r.SourceVersion)
-}
-
-func dateOrNil(t *time.Time) any {
-	if t == nil {
-		return nil
-	}
-	return t.Format(time.DateOnly)
 }

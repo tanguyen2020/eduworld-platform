@@ -17,7 +17,7 @@ import (
 // LearningEventWriter implements write.LearningEventWriter with explicit SQL on the partitioned append-only
 // learning.learning_events (EVENT_DESIGN §5.4): the row is written in the transaction of ctx; an idempotency key
 // already recorded for the tenant adds nothing. grade_level is the grade of the student at that moment (ref.students,
-// ADR-0095) when the caller does not give it; class_id is no longer written (NULL, dropped by WP-R). Every event is checked against
+// ADR-0095) when the caller does not give it. Every event is checked against
 // learning-event.schema.json before it is written (F031-AC-01, F031-AC-05): an event outside the schema fails the
 // transaction of the change it records.
 type LearningEventWriter struct{}
@@ -75,19 +75,18 @@ func (LearningEventWriter) Write(ctx context.Context, e write.LearningEvent) err
 		return fmt.Errorf("learning event %s: %w", e.Type, err)
 	}
 	// The NOT EXISTS and the grade of ref.students (the grade at the time, even of a soft-deleted student) read the tenant $6
-	// only; class_id ($7) is always NULL (ADR-0095).
+	// only.
 	// tenancyguard:ok append-only learning_events without deleted_at; insert of the session tenant (RLS insert policy)
 	_, err = tx.ExecContext(ctx, `INSERT INTO learning.learning_events (event_id, occurred_at, event_type, student_id, tenant_id, school_id,
-		class_id, game_session_id, activity_id, content_id, content_version_id, objective_ids, context, actor_type, payload, idempotency_key,
+		game_session_id, activity_id, content_id, content_version_id, objective_ids, context, actor_type, payload, idempotency_key,
 		efficacy_wave_id, experiment_arms, grade_level)
 		SELECT $1::uuid, $2::timestamptz, $3::varchar, $4::uuid, $6::uuid, $5::uuid,
-			$7::uuid,
-			$8::uuid, $9::uuid, $10::uuid, $11::uuid, $12::uuid[], $13::varchar, $14::varchar, $15::jsonb, $16::varchar,
-			$17::uuid, $18::varchar(97)[],
-			COALESCE($19::smallint, (SELECT st.grade_level FROM ref.students st WHERE st.student_id = $4 AND st.tenant_id = $6))
-		WHERE NOT EXISTS (SELECT 1 FROM learning.learning_events le WHERE le.idempotency_key = $16::varchar AND le.tenant_id = $6::uuid)
+			$7::uuid, $8::uuid, $9::uuid, $10::uuid, $11::uuid[], $12::varchar, $13::varchar, $14::jsonb, $15::varchar,
+			$16::uuid, $17::varchar(97)[],
+			COALESCE($18::smallint, (SELECT st.grade_level FROM ref.students st WHERE st.student_id = $4 AND st.tenant_id = $6))
+		WHERE NOT EXISTS (SELECT 1 FROM learning.learning_events le WHERE le.idempotency_key = $15::varchar AND le.tenant_id = $6::uuid)
 		ON CONFLICT DO NOTHING`,
-		e.ID, e.OccurredAt.UTC(), e.Type, e.StudentID, e.SchoolID, e.TenantID, nil, e.GameSessionID, e.ActivityID, e.ContentID,
+		e.ID, e.OccurredAt.UTC(), e.Type, e.StudentID, e.SchoolID, e.TenantID, e.GameSessionID, e.ActivityID, e.ContentID,
 		e.ContentVersionID, uuidArray(e.ObjectiveIDs), e.Context, actor, payload, e.IdempotencyKey, e.EfficacyWaveID, armsArray(e.ExperimentArms),
 		e.GradeLevel)
 	if err != nil {

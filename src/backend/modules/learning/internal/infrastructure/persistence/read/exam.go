@@ -59,7 +59,7 @@ func (ExamModel) Sessions(ctx context.Context, f read.ExamSessionFilter) ([]writ
 }
 
 // examSessionColumnsA are the columns of ScanExamSession on alias a.
-const examSessionColumnsA = `a.exam_session_id, a.tenant_id, a.school_id, a.subject_id, a.grade_level, a.course_id, a.assignment_id, a.title,
+const examSessionColumnsA = `a.exam_session_id, a.tenant_id, a.school_id, a.subject_id, a.grade_level, a.assignment_id, a.title,
 	a.exam_type, a.is_official, a.blueprint_id, a.blueprint_version_id, a.window_start, a.window_end, a.duration_sec, a.target, a.sections,
 	a.audience, a.variant_strategy, a.variant_count, a.feedback_timing, a.result_release, a.show_correct_answers, a.show_explanations,
 	a.late_start_policy, a.accommodations, a.max_attempts, a.score_policy, a.question_count, a.total_points::float8, a.status, a.created_by,
@@ -73,7 +73,7 @@ func nullString(s string) *string {
 	return &s
 }
 
-const ExamSessionColumns = `exam_session_id, tenant_id, school_id, subject_id, grade_level, course_id, assignment_id, title, exam_type,
+const ExamSessionColumns = `exam_session_id, tenant_id, school_id, subject_id, grade_level, assignment_id, title, exam_type,
 	is_official, blueprint_id, blueprint_version_id, window_start, window_end, duration_sec, target, sections, audience, variant_strategy,
 	variant_count, feedback_timing, result_release, show_correct_answers, show_explanations, late_start_policy, accommodations,
 	max_attempts, score_policy, question_count, total_points::float8, status, created_by, created_by_role, opened_at, closed_at,
@@ -85,8 +85,8 @@ type rowScanner interface{ Scan(dest ...any) error }
 func ScanExamSession(r rowScanner) (write.ExamSessionRow, error) {
 	var s write.ExamSessionRow
 	var grade sql.NullInt64
-	var course, asg, by, wave uuid.NullUUID
-	err := r.Scan(&s.ID, &s.TenantID, &s.SchoolID, &s.SubjectID, &grade, &course, &asg, &s.Title, &s.Type, &s.IsOfficial, &s.BlueprintID,
+	var asg, by, wave uuid.NullUUID
+	err := r.Scan(&s.ID, &s.TenantID, &s.SchoolID, &s.SubjectID, &grade, &asg, &s.Title, &s.Type, &s.IsOfficial, &s.BlueprintID,
 		&s.BlueprintVersionID, &s.WindowStart, &s.WindowEnd, &s.DurationSec, &s.Target, &s.Sections, &s.Audience, &s.Strategy, &s.VariantCount,
 		&s.FeedbackTiming, &s.ResultRelease, &s.ShowCorrect, &s.ShowExplanations, &s.LateStartPolicy, &s.Accommodations, &s.MaxAttempts,
 		&s.ScorePolicy, &s.QuestionCount, &s.TotalPoints, &s.Status, &s.CreatedBy, &s.CreatedByRole, &s.OpenedAt, &s.ClosedAt, &s.ReleasedAt,
@@ -95,7 +95,7 @@ func ScanExamSession(r rowScanner) (write.ExamSessionRow, error) {
 		g := int(grade.Int64)
 		s.GradeLevel = &g
 	}
-	s.CourseID, s.AssignmentID, s.ReleasedBy, s.EfficacyWaveID = nullUUID(course), nullUUID(asg), nullUUID(by), nullUUID(wave)
+	s.AssignmentID, s.ReleasedBy, s.EfficacyWaveID = nullUUID(asg), nullUUID(by), nullUUID(wave)
 	return s, err
 }
 

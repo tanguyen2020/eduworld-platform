@@ -728,7 +728,7 @@ func (QualityRepo) UpsertReferenceLevels(ctx context.Context, rs []write.Referen
 				proficient_ratio, mastered_ratio, official_score, low_reliability_exam_ids, rapid_guess_ratio, computed_at)
 			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::uuid[],$18,$19)
 			ON CONFLICT (tenant_id, student_id, subject_id, academic_year, period, profile_version) DO UPDATE SET school_id = EXCLUDED.school_id,
-				grade_level = EXCLUDED.grade_level, class_id = NULL, level_code = EXCLUDED.level_code, objectives_in_scope = EXCLUDED.objectives_in_scope,
+				grade_level = EXCLUDED.grade_level, level_code = EXCLUDED.level_code, objectives_in_scope = EXCLUDED.objectives_in_scope,
 				coverage_ratio = EXCLUDED.coverage_ratio, proficient_ratio = EXCLUDED.proficient_ratio, mastered_ratio = EXCLUDED.mastered_ratio,
 				official_score = EXCLUDED.official_score, low_reliability_exam_ids = EXCLUDED.low_reliability_exam_ids,
 				rapid_guess_ratio = EXCLUDED.rapid_guess_ratio, computed_at = EXCLUDED.computed_at`,

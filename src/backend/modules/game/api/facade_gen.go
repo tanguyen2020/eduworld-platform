@@ -108,12 +108,9 @@ const (
 	CommonInternalCommonV1ResourceTypeAssignment          CommonInternalCommonV1ResourceType = "assignment"
 	CommonInternalCommonV1ResourceTypeChallenge           CommonInternalCommonV1ResourceType = "challenge"
 	CommonInternalCommonV1ResourceTypeChallengeTemplate   CommonInternalCommonV1ResourceType = "challenge_template"
-	CommonInternalCommonV1ResourceTypeClassTemplate       CommonInternalCommonV1ResourceType = "class_template"
-	CommonInternalCommonV1ResourceTypeCourse              CommonInternalCommonV1ResourceType = "course"
 	CommonInternalCommonV1ResourceTypeCurriculum          CommonInternalCommonV1ResourceType = "curriculum"
 	CommonInternalCommonV1ResourceTypeItem                CommonInternalCommonV1ResourceType = "item"
 	CommonInternalCommonV1ResourceTypeLearningMaterial    CommonInternalCommonV1ResourceType = "learning_material"
-	CommonInternalCommonV1ResourceTypeLearningPath        CommonInternalCommonV1ResourceType = "learning_path"
 	CommonInternalCommonV1ResourceTypeLesson              CommonInternalCommonV1ResourceType = "lesson"
 	CommonInternalCommonV1ResourceTypeMedia               CommonInternalCommonV1ResourceType = "media"
 	CommonInternalCommonV1ResourceTypeMinigameConfig      CommonInternalCommonV1ResourceType = "minigame_config"
@@ -138,17 +135,11 @@ func (e CommonInternalCommonV1ResourceType) Valid() bool {
 		return true
 	case CommonInternalCommonV1ResourceTypeChallengeTemplate:
 		return true
-	case CommonInternalCommonV1ResourceTypeClassTemplate:
-		return true
-	case CommonInternalCommonV1ResourceTypeCourse:
-		return true
 	case CommonInternalCommonV1ResourceTypeCurriculum:
 		return true
 	case CommonInternalCommonV1ResourceTypeItem:
 		return true
 	case CommonInternalCommonV1ResourceTypeLearningMaterial:
-		return true
-	case CommonInternalCommonV1ResourceTypeLearningPath:
 		return true
 	case CommonInternalCommonV1ResourceTypeLesson:
 		return true

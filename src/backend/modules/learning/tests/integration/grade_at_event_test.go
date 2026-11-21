@@ -98,6 +98,7 @@ func TestGradeBackfill(t *testing.T) {
 			t.Fatalf("%v: %s", err, q)
 		}
 	}
+	preADR0095Schema(ctx, t, tx)
 	class5 := uuid.New()
 	exec(`INSERT INTO ref.classes (class_id, tenant_id, school_id, grade_level, name, source_version) VALUES ($1, $2, $3, 5, '5A', 1)`,
 		class5, c.tenantA, k.school)

@@ -17,7 +17,6 @@ type ExamSessionRow struct {
 	SchoolID           uuid.UUID
 	SubjectID          uuid.UUID
 	GradeLevel         *int
-	CourseID           *uuid.UUID
 	AssignmentID       *uuid.UUID
 	Title              string
 	Type               string

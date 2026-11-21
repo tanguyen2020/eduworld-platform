@@ -4879,7 +4879,6 @@ paths:
           question: action.content_studio.question_bank.workflow
           question_set: action.content_studio.question_sets.workflow
           assessment_blueprint: action.content_studio.assessments.workflow
-          learning_path: action.content_studio.learning_paths.workflow
       summary: Workflow Draft → Review → Approved → Published → Archived
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -4951,7 +4950,6 @@ paths:
           question: action.content_studio.question_bank.view
           question_set: action.content_studio.question_sets.view
           assessment_blueprint: action.content_studio.assessments.view
-          learning_path: action.content_studio.learning_paths.view
       summary: Lịch sử version của một item nội dung học tập (ADR-0043)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -4985,7 +4983,6 @@ paths:
           question: action.content_studio.question_bank.view
           question_set: action.content_studio.question_sets.view
           assessment_blueprint: action.content_studio.assessments.view
-          learning_path: action.content_studio.learning_paths.view
       summary: So sánh hai version của một item (diff theo field/khối)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -5020,7 +5017,6 @@ paths:
           question: action.content_studio.question_bank.publish
           question_set: action.content_studio.question_sets.publish
           assessment_blueprint: action.content_studio.assessments.publish
-          learning_path: action.content_studio.learning_paths.publish
       summary: Xuất bản version đã duyệt (ngay hoặc hẹn giờ) — dựng snapshot, đổi con trỏ release
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -5069,7 +5065,6 @@ paths:
           question: action.content_studio.question_bank.rollback
           question_set: action.content_studio.question_sets.rollback
           assessment_blueprint: action.content_studio.assessments.rollback
-          learning_path: action.content_studio.learning_paths.rollback
       summary: Dùng lại một version đã publish cho học sinh (đổi con trỏ, không tạo version mới)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -5108,7 +5103,6 @@ paths:
           question: action.content_studio.question_bank.rollback
           question_set: action.content_studio.question_sets.rollback
           assessment_blueprint: action.content_studio.assessments.rollback
-          learning_path: action.content_studio.learning_paths.rollback
       summary: Gỡ xuất bản (con trỏ về rỗng; lượt đang chơi/học không bị ngắt)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -5146,7 +5140,6 @@ paths:
           question: action.content_studio.question_bank.view
           question_set: action.content_studio.question_sets.view
           assessment_blueprint: action.content_studio.assessments.view
-          learning_path: action.content_studio.learning_paths.view
       summary: Nội dung chỉ đọc của một version bất kỳ (kể cả archived) — đáp án chỉ khi có learning_content.review (F026-AC-20)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -5178,7 +5171,6 @@ paths:
           question: action.content_studio.question_bank.view
           question_set: action.content_studio.question_sets.view
           assessment_blueprint: action.content_studio.assessments.view
-          learning_path: action.content_studio.learning_paths.view
       summary: Nơi sử dụng một item trong module learning theo version, kèm số lượt đang ghim (F026-AC-27)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -5214,7 +5206,6 @@ paths:
           question: action.content_studio.question_bank.publish
           question_set: action.content_studio.question_sets.publish
           assessment_blueprint: action.content_studio.assessments.publish
-          learning_path: action.content_studio.learning_paths.publish
       summary: Hủy một lịch hẹn xuất bản chưa chạy (F026-AC-19)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -5251,7 +5242,6 @@ paths:
           question: action.content_studio.question_bank.view
           question_set: action.content_studio.question_sets.view
           assessment_blueprint: action.content_studio.assessments.view
-          learning_path: action.content_studio.learning_paths.view
       summary: Lịch sử publish/rollback/unpublish của một item
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
@@ -8284,13 +8274,14 @@ paths:
       tags: [lms]
       operationId: listChallenges
       x-portal-action: action.school_lms.challenges.view
-      summary: Thử thách lớp / giải trường trong scope
+      summary: Thử thách khối / giải trường trong scope
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/TenantIds'
-        - name: class_id
+        - name: grade_level
           in: query
-          schema: { $ref: '#/components/schemas/Uuid' }
+          description: Khối của thử thách (ADR-0095 — thay class_id)
+          schema: { $ref: '#/components/schemas/GradeLevel' }
         - name: status
           in: query
           schema: { type: string, enum: [scheduled, running, completed, cancelled] }
@@ -20462,7 +20453,7 @@ components:
                 - type: 'null'
     ChallengeCreate:
       type: object
-      required: [template_id, name, targets, starts_at]
+      required: [template_id, name, school_id, targets, starts_at]
       properties:
         tenant_id:
           description: Tenant đích — bắt buộc khi người gọi là System Admin; người dùng tenant bỏ trống
@@ -20471,18 +20462,37 @@ components:
           description: Template phải được gán cho tenant (nếu không → RESOURCE_NOT_ASSIGNED)
           $ref: '#/components/schemas/Uuid'
         name: { type: string, maxLength: 80 }
+        school_id:
+          description: Trường của thử thách (ADR-0095 mục 3); học sinh không thuộc trường này → 422 VALIDATION_FAILED
+          $ref: '#/components/schemas/Uuid'
         targets:
           type: array
           minItems: 1
+          maxItems: 2
+          description: Khối của trường (grade) và/hoặc danh sách học sinh cùng trường (students); exclude_student_ids thắng (ADR-0095 — không còn lớp, nhóm)
           items:
             type: object
-            required: [target_type, target_id]
+            required: [target_type]
             properties:
-              target_type: { type: string, enum: [class, group, grade_level, school] }
-              target_id: { $ref: '#/components/schemas/Uuid' }
+              target_type: { type: string, enum: [grade, students] }
+              grade_level:
+                description: Bắt buộc khi target_type = grade
+                $ref: '#/components/schemas/GradeLevel'
+              student_ids:
+                description: Bắt buộc khi target_type = students
+                type: array
+                maxItems: 500
+                items: { $ref: '#/components/schemas/Uuid' }
+        exclude_student_ids:
+          type: array
+          maxItems: 500
+          items: { $ref: '#/components/schemas/Uuid' }
         starts_at: { $ref: '#/components/schemas/Timestamp' }
         ends_at: { $ref: '#/components/schemas/Timestamp' }
-        participation: { type: string, enum: [individual, study_group] }
+        participation:
+          type: string
+          enum: [individual]
+          description: Không còn study_group (nhóm học tập LMS đã bỏ — ADR-0095) [Proposed]
         question_set_version_id: { $ref: '#/components/schemas/Uuid' }
         params:
           type: object
@@ -20494,7 +20504,7 @@ components:
       properties:
         template_id: { $ref: '#/components/schemas/Uuid' }
         version: { type: integer }
-        kind: { type: string, enum: [class_challenge, school_tournament] }
+        kind: { type: string, enum: [grade_challenge, school_tournament] }
         name: { type: string, maxLength: 255 }
         description: { type: string, maxLength: 1000 }
         mode: { $ref: '#/components/schemas/MatchMode' }
@@ -20574,7 +20584,7 @@ components:
     ResourceType:
       type: string
       description: Loại tài nguyên dùng cho Thùng rác, gán và clone (ADR-0028, ADR-0029)
-      enum: [curriculum, lesson, learning_material, question, question_set, assessment_blueprint, media, assignment, course, learning_path, activity, challenge, challenge_template, tournament_template, quest, minigame_config, item, school_settings, tenant_settings, user, student]
+      enum: [curriculum, lesson, learning_material, question, question_set, assessment_blueprint, media, assignment, activity, challenge, challenge_template, tournament_template, quest, minigame_config, item, school_settings, tenant_settings, user, student]
     TrashItem:
       type: object
       description: Chỉ trả trong API Thùng rác — schema duy nhất có deleted_at
@@ -21633,7 +21643,7 @@ components:
       enum: [immediate, after_close, manual]
     LearningContentType:
       type: string
-      enum: [question, question_set, assessment_blueprint, lesson, learning_material, learning_path, activity]
+      enum: [question, question_set, assessment_blueprint, lesson, learning_material, activity]
     ItemId:
       type: string
       maxLength: 64
@@ -23701,7 +23711,7 @@ components:
           enum: [practice, assignment, minigame, retry_wrong, diagnostic]
           default: practice
           description: quest/challenge/competition do service khác tạo qua internal API; exam dùng /exams/*
-        context_type: { type: string, enum: [free_play, assignment, lesson, learning_path, recommendation] }
+        context_type: { type: string, enum: [free_play, assignment, lesson, recommendation] }
         context_id: { $ref: '#/components/schemas/Uuid' }
         recommendation_id: { $ref: '#/components/schemas/Uuid', description: Gợi ý ôn tập (GET /learning/recommendations/me) dẫn tới attempt — XP không giảm khi ôn LO tiên quyết }
     AdHocAttemptStart:

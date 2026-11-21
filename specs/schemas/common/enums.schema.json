@@ -47,7 +47,7 @@
     "LearningContentType": {
       "type": "string",
       "description": "Loại nội dung học tập có version/publish (ADR-0043).",
-      "enum": ["question", "question_set", "assessment_blueprint", "lesson", "learning_material", "learning_path", "activity"]
+      "enum": ["question", "question_set", "assessment_blueprint", "lesson", "learning_material", "activity"]
     }
   }
 }

@@ -7477,8 +7477,6 @@ components:
         - assessment_blueprint
         - media
         - assignment
-        - course
-        - learning_path
         - activity
         - challenge
         - challenge_template
