@@ -132,7 +132,7 @@ Ví dụ: `ew:mm:queue:battle_1v1:s:018f…:g3:math`.
 
 ### 5.1. Cấu hình matchmaking — platform-only
 
-Queue, mode, grade band, cửa sổ rating nới dần, timeout ready check là **cấu hình phiên bản hóa** (`competition.matchmaking_config_versions`, `effective_from`) soạn trong **Game Operations Console** (workspace A, `/api/v1/game-admin/matchmaking-configs`, permission `competition.config.matchmaking.write`, chỉ `eduworld-portal` + MFA qua gateway nội bộ — ADR-0027). Vận hành tenant không thay đổi được; phạm vi ghép liên trường trong một tenant `unit` bật/tắt qua cài đặt tenant (an toàn), không qua cấu hình matchmaking.
+Queue, mode, grade band, cửa sổ rating nới dần, timeout ready check là **cấu hình phiên bản hóa** (`competition.matchmaking_config_versions`, `effective_from`) soạn trong **Game Operations Console** (workspace A, `/api/v1/game-admin/matchmaking-configs`, permission `competition.config.matchmaking.write`, chỉ `eduworld-portal` + role platform qua gateway nội bộ — ADR-0027). Vận hành tenant không thay đổi được; phạm vi ghép liên trường trong một tenant `unit` bật/tắt qua cài đặt tenant (an toàn), không qua cấu hình matchmaking.
 
 ## 6. Matchmaker (worker)
 

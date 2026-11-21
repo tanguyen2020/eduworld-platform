@@ -18,23 +18,14 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
-// DefaultPlatformMaxAuthAge is the step-up window of platform routes when EW_OIDC_PLATFORM_MAX_AUTH_AGE is unset
-// (KEYCLOAK_SSO §3.3: auth_time within the last 8 hours).
-const DefaultPlatformMaxAuthAge = 8 * time.Hour
-
 // AuthConfig comes from EW_OIDC_* and EW_KC_*_CLIENT_ID (KEYCLOAK_SSO §11); nothing is hard-coded (R3).
 type AuthConfig struct {
-	Issuers             []string
-	Audience            string
-	AllowedAZP          []string
-	ClockSkew           time.Duration
-	PortalClientID      string
-	GameClientID        string
-	PlatformRequiredACR []string
-	// PlatformRequiredAMR: amr values that prove MFA. Keycloak direct grant (ADR-0091) sets amr ["pwd","otp"]
-	// but keeps acr at 1 (LoA is a browser-flow concept) — F004 spike R5.
-	PlatformRequiredAMR []string
-	PlatformMaxAuthAge  time.Duration
+	Issuers        []string
+	Audience       string
+	AllowedAZP     []string
+	ClockSkew      time.Duration
+	PortalClientID string
+	GameClientID   string
 }
 
 // AuthConfigFrom reads the configuration; missing variables are reported by name only.
@@ -44,15 +35,9 @@ func AuthConfigFrom(c *config.Config) (AuthConfig, error) {
 		return AuthConfig{}, err
 	}
 	skew := c.Duration("EW_OIDC_ALLOWED_CLOCK_SKEW", 30*time.Second)
-	age := c.Duration("EW_OIDC_PLATFORM_MAX_AUTH_AGE", DefaultPlatformMaxAuthAge)
-	amr := c.List("EW_OIDC_PLATFORM_REQUIRED_AMR")
-	if len(amr) == 0 {
-		amr = []string{"otp"}
-	}
 	return AuthConfig{
 		Issuers: c.List("EW_OIDC_ISSUERS"), Audience: c.String("EW_OIDC_AUDIENCE"), AllowedAZP: c.List("EW_OIDC_ALLOWED_AZP"),
 		ClockSkew: skew, PortalClientID: c.String("EW_KC_PORTAL_CLIENT_ID"), GameClientID: c.String("EW_KC_GAME_CLIENT_ID"),
-		PlatformRequiredACR: c.List("EW_OIDC_PLATFORM_REQUIRED_ACR"), PlatformRequiredAMR: amr, PlatformMaxAuthAge: age,
 	}, nil
 }
 
@@ -67,14 +52,11 @@ var allowedAlgs = []jose.SignatureAlgorithm{jose.RS256, jose.RS384, jose.RS512, 
 
 type tokenClaims struct {
 	jwt.Claims
-	AZP               string   `json:"azp"`
-	Typ               string   `json:"typ"`
-	SID               string   `json:"sid"`
-	ACR               string   `json:"acr"`
-	AMR               []string `json:"amr"`
-	AuthTime          int64    `json:"auth_time"`
-	ClientID          string   `json:"client_id"`
-	PreferredUsername string   `json:"preferred_username"`
+	AZP               string `json:"azp"`
+	Typ               string `json:"typ"`
+	SID               string `json:"sid"`
+	ClientID          string `json:"client_id"`
+	PreferredUsername string `json:"preferred_username"`
 	// Organization is the Keycloak Organizations claim: a list of aliases or an object keyed by alias.
 	Organization json.RawMessage `json:"organization"`
 }
@@ -142,17 +124,10 @@ func (v *Verifier) Verify(ctx context.Context, raw string) (authz.Claims, error)
 		// Client-credentials tokens have no user and never reach application routes (F002-AC-05).
 		return authz.Claims{}, unauthenticated("token has no user")
 	}
-	out := authz.Claims{Issuer: c.Issuer, Subject: c.Subject, AZP: c.AZP, SessionID: c.SID, ACR: c.ACR, AMR: c.AMR,
-		Expiry: c.Expiry.Time(), Organizations: organizations(c.Organization)}
-	switch {
-	case c.AuthTime > 0:
-		out.AuthTime = time.Unix(c.AuthTime, 0).UTC()
-	case c.IssuedAt != nil:
-		// Keycloak direct grant (ADR-0091) emits no auth_time (F004 spike R5): fall back to iat; module identity
-		// refuses portal refreshes of platform staff older than EW_OIDC_PLATFORM_MAX_AUTH_AGE (F012).
-		out.AuthTime = c.IssuedAt.Time().UTC()
-	}
-	return out, nil
+	// No acr/amr/auth_time check (ADR-0094): the age of a platform session is bounded by module identity,
+	// which refuses portal refreshes of platform staff older than EW_OIDC_PLATFORM_MAX_AUTH_AGE (F012).
+	return authz.Claims{Issuer: c.Issuer, Subject: c.Subject, AZP: c.AZP, SessionID: c.SID,
+		Expiry: c.Expiry.Time(), Organizations: organizations(c.Organization)}, nil
 }
 
 // organizations reads the aliases of the organization claim (list of aliases, or object keyed by alias).
@@ -187,17 +162,4 @@ func (v *Verifier) channel(azp string) authz.Channel {
 		return authz.ChannelGame
 	}
 	return authz.ChannelUnknown
-}
-
-// mfa reports a platform-grade authentication: acr in PlatformRequiredACR or an amr value in
-// PlatformRequiredAMR, and auth_time recent enough.
-func (v *Verifier) mfa(c authz.Claims) bool {
-	strong := slices.Contains(v.cfg.PlatformRequiredACR, c.ACR)
-	for _, m := range c.AMR {
-		strong = strong || slices.Contains(v.cfg.PlatformRequiredAMR, m)
-	}
-	if !strong || c.AuthTime.IsZero() {
-		return false
-	}
-	return v.clock.Now().Sub(c.AuthTime) <= v.cfg.PlatformMaxAuthAge
 }

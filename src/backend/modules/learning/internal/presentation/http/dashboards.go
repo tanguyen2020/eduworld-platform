@@ -34,7 +34,7 @@ func init() {
 		httpx.TenantRequired, httpx.IdempotencyNone, 200)
 	Operations["getTenantLearningSummary"] = op("getTenantLearningSummary", http.MethodGet, "/tenant/analytics/learning/summary",
 		httpx.TenantRequired, httpx.IdempotencyNone, 200)
-	// /admin/: internal gateway, platform role with MFA (httpx GuardPlatformMFA, ADR-0027); no X-Tenant-Id.
+	// /admin/: internal gateway, platform role (httpx GuardPlatformRole, ADR-0027; no MFA, ADR-0094); no X-Tenant-Id.
 	Operations["getPlatformLearningSummary"] = op("getPlatformLearningSummary", http.MethodGet, "/admin/analytics/learning/summary",
 		httpx.TenantNone, httpx.IdempotencyNone, 200)
 }

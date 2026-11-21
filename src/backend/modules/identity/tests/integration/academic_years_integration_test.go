@@ -28,7 +28,7 @@ func TestListSchoolAcademicYears(t *testing.T) {
 	schoolA1, schoolA2 := uuid.MustParse(a.school), uuid.MustParse(a.otherSchool)
 	token := func(sub string, p authz.Principal) string {
 		h.res.Set(sub, p.PrincipalData)
-		return h.idp.Token(sub, httpxtest.PortalClient, false, now)
+		return h.idp.Token(sub, httpxtest.PortalClient, now)
 	}
 	schoolAdminA1 := token("kc-t047-sa1", authztest.Staff(ta, "school_admin", authztest.AtSchool(schoolA1)))
 	managerA := token("kc-t047-am", authztest.Staff(ta, "academic_manager"))

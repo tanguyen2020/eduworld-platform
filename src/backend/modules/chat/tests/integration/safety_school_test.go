@@ -26,7 +26,7 @@ func (s *safetyEnv) schoolStaff(tenant uuid.UUID, role string, school *uuid.UUID
 	}
 	sub := "kc-school-" + uuid.NewString()
 	s.res.Set(sub, authztest.Staff(tenant, role, opts...).PrincipalData)
-	return s.idp.Token(sub, httpxtest.PortalClient, true, time.Now())
+	return s.idp.Token(sub, httpxtest.PortalClient, time.Now())
 }
 
 func (s *safetyEnv) tenantGet(token string, tenant uuid.UUID, path string) resp {

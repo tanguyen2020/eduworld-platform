@@ -119,7 +119,7 @@ func TestUserLifecycle(t *testing.T) {
 	portalUser(ctx, t, e, iss, "ad.donvi.lc", "tenant_admin", &a.tenant, "tenant", nil)
 	portalUser(ctx, t, e, iss, "sa.lc", "system_admin", nil, "platform", nil)
 	now := time.Now()
-	tok := func(u string, mfa bool) string { return idp.Token("sub-"+u, httpxtest.PortalClient, mfa, now) }
+	tok := func(u string) string { return idp.Token("sub-"+u, httpxtest.PortalClient, now) }
 	hdr := func() map[string]string {
 		return map[string]string{"X-Tenant-Id": a.tenant, "Idempotency-Key": uuid.Must(uuid.NewV7()).String()}
 	}
@@ -129,7 +129,7 @@ func TestUserLifecycle(t *testing.T) {
 	}
 
 	// AC-01: lock → locked, history, audit, status_changed + access_revoked; a second lock is a no-op.
-	if r := h.do(t, "POST", "/tenant/users/"+st.String()+":lock", tok("ad.truong.lc", false), hdr(), body); r.status != 204 {
+	if r := h.do(t, "POST", "/tenant/users/"+st.String()+":lock", tok("ad.truong.lc"), hdr(), body); r.status != 204 {
 		t.Fatalf("lock: %d %v", r.status, r.body)
 	}
 	if count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE user_id = $1 AND status = 'locked'`, st) != 1 ||
@@ -137,28 +137,28 @@ func TestUserLifecycle(t *testing.T) {
 		events("user.status_changed") != 1 || events("user.access_revoked") != 1 {
 		t.Fatal("lock effects")
 	}
-	if r := h.do(t, "POST", "/tenant/users/"+st.String()+":lock", tok("ad.truong.lc", false), hdr(), body); r.status != 204 || events("user.access_revoked") != 1 {
+	if r := h.do(t, "POST", "/tenant/users/"+st.String()+":lock", tok("ad.truong.lc"), hdr(), body); r.status != 204 || events("user.access_revoked") != 1 {
 		t.Fatalf("second lock: %d", r.status)
 	}
 	// AC-05: other school → 403; other tenant → 404; staff → 403; no reason → 422.
-	if r := h.do(t, "POST", "/tenant/users/"+other+":lock", tok("ad.truong.lc", false), hdr(), body); r.status != 403 {
+	if r := h.do(t, "POST", "/tenant/users/"+other+":lock", tok("ad.truong.lc"), hdr(), body); r.status != 403 {
 		t.Fatalf("other school: %d", r.status)
 	}
-	if r := h.do(t, "POST", "/tenant/users/"+stB.String()+":lock", tok("ad.truong.lc", false), hdr(), body); r.status != 404 {
+	if r := h.do(t, "POST", "/tenant/users/"+stB.String()+":lock", tok("ad.truong.lc"), hdr(), body); r.status != 404 {
 		t.Fatalf("other tenant: %d", r.status)
 	}
-	if r := h.do(t, "POST", "/tenant/users/"+staff.String()+":lock", tok("ad.donvi.lc", false), hdr(), body); r.status != 403 {
+	if r := h.do(t, "POST", "/tenant/users/"+staff.String()+":lock", tok("ad.donvi.lc"), hdr(), body); r.status != 403 {
 		t.Fatalf("staff: %d", r.status)
 	}
-	if r := h.do(t, "POST", "/tenant/users/"+st.String()+":unlock", tok("ad.donvi.lc", false), hdr(), map[string]any{}); r.status != 422 {
+	if r := h.do(t, "POST", "/tenant/users/"+st.String()+":unlock", tok("ad.donvi.lc"), hdr(), map[string]any{}); r.status != 422 {
 		t.Fatalf("no reason: %d", r.status)
 	}
 	// AC-04: unlock → active + access_restored.
-	if r := h.do(t, "POST", "/tenant/users/"+st.String()+":unlock", tok("ad.donvi.lc", false), hdr(), body); r.status != 204 || events("user.access_restored") != 1 {
+	if r := h.do(t, "POST", "/tenant/users/"+st.String()+":unlock", tok("ad.donvi.lc"), hdr(), body); r.status != 204 || events("user.access_restored") != 1 {
 		t.Fatalf("unlock: %d", r.status)
 	}
 	// System Admin deactivates (target tenant in X-Tenant-Id).
-	if r := h.do(t, "POST", "/admin/users/"+stB.String()+":deactivate", tok("sa.lc", true), map[string]string{"X-Tenant-Id": b.tenant,
+	if r := h.do(t, "POST", "/admin/users/"+stB.String()+":deactivate", tok("sa.lc"), map[string]string{"X-Tenant-Id": b.tenant,
 		"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}, body); r.status != 204 {
 		t.Fatalf("deactivate: %d %v", r.status, r.body)
 	}
@@ -166,7 +166,7 @@ func TestUserLifecycle(t *testing.T) {
 		t.Fatal("deactivated")
 	}
 	// Tenant admin cannot use the platform route.
-	if r := h.do(t, "POST", "/admin/users/"+st.String()+":lock", tok("ad.donvi.lc", false), hdr(), body); r.status != 403 {
+	if r := h.do(t, "POST", "/admin/users/"+st.String()+":lock", tok("ad.donvi.lc"), hdr(), body); r.status != 403 {
 		t.Fatalf("tenant admin on /admin: %d", r.status)
 	}
 
@@ -190,7 +190,7 @@ func TestUserLifecycle(t *testing.T) {
 	// AC-25..AC-27: reset password by the School Admin; replay without password; other school/tenant refused.
 	key := uuid.Must(uuid.NewV7()).String()
 	rh := map[string]string{"X-Tenant-Id": a.tenant, "Idempotency-Key": key}
-	r := h.do(t, "POST", "/tenant/students/"+st.String()+"/password:reset", tok("ad.truong.lc", false), rh, map[string]any{"reason": "Quên mật khẩu"})
+	r := h.do(t, "POST", "/tenant/students/"+st.String()+"/password:reset", tok("ad.truong.lc"), rh, map[string]any{"reason": "Quên mật khẩu"})
 	if r.status != 200 || r.body["initial_password"] == nil || r.body["password_temporary"] != false || r.header.Get("Cache-Control") != "no-store" {
 		t.Fatalf("reset: %d %v", r.status, r.body)
 	}
@@ -200,14 +200,14 @@ func TestUserLifecycle(t *testing.T) {
 	if count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'user.access_revoked' AND envelope::text LIKE '%password_changed%'`) != 1 {
 		t.Fatal("access_revoked password_changed")
 	}
-	r = h.do(t, "POST", "/tenant/students/"+st.String()+"/password:reset", tok("ad.truong.lc", false), rh, map[string]any{"reason": "Quên mật khẩu"})
+	r = h.do(t, "POST", "/tenant/students/"+st.String()+"/password:reset", tok("ad.truong.lc"), rh, map[string]any{"reason": "Quên mật khẩu"})
 	if r.status != 200 || r.body["initial_password"] != nil || r.body["password_redacted"] != true || len(h.revoker.calls) != 1 {
 		t.Fatalf("replay: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "POST", "/tenant/students/"+other+"/password:reset", tok("ad.truong.lc", false), hdr(), map[string]any{"reason": "Thử"}); r.status != 403 {
+	if r := h.do(t, "POST", "/tenant/students/"+other+"/password:reset", tok("ad.truong.lc"), hdr(), map[string]any{"reason": "Thử"}); r.status != 403 {
 		t.Fatalf("reset other school: %d", r.status)
 	}
-	if r := h.do(t, "POST", "/tenant/students/"+stB.String()+"/password:reset", tok("ad.donvi.lc", false), hdr(), map[string]any{"reason": "Thử"}); r.status != 404 {
+	if r := h.do(t, "POST", "/tenant/students/"+stB.String()+"/password:reset", tok("ad.donvi.lc"), hdr(), map[string]any{"reason": "Thử"}); r.status != 404 {
 		t.Fatalf("reset other tenant: %d", r.status)
 	}
 }

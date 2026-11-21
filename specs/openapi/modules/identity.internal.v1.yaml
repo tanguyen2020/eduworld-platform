@@ -191,7 +191,7 @@ components:
         client_id:
           type: [string, 'null']
           maxLength: 64
-          description: '`azp` của token người dùng gốc (`eduworld-game-backend` cho game — ADR-0068, `eduworld-portal` cho portal — ADR-0066) để áp quy tắc ADR-0027/0031/0066 (game chỉ cho học sinh, portal chỉ cho nhân sự, permission platform chỉ với eduworld-portal + MFA)'
+          description: '`azp` của token người dùng gốc (`eduworld-game-backend` cho game — ADR-0068, `eduworld-portal` cho portal — ADR-0066) để áp quy tắc ADR-0027/0031/0066 (game chỉ cho học sinh, portal chỉ cho nhân sự, permission platform chỉ với eduworld-portal — không MFA, ADR-0094)'
 
     Scope:
       type: object

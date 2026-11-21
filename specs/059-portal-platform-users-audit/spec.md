@@ -47,6 +47,10 @@
 - OQ F059-12 → **Chốt:** `route_groups[]` sinh lúc build từ route-as-code (task ở F012); tab "Keycloak · APISIX" hiển thị bảng nhóm prefix → gateway → service thay cho "Chưa có dữ liệu". Task bổ sung.
 - OQ F059-9 → **Chốt:** E2E Playwright, axe/visual sáng-tối với backend thật chạy khi có môi trường compose — không phải câu hỏi mở.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F059-AC-22: tổng quan tích hợp không còn hiển thị "MFA cho role platform" (`platform_mfa_required` bỏ khỏi `IntegrationOverview`), giữ tuổi tối đa phiên platform. F059-AC-25: nhánh `403 MFA_REQUIRED` → `MfaStepUp` bỏ; lỗi gateway nội bộ giữ nguyên. T044, T048, T051, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Role platform và Permission catalog (Priority: P1) 🎯 MVP

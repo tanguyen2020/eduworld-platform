@@ -108,7 +108,6 @@ func (h PortalAuthHandlers) portalLogin(w http.ResponseWriter, r *http.Request) 
 	var b struct {
 		Username string    `json:"username"`
 		Password string    `json:"password"`
-		OTP      string    `json:"otp"`
 		DeviceID uuid.UUID `json:"device_id"`
 		Locale   string    `json:"locale"`
 	}
@@ -116,8 +115,8 @@ func (h PortalAuthHandlers) portalLogin(w http.ResponseWriter, r *http.Request) 
 		fail(w, r, err)
 		return
 	}
-	in := dto.PortalLogin{Username: b.Username, Password: []byte(b.Password), OTP: []byte(b.OTP), DeviceID: b.DeviceID, Locale: b.Locale}
-	b.Password, b.OTP = "", ""
+	in := dto.PortalLogin{Username: b.Username, Password: []byte(b.Password), DeviceID: b.DeviceID, Locale: b.Locale}
+	b.Password = ""
 	out, err := h.Session.Login(r.Context(), in)
 	if err != nil {
 		portalFail(w, r, err, false)
@@ -177,8 +176,7 @@ func writePortalSession(w http.ResponseWriter, s dto.PortalSession) {
 		ExpiresIn        int    `json:"expires_in"`
 		RefreshExpiresIn int    `json:"refresh_expires_in"`
 		AuthTime         string `json:"auth_time"`
-		MFA              bool   `json:"mfa"`
-	}{s.AccessToken, "Bearer", s.ExpiresIn, s.RefreshExpiresIn, s.AuthTime.UTC().Format(time.RFC3339), s.MFA})
+	}{s.AccessToken, "Bearer", s.ExpiresIn, s.RefreshExpiresIn, s.AuthTime.UTC().Format(time.RFC3339)})
 }
 
 // setPortalCookies writes the refresh cookie (HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal)
@@ -216,9 +214,8 @@ func (h PortalAuthHandlers) setupPortalPassword(w http.ResponseWriter, r *http.R
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, http.StatusOK, struct {
-		RemainingSteps    []string `json:"remaining_steps"`
-		OTPSetupEmailSent bool     `json:"otp_setup_email_sent"`
-	}{out.RemainingSteps, out.OTPSetupEmailSent})
+		RemainingSteps []string `json:"remaining_steps"`
+	}{out.RemainingSteps})
 }
 
 func (h PortalAuthHandlers) forgotPortalPassword(w http.ResponseWriter, r *http.Request) {

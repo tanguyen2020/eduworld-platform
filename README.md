@@ -57,7 +57,7 @@ Không có vai trò giáo viên trong hệ thống ([ADR-0072](docs/adr/ADR-0072
 | Admin Portal | Một React SPA (TypeScript, Vite) với 5 workspace; Ant Design 5 + Ant Design Pro | ADR-0022, ADR-0027, ADR-0047 |
 | Công thức Toán/Lý/Hóa | MathJax 4 (hiển thị, mhchem) + MathLive (nhập trên portal); game chỉ hiển thị SVG đã render | ADR-0055 |
 | Design system | Design tokens trong `design/` (Style Dictionary) → Theme Godot cho game và theme Ant Design cho portal | ADR-0047 |
-| Identity | Keycloak; game và portal đăng nhập bằng form riêng qua backend; MFA (TOTP) cho nhân sự platform | ADR-0068, ADR-0086, ADR-0091 |
+| Identity | Keycloak; game và portal đăng nhập bằng form riêng qua backend; portal chỉ username + mật khẩu, không MFA kể cả nhân sự platform (rủi ro owner chấp nhận) | ADR-0068, ADR-0086, ADR-0091, ADR-0094 |
 | API Gateway | Apache APISIX: `/api/v1/*` → `core-api`, `/realtime/v1` → `realtime`; gateway nội bộ cho workspace platform | ADR-0009, ADR-0074 |
 | Database | PostgreSQL một cụm, mỗi module một database (5 database), `tenant_id` + RLS, chỉ soft-delete, mọi chuỗi có giới hạn độ dài | ADR-0005, ADR-0028, ADR-0037, ADR-0041, ADR-0089 |
 | Messaging | NATS JetStream: domain event qua transactional outbox, đường ghi chat, lệnh realtime request/reply | ADR-0035, ADR-0042 |
@@ -102,10 +102,10 @@ flowchart LR
   OP(["Đội nội dung · game · Safety · System Admin"]) --> AP
   GC --> EW["EduWorld backend"]
   AP --> EW
-  EW --> KC["Keycloak<br/>định danh, mật khẩu, OTP"]
+  EW --> KC["Keycloak<br/>định danh, mật khẩu"]
   EW --> SIS["SIS của trường<br/>CSV hoặc API"]
   EW --> OS["Object storage + CDN<br/>media, manifest nội dung game"]
-  EW --> MAIL["SMTP<br/>email đặt lại mật khẩu, đăng ký OTP"]
+  EW --> MAIL["SMTP<br/>email đặt lại mật khẩu"]
   GC --> OS
 ```
 
@@ -350,9 +350,9 @@ sequenceDiagram
   participant AP as Admin Portal
   participant ID as identity (core-api)
   participant KC as Keycloak
-  NS->>AP: Mở /login, nhập tên đăng nhập, mật khẩu, mã OTP (nếu có)
+  NS->>AP: Mở /login, nhập tên đăng nhập, mật khẩu
   AP->>ID: POST /auth/portal/login
-  ID->>KC: Direct Access Grant (client eduworld-portal) + TOTP
+  ID->>KC: Direct Access Grant (client eduworld-portal)
   ID-->>AP: Access token (chỉ giữ trong bộ nhớ) + refresh token trong cookie HttpOnly
   AP->>ID: GET /me/tenants
   AP->>ID: GET /me/permissions (X-Tenant-Id)
@@ -362,7 +362,7 @@ sequenceDiagram
   Note over ID: featuregate chặn action đang tắt (403 FEATURE_DISABLED), rồi authz.Require kiểm tra quyền
 ```
 
-- Lỗi đăng nhập luôn là thông điệp chung, không cho biết tài khoản nào cần OTP. Tài khoản mới đổi mật khẩu tạm trên màn của portal; đăng ký ứng dụng xác thực qua link email.
+- Lỗi đăng nhập luôn là thông điệp chung. Tài khoản mới đổi mật khẩu tạm trên màn của portal. Không có mã OTP với bất kỳ tài khoản nào (ADR-0094); phiên nhân sự platform tối đa 8 giờ từ lúc nhập mật khẩu.
 - Danh mục 80 menu / 232 action là contract; System Admin bật/tắt theo platform hoặc từng tenant, backend chặn thật ở API ([ADR-0090](docs/adr/ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md), [ADR-0091](docs/adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md)).
 
 ## 6. Đa tenant, phân quyền và an toàn
@@ -372,7 +372,7 @@ sequenceDiagram
 | Tenant | Trường độc lập, đơn vị nhiều trường, hoặc tenant chung `common`. Mỗi phiên làm việc trong đúng một tenant, xác định bằng `X-Tenant-Id` + kiểm tra membership; không suy ra tenant từ username/email |
 | Lọc dữ liệu | ent interceptor thêm `tenant_id` và `deleted_at IS NULL` cho mọi truy vấn; PostgreSQL RLS lọc tenant ở tầng DB; truy cập liên tenant chỉ qua `tenancy.Bypass` với danh sách lý do đóng, có audit và metric |
 | Phân quyền | Permission trong code, Role và UserRole trong DB; mỗi use case gọi `authz.Require` tường minh. Role của trường không bao giờ có quyền `game.*`, `platform.*` |
-| Workspace platform | Chỉ qua gateway nội bộ, bắt buộc MFA và role platform |
+| Workspace platform | Chỉ qua gateway nội bộ, bắt buộc role platform (không MFA — ADR-0094) |
 | Game | Chỉ học sinh vào game; mỗi học sinh một thiết bị đang chơi; Windows mặc định coi là máy dùng chung |
 | Xóa dữ liệu | Chỉ soft-delete; nghĩa vụ xóa = ẩn danh hóa |
 | Chat | Mọi tin qua pipeline kiểm duyệt; bước PII/grooming luôn chạy; tắt bước khác phải có hạn và hai người duyệt |

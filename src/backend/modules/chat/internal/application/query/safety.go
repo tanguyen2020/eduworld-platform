@@ -102,7 +102,7 @@ type CaseFilter struct {
 	Cursor    string
 }
 
-// moderator authorizes a read of the Safety Team: platform role staff with perm (MFA and the internal gateway are the
+// moderator authorizes a read of the Safety Team: platform role staff with perm (the internal gateway and the platform role guard are the
 // httpx guards of /admin/).
 func moderator(ctx context.Context, perm authz.Permission) (authz.Principal, error) {
 	p, ok := authz.PrincipalFrom(ctx)

@@ -40,7 +40,7 @@ type SafetyQueries interface {
 }
 
 // SafetyHandlers serve the operations of the Safety Team (core-api): createReport (player route, game_player guard),
-// /admin/moderation/* and /admin/safety/* (internal gateway: httpx adds GuardPortalStaff + GuardPlatformMFA; the use
+// /admin/moderation/* and /admin/safety/* (internal gateway: httpx adds GuardPortalStaff + GuardPlatformRole; the use
 // cases require moderation.* in Go, R7), /tenant/safety/* (school staff, portal).
 type SafetyHandlers struct {
 	Commands SafetyCommands

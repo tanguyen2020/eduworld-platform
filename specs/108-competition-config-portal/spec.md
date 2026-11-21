@@ -20,6 +20,10 @@
 
 - Nơi dùng nội dung học tập trong cấu hình thi đấu → **Chốt:** event publish cấu hình thi đấu của module competition mang `content_refs[]` như F078; module learning dùng chung projection `content.external_usages` (`ref_type = competition`). Platform-ops cho cấu hình thi đấu (OQ F045-3) cũng thuộc F108.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F108-AC-02, AC-03: bỏ điều kiện MFA (`acr`) và nhánh "token thiếu MFA → `403 MFA_REQUIRED`"; giữ 404 tại gateway public, `azp = eduworld-portal`, role platform, `competition.config.*`. T011, plan, quickstart nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Cấu hình thi đấu phiên bản hóa qua `/game-admin/*` (Priority: P1) 🎯 MVP

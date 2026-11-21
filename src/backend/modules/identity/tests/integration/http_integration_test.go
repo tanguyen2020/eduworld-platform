@@ -132,8 +132,8 @@ func TestIdentityHTTP(t *testing.T) {
 	saData := authztest.Platform("system_admin").PrincipalData
 	saData.UserID = sa
 	h.res.Set("kc-sa", saData)
-	saTok := h.idp.Token("kc-sa", httpxtest.PortalClient, true, now)
-	saNoMFA := h.idp.Token("kc-sa", httpxtest.PortalClient, false, now)
+	saTok := h.idp.Token("kc-sa", httpxtest.PortalClient, now) // password only: no MFA since ADR-0094
+	saGame := h.idp.Token("kc-sa", httpxtest.GameClient, now)
 
 	key := func() map[string]string { return map[string]string{"Idempotency-Key": ids.New().String()} }
 	body := map[string]any{"code": "th-http", "name": "TH HTTP", "tenant_type": "school", "keycloak_org_alias": "th-http"}
@@ -142,9 +142,10 @@ func TestIdentityHTTP(t *testing.T) {
 	if r := h.do(t, "POST", "/admin/tenants", saTok, nil, body); r.status != 428 {
 		t.Fatalf("no key: %d %s", r.status, r.raw)
 	}
-	// AC-04: platform route needs MFA.
-	if r := h.do(t, "POST", "/admin/tenants", saNoMFA, key(), body); r.status != 403 {
-		t.Fatalf("no MFA: %d %s", r.status, r.raw)
+	// AC-04 (ADR-0094): the platform route needs the portal client and a platform role, not MFA — the same System
+	// Admin through the game client is refused.
+	if r := h.do(t, "POST", "/admin/tenants", saGame, key(), body); r.status != 403 {
+		t.Fatalf("game client: %d %s", r.status, r.raw)
 	}
 	// AC-05: maxLength → 422 with the field.
 	long := map[string]any{"code": strings.Repeat("c", 65), "name": "x", "tenant_type": "unit", "keycloak_org_alias": "long-code"}
@@ -191,8 +192,8 @@ func TestIdentityHTTP(t *testing.T) {
 	}
 	h.res.Set("kc-ta", adminData(ta))
 	h.res.Set("kc-tb", adminData(tb))
-	taTok := h.idp.Token("kc-ta", httpxtest.PortalClient, false, now)
-	tbTok := h.idp.Token("kc-tb", httpxtest.PortalClient, false, now)
+	taTok := h.idp.Token("kc-ta", httpxtest.PortalClient, now)
+	tbTok := h.idp.Token("kc-tb", httpxtest.PortalClient, now)
 	if r := h.do(t, "GET", "/admin/tenants", taTok, nil, nil); r.status != 403 {
 		t.Fatalf("tenant admin on /admin: %d %s", r.status, r.raw)
 	}
@@ -264,9 +265,7 @@ func TestIdentityHTTP(t *testing.T) {
 	if r := h.do(t, "GET", "/catalog/schools", saTok, nil, nil); r.status != 403 {
 		t.Fatalf("System Admin without tenant_ids: %d %s", r.status, r.raw)
 	}
-	if r := h.do(t, "GET", "/catalog/schools?tenant_ids="+ta.String()+","+tb.String(), saNoMFA, nil, nil); r.status != 403 {
-		t.Fatalf("System Admin without MFA: %d %s", r.status, r.raw)
-	}
+	// ADR-0094: the password-only System Admin token reads across tenants (audited cross_tenant.accessed).
 	if r := h.do(t, "GET", "/catalog/schools?status=active&tenant_ids="+ta.String()+","+tb.String(), saTok, nil, nil); r.status != 200 ||
 		schoolsOf(r) != 1 || r.body["items"].([]any)[0].(map[string]any)["tenant_id"] != ta.String() {
 		t.Fatalf("System Admin cross-tenant: %d %s", r.status, r.raw)

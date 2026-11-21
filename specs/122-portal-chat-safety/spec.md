@@ -20,6 +20,10 @@
 
 - Màn chat policy → **Chốt:** giờ chat mặc định hiển thị 06:30–21:30 (chỉ thu hẹp được); phạm vi World chỉ có "Theo trường" và (tenant `unit`) "Toàn đơn vị" — không có lựa chọn organization/liên tenant (CONFIG_DEFAULTS `world_chat_scope`, CHAT_SYSTEM §2).
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F122-AC-25: nhánh "`403 MFA_REQUIRED` → step-up MFA" bỏ; nhánh gateway nội bộ không kết nối được giữ nguyên. T002, T044, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Hàng đợi case của Platform Safety Team (Priority: P1) 🎯 MVP

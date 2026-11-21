@@ -78,7 +78,7 @@ func (s *safetyEnv) moderator(role string, lead bool) *moderator {
 	}
 	sub := "kc-mod-" + uuid.NewString()
 	s.res.Set(sub, d)
-	return &moderator{s: s, data: d, id: d.UserID, token: s.idp.Token(sub, httpxtest.PortalClient, true, time.Now())}
+	return &moderator{s: s, data: d, id: d.UserID, token: s.idp.Token(sub, httpxtest.PortalClient, time.Now())}
 }
 
 // in returns the token of the moderator resolved into tenant (the principal identity would build for X-Tenant-Id).
@@ -88,7 +88,7 @@ func (m *moderator) in(tenant uuid.UUID) string {
 	d.TenantID, d.TenantType = &t, authz.TenantTypeSchool
 	sub := "kc-mod-in-" + uuid.NewString()
 	m.s.res.Set(sub, d)
-	return m.s.idp.Token(sub, httpxtest.PortalClient, true, time.Now())
+	return m.s.idp.Token(sub, httpxtest.PortalClient, time.Now())
 }
 
 // get calls a read of the Safety Team (no X-Tenant-Id).

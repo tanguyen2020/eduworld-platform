@@ -445,12 +445,6 @@
           "type": "password",
           "value": "Demo@12345",
           "temporary": false
-        },
-        {
-          "type": "otp",
-          "userLabel": "local-demo",
-          "secretData": "{\"value\":\"ew-local-totp-sa-admin-0001\"}",
-          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA1\"}"
         }
       ]
     },
@@ -511,8 +505,7 @@
         "platform_staff"
       ],
       "requiredActions": [
-        "UPDATE_PASSWORD",
-        "CONFIGURE_TOTP"
+        "UPDATE_PASSWORD"
       ],
       "credentials": [
         {

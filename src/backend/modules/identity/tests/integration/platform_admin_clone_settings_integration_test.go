@@ -19,7 +19,7 @@ func TestPlatformAdminCloneSettings(t *testing.T) {
 	b := seedTenant(ctx, t, e.platform, "pgd-cs-b")
 	c := seedTenant(ctx, t, e.platform, "pgd-cs-c")
 	platformUsers(ctx, t, p, a, "cs")
-	sa := p.token("sa.cs", true)
+	sa := p.token("sa.cs")
 	exec := func(q string, args ...any) {
 		t.Helper()
 		if _, err := e.platform.ExecContext(ctx, q, args...); err != nil {

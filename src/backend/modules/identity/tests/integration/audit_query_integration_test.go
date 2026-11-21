@@ -76,7 +76,7 @@ func TestAuditLogQueries(t *testing.T) {
 	portalUser(ctx, t, e, iss, "ca.aq", "content_admin", nil, "platform", nil)
 	now := time.Now()
 	window := "from=" + url.QueryEscape(now.Add(-24*time.Hour).Format(time.RFC3339)) + "&to=" + url.QueryEscape(now.Add(time.Minute).Format(time.RFC3339))
-	tok := func(user string, mfa bool) string { return idp.Token("sub-"+user, httpxtest.PortalClient, mfa, now) }
+	tok := func(user string) string { return idp.Token("sub-"+user, httpxtest.PortalClient, now) }
 	inA := map[string]string{"X-Tenant-Id": a.tenant}
 	count := func(r httpResp) int {
 		data, _ := r.body["data"].([]any)
@@ -84,39 +84,39 @@ func TestAuditLogQueries(t *testing.T) {
 	}
 
 	// AC-07: tenant admin sees the tenant, without the moderation journal.
-	r := h.do(t, "GET", "/tenant/audit-logs?"+window, tok("ad.donvi.aq", false), inA, nil)
+	r := h.do(t, "GET", "/tenant/audit-logs?"+window, tok("ad.donvi.aq"), inA, nil)
 	if r.status != 200 || count(r) != 2 {
 		t.Fatalf("tenant admin: %d %v", r.status, r.body)
 	}
 	// School Admin: only the school of the grant; another school → 403.
-	r = h.do(t, "GET", "/tenant/audit-logs?"+window, tok("ad.truong.aq", false), inA, nil)
+	r = h.do(t, "GET", "/tenant/audit-logs?"+window, tok("ad.truong.aq"), inA, nil)
 	if r.status != 200 || count(r) != 1 || r.body["data"].([]any)[0].(map[string]any)["school_id"] != a.school {
 		t.Fatalf("school admin: %d %v", r.status, r.body)
 	}
-	if r = h.do(t, "GET", "/tenant/audit-logs?"+window+"&school_id="+a.otherSchool, tok("ad.truong.aq", false), inA, nil); r.status != 403 {
+	if r = h.do(t, "GET", "/tenant/audit-logs?"+window+"&school_id="+a.otherSchool, tok("ad.truong.aq"), inA, nil); r.status != 403 {
 		t.Fatalf("other school: %d", r.status)
 	}
 	// Paging: limit 1 then the cursor.
-	r = h.do(t, "GET", "/tenant/audit-logs?"+window+"&limit=1", tok("ad.donvi.aq", false), inA, nil)
+	r = h.do(t, "GET", "/tenant/audit-logs?"+window+"&limit=1", tok("ad.donvi.aq"), inA, nil)
 	next, _ := r.body["page"].(map[string]any)["next_cursor"].(string)
 	if r.status != 200 || count(r) != 1 || next == "" {
 		t.Fatalf("page 1: %v", r.body)
 	}
-	if r = h.do(t, "GET", "/tenant/audit-logs?"+window+"&limit=1&cursor="+url.QueryEscape(next), tok("ad.donvi.aq", false), inA, nil); r.status != 200 || count(r) != 1 {
+	if r = h.do(t, "GET", "/tenant/audit-logs?"+window+"&limit=1&cursor="+url.QueryEscape(next), tok("ad.donvi.aq"), inA, nil); r.status != 200 || count(r) != 1 {
 		t.Fatalf("page 2: %v", r.body)
 	}
 	// AC-10: missing or too wide window → 422.
-	if r = h.do(t, "GET", "/tenant/audit-logs", tok("ad.donvi.aq", false), inA, nil); r.status != 422 {
+	if r = h.do(t, "GET", "/tenant/audit-logs", tok("ad.donvi.aq"), inA, nil); r.status != 422 {
 		t.Fatalf("no window: %d", r.status)
 	}
 	wide := "from=" + url.QueryEscape(now.AddDate(0, 0, -100).Format(time.RFC3339)) + "&to=" + url.QueryEscape(now.Format(time.RFC3339))
-	if r = h.do(t, "GET", "/tenant/audit-logs?"+wide, tok("ad.donvi.aq", false), inA, nil); r.status != 422 {
+	if r = h.do(t, "GET", "/tenant/audit-logs?"+wide, tok("ad.donvi.aq"), inA, nil); r.status != 422 {
 		t.Fatalf("wide window: %d", r.status)
 	}
 
 	// AC-08: System Admin with tenant_ids → rows of both tenants with tenant_id, audited.
 	before := count0(ctx, t, e)
-	r = h.do(t, "GET", "/admin/audit-logs?"+window+"&tenant_ids="+a.tenant+","+b.tenant, tok("sa.aq", true), nil, nil)
+	r = h.do(t, "GET", "/admin/audit-logs?"+window+"&tenant_ids="+a.tenant+","+b.tenant, tok("sa.aq"), nil, nil)
 	if r.status != 200 || count(r) != 4 || r.body["data"].([]any)[0].(map[string]any)["tenant_id"] == nil {
 		t.Fatalf("system admin: %d %v", r.status, r.body)
 	}
@@ -124,14 +124,14 @@ func TestAuditLogQueries(t *testing.T) {
 		t.Fatal("cross_tenant.accessed not audited")
 	}
 	// Without tenant_ids: the platform entries only.
-	if r = h.do(t, "GET", "/admin/audit-logs?"+window, tok("sa.aq", true), nil, nil); r.status != 200 || count(r) != 1 {
+	if r = h.do(t, "GET", "/admin/audit-logs?"+window, tok("sa.aq"), nil, nil); r.status != 200 || count(r) != 1 {
 		t.Fatalf("platform rows: %d %v", r.status, r.body)
 	}
 	// Other roles → 403 (content admin; tenant admin on /admin; tenant admin of A asking for B is impossible — scope is the session).
-	if r = h.do(t, "GET", "/admin/audit-logs?"+window, tok("ca.aq", true), nil, nil); r.status != 403 {
+	if r = h.do(t, "GET", "/admin/audit-logs?"+window, tok("ca.aq"), nil, nil); r.status != 403 {
 		t.Fatalf("content admin: %d", r.status)
 	}
-	if r = h.do(t, "GET", "/admin/audit-logs?"+window+"&tenant_ids="+b.tenant, tok("ad.donvi.aq", false), nil, nil); r.status != 403 {
+	if r = h.do(t, "GET", "/admin/audit-logs?"+window+"&tenant_ids="+b.tenant, tok("ad.donvi.aq"), nil, nil); r.status != 403 {
 		t.Fatalf("tenant admin on /admin: %d", r.status)
 	}
 }

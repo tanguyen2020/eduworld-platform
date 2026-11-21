@@ -41,10 +41,10 @@ const (
 type Guard uint8
 
 const (
-	GuardNone        Guard = 0
-	GuardPortalStaff Guard = 1 << iota // azp = portal client and user_type = staff
-	GuardGamePlayer                    // azp = game client and user_type = student (ADR-0031)
-	GuardPlatformMFA                   // platform role + acr/auth_time (ADR-0027)
+	GuardNone         Guard = 0
+	GuardPortalStaff  Guard = 1 << iota // azp = portal client and user_type = staff
+	GuardGamePlayer                     // azp = game client and user_type = student (ADR-0031)
+	GuardPlatformRole                   // a platform role (ADR-0027; no MFA since ADR-0094)
 )
 
 // Operation describes one public operation (generated from OpenAPI in later features).
@@ -86,7 +86,7 @@ func effectiveGuard(op Operation) Guard {
 		g |= GuardPortalStaff
 	}
 	if hasPrefix(op.Pattern, platformPrefixes) {
-		g |= GuardPlatformMFA
+		g |= GuardPlatformRole
 	}
 	return g
 }

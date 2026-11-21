@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F078, F079, F118 (và F053 `BilingualField`, F051); delta T004–T007 đã có backend.
 - Lệnh ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)): `make up`, `make migrate`, `make seed`, `make up-app` (gồm `core-api` nạp module `game`, `chat` và `worker-jobs`); `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev`.
-- Tài khoản: `sa.admin` (system_admin, MFA tắt ở local; bật OTP seed để thử step-up); tài khoản seed `game_designer`/`liveops`/`content_reviewer` [Confirmed theo F079: `gd.thietke`, `lo.vanhanh`, `cm.duyet`]; `ad.truong.a`, `sm.antoan` cho kiểm chặn; học sinh `hs.an.3a` để xem sticker trong game.
+- Tài khoản: `sa.admin` (system_admin, chỉ mật khẩu — không MFA, ADR-0094); tài khoản seed `game_designer`/`liveops`/`content_reviewer` [Confirmed theo F079: `gd.thietke`, `lo.vanhanh`, `cm.duyet`]; `ad.truong.a`, `sm.antoan` cho kiểm chặn; học sinh `hs.an.3a` để xem sticker trong game.
 - Dữ liệu: seed quest/NPC dialogue có đủ `vi`/`en`, một quest thiếu `en`; 2 tệp webp mẫu, 1 tệp vượt giới hạn, 1 GIF mẫu; reward rule đã publish để làm `unlock_rule`.
 
 ## 2. Kịch bản kiểm tra
@@ -27,7 +27,7 @@
 | 12 | Xuất XLIFF 120 item "chỉ trường thiếu" | Job `succeeded`, tải file có khóa `<config_type>/<id>/<version>/<pointer>`, link có hạn | F082-AC-12, F082-AC-15 |
 | 13 | Sửa `target`, nhập `dry_run` rồi nhập thật | Dry run không tạo version; nhập thật tạo Draft mới, version publish không đổi | F082-AC-13 |
 | 14 | Nhập file có khóa sai, khóa version cũ, chuỗi quá dài; file XML hỏng | Báo cáo từng dòng, job `succeeded`; file hỏng → `failed` | F082-AC-14 |
-| 15 | Gọi API dịch bằng token thiếu MFA; `gd.thietke` đọc job của `sa.admin` | `403 MFA_REQUIRED`; `404` | F082-AC-16 |
+| 15 | Gọi API dịch bằng token client game; `gd.thietke` đọc job của `sa.admin` | `403 PORTAL_ACCESS_STAFF_ONLY` (không còn kiểm MFA — ADR-0094); `404` | F082-AC-16 |
 | 16 | Đưa `event_id` sự kiện trường của `th-demo-a` vào `content_ids`; gọi route qua gateway public | Báo lỗi như không tồn tại; 404 tại APISIX | F082-AC-17 |
 | 17 | `ad.truong.a`, `sm.antoan` mở `/game-ops/translations` | 403, network log không tải chunk `game-ops` | F082-AC-18 |
 | 18 | `content_ids` 501 phần tử; tag 65 ký tự | `422 VALIDATION_FAILED` chỉ rõ field; bộ đếm ký tự trong UI | F082-AC-19 |

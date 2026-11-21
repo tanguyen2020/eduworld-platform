@@ -32,7 +32,7 @@ func TestTenantSocialSettingsSubset(t *testing.T) {
 	portalUser(ctx, t, e, iss, "ad.donvi.soc", "tenant_admin", &a.tenant, "tenant", nil)
 	portalUser(ctx, t, e, iss, "ad.truong.soc", "tenant_admin", &b.tenant, "tenant", nil)
 	now := time.Now()
-	tok := func(user string) string { return idp.Token("sub-"+user, httpxtest.PortalClient, false, now) }
+	tok := func(user string) string { return idp.Token("sub-"+user, httpxtest.PortalClient, now) }
 	headers := func(tenant, etag string) map[string]string {
 		return map[string]string{"X-Tenant-Id": tenant, "Content-Type": "application/merge-patch+json", "If-Match": etag}
 	}

@@ -1,7 +1,7 @@
 // Generates realm-eduworld.dev.json (local only, F004 T013/T043): Organizations and the demo accounts of
 // LOCAL_DEVELOPMENT §5. Fake data only. Run: node deploy/keycloak/scripts/gen-dev-realm.mjs
 import { writeFileSync } from 'node:fs';
-import { DEMO_PASSWORD, SA_ADMIN_TOTP_SECRET } from './dev-constants.mjs';
+import { DEMO_PASSWORD } from './dev-constants.mjs';
 
 const PASSWORD = DEMO_PASSWORD;
 
@@ -37,20 +37,13 @@ for (const [u, list] of Object.entries(tenantStaff)) {
   users.push({ username: u, email: `${u}@example.invalid`, enabled: true, emailVerified: true, realmRoles: ['tenant_staff'], credentials: [pwd] });
   for (const org of list) members[org].push(u);
 }
+// Platform staff sign in with the password only (ADR-0094: no OTP for any account).
 for (const u of platformStaff) {
-  const creds = [pwd];
-  if (u === 'sa.admin') {
-    creds.push({
-      type: 'otp', userLabel: 'local-demo',
-      secretData: JSON.stringify({ value: SA_ADMIN_TOTP_SECRET }),
-      credentialData: JSON.stringify({ subType: 'totp', digits: 6, counter: 0, period: 30, algorithm: 'HmacSHA1' }),
-    });
-  }
-  users.push({ username: u, email: `${u}@example.invalid`, enabled: true, emailVerified: true, realmRoles: ['platform_staff'], credentials: creds });
+  users.push({ username: u, email: `${u}@example.invalid`, enabled: true, emailVerified: true, realmRoles: ['platform_staff'], credentials: [pwd] });
 }
-// Spike R5 / F012: platform staff with a temporary password and no OTP yet (UPDATE_PASSWORD + CONFIGURE_TOTP).
+// Spike R5 / F012: platform staff with a temporary password (UPDATE_PASSWORD).
 users.push({ username: 'sa.moi', email: 'sa.moi@example.invalid', enabled: true, emailVerified: true, realmRoles: ['platform_staff'],
-  requiredActions: ['UPDATE_PASSWORD', 'CONFIGURE_TOTP'], credentials: [{ type: 'password', value: PASSWORD, temporary: true }] });
+  requiredActions: ['UPDATE_PASSWORD'], credentials: [{ type: 'password', value: PASSWORD, temporary: true }] });
 
 const realm = {
   realm: 'eduworld',

@@ -85,7 +85,7 @@ func newGameIntegration(ctx context.Context, t *testing.T, o gameOpts) *gameInte
 	}
 	t.Cleanup(vk.Close)
 	kc := &fakeKeycloak{users: map[string]fakeKCUser{}, refresh: map[string]string{}, sidUser: map[string]string{},
-		sidAMR: map[string][]string{}, actions: map[string][]string{}, sidClient: map[string]string{}}
+		sidRoles: map[string][]string{}, actions: map[string][]string{}, sidClient: map[string]string{}}
 	kcSrv := httptest.NewServer(kc)
 	t.Cleanup(kcSrv.Close)
 	tokens, err := keycloak.NewPortalTokens(keycloak.PortalConfig{TokenURL: kcSrv.URL + "/realms/eduworld/protocol/openid-connect/token",

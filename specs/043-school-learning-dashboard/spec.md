@@ -31,6 +31,10 @@
 - Q: T042 `DashboardMeta.available_from` tính thế nào? → A: [Confirmed] Ngày `bucket_date` nhỏ nhất của rollup ngày trong phạm vi câu trả lời: `rollup_class_daily` của lớp khi có `class_id` (dashboard lớp, dashboard trường lọc lớp), ngược lại `rollup_school_daily` của các trường của phạm vi (dashboard trường, chuỗi, hồ sơ học sinh theo trường của học sinh, tóm tắt tenant); không áp bộ lọc khối/môn; `null`/vắng khi phạm vi chưa có dòng và ở tóm tắt platform (không tính liên tenant). Chưa có bảng `available_from` theo chỉ số của DASHBOARD_DATA §5 (backfill) — khi có, thay nguồn mà không đổi contract.
 - Q: T042 `replica_lag_warning`? → A: [Confirmed] Đo trong cùng transaction đọc (savepoint, không bao giờ làm hỏng câu trả lời): `pg_is_in_recovery()` và đã replay hết WAL nhận được → 0, ngược lại `now() - pg_last_xact_replay_timestamp()`; cờ = độ trễ > `dashboard_replica_lag_alert_seconds` (60 s, CONFIG_DEFAULTS, `analytics.Config.ReplicaLagAlert`); không đo được → cờ `true` (log WARN). Số liệu vẫn trả từ replica (không fallback primary, F043-AC-21); phản hồi có cờ `true` không ghi cache Valkey. Cả hai trường là tùy chọn trong contract (không phá vỡ client cũ).
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: Chỉ plan/contracts nhắc MFA cho đọc liên tenant của System Admin; đọc là `platform.cross_tenant.read` + client portal + audit, không MFA. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Pipeline rollup gia tăng và chốt ngày (Priority: P1)

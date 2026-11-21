@@ -19,6 +19,10 @@
 - Game Dashboard → **Chốt:** thuộc F079 (đếm item cần dịch theo `translation_status`).
 - Platform-ops (gán/clone/Thùng rác) cho sticker pack/GIF của module chat (OQ F045-3) → **Chốt:** F082 hiện thực facade platform-ops của module chat cho hai loại này (hộp gán ở F057, saga ở F045).
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F082-AC-16, AC-18: bỏ điều kiện "thiếu MFA", mã `403 MFA_REQUIRED` và step-up MFA; giữ permission, `azp`, role platform, lỗi gateway nội bộ. T030, T032, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Quản lý sticker pack (Priority: P1) 🎯 MVP

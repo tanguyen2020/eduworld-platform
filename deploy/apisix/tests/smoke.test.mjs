@@ -128,7 +128,7 @@ run('F004-AC-15/16: the password of a login never reaches the gateway logs', asy
   await call(PUB, '/api/v1/auth/game/login', { method: 'POST', headers: { 'X-Device-Id': `dev-${randomUUID()}` },
     body: { username: `log-${randomUUID()}`, password: secret } });
   await call(PUB, '/api/v1/auth/portal/login', { method: 'POST', headers: { 'X-Device-Id': `dev-${randomUUID()}` },
-    body: { username: `log-${randomUUID()}`, password: secret, otp: '123456' } });
+    body: { username: `log-${randomUUID()}`, password: secret } });
   const logs = execFileSync('docker', ['logs', '--since', '2m', 'eduworld-apisix-1'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   assert.ok(!logs.includes(secret), 'password found in APISIX logs');
   assert.ok(!/\/realtime\/v1\?/.test(logs), 'realtime query string in access log');

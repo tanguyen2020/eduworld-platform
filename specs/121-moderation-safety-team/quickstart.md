@@ -21,7 +21,7 @@
 | 6 | `sm.antoan` `listModerationCases` không chọn tenant | Thấy case `th-demo-a` và `pgd-demo`; audit + metric bypass tăng | F121-AC-06 |
 | 7 | `sm.antoan` nhận case (`assignModerationCase`), mở tin, tìm `q`; tài khoản moderator khác mở cùng case | Trả snapshot + ngữ cảnh, audit `moderation.case.*`; người khác `403` | F121-AC-07, F121-AC-08 |
 | 8 | `sm.antoan` gọi `getSchoolDashboard`, `searchMessages`; `ad.truong.a` gọi `/admin/moderation/cases` qua gateway public | `403`; gateway public `404` | F121-AC-09 |
-| 9 | Token `sm.antoan` không MFA (bật OTP seed) | `403 MFA_REQUIRED` | F121-AC-10 |
+| 9 | Token `sm.antoan` chỉ mật khẩu; token client game của `sm.antoan` | `200` (không MFA — ADR-0094); `403 PORTAL_ACCESS_STAFF_ONLY` + audit `authz.denied` | F121-AC-10 |
 | 10 | `actOnModerationCase` `remove_message` rồi `restrict` (`restrict_text`) và `close`; gửi lại với `If-Match` cũ | Tin placeholder realtime; `412` | F121-AC-11, F121-AC-12 |
 | 11 | `sm.antoan` áp `restrict_multiplayer` 14 ngày; `sm.truongca` áp lại | `403`; thành công, `sanction.applied` | F121-AC-13 |
 | 12 | `hs.an.3a` gửi text khi `restrict_text`, cả khi `enabled_all` tắt và trong `match` | Bị từ chối | F121-AC-14 |

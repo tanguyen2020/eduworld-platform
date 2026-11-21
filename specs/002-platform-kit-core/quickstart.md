@@ -23,11 +23,11 @@
 | 8 | `ad.truong.a` gửi `?tenant_ids=B` | Bị bỏ qua, chỉ dữ liệu A | F002-AC-08 |
 | 9 | Resolver trả timeout, cache trống | 503 `UNAVAILABLE` `retryable: true` | F002-AC-09 |
 | 10 | Gọi 2 lần liên tiếp rồi `Invalidate` | Lần 2 hit cache; sau invalidate gọi resolver | F002-AC-10 |
-| 11 | `sa.admin` (MFA) dùng `CrossTenantScope` với lý do rỗng / có lý do | Lỗi / thành công + audit `cross_tenant.accessed` | F002-AC-11, F002-AC-12 |
+| 11 | `sa.admin` (token portal, không MFA — ADR-0094) dùng `CrossTenantScope` với lý do rỗng / có lý do | Lỗi / thành công + audit `cross_tenant.accessed` | F002-AC-11, F002-AC-12 |
 | 12 | Chạy test RLS (testcontainers) | 0 dòng khi không set hoặc set tenant khác | F002-AC-13 |
 | 13 | Sửa catalog thêm `game.quest.write` vào role `school_admin`, chạy binary | Exit 1, log tên role/permission | F002-AC-14, F002-AC-15 |
 | 14 | `hs.an.3a` gọi `/api/v1/cms/_kit/echo`; `ad.truong.a` gọi route game thử | 403 `PORTAL_ACCESS_STAFF_ONLY`; 403 `GAME_ACCESS_STUDENT_ONLY` | F002-AC-16, F002-AC-17 |
-| 15 | `sa.admin` không MFA gọi route platform thử; `ad.truong.a` có MFA | 403 `MFA_REQUIRED`; 403 `PERMISSION_DENIED` | F002-AC-18 |
+| 15 | `sa.admin` (token portal không `amr`/`acr`) gọi route platform thử; `ad.truong.a` (role tenant) gọi cùng route | `200`; 403 `PERMISSION_DENIED` + `authz.denied` (ADR-0094) | F002-AC-18 |
 | 16 | `qlcm.truong.a` (scope Toán) gọi tài nguyên môn khác; tài nguyên tenant B | 403 `PERMISSION_DENIED`; 404 | F002-AC-19 |
 | 17 | Panic giả trong handler; lỗi lạ | 500 `INTERNAL`, có `trace_id`, không stack trace | F002-AC-20 |
 | 18 | Thêm mã vào `ProblemCode` không chạy gen → `make gen-check` | Fail | F002-AC-21 |

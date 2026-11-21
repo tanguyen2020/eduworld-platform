@@ -94,8 +94,7 @@ func asPlatform(ctx context.Context, p authz.Principal) (context.Context, error)
 // is gone, the step still acts for that user (audit actor) and never with more rights.
 func onBehalf(ctx context.Context, userID uuid.UUID, perm authz.Permission) (context.Context, error) {
 	p := authz.NewPrincipal(authz.PrincipalData{UserID: userID, UserType: authz.UserTypeStaff, IsSystemAdmin: true,
-		Channel: authz.ChannelPortal, MFA: true,
-		Grants: []authz.Grant{{Role: "system_admin", ScopeKind: authz.RoleScopePlatform, Permissions: []authz.Permission{perm}}}})
+		Channel: authz.ChannelPortal, Grants: []authz.Grant{{Role: "system_admin", ScopeKind: authz.RoleScopePlatform, Permissions: []authz.Permission{perm}}}})
 	sc, err := authz.PlatformScope(p)
 	if err != nil {
 		return ctx, err

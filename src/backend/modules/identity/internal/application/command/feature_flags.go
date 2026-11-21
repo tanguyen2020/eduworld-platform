@@ -30,7 +30,7 @@ type FeatureFlagWrite struct {
 }
 
 // FeatureFlags implements putFeatureFlag (F015 US5, ADR-0090): System Admin (platform.feature_flag.write,
-// MFA through the /admin guard) sets the platform default or a tenant override of a feature flag or of a
+// platform role through the /admin guard) sets the platform default or a tenant override of a feature flag or of a
 // menu/action of the catalog; kind and parent come from the catalog; protected items cannot be disabled.
 type FeatureFlags struct {
 	UoW    write.UnitOfWork

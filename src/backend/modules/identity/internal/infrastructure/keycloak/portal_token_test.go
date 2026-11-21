@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -68,9 +69,9 @@ func (f *fakeTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	amr := []string{"pwd"}
-	if form.Get("otp") != "" {
-		amr = append(amr, "otp")
+	roles := []string{"default-roles-eduworld", "tenant_staff"}
+	if form.Get("username") == "sa.admin" {
+		roles = []string{"default-roles-eduworld", "platform_staff"}
 	}
 	if form.Get("grant_type") == "refresh_token" && form.Get("refresh_token") != "rt-1" {
 		w.Header().Set("Content-Type", "application/json")
@@ -78,7 +79,7 @@ func (f *fakeTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, `{"error":"invalid_grant","error_description":"Token is not active"}`)
 		return
 	}
-	at := jwtWith(map[string]any{"iss": "http://kc/realms/eduworld", "sub": "kc-user-1", "sid": "sid-9", "amr": amr,
+	at := jwtWith(map[string]any{"iss": "http://kc/realms/eduworld", "sub": "kc-user-1", "sid": "sid-9", "roles": roles, "amr": []string{"pwd"},
 		"iat": 1_800_000_000, "azp": "eduworld-portal"})
 	rt := jwtWith(map[string]any{"sid": "sid-9", "typ": "Refresh"})
 	w.Header().Set("Content-Type", "application/json")
@@ -118,26 +119,27 @@ func TestPortalConfigFrom(t *testing.T) {
 	}
 }
 
-// F012-AC-27: direct grant of the confidential client, otp only when given, claims read from the token.
+// F012-AC-27: direct grant of the confidential client with username and password only (ADR-0094), claims read
+// from the token (realm roles for the platform session bound).
 func TestPortalPasswordGrant(t *testing.T) {
 	f := &fakeTokenEndpoint{}
 	p := newPortalTokens(t, f)
 	pw := []byte(`p@ss word&="x`)
-	tok, err := p.PasswordGrant(context.Background(), "ad.truong.a", pw, nil)
+	tok, err := p.PasswordGrant(context.Background(), "ad.truong.a", pw)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if tok.Subject != "kc-user-1" || tok.SessionID != "sid-9" || tok.Issuer != "http://kc/realms/eduworld" || tok.ExpiresIn != 300 ||
-		tok.RefreshExpiresIn != 1800 || tok.RefreshToken == "" || len(tok.AMR) != 1 || tok.IssuedAt.Unix() != 1_800_000_000 {
+		tok.RefreshExpiresIn != 1800 || tok.RefreshToken == "" || !slices.Contains(tok.RealmRoles, "tenant_staff") || tok.IssuedAt.Unix() != 1_800_000_000 {
 		t.Fatalf("tokens = %+v", tok)
 	}
 	c := f.calls[0]
 	if c.Get("grant_type") != "password" || c.Get("username") != "ad.truong.a" || c.Get("password") != string(pw) || c.Has("otp") {
 		t.Fatalf("form = %v", c)
 	}
-	tok, err = p.PasswordGrant(context.Background(), "sa.admin", []byte("x"), []byte("123456"))
-	if err != nil || f.calls[1].Get("otp") != "123456" || len(tok.AMR) != 2 {
-		t.Fatalf("otp grant = %+v %v (form %v)", tok, err, f.calls[1])
+	tok, err = p.PasswordGrant(context.Background(), "sa.admin", []byte("x"))
+	if err != nil || f.calls[1].Has("otp") || !slices.Contains(tok.RealmRoles, "platform_staff") {
+		t.Fatalf("platform grant = %+v %v (form %v)", tok, err, f.calls[1])
 	}
 }
 
@@ -162,7 +164,7 @@ func TestPortalGrantErrors(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			f := &fakeTokenEndpoint{status: c.status, ctype: c.ctype, body: c.body}
 			p := newPortalTokens(t, f)
-			_, err := p.PasswordGrant(context.Background(), "u", []byte("p"), nil)
+			_, err := p.PasswordGrant(context.Background(), "u", []byte("p"))
 			if c.want != nil && !errors.Is(err, c.want) {
 				t.Fatalf("err = %v, want %v", err, c.want)
 			}
@@ -177,14 +179,14 @@ func TestPortalGrantErrors(t *testing.T) {
 func TestPortalGrantNoRetry(t *testing.T) {
 	f := &fakeTokenEndpoint{status: 503}
 	p := newPortalTokens(t, f)
-	_, err := p.PasswordGrant(context.Background(), "u", []byte("p"), nil)
+	_, err := p.PasswordGrant(context.Background(), "u", []byte("p"))
 	if err == nil || errors.Is(err, port.ErrPortalInvalidCredentials) || len(f.calls) != 1 {
 		t.Fatalf("err = %v calls = %d", err, len(f.calls))
 	}
 	f2 := &fakeTokenEndpoint{status: 401, body: `{"error":"invalid_grant"}`}
 	p2 := newPortalTokens(t, f2)
 	for range 30 {
-		if _, err := p2.PasswordGrant(context.Background(), "u", []byte("p"), nil); !errors.Is(err, port.ErrPortalInvalidCredentials) {
+		if _, err := p2.PasswordGrant(context.Background(), "u", []byte("p")); !errors.Is(err, port.ErrPortalInvalidCredentials) {
 			t.Fatalf("credential errors must not open the circuit: %v", err)
 		}
 	}

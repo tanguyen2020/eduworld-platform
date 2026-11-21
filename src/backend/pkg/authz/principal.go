@@ -59,7 +59,7 @@ func (s PermissionSet) List() []Permission {
 // whole tenant, or the platform for platform roles). There is no class scope (ADR-0072).
 type Grant struct {
 	Role        string        `json:"role"`
-	ScopeKind   RoleScopeKind `json:"scope_kind"` // role_scope_kind of the role (platform roles need MFA)
+	ScopeKind   RoleScopeKind `json:"scope_kind"` // role_scope_kind of the role
 	Permissions []Permission  `json:"permissions"`
 	SchoolID    *uuid.UUID    `json:"school_id,omitempty"`
 	SubjectID   *uuid.UUID    `json:"subject_id,omitempty"`
@@ -75,9 +75,8 @@ type PrincipalData struct {
 	IsSystemAdmin bool       `json:"is_system_admin,omitempty"`
 	ClientID      string     `json:"-"` // azp (per request, not cached)
 	SessionID     string     `json:"-"` // sid (per request, not cached)
-	// Channel and MFA come from the verified token on each request, never from the cache.
+	// Channel comes from the verified token on each request, never from the cache.
 	Channel Channel `json:"-"`
-	MFA     bool    `json:"-"`
 }
 
 // Principal is the authenticated actor of a request (BACKEND_DESIGN §6). Build it with NewPrincipal so
@@ -155,7 +154,7 @@ func ScopeFor(p Principal) (tenancy.TenantScope, error) {
 }
 
 // CrossTenantScope returns an explicit multi-tenant scope for System Admin: it requires
-// platform.cross_tenant.read, the portal client, MFA, no session tenant and a reason of the closed list
+// platform.cross_tenant.read, the portal client, no session tenant and a reason of the closed list
 // (F002-AC-11, ADR-0027 §6). Data access records cross_tenant.accessed on use (tenancy.RecordCrossTenantScope).
 func CrossTenantScope(p Principal, ids []uuid.UUID, reason tenancy.BypassReason) (tenancy.CrossTenantScope, error) {
 	switch {
@@ -163,8 +162,8 @@ func CrossTenantScope(p Principal, ids []uuid.UUID, reason tenancy.BypassReason)
 		return tenancy.CrossTenantScope{}, errors.New("authz: cross-tenant scope needs a platform principal")
 	case !p.Has(PermPlatformCrossTenantRead):
 		return tenancy.CrossTenantScope{}, errors.New("authz: missing platform.cross_tenant.read")
-	case p.Channel != ChannelPortal || !p.MFA:
-		return tenancy.CrossTenantScope{}, errors.New("authz: cross-tenant scope needs the portal client with MFA")
+	case p.Channel != ChannelPortal:
+		return tenancy.CrossTenantScope{}, errors.New("authz: cross-tenant scope needs the portal client")
 	case !reason.Valid():
 		return tenancy.CrossTenantScope{}, fmt.Errorf("%w: %q", tenancy.ErrBypassReason, reason)
 	case len(ids) == 0 || slices.Contains(ids, uuid.Nil):

@@ -4,18 +4,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { admin, adminToken, passwordGrant, decodeJWT, KC_URL, REALM } from '../scripts/kc.mjs';
-import { totp } from '../scripts/totp.mjs';
-import { DEMO_PASSWORD as P, SA_ADMIN_TOTP_SECRET } from '../scripts/dev-constants.mjs';
+import { DEMO_PASSWORD as P } from '../scripts/dev-constants.mjs';
 
 const S = process.env.KC_LOCAL_SECRET ?? 'change-me-local';
 const run = process.env.KC_INTEGRATION === '1' ? test : test.skip;
-
-async function freshTotp() {
-  // A TOTP code cannot be reused (otpPolicyCodeReusable=false): wait for the next 30 s window.
-  const ms = 30000 - (Date.now() % 30000) + 200;
-  await new Promise((r) => setTimeout(r, ms));
-  return totp(SA_ADMIN_TOTP_SECRET);
-}
 
 run('F004-AC-02: direct grant only through the two confidential clients with their secret', async () => {
   assert.equal((await passwordGrant('eduworld-game-backend', S, 'hs.an.3a', P)).status, 200);
@@ -46,18 +38,18 @@ run('F004-AC-03/25: only students in the game, only staff in the portal; denial 
   assert.match(setup.json.error_description, /not fully set up/);
 });
 
-run('F004-AC-26/29: amr pwd without OTP, pwd+otp with OTP; OTP required once configured', async () => {
-  const t = decodeJWT((await passwordGrant('eduworld-portal', S, 'ad.truong.a', P)).json.access_token);
-  assert.deepEqual(t.amr, ['pwd']);
-  const missing = await passwordGrant('eduworld-portal', S, 'sa.admin', P);
-  assert.equal(missing.json.error, 'invalid_grant');
-  const ok = await passwordGrant('eduworld-portal', S, 'sa.admin', P, { otp: await freshTotp() });
+run('ADR-0094: platform staff sign in with the password alone; the portal flow and tokens carry no OTP/LoA', async () => {
+  const ok = await passwordGrant('eduworld-portal', S, 'sa.admin', P);
   assert.equal(ok.status, 200, JSON.stringify(ok.json));
-  const mfa = decodeJWT(ok.json.access_token);
-  assert.deepEqual(mfa.amr, ['pwd', 'otp']);
-  // Keycloak 26.4 direct grant emits no auth_time (spike R5): httpx falls back to iat.
-  assert.equal(mfa.auth_time, undefined);
-  assert.ok(mfa.iat > 0);
+  const t = decodeJWT(ok.json.access_token);
+  assert.ok(t.roles.includes('platform_staff'));
+  assert.ok(!(t.amr ?? []).includes('otp')); // no OTP step, no AMR/LoA mapper on eduworld-portal any more
+  assert.ok(t.iat > 0); // direct grant emits no auth_time (spike R5): module identity bounds the platform session
+  const token = await adminToken();
+  const ex = (await admin('/authentication/flows/eduworld-portal-direct-grant/executions', { token })).json;
+  assert.ok(!ex.some((e) => /otp/i.test(`${e.providerId ?? ''} ${e.displayName ?? ''}`)), JSON.stringify(ex));
+  const totp = (await admin('/authentication/required-actions/CONFIGURE_TOTP', { token })).json;
+  assert.equal(totp.enabled, false);
 });
 
 run('F004-AC-05: audience, flat realm roles, no organization claim, no personal data, no offline_access', async () => {

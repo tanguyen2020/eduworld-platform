@@ -6,12 +6,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// PortalLogin is the input of portalLogin. Password and OTP are zeroed by the use case after the Keycloak
-// call (best effort, F012-AC-31).
+// PortalLogin is the input of portalLogin: username and password only (ADR-0094). The password is zeroed by
+// the use case after the Keycloak call (best effort, F012-AC-31).
 type PortalLogin struct {
 	Username string
 	Password []byte
-	OTP      []byte
 	DeviceID uuid.UUID
 	Locale   string
 }
@@ -24,8 +23,7 @@ type PortalSession struct {
 	CSRF             string
 	ExpiresIn        int
 	RefreshExpiresIn int
-	AuthTime         time.Time
-	MFA              bool
+	AuthTime         time.Time // password entry of the session
 }
 
 // PortalSetupPassword is the input of setupPortalPassword.
@@ -36,8 +34,7 @@ type PortalSetupPassword struct {
 
 // PortalSetupResult is the output of setupPortalPassword.
 type PortalSetupResult struct {
-	RemainingSteps    []string
-	OTPSetupEmailSent bool
+	RemainingSteps []string
 }
 
 // PortalForgotPassword is the input of forgotPortalPassword.

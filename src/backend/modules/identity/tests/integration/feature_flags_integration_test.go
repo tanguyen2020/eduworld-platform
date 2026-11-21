@@ -36,8 +36,8 @@ func TestFeatureFlagsAndMenuCatalog(t *testing.T) {
 	portalUser(ctx, t, e, iss, "sa.ff", "system_admin", nil, "platform", nil)
 	portalUser(ctx, t, e, iss, "ad.donvi.ff", "tenant_admin", &a.tenant, "tenant", nil)
 	now := time.Now()
-	sa := idp.Token("sub-sa.ff", httpxtest.PortalClient, true, now)
-	ta := idp.Token("sub-ad.donvi.ff", httpxtest.PortalClient, false, now)
+	sa := idp.Token("sub-sa.ff", httpxtest.PortalClient, now)
+	ta := idp.Token("sub-ad.donvi.ff", httpxtest.PortalClient, now)
 
 	// AC-23: the catalog is synced (setup ran cmd/migrate's sync); a second sync is idempotent.
 	var menu, action, protected string

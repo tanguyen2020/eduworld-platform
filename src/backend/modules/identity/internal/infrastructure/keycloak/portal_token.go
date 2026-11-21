@@ -135,15 +135,12 @@ type tokenResult struct {
 
 const maxTokenBody = 64 << 10
 
-// PasswordGrant implements port.PortalIdP. The form buffer holding the password is zeroed after the call
-// (best effort, F012-AC-31); the caller zeroes its own copies.
-func (p *PortalTokens) PasswordGrant(ctx context.Context, username string, password, otp []byte) (port.PortalTokens, error) {
+// PasswordGrant implements port.PortalIdP: username and password only (ADR-0094). The form buffer holding the
+// password is zeroed after the call (best effort, F012-AC-31); the caller zeroes its own copies.
+func (p *PortalTokens) PasswordGrant(ctx context.Context, username string, password []byte) (port.PortalTokens, error) {
 	form := p.clientForm("password")
 	form = appendField(form, "username", []byte(username))
 	form = appendField(form, "password", password)
-	if len(otp) > 0 {
-		form = appendField(form, "otp", otp) // the direct grant OTP parameter is "otp" (F004 research R5)
-	}
 	defer clear(form)
 	res, err := p.post(ctx, p.cfg.Kind+"_password_grant", p.cfg.TokenURL, form, p.once)
 	if err != nil {
@@ -289,11 +286,11 @@ func parseTokens(res tokenResult, refresh bool) (port.PortalTokens, error) {
 		return port.PortalTokens{}, fmt.Errorf("keycloak token: invalid response: %w", errMisconfigured)
 	}
 	var c struct {
-		Iss string   `json:"iss"`
-		Sub string   `json:"sub"`
-		SID string   `json:"sid"`
-		AMR []string `json:"amr"`
-		Iat int64    `json:"iat"`
+		Iss   string   `json:"iss"`
+		Sub   string   `json:"sub"`
+		SID   string   `json:"sid"`
+		Roles []string `json:"roles"` // realm roles (scope eduworld-roles)
+		Iat   int64    `json:"iat"`
 	}
 	if err := decodeClaims(t.AccessToken, &c); err != nil || c.Sub == "" || c.Iss == "" {
 		return port.PortalTokens{}, fmt.Errorf("keycloak token: unreadable access token: %w", errMisconfigured)
@@ -302,7 +299,7 @@ func parseTokens(res tokenResult, refresh bool) (port.PortalTokens, error) {
 		c.SID = t.SessionState
 	}
 	out := port.PortalTokens{AccessToken: t.AccessToken, RefreshToken: t.RefreshToken, ExpiresIn: t.ExpiresIn,
-		RefreshExpiresIn: t.RefreshExpiresIn, Issuer: c.Iss, Subject: c.Sub, SessionID: c.SID, AMR: c.AMR}
+		RefreshExpiresIn: t.RefreshExpiresIn, Issuer: c.Iss, Subject: c.Sub, SessionID: c.SID, RealmRoles: c.Roles}
 	if c.Iat > 0 {
 		out.IssuedAt = time.Unix(c.Iat, 0).UTC()
 	}

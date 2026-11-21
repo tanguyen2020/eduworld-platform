@@ -64,7 +64,7 @@ func TestStartSessionStudentOnly(t *testing.T) {
 	}
 	// Staff with a game-client token (the game client is for students only) are stopped by the game_player guard.
 	staff := e.staff(e.tenantA, "school_admin")
-	tok := e.idp.Token(staff, httpxtest.GameClient, false, time.Now())
+	tok := e.idp.Token(staff, httpxtest.GameClient, time.Now())
 	r := e.do(t, http.MethodPost, "/game/sessions", tok, map[string]string{"X-Tenant-Id": e.tenantA.String(),
 		"X-Device-Id": uuid.NewString(), "Idempotency-Key": newKey()}, map[string]any{"client_platform": "windows", "client_version": "1.2.3"})
 	if r.status != http.StatusForbidden || r.code() != string(problem.GameAccessStudentOnly) {

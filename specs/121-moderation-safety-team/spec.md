@@ -39,6 +39,10 @@ Owner đã duyệt trước các mặc định [Proposed]; khi tài liệu thi�
 - Q: `safety_moderator` ghi với `X-Tenant-Id`? → A: Identity chưa phân giải role platform vào tenant đích (F012 T058) → hiện nhận `TENANT_MISMATCH` (fail closed); test tích hợp mô phỏng principal đã phân giải (như F116). Ghi luôn chạy trong TenantScope của `X-Tenant-Id`; case của tenant khác → `403 TENANT_MISMATCH` (tra qua `tenancy.Bypass(moderation_case)` có audit). Quyền `moderation.case.lead` chưa có role nào cấp (seed `sm.truongca` chỉ có `safety_moderator`) → thao tác trưởng ca bị từ chối tới khi identity cấp (câu hỏi mở F012).
 - Q: Lạm dụng báo cáo? → A: `weight` = 0,5 khi người báo cáo có ≥ 3 report bị bác bỏ trong 30 ngày (không phạt); `report_count` vẫn đếm một lần mỗi người báo cáo.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F121-AC-06: token `eduworld-portal` của Safety Moderator/System Admin không cần MFA. F121-AC-10 sửa nghĩa: `azp ≠ eduworld-portal` hoặc không có role platform → `403 PERMISSION_DENIED` + audit `authz.denied`; không còn nhánh "thiếu MFA (`acr`) → `403 MFA_REQUIRED`"; test ma trận authz bỏ ca MFA, thêm ca Safety Moderator đăng nhập chỉ bằng mật khẩu đọc được hàng đợi case. T021, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Học sinh báo cáo, hệ thống tạo case (Priority: P1) 🎯 MVP
@@ -77,7 +81,7 @@ Owner đã duyệt trước các mặc định [Proposed]; khi tài liệu thi�
 | F121-AC-07 | KHI người được gán hoặc trưởng ca gọi `getModerationCase`/`listModerationCaseMessages`, module chat PHẢI trả snapshot bằng chứng + ±200 tin ngữ cảnh của channel liên quan (nội dung gốc, revision, trạng thái), tìm `q` chỉ trong phạm vi đó, ghi audit `moderation.case.viewed`/`moderation.case.messages_viewed`/`moderation.case.searched` kèm `tenant_id` đích; NẾU không phải người được gán/trưởng ca, THÌ PHẢI trả `403 PERMISSION_DENIED` | FR-MOD-016 · FR-MOD-005 · [MODERATION §6.1](../../docs/03-social-multiplayer/MODERATION.md) | TC-CHAT-040 |
 | F121-AC-08 | KHI gọi `assignModerationCase` với `Idempotency-Key` và `X-Tenant-Id` = tenant của case, module chat PHẢI đặt `assignee_moderator_id` (tự nhận, hoặc trưởng ca gán người khác), chuyển `open → in_review`, phát `moderation.case_assigned`; case đã `resolved` PHẢI trả `409 MODERATION_CASE_CLOSED` | FR-MOD-003 · [MODERATION §6.2](../../docs/03-social-multiplayer/MODERATION.md) | TC-CHAT-007 |
 | F121-AC-09 | NẾU token `safety_moderator` gọi API ngoài module moderation (LMS, nội dung, hồ sơ học sinh, login events, `searchMessages`), THÌ module đích PHẢI trả `403 PERMISSION_DENIED`; NẾU role tenant gọi `/admin/moderation/*`, THÌ gateway public PHẢI không có route và backend trả `403` | FR-MOD-016 · AC-MOD-006 · AGENTS R20 | TC-CHAT-042 |
-| F121-AC-10 | NẾU token thiếu MFA (`acr`) hoặc `azp ≠ eduworld-portal`, THÌ module chat PHẢI trả `403 MFA_REQUIRED`/`403 PERMISSION_DENIED` và audit `authz.denied` | FR-MOD-003 · ADR-0027 | TC-CMS-WS-02 |
+| F121-AC-10 | NẾU `azp ≠ eduworld-portal` hoặc người gọi không có role platform, THÌ module chat PHẢI trả `403 PERMISSION_DENIED` và audit `authz.denied`; HỆ THỐNG PHẢI KHÔNG yêu cầu MFA (sửa theo ADR-0094) | FR-MOD-003 · ADR-0027 · ADR-0094 | TC-CMS-WS-02 |
 
 ---
 

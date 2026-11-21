@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Admin Portal login through the backend (ADR-0091, F012 US7/US8). Passwords, OTP codes, refresh tokens,
+// Admin Portal login through the backend (ADR-0091, ADR-0094, F012 US7/US8). Passwords, refresh tokens,
 // setup tickets and reset tokens cross these ports as []byte or opaque strings and are never logged,
 // traced or audited (AGENTS R14, F012-AC-31).
 
@@ -16,8 +16,8 @@ import (
 // Any other error is transient or a misconfiguration (timeout, 5xx, open circuit, invalid_client) and is
 // answered 503 UNAVAILABLE — never as a credential error.
 var (
-	// ErrPortalInvalidCredentials: unknown username, wrong password, wrong or missing OTP, account disabled or
-	// temporarily locked by brute-force detection (Keycloak answers all of them alike).
+	// ErrPortalInvalidCredentials: unknown username, wrong password, account disabled or temporarily locked by
+	// brute-force detection (Keycloak answers all of them alike).
 	ErrPortalInvalidCredentials = errors.New("portal idp: invalid credentials")
 	// ErrPortalAccessDenied: the direct grant flow refused the account after the password step ("Allow access
 	// only for role": student accounts) — F004 research R5 (d).
@@ -41,15 +41,16 @@ type PortalTokens struct {
 	Issuer    string
 	Subject   string // Keycloak user id
 	SessionID string // sid
-	AMR       []string
-	IssuedAt  time.Time
+	// RealmRoles is the claim roles (realm roles): platform_staff bounds the session age (ADR-0094 §2).
+	RealmRoles []string
+	IssuedAt   time.Time
 }
 
 // PortalIdP is the token client of eduworld-portal (Keycloak token/logout endpoints). Every call has a
 // timeout and a circuit breaker; only Logout (idempotent) is retried (AGENTS R29).
 type PortalIdP interface {
-	// PasswordGrant runs the direct grant with the password and, when otp is not empty, the OTP code.
-	PasswordGrant(ctx context.Context, username string, password, otp []byte) (PortalTokens, error)
+	// PasswordGrant runs the direct grant with the password (no second factor, ADR-0094).
+	PasswordGrant(ctx context.Context, username string, password []byte) (PortalTokens, error)
 	// Refresh rotates the refresh token.
 	Refresh(ctx context.Context, refreshToken string) (PortalTokens, error)
 	// Logout ends the Keycloak session of the refresh token (sid); an already ended session is success.
@@ -64,23 +65,21 @@ type PortalIdP interface {
 type PortalAccountAdmin interface {
 	// FindUserByLogin finds the Keycloak user by exact username, or by exact email when login contains "@".
 	FindUserByLogin(ctx context.Context, login string) (KCUser, error)
-	// RequiredActions returns the pending required actions of the user (UPDATE_PASSWORD, CONFIGURE_TOTP…).
+	// RequiredActions returns the pending required actions of the user (UPDATE_PASSWORD…).
 	RequiredActions(ctx context.Context, userID string) ([]string, error)
 	// ResetPassword sets a permanent password (realm policy applies → ErrKCPasswordPolicy).
 	ResetPassword(ctx context.Context, userID string, password []byte) error
 	// RemoveRequiredAction removes one required action (no-op when absent).
 	RemoveRequiredAction(ctx context.Context, userID, action string) error
-	// ExecuteActionsEmail sends the Keycloak action-token email for the actions (CONFIGURE_TOTP).
+	// ExecuteActionsEmail sends the Keycloak action-token email for the actions (UPDATE_PASSWORD of a new
+	// platform account).
 	ExecuteActionsEmail(ctx context.Context, userID string, actions ...string) error
 	// LogoutUser revokes every Keycloak session of the user.
 	LogoutUser(ctx context.Context, userID string) error
 }
 
-// Keycloak required actions used by the portal setup.
-const (
-	KCActionUpdatePassword = "UPDATE_PASSWORD"
-	KCActionConfigureTOTP  = "CONFIGURE_TOTP"
-)
+// KCActionUpdatePassword is the Keycloak required action of the portal setup (the only one since ADR-0094).
+const KCActionUpdatePassword = "UPDATE_PASSWORD"
 
 // ErrSetupTicketInvalid: the setup ticket is unknown, used or expired.
 var ErrSetupTicketInvalid = errors.New("portal: setup ticket invalid")
@@ -88,11 +87,10 @@ var ErrSetupTicketInvalid = errors.New("portal: setup ticket invalid")
 // SetupTicket is the one-time state behind a setup_ticket (Valkey, TTL portal_setup_ticket_ttl). It never
 // holds a password.
 type SetupTicket struct {
-	UserID       uuid.UUID `json:"user_id"`
-	KCUserID     string    `json:"kc_user_id"`
-	Steps        []string  `json:"required_steps"`
-	OTPEmailSent bool      `json:"otp_email_sent"`
-	ExpiresAt    time.Time `json:"expires_at"`
+	UserID    uuid.UUID `json:"user_id"`
+	KCUserID  string    `json:"kc_user_id"`
+	Steps     []string  `json:"required_steps"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 // SetupTicketStore keeps setup tickets by the SHA-256 of the ticket (ew:identity:portal_setup:<hash>).
@@ -101,19 +99,15 @@ type SetupTicketStore interface {
 	Save(ctx context.Context, ticketHash string, t SetupTicket) error
 	// Take reads and deletes the ticket atomically (GETDEL); ErrSetupTicketInvalid when absent.
 	Take(ctx context.Context, ticketHash string) (SetupTicket, error)
-	// MarkOTPEmail reserves the CONFIGURE_TOTP email of the user for window; false when already sent in it.
-	MarkOTPEmail(ctx context.Context, userID uuid.UUID, window time.Duration) (bool, error)
-	// UnmarkOTPEmail releases the reservation after a failed send.
-	UnmarkOTPEmail(ctx context.Context, userID uuid.UUID) error
 }
 
 // PortalSession is what module identity remembers of a portal session (no token): the time the password
 // was entered, so refreshes of platform staff stop after EW_OIDC_PLATFORM_MAX_AUTH_AGE (direct grant
-// tokens carry no auth_time — F004 research R5).
+// tokens carry no auth_time — F004 research R5; ADR-0094 §2 keeps this bound without MFA).
 type PortalSession struct {
 	UserID   uuid.UUID `json:"user_id"`
 	AuthTime time.Time `json:"auth_time"`
-	MFA      bool      `json:"mfa"`
+	Platform bool      `json:"platform"` // realm role platform_staff
 }
 
 // PortalSessionStore keeps PortalSession by portalauth.SessionKey(sid) (ew:identity:portal_session:<key>).

@@ -15,8 +15,8 @@ Không áp dụng — F051 là client (`src/cms/frontend/apps/portal`), không t
 | `tenants` | `MyTenant[]` | `listMyTenants` | |
 | `hasPlatformRole` | `boolean` | `MyTenantsResponse.has_platform_role` | |
 | `returnUrl` | `string` | URL trước đăng nhập | Giữ khi hết phiên (AC-07) |
-| `accessToken` | `{ token: string; expiresAt: number; authTime: number; mfa: boolean }` | `portalLogin`/`refreshPortalToken` | Chỉ RAM (`tokenStore`), không vào kho trình duyệt |
-| `setupTicket` | `{ ticket: string; requiredSteps: ('update_password' \| 'configure_otp')[] } \| null` | `403 ACCOUNT_SETUP_REQUIRED` | Chỉ RAM, xóa khi rời màn thiết lập |
+| `accessToken` | `{ token: string; expiresAt: number; authTime: number }` (bỏ `mfa` — ADR-0094) | `portalLogin`/`refreshPortalToken` | Chỉ RAM (`tokenStore`), không vào kho trình duyệt |
+| `setupTicket` | `{ ticket: string; requiredSteps: ('update_password')[] } \| null` (bỏ `configure_otp` — ADR-0094) | `403 ACCOUNT_SETUP_REQUIRED` | Chỉ RAM, xóa khi rời màn thiết lập |
 
 ### Cache truy vấn TanStack Query
 
@@ -43,7 +43,7 @@ Không áp dụng — F051 là client (`src/cms/frontend/apps/portal`), không t
 | `ew.portal.sessionTenantId` | `sessionStorage` | uuid | Tenant phiên của tab để khôi phục khi F5 (AC-28) |
 | `__Secure-ew_portal_rt`, `__Host-ew_portal_csrf` | cookie (backend đặt) | — | Portal chỉ **đọc** cookie CSRF để gửi `X-EW-CSRF`; không ghi cookie nào |
 
-Không lưu token, mật khẩu, mã OTP, `setup_ticket`, token đặt lại mật khẩu, email, tên người dùng hay dữ liệu học sinh trong kho trình duyệt (AC-02, R14).
+Không lưu token, mật khẩu, `setup_ticket`, token đặt lại mật khẩu, email, tên người dùng hay dữ liệu học sinh trong kho trình duyệt (AC-02, R14).
 
 ### Danh mục menu/action sinh từ catalog (`src/generated/menu-catalog.ts`, ADR-0090)
 
@@ -63,7 +63,7 @@ stateDiagram-v2
   restoring --> unauthenticated: 401 hoặc 403 CSRF_TOKEN_INVALID hoặc quá idle 30 phút
   [*] --> unauthenticated
   unauthenticated --> setting_up: 403 ACCOUNT_SETUP_REQUIRED
-  setting_up --> unauthenticated: đổi mật khẩu xong hoặc chờ email OTP hoặc SETUP_TICKET_INVALID
+  setting_up --> unauthenticated: đổi mật khẩu xong hoặc SETUP_TICKET_INVALID
   unauthenticated --> resolving_scope: portalLogin thành công
   resolving_scope --> ready: has_platform_role hoặc đúng 1 tenant
   resolving_scope --> selecting_tenant: > 1 tenant

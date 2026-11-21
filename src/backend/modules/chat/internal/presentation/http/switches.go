@@ -29,7 +29,7 @@ type SwitchQueries interface {
 }
 
 // SwitchHandlers serve the moderation switch operations (core-api, internal gateway: httpx adds GuardPortalStaff +
-// GuardPlatformMFA to /admin/ routes; chat.policy.toggle is required in each use case, R7).
+// GuardPlatformRole to /admin/ routes; chat.policy.toggle is required in each use case, R7).
 type SwitchHandlers struct {
 	Commands SwitchCommands
 	Queries  SwitchQueries

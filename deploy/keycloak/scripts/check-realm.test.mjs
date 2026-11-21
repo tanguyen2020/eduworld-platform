@@ -63,12 +63,25 @@ test('F004-AC-03/25/26/27: flow order, deny rules, reference values, no WebAuthn
   const game = r.authenticationFlows.find((f) => f.alias === 'eduworld-game-deny-non-student');
   r.authenticatorConfig.find((c) => c.alias === 'ew-game-not-student').config.negate = 'false';
   game.authenticationExecutions.push({ authenticator: 'webauthn-authenticator', requirement: 'REQUIRED', priority: 99 });
-  r.authenticatorConfig.find((c) => c.alias === 'ew-portal-ref-otp').config['default.reference.value'] = 'mfa';
   const p = check(r);
   has(p, 'username → password → deny non-staff');
   has(p, 'deny users without role student');
   has(p, 'WebAuthn is out of scope');
-  has(p, 'OTP needs reference value otp');
+});
+
+test('ADR-0094: no OTP step in any flow, no AMR/LoA mapper or scope', () => {
+  const r = realm();
+  const portal = r.authenticationFlows.find((f) => f.alias === 'eduworld-portal-direct-grant');
+  portal.authenticationExecutions.push({ flowAlias: 'eduworld-portal-otp-configured', requirement: 'CONDITIONAL', priority: 50, authenticatorFlow: true });
+  r.authenticationFlows.push({ alias: 'eduworld-portal-otp-configured', authenticationExecutions: [
+    { authenticator: 'direct-grant-validate-otp', requirement: 'REQUIRED', priority: 20 }] });
+  r.clientScopes.push({ name: 'eduworld-amr-loa', protocolMappers: [{ name: 'amr', protocolMapper: 'oidc-amr-mapper' }] });
+  client(r, 'eduworld-portal').defaultClientScopes.push('eduworld-amr-loa');
+  const p = check(r);
+  has(p, 'nothing else (no OTP, ADR-0094)');
+  has(p, 'flow eduworld-portal-otp-configured: no OTP step');
+  has(p, 'client scope eduworld-amr-loa: no AMR/LoA mapper');
+  has(p, 'client eduworld-portal: scope eduworld-amr-loa must not be assigned');
 });
 
 test('F004-AC-06: realm settings', () => {

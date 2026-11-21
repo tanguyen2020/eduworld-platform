@@ -29,13 +29,13 @@ func TestSisHTTP(t *testing.T) {
 
 	saData := authztest.Platform("system_admin").PrincipalData
 	h.res.Set("kc-sa", saData)
-	sa := h.idp.Token("kc-sa", httpxtest.PortalClient, true, now)
+	sa := h.idp.Token("kc-sa", httpxtest.PortalClient, now)
 	adm := authztest.Staff(ta, "school_admin").PrincipalData
 	h.res.Set("kc-adm", adm)
-	admTok := h.idp.Token("kc-adm", httpxtest.PortalClient, true, now)
+	admTok := h.idp.Token("kc-adm", httpxtest.PortalClient, now)
 	admB := authztest.Staff(tb, "school_admin").PrincipalData
 	h.res.Set("kc-adm-b", admB)
-	admBTok := h.idp.Token("kc-adm-b", httpxtest.PortalClient, true, now)
+	admBTok := h.idp.Token("kc-adm-b", httpxtest.PortalClient, now)
 	key := func(tenant uuid.UUID) map[string]string {
 		m := map[string]string{"Idempotency-Key": ids.New().String()}
 		if tenant != uuid.Nil {

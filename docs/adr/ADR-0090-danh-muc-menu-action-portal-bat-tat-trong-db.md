@@ -1,6 +1,9 @@
 # ADR-0090 — Danh mục menu/action của Admin Portal và bật/tắt lưu trong database
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-17 · **OQ:** — · **Bổ sung:** ADR-0027, ADR-0066 · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [API_DESIGN](../07-backend/API_DESIGN.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-17 · **OQ:** — · **Bổ sung:** ADR-0027, ADR-0066 · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · [API_DESIGN](../07-backend/API_DESIGN.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: điều kiện "MFA" khi System Admin đặt bật/tắt. **Còn hiệu lực:** chỉ System Admin (`platform.feature_flag.write`, gateway nội bộ), bắt buộc `reason`, `If-Match`, audit.
 
 ## Bối cảnh
 
@@ -52,3 +55,4 @@ Menu trong game client (Godot) không dùng cơ chế này; tính năng game v�
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-17 | Tạo ADR (Accepted): chỉ System Admin bật/tắt, chỉ Admin Portal | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

@@ -52,13 +52,13 @@ func TestSisContractHTTP(t *testing.T) {
 	now := time.Now()
 	tb := uuid.MustParse(s.b.tenant)
 	res.Set("kc-sa", authztest.Platform("system_admin").PrincipalData)
-	sa := idp.Token("kc-sa", httpxtest.PortalClient, true, now)
+	sa := idp.Token("kc-sa", httpxtest.PortalClient, now)
 	res.Set("kc-adm-a", authztest.Staff(s.ta, "school_admin", authztest.AtSchool(s.school)).PrincipalData)
-	admA := idp.Token("kc-adm-a", httpxtest.PortalClient, true, now)
+	admA := idp.Token("kc-adm-a", httpxtest.PortalClient, now)
 	res.Set("kc-adm-b", authztest.Staff(tb, "school_admin", authztest.AtSchool(uuid.MustParse(s.b.school))).PrincipalData)
-	admB := idp.Token("kc-adm-b", httpxtest.PortalClient, true, now)
+	admB := idp.Token("kc-adm-b", httpxtest.PortalClient, now)
 	res.Set("kc-qlcm", authztest.Staff(s.ta, "academic_manager").PrincipalData)
-	qlcm := idp.Token("kc-qlcm", httpxtest.PortalClient, true, now)
+	qlcm := idp.Token("kc-qlcm", httpxtest.PortalClient, now)
 	hdr := func(tenant string, key bool) map[string]string {
 		m := map[string]string{}
 		if tenant != "" {

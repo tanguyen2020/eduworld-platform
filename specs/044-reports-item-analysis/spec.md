@@ -28,6 +28,10 @@
 - Q: Bộ cân bằng (F044-AC-22) — "seed cố định"? → A: Thuật toán tham lam xác định (thứ tự cố định theo version id, không ngẫu nhiên): hoán đổi cùng vị trí rule giữa biến thể dễ nhất/khó nhất hoặc rút lại vị trí đó từ pool trong rule; cùng đầu vào → cùng đề (tái lập). Kết quả trả ở `createExamSession.balance` và `ExamPaper.balance_warning`.
 - Q: Payload `report.completed`? → A: `report_id`, `scope_level`, `report_type`, `format`, `status` (`succeeded`/`failed`), `requested_by`, `row_count`; EVENT_DESIGN §4 đã đồng bộ.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: Chỉ plan/contracts nhắc MFA cho đọc liên tenant; đọc là `platform.cross_tenant.read` + client portal + audit, không MFA. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Xuất báo cáo bất đồng bộ (Priority: P1)

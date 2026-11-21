@@ -26,7 +26,7 @@ type PlatformAdminHandlers struct {
 }
 
 // PlatformAdminOperations are the F045 operations; the contract test checks them against the merged spec.
-// /admin/* also gets platform_mfa from httpx (internal gateway, azp eduworld-portal, MFA, F045-AC-04).
+// /admin/* also gets platform_role from httpx (internal gateway, azp eduworld-portal, platform role, F045-AC-04).
 var PlatformAdminOperations = map[string]httpx.Operation{
 	"listTrash":              portalOp2("listTrash", http.MethodGet, "/admin/trash", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"restoreTrashItem":       portalOp2("restoreTrashItem", http.MethodPost, "/admin/trash/{resource_type}/{resource_id}:restore", httpx.TenantOptional, httpx.IdempotencyRequired, 204),

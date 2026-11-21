@@ -39,7 +39,7 @@ func TestFixtures(t *testing.T) {
 		t.Fatal("tenant scope missing")
 	}
 	sa := authztest.Platform("system_admin")
-	if !sa.IsSystemAdmin || !sa.MFA || !sa.HasPlatformRole() || sa.TenantID != nil {
+	if !sa.IsSystemAdmin || sa.Channel != authz.ChannelPortal || !sa.HasPlatformRole() || sa.TenantID != nil {
 		t.Fatalf("platform fixture %+v", sa)
 	}
 	if sc, ok := tenancy.ScopeFrom(authztest.Ctx(context.Background(), sa)); !ok || !sc.PlatformOnly() {

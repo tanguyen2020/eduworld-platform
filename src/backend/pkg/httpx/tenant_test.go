@@ -66,7 +66,8 @@ func TestTenantMismatch(t *testing.T) {
 }
 
 // F002-AC-08: Principal.TenantID comes from the resolver; tenant_ids is ignored for tenant users and
-// honoured for System Admin with platform.cross_tenant.read + MFA (CrossTenantScope).
+// honoured for System Admin with platform.cross_tenant.read on the portal client (CrossTenantScope, no MFA —
+// ADR-0094).
 func TestTenantIDsOnlyForSystemAdmin(t *testing.T) {
 	e := newEnv(t, reportsOp)
 	ta, tb := uuid.New(), uuid.New()
@@ -78,7 +79,6 @@ func TestTenantIDsOnlyForSystemAdmin(t *testing.T) {
 	}
 
 	sa := e.idp.baseClaims(portalClient)
-	sa["acr"] = "mfa"
 	e.res.set(sa["sub"].(string), authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, IsSystemAdmin: true,
 		Grants: []authz.Grant{{Role: "system_admin", ScopeKind: authz.RoleScopePlatform, Permissions: []authz.Permission{authz.PermPlatformCrossTenantRead}}}})
 	r = e.do(t, http.MethodGet, "/api/v1/lms/reports?tenant_ids="+ta.String()+","+tb.String(), e.idp.sign(tok{claims: sa}), nil)
@@ -89,14 +89,15 @@ func TestTenantIDsOnlyForSystemAdmin(t *testing.T) {
 		// Recorded by data access when the scope is used (tenancy.RecordCrossTenantScope), not here.
 		t.Fatal("cross_tenant.accessed recorded by middleware")
 	}
-	// Without MFA the parameter is refused rather than silently widened.
-	sa["acr"] = "1"
-	r = e.do(t, http.MethodGet, "/api/v1/lms/reports?tenant_ids="+ta.String(), e.idp.sign(tok{claims: sa}), nil)
-	if r.status != 403 || r.code != "MFA_REQUIRED" {
-		t.Fatalf("cross-tenant without MFA: %d %q", r.status, r.code)
+	// Platform staff without platform.cross_tenant.read cannot widen the scope: tenant_ids is ignored.
+	mod := e.idp.baseClaims(portalClient)
+	e.res.set(mod["sub"].(string), authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff,
+		Grants: []authz.Grant{{Role: "safety_moderator", ScopeKind: authz.RoleScopePlatform, Permissions: []authz.Permission{authz.PermModerationCaseRead}}}})
+	r = e.do(t, http.MethodGet, "/api/v1/lms/reports?tenant_ids="+ta.String(), e.idp.sign(tok{claims: mod}), nil)
+	if r.status != 200 || len(r.body.Scope) != 0 || !r.body.Platform {
+		t.Fatalf("platform staff without cross-tenant read: %d %+v", r.status, r.body)
 	}
 	// Platform staff without tenant_ids gets the platform scope.
-	sa["acr"] = "mfa"
 	r = e.do(t, http.MethodGet, "/api/v1/lms/reports", e.idp.sign(tok{claims: sa}), nil)
 	if r.status != 200 || !r.body.Platform {
 		t.Fatalf("platform scope: %d %+v", r.status, r.body)

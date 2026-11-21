@@ -15,7 +15,7 @@ Content Filtering, Profanity Filtering, Anti-spam, Anti-bullying, Personal Infor
 
 > **Thay đổi theo stakeholder (ADR-0020, Accepted 2026-11-15):** mục "Age/Grade-based Policy" được thay bằng **một bộ quy tắc chat chung cho mọi lớp 1–9**. An toàn cho học sinh nhỏ tuổi được bảo đảm bằng việc **mọi tin nhắn phải qua kiểm tra hợp lệ** với cùng mức nghiêm, không bằng cách phân quyền chat theo khối.
 
-> **ADR-0072 (Accepted 2026-11-15):** mục "Teacher/Admin Moderation" được hiện thực bằng **kiểm duyệt tập trung** của **Platform Safety Team** (role platform `safety_moderator`, MFA). Không có giáo viên hay moderator của từng trường; nhà trường đặt chat policy cấp trường trong giới hạn platform và nhận thông báo vụ việc nghiêm trọng để liên hệ phụ huynh (§6.4, §8).
+> **ADR-0072 (Accepted 2026-11-15):** mục "Teacher/Admin Moderation" được hiện thực bằng **kiểm duyệt tập trung** của **Platform Safety Team** (role platform `safety_moderator`; đăng nhập portal không MFA theo ADR-0094). Không có giáo viên hay moderator của từng trường; nhà trường đặt chat policy cấp trường trong giới hạn platform và nhận thông báo vụ việc nghiêm trọng để liên hệ phụ huynh (§6.4, §8).
 
 > **ADR-0030 (Accepted 2026-11-15):** từ nhạy cảm được quản lý bằng **danh mục** trong CMS (§11). Toàn bộ pipeline kiểm tra nội dung có **công tắc bật/tắt** theo từng bước hoặc công tắc tổng, ở cấp platform hoặc tenant (§12). Mặc định **BẬT**. Khi tắt, chỉ còn các giới hạn kỹ thuật, tính năng người dùng và các bước luôn chạy (§12.3).
 
@@ -157,7 +157,7 @@ sequenceDiagram
   API-->>S: notification "Báo cáo của em đã được xử lý" (không nói chi tiết hình phạt)
 ```
 
-- API kiểm duyệt của Safety Team nằm dưới `/api/v1/admin/moderation/*` (chỉ gateway nội bộ, `azp = eduworld-portal` + MFA, role platform); học sinh chỉ có `POST /api/v1/chat/reports`. Snapshot lúc tạo report là **±10 tin** (nguồn duy nhất của con số này; DATABASE_DESIGN theo); khi channel còn, moderator xem thêm ±200 tin ngữ cảnh (§6.1).
+- API kiểm duyệt của Safety Team nằm dưới `/api/v1/admin/moderation/*` (chỉ gateway nội bộ, `azp = eduworld-portal`, role platform); học sinh chỉ có `POST /api/v1/chat/reports`. Snapshot lúc tạo report là **±10 tin** (nguồn duy nhất của con số này; DATABASE_DESIGN theo); khi channel còn, moderator xem thêm ±200 tin ngữ cảnh (§6.1).
 - `reason` (enum, chọn bằng icon cho lớp 1–5): `rude_language`, `bullying`, `asked_personal_info`, `spam`, `inappropriate_content`, `cheating`, `other`.
 - Báo cáo `asked_personal_info` hoặc dấu hiệu grooming → `p1` theo §6.2, kèm thông báo nhà trường theo §6.4 **[Confirmed]**.
 - Lạm dụng báo cáo (nhiều báo cáo bị bác bỏ) → giảm trọng số, không phạt trẻ (chỉ nhắc nhở) **[Confirmed]**.
@@ -172,7 +172,7 @@ Kiểm duyệt tập trung ở platform (ADR-0072):
 
 | Vai trò | Phạm vi được xem | Hành động |
 |---|---|---|
-| `safety_moderator` (Platform Safety Team, role platform, MFA) | Case của **mọi tenant**, chỉ trong module moderation: case, snapshot bằng chứng, tin liên quan case (±200 tin ngữ cảnh). Đọc liên tenant qua `tenancy.Bypass(ctx, "moderation_case")`, có audit và metric | Mọi sanction (§7), gỡ tin, escalate nội bộ, gửi thông báo nhà trường (§6.4), ghi mục từ bổ sung và bật/tắt nhóm từ của tenant (§11.3) |
+| `safety_moderator` (Platform Safety Team, role platform) | Case của **mọi tenant**, chỉ trong module moderation: case, snapshot bằng chứng, tin liên quan case (±200 tin ngữ cảnh). Đọc liên tenant qua `tenancy.Bypass(ctx, "moderation_case")`, có audit và metric | Mọi sanction (§7), gỡ tin, escalate nội bộ, gửi thông báo nhà trường (§6.4), ghi mục từ bổ sung và bật/tắt nhóm từ của tenant (§11.3) |
 | Trưởng ca Safety Team (`safety_moderator` được gán `lead`) | Như trên + case quá SLA, kháng nghị | Duyệt sanction dài hạn (`account_lock`, `restrict_multiplayer` > 7 ngày), phối hợp pháp lý, cơ quan chức năng |
 | `system_admin` | Không xử lý case thường ngày; truy cập nội dung ngoài phạm vi case chỉ qua quy trình **break-glass** (lý do, thời hạn, phê duyệt hai người) | Danh mục platform, công tắc kiểm duyệt (§11–§12), khóa tài khoản toàn hệ thống khi có yêu cầu pháp lý |
 | `school_admin` | **Không** đọc case hay nội dung chat; chỉ nhận thông báo tóm tắt về học sinh trường mình (§6.4) | Xác nhận đã liên hệ phụ huynh; đặt chat policy cấp trường (§8) |
@@ -349,7 +349,7 @@ Không bao giờ trả về từ đã khớp, vị trí khớp hay nội dung da
 
 | Quy tắc | Chi tiết |
 |---|---|
-| Người thao tác | Chỉ System Admin (`chat.policy.toggle`, Admin Portal `eduworld-portal` + MFA, workspace Platform Administration) |
+| Người thao tác | Chỉ System Admin (`chat.policy.toggle`, Admin Portal `eduworld-portal`, workspace Platform Administration) |
 | Lý do | Bắt buộc (`reason` ≥ 10 ký tự), thiếu → `MODERATION_SWITCH_REASON_REQUIRED` |
 | Bước không tắt được | Yêu cầu tắt `pii` hoặc grooming → `422 MODERATION_SWITCH_STEP_NOT_ALLOWED` ([API_DESIGN §4.1](../07-backend/API_DESIGN.md)) |
 | Thời hạn | **Bắt buộc** `expires_at` ≤ `moderation_switch_max_duration` (24 giờ) khi tắt bất kỳ bước nào hoặc `enabled_all`; thiếu hoặc quá hạn → `422 MODERATION_SWITCH_EXPIRY_REQUIRED`; job trong `worker-jobs` tự bật lại khi hết hạn và ghi audit; muốn tắt tiếp phải tạo yêu cầu mới [Confirmed — Technical Architect 2026-11-17] (ADR-0078) |

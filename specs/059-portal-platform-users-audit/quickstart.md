@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F012, F015, F057, F014, F016 (lock), F011 (SIS connection), F050, F051.
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Tài khoản: `sa.admin` (MFA tắt ở local; bật OTP seed để thử step-up), `cm.noidung`, `cm.duyet`, `sm.antoan`, `ad.truong.a`, `ad.donvi`, `qlcm.truong.a`, học sinh `hs.an.3a`, `hs.locked`.
+- Tài khoản: `sa.admin` (chỉ mật khẩu — không MFA, ADR-0094), `cm.noidung`, `cm.duyet`, `sm.antoan`, `ad.truong.a`, `ad.donvi`, `qlcm.truong.a`, học sinh `hs.an.3a`, `hs.locked`.
 - Dữ liệu: `hs.an.3a` đã vào game trên 2 thiết bị (seed hoặc chạy F061) để có `end_reason = replaced_by_other_device`.
 
 ## 2. Kịch bản kiểm tra
@@ -37,7 +37,7 @@
 | 22 | Tích hợp: xem Keycloak, APISIX, tab SIS | Issuer, realm, client; nhóm route; connection + lần sync gần nhất | F059-AC-22 |
 | 23 | Quét response/DOM màn Tích hợp | Không có secret/credential; không ô nhập | F059-AC-23 |
 | 24 | `ad.truong.a`, `cm.noidung`, `sm.antoan` mở `/portal/platform-admin/roles`, `/portal/platform-admin/audit` | Trang 403; không tải chunk D | F059-AC-24 |
-| 25 | Token không MFA; tắt gateway nội bộ | Step-up MFA; banner "Cần kết nối mạng quản trị (VPN)" | F059-AC-25 |
+| 25 | Tắt gateway nội bộ (không còn step-up MFA — ADR-0094) | Banner "Cần kết nối mạng quản trị (VPN)" | F059-AC-25 |
 | 26 | Chặn mạng khi gán UserRole rồi thử lại | Hai request cùng `Idempotency-Key`; một UserRole | F059-AC-26 |
 | 27 | Dán chuỗi dài vào mã role, lý do, email | Cắt theo `maxLength`, có bộ đếm | F059-AC-27 |
 | 28 | `sa.admin` tắt mặc định platform `menu.platform_admin.student_activity`, tải lại portal | Menu "Hoạt động đăng nhập game" biến mất; `listLoginEventsCrossTenant` → `403 FEATURE_DISABLED`; Người dùng & phân quyền, Nhật ký, Bật/tắt menu vẫn hiện (khóa, không tắt được) | F059-AC-28 |
@@ -79,7 +79,7 @@ Chạy trong `src/cms/frontend` (tối đa 2 worker), commit `b75d83a`. Backend 
 | 18–19 | `LoginEventsFlags.test.tsx` (7 ngày, nhãn `end_reason`, cursor "Tải thêm", không IP) |
 | 20–21 | `LoginEventsFlags.test.tsx` (mặc định platform + `If-Match` + lý do, mục bảo vệ không tắt được, ghi đè tenant `X-Tenant-Id`, `412` tải lại + "Đã có người sửa") |
 | 22–23 | `IntegrationsGuard.test.tsx` (tab SIS: connection, trường, lần sync; trường ngoài schema không vào DOM, không ô nhập; Keycloak/APISIX từ `getIntegrationOverview`, nhóm route "Chưa có dữ liệu" — OQ F059-2, F059-12) |
-| 24–25, 28 | `IntegrationsGuard.test.tsx` (403 + không tải chunk D cho `ad.truong.a`/`cm.noidung`/`sm.antoan` ở cả 5 URL; menu ẩn khi thiếu `platform.audit.read`; `PERMISSION_DENIED` + `trace_id`; MFA step-up; menu tắt → "Tính năng đang tắt", mục bảo vệ còn; action tắt ẩn nút; `403 FEATURE_DISABLED` tải lại quyền) |
+| 24–25, 28 | `IntegrationsGuard.test.tsx` (403 + không tải chunk D cho `ad.truong.a`/`cm.noidung`/`sm.antoan` ở cả 5 URL; menu ẩn khi thiếu `platform.audit.read`; `PERMISSION_DENIED` + `trace_id`; không còn MFA step-up (ADR-0094); menu tắt → "Tính năng đang tắt", mục bảo vệ còn; action tắt ẩn nút; `403 FEATURE_DISABLED` tải lại quyền) |
 | 27 | `limits.test.ts` (giới hạn = OpenAPI, `principal_cache_ttl`/`audit_query_max_range_days` = CONFIG_DEFAULTS) + `maxlength`/bộ đếm trong test màn |
 
 ### Bằng chứng 2026-11-20 (portal bật màn chờ backend — OQ F057-2/3/4, F059-1/2/3/5)

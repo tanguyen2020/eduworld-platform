@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F051, F050, F116, F120, F121.
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Tài khoản: `sm.antoan`, `sa.admin` (bật OTP seed để thử step-up), `ad.truong.a`, `ad.truong.b`, `ad.donvi`, `qlcm.truong.a`, `cm.noidung`; học sinh `hs.an.3a`, `hs.binh.3a`, `hs.em.4a` để sinh case/club.
+- Tài khoản: `sm.antoan`, `sa.admin` (chỉ mật khẩu — không MFA, ADR-0094), `ad.truong.a`, `ad.truong.b`, `ad.donvi`, `qlcm.truong.a`, `cm.noidung`; học sinh `hs.an.3a`, `hs.binh.3a`, `hs.em.4a` để sinh case/club.
 - Dữ liệu: 2 case (p1 TH Demo A, p2 `pgd-demo`) tạo bằng kịch bản F121; danh mục placeholder seed module chat.
 
 ## 2. Kịch bản kiểm tra
@@ -37,7 +37,7 @@
 | 22 | Thử nới rate vượt platform; tìm control `match` | Thông báo `CHAT_POLICY_RELAX_NOT_ALLOWED` tại control; `match`/`team`/`party` khóa "Luôn bật"; không có control theo khối | F122-AC-22 |
 | 23 | `ad.truong.a` duyệt club `pending_approval` của `hs.em.4a` (trường C — dùng School Admin tương ứng) | `active`; không có màn chat club | F122-AC-23 |
 | 24 | `ad.truong.a`, `qlcm.truong.a`, `cm.noidung` mở `/live-ops/moderation/cases`, `/platform-admin/chat-safety/switches` | Trang 403, không tải chunk | F122-AC-24 |
-| 25 | Token không MFA; tắt gateway nội bộ | Step-up rồi quay lại; "Cần kết nối mạng quản trị (VPN)" | F122-AC-25 |
+| 25 | Tắt gateway nội bộ (không còn step-up MFA — ADR-0094) | "Cần kết nối mạng quản trị (VPN)" | F122-AC-25 |
 | 26 | Dán chuỗi dài vào lý do/tóm tắt/ghi chú; ngắt mạng giữa lúc xác nhận rồi thử lại | Bị giới hạn có bộ đếm; cùng `Idempotency-Key` | F122-AC-26 |
 | 27 | `sa.admin` gửi yêu cầu tắt `spam`; `sa.admin` mở danh sách chờ; `sa.admin2` phê duyệt | "Chờ phê duyệt"; người đề xuất không có nút duyệt; sau duyệt công tắc hiệu lực; PII/grooming "Luôn bật" | F122-AC-27 |
 | 28 | `ad.truong.a` chọn preset `quick_message_emote_only` cho trường có lý do | Không có lựa chọn theo khối/lớp; lưu thành công | F122-AC-28 |

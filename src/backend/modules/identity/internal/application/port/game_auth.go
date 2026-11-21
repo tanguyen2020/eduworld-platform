@@ -12,7 +12,7 @@ import (
 )
 
 // Game login through the backend (F013, ADR-0068, ADR-0086). The token client of the confidential client
-// eduworld-game-backend has the PortalIdP shape (password grant without OTP, refresh with rotation, logout);
+// eduworld-game-backend has the PortalIdP shape (password grant, refresh with rotation, logout);
 // passwords cross it as []byte and are never logged, traced or audited (F013-AC-16).
 
 // KeycloakSessionAdmin ends one Keycloak user session by its id (Admin API DELETE /sessions/{sid}, client

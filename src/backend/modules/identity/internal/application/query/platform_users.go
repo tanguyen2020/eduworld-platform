@@ -31,7 +31,7 @@ type PlatformUsersInput struct {
 var userStatuses = map[string]bool{"": true, "pending": true, "active": true, "locked": true, "deactivated": true}
 
 // List runs listPlatformUsers. Without tenant_ids it lists the platform staff only; with tenant_ids the
-// CrossTenantScope set by httpx (platform.cross_tenant.read + MFA) lists the members of those tenants and the
+// CrossTenantScope set by httpx (platform.cross_tenant.read) lists the members of those tenants and the
 // read is audited as cross_tenant.accessed. A tenant session never reaches it (403).
 func (q PlatformUsers) List(ctx context.Context, in PlatformUsersInput) (out UserPage, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListPlatformUsers")

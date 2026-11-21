@@ -1,6 +1,9 @@
 # ADR-0063 — Đăng nhập Release 1.0: username/password và quy tắc xác định tenant
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Supersedes một phần:** ADR-0026 (mục 3–4), ADR-0045 (mục 4), ADR-0046 (nhánh IdP) · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Supersedes một phần:** ADR-0026 (mục 3–4), ADR-0045 (mục 4), ADR-0046 (nhánh IdP) · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: "+ MFA theo role" ở mục 5 (portal chỉ username/email + mật khẩu). **Còn hiệu lực:** toàn bộ quy tắc tenant khi đăng nhập.
 
 ## Bối cảnh
 
@@ -33,3 +36,4 @@ Người duyệt chốt: học sinh **không chọn trường** khi đăng nhậ
 |---|---|---|
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
 | 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

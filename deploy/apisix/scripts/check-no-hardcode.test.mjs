@@ -15,7 +15,7 @@ test('literals are reported', () => {
 test('variables, comments and plain values are accepted', () => {
   for (const line of ['  core-api: ${EW_UPSTREAM_CORE_API}', '"secret": "$(env:KC_PORTAL_CLIENT_SECRET)"',
     '# e.g. http://localhost:9080', '  uris: [/api/v1/game/*]', '  priority: 300', '"accessTokenLifespan": 900',
-    '"alias": "ew-portal-ref-otp"', '"name": "eduworld-api-audience"']) {
+    '"alias": "ew-portal-ref-pwd"', '"name": "eduworld-api-audience"']) {
     assert.deepEqual(scan('f', line), [], line);
   }
 });

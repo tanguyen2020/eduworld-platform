@@ -1,9 +1,12 @@
 # ADR-0086 — Giữ phiên game bằng refresh token: còn hạn thì không phải đăng nhập lại
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-16 · **OQ:** — · **Thay một phần:** ADR-0064 (mục 1, 2, 4, 5) · **Bổ sung:** ADR-0068, ADR-0083 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-16 · **OQ:** — · **Thay một phần:** ADR-0064 (mục 1, 2, 4, 5) · **Bổ sung:** ADR-0068, ADR-0083 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [GAME_NETWORKING](../08-game-client/GAME_NETWORKING.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
 
 > [!NOTE]
 > Bổ sung bởi ADR-0078 mục 5: Windows mặc định `shared_device = true`; mọi nền tảng hiện màn "Tiếp tục là <nickname>?" khi tự vào lại bằng refresh token, nút "Không phải tôi" đăng xuất và xóa token.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: "MFA theo role" ở mục 7. **Còn hiệu lực:** chính sách phiên portal (idle 30 phút, tối đa 10 giờ; `platform_staff` tối đa 8 giờ từ lúc nhập mật khẩu) và toàn bộ quyết định về phiên game.
 
 ## Bối cảnh
 
@@ -38,3 +41,4 @@
 |---|---|---|
 | 2026-11-16 | Tạo ADR | Technical Architect |
 | 2026-11-17 | Ghi chú bổ sung từ ADR-0078 mục 5 (không đổi ý nghĩa quyết định) | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

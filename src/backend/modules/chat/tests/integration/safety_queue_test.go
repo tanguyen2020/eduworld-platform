@@ -231,7 +231,7 @@ func TestSafetyCaseReadAndAssign(t *testing.T) {
 
 // T020–T021 / F121-AC-09, AC-10 (TC-CHAT-042, TC-CMS-AUTHZ-02, TC-CMS-WS-02): tenant roles and students have no access
 // to /admin/moderation/* (403, audited); a safety_moderator token is refused outside moderation (player routes, the
-// switches of System Admin); without MFA → 403 MFA_REQUIRED (audited); a game token → 403.
+// switches of System Admin); a password-only portal token is enough (no MFA, ADR-0094); a game token → 403.
 func TestSafetyAuthzMatrix(t *testing.T) {
 	authztest.Cover(t, "getModerationCase", authztest.CrossTenant, authztest.RoleDenied)
 	authztest.Cover(t, "actOnModerationCase", authztest.CrossTenant, authztest.RoleDenied)
@@ -280,14 +280,14 @@ func TestSafetyAuthzMatrix(t *testing.T) {
 	if r := s.do(http.MethodGet, "/social/friends", sm.in(s.tenantA), map[string]string{"X-Tenant-Id": s.tenantA.String()}, nil); r.status != http.StatusForbidden {
 		t.Fatalf("safety_moderator on a player route: %d", r.status)
 	}
-	// No MFA: 403 MFA_REQUIRED, audited.
-	sub := "kc-nomfa-" + uuid.NewString()
+	// ADR-0094: username + password is enough for the platform route, no second factor.
+	sub := "kc-pwonly-" + uuid.NewString()
 	s.res.Set(sub, sm.data)
-	noMFA := s.idp.Token(sub, httpxtest.PortalClient, false, time.Now())
-	if r := s.do(http.MethodGet, "/admin/moderation/cases", noMFA, nil, nil); r.status != http.StatusForbidden || r.code() != "MFA_REQUIRED" {
-		t.Fatalf("no MFA: %d %s", r.status, r.raw)
+	pwOnly := s.idp.Token(sub, httpxtest.PortalClient, time.Now())
+	if r := s.do(http.MethodGet, "/admin/moderation/cases", pwOnly, nil, nil); r.status != http.StatusOK {
+		t.Fatalf("password-only moderator: %d %s", r.status, r.raw)
 	}
-	game := s.idp.Token(sub, httpxtest.GameClient, true, time.Now())
+	game := s.idp.Token(sub, httpxtest.GameClient, time.Now())
 	if r := s.do(http.MethodGet, "/admin/moderation/cases", game, nil, nil); r.status != http.StatusForbidden {
 		t.Fatalf("game azp: %d %s", r.status, r.raw)
 	}
@@ -297,14 +297,14 @@ func TestSafetyAuthzMatrix(t *testing.T) {
 			denied++
 		}
 	}
-	mfa := false
+	gameDenied := false
 	for _, m := range s.auditMeta("authz.denied") {
-		if m["why"] == "mfa" {
-			mfa = true
+		if m["why"] == "portal_staff" {
+			gameDenied = true
 		}
 	}
-	if denied == 0 || !mfa {
-		t.Fatalf("authz.denied audits: %d mfa=%v", denied, mfa)
+	if denied == 0 || !gameDenied {
+		t.Fatalf("authz.denied audits: %d game azp audited=%v", denied, gameDenied)
 	}
 	if n := s.count(`SELECT count(*) FROM chat.moderation_actions WHERE case_id = $1 AND action NOT IN ('report','hold')`, caseID); n != 0 {
 		t.Fatalf("a refused write changed the case: %d", n)

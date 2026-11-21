@@ -48,6 +48,9 @@ func DefaultPortalRateLimits() PortalRateLimits {
 const (
 	DefaultPortalSetupTicketTTL   = 10 * time.Minute // portal_setup_ticket_ttl [Confirmed]
 	DefaultPortalPasswordResetTTL = 30 * time.Minute // portal_password_reset_ttl [Proposed]
+	// DefaultPlatformMaxAuthAge bounds a platform staff portal session from the password entry when
+	// EW_OIDC_PLATFORM_MAX_AUTH_AGE is unset (portal_session_sso, ADR-0094 §2).
+	DefaultPlatformMaxAuthAge = 8 * time.Hour
 )
 
 // PortalAuthConfig is the configuration of the portal login use cases (no secret here).
@@ -55,9 +58,8 @@ type PortalAuthConfig struct {
 	// Issuers are the trusted OIDC issuers (EW_OIDC_ISSUERS): a Keycloak user id found through the Admin
 	// API is mapped to the EduWorld user through its external identity at one of them.
 	Issuers []string
-	// MFAAMR are the amr values proving MFA (EW_OIDC_PLATFORM_REQUIRED_AMR, default otp).
-	MFAAMR []string
-	// MaxAuthAge bounds refreshes of MFA sessions (EW_OIDC_PLATFORM_MAX_AUTH_AGE, portal_session_sso).
+	// MaxAuthAge bounds refreshes of platform staff sessions from the password entry (EW_OIDC_PLATFORM_MAX_AUTH_AGE,
+	// portal_session_sso, ADR-0094 §2).
 	MaxAuthAge     time.Duration
 	SetupTicketTTL time.Duration // portal_setup_ticket_ttl
 	ResetTTL       time.Duration // portal_password_reset_ttl
@@ -67,11 +69,8 @@ type PortalAuthConfig struct {
 }
 
 func (c PortalAuthConfig) withDefaults() PortalAuthConfig {
-	if len(c.MFAAMR) == 0 {
-		c.MFAAMR = []string{"otp"}
-	}
 	if c.MaxAuthAge <= 0 {
-		c.MaxAuthAge = 8 * time.Hour
+		c.MaxAuthAge = DefaultPlatformMaxAuthAge
 	}
 	if c.SetupTicketTTL <= 0 {
 		c.SetupTicketTTL = DefaultPortalSetupTicketTTL

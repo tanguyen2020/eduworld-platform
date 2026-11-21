@@ -180,7 +180,8 @@ func TestEfficacyStudy(t *testing.T) {
 		"covers": []string{"experiment"}, "agreed_on": "2026-09-01"}); x.status != http.StatusConflict {
 		t.Fatalf("duplicate ref: %d %s", x.status, x.raw)
 	}
-	// AC-10: tenant roles, content_admin, safety_moderator → 403 PERMISSION_DENIED; no MFA → 403 MFA_REQUIRED.
+	// AC-10: tenant roles, content_admin, safety_moderator → 403 PERMISSION_DENIED; a password-only System Admin
+	// token is allowed (no MFA, ADR-0094).
 	for _, sub := range []string{adA, qlcmA, cmNoidung, smAntoan} {
 		if x := c.do(t, http.MethodGet, studies, sub, nil, nil); x.status != http.StatusForbidden || x.str("code") != "PERMISSION_DENIED" {
 			t.Fatalf("%s list: %d %s", sub, x.status, x.raw)
@@ -189,8 +190,8 @@ func TestEfficacyStudy(t *testing.T) {
 			t.Fatalf("%s create: %d %s", sub, x.status, x.raw)
 		}
 	}
-	if x := c.do(t, http.MethodGet, studies, saNoMFA, nil, nil); x.status != http.StatusForbidden || x.str("code") != "MFA_REQUIRED" {
-		t.Fatalf("no MFA: %d %s", x.status, x.raw)
+	if x := c.do(t, http.MethodGet, studies, saPwOnly, nil, nil); x.status != http.StatusOK {
+		t.Fatalf("password-only System Admin: %d %s", x.status, x.raw)
 	}
 	// AC-07: invalid study → 422 naming the field; idempotent creation; code unique.
 	bad := k.studyBody("math-g3")

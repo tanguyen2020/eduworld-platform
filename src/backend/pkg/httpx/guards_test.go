@@ -71,21 +71,17 @@ func TestPortalGuardIsForcedByPrefix(t *testing.T) {
 	}
 }
 
-// F002-AC-18 (TC-CMS-WS-02, TC-CMS-AUTHZ-02): platform routes need acr, fresh auth_time and a platform role.
-func TestPlatformMFAGuard(t *testing.T) {
+// F002-AC-18 (TC-CMS-WS-02, TC-CMS-AUTHZ-02) as changed by ADR-0094: platform routes need the portal client, a
+// staff user and a platform role — no MFA. A password-only token (amr ["pwd"], no acr, no auth_time, issued
+// long ago in the session) reaches the route; a tenant role or a game token is still refused and audited.
+func TestPlatformRoleGuard(t *testing.T) {
 	e := newEnv(t, gameAdminOp)
 	platform := []authz.Grant{{Role: "game_designer", ScopeKind: authz.RoleScopePlatform, Permissions: []authz.Permission{authz.PermGameQuestWrite}}}
-	mk := func(acr string, authAge time.Duration, grants []authz.Grant, tenant *uuid.UUID) string {
-		c := e.idp.baseClaims(portalClient)
-		c["acr"] = acr
-		c["auth_time"] = now.Add(-authAge).Unix()
-		e.res.set(c["sub"].(string), authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, Grants: grants, TenantID: tenant})
-		return e.idp.sign(tok{claims: c})
-	}
-	mkAMR := func(acr string, amr []string, authAge time.Duration, grants []authz.Grant) string {
-		c := e.idp.baseClaims(portalClient)
-		c["acr"], c["amr"] = acr, amr
-		c["auth_time"] = now.Add(-authAge).Unix()
+	mk := func(azp string, grants []authz.Grant, claims map[string]any) string {
+		c := e.idp.baseClaims(azp)
+		for k, v := range claims {
+			c[k] = v
+		}
 		e.res.set(c["sub"].(string), authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, Grants: grants})
 		return e.idp.sign(tok{claims: c})
 	}
@@ -95,13 +91,12 @@ func TestPlatformMFAGuard(t *testing.T) {
 		status int
 		code   string
 	}{
-		{"mfa + platform role", mk("mfa", time.Hour, platform, nil), 200, ""},
-		{"no mfa", mk("1", time.Hour, platform, nil), 403, "MFA_REQUIRED"},
-		{"keycloak direct grant: acr 1 + amr otp", mkAMR("1", []string{"pwd", "otp"}, time.Hour, platform), 200, ""},
-		{"amr pwd only", mkAMR("1", []string{"pwd"}, time.Hour, platform), 403, "MFA_REQUIRED"},
-		{"auth too old", mk("mfa", 9*time.Hour, platform, nil), 403, "MFA_REQUIRED"},
-		{"tenant role only", mk("mfa", time.Hour, []authz.Grant{{Role: "tenant_admin", ScopeKind: authz.RoleScopeTenant,
+		{"password only + platform role", mk(portalClient, platform, nil), 200, ""},
+		{"no amr, no acr, no auth_time", mk(portalClient, platform, map[string]any{"amr": nil}), 200, ""},
+		{"old Keycloak claims are ignored", mk(portalClient, platform, map[string]any{"acr": "0", "auth_time": now.Add(-24 * time.Hour).Unix()}), 200, ""},
+		{"tenant role only", mk(portalClient, []authz.Grant{{Role: "tenant_admin", ScopeKind: authz.RoleScopeTenant,
 			Permissions: []authz.Permission{authz.PermTenantUserRead}}}, nil), 403, "PERMISSION_DENIED"},
+		{"game client", mk(gameClient, platform, nil), 403, "PORTAL_ACCESS_STAFF_ONLY"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -110,13 +105,12 @@ func TestPlatformMFAGuard(t *testing.T) {
 			if r.status != c.status || r.code != c.code {
 				t.Fatalf("status %d code %q (%v)", r.status, r.code, r.raw)
 			}
-			if c.code == "PERMISSION_DENIED" && e.auditCount(audit.ActionAuthzDenied) != before+1 {
-				t.Fatal("PERMISSION_DENIED not audited")
+			if c.code != "" && e.auditCount(audit.ActionAuthzDenied) != before+1 {
+				t.Fatalf("%s not audited", c.code)
 			}
 		})
 	}
-	// MFA state is visible to handlers (used by authz.CrossTenantScope).
-	if r := e.do(t, http.MethodGet, "/api/v1/game-admin/quests", mk("mfa", time.Minute, platform, nil), nil); !r.body.MFA {
-		t.Fatal("principal MFA not set")
+	if r := e.do(t, http.MethodGet, "/api/v1/game-admin/quests", mk(portalClient, platform, nil), nil); r.body.Channel != string(authz.ChannelPortal) {
+		t.Fatalf("principal channel %q", r.body.Channel)
 	}
 }

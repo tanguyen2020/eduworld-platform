@@ -118,8 +118,6 @@ EW_OIDC_ISSUERS=http://localhost:8180/realms/eduworld
 EW_OIDC_AUDIENCE=eduworld-api
 EW_OIDC_ALLOWED_AZP=eduworld-game-backend,eduworld-portal
 EW_OIDC_ALLOWED_CLOCK_SKEW=30s
-EW_OIDC_PLATFORM_REQUIRED_AMR=otp                 # MFA platform: amr chứa otp (direct grant không nâng acr — research F004 R5)
-EW_OIDC_PLATFORM_REQUIRED_ACR=                    # tùy chọn: acr chấp nhận thêm (trống = chỉ xét amr)
 EW_OIDC_PLATFORM_MAX_AUTH_AGE=8h
 EW_KC_PORTAL_CLIENT_ID=eduworld-portal            # azp của portal (guard portal_staff, F002)
 EW_KC_GAME_CLIENT_ID=eduworld-game-backend        # azp của game (guard game_player, F002)
@@ -224,7 +222,7 @@ Toàn bộ dữ liệu seed là **giả**, không dùng thông tin học sinh th
 
 | Seed | Vị trí | Nội dung |
 |---|---|---|
-| Realm Keycloak | `deploy/keycloak/realm-eduworld.dev.json` | Realm `eduworld`; client `eduworld-game-backend` (confidential, chỉ Direct Access Grants, secret local `change-me-local` chỉ dùng trong `core-api` cho module identity — ADR-0068), `eduworld-portal` (confidential, chỉ Direct Access Grants, flow `eduworld-portal-direct-grant` với OTP có điều kiện cho `platform_staff`, secret local `change-me-local` chỉ dùng trong `core-api` cho module identity — ADR-0091; theme `eduworld-ops` chỉ cho trang action-token đăng ký OTP; tài khoản dev platform có OTP seed sẵn), `eduworld-api`; client `svc-identity` (chỉ Keycloak Admin API, secret local `change-me-local` — ADR-0074 mục 5) và client provisioning của module identity; realm roles; mỗi tenant seed là một Keycloak Organization: `th-demo-a` (trường `DEMOA1`), `pgd-demo` (2 trường `DEMOB1`, `DEMOC1`), `common`, `qa-probe` (tenant QA `is_qa = true`, chỉ chứa tài khoản synthetic) |
+| Realm Keycloak | `deploy/keycloak/realm-eduworld.dev.json` | Realm `eduworld`; client `eduworld-game-backend` (confidential, chỉ Direct Access Grants, secret local `change-me-local` chỉ dùng trong `core-api` cho module identity — ADR-0068), `eduworld-portal` (confidential, chỉ Direct Access Grants, flow `eduworld-portal-direct-grant` chỉ username + mật khẩu (không OTP — ADR-0094), secret local `change-me-local` chỉ dùng trong `core-api` cho module identity — ADR-0091; theme `eduworld-ops` chỉ cho trang action-token `UPDATE_PASSWORD` và email của Keycloak; tài khoản dev không có OTP; tài khoản dev platform có OTP seed sẵn), `eduworld-api`; client `svc-identity` (chỉ Keycloak Admin API, secret local `change-me-local` — ADR-0074 mục 5) và client provisioning của module identity; realm roles; mỗi tenant seed là một Keycloak Organization: `th-demo-a` (trường `DEMOA1`), `pgd-demo` (2 trường `DEMOB1`, `DEMOC1`), `common`, `qa-probe` (tenant QA `is_qa = true`, chỉ chứa tài khoản synthetic) |
 | module identity | `src/backend/modules/identity/seed/` (`dev.yaml` + `sis/<mã trường>/{classes,students,enrollments}.csv`, cột = tên trường DTO của EduWorld SIS Contract v1) | System Admin bootstrap `sa.admin` + nhân sự platform; tenant `th-demo-a` (trường `DEMOA1`), `pgd-demo` (trường `DEMOB1`, `DEMOC1`); 1 `sis_connection` `csv_import` mỗi tenant; lớp/năm học/học sinh/enrollment qua import CSV; nhân sự trường/đơn vị + `user_roles`; khóa `hs.locked`. Tenant chung `common` + trường ảo "EduWorld chung" có sẵn từ migration |
 | module learning | `src/backend/modules/learning/seed/` (theo `specs/schemas`) | Curriculum `GDPT2018_SAMPLE` (GDPT 2018 Toán lớp 1–5 rút gọn, file `seed/curriculum/gdpt2018_math_g1_5.yaml`; publish được dù thiếu `yccd_ref`), ~200 câu hỏi, assignment nội dung platform cho 3 tenant (ADR-0029) |
 | module game | `src/backend/modules/game/seed/` | 3 quest, 2 mini-game config, item cosmetic, reward rule |
@@ -258,9 +256,9 @@ Tài khoản demo (mật khẩu chung `Demo@12345`, **chỉ local**):
 | `gd.thietke` | game_designer | Platform; Game Operations Console: soạn quest, reward rule, sticker/GIF, bản dịch game; không publish, không điều chỉnh kinh tế |
 | `lo.vanhanh` | liveops | Platform; publish/rollback nội dung game, Event Builder, season track, báo cáo game analytics |
 | `tc.thidau` | competition_admin | Platform; cấu hình matchmaking, ranking, season, phần thưởng thi đấu (`competition.config.*`) |
-| `sa.admin` | system_admin | Platform (không có tenant gốc), liên tenant; MFA: OTP seed sẵn trong realm import (mã 6 số: `totp()` của `deploy/keycloak/scripts/totp.mjs` với secret trong `dev-constants.mjs`); System Admin bootstrap của seed identity |
+| `sa.admin` | system_admin | Platform (không có tenant gốc), liên tenant; đăng nhập chỉ bằng mật khẩu demo (không OTP — ADR-0094); System Admin bootstrap của seed identity |
 | `sa.admin2` | system_admin thứ hai, kiêm `game.economy.adjust` | Platform; người duyệt thứ hai cho điều chỉnh kinh tế (tạo bởi `sa.admin`) và yêu cầu break-glass (người duyệt khác người tạo) |
-| `sm.antoan` | safety_moderator | Platform (không có tenant gốc); hàng đợi moderation mọi tenant, đọc tin nhắn chỉ trong case (`tenancy.Bypass(ctx, "moderation_case")`); MFA như mọi role platform (tắt ở local) — ADR-0072 |
+| `sm.antoan` | safety_moderator | Platform (không có tenant gốc); hàng đợi moderation mọi tenant, đọc tin nhắn chỉ trong case (`tenancy.Bypass(ctx, "moderation_case")`); đăng nhập chỉ bằng mật khẩu như mọi role platform (ADR-0094) — ADR-0072 |
 | `sm.truongca` | safety_moderator + `moderation.case.lead` | Platform; trưởng ca Safety Team (phân case, lịch trực) |
 
 Mọi tài khoản không phải học sinh có `user_type = staff` (ADR-0081): tài khoản trường/đơn vị có `primary_tenant_id` và chỉ có role tenant; tài khoản platform (`cm.*`, `gd.*`, `lo.*`, `tc.*`, `sa.*`, `sm.*`) có `primary_tenant_id = NULL` và chỉ có role platform. Seed vi phạm bất biến này bị trigger `user_roles_scope_chk` chặn. Không có tài khoản giáo viên: Release 1.0 không có vai trò giáo viên (ADR-0072).

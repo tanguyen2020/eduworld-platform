@@ -63,11 +63,11 @@ func TestForRead(t *testing.T) {
 	if _, err := ForRead(ctx, authztest.Platform("content_admin"), nil, dir); codeOf(err) != problem.PermissionDenied {
 		t.Fatalf("content_admin: %v", err)
 	}
-	// MFA is required for a cross-tenant scope.
+	// A cross-tenant scope needs the portal client (no MFA since ADR-0094).
 	d := sa.PrincipalData
-	d.MFA = false
+	d.Channel = authz.ChannelGame
 	if _, err := ForRead(ctx, authz.NewPrincipal(d), nil, dir); codeOf(err) != problem.PermissionDenied {
-		t.Fatalf("no MFA: %v", err)
+		t.Fatalf("game client: %v", err)
 	}
 }
 

@@ -45,8 +45,8 @@ func TestPlatformAdminCrossTenantTrash(t *testing.T) {
 	b := seedTenant(ctx, t, e.platform, "pgd-pa-b")
 	ta, tb := uuid.MustParse(a.tenant), uuid.MustParse(b.tenant)
 	platformUsers(ctx, t, p, a, "tr")
-	sa, ca, sm := p.token("sa.tr", true), p.token("ca.tr", true), p.token("sm.tr", true)
-	ad, adNoTrash := p.token("ad.donvi.tr", false), p.token("ad.truong.tr", false)
+	sa, ca, sm := p.token("sa.tr"), p.token("ca.tr"), p.token("sm.tr")
+	ad, adNoTrash := p.token("ad.donvi.tr"), p.token("ad.truong.tr")
 	inA := map[string]string{"X-Tenant-Id": a.tenant}
 
 	qa := p.learn.add(&ta, "q-a", true)
@@ -78,7 +78,8 @@ func TestPlatformAdminCrossTenantTrash(t *testing.T) {
 	if outboxCount(ctx, t, p, "audit.recorded", "cross_tenant.accessed") <= before {
 		t.Fatal("audit of the all-tenant read")
 	}
-	// AC-03, AC-04: other platform roles 403, tenant role 403 (+ authz.denied), System Admin without MFA 403.
+	// AC-03, AC-04: other platform roles 403, tenant role 403 (+ authz.denied); System Admin with a password-only
+	// token is allowed (ADR-0094).
 	for _, tok := range []string{ca, sm, ad} {
 		if r = p.do(t, "GET", "/admin/trash?resource_type=question", tok, nil, nil); r.status != 403 || r.body["code"] != "PERMISSION_DENIED" {
 			t.Fatalf("role denied: %d %s", r.status, r.raw)
@@ -87,8 +88,8 @@ func TestPlatformAdminCrossTenantTrash(t *testing.T) {
 	if outboxCount(ctx, t, p, "audit.recorded", "authz.denied") == 0 {
 		t.Fatal("audit authz.denied")
 	}
-	if r = p.do(t, "GET", "/admin/trash?resource_type=question", p.token("sa.tr", false), nil, nil); r.status != 403 || r.body["code"] != "MFA_REQUIRED" {
-		t.Fatalf("mfa: %d %s", r.status, r.raw)
+	if r = p.do(t, "GET", "/admin/trash?resource_type=question", p.token("sa.tr"), nil, nil); r.status != 200 {
+		t.Fatalf("password-only System Admin: %d %s", r.status, r.raw)
 	}
 	authztest.Cover(t, "listTrash", authztest.RoleDenied)
 

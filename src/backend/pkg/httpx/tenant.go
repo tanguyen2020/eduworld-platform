@@ -99,7 +99,7 @@ func (s *Server) principal(op Operation, next http.Handler) http.Handler {
 		}
 		d := p.PrincipalData
 		d.ClientID, d.SessionID = c.AZP, c.SessionID
-		d.Channel, d.MFA = s.verifier.channel(c.AZP), s.verifier.mfa(c)
+		d.Channel = s.verifier.channel(c.AZP)
 		p = authz.NewPrincipal(d)
 
 		scope, err := s.scopeFor(r, p)
@@ -121,7 +121,7 @@ func (s *Server) principal(op Operation, next http.Handler) http.Handler {
 }
 
 // scopeFor: tenant principal → TenantScope (tenant_ids ignored); platform principal with tenant_ids and
-// platform.cross_tenant.read → CrossTenantScope (MFA required); other platform staff → PlatformScope.
+// platform.cross_tenant.read → CrossTenantScope (audited on use); other platform staff → PlatformScope.
 func (s *Server) scopeFor(r *http.Request, p authz.Principal) (tenancy.Scope, error) {
 	if p.TenantID != nil {
 		sc, err := authz.ScopeFor(p)
@@ -135,9 +135,6 @@ func (s *Server) scopeFor(r *http.Request, p authz.Principal) (tenancy.Scope, er
 	}
 	raw := r.URL.Query().Get("tenant_ids")
 	if raw != "" && p.Has(authz.PermPlatformCrossTenantRead) {
-		if !p.MFA {
-			return nil, problem.New(problem.MfaRequired, "")
-		}
 		parts := strings.Split(raw, ",")
 		if len(parts) > maxTenantIDs {
 			return nil, problem.Invalid("tenant_ids", problem.SubInvalid, "too many tenant ids")

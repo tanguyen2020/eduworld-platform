@@ -72,7 +72,7 @@ func TestRequire(t *testing.T) {
 func TestRequireSystemAdminCrossTenant(t *testing.T) {
 	ta, tb := uuid.New(), uuid.New()
 	sa := authz.NewPrincipal(authz.PrincipalData{
-		UserID: uuid.New(), UserType: authz.UserTypeStaff, IsSystemAdmin: true, Channel: authz.ChannelPortal, MFA: true,
+		UserID: uuid.New(), UserType: authz.UserTypeStaff, IsSystemAdmin: true, Channel: authz.ChannelPortal,
 		Grants: []authz.Grant{{Role: "system_admin", Permissions: []authz.Permission{authz.PermPlatformCrossTenantRead, authz.PermLmsReportRead}}},
 	})
 	ctx := context.Background()

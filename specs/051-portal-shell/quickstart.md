@@ -12,7 +12,7 @@
 
 | # | Bước | Kết quả mong đợi | Tiêu chí |
 |---|---|---|---|
-| 1 | Mở portal chưa đăng nhập | Trang `/login` của portal (không request tới Keycloak), có ô mã xác thực 6 số, không có bước chọn trường | F051-AC-01 |
+| 1 | Mở portal chưa đăng nhập | Trang `/login` của portal (không request tới Keycloak), chỉ ô tên đăng nhập/email và mật khẩu (không ô mã xác thực — ADR-0094), không có bước chọn trường | F051-AC-01 |
 | 2 | Đăng nhập `ad.truong.a` bằng email chữ hoa | Vào thẳng `th-demo-a`; DevTools Application không có token trong storage | F051-AC-02, F051-AC-03 |
 | 3 | Đăng nhập `qlcm.truong.a` | Màn "Chọn đơn vị làm việc" 2 tenant; chọn `th-demo-a` không gọi lại `portalLogin`/không token mới; request sau có `X-Tenant-Id` | F051-AC-03, F051-AC-05, F051-AC-06 |
 | 4 | Đăng nhập `hs.an.3a` | `portalLogin` → `403 PORTAL_ACCESS_STAFF_ONLY`, thông điệp chặn học sinh; nếu tắt điều kiện role (test env) → API trả cùng mã, đăng xuất | F051-AC-04 |
@@ -34,7 +34,7 @@
 | 18 | `ad.truong.a` mở danh sách | Không có bộ lọc/cột Tenant; không có `tenant_ids` | F051-AC-26 |
 | 19 | Dán chuỗi dài hơn `maxLength` vào ô tìm tenant | Bị cắt/chặn tại giới hạn | F051-AC-27 |
 | 20 | `/login`: `sa.admin` thiếu mã / mã sai / mật khẩu sai; rồi đúng; 11 lần sai/phút | Cùng một thông điệp chung, ô mật khẩu và mã bị xóa; vào được; lần 11 hiện thời gian chờ | F051-AC-30 |
-| 21 | Tài khoản còn `UPDATE_PASSWORD` đăng nhập → đổi mật khẩu yếu rồi hợp lệ; tài khoản platform chưa có OTP | Màn thiết lập, lỗi policy theo field, quay lại `/login`; màn "Kiểm tra email" | F051-AC-31 |
+| 21 | Tài khoản còn `UPDATE_PASSWORD` đăng nhập → đổi mật khẩu yếu rồi hợp lệ | Màn thiết lập, lỗi policy theo field, quay lại `/login` (không còn màn "Kiểm tra email" — ADR-0094) | F051-AC-31 |
 | 22 | `/forgot-password` với email `ad.truong.a` và email lạ; mở link từ Mailpit; dùng lại link | Cùng thông điệp; token biến khỏi URL, đặt mật khẩu → `/login`; link cũ → "không còn hiệu lực" | F051-AC-32 |
 | 23 | DevTools: `document.cookie`, Application storage; 3 request song song khi access token hết hạn; mở hai tab rồi F5 cả hai | Không thấy refresh token; một lời gọi `refreshPortalToken` có `X-EW-CSRF`, request được thử lại; cả hai tab còn phiên | F051-AC-02, F051-AC-33 |
 | 24 | Sửa `specs/portal/menu-catalog.yaml` thử (thêm menu không component) rồi `make portal-catalog` + test; `git diff` file sinh | Test fail "thiếu component"; CI phát hiện file sinh lệch | F051-AC-34 |
@@ -61,7 +61,7 @@ Backend F012 chưa chạy được (binary chưa nối — OQ F010-2) nên mọi
 
 | Tiêu chí | Bằng chứng tự động (Vitest, `src/**`) | Kết quả |
 |---|---|---|
-| AC-01, AC-30 | `auth/LoginPage.test.tsx` (trang `/login` đủ ô, chỉ một request tới gateway portal, một `portalLogin` gồm `username`/`password`/`device_id`/`locale` (+`otp`), lỗi chung xóa mật khẩu + mã, `429` → "đợi 30 giây", cờ `otpHint`) | 8/8 pass |
+| AC-01, AC-30 | `auth/LoginPage.test.tsx` (trang `/login` đủ ô, chỉ một request tới gateway portal, một `portalLogin` gồm `username`/`password`/`device_id`/`locale` (không `otp` — ADR-0094), lỗi chung xóa mật khẩu, `429` → "đợi 30 giây") | 8/8 pass |
 | AC-02 | `auth/tokenStore.test.ts` (không token/mật khẩu/mã/ticket trong storage hay cookie, chỉ ghi `ew.portal.deviceId`; gọi `/auth/portal/*` `credentials: include`, không `Authorization`/`X-Tenant-Id`), `sessionLifecycle.test.tsx` (F5 không lưu token) | 7/7, pass |
 | AC-03, AC-04 | `session/sessionMachine.test.ts` (định tuyến thuần), `LoginPage.test.tsx` (1 tenant, nhiều tenant + `returnUrl`, không quyền, học sinh), `sessionLifecycle.test.tsx` › staff only | 9/9, pass |
 | AC-05, AC-06, AC-27 | `session/tenantSession.test.tsx` › tenant selection (cùng `Authorization`, không `portalLogin`/refresh mới, `X-Tenant-Id`, nhớ lựa chọn, ô tìm `maxlength=100`); `shared/api/withTenantScope.test.ts` (header phiên thắng mọi header, bỏ `tenant_ids`) | 3/3, 7/7 pass |

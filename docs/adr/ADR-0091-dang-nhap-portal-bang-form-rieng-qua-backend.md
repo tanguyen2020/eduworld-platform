@@ -1,6 +1,9 @@
 # ADR-0091 — Admin Portal đăng nhập bằng form riêng qua backend, không chuyển hướng OIDC
 
-> **Trạng thái:** Accepted · một phần supersedes ADR-0066 (mục 1), ADR-0067 (chọn tenant bằng scope token), ADR-0068 (mục 4) · **Ngày:** 2026-11-17 · **OQ:** — · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần supersedes ADR-0066 (mục 1), ADR-0067 (chọn tenant bằng scope token), ADR-0068 (mục 4) · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-17 · **OQ:** — · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: ô "Mã xác thực 6 số" và trường `otp` (mục 1); OTP có điều kiện trong flow `eduworld-portal-direct-grant`, mapper AMR/LoA, "MFA chỉ TOTP" (mục 2); đăng ký OTP qua email `CONFIGURE_TOTP` (mục 3); step-up `403 MFA_REQUIRED` khi `auth_time` quá 8 giờ (mục 4) — thay bằng giới hạn phiên `platform_staff` 8 giờ khi refresh (`401 REFRESH_TOKEN_INVALID`). **Còn hiệu lực:** form đăng nhập riêng qua module `identity`, client `eduworld-portal` confidential, đổi mật khẩu tạm, quên mật khẩu, cookie refresh + CSRF, chọn tenant bằng `X-Tenant-Id`, các biện pháp bảo vệ ở mục 5.
 
 ## Bối cảnh
 
@@ -62,3 +65,4 @@ Ràng buộc kỹ thuật của Keycloak: không có API tạo credential OTP; l
 | Ngày | Thay đổi | Nguồn |
 |---|---|---|
 | 2026-11-17 | Tạo ADR (Accepted) | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

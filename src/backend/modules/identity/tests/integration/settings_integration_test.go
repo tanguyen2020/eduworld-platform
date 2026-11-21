@@ -22,8 +22,8 @@ func TestPlatformAndTenantSettings(t *testing.T) {
 	portalUser(ctx, t, e, iss, "ad.donvi.set", "tenant_admin", &a.tenant, "tenant", nil)
 	portalUser(ctx, t, e, iss, "ad.truong.set", "school_admin", &a.tenant, "school", &a.school)
 	now := time.Now()
-	tok := func(user string, mfa bool) string { return idp.Token("sub-"+user, httpxtest.PortalClient, mfa, now) }
-	sa := tok("sa.set", true)
+	tok := func(user string) string { return idp.Token("sub-"+user, httpxtest.PortalClient, now) }
+	sa := tok("sa.set")
 	ifm := func(etag string) map[string]string { return map[string]string{"If-Match": etag} }
 	events := func(key string) int {
 		return count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'platform_settings.changed' AND envelope::text LIKE '%"key": "`+key+`"%'`)
@@ -55,7 +55,7 @@ func TestPlatformAndTenantSettings(t *testing.T) {
 		t.Fatal("platform_settings.changed / audit of the curfew")
 	}
 	// Tenant roles cannot write platform settings.
-	if r = h.do(t, "PUT", "/admin/settings/curfew", tok("ad.donvi.set", false), ifm(`W/"1"`), map[string]any{"start": "20:00", "end": "06:30", "reason": "x x x"}); r.status != 403 {
+	if r = h.do(t, "PUT", "/admin/settings/curfew", tok("ad.donvi.set"), ifm(`W/"1"`), map[string]any{"start": "20:00", "end": "06:30", "reason": "x x x"}); r.status != 403 {
 		t.Fatalf("tenant admin on platform curfew: %d", r.status)
 	}
 
@@ -74,7 +74,7 @@ func TestPlatformAndTenantSettings(t *testing.T) {
 
 	// AC-13: overriding the cleanup days while the platform forbids it → 403.
 	inA := map[string]string{"X-Tenant-Id": a.tenant, "Content-Type": "application/merge-patch+json"}
-	r = h.do(t, "GET", "/tenant/settings", tok("ad.donvi.set", false), map[string]string{"X-Tenant-Id": a.tenant}, nil)
+	r = h.do(t, "GET", "/tenant/settings", tok("ad.donvi.set"), map[string]string{"X-Tenant-Id": a.tenant}, nil)
 	etag := r.header.Get("ETag")
 	if r.status != 200 || r.body["effective_cleanup_days"] != float64(180) || etag == "" {
 		t.Fatalf("tenant settings: %d %v", r.status, r.body)
@@ -86,7 +86,7 @@ func TestPlatformAndTenantSettings(t *testing.T) {
 		}
 		return out
 	}
-	if r = h.do(t, "PATCH", "/tenant/settings", tok("ad.donvi.set", false), withIf(inA, etag), map[string]any{"inactive_student_cleanup_days": 90}); r.status != 403 {
+	if r = h.do(t, "PATCH", "/tenant/settings", tok("ad.donvi.set"), withIf(inA, etag), map[string]any{"inactive_student_cleanup_days": 90}); r.status != 403 {
 		t.Fatalf("override forbidden: %d %v", r.status, r.body)
 	}
 	// Allowed again → stored, effective value follows (AC-14), tenant.updated published.
@@ -95,7 +95,7 @@ func TestPlatformAndTenantSettings(t *testing.T) {
 	if r.status != 200 {
 		t.Fatalf("reopen overrides: %d %v", r.status, r.body)
 	}
-	r = h.do(t, "PATCH", "/tenant/settings", tok("ad.donvi.set", false), withIf(inA, etag), map[string]any{"inactive_student_cleanup_days": 90,
+	r = h.do(t, "PATCH", "/tenant/settings", tok("ad.donvi.set"), withIf(inA, etag), map[string]any{"inactive_student_cleanup_days": 90,
 		"gameplay_chat_retention_days": 5, "allowed_hours": map[string]any{"windows": []any{map[string]any{"days": []string{"mon", "tue"}, "from": "06:00", "to": "21:00"}}}})
 	if r.status != 200 || r.body["effective_cleanup_days"] != float64(90) || r.body["gameplay_chat_retention_days"] != float64(5) {
 		t.Fatalf("patch: %d %v", r.status, r.body)
@@ -104,19 +104,19 @@ func TestPlatformAndTenantSettings(t *testing.T) {
 		t.Fatal("tenant.updated")
 	}
 	// AC-15: stale If-Match → 412; chat below minimum → 422; School Admin lacks tenant.settings.write → 403.
-	if r = h.do(t, "PATCH", "/tenant/settings", tok("ad.donvi.set", false), withIf(inA, etag), map[string]any{"default_locale": "en-US"}); r.status != 412 {
+	if r = h.do(t, "PATCH", "/tenant/settings", tok("ad.donvi.set"), withIf(inA, etag), map[string]any{"default_locale": "en-US"}); r.status != 412 {
 		t.Fatalf("stale: %d", r.status)
 	}
-	r = h.do(t, "GET", "/tenant/settings", tok("ad.donvi.set", false), map[string]string{"X-Tenant-Id": a.tenant}, nil)
+	r = h.do(t, "GET", "/tenant/settings", tok("ad.donvi.set"), map[string]string{"X-Tenant-Id": a.tenant}, nil)
 	etag = r.header.Get("ETag")
-	if r = h.do(t, "PATCH", "/tenant/settings", tok("ad.donvi.set", false), withIf(inA, etag), map[string]any{"gameplay_chat_retention_days": 2}); r.status != 422 {
+	if r = h.do(t, "PATCH", "/tenant/settings", tok("ad.donvi.set"), withIf(inA, etag), map[string]any{"gameplay_chat_retention_days": 2}); r.status != 422 {
 		t.Fatalf("chat below minimum: %d", r.status)
 	}
-	if r = h.do(t, "PATCH", "/tenant/settings", tok("ad.truong.set", false), withIf(inA, etag), map[string]any{"default_locale": "en-US"}); r.status != 403 {
+	if r = h.do(t, "PATCH", "/tenant/settings", tok("ad.truong.set"), withIf(inA, etag), map[string]any{"default_locale": "en-US"}); r.status != 403 {
 		t.Fatalf("school admin on tenant settings: %d", r.status)
 	}
 	// Another tenant: the tenant admin of A cannot use X-Tenant-Id of B.
-	if r = h.do(t, "GET", "/tenant/settings", tok("ad.donvi.set", false), map[string]string{"X-Tenant-Id": b.tenant}, nil); r.status != 403 {
+	if r = h.do(t, "GET", "/tenant/settings", tok("ad.donvi.set"), map[string]string{"X-Tenant-Id": b.tenant}, nil); r.status != 403 {
 		t.Fatalf("other tenant: %d", r.status)
 	}
 }

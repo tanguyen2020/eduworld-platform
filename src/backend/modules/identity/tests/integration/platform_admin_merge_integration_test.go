@@ -75,7 +75,7 @@ func TestPlatformAdminMerge(t *testing.T) {
 	a := seedTenant(ctx, t, e.platform, "th-mg-a")
 	b := seedTenant(ctx, t, e.platform, "th-mg-b")
 	platformUsers(ctx, t, p, a, "mg")
-	sa, ca, sch := p.token("sa.mg", true), p.token("ca.mg", true), p.token("ad.truong.mg", false)
+	sa, ca, sch := p.token("sa.mg"), p.token("ca.mg"), p.token("ad.truong.mg")
 	inA := map[string]string{"X-Tenant-Id": a.tenant}
 
 	a1 := enrolled(ctx, t, e.platform, a, "hs.trung.a1")
@@ -118,15 +118,12 @@ func TestPlatformAdminMerge(t *testing.T) {
 	}
 	body := map[string]any{"from_user_id": a2, "into_user_id": a1, "reconciliation_issue_id": issue, "reason": "cùng một học sinh, hai tài khoản"}
 
-	// AC-30: School Admin (direct call), content_admin, missing MFA → 403; a user outside the tenant → 404.
+	// AC-30: School Admin (direct call), content_admin → 403 (no MFA check since ADR-0094); a user outside the tenant → 404.
 	if r := merge(newKey(), body, sch, inA); r.status != 403 {
 		t.Fatalf("school admin: %d %s", r.status, r.raw)
 	}
 	if r := merge(newKey(), body, ca, inA); r.status != 403 {
 		t.Fatalf("content admin: %d %s", r.status, r.raw)
-	}
-	if r := merge(newKey(), body, p.token("sa.mg", false), inA); r.status != 403 || r.body["code"] != "MFA_REQUIRED" {
-		t.Fatalf("mfa: %d %s", r.status, r.raw)
 	}
 	if r := merge(newKey(), map[string]any{"from_user_id": b1, "into_user_id": a1, "reconciliation_issue_id": issue, "reason": "khác tenant"}, sa, inA); r.status != 404 {
 		t.Fatalf("other tenant: %d %s", r.status, r.raw)

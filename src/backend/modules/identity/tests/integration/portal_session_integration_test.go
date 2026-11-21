@@ -91,7 +91,7 @@ func TestPortalSession(t *testing.T) {
 	link(gv, "kc-gv")
 	grantRole(ctx, t, e, gv, "school_admin", &a.tenant, "tenant", nil, "NULL")
 	grantRole(ctx, t, e, gv, "academic_manager", &b.tenant, "tenant", nil, "NULL")
-	tok := idp.Token("kc-gv", httpxtest.PortalClient, false, now)
+	tok := idp.Token("kc-gv", httpxtest.PortalClient, now)
 
 	// AC-04: listMyTenants without X-Tenant-Id.
 	r := h.do(t, "GET", "/me/tenants", tok, nil, nil)
@@ -126,19 +126,19 @@ func TestPortalSession(t *testing.T) {
 		t.Fatal(err)
 	}
 	link(st, "kc-hs")
-	stTok := idp.Token("kc-hs", httpxtest.PortalClient, false, now)
+	stTok := idp.Token("kc-hs", httpxtest.PortalClient, now)
 	if r = h.do(t, "GET", "/me/tenants", stTok, nil, nil); r.status != 403 || !strings.Contains(r.raw, "PORTAL_ACCESS_STAFF_ONLY") {
 		t.Fatalf("student listMyTenants on portal: %d %s", r.status, r.raw)
 	}
 	if r = h.do(t, "GET", "/me/permissions", stTok, hdr(a.tenant), nil); r.status != 403 || !strings.Contains(r.raw, "PORTAL_ACCESS_STAFF_ONLY") {
 		t.Fatalf("student getMyPermissions on portal: %d %s", r.status, r.raw)
 	}
-	if r = h.do(t, "GET", "/me/tenants", idp.Token("kc-hs", httpxtest.GameClient, false, now), nil, nil); r.status != 200 || len(r.body["items"].([]any)) != 1 {
+	if r = h.do(t, "GET", "/me/tenants", idp.Token("kc-hs", httpxtest.GameClient, now), nil, nil); r.status != 200 || len(r.body["items"].([]any)) != 1 {
 		t.Fatalf("student listMyTenants on game: %d %s", r.status, r.raw)
 	}
 	none := staffUser(ctx, t, e, "gv.none", &a.tenant)
 	link(none, "kc-none")
-	if r = h.do(t, "GET", "/me/tenants", idp.Token("kc-none", httpxtest.PortalClient, false, now), nil, nil); r.status != 403 ||
+	if r = h.do(t, "GET", "/me/tenants", idp.Token("kc-none", httpxtest.PortalClient, now), nil, nil); r.status != 403 ||
 		!strings.Contains(r.raw, "PORTAL_ACCESS_STAFF_ONLY") {
 		t.Fatalf("staff without role: %d %s", r.status, r.raw)
 	}
@@ -147,7 +147,7 @@ func TestPortalSession(t *testing.T) {
 	sa := staffUser(ctx, t, e, "sa.sess", nil)
 	link(sa, "kc-sa-sess")
 	grantRole(ctx, t, e, sa, "system_admin", nil, "platform", nil, "NULL")
-	saTok := idp.Token("kc-sa-sess", httpxtest.PortalClient, true, now)
+	saTok := idp.Token("kc-sa-sess", httpxtest.PortalClient, now)
 	if r = h.do(t, "GET", "/me/tenants", saTok, nil, nil); r.status != 200 || r.body["has_platform_role"] != true {
 		t.Fatalf("system admin listMyTenants: %d %s", r.status, r.raw)
 	}

@@ -34,12 +34,6 @@
     "en"
   ],
   "defaultLocale": "vi",
-  "otpPolicyType": "totp",
-  "otpPolicyAlgorithm": "HmacSHA1",
-  "otpPolicyDigits": 6,
-  "otpPolicyPeriod": 30,
-  "otpPolicyLookAheadWindow": 1,
-  "otpPolicyCodeReusable": false,
   "roles": {
     "realm": [
       {
@@ -52,7 +46,7 @@
       },
       {
         "name": "platform_staff",
-        "description": "Đội EduWorld: Admin Portal với OTP bắt buộc (ADR-0091)"
+        "description": "Đội EduWorld: Admin Portal, đăng nhập chỉ bằng mật khẩu, phiên tối đa 8 giờ (ADR-0094)"
       },
       {
         "name": "default-roles-eduworld",
@@ -156,39 +150,6 @@
           }
         }
       ]
-    },
-    {
-      "name": "eduworld-amr-loa",
-      "description": "amr from authenticator reference values (pwd, otp) and acr from the level of authentication (ADR-0091)",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "false",
-        "display.on.consent.screen": "false"
-      },
-      "protocolMappers": [
-        {
-          "name": "amr",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-amr-mapper",
-          "consentRequired": false,
-          "config": {
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "introspection.token.claim": "true"
-          }
-        },
-        {
-          "name": "acr loa level",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-acr-mapper",
-          "consentRequired": false,
-          "config": {
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "introspection.token.claim": "true"
-          }
-        }
-      ]
     }
   ],
   "clients": [
@@ -256,8 +217,7 @@
         "basic",
         "eduworld-api-audience",
         "eduworld-roles",
-        "eduworld-username",
-        "eduworld-amr-loa"
+        "eduworld-username"
       ],
       "optionalClientScopes": []
     },
@@ -380,12 +340,6 @@
       "config": {
         "default.reference.value": "pwd"
       }
-    },
-    {
-      "alias": "ew-portal-ref-otp",
-      "config": {
-        "default.reference.value": "otp"
-      }
     }
   ],
   "authenticationFlows": [
@@ -447,7 +401,7 @@
     },
     {
       "alias": "eduworld-portal-direct-grant",
-      "description": "Admin Portal login through module identity: staff only, OTP for platform_staff (ADR-0091)",
+      "description": "Admin Portal login through module identity: staff only, password only, no OTP (ADR-0091, ADR-0094)",
       "providerId": "basic-flow",
       "topLevel": true,
       "builtIn": false,
@@ -471,13 +425,6 @@
           "flowAlias": "eduworld-portal-deny-non-staff",
           "requirement": "CONDITIONAL",
           "priority": 30,
-          "authenticatorFlow": true,
-          "userSetupAllowed": false
-        },
-        {
-          "flowAlias": "eduworld-portal-otp-configured",
-          "requirement": "CONDITIONAL",
-          "priority": 50,
           "authenticatorFlow": true,
           "userSetupAllowed": false
         }
@@ -511,30 +458,6 @@
           "authenticatorConfig": "ew-portal-deny",
           "requirement": "REQUIRED",
           "priority": 30,
-          "authenticatorFlow": false,
-          "userSetupAllowed": false
-        }
-      ]
-    },
-    {
-      "alias": "eduworld-portal-otp-configured",
-      "description": "OTP for every staff who configured it; platform_staff without OTP carry CONFIGURE_TOTP (provisioning) and never pass the MFA guard (spike R5)",
-      "providerId": "basic-flow",
-      "topLevel": false,
-      "builtIn": false,
-      "authenticationExecutions": [
-        {
-          "authenticator": "conditional-user-configured",
-          "requirement": "REQUIRED",
-          "priority": 10,
-          "authenticatorFlow": false,
-          "userSetupAllowed": false
-        },
-        {
-          "authenticator": "direct-grant-validate-otp",
-          "authenticatorConfig": "ew-portal-ref-otp",
-          "requirement": "REQUIRED",
-          "priority": 20,
           "authenticatorFlow": false,
           "userSetupAllowed": false
         }

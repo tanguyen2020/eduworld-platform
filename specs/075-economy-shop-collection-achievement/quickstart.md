@@ -7,7 +7,7 @@
 - Phụ thuộc đã Done: F070, F074 (và F031 phát `learning_objective.progressed`).
 - Lệnh: `make up`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events`, `make seed-check` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
 - Seed config: `go -C src/backend run ./cmd/worker seed-config --module=game --dir deploy/seed/game-config` (currency `xu`, 10 item, 3 shop item trong đó 1 gán riêng `th-demo-a`, 1 collection knowledge card, 2 achievement có một ẩn).
-- Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (`th-demo-a`), `hs.dung.7a` (`pgd-demo`), `ad.truong.a`, `sa.admin` (điều chỉnh, MFA tắt ở local) và một tài khoản platform thứ hai có `game.economy.adjust` (`cm.noidung` được gán tạm role này trong realm local — xem task Polish).
+- Tài khoản demo: `hs.an.3a`, `hs.binh.3a` (`th-demo-a`), `hs.dung.7a` (`pgd-demo`), `ad.truong.a`, `sa.admin` (điều chỉnh, không MFA — ADR-0094) và một tài khoản platform thứ hai có `game.economy.adjust` (`cm.noidung` được gán tạm role này trong realm local — xem task Polish).
 
 ## 2. Kịch bản kiểm tra
 

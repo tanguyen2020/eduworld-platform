@@ -53,6 +53,10 @@ Các điểm thiếu/mâu thuẫn gặp khi triển khai; lấy mặc định [C
 - OQ F045-9 → **Chốt:** hộp gỡ gán có ô "Gỡ cả gán mặc định cho tenant mới" (`remove_default`) khi tài nguyên có quy tắc mặc định.
 - OQ F057-10 → **Chốt:** E2E backend thật (T019, T040, T046, T048, T049) chạy khi có môi trường compose — không phải câu hỏi mở.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F057-AC-19 (và F051-AC-13 được dẫn) không còn áp dụng: không có `MFA_REQUIRED`/đăng nhập lại có MFA; lỗi kết nối gateway nội bộ vẫn hiển thị "Cần VPN". T003, T008, T041, T044, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Bộ lọc tenant liên tenant của System Admin (Priority: P1) 🎯 MVP

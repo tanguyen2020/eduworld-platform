@@ -1,6 +1,9 @@
 # ADR-0022 — Admin Portal (CMS/LMS) là React + TypeScript SPA
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md), [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: "MFA bắt buộc với role platform" (đăng nhập portal theo ADR-0091, không còn OTP). **Còn hiệu lực:** React + TypeScript SPA, token chỉ trong bộ nhớ.
 
 ## Bối cảnh
 
@@ -32,3 +35,4 @@ Vue, Angular (stakeholder chọn React). Next.js/SSR: ứng dụng nội bộ sa
 | 2026-11-15 | UI Admin/Ops bằng Ant Design 5 + Pro | ADR-0047 |
 | 2026-11-15 | Một portal, client `eduworld-portal` (thay `eduworld-cms`/`eduworld-admin`, 2 bundle) | ADR-0027 |
 | 2026-11-20 | Owner chốt chi tiết stack (Accepted toàn bộ) | Owner |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

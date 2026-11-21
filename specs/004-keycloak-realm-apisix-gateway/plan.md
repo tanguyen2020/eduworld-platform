@@ -1,5 +1,7 @@
 # Implementation Plan: F004 — Keycloak realm as code và APISIX gateway (route, `tenant-header`, gateway nội bộ)
 
+> **ADR-0094 (2026-11-21, owner bỏ MFA/TOTP cho đăng nhập Admin Portal):** mọi nội dung về OTP/TOTP, mapper AMR/LoA, `acr`/`amr`, `MFA_REQUIRED`, step-up, `configure_otp`, `otp_setup_email_sent`, guard `platform_mfa` trong file này là **lịch sử, không còn hiệu lực**. Hiện hành: [spec.md — Clarifications, Session 2026-11-21](spec.md) và [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md).
+
 **Branch**: `004-keycloak-realm-apisix-gateway` · **Date**: 2026-11-16 · **Spec**: [spec.md](spec.md)
 
 ## Summary

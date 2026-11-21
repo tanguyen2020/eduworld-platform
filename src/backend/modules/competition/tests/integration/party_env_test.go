@@ -348,13 +348,13 @@ func (e *penv) block(blocker, blocked kid) {
 func (e *penv) staffToken(tenant uuid.UUID, role string) string {
 	sub := "kc-staff-" + uuid.NewString()
 	e.res.Set(sub, authztest.Staff(tenant, role).PrincipalData)
-	return e.idp.Token(sub, httpxtest.PortalClient, true, time.Now())
+	return e.idp.Token(sub, httpxtest.PortalClient, time.Now())
 }
 
 func (e *penv) platformToken(role string) string {
 	sub := "kc-platform-" + uuid.NewString()
 	e.res.Set(sub, authztest.Platform(role).PrincipalData)
-	return e.idp.Token(sub, httpxtest.PortalClient, true, time.Now())
+	return e.idp.Token(sub, httpxtest.PortalClient, time.Now())
 }
 
 type presp struct {

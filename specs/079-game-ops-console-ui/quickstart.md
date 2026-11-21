@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F051, F050, F077, F078 (và F074 cho progression).
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Tài khoản: `sa.admin` (MFA tắt ở local; bật OTP seed để thử step-up), tài khoản seed `game_designer`/`liveops`/`content_reviewer` [Confirmed: `gd.thietke`, `lo.vanhanh`, `cm.duyet`]; `ad.truong.a`, `qlcm.truong.a`, `sm.antoan` cho kiểm chặn.
+- Tài khoản: `sa.admin` (chỉ mật khẩu — không MFA, ADR-0094), tài khoản seed `game_designer`/`liveops`/`content_reviewer` [Confirmed: `gd.thietke`, `lo.vanhanh`, `cm.duyet`]; `ad.truong.a`, `qlcm.truong.a`, `sm.antoan` cho kiểm chặn.
 - Dữ liệu: seed module game (8 vùng, NPC mẫu, client manifest hiện hành).
 
 ## 2. Kịch bản kiểm tra
@@ -31,7 +31,7 @@
 | 16 | Publish item mới, xem danh sách; render lỗi giả lập | Thumbnail đúng version; placeholder + nhãn | F079-AC-16 |
 | 17 | Bấm Preview quest nháp | `GamePreviewFrame` tải Godot Web trong iframe | F079-AC-17 |
 | 18 | `ad.truong.a`, `qlcm.truong.a`, `sm.antoan` mở `/game-ops/quests` | Trang 403, không tải chunk | F079-AC-18 |
-| 19 | Token không MFA; tắt gateway nội bộ | Step-up quay lại URL; "Cần kết nối mạng quản trị (VPN)" | F079-AC-19 |
+| 19 | Tắt gateway nội bộ (không còn step-up MFA — ADR-0094) | "Cần kết nối mạng quản trị (VPN)" | F079-AC-19 |
 | 20 | Dán chuỗi dài vào tiêu đề; ngắt mạng lúc publish rồi thử lại | Giới hạn + bộ đếm; cùng `Idempotency-Key` | F079-AC-20 |
 | 21 | `sa.admin` tắt mặc định platform `menu.game_ops.shop`; `lo.vanhanh` tải lại portal | Menu "Shop · Tiền tệ" biến mất; `listGameConfigs?config_type=shop-items` → `403 FEATURE_DISABLED`; `config_type=items` vẫn chạy | F079-AC-21 |
 

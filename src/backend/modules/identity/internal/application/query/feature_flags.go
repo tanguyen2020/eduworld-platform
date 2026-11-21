@@ -85,7 +85,7 @@ type FeatureFlags struct {
 	Cursors *page.Codec
 }
 
-// admin checks platform.feature_flag.write (System Admin, MFA by the /admin guard) and, for a tenant view,
+// admin checks platform.feature_flag.write (System Admin, platform role guard of /admin) and, for a tenant view,
 // records cross_tenant.accessed (ADR-0027 §6).
 func (q FeatureFlags) admin(ctx context.Context, tenant *uuid.UUID) (context.Context, error) {
 	p, err := authenticated(ctx)

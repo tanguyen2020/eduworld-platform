@@ -1,9 +1,12 @@
 # ADR-0064 — Không tự đăng nhập khi mở lại game
 
-> **Trạng thái:** Accepted · một phần superseded by ADR-0086 · **Ngày:** 2026-11-15 · **OQ:** — · **Supersedes một phần:** ADR-0045 (mục 3: phiên dài + refresh token lưu trên thiết bị), ADR-0007 (lưu refresh token trong secure storage) · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0086 · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Supersedes một phần:** ADR-0045 (mục 3: phiên dài + refresh token lưu trên thiết bị), ADR-0007 (lưu refresh token trong secure storage) · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [GODOT_ARCHITECTURE](../08-game-client/GODOT_ARCHITECTURE.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay bởi [ADR-0086](ADR-0086-giu-phien-game-bang-refresh-token.md):** không còn bắt nhập mật khẩu mỗi lần mở game; refresh token được lưu trong kho bảo mật của thiết bị cá nhân (mục 1, 2, 4, 5). **Còn hiệu lực:** mục 3, 6, 7; máy dùng chung vẫn chỉ giữ token trong RAM.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: "MFA theo role" ở mục 7. **Còn hiệu lực:** chính sách phiên portal idle 30 phút, tối đa 10 giờ (phiên `platform_staff` tối đa 8 giờ từ lúc nhập mật khẩu, ADR-0094 mục 2).
 
 ## Bối cảnh
 
@@ -30,3 +33,4 @@ Người duyệt yêu cầu: **mở game lần sau phải nhập lại mật kh�
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
 | 2026-11-15 | Cập nhật tham chiếu theo ADR-0072 (bỏ vai trò giáo viên), không đổi ý nghĩa quyết định | Technical Architect |
 | 2026-11-16 | Một phần superseded by ADR-0086 | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

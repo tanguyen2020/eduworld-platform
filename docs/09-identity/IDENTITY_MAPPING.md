@@ -124,7 +124,6 @@ func (r *Resolver) Resolve(ctx context.Context, tok VerifiedToken) (*Principal, 
     }
     if err := ext.User.EnsureActive(); err != nil { return nil, err } // locked/deactivated
     if tok.AZP == "eduworld-portal" && r.roles.HasPlatformRole(ctx, ext.User) {
-        if !tok.HasMFA() { return nil, ErrMFARequired } // acr/amr — ADR-0027 mục 3
         return r.scopes.BuildSystemAdmin(ctx, ext.User) // không gắn tenant; CrossTenantScope + audit
     }
     members, err := r.membership.TenantsOf(ctx, ext.User) // từ DB, không từ token
@@ -260,9 +259,9 @@ sequenceDiagram
 | Student | Enrollment `status=active` năm học hiện tại **trong tenant của phiên**; tenant chung: lớp ảo theo khối | tenant phiên / `{students.school_id}` | lớp đang học (thường 1) |
 | School Admin | UserRole(scope=school) trong tenant | tenant phiên / trường được gán | tất cả lớp trong trường (lazy) |
 | Academic Manager | UserRole(scope=school hoặc tenant, kèm scope=subject tùy chọn) | tenant phiên / trường được gán (hoặc mọi trường nếu scope tenant) | tất cả lớp trong phạm vi (lazy), lọc theo `SubjectIDs` |
-| Safety Moderator | UserRole(scope=platform), đăng nhập `eduworld-portal` có MFA | không gắn tenant; chỉ module moderation đọc liên tenant qua `tenancy.Bypass(ctx, "moderation_case")` + audit (ADR-0072) | — |
+| Safety Moderator | UserRole(scope=platform), đăng nhập `eduworld-portal` (không MFA — ADR-0094) | không gắn tenant; chỉ module moderation đọc liên tenant qua `tenancy.Bypass(ctx, "moderation_case")` + audit (ADR-0072) | — |
 | Tenant Admin | UserRole(scope=tenant) | tenant phiên / mọi trường trong tenant | — |
-| System Admin | UserRole(scope=platform), đăng nhập `eduworld-portal` có MFA | không gắn tenant khi đọc liên tenant (`tenant_ids`, không gửi header); ghi dữ liệu tenant gửi `X-Tenant-Id` = tenant đích (ADR-0065); `CrossTenantScope` theo dropdown, DB role `<module>_platform` + audit (ADR-0005, ADR-0027 §6) | — |
+| System Admin | UserRole(scope=platform), đăng nhập `eduworld-portal` (không MFA — ADR-0094) | không gắn tenant khi đọc liên tenant (`tenant_ids`, không gửi header); ghi dữ liệu tenant gửi `X-Tenant-Id` = tenant đích (ADR-0065); `CrossTenantScope` theo dropdown, DB role `<module>_platform` + audit (ADR-0005, ADR-0027 §6) | — |
 
 Quy tắc:
 

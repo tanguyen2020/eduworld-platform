@@ -20,7 +20,7 @@ type PlatformUserHandlers struct {
 }
 
 // PlatformUserOperations are the F059-1/F059-2 operations; the contract test checks them against the merged spec.
-// /admin/* also gets platform_mfa from httpx (internal gateway, azp eduworld-portal, MFA, ADR-0027).
+// /admin/* also gets platform_role from httpx (internal gateway, azp eduworld-portal, platform role, ADR-0027).
 var PlatformUserOperations = map[string]httpx.Operation{
 	"listPlatformUsers":      portalOp2("listPlatformUsers", http.MethodGet, "/admin/users", httpx.TenantNone, httpx.IdempotencyNone, 200),
 	"createPlatformUser":     portalOp2("createPlatformUser", http.MethodPost, "/admin/users", httpx.TenantNone, httpx.IdempotencyRequired, 201),

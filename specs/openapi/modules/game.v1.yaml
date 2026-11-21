@@ -37,7 +37,7 @@ tags:
   - name: tenant
     description: 'Tự quản trị của tenant (tenant của phiên): cài đặt, trường trong đơn vị, phân quyền, Thùng rác tenant [Proposed]'
   - name: game-admin
-    description: INTERNAL — Game Operations Console & cấu hình thi đấu (Admin Portal workspace A), chỉ role platform qua client eduworld-portal + MFA, chỉ gateway nội bộ (ADR-0027)
+    description: INTERNAL — Game Operations Console & cấu hình thi đấu (Admin Portal workspace A), chỉ role platform qua client eduworld-portal, chỉ gateway nội bộ (ADR-0027; không MFA — ADR-0094)
 paths:
   /game/profile:
     get:
@@ -4740,7 +4740,6 @@ components:
         - UNAUTHENTICATED
         - TOKEN_EXPIRED
         - PERMISSION_DENIED
-        - MFA_REQUIRED
         - CALLER_NOT_ALLOWED
         - POLICY_DENIED
         - NOT_FOUND
@@ -9472,7 +9471,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        Access token Keycloak của Admin Portal (claim `azp = eduworld-portal`, phát qua `POST /auth/portal/login` — ADR-0091) có MFA (`acr` mức MFA, `amr` chứa `otp`; thiếu hoặc `auth_time` quá 8 giờ → 403 MFA_REQUIRED),
+        Access token Keycloak của Admin Portal (claim `azp = eduworld-portal`, phát qua `POST /auth/portal/login` — ADR-0091); không yêu cầu MFA (ADR-0094).
         Principal phải có role platform với permission tương ứng (`game.*`, `competition.config.*`, `platform.*`).
         Chỉ dùng trên gateway nội bộ (ADR-0027).
     keycloakOidc:

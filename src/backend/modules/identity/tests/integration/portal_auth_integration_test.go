@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -39,16 +40,16 @@ const kcIssuer = "http://kc/realms/eduworld"
 // confidential client eduworld-portal (direct grant flow eduworld-portal-direct-grant, F004 research R5):
 // wrong credentials → 401 invalid_grant, student → 401 text/html, rotating single-use refresh tokens.
 type fakeKeycloak struct {
-	mu      sync.Mutex
-	users   map[string]fakeKCUser // username → account
-	refresh map[string]string     // live refresh token → sid
-	sidUser map[string]string     // sid → username
-	sidAMR  map[string][]string
-	seq     int
-	logouts int
-	actions map[string][]string // username → Keycloak required actions (setup pending when not empty)
-	emails  int                 // execute-actions-email CONFIGURE_TOTP
-	kicked  int                 // Admin logout of every session of a user
+	mu       sync.Mutex
+	users    map[string]fakeKCUser // username → account
+	refresh  map[string]string     // live refresh token → sid
+	sidUser  map[string]string     // sid → username
+	sidRoles map[string][]string   // sid → realm roles (claim roles)
+	seq      int
+	logouts  int
+	actions  map[string][]string // username → Keycloak required actions (setup pending when not empty)
+	emails   int                 // execute-actions-email (never sent by the portal login since ADR-0094)
+	kicked   int                 // Admin logout of every session of a user
 	// F013: the game client eduworld-game-backend shares the fake; sidClient is the azp of each session,
 	// deleted counts Admin DELETE /sessions/{sid}.
 	sidClient map[string]string
@@ -60,8 +61,9 @@ type fakeKeycloak struct {
 var fakeClients = map[string]string{"eduworld-portal": "portal-secret", "eduworld-game-backend": "game-secret"}
 
 type fakeKCUser struct {
-	password, otp string
-	student       bool
+	password string
+	student  bool
+	platform bool // realm role platform_staff
 }
 
 func jwtOf(claims map[string]any) string {
@@ -74,7 +76,7 @@ func (k *fakeKeycloak) issue(w http.ResponseWriter, sid string) {
 	user := k.sidUser[sid]
 	rt := jwtOf(map[string]any{"sid": sid, "jti": fmt.Sprint(k.seq), "typ": "Refresh"})
 	k.refresh[rt] = sid
-	at := jwtOf(map[string]any{"iss": kcIssuer, "sub": "kc-" + user, "sid": sid, "amr": k.sidAMR[sid], "iat": time.Now().Unix(),
+	at := jwtOf(map[string]any{"iss": kcIssuer, "sub": "kc-" + user, "sid": sid, "amr": []string{"pwd"}, "roles": k.sidRoles[sid], "iat": time.Now().Unix(),
 		"azp": k.azp(sid), "typ": "Bearer"})
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"access_token": at, "refresh_token": rt, "expires_in": 300, "refresh_expires_in": 1800,
@@ -145,10 +147,6 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			_, _ = io.WriteString(w, "<html>portalStudentDenied</html>")
 			return
 		}
-		if u.otp != "" && f.Get("otp") != u.otp {
-			oauthErr(w, 401, "invalid_grant", "Invalid user credentials")
-			return
-		}
 		if len(k.actions[f.Get("username")]) > 0 {
 			oauthErr(w, 400, "invalid_grant", "Account is not fully set up")
 			return
@@ -158,9 +156,13 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if k.sidClient != nil {
 			k.sidClient[sid] = client
 		}
-		k.sidAMR[sid] = []string{"pwd"}
-		if f.Get("otp") != "" {
-			k.sidAMR[sid] = []string{"pwd", "otp"}
+		switch {
+		case u.student:
+			k.sidRoles[sid] = []string{"student"}
+		case u.platform:
+			k.sidRoles[sid] = []string{"platform_staff"}
+		default:
+			k.sidRoles[sid] = []string{"tenant_staff"}
 		}
 		k.issue(w, sid)
 	case "refresh_token":
@@ -293,7 +295,7 @@ func newPortalIntegration(ctx context.Context, t *testing.T) *portalIntegration 
 	}
 	t.Cleanup(vk.Close)
 	kc := &fakeKeycloak{users: map[string]fakeKCUser{}, refresh: map[string]string{}, sidUser: map[string]string{},
-		sidAMR: map[string][]string{}, actions: map[string][]string{}}
+		sidRoles: map[string][]string{}, actions: map[string][]string{}}
 	kcSrv := httptest.NewServer(kc)
 	t.Cleanup(kcSrv.Close)
 	tokens, err := keycloak.NewPortalTokens(keycloak.PortalConfig{TokenURL: kcSrv.URL + "/realms/eduworld/protocol/openid-connect/token",
@@ -373,12 +375,8 @@ func (p *portalIntegration) post(t *testing.T, path string, body any, cookies ma
 	return out
 }
 
-func portalLogin(user, password, otp string) map[string]any {
-	m := map[string]any{"username": user, "password": password, "device_id": uuid.NewString(), "locale": "vi-VN"}
-	if otp != "" {
-		m["otp"] = otp
-	}
-	return m
+func portalLogin(user, password string) map[string]any {
+	return map[string]any{"username": user, "password": password, "device_id": uuid.NewString(), "locale": "vi-VN"}
 }
 
 func cookiesOf(r portalResp) map[string]string {
@@ -415,21 +413,31 @@ func TestPortalLoginIntegration(t *testing.T) {
 	for _, u := range []string{"ad.portal.a", "nv.portal.norole", "nv.portal.expired", "nv.portal.disabled", "nv.portal.off"} {
 		p.kc.users[u] = fakeKCUser{password: pw}
 	}
-	p.kc.users["sa.portal"] = fakeKCUser{password: pw, otp: "482913"}
+	p.kc.users["sa.portal"] = fakeKCUser{password: pw, platform: true}
 	p.kc.users["hs.portal"] = fakeKCUser{password: pw, student: true}
 
-	// AC-27: tenant staff without OTP, platform staff with OTP.
-	r := p.post(t, "/auth/portal/login", portalLogin("AD.Portal.A", pw, ""), nil, nil)
-	if r.code != 200 || r.body["mfa"] != false || r.header.Get("Cache-Control") != "no-store" || !r.cookies[identityhttp.PortalRefreshCookie].HttpOnly {
+	// AC-27 (ADR-0094): tenant staff and platform staff (System Admin) both sign in with username + password only.
+	r := p.post(t, "/auth/portal/login", portalLogin("AD.Portal.A", pw), nil, nil)
+	if _, has := r.body["mfa"]; r.code != 200 || has || r.header.Get("Cache-Control") != "no-store" || !r.cookies[identityhttp.PortalRefreshCookie].HttpOnly {
 		t.Fatalf("tenant staff login = %d %v", r.code, r.body)
 	}
 	session := cookiesOf(r)
-	if r = p.post(t, "/auth/portal/login", portalLogin("sa.portal", pw, "482913"), nil, nil); r.code != 200 || r.body["mfa"] != true {
+	if r = p.post(t, "/auth/portal/login", portalLogin("sa.portal", pw), nil, nil); r.code != 200 || r.body["access_token"] == "" {
 		t.Fatalf("platform login = %d %v", r.code, r.body)
 	}
-	// AC-28: missing OTP for platform staff = wrong password = unknown user.
-	for _, in := range []map[string]any{portalLogin("sa.portal", pw, ""), portalLogin("sa.portal", pw, "000000"),
-		portalLogin("ad.portal.a", "nope", ""), portalLogin("khong.co", pw, "")} {
+	// ADR-0094 §2: the platform session is marked in Valkey so its refreshes stop after EW_OIDC_PLATFORM_MAX_AUTH_AGE.
+	platformSessions := 0
+	sessKeys, _ := p.vk.Do(ctx, p.vk.B().Keys().Pattern("ew:identity:portal_session:*").Build()).AsStrSlice()
+	for _, k := range sessKeys {
+		if v, _ := p.vk.Do(ctx, p.vk.B().Get().Key(k).Build()).ToString(); strings.Contains(v, `"platform":true`) {
+			platformSessions++
+		}
+	}
+	if len(sessKeys) != 2 || platformSessions != 1 {
+		t.Fatalf("portal sessions %d, platform %d", len(sessKeys), platformSessions)
+	}
+	// AC-28: wrong password (platform or tenant staff) = unknown user.
+	for _, in := range []map[string]any{portalLogin("sa.portal", "nope"), portalLogin("ad.portal.a", "nope"), portalLogin("khong.co", pw)} {
 		if r = p.post(t, "/auth/portal/login", in, nil, nil); r.code != 401 || r.body["code"] != "INVALID_CREDENTIALS" {
 			t.Fatalf("%v → %d %v", in["username"], r.code, r.body)
 		}
@@ -438,7 +446,7 @@ func TestPortalLoginIntegration(t *testing.T) {
 	revokedBefore := p.kc.logouts
 	for user, code := range map[string]string{"hs.portal": "PORTAL_ACCESS_STAFF_ONLY", "nv.portal.norole": "PORTAL_ACCESS_STAFF_ONLY",
 		"nv.portal.expired": "PORTAL_ACCESS_STAFF_ONLY", "nv.portal.disabled": "PORTAL_ACCESS_STAFF_ONLY", "nv.portal.off": "ACCOUNT_DEACTIVATED"} {
-		if r = p.post(t, "/auth/portal/login", portalLogin(user, pw, ""), nil, nil); r.code != 403 || r.body["code"] != code {
+		if r = p.post(t, "/auth/portal/login", portalLogin(user, pw), nil, nil); r.code != 403 || r.body["code"] != code {
 			t.Fatalf("%s → %d %v", user, r.code, r.body)
 		}
 	}
@@ -475,11 +483,11 @@ func TestPortalLoginIntegration(t *testing.T) {
 		payloads = append(payloads, s)
 	}
 	_ = rows.Close()
-	if len(payloads) < 12 {
+	if len(payloads) < 11 { // 2 logins, 3 credential failures, 5 refusals, 1 logout
 		t.Fatalf("portal audits = %d", len(payloads))
 	}
 	all := strings.Join(payloads, "\n")
-	for _, secret := range []string{pw, "482913", "ad.portal.a", "sa.portal", session[identityhttp.PortalRefreshCookie], next[identityhttp.PortalRefreshCookie]} {
+	for _, secret := range []string{pw, "ad.portal.a", "sa.portal", session[identityhttp.PortalRefreshCookie], next[identityhttp.PortalRefreshCookie]} {
 		if strings.Contains(strings.ToLower(all), strings.ToLower(secret)) {
 			t.Fatalf("audit contains %q", secret)
 		}
@@ -487,7 +495,7 @@ func TestPortalLoginIntegration(t *testing.T) {
 	// AC-32: per username in Valkey (hashed key), Retry-After.
 	var last portalResp
 	for range 11 {
-		last = p.post(t, "/auth/portal/login", portalLogin("nv.portal.norole", "wrong", ""), nil, nil)
+		last = p.post(t, "/auth/portal/login", portalLogin("nv.portal.norole", "wrong"), nil, nil)
 	}
 	if last.code != 429 || last.header.Get("Retry-After") == "" || last.body["code"] != "RATE_LIMITED" {
 		t.Fatalf("rate limit = %d %v", last.code, last.body)
@@ -513,38 +521,39 @@ func TestPortalAccountSetupIntegration(t *testing.T) {
 	moi := staffUser(ctx, t, p.env, "nv.portal.moi", &a.tenant)
 	grantRole(ctx, t, p.env, moi, "school_admin", &a.tenant, "tenant", nil, "NULL")
 	p.kc.users["nv.portal.moi"] = fakeKCUser{password: tmp}
-	p.kc.actions["nv.portal.moi"] = []string{"UPDATE_PASSWORD", "CONFIGURE_TOTP"}
+	p.kc.actions["nv.portal.moi"] = []string{"UPDATE_PASSWORD", "CONFIGURE_TOTP"} // CONFIGURE_TOTP: left from before ADR-0094
 
-	// AC-33: password right, required actions left → 403 + ticket + steps, no token, no cookie.
-	r := p.post(t, "/auth/portal/login", portalLogin("nv.portal.moi", tmp, ""), nil, nil)
-	if r.code != 403 || r.body["code"] != "ACCOUNT_SETUP_REQUIRED" || len(r.cookies) != 0 || r.body["otp_setup_email_sent"] != false {
+	// AC-33: password right, required actions left → 403 + ticket + steps, no token, no cookie. ADR-0094: the legacy
+	// CONFIGURE_TOTP is removed through the Admin API, never a step, no email.
+	r := p.post(t, "/auth/portal/login", portalLogin("nv.portal.moi", tmp), nil, nil)
+	if _, has := r.body["otp_setup_email_sent"]; r.code != 403 || r.body["code"] != "ACCOUNT_SETUP_REQUIRED" || len(r.cookies) != 0 || has {
 		t.Fatalf("login = %d %v", r.code, r.body)
+	}
+	if steps, _ := r.body["required_steps"].([]any); len(steps) != 1 || steps[0] != "update_password" ||
+		!slices.Equal(p.kc.actions["nv.portal.moi"], []string{"UPDATE_PASSWORD"}) || p.kc.emails != 0 {
+		t.Fatalf("steps = %v actions = %v emails = %d", r.body, p.kc.actions["nv.portal.moi"], p.kc.emails)
 	}
 	ticket, _ := r.body["setup_ticket"].(string)
 	keys, _ := p.vk.Do(ctx, p.vk.B().Keys().Pattern("ew:identity:portal_setup:*").Build()).AsStrSlice()
 	if len(ticket) < 32 || len(keys) != 1 || strings.Contains(keys[0], ticket) {
 		t.Fatalf("ticket %q keys %v", ticket, keys)
 	}
-	// AC-34: policy violation keeps the ticket; success removes UPDATE_PASSWORD; AC-35: CONFIGURE_TOTP email.
+	// AC-34: policy violation keeps the ticket; success removes UPDATE_PASSWORD; AC-35 (ADR-0094): no OTP email.
 	setupBody := func(pw string) map[string]any { return map[string]any{"setup_ticket": ticket, "new_password": pw} }
 	if r = p.post(t, "/auth/portal/setup:password", setupBody("short"), nil, nil); r.code != 422 {
 		t.Fatalf("weak = %d %v", r.code, r.body)
 	}
-	if r = p.post(t, "/auth/portal/setup:password", setupBody(fresh), nil, nil); r.code != 200 || r.body["otp_setup_email_sent"] != true {
+	if r = p.post(t, "/auth/portal/setup:password", setupBody(fresh), nil, nil); r.code != 200 {
 		t.Fatalf("setup = %d %v", r.code, r.body)
 	}
-	if steps, _ := r.body["remaining_steps"].([]any); len(steps) != 1 || steps[0] != "configure_otp" || p.kc.emails != 1 {
+	if steps, ok := r.body["remaining_steps"].([]any); !ok || len(steps) != 0 || len(r.body) != 1 || p.kc.emails != 0 {
 		t.Fatalf("remaining = %v emails = %d", r.body, p.kc.emails)
 	}
 	if r = p.post(t, "/auth/portal/setup:password", setupBody(fresh), nil, nil); r.code != 401 || r.body["code"] != "SETUP_TICKET_INVALID" {
 		t.Fatalf("reuse = %d %v", r.code, r.body)
 	}
-	if r = p.post(t, "/auth/portal/login", portalLogin("nv.portal.moi", fresh, ""), nil, nil); r.code != 403 || p.kc.emails != 1 {
-		t.Fatalf("otp-only login = %d %v emails=%d (one email per window)", r.code, r.body, p.kc.emails)
-	}
-	// The user scans the QR on the Keycloak action-token page; then the new password works.
-	p.kc.actions["nv.portal.moi"] = nil
-	if r = p.post(t, "/auth/portal/login", portalLogin("nv.portal.moi", fresh, ""), nil, nil); r.code != 200 {
+	// Nothing left: the new password alone signs in.
+	if r = p.post(t, "/auth/portal/login", portalLogin("nv.portal.moi", fresh), nil, nil); r.code != 200 {
 		t.Fatalf("login after setup = %d %v", r.code, r.body)
 	}
 
@@ -604,7 +613,7 @@ func TestPortalAccountSetupIntegration(t *testing.T) {
 	if r = reset(second, "short"); r.code != 422 {
 		t.Fatalf("weak = %d %v", r.code, r.body)
 	}
-	session := p.post(t, "/auth/portal/login", portalLogin("ad.portal.reset", tmp, ""), nil, nil)
+	session := p.post(t, "/auth/portal/login", portalLogin("ad.portal.reset", tmp), nil, nil)
 	if session.code != 200 {
 		t.Fatalf("login before reset = %d", session.code)
 	}
@@ -634,11 +643,11 @@ func TestPortalAccountSetupIntegration(t *testing.T) {
 	if r = p.post(t, "/auth/portal/token:refresh", nil, ck, map[string]string{identityhttp.PortalCSRFHeader: ck[identityhttp.PortalCSRFCookie]}); r.code != 401 || p.kc.kicked != 1 {
 		t.Fatalf("refresh after reset = %d kicked=%d", r.code, p.kc.kicked)
 	}
-	if r = p.post(t, "/auth/portal/login", portalLogin("ad.portal.reset", fresh, ""), nil, nil); r.code != 200 {
+	if r = p.post(t, "/auth/portal/login", portalLogin("ad.portal.reset", fresh), nil, nil); r.code != 200 {
 		t.Fatalf("login with the new password = %d", r.code)
 	}
 	if n := count(ctx, t, p.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'audit.recorded'
-		AND envelope->'payload'->>'action' IN ('auth.portal_setup_password', 'auth.portal_password_reset_requested', 'auth.portal_password_reset', 'auth.portal_otp_setup_email_sent')`); n != 5 {
+		AND envelope->'payload'->>'action' IN ('auth.portal_setup_password', 'auth.portal_password_reset_requested', 'auth.portal_password_reset', 'auth.portal_legacy_otp_action_removed')`); n != 5 {
 		t.Fatalf("setup/reset audits = %d", n)
 	}
 }

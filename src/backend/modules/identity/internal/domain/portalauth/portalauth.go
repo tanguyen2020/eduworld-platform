@@ -15,31 +15,34 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-// Setup steps of PortalSetupStep (OpenAPI) and the Keycloak required actions behind them.
+// Setup steps of PortalSetupStep (OpenAPI) and the Keycloak required actions behind them. The portal has no
+// second factor (ADR-0094): update_password is the only step.
 const (
 	StepUpdatePassword = "update_password"
-	StepConfigureOTP   = "configure_otp"
 
 	actionUpdatePassword = "UPDATE_PASSWORD"
-	actionConfigureTOTP  = "CONFIGURE_TOTP"
+	// ActionLegacyConfigureTOTP is the Keycloak OTP enrolment of ADR-0091. ADR-0094 removed OTP: the realm
+	// disables it and module identity drops it from any account that still carries it, so nobody is blocked
+	// by "Account is not fully set up".
+	ActionLegacyConfigureTOTP = "CONFIGURE_TOTP"
 )
 
-// Steps maps Keycloak required actions to the portal setup steps (update_password first). Other required
-// actions (VERIFY_EMAIL, UPDATE_PROFILE…) have no portal screen and are ignored.
+// RealmRolePlatformStaff is the Keycloak realm role of the EduWorld platform team (KEYCLOAK_SSO §4): their
+// portal sessions are bounded by the platform session age (ADR-0094 §2).
+const RealmRolePlatformStaff = "platform_staff"
+
+// Steps maps Keycloak required actions to the portal setup steps. Other required actions (VERIFY_EMAIL,
+// UPDATE_PROFILE, the legacy CONFIGURE_TOTP…) have no portal screen and are ignored.
 func Steps(actions []string) []string {
-	var out []string
 	if slices.Contains(actions, actionUpdatePassword) {
-		out = append(out, StepUpdatePassword)
+		return []string{StepUpdatePassword}
 	}
-	if slices.Contains(actions, actionConfigureTOTP) {
-		out = append(out, StepConfigureOTP)
-	}
-	return out
+	return nil
 }
 
-// OnlyOTPLeft reports that configure_otp is the last remaining step (the CONFIGURE_TOTP email is sent).
-func OnlyOTPLeft(steps []string) bool {
-	return len(steps) == 1 && steps[0] == StepConfigureOTP
+// PlatformStaff reports the realm role platform_staff among the roles of a token.
+func PlatformStaff(realmRoles []string) bool {
+	return slices.Contains(realmRoles, RealmRolePlatformStaff)
 }
 
 // Decision is the outcome of the EduWorld checks after Keycloak authenticated the account.
@@ -70,16 +73,6 @@ func Decide(a *Account) Decision {
 		return StaffOnly
 	}
 	return Allowed
-}
-
-// MFA reports that the token proves a second factor: an amr value among required (EW_OIDC_PLATFORM_REQUIRED_AMR).
-func MFA(amr, required []string) bool {
-	for _, m := range amr {
-		if slices.Contains(required, m) {
-			return true
-		}
-	}
-	return false
 }
 
 // NormalizeLogin trims, applies Unicode NFC and lower-cases a username or an email (ADR-0067, ADR-0069).

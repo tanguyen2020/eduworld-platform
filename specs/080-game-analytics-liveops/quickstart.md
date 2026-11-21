@@ -36,7 +36,7 @@
 | 20 | Chọn khoảng 3 năm; giả lập `DASHBOARD_BUSY` | Date picker chặn; tự thử lại ≤ 2 lần | F080-AC-22 |
 | 21 | Bấm quest bị bỏ nhiều; bấm Xuất | Mở item ở workspace A; job xuất báo khi xong | F080-AC-23 |
 | 22 | `sm.antoan`, `ad.donvi` mở `/live-ops/analytics` | Trang 403; `ad.donvi` không tải chunk | F080-AC-24 |
-| 23 | Token không MFA; tắt gateway nội bộ | Step-up; "Cần kết nối mạng quản trị (VPN)" | F080-AC-25 |
+| 23 | Tắt gateway nội bộ (không còn step-up MFA — ADR-0094) | "Cần kết nối mạng quản trị (VPN)" | F080-AC-25 |
 | 24 | `client_versions` 21 phần tử; lý do dừng sự kiện quá dài | `422 VALIDATION_FAILED` | F080-AC-26 |
 | 25 | `ad.donvi` mở Hoạt động game (workspace C), 30 ngày, lọc trường, khối | 5 nhóm widget tải độc lập; không có Xu/danh sách học sinh | F080-AC-27, F080-AC-28 |
 | 26 | Nhóm 3 học sinh (seed rollup `pgd-demo`) | Ô "< 5" + chú thích số ô ẩn | F080-AC-29 |

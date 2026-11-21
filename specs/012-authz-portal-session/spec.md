@@ -52,6 +52,10 @@
 - OQ F059-12 (`route_groups[]` của màn Tích hợp) → **Chốt:** thêm `IntegrationOverview.apisix.route_groups[]` (`prefix` ≤ 256, `gateway` ∈ {`public`, `internal`}, `service` ≤ 64; maxItems 100). Danh mục **sinh lúc build** từ `deploy/apisix/routes/routes.yaml` (`make gen` → file nhúng `go:embed` trong module identity, `gen-check` chặn lệch) — vẫn một nguồn route-as-code, `core-api` không đọc file triển khai lúc chạy. F059-AC-22 yêu cầu nhóm prefix → service.
 - Triển khai T055–T057 (2026-11-20): email đổi được phát bằng event mới `user.email_changed` (chỉ `user_id`, `email_verified = false`; không chứa địa chỉ — R14) và do consumer sẵn có `identity.keycloak_access` (worker đồng bộ tài khoản sang Keycloak) chép sang Keycloak thay cho tên `keycloak-provisioner` ở trên (consumer đó chỉ tạo tài khoản học sinh SIS); Keycloak báo trùng email → DLQ cho vận hành. `route_groups`: một mục cho mỗi URI × gateway (`both` → public + internal), `service` = upstream (`core-api`, `realtime`), bỏ `*` cuối. Route APISIX `tenant-optional` nhận `/api/v1/auth/me` để khớp `getMe` header tùy chọn.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F012-AC-06 sửa: không còn `403 MFA_REQUIRED`; người không có role platform → `403 PERMISSION_DENIED`; phiên `platform_staff` quá 8 giờ từ lúc nhập mật khẩu → `refreshPortalToken` trả `401 REFRESH_TOKEN_INVALID`. F012-AC-27, AC-28, AC-31, AC-33, AC-34 sửa: `portalLogin` không có `otp`, `PortalTokenResponse` không có `mfa`, thông điệp lỗi chung "Tên đăng nhập hoặc mật khẩu chưa đúng", `required_steps` chỉ `update_password`, `PortalSetupResult` không có `otp_setup_email_sent`. F012-AC-35 bỏ (không gửi email `CONFIGURE_TOTP`, bỏ khóa Valkey `portal_otp_email`, audit `auth.portal_otp_setup_email_sent`). Bản ghi phiên Valkey đổi `{user_id, auth_time, mfa}` → `{user_id, auth_time, platform}` (platform = realm role `platform_staff` trong token). `getIntegrationOverview` bỏ `platform_mfa_required`, giữ `platform_auth_max_age_seconds`. Nhắc OTP/MFA trong plan, tasks (T004, T009, T013, T039–T050, T058, T060), quickstart, Clarifications cũ là lịch sử; test hiện hành: `sa.admin` đăng nhập chỉ bằng mật khẩu vào được route platform. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Permission catalog và role hệ thống (Priority: P1)
@@ -74,7 +78,7 @@
 
 ### User Story 2 — Phiên Admin Portal và chọn tenant sau đăng nhập (Priority: P1)
 
-Nhân sự đăng nhập portal (username hoặc email, MFA với role platform), không chọn tenant trước; 1 tenant vào thẳng, nhiều tenant chọn sau, đổi trên topbar; học sinh bị chặn.
+Nhân sự đăng nhập portal (username hoặc email + mật khẩu, không MFA với mọi role — ADR-0094), không chọn tenant trước; 1 tenant vào thẳng, nhiều tenant chọn sau, đổi trên topbar; học sinh bị chặn.
 
 **Why this priority**: Mốc M-C1 yêu cầu `ad.truong.a` đăng nhập portal thấy đúng workspace.
 
@@ -86,7 +90,7 @@ Nhân sự đăng nhập portal (username hoặc email, MFA với role platform)
 |---|---|---|---|
 | F012-AC-04 | KHI nhân sự gọi `listMyTenants` (không cần `X-Tenant-Id`), module identity PHẢI trả các tenant có membership và UserRole portal hiệu lực kèm `roles[]` tóm tắt và cờ `has_platform_role` | FR-AUTH-030 · ADR-0067 | TC-AUTH-072 |
 | F012-AC-05 | NẾU token `azp = eduworld-portal` thuộc `user_type = student`, hoặc nhân sự không có UserRole portal hiệu lực ở tenant nào và không có role platform, THÌ HỆ THỐNG PHẢI trả `403 PORTAL_ACCESS_STAFF_ONLY` ở mọi route portal và ghi audit | FR-AUTH-029 · AC-AUTH-025 | TC-AUTH-070 |
-| F012-AC-06 | NẾU người có role platform gọi route platform bằng token không có `acr` mức MFA hoặc `amr` không chứa `otp` (claim do direct grant flow `eduworld-portal-direct-grant` đặt — F004-AC-26), hoặc `auth_time` cũ hơn ngưỡng `portal_session_sso`, THÌ HỆ THỐNG PHẢI trả `403 MFA_REQUIRED` và audit `authz.denied` (portal mở hộp đăng nhập lại bằng mật khẩu + OTP) | FR-AUTH-029 · ADR-0066 · ADR-0091 mục 2, 4 | TC-CMS-WS-02, TC-AUTH-101 |
+| F012-AC-06 | NẾU người không có role platform gọi route platform (`/admin/*`, `/game-admin/*`), THÌ HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` và audit `authz.denied`; NẾU phiên của người có realm role `platform_staff` đã quá `EW_OIDC_PLATFORM_MAX_AUTH_AGE` (8 giờ) từ lúc nhập mật khẩu, THÌ `refreshPortalToken` PHẢI trả `401 REFRESH_TOKEN_INVALID` (người dùng nhập lại mật khẩu); HỆ THỐNG PHẢI KHÔNG yêu cầu `acr`/`amr` hay trả `MFA_REQUIRED` (sửa theo ADR-0094) | FR-AUTH-029 · ADR-0066 · ADR-0091 mục 2, 4 · ADR-0094 | TC-CMS-WS-02, TC-AUTH-101 |
 | F012-AC-07 | KHI nhân sự thuộc nhiều tenant đổi tenant, HỆ THỐNG PHẢI chấp nhận cùng access token với `X-Tenant-Id` mới và xác định tenant của request chỉ bằng header + kiểm tra membership/UserRole portal hiệu lực (không dùng claim `organization`, không xin token mới); NẾU header là tenant không còn membership hoặc UserRole portal hiệu lực, THÌ HỆ THỐNG PHẢI trả `403 TENANT_MISMATCH` + audit; một request PHẢI không trả dữ liệu của hai tenant | FR-AUTH-019 · FR-AUTH-030 · FR-ORG-008 · AC-AUTH-012 · ADR-0091 mục 4 | TC-CMS-LOGIN-03, TC-AUTH-101 |
 | F012-AC-08 | KHI nhân sự đăng nhập portal, HỆ THỐNG PHẢI dựng phiên bằng `listMyTenants` → (chọn tenant) → `getMyPermissions` (header `X-Tenant-Id`) → `getMe`, **không** qua `createAuthSession` (endpoint này trả `PlayerBootstrap` của hồ sơ người chơi); các response PHẢI không có PII thừa và audit đăng nhập portal `auth.portal_login` PHẢI được ghi ở `portalLogin` (F012-AC-27), không ở `listMyTenants` | FR-AUTH-029 · FR-AUD-001 · [API_DESIGN `/auth/session`](../../docs/07-backend/API_DESIGN.md) | TC-CMS-LOGIN-02 |
 | F012-AC-09 | TRONG KHI người dùng là người dùng tenant, HỆ THỐNG PHẢI bỏ qua tham số `tenant_ids`; chỉ `system_admin` dùng `tenant_ids` để đọc liên tenant và mỗi lần PHẢI ghi audit `cross_tenant.accessed` | FR-ORG-008 · ADR-0065 | TC-CMS-TEN-01 |
@@ -173,21 +177,21 @@ Tenant Admin thêm nhân sự (họ tên, username, email bắt buộc, role ban
 
 ### User Story 7 — Đăng nhập portal bằng form riêng qua backend (Priority: P1)
 
-Nhân sự nhập tên đăng nhập/email, mật khẩu và (nếu có) mã xác thực 6 số trên trang `/login` của portal; một request, một thông điệp lỗi chung; phiên giữ bằng cookie refresh HttpOnly và CSRF double-submit.
+Nhân sự nhập tên đăng nhập/email và mật khẩu trên trang `/login` của portal (không mã xác thực — ADR-0094); một request, một thông điệp lỗi chung; phiên giữ bằng cookie refresh HttpOnly và CSRF double-submit.
 
 **Why this priority**: ADR-0091 thay đăng nhập OIDC chuyển hướng; M-C1 cần `ad.truong.a` và `sa.admin` vào được portal.
 
-**Independent Test**: `ad.truong.a` đăng nhập không OTP → `200` + cookie; `sa.admin` thiếu OTP / OTP sai / mật khẩu sai → cùng `401 INVALID_CREDENTIALS`; tải lại trang → `refreshPortalToken` có `X-EW-CSRF` → token mới; thiếu header → `403 CSRF_TOKEN_INVALID`.
+**Independent Test**: `ad.truong.a` và `sa.admin` đăng nhập chỉ bằng mật khẩu → `200` + cookie (ADR-0094); mật khẩu sai / username không tồn tại → cùng `401 INVALID_CREDENTIALS`; tải lại trang → `refreshPortalToken` có `X-EW-CSRF` → token mới; thiếu header → `403 CSRF_TOKEN_INVALID`.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F012-AC-27 | KHI `portalLogin` nhận `username` (username hoặc email), `password`, `otp?`, `device_id`, `locale` hợp lệ, module identity PHẢI gọi token endpoint Keycloak bằng client confidential `eduworld-portal` (Direct Access Grant, kèm `totp` khi có), kiểm tra `user_type = staff`, trạng thái User và có UserRole portal hoặc role platform, rồi trả `200` `PortalTokenResponse` (`access_token`, `expires_in`, `refresh_expires_in`, `auth_time`, `mfa`) với `Cache-Control: no-store`, đặt cookie `__Secure-ew_portal_rt` (`HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`) và `__Host-ew_portal_csrf` (không HttpOnly, `Secure; SameSite=Strict; Path=/`), ghi audit `auth.portal_login` (`result = success`) | FR-AUTH-029 · AC-AUTH-033 · ADR-0091 mục 1, 4 | TC-AUTH-093 |
-| F012-AC-28 | NẾU username không tồn tại, mật khẩu sai, OTP sai, thiếu OTP với tài khoản `platform_staff`, tài khoản bị Keycloak vô hiệu hóa hoặc đang khóa tạm do brute-force, THÌ module identity PHẢI trả `401 INVALID_CREDENTIALS` cùng status, cùng `code`, cùng thông điệp "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng", chênh lệch thời gian phản hồi p50 < 50 ms, không có trường nào cho biết tài khoản cần OTP, và ghi audit thất bại không chứa username thô | FR-AUTH-029 · AC-AUTH-033 · ADR-0091 mục 1 | TC-AUTH-094 |
+| F012-AC-27 | KHI `portalLogin` nhận `username` (username hoặc email), `password`, `device_id`, `locale` hợp lệ (không có `otp` — ADR-0094), module identity PHẢI gọi token endpoint Keycloak bằng client confidential `eduworld-portal` (Direct Access Grant), kiểm tra `user_type = staff`, trạng thái User và có UserRole portal hoặc role platform, rồi trả `200` `PortalTokenResponse` (`access_token`, `expires_in`, `refresh_expires_in`, `auth_time`) với `Cache-Control: no-store`, đặt cookie `__Secure-ew_portal_rt` (`HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`) và `__Host-ew_portal_csrf` (không HttpOnly, `Secure; SameSite=Strict; Path=/`), ghi audit `auth.portal_login` (`result = success`) | FR-AUTH-029 · AC-AUTH-033 · ADR-0091 mục 1, 4 · ADR-0094 | TC-AUTH-093 |
+| F012-AC-28 | NẾU username không tồn tại, mật khẩu sai, tài khoản bị Keycloak vô hiệu hóa hoặc đang khóa tạm do brute-force, THÌ module identity PHẢI trả `401 INVALID_CREDENTIALS` cùng status, cùng `code`, cùng thông điệp "Tên đăng nhập hoặc mật khẩu chưa đúng", chênh lệch thời gian phản hồi p50 < 50 ms, và ghi audit thất bại không chứa username thô | FR-AUTH-029 · AC-AUTH-033 · ADR-0091 mục 1 | TC-AUTH-094 |
 | F012-AC-29 | NẾU Keycloak chặn ở bước "Allow access only for role" (tài khoản học sinh, mật khẩu đúng), THÌ module identity PHẢI trả `403 PORTAL_ACCESS_STAFF_ONLY` và audit; NẾU Keycloak xác thực thành công nhưng User EduWorld `deactivated`, THÌ PHẢI trả `403 ACCOUNT_DEACTIVATED` và thu hồi phiên Keycloak vừa tạo | FR-AUTH-029 · AC-AUTH-025 · ADR-0091 mục 5 | TC-AUTH-095 |
 | F012-AC-30 | KHI `refreshPortalToken` hoặc `portalLogout` được gọi, module identity PHẢI yêu cầu cookie `__Secure-ew_portal_rt` và header `X-EW-CSRF` bằng giá trị cookie `__Host-ew_portal_csrf`; NẾU thiếu hoặc lệch, THÌ PHẢI trả `403 CSRF_TOKEN_INVALID` mà không gọi Keycloak; refresh thành công PHẢI xoay vòng refresh token và CSRF; refresh token hết hạn, đã thu hồi hoặc bị dùng lại PHẢI trả `401 REFRESH_TOKEN_INVALID` và xóa cả hai cookie; logout PHẢI thu hồi refresh token và phiên Keycloak (`sid`), xóa cookie, trả `204` kể cả khi phiên đã kết thúc | FR-AUTH-029 · AC-AUTH-036 · ADR-0091 mục 4 | TC-AUTH-098 |
-| F012-AC-31 | HỆ THỐNG PHẢI không ghi body, cookie, header `X-EW-CSRF` của `/auth/portal/*` vào log, trace hay audit; PHẢI xóa mật khẩu/OTP khỏi bộ nhớ sau khi gọi Keycloak (best effort); PHẢI không lưu refresh token thô ở phía server và không dùng `Idempotency-Key` cho các operation này | FR-AUTH-029 · FR-AUTH-003 · ADR-0091 mục 5 · AGENTS R14 | TC-AUTH-100 |
+| F012-AC-31 | HỆ THỐNG PHẢI không ghi body, cookie, header `X-EW-CSRF` của `/auth/portal/*` vào log, trace hay audit; PHẢI xóa mật khẩu khỏi bộ nhớ sau khi gọi Keycloak (best effort); PHẢI không lưu refresh token thô ở phía server và không dùng `Idempotency-Key` cho các operation này | FR-AUTH-029 · FR-AUTH-003 · ADR-0091 mục 5 · AGENTS R14 | TC-AUTH-100 |
 | F012-AC-32 | NẾU một username (đã chuẩn hóa, băm), một `device_id` hoặc toàn hệ thống vượt `portal_login_rate` ở `portalLogin`, `forgotPortalPassword`, `setupPortalPassword`, `resetPortalPassword` hay `refreshPortalToken`, THÌ module identity (lớp hai sau APISIX) PHẢI trả `429 RATE_LIMITED` + `Retry-After`; HỆ THỐNG PHẢI KHÔNG giới hạn theo IP đơn lẻ | FR-AUTH-029 · NFR-SEC-003 · ADR-0091 mục 5 · AGENTS R30 | TC-AUTH-099 |
 
 ---
@@ -204,9 +208,9 @@ Nhân sự mới đổi mật khẩu tạm trên màn riêng của portal, đăn
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F012-AC-33 | NẾU Keycloak báo tài khoản chưa thiết lập xong (còn required action) sau khi mật khẩu đúng, THÌ module identity PHẢI trả `403 ACCOUNT_SETUP_REQUIRED` kèm `setup_ticket` (ngẫu nhiên, dùng một lần, hết hạn theo `portal_setup_ticket_ttl`, gắn `user_id`, lưu Valkey, không chứa mật khẩu) và `required_steps[]` (`update_password`, `configure_otp`), không cấp token và ghi audit | FR-AUTH-029 · AC-AUTH-034 · ADR-0091 mục 3 | TC-AUTH-096 |
-| F012-AC-34 | KHI `setupPortalPassword` nhận `setup_ticket` hợp lệ và `new_password`, module identity PHẢI đặt mật khẩu qua Keycloak Admin API (client `svc-identity`, áp password policy của realm), gỡ required action `UPDATE_PASSWORD`, tiêu hủy ticket, audit và trả `PortalSetupResult` (`remaining_steps[]`, `otp_setup_email_sent`); NẾU ticket hết hạn, đã dùng hoặc không tồn tại, THÌ PHẢI trả `401 SETUP_TICKET_INVALID`; NẾU mật khẩu vi phạm policy, THÌ PHẢI trả `422 VALIDATION_FAILED` với `errors[].code = PASSWORD_POLICY_VIOLATION` và ticket còn hiệu lực đến hết hạn | FR-AUTH-029 · AC-AUTH-034 · ADR-0091 mục 3 | TC-AUTH-096 |
-| F012-AC-35 | KHI tài khoản chỉ còn bước `configure_otp` (lúc đăng nhập hoặc sau `setupPortalPassword`), module identity PHẢI gọi Keycloak Admin API `execute-actions-email` với `CONFIGURE_TOTP` tối đa một lần trong mỗi cửa sổ `portal_setup_ticket_ttl` và trả `otp_setup_email_sent = true`; module identity PHẢI KHÔNG tự sinh, lưu hay kiểm secret OTP | FR-AUTH-029 · AC-AUTH-034 · ADR-0091 mục 3 · AGENTS R30 | TC-AUTH-096 |
+| F012-AC-33 | NẾU Keycloak báo tài khoản chưa thiết lập xong (còn required action) sau khi mật khẩu đúng, THÌ module identity PHẢI trả `403 ACCOUNT_SETUP_REQUIRED` kèm `setup_ticket` (ngẫu nhiên, dùng một lần, hết hạn theo `portal_setup_ticket_ttl`, gắn `user_id`, lưu Valkey, không chứa mật khẩu) và `required_steps[]` (chỉ `update_password`; `configure_otp` bỏ theo ADR-0094), không cấp token và ghi audit | FR-AUTH-029 · AC-AUTH-034 · ADR-0091 mục 3 | TC-AUTH-096 |
+| F012-AC-34 | KHI `setupPortalPassword` nhận `setup_ticket` hợp lệ và `new_password`, module identity PHẢI đặt mật khẩu qua Keycloak Admin API (client `svc-identity`, áp password policy của realm), gỡ required action `UPDATE_PASSWORD`, tiêu hủy ticket, audit và trả `PortalSetupResult` (`remaining_steps[]`; `otp_setup_email_sent` bỏ theo ADR-0094); NẾU ticket hết hạn, đã dùng hoặc không tồn tại, THÌ PHẢI trả `401 SETUP_TICKET_INVALID`; NẾU mật khẩu vi phạm policy, THÌ PHẢI trả `422 VALIDATION_FAILED` với `errors[].code = PASSWORD_POLICY_VIOLATION` và ticket còn hiệu lực đến hết hạn | FR-AUTH-029 · AC-AUTH-034 · ADR-0091 mục 3 | TC-AUTH-096 |
+| F012-AC-35 | Module identity PHẢI KHÔNG gửi email `execute-actions-email` `CONFIGURE_TOTP`, PHẢI KHÔNG trả `configure_otp`/`otp_setup_email_sent`, và PHẢI KHÔNG tự sinh, lưu hay kiểm secret OTP (bỏ luồng đăng ký OTP theo ADR-0094) | FR-AUTH-029 · AC-AUTH-034 · ADR-0091 mục 3 · ADR-0094 · AGENTS R30 | TC-AUTH-096 |
 | F012-AC-36 | KHI `forgotPortalPassword` nhận `identifier`, module identity PHẢI luôn trả `202` trong thời gian không phụ thuộc tài khoản có tồn tại; chỉ khi `identifier` khớp tài khoản `staff` đang hoạt động, module identity PHẢI tạo token ngẫu nhiên (≥ 32 byte), lưu băm SHA-256 với `expires_at` = thời điểm tạo + `portal_password_reset_ttl`, soft-delete token chưa dùng trước đó của user, và gửi email (bất đồng bộ) chứa link `https://portal.<domain>/reset-password?token=…`; tài khoản học sinh PHẢI không bao giờ nhận email này | FR-AUTH-029 · AC-AUTH-035 · ADR-0091 mục 3 | TC-AUTH-097 |
 | F012-AC-37 | KHI `resetPortalPassword` nhận token khớp băm, chưa dùng, chưa hết hạn, module identity PHẢI đánh dấu `used_at` nguyên tử (một lần), đặt mật khẩu qua Keycloak Admin API, thu hồi mọi phiên portal của user và audit; NẾU token sai, đã dùng hoặc hết hạn, THÌ PHẢI trả `401 PASSWORD_RESET_TOKEN_INVALID`; vi phạm policy PHẢI trả `422 VALIDATION_FAILED` (`PASSWORD_POLICY_VIOLATION`) | FR-AUTH-029 · AC-AUTH-035 · ADR-0091 mục 3 | TC-AUTH-097 |
 
@@ -248,7 +252,7 @@ Khi System Admin tắt một menu hoặc action (F015), mọi request của Admi
 |---|---|---|
 | FR-AUTH-016 | Permission → Role → UserRole, kiểm tra ở mọi use case, bất biến phân vùng, event | [ADMIN_PORTAL §2](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-AUTH-019 | Một tenant mỗi request; portal đổi tenant bằng header `X-Tenant-Id` mới + membership (không token mới — ADR-0091); System Admin `tenant_ids` | [MULTITENANCY §8](../../docs/06-architecture/MULTITENANCY.md) |
-| FR-AUTH-029 | Đăng nhập portal bằng form riêng qua `/auth/portal/*` (mật khẩu + OTP một request, lỗi chung, cookie refresh + CSRF, thiết lập lần đầu, đăng ký OTP qua email, quên/đặt lại mật khẩu); chỉ nhân sự (`PORTAL_ACCESS_STAFF_ONLY`), MFA role platform | [KEYCLOAK_SSO §3.3](../../docs/09-identity/KEYCLOAK_SSO.md) · [SECURITY_ARCHITECTURE](../../docs/10-security/SECURITY_ARCHITECTURE.md) |
+| FR-AUTH-029 | Đăng nhập portal bằng form riêng qua `/auth/portal/*` (username/email + mật khẩu một request, lỗi chung, cookie refresh + CSRF, thiết lập lần đầu, quên/đặt lại mật khẩu); chỉ nhân sự (`PORTAL_ACCESS_STAFF_ONLY`); không MFA (ADR-0094) | [KEYCLOAK_SSO §3.3](../../docs/09-identity/KEYCLOAK_SSO.md) · [SECURITY_ARCHITECTURE](../../docs/10-security/SECURITY_ARCHITECTURE.md) |
 | FR-AUTH-030 | Không chọn tenant trước; `/me/tenants`; chọn/đổi tenant sau đăng nhập bằng `X-Tenant-Id` + membership | [ADMIN_PORTAL §1.3b](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-AUTH-032 | Quản lý Role/UserRole tenant, trường, platform; nhật ký phân quyền | [ADMIN_PORTAL §3.17](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-CMS-001 | Danh mục role tenant/platform | [ADMIN_PORTAL §2.3](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
@@ -275,7 +279,7 @@ Khi System Admin tắt một menu hoặc action (F015), mọi request của Admi
 |---|---|
 | `principal_cache`, `principal_cache_ttl` | Cache Principal L1 + Valkey và độ trễ thu hồi quyền |
 | `portal_session_sso` | Idle/max phiên portal, `auth_time` tối đa cho route platform, vòng đời cookie refresh |
-| `portal_setup_ticket_ttl` | Hạn `setup_ticket` và cửa sổ gửi lại email `CONFIGURE_TOTP` |
+| `portal_setup_ticket_ttl` | Hạn `setup_ticket` |
 | `portal_password_reset_ttl` | Hạn token đặt lại mật khẩu |
 | `portal_login_rate` | Giới hạn `/auth/portal/*` theo username, `device_id`, toàn cục (không theo IP) |
 | `brute_force_lockout` | Khóa tạm của Keycloak (không đổi, lỗi vẫn là `INVALID_CREDENTIALS`) |
@@ -288,9 +292,9 @@ Khi System Admin tắt một menu hoặc action (F015), mọi request của Admi
 
 | Ràng buộc | Nguồn |
 |---|---|
-| Đường đăng nhập portal (`portalLogin`, `listMyTenants`, `getMyPermissions`, `getMe`) không gọi đồng bộ module khác (chỉ Keycloak); p95 theo `login_slo`; chỉ Keycloak xác thực mật khẩu/OTP | AGENTS R30 · ADR-0045 · ADR-0091 |
-| Mật khẩu/OTP/refresh token không vào log, trace, audit | AGENTS R14 · ADR-0091 mục 5 |
-| Route platform chỉ gateway nội bộ, `azp = eduworld-portal` + MFA | AGENTS R20 · ADR-0027 |
+| Đường đăng nhập portal (`portalLogin`, `listMyTenants`, `getMyPermissions`, `getMe`) không gọi đồng bộ module khác (chỉ Keycloak); p95 theo `login_slo`; chỉ Keycloak xác thực mật khẩu | AGENTS R30 · ADR-0045 · ADR-0091 |
+| Mật khẩu/refresh token không vào log, trace, audit | AGENTS R14 · ADR-0091 mục 5 |
+| Route platform chỉ gateway nội bộ, `azp = eduworld-portal` + role platform (không MFA) | AGENTS R20 · ADR-0027 · ADR-0094 |
 | Authorization ở backend; ẩn menu không phải lớp bảo mật | AGENTS R7, R20 |
 | Test isolation + authorization cho 100% endpoint mới | NFR-SEC-006 |
 
@@ -302,13 +306,13 @@ Khi System Admin tắt một menu hoặc action (F015), mọi request của Admi
 - **SC-002**: 0 role tenant chứa permission platform ở mọi môi trường (kiểm khi khởi động và bằng trigger).
 - **SC-003**: Nhân sự thuộc 2 tenant đổi tenant không phải nhập lại mật khẩu trong 100% lượt thử E2E.
 - **SC-004**: 100% route portal trả `403 PORTAL_ACCESS_STAFF_ONLY` với token học sinh trong test sinh từ OpenAPI.
-- **SC-005**: 0 lần mật khẩu/OTP mẫu xuất hiện trong log/trace sau bộ test TC-AUTH-100; 100% biến thể lỗi đăng nhập trả cùng `401 INVALID_CREDENTIALS` (TC-AUTH-094).
+- **SC-005**: 0 lần mật khẩu mẫu xuất hiện trong log/trace sau bộ test TC-AUTH-100; 100% biến thể lỗi đăng nhập trả cùng `401 INVALID_CREDENTIALS` (TC-AUTH-094).
 - **SC-006**: 100% operation có `x-portal-action` trả `403 FEATURE_DISABLED` khi action/menu cha tắt, trong ≤ `feature_toggle_cache_ttl` sau khi đổi (test sinh từ OpenAPI).
 
 ## Ngoài phạm vi
 
 - Màn đăng nhập portal (`/login`, thiết lập, quên/đặt lại mật khẩu), bộ chọn tenant, menu UI sinh từ catalog → F051; màn người dùng/role → F052, F057.
-- Cấu hình Keycloak realm, client `eduworld-portal` confidential, direct grant flow chặn học sinh, OTP có điều kiện, mapper AMR/LoA, route APISIX `/auth/portal/*` → F004.
+- Cấu hình Keycloak realm, client `eduworld-portal` confidential, direct grant flow chặn học sinh (không OTP — ADR-0094), route APISIX `/auth/portal/*` → F004.
 - Dữ liệu bật/tắt (`platform.feature_flags`, `platform.portal_menu_catalog`), API System Admin, hiện thực `featuregate.Source` → F015; danh mục `specs/portal/menu-catalog.yaml` và `x-portal-action` → contract chung (ADR-0090).
 - Gửi email (adapter SMTP/outbox thông báo) dùng hạ tầng thông báo chung; nội dung email theo file dịch.
 - Đồng bộ membership Organization và realm role theo `user_role.changed` → F010 (consumer).
@@ -320,5 +324,5 @@ Khi System Admin tắt một menu hoặc action (F015), mọi request của Admi
 - Role tùy biến của tenant [Confirmed] (ADR-0066); triển khai nhưng có thể tắt bằng feature flag nếu chưa duyệt.
 - F002 cung cấp middleware `auth`, `principal`, `tenant`, `portal_staff`, `game_player` trong `src/backend/pkg/httpx`; F012 cung cấp dữ liệu (Principal) và test.
 - `auth_time` tối đa 8 giờ cho route platform [Confirmed] theo KEYCLOAK_SSO §3.3.
-- Claim `amr`/`acr` của direct grant và lỗi Keycloak khi còn required action theo giả định của ADR-0091; xác nhận bằng spike F004 T039 [Confirmed].
+- Lỗi Keycloak khi còn required action theo giả định của ADR-0091; xác nhận bằng spike F004 T039 [Confirmed]. Claim `amr`/`acr` không còn dùng (ADR-0094).
 - APISIX phục vụ `/api/v1/*` dưới origin của portal để cookie là first-party [Confirmed] (F004-AC-28).

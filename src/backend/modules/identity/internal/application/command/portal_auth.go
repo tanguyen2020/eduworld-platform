@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,7 +25,8 @@ const (
 	AuditPortalSetupPassword          = "auth.portal_setup_password"
 	AuditPortalPasswordResetRequested = "auth.portal_password_reset_requested"
 	AuditPortalPasswordReset          = "auth.portal_password_reset"
-	AuditPortalOTPSetupEmailSent      = "auth.portal_otp_setup_email_sent"
+	// AuditPortalLegacyOTPActionRemoved: a leftover CONFIGURE_TOTP required action was removed at login (ADR-0094).
+	AuditPortalLegacyOTPActionRemoved = "auth.portal_legacy_otp_action_removed"
 )
 
 // PortalSessionHandler is the typed interface of portalLogin, refreshPortalToken and portalLogout (ADR-0087:
@@ -35,8 +37,9 @@ type PortalSessionHandler interface {
 	Logout(ctx context.Context, refreshToken string) error
 }
 
-// PortalAuth implements the Admin Portal login through the backend (ADR-0091, F012 US7/US8). Only Keycloak
-// verifies passwords and OTP codes (AGENTS R30); module identity checks the EduWorld side (staff, status,
+// PortalAuth implements the Admin Portal login through the backend (ADR-0091, F012 US7/US8): username and
+// password only, no second factor (ADR-0094). Only Keycloak verifies passwords (AGENTS R30); module identity
+// checks the EduWorld side (staff, status,
 // roles), keeps no refresh token and audits without credentials or raw usernames (F012-AC-28, AC-31).
 type PortalAuth struct {
 	UoW      write.UnitOfWork
@@ -98,7 +101,6 @@ func (h PortalAuth) Login(ctx context.Context, in dto.PortalLogin) (out dto.Port
 	ctx, done := observability.UseCase(ctx, "identity.command.PortalLogin")
 	defer func() { done(err) }()
 	defer clear(in.Password)
-	defer clear(in.OTP)
 	cfg := h.Cfg.withDefaults()
 	login := portalauth.NormalizeLogin(in.Username)
 	userKey := portalauth.Key("login", login)
@@ -109,9 +111,21 @@ func (h PortalAuth) Login(ctx context.Context, in dto.PortalLogin) (out dto.Port
 		h.loginResult(port.LoginRateLimited)
 		return out, err
 	}
-	tok, err := h.IdP.PasswordGrant(ctx, login, in.Password, in.OTP)
+	tok, err := h.IdP.PasswordGrant(ctx, login, in.Password)
+	if errors.Is(err, port.ErrPortalSetupRequired) {
+		// An account enrolled for OTP before ADR-0094 may still carry CONFIGURE_TOTP: drop it and try once more
+		// with the same password, so nobody is locked out by a second factor that no longer exists.
+		dropped, derr := h.dropLegacyOTPAction(ctx, login)
+		if derr != nil {
+			clear(in.Password)
+			h.loginResult(port.LoginUnavailable)
+			return out, unavailable(derr)
+		}
+		if dropped {
+			tok, err = h.IdP.PasswordGrant(ctx, login, in.Password)
+		}
+	}
 	clear(in.Password)
-	clear(in.OTP)
 	deny := func(code problem.Code, result string, userID uuid.UUID) error {
 		h.loginResult(result)
 		tt, tid := targetUser(userID)
@@ -121,7 +135,7 @@ func (h PortalAuth) Login(ctx context.Context, in dto.PortalLogin) (out dto.Port
 	}
 	switch {
 	case errors.Is(err, port.ErrPortalInvalidCredentials):
-		// One status, code and message for every credential failure; nothing tells whether OTP is needed.
+		// One status, code and message for every credential failure.
 		return out, deny(problem.InvalidCredentials, port.LoginInvalidCredentials, uuid.Nil)
 	case errors.Is(err, port.ErrPortalAccessDenied):
 		return out, deny(problem.PortalAccessStaffOnly, port.LoginStaffOnly, uuid.Nil)
@@ -151,19 +165,19 @@ func (h PortalAuth) Login(ctx context.Context, in dto.PortalLogin) (out dto.Port
 		h.revoke(ctx, tok.RefreshToken)
 		return out, deny(problem.AccountDeactivated, port.LoginDeactivated, userID)
 	}
-	mfa := portalauth.MFA(tok.AMR, cfg.MFAAMR)
+	platform := portalauth.PlatformStaff(tok.RealmRoles)
 	authTime := h.now()
 	key := portalauth.SessionKey(tok.SessionID)
-	if err := h.Sessions.Save(ctx, key, port.PortalSession{UserID: acct.UserID, AuthTime: authTime, MFA: mfa}, ttl(tok)); err != nil {
-		// Without it a refresh of an MFA session is refused (fail-safe: the user signs in again).
+	if err := h.Sessions.Save(ctx, key, port.PortalSession{UserID: acct.UserID, AuthTime: authTime, Platform: platform}, ttl(tok)); err != nil {
+		// Without it a refresh of a platform session is refused (fail-safe: the user signs in again).
 		slog.WarnContext(ctx, "portal: session store unavailable", "error", err)
 	}
-	out, err = session(tok, authTime, mfa)
+	out, err = session(tok, authTime)
 	if err != nil {
 		h.revoke(ctx, tok.RefreshToken)
 		return dto.PortalSession{}, unavailable(err)
 	}
-	meta["mfa"] = mfa
+	meta["platform"] = platform
 	meta["session_key"] = key
 	h.loginResult(port.LoginSuccess)
 	h.record(ctx, audit.Event{Action: AuditPortalLogin, TargetType: "user", TargetID: acct.UserID.String(), Result: audit.ResultSuccess, Metadata: meta})
@@ -185,7 +199,7 @@ func ttl(t port.PortalTokens) time.Duration {
 	return 30 * time.Minute
 }
 
-func session(t port.PortalTokens, authTime time.Time, mfa bool) (dto.PortalSession, error) {
+func session(t port.PortalTokens, authTime time.Time) (dto.PortalSession, error) {
 	csrf, err := portalauth.NewSecret(portalauth.SecretBytes)
 	if err != nil {
 		return dto.PortalSession{}, err
@@ -198,12 +212,12 @@ func session(t port.PortalTokens, authTime time.Time, mfa bool) (dto.PortalSessi
 		rexp = int(ttl(t) / time.Second)
 	}
 	return dto.PortalSession{AccessToken: t.AccessToken, RefreshToken: t.RefreshToken, CSRF: csrf, ExpiresIn: exp,
-		RefreshExpiresIn: rexp, AuthTime: authTime, MFA: mfa}, nil
+		RefreshExpiresIn: rexp, AuthTime: authTime}, nil
 }
 
 // Refresh implements refreshPortalToken (F012-AC-30, AC-32). The CSRF double-submit is checked by the
-// presentation before this use case runs. Refreshes of MFA sessions stop after MaxAuthAge counted from the
-// password entry (direct grant tokens have no auth_time — F004 research R5).
+// presentation before this use case runs. Refreshes of platform staff sessions stop after MaxAuthAge counted
+// from the password entry (direct grant tokens have no auth_time — F004 research R5; ADR-0094 §2).
 func (h PortalAuth) Refresh(ctx context.Context, refreshToken string) (out dto.PortalSession, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.command.RefreshPortalToken")
 	defer func() { done(err) }()
@@ -243,7 +257,7 @@ func (h PortalAuth) Refresh(ctx context.Context, refreshToken string) (out dto.P
 		slog.WarnContext(ctx, "portal: session store unavailable", "error", err)
 		found = false
 	}
-	mfa := portalauth.MFA(tok.AMR, cfg.MFAAMR) || (found && s.MFA)
+	platform := portalauth.PlatformStaff(tok.RealmRoles) || (found && s.Platform)
 	authTime := tok.IssuedAt
 	if found {
 		authTime = s.AuthTime
@@ -251,13 +265,13 @@ func (h PortalAuth) Refresh(ctx context.Context, refreshToken string) (out dto.P
 	if authTime.IsZero() {
 		authTime = h.now()
 	}
-	if mfa && (!found || h.now().Sub(authTime) > cfg.MaxAuthAge) {
-		return out, end(problem.RefreshTokenInvalid) // platform sessions re-enter password + OTP (ADR-0091 §4)
+	if platform && (!found || h.now().Sub(authTime) > cfg.MaxAuthAge) {
+		return out, end(problem.RefreshTokenInvalid) // platform staff re-enter their password (ADR-0094 §2)
 	}
-	if err := h.Sessions.Save(ctx, key, port.PortalSession{UserID: acct.UserID, AuthTime: authTime, MFA: mfa}, ttl(tok)); err != nil {
+	if err := h.Sessions.Save(ctx, key, port.PortalSession{UserID: acct.UserID, AuthTime: authTime, Platform: platform}, ttl(tok)); err != nil {
 		slog.WarnContext(ctx, "portal: session store unavailable", "error", err)
 	}
-	out, err = session(tok, authTime, mfa)
+	out, err = session(tok, authTime)
 	if err != nil {
 		return dto.PortalSession{}, unavailable(err)
 	}
@@ -291,9 +305,29 @@ func (h PortalAuth) Logout(ctx context.Context, refreshToken string) (err error)
 	return nil
 }
 
+// dropLegacyOTPAction removes the CONFIGURE_TOTP required action left on an account from before ADR-0094
+// (Admin API, audited). It reports whether one was removed; the caller then retries the password grant.
+func (h PortalAuth) dropLegacyOTPAction(ctx context.Context, login string) (bool, error) {
+	kcUser, err := h.KC.FindUserByLogin(ctx, login)
+	if err != nil {
+		return false, err
+	}
+	actions, err := h.KC.RequiredActions(ctx, kcUser.ID)
+	if err != nil {
+		return false, err
+	}
+	if !slices.Contains(actions, portalauth.ActionLegacyConfigureTOTP) {
+		return false, nil
+	}
+	if err := h.KC.RemoveRequiredAction(ctx, kcUser.ID, portalauth.ActionLegacyConfigureTOTP); err != nil {
+		return false, err
+	}
+	h.record(ctx, audit.Event{Action: AuditPortalLegacyOTPActionRemoved, TargetType: "keycloak_user", TargetID: kcUser.ID, Result: audit.ResultSuccess})
+	return true, nil
+}
+
 // setupRequired answers 403 ACCOUNT_SETUP_REQUIRED with a one-time setup_ticket (F012-AC-33) after
-// Keycloak confirmed the password; when configure_otp is the only step left the CONFIGURE_TOTP email is
-// sent at most once per window (F012-AC-35).
+// Keycloak confirmed the password.
 func (h PortalAuth) setupRequired(ctx context.Context, cfg PortalAuthConfig, login string, meta map[string]any) error {
 	kcUser, err := h.KC.FindUserByLogin(ctx, login)
 	if err != nil {
@@ -329,16 +363,12 @@ func (h PortalAuth) setupRequired(ctx context.Context, cfg PortalAuthConfig, log
 		return unavailable(err)
 	}
 	steps := portalauth.Steps(actions)
-	sent := false
-	if portalauth.OnlyOTPLeft(steps) {
-		sent = h.sendOTPEmail(ctx, cfg, acct.UserID, kcUser.ID)
-	}
 	ticket, err := portalauth.NewSecret(portalauth.SecretBytes)
 	if err != nil {
 		h.loginResult(port.LoginUnavailable)
 		return unavailable(err)
 	}
-	t := port.SetupTicket{UserID: acct.UserID, KCUserID: kcUser.ID, Steps: steps, OTPEmailSent: sent, ExpiresAt: h.now().Add(cfg.SetupTicketTTL)}
+	t := port.SetupTicket{UserID: acct.UserID, KCUserID: kcUser.ID, Steps: steps, ExpiresAt: h.now().Add(cfg.SetupTicketTTL)}
 	if err := h.Tickets.Save(ctx, portalauth.HashToken(ticket), t); err != nil {
 		h.loginResult(port.LoginUnavailable)
 		return unavailable(err)
@@ -350,29 +380,5 @@ func (h PortalAuth) setupRequired(ctx context.Context, cfg PortalAuthConfig, log
 	meta["required_steps"] = len(steps)
 	h.record(ctx, audit.Event{Action: AuditPortalLogin, TargetType: "user", TargetID: acct.UserID.String(), Result: audit.ResultDenied,
 		Reason: string(problem.AccountSetupRequired), Metadata: meta})
-	return problem.New(problem.AccountSetupRequired, "").With("setup_ticket", ticket).With("required_steps", steps).
-		With("otp_setup_email_sent", sent)
-}
-
-// sendOTPEmail asks Keycloak for the CONFIGURE_TOTP action-token email at most once per SetupTicketTTL
-// (F012-AC-35). Module identity never generates, stores or checks an OTP secret. It reports whether the
-// email was sent in the current window.
-func (h PortalAuth) sendOTPEmail(ctx context.Context, cfg PortalAuthConfig, userID uuid.UUID, kcUserID string) bool {
-	first, err := h.Tickets.MarkOTPEmail(ctx, userID, cfg.SetupTicketTTL)
-	if err != nil {
-		slog.WarnContext(ctx, "portal: OTP email window unavailable", "error", err)
-		return false
-	}
-	if !first {
-		return true // already sent in this window
-	}
-	if err := h.KC.ExecuteActionsEmail(ctx, kcUserID, port.KCActionConfigureTOTP); err != nil {
-		slog.WarnContext(ctx, "portal: CONFIGURE_TOTP email failed", "error", err)
-		if uerr := h.Tickets.UnmarkOTPEmail(ctx, userID); uerr != nil {
-			slog.WarnContext(ctx, "portal: OTP email window unavailable", "error", uerr)
-		}
-		return false
-	}
-	h.record(ctx, audit.Event{Action: AuditPortalOTPSetupEmailSent, TargetType: "user", TargetID: userID.String(), Result: audit.ResultSuccess})
-	return true
+	return problem.New(problem.AccountSetupRequired, "").With("setup_ticket", ticket).With("required_steps", steps)
 }

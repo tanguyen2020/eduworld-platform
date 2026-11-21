@@ -53,7 +53,7 @@ func TestEveryPortalOperation(t *testing.T) {
 	}
 	res.Set("sa", authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, IsSystemAdmin: true,
 		Grants: []authz.Grant{{Role: "system_admin", ScopeKind: authz.RoleScopePlatform}}})
-	token := idp.Token("sa", httpxtest.PortalClient, true, clk.Now())
+	token := idp.Token("sa", httpxtest.PortalClient, clk.Now())
 
 	var cases []specCase
 	ok := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })

@@ -36,9 +36,9 @@
 | 22 | `grep -R "http://" deploy/apisix/routes deploy/keycloak/realm-eduworld.json` | Chỉ biến `${EW_*}`/`${env.*}` | F004-AC-22 |
 | 23 | PR mẫu sửa `routes.yaml` | Workflow `deploy-config.yml` đăng diff lên PR | F004-AC-23 |
 | 24 | Admin API đọc client `eduworld-portal`; password grant không secret / có secret | Confidential, Standard Flow tắt, không redirect URI; không secret → `invalid_client`; có secret → token | F004-AC-24, F004-AC-02 |
-| 25 | Password grant `eduworld-portal` (có secret): `ad.truong.a` mật khẩu đúng; `sa.admin` thiếu OTP / OTP sai / OTP đúng; `hs.an.3a` mật khẩu đúng | Token; `invalid_grant` ×2 cùng lỗi như sai mật khẩu, rồi token; `hs.an.3a` bị chặn sau bước mật khẩu (thông điệp `portalStudentDenied`) | F004-AC-25, F004-AC-03 |
-| 26 | Giải mã token của `ad.truong.a` và `sa.admin` (OTP) | `amr` = [`pwd`] / [`pwd`, `otp`]; `acr` mức mật khẩu / MFA; không claim `organization` | F004-AC-26, F004-AC-05 |
-| 27 | Gọi `execute-actions-email` `CONFIGURE_TOTP` cho tài khoản thử; mở link | Trang action-token theme `eduworld-ops` (vi/en) quét QR; realm không có browser flow/login theme cho portal | F004-AC-27 |
+| 25 | Password grant `eduworld-portal` (có secret): `ad.truong.a` mật khẩu đúng; `sa.admin` chỉ mật khẩu (không OTP — ADR-0094); `hs.an.3a` mật khẩu đúng | Token; token; `hs.an.3a` bị chặn sau bước mật khẩu (thông điệp `portalStudentDenied`) | F004-AC-25, F004-AC-03 |
+| 26 | Giải mã token của `ad.truong.a` và `sa.admin`; `node deploy/keycloak/scripts/check-realm.mjs` | Không scope `eduworld-amr-loa`, không bước OTP; không claim `organization` (ADR-0094) | F004-AC-26, F004-AC-05 |
+| 27 | Gọi `execute-actions-email` `UPDATE_PASSWORD` cho tài khoản thử; mở link | Trang action-token theme `eduworld-ops` (vi/en) đặt mật khẩu (không còn `CONFIGURE_TOTP` — ADR-0094); realm không có browser flow/login theme cho portal | F004-AC-27 |
 | 28 | `POST :9080/api/v1/auth/portal/login` qua host portal với mật khẩu mẫu duy nhất; 11 lần/phút cùng username; cùng `device_id`; nhiều username khác từ một IP | Log/trace không chứa mật khẩu; lần 11 → `429 RATE_LIMITED`; IP chung không bị chặn; route không yêu cầu `X-Tenant-Id` | F004-AC-28 |
 | 29 | Đọc research R5 | Có kết quả spike (`amr`/`acr`, required action, CONFIGURE_TOTP, thông điệp chặn học sinh) | F004-AC-29 |
 
@@ -53,7 +53,7 @@ postman collection run specs/postman/gateway.postman_collection.json -e specs/po
 ## 4. Bằng chứng cần nộp
 
 - Output script kiểm, kết quả quét log TC-AUTH-060 (kịch bản 16), bảng 404 của prefix nội bộ, diff realm lần áp thứ hai.
-- Kết quả spike R5 (token đã giải mã có/không OTP), quét log `/auth/portal/*` (kịch bản 28).
+- Kết quả spike R5 (lịch sử; OTP bỏ theo ADR-0094), quét log `/auth/portal/*` (kịch bản 28).
 
 ## 5. Bằng chứng (2026-11-18, Windows 11 + Docker Desktop; keycloak 26.4, apache/apisix:3.13.0-debian, valkey:8 trong compose)
 

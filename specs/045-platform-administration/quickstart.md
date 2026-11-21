@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F010, F012, F015, F020 (module learning có platform ops và `infra.tenant_resource_assignments`).
 - Lệnh: `make up`, `make seed`, `make run-core-api`, `make run-worker PROFILE=jobs` (saga), `make run-worker PROFILE=events` (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); gọi route `/admin/*` qua gateway nội bộ của compose.
-- Tài khoản demo: `sa.admin` (system_admin, MFA tắt ở local), `cm.noidung` (content_admin), `sm.antoan` (safety_moderator), `ad.donvi` (tenant_admin `pgd-demo`), `ad.truong.a` (school_admin `th-demo-a`), `ad.truong.b` (school_admin `pgd-demo`).
+- Tài khoản demo: `sa.admin` (system_admin, không MFA — ADR-0094), `cm.noidung` (content_admin), `sm.antoan` (safety_moderator), `ad.donvi` (tenant_admin `pgd-demo`), `ad.truong.a` (school_admin `th-demo-a`), `ad.truong.b` (school_admin `pgd-demo`).
 - Dữ liệu: một question set platform đã publish (`cm.noidung` tạo), một câu hỏi tenant `th-demo-a`.
 
 ## 2. Kịch bản kiểm tra
@@ -16,7 +16,7 @@
 | 1 | `sa.admin` gọi `listTenants?q=DEMO` | Trả `th-demo-a`, `pgd-demo` (không phân biệt hoa thường), có `tenant_type`; `q` 101 ký tự → `422` | F045-AC-05, F045-AC-26 |
 | 2 | `sa.admin` gọi `listTrash?resource_type=question` (không `X-Tenant-Id`, không `tenant_ids`) | Dữ liệu mọi tenant, mỗi dòng có `tenant_id`; audit `cross_tenant.accessed`; metric bypass tăng | F045-AC-01, F045-AC-06, F045-AC-19 |
 | 3 | `ad.donvi` gọi `listTenantTrash?resource_type=question&tenant_ids=<th-demo-a>` | Chỉ dữ liệu `pgd-demo` (tham số bị bỏ qua) | F045-AC-02, F045-AC-22 |
-| 4 | `cm.noidung`, `sm.antoan` gọi `listTrash`; `ad.truong.a` gọi `/admin/trash` qua gateway public; token `sa.admin` thiếu MFA (bật MFA trong test) | `403 PERMISSION_DENIED`; không có route; `403 MFA_REQUIRED` + audit `authz.denied` | F045-AC-03, F045-AC-04 |
+| 4 | `cm.noidung`, `sm.antoan` gọi `listTrash`; `ad.truong.a` gọi `/admin/trash` qua gateway public; token `sa.admin` chỉ mật khẩu | `403 PERMISSION_DENIED` + audit `authz.denied`; không có route; `200` (không MFA — ADR-0094) | F045-AC-03, F045-AC-04 |
 | 5 | `sa.admin` `assignToTenants` question set platform → `th-demo-a`; gửi lại cùng key; cùng key khác payload | `ad.truong.a` thấy chỉ đọc, `ad.truong.b` không thấy; replay trả kết quả cũ; `409 IDEMPOTENCY_KEY_REUSED` | F045-AC-07, F045-AC-09, F045-AC-12 |
 | 6 | Gán câu hỏi của tenant `th-demo-a` (không phải platform); gán id không tồn tại | `422 VALIDATION_FAILED`; `404 NOT_FOUND` | F045-AC-08 |
 | 7 | `ad.truong.a` sửa question set được gán; `ad.truong.b` tạo bài giao tham chiếu nó | `403`; `403 RESOURCE_NOT_ASSIGNED` | F045-AC-09 |

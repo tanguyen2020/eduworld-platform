@@ -12,6 +12,10 @@
 - Q: Cập nhật community goal tới client bao lâu một lần? → A: Theo `community_goal_progress_flush_seconds` (CONFIG_DEFAULTS, EVENT_SEASON_SYSTEM §12). AsyncAPI ghi 10 giây — lệch, sửa AsyncAPI theo tài liệu sở hữu (delta).
 - Q: Event Builder/Season Track UI? → A: F079 (workspace A); màn sự kiện trường workspace C → chưa có mã trong danh mục (ghi báo cáo). F077 chỉ backend.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F077-AC-06: bỏ điều kiện "thiếu MFA" và mã `403 MFA_REQUIRED`; phần permission/`azp` giữ nguyên. T015, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Vòng đời chạy sự kiện và vận hành khẩn cấp (Priority: P1)

@@ -29,7 +29,7 @@ func TestScopeFor(t *testing.T) {
 func TestCrossTenantScopeRequirements(t *testing.T) {
 	ids := []uuid.UUID{uuid.New(), uuid.New()}
 	full := authz.PrincipalData{
-		UserID: uuid.New(), UserType: authz.UserTypeStaff, IsSystemAdmin: true, Channel: authz.ChannelPortal, MFA: true,
+		UserID: uuid.New(), UserType: authz.UserTypeStaff, IsSystemAdmin: true, Channel: authz.ChannelPortal,
 		Grants: []authz.Grant{{Role: "system_admin", Permissions: []authz.Permission{authz.PermPlatformCrossTenantRead}}},
 	}
 	if s, err := authz.CrossTenantScope(authz.NewPrincipal(full), ids, tenancy.ReasonSystemAdminCrossTenant); err != nil || len(s.TenantIDs()) != 2 {
@@ -38,7 +38,7 @@ func TestCrossTenantScopeRequirements(t *testing.T) {
 	mutations := map[string]func(d *authz.PrincipalData){
 		"no permission": func(d *authz.PrincipalData) { d.Grants = nil },
 		"game channel":  func(d *authz.PrincipalData) { d.Channel = authz.ChannelGame },
-		"no MFA":        func(d *authz.PrincipalData) { d.MFA = false },
+		"no client":     func(d *authz.PrincipalData) { d.Channel = authz.ChannelUnknown },
 		"tenant user":   func(d *authz.PrincipalData) { d.TenantID = ptr(uuid.New()) },
 	}
 	for name, m := range mutations {

@@ -131,7 +131,7 @@ func TestIntegrationOverview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out.Sis.ConnectionsTotal != 4 || out.Sis.ConnectionsByStatus["active"] != 3 || !out.Keycloak.PlatformMFARequired ||
+	if out.Sis.ConnectionsTotal != 4 || out.Sis.ConnectionsByStatus["active"] != 3 ||
 		out.Keycloak.PlatformAuthMaxAgeSeconds != 28800 || out.Apisix.PublicBaseURL != nil || out.Apisix.InternalBaseURL == nil ||
 		!out.GeneratedAt.Equal(now) {
 		t.Fatalf("overview = %+v", out)

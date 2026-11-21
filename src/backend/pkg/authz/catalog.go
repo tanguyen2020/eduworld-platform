@@ -288,7 +288,7 @@ var (
 	}
 )
 
-// PlatformOnly reports a permission reserved to platform roles (and gated by MFA, F002-AC-18).
+// PlatformOnly reports a permission reserved to platform roles (F002-AC-18).
 func (p Permission) PlatformOnly() bool {
 	if platformOnlyCodes[p] {
 		return true

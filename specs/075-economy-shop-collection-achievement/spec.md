@@ -16,6 +16,10 @@
 
 - Q: Định danh vật phẩm? → A: `item_id` là mã ổn định `varchar(64)` (không phải UUID) ở mọi bảng (`item_definitions`, `inventory_items`, `item_ledger`, `shop_item_versions`, `collection_items`, `collection_progress`, `economy_adjustments`) và mọi contract; OpenAPI `InventoryItem`, `ShopItem`, `EconomyAdjustmentRequest` đổi theo (DATABASE_DESIGN §2.8, RB-308).
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F075-AC-27: bỏ điều kiện "thiếu MFA" và mã `403 MFA_REQUIRED`; thiếu `game.economy.adjust` hoặc token không phải `eduworld-portal` vẫn `403 PERMISSION_DENIED` + `authz.denied`. T037, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Ví Xu và sổ cái (Priority: P1)

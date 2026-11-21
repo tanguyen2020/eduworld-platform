@@ -135,17 +135,18 @@ func TestResetPasswordAndPolicy(t *testing.T) {
 	}
 }
 
-// F012-AC-35: execute-actions-email CONFIGURE_TOTP; it sends an email so it is never retried.
+// execute-actions-email (UPDATE_PASSWORD of a new platform account; no CONFIGURE_TOTP since ADR-0094); it sends
+// an email so it is never retried.
 func TestExecuteActionsEmail(t *testing.T) {
 	f := &fakePortalAdmin{}
 	a := newPortalAdmin(t, f)
 	ctx := context.Background()
-	if err := a.ExecuteActionsEmail(ctx, "kc-a", port.KCActionConfigureTOTP); err != nil || len(f.emails) != 1 || f.emails[0][0] != "CONFIGURE_TOTP" {
+	if err := a.ExecuteActionsEmail(ctx, "kc-a", port.KCActionUpdatePassword); err != nil || len(f.emails) != 1 || f.emails[0][0] != "UPDATE_PASSWORD" {
 		t.Fatalf("email = %v %v", f.emails, err)
 	}
 	f.failEmail = true
 	n := len(f.calls)
-	if err := a.ExecuteActionsEmail(ctx, "kc-a", port.KCActionConfigureTOTP); err == nil || len(f.calls) != n+1 {
+	if err := a.ExecuteActionsEmail(ctx, "kc-a", port.KCActionUpdatePassword); err == nil || len(f.calls) != n+1 {
 		t.Fatalf("no retry: %v calls=%v", err, f.calls[n:])
 	}
 }

@@ -6,8 +6,8 @@
 
 - Phụ thuộc đã Done: F003, F004.
 - Lệnh: `make up`, `make seed`, `make run-core-api`, `make run-worker PROFILE=events` (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Tài khoản demo: `sa.admin` (System Admin, MFA tắt ở local), `ad.donvi` (Tenant Admin `pgd-demo`), `ad.truong.a`, `ad.truong.b` (School Admin), `hs.an.3a`, `hs.em.4a`, `hs.tudo`.
-- Token portal lấy bằng `POST /api/v1/auth/portal/login` (mật khẩu + OTP, Keycloak local qua module identity — ADR-0091); gọi API qua APISIX nội bộ cho `/admin/*`.
+- Tài khoản demo: `sa.admin` (System Admin, không MFA — ADR-0094), `ad.donvi` (Tenant Admin `pgd-demo`), `ad.truong.a`, `ad.truong.b` (School Admin), `hs.an.3a`, `hs.em.4a`, `hs.tudo`.
+- Token portal lấy bằng `POST /api/v1/auth/portal/login` (username + mật khẩu, không OTP, Keycloak local qua module identity — ADR-0091, ADR-0094); gọi API qua APISIX nội bộ cho `/admin/*`.
 
 ## 2. Kịch bản kiểm tra
 
@@ -48,7 +48,7 @@ Kịch bản §2 được tự động hóa bằng test (gói `src/backend/modul
 | Kịch bản / tiêu chí | Test | Kết quả |
 |---|---|---|
 | 1, 2, 4 — AC-01, AC-02, AC-03 (Organization), AC-05 | `TestTenantLifecycle`, `command/tenant_test.go`, `command/org_sync_test.go`, `keycloak/admin_test.go` | pass |
-| 3 — AC-04, AC-05 qua HTTP (403 thiếu MFA/role tenant, 428 thiếu key, replay, 422 `maxLength`, 428/412 `If-Match`) | `TestIdentityHTTP` (chuỗi `httpx` thật + `httpxtest`) | pass |
+| 3 — AC-04, AC-05 qua HTTP (403 client game/role tenant — không còn kiểm MFA theo ADR-0094, 428 thiếu key, replay, 422 `maxLength`, 428/412 `If-Match`) | `TestIdentityHTTP` (chuỗi `httpx` thật + `httpxtest`) | pass |
 | 5 — AC-06 | `TestOrgSchema/CatalogSeed` | pass |
 | 6 — AC-08 | `TestImportSchools` (tỉnh cũ → kế thừa + `province_outdated`, thiếu tỉnh → `pending_review`, mã tỉnh sai, trùng mã, dry-run) | pass |
 | 7 — AC-07, AC-09 | `TestSchoolLifecycle`, `command/school_test.go` | pass |
@@ -79,7 +79,7 @@ Chuẩn bị (không có `make` trên máy dev nên chạy lệnh tương đươ
 | `GET /api/v1/game/client-config?platform=windows&version=0.1.0` (route public module game) | `200`, `min_client_version` `0.1.0`, `login_url`, `supported_locales` từ `x-module-env` |
 | `POST /api/v1/auth/game/login` `hs.an.3a` sai mật khẩu | `401 INVALID_CREDENTIALS` (password grant thật của `eduworld-game-backend` tới Keycloak) |
 | `POST /api/v1/auth/game/login` `hs.an.3a` đúng mật khẩu | `403 ACCOUNT_NOT_PROVISIONED` + logout phiên Keycloak (`eduworld_keycloak_token_call_duration_seconds_count{op="game_logout"}`): đúng ADR-0063 vì module identity chưa có seed học sinh (`modules/identity/seed/README.md`); lần gọi đầu sau khi Keycloak vừa khởi động vượt `keycloak_token_call_timeout` 3 s → `503 UNAVAILABLE` (retryable) |
-| `POST /api/v1/auth/portal/login` `sa.admin` + OTP (`totp.mjs`) | `403 PORTAL_ACCESS_STAFF_ONLY` (Keycloak OTP grant thành công, identity chưa có tài khoản nhân sự) |
+| `POST /api/v1/auth/portal/login` `sa.admin` (chỉ mật khẩu — ADR-0094) | `403 PORTAL_ACCESS_STAFF_ONLY` (Keycloak grant thành công, identity chưa có tài khoản nhân sự) |
 | `GET /api/v1/me/tenants`, `/me/permissions` với access token thật của `eduworld-portal` (`ad.truong.a`) | `403 TENANT_MISMATCH`: token qua JWKS của `http://keycloak:8180/realms/eduworld`, resolver Principal (facade `resolvePrincipal`) trả "không phải thành viên" |
 | Không token / token hỏng | `401 UNAUTHENTICATED` (`missing bearer token` / `malformed token`) |
 | Outbox relay (worker `events`) | `identity.infra.outbox_events`: 159 `audit.recorded`, 159 có `published_at`; JetStream `EVT_IDENTITY`, `EVT_LEARNING`, `EVT_GAME`, `EVT_COMPETITION`, `EVT_CHAT`, `DLQ_*`, `IDENTITY_SIS_JOBS` được tạo |
@@ -105,7 +105,7 @@ Chuẩn bị như trên với `COMPOSE_PROJECT_NAME=ewseed` (Atlas qua bản sao
 | Game login `hs.locked` / `hs.nosis` | `403 ACCOUNT_LOCKED` / `403 ACCOUNT_NOT_PROVISIONED` |
 | `POST /api/v1/game/sessions` (`hs.an.3a`, `X-Tenant-Id`, `X-Device-Id`, `Idempotency-Key`) | `201`, `game_session_id` trả về |
 | `POST /api/v1/auth/portal/login` `ad.truong.a` | `200`; `GET /me/tenants` `200` [`th-demo-a`]; `GET /me/permissions` (`X-Tenant-Id` = `th-demo-a`) `200`: role `school_admin` scope trường `DEMOA1`, 31 permission |
-| Portal login `sa.admin` không OTP / có OTP (`totp.mjs`) | `401 INVALID_CREDENTIALS` / `200`; `GET /me/permissions` (platform) `200`: `system_admin`, 123 permission; `GET /me/tenants` `200` `[]` |
+| Portal login `sa.admin` bằng mật khẩu (không OTP — ADR-0094) | `200`; `GET /me/permissions` (platform) `200`: `system_admin`, 123 permission; `GET /me/tenants` `200` `[]` |
 
 Ghi chú của lần chạy:
 - Smoke chạy lúc 04:50 ICT, trong `platform_curfew` mặc định 21:30–06:30: login game trả `403 CURFEW_ACTIVE` đúng thiết kế. Đã đổi giờ giới nghiêm bằng `putPlatformCurfewSettings` (`sa.admin`, `If-Match`, lý do) thành 21:30–04:00 cho module identity; module game không theo `platform_settings.changed` mà đọc `EW_PLATFORM_CURFEW` (`createGameSession` vẫn `403 CURFEW_ACTIVE`) nên `core-api` được tạo lại với override compose `EW_PLATFORM_CURFEW=21:30-04:00` chỉ trên stack `ewseed` [câu hỏi mở: game đọc giới nghiêm từ cài đặt platform — đã xử lý 2026-11-20: consumer `game.platform_settings` + projection `ref.platform_settings`, xem OQ F014-2 trong spec F014; không cần override env nữa khi `worker` profile `events` chạy].

@@ -37,29 +37,32 @@ import (
 const testIssuer = "http://kc/realms/eduworld"
 
 type fakeKCAccount struct {
-	password, otp string
-	sub           string
-	outcome       error // forced outcome of the direct grant (access denied, setup required)
+	password string
+	sub      string
+	platform bool  // realm role platform_staff in the token (claim roles)
+	outcome  error // forced outcome of the direct grant (access denied, setup required)
 }
 
 type fakeIdP struct {
 	mu        sync.Mutex
 	clock     func() time.Time
 	accounts  map[string]fakeKCAccount
-	refresh   map[string]string // live refresh token → sid
-	sids      map[string]string // sid → subject
-	amr       map[string][]string
+	refresh   map[string]string   // live refresh token → sid
+	sids      map[string]string   // sid → subject
+	roles     map[string][]string // sid → realm roles
 	seq       int
 	grants    int
 	refreshes int
 	logouts   []string
 	passwords [][]byte // the slices received (zeroing check)
 	fail      error
+	// pending, when set, reports Keycloak required actions of a username ("Account is not fully set up").
+	pending func(username string) bool
 }
 
 func newFakeIdP(clock func() time.Time) *fakeIdP {
 	return &fakeIdP{clock: clock, accounts: map[string]fakeKCAccount{}, refresh: map[string]string{}, sids: map[string]string{},
-		amr: map[string][]string{}}
+		roles: map[string][]string{}}
 }
 
 func (f *fakeIdP) issue(sid string) port.PortalTokens {
@@ -67,10 +70,10 @@ func (f *fakeIdP) issue(sid string) port.PortalTokens {
 	rt := fmt.Sprintf("rt-%d-%s", f.seq, sid)
 	f.refresh[rt] = sid
 	return port.PortalTokens{AccessToken: fmt.Sprintf("at-%d", f.seq), RefreshToken: rt, ExpiresIn: 300, RefreshExpiresIn: 1800,
-		Issuer: testIssuer, Subject: f.sids[sid], SessionID: sid, AMR: f.amr[sid], IssuedAt: f.clock()}
+		Issuer: testIssuer, Subject: f.sids[sid], SessionID: sid, RealmRoles: f.roles[sid], IssuedAt: f.clock()}
 }
 
-func (f *fakeIdP) PasswordGrant(_ context.Context, username string, password, otp []byte) (port.PortalTokens, error) {
+func (f *fakeIdP) PasswordGrant(_ context.Context, username string, password []byte) (port.PortalTokens, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.grants++
@@ -84,14 +87,14 @@ func (f *fakeIdP) PasswordGrant(_ context.Context, username string, password, ot
 		return port.PortalTokens{}, port.ErrPortalInvalidCredentials
 	case a.outcome != nil:
 		return port.PortalTokens{}, a.outcome
-	case a.otp != "" && string(otp) != a.otp:
-		return port.PortalTokens{}, port.ErrPortalInvalidCredentials
+	case f.pending != nil && f.pending(username):
+		return port.PortalTokens{}, port.ErrPortalSetupRequired
 	}
 	sid := fmt.Sprintf("sid-%s-%d", a.sub, f.seq+1)
 	f.sids[sid] = a.sub
-	f.amr[sid] = []string{"pwd"}
-	if len(otp) > 0 {
-		f.amr[sid] = []string{"pwd", "otp"}
+	f.roles[sid] = []string{"tenant_staff"}
+	if a.platform {
+		f.roles[sid] = []string{"platform_staff"}
 	}
 	return f.issue(sid), nil
 }
@@ -325,7 +328,7 @@ func newPortalEnv(t *testing.T) *portalEnv {
 		Cfg: command.PortalAuthConfig{Issuers: []string{testIssuer}, PortalBaseURL: "https://portal.eduworld.test/"}, Clock: clk.now,
 		Background: func(f func()) { f() }}
 	e.kc = &fakeKCAdmin{actions: map[string][]string{}, passwords: map[string]string{}, policyMin: 8}
-	e.tickets = &memTickets{clock: clk.now, m: map[string]port.SetupTicket{}, otp: map[uuid.UUID]time.Time{}}
+	e.tickets = &memTickets{clock: clk.now, m: map[string]port.SetupTicket{}}
 	e.resets = &fakeResets{}
 	e.mailer = &fakeMailer{}
 	e.auth.KC, e.auth.Tickets, e.auth.Resets, e.auth.Mailer = e.kc, e.tickets, e.resets, e.mailer
@@ -386,7 +389,7 @@ type fakeKCAdmin struct {
 	actions    map[string][]string // Keycloak id → required actions
 	passwords  map[string]string   // Keycloak id → password set through the Admin API
 	policyMin  int                 // realm password policy: minimum length
-	emails     []string            // Keycloak ids that received execute-actions-email CONFIGURE_TOTP
+	emails     []string            // Keycloak ids that received an execute-actions-email
 	loggedOut  []string
 	failLogout bool
 }
@@ -422,9 +425,7 @@ func (k *fakeKCAdmin) RemoveRequiredAction(_ context.Context, id, action string)
 func (k *fakeKCAdmin) ExecuteActionsEmail(_ context.Context, id string, actions ...string) error {
 	k.mu.Lock()
 	defer k.mu.Unlock()
-	if len(actions) == 1 && actions[0] == port.KCActionConfigureTOTP {
-		k.emails = append(k.emails, id)
-	}
+	k.emails = append(k.emails, id)
 	return nil
 }
 func (k *fakeKCAdmin) LogoutUser(_ context.Context, id string) error {
@@ -442,7 +443,6 @@ type memTickets struct {
 	mu    sync.Mutex
 	clock func() time.Time
 	m     map[string]port.SetupTicket
-	otp   map[uuid.UUID]time.Time
 }
 
 func (s *memTickets) Save(_ context.Context, h string, t port.SetupTicket) error {
@@ -460,21 +460,6 @@ func (s *memTickets) Take(_ context.Context, h string) (port.SetupTicket, error)
 		return port.SetupTicket{}, port.ErrSetupTicketInvalid
 	}
 	return t, nil
-}
-func (s *memTickets) MarkOTPEmail(_ context.Context, id uuid.UUID, window time.Duration) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if until, ok := s.otp[id]; ok && until.After(s.clock()) {
-		return false, nil
-	}
-	s.otp[id] = s.clock().Add(window)
-	return true, nil
-}
-func (s *memTickets) UnmarkOTPEmail(_ context.Context, id uuid.UUID) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	delete(s.otp, id)
-	return nil
 }
 
 // fakeResets is a TEST FAKE of identity.portal_password_reset_tokens (hash only, one live token per user).

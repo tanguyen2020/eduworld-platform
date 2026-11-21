@@ -215,7 +215,7 @@ func (h UserAnonymize) start(ctx context.Context, s anonymizeSubject) (saga.Outc
 
 // CreateDataRequest implements createDataRequest (platform.data_request.write, X-Tenant-Id = tenant of the
 // subject, F016-AC-22). Only request_type anonymize is served: export is deferred (spec Out of Scope) and
-// answers 422. [Proposed] A request recorded by the System Admin (MFA) is approved at once (OQ F016-11);
+// answers 422. [Proposed] A request recorded by the System Admin is approved at once (OQ F016-11);
 // the saga starts right away and the response carries its state.
 func (h UserAnonymize) CreateDataRequest(ctx context.Context, in DataRequestInput) (out DataRequestView, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.command.CreateDataRequest")

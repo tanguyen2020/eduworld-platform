@@ -12,6 +12,10 @@
 - Q: Ai phát metric nghiệp vụ (CCU, matchmaking, chat…)? → A: Module sở hữu (feature nền của module) phát qua `src/backend/pkg/otel` (F002) với nhãn `service` (= binary `core-api`, `realtime`, `worker`), `module` và `profile` (worker) theo [MONITORING §2](../../docs/11-operations/MONITORING.md) (ADR-0074); F131 kiểm **có mặt** đúng tên/label theo [MONITORING §3](../../docs/11-operations/MONITORING.md), dựng dashboard/alert. Metric client từ telemetry do F080 chuyển đổi.
 - Q: Synthetic monitoring dùng tài khoản nào? → A: Tenant QA riêng (seed như tenant demo, không học sinh thật) theo [TEST_STRATEGY §4](../../docs/12-project/TEST_STRATEGY.md); chỉ luồng đọc + đăng nhập học sinh QA [Confirmed].
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: ADR-0094 bỏ OTP và mapper AMR/LoA khỏi realm `eduworld`, nên yêu cầu "đăng nhập Keycloak có MFA" của F131-AC-07 (Grafana/GlitchTip qua client `eduworld-ops-tools`, T005, T012, plan) không còn đạt được bằng realm này. [Proposed] Giữ chặn bằng network `admin` (VPN) + role vận hành platform, bỏ yêu cầu `acr` MFA; **Câu hỏi mở** cho owner: có muốn giữ MFA riêng cho công cụ vận hành (ngoài Admin Portal) hay không — nếu có cần ADR mới.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Thu thập metric, log, trace xuyên binary và module trên Swarm (Priority: P1)

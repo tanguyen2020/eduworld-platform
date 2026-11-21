@@ -107,7 +107,6 @@ const (
 	MediaNotReady                    Code = "MEDIA_NOT_READY"
 	MediaTooLarge                    Code = "MEDIA_TOO_LARGE"
 	MediaTypeNotAllowed              Code = "MEDIA_TYPE_NOT_ALLOWED"
-	MfaRequired                      Code = "MFA_REQUIRED"
 	MmTicketAlreadyActive            Code = "MM_TICKET_ALREADY_ACTIVE"
 	ModerationCaseClosed             Code = "MODERATION_CASE_CLOSED"
 	ModerationSwitchExpiryRequired   Code = "MODERATION_SWITCH_EXPIRY_REQUIRED"
@@ -283,7 +282,6 @@ var statusByCode = map[Code]int{
 	MediaNotReady:                    422,
 	MediaTooLarge:                    413,
 	MediaTypeNotAllowed:              415,
-	MfaRequired:                      403,
 	MmTicketAlreadyActive:            409,
 	ModerationCaseClosed:             409,
 	ModerationSwitchExpiryRequired:   422,
@@ -459,7 +457,6 @@ var allCodes = []Code{
 	MediaNotReady,
 	MediaTooLarge,
 	MediaTypeNotAllowed,
-	MfaRequired,
 	MmTicketAlreadyActive,
 	ModerationCaseClosed,
 	ModerationSwitchExpiryRequired,

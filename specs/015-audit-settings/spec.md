@@ -56,6 +56,10 @@
 - Q: T044 — `common_social_enabled`? → A: [Confirmed] Không ghi được qua `updateTenantSettings` (422 — cờ của System Admin, F120 T059); identity chỉ đọc khóa này từ `platform.tenants.settings` khi phát.
 - Q: T044 — nội dung `settings_subset` của `tenant.updated`? → A: [Confirmed] Luôn đủ hai khóa `cross_school_social_enabled`, `common_social_enabled` (vắng/`null`/không phải boolean = `false`) vì consumer thay cả object; phát kèm `source_version` = version dòng tenant sau khi ghi; áp cho `updateTenantSettings` và bước clone `tenant_settings`; `tenant.updated` do sửa tên/trạng thái (F010) không mang `settings_subset` (consumer giữ nguyên). Snapshot `listProjectionSnapshot` (`tenant`) trả cùng `settings_subset` để dựng lại projection không tắt nhầm.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F015-AC-21, AC-25, AC-26, AC-28: "System Admin, MFA" đọc là System Admin qua gateway nội bộ; nhánh "token thiếu MFA → `403 MFA_REQUIRED`" bỏ, thay bằng người không có role platform → `403 PERMISSION_DENIED`. T005, T037 và contracts/plan nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Audit log tập trung, append-only (Priority: P1)

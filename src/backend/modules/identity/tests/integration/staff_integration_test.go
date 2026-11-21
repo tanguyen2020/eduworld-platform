@@ -47,7 +47,7 @@ func TestTenantStaff(t *testing.T) {
 			t.Fatal(err)
 		}
 		grantRole(ctx, t, e, u, "tenant_admin", &tenant, "tenant", nil, "NULL")
-		return idp.Token("kc-"+name, httpxtest.PortalClient, false, now)
+		return idp.Token("kc-"+name, httpxtest.PortalClient, now)
 	}
 	tok, tokB := admin("ta.staff", a.tenant), admin("tb.staff", b.tenant)
 	newKey := func() map[string]string {

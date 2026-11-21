@@ -41,6 +41,10 @@
 - OQ F011-3 (`routematrix` không nhận route viết bằng helper `op(...)`) → **Chốt:** sửa tool: `routematrix` lấy danh sách operation từ `pkg/module.Registry` (route thật đã đăng ký) trong test thay vì phân tích literal; không đổi route sang literal. Ma trận role/tenant bắt buộc cho mọi operation của mọi module.
 - OQ F013-5 (IP client sau APISIX) → **Chốt:** `pkg/httpx` thêm `ClientIP(r)`: chỉ tin `X-Forwarded-For` (lấy địa chỉ không tin cậy ngoài cùng bên phải) khi `RemoteAddr` thuộc `EW_TRUSTED_PROXY_CIDRS` (node APISIX); ngoài ra dùng `RemoteAddr`. Module identity (`ip_hash` đăng nhập) và game (`login_events`) dùng chung hàm này; chỉ hash, không lưu IP thô (R23).
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F002-AC-18 sửa: guard `platform_mfa` đổi tên `platform_role`, chỉ kiểm role platform, không kiểm `acr`/`amr`/`auth_time`, không còn `MFA_REQUIRED`; F002-AC-11 bỏ điều kiện MFA của `authz.CrossTenantScope`; `Principal` không còn trường MFA, `AuthConfig` không còn `PlatformRequiredACR`/`PlatformRequiredAMR` (`EW_OIDC_PLATFORM_REQUIRED_ACR`/`_AMR` bỏ). Nhắc MFA trong plan, tasks (T013, T019, T030, T034), quickstart là lịch sử; test hiện hành: token portal có role platform, không `amr`/`acr` → `200`; không có role platform → `403 PERMISSION_DENIED`. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Service tự xác thực token, không tin APISIX (Priority: P1)
@@ -80,7 +84,7 @@ Mọi request tenant-scoped mang `X-Tenant-Id`; `core-api` dựng Principal theo
 | F002-AC-08 | HỆ THỐNG PHẢI lấy `Principal.TenantID` từ kết quả resolve, PHẢI KHÔNG lấy thẳng từ header; tham số `tenant_ids` của người dùng không có `platform.cross_tenant.read` PHẢI bị bỏ qua | FR-ORG-006 · ADR-0065 | TC-TEN-011, TC-CMS-TEN-01 |
 | F002-AC-09 | NẾU module identity lỗi hoặc timeout và không có Principal hợp lệ trong cache, THÌ HỆ THỐNG PHẢI trả `503 UNAVAILABLE` có `retryable` và PHẢI KHÔNG cho qua | BACKEND_DESIGN §6 · NFR-AVAIL-005 | TC-SVC-011 |
 | F002-AC-10 | HỆ THỐNG PHẢI cache Principal hai lớp (L1 trong tiến trình + Valkey) theo `principal_cache` và `principal_cache_ttl`; KHI `Invalidate(user_id, tenant_id)` được gọi, cả hai lớp PHẢI bị xóa ngay | [IDENTITY_MAPPING](../../docs/09-identity/IDENTITY_MAPPING.md) · ADR-0066 | — |
-| F002-AC-11 | Scope PHẢI chỉ được tạo qua `authz.ScopeFor(p)` (`TenantScope`, đúng một tenant), `authz.CrossTenantScope(p, ids, reason)` khi Principal có `platform.cross_tenant.read`, `azp = eduworld-portal` và MFA, hoặc `authz.PlatformScope(p)` (nhân sự platform) / `authz.SystemPlatformScope(job)` (job platform) (chỉ dòng `tenant_id IS NULL`, không đọc được dòng có `tenant_id`); linter PHẢI fail khi code ngoài `src/backend/pkg/authz` tạo scope | FR-ORG-006 · MULTITENANCY §4.1, §4.4 · AGENTS R8 · ADR-0089 | TC-TEN-004, TC-TEN-018 |
+| F002-AC-11 | Scope PHẢI chỉ được tạo qua `authz.ScopeFor(p)` (`TenantScope`, đúng một tenant), `authz.CrossTenantScope(p, ids, reason)` khi Principal có `platform.cross_tenant.read` và `azp = eduworld-portal` (điều kiện MFA bỏ theo ADR-0094), hoặc `authz.PlatformScope(p)` (nhân sự platform) / `authz.SystemPlatformScope(job)` (job platform) (chỉ dòng `tenant_id IS NULL`, không đọc được dòng có `tenant_id`); linter PHẢI fail khi code ngoài `src/backend/pkg/authz` tạo scope | FR-ORG-006 · MULTITENANCY §4.1, §4.4 · AGENTS R8 · ADR-0089 | TC-TEN-004, TC-TEN-018 |
 | F002-AC-12 | KHI `tenancy.Bypass(ctx, reason)` được gọi, HỆ THỐNG PHẢI từ chối lý do rỗng hoặc ngoài danh sách đóng (`system_admin_cross_tenant`, `moderation_case`, `break_glass`, `trash`, `auth_login`, `tenant_clone`, `inactive_cleanup`, `re_evaluation`, `efficacy_study`, `platform_job`), ghi audit `cross_tenant.accessed` (trường `reason`, `tenant_ids`, `mode` = `read`/`write`) và tăng `eduworld_tenant_filter_bypass_total{module,reason}`; mỗi lần dùng `CrossTenantScope` PHẢI ghi cùng audit đó | AGENTS R27 · ADR-0039 · ADR-0089 | TC-TEN-023 |
 | F002-AC-13 | Helper RLS PHẢI sinh policy cho bảng loại T, TA, T\*, TA\*, H khớp [DATABASE_DESIGN §4](../../docs/07-backend/DATABASE_DESIGN.md): T/TA/T\*/TA\* chỉ có điều kiện tenant, H có điều kiện tenant + gán, không policy nào chứa `deleted_at`; NẾU `app.tenant_id` không được đặt hoặc đặt tenant A, THÌ truy vấn không điều kiện trên bảng có dòng tenant B PHẢI trả 0 dòng | FR-ORG-006 · ADR-0005 · ADR-0089 | TC-TEN-005 |
 | F002-AC-29 | KHI lệnh soft-delete (`UPDATE ... SET deleted_at = now() ... RETURNING`) chạy bằng role `<module>_app` trên bảng loại T có policy do helper sinh, HỆ THỐNG PHẢI thực hiện thành công (không lỗi "new row violates row-level security policy") và dòng đó PHẢI biến mất khỏi truy vấn có `deleted_at IS NULL` và khỏi view `<table>_live` do helper sinh; role `<module>_readonly` PHẢI KHÔNG đọc được bảng gốc | ADR-0089 §1 · ADR-0028 · [DATABASE_DESIGN §4](../../docs/07-backend/DATABASE_DESIGN.md) | — |
@@ -90,11 +94,11 @@ Mọi request tenant-scoped mang `X-Tenant-Id`; `core-api` dựng Principal theo
 
 ### User Story 3 — Permission catalog trong code và chốt chặn theo loại client (Priority: P1)
 
-Mọi module dùng chung catalog; role tenant không bao giờ chứa quyền platform; route portal chỉ cho nhân sự, route game chỉ cho học sinh, route platform cần MFA.
+Mọi module dùng chung catalog; role tenant không bao giờ chứa quyền platform; route portal chỉ cho nhân sự, route game chỉ cho học sinh, route platform cần role platform (không MFA — ADR-0094).
 
 **Why this priority**: R20, R23, ADR-0027, ADR-0031, ADR-0066.
 
-**Independent Test**: Unit test catalog; server test từng guard với token giả theo `azp`, `user_type`, `acr`.
+**Independent Test**: Unit test catalog; server test từng guard với token giả theo `azp`, `user_type`, role platform.
 
 **Acceptance Criteria (EARS)**:
 
@@ -104,7 +108,7 @@ Mọi module dùng chung catalog; role tenant không bao giờ chứa quyền pl
 | F002-AC-15 | NẾU role phạm vi `tenant` chứa permission tiền tố `game.`, `competition.config.`, `platform.` hoặc permission platform-only của moderation/chat (Clarifications), THÌ tiến trình PHẢI thoát mã 1 và log tên role + permission | FR-CMS-012 · ADR-0027 | TC-CMS-AUTHZ-04 |
 | F002-AC-16 | KHI request tới `/cms/*`, `/lms/*`, `/tenant/*`, `/schools/*`, `/game-admin/*`, `/admin/*`, middleware `portal_staff` PHẢI yêu cầu `azp = eduworld-portal` và `user_type = staff`; nếu không PHẢI trả `403 PORTAL_ACCESS_STAFF_ONLY` kèm audit | ADR-0066 · ADR-0081 · [API_DESIGN §11](../../docs/07-backend/API_DESIGN.md) | TC-AUTH-070 |
 | F002-AC-17 | KHI request tới route người chơi (API_DESIGN §11 mục 1b), middleware `game_player` PHẢI yêu cầu `azp = eduworld-game-backend` và `user_type = student`; nếu không PHẢI trả `403 GAME_ACCESS_STUDENT_ONLY` kèm audit | ADR-0031 · AGENTS R23 | TC-AUTH-014 |
-| F002-AC-18 | Ở NƠI operation yêu cầu permission platform-only, HỆ THỐNG PHẢI yêu cầu `acr` đạt `EW_OIDC_PLATFORM_REQUIRED_ACR` và `auth_time` trong `EW_OIDC_PLATFORM_MAX_AUTH_AGE` (nếu không: `403 MFA_REQUIRED`) và role phạm vi platform (nếu không: `403 PERMISSION_DENIED` + audit `authz.denied`) | ADR-0027 · KEYCLOAK_SSO §3.3 | TC-CMS-WS-02, TC-CMS-AUTHZ-02 |
+| F002-AC-18 | Ở NƠI route thuộc nhóm platform (`/admin/*`, `/game-admin/*`), HỆ THỐNG PHẢI áp guard `platform_role`: Principal có role phạm vi platform (nếu không: `403 PERMISSION_DENIED` + audit `authz.denied`); HỆ THỐNG PHẢI KHÔNG kiểm tra `acr`/`amr`/`auth_time` và không trả `MFA_REQUIRED` (sửa theo ADR-0094) | ADR-0027 · ADR-0094 · KEYCLOAK_SSO §3.3 | TC-CMS-WS-02, TC-CMS-AUTHZ-02 |
 | F002-AC-19 | `authz.Require(ctx, p, perm, resource)` PHẢI trả `404 NOT_FOUND` khi tài nguyên ngoài tenant của phiên, `403 PERMISSION_DENIED` khi vượt phạm vi school/subject của UserRole hoặc khi trong phạm vi nhưng thiếu permission (không có mã scope riêng, RB-113) | API_DESIGN §4.1, §11 · ADR-0072 | TC-TEN-001, TC-TEN-002, TC-TEN-003 |
 
 ---
@@ -162,7 +166,7 @@ Tech Lead muốn CI chặn vi phạm tầng trong module và bảo đảm mọi 
 |---|---|---|
 | FR-AUTH-004 | Middleware `auth`, JWKS cache | KEYCLOAK_SSO §4.4, BACKEND_DESIGN §6 |
 | FR-ORG-006 | Middleware `tenant`, `TenantScope`, `Bypass`, helper RLS | MULTITENANCY §4–§5, DATABASE_DESIGN §4 |
-| FR-CMS-012 | Catalog permission + role hệ thống + `ValidateCatalog`; guard platform/MFA | ADMIN_PORTAL §2, SECURITY_ARCHITECTURE §5.2 |
+| FR-CMS-012 | Catalog permission + role hệ thống + `ValidateCatalog`; guard role platform (không MFA — ADR-0094) | ADMIN_PORTAL §2, SECURITY_ARCHITECTURE §5.2 |
 | FR-OPS-003 | Metric HTTP/DB pool chuẩn (API latency, error rate, DB performance); metric nghiệp vụ khác do feature sở hữu | MONITORING §3 |
 | NFR-OBS-002 | `src/backend/pkg/observability`: slog JSON, OTel, Prometheus, nhãn `binary`/`module` | MONITORING §1, §7, §8 |
 | NFR-SEC-006 | `routematrix` + harness test tenant/role | TEST_STRATEGY §6.7 |

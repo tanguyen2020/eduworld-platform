@@ -24,14 +24,10 @@ import (
 const (
 	pwTenant   = "Mk-T3nant-Sample!" // sample secrets: never seen in logs/audit (F012-AC-31)
 	pwPlatform = "Mk-Pl4tform-Sample!"
-	otpSample  = "731905"
 )
 
-func loginBody(username, password, otp string, device uuid.UUID) string {
+func loginBody(username, password string, device uuid.UUID) string {
 	m := map[string]any{"username": username, "password": password, "device_id": device.String(), "locale": "vi-VN"}
-	if otp != "" {
-		m["otp"] = otp
-	}
 	b, _ := json.Marshal(m)
 	return string(b)
 }
@@ -45,11 +41,11 @@ func decodeBody(t *testing.T, r result) map[string]any {
 	return m
 }
 
-// seedPortal: ad.truong.a (tenant staff, no OTP), sa.admin (platform staff, OTP), a student account, a staff
-// without role and a deactivated staff.
+// seedPortal: ad.truong.a (tenant staff), sa.admin (platform staff — password only, ADR-0094), a student
+// account, a staff without role and a deactivated staff.
 func seedPortal(e *portalEnv) {
 	e.idp.accounts["ad.truong.a"] = fakeKCAccount{password: pwTenant, sub: "kc-ad"}
-	e.idp.accounts["sa.admin"] = fakeKCAccount{password: pwPlatform, otp: otpSample, sub: "kc-sa"}
+	e.idp.accounts["sa.admin"] = fakeKCAccount{password: pwPlatform, sub: "kc-sa", platform: true}
 	e.idp.accounts["hs.an.3a"] = fakeKCAccount{password: pwTenant, sub: "kc-hs", outcome: port.ErrPortalAccessDenied}
 	e.idp.accounts["nv.norole"] = fakeKCAccount{password: pwTenant, sub: "kc-norole"}
 	e.idp.accounts["nv.off"] = fakeKCAccount{password: pwTenant, sub: "kc-off"}
@@ -64,14 +60,17 @@ func seedPortal(e *portalEnv) {
 func TestPortalLoginSuccess(t *testing.T) {
 	e := newPortalEnv(t)
 	seedPortal(e)
-	r := e.post("/auth/portal/login", loginBody("  AD.Truong.A ", pwTenant, "", uuid.New()), nil, map[string]string{"X-Tenant-Id": uuid.NewString()})
+	r := e.post("/auth/portal/login", loginBody("  AD.Truong.A ", pwTenant, uuid.New()), nil, map[string]string{"X-Tenant-Id": uuid.NewString()})
 	if r.code != http.StatusOK {
 		t.Fatalf("login = %d %s", r.code, r.body)
 	}
 	b := decodeBody(t, r)
 	if b["access_token"] == "" || b["token_type"] != "Bearer" || b["expires_in"] != float64(300) || b["refresh_expires_in"] != float64(1800) ||
-		b["mfa"] != false || b["auth_time"] != "2026-11-19T08:00:00Z" {
+		b["auth_time"] != "2026-11-19T08:00:00Z" {
 		t.Fatalf("body = %v", b)
+	}
+	if _, has := b["mfa"]; has {
+		t.Fatalf("no mfa field since ADR-0094: %v", b)
 	}
 	if _, leaked := b["refresh_token"]; leaked {
 		t.Fatal("refresh token must never be in the body")
@@ -87,13 +86,16 @@ func TestPortalLoginSuccess(t *testing.T) {
 		t.Fatalf("csrf cookie = %+v", csrf)
 	}
 	ok := e.audit.find(command.AuditPortalLogin, audit.ResultSuccess)
-	if len(ok) != 1 || ok[0].TargetType != "user" || ok[0].Metadata["mfa"] != false {
+	if len(ok) != 1 || ok[0].TargetType != "user" || ok[0].Metadata["platform"] != false {
 		t.Fatalf("audit = %+v", ok)
 	}
-	// Platform staff with OTP: amr otp → mfa = true.
-	r = e.post("/auth/portal/login", loginBody("sa.admin", pwPlatform, otpSample, uuid.New()), nil, nil)
-	if r.code != http.StatusOK || decodeBody(t, r)["mfa"] != true {
+	// ADR-0094: platform staff (System Admin) sign in with username + password only, no code.
+	r = e.post("/auth/portal/login", loginBody("sa.admin", pwPlatform, uuid.New()), nil, nil)
+	if r.code != http.StatusOK || decodeBody(t, r)["access_token"] == "" {
 		t.Fatalf("platform login = %d %s", r.code, r.body)
+	}
+	if ok = e.audit.find(command.AuditPortalLogin, audit.ResultSuccess); len(ok) != 2 || ok[1].Metadata["platform"] != true {
+		t.Fatalf("platform audit = %+v", ok)
 	}
 	if testutil.ToFloat64(e.metrics.LoginCount(port.LoginSuccess)) != 2 {
 		t.Fatal("eduworld_portal_login_total{result=success}")
@@ -107,24 +109,23 @@ func TestPortalLoginSuccess(t *testing.T) {
 }
 
 // F012-AC-28 (TC-AUTH-094): every credential failure is the same 401 INVALID_CREDENTIALS (status, code,
-// message, fields), nothing says that OTP is needed, timing does not depend on the variant, the audit has
+// message, fields), nothing mentions a second factor, timing does not depend on the variant, the audit has
 // no raw username.
 func TestPortalLoginGenericFailure(t *testing.T) {
 	e := newPortalEnv(t)
 	seedPortal(e)
-	variants := []struct{ name, user, pw, otp string }{
-		{"unknown user", "khong.ton.tai", pwTenant, ""},
-		{"wrong password", "ad.truong.a", "wrong", ""},
-		{"wrong otp", "sa.admin", pwPlatform, "000000"},
-		{"missing otp (platform_staff)", "sa.admin", pwPlatform, ""},
-		{"disabled or locked (Keycloak)", "nv.locked", pwTenant, ""},
+	variants := []struct{ name, user, pw string }{
+		{"unknown user", "khong.ton.tai", pwTenant},
+		{"wrong password", "ad.truong.a", "wrong"},
+		{"wrong password (platform_staff)", "sa.admin", "wrong"},
+		{"disabled or locked (Keycloak)", "nv.locked", pwTenant},
 	}
 	var first map[string]any
 	durations := map[string][]time.Duration{}
 	for round := range 15 {
 		for _, v := range variants {
 			start := time.Now()
-			r := e.post("/auth/portal/login", loginBody(v.user, v.pw, v.otp, uuid.New()), nil, nil)
+			r := e.post("/auth/portal/login", loginBody(v.user, v.pw, uuid.New()), nil, nil)
 			durations[v.name] = append(durations[v.name], time.Since(start))
 			if r.code != http.StatusUnauthorized {
 				t.Fatalf("%s: %d %s", v.name, r.code, r.body)
@@ -183,7 +184,7 @@ func TestPortalLoginRefusals(t *testing.T) {
 		{"nv.off", "ACCOUNT_DEACTIVATED"},
 	}
 	for _, c := range cases {
-		r := e.post("/auth/portal/login", loginBody(c.user, pwTenant, "", uuid.New()), nil, nil)
+		r := e.post("/auth/portal/login", loginBody(c.user, pwTenant, uuid.New()), nil, nil)
 		if r.code != http.StatusForbidden || decodeBody(t, r)["code"] != c.code || len(r.cookies) != 0 {
 			t.Fatalf("%s: %d %s", c.user, r.code, r.body)
 		}
@@ -210,7 +211,7 @@ func sessionCookies(r result) map[string]string {
 func TestPortalRefreshAndLogout(t *testing.T) {
 	e := newPortalEnv(t)
 	seedPortal(e)
-	login := e.post("/auth/portal/login", loginBody("ad.truong.a", pwTenant, "", uuid.New()), nil, nil)
+	login := e.post("/auth/portal/login", loginBody("ad.truong.a", pwTenant, uuid.New()), nil, nil)
 	ck := sessionCookies(login)
 	csrf := ck[identityhttp.PortalCSRFCookie]
 	other := strings.Repeat("A", 43)
@@ -282,17 +283,18 @@ func TestPortalRefreshAndLogout(t *testing.T) {
 	}
 }
 
-// Refreshes of an MFA (platform) session stop once the password + OTP entry is older than
-// EW_OIDC_PLATFORM_MAX_AUTH_AGE (direct grant tokens carry no auth_time — F004 research R5, ADR-0091 §4).
+// ADR-0094 §2: refreshes of a platform staff session stop once the password entry is older than
+// EW_OIDC_PLATFORM_MAX_AUTH_AGE (direct grant tokens carry no auth_time — F004 research R5); tenant staff
+// sessions are bounded by the Keycloak client session only.
 func TestPortalRefreshMaxAuthAge(t *testing.T) {
 	e := newPortalEnv(t)
 	seedPortal(e)
-	r := e.post("/auth/portal/login", loginBody("sa.admin", pwPlatform, otpSample, uuid.New()), nil, nil)
+	r := e.post("/auth/portal/login", loginBody("sa.admin", pwPlatform, uuid.New()), nil, nil)
 	ck := sessionCookies(r)
 	for range 3 {
 		e.clock.add(2 * time.Hour)
 		r = e.post("/auth/portal/token:refresh", "", ck, csrfHeaders(ck[identityhttp.PortalCSRFCookie]))
-		if r.code != http.StatusOK || decodeBody(t, r)["mfa"] != true {
+		if r.code != http.StatusOK || decodeBody(t, r)["auth_time"] != "2026-11-19T08:00:00Z" {
 			t.Fatalf("refresh = %d %s", r.code, r.body)
 		}
 		ck = sessionCookies(r)
@@ -302,8 +304,8 @@ func TestPortalRefreshMaxAuthAge(t *testing.T) {
 	if r.code != http.StatusUnauthorized || decodeBody(t, r)["code"] != "REFRESH_TOKEN_INVALID" {
 		t.Fatalf("refresh after max auth age = %d %s", r.code, r.body)
 	}
-	// An MFA session whose record is lost cannot prove its auth time: refused (fail-safe).
-	r = e.post("/auth/portal/login", loginBody("sa.admin", pwPlatform, otpSample, uuid.New()), nil, nil)
+	// A platform session whose record is lost cannot prove its auth time: refused (fail-safe).
+	r = e.post("/auth/portal/login", loginBody("sa.admin", pwPlatform, uuid.New()), nil, nil)
 	ck = sessionCookies(r)
 	e.sessions.mu.Lock()
 	clear(e.sessions.m)
@@ -312,9 +314,17 @@ func TestPortalRefreshMaxAuthAge(t *testing.T) {
 	if r.code != http.StatusUnauthorized {
 		t.Fatalf("refresh without session record = %d", r.code)
 	}
-	// A deactivated user loses the session at the next refresh.
-	r = e.post("/auth/portal/login", loginBody("ad.truong.a", pwTenant, "", uuid.New()), nil, nil)
+	// Tenant staff are not bounded by the platform age.
+	r = e.post("/auth/portal/login", loginBody("ad.truong.a", pwTenant, uuid.New()), nil, nil)
 	ck = sessionCookies(r)
+	for range 5 {
+		e.clock.add(2 * time.Hour)
+		if r = e.post("/auth/portal/token:refresh", "", ck, csrfHeaders(ck[identityhttp.PortalCSRFCookie])); r.code != http.StatusOK {
+			t.Fatalf("tenant staff refresh after 10 h = %d %s", r.code, r.body)
+		}
+		ck = sessionCookies(r)
+	}
+	// A deactivated user loses the session at the next refresh.
 	e.accounts.bySub["kc-ad"].Status = "deactivated"
 	r = e.post("/auth/portal/token:refresh", "", ck, csrfHeaders(ck[identityhttp.PortalCSRFCookie]))
 	if r.code != http.StatusForbidden || decodeBody(t, r)["code"] != "ACCOUNT_DEACTIVATED" || r.cookies[identityhttp.PortalRefreshCookie].MaxAge >= 0 {
@@ -322,14 +332,14 @@ func TestPortalRefreshMaxAuthAge(t *testing.T) {
 	}
 }
 
-// F012-AC-31 (TC-AUTH-100): no password, OTP, refresh token, CSRF value or username in logs or audit;
+// F012-AC-31 (TC-AUTH-100): no password, refresh token, CSRF value or username in logs or audit;
 // no Idempotency-Key is needed.
 func TestPortalNoSecretsInLogsOrAudit(t *testing.T) {
 	e := newPortalEnv(t)
 	seedPortal(e)
-	login := e.post("/auth/portal/login", loginBody("sa.admin", pwPlatform, otpSample, uuid.New()), nil, nil)
+	login := e.post("/auth/portal/login", loginBody("sa.admin", pwPlatform, uuid.New()), nil, nil)
 	ck := sessionCookies(login)
-	_ = e.post("/auth/portal/login", loginBody("sa.admin", "Wr0ng-Sample-Pw", otpSample, uuid.New()), nil, nil)
+	_ = e.post("/auth/portal/login", loginBody("sa.admin", "Wr0ng-Sample-Pw", uuid.New()), nil, nil)
 	r := e.post("/auth/portal/token:refresh", "", ck, csrfHeaders(ck[identityhttp.PortalCSRFCookie]))
 	ck2 := sessionCookies(r)
 	_ = e.post("/auth/portal/token:refresh", "", ck, csrfHeaders("bad-"+ck[identityhttp.PortalCSRFCookie]))
@@ -338,7 +348,7 @@ func TestPortalNoSecretsInLogsOrAudit(t *testing.T) {
 		t.Fatal("expected access/use-case logs")
 	}
 	haystack := e.logs.String() + fmt.Sprintf("%+v", e.audit.events)
-	for _, secret := range []string{pwPlatform, "Wr0ng-Sample-Pw", otpSample, ck[identityhttp.PortalRefreshCookie], ck[identityhttp.PortalCSRFCookie],
+	for _, secret := range []string{pwPlatform, "Wr0ng-Sample-Pw", ck[identityhttp.PortalRefreshCookie], ck[identityhttp.PortalCSRFCookie],
 		ck2[identityhttp.PortalRefreshCookie], "sa.admin", decodeBody(t, login)["access_token"].(string)} {
 		if strings.Contains(haystack, secret) {
 			t.Fatalf("secret %q found in logs/audit", secret)
@@ -358,7 +368,7 @@ func TestPortalLoginRate(t *testing.T) {
 	seedPortal(e)
 	// Per username across devices.
 	for i := range 11 {
-		r := e.post("/auth/portal/login", loginBody("ad.truong.a", "wrong", "", uuid.New()), nil, nil)
+		r := e.post("/auth/portal/login", loginBody("ad.truong.a", "wrong", uuid.New()), nil, nil)
 		if i < 10 && r.code != http.StatusUnauthorized || i == 10 && (r.code != http.StatusTooManyRequests || r.header.Get("Retry-After") == "") {
 			t.Fatalf("username attempt %d = %d %v", i, r.code, r.header)
 		}
@@ -370,7 +380,7 @@ func TestPortalLoginRate(t *testing.T) {
 	// Per device across usernames.
 	dev := uuid.New()
 	for i := range 11 {
-		r := e.post("/auth/portal/login", loginBody(fmt.Sprintf("u%d.dev", i), "x", "", dev), nil, nil)
+		r := e.post("/auth/portal/login", loginBody(fmt.Sprintf("u%d.dev", i), "x", dev), nil, nil)
 		if i == 10 && r.code != http.StatusTooManyRequests {
 			t.Fatalf("device attempt %d = %d", i, r.code)
 		}
@@ -379,7 +389,7 @@ func TestPortalLoginRate(t *testing.T) {
 	// Global: 20 per second.
 	codes := map[int]int{}
 	for i := range 21 {
-		codes[e.post("/auth/portal/login", loginBody(fmt.Sprintf("g%d.user", i), "x", "", uuid.New()), nil, nil).code]++
+		codes[e.post("/auth/portal/login", loginBody(fmt.Sprintf("g%d.user", i), "x", uuid.New()), nil, nil).code]++
 	}
 	if codes[http.StatusTooManyRequests] != 1 {
 		t.Fatalf("global = %v", codes)
@@ -389,13 +399,13 @@ func TestPortalLoginRate(t *testing.T) {
 		if i%10 == 0 {
 			e.clock.add(time.Second)
 		}
-		if r := e.post("/auth/portal/login", loginBody(fmt.Sprintf("ip%d.user", i), "x", "", uuid.New()), nil, nil); r.code != http.StatusUnauthorized {
+		if r := e.post("/auth/portal/login", loginBody(fmt.Sprintf("ip%d.user", i), "x", uuid.New()), nil, nil); r.code != http.StatusUnauthorized {
 			t.Fatalf("user %d from one IP = %d", i, r.code)
 		}
 	}
 	// Refresh: per Keycloak session (no device_id in the request).
 	e.clock.add(time.Minute)
-	login := e.post("/auth/portal/login", loginBody("ad.truong.a", pwTenant, "", uuid.New()), nil, nil)
+	login := e.post("/auth/portal/login", loginBody("ad.truong.a", pwTenant, uuid.New()), nil, nil)
 	ck := sessionCookies(login)
 	limited := false
 	for range 31 {

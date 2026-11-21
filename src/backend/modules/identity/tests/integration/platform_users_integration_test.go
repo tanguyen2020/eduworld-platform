@@ -49,7 +49,7 @@ func noSecret(t *testing.T, what, raw string) {
 }
 
 // F059-1 (listPlatformUsers, createPlatformUser; owner F012) through httpx with the real Principal resolution:
-// platform.user.manage + MFA on /admin/*, Idempotency-Key replay, platform staff only without tenant_ids,
+// platform.user.manage on /admin/* (no MFA, ADR-0094), Idempotency-Key replay, platform staff only without tenant_ids,
 // members of the filtered tenants with tenant_ids (tenant A/B isolation), no secret in the responses.
 func TestPlatformUsers(t *testing.T) {
 	ctx := context.Background()
@@ -64,8 +64,8 @@ func TestPlatformUsers(t *testing.T) {
 	portalUser(ctx, t, e, iss, "gv.pu.b", "academic_manager", &b.tenant, "tenant", nil)
 	studentA := enrolled(ctx, t, e.platform, a, "hs.pu.a")
 	studentB := enrolled(ctx, t, e.platform, b, "hs.pu.b")
-	tok := func(user string, mfa bool) string { return idp.Token("sub-"+user, httpxtest.PortalClient, mfa, now) }
-	sa, saNoMFA, ca, ta := tok("sa.pu", true), tok("sa.pu", false), tok("ca.pu", true), tok("ta.pu", false)
+	tok := func(user string) string { return idp.Token("sub-"+user, httpxtest.PortalClient, now) }
+	sa, ca, ta := tok("sa.pu"), tok("ca.pu"), tok("ta.pu")
 	key := func() map[string]string { return map[string]string{"Idempotency-Key": ids.New().String()} }
 	body := func(username, email string, roles ...string) map[string]any {
 		r := []string{}
@@ -76,15 +76,12 @@ func TestPlatformUsers(t *testing.T) {
 			"reason": "new liveops engineer"}
 	}
 
-	// Authorization: MFA step-up, tenant staff and platform staff without platform.user.manage are refused.
+	// Authorization: tenant staff and platform staff without platform.user.manage are refused; the System Admin
+	// signs in with username + password only (ADR-0094) and reaches /admin/users.
 	authztest.Cover(t, "listPlatformUsers", authztest.RoleDenied)
 	authztest.Cover(t, "createPlatformUser", authztest.RoleDenied)
-	if r := h.do(t, "GET", "/admin/users", saNoMFA, nil, nil); r.status != 403 || !strings.Contains(r.raw, "MFA_REQUIRED") {
-		t.Fatalf("no MFA: %d %s", r.status, r.raw)
-	}
-	if r := h.do(t, "POST", "/admin/users", saNoMFA, key(), body("ops.mfa", "ops.mfa@eduworld.vn", "liveops")); r.status != 403 ||
-		!strings.Contains(r.raw, "MFA_REQUIRED") {
-		t.Fatalf("create without MFA: %d %s", r.status, r.raw)
+	if r := h.do(t, "GET", "/admin/users", sa, nil, nil); r.status != 200 {
+		t.Fatalf("password-only System Admin: %d %s", r.status, r.raw)
 	}
 	for name, tk := range map[string]string{"tenant admin": ta, "content admin": ca} {
 		if r := h.do(t, "GET", "/admin/users", tk, nil, nil); r.status != 403 {
@@ -195,7 +192,7 @@ func TestPlatformUsers(t *testing.T) {
 	}
 }
 
-// F059-2 (getIntegrationOverview): read-only configuration and SIS counts for platform staff with MFA; never a secret.
+// F059-2 (getIntegrationOverview): read-only configuration and SIS counts for platform staff; never a secret.
 func TestIntegrationOverview(t *testing.T) {
 	ctx := context.Background()
 	e := setup(ctx, t)
@@ -212,25 +209,22 @@ func TestIntegrationOverview(t *testing.T) {
 	portalUser(ctx, t, e, iss, "sa.io", "system_admin", nil, "platform", nil)
 	portalUser(ctx, t, e, iss, "ca.io", "content_admin", nil, "platform", nil)
 	portalUser(ctx, t, e, iss, "ta.io", "tenant_admin", &a.tenant, "tenant", nil)
-	tok := func(user string, mfa bool) string { return idp.Token("sub-"+user, httpxtest.PortalClient, mfa, now) }
+	tok := func(user string) string { return idp.Token("sub-"+user, httpxtest.PortalClient, now) }
 
 	authztest.Cover(t, "getIntegrationOverview", authztest.RoleDenied)
-	if r := h.do(t, "GET", "/admin/integrations", tok("sa.io", false), nil, nil); r.status != 403 || !strings.Contains(r.raw, "MFA_REQUIRED") {
-		t.Fatalf("no MFA: %d %s", r.status, r.raw)
-	}
 	for _, u := range []string{"ca.io", "ta.io"} {
-		if r := h.do(t, "GET", "/admin/integrations", tok(u, u != "ta.io"), nil, nil); r.status != 403 {
+		if r := h.do(t, "GET", "/admin/integrations", tok(u), nil, nil); r.status != 403 {
 			t.Errorf("%s: %d %s", u, r.status, r.raw)
 		}
 	}
-	r := h.do(t, "GET", "/admin/integrations", tok("sa.io", true), nil, nil)
+	r := h.do(t, "GET", "/admin/integrations", tok("sa.io"), nil, nil)
 	if r.status != 200 {
 		t.Fatalf("overview: %d %s", r.status, r.raw)
 	}
 	kc := r.body["keycloak"].(map[string]any)
 	sis := r.body["sis"].(map[string]any)
 	byStatus := sis["connections_by_status"].(map[string]any)
-	if kc["realm"] != "eduworld" || kc["platform_mfa_required"] != true || sis["connections_total"] != float64(3) || byStatus["active"] != float64(2) ||
+	if kc["realm"] != "eduworld" || kc["platform_mfa_required"] != nil || sis["connections_total"] != float64(3) || byStatus["active"] != float64(2) ||
 		byStatus["paused"] != float64(1) || r.body["apisix"].(map[string]any)["public_base_url"] != nil {
 		t.Fatalf("overview: %s", r.raw)
 	}
@@ -270,8 +264,8 @@ func TestAuditActionPrefix(t *testing.T) {
 	iss, now := idp.Issuer(), time.Now()
 	portalUser(ctx, t, e, iss, "sa.ap", "system_admin", nil, "platform", nil)
 	portalUser(ctx, t, e, iss, "ta.ap", "tenant_admin", &a.tenant, "tenant", nil)
-	sa := idp.Token("sub-sa.ap", httpxtest.PortalClient, true, now)
-	ta := idp.Token("sub-ta.ap", httpxtest.PortalClient, false, now)
+	sa := idp.Token("sub-sa.ap", httpxtest.PortalClient, now)
+	ta := idp.Token("sub-ta.ap", httpxtest.PortalClient, now)
 	window := "from=" + url.QueryEscape(now.Add(-24*time.Hour).Format(time.RFC3339)) + "&to=" + url.QueryEscape(now.Add(time.Minute).Format(time.RFC3339))
 	prefixes := "&action_prefix=role&action_prefix=user_role"
 	actions := func(r httpResp) string {

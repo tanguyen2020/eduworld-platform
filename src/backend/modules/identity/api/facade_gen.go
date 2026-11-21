@@ -366,7 +366,7 @@ type PrincipalGrantRoleScopeKind string
 
 // PrincipalResolveRequest Định danh bằng `issuer` + `subject` (cách chính) hoặc `user_id` — đúng một trong hai cách (owner F012).
 type PrincipalResolveRequest struct {
-	// ClientId `azp` của token người dùng gốc (`eduworld-game-backend` cho game — ADR-0068, `eduworld-portal` cho portal — ADR-0066) để áp quy tắc ADR-0027/0031/0066 (game chỉ cho học sinh, portal chỉ cho nhân sự, permission platform chỉ với eduworld-portal + MFA)
+	// ClientId `azp` của token người dùng gốc (`eduworld-game-backend` cho game — ADR-0068, `eduworld-portal` cho portal — ADR-0066) để áp quy tắc ADR-0027/0031/0066 (game chỉ cho học sinh, portal chỉ cho nhân sự, permission platform chỉ với eduworld-portal — không MFA, ADR-0094)
 	ClientId *string `json:"client_id,omitempty"`
 
 	// Issuer Claim `iss` của token người dùng gốc (allowlist issuer, F011-AC-12)

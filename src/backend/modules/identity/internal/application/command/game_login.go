@@ -245,7 +245,7 @@ func (h GameAuth) Login(ctx context.Context, in dto.GameLogin) (out dto.GameLogi
 		}
 		return fail(result, err)
 	}
-	tok, err := h.IdP.PasswordGrant(ctx, username, in.Password, nil)
+	tok, err := h.IdP.PasswordGrant(ctx, username, in.Password)
 	clear(in.Password)
 	switch {
 	case errors.Is(err, port.ErrPortalInvalidCredentials), errors.Is(err, port.ErrPortalSetupRequired):

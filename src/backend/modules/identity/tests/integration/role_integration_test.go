@@ -35,7 +35,7 @@ func TestRoles(t *testing.T) {
 		u := staffUser(ctx, t, e, name, tenant)
 		link(u, "kc-"+name)
 		grantRole(ctx, t, e, u, role, tenant, scope, nil, "NULL")
-		return idp.Token("kc-"+name, httpxtest.PortalClient, scope == "platform", now)
+		return idp.Token("kc-"+name, httpxtest.PortalClient, now)
 	}
 	taTok := admin("ta.role", &a.tenant, "tenant_admin", "tenant")
 	tbTok := admin("tb.role", &b.tenant, "tenant_admin", "tenant")
@@ -106,7 +106,7 @@ func TestRoles(t *testing.T) {
 	if r := h.do(t, "POST", "/tenant/user-roles", taTok, key(a.tenant), map[string]any{"user_id": gv.String(), "role_id": custom, "scope_type": "tenant"}); r.status != 201 {
 		t.Fatalf("grant custom role: %d %s", r.status, r.raw)
 	}
-	gvTok := idp.Token("kc-gv.role", httpxtest.PortalClient, false, now)
+	gvTok := idp.Token("kc-gv.role", httpxtest.PortalClient, now)
 	if p := h.do(t, "GET", "/me/permissions", gvTok, hdr(a.tenant, nil), nil); !strings.Contains(p.raw, `"lms.assignment.read"`) {
 		t.Fatalf("custom role permissions: %s", p.raw)
 	}

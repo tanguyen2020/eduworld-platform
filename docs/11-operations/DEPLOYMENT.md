@@ -47,7 +47,7 @@ Image `eduworld/migrate` (Atlas, ADR-0039) chứa thư mục migration của m�
 
 | Thành phần | Image / artifact | Nguồn | Ghi chú |
 |---|---|---|---|
-| Admin Portal (5 workspace) | `eduworld/web-portal` | `src/cms/frontend/apps/portal` (`vite build`) | Static trên CDN public `portal.<domain>`; mã mỗi workspace là chunk lazy-load (không phải lớp bảo mật). API workspace platform (`/api/v1/game-admin/*`, `/api/v1/admin/*`) chỉ trên APISIX nội bộ/VPN, yêu cầu MFA (ADR-0027 mục 3, 7) |
+| Admin Portal (5 workspace) | `eduworld/web-portal` | `src/cms/frontend/apps/portal` (`vite build`) | Static trên CDN public `portal.<domain>`; mã mỗi workspace là chunk lazy-load (không phải lớp bảo mật). API workspace platform (`/api/v1/game-admin/*`, `/api/v1/admin/*`) chỉ trên APISIX nội bộ/VPN, yêu cầu role platform (ADR-0027 mục 3, 7; không MFA — ADR-0094) |
 | Godot client | Artifact | `src/game/` | 4 nền tảng Windows, Android, iOS, Web, phát hành từ pilot (ADR-0013, ADR-0073) |
 | Godot content packs | `.pck` / asset bundle | `src/game/` + CMS | Object storage + CDN, manifest phiên bản |
 | Keycloak | `quay.io/keycloak/keycloak:26.x` + theme/provider | `deploy/keycloak/` | Build optimized image |
@@ -305,7 +305,7 @@ Không có prefix `/internal/v1/*`: module gọi nhau trong tiến trình (ADR-0
 
 ## 6. Keycloak
 
-- Keycloak 26.x, build image optimized với provider/theme: theme `eduworld-ops` chỉ cho trang action-token đăng ký OTP và email Keycloak của nhân sự (Admin Portal đăng nhập bằng form riêng qua module identity, ADR-0091); học sinh không dùng trang Keycloak (đăng nhập form trong game qua `eduworld-game-backend`, ADR-0068).
+- Keycloak 26.x, build image optimized với provider/theme: theme `eduworld-ops` chỉ cho trang action-token `UPDATE_PASSWORD` và email Keycloak của nhân sự (không còn đăng ký OTP — ADR-0094) (Admin Portal đăng nhập bằng form riêng qua module identity, ADR-0091); học sinh không dùng trang Keycloak (đăng nhập form trong game qua `eduworld-game-backend`, ADR-0068).
 - Cluster ≥ 2 node (pilot), **≥ 3 node 4 vCPU / 8 GB cho Release 1.0** (ADR-0045); tăng replica theo lịch học (§4.4); cache phân tán (Infinispan, jgroups qua DNS_PING/JDBC_PING); **persistent user sessions** (phiên lưu DB, scale/restart không làm học sinh bị đăng xuất).
 - Băm mật khẩu: argon2id/pbkdf2 với tham số benchmark ≤ 80 ms/lần trên node thật; rehash on login. JVM heap ~70% RAM; DB pool ≥ 100 kết nối/node.
 - Không build provider authenticator tùy biến cho học sinh (QR lớp, thẻ QR, mật khẩu hình — ADR-0076 Rejected) và không tạo client `svc-keycloak-authn` ([KEYCLOAK_SSO §3.2](../09-identity/KEYCLOAK_SSO.md)); image chỉ gồm theme.

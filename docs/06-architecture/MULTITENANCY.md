@@ -95,7 +95,7 @@ type Principal struct {
     SchoolIDs   []uuid.UUID      // các trường trong tenant mà user có phạm vi (School Admin, Academic Manager); học sinh = [school_id]
     SubjectIDs  []uuid.UUID      // môn được gán qua UserRole scope subject (Academic Manager); rỗng = mọi môn trong phạm vi
     Permissions PermissionSet    // hợp permission của các UserRole hiệu lực trong tenant (ADR-0066)
-    IsSystemAdmin bool           // chế độ liên tenant: role system_admin + token eduworld-portal có MFA
+    IsSystemAdmin bool           // chế độ liên tenant: role system_admin + token eduworld-portal (không MFA — ADR-0094)
     GradeLevel  *int
     SessionID   string
 }
@@ -325,7 +325,7 @@ Tóm tắt: có claim `organization` thì tenant đó phải thuộc membership 
 | Nhân sự (School Admin, Tenant Admin, System Admin…) mở game | Không được vào game: `403 GAME_ACCESS_STUDENT_ONLY` (ADR-0031); tenant không thay đổi điều này | [Confirmed] |
 | Học sinh đăng nhập thiết bị thứ hai | Tenant của phiên mới phải khớp như bình thường; takeover chỉ kết thúc session cũ, không đổi tenant (ADR-0031) | [Confirmed] |
 | Học sinh bị dọn do không đăng nhập (ADR-0032) | Soft-delete + gỡ membership tenant; đăng nhập lại và còn hợp lệ trong SIS của **cùng tenant** → khôi phục; SIS tenant khác → xử lý như chuyển tenant | [Confirmed] |
-| System Admin | Đăng nhập Admin Portal (`eduworld-portal`, MFA bắt buộc với role platform), không chọn tenant, không gắn tenant; dropdown chọn tenant ở mỗi màn hình (ADR-0027 §6); thao tác ghi gửi `X-Tenant-Id` tenant đích; `CrossTenantScope` + audit | [Confirmed] |
+| System Admin | Đăng nhập Admin Portal (`eduworld-portal`, username + mật khẩu, không MFA — ADR-0094), không chọn tenant, không gắn tenant; dropdown chọn tenant ở mỗi màn hình (ADR-0027 §6); thao tác ghi gửi `X-Tenant-Id` tenant đích; `CrossTenantScope` + audit | [Confirmed] |
 | Nhân sự tenant đăng nhập portal | Không chọn tenant (ADR-0067); 1 tenant → vào thẳng; nhiều → hộp chọn sau đăng nhập + bộ chọn trên topbar; không có UserRole portal hiệu lực → `403 PORTAL_ACCESS_STAFF_ONLY` | [Confirmed] |
 | Học sinh mở portal | Bị chặn ở Keycloak (realm role gate) và backend (`403 PORTAL_ACCESS_STAFF_ONLY`) (ADR-0066) | [Confirmed] |
 | Thi đấu/giải liên tenant | Mỗi học sinh vẫn ở phiên tenant mình; match room cross-tenant có kiểm soát | [Confirmed] |
@@ -346,7 +346,7 @@ Tóm tắt: có claim `organization` thì tenant đó phải thuộc membership 
 
 ```mermaid
 flowchart LR
-  SA[System Admin\neduworld-portal + MFA] -->|tạo| PD[(Dữ liệu platform\ntenant_id = NULL)]
+  SA[System Admin\neduworld-portal] -->|tạo| PD[(Dữ liệu platform\ntenant_id = NULL)]
   SA -->|gán| AS[(tenant_resource_assignments)]
   AS --> TA[Tenant A thấy chỉ đọc]
   AS --> TB[Tenant B thấy chỉ đọc]

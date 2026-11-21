@@ -237,14 +237,14 @@ func (e *env) student(tenant, school uuid.UUID) student {
 func (e *env) staff(tenant uuid.UUID, role string) string {
 	sub := "kc-staff-" + uuid.NewString()
 	e.res.Set(sub, authztest.Staff(tenant, role).PrincipalData)
-	return e.idp.Token(sub, httpxtest.PortalClient, true, time.Now())
+	return e.idp.Token(sub, httpxtest.PortalClient, time.Now())
 }
 
 // platformStaff registers a platform staff principal and returns its portal token.
 func (e *env) platformStaff(role string) string {
 	sub := "kc-platform-" + uuid.NewString()
 	e.res.Set(sub, authztest.Platform(role).PrincipalData)
-	return e.idp.Token(sub, httpxtest.PortalClient, true, time.Now())
+	return e.idp.Token(sub, httpxtest.PortalClient, time.Now())
 }
 
 type resp struct {

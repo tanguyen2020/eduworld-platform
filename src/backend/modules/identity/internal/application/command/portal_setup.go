@@ -33,9 +33,9 @@ func passwordPolicy() error {
 }
 
 // SetupPassword implements setupPortalPassword (F012-AC-34, AC-35): the one-time ticket (GETDEL) gives the
-// Keycloak user; the new password is set through the Admin API (realm policy), UPDATE_PASSWORD is removed
-// and, when only configure_otp remains, the CONFIGURE_TOTP email is sent. A policy violation puts the ticket
-// back until its expiry; any other failure consumes it.
+// Keycloak user; the new password is set through the Admin API (realm policy) and UPDATE_PASSWORD is removed
+// (no OTP enrolment since ADR-0094). A policy violation puts the ticket back until its expiry; any other
+// failure consumes it.
 func (h PortalAuth) SetupPassword(ctx context.Context, in dto.PortalSetupPassword) (out dto.PortalSetupResult, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.command.SetupPortalPassword")
 	defer func() { done(err) }()
@@ -86,14 +86,10 @@ func (h PortalAuth) SetupPassword(ctx context.Context, in dto.PortalSetupPasswor
 	if actions, err := h.KC.RequiredActions(ctx, t.KCUserID); err == nil {
 		steps = portalauth.Steps(actions)
 	}
-	sent := false
-	if portalauth.OnlyOTPLeft(steps) {
-		sent = h.sendOTPEmail(ctx, cfg, t.UserID, t.KCUserID)
-	}
 	h.record(ctx, audit.Event{Action: AuditPortalSetupPassword, TargetType: "user", TargetID: t.UserID.String(), Result: audit.ResultSuccess,
-		Metadata: map[string]any{"remaining_steps": len(steps), "otp_setup_email_sent": sent}})
+		Metadata: map[string]any{"remaining_steps": len(steps)}})
 	if steps == nil {
 		steps = []string{}
 	}
-	return dto.PortalSetupResult{RemainingSteps: steps, OTPSetupEmailSent: sent}, nil
+	return dto.PortalSetupResult{RemainingSteps: steps}, nil
 }

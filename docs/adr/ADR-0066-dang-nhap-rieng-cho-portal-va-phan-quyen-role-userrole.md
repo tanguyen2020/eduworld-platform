@@ -1,12 +1,15 @@
 # ADR-0066 — Đăng nhập riêng cho Admin Portal (CMS/LMS) và phân quyền Role / UserRole
 
-> **Trạng thái:** Accepted · một phần superseded by [ADR-0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · một phần superseded by ADR-0072 · **Ngày:** 2026-11-15 · **OQ:** OQ-07 · **Bổ sung:** ADR-0027 · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · một phần superseded by ADR-0072 · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-07 · **Bổ sung:** ADR-0027 · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: role `teacher` và `tenant_moderator` trong danh sách role seed (mục 5); thêm role platform `safety_moderator`. **Còn hiệu lực:** đăng nhập portal riêng, mô hình Permission → Role → UserRole.
 
 > [!WARNING]
 > **Một phần được thay bởi ADR-0091.** Không còn hiệu lực: mục 1 "trang đăng nhập bằng theme Keycloak". **Còn hiệu lực:** đăng nhập riêng cho portal, chặn học sinh hai lớp, mô hình Role/UserRole.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: "MFA bắt buộc với role platform" ở mục 1. **Còn hiệu lực:** màn đăng nhập riêng (theo ADR-0091), học sinh không vào được, mô hình Permission → Role → UserRole.
 
 ## Bối cảnh
 
@@ -39,3 +42,4 @@ Người duyệt yêu cầu: CMS/LMS có **màn hình đăng nhập riêng**; **
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
 | 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |
 | 2026-11-17 | Một phần superseded by ADR-0091 (portal đăng nhập bằng form riêng qua backend) | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

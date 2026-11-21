@@ -41,7 +41,7 @@ tags:
   - name: moderation
     description: Kiểm duyệt tập trung của Platform Safety Team (safety_moderator, ADR-0072 §4) — chỉ gateway nội bộ; thông báo vụ việc cho nhà trường
   - name: game-admin
-    description: INTERNAL — Game Operations Console & cấu hình thi đấu (Admin Portal workspace A), chỉ role platform qua client eduworld-portal + MFA, chỉ gateway nội bộ (ADR-0027)
+    description: INTERNAL — Game Operations Console & cấu hình thi đấu (Admin Portal workspace A), chỉ role platform qua client eduworld-portal, chỉ gateway nội bộ (ADR-0027; không MFA — ADR-0094)
 paths:
   /chat/channels:
     get:
@@ -2269,7 +2269,7 @@ paths:
       x-portal-action: action.platform_admin.moderation_switches.toggle
       summary: Bật/tắt công tắc kiểm duyệt (tổng hoặc từng bước) cho platform hoặc một tenant
       description: |
-        Chỉ System Admin (`chat.policy.toggle`, MFA). Body là cấu hình đầy đủ của cấp `scope` (`scope = tenant`: `tenant_id`
+        Chỉ System Admin (`chat.policy.toggle`). Body là cấu hình đầy đủ của cấp `scope` (`scope = tenant`: `tenant_id`
         bắt buộc; nếu có `X-Tenant-Id` thì phải trùng). `reason` ≥ 10 ký tự cho mọi thay đổi (thiếu/ngắn →
         `422 MODERATION_SWITCH_REASON_REQUIRED`). `pii` và grooming luôn chạy, không có công tắc (ADR-0078): gửi
         `steps.pii = false` hoặc `steps.grooming = false` → `422 MODERATION_SWITCH_STEP_NOT_ALLOWED`.
@@ -2326,7 +2326,7 @@ paths:
       x-portal-action: action.platform_admin.moderation_switches.toggle
       summary: Phê duyệt yêu cầu tắt công tắc kiểm duyệt (System Admin thứ hai)
       description: |
-        Chỉ System Admin (`chat.policy.toggle`, MFA) **khác** người đề xuất (`moderation_switch_approvals` = 2, ADR-0078); người
+        Chỉ System Admin (`chat.policy.toggle`) **khác** người đề xuất (`moderation_switch_approvals` = 2, ADR-0078); người
         đề xuất tự duyệt → `403 MODERATION_SWITCH_SELF_APPROVAL`. Yêu cầu của tenant: gửi `X-Tenant-Id` = tenant của yêu cầu
         (không có → chỉ tìm yêu cầu platform); không thấy → `404`. Yêu cầu không còn `pending_approval` hoặc đã quá
         `request_expires_at` → `409 CONFLICT`. Áp giá trị yêu cầu (lý do, `expires_at`), ghi `moderation_switch_changes`
@@ -2626,7 +2626,7 @@ paths:
       x-portal-action: action.live_ops.moderation_cases.view
       summary: Hàng đợi kiểm duyệt liên tenant của Platform Safety Team (safety_moderator · moderation.case.read; Bypass moderation_case có audit)
       description: |
-        Chỉ gateway nội bộ, `azp = eduworld-portal` + MFA + role platform (ADR-0027, ADR-0072 §4). Không gửi `X-Tenant-Id`; lọc `tenant_ids`.
+        Chỉ gateway nội bộ, `azp = eduworld-portal` + role platform (ADR-0027, ADR-0072 §4; không MFA — ADR-0094). Không gửi `X-Tenant-Id`; lọc `tenant_ids`.
         Đọc liên tenant chỉ trong module moderation qua `tenancy.Bypass(ctx, "moderation_case")` (audit + metric).
       parameters:
         - $ref: '#/components/parameters/TenantIds'
@@ -4239,7 +4239,6 @@ components:
         - UNAUTHENTICATED
         - TOKEN_EXPIRED
         - PERMISSION_DENIED
-        - MFA_REQUIRED
         - CALLER_NOT_ALLOWED
         - POLICY_DENIED
         - NOT_FOUND
@@ -6866,7 +6865,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        Access token Keycloak của Admin Portal (claim `azp = eduworld-portal`, phát qua `POST /auth/portal/login` — ADR-0091) có MFA (`acr` mức MFA, `amr` chứa `otp`; thiếu hoặc `auth_time` quá 8 giờ → 403 MFA_REQUIRED),
+        Access token Keycloak của Admin Portal (claim `azp = eduworld-portal`, phát qua `POST /auth/portal/login` — ADR-0091); không yêu cầu MFA (ADR-0094).
         Principal phải có role platform với permission tương ứng (`game.*`, `competition.config.*`, `platform.*`).
         Chỉ dùng trên gateway nội bộ (ADR-0027).
     keycloakOidc:

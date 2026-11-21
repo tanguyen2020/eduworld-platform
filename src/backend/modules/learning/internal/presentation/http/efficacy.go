@@ -53,7 +53,7 @@ const (
 )
 
 func init() {
-	// /admin/: internal gateway, platform role with MFA (httpx GuardPlatformMFA, ADR-0027); platform.efficacy_study.manage in
+	// /admin/: internal gateway, platform role (httpx GuardPlatformRole, ADR-0027; no MFA, ADR-0094); platform.efficacy_study.manage in
 	// the use cases. Writes into a tenant take X-Tenant-Id (TenantRequired); platform writes and lists take none.
 	for id, o := range map[string]httpx.Operation{
 		"listResearchAgreements":   op("listResearchAgreements", http.MethodGet, agreementsPath, httpx.TenantNone, httpx.IdempotencyNone, 200),

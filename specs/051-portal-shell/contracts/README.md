@@ -17,9 +17,9 @@ Nguồn contract: [`specs/openapi/eduworld-api.v1.yaml`](../../openapi/eduworld-
 | `logout` | `POST /api/v1/auth/logout` | như trên | đã đăng nhập | Không dùng cho portal (thay bằng `portalLogout` — ADR-0091) |
 | `listTenants` | `GET /api/v1/admin/tenants` (gateway nội bộ) | như trên | `platform.cross_tenant.read` | Có sẵn |
 | `createAuthSession` | `POST /api/v1/auth/session` | như trên | — | Không dùng (trả `PlayerBootstrap` của game) |
-| OIDC | `/realms/{realm}/protocol/openid-connect/*` | Keycloak | — | **Không dùng** từ trình duyệt (ADR-0091); chỉ trang action-token đăng ký OTP mở từ email |
+| OIDC | `/realms/{realm}/protocol/openid-connect/*` | Keycloak | — | **Không dùng** từ trình duyệt (ADR-0091); chỉ trang action-token `UPDATE_PASSWORD` mở từ email (đăng ký OTP bỏ — ADR-0094) |
 
-Mã lỗi Problem Details shell xử lý (enum `ProblemCode`, có sẵn): `UNAUTHENTICATED`, `TOKEN_EXPIRED`, `PORTAL_ACCESS_STAFF_ONLY`, `MFA_REQUIRED`, `PERMISSION_DENIED`, `TENANT_HEADER_REQUIRED`, `TENANT_MISMATCH`, `TENANT_NOT_SELECTED`, `TENANT_ACCESS_DISABLED`, `ACCOUNT_NOT_PROVISIONED`, `ACCOUNT_LOCKED`, `ACCOUNT_DEACTIVATED`, `RATE_LIMITED`, `UNAVAILABLE`, `MAINTENANCE`; thêm theo ADR-0090/0091: `INVALID_CREDENTIALS`, `ACCOUNT_SETUP_REQUIRED`, `SETUP_TICKET_INVALID`, `PASSWORD_RESET_TOKEN_INVALID`, `CSRF_TOKEN_INVALID`, `REFRESH_TOKEN_INVALID`, `FEATURE_DISABLED`.
+Mã lỗi Problem Details shell xử lý (enum `ProblemCode`, có sẵn): `UNAUTHENTICATED`, `TOKEN_EXPIRED`, `PORTAL_ACCESS_STAFF_ONLY`, `PERMISSION_DENIED`, `TENANT_HEADER_REQUIRED`, `TENANT_MISMATCH`, `TENANT_NOT_SELECTED`, `TENANT_ACCESS_DISABLED`, `ACCOUNT_NOT_PROVISIONED`, `ACCOUNT_LOCKED`, `ACCOUNT_DEACTIVATED`, `RATE_LIMITED`, `UNAVAILABLE`, `MAINTENANCE`; thêm theo ADR-0090/0091: `INVALID_CREDENTIALS`, `ACCOUNT_SETUP_REQUIRED`, `SETUP_TICKET_INVALID`, `PASSWORD_RESET_TOKEN_INVALID`, `CSRF_TOKEN_INVALID`, `REFRESH_TOKEN_INVALID`, `FEATURE_DISABLED`.
 
 ## 2. Internal API
 

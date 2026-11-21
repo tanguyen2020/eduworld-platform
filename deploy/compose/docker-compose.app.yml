@@ -36,7 +36,6 @@ x-module-env: &module-env
   EW_OIDC_ISSUERS: http://keycloak:8180/realms/eduworld
   EW_OIDC_AUDIENCE: eduworld-api
   EW_OIDC_ALLOWED_AZP: eduworld-game-backend,eduworld-portal
-  EW_OIDC_PLATFORM_REQUIRED_AMR: otp
   EW_KC_ADMIN_BASE_URL: http://keycloak:8180/admin/realms/eduworld
   EW_KC_ADMIN_CLIENT_ID: svc-identity
   EW_KC_ADMIN_CLIENT_SECRET: ${KC_SVC_IDENTITY_SECRET:-change-me-local}

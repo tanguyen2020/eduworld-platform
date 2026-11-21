@@ -65,7 +65,7 @@ type (
 		Change(ctx context.Context, route, action string, userID uuid.UUID, reason string) error
 	}
 	// PrincipalOf resolves the Principal of a user (in a tenant, or platform when tenantID is nil) through the
-	// resolvePrincipal read model, as the portal session of that user would get it (portal client, MFA).
+	// resolvePrincipal read model, as the portal session of that user would get it (portal client).
 	PrincipalOf func(ctx context.Context, userID uuid.UUID, tenantID *uuid.UUID) (authz.Principal, error)
 )
 

@@ -236,7 +236,7 @@ export interface paths {
         get: operations["listModerationSwitches"];
         /**
          * Bật/tắt công tắc kiểm duyệt (tổng hoặc từng bước) cho platform hoặc một tenant
-         * @description Chỉ System Admin (`chat.policy.toggle`, MFA). Body là cấu hình đầy đủ của cấp `scope` (`scope = tenant`: `tenant_id`
+         * @description Chỉ System Admin (`chat.policy.toggle`). Body là cấu hình đầy đủ của cấp `scope` (`scope = tenant`: `tenant_id`
          *     bắt buộc; nếu có `X-Tenant-Id` thì phải trùng). `reason` ≥ 10 ký tự cho mọi thay đổi (thiếu/ngắn →
          *     `422 MODERATION_SWITCH_REASON_REQUIRED`). `pii` và grooming luôn chạy, không có công tắc (ADR-0078): gửi
          *     `steps.pii = false` hoặc `steps.grooming = false` → `422 MODERATION_SWITCH_STEP_NOT_ALLOWED`.
@@ -284,7 +284,7 @@ export interface paths {
         put?: never;
         /**
          * Phê duyệt yêu cầu tắt công tắc kiểm duyệt (System Admin thứ hai)
-         * @description Chỉ System Admin (`chat.policy.toggle`, MFA) **khác** người đề xuất (`moderation_switch_approvals` = 2, ADR-0078); người
+         * @description Chỉ System Admin (`chat.policy.toggle`) **khác** người đề xuất (`moderation_switch_approvals` = 2, ADR-0078); người
          *     đề xuất tự duyệt → `403 MODERATION_SWITCH_SELF_APPROVAL`. Yêu cầu của tenant: gửi `X-Tenant-Id` = tenant của yêu cầu
          *     (không có → chỉ tìm yêu cầu platform); không thấy → `404`. Yêu cầu không còn `pending_approval` hoặc đã quá
          *     `request_expires_at` → `409 CONFLICT`. Áp giá trị yêu cầu (lý do, `expires_at`), ghi `moderation_switch_changes`
@@ -549,7 +549,7 @@ export interface paths {
         put?: never;
         /**
          * System Admin tạo học sinh tenant chung (một hoặc lô ≤ common_student_batch_max) — mật khẩu ban đầu trả một lần
-         * @description Quyền `platform.user.manage` (token `eduworld-portal` + MFA, gateway nội bộ). Header `X-Tenant-Id` = tenant `common` (tenant khác → `422`).
+         * @description Quyền `platform.user.manage` (token `eduworld-portal`, gateway nội bộ). Header `X-Tenant-Id` = tenant `common` (tenant khác → `422`).
          *     Không có tự đăng ký (F010-AC-26). Quy tắc nguồn: ACCOUNT_PROVISIONING §3.4.
          *
          *     - Mỗi dòng xử lý **độc lập** (thành công một phần): `200` kèm `results[]` theo `row_no` và số đếm. Dòng trùng `username` với tài khoản khác
@@ -646,7 +646,7 @@ export interface paths {
         };
         /**
          * Danh sách feature flag và cờ bật/tắt menu/action của portal (mặc định platform + ghi đè theo tenant) — F015, ADR-0090
-         * @description Chỉ System Admin (`platform.feature_flag.write`, gateway nội bộ, MFA). `flag_kind` lọc theo loại (`feature` — tính năng game/portal
+         * @description Chỉ System Admin (`platform.feature_flag.write`, gateway nội bộ). `flag_kind` lọc theo loại (`feature` — tính năng game/portal
          *     trả trong bootstrap; `menu`/`action` — mục trong danh mục `specs/portal/menu-catalog.yaml`). `tenant_id` có giá trị → mỗi dòng có thêm
          *     `tenant_override` và `effective_enabled` của tenant đó; vắng mặt → `effective_enabled` theo mặc định platform. Không có dòng flag nghĩa là **bật**.
          */
@@ -669,7 +669,7 @@ export interface paths {
         get?: never;
         /**
          * Đặt mặc định platform hoặc ghi đè cho một tenant đích của feature flag / menu / action (chỉ System Admin) — F015, ADR-0090
-         * @description Chỉ System Admin (`platform.feature_flag.write`, gateway nội bộ, MFA, `azp = eduworld-portal`). Bắt buộc `reason` và `If-Match`
+         * @description Chỉ System Admin (`platform.feature_flag.write`, gateway nội bộ, `azp = eduworld-portal`). Bắt buộc `reason` và `If-Match`
          *     (ETag của flag; flag chưa có dòng dùng `If-Match: "0"`).
          *
          *     - `scope = platform`: đặt `default_enabled` (`state` = `enabled`/`disabled`); **không** gửi `X-Tenant-Id`.
@@ -701,7 +701,7 @@ export interface paths {
         };
         /**
          * Tổng quan tích hợp chỉ đọc — Keycloak, gateway APISIX, SIS (platform.sis_connection.manage hoặc platform.tenant.manage)
-         * @description Giá trị lấy từ cấu hình server (Keycloak: issuer, realm, client id + mục đích, MFA bắt buộc với route platform; APISIX:
+         * @description Giá trị lấy từ cấu hình server (Keycloak: issuer, realm, client id + mục đích, tuổi tối đa của phiên nhân sự platform; APISIX:
          *     URL gateway public/nội bộ khi được cấu hình) và số kết nối SIS theo trạng thái (mọi tenant, chỉ đếm). Không bao giờ
          *     chứa secret, credential, token hay tham chiếu secret (AGENTS R3, R4; F059-AC-23). Không có thao tác ghi.
          */
@@ -1036,7 +1036,7 @@ export interface paths {
         };
         /**
          * Hàng đợi kiểm duyệt liên tenant của Platform Safety Team (safety_moderator · moderation.case.read; Bypass moderation_case có audit)
-         * @description Chỉ gateway nội bộ, `azp = eduworld-portal` + MFA + role platform (ADR-0027, ADR-0072 §4). Không gửi `X-Tenant-Id`; lọc `tenant_ids`.
+         * @description Chỉ gateway nội bộ, `azp = eduworld-portal` + role platform (ADR-0027, ADR-0072 §4; không MFA — ADR-0094). Không gửi `X-Tenant-Id`; lọc `tenant_ids`.
          *     Đọc liên tenant chỉ trong module moderation qua `tenancy.Bypass(ctx, "moderation_case")` (audit + metric).
          */
         get: operations["listModerationCases"];
@@ -1194,7 +1194,7 @@ export interface paths {
         };
         /**
          * Cây danh mục workspace → menu → action của Admin Portal kèm trạng thái bật/tắt (màn "Bật/tắt menu & action") — ADR-0090
-         * @description Chỉ System Admin (`platform.feature_flag.write`, gateway nội bộ, MFA). Đọc `platform.portal_menu_catalog` (đồng bộ từ
+         * @description Chỉ System Admin (`platform.feature_flag.write`, gateway nội bộ). Đọc `platform.portal_menu_catalog` (đồng bộ từ
          *     `specs/portal/menu-catalog.yaml` bởi `cmd/migrate`, có `catalog_version`) ghép với `platform.feature_flags`: mỗi menu/action có
          *     `can_disable`, `default_enabled`, `tenant_override` (khi có `tenant_id`) và `effective_enabled` (action = action AND menu cha).
          *     Danh mục không sửa được qua API (thêm menu/action cần code và deploy).
@@ -1369,7 +1369,7 @@ export interface paths {
         get: operations["getPlatformCurfewSettings"];
         /**
          * Cập nhật giờ giới nghiêm platform (bắt buộc reason, audit, phát platform_settings.changed)
-         * @description Chỉ `platform.settings.write` (System Admin, MFA, gateway nội bộ); role tenant → `403 PERMISSION_DENIED` (F015-AC-21). Khung trường đã lưu không bị sửa; giới nghiêm hiệu lực của học sinh luôn là hợp `platform_curfew` và khung trường (F015-AC-22).
+         * @description Chỉ `platform.settings.write` (System Admin, gateway nội bộ); role tenant → `403 PERMISSION_DENIED` (F015-AC-21). Khung trường đã lưu không bị sửa; giới nghiêm hiệu lực của học sinh luôn là hợp `platform_curfew` và khung trường (F015-AC-22).
          */
         put: operations["putPlatformCurfewSettings"];
         post?: never;
@@ -1460,7 +1460,7 @@ export interface paths {
         put?: never;
         /**
          * Hủy lần dọn đang chờ xác nhận (vượt ngưỡng)
-         * @description Quyền `platform.student_cleanup.approve` (System Admin, gateway nội bộ + MFA). Chỉ lần dọn `awaiting_approval` → `cancelled`
+         * @description Quyền `platform.student_cleanup.approve` (System Admin, gateway nội bộ). Chỉ lần dọn `awaiting_approval` → `cancelled`
          *     (khác → `409 CONFLICT`); không học sinh nào bị dọn, audit `student_cleanup.cancelled` kèm lý do. Lần chạy job sau tạo lần dọn mới
          *     theo cấu hình hiện hành (F016, OQ F057-2).
          */
@@ -1539,7 +1539,7 @@ export interface paths {
         put?: never;
         /**
          * Tạo tenant (school/unit/common) — worker tạo Keycloak Organization, phát tenant.created
-         * @description Quyền `platform.tenant.manage` (token `eduworld-portal` + MFA, gateway nội bộ; người dùng tenant → `403 PERMISSION_DENIED` — F010-AC-04).
+         * @description Quyền `platform.tenant.manage` (token `eduworld-portal`, gateway nội bộ; người dùng tenant → `403 PERMISSION_DENIED` — F010-AC-04).
          *     Tenant là dữ liệu platform: không gửi `X-Tenant-Id`. `keycloak_org_alias` duy nhất, khớp `^[a-z0-9-]{3,63}$` (sai mẫu → `422`);
          *     tạo tenant `common` thứ hai hoặc trùng `code`/alias → `409 CONFLICT` (F010-AC-02). Ghi audit `tenant.created`, phát `tenant.created` qua outbox;
          *     worker tạo đúng một Keycloak Organization có attribute `tenant_id`, `tenant_type` (F010-AC-01, KEYCLOAK_SSO §2.1).
@@ -1566,7 +1566,7 @@ export interface paths {
         head?: never;
         /**
          * Sửa tenant (tên) hoặc bật/tắt tenant (JSON Merge Patch, If-Match, reason)
-         * @description Quyền `platform.tenant.manage` (gateway nội bộ + MFA). `tenant_type`, `code`, `keycloak_org_alias` không đổi được.
+         * @description Quyền `platform.tenant.manage` (gateway nội bộ). `tenant_type`, `code`, `keycloak_org_alias` không đổi được.
          *     `status = disabled` → worker đặt Organization `enabled=false`, mọi thành viên nhận `403 TENANT_ACCESS_DISABLED` ở lần resolve kế tiếp (F010-AC-03).
          *     Ghi audit `tenant.updated`, phát `tenant.updated` (F010-AC-05). Không gửi `X-Tenant-Id` (tenant đích là `tenant_id` trên path).
          */
@@ -1582,13 +1582,13 @@ export interface paths {
         };
         /**
          * Danh sách trường thuộc một tenant (System Admin)
-         * @description Quyền `platform.tenant.manage` (gateway nội bộ + MFA). Đọc liên tenant: không gửi `X-Tenant-Id`, ghi audit `cross_tenant.accessed` (F010-AC-10).
+         * @description Quyền `platform.tenant.manage` (gateway nội bộ). Đọc liên tenant: không gửi `X-Tenant-Id`, ghi audit `cross_tenant.accessed` (F010-AC-10).
          */
         get: operations["listAdminTenantSchools"];
         put?: never;
         /**
          * Tạo trường trong tenant đích (System Admin)
-         * @description Quyền `platform.tenant.manage` (gateway nội bộ + MFA). Ghi dữ liệu tenant: header `X-Tenant-Id` = tenant đích, phải trùng `tenant_id` trên path (khác → `422`).
+         * @description Quyền `platform.tenant.manage` (gateway nội bộ). Ghi dữ liệu tenant: header `X-Tenant-Id` = tenant đích, phải trùng `tenant_id` trên path (khác → `422`).
          *     Tenant `school` đã có trường → `422 VALIDATION_FAILED` (tenant `school` có đúng một trường); tỉnh/thành `inactive` → `422` (F010-AC-07);
          *     `code`/`moet_code` trùng → `409 CONFLICT`. Ghi audit, phát `school.updated`.
          */
@@ -1614,7 +1614,7 @@ export interface paths {
         head?: never;
         /**
          * Sửa hoặc kích hoạt/tắt trường thuộc tenant đích (JSON Merge Patch, If-Match, reason)
-         * @description Quyền `platform.tenant.manage` (gateway nội bộ + MFA). Header `X-Tenant-Id` = tenant đích, trùng `tenant_id` trên path. Trường thuộc tenant khác → `404`.
+         * @description Quyền `platform.tenant.manage` (gateway nội bộ). Header `X-Tenant-Id` = tenant đích, trùng `tenant_id` trên path. Trường thuộc tenant khác → `404`.
          *     Tỉnh/thành `inactive` → `422` (F010-AC-07). Ghi audit, phát `school.updated`.
          */
         patch: operations["updateAdminTenantSchool"];
@@ -1719,7 +1719,7 @@ export interface paths {
         /**
          * Tài khoản người dùng cho System Admin (platform.user.manage) — không gửi X-Tenant-Id
          * @description Không có `tenant_ids` → chỉ nhân sự platform (`primary_tenant_id = null`); có `tenant_ids` (CrossTenantScope,
-         *     cần thêm `platform.cross_tenant.read` + MFA, audit `cross_tenant.accessed`) → người có membership trong các tenant đó
+         *     cần thêm `platform.cross_tenant.read`, audit `cross_tenant.accessed`) → người có membership trong các tenant đó
          *     (học sinh + nhân sự trường). Không có truy vấn "mọi người dùng mọi tenant" (AGENTS R8). `tenant_ids[]` của từng
          *     `User` chỉ gồm các tenant trong phạm vi truy vấn; `user_roles` để trống (xem `listAllUserRoles?user_id=`).
          *     Không trả mật khẩu, token, IP (F059-AC-14).
@@ -1728,7 +1728,7 @@ export interface paths {
         put?: never;
         /**
          * Tạo tài khoản nhân sự platform (platform.user.manage + platform.user_role.write) — primary_tenant_id = null (ADR-0081)
-         * @description Tạo user Keycloak (realm role `platform_staff` → OTP bắt buộc, email đặt mật khẩu `UPDATE_PASSWORD`), tài khoản
+         * @description Tạo user Keycloak (realm role `platform_staff`, đăng nhập chỉ bằng mật khẩu — ADR-0094; email đặt mật khẩu `UPDATE_PASSWORD`), tài khoản
          *     `staff` không có tenant gốc và các UserRole platform ban đầu (`scope_type = platform`) trong một use case; lỗi DB vô
          *     hiệu hóa user Keycloak vừa tạo. Role không phải `platform` hoặc `safety_moderator` (cần `training_completed_at`, gán
          *     sau bằng `grantPlatformUserRole`) → `422`. Username/email đã thuộc tài khoản khác → `409 USERNAME_TAKEN` /
@@ -1993,30 +1993,28 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Đăng nhập Admin Portal bằng form của portal (mật khẩu + mã OTP trong một request) qua backend — ADR-0091
+         * Đăng nhập Admin Portal bằng form của portal (username + mật khẩu) qua backend — ADR-0091, ADR-0094
          * @description Public, **không** cần token và `X-Tenant-Id`; chỉ HTTPS; APISIX phục vụ dưới origin của portal (`https://portal.<domain>/api/v1/...`)
          *     để cookie là first-party [Proposed]. module identity gọi token endpoint Keycloak (Direct Access Grant) bằng client **confidential**
          *     `eduworld-portal` (secret chỉ ở module identity), flow `eduworld-portal-direct-grant`: username → mật khẩu → chỉ realm role
-         *     `tenant_staff`/`platform_staff` → OTP có điều kiện (bắt buộc với `platform_staff`). Gửi `otp` khi người dùng nhập mã; không có
-         *     bước hỏi trước tài khoản có cần OTP.
+         *     `tenant_staff`/`platform_staff`. Không có xác thực hai lớp với bất kỳ tài khoản nào, kể cả role platform (ADR-0094).
          *
          *     Kết quả:
          *     - **200:** access token trong body (portal chỉ giữ trong bộ nhớ); refresh token trong cookie `__Secure-ew_portal_rt`
          *       (`HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/portal`); cookie CSRF `__Host-ew_portal_csrf` (đọc được bằng JavaScript,
-         *       `Secure; SameSite=Strict; Path=/`) dùng cho header `X-EW-CSRF` (double-submit). Token có `azp = eduworld-portal`;
-         *       khi bước OTP chạy, `amr` chứa `otp` và `acr` ở mức MFA.
-         *     - **401 INVALID_CREDENTIALS** — một thông điệp chung "Tên đăng nhập, mật khẩu hoặc mã xác thực chưa đúng" cho: sai/không tồn tại
-         *       username, sai mật khẩu, sai/thiếu OTP (kể cả `platform_staff` không gửi `otp`), tài khoản bị khóa tạm do brute-force hoặc bị tắt ở Keycloak.
+         *       `Secure; SameSite=Strict; Path=/`) dùng cho header `X-EW-CSRF` (double-submit). Token có `azp = eduworld-portal`.
+         *     - **401 INVALID_CREDENTIALS** — một thông điệp chung "Tên đăng nhập hoặc mật khẩu chưa đúng" cho: sai/không tồn tại
+         *       username, sai mật khẩu, tài khoản bị khóa tạm do brute-force hoặc bị tắt ở Keycloak.
          *     - **403 ACCOUNT_SETUP_REQUIRED** — mật khẩu đúng nhưng tài khoản còn required action: body có `setup_ticket` (dùng một lần,
-         *       `portal_setup_ticket_ttl`, gắn `user_id`, lưu Valkey, không chứa mật khẩu) và `required_steps[]`. Còn `configure_otp` (không còn
-         *       `update_password`) → module identity gửi email `execute-actions-email` `CONFIGURE_TOTP` (trang action-token Keycloak, ngoại lệ duy nhất)
-         *       và trả `otp_setup_email_sent = true`.
+         *       `portal_setup_ticket_ttl`, gắn `user_id`, lưu Valkey, không chứa mật khẩu) và `required_steps[]` (chỉ `update_password`).
+         *       Required action `CONFIGURE_TOTP` còn sót từ trước ADR-0094 được module identity gỡ qua Admin API (audit
+         *       `auth.portal_legacy_otp_action_removed`) rồi thử lại một lần bằng cùng mật khẩu, nên không ai bị chặn vì OTP.
          *     - **403 PORTAL_ACCESS_STAFF_ONLY** — tài khoản học sinh (flow Keycloak từ chối sau bước mật khẩu) hoặc không còn UserRole portal
          *       hiệu lực và không có role platform; **403 ACCOUNT_DEACTIVATED** — `User` trong EduWorld bị vô hiệu hóa.
          *
-         *     Body **không bao giờ log** (APISIX, module identity, tracing); mật khẩu/OTP xóa khỏi bộ nhớ sau khi gọi Keycloak (best effort).
+         *     Body **không bao giờ log** (APISIX, module identity, tracing); mật khẩu xóa khỏi bộ nhớ sau khi gọi Keycloak (best effort).
          *     Rate limit `portal_login_rate` theo username, theo `device_id` và toàn cục — **không** theo một IP (R30). Ghi audit đăng nhập
-         *     thành công/thất bại (không ghi mật khẩu/OTP). Không dùng `Idempotency-Key` (không lưu token vào kho idempotency).
+         *     thành công/thất bại (không ghi mật khẩu). Không dùng `Idempotency-Key` (không lưu token vào kho idempotency).
          */
         post: operations["portalLogin"];
         delete?: never;
@@ -2086,7 +2084,7 @@ export interface paths {
          * @description Public. Token so khớp theo SHA-256, dùng một lần (đánh dấu `used_at` nguyên tử), hết hạn theo `portal_password_reset_ttl`;
          *     sai/hết hạn/đã dùng → `401 PASSWORD_RESET_TOKEN_INVALID`. module identity đặt mật khẩu qua Keycloak Admin API (password policy
          *     của realm; không đạt → `422 VALIDATION_FAILED`, `errors[].code = PASSWORD_POLICY_VIOLATION`, token **không** bị tiêu thụ), gỡ
-         *     `UPDATE_PASSWORD` nếu có và **thu hồi mọi phiên portal** của người dùng; người dùng đăng nhập lại (OTP vẫn bắt buộc theo role).
+         *     `UPDATE_PASSWORD` nếu có và **thu hồi mọi phiên portal** của người dùng; người dùng đăng nhập lại bằng mật khẩu mới.
          *     Body không bao giờ log; audit `portal.password_reset`. Không dùng `Idempotency-Key`: token dùng một lần.
          */
         post: operations["resetPortalPassword"];
@@ -2110,9 +2108,8 @@ export interface paths {
          * @description Public, không cần token. `setup_ticket` lấy từ `403 ACCOUNT_SETUP_REQUIRED` của `portalLogin`: dùng một lần,
          *     hết hạn theo `portal_setup_ticket_ttl`; hết hạn/đã dùng/không tồn tại → `401 SETUP_TICKET_INVALID` (portal về `/login`).
          *     module identity đặt mật khẩu mới qua Keycloak Admin API (client `svc-identity`, áp password policy của realm; không đạt →
-         *     `422 VALIDATION_FAILED` với `errors[].code = PASSWORD_POLICY_VIOLATION`) và gỡ required action `UPDATE_PASSWORD`. Nếu còn
-         *     `configure_otp` → gửi email `execute-actions-email` `CONFIGURE_TOTP` và trả `otp_setup_email_sent = true`. Người dùng đăng nhập
-         *     lại bằng mật khẩu mới (không phát token ở đây). Body không bao giờ log; audit `portal.password_setup`. Không dùng
+         *     `422 VALIDATION_FAILED` với `errors[].code = PASSWORD_POLICY_VIOLATION`) và gỡ required action `UPDATE_PASSWORD`
+         *     (không có bước đăng ký OTP — ADR-0094). Người dùng đăng nhập lại bằng mật khẩu mới (không phát token ở đây). Body không bao giờ log; audit `portal.password_setup`. Không dùng
          *     `Idempotency-Key`: ticket dùng một lần đã chặn thực hiện lặp.
          */
         post: operations["setupPortalPassword"];
@@ -2230,7 +2227,7 @@ export interface paths {
         /**
          * Danh mục trường (người dùng tenant thấy trường trong tenant; System Admin lọc theo tenant_ids)
          * @description Người dùng tenant: luôn khóa vào tenant của phiên (`X-Tenant-Id` bắt buộc, `tenant_ids` bị bỏ qua).
-         *     System Admin: không gửi `X-Tenant-Id` thì **bắt buộc** `tenant_ids` (`platform.cross_tenant.read` + MFA, CrossTenantScope,
+         *     System Admin: không gửi `X-Tenant-Id` thì **bắt buộc** `tenant_ids` (`platform.cross_tenant.read`, CrossTenantScope,
          *     audit `cross_tenant.accessed`); không có `tenant_ids` → `403 PERMISSION_DENIED` (không liệt kê trường của mọi tenant).
          *     Gửi `X-Tenant-Id` = tenant đích thì đọc đúng tenant đó (OQ F057-4).
          */
@@ -12313,10 +12310,8 @@ export interface components {
                  * @description Issuer OIDC của realm (phần tử đầu EW_OIDC_ISSUERS)
                  */
                 issuer_url: string;
-                /** @description Tuổi tối đa của lần xác thực cho route platform (EW_OIDC_PLATFORM_MAX_AUTH_AGE) */
+                /** @description Tuổi tối đa của phiên portal nhân sự platform tính từ lúc nhập mật khẩu (EW_OIDC_PLATFORM_MAX_AUTH_AGE, ADR-0094 §2) */
                 platform_auth_max_age_seconds: number;
-                /** @description Luôn true: /admin/*, /game-admin/* yêu cầu MFA + role platform (ADR-0027) */
-                platform_mfa_required: boolean;
                 realm: string;
             };
             sis: {
@@ -13841,19 +13836,15 @@ export interface components {
             locale?: components["schemas"]["Locale"];
         };
         PortalLoginProblem: components["schemas"]["Problem"] & {
-            /** @description true khi module identity đã gửi email đăng ký ứng dụng xác thực (trang action-token Keycloak) */
-            otp_setup_email_sent?: boolean;
             required_steps?: components["schemas"]["PortalSetupStep"][];
             /** @description Chỉ có khi `code = ACCOUNT_SETUP_REQUIRED`: dùng một lần, hết hạn theo `portal_setup_ticket_ttl` */
             setup_ticket?: string;
         };
-        /** @description Body của `POST /auth/portal/login`. **Không bao giờ log** (APISIX, module identity, tracing); mật khẩu và OTP chỉ chuyển tiếp tới Keycloak. */
+        /** @description Body của `POST /auth/portal/login`. **Không bao giờ log** (APISIX, module identity, tracing); mật khẩu chỉ chuyển tiếp tới Keycloak. Không có trường mã OTP (ADR-0094). */
         PortalLoginRequest: {
             /** @description UUID trình duyệt do portal sinh và lưu (không phải bí mật) */
             device_id: components["schemas"]["Uuid"];
             locale?: components["schemas"]["Locale"];
-            /** @description Mã TOTP 6 số; bắt buộc với tài khoản vận hành platform (thiếu/sai → cùng `401 INVALID_CREDENTIALS`) */
-            otp?: string;
             /** Format: password */
             password: string;
             /** @description Username hoặc email; không phân biệt hoa thường sau chuẩn hóa trim/NFC (ADR-0069) */
@@ -13881,25 +13872,23 @@ export interface components {
             setup_ticket: string;
         };
         PortalSetupResult: {
-            otp_setup_email_sent: boolean;
             remaining_steps: components["schemas"]["PortalSetupStep"][];
         };
         /**
-         * @description Bước thiết lập còn thiếu (required action Keycloak `UPDATE_PASSWORD` / `CONFIGURE_TOTP`)
+         * @description Bước thiết lập còn thiếu (required action Keycloak `UPDATE_PASSWORD`); không có bước OTP (ADR-0094)
          * @enum {string}
          */
-        PortalSetupStep: "update_password" | "configure_otp";
+        PortalSetupStep: "update_password";
         /**
          * @description Access token Keycloak của Admin Portal (`azp = eduworld-portal`). Portal **chỉ giữ trong bộ nhớ** (không localStorage/sessionStorage);
          *     refresh token không bao giờ nằm trong body — chỉ trong cookie HttpOnly.
          */
         PortalTokenResponse: {
             access_token: string;
+            /** @description Lúc nhập mật khẩu của phiên; phiên nhân sự platform không làm mới được quá `EW_OIDC_PLATFORM_MAX_AUTH_AGE` (8 giờ) — ADR-0094 §2 */
             auth_time: components["schemas"]["Timestamp"];
             /** @description Giây (mặc định 300) */
             expires_in: number;
-            /** @description true khi bước OTP đã chạy (`amr` chứa `otp`); route platform còn yêu cầu `auth_time` trong 8 giờ */
-            mfa: boolean;
             /** @description Giây tới khi phiên hết hạn theo idle (30 phút) nhưng không vượt tối đa 10 giờ — `portal_session_sso` */
             refresh_expires_in: number;
             /** @enum {string} */
@@ -13980,7 +13969,7 @@ export interface components {
          * @description Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
          * @enum {string}
          */
-        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "MFA_REQUIRED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
+        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
         ProgressionLevel: {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
@@ -21361,7 +21350,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalTokenResponse"];
                 };
             };
-            /** @description INVALID_CREDENTIALS (thông điệp chung, không tiết lộ tài khoản tồn tại, bị khóa hay cần OTP) */
+            /** @description INVALID_CREDENTIALS (thông điệp chung, không tiết lộ tài khoản tồn tại hay bị khóa) */
             401: {
                 headers: {
                     [name: string]: unknown;

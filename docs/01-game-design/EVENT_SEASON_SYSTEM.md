@@ -221,7 +221,7 @@ Quy ước cột (varchar(n), `tenant_id`, `deleted_at`, ledger chỉ INSERT): [
 
 **Tenant (workspace C, route ngoại lệ tới module game):** `GET /api/v1/lms/event-templates`, `GET/POST /api/v1/lms/school-events`, `GET/PATCH /api/v1/lms/school-events/{event_id}`, `POST /api/v1/lms/school-events/{event_id}:cancel`.
 
-**Game Studio (`/api/v1/game-admin/{config_type}`, gateway nội bộ + MFA):** `events` (thay `world-events`), `event-templates`, `season-tracks` (module game); `seasons` giữ ở module competition. Vận hành: `POST /api/v1/game-admin/events/{event_id}/runs/{run_id}:suspend` / `:resume` / `:cancel` (lý do bắt buộc), `GET .../runs/{run_id}/stats`.
+**Game Studio (`/api/v1/game-admin/{config_type}`, gateway nội bộ):** `events` (thay `world-events`), `event-templates`, `season-tracks` (module game); `seasons` giữ ở module competition. Vận hành: `POST /api/v1/game-admin/events/{event_id}/runs/{run_id}:suspend` / `:resume` / `:cancel` (lý do bắt buộc), `GET .../runs/{run_id}/stats`.
 
 ## 15. Event NATS
 

@@ -97,7 +97,7 @@ func subjectHash(s SubjectRef) string {
 
 // Resolve returns the principal from L1, then Valkey, then the identity resolver. Resolver errors other
 // than ErrNotMember become 503 UNAVAILABLE (retryable): the request is never let through (fail closed).
-// Per-request fields (ClientID; SessionID, Channel and MFA are set by httpx) are never cached.
+// Per-request fields (ClientID; SessionID and Channel are set by httpx) are never cached.
 func (c *CachedResolver) Resolve(ctx context.Context, req ResolveRequest) (Principal, error) {
 	sh := subjectHash(req.Subject)
 	tp := tenantPart(req.TenantID)
@@ -125,7 +125,7 @@ func (c *CachedResolver) Resolve(ctx context.Context, req ResolveRequest) (Princ
 		return Principal{}, problem.New(problem.Unavailable, "identity unavailable").Retry().Wrap(err)
 	}
 	d := p.PrincipalData
-	d.ClientID, d.SessionID, d.Channel, d.MFA = "", "", ChannelUnknown, false
+	d.ClientID, d.SessionID, d.Channel = "", "", ChannelUnknown
 	c.l1.Add(l1Key, l1Entry{data: d, expires: now.Add(c.o.L1TTL)})
 	if c.o.Valkey != nil {
 		c.writeValkey(ctx, sh, tp, d)

@@ -23,7 +23,7 @@ Cột "Vai trò Keycloak" dùng realm roles của ADR-0006; phạm vi chi tiết
 | P-08 | Quản trị nội dung / Reviewer ("Chị Mai") | — | `content_admin`, `content_reviewer` | CMS web | P2–P3 |
 | P-09 | Academic Manager ("Bà Thu") | — | `tenant_staff` + UserRole `academic_manager` | Admin Portal (workspace C, B), School Learning Dashboard | P3 |
 | P-10 | System Admin ("Đạt") | — | `system_admin` | Admin Portal (mọi workspace, D Platform Administration), Keycloak, Grafana | P1 |
-| P-13 | Safety Moderator ("Ngọc") | — | `safety_moderator` | Admin Portal (module moderation, MFA) | P5 |
+| P-13 | Safety Moderator ("Ngọc") | — | `safety_moderator` | Admin Portal (module moderation) | P5 |
 
 Mã P-05, P-06 (giáo viên chủ nhiệm, giáo viên bộ môn) không còn dùng theo ADR-0072 và không tái sử dụng; nhu cầu của họ được phân lại ở [§3](#3-nhu-cầu-từng-thuộc-về-giáo-viên).
 
@@ -159,7 +159,7 @@ Release 1.0 không có vai trò giáo viên (ADR-0072). Bảng dưới phân l�
 | Bối cảnh | Khoa, game designer của đội EduWorld |
 | Mục tiêu | Thiết kế quest, mini-game, phần thưởng, sự kiện thế giới, mùa giải và template giải đấu áp dụng cho mọi tenant |
 | Pain points | Cần preview trong game; thay đổi phải công bằng cho mọi trường |
-| Thiết bị | Laptop, VPN + MFA |
+| Thiết bị | Laptop, VPN (đăng nhập Admin Portal không MFA — ADR-0094) |
 | Nhu cầu UX | Game Operations Console (workspace A) và Game Live Operations (workspace E) trong Admin Portal, preview Godot Web, workflow duyệt lane `platform_game` |
 | Quyền hạn | `game_designer`/`liveops`/`competition_admin` (role platform): chỉ dữ liệu platform (`tenant_id = NULL`); **không** xem dữ liệu học sinh/tenant |
 | Thành công khi | Ra một sự kiện thế giới mới mỗi tháng không cần build lại client |
@@ -172,7 +172,7 @@ Release 1.0 không có vai trò giáo viên (ADR-0072). Bảng dưới phân l�
 | Mục tiêu | Hệ thống ổn định, onboard tổ chức/trường mới, cấu hình Keycloak/IdP, xử lý sự cố |
 | Pain points | Sự cố giờ cao điểm (sáng thứ Hai, giờ ra chơi); yêu cầu truy cập dữ liệu nhạy cảm cần kiểm soát |
 | Thiết bị | Laptop, truy cập qua VPN/mạng quản trị |
-| Nhu cầu UX | Admin Portal (`eduworld-portal`, MFA bắt buộc với role platform; workspace Platform Administration), Grafana dashboard, runbook, công cụ tạo Tenant/School, gán/clone dữ liệu giữa tenant, thùng rác, cấu hình SIS connection |
+| Nhu cầu UX | Admin Portal (`eduworld-portal`, đăng nhập username + mật khẩu, không MFA — ADR-0094; workspace Platform Administration), Grafana dashboard, runbook, công cụ tạo Tenant/School, gán/clone dữ liệu giữa tenant, thùng rác, cấu hình SIS connection |
 | Quyền hạn | `system_admin`: **người duy nhất xem dữ liệu liên tenant** (dropdown tìm kiếm tenant, mặc định "Tất cả tenant", chọn nhiều; cột Tenant; ghi luôn chọn một tenant đích), quản lý tenant, gán dữ liệu platform cho tenant và clone giữa tenant (ADR-0029), Thùng rác mọi tenant (ADR-0028), Game Studio; mọi truy cập dữ liệu tenant có audit. Truy cập dữ liệu học sinh cần lý do và được audit (break-glass) |
 | Thành công khi | Onboard tổ chức mới không cần sửa code; MTTR sự cố P1 ≤ 1 giờ |
 
@@ -183,9 +183,9 @@ Release 1.0 không có vai trò giáo viên (ADR-0072). Bảng dưới phân l�
 | Bối cảnh | Ngọc, thành viên Platform Safety Team của EduWorld, xử lý báo cáo chat của mọi tenant theo ca |
 | Mục tiêu | Xử lý case nhanh và nhất quán giữa các trường; ưu tiên case grooming/tự hại |
 | Pain points | Khối lượng report lớn vào giờ cao điểm; cần đủ ngữ cảnh mà không xem chat ngoài phạm vi case |
-| Thiết bị | Laptop, VPN + MFA |
+| Thiết bị | Laptop, VPN (đăng nhập Admin Portal không MFA — ADR-0094) |
 | Nhu cầu UX | Hàng đợi case theo mức ưu tiên và SLA, bằng chứng và tin nhắn liên quan case, sanction một chạm, gửi thông báo tóm tắt cho nhà trường và theo dõi xác nhận đã liên hệ phụ huynh; quản lý danh mục từ nhạy cảm cấp tenant theo yêu cầu |
-| Quyền hạn | `safety_moderator` (role platform, MFA): `moderation.case.*`, `moderation.sanction.*`, đọc chat trong phạm vi case qua `tenancy.Bypass(ctx, "moderation_case")` có audit; không đọc dữ liệu học tập, không thấy cấu hình game ([MODERATION](../03-social-multiplayer/MODERATION.md)) |
+| Quyền hạn | `safety_moderator` (role platform): `moderation.case.*`, `moderation.sanction.*`, đọc chat trong phạm vi case qua `tenancy.Bypass(ctx, "moderation_case")` có audit; không đọc dữ liệu học tập, không thấy cấu hình game ([MODERATION](../03-social-multiplayer/MODERATION.md)) |
 | Thành công khi | Case p1 được phản hồi trong SLA; thông báo trường gửi đủ cho mọi vụ việc nghiêm trọng |
 
 ## 5. Ma trận quyền tóm tắt

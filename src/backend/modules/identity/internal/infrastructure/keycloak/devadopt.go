@@ -12,7 +12,7 @@ import (
 var ErrNotInRealmImport = errors.New("keycloak: user is not in the local realm import (run make keycloak-import)")
 
 // DevAdopter is a LOCAL-ONLY decorator of the Keycloak Admin port for the dev seed (LOCAL_DEVELOPMENT §5): the
-// realm import already holds every demo user with its password (and the OTP of sa.admin), so the use cases that
+// realm import already holds every demo user with its password (password only, ADR-0094), so the use cases that
 // create a Keycloak user (createTenantUser, the SIS student provisioning) adopt the user with the same username
 // instead of creating one, never rewrite its password, never disable it and never send an action email. Every
 // other call goes to the real adapter. The seed binary refuses to run unless EW_ENV=local; production never wires it.

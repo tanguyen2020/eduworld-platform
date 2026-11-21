@@ -13,6 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/write"
 	domainauthz "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/portalauth"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/domain/user"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -23,9 +24,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
-// KCRealmRolePlatformStaff is the Keycloak realm role of platform staff: the direct grant flow of the portal
-// requires OTP for it (KEYCLOAK_SSO §3.3).
-const KCRealmRolePlatformStaff = "platform_staff"
+// KCRealmRolePlatformStaff is the Keycloak realm role of platform staff: the portal flow admits it and module
+// identity bounds its session age (KEYCLOAK_SSO §3.3, ADR-0094 §2). No OTP since ADR-0094.
+const KCRealmRolePlatformStaff = portalauth.RealmRolePlatformStaff
 
 // CreatePlatformStaffInput is createPlatformUser (F059-1).
 type CreatePlatformStaffInput struct {
@@ -148,7 +149,7 @@ func PlatformStaffView(s write.StaffRow) read.UserView {
 	return v
 }
 
-// Create creates the Keycloak user (realm role platform_staff so the portal asks for OTP; no password, the
+// Create creates the Keycloak user (realm role platform_staff, password only — ADR-0094; no password yet, the
 // UPDATE_PASSWORD action email sets it), the staff account without a home tenant and its initial platform roles in
 // one use case; a database failure disables the Keycloak user it created (same compensation as createTenantUser).
 func (h PlatformStaff) Create(ctx context.Context, in CreatePlatformStaffInput) (out write.StaffRow, err error) {

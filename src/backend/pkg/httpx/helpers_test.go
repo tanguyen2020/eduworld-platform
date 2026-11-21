@@ -104,7 +104,7 @@ func (p *idp) baseClaims(azp string) map[string]any {
 	return map[string]any{
 		"iss": p.issuer(), "sub": "kc-" + uuid.NewString(), "aud": []string{testAudience, "account"}, "azp": azp,
 		"typ": "Bearer", "exp": now.Add(5 * time.Minute).Unix(), "iat": now.Add(-time.Minute).Unix(),
-		"nbf": now.Add(-time.Minute).Unix(), "sid": "sid-1", "acr": "1", "auth_time": now.Add(-time.Minute).Unix(),
+		"nbf": now.Add(-time.Minute).Unix(), "sid": "sid-1", "amr": []string{"pwd"},
 	}
 }
 
@@ -143,7 +143,6 @@ func authCfg(p *idp) httpx.AuthConfig {
 	return httpx.AuthConfig{
 		Issuers: []string{p.issuer()}, Audience: testAudience, AllowedAZP: []string{gameClient, portalClient},
 		ClockSkew: 30 * time.Second, PortalClientID: portalClient, GameClientID: gameClient,
-		PlatformRequiredACR: []string{"mfa"}, PlatformRequiredAMR: []string{"otp"}, PlatformMaxAuthAge: 8 * time.Hour,
 	}
 }
 
@@ -247,7 +246,6 @@ type echoBody struct {
 	TenantID string   `json:"tenant_id"`
 	Scope    []string `json:"scope"`
 	Platform bool     `json:"platform"`
-	MFA      bool     `json:"mfa"`
 	Channel  string   `json:"channel"`
 }
 
@@ -258,7 +256,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		if p.TenantID != nil {
 			b.TenantID = p.TenantID.String()
 		}
-		b.MFA, b.Channel = p.MFA, string(p.Channel)
+		b.Channel = string(p.Channel)
 	}
 	if s, ok := tenancy.ScopeFrom(r.Context()); ok {
 		for _, id := range s.TenantIDs() {

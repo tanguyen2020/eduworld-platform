@@ -17,11 +17,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 )
 
-// F035 demo principals (quickstart §1): a student of 3B, a safety moderator and a System Admin token without MFA.
+// F035 demo principals (quickstart §1): a student of 3B, a safety moderator and a second System Admin token
+// (password only like every portal token since ADR-0094).
 const (
 	hsChi      = "hs.chi.3b"
 	smAntoan   = "sm.antoan"
-	saNoMFA    = "sa.nomfa"
+	saPwOnly   = "sa.pwonly"
 	agreements = "/admin/learning/research-agreements"
 	studies    = "/admin/learning/efficacy-studies"
 )
@@ -71,8 +72,8 @@ func (c *curEnv) effSetup(ctx context.Context, t *testing.T) effKit {
 	c.user(hsChi, authztest.Student(c.tenantA).PrincipalData, false)
 	c.user(smAntoan, authztest.Platform("safety_moderator").PrincipalData, true)
 	d := authztest.Platform("system_admin").PrincipalData
-	c.user(saNoMFA, d, true)
-	c.tokens[saNoMFA] = c.idp.Token(saNoMFA, httpxtest.PortalClient, false, time.Now())
+	c.user(saPwOnly, d, true)
+	c.tokens[saPwOnly] = c.idp.Token(saPwOnly, httpxtest.PortalClient, time.Now())
 	if _, err := c.platform.ExecContext(ctx, `INSERT INTO ref.classes (class_id, tenant_id, school_id, grade_level, name, source_version)
 		VALUES ($1, $2, $3, 3, '3B', 1), ($4, $5, $6, 3, '3C', 1)`, k.classB, c.tenantA, k.school, k.classOther, c.tenantB, uuid.New()); err != nil {
 		t.Fatal(err)

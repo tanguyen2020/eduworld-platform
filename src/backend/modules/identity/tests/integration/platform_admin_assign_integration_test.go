@@ -30,7 +30,7 @@ func TestPlatformAdminAssignments(t *testing.T) {
 	}
 	ta, tb := uuid.MustParse(a.tenant), uuid.MustParse(b.tenant)
 	platformUsers(ctx, t, p, a, "as")
-	sa, ca := p.token("sa.as", true), p.token("ca.as", true)
+	sa, ca := p.token("sa.as"), p.token("ca.as")
 	qs := p.learn.add(nil, "qs-platform", false)
 	tenantItem := p.learn.add(&ta, "qs-tenant", false)
 

@@ -89,14 +89,14 @@ func NewDevSeed(d DevSeedDeps) (devseed.Seeder, error) {
 	}, nil
 }
 
-// portalPrincipal builds the Principal a portal session of the user would carry (portal client, MFA verified), the
+// portalPrincipal builds the Principal a portal session of the user would carry (portal client), the
 // way the principal middleware maps resolvePrincipal (cmd/internal/wiring).
 func portalPrincipal(p dto.Principal) (authz.Principal, error) {
 	if p.Status != "active" {
 		return authz.Principal{}, problem.New(problem.AccountDeactivated, "")
 	}
 	d := authz.PrincipalData{UserID: p.UserID, UserType: authz.UserType(p.UserType), TenantID: p.TenantID, IsSystemAdmin: p.IsSystemAdmin,
-		ClientID: "eduworld-portal", Channel: authz.ChannelPortal, MFA: true}
+		ClientID: "eduworld-portal", Channel: authz.ChannelPortal}
 	if p.TenantType != nil {
 		d.TenantType = authz.TenantType(*p.TenantType)
 	}

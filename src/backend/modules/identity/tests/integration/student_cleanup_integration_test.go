@@ -76,22 +76,22 @@ func TestStudentCleanup(t *testing.T) {
 	portalUser(ctx, t, e, iss, "ad.truong.cl", "school_admin", &a.tenant, "school", &a.school)
 	portalUser(ctx, t, e, iss, "sa.cl", "system_admin", nil, "platform", nil)
 	now := time.Now()
-	tok := func(u string, mfa bool) string { return idp.Token("sub-"+u, httpxtest.PortalClient, mfa, now) }
+	tok := func(u string) string { return idp.Token("sub-"+u, httpxtest.PortalClient, now) }
 	inA := func() map[string]string {
 		return map[string]string{"X-Tenant-Id": a.tenant, "Idempotency-Key": uuid.Must(uuid.NewV7()).String()}
 	}
 
 	// AC-11: exclusion with reason (tenant admin), audited; School Admin without the permission → 403.
-	if r := h.do(t, "POST", "/tenant/student-cleanup/exclusions", tok("ad.donvi.cl", false), inA(), map[string]any{"student_ids": []uuid.UUID{s3},
+	if r := h.do(t, "POST", "/tenant/student-cleanup/exclusions", tok("ad.donvi.cl"), inA(), map[string]any{"student_ids": []uuid.UUID{s3},
 		"reason": "Học sinh ốm dài ngày"}); r.status != 204 {
 		t.Fatalf("exclude: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "POST", "/tenant/student-cleanup/exclusions", tok("ad.truong.cl", false), inA(), map[string]any{"student_ids": []uuid.UUID{s4},
+	if r := h.do(t, "POST", "/tenant/student-cleanup/exclusions", tok("ad.truong.cl"), inA(), map[string]any{"student_ids": []uuid.UUID{s4},
 		"reason": "Thử"}); r.status != 403 {
 		t.Fatalf("school admin exclude: %d", r.status)
 	}
 	// AC-10, AC-16: preview of the tenant (due + notice window), never another tenant's students.
-	r := h.do(t, "GET", "/tenant/student-cleanup/preview?limit=50", tok("ad.donvi.cl", false), map[string]string{"X-Tenant-Id": a.tenant}, nil)
+	r := h.do(t, "GET", "/tenant/student-cleanup/preview?limit=50", tok("ad.donvi.cl"), map[string]string{"X-Tenant-Id": a.tenant}, nil)
 	if r.status != 200 || len(r.body["data"].([]any)) != 4 { // s1, s2, s4, s6 (s3 excluded, s5 recent)
 		t.Fatalf("preview: %d %v", r.status, r.body)
 	}
@@ -125,17 +125,17 @@ func TestStudentCleanup(t *testing.T) {
 		return map[string]string{"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}
 	}
 	cancelPath := "/admin/student-cleanup/runs/" + run.ID.String() + ":cancel"
-	if r := h.do(t, "POST", cancelPath, tok("ad.donvi.cl", false), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 403 {
+	if r := h.do(t, "POST", cancelPath, tok("ad.donvi.cl"), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 403 {
 		t.Fatalf("tenant admin cancel: %d", r.status)
 	}
-	if r := h.do(t, "POST", cancelPath, tok("sa.cl", true), idem(), map[string]any{"reason": "ab"}); r.status != 422 {
+	if r := h.do(t, "POST", cancelPath, tok("sa.cl"), idem(), map[string]any{"reason": "ab"}); r.status != 422 {
 		t.Fatalf("short reason: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "POST", "/admin/student-cleanup/runs/"+uuid.Must(uuid.NewV7()).String()+":cancel", tok("sa.cl", true), idem(),
+	if r := h.do(t, "POST", "/admin/student-cleanup/runs/"+uuid.Must(uuid.NewV7()).String()+":cancel", tok("sa.cl"), idem(),
 		map[string]any{"reason": "Không dọn đợt này"}); r.status != 404 {
 		t.Fatalf("unknown run: %d", r.status)
 	}
-	if r := h.do(t, "POST", cancelPath, tok("sa.cl", true), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 204 {
+	if r := h.do(t, "POST", cancelPath, tok("sa.cl"), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 204 {
 		t.Fatalf("cancel: %d %v", r.status, r.body)
 	}
 	if count(ctx, t, e.platform, `SELECT count(*) FROM platform.student_cleanup_runs WHERE run_id = $1 AND status = 'cancelled'
@@ -149,10 +149,10 @@ func TestStudentCleanup(t *testing.T) {
 	if count(ctx, t, e.platform, `SELECT count(*) FROM identity.users WHERE delete_reason = 'inactive_cleanup'`) != 0 {
 		t.Fatal("removed by a cancelled run")
 	}
-	if r := h.do(t, "POST", cancelPath, tok("sa.cl", true), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 409 {
+	if r := h.do(t, "POST", cancelPath, tok("sa.cl"), idem(), map[string]any{"reason": "Không dọn đợt này"}); r.status != 409 {
 		t.Fatalf("cancel twice: %d", r.status)
 	}
-	if r := h.do(t, "POST", "/admin/student-cleanup/runs/"+run.ID.String()+":approve", tok("sa.cl", true), idem(), nil); r.status != 409 {
+	if r := h.do(t, "POST", "/admin/student-cleanup/runs/"+run.ID.String()+":approve", tok("sa.cl"), idem(), nil); r.status != 409 {
 		t.Fatalf("approve a cancelled run: %d", r.status)
 	}
 	cancelled := run.ID
@@ -163,10 +163,10 @@ func TestStudentCleanup(t *testing.T) {
 
 	// Only platform.student_cleanup.approve approves (tenant admin → 403).
 	path := "/admin/student-cleanup/runs/" + run.ID.String() + ":approve"
-	if r := h.do(t, "POST", path, tok("ad.donvi.cl", false), map[string]string{"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}, nil); r.status != 403 {
+	if r := h.do(t, "POST", path, tok("ad.donvi.cl"), map[string]string{"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}, nil); r.status != 403 {
 		t.Fatalf("tenant admin approve: %d", r.status)
 	}
-	if r := h.do(t, "POST", path, tok("sa.cl", true), map[string]string{"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}, nil); r.status != 202 {
+	if r := h.do(t, "POST", path, tok("sa.cl"), map[string]string{"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}, nil); r.status != 202 {
 		t.Fatalf("approve: %d %v", r.status, r.body)
 	}
 
@@ -194,7 +194,7 @@ func TestStudentCleanup(t *testing.T) {
 		t.Fatalf("compensation of s4: cleaned=%d restored=%d", game.cleaned[s4], game.restored[s4])
 	}
 	// Runs list for the System Admin: the applied run and the cancelled one.
-	r = h.do(t, "GET", "/admin/student-cleanup/runs", tok("sa.cl", true), nil, nil)
+	r = h.do(t, "GET", "/admin/student-cleanup/runs", tok("sa.cl"), nil, nil)
 	if r.status != 200 || len(r.body["data"].([]any)) != 2 {
 		t.Fatalf("runs: %d %v", r.status, r.body)
 	}

@@ -90,7 +90,7 @@ func (h Efficacy) config() efficacy.Config {
 }
 
 // efficacyAdmin authorizes a platform permission of the study (F035-AC-10): platform staff only, the permission held
-// (tenant roles, content_admin and safety_moderator lack it → 403 PERMISSION_DENIED; MFA is the httpx guard of /admin/).
+// (tenant roles, content_admin and safety_moderator lack it → 403 PERMISSION_DENIED; the platform role is the httpx guard of /admin/).
 func efficacyAdmin(ctx context.Context, perm authz.Permission) (authz.Principal, error) {
 	p, err := principal(ctx)
 	if err != nil {

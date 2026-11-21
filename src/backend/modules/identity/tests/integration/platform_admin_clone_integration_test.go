@@ -27,7 +27,7 @@ func TestPlatformAdminClone(t *testing.T) {
 	}
 	ta, tb := uuid.MustParse(a.tenant), uuid.MustParse(b.tenant)
 	platformUsers(ctx, t, p, a, "cl")
-	sa, ca := p.token("sa.cl", true), p.token("ca.cl", true)
+	sa, ca := p.token("sa.cl"), p.token("ca.cl")
 	q1, q2 := p.learn.add(&ta, "c-1", false), p.learn.add(&ta, "c-2", false)
 	studentsB := count(ctx, t, e.platform, `SELECT count(*) FROM org.students WHERE tenant_id = $1`, b.tenant)
 

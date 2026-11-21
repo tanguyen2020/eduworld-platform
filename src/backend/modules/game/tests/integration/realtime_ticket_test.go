@@ -118,14 +118,14 @@ func TestRealtimeTicketAuthz(t *testing.T) {
 	session := e.start(t, an, d, newKey(), nil).body["game_session_id"].(string)
 
 	for _, role := range []string{"school_admin", "academic_manager", "tenant_admin"} {
-		tok := e.idp.Token(e.staff(e.tenantA, role), "eduworld-portal", true, nowWall())
+		tok := e.idp.Token(e.staff(e.tenantA, role), "eduworld-portal", nowWall())
 		r := e.do(t, http.MethodPost, "/game/sessions/"+session+"/realtime-tickets", tok, map[string]string{"X-Tenant-Id": e.tenantA.String()}, nil)
 		if r.status != http.StatusForbidden || r.code() != string(problem.GameAccessStudentOnly) {
 			t.Fatalf("%s: %d %s", role, r.status, r.raw)
 		}
 	}
 	for _, role := range []string{"safety_moderator", "system_admin"} {
-		tok := e.idp.Token(e.platformStaff(role), "eduworld-portal", true, nowWall())
+		tok := e.idp.Token(e.platformStaff(role), "eduworld-portal", nowWall())
 		r := e.do(t, http.MethodPost, "/game/sessions/"+session+"/realtime-tickets", tok, map[string]string{"X-Tenant-Id": e.tenantA.String()}, nil)
 		if r.status != http.StatusForbidden {
 			t.Fatalf("%s: %d %s", role, r.status, r.raw)

@@ -48,6 +48,10 @@
 - OQ F016-11, OQ F016-13 → **Chốt:** giữ đúng như mô tả (System Admin ghi nhận = đã duyệt, `export` → `422`; khôi phục identity trước, module tự khôi phục khi nhận `student.restored`).
 - Mọi OQ F016-1…13 còn lại giữ [Confirmed].
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: Chỉ spec/contracts nhắc MFA trong mô tả route platform; đọc là gateway nội bộ + role platform. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khóa, mở khóa, vô hiệu hóa và thu hồi truy cập (Priority: P1)

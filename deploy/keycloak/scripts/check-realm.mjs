@@ -1,5 +1,5 @@
 // F004 T007/T040 — static checks of the realm as code (F004-AC-01, AC-02, AC-04, AC-05, AC-06, AC-08,
-// AC-24, AC-25, AC-27). Usage: node deploy/keycloak/scripts/check-realm.mjs  (exit 1 on any problem)
+// AC-24, AC-25, AC-27; ADR-0094: no OTP step, no AMR/LoA mapper). Usage: node deploy/keycloak/scripts/check-realm.mjs  (exit 1 on any problem)
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
@@ -57,8 +57,8 @@ export function check(realm) {
     p.push('flow eduworld-game-direct-grant: username → password → deny non-student');
   }
   if (!same(seq('eduworld-portal-direct-grant'), ['direct-grant-validate-username', 'direct-grant-validate-password',
-    'flow:eduworld-portal-deny-non-staff', 'flow:eduworld-portal-otp-configured'])) {
-    p.push('flow eduworld-portal-direct-grant: username → password → deny non-staff → OTP when configured');
+    'flow:eduworld-portal-deny-non-staff'])) {
+    p.push('flow eduworld-portal-direct-grant: username → password → deny non-staff, nothing else (no OTP, ADR-0094)');
   }
   const configs = Object.fromEntries((realm.authenticatorConfig ?? []).map((c) => [c.alias, c.config]));
   const used = new Map();
@@ -73,9 +73,7 @@ export function check(realm) {
       if (e.authenticator === 'direct-grant-validate-password' && configs[e.authenticatorConfig]?.['default.reference.value'] !== 'pwd') {
         p.push(`flow ${f.alias}: password needs reference value pwd (amr)`);
       }
-      if (e.authenticator === 'direct-grant-validate-otp' && configs[e.authenticatorConfig]?.['default.reference.value'] !== 'otp') {
-        p.push(`flow ${f.alias}: OTP needs reference value otp (amr)`);
-      }
+      if (/otp/i.test(`${e.authenticator ?? ''} ${e.flowAlias ?? ''}`)) p.push(`flow ${f.alias}: no OTP step (ADR-0094)`);
     }
   }
   const denies = (alias, role, msg) => {
@@ -88,8 +86,16 @@ export function check(realm) {
   if (!denies('eduworld-portal-deny-non-staff', 'tenant_staff', 'portalStudentDenied') || !denies('eduworld-portal-deny-non-staff', 'platform_staff', 'portalStudentDenied')) {
     p.push('portal flow must deny users without tenant_staff or platform_staff');
   }
-  const portal = clients.find((c) => c.clientId === 'eduworld-portal');
-  if (portal && !(portal.defaultClientScopes ?? []).includes('eduworld-amr-loa')) p.push('eduworld-portal needs scope eduworld-amr-loa');
+  // ADR-0094: no second factor, so no AMR/LoA claims anywhere (nothing may rely on amr/acr).
+  for (const s of realm.clientScopes ?? []) {
+    for (const m of s.protocolMappers ?? []) {
+      if (m.protocolMapper === 'oidc-amr-mapper' || m.protocolMapper === 'oidc-acr-mapper') p.push(`client scope ${s.name}: no AMR/LoA mapper (ADR-0094)`);
+    }
+  }
+  for (const c of clients) {
+    const scopes = [...(c.defaultClientScopes ?? []), ...(c.optionalClientScopes ?? [])];
+    for (const s of ['eduworld-amr-loa', 'acr']) if (scopes.includes(s)) p.push(`client ${c.clientId}: scope ${s} must not be assigned (ADR-0094)`);
+  }
   for (const id of DIRECT_GRANT) {
     const c = clients.find((x) => x.clientId === id);
     for (const s of ['eduworld-api-audience', 'eduworld-roles']) if (c && !(c.defaultClientScopes ?? []).includes(s)) p.push(`${id} needs scope ${s}`);

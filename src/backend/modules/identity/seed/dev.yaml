@@ -3,7 +3,7 @@
 # the demo password; the seed links accounts to those users and never sets a password.
 # The common tenant "common" (EduWorld chung) comes with the migrations. Not seeded yet [Proposed]: qa-probe
 # (createTenant cannot set is_qa), hs.tudo (createCommonStudents sets a generated password), hs.nosis (on purpose:
-# ACCOUNT_NOT_PROVISIONED), sa.moi (required actions UPDATE_PASSWORD + CONFIGURE_TOTP).
+# ACCOUNT_NOT_PROVISIONED), sa.moi (required action UPDATE_PASSWORD; no OTP since ADR-0094).
 tenants:
   - code: th-demo-a
     name: TH Demo A

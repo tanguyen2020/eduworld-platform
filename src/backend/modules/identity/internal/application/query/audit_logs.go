@@ -126,7 +126,7 @@ func (q AuditLogs) ListTenant(ctx context.Context, in AuditLogsInput) (out Audit
 	return q.page(tenancy.WithScope(ctx, sc), f)
 }
 
-// ListPlatform is listPlatformAuditLogs (platform.audit.read, platform staff with MFA): with tenant_ids the
+// ListPlatform is listPlatformAuditLogs (platform.audit.read, platform staff): with tenant_ids the
 // CrossTenantScope set by httpx (audited cross_tenant.accessed), otherwise the platform entries only.
 func (q AuditLogs) ListPlatform(ctx context.Context, in AuditLogsInput) (out AuditPage, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListPlatformAuditLogs")

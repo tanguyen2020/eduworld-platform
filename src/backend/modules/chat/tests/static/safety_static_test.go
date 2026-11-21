@@ -81,7 +81,7 @@ func TestSafetyModeratorPermissions(t *testing.T) {
 			continue
 		}
 		if r.ScopeKind != authz.RoleScopePlatform {
-			t.Fatal("safety_moderator is a platform role (MFA)")
+			t.Fatal("safety_moderator is a platform role")
 		}
 		for _, p := range r.Permissions {
 			if !allowed(string(p)) {

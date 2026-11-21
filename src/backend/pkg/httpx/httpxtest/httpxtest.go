@@ -58,32 +58,29 @@ func NewIDP(t testing.TB) *IDP {
 // Issuer is the iss of the tokens.
 func (p *IDP) Issuer() string { return p.srv.URL }
 
-// AuthConfig is the httpx configuration trusting this issuer (MFA = amr otp).
+// AuthConfig is the httpx configuration trusting this issuer.
 func (p *IDP) AuthConfig() httpx.AuthConfig {
 	return httpx.AuthConfig{Issuers: []string{p.Issuer()}, Audience: Audience, AllowedAZP: []string{GameClient, PortalClient},
-		ClockSkew: 30 * time.Second, PortalClientID: PortalClient, GameClientID: GameClient,
-		PlatformRequiredAMR: []string{"otp"}, PlatformMaxAuthAge: 8 * time.Hour}
+		ClockSkew: 30 * time.Second, PortalClientID: PortalClient, GameClientID: GameClient}
 }
 
-// Token signs an access token for sub through client azp at now; mfa adds amr otp.
-func (p *IDP) Token(sub, azp string, mfa bool, now time.Time) string {
+// Token signs an access token for sub through client azp at now: password only, like every Keycloak token
+// of the realm since ADR-0094 (amr ["pwd"], no OTP).
+func (p *IDP) Token(sub, azp string, now time.Time) string {
 	p.t.Helper()
-	return p.sign(sub, azp, "sid-1", mfa, now)
+	return p.sign(sub, azp, "sid-1", now)
 }
 
 // TokenSID is Token with the Keycloak session id sid (game tokens of two devices, F014 takeover).
 func (p *IDP) TokenSID(sub, azp, sid string, now time.Time) string {
 	p.t.Helper()
-	return p.sign(sub, azp, sid, false, now)
+	return p.sign(sub, azp, sid, now)
 }
 
-func (p *IDP) sign(sub, azp, sid string, mfa bool, now time.Time) string {
+func (p *IDP) sign(sub, azp, sid string, now time.Time) string {
 	p.t.Helper()
 	claims := map[string]any{"iss": p.Issuer(), "sub": sub, "aud": []string{Audience}, "azp": azp, "typ": "Bearer",
 		"exp": now.Add(5 * time.Minute).Unix(), "iat": now.Add(-time.Minute).Unix(), "nbf": now.Add(-time.Minute).Unix(), "sid": sid}
-	if mfa {
-		claims["amr"] = []string{"pwd", "otp"}
-	}
 	s, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: p.key}, (&jose.SignerOptions{}).WithType("JWT").WithHeader("kid", "k1"))
 	if err != nil {
 		p.t.Fatal(err)

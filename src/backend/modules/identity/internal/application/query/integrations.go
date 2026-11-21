@@ -49,11 +49,11 @@ type IntegrationOverview struct {
 
 // KeycloakOverview is IntegrationOverview.keycloak.
 type KeycloakOverview struct {
-	IssuerURL                 string              `json:"issuer_url"`
-	Realm                     string              `json:"realm"`
-	Clients                   []IntegrationClient `json:"clients"`
-	PlatformMFARequired       bool                `json:"platform_mfa_required"`
-	PlatformAuthMaxAgeSeconds int64               `json:"platform_auth_max_age_seconds"`
+	IssuerURL string              `json:"issuer_url"`
+	Realm     string              `json:"realm"`
+	Clients   []IntegrationClient `json:"clients"`
+	// PlatformAuthMaxAgeSeconds is the maximum age of a platform staff portal session (ADR-0094 §2).
+	PlatformAuthMaxAgeSeconds int64 `json:"platform_auth_max_age_seconds"`
 }
 
 // ApisixOverview is IntegrationOverview.apisix (null = not configured).
@@ -128,7 +128,7 @@ func (q Integrations) Overview(ctx context.Context) (out IntegrationOverview, er
 	}
 	return IntegrationOverview{
 		Keycloak: KeycloakOverview{IssuerURL: q.Config.IssuerURL, Realm: q.Config.Realm, Clients: clients,
-			PlatformMFARequired: true, PlatformAuthMaxAgeSeconds: int64(q.Config.PlatformMaxAuthAge / time.Second)},
+			PlatformAuthMaxAgeSeconds: int64(q.Config.PlatformMaxAuthAge / time.Second)},
 		Apisix: ApisixOverview{PublicBaseURL: optional(q.Config.PublicBaseURL), InternalBaseURL: optional(q.Config.InternalBaseURL),
 			RouteGroups: groups},
 		Sis:         SisOverview{ConnectionsTotal: total, ConnectionsByStatus: counts},

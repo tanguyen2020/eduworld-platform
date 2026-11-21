@@ -60,7 +60,7 @@ flowchart LR
   game -.->|form đăng nhập qua module identity, ADR-0068| core
   core -.->|password grant eduworld-game-backend| kc
   web -.->|form đăng nhập portal qua module identity, ADR-0091| core
-  core -.->|password grant + totp eduworld-portal| kc
+  core -.->|password grant eduworld-portal| kc
   kc -.->|brokering| idp
   core -- sync theo contract --> sis
   core -- admin API (provisioning, membership) --> kc
@@ -138,7 +138,7 @@ Release 1.0 hỗ trợ 4 nền tảng client: Windows, Android, iOS, Web (ADR-00
 | Container | Trách nhiệm | Không làm |
 |---|---|---|
 | Godot Client | Render 3D, input, UI, nội suy, gọi REST/WS, cache nội dung | Chấm điểm, quyết định reward/kết quả, gọi SIS/NATS/Valkey, giữ answer key |
-| Admin Portal (`src/cms/frontend/apps/portal`) | Một ứng dụng, 5 workspace theo permission (ADR-0027 mục 7): School & LMS và Learning Content Studio cho tenant; Game Operations, Live Operations, Platform Administration cho platform (qua gateway nội bộ + MFA). Giao diện Admin/Ops (Ant Design 5 + Pro; ADR-0047). Chi tiết: [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | Quyết định phân quyền (chỉ ẩn/hiện) |
+| Admin Portal (`src/cms/frontend/apps/portal`) | Một ứng dụng, 5 workspace theo permission (ADR-0027 mục 7): School & LMS và Learning Content Studio cho tenant; Game Operations, Live Operations, Platform Administration cho platform (qua gateway nội bộ; không MFA — ADR-0094). Giao diện Admin/Ops (Ant Design 5 + Pro; ADR-0047). Chi tiết: [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | Quyết định phân quyền (chỉ ẩn/hiện) |
 | APISIX public / internal | TLS, JWT validation, rate limit, size limit, CORS, WS proxy; hai upstream: `core-api` (mọi REST) và `realtime` (`/realtime/v1`) ([API_DESIGN §10](../07-backend/API_DESIGN.md#10-apisix-route-mapping)) | Authorization nghiệp vụ, tenant check |
 | **`core-api`** (binary `src/backend/cmd/core-api`) | Nạp năm module domain; phục vụ REST public `/api/v1/*`, route gateway nội bộ (`/game-admin/*`, `/admin/*`, `/sis/*`), webhook `/internal/sis/*`, `/internal/auth/*`; handler NATS request/reply `ew.cmd.<module>.>` cho lệnh từ realtime; ghi outbox trong transaction của từng module | Relay outbox, consumer event, job định kỳ |
 | **`realtime`** (binary `src/backend/cmd/realtime`) | Giữ WS, xác thực ticket (Valkey), presence, heartbeat, định tuyến lệnh WS → module trong `core-api` qua NATS request/reply `ew.cmd.*`, giao sự kiện từ Valkey Pub/Sub `ew:rt:*`/`ew:chat:fanout:*` xuống client, backpressure (room host nằm ở `competition` trong `core-api`) | Logic nghiệp vụ, database, gọi facade module domain |

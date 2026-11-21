@@ -87,8 +87,8 @@ func platformHTTP(ctx context.Context, t *testing.T, e *env, owners func(port.Ow
 		sagas: command.PlatformSagas{PlatformAdminDeps: deps}}
 }
 
-func (p *platformEnv) token(user string, mfa bool) string {
-	return p.idp.Token("sub-"+user, httpxtest.PortalClient, mfa, time.Now())
+func (p *platformEnv) token(user string) string {
+	return p.idp.Token("sub-"+user, httpxtest.PortalClient, time.Now())
 }
 
 // runSagas runs the job platform-saga until nothing is due (bounded).

@@ -1,12 +1,15 @@
 # ADR-0072 — Bỏ vai trò giáo viên: học sinh tự học, bỏ hoạt động chấm tay, kiểm duyệt tập trung ở platform
 
-> **Trạng thái:** Accepted · một phần superseded by ADR-0081 · một phần superseded by ADR-0084 · **Ngày:** 2026-11-15 · **OQ:** OQ-07 · **Thay một phần:** ADR-0020, ADR-0021, ADR-0027, ADR-0048, ADR-0050, ADR-0053, ADR-0059, ADR-0062, ADR-0066 · **Tài liệu:** [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [MODERATION](../03-social-multiplayer/MODERATION.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by ADR-0081 · một phần superseded by ADR-0084 · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-07 · **Thay một phần:** ADR-0020, ADR-0021, ADR-0027, ADR-0048, ADR-0050, ADR-0053, ADR-0059, ADR-0062, ADR-0066 · **Tài liệu:** [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) · [MODERATION](../03-social-multiplayer/MODERATION.md) · [EDU_FIT_REVIEW](../12-project/EDU_FIT_REVIEW.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Một phần đã được thay bởi [ADR-0081](ADR-0081-user-type-student-staff-phan-biet-bang-tenant.md).** Không còn hiệu lực: giá trị `admin` của `user_type` (mục 1). **Còn hiệu lực:** toàn bộ phần còn lại; `user_type` chỉ gồm `student`, `staff`.
 
 > [!WARNING]
 > **Một phần đã được thay bởi [ADR-0084](ADR-0084-nhom-hoc-tap-thuoc-learning-service.md):** study group (mục 2) là nhóm LMS do learning-service sở hữu, không phải một loại club theo ADR-0050.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: "Đăng nhập portal bắt buộc MFA như mọi role platform" của `safety_moderator`. **Còn hiệu lực:** role platform `safety_moderator`, quyền và phạm vi đọc liên tenant chỉ trong module moderation (`tenancy.Bypass(ctx, "moderation_case")`, audit).
 
 ## Bối cảnh
 
@@ -83,3 +86,4 @@ Mốc M3 "Teacher Loop" đổi thành **M3 School Loop**: nhà trường giao b�
 | 2026-11-15 | Tạo ADR; trả lời OQ-07 (không có giáo viên) | Technical Architect |
 | 2026-11-15 | Một phần superseded by ADR-0081 (`user_type`) | Technical Architect |
 | 2026-11-16 | Một phần superseded by ADR-0084 (study group) | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

@@ -26,7 +26,7 @@ func TestSchoolSettings(t *testing.T) {
 	a := seedTenant(ctx, t, e.platform, "pgd-ss-a")
 	b := seedTenant(ctx, t, e.platform, "pgd-ss-b")
 	portalUser(ctx, t, e, idp.Issuer(), "ad.truong.ss", "school_admin", &a.tenant, "school", &a.school)
-	tok := idp.Token("sub-ad.truong.ss", httpxtest.PortalClient, false, time.Now())
+	tok := idp.Token("sub-ad.truong.ss", httpxtest.PortalClient, time.Now())
 	// Tenant hours Mon–Fri 06:00–21:00.
 	if _, err := e.platform.ExecContext(ctx, `UPDATE platform.tenants SET settings = '{"allowed_hours":{"windows":[{"days":["mon","tue","wed","thu","fri"],"from":"06:00","to":"21:00"}]}}'
 		WHERE tenant_id = $1`, a.tenant); err != nil {

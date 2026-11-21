@@ -61,7 +61,7 @@ func TestUserAnonymize(t *testing.T) {
 	portalUser(ctx, t, e, iss, "sa.an", "system_admin", nil, "platform", nil)
 	portalUser(ctx, t, e, iss, "ad.donvi.an", "tenant_admin", &a.tenant, "tenant", nil)
 	now := time.Now()
-	tok := func(u string, mfa bool) string { return idp.Token("sub-"+u, httpxtest.PortalClient, mfa, now) }
+	tok := func(u string) string { return idp.Token("sub-"+u, httpxtest.PortalClient, now) }
 	hdr := func(tenant string) map[string]string {
 		m := map[string]string{"Idempotency-Key": uuid.Must(uuid.NewV7()).String()}
 		if tenant != "" {
@@ -75,17 +75,17 @@ func TestUserAnonymize(t *testing.T) {
 	}
 
 	// AC-22: only platform.data_request.write; X-Tenant-Id must be the tenant of the subject.
-	if r := h.do(t, "POST", "/admin/data-requests", tok("ad.donvi.an", false), hdr(a.tenant), body("anonymize", st)); r.status != 403 {
+	if r := h.do(t, "POST", "/admin/data-requests", tok("ad.donvi.an"), hdr(a.tenant), body("anonymize", st)); r.status != 403 {
 		t.Fatalf("tenant admin: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "POST", "/admin/data-requests", tok("sa.an", true), hdr(b.tenant), body("anonymize", st)); r.status != 404 {
+	if r := h.do(t, "POST", "/admin/data-requests", tok("sa.an"), hdr(b.tenant), body("anonymize", st)); r.status != 404 {
 		t.Fatalf("other tenant: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "POST", "/admin/data-requests", tok("sa.an", true), hdr(a.tenant), body("export", st)); r.status != 422 {
+	if r := h.do(t, "POST", "/admin/data-requests", tok("sa.an"), hdr(a.tenant), body("export", st)); r.status != 422 {
 		t.Fatalf("export: %d %v", r.status, r.body)
 	}
 	// AC-20, AC-21: the saga runs every participant, overwrites the PII, keeps every row.
-	r := h.do(t, "POST", "/admin/data-requests", tok("sa.an", true), hdr(a.tenant), body("anonymize", st))
+	r := h.do(t, "POST", "/admin/data-requests", tok("sa.an"), hdr(a.tenant), body("anonymize", st))
 	if r.status != 202 || r.body["status"] != "completed" || r.body["request_type"] != "anonymize" {
 		t.Fatalf("create: %d %v", r.status, r.body)
 	}
@@ -144,19 +144,19 @@ func TestUserAnonymize(t *testing.T) {
 		t.Fatalf("keycloak: %+v", kc)
 	}
 	// Already anonymized → 409; reads only for platform.data_request.write.
-	if r := h.do(t, "POST", "/admin/data-requests", tok("sa.an", true), hdr(a.tenant), body("anonymize", st)); r.status != 409 {
+	if r := h.do(t, "POST", "/admin/data-requests", tok("sa.an"), hdr(a.tenant), body("anonymize", st)); r.status != 409 {
 		t.Fatalf("second request: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "GET", "/admin/data-requests/"+reqID, tok("sa.an", true), nil, nil); r.status != 200 || r.body["status"] != "completed" {
+	if r := h.do(t, "GET", "/admin/data-requests/"+reqID, tok("sa.an"), nil, nil); r.status != 200 || r.body["status"] != "completed" {
 		t.Fatalf("get: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "GET", "/admin/data-requests?tenant_ids="+b.tenant, tok("sa.an", true), nil, nil); r.status != 200 || len(r.body["data"].([]any)) != 0 {
+	if r := h.do(t, "GET", "/admin/data-requests?tenant_ids="+b.tenant, tok("sa.an"), nil, nil); r.status != 200 || len(r.body["data"].([]any)) != 0 {
 		t.Fatalf("list other tenant: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "GET", "/admin/data-requests?status=completed", tok("sa.an", true), nil, nil); r.status != 200 || len(r.body["data"].([]any)) != 1 {
+	if r := h.do(t, "GET", "/admin/data-requests?status=completed", tok("sa.an"), nil, nil); r.status != 200 || len(r.body["data"].([]any)) != 1 {
 		t.Fatalf("list: %d %v", r.status, r.body)
 	}
-	if r := h.do(t, "GET", "/admin/data-requests/"+reqID, tok("ad.donvi.an", false), map[string]string{"X-Tenant-Id": a.tenant}, nil); r.status != 403 {
+	if r := h.do(t, "GET", "/admin/data-requests/"+reqID, tok("ad.donvi.an"), map[string]string{"X-Tenant-Id": a.tenant}, nil); r.status != 403 {
 		t.Fatalf("tenant admin read: %d", r.status)
 	}
 

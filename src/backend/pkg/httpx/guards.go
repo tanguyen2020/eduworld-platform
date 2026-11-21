@@ -7,9 +7,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
-// guards applies portal_staff, game_player and platform_mfa (F002-AC-16..18, API_DESIGN §11). Denials
-// are audited as authz.denied with the problem code as reason; MFA_REQUIRED is a step-up prompt and is
-// not audited.
+// guards applies portal_staff, game_player and platform_role (F002-AC-16..18, API_DESIGN §11). Denials
+// are audited as authz.denied with the problem code as reason. No route requires MFA (ADR-0094).
 func (s *Server) guards(g Guard, next http.Handler) http.Handler {
 	if g == GuardNone {
 		return next
@@ -37,15 +36,9 @@ func (s *Server) guards(g Guard, next http.Handler) http.Handler {
 			deny(problem.GameAccessStudentOnly, "game_player")
 			return
 		}
-		if g&GuardPlatformMFA != 0 {
-			if !p.HasPlatformRole() {
-				deny(problem.PermissionDenied, "platform_role")
-				return
-			}
-			if !p.MFA {
-				deny(problem.MfaRequired, "mfa") // audited like every other guard denial (F121-AC-10, ADR-0027)
-				return
-			}
+		if g&GuardPlatformRole != 0 && !p.HasPlatformRole() {
+			deny(problem.PermissionDenied, "platform_role")
+			return
 		}
 		next.ServeHTTP(w, r)
 	})

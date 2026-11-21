@@ -42,19 +42,19 @@ func TestUserRoleGrants(t *testing.T) {
 	ta := staffUser(ctx, t, e, "ta.ur", &a.tenant) // tenant admin of A
 	link(ta, "kc-ta")
 	grantRole(ctx, t, e, ta, "tenant_admin", &a.tenant, "tenant", nil, "NULL")
-	taTok := idp.Token("kc-ta", httpxtest.PortalClient, false, now)
+	taTok := idp.Token("kc-ta", httpxtest.PortalClient, now)
 	sch := staffUser(ctx, t, e, "sa.school.ur", &a.tenant) // School Admin of school A only
 	link(sch, "kc-sch")
 	grantRole(ctx, t, e, sch, "school_admin", &a.tenant, "school", &a.school, "NULL")
-	schTok := idp.Token("kc-sch", httpxtest.PortalClient, false, now)
+	schTok := idp.Token("kc-sch", httpxtest.PortalClient, now)
 	gv := staffUser(ctx, t, e, "gv.ur", &a.tenant)
 	link(gv, "kc-gv-ur")
-	gvTok := idp.Token("kc-gv-ur", httpxtest.PortalClient, false, now)
+	gvTok := idp.Token("kc-gv-ur", httpxtest.PortalClient, now)
 	student := enrolled(ctx, t, e.platform, a, "hs.ur")
 	sa := staffUser(ctx, t, e, "sa.ur", nil)
 	link(sa, "kc-sa-ur")
 	grantRole(ctx, t, e, sa, "system_admin", nil, "platform", nil, "NULL")
-	saTok := idp.Token("kc-sa-ur", httpxtest.PortalClient, true, now)
+	saTok := idp.Token("kc-sa-ur", httpxtest.PortalClient, now)
 	mod := staffUser(ctx, t, e, "mod.ur", nil)
 
 	grant := func(tok string, hdrs map[string]string, path string, body map[string]any) httpResp {
@@ -143,7 +143,7 @@ func TestUserRoleGrants(t *testing.T) {
 	tb := staffUser(ctx, t, e, "ta.ur.b", &b.tenant)
 	link(tb, "kc-tb")
 	grantRole(ctx, t, e, tb, "tenant_admin", &b.tenant, "tenant", nil, "NULL")
-	if r := h.do(t, "DELETE", "/tenant/user-roles/"+granted+"?reason=cleanup", idp.Token("kc-tb", httpxtest.PortalClient, false, now), hdr(b.tenant), nil); r.status != 404 {
+	if r := h.do(t, "DELETE", "/tenant/user-roles/"+granted+"?reason=cleanup", idp.Token("kc-tb", httpxtest.PortalClient, now), hdr(b.tenant), nil); r.status != 404 {
 		t.Fatalf("other tenant revoke: %d %s", r.status, r.raw)
 	}
 	if r := h.do(t, "DELETE", "/tenant/user-roles/"+granted+"?reason=left+the+school", taTok, hdr(a.tenant), nil); r.status != 204 {

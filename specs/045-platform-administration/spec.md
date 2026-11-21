@@ -47,6 +47,10 @@
 - Triển khai OQ F045-6 (T061, 2026-11-20) → **[Confirmed]:** khi user đích đã có enrollment active, enrollment active của user nguồn được kết thúc (`status = ended`, `end_date` = ngày gộp, phát `enrollment.changed` `op = ended`) vì bản ghi học sinh nguồn bị soft-delete; enrollment chuyển sang user đích phát `enrollment.changed` `op = added`; `tenant_membership.changed` (`removed`, `source = merge`).
 - OQ F057-1 (T058) → **Chưa làm (2026-11-20):** cần thêm phép xác định phụ thuộc cho mọi `ResourceHandler` của module learning (question set → question → media, giữ tham chiếu dữ liệu platform) cùng operation facade mới và hợp nhất ở identity — lớn hơn cỡ M và chạm module learning đang được F031 sửa; tách thành việc riêng.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F045-AC-03, AC-04, AC-30: bỏ điều kiện MFA và nhánh "thiếu MFA → `403 MFA_REQUIRED`"; giữ gateway nội bộ, `azp = eduworld-portal`, role platform (không có → `403 PERMISSION_DENIED`). T011, T013, T050, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin đọc dữ liệu liên tenant có kiểm soát (Priority: P1)

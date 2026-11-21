@@ -74,7 +74,7 @@ func op(id, method, pattern string, tenant httpx.TenantMode, idem httpx.Idempote
 
 // Operations of F014 (method, path, X-Tenant-Id mode, Idempotency-Key, success status and guard of the spec; the
 // contract test checks them against specs/openapi/eduworld-api.v1.yaml). Player routes carry game_player; /tenant/
-// and /admin/ get portal_staff (+ platform MFA for /admin/) from the route group.
+// and /admin/ get portal_staff (+ platform role for /admin/) from the route group.
 var Operations = map[string]httpx.Operation{
 	"createGameSession": op("createGameSession", http.MethodPost, "/game/sessions", httpx.TenantRequired, httpx.IdempotencyRequired,
 		http.StatusCreated, httpx.GuardGamePlayer),

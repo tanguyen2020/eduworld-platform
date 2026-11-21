@@ -86,7 +86,7 @@ func TestTenantStudentLoginEvents(t *testing.T) {
 	manager := e.staff(e.tenantA, "academic_manager")
 	adB := e.staff(e.tenantB, "school_admin", authztest.AtSchool(e.schoolB))
 	list := func(sub string, tenant string, s student, extra string) resp {
-		tok := e.idp.Token(sub, "eduworld-portal", false, nowWall())
+		tok := e.idp.Token(sub, "eduworld-portal", nowWall())
 		return e.do(t, http.MethodGet, "/tenant/students/"+s.id.String()+"/login-events"+extra, tok, map[string]string{"X-Tenant-Id": tenant}, nil)
 	}
 	r := list(adA, e.tenantA.String(), an, "?limit=1")
@@ -121,7 +121,7 @@ func TestTenantStudentLoginEvents(t *testing.T) {
 		t.Fatalf("tenant A reading tenant B: %d %s", r.status, r.raw)
 	}
 	mod := e.platformStaff("safety_moderator")
-	tok := e.idp.Token(mod, "eduworld-portal", true, nowWall())
+	tok := e.idp.Token(mod, "eduworld-portal", nowWall())
 	if r := e.do(t, http.MethodGet, "/tenant/students/"+an.id.String()+"/login-events", tok, map[string]string{"X-Tenant-Id": e.tenantA.String()}, nil); r.status != http.StatusForbidden {
 		t.Fatalf("safety_moderator: %d %s", r.status, r.raw)
 	}
@@ -145,7 +145,7 @@ func TestLoginEventsCrossTenant(t *testing.T) {
 			t.Fatalf("start: %d %s", r.status, r.raw)
 		}
 	}
-	sa := e.idp.Token(e.platformStaff("system_admin"), "eduworld-portal", true, nowWall())
+	sa := e.idp.Token(e.platformStaff("system_admin"), "eduworld-portal", nowWall())
 	r := e.do(t, http.MethodGet, "/admin/login-events?tenant_ids="+e.tenantB.String(), sa, nil, nil)
 	data, _ := r.body["data"].([]any)
 	if r.status != http.StatusOK || len(data) != 1 || data[0].(map[string]any)["tenant_id"] != e.tenantB.String() ||
@@ -156,12 +156,12 @@ func TestLoginEventsCrossTenant(t *testing.T) {
 		t.Fatal("cross-tenant read not audited")
 	}
 	for _, role := range []string{"safety_moderator", "content_admin"} {
-		tok := e.idp.Token(e.platformStaff(role), "eduworld-portal", true, nowWall())
+		tok := e.idp.Token(e.platformStaff(role), "eduworld-portal", nowWall())
 		if r := e.do(t, http.MethodGet, "/admin/login-events?tenant_ids="+e.tenantA.String(), tok, nil, nil); r.status != http.StatusForbidden {
 			t.Fatalf("%s: %d %s", role, r.status, r.raw)
 		}
 	}
-	tenantAdmin := e.idp.Token(e.staff(e.tenantA, "tenant_admin"), "eduworld-portal", false, nowWall())
+	tenantAdmin := e.idp.Token(e.staff(e.tenantA, "tenant_admin"), "eduworld-portal", nowWall())
 	if r := e.do(t, http.MethodGet, "/admin/login-events?tenant_ids="+e.tenantA.String(), tenantAdmin, nil, nil); r.status != http.StatusForbidden {
 		t.Fatalf("tenant admin: %d %s", r.status, r.raw)
 	}

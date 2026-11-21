@@ -50,7 +50,7 @@ type CatalogQueries interface {
 }
 
 // CatalogHandlers serve the catalogue operations (core-api only). The /admin/ routes are internal-gateway routes:
-// httpx adds GuardPortalStaff + GuardPlatformMFA (platform role, MFA); /tenant/chat/categories gets GuardPortalStaff.
+// httpx adds GuardPortalStaff + GuardPlatformRole (platform role; no MFA, ADR-0094); /tenant/chat/categories gets GuardPortalStaff.
 // Authorization of the permission is in each use case (authz.Require, R7).
 type CatalogHandlers struct {
 	Commands CatalogCommands

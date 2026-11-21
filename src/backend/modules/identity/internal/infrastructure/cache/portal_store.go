@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/valkey-io/valkey-go"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port"
@@ -35,9 +34,8 @@ var (
 	_ port.RateLimiter        = RateLimiter{}
 )
 
-func ticketKey(hash string) string        { return prefix + "portal_setup:" + hash }
-func otpEmailKey(userID uuid.UUID) string { return prefix + "portal_otp_email:" + userID.String() }
-func sessionKey(key string) string        { return prefix + "portal_session:" + key }
+func ticketKey(hash string) string { return prefix + "portal_setup:" + hash }
+func sessionKey(key string) string { return prefix + "portal_session:" + key }
 
 // Save implements port.SetupTicketStore (SET … PXAT expires_at).
 func (s SetupTickets) Save(ctx context.Context, ticketHash string, t port.SetupTicket) error {
@@ -68,20 +66,6 @@ func (s SetupTickets) Take(ctx context.Context, ticketHash string) (port.SetupTi
 	return t, nil
 }
 
-// MarkOTPEmail implements port.SetupTicketStore (SET NX PX window).
-func (s SetupTickets) MarkOTPEmail(ctx context.Context, userID uuid.UUID, window time.Duration) (bool, error) {
-	err := s.C.Do(ctx, s.C.B().Set().Key(otpEmailKey(userID)).Value("1").Nx().Px(window).Build()).Error()
-	if valkey.IsValkeyNil(err) {
-		return false, nil
-	}
-	return err == nil, err
-}
-
-// UnmarkOTPEmail implements port.SetupTicketStore.
-func (s SetupTickets) UnmarkOTPEmail(ctx context.Context, userID uuid.UUID) error {
-	return s.C.Do(ctx, s.C.B().Del().Key(otpEmailKey(userID)).Build()).Error()
-}
-
 // Save implements port.PortalSessionStore.
 func (s PortalSessions) Save(ctx context.Context, key string, v port.PortalSession, ttl time.Duration) error {
 	raw, err := json.Marshal(v)
@@ -102,7 +86,7 @@ func (s PortalSessions) Get(ctx context.Context, key string) (port.PortalSession
 	}
 	var v port.PortalSession
 	if json.Unmarshal(raw, &v) != nil {
-		return port.PortalSession{}, false, nil //nolint:nilerr // an unreadable record counts as absent (fail-safe for MFA sessions)
+		return port.PortalSession{}, false, nil //nolint:nilerr // an unreadable record counts as absent (fail-safe for platform sessions)
 	}
 	return v, true, nil
 }

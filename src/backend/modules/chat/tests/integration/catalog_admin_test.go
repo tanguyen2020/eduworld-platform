@@ -45,7 +45,7 @@ func (c *chatEnv) inTenant(role string, tenant uuid.UUID) string {
 	d.TenantID, d.TenantType = &t, authz.TenantTypeSchool
 	sub := "kc-platform-" + uuid.NewString()
 	c.res.Set(sub, d)
-	return c.idp.Token(sub, httpxtest.PortalClient, true, time.Now())
+	return c.idp.Token(sub, httpxtest.PortalClient, time.Now())
 }
 
 func termInput(cat uuid.UUID, text, match string) map[string]any {

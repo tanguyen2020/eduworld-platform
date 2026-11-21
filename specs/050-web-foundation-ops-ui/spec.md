@@ -30,6 +30,10 @@
 - Q: Font Be Vietnam Pro tự host? → A: [Confirmed] `ops-ui/src/theme/fonts.css` nạp 400/500/600/700 từ `design/fonts/BeVietnamPro` (Vite đóng gói). Màu chữ phụ của Ant Design (độ mờ 0,45 → 3,36:1) bị axe chặn nên `design/admin-tokens` thêm `antd.colorText*` (tokens@0.2.0).
 - Q: Đường dẫn route workspace? → A: `/school`, `/content`, `/game-ops`, `/live-ops`, `/platform` (tasks T010) → thư mục `school-lms`, `content-studio`, `game-ops`, `live-ops`, `platform-admin`; trang `/` chỉ là danh sách liên kết, không quyết định quyền.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F050-AC-15: nhánh "`403 MFA_REQUIRED` phát `mfa_required`" không còn áp dụng (mã đã bỏ khỏi catalog); T027 và quickstart nhắc `mfa_required` là lịch sử, phía UI do đợt sửa portal của ADR-0094 xử lý. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khung Admin Portal một ứng dụng, 5 workspace (Priority: P1)

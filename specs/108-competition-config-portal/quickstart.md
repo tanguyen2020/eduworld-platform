@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F104–F107, F079 (khung workspace A), F051 (portal shell), F050 (`ops-ui`), F004 (gateway nội bộ).
 - Lệnh: `make up`, `make seed`, `make run-core-api`, `make run-worker PROFILE=events`, `pnpm --filter portal dev` (theo [LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)); truy cập workspace A qua gateway nội bộ local.
-- Tài khoản demo: `sa.admin` (System Admin, kiêm `competition.config.*`, MFA tắt ở local) — dùng thay Competition Admin; `ad.truong.a` (School Admin), `qlcm.truong.a` (Academic Manager), `ad.donvi` (Tenant Admin).
+- Tài khoản demo: `sa.admin` (System Admin, kiêm `competition.config.*`, không MFA — ADR-0094) — dùng thay Competition Admin; `ad.truong.a` (School Admin), `qlcm.truong.a` (Academic Manager), `ad.donvi` (Tenant Admin).
 
 ## 2. Kịch bản kiểm tra
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 1 | `sa.admin` gọi `listGameConfigs_competition` cho từng loại trong 7 loại | 200, có seed | F108-AC-01 |
 | 2 | Tài khoản platform chỉ có `competition.config.season.write` sửa `ranking-rules`; không có `game.content.publish` gọi publish | `403 PERMISSION_DENIED`, audit `authz.denied` | F108-AC-02 |
-| 3 | `ad.truong.a` gọi `/api/v1/game-admin/ranking-rules` qua gateway public; gọi thẳng backend; token không MFA (bật MFA) | 404 tại APISIX; `403 PERMISSION_DENIED`; `403 MFA_REQUIRED` | F108-AC-03 |
+| 3 | `ad.truong.a` gọi `/api/v1/game-admin/ranking-rules` qua gateway public; gọi thẳng backend | 404 tại APISIX; `403 PERMISSION_DENIED` (không còn kiểm MFA — ADR-0094) | F108-AC-03 |
 | 4 | Lưu matchmaking cho phép ghép lớp 3 với lớp 4; ranking-rules tier giảm dần; leaderboard scope `class` metric `xp`; template có `allowed_params` `reward`; bật bonus tốc độ khối 3 | `422 VALIDATION_FAILED` chỉ rõ trường | F108-AC-04 |
 | 5 | PATCH version đã publish; tạo nháp từ `based_on_version_id`; publish `effective_from` quá khứ; rollback không lý do / về version chưa từng publish | `409 CONTENT_NOT_EDITABLE`; nháp mới; `422`; `422`/`422 ROLLBACK_TARGET_INVALID` | F108-AC-05 |
 | 6 | PATCH không `If-Match`; với `If-Match` cũ | `428 PRECONDITION_REQUIRED`; `412 CONTENT_VERSION_CONFLICT` | F108-AC-06 |

@@ -35,7 +35,7 @@ func TestSchoolScopedRoutes(t *testing.T) {
 
 	token := func(sub string, p authz.Principal) string {
 		h.res.Set(sub, p.PrincipalData)
-		return h.idp.Token(sub, httpxtest.PortalClient, false, now)
+		return h.idp.Token(sub, httpxtest.PortalClient, now)
 	}
 	tenantAdminA := token("kc-f052-ta", authztest.Staff(ta, "tenant_admin"))
 	schoolAdminA1 := token("kc-f052-sa1", authztest.Staff(ta, "school_admin", authztest.AtSchool(schoolA1)))

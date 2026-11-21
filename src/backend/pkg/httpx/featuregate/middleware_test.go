@@ -145,7 +145,7 @@ func (e *gateEnv) do(t *testing.T, path string, w *who, tenantHeader *uuid.UUID)
 	if w != nil {
 		sub := "kc-" + uuid.NewString()
 		e.res.Set(sub, w.data)
-		req.Header.Set("Authorization", "Bearer "+e.idp.Token(sub, w.azp, true, e.clk.Now()))
+		req.Header.Set("Authorization", "Bearer "+e.idp.Token(sub, w.azp, e.clk.Now()))
 	}
 	if tenantHeader != nil {
 		req.Header.Set(httpx.TenantHeader, tenantHeader.String())
@@ -306,7 +306,7 @@ func TestMiddlewareInvalidate(t *testing.T) {
 	res.Set("u1", authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, TenantID: &ta})
 	call := func() int {
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/lms/assignments", nil)
-		req.Header.Set("Authorization", "Bearer "+idp.Token("u1", httpxtest.PortalClient, false, clk.Now()))
+		req.Header.Set("Authorization", "Bearer "+idp.Token("u1", httpxtest.PortalClient, clk.Now()))
 		req.Header.Set(httpx.TenantHeader, ta.String())
 		rec := httptest.NewRecorder()
 		srv.ServeHTTP(rec, req)

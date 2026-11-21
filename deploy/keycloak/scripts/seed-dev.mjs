@@ -1,6 +1,6 @@
 // Local dev data of realm eduworld (F004 T013/T043, LOCAL_DEVELOPMENT §5), idempotent:
 //   1. users of realm-eduworld.dev.json through Admin API partialImport with ifResourceExists=SKIP
-//      (creates missing users with password and OTP credentials, never rewrites existing ones, so the
+//      (creates missing users with their password, never rewrites existing ones, so the
 //      realm password history is never violated);
 //   2. Organizations and members (keycloak-config-cli 6.4 does not import organizations).
 // Local only: refuses to run unless EW_ENV=local.

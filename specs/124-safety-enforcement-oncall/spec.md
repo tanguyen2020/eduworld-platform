@@ -17,6 +17,10 @@
 
 - Q: Xác nhận sau đối soát (RB-621, RB-510)? → A: Khóa nhiều nguồn lưu ở `identity.account_locks` ([DATABASE_DESIGN](../../docs/07-backend/DATABASE_DESIGN.md)); F016 dùng chung bảng này thay một `status_reason`. Metric bypass là `eduworld_tenant_filter_bypass_total{module,reason}`.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F124-AC-16, AC-21: bỏ điều kiện "token thiếu MFA" và mã `403 MFA_REQUIRED` của API break-glass; `safety_moderator`, role tenant vẫn `403 PERMISSION_DENIED`. T033, T042, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Sanction `account_lock` khóa tài khoản và thu hồi phiên (Priority: P1) 🎯 MVP

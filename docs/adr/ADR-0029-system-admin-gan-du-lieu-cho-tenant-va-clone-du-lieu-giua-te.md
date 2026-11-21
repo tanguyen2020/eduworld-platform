@@ -1,6 +1,9 @@
 # ADR-0029 — System Admin gán dữ liệu cho tenant và clone dữ liệu giữa tenant
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [MULTITENANCY](../06-architecture/MULTITENANCY.md), [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [MULTITENANCY](../06-architecture/MULTITENANCY.md), [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: điều kiện MFA ở mục 3. **Còn hiệu lực:** chỉ System Admin gán/clone, qua workspace Platform Administration trên gateway nội bộ.
 
 ## Bối cảnh
 
@@ -30,3 +33,4 @@ Stakeholder yêu cầu: dữ liệu System Admin tạo có thể gán cho các t
 | 2026-11-15 | Accepted | Stakeholder |
 | 2026-11-15 | Assignment nằm ở DB service sở hữu; clone là saga | ADR-0036, ADR-0037 |
 | 2026-11-15 | Client `eduworld-portal` + MFA thay `eduworld-admin` | ADR-0027 |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

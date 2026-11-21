@@ -119,7 +119,7 @@ var schoolStatuses = map[string]bool{"": true, "active": true, "pending_review":
 
 // ListCatalogSchools is listCatalogSchools: portal staff see the schools of the scope set by the request —
 // tenant users their session tenant (tenant_ids ignored); a platform principal without X-Tenant-Id only through
-// the CrossTenantScope httpx builds from tenant_ids (platform.cross_tenant.read + MFA, audited
+// the CrossTenantScope httpx builds from tenant_ids (platform.cross_tenant.read, audited
 // cross_tenant.accessed). A plain PlatformScope never lists the schools of every tenant (F010-AC-10, OQ F057-4).
 func (q Org) ListCatalogSchools(ctx context.Context, in CatalogSchoolsInput) (out Page[dto.School], err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListCatalogSchools")

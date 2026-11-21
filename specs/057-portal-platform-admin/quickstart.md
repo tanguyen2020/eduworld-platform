@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F045, F051, F010, F016, F050.
 - Lệnh: `make up`, `make migrate`, `make seed`, `make up-app`; `cd src/cms/frontend && pnpm install && pnpm gen:api && pnpm dev` ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md); local gọi public + internal cùng máy).
-- Tài khoản: `sa.admin` (MFA tắt ở local; bật OTP seed để thử step-up), `ad.truong.a`, `cm.noidung`, `sm.antoan`.
+- Tài khoản: `sa.admin` (chỉ mật khẩu — không MFA, ADR-0094), `ad.truong.a`, `cm.noidung`, `sm.antoan`.
 - Dữ liệu: bộ câu hỏi platform seed; một câu hỏi TH Demo A đã xóa mềm ở workspace B.
 
 ## 2. Kịch bản kiểm tra
@@ -32,7 +32,7 @@
 | 16b | Cấu hình hệ thống → Giờ giới nghiêm platform: xem giá trị mặc định; nhập `25:00`; đổi 21:00–06:30 không lý do; rồi có lý do và xác nhận | Nhãn "mặc định"; lỗi tại ô; bị chặn; lưu thành công, audit + `platform_settings.changed`; `getSchoolSettings` của TH Demo A trả `platform_curfew` mới | F057-AC-23 |
 | 17 | Tenant: tạo tenant mã trùng (sau delta T004) | `409` hiển thị; tạo mã mới thành công | F057-AC-17 |
 | 18 | `ad.truong.a`, `cm.noidung`, `sm.antoan` mở `/portal/platform-admin/trash` | Trang 403; không tải chunk D | F057-AC-18 |
-| 19 | Bật OTP cho `sa.admin`, dùng token không MFA; tắt gateway nội bộ | Step-up MFA rồi quay lại URL; "Cần kết nối mạng quản trị (VPN)" | F057-AC-19 |
+| 19 | Tắt gateway nội bộ (không còn step-up MFA — ADR-0094) | "Cần kết nối mạng quản trị (VPN)" | F057-AC-19 |
 | 20 | Chặn mạng giữa lúc gán rồi thử lại | Hai request cùng `Idempotency-Key`; một assignment | F057-AC-20 |
 | 21 | Dán chuỗi dài vào ô lý do, mã tenant | Bị giới hạn theo `maxLength`, có bộ đếm | F057-AC-21 |
 | 22 | `sa.admin` tắt mặc định platform `action.platform_admin.tenant_data.clone`, tải lại portal | Nút "Clone giữa tenant" ẩn; `createTenantClone` → `403 FEATURE_DISABLED`; Tenant và Thùng rác không có công tắc tắt (`422 FEATURE_NOT_DISABLEABLE` nếu gọi API) | F057-AC-22 |
@@ -74,7 +74,7 @@ Chạy trong `src/cms/frontend` (tối đa 3 worker), commit `6b7a82d`. Backend 
 | 11–13 | `Catalog.test.tsx` (quốc gia có lý do, sửa gửi `If-Match` = `version` của dòng — OQ F057-3; tỉnh `status=all`, kế thừa; danh mục trường `tenant_ids[]` nhiều tenant + cột Tenant + lọc `status` — OQ F057-4; import dry-run → lỗi theo dòng → xác nhận áp dụng) |
 | 14–16b | `SystemSettings.test.tsx` (cảnh báo < 60 ngày, `default_days=null`, duyệt lần dọn, "Hủy lần dọn" có lý do + thử lại giữ `Idempotency-Key` — OQ F057-2, `RETENTION_BELOW_MINIMUM`, giới nghiêm "Mặc định", "hôm sau", HH:MM, xác nhận, `If-Match`, `422`/`412` theo code) |
 | 17, 21 | `TenantListPage.test.tsx` (lọc `q`/`tenant_type`, `maxlength` + bộ đếm, `409`, tắt có lý do + `If-Match`); `limits.test.ts` (mọi giới hạn = OpenAPI) |
-| 18–19, 22 | `workspaceGuard.test.tsx` (403 + không tải chunk D cho `ad.truong.a`/`cm.noidung`/`sm.antoan`, MFA step-up giữ URL, VPN, tab ẩn khi action tắt, `403 FEATURE_DISABLED` tải lại quyền) |
+| 18–19, 22 | `workspaceGuard.test.tsx` (403 + không tải chunk D cho `ad.truong.a`/`cm.noidung`/`sm.antoan`, VPN (không còn MFA step-up — ADR-0094), tab ẩn khi action tắt, `403 FEATURE_DISABLED` tải lại quyền) |
 
 ### Bằng chứng 2026-11-20 (portal bật màn chờ backend — OQ F057-2/3/4, F059-1/2/3/5)
 

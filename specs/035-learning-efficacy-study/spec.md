@@ -37,6 +37,10 @@
 - Trải nghiệm theo arm `live` (F035-AC-24): `getMyMastery`, `getMyProgress` đọc mô hình/trạng thái của arm `mastery_model` ngay ở request; gợi ý (`getMyRecommendations`) được **tính và lưu** theo arm (mô hình arm + `rule_params`) ở lần tính lại kế tiếp (sau mỗi attempt được chấm, job `recommendation-nightly`); khi thử nghiệm dừng/thu hồi, danh sách gợi ý trở về engine mặc định ở lần tính lại kế tiếp (≤ 24 giờ), còn mastery/tiến độ hiển thị trở về control từ request kế tiếp. Học sinh ở nhiều thử nghiệm `live` cùng lúc: mô hình mastery lấy từ thử nghiệm bắt đầu sớm nhất; mỗi `rule_params` lấy giá trị của thử nghiệm bắt đầu sớm nhất có đặt tham số đó. Attempt `mode = exam`, ExamSession và `getStudentProgress`/dashboard không đọc arm.
 - Portal US8: đường dẫn màn chi tiết là route con của menu (`/platform-admin/efficacy-studies/:studyId`, `/platform-admin/learning-experiments/:experimentId`) thay cho `/portal/platform-admin/research/*` trong plan (đường dẫn menu do catalog F051 sở hữu); bản dịch `platform.research.*` nằm trong `research/i18n/{vi,en}.json` của chunk workspace D.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F035-AC-10, AC-27: bỏ điều kiện MFA và nhánh `403 MFA_REQUIRED`; người không có `platform.efficacy_study.manage`/`platform.learning_experiment.manage` vẫn `403 PERMISSION_DENIED`. T021 và plan/contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Câu và đề đo hiệu quả độc lập với luyện tập (Priority: P1)

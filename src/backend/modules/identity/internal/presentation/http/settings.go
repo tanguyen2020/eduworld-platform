@@ -141,7 +141,7 @@ func (h SettingsHandlers) listPlatformAuditLogs(w http.ResponseWriter, r *http.R
 }
 
 // portalOp2 is an operation of the Admin Portal: portal_staff guard (F012-AC-05); /admin/* routes also get
-// platform_mfa from httpx.
+// platform_role from httpx.
 func portalOp2(id, method, pattern string, tenant httpx.TenantMode, idem httpx.IdempotencyMode, status int) httpx.Operation {
 	return withGuard(op(id, method, pattern, tenant, idem, status), httpx.GuardPortalStaff)
 }

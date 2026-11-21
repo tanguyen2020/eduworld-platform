@@ -33,7 +33,7 @@ func TestPlayerRoutesStaffDenied(t *testing.T) {
 		o := gamehttp.Operations[id]
 		path := strings.NewReplacer("{game_session_id}", session, "{slot}", "1").Replace(o.Pattern)
 		for role, sub := range subs {
-			tok := e.idp.Token(sub, "eduworld-portal", true, nowWall())
+			tok := e.idp.Token(sub, "eduworld-portal", nowWall())
 			h := map[string]string{"X-Tenant-Id": e.tenantA.String(), "X-Device-Id": uuid.NewString(), "Idempotency-Key": newKey()}
 			var body any
 			if o.Method == http.MethodPost && id == "createGameSession" {

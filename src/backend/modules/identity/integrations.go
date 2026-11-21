@@ -5,20 +5,20 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/integration"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 )
 
 // integrationConfig reads the non-secret configuration of getIntegrationOverview (F059-2): the realm issuer
-// (first of EW_OIDC_ISSUERS) and its realm name, the client ids with their purpose, the step-up window of
-// platform routes and the optional gateway URLs EW_GATEWAY_PUBLIC_BASE_URL / EW_GATEWAY_INTERNAL_BASE_URL.
+// (first of EW_OIDC_ISSUERS) and its realm name, the client ids with their purpose, the maximum session age of
+// platform staff (ADR-0094 §2) and the optional gateway URLs EW_GATEWAY_PUBLIC_BASE_URL / EW_GATEWAY_INTERNAL_BASE_URL.
 // Secrets (EW_KC_*_CLIENT_SECRET, …) are never read here. A URL carrying credentials, a query or a fragment
 // is refused at startup so nothing secret can reach the response (AGENTS R3, R4).
 func integrationConfig(cfg *config.Config, issuer string) (query.IntegrationConfig, error) {
 	out := query.IntegrationConfig{IssuerURL: issuer,
-		PlatformMaxAuthAge: cfg.Duration("EW_OIDC_PLATFORM_MAX_AUTH_AGE", httpx.DefaultPlatformMaxAuthAge)}
+		PlatformMaxAuthAge: cfg.Duration("EW_OIDC_PLATFORM_MAX_AUTH_AGE", command.DefaultPlatformMaxAuthAge)}
 	if err := plainURL("EW_OIDC_ISSUERS", issuer); err != nil {
 		return out, err
 	}

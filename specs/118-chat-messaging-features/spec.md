@@ -13,6 +13,10 @@
 - Q: Học sinh "đã sở hữu" pack sticker khóa xác định thế nào? → A: Qua projection từ event mở khóa của module game (F075); chưa có event thì pack khóa không chọn được (fail-closed), pack mặc định vẫn dùng được.
 - Q: Copy tin? → A: Tính năng client (F119), không có API.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F118-AC-17: "(gateway nội bộ, MFA)" đọc là gateway nội bộ + `game.chat_assets.write`, không MFA; plan/contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Sửa và thu hồi tin mà không xóa được bằng chứng (Priority: P1)

@@ -36,6 +36,10 @@ Quyết định khi triển khai, chọn phương án bảo thủ nhất (owner 
 - **Tham số:** giá trị `dashboard_*`, `school_dashboard_refresh` phạm vi `code` mirror trong `dashboard/model/limits.ts`, test so với CONFIG_DEFAULTS (R33).
 - **Mock test:** theo mẫu repo (`MockPortalBackend` + `src/test/dashboard-mock.ts`, nhãn MOCK) thay cho MSW `__tests__/msw/handlers.ts` của T010.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: Chỉ plan/contracts nhắc MFA cho đọc liên tenant; đọc là `platform.cross_tenant.read` + client portal + audit, không MFA. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trang tổng quan trường (Priority: P1) 🎯 MVP

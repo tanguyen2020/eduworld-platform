@@ -16,7 +16,7 @@ type RoleScopeKind string
 const (
 	// RoleScopeTenant roles are assigned inside one tenant (scope tenant, school or subject).
 	RoleScopeTenant RoleScopeKind = "tenant"
-	// RoleScopePlatform roles have tenant_id = NULL and require MFA on the portal.
+	// RoleScopePlatform roles have tenant_id = NULL (Admin Portal only; no MFA since ADR-0094).
 	RoleScopePlatform RoleScopeKind = "platform"
 )
 

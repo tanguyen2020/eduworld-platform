@@ -48,6 +48,10 @@ Owner đã duyệt trước các mặc định [Proposed]; khi tài liệu thi�
 - Q (US3): migration "đưa `pii` về bật"? → A: Không cần: bảng `chat.moderation_switches` ra đời cùng F116 (migration seed không có khóa `pii`); resolver bỏ qua `steps.pii` cũ (test với dòng thô) và mọi lần ghi chỉ lưu 4 bước tắt được (khóa `pii` cũ bị xóa ở lần ghi kế tiếp).
 - Q (US3): metric `eduworld_chat_policy_disabled` khi lệnh ở core-api còn job hết hạn ở worker? → A: Mỗi process tự đồng bộ gauge từ PostgreSQL (sau mỗi thay đổi, sau mỗi lượt `moderation-switch-expirer` 30 s, và mỗi 30 s trong core-api), đặt lại 0 cho nhãn không còn tắt; alert dùng `max by (tenant, step)`. Job chạy mỗi 30 s (lease `ew:lock:job:moderation-switch-expirer` + khóa dòng), nên bước bật lại ≤ 30 s sau `expires_at`; pipeline đã coi giá trị quá hạn là bật.
 
+### Session 2026-11-21 (owner bỏ MFA — [Confirmed])
+
+- Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F116-AC-12: "System Admin (`chat.sensitive_terms.write`, gateway nội bộ, MFA)" đọc là không MFA; test authz của danh mục từ nhạy cảm kiểm `403 PERMISSION_DENIED` cho người thiếu permission, không còn kiểm `MFA_REQUIRED`. T025, T041, plan, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Mọi tin nhắn được kiểm tra trước khi phát (Priority: P1)

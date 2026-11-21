@@ -44,23 +44,32 @@ func fieldCodes(b map[string]any) []string {
 	return out
 }
 
-// seedSetup: nv.moi has a temporary password (UPDATE_PASSWORD) and no OTP yet (CONFIGURE_TOTP).
+// seedSetup: nv.moi has a temporary password (UPDATE_PASSWORD) and, from before ADR-0094, a pending OTP
+// enrolment (CONFIGURE_TOTP). The fake direct grant answers "not fully set up" while Keycloak has required
+// actions for the user.
 func seedSetup(e *portalEnv) *write.PortalAccount {
-	e.idp.accounts["nv.moi"] = fakeKCAccount{password: pwTenant, sub: "kc-moi", outcome: port.ErrPortalSetupRequired}
+	e.idp.accounts["nv.moi"] = fakeKCAccount{password: pwTenant, sub: "kc-moi"}
 	e.kc.logins = map[string]string{"nv.moi": "kc-moi"}
-	e.kc.actions["kc-moi"] = []string{port.KCActionUpdatePassword, port.KCActionConfigureTOTP}
+	e.kc.actions["kc-moi"] = []string{port.KCActionUpdatePassword, portalauth.ActionLegacyConfigureTOTP}
+	e.idp.pending = func(username string) bool {
+		e.kc.mu.Lock()
+		defer e.kc.mu.Unlock()
+		id, ok := e.kc.logins[username]
+		return ok && len(e.kc.actions[id]) > 0
+	}
 	return e.accounts.add("kc-moi", "nv.moi", write.PortalAccount{UserType: "staff", Status: "active", HasPortalRole: true})
 }
 
-// F012-AC-33, AC-34, AC-35 (TC-AUTH-096): ACCOUNT_SETUP_REQUIRED + one-time ticket + steps; policy violation
-// keeps the ticket; success removes UPDATE_PASSWORD and sends the CONFIGURE_TOTP email at most once per
-// window; used, expired or orphaned tickets → 401 SETUP_TICKET_INVALID.
+// F012-AC-33, AC-34, AC-35 (TC-AUTH-096) as changed by ADR-0094: ACCOUNT_SETUP_REQUIRED + one-time ticket +
+// update_password only (the legacy CONFIGURE_TOTP is dropped, never a step, no OTP email); policy violation
+// keeps the ticket; success removes UPDATE_PASSWORD and the next login succeeds with the password alone;
+// used, expired or orphaned tickets → 401 SETUP_TICKET_INVALID.
 func TestPortalSetupPassword(t *testing.T) {
 	e := newPortalEnv(t)
 	acct := seedSetup(e)
 	login := func() map[string]any {
 		t.Helper()
-		r := e.post("/auth/portal/login", loginBody("nv.moi", pwTenant, "", uuid.New()), nil, nil)
+		r := e.post("/auth/portal/login", loginBody("nv.moi", pwTenant, uuid.New()), nil, nil)
 		if r.code != http.StatusForbidden || len(r.cookies) != 0 {
 			t.Fatalf("login = %d %s", r.code, r.body)
 		}
@@ -71,8 +80,14 @@ func TestPortalSetupPassword(t *testing.T) {
 		return b
 	}
 	b := login()
-	if !slices.Equal(strs(b["required_steps"]), []string{"update_password", "configure_otp"}) || b["otp_setup_email_sent"] != false {
+	if !slices.Equal(strs(b["required_steps"]), []string{"update_password"}) {
 		t.Fatalf("steps = %v", b)
+	}
+	if _, has := b["otp_setup_email_sent"]; has {
+		t.Fatalf("no OTP field since ADR-0094: %v", b)
+	}
+	if slices.Contains(e.kc.actions["kc-moi"], portalauth.ActionLegacyConfigureTOTP) || len(e.kc.emails) != 0 {
+		t.Fatalf("legacy CONFIGURE_TOTP must be dropped without email: %+v", e.kc)
 	}
 	if _, stored := e.tickets.m[b["setup_ticket"].(string)]; stored || len(e.tickets.m) != 1 {
 		t.Fatal("the ticket is stored by its hash only")
@@ -94,32 +109,22 @@ func TestPortalSetupPassword(t *testing.T) {
 		t.Fatalf("setup = %d %s", r.code, r.body)
 	}
 	b = decodeBody(t, r)
-	if !slices.Equal(strs(b["remaining_steps"]), []string{"configure_otp"}) || b["otp_setup_email_sent"] != true {
+	if steps, ok := b["remaining_steps"].([]any); !ok || len(steps) != 0 || len(b) != 1 {
 		t.Fatalf("result = %v", b)
 	}
-	if e.kc.passwords["kc-moi"] != "Mk-New-Passw0rd" || slices.Contains(e.kc.actions["kc-moi"], port.KCActionUpdatePassword) || len(e.kc.emails) != 1 {
+	if e.kc.passwords["kc-moi"] != "Mk-New-Passw0rd" || len(e.kc.actions["kc-moi"]) != 0 || len(e.kc.emails) != 0 {
 		t.Fatalf("keycloak = %+v", e.kc)
 	}
-	if len(e.audit.find(command.AuditPortalSetupPassword, audit.ResultSuccess)) != 1 || len(e.audit.find(command.AuditPortalOTPSetupEmailSent, audit.ResultSuccess)) != 1 {
+	if len(e.audit.find(command.AuditPortalSetupPassword, audit.ResultSuccess)) != 1 {
 		t.Fatal("setup audits")
 	}
 	// One time.
 	if r = setup(ticket, "Mk-New-Passw0rd"); r.code != http.StatusUnauthorized || decodeBody(t, r)["code"] != "SETUP_TICKET_INVALID" {
 		t.Fatalf("reuse = %d %s", r.code, r.body)
 	}
-	// Only configure_otp left: login answers it, the email is not sent again within the window...
-	b = login()
-	if !slices.Equal(strs(b["required_steps"]), []string{"configure_otp"}) || b["otp_setup_email_sent"] != true || len(e.kc.emails) != 1 {
-		t.Fatalf("otp only = %v emails=%d", b, len(e.kc.emails))
-	}
-	// ...and such a ticket does not change the password.
-	if r = setup(b["setup_ticket"].(string), "Mk-Other-Passw0rd"); r.code != http.StatusUnauthorized {
-		t.Fatalf("otp-only ticket = %d", r.code)
-	}
-	e.clock.add(command.DefaultPortalSetupTicketTTL + time.Second)
-	_ = login()
-	if len(e.kc.emails) != 2 {
-		t.Fatalf("new window → new email, got %d", len(e.kc.emails))
+	// Nothing left: the password alone signs in.
+	if r = e.post("/auth/portal/login", loginBody("nv.moi", pwTenant, uuid.New()), nil, nil); r.code != http.StatusOK {
+		t.Fatalf("login after setup = %d %s", r.code, r.body)
 	}
 	// Expired ticket.
 	e.kc.actions["kc-moi"] = []string{port.KCActionUpdatePassword}
@@ -143,6 +148,44 @@ func TestPortalSetupPassword(t *testing.T) {
 // F012-AC-36, AC-37 (TC-AUTH-097): forgot always 202 without doing the work in the request; only active
 // staff get an email with the link only; DB holds the hash only; one live token per user; reset is single
 // use, revokes every session; policy violation and Keycloak failures keep the token.
+// ADR-0094: a platform account still carrying the CONFIGURE_TOTP required action of ADR-0091 (enrolled before
+// OTP was removed, realm not re-applied yet) is not locked out: module identity drops the action through the
+// Admin API (audited), retries the password grant once and the user is signed in with the password alone.
+func TestPortalLoginDropsLegacyOTPAction(t *testing.T) {
+	e := newPortalEnv(t)
+	seedPortal(e)
+	e.idp.accounts["sm.antoan"] = fakeKCAccount{password: pwPlatform, sub: "kc-sm", platform: true}
+	e.accounts.add("kc-sm", "sm.antoan", write.PortalAccount{UserType: "staff", Status: "active", HasPortalRole: true})
+	e.kc.logins = map[string]string{"sm.antoan": "kc-sm"}
+	e.kc.actions["kc-sm"] = []string{portalauth.ActionLegacyConfigureTOTP}
+	e.idp.pending = func(username string) bool {
+		e.kc.mu.Lock()
+		defer e.kc.mu.Unlock()
+		return len(e.kc.actions[e.kc.logins[username]]) > 0
+	}
+	r := e.post("/auth/portal/login", loginBody("sm.antoan", pwPlatform, uuid.New()), nil, nil)
+	if r.code != http.StatusOK || decodeBody(t, r)["access_token"] == "" {
+		t.Fatalf("login = %d %s", r.code, r.body)
+	}
+	if len(e.kc.actions["kc-sm"]) != 0 || len(e.kc.emails) != 0 || e.idp.grants != 2 {
+		t.Fatalf("keycloak = %+v grants=%d", e.kc, e.idp.grants)
+	}
+	if ev := e.audit.find(command.AuditPortalLegacyOTPActionRemoved, audit.ResultSuccess); len(ev) != 1 || ev[0].TargetID != "kc-sm" {
+		t.Fatalf("audit = %+v", ev)
+	}
+	for _, p := range e.idp.passwords {
+		if strings.Trim(string(p), "\x00") != "" {
+			t.Fatalf("password bytes not cleared: %q", p)
+		}
+	}
+	// A wrong password never reaches the Admin API.
+	e.kc.actions["kc-sm"] = []string{portalauth.ActionLegacyConfigureTOTP}
+	if r = e.post("/auth/portal/login", loginBody("sm.antoan", "wrong", uuid.New()), nil, nil); r.code != http.StatusUnauthorized ||
+		len(e.kc.actions["kc-sm"]) != 1 {
+		t.Fatalf("wrong password = %d %s %+v", r.code, r.body, e.kc.actions)
+	}
+}
+
 func TestPortalForgotAndReset(t *testing.T) {
 	e := newPortalEnv(t)
 	seedPortal(e)

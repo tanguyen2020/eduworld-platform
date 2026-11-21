@@ -19,15 +19,12 @@ type Channel string
 const ChannelGame Channel
 const ChannelPortal Channel
 const ChannelUnknown Channel
-type Claims struct{Issuer string; Subject string; AZP string; SessionID string; ACR string; AMR []string; AuthTime time.Time; Expiry time.Time; Organizations []string}
+type Claims struct{Issuer string; Subject string; AZP string; SessionID string; Expiry time.Time; Organizations []string}
   func (Claims).SubjectRef() SubjectRef
   field Issuer string
   field Subject string
   field AZP string
   field SessionID string
-  field ACR string
-  field AMR []string
-  field AuthTime time.Time
   field Expiry time.Time
   field Organizations []string
 func ClaimsFrom(ctx context.Context) (Claims, bool)
@@ -184,7 +181,7 @@ type Principal struct{PrincipalData; perms PermissionSet}
   func (Principal).Has(perm Permission) bool
   func (Principal).IsPlatform() bool
   field PrincipalData PrincipalData
-type PrincipalData struct{UserID github.com/google/uuid.UUID "json:\"user_id\""; UserType UserType "json:\"user_type\""; TenantID *github.com/google/uuid.UUID "json:\"tenant_id,omitempty\""; TenantType TenantType "json:\"tenant_type,omitempty\""; Grants []Grant "json:\"grants,omitempty\""; IsSystemAdmin bool "json:\"is_system_admin,omitempty\""; ClientID string "json:\"-\""; SessionID string "json:\"-\""; Channel Channel "json:\"-\""; MFA bool "json:\"-\""}
+type PrincipalData struct{UserID github.com/google/uuid.UUID "json:\"user_id\""; UserType UserType "json:\"user_type\""; TenantID *github.com/google/uuid.UUID "json:\"tenant_id,omitempty\""; TenantType TenantType "json:\"tenant_type,omitempty\""; Grants []Grant "json:\"grants,omitempty\""; IsSystemAdmin bool "json:\"is_system_admin,omitempty\""; ClientID string "json:\"-\""; SessionID string "json:\"-\""; Channel Channel "json:\"-\""}
   field UserID github.com/google/uuid.UUID
   field UserType UserType
   field TenantID *github.com/google/uuid.UUID
@@ -194,7 +191,6 @@ type PrincipalData struct{UserID github.com/google/uuid.UUID "json:\"user_id\"";
   field ClientID string
   field SessionID string
   field Channel Channel
-  field MFA bool
 func PrincipalFrom(ctx context.Context) (Principal, bool)
 type PrincipalResolver interface{Resolve(ctx context.Context, req ResolveRequest) (Principal, error)}
 func RecordDenied(ctx context.Context, reason string, metadata map[string]any)

@@ -358,7 +358,7 @@ func (c *curEnv) user(sub string, d authz.PrincipalData, portal bool) {
 	if !portal {
 		azp = httpxtest.GameClient
 	}
-	c.tokens[sub] = c.idp.Token(sub, azp, d.TenantID == nil, time.Now())
+	c.tokens[sub] = c.idp.Token(sub, azp, time.Now())
 }
 
 type resp struct {

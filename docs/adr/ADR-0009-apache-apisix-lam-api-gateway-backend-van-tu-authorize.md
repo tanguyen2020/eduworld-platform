@@ -1,6 +1,9 @@
 # ADR-0009 — Apache APISIX làm API gateway, backend vẫn tự authorize
 
-> **Trạng thái:** Accepted · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [API_DESIGN](../07-backend/API_DESIGN.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Tài liệu:** [API_DESIGN](../07-backend/API_DESIGN.md), [DEPLOYMENT](../11-operations/DEPLOYMENT.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: yêu cầu MFA cho `/api/v1/admin/*`, `/api/v1/sis/*`, `/api/v1/game-admin/*`. **Còn hiệu lực:** APISIX làm gateway, backend tự authorize, các route đó chỉ publish trên gateway nội bộ/VPN và backend kiểm tra role platform.
 
 ## Bối cảnh
 
@@ -29,3 +32,4 @@ Cần một cổng API thống nhất cho TLS, routing, rate limit, quan sát; n
 | 2026-11-15 | Quy ước route nội bộ (`/api/v1/admin|sis`, `/internal/*`) | Vòng đồng bộ tài liệu |
 | 2026-11-15 | Thêm `/game-admin/*` nội bộ + MFA; routing theo service | ADR-0027, ADR-0036 |
 | 2026-11-20 | Owner chốt (Accepted) | Owner |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

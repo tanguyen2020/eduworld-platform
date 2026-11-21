@@ -39,7 +39,7 @@ type GaugeSyncer interface {
 }
 
 // SwitchAdmin are the write use cases of the moderation switches (F116 US3; ADR-0030, ADR-0078): only System Admin
-// (chat.policy.toggle, internal gateway, MFA). A change that only re-enables applies at once; a disabling change is a
+// (chat.policy.toggle, internal gateway). A change that only re-enables applies at once; a disabling change is a
 // request pending the approval of another System Admin. Each use case authorizes first, then runs in one UnitOfWork
 // with the history row, the outbox event and the audit; after the commit the cached switches are dropped and every
 // instance is told (ew:chat:switches:changed), so the change is in force everywhere within the 30 s cache freshness.

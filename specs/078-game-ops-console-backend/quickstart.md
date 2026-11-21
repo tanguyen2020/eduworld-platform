@@ -6,7 +6,7 @@
 
 - Phụ thuộc đã Done: F071–F075 (module loại), F045 (identity gọi gán), F041 (projection catalog — cho kịch bản 12).
 - Lệnh: `make up`, `make seed`, `make up-app EXCEPT=core-api`, `make run-core-api`, `make run-worker PROFILE=events`, container `game-renderer` (`docker compose -f deploy/compose/game-renderer.yml up`), `make render-thumbnails` để thử thủ công ([LOCAL_DEVELOPMENT](../../docs/11-operations/LOCAL_DEVELOPMENT.md)).
-- Gọi qua gateway nội bộ (APISIX admin route local) bằng token `eduworld-portal` (MFA tắt ở local).
+- Gọi qua gateway nội bộ (APISIX admin route local) bằng token `eduworld-portal` (chỉ mật khẩu, không MFA — ADR-0094).
 - Tài khoản demo: `sa.admin` (system_admin kiêm `game.*`, author/publisher), `cm.duyet` (content_reviewer, `game.content.review`), `cm.noidung` (content_admin — không có `game.*`), `ad.truong.a`, `ad.truong.b`, `hs.an.3a`.
 
 ## 2. Kịch bản kiểm tra

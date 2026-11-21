@@ -1,7 +1,5 @@
 // Spike R5 (F004 T039, AC-29): what Keycloak returns for the direct grant flows of the realm.
 import { passwordGrant, decodeJWT } from './kc.mjs';
-import { totp } from './totp.mjs';
-import { SA_ADMIN_TOTP_SECRET } from './dev-constants.mjs';
 
 const S = 'change-me-local', P = 'Demo@12345';
 const show = (label, r) => {
@@ -12,12 +10,10 @@ const show = (label, r) => {
     console.log(`${label}: ${r.status} ${r.json.error} — ${r.json.error_description}`);
   }
 };
-show('portal tenant_staff no OTP', await passwordGrant('eduworld-portal', S, 'ad.truong.a', P));
+show('portal tenant_staff', await passwordGrant('eduworld-portal', S, 'ad.truong.a', P));
 show('portal tenant_staff by email', await passwordGrant('eduworld-portal', S, 'ad.truong.a@example.invalid', P));
-show('portal platform_staff + totp', await passwordGrant('eduworld-portal', S, 'sa.admin', P, { otp: totp(SA_ADMIN_TOTP_SECRET) }));
-show('portal platform_staff no totp', await passwordGrant('eduworld-portal', S, 'sa.admin', P));
-show('portal platform_staff wrong totp', await passwordGrant('eduworld-portal', S, 'sa.admin', P, { otp: '000000' }));
-show('portal platform_staff never set OTP', await passwordGrant('eduworld-portal', S, 'sm.antoan', P));
+show('portal platform_staff (password only, ADR-0094)', await passwordGrant('eduworld-portal', S, 'sa.admin', P));
+show('portal safety_moderator (password only, ADR-0094)', await passwordGrant('eduworld-portal', S, 'sm.antoan', P));
 show('portal required action UPDATE_PASSWORD', await passwordGrant('eduworld-portal', S, 'sa.moi', P));
 show('portal student', await passwordGrant('eduworld-portal', S, 'hs.binh.3a', P));
 show('portal wrong password', await passwordGrant('eduworld-portal', S, 'ad.truong.b', 'wrong'));

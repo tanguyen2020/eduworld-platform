@@ -48,7 +48,7 @@ func init() {
 	Operations["getLmsReport"] = lmsOp("getLmsReport", http.MethodGet, "/lms/reports/{report_id}", httpx.IdempotencyNone, 200)
 	Operations["createTenantReport"] = lmsOp("createTenantReport", http.MethodPost, "/tenant/reports", httpx.IdempotencyRequired, 202)
 	Operations["getTenantReport"] = lmsOp("getTenantReport", http.MethodGet, "/tenant/reports/{report_id}", httpx.IdempotencyNone, 200)
-	// /admin/: internal gateway, System Admin with MFA (httpx GuardPlatformMFA, ADR-0027).
+	// /admin/: internal gateway, System Admin (httpx GuardPlatformRole, ADR-0027; no MFA, ADR-0094).
 	Operations["createPlatformReport"] = op("createPlatformReport", http.MethodPost, "/admin/reports", httpx.TenantOptional,
 		httpx.IdempotencyRequired, 202)
 	Operations["getPlatformReport"] = op("getPlatformReport", http.MethodGet, "/admin/reports/{report_id}", httpx.TenantNone,

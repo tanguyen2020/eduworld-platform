@@ -1,12 +1,15 @@
 # ADR-0068 — Đăng nhập game bằng form trong game, xác thực qua backend
 
-> **Trạng thái:** Accepted · một phần superseded by [ADR-0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · bổ sung bởi ADR-0083 · **Ngày:** 2026-11-15 · **OQ:** — · **Supersedes:** ADR-0007 (cho game; portal giữ luồng trình duyệt) · **Bổ sung:** ADR-0063, ADR-0064, ADR-0065 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · bổ sung bởi ADR-0083 · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** — · **Supersedes:** ADR-0007 (cho game; portal giữ luồng trình duyệt) · **Bổ sung:** ADR-0063, ADR-0064, ADR-0065 · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [IDENTITY_MAPPING](../09-identity/IDENTITY_MAPPING.md) · [STUDENT_GAME_UX_CORE](../05-ux/STUDENT_GAME_UX_CORE.md) · [Chỉ mục ADR](README.md)
 
 > [!WARNING]
 > **Bổ sung bởi [ADR-0083](ADR-0083-dang-nhap-game-va-tao-game-session-tach-biet.md):** `/auth/game/login` không tạo game session; client gọi `POST /game/sessions` sau đăng nhập.
 
 > [!WARNING]
 > **Một phần được thay bởi ADR-0091.** Không còn hiệu lực: mục 4 "portal giữ đăng nhập qua trang Keycloak". **Còn hiệu lực:** toàn bộ đăng nhập game.
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)** (owner bỏ MFA/TOTP cho đăng nhập Admin Portal, 2026-11-21). Không còn hiệu lực: lý do "có MFA" ở mục 4 (mục này đã được ADR-0091 thay). **Còn hiệu lực:** toàn bộ quyết định đăng nhập game.
 
 ## Bối cảnh
 
@@ -50,3 +53,4 @@ Phương án 1 (trải nghiệm kém khi đăng nhập mỗi lần); phương á
 | 2026-11-15 | Tạo ADR | Stakeholder (người duyệt) |
 | 2026-11-16 | Bổ sung bởi ADR-0083 | Technical Architect |
 | 2026-11-17 | Một phần superseded by ADR-0091 (portal đăng nhập bằng form riêng qua backend) | Technical Architect |
+| 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |

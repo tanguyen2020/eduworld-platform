@@ -115,8 +115,8 @@ func TestScopeOfContentLists(t *testing.T) {
 	srv := httptest.NewServer(s)
 	t.Cleanup(srv.Close)
 	now := time.Now()
-	staffTok := idp.Token("staff-a", httpxtest.PortalClient, false, now)
-	saTok := idp.Token("sa", httpxtest.PortalClient, true, now)
+	staffTok := idp.Token("staff-a", httpxtest.PortalClient, now)
+	saTok := idp.Token("sa", httpxtest.PortalClient, now)
 
 	// Tenant user: tenant_ids of tenant B is ignored.
 	r := get(t, srv, "/api/v1/cms/fixture-contents?tenant_ids="+e.tenantB.String(), staffTok, &e.tenantA)

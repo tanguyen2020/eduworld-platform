@@ -98,14 +98,14 @@ func Student(tenant uuid.UUID) authz.Principal {
 		TenantType: authz.TenantTypeSchool, Channel: authz.ChannelGame})
 }
 
-// Platform returns platform staff holding a platform system role, signed in on the portal with MFA.
+// Platform returns platform staff holding a platform system role, signed in on the portal (no MFA, ADR-0094).
 func Platform(roleName string) authz.Principal {
 	r := role(roleName)
 	if r.ScopeKind != authz.RoleScopePlatform {
 		panic("authztest: " + roleName + " is not a platform role; use Staff")
 	}
 	return authz.NewPrincipal(authz.PrincipalData{UserID: uuid.New(), UserType: authz.UserTypeStaff, Grants: []authz.Grant{grant(r)},
-		IsSystemAdmin: roleName == "system_admin", Channel: authz.ChannelPortal, MFA: true})
+		IsSystemAdmin: roleName == "system_admin", Channel: authz.ChannelPortal})
 }
 
 // Ctx returns ctx carrying p and the scope the principal middleware would set.
