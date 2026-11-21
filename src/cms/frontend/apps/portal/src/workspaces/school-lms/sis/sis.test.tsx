@@ -81,6 +81,28 @@ describe('Xung đột đồng bộ', () => {
     expect(backend.calls('POST', path)[1]!.body).toEqual({ resolution: 'fixed_in_source', reason: 'Đã đổi username trong SIS' });
   });
 
+  it('F052 T061 (OQ F045-7): "Đề nghị gộp tài khoản" on a duplicate issue sends merge_requested + reason; the issue stays open, marked as proposed', async () => {
+    const { backend, state } = await renderSchoolLms('/school-lms/sis-sync');
+    const path = `/schools/${IDS.schoolA}/reconciliation-issues/${IDS.issueDup}:resolve`;
+    fireEvent.click(await screen.findByRole('tab', { name: 'Xung đột đồng bộ' }));
+    expect(await screen.findByText('Trùng tên đăng nhập/email', { selector: 'td' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Xử lý' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByLabelText('Đề nghị gộp tài khoản'));
+    expect(within(dialog).getByText(/Quản trị hệ thống sẽ gộp/)).toBeInTheDocument();
+    fireEvent.change(within(dialog).getByLabelText('Lý do'), { target: { value: 'Cùng một học sinh có hai tài khoản' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Xử lý' }));
+    await waitFor(() => expect(backend.calls('POST', path)).toHaveLength(1));
+    expect(backend.calls('POST', path)[0]!.body).toEqual({ resolution: 'merge_requested', reason: 'Cùng một học sinh có hai tài khoản' });
+    expect(backend.calls('POST', path)[0]!.headers['idempotency-key']).toBeTruthy();
+    expect(state.issueStatus).toBe('open');
+    expect(await screen.findByText('Đã đề nghị gộp')).toBeInTheDocument();
+    // Proposed already: the dialog no longer offers the merge request.
+    fireEvent.click(screen.getByRole('button', { name: 'Xử lý' }));
+    const again = await screen.findByRole('dialog');
+    expect(within(again).queryByLabelText('Đề nghị gộp tài khoản')).toBeNull();
+  });
+
   it('a read-only user has no Tải lên / Xử lý button (F052-AC-25)', async () => {
     await renderSchoolLms('/school-lms/sis-sync', { account: accountWith('qlcm.truong.a', TENANTS.thDemoA, READ_ONLY_PERMS) });
     fireEvent.click(await screen.findByRole('tab', { name: 'Xung đột đồng bộ' }));

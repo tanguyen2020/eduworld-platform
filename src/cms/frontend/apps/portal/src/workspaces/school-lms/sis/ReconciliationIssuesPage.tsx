@@ -1,6 +1,6 @@
 // "Xung đột đồng bộ" (F052 T026, F052-AC-10): listSchoolReconciliationIssues by type and status with the suggested
 // action; "Xử lý" (ActionGate sis_sync.import) on open issues. `entity_refs` are ids only (no raw PII, SIS_INTEGRATION).
-import { Button, Flex, Form, Select, Space, Typography } from 'antd';
+import { Button, Flex, Form, Select, Space, Tag, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,7 +32,16 @@ export function ReconciliationIssuesPage({ schoolId }: { schoolId: string }) {
     { key: 'title', title: t('portal.school_lms.recon.type'), render: (_, x) => t(`portal.school_lms.recon.types.${x.issue_type}`) },
     { key: 'refs', title: t('portal.school_lms.recon.refs'), render: (_, x) => Object.entries(x.entity_refs ?? {}).map(([k, v]) => `${k}: ${v}`).join(', ') },
     { key: 'suggested', title: t('portal.school_lms.recon.suggested'), render: (_, x) => t(suggestionKey(x, exists)) },
-    { key: 'status', title: t('portal.school_lms.recon.status'), render: (_, x) => <StatusTag group="issue" value={x.status} /> },
+    {
+      key: 'status',
+      title: t('portal.school_lms.recon.status'),
+      render: (_, x) => (
+        <Space size="small" wrap>
+          <StatusTag group="issue" value={x.status} />
+          {x.status === 'open' && x.resolution === 'merge_requested' ? <Tag>{t('portal.school_lms.recon.mergeRequested')}</Tag> : null}
+        </Space>
+      ),
+    },
     { key: 'created', title: t('portal.school_lms.recon.createdAt'), render: (_, x) => formatDateTime(x.created_at) },
     {
       key: 'actions',

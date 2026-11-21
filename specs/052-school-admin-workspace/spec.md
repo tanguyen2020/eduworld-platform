@@ -35,6 +35,10 @@
 - OQ-17 giới hạn chơi/ngày (owner chốt 2026-11-20) → **Chốt:** Cài đặt trường thêm ô "Giới hạn chơi mỗi ngày" (tắt mặc định); thêm F052-AC-32.
 - OQ F051-9 → E2E backend thật chạy khi có môi trường compose (không phải câu hỏi mở).
 
+### Session 2026-11-21 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+- Q: T061 — "Đề nghị gộp" hiển thị ở đâu, ai thấy? → A: [Confirmed] Lựa chọn thứ ba "Đề nghị gộp tài khoản" trong hộp "Xử lý" (cùng `ActionGate action.school_lms.sis_sync.import`, quyền `tenant.sis.import`), chỉ cho issue `duplicate_identifier`/`possible_duplicate` chưa đề nghị; chọn → giải thích "Quản trị hệ thống sẽ gộp…", vẫn bắt buộc lý do 3–500 và một `Idempotency-Key` cho mỗi ý định; sau khi gửi issue vẫn `open` và có thẻ "Đã đề nghị gộp" ở cột Trạng thái, hộp "Xử lý" không còn lựa chọn này (backend trả 409 nếu gửi lại).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trường, lớp, học sinh và hoạt động đăng nhập (Priority: P1)

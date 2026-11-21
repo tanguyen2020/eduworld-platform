@@ -242,7 +242,9 @@
     "resolve": "Xử lý",
     "resolveTitle": "Xử lý xung đột: {{type}}",
     "resolution": "Cách xử lý",
-    "resolutions": { "fixed_in_source": "Đã sửa ở SIS/CSV", "ignore": "Bỏ qua" },
+    "resolutions": { "fixed_in_source": "Đã sửa ở SIS/CSV", "ignore": "Bỏ qua", "merge_requested": "Đề nghị gộp tài khoản" },
+    "mergeHint": "Hai tài khoản là cùng một học sinh: Quản trị hệ thống sẽ gộp sau khi xem xét; xung đột vẫn mở tới khi gộp xong.",
+    "mergeRequested": "Đã đề nghị gộp",
     "resolved": "Đã ghi nhận xử lý."
   },
   "users": {

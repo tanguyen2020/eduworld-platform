@@ -9,6 +9,7 @@ Nhóm mục: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `
 ## [Unreleased]
 
 ### Added
+- 2026-11-21 — **F052 T061: "Đề nghị gộp tài khoản" trên xung đột trùng định danh** (`src/cms/frontend`, Workspace C): School Admin gửi `merge_requested` + lý do qua `resolveSchoolReconciliationIssue` (F011 T041); xung đột vẫn mở, có thẻ "Đã đề nghị gộp".
 - 2026-11-21 — **F011 T041 (OQ F045-7): School Admin đề nghị gộp tài khoản** (module `identity`): `resolveSchoolReconciliationIssue` nhận `resolution = merge_requested` cho issue `duplicate_identifier`/`possible_duplicate` của trường (issue giữ `open`, audit, đề nghị lại 409); System Admin chạy `mergeUsers` sau đề nghị.
 - 2026-11-21 — **F011 T040 (OQ F020-1): `class.synced` có `source_version`, `academic_year_id`, `is_virtual`; `school.synced` có `source_version`** (module `identity`): projection `ref.classes`/`ref.schools` chỉ áp bản mới hơn theo version aggregate; bản ghi SIS của lớp đã xóa mềm không được áp.
 - 2026-11-21 — **F056 T052: lịch năm học và `available_from`/cảnh báo trễ trên dashboard trường** (`src/cms/frontend`): preset "Năm học này" từ `listSchoolAcademicYears` (F010 T047), "Học kỳ này" bật khi trường có học kỳ (hiện chưa có — OQ F010-4); `DashboardWidget` hiện "Chưa có số liệu trước ngày …" và "Số liệu có thể chậm do đồng bộ trễ" theo `DashboardMeta` (F043 T042).

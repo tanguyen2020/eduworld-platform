@@ -242,7 +242,9 @@
     "resolve": "Resolve",
     "resolveTitle": "Resolve conflict: {{type}}",
     "resolution": "Resolution",
-    "resolutions": { "fixed_in_source": "Fixed in SIS/CSV", "ignore": "Ignore" },
+    "resolutions": { "fixed_in_source": "Fixed in SIS/CSV", "ignore": "Ignore", "merge_requested": "Request account merge" },
+    "mergeHint": "Both accounts are the same student: a System Admin merges them after review; the conflict stays open until then.",
+    "mergeRequested": "Merge requested",
     "resolved": "Resolution recorded."
   },
   "users": {

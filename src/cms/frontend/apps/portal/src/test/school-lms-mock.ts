@@ -68,6 +68,8 @@ export interface SchoolLmsMockState {
   schoolSettings: Record<string, unknown>;
   tenantSettings: Record<string, unknown>;
   issueStatus: string;
+  /** resolution of the open issue (merge_requested keeps it open, F052 T061). */
+  issueResolution?: string;
   resolveCalls: number;
 }
 
@@ -172,13 +174,16 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
     }
     if ((x = /^\/schools\/([^/]+)\/reconciliation-issues$/.exec(p)) && m === 'GET') {
       if (!schoolIn(r, x[1]!)) return problem(404, 'NOT_FOUND');
-      return json(200, page([{ issue_id: IDS.issueDup, tenant_id: T_A, school_id: x[1], issue_type: 'duplicate_identifier', entity_refs: { external_id: 'HS003' }, suggested_action: 'fix_in_source', status: state.issueStatus, created_at: '2026-11-19T08:00:01Z' }], 'data'));
+      return json(200, page([{ issue_id: IDS.issueDup, tenant_id: T_A, school_id: x[1], issue_type: 'duplicate_identifier', entity_refs: { external_id: 'HS003' }, suggested_action: 'fix_in_source', status: state.issueStatus, ...(state.issueResolution ? { resolution: state.issueResolution } : {}), created_at: '2026-11-19T08:00:01Z' }], 'data'));
     }
     if ((x = /^\/schools\/([^/]+)\/reconciliation-issues\/([^/:]+):resolve$/.exec(p)) && m === 'POST') {
       if (!schoolIn(r, x[1]!)) return problem(404, 'NOT_FOUND');
       state.resolveCalls++;
-      state.issueStatus = (r.body as { resolution: string }).resolution === 'ignore' ? 'ignored' : 'resolved';
-      return json(200, { issue_id: x[2], tenant_id: T_A, school_id: x[1], issue_type: 'duplicate_identifier', status: state.issueStatus, created_at: '2026-11-19T08:00:01Z' });
+      const resolution = (r.body as { resolution: string }).resolution;
+      if (resolution === 'merge_requested' && state.issueResolution === 'merge_requested') return problem(409, 'CONFLICT');
+      state.issueResolution = resolution;
+      state.issueStatus = resolution === 'ignore' ? 'ignored' : resolution === 'merge_requested' ? 'open' : 'resolved';
+      return json(200, { issue_id: x[2], tenant_id: T_A, school_id: x[1], issue_type: 'duplicate_identifier', status: state.issueStatus, resolution, created_at: '2026-11-19T08:00:01Z' });
     }
     if ((x = /^\/tenant\/users\/([^/]+)$/.exec(p)) && m === 'PATCH') {
       if (r.headers['if-match'] !== 'W/"1"') return problem(412, 'VERSION_MISMATCH');
