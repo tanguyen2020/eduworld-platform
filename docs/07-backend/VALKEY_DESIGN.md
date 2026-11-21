@@ -25,7 +25,7 @@
 | Topology | 1 instance | Primary + 2 replica + 3 Sentinel (pilot); Valkey Cluster khi pub/sub/throughput vượt ngưỡng (§8) | [Confirmed] |
 | Persistence | Tắt | AOF `appendfsync everysec` + RDB snapshot 15'; **không** dùng để khôi phục dữ liệu nghiệp vụ, chỉ giảm thời gian warm-up | [Confirmed] |
 | Memory | 256 MB | `maxmemory` = 70% RAM; `maxmemory-policy volatile-lru` (chỉ evict key có TTL) | [Confirmed] |
-| Bảo mật | không | ACL user theo module (`identity`, `learning`, `game`, `competition`, `chat`, `realtime`, `apisix_ratelimit`; `core-api` và `worker` mở một client Valkey cho mỗi module nạp, dùng user của module đó — ADR-0074): mỗi user chỉ key `~ew:<module>:*` của mình (+ `realtime` đọc/`GETDEL` `~ew:game:rt:ticket:*`, ghi `~ew:gateway:*`) và kênh Pub/Sub cần dùng (`&ew:rt:*`, `&ew:chat:fanout:*`); TLS; tắt `KEYS`, `FLUSHALL`, `DEBUG`, `CONFIG` cho user ứng dụng | [Confirmed] |
+| Bảo mật | không | ACL user theo module (`identity`, `learning`, `game`, `competition`, `chat`, `realtime`, `apisix_ratelimit`; `core-api` và `worker` mở một client Valkey cho mỗi module nạp, dùng user của module đó — ADR-0074): mỗi user chỉ key `~ew:<module>:*` của mình (+ `realtime` đọc/`GETDEL` `~ew:game:rt:ticket:*`, ghi `~ew:gateway:*`) và kênh Pub/Sub cần dùng (`&ew:rt:*`, `&ew:chat:fanout:*`, `&ew:chat:sensitive:version`, `&ew:chat:switches:changed`); TLS; tắt `KEYS`, `FLUSHALL`, `DEBUG`, `CONFIG` cho user ứng dụng | [Confirmed] |
 | Client Go | `valkey-io/valkey-go` (client-side caching tắt mặc định) | | ADR-0025 |
 
 Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lua/Functions đặt trong `src/backend/modules/<module>/internal/infrastructure/cache/scripts/`, có test.
@@ -109,9 +109,10 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:chat:ntf:unread:<user_id>` | STRING counter thông báo chưa đọc (`social.notifications`) | 7 ngày | `chat · notification` | Rebuildable — mất thì đếm lại từ PG |
 | `ew:chat:mentions:<user_id>` | HASH channel_id → unread_mentions | 7 ngày | `chat · chat` | Rebuildable (từ `channel_members.unread_mentions`) |
 | `ew:chat:cursor_buf:<channel_id>:<user_id>` | HASH {delivered_seq, read_seq, dirty_at} | 1 phút | `chat · chat` | Ephemeral — gộp receipt trước khi publish JetStream (≤ 1 lần/2 s) |
-| `ew:chat:sensitive:compiled:<scope>:<version>` | STRING (bản biên dịch danh mục từ nhạy cảm đã tuần tự hóa + checksum; `scope` = `platform` hoặc `tenant:<tenant_id>`) | 7 ngày | `chat · moderation` | Rebuildable từ PG (`chat.sensitive_*`); chỉ node backend đọc, không bao giờ trả client (ADR-0030) |
-| `ew:chat:sensitive:current` | HASH scope → catalog_version hiện hành | Không TTL | `chat · moderation` | Rebuildable từ `chat.sensitive_catalog_versions` |
-| `ew:chat:switches:<tenant_id>` | HASH {enabled_all, steps (json), expires_at, snapshot_id} — giá trị **hiệu lực** đã kết hợp platform + tenant; `platform` dùng key `ew:chat:switches:platform` | 10 phút (refresh khi đổi) | `chat · moderation` | Rebuildable từ `chat.moderation_switches`; mất cache → đọc PG (không mặc định tắt) |
+| `ew:chat:facts:switches:<tenant_id>` | STRING `{at, v}` — công tắc **đã cấu hình** của platform và tenant (resolver tính hiệu lực = platform ∧ tenant; bước tắt quá `expires_at` coi như bật); thay tên `ew:chat:switches:<tenant_id>` | tươi 30 s, giữ bản cũ tới `chat_facts_stale_ttl` | `chat · moderation` (F116) | Rebuildable từ `chat.moderation_switches`; mất cache và PG → mọi bước **bật** (không mặc định tắt) |
+| `ew:chat:sanction:<user_id>` | STRING JSON danh sách sanction đang hiệu lực (mute) | tới `ends_at` gần nhất, tối đa 1 h; xóa khi áp sanction mới | `chat · moderation` (F116) | Rebuildable từ `chat.sanctions`; mất cache → đọc PG (cả hai không trả lời → từ chối gửi, fail closed) |
+| `ew:chat:spam:rep:<user_id>:<channel_id>:<fp>`, `ew:chat:spam:chn:<user_id>:<fp>`, `ew:chat:spam:blk:<user_id>` | ZSET cửa sổ spam (`chat_spam_thresholds`): tin giống nhau trong một channel (60 s), số channel cùng nội dung (2 phút), số lần block (10 phút → auto-mute); `fp` là hash nội dung đã normalize — **không** lưu nội dung (R14) | 61 s / 121 s / 601 s | `chat · moderation` (F116) | Ephemeral |
+| `ew:lock:job:moderation-switch-expirer` | STRING lease của job bật lại công tắc hết hạn | thời lượng một lượt | `chat · moderation` (F116) | Ephemeral |
 | `ew:gam:cap:<student_id>:<rule_id>:<yyyymmdd>` | STRING counter | 48 h | `game · gamification` | Ephemeral cache; cap chuẩn kiểm tra lại trong PG khi trao |
 | `ew:lock:<name>` | STRING owner | ≤ 30 s | `mỗi module` | Ephemeral — gồm `ew:lock:job:student-inactive-cleanup:<tenant_id>`, `ew:lock:job:gameplay-chat-purge`, `ew:lock:job:game-session-timeout` |
 | `ew:settings:<key>:<scope>` | STRING (JSON giá trị hiệu lực, vd. `student_cleanup`, `chat_retention`; `scope` = `platform` hoặc `tenant:<id>`) | 10 phút; xóa khi nhận `platform_settings.changed` | `identity · tenancy` | Rebuildable từ `platform.platform_settings` + `platform.tenants.settings` |
@@ -135,8 +136,8 @@ Quy tắc code: cấm `KEYS`; dùng `SCAN` chỉ trong job bảo trì. Script Lu
 | `ew:rt:room:<room_id>:out` | module competition (instance giữ lease room) | `realtime` node có member trong room |
 | `ew:rt:node:<node_id>:in` | realtime node bất kỳ (forward tín hiệu kết nối, vd. takeover) | Node `<node_id>` |
 | `ew:rt:broadcast` | module identity (thông báo bảo trì, admin) | Tất cả node gateway |
-| `ew:chat:sensitive:version` | module chat worker (sau khi publish danh mục) | Mọi instance module chat (api): biên dịch bản mới ở nền rồi hoán đổi nguyên tử; payload `{scope, tenant_id?, version}` |
-| `ew:chat:switches:changed` | module chat api (công tắc kiểm duyệt) / worker (tự bật lại khi hết hạn) | Mọi instance module chat: xóa cache `ew:chat:switches:<tenant_id>` |
+| `ew:chat:sensitive:version` | module chat api (sau commit `publishSensitiveCatalog`/`publishTenantSensitiveCatalog`, F116) | Mọi instance module chat (api): đọc snapshot version mới từ PG, biên dịch rồi hoán đổi nguyên tử; payload `{tenant_id?, version}`; mất thông báo → đối chiếu version mỗi 30 s (≤ `moderation_config_propagation_max`) |
+| `ew:chat:switches:changed` | module chat api (công tắc kiểm duyệt, bật/tắt category của tenant) / worker (tự bật lại khi hết hạn) | Mọi instance module chat: xóa cache `ew:chat:facts:switches:<tenant_id>` và nạp lại danh mục của tenant; payload `{tenant_id?}` |
 
 Lệnh từ client đi theo chiều ngược lại **không** qua Valkey: gateway gửi NATS request `ew.cmd.<module>.<domain>.<action>` tới handler của module trong `core-api` (ADR-0074). Khi chuyển sang Valkey Cluster: dùng **sharded pub/sub** (`SSUBSCRIBE`/`SPUBLISH`) cho các channel theo ID.
 
