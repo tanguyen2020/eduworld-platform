@@ -218,3 +218,34 @@ func Without(t *schema.Table, columns, indexes []string) *schema.Table {
 	}
 	return c
 }
+
+// WithoutTables returns migration with the CREATE TABLE statement (and the CREATE INDEX statements that follow it)
+// of each given schema-qualified table removed from its entddl block: the tables a later contract migration dropped
+// on purpose (ADR-0095 mục 8), which no longer exist in the ent schema. The applied migration itself never changes
+// (AGENTS R12); the golden test compares the rest of the block with the ent schema.
+func WithoutTables(migration string, tables ...string) string {
+	m := strings.ReplaceAll(migration, "\r\n", "\n")
+	const begin, end = "-- BEGIN entddl\n", "-- END entddl"
+	i := strings.Index(m, begin)
+	j := strings.Index(m, end)
+	if i < 0 || j < i {
+		return m
+	}
+	drop := map[string]bool{}
+	for _, t := range tables {
+		drop["CREATE TABLE "+t+" ("] = true
+	}
+	chunks := strings.Split(strings.TrimRight(m[i+len(begin):j], "\n"), "\n\n")
+	kept := make([]string, 0, len(chunks))
+	for _, c := range chunks {
+		first, _, _ := strings.Cut(c, "\n")
+		if !drop[first] {
+			kept = append(kept, c)
+		}
+	}
+	block := strings.Join(kept, "\n\n")
+	if block != "" {
+		block += "\n"
+	}
+	return m[:i+len(begin)] + block + m[j:]
+}

@@ -20,9 +20,9 @@ func TestGameLoginSchema(t *testing.T) {
 	st := enrolled(ctx, t, e.platform, a, "hs.gl")
 	other := enrolled(ctx, t, e.platform, b, "hs.gl.b")
 
-	// identity_app without any tenant set: RLS hides the enrollments, the function still returns the user's rows.
-	if n := count(ctx, t, e.app, `SELECT count(*) FROM org.enrollments`); n != 0 {
-		t.Fatalf("app sees %d enrollments without a tenant", n)
+	// identity_app without any tenant set: RLS hides the students, the function still returns the user's rows.
+	if n := count(ctx, t, e.app, `SELECT count(*) FROM org.students`); n != 0 {
+		t.Fatalf("app sees %d students without a tenant", n)
 	}
 	if n := count(ctx, t, e.app, `SELECT count(*) FROM identity.memberships_for_user($1)`, st); n != 1 {
 		t.Fatalf("memberships of the student = %d", n)

@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 // F010 T007 — renders the seed migration of module identity from specs/reference-data (ADR-0060):
 // catalog.countries, catalog.provinces (34 active + 63 former units), catalog.province_successions,
-// and the common tenant (MULTITENANCY §8.3 [Proposed]): tenant `common`, virtual school, academic
-// year and virtual grade classes common-g1…common-g9. Province ids are UUIDv5 of the province code so
-// the output is stable. The migration is immutable once applied: --check only verifies it.
+// and the common tenant (MULTITENANCY §8.3 [Proposed]): tenant `common`, virtual school and academic
+// year. Province ids are UUIDv5 of the province code so the output is stable. The migration is immutable
+// once applied (AGENTS R12): --check only verifies it, so this script keeps rendering it byte for byte,
+// including the 9 virtual classes common-g1…common-g9 of the original F010 seed; those rows no longer exist
+// anywhere: org.classes is dropped by 20261201000001_adr0095_drop_class_enrollment.sql (ADR-0095 mục 8).
+// A new seed never creates classes.
 //   node scripts/db/gen-identity-seed.mjs [--check]
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -17,7 +20,7 @@ export const COMMON = {
   tenant: '0193a000-0000-7000-8000-000000000001',
   school: '0193a000-0000-7000-8000-000000000002',
   year: '0193a000-0000-7000-8000-000000000003',
-  classPrefix: '0193a000-0000-7000-8000-0000000000', // + 11…19 for grade 1…9
+  classPrefix: '0193a000-0000-7000-8000-0000000000', // + 11…19: history of the applied seed only (ADR-0095)
 };
 
 const NS = Buffer.from('6f2a9c1e5b3d4e8fa1c27d9e0b4f6a13', 'hex'); // namespace of catalog ids

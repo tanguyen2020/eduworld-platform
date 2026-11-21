@@ -9,14 +9,8 @@ import (
 // AcademicYear is the predicate function for academicyear builders.
 type AcademicYear func(*sql.Selector)
 
-// Class is the predicate function for class builders.
-type Class func(*sql.Selector)
-
 // Country is the predicate function for country builders.
 type Country func(*sql.Selector)
-
-// Enrollment is the predicate function for enrollment builders.
-type Enrollment func(*sql.Selector)
 
 // ExternalIdentity is the predicate function for externalidentity builders.
 type ExternalIdentity func(*sql.Selector)

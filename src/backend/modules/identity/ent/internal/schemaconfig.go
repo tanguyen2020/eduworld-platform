@@ -8,9 +8,7 @@ import "context"
 // that can be passed at runtime.
 type SchemaConfig struct {
 	AcademicYear             string // AcademicYear table.
-	Class                    string // Class table.
 	Country                  string // Country table.
-	Enrollment               string // Enrollment table.
 	ExternalIdentity         string // ExternalIdentity table.
 	GameAuthSession          string // GameAuthSession table.
 	LoginEvent               string // LoginEvent table.

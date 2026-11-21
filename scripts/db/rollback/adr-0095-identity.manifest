@@ -1,0 +1,10 @@
+# ADR-0095 mục 8 — objects dropped by the contract migration of module identity (read by scripts/db/adr-0095-backup.sh).
+# migration <file>                         the contract migration (applied by --verify-rollback on the scratch copy)
+# table <schema.table>                     dropped table: row count before/after, data restored by pg_restore --data-only
+# column <schema.table> <pk,cols> <col>    dropped column: non-NULL count before/after, values restored by primary key
+# values <schema.table> <col> <v1,v2>      rows carrying old CHECK values (the CHECK is narrowed only when 0)
+migration src/backend/modules/identity/migrations/20261201000001_adr0095_drop_class_enrollment.sql
+table org.classes
+table org.enrollments
+values sis.sis_links entity_type class,enrollment
+values sis.staging_records entity_kind class,enrollment

@@ -13,9 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
@@ -102,9 +100,7 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			academicyear.Table:             academicyear.ValidColumn,
-			class.Table:                    class.ValidColumn,
 			country.Table:                  country.ValidColumn,
-			enrollment.Table:               enrollment.ValidColumn,
 			externalidentity.Table:         externalidentity.ValidColumn,
 			gameauthsession.Table:          gameauthsession.ValidColumn,
 			loginevent.Table:               loginevent.ValidColumn,

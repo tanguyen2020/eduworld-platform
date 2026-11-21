@@ -19,7 +19,7 @@ var printDDL = flag.String("print", "", "print the entddl block of this migratio
 // migrations lists, per migration file, the ent tables created in its entddl block (in order). Tables
 // created by hand (partitioned sis.staging_records, sis.sync_record_errors) are not listed.
 var migrations = map[string][]string{
-	"20261119000001_f010_org.sql": {"academic_years", "classes", "countries", "enrollments", "external_identities", "provinces",
+	"20261119000001_f010_org.sql": {"academic_years", "countries", "external_identities", "provinces",
 		"province_successions", "schools", "students", "tenants", "users"},
 	"20261120000001_f011_sis.sql": {"reconciliation_issues", "sis_connection_schools", "sis_connections", "sis_identity_links",
 		"sis_imports", "sis_links", "student_login_keys", "sync_runs", "synced_students"},
@@ -29,6 +29,13 @@ var migrations = map[string][]string{
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier
 // migration (ALTER TABLE … ADD COLUMN in its entddl block); earlier blocks are checked without them.
+// dropped lists, per migration, the tables of its entddl block that a later contract migration dropped on purpose
+// (ADR-0095 mục 8: org.classes and org.enrollments, 20261201000001_adr0095_drop_class_enrollment.sql); they are no
+// longer in the ent schema and are left out of the comparison.
+var dropped = map[string][]string{
+	"20261119000001_f010_org.sql": {"org.classes", "org.enrollments"},
+}
+
 type addition struct {
 	table            string
 	columns, indexes []string
@@ -62,8 +69,8 @@ func schemas() map[string]string {
 	c := ent.DefaultSchemaConfig
 	return map[string]string{
 		"tenants": c.Tenant, "countries": c.Country, "provinces": c.Province, "province_successions": c.ProvinceSuccession,
-		"schools": c.School, "academic_years": c.AcademicYear, "classes": c.Class, "students": c.Student,
-		"enrollments": c.Enrollment, "users": c.User, "external_identities": c.ExternalIdentity,
+		"schools": c.School, "academic_years": c.AcademicYear, "students": c.Student,
+		"users": c.User, "external_identities": c.ExternalIdentity,
 		"sis_connections": c.SisConnection, "sis_connection_schools": c.SisConnectionSchool, "sync_runs": c.SyncRun,
 		"staging_records": c.StagingRecord, "sync_record_errors": c.SyncRecordError, "sis_imports": c.SisImport,
 		"sis_links": c.SisLink, "synced_students": c.SyncedStudent, "student_login_keys": c.StudentLoginKey,
@@ -139,7 +146,7 @@ func TestMigrationMatchesEnt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if ok, got := entx.CheckDDLBlock(string(b), want); !ok {
+		if ok, got := entx.CheckDDLBlock(entx.WithoutTables(string(b), dropped[file]...), want); !ok {
 			t.Fatalf("entddl block of %s differs from the ent schema; regenerate with -print=%s.\n--- want\n%s\n--- got\n%s", file, file, want, got)
 		}
 	}

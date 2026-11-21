@@ -21,18 +21,6 @@ func (f AcademicYearFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AcademicYearMutation", m)
 }
 
-// The ClassFunc type is an adapter to allow the use of ordinary
-// function as Class mutator.
-type ClassFunc func(context.Context, *ent.ClassMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f ClassFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.ClassMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ClassMutation", m)
-}
-
 // The CountryFunc type is an adapter to allow the use of ordinary
 // function as Country mutator.
 type CountryFunc func(context.Context, *ent.CountryMutation) (ent.Value, error)
@@ -43,18 +31,6 @@ func (f CountryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CountryMutation", m)
-}
-
-// The EnrollmentFunc type is an adapter to allow the use of ordinary
-// function as Enrollment mutator.
-type EnrollmentFunc func(context.Context, *ent.EnrollmentMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f EnrollmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.EnrollmentMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EnrollmentMutation", m)
 }
 
 // The ExternalIdentityFunc type is an adapter to allow the use of ordinary

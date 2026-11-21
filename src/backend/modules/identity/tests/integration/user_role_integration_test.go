@@ -90,7 +90,7 @@ func TestUserRoleGrants(t *testing.T) {
 		body map[string]any
 		code string
 	}{
-		"class scope":  {map[string]any{"user_id": gv.String(), "role_id": role("academic_manager"), "scope_type": "class", "scope_id": a.class}, "VALIDATION_FAILED"},
+		"class scope":  {map[string]any{"user_id": gv.String(), "role_id": role("academic_manager"), "scope_type": "class", "scope_id": ids.New().String()}, "VALIDATION_FAILED"},
 		"unknown role": {map[string]any{"user_id": gv.String(), "role_id": uuid.NewString(), "scope_type": "tenant"}, "ROLE_NOT_FOUND"},
 		// AC-21: student, platform role on a tenant route.
 		"student":       {map[string]any{"user_id": student.String(), "role_id": role("academic_manager"), "scope_type": "tenant"}, "VALIDATION_FAILED"},

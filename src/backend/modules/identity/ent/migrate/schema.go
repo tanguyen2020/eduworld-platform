@@ -43,51 +43,6 @@ var (
 			},
 		},
 	}
-	// ClassesColumns holds the columns for the "classes" table.
-	ClassesColumns = []*schema.Column{
-		{Name: "class_id", Type: field.TypeUUID},
-		{Name: "tenant_id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
-		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
-		{Name: "version", Type: field.TypeInt64, Default: 1},
-		{Name: "school_id", Type: field.TypeUUID},
-		{Name: "academic_year_id", Type: field.TypeUUID},
-		{Name: "grade_level", Type: field.TypeInt16},
-		{Name: "name", Type: field.TypeString, Size: 128},
-		{Name: "is_virtual", Type: field.TypeBool, Default: false},
-		{Name: "status", Type: field.TypeString, Size: 64, Default: "active"},
-	}
-	// ClassesTable holds the schema information for the "classes" table.
-	ClassesTable = &schema.Table{
-		Name:       "classes",
-		Columns:    ClassesColumns,
-		PrimaryKey: []*schema.Column{ClassesColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "classes_name_uq",
-				Unique:  true,
-				Columns: []*schema.Column{ClassesColumns[10], ClassesColumns[11], ClassesColumns[13]},
-				Annotation: &entsql.IndexAnnotation{
-					Where: "deleted_at IS NULL",
-				},
-			},
-			{
-				Name:    "classes_class_school_uq",
-				Unique:  true,
-				Columns: []*schema.Column{ClassesColumns[0], ClassesColumns[10]},
-			},
-			{
-				Name:    "classes_school_grade_idx",
-				Unique:  false,
-				Columns: []*schema.Column{ClassesColumns[10], ClassesColumns[12]},
-			},
-		},
-	}
 	// CountriesColumns holds the columns for the "countries" table.
 	CountriesColumns = []*schema.Column{
 		{Name: "country_code", Type: field.TypeString, Size: 2},
@@ -108,50 +63,6 @@ var (
 		Name:       "countries",
 		Columns:    CountriesColumns,
 		PrimaryKey: []*schema.Column{CountriesColumns[0]},
-	}
-	// EnrollmentsColumns holds the columns for the "enrollments" table.
-	EnrollmentsColumns = []*schema.Column{
-		{Name: "enrollment_id", Type: field.TypeUUID},
-		{Name: "tenant_id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
-		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
-		{Name: "version", Type: field.TypeInt64, Default: 1},
-		{Name: "school_id", Type: field.TypeUUID},
-		{Name: "student_id", Type: field.TypeUUID},
-		{Name: "class_id", Type: field.TypeUUID},
-		{Name: "status", Type: field.TypeString, Size: 64},
-		{Name: "start_date", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
-		{Name: "end_date", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "date"}},
-		{Name: "source", Type: field.TypeString, Size: 64, Default: "sis"},
-	}
-	// EnrollmentsTable holds the schema information for the "enrollments" table.
-	EnrollmentsTable = &schema.Table{
-		Name:       "enrollments",
-		Columns:    EnrollmentsColumns,
-		PrimaryKey: []*schema.Column{EnrollmentsColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "enrollments_one_active_uq",
-				Unique:  true,
-				Columns: []*schema.Column{EnrollmentsColumns[11]},
-				Annotation: &entsql.IndexAnnotation{
-					Where: "status = 'active' AND deleted_at IS NULL",
-				},
-			},
-			{
-				Name:    "enrollments_class_idx",
-				Unique:  false,
-				Columns: []*schema.Column{EnrollmentsColumns[1], EnrollmentsColumns[12], EnrollmentsColumns[13]},
-				Annotation: &entsql.IndexAnnotation{
-					Where: "deleted_at IS NULL",
-				},
-			},
-		},
 	}
 	// ExternalIdentitiesColumns holds the columns for the "external_identities" table.
 	ExternalIdentitiesColumns = []*schema.Column{
@@ -1148,9 +1059,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AcademicYearsTable,
-		ClassesTable,
 		CountriesTable,
-		EnrollmentsTable,
 		ExternalIdentitiesTable,
 		GameAuthSessionsTable,
 		LoginEventsTable,
@@ -1183,14 +1092,8 @@ func init() {
 	AcademicYearsTable.Annotation = &entsql.Annotation{
 		Table: "academic_years",
 	}
-	ClassesTable.Annotation = &entsql.Annotation{
-		Table: "classes",
-	}
 	CountriesTable.Annotation = &entsql.Annotation{
 		Table: "countries",
-	}
-	EnrollmentsTable.Annotation = &entsql.Annotation{
-		Table: "enrollments",
 	}
 	ExternalIdentitiesTable.Annotation = &entsql.Annotation{
 		Table: "external_identities",

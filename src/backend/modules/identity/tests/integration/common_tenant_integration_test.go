@@ -99,9 +99,6 @@ func TestCreateCommonStudents(t *testing.T) {
 		AND s.status = 'active'`, tudo.UserID, tenant.CommonTenantID, tenant.CommonSchoolID); n != 1 {
 		t.Fatal("common student rows missing")
 	}
-	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE student_id = $1`, tudo.UserID); n != 0 {
-		t.Fatal("no enrollment is written any more")
-	}
 	if n := count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events WHERE event_type = 'student.placement_changed'
 		AND envelope->'payload'->>'student_id' = $1 AND envelope->'payload'->>'source' = 'platform_common'
 		AND envelope->'payload'->>'grade_level' = '4' AND envelope->'payload'->>'previous_school_id' IS NULL`, tudo.UserID.String()); n != 1 {

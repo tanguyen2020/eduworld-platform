@@ -81,3 +81,19 @@ func TestCheckDDLBlock(t *testing.T) {
 		t.Fatal("missing markers must fail")
 	}
 }
+
+func TestWithoutTables(t *testing.T) {
+	m := "-- BEGIN entddl\r\nCREATE TABLE s.a (\r\n  x int\r\n);\r\nCREATE INDEX a_idx ON s.a (x);\r\n\r\nCREATE TABLE s.b (\r\n  y int\r\n);\r\n\r\n" +
+		"CREATE TABLE s.c (\r\n  z int\r\n);\r\n-- END entddl\r\nALTER TABLE s.b;\r\n"
+	got := entx.WithoutTables(m, "s.b")
+	want := "-- BEGIN entddl\nCREATE TABLE s.a (\n  x int\n);\nCREATE INDEX a_idx ON s.a (x);\n\nCREATE TABLE s.c (\n  z int\n);\n-- END entddl\nALTER TABLE s.b;\n"
+	if got != want {
+		t.Fatalf("WithoutTables:\n%q\nwant\n%q", got, want)
+	}
+	if ok, _ := entx.CheckDDLBlock(entx.WithoutTables(m, "s.a", "s.b", "s.c"), ""); !ok {
+		t.Fatal("dropping every table leaves an empty block")
+	}
+	if got := entx.WithoutTables("no markers", "s.a"); got != "no markers" {
+		t.Fatalf("no markers: %q", got)
+	}
+}

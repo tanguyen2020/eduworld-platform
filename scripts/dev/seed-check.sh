@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # make seed-check (LOCAL_DEVELOPMENT §5): after `make seed` and `make up-app`, wait until the worker relayed the events
-# of the identity seed and the identity projections of the other modules hold every seeded student: each student with
-# an active enrollment in module identity must be in ref.students of module learning and module game (projections are
+# of the identity seed and the identity projections of the other modules hold every seeded student: each effective student
+# (status active, not soft-deleted; ADR-0095: no enrollment) of module identity must be in ref.students of module learning and module game (projections are
 # loaded through events only, never seeded). Read-only: SELECT as the <module>_platform roles inside the postgres
 # container. Honors COMPOSE_PROJECT_NAME; PW is the local role password (default of deploy/postgres/init).
 set -euo pipefail
@@ -15,10 +15,10 @@ q() { # q <module> <sql>
     "postgresql://$1_platform:${PW}@localhost:5432/eduworld_$1" -c "$2"
 }
 
-ids=$(q identity "SELECT string_agg(DISTINCT student_id::text, ',') FROM org.enrollments
+ids=$(q identity "SELECT string_agg(DISTINCT student_id::text, ',') FROM org.students
   WHERE status = 'active' AND deleted_at IS NULL AND tenant_id IN (SELECT tenant_id FROM platform.tenants WHERE tenant_type <> 'common' AND deleted_at IS NULL)")
 if [ -z "$ids" ]; then
-  echo "seed-check: module identity has no enrolled student: run make seed first" >&2
+  echo "seed-check: module identity has no effective student: run make seed first" >&2
   exit 1
 fi
 want=$(tr ',' '\n' <<<"$ids" | wc -l | tr -d ' ')

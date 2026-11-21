@@ -130,9 +130,9 @@ func TestDevSeedIsIdempotent(t *testing.T) {
 
 	events := func() int { return count(ctx, t, e.relay, `SELECT count(*) FROM infra.outbox_events`) }
 	rows := func() int {
-		return n(`SELECT (SELECT count(*) FROM platform.tenants) + (SELECT count(*) FROM org.schools) + (SELECT count(*) FROM org.classes)
+		return n(`SELECT (SELECT count(*) FROM platform.tenants) + (SELECT count(*) FROM org.schools)
 			+ (SELECT count(*) FROM identity.users) + (SELECT count(*) FROM identity.external_identities) + (SELECT count(*) FROM identity.user_roles)
-			+ (SELECT count(*) FROM org.enrollments) + (SELECT count(*) FROM sis.sync_runs) + (SELECT count(*) FROM sis.sis_connections)`)
+			+ (SELECT count(*) FROM sis.sync_runs) + (SELECT count(*) FROM sis.sis_connections)`)
 	}
 	beforeEvents, beforeRows := events(), rows()
 	second, err := s.Run(ctx, plan)

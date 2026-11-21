@@ -14,12 +14,8 @@ type Tx struct {
 	config
 	// AcademicYear is the client for interacting with the AcademicYear builders.
 	AcademicYear *AcademicYearClient
-	// Class is the client for interacting with the Class builders.
-	Class *ClassClient
 	// Country is the client for interacting with the Country builders.
 	Country *CountryClient
-	// Enrollment is the client for interacting with the Enrollment builders.
-	Enrollment *EnrollmentClient
 	// ExternalIdentity is the client for interacting with the ExternalIdentity builders.
 	ExternalIdentity *ExternalIdentityClient
 	// GameAuthSession is the client for interacting with the GameAuthSession builders.
@@ -202,9 +198,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.AcademicYear = NewAcademicYearClient(tx.config)
-	tx.Class = NewClassClient(tx.config)
 	tx.Country = NewCountryClient(tx.config)
-	tx.Enrollment = NewEnrollmentClient(tx.config)
 	tx.ExternalIdentity = NewExternalIdentityClient(tx.config)
 	tx.GameAuthSession = NewGameAuthSessionClient(tx.config)
 	tx.LoginEvent = NewLoginEventClient(tx.config)

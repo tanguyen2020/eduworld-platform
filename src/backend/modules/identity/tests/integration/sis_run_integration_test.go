@@ -112,7 +112,7 @@ func TestSisImportRun(t *testing.T) {
 		dry.Diff["enrollment"] != nil || dry.Diff["school"] != nil {
 		t.Fatalf("dry run = %+v", dry)
 	}
-	if users() != 0 || count(ctx, t, e.platform, `SELECT count(*) FROM org.classes WHERE name IN ('3B', '4A')`) != 0 {
+	if users() != 0 {
 		t.Fatal("dry run changed business data")
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.staging_records WHERE sync_run_id = $1`, dry.RunID); n != 4 {
@@ -149,9 +149,6 @@ func TestSisImportRun(t *testing.T) {
 		WHERE u.username LIKE 'hs.sis.%' AND s.status = 'active' AND s.school_id = $1 AND s.tenant_id = $2
 		AND ((u.username = 'hs.sis.binh' AND s.grade_level = 4) OR (u.username <> 'hs.sis.binh' AND s.grade_level = 3))`, a.school, a.tenant); n != 3 {
 		t.Fatalf("placed students = %d", n)
-	}
-	if n := count(ctx, t, e.platform, `SELECT count(*) FROM org.enrollments WHERE tenant_id = $1`, a.tenant); n != 0 {
-		t.Fatalf("enrollments written = %d (none since ADR-0095)", n)
 	}
 	if n := count(ctx, t, e.platform, `SELECT count(*) FROM sis.sync_runs WHERE sync_run_id = $1 AND (stats->>'class_ignored')::int = 2
 		AND (stats->>'enrollment_ignored')::int = 3`, run.RunID); n != 1 {
@@ -385,7 +382,6 @@ func TestSisTransferBetweenConnections(t *testing.T) {
 		`SELECT count(*) FROM identity.sis_identity_links WHERE user_id = $1 AND status = 'active' AND student_external_id = 'HS-77'`:                                  1,
 		`SELECT count(*) FROM org.students WHERE student_id = $1 AND school_id = '` + a.otherSchool + `'`:                                                              1,
 		`SELECT count(*) FROM identity.tenant_memberships_v WHERE user_id = $1 AND school_id = '` + a.otherSchool + `'`:                                                1,
-		`SELECT count(*) FROM org.enrollments WHERE student_id = $1`:                                                                                                   0,
 	} {
 		if n := count(ctx, t, e.platform, q, an); n != want {
 			t.Fatalf("%s = %d", q, n)

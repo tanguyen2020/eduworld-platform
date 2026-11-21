@@ -7,9 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
@@ -95,65 +93,6 @@ func init() {
 	academicyearDescID := academicyearMixinFields0[0].Descriptor()
 	// academicyear.DefaultID holds the default value on creation for the id field.
 	academicyear.DefaultID = academicyearDescID.Default.(func() uuid.UUID)
-	classMixin := schema.Class{}.Mixin()
-	classMixinHooks0 := classMixin[0].Hooks()
-	class.Hooks[0] = classMixinHooks0[0]
-	classMixinInters0 := classMixin[0].Interceptors()
-	class.Interceptors[0] = classMixinInters0[0]
-	classMixinFields0 := classMixin[0].Fields()
-	_ = classMixinFields0
-	classFields := schema.Class{}.Fields()
-	_ = classFields
-	// classDescCreatedAt is the schema descriptor for created_at field.
-	classDescCreatedAt := classMixinFields0[2].Descriptor()
-	// class.DefaultCreatedAt holds the default value on creation for the created_at field.
-	class.DefaultCreatedAt = classDescCreatedAt.Default.(func() time.Time)
-	// classDescUpdatedAt is the schema descriptor for updated_at field.
-	classDescUpdatedAt := classMixinFields0[4].Descriptor()
-	// class.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	class.DefaultUpdatedAt = classDescUpdatedAt.Default.(func() time.Time)
-	// class.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	class.UpdateDefaultUpdatedAt = classDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// classDescDeleteReason is the schema descriptor for delete_reason field.
-	classDescDeleteReason := classMixinFields0[8].Descriptor()
-	// class.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
-	class.DeleteReasonValidator = classDescDeleteReason.Validators[0].(func(string) error)
-	// classDescVersion is the schema descriptor for version field.
-	classDescVersion := classMixinFields0[9].Descriptor()
-	// class.DefaultVersion holds the default value on creation for the version field.
-	class.DefaultVersion = classDescVersion.Default.(int64)
-	// classDescName is the schema descriptor for name field.
-	classDescName := classFields[3].Descriptor()
-	// class.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	class.NameValidator = func() func(string) error {
-		validators := classDescName.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(name string) error {
-			for _, fn := range fns {
-				if err := fn(name); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
-	// classDescIsVirtual is the schema descriptor for is_virtual field.
-	classDescIsVirtual := classFields[4].Descriptor()
-	// class.DefaultIsVirtual holds the default value on creation for the is_virtual field.
-	class.DefaultIsVirtual = classDescIsVirtual.Default.(bool)
-	// classDescStatus is the schema descriptor for status field.
-	classDescStatus := classFields[5].Descriptor()
-	// class.DefaultStatus holds the default value on creation for the status field.
-	class.DefaultStatus = classDescStatus.Default.(string)
-	// class.StatusValidator is a validator for the "status" field. It is called by the builders before save.
-	class.StatusValidator = classDescStatus.Validators[0].(func(string) error)
-	// classDescID is the schema descriptor for id field.
-	classDescID := classMixinFields0[0].Descriptor()
-	// class.DefaultID holds the default value on creation for the id field.
-	class.DefaultID = classDescID.Default.(func() uuid.UUID)
 	countryMixin := schema.Country{}.Mixin()
 	countryMixinHooks0 := countryMixin[0].Hooks()
 	country.Hooks[0] = countryMixinHooks0[0]
@@ -209,47 +148,6 @@ func init() {
 			return nil
 		}
 	}()
-	enrollmentMixin := schema.Enrollment{}.Mixin()
-	enrollmentMixinHooks0 := enrollmentMixin[0].Hooks()
-	enrollment.Hooks[0] = enrollmentMixinHooks0[0]
-	enrollmentMixinInters0 := enrollmentMixin[0].Interceptors()
-	enrollment.Interceptors[0] = enrollmentMixinInters0[0]
-	enrollmentMixinFields0 := enrollmentMixin[0].Fields()
-	_ = enrollmentMixinFields0
-	enrollmentFields := schema.Enrollment{}.Fields()
-	_ = enrollmentFields
-	// enrollmentDescCreatedAt is the schema descriptor for created_at field.
-	enrollmentDescCreatedAt := enrollmentMixinFields0[2].Descriptor()
-	// enrollment.DefaultCreatedAt holds the default value on creation for the created_at field.
-	enrollment.DefaultCreatedAt = enrollmentDescCreatedAt.Default.(func() time.Time)
-	// enrollmentDescUpdatedAt is the schema descriptor for updated_at field.
-	enrollmentDescUpdatedAt := enrollmentMixinFields0[4].Descriptor()
-	// enrollment.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	enrollment.DefaultUpdatedAt = enrollmentDescUpdatedAt.Default.(func() time.Time)
-	// enrollment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	enrollment.UpdateDefaultUpdatedAt = enrollmentDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// enrollmentDescDeleteReason is the schema descriptor for delete_reason field.
-	enrollmentDescDeleteReason := enrollmentMixinFields0[8].Descriptor()
-	// enrollment.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
-	enrollment.DeleteReasonValidator = enrollmentDescDeleteReason.Validators[0].(func(string) error)
-	// enrollmentDescVersion is the schema descriptor for version field.
-	enrollmentDescVersion := enrollmentMixinFields0[9].Descriptor()
-	// enrollment.DefaultVersion holds the default value on creation for the version field.
-	enrollment.DefaultVersion = enrollmentDescVersion.Default.(int64)
-	// enrollmentDescStatus is the schema descriptor for status field.
-	enrollmentDescStatus := enrollmentFields[3].Descriptor()
-	// enrollment.StatusValidator is a validator for the "status" field. It is called by the builders before save.
-	enrollment.StatusValidator = enrollmentDescStatus.Validators[0].(func(string) error)
-	// enrollmentDescSource is the schema descriptor for source field.
-	enrollmentDescSource := enrollmentFields[6].Descriptor()
-	// enrollment.DefaultSource holds the default value on creation for the source field.
-	enrollment.DefaultSource = enrollmentDescSource.Default.(string)
-	// enrollment.SourceValidator is a validator for the "source" field. It is called by the builders before save.
-	enrollment.SourceValidator = enrollmentDescSource.Validators[0].(func(string) error)
-	// enrollmentDescID is the schema descriptor for id field.
-	enrollmentDescID := enrollmentMixinFields0[0].Descriptor()
-	// enrollment.DefaultID holds the default value on creation for the id field.
-	enrollment.DefaultID = enrollmentDescID.Default.(func() uuid.UUID)
 	externalidentityMixin := schema.ExternalIdentity{}.Mixin()
 	externalidentityMixinHooks0 := externalidentityMixin[0].Hooks()
 	externalidentity.Hooks[0] = externalidentityMixinHooks0[0]

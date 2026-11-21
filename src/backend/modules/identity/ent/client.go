@@ -16,9 +16,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/academicyear"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/class"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/enrollment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/externalidentity"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/gameauthsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/loginevent"
@@ -55,12 +53,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// AcademicYear is the client for interacting with the AcademicYear builders.
 	AcademicYear *AcademicYearClient
-	// Class is the client for interacting with the Class builders.
-	Class *ClassClient
 	// Country is the client for interacting with the Country builders.
 	Country *CountryClient
-	// Enrollment is the client for interacting with the Enrollment builders.
-	Enrollment *EnrollmentClient
 	// ExternalIdentity is the client for interacting with the ExternalIdentity builders.
 	ExternalIdentity *ExternalIdentityClient
 	// GameAuthSession is the client for interacting with the GameAuthSession builders.
@@ -123,9 +117,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.AcademicYear = NewAcademicYearClient(c.config)
-	c.Class = NewClassClient(c.config)
 	c.Country = NewCountryClient(c.config)
-	c.Enrollment = NewEnrollmentClient(c.config)
 	c.ExternalIdentity = NewExternalIdentityClient(c.config)
 	c.GameAuthSession = NewGameAuthSessionClient(c.config)
 	c.LoginEvent = NewLoginEventClient(c.config)
@@ -247,9 +239,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                      ctx,
 		config:                   cfg,
 		AcademicYear:             NewAcademicYearClient(cfg),
-		Class:                    NewClassClient(cfg),
 		Country:                  NewCountryClient(cfg),
-		Enrollment:               NewEnrollmentClient(cfg),
 		ExternalIdentity:         NewExternalIdentityClient(cfg),
 		GameAuthSession:          NewGameAuthSessionClient(cfg),
 		LoginEvent:               NewLoginEventClient(cfg),
@@ -295,9 +285,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                      ctx,
 		config:                   cfg,
 		AcademicYear:             NewAcademicYearClient(cfg),
-		Class:                    NewClassClient(cfg),
 		Country:                  NewCountryClient(cfg),
-		Enrollment:               NewEnrollmentClient(cfg),
 		ExternalIdentity:         NewExternalIdentityClient(cfg),
 		GameAuthSession:          NewGameAuthSessionClient(cfg),
 		LoginEvent:               NewLoginEventClient(cfg),
@@ -352,13 +340,12 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AcademicYear, c.Class, c.Country, c.Enrollment, c.ExternalIdentity,
-		c.GameAuthSession, c.LoginEvent, c.Permission, c.PortalPasswordResetToken,
-		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.Role,
-		c.RolePermission, c.School, c.SisConnection, c.SisConnectionSchool,
-		c.SisIdentityLink, c.SisImport, c.SisLink, c.StagingRecord, c.Student,
-		c.StudentLoginKey, c.SyncRecordError, c.SyncRun, c.SyncedStudent, c.Tenant,
-		c.User, c.UserRole,
+		c.AcademicYear, c.Country, c.ExternalIdentity, c.GameAuthSession, c.LoginEvent,
+		c.Permission, c.PortalPasswordResetToken, c.Province, c.ProvinceSuccession,
+		c.ReconciliationIssue, c.Role, c.RolePermission, c.School, c.SisConnection,
+		c.SisConnectionSchool, c.SisIdentityLink, c.SisImport, c.SisLink,
+		c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError, c.SyncRun,
+		c.SyncedStudent, c.Tenant, c.User, c.UserRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -368,13 +355,12 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AcademicYear, c.Class, c.Country, c.Enrollment, c.ExternalIdentity,
-		c.GameAuthSession, c.LoginEvent, c.Permission, c.PortalPasswordResetToken,
-		c.Province, c.ProvinceSuccession, c.ReconciliationIssue, c.Role,
-		c.RolePermission, c.School, c.SisConnection, c.SisConnectionSchool,
-		c.SisIdentityLink, c.SisImport, c.SisLink, c.StagingRecord, c.Student,
-		c.StudentLoginKey, c.SyncRecordError, c.SyncRun, c.SyncedStudent, c.Tenant,
-		c.User, c.UserRole,
+		c.AcademicYear, c.Country, c.ExternalIdentity, c.GameAuthSession, c.LoginEvent,
+		c.Permission, c.PortalPasswordResetToken, c.Province, c.ProvinceSuccession,
+		c.ReconciliationIssue, c.Role, c.RolePermission, c.School, c.SisConnection,
+		c.SisConnectionSchool, c.SisIdentityLink, c.SisImport, c.SisLink,
+		c.StagingRecord, c.Student, c.StudentLoginKey, c.SyncRecordError, c.SyncRun,
+		c.SyncedStudent, c.Tenant, c.User, c.UserRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -385,12 +371,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *AcademicYearMutation:
 		return c.AcademicYear.mutate(ctx, m)
-	case *ClassMutation:
-		return c.Class.mutate(ctx, m)
 	case *CountryMutation:
 		return c.Country.mutate(ctx, m)
-	case *EnrollmentMutation:
-		return c.Enrollment.mutate(ctx, m)
 	case *ExternalIdentityMutation:
 		return c.ExternalIdentity.mutate(ctx, m)
 	case *GameAuthSessionMutation:
@@ -581,141 +563,6 @@ func (c *AcademicYearClient) mutate(ctx context.Context, m *AcademicYearMutation
 	}
 }
 
-// ClassClient is a client for the Class schema.
-type ClassClient struct {
-	config
-}
-
-// NewClassClient returns a client for the Class from the given config.
-func NewClassClient(c config) *ClassClient {
-	return &ClassClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `class.Hooks(f(g(h())))`.
-func (c *ClassClient) Use(hooks ...Hook) {
-	c.hooks.Class = append(c.hooks.Class, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `class.Intercept(f(g(h())))`.
-func (c *ClassClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Class = append(c.inters.Class, interceptors...)
-}
-
-// Create returns a builder for creating a Class entity.
-func (c *ClassClient) Create() *ClassCreate {
-	mutation := newClassMutation(c.config, OpCreate)
-	return &ClassCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Class entities.
-func (c *ClassClient) CreateBulk(builders ...*ClassCreate) *ClassCreateBulk {
-	return &ClassCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *ClassClient) MapCreateBulk(slice any, setFunc func(*ClassCreate, int)) *ClassCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &ClassCreateBulk{err: fmt.Errorf("calling to ClassClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*ClassCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &ClassCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Class.
-func (c *ClassClient) Update() *ClassUpdate {
-	mutation := newClassMutation(c.config, OpUpdate)
-	return &ClassUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *ClassClient) UpdateOne(_m *Class) *ClassUpdateOne {
-	mutation := newClassMutation(c.config, OpUpdateOne, withClass(_m))
-	return &ClassUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *ClassClient) UpdateOneID(id uuid.UUID) *ClassUpdateOne {
-	mutation := newClassMutation(c.config, OpUpdateOne, withClassID(id))
-	return &ClassUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Class.
-func (c *ClassClient) Delete() *ClassDelete {
-	mutation := newClassMutation(c.config, OpDelete)
-	return &ClassDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *ClassClient) DeleteOne(_m *Class) *ClassDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ClassClient) DeleteOneID(id uuid.UUID) *ClassDeleteOne {
-	builder := c.Delete().Where(class.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &ClassDeleteOne{builder}
-}
-
-// Query returns a query builder for Class.
-func (c *ClassClient) Query() *ClassQuery {
-	return &ClassQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeClass},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Class entity by its id.
-func (c *ClassClient) Get(ctx context.Context, id uuid.UUID) (*Class, error) {
-	return c.Query().Where(class.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *ClassClient) GetX(ctx context.Context, id uuid.UUID) *Class {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *ClassClient) Hooks() []Hook {
-	hooks := c.hooks.Class
-	return append(hooks[:len(hooks):len(hooks)], class.Hooks[:]...)
-}
-
-// Interceptors returns the client interceptors.
-func (c *ClassClient) Interceptors() []Interceptor {
-	inters := c.inters.Class
-	return append(inters[:len(inters):len(inters)], class.Interceptors[:]...)
-}
-
-func (c *ClassClient) mutate(ctx context.Context, m *ClassMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&ClassCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&ClassUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&ClassUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&ClassDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Class mutation op: %q", m.Op())
-	}
-}
-
 // CountryClient is a client for the Country schema.
 type CountryClient struct {
 	config
@@ -848,141 +695,6 @@ func (c *CountryClient) mutate(ctx context.Context, m *CountryMutation) (Value, 
 		return (&CountryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Country mutation op: %q", m.Op())
-	}
-}
-
-// EnrollmentClient is a client for the Enrollment schema.
-type EnrollmentClient struct {
-	config
-}
-
-// NewEnrollmentClient returns a client for the Enrollment from the given config.
-func NewEnrollmentClient(c config) *EnrollmentClient {
-	return &EnrollmentClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `enrollment.Hooks(f(g(h())))`.
-func (c *EnrollmentClient) Use(hooks ...Hook) {
-	c.hooks.Enrollment = append(c.hooks.Enrollment, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `enrollment.Intercept(f(g(h())))`.
-func (c *EnrollmentClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Enrollment = append(c.inters.Enrollment, interceptors...)
-}
-
-// Create returns a builder for creating a Enrollment entity.
-func (c *EnrollmentClient) Create() *EnrollmentCreate {
-	mutation := newEnrollmentMutation(c.config, OpCreate)
-	return &EnrollmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Enrollment entities.
-func (c *EnrollmentClient) CreateBulk(builders ...*EnrollmentCreate) *EnrollmentCreateBulk {
-	return &EnrollmentCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *EnrollmentClient) MapCreateBulk(slice any, setFunc func(*EnrollmentCreate, int)) *EnrollmentCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &EnrollmentCreateBulk{err: fmt.Errorf("calling to EnrollmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*EnrollmentCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &EnrollmentCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Enrollment.
-func (c *EnrollmentClient) Update() *EnrollmentUpdate {
-	mutation := newEnrollmentMutation(c.config, OpUpdate)
-	return &EnrollmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *EnrollmentClient) UpdateOne(_m *Enrollment) *EnrollmentUpdateOne {
-	mutation := newEnrollmentMutation(c.config, OpUpdateOne, withEnrollment(_m))
-	return &EnrollmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *EnrollmentClient) UpdateOneID(id uuid.UUID) *EnrollmentUpdateOne {
-	mutation := newEnrollmentMutation(c.config, OpUpdateOne, withEnrollmentID(id))
-	return &EnrollmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Enrollment.
-func (c *EnrollmentClient) Delete() *EnrollmentDelete {
-	mutation := newEnrollmentMutation(c.config, OpDelete)
-	return &EnrollmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *EnrollmentClient) DeleteOne(_m *Enrollment) *EnrollmentDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *EnrollmentClient) DeleteOneID(id uuid.UUID) *EnrollmentDeleteOne {
-	builder := c.Delete().Where(enrollment.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &EnrollmentDeleteOne{builder}
-}
-
-// Query returns a query builder for Enrollment.
-func (c *EnrollmentClient) Query() *EnrollmentQuery {
-	return &EnrollmentQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeEnrollment},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Enrollment entity by its id.
-func (c *EnrollmentClient) Get(ctx context.Context, id uuid.UUID) (*Enrollment, error) {
-	return c.Query().Where(enrollment.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *EnrollmentClient) GetX(ctx context.Context, id uuid.UUID) *Enrollment {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *EnrollmentClient) Hooks() []Hook {
-	hooks := c.hooks.Enrollment
-	return append(hooks[:len(hooks):len(hooks)], enrollment.Hooks[:]...)
-}
-
-// Interceptors returns the client interceptors.
-func (c *EnrollmentClient) Interceptors() []Interceptor {
-	inters := c.inters.Enrollment
-	return append(inters[:len(inters):len(inters)], enrollment.Interceptors[:]...)
-}
-
-func (c *EnrollmentClient) mutate(ctx context.Context, m *EnrollmentMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&EnrollmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&EnrollmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&EnrollmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&EnrollmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Enrollment mutation op: %q", m.Op())
 	}
 }
 
@@ -4362,16 +4074,16 @@ func (c *UserRoleClient) mutate(ctx context.Context, m *UserRoleMutation) (Value
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicYear, Class, Country, Enrollment, ExternalIdentity, GameAuthSession,
-		LoginEvent, Permission, PortalPasswordResetToken, Province, ProvinceSuccession,
+		AcademicYear, Country, ExternalIdentity, GameAuthSession, LoginEvent,
+		Permission, PortalPasswordResetToken, Province, ProvinceSuccession,
 		ReconciliationIssue, Role, RolePermission, School, SisConnection,
 		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
 		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
 		User, UserRole []ent.Hook
 	}
 	inters struct {
-		AcademicYear, Class, Country, Enrollment, ExternalIdentity, GameAuthSession,
-		LoginEvent, Permission, PortalPasswordResetToken, Province, ProvinceSuccession,
+		AcademicYear, Country, ExternalIdentity, GameAuthSession, LoginEvent,
+		Permission, PortalPasswordResetToken, Province, ProvinceSuccession,
 		ReconciliationIssue, Role, RolePermission, School, SisConnection,
 		SisConnectionSchool, SisIdentityLink, SisImport, SisLink, StagingRecord,
 		Student, StudentLoginKey, SyncRecordError, SyncRun, SyncedStudent, Tenant,
@@ -4383,9 +4095,7 @@ var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
 		AcademicYear:             tableSchemas[2],
-		Class:                    tableSchemas[2],
 		Country:                  tableSchemas[0],
-		Enrollment:               tableSchemas[2],
 		ExternalIdentity:         tableSchemas[1],
 		GameAuthSession:          tableSchemas[1],
 		LoginEvent:               tableSchemas[1],

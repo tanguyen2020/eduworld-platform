@@ -73,33 +73,6 @@ func (AcademicYear) Indexes() []ent.Index {
 	}
 }
 
-// Class — org.classes (T): grade 1–9; virtual grade classes common-g1…g9 in the common tenant.
-type Class struct{ ent.Schema }
-
-func (Class) Annotations() []schema.Annotation {
-	return []schema.Annotation{entsql.Annotation{Schema: "org", Table: "classes"}}
-}
-func (Class) Mixin() []ent.Mixin { return []ent.Mixin{entx.Base{PK: entx.PK{Column: "class_id"}}} }
-func (Class) Fields() []ent.Field {
-	return []ent.Field{
-		field.UUID("school_id", uuid.UUID{}).Immutable(),
-		field.UUID("academic_year_id", uuid.UUID{}),
-		field.Int16("grade_level"),
-		field.String("name").MaxLen(128).NotEmpty(),
-		field.Bool("is_virtual").Default(false),
-		field.String("status").MaxLen(64).Default("active"),
-	}
-}
-func (Class) Indexes() []ent.Index {
-	return []ent.Index{
-		index.Fields("school_id", "academic_year_id", "name").Unique().StorageKey("classes_name_uq").
-			Annotations(entsql.IndexWhere("deleted_at IS NULL")),
-		// Target of the composite FK enrollments(class_id, school_id) (ADR-0060): not partial.
-		index.Fields("id", "school_id").Unique().StorageKey("classes_class_school_uq"),
-		index.Fields("school_id", "grade_level").StorageKey("classes_school_grade_idx"),
-	}
-}
-
 // Student — org.students (T): student_id = identity.users.user_id.
 type Student struct{ ent.Schema }
 
@@ -122,34 +95,5 @@ func (Student) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("school_id", "student_code").Unique().StorageKey("students_code_uq").
 			Annotations(entsql.IndexWhere("student_code IS NOT NULL AND deleted_at IS NULL")),
-	}
-}
-
-// Enrollment — org.enrollments (T): history of student ↔ class, at most one active (ADR-0060).
-type Enrollment struct{ ent.Schema }
-
-func (Enrollment) Annotations() []schema.Annotation {
-	return []schema.Annotation{entsql.Annotation{Schema: "org", Table: "enrollments"}}
-}
-func (Enrollment) Mixin() []ent.Mixin {
-	return []ent.Mixin{entx.Base{PK: entx.PK{Column: "enrollment_id"}}}
-}
-func (Enrollment) Fields() []ent.Field {
-	return []ent.Field{
-		field.UUID("school_id", uuid.UUID{}).Immutable(),
-		field.UUID("student_id", uuid.UUID{}).Immutable(),
-		field.UUID("class_id", uuid.UUID{}).Immutable(),
-		field.String("status").MaxLen(64),
-		dateField("start_date"),
-		optionalDate("end_date"),
-		field.String("source").MaxLen(64).Default("sis"),
-	}
-}
-func (Enrollment) Indexes() []ent.Index {
-	return []ent.Index{
-		index.Fields("student_id").Unique().StorageKey("enrollments_one_active_uq").
-			Annotations(entsql.IndexWhere("status = 'active' AND deleted_at IS NULL")),
-		index.Fields("tenant_id", "class_id", "status").StorageKey("enrollments_class_idx").
-			Annotations(entsql.IndexWhere("deleted_at IS NULL")),
 	}
 }

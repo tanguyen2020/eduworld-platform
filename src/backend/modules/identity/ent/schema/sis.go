@@ -169,7 +169,7 @@ func (SisImport) Fields() []ent.Field {
 	}
 }
 
-// SisLink — sis.sis_links (T): SIS external id ↔ school, class or enrollment.
+// SisLink — sis.sis_links (T): SIS external id ↔ school (class and enrollment links are history, ADR-0095 D6).
 type SisLink struct{ ent.Schema }
 
 func (SisLink) Annotations() []schema.Annotation {

@@ -5,6 +5,8 @@ package integration
 import (
 	"context"
 	"testing"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 )
 
 // OQ F045-4 (T060): tenant_settings and school_settings are cloned by module identity from the settings of F015
@@ -39,7 +41,7 @@ func TestPlatformAdminCloneSettings(t *testing.T) {
 	}
 	jobs := count(ctx, t, e.platform, `SELECT count(*) FROM platform.tenant_clone_jobs`)
 	for name, bad := range map[string]map[string]any{
-		"class_template": {"source_tenant_id": a.tenant, "target_tenant_id": b.tenant, "resource_type": "class_template", "resource_ids": []string{a.class}},
+		"class_template": {"source_tenant_id": a.tenant, "target_tenant_id": b.tenant, "resource_type": "class_template", "resource_ids": []string{ids.New().String()}},
 		"tenant ids":     {"source_tenant_id": a.tenant, "target_tenant_id": b.tenant, "resource_type": "tenant_settings", "resource_ids": []string{b.tenant}},
 		"two schools": {"source_tenant_id": a.tenant, "target_tenant_id": b.tenant, "resource_type": "school_settings",
 			"resource_ids": []string{a.school, a.otherSchool}},

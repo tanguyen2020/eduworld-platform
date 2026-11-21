@@ -76,14 +76,13 @@ type sqlQuerier interface {
 }
 
 type fixture struct {
-	tenant, school, year, class, otherSchool, otherClass string
+	tenant, school, year, otherSchool string
 }
 
-// seedTenant creates a tenant of type unit with two schools, a year and a class each (as platform role).
+// seedTenant creates a tenant of type unit with two schools and a year each (as platform role).
 func seedTenant(ctx context.Context, t *testing.T, platform *sql.DB, code string) fixture {
 	t.Helper()
-	f := fixture{tenant: ids.New().String(), school: ids.New().String(), year: ids.New().String(), class: ids.New().String(),
-		otherSchool: ids.New().String(), otherClass: ids.New().String()}
+	f := fixture{tenant: ids.New().String(), school: ids.New().String(), year: ids.New().String(), otherSchool: ids.New().String()}
 	var province string
 	if err := platform.QueryRowContext(ctx, "SELECT province_id FROM catalog.provinces WHERE code = 'vn.ha-noi'").Scan(&province); err != nil {
 		t.Fatal(err)
@@ -96,14 +95,12 @@ func seedTenant(ctx context.Context, t *testing.T, platform *sql.DB, code string
 	}
 	exec(`INSERT INTO platform.tenants (tenant_id, created_at, updated_at, code, name, tenant_type, keycloak_org_alias, settings)
 		VALUES ($1, now(), now(), $2, $2, 'unit', $2, '{}')`, f.tenant, code)
-	for _, s := range [][3]string{{f.school, f.year, f.class}, {f.otherSchool, ids.New().String(), f.otherClass}} {
+	for _, s := range [][2]string{{f.school, f.year}, {f.otherSchool, ids.New().String()}} {
 		exec(`INSERT INTO org.schools (school_id, tenant_id, created_at, updated_at, code, name, country_code, province_id,
 			school_level, grade_min, grade_max, settings) VALUES ($1, $2, now(), now(), $3, $3, 'VN', $4, 'primary', 1, 5, '{}')`,
 			s[0], f.tenant, code+"-"+s[0][len(s[0])-6:], province)
 		exec(`INSERT INTO org.academic_years (academic_year_id, tenant_id, created_at, updated_at, school_id, name, start_date, end_date, is_current)
 			VALUES ($1, $2, now(), now(), $3, '2026-2027', '2026-09-01', '2027-05-31', true)`, s[1], f.tenant, s[0])
-		exec(`INSERT INTO org.classes (class_id, tenant_id, created_at, updated_at, school_id, academic_year_id, grade_level, name)
-			VALUES ($1, $2, now(), now(), $3, $4, 3, '3A')`, s[2], f.tenant, s[0], s[1])
 	}
 	return f
 }
@@ -117,12 +114,6 @@ func insertStudent(ctx context.Context, tx *sql.Tx, f fixture, username string) 
 	_, err := tx.ExecContext(ctx, `INSERT INTO org.students (student_id, tenant_id, created_at, updated_at, school_id, grade_level, full_name)
 		VALUES ($1, $2, now(), now(), $3, 3, 'Hoc Sinh')`, id, f.tenant, f.school)
 	return id, err
-}
-
-func enroll(ctx context.Context, tx *sql.Tx, f fixture, student, school, class string) error {
-	_, err := tx.ExecContext(ctx, `INSERT INTO org.enrollments (enrollment_id, tenant_id, created_at, updated_at, school_id, student_id, class_id, status, start_date, source)
-		VALUES ($1, $2, now(), now(), $3, $4, $5, 'active', current_date, 'manual')`, ids.New().String(), f.tenant, school, student, class)
-	return err
 }
 
 func TestOrgSchema(t *testing.T) {
@@ -155,8 +146,16 @@ func TestOrgSchema(t *testing.T) {
 		if n := count(ctx, t, platform, "SELECT count(*) FROM platform.tenants WHERE tenant_type = 'common' AND tenant_id = $1", commonTenant); n != 1 {
 			t.Fatal("common tenant missing")
 		}
-		if n := count(ctx, t, platform, "SELECT count(*) FROM org.classes WHERE tenant_id = $1 AND is_virtual AND name LIKE 'common-g%'", commonTenant); n != 9 {
-			t.Fatalf("virtual classes = %d, want 9", n)
+		// ADR-0095 mục 8 (WP-R): org.classes (and the 9 virtual classes common-g1…g9 of the seed) and org.enrollments
+		// are dropped; the CHECK values of the removed SIS kinds are gone on a database where no row carried them.
+		if n := count(ctx, t, platform, `SELECT count(*) FROM (VALUES (to_regclass('org.classes')), (to_regclass('org.enrollments')),
+			(to_regclass('org.classes_live')), (to_regclass('org.enrollments_live'))) v(r) WHERE r IS NOT NULL`); n != 0 {
+			t.Fatalf("%d class/enrollment relations left (ADR-0095 mục 8)", n)
+		}
+		if n := count(ctx, t, platform, `SELECT count(*) FROM pg_constraint WHERE conname IN ('sis_links_type_chk', 'staging_records_entity_kind_check')
+			AND conrelid IN ('sis.sis_links'::regclass, 'sis.staging_records'::regclass)
+			AND pg_get_constraintdef(oid) NOT LIKE '%class%' AND pg_get_constraintdef(oid) NOT LIKE '%enrollment%'`); n != 2 {
+			t.Fatalf("narrowed SIS CHECKs = %d, want 2", n)
 		}
 		// F010-AC-02 (DB layer): a second common tenant violates tenants_single_common_uq.
 		_, err := platform.ExecContext(ctx, `INSERT INTO platform.tenants (tenant_id, created_at, updated_at, code, name, tenant_type, settings)
@@ -168,7 +167,7 @@ func TestOrgSchema(t *testing.T) {
 
 	// T009: RLS on every new T table — tenant A never sees B, unset tenant sees nothing, no DELETE.
 	t.Run("RLS", func(t *testing.T) {
-		for _, table := range []string{"org.schools", "org.academic_years", "org.classes"} {
+		for _, table := range []string{"org.schools", "org.academic_years"} {
 			if n := count(ctx, t, app, "SELECT count(*) FROM "+table); n != 0 {
 				t.Fatalf("%s without app.tenant_id returned %d rows", table, n)
 			}
@@ -183,15 +182,15 @@ func TestOrgSchema(t *testing.T) {
 			})
 		}
 		err := inTenant(ctx, t, app, a.tenant, false, func(tx *sql.Tx) error {
-			_, err := tx.ExecContext(ctx, `INSERT INTO org.classes (class_id, tenant_id, created_at, updated_at, school_id, academic_year_id, grade_level, name)
-				VALUES ($1, $2, now(), now(), $3, $4, 3, '3Z')`, ids.New().String(), b.tenant, b.school, b.year)
+			_, err := tx.ExecContext(ctx, `INSERT INTO org.academic_years (academic_year_id, tenant_id, created_at, updated_at, school_id, name, start_date, end_date)
+				VALUES ($1, $2, now(), now(), $3, '2027-2028', '2027-09-01', '2028-05-31')`, ids.New().String(), b.tenant, b.school)
 			return err
 		})
 		if pgCode(err) != "42501" {
 			t.Fatalf("insert into tenant B from A: %v (want RLS 42501)", err)
 		}
 		err = inTenant(ctx, t, app, a.tenant, false, func(tx *sql.Tx) error {
-			_, err := tx.ExecContext(ctx, "DELETE FROM org.classes WHERE class_id = $1", a.class) // tenancyguard:ok asserts DELETE is refused
+			_, err := tx.ExecContext(ctx, "DELETE FROM org.academic_years WHERE academic_year_id = $1", a.year) // tenancyguard:ok asserts DELETE is refused
 			return err
 		})
 		if pgCode(err) != "42501" {
@@ -209,36 +208,6 @@ func TestOrgSchema(t *testing.T) {
 		})
 		if err != nil {
 			t.Fatal(err)
-		}
-	})
-
-	// F010-AC-11, F010-AC-12: one active enrollment; class of the enrollment's school (composite FK).
-	t.Run("EnrollmentInvariants", func(t *testing.T) {
-		err := inTenant(ctx, t, app, a.tenant, false, func(tx *sql.Tx) error {
-			s, err := insertStudent(ctx, tx, a, "hs.inv.1")
-			if err != nil {
-				return err
-			}
-			if err := enroll(ctx, tx, a, s, a.school, a.class); err != nil {
-				return err
-			}
-			if err := enroll(ctx, tx, a, s, a.otherSchool, a.otherClass); pgCode(err) != "23505" {
-				t.Fatalf("second active enrollment: %v (want 23505)", err)
-			}
-			return nil
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = inTenant(ctx, t, app, a.tenant, false, func(tx *sql.Tx) error {
-			s, err := insertStudent(ctx, tx, a, "hs.inv.2")
-			if err != nil {
-				return err
-			}
-			return enroll(ctx, tx, a, s, a.school, a.otherClass) // class of another school
-		})
-		if pgCode(err) != "23503" {
-			t.Fatalf("class of another school: %v (want FK 23503)", err)
 		}
 	})
 
@@ -270,10 +239,8 @@ func TestOrgSchema(t *testing.T) {
 		var student string
 		err := inTenant(ctx, t, app, a.tenant, true, func(tx *sql.Tx) error {
 			var err error
-			if student, err = insertStudent(ctx, tx, a, "hs.member"); err != nil {
-				return err
-			}
-			return enroll(ctx, tx, a, student, a.school, a.class)
+			student, err = insertStudent(ctx, tx, a, "hs.member")
+			return err
 		})
 		if err != nil {
 			t.Fatal(err)
