@@ -11534,6 +11534,31 @@ export interface components {
             section_id: string;
             title?: string;
         };
+        /**
+         * @example {
+         *       "exam_session_id": "0f640000-0000-4000-8000-000000000001",
+         *       "title": "Kiểm tra: Phép nhân",
+         *       "type": "chapter",
+         *       "is_official": true,
+         *       "subject_id": "0f640000-0000-4000-8000-0000000000a1",
+         *       "grade_level": 3,
+         *       "window_start": "2026-11-20T01:00:00Z",
+         *       "window_end": "2026-11-20T03:00:00Z",
+         *       "duration_seconds": 900,
+         *       "question_count": 15,
+         *       "max_attempts": 1,
+         *       "attempts_used": 0,
+         *       "status": "open",
+         *       "assessment_blueprint_version_id": "0f640000-0000-4000-8000-0000000000b1",
+         *       "navigation": "free",
+         *       "feedback_timing": "after_close",
+         *       "result_release": "after_close",
+         *       "assignment_id": "0f640000-0000-4000-8000-0000000000c1",
+         *       "audience": "assigned",
+         *       "effective_duration_seconds": 900,
+         *       "server_time": "2026-11-20T01:30:00Z"
+         *     }
+         */
         ExamSession: {
             /** @description Chỉ trả cho nhân sự */
             accommodations?: components["schemas"]["ExamAccommodation"][];
@@ -11557,6 +11582,11 @@ export interface components {
             is_official: boolean;
             late_start_policy?: components["schemas"]["ExamLateStartPolicy"];
             max_attempts?: number;
+            /**
+             * @description Điều hướng trong đề, lấy từ blueprint version đã ghim (assessment-blueprint.schema.json `navigation`, EXAM_ENGINE §3) — free cho chuyển tự do qua lưới câu; sequential_no_return chỉ đi tới, không quay lại câu trước (F064-AC-06)
+             * @enum {string}
+             */
+            navigation?: "free" | "sequential_no_return";
             question_count?: number;
             result_release?: components["schemas"]["ResultRelease"];
             results_released_at?: components["schemas"]["Timestamp"];
