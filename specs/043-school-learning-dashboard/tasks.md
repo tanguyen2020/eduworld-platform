@@ -124,6 +124,10 @@
 - [x] T040 [P] Cập nhật CHANGELOG và trạng thái F043 trong CODE_PLAN — file: `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md` — Bằng chứng: CHANGELOG, CODE_PLAN (In progress — AC-22 chờ kiểm thử tải)
 - [ ] T041 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/043-school-learning-dashboard/quickstart.md` — **Một phần**: kịch bản 1–12 tương ứng test integration `TestDashboard*`, `TestSchoolDashboardWidgets`, `TestClassDashboardAndSeries`, `TestStudentLearningProfile`, `TestTenantAndPlatformSummary` (local, testcontainers); kịch bản 13 (tải) chờ staging
 
+## Nhận từ F056 (OQ F056-3, owner chốt 2026-11-21)
+
+- [ ] T042 `DashboardMeta` thêm `available_from` (date, ngày sớm nhất có số liệu của phạm vi) và `replica_lag_warning` (boolean, true khi độ trễ replica vượt ngưỡng trong CONFIG_DEFAULTS) — contract + query handler + test — file: `specs/openapi/eduworld-api.v1.yaml`, `src/backend/modules/learning/internal/application/query/` — kiểm: `make specs-lint`, `make test-integration MOD=learning` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T004–T008) → US1 → US2 và US3 (song song sau US1) → US4, US5 → Polish.

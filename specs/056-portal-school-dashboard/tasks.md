@@ -118,11 +118,15 @@
 - [x] T050 [P] Test F056-AC-23: tắt `action.school_lms.reports.export` → menu/nút ẩn, `403 FEATURE_DISABLED` hiện thông báo và tải lại `getMyPermissions` (TC-CMS-MENU-02) — file: `src/cms/frontend/apps/portal/tests/e2e/school-lms/dashboard-feature-toggle.spec.ts` — ✅ Vitest `src/cms/frontend/apps/portal/src/workspaces/school-lms/dashboard/__tests__/permissions.test.tsx` › AC-23 (2 test: action/menu tắt; `403 FEATURE_DISABLED` → thông báo + tải lại `getMyPermissions`); Playwright cùng kịch bản chờ backend compose
 - [x] T051 Dùng khóa catalog, không đăng ký menu tay: route/menu lấy từ registry sinh từ `specs/portal/menu-catalog.yaml` (F051), nút thao tác bọc `<ActionGate actionKey=…>` theo bảng khóa trong [plan.md](plan.md) (F056-AC-23) — file: `src/cms/frontend/apps/portal/src/workspaces/school-lms/routes.tsx` — ✅ `src/workspaces/school-lms/index.tsx` + `platform-admin/index.tsx` gắn màn vào khóa menu catalog; nút bọc `<ActionGate>` (`reports.export`, `assignments.edit`), tab theo `reports.view`/`reports.export`, tab đăng nhập theo `student_activity.view`; `check-portal-catalog` 0 lỗi
 
+## Việc nhận sau khi chốt câu hỏi mở (owner chốt 2026-11-21)
+
+- [ ] T052 Truyền lịch năm học/học kỳ từ `listSchoolAcademicYears` (F010 T047) vào `DashboardRangePicker` để bật preset "Học kỳ này"/"Năm học này"; hiện `available_from` ("Chưa có số liệu trước ngày …") và cảnh báo trễ replica từ `DashboardMeta` (F043 T042) trong `DashboardWidget` — chờ F010 T047, F043 T042 — kiểm: `pnpm lint`, `pnpm typecheck`, vitest dashboard — cỡ S
+
 ## Câu hỏi mở (Clarifications 2026-11-21)
 
-- **F056-1** — `getAssignmentItemAnalysis` (phân tích theo câu cho bài không có phiên thi) và danh sách học sinh sai từng câu chưa có trong contract; owner F044 quyết định có thêm hay không. Hiện: chỉ bài có `exam_session_id`.
-- **F056-2** — Ngày năm học/học kỳ của trường cho preset "Học kỳ này"/"Năm học này" (đọc `academic_years` qua API công khai). Hiện: hai preset bị vô hiệu kèm giải thích.
-- **F056-3** — `DashboardMeta` thiếu `available_from` ("Chưa có số liệu trước ngày …") và cờ cảnh báo trễ replica (Edge Cases); owner F043 bổ sung contract.
+- **F056-1** — `getAssignmentItemAnalysis` (phân tích theo câu cho bài không có phiên thi) và danh sách học sinh sai từng câu chưa có trong contract; owner F044 quyết định có thêm hay không. Hiện: chỉ bài có `exam_session_id`. **Chốt 2026-11-21:** Release 1 giữ cách hiện tại (phân tích theo câu chỉ cho bài có phiên thi), không thêm `getAssignmentItemAnalysis`.
+- **F056-2** — Ngày năm học/học kỳ của trường cho preset "Học kỳ này"/"Năm học này" (đọc `academic_years` qua API công khai). Hiện: hai preset bị vô hiệu kèm giải thích. **Chốt 2026-11-21:** thêm operation đọc năm học (F010 T047) rồi bật preset (T052).
+- **F056-3** — `DashboardMeta` thiếu `available_from` ("Chưa có số liệu trước ngày …") và cờ cảnh báo trễ replica (Edge Cases); owner F043 bổ sung contract. **Chốt 2026-11-21:** F043 T042 thêm hai trường, F056 T052 hiển thị.
 
 ## Dependencies & Execution Order
 

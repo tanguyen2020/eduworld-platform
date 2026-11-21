@@ -126,6 +126,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 - [ ] T045 **OQ chốt 2026-11-20** (audit đọc hồ sơ) `getStudentProfile` ghi audit `student_profile.viewed` qua `audit.Recorder`; test có audit khi đọc thành công, không audit khi 403/404 — file: `src/backend/modules/identity/internal/application/query/`, `tests/integration/` — kiểm: `make test-integration MOD=identity` — cỡ S
 - [ ] T046 **OQ chốt 2026-11-20** (T034) Lệnh `--once` cho job `org-membership-reconcile` và ghi issue `unexpected_org_member` vào `sis.reconciliation_issues` — file: `src/backend/cmd/worker/`, `src/backend/modules/identity/internal/application/command/org_reconcile.go` — kiểm: integration — cỡ S
 
+## Nhận từ F056 (OQ F056-2, owner chốt 2026-11-21)
+
+- [ ] T047 Operation công khai chỉ đọc `listSchoolAcademicYears` (năm học + học kỳ của trường: `academic_year_id`, `name`, `start_date`, `end_date`, `terms[]`), `x-portal-action` của dashboard trường, `TenantScope` + `deleted_at IS NULL`, test authz/tenant isolation — file: `specs/openapi/eduworld-api.v1.yaml`, `src/backend/modules/identity/internal/application/query/` — kiểm: `make specs-lint`, `make test-integration MOD=identity` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T003–T009) → US1 → US2, US3 song song → US4 (cần T008, T016) → US5 (cần T008, T027) → Polish.
