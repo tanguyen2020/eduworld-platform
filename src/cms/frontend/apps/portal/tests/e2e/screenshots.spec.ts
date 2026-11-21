@@ -226,10 +226,16 @@ test.describe('@screenshots Ảnh chụp mọi màn portal', () => {
         // school dashboard with the first school picked: the KPI widget cards with data of the seed
         const dash = WORKSPACE_CATALOG.flatMap((w) => w.menus).find((m) => m.key === 'menu.school_lms.school_dashboard')!;
         await page.goto(dash.path);
-        await page.getByRole('combobox', { name: 'Trường' }).click();
-        await page.getByRole('option').first().click();
-        await page.getByTestId('widget-assignments').waitFor({ timeout: 30_000 }).catch(() => undefined);
-        await shoot(page, watch, role, role, n++, dash.path, '-school-selected');
+        // the school list may be empty for the role (then the shot shows the open, empty picker as the finding)
+        await page.getByRole('combobox', { name: 'Trường' }).click({ timeout: 10_000 }).catch(() => undefined);
+        const picked = await page
+          .getByRole('option')
+          .first()
+          .click({ timeout: 10_000 })
+          .then(() => true)
+          .catch(() => false);
+        if (picked) await page.getByTestId('widget-assignments').waitFor({ timeout: 30_000 }).catch(() => undefined);
+        await shoot(page, watch, role, role, n++, dash.path, picked ? '-school-selected' : '-school-picker-empty');
         // dark theme of the overview screens (owner review of direction B)
         await page.evaluate(() => {
           const p = JSON.parse(window.localStorage.getItem('ew.portal.prefs') ?? '{}');
