@@ -127,6 +127,12 @@
 - [x] T043 [P] Ghi CHANGELOG; đồng bộ LEARNING_ANALYTICS §8 (`/learning/mastery/me` dùng `getMyProgress`) — file: `docs/02-learning/LEARNING_ANALYTICS.md` — ✅ CHANGELOG; LEARNING_ANALYTICS §8 (`getMyProgress` thay `/learning/mastery/me`, level sau decay); DATABASE_DESIGN §2.7; MONITORING (metric + alert `LearningPartitionsMissing`)
 - [x] T044 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/031-learning-events-mastery/quickstart.md` — ✅ quickstart §5–§7: bằng chứng tự động cho kịch bản 1–27 (test tích hợp trên PostgreSQL/NATS/Valkey thật); chạy tay trên stack compose chưa làm (đăng nhập game bị chặn quyền ở phiên agent, như F030 T051)
 
+## ADR-0095 — khối tại thời điểm sự kiện (WP-L1, 2026-11-21)
+
+- [x] T058 Migration `20261229000002_adr0095_grade_at_event.sql` (cột `grade_level` + CHECK, backfill từ `ref.classes`/`ref.students`) và writer `LearningEventWriter`/`MasteryRepo.AddDaily` ghi `grade_level` từ `ref.students` — file: `src/backend/modules/learning/migrations/`, `src/backend/modules/learning/internal/infrastructure/persistence/write/`
+- [x] T059 Integration test `TestGradeAtEventTime` (F031-AC-31) và `TestGradeBackfill` (F031-AC-32) — file: `src/backend/modules/learning/tests/integration/grade_at_event_test.go`
+- [ ] T060 (WP-L2) Rollup/dashboard đọc `grade_level` của dòng thay `COALESCE(c.grade_level, st.grade_level)` qua lớp; ngừng ghi `class_id`
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 → (US3, US4 song song) → US5 → US6 (sau US1, song song US2–US5) → Polish.

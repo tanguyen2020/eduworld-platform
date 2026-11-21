@@ -115,11 +115,13 @@ type EvidenceReader interface {
 type ProgressDelta struct {
 	TenantID, StudentID, SchoolID, SubjectID uuid.UUID
 	ClassID                                  *uuid.UUID
-	Day                                      time.Time // the calendar day (date part used)
-	ActivitiesCompleted                      int
-	Items                                    ItemCounts
-	ActiveSeconds                            int64
-	LessonsCompleted                         int
+	// GradeLevel is the grade of the student on the day (ADR-0095); nil = read from ref.students.
+	GradeLevel          *int
+	Day                 time.Time // the calendar day (date part used)
+	ActivitiesCompleted int
+	Items               ItemCounts
+	ActiveSeconds       int64
+	LessonsCompleted    int
 }
 
 // ProgressStore upserts progress_daily counters in the TenantScope of ctx.

@@ -339,7 +339,8 @@ func (MasteryRepo) FirstAnswers(ctx context.Context, attemptID uuid.UUID) (write
 	return c, nil
 }
 
-// AddDaily implements write.ProgressStore (upsert of counters; class_id is the enrollment snapshot at the time).
+// AddDaily implements write.ProgressStore (upsert of counters; grade_level is the grade of the student when the bucket
+// is first written — ADR-0095 — and class_id the enrollment snapshot, kept for the class rollups until WP-L2).
 func (MasteryRepo) AddDaily(ctx context.Context, d write.ProgressDelta) error {
 	tx, err := txOf(ctx)
 	if err != nil {
@@ -348,11 +349,12 @@ func (MasteryRepo) AddDaily(ctx context.Context, d write.ProgressDelta) error {
 	// tenancyguard:ok derived progress_daily has no deleted_at (DATABASE_DESIGN §2.7); insert/update of the session tenant (RLS)
 	_, err = tx.ExecContext(ctx, `INSERT INTO learning.progress_daily (tenant_id, student_id, subject_id, bucket_date, metric_version, school_id,
 			class_id, activities_completed, items_answered, items_correct, items_rapid_guess, items_with_hint, active_seconds, lessons_completed,
-			items_correct_rapid_guess)
+			items_correct_rapid_guess, grade_level)
 		VALUES ($1, $2, $3, $4::date, 1, $5,
 			COALESCE($6::uuid, (SELECT en.class_id FROM ref.enrollments en WHERE en.student_id = $2 AND en.tenant_id = $1
 				AND en.status = 'active' ORDER BY en.start_date DESC LIMIT 1)),
-			$7, $8, $9, $10, $11, $12, $13, $14)
+			$7, $8, $9, $10, $11, $12, $13, $14,
+			COALESCE($15::smallint, (SELECT st.grade_level FROM ref.students st WHERE st.student_id = $2 AND st.tenant_id = $1)))
 		ON CONFLICT (tenant_id, student_id, subject_id, bucket_date, metric_version) DO UPDATE SET
 			items_correct_rapid_guess = progress_daily.items_correct_rapid_guess + EXCLUDED.items_correct_rapid_guess,
 			activities_completed = progress_daily.activities_completed + EXCLUDED.activities_completed,
@@ -362,9 +364,10 @@ func (MasteryRepo) AddDaily(ctx context.Context, d write.ProgressDelta) error {
 			items_with_hint = progress_daily.items_with_hint + EXCLUDED.items_with_hint,
 			active_seconds = progress_daily.active_seconds + EXCLUDED.active_seconds,
 			lessons_completed = progress_daily.lessons_completed + EXCLUDED.lessons_completed,
+			grade_level = COALESCE(progress_daily.grade_level, EXCLUDED.grade_level),
 			computed_at = now()`,
 		d.TenantID, d.StudentID, d.SubjectID, d.Day.Format(time.DateOnly), d.SchoolID, d.ClassID, d.ActivitiesCompleted, d.Items.Answered,
-		d.Items.Correct, d.Items.RapidGuess, d.Items.WithHint, d.ActiveSeconds, d.LessonsCompleted, d.Items.CorrectRapid)
+		d.Items.Correct, d.Items.RapidGuess, d.Items.WithHint, d.ActiveSeconds, d.LessonsCompleted, d.Items.CorrectRapid, d.GradeLevel)
 	if err != nil {
 		return fmt.Errorf("progress daily: %w", err)
 	}

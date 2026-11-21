@@ -87,13 +87,15 @@ type AttemptStore interface {
 // LearningEvent is one row of learning.learning_events (EVENT_DESIGN §5, learning-event.schema.json): written in the
 // transaction of the change it records; a replay with the same idempotency key adds no row.
 type LearningEvent struct {
-	ID               uuid.UUID
-	OccurredAt       time.Time
-	Type             string
-	StudentID        uuid.UUID
-	TenantID         uuid.UUID
-	SchoolID         uuid.UUID
-	ClassID          *uuid.UUID
+	ID         uuid.UUID
+	OccurredAt time.Time
+	Type       string
+	StudentID  uuid.UUID
+	TenantID   uuid.UUID
+	SchoolID   uuid.UUID
+	ClassID    *uuid.UUID
+	// GradeLevel is the grade of the student at the time of the event (ADR-0095); nil = read from ref.students.
+	GradeLevel       *int
 	GameSessionID    *uuid.UUID
 	ActivityID       *uuid.UUID
 	ContentID        *uuid.UUID
