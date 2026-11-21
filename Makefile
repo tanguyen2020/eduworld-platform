@@ -101,7 +101,7 @@ build: ## Build every binary into ./bin with build metadata
 	  CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS) -X $(GOPKG)/pkg/buildinfo.Binary=$$b" -o $(GOBIN)/$$b ./cmd/$$b; done
 
 # ---------- database ----------
-.PHONY: migrate migrate-diff migrate-lint seed seed-identity seed-learning seed-game seed-check db-privileges db-backup db-restore
+.PHONY: migrate migrate-diff migrate-lint seed seed-identity seed-learning seed-game seed-check seed-content db-privileges db-backup db-restore
 migrate: $(addprefix migrate-,$(MODULES)) ## Apply Atlas migrations to every module database
 
 migrate-%: ## Apply Atlas migrations of one module (role <module>_migrator)
@@ -122,6 +122,10 @@ seed-learning: ## Learning dev seed (subjects + curriculum GDPT2018_SAMPLE throu
 
 seed-game: ## Game dev seed (character catalog v1 + default item definitions through the publish use case, F070)
 	EW_DB_GAME_DSN=$(call dsn,game,app) EW_DB_GAME_PLATFORM_DSN=$(call dsn,game,platform) $(GO) run ./modules/game/cmd/seed
+
+seed-content: ## DEV published content Toán khối 3 + ADR-0029 assignment of it and GDPT2018_SAMPLE to th-demo-a/pgd-demo, through the API (after make up-app && make seed-check; EW_SEED_PASSWORD = demo password)
+	EW_ENV=local EW_SEED_API_URL=$${EW_SEED_API_URL:-http://localhost:9080/api/v1} EW_SEED_INTERNAL_API_URL=$${EW_SEED_INTERNAL_API_URL:-http://localhost:9180/api/v1} \
+	  $(GO) run ./modules/learning/cmd/seed-content
 
 seed-check: ## Wait until the worker projected every seeded student into ref.students of learning and game (after make up-app)
 	bash scripts/dev/seed-check.sh

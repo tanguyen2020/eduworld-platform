@@ -1,0 +1,103 @@
+{
+  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): published platform content for Toán khối 3 over GDPT2018_SAMPLE, loaded by `make seed-content` through the public CMS API (create → submit_review → approve → publish) and assigned to the demo tenants (ADR-0029). Fake data, not reviewed by EdTech. Never assigned to real tenants.",
+  "curriculum_code": "GDPT2018_SAMPLE",
+  "subject_code": "math",
+  "grade_level": 3,
+  "topic_code": "MATH.G3.T01",
+  "objective_codes": ["MATH.G3.NUM.MUL_TABLE.2"],
+  "audio_exempt_reason": "Dữ liệu dev: chưa thu giọng đọc",
+  "tenant_codes": ["th-demo-a", "pgd-demo"],
+  "questions": [
+    {
+      "key": "devseed-mg3-q1",
+      "body": {
+        "type": "single_choice",
+        "difficulty": 1,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] 6 × 7 = ?" }] },
+        "render_payload": {
+          "options": [
+            { "id": "o_a1", "content": { "blocks": [{ "type": "paragraph", "text": "36" }] }, "feedback": "36 là 6 × 6. Em cộng thêm 6 nhé." },
+            { "id": "o_a2", "content": { "blocks": [{ "type": "paragraph", "text": "42" }] }, "feedback": "Đúng rồi: 6 × 7 = 42." },
+            { "id": "o_a3", "content": { "blocks": [{ "type": "paragraph", "text": "48" }] }, "feedback": "48 là 6 × 8." }
+          ],
+          "shuffle_options": true
+        },
+        "answer_key": { "correct_option_id": "o_a2" },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-q2",
+      "body": {
+        "type": "single_choice",
+        "difficulty": 2,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] 8 × 9 = ?" }] },
+        "render_payload": {
+          "options": [
+            { "id": "o_b1", "content": { "blocks": [{ "type": "paragraph", "text": "63" }] }, "feedback": "63 là 7 × 9." },
+            { "id": "o_b2", "content": { "blocks": [{ "type": "paragraph", "text": "81" }] }, "feedback": "81 là 9 × 9." },
+            { "id": "o_b3", "content": { "blocks": [{ "type": "paragraph", "text": "72" }] }, "feedback": "Đúng rồi: 8 × 9 = 72." }
+          ],
+          "shuffle_options": true
+        },
+        "answer_key": { "correct_option_id": "o_b3" },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-q3",
+      "body": {
+        "type": "single_choice",
+        "difficulty": 2,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] 7 × 8 = ?" }] },
+        "render_payload": {
+          "options": [
+            { "id": "o_c1", "content": { "blocks": [{ "type": "paragraph", "text": "56" }] }, "feedback": "Đúng rồi: 7 × 8 = 7 × 7 + 7 = 56." },
+            { "id": "o_c2", "content": { "blocks": [{ "type": "paragraph", "text": "54" }] }, "feedback": "54 là 6 × 9." },
+            { "id": "o_c3", "content": { "blocks": [{ "type": "paragraph", "text": "64" }] }, "feedback": "64 là 8 × 8." }
+          ],
+          "shuffle_options": true
+        },
+        "answer_key": { "correct_option_id": "o_c1" },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    },
+    {
+      "key": "devseed-mg3-q4",
+      "body": {
+        "type": "numeric",
+        "difficulty": 3,
+        "stem": { "blocks": [{ "type": "paragraph", "text": "[DEV] Mỗi hộp có 9 cái bút. Hỏi 6 hộp có bao nhiêu cái bút?" }] },
+        "render_payload": { "keyboard": "numeric", "unit_label": "cái", "allow_fraction_input": false, "decimal_separator": "," },
+        "answer_key": { "value": 54, "tolerance": { "type": "absolute", "value": 0 }, "accept_equivalent_forms": true },
+        "scoring_rule": { "mode": "all_or_nothing" },
+        "max_score": 1
+      }
+    }
+  ],
+  "question_set": {
+    "title": "[DEV] Luyện bảng nhân 6–9",
+    "purpose": "exercise"
+  },
+  "activity": {
+    "title": "[DEV] Quiz bảng nhân 6–9",
+    "description": "Ôn tập bảng nhân 6, 7, 8, 9 (dữ liệu dev)",
+    "instructions": "Chọn hoặc nhập đáp án đúng",
+    "config": {
+      "interaction": { "shuffle_items": false, "shuffle_options": true },
+      "evaluation": { "strategies": ["auto"], "max_score": 10, "pass_threshold": 0.5 },
+      "feedback": { "timing": "immediate" },
+      "completion_rule": { "mode": "submit" }
+    }
+  },
+  "lesson": {
+    "title": "[DEV] Bảng nhân 6–9",
+    "completion_rule": "view_only",
+    "blocks": [
+      { "kind": "rich_text", "content": { "blocks": [{ "type": "paragraph", "text": "Bảng nhân 7: 7 × 1 = 7, 7 × 2 = 14, … 7 × 9 = 63. Mỗi lần nhân thêm 1, kết quả tăng thêm 7." }] } }
+    ]
+  }
+}
