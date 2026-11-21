@@ -1,8 +1,8 @@
 // F035 T064 — F035-AC-35 (TC-UI-003, TC-UI-006), quickstart scenario 22 @F035: on the REAL stack (seed of
-// quickstart §1), sa.admin goes through the research flow of workspace D (agreement → study → classes → activate →
-// wave → report) and the A/B experiment screens; ad.truong.a never sees the research menus; the pages pass a basic
-// accessibility check (labelled controls, one h1). Needs EW_E2E_PORTAL_URL, EW_E2E_PASSWORD (password only, ADR-0094); skipped
-// otherwise (OQ F051-9: no E2E job against a real backend yet).
+// quickstart §1), sa.admin goes through the research flow of workspace D (agreement → study → cohorts → activate →
+// wave → report; a cohort is a (school, grade) since ADR-0095) and the A/B experiment screens; ad.truong.a never sees
+// the research menus; the pages pass a basic accessibility check (labelled controls, one h1). Needs EW_E2E_PORTAL_URL,
+// EW_E2E_PASSWORD (password only, ADR-0094); skipped otherwise (OQ F051-9: no E2E job against a real backend yet).
 import { expect, test, type Page } from '@playwright/test';
 import { e2eReady as ready, signIn } from '../support/auth';
 
@@ -18,7 +18,7 @@ async function a11y(page: Page) {
 test.describe('@F035 Nghiên cứu hiệu quả trên portal', () => {
   test.skip(!ready, 'real stack not configured (EW_E2E_PORTAL_URL, EW_E2E_PASSWORD) — OQ F051-9');
 
-  test('sa.admin: agreement, study, class pair, activation, wave and report', async ({ page }) => {
+  test('sa.admin: agreement, study, cohort pair, activation, wave and report', async ({ page }) => {
     await signIn(page, 'sa.admin');
     await page.goto('/platform-admin'); // sign-in lands on the first workspace (school_lms)
     await page.getByRole('link', { name: 'Nghiên cứu hiệu quả học tập' }).click();
@@ -40,13 +40,18 @@ test.describe('@F035 Nghiên cứu hiệu quả trên portal', () => {
     await expect(page.getByText(ref)).toBeVisible();
     // the seeded draft study (quickstart §1): detail, activation, wave
     await page.getByRole('tab', { name: 'Nghiên cứu' }).click();
-    await page.getByRole('link', { name: /math-g3/ }).first().click();
-    await expect(page.getByRole('tab', { name: 'Lớp và cặp' })).toBeVisible();
+    const study = page.getByRole('link', { name: /math-g3/ }).first();
+    await study.waitFor({ timeout: 15_000 }).catch(() => undefined);
+    // the study comes from F035 quickstart step 6 (createEfficacyStudy), not from `make seed`: without it, a
+    // missing-seed finding rather than a portal failure
+    test.skip(!(await study.isVisible()), 'missing seed data: no math-g3 study (F035 quickstart step 6) in the study list');
+    await study.click();
+    await expect(page.getByRole('tab', { name: 'Cụm (trường, khối) và cặp' })).toBeVisible();
     await a11y(page);
     if (await page.getByRole('button', { name: 'Kích hoạt' }).isVisible()) {
       await page.getByRole('button', { name: 'Kích hoạt' }).click();
       await page.getByRole('button', { name: 'Kích hoạt' }).last().click();
-      await expect(page.getByText('Nghiên cứu đã kích hoạt: cặp lớp, nhánh và dạng đề đã khóa.')).toBeVisible();
+      await expect(page.getByText('Nghiên cứu đã kích hoạt: cặp cụm, nhánh và dạng đề đã khóa.')).toBeVisible();
     }
     await page.getByRole('tab', { name: 'Đợt kiểm tra' }).click();
     await expect(page.getByText(/Đợt kiểm tra không công bố điểm/)).toBeVisible();
