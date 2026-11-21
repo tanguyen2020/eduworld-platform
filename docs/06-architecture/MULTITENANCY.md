@@ -154,7 +154,7 @@ flowchart LR
   F --> G[(Database của module\nSET LOCAL app.tenant_id\nRLS)]
 ```
 
-Cache Principal (`ew:<module>:principal:<user_id>:<tenant_id>`, mỗi module một prefix theo ACL Valkey, [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md)) bị xóa khi nhận event `user.access_revoked`, `enrollment.changed`, `user_role.changed`, `role.updated`, `tenant_membership.changed`, `tenant.updated`.
+Cache Principal (`ew:<module>:principal:<user_id>:<tenant_id>`, mỗi module một prefix theo ACL Valkey, [VALKEY_DESIGN](../07-backend/VALKEY_DESIGN.md)) bị xóa khi nhận event `user.access_revoked`, `student.placement_changed`, `user_role.changed`, `role.updated`, `tenant_membership.changed`, `tenant.updated`.
 
 ### 4.4. Quy tắc interceptor theo mixin, ba loại scope và cổng bypass (ADR-0089)
 
@@ -372,7 +372,7 @@ flowchart LR
 | AC-ORG-007 | WS: subscribe channel/room tenant B → `PERMISSION_DENIED` | Realtime integration |
 | AC-ORG-008 | Chuyển sang tenant khác: tenant mới không thấy attempt cũ; học sinh vẫn thấy lịch sử của mình | Integration |
 | AC-ORG-009 | Nội dung riêng tenant A không xuất hiện ở tenant B; nội dung platform chưa gán không xuất hiện ở tenant nào | Integration |
-| AC-ORG-010 | Cache Principal bị vô hiệu sau `enrollment.changed` ≤ 60 s | Integration |
+| AC-ORG-010 | Cache Principal bị vô hiệu sau `student.placement_changed` ≤ 60 s (ADR-0095) | Integration |
 | AC-ORG-011 | Học sinh tenant A đăng nhập với `organization:{alias B}` (đúng mật khẩu) → `TENANT_MISMATCH` + audit | E2E Keycloak + API |
 | AC-ORG-012 | Học sinh thuộc 1 tenant đăng nhập (màn đăng nhập không có bước chọn trường) → vào đúng tenant đó | API, E2E |
 | AC-ORG-013 | Nhân sự có UserRole ở 2 tenant đăng nhập portal không chọn → danh sách 2 tenant để chọn sau đăng nhập; token tenant A gọi tài nguyên B → 404 | API |

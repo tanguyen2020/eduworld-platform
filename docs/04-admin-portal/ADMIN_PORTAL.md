@@ -734,8 +734,7 @@ Nghiệp vụ: [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md). 
 | Màn | Chức năng | Ghi chú |
 |---|---|---|
 | Trường của tenant | Xem/sửa thông tin hiển thị (tên song ngữ, tỉnh/thành, cấp học, địa chỉ); **duyệt trường `pending_review`** (chọn tỉnh/thành khi SIS không gửi) | Trường do SIS sở hữu: trường dữ liệu SIS chỉ đọc (sửa ở SIS); tỉnh/thành sửa được khi SIS không cung cấp |
-| Lớp | Danh sách lớp theo năm học/khối, sĩ số, số course đang dùng | Lớp SIS chỉ đọc; trường dùng CSV tạo lớp qua import |
-| Học sinh chưa có lớp | Danh sách `reconciliation_issue` loại `missing_class` (học sinh không vào được game, ADR-0060) với hướng dẫn bổ sung lớp trong SIS/CSV | Không có thao tác "gán lớp tạm" trên portal |
+| Học sinh theo khối | Trường → khối → danh sách học sinh hiệu lực (`listTenantGradeStudents`), lần vào game cuối, đặt lại mật khẩu, khóa (ADR-0095 — không còn lớp, không còn "học sinh chưa có lớp") | Học sinh SIS chỉ đọc; trường/khối sửa ở SIS/CSV |
 
 Permission: `platform.catalog.write` (platform-only), `tenant.school.write`, `tenant.student.read`. Bảng endpoint đề xuất: [SCHOOL_LMS §11](SCHOOL_LMS.md) và mục API dưới đây.
 

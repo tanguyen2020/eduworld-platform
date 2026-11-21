@@ -1,4 +1,4 @@
-# Feature Specification: F010 — Tenant, danh mục quốc gia/tỉnh/trường, tổ chức trường–lớp–enrollment
+# Feature Specification: F010 — Tenant, danh mục quốc gia/tỉnh/trường, tổ chức trường–khối–học sinh (ADR-0095: không còn lớp/enrollment)
 
 **Feature Branch**: `010-tenant-org-structure` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `identity` · **Mốc**: M-C1 · **Phụ thuộc**: F003, F004
 **Input**: Mô hình tenant (`school`/`unit`/`common`) gắn một Keycloak Organization, danh mục quốc gia/tỉnh/trường, năm học–lớp–học sinh–enrollment có lịch sử, tenant chung do platform tạo. FR nguồn: FR-ORG-001, FR-ORG-002, FR-ORG-003, FR-ORG-005, FR-ORG-009, FR-ORG-010, FR-ORG-015, FR-ORG-016, FR-ORG-017, FR-AUTH-001, FR-AUTH-021.
@@ -75,6 +75,13 @@
 
 - Q: Event nào thay `enrollment.changed` khi bỏ hẳn enrollment (ADR-0095 D1), và feature nào sở hữu? → A: [Confirmed] `student.placement_changed.v1` (module identity, **owner F010**), schema [`specs/events/payloads/identity/student.placement_changed.v1.schema.json`](../events/payloads/identity/student.placement_changed.v1.schema.json), dòng [EVENT_DESIGN §4.1](../../docs/07-backend/EVENT_DESIGN.md#41-identity-tenancy-organization--sis). Phát trong cùng transaction với mọi thay đổi `org.students.school_id`, `grade_level`, `status` hoặc xóa mềm, từ mọi nguồn (SIS F011/F017 phát với "owner F010", tenant chung, saga F045, chuyển trường/lên khối, vòng đời F016); payload `student_id`, `tenant_id`, `school_id`, `grade_level`, `status` (`active`/`inactive` — hiệu lực = `status = 'active'` ∧ chưa xóa mềm), `previous_*?`, `changed_fields[]`, `academic_year_id?`, `effective_from?`, `source` (`sis`/`manual`/`platform_common`/`platform_saga`/`lifecycle`), `sync_run_id?`, `source_version` (version bản ghi học sinh). Thứ tự: schema + catalog trước (WP-S, 2026-11-21), consumer learning/competition (WP-L1, WP-C1), producer + bỏ `enrollment.changed`/`class.*` (WP-I1, [CODE_PLAN §4.2](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#42-kế-hoạch-bỏ-khái-niệm-lớp-adr-0095)). Viết lại US/AC lớp–enrollment của feature này (F010-AC-13 chuyển lớp, lớp ảo `common-g1…g9`, membership từ enrollment) thuộc WP-I1; tới lúc đó các AC đó vẫn mô tả code hiện có ([ADR-0095](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) thắng khi mâu thuẫn).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed], WP-I1 triển khai)
+
+- Q: Học sinh thuộc trường/khối bằng gì khi bỏ hẳn enrollment (ADR-0095 D1)? → A: [Confirmed] `org.students.school_id` + `grade_level`; học sinh **hiệu lực** = `status = 'active'` và chưa xóa mềm. `identity.tenant_memberships_v` dựng lại từ học sinh hiệu lực (⨝ trường còn sống cùng tenant) ∪ `user_roles` của nhân sự (migration `20261130000002_adr0095_membership_from_students`, cùng migration đặt `status = 'inactive'` cho học sinh có enrollment nhưng không còn enrollment active, soft-delete `sis_links` lớp/enrollment, đóng issue đối soát loại lớp, gỡ `class_leaderboard_enabled`). `org.enrollments`/`org.classes` không còn được ghi (DROP ở WP-R).
+- Q: Chuyển lớp (F010-AC-13) còn không? → A: [Confirmed] Không. `TransferStudent` nhận trường + khối đích: cùng trường khác khối = **lên khối**, khác trường cùng tenant (AC-14), khác tenant (AC-15); khóa dòng `org.students` FOR UPDATE nên hai lệnh đồng thời tuần tự hóa (AC-11). Mỗi thay đổi trường/khối/hiệu lực phát `student.placement_changed` (kèm `previous_*`, `changed_fields`, `academic_year_id` = năm học hiện tại của trường, `source_version` = version dòng học sinh) trong cùng transaction.
+- Q: API "lớp" của portal thay bằng gì? → A: [Confirmed] `listTenantGradeStudents` (`GET /tenant/schools/{school_id}/grades/{grade_level}/students`, cursor, `q`; `tenant.student.read` hoặc `lms.student.read`, ngoài scope → 404, khối ngoài 1–9 → 422) thay `listClasses`, `listTenantSchoolClasses`, `listTenantClassStudents`, `listUnassignedStudents` (xóa). Menu `menu.school_lms.classes` → `menu.school_lms.students` ("Học sinh theo khối"). `getMyStudentProfile`/`getStudentProfile`/bootstrap không còn `class_id`/`class_name`/`class`. Facade: `checkMemberships` bỏ `class_id`, `Principal` bỏ `class_ids`, `listProjectionSnapshot` chỉ còn `tenant`, `school`, `student` (`student` = trường của `student.placement_changed`).
+- Q: Tenant chung (AC-24)? → A: [Confirmed] Học sinh thuộc School ảo với khối khai báo, không lớp ảo, không enrollment; phát `student.placement_changed` (`source = platform_common`).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin tạo và quản lý tenant (Priority: P1)
@@ -117,28 +124,28 @@ System Admin quản lý danh mục quốc gia/tỉnh (hiệu lực, kế thừa)
 
 ---
 
-### User Story 3 — Năm học, lớp, enrollment và chuyển lớp/chuyển trường (Priority: P1)
+### User Story 3 — Năm học, trường/khối của học sinh, lên khối/chuyển trường (Priority: P1)
 
-Hệ thống giữ cấu trúc trường–năm học–lớp–học sinh; mỗi học sinh đúng một enrollment active; chuyển lớp/trường đóng enrollment cũ và mở enrollment mới trong cùng transaction, giữ lịch sử.
+Hệ thống giữ cấu trúc trường–năm học–khối–học sinh (ADR-0095: không còn lớp, không còn enrollment); mỗi học sinh thuộc đúng một trường với một khối; lên khối/chuyển trường đổi `org.students` trong một transaction, có audit và event `student.placement_changed`.
 
-**Why this priority**: Đăng nhập game (F013) yêu cầu học sinh có một trường, một lớp.
+**Why this priority**: Đăng nhập game (F013) yêu cầu học sinh có một trường, một khối hiệu lực.
 
-**Independent Test**: Áp chuyển lớp cho `hs.an.3a` (3A → 3B) và chuyển trường `hs.em.4a` trong tenant `pgd-demo`; truy vấn ở mọi thời điểm thấy đúng một lớp, tenant không đổi.
+**Independent Test**: Cho `hs.an.3a` lên khối 4 và chuyển trường `hs.em.4a` trong tenant `pgd-demo`; truy vấn ở mọi thời điểm thấy đúng một trường và một khối, tenant không đổi.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F010-AC-11 | HỆ THỐNG PHẢI bảo đảm mỗi học sinh có tối đa một enrollment `active`; hai lệnh áp đồng thời PHẢI chỉ một thành công | FR-ORG-017 · FR-ORG-002 | TC-ORG-105 |
-| F010-AC-12 | NẾU enrollment trỏ lớp thuộc trường khác với trường của enrollment, THÌ HỆ THỐNG PHẢI từ chối (FK ghép `(class_id, school_id)`) | FR-ORG-017 | TC-ORG-106 |
-| F010-AC-13 | KHI học sinh chuyển lớp, module identity PHẢI đóng enrollment cũ (`transferred`, `end_date`) và mở enrollment mới trong cùng transaction, phát `enrollment.changed` | FR-ORG-005 | TC-ORG-107 |
-| F010-AC-14 | KHI học sinh chuyển trường trong cùng tenant `unit`, module identity PHẢI giữ `tenant_id`, membership Keycloak và phiên; chỉ đổi `school_id` và enrollment | FR-ORG-005 · FR-ORG-010 | TC-TEN-009 |
+| F010-AC-11 | HỆ THỐNG PHẢI bảo đảm mỗi học sinh thuộc đúng một trường với một khối (`org.students`, ADR-0095); hai lệnh chuyển đồng thời PHẢI tuần tự hóa trên dòng học sinh | FR-ORG-017 · FR-ORG-002 | TC-ORG-105 |
+| F010-AC-12 | HỆ THỐNG PHẢI không ghi `org.enrollments`/`org.classes` nữa và chỉ coi học sinh là thành viên tenant khi học sinh hiệu lực thuộc một trường còn sống của chính tenant đó (ADR-0095 — thay FK lớp–trường) | FR-ORG-017 | TC-ORG-106 |
+| F010-AC-13 | KHI học sinh lên khối (cùng trường, khối khác), module identity PHẢI đổi `org.students.grade_level` trong một transaction, ghi audit và phát `student.placement_changed` (`changed_fields = [grade_level]`, `previous_grade_level`) (ADR-0095 — thay "chuyển lớp") | FR-ORG-005 | TC-ORG-107 |
+| F010-AC-14 | KHI học sinh chuyển trường trong cùng tenant `unit`, module identity PHẢI giữ `tenant_id`, membership Keycloak và phiên; chỉ đổi `school_id` (và khối nếu đổi), phát `student.transferred` + `student.placement_changed` | FR-ORG-005 · FR-ORG-010 | TC-TEN-009 |
 | F010-AC-15 | KHI học sinh chuyển sang trường thuộc tenant khác, module identity PHẢI giữ `user_id`, phát `tenant_membership.changed` (removed rồi added) và dữ liệu lịch sử PHẢI giữ `tenant_id` cũ | FR-ORG-005 · AC-AUTH-013 | TC-AUTH-008 |
 | F010-AC-16 | HỆ THỐNG PHẢI chỉ chấp nhận `user_type ∈ {student, staff}`; học sinh luôn có `primary_tenant_id` | FR-ORG-003 · ADR-0081 | — |
-| F010-AC-17 | NẾU người dùng tenant A gọi API lớp/học sinh/trường bằng ID của tenant B, THÌ HỆ THỐNG PHẢI trả `404` (không tiết lộ tồn tại) | FR-ORG-001 · NFR-SEC-006 | TC-TEN-001 |
-| F010-AC-18 | KHI School Admin trường A gọi danh sách lớp của trường B cùng tenant, HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` hoặc `404` | FR-ORG-001 | TC-TEN-003 |
-| F010-AC-19 | KHI học sinh xem hồ sơ của mình (`getMyStudentProfile`), HỆ THỐNG PHẢI trả trường/lớp/tỉnh song ngữ; người chơi khác không nhận các trường này | FR-ORG-016 · AGENTS R16 | TC-ORG-109 |
-| F010-AC-27 | KHI module có trong `x-allowed-callers` gọi facade `listProjectionSnapshot` (`entity_type` ∈ `tenant`, `school`, `class`, `student`, `enrollment`; `tenant_id` hoặc phạm vi platform cho job; `cursor`, `limit` ≤ 1000), module identity PHẢI trả trang trạng thái hiện hành gồm đúng các trường của payload event projection tương ứng kèm `source_version` (bản ghi soft-delete trả cờ `deleted`), đọc read model không ghi DB, không có PII ngoài trường của payload event; module không có trong `x-allowed-callers` PHẢI bị `make arch-check` chặn | [DATABASE_DESIGN §2.17](../../docs/07-backend/DATABASE_DESIGN.md) · ADR-0074 · ADR-0042 · AGENTS R13 | — |
+| F010-AC-17 | NẾU người dùng tenant A gọi API học sinh/trường bằng ID của tenant B, THÌ HỆ THỐNG PHẢI trả `404` (không tiết lộ tồn tại) | FR-ORG-001 · NFR-SEC-006 | TC-TEN-001 |
+| F010-AC-18 | KHI School Admin trường A gọi danh sách học sinh theo khối (`listTenantGradeStudents`) của trường B cùng tenant, HỆ THỐNG PHẢI trả `403 PERMISSION_DENIED` hoặc `404` | FR-ORG-001 | TC-TEN-003 |
+| F010-AC-19 | KHI học sinh xem hồ sơ của mình (`getMyStudentProfile`), HỆ THỐNG PHẢI trả trường/khối/tỉnh song ngữ (không có lớp — ADR-0095); người chơi khác không nhận các trường này | FR-ORG-016 · AGENTS R16 | TC-ORG-109 |
+| F010-AC-27 | KHI module có trong `x-allowed-callers` gọi facade `listProjectionSnapshot` (`entity_type` ∈ `tenant`, `school`, `student` — ADR-0095; `tenant_id` hoặc phạm vi platform cho job; `cursor`, `limit` ≤ 1000), module identity PHẢI trả trang trạng thái hiện hành gồm đúng các trường của payload event projection tương ứng kèm `source_version` (bản ghi soft-delete trả cờ `deleted`), đọc read model không ghi DB, không có PII ngoài trường của payload event; module không có trong `x-allowed-callers` PHẢI bị `make arch-check` chặn | [DATABASE_DESIGN §2.17](../../docs/07-backend/DATABASE_DESIGN.md) · ADR-0074 · ADR-0042 · AGENTS R13 | — |
 
 ---
 
@@ -163,17 +170,17 @@ Worker đồng bộ membership từ dữ liệu EduWorld: học sinh member đú
 
 ### User Story 5 — Tenant chung và tài khoản học sinh do platform tạo (Priority: P2)
 
-System Admin tạo/import có chủ đích học sinh vào tenant `common` với khối 1–9; học sinh vào lớp ảo theo khối; không có tự đăng ký.
+System Admin tạo/import có chủ đích học sinh vào tenant `common` với khối 1–9; học sinh thuộc School ảo với khối đó (không lớp ảo — ADR-0095); không có tự đăng ký.
 
 **Why this priority**: Cần cho học sinh ngoài trường ký hợp đồng; không chặn luồng chính.
 
-**Independent Test**: Tạo `hs.tudo` khối 4 trong `common` → `org.students` thuộc School ảo, enrollment lớp `common-g4`, Keycloak user member Organization `common`.
+**Independent Test**: Tạo `hs.tudo` khối 4 trong `common` → `org.students` thuộc School ảo với khối 4, Keycloak user member Organization `common`.
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F010-AC-24 | KHI System Admin tạo học sinh tenant chung với khối n, module identity PHẢI tạo `identity.users` (`student`, `primary_tenant_id = common`), `org.students` thuộc School ảo, enrollment lớp ảo `common-g<n>`, Keycloak local user member Organization `common`, audit `user.provisioned` với `source = platform_common` | FR-AUTH-021 · AC-AUTH-011 | TC-ORG-108 |
+| F010-AC-24 | KHI System Admin tạo học sinh tenant chung với khối n, module identity PHẢI tạo `identity.users` (`student`, `primary_tenant_id = common`), `org.students` thuộc School ảo với khối n (không lớp ảo, không enrollment — ADR-0095), Keycloak local user member Organization `common`, audit `user.provisioned` với `source = platform_common` và event `student.placement_changed` (`source = platform_common`) | FR-AUTH-021 · AC-AUTH-011 | TC-ORG-108 |
 | F010-AC-25 | NẾU yêu cầu tạo học sinh tenant chung thiếu khối hoặc khối ngoài 1–9, THÌ module identity PHẢI trả `422 VALIDATION_FAILED` | FR-AUTH-021 · FR-ORG-017 | — |
 | F010-AC-26 | HỆ THỐNG PHẢI không có endpoint nào cho phép tự đăng ký hoặc tự tạo tài khoản học sinh từ client game; không bao giờ tự đưa người dùng không khớp tenant nào vào `common` | FR-AUTH-001 · FR-AUTH-021 · ADR-0063 | TC-TEN-014 |
 | F010-AC-28 | KHI System Admin gọi `createCommonTenantStudents` (`Idempotency-Key`, `X-Tenant-Id` = tenant `common`, ≤ `common_student_batch_max` dòng, mỗi dòng `username` bắt buộc đã chuẩn hóa trim/NFC/chữ thường, `display_name`, `grade_level`, `external_ref` tùy chọn), module identity PHẢI xử lý từng dòng độc lập và trả `200` với `results[]` (`row_no`, `status` `created`/`failed`, `user_id`, `username`, `initial_password`, `error_code`) cùng số đếm; dòng trùng username với tài khoản khác PHẢI `failed` với `USERNAME_TAKEN` và không tạo reconciliation issue; `external_ref` PHẢI lưu thành ExternalIdentity `issuer = platform_common` (không thêm cột học sinh), trùng với bản ghi chưa xóa PHẢI `failed` với `IDENTITY_CONFLICT` | FR-AUTH-021 · ADR-0069 · [ACCOUNT_PROVISIONING §3.4](../../docs/09-identity/ACCOUNT_PROVISIONING.md) | — |
@@ -183,8 +190,8 @@ System Admin tạo/import có chủ đích học sinh vào tenant `common` với
 
 - NẾU tenant `school` được thêm trường thứ hai, THÌ HỆ THỐNG PHẢI từ chối `422 VALIDATION_FAILED` (tenant `school` có đúng một trường).
 - NẾU `moet_code` trùng trường khác, THÌ HỆ THỐNG PHẢI không tự gộp và tạo issue `school_duplicate`.
-- NẾU học sinh rời trường cũ (khác tenant) trước khi trường mới đồng bộ, THÌ học sinh không còn enrollment active; đăng nhập xử lý ở F013 (`NO_ACTIVE_ENROLLMENT`/`ACCOUNT_NOT_PROVISIONED`).
-- NẾU xóa lớp (soft-delete), THÌ lớp không xuất hiện ở API đọc và tạo lại cùng tên được (partial unique) — TC-TEN-015.
+- NẾU học sinh rời trường cũ (khác tenant) trước khi trường mới đồng bộ, THÌ học sinh không còn trường/khối hiệu lực (`org.students.status = inactive`); đăng nhập xử lý ở F013 (`NO_ACTIVE_ENROLLMENT`/`ACCOUNT_NOT_PROVISIONED`).
+- NẾU xóa trường (soft-delete), THÌ học sinh của trường không còn membership (view chỉ nối trường còn sống) — TC-TEN-015 (lớp không còn, ADR-0095).
 - NẾU ent query thiếu `TenantScope`, THÌ trả `ErrMissingTenantScope`, không trả dữ liệu (TC-TEN-021).
 
 ## Requirements *(bắt buộc)*
@@ -196,24 +203,24 @@ System Admin tạo/import có chủ đích học sinh vào tenant `common` với
 | FR-ORG-001 | Phân cấp Platform → Tenant → School → Class; CRUD tenant, cô lập theo tenant | [MULTITENANCY §2](../../docs/06-architecture/MULTITENANCY.md) |
 | FR-ORG-002 | AcademicYear, Class (grade 1–9), Enrollment có lịch sử | [DATABASE_DESIGN §2.2](../../docs/07-backend/DATABASE_DESIGN.md) |
 | FR-ORG-003 | Thực thể User/Student/Staff/School/Class/Enrollment/ExternalIdentity; không có thực thể giáo viên | [IDENTITY_MAPPING §2](../../docs/09-identity/IDENTITY_MAPPING.md) |
-| FR-ORG-005 | Chuyển lớp, chuyển trường (cùng tenant `unit` / khác tenant) | [IDENTITY_MAPPING §6](../../docs/09-identity/IDENTITY_MAPPING.md) |
+| FR-ORG-005 | Lên khối, chuyển trường (cùng tenant `unit` / khác tenant) — không còn chuyển lớp (ADR-0095) | [IDENTITY_MAPPING §6](../../docs/09-identity/IDENTITY_MAPPING.md) |
 | FR-ORG-009 | Mỗi tenant là một Keycloak Organization | [KEYCLOAK_SSO §2.1](../../docs/09-identity/KEYCLOAK_SSO.md) |
 | FR-ORG-010 | Đồng bộ membership Organization + reconciliation | [ACCOUNT_PROVISIONING §2.1](../../docs/09-identity/ACCOUNT_PROVISIONING.md) |
 | FR-ORG-015 | Danh mục quốc gia, tỉnh/thành có hiệu lực và kế thừa | [ADMIN_PORTAL §3.16](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
 | FR-ORG-016 | Danh mục trường, import CSV, duyệt `pending_review` | [ADMIN_PORTAL §3.16](../../docs/04-admin-portal/ADMIN_PORTAL.md) |
-| FR-ORG-017 | Một trường, một lớp, một enrollment active; lớp ảo tenant chung | [ADR-0060](../../docs/adr/ADR-0060-danh-muc-quoc-gia-tinh-thanh-truong-hoc-sinh-thuoc-mot-truong-mot-lop.md) |
+| FR-ORG-017 | Một trường + một khối hiệu lực (`org.students`); `NO_ACTIVE_ENROLLMENT` = không có trường/khối hiệu lực; tenant chung: School ảo + khối (ADR-0095) | [ADR-0060](../../docs/adr/ADR-0060-danh-muc-quoc-gia-tinh-thanh-truong-hoc-sinh-thuoc-mot-truong-mot-lop.md) |
 | FR-AUTH-001 | Không có self-registration; tài khoản do nhà trường/platform cấp | [KEYCLOAK_SSO §1](../../docs/09-identity/KEYCLOAK_SSO.md) |
-| FR-AUTH-021 | Tài khoản tenant chung chỉ do System Admin tạo/import, kèm khối và lớp ảo | [ACCOUNT_PROVISIONING §3.4](../../docs/09-identity/ACCOUNT_PROVISIONING.md) |
+| FR-AUTH-021 | Tài khoản tenant chung chỉ do System Admin tạo/import, kèm khối (School ảo, không lớp ảo — ADR-0095) | [ACCOUNT_PROVISIONING §3.4](../../docs/09-identity/ACCOUNT_PROVISIONING.md) |
 
 ### Key Entities
 
 - **Tenant**: đơn vị cô lập dữ liệu và đăng nhập; loại `school`/`unit`/`common`; trạng thái `active`/`disabled`; khóa nối Keycloak Organization.
 - **Country, Province, ProvinceSuccession**: danh mục platform có hiệu lực, kế thừa đơn vị cũ → mới.
 - **School**: thuộc đúng một tenant và một tỉnh; trạng thái `active`/`pending_review`/`inactive`; có School ảo cho tenant chung.
-- **AcademicYear, Class**: lớp theo năm học, `grade_level` 1–9, lớp ảo theo khối cho tenant chung.
+- **AcademicYear**: năm học của trường (`is_current`); `student.placement_changed.academic_year_id` = năm học hiện tại. Không còn Class (ADR-0095; bảng `org.classes` DROP ở WP-R).
 - **User, Student**: User toàn cục (`student`/`staff`); Student = User học sinh gắn tenant, trường hiện tại.
-- **Enrollment**: học sinh ↔ lớp, có lịch sử, tối đa một `active`.
-- **TenantMembership**: suy ra từ enrollment active (học sinh) và UserRole hiệu lực (nhân sự).
+- **Student (placement)**: `org.students.school_id` + `grade_level` + `status`; hiệu lực = `active` và chưa xóa mềm. Không còn Enrollment (ADR-0095; `org.enrollments` DROP ở WP-R).
+- **TenantMembership**: suy ra từ học sinh hiệu lực (`org.students` ⨝ trường còn sống) và UserRole hiệu lực (nhân sự).
 
 ### Tham số
 
@@ -239,7 +246,7 @@ System Admin tạo/import có chủ đích học sinh vào tenant `common` với
 
 - **SC-001**: 100% endpoint tenant-scoped mới của feature qua test tenant isolation (tenant A không đọc/ghi tenant B).
 - **SC-002**: Tạo tenant mới hiển thị Organization tương ứng trong Keycloak trong ≤ 60 giây sau commit.
-- **SC-003**: 0 trường hợp học sinh có hai enrollment active dưới tải đồng thời trong integration test.
+- **SC-003**: 0 trường hợp hai lệnh chuyển đồng thời làm lệch trường/khối của một học sinh (khóa dòng `org.students`) trong integration test.
 - **SC-004**: Seed danh mục đạt `validate-reference-data` (34/63/kế thừa đầy đủ) ở mọi môi trường.
 
 ## Ngoài phạm vi

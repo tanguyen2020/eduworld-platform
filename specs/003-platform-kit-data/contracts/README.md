@@ -32,7 +32,7 @@
 | `role.updated` | Tiêu thụ: `natsx.PrincipalInvalidator` | `specs/events/payloads/identity/role.updated.v1.schema.json` | Có sẵn |
 | `tenant_membership.changed` | Tiêu thụ: `natsx.PrincipalInvalidator` (owner F010) | `specs/events/payloads/identity/tenant_membership.changed.v1.schema.json` | Có sẵn (áp 2026-11-17), owner F010 |
 | `user.access_revoked` | Tiêu thụ: `natsx.PrincipalInvalidator` (owner F011) | `specs/events/payloads/identity/user.access_revoked.v1.schema.json` | Có sẵn (áp 2026-11-17), owner F011 |
-| `enrollment.changed` | Tiêu thụ: `natsx.PrincipalInvalidator` (owner F010) | `specs/events/payloads/identity/enrollment.changed.v1.schema.json` | Có sẵn (áp 2026-11-17), owner F010 |
+| `student.placement_changed` | Tiêu thụ: `natsx.PrincipalInvalidator` (owner F010; thay `enrollment.changed` — ADR-0095) | `specs/events/payloads/identity/student.placement_changed.v1.schema.json` | Có sẵn (áp 2026-11-21), owner F010 |
 | `tenant.updated` | Tiêu thụ: `natsx.PrincipalInvalidator` (owner F010) | `specs/events/payloads/identity/tenant.updated.v1.schema.json` | Có sẵn (áp 2026-11-17), owner F010 |
 
 ## 5. JSON Schema nội dung

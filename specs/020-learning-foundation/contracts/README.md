@@ -35,9 +35,8 @@ F020 không thêm endpoint public. Endpoint public liên quan thuộc module ide
 |---|---|---|---|
 | `tenant.created`, `tenant.updated` | Tiêu thụ (identity) | `specs/events/payloads/identity/tenant.*.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010) |
 | `school.synced` | Tiêu thụ | `specs/events/payloads/identity/school.synced.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F011) |
-| `class.synced` | Tiêu thụ | `specs/events/payloads/identity/class.synced.v1.schema.json` | Có sẵn |
 | `province.updated` | Tiêu thụ | `specs/events/payloads/identity/province.updated.v1.schema.json` | Có sẵn |
-| `student.synced`, `student.cleaned_up`, `student.restored`, `enrollment.changed` | Tiêu thụ | `specs/events/payloads/identity/<event>.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010/F011/F016) |
+| `student.synced`, `student.cleaned_up`, `student.restored`, `student.placement_changed` | Tiêu thụ | `specs/events/payloads/identity/<event>.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010/F011/F016) |
 | `<resource_type>.deleted`, `<resource_type>.restored` | Phát | `specs/events/payloads/learning/resource.deleted.v1.schema.json`, `resource.restored.v1.schema.json` | Có sẵn (F020, 2026-11-19) |
 | `audit.recorded` | Phát | `specs/events/envelope.schema.json` | Có sẵn |
 

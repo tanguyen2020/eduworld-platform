@@ -85,8 +85,7 @@ Database `eduworld_identity`. Bảng T có cột chung `tenant_id`, `created_at`
 | Event | Khi nào | Payload schema |
 |---|---|---|
 | `school.synced`, `student.synced` | Apply SIS | `specs/events/payloads/identity/` — Có sẵn (áp 2026-11-17) |
-| `enrollment.changed` | Apply SIS (enrollment từ SIS) | Schema owner F010 (T004) — F011 phát cùng schema |
-| `class.synced` | Apply lớp | `class.synced.v1.schema.json` (có sẵn) |
+| `student.placement_changed` | Apply học sinh SIS (trường + khối + trạng thái hiệu lực — ADR-0095) | Schema owner F010 — F011 phát cùng schema |
 | `student.provisioning_requested` | Học sinh mới | Có sẵn (áp 2026-11-17) |
 | `user.provisioned` | Tạo user học sinh từ SIS | Schema owner F010 (T004) — F011 phát cùng schema |
 | `student.sis_link_created`, `student.sis_link_superseded` | Tạo/chuyển link | Có sẵn (áp 2026-11-17) |

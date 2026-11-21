@@ -156,7 +156,7 @@ Sau khi có User, module identity đọc `identity.sis_identity_links` đang `ac
 | Key | Nội dung | TTL | Invalidate khi |
 |---|---|---|---|
 | `ew:id:ext:<sha256(iss|sub)>` | `user_id` | 24h | link/unlink identity |
-| `ew:<module>:principal:<user_id>:<tenant_id\|_platform>` (mỗi module một prefix) | Principal đã build cho tenant đó (không gồm token) | 60s | event `user.status_changed`, `enrollment.changed`, `user_role.changed`, `role.updated`, `tenant_membership.changed`, `tenant.updated` (xóa key + pub/sub tới L1) |
+| `ew:<module>:principal:<user_id>:<tenant_id\|_platform>` (mỗi module một prefix) | Principal đã build cho tenant đó (không gồm token) | 60s | event `user.status_changed`, `student.placement_changed`, `user_role.changed`, `role.updated`, `tenant_membership.changed`, `tenant.updated` (xóa key + pub/sub tới L1) |
 | `ew:id:memberships:<user_id>` | Danh sách tenant_id user là thành viên | 60s | như trên |
 | L1 in-process (LRU 50k) | như trên | 15s | pub/sub `ew:id:invalidate` |
 
@@ -283,7 +283,7 @@ Quy tắc:
 | 4 | `ACCOUNT_LOCKED` / `ACCOUNT_DEACTIVATED` | 403 | `user.status` |
 | 5 | `TENANT_NOT_SELECTED` | 403 | Claim có > 1 tenant, hoặc không có claim mà user thuộc > 1 tenant; response kèm danh sách tenant (`choices[]`: alias, tên, loại) |
 | 6 | `TENANT_MISMATCH` | 403 | Tenant trong claim không thuộc membership của user; ghi audit + security event `tenant_mismatch` (cảnh báo khi một user/IP lặp lại > 5 lần/giờ [Confirmed]) |
-| 7 | `NO_ACTIVE_ENROLLMENT` | 403 | Học sinh thuộc tenant thường nhưng chưa có enrollment active (một trường, một lớp — ADR-0060) **sau** login sync nhánh B; tạo `reconciliation_issue` `missing_class`. Không áp dụng cho tenant chung (luôn có lớp ảo theo khối) |
+| 7 | `NO_ACTIVE_ENROLLMENT` | 403 | Mã giữ nguyên, nghĩa theo ADR-0095: học sinh thuộc tenant thường nhưng **không có trường/khối hiệu lực** (`org.students.status` khác `active` hoặc đã xóa mềm) **sau** login sync nhánh B (kết quả `missing_placement`, không tạo issue). Không áp dụng cho tenant chung (học sinh luôn thuộc School ảo với khối khai báo) |
 | 8 | `ACCESS_OUTSIDE_ALLOWED_HOURS` | 403 | Ngoài khung giờ trường cấu hình |
 | 8b | `GAME_ACCESS_STUDENT_ONLY` | 403 | Đăng nhập game (`/auth/game/login`, token `azp = eduworld-game-backend`) nhưng `user_type ≠ student` (ADR-0031, ADR-0068). Kiểm tra **trước** JIT: không bao giờ JIT tạo tài khoản qua client game cho người không phải học sinh |
 | 8c | `PORTAL_ACCESS_STAFF_ONLY` | 403 | Token `azp = eduworld-portal` của `user_type = student`, hoặc nhân sự không còn UserRole portal hiệu lực ở tenant nào và không có role platform (ADR-0066, ADR-0067) |
@@ -317,23 +317,23 @@ stateDiagram-v2
 
 ## 6. Chuyển lớp / chuyển trường
 
-### 6.1. Chuyển lớp (cùng trường)
+### 6.1. Lên khối (cùng trường) — thay "chuyển lớp" (ADR-0095)
 
-1. SIS sync (hoặc login sync, ADR-0061) phát hiện enrollment mới → đóng enrollment cũ (`status=transferred`, `end_date`), tạo enrollment mới **trong cùng transaction** — không có thời điểm học sinh không có lớp hoặc có hai lớp (ADR-0060).
-2. Event `enrollment.changed` → invalidate Principal cache; thoát khỏi Class Chat cũ, vào Class Chat mới; assignment chưa hết hạn của lớp cũ chuyển trạng thái theo policy [Confirmed: vẫn nhìn thấy kết quả đã nộp, không làm tiếp bài mới của lớp cũ].
-3. Attempt/learning event giữ nguyên `class_id` tại thời điểm làm (snapshot), không cập nhật hồi tố.
+1. SIS sync (hoặc login sync, ADR-0061) hay System Admin đổi `org.students.grade_level` trong một transaction (khóa dòng học sinh); không còn lớp/enrollment.
+2. Event `student.placement_changed` (`changed_fields = [grade_level]`, `previous_grade_level`) → invalidate Principal cache; module game áp quy tắc chuyển năm học; learning thêm học sinh vào bài giao khối mới còn mở.
+3. Attempt/learning event giữ nguyên `grade_level` tại thời điểm làm (snapshot), không cập nhật hồi tố.
 
 ### 6.2. Chuyển trường
 
-**Trong cùng tenant `unit`:** chỉ đổi `students.school_id` và enrollment; `tenant_id`, membership Keycloak và phiên giữ nguyên; lịch sử vẫn trong tenant.
+**Trong cùng tenant `unit`:** chỉ đổi `students.school_id` (và khối nếu đổi), phát `student.transferred` + `student.placement_changed`; `tenant_id`, membership Keycloak và phiên giữ nguyên; lịch sử vẫn trong tenant.
 
 **Sang trường thuộc tenant khác:**
 
 | Bước | Hành động |
 |---|---|
-| 1 | SIS trường cũ báo học sinh rời (`status=transferred_out`) → enrollment đóng; `students.tenant_id`/`school_id` vẫn trỏ trường cũ cho đến khi có trường mới. Trong thời gian chờ trường mới, đăng nhập nhận `NO_ACTIVE_ENROLLMENT`; nếu đã bị gỡ khỏi mọi tenant → `ACCOUNT_NOT_PROVISIONED`. Không tự đưa vào tenant chung (ADR-0063) |
+| 1 | SIS trường cũ báo học sinh rời (`status=transferred_out`) → học sinh không còn hiệu lực (`org.students.status=inactive`, `student.placement_changed` — ADR-0095); `students.tenant_id`/`school_id` vẫn trỏ trường cũ cho đến khi có trường mới. Trong thời gian chờ trường mới, đăng nhập nhận `NO_ACTIVE_ENROLLMENT`; nếu đã bị gỡ khỏi mọi tenant → `ACCOUNT_NOT_PROVISIONED`. Không tự đưa vào tenant chung (ADR-0063) |
 | 2 | SIS trường mới gửi bản ghi học sinh → **reconciliation** cố gắng khớp với user hiện có (mã định danh học sinh quốc gia nếu SIS cung cấp, hoặc School Admin xác nhận thủ công) — xem [SIS_INTEGRATION §6](SIS_INTEGRATION.md) |
-| 3 | Khớp thành công: cùng `user_id`, cập nhật `students.tenant_id`/`school_id`, tạo enrollment mới, `UserRole` mới; worker **gỡ membership Keycloak Organization của tenant cũ, thêm vào Organization tenant mới, thu hồi phiên/refresh token đang gắn tenant cũ (kể cả refresh token game lưu trên thiết bị — `game_auth_sessions`, ADR-0086)** và phát `user.access_revoked` (ADR-0026, [ACCOUNT_PROVISIONING §5](ACCOUNT_PROVISIONING.md)); từ đây token còn mang tenant cũ → `TENANT_MISMATCH`, lần đăng nhập sau backend tự xác định tenant mới; dữ liệu tenant cũ: learning record của học sinh **theo học sinh** (học sinh vẫn xem được lịch sử của mình), trường cũ giữ quyền đọc dữ liệu phát sinh trong thời gian học ở trường cũ theo policy [Confirmed] |
+| 3 | Khớp thành công: cùng `user_id`, cập nhật `students.tenant_id`/`school_id`/`grade_level` (phát `student.placement_changed`), `UserRole` mới; worker **gỡ membership Keycloak Organization của tenant cũ, thêm vào Organization tenant mới, thu hồi phiên/refresh token đang gắn tenant cũ (kể cả refresh token game lưu trên thiết bị — `game_auth_sessions`, ADR-0086)** và phát `user.access_revoked` (ADR-0026, [ACCOUNT_PROVISIONING §5](ACCOUNT_PROVISIONING.md)); từ đây token còn mang tenant cũ → `TENANT_MISMATCH`, lần đăng nhập sau backend tự xác định tenant mới; dữ liệu tenant cũ: learning record của học sinh **theo học sinh** (học sinh vẫn xem được lịch sử của mình), trường cũ giữ quyền đọc dữ liệu phát sinh trong thời gian học ở trường cũ theo policy [Confirmed] |
 | 4 | Không khớp được: tạo user mới, mở `ReconciliationIssue` để admin hợp nhất sau (merge có audit) |
 | 5 | Party, friend, chat: rời party; friendship khác trường xử lý theo chat/friend policy (mặc định: giữ quan hệ nhưng DM bị chặn nếu policy yêu cầu cùng trường) |
 

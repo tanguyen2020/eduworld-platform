@@ -256,8 +256,7 @@ Không có endpoint hàng đợi chấm (`/api/v1/lms/reviews…`) trong Release
 | GET | `/api/v1/catalog/provinces?country=VN&status=active` | mọi người dùng đã đăng nhập | Tỉnh/thành theo quốc gia; `status=all` chỉ cho System Admin |
 | GET | `/api/v1/catalog/schools?province=&school_level=&q=` | Tenant user: trường trong tenant; System Admin: thêm `tenant_ids[]` | Danh mục trường (phân trang cursor) |
 | GET/PATCH | `/api/v1/tenant/schools/{school_id}` | `tenant.school.write` | Xem/sửa thông tin hiển thị; `:approve` cho trường `pending_review` |
-| GET | `/api/v1/tenant/schools/{school_id}/classes?academic_year=&grade=` | `tenant.class.read` | Lớp và sĩ số |
-| GET | `/api/v1/tenant/students/unassigned` | `tenant.class.read` | Học sinh SIS chưa có lớp (`missing_class`) |
+| GET | `/api/v1/tenant/schools/{school_id}/grades/{grade_level}/students?q=` | `tenant.student.read` / `lms.student.read` | Học sinh theo khối của trường (`listTenantGradeStudents`, ADR-0095) |
 | POST/PATCH | `/api/v1/admin/catalog/countries`, `/api/v1/admin/catalog/countries/{code}` | `platform.catalog.write` (gateway nội bộ) | Bật/tắt, sửa tên |
 | POST/PATCH | `/api/v1/admin/catalog/provinces`, `/api/v1/admin/catalog/provinces/{province_id}` | `platform.catalog.write` | Tạo đơn vị mới, sửa tên/`official_code`, đặt `inactive` |
 | POST | `/api/v1/admin/catalog/province-successions` | `platform.catalog.write` | Ghi kế thừa cũ → mới |

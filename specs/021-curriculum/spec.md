@@ -47,7 +47,7 @@
 ### Session 2026-11-21 (ADR-0095 — [Confirmed])
 
 - FR-CUR-008 và `lms.school_curriculum_settings` → **[Confirmed]** chuyển từ F040 (Removed theo ADR-0095) sang F021: `getSchoolCurriculumSettings` (quyền `lms.student.read` ở trường — đổi tên từ lms.class.read ở WP-I1) và `putSchoolCurriculumSettings` (`school.settings.write`, `If-Match`, chỉ version đã publish của tenant hoặc curriculum platform được gán, audit `school_curriculum.set`) giữ nguyên đường dẫn `/lms/schools/{school_id}/curriculum-settings` và contract; bảng giữ nguyên (không DROP). Code: `command.SchoolCurriculum`, `query.SchoolCurriculum`, `write.CurriculumSettingsRepo`, `read.CurriculumSettingsModel` (F021-AC-30). Không còn course tự tạo theo lớp nên setting chỉ tác động resolver version mặc định của trường (F021-AC-19).
-- Năm học của resolver (OQ F021-5) → **[Confirmed — tạm]** vẫn lấy `academic_year_id` từ projection `ref.classes` khi còn (dữ liệu cũ); khi identity ngừng `class.synced` (WP-I1) resolver áp setting của mọi năm học như quy tắc cũ khi không biết năm học. Nguồn năm học hiện tại của trường thay `ref.classes` là việc của WP-I1/WP-R (ghi ở Câu hỏi mở).
+- Năm học của resolver (OQ F021-5) → **[Confirmed]** (WP-I1, 2026-11-21) năm học hiện tại của học sinh trường (và khối) trong projection `ref.students.academic_year_id`, lấy từ `student.placement_changed.academic_year_id` (năm học `is_current` của trường ở identity; migration learning `20261229000004_adr0095_student_academic_year` điền từ lớp cũ); không biết năm học → áp setting của mọi năm học như trước. Test: `TestSchoolCurriculumSettings` (curriculum_settings_test), `TestProjectionSourceVersionOrdering`.
 
 ## User Scenarios & Testing *(bắt buộc)*
 
@@ -269,4 +269,4 @@ Content Admin khai báo bộ sách, tập, bài và ánh xạ bài ↔ LO để 
 
 ## Câu hỏi mở
 
-- ADR-0095 (WP-I1/WP-R): resolver version mặc định lọc năm học qua `ref.classes.academic_year_id`; khi bỏ lớp cần nguồn năm học hiện tại của trường trong module learning (projection năm học của identity hoặc `academic_year_id` của `student.placement_changed`). [Proposed] tạm dùng quy tắc không lọc năm học khi không biết năm học.
+- ~~ADR-0095: nguồn năm học của resolver thay `ref.classes`~~ — đã trả lời (WP-I1): `ref.students.academic_year_id` từ `student.placement_changed`.

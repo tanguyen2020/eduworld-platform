@@ -51,6 +51,10 @@
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: F045-AC-03, AC-04, AC-30: bỏ điều kiện MFA và nhánh "thiếu MFA → `403 MFA_REQUIRED`"; giữ gateway nội bộ, `azp = eduworld-portal`, role platform (không có → `403 PERMISSION_DENIED`). T011, T013, T050, plan, quickstart, contracts nhắc MFA là lịch sử. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed], WP-I1)
+
+- Q: Gộp tài khoản và clone khi bỏ enrollment? → A: [Confirmed] Bước identity của gộp tài khoản chỉ soft-delete `org.students` của nguồn (target giữ trường/khối của mình), phát `student.placement_changed` (`source = platform_saga`, `status = inactive` nếu nguồn đang hiệu lực) và `tenant_membership.changed` (removed); không còn chuyển/đóng enrollment. Clone không bao giờ sao chép học sinh hay xếp trường/khối (R22); `class_template` bị gỡ khỏi `ResourceType`. Test: `TestPlatformAdminMerge`, `TestPlanCloneSettings`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — System Admin đọc dữ liệu liên tenant có kiểm soát (Priority: P1)

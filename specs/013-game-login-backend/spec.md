@@ -42,6 +42,10 @@
 - k6 hàng chờ đăng nhập → chạy khi có môi trường staging (không phải câu hỏi mở).
 - OQ-17 giới hạn chơi/ngày (owner chốt 2026-11-20, CHILD_SAFETY §4, CONFIG_DEFAULTS `daily_play_limit_minutes`) → **Chốt:** module identity từ chối `gameLogin`, `selectGameLoginTenant`, `refreshGameToken` `mode = resume` khi học sinh đã đạt giới hạn/ngày của trường, bằng mã lỗi mới `403 DAILY_PLAY_LIMIT_REACHED` kèm `reopen_at` = 00:00 ICT hôm sau (cùng shape `CURFEW_ACTIVE`). Không gọi module game đồng bộ (R30, ADR-0045): identity dựng projection thời gian chơi trong ngày từ `game_session.ended` (`duration_ms`, đã có trong EVENT_DESIGN) và đọc giới hạn trong cài đặt trường của chính module (F015-AC-30); module game là nơi cưỡng chế chính (F014-AC-27). Thêm F013-AC-33. Mã lỗi mới cần đăng ký ở API_DESIGN §4.1 (agent docs) và enum `ProblemCode`.
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed], WP-I1)
+
+- Q: Đăng nhập game khi bỏ enrollment? → A: [Confirmed] Membership tenant của học sinh = học sinh hiệu lực (`org.students.status = active`, chưa xóa mềm, trường còn sống). `NO_ACTIVE_ENROLLMENT` giữ mã, nghĩa mới "không có trường/khối hiệu lực" (chuỗi game: "Em chưa có thông tin trường/khối trong năm học này."); login sync nhánh B dùng kết quả `missing_placement`. Bootstrap không còn `class`; khối lấy từ `student.grade_level`; `policies.party.cross_class_allowed` bị gỡ khỏi contract. Test: `TestGameLogin`, `TestLoginSync`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Học sinh đăng nhập bằng form trong game (Priority: P1)

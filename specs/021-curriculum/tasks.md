@@ -118,7 +118,7 @@
 ## ADR-0095 — nhận FR-CUR-008 từ F040 (WP-L1, 2026-11-21)
 
 - [x] T043 Chuyển `lms.school_curriculum_settings` (command `SchoolCurriculum`, query `SchoolCurriculum`, repository `CurriculumSettingsRepo`/`CurriculumSettingsModel`, handler `get/putSchoolCurriculumSettings`) ra khỏi code F040 trước khi xóa F040; integration test `TestSchoolCurriculumSettings` (F021-AC-30) — file: `src/backend/modules/learning/internal/`, `src/backend/modules/learning/tests/integration/curriculum_settings_test.go`
-- [ ] T044 (WP-I1/WP-R) Nguồn năm học hiện tại của trường cho resolver thay `ref.classes.academic_year_id` (Câu hỏi mở của spec)
+- [x] T044 (WP-I1) Nguồn năm học hiện tại của trường cho resolver thay `ref.classes.academic_year_id`: `ref.students.academic_year_id` từ `student.placement_changed` (migration `20261229000004_adr0095_student_academic_year`, `read.SchoolSettings.DefaultVersion`)
 
 ## Dependencies & Execution Order
 

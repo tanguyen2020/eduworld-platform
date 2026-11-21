@@ -48,8 +48,6 @@ Keycloak Admin REST (ra ngoài, không phải contract EduWorld): organizations,
 | `tenant.created`, `tenant.updated` | identity phát; identity worker, learning/game/competition/chat (`ref.tenants`) tiêu thụ | `specs/events/payloads/identity/tenant.created.v1.schema.json`, `tenant.updated.v1.schema.json` | Có sẵn (áp 2026-11-17) |
 | `province.updated` | identity phát; learning, game tiêu thụ | `province.updated.v1.schema.json` | Có sẵn |
 | `school.updated` | identity phát; mọi module (`ref.schools`) | `school.updated.v1.schema.json` | Có sẵn (áp 2026-11-17) |
-| `class.created`, `class.updated` | identity phát; chat, learning | `class.created.v1.schema.json`, `class.updated.v1.schema.json` | Có sẵn (áp 2026-11-17) — Deprecated (ADR-0095) |
-| `enrollment.changed` | identity phát; learning, game, chat | `enrollment.changed.v1.schema.json` | Có sẵn (áp 2026-11-17) — Deprecated (ADR-0095), thay bằng `student.placement_changed` |
 | `student.transferred` | identity phát; chat, competition, learning | `student.transferred.v1.schema.json` | Có sẵn (áp 2026-11-17) |
 | `student.placement_changed` | identity phát (mọi nguồn đổi trường/khối/hiệu lực — ADR-0095); learning, game, competition, chat, cache Principal tiêu thụ | `student.placement_changed.v1.schema.json` | Có sẵn (áp 2026-11-21, WP-S); producer ở WP-I1 |
 | `tenant_membership.changed` | identity phát và tiêu thụ (worker); mọi module invalidate Principal | `tenant_membership.changed.v1.schema.json` | Có sẵn (áp 2026-11-17) |

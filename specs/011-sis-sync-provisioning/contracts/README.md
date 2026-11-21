@@ -34,7 +34,6 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml`.
 
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
-| `class.synced` | identity → learning, game, competition, chat | `specs/events/payloads/identity/class.synced.v1.schema.json` | Có sẵn |
 | `school.synced` | identity → mọi module (`ref.schools`) | `school.synced.v1.schema.json` | Có sẵn (áp 2026-11-17) |
 | `student.synced` | identity → mọi module (`ref.students`) | `student.synced.v1.schema.json` | Có sẵn (áp 2026-11-17) |
 | `student.provisioning_requested` | identity → identity worker | `student.provisioning_requested.v1.schema.json` | Có sẵn (áp 2026-11-17) |

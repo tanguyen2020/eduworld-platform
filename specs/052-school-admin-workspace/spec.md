@@ -39,6 +39,10 @@
 
 - Q: T061 — "Đề nghị gộp" hiển thị ở đâu, ai thấy? → A: [Confirmed] Lựa chọn thứ ba "Đề nghị gộp tài khoản" trong hộp "Xử lý" (cùng `ActionGate action.school_lms.sis_sync.import`, quyền `tenant.sis.import`), chỉ cho issue `duplicate_identifier`/`possible_duplicate` chưa đề nghị; chọn → giải thích "Quản trị hệ thống sẽ gộp…", vẫn bắt buộc lý do 3–500 và một `Idempotency-Key` cho mỗi ý định; sau khi gửi issue vẫn `open` và có thẻ "Đã đề nghị gộp" ở cột Trạng thái, hộp "Xử lý" không còn lựa chọn này (backend trả 409 nếu gửi lại).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed], WP-I1)
+
+- Q: Backend màn "Học sinh theo khối"? → A: [Confirmed] `listTenantGradeStudents` (`GET /tenant/schools/{school_id}/grades/{grade_level}/students`, `x-portal-action: action.school_lms.students.view`, `tenant.student.read` hoặc `lms.student.read`, cursor + `q`, trường ngoài scope → 404, khối ngoài 1–9 → 422, chỉ học sinh hiệu lực) thay `listTenantSchoolClasses`, `listTenantClassStudents`, `listUnassignedStudents`, `listClasses`. Action `action.school_lms.students.{view,reset_password,lock}`. Issue đối soát không còn loại lớp; import CSV chỉ `schools`/`students`.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Trường, lớp, học sinh và hoạt động đăng nhập (Priority: P1)

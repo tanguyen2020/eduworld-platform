@@ -104,7 +104,7 @@ JIT chỉ chạy khi **tất cả** điều kiện đúng:
 | Lookup SIS timeout/lỗi ở mọi connection | 503 `UNAVAILABLE` (client thử lại sau), không tạo user | metric `eduworld_sis_lookup_total{result}` |
 | Bản ghi SIS inactive/graduated | 403 `ACCOUNT_DEACTIVATED` | audit |
 | Bản ghi suspended | 403 `ACCOUNT_LOCKED` | audit |
-| Không có enrollment active (thiếu lớp) sau login sync nhánh B (ADR-0060, ADR-0061) | 403 `NO_ACTIVE_ENROLLMENT`; không tạo Student "trống", không tự gán lớp | audit + `reconciliation_issue: missing_class` cho School Admin |
+| Không có trường/khối hiệu lực sau login sync nhánh B (ADR-0095, ADR-0061) | 403 `NO_ACTIVE_ENROLLMENT` (mã giữ nguyên); không tạo Student "trống", không tự xếp trường/khối | audit đăng nhập; metric `eduworld_sis_login_sync_total{result="missing_placement"}` (không còn issue `missing_class`) |
 | User đã link với subject khác cùng issuer | 409 `IDENTITY_CONFLICT` | `reconciliation_issue: identity_conflict` + cảnh báo bảo mật |
 | Tenant không bật EduWorld | 403 `TENANT_ACCESS_DISABLED` | — |
 | Bản ghi SIS khớp nhưng thuộc **tenant khác** với tenant trong token | 403 `TENANT_MISMATCH` (không tạo user, không link) | audit + security event `tenant_mismatch` |

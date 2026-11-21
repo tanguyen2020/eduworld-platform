@@ -182,23 +182,13 @@ school_external_id,school_code,name,organization_external_id,status
 TH-DEMO-001,THDEMO,Trường Tiểu học Demo,ORG-DEMO,active
 ```
 
-`classes.csv`
-```csv
-class_external_id,school_external_id,academic_year,grade_level,name
-C-2026-3A,TH-DEMO-001,2026-2027,3,3A
-```
-
 `students.csv`
 ```csv
 student_external_id,school_external_id,student_code,full_name,date_of_birth,grade_level,status,login_username
 HS-000123,TH-DEMO-001,2026000123,Nguyễn Văn An,2018-03-14,3,active,hs.thdemo.000123
 ```
 
-`enrollments.csv`
-```csv
-student_external_id,class_external_id,start_date,end_date,status
-HS-000123,C-2026-3A,2026-09-05,,active
-```
+`students.csv` xếp học sinh vào trường (`school_external_id`) và khối (`grade_level`) (ADR-0095). Từ SIS contract 1.3.0 không còn `classes.csv`, `enrollments.csv`: file cũ gửi kèm bị **bỏ qua kèm cảnh báo** (đếm `class_ignored`/`enrollment_ignored` trong stats của lần chạy), không lỗi.
 
 Validate bằng cùng contract validator với `contract_v1`. Lỗi từng dòng ghi `sis.sync_record_errors` (số dòng, cột, mã lỗi). Import theo chế độ **all-or-nothing theo file** [Confirmed] để tránh trạng thái nửa vời. Có **dry-run** hiển thị diff trước khi áp dụng.
 
@@ -219,7 +209,7 @@ Mục tiêu: học sinh thuộc SIS luôn có trong database EduWorld đủ dữ
 | Nhánh | Điều kiện (tại `POST /api/v1/auth/game/login`, sau khi Keycloak xác thực) | Hành vi | Đăng nhập |
 |---|---|---|---|
 | **A. Đủ & mới** | Có `synced_students` + enrollment active + trường + lớp; `last_synced_at` trong `sis_login_refresh_after_hours` (mặc định 24 giờ) | Không gọi SIS | Tiếp tục ngay |
-| **B. Thiếu dữ liệu bắt buộc** | Lần đầu đăng nhập, hoặc chưa có trường/lớp/enrollment | **Blocking lookup**: `GET /schools/{school_external_id}/students/lookup` của đúng connection (ADR-0046), timeout `sis_login_sync_timeout_ms` (3.000 ms) → contract validator → reconciliation → apply (cùng pipeline §6) | Có lớp → tiếp tục; vẫn thiếu lớp → `NO_ACTIVE_ENROLLMENT` + `reconciliation_issue` `missing_class`; SIS lỗi/timeout/không có capability `student_lookup` → dùng dữ liệu đồng bộ gần nhất, nếu vẫn thiếu → `NO_ACTIVE_ENROLLMENT` |
+| **B. Thiếu dữ liệu bắt buộc** | Lần đầu đăng nhập, hoặc chưa có trường/khối hiệu lực (ADR-0095) | **Blocking lookup**: `GET /schools/{school_external_id}/students/lookup` của đúng connection (ADR-0046), timeout `sis_login_sync_timeout_ms` (3.000 ms) → contract validator → reconciliation → apply (cùng pipeline §6) | Có lớp → tiếp tục; vẫn thiếu lớp → `NO_ACTIVE_ENROLLMENT` + `reconciliation_issue` `missing_class`; SIS lỗi/timeout/không có capability `student_lookup` → dùng dữ liệu đồng bộ gần nhất, nếu vẫn thiếu → `NO_ACTIVE_ENROLLMENT` |
 | **C. Có nhưng cũ** | Đủ dữ liệu nhưng `last_synced_at` cũ hơn ngưỡng | **Refresh nền**: đặt job `login_refresh` vào JetStream work-queue `IDENTITY_SIS_JOBS` (khóa gộp trùng `student:<sis_connection_id>:<student_external_id>`, `Nats-Msg-Id` chống trùng trong 10 phút) | Tiếp tục ngay bằng dữ liệu hiện có |
 
 ```mermaid
@@ -234,16 +224,15 @@ sequenceDiagram
   G->>ID: POST /auth/game/login
   ID->>DB: synced_students + enrollment + school + class
   alt A. Đủ và mới
-    ID-->>G: bootstrap (trường, lớp, khối)
+    ID-->>G: bootstrap (trường, khối)
   else B. Thiếu dữ liệu bắt buộc
     ID->>SIS: students/lookup (timeout 3 s, giới hạn đồng thời theo connection)
     alt Có kết quả hợp lệ
       SIS-->>ID: Student DTO
       ID->>DB: validate → reconcile → apply (+ outbox)
       ID-->>G: bootstrap
-    else Lỗi, timeout hoặc vẫn thiếu lớp
-      ID->>DB: reconciliation_issue missing_class
-      ID-->>G: 403 NO_ACTIVE_ENROLLMENT
+    else Lỗi, timeout hoặc vẫn chưa có trường/khối hiệu lực
+      ID-->>G: 403 NO_ACTIVE_ENROLLMENT (missing_placement)
     end
   else C. Có nhưng cũ
     ID->>Q: job login_refresh (gộp trùng)
@@ -252,13 +241,13 @@ sequenceDiagram
     ID->>SIS: students/lookup
     ID->>DB: validate → reconcile → apply (+ outbox)
   end
-  DB-->>SVC: student.synced / enrollment.changed / school.synced qua NATS → ref.*
+  DB-->>SVC: student.synced / student.placement_changed / school.synced qua NATS → ref.*
 ```
 
 - **Bootstrap trả về trường, lớp, khối, tỉnh/thành từ module identity**, nên lần đăng nhập đầu hiển thị đúng ngay; các module khác cập nhật projection `ref.students`, `ref.schools`, `ref.classes`, `ref.enrollments` qua event ([DATABASE_DESIGN §2.17](../07-backend/DATABASE_DESIGN.md)).
 - **Bảo vệ khi tải cao:** tối đa `sis_login_sync_concurrency` (20) lookup đồng thời mỗi connection; vượt giới hạn hoặc circuit breaker connection đang mở → nhánh B dùng dữ liệu đồng bộ gần nhất (nếu đủ) hoặc trả `NO_ACTIVE_ENROLLMENT` kèm thông điệp "thử lại sau ít phút"; nhánh C chỉ xếp job. Không có retry đồng bộ trên đường đăng nhập.
 - **Circuit breaker theo connection** (`sis_login_sync_breaker`): 5 lookup lỗi liên tiếp mở mạch 30 giây [Confirmed]; khi mở, nhánh B xử lý như vượt giới hạn.
-- **Quan sát:** metric `eduworld_sis_login_sync_total{branch,result}` (`branch` = `fresh`/`blocking`/`background`; `result` = `ok`/`timeout`/`error`/`missing_class`/`throttled`), `eduworld_sis_login_sync_duration_seconds`; cảnh báo khi tỷ lệ `timeout` nhánh B > 5% trong 10 phút ([MONITORING](../11-operations/MONITORING.md)).
+- **Quan sát:** metric `eduworld_sis_login_sync_total{branch,result}` (`branch` = `fresh`/`blocking`/`background`; `result` = `ok`/`timeout`/`error`/`missing_placement`/`throttled`), `eduworld_sis_login_sync_duration_seconds`; cảnh báo khi tỷ lệ `timeout` nhánh B > 5% trong 10 phút ([MONITORING](../11-operations/MONITORING.md)).
 - `login_events.sis_connection_id` và kết quả sync được ghi lại (ADR-0046 mục 8).
 - Phạm vi dữ liệu đúng DTO contract (ADR-0021); không lấy trường ngoài contract.
 
@@ -325,7 +314,7 @@ sequenceDiagram
   C->>R: stats
 ```
 
-Apply trong transaction theo **lô 500 bản ghi**, mỗi lô idempotent (dựa trên `raw_hash`). Event sinh ra: `student.synced`, `enrollment.changed`, `user.status_changed`, `class.synced`, `school.synced`.
+Apply trong transaction theo **lô 500 bản ghi**, mỗi lô idempotent (dựa trên `raw_hash`). Event sinh ra: `student.synced`, `student.placement_changed` (ADR-0095), `user.status_changed`, `school.synced` (không còn `class.synced`, `enrollment.changed`).
 
 **UserRole không đến từ SIS (ADR-0066, ADR-0072):** Release 1.0 SIS không đồng bộ nhân sự, nên mọi UserRole của nhân sự nhà trường là `source = manual` do Tenant Admin/School Admin gán trên Admin Portal; enum `source` không có giá trị `sis`. Học sinh không bao giờ nhận role portal.
 
@@ -343,15 +332,12 @@ Apply trong transaction theo **lô 500 bản ghi**, mỗi lô idempotent (dựa 
 | **Username hoặc email trùng** (không phân biệt hoa thường) với tài khoản khác trên toàn hệ thống, kể cả tenant khác hoặc tài khoản soft-delete chưa ẩn danh hóa (ADR-0067, [ADR-0069](../adr/ADR-0069-username-email-duy-nhat-theo-tenant-va-dang-nhap-khong-chon-tenant.md)) | Unique `lower(username)`/`lower(email)` ở `identity.users` + Keycloak `duplicateEmailsAllowed=false` | Không tạo, không ghi đè tài khoản kia; bản ghi chờ `pending_identifier` | `duplicate_identifier` — **cùng một người** (liên kết định danh SIS hoặc Tenant Admin xác nhận) → thêm membership vào tài khoản sẵn có (nhân sự làm nhiều trường: thêm UserRole; học sinh: enrollment tenant mới); **người khác** → trường đổi username theo mẫu có mã trường |
 | Khóa đăng nhập (`student_login_keys`) trùng giữa hai bản ghi | Unique theo connection; trùng **giữa hai connection** → phát hiện khi đăng nhập | Không tự chọn | `ambiguous_login` → `IDENTITY_CONFLICT` khi đăng nhập |
 | Bản ghi biến mất trong full sync | Thiếu trong run | `missing_in_source` | Sau 2 lần → `deactivation_review` nếu vượt ngưỡng |
-| Enrollment trỏ lớp không tồn tại | FK fail | Không | `orphan_enrollment` |
-| **Học sinh không có lớp** trong SIS (ADR-0060) | Không có enrollment active sau apply | Không tự gán lớp; học sinh không vào được game (`NO_ACTIVE_ENROLLMENT`) | `missing_class` — trường bổ sung lớp trong SIS hoặc CSV |
-| Enrollment mới thuộc lớp của **trường khác** với trường của học sinh | FK ghép `(class_id, school_id)` | Không apply | `class_school_mismatch` |
-| Chuyển lớp trong năm học | Enrollment mới khác lớp, cùng trường | Đóng enrollment cũ (`transferred`) và mở mới trong cùng transaction | — |
+| Bản ghi/Change loại `class`/`enrollment` hoặc file `classes.csv`/`enrollments.csv` (SIS contract < 1.3.0) | `entity_kind` đã gỡ (ADR-0095 D6) | **Bỏ qua kèm cảnh báo**, không lưu, không từ chối | — |
+| Lên khối / đổi khối | `grade_level` của bản ghi học sinh đổi | Cập nhật `org.students.grade_level`, phát `student.placement_changed` | — |
 | Trường thiếu/không khớp tỉnh/thành | `province_code` thiếu hoặc không có trong danh mục; mã cũ | Mã cũ → ánh xạ qua kế thừa; thiếu → trường `pending_review` | `school_province_missing` (§4.6) |
-| Grade level SIS khác grade của lớp | Validate | Dùng grade của lớp, cảnh báo | `grade_mismatch` |
 | Trường do EduWorld sở hữu (nickname, avatar, settings game) | — | **Không bao giờ ghi đè từ SIS** | — |
 | Admin sửa tay trường do SIS sở hữu | `override` flag | Lần sync sau ghi đè + cảnh báo trong CMS | — |
-| Status `inactive` / `graduated` | Status | `user.status=deactivated`, đóng enrollment | — |
+| Status `inactive` / `graduated` / `transferred_out` | Status | `user.status=deactivated` (trừ `transferred_out`), học sinh không còn hiệu lực (`org.students.status=inactive`), `student.placement_changed` | — |
 | Status `suspended` | Status | `user.status=locked` | — |
 | Học sinh **đã bị dọn do không đăng nhập** (`delete_reason = 'inactive_cleanup'`, ADR-0032) xuất hiện lại trong sync | `sis_links` trỏ tới user đã soft-delete | **Không tự khôi phục**; cập nhật trường do SIS sở hữu trên bản ghi đã xóa; khôi phục chỉ khi học sinh đăng nhập lại hoặc School Admin khôi phục | `cleaned_up_student_in_sis` (thông tin) |
 | Học sinh có enrollment active ở **hai trường** cùng lúc | Rule tenant duy nhất | Không apply enrollment thứ hai; giữ membership tenant hiện tại | `multi_school_enrollment` (học sinh chỉ thuộc một tenant, ADR-0026) |

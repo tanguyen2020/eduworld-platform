@@ -62,6 +62,10 @@ Quyết định khi hiện thực F011; mục [Confirmed] đã được owner ch
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: Chỉ plan nhắc MFA cho route `/admin/*`, `/sis/*`; đọc là gateway nội bộ + role platform, không MFA. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-21 (ADR-0095 — [Confirmed], WP-I1)
+
+- Q: Pipeline SIS khi bỏ lớp/enrollment (ADR-0095 D6, SIS contract 1.3.0)? → A: [Confirmed] Apply theo thứ tự school → student; bản ghi học sinh xếp học sinh vào trường (`school_external_id`) và khối (`grade_level`) của `org.students`; trạng thái nguồn đổi trạng thái hiệu lực (`inactive`/`graduated`/`transferred_out` → `org.students.status = inactive`, `active` → `active`, `suspended` chỉ khóa tài khoản). Mỗi thay đổi trường/khối/hiệu lực phát `student.placement_changed` (`source = sis`, `sync_run_id`). File `classes.csv`/`enrollments.csv`, `entity_kinds` `classes`/`enrollments` cũ và `Change` loại `class`/`enrollment` được **bỏ qua kèm cảnh báo** (đếm `<kind>_ignored`/`changes_ignored` trong stats của run, log WARN), không từ chối, không lưu; EduWorld không gọi `listClasses`/`listEnrollments` nữa. Issue `missing_class`, `class_school_mismatch`, `orphan_enrollment`, `multi_school_enrollment`, `grade_mismatch` bị bỏ (issue mở còn lại đóng `ignored` bởi migration); login sync dùng kết quả `missing_placement`. Import CSV/full pull có năm học hiện tại thì tạo năm học của trường (`academic_year_id` của event).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — School Admin nhập CSV theo contract (Priority: P1)
@@ -79,7 +83,7 @@ School Admin (`ad.truong.a`) tải file `schools.csv`, `classes.csv`, `students.
 | F011-AC-01 | KHI School Admin gửi import CSV kèm `dry_run=true`, module identity PHẢI validate bằng JSON Schema trích từ contract, trả diff (create/update/noop/deactivate) và không thay đổi dữ liệu nghiệp vụ | FR-SIS-003 · [SIS_INTEGRATION §4.3](../../docs/09-identity/SIS_INTEGRATION.md) | TC-AUTH-011 |
 | F011-AC-02 | NẾU bản ghi thiếu trường bắt buộc, sai kiểu hoặc sai enum, THÌ module identity PHẢI từ chối bản ghi đó với `SIS_CONTRACT_VIOLATION` (số dòng, cột) và, ở chế độ CSV, không áp dụng file chứa dòng lỗi (all-or-nothing theo file) | FR-SIS-003 · FR-SIS-006 | TC-AUTH-011 |
 | F011-AC-03 | KHI bản ghi có cột ngoài contract (kể cả giáo viên, phân công giảng dạy), module identity PHẢI bỏ qua, không lưu và tăng metric trường lạ | FR-SIS-002 · ADR-0021 | TC-SIS-107 |
-| F011-AC-04 | KHI áp dụng, module identity PHẢI apply theo thứ tự school → class → student → enrollment, lô 500 bản ghi idempotent theo `raw_hash`, phát `school.synced`, `class.synced`, `student.synced`, `enrollment.changed` qua outbox | FR-SIS-002 · [SIS_INTEGRATION §6.2](../../docs/09-identity/SIS_INTEGRATION.md) | TC-SVC-008 |
+| F011-AC-04 | KHI áp dụng, module identity PHẢI apply theo thứ tự school → student (ADR-0095), lô 500 bản ghi idempotent theo `raw_hash`, phát `school.synced`, `student.synced`, `student.placement_changed` qua outbox | FR-SIS-002 · [SIS_INTEGRATION §6.2](../../docs/09-identity/SIS_INTEGRATION.md) | TC-SVC-008 |
 | F011-AC-05 | KHI import lại cùng file, module identity PHẢI cho 0 bản ghi `update` | FR-SIS-003 | — |
 | F011-AC-06 | HỆ THỐNG PHẢI chỉ cho School Admin có `tenant.sis.import` trong scope trường gọi import; file vượt `csv_import_max` PHẢI bị từ chối `422 VALIDATION_FAILED`; mọi import PHẢI có `Idempotency-Key` và audit `actor = system:sis-sync:<connection_id>` cho từng thay đổi (không ghi PII đầy đủ) | FR-SIS-006 · FR-SIS-007 | — |
 | F011-AC-07 | NẾU School Admin tenant A gọi `getSisImport` của tenant B hoặc trường khác cùng tenant, THÌ HỆ THỐNG PHẢI trả `404` | NFR-SEC-006 | TC-TEN-001 |
@@ -113,14 +117,14 @@ School Admin xem các bản ghi xung đột (trùng, thiếu lớp, chuyển tr�
 
 **Why this priority**: Dữ liệu sai trường đưa học sinh vào sai tenant; phải có người duyệt.
 
-**Independent Test**: Import học sinh không có lớp → issue `missing_class`; resolve issue sau khi bổ sung lớp → issue `resolved`.
+**Independent Test**: Import bản ghi xung đột (trùng username) → issue `duplicate_identifier`; resolve issue → `resolved`. (ADR-0095: không còn `missing_class`.)
 
 **Acceptance Criteria (EARS)**:
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F011-AC-14 | KHI reconciler gặp tình huống trong conflict matrix (`possible_duplicate`, `transfer_confirmation`, `missing_class`, `class_school_mismatch`, `orphan_enrollment`, `multi_school_enrollment`, `school_province_missing`, `unmapped_school`, `cleaned_up_student_in_sis`, `duplicate_identifier`), module identity PHẢI tạo issue, bỏ qua bản ghi và phát `sis.reconciliation_issue_raised` | FR-SIS-005 · [SIS_INTEGRATION §6.3](../../docs/09-identity/SIS_INTEGRATION.md) | TC-ORG-106 |
-| F011-AC-15 | KHI học sinh không có enrollment active sau apply, module identity PHẢI không tự gán lớp và tạo issue `missing_class` | FR-SIS-005 · FR-ORG-018 | TC-SIS-103 |
+| F011-AC-14 | KHI reconciler gặp tình huống trong conflict matrix (`possible_duplicate`, `transfer_confirmation`, `school_province_missing`, `unmapped_school`, `cleaned_up_student_in_sis`, `duplicate_identifier`), module identity PHẢI tạo issue, bỏ qua bản ghi và phát `sis.reconciliation_issue_raised` | FR-SIS-005 · [SIS_INTEGRATION §6.3](../../docs/09-identity/SIS_INTEGRATION.md) | TC-ORG-106 |
+| F011-AC-15 | KHI lần import có `classes.csv`/`enrollments.csv` hoặc lần đồng bộ nhận `Change` loại `class`/`enrollment`, module identity PHẢI bỏ qua kèm cảnh báo (đếm trong stats của run), không lưu, không từ chối và không tạo issue `missing_class` (SIS contract 1.3.0, ADR-0095 D6) | FR-SIS-005 · FR-ORG-018 | TC-SIS-103 |
 | F011-AC-16 | KHI chuyển trường giữa hai SIS cùng tenant `unit` với `national_student_id` hash trùng, module identity PHẢI chuyển link sang khóa nguồn mới, đánh dấu link cũ `superseded`, giữ nguyên User; khác tenant PHẢI tạo `transfer_confirmation` | FR-SIS-005 · ADR-0046 | TC-AUTH-035 |
 | F011-AC-17 | KHI người có quyền resolve issue, module identity PHẢI lưu `resolved_by`, `resolved_at`, ghi audit; người ngoài scope trường PHẢI nhận `404` | FR-SIS-005 | — |
 
@@ -158,7 +162,7 @@ SIS báo nghỉ học/ra trường/đình chỉ/chuyển đi; trạng thái EduW
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F011-AC-23 | KHI SIS báo `inactive`/`graduated`, module identity PHẢI đặt `deactivated`, đóng enrollment; báo `suspended` PHẢI đặt `locked`; báo `transferred_out` PHẢI đóng enrollment; mỗi thay đổi phát `user.status_changed` và `user.access_revoked` trong cùng transaction | FR-SIS-008 · FR-SIS-002 | TC-AUTH-036 |
+| F011-AC-23 | KHI SIS báo `inactive`/`graduated`, module identity PHẢI đặt `deactivated` và học sinh không còn hiệu lực (`org.students.status = inactive`, ADR-0095); báo `suspended` PHẢI đặt `locked`; báo `transferred_out` PHẢI làm học sinh không còn hiệu lực; mỗi thay đổi phát `user.status_changed` và `user.access_revoked` trong cùng transaction | FR-SIS-008 · FR-SIS-002 | TC-AUTH-036 |
 | F011-AC-24 | KHI bản ghi biến mất trong lần import CSV đầy đủ của trường, module identity PHẢI đánh dấu `missing_in_source`, không deactivate; sau hai lần liên tiếp vượt 5% PHẢI tạo `deactivation_review` | FR-SIS-005 · [SIS_INTEGRATION §5](../../docs/09-identity/SIS_INTEGRATION.md) | — |
 | F011-AC-25 | KHI học sinh đã bị dọn (`inactive_cleanup`) xuất hiện lại trong sync, module identity PHẢI không tự khôi phục và tạo issue `cleaned_up_student_in_sis` | FR-SIS-005 · ADR-0032 | — |
 

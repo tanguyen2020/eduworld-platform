@@ -98,8 +98,6 @@ Hợp: học sinh (enrollment active → `tenant_id`) ∪ nhân sự (`identity.
 | `tenant.created` / `tenant.updated` | Tạo/sửa/bật-tắt tenant | `specs/events/payloads/identity/` — Có sẵn (áp 2026-11-17) |
 | `province.updated` | Tạo/sửa đơn vị, ghi kế thừa | `specs/events/payloads/identity/province.updated.v1.schema.json` (có sẵn) |
 | `school.updated` | Sửa/duyệt trường | Có sẵn (áp 2026-11-17) |
-| `class.created` / `class.updated` | Tạo/sửa lớp (thủ công, tenant chung) | Có sẵn (áp 2026-11-17) (lớp từ SIS dùng `class.synced`, F011) — Deprecated (ADR-0095), xóa ở WP-I1 |
-| `enrollment.changed` | Mở/đóng enrollment | Có sẵn (áp 2026-11-17) — Deprecated (ADR-0095), xóa schema cùng code ở WP-I1 |
 | `student.transferred` | Chuyển trường | Có sẵn (áp 2026-11-17) |
 | `student.placement_changed` | Trường/khối/trạng thái hiệu lực của học sinh đổi (mọi nguồn; thay `enrollment.changed` — ADR-0095) | `specs/events/payloads/identity/student.placement_changed.v1.schema.json` — Có sẵn (áp 2026-11-21, WP-S); producer ở WP-I1 |
 | `tenant_membership.changed` | Học sinh đổi tenant | Có sẵn (áp 2026-11-17) |

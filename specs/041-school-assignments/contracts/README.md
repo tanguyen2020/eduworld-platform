@@ -47,7 +47,7 @@ Spec: `specs/openapi/modules/learning.v1.yaml` (bundle `specs/openapi/eduworld-a
 | `assignment.reminded` | Phát | `specs/events/payloads/learning/assignment.reminded.v1.schema.json` | Cần thêm |
 | `activity.graded`, `activity.submitted` | Tiêu thụ | `specs/events/payloads/learning/activity.graded.v1.schema.json`, `activity.submitted.v1.schema.json` | Có sẵn |
 | `activity.started`, `activity.submitted`, `exam.graded`, `attempt.re_evaluated` | Tiêu thụ (owner: `activity.*` F030) | `specs/events/payloads/learning/<event>.v1.schema.json` | Cần thêm (thuộc F030/F031/F042) |
-| `enrollment.changed`, `user.access_revoked` | Tiêu thụ | `specs/events/payloads/identity/<event>.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010/F011) |
+| `student.placement_changed`, `student.synced`, `user.access_revoked` | Tiêu thụ | `specs/events/payloads/identity/<event>.v1.schema.json` | Có sẵn (áp 2026-11-17, owner F010/F011) |
 | `content.published`, `content.rolled_back`, `content.unpublished` (module game; `item_type` `quest`/`minigame_config`, khối `catalog`) | Tiêu thụ → `ref.game_activities` | `specs/events/payloads/game/content.published.v1.schema.json` (+ `content.rolled_back`, `content.unpublished`) | Cần thêm (owner F071 cho `content.published`, owner F078 cho `rolled_back`/`unpublished`) |
 | `tenant_data.assigned`, `tenant_data.unassigned` (`resource_type` `quest`/`minigame_config`) | Tiêu thụ → `ref.game_activities` (tenant được gán) | `specs/events/payloads/identity/tenant_data.assigned.v1.schema.json` (+ `tenant_data.unassigned`) | Cần thêm (owner F045) |
 

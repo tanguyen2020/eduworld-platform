@@ -300,7 +300,7 @@ func ValidateCatalog(roles []RoleDef) error
   | `tenant.role.read` / `tenant.role.write` | Tenant được phép | `tenant_admin` | `/tenant/permissions`, `/tenant/roles*` |
   | `tenant.user_role.write` | Tenant được phép | `tenant_admin`; `school_admin` ở scope trường | `/tenant/user-roles*`, `/schools/{school_id}/user-roles` |
   | `tenant.school.read` / `tenant.school.write` | Tenant được phép | `tenant_admin`, `school_admin` (trường mình) | `/tenant/schools*`, `:approve` |
-  | `tenant.class.read` | Tenant được phép | `tenant_admin`, `school_admin` | `/tenant/schools/{school_id}/classes`, `/tenant/students/unassigned` |
+  | `tenant.student.read` (thay `tenant.class.read` — ADR-0095) | Tenant được phép | `tenant_admin` (`school_admin`, `academic_manager` dùng `lms.student.read`) | `/tenant/schools/{school_id}/grades/{grade_level}/students` |
   | `analytics.tenant.read` / `analytics.school.read` | Tenant được phép | `tenant_admin` / `school_admin`, `academic_manager` | `/tenant/analytics/*`, `/lms/schools/{school_id}/analytics/*` |
   | `report.export` | Tenant được phép (dữ liệu trong quyền) và platform | `tenant_admin`, `school_admin`, `system_admin` | `/tenant/reports`, `/admin/reports` |
   | `platform.catalog.write` | Platform-only | `system_admin` | `/admin/catalog/*`, `/admin/schools:import` |

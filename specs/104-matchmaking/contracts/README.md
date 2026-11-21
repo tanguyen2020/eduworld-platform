@@ -47,7 +47,7 @@ Spec: `specs/asyncapi/eduworld-realtime.v1.yaml`; gateway định tuyến `match
 | `audit.recorded` | Phát | `specs/events/envelope.schema.json` | Có sẵn |
 | `party.member_left`, `party.disbanded` | Tiêu thụ (nội bộ module) | — | Cần thêm (thuộc F100) |
 | `user.blocked`, `user.unblocked` | Tiêu thụ (module chat) | — | Cần thêm (thuộc F095) |
-| `student.synced`, `enrollment.changed`, `school.updated`, `tenant.updated` | Tiêu thụ (projection `ref.*`) | `specs/events/payloads/identity/…` | Có sẵn (áp 2026-11-17, owner F010/F011; `school.updated` có `settings_subset`) |
+| `student.synced`, `student.placement_changed`, `school.updated`, `tenant.updated` | Tiêu thụ (projection `ref.*`) | `specs/events/payloads/identity/…` | Có sẵn (áp 2026-11-17, owner F010/F011; `school.updated` có `settings_subset`) |
 | `game_profile.updated` | Tiêu thụ (projection `ref.player_profiles`) | `specs/events/payloads/game/game_profile.updated.v1.schema.json` | Cần thêm (owner F070) |
 
 ## 5. JSON Schema nội dung
