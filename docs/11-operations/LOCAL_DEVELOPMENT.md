@@ -286,6 +286,12 @@ Chạy trên stack local dùng chung (container `postgres`, `EW_ENV=local`), **t
 # 0. Dừng ghi: không chạy core-api/worker/realtime trong lúc chuyển đổi
 docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.app.yml --profile app stop core-api worker realtime
 
+# 0b. Đưa database tới ngay trước migration DROP: áp mọi migration đang chờ TRỪ migration ADR-0095 (luôn là file cuối
+#     của module). Bỏ bước này thì --verify-rollback lỗi (vd. view cũ của identity còn phụ thuộc org.enrollments).
+R=$(pwd -W 2>/dev/null || pwd); DSN="postgres://identity_migrator:change-me-local@localhost:5432/eduworld_identity?sslmode=disable"
+n=$(bash scripts/dev/atlas.sh migrate status --dir "file://$R/src/backend/modules/identity/migrations" --url "$DSN" --format '{{ len .Pending }}' 2>/dev/null | tail -1)
+[ "$n" -gt 1 ] && bash scripts/dev/atlas.sh migrate apply --dir "file://$R/src/backend/modules/identity/migrations" --url "$DSN" $((n-1))
+
 # 1–3. Backup (R12): pg_dump -Fc + SHA-256, thử pg_restore vào eduworld_<module>_restore_check, đếm dòng trước
 bash scripts/db/adr-0095-backup.sh identity
 #    → data/backups/pre-adr0095-eduworld_identity-<YYYYMMDD>.dump (+ .sha256, .counts-before.txt)
