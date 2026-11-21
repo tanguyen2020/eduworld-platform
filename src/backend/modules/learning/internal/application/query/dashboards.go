@@ -145,13 +145,21 @@ func dashRun[T any](ctx context.Context, q Dashboards, queryID string, p authz.P
 			}
 		}
 	}
+	lagging := false
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
 		if err := q.Model.Prepare(ctx, q.Config.StatementTimeout); err != nil {
 			return err
 		}
 		var err error
-		out, err = fn(ctx)
-		return err
+		if out, err = fn(ctx); err != nil {
+			return err
+		}
+		// replica_lag_warning of every answer carrying a DashboardMeta (F043 T042).
+		if mv, ok := any(&out).(interface{ Meta() *dto.DashboardMeta }); ok {
+			lagging = q.laggingReplica(ctx)
+			mv.Meta().ReplicaLagWarning = lagging
+		}
+		return nil
 	})
 	if err = unavailable(ctx, err); err != nil {
 		if problemCode(err) == problem.DashboardQueryTimeout {
@@ -159,7 +167,7 @@ func dashRun[T any](ctx context.Context, q Dashboards, queryID string, p authz.P
 		}
 		return out, err
 	}
-	if ck != "" {
+	if ck != "" && !lagging { // a lagging answer is never cached (it would outlive the lag)
 		ttl := q.Config.CacheTTLClosed
 		if rg == nil || !rg.To.Before(q.Config.Day(q.now())) {
 			ttl = q.Config.CacheTTLToday
@@ -282,4 +290,29 @@ func crossTenantIDs(ctx context.Context) ([]uuid.UUID, bool) {
 		return cs.TenantIDs(), true
 	}
 	return nil, false
+}
+
+// metaOf is meta plus available_from: the earliest daily rollup of the scope of the answer (F043 T042, F056-3).
+func (q Dashboards) metaOf(ctx context.Context, rg analytics.Range, m read.RollupMeta, sc read.DashScope) (dto.DashboardMeta, error) {
+	meta := q.meta(rg, m)
+	from, err := q.Model.AvailableFrom(ctx, sc)
+	if err != nil {
+		return meta, err
+	}
+	if from != nil {
+		s := from.Format(time.DateOnly)
+		meta.AvailableFrom = &s
+	}
+	return meta, nil
+}
+
+// laggingReplica reports whether the dashboard replica lags more than dashboard_replica_lag_alert_seconds (F043 T042). The
+// answer is still served from the replica (never the primary, F043-AC-21); a lag that cannot be read counts as lagging.
+func (q Dashboards) laggingReplica(ctx context.Context) bool {
+	lag, err := q.Model.ReplicaLag(ctx)
+	if err != nil {
+		slog.WarnContext(ctx, "dashboard replica lag unavailable", "error", err)
+		return true
+	}
+	return q.Config.ReplicaLagAlert > 0 && lag > q.Config.ReplicaLagAlert
 }

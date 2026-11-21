@@ -126,7 +126,7 @@
 
 ## Nhận từ F056 (OQ F056-3, owner chốt 2026-11-21)
 
-- [ ] T042 `DashboardMeta` thêm `available_from` (date, ngày sớm nhất có số liệu của phạm vi) và `replica_lag_warning` (boolean, true khi độ trễ replica vượt ngưỡng trong CONFIG_DEFAULTS) — contract + query handler + test — file: `specs/openapi/eduworld-api.v1.yaml`, `src/backend/modules/learning/internal/application/query/` — kiểm: `make specs-lint`, `make test-integration MOD=learning` — cỡ S
+- [x] T042 `DashboardMeta` thêm `available_from` (date, ngày sớm nhất có số liệu của phạm vi) và `replica_lag_warning` (boolean, true khi độ trễ replica vượt ngưỡng trong CONFIG_DEFAULTS) — contract + query handler + test — file: `specs/openapi/eduworld-api.v1.yaml`, `src/backend/modules/learning/internal/application/query/` — kiểm: `make specs-lint`, `make test-integration MOD=learning` — cỡ S — ✅ 2026-11-21: `DashboardMeta.available_from` (ngày rollup ngày sớm nhất của trường/lớp của phạm vi, query `available_from` của catalog có index path) và `replica_lag_warning` (`dashboard_replica_lag_alert_seconds` = 60 s đã có ở CONFIG_DEFAULTS, `analytics.Config.ReplicaLagAlert`; đo trong savepoint; phản hồi có cờ không cache); test `TestDashboardMetaAvailableFromAndReplicaLag` FAIL (stub) → PASS, `TestDashboardRoleAndQueryCatalog` (EXPLAIN không Seq Scan) và các test dashboard F043 PASS
 
 ## Dependencies & Execution Order
 

@@ -611,6 +611,12 @@ func TestDashboardRoleAndQueryCatalog(t *testing.T) {
 		if _, err := m.ProfileAssignments(ctx, sc, k.a1, 20); err != nil {
 			return err
 		}
+		if _, err := m.AvailableFrom(ctx, sc); err != nil {
+			return err
+		}
+		if _, err := m.AvailableFrom(ctx, cls); err != nil {
+			return err
+		}
 		_, err := m.ProfileRecommendations(ctx, sc, k.a1, 3)
 		return err
 	})

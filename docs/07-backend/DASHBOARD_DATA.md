@@ -163,7 +163,7 @@ sequenceDiagram
 | Pool kết nối dashboard tách khỏi pool nghiệp vụ | ≤ 10 kết nối/replica API | [Confirmed] |
 | Đồng thời theo người dùng | ≤ 4 truy vấn dashboard đang chạy; vượt → `429 DASHBOARD_BUSY` | [Confirmed] |
 | Đồng thời theo tenant | ≤ 30 | [Confirmed] |
-| Replica lag | Dashboard hiển thị `data_as_of`; lag > 60 s → cảnh báo; lag > 5 phút → API đọc fallback primary bị **cấm**, trả số liệu kèm cảnh báo trễ | [Confirmed] |
+| Replica lag | Dashboard hiển thị `data_as_of`; lag > 60 s (`dashboard_replica_lag_alert_seconds`) → cảnh báo (cờ `replica_lag_warning` của `DashboardMeta`, phản hồi có cờ không cache); lag > 5 phút → API đọc fallback primary bị **cấm**, trả số liệu kèm cảnh báo trễ | [Confirmed] |
 
 Timeout trả `504 DASHBOARD_QUERY_TIMEOUT` kèm gợi ý thu hẹp khoảng/phạm vi; không tự retry phía server.
 

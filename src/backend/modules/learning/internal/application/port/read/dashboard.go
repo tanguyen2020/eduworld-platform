@@ -197,4 +197,9 @@ type DashboardReader interface {
 	TenantCells(ctx context.Context, tenantIDs []uuid.UUID, grade *int, rg analytics.Range) ([]SummaryCell, RollupMeta, error)
 	// Tenants lists the active tenants and those of them flagged is_qa (DASHBOARD_DATA §3.4).
 	Tenants(ctx context.Context, ids []uuid.UUID) (active, qa []uuid.UUID, err error)
+	// AvailableFrom is the earliest daily rollup bucket of the scope (rollup_class_daily when ClassID is set, else
+	// rollup_school_daily of the schools, every school of the tenant when SchoolIDs is nil); nil when the scope has no row.
+	AvailableFrom(ctx context.Context, sc DashScope) (*time.Time, error)
+	// ReplicaLag is the replay lag of the dashboard read replica (0 on a primary or a replica that replayed all it received).
+	ReplicaLag(ctx context.Context) (time.Duration, error)
 }

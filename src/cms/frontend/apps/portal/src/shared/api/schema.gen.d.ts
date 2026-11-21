@@ -11144,6 +11144,11 @@ export interface components {
         DashboardGrain: "day" | "week" | "month";
         /** @description Siêu dữ liệu bắt buộc của mọi phản hồi dashboard (DASHBOARD_DATA §8) */
         DashboardMeta: {
+            /**
+             * Format: date
+             * @description Ngày sớm nhất có số liệu (rollup ngày) của phạm vi trả lời — trường/lớp được hỏi, cả tenant ở tóm tắt tenant; `null` khi phạm vi chưa có số liệu hoặc ở tóm tắt platform. Khi sau `from`, portal hiện "Chưa có số liệu trước ngày …" (F043 T042, F056-AC-02).
+             */
+            available_from?: string | null;
             /** @description `computed_at` cũ nhất trong kết quả */
             data_as_of: components["schemas"]["Timestamp"];
             /** Format: date */
@@ -11151,6 +11156,8 @@ export interface components {
             grain: components["schemas"]["DashboardGrain"];
             /** @description true nếu có dòng chưa chốt (`is_final = false`, ví dụ hôm nay) */
             is_partial: boolean;
+            /** @description true khi độ trễ của read replica dashboard vượt `dashboard_replica_lag_alert_seconds` (CONFIG_DEFAULTS, DASHBOARD_DATA §7): số liệu vẫn trả kèm `data_as_of`, không đọc primary; phản hồi có cờ này không được cache (F043 T042). */
+            replica_lag_warning?: boolean;
             /** Format: date */
             to?: string;
         };

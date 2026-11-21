@@ -118,7 +118,11 @@ func (q Dashboards) GetSchoolDashboard(ctx context.Context, in SchoolDashboardIn
 			}
 			// Safety notifications come from module chat (F122, facade not available yet): null, never a mock (R17).
 			w.SafetyNotificationsUnacknowledge = nil
-			v.DashboardMeta = q.meta(rg, m)
+			meta, err := q.metaOf(ctx, rg, m, sc)
+			if err != nil {
+				return v, err
+			}
+			v.DashboardMeta = meta
 			return v, nil
 		})
 }
@@ -395,7 +399,11 @@ func (q Dashboards) GetClassDashboard(ctx context.Context, in ClassDashboardInpu
 					RapidGuessRatio: analytics.Ratio(s.RapidNum, s.RapidDen), RapidGuessFlag: rapidFlag(s.RapidNum, s.RapidDen, q.Config.Attention),
 					Reasons: rs})
 			}
-			v.DashboardMeta = q.meta(rg, m)
+			meta, err := q.metaOf(ctx, rg, m, sc)
+			if err != nil {
+				return v, err
+			}
+			v.DashboardMeta = meta
 			return v, nil
 		})
 }
@@ -485,7 +493,11 @@ func (q Dashboards) GetSchoolSeries(ctx context.Context, in SeriesInput) (out dt
 				return &x
 			}
 			v.Points = q.points(rg, rows, value, unit != "ratio")
-			v.DashboardMeta = q.meta(rg, m)
+			meta, err := q.metaOf(ctx, rg, m, sc)
+			if err != nil {
+				return v, err
+			}
+			v.DashboardMeta = meta
 			return v, nil
 		})
 }
@@ -586,7 +598,11 @@ func (q Dashboards) GetStudentProfile(ctx context.Context, in ProfileInput) (out
 				v.ActiveRecommendations = append(v.ActiveRecommendations, dto.ProfileRecommendationView{RecommendationID: r.RecommendationID,
 					RuleCode: r.RuleCode, ReasonCode: r.ReasonCode, SubjectID: r.SubjectID})
 			}
-			v.DashboardMeta = q.meta(rg, m)
+			meta, err := q.metaOf(ctx, rg, m, sc)
+			if err != nil {
+				return v, err
+			}
+			v.DashboardMeta = meta
 			return v, nil
 		})
 }
@@ -671,7 +687,11 @@ func (q Dashboards) GetTenantSummary(ctx context.Context, in TenantSummaryInput)
 				return dto.LearningSummaryView{}, err
 			}
 			v := q.summary(rg, cells, func(c read.SummaryCell) string { return c.SchoolID.String() }, false)
-			v.DashboardMeta = q.meta(rg, m)
+			meta, err := q.metaOf(ctx, rg, m, sc)
+			if err != nil {
+				return v, err
+			}
+			v.DashboardMeta = meta
 			return v, nil
 		})
 }

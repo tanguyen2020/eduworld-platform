@@ -24,6 +24,7 @@ type Config struct {
 	Refresh              time.Duration // school_dashboard_refresh
 	MinCellSize          int           // analytics_min_cell_size
 	Attention            Thresholds    // dashboard_attention_thresholds (tenant setting; platform default here)
+	ReplicaLagAlert      time.Duration // dashboard_replica_lag_alert_seconds (above: replica_lag_warning, F043 T042)
 	Zone                 *time.Location
 }
 
@@ -46,6 +47,7 @@ func DefaultConfig() Config {
 		Refresh:              15 * time.Minute,
 		MinCellSize:          5,
 		Attention:            DefaultThresholds(),
+		ReplicaLagAlert:      60 * time.Second,
 		Zone:                 Zone,
 	}
 }

@@ -14,7 +14,14 @@ type DashboardMeta struct {
 	IsPartial bool      `json:"is_partial"`
 	From      string    `json:"from,omitempty"`
 	To        string    `json:"to,omitempty"`
+	// AvailableFrom is the earliest day with daily rollups of the scope (YYYY-MM-DD; nil = none or not computed, F043 T042).
+	AvailableFrom *string `json:"available_from,omitempty"`
+	// ReplicaLagWarning: the dashboard replica lags more than dashboard_replica_lag_alert_seconds (F043 T042).
+	ReplicaLagWarning bool `json:"replica_lag_warning"`
 }
+
+// Meta gives access to the embedded DashboardMeta of a view (set by the generic dashboard runner).
+func (m *DashboardMeta) Meta() *DashboardMeta { return m }
 
 // AnalyticsPointView is AnalyticsPoint.
 type AnalyticsPointView struct {

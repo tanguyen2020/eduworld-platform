@@ -30,7 +30,7 @@ var _ read.DashboardReader = DashboardModel{}
 // Catalog lists the query ids of the dashboards with one representative statement each (EXPLAIN test, TC-DASH-001).
 var Catalog = []string{"school_totals", "class_totals", "school_series", "class_series", "active_students", "classes",
 	"objective_stats", "attention", "assignments", "self_study", "class_students", "profile_subjects", "profile_topics",
-	"profile_trend", "profile_assignments", "profile_recommendations", "school_cells", "tenant_cells"}
+	"profile_trend", "profile_assignments", "profile_recommendations", "school_cells", "tenant_cells", "available_from"}
 
 var grainTables = map[analytics.Grain]string{analytics.Day: "daily", analytics.Week: "weekly", analytics.Month: "monthly"}
 

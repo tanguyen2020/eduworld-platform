@@ -25621,6 +25621,17 @@ components:
         is_partial: { type: boolean, description: 'true nếu có dòng chưa chốt (`is_final = false`, ví dụ hôm nay)' }
         from: { type: string, format: date }
         to: { type: string, format: date }
+        available_from:
+          type: [string, 'null']
+          format: date
+          description: >-
+            Ngày sớm nhất có số liệu (rollup ngày) của phạm vi trả lời — trường/lớp được hỏi, cả tenant ở tóm tắt tenant; `null` khi
+            phạm vi chưa có số liệu hoặc ở tóm tắt platform. Khi sau `from`, portal hiện "Chưa có số liệu trước ngày …" (F043 T042, F056-AC-02).
+        replica_lag_warning:
+          type: boolean
+          description: >-
+            true khi độ trễ của read replica dashboard vượt `dashboard_replica_lag_alert_seconds` (CONFIG_DEFAULTS, DASHBOARD_DATA §7):
+            số liệu vẫn trả kèm `data_as_of`, không đọc primary; phản hồi có cờ này không được cache (F043 T042).
     AnalyticsPoint:
       type: object
       required: [period_start]
