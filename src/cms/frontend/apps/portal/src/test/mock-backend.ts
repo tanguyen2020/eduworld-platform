@@ -40,7 +40,7 @@ export interface MockAccount {
   tenants: Tenant[];
   /** Permission set per tenant id, or `platform`. */
   perms: Record<string, PermissionFixture>;
-  setupRequired?: { steps: ('update_password' | 'configure_otp')[]; emailSent: boolean };
+  setupRequired?: { steps: 'update_password'[] };
 }
 
 const SCHOOL = permissionsOf(['school_lms']);
@@ -175,12 +175,12 @@ export class MockPortalBackend {
     return `csrf${String(this.csrfN).padStart(2, '0')}`.padEnd(43, 'x');
   }
 
-  private issue(account: MockAccount, mfa: boolean) {
+  private issue(account: MockAccount) {
     this.n++;
     this.currentToken = fakeJwt(account.sub, this.n);
     this.refreshAlive = true;
     this.csrf = this.newCsrf();
-    return json(200, { access_token: this.currentToken, token_type: 'Bearer', expires_in: 300, refresh_expires_in: 1800, auth_time: '2026-11-19T08:00:00Z', mfa }, { 'Cache-Control': 'no-store' });
+    return json(200, { access_token: this.currentToken, token_type: 'Bearer', expires_in: 300, refresh_expires_in: 1800, auth_time: '2026-11-19T08:00:00Z' }, { 'Cache-Control': 'no-store' });
   }
 
   readonly fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
@@ -227,16 +227,15 @@ export class MockPortalBackend {
           return problem(403, 'ACCOUNT_SETUP_REQUIRED', {
             setup_ticket: 'setup-ticket-0123456789abcdef0123456789abcdef',
             required_steps: account.setupRequired.steps,
-            otp_setup_email_sent: account.setupRequired.emailSent,
           });
         }
         this.user = account;
-        return this.issue(account, false);
+        return this.issue(account);
       }
       case 'POST /auth/portal/token:refresh': {
         if (!this.csrf || rec.headers['x-ew-csrf'] !== this.csrf) return problem(403, 'CSRF_TOKEN_INVALID');
         if (!this.refreshAlive || !this.user) return problem(401, 'REFRESH_TOKEN_INVALID');
-        return this.issue(this.user, false);
+        return this.issue(this.user);
       }
       case 'POST /auth/portal/logout': {
         if (this.refreshAlive && rec.headers['x-ew-csrf'] !== this.csrf) return problem(403, 'CSRF_TOKEN_INVALID');
@@ -248,7 +247,7 @@ export class MockPortalBackend {
       case 'POST /auth/portal/setup:password': {
         if (body.setup_ticket !== 'setup-ticket-0123456789abcdef0123456789abcdef') return problem(401, 'SETUP_TICKET_INVALID');
         if (String(body.new_password).length < 10) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'new_password', code: 'PASSWORD_POLICY_VIOLATION' }] });
-        return json(200, { remaining_steps: [], otp_setup_email_sent: false });
+        return json(200, { remaining_steps: [] });
       }
       case 'POST /auth/portal/password:forgot':
         return new Response(null, { status: 202 });

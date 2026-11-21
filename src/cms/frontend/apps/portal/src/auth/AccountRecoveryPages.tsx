@@ -1,7 +1,7 @@
 // Account setup and password recovery (F051 T058, F051-AC-31, F051-AC-32, ADR-0091 mục 3):
 // - /account-setup: `403 ACCOUNT_SETUP_REQUIRED` of portalLogin → new password (setupPortalPassword with the
-//   in-memory setup_ticket, policy errors per field) → "check your email" when the authenticator still has to be
-//   registered → back to /login; `401 SETUP_TICKET_INVALID` → /login with the "expired" notice.
+//   in-memory setup_ticket, policy errors per field) → back to /login (no authenticator step, ADR-0094);
+//   `401 SETUP_TICKET_INVALID` → /login with the "expired" notice.
 // - /forgot-password: forgotPortalPassword, always the same confirmation (no account enumeration).
 // - /reset-password?token=…: the token is read then removed from the URL at once (history.replaceState), kept in
 //   memory only, never sent to telemetry; the page runs with `Referrer-Policy: no-referrer` (index.html meta);
@@ -89,23 +89,10 @@ export function AccountSetupPage() {
   const session = useSession();
   const navigate = useNavigate();
   const [setup] = useState(() => setupTicketStore.get());
-  const [checkEmail, setCheckEmail] = useState(() => !!setup && !setup.requiredSteps.includes('update_password') && setup.otpSetupEmailSent);
   // the ticket leaves memory when the page is left
   useEffect(() => () => setupTicketStore.clear(), []);
 
   if (!setup) return <Navigate to="/login" replace />;
-  const backToLogin = (
-    <Button type="primary" onClick={() => navigate('/login', { replace: true })}>
-      {t('shell.setup.backToLogin')}
-    </Button>
-  );
-  if (checkEmail) {
-    return (
-      <AuthLayout title={t('shell.setup.checkEmailTitle')}>
-        <Result status="info" title={t('shell.setup.checkEmailTitle')} subTitle={t('shell.setup.checkEmailDescription')} extra={backToLogin} />
-      </AuthLayout>
-    );
-  }
   return (
     <AuthLayout title={t('shell.setup.title')}>
       <Typography.Paragraph>{t('shell.setup.description')}</Typography.Paragraph>
@@ -115,11 +102,8 @@ export function AccountSetupPage() {
           const r = await rt.authApi.setupPassword({ setup_ticket: setup.setupTicket, new_password: password });
           if (r.ok) {
             setupTicketStore.clear();
-            if (r.data.remaining_steps.includes('configure_otp') && r.data.otp_setup_email_sent) setCheckEmail(true);
-            else {
-              session.setNotice('passwordChanged');
-              navigate('/login', { replace: true });
-            }
+            session.setNotice('passwordChanged');
+            navigate('/login', { replace: true });
           } else if (r.error.code === 'SETUP_TICKET_INVALID') {
             setupTicketStore.clear();
             session.setNotice('setupTicketExpired');

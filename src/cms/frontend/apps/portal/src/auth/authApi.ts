@@ -23,7 +23,6 @@ export type PortalSetupPasswordRequest = Schemas['PortalSetupPasswordRequest'];
 export interface SetupRequired {
   setupTicket: string;
   requiredSteps: PortalSetupStep[];
-  otpSetupEmailSent: boolean;
 }
 
 export type AuthResult<T> = { ok: true; status: number; data: T } | { ok: false; status: number; error: ApiError; setup?: SetupRequired };
@@ -57,9 +56,9 @@ export interface AuthApi {
 function setupOf(problem: Record<string, unknown>): SetupRequired | undefined {
   if (problem.code !== 'ACCOUNT_SETUP_REQUIRED' || typeof problem.setup_ticket !== 'string') return undefined;
   const steps = Array.isArray(problem.required_steps)
-    ? problem.required_steps.filter((s): s is PortalSetupStep => s === 'update_password' || s === 'configure_otp')
+    ? problem.required_steps.filter((s): s is PortalSetupStep => s === 'update_password')
     : [];
-  return { setupTicket: problem.setup_ticket, requiredSteps: steps, otpSetupEmailSent: problem.otp_setup_email_sent === true };
+  return { setupTicket: problem.setup_ticket, requiredSteps: steps };
 }
 
 export function createAuthApi(opts: AuthApiOptions): AuthApi {

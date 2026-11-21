@@ -2,7 +2,7 @@
 // summary across tenants — getPlatformLearningSummary with `tenant_ids[]` from the topbar tenant filter (F057; no
 // X-Tenant-Id in platform scope), a Tenant column in every table, "< 5" for suppressed cells (SuppressedCell), QA tenants
 // excluded by the server listed; export through createPlatformReport / getPlatformReport (job + signed link). Internal
-// gateway + MFA are enforced by the gateway/backend (AGENTS R20); numbers are the server's.
+// gateway + platform role are enforced by the gateway/backend (AGENTS R20); numbers are the server's.
 import {
   DashboardMetric,
   DashboardQueueProvider,

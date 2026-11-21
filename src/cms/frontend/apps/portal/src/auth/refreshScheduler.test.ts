@@ -10,7 +10,7 @@ import type { AuthApi, AuthResult, PortalTokenResponse } from './authApi';
 import { refreshLeadMs, RefreshScheduler } from './refreshScheduler';
 import { TokenStore } from './tokenStore';
 
-const body = (token: string): PortalTokenResponse => ({ access_token: token, token_type: 'Bearer', expires_in: 300, refresh_expires_in: 1800, auth_time: '2026-11-19T08:00:00Z', mfa: false });
+const body = (token: string): PortalTokenResponse => ({ access_token: token, token_type: 'Bearer', expires_in: 300, refresh_expires_in: 1800, auth_time: '2026-11-19T08:00:00Z' });
 const ok = (token: string): AuthResult<PortalTokenResponse> => ({ ok: true, status: 200, data: body(token) });
 const fail = (status: number, code: string): AuthResult<PortalTokenResponse> => ({ ok: false, status, error: new ApiError({ status, code, i18nKey: `error.${code}` }) });
 

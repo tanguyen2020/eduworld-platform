@@ -1,7 +1,7 @@
 // LoginPage (F051 T058, F051-AC-01/04/30/31, ADR-0091 mục 1; layout: ADMIN_PORTAL §1.3b direction A "Sân trường"):
 // the portal's own /login page — username or email, password (show/hide), "Quên mật khẩu?", language — sent as ONE
-// `portalLogin` request with `device_id` and `locale`. No 6-digit code (owner 2026-11-21: portal MFA removed, new ADR
-// replacing ADR-0091 mục 2): the request never carries `otp`. Every authentication failure shows one generic message
+// `portalLogin` request with `device_id` and `locale`. No 6-digit code (owner 2026-11-21: portal MFA removed,
+// ADR-0094): the request never carries `otp`. Every authentication failure shows one generic message
 // and clears the password. No redirect to Keycloak, no tenant choice before sign-in, no tenant in the URL. The privacy
 // policy and game links are not shown: the runtime config has no URL for them (AGENTS R3), only the sentences stay.
 import { UserOutlined } from '@ant-design/icons';

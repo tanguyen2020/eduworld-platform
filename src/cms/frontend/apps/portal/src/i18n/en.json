@@ -48,10 +48,7 @@
       "policyHint": "The password must meet the password policy (length, upper case, lower case, digits).",
       "policyViolation": "The password does not meet the password policy.",
       "mismatch": "The two passwords do not match.",
-      "submit": "Save and sign in again",
-      "checkEmailTitle": "Check your email to set up the authenticator app",
-      "checkEmailDescription": "Open the link in the email, scan the QR code with an authenticator app, then come back to the sign-in page.",
-      "backToLogin": "Back to sign in"
+      "submit": "Save and sign in again"
     },
     "forgot": {
       "title": "Forgot password",
@@ -93,12 +90,6 @@
       "scopeError": "Cannot load your working organizations.",
       "retry": "Retry",
       "logout": "Sign out"
-    },
-    "relogin": {
-      "title": "Sign in again",
-      "description": "This action needs you to sign in again.",
-      "submit": "Confirm",
-      "cancel": "Cancel"
     },
     "forbidden": {
       "title": "Access denied",
@@ -184,7 +175,6 @@
     "UNAUTHENTICATED": "Your session is not valid. Please sign in again.",
     "TOKEN_EXPIRED": "Your session has expired. Please sign in again.",
     "PERMISSION_DENIED": "You do not have permission to do this.",
-    "MFA_REQUIRED": "This action requires two-factor authentication.",
     "TENANT_HEADER_REQUIRED": "No working organization selected.",
     "TENANT_NOT_SELECTED": "No working organization selected.",
     "TENANT_MISMATCH": "Your access to the working organization has changed.",

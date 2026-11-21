@@ -31,11 +31,6 @@ export interface ApiClientOptions {
   random?: () => number;
   now?: () => number;
   events?: ApiEvents;
-  /**
-   * F051-AC-13: on `403 MFA_REQUIRED` the shell opens the re-login dialog (password + code, `portalLogin`); resolves
-   * true when a new access token is in place — the request is then retried once. Shared by concurrent requests.
-   */
-  reauthenticate?: () => Promise<boolean>;
 }
 
 export interface ApiClient {
@@ -61,17 +56,6 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
   const idempotencyKeys = new IdempotencyKeys(now);
   const etags = new EtagCache();
   const refresh = createRefresher(tokenProvider);
-  let reauthInFlight: Promise<boolean> | null = null;
-  const reauthenticate = (): Promise<boolean> => {
-    if (!opts.reauthenticate) return Promise.resolve(false);
-    reauthInFlight ??= opts
-      .reauthenticate()
-      .catch(() => false)
-      .finally(() => {
-        reauthInFlight = null;
-      });
-    return reauthInFlight;
-  };
 
   async function pipeline(input: Request): Promise<Response> {
     const url = new URL(input.url);
@@ -94,7 +78,6 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
 
     let token = await tokenProvider.getAccessToken();
     let refreshed = false;
-    let reauthenticated = false;
     let attempt = 0;
     for (;;) {
       applyAuth(headers, token);
@@ -145,16 +128,7 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       if (res.status === 403) {
         const { code, traceId, featureKey } = await peekProblem(res);
         const detail = { operationId, status: 403, code, traceId };
-        if (code === 'MFA_REQUIRED') {
-          events.emit('mfa_required', detail);
-          if (!reauthenticated && opts.reauthenticate) {
-            reauthenticated = true;
-            if (await reauthenticate()) {
-              token = await tokenProvider.getAccessToken();
-              continue;
-            }
-          }
-        }
+        // F051-AC-13 (ADR-0094): no step-up re-login; an ended platform session surfaces as 401 on refresh
         if (code === 'TENANT_MISMATCH' || code === 'TENANT_ACCESS_DISABLED') events.emit('tenant_mismatch', detail);
         if (code === 'PORTAL_ACCESS_STAFF_ONLY') events.emit('staff_only', detail);
         if (code === 'FEATURE_DISABLED') events.emit('feature_disabled', { ...detail, featureKey });

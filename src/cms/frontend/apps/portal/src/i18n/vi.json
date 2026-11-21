@@ -48,10 +48,7 @@
       "policyHint": "Mật khẩu phải đạt chính sách mật khẩu của hệ thống (độ dài, chữ hoa, chữ thường, chữ số).",
       "policyViolation": "Mật khẩu chưa đạt chính sách mật khẩu.",
       "mismatch": "Hai mật khẩu chưa khớp.",
-      "submit": "Lưu và đăng nhập lại",
-      "checkEmailTitle": "Kiểm tra email để cài ứng dụng xác thực",
-      "checkEmailDescription": "Mở link trong email, quét mã QR bằng ứng dụng xác thực rồi quay lại trang đăng nhập.",
-      "backToLogin": "Về trang đăng nhập"
+      "submit": "Lưu và đăng nhập lại"
     },
     "forgot": {
       "title": "Quên mật khẩu",
@@ -93,12 +90,6 @@
       "scopeError": "Không tải được danh sách đơn vị làm việc.",
       "retry": "Thử lại",
       "logout": "Đăng xuất"
-    },
-    "relogin": {
-      "title": "Đăng nhập lại",
-      "description": "Thao tác này cần đăng nhập lại.",
-      "submit": "Xác nhận",
-      "cancel": "Hủy"
     },
     "forbidden": {
       "title": "Không có quyền truy cập",
@@ -184,7 +175,6 @@
     "UNAUTHENTICATED": "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
     "TOKEN_EXPIRED": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
     "PERMISSION_DENIED": "Bạn không có quyền thực hiện thao tác này.",
-    "MFA_REQUIRED": "Thao tác này cần xác thực hai lớp.",
     "TENANT_HEADER_REQUIRED": "Chưa chọn đơn vị làm việc.",
     "TENANT_NOT_SELECTED": "Chưa chọn đơn vị làm việc.",
     "TENANT_MISMATCH": "Đơn vị làm việc đã thay đổi quyền truy cập.",

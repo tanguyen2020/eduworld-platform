@@ -141,17 +141,18 @@ Mobile (< 768 px): một cột
 
 **Form đăng nhập (ADR-0091 mục 1):**
 
-- Một form gửi **một lần** tên đăng nhập/email và mật khẩu, kèm `device_id` (sinh ngẫu nhiên, lưu per-browser) và `locale`. **Không có ô mã xác thực 6 số** (owner chốt 2026-11-21: bỏ MFA của portal — ADR mới thay ADR-0091 mục 2); portal không gửi `otp` và không nhớ cờ "lần trước dùng mã".
+- Một form gửi **một lần** tên đăng nhập/email và mật khẩu, kèm `device_id` (sinh ngẫu nhiên, lưu per-browser) và `locale`. **Không có ô mã xác thực 6 số** (owner chốt 2026-11-21: bỏ MFA của portal — [ADR-0094](../adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) thay ADR-0091 mục 2); portal không gửi `otp` và không nhớ cờ "lần trước dùng mã".
 - Không nhớ mật khẩu; trình duyệt chỉ nhớ ngôn ngữ và `device_id`.
 - Mọi lỗi xác thực (sai tên, sai mật khẩu, tài khoản bị khóa tạm) hiện **một** thông điệp chung (bảng lỗi bên dưới).
 - Giới hạn số lần thử theo username, theo `device_id` và toàn cục (không theo IP — R30): tham số `portal_login_rate` ([SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md)).
 
-**Mật khẩu lần đầu và đăng ký mã xác thực (ADR-0091 mục 3):** khi Keycloak báo tài khoản còn bước thiết lập (sau khi mật khẩu đã đúng), API trả `403 ACCOUNT_SETUP_REQUIRED` kèm `setup_ticket` (dùng một lần, hạn `portal_setup_ticket_ttl` — [KEYCLOAK_SSO §3.3](../09-identity/KEYCLOAK_SSO.md)) và `required_steps[]`:
+**Mật khẩu lần đầu (ADR-0091 mục 3, [ADR-0094](../adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)):** khi Keycloak báo tài khoản còn bước thiết lập (sau khi mật khẩu đã đúng), API trả `403 ACCOUNT_SETUP_REQUIRED` kèm `setup_ticket` (dùng một lần, hạn `portal_setup_ticket_ttl` — [KEYCLOAK_SSO §3.3](../09-identity/KEYCLOAK_SSO.md)) và `required_steps[]`:
 
 | Bước | Màn hình portal | API |
 |---|---|---|
-| `update_password` | "Đặt mật khẩu mới" (wireframe trên): mật khẩu mới + nhập lại, gợi ý chính sách mật khẩu của realm; vi phạm → lỗi theo field | `POST /api/v1/auth/portal/setup:password` (`setupPortalPassword`) → `remaining_steps[]`, `otp_setup_email_sent`; sau đó về `/login` đăng nhập lại bằng mật khẩu mới |
-| `configure_otp` | "Kiểm tra email để cài ứng dụng xác thực": hướng dẫn mở link trong email, quét mã QR bằng ứng dụng xác thực rồi quay lại `/login`; nút "Về trang đăng nhập" | Module identity gửi email `execute-actions-email` (`CONFIGURE_TOTP`) của Keycloak; link mở **trang action-token của Keycloak** (theme `eduworld-ops`) — ngoại lệ duy nhất dùng trang Keycloak, không phải luồng đăng nhập OIDC |
+| `update_password` | "Đặt mật khẩu mới" (wireframe trên): mật khẩu mới + nhập lại, gợi ý chính sách mật khẩu của realm; vi phạm → lỗi theo field | `POST /api/v1/auth/portal/setup:password` (`setupPortalPassword`) → `remaining_steps[]`; sau đó về `/login` đăng nhập lại bằng mật khẩu mới |
+
+Không có bước `configure_otp` hay màn "Kiểm tra email để cài ứng dụng xác thực" (bỏ theo [ADR-0094](../adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)).
 
 `setup_ticket` hết hạn hoặc đã dùng → `401 SETUP_TICKET_INVALID`, portal về `/login`.
 
@@ -166,7 +167,7 @@ Mobile (< 768 px): một cột
 
 | Trường hợp | Kết quả |
 |---|---|
-| Nhân sự platform (`staff` không có `primary_tenant_id`, chỉ có role platform: System Admin, Content Admin/Reviewer, Game Designer, Live-ops, Competition Admin, Safety Moderator — ADR-0081) | Vào phạm vi platform (đăng nhập bằng tên đăng nhập + mật khẩu như mọi nhân sự; bỏ MFA theo ADR mới thay ADR-0091 mục 2). System Admin xem liên tenant bằng bộ lọc tenant (§2.5); khi ghi dữ liệu tenant chọn tenant đích → portal gửi `X-Tenant-Id` = tenant đích |
+| Nhân sự platform (`staff` không có `primary_tenant_id`, chỉ có role platform: System Admin, Content Admin/Reviewer, Game Designer, Live-ops, Competition Admin, Safety Moderator — ADR-0081) | Vào phạm vi platform (đăng nhập bằng tên đăng nhập + mật khẩu như mọi nhân sự; không MFA — [ADR-0094](../adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)). System Admin xem liên tenant bằng bộ lọc tenant (§2.5); khi ghi dữ liệu tenant chọn tenant đích → portal gửi `X-Tenant-Id` = tenant đích |
 | Nhân sự thuộc đúng 1 tenant | Vào thẳng tenant đó; mọi request gửi `X-Tenant-Id` |
 | Nhân sự thuộc nhiều tenant | Màn "Chọn đơn vị làm việc" (chọn sẵn tenant lần trước nếu đã nhớ, per-viewer); portal gửi `X-Tenant-Id` của tenant đã chọn — **không** xin token mới, không nhập lại mật khẩu; backend kiểm tra membership (ADR-0065, ADR-0091 mục 4) |
 | Không còn UserRole portal hiệu lực ở tenant nào và không có role platform | Màn "Tài khoản chưa được cấp quyền quản trị. Vui lòng liên hệ quản trị trường." (`403 PORTAL_ACCESS_STAFF_ONLY`) + nút Đăng xuất |
@@ -174,7 +175,7 @@ Mobile (< 768 px): một cột
 
 **Đổi tenant trên topbar:** nhân sự thuộc nhiều tenant thấy bộ chọn `[Đơn vị: THCS Demo B ▾]` trên topbar (mobile: trong menu ☰). Đổi tenant = đổi `X-Tenant-Id` + tải lại menu (`GET /me/permissions`, gồm `disabled_menus`/`disabled_actions` của tenant mới) và đưa về trang tổng quan của workspace; bản nháp chưa lưu được cảnh báo trước khi đổi. Không xin token mới (bỏ scope `organization:{alias}` cho portal — ADR-0091 mục 4). Không bao giờ trộn dữ liệu hai tenant trong một màn.
 
-**Phiên portal (ADR-0091 mục 4, ADR-0086 mục 7):** giữ chính sách idle 30 phút / tối đa 10 giờ và MFA theo role (`portal_session_sso`, [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md)). Access token chỉ nằm trong bộ nhớ SPA (không `localStorage`/`sessionStorage`); refresh token nằm trong cookie `HttpOnly` mà JavaScript không đọc được. Tải lại trang hoặc mở tab mới: portal gọi `POST /api/v1/auth/portal/token:refresh` (kèm header `X-EW-CSRF` lấy từ cookie CSRF) để khôi phục phiên, **không** phải đăng nhập lại; quá idle/max → về `/login` của portal (giữ URL để quay lại sau đăng nhập). Route platform chỉ nhận `auth_time` trong 8 giờ: quá hạn → `403 MFA_REQUIRED`, portal mở hộp đăng nhập lại (mật khẩu + mã xác thực) ngay trên trang. Đăng xuất gọi `POST /api/v1/auth/portal/logout` (thu hồi refresh token và phiên Keycloak, xóa cookie). Học sinh vào lại game bằng refresh token lưu trên thiết bị là chính sách riêng của game, không áp dụng cho portal.
+**Phiên portal (ADR-0091 mục 4, ADR-0086 mục 7):** giữ chính sách idle 30 phút / tối đa 10 giờ (`portal_session_sso`, [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md)). Access token chỉ nằm trong bộ nhớ SPA (không `localStorage`/`sessionStorage`); refresh token nằm trong cookie `HttpOnly` mà JavaScript không đọc được. Tải lại trang hoặc mở tab mới: portal gọi `POST /api/v1/auth/portal/token:refresh` (kèm header `X-EW-CSRF` lấy từ cookie CSRF) để khôi phục phiên, **không** phải đăng nhập lại; quá idle/max → về `/login` của portal (giữ URL để quay lại sau đăng nhập). Phiên nhân sự platform không làm mới được quá 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`): `token:refresh` trả `401 REFRESH_TOKEN_INVALID` → về `/login` giữ URL; portal không có hộp đăng nhập lại (step-up) — [ADR-0094](../adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md). Đăng xuất gọi `POST /api/v1/auth/portal/logout` (thu hồi refresh token và phiên Keycloak, xóa cookie). Học sinh vào lại game bằng refresh token lưu trên thiết bị là chính sách riêng của game, không áp dụng cho portal.
 
 **Trạng thái lỗi màn đăng nhập** (mã lỗi theo [API_DESIGN §4.1](../07-backend/API_DESIGN.md#41-catalog-mã-lỗi)):
 
@@ -188,7 +189,6 @@ Mobile (< 768 px): một cột
 | Phiên hết hạn (idle 30 phút / tối đa 10 giờ) — `token:refresh` trả `401 REFRESH_TOKEN_INVALID` | — | Hộp "Phiên làm việc đã hết, vui lòng đăng nhập lại"; giữ URL để quay lại sau đăng nhập |
 | Cookie CSRF thiếu/lệch khi làm mới phiên | `403 CSRF_TOKEN_INVALID` | Về `/login` (không hiện chi tiết kỹ thuật) |
 | `403 TENANT_MISMATCH` khi đang dùng | — | "Đơn vị làm việc đã thay đổi quyền truy cập." → về màn chọn tenant |
-| `403 MFA_REQUIRED` ở workspace platform | — | Hộp đăng nhập lại (tên đăng nhập + mật khẩu, không có ô mã) |
 | `403 FEATURE_DISABLED` khi đang dùng | — | "Tính năng này đang tạm tắt." → tải lại menu (§2.7) |
 
 **Định danh (ADR-0067, [ADR-0069](../adr/ADR-0069-username-email-duy-nhat-theo-tenant-va-dang-nhap-khong-chon-tenant.md)):** đăng nhập portal bằng username **hoặc** email; cả hai là duy nhất trên SSO (một người một tài khoản, không phân biệt hoa thường), nên không trùng trong cùng tenant; Keycloak xác thực trước, module identity kiểm tra tenant sau; nhân sự bắt buộc có email; một người làm nhiều trường dùng **một** tài khoản với nhiều membership và UserRole.

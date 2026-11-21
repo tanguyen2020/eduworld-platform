@@ -28,8 +28,8 @@ afterEach(() => {
 describe('token store and portal session API (F051-AC-02)', () => {
   it('keeps the token in memory with its expiry; clear forgets it', () => {
     const store = new TokenStore(() => 1_000);
-    const t = store.setFromResponse({ access_token: 'tok', expires_in: 300, refresh_expires_in: 1800, auth_time: '2026-11-19T08:00:00Z', mfa: true });
-    expect(t).toMatchObject({ token: 'tok', expiresAt: 301_000, sessionExpiresAt: 1_801_000, mfa: true });
+    const t = store.setFromResponse({ access_token: 'tok', expires_in: 300, refresh_expires_in: 1800, auth_time: '2026-11-19T08:00:00Z' });
+    expect(t).toMatchObject({ token: 'tok', expiresAt: 301_000, sessionExpiresAt: 1_801_000 });
     store.clear();
     expect(store.get()).toBeNull();
   });
@@ -79,7 +79,7 @@ describe('token store and portal session API (F051-AC-02)', () => {
   it('403 ACCOUNT_SETUP_REQUIRED exposes the setup ticket and steps (memory only)', async () => {
     const backend = new MockPortalBackend();
     backend.overrides.push(() =>
-      new Response(JSON.stringify({ code: 'ACCOUNT_SETUP_REQUIRED', status: 403, title: 'x', type: 'about:blank', setup_ticket: 't'.repeat(40), required_steps: ['update_password', 'configure_otp'], otp_setup_email_sent: false }), {
+      new Response(JSON.stringify({ code: 'ACCOUNT_SETUP_REQUIRED', status: 403, title: 'x', type: 'about:blank', setup_ticket: 't'.repeat(40), required_steps: ['update_password'] }), {
         status: 403,
         headers: { 'Content-Type': 'application/problem+json' },
       }),
@@ -87,7 +87,7 @@ describe('token store and portal session API (F051-AC-02)', () => {
     const api = createAuthApi({ config: TEST_CONFIG, getLocale: () => 'vi-VN', hasTranslation: () => true, fetch: backend.fetch });
     const r = await api.login({ username: 'gv.moi', password: 'x', device_id: deviceId() });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.setup).toEqual({ setupTicket: 't'.repeat(40), requiredSteps: ['update_password', 'configure_otp'], otpSetupEmailSent: false });
+    if (!r.ok) expect(r.setup).toEqual({ setupTicket: 't'.repeat(40), requiredSteps: ['update_password'] });
   });
 
   it('reads (never writes) the CSRF cookie; rejects malformed values', () => {

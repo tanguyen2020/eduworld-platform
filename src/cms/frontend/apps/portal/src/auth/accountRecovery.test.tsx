@@ -21,7 +21,7 @@ const RESET = 'reset-token-0123456789abcdef0123456789abcdef';
 
 describe('account setup (F051-AC-31)', () => {
   it('update_password: policy error per field, then success → /login with notice; ticket only in memory', async () => {
-    ACCOUNTS['gv.moi']!.setupRequired = { steps: ['update_password'], emailSent: false };
+    ACCOUNTS['gv.moi']!.setupRequired = { steps: ['update_password'] };
     const { user, router, backend } = await renderPortal({ url: '/login' });
     await signIn(user, 'gv.moi', 'Temp@12345');
     expect(await screen.findByRole('heading', { name: 'Đặt mật khẩu mới' })).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('account setup (F051-AC-31)', () => {
   });
 
   it('mismatching confirmation is caught before calling the API', async () => {
-    ACCOUNTS['gv.moi']!.setupRequired = { steps: ['update_password'], emailSent: false };
+    ACCOUNTS['gv.moi']!.setupRequired = { steps: ['update_password'] };
     const { user, backend } = await renderPortal({ url: '/login' });
     await signIn(user, 'gv.moi', 'Temp@12345');
     await screen.findByRole('heading', { name: 'Đặt mật khẩu mới' });
@@ -52,15 +52,8 @@ describe('account setup (F051-AC-31)', () => {
     expect(backend.calls('POST', '/auth/portal/setup:password')).toHaveLength(0);
   });
 
-  it('only configure_otp with the email sent → "check your email" screen', async () => {
-    ACCOUNTS['gv.moi']!.setupRequired = { steps: ['configure_otp'], emailSent: true };
-    const { user } = await renderPortal({ url: '/login' });
-    await signIn(user, 'gv.moi', 'Temp@12345');
-    expect(await screen.findByText('Mở link trong email, quét mã QR bằng ứng dụng xác thực rồi quay lại trang đăng nhập.')).toBeInTheDocument();
-  });
-
   it('401 SETUP_TICKET_INVALID → /login with the expired notice', async () => {
-    ACCOUNTS['gv.moi']!.setupRequired = { steps: ['update_password'], emailSent: false };
+    ACCOUNTS['gv.moi']!.setupRequired = { steps: ['update_password'] };
     const backend = new MockPortalBackend();
     backend.overrides.push((r) => (r.path === '/auth/portal/setup:password' ? problem(401, 'SETUP_TICKET_INVALID') : undefined));
     const { user, router } = await renderPortal({ url: '/login', backend });

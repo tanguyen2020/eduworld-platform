@@ -575,11 +575,8 @@
       "game": "Game backend",
       "admin_api": "Admin API (module identity)"
     },
-    "platformMfa": "MFA cho role platform",
     "maxAuthAge": "Tuổi tối đa lần xác thực (route platform)",
     "seconds": "{{count}} giây",
-    "yes": "Bắt buộc",
-    "no": "Không bắt buộc",
     "apisix": "APISIX",
     "publicGateway": "Gateway public",
     "internalGateway": "Gateway nội bộ",
@@ -589,7 +586,10 @@
     "routePrefix": "Prefix",
     "routeGateway": "Gateway",
     "routeService": "Service",
-    "gatewayKind": { "public": "Public", "internal": "Nội bộ" },
+    "gatewayKind": {
+      "public": "Public",
+      "internal": "Nội bộ"
+    },
     "connectionsTotal": "Tổng số kết nối",
     "connectionsByStatus": "Theo trạng thái",
     "generatedAt": "Số liệu lúc {{at}}",

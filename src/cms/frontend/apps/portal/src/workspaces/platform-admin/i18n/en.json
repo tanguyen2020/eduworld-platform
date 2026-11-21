@@ -575,11 +575,8 @@
       "game": "Game backend",
       "admin_api": "Admin API (identity module)"
     },
-    "platformMfa": "MFA for platform roles",
     "maxAuthAge": "Max authentication age (platform routes)",
     "seconds": "{{count}} s",
-    "yes": "Required",
-    "no": "Not required",
     "apisix": "APISIX",
     "publicGateway": "Public gateway",
     "internalGateway": "Internal gateway",
@@ -589,7 +586,10 @@
     "routePrefix": "Prefix",
     "routeGateway": "Gateway",
     "routeService": "Service",
-    "gatewayKind": { "public": "Public", "internal": "Internal" },
+    "gatewayKind": {
+      "public": "Public",
+      "internal": "Internal"
+    },
     "connectionsTotal": "Connections",
     "connectionsByStatus": "By status",
     "generatedAt": "Figures as of {{at}}",

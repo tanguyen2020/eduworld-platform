@@ -1,6 +1,6 @@
 // @vitest-environment node
 // F050-AC-15 (TC-CMS-WS-02): 401 TOKEN_EXPIRED → refresh() once then replay; refresh failure → session_expired;
-// 403 TENANT_MISMATCH → tenant_mismatch; 403 MFA_REQUIRED → mfa_required; 429 waits for Retry-After.
+// 403 TENANT_MISMATCH → tenant_mismatch (no MFA step-up, ADR-0094); 429 waits for Retry-After.
 // MSW gateway and fake TokenProvider (MOCK).
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
@@ -71,15 +71,6 @@ describe('403 events', () => {
     api.events.on('tenant_mismatch', () => events.push('tenant_mismatch'));
     await api.client.GET('/me/permissions', {});
     expect(events).toEqual(['tenant_mismatch']);
-  });
-
-  it('MFA_REQUIRED → mfa_required', async () => {
-    server.use(http.get(`${PUBLIC}/me/permissions`, () => problem(403, 'MFA_REQUIRED')));
-    const { api } = testClient();
-    const events: string[] = [];
-    api.events.on('mfa_required', () => events.push('mfa_required'));
-    await api.client.GET('/me/permissions', {});
-    expect(events).toEqual(['mfa_required']);
   });
 });
 

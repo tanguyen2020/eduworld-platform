@@ -3,9 +3,9 @@
 // F059-12; SIS connections with schools and
 // sync runs; no input that writes, no secret/credential/token even when the response carries fields outside the
 // schema); F059 screens are platform-only (403 page, chunk D not loaded for ad.truong.a / cm.noidung / sm.antoan);
-// 403 PERMISSION_DENIED shows its trace id, MFA_REQUIRED opens the step-up; a turned-off menu is hidden and its
+// 403 PERMISSION_DENIED shows its trace id (no MFA step-up, ADR-0094); a turned-off menu is hidden and its
 // `403 FEATURE_DISABLED` reloads permissions; protected menus stay. Backend = MOCK.
-import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, configure, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { tenantFilterStore } from '../../../shell/tenantFilterStore';
 import { ACCOUNTS, MockPortalBackend, permissionsOf, problem, renderPortal, stopPortals } from '../../../test/portal-harness';
@@ -93,7 +93,7 @@ describe('Bảo vệ màn F059 (F059-AC-24)', () => {
   });
 });
 
-describe('Lỗi quyền, MFA (F059-AC-25)', () => {
+describe('Lỗi quyền (F059-AC-25)', () => {
   it('403 PERMISSION_DENIED → "Không có quyền" with trace id', async () => {
     const backend = backendFor('sa.admin');
     backend.overrides.unshift((r) => (r.path === '/admin/roles' ? problem(403, 'PERMISSION_DENIED') : undefined));
@@ -102,19 +102,6 @@ describe('Lỗi quyền, MFA (F059-AC-25)', () => {
     expect(screen.getByText('Mã truy vết: trace-permission_denied')).toBeInTheDocument();
   });
 
-  it('403 MFA_REQUIRED on an F059 list → step-up re-login, request retried', async () => {
-    const backend = backendFor('sa.admin');
-    let first = true;
-    backend.overrides.unshift((r) => (r.path === '/admin/login-events' && first ? ((first = false), problem(403, 'MFA_REQUIRED')) : undefined));
-    const { router, user } = await renderPortal({ url: '/platform-admin/student-activity', backend });
-    const dialog = await screen.findByRole('dialog');
-    fireEvent.change(within(dialog).getByLabelText('Tên đăng nhập hoặc email'), { target: { value: 'sa.admin' } });
-    fireEvent.change(within(dialog).getByLabelText('Mật khẩu'), { target: { value: 'Demo@12345' } });
-    await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
-    expect(await screen.findByText('Đăng nhập trên thiết bị khác')).toBeInTheDocument();
-    expect(backend.calls('GET', '/admin/login-events').length).toBeGreaterThanOrEqual(2);
-    expect(router.state.location.pathname).toBe('/platform-admin/student-activity');
-  });
 });
 
 describe('Menu/action tắt (F059-AC-28)', () => {

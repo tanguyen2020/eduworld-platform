@@ -5,7 +5,6 @@
 import { Outlet, type RouteObject } from 'react-router-dom';
 import { AccountSetupPage, ForgotPasswordPage, ResetPasswordPage } from '../auth/AccountRecoveryPages';
 import { LoginPage } from '../auth/LoginPage';
-import { ReLoginHost } from '../auth/ReLoginDialog';
 import { WORKSPACE_CATALOG } from '../generated/menu-catalog';
 import { WorkspaceGate } from '../permissions/RequirePermission';
 import { workspaceLoaders, type WorkspaceLoaders } from '../permissions/workspaceRegistry';
@@ -17,7 +16,6 @@ import { NotFound } from './NotFound';
 function SessionRoot() {
   return (
     <SessionProvider>
-      <ReLoginHost />
       <Outlet />
     </SessionProvider>
   );

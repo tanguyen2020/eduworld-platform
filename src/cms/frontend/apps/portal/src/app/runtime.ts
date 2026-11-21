@@ -16,19 +16,6 @@ import type { RuntimeConfig } from '../shared/api/types';
 
 export const SESSION_CHANNEL = 'ew.portal.session';
 
-/** Bridge between the apiClient (`403 MFA_REQUIRED`) and the re-login dialog rendered by the session layer. */
-export class ReauthBridge {
-  private handler: (() => Promise<boolean>) | null = null;
-
-  bind(handler: (() => Promise<boolean>) | null): void {
-    this.handler = handler;
-  }
-
-  request(): Promise<boolean> {
-    return this.handler ? this.handler() : Promise.resolve(false);
-  }
-}
-
 export interface PortalRuntime {
   config: RuntimeConfig;
   i18n: I18n;
@@ -39,7 +26,6 @@ export interface PortalRuntime {
   api: ApiClient;
   queryClient: QueryClient;
   idle: IdleGuard;
-  reauth: ReauthBridge;
   /** Current value of the CSRF cookie (X-EW-CSRF), null when missing. */
   readCsrf: () => string | null;
   /** Cross-tab channel (sign-out only; never a token). Null when BroadcastChannel is unavailable. */
@@ -70,10 +56,9 @@ export function createPortalRuntime(config: RuntimeConfig, i18n: I18n, o: Runtim
   const readCsrf = o.readCsrf ?? (() => readCsrfToken());
   const scheduler = new RefreshScheduler({ authApi, store: tokens, locks: o.locks, now, readCsrf, isActive: () => idle.isActive() });
   const tenant = new WorkingTenant();
-  const reauth = new ReauthBridge();
-  const api = createApiClient({ config, tokenProvider: scheduler, tenant, getLocale, hasTranslation, fetch: o.fetch, now, reauthenticate: () => reauth.request() });
+  const api = createApiClient({ config, tokenProvider: scheduler, tenant, getLocale, hasTranslation, fetch: o.fetch, now });
   const channel = o.channel !== undefined ? o.channel : typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(SESSION_CHANNEL);
-  return { config, i18n, tokens, authApi, scheduler, tenant, api, queryClient: createQueryClient(), idle, reauth, readCsrf, channel };
+  return { config, i18n, tokens, authApi, scheduler, tenant, api, queryClient: createQueryClient(), idle, readCsrf, channel };
 }
 
 export const PortalRuntimeContext = createContext<PortalRuntime | null>(null);

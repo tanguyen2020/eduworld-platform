@@ -1,9 +1,9 @@
-// F051 T026 — F051-AC-13, F051-AC-14, F051-AC-15 (TC-CMS-WS-02, TC-AUTH-101): `403 MFA_REQUIRED` opens the re-login
-// dialog on the current page (portalLogin, username + password), the request is retried once and the URL kept, cancel → /login;
+// F051 T026 — F051-AC-13, F051-AC-14, F051-AC-15 (TC-CMS-WS-02, TC-AUTH-101): no step-up re-login (ADR-0094): a 403 on a
+// platform route never opens a dialog and is not retried; an ended session (refresh 401) goes to /login keeping the URL;
 // network failure of the internal gateway in game_ops/live_ops/platform_admin → "Cần kết nối mạng quản trị (VPN)";
 // Problem Details → translated message by `code` + trace_id, unknown code → generic message. MOCK backend.
 import { OpsThemeProvider } from '@eduworld/ops-ui';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createI18n } from '../i18n';
@@ -13,37 +13,26 @@ import { ProblemMessage } from './ProblemMessage';
 
 afterEach(() => stopPortals());
 
-describe('MFA re-login (F051-AC-13)', () => {
-  it('opens on the current page, retries the request with the new token, keeps the URL', async () => {
+describe('no step-up re-login (F051-AC-13, ADR-0094)', () => {
+  it('a 403 on a platform route opens no dialog and is not retried; the URL stays', async () => {
     const backend = new MockPortalBackend().withSession('sa.admin');
-    const { user, router, runtime } = await renderPortal({ url: '/platform-admin/tenants', backend });
+    const { router, runtime } = await renderPortal({ url: '/platform-admin/tenants', backend });
     await screen.findByRole('heading', { level: 1, name: 'Tenant, kết nối SIS' });
-    const oldToken = runtime.tokens.get()!.token;
-    backend.overrides.push((r) => (r.path === '/admin/tenants' && r.headers.authorization === `Bearer ${oldToken}` ? problem(403, 'MFA_REQUIRED') : undefined));
-    const pending = runtime.api.call<{ data: unknown[] }>(runtime.api.client.GET('/admin/tenants', {}));
-    const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Thao tác này cần đăng nhập lại.')).toBeInTheDocument();
-    fireEvent.change(within(dialog).getByLabelText('Tên đăng nhập hoặc email'), { target: { value: 'sa.admin' } });
-    fireEvent.change(within(dialog).getByLabelText('Mật khẩu'), { target: { value: 'Demo@12345' } });
-    await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
-    const res = await pending;
-    expect(res.data.length).toBeGreaterThan(0);
-    expect(runtime.tokens.get()!.token).not.toBe(oldToken);
-    const auths = backend.calls('GET', '/admin/tenants').map((r) => r.headers.authorization);
-    expect(auths).toContain(`Bearer ${oldToken}`);
-    expect(auths.at(-1)).toBe(`Bearer ${runtime.tokens.get()!.token}`);
+    const before = backend.calls('GET', '/admin/tenants').length;
+    backend.overrides.push((r) => (r.path === '/admin/tenants' ? problem(403, 'PERMISSION_DENIED') : undefined));
+    const err = await runtime.api.call(runtime.api.client.GET('/admin/tenants', {})).catch((e: unknown) => e);
+    expect((err as ApiError).code).toBe('PERMISSION_DENIED');
+    expect(backend.calls('GET', '/admin/tenants')).toHaveLength(before + 1);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(backend.calls('POST', '/auth/portal/login')).toHaveLength(0);
     expect(router.state.location.pathname).toBe('/platform-admin/tenants');
   });
 
-  it('cancel → back to /login keeping the URL', async () => {
-    const backend = new MockPortalBackend().withSession('sa.admin');
-    const { user, router, runtime } = await renderPortal({ url: '/platform-admin/tenants', backend });
-    await screen.findByRole('heading', { level: 1, name: 'Tenant, kết nối SIS' });
-    backend.overrides.push((r) => (r.path === '/admin/tenants' ? problem(403, 'MFA_REQUIRED') : undefined));
-    const pending = runtime.api.call(runtime.api.client.GET('/admin/tenants', {})).catch((e: unknown) => e);
-    const dialog = await screen.findByRole('dialog');
-    await user.click(within(dialog).getByRole('button', { name: 'Hủy' }));
-    expect(await pending).toBeInstanceOf(ApiError);
+  it('session ended (refresh 401 REFRESH_TOKEN_INVALID) → /login keeping the URL, no dialog', async () => {
+    const backend = new MockPortalBackend();
+    const { router } = await renderPortal({ url: '/platform-admin/tenants', backend });
+    expect(await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).toBeNull();
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
     expect(router.state.location.search).toBe('?returnUrl=%2Fplatform-admin%2Ftenants');
   });

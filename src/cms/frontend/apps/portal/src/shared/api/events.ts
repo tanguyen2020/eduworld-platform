@@ -1,5 +1,5 @@
-// apiClient events (F050 plan, extended by F051): the shell listens and reacts (back to login, tenant picker, MFA
-// re-login, VPN banner, staff-only page, feature-disabled notice, permission refresh). Payloads never carry tokens.
+// apiClient events (F050 plan, extended by F051): the shell listens and reacts (back to login, tenant picker,
+// VPN banner, staff-only page, feature-disabled notice, permission refresh). Payloads never carry tokens.
 import type { ApiEventType } from './types';
 
 export interface ApiEventDetail {

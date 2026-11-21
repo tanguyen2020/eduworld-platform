@@ -1,6 +1,6 @@
 // F057 T040/T041/T049 — F057-AC-18, F057-AC-19, F057-AC-22 (TC-CMS-AUTHZ-05, TC-CMS-WS-01/02, TC-CMS-MENU-02):
 // users without system_admin (per getMyPermissions) opening a workspace D URL get the 403 page and the D chunk is never
-// imported; `403 MFA_REQUIRED` on a D call opens the step-up re-login and keeps the URL; a network failure of the
+// imported (no step-up re-login since ADR-0094); a network failure of the
 // internal gateway shows "Cần kết nối mạng quản trị (VPN)"; a turned-off clone action hides its tab and
 // `403 FEATURE_DISABLED` shows the notice and reloads permissions. Display gates only — the backend authorizes.
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -40,21 +40,7 @@ describe('Bảo vệ workspace D (F057-AC-18)', () => {
   });
 });
 
-describe('MFA step-up và VPN (F057-AC-19)', () => {
-  it('403 MFA_REQUIRED on a D list → re-login (username + password), request retried, URL kept', async () => {
-    const backend = backendFor('sa.admin');
-    let first = true;
-    backend.overrides.unshift((r) => (r.path === '/admin/trash' && first ? ((first = false), problem(403, 'MFA_REQUIRED')) : undefined));
-    const { router, user } = await renderPortal({ url: '/platform-admin/trash', backend });
-    const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Thao tác này cần đăng nhập lại.')).toBeInTheDocument();
-    fireEvent.change(within(dialog).getByLabelText('Tên đăng nhập hoặc email'), { target: { value: 'sa.admin' } });
-    fireEvent.change(within(dialog).getByLabelText('Mật khẩu'), { target: { value: 'Demo@12345' } });
-    await user.click(within(dialog).getByRole('button', { name: 'Xác nhận' }));
-    expect(await screen.findByText('Câu hỏi bảng nhân 7')).toBeInTheDocument();
-    expect(backend.calls('GET', '/admin/trash').length).toBeGreaterThanOrEqual(2);
-    expect(router.state.location.pathname).toBe('/platform-admin/trash');
-  });
+describe('VPN (F057-AC-19)', () => {
 
   it('network failure of the internal gateway → "Cần kết nối mạng quản trị (VPN)"', async () => {
     const backend = backendFor('sa.admin');

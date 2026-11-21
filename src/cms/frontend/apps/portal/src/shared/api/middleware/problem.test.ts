@@ -54,6 +54,6 @@ describe('Problem → ApiError', () => {
     const viKeys = Object.keys(vi.error).sort();
     const enKeys = Object.keys(en.error).sort();
     expect(viKeys).toEqual(enKeys);
-    expect(viKeys).toEqual(expect.arrayContaining(['generic', 'VPN_REQUIRED', 'NETWORK_ERROR', 'TOKEN_EXPIRED', 'TENANT_MISMATCH', 'MFA_REQUIRED', 'VALIDATION_FAILED']));
+    expect(viKeys).toEqual(expect.arrayContaining(['generic', 'VPN_REQUIRED', 'NETWORK_ERROR', 'TOKEN_EXPIRED', 'TENANT_MISMATCH', 'VALIDATION_FAILED']));
   });
 });

@@ -274,7 +274,6 @@ export function withAccessMock(backend: MockPortalBackend, state: AccessState = 
             { client_id: 'eduworld-game-backend', purpose: 'game' },
             { client_id: 'eduworld-identity-admin', purpose: 'admin_api' },
           ],
-          platform_mfa_required: true,
           platform_auth_max_age_seconds: 900,
           // outside the schema (must never be rendered, F059-AC-23)
           client_secret: 'kc-secret-should-not-show',

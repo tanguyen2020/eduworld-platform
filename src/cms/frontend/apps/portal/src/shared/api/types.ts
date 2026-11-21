@@ -34,13 +34,12 @@ export interface FieldError {
 
 /**
  * apiClient events the shell reacts to (F050 plan, F051 interceptors): session expired, tenant mismatch or tenant
- * access disabled (F051-AC-21), MFA re-login (F051-AC-13), VPN (F051-AC-14), staff only (F051-AC-04), feature
+ * access disabled (F051-AC-21), VPN (F051-AC-14), staff only (F051-AC-04), feature
  * disabled (F051-AC-37), permission denied (F051-AC-12).
  */
 export type ApiEventType =
   | 'session_expired'
   | 'tenant_mismatch'
-  | 'mfa_required'
   | 'vpn_required'
   | 'staff_only'
   | 'feature_disabled'

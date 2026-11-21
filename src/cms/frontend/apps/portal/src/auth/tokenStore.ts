@@ -10,7 +10,6 @@ export interface AccessToken {
   sessionExpiresAt: number;
   /** `auth_time` of the token (ISO-8601). */
   authTime: string;
-  mfa: boolean;
 }
 
 export interface PortalTokenBody {
@@ -18,7 +17,6 @@ export interface PortalTokenBody {
   expires_in: number;
   refresh_expires_in: number;
   auth_time: string;
-  mfa: boolean;
 }
 
 export class TokenStore {
@@ -39,7 +37,6 @@ export class TokenStore {
       expiresAt: at + body.expires_in * 1000,
       sessionExpiresAt: at + body.refresh_expires_in * 1000,
       authTime: body.auth_time,
-      mfa: body.mfa,
     };
     this.emit();
     return this.current;
