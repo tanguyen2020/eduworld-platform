@@ -33,6 +33,12 @@ func TestSystemRolesValid(t *testing.T) {
 		got["academic_manager"].Has(authz.PermLmsChallengeWrite) {
 		t.Fatal("lms.challenge.write belongs to school_admin only among tenant roles")
 	}
+	// F012 Clarifications 2026-11-21: the school picker of the school screens needs tenant.school.read.
+	for _, r := range []string{"tenant_admin", "school_admin", "academic_manager"} {
+		if !got[r].Has(authz.PermTenantSchoolRead) {
+			t.Fatalf("%s must hold tenant.school.read", r)
+		}
+	}
 	if got["game_designer"].Has(authz.PermGameContentPublish) || got["game_designer"].Has(authz.PermGameEconomyAdjust) ||
 		!got["game_designer"].Has(authz.PermGameQuestWrite) {
 		t.Fatal("game_designer: game.* except content.publish and economy.adjust")

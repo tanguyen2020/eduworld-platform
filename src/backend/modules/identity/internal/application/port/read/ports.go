@@ -53,7 +53,8 @@ type OrgMembershipReader interface {
 
 // SchoolFilter selects schools of the scope (the scope decides the visible tenants).
 type SchoolFilter struct {
-	TenantID     *uuid.UUID // restrict to one tenant (System Admin path); nil = every tenant of the scope
+	TenantID     *uuid.UUID  // restrict to one tenant (System Admin path); nil = every tenant of the scope
+	SchoolIDs    []uuid.UUID // restrict to these schools (school-limited grants); nil = no restriction
 	Status       string
 	ProvinceCode string
 	Level        string

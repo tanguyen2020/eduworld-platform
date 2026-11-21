@@ -145,6 +145,9 @@ func (m OrgModel) Schools(ctx context.Context, f read.SchoolFilter) (out []dto.S
 		if f.TenantID != nil {
 			q = q.Where(entschool.TenantID(*f.TenantID))
 		}
+		if f.SchoolIDs != nil {
+			q = q.Where(entschool.IDIn(f.SchoolIDs...))
+		}
 		if f.Status != "" {
 			q = q.Where(entschool.Status(f.Status))
 		}

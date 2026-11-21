@@ -129,6 +129,35 @@ func TestOrgQueries(t *testing.T) {
 		t.Fatalf("own school classes = %+v %v", cls, err)
 	}
 	authztest.ExpectDenied(t, func() error { _, err := q.ListClasses(schoolAdmin, schoolA2, nil, 0); return err }())
+
+	// F012 Clarifications 2026-11-21 (portal E2E): School Admin and Academic Manager read their schools; a
+	// school-limited grant lists and opens only its schools; another tenant's school is never visible.
+	if own, err := q.ListTenantSchools(schoolAdmin, "", query.ListInput{}); err != nil || len(own.Items) != 1 || own.Items[0].SchoolID != schoolA1 {
+		t.Fatalf("school admin of A1 lists = %+v %v", own, err)
+	}
+	if s, err := q.GetTenantSchool(schoolAdmin, schoolA1); err != nil || s.SchoolID != schoolA1 {
+		t.Fatalf("school admin of A1 opens A1 = %+v %v", s, err)
+	}
+	authztest.ExpectDenied(t, func() error { _, err := q.GetTenantSchool(schoolAdmin, schoolA2); return err }())
+	schoolAdminB := authztest.Ctx(ctx, authztest.Staff(tb, "school_admin", authztest.AtSchool(schoolB)))
+	if own, err := q.ListTenantSchools(schoolAdminB, "", query.ListInput{}); err != nil || len(own.Items) != 1 || own.Items[0].SchoolID != schoolB {
+		t.Fatalf("school admin of B lists = %+v %v", own, err)
+	}
+	if _, err := q.GetTenantSchool(schoolAdminB, schoolA1); code(err) != problem.PermissionDenied && code(err) != problem.NotFound {
+		t.Fatalf("school admin of B opens a school of A: %v (want 403/404)", err)
+	}
+	subjectAM := authztest.Ctx(ctx, authztest.Staff(ta, "academic_manager", authztest.ForSubject(uuid.New())))
+	if am, err := q.ListTenantSchools(subjectAM, "", query.ListInput{}); err != nil || len(am.Items) != 2 || am.Items[0].TenantID != ta || am.Items[1].TenantID != ta {
+		t.Fatalf("subject-scoped academic manager lists = %+v %v", am, err)
+	}
+	schoolAM := authztest.Ctx(ctx, authztest.Staff(ta, "academic_manager", authztest.AtSchool(schoolA2)))
+	if am, err := q.ListTenantSchools(schoolAM, "", query.ListInput{}); err != nil || len(am.Items) != 1 || am.Items[0].SchoolID != schoolA2 {
+		t.Fatalf("school-scoped academic manager lists = %+v %v", am, err)
+	}
+	editor := authztest.Ctx(ctx, authztest.Staff(ta, "tenant_content_editor"))
+	authztest.ExpectDenied(t, func() error { _, err := q.ListTenantSchools(editor, "", query.ListInput{}); return err }())
+	authztest.Cover(t, "listTenantSchools", authztest.CrossTenant, authztest.RoleDenied)
+	authztest.Cover(t, "getTenantSchool", authztest.CrossTenant, authztest.RoleDenied)
 	tcls, err := q.ListTenantSchoolClasses(adminA, query.ClassesInput{SchoolID: schoolA1, Grade: 3})
 	if err != nil || len(tcls.Items) != 1 {
 		t.Fatalf("tenant school classes = %+v %v", tcls, err)

@@ -57,7 +57,8 @@ func expand(patterns []string, exclude ...Permission) []Permission {
 // SystemRoles returns the system roles of ADMIN_PORTAL §2.3. There is no teacher or tenant_moderator role
 // (ADR-0072). Deviations recorded in the F002 clarifications [Proposed]: report.export goes to
 // tenant_admin, school_admin and academic_manager; school_admin also holds social.club.approve and
-// tenant.audit.read; tenant_admin does not hold learning_content.re_evaluate (§2.4 matrix);
+// tenant.audit.read; school_admin and academic_manager read their schools (tenant.school.read, F012 Clarifications
+// 2026-11-21: listTenantSchools keeps a school-limited grant to its schools); tenant_admin does not hold learning_content.re_evaluate (§2.4 matrix);
 // content_reviewer also holds learning_content.read.
 func SystemRoles() []RoleDef {
 	return []RoleDef{
@@ -68,13 +69,13 @@ func SystemRoles() []RoleDef {
 			"report.export",
 		}, PermLearningContentReEvaluate)},
 		{Name: "school_admin", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
-			"school.*", "tenant.user.read", "tenant.user.lock", "tenant.user_role.write", "lms.*", "learning_content.read",
+			"school.*", "tenant.user.read", "tenant.user.lock", "tenant.school.read", "tenant.user_role.write", "lms.*", "learning_content.read",
 			"learning_content.write", "learning_content.review", "learning_content.publish", "analytics.school.read",
 			"analytics.class.read", "moderation.school_notification.read", "moderation.school_notification.acknowledge",
 			"tenant.sis.import", "social.club.approve", "tenant.audit.read", "report.export",
 		})},
 		{Name: "academic_manager", ScopeKind: RoleScopeTenant, Permissions: expand([]string{
-			"curriculum.*", "learning_content.*", "lms.class.read",
+			"curriculum.*", "learning_content.*", "tenant.school.read", "lms.class.read",
 			"lms.assignment.*", "lms.result.release", "lms.report.read",
 			"lms.student_activity.read", "analytics.*", "report.export",
 		})},

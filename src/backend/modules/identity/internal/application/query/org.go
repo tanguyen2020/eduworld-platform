@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -163,23 +164,54 @@ func (q Org) ListCatalogSchools(ctx context.Context, in CatalogSchoolsInput) (ou
 	return pageOf(q.Cursors, rows, limit, schoolKey), nil
 }
 
-// ListTenantSchools is listTenantSchools (tenant.school.read).
+// ListTenantSchools is listTenantSchools (tenant.school.read): a grant without a school limit (scope tenant or
+// subject) lists every school of the session tenant; school-limited grants (School Admin, Academic Manager of a
+// school) list their schools only (F012 Clarifications 2026-11-21).
 func (q Org) ListTenantSchools(ctx context.Context, status string, in ListInput) (out Page[dto.School], err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListTenantSchools")
 	defer func() { done(err) }()
-	if ctx, _, err = tenantRead(ctx, authz.PermTenantSchoolRead, nil); err != nil {
+	ctx, only, err := schoolRead(ctx, nil)
+	if err != nil {
 		return out, err
 	}
-	return q.schools(ctx, nil, status, in)
+	return q.schools(ctx, nil, only, status, in)
 }
 
-func (q Org) schools(ctx context.Context, tenantID *uuid.UUID, status string, in ListInput) (out Page[dto.School], err error) {
+// schoolRead authorizes tenant.school.read on the session tenant (one school when id is set) and sets its
+// TenantScope. It returns the schools a school-limited principal may see (nil: every school of the tenant).
+// Without the permission, or for a school outside every grant, authz.Require answers 403 and records
+// authz.denied; another tenant's school stays invisible to the scoped query (404).
+func schoolRead(ctx context.Context, id *uuid.UUID) (context.Context, []uuid.UUID, error) {
+	p, err := authenticated(ctx)
+	if err != nil {
+		return ctx, nil, err
+	}
+	all, schools := schoolsOf(p, authz.PermTenantSchoolRead)
+	if !all && (len(schools) == 0 || (id != nil && !slices.Contains(schools, *id))) {
+		// no grant, or a school outside every grant: authz.Require denies (403) and records authz.denied
+		ctx, _, err = tenantRead(ctx, authz.PermTenantSchoolRead, id)
+		if err == nil {
+			err = problem.New(problem.PermissionDenied, "")
+		}
+		return ctx, nil, err
+	}
+	sc, err := authz.ScopeFor(p)
+	if err != nil {
+		return ctx, nil, problem.New(problem.PermissionDenied, "").Wrap(err)
+	}
+	if all { // a grant without a school limit (scope tenant or subject): every school of the scope
+		schools = nil
+	}
+	return tenancy.WithScope(ctx, sc), schools, nil
+}
+
+func (q Org) schools(ctx context.Context, tenantID *uuid.UUID, only []uuid.UUID, status string, in ListInput) (out Page[dto.School], err error) {
 	after, err := q.cursor(in.Cursor)
 	if err != nil {
 		return out, err
 	}
 	limit := page.Limit(in.Limit)
-	rows, err := q.Model.Schools(ctx, read.SchoolFilter{TenantID: tenantID, Status: status, After: after, Limit: limit})
+	rows, err := q.Model.Schools(ctx, read.SchoolFilter{TenantID: tenantID, SchoolIDs: only, Status: status, After: after, Limit: limit})
 	if err != nil {
 		return out, err
 	}
@@ -190,7 +222,7 @@ func (q Org) schools(ctx context.Context, tenantID *uuid.UUID, status string, in
 func (q Org) GetTenantSchool(ctx context.Context, id uuid.UUID) (out dto.School, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.GetTenantSchool")
 	defer func() { done(err) }()
-	if ctx, _, err = tenantRead(ctx, authz.PermTenantSchoolRead, &id); err != nil {
+	if ctx, _, err = schoolRead(ctx, &id); err != nil {
 		return out, err
 	}
 	return q.Model.School(ctx, id)
@@ -211,7 +243,7 @@ func (q Org) ListAdminTenantSchools(ctx context.Context, tenantID uuid.UUID, sta
 	if err != nil {
 		return out, err
 	}
-	return q.schools(tenancy.WithScope(ctx, sc), &tenantID, status, in)
+	return q.schools(tenancy.WithScope(ctx, sc), &tenantID, nil, status, in)
 }
 
 // ClassesInput filters the class lists.
