@@ -155,6 +155,30 @@ func TestLoginEventsCrossTenant(t *testing.T) {
 	if e.audits(ctx, t, "cross_tenant.accessed") == 0 {
 		t.Fatal("cross-tenant read not audited")
 	}
+	// E2E Portal v2 finding 4: without tenant_ids ("Tất cả tenant") System Admin reads every tenant (contract TenantIds:
+	// absent = all tenants) through an audited bypass; other roles and tenant users stay 403.
+	audited := e.audits(ctx, t, "cross_tenant.accessed")
+	r = e.do(t, http.MethodGet, "/admin/login-events", sa, nil, nil)
+	data, _ = r.body["data"].([]any)
+	seen := map[any]bool{}
+	for _, d := range data {
+		seen[d.(map[string]any)["tenant_id"]] = true
+	}
+	if r.status != http.StatusOK || !seen[e.tenantA.String()] || !seen[e.tenantB.String()] {
+		t.Fatalf("system admin, every tenant: %d %s", r.status, r.raw)
+	}
+	if e.audits(ctx, t, "cross_tenant.accessed") <= audited {
+		t.Fatal("every-tenant read not audited")
+	}
+	for _, role := range []string{"safety_moderator", "content_admin"} {
+		tok := e.idp.Token(e.platformStaff(role), "eduworld-portal", nowWall())
+		if r := e.do(t, http.MethodGet, "/admin/login-events", tok, nil, nil); r.status != http.StatusForbidden {
+			t.Fatalf("%s every tenant: %d %s", role, r.status, r.raw)
+		}
+	}
+	if r := e.do(t, http.MethodGet, "/admin/login-events", e.idp.Token(e.staff(e.tenantA, "tenant_admin"), "eduworld-portal", nowWall()), nil, nil); r.status != http.StatusForbidden {
+		t.Fatalf("tenant admin every tenant: %d %s", r.status, r.raw)
+	}
 	for _, role := range []string{"safety_moderator", "content_admin"} {
 		tok := e.idp.Token(e.platformStaff(role), "eduworld-portal", nowWall())
 		if r := e.do(t, http.MethodGet, "/admin/login-events?tenant_ids="+e.tenantA.String(), tok, nil, nil); r.status != http.StatusForbidden {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/entx"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
 
 func tx(ctx context.Context) (*sql.Tx, error) {
@@ -59,20 +60,28 @@ func (LoginEvents) List(ctx context.Context, f read.LoginFilter) ([]read.LoginEv
 	if err != nil {
 		return nil, err
 	}
-	if len(f.TenantIDs) == 0 {
+	if len(f.TenantIDs) == 0 && !f.AllTenants {
 		return nil, nil
 	}
-	tenants := make([]string, len(f.TenantIDs))
-	for i, id := range f.TenantIDs {
-		tenants[i] = id.String()
+	var tenants any
+	if f.AllTenants {
+		if _, ok := tenancy.Bypassed(ctx); !ok {
+			return nil, errors.New("login events: every tenant needs an audited bypass")
+		}
+	} else {
+		list := make([]string, len(f.TenantIDs))
+		for i, id := range f.TenantIDs {
+			list[i] = id.String()
+		}
+		tenants = list
 	}
-	// Explicit tenant_id list = the TenantScope tenant or the CrossTenantScope ids of System Admin; device_id and ip_hash
-	// are never selected.
-	// tenancyguard:ok append-only TA table (no deleted_at), tenant_id = ANY(tenants of the scope)
+	// Explicit tenant_id list = the TenantScope tenant or the CrossTenantScope ids of System Admin; NULL = every tenant
+	// (AllTenants: System Admin under the audited bypass system_admin_cross_tenant). device_id and ip_hash are never selected.
+	// tenancyguard:ok append-only TA table (no deleted_at), tenant_id = ANY(tenants of the scope) or the audited all-tenant bypass
 	rows, err := t.QueryContext(ctx, `SELECT login_event_id, tenant_id, student_id, game_session_id, platform, device_model,
 			client_version, login_at, logout_at, end_reason
 		FROM game.login_events
-		WHERE tenant_id = ANY($1::uuid[]) AND ($2::uuid IS NULL OR student_id = $2)
+		WHERE ($1::uuid[] IS NULL OR tenant_id = ANY($1::uuid[])) AND ($2::uuid IS NULL OR student_id = $2)
 			AND ($3::timestamptz IS NULL OR login_at >= $3) AND ($4::timestamptz IS NULL OR login_at < $4)
 			AND ($5::timestamptz IS NULL OR (login_at, login_event_id) < ($5, $6))
 		ORDER BY login_at DESC, login_event_id DESC LIMIT $7`,

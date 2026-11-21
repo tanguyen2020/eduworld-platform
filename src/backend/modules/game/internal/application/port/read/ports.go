@@ -44,15 +44,17 @@ type LoginEvent struct {
 	EndReason     *string
 }
 
-// LoginFilter selects login events: tenants (one for a tenant user, the CrossTenantScope ids for System Admin),
+// LoginFilter selects login events: tenants (one for a tenant user, the CrossTenantScope ids for System Admin) or
+// AllTenants (System Admin without tenant_ids, only under an audited bypass),
 // optionally one student and a time range, keyset after (login_at, id).
 type LoginFilter struct {
-	TenantIDs []uuid.UUID
-	StudentID *uuid.UUID
-	From, To  *time.Time
-	AfterAt   *time.Time
-	AfterID   uuid.UUID
-	Limit     int
+	TenantIDs  []uuid.UUID
+	AllTenants bool
+	StudentID  *uuid.UUID
+	From, To   *time.Time
+	AfterAt    *time.Time
+	AfterID    uuid.UUID
+	Limit      int
 }
 
 // LoginEventReadModel reads game.login_events.

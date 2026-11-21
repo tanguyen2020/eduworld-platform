@@ -59,6 +59,10 @@ Quyết định khi triển khai (theo mặc định `[Confirmed]` của spec/t�
 
 - Q: Owner bỏ MFA/TOTP cho đăng nhập Admin Portal với mọi tài khoản, kể cả role platform (2026-11-21, [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md)) — phần nào của feature này đổi? → A: Chỉ contracts nhắc MFA (route platform); đọc là gateway nội bộ + role platform. Thay thế chung: route platform (`/admin/*`, `/game-admin/*`) chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform (guard `platform_role`, thiếu → `403 PERMISSION_DENIED` + `authz.denied`); `CrossTenantScope` giữ `platform.cross_tenant.read` + client portal + `reason` + audit; phiên `platform_staff` bị từ chối `refreshPortalToken` sau 8 giờ từ lúc nhập mật khẩu (`EW_OIDC_PLATFORM_MAX_AUTH_AGE`, `401 REFRESH_TOKEN_INVALID`).
 
+### Session 2026-11-22 (E2E Portal v2)
+
+- Q: `/platform-admin/student-activity` với "Tất cả tenant" gọi `listLoginEventsCrossTenant` không có `tenant_ids` và nhận `403`, trong khi contract `TenantIds` ghi "vắng mặt = tất cả tenant" — hành vi đúng? → A: Theo contract: System Admin (`platform.cross_tenant.read`) không gửi `tenant_ids` đọc mọi tenant. Middleware cho `PlatformScope`; use case mở bypass có audit `tenancy.Bypass(…, system_admin_cross_tenant, ModeRead)` (`cross_tenant.accessed`, metric, lý do thuộc danh sách đóng ADR-0089) như các truy vấn "mọi tenant" khác, đọc bằng role `game_platform`; repository chỉ bỏ điều kiện tenant khi có bypass. Role platform khác và người dùng tenant vẫn `403`. Test: `TestLoginEventsCrossTenant`.
+
 ### Session 2026-11-22 (ADR-0094 — [Confirmed])
 
 - Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: contracts/README (`listLoginEventsCrossTenant`). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.

@@ -180,7 +180,7 @@ func (h LoginEvents) ForStudent(ctx context.Context, student uuid.UUID, in Login
 		if st == nil || !schoolCovered(p, st.SchoolID) {
 			return problem.New(problem.NotFound, "")
 		}
-		out, err = h.list(ctx, []uuid.UUID{tenant}, in)
+		out, err = h.list(ctx, []uuid.UUID{tenant}, false, in)
 		return err
 	})
 	return out, err
@@ -211,20 +211,35 @@ func (h LoginEvents) CrossTenant(ctx context.Context, in LoginEventsInput) (out 
 		return out, err
 	}
 	sc, ok := tenancy.ScopeFrom(ctx)
-	cs, cross := sc.(tenancy.CrossTenantScope)
-	if !ok || !cross || !p.IsSystemAdmin {
+	if !ok || !p.IsSystemAdmin {
+		return out, problem.New(problem.PermissionDenied, "")
+	}
+	var tenants []uuid.UUID
+	all := false
+	switch s := sc.(type) {
+	case tenancy.CrossTenantScope:
+		tenants = s.TenantIDs()
+	case tenancy.PlatformScope:
+		// tenant_ids absent = every tenant (contract TenantIds, MULTITENANCY §4.1 rule 6): an audited bypass with the
+		// reason of the closed list (cross_tenant.accessed, ADR-0089), like the other "all tenants" reads.
+		if ctx, err = tenancy.Bypass(tenancy.WithModule(ctx, "game"), tenancy.ReasonSystemAdminCrossTenant,
+			tenancy.WithMode(tenancy.ModeRead)); err != nil {
+			return out, err
+		}
+		all = true
+	default:
 		return out, problem.New(problem.PermissionDenied, "")
 	}
 	err = h.Read.Read(ctx, func(ctx context.Context) error {
-		out, err = h.list(ctx, cs.TenantIDs(), in)
+		out, err = h.list(ctx, tenants, all, in)
 		return err
 	})
 	return out, err
 }
 
-func (h LoginEvents) list(ctx context.Context, tenants []uuid.UUID, in LoginEventsInput) (LoginEventsPage, error) {
+func (h LoginEvents) list(ctx context.Context, tenants []uuid.UUID, all bool, in LoginEventsInput) (LoginEventsPage, error) {
 	limit := page.Limit(in.Limit)
-	f := read.LoginFilter{TenantIDs: tenants, StudentID: in.StudentID, From: in.From, To: in.To, Limit: limit}
+	f := read.LoginFilter{TenantIDs: tenants, AllTenants: all, StudentID: in.StudentID, From: in.From, To: in.To, Limit: limit}
 	cur, err := h.Cursors.Decode(in.Cursor)
 	if err != nil {
 		return LoginEventsPage{}, problem.New(problem.BadRequest, "invalid cursor")
