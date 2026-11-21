@@ -1,6 +1,9 @@
 # ADR-0066 — Đăng nhập riêng cho Admin Portal (CMS/LMS) và phân quyền Role / UserRole
 
-> **Trạng thái:** Accepted · một phần superseded by [ADR-0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · một phần superseded by ADR-0072 · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-07 · **Bổ sung:** ADR-0027 · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted · một phần superseded by [ADR-0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · một phần superseded by ADR-0072 · một phần superseded by [ADR-0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) · một phần superseded by [ADR-0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md) · **Ngày:** 2026-11-15 · **OQ:** OQ-07 · **Bổ sung:** ADR-0027 · **Tài liệu:** [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md)** (2026-11-22, Proposed). Không còn hiệu lực: lớp chặn trong Keycloak ("điều kiện role trong authentication flow", mục 1) — Keycloak từ chối được tính là một lần đăng nhập sai và khóa tạm cả tài khoản game của học sinh. **Còn hiệu lực:** phần còn lại; học sinh vẫn bị chặn ở portal bằng hai lớp backend (`portalLogin` của module `identity` sau khi Keycloak cấp token, thu hồi phiên; guard `portal_staff` ở mọi route portal).
 
 > [!WARNING]
 > **Một phần đã được thay bởi [ADR-0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md).** Không còn hiệu lực: role `teacher` và `tenant_moderator` trong danh sách role seed (mục 5); thêm role platform `safety_moderator`. **Còn hiệu lực:** đăng nhập portal riêng, mô hình Permission → Role → UserRole.
@@ -43,3 +46,4 @@ Người duyệt yêu cầu: CMS/LMS có **màn hình đăng nhập riêng**; **
 | 2026-11-15 | Một phần superseded by ADR-0072 (bỏ vai trò giáo viên) | Technical Architect |
 | 2026-11-17 | Một phần superseded by ADR-0091 (portal đăng nhập bằng form riêng qua backend) | Technical Architect |
 | 2026-11-21 | Một phần superseded by ADR-0094 (bỏ MFA/TOTP cho đăng nhập Admin Portal) | Owner dự án |
+| 2026-11-22 | Một phần superseded by ADR-0096 (Proposed): chặn học sinh ở portal không còn nằm trong flow Keycloak để không bị brute-force tính là đăng nhập sai | E2E Portal v2 |

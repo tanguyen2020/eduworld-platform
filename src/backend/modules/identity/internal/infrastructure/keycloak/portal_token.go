@@ -317,7 +317,8 @@ func parseTokens(res tokenResult, refresh bool) (port.PortalTokens, error) {
 // flowDenied reports a JSON 401 written by the deny-access authenticator of the direct grant flow. Keycloak
 // 26.4 answers a request that accepts JSON with {"error": "<localized denyErrorMessage>"}: the member then
 // holds a sentence, not an OAuth error code (RFC 6749 §5.2 codes are lower-case ASCII with underscores).
-// "access_denied" is accepted too. Keycloak only reaches this authenticator after the password step, so
+// "access_denied" is accepted too. Since ADR-0096 only the game flow has such a step; the portal mapping stays for
+// a realm not yet re-applied. Keycloak only reaches this authenticator after the password step, so
 // this never tells a wrong password apart from an unknown account (ADR-0091).
 func flowDenied(code string) bool {
 	if code == "" {

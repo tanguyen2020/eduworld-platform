@@ -1,6 +1,9 @@
 # ADR-0094 — Bỏ MFA (TOTP) cho đăng nhập Admin Portal
 
-> **Trạng thái:** Accepted (rủi ro được chấp nhận) · một phần supersedes ADR-0091 (mục 1 ô mã OTP, mục 2 OTP có điều kiện và mapper AMR/LoA, mục 3 đăng ký OTP, mục 4 step-up `MFA_REQUIRED`), ADR-0009, ADR-0022, ADR-0027 mục 3(c), ADR-0029, ADR-0063 mục 5, ADR-0064 mục 7, ADR-0066 mục 1, ADR-0067 mục 1, ADR-0068 mục 4, ADR-0072 (MFA của `safety_moderator`), ADR-0086 mục 7, ADR-0090 (phần MFA) · **Ngày:** 2026-11-21 · **OQ:** — · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [Chỉ mục ADR](README.md)
+> **Trạng thái:** Accepted (rủi ro được chấp nhận) · một phần supersedes ADR-0091 (mục 1 ô mã OTP, mục 2 OTP có điều kiện và mapper AMR/LoA, mục 3 đăng ký OTP, mục 4 step-up `MFA_REQUIRED`), ADR-0009, ADR-0022, ADR-0027 mục 3(c), ADR-0029, ADR-0063 mục 5, ADR-0064 mục 7, ADR-0066 mục 1, ADR-0067 mục 1, ADR-0068 mục 4, ADR-0072 (MFA của `safety_moderator`), ADR-0086 mục 7, ADR-0090 (phần MFA) · một phần superseded by [ADR-0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md) · **Ngày:** 2026-11-21 · **OQ:** — · **Tài liệu:** [KEYCLOAK_SSO](../09-identity/KEYCLOAK_SSO.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) · [Chỉ mục ADR](README.md)
+
+> [!WARNING]
+> **Một phần đã được thay bởi [ADR-0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md)** (2026-11-22, Proposed). Không còn hiệu lực: bước "chặn người không có realm role `tenant_staff`/`platform_staff`" trong flow `eduworld-portal-direct-grant` (mục 1) và dòng "Chặn học sinh: hai lớp: flow Keycloak…" (mục 3). **Còn hiệu lực:** phần còn lại; học sinh vẫn bị chặn ở portal bằng hai lớp backend (`portalLogin` của module `identity` sau khi Keycloak cấp token, thu hồi phiên; guard `portal_staff` ở mọi route portal).
 
 ## Bối cảnh
 
@@ -64,3 +67,4 @@ Ngày 2026-11-21 owner dự án quyết định **bỏ hoàn toàn xác thực h
 |---|---|---|
 | 2026-11-21 | Tạo ADR (Accepted, rủi ro được chấp nhận sau cảnh báo) | Owner dự án |
 | 2026-11-21 | Mở rộng cho công cụ vận hành (Grafana, GlitchTip…): không MFA, chỉ VPN + role vận hành | Owner dự án |
+| 2026-11-22 | Một phần superseded by ADR-0096 (Proposed): chặn học sinh ở portal không còn nằm trong flow Keycloak để không bị brute-force tính là đăng nhập sai | E2E Portal v2 |

@@ -38,7 +38,10 @@ const kcIssuer = "http://kc/realms/eduworld"
 
 // fakeKeycloak is a TEST FAKE of the Keycloak 26 token and logout endpoints of realm eduworld for the
 // confidential client eduworld-portal (direct grant flow eduworld-portal-direct-grant, F004 research R5):
-// wrong credentials → 401 invalid_grant, student → 401 text/html, rotating single-use refresh tokens.
+// wrong credentials → 401 invalid_grant, staff in the game → 401 text/html, rotating single-use refresh tokens.
+// Since ADR-0096 the portal flow has no deny step: a student with the right password gets a portal token and
+// module identity refuses it (403 PORTAL_ACCESS_STAFF_ONLY) and revokes that session. failures counts the
+// failed logins per username the way Keycloak brute-force detection does (wrong password and flow denials).
 type fakeKeycloak struct {
 	mu       sync.Mutex
 	users    map[string]fakeKCUser // username → account
@@ -55,6 +58,14 @@ type fakeKeycloak struct {
 	sidClient map[string]string
 	deleted   int
 	down      bool // every token call answers 503 (F013-AC-21)
+	failures  map[string]int
+}
+
+func (k *fakeKeycloak) failed(username string) {
+	if k.failures == nil {
+		k.failures = map[string]int{}
+	}
+	k.failures[username]++
 }
 
 // fakeClients are the confidential clients of the fake realm and their secrets.
@@ -138,10 +149,12 @@ func (k *fakeKeycloak) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "password":
 		u, ok := k.users[f.Get("username")]
 		if !ok || u.password != f.Get("password") {
+			k.failed(f.Get("username"))
 			oauthErr(w, 401, "invalid_grant", "Invalid user credentials")
 			return
 		}
-		if u.student == (client == "eduworld-portal") { // portal denies students, the game denies staff
+		if !u.student && client == "eduworld-game-backend" { // the game flow denies staff (the portal flow denies nobody, ADR-0096)
+			k.failed(f.Get("username"))
 			// Keycloak 26.4 (deny-access-authenticator): JSON with the localized denyErrorMessage in "error"
 			// when the request accepts JSON (module identity always does), else the theme's HTML error page.
 			if strings.Contains(r.Header.Get("Accept"), "application/json") {
@@ -423,6 +436,18 @@ func TestPortalLoginIntegration(t *testing.T) {
 	}
 	p.kc.users["sa.portal"] = fakeKCUser{password: pw, platform: true}
 	p.kc.users["hs.portal"] = fakeKCUser{password: pw, student: true}
+	var hs string
+	if err := inTenant(ctx, t, p.app, a.tenant, true, func(tx *sql.Tx) error {
+		var err error
+		hs, err = insertStudent(ctx, tx, a, "hs.portal")
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := p.platform.ExecContext(ctx, `INSERT INTO identity.external_identities (external_identity_id, created_at, updated_at, issuer, subject, user_id)
+		VALUES ($1, now(), now(), $2, 'kc-hs.portal', $3)`, uuid.New(), kcIssuer, hs); err != nil {
+		t.Fatal(err)
+	}
 
 	// AC-27 (ADR-0094): tenant staff and platform staff (System Admin) both sign in with username + password only.
 	r := p.post(t, "/auth/portal/login", portalLogin("AD.Portal.A", pw), nil, nil)
@@ -450,7 +475,7 @@ func TestPortalLoginIntegration(t *testing.T) {
 			t.Fatalf("%v → %d %v", in["username"], r.code, r.body)
 		}
 	}
-	// AC-29: student (flow), no role, expired role, role only in a disabled tenant → staff only; deactivated.
+	// AC-29: student, no role, expired role, role only in a disabled tenant → staff only; deactivated.
 	revokedBefore := p.kc.logouts
 	for user, code := range map[string]string{"hs.portal": "PORTAL_ACCESS_STAFF_ONLY", "nv.portal.norole": "PORTAL_ACCESS_STAFF_ONLY",
 		"nv.portal.expired": "PORTAL_ACCESS_STAFF_ONLY", "nv.portal.disabled": "PORTAL_ACCESS_STAFF_ONLY", "nv.portal.off": "ACCOUNT_DEACTIVATED"} {
@@ -458,8 +483,22 @@ func TestPortalLoginIntegration(t *testing.T) {
 			t.Fatalf("%s → %d %v", user, r.code, r.body)
 		}
 	}
-	if p.kc.logouts-revokedBefore != 4 {
-		t.Fatalf("Keycloak sessions revoked = %d, want 4", p.kc.logouts-revokedBefore)
+	if p.kc.logouts-revokedBefore != 5 {
+		t.Fatalf("Keycloak sessions revoked = %d, want 5", p.kc.logouts-revokedBefore)
+	}
+	// ADR-0096: a student who tries the portal again and again always gets 403 PORTAL_ACCESS_STAFF_ONLY (never
+	// 401 after a lock-out), every Keycloak session is revoked and no attempt is a failed login for brute force.
+	revokedBefore = p.kc.logouts
+	for i := range 3 {
+		if r = p.post(t, "/auth/portal/login", portalLogin("hs.portal", pw), nil, nil); r.code != 403 || r.body["code"] != "PORTAL_ACCESS_STAFF_ONLY" {
+			t.Fatalf("student attempt %d → %d %v", i+1, r.code, r.body)
+		}
+	}
+	if p.kc.logouts-revokedBefore != 3 || p.kc.failures["hs.portal"] != 0 {
+		t.Fatalf("student retries: revoked %d (want 3), failed logins %d (want 0)", p.kc.logouts-revokedBefore, p.kc.failures["hs.portal"])
+	}
+	if p.kc.failures["sa.portal"] != 1 || p.kc.failures["ad.portal.a"] != 1 {
+		t.Fatalf("wrong passwords must still count: %v", p.kc.failures)
 	}
 	// AC-30: refresh through Valkey keeps auth_time; reuse of the rotated token → 401 and cookies cleared.
 	csrf := map[string]string{identityhttp.PortalCSRFHeader: session[identityhttp.PortalCSRFCookie]}
@@ -491,7 +530,7 @@ func TestPortalLoginIntegration(t *testing.T) {
 		payloads = append(payloads, s)
 	}
 	_ = rows.Close()
-	if len(payloads) < 11 { // 2 logins, 3 credential failures, 5 refusals, 1 logout
+	if len(payloads) < 14 { // 2 logins, 3 credential failures, 5 + 3 refusals, 1 logout
 		t.Fatalf("portal audits = %d", len(payloads))
 	}
 	all := strings.Join(payloads, "\n")

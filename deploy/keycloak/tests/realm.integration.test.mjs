@@ -9,6 +9,12 @@ import { DEMO_PASSWORD as P } from '../scripts/dev-constants.mjs';
 const S = process.env.KC_LOCAL_SECRET ?? 'change-me-local';
 const run = process.env.KC_INTEGRATION === '1' ? test : test.skip;
 
+const userID = async (username) => (await admin(`/users?username=${encodeURIComponent(username)}&exact=true`)).json[0].id;
+const bruteForce = async (username) => (await admin(`/attack-detection/brute-force/users/${await userID(username)}`)).json;
+const clearLockout = async (username) => admin(`/attack-detection/brute-force/users/${await userID(username)}`, { method: 'DELETE' });
+const logout = (clientId, refreshToken) => fetch(`${KC_URL}/realms/${REALM}/protocol/openid-connect/logout`, { method: 'POST',
+  body: new URLSearchParams({ client_id: clientId, client_secret: S, refresh_token: refreshToken }) });
+
 run('F004-AC-02: direct grant only through the two confidential clients with their secret', async () => {
   assert.equal((await passwordGrant('eduworld-game-backend', S, 'hs.an.3a', P)).status, 200);
   assert.equal((await passwordGrant('eduworld-portal', S, 'ad.truong.a', P)).status, 200);
@@ -20,31 +26,61 @@ run('F004-AC-02: direct grant only through the two confidential clients with the
   assert.notEqual(none.status, 200);
 });
 
-run('F004-AC-03/25: only students in the game, only staff in the portal; denial differs from a wrong password', async () => {
+run('F004-AC-03/25: only students in the game; the portal flow ends at the password (ADR-0096)', async () => {
   const staffInGame = await fetch(`${KC_URL}/realms/${REALM}/protocol/openid-connect/token`, { method: 'POST',
     body: new URLSearchParams({ grant_type: 'password', client_id: 'eduworld-game-backend', client_secret: S, username: 'ad.donvi', password: P }) });
   assert.equal(staffInGame.status, 401);
   assert.match(staffInGame.headers.get('content-type'), /text\/html/);
   assert.match(await staffInGame.text(), /không dùng để vào game/);
-  const studentInPortal = await fetch(`${KC_URL}/realms/${REALM}/protocol/openid-connect/token`, { method: 'POST',
-    body: new URLSearchParams({ grant_type: 'password', client_id: 'eduworld-portal', client_secret: S, username: 'hs.binh.3a', password: P }) });
-  assert.equal(studentInPortal.status, 401);
-  assert.match(await studentInPortal.text(), /không dùng để đăng nhập trang quản trị/);
-  // Module identity sends Accept: application/json; Keycloak 26.4 then answers the deny step with JSON whose
-  // "error" is the localized message, not an OAuth code (F012 Clarifications 2026-11-21) → PORTAL_ACCESS_STAFF_ONLY.
-  const studentJSON = await fetch(`${KC_URL}/realms/${REALM}/protocol/openid-connect/token`, { method: 'POST',
-    headers: { Accept: 'application/json' },
-    body: new URLSearchParams({ grant_type: 'password', client_id: 'eduworld-portal', client_secret: S, username: 'hs.binh.3a', password: P }) });
-  assert.equal(studentJSON.status, 401);
-  const denied = await studentJSON.json();
-  assert.match(denied.error, /không dùng để đăng nhập trang quản trị/);
-  assert.doesNotMatch(denied.error, /^[a-z_]+$/);
+  // ADR-0096: Keycloak no longer denies a student in the portal flow (that denial counted as a failed login);
+  // module identity refuses the account after the grant (403 PORTAL_ACCESS_STAFF_ONLY) and revokes the session.
+  const student = await passwordGrant('eduworld-portal', S, 'hs.binh.3a', P);
+  assert.equal(student.status, 200, JSON.stringify(student.json));
+  assert.ok(decodeJWT(student.json.access_token).roles.includes('student'));
+  assert.equal((await logout('eduworld-portal', student.json.refresh_token)).status, 204);
   const wrong = await passwordGrant('eduworld-portal', S, 'ad.truong.b', 'wrong-password');
   assert.equal(wrong.status, 401);
   assert.equal(wrong.json.error, 'invalid_grant');
+  await clearLockout('ad.truong.b');
   const setup = await passwordGrant('eduworld-portal', S, 'sa.moi', P);
   assert.equal(setup.status, 400);
   assert.match(setup.json.error_description, /not fully set up/);
+});
+
+run('ADR-0096: a student who tries the portal again and again is never locked out of the game', async () => {
+  const user = 'hs.an.3a';
+  await clearLockout(user);
+  // Faster than quickLoginCheckMilliSeconds and more than failureFactor: any counted denial would lock the account.
+  for (let i = 0; i < 7; i++) {
+    const r = await passwordGrant('eduworld-portal', S, user, P);
+    assert.equal(r.status, 200, `attempt ${i + 1}: ${JSON.stringify(r.json)}`);
+    assert.equal((await logout('eduworld-portal', r.json.refresh_token)).status, 204); // what module identity does
+  }
+  const bf = await bruteForce(user);
+  assert.equal(bf.numFailures, 0, JSON.stringify(bf));
+  assert.equal(bf.disabled, false, JSON.stringify(bf));
+  const game = await passwordGrant('eduworld-game-backend', S, user, P);
+  assert.equal(game.status, 200, JSON.stringify(game.json));
+  await logout('eduworld-game-backend', game.json.refresh_token);
+});
+
+run('ADR-0096: wrong passwords in the portal still count and lock the account for a while', async () => {
+  const user = 'hs.binh.3a';
+  await clearLockout(user);
+  try {
+    for (let i = 0; i < 5; i++) {
+      const r = await passwordGrant('eduworld-portal', S, user, `wrong-${i}`);
+      assert.equal(r.json.error, 'invalid_grant');
+      await new Promise((ok) => setTimeout(ok, 1100)); // slower than the quick-login check: counted by failureFactor
+    }
+    const bf = await bruteForce(user);
+    assert.ok(bf.numFailures >= 5, JSON.stringify(bf));
+    assert.equal(bf.disabled, true, JSON.stringify(bf));
+    const game = await passwordGrant('eduworld-game-backend', S, user, P);
+    assert.equal(game.status, 401); // temporarily locked: the right password is refused too
+  } finally {
+    await clearLockout(user);
+  }
 });
 
 run('ADR-0094: platform staff sign in with the password alone; the portal flow and tokens carry no OTP/LoA', async () => {

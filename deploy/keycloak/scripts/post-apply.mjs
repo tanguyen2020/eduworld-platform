@@ -6,6 +6,8 @@
 //      disables the CONFIGURE_TOTP required action and removes it from every staff account that still
 //      carries it, so nobody is blocked by "Account is not fully set up". OTP credentials enrolled before are
 //      left in place (no flow reads them).
+//   3. ADR-0096: fails if the portal direct grant flow still has a deny step (a denial counts as a failed login
+//      for brute-force detection and would lock a student out of the game).
 import { admin, adminToken } from './kc.mjs';
 
 const token = await adminToken();
@@ -21,6 +23,9 @@ console.log(`post-apply: removed ${drop.length} default role composites`);
 const executions = (await admin('/authentication/flows/eduworld-portal-direct-grant/executions', { token })).json ?? [];
 const otpSteps = executions.filter((e) => /otp/i.test(`${e.providerId ?? ''} ${e.displayName ?? ''} ${e.alias ?? ''}`));
 if (otpSteps.length > 0) throw new Error(`eduworld-portal-direct-grant still has OTP steps: ${otpSteps.map((e) => e.displayName).join(', ')}`);
+// 3. No deny step left in the portal flow (ADR-0096); module identity refuses non-staff after the grant.
+const denySteps = executions.filter((e) => e.providerId === 'deny-access-authenticator' || e.authenticationFlow);
+if (denySteps.length > 0) throw new Error(`eduworld-portal-direct-grant still has a deny step or sub-flow (ADR-0096): ${denySteps.map((e) => e.displayName).join(', ')}`);
 
 // 2b. CONFIGURE_TOTP is never required.
 const totp = await admin('/authentication/required-actions/CONFIGURE_TOTP', { token });

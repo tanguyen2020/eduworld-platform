@@ -64,9 +64,20 @@ test('F004-AC-03/25/26/27: flow order, deny rules, reference values, no WebAuthn
   r.authenticatorConfig.find((c) => c.alias === 'ew-game-not-student').config.negate = 'false';
   game.authenticationExecutions.push({ authenticator: 'webauthn-authenticator', requirement: 'REQUIRED', priority: 99 });
   const p = check(r);
-  has(p, 'username → password → deny non-staff');
+  has(p, 'username → password, nothing else');
   has(p, 'deny users without role student');
   has(p, 'WebAuthn is out of scope');
+});
+
+test('ADR-0096: the portal flow has no deny step (a denial would count as a brute-force failure)', () => {
+  const r = realm();
+  const portal = r.authenticationFlows.find((f) => f.alias === 'eduworld-portal-direct-grant');
+  portal.authenticationExecutions.push({ flowAlias: 'eduworld-portal-deny-non-staff', requirement: 'CONDITIONAL', priority: 30, authenticatorFlow: true });
+  r.authenticationFlows.push({ alias: 'eduworld-portal-deny-non-staff', topLevel: false, authenticationExecutions: [
+    { authenticator: 'deny-access-authenticator', requirement: 'REQUIRED', priority: 10 }] });
+  const p = check(r);
+  has(p, 'username → password, nothing else');
+  has(p, 'flow eduworld-portal-deny-non-staff must not exist');
 });
 
 test('ADR-0094: no OTP step in any flow, no AMR/LoA mapper or scope', () => {
@@ -78,7 +89,7 @@ test('ADR-0094: no OTP step in any flow, no AMR/LoA mapper or scope', () => {
   r.clientScopes.push({ name: 'eduworld-amr-loa', protocolMappers: [{ name: 'amr', protocolMapper: 'oidc-amr-mapper' }] });
   client(r, 'eduworld-portal').defaultClientScopes.push('eduworld-amr-loa');
   const p = check(r);
-  has(p, 'nothing else (no OTP, ADR-0094)');
+  has(p, 'nothing else (no OTP, ADR-0094');
   has(p, 'flow eduworld-portal-otp-configured: no OTP step');
   has(p, 'client scope eduworld-amr-loa: no AMR/LoA mapper');
   has(p, 'client eduworld-portal: scope eduworld-amr-loa must not be assigned');

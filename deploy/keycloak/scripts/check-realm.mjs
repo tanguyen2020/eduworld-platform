@@ -1,5 +1,5 @@
 // F004 T007/T040 — static checks of the realm as code (F004-AC-01, AC-02, AC-04, AC-05, AC-06, AC-08,
-// AC-24, AC-25, AC-27; ADR-0094: no OTP step, no AMR/LoA mapper). Usage: node deploy/keycloak/scripts/check-realm.mjs  (exit 1 on any problem)
+// AC-24, AC-25, AC-27; ADR-0094: no OTP step, no AMR/LoA mapper; ADR-0096: no deny step in the portal flow). Usage: node deploy/keycloak/scripts/check-realm.mjs  (exit 1 on any problem)
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
@@ -56,10 +56,13 @@ export function check(realm) {
   if (!same(seq('eduworld-game-direct-grant'), ['direct-grant-validate-username', 'direct-grant-validate-password', 'flow:eduworld-game-deny-non-student'])) {
     p.push('flow eduworld-game-direct-grant: username → password → deny non-student');
   }
-  if (!same(seq('eduworld-portal-direct-grant'), ['direct-grant-validate-username', 'direct-grant-validate-password',
-    'flow:eduworld-portal-deny-non-staff'])) {
-    p.push('flow eduworld-portal-direct-grant: username → password → deny non-staff, nothing else (no OTP, ADR-0094)');
+  // ADR-0096: the portal flow ends at the password. Module identity refuses non-staff after the grant and revokes
+  // that session, so a student who opens the portal is never counted as a failed login by brute-force detection
+  // (a deny-access step would be, and would lock the student out of the game too).
+  if (!same(seq('eduworld-portal-direct-grant'), ['direct-grant-validate-username', 'direct-grant-validate-password'])) {
+    p.push('flow eduworld-portal-direct-grant: username → password, nothing else (no OTP, ADR-0094; no deny step, ADR-0096)');
   }
+  if (flows['eduworld-portal-deny-non-staff']) p.push('flow eduworld-portal-deny-non-staff must not exist (ADR-0096: a denial counts as a brute-force failure)');
   const configs = Object.fromEntries((realm.authenticatorConfig ?? []).map((c) => [c.alias, c.config]));
   const used = new Map();
   for (const f of realm.authenticationFlows ?? []) {
@@ -83,9 +86,6 @@ export function check(realm) {
     return conds.every((c) => c?.negate === 'true') && conds.some((c) => c?.condUserRole === role) && configs[deny?.authenticatorConfig]?.denyErrorMessage === msg;
   };
   if (!denies('eduworld-game-deny-non-student', 'student', 'gameStaffDenied')) p.push('game flow must deny users without role student');
-  if (!denies('eduworld-portal-deny-non-staff', 'tenant_staff', 'portalStudentDenied') || !denies('eduworld-portal-deny-non-staff', 'platform_staff', 'portalStudentDenied')) {
-    p.push('portal flow must deny users without tenant_staff or platform_staff');
-  }
   // ADR-0094: no second factor, so no AMR/LoA claims anywhere (nothing may rely on amr/acr).
   for (const s of realm.clientScopes ?? []) {
     for (const m of s.protocolMappers ?? []) {

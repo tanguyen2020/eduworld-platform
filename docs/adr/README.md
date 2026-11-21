@@ -83,7 +83,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0063](ADR-0063-dang-nhap-release-1-0-username-password-va-quy-tac-tenant.md) | Đăng nhập Release 1.0: username/password và quy tắc tenant | Accepted · một phần superseded by ADR-0094 · một phần superseded by ADR-0095 | — |
 | [0064](ADR-0064-khong-tu-dang-nhap-khi-mo-lai-game.md) | Không tự đăng nhập khi mở lại game | Accepted · một phần superseded by ADR-0086 · một phần superseded by ADR-0094 | — |
 | [0065](ADR-0065-tenant-id-tren-header-moi-request.md) | tenant_id trên header mọi request, luôn kiểm tra chéo | Accepted | — |
-| [0066](ADR-0066-dang-nhap-rieng-cho-portal-va-phan-quyen-role-userrole.md) | Đăng nhập riêng cho portal; phân quyền Role/UserRole | Accepted · một phần superseded by ADR-0072 · một phần superseded by ADR-0091 · một phần superseded by ADR-0094 | OQ-07 |
+| [0066](ADR-0066-dang-nhap-rieng-cho-portal-va-phan-quyen-role-userrole.md) | Đăng nhập riêng cho portal; phân quyền Role/UserRole | Accepted · một phần superseded by ADR-0072 · một phần superseded by ADR-0091 · một phần superseded by ADR-0094 · một phần superseded by ADR-0096 | OQ-07 |
 | [0067](ADR-0067-portal-khong-chon-tenant-va-dinh-danh-dang-nhap-duy-nhat.md) | Portal không chọn tenant; username/email duy nhất | Accepted · một phần superseded by ADR-0091 · một phần superseded by ADR-0094 | — |
 | [0068](ADR-0068-dang-nhap-game-bang-form-trong-game-qua-backend.md) | Đăng nhập game bằng form trong game qua backend | Accepted · một phần superseded by ADR-0091 · một phần superseded by ADR-0094 | — |
 | [0069](ADR-0069-username-email-duy-nhat-theo-tenant-va-dang-nhap-khong-chon-tenant.md) | Đăng nhập: SSO xác thực trước, kiểm tra tenant sau; username/email không trùng trong tenant | Accepted | — |
@@ -108,11 +108,12 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0088](ADR-0088-ci-cd-bang-github-actions.md) | CI/CD bằng GitHub Actions | Accepted | — |
 | [0089](ADR-0089-chot-tang-du-lieu-rls-mixin-outbox.md) | Chốt tầng dữ liệu: RLS chỉ lọc tenant, bộ mixin ent, outbox và partition hạ tầng | Accepted | — |
 | [0090](ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md) | Danh mục menu/action của Admin Portal và bật/tắt lưu trong database | Accepted · một phần superseded by ADR-0094 | — |
-| [0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) | Admin Portal đăng nhập bằng form riêng qua backend, không chuyển hướng OIDC | Accepted · một phần supersedes ADR-0066, 0067, 0068 · một phần superseded by ADR-0094 | — |
+| [0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) | Admin Portal đăng nhập bằng form riêng qua backend, không chuyển hướng OIDC | Accepted · một phần supersedes ADR-0066, 0067, 0068 · một phần superseded by ADR-0094 · một phần superseded by ADR-0096 | — |
 | [0092](ADR-0092-to-chuc-ma-nguon-trong-src.md) | Tổ chức mã nguồn trong src/: backend dùng chung, cms/frontend, game | Accepted · một phần supersedes ADR-0074 | — |
 | [0093](ADR-0093-object-storage-tu-host-seaweedfs-truoc-chuyen-s3-managed-bang-cau-hinh.md) | Object storage tự host SeaweedFS trước, chuyển S3 managed bằng cấu hình | Accepted · một phần supersedes ADR-0075 | OQ-10, OQ-21 |
-| [0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) | Bỏ MFA (TOTP) cho đăng nhập Admin Portal | Accepted (rủi ro được chấp nhận) · một phần supersedes ADR-0091, 0009, 0022, 0027, 0029, 0063, 0064, 0066, 0067, 0068, 0072, 0086, 0090 | — |
+| [0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) | Bỏ MFA (TOTP) cho đăng nhập Admin Portal | Accepted (rủi ro được chấp nhận) · một phần supersedes ADR-0091, 0009, 0022, 0027, 0029, 0063, 0064, 0066, 0067, 0068, 0072, 0086, 0090 · một phần superseded by ADR-0096 | — |
 | [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | Bỏ khái niệm lớp: học sinh thuộc trường theo khối (bỏ enrollment, course, learning path, lịch, nhóm học tập; DROP một lần) | Accepted · supersedes ADR-0084 · một phần supersedes ADR-0005, 0020, 0021, 0026, 0027, 0034, 0043, 0046, 0050, 0060, 0061, 0062, 0063, 0072, 0080 · ngoại lệ mục 2 ADR-0070 | — |
+| [0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md) | Chặn học sinh ở Admin Portal không được tính là đăng nhập sai | Proposed (đã triển khai) · một phần supersedes ADR-0066, 0091, 0094 | — |
 
 ## Quyết định hiện hành theo chủ đề
 
@@ -164,6 +165,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 
 | ADR | Quyết định hiện hành |
 |---|---|
+| [0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md) | Flow Keycloak của portal chỉ còn username → mật khẩu; module `identity` từ chối tài khoản không phải nhân sự **sau** khi Keycloak cấp token (`403 PORTAL_ACCESS_STAFF_ONLY`, thu hồi phiên) để học sinh vào nhầm portal không bị brute-force khóa khỏi game (Proposed, đã triển khai) |
 | [0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) | **Admin Portal không còn MFA/TOTP** cho mọi tài khoản, kể cả role platform (owner chấp nhận rủi ro): đăng nhập chỉ username/email + mật khẩu; route platform giữ gateway nội bộ + `azp = eduworld-portal` + role platform; phiên `platform_staff` tối đa 8 giờ từ lúc nhập mật khẩu; kiểm soát bù trừ ghi trong ADR |
 | [0086](ADR-0086-giu-phien-game-bang-refresh-token.md) | Refresh token lưu trong kho bảo mật thiết bị cá nhân (xoay vòng, gắn thiết bị); còn hạn thì không đăng nhập lại; máy dùng chung chỉ giữ trong RAM |
 | [0085](ADR-0085-don-hoc-sinh-giu-user-keycloak.md) | Dọn học sinh: giữ user Keycloak enabled, gỡ membership, thu hồi phiên; tự khôi phục khi đăng nhập lại |

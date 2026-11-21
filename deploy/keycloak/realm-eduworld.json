@@ -310,26 +310,6 @@
       }
     },
     {
-      "alias": "ew-portal-not-tenant-staff",
-      "config": {
-        "condUserRole": "tenant_staff",
-        "negate": "true"
-      }
-    },
-    {
-      "alias": "ew-portal-not-platform-staff",
-      "config": {
-        "condUserRole": "platform_staff",
-        "negate": "true"
-      }
-    },
-    {
-      "alias": "ew-portal-deny",
-      "config": {
-        "denyErrorMessage": "portalStudentDenied"
-      }
-    },
-    {
       "alias": "ew-game-ref-pwd",
       "config": {
         "default.reference.value": "pwd"
@@ -401,7 +381,7 @@
     },
     {
       "alias": "eduworld-portal-direct-grant",
-      "description": "Admin Portal login through module identity: staff only, password only, no OTP (ADR-0091, ADR-0094)",
+      "description": "Admin Portal login through module identity: password only, no OTP (ADR-0091, ADR-0094); the staff-only check is done by module identity after the grant so a student is never counted as a failed login (ADR-0096)",
       "providerId": "basic-flow",
       "topLevel": true,
       "builtIn": false,
@@ -418,46 +398,6 @@
           "authenticatorConfig": "ew-portal-ref-pwd",
           "requirement": "REQUIRED",
           "priority": 20,
-          "authenticatorFlow": false,
-          "userSetupAllowed": false
-        },
-        {
-          "flowAlias": "eduworld-portal-deny-non-staff",
-          "requirement": "CONDITIONAL",
-          "priority": 30,
-          "authenticatorFlow": true,
-          "userSetupAllowed": false
-        }
-      ]
-    },
-    {
-      "alias": "eduworld-portal-deny-non-staff",
-      "description": "Deny users with neither tenant_staff nor platform_staff (students)",
-      "providerId": "basic-flow",
-      "topLevel": false,
-      "builtIn": false,
-      "authenticationExecutions": [
-        {
-          "authenticator": "conditional-user-role",
-          "authenticatorConfig": "ew-portal-not-tenant-staff",
-          "requirement": "REQUIRED",
-          "priority": 10,
-          "authenticatorFlow": false,
-          "userSetupAllowed": false
-        },
-        {
-          "authenticator": "conditional-user-role",
-          "authenticatorConfig": "ew-portal-not-platform-staff",
-          "requirement": "REQUIRED",
-          "priority": 20,
-          "authenticatorFlow": false,
-          "userSetupAllowed": false
-        },
-        {
-          "authenticator": "deny-access-authenticator",
-          "authenticatorConfig": "ew-portal-deny",
-          "requirement": "REQUIRED",
-          "priority": 30,
           "authenticatorFlow": false,
           "userSetupAllowed": false
         }
