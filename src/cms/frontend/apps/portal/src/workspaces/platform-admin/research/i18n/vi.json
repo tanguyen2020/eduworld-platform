@@ -43,7 +43,7 @@
     "recommendation_rule": "Luật gợi ý"
   },
   "unit": {
-    "class": "Theo lớp",
+    "school_grade": "Theo cụm (trường, khối)",
     "student": "Theo học sinh"
   },
   "stopReason": {
@@ -81,13 +81,11 @@
     "expired": "Hết hạn"
   },
   "studies": {
-    "intro": "Nghiên cứu đo hiệu quả bằng bài kiểm tra độc lập trước/sau có lớp so sánh. Học sinh không thấy điểm, không nhận XP; mọi số liệu do hệ thống tính và đã ẩn ô nhỏ.",
+    "intro": "Nghiên cứu đo hiệu quả bằng bài kiểm tra độc lập trước/sau có nhóm so sánh theo cụm (trường, khối). Học sinh không thấy điểm, không nhận XP; mọi số liệu do hệ thống tính và đã ẩn ô nhỏ.",
     "tab": "Nghiên cứu",
     "code": "Mã nghiên cứu",
     "title": "Tên nghiên cứu",
     "grade": "Khối",
-    "classes": "Lớp / cặp",
-    "classCount": "{{classes}} lớp · {{pairs}} cặp",
     "tenants": "Số tenant",
     "create": "Tạo nghiên cứu",
     "createHelp": "Hai dạng đề A/B là version blueprint đo hiệu quả đã publish, cùng môn/khối và phủ đúng các mục tiêu đã chọn.",
@@ -98,13 +96,15 @@
     "formB": "Dạng đề B (blueprint version)",
     "minWeeks": "Số tuần can thiệp tối thiểu",
     "activate": "Kích hoạt",
-    "activateConfirm": "Kích hoạt sẽ gán nhánh còn trống và khóa cặp lớp, dạng đề. Tiếp tục?",
+    "activateConfirm": "Kích hoạt sẽ gán nhánh còn trống và khóa cặp cụm, dạng đề. Tiếp tục?",
     "activated": "Đã kích hoạt nghiên cứu.",
     "complete": "Kết thúc nghiên cứu",
     "completeConfirm": "Kết thúc nghiên cứu? Không lập thêm đợt kiểm tra được nữa.",
     "completed": "Đã kết thúc nghiên cứu.",
     "activatedAt": "Kích hoạt lúc",
-    "completedAt": "Kết thúc lúc"
+    "completedAt": "Kết thúc lúc",
+    "cohorts": "Cụm / cặp",
+    "cohortCount": "{{cohorts}} cụm · {{pairs}} cặp"
   },
   "agreements": {
     "tab": "Thỏa thuận tham gia",
@@ -125,28 +125,10 @@
     "revokeHelp": "Thu hồi sẽ rút toàn bộ học sinh của tenant khỏi mọi nghiên cứu đang chạy và đưa các em về nhánh control của mọi thử nghiệm.",
     "revoked": "Đã thu hồi thỏa thuận."
   },
-  "classes": {
-    "tab": "Lớp và cặp",
-    "class": "Lớp",
-    "classId": "Mã lớp (class_id)",
-    "pair": "Cặp số",
-    "arm": "Nhánh",
-    "armRandom": "Gán ngẫu nhiên khi kích hoạt",
-    "formOrder": "Thứ tự dạng đề",
-    "formOrderAuto": "Tự xen kẽ theo cặp",
-    "participants": "Học sinh tham gia",
-    "add": "Thêm lớp",
-    "addHelp": "Lớp phải thuộc tenant đích, đúng khối và tenant có thỏa thuận còn hiệu lực phủ nghiên cứu hiệu quả.",
-    "added": "Đã thêm lớp.",
-    "remove": "Bỏ lớp",
-    "removeConfirm": "Bỏ lớp khỏi nghiên cứu nháp?",
-    "locked": "Nghiên cứu đã kích hoạt: cặp lớp, nhánh và dạng đề đã khóa."
-  },
   "waves": {
     "tab": "Đợt kiểm tra",
     "kind": "Loại đợt",
     "form": "Dạng đề",
-    "formByClass": "Theo thứ tự của từng lớp",
     "window": "Cửa sổ làm bài",
     "sessions": "Số phiên thi",
     "counts": "Mời / đã làm / vắng",
@@ -155,7 +137,8 @@
     "schedule": "Lập đợt kiểm tra",
     "scheduleHelp": "Đợt sau can thiệp phải mở sau khi đợt trước đóng ít nhất {{weeks}} tuần.",
     "scheduled": "Đã lập đợt kiểm tra.",
-    "durationMinutes": "Thời gian làm bài (phút)"
+    "durationMinutes": "Thời gian làm bài (phút)",
+    "formByCohort": "Theo thứ tự của từng cụm"
   },
   "withdraw": {
     "tab": "Rút khỏi nghiên cứu",
@@ -164,7 +147,7 @@
     "scopeKind": {
       "tenant": "Cả tenant",
       "school": "Một trường",
-      "class": "Một lớp",
+      "cohort": "Một cụm (trường, khối)",
       "students": "Danh sách học sinh"
     },
     "schoolId": "Mã trường (school_id)",
@@ -181,7 +164,7 @@
     "excludedCount": "Số câu bị loại",
     "finishedAt": "Tính xong lúc",
     "failed": "Báo cáo thất bại. Thử tạo lại sau.",
-    "descriptiveOnly": "Số lớp mỗi nhóm dưới khuyến nghị cỡ mẫu: chỉ dùng như thống kê mô tả.",
+    "descriptiveOnly": "Số cụm mỗi nhóm dưới khuyến nghị cỡ mẫu: chỉ dùng như thống kê mô tả.",
     "attritionWarning": "Tỉ lệ rời nghiên cứu vượt ngưỡng cảnh báo.",
     "arms": "Theo nhóm",
     "metric": "Chỉ số",
@@ -199,7 +182,6 @@
       "thresholds": "Ngưỡng áp dụng"
     },
     "field": {
-      "classes": "Số lớp",
       "participants": "Học sinh tham gia",
       "analysed": "Học sinh được phân tích",
       "withdrawn": "Đã rút",
@@ -219,7 +201,8 @@
       "icc": "ICC",
       "design_effect": "Design effect",
       "n_intervention": "n can thiệp",
-      "n_comparison": "n so sánh"
+      "n_comparison": "n so sánh",
+      "cohorts": "Số cụm"
     }
   },
   "dataset": {
@@ -234,7 +217,7 @@
     "kind": "Loại thử nghiệm",
     "allKinds": "Mọi loại",
     "unit": "Đơn vị phân nhánh",
-    "unitHelp": "Theo lớp: mọi học sinh cùng lớp luôn cùng nhánh.",
+    "unitHelp": "Theo cụm (trường, khối): mọi học sinh của cụm luôn cùng nhánh.",
     "arms": "Nhánh",
     "period": "Thời gian",
     "stopReason": "Lý do dừng",
@@ -274,5 +257,26 @@
     "primary": "Chỉ số chính",
     "logLoss": "Log-loss dự đoán",
     "minutes": "Phút học TB"
+  },
+  "cohorts": {
+    "tab": "Cụm (trường, khối) và cặp",
+    "school": "Trường",
+    "schoolId": "Mã trường (school_id)",
+    "grade": "Khối",
+    "gradeN": "Khối {{n}}",
+    "conflict": "Xung đột",
+    "conflictYes": "Cụm có học sinh ở hai nhánh — cần xử lý",
+    "pair": "Cặp số",
+    "arm": "Nhánh",
+    "armRandom": "Gán ngẫu nhiên khi kích hoạt",
+    "formOrder": "Thứ tự dạng đề",
+    "formOrderAuto": "Tự xen kẽ theo cặp",
+    "participants": "Học sinh tham gia",
+    "add": "Thêm cụm",
+    "addHelp": "Cụm là khối của nghiên cứu trong một trường thuộc tenant đích; tenant phải có thỏa thuận còn hiệu lực phủ nghiên cứu hiệu quả.",
+    "added": "Đã thêm cụm.",
+    "remove": "Bỏ cụm",
+    "removeConfirm": "Bỏ cụm khỏi nghiên cứu nháp?",
+    "locked": "Nghiên cứu đã kích hoạt: cặp cụm, nhánh và dạng đề đã khóa."
   }
 }

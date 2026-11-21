@@ -119,17 +119,24 @@ describe('Xuất báo cáo (US4)', () => {
     fireEvent.click(await screen.findByTitle('Báo cáo tham khảo TT27/TT22'));
     expect(await screen.findByTestId('regulation-disclaimer')).toHaveTextContent('Tham khảo — không thay đánh giá chính thức');
     expect(screen.getByRole('button', { name: 'Xuất báo cáo' })).toBeDisabled();
+    // the skill map needs school, grade and subject (ADR-0095: by grade, no class)
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Loại báo cáo' }));
+    fireEvent.click(await screen.findByTitle('Bản đồ kỹ năng của khối'));
+    expect(await screen.findByRole('combobox', { name: 'Khối' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Lớp' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Xuất báo cáo' })).toBeDisabled();
     stopPortals();
     cleanup();
-    await renderDashboard(`/school-lms/school-dashboard/reference?school=${IDS.schoolA}&subject=${IDS.subjectMath}&preset=7d&from=2026-11-15&to=2026-11-21`);
+    const { backend } = await renderDashboard(`/school-lms/school-dashboard/reference?school=${IDS.schoolA}&grade=3&subject=${IDS.subjectMath}&preset=7d&from=2026-11-15&to=2026-11-21`);
     const page = await screen.findByTestId('dashboard-reference');
     expect(within(page).getByTestId('regulation-disclaimer')).toHaveTextContent('Tham khảo — không thay đánh giá chính thức');
     expect(await within(page).findByText('Chưa đủ dữ liệu')).toBeInTheDocument();
     expect(within(page).getByText('Hoàn thành')).toBeInTheDocument();
     expect(await within(page).findByText('Mức tham khảo suy ra từ kết quả tự chấm theo hồ sơ đánh giá.')).toBeInTheDocument();
-    // no class filter or class name (ADR-0095); rows are numbered until the report carries names (WP-L2)
+    // filtered by grade (no class); names come from the students of the grade (listTenantGradeStudents)
     expect(within(page).queryByRole('combobox', { name: 'Lớp' })).toBeNull();
-    expect(within(page).getAllByText(/^Học sinh \d+$/).length).toBeGreaterThan(0);
+    expect(new URLSearchParams(backend.calls('GET', `/lms/schools/${IDS.schoolA}/reference-levels`).at(-1)!.search).get('grade_level')).toBe('3');
+    expect(await within(page).findByText('Nguyễn An')).toBeInTheDocument();
   });
 });
 

@@ -43,7 +43,7 @@
     "recommendation_rule": "Recommendation rules"
   },
   "unit": {
-    "class": "By class",
+    "school_grade": "By cohort (school, grade)",
     "student": "By student"
   },
   "stopReason": {
@@ -81,13 +81,11 @@
     "expired": "Expired"
   },
   "studies": {
-    "intro": "Efficacy studies use independent pre/post tests with comparison classes. Students see no score and get no XP; every figure is computed by the system with small cells hidden.",
+    "intro": "Efficacy studies use independent pre/post tests with comparison cohorts (school, grade). Students see no score and get no XP; every figure is computed by the system with small cells hidden.",
     "tab": "Studies",
     "code": "Study code",
     "title": "Study title",
     "grade": "Grade",
-    "classes": "Classes / pairs",
-    "classCount": "{{classes}} classes · {{pairs}} pairs",
     "tenants": "Tenants",
     "create": "Create study",
     "createHelp": "Forms A/B are published efficacy blueprint versions of the same subject/grade covering exactly the selected objectives.",
@@ -104,7 +102,9 @@
     "completeConfirm": "Complete the study? No further test wave can be scheduled.",
     "completed": "Study completed.",
     "activatedAt": "Activated",
-    "completedAt": "Completed"
+    "completedAt": "Completed",
+    "cohorts": "Cohorts / pairs",
+    "cohortCount": "{{cohorts}} cohorts · {{pairs}} pairs"
   },
   "agreements": {
     "tab": "Participation agreements",
@@ -125,28 +125,10 @@
     "revokeHelp": "Revoking withdraws every student of the tenant from the running studies and moves them back to the control arm of every experiment.",
     "revoked": "Agreement revoked."
   },
-  "classes": {
-    "tab": "Classes and pairs",
-    "class": "Class",
-    "classId": "Class id (class_id)",
-    "pair": "Pair no.",
-    "arm": "Arm",
-    "armRandom": "Random at activation",
-    "formOrder": "Form order",
-    "formOrderAuto": "Alternated by pair",
-    "participants": "Participants",
-    "add": "Add class",
-    "addHelp": "The class must belong to the target tenant, be of the study grade, and the tenant needs an active agreement covering efficacy studies.",
-    "added": "Class added.",
-    "remove": "Remove class",
-    "removeConfirm": "Remove the class from the draft study?",
-    "locked": "The study is active: pairs, arms and forms are locked."
-  },
   "waves": {
     "tab": "Test waves",
     "kind": "Wave",
     "form": "Form",
-    "formByClass": "By the order of each class",
     "window": "Test window",
     "sessions": "Exam sessions",
     "counts": "Invited / done / absent",
@@ -155,7 +137,8 @@
     "schedule": "Schedule wave",
     "scheduleHelp": "The post-test opens at least {{weeks}} weeks after the pre-test closes.",
     "scheduled": "Wave scheduled.",
-    "durationMinutes": "Test duration (minutes)"
+    "durationMinutes": "Test duration (minutes)",
+    "formByCohort": "In each cohort’s order"
   },
   "withdraw": {
     "tab": "Withdraw from the study",
@@ -164,7 +147,7 @@
     "scopeKind": {
       "tenant": "Whole tenant",
       "school": "One school",
-      "class": "One class",
+      "cohort": "One cohort (school, grade)",
       "students": "List of students"
     },
     "schoolId": "School id (school_id)",
@@ -181,7 +164,7 @@
     "excludedCount": "Excluded questions",
     "finishedAt": "Computed",
     "failed": "The report failed. Try again later.",
-    "descriptiveOnly": "Fewer classes per arm than the recommended sample: descriptive statistics only.",
+    "descriptiveOnly": "Fewer cohorts per arm than the recommended sample: descriptive statistics only.",
     "attritionWarning": "Attrition is above the warning threshold.",
     "arms": "By arm",
     "metric": "Metric",
@@ -199,7 +182,6 @@
       "thresholds": "Thresholds applied"
     },
     "field": {
-      "classes": "Classes",
       "participants": "Participants",
       "analysed": "Analysed",
       "withdrawn": "Withdrawn",
@@ -219,7 +201,8 @@
       "icc": "ICC",
       "design_effect": "Design effect",
       "n_intervention": "n intervention",
-      "n_comparison": "n comparison"
+      "n_comparison": "n comparison",
+      "cohorts": "Cohorts"
     }
   },
   "dataset": {
@@ -234,7 +217,7 @@
     "kind": "Kind",
     "allKinds": "All kinds",
     "unit": "Assignment unit",
-    "unitHelp": "By class: every student of a class is always in the same arm.",
+    "unitHelp": "By cohort (school, grade): every student of a cohort is always in the same arm.",
     "arms": "Arms",
     "period": "Period",
     "stopReason": "Stop reason",
@@ -274,5 +257,26 @@
     "primary": "Primary metric",
     "logLoss": "Prediction log-loss",
     "minutes": "Avg. study minutes"
+  },
+  "cohorts": {
+    "tab": "Cohorts (school, grade) and pairs",
+    "school": "School",
+    "schoolId": "School id (school_id)",
+    "grade": "Grade",
+    "gradeN": "Grade {{n}}",
+    "conflict": "Conflict",
+    "conflictYes": "Cohort has students in two arms — to resolve",
+    "pair": "Pair no.",
+    "arm": "Arm",
+    "armRandom": "Random assignment on activation",
+    "formOrder": "Form order",
+    "formOrderAuto": "Alternate by pair",
+    "participants": "Participants",
+    "add": "Add cohort",
+    "addHelp": "A cohort is the grade of the study in one school of the target tenant; the tenant needs a valid agreement covering efficacy research.",
+    "added": "Cohort added.",
+    "remove": "Remove cohort",
+    "removeConfirm": "Remove the cohort from the draft study?",
+    "locked": "The study is active: cohort pairs, arms and forms are locked."
   }
 }

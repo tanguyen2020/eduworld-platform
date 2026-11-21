@@ -33,12 +33,12 @@
       "safety": "⑤ Safety"
     },
     "empty": {
-      "assignments": "No open assignment yet. Assign the first one to a class.",
+      "assignments": "No open assignment yet. Assign the first one to a grade.",
       "weak": "No objective needs consolidation in this period.",
       "attention": "No student needs attention in this period.",
       "selfStudy": "No self-study data yet.",
       "safety": "No data yet.",
-      "heatmap": "The class has no learning evidence per objective in this period.",
+      "heatmap": "The grade has no learning evidence per objective in this period.",
       "summary": "No summary data for this scope yet."
     },
     "filter": {
@@ -54,12 +54,14 @@
       "completion": "Submission rate",
       "none": "No assignment due soon.",
       "item": "{{title}} — due {{due}}",
-      "submitted": "{{submitted}}/{{total}}"
+      "submitted": "{{submitted}}/{{total}}",
+      "byGrade": "Completion by grade"
     },
     "weak": {
       "assignPractice": "Assign practice for this objective",
       "codeRef": "{{code}} ({{ref}})",
-      "belowProficient": "{{ratio}} of students below proficient"
+      "belowProficient": "{{ratio}} of students below proficient",
+      "skillMap": "Skill map"
     },
     "attention": {
       "total": "{{count}} students need support"
@@ -138,7 +140,7 @@
       "R3": "Review the prerequisite first",
       "R4": "Review fading knowledge",
       "R5": "Relearn an objective after the test",
-      "R6": "New lesson from the class schedule",
+      "R6": "New lesson",
       "R7": "Take the warm-up test",
       "R8": "Mixed practice across topics",
       "R9": "Retry wrong questions"
@@ -184,7 +186,8 @@
       "types": {
         "assignment_results": "Assignment results",
         "regulation_reference": "Reference report TT27/TT22",
-        "school_monthly": "Monthly school report"
+        "school_monthly": "Monthly school report",
+        "skill_map": "Skill map of a grade"
       }
     },
     "reference": {
@@ -223,6 +226,17 @@
       "minutes": "Average study minutes",
       "attempts": "Attempts",
       "excluded": "{{count}} test tenants are excluded from the summary."
+    },
+    "grade": {
+      "summary": "{{name}} overview",
+      "heatmap": "Skill map (LO × level)",
+      "heatmapCaption": "Mastery levels by LO of {{name}}",
+      "objective": "LO",
+      "students": "Students of {{name}}",
+      "searchStudent": "Search students by name",
+      "noMatch": "No matching student.",
+      "suppressed": "Fewer than 5 students in this grade: totals are hidden to protect students.",
+      "unknown": "Unknown grade"
     }
   }
 }

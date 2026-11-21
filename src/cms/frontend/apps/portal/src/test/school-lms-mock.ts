@@ -26,6 +26,14 @@ export const IDS = {
 } as const;
 
 const T_A = TENANTS.thDemoA.tenant_id;
+
+/** Students of TH Demo A by grade (listTenantGradeStudents). */
+export const GRADE_STUDENTS = [
+  { student_id: IDS.studentAn, display_name: 'Nguyễn An', student_code: 'HS001', username: 'hs.an.3a', status: 'active', source: 'sis', grade_level: 3, last_login_at: '2026-11-17T08:00:00Z', days_since_last_login: 2 },
+  { student_id: '0193a4d2-4000-7000-8000-0000000000b2', display_name: 'Lê Bình', student_code: 'HS003', username: 'hs.binh.3a', status: 'active', source: 'sis', grade_level: 3, last_login_at: null, days_since_last_login: null },
+  { student_id: IDS.studentSapBiDon, display_name: 'Trần Sắp Bị Dọn', student_code: 'HS002', username: 'hs.sapbidon', status: 'active', source: 'sis', grade_level: 3, last_login_at: null, days_since_last_login: null },
+  { student_id: '0193a4d2-4000-7000-8000-0000000000c4', display_name: 'Phạm Cường', student_code: 'HS004', username: 'hs.cuong.4b', status: 'active', source: 'sis', grade_level: 4, last_login_at: null, days_since_last_login: null },
+];
 const T_PGD = TENANTS.pgdDemo.tenant_id;
 const T_B = TENANTS.thcsDemoB.tenant_id;
 const page = (items: unknown[], key = 'items') => ({ [key]: items, page: { has_more: false, limit: 50, next_cursor: null } });
@@ -181,19 +189,21 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
         if (b.username === 'ad.truong.a') return problem(409, 'USERNAME_TAKEN');
         return json(201, { user_id: '0193a4d2-1111-7000-8000-0000000000ff', user_type: 'staff', status: 'pending', username: b.username, version: 1 });
       }
-      // MOCK filters of listTenantUsers: user_type, school_id (students of the school), q (name/username); tenant A only
-      const q = new URLSearchParams(r.search);
+      // MOCK of listTenantUsers (unfiltered list of "Người dùng & phân quyền")
       const users = [
         { user_id: IDS.userQlcm, user_type: 'staff', status: 'active', username: 'qlcm.truong.a', email: 'qlcm.a@thdemo.edu.vn', display_name: 'Cán bộ B', source: 'manual', user_roles: [], version: 1 },
         { user_id: IDS.studentAn, user_type: 'student', status: 'active', username: 'hs.an.3a', display_name: 'Nguyễn An', source: 'sis', last_login_at: '2026-11-17T08:00:00Z', version: 1 },
       ];
-      const text = (q.get('q') ?? '').toLowerCase();
-      const keep = (u: (typeof users)[number]) =>
-        tenantOf(r) === T_A &&
-        (!q.get('user_type') || u.user_type === q.get('user_type')) &&
-        (!q.get('school_id') || (u.user_type === 'student' && q.get('school_id') === IDS.schoolA)) &&
-        (!text || `${u.display_name} ${u.username}`.toLowerCase().includes(text));
-      return json(200, page(users.filter(keep)));
+      return json(200, page(users));
+    }
+    if ((x = /^\/tenant\/schools\/([^/]+)\/grades\/(\d+)\/students$/.exec(p)) && m === 'GET') {
+      // MOCK of listTenantGradeStudents (ADR-0095): school of another tenant / outside the scope → 404, grade outside 1–9 → 422
+      if (!schoolIn(r, x[1]!)) return problem(404, 'NOT_FOUND');
+      const grade = Number(x[2]);
+      if (grade < 1 || grade > 9) return problem(422, 'VALIDATION_FAILED', { errors: [{ field: 'grade_level', code: 'OUT_OF_RANGE' }] });
+      const text = (new URLSearchParams(r.search).get('q') ?? '').toLowerCase();
+      const rows = GRADE_STUDENTS.filter((s) => x![1] === IDS.schoolA && s.grade_level === grade && (!text || `${s.display_name} ${s.username} ${s.student_code ?? ''}`.toLowerCase().includes(text)));
+      return json(200, page(rows));
     }
     if (m === 'GET' && p === '/tenant/permissions') {
       return json(200, {

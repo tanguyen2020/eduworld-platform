@@ -1,4 +1,4 @@
-// Research API hooks of workspace D (F035 US8, F035-AC-35): research agreements, efficacy studies (classes, waves,
+// Research API hooks of workspace D (F035 US8, F035-AC-35): research agreements, efficacy studies (cohorts = school × grade of the study — ADR-0095, waves,
 // withdrawals, reports, pseudonymised dataset) and A/B learning experiments. Hooks only call the API and shape the
 // requests — every rule (pairing, statistics, guardrails, small-cell suppression) is computed by the backend (AGENTS
 // R1, R7). Tenant writes carry the X-Tenant-Id of their target tenant; lists of tenant data carry `tenant_ids[]`
@@ -13,8 +13,8 @@ export type ResearchAgreementCreate = Schemas['ResearchAgreementCreate'];
 export type EfficacyStudy = Schemas['EfficacyStudy'];
 export type EfficacyStudyCreate = Schemas['EfficacyStudyCreate'];
 export type EfficacyStudyStatus = Schemas['EfficacyStudyStatus'];
-export type EfficacyStudyClass = Schemas['EfficacyStudyClass'];
-export type EfficacyStudyClassCreate = Schemas['EfficacyStudyClassCreate'];
+export type EfficacyStudyCohort = Schemas['EfficacyStudyCohort'];
+export type EfficacyStudyCohortCreate = Schemas['EfficacyStudyCohortCreate'];
 export type EfficacyWave = Schemas['EfficacyWave'];
 export type EfficacyWaveCreate = Schemas['EfficacyWaveCreate'];
 export type EfficacyWithdrawalCreate = Schemas['EfficacyWithdrawalCreate'];
@@ -33,7 +33,7 @@ export const EXPERIMENT_STATUSES: readonly LearningExperimentStatus[] = ['draft'
 export const EXPERIMENT_KINDS: readonly LearningExperimentKind[] = ['mastery_model', 'recommendation_rule'];
 export const WAVE_KINDS: readonly Schemas['EfficacyWaveKind'][] = ['validation', 'pre', 'post'];
 export const ARMS: readonly Schemas['EfficacyArm'][] = ['intervention', 'comparison', 'validation'];
-export const WITHDRAW_SCOPES: readonly EfficacyWithdrawalCreate['scope'][] = ['tenant', 'school', 'class', 'students'];
+export const WITHDRAW_SCOPES: readonly EfficacyWithdrawalCreate['scope'][] = ['tenant', 'school', 'cohort', 'students'];
 /** Parameters of the rule engine an arm may change (backend catalog, spec Clarifications 2026-11-21 (b)). */
 export const RULE_PARAMS = ['review_threshold', 'max_recommendations', 'prerequisite_depth', 'spaced_review_days', 'practice_difficulty', 'diagnostic_threshold'] as const;
 
@@ -141,25 +141,25 @@ export function useStudyTransition(studyId: string, transition: 'activate' | 'co
   );
 }
 
-export function useStudyClasses(studyId: string) {
+export function useStudyCohorts(studyId: string) {
   const api = usePlatformApi();
   const scope = useCrossTenantScope();
   const query = scope.listQuery({});
-  return useItemsList<EfficacyStudyClass>([...studyKey(studyId), 'classes', query], (cursor) =>
-    api.call<ItemsPage<EfficacyStudyClass>>(
-      api.client.GET('/admin/learning/efficacy-studies/{study_id}/classes', { params: { path: { study_id: studyId }, query: { ...query, ...pageQuery(cursor) } } }),
+  return useItemsList<EfficacyStudyCohort>([...studyKey(studyId), 'cohorts', query], (cursor) =>
+    api.call<ItemsPage<EfficacyStudyCohort>>(
+      api.client.GET('/admin/learning/efficacy-studies/{study_id}/cohorts', { params: { path: { study_id: studyId }, query: { ...query, ...pageQuery(cursor) } } }),
     ),
   );
 }
 
-export function useAddStudyClass(studyId: string) {
+export function useAddStudyCohort(studyId: string) {
   const api = usePlatformApi();
   const scope = useCrossTenantScope();
   const qc = useQueryClient();
   return useIdempotentMutation(
-    ({ tenantId, body }: { tenantId: string; body: EfficacyStudyClassCreate }, headers) =>
-      api.call<EfficacyStudyClass>(
-        api.client.POST('/admin/learning/efficacy-studies/{study_id}/classes', {
+    ({ tenantId, body }: { tenantId: string; body: EfficacyStudyCohortCreate }, headers) =>
+      api.call<EfficacyStudyCohort>(
+        api.client.POST('/admin/learning/efficacy-studies/{study_id}/cohorts', {
           params: { path: { study_id: studyId } },
           body,
           headers: { ...headers, ...scope.writeHeaders(tenantId) },
@@ -169,15 +169,15 @@ export function useAddStudyClass(studyId: string) {
   );
 }
 
-export function useRemoveStudyClass(studyId: string) {
+export function useRemoveStudyCohort(studyId: string) {
   const api = usePlatformApi();
   const scope = useCrossTenantScope();
   const qc = useQueryClient();
   return useIdempotentMutation(
-    (c: EfficacyStudyClass, headers) =>
+    (c: EfficacyStudyCohort, headers) =>
       api.call<unknown>(
-        api.client.DELETE('/admin/learning/efficacy-studies/{study_id}/classes/{class_id}', {
-          params: { path: { study_id: studyId, class_id: c.class_id } },
+        api.client.DELETE('/admin/learning/efficacy-studies/{study_id}/cohorts/{school_id}', {
+          params: { path: { study_id: studyId, school_id: c.school_id } },
           headers: { ...headers, ...scope.writeHeaders(c.tenant_id) },
         }),
       ),

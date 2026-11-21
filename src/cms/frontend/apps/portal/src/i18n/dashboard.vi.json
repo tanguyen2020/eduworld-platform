@@ -33,12 +33,12 @@
       "safety": "⑤ An toàn"
     },
     "empty": {
-      "assignments": "Chưa có bài giao đang mở. Hãy giao bài đầu tiên cho lớp.",
+      "assignments": "Chưa có bài giao đang mở. Hãy giao bài đầu tiên cho một khối.",
       "weak": "Chưa có LO nào cần củng cố trong khoảng này.",
       "attention": "Chưa có học sinh cần chú ý trong khoảng này.",
       "selfStudy": "Chưa có số liệu tự học.",
       "safety": "Chưa có số liệu.",
-      "heatmap": "Lớp chưa có bằng chứng học tập theo LO trong khoảng này.",
+      "heatmap": "Khối chưa có bằng chứng học tập theo LO trong khoảng này.",
       "summary": "Chưa có số liệu tổng hợp cho phạm vi này."
     },
     "filter": {
@@ -54,12 +54,14 @@
       "completion": "Tỉ lệ nộp",
       "none": "Không có bài giao sắp hạn.",
       "item": "{{title}} — hạn {{due}}",
-      "submitted": "{{submitted}}/{{total}}"
+      "submitted": "{{submitted}}/{{total}}",
+      "byGrade": "Tỉ lệ nộp theo khối"
     },
     "weak": {
       "assignPractice": "Giao ôn tập theo LO",
       "codeRef": "{{code}} ({{ref}})",
-      "belowProficient": "{{ratio}} học sinh dưới mức thành thạo"
+      "belowProficient": "{{ratio}} học sinh dưới mức thành thạo",
+      "skillMap": "Bản đồ kỹ năng"
     },
     "attention": {
       "total": "{{count}} học sinh cần hỗ trợ"
@@ -138,7 +140,7 @@
       "R3": "Ôn LO tiên quyết trước",
       "R4": "Ôn lại kiến thức đang quên",
       "R5": "Học lại LO sau bài kiểm tra",
-      "R6": "Học bài mới theo lịch lớp",
+      "R6": "Học bài mới",
       "R7": "Làm bài khởi động",
       "R8": "Luyện trộn nhiều chủ đề",
       "R9": "Ôn câu sai"
@@ -184,7 +186,8 @@
       "types": {
         "assignment_results": "Kết quả bài giao",
         "regulation_reference": "Báo cáo tham khảo TT27/TT22",
-        "school_monthly": "Báo cáo trường theo tháng"
+        "school_monthly": "Báo cáo trường theo tháng",
+        "skill_map": "Bản đồ kỹ năng của khối"
       }
     },
     "reference": {
@@ -223,6 +226,17 @@
       "minutes": "Phút học trung bình",
       "attempts": "Lượt làm bài",
       "excluded": "{{count}} tenant thử nghiệm không được tính vào tổng hợp."
+    },
+    "grade": {
+      "summary": "Tổng quan {{name}}",
+      "heatmap": "Bản đồ kỹ năng (LO × mức)",
+      "heatmapCaption": "Phân bố mức thành thạo theo LO của {{name}}",
+      "objective": "LO",
+      "students": "Học sinh {{name}}",
+      "searchStudent": "Tìm học sinh theo tên",
+      "noMatch": "Không có học sinh khớp.",
+      "suppressed": "Khối có dưới 5 học sinh: số tổng hợp được ẩn để bảo vệ học sinh.",
+      "unknown": "Chưa rõ khối"
     }
   }
 }

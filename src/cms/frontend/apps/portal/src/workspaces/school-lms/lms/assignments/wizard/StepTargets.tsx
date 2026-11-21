@@ -1,16 +1,16 @@
 // Step 2 "Đối tượng" (F055 T018; F055-AC-02, AC-04; ADR-0095 mục 3): the school (schools of the user's scope), the
 // subject (subjects of the tenant, only those of a subject-scoped role), then either "Theo khối" — one or more grades the
 // school teaches, optional students of other grades of the same school to add, optional students to leave out (exclude
-// wins) — or "Học sinh cụ thể" (a list of students of the school). Options only come from the API; limits come from
+// wins) — or "Học sinh cụ thể" (a list of students of the school). Students are picked grade by grade from
+// listTenantGradeStudents (search ≥ 2 characters on the server). Options only come from the API; limits come from
 // the contract (fieldSchemas). No class, study group or course (removed by ADR-0095). Presentational only (AGENTS R1).
-import { Alert, Form, Radio, Select, Typography } from 'antd';
+import { Alert, Flex, Form, Radio, Select, Typography } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMyPermissions } from '../../../../../shared/api/hooks/useMyPermissions';
-import { ApiError } from '../../../../../shared/api/middleware/problem';
 import { SchoolSelect } from '../../../common/SchoolSelect';
 import { subjectLabel, subjectsInScope } from '../../../dashboard/model/filters';
-import { useSchoolGrades, useSchoolStudentSearch, useTenantSubjects } from '../../api/targets';
+import { useGradeStudents, useSchoolGrades, useTenantSubjects } from '../../api/targets';
 import { excludedIncludes, type AssignmentFormValues, type TargetMode } from '../../model/assignmentForm';
 import { LMS_LIMITS } from '../../model/fieldSchemas';
 import { LmsProblem } from '../../LmsUi';
@@ -31,6 +31,10 @@ const status = (e: string | undefined) => (e ? ('error' as const) : undefined);
 
 interface PickerProps {
   schoolId?: string;
+  /** Grades the school teaches (the picker lists one grade at a time). */
+  grades: number[];
+  /** Grade shown first (include: a grade not targeted; exclude: a targeted grade). */
+  initialGrade?: number;
   value: string[];
   onChange: (ids: string[]) => void;
   label: string;
@@ -40,35 +44,48 @@ interface PickerProps {
   labels: Map<string, string>;
 }
 
-/** Searchable multi-select of students of one school (interim search — lms/api/targets.ts). */
-function StudentPicker({ schoolId, value, onChange, label, max, testId, labels }: PickerProps) {
+/** Multi-select of students of one grade of the school at a time (listTenantGradeStudents), searchable on the server. */
+function StudentPicker({ schoolId, grades, initialGrade, value, onChange, label, max, testId, labels }: PickerProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
-  const found = useSchoolStudentSearch(schoolId, search);
-  for (const s of found.items) labels.set(s.user_id, s.display_name ? `${s.display_name} (${s.username})` : s.username);
-  const unavailable = found.error instanceof ApiError && found.error.status === 403;
-  const options = [...new Set([...value, ...found.items.map((s) => s.user_id)])].map((id) => ({ value: id, label: labels.get(id) ?? t('lms.wizard.studentPrefilled') }));
+  const [picked, setPicked] = useState<number | undefined>();
+  const grade = picked ?? initialGrade ?? grades[0];
+  const found = useGradeStudents(schoolId, grade, search);
+  for (const s of found.items) labels.set(s.student_id, `${s.display_name} (${s.username})`);
+  const options = [...new Set([...value, ...found.items.map((s) => s.student_id)])].map((id) => ({ value: id, label: labels.get(id) ?? t('lms.wizard.studentPrefilled') }));
   return (
-    <>
-      <Select
-        mode="multiple"
-        showSearch
-        filterOption={false}
-        allowClear
-        aria-label={label}
-        placeholder={t('lms.wizard.searchStudent')}
-        disabled={!schoolId}
-        value={value}
-        onSearch={setSearch}
-        onChange={(ids: string[]) => onChange(ids)}
-        loading={found.isFetching}
-        maxCount={max}
-        notFoundContent={search.trim().length < 2 ? t('lms.wizard.searchHint') : t('lms.picker.empty')}
-        options={options}
-        data-testid={testId}
-      />
-      {unavailable ? <Alert type="info" showIcon data-testid={`${testId}-unavailable`} message={t('lms.wizard.studentSearchUnavailable')} /> : <LmsProblem error={found.error} />}
-    </>
+    <Flex vertical gap="small">
+      <Flex gap="small" wrap>
+        <Select
+          aria-label={t('lms.wizard.pickerGrade', { label })}
+          value={grade}
+          disabled={!schoolId}
+          onChange={(g: number) => setPicked(g)}
+          options={grades.map((g) => ({ value: g, label: t('lms.wizard.gradeN', { n: g }) }))}
+          popupMatchSelectWidth={false}
+          data-testid={`${testId}-grade`}
+        />
+        <Select
+          mode="multiple"
+          showSearch
+          filterOption={false}
+          allowClear
+          aria-label={label}
+          placeholder={t('lms.wizard.searchStudent')}
+          disabled={!schoolId}
+          value={value}
+          onSearch={setSearch}
+          onChange={(ids: string[]) => onChange(ids)}
+          loading={found.isFetching}
+          maxCount={max}
+          notFoundContent={t('lms.wizard.noStudent')}
+          options={options}
+          data-testid={testId}
+          style={{ flex: 1, minWidth: 0 }}
+        />
+      </Flex>
+      <LmsProblem error={found.error} />
+    </Flex>
   );
 }
 
@@ -86,9 +103,11 @@ export function StepTargets({ v, set, errors }: { v: AssignmentFormValues; set: 
   );
   const subjectOptions = subjectsInScope(subjects.data ?? [], perms.data?.roles ?? []).map((s) => ({ value: s.subject_id, label: subjectLabel(s, i18n.language) }));
   const conflicts = excludedIncludes(v);
+  // include lists another grade than the targeted ones first; exclude starts on a targeted grade
+  const initialGrade = (field: StudentField) => (field === INCLUDE ? school.grades.find((g) => !v.grades.includes(g)) : field === EXCLUDE ? [...v.grades].sort((a, b) => a - b)[0] : undefined);
   const picker = (field: StudentField) => (
     <Form.Item label={t(`lms.wizard.${field}`)} required={field === 'studentIds'} validateStatus={status(errors[field])} help={errors[field]}>
-      <StudentPicker schoolId={v.schoolId} value={v[field]} onChange={(ids) => set({ [field]: ids })} label={t(`lms.wizard.${field}`)} max={STUDENT_MAX[field]} testId={`pick-${field}`} labels={labels} />
+      <StudentPicker schoolId={v.schoolId} grades={school.grades} initialGrade={initialGrade(field)} value={v[field]} onChange={(ids) => set({ [field]: ids })} label={t(`lms.wizard.${field}`)} max={STUDENT_MAX[field]} testId={`pick-${field}`} labels={labels} />
     </Form.Item>
   );
   return (

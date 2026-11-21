@@ -61,7 +61,7 @@ function StudyList() {
     { key: 'title', title: t('platform.research.studies.title'), render: (_, s) => s.title },
     { key: 'grade', title: t('platform.research.studies.grade'), render: (_, s) => s.grade_level },
     { key: 'status', title: t('platform.research.common.status'), render: (_, s) => <StatusTag status={s.status} /> },
-    { key: 'classes', title: t('platform.research.studies.classes'), render: (_, s) => t('platform.research.studies.classCount', { classes: s.class_count ?? 0, pairs: s.pair_count ?? 0 }) },
+    { key: 'cohorts', title: t('platform.research.studies.cohorts'), render: (_, s) => t('platform.research.studies.cohortCount', { cohorts: s.cohort_count ?? 0, pairs: s.pair_count ?? 0 }) },
     { key: 'tenants', title: t('platform.research.studies.tenants'), render: (_, s) => s.tenant_ids?.length ?? 0 },
     { key: 'created', title: t('platform.research.common.createdAt'), render: (_, s) => formatTime(s.created_at) },
   ];

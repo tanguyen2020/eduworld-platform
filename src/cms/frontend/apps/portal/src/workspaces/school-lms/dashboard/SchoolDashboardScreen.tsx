@@ -8,6 +8,7 @@ import { DashboardQueueProvider } from '@eduworld/ops-ui/dashboard';
 import { Route, Routes } from 'react-router-dom';
 import { SingleTenantGate } from '../common/scope';
 import { PageTitle } from '../common/ui';
+import { GradeDashboardPage } from './grade/GradeDashboardPage';
 import { DASHBOARD_CONFIG } from './model/limits';
 import { OverviewPage } from './overview/OverviewPage';
 import { ReferenceLevelsPage } from './reports/ReferenceLevelsPage';
@@ -22,6 +23,7 @@ export function SchoolDashboardScreen({ title }: { title: string }) {
           <DashboardQueueProvider limit={DASHBOARD_CONFIG.dashboard_max_concurrent_per_user}>
             <Routes>
               <Route index element={<OverviewPage />} />
+              <Route path="grades/:grade" element={<GradeDashboardPage />} />
               <Route path="students/:studentId" element={<StudentProfilePage />} />
               <Route path="reference" element={<ReferenceLevelsPage />} />
             </Routes>

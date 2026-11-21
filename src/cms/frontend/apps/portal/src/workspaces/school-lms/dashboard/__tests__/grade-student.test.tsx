@@ -1,8 +1,9 @@
 // F056 T022, T024, T025, T044 (US2, US6) rewritten for ADR-0095 (no class level) — F056-AC-08 (school → grade → student:
-// the grade filter keeps range/subject, breadcrumb school → grade → student, no class page, list or link even when the
-// server still sends class fields), F056-AC-10 ("Giao ôn tập theo LO" opens the F055 wizard with mode=practice, the LO,
-// the school, subject and grade of the filters), F056-AC-11 (profile tabs; no Game Rating / position / friends / chat /
-// IP / device id), F056-AC-21 (out of scope → "Không tìm thấy"). Backend = MOCK.
+// grades of the school on the overview, the grade page (getGradeDashboard) keeps range/subject, breadcrumb school → grade
+// → student, "< 5" for a grade under the small-cell threshold, no class page, list or link), F056-AC-09 (MasteryHeatmap
+// with symbols on the grade page), F056-AC-10 ("Giao ôn tập theo LO" opens the F055 wizard with mode=practice, the LO,
+// the school, subject, grade and the weak students), F056-AC-11 (profile tabs; no Game Rating / position / friends /
+// chat / IP / device id), F056-AC-21 (out of scope → "Không tìm thấy"). Backend = MOCK.
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { DASH_IDS, IDS, LMS_IDS, adTruongA, renderDashboard, SCHOOL_ADMIN_DASH_PERMS, stopPortals } from '../../../../test/dashboard-harness';
@@ -14,55 +15,77 @@ afterEach(() => {
 
 const BASE = '/school-lms/school-dashboard';
 const RANGE = 'preset=30d&from=2026-10-23&to=2026-11-21';
+const GRADE3 = `/lms/schools/${IDS.schoolA}/grades/3/dashboard`;
 
 describe('Trường → khối → học sinh (US2, ADR-0095)', () => {
-  it('F056-AC-08: grade filter (grades of the school, 1–9) keeps range + subject; no class anywhere; student breadcrumb school → grade → student', async () => {
+  it('F056-AC-08/AC-09: overview grades (one under 5 students → "< 5") → grade page keeps range + subject; heatmap with symbols; cursor pages; breadcrumb school → grade → student; no class', async () => {
     const { backend, router } = await renderDashboard(`${BASE}?school=${IDS.schoolA}&subject=${IDS.subjectMath}&${RANGE}`);
-    await screen.findByTestId('widget-assignments');
-    await waitFor(() => expect(screen.getByTestId('metric-assignments-open')).toHaveTextContent('2'));
-    // no class filter, link, list or name although the MOCK server still sends class fields (WP-L2 removes them)
-    expect(screen.queryByRole('combobox', { name: 'Lớp' })).toBeNull();
-    expect(screen.queryByRole('link', { name: '3A' })).toBeNull();
+    const assignments = await screen.findByTestId('widget-assignments');
+    await waitFor(() => expect(within(assignments).getAllByTestId('grade-row')).toHaveLength(2));
+    const rows = within(assignments).getAllByTestId('grade-row');
+    expect(within(rows[1]!).getByTestId('suppressed-cell')).toHaveTextContent('< 5');
+    expect(within(assignments).getAllByTestId('progress-by-grade')[1]!).toHaveTextContent('< 5');
     expect(document.body.textContent).not.toMatch(/\b3A\b|lớp/i);
-    expect(within(screen.getByTestId('widget-assignments')).getByText('2/3')).toBeInTheDocument();
-    // grade options = grades the school teaches (TH Demo A: 1–5)
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Khối' }));
-    expect(await screen.findByTitle('Khối 5')).toBeInTheDocument();
-    expect(screen.queryByTitle('Khối 6')).toBeNull();
-    fireEvent.click(screen.getByTitle('Khối 3'));
-    await waitFor(() => {
-      const q = new URLSearchParams(backend.calls('GET', '/lms/dashboards/school').at(-1)!.search);
-      expect([q.get('grade_level'), q.get('subject_id'), q.get('from'), q.get('to'), q.get('class_id')]).toEqual(['3', IDS.subjectMath, '2026-10-23', '2026-11-21', null]);
-    });
-    // to the student (the name travels with the link, never in the URL)
-    const attention = screen.getByTestId('widget-attention');
-    fireEvent.click(within(attention).getByRole('link', { name: 'Nguyễn An' }));
-    const studentPage = await screen.findByTestId('dashboard-student');
-    expect(router.state.location.pathname).toBe(`${BASE}/students/${IDS.studentAn}`);
-    expect(router.state.location.search).not.toMatch(/Nguy|class/);
-    const crumbs = studentPage.querySelector('.ant-breadcrumb') as HTMLElement;
-    expect(within(crumbs).getByRole('link', { name: 'Tổng quan trường' })).toHaveAttribute('href', expect.stringContaining('grade=3'));
+    fireEvent.click(within(rows[0]!).getByRole('link', { name: 'Khối 3' }));
+    const page = await screen.findByTestId('dashboard-grade');
+    expect(router.state.location.pathname).toBe(`${BASE}/grades/3`);
+    await waitFor(() => expect(backend.calls('GET', GRADE3).length).toBeGreaterThan(0));
+    const q = new URLSearchParams(backend.calls('GET', GRADE3)[0]!.search);
+    expect([q.get('from'), q.get('to'), q.get('subject_id'), q.get('page_size')]).toEqual(['2026-10-23', '2026-11-21', IDS.subjectMath, '100']);
+    const crumbs = page.querySelector('.ant-breadcrumb') as HTMLElement;
+    expect(within(crumbs).getByRole('link', { name: 'Tổng quan trường' })).toBeInTheDocument();
     expect(within(crumbs).getByText('Khối 3')).toBeInTheDocument();
-    expect(await within(crumbs).findByText('Nguyễn An')).toBeInTheDocument();
+    const heatmap = await screen.findByTestId('mastery-heatmap');
+    const cell = within(heatmap).getByLabelText('TOAN.3.CHIA_DU (YCCĐ 3.12) · Mới bắt đầu: 2 học sinh');
+    expect(cell).toHaveTextContent('◔');
+    // students: names from listTenantGradeStudents, page 1 then "Xem thêm" (cursor)
+    const students = screen.getByTestId('widget-students');
+    expect(await within(students).findByText('Nguyễn An')).toBeInTheDocument();
+    fireEvent.click(within(students).getByRole('button', { name: 'Xem thêm' }));
+    expect(await within(students).findByText('Lê Bình')).toBeInTheDocument();
+    expect(backend.calls('GET', GRADE3).some((r) => new URLSearchParams(r.search).get('cursor') === 'p2')).toBe(true);
+    fireEvent.click(within(students).getByRole('link', { name: 'Nguyễn An' }));
+    const studentPage = await screen.findByTestId('dashboard-student');
+    expect(router.state.location.search).not.toMatch(/Nguy|class/);
+    const crumbs2 = studentPage.querySelector('.ant-breadcrumb') as HTMLElement;
+    expect(within(crumbs2).getByText('Khối 3')).toBeInTheDocument();
+    expect(await within(crumbs2).findByText('Nguyễn An')).toBeInTheDocument();
     expect(backend.requests.some((r) => /\/classes(\/|$)/.test(r.path))).toBe(false);
   });
 
-  it('F056-AC-10: "Giao ôn tập theo LO" opens the F055 wizard with mode=practice, the LO, the school, subject and grade', async () => {
-    const { router } = await renderDashboard(`${BASE}?school=${IDS.schoolA}&subject=${IDS.subjectMath}&grade=3&${RANGE}`);
-    const weak = await screen.findByTestId('widget-weak');
-    expect(await within(weak).findByText('55% học sinh dưới mức thành thạo')).toBeInTheDocument();
-    expect(within(weak).queryByRole('link', { name: 'Bản đồ kỹ năng' })).toBeNull();
-    fireEvent.click(within(weak).getByRole('link', { name: 'Giao ôn tập theo LO' }));
+  it('F056-AC-08: a grade under the small-cell threshold shows "< 5" and no heatmap', async () => {
+    await renderDashboard(`${BASE}/grades/4?school=${IDS.schoolA}&${RANGE}`);
+    expect(await screen.findByTestId('grade-suppressed')).toBeInTheDocument();
+    expect(screen.getAllByTestId('suppressed-cell').length).toBeGreaterThan(0);
+    expect(screen.queryByTestId('mastery-heatmap')).toBeNull();
+  });
+
+  it('F056-AC-10: "Giao ôn tập theo LO" (grade heatmap and overview) opens the F055 wizard with mode=practice, the LO, the school, subject, grade and weak students', async () => {
+    const { router } = await renderDashboard(`${BASE}/grades/3?school=${IDS.schoolA}&subject=${IDS.subjectMath}&${RANGE}`);
+    const heatmap = await screen.findByTestId('mastery-heatmap');
+    const row = within(heatmap).getByText('TOAN.3.CHIA_DU (YCCĐ 3.12)').closest('tr')!;
+    fireEvent.click(within(row).getByRole('button', { name: 'Giao ôn tập theo LO' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/assignments/new'));
     const q = new URLSearchParams(router.state.location.search);
-    expect(Object.fromEntries(q)).toEqual({ mode: 'practice', objective_id: DASH_IDS.loChiaDu, school_id: IDS.schoolA, subject_id: IDS.subjectMath, grade: '3' });
+    expect([q.get('mode'), q.get('objective_id'), q.get('school_id'), q.get('subject_id'), q.get('grade'), q.get('class_id')]).toEqual(['practice', DASH_IDS.loChiaDu, IDS.schoolA, IDS.subjectMath, '3', null]);
+    expect(q.get('student_ids')!.split(',')).toEqual([IDS.studentAn, LMS_IDS.studentBinh]);
     expect(await screen.findByText('Giao bài mới')).toBeInTheDocument();
     stopPortals();
     cleanup();
+    // overview: weak LO of one grade → skill map of that grade and the practice link with the grade
+    const r2 = await renderDashboard(`${BASE}?school=${IDS.schoolA}&subject=${IDS.subjectMath}&${RANGE}`);
+    const weak = await screen.findByTestId('widget-weak');
+    expect(await within(weak).findByText(/55% học sinh dưới mức thành thạo · Khối 3/)).toBeInTheDocument();
+    expect(within(weak).getByRole('link', { name: 'Bản đồ kỹ năng' })).toHaveAttribute('href', expect.stringContaining(`${BASE}/grades/3?`));
+    fireEvent.click(within(weak).getByRole('link', { name: 'Giao ôn tập theo LO' }));
+    await waitFor(() => expect(r2.router.state.location.pathname).toBe('/school-lms/assignments/new'));
+    expect(new URLSearchParams(r2.router.state.location.search).get('grade')).toBe('3');
+    stopPortals();
+    cleanup();
     // without lms.assignment.write the shortcut is not offered
-    await renderDashboard(`${BASE}?school=${IDS.schoolA}&${RANGE}`, { account: adTruongA(SCHOOL_ADMIN_DASH_PERMS.filter((p) => p !== 'lms.assignment.write')) });
-    await screen.findByText('55% học sinh dưới mức thành thạo');
-    expect(screen.queryByRole('link', { name: 'Giao ôn tập theo LO' })).toBeNull();
+    await renderDashboard(`${BASE}/grades/3?school=${IDS.schoolA}&${RANGE}`, { account: adTruongA(SCHOOL_ADMIN_DASH_PERMS.filter((p) => p !== 'lms.assignment.write')) });
+    await screen.findByTestId('mastery-heatmap');
+    expect(screen.queryByRole('button', { name: 'Giao ôn tập theo LO' })).toBeNull();
   });
 
   it('F056-AC-11: profile tabs (mastery, trend, history, recommendations, login activity); no rating/friends/chat/IP/device', async () => {

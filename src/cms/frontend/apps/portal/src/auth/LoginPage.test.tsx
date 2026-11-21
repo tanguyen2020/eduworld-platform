@@ -15,7 +15,7 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
     const { backend, router } = await renderPortal({ url: '/school-lms/students' });
     expect(await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
-    expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fclasses');
+    expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fstudents');
     expect(screen.getByLabelText('Tên đăng nhập hoặc email')).toHaveAttribute('maxlength', '254');
     expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('type', 'password');
     // no 6-digit code anywhere (owner 2026-11-21)
@@ -86,7 +86,7 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
   });
 
   it('several tenants → "Chọn đơn vị làm việc"; returnUrl kept for after the choice (F051-AC-03)', async () => {
-    const { user, router } = await renderPortal({ url: '/login?returnUrl=%2Fschool-lms%2Fclasses' });
+    const { user, router } = await renderPortal({ url: '/login?returnUrl=%2Fschool-lms%2Fstudents' });
     await signIn(user, 'qlcm.truong.a');
     expect(await screen.findByRole('heading', { name: 'Chọn đơn vị làm việc' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/select-tenant');

@@ -91,10 +91,10 @@
     "daysAway": "Số ngày chưa vào game",
     "days": "{{count}} ngày",
     "activity": "Hoạt động đăng nhập",
-    "searchHint": "Tên hoặc tên đăng nhập (ít nhất 2 ký tự)",
+    "searchHint": "Tên, tên đăng nhập hoặc mã học sinh (ít nhất 2 ký tự)",
     "readOnlyHint": "Học sinh thuộc một trường và một khối, lấy từ SIS/CSV, chỉ xem. Sửa thông tin hoặc đổi trường/khối trong SIS hoặc file CSV.",
-    "searchFirst": "Gõ tên hoặc tên đăng nhập (ít nhất 2 ký tự) để tìm học sinh của trường.",
-    "searchUnavailable": "Chưa tìm được học sinh với quyền hiện tại (cần quyền xem người dùng của trường).",
+    "grade": "Khối",
+    "gradeN": "Khối {{n}}",
     "found": "Học sinh tìm thấy"
   },
   "activity": {
@@ -134,7 +134,7 @@
     "tab": "Nhập CSV",
     "help": "File CSV theo EduWorld SIS Contract (tên cột = tên trường dữ liệu), mỗi file một loại dữ liệu, tối đa 10 MB. Lịch đồng bộ SIS tự động do EduWorld cấu hình cho từng kết nối; trường dùng CSV cập nhật bằng cách tải file mới.",
     "kind": "Loại dữ liệu",
-    "kinds": { "students": "Học sinh", "classes": "Lớp", "enrollments": "Xếp lớp", "schools": "Trường" },
+    "kinds": { "students": "Học sinh", "schools": "Trường" },
     "dryRun": "Chạy thử",
     "dryRunHelp": "Chạy thử chỉ kiểm tra và đếm thay đổi, không áp dụng vào dữ liệu.",
     "file": "File CSV",
@@ -187,15 +187,10 @@
     "types": {
       "possible_duplicate": "Có thể trùng người",
       "transfer_confirmation": "Xác nhận chuyển trường",
-      "missing_class": "Học sinh thiếu lớp",
-      "class_school_mismatch": "Lớp không thuộc trường",
-      "orphan_enrollment": "Xếp lớp không có học sinh/lớp",
-      "multi_school_enrollment": "Học sinh thuộc nhiều trường",
       "school_province_missing": "Trường thiếu tỉnh/thành",
       "unmapped_school": "Trường chưa ánh xạ",
       "cleaned_up_student_in_sis": "Học sinh đã bị dọn vẫn có trong SIS",
       "duplicate_identifier": "Trùng tên đăng nhập/email",
-      "grade_mismatch": "Khối không khớp",
       "deactivation_review": "Cần xem xét ngừng hoạt động",
       "ambiguous_login": "Tên đăng nhập không rõ ràng",
       "school_duplicate": "Trường bị trùng",
@@ -204,15 +199,10 @@
     "typeAdvice": {
       "possible_duplicate": "Kiểm tra hai bản ghi trong SIS; nếu là cùng một người, sửa ở nguồn.",
       "transfer_confirmation": "Xác nhận việc chuyển trường trong SIS.",
-      "missing_class": "Bổ sung lớp cho học sinh trong SIS/CSV rồi nhập lại.",
-      "class_school_mismatch": "Sửa trường của lớp trong SIS/CSV.",
-      "orphan_enrollment": "Kiểm tra dòng xếp lớp trong SIS/CSV.",
-      "multi_school_enrollment": "Mỗi học sinh chỉ thuộc một trường; sửa trong SIS/CSV.",
       "school_province_missing": "Chọn tỉnh/thành khi duyệt trường.",
       "unmapped_school": "Liên hệ EduWorld để ánh xạ trường.",
       "cleaned_up_student_in_sis": "Kiểm tra học sinh trong SIS; học sinh được khôi phục khi đăng nhập lại.",
       "duplicate_identifier": "Đổi tên đăng nhập/email trong SIS/CSV để không trùng với tài khoản khác.",
-      "grade_mismatch": "Sửa khối của học sinh hoặc lớp trong SIS/CSV.",
       "deactivation_review": "Xác nhận học sinh đã nghỉ học trong SIS.",
       "ambiguous_login": "Đổi tên đăng nhập trong SIS/CSV.",
       "school_duplicate": "Liên hệ Quản trị đơn vị để gộp trường.",
@@ -408,7 +398,6 @@
       "course": "Khóa học",
       "learning_path": "Lộ trình học",
       "challenge": "Thử thách",
-      "class_template": "Mẫu lớp",
       "student": "Học sinh"
     }
   }

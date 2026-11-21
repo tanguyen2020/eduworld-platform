@@ -1,7 +1,7 @@
 // MOCK (test only, AGENTS R17): in-memory stand-in of the learning-module LMS operations used by the F055 screens —
 // assignments (create/publish/update/cancel/release/archive/remind, extend/excuse, submissions; targets by grade of a
 // school ± students or a student list — ADR-0095), the content picker lists, the student search of the wizard (interim
-// listTenantUsers, user_type=student), exam session / papers / accommodations and regrade — answering per
+// listTenantGradeStudents of the F052 MOCK), exam session / papers / accommodations and regrade — answering per
 // specs/openapi/eduworld-api.v1.yaml. Writes check Idempotency-Key (same key → same answer, no duplicate)
 // and If-Match like the backend (W/"n"). Data belongs to TH Demo A; another tenant's X-Tenant-Id gets 404.
 // Never imported by application code; NOT a real backend and no live integration.
@@ -38,8 +38,6 @@ type Row = Record<string, unknown>;
 export interface LmsMockState {
   assignments: Map<string, Row & { version: number }>;
   submissions: Row[];
-  /** Students of TH Demo A the wizard can find (listTenantUsers user_type=student). */
-  students: Row[];
   session: Row & { version: number };
   /** Idempotency-Key → recorded response (status + body). */
   idem: Map<string, { status: number; body: unknown; headers?: Record<string, string> }>;
@@ -80,13 +78,6 @@ export function installLmsMock(backend: MockPortalBackend): LmsMockState {
       { assignment_id: '', student_id: LMS_IDS.studentBinh, display_name: 'Lê Bình', status: 'not_started', attempts_used: 0, score: null, max_score: null, rapid_guess_count: 0 },
       { assignment_id: '', student_id: IDS.studentSapBiDon, display_name: 'Trần Sắp Bị Dọn', status: 'missed', attempts_used: 0, score: null, rapid_guess_count: 0 },
     ],
-    students: [
-      { user_id: IDS.studentAn, user_type: 'student', status: 'active', username: 'hs.an.3a', display_name: 'Nguyễn An', source: 'sis', version: 1 },
-      { user_id: LMS_IDS.studentBinh, user_type: 'student', status: 'active', username: 'hs.binh.3a', display_name: 'Lê Bình', source: 'sis', version: 1 },
-      { user_id: LMS_IDS.studentCuong4, user_type: 'student', status: 'active', username: 'hs.cuong.4b', display_name: 'Phạm Cường', source: 'sis', version: 1 },
-      // MOCK: a student the search returns but who belongs to another school (the server answers 422 on create)
-      { user_id: OTHER_SCHOOL_STUDENT, user_type: 'student', status: 'active', username: 'hs.khac.truong', display_name: 'Đỗ Khác Trường', source: 'sis', version: 1 },
-    ],
     session: {
       exam_session_id: LMS_IDS.examSession,
       type: 'unit_test',
@@ -124,13 +115,6 @@ export function installLmsMock(backend: MockPortalBackend): LmsMockState {
   backend.overrides.unshift((r) => {
     const p = r.path;
     const m = r.method;
-    if (m === 'GET' && p === '/tenant/users' && new URLSearchParams(r.search).get('user_type') === 'student') {
-      if (!tenantOk(r)) return problem(404, 'NOT_FOUND');
-      const q = (new URLSearchParams(r.search).get('q') ?? '').toLowerCase();
-      if (new URLSearchParams(r.search).get('school_id') !== IDS.schoolA) return json(200, { items: [], page: { has_more: false, limit: 50, next_cursor: null } });
-      const items = state.students.filter((u) => `${u.display_name} ${u.username}`.toLowerCase().includes(q));
-      return json(200, { items, page: { has_more: false, limit: 50, next_cursor: null } });
-    }
     if (!/^\/(lms|exams|cms\/learning\/(activities|activity-types|question-sets|assessment-blueprints|lessons|regrade-requests))/.test(p)) return undefined;
     if (!tenantOk(r)) return problem(404, 'NOT_FOUND');
     const b = (r.body ?? {}) as Row;

@@ -9,7 +9,7 @@ import { StatusTag } from './ResearchForms';
 
 type Row = Record<string, unknown>;
 
-const ARM_FIELDS = ['classes', 'participants', 'analysed', 'withdrawn', 'missing_pre', 'missing_post', 'attrition_rate', 'pre_mean', 'post_mean', 'gain_mean', 'gain_sd', 'normalized_gain_mean'];
+const ARM_FIELDS = ['cohorts', 'participants', 'analysed', 'withdrawn', 'missing_pre', 'missing_post', 'attrition_rate', 'pre_mean', 'post_mean', 'gain_mean', 'gain_sd', 'normalized_gain_mean'];
 const EFFECT_FIELDS = ['hedges_g', 'ci_low', 'ci_high', 'se', 'se_adjusted', 'icc', 'design_effect', 'n_intervention', 'n_comparison'];
 
 function Cell({ value }: { value: unknown }) {

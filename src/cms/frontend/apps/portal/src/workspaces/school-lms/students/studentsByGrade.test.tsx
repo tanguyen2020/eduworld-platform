@@ -1,9 +1,9 @@
 // F052 T012, T013, T014, T058 rewritten for ADR-0095 (no class) — F052-AC-04, F052-AC-07, F052-AC-27, F052-AC-31
-// (TC-TEN-001, TC-TEN-003, TC-AUTH-087): "Học sinh theo khối" searches the students of one school (interim
-// listTenantUsers user_type=student until the school → grade → students list of WP-I1), read-only with the "SIS" tag
-// and no identity/class action; no class list and no "học sinh chưa có lớp" tab; another tenant's data never shown;
-// password reset (reason, Idempotency-Key reused on retry, password once + print, redacted notice, hidden without
-// permission/when turned off, nothing stored); cards below 768 px. Backend = MOCK.
+// (TC-TEN-001, TC-TEN-003, TC-AUTH-087): "Học sinh theo khối" = school → grade (grades the school teaches) → students
+// (listTenantGradeStudents, cursor, search), read-only with the "SIS" tag and no identity/class action; no class list
+// and no "học sinh chưa có lớp" tab; another tenant's school → "Không tìm thấy"; password reset (reason,
+// Idempotency-Key reused on retry, password once + print, redacted notice, hidden without permission/when turned off,
+// nothing stored); cards below 768 px. Backend = MOCK.
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { accountWith, IDS, problem, READ_ONLY_PERMS, renderSchoolLms, SCHOOL_PERMS, stopPortals, TENANTS } from '../../../test/school-lms-harness';
@@ -12,44 +12,57 @@ afterEach(() => stopPortals());
 
 const URL = '/school-lms/students';
 
-/** Searches the students of the (only, auto-selected) school by "An". */
+/** Picks grade 3 of the (only, auto-selected) school and searches "An". */
 async function searchStudents(q = 'An') {
-  const box = await screen.findByRole('searchbox', { name: 'Tìm kiếm' });
-  await waitFor(() => expect(within(screen.getByTestId('students-by-grade')).getByText('TH Demo A')).toBeInTheDocument());
+  const page = await screen.findByTestId('students-by-grade');
+  await waitFor(() => expect(within(page).getByText('TH Demo A')).toBeInTheDocument());
+  fireEvent.mouseDown(within(page).getByRole('combobox', { name: 'Khối' }));
+  const option = () => screen.queryAllByTitle('Khối 3').filter((e) => e.classList.contains('ant-select-item-option'));
+  await waitFor(() => expect(option().length).toBeGreaterThan(0));
+  fireEvent.click(option().at(-1)!);
+  const box = within(page).getByRole('searchbox', { name: 'Tìm kiếm' });
   fireEvent.change(box, { target: { value: q } });
   fireEvent.keyDown(box, { key: 'Enter', code: 'Enter', keyCode: 13 });
 }
 
+const gradeCalls = (backend: { requests: { path: string; search: string; headers: Record<string, string> }[] }) =>
+  backend.requests.filter((r) => /^\/tenant\/schools\/[^/]+\/grades\/\d+\/students$/.test(r.path));
+
 describe('Học sinh theo khối (ADR-0095)', () => {
-  it('students of the school: search ≥ 2 characters, read-only with the SIS tag, no edit/class action (F052-AC-04)', async () => {
+  it('school → grade → students (listTenantGradeStudents), read-only with the SIS tag, no edit/class action (F052-AC-04)', async () => {
     const { backend } = await renderSchoolLms(URL);
-    expect(await screen.findByText('Gõ tên hoặc tên đăng nhập (ít nhất 2 ký tự) để tìm học sinh của trường.')).toBeInTheDocument();
-    expect(backend.calls('GET', '/tenant/users')).toHaveLength(0);
+    const page = await screen.findByTestId('students-by-grade');
+    // grades = grades the school teaches (TH Demo A: 1–5)
+    fireEvent.mouseDown(within(page).getByRole('combobox', { name: 'Khối' }));
+    expect(await screen.findByTitle('Khối 5')).toBeInTheDocument();
+    expect(screen.queryByTitle('Khối 6')).toBeNull();
+    fireEvent.mouseDown(within(page).getByRole('combobox', { name: 'Khối' }));
     await searchStudents();
     expect(await screen.findByText('Nguyễn An')).toBeInTheDocument();
-    expect(screen.queryByText('Cán bộ B')).toBeNull();
+    expect(screen.getByText('HS001')).toBeInTheDocument();
+    expect(screen.getByText('2 ngày')).toBeInTheDocument();
     expect(screen.getAllByTestId('sis-tag').length).toBeGreaterThan(0);
-    const q = new URLSearchParams(backend.calls('GET', '/tenant/users').at(-1)!.search);
-    expect([q.get('user_type'), q.get('school_id'), q.get('q')]).toEqual(['student', IDS.schoolA, 'An']);
+    const last = gradeCalls(backend).at(-1)!;
+    expect(last.path).toBe(`/tenant/schools/${IDS.schoolA}/grades/3/students`);
+    expect(new URLSearchParams(last.search).get('q')).toBe('An');
     expect(screen.queryByRole('button', { name: /Sửa|Gán lớp|Chuyển lớp|Xóa/ })).toBeNull();
+    expect(backend.requests.some((r) => r.path === '/tenant/users')).toBe(false);
   });
 
   it('no class list, class page or "học sinh chưa có lớp" tab; no class request (ADR-0095)', async () => {
-    const { backend } = await renderSchoolLms(`${URL}/${IDS.schoolA}/${IDS.class3A}`);
-    await screen.findByTestId('students-by-grade');
+    const { backend } = await renderSchoolLms(`/school-lms/classes/${IDS.schoolA}/${IDS.class3A}`);
+    await waitFor(() => expect(backend.calls('GET', '/me/permissions').length).toBeGreaterThan(0));
+    expect(await screen.findByText('Không tìm thấy trang.')).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /lớp/i })).toBeNull();
-    expect(document.body.textContent).not.toMatch(/\bLớp\b|3A|chưa có lớp/);
     expect(backend.requests.some((r) => /\/classes|students\/unassigned/.test(r.path))).toBe(false);
   });
 
-  it("another tenant's session never shows the data of tenant A (F052-AC-07, TC-TEN-001/003)", async () => {
+  it("another tenant's school → Không tìm thấy, nothing of it shown (F052-AC-07, TC-TEN-001/003)", async () => {
     const { backend } = await renderSchoolLms(URL, { account: accountWith('ad.truong.b', TENANTS.thcsDemoB, SCHOOL_PERMS) });
-    await waitFor(() => expect(within(screen.getByTestId('students-by-grade')).getByText('THCS Demo B')).toBeInTheDocument());
-    const box = screen.getByRole('searchbox', { name: 'Tìm kiếm' });
-    fireEvent.change(box, { target: { value: 'An' } });
-    fireEvent.keyDown(box, { key: 'Enter', code: 'Enter', keyCode: 13 });
-    await waitFor(() => expect(backend.calls('GET', '/tenant/users').length).toBeGreaterThan(0));
-    expect(backend.calls('GET', '/tenant/users').every((r) => r.headers['x-tenant-id'] === TENANTS.thcsDemoB.tenant_id)).toBe(true);
+    const page = await screen.findByTestId('students-by-grade');
+    await waitFor(() => expect(within(page).getByText('THCS Demo B')).toBeInTheDocument());
+    await waitFor(() => expect(gradeCalls(backend).length).toBeGreaterThan(0));
+    expect(gradeCalls(backend).every((r) => r.headers['x-tenant-id'] === TENANTS.thcsDemoB.tenant_id)).toBe(true);
     expect(screen.queryByText('Nguyễn An')).toBeNull();
   });
 

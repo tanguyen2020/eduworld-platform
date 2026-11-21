@@ -13,9 +13,9 @@ describe('returnUrl', () => {
   });
 
   it('builds /login?returnUrl= and reads it back', () => {
-    expect(loginPath('/school-lms/students')).toBe('/login?returnUrl=%2Fschool-lms%2Fclasses');
+    expect(loginPath('/school-lms/students')).toBe('/login?returnUrl=%2Fschool-lms%2Fstudents');
     expect(loginPath('/')).toBe('/login');
-    expect(returnTarget('?returnUrl=%2Fschool-lms%2Fclasses')).toBe('/school-lms/students');
+    expect(returnTarget('?returnUrl=%2Fschool-lms%2Fstudents')).toBe('/school-lms/students');
     expect(returnTarget('?returnUrl=https%3A%2F%2Fevil')).toBe('/');
   });
 });

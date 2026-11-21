@@ -37,7 +37,7 @@ describe('reload while the session is valid (F051-AC-28)', () => {
     backend.csrf = 'stale-csrf-value'.padEnd(43, 'x');
     const { router } = await renderPortal({ url: '/school-lms/students', backend });
     expect(await screen.findByRole('heading', { name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
-    expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fclasses');
+    expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fstudents');
   });
 });
 
@@ -49,7 +49,7 @@ describe('idle limit (F051-AC-29)', () => {
     expect(await screen.findByRole('heading', { name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
     expect(backend.calls('POST', '/auth/portal/token:refresh')).toHaveLength(0);
     expect(backend.calls('POST', '/auth/portal/logout')).toHaveLength(1);
-    expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fclasses');
+    expect(router.state.location.search).toBe('?returnUrl=%2Fschool-lms%2Fstudents');
   });
 
   it('idle detected while working → sign-out, "session ended" notice on /login', async () => {

@@ -11,6 +11,7 @@ import { DASHBOARD_CONFIG, DASHBOARD_QUERY_TIMING } from '../model/limits';
 import type { DashboardFilters } from '../model/filters';
 
 export type SchoolDashboard = Schemas['SchoolDashboard'];
+export type GradeDashboard = Schemas['GradeDashboard'];
 export type StudentLearningProfile = Schemas['StudentLearningProfile'];
 export type AttentionReason = Schemas['AttentionReason'];
 export type Subject = Schemas['Subject'];
@@ -46,6 +47,38 @@ export function useSchoolDashboard(f: DashboardFilters) {
   });
 }
 
+/** getGradeDashboard: one grade of a school — LO heatmap, assignment progress, students (cursor ≤ dashboard_page_size_max). */
+export function useGradeDashboard(schoolId: string | undefined, grade: number | undefined, f: DashboardFilters) {
+  const { api, scope, queue } = useDashboardContext();
+  const query = { ...rangeQuery(f), ...(f.subjectId ? { subject_id: f.subjectId } : {}), ...(f.range.grain ? { grain: f.range.grain } : {}), page_size: DASHBOARD_CONFIG.dashboard_page_size_max };
+  const enabled = scope.ready && !!schoolId && !!grade;
+  const q = useInfiniteQuery({
+    queryKey: dashKey('grade', scope, schoolId, grade, query),
+    queryFn: ({ pageParam }) =>
+      queue.run(() =>
+        api.call<GradeDashboard>(
+          api.client.GET('/lms/schools/{school_id}/grades/{grade_level}/dashboard', {
+            params: { path: { school_id: schoolId!, grade_level: grade! }, query: { ...query, ...(pageParam ? { cursor: pageParam } : {}) } },
+            headers: scope.headers,
+          } as never),
+        ),
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: GradeDashboard) => (last.students.page?.has_more && last.students.page.next_cursor ? last.students.page.next_cursor : undefined),
+    enabled,
+    ...DASHBOARD_QUERY_TIMING,
+  });
+  return {
+    first: q.data?.pages[0],
+    students: q.data?.pages.flatMap((p) => p.students.data) ?? [],
+    hasMore: !!q.hasNextPage,
+    loadMore: () => void q.fetchNextPage(),
+    isLoading: q.isPending && enabled,
+    isFetching: q.isFetching,
+    error: q.error,
+  };
+}
+
 /** getStudentLearningProfile (audited `learning.profile_viewed` by the server). */
 export function useStudentProfile(studentId: string | undefined, f: DashboardFilters) {
   const { api, scope, queue } = useDashboardContext();
@@ -75,13 +108,14 @@ export function useSubjects() {
 export interface ReferenceFilters {
   schoolId?: string;
   subjectId?: string;
+  grade?: number;
   period: AssessmentPeriod;
 }
 
 /** getRegulationReferenceReport: reference levels TT27/TT22 (always with the server disclaimer, F056-AC-16). */
 export function useRegulationReference(f: ReferenceFilters) {
   const { api, scope, queue } = useDashboardContext();
-  const query = { subject_id: f.subjectId!, period: f.period, limit: DASHBOARD_CONFIG.dashboard_page_size_max };
+  const query = { subject_id: f.subjectId!, period: f.period, ...(f.grade ? { grade_level: f.grade } : {}), limit: DASHBOARD_CONFIG.dashboard_page_size_max };
   const q = useInfiniteQuery({
     queryKey: dashKey('reference', scope, f.schoolId, query),
     queryFn: ({ pageParam }) =>

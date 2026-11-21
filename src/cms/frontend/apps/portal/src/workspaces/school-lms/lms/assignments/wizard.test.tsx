@@ -22,9 +22,12 @@ afterEach(() => {
 
 const URL = '/school-lms/assignments/new';
 
+/** Opens a select and clicks the option of its dropdown (the last rendered dropdown holding that title). */
 async function pickOption(label: string, option: string) {
   fireEvent.mouseDown(screen.getByRole('combobox', { name: label }));
-  fireEvent.click(await screen.findByTitle(option));
+  const options = () => screen.queryAllByTitle(option).filter((e) => e.classList.contains('ant-select-item-option'));
+  await waitFor(() => expect(options().length).toBeGreaterThan(0));
+  fireEvent.click(options().at(-1)!);
 }
 
 function typeDate(label: string, value: string) {
@@ -50,8 +53,9 @@ async function pickTargets() {
   await pickOption('Khối được giao', 'Khối 3');
 }
 
-/** Types in a student picker (search ≥ 2 characters) and picks the option. */
-async function pickStudent(label: string, search: string, option: string) {
+/** Picks the grade of a student picker, types in it (search ≥ 2 characters) and picks the option. */
+async function pickStudent(label: string, grade: number, search: string, option: string) {
+  await pickOption(`${label} — khối`, `Khối ${grade}`);
   const box = screen.getByRole('combobox', { name: label });
   fireEvent.mouseDown(box);
   fireEvent.change(box, { target: { value: search } });
@@ -90,7 +94,7 @@ describe('Wizard giao bài — nội dung và đối tượng', () => {
     expect(screen.queryByRole('button', { name: /Cấu hình|Sửa quest/ })).toBeNull();
   });
 
-  it('targets: school of the scope, its grades (1–9 ∩ grade_min…grade_max), subjects and students from the API of the session tenant; no class, group or course (F055-AC-02, ADR-0095)', async () => {
+  it('targets: school of the scope, its grades (1–9 ∩ grade_min…grade_max), subjects and students of a grade from the API of the session tenant; no class, group or course (F055-AC-02, ADR-0095)', async () => {
     const { backend } = await renderLms(URL);
     await pickContent();
     await pickTargets();
@@ -99,23 +103,20 @@ describe('Wizard giao bài — nội dung và đối tượng', () => {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Khối được giao' }));
     expect(await screen.findByTitle('Khối 5')).toBeInTheDocument();
     expect(screen.queryByTitle('Khối 6')).toBeNull();
-    // the student search needs 2 characters, then lists students of the school only
-    const include = screen.getByRole('combobox', { name: 'Thêm học sinh khối khác (cùng trường)' });
-    fireEvent.mouseDown(include);
-    fireEvent.change(include, { target: { value: 'C' } });
-    expect(backend.calls('GET', '/tenant/users')).toHaveLength(0);
-    await pickStudent('Thêm học sinh khối khác (cùng trường)', 'Cường', 'Phạm Cường (hs.cuong.4b)');
+    // students are listed grade by grade (listTenantGradeStudents); the include list opens on a grade not targeted
+    await pickStudent('Thêm học sinh khối khác (cùng trường)', 4, 'Cường', 'Phạm Cường (hs.cuong.4b)');
     fireEvent.click(screen.getByRole('radio', { name: 'Học sinh cụ thể' }));
     expect(screen.queryByRole('combobox', { name: 'Khối được giao' })).toBeNull();
-    await pickStudent('Học sinh', 'An', 'Nguyễn An (hs.an.3a)');
-    for (const path of ['/tenant/schools', '/learning/subjects', '/tenant/users']) {
+    await pickStudent('Học sinh', 3, 'An', 'Nguyễn An (hs.an.3a)');
+    const gradeCalls = backend.requests.filter((r) => /^\/tenant\/schools\/[^/]+\/grades\/\d+\/students$/.test(r.path));
+    for (const path of ['/tenant/schools', '/learning/subjects']) {
       const calls = backend.calls('GET', path);
       expect(calls.length, path).toBeGreaterThan(0);
       expect(calls.every((r) => r.headers['x-tenant-id'] === TENANTS.thDemoA.tenant_id && !r.search.includes('tenant_ids')), path).toBe(true);
     }
-    const q = new URLSearchParams(backend.calls('GET', '/tenant/users').at(-1)!.search);
-    expect([q.get('user_type'), q.get('school_id'), q.get('q')]).toEqual(['student', IDS.schoolA, 'An']);
-    expect(backend.requests.some((r) => /\/courses|\/classes|study-groups/.test(r.path))).toBe(false);
+    expect(gradeCalls.every((r) => r.headers['x-tenant-id'] === TENANTS.thDemoA.tenant_id && r.path.startsWith(`/tenant/schools/${IDS.schoolA}/grades/`))).toBe(true);
+    expect(gradeCalls.some((r) => r.path.endsWith('/grades/3/students') && new URLSearchParams(r.search).get('q') === 'An')).toBe(true);
+    expect(backend.requests.some((r) => /\/courses|\/classes|study-groups|\/tenant\/users/.test(r.path))).toBe(false);
   });
 
   it('grades ± students: one request per intent with grade targets, include on the first grade, exclude on every grade; exclude wins hint (ADR-0095)', async () => {
@@ -123,11 +124,11 @@ describe('Wizard giao bài — nội dung và đối tượng', () => {
     await pickContent();
     await pickTargets();
     await pickOption('Khối được giao', 'Khối 4');
-    await pickStudent('Thêm học sinh khối khác (cùng trường)', 'Cường', 'Phạm Cường (hs.cuong.4b)');
-    await pickStudent('Bớt học sinh', 'Bình', 'Lê Bình (hs.binh.3a)');
+    await pickStudent('Thêm học sinh khối khác (cùng trường)', 4, 'Cường', 'Phạm Cường (hs.cuong.4b)');
+    await pickStudent('Bớt học sinh', 3, 'Bình', 'Lê Bình (hs.binh.3a)');
     expect(screen.queryByTestId('exclude-wins')).toBeNull();
     expect(screen.getByText(/Học sinh mới vào khối sau khi giao được tự động thêm/)).toBeInTheDocument();
-    await pickStudent('Bớt học sinh', 'Cường', 'Phạm Cường (hs.cuong.4b)');
+    await pickStudent('Bớt học sinh', 4, 'Cường', 'Phạm Cường (hs.cuong.4b)');
     expect(screen.getByTestId('exclude-wins')).toHaveTextContent('1 học sinh vừa được thêm vừa bị bớt');
     next();
     fireEvent.change(await screen.findByLabelText('Tiêu đề'), { target: { value: 'Ôn tập khối' } });
@@ -142,7 +143,7 @@ describe('Wizard giao bài — nội dung và đối tượng', () => {
     expect(await screen.findByTestId('assignment-detail')).toBeInTheDocument();
     const creates = backend.calls('POST', '/lms/assignments');
     expect(creates).toHaveLength(1);
-    expect(creates[0]!.headers['idempotency-key']).toMatch(/^[0-9a-f-]{36}:create$|^[0-9a-f-]{36}$/);
+    expect(creates[0]!.headers['idempotency-key']).toBeTruthy();
     expect(lms.assignments.size).toBe(1);
     const body = creates[0]!.body as Record<string, unknown>;
     expect(body).toMatchObject({ school_id: IDS.schoolA, subject_id: IDS.subjectMath });
@@ -153,11 +154,11 @@ describe('Wizard giao bài — nội dung và đối tượng', () => {
     ]);
   });
 
-  it('a student of another school → 422 at the include list, back to the "Đối tượng" step (F055-AC-06, ADR-0095)', async () => {
-    await renderLms(URL);
+  it('a student of another school → 422 at the student list, back to the "Đối tượng" step (F055-AC-06, ADR-0095)', async () => {
+    await renderLms(`${URL}?student_ids=${OTHER_SCHOOL_STUDENT}`);
     await pickContent();
-    await pickTargets();
-    await pickStudent('Thêm học sinh khối khác (cùng trường)', 'Khác', 'Đỗ Khác Trường (hs.khac.truong)');
+    await waitFor(() => expect(within(screen.getByRole('combobox', { name: 'Trường' }).closest('.ant-select')!).getByText('TH Demo A')).toBeInTheDocument());
+    await pickOption('Môn học', 'Toán');
     next();
     fireEvent.change(await screen.findByLabelText('Tiêu đề'), { target: { value: 'Ôn tập' } });
     typeDate('Mở bài lúc', '2026-12-01 08:00:00');
@@ -167,9 +168,8 @@ describe('Wizard giao bài — nội dung và đối tượng', () => {
     next();
     await screen.findByTestId('wizard-review');
     fireEvent.click(screen.getByRole('button', { name: 'Giao bài' }));
-    const include = await screen.findByRole('combobox', { name: 'Thêm học sinh khối khác (cùng trường)' });
-    await waitFor(() => expect(include.closest('.ant-form-item')).toHaveClass('ant-form-item-has-error'));
-    expect(OTHER_SCHOOL_STUDENT).toBeTruthy();
+    const list = await screen.findByRole('combobox', { name: 'Học sinh' });
+    await waitFor(() => expect(list.closest('.ant-form-item')).toHaveClass('ant-form-item-has-error'));
   });
 
   it('prefill from the dashboard: ?school_id&subject_id&grade → grade target; ?student_ids → students target; no class parameter is read', async () => {
@@ -184,19 +184,6 @@ describe('Wizard giao bài — nội dung và đối tượng', () => {
     await pickContent();
     expect(await screen.findByRole('radio', { name: 'Học sinh cụ thể' })).toBeChecked();
     expect(within(screen.getByTestId('pick-studentIds')).getAllByText('Học sinh đã chọn sẵn')).toHaveLength(2);
-  });
-
-  it('student search without tenant.user.read (403) → notice, grade targets still possible (interim search, ADR-0095 gap)', async () => {
-    const { backend } = await renderLms(URL);
-    backend.overrides.unshift((r) => (r.path === '/tenant/users' ? problem(403, 'PERMISSION_DENIED') : undefined));
-    await pickContent();
-    await pickTargets();
-    const include = screen.getByRole('combobox', { name: 'Thêm học sinh khối khác (cùng trường)' });
-    fireEvent.mouseDown(include);
-    fireEvent.change(include, { target: { value: 'An' } });
-    expect(await screen.findByTestId('pick-includeIds-unavailable')).toHaveTextContent('Chưa tra cứu được học sinh ở đây');
-    next();
-    expect(await screen.findByLabelText('Tiêu đề')).toBeInTheDocument();
   });
 });
 

@@ -2,9 +2,8 @@
 // catalog action is granted and turned on (ADR-0090) — "Xuất báo cáo" (createLmsReport: report type, format and the
 // scope the type needs; asynchronous job, link with expiry; reference reports labelled "Tham khảo") and "Tổng hợp đơn
 // vị" (Tenant Admin: getTenantLearningSummary by school × grade × subject, "< 5" for suppressed cells, export through
-// createTenantReport). Numbers are the server's; cells are never recomputed. ADR-0095: no course or class — the course
-// results and the class skill map (`skill_map` needs a `class_id` until WP-L2 reworks it by grade) are not offered;
-// reference levels are per school and subject.
+// createTenantReport). Numbers are the server's; cells are never recomputed. ADR-0095: no course or class — the skill map
+// is per school, grade and subject; reference levels per school and subject, optionally one grade.
 import { DashboardMetric, DashboardQueueProvider, DashboardRangePicker, DashboardWidget, SuppressedCell, type DashboardRange } from '@eduworld/ops-ui/dashboard';
 import { Col, Flex, Form, Row, Select, Table, Tabs } from 'antd';
 import { useState } from 'react';
@@ -14,6 +13,7 @@ import { SchoolSelect } from '../../common/SchoolSelect';
 import { SingleTenantGate } from '../../common/scope';
 import { PageTitle } from '../../common/ui';
 import { useAssignments } from '../../lms/api/assignments';
+import { useSchoolGrades } from '../../lms/api/targets';
 import { useActionEnabled } from '../../lms/LmsUi';
 import { useSchoolList } from '../../schools/useSchools';
 import { useSubjects, type AssessmentPeriod } from '../api/dashboardApi';
@@ -24,14 +24,14 @@ import { DASHBOARD_CONFIG, RANGE_LIMITS } from '../model/limits';
 import { RegulationDisclaimer } from './RegulationDisclaimer';
 import { LmsReportExport, TenantReportExport } from './ReportExport';
 
-/** Report types offered by the portal (ADR-0095: not `course_results`, not the class `skill_map`). */
-type ReportType = Exclude<LmsReportRequest['report_type'], 'course_results' | 'skill_map'>;
+type ReportType = LmsReportRequest['report_type'];
 type Format = LmsReportRequest['format'];
 
 /** Formats offered per report type (SCHOOL_LMS §10 table); the server validates the request anyway. */
 export const REPORT_FORMATS: Record<ReportType, Format[]> = {
   assignment_results: ['xlsx', 'csv'],
   regulation_reference: ['xlsx', 'pdf'],
+  skill_map: ['xlsx', 'pdf'],
   school_monthly: ['pdf'],
 };
 const TYPES = Object.keys(REPORT_FORMATS) as ReportType[];
@@ -42,6 +42,7 @@ interface ExportForm {
   format: Format;
   schoolId?: string;
   assignmentId?: string;
+  grade?: number;
   subjectId?: string;
   period: AssessmentPeriod;
   range: DashboardRange;
@@ -54,7 +55,9 @@ export function toLmsReportRequest(v: ExportForm): LmsReportRequest | null {
     case 'assignment_results':
       return v.assignmentId ? { ...base, assignment_id: v.assignmentId } : null;
     case 'regulation_reference':
-      return v.schoolId && v.subjectId ? { ...base, school_id: v.schoolId, subject_id: v.subjectId, period: v.period } : null;
+      return v.schoolId && v.subjectId ? { ...base, school_id: v.schoolId, subject_id: v.subjectId, period: v.period, ...(v.grade ? { grade_level: v.grade } : {}) } : null;
+    case 'skill_map':
+      return v.schoolId && v.grade && v.subjectId ? { ...base, school_id: v.schoolId, grade_level: v.grade, subject_id: v.subjectId } : null;
     case 'school_monthly':
       return v.schoolId ? { ...base, school_id: v.schoolId, from: v.range.from, to: v.range.to } : null;
   }
@@ -64,13 +67,15 @@ function ExportTab() {
   const { t, i18n } = useTranslation();
   const [v, setV] = useState<ExportForm>({ type: 'assignment_results', format: 'xlsx', period: 'end_term_1', range: defaultRange(todayIso()) });
   const set = (p: Partial<ExportForm>) => setV((o) => ({ ...o, ...p }));
-  const needs = (k: 'school' | 'assignment' | 'subject' | 'period' | 'range') =>
+  const needs = (k: 'school' | 'assignment' | 'grade' | 'subject' | 'period' | 'range') =>
     ({
       assignment_results: ['assignment'],
-      regulation_reference: ['school', 'subject', 'period'],
+      regulation_reference: ['school', 'grade', 'subject', 'period'],
+      skill_map: ['school', 'grade', 'subject'],
       school_monthly: ['school', 'range'],
     })[v.type].includes(k);
-  const show = { school: needs('school'), assignment: needs('assignment'), subject: needs('subject'), period: needs('period'), range: needs('range') };
+  const show = { school: needs('school'), assignment: needs('assignment'), grade: needs('grade'), subject: needs('subject'), period: needs('period'), range: needs('range') };
+  const grades = useSchoolGrades(v.schoolId).grades;
   const assignments = useAssignments({});
   const subjects = useSubjects();
   const request = toLmsReportRequest(v);
@@ -91,7 +96,20 @@ function ExportTab() {
         </Form.Item>
         {show.school ? (
           <Form.Item label={t('portal.school_lms.common.school')} style={{ marginBottom: 0 }}>
-            <SchoolSelect value={v.schoolId} onChange={(schoolId) => set({ schoolId })} />
+            <SchoolSelect value={v.schoolId} onChange={(schoolId) => set({ schoolId, grade: undefined })} />
+          </Form.Item>
+        ) : null}
+        {show.grade ? (
+          <Form.Item label={t('dashboard.filter.grade')} style={{ marginBottom: 0 }}>
+            <Select
+              allowClear={v.type !== 'skill_map'}
+              aria-label={t('dashboard.filter.grade')}
+              placeholder={t('dashboard.filter.allGrades')}
+              value={v.grade}
+              onChange={(grade?: number) => set({ grade })}
+              options={grades.map((g) => ({ value: g, label: t('dashboard.filter.gradeN', { n: g }) }))}
+              popupMatchSelectWidth={false}
+            />
           </Form.Item>
         ) : null}
         {show.assignment ? (

@@ -90,7 +90,7 @@ interface ArmValues {
 interface ExperimentValues {
   code: string;
   kind: LearningExperimentKind;
-  unit: 'class' | 'student';
+  unit: 'school_grade' | 'student';
   tenant_ids: string[];
   study_id?: string;
   period: [Dayjs, Dayjs];
@@ -145,13 +145,13 @@ function CreateExperimentDialog({ onClose }: { onClose: () => void }) {
     <Modal open width={760} title={t('platform.research.experiments.create')} okText={t('platform.research.common.save')} cancelText={t('platform.research.common.cancel')} confirmLoading={create.isPending} onOk={submit} onCancel={onClose} destroyOnHidden>
       <Typography.Paragraph type="secondary">{t('platform.research.experiments.createHelp')}</Typography.Paragraph>
       {create.error ? <ProblemMessage error={create.error} /> : null}
-      <Form form={form} name="learning_experiment" layout="vertical" initialValues={{ kind: 'mastery_model', unit: 'class', arms: initialArms, period: [dayjs().startOf('hour'), dayjs().startOf('hour').add(30, 'day')] }}>
+      <Form form={form} name="learning_experiment" layout="vertical" initialValues={{ kind: 'mastery_model', unit: 'school_grade', arms: initialArms, period: [dayjs().startOf('hour'), dayjs().startOf('hour').add(30, 'day')] }}>
         <LimitedField name="code" label={t('platform.research.experiments.code')} limit={L.experimentCode} required />
         <Form.Item name="kind" label={t('platform.research.experiments.kind')} rules={[{ required: true }]}>
           <Radio.Group options={EXPERIMENT_KINDS.map((k) => ({ value: k, label: t(`platform.research.experimentKind.${k}`) }))} />
         </Form.Item>
         <Form.Item name="unit" label={t('platform.research.experiments.unit')} extra={t('platform.research.experiments.unitHelp')}>
-          <Radio.Group options={(['class', 'student'] as const).map((u) => ({ value: u, label: t(`platform.research.unit.${u}`) }))} />
+          <Radio.Group options={(['school_grade', 'student'] as const).map((u) => ({ value: u, label: t(`platform.research.unit.${u}`) }))} />
         </Form.Item>
         <Form.Item name="tenant_ids" label={t('platform.research.experiments.tenants')} rules={[{ required: true, message: t('platform.research.form.required') }]}>
           <TenantSelect multiple maxCount={L.experimentTenants.maxItems} ariaLabel={t('platform.research.experiments.tenants')} />

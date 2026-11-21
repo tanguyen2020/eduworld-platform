@@ -91,10 +91,10 @@
     "daysAway": "Days without the game",
     "days": "{{count}} days",
     "activity": "Login activity",
-    "searchHint": "Name or username (at least 2 characters)",
+    "searchHint": "Name, username or student code (at least 2 characters)",
     "readOnlyHint": "Students belong to one school and one grade, come from SIS/CSV and are read-only. Edit details or change school/grade in SIS or the CSV file.",
-    "searchFirst": "Type a name or username (at least 2 characters) to find students of the school.",
-    "searchUnavailable": "Students cannot be searched with your current permissions (requires viewing the users of the school).",
+    "grade": "Grade",
+    "gradeN": "Grade {{n}}",
     "found": "Students found"
   },
   "activity": {
@@ -134,7 +134,7 @@
     "tab": "CSV import",
     "help": "CSV file following the EduWorld SIS Contract (column = data field name), one data kind per file, up to 10 MB. The automatic SIS sync schedule is set by EduWorld per connection; schools using CSV update by uploading a new file.",
     "kind": "Data kind",
-    "kinds": { "students": "Students", "classes": "Classes", "enrollments": "Enrollments", "schools": "Schools" },
+    "kinds": { "students": "Students", "schools": "Schools" },
     "dryRun": "Dry run",
     "dryRunHelp": "A dry run only checks and counts changes; nothing is applied.",
     "file": "CSV file",
@@ -187,15 +187,10 @@
     "types": {
       "possible_duplicate": "Possible duplicate person",
       "transfer_confirmation": "Transfer confirmation",
-      "missing_class": "Student without a class",
-      "class_school_mismatch": "Class not in the school",
-      "orphan_enrollment": "Enrollment without student/class",
-      "multi_school_enrollment": "Student in several schools",
       "school_province_missing": "School without province",
       "unmapped_school": "Unmapped school",
       "cleaned_up_student_in_sis": "Cleaned-up student still in SIS",
       "duplicate_identifier": "Duplicate username/email",
-      "grade_mismatch": "Grade mismatch",
       "deactivation_review": "Deactivation review",
       "ambiguous_login": "Ambiguous username",
       "school_duplicate": "Duplicate school",
@@ -204,15 +199,10 @@
     "typeAdvice": {
       "possible_duplicate": "Check both records in SIS; if it is the same person, fix it at the source.",
       "transfer_confirmation": "Confirm the transfer in SIS.",
-      "missing_class": "Add the student's class in SIS/CSV and import again.",
-      "class_school_mismatch": "Fix the class's school in SIS/CSV.",
-      "orphan_enrollment": "Check the enrollment row in SIS/CSV.",
-      "multi_school_enrollment": "A student belongs to one school only; fix it in SIS/CSV.",
       "school_province_missing": "Select the province when approving the school.",
       "unmapped_school": "Contact EduWorld to map the school.",
       "cleaned_up_student_in_sis": "Check the student in SIS; the student is restored when signing in again.",
       "duplicate_identifier": "Change the username/email in SIS/CSV so it does not clash with another account.",
-      "grade_mismatch": "Fix the grade of the student or class in SIS/CSV.",
       "deactivation_review": "Confirm in SIS that the student left.",
       "ambiguous_login": "Change the username in SIS/CSV.",
       "school_duplicate": "Contact the tenant admin to merge the schools.",
@@ -408,7 +398,6 @@
       "course": "Course",
       "learning_path": "Learning path",
       "challenge": "Challenge",
-      "class_template": "Class template",
       "student": "Student"
     }
   }

@@ -9,7 +9,7 @@ export const RESEARCH_LIMITS = {
   studyTitle: { source: 'components.schemas.EfficacyStudyCreate.properties.title', minLength: 1, maxLength: 255 },
   studyObjectives: { source: 'components.schemas.EfficacyStudyCreate.properties.objective_ids', maxItems: 100 },
   minWeeks: { source: 'components.schemas.EfficacyStudyCreate.properties.min_intervention_weeks', minimum: 1, maximum: 52 },
-  pairNo: { source: 'components.schemas.EfficacyStudyClassCreate.properties.pair_no', minimum: 1, maximum: 200 },
+  pairNo: { source: 'components.schemas.EfficacyStudyCohortCreate.properties.pair_no', minimum: 1, maximum: 200 },
   waveDuration: { source: 'components.schemas.EfficacyWaveCreate.properties.duration_seconds', minimum: 60, maximum: 14400 },
   withdrawReason: { source: 'components.schemas.EfficacyWithdrawalCreate.properties.reason', minLength: 10, maxLength: 1000 },
   schoolRequestRef: { source: 'components.schemas.EfficacyWithdrawalCreate.properties.school_request_ref', maxLength: 128 },

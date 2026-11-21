@@ -1,10 +1,10 @@
 // MOCK (test only, AGENTS R17): in-memory stand-in of the learning-module dashboard and report operations used by the
-// F056 screens — getSchoolDashboard, getStudentLearningProfile, getRegulationReferenceReport, getExamSessionReport, listSchoolAcademicYears (module identity), listSchoolAcademicYears (module identity), createLmsReport/getLmsReport, getTenantLearningSummary,
+// F056 screens — getSchoolDashboard, getGradeDashboard, getStudentLearningProfile, getRegulationReferenceReport, getExamSessionReport, listSchoolAcademicYears (module identity), listSchoolAcademicYears (module identity), createLmsReport/getLmsReport, getTenantLearningSummary,
 // createTenantReport/getTenantReport, getPlatformLearningSummary, createPlatformReport/getPlatformReport and
 // listSubjects — answering per specs/openapi/eduworld-api.v1.yaml (golden data of TH Demo A). Tenant isolation is
 // simulated: another tenant's X-Tenant-Id gets 404 (F056-AC-21); a forbidden subject gets 403 PERMISSION_DENIED.
-// The school fixture still carries the class fields the contract keeps until WP-L2 (`classes`, `by_class`, `class_ids`,
-// attention `class_id`) so the tests prove the portal never shows them (ADR-0095). Exports need an Idempotency-Key and go queued → running → succeeded with a signed link. Per-test behaviours go
+// Shapes by school grade (ADR-0095, WP-L2): `grades`, `by_grade` (grade 4 under the small-cell threshold → `suppressed`),
+// weak LO `grade_levels`, attention `grade_level`. Exports need an Idempotency-Key and go queued → running → succeeded with a signed link. Per-test behaviours go
 // through `state.next` (queued Problem answers per operation). Never imported by application code; NOT a backend.
 import { problem, TENANTS, type MockPortalBackend, type RecordedRequest } from './mock-backend';
 import { LMS_IDS } from './lms-mock';
@@ -39,12 +39,30 @@ export function schoolDashboardFixture(): Row {
       assignments_open: 2,
       assignments_due_soon: 1,
       assignment_completion_rate: 0.6,
-      assignments: [{ assignment_id: DASH_IDS.assignmentGraded, title: 'Bảng nhân 6–9', due_at: '2026-11-22T10:00:00Z', status: 'open', submitted: 2, total: 3, missed: 0, not_started: 1, by_class: [{ class_id: IDS.class3A, submitted: 2, total: 3 }] }],
-      classes: [{ class_id: IDS.class3A, name: '3A', grade_level: 3, assignment_completion_rate: 0.67, accuracy: 0.7, active_students: 3 }],
-      weak_objectives: [{ objective_id: DASH_IDS.loChiaDu, code: 'TOAN.3.CHIA_DU', yccd_ref: 'YCCĐ 3.12', below_proficient_ratio: 0.55, class_ids: [IDS.class3A] }],
+      assignments: [
+        {
+          assignment_id: DASH_IDS.assignmentGraded,
+          title: 'Bảng nhân 6–9',
+          due_at: '2026-11-22T10:00:00Z',
+          status: 'open',
+          submitted: 2,
+          total: 3,
+          missed: 0,
+          not_started: 1,
+          by_grade: [
+            { grade_level: 3, submitted: 2, total: 3, not_started: 1, missed: 0, suppressed: false },
+            { grade_level: 4, submitted: null, total: null, not_started: null, missed: null, suppressed: true },
+          ],
+        },
+      ],
+      grades: [
+        { grade_level: 3, students: 32, active_students: 21, accuracy: 0.7, assignment_completion_rate: 0.67, suppressed: false },
+        { grade_level: 4, students: null, active_students: null, accuracy: null, assignment_completion_rate: null, suppressed: true },
+      ],
+      weak_objectives: [{ objective_id: DASH_IDS.loChiaDu, code: 'TOAN.3.CHIA_DU', yccd_ref: 'YCCĐ 3.12', below_proficient_ratio: 0.55, grade_levels: [3] }],
       students_needing_attention: [
-        { student_id: IDS.studentAn, display_name: 'Nguyễn An', class_id: IDS.class3A, reasons: ['rapid_guess'] },
-        { student_id: LMS_IDS.studentBinh, display_name: 'Lê Bình', class_id: IDS.class3A, reasons: ['missed_assignments', 'inactive_game'] },
+        { student_id: IDS.studentAn, display_name: 'Nguyễn An', grade_level: 3, reasons: ['rapid_guess'] },
+        { student_id: LMS_IDS.studentBinh, display_name: 'Lê Bình', grade_level: 3, reasons: ['missed_assignments', 'inactive_game'] },
       ],
       students_needing_attention_total: 2,
       self_study: { avg_active_minutes_per_student: 42, recommendation_started_rate: 0.68, objectives_improved_after_recommendation: 37 },
@@ -54,6 +72,46 @@ export function schoolDashboardFixture(): Row {
       ],
       safety_notifications_unacknowledged: 1,
     },
+  };
+}
+
+function gradeDashboard(grade: number, cursor: string | null): Row {
+  const students = [
+    { student_id: IDS.studentAn, accuracy: 0.8, active_minutes: 50, activities_completed: 6, lessons_completed: 2, rapid_guess_flag: true, rapid_guess_ratio: 0.35, reasons: ['rapid_guess'] },
+    { student_id: LMS_IDS.studentBinh, accuracy: 0.4, active_minutes: 5, activities_completed: 1, lessons_completed: 0, rapid_guess_flag: false, reasons: ['missed_assignments'] },
+  ];
+  const suppressed = grade !== 3;
+  return {
+    school_id: IDS.schoolA,
+    grade_level: grade,
+    data_as_of: AS_OF,
+    grain: 'day',
+    is_partial: false,
+    generated_at: AS_OF,
+    suppressed,
+    student_count: suppressed ? null : 32,
+    active_students_7d: suppressed ? null : 21,
+    assignments_open: 2,
+    accuracy: suppressed ? null : 0.62,
+    rapid_guess_ratio: suppressed ? null : 0.12,
+    assignment_completion_rate: suppressed ? null : 0.67,
+    objective_distribution: suppressed
+      ? []
+      : [
+          { objective_id: DASH_IDS.loChiaDu, code: 'TOAN.3.CHIA_DU', yccd_ref: 'YCCĐ 3.12', level_counts: { not_started: 0, beginning: 2, developing: 1, proficient: 0, mastered: 0 }, below_proficient_ratio: 1, students_with_evidence: 3 },
+          { objective_id: DASH_IDS.loNhan7, code: 'TOAN.3.NHAN_7', level_counts: { not_started: 1, beginning: 0, developing: 0, proficient: 1, mastered: 1 }, below_proficient_ratio: 0.33, students_with_evidence: 2 },
+        ],
+    students_needing_attention: suppressed
+      ? []
+      : [
+          { student_id: IDS.studentAn, display_name: 'Nguyễn An', reasons: ['rapid_guess'], weak_objective_ids: [DASH_IDS.loChiaDu] },
+          { student_id: LMS_IDS.studentBinh, display_name: 'Lê Bình', reasons: ['missed_assignments'], weak_objective_ids: [DASH_IDS.loChiaDu, DASH_IDS.loNhan7] },
+        ],
+    students: suppressed
+      ? { data: [], page: { has_more: false, limit: 100, next_cursor: null } }
+      : cursor
+        ? { data: [students[1]], page: { has_more: false, limit: 1, next_cursor: null } }
+        : { data: [students[0]], page: { has_more: true, limit: 1, next_cursor: 'p2' } },
   };
 }
 
@@ -214,6 +272,13 @@ export function installDashboardMock(backend: MockPortalBackend): DashboardMockS
       if (state.forbiddenSubjects.has(q(r).get('subject_id') ?? '')) return problem(403, 'PERMISSION_DENIED');
       return json(200, { ...state.school(), from: q(r).get('from'), to: q(r).get('to') });
     }
+    if ((x = /^\/lms\/schools\/([^/]+)\/grades\/(\d+)\/dashboard$/.exec(p)) && m === 'GET') {
+      const n = queued('grade');
+      if (n) return n;
+      if (x[1] !== IDS.schoolA) return problem(404, 'NOT_FOUND');
+      if (state.forbiddenSubjects.has(q(r).get('subject_id') ?? '')) return problem(403, 'PERMISSION_DENIED');
+      return json(200, gradeDashboard(Number(x[2]), q(r).get('cursor')));
+    }
     if ((x = /^\/lms\/students\/([^/]+)\/analytics$/.exec(p)) && m === 'GET') {
       const n = queued('student');
       if (n) return n;
@@ -228,8 +293,8 @@ export function installDashboardMock(backend: MockPortalBackend): DashboardMockS
         academic_year: 2026,
         disclaimer: 'Mức tham khảo suy ra từ kết quả tự chấm theo hồ sơ đánh giá.',
         items: [
-          { student_id: IDS.studentAn, class_id: IDS.class3A, level_code: 'completed', coverage_ratio: 0.8, rapid_guess_ratio: 0.1, profile_version: 1 },
-          { student_id: IDS.studentSapBiDon, class_id: IDS.class3A, level_code: 'insufficient_data', coverage_ratio: 0.1, rapid_guess_ratio: 0, profile_version: 1, low_reliability_exam_ids: [LMS_IDS.examSession] },
+          { student_id: IDS.studentAn, grade_level: 3, level_code: 'completed', coverage_ratio: 0.8, rapid_guess_ratio: 0.1, profile_version: 1 },
+          { student_id: IDS.studentSapBiDon, grade_level: 3, level_code: 'insufficient_data', coverage_ratio: 0.1, rapid_guess_ratio: 0, profile_version: 1, low_reliability_exam_ids: [LMS_IDS.examSession] },
         ],
         page: { has_more: false, limit: 100, next_cursor: null },
       });

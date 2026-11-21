@@ -17,7 +17,6 @@ export const RIDS = {
   lo: '0193a4d2-5000-7000-8000-000000000003',
   formA: '0193a4d2-5000-7000-8000-000000000004',
   formB: '0193a4d2-5000-7000-8000-000000000005',
-  class3a: '0193a4d2-5000-7000-8000-000000000006',
   school: '0193a4d2-5000-7000-8000-000000000007',
   agreement: '0193a4d2-5000-7000-8000-000000000008',
   experiment: '0193a4d2-5000-7000-8000-000000000009',
@@ -28,7 +27,7 @@ export const RIDS = {
 
 export interface ResearchState {
   studies: Obj[];
-  classes: Obj[];
+  cohorts: Obj[];
   agreements: Obj[];
   experiments: Obj[];
   waves: Obj[];
@@ -39,17 +38,17 @@ export function researchState(): ResearchState {
     studies: [
       {
         study_id: RIDS.study, code: 'math-g3-2026', title: 'Toán 3 – học kỳ I', subject_id: RIDS.subject, grade_level: 3, objective_ids: [RIDS.lo],
-        form_a_blueprint_version_id: RIDS.formA, form_b_blueprint_version_id: RIDS.formB, min_intervention_weeks: 8, status: 'draft', class_count: 0,
+        form_a_blueprint_version_id: RIDS.formA, form_b_blueprint_version_id: RIDS.formB, min_intervention_weeks: 8, status: 'draft', cohort_count: 0,
         pair_count: 0, tenant_ids: [], created_at: '2026-11-17T08:00:00Z', version: 1,
       },
     ],
-    classes: [],
+    cohorts: [],
     agreements: [
       { agreement_id: RIDS.agreement, tenant_id: TENANTS.thDemoA.tenant_id, agreement_ref: 'HD-2026-01', covers: ['efficacy_study', 'experiment'], agreed_on: '2026-09-01', status: 'active', created_at: '2026-11-17T08:00:00Z' },
     ],
     experiments: [
       {
-        experiment_id: RIDS.experiment, code: 'mastery-we-1-1', kind: 'mastery_model', unit: 'class', status: 'draft', revision: 1, tenant_ids: [TENANTS.thDemoA.tenant_id],
+        experiment_id: RIDS.experiment, code: 'mastery-we-1-1', kind: 'mastery_model', unit: 'school_grade', status: 'draft', revision: 1, tenant_ids: [TENANTS.thDemoA.tenant_id],
         arms: [{ code: 'control', allocation_pct: 50, is_control: true, model_version: 'we-1.0' }, { code: 'we11', allocation_pct: 50, is_control: false, model_version: 'we-1.1' }],
         start_at: '2026-11-20T00:00:00Z', end_at: '2026-12-20T00:00:00Z', created_at: '2026-11-18T00:00:00Z',
       },
@@ -63,8 +62,8 @@ const REPORT = {
   excluded_question_version_ids: [],
   results: {
     arms: {
-      intervention: { classes: 1, participants: 25, analysed: 24, withdrawn: null, attrition_rate: 0.04, pre_mean: 0.41, post_mean: 0.66, gain_mean: 0.25 },
-      comparison: { classes: 1, participants: 26, analysed: 25, withdrawn: null, attrition_rate: 0.038, pre_mean: 0.4, post_mean: 0.5, gain_mean: 0.1 },
+      intervention: { cohorts: 1, participants: 25, analysed: 24, withdrawn: null, attrition_rate: 0.04, pre_mean: 0.41, post_mean: 0.66, gain_mean: 0.25 },
+      comparison: { cohorts: 1, participants: 26, analysed: 25, withdrawn: null, attrition_rate: 0.038, pre_mean: 0.4, post_mean: 0.5, gain_mean: 0.1 },
     },
     effect: { hedges_g: 0.512, ci_low: 0.021, ci_high: 1.003 },
     objectives: [{ objective_id: RIDS.lo, intervention_gain: 0.3, comparison_gain: null }],
@@ -118,17 +117,17 @@ export function withResearchMock(backend: MockPortalBackend, state: ResearchStat
         return json(200, st);
       }
       if (rest === ':complete') return json(200, Object.assign(st, { status: 'completed' }));
-      if (rest === '/classes' && rec.method === 'GET') return json(200, page(s.classes));
-      if (rest === '/classes' && rec.method === 'POST') {
+      if (rest === '/cohorts' && rec.method === 'GET') return json(200, page(s.cohorts));
+      if (rest === '/cohorts' && rec.method === 'POST') {
         const tenant = rec.headers['x-tenant-id'];
         if (!tenant) return problem(400, 'TENANT_HEADER_REQUIRED');
-        const c = { study_id: st.study_id, tenant_id: tenant, school_id: RIDS.school, class_name: '3A', status: 'enrolled', participant_count: 0, ...body };
-        s.classes.push(c);
+        const c = { study_id: st.study_id, tenant_id: tenant, grade_level: st.grade_level, conflict: false, status: 'enrolled', participant_count: 0, ...body };
+        s.cohorts.push(c);
         return json(201, c);
       }
       if (rest === '/waves' && rec.method === 'GET') return json(200, { items: s.waves });
       if (rest === '/waves' && rec.method === 'POST') {
-        const w = { wave_id: RIDS.wave, study_id: st.study_id, status: 'scheduled', duration_seconds: 2400, classes: [], ...body };
+        const w = { wave_id: RIDS.wave, study_id: st.study_id, status: 'scheduled', duration_seconds: 2400, cohorts: [], ...body };
         s.waves.push(w);
         return json(201, w);
       }

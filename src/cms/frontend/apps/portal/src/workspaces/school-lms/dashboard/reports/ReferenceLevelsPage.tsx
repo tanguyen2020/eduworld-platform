@@ -1,5 +1,6 @@
 // Reference levels TT27/TT22 (F056-AC-16; SCHOOL_LMS §10): getRegulationReferenceReport for one school, subject and
-// assessment period (no class filter — ADR-0095) — level per student as computed by the server, "Chưa đủ dữ liệu" when the
+// assessment period, optionally one grade (ADR-0095: no class) — level per student as computed by the server (names of
+// the chosen grade's students from listTenantGradeStudents), "Chưa đủ dữ liệu" when the
 // server says `insufficient_data`, the low-reliability warning of official exams, always under the reference label.
 import { Alert, Breadcrumb, Flex, Form, Select, Tag, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
@@ -7,6 +8,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ResponsiveTable } from '../../common/ResponsiveTable';
+import { useGradeStudents } from '../../lms/api/targets';
 import { useRegulationReference, type AssessmentPeriod, type RegulationReferenceReport } from '../api/dashboardApi';
 import { DashboardPageError, DASHBOARD_BASE } from '../DashboardUi';
 import { DashboardFilterBar, useDashboardFilters } from '../DashboardFilterBar';
@@ -20,9 +22,10 @@ export function ReferenceLevelsPage() {
   const { t, i18n } = useTranslation();
   const { filters, setFilters } = useDashboardFilters();
   const [period, setPeriod] = useState<AssessmentPeriod>('end_term_1');
-  const q = useRegulationReference({ schoolId: filters.schoolId, subjectId: filters.subjectId, period });
-  // the report carries no display name and the class student list is gone (ADR-0095): rows are numbered until WP-L2
-  const nameOf = (i: Item) => t('dashboard.student.numbered', { n: q.items.indexOf(i) + 1 });
+  const q = useRegulationReference({ schoolId: filters.schoolId, subjectId: filters.subjectId, grade: filters.grade, period });
+  // the report carries no display name: names come from the students of the chosen grade, else rows are numbered
+  const names = useGradeStudents(filters.schoolId, filters.grade);
+  const nameOf = (i: Item) => names.items.find((s) => s.student_id === i.student_id)?.display_name ?? t('dashboard.student.numbered', { n: q.items.indexOf(i) + 1 });
   const pct = (v: number | undefined) => (v === undefined ? '' : new Intl.NumberFormat(i18n.language, { style: 'percent', maximumFractionDigits: 0 }).format(v));
   const columns: ColumnType<Item>[] = [
     { key: 'student', title: t('dashboard.student.name'), render: (_, i) => nameOf(i) },

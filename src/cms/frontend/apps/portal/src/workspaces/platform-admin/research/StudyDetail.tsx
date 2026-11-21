@@ -15,20 +15,20 @@ import {
   ARMS,
   WAVE_KINDS,
   WITHDRAW_SCOPES,
-  useAddStudyClass,
+  useAddStudyCohort,
   useCreateReport,
   useExportDataset,
   usePlatformReport,
-  useRemoveStudyClass,
+  useRemoveStudyCohort,
   useReport,
   useScheduleWave,
   useStudy,
-  useStudyClasses,
+  useStudyCohorts,
   useStudyTransition,
   useWaves,
   useWithdraw,
   type EfficacyStudy,
-  type EfficacyStudyClass,
+  type EfficacyStudyCohort,
   type EfficacyWave,
   type EfficacyWithdrawal,
 } from './api';
@@ -68,7 +68,7 @@ export function StudyDetail() {
           </Descriptions>
           <Tabs
             items={[
-              { key: 'classes', label: t('platform.research.classes.tab'), children: <ClassesTab study={s} /> },
+              { key: 'cohorts', label: t('platform.research.cohorts.tab'), children: <CohortsTab study={s} /> },
               { key: 'waves', label: t('platform.research.waves.tab'), children: <WavesTab study={s} /> },
               { key: 'withdraw', label: t('platform.research.withdraw.tab'), children: <WithdrawTab study={s} /> },
               { key: 'report', label: t('platform.research.report.tab'), children: <ReportTab study={s} /> },
@@ -110,22 +110,24 @@ function StudyActions({ study }: { study: EfficacyStudy }) {
   );
 }
 
-// ---------- classes ----------
+// ---------- cohorts (school × grade of the study, ADR-0095) ----------
 
-function ClassesTab({ study }: { study: EfficacyStudy }) {
+function CohortsTab({ study }: { study: EfficacyStudy }) {
   const { t } = useTranslation();
   const directory = useTenantDirectory();
-  const list = useStudyClasses(study.study_id);
-  const remove = useRemoveStudyClass(study.study_id);
+  const list = useStudyCohorts(study.study_id);
+  const remove = useRemoveStudyCohort(study.study_id);
   const [adding, setAdding] = useState(false);
   const draft = study.status === 'draft';
-  const columns: ColumnsType<EfficacyStudyClass> = [
+  const columns: ColumnsType<EfficacyStudyCohort> = [
     { key: 'tenant', title: t('platform.research.common.tenant'), render: (_, c) => <TenantCell tenantId={c.tenant_id} directory={directory} /> },
-    { key: 'class', title: t('platform.research.classes.class'), render: (_, c) => c.class_name ?? c.class_id },
-    { key: 'pair', title: t('platform.research.classes.pair'), render: (_, c) => c.pair_no ?? t('platform.research.common.none') },
-    { key: 'arm', title: t('platform.research.classes.arm'), render: (_, c) => (c.arm ? t(`platform.research.arm.${c.arm}`) : t('platform.research.classes.armRandom')) },
-    { key: 'form', title: t('platform.research.classes.formOrder'), render: (_, c) => (c.form_order ? t(`platform.research.formOrder.${c.form_order}`) : t('platform.research.common.none')) },
-    { key: 'participants', title: t('platform.research.classes.participants'), render: (_, c) => c.participant_count ?? 0 },
+    { key: 'school', title: t('platform.research.cohorts.school'), render: (_, c) => c.school_id },
+    { key: 'grade', title: t('platform.research.cohorts.grade'), render: (_, c) => t('platform.research.cohorts.gradeN', { n: c.grade_level }) },
+    { key: 'conflict', title: t('platform.research.cohorts.conflict'), render: (_, c) => (c.conflict ? <Typography.Text type="warning">{t('platform.research.cohorts.conflictYes')}</Typography.Text> : null) },
+    { key: 'pair', title: t('platform.research.cohorts.pair'), render: (_, c) => c.pair_no ?? t('platform.research.common.none') },
+    { key: 'arm', title: t('platform.research.cohorts.arm'), render: (_, c) => (c.arm ? t(`platform.research.arm.${c.arm}`) : t('platform.research.cohorts.armRandom')) },
+    { key: 'form', title: t('platform.research.cohorts.formOrder'), render: (_, c) => (c.form_order ? t(`platform.research.formOrder.${c.form_order}`) : t('platform.research.common.none')) },
+    { key: 'participants', title: t('platform.research.cohorts.participants'), render: (_, c) => c.participant_count ?? 0 },
     { key: 'status', title: t('platform.research.common.status'), render: (_, c) => <StatusTag status={c.status} /> },
     {
       key: 'actions',
@@ -133,9 +135,9 @@ function ClassesTab({ study }: { study: EfficacyStudy }) {
       render: (_, c) =>
         draft ? (
           <ActionGate actionKey="action.platform_admin.efficacy_studies.edit">
-            <Popconfirm title={t('platform.research.classes.removeConfirm')} okText={t('platform.research.classes.remove')} cancelText={t('platform.research.common.cancel')} onConfirm={() => remove.mutate(c)}>
+            <Popconfirm title={t('platform.research.cohorts.removeConfirm')} okText={t('platform.research.cohorts.remove')} cancelText={t('platform.research.common.cancel')} onConfirm={() => remove.mutate(c)}>
               <Button size="small" danger>
-                {t('platform.research.classes.remove')}
+                {t('platform.research.cohorts.remove')}
               </Button>
             </Popconfirm>
           </ActionGate>
@@ -146,29 +148,29 @@ function ClassesTab({ study }: { study: EfficacyStudy }) {
     <Space direction="vertical" style={{ width: '100%' }}>
       {draft ? (
         <ActionGate actionKey="action.platform_admin.efficacy_studies.edit">
-          <Button onClick={() => setAdding(true)}>{t('platform.research.classes.add')}</Button>
+          <Button onClick={() => setAdding(true)}>{t('platform.research.cohorts.add')}</Button>
         </ActionGate>
       ) : (
-        <Typography.Paragraph type="secondary">{t('platform.research.classes.locked')}</Typography.Paragraph>
+        <Typography.Paragraph type="secondary">{t('platform.research.cohorts.locked')}</Typography.Paragraph>
       )}
       {list.error ? <ProblemMessage error={list.error} /> : null}
       {remove.error ? <ProblemMessage error={remove.error} /> : null}
-      <Table rowKey={(c) => `${c.tenant_id}/${c.class_id}`} columns={columns} dataSource={list.rows} loading={list.isFetching} pagination={false} locale={{ emptyText: t('platform.research.common.empty') }} />
+      <Table rowKey={(c) => `${c.tenant_id}/${c.school_id}`} columns={columns} dataSource={list.rows} loading={list.isFetching} pagination={false} locale={{ emptyText: t('platform.research.common.empty') }} />
       {list.hasNextPage ? (
         <Button onClick={() => list.fetchNextPage()} loading={list.isFetchingNextPage}>
           {t('platform.research.common.loadMore')}
         </Button>
       ) : null}
-      {adding ? <AddClassDialog study={study} onClose={() => setAdding(false)} /> : null}
+      {adding ? <AddCohortDialog study={study} onClose={() => setAdding(false)} /> : null}
     </Space>
   );
 }
 
-function AddClassDialog({ study, onClose }: { study: EfficacyStudy; onClose: () => void }) {
+function AddCohortDialog({ study, onClose }: { study: EfficacyStudy; onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const { message } = AntApp.useApp();
   const [form] = Form.useForm();
-  const add = useAddStudyClass(study.study_id);
+  const add = useAddStudyCohort(study.study_id);
   const submit = async () => {
     const v = await form.validateFields().catch(() => null);
     if (!v) return;
@@ -178,28 +180,28 @@ function AddClassDialog({ study, onClose }: { study: EfficacyStudy; onClose: () 
       { tenantId, body: body as never },
       {
         onSuccess: () => {
-          message.success(t('platform.research.classes.added'));
+          message.success(t('platform.research.cohorts.added'));
           onClose();
         },
-        onError: (e) => applyFieldErrors(form, e, ['class_id', 'pair_no', 'arm', 'form_order'], t, (k) => i18n.exists(k)),
+        onError: (e) => applyFieldErrors(form, e, ['school_id', 'pair_no', 'arm', 'form_order'], t, (k) => i18n.exists(k)),
       },
     );
   };
   return (
-    <Modal open title={t('platform.research.classes.add')} okText={t('platform.research.common.save')} cancelText={t('platform.research.common.cancel')} confirmLoading={add.isPending} onOk={submit} onCancel={onClose} destroyOnHidden>
-      <Typography.Paragraph type="secondary">{t('platform.research.classes.addHelp')}</Typography.Paragraph>
+    <Modal open title={t('platform.research.cohorts.add')} okText={t('platform.research.common.save')} cancelText={t('platform.research.common.cancel')} confirmLoading={add.isPending} onOk={submit} onCancel={onClose} destroyOnHidden>
+      <Typography.Paragraph type="secondary">{t('platform.research.cohorts.addHelp')}</Typography.Paragraph>
       {add.error ? <ProblemMessage error={add.error} /> : null}
-      <Form form={form} name="efficacy_class" layout="vertical">
+      <Form form={form} name="efficacy_cohort" layout="vertical">
         <Form.Item name="tenant_id" label={t('platform.research.common.targetTenant')} rules={[{ required: true, message: t('platform.research.form.required') }]}>
           <TenantSelect ariaLabel={t('platform.research.common.targetTenant')} />
         </Form.Item>
-        <UuidField name="class_id" label={t('platform.research.classes.classId')} />
-        <BoundedNumberField name="pair_no" label={t('platform.research.classes.pair')} limit={L.pairNo} required={false} />
-        <Form.Item name="arm" label={t('platform.research.classes.arm')}>
-          <Select aria-label={t('platform.research.classes.arm')} allowClear placeholder={t('platform.research.classes.armRandom')} options={ARMS.map((a) => ({ value: a, label: t(`platform.research.arm.${a}`) }))} />
+        <UuidField name="school_id" label={t('platform.research.cohorts.schoolId')} />
+        <BoundedNumberField name="pair_no" label={t('platform.research.cohorts.pair')} limit={L.pairNo} required={false} />
+        <Form.Item name="arm" label={t('platform.research.cohorts.arm')}>
+          <Select aria-label={t('platform.research.cohorts.arm')} allowClear placeholder={t('platform.research.cohorts.armRandom')} options={ARMS.map((a) => ({ value: a, label: t(`platform.research.arm.${a}`) }))} />
         </Form.Item>
-        <Form.Item name="form_order" label={t('platform.research.classes.formOrder')}>
-          <Select aria-label={t('platform.research.classes.formOrder')} allowClear placeholder={t('platform.research.classes.formOrderAuto')} options={(['a_then_b', 'b_then_a'] as const).map((x) => ({ value: x, label: t(`platform.research.formOrder.${x}`) }))} />
+        <Form.Item name="form_order" label={t('platform.research.cohorts.formOrder')}>
+          <Select aria-label={t('platform.research.cohorts.formOrder')} allowClear placeholder={t('platform.research.cohorts.formOrderAuto')} options={(['a_then_b', 'b_then_a'] as const).map((x) => ({ value: x, label: t(`platform.research.formOrder.${x}`) }))} />
         </Form.Item>
       </Form>
     </Modal>
@@ -208,7 +210,7 @@ function AddClassDialog({ study, onClose }: { study: EfficacyStudy; onClose: () 
 
 // ---------- waves ----------
 
-const sum = (w: EfficacyWave, k: 'invited_count' | 'completed_count' | 'absent_count') => (w.classes ?? []).reduce((n, c) => n + c[k], 0);
+const sum = (w: EfficacyWave, k: 'invited_count' | 'completed_count' | 'absent_count') => (w.cohorts ?? []).reduce((n, c) => n + c[k], 0);
 
 function WavesTab({ study }: { study: EfficacyStudy }) {
   const { t } = useTranslation();
@@ -216,10 +218,10 @@ function WavesTab({ study }: { study: EfficacyStudy }) {
   const [scheduling, setScheduling] = useState(false);
   const columns: ColumnsType<EfficacyWave> = [
     { key: 'kind', title: t('platform.research.waves.kind'), render: (_, w) => t(`platform.research.waveKind.${w.kind}`) },
-    { key: 'form', title: t('platform.research.waves.form'), render: (_, w) => (w.form ? t(`platform.research.formName.${w.form}`) : t('platform.research.waves.formByClass')) },
+    { key: 'form', title: t('platform.research.waves.form'), render: (_, w) => (w.form ? t(`platform.research.formName.${w.form}`) : t('platform.research.waves.formByCohort')) },
     { key: 'window', title: t('platform.research.waves.window'), render: (_, w) => `${formatTime(w.window_start)} – ${formatTime(w.window_end)}` },
     { key: 'status', title: t('platform.research.common.status'), render: (_, w) => <StatusTag status={w.status} /> },
-    { key: 'sessions', title: t('platform.research.waves.sessions'), render: (_, w) => w.classes?.length ?? 0 },
+    { key: 'sessions', title: t('platform.research.waves.sessions'), render: (_, w) => w.cohorts?.length ?? 0 },
     {
       key: 'counts',
       title: t('platform.research.waves.counts'),
@@ -305,12 +307,12 @@ function WithdrawTab({ study }: { study: EfficacyStudy }) {
       reason: v.reason.trim(),
       ...(v.school_request_ref?.trim() ? { school_request_ref: v.school_request_ref.trim() } : {}),
       ...(v.scope === 'school' ? { school_id: v.school_id } : {}),
-      ...(v.scope === 'class' ? { class_id: v.class_id } : {}),
+      ...(v.scope === 'cohort' ? { school_id: v.school_id } : {}),
       ...(v.scope === 'students' ? { student_ids: v.student_ids } : {}),
     };
     withdraw.mutate(
       { tenantId: v.tenant_id, body },
-      { onSuccess: setResult, onError: (e) => applyFieldErrors(form, e, ['scope', 'school_id', 'class_id', 'student_ids', 'reason', 'school_request_ref'], t, (k) => i18n.exists(k)) },
+      { onSuccess: setResult, onError: (e) => applyFieldErrors(form, e, ['scope', 'school_id', 'student_ids', 'reason', 'school_request_ref'], t, (k) => i18n.exists(k)) },
     );
   };
   return (
@@ -325,8 +327,7 @@ function WithdrawTab({ study }: { study: EfficacyStudy }) {
         <Form.Item name="scope" label={t('platform.research.withdraw.scope')} rules={[{ required: true }]}>
           <Radio.Group options={WITHDRAW_SCOPES.map((s) => ({ value: s, label: t(`platform.research.withdraw.scopeKind.${s}`) }))} />
         </Form.Item>
-        {scope === 'school' ? <UuidField name="school_id" label={t('platform.research.withdraw.schoolId')} /> : null}
-        {scope === 'class' ? <UuidField name="class_id" label={t('platform.research.classes.classId')} /> : null}
+        {scope === 'school' || scope === 'cohort' ? <UuidField name="school_id" label={t('platform.research.withdraw.schoolId')} /> : null}
         {scope === 'students' ? <UuidListField name="student_ids" label={t('platform.research.withdraw.studentIds')} limit={L.withdrawStudents} required /> : null}
         <LimitedField name="reason" label={t('platform.research.common.reason')} limit={L.withdrawReason} required textarea />
         <LimitedField name="school_request_ref" label={t('platform.research.withdraw.requestRef')} limit={L.schoolRequestRef} />
