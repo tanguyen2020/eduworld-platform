@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -69,16 +70,22 @@ func (RegradeModel) Request(ctx context.Context, id uuid.UUID, platform bool) (*
 }
 
 // Requests implements read.RegradeReadModel.
-func (RegradeModel) Requests(ctx context.Context, questionVersionID, activityVersionID *uuid.UUID, platform bool, limit int) ([]dto.RegradeRequestView, error) {
+func (RegradeModel) Requests(ctx context.Context, questionVersionID, activityVersionID *uuid.UUID, platform bool, after *read.RegradeKey, limit int) ([]dto.RegradeRequestView, error) {
 	q, err := sqlTx(ctx)
 	if err != nil {
 		return nil, err
+	}
+	var afterAt *time.Time
+	afterID := uuid.Nil
+	if after != nil {
+		afterAt, afterID = &after.CreatedAt, after.ID
 	}
 	// tenancyguard:ok platform requests (tenant_id IS NULL, PlatformScope) or requests of the session tenant (RLS + infra.current_tenant_id()); deleted_at IS NULL
 	rows, err := q.QueryContext(ctx, `SELECT `+regradeColumns+` FROM assessment.regrade_requests
 		WHERE deleted_at IS NULL AND (($1 AND tenant_id IS NULL) OR (NOT $1 AND tenant_id = infra.current_tenant_id()))
 			AND ($2::uuid IS NULL OR question_version_id = $2) AND ($3::uuid IS NULL OR activity_version_id = $3)
-		ORDER BY created_at DESC, regrade_request_id DESC LIMIT $4`, platform, questionVersionID, activityVersionID, limit)
+			AND ($5::timestamptz IS NULL OR (created_at, regrade_request_id) < ($5::timestamptz, $6::uuid))
+		ORDER BY created_at DESC, regrade_request_id DESC LIMIT $4`, platform, questionVersionID, activityVersionID, limit, afterAt, afterID)
 	if err != nil {
 		return nil, fmt.Errorf("regrade requests: %w", err)
 	}

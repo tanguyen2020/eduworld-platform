@@ -157,11 +157,24 @@ func (ReleaseModel) Releases(ctx context.Context, t contentmodel.ContentType, it
 }
 
 // QuestionUsages implements read.ReleaseReadModel: the question set versions holding a version of the question.
-func (ReleaseModel) QuestionUsages(ctx context.Context, questionID uuid.UUID) ([]dto.ContentUsageView, error) {
+func (ReleaseModel) QuestionUsages(ctx context.Context, questionID uuid.UUID, after *uuid.UUID, limit int) ([]dto.ContentUsageView, *uuid.UUID, bool, error) {
 	cl := client(ctx)
-	items, err := cl.QuestionSetItem.Query().Where(entqsi.QuestionID(questionID)).All(ctx)
+	q := cl.QuestionSetItem.Query().Where(entqsi.QuestionID(questionID))
+	if after != nil {
+		q = q.Where(entqsi.IDGT(*after))
+	}
+	items, err := q.Order(ent.Asc(entqsi.FieldID)).Limit(limit + 1).All(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, false, err
+	}
+	more := len(items) > limit
+	if more {
+		items = items[:limit]
+	}
+	var last *uuid.UUID
+	if len(items) > 0 {
+		id := items[len(items)-1].ID
+		last = &id
 	}
 	out := []dto.ContentUsageView{}
 	for _, it := range items {
@@ -180,5 +193,5 @@ func (ReleaseModel) QuestionUsages(ctx context.Context, questionID uuid.UUID) ([
 		u.Title = titleOfJSON(sv.Title, sv.ContentLanguage)
 		out = append(out, u)
 	}
-	return out, nil
+	return out, last, more, nil
 }

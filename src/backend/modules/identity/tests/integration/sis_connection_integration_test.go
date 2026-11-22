@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -11,6 +12,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 )
 
@@ -21,7 +23,8 @@ func TestSisConnections(t *testing.T) {
 	e := setup(ctx, t)
 	a := seedTenant(ctx, t, e.platform, "pgd-conn-a")
 	b := seedTenant(ctx, t, e.platform, "pgd-conn-b")
-	h := command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit}
+	codec, _ := page.NewCodec([]byte(strings.Repeat("k", 32)))
+	h := command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit, Cursors: codec}
 	sa := authztest.Ctx(ctx, authztest.Platform("system_admin"))
 	ta := uuid.MustParse(a.tenant)
 
@@ -54,10 +57,22 @@ func TestSisConnections(t *testing.T) {
 	if _, err := h.SetSchools(sa, c2.ID, []uuid.UUID{s2}, "move"); err != nil {
 		t.Fatalf("move freed school: %v", err)
 	}
-	list, err := h.Schools(sa, c1.ID)
+	// API_DESIGN §5: cursor pages — limit 1 returns one row, has_more and a cursor to the second (last) row.
+	first, err := h.Schools(sa, c1.ID, 1, "")
 	if err != nil {
 		t.Fatal(err)
 	}
+	if len(first.Data) != 1 || !first.Page.HasMore || first.Page.NextCursor == nil {
+		t.Fatalf("first page: %+v", first)
+	}
+	second, err := h.Schools(sa, c1.ID, 1, *first.Page.NextCursor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(second.Data) != 1 || second.Page.HasMore || second.Data[0].SchoolID == first.Data[0].SchoolID {
+		t.Fatalf("second page: %+v", second)
+	}
+	list := append(first.Data, second.Data...)
 	active := 0
 	for _, s := range list {
 		if s.Active {
@@ -67,7 +82,7 @@ func TestSisConnections(t *testing.T) {
 	if active != 1 {
 		t.Fatalf("active schools of c1 = %d (%+v)", active, list)
 	}
-	if _, err := h.Schools(sa, uuid.New()); code(err) != problem.NotFound {
+	if _, err := h.Schools(sa, uuid.New(), 0, ""); code(err) != problem.NotFound {
 		t.Fatalf("unknown connection: %v", err)
 	}
 	authztest.ExpectDenied(t, func() error {

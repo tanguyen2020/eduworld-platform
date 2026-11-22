@@ -31,7 +31,7 @@ type ReleaseQueries interface {
 	GetVersion(ctx context.Context, typ string, id uuid.UUID, no int) (dto.ContentVersionDetail, error)
 	Diff(ctx context.Context, typ string, id uuid.UUID, no, with int) (query.VersionDiff, error)
 	ListReleases(ctx context.Context, typ string, id uuid.UUID, in query.PageInput) (query.Page[dto.ContentReleaseView], error)
-	Usages(ctx context.Context, typ string, id uuid.UUID) ([]dto.ContentUsageView, error)
+	Usages(ctx context.Context, typ string, id uuid.UUID, in query.PageInput) (query.Page[dto.ContentUsageView], error)
 }
 
 const cmsContent = "/cms/learning/content/{content_type}/{content_id}"
@@ -247,10 +247,10 @@ func (h Handlers) getContentUsages(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
-	out, err := h.ReleaseQueries.Usages(r.Context(), typ, id)
+	p, err := h.ReleaseQueries.Usages(r.Context(), typ, id, pageIn(r))
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": out})
+	list(w, p, func(v dto.ContentUsageView) dto.ContentUsageView { return v })
 }

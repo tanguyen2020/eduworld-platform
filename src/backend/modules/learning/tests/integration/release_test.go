@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -421,6 +422,16 @@ func TestReleaseHistory(t *testing.T) {
 	us := u.items("data")
 	if len(us) != 1 || us[0]["ref_type"] != "question_set" || us[0]["ref_id"] != set.str("content_id") || us[0]["used_version"] != float64(2) {
 		t.Fatalf("usages: %s", u.raw)
+	}
+	// API_DESIGN §5: usages are cursor paginated — a second set, limit 1 → two pages.
+	set2 := must(t, c.do(t, http.MethodPost, "/cms/learning/question-sets", qlcmA, idem(), setBody(qc, staticDef(c.versionID(ctx, t, id, 2)))), http.StatusCreated, "set 2")
+	p1 := must(t, c.do(t, http.MethodGet, base+"/usages?limit=1", qlcmA, nil, nil), http.StatusOK, "usages page 1")
+	if len(p1.items("data")) != 1 || p1.obj("page")["has_more"] != true || p1.str("page", "next_cursor") == "" {
+		t.Fatalf("usages page 1: %s", p1.raw)
+	}
+	p2 := must(t, c.do(t, http.MethodGet, base+"/usages?limit=1&cursor="+url.QueryEscape(p1.str("page", "next_cursor")), qlcmA, nil, nil), http.StatusOK, "usages page 2")
+	if us2 := p2.items("data"); len(us2) != 1 || p2.obj("page")["has_more"] != false || us2[0]["ref_id"] == p1.items("data")[0]["ref_id"] {
+		t.Fatalf("usages page 2: %s (set2 %s)", p2.raw, set2.str("content_id"))
 	}
 	if r := c.do(t, http.MethodGet, base+"/usages", qlcmB, nil, nil); r.status != http.StatusNotFound {
 		t.Fatalf("usages tenant B: %d", r.status)

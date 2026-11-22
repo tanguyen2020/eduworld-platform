@@ -111,7 +111,7 @@ func newHTTPEnv(ctx context.Context, t *testing.T, kc *kcUsers) *httpEnv {
 		CreateSisImport: command.CreateSisImport{UoW: e.uow, Imports: write.SisSyncRepo{}, Storage: &memStorage{objects: map[string][]byte{}}, Audit: e.deps.Audit},
 		SisImports:      query.SisImports{Model: read.SisImportModel{Session: e.read}},
 		SisAdmin:        query.SisAdmin{Model: read.SisAdminModel{Session: e.read}, Cursors: codec},
-		SisConnections:  command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit},
+		SisConnections:  command.SisConnections{UoW: e.uow, Connections: write.SisConnectionRepo{}, Audit: e.deps.Audit, Cursors: codec},
 	}
 	if err := identityhttp.Register(srv, h); err != nil {
 		t.Fatal(err)

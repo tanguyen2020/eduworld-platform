@@ -19820,7 +19820,11 @@ export interface operations {
     };
     listSisConnectionSchools: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
             header?: never;
             path: {
                 connection_id: components["parameters"]["ConnectionIdPath"];
@@ -19837,6 +19841,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["SisConnectionSchool"][];
+                        page: components["schemas"]["PageInfo"];
                     };
                 };
             };
@@ -21606,6 +21611,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): kênh DM ≤ friend_limits (100 bạn) + club ≤ 5 + kênh party/trận/khu vực đang tham gia; không phân trang */
                         data: components["schemas"]["Channel"][];
                     };
                 };
@@ -23162,7 +23168,11 @@ export interface operations {
     };
     getContentUsages: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
             header?: {
                 /**
                  * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
@@ -23187,6 +23197,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ContentUsage"][];
+                        page: components["schemas"]["PageInfo"];
                     };
                 };
             };
@@ -25480,6 +25491,8 @@ export interface operations {
         parameters: {
             query?: {
                 activity_version_id?: components["schemas"]["Uuid"];
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
                 question_version_id?: components["schemas"]["Uuid"];
             };
@@ -25504,6 +25517,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["RegradeRequest"][];
+                        page: components["schemas"]["PageInfo"];
                     };
                 };
             };
@@ -33329,6 +33343,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): lời mời đang chờ ≤ party_pending_invites_max (20), hết hạn sau 5 phút; lịch sử theo status trả 100 mới nhất */
                         data: components["schemas"]["PartyInvitation"][];
                     };
                 };
@@ -35945,6 +35960,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): chỉ lời mời đang chờ chưa hết hạn friend_request_ttl (7 ngày); gửi đi ≤ 10 (friend_limits); 100 mới nhất */
                         data: components["schemas"]["FriendRequest"][];
                     };
                 };

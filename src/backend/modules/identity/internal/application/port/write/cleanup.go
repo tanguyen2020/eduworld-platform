@@ -25,6 +25,21 @@ func (c CleanupCandidate) DueAt(days int) time.Time {
 	return base.AddDate(0, 0, days)
 }
 
+// CandidatePageQuery is the filter of CleanupRepository.CandidatePage.
+type CandidatePageQuery struct {
+	DueBefore, Now time.Time
+	Schools        []uuid.UUID // nil = every school of the tenant scope
+	AfterBase      *time.Time  // COALESCE(last_login_at, provisioned_at) of the last row of the previous page
+	AfterID        uuid.UUID
+	Limit          int
+}
+
+// CleanupRunKey is the keyset position of ListRuns (started_at DESC, run_id DESC): rows strictly after it.
+type CleanupRunKey struct {
+	StartedAt time.Time
+	ID        uuid.UUID
+}
+
 // CleanupRun is one row of platform.student_cleanup_runs.
 type CleanupRun struct {
 	ID            uuid.UUID
@@ -60,6 +75,10 @@ type CleanupRepository interface {
 	// Candidates returns the students of the tenant scope whose COALESCE(last_login_at, provisioned_at) is
 	// before dueBefore, active or pending, without a live exclusion at now (school limits to one school).
 	Candidates(ctx context.Context, dueBefore, now time.Time, school *uuid.UUID) ([]CleanupCandidate, error)
+	// CandidatePage is one keyset page of Candidates for previewTenantStudentCleanup (API_DESIGN §5): ordered by
+	// (COALESCE(last_login_at, provisioned_at), student_id), rows after `after` only, at most limit rows, limited to
+	// schools when not nil (School Admin).
+	CandidatePage(ctx context.Context, q CandidatePageQuery) ([]CleanupCandidate, error)
 	// StudentCount counts the live students of the tenant scope.
 	StudentCount(ctx context.Context) (int, error)
 	// SoftDeleteStudent soft-deletes the user and the student (delete_reason inactive_cleanup; the student loses its
@@ -79,7 +98,7 @@ type CleanupRepository interface {
 	Run(ctx context.Context, id uuid.UUID) (*CleanupRun, error)
 	// ApprovedRun returns the approved run of a tenant waiting to be applied (nil when none).
 	ApprovedRun(ctx context.Context, tenant uuid.UUID) (*CleanupRun, error)
-	ListRuns(ctx context.Context, tenants []uuid.UUID, status string, limit int) ([]CleanupRun, error)
+	ListRuns(ctx context.Context, tenants []uuid.UUID, status string, after *CleanupRunKey, limit int) ([]CleanupRun, error)
 	// CleanupTenants lists the active tenants (the job iterates them).
 	CleanupTenants(ctx context.Context) ([]uuid.UUID, error)
 

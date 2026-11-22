@@ -456,7 +456,7 @@ func build(r *module.Registry) (*wiring, error) {
 	h.Dashboards = dq
 	h.Lessons, h.LessonQueries = lessons, query.Lessons{Session: core.ReadSession, Model: read.LessonModel{}}
 	rgd := command.Regrades{UoW: core.UoW, Store: write.RegradeRepo{}, Attempts: att, Audit: auditor, Metrics: observability.RegradeCounter{}, Exams: exams}
-	h.Regrades, h.RegradeQueries = rgd, query.Regrades{Session: core.ReadSession, Model: read.RegradeModel{}}
+	h.Regrades, h.RegradeQueries = rgd, query.Regrades{Session: core.ReadSession, Model: read.RegradeModel{}, Cursors: cursors}
 
 	deps := command.AssignmentDeps{UoW: core.UoW, Assignments: write.AssignmentRepo{}, Tenants: read.TenantDirectory{}, Resources: resources,
 		Audit: auditor, Cache: cache.Invalidator{C: vk}, Metrics: observability.AssignmentCounter{}}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/dto"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
 )
 
@@ -20,7 +21,7 @@ type RegradeCommands interface {
 // RegradeQueries read regrade requests (query.Regrades).
 type RegradeQueries interface {
 	Get(ctx context.Context, id uuid.UUID) (dto.RegradeRequestView, error)
-	List(ctx context.Context, questionVersionID, activityVersionID *uuid.UUID, limit int) ([]dto.RegradeRequestView, error)
+	List(ctx context.Context, questionVersionID, activityVersionID *uuid.UUID, in query.PageInput) (query.Page[dto.RegradeRequestView], error)
 }
 
 func init() {
@@ -94,14 +95,10 @@ func (h Handlers) listRegradeRequests(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
-	limit := 100
-	if n := queryInt(r, "limit"); n != nil {
-		limit = *n
-	}
-	list, err := h.RegradeQueries.List(r.Context(), qv, av, limit)
+	p, err := h.RegradeQueries.List(r.Context(), qv, av, pageIn(r))
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": list})
+	list(w, p, func(v dto.RegradeRequestView) dto.RegradeRequestView { return v })
 }

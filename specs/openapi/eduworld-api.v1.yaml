@@ -2595,6 +2595,8 @@ paths:
                 properties:
                   data:
                     type: array
+                    maxItems: 100
+                    description: 'Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): lời mời đang chờ ≤ party_pending_invites_max (20), hết hạn sau 5 phút; lịch sử theo status trả 100 mới nhất'
                     items: { $ref: '#/components/schemas/PartyInvitation' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
@@ -3294,6 +3296,8 @@ paths:
                 properties:
                   data:
                     type: array
+                    maxItems: 200
+                    description: 'Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): kênh DM ≤ friend_limits (100 bạn) + club ≤ 5 + kênh party/trận/khu vực đang tham gia; không phân trang'
                     items: { $ref: '#/components/schemas/Channel' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
@@ -3801,6 +3805,8 @@ paths:
                 properties:
                   data:
                     type: array
+                    maxItems: 100
+                    description: 'Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): chỉ lời mời đang chờ chưa hết hạn friend_request_ttl (7 ngày); gửi đi ≤ 10 (friend_limits); 100 mới nhất'
                     items: { $ref: '#/components/schemas/FriendRequest' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
@@ -5448,6 +5454,8 @@ paths:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
         - $ref: '#/components/parameters/LearningContentType'
         - $ref: '#/components/parameters/ContentIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: Tham chiếu trong phạm vi tenant người gọi
@@ -5455,12 +5463,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [data]
+                required: [data, page]
                 properties:
                   data:
                     type: array
-                    maxItems: 1000
+                    maxItems: 100
                     items: { $ref: '#/components/schemas/ContentUsage' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -7635,6 +7644,7 @@ paths:
           in: query
           schema: { $ref: '#/components/schemas/Uuid' }
         - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: Mới nhất trước
@@ -7642,12 +7652,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [data]
+                required: [data, page]
                 properties:
                   data:
                     type: array
                     maxItems: 100
                     items: { $ref: '#/components/schemas/RegradeRequest' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
@@ -13875,6 +13886,8 @@ paths:
         - keycloakAdminBearer: []
       parameters:
         - $ref: '#/components/parameters/ConnectionIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -13882,11 +13895,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [data]
+                required: [data, page]
                 properties:
                   data:
                     type: array
+                    maxItems: 100
                     items: { $ref: '#/components/schemas/SisConnectionSchool' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }

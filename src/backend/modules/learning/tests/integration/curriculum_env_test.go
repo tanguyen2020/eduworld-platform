@@ -311,7 +311,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	handlers.Efficacy = learninghttp.EfficacyHandlers{Commands: eff, Queries: query.Efficacy{Session: e.read, Model: read.EfficacyModel{}, Cursors: codec}}
 	// F031 US4: re-evaluation with the test clock.
 	rgd := command.Regrades{UoW: e.uow, Store: write.RegradeRepo{}, Attempts: att, Audit: write.Auditor{R: e.rec}, Clock: clk.Now, Exams: exams}
-	handlers.Regrades, handlers.RegradeQueries = rgd, query.Regrades{Session: e.read, Model: read.RegradeModel{}}
+	handlers.Regrades, handlers.RegradeQueries = rgd, query.Regrades{Session: e.read, Model: read.RegradeModel{}, Cursors: codec}
 	cmd.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	handlers.Commands = cmd
 	if err := learninghttp.Register(srv, handlers); err != nil {

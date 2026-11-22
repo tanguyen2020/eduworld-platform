@@ -4602,6 +4602,8 @@ paths:
         - keycloakAdminBearer: []
       parameters:
         - $ref: '#/components/parameters/ConnectionIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -4611,11 +4613,15 @@ paths:
                 type: object
                 required:
                   - data
+                  - page
                 properties:
                   data:
                     type: array
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/SisConnectionSchool'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':

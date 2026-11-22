@@ -313,7 +313,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		CreateSisImport: command.CreateSisImport{UoW: core.UoW, Imports: write.SisSyncRepo{}, Storage: objects, Audit: auditor},
 		SisImports:      query.SisImports{Model: read.SisImportModel{Session: core.ReadSession}},
 		SisAdmin:        query.SisAdmin{Model: read.SisAdminModel{Session: core.ReadSession}, Cursors: cursors},
-		SisConnections:  command.SisConnections{UoW: core.UoW, Connections: write.SisConnectionRepo{}, Audit: auditor, Contract: &sisContract},
+		SisConnections:  command.SisConnections{UoW: core.UoW, Connections: write.SisConnectionRepo{}, Audit: auditor, Contract: &sisContract, Cursors: cursors},
 		Me:              query.Me{Model: principals, Workspaces: workspaces, Toggles: toggles},
 		UserRoles:       userRoles, UserRoleList: query.UserRoles{Model: principals, Cursors: cursors},
 		Staff: command.Staff{UoW: core.UoW, Repo: write.StaffRepo{}, Roles: userRoles, KC: kc, Events: events, Audit: auditor,

@@ -78,18 +78,20 @@ func (h StudentCleanup) Preview(ctx context.Context, limit int, cursor *page.Cur
 		if err != nil || days == nil {
 			return err
 		}
-		cands, err := h.Repo.Candidates(ctx, now.AddDate(0, 0, policy.NoticeDays-*days), now, nil)
+		q := write.CandidatePageQuery{DueBefore: now.AddDate(0, 0, policy.NoticeDays-*days), Now: now, Schools: schools, Limit: limit + 1}
+		if cursor != nil {
+			at, err := time.Parse(time.RFC3339Nano, cursor.Key)
+			if err != nil {
+				return problem.New(problem.BadRequest, "invalid cursor")
+			}
+			base := at.AddDate(0, 0, -*days) // the cursor carries the scheduled date = base + days
+			q.AfterBase, q.AfterID = &base, cursor.ID
+		}
+		cands, err := h.Repo.CandidatePage(ctx, q)
 		if err != nil {
 			return err
 		}
 		for _, c := range cands {
-			if schools != nil && !slices.Contains(schools, c.SchoolID) {
-				continue
-			}
-			key := c.DueAt(*days).UTC().Format(time.RFC3339Nano)
-			if cursor != nil && (key < cursor.Key || (key == cursor.Key && c.StudentID.String() <= cursor.ID.String())) {
-				continue
-			}
 			if len(out.Data) == limit {
 				last := out.Data[limit-1]
 				if h.Cursors != nil {
@@ -156,19 +158,36 @@ func (h StudentCleanup) Exclude(ctx context.Context, students []uuid.UUID, until
 	})
 }
 
-// ListRuns implements listStudentCleanupRuns (System Admin: tenant_ids of the CrossTenantScope, or every tenant).
-func (h StudentCleanup) ListRuns(ctx context.Context, limit int) (out []write.CleanupRun, err error) {
+// CleanupRunPage is one cursor page of listStudentCleanupRuns.
+type CleanupRunPage struct {
+	Runs []write.CleanupRun
+	Page page.Info
+}
+
+// ListRuns implements listStudentCleanupRuns (System Admin: tenant_ids of the CrossTenantScope, or every tenant), keyset
+// paginated (started_at DESC, run_id DESC; API_DESIGN §5).
+func (h StudentCleanup) ListRuns(ctx context.Context, limit int, cursor *page.Cursor) (out CleanupRunPage, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.command.ListStudentCleanupRuns")
 	defer func() { done(err) }()
 	p, err := principal(ctx)
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 	if p.TenantID != nil {
-		return nil, problem.New(problem.PermissionDenied, "")
+		return out, problem.New(problem.PermissionDenied, "")
 	}
 	if err := authz.Require(ctx, p, authz.PermPlatformStudentCleanupApprove, authz.Resource{}); err != nil {
-		return nil, err
+		return out, err
+	}
+	limit = page.Limit(limit)
+	out.Page.Limit = limit
+	var after *write.CleanupRunKey
+	if cursor != nil {
+		at, err := time.Parse(time.RFC3339Nano, cursor.Key)
+		if err != nil {
+			return out, problem.New(problem.BadRequest, "invalid cursor")
+		}
+		after = &write.CleanupRunKey{StartedAt: at, ID: cursor.ID}
 	}
 	var tenants []uuid.UUID
 	if s, ok := tenancy.ScopeFrom(ctx); ok {
@@ -176,9 +195,23 @@ func (h StudentCleanup) ListRuns(ctx context.Context, limit int) (out []write.Cl
 			tenants = cs.TenantIDs()
 		}
 	}
+	var rows []write.CleanupRun
 	err = h.platform(ctx, func(ctx context.Context) error {
-		out, err = h.Repo.ListRuns(ctx, tenants, "", page.Limit(limit))
+		rows, err = h.Repo.ListRuns(ctx, tenants, "", after, limit+1)
 		return err
 	})
-	return out, err
+	if err != nil {
+		return out, err
+	}
+	if len(rows) > limit {
+		rows = rows[:limit]
+		out.Page.HasMore = true
+		if h.Cursors != nil {
+			last := rows[limit-1]
+			next := h.Cursors.Encode(page.Cursor{Key: last.StartedAt.UTC().Format(time.RFC3339Nano), ID: last.ID})
+			out.Page.NextCursor = &next
+		}
+	}
+	out.Runs = rows
+	return out, nil
 }

@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"net/url"
 	"testing"
 	"time"
 
@@ -94,6 +95,25 @@ func TestStudentCleanup(t *testing.T) {
 	r := h.do(t, "GET", "/tenant/student-cleanup/preview?limit=50", tok("ad.donvi.cl"), map[string]string{"X-Tenant-Id": a.tenant}, nil)
 	if r.status != 200 || len(r.body["data"].([]any)) != 4 { // s1, s2, s4, s6 (s3 excluded, s5 recent)
 		t.Fatalf("preview: %d %v", r.status, r.body)
+	}
+	// API_DESIGN §5: keyset pages of the preview (limit 3 → 3 + 1, same students, no overlap).
+	p1 := h.do(t, "GET", "/tenant/student-cleanup/preview?limit=3", tok("ad.donvi.cl"), map[string]string{"X-Tenant-Id": a.tenant}, nil)
+	pg1, _ := p1.body["page"].(map[string]any)
+	if p1.status != 200 || len(p1.body["data"].([]any)) != 3 || pg1["has_more"] != true || pg1["next_cursor"] == nil {
+		t.Fatalf("preview page 1: %d %v", p1.status, p1.body)
+	}
+	p2 := h.do(t, "GET", "/tenant/student-cleanup/preview?limit=3&cursor="+url.QueryEscape(pg1["next_cursor"].(string)), tok("ad.donvi.cl"),
+		map[string]string{"X-Tenant-Id": a.tenant}, nil)
+	pg2, _ := p2.body["page"].(map[string]any)
+	if p2.status != 200 || len(p2.body["data"].([]any)) != 1 || pg2["has_more"] != false {
+		t.Fatalf("preview page 2: %d %v", p2.status, p2.body)
+	}
+	seen := map[any]bool{}
+	for _, x := range append(p1.body["data"].([]any), p2.body["data"].([]any)...) {
+		seen[x.(map[string]any)["student_id"]] = true
+	}
+	if len(seen) != 4 {
+		t.Fatalf("preview pages overlap: %v", seen)
 	}
 
 	defaults, err := settingscfg.DefaultsFrom(config.Load())
@@ -204,6 +224,18 @@ func TestStudentCleanup(t *testing.T) {
 	}
 	if !statuses["completed"] || !statuses["cancelled"] {
 		t.Fatalf("run statuses = %v", statuses)
+	}
+	// API_DESIGN §5: limit 1 → a cursor to the second run, then the last page.
+	r1 := h.do(t, "GET", "/admin/student-cleanup/runs?limit=1", tok("sa.cl"), nil, nil)
+	rp1, _ := r1.body["page"].(map[string]any)
+	if r1.status != 200 || len(r1.body["data"].([]any)) != 1 || rp1["has_more"] != true || rp1["next_cursor"] == nil {
+		t.Fatalf("runs page 1: %d %v", r1.status, r1.body)
+	}
+	r2 := h.do(t, "GET", "/admin/student-cleanup/runs?limit=1&cursor="+url.QueryEscape(rp1["next_cursor"].(string)), tok("sa.cl"), nil, nil)
+	rp2, _ := r2.body["page"].(map[string]any)
+	if r2.status != 200 || len(r2.body["data"].([]any)) != 1 || rp2["has_more"] != false ||
+		r2.body["data"].([]any)[0].(map[string]any)["run_id"] == r1.body["data"].([]any)[0].(map[string]any)["run_id"] {
+		t.Fatalf("runs page 2: %d %v", r2.status, r2.body)
 	}
 	// No physical delete anywhere (R21): the rows are still there.
 	if count(ctx, t, e.platform, `SELECT count(*) FROM org.students WHERE student_id IN ($1, $2)`, s1, s2) != 2 {

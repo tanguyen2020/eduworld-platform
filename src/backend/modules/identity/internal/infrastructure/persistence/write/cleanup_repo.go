@@ -54,6 +54,45 @@ func (CleanupRepo) Candidates(ctx context.Context, dueBefore, now time.Time, sch
 	return out, rows.Err()
 }
 
+// CandidatePage implements write.CleanupRepository: keyset page of the candidates (never the whole tenant).
+func (CleanupRepo) CandidatePage(ctx context.Context, q write.CandidatePageQuery) ([]write.CleanupCandidate, error) {
+	tx, err := portalTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var schools any
+	if q.Schools != nil {
+		schools = nonNilIDs(q.Schools)
+	}
+	// tenancyguard:ok org.students and platform.cleanup_exclusions under the TenantScope (RLS); identity.users global by id; deleted_at filtered
+	rows, err := tx.QueryContext(ctx, `SELECT s.student_id, s.school_id, coalesce(u.display_name, s.full_name), u.last_login_at, u.provisioned_at
+		FROM org.students s
+		JOIN identity.users u ON u.user_id = s.student_id AND u.deleted_at IS NULL AND u.status IN ('active', 'pending')
+		WHERE s.deleted_at IS NULL AND coalesce(u.last_login_at, u.provisioned_at) < $1
+			AND ($3::uuid[] IS NULL OR s.school_id = ANY($3::uuid[]))
+			AND ($4::timestamptz IS NULL OR (coalesce(u.last_login_at, u.provisioned_at), s.student_id) > ($4::timestamptz, $5::uuid))
+			AND NOT EXISTS (SELECT 1 FROM platform.cleanup_exclusions x WHERE x.student_id = s.student_id AND x.deleted_at IS NULL
+				AND (x.until IS NULL OR x.until > $2))
+		ORDER BY coalesce(u.last_login_at, u.provisioned_at), s.student_id LIMIT $6`, q.DueBefore, q.Now, schools, q.AfterBase, q.AfterID, q.Limit)
+	if err != nil {
+		return nil, fmt.Errorf("cleanup candidate page: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := []write.CleanupCandidate{}
+	for rows.Next() {
+		var c write.CleanupCandidate
+		var last sql.NullTime
+		if err := rows.Scan(&c.StudentID, &c.SchoolID, &c.DisplayName, &last, &c.ProvisionedAt); err != nil {
+			return nil, err
+		}
+		if last.Valid {
+			c.LastLoginAt = &last.Time
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
 // StudentCount implements write.CleanupRepository.
 func (CleanupRepo) StudentCount(ctx context.Context) (int, error) {
 	tx, err := portalTx(ctx)
@@ -249,7 +288,7 @@ func (CleanupRepo) ApprovedRun(ctx context.Context, tenant uuid.UUID) (*write.Cl
 }
 
 // ListRuns implements write.CleanupRepository.
-func (CleanupRepo) ListRuns(ctx context.Context, tenants []uuid.UUID, status string, limit int) ([]write.CleanupRun, error) {
+func (CleanupRepo) ListRuns(ctx context.Context, tenants []uuid.UUID, status string, after *write.CleanupRunKey, limit int) ([]write.CleanupRun, error) {
 	tx, err := portalTx(ctx)
 	if err != nil {
 		return nil, err
@@ -258,9 +297,16 @@ func (CleanupRepo) ListRuns(ctx context.Context, tenants []uuid.UUID, status str
 	if status != "" {
 		st = &status
 	}
+	var afterAt *time.Time
+	afterID := uuid.Nil
+	if after != nil {
+		afterAt, afterID = &after.StartedAt, after.ID
+	}
 	// tenancyguard:ok platform scope (System Admin): runs of every tenant or of one, explicit tenant condition
 	rows, err := tx.QueryContext(ctx, `SELECT `+runColumns+` FROM platform.student_cleanup_runs
-		WHERE (cardinality($1::uuid[]) = 0 OR tenant_id = ANY($1::uuid[])) AND ($2::varchar IS NULL OR status = $2) ORDER BY started_at DESC LIMIT $3`, nonNilIDs(tenants), st, limit)
+		WHERE (cardinality($1::uuid[]) = 0 OR tenant_id = ANY($1::uuid[])) AND ($2::varchar IS NULL OR status = $2)
+			AND ($4::timestamptz IS NULL OR (started_at, run_id) < ($4::timestamptz, $5::uuid))
+		ORDER BY started_at DESC, run_id DESC LIMIT $3`, nonNilIDs(tenants), st, limit, afterAt, afterID)
 	if err != nil {
 		return nil, fmt.Errorf("list runs: %w", err)
 	}

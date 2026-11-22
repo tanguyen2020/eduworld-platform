@@ -156,4 +156,7 @@ type SisConnectionRepository interface {
 	// connection is problem SIS_SCHOOL_ALREADY_CONNECTED, a school outside the tenant 422.
 	SetSchools(ctx context.Context, c *SisConnection, schoolIDs []uuid.UUID, by uuid.UUID) ([]SisConnectionSchool, error)
 	Schools(ctx context.Context, connectionID uuid.UUID) ([]SisConnectionSchool, error)
+	// SchoolPage is one keyset page of Schools for listSisConnectionSchools (row id ascending, rows after `after`, at
+	// most limit rows; API_DESIGN §5).
+	SchoolPage(ctx context.Context, connectionID uuid.UUID, after *uuid.UUID, limit int) ([]SisConnectionSchool, []uuid.UUID, error)
 }

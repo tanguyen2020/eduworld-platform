@@ -65,6 +65,8 @@ paths:
                 properties:
                   data:
                     type: array
+                    maxItems: 200
+                    description: 'Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): kênh DM ≤ friend_limits (100 bạn) + club ≤ 5 + kênh party/trận/khu vực đang tham gia; không phân trang'
                     items:
                       $ref: '#/components/schemas/Channel'
           headers:
@@ -738,6 +740,8 @@ paths:
                 properties:
                   data:
                     type: array
+                    maxItems: 100
+                    description: 'Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): chỉ lời mời đang chờ chưa hết hạn friend_request_ttl (7 ngày); gửi đi ≤ 10 (friend_limits); 100 mới nhất'
                     items:
                       $ref: '#/components/schemas/FriendRequest'
           headers:

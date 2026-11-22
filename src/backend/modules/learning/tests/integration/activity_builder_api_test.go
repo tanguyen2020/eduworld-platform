@@ -70,6 +70,13 @@ func TestRegradePreviewAndHistory(t *testing.T) {
 	if items := h.items("data"); len(items) != 1 || items[0]["regrade_request_id"] != id || items[0]["status"] != "queued" {
 		t.Fatalf("history: %s", h.raw)
 	}
+	// API_DESIGN §5: cursor pagination (default limit 20), the last page has no cursor.
+	if pg := h.obj("page"); pg["has_more"] != false || pg["next_cursor"] != nil || pg["limit"] != float64(20) {
+		t.Fatalf("history page: %s", h.raw)
+	}
+	if r := c.do(t, http.MethodGet, history+"&cursor=bogus", qlcmA, nil, nil); r.status != http.StatusBadRequest {
+		t.Fatalf("bad cursor: %d %s", r.status, r.raw)
+	}
 	if r := must(t, c.do(t, http.MethodGet, history, qlcmB, nil, nil), http.StatusOK, "tenant B"); len(r.items("data")) != 0 {
 		t.Fatalf("tenant B sees tenant A requests: %s", r.raw)
 	}

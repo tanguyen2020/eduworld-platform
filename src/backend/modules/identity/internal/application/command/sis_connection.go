@@ -13,6 +13,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/page"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
 )
@@ -25,6 +26,7 @@ type SisConnections struct {
 	Connections write.SisConnectionRepository
 	Audit       write.Auditor
 	Contract    *SisContract // F017: contract_v1 connections (nil = csv_import only)
+	Cursors     *page.Codec  // listSisConnectionSchools paging
 }
 
 // platformTarget authorizes platform.sis_connection.manage and returns ctx scoped to the target tenant.
@@ -127,19 +129,52 @@ func (h SisConnections) SetSchools(ctx context.Context, id uuid.UUID, schoolIDs 
 	return out, err
 }
 
-// Schools lists the schools of a connection (listSisConnectionSchools).
-func (h SisConnections) Schools(ctx context.Context, id uuid.UUID) (out []write.SisConnectionSchool, err error) {
+// SisConnectionSchoolPage is one cursor page of listSisConnectionSchools.
+type SisConnectionSchoolPage struct {
+	Data []write.SisConnectionSchool
+	Page page.Info
+}
+
+// Schools lists the schools of a connection (listSisConnectionSchools), keyset paginated (API_DESIGN §5).
+func (h SisConnections) Schools(ctx context.Context, id uuid.UUID, limit int, cursor string) (out SisConnectionSchoolPage, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.command.ListSisConnectionSchools")
 	defer func() { done(err) }()
+	limit = page.Limit(limit)
+	out.Page.Limit = limit
+	var after *uuid.UUID
+	if cursor != "" {
+		if h.Cursors == nil {
+			return out, problem.New(problem.BadRequest, "invalid cursor")
+		}
+		c, err := h.Cursors.Decode(cursor)
+		if err != nil {
+			return out, problem.New(problem.BadRequest, "invalid cursor")
+		}
+		after = &c.ID
+	}
 	ctx, _, err = h.connectionScope(ctx, id)
 	if err != nil {
-		return nil, err
+		return out, err
 	}
+	var rows []write.SisConnectionSchool
+	var ids []uuid.UUID
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
-		out, err = h.Connections.Schools(ctx, id)
+		rows, ids, err = h.Connections.SchoolPage(ctx, id, after, limit+1)
 		return err
 	})
-	return out, err
+	if err != nil {
+		return out, err
+	}
+	if len(rows) > limit {
+		rows = rows[:limit]
+		out.Page.HasMore = true
+		if h.Cursors != nil {
+			next := h.Cursors.Encode(page.Cursor{ID: ids[limit-1]})
+			out.Page.NextCursor = &next
+		}
+	}
+	out.Data = rows
+	return out, nil
 }
 
 // CreateContract is the contract_v1 branch of createSisConnection, served by SisContract (F017).

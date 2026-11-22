@@ -558,6 +558,8 @@ paths:
                 properties:
                   data:
                     type: array
+                    maxItems: 100
+                    description: 'Danh sách có giới hạn theo nghiệp vụ (API_DESIGN §5.1): lời mời đang chờ ≤ party_pending_invites_max (20), hết hạn sau 5 phút; lịch sử theo status trả 100 mới nhất'
                     items:
                       $ref: '#/components/schemas/PartyInvitation'
           headers:

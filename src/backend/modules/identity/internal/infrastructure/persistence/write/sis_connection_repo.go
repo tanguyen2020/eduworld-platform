@@ -105,7 +105,26 @@ func (r SisConnectionRepo) SetSchools(ctx context.Context, c *write.SisConnectio
 	return r.Schools(ctx, c.ID)
 }
 
-// Schools lists the schools of a connection.
+// SchoolPage implements write.SisConnectionRepository: one keyset page (row ids returned for the cursor).
+func (SisConnectionRepo) SchoolPage(ctx context.Context, connectionID uuid.UUID, after *uuid.UUID, limit int) ([]write.SisConnectionSchool, []uuid.UUID, error) {
+	q := client(ctx).SisConnectionSchool.Query().Where(entcs.SisConnectionID(connectionID))
+	if after != nil {
+		q = q.Where(entcs.IDGT(*after))
+	}
+	rows, err := q.Order(ent.Asc(entcs.FieldID)).Limit(limit).All(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	out := make([]write.SisConnectionSchool, 0, len(rows))
+	ids := make([]uuid.UUID, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, write.SisConnectionSchool{ConnectionID: r.SisConnectionID, SchoolID: r.SchoolID, TenantID: r.TenantID, Active: r.Active, AssignedAt: r.AssignedAt})
+		ids = append(ids, r.ID)
+	}
+	return out, ids, nil
+}
+
+// Schools lists the schools of a connection (internal: sync runs, seed).
 func (SisConnectionRepo) Schools(ctx context.Context, connectionID uuid.UUID) ([]write.SisConnectionSchool, error) {
 	rows, err := client(ctx).SisConnectionSchool.Query().Where(entcs.SisConnectionID(connectionID)).
 		Order(ent.Asc(entcs.FieldAssignedAt)).All(ctx)

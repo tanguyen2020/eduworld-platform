@@ -359,14 +359,23 @@ func (q Releases) ListReleases(ctx context.Context, typ string, id uuid.UUID, in
 // Usages lists where an item is referenced in module learning in the caller's scope (F026-AC-27): question sets for a
 // question; activities, assignments and exam sessions are added by F030, F041, F042 [Proposed]. pinned_sessions is 0
 // until F030 counts the attempts.
-func (q Releases) Usages(ctx context.Context, typ string, id uuid.UUID) (out []dto.ContentUsageView, err error) {
+func (q Releases) Usages(ctx context.Context, typ string, id uuid.UUID, in PageInput) (out Page[dto.ContentUsageView], err error) {
 	ctx, done := observability.UseCase(ctx, "learning.query.GetContentUsages")
 	defer func() { done(err) }()
 	_, t, err := q.authorize(ctx, typ)
 	if err != nil {
 		return out, err
 	}
-	out = []dto.ContentUsageView{}
+	limit := page.Limit(in.Limit)
+	out = Page[dto.ContentUsageView]{Limit: limit, Data: []dto.ContentUsageView{}}
+	cur, err := q.Cursors.Decode(in.Cursor)
+	if err != nil {
+		return out, problem.New(problem.BadRequest, "invalid cursor")
+	}
+	var after *uuid.UUID
+	if cur != nil {
+		after = &cur.ID
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
 		if _, err := q.Reader.item(ctx, t, id); err != nil {
 			return err
@@ -374,11 +383,16 @@ func (q Releases) Usages(ctx context.Context, typ string, id uuid.UUID) (out []d
 		if t != contentmodel.TypeQuestion {
 			return nil
 		}
-		us, err := q.Model.QuestionUsages(ctx, id)
+		us, last, more, err := q.Model.QuestionUsages(ctx, id, after, limit)
 		if err != nil {
 			return err
 		}
-		out = append(out, us...)
+		if more && last != nil {
+			out.HasMore = true
+			s := q.Cursors.Encode(page.Cursor{ID: *last})
+			out.NextCursor = &s
+		}
+		out.Data = append(out.Data, us...)
 		return nil
 	})
 	if errors.Is(err, port.ErrCacheMiss) {

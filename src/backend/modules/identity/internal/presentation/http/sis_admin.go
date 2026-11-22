@@ -21,7 +21,7 @@ type SisConnectionsHandler interface {
 	// CreateContract is the contract_v1 branch of createSisConnection (F017-AC-01).
 	CreateContract(ctx context.Context, tenantID uuid.UUID, in command.ContractCreateInput) (dto.SisConnection, error)
 	SetSchools(ctx context.Context, id uuid.UUID, schoolIDs []uuid.UUID, reason string) ([]write.SisConnectionSchool, error)
-	Schools(ctx context.Context, id uuid.UUID) ([]write.SisConnectionSchool, error)
+	Schools(ctx context.Context, id uuid.UUID, limit int, cursor string) (command.SisConnectionSchoolPage, error)
 }
 
 // F011 platform operations on connections and runs (gateway nội bộ).
@@ -110,12 +110,12 @@ func (h Handlers) listSisConnectionSchools(w http.ResponseWriter, r *http.Reques
 		fail(w, r, err)
 		return
 	}
-	rows, err := h.SisConnections.Schools(r.Context(), id)
+	res, err := h.SisConnections.Schools(r.Context(), id, queryInt(r, "limit"), r.URL.Query().Get("cursor"))
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, schoolsView(rows))
+	writeJSON(w, http.StatusOK, map[string]any{"data": schoolsView(res.Data)["data"], "page": res.Page})
 }
 
 func (h Handlers) setSisConnectionSchools(w http.ResponseWriter, r *http.Request) {

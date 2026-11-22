@@ -164,7 +164,16 @@ type cleanupRunView struct {
 }
 
 func (h LifecycleHandlers) listStudentCleanupRuns(w http.ResponseWriter, r *http.Request) {
-	runs, err := h.Cleanup.ListRuns(r.Context(), queryInt(r, "limit"))
+	var cursor *page.Cursor
+	if c := r.URL.Query().Get("cursor"); c != "" && h.Cleanup.Cursors != nil {
+		v, err := h.Cleanup.Cursors.Decode(c)
+		if err != nil {
+			fail(w, r, problem.New(problem.BadRequest, "invalid cursor"))
+			return
+		}
+		cursor = v
+	}
+	res, err := h.Cleanup.ListRuns(r.Context(), queryInt(r, "limit"), cursor)
 	if err != nil {
 		fail(w, r, err)
 		return
@@ -172,8 +181,8 @@ func (h LifecycleHandlers) listStudentCleanupRuns(w http.ResponseWriter, r *http
 	out := struct {
 		Data []cleanupRunView `json:"data"`
 		Page page.Info        `json:"page"`
-	}{Data: []cleanupRunView{}, Page: page.Info{Limit: page.Limit(queryInt(r, "limit"))}}
-	for _, x := range runs {
+	}{Data: []cleanupRunView{}, Page: res.Page}
+	for _, x := range res.Runs {
 		out.Data = append(out.Data, cleanupRunView{RunID: x.ID, TenantID: x.TenantID, Status: x.Status, Candidates: x.Candidates,
 			Cleaned: x.Cleaned, Excluded: x.Excluded, SkippedActive: x.SkippedActive, StartedAt: x.StartedAt, FinishedAt: x.FinishedAt})
 	}
