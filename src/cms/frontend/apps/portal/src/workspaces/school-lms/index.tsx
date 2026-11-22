@@ -21,7 +21,6 @@ import { TenantTrashPage } from './trash/TenantTrashPage';
 import { AccessControlScreen } from './users/AccessControlScreen';
 
 export const screens = {
-  'menu.school_lms.overview': placeholderScreen,
   'menu.school_lms.schools': SchoolsScreen,
   'menu.school_lms.students': StudentsScreen, // "Học sinh theo khối" (ADR-0095; key renamed menu.school_lms.students by WP-I1)
   'menu.school_lms.sis_sync': SisScreen,

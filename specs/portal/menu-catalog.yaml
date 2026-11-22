@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.21.3"
+catalog_version: "2026.11.22.1"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -19,32 +19,6 @@ workspaces:
     order: 1
     path: /school-lms
     menus:
-      - key: menu.school_lms.overview
-        label_key: portal.menu.school_lms.overview
-        title: Tổng quan
-        path: /school-lms/overview
-        order: 10
-        required_permissions:
-          - lms.student.read
-          - lms.assignment.read
-          - analytics.school.read
-          - tenant.settings.read
-          - school.settings.read
-          - moderation.school_notification.read
-        can_disable: true
-        actions:
-          - key: action.school_lms.overview.view
-            label_key: portal.action.school_lms.overview.view
-            title: Xem việc cần làm
-            required_permissions:
-              - lms.student.read
-              - lms.assignment.read
-              - analytics.school.read
-              - tenant.settings.read
-              - school.settings.read
-              - moderation.school_notification.read
-            operation_ids: []
-            can_disable: true
       - key: menu.school_lms.schools
         label_key: portal.menu.school_lms.schools
         title: Trường (tenant đơn vị)
@@ -2033,20 +2007,6 @@ workspaces:
             required_permissions: [platform.catalog.write]
             operation_ids: [importSchools, getSchoolImport]
             can_disable: true
-      - key: menu.platform_admin.school_policies
-        label_key: portal.menu.platform_admin.school_policies
-        title: Chính sách trường
-        path: /platform-admin/school-policies
-        order: 50
-        required_permissions: [platform.settings.write]
-        can_disable: true
-        actions:
-          - key: action.platform_admin.school_policies.view
-            label_key: portal.action.platform_admin.school_policies.view
-            title: Xem chính sách trường
-            required_permissions: [platform.settings.write]
-            operation_ids: []
-            can_disable: true
       - key: menu.platform_admin.chat_safety
         label_key: portal.menu.platform_admin.chat_safety
         title: An toàn chat — Danh mục từ nhạy cảm
@@ -2106,20 +2066,6 @@ workspaces:
             title: Bật/tắt công tắc kiểm duyệt
             required_permissions: [chat.policy.toggle]
             operation_ids: [setModerationSwitches, approveModerationSwitchChange]
-            can_disable: true
-      - key: menu.platform_admin.break_glass
-        label_key: portal.menu.platform_admin.break_glass
-        title: Break-glass
-        path: /platform-admin/break-glass
-        order: 80
-        required_permissions: [platform.break_glass.request, platform.break_glass.approve]
-        can_disable: true
-        actions:
-          - key: action.platform_admin.break_glass.view
-            label_key: portal.action.platform_admin.break_glass.view
-            title: Xem yêu cầu break-glass
-            required_permissions: [platform.break_glass.request, platform.break_glass.approve]
-            operation_ids: []
             can_disable: true
       - key: menu.platform_admin.system_settings
         label_key: portal.menu.platform_admin.system_settings

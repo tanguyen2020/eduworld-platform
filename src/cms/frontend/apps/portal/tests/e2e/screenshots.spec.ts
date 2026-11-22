@@ -202,7 +202,7 @@ async function schoolAdminExtras(page: Page, watch: Watch, role: string, start: 
     await shoot(page, watch, role, role, n++, new URL(page.url()).pathname);
   }
   await storeTheme(page, 'dark');
-  for (const key of ['menu.school_lms.overview', 'menu.school_lms.school_dashboard'] as const) {
+  for (const key of ['menu.school_lms.school_dashboard'] as const) {
     await spaGoto(page, menu(key).path);
     await shoot(page, watch, role, role, n++, menu(key).path, '-dark');
   }

@@ -8,7 +8,6 @@
   },
   "menu": {
     "school_lms": {
-      "overview": "Tổng quan",
       "schools": "Trường",
       "students": "Học sinh theo khối",
       "sis_sync": "Đồng bộ SIS/CSV",
@@ -78,10 +77,8 @@
       "access_control": "Người dùng & phân quyền",
       "tenant_data": "Gán và clone dữ liệu tenant",
       "catalog": "Danh mục quốc gia, tỉnh, trường",
-      "school_policies": "Chính sách trường",
       "chat_safety": "Danh mục từ nhạy cảm",
       "moderation_switches": "Công tắc kiểm duyệt",
-      "break_glass": "Break-glass",
       "system_settings": "Cấu hình hệ thống",
       "feature_toggles": "Bật/tắt menu & action",
       "student_activity": "Hoạt động đăng nhập game",

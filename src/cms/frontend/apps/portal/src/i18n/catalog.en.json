@@ -8,7 +8,6 @@
   },
   "menu": {
     "school_lms": {
-      "overview": "Overview",
       "schools": "Schools",
       "students": "Students by grade",
       "sis_sync": "SIS/CSV sync",
@@ -78,10 +77,8 @@
       "access_control": "Users & roles",
       "tenant_data": "Assign and clone tenant data",
       "catalog": "Countries, provinces, schools",
-      "school_policies": "School policies",
       "chat_safety": "Sensitive term catalog",
       "moderation_switches": "Moderation switches",
-      "break_glass": "Break-glass",
       "system_settings": "System settings",
       "feature_toggles": "Menu & action toggles",
       "student_activity": "Game login activity",

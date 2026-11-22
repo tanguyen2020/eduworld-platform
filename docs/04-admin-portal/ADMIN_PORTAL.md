@@ -612,7 +612,7 @@ Chi tiết nghiệp vụ: [MODERATION §11–§12](../03-social-multiplayer/MODE
 | **Giờ giới nghiêm** | C → Cài đặt trường · D → Cấu hình hệ thống | School Admin (`school.settings.write`, action `action.school_lms.settings.edit_school`) · System Admin (`platform.settings.write`) | Trường: xem giờ giới nghiêm platform (chỉ đọc) và giờ hiệu lực, đặt khung giới nghiêm của trường chỉ **mở rộng** (phải chứa trọn giờ platform, server từ chối `422 VALIDATION_FAILED`), bắt buộc lý do (`getSchoolSettings`/`updateSchoolSettings`). Platform: đặt `platform_curfew` có lý do và xác nhận (`getPlatformCurfewSettings`/`putPlatformCurfewSettings`). Không có lựa chọn theo khối (R15); quy tắc: [CHILD_SAFETY §4.1](../10-security/CHILD_SAFETY.md#41-giờ-giới-nghiêm-cấp-platform-adr-0078) |
 | **Chat policy trường** | C → Cài đặt trường | School Admin (`school.settings.write`) | Siết chặt trong giới hạn platform (ADR-0020, ADR-0030): giờ chat, bật/tắt DM, world chat, hiển thị tên thật cho bạn cùng lớp; không tắt được chat `match`/`team`/`party` (always-on); không có điều kiện theo khối (R15). Giới hạn: [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) |
 | **Lịch trực Safety Team** | E → Kiểm duyệt | Trưởng ca quản lý (`moderation.case.lead`); Safety Moderator, System Admin xem (`moderation.case.read`) | Lịch ca trực on-call 24/7 cho case p1: calendar tuần (ICT), mỗi ca có người trực, vai trò `primary`/`secondary`, ghi chú; tạo/xóa mềm ca (chồng lấn cùng vai trò → `409 ONCALL_SHIFT_OVERLAP`); chỉ báo khoảng trống không có người trực; chuỗi gọi và ngưỡng theo [MODERATION §6.3](../03-social-multiplayer/MODERATION.md) |
-| **Break-glass** | D → An toàn chat | System Admin yêu cầu (`platform.break_glass.request`), một System Admin **khác** duyệt (`platform.break_glass.approve`) | Yêu cầu truy cập nội dung ngoài phạm vi case: lý do, thời hạn, phạm vi; hàng chờ duyệt; trạng thái còn hiệu lực/hết hạn; mọi bước ghi audit, không chép nội dung tin vào audit; quy trình ở [MODERATION §6.1](../03-social-multiplayer/MODERATION.md) |
+| **Break-glass** ⛔ ngoài Release 1 (owner chốt 2026-11-22: bỏ menu, chưa có feature) | D → An toàn chat | System Admin yêu cầu (`platform.break_glass.request`), một System Admin **khác** duyệt (`platform.break_glass.approve`) | Yêu cầu truy cập nội dung ngoài phạm vi case: lý do, thời hạn, phạm vi; hàng chờ duyệt; trạng thái còn hiệu lực/hết hạn; mọi bước ghi audit, không chép nội dung tin vào audit; quy trình ở [MODERATION §6.1](../03-social-multiplayer/MODERATION.md) |
 | **Banner trạng thái** | Mọi workspace (topbar) | System Admin; Safety Moderator; Tenant Admin/School Admin của tenant | Khi bất kỳ bước nào của tenant đang tắt: banner đỏ cố định **"Đang tắt kiểm duyệt: <bước> — đến <thời hạn>"** trên mọi màn hình của tenant đó |
 
 ### 3.10. Hoạt động đăng nhập game và dọn học sinh (ADR-0031, ADR-0032, ADR-0033)
@@ -953,7 +953,7 @@ Một portal, menu từng workspace sinh từ danh mục menu (§2.7), lọc the
 EduWorld Admin Portal   [Workspace ▾]   [Tenant ▾ — System Admin: lọc · nhân sự nhiều tenant: chọn đơn vị]
 │
 ├── C. School & Learning Management   (tenant · System Admin)
-│   ├── Tổng quan (việc cần làm: review chờ, bài sắp hạn, import lỗi, thông báo an toàn chờ xác nhận)
+│   ├── Tổng quan ⛔ ngoài Release 1 (owner chốt 2026-11-22: bỏ menu, chưa có feature; trang đầu là School Learning Dashboard)
 │   ├── Trường (tenant unit) · Học sinh theo khối (từ SIS, chỉ đọc) · Đồng bộ SIS/CSV
 │   ├── Giao bài — Bài tập / đề (theo khối của trường ± học sinh) · Bài chẩn đoán · Hoạt động game được gán (chỉ đọc) · Thử thách khối / giải trường (template, School Admin)
 │   ├── Tiến độ & báo cáo — School Learning Dashboard (trường → khối → học sinh) · Bản đồ kỹ năng · Kết quả bài/đề (hộp thoại chấm lại đề `scope = exam_session`, Academic Manager) · Báo cáo tham khảo TT27/TT22 · Analytics
@@ -992,7 +992,7 @@ EduWorld Admin Portal   [Workspace ▾]   [Tenant ▾ — System Admin: lọc ·
     ├── Tenant (trường độc lập, đơn vị, tenant chung; kích hoạt; SIS connection)
     ├── Người dùng & phân quyền — Người dùng (mọi tenant) · Role platform & role dùng chung · UserRole (platform + tenant đích) · Permission catalog (chỉ xem)
     ├── Gán cho tenant · Clone giữa tenant (job)
-    ├── Chính sách trường · An toàn chat — Danh mục từ nhạy cảm · Công tắc kiểm duyệt · Break-glass
+    ├── An toàn chat — Danh mục từ nhạy cảm · Công tắc kiểm duyệt (Chính sách trường, Break-glass ⛔ ngoài Release 1 — owner chốt 2026-11-22)
     ├── Cấu hình hệ thống — Dọn học sinh · Thời hạn chat gameplay · Retention · Feature flag · Bật/tắt menu & action (§3.18)
     ├── Tích hợp — Keycloak · SIS · APISIX (tham chiếu, chỉ xem: `getIntegrationOverview`, giá trị từ cấu hình server, không secret) · Integration Monitoring ⛔ (Grafana/alert)
     ├── Thùng rác (mọi tenant + platform)
