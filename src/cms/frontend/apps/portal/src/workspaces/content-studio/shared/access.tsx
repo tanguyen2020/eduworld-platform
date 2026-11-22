@@ -1,5 +1,5 @@
 // Display permissions of Content Studio (F053-AC-13, AC-29, AC-33; ADMIN_PORTAL §2.3, ADR-0090): which buttons to
-// show for the session — learning_content.write / review / publish / translate, media.upload, curriculum.* — and the
+// show for the session — learning_content.write / review / publish, media.upload, curriculum.* — and the
 // ActionGate of each workflow button (hidden without permission, disabled with "Tính năng đang tắt" when the
 // action is turned off). Display only: the backend authorizes every request (AGENTS R20).
 import type { ReactElement } from 'react';
@@ -15,7 +15,7 @@ export interface ContentAccess {
   crossTenant: boolean;
   /** Platform scope (no session tenant): platform staff, System Admin — platform lane / platform source offered. */
   platform: boolean;
-  question: { write: boolean; review: boolean; publish: boolean; translate: boolean; upload: boolean; preview: boolean };
+  question: { write: boolean; review: boolean; publish: boolean; upload: boolean; preview: boolean };
   curriculum: { read: boolean; write: boolean; publish: boolean };
   /** Activity Builder (F058, ACTIVITY_ENGINE §13): activity.write / activity.review, publish, re_evaluate. */
   activity: { write: boolean; review: boolean; publish: boolean; reEvaluate: boolean };
@@ -36,7 +36,6 @@ export function useContentAccess(): ContentAccess {
       write: has('learning_content.write'),
       review: has('learning_content.review'),
       publish: has('learning_content.publish'),
-      translate: has('learning_content.translate'),
       upload: has('media.upload'),
       preview: has('learning_content.read'),
     },

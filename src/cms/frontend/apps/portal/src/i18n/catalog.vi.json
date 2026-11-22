@@ -38,8 +38,7 @@
       "assessments": "Ma trận đề",
       "regrade": "Chấm lại hệ thống",
       "media": "Video, audio, media",
-      "reviews": "Duyệt nội dung, preview",
-      "translations": "Dịch nội dung"
+      "reviews": "Duyệt nội dung, preview"
     },
     "game_ops": {
       "dashboard": "Game Dashboard",
@@ -85,7 +84,6 @@
       "reports": "Báo cáo học tập toàn platform",
       "efficacy_studies": "Nghiên cứu hiệu quả học tập",
       "learning_experiments": "Thử nghiệm A/B",
-      "data_requests": "Yêu cầu về dữ liệu cá nhân",
       "integrations": "Tích hợp",
       "trash": "Thùng rác",
       "audit_logs": "Nhật ký toàn hệ thống"

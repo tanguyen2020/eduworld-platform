@@ -36,7 +36,6 @@ export class MockContentBackend {
   curricula: Record<string, unknown>[] = [];
   versions: Record<string, unknown>[] = [];
   lessons: Record<string, unknown>[] = [];
-  readonly jobs = new Map<string, { job_id: string; kind: string; status: string; polls: number; download_url?: string; report?: unknown }>();
   /** Per-path failures to inject (first match answers). */
   readonly fail: { method: string; path: RegExp; response: () => Response; once?: boolean }[] = [];
   private n = 100;
@@ -200,21 +199,6 @@ export class MockContentBackend {
       const lo = this.objectives.find((x) => x.objective_id === m![1])!;
       Object.assign(lo, body);
       return json(200, lo);
-    }
-    if ((p === '/cms/learning/translations:export' || p === '/cms/learning/translations:import') && r.method === 'POST') {
-      const kind = p.endsWith('export') ? 'export' : 'import';
-      const job = { job_id: U(this.n++), kind, status: 'queued' };
-      this.jobs.set(job.job_id, { ...job, polls: 0 });
-      return json(202, job);
-    }
-    if ((m = p.match(/^\/cms\/learning\/translations\/jobs\/([^/]+)$/))) {
-      const j = this.jobs.get(m[1]!)!;
-      if (++j.polls >= 2) {
-        j.status = 'succeeded';
-        if (j.kind === 'export') j.download_url = 'https://storage.mock.test/exports/question.xlf';
-        else j.report = { total: 3, updated: 2, skipped: 1, errors: [{ ref: 'question/x/1/stem/blocks/9/text', message: 'key not found' }] };
-      }
-      return json(200, j);
     }
     if (p === '/cms/learning/lessons' && r.method === 'GET') return json(200, { data: this.lessons, page: { has_more: false } });
     if ((m = p.match(/^\/cms\/learning\/lessons\/([^/]+)$/))) return json(200, this.lessons.find((l) => l.content_id === m![1]));

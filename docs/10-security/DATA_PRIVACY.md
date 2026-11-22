@@ -67,6 +67,21 @@ Yêu cầu về dữ liệu học sinh đi qua **nhà trường** (đơn vị k�
 
 Mọi yêu cầu được ghi `audit` với mã yêu cầu (`dsr_id`).
 
+### 3.1. Release 1: không có kênh Portal, xử lý thủ công
+
+> [!WARNING]
+> **Rủi ro được chấp nhận ([ADR-0097](../adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md), owner chốt 2026-11-22; [RISKS](../12-project/RISKS.md) RISK-57).** Release 1 **không có** chức năng Portal nào để tiếp nhận, theo dõi hay thực hiện yêu cầu của chủ thể dữ liệu theo Nghị định 13/2023/NĐ-CP: menu "Yêu cầu dữ liệu" và API `/admin/data-requests` đã gỡ, chức năng "Xuất dữ liệu học sinh" ở bảng trên chưa có. Bảng trên là thiết kế đích; đáp ứng đúng thời hạn phụ thuộc hoàn toàn vào quy trình thủ công dưới đây.
+
+Quy trình thủ công [Proposed] (chưa có runbook riêng; người thực hiện là System Admin được vận hành chỉ định; owner duyệt trước pilot):
+
+1. **Tiếp nhận:** chỉ nhận văn bản từ nhà trường (đơn vị ký thỏa thuận). Ghi vào sổ theo dõi ngoài hệ thống (mã yêu cầu `dsr_id`, ngày nhận, trường, `user_id` học sinh, loại yêu cầu, hạn xử lý theo bảng trên). Không ghi họ tên/ngày sinh vào ticket, chat hay log (R14).
+2. **Xác minh:** đối chiếu `user_id` với tenant của trường gửi yêu cầu trên Portal (đọc theo tenant đó, có audit); từ chối nếu học sinh không thuộc tenant.
+3. **Thực hiện:**
+   - *Hạn chế xử lý:* khóa tài khoản (`lockUser`, lý do ghi `dsr_id`).
+   - *Xóa:* vô hiệu hóa tài khoản (`deactivateUser`, lý do ghi `dsr_id`); ẩn danh hóa chạy bằng job `retention-anonymizer` khi hết `student_data_retention` (CONFIG_DEFAULTS). Nếu thời hạn luật ngắn hơn retention, báo owner — Release 1 **không có** đường ẩn danh hóa ngay theo yêu cầu.
+   - *Truy cập:* trích xuất thủ công từ read replica bởi DBA có quyền, chỉ dữ liệu của học sinh đó, gửi lại nhà trường qua kênh đã thỏa thuận; ghi audit thủ công vào sổ theo dõi.
+4. **Đóng:** ghi ngày hoàn tất và người thực hiện vào sổ theo dõi; thao tác trên Portal (khóa, vô hiệu hóa) đã có audit với lý do chứa `dsr_id`.
+
 ## 4. Xóa & ẩn danh hóa
 
 - **Anonymize** (mặc định khi hết retention): `identity.users.display_name = NULL`, `org.students` xóa `full_name`, `date_of_birth`, `student_code`, `national_id_hash`; GameProfile nickname → `Người chơi #<hash>`; giữ `user_id` để thống kê tổng hợp không liên kết được người thật; xóa ExternalIdentity và Keycloak user.

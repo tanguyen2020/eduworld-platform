@@ -35,7 +35,6 @@ export const screens = {
   'menu.platform_admin.reports': PlatformReportsPage, // F056 US5
   'menu.platform_admin.efficacy_studies': EfficacyStudiesScreen,
   'menu.platform_admin.learning_experiments': LearningExperimentsScreen,
-  'menu.platform_admin.data_requests': placeholderScreen,
   'menu.platform_admin.integrations': IntegrationsPage,
   'menu.platform_admin.trash': TrashPage,
   'menu.platform_admin.audit_logs': AuditLogsPage,

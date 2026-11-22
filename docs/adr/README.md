@@ -114,6 +114,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0094](ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) | Bỏ MFA (TOTP) cho đăng nhập Admin Portal | Accepted (rủi ro được chấp nhận) · một phần supersedes ADR-0091, 0009, 0022, 0027, 0029, 0063, 0064, 0066, 0067, 0068, 0072, 0086, 0090 · một phần superseded by ADR-0096 | — |
 | [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | Bỏ khái niệm lớp: học sinh thuộc trường theo khối (bỏ enrollment, course, learning path, lịch, nhóm học tập; DROP một lần) | Accepted · supersedes ADR-0084 · một phần supersedes ADR-0005, 0020, 0021, 0026, 0027, 0034, 0043, 0046, 0050, 0060, 0061, 0062, 0063, 0072, 0080 · ngoại lệ mục 2 ADR-0070 | — |
 | [0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md) | Chặn học sinh ở Admin Portal không được tính là đăng nhập sai | Accepted · một phần supersedes ADR-0066, 0091, 0094 | — |
+| [0097](ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md) | Bỏ "Yêu cầu dữ liệu cá nhân" và "Dịch nội dung học tập" khỏi Admin Portal Release 1 | Accepted (rủi ro được chấp nhận) | — |
 
 ## Quyết định hiện hành theo chủ đề
 
@@ -233,6 +234,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 
 | ADR | Quyết định hiện hành |
 |---|---|
+| [0097](ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md) | Release 1 không có menu Portal "Yêu cầu dữ liệu" (F016) và "Bản dịch" nội dung học tập (F025): gỡ 6 operation; yêu cầu của chủ thể dữ liệu xử lý thủ công theo DATA_PRIVACY §3.1 (rủi ro chấp nhận, RISK-57) |
 | [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | LMS không còn lớp, course, learning path, lịch, nhóm học tập; giao bài/đề theo (trường, khối) ± danh sách học sinh; School Learning Dashboard trường → khối → học sinh; menu "Học sinh theo khối" |
 | [0072](ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) | Không có vai trò giáo viên; học sinh tự học, nhà trường (`school_admin`/`academic_manager`) giao bài và xem School Learning Dashboard; role platform `safety_moderator` |
 | [0027](ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) | Một Admin Portal 5 workspace; tenant chỉ Learning Management; System Admin liên tenant |

@@ -18,7 +18,7 @@ import {
   type QuestionDraft,
   type WorkflowAction,
 } from '@eduworld/ops-ui/content';
-import { Alert, Button, Card, Flex, Form, Input, Modal, Result, Spin, Tabs } from 'antd';
+import { Alert, Card, Flex, Form, Input, Modal, Result, Spin, Tabs } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -40,7 +40,6 @@ import { ASSETS_PER_VERSION_MAX, CONTENT_AUTOSAVE_DEBOUNCE_MS, CONTENT_AUTOSAVE_
 import { audioGate, mediaGate, mediaRefs, originalMissing, serverGates, translationPartial, type Gate } from '../shared/gates';
 import { OWNER_FIELD, ownerOf, OwnerScopeField } from '../shared/OwnerScopeField';
 import { schemaErrorMessage, validateQuestionDraft } from '../shared/schemaValidator';
-import { TranslationExportDialog, TranslationImportDialog } from '../translations/TranslationDialogs';
 import { QuestionMetaPanel } from './QuestionMetaPanel';
 import { StudentViewPreview } from './StudentViewPreview';
 import { fromAuthoring, toAuthoringBody, useCmsQuestion, useQuestionApi, type QuestionAuthoring, type QuestionMeta } from './useQuestion';
@@ -110,7 +109,7 @@ function QuestionEditorForm({ questionId, server, etag, reload }: { questionId?:
   const [actionError, setActionError] = useState<unknown>(null);
   const [mediaStatus, setMediaStatus] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<WorkflowAction | null>(null);
-  const [dialog, setDialog] = useState<'reject' | 'publish' | 'export' | 'import' | null>(null);
+  const [dialog, setDialog] = useState<'reject' | 'publish' | null>(null);
   const [ownerForm] = Form.useForm<{ [OWNER_FIELD]?: string }>();
   const lang = state.meta.content_language;
   const status = server?.status ?? 'draft';
@@ -298,12 +297,6 @@ function QuestionEditorForm({ questionId, server, etag, reload }: { questionId?:
             </Form>
           </Card>
         )}
-        {questionId && access.question.translate && (
-          <Flex gap="small" justify="end">
-            <Button onClick={() => setDialog('export')}>{t('content_studio.translations.export')}</Button>
-            <Button onClick={() => setDialog('import')}>{t('content_studio.translations.import')}</Button>
-          </Flex>
-        )}
         {status === 'published' && <Alert type="info" showIcon message={t('content_studio.question.publishedReadOnly', { version: server?.version })} />}
         {questionId && server && EDITABLE.has(status) && <ReviewFieldComments item={{ contentType: 'question', contentId: questionId }} version={server.version} />}
         <QuestionEditor
@@ -349,12 +342,6 @@ function QuestionEditorForm({ questionId, server, etag, reload }: { questionId?:
             .finally(() => setBusy(null));
         }}
       />
-      {questionId && server && (
-        <>
-          <TranslationExportDialog open={dialog === 'export'} onClose={() => setDialog(null)} contentType="question" contentIds={[questionId]} sourceLanguage={lang} />
-          <TranslationImportDialog open={dialog === 'import'} onClose={() => setDialog(null)} onImported={() => void reload()} sourceLanguage={lang} />
-        </>
-      )}
     </>
   );
 }

@@ -11,7 +11,7 @@
 # - can_disable: false = mục được bảo vệ, không tắt được (422 FEATURE_NOT_DISABLEABLE); action của menu được bảo vệ cũng false.
 # - title chỉ để người đọc file và màn hình Bật/tắt; nhãn hiển thị lấy theo label_key từ file dịch của portal.
 # - Tăng catalog_version mỗi khi đổi file (cmd/migrate ghi vào platform.portal_menu_catalog).
-catalog_version: "2026.11.22.1"
+catalog_version: "2026.11.23.1"
 workspaces:
   - key: school_lms
     label_key: portal.workspace.school_lms
@@ -823,20 +823,6 @@ workspaces:
             title: Preview nội dung
             required_permissions: [learning_content.read]
             operation_ids: [createLearningPreviewSession, submitPreviewResponse]
-            can_disable: true
-      - key: menu.content_studio.translations
-        label_key: portal.menu.content_studio.translations
-        title: Dịch nội dung
-        path: /content-studio/translations
-        order: 120
-        required_permissions: [learning_content.translate]
-        can_disable: true
-        actions:
-          - key: action.content_studio.translations.translate
-            label_key: portal.action.content_studio.translations.translate
-            title: Xuất/nhập file dịch
-            required_permissions: [learning_content.translate]
-            operation_ids: [exportLearningTranslations, importLearningTranslations, getLearningTranslationJob]
             can_disable: true
   - key: game_ops
     label_key: portal.workspace.game_ops
@@ -2217,26 +2203,6 @@ workspaces:
             title: Bắt đầu shadow/live, dừng thử nghiệm
             required_permissions: [platform.learning_experiment.manage]
             operation_ids: [startLearningExperiment, stopLearningExperiment]
-            can_disable: true
-      - key: menu.platform_admin.data_requests
-        label_key: portal.menu.platform_admin.data_requests
-        title: Yêu cầu về dữ liệu cá nhân
-        path: /platform-admin/data-requests
-        order: 130
-        required_permissions: [platform.data_request.write]
-        can_disable: true
-        actions:
-          - key: action.platform_admin.data_requests.view
-            label_key: portal.action.platform_admin.data_requests.view
-            title: Xem yêu cầu
-            required_permissions: [platform.data_request.write]
-            operation_ids: [listDataRequests, getDataRequest]
-            can_disable: true
-          - key: action.platform_admin.data_requests.create
-            label_key: portal.action.platform_admin.data_requests.create
-            title: Tiếp nhận yêu cầu
-            required_permissions: [platform.data_request.write]
-            operation_ids: [createDataRequest]
             can_disable: true
       - key: menu.platform_admin.integrations
         label_key: portal.menu.platform_admin.integrations

@@ -568,41 +568,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/data-requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Yêu cầu dữ liệu cá nhân (xuất / ẩn danh hóa — ADR-0028 §8, ADR-0070) và trạng thái */
-        get: operations["listDataRequests"];
-        put?: never;
-        /** Ghi nhận yêu cầu xuất/ẩn danh dữ liệu học sinh (system_admin · platform.data_request.write; X-Tenant-Id = tenant đích; saga qua interface platform ops) */
-        post: operations["createDataRequest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/data-requests/{data_request_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Trạng thái yêu cầu dữ liệu + link ký gói xuất (15 phút) khi hoàn tất */
-        get: operations["getDataRequest"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/economy/adjustments": {
         parameters: {
             query?: never;
@@ -3734,57 +3699,6 @@ export interface paths {
         head?: never;
         /** Sửa chủ đề trong version draft (If-Match) — curriculum.write */
         patch: operations["updateTopic"];
-        trace?: never;
-    };
-    "/cms/learning/translations:export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Xuất file dịch XLIFF/CSV (learning_content.translate) — bất đồng bộ */
-        post: operations["exportLearningTranslations"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/cms/learning/translations:import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Nhập bản dịch (learning_content.translate); bản dịch tạo version Draft mới, không sửa version đã publish (ADR-0043) */
-        post: operations["importLearningTranslations"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/cms/learning/translations/jobs/{job_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Trạng thái job dịch */
-        get: operations["getLearningTranslationJob"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/cms/media": {
@@ -11022,26 +10936,6 @@ export interface components {
             /** Format: date */
             to?: string;
         };
-        DataRequest: components["schemas"]["DataRequestCreate"] & {
-            completed_at?: components["schemas"]["Timestamp"];
-            created_at: components["schemas"]["Timestamp"];
-            data_request_id: components["schemas"]["Uuid"];
-            /** Format: uri */
-            download_url?: string | null;
-            /** @enum {string} */
-            status: "received" | "verifying" | "in_progress" | "completed" | "rejected";
-            tenant_id: components["schemas"]["Uuid"];
-        };
-        DataRequestCreate: {
-            reason: string;
-            /** @description Số văn bản/mã hồ sơ của yêu cầu */
-            reference?: string;
-            /** @enum {string} */
-            request_type: "export" | "anonymize";
-            /** @enum {string} */
-            requester_kind: "school" | "parent_via_school" | "student" | "authority";
-            subject_user_id: components["schemas"]["Uuid"];
-        };
         DeviceProfile: {
             match: {
                 device_model_pattern?: string;
@@ -16282,7 +16176,6 @@ export interface components {
         DashboardPageSize: number;
         /** @description Ngày kết thúc (bao gồm). Phải ≥ `from`. */
         DashboardTo: string;
-        DataRequestIdPath: components["schemas"]["Uuid"];
         /** @description UUID của bản cài game (sinh lần đầu, lưu user://). Dùng cho quy tắc một thiết bị (ADR-0031), không phải credential. */
         DeviceIdHeader: components["schemas"]["Uuid"];
         DuelIdPath: components["schemas"]["Uuid"];
@@ -17885,108 +17778,6 @@ export interface operations {
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
-        };
-    };
-    listDataRequests: {
-        parameters: {
-            query?: {
-                /** @description Cursor opaque từ page.next_cursor */
-                cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
-                status?: "received" | "verifying" | "in_progress" | "completed" | "rejected";
-                /**
-                 * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
-                 *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
-                 */
-                tenant_ids?: components["parameters"]["TenantIds"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["DataRequest"][];
-                        page: components["schemas"]["PageInfo"];
-                    };
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-        };
-    };
-    createDataRequest: {
-        parameters: {
-            query?: never;
-            header?: {
-                /**
-                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
-                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
-                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
-                 */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-                /**
-                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
-                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
-                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DataRequestCreate"];
-            };
-        };
-        responses: {
-            /** @description Đã ghi nhận */
-            202: {
-                headers: {
-                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataRequest"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            422: components["responses"]["ValidationFailed"];
-        };
-    };
-    getDataRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                data_request_id: components["parameters"]["DataRequestIdPath"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataRequest"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
         };
     };
     createEconomyAdjustment: {
@@ -26411,120 +26202,6 @@ export interface operations {
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
-        };
-    };
-    exportLearningTranslations: {
-        parameters: {
-            query?: never;
-            header?: {
-                /**
-                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
-                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
-                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
-                 */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-                /**
-                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
-                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
-                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TranslationExportRequest"];
-            };
-        };
-        responses: {
-            /** @description Job đã tạo */
-            202: {
-                headers: {
-                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TranslationJob"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-            422: components["responses"]["ValidationFailed"];
-        };
-    };
-    importLearningTranslations: {
-        parameters: {
-            query?: never;
-            header?: {
-                /**
-                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
-                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
-                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
-                 */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-                /**
-                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
-                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
-                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TranslationImportRequest"];
-            };
-        };
-        responses: {
-            /** @description Job đã tạo */
-            202: {
-                headers: {
-                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TranslationJob"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-            422: components["responses"]["ValidationFailed"];
-        };
-    };
-    getLearningTranslationJob: {
-        parameters: {
-            query?: never;
-            header?: {
-                /**
-                 * @description Người dùng tenant: **bắt buộc** (thiếu → `400 TENANT_HEADER_REQUIRED`). Role platform (System Admin, content_admin…):
-                 *     vắng mặt = phạm vi platform / đọc liên tenant bằng `tenant_ids`; có giá trị = tenant đích của thao tác ghi (ADR-0027, ADR-0065).
-                 *     Có giá trị thì luôn được kiểm tra như `TenantIdHeader`.
-                 */
-                "X-Tenant-Id"?: components["parameters"]["TenantIdHeaderOptional"];
-            };
-            path: {
-                job_id: components["parameters"]["TranslationJobIdPath"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TranslationJob"];
-                };
-            };
-            401: components["responses"]["Unauthenticated"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
         };
     };
     listMediaAssets: {

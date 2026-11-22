@@ -42,6 +42,10 @@
 - Q: T066 (OQ F053-9) — portal suy `curriculum_version_id` hiện hành thế nào? → A: [Confirmed] Không đổi contract. Portal đọc `listCmsCurricula` (curriculum tenant thấy: của tenant và platform được gán), với mỗi curriculum có `current_version` (con trỏ version đang hiệu lực, CURRICULUM_MODEL §2) gọi `getCurriculumVersion` để lấy `subject_grades`, chọn version có cặp môn × khối (chỉ một khối được chọn → khối đó; nhiều hoặc chưa chọn khối → chỉ theo môn), rồi gọi `listCmsTopics` với `curriculum_version_id` + `subject_id` (+ `grade_level`). Nhiều curriculum khớp → ưu tiên curriculum riêng của tenant, rồi theo thứ tự danh sách (bảo thủ: dùng đúng chương trình tenant tự soạn, không trộn chủ đề nhiều chương trình). Version nháp/đang duyệt không bao giờ dùng. Ô chọn hiện dòng "Chủ đề theo chương trình …, phiên bản …" để người soạn thấy nguồn. Không có version khớp → không gửi `listCmsTopics`, ô chọn hiện giải thích "Chưa có chương trình học đã xuất bản cho môn và khối này…". Cài đặt curriculum mặc định của trường (`lms.school_curriculum_settings`, SCHOOL_LMS §3) không dùng ở đây vì nội dung Content Studio không có chiều trường. LO giữ nguyên cách lọc hiện có (ngoài phạm vi T066).
 - Q: T067 — `CurriculumTreePage.test.tsx` AC-26 đỏ do test hay code? → A: [Confirmed] Test. Workspace Content Studio là chunk lazy (F050-AC-02); test đầu tiên của file trả chi phí import lạnh (~9–10 s) bên trong `findByText("Toán")` có `asyncUtilTimeout` 10 s nên đỏ khi máy tải nặng; trang đúng (sau khi chunk đã nạp AC-29 render ~1 s; sau khi sửa, AC-26 chạy 2,9 s trong lượt vitest đầy đủ Content Studio dưới tải). Sửa test: `beforeAll` import chunk trước, mỗi `findBy` chỉ đo trang. Code không đổi.
 
+### Session 2026-11-22 (owner bỏ "Bản dịch" khỏi Release 1 — [Confirmed])
+
+- Q: Nút xuất/nhập file dịch trên trình soạn câu hỏi còn dùng được khi F025 US5 bị gỡ? → A: [Confirmed] Không ([ADR-0097](../../docs/adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md)): bỏ nút và hộp thoại xuất/nhập (`TranslationDialogs`, `useTranslationJobs`), cờ quyền `translate` của Content Studio; F053-AC-25 → Removed (kiểm âm trong `QuestionEditorPage.test.tsx`). Biên tập song ngữ hai cột vi/en (AC-21…AC-24) giữ nguyên.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Soạn câu hỏi 11 dạng và đưa qua workflow (Priority: P1)
@@ -110,7 +114,7 @@ Biên tập viên soạn trường văn bản hai cột vi/en, thấy trạng th
 | F053-AC-22 | Portal PHẢI hiển thị huy hiệu Đủ/Thiếu/Lỗi thời theo `translation_status` ở từng trường và ở version. | FR-CNT-018 · [CONTENT_MODEL §8](../../docs/02-learning/CONTENT_MODEL.md) | — |
 | F053-AC-23 | NẾU thiếu bản theo `content_language` ở trường bắt buộc, THÌ Portal PHẢI khóa Gửi duyệt/Xuất bản kèm danh sách field thiếu bấm để nhảy tới; NẾU server trả `422 TRANSLATION_INCOMPLETE`, THÌ hiển thị cùng cách. | FR-CNT-018, NFR-I18N-002 | — |
 | F053-AC-24 | KHI chỉ thiếu bản dịch tùy chọn, Portal PHẢI cho xuất bản kèm cảnh báo `translation_status = partial`. | FR-CNT-018 · `learning_translation_required` | TC-I18N-002 |
-| F053-AC-25 | KHI người có `learning_content.translate` xuất file dịch, Portal PHẢI gọi `exportLearningTranslations` (`xliff`/`csv`, Idempotency-Key), theo dõi `getLearningTranslationJob` và cho tải file; KHI nhập lại qua `importLearningTranslations`, Portal PHẢI báo field không khớp và Draft mới được tạo. | FR-CNT-018 · [ADMIN_PORTAL §1.5](../../docs/04-admin-portal/ADMIN_PORTAL.md) | — |
+| F053-AC-25 | **Removed (owner 2026-11-22, ngoài Release 1 — ADR-0097)** — không có xuất/nhập file dịch nội dung học tập. Chỉ giữ kiểm âm: trình soạn câu hỏi PHẢI không có nút "Xuất file dịch"/"Nhập file dịch" | FR-CNT-018 · ADR-0097 | — |
 
 ---
 

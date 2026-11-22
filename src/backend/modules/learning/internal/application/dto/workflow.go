@@ -60,29 +60,3 @@ type ReviewTaskView struct {
 	// FieldComments are the per-field comments of a rejected task (F025 T046).
 	FieldComments json.RawMessage `json:"field_comments,omitempty"`
 }
-
-// TranslationReport is TranslationJob.report.
-type TranslationReport struct {
-	Total   int                      `json:"total"`
-	Updated int                      `json:"updated"`
-	Skipped int                      `json:"skipped"`
-	Errors  []TranslationReportError `json:"errors"`
-}
-
-// TranslationReportError is one line of TranslationJob.report.errors (≤ 500).
-type TranslationReportError struct {
-	Ref     string `json:"ref"`
-	Message string `json:"message"`
-}
-
-// TranslationJobView is schema TranslationJob (F025 US5); ResultKey is the object of the export file.
-type TranslationJobView struct {
-	JobID       uuid.UUID          `json:"job_id"`
-	Kind        string             `json:"kind"`
-	Status      string             `json:"status"`
-	DownloadURL string             `json:"download_url,omitempty"`
-	ExpiresAt   *time.Time         `json:"expires_at,omitempty"`
-	Report      *TranslationReport `json:"report,omitempty"`
-	ResultKey   *string            `json:"-"`
-	TenantID    *uuid.UUID         `json:"-"`
-}

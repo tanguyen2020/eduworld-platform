@@ -41,7 +41,6 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/qbschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/secret"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/storage"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/translation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/consumer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/facade"
 	learninghttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/http"
@@ -59,11 +58,10 @@ import (
 // Name is the module name used for its database (eduworld_learning), env prefix and checks.
 const Name = "learning"
 
-// Intervals of the learning jobs [Proposed] (OQ F020-3): queued imports and translation jobs are picked up within
+// Intervals of the learning jobs [Proposed] (OQ F020-3): queued imports are picked up within
 // seconds of their creation.
 const (
-	ImportJobInterval      = 30 * time.Second
-	TranslationJobInterval = 30 * time.Second
+	ImportJobInterval = 30 * time.Second
 	// ScheduledPublishInterval: F026 T036 applies due scheduled publications every minute.
 	ScheduledPublishInterval = time.Minute
 	// AttemptLifecycleInterval: F030 T003/T035 pauses idle attempts, abandons and expires due attempts every minute.
@@ -143,7 +141,7 @@ func (m *Module) Wire(Imports) {}
 // Register wires the module into the running binary (OQ F020-3, F010-2): health checks everywhere (plus the Activity
 // Registry readiness of F030 where the use cases load); the CMS and attempt routes (F021–F027, F030) in core-api; the
 // outbox relay and the consumers projection_identity, qb_pool_invalidation, media_worker and release_pointer_cache in
-// worker events; the import, translation, scheduled-publish and attempt-lifecycle jobs in worker jobs.
+// worker events; the import, scheduled-publish and attempt-lifecycle jobs in worker jobs.
 func Register(r *module.Registry) (*Module, error) {
 	pool, err := r.Database(Name)
 	if err != nil {
@@ -204,7 +202,6 @@ func Register(r *module.Registry) (*Module, error) {
 		return consumer.ProgressDailyOptions(consumer.ProgressDaily{Record: w.progress}, core.UoW, core.App, js)
 	})
 	r.Job(Name, "import-jobs", ImportJobInterval, job.ImportWorker{Runner: w.curriculum}.RunOnce)
-	r.Job(Name, "translation-jobs", TranslationJobInterval, job.TranslationWorker{Runner: w.translations}.RunOnce)
 	r.Job(Name, "content-scheduled-publish", ScheduledPublishInterval, job.ScheduleWorker{Runner: w.releases}.RunOnce)
 	r.Job(Name, "attempt-lifecycle", AttemptLifecycleInterval, job.AttemptLifecycle{Runner: w.attempts}.Count)
 	// The partition job runs as learning_partition_admin (EXECUTE on the partition functions only, F031 migration); the
@@ -242,20 +239,19 @@ func Register(r *module.Registry) (*Module, error) {
 }
 
 type wiring struct {
-	core         *module.Core
-	valkey       valkey.Client
-	http         learninghttp.Handlers
-	facade       facade.Facade
-	curriculum   command.Curriculum
-	translations command.Translations
-	media        command.Media
-	releases     command.Releases
-	attempts     command.Attempts
-	activities   *activity.Registry
-	mastery      command.Mastery
-	progress     command.Progress
-	regrades     command.Regrades
-	lessons      command.Lessons
+	core       *module.Core
+	valkey     valkey.Client
+	http       learninghttp.Handlers
+	facade     facade.Facade
+	curriculum command.Curriculum
+	media      command.Media
+	releases   command.Releases
+	attempts   command.Attempts
+	activities *activity.Registry
+	mastery    command.Mastery
+	progress   command.Progress
+	regrades   command.Regrades
+	lessons    command.Lessons
 	// F032: the rule engine of the recommendations (R1/R5 are registered here by F041/F042; R6 left with F040, ADR-0095).
 	recommendations command.Recommendations
 	assignments     command.Assignments
@@ -362,8 +358,6 @@ func build(r *module.Registry) (*wiring, error) {
 	wf := command.Workflow{UoW: core.UoW, Status: write.WorkflowRepo{}, Reviews: write.WorkflowRepo{}, Questions: write.QuestionRepo{},
 		Docs: write.DocRepo{}, Schema: schema, Media: write.MediaRepo{}, Guard: readiness.Default(), Events: events, Audit: auditor,
 		Metrics: observability.WorkflowCounter{}}
-	tr := command.Translations{UoW: core.UoW, Jobs: write.TranslationJobRepo{}, Workflow: wf, Questions: qcmd, Docs: dcmd,
-		Codec: translation.Codec{}, Files: files, Assets: assets, Audit: auditor}
 	cur.Content = &command.ContentImport{Questions: qcmd, Codec: importer.QuestionCodec{}}
 	snapshots := cache.SnapshotCache{C: vk}
 	rel := command.Releases{UoW: core.UoW, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: events,
@@ -425,7 +419,6 @@ func build(r *module.Registry) (*wiring, error) {
 		Docs: dcmd, DocQueries: docQueries,
 		Widgets:  query.QuestionWidgets{Widgets: registry.Widgets()},
 		Workflow: wf, Reviews: query.ReviewTasks{Session: core.ReadSession, Model: read.ReviewTaskModel{}, Cursors: cursors},
-		Translations: tr, TranslationJobs: query.TranslationJobs{Session: core.ReadSession, Model: read.TranslationJobModel{}, Files: files},
 		Releases: rel, ReleaseQueries: query.Releases{Session: core.ReadSession, Model: read.ReleaseModel{}, Reader: reader, Cursors: cursors},
 		CmsActivities: query.CmsActivities{Docs: docQueries}, ActivityTypes: query.ActivityTypes{Registry: activities},
 		Attempts: att, AttemptQueries: attq,
@@ -505,7 +498,7 @@ func build(r *module.Registry) (*wiring, error) {
 	h.Reports.Commands = reports
 	h.Efficacy = learninghttp.EfficacyHandlers{Commands: eff, Queries: query.Efficacy{Session: core.ReadSession, Model: read.EfficacyModel{},
 		Cursors: cursors}}
-	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, translations: tr, media: media, releases: rel,
+	return &wiring{core: core, valkey: vk, http: h, facade: f, curriculum: cur, media: media, releases: rel,
 		attempts: att, activities: activities, mastery: mst, progress: prg, regrades: rgd, lessons: lessons, recommendations: recs,
 		assignments: asg, exams: exams, dashboards: dashboards, reports: reports, quality: quality, efficacy: eff, experiments: exps}, nil
 }

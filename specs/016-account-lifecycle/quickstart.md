@@ -26,8 +26,7 @@
 | 11 | Học sinh đã dọn đăng nhập lại (còn active SIS) | Keycloak xác thực được (user vẫn `enabled`); `student.restored`, membership Organization thêm lại, dữ liệu cũ dùng lại | F016-AC-17 |
 | 13 | `hs.an.3a` đăng nhập game (F013) + tạo session (F014); `ad.truong.a` khóa; lặp lại với SIS `suspended` và với dọn thật (Clock giả) | Trong ≤ 1 phút: session `account_locked`/`cleanup`; refresh → `401 REFRESH_TOKEN_INVALID`; event đúng schema | F016-AC-24 |
 | 14 | `ad.truong.a` gọi `resetStudentPassword` cho `hs.an.3a` (đang chơi) với `reason`, rồi gọi lại cùng `Idempotency-Key`; `hs.an.3a` tự gọi | `200` + `initial_password` (một lần, `no-store`); máy đang chơi bị đóng WS `4403` sau `session.session.ended` (`password_changed`), refresh → `401 REFRESH_TOKEN_INVALID`, đăng nhập lại bằng mật khẩu mới được; lần gọi lại không có mật khẩu (`password_redacted`); học sinh tự gọi → `403` | F016-AC-25, F016-AC-26, F016-AC-27 |
-| 12 | `sa.admin` `createDataRequest` ẩn danh hóa học sinh `deactivated` | `status = anonymized`, username `anon.<user_id>`, erasure log, không `DELETE` | F016-AC-20, F016-AC-21 |
-
+| 12 | `sa.admin` `createDataRequest` ẩn danh hóa học sinh `deactivated` | `status = anonymized`, username `anon.<user_id>`, erasure log, không `DELETE` | F016-AC-20, F016-AC-21  ⛔ ngoài Release 1 (ADR-0097): kiểm bằng job `retention-anonymizer` |
 ## 3. Lệnh test tự động
 
 ```bash

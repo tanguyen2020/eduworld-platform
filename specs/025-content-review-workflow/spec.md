@@ -29,6 +29,10 @@
 - OQ F054-1 (`field_comments[]`) → **Chốt:** body `transitionContentVersion` thêm `field_comments[]` tùy chọn (`path` JSON pointer ≤ 256, `comment` ≤ 1000; maxItems 50; chỉ nhận ở `reject`/`request_changes`), lưu cùng review task/transition, trả trong `ContentReviewTask` và lịch sử transition để tác giả thấy theo trường; portal F054 bỏ cách ghép vào `note`. Task bổ sung.
 - Triển khai T046: action của workflow không có `request_changes` nên `field_comments` chỉ nhận với `reject`; lịch sử trả nhận xét của lần từ chối gần nhất mỗi version (`ContentVersionSummary.field_comments`); review task lưu trong cột `comments` có sẵn [Confirmed].
 
+### Session 2026-11-22 (owner bỏ khỏi Release 1 — [Confirmed])
+
+- Q: Menu Portal "Bản dịch" (`menu.content_studio.translations`) chưa có màn hình, giữ hay bỏ? → A: [Confirmed] Owner bỏ khỏi Release 1 ([ADR-0097](../../docs/adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md)): gỡ `exportLearningTranslations`, `importLearningTranslations`, `getLearningTranslationJob` khỏi contract và route HTTP; xóa command/query/repository, codec XLIFF/CSV và job `translation-jobs` của module learning; Portal bỏ nút xuất/nhập trên trình soạn (F053-AC-25). US5 ngoài Release 1, F025-AC-22/23/24 → Removed (chỉ giữ kiểm âm). Giữ: `translation_status`, chặn `TRANSLATION_INCOMPLETE` (US4), bảng `content.translation_jobs` (R12), schema `TranslationJob`/`TranslationExportRequest`/`TranslationImportRequest` dùng chung với dịch nội dung game (F082). Người dịch nhập bản dịch trực tiếp trong trình soạn hai cột vi/en.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Gửi duyệt, duyệt, từ chối nội dung (Priority: P1)
@@ -112,7 +116,7 @@ Mỗi version có `content_language`; bản theo `content_language` là bắt bu
 
 ---
 
-### User Story 5 — Xuất/nhập file dịch (Priority: P3)
+### User Story 5 — Xuất/nhập file dịch (Priority: P3) — ⛔ ngoài Release 1 (owner 2026-11-22, ADR-0097)
 
 Người dịch có `learning_content.translate` xuất trường cần dịch ra XLIFF 2.1/CSV, nhập lại thành version draft mới.
 
@@ -124,9 +128,9 @@ Người dịch có `learning_content.translate` xuất trường cần dịch r
 
 | Mã | Tiêu chí | Nguồn | TC |
 |---|---|---|---|
-| F025-AC-22 | KHI gọi `exportLearningTranslations`, module learning PHẢI tạo job `202`, sinh file XLIFF/CSV vào bucket `ew-exports` và trả `download_url` presigned trong `getLearningTranslationJob` khi `succeeded`. | FR-CNT-018 · [ADMIN_PORTAL §1.5](../../docs/04-admin-portal/ADMIN_PORTAL.md) | — |
-| F025-AC-23 | KHI gọi `importLearningTranslations` (không `dry_run`), module learning PHẢI tạo version draft mới cho mỗi item khớp khóa, không sửa version `published`, báo dòng không khớp trong `report.errors[]`. | FR-CNT-018 · ADR-0043 | — |
-| F025-AC-24 | NẾU người gọi thiếu `learning_content.translate` hoặc item thuộc tenant khác, THÌ module learning PHẢI trả `403 PERMISSION_DENIED` / bỏ qua item và ghi vào `report.errors[]` như không tồn tại. | R7 · R8 · ADR-0005 | TC-TEN-001 |
+| F025-AC-22 | **Removed (owner 2026-11-22, ngoài Release 1 — ADR-0097)** — không có xuất file dịch nội dung học tập. Chỉ giữ kiểm âm: contract và route PHẢI không có `exportLearningTranslations` | FR-CNT-018 · ADR-0097 | — |
+| F025-AC-23 | **Removed (owner 2026-11-22, ngoài Release 1 — ADR-0097)** — không có nhập file dịch. Chỉ giữ kiểm âm: contract và route PHẢI không có `importLearningTranslations`, `getLearningTranslationJob` | FR-CNT-018 · ADR-0097 | — |
+| F025-AC-24 | **Removed (owner 2026-11-22, ngoài Release 1 — ADR-0097)** — không còn operation dùng `learning_content.translate`. Chỉ giữ kiểm âm: catalog menu PHẢI không có `menu.content_studio.translations` (`check-portal-catalog`) | R7 · R8 · ADR-0097 | — |
 
 ### Edge Cases
 

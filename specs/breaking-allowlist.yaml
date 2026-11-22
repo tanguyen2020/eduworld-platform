@@ -1319,3 +1319,57 @@ exceptions:
     operation: GET
     path: /leaderboards/{leaderboard_id}/me
     text: the response property 'entries/items/value' became optional for the status '200'
+  - adr: ADR-0097
+    reason: 'Owner bỏ khỏi Release 1 menu Yêu cầu dữ liệu (F016) và Bản dịch nội dung học tập (F025): gỡ operation không còn màn hình'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /admin/data-requests
+    text: api path removed without deprecation
+  - adr: ADR-0097
+    reason: 'Owner bỏ khỏi Release 1 menu Yêu cầu dữ liệu (F016) và Bản dịch nội dung học tập (F025): gỡ operation không còn màn hình'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /admin/data-requests
+    text: api path removed without deprecation
+  - adr: ADR-0097
+    reason: 'Owner bỏ khỏi Release 1 menu Yêu cầu dữ liệu (F016) và Bản dịch nội dung học tập (F025): gỡ operation không còn màn hình'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/identity.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /admin/data-requests/{data_request_id}
+    text: api path removed without deprecation
+  - adr: ADR-0097
+    reason: 'Owner bỏ khỏi Release 1 menu Yêu cầu dữ liệu (F016) và Bản dịch nội dung học tập (F025): gỡ operation không còn màn hình'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: GET
+    path: /cms/learning/translations/jobs/{job_id}
+    text: api path removed without deprecation
+  - adr: ADR-0097
+    reason: 'Owner bỏ khỏi Release 1 menu Yêu cầu dữ liệu (F016) và Bản dịch nội dung học tập (F025): gỡ operation không còn màn hình'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /cms/learning/translations:export
+    text: api path removed without deprecation
+  - adr: ADR-0097
+    reason: 'Owner bỏ khỏi Release 1 menu Yêu cầu dữ liệu (F016) và Bản dịch nội dung học tập (F025): gỡ operation không còn màn hình'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/learning.v1.yaml
+    id: api-path-removed-without-deprecation
+    operation: POST
+    path: /cms/learning/translations:import
+    text: api path removed without deprecation

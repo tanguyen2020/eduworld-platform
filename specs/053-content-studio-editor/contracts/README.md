@@ -25,8 +25,8 @@ Nguồn: [`specs/openapi/eduworld-api.v1.yaml`](../../openapi/eduworld-api.v1.ya
 | `listCurriculumVersions` | `GET /api/v1/cms/learning/curricula/{curriculum_id}/versions` | như trên | `curriculum.read` | Cần thêm |
 | `transitionCurriculumVersion` | `POST /api/v1/cms/learning/curricula/{curriculum_id}/versions/{version}:transition` (`If-Match`, Idempotency-Key) | như trên | `curriculum.write` / `curriculum.publish` | Cần thêm |
 | `publishCurriculumVersion` | `POST /api/v1/cms/learning/curricula/{curriculum_id}/versions/{version}:publish` (Idempotency-Key) | như trên | `curriculum.publish` | Cần thêm |
-| `exportLearningTranslations` / `importLearningTranslations` | `POST /api/v1/cms/learning/translations:export`, `:import` (Idempotency-Key) | như trên | `learning_content.translate` | Có sẵn |
-| `getLearningTranslationJob` | `GET /api/v1/cms/learning/translations/jobs/{job_id}` | như trên | `learning_content.translate` | Có sẵn |
+| `exportLearningTranslations` / `importLearningTranslations` | `POST /api/v1/cms/learning/translations:export`, `:import` (Idempotency-Key) | như trên | `learning_content.translate` | **Đã gỡ** (owner 2026-11-22, ADR-0097) |
+| `getLearningTranslationJob` | `GET /api/v1/cms/learning/translations/jobs/{job_id}` | như trên | `learning_content.translate` | **Đã gỡ** (owner 2026-11-22, ADR-0097) |
 
 Mã lỗi xử lý: `VALIDATION_FAILED`, `CONTENT_VERSION_CONFLICT`, `VERSION_MISMATCH`, `CONTENT_NOT_EDITABLE`, `INVALID_STATE_TRANSITION`, `MEDIA_NOT_READY`, `MEDIA_TYPE_NOT_ALLOWED`, `MEDIA_TOO_LARGE`, `MATH_RENDER_FAILED`, `TRANSLATION_INCOMPLETE`, `AUDIO_REQUIRED` (Cần thêm), `RESOURCE_NOT_ASSIGNED`, `PERMISSION_DENIED`, `TENANT_HEADER_REQUIRED`, `TENANT_MISMATCH`, `IDEMPOTENCY_KEY_REUSED`.
 

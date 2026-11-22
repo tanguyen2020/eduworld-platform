@@ -85,6 +85,8 @@
 
 ## Phase 7: User Story 5 — Xuất/nhập file dịch (Priority: P3)
 
+> **2026-11-22 — ngoài Release 1 (owner, ADR-0097):** T036–T041 đã làm rồi được gỡ (operation, code, test `translation_test.go`); AC-22/23/24 Removed.
+
 ### Tests cho User Story 5
 
 - [x] T036 [P] [US5] Integration test export XLIFF/CSV + `download_url` (F025-AC-22) — file: `src/backend/modules/learning/tests/integration/translation/export_test.go`

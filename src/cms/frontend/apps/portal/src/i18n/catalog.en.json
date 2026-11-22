@@ -38,8 +38,7 @@
       "assessments": "Assessment blueprints",
       "regrade": "System regrade",
       "media": "Video, audio, media",
-      "reviews": "Content review, preview",
-      "translations": "Content translation"
+      "reviews": "Content review, preview"
     },
     "game_ops": {
       "dashboard": "Game Dashboard",
@@ -85,7 +84,6 @@
       "reports": "Platform learning reports",
       "efficacy_studies": "Learning efficacy studies",
       "learning_experiments": "A/B experiments",
-      "data_requests": "Personal data requests",
       "integrations": "Integrations",
       "trash": "Trash",
       "audit_logs": "System audit log"

@@ -452,22 +452,6 @@
       "open": "Open",
       "searchLater": "Question lists and search come in a later version."
     },
-    "translations": {
-      "export": "Export translation file",
-      "import": "Import translation file",
-      "status": { "queued": "Queued…", "running": "Running…", "succeeded": "Done", "failed": "Failed" },
-      "download": "Download file",
-      "report": "Total {{total}}, updated {{updated}}, skipped {{skipped}}",
-      "mismatch": "Fields that do not match",
-      "exportTitle": "Export the fields to translate",
-      "format": "Format",
-      "onlyMissing": "Only untranslated fields",
-      "exportOk": "Export",
-      "importTitle": "Import a translation",
-      "file": "Translated file",
-      "importOk": "Import",
-      "newDraft": "A new draft was created from the translation file."
-    },
     "topicPicker": {
       "from": "Topics of curriculum {{name}}, version {{version}}",
       "none": "No published curriculum covers this subject and grade yet, so there are no topics to pick. Publish one under Curriculum."

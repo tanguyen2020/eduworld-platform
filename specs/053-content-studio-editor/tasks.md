@@ -88,14 +88,14 @@ Viết tắt: `OPS/` = `src/cms/frontend/packages/ops-ui/src/`, `WS/` = `src/cms
 
 - [x] T039 [P] [US3] Unit test `BilingualField` (hai cột/tab, nhãn "Gốc") và huy hiệu `translation_status` + `outdated_fields` (F053-AC-21, F053-AC-22) — file: `src/cms/frontend/packages/ops-ui/src/i18n-field/BilingualField.test.tsx` — phải FAIL trước khi code — **2026-11-19:** `BilingualField.test.tsx` 6 pass.
 - [x] T040 [P] [US3] Unit test khóa khi thiếu bản gốc, map `TRANSLATION_INCOMPLETE`, thiếu bản tùy chọn → cảnh báo `partial` (F053-AC-23, F053-AC-24) — file: `src/cms/frontend/apps/portal/tests/unit/content-studio/translationGate.test.ts` — **2026-11-19:** `shared/gates.test.ts` (translation gate).
-- [x] T041 [P] [US3] Unit test dialog xuất/nhập dịch: Idempotency-Key, poll job, field không khớp (F053-AC-25) — file: `src/cms/frontend/apps/portal/tests/unit/content-studio/translations.test.tsx` — **2026-11-19:** xuất file dịch (Idempotency-Key, poll job, link tải) trong `QuestionEditorPage.test.tsx` › AC-25; báo field không khớp hiển thị bởi `JobStatus`.
-- [ ] T042 [US3] E2E song ngữ; authorization: người thiếu `learning_content.translate` không thấy xuất/nhập (F053-AC-21, F053-AC-22, F053-AC-23, F053-AC-24, F053-AC-25; TC-I18N-002) — file: `src/cms/frontend/apps/portal/tests/e2e/content-studio/bilingual.spec.ts` — **2026-11-19:** phần unit xong; E2E chờ OQ F051-9.
+- [x] T041 [P] [US3] Unit test dialog xuất/nhập dịch: Idempotency-Key, poll job, field không khớp (F053-AC-25) — file: `src/cms/frontend/apps/portal/tests/unit/content-studio/translations.test.tsx` — **2026-11-19:** xuất file dịch (Idempotency-Key, poll job, link tải) trong `QuestionEditorPage.test.tsx` › AC-25; báo field không khớp hiển thị bởi `JobStatus`. — **2026-11-22 (ADR-0097):** gỡ cùng dialog; thay bằng kiểm âm AC-25 trong `QuestionEditorPage.test.tsx`
+- [ ] T042 [US3] E2E song ngữ; authorization: người thiếu `learning_content.translate` không thấy xuất/nhập (F053-AC-21, F053-AC-22, F053-AC-23, F053-AC-24, F053-AC-25; TC-I18N-002) — file: `src/cms/frontend/apps/portal/tests/e2e/content-studio/bilingual.spec.ts` — **2026-11-19:** phần unit xong; E2E chờ OQ F051-9. — **2026-11-22 (ADR-0097):** bỏ phần xuất/nhập (AC-25 Removed)
 
 ### Implementation cho User Story 3
 
 - [x] T043 [P] [US3] `BilingualField`, `translationStatus.ts` — file: `src/cms/frontend/packages/ops-ui/src/i18n-field/BilingualField.tsx` — **2026-11-19:** `i18n-field/{BilingualField,translationStatus}`.
 - [x] T044 [US3] Khóa Gửi duyệt/Xuất bản + danh sách field thiếu nhảy tới trường — file: `src/cms/frontend/packages/ops-ui/src/editor/ItemStatusBar.tsx` — **2026-11-19:** `ItemStatusBar` blockers + `jumpToField`.
-- [x] T045 [US3] `TranslationExportDialog`, `TranslationImportDialog`, `useTranslationJobs` — file: `src/cms/frontend/apps/portal/src/workspaces/content-studio/translations/TranslationExportDialog.tsx` — **2026-11-19:** `translations/{TranslationDialogs.tsx,useTranslationJobs.ts}`.
+- [x] T045 [US3] `TranslationExportDialog`, `TranslationImportDialog`, `useTranslationJobs` — file: `src/cms/frontend/apps/portal/src/workspaces/content-studio/translations/TranslationExportDialog.tsx` — **2026-11-19:** `translations/{TranslationDialogs.tsx,useTranslationJobs.ts}`. — **2026-11-22 (ADR-0097):** đã xóa (ngoài Release 1)
 
 **Checkpoint**: User Story 3 chạy và kiểm độc lập được.
 

@@ -87,8 +87,6 @@ type Handlers struct {
 	Widgets                 WidgetQueries            // F023
 	Workflow                WorkflowCommands         // F025
 	Reviews                 ReviewQueries            // F025
-	Translations            TranslationCommands      // F025 US5
-	TranslationJobs         TranslationQueries       // F025 US5
 	Releases                ReleaseCommands          // F026
 	ReleaseQueries          ReleaseQueries           // F026
 	CmsActivities           CmsActivityQueries       // F030 US4

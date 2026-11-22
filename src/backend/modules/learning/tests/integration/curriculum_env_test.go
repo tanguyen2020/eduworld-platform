@@ -35,7 +35,6 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/qbschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/storage"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/infrastructure/translation"
 	learninghttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/internal/presentation/http"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
@@ -90,7 +89,6 @@ type curEnv struct {
 	qcmd    command.Questions
 	dcmd    command.Docs
 	wf      command.Workflow
-	tr      command.Translations
 	rel     command.Releases
 	schema  *qbschema.Validator
 	assets  *memAssets
@@ -207,10 +205,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		Schema: schema, Media: write.MediaRepo{}, Events: write.Publisher{W: e.writer}, Audit: write.Auditor{R: e.rec}, Metrics: observability.WorkflowCounter{}}
 	handlers := learninghttp.Handlers{Commands: cmd, Queries: qry, QuestionCommands: qcmd, QuestionQueries: qqry, Docs: dcmd, DocQueries: dqry,
 		Widgets: query.QuestionWidgets{Widgets: question.Full().Widgets()}, Workflow: wf,
-		Reviews:         query.ReviewTasks{Session: e.read, Model: read.ReviewTaskModel{}, Cursors: codec},
-		TranslationJobs: query.TranslationJobs{Session: e.read, Model: read.TranslationJobModel{}}}
-	tr := command.Translations{UoW: e.uow, Jobs: write.TranslationJobRepo{}, Workflow: wf, Questions: qcmd, Docs: dcmd, Codec: translation.Codec{},
-		Assets: assets, Audit: write.Auditor{R: e.rec}}
+		Reviews: query.ReviewTasks{Session: e.read, Model: read.ReviewTaskModel{}, Cursors: codec}}
 	var mk *mediaKit
 	if o.media {
 		mk = newMediaKit(ctx, t, e, codec, schema)
@@ -221,10 +216,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 		if err := mk.s3.EnsureBucket(ctx, storage.BucketExports); err != nil {
 			t.Fatal(err)
 		}
-		tr.Files = storage.ExportBucket{S3: mk.s3}
-		handlers.TranslationJobs = query.TranslationJobs{Session: e.read, Model: read.TranslationJobModel{}, Files: tr.Files}
 	}
-	tr.Questions, tr.Docs = qcmd, dcmd
 	rel := command.Releases{UoW: e.uow, Workflow: wf, Store: write.ReleaseRepo{}, Schedules: write.ReleaseRepo{}, Events: write.Publisher{W: e.writer},
 		Audit: write.Auditor{R: e.rec}, Metrics: observability.ReleaseCounter{}, Activities: registry, ActivitySchema: actSchema}
 	reader := query.ContentReader{Questions: read.QuestionModel{}, Docs: read.DocModel{}}
@@ -233,7 +225,6 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	}
 	handlers.Releases = rel
 	handlers.ReleaseQueries = query.Releases{Session: e.read, Model: read.ReleaseModel{}, Reader: reader, Cursors: codec}
-	handlers.Translations = tr
 	handlers.CmsActivities = query.CmsActivities{Docs: dqry}
 	handlers.ActivityTypes = query.ActivityTypes{Registry: registry}
 	// F030: the attempt engine with an adjustable clock (TEST clock, never in a binary).
@@ -328,7 +319,7 @@ func newCurEnv(ctx context.Context, t *testing.T, opts ...envOpt) *curEnv {
 	}
 	hs := httptest.NewServer(srv)
 	t.Cleanup(hs.Close)
-	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, tr: tr, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
+	ce := &curEnv{env: e, srv: hs, idp: idp, res: res, cmd: cmd, qry: qry, qcmd: qcmd, dcmd: dcmd, wf: wf, rel: rel, schema: schema, assets: assets, users: map[string]authz.PrincipalData{},
 		tokens: map[string]string{}, media: mk, att: att, attq: attq, clk: clk, rgd: rgd, lessons: lessons, recs: recs,
 		asg: asg, asgq: asgq, exams: exams, examq: examq, dashq: dashq,
 		reports: reports, quality: quality, reportq: reportq, eff: eff, exps: exps}

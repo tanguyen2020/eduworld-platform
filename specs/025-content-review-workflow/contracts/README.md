@@ -10,9 +10,9 @@ Spec nguồn: `specs/openapi/modules/learning.v1.yaml` (gộp trong `specs/opena
 |---|---|---|---|---|
 | `transitionContentVersion` | `POST /api/v1/cms/learning/content/{content_type}/{content_id}/versions/{version}:transition` | learning.v1 | `learning_content.write` (submit_review, revise) · `learning_content.review` (approve, reject); activity: `learning_content.activity.write/review` | Cần sửa (action `revise`, field `audio_exemption_acknowledged`, response 409/428 đủ mã) |
 | `listContentReviewTasks` | `GET /api/v1/cms/learning/review-tasks` | learning.v1 | `learning_content.review` | Cần sửa (enum `lane` → `tenant`, `platform_learning`) |
-| `exportLearningTranslations` | `POST /api/v1/cms/learning/translations:export` | learning.v1 | `learning_content.translate` | Có sẵn |
-| `importLearningTranslations` | `POST /api/v1/cms/learning/translations:import` | learning.v1 | `learning_content.translate` | Có sẵn |
-| `getLearningTranslationJob` | `GET /api/v1/cms/learning/translations/jobs/{job_id}` | learning.v1 | `learning_content.translate` | Có sẵn |
+| `exportLearningTranslations` | `POST /api/v1/cms/learning/translations:export` | learning.v1 | `learning_content.translate` | **Đã gỡ** (owner 2026-11-22, ADR-0097) |
+| `importLearningTranslations` | `POST /api/v1/cms/learning/translations:import` | learning.v1 | `learning_content.translate` | **Đã gỡ** (owner 2026-11-22, ADR-0097) |
+| `getLearningTranslationJob` | `GET /api/v1/cms/learning/translations/jobs/{job_id}` | learning.v1 | `learning_content.translate` | **Đã gỡ** (owner 2026-11-22, ADR-0097) |
 | `updateQuestionDraft` (và `update*Draft` khác) | `PATCH …/versions/{version}` | learning.v1 | `learning_content.write` | Có sẵn — trả `translation_status` (F022/F024 sở hữu endpoint, F025 thêm tính toán) |
 
 Schema dùng: `ContentVersion` (`translation_status`, `content_language`), `ContentReviewTask`, `TranslationExportRequest`, `TranslationImportRequest`, `TranslationJob`, `Problem` (`ProblemCode`: `VALIDATION_FAILED`, `MEDIA_NOT_READY`, `INVALID_STATE_TRANSITION`, `TRANSLATION_INCOMPLETE`, `PERMISSION_DENIED`, `VERSION_MISMATCH`, `PRECONDITION_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`).

@@ -452,22 +452,6 @@
       "open": "Mở",
       "searchLater": "Danh sách và tìm kiếm câu hỏi có ở phiên bản sau."
     },
-    "translations": {
-      "export": "Xuất file dịch",
-      "import": "Nhập file dịch",
-      "status": { "queued": "Đang chờ xử lý…", "running": "Đang xử lý…", "succeeded": "Hoàn tất", "failed": "Thất bại" },
-      "download": "Tải file",
-      "report": "Tổng {{total}}, đã cập nhật {{updated}}, bỏ qua {{skipped}}",
-      "mismatch": "Trường không khớp",
-      "exportTitle": "Xuất các trường cần dịch",
-      "format": "Định dạng",
-      "onlyMissing": "Chỉ các trường chưa dịch",
-      "exportOk": "Xuất",
-      "importTitle": "Nhập bản dịch",
-      "file": "File đã dịch",
-      "importOk": "Nhập",
-      "newDraft": "Đã tạo bản nháp mới từ file dịch."
-    },
     "topicPicker": {
       "from": "Chủ đề theo chương trình {{name}}, phiên bản {{version}}",
       "none": "Chưa có chương trình học đã xuất bản cho môn và khối này nên chưa có chủ đề để chọn. Xuất bản chương trình ở mục Chương trình học."

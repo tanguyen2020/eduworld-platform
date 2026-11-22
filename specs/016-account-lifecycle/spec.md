@@ -60,6 +60,10 @@
 
 - Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: contracts/README (`lockUser`). Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
 
+### Session 2026-11-22 (owner bỏ khỏi Release 1 — [Confirmed])
+
+- Q: Menu Portal "Yêu cầu dữ liệu" (`menu.platform_admin.data_requests`) chưa có màn hình, giữ hay bỏ? → A: [Confirmed] Owner bỏ khỏi Release 1 ([ADR-0097](../../docs/adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md)): gỡ `listDataRequests`, `createDataRequest`, `getDataRequest` khỏi contract, route HTTP và code tiếp nhận yêu cầu (command, repository). F016-AC-22 → Removed (chỉ giữ kiểm âm). US5 chỉ còn ẩn danh hóa theo retention: saga `user_anonymize`, job `retention-anonymizer` giữ nguyên; F016-AC-20/21/23 kiểm qua `TestUserAnonymize` (đường retention). Bảng `platform.deletion_requests` và permission `platform.data_request.write` giữ (R12), không operation nào dùng. Rủi ro: Release 1 không có kênh Portal cho yêu cầu của chủ thể dữ liệu theo Nghị định 13/2023 — xử lý thủ công theo [DATA_PRIVACY §3.1](../../docs/10-security/DATA_PRIVACY.md#31-release-1-không-có-kênh-portal-xử-lý-thủ-công) (RISK-57).
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Khóa, mở khóa, vô hiệu hóa và thu hồi truy cập (Priority: P1)
@@ -144,7 +148,7 @@ Học sinh bị dọn quay lại và vẫn hợp lệ trong SIS được khôi p
 
 ---
 
-### User Story 5 — Ẩn danh hóa theo retention và yêu cầu (Priority: P3)
+### User Story 5 — Ẩn danh hóa theo retention và yêu cầu (Priority: P3) — tiếp nhận yêu cầu qua Portal ngoài Release 1 (ADR-0097)
 
 Hết thời gian lưu giữ hoặc có yêu cầu qua nhà trường, dữ liệu cá nhân được ẩn danh hóa ở mọi module; không xóa vật lý.
 
@@ -158,7 +162,7 @@ Hết thời gian lưu giữ hoặc có yêu cầu qua nhà trường, dữ li�
 |---|---|---|---|
 | F016-AC-20 | KHI yêu cầu ẩn danh hóa được duyệt hoặc học sinh `deactivated` quá thời hạn lưu giữ theo DATA_PRIVACY §2, module identity PHẢI chạy saga `user_anonymize`: xóa trắng PII (`display_name`, `email`, `full_name`, `student_code`, `date_of_birth_enc`, `national_id_hash`), đặt username `anon.<user_id>`, `status = anonymized`, vô hiệu hóa và ẩn danh hóa user Keycloak, gọi `anonymizeUserData` các service, ghi nhật ký erasure, phát `user.anonymized` | FR-ORG-014 · NFR-PRIV-003 · ADR-0070 | — |
 | F016-AC-21 | HỆ THỐNG PHẢI không xóa vật lý bất kỳ dòng nào khi ẩn danh hóa; yêu cầu chỉ hoàn tất khi mọi module trả `done` | FR-ORG-014 · ADR-0028 | TC-TEN-016 |
-| F016-AC-22 | HỆ THỐNG PHẢI chỉ cho `platform.data_request.write` tạo/xem yêu cầu dữ liệu (`X-Tenant-Id` = tenant đích khi ghi) và ghi audit với mã yêu cầu | FR-ORG-014 · ADR-0027 | TC-TEN-004 |
+| F016-AC-22 | **Removed (owner 2026-11-22, ngoài Release 1 — ADR-0097)** — không có tiếp nhận yêu cầu dữ liệu qua Portal. Chỉ giữ kiểm âm: contract và route HTTP PHẢI không có `/admin/data-requests*` (`routematrix check`, `check-portal-catalog`) | FR-ORG-014 · ADR-0097 | — |
 | F016-AC-24 | KHI khóa thật (US1), SIS phát thu hồi (US2) hoặc dọn thật (US3) một học sinh đang có game session và phiên game, HỆ THỐNG PHẢI end-to-end: phát `user.status_changed`/`user.access_revoked`/`student.cleaned_up` đúng payload schema contract-first (F013 T045), module game kết thúc session với `account_locked`/`cleanup` (consumer F014-AC-24), module identity thu hồi phiên game và refresh kế tiếp trả `401 REFRESH_TOKEN_INVALID` (consumer F013-AC-29), trong ≤ 1 phút | FR-AUTH-010 · FR-AUTH-024 · ADR-0031 · ADR-0086 · [CODE_PLAN §4.1](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md#41-phụ-thuộc-ẩn-và-đề-xuất-xử-lý) | TC-AUTH-006 |
 | F016-AC-23 | HỆ THỐNG PHẢI giữ event và projection của feature chỉ gồm định danh và trạng thái tối thiểu (không họ tên, ngày sinh, mã học sinh) | NFR-PRIV-002 · AGENTS R14 | — |
 

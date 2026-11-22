@@ -8,7 +8,7 @@
 //   AC-11 assigned platform content → "Từ EduWorld", read only (TC-CMS-ASG-02)
 //   AC-12 System Admin must choose Platform or a tenant (TC-CMS-TEN-03); AC-15 < 1024 px → read only
 //   AC-13 reviewer without write: no Lưu / Gửi duyệt; 403 PERMISSION_DENIED message; AC-33 action turned off → disabled
-//   AC-25 export translations: job polled, download link
+//   AC-25 out of Release 1 (owner 2026-11-22): no translation export/import buttons
 import { cleanup, configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearUnsavedChangesForTest } from '../../../session/unsavedChangesGuard';
@@ -212,16 +212,11 @@ describe('QuestionEditorPage', () => {
     expect(await findBtn('Lưu')).toBeInTheDocument(); // still editable
   });
 
-  it('AC-25: export translations → job polled → download link', async () => {
+  it('AC-25 out of Release 1: no translation export/import on the editor', async () => {
     const { backend } = setup('cm.noidung', [{ status: 'draft', body: body() }]);
     await renderPortal({ url: `/content-studio/question-bank/${Q}`, backend });
-    fireEvent.click(await findBtn('Xuất file dịch'));
-    const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByText('Xuất').closest('button')!);
-    await waitFor(() => expect(backend.calls('POST', '/cms/learning/translations:export')).toHaveLength(1));
-    const req = backend.calls('POST', '/cms/learning/translations:export')[0]!;
-    expect(req.body).toMatchObject({ content_types: ['question'], content_ids: [Q], source_language: 'vi', target_language: 'en', format: 'xliff', only_missing: true });
-    expect(req.headers['idempotency-key']).toBeTruthy();
-    expect(await within(dialog).findByText('Tải file', {}, { timeout: 30_000 })).toBeInTheDocument();
+    expect(await findBtn('Lưu')).toBeInTheDocument();
+    expect(screen.queryByText('Xuất file dịch')).toBeNull();
+    expect(screen.queryByText('Nhập file dịch')).toBeNull();
   });
 });

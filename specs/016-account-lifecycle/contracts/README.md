@@ -17,7 +17,7 @@ Spec nguồn: `specs/openapi/modules/identity.v1.yaml`.
 | `listStudentCleanupRuns` | `GET /api/v1/admin/student-cleanup/runs?tenant_ids=` | identity.v1.yaml | `platform.student_cleanup.approve` (đọc) | Có sẵn |
 | `approveStudentCleanupRun` | `POST /api/v1/admin/student-cleanup/runs/{run_id}:approve` | identity.v1.yaml | `platform.student_cleanup.approve` | Có sẵn |
 | `restoreTenantTrashItem` | `POST /api/v1/tenant/trash/{resource_type}/{resource_id}:restore` (`resource_type = student`) | identity.v1.yaml | `tenant.trash.restore` | Có sẵn |
-| `listDataRequests` · `createDataRequest` · `getDataRequest` | `/api/v1/admin/data-requests*` | identity.v1.yaml | `platform.data_request.write` | Có sẵn |
+| `listDataRequests` · `createDataRequest` · `getDataRequest` | `/api/v1/admin/data-requests*` | identity.v1.yaml | `platform.data_request.write` | **Đã gỡ** (owner 2026-11-22, ADR-0097) |
 
 ## 2. Internal API
 

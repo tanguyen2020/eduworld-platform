@@ -331,7 +331,7 @@ func build(r *module.Registry, m *Module, in Imports) error {
 		Lifecycle: command.UserLifecycle{UoW: core.UoW, Repo: write.LifecycleRepo{}, Events: events, Audit: auditor},
 		ResetPassword: command.ResetStudentPassword{UoW: core.UoW, Repo: write.LifecycleRepo{}, KC: kc, Sessions: gameAuth, Events: events,
 			Audit: auditor, Issuers: issuers},
-		Cleanup: cleanup, Anonymize: anonymize}
+		Cleanup: cleanup}
 	platformH := identityhttp.PlatformAdminHandlers{
 		Reads:  query.PlatformAdmin{Model: read.PlatformAdminModel{Session: core.ReadSession}, Owners: gw, Cursors: cursors},
 		Assign: command.AssignToTenants{PlatformAdminDeps: pad}, Unassign: command.UnassignFromTenants{PlatformAdminDeps: pad},

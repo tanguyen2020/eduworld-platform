@@ -7688,77 +7688,6 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
-  /cms/learning/translations:export:
-    post:
-      x-service: learning
-      tags: [cms]
-      operationId: exportLearningTranslations
-      x-portal-action: action.content_studio.translations.translate
-      summary: Xuất file dịch XLIFF/CSV (learning_content.translate) — bất đồng bộ
-      parameters:
-        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/TranslationExportRequest' }
-      responses:
-        '202':
-          description: Job đã tạo
-          headers:
-            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TranslationJob' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
-  /cms/learning/translations:import:
-    post:
-      x-service: learning
-      tags: [cms]
-      operationId: importLearningTranslations
-      x-portal-action: action.content_studio.translations.translate
-      summary: Nhập bản dịch (learning_content.translate); bản dịch tạo version Draft mới, không sửa version đã publish (ADR-0043)
-      parameters:
-        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/TranslationImportRequest' }
-      responses:
-        '202':
-          description: Job đã tạo
-          headers:
-            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TranslationJob' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
-  /cms/learning/translations/jobs/{job_id}:
-    get:
-      x-service: learning
-      tags: [cms]
-      operationId: getLearningTranslationJob
-      x-portal-action: action.content_studio.translations.translate
-      summary: Trạng thái job dịch
-      parameters:
-        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
-        - $ref: '#/components/parameters/TranslationJobIdPath'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TranslationJob' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
   /cms/media:presign-upload:
     post:
       x-service: learning
@@ -12232,82 +12161,6 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
-  /admin/data-requests:
-    get:
-      x-service: identity
-      tags: [admin]
-      operationId: listDataRequests
-      x-internal: true
-      x-portal-action: action.platform_admin.data_requests.view
-      summary: Yêu cầu dữ liệu cá nhân (xuất / ẩn danh hóa — ADR-0028 §8, ADR-0070) và trạng thái
-      parameters:
-        - $ref: '#/components/parameters/TenantIds'
-        - name: status
-          in: query
-          schema: { type: string, enum: [received, verifying, in_progress, completed, rejected] }
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Cursor'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [data, page]
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '#/components/schemas/DataRequest' }
-                  page: { $ref: '#/components/schemas/PageInfo' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-    post:
-      x-service: identity
-      tags: [admin]
-      operationId: createDataRequest
-      x-internal: true
-      x-portal-action: action.platform_admin.data_requests.create
-      summary: Ghi nhận yêu cầu xuất/ẩn danh dữ liệu học sinh (system_admin · platform.data_request.write; X-Tenant-Id = tenant đích; saga qua interface platform ops)
-      parameters:
-        - { $ref: '#/components/parameters/TenantIdHeader' }
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/DataRequestCreate' }
-      responses:
-        '202':
-          description: Đã ghi nhận
-          headers:
-            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/DataRequest' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
-  /admin/data-requests/{data_request_id}:
-    get:
-      x-service: identity
-      tags: [admin]
-      operationId: getDataRequest
-      x-internal: true
-      x-portal-action: action.platform_admin.data_requests.view
-      summary: Trạng thái yêu cầu dữ liệu + link ký gói xuất (15 phút) khi hoàn tất
-      parameters:
-        - $ref: '#/components/parameters/DataRequestIdPath'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/DataRequest' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
   /tenant/analytics/game/summary:
     get:
       x-service: game
@@ -17252,11 +17105,6 @@ components:
       schema: { $ref: '#/components/schemas/Uuid' }
     NotificationIdPath:
       name: notification_id
-      in: path
-      required: true
-      schema: { $ref: '#/components/schemas/Uuid' }
-    DataRequestIdPath:
-      name: data_request_id
       in: path
       required: true
       schema: { $ref: '#/components/schemas/Uuid' }
@@ -23736,28 +23584,6 @@ components:
           type: array
           items: { $ref: '#/components/schemas/AuditLogEntry' }
         page: { $ref: '#/components/schemas/PageInfo' }
-    DataRequestCreate:
-      type: object
-      required: [request_type, subject_user_id, requester_kind, reason]
-      additionalProperties: false
-      properties:
-        request_type: { type: string, enum: [export, anonymize] }
-        subject_user_id: { $ref: '#/components/schemas/Uuid' }
-        requester_kind: { type: string, enum: [school, parent_via_school, student, authority] }
-        reference: { type: string, maxLength: 128, description: Số văn bản/mã hồ sơ của yêu cầu }
-        reason: { type: string, minLength: 10, maxLength: 1000 }
-    DataRequest:
-      allOf:
-        - $ref: '#/components/schemas/DataRequestCreate'
-        - type: object
-          required: [data_request_id, tenant_id, status, created_at]
-          properties:
-            data_request_id: { $ref: '#/components/schemas/Uuid' }
-            tenant_id: { $ref: '#/components/schemas/Uuid' }
-            status: { type: string, enum: [received, verifying, in_progress, completed, rejected] }
-            download_url: { type: [string, 'null'], maxLength: 2048, format: uri }
-            created_at: { $ref: '#/components/schemas/Timestamp' }
-            completed_at: { $ref: '#/components/schemas/Timestamp' }
     # ---------- learning: Activity Engine (ACTIVITY_ENGINE, ADR-0048, ADR-0055)
     ActivityType:
       type: string

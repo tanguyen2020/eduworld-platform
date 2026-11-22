@@ -712,17 +712,6 @@
     ]
   },
   {
-    "operation_id": "createDataRequest",
-    "module": "identity",
-    "method": "POST",
-    "path": "/admin/data-requests",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "createDuel",
     "module": "competition",
     "method": "POST",
@@ -1588,17 +1577,6 @@
     ]
   },
   {
-    "operation_id": "exportLearningTranslations",
-    "module": "learning",
-    "method": "POST",
-    "path": "/cms/learning/translations:export",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "extendAssignmentForStudent",
     "module": "learning",
     "method": "POST",
@@ -1941,17 +1919,6 @@
     ]
   },
   {
-    "operation_id": "getDataRequest",
-    "module": "identity",
-    "method": "GET",
-    "path": "/admin/data-requests/{data_request_id}",
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "getEfficacyStudy",
     "module": "learning",
     "method": "GET",
@@ -2243,18 +2210,6 @@
     "module": "learning",
     "method": "GET",
     "path": "/learning/objectives/{objective_id}",
-    "tenant_scoped": true,
-    "has_id_param": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "getLearningTranslationJob",
-    "module": "learning",
-    "method": "GET",
-    "path": "/cms/learning/translations/jobs/{job_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -2944,17 +2899,6 @@
     ]
   },
   {
-    "operation_id": "importLearningTranslations",
-    "module": "learning",
-    "method": "POST",
-    "path": "/cms/learning/translations:import",
-    "tenant_scoped": true,
-    "required": [
-      "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
     "operation_id": "importSchools",
     "module": "identity",
     "method": "POST",
@@ -3493,15 +3437,6 @@
     "has_id_param": true,
     "required": [
       "cross_tenant",
-      "role_denied"
-    ]
-  },
-  {
-    "operation_id": "listDataRequests",
-    "module": "identity",
-    "method": "GET",
-    "path": "/admin/data-requests",
-    "required": [
       "role_denied"
     ]
   },
