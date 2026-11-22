@@ -1,6 +1,6 @@
 # Admin Portal — CMS/LMS cho vận hành game
 
-> Trạng thái: Draft · Phiên bản: 0.8 (một Admin Portal, 5 workspace; nhà trường quản trị, kiểm duyệt tập trung — ADR-0072) · Owner: Product Manager + Backend Architect + UX Architect · Cập nhật: 2026-11-22 (ADR-0097: bỏ menu "Yêu cầu dữ liệu" và "Bản dịch" nội dung học tập khỏi Release 1) · 2026-11-20 (owner chốt: Game Dashboard tối thiểu của workspace A thuộc F079; audit action `student_profile.viewed`) · 2026-11-17 (màn đăng nhập riêng qua backend — ADR-0091; danh mục menu/action và bật/tắt trong DB — ADR-0090)
+> Trạng thái: Draft · Phiên bản: 0.8 (một Admin Portal, 5 workspace; nhà trường quản trị, kiểm duyệt tập trung — ADR-0072) · Owner: Product Manager + Backend Architect + UX Architect · Cập nhật: 2026-11-22 (ADR-0097: bỏ menu "Yêu cầu dữ liệu" và "Bản dịch" nội dung học tập khỏi Release 1; §1.6 quy tắc bảng/dropdown phân trang) · 2026-11-20 (owner chốt: Game Dashboard tối thiểu của workspace A thuộc F079; audit action `student_profile.viewed`) · 2026-11-17 (màn đăng nhập riêng qua backend — ADR-0091; danh mục menu/action và bật/tắt trong DB — ADR-0090)
 > Liên quan: [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0005](../adr/ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) · [ADR-0026](../adr/ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0029](../adr/ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) · [ADR-0022](../adr/ADR-0022-cms-lms-web-la-react-typescript-spa.md) · [ADR-0015](../adr/ADR-0015-content-versioning-bat-bien-sau-publish.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [SCHOOL_LMS](SCHOOL_LMS.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0090](../adr/ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md) · [ADR-0091](../adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · [OQ-07](../12-project/OPEN_QUESTIONS.md)
 
 ## 1. Định vị
@@ -334,6 +334,17 @@ Game song ngữ `vi` + `en` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.m
 | **Bản dịch lỗi thời** | Sửa bản gốc sau khi đã dịch → field dịch tự đánh dấu `Lỗi thời`, hiện diff bản gốc cũ/mới cho người dịch |
 | **Giao diện portal** | Ngôn ngữ giao diện `vi` (mặc định) / `en` chọn bằng nút nhanh trên topbar (§1.3) [Confirmed]; chuỗi UI portal qua i18n của React (khóa `portal.<workspace>.<screen>.<element>`), không phụ thuộc ngôn ngữ nội dung đang soạn |
 | **Không dịch máy tự động** | Không tự dịch khi publish. Gợi ý dịch máy (nếu bật sau này) chỉ điền Draft, người duyệt phải xác nhận [Confirmed] |
+
+### 1.6. Danh sách, bảng và dropdown (quy tắc phân trang)
+
+Quy tắc owner 2026-11-22 [Confirmed]: **dropdown tải toàn bộ lựa chọn và phải tìm được; bảng/lưới phải phân trang.** Backend luôn phân trang theo cursor ([API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting)).
+
+| Thành phần | Quy tắc |
+|---|---|
+| Bảng, lưới, danh sách hiển thị theo dòng | Phân trang theo cursor của server: hiện trang đầu (page size mặc định của API), nút **"Tải thêm"** nối trang kế khi `page.has_more`; không bao giờ tải hết. Hook dùng chung: `useCursorPages` (`apps/portal/src/shared/api/useCursorPages.ts`), `useCursorList` (workspace D), `usePagedList` (workspace C) |
+| Dữ liệu của dropdown/Select | Đọc **mọi** trang cursor bằng helper dùng chung `fetchAllPages`/`useAllPages` (`apps/portal/src/shared/api/fetchAllPages.ts`): mỗi request `limit: 100`, dừng khi `has_more = false`, cache bằng react-query; trần an toàn 5.000 mục — vượt thì cắt và hiện cảnh báo (`truncated`). **Không bao giờ** coi một lần gọi `limit: 100` là đủ |
+| Select | Chỉ dùng `SearchSelect` (`@eduworld/ops-ui`): luôn `showSearch`, lọc phía client không phân biệt hoa thường và dấu tiếng Việt (`viFilterOption`/`foldVi`: "da nang" tìm thấy "Đà Nẵng"), trạng thái rỗng rõ ràng ("Không có mục phù hợp"), cảnh báo khi danh sách bị cắt. Không cần tham số `q` của server chỉ để phục vụ dropdown |
+| Kiểm tra tự động | ESLint `ew/no-single-page-list` chặn `limit` ≥ 100 dạng literal và vòng lặp tự viết theo `next_cursor`; `no-restricted-imports` chặn `Select` của antd ngoài `SearchSelect` (ngoại lệ tạm: điều khiển header/đăng nhập của shell) |
 
 ## 2. Permission model
 

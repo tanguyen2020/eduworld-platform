@@ -230,6 +230,22 @@ Quy tắc chung mọi WP: theo AGENTS §3 (contract trước → `make gen MOD=`
 
 Lịch gợi ý (≤ 3 agent song song): đợt 0 WP0 → đợt 1 WP-S (bước đầu trước), WP-L1, WP-C1 → đợt 2 WP-L2, WP-I1, WP-P1a (→ P1b) → đợt 3 WP-R. Ước lượng ~12–14 agent-ngày (WP-I1 tăng ~0,5–1 ngày vì bỏ enrollment). Chi tiết inventory theo file nằm trong báo cáo kế hoạch của owner (không lưu trong repo).
 
+### 4.3. Nợ phân trang còn lại (quy tắc owner 2026-11-22)
+
+Quy tắc ở [API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting) và [ADMIN_PORTAL §1.6](../04-admin-portal/ADMIN_PORTAL.md#16-danh-sách-bảng-và-dropdown-quy-tắc-phân-trang). Đã sửa 2026-11-22: `listRegradeRequests`, `getContentUsages`, `listSisConnectionSchools` (thêm cursor + `page`), `listStudentCleanupRuns` (cursor thật), `previewTenantStudentCleanup` (keyset SQL), portal (bảng "Tải thêm", dropdown `fetchAllPages` + `SearchSelect`). Còn lại — contract đúng nhưng DB đọc hết rồi phân trang trong bộ nhớ, giao cho feature sở hữu khi chạm lại:
+
+| Operation | Feature sở hữu | Việc |
+|---|---|---|
+| `searchQuestions` | F022/F024 | Keyset + full-text trong SQL |
+| `listQuests` | F072 | Keyset trên quest được giao + tiến độ |
+| fallback DB `getLeaderboard`/`getMyLeaderboardPosition` | F106 | `LIMIT` + vị trí theo window function |
+| `listContentVersions`, `listContentReleases` (bảng phụ version) | F026 | Keyset theo `version_no` |
+| `listCms*` curriculum, textbook | F021 | Keyset (hiện chặn theo giới hạn import) |
+| `listResearchAgreements`, `listEfficacyStudies`, `listEfficacyStudyCohorts`, `listLearningExperiments` | F035/F036 | Keyset |
+| `listMyWrongQuestions` (chặn 1000) | F034 | Keyset |
+| `listModerationSwitches` (mọi tenant) | F121 | Cursor theo tenant |
+| Điều khiển header/đăng nhập của shell (Select ngôn ngữ, tenant) | F051 (portal shell) | Chuyển sang `SearchSelect`, bỏ ngoại lệ ESLint |
+
 ## 5. Lộ trình theo mốc (CMS/LMS trước)
 
 | Mốc | Kết quả | Backend | Frontend | Game client |

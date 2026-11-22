@@ -127,6 +127,7 @@ Portal (`apps/portal`) dùng thêm **Tailwind CSS v3** (ghim phiên bản) cho b
 | Mẫu | Thành phần | Quy tắc |
 |---|---|---|
 | **Danh sách** | Bộ lọc (QueryFilter, gồm dropdown tenant cho System Admin) + **ProTable** (sort, filter cột, cột cố định, phân trang cursor, chọn hàng) + thao tác hàng loạt (publish, gán tenant, khôi phục…) | Cột Tenant luôn có ở chế độ liên tenant; trạng thái hiển thị bằng `Tag` theo mã màu nghiệp vụ; hành động phá hủy có xác nhận + lý do |
+| **Dropdown / Select** | `SearchSelect` của `ops-ui` (antd Select bọc sẵn) | Luôn tìm kiếm được, không phân biệt dấu/hoa thường, trạng thái rỗng, cảnh báo khi danh sách bị cắt; dữ liệu là toàn bộ danh sách — quy tắc phân trang thuộc [ADMIN_PORTAL §1.6](../04-admin-portal/ADMIN_PORTAL.md#16-danh-sách-bảng-và-dropdown-quy-tắc-phân-trang) |
 | **Chi tiết** | Header thông tin + **Tabs** (Thông tin, Phiên bản, Phát hành, Sử dụng, Audit) + **Timeline** audit/version | Tab Phiên bản: danh sách version, xem chỉ đọc, diff, preview (ADR-0043) |
 | **Form** | **ProForm** (StepsForm cho nội dung nhiều bước), autosave Draft | Validation sinh từ OpenAPI: `maxLength`, `required`, `pattern` (ADR-0041); hiển thị bộ đếm ký tự; lỗi `VALIDATION_FAILED` map về từng trường |
 | **Dashboard live-ops** | Thẻ KPI (`StatisticCard`) + biểu đồ (ECharts hoặc Ant Design Charts [Confirmed]) + bảng sự kiện gần nhất | Tự làm mới 15–30 giây; ghi rõ thời điểm dữ liệu |
