@@ -1,13 +1,14 @@
 // ObjectiveForm (F053-AC-28, CURRICULUM_MODEL §3.3, §4): learning objective — code, description, Bloom level,
 // `yccd_ref` (GDPT 2018), prerequisite LOs (at most `prerequisite_ids.maxItems` = 20). A prerequisite cycle refused
 // by the server (422, errors[].code = PREREQUISITE_CYCLE) is shown on the prerequisites field.
-import { Button, Form, Input, Select } from 'antd';
+import { Button, Form, Input } from 'antd';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { LIMITS } from '../shared/config';
 import type { LearningObjective, LearningObjectiveInput } from './useCurriculum';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export const BLOOM_LEVELS = ['remember', 'understand', 'apply', 'analyze', 'evaluate', 'create'] as const;
 
@@ -69,13 +70,13 @@ export function ObjectiveForm({ objective, topicId, candidates, readOnly = false
         <Input.TextArea maxLength={LIMITS.objectiveDescription} showCount autoSize={{ minRows: 2, maxRows: 6 }} />
       </Form.Item>
       <Form.Item name="bloom_level" label={t('content_studio.curriculum.bloom')}>
-        <Select allowClear options={BLOOM_LEVELS.map((b) => ({ value: b, label: t(`content_studio.curriculum.bloomLevels.${b}`) }))} />
+        <SearchSelect allowClear options={BLOOM_LEVELS.map((b) => ({ value: b, label: t(`content_studio.curriculum.bloomLevels.${b}`) }))} />
       </Form.Item>
       <Form.Item name="yccd_ref" label={t('content_studio.curriculum.yccd')}>
         <Input maxLength={LIMITS.yccdRef} showCount />
       </Form.Item>
       <Form.Item name="prerequisite_ids" label={t('content_studio.curriculum.prerequisites', { max: LIMITS.prerequisites })}>
-        <Select
+        <SearchSelect
           mode="multiple"
           aria-label={t('content_studio.curriculum.prerequisites', { max: LIMITS.prerequisites })}
           maxCount={LIMITS.prerequisites}

@@ -1,47 +1,38 @@
-// useTenantOptions (F051 T045, F051-AC-22/27; F057 edge case "tải tiếp theo cursor"): `listTenants` (internal gateway,
-// `platform.cross_tenant.read`) as the source of the System Admin tenant filter and target-tenant field. Search by
-// code/name, debounced; the search text is cut at the `maxLength` of the `q` parameter in OpenAPI (100). Pages follow
-// the cursor (`fetchNextPage` when the dropdown is scrolled to its end) — the whole list is never loaded at once.
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+// useTenantOptions (F051 T045, F051-AC-22/27; owner rule 2026-11-22, ADMIN_PORTAL §1.6): `listTenants` (internal gateway,
+// `platform.cross_tenant.read`) as the source of the System Admin tenant filter and target-tenant field. A dropdown loads
+// the WHOLE list (fetchAllPages walks every cursor page, limit 100, cached) and filters in the browser ignoring case and
+// Vietnamese diacritics (viFilterOption). `truncated` is true when the safety cap cut the list.
+import { foldVi } from '@eduworld/ops-ui';
 import { usePortalRuntime } from '../../../app/runtime';
+import { useAllPages } from '../fetchAllPages';
 import type { components } from '../schema.gen';
 
 export type TenantSummary = components['schemas']['TenantSummary'];
 type PageInfo = components['schemas']['PageInfo'];
 
-/** `maxLength` of `listTenants` `q` (specs/openapi/eduworld-api.v1.yaml). */
+/** `maxLength` of `listTenants` `q` (specs/openapi/eduworld-api.v1.yaml); also caps the client-side search text. */
 export const TENANT_SEARCH_MAX_LENGTH = 100;
-export const TENANT_SEARCH_DEBOUNCE_MS = 300;
 
 export function clampTenantSearch(q: string): string {
   return q.slice(0, TENANT_SEARCH_MAX_LENGTH);
 }
 
-function useDebounced<T>(value: T, ms: number): T {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const h = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(h);
-  }, [value, ms]);
-  return v;
-}
-
+/** Every tenant (all cursor pages), cached; `search` filters client-side on code and name. */
 export function useTenantOptions(search: string, enabled: boolean) {
   const { api } = usePortalRuntime();
-  const q = useDebounced(clampTenantSearch(search.trim()), TENANT_SEARCH_DEBOUNCE_MS);
-  const query = useInfiniteQuery({
-    queryKey: ['admin', 'tenants', q],
-    queryFn: ({ pageParam }) => {
-      const params = { ...(q ? { q } : {}), ...(pageParam ? { cursor: pageParam } : {}) };
-      return api.call<{ data: TenantSummary[]; page?: PageInfo }>(api.client.GET('/admin/tenants', { params: { query: params } }));
-    },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) => (last.page?.has_more && last.page.next_cursor ? last.page.next_cursor : undefined),
-    enabled,
-    staleTime: 30_000,
-  });
-  return { ...query, data: query.data?.pages.flatMap((p) => p.data) };
+  const all = useAllPages<TenantSummary>(
+    ['admin', 'tenants'],
+    (query) => api.call<{ data: TenantSummary[]; page?: PageInfo }>(api.client.GET('/admin/tenants', { params: { query } })),
+    { enabled, staleTime: 60_000 },
+  );
+  const words = foldVi(clampTenantSearch(search)).split(' ').filter(Boolean);
+  const data = words.length
+    ? all.items.filter((x) => {
+        const text = foldVi(`${x.code} ${x.name}`);
+        return words.every((w) => text.includes(w));
+      })
+    : all.items;
+  return { ...all, data, hasNextPage: false, isFetchingNextPage: false, fetchNextPage: () => undefined };
 }
 
 /** Scroll handler of a Select popup: loads the next page when the list end is reached. */

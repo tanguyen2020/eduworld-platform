@@ -1,7 +1,7 @@
 // Activities screen (F058 T001, T024; ADR-0090: menu `menu.content_studio.activities` of the generated catalog): the
 // list of learning activities (listCmsActivities, filter by type and status), step 1 "chọn loại" from the registry of
 // the backend ∩ the editors of this portal (F058-AC-01), the editor of a new or existing activity.
-import { Alert, Button, Card, Flex, List, Select, Space, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Flex, List, Space, Table, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -13,7 +13,8 @@ import { CONTENT_STATUSES } from '../shared/contentTypes';
 import { ActivityEditorPage } from './ActivityEditorPage';
 import type { ActivityType } from './activityModel';
 import { activityEditor, offeredTypes } from './editorRegistry';
-import { useActivityList, useActivityTypes } from './useActivity';
+import { useActivityList, useActivityTypes, type ActivityListFilter } from './useActivity';
+import { SearchSelect } from '@eduworld/ops-ui';
 import './editors';
 
 const label = (v: { vi?: string; en?: string } | undefined, en: boolean) => (en ? (v?.en ?? v?.vi) : (v?.vi ?? v?.en)) ?? '';
@@ -55,7 +56,7 @@ function ActivityList({ title }: { title: string }) {
   const { t, i18n } = useTranslation();
   const access = useContentAccess();
   const [type, setType] = useState<ActivityType | undefined>();
-  const [status, setStatus] = useState<string | undefined>();
+  const [status, setStatus] = useState<ActivityListFilter['status']>();
   const list = useActivityList({ activity_type: type, status });
   const types = useActivityTypes();
   const en = i18n.language.startsWith('en');
@@ -72,15 +73,15 @@ function ActivityList({ title }: { title: string }) {
         )}
       </Flex>
       <Space>
-        <Select allowClear aria-label={t('content_studio.activity.filterType')} placeholder={t('content_studio.activity.filterType')} style={{ minWidth: 200 }} value={type} options={(types.data?.data ?? []).map((x) => ({ value: x.activity_type, label: activityEditor(x.activity_type) ? t(activityEditor(x.activity_type)!.labelKey) : x.activity_type }))} onChange={(v?: ActivityType) => setType(v)} />
-        <Select allowClear aria-label={t('content_studio.activity.filterStatus')} placeholder={t('content_studio.activity.filterStatus')} style={{ minWidth: 160 }} value={status} options={CONTENT_STATUSES.map((s) => ({ value: s, label: t(`content_studio.status.${s}`) }))} onChange={(v?: string) => setStatus(v)} />
+        <SearchSelect allowClear aria-label={t('content_studio.activity.filterType')} placeholder={t('content_studio.activity.filterType')} style={{ minWidth: 200 }} value={type} options={(types.data?.data ?? []).map((x) => ({ value: x.activity_type, label: activityEditor(x.activity_type) ? t(activityEditor(x.activity_type)!.labelKey) : x.activity_type }))} onChange={(v?: ActivityType) => setType(v)} />
+        <SearchSelect allowClear aria-label={t('content_studio.activity.filterStatus')} placeholder={t('content_studio.activity.filterStatus')} style={{ minWidth: 160 }} value={status} options={CONTENT_STATUSES.map((s) => ({ value: s, label: t(`content_studio.status.${s}`) }))} onChange={(v?: ActivityListFilter['status']) => setStatus(v)} />
       </Space>
       {list.error ? <ProblemMessage error={list.error} /> : null}
       <Table
         rowKey="activity_id"
         loading={list.isPending}
         data-testid="activity-list"
-        dataSource={list.data?.data ?? []}
+        dataSource={list.rows}
         pagination={false}
         columns={[
           { title: t('content_studio.builder.title'), render: (_, a) => <Link to={a.activity_id}>{label(a.title as never, en) || a.activity_id}</Link> },
@@ -90,6 +91,11 @@ function ActivityList({ title }: { title: string }) {
           { title: '', render: (_, a) => (a.assigned ? <AssignedBadge /> : null) },
         ]}
       />
+      {list.hasNextPage && (
+        <Button onClick={() => void list.fetchNextPage()} loading={list.isFetchingNextPage}>
+          {t('content_studio.loadMore')}
+        </Button>
+      )}
       {!access.activity.write && <Alert type="info" showIcon message={t('content_studio.activity.readOnlyRole')} />}
     </Flex>
   );

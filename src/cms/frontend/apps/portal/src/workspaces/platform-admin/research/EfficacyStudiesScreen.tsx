@@ -1,7 +1,7 @@
 // Menu "Nghiên cứu hiệu quả học tập" (F035 US8, F035-AC-35, AC-37; LEARNING_EFFICACY_PLAN): research agreements of the
 // tenants (tenant_ids[] mandatory, X-Tenant-Id on writes), the efficacy studies (list, create) and the study detail
 // (route `:studyId`). Every button sits in an ActionGate of `menu.platform_admin.efficacy_studies`; the API decides.
-import { App as AntApp, Button, Checkbox, DatePicker, Form, Modal, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { App as AntApp, Button, Checkbox, DatePicker, Form, Modal, Space, Table, Tabs, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { Dayjs } from 'dayjs';
 import { useState } from 'react';
@@ -25,6 +25,7 @@ import {
 import { RESEARCH_LIMITS as L } from './limits';
 import { BoundedNumberField, StatusTag, UuidField, UuidListField } from './ResearchForms';
 import { StudyDetail } from './StudyDetail';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function EfficacyStudiesScreen({ title }: { title: string }) {
   return (
@@ -68,7 +69,7 @@ function StudyList() {
   return (
     <Space direction="vertical" style={{ width: '100%' }}>
       <Space wrap>
-        <Select
+        <SearchSelect
           aria-label={t('platform.research.common.status')}
           allowClear
           placeholder={t('platform.research.common.allStatuses')}
@@ -167,7 +168,7 @@ function AgreementsPanel() {
     <Space direction="vertical" style={{ width: '100%' }}>
       <Space wrap>
         <TenantSelect multiple maxCount={100} ariaLabel={t('platform.research.agreements.tenants')} value={tenantIds} onChange={(v) => setTenantIds(v as string[])} />
-        <Select
+        <SearchSelect
           aria-label={t('platform.research.common.status')}
           allowClear
           placeholder={t('platform.research.common.allStatuses')}

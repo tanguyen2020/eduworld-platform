@@ -389,5 +389,9 @@
         "query_timeout": "The query took too long. Please narrow the scope."
       }
     }
+  },
+  "select": {
+    "empty": "No matching items",
+    "truncated": "The list is too long; only part of it is shown. Type to search or narrow the filter."
   }
 }

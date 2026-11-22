@@ -5,7 +5,7 @@
 // tag. Students are read only (no role button). Lookup of any account by id (detail drawer: UserRoles of every
 // tenant, lock/unlock/deactivate), "Tạo nhân sự" (platform staff or school staff, CreateUserDialog). Display only:
 // the backend authorizes every call (AGENTS R7, R20).
-import { Alert, Button, Form, Input, Select, Space, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Form, Input, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +22,7 @@ import { GrantUserRoleDialog, type GrantPreset } from '../user-roles/GrantUserRo
 import { accountKindOf, memberTenantsOf } from '../user-roles/grantableRoles';
 import { CreateUserDialog, type CreateKind } from './CreateUserDialog';
 import { UserDetailDrawer } from './UserDetailDrawer';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const grantPreset = (u: User): GrantPreset => {
   const members = memberTenantsOf(u);
@@ -105,7 +106,7 @@ export function PlatformUserPage() {
     <section aria-label={t('platform.access.tabUsers')}>
       <Space wrap>
         <TenantFilter />
-        <Select
+        <SearchSelect
           aria-label={t('platform.users.userType')}
           placeholder={t('platform.users.allTypes')}
           allowClear
@@ -113,7 +114,7 @@ export function PlatformUserPage() {
           onChange={(userType?: UserType) => setFilter((f) => ({ ...f, userType }))}
           options={USER_TYPES.map((x) => ({ value: x, label: t(`platform.users.type.${x}`) }))}
         />
-        <Select
+        <SearchSelect
           aria-label={t('platform.common.status')}
           placeholder={t('platform.users.allStatuses')}
           allowClear

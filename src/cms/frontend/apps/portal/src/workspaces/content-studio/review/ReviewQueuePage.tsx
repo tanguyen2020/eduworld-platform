@@ -3,7 +3,7 @@
 // selection → bulk approval (≤ `content_review_bulk_max`). A tenant reviewer sees exactly what the API returns for
 // the session tenant (no `tenant_ids`, no platform lane option); the System Admin filters tenants in the topbar.
 // Cards below 768 px (reading, opening a task and deciding work on every breakpoint).
-import { Button, Flex, Select, Switch, Tag, Typography } from 'antd';
+import { Button, Flex, Switch, Tag, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,7 @@ import { BulkApproveDialog } from './BulkApproveDialog';
 import { dueAt, isOverdue, taskKey, type ReviewTask } from './reviewRules';
 import { ReviewTaskPage } from './ReviewTaskPage';
 import { useReviewTasks, type ReviewFilters } from './useReviewTasks';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 type Row = ReviewTask & { key: string };
 
@@ -66,7 +67,7 @@ function ReviewQueue({ title }: { title: string }) {
           {title}
         </Typography.Title>
         <Flex gap="small" wrap align="center">
-          <Select
+          <SearchSelect
             allowClear
             aria-label={t('content_studio.review.col.lane')}
             placeholder={t('content_studio.review.col.lane')}
@@ -74,7 +75,7 @@ function ReviewQueue({ title }: { title: string }) {
             onChange={(lane) => setF({ ...f, lane })}
             options={(platform ? (['tenant', 'platform_learning'] as const) : (['tenant'] as const)).map((l) => ({ value: l, label: t(`content_studio.review.lane.${l}`) }))}
           />
-          <Select
+          <SearchSelect
             allowClear
             aria-label={t('content_studio.review.col.type')}
             placeholder={t('content_studio.review.col.type')}

@@ -1,7 +1,7 @@
 // "Thêm nhân sự" (F052 T033, F052-AC-13, F052-AC-26, ADR-0069): Họ tên, Username (pattern/maxLength of OpenAPI), Email,
 // one initial role + scope (Đơn vị/Trường/Môn, never Lớp), createTenantUser with an Idempotency-Key per intent.
 // 409 USERNAME_TAKEN / EMAIL_TAKEN → error at the field + hint to grant a role to the existing account instead.
-import { Alert, App, Form, Input, Modal, Radio, Select } from 'antd';
+import { Alert, App, Form, Input, Modal, Radio } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../../shared/api/middleware/problem';
@@ -11,6 +11,7 @@ import { useFieldRules } from '../common/ui';
 import { ScopeTargetField } from './ScopeTargetField';
 import { scopesFor, type GrantMode, type GrantScope, type Role } from './canGrant';
 import { useCreateStaff } from './useUsers';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 interface StaffForm {
   display_name: string;
@@ -65,7 +66,7 @@ export function CreateStaffForm({ open, roles, mode, onClose }: { open: boolean;
           <Input type="email" autoComplete="off" {...field.input(FIELDS.email)} />
         </Form.Item>
         <Form.Item name="role_id" label={t('portal.school_lms.users.initialRole')} rules={[{ required: true, message: t('portal.school_lms.users.roleRequired') }]}>
-          <Select options={roles.map((r) => ({ value: r.role_id, label: r.name.vi }))} />
+          <SearchSelect options={roles.map((r) => ({ value: r.role_id, label: r.name.vi }))} />
         </Form.Item>
         <Form.Item name="scope_type" label={t('portal.school_lms.userRoles.scope')} rules={[{ required: true }]}>
           <Radio.Group options={scopesFor(mode).map((s) => ({ value: s, label: t(`portal.school_lms.userRoles.scopes.${s}`) }))} />

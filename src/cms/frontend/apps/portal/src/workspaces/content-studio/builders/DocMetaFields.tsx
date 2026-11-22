@@ -3,10 +3,11 @@
 // lists of F053). Every text is capped by its OpenAPI maxLength (ADR-0041). The topics come from the current curriculum
 // version of subject × khối (F053 T066, OQ F053-9); none → the picker explains why.
 import { BilingualField } from '@eduworld/ops-ui/content';
-import { Form, Select } from 'antd';
+import { Form } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { topicPickerHelp, useCurrentTopics, useObjectives, useSubjects } from '../curriculum/useCurriculum';
 import { LIMITS } from '../shared/config';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export interface DocMeta {
   title: { vi?: string; en?: string };
@@ -37,7 +38,7 @@ export function DocMetaFields<T extends DocMeta>({ value, onChange, readOnly, la
     <Form layout="vertical" component="div" disabled={readOnly}>
       <BilingualField id="title" label={t('content_studio.builder.title')} value={value.title} onChange={(v) => set({ title: (v ?? {}) as DocMeta['title'] })} contentLanguage={value.content_language} maxLength={LIMITS.name} required readOnly={readOnly} error={errors.title ?? errors['/title']} />
       <Form.Item label={t('content_studio.question.contentLanguage')}>
-        <Select
+        <SearchSelect
           aria-label={t('content_studio.question.contentLanguage')}
           value={value.content_language}
           disabled={readOnly || languageLocked}
@@ -49,10 +50,10 @@ export function DocMetaFields<T extends DocMeta>({ value, onChange, readOnly, la
         />
       </Form.Item>
       <Form.Item label={t('content_studio.question.subject')} {...err(F.subject)}>
-        <Select aria-label={t('content_studio.question.subject')} allowClear value={value.subject_id} loading={subjects.isFetching} options={(subjects.data?.data ?? []).map((s) => ({ value: s.subject_id, label: label(s.name) }))} onChange={(v?: string) => set({ subject_id: v, topic_ids: [], objective_ids: [] })} />
+        <SearchSelect aria-label={t('content_studio.question.subject')} allowClear value={value.subject_id} loading={subjects.isFetching} options={(subjects.data?.data ?? []).map((s) => ({ value: s.subject_id, label: label(s.name) }))} onChange={(v?: string) => set({ subject_id: v, topic_ids: [], objective_ids: [] })} />
       </Form.Item>
       <Form.Item label={t('content_studio.question.gradeLevels')} {...err(F.grades)}>
-        <Select
+        <SearchSelect
           mode={singleGrade ? undefined : 'multiple'}
           aria-label={t('content_studio.question.gradeLevels')}
           value={singleGrade ? value.grade_levels[0] : value.grade_levels}
@@ -62,7 +63,7 @@ export function DocMetaFields<T extends DocMeta>({ value, onChange, readOnly, la
         />
       </Form.Item>
       <Form.Item label={t('content_studio.question.topic')} {...err(F.topics)} extra={topicHelp}>
-        <Select
+        <SearchSelect
           mode={singleTopic ? undefined : 'multiple'}
           allowClear
           aria-label={t('content_studio.question.topic')}
@@ -74,7 +75,7 @@ export function DocMetaFields<T extends DocMeta>({ value, onChange, readOnly, la
         />
       </Form.Item>
       <Form.Item label={t('content_studio.question.objectives')} {...err(F.objectives)}>
-        <Select mode="multiple" aria-label={t('content_studio.question.objectives')} value={value.objective_ids} maxCount={50} loading={objectives.isFetching} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: `${o.code} — ${o.description}` }))} onChange={(v: string[]) => set({ objective_ids: v })} />
+        <SearchSelect mode="multiple" aria-label={t('content_studio.question.objectives')} value={value.objective_ids} maxCount={50} loading={objectives.isFetching} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: `${o.code} — ${o.description}` }))} onChange={(v: string[]) => set({ objective_ids: v })} />
       </Form.Item>
     </Form>
   );

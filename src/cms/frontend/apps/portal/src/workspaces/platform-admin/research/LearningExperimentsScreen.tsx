@@ -2,7 +2,7 @@
 // creation (arms, allocation, mastery model version or rule_params), detail with start shadow/live, stop with a
 // reason and the results by arm (small cells hidden by the backend, guardrail state). Assignment, guardrail and
 // metrics are computed by the backend; the page only calls the API.
-import { Alert, App as AntApp, Button, Checkbox, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Popconfirm, Radio, Select, Space, Table, Typography } from 'antd';
+import { Alert, App as AntApp, Button, Checkbox, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Popconfirm, Radio, Space, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
@@ -28,6 +28,7 @@ import {
 } from './api';
 import { RESEARCH_LIMITS as L } from './limits';
 import { StatusTag, UuidField } from './ResearchForms';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function LearningExperimentsScreen({ title }: { title: string }) {
   return (
@@ -59,8 +60,8 @@ function ExperimentList({ title }: { title: string }) {
       <PageTitle title={title} />
       <Typography.Paragraph type="secondary">{t('platform.research.experiments.intro')}</Typography.Paragraph>
       <Space wrap>
-        <Select aria-label={t('platform.research.common.status')} allowClear placeholder={t('platform.research.common.allStatuses')} value={status} onChange={setStatus} options={EXPERIMENT_STATUSES.map((x) => ({ value: x, label: t(`platform.research.status.${x}`) }))} />
-        <Select aria-label={t('platform.research.experiments.kind')} allowClear placeholder={t('platform.research.experiments.allKinds')} value={kind} onChange={setKind} options={EXPERIMENT_KINDS.map((x) => ({ value: x, label: t(`platform.research.experimentKind.${x}`) }))} />
+        <SearchSelect aria-label={t('platform.research.common.status')} allowClear placeholder={t('platform.research.common.allStatuses')} value={status} onChange={setStatus} options={EXPERIMENT_STATUSES.map((x) => ({ value: x, label: t(`platform.research.status.${x}`) }))} />
+        <SearchSelect aria-label={t('platform.research.experiments.kind')} allowClear placeholder={t('platform.research.experiments.allKinds')} value={kind} onChange={setKind} options={EXPERIMENT_KINDS.map((x) => ({ value: x, label: t(`platform.research.experimentKind.${x}`) }))} />
         <ActionGate actionKey="action.platform_admin.learning_experiments.edit">
           <Button type="primary" onClick={() => setCreating(true)}>
             {t('platform.research.experiments.create')}

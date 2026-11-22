@@ -3,7 +3,7 @@
 // description, platform default, override, effective value, protected (`can_disable = false`), version, updated
 // at/by. "Sửa" opens the editor (platform default or tenant override, mandatory reason, If-Match). Flags come from
 // code and the menu catalog: no create, no delete.
-import { Alert, Button, Select, Space, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,7 @@ import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { FLAG_KINDS, useFeatureFlags, type FeatureFlag, type FeatureFlagKind } from '../api/featureFlags';
 import { formatTime, PageTitle, TenantSelect, useLargeScreen } from '../ui';
 import { FeatureFlagEditor } from './FeatureFlagEditor';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const onOff = (v: boolean) => (v ? 'platform.featureFlags.on' : 'platform.featureFlags.off');
 
@@ -68,7 +69,7 @@ export function FeatureFlagListPage({ title }: { title: string }) {
     <section>
       <PageTitle title={title} />
       <Space wrap>
-        <Select
+        <SearchSelect
           aria-label={t('platform.featureFlags.kind')}
           allowClear
           placeholder={t('platform.featureFlags.allKinds')}

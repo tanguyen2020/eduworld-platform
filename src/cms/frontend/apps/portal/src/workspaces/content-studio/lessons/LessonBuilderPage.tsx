@@ -2,7 +2,7 @@
 // (one grade, one topic, LOs), estimated minutes, completion rule, the block list; formulas of the blocks rendered in
 // the browser and sent as `math_assets` (ADR-0055, ≤ maxItems); formula errors block the save.
 import { buildMathAssets, collectMath } from '@eduworld/ops-ui/content';
-import { Flex, Form, InputNumber, Select } from 'antd';
+import { Flex, Form, InputNumber } from 'antd';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DocMetaFields } from '../builders/DocMetaFields';
@@ -10,6 +10,7 @@ import { DocumentEditorPage, type BuilderArgs } from '../builders/DocumentEditor
 import type { DocAuthoring, LessonAuthoring } from '../builders/useDocument';
 import { LessonBlockList } from './LessonBlockList';
 import { emptyLesson, fromLesson, LESSON_LIMITS, lessonIssues, mathPayload, toLessonBody, type CompletionRule, type LessonState } from './lessonModel';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const RULES: CompletionRule[] = ['all_required_activities', 'any_activity', 'view_only'];
 
@@ -31,7 +32,7 @@ function LessonBody({ state, onChange, readOnly, errors, id }: BuilderArgs<Lesso
             <InputNumber aria-label={t('content_studio.lesson.minutes')} min={1} max={180} value={state.estimated_minutes} onChange={(v) => onChange({ ...state, estimated_minutes: v ?? undefined })} />
           </Form.Item>
           <Form.Item label={t('content_studio.lesson.completion')} data-field="completion_rule">
-            <Select aria-label={t('content_studio.lesson.completion')} value={state.completion_rule} options={RULES.map((r) => ({ value: r, label: t(`content_studio.lesson.completionRules.${r}`) }))} onChange={(completion_rule: CompletionRule) => onChange({ ...state, completion_rule })} />
+            <SearchSelect aria-label={t('content_studio.lesson.completion')} value={state.completion_rule} options={RULES.map((r) => ({ value: r, label: t(`content_studio.lesson.completionRules.${r}`) }))} onChange={(completion_rule: CompletionRule) => onChange({ ...state, completion_rule })} />
           </Form.Item>
         </Flex>
       </Form>

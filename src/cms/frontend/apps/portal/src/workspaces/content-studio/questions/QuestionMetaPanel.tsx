@@ -1,7 +1,7 @@
 // QuestionMetaPanel (F053-AC-04, AC-14, AC-32; data-model "Metadata"): grade levels (several, 1–9), subject, topic,
 // LOs, difficulty, original language, tags, spoken-stem exemption (grades 1–3), worked example and change note.
 // Every text is capped by its OpenAPI maxLength (ADR-0041).
-import { Form, Input, InputNumber, Select } from 'antd';
+import { Form, Input, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useObjectives, useSubjects, useTopics } from '../curriculum/useCurriculum';
 import { LIMITS } from '../shared/config';
@@ -9,6 +9,7 @@ import { needsSpokenStem } from '../shared/gates';
 import type { QuestionMeta } from './useQuestion';
 import { EfficacyInstrumentField } from './EfficacyInstrumentField';
 import { WorkedExampleRefPicker } from './WorkedExampleRefPicker';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export interface QuestionMetaPanelProps {
   value: QuestionMeta;
@@ -46,22 +47,22 @@ export function QuestionMetaPanel({ value, onChange, readOnly, languageLocked, e
   return (
     <Form layout="vertical" component="div" disabled={readOnly} aria-label={t('content_studio.question.meta')}>
       <Form.Item label={t('content_studio.question.gradeLevels')} required {...item(F.grades)}>
-        <Select mode="multiple" aria-label={t('content_studio.question.gradeLevels')} value={value.grade_levels ?? []} maxCount={9} options={GRADES.map((g) => ({ value: g, label: t('content_studio.curriculum.grade', { grade: g }) }))} onChange={(v: number[]) => set({ grade_levels: v })} />
+        <SearchSelect mode="multiple" aria-label={t('content_studio.question.gradeLevels')} value={value.grade_levels ?? []} maxCount={9} options={GRADES.map((g) => ({ value: g, label: t('content_studio.curriculum.grade', { grade: g }) }))} onChange={(v: number[]) => set({ grade_levels: v })} />
       </Form.Item>
       <Form.Item label={t('content_studio.question.subject')} {...item(F.subject)}>
-        <Select aria-label={t('content_studio.question.subject')} allowClear value={value.subject_id} loading={subjects.isFetching} options={(subjects.data?.data ?? []).map((s) => ({ value: s.subject_id, label: label(s.name) }))} onChange={(v?: string) => set({ subject_id: v, topic_id: undefined, objective_ids: [] })} />
+        <SearchSelect aria-label={t('content_studio.question.subject')} allowClear value={value.subject_id} loading={subjects.isFetching} options={(subjects.data?.data ?? []).map((s) => ({ value: s.subject_id, label: label(s.name) }))} onChange={(v?: string) => set({ subject_id: v, topic_id: undefined, objective_ids: [] })} />
       </Form.Item>
       <Form.Item label={t('content_studio.question.topic')} {...item(F.topic)}>
-        <Select aria-label={t('content_studio.question.topic')} allowClear value={value.topic_id} loading={topics.isFetching} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: `${x.code ?? ''} ${x.name}`.trim() }))} onChange={(v?: string) => set({ topic_id: v, objective_ids: [] })} />
+        <SearchSelect aria-label={t('content_studio.question.topic')} allowClear value={value.topic_id} loading={topics.isFetching} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: `${x.code ?? ''} ${x.name}`.trim() }))} onChange={(v?: string) => set({ topic_id: v, objective_ids: [] })} />
       </Form.Item>
       <Form.Item label={t('content_studio.question.objectives')} {...item(F.objectives)}>
-        <Select mode="multiple" aria-label={t('content_studio.question.objectives')} value={value.objective_ids ?? []} maxCount={50} loading={objectives.isFetching} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: `${o.code} — ${o.description}` }))} onChange={(v: string[]) => set({ objective_ids: v })} />
+        <SearchSelect mode="multiple" aria-label={t('content_studio.question.objectives')} value={value.objective_ids ?? []} maxCount={50} loading={objectives.isFetching} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: `${o.code} — ${o.description}` }))} onChange={(v: string[]) => set({ objective_ids: v })} />
       </Form.Item>
       <Form.Item label={t('content_studio.question.difficulty')} {...item(F.difficulty)}>
         <InputNumber min={1} max={5} value={value.difficulty} onChange={(v) => set({ difficulty: v ?? undefined })} />
       </Form.Item>
       <Form.Item label={t('content_studio.question.contentLanguage')}>
-        <Select
+        <SearchSelect
           aria-label={t('content_studio.question.contentLanguage')}
           value={value.content_language}
           disabled={readOnly || languageLocked}
@@ -73,7 +74,7 @@ export function QuestionMetaPanel({ value, onChange, readOnly, languageLocked, e
         />
       </Form.Item>
       <Form.Item label={t('content_studio.question.tags')} {...item(F.tags)}>
-        <Select mode="tags" open={false} aria-label={t('content_studio.question.tags')} value={value.tags ?? []} maxCount={LIMITS.tags} onChange={(v: string[]) => set({ tags: v.map((x) => x.slice(0, LIMITS.tag)) })} />
+        <SearchSelect mode="tags" open={false} aria-label={t('content_studio.question.tags')} value={value.tags ?? []} maxCount={LIMITS.tags} onChange={(v: string[]) => set({ tags: v.map((x) => x.slice(0, LIMITS.tag)) })} />
       </Form.Item>
       {needsSpokenStem(value.grade_levels) && (
         <Form.Item label={t('content_studio.question.audioExempt')} extra={t('content_studio.question.audioExemptHelp')} {...item(F.exempt)}>

@@ -4,7 +4,7 @@
 // to the registry list of the type, max score, pass threshold, FeedbackTiming, completion rule ("Hoàn thành khác Đạt"),
 // and the timer of a timed quiz. Display and intents only: module learning validates and grades (AGENTS R1, R5).
 import { DeleteOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Checkbox, Flex, Form, Input, InputNumber, List, Segmented, Select, Switch, Typography } from 'antd';
+import { Alert, Button, Card, Checkbox, Flex, Form, Input, InputNumber, List, Segmented, Switch, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { topicPickerHelp, useCurrentTopics, useObjectives } from '../../curriculum/useCurriculum';
@@ -12,6 +12,7 @@ import { QuestionPicker } from '../../question-sets/SelectionRuleEditor';
 import { allowedTypesOf, COMPLETION_MODES, FEEDBACK_TIMINGS, type ActivityType, type Config } from '../activityModel';
 import type { ActivityEditorProps } from '../editorRegistry';
 import { canAddQuestion, MAX_QUESTIONS, offeredStrategies, sourceIssues, type QuestionSource, type SourceKind } from '../validators/questionSourceRules';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' ? (v as Record<string, unknown>) : {});
 
@@ -126,10 +127,10 @@ export function QuestionActivityEditor({ config, onChange, readOnly, errors, typ
           {source.kind === 'selection' && (
             <Flex vertical gap="small">
               <Form.Item label={t('content_studio.question.topic')} extra={topicHelp}>
-                <Select mode="multiple" aria-label={t('content_studio.question.topic')} maxCount={20} loading={currentTopics.loading} notFoundContent={currentTopics.none ? topicHelp : undefined} value={selection.topic_ids ?? []} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: x.name }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, topic_ids: v } })} />
+                <SearchSelect mode="multiple" aria-label={t('content_studio.question.topic')} maxCount={20} loading={currentTopics.loading} notFoundContent={currentTopics.none ? topicHelp : undefined} value={selection.topic_ids ?? []} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: x.name }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, topic_ids: v } })} />
               </Form.Item>
               <Form.Item label={t('content_studio.question.objectives')}>
-                <Select mode="multiple" aria-label={t('content_studio.question.objectives')} maxCount={20} value={selection.objective_ids ?? []} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: `${o.code} — ${o.description}` }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, objective_ids: v } })} />
+                <SearchSelect mode="multiple" aria-label={t('content_studio.question.objectives')} maxCount={20} value={selection.objective_ids ?? []} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: `${o.code} — ${o.description}` }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, objective_ids: v } })} />
               </Form.Item>
               <Flex gap="small">
                 <Form.Item label={t('content_studio.activity.source.difficultyMin')}>
@@ -143,12 +144,12 @@ export function QuestionActivityEditor({ config, onChange, readOnly, errors, typ
                 </Form.Item>
               </Flex>
               <Form.Item label={t('content_studio.questionSet.types')}>
-                <Select mode="multiple" aria-label={t('content_studio.questionSet.types')} value={selection.question_types ?? []} options={allowed.map((x) => ({ value: x, label: t(`ops-ui:question.types.${x}`) }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, question_types: v.length ? v : undefined } })} />
+                <SearchSelect mode="multiple" aria-label={t('content_studio.questionSet.types')} value={selection.question_types ?? []} options={allowed.map((x) => ({ value: x, label: t(`ops-ui:question.types.${x}`) }))} onChange={(v: string[]) => setSource({ ...source, selection: { ...selection, question_types: v.length ? v : undefined } })} />
               </Form.Item>
             </Flex>
           )}
           <Form.Item label={t('content_studio.activity.allowedTypes')}>
-            <Select mode="multiple" aria-label={t('content_studio.activity.allowedTypes')} value={allowed} options={allowedTypesOf(type).values.map((x) => ({ value: x, label: t(`ops-ui:question.types.${x}`) }))} onChange={(v: string[]) => setContent({ allowed_question_types: v })} />
+            <SearchSelect mode="multiple" aria-label={t('content_studio.activity.allowedTypes')} value={allowed} options={allowedTypesOf(type).values.map((x) => ({ value: x, label: t(`ops-ui:question.types.${x}`) }))} onChange={(v: string[]) => setContent({ allowed_question_types: v })} />
           </Form.Item>
           {type === 'quiz' && (
             <Flex gap="small" align="center">
@@ -187,10 +188,10 @@ export function QuestionActivityEditor({ config, onChange, readOnly, errors, typ
             </Form.Item>
           </Flex>
           <Form.Item label={t('content_studio.activity.grading.feedback')}>
-            <Select aria-label={t('content_studio.activity.grading.feedback')} value={feedback.timing as string | undefined} options={FEEDBACK_TIMINGS.map((x) => ({ value: x, label: t(`content_studio.activity.feedback.${x}`) }))} onChange={(v: string) => onChange({ ...config, feedback: { ...feedback, timing: v } })} />
+            <SearchSelect aria-label={t('content_studio.activity.grading.feedback')} value={feedback.timing as string | undefined} options={FEEDBACK_TIMINGS.map((x) => ({ value: x, label: t(`content_studio.activity.feedback.${x}`) }))} onChange={(v: string) => onChange({ ...config, feedback: { ...feedback, timing: v } })} />
           </Form.Item>
           <Form.Item label={t('content_studio.activity.grading.completion')} extra={t('content_studio.activity.grading.completionHelp')}>
-            <Select aria-label={t('content_studio.activity.grading.completion')} value={completion.mode as string | undefined} options={COMPLETION_MODES.filter((m) => m === 'submit' || m === 'graded').map((x) => ({ value: x, label: t(`content_studio.activity.completion.${x}`) }))} onChange={(v: string) => onChange({ ...config, completion_rule: { ...completion, mode: v } })} />
+            <SearchSelect aria-label={t('content_studio.activity.grading.completion')} value={completion.mode as string | undefined} options={COMPLETION_MODES.filter((m) => m === 'submit' || m === 'graded').map((x) => ({ value: x, label: t(`content_studio.activity.completion.${x}`) }))} onChange={(v: string) => onChange({ ...config, completion_rule: { ...completion, mode: v } })} />
           </Form.Item>
           <Typography.Text type="secondary">{t('content_studio.activity.grading.note')}</Typography.Text>
         </Form>

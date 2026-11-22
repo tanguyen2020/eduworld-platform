@@ -1,7 +1,7 @@
 // Edit an assignment (F055 T027, F055-AC-12): only the fields its status allows (editableFields: open → due_at,
 // instructions, late_policy), merge patch of the changed fields with If-Match (ETag of getAssignment, remembered by the
 // apiClient). 412 / VERSION_MISMATCH / ASSIGNMENT_NOT_EDITABLE → message, reload of the fresh copy, nothing overwritten.
-import { DatePicker, Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
+import { DatePicker, Form, Input, InputNumber, Modal, Switch } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useUpdateAssignment, type Assignment } from '../api/assignments';
@@ -9,6 +9,7 @@ import { editableFields, toUpdatePayload } from '../model/assignmentForm';
 import { LMS_ENUMS, LMS_FIELDS, LMS_LIMITS } from '../model/fieldSchemas';
 import { isStale } from '../model/problemMessages';
 import { LmsProblem } from '../LmsUi';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 interface EditValues {
   title?: string;
@@ -111,7 +112,7 @@ export function AssignmentEditDialog({ assignment: a, onClose, onStale }: { assi
           <InputNumber disabled={!fields.has('max_attempts')} min={LMS_LIMITS.maxAttempts.minimum} max={LMS_LIMITS.maxAttempts.maximum} precision={0} />
         </Form.Item>
         <Form.Item name="score_policy" label={t('lms.wizard.scorePolicy')}>
-          <Select disabled={!fields.has('score_policy')} options={LMS_ENUMS.scorePolicy.values.map((s) => ({ value: s, label: t(`lms.scorePolicy.${s}`) }))} />
+          <SearchSelect disabled={!fields.has('score_policy')} options={LMS_ENUMS.scorePolicy.values.map((s) => ({ value: s, label: t(`lms.scorePolicy.${s}`) }))} />
         </Form.Item>
       </Form>
     </Modal>

@@ -3,7 +3,7 @@
 // `tenant_id = null`), "Hệ thống" tag, active UserRole count. A system role only offers "Nhân bản thành role tùy
 // biến"; a custom role of a tenant is read only here (edited in workspace C, F052). Delete asks for a confirmation and
 // a reason (soft delete, AGENTS R21); `409` (role still in use) and `403` are shown by their code.
-import { Alert, App as AntApp, Button, Select, Space, Table, Tag, Typography } from 'antd';
+import { Alert, App as AntApp, Button, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,7 @@ import { useTenantDirectory } from '../api/tenants';
 import { LIMITS, PRINCIPAL_CACHE_TTL_SECONDS } from '../limits';
 import { formatTime, useLargeScreen } from '../ui';
 import { PlatformRoleEditor, type EditorTarget } from './PlatformRoleEditor';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function PlatformRoleListPage() {
   const { t, i18n } = useTranslation();
@@ -74,7 +75,7 @@ export function PlatformRoleListPage() {
   return (
     <section aria-label={t('platform.access.tabRoles')}>
       <Space wrap>
-        <Select
+        <SearchSelect
           aria-label={t('platform.roles.scopeKind')}
           allowClear
           placeholder={t('platform.permissions.allScopes')}

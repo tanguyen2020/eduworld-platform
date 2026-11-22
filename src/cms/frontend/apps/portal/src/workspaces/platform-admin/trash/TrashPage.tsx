@@ -2,7 +2,7 @@
 // `resource_type` and the tenant filter (`tenant_ids[]`), columns Tenant / deleted by / deleted at / reason; "Khôi phục"
 // asks for a reason (3–1000) then restoreTrashItem (Idempotency-Key, X-Tenant-Id = tenant of the item). A row with
 // `restorable = false` or a `409 CONFLICT` answer shows "Đã có bản ghi mới cùng mã". There is no "Xóa vĩnh viễn".
-import { Alert, App as AntApp, Button, Select, Space, Table, Tooltip, Typography } from 'antd';
+import { Alert, App as AntApp, Button, Space, Table, Tooltip, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,7 @@ import { useTenantDirectory } from '../api/tenants';
 import { TRASH_TYPES, useRestore, useTrash, type TrashItem } from '../api/trash';
 import { LIMITS } from '../limits';
 import { formatTime, PageTitle, TenantCell } from '../ui';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function TrashPage({ title }: { title: string }) {
   const { t } = useTranslation();
@@ -66,7 +67,7 @@ export function TrashPage({ title }: { title: string }) {
     <section>
       <PageTitle title={title} />
       <Space wrap>
-        <Select
+        <SearchSelect
           aria-label={t('platform.trash.resourceType')}
           value={resourceType}
           onChange={setResourceType}

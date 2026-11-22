@@ -30,7 +30,14 @@ export function RegradeEntryButton({ scope, versionId, item }: { scope: RegradeS
         size="small"
         data-testid="regrade-history"
         locale={{ emptyText: t('content_studio.regrade.noHistory') }}
-        dataSource={history.data?.data ?? []}
+        dataSource={history.rows}
+        loadMore={
+          history.hasNextPage ? (
+            <Button size="small" onClick={() => void history.fetchNextPage()} loading={history.isFetchingNextPage}>
+              {t('content_studio.loadMore')}
+            </Button>
+          ) : null
+        }
         renderItem={(r) => (
           <List.Item>
             <Typography.Text>{new Date(r.created_at).toLocaleString()}</Typography.Text>

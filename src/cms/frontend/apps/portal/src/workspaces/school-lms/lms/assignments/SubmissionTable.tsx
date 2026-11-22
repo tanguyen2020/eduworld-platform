@@ -2,7 +2,7 @@
 // student, status, auto-graded score, attempts, submitted at, "làm quá nhanh" when rapid_guess_count > 0. No XP, rating
 // or manual comment column (SCHOOL_LMS §8.2, ADR-0072). Per-row extend / excuse inside the catalog ActionGate; the row
 // is updated from the AssignmentSubmission the server returns. Cards below 768 px (ResponsiveTable).
-import { Button, DatePicker, Flex, Form, Input, Modal, Select, Space, Tag } from 'antd';
+import { Button, DatePicker, Flex, Form, Input, Modal, Space, Tag } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
@@ -15,6 +15,7 @@ import { useFieldRules } from '../../common/ui';
 import { useStudentAction, useSubmissions, type Assignment, type AssignmentSubmission } from '../api/assignments';
 import { LMS_ENUMS, LMS_FIELDS } from '../model/fieldSchemas';
 import { LmsProblem, LmsTag } from '../LmsUi';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 type SubStatus = AssignmentSubmission['status'];
 
@@ -103,7 +104,7 @@ export function SubmissionTable({ assignment }: { assignment: Assignment }) {
   ];
   return (
     <Flex vertical gap="small" data-testid="submission-table">
-      <Select
+      <SearchSelect
         allowClear
         aria-label={t('lms.submissions.filter')}
         placeholder={t('lms.submissions.filter')}

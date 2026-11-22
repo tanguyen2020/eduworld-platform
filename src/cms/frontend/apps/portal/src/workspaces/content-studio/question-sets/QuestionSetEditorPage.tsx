@@ -1,6 +1,6 @@
 // QuestionSetEditorPage (F054-AC-20, AC-23, ADMIN_PORTAL §3.2): Question Set editor on the shared builder frame —
 // metadata, purpose, shuffle options, static items and/or selection rules with the pool size of each rule.
-import { Flex, Form, Select, Switch } from 'antd';
+import { Flex, Form, Switch } from 'antd';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DocMetaFields } from '../builders/DocMetaFields';
@@ -8,6 +8,7 @@ import { DocumentEditorPage, type BuilderArgs } from '../builders/DocumentEditor
 import { usePoolStats, type DocAuthoring, type QuestionSetAuthoring } from '../builders/useDocument';
 import { emptyQuestionSet, fromQuestionSet, questionSetIssues, toQuestionSetBody, type QuestionSetState, type SetPurpose } from './questionSetModel';
 import { SelectionRuleEditor } from './SelectionRuleEditor';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const PURPOSES: SetPurpose[] = ['exercise', 'minigame', 'quest', 'competition', 'general'];
 
@@ -19,7 +20,7 @@ function QuestionSetBody({ state, onChange, readOnly, errors, server, id }: Buil
       <DocMetaFields value={state} onChange={onChange} readOnly={readOnly} languageLocked={!!id} errors={errors} />
       <Form layout="vertical" component="div" disabled={readOnly}>
         <Form.Item label={t('content_studio.questionSet.purpose')}>
-          <Select aria-label={t('content_studio.questionSet.purpose')} value={state.purpose} options={PURPOSES.map((p) => ({ value: p, label: t(`content_studio.questionSet.purposes.${p}`) }))} onChange={(purpose: SetPurpose) => onChange({ ...state, purpose })} />
+          <SearchSelect aria-label={t('content_studio.questionSet.purpose')} value={state.purpose} options={PURPOSES.map((p) => ({ value: p, label: t(`content_studio.questionSet.purposes.${p}`) }))} onChange={(purpose: SetPurpose) => onChange({ ...state, purpose })} />
         </Form.Item>
         <Flex gap="large" wrap>
           <Flex gap="small" align="center">

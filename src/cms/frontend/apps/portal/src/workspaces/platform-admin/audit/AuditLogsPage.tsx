@@ -4,7 +4,7 @@
 // `role.*` / `user_role.*` action in one list, optionally one exact action — OQ F059-3). Filters live
 // in the URL query string (shareable link). A `422` (range over `audit_query_max_range_days`) is shown with the limit
 // and the filters are kept. Read only: no edit/delete of an audit entry anywhere.
-import { Alert, Button, DatePicker, Form, Input, Select, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Button, DatePicker, Form, Input, Space, Table, Tabs, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useMemo, useState } from 'react';
@@ -18,6 +18,7 @@ import { useTenantDirectory } from '../api/tenants';
 import { AUDIT_MAX_RANGE_DAYS, isUuid, LIMITS } from '../limits';
 import { formatTime, limitInputProps, PageTitle, TenantCell } from '../ui';
 import { AuditDetailDrawer } from './AuditDetailDrawer';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 type Mode = AuditMode;
 
@@ -108,7 +109,7 @@ function AuditLogView({ mode }: { mode: Mode }) {
         </Form.Item>
         <Form.Item name="action" label={t('platform.audit.action')}>
           {mode === 'permissions' ? (
-            <Select allowClear placeholder={t('platform.audit.allPermissionActions')} options={PERMISSION_AUDIT_ACTIONS.map((a) => ({ value: a, label: a }))} />
+            <SearchSelect allowClear placeholder={t('platform.audit.allPermissionActions')} options={PERMISSION_AUDIT_ACTIONS.map((a) => ({ value: a, label: a }))} />
           ) : (
             <Input allowClear {...limitInputProps(LIMITS.auditAction)} />
           )}

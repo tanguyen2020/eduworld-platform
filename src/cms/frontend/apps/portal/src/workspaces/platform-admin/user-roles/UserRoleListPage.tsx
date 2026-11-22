@@ -2,7 +2,7 @@
 // `user_id`, `role_id` and the tenant filter (`tenant_ids[]`), columns account, role, scope, tenant, validity, source,
 // granted by. "Thu hồi" asks for a confirmation and a reason, then revokePlatformUserRole (X-Tenant-Id = tenant of the
 // UserRole when it has one). The account id opens the detail drawer.
-import { Alert, App as AntApp, Button, Form, Input, Select, Space, Table, Tag, Typography, theme } from 'antd';
+import { Alert, App as AntApp, Button, Form, Input, Space, Table, Tag, Typography, theme } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,7 @@ import { isUuid, LIMITS, PRINCIPAL_CACHE_TTL_SECONDS } from '../limits';
 import { formatTime, TenantCell, useLargeScreen } from '../ui';
 import { UserDetailDrawer } from '../users/UserDetailDrawer';
 import { GrantUserRoleDialog } from './GrantUserRoleDialog';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function validityText(r: Pick<UserRole, 'valid_from' | 'valid_to'>, t: (k: string, o?: Record<string, unknown>) => string): string {
   return r.valid_to ? t('platform.userRoles.validRange', { from: formatTime(r.valid_from), to: formatTime(r.valid_to) }) : t('platform.userRoles.validFrom', { from: formatTime(r.valid_from) });
@@ -86,7 +87,7 @@ export function UserRoleListPage() {
           <Input allowClear maxLength={36} />
         </Form.Item>
         <Form.Item name="role_id" label={t('platform.userRoles.role')}>
-          <Select allowClear showSearch optionFilterProp="label" style={{ minWidth: token.controlHeightLG * 5 }} options={(roles.data ?? []).map((r) => ({ value: r.role_id, label: r.code }))} />
+          <SearchSelect allowClear showSearch optionFilterProp="label" style={{ minWidth: token.controlHeightLG * 5 }} options={(roles.data ?? []).map((r) => ({ value: r.role_id, label: r.code }))} />
         </Form.Item>
         <Form.Item>
           <Button htmlType="submit">{t('platform.common.search')}</Button>

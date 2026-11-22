@@ -1,12 +1,13 @@
 // Approve a `pending_review` school (F052 T016, F052-AC-03, FR-SIS-005): shows why it waits, requires a province
 // (active provinces only) before approveTenantSchool (If-Match). When the school has no province yet the chosen one
 // is saved first with updateTenantSchool; the server still checks both steps.
-import { Alert, App, Form, Modal, Select } from 'antd';
+import { Alert, App, Form, Modal } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { writeErrorKey } from '../common/errors';
 import { localizedName } from '../common/format';
 import { useActiveProvinces, useApproveSchool, useUpdateSchool, type School } from './useSchools';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 /** Reasons a school waits for review, as i18n keys (pure, F052-AC-03). */
 export function pendingReasons(school: Pick<School, 'status' | 'province'>): string[] {
@@ -50,7 +51,7 @@ export function ApproveSchoolDialog({ school, open, onClose }: { school: School;
       <Alert type="info" showIcon message={t('portal.school_lms.schools.pending.title')} description={pendingReasons(school).map((k) => t(k)).join(' ')} />
       <Form layout="vertical">
         <Form.Item label={t('portal.school_lms.schools.province')} required help={province ? undefined : t('portal.school_lms.schools.provinceRequired')}>
-          <Select
+          <SearchSelect
             aria-label={t('portal.school_lms.schools.province')}
             value={province}
             onChange={setProvince}

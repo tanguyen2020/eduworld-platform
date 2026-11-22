@@ -5,6 +5,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
+import type { components } from '../../../shared/api/schema.gen';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import type { IntentHeaders } from '../../../shared/api/useIdempotentMutation';
 import { withEtag, type Loaded } from '../questions/useQuestion';
 import type { ActivityDefinition, ActivityDefinitionInput, ActivityType, ActivityTypeInfo } from './activityModel';
@@ -23,20 +25,16 @@ export function useActivityTypes() {
 
 export interface ActivityListFilter {
   activity_type?: ActivityType;
-  status?: string;
-  cursor?: string;
+  status?: components['schemas']['ContentStatus'];
 }
 
 export function useActivityList(f: ActivityListFilter) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useQuery({
-    queryKey: ['content-studio', 'list', scopeKey, 'activities', f],
-    queryFn: () =>
-      api.call<{ data: ActivityDefinition[]; page: { next_cursor?: string | null; has_more: boolean } }>(
-        api.client.GET('/cms/learning/activities', { params: { query: { ...f, limit: 50 } as never } }),
-      ),
-  });
+  // A table: cursor pages, "Tải thêm" (owner rule 2026-11-22).
+  return useCursorPages<ActivityDefinition>(['content-studio', 'list', scopeKey, 'activities', f], (cursor) =>
+    api.call(api.client.GET('/cms/learning/activities', { params: { query: { ...f, ...(cursor ? { cursor } : {}) } } })),
+  );
 }
 
 export function useActivityQuery(id: string | undefined) {

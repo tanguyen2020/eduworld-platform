@@ -1,7 +1,7 @@
 // MediaLibraryPage (F054-AC-16, AC-17, AC-18, AC-30, CONTENT_MODEL §7): "Video · Audio · Media" — listMediaAssets
 // filtered by kind / status / `q` (cursor), status with the rejection reason, variants count, license, alt text,
 // the System Admin Tenant column; detail drawer with "used in"; the multi-file upload zone (`media.upload`).
-import { Button, Flex, Input, Select, Tag, Typography } from 'antd';
+import { Button, Flex, Input, Tag, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -18,6 +18,7 @@ import { LIMITS } from '../shared/config';
 import { MediaDetailDrawer } from './MediaDetailDrawer';
 import { MediaUploadDropzone } from './MediaUploadDropzone';
 import type { MediaAsset, MediaKind, MediaStatus } from './useMediaUpload';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const KINDS: MediaKind[] = ['image', 'audio', 'video', 'model3d', 'document'];
 const STATUSES: MediaStatus[] = ['quarantined', 'processing', 'ready', 'rejected'];
@@ -96,8 +97,8 @@ export function MediaLibraryPage({ title }: { title: string }) {
         </Flex>
         {uploading && <MediaUploadDropzone onUploaded={() => void list.refetch()} />}
         <Flex gap="small" wrap align="center">
-          <Select allowClear aria-label={t('content_studio.media.col.kind')} placeholder={t('content_studio.media.col.kind')} value={kind} onChange={setKind} options={KINDS.map((k) => ({ value: k, label: t(`content_studio.media.kind.${k}`) }))} />
-          <Select allowClear aria-label={t('content_studio.media.col.status')} placeholder={t('content_studio.media.col.status')} value={status} onChange={setStatus} options={STATUSES.map((s) => ({ value: s, label: t(`content_studio.media.status.${s}`) }))} />
+          <SearchSelect allowClear aria-label={t('content_studio.media.col.kind')} placeholder={t('content_studio.media.col.kind')} value={kind} onChange={setKind} options={KINDS.map((k) => ({ value: k, label: t(`content_studio.media.kind.${k}`) }))} />
+          <SearchSelect allowClear aria-label={t('content_studio.media.col.status')} placeholder={t('content_studio.media.col.status')} value={status} onChange={setStatus} options={STATUSES.map((s) => ({ value: s, label: t(`content_studio.media.status.${s}`) }))} />
           <Input.Search aria-label={t('content_studio.media.search')} placeholder={t('content_studio.media.search')} maxLength={LIMITS.search} value={q} onChange={(e) => setQ(e.target.value)} onSearch={(v) => setSearch(v.trim())} allowClear />
         </Flex>
         {list.error ? <ProblemMessage error={list.error} /> : null}

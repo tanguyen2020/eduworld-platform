@@ -1,11 +1,12 @@
 // School picker of the screens working on one school (classes, SIS, school settings, audit filter). Options come from
 // listTenantSchools — a School Admin only receives the schools of their scope, a Tenant Admin all schools of the tenant
 // (edge case "tenant unit có nhiều trường"); the only school is selected automatically.
-import { Select } from 'antd';
+
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSchoolList } from '../schools/useSchools';
 import { localizedName } from './format';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export interface SchoolSelectProps {
   value: string | undefined;
@@ -24,7 +25,7 @@ export function SchoolSelect({ value, onChange, allowClear = false, autoSelect =
     if (autoSelect && !value && first) onChange(first);
   }, [autoSelect, value, first, onChange]);
   return (
-    <Select
+    <SearchSelect
       id={id}
       aria-label={t('portal.school_lms.common.school')}
       placeholder={t('portal.school_lms.common.pickSchool')}

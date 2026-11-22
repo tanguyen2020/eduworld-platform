@@ -1,7 +1,7 @@
 // Screen of `menu.school_lms.assignments` (F055 T018, T019, T026): list, wizard (`new`), detail (`:assignmentId`).
 // One tenant at a time (SingleTenantGate: a System Admin must pick the target tenant first — F055-AC-07). The list filters
 // by school, subject, grade (ADR-0095) and status and shows the targets of each assignment (grades or students).
-import { Button, Flex, Form, Select, Typography } from 'antd';
+import { Button, Flex, Form, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,7 @@ import { LmsProblem, LmsTag, TargetsText } from '../LmsUi';
 import { AssignmentDetailPage } from './AssignmentDetailPage';
 import { AssignmentFilterBar } from './AssignmentFilterBar';
 import { AssignmentWizard } from './wizard/AssignmentWizard';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 function AssignmentListPage() {
   const { t } = useTranslation();
@@ -36,7 +37,7 @@ function AssignmentListPage() {
         <Flex wrap="wrap" gap="small" align="end" data-testid="assignment-filters">
           <AssignmentFilterBar value={filters} onChange={setFilters} />
           <Form.Item label={t('lms.assignment.status')} style={{ marginBottom: 0 }}>
-            <Select
+            <SearchSelect
               allowClear
               aria-label={t('lms.assignment.status')}
               placeholder={t('lms.assignment.status')}

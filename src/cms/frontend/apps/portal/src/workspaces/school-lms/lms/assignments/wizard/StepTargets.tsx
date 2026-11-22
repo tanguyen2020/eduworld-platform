@@ -4,7 +4,7 @@
 // wins) — or "Học sinh cụ thể" (a list of students of the school). Students are picked grade by grade from
 // listTenantGradeStudents (search ≥ 2 characters on the server). Options only come from the API; limits come from
 // the contract (fieldSchemas). No class, study group or course (removed by ADR-0095). Presentational only (AGENTS R1).
-import { Alert, Flex, Form, Radio, Select, Typography } from 'antd';
+import { Alert, Flex, Form, Radio, Typography } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMyPermissions } from '../../../../../shared/api/hooks/useMyPermissions';
@@ -14,6 +14,7 @@ import { useGradeStudents, useSchoolGrades, useTenantSubjects } from '../../api/
 import { excludedIncludes, type AssignmentFormValues, type TargetMode } from '../../model/assignmentForm';
 import { LMS_LIMITS } from '../../model/fieldSchemas';
 import { LmsProblem } from '../../LmsUi';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 type Patch = (p: Partial<AssignmentFormValues>) => void;
 type Errors = Partial<Record<keyof AssignmentFormValues, string>>;
@@ -56,7 +57,7 @@ function StudentPicker({ schoolId, grades, initialGrade, value, onChange, label,
   return (
     <Flex vertical gap="small">
       <Flex gap="small" wrap>
-        <Select
+        <SearchSelect
           aria-label={t('lms.wizard.pickerGrade', { label })}
           value={grade}
           disabled={!schoolId}
@@ -65,7 +66,7 @@ function StudentPicker({ schoolId, grades, initialGrade, value, onChange, label,
           popupMatchSelectWidth={false}
           data-testid={`${testId}-grade`}
         />
-        <Select
+        <SearchSelect
           mode="multiple"
           showSearch
           filterOption={false}
@@ -117,7 +118,7 @@ export function StepTargets({ v, set, errors }: { v: AssignmentFormValues; set: 
         <SchoolSelect value={v.schoolId} onChange={onSchool} />
       </Form.Item>
       <Form.Item label={t('lms.wizard.subject')} required validateStatus={status(errors.subjectId)} help={errors.subjectId}>
-        <Select
+        <SearchSelect
           showSearch
           optionFilterProp="label"
           aria-label={t('lms.wizard.subject')}
@@ -139,7 +140,7 @@ export function StepTargets({ v, set, errors }: { v: AssignmentFormValues; set: 
       {v.targetMode === 'grades' ? (
         <>
           <Form.Item label={t('lms.wizard.grades')} required validateStatus={status(errors.grades)} help={errors.grades}>
-            <Select
+            <SearchSelect
               mode="multiple"
               aria-label={t('lms.wizard.grades')}
               placeholder={t('lms.wizard.grades')}

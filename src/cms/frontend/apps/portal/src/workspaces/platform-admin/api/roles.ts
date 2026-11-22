@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
+import { useAllPages } from '../../../shared/api/fetchAllPages';
 import { LIMITS } from '../limits';
 import { useCursorList, usePlatformApi, type CursorPage, type PageInfo, type Schemas } from './common';
 
@@ -61,19 +62,17 @@ export function useRoleList(roleScopeKind: PermissionScopeKind | undefined) {
  */
 export function useRoleOptions(roleScopeKind: PermissionScopeKind | undefined, tenantId?: string, enabled = true) {
   const api = usePlatformApi();
-  return useQuery({
-    queryKey: ['platform', 'role-options', roleScopeKind ?? null, tenantId ?? null],
-    queryFn: async () =>
-      (
-        await api.call(
-          api.client.GET('/admin/roles', {
-            params: { query: { limit: LIMITS.pageSize.maximum, ...(roleScopeKind ? { role_scope_kind: roleScopeKind } : {}), ...(tenantId ? { tenant_ids: [tenantId] } : {}) } },
-          }),
-        )
-      ).items,
-    enabled,
-    staleTime: 30_000,
-  });
+  const all = useAllPages<Role>(
+    ['platform', 'role-options', roleScopeKind ?? null, tenantId ?? null],
+    (page) =>
+      api.call(
+        api.client.GET('/admin/roles', {
+          params: { query: { ...page, ...(roleScopeKind ? { role_scope_kind: roleScopeKind } : {}), ...(tenantId ? { tenant_ids: [tenantId] } : {}) } },
+        }),
+      ),
+    { enabled, staleTime: 30_000 },
+  );
+  return { ...all, data: all.items };
 }
 
 export function useRole(roleId: string | undefined) {

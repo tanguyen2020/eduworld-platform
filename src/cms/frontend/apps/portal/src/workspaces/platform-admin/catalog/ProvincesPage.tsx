@@ -2,7 +2,7 @@
 // search by name/code over the loaded catalog (≤ 500 units, one response), effective dates and `successor_code`.
 // Edit = names and `official_code` only (updateProvince); a boundary change = createProvince (new unit) +
 // createProvinceSuccession (ProvinceSuccessionDialog) — an old unit is never overwritten.
-import { App as AntApp, Button, DatePicker, Form, Input, Modal, Segmented, Select, Space, Table, Tag } from 'antd';
+import { App as AntApp, Button, DatePicker, Form, Input, Modal, Segmented, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { useCountries, useCreateProvince, useProvinces, useUpdateProvince, type 
 import { LIMITS } from '../limits';
 import { LimitedField, ReasonField } from '../ui';
 import { ProvinceSuccessionDialog } from './ProvinceSuccessionDialog';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const PROVINCE_TYPES: readonly Province['province_type'][] = ['province', 'municipality'];
 
@@ -89,10 +90,10 @@ function ProvinceForm({ province, onClose }: { province: Province | null; onClos
         {province ? null : (
           <>
             <Form.Item name="country_code" label={t('platform.catalog.countryCode')} rules={[{ required: true }]}>
-              <Select options={(countries.data?.items ?? []).map((c) => ({ value: c.country_code, label: `${c.country_code} · ${c.name.vi}` }))} />
+              <SearchSelect options={(countries.data?.items ?? []).map((c) => ({ value: c.country_code, label: `${c.country_code} · ${c.name.vi}` }))} />
             </Form.Item>
             <Form.Item name="province_type" label={t('platform.catalog.provinceType')} rules={[{ required: true }]}>
-              <Select options={PROVINCE_TYPES.map((x) => ({ value: x, label: t(`platform.catalog.provinceTypes.${x}`) }))} />
+              <SearchSelect options={PROVINCE_TYPES.map((x) => ({ value: x, label: t(`platform.catalog.provinceTypes.${x}`) }))} />
             </Form.Item>
             <Form.Item name="effective_from" label={t('platform.catalog.effectiveFrom')}>
               <DatePicker format="DD/MM/YYYY" />

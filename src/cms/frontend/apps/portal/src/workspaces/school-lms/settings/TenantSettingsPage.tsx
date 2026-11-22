@@ -3,7 +3,7 @@
 // updateTenantSettings = JSON Merge Patch of the changed fields + If-Match; shows `effective_cleanup_days`; warns
 // below the cleanup threshold. 403 PERMISSION_DENIED on the cleanup override / 422 RETENTION_BELOW_MINIMUM → error at
 // that field and the saved value is kept.
-import { Alert, App, Button, Card, Descriptions, Form, InputNumber, Select, Space, Spin } from 'antd';
+import { Alert, App, Button, Card, Descriptions, Form, InputNumber, Space, Spin } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { actionStatus } from '../../../permissions/menuRegistry';
@@ -14,6 +14,7 @@ import { LIMITS } from '../common/fieldSchemas';
 import { AllowedHoursField } from './AllowedHoursField';
 import { cleanupWarning, mergePatch, type TenantSettingsForm } from './tenantSettingsForm';
 import { useTenantSettings, useUpdateTenantSettings } from './useSettings';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function TenantSettingsPage() {
   const { t, i18n } = useTranslation();
@@ -52,7 +53,7 @@ export function TenantSettingsPage() {
     <Card data-testid="tenant-settings">
       <Form<TenantSettingsForm> form={form} layout="vertical" initialValues={saved} onFinish={submit}>
         <Form.Item name="default_locale" label={t('portal.school_lms.settings.defaultLocale')}>
-          <Select disabled={ro('default_locale')} options={(['vi-VN', 'en-US'] as const).map((l) => ({ value: l, label: t(`shell.locale.${l}`) }))} />
+          <SearchSelect disabled={ro('default_locale')} options={(['vi-VN', 'en-US'] as const).map((l) => ({ value: l, label: t(`shell.locale.${l}`) }))} />
         </Form.Item>
         <Form.Item label={t('portal.school_lms.settings.allowedHours')}>
           <AllowedHoursField disabled={ro('allowed_hours')} />

@@ -3,7 +3,8 @@
 // deleteTenantRole (If-Match, reason in the query — soft delete on the server, R21).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
-import { qk, useApi, usePagedList, type Schemas } from '../common/api';
+import { useAllPages } from '../../../shared/api/fetchAllPages';
+import { PAGE_SIZE, qk, useApi, usePagedList, type Schemas } from '../common/api';
 import { useSchoolLmsScope } from '../common/scope';
 
 export type Role = Schemas['Role'];
@@ -14,8 +15,19 @@ export function useRoleList(enabled = true) {
   const scope = useSchoolLmsScope();
   return usePagedList<Role>(
     qk('roles', scope),
-    (cursor) => api.call(api.client.GET('/tenant/roles', { params: { query: { limit: 100, ...(cursor ? { cursor } : {}) } }, headers: scope.headers })),
+    (cursor) => api.call(api.client.GET('/tenant/roles', { params: { query: { limit: PAGE_SIZE, ...(cursor ? { cursor } : {}) } }, headers: scope.headers })),
     scope.ready && enabled,
+  );
+}
+
+/** Roles of the tenant for dropdowns (filters, grant): every page (fetchAllPages, owner rule 2026-11-22). */
+export function useRoleOptions(enabled = true) {
+  const api = useApi();
+  const scope = useSchoolLmsScope();
+  return useAllPages<Role>(
+    [...qk('roles', scope), 'options'],
+    (page) => api.call(api.client.GET('/tenant/roles', { params: { query: page }, headers: scope.headers })),
+    { enabled: scope.ready && enabled },
   );
 }
 

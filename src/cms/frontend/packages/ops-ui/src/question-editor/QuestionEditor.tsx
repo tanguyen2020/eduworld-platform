@@ -2,7 +2,7 @@
 // answer asks first and drops what is incompatible), stem (rich content + spoken stem `audio_ref`, required for
 // grades 1–3), the type editor, explanation, up to 5 hints and the scoring rule. The value is the authoring payload
 // (mappers). Presentational: the page saves, validates with question.schema.json and calls the workflow.
-import { Alert, Divider, Flex, Form, Modal, Select, Typography } from 'antd';
+import { Alert, Divider, Flex, Form, Modal, Typography } from 'antd';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ContentLang } from '../i18n-field/translationStatus';
@@ -11,6 +11,7 @@ import { RichContentEditor, type MediaSlotArgs } from '../rich-content/RichConte
 import { HintsField } from './HintsField';
 import { ADVANCED_TYPES, changeType, expressionInputWarning, needsTypeChangeConfirm, QUESTION_TYPES, scoringMethods, type QuestionDraft, type QuestionType } from './mappers';
 import { TYPE_EDITORS } from './typeEditors';
+import { SearchSelect } from '../select/SearchSelect';
 
 export interface QuestionEditorProps {
   value: QuestionDraft;
@@ -51,7 +52,7 @@ export function QuestionEditor({ value, onChange, contentLanguage, readOnly = fa
     <Form layout="vertical" component="div" disabled={readOnly}>
       <Flex vertical gap="middle">
         <Form.Item label={t('question.type')}>
-          <Select<QuestionType>
+          <SearchSelect<QuestionType>
             aria-label={t('question.type')}
             value={value.type}
             disabled={readOnly || typeLocked}
@@ -83,7 +84,7 @@ export function QuestionEditor({ value, onChange, contentLanguage, readOnly = fa
         />
         {methods.length > 0 && (
           <Form.Item label={t('question.scoring')}>
-            <Select
+            <SearchSelect
               aria-label={t('question.scoring')}
               value={value.scoring_rule.mode === 'partial' ? value.scoring_rule.partial_method : 'all_or_nothing'}
               options={[{ value: 'all_or_nothing', label: t('question.scoringMethods.all_or_nothing') }, ...methods.map((m) => ({ value: m, label: t(`question.scoringMethods.${m}`) }))]}

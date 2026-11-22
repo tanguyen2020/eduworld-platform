@@ -3,7 +3,7 @@
 // the range picker of ops-ui. Filters live in the
 // URL (drill-down keeps them) and the last grade/subject/preset is remembered per viewer and tenant.
 import { DashboardRangePicker } from '@eduworld/ops-ui/dashboard';
-import { Flex, Form, Select } from 'antd';
+import { Flex, Form } from 'antd';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -16,6 +16,7 @@ import { useSchoolAcademicYears, useSubjects } from './api/dashboardApi';
 import { schoolCalendar } from './model/calendar';
 import { filtersFromSearch, filtersToSearch, GRADES, recalledSearch, rememberFilters, subjectLabel, subjectsInScope, todayIso, type DashboardFilters } from './model/filters';
 import { RANGE_LIMITS } from './model/limits';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 /** Filters of the URL + setter (replace, so Back leaves the dashboard instead of undoing a filter). */
 export function useDashboardFilters() {
@@ -61,7 +62,7 @@ export function DashboardFilterBar({ filters, onChange }: { filters: DashboardFi
         <SchoolSelect value={filters.schoolId} onChange={onSchool} />
       </Form.Item>
       <Form.Item label={t('dashboard.filter.grade')} style={{ marginBottom: 0 }}>
-        <Select
+        <SearchSelect
           allowClear
           aria-label={t('dashboard.filter.grade')}
           placeholder={t('dashboard.filter.allGrades')}
@@ -72,7 +73,7 @@ export function DashboardFilterBar({ filters, onChange }: { filters: DashboardFi
         />
       </Form.Item>
       <Form.Item label={t('dashboard.filter.subject')} style={{ marginBottom: 0 }}>
-        <Select
+        <SearchSelect
           allowClear
           aria-label={t('dashboard.filter.subject')}
           placeholder={t('dashboard.filter.allSubjects')}

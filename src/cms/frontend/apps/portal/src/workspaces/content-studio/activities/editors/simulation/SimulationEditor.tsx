@@ -6,7 +6,7 @@
 // validates with the template rules (ACTIVITY_CONFIG_INVALID).
 import { DeleteOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Alert, Button, Card, Flex, Form, Input, InputNumber, List, Select, Switch, Typography } from 'antd';
+import { Alert, Button, Card, Flex, Form, Input, InputNumber, List, Switch, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePortalRuntime } from '../../../../../app/runtime';
@@ -18,6 +18,7 @@ import { QuestionPicker } from '../../../question-sets/SelectionRuleEditor';
 import type { Config } from '../../activityModel';
 import type { ActivityEditorProps, BlockerContext } from '../../editorRegistry';
 import { AUTO_TYPES } from '../../validators/questionSourceRules';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export type SimulationTemplate = components['schemas']['SimulationTemplate'];
 type ParamSchema = { type?: string | string[]; minimum?: number; maximum?: number; enum?: unknown[]; maxLength?: number; title?: string };
@@ -69,7 +70,7 @@ function ParamField({ name, schema, value, required, readOnly, onChange }: { nam
   return (
     <Form.Item label={label} required={required}>
       {schema.enum ? (
-        <Select aria-label={label} disabled={readOnly} value={value as string} options={schema.enum.map((e) => ({ value: e as string, label: String(e) }))} onChange={(v) => onChange(v)} />
+        <SearchSelect aria-label={label} disabled={readOnly} value={value as string} options={schema.enum.map((e) => ({ value: e as string, label: String(e) }))} onChange={(v) => onChange(v)} />
       ) : type === 'number' || type === 'integer' ? (
         <InputNumber aria-label={label} disabled={readOnly} min={schema.minimum} max={schema.maximum} step={type === 'integer' ? 1 : 0.1} precision={type === 'integer' ? 0 : undefined} value={value as number | undefined} onChange={(v) => onChange(v ?? undefined)} />
       ) : type === 'boolean' ? (
@@ -106,7 +107,7 @@ export function SimulationEditor({ config, onChange, readOnly, errors }: Activit
   return (
     <Flex vertical gap="middle" data-testid="simulation-editor">
       <Card size="small" title={t('content_studio.activity.simulation.template')}>
-        <Select
+        <SearchSelect
           aria-label={t('content_studio.activity.simulation.template')}
           placeholder={t('content_studio.activity.simulation.template')}
           disabled={readOnly}
@@ -139,8 +140,8 @@ export function SimulationEditor({ config, onChange, readOnly, errors }: Activit
             <Flex key={i} gap="small" align="center" wrap>
               <Input aria-label={t('content_studio.activity.simulation.goalIdOf', { n: i + 1 })} maxLength={64} disabled={readOnly} value={g.goal_id} style={{ width: 140 }} onChange={(e) => set({ goals: upd(goals, i, { goal_id: e.target.value }) })} />
               <Input aria-label={t('content_studio.activity.simulation.goalTextOf', { n: i + 1 })} maxLength={128} disabled={readOnly} value={g.description?.vi ?? ''} onChange={(e) => set({ goals: upd(goals, i, { description: { vi: e.target.value } }) })} />
-              <Select aria-label={t('content_studio.activity.simulation.metricOf', { n: i + 1 })} disabled={readOnly} style={{ width: 160 }} value={g.check.metric || undefined} options={metrics.map((m) => ({ value: m.metric, label: m.unit ? `${m.metric} (${m.unit})` : m.metric }))} onChange={(v: string) => set({ goals: upd(goals, i, { check: { ...g.check, metric: v } }) })} />
-              <Select aria-label={t('content_studio.activity.simulation.operatorOf', { n: i + 1 })} disabled={readOnly} style={{ width: 120 }} value={g.check.operator} options={OPERATORS.map((o) => ({ value: o, label: t(`content_studio.activity.simulation.operators.${o}`) }))} onChange={(v: string) => set({ goals: upd(goals, i, { check: { ...g.check, operator: v } }) })} />
+              <SearchSelect aria-label={t('content_studio.activity.simulation.metricOf', { n: i + 1 })} disabled={readOnly} style={{ width: 160 }} value={g.check.metric || undefined} options={metrics.map((m) => ({ value: m.metric, label: m.unit ? `${m.metric} (${m.unit})` : m.metric }))} onChange={(v: string) => set({ goals: upd(goals, i, { check: { ...g.check, metric: v } }) })} />
+              <SearchSelect aria-label={t('content_studio.activity.simulation.operatorOf', { n: i + 1 })} disabled={readOnly} style={{ width: 120 }} value={g.check.operator} options={OPERATORS.map((o) => ({ value: o, label: t(`content_studio.activity.simulation.operators.${o}`) }))} onChange={(v: string) => set({ goals: upd(goals, i, { check: { ...g.check, operator: v } }) })} />
               <InputNumber aria-label={t('content_studio.activity.simulation.valueOf', { n: i + 1 })} disabled={readOnly} value={g.check.value} onChange={(v) => set({ goals: upd(goals, i, { check: { ...g.check, value: v ?? 0 } }) })} />
               {g.check.operator === 'abs_diff_lte' && <InputNumber aria-label={t('content_studio.activity.simulation.toleranceOf', { n: i + 1 })} disabled={readOnly} min={0} value={g.check.tolerance} onChange={(v) => set({ goals: upd(goals, i, { check: { ...g.check, tolerance: v ?? 0 } }) })} />}
               {!readOnly && <Button size="small" icon={<DeleteOutlined />} aria-label={t('content_studio.activity.simulation.removeGoal', { n: i + 1 })} onClick={() => set({ goals: goals.filter((_, k) => k !== i) })} />}
@@ -178,7 +179,7 @@ export function SimulationEditor({ config, onChange, readOnly, errors }: Activit
         <Form layout="vertical" component="div" disabled={readOnly}>
           <Flex gap="middle" align="center" wrap>
             <Form.Item label={t('content_studio.activity.simulation.seedPolicy')}>
-              <Select aria-label={t('content_studio.activity.simulation.seedPolicy')} style={{ minWidth: 200 }} value={(content.seed_policy as string) ?? 'per_attempt'} options={['per_attempt', 'fixed'].map((p) => ({ value: p, label: t(`content_studio.activity.simulation.seed.${p}`) }))} onChange={(v: string) => set({ seed_policy: v })} />
+              <SearchSelect aria-label={t('content_studio.activity.simulation.seedPolicy')} style={{ minWidth: 200 }} value={(content.seed_policy as string) ?? 'per_attempt'} options={['per_attempt', 'fixed'].map((p) => ({ value: p, label: t(`content_studio.activity.simulation.seed.${p}`) }))} onChange={(v: string) => set({ seed_policy: v })} />
             </Form.Item>
             <Form.Item label={t('content_studio.activity.simulation.maxRuns')}>
               <InputNumber aria-label={t('content_studio.activity.simulation.maxRuns')} min={1} max={50} value={interaction.max_runs as number | undefined} onChange={(v) => onChange({ ...config, interaction: { ...interaction, max_runs: v ?? undefined } })} />

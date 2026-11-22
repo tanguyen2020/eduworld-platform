@@ -3,10 +3,11 @@
 // questions; row / column / grand totals and the check against `total_points`; each cell shows the pool of its rule
 // (available / required) and is highlighted when the pool is insufficient (QUESTION_POOL_INSUFFICIENT, pool stats).
 import { DeleteOutlined } from '@ant-design/icons';
-import { Alert, Button, Flex, InputNumber, Select, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Flex, InputNumber, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import { BP_LIMITS, cellKey, totalPoints, totalQuestions, toRules, type CellPool, type Matrix } from './matrixModel';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export interface BlueprintMatrixProps {
   matrix: Matrix;
@@ -86,7 +87,7 @@ export function BlueprintMatrix({ matrix, onChange, objectiveLabels, objectiveOp
   return (
     <Flex vertical gap="small" data-testid="blueprint-matrix">
       <Flex gap="small" wrap align="center">
-        <Select
+        <SearchSelect
           mode="multiple"
           aria-label={t('content_studio.blueprint.difficulties')}
           placeholder={t('content_studio.blueprint.difficulties')}
@@ -96,7 +97,7 @@ export function BlueprintMatrix({ matrix, onChange, objectiveLabels, objectiveOp
           onChange={(v: number[]) => onChange({ ...matrix, difficulties: [...v].sort((a, b) => a - b), points: Object.fromEntries(v.map((d) => [d, matrix.points[d] ?? 1])) })}
           style={{ minWidth: 240 }}
         />
-        <Select
+        <SearchSelect
           showSearch
           optionFilterProp="label"
           aria-label={t('content_studio.blueprint.addLo')}

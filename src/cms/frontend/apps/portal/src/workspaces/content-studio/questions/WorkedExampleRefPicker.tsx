@@ -2,13 +2,15 @@
 // {content_item_id, block_id} of a `worked_example` block of a lesson that shares one of the question's LOs.
 // Lessons come from listCmsLessons (subject / grade filter) and are kept when their objective_ids meet the question's;
 // the blocks are read with getCmsLesson.
-import { Select, Space } from 'antd';
+import { Space } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAllPages } from '../../../shared/api/fetchAllPages';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
 import type { components } from '../../../shared/api/schema.gen';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 type Lesson = components['schemas']['LessonAuthoring'];
 
@@ -47,26 +49,28 @@ export function WorkedExampleRefPicker({ value, onChange, objectiveIds, subjectI
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
   const [lessonId, setLessonId] = useState<string | undefined>(value?.content_item_id);
-  const lessons = useQuery({
-    queryKey: ['content-studio', 'lessons', scopeKey, { subjectId }],
-    queryFn: () => api.call<{ data: Lesson[] }>(api.client.GET('/cms/learning/lessons', { params: { query: { ...(subjectId ? { subject_id: subjectId } : {}), limit: 100 } as never } })),
-    enabled: objectiveIds.length > 0,
-  });
+  // Dropdown: every lesson page (fetchAllPages, owner rule 2026-11-22), filtered client-side.
+  const lessons = useAllPages<Lesson>(
+    ['content-studio', 'lessons', scopeKey, { subjectId }],
+    (page) => api.call(api.client.GET('/cms/learning/lessons', { params: { query: { ...(subjectId ? { subject_id: subjectId } : {}), ...page } } })),
+    { enabled: objectiveIds.length > 0 },
+  );
   const lesson = useQuery({
     queryKey: ['content-studio', 'lesson', scopeKey, lessonId],
     queryFn: () => api.call<Lesson>(api.client.GET('/cms/learning/lessons/{lesson_id}', { params: { path: { lesson_id: lessonId! } } })),
     enabled: !!lessonId,
   });
-  const candidates = lessonsForObjectives(lessons.data?.data ?? [], objectiveIds);
+  const candidates = lessonsForObjectives(lessons.items, objectiveIds);
   const title = (l: Lesson) => (i18n.language.startsWith('en') ? (l.title.en ?? l.title.vi) : (l.title.vi ?? l.title.en)) ?? l.content_id;
   return (
     <Space wrap>
-      <Select
+      <SearchSelect
         aria-label={t('content_studio.question.workedExampleLesson')}
         placeholder={objectiveIds.length ? t('content_studio.question.workedExampleLesson') : t('content_studio.question.workedExampleNeedsLo')}
         allowClear
         disabled={disabled || objectiveIds.length === 0}
         loading={lessons.isFetching}
+        truncated={lessons.truncated}
         value={lessonId}
         onChange={(v?: string) => {
           setLessonId(v);
@@ -74,7 +78,7 @@ export function WorkedExampleRefPicker({ value, onChange, objectiveIds, subjectI
         }}
         options={candidates.map((l) => ({ value: l.content_id, label: title(l) }))}
       />
-      <Select
+      <SearchSelect
         aria-label={t('content_studio.question.workedExampleBlock')}
         placeholder={t('content_studio.question.workedExampleBlock')}
         allowClear

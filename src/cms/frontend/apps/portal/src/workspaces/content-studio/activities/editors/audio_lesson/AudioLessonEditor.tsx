@@ -4,7 +4,7 @@
 // time (or after the audio), max plays, speed change, transcript display, completion by the heard part. Early checks
 // only (audioRules); module learning validates (ACTIVITY_CONFIG_INVALID). No recording, no speaking (ADR-0072).
 import { DeleteOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Checkbox, Flex, Form, Input, InputNumber, List, Select, Switch, Table, Typography } from 'antd';
+import { Alert, Button, Card, Checkbox, Flex, Form, Input, InputNumber, List, Switch, Table, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MediaPicker } from '../../../media/MediaPicker';
@@ -14,6 +14,7 @@ import type { Config } from '../../activityModel';
 import type { ActivityEditorProps, BlockerContext } from '../../editorRegistry';
 import { AUTO_TYPES } from '../../validators/questionSourceRules';
 import { audioIssues, MAX_QUESTIONS, MAX_SEGMENTS, type AudioContent, type AudioQuestion, type AudioSegment } from './audioRules';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 /** video_completion (CONFIG_DEFAULTS), the default completion of the shared media timeline (F066 Clarifications). */
 const COMPLETION = { mode: 'min_watched_ratio', min_watched_ratio: 0.9 } as const;
@@ -162,7 +163,7 @@ export function AudioLessonEditor({ config, onChange, readOnly, errors, onMediaS
               <Typography.Text>{t('content_studio.activity.audio.speed')}</Typography.Text>
             </Flex>
             <Form.Item label={t('content_studio.activity.audio.showTranscript')}>
-              <Select aria-label={t('content_studio.activity.audio.showTranscript')} style={{ minWidth: 200 }} value={(interaction.show_transcript as string | undefined) ?? 'after_complete'} options={TRANSCRIPT_MODES.map((m) => ({ value: m, label: t(`content_studio.activity.audio.transcriptMode.${m}`) }))} onChange={(v: string) => onChange({ ...config, interaction: { ...interaction, show_transcript: v } })} />
+              <SearchSelect aria-label={t('content_studio.activity.audio.showTranscript')} style={{ minWidth: 200 }} value={(interaction.show_transcript as string | undefined) ?? 'after_complete'} options={TRANSCRIPT_MODES.map((m) => ({ value: m, label: t(`content_studio.activity.audio.transcriptMode.${m}`) }))} onChange={(v: string) => onChange({ ...config, interaction: { ...interaction, show_transcript: v } })} />
             </Form.Item>
             <Form.Item label={t('content_studio.activity.video.minWatched')}>
               <InputNumber aria-label={t('content_studio.activity.audio.minHeard')} min={0} max={1} step={0.05} value={completion.min_watched_ratio as number | undefined} onChange={(v) => onChange({ ...config, completion_rule: { ...completion, mode: 'min_watched_ratio', min_watched_ratio: v ?? 0 } })} />

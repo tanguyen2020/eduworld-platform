@@ -3,6 +3,8 @@
 //   ew/no-game-imports     — no import of src/game, design/game-tokens, Godot resources (F050-AC-07, TC-UI-010)
 //   ew/no-env-url-literal  — environment URLs only from the runtime config (F050-AC-03)
 //   i18next/no-literal-string — UI strings only through translation files (F050-AC-04)
+//   ew/no-single-page-list — no list read as one big page / hand-written cursor loop (owner rule 2026-11-22, ADMIN_PORTAL §1.6)
+//   no-restricted-imports  — antd Select only through SearchSelect (searchable, diacritic-insensitive; ADMIN_PORTAL §1.6)
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -42,7 +44,18 @@ export default tseslint.config(
       'ew/no-env-url-literal': ['error', { allow: ['http://www.w3.org/'] }],
       'i18next/no-literal-string': ['error', { mode: 'jsx-only', 'jsx-attributes': { include: TRANSLATED_ATTRIBUTES } }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
+      'ew/no-single-page-list': 'error',
+      'no-restricted-imports': [
+        'error',
+        { paths: [{ name: 'antd', importNames: ['Select'], message: 'Use SearchSelect from @eduworld/ops-ui (showSearch + diacritic-insensitive filter + empty state; ADMIN_PORTAL §1.6).' }] },
+      ],
     },
+  },
+  {
+    // SearchSelect wraps antd Select. Shell header/login controls are owned by the portal-shell work and already set
+    // showSearch (tenant controls) or hold two options (language) — to move to SearchSelect with that work.
+    files: ['packages/ops-ui/src/select/SearchSelect.tsx', 'apps/portal/src/shell/PortalLayout.tsx', 'apps/portal/src/shell/TenantControls.tsx', 'apps/portal/src/auth/AuthLayout.tsx'],
+    rules: { 'no-restricted-imports': 'off' },
   },
   {
     files: ['**/*.{js,mjs,cjs}'],
@@ -60,6 +73,7 @@ export default tseslint.config(
   },
   {
     files: ['**/*.test.{ts,tsx,js,mjs}', '**/test-utils.ts', '**/src/test/**', 'tests/**'],
-    rules: { 'ew/no-hardcoded-style': 'off', '@typescript-eslint/no-non-null-assertion': 'off' },
+    // mock backends echo PageInfo.limit and size limits; the list rule is about request code
+    rules: { 'ew/no-hardcoded-style': 'off', '@typescript-eslint/no-non-null-assertion': 'off', 'ew/no-single-page-list': 'off' },
   },
 );

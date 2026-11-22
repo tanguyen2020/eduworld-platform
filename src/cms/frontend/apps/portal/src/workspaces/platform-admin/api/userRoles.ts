@@ -3,9 +3,11 @@
 // `tenant` role, none for a `platform` role), revokePlatformUserRole (reason; X-Tenant-Id = tenant of the UserRole).
 // Account pickers for staff with a home tenant: listTenantUsers and listAdminTenantSchools of the target tenant.
 // The backend validates scope/role/tenant (422/409) — the dialog only narrows what it offers (AGENTS R1, R20).
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
+import { foldVi } from '@eduworld/ops-ui';
+import { useAllPages } from '../../../shared/api/fetchAllPages';
 import { LIMITS } from '../limits';
 import { useCursorList, usePlatformApi, type CursorPage, type PageInfo, type Schemas } from './common';
 
@@ -42,14 +44,15 @@ export function useUserRoleList(f: UserRoleFilter, enabled = true) {
   );
 }
 
-/** Every UserRole of one account across tenants (detail drawer, F059-AC-14): first page, all tenants. */
+/** Every UserRole of one account across tenants (detail drawer, F059-AC-14): every page (fetchAllPages), all tenants. */
 export function useUserRolesOf(userId: string | undefined) {
   const api = usePlatformApi();
-  return useQuery({
-    queryKey: ['platform', 'user-roles-of', userId],
-    queryFn: async () => (await api.call(api.client.GET('/admin/user-roles', { params: { query: { user_id: userId!, limit: LIMITS.pageSize.maximum } } }))).items,
-    enabled: !!userId,
-  });
+  const all = useAllPages<UserRole>(
+    ['platform', 'user-roles-of', userId],
+    (page) => api.call(api.client.GET('/admin/user-roles', { params: { query: { ...page, user_id: userId! } } })),
+    { enabled: !!userId },
+  );
+  return { ...all, data: all.items };
 }
 
 function useInvalidateUserRoles() {
@@ -89,33 +92,28 @@ export function useRevokeUserRole() {
   });
 }
 
-/** Accounts of one tenant (`listTenantUsers`, X-Tenant-Id = that tenant) of one type, searched by `q` (2–100). */
+/** Accounts of one tenant (`listTenantUsers`, X-Tenant-Id = that tenant) of one type: every page (fetchAllPages),
+ * `q` filters client-side ignoring case and diacritics (owner rule 2026-11-22, ADMIN_PORTAL §1.6). */
 export function useTenantStaff(tenantId: string | undefined, q: string, userType: 'staff' | 'student' = 'staff') {
   const api = usePlatformApi();
   const scope = useCrossTenantScope();
-  const search = q.trim().length >= (LIMITS.tenantUserSearch.minLength ?? 0) ? q.trim() : '';
-  return useQuery({
-    queryKey: ['platform', 'tenant-staff', tenantId, userType, search],
-    queryFn: async () =>
-      (
-        await api.call(
-          api.client.GET('/tenant/users', {
-            params: { query: { user_type: userType, limit: LIMITS.pageSize.maximum, ...(search ? { q: search } : {}) } },
-            headers: scope.writeHeaders(tenantId!),
-          }),
-        )
-      ).items,
-    enabled: !!tenantId,
-  });
+  const all = useAllPages<User>(
+    ['platform', 'tenant-staff', tenantId, userType],
+    (page) => api.call(api.client.GET('/tenant/users', { params: { query: { ...page, user_type: userType } }, headers: scope.writeHeaders(tenantId!) })),
+    { enabled: !!tenantId },
+  );
+  const words = foldVi(q).split(' ').filter(Boolean);
+  const data = words.length ? all.items.filter((u) => words.every((w) => foldVi(`${u.display_name ?? ''} ${u.username ?? ''} ${u.email ?? ''}`).includes(w))) : all.items;
+  return { ...all, data };
 }
 
-/** Schools of the target tenant (scope `school`). */
+/** Schools of the target tenant (scope `school`): every page. */
 export function useTenantSchools(tenantId: string | undefined) {
   const api = usePlatformApi();
-  return useQuery({
-    queryKey: ['platform', 'tenant-schools', tenantId],
-    queryFn: async () =>
-      (await api.call(api.client.GET('/admin/tenants/{tenant_id}/schools', { params: { path: { tenant_id: tenantId! }, query: { limit: LIMITS.pageSize.maximum } } }))).items,
-    enabled: !!tenantId,
-  });
+  const all = useAllPages<Schemas['School']>(
+    ['platform', 'tenant-schools', tenantId],
+    (page) => api.call(api.client.GET('/admin/tenants/{tenant_id}/schools', { params: { path: { tenant_id: tenantId! }, query: page } })),
+    { enabled: !!tenantId },
+  );
+  return { ...all, data: all.items };
 }

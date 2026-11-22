@@ -2,7 +2,7 @@
 // content only, no student data) + record ids (≤ maxItems of TenantCloneRequest); 2. exactly one target tenant, the
 // source is not offered and there is no "all tenants"; 3. dependency preview — skipped while previewTenantClone does
 // not exist (said on screen); 4. run createTenantClone (Idempotency-Key) and follow the job (CloneJobView).
-import { Alert, Button, Form, Select, Space, Steps, Typography } from 'antd';
+import { Alert, Button, Form, Space, Steps, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
@@ -12,6 +12,7 @@ import { useTenantDirectory } from '../api/tenants';
 import { isUuid, LIMITS } from '../limits';
 import { TenantSelect } from '../ui';
 import { CloneJobView } from './CloneJobPage';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 interface SourceValues {
   source_tenant_id: string;
@@ -83,7 +84,7 @@ export function CloneWizard() {
             <TenantSelect ariaLabel={t('platform.clone.sourceTenant')} />
           </Form.Item>
           <Form.Item name="resource_type" label={t('platform.tenantData.resourceType')} rules={[{ required: true }]}>
-            <Select aria-label={t('platform.tenantData.resourceType')} options={CLONABLE_TYPES.map((x) => ({ value: x, label: t(`platform.resourceType.${x}`) }))} />
+            <SearchSelect aria-label={t('platform.tenantData.resourceType')} options={CLONABLE_TYPES.map((x) => ({ value: x, label: t(`platform.resourceType.${x}`) }))} />
           </Form.Item>
           <Form.Item
             name="resource_ids"
@@ -100,7 +101,7 @@ export function CloneWizard() {
               },
             ]}
           >
-            <Select aria-label={t('platform.clone.resourceIds')} mode="tags" tokenSeparators={[',', ' ', '\n']} open={false} maxCount={max} />
+            <SearchSelect aria-label={t('platform.clone.resourceIds')} mode="tags" tokenSeparators={[',', ' ', '\n']} open={false} maxCount={max} />
           </Form.Item>
           <Button type="primary" htmlType="submit">
             {t('platform.clone.next')}

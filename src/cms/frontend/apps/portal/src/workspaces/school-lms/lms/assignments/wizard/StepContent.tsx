@@ -1,11 +1,12 @@
 // Step 1 "Nội dung" (F055 T018, F055-AC-01, AC-22): tabs Activity / Bộ câu hỏi / Đề / Bài học / Hoạt động game, grade
 // filter; the lists come from usePickerChoices (published, server-graded, quests and mini-games read-only).
-import { Button, Empty, Flex, List, Select, Tabs, Tag, Typography } from 'antd';
+import { Button, Empty, Flex, List, Tabs, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePickerChoices, type PickerTab } from '../../api/contentPicker';
 import type { ContentChoice } from '../../model/assignmentForm';
 import { LmsProblem } from '../../LmsUi';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export const PICKER_TABS: PickerTab[] = ['activity', 'question_set', 'assessment_blueprint', 'lesson', 'game'];
 const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -24,10 +25,10 @@ export function ContentPicker({ value, onChange, tabs = PICKER_TABS, objectiveId
   const [tab, setTab] = useState<PickerTab>(tabs[0]!);
   const [grade, setGrade] = useState<number | undefined>();
   const choices = usePickerChoices(tab, { gradeLevel: grade, objectiveId }, i18n.language);
-  const items = (choices.data ?? []).filter((c) => !questsOnly || tab !== 'game' || c.contentType === 'quest');
+  const items = choices.rows.filter((c) => !questsOnly || tab !== 'game' || c.contentType === 'quest');
   return (
     <Flex vertical gap="small" data-testid="content-picker">
-      <Select
+      <SearchSelect
         allowClear
         aria-label={t('lms.wizard.grade')}
         placeholder={t('lms.wizard.grade')}
@@ -41,6 +42,13 @@ export function ContentPicker({ value, onChange, tabs = PICKER_TABS, objectiveId
         loading={choices.isFetching}
         locale={{ emptyText: <Empty description={t('lms.picker.empty')} /> }}
         dataSource={items}
+        loadMore={
+          choices.hasNextPage ? (
+            <Button onClick={() => void choices.fetchNextPage()} loading={choices.isFetchingNextPage}>
+              {t('portal.school_lms.common.loadMore')}
+            </Button>
+          ) : null
+        }
         renderItem={(c) => {
           const selected = value?.contentId === c.contentId && value.contentType === c.contentType;
           return (

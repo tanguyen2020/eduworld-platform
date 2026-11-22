@@ -3,6 +3,7 @@
 // lessons (listCms*, status=published) and quests / mini-games of the game catalog (listGameActivities, read-only:
 // no game configuration in workspace C). Written response / speaking / project types do not exist in the contract.
 import { useQuery } from '@tanstack/react-query';
+import { useCursorPages } from '../../../../shared/api/useCursorPages';
 import type { ContentChoice } from '../model/assignmentForm';
 import type { ContentType } from '../model/fieldSchemas';
 import { LMS_PAGE_SIZE, lmsKey, useLmsContext, type DataPage, type S } from './lmsCommon';
@@ -35,40 +36,48 @@ export function useEnabledActivityTypes(enabled = true) {
   });
 }
 
-/** One page of choices of a tab (published only). */
+/** Choices of a tab (published only): rows of a list, cursor pages — "Tải thêm" (owner rule 2026-11-22). */
 export function usePickerChoices(tab: PickerTab, f: PickerFilters, locale: string, enabled = true) {
   const { api, scope } = useLmsContext();
   const types = useEnabledActivityTypes(enabled && tab === 'activity');
-  const query = {
+  const base = {
     limit: LMS_PAGE_SIZE,
     ...(f.gradeLevel ? { grade_level: f.gradeLevel } : {}),
     ...(f.subjectId ? { subject_id: f.subjectId } : {}),
   };
-  return useQuery({
-    queryKey: lmsKey('picker', scope, tab, f, tab === 'activity' ? types.data : null),
-    enabled: scope.ready && enabled && (tab !== 'activity' || !!types.data),
-    queryFn: async (): Promise<ContentChoice[]> => {
+  type ChoicePage = { data: ContentChoice[]; page?: { has_more?: boolean; next_cursor?: string | null } };
+  return useCursorPages<ContentChoice, ChoicePage>(
+    lmsKey('picker', scope, tab, f, tab === 'activity' ? types.data : null),
+    async (cursor): Promise<ChoicePage> => {
+      const query = { ...base, ...(cursor ? { cursor } : {}) };
       if (tab === 'game') {
         const r = await api.call<DataPage<S['GameActivityCatalogItem']>>(
           api.client.GET('/lms/catalog/game-activities', { params: { query: { ...query, ...(f.objectiveId ? { objective_id: f.objectiveId } : {}) } }, headers: scope.headers } as never),
         );
-        return r.data.map((g) => ({ contentType: g.content_type as ContentType, contentId: g.content_id ?? g.content_version_id, versionId: g.content_version_id, title: g.title }));
+        return { page: r.page, data: r.data.map((g) => ({ contentType: g.content_type as ContentType, contentId: g.content_id ?? g.content_version_id, versionId: g.content_version_id, title: g.title })) };
       }
       if (tab === 'activity') {
         const r = await api.call<DataPage<S['ActivityDefinition']>>(
           api.client.GET('/cms/learning/activities', { params: { query: { ...query, status: 'published' } }, headers: scope.headers } as never),
         );
         const allowed = new Set(types.data ?? []);
-        return r.data
-          .filter((a) => a.status === 'published' && allowed.has(a.activity_type))
-          .map((a) => ({ contentType: 'activity' as const, contentId: a.activity_id, versionId: a.activity_version_id, title: nameOf(a.title as Named, locale) }));
+        return {
+          page: r.page,
+          data: r.data
+            .filter((a) => a.status === 'published' && allowed.has(a.activity_type))
+            .map((a) => ({ contentType: 'activity' as const, contentId: a.activity_id, versionId: a.activity_version_id, title: nameOf(a.title as Named, locale) })),
+        };
       }
       const r = await api.call<DataPage<S['ContentVersion'] & { title?: Named; name?: Named }>>(
         api.client.GET(CMS_PATH[tab] as '/cms/learning/lessons', { params: { query: { ...query, status: 'published', ...(f.objectiveId ? { objective_id: f.objectiveId } : {}) } }, headers: scope.headers } as never),
       );
-      return r.data
-        .filter((c) => c.status === 'published')
-        .map((c) => ({ contentType: tab, contentId: c.content_id, versionId: c.content_version_id, title: nameOf(c.title ?? c.name, locale) }));
+      return {
+        page: r.page,
+        data: r.data
+          .filter((c) => c.status === 'published')
+          .map((c) => ({ contentType: tab, contentId: c.content_id, versionId: c.content_version_id, title: nameOf(c.title ?? c.name, locale) })),
+      };
     },
-  });
+    { enabled: scope.ready && enabled && (tab !== 'activity' || !!types.data) },
+  );
 }

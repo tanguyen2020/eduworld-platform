@@ -18,13 +18,13 @@ export function ReleaseTimeline({ item, canPublish }: { item: ItemRef; canPublis
   const { cancelSchedule } = useRelease();
   if (q.isPending) return <Skeleton active />;
   if (q.error) return <ProblemMessage error={q.error} />;
-  if (q.data.data.length === 0) return <Empty description={t('content_studio.release.noReleases')} />;
+  if (q.rows.length === 0) return <Empty description={t('content_studio.release.noReleases')} />;
   return (
     <>
       {cancelSchedule.error ? <ProblemMessage error={cancelSchedule.error} /> : null}
       <Timeline
         data-testid="release-timeline"
-        items={q.data.data.map((r) => ({
+        items={q.rows.map((r) => ({
           key: r.release_id,
           color: r.status === 'cancelled' || r.status === 'failed' ? 'gray' : COLOR[r.action],
           children: (
@@ -59,6 +59,11 @@ export function ReleaseTimeline({ item, canPublish }: { item: ItemRef; canPublis
           ),
         }))}
       />
+      {q.hasNextPage && (
+        <Button onClick={() => void q.fetchNextPage()} loading={q.isFetchingNextPage}>
+          {t('content_studio.loadMore')}
+        </Button>
+      )}
     </>
   );
 }

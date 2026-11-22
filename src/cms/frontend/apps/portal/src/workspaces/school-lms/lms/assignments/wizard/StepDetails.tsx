@@ -1,11 +1,12 @@
 // Steps 3 "Thời gian" and 4 "Chính sách" of the wizard (F055 T018; F055-AC-03, AC-04): limits and counters from the
 // contract (fieldSchemas), `follow_latest` disabled in graded mode, feedback timing / result release left empty =
 // "mặc định của hệ thống" (the server applies graded_assignment_release_default). Presentational only.
-import { Checkbox, DatePicker, Form, Input, InputNumber, Radio, Select, Switch } from 'antd';
+import { Checkbox, DatePicker, Form, Input, InputNumber, Radio, Switch } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { followLatestAllowed, type AssignmentFormValues } from '../../model/assignmentForm';
 import { LMS_ENUMS, LMS_FIELDS, LMS_LIMITS } from '../../model/fieldSchemas';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 type Patch = (p: Partial<AssignmentFormValues>) => void;
 type Errors = Partial<Record<keyof AssignmentFormValues, string>>;
@@ -79,7 +80,7 @@ export function StepPolicy({ v, set, errors }: { v: AssignmentFormValues; set: P
         <InputNumber id="asg-attempts" min={LMS_LIMITS.maxAttempts.minimum} max={LMS_LIMITS.maxAttempts.maximum} precision={0} value={v.maxAttempts} onChange={(n) => set({ maxAttempts: n ?? 1 })} />
       </Form.Item>
       <Form.Item label={t('lms.wizard.scorePolicy')}>
-        <Select
+        <SearchSelect
           aria-label={t('lms.wizard.scorePolicy')}
           value={v.scorePolicy}
           onChange={(s: AssignmentFormValues['scorePolicy']) => set({ scorePolicy: s })}
@@ -87,7 +88,7 @@ export function StepPolicy({ v, set, errors }: { v: AssignmentFormValues; set: P
         />
       </Form.Item>
       <Form.Item label={t('lms.wizard.feedbackTiming')} extra={t('lms.wizard.serverDefault')}>
-        <Select
+        <SearchSelect
           allowClear
           aria-label={t('lms.wizard.feedbackTiming')}
           placeholder={t('lms.wizard.serverDefaultShort')}
@@ -97,7 +98,7 @@ export function StepPolicy({ v, set, errors }: { v: AssignmentFormValues; set: P
         />
       </Form.Item>
       <Form.Item label={t('lms.wizard.resultRelease')}>
-        <Select
+        <SearchSelect
           allowClear
           aria-label={t('lms.wizard.resultRelease')}
           placeholder={t('lms.wizard.serverDefaultShort')}

@@ -1,7 +1,7 @@
 // Edit the displayed information of a school (F052 T016, F052-AC-02, F052-AC-26): updateTenantSchool with If-Match
 // (ETag of the last getTenantSchool, sent by the apiClient), active provinces only (listProvinces?status=active),
 // SIS-owned data read-only. 412/422 shown at the field or as a Problem with trace id.
-import { App, Button, Form, Input, InputNumber, Select, Space } from 'antd';
+import { App, Button, Form, Input, InputNumber, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { applyFormError, writeErrorKey } from '../common/errors';
 import { FIELDS } from '../common/fieldSchemas';
@@ -9,6 +9,7 @@ import { localizedName } from '../common/format';
 import { useFieldRules } from '../common/ui';
 import { formValues, readOnlyFields, updateBody, type SchoolFormValues } from './schoolForm';
 import { useActiveProvinces, useUpdateSchool, type School } from './useSchools';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const LEVELS: School['school_level'][] = ['primary', 'lower_secondary', 'multi_level'];
 const FORM_FIELDS = ['name', 'name_vi', 'name_en', 'province_code', 'school_level', 'grade_min', 'grade_max', 'address'];
@@ -41,7 +42,7 @@ export function SchoolEditForm({ school, onDone }: { school: School; onDone: () 
         <Input disabled={locked.has('name_en')} {...field.input(FIELDS.schoolNameEn)} />
       </Form.Item>
       <Form.Item name="province_code" label={t('portal.school_lms.schools.province')}>
-        <Select
+        <SearchSelect
           disabled={locked.has('province_code')}
           showSearch
           optionFilterProp="label"
@@ -50,7 +51,7 @@ export function SchoolEditForm({ school, onDone }: { school: School; onDone: () 
         />
       </Form.Item>
       <Form.Item name="school_level" label={t('portal.school_lms.schools.level')} rules={[{ required: true }]}>
-        <Select disabled={locked.has('school_level')} options={LEVELS.map((l) => ({ value: l, label: t(`portal.school_lms.schools.levels.${l}`) }))} />
+        <SearchSelect disabled={locked.has('school_level')} options={LEVELS.map((l) => ({ value: l, label: t(`portal.school_lms.schools.levels.${l}`) }))} />
       </Form.Item>
       <Space>
         <Form.Item name="grade_min" label={t('portal.school_lms.schools.gradeMin')} rules={[{ required: true }]}>

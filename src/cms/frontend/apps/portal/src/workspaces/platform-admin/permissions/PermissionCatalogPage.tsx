@@ -2,7 +2,7 @@
 // `group_code`, filtered by `scope_kind` and code text (≤ PermissionCode maxLength), with `catalog_version` and, per
 // permission, the roles (first page of listPlatformRoles) that contain it. Permissions are defined in code: there is
 // no add/edit/delete here.
-import { Collapse, Input, Select, Space, Table, Tag, Typography } from 'antd';
+import { Collapse, Input, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { SCOPE_KINDS, usePermissionCatalog, useRoleOptions, type PermissionScopeKind } from '../api/roles';
 import { LIMITS } from '../limits';
 import { limitInputProps } from '../ui';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function PermissionCatalogPage() {
   const { t, i18n } = useTranslation();
@@ -35,7 +36,7 @@ export function PermissionCatalogPage() {
   return (
     <section aria-label={t('platform.access.tabPermissions')}>
       <Space wrap>
-        <Select
+        <SearchSelect
           aria-label={t('platform.permissions.scopeKind')}
           allowClear
           placeholder={t('platform.permissions.allScopes')}

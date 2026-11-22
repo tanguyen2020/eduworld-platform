@@ -2,7 +2,7 @@
 // assessment period, optionally one grade (ADR-0095: no class) — level per student as computed by the server (names of
 // the chosen grade's students from listTenantGradeStudents), "Chưa đủ dữ liệu" when the
 // server says `insufficient_data`, the low-reliability warning of official exams, always under the reference label.
-import { Alert, Breadcrumb, Flex, Form, Select, Tag, Typography } from 'antd';
+import { Alert, Breadcrumb, Flex, Form, Tag, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,7 @@ import { DashboardPageError, DASHBOARD_BASE } from '../DashboardUi';
 import { DashboardFilterBar, useDashboardFilters } from '../DashboardFilterBar';
 import { filtersToSearch } from '../model/filters';
 import { RegulationDisclaimer } from './RegulationDisclaimer';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 type Item = RegulationReferenceReport['items'][number];
 const PERIODS: AssessmentPeriod[] = ['mid_term_1', 'end_term_1', 'mid_term_2', 'end_term_2'];
@@ -40,7 +41,7 @@ export function ReferenceLevelsPage() {
       <RegulationDisclaimer serverText={q.first?.disclaimer} />
       <DashboardFilterBar filters={filters} onChange={setFilters} />
       <Form.Item label={t('dashboard.reference.period')} style={{ marginBottom: 0 }}>
-        <Select<AssessmentPeriod> aria-label={t('dashboard.reference.period')} value={period} onChange={setPeriod} options={PERIODS.map((p) => ({ value: p, label: t(`dashboard.reference.periods.${p}`) }))} popupMatchSelectWidth={false} />
+        <SearchSelect<AssessmentPeriod> aria-label={t('dashboard.reference.period')} value={period} onChange={setPeriod} options={PERIODS.map((p) => ({ value: p, label: t(`dashboard.reference.periods.${p}`) }))} popupMatchSelectWidth={false} />
       </Form.Item>
       {!filters.subjectId ? <Alert type="info" showIcon message={t('dashboard.reference.pickSubject')} /> : null}
       {q.error ? <DashboardPageError error={q.error} /> : null}

@@ -1,13 +1,14 @@
 // Screen of `menu.school_lms.game_activities` (F055-AC-22, FR-LMS-007): read-only catalog of published quests and
 // mini-games that can be assigned (listGameActivities). Workspace C has no screen or button to configure them
 // (ADR-0027); assigning goes through the wizard.
-import { Flex, List, Select, Tag, Typography } from 'antd';
+import { Button, Flex, List, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SingleTenantGate } from '../../common/scope';
 import { PageTitle } from '../../common/ui';
 import { usePickerChoices } from '../api/contentPicker';
 import { LmsProblem } from '../LmsUi';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 function Catalog() {
   const { t, i18n } = useTranslation();
@@ -16,7 +17,7 @@ function Catalog() {
   return (
     <Flex vertical gap="middle" data-testid="game-activities">
       <Typography.Paragraph type="secondary">{t('lms.games.help')}</Typography.Paragraph>
-      <Select
+      <SearchSelect
         allowClear
         aria-label={t('lms.wizard.grade')}
         placeholder={t('lms.wizard.grade')}
@@ -27,7 +28,14 @@ function Catalog() {
       <LmsProblem error={items.error} />
       <List
         loading={items.isFetching}
-        dataSource={items.data ?? []}
+        dataSource={items.rows}
+        loadMore={
+          items.hasNextPage ? (
+            <Button onClick={() => void items.fetchNextPage()} loading={items.isFetchingNextPage}>
+              {t('portal.school_lms.common.loadMore')}
+            </Button>
+          ) : null
+        }
         locale={{ emptyText: t('lms.picker.empty') }}
         renderItem={(c) => (
           <List.Item>

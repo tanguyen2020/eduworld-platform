@@ -10,6 +10,8 @@ import { useSession } from '../../../session/SessionProvider';
 import type { ApiClient } from '../../../shared/api/client';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import type { components } from '../../../shared/api/schema.gen';
+import { fetchAllPages } from '../../../shared/api/fetchAllPages';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { useIdempotentMutation, type IntentHeaders } from '../../../shared/api/useIdempotentMutation';
 import { withEtag } from '../questions/useQuestion';
 import { CONTENT_TYPES, type ContentType } from '../shared/contentTypes';
@@ -35,25 +37,47 @@ export const releaseKeys = {
   version: (scope: string, r: ItemRef, v: number) => ['content-studio', 'version', scope, r.contentType, r.contentId, v] as const,
 };
 
-export function useVersions(r: ItemRef, status?: string) {
+type ContentStatus = components['schemas']['ContentStatus'];
+type VersionSummary = components['schemas']['ContentVersionSummary'];
+
+/** Every version of the item (fetchAllPages): lookups, rollback targets, "current" — not a table. */
+export function useVersions(r: ItemRef, status?: ContentStatus) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
   return useQuery({
     queryKey: releaseKeys.versions(scopeKey, r, status),
-    queryFn: () =>
-      api.call<VersionHistory>(
-        api.client.GET('/cms/learning/content/{content_type}/{content_id}/versions', { params: { path: path(r), query: { ...(status ? { status } : {}), limit: 100 } as never } }),
-      ),
+    queryFn: async (): Promise<VersionHistory & { truncated: boolean }> => {
+      let first: VersionHistory | undefined;
+      const all = await fetchAllPages<VersionSummary>(async (page) => {
+        const p = await api.call<VersionHistory>(
+          api.client.GET('/cms/learning/content/{content_type}/{content_id}/versions', { params: { path: path(r), query: { ...(status ? { status } : {}), ...page } } }),
+        );
+        first ??= p;
+        return p;
+      });
+      return { ...first!, data: all.items, truncated: all.truncated };
+    },
   });
 }
 
+/** Version history table: cursor pages, "Tải thêm" (owner rule 2026-11-22). */
+export function useVersionPages(r: ItemRef, status?: ContentStatus) {
+  const { api } = usePortalRuntime();
+  const { scopeKey } = useSession();
+  return useCursorPages<VersionSummary, VersionHistory>([...releaseKeys.versions(scopeKey, r, status), 'pages'], (cursor) =>
+    api.call<VersionHistory>(
+      api.client.GET('/cms/learning/content/{content_type}/{content_id}/versions', { params: { path: path(r), query: { ...(status ? { status } : {}), ...(cursor ? { cursor } : {}) } } }),
+    ),
+  );
+}
+
+/** Release timeline: cursor pages, "Tải thêm". */
 export function useReleases(r: ItemRef) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useQuery({
-    queryKey: releaseKeys.releases(scopeKey, r),
-    queryFn: () => api.call<Page<ContentRelease>>(api.client.GET('/cms/learning/content/{content_type}/{content_id}/releases', { params: { path: path(r), query: { limit: 100 } as never } })),
-  });
+  return useCursorPages<ContentRelease, Page<ContentRelease>>(releaseKeys.releases(scopeKey, r), (cursor) =>
+    api.call<Page<ContentRelease>>(api.client.GET('/cms/learning/content/{content_type}/{content_id}/releases', { params: { path: path(r), query: cursor ? { cursor } : {} } })),
+  );
 }
 
 /** Diff of version `v` against `w` (both of the same item). */

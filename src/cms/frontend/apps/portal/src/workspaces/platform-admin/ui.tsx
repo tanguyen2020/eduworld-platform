@@ -1,8 +1,8 @@
 // Presentational helpers shared by the screens of workspace D (F057): page heading, reason field with the OpenAPI
 // limits and a character counter (F057-AC-21), Tenant cell (name + type, "Platform" for platform data), large-screen
 // switch (ADMIN_PORTAL §1.5), timestamps, mapping of `422 VALIDATION_FAILED` to form fields. No business rule here.
-import { openapiInputProps, openapiRules, OPS_UI_NS } from '@eduworld/ops-ui';
-import { Form, Input, Select, Tag, Typography, theme, type FormInstance } from 'antd';
+import { openapiInputProps, openapiRules, OPS_UI_NS, SearchSelect } from '@eduworld/ops-ui';
+import { Form, Input, Tag, Typography, theme, type FormInstance } from 'antd';
 import dayjs from 'dayjs';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -86,7 +86,7 @@ export function TenantSelect({ value, onChange, multiple, exclude = [], ariaLabe
   const options = useTenantOptions(search, true);
   const items = (options.data ?? []).filter((x) => !exclude.includes(x.tenant_id)).map((x) => ({ value: x.tenant_id, label: tenantLabel(x, t) }));
   return (
-    <Select
+    <SearchSelect
       aria-label={ariaLabel}
       mode={multiple ? 'multiple' : undefined}
       maxCount={multiple ? maxCount : undefined}
@@ -98,6 +98,7 @@ export function TenantSelect({ value, onChange, multiple, exclude = [], ariaLabe
       searchValue={search}
       onSearch={(v) => setSearch(clampTenantSearch(v))}
       loading={options.isFetching}
+      truncated={options.truncated}
       onPopupScroll={loadMoreOnScroll(options)}
       options={items}
     />

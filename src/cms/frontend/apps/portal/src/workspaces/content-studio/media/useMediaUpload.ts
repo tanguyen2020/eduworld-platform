@@ -9,6 +9,7 @@ import { useSession } from '../../../session/SessionProvider';
 import { useTenantSource } from '../../../shared/auth/TenantContext';
 import type { components } from '../../../shared/api/schema.gen';
 import { INTENT_HEADER } from '../../../shared/api/middleware/idempotency';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { MEDIA_POLL_MS } from '../shared/config';
 
@@ -64,12 +65,12 @@ export function useMediaAsset(id: string | undefined) {
 export function useMediaList(kind: MediaKind, q: string, enabled: boolean) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useQuery({
-    queryKey: mediaListKey(scopeKey, { kind, q }),
-    queryFn: () =>
-      api.call<{ data: MediaAsset[] }>(api.client.GET('/cms/media', { params: { query: { kind, ...(q ? { q } : {}), limit: 50 } as never } })),
-    enabled,
-  });
+  // A list of rows: cursor pages, "Tải thêm" (owner rule 2026-11-22).
+  return useCursorPages<MediaAsset>(
+    mediaListKey(scopeKey, { kind, q }),
+    (cursor) => api.call(api.client.GET('/cms/media', { params: { query: { kind, ...(q ? { q } : {}), ...(cursor ? { cursor } : {}) } } })),
+    { enabled },
+  );
 }
 
 export function useMediaUpload() {

@@ -92,7 +92,14 @@ export function MediaPicker({ id, kind, value, onChange, onStatus, disabled = fa
           {list.error ? <ProblemMessage error={list.error} /> : null}
           <List
             loading={list.isFetching}
-            dataSource={list.data?.data ?? []}
+            dataSource={list.rows}
+            loadMore={
+              list.hasNextPage ? (
+                <Button size="small" onClick={() => void list.fetchNextPage()} loading={list.isFetchingNextPage}>
+                  {t('content_studio.loadMore')}
+                </Button>
+              ) : null
+            }
             renderItem={(a) => (
               <List.Item
                 actions={[

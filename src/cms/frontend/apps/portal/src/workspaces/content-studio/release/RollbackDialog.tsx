@@ -3,13 +3,14 @@
 // (required, ≤ RollbackRequest.reason maxLength). Step 2: impact (sessions in progress keep their pinned version, new
 // ones get the chosen version) and a second, warning-colored confirmation → rollbackContent (Idempotency-Key: a
 // retry after a network error reuses the key, F054-AC-11). ROLLBACK_TARGET_INVALID / 403 are shown in the dialog.
-import { Alert, App as AntApp, Flex, Form, Input, Modal, Select, Typography } from 'antd';
+import { Alert, App as AntApp, Flex, Form, Input, Modal, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { LIMITS } from '../shared/config';
 import { formatIct, rollbackTargets, type VersionSummary } from './releaseOptions';
 import { useRelease, type ItemRef } from './useRelease';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export interface RollbackDialogProps {
   item: ItemRef;
@@ -74,7 +75,7 @@ export function RollbackDialog({ item, open, versions, current, initialTarget, o
         <Form form={form} layout="vertical" preserve initialValues={{ to_version: initialTarget && targets.some((x) => x.version === initialTarget) ? initialTarget : undefined }}>
           {targets.length === 0 && <Alert type="info" showIcon message={t('content_studio.release.noRollbackTarget')} />}
           <Form.Item name="to_version" label={t('content_studio.release.target')} rules={[{ required: true, message: t('content_studio.release.targetRequired') }]}>
-            <Select aria-label={t('content_studio.release.target')} options={options} />
+            <SearchSelect aria-label={t('content_studio.release.target')} options={options} />
           </Form.Item>
           <Form.Item name="reason" label={t('content_studio.release.reason')} rules={[{ required: true, whitespace: true, message: t('content_studio.release.reasonRequired') }, { max: LIMITS.releaseReason }]}>
             <Input.TextArea aria-label={t('content_studio.release.reason')} maxLength={LIMITS.releaseReason} showCount autoSize={{ minRows: 2, maxRows: 6 }} />

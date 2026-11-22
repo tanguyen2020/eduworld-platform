@@ -5,7 +5,7 @@
 // X-Tenant-Id = target. Idempotency-Key per intent (kept on retry), mandatory reason, optional validity
 // (`valid_to` > `valid_from`), training date mandatory for `safety_moderator`. Server answers (422 incl.
 // ROLE_NOT_FOUND, 409) are shown by `code` without clearing the form.
-import { Alert, App as AntApp, DatePicker, Form, Input, Modal, Radio, Select } from 'antd';
+import { Alert, App as AntApp, DatePicker, Form, Input, Modal, Radio } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,7 @@ import { useGrantUserRole, useTenantSchools, useTenantStaff, type UserRoleGrantR
 import { isUuid, LIMITS, PRINCIPAL_CACHE_TTL_SECONDS } from '../limits';
 import { applyFieldErrors, ReasonField } from '../ui';
 import { grantableRoles, grantableScopes, scopeNeedsId, TRAINING_REQUIRED_ROLE, validRange, type AccountKind } from './grantableRoles';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 interface FormValues {
   kind: AccountKind;
@@ -47,7 +48,7 @@ function MemberTenantField({ tenantIds }: { tenantIds: readonly string[] }) {
   const directory = useTenantDirectory();
   return (
     <Form.Item name="tenant_target" label={t('shell.tenantTarget.label')} extra={t('platform.userRoles.memberTenantsHelp')} rules={[{ required: true, message: t('shell.tenantTarget.required') }]}>
-      <Select
+      <SearchSelect
         options={tenantIds.map((id) => {
           const x = directory.get(id);
           return { value: id, label: x ? tenantLabel(x, t) : id };
@@ -122,7 +123,7 @@ export function GrantUserRoleDialog({ preset, onClose }: { preset?: GrantPreset;
           </Form.Item>
         ) : (
           <Form.Item name="user_id" label={t('platform.userRoles.staff')} rules={[{ required: true, message: t('platform.userRoles.userRequired') }]}>
-            <Select
+            <SearchSelect
               showSearch
               disabled={!target || !!preset?.userId}
               filterOption={false}
@@ -134,7 +135,7 @@ export function GrantUserRoleDialog({ preset, onClose }: { preset?: GrantPreset;
           </Form.Item>
         )}
         <Form.Item name="role_id" label={t('platform.userRoles.role')} rules={[{ required: true, message: t('platform.userRoles.roleRequired') }]}>
-          <Select
+          <SearchSelect
             showSearch
             optionFilterProp="label"
             disabled={kind === 'tenant' && !target}
@@ -143,11 +144,11 @@ export function GrantUserRoleDialog({ preset, onClose }: { preset?: GrantPreset;
           />
         </Form.Item>
         <Form.Item name="scope_type" label={t('platform.userRoles.scope')} rules={[{ required: true }]}>
-          <Select disabled={scopes.length === 1} options={scopes.map((x) => ({ value: x, label: t(`platform.scopeType.${x}`) }))} />
+          <SearchSelect disabled={scopes.length === 1} options={scopes.map((x) => ({ value: x, label: t(`platform.scopeType.${x}`) }))} />
         </Form.Item>
         {scopeType === 'school' ? (
           <Form.Item name="scope_id" label={t('platform.scopeType.school')} rules={[{ required: true, message: t('platform.userRoles.scopeIdRequired') }]}>
-            <Select loading={schools.isFetching} options={(schools.data ?? []).map((s) => ({ value: s.school_id, label: `${s.name.vi} (${s.code})` }))} />
+            <SearchSelect loading={schools.isFetching} options={(schools.data ?? []).map((s) => ({ value: s.school_id, label: `${s.name.vi} (${s.code})` }))} />
           </Form.Item>
         ) : null}
         {scopeType === 'subject' ? (

@@ -2,7 +2,7 @@
 // record (type + id, or `?resource_type=&resource_id=` when opened from a content list of workspace A/B) and manage its
 // tenants (AssignedTenantsTab); tab "Clone giữa tenant" — CloneWizard. Each tab sits behind its catalog action.
 // Assign and clone need a large screen (ADMIN_PORTAL §1.5): smaller screens get a read-only notice.
-import { Alert, Button, Form, Input, Select, Space, Tabs } from 'antd';
+import { Alert, Button, Form, Input, Space, Tabs } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -15,6 +15,7 @@ import { AssignedTenantsTab } from '../assignments/AssignedTenantsTab';
 import { CloneWizard } from '../clones/CloneWizard';
 import { isUuid } from '../limits';
 import { PageTitle, useLargeScreen } from '../ui';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 interface RecordRef {
   resourceType: ResourceType;
@@ -40,7 +41,7 @@ function AssignPanel() {
         onFinish={(v) => setParams({ resource_type: v.resource_type, resource_id: v.resource_id.trim() })}
       >
         <Form.Item name="resource_type" label={t('platform.tenantData.resourceType')} rules={[{ required: true }]}>
-          <Select aria-label={t('platform.tenantData.resourceType')} options={ASSIGNABLE_TYPES.map((x) => ({ value: x, label: t(`platform.resourceType.${x}`) }))} />
+          <SearchSelect aria-label={t('platform.tenantData.resourceType')} options={ASSIGNABLE_TYPES.map((x) => ({ value: x, label: t(`platform.resourceType.${x}`) }))} />
         </Form.Item>
         <Form.Item
           name="resource_id"

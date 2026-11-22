@@ -4,8 +4,8 @@
 // rollback (published ≠ current, `content.release.rollback`), unpublish and archive (≠ current). There is no action
 // that edits or deletes a published version. Buttons follow the permissions and the catalog actions (ActionGate);
 // assigned platform content is read only for tenant users. The server decides every rule again (AGENTS R1, R20).
-import { DomainTag } from '@eduworld/ops-ui';
-import { Button, Flex, Select, Skeleton, Space, Table, Tag, Typography } from 'antd';
+import { DomainTag, SearchSelect } from '@eduworld/ops-ui';
+import { Button, Flex, Skeleton, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +18,10 @@ import { PublishDialog } from './PublishDialog';
 import { canArchive, formatIct, rollbackTargets, type VersionSummary } from './releaseOptions';
 import { RollbackDialog } from './RollbackDialog';
 import { UnpublishDialog } from './UnpublishDialog';
-import { useVersions, type ItemRef } from './useRelease';
+import { useVersionPages, useVersions, type ItemRef } from './useRelease';
+import type { components } from '../../../shared/api/schema.gen';
+
+type ContentStatus = components['schemas']['ContentStatus'];
 import { VersionDiffView } from './VersionDiffView';
 import { VersionViewDrawer } from './VersionViewDrawer';
 
@@ -32,8 +35,9 @@ export interface VersionHistoryTabProps {
 export function VersionHistoryTab({ item, assigned = false, onDraftCreated }: VersionHistoryTabProps) {
   const { t } = useTranslation();
   const access = useContentAccess();
-  const [status, setStatus] = useState<string | undefined>();
-  const q = useVersions(item, status);
+  const [status, setStatus] = useState<ContentStatus | undefined>();
+  const q = useVersionPages(item, status);
+  const all = useVersions(item);
   const [selected, setSelected] = useState<number[]>([]);
   const [compare, setCompare] = useState<[number, number] | null>(null);
   const [viewing, setViewing] = useState<number | null>(null);
@@ -45,11 +49,11 @@ export function VersionHistoryTab({ item, assigned = false, onDraftCreated }: Ve
   const { write, review, publish } = access.question;
   const canRelease = !assigned;
 
-  if (q.isPending) return <Skeleton active />;
-  if (q.error) return <ProblemMessage error={q.error} />;
-  const current = q.data.current_version;
-  const rows = q.data.data;
-  const targets = rollbackTargets(rows, current);
+  if (q.isPending || all.isPending) return <Skeleton active />;
+  if (q.error || all.error) return <ProblemMessage error={q.error ?? all.error} />;
+  const current = all.data.current_version;
+  const rows = q.rows;
+  const targets = rollbackTargets(all.data.data, current);
 
   const columns: ColumnsType<VersionSummary> = [
     {
@@ -109,7 +113,7 @@ export function VersionHistoryTab({ item, assigned = false, onDraftCreated }: Ve
   return (
     <Flex vertical gap="middle" data-testid="version-history">
       <Flex gap="small" wrap align="center">
-        <Select
+        <SearchSelect
           allowClear
           aria-label={t('content_studio.release.statusFilter')}
           placeholder={t('content_studio.release.statusFilter')}
@@ -144,6 +148,15 @@ export function VersionHistoryTab({ item, assigned = false, onDraftCreated }: Ve
         dataSource={rows}
         pagination={false}
         scroll={{ x: true }}
+        footer={
+          q.hasNextPage
+            ? () => (
+                <Button onClick={() => void q.fetchNextPage()} loading={q.isFetchingNextPage}>
+                  {t('content_studio.loadMore')}
+                </Button>
+              )
+            : undefined
+        }
         rowSelection={{
           selectedRowKeys: selected,
           onChange: (keys) => setSelected((keys as number[]).slice(-2)),
@@ -157,7 +170,7 @@ export function VersionHistoryTab({ item, assigned = false, onDraftCreated }: Ve
       }} />
       <PublishDialog item={item} version={publishing} current={current} onClose={() => setPublishing(null)} />
       <ArchiveDialog item={item} version={archiving} onClose={() => setArchiving(null)} />
-      <RollbackDialog item={item} open={rollback !== null} versions={rows} current={current} initialTarget={rollback?.target} onClose={() => setRollback(null)} />
+      <RollbackDialog item={item} open={rollback !== null} versions={all.data.data} current={current} initialTarget={rollback?.target} onClose={() => setRollback(null)} />
       <UnpublishDialog item={item} open={unpublishing} onClose={() => setUnpublishing(false)} />
     </Flex>
   );

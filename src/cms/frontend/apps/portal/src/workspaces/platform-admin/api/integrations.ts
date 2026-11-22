@@ -7,7 +7,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { PAGE_SIZE } from '../limits';
-import { useCursorList, usePlatformApi, type CursorPage, type Schemas } from './common';
+import { pageQuery, useCursorList, usePlatformApi, type CursorPage, type Schemas } from './common';
 
 export type SisConnection = Schemas['SisConnection'];
 export type SisConnectionStatus = Schemas['SisConnectionStatus'];
@@ -29,19 +29,18 @@ export function useSisConnections(status: SisConnectionStatus | undefined) {
   );
 }
 
+/** Schools of a connection: a table, cursor pages ("Tải thêm"). */
 export function useSisConnectionSchools(connectionId: string) {
   const api = usePlatformApi();
-  return useQuery({
-    queryKey: ['platform', 'sis-connection-schools', connectionId],
-    queryFn: async () => (await api.call(api.client.GET('/admin/sis/connections/{connection_id}/schools', { params: { path: { connection_id: connectionId } } }))).data,
-  });
+  return useCursorList(['platform', 'sis-connection-schools', connectionId], (cursor) =>
+    api.call(api.client.GET('/admin/sis/connections/{connection_id}/schools', { params: { path: { connection_id: connectionId }, query: pageQuery(cursor) } })),
+  );
 }
 
+/** Sync runs of a connection: a table, cursor pages ("Tải thêm"). */
 export function useSisSyncRuns(connectionId: string) {
   const api = usePlatformApi();
-  return useQuery({
-    queryKey: ['platform', 'sis-sync-runs', connectionId],
-    queryFn: async () =>
-      (await api.call(api.client.GET('/sis/connections/{connection_id}/sync-runs', { params: { path: { connection_id: connectionId }, query: { limit: PAGE_SIZE } } }))).data,
-  });
+  return useCursorList(['platform', 'sis-sync-runs', connectionId], (cursor) =>
+    api.call(api.client.GET('/sis/connections/{connection_id}/sync-runs', { params: { path: { connection_id: connectionId }, query: pageQuery(cursor) } })),
+  );
 }

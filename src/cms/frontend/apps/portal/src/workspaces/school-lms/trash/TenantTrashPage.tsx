@@ -4,7 +4,7 @@
 // or a `409 CONFLICT` shows that a newer record has the same code; a parent still deleted shows the server message.
 // There is no permanent delete. The menu (`menu.school_lms.trash`) needs `tenant.trash.read`.
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { Alert, App as AntApp, Button, Flex, Select, Tooltip, Typography } from 'antd';
+import { Alert, App as AntApp, Button, Flex, Tooltip, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,7 @@ import { ReasonDialog } from '../../../shell/ReasonDialog';
 import { ResponsiveTable } from '../../../shell/ResponsiveTable';
 import { SingleTenantGate, type SchoolLmsScope } from '../common/scope';
 import { formatDateTime } from '../common/format';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export type TrashItem = components['schemas']['TrashItem'];
 export type ResourceType = components['schemas']['ResourceType'];
@@ -101,7 +102,7 @@ function TrashList({ scope }: { scope: SchoolLmsScope }) {
 
   return (
     <Flex vertical gap="middle">
-      <Select aria-label={t('portal.school_lms.trash.col.type')} value={type} onChange={setType} options={TENANT_TRASH_TYPES.map((x) => ({ value: x, label: t(`portal.school_lms.trash.types.${x}`, { defaultValue: x }) }))} style={{ maxWidth: 320 }} />
+      <SearchSelect aria-label={t('portal.school_lms.trash.col.type')} value={type} onChange={setType} options={TENANT_TRASH_TYPES.map((x) => ({ value: x, label: t(`portal.school_lms.trash.types.${x}`, { defaultValue: x }) }))} style={{ maxWidth: 320 }} />
       {list.error ? <ProblemMessage error={list.error} /> : null}
       <ResponsiveTable<TrashItem>
         rowKey="resource_id"

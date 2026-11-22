@@ -1,7 +1,7 @@
 // Study detail (F035 US8, F035-AC-35): description, activate/complete, classes and pairs, waves, withdrawals, the
 // efficacy report and the pseudonymised dataset export. The report is computed by the backend job; the page only
 // shows what the API returns (aggregates, small cells already hidden — R1, R16).
-import { Alert, App as AntApp, Button, DatePicker, Descriptions, Form, Modal, Popconfirm, Radio, Select, Space, Table, Tabs, Typography } from 'antd';
+import { Alert, App as AntApp, Button, DatePicker, Descriptions, Form, Modal, Popconfirm, Radio, Space, Table, Tabs, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { Dayjs } from 'dayjs';
 import { useState } from 'react';
@@ -35,6 +35,7 @@ import {
 import { RESEARCH_LIMITS as L } from './limits';
 import { ReportView } from './ReportView';
 import { BoundedNumberField, StatusTag, UuidField, UuidListField } from './ResearchForms';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function StudyDetail() {
   const { t } = useTranslation();
@@ -198,10 +199,10 @@ function AddCohortDialog({ study, onClose }: { study: EfficacyStudy; onClose: ()
         <UuidField name="school_id" label={t('platform.research.cohorts.schoolId')} />
         <BoundedNumberField name="pair_no" label={t('platform.research.cohorts.pair')} limit={L.pairNo} required={false} />
         <Form.Item name="arm" label={t('platform.research.cohorts.arm')}>
-          <Select aria-label={t('platform.research.cohorts.arm')} allowClear placeholder={t('platform.research.cohorts.armRandom')} options={ARMS.map((a) => ({ value: a, label: t(`platform.research.arm.${a}`) }))} />
+          <SearchSelect aria-label={t('platform.research.cohorts.arm')} allowClear placeholder={t('platform.research.cohorts.armRandom')} options={ARMS.map((a) => ({ value: a, label: t(`platform.research.arm.${a}`) }))} />
         </Form.Item>
         <Form.Item name="form_order" label={t('platform.research.cohorts.formOrder')}>
-          <Select aria-label={t('platform.research.cohorts.formOrder')} allowClear placeholder={t('platform.research.cohorts.formOrderAuto')} options={(['a_then_b', 'b_then_a'] as const).map((x) => ({ value: x, label: t(`platform.research.formOrder.${x}`) }))} />
+          <SearchSelect aria-label={t('platform.research.cohorts.formOrder')} allowClear placeholder={t('platform.research.cohorts.formOrderAuto')} options={(['a_then_b', 'b_then_a'] as const).map((x) => ({ value: x, label: t(`platform.research.formOrder.${x}`) }))} />
         </Form.Item>
       </Form>
     </Modal>

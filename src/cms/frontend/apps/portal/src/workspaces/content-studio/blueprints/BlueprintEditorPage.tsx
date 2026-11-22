@@ -4,7 +4,7 @@
 // exam session); QUESTION_POOL_INSUFFICIENT refreshes the pool stats and highlights the cells lacking questions.
 import { QuestionPreview, type RichContent } from '@eduworld/ops-ui/content';
 import { useMutation } from '@tanstack/react-query';
-import { Alert, Button, Card, Flex, Form, InputNumber, List, Segmented, Select, Typography } from 'antd';
+import { Alert, Button, Card, Flex, Form, InputNumber, List, Segmented, Typography } from 'antd';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePortalRuntime } from '../../../app/runtime';
@@ -21,6 +21,7 @@ import { cellPools } from './matrixModel';
 import { BlueprintMatrix } from './BlueprintMatrix';
 import { blueprintIssues, emptyBlueprint, EXAM_TYPES, fromBlueprint, toBlueprintBody, type BlueprintState, type ExamType, type ReleaseMode, type SelectionMode } from './blueprintModel';
 import { FixedForm } from './FixedForm';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 function SampleExam({ id, version, onInsufficient }: { id: string; version: number; onInsufficient: () => void }) {
   const { t } = useTranslation();
@@ -71,7 +72,7 @@ function BlueprintBody({ state, onChange, readOnly, errors, server, id }: Builde
       <Form layout="vertical" component="div" disabled={readOnly}>
         <Flex gap="middle" wrap>
           <Form.Item label={t('content_studio.blueprint.examType')}>
-            <Select aria-label={t('content_studio.blueprint.examType')} value={state.exam_type} options={EXAM_TYPES.map((x) => ({ value: x, label: t(`content_studio.blueprint.examTypes.${x}`) }))} onChange={(exam_type: ExamType) => onChange({ ...state, exam_type })} />
+            <SearchSelect aria-label={t('content_studio.blueprint.examType')} value={state.exam_type} options={EXAM_TYPES.map((x) => ({ value: x, label: t(`content_studio.blueprint.examTypes.${x}`) }))} onChange={(exam_type: ExamType) => onChange({ ...state, exam_type })} />
           </Form.Item>
           <Form.Item label={t('content_studio.blueprint.duration')} data-field="duration">
             <InputNumber aria-label={t('content_studio.blueprint.duration')} min={1} max={240} value={state.duration_min} onChange={(v) => onChange({ ...state, duration_min: v ?? 1 })} />
@@ -83,7 +84,7 @@ function BlueprintBody({ state, onChange, readOnly, errors, server, id }: Builde
             <InputNumber aria-label={t('content_studio.blueprint.maxAttempts')} min={1} max={20} value={state.max_attempts} onChange={(v) => onChange({ ...state, max_attempts: v ?? 1 })} />
           </Form.Item>
           <Form.Item label={t('content_studio.blueprint.release')}>
-            <Select aria-label={t('content_studio.blueprint.release')} value={state.result_release} options={(['immediate', 'after_close', 'manual'] as const).map((x) => ({ value: x, label: t(`content_studio.blueprint.releases.${x}`) }))} onChange={(result_release: ReleaseMode) => onChange({ ...state, result_release })} />
+            <SearchSelect aria-label={t('content_studio.blueprint.release')} value={state.result_release} options={(['immediate', 'after_close', 'manual'] as const).map((x) => ({ value: x, label: t(`content_studio.blueprint.releases.${x}`) }))} onChange={(result_release: ReleaseMode) => onChange({ ...state, result_release })} />
           </Form.Item>
         </Flex>
       </Form>

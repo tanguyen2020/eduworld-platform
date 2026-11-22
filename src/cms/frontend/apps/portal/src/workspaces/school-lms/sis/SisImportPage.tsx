@@ -1,7 +1,7 @@
 // "Nhập CSV" (F052 T025, F052-AC-08, F052-AC-09, F052-AC-11, F052-AC-27): school, data kind (one per file, SisImportCreate
 // `entity_kinds` maxItems 1), dry run, file → useSisImport. Columns follow the EduWorld SIS Contract (specs/sis); the
 // automatic SIS schedule (`sis_sync_schedule`) is set by EduWorld, not here. Large screens only (< 768 px → notice).
-import { Alert, Button, Form, Select, Space, Switch, Typography, Upload } from 'antd';
+import { Alert, Button, Form, Space, Switch, Typography, Upload } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../permissions/ActionGate';
@@ -12,6 +12,7 @@ import { MOBILE_QUERY } from '../common/ResponsiveTable';
 import { checkCsvFile } from './fileCheck';
 import { SisImportProgress } from './SisImportProgress';
 import { useSisImport, type EntityKind } from './useSisImport';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const KINDS: EntityKind[] = ['students']; // SIS contract 1.3.0 (ADR-0095): no classes, no enrollments
 
@@ -30,7 +31,7 @@ export function SisImportPage({ schoolId }: { schoolId: string }) {
       <Typography.Paragraph type="secondary">{t('portal.school_lms.sis.help')}</Typography.Paragraph>
       <Form layout="vertical">
         <Form.Item label={t('portal.school_lms.sis.kind')}>
-          <Select aria-label={t('portal.school_lms.sis.kind')} value={kind} onChange={setKind} options={KINDS.map((k) => ({ value: k, label: t(`portal.school_lms.sis.kinds.${k}`) }))} />
+          <SearchSelect aria-label={t('portal.school_lms.sis.kind')} value={kind} onChange={setKind} options={KINDS.map((k) => ({ value: k, label: t(`portal.school_lms.sis.kinds.${k}`) }))} />
         </Form.Item>
         <Form.Item label={t('portal.school_lms.sis.dryRun')} help={t('portal.school_lms.sis.dryRunHelp')}>
           <Switch checked={dryRun} onChange={setDryRun} aria-label={t('portal.school_lms.sis.dryRun')} />

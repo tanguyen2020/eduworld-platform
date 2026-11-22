@@ -2,7 +2,7 @@
 // status and name/code search (`q` 2–100). The System Admin reads one or more tenants of the tenant filter with
 // `tenant_ids[]` (CrossTenantScope, no X-Tenant-Id) and must pick at least one — the backend refuses a cross-tenant read
 // without tenant_ids (OQ F057-4); the Tenant column shows the tenant of each school.
-import { Alert, Button, Input, Select, Space, Table, Tag } from 'antd';
+import { Alert, Button, Input, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ import { SCHOOL_LEVELS, SCHOOL_STATUSES, useCatalogSchools, useProvinces, type S
 import { useTenantDirectory } from '../api/tenants';
 import { LIMITS } from '../limits';
 import { TenantCell } from '../ui';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function SchoolCatalogPage() {
   const { t, i18n } = useTranslation();
@@ -37,7 +38,7 @@ export function SchoolCatalogPage() {
     <section aria-label={t('platform.catalog.schools')}>
       <Space wrap>
         <TenantFilter />
-        <Select
+        <SearchSelect
           aria-label={t('platform.catalog.province')}
           placeholder={t('platform.catalog.allProvinces')}
           allowClear
@@ -47,7 +48,7 @@ export function SchoolCatalogPage() {
           onChange={(province?: string) => setFilter((f) => ({ ...f, province }))}
           options={(provinces.data?.items ?? []).map((p) => ({ value: p.code, label: p.name.vi }))}
         />
-        <Select
+        <SearchSelect
           aria-label={t('platform.catalog.schoolLevel')}
           placeholder={t('platform.catalog.allLevels')}
           allowClear
@@ -55,7 +56,7 @@ export function SchoolCatalogPage() {
           onChange={(school_level?: SchoolLevel) => setFilter((f) => ({ ...f, school_level }))}
           options={SCHOOL_LEVELS.map((x) => ({ value: x, label: t(`platform.catalog.schoolLevels.${x}`) }))}
         />
-        <Select
+        <SearchSelect
           aria-label={t('platform.common.status')}
           placeholder={t('platform.catalog.allSchoolStatuses')}
           allowClear

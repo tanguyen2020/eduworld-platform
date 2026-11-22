@@ -4,11 +4,12 @@
 // range or a coarser one (`dashboard_grain_daily_max_days` / `dashboard_grain_weekly_max_days`); the server decides the
 // grain it really uses and returns it. "Học kỳ này" / "Năm học này" need the school calendar dates from the caller;
 // without them the preset is shown disabled. Limits are props (the app owns the configuration, AGENTS R33).
-import { DatePicker, Flex, Segmented, Select, Tooltip } from 'antd';
+import { DatePicker, Flex, Segmented, Tooltip } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { OPS_UI_NS } from '../i18n';
 import type { DashboardGrain } from './DashboardWidget';
+import { SearchSelect } from '../select/SearchSelect';
 
 export const RANGE_PRESETS = ['today', '7d', '30d', 'term', 'school_year', '12m'] as const;
 export type RangePreset = (typeof RANGE_PRESETS)[number] | 'custom';
@@ -122,7 +123,7 @@ export function DashboardRangePicker({ value, onChange, limits, calendar, today 
           if (v?.[0] && v[1]) onChange({ preset: 'custom', from: v[0].format(FMT), to: v[1].format(FMT), grain: undefined });
         }}
       />
-      <Select<DashboardGrain>
+      <SearchSelect<DashboardGrain>
         aria-label={t('dashboard.range.grain')}
         allowClear
         placeholder={t('dashboard.range.grainAuto')}

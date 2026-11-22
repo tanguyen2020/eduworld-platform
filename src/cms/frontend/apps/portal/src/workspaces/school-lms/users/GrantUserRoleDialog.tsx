@@ -1,7 +1,7 @@
 // Grant a UserRole (F052 T035, F052-AC-16): only roles the granter may hand out (grantableRoles), scope Đơn vị/Trường/Môn
 // (no Lớp; a School Admin gets Trường/Môn only), optional validity, reason required; Tenant Admin → grantTenantUserRole,
 // School Admin → grantSchoolUserRole (Idempotency-Key per intent). 403 PERMISSION_DENIED / 422 ROLE_NOT_FOUND shown.
-import { App, DatePicker, Form, Input, Modal, Radio, Select } from 'antd';
+import { App, DatePicker, Form, Input, Modal, Radio } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { applyFormError, writeErrorKey } from '../common/errors';
@@ -11,6 +11,7 @@ import { useFieldRules } from '../common/ui';
 import { ScopeTargetField } from './ScopeTargetField';
 import { scopesFor, type GrantMode, type GrantScope, type Role } from './canGrant';
 import { useGrantUserRole } from './useUserRoles';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 interface GrantForm {
   role_id: string;
@@ -56,7 +57,7 @@ export function GrantUserRoleDialog({ userId, roles, mode, onClose }: { userId: 
     <Modal open title={t('portal.school_lms.userRoles.grant')} okText={t('portal.school_lms.userRoles.grant')} cancelText={t('portal.school_lms.common.cancel')} confirmLoading={grant.isPending} onOk={ok} onCancel={onClose} destroyOnHidden>
       <Form<GrantForm> form={form} layout="vertical" preserve={false} initialValues={{ scope_type: scopesFor(mode)[0] }} data-testid="grant-form">
         <Form.Item name="role_id" label={t('portal.school_lms.userRoles.role')} rules={[{ required: true, message: t('portal.school_lms.users.roleRequired') }]}>
-          <Select aria-label={t('portal.school_lms.userRoles.role')} options={roles.map((r) => ({ value: r.role_id, label: localizedName(r.name, i18n.language) }))} />
+          <SearchSelect aria-label={t('portal.school_lms.userRoles.role')} options={roles.map((r) => ({ value: r.role_id, label: localizedName(r.name, i18n.language) }))} />
         </Form.Item>
         <Form.Item name="scope_type" label={t('portal.school_lms.userRoles.scope')} rules={[{ required: true }]}>
           <Radio.Group options={scopesFor(mode).map((s) => ({ value: s, label: t(`portal.school_lms.userRoles.scopes.${s}`) }))} />

@@ -1,7 +1,7 @@
 // Filters of the assignment lists (F055 T019, F056 T032; ADR-0095): school, subject and grade — the listAssignments
 // filters `school_id`, `subject_id`, `grade_level` (no course or class any more). Grades are those the chosen school
 // teaches (1–9 when no school is chosen); subjects are those of the session's scope. Display only: the server filters.
-import { Form, Select } from 'antd';
+import { Form } from 'antd';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMyPermissions } from '../../../../shared/api/hooks/useMyPermissions';
@@ -10,6 +10,7 @@ import { subjectLabel, subjectsInScope } from '../../dashboard/model/filters';
 import type { AssignmentFilters } from '../api/assignments';
 import { useSchoolGrades, useTenantSubjects } from '../api/targets';
 import { LMS_LIMITS } from '../model/fieldSchemas';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const ALL_GRADES = Array.from({ length: LMS_LIMITS.gradeLevel.maximum - LMS_LIMITS.gradeLevel.minimum + 1 }, (_, i) => LMS_LIMITS.gradeLevel.minimum + i);
 
@@ -26,7 +27,7 @@ export function AssignmentFilterBar({ value, onChange }: { value: AssignmentFilt
         <SchoolSelect value={value.schoolId} onChange={onSchool} allowClear autoSelect={false} />
       </Form.Item>
       <Form.Item label={t('lms.wizard.subject')} style={{ marginBottom: 0 }}>
-        <Select
+        <SearchSelect
           allowClear
           aria-label={t('lms.wizard.subject')}
           placeholder={t('lms.filters.allSubjects')}
@@ -38,7 +39,7 @@ export function AssignmentFilterBar({ value, onChange }: { value: AssignmentFilt
         />
       </Form.Item>
       <Form.Item label={t('lms.wizard.grade')} style={{ marginBottom: 0 }}>
-        <Select
+        <SearchSelect
           allowClear
           aria-label={t('lms.wizard.grade')}
           placeholder={t('lms.filters.allGrades')}

@@ -3,7 +3,7 @@
 // (BilingualField) with a formula button; a math block uses MathInput. Blocks move with Lên / Xuống buttons (keyboard
 // accessible). Media is chosen through the host's `mediaSlot` (the portal's MediaPicker: list + upload, F053-AC-05).
 // Presentational: no API call.
-import { Button, Card, Flex, Form, Input, InputNumber, Select, Space, Typography } from 'antd';
+import { Button, Card, Flex, Form, Input, InputNumber, Space, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { BilingualField } from '../i18n-field/BilingualField';
 import type { ContentLang, I18nTextValue } from '../i18n-field/translationStatus';
@@ -12,6 +12,7 @@ import { MathInput } from '../math/MathInput';
 import { MathInsertButton } from '../math/MathInsertButton';
 import type { ReactNode } from 'react';
 import { BASIC_BLOCKS, emptyBlock, RICH_ALT_MAX, RICH_LATEX_MAX, RICH_TEXT_MAX, type RichBlock, type RichBlockType, type RichContent } from './types';
+import { SearchSelect } from '../select/SearchSelect';
 
 export interface MediaSlotArgs {
   kind: 'image' | 'audio' | 'video';
@@ -193,7 +194,7 @@ export function RichContentEditor({ id, label, value, onChange, contentLanguage,
         </Card>
       ))}
       {!readOnly && (
-        <Select<RichBlockType>
+        <SearchSelect<RichBlockType>
           aria-label={t('richContent.addBlock')}
           placeholder={t('richContent.addBlock')}
           value={null as unknown as RichBlockType}

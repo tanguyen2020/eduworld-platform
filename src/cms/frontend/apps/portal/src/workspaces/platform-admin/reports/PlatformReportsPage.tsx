@@ -18,6 +18,7 @@ import { Alert, Col, Flex, Row, Space, Table } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../permissions/ActionGate';
+import { fetchAllAsPage } from '../../../shared/api/fetchAllPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { TenantFilter } from '../../../shell/TenantControls';
@@ -52,7 +53,7 @@ function useSubjectNames() {
   const { i18n } = useTranslation();
   const q = useQuery({
     queryKey: ['platform', 'subjects'],
-    queryFn: () => api.call<{ data: Subject[] }>(api.client.GET('/cms/learning/subjects', { params: { query: { limit: 100 } } } as never)),
+    queryFn: () => fetchAllAsPage<Subject>((query) => api.call(api.client.GET('/cms/learning/subjects', { params: { query } }))),
     staleTime: 10 * 60_000,
   });
   return (id: string) => {

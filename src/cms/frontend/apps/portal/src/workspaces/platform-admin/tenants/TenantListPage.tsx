@@ -1,7 +1,7 @@
 // Tenant screen (F057 T039, F057-AC-17, ADMIN_PORTAL §10.1 "Quản lý tenant"): listTenants filtered by `q`/`tenant_type`
 // with cursor paging, create/edit through TenantForm, activate/disable after a confirmation with reason. Write actions
 // are wrapped in <ActionGate action.platform_admin.tenants.edit> and hidden on small screens (read only).
-import { Alert, Button, Input, Select, Space, Table, Tag } from 'antd';
+import { Alert, Button, Input, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { TENANT_TYPES, useTenantList, useUpdateTenant, type TenantSummary, type 
 import { LIMITS } from '../limits';
 import { PageTitle, useLargeScreen } from '../ui';
 import { TenantForm } from './TenantForm';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function TenantListPage({ title }: { title: string }) {
   const { t } = useTranslation();
@@ -78,7 +79,7 @@ export function TenantListPage({ title }: { title: string }) {
           allowClear
           onSearch={(v) => setQ(v.trim())}
         />
-        <Select
+        <SearchSelect
           aria-label={t('platform.tenants.type')}
           placeholder={t('platform.tenants.allTypes')}
           allowClear

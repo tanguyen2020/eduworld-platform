@@ -1,7 +1,7 @@
 // RegradeScreen (F058 T049, F058-AC-23; menu `menu.content_studio.regrade` of the catalog): the requests of system
 // re-evaluation of one question or activity version (listRegradeRequests) and the status of a request, opened from the
 // version page or by version id. Read only; requests are created from the version page (RegradeEntryButton).
-import { Descriptions, Flex, Input, Segmented, Table, Tag, Typography } from 'antd';
+import { Button, Descriptions, Flex, Input, Segmented, Table, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
@@ -33,7 +33,16 @@ export function RegradeScreen({ title }: { title: string }) {
         loading={history.isFetching}
         pagination={false}
         data-testid="regrade-screen-history"
-        dataSource={history.data?.data ?? []}
+        dataSource={history.rows}
+        footer={
+          history.hasNextPage
+            ? () => (
+                <Button onClick={() => void history.fetchNextPage()} loading={history.isFetchingNextPage}>
+                  {t('content_studio.loadMore')}
+                </Button>
+              )
+            : undefined
+        }
         onRow={(r) => ({ onClick: () => setOpen(r.regrade_request_id) })}
         columns={[
           { title: t('content_studio.regrade.createdAt'), render: (_, r) => new Date(r.created_at).toLocaleString() },

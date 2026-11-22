@@ -3,7 +3,7 @@
 // add topics and LOs, edit an LO, run the version workflow. Platform curricula assigned to a tenant are read only for
 // tenant users ("Từ EduWorld"); only `curriculum.write` in a tenant scope (Academic Manager) creates the tenant's own
 // curriculum. Editing needs a draft version. Display only: the backend authorizes (AGENTS R20).
-import { Button, Card, Col, Empty, Flex, Form, Input, Modal, Row, Select, Space, theme, Typography } from 'antd';
+import { Button, Card, Col, Empty, Flex, Form, Input, Modal, Row, Space, theme, Typography } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ import { ObjectiveForm } from './ObjectiveForm';
 import { TopicTree } from './TopicTree';
 import type { TreeNode } from './treeModel';
 import { useCurricula, useCurriculumApi, useCurriculumVersions, useObjectives, useSubjects, useTopics, type Curriculum, type CurriculumVersion } from './useCurriculum';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const nameOf = (n: { vi?: string; en?: string } | undefined, lang: string) => (lang.startsWith('en') ? (n?.en ?? n?.vi) : (n?.vi ?? n?.en)) ?? '';
 
@@ -103,7 +104,7 @@ export function CurriculumTreePage({ title }: { title: string }) {
         </Flex>
         {curricula.error ? <ProblemMessage error={curricula.error} /> : null}
         <Space wrap>
-          <Select
+          <SearchSelect
             aria-label={t('content_studio.curriculum.pick')}
             style={{ minWidth: token.controlHeightLG * 8 }}
             loading={curricula.isFetching}
@@ -118,7 +119,7 @@ export function CurriculumTreePage({ title }: { title: string }) {
               label: `${nameOf(c.name, i18n.language)} (${c.code}) · ${t(`content_studio.owner.${c.owner_scope}`)}`,
             }))}
           />
-          <Select
+          <SearchSelect
             aria-label={t('content_studio.curriculum.pickVersion')}
             value={versionNo}
             onChange={setVersionNo}

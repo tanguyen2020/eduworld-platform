@@ -3,10 +3,10 @@
 // topics, LOs, difficulty range, types, count) with the current pool size of each rule from the server
 // (getQuestionSetPoolStats of the saved version: available / required, insufficient, warning).
 import { DeleteOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Flex, Input, InputNumber, List, Modal, Segmented, Select, Space, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Flex, Input, InputNumber, List, Modal, Segmented, Space, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
 import type { PoolStats } from '../builders/useDocument';
@@ -14,17 +14,19 @@ import { useObjectives, useTopics } from '../curriculum/useCurriculum';
 import type { QuestionAuthoring } from '../questions/useQuestion';
 import { LIMITS } from '../shared/config';
 import { SET_LIMITS, type QuestionSetState, type SelectionRule, type SetKind } from './questionSetModel';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const TYPES = ['single_choice', 'multiple_choice', 'true_false', 'fill_in_blank', 'short_answer', 'numeric', 'matching', 'ordering', 'drag_drop', 'image_based', 'interactive'];
 
 function useQuestionSearch(q: string, enabled: boolean) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useQuery({
-    queryKey: ['content-studio', 'list', scopeKey, 'question-picker', q],
-    queryFn: () => api.call<{ data: QuestionAuthoring[] }>(api.client.GET('/cms/learning/questions', { params: { query: { status: 'published', ...(q ? { q } : {}), limit: 50 } as never } })),
-    enabled,
-  });
+  // A list of rows: cursor pages, "Tải thêm" (owner rule 2026-11-22).
+  return useCursorPages<QuestionAuthoring>(
+    ['content-studio', 'list', scopeKey, 'question-picker', q],
+    (cursor) => api.call(api.client.GET('/cms/learning/questions', { params: { query: { status: 'published', ...(q ? { q } : {}), ...(cursor ? { cursor } : {}) } } })),
+    { enabled },
+  );
 }
 
 export function QuestionPicker({ open, onPick, onClose }: { open: boolean; onPick: (q: QuestionAuthoring) => void; onClose: () => void }) {
@@ -37,7 +39,14 @@ export function QuestionPicker({ open, onPick, onClose }: { open: boolean; onPic
       <Input.Search aria-label={t('content_studio.list.search')} placeholder={t('content_studio.list.search')} maxLength={LIMITS.search} value={q} onChange={(e) => setQ(e.target.value)} onSearch={(v) => setSearch(v.trim())} />
       <List
         loading={list.isFetching}
-        dataSource={list.data?.data ?? []}
+        dataSource={list.rows}
+        loadMore={
+          list.hasNextPage ? (
+            <Button size="small" onClick={() => void list.fetchNextPage()} loading={list.isFetchingNextPage}>
+              {t('content_studio.loadMore')}
+            </Button>
+          ) : null
+        }
         renderItem={(x) => (
           <List.Item
             key={x.content_version_id ?? x.content_id}
@@ -81,9 +90,9 @@ function RuleCard({ rule, index, state, onChange, onRemove, readOnly, pool }: { 
       }
     >
       <Flex gap="small" wrap>
-        <Select mode="multiple" aria-label={t('content_studio.question.topic')} placeholder={t('content_studio.question.topic')} disabled={readOnly} value={f.topic_ids ?? []} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: `${x.code ?? ''} ${x.name}`.trim() }))} onChange={(v: string[]) => set({ topic_ids: v })} style={{ minWidth: 200 }} />
-        <Select mode="multiple" aria-label={t('content_studio.question.objectives')} placeholder={t('content_studio.question.objectives')} disabled={readOnly} value={f.objective_ids ?? []} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: o.code }))} onChange={(v: string[]) => set({ objective_ids: v })} style={{ minWidth: 200 }} />
-        <Select mode="multiple" aria-label={t('content_studio.questionSet.types')} placeholder={t('content_studio.questionSet.types')} disabled={readOnly} value={f.types ?? []} options={TYPES.map((x) => ({ value: x, label: t(`ops-ui:question.types.${x}`) }))} onChange={(v: string[]) => set({ types: v })} style={{ minWidth: 200 }} />
+        <SearchSelect mode="multiple" aria-label={t('content_studio.question.topic')} placeholder={t('content_studio.question.topic')} disabled={readOnly} value={f.topic_ids ?? []} options={(topics.data?.data ?? []).map((x) => ({ value: x.topic_id, label: `${x.code ?? ''} ${x.name}`.trim() }))} onChange={(v: string[]) => set({ topic_ids: v })} style={{ minWidth: 200 }} />
+        <SearchSelect mode="multiple" aria-label={t('content_studio.question.objectives')} placeholder={t('content_studio.question.objectives')} disabled={readOnly} value={f.objective_ids ?? []} options={(objectives.data?.data ?? []).map((o) => ({ value: o.objective_id, label: o.code }))} onChange={(v: string[]) => set({ objective_ids: v })} style={{ minWidth: 200 }} />
+        <SearchSelect mode="multiple" aria-label={t('content_studio.questionSet.types')} placeholder={t('content_studio.questionSet.types')} disabled={readOnly} value={f.types ?? []} options={TYPES.map((x) => ({ value: x, label: t(`ops-ui:question.types.${x}`) }))} onChange={(v: string[]) => set({ types: v })} style={{ minWidth: 200 }} />
         <Space>
           <InputNumber aria-label={t('content_studio.questionSet.difficultyMin')} placeholder={t('content_studio.questionSet.difficultyMin')} disabled={readOnly} min={1} max={5} value={f.difficulty?.min} onChange={(v) => set({ difficulty: { ...f.difficulty, min: v ?? undefined } })} />
           <InputNumber aria-label={t('content_studio.questionSet.difficultyMax')} placeholder={t('content_studio.questionSet.difficultyMax')} disabled={readOnly} min={1} max={5} value={f.difficulty?.max} onChange={(v) => set({ difficulty: { ...f.difficulty, max: v ?? undefined } })} />

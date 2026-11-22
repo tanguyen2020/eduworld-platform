@@ -389,5 +389,9 @@
         "query_timeout": "Truy vấn quá lâu. Hãy thu hẹp phạm vi."
       }
     }
+  },
+  "select": {
+    "empty": "Không có mục phù hợp",
+    "truncated": "Danh sách quá dài, chỉ hiện một phần. Gõ để tìm hoặc lọc hẹp hơn."
   }
 }

@@ -4,11 +4,12 @@
 // confirming, then the request followed to completed / failed. Scope exam_session (F055-AC-23): `versionId` is the
 // exam session and one question of its locked papers is picked from `questionOptions`. States plainly that original answers and old
 // evaluations are kept and the new score is computed by the system with an audit record; no score field anywhere.
-import { Alert, Descriptions, Flex, Input, Modal, Radio, Select, Typography } from 'antd';
+import { Alert, Descriptions, Flex, Input, Modal, Radio, Typography } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { useCreateRegrade, useRegradePreview, useRegradeStatus, type RegradeCreate, type RegradeScope } from './useRegrade';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 /** RegradeRequestCreate.reason bounds (createRegradeRequest, F031-AC-18). */
 export const REASON_MIN = 10;
@@ -66,7 +67,7 @@ export function RegradeDialog({ open, scope, versionId, correctedOptions = [], q
         <Alert type="info" showIcon message={t('content_studio.regrade.keeps')} />
         {!created && (
           <>
-            {exam && <Select aria-label={t('content_studio.regrade.question')} placeholder={t('content_studio.regrade.question')} value={question} options={questionOptions} onChange={(v: string) => setQuestion(v)} />}
+            {exam && <SearchSelect aria-label={t('content_studio.regrade.question')} placeholder={t('content_studio.regrade.question')} value={question} options={questionOptions} onChange={(v: string) => setQuestion(v)} />}
             <Radio.Group aria-label={t('content_studio.regrade.action')} value={action} onChange={(e) => setAction(e.target.value as string)}>
               {actions.map((a) => (
                 <Radio key={a} value={a}>
@@ -74,7 +75,7 @@ export function RegradeDialog({ open, scope, versionId, correctedOptions = [], q
                 </Radio>
               ))}
             </Radio.Group>
-            {action === 'use_new_key' && <Select aria-label={t('content_studio.regrade.corrected')} placeholder={t('content_studio.regrade.corrected')} value={corrected} options={correctedOptions} onChange={(v: string) => setCorrected(v)} />}
+            {action === 'use_new_key' && <SearchSelect aria-label={t('content_studio.regrade.corrected')} placeholder={t('content_studio.regrade.corrected')} value={corrected} options={correctedOptions} onChange={(v: string) => setCorrected(v)} />}
             <Input.TextArea aria-label={t('content_studio.regrade.reason')} placeholder={t('content_studio.regrade.reason')} rows={3} maxLength={REASON_MAX} showCount value={reason} onChange={(e) => setReason(e.target.value)} status={tooShort ? 'error' : undefined} />
             {tooShort && <Typography.Text type="danger">{t('content_studio.regrade.reasonMin', { min: REASON_MIN })}</Typography.Text>}
             {impact.data && (

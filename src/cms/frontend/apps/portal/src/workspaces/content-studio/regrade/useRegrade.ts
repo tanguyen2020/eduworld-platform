@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
 import type { components } from '../../../shared/api/schema.gen';
+import { fetchAllAsPage } from '../../../shared/api/fetchAllPages';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 
 export type RegradeRequest = components['schemas']['RegradeRequest'];
@@ -30,11 +32,12 @@ export function useRegradePreview(body: RegradeCreate | null) {
 export function useRegradeHistory(scope: RegradeScope, versionId: string | undefined) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useQuery({
-    queryKey: ['content-studio', 'regrades', scopeKey, scope, versionId],
-    queryFn: () => api.call<{ data: RegradeRequest[] }>(api.client.GET('/cms/learning/regrade-requests', { params: { query: { ...versionQuery(scope, versionId!), limit: 50 } as never } })),
-    enabled: !!versionId,
-  });
+  // History rows: cursor pages, "Tải thêm" (owner rule 2026-11-22).
+  return useCursorPages<RegradeRequest>(
+    ['content-studio', 'regrades', scopeKey, scope, versionId],
+    (cursor) => api.call(api.client.GET('/cms/learning/regrade-requests', { params: { query: { ...versionQuery(scope, versionId!), ...(cursor ? { cursor } : {}) } } })),
+    { enabled: !!versionId },
+  );
 }
 
 export function useRegradeStatus(id: string | undefined) {
@@ -52,11 +55,12 @@ export function useRegradeStatus(id: string | undefined) {
 export function useCorrectedVersions(item: { contentType: string; contentId: string } | undefined) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
+  // Dropdown of use_new_key: every published version (fetchAllPages).
   return useQuery({
     queryKey: ['content-studio', 'regrade-versions', scopeKey, item],
     queryFn: () =>
-      api.call<{ data: { version: number; status: string; content_version_id?: string }[] }>(
-        api.client.GET('/cms/learning/content/{content_type}/{content_id}/versions', { params: { path: { content_type: item!.contentType, content_id: item!.contentId }, query: { status: 'published', limit: 100 } } } as never),
+      fetchAllAsPage<{ version: number; status: string; content_version_id?: string }>((page) =>
+        api.call(api.client.GET('/cms/learning/content/{content_type}/{content_id}/versions', { params: { path: { content_type: item!.contentType as components['schemas']['LearningContentType'], content_id: item!.contentId }, query: { status: 'published', ...page } } })),
       ),
     enabled: !!item,
   });

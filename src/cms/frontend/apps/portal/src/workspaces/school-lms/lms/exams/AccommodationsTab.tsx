@@ -2,7 +2,7 @@
 // per student of the assignment's audience (students from listAssignmentSubmissions), percent within the
 // ExamAccommodation limits, saved with putExamAccommodations (delta F055-D2: reason, Idempotency-Key, If-Match).
 // The server recomputes the deadline of each attempt; nothing is computed here.
-import { Button, Flex, InputNumber, Select, Table, Typography } from 'antd';
+import { Button, Flex, InputNumber, Table, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../../permissions/ActionGate';
@@ -11,6 +11,7 @@ import { useSubmissions, type Assignment } from '../api/assignments';
 import { useExamSession, usePutAccommodations, type ExamAccommodation } from '../api/exams';
 import { LMS_FIELDS, LMS_LIMITS } from '../model/fieldSchemas';
 import { LmsProblem } from '../LmsUi';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function AccommodationsTab({ assignment }: { assignment: Assignment }) {
   const { t } = useTranslation();
@@ -50,7 +51,7 @@ export function AccommodationsTab({ assignment }: { assignment: Assignment }) {
         ]}
       />
       <Flex wrap="wrap" gap="small" align="center">
-        <Select
+        <SearchSelect
           showSearch
           optionFilterProp="label"
           aria-label={t('lms.submissions.student')}

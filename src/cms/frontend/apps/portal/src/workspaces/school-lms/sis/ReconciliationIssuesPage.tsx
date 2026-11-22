@@ -1,6 +1,6 @@
 // "Xung đột đồng bộ" (F052 T026, F052-AC-10): listSchoolReconciliationIssues by type and status with the suggested
 // action; "Xử lý" (ActionGate sis_sync.import) on open issues. `entity_refs` are ids only (no raw PII, SIS_INTEGRATION).
-import { Button, Flex, Form, Select, Space, Tag, Typography } from 'antd';
+import { Button, Flex, Form, Space, Tag, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import { ResponsiveTable } from '../common/ResponsiveTable';
 import { StatusTag } from '../common/ui';
 import { ResolveIssueDialog } from './ResolveIssueDialog';
 import { useReconciliationIssues, type IssueStatus, type IssueType, type ReconciliationIssue } from './useReconciliation';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const TYPES: IssueType[] = ['duplicate_identifier', 'school_province_missing', 'school_duplicate', 'possible_duplicate', 'transfer_confirmation', 'deactivation_review', 'cleaned_up_student_in_sis'];
 const STATUSES: IssueStatus[] = ['open', 'resolved', 'ignored'];
@@ -62,10 +63,10 @@ export function ReconciliationIssuesPage({ schoolId }: { schoolId: string }) {
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
       <Flex wrap="wrap" gap="middle">
         <Form.Item label={t('portal.school_lms.recon.type')}>
-          <Select allowClear aria-label={t('portal.school_lms.recon.type')} value={issueType} onChange={setIssueType} popupMatchSelectWidth={false} options={TYPES.map((x) => ({ value: x, label: t(`portal.school_lms.recon.types.${x}`) }))} />
+          <SearchSelect allowClear aria-label={t('portal.school_lms.recon.type')} value={issueType} onChange={setIssueType} popupMatchSelectWidth={false} options={TYPES.map((x) => ({ value: x, label: t(`portal.school_lms.recon.types.${x}`) }))} />
         </Form.Item>
         <Form.Item label={t('portal.school_lms.recon.status')}>
-          <Select allowClear aria-label={t('portal.school_lms.recon.status')} value={status} onChange={setStatus} options={STATUSES.map((x) => ({ value: x, label: t(`portal.school_lms.status.issue.${x}`) }))} />
+          <SearchSelect allowClear aria-label={t('portal.school_lms.recon.status')} value={status} onChange={setStatus} options={STATUSES.map((x) => ({ value: x, label: t(`portal.school_lms.status.issue.${x}`) }))} />
         </Form.Item>
       </Flex>
       {issues.error ? <QueryError error={issues.error} resource /> : null}

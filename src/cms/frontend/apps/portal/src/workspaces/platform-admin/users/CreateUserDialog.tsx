@@ -5,7 +5,7 @@
 //   scope tenant/school/subject — no `class`, ADR-0072).
 // Email is mandatory for both. `409 USERNAME_TAKEN` / `EMAIL_TAKEN` shows the hint "gán role cho tài khoản sẵn có"
 // (identifier_uniqueness). `kinds` = the kinds the caller's actions allow (display only; the backend authorizes).
-import { Alert, App as AntApp, Form, Input, Modal, Radio, Select } from 'antd';
+import { Alert, App as AntApp, Form, Input, Modal, Radio } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
@@ -16,6 +16,7 @@ import { useCreatePlatformUser, useCreateTenantUser, type PlatformUserCreateRequ
 import { isUuid, LIMITS } from '../limits';
 import { applyFieldErrors, LimitedField, ReasonField } from '../ui';
 import { grantableRoles, TRAINING_REQUIRED_ROLE } from '../user-roles/grantableRoles';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const LOCALES = ['vi-VN', 'en-US'] as const;
 const TAKEN = ['USERNAME_TAKEN', 'EMAIL_TAKEN'];
@@ -114,7 +115,7 @@ export function CreateUserDialog({ kinds, onClose }: { kinds: readonly CreateKin
         />
         <LimitedField name="display_name" label={t('platform.users.displayName')} limit={kind === 'platform' ? LIMITS.platformDisplayName : LIMITS.displayName} required />
         <Form.Item name="locale" label={t('platform.users.locale')}>
-          <Select options={LOCALES.map((x) => ({ value: x, label: t(`shell.locale.${x}`) }))} />
+          <SearchSelect options={LOCALES.map((x) => ({ value: x, label: t(`shell.locale.${x}`) }))} />
         </Form.Item>
         {kind === 'platform' ? (
           <>
@@ -124,7 +125,7 @@ export function CreateUserDialog({ kinds, onClose }: { kinds: readonly CreateKin
               extra={t('platform.users.safetyLater')}
               rules={[{ required: true, type: 'array', min: 1, message: t('platform.userRoles.roleRequired') }]}
             >
-              <Select
+              <SearchSelect
                 mode="multiple"
                 maxCount={LIMITS.platformInitialRoles.maxItems}
                 optionFilterProp="label"
@@ -139,7 +140,7 @@ export function CreateUserDialog({ kinds, onClose }: { kinds: readonly CreateKin
         ) : (
           <>
             <Form.Item name="role_id" label={t('platform.users.initialRole')} rules={[{ required: true, message: t('platform.userRoles.roleRequired') }]}>
-              <Select
+              <SearchSelect
                 showSearch
                 optionFilterProp="label"
                 disabled={!target}
@@ -148,11 +149,11 @@ export function CreateUserDialog({ kinds, onClose }: { kinds: readonly CreateKin
               />
             </Form.Item>
             <Form.Item name="scope_type" label={t('platform.userRoles.scope')} rules={[{ required: true }]}>
-              <Select options={INITIAL_SCOPES.map((x) => ({ value: x, label: t(`platform.scopeType.${x}`) }))} />
+              <SearchSelect options={INITIAL_SCOPES.map((x) => ({ value: x, label: t(`platform.scopeType.${x}`) }))} />
             </Form.Item>
             {scopeType === 'school' ? (
               <Form.Item name="scope_id" label={t('platform.scopeType.school')} rules={[{ required: true, message: t('platform.userRoles.scopeIdRequired') }]}>
-                <Select loading={schools.isFetching} options={(schools.data ?? []).map((s) => ({ value: s.school_id, label: `${s.name.vi} (${s.code})` }))} />
+                <SearchSelect loading={schools.isFetching} options={(schools.data ?? []).map((s) => ({ value: s.school_id, label: `${s.name.vi} (${s.code})` }))} />
               </Form.Item>
             ) : null}
             {scopeType === 'subject' ? (

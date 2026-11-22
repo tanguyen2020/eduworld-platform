@@ -3,7 +3,7 @@
 // schedule (`sis_sync_schedule` default when empty), whether a secret is configured (never its value) and the last sync
 // run; a row expands to its schools (listSisConnectionSchools) and sync runs (listSisSyncRuns: status, time, rejected
 // rows). Columns read named schema fields only, so a field outside the schema is never shown.
-import { Button, Select, Space, Table, Tag, Typography } from 'antd';
+import { Button, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { TenantFilter } from '../../../shell/TenantControls';
 import { useSisConnections, useSisConnectionSchools, useSisSyncRuns, type SisConnection, type SisConnectionStatus, type SyncRun } from '../api/integrations';
 import { useTenantDirectory } from '../api/tenants';
 import { formatTime, TenantCell } from '../ui';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const STATUSES: readonly SisConnectionStatus[] = ['active', 'auth_error', 'contract_error', 'paused'];
 /** `SyncRun.stats` key of the rejected rows (module identity SIS import). */
@@ -46,7 +47,7 @@ export function SisConnectionsTab() {
   return (
     <section aria-label={t('platform.integrations.tabSis')}>
       <Space wrap>
-        <Select
+        <SearchSelect
           aria-label={t('platform.common.status')}
           allowClear
           placeholder={t('platform.integrations.allStatuses')}
@@ -87,7 +88,7 @@ function ConnectionDetail({ connectionId }: { connectionId: string }) {
         rowKey="school_id"
         size="small"
         pagination={false}
-        dataSource={schools.data ?? []}
+        dataSource={schools.rows}
         loading={schools.isFetching}
         columns={[
           { key: 'name', title: t('platform.integrations.schoolName'), render: (_, s) => s.school_name ?? s.school_id },
@@ -95,13 +96,18 @@ function ConnectionDetail({ connectionId }: { connectionId: string }) {
           { key: 'assigned', title: t('platform.integrations.assignedAt'), render: (_, s) => formatTime(s.assigned_at) },
         ]}
       />
+      {schools.hasNextPage && (
+        <Button size="small" onClick={() => void schools.fetchNextPage()} loading={schools.isFetchingNextPage}>
+          {t('platform.common.loadMore')}
+        </Button>
+      )}
       <Typography.Text strong>{t('platform.integrations.runs')}</Typography.Text>
       {runs.error ? <ProblemMessage error={runs.error} /> : null}
       <Table
         rowKey="sync_run_id"
         size="small"
         pagination={false}
-        dataSource={runs.data ?? []}
+        dataSource={runs.rows}
         loading={runs.isFetching}
         columns={[
           { key: 'kind', title: t('platform.integrations.runKind'), render: (_, r) => r.kind },
@@ -111,6 +117,11 @@ function ConnectionDetail({ connectionId }: { connectionId: string }) {
           { key: 'rejected', title: t('platform.integrations.rejectedRows'), render: (_, r) => r.stats?.[REJECTED_STAT] ?? 0 },
         ]}
       />
+      {runs.hasNextPage && (
+        <Button size="small" onClick={() => void runs.fetchNextPage()} loading={runs.isFetchingNextPage}>
+          {t('platform.common.loadMore')}
+        </Button>
+      )}
     </Space>
   );
 }

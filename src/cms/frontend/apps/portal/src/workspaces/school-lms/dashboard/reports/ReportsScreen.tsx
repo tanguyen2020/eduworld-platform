@@ -5,7 +5,7 @@
 // createTenantReport). Numbers are the server's; cells are never recomputed. ADR-0095: no course or class — the skill map
 // is per school, grade and subject; reference levels per school and subject, optionally one grade.
 import { DashboardMetric, DashboardQueueProvider, DashboardRangePicker, DashboardWidget, SuppressedCell, type DashboardRange } from '@eduworld/ops-ui/dashboard';
-import { Col, Flex, Form, Row, Select, Table, Tabs } from 'antd';
+import { Col, Flex, Form, Row, Table, Tabs } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { localizedName } from '../../common/format';
@@ -23,6 +23,7 @@ import { defaultRange, subjectLabel, todayIso } from '../model/filters';
 import { DASHBOARD_CONFIG, RANGE_LIMITS } from '../model/limits';
 import { RegulationDisclaimer } from './RegulationDisclaimer';
 import { LmsReportExport, TenantReportExport } from './ReportExport';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 type ReportType = LmsReportRequest['report_type'];
 type Format = LmsReportRequest['format'];
@@ -83,7 +84,7 @@ function ExportTab() {
     <Flex vertical gap="middle" data-testid="export-tab">
       <Flex wrap gap="small" align="end">
         <Form.Item label={t('dashboard.export.type')} style={{ marginBottom: 0 }}>
-          <Select<ReportType>
+          <SearchSelect<ReportType>
             aria-label={t('dashboard.export.type')}
             value={v.type}
             onChange={(type) => set({ type, format: REPORT_FORMATS[type][0]! })}
@@ -92,7 +93,7 @@ function ExportTab() {
           />
         </Form.Item>
         <Form.Item label={t('dashboard.export.format')} style={{ marginBottom: 0 }}>
-          <Select<Format> aria-label={t('dashboard.export.format')} value={v.format} onChange={(format) => set({ format })} options={REPORT_FORMATS[v.type].map((f) => ({ value: f, label: f.toUpperCase() }))} />
+          <SearchSelect<Format> aria-label={t('dashboard.export.format')} value={v.format} onChange={(format) => set({ format })} options={REPORT_FORMATS[v.type].map((f) => ({ value: f, label: f.toUpperCase() }))} />
         </Form.Item>
         {show.school ? (
           <Form.Item label={t('portal.school_lms.common.school')} style={{ marginBottom: 0 }}>
@@ -101,7 +102,7 @@ function ExportTab() {
         ) : null}
         {show.grade ? (
           <Form.Item label={t('dashboard.filter.grade')} style={{ marginBottom: 0 }}>
-            <Select
+            <SearchSelect
               allowClear={v.type !== 'skill_map'}
               aria-label={t('dashboard.filter.grade')}
               placeholder={t('dashboard.filter.allGrades')}
@@ -114,17 +115,17 @@ function ExportTab() {
         ) : null}
         {show.assignment ? (
           <Form.Item label={t('dashboard.export.assignment')} style={{ marginBottom: 0 }}>
-            <Select aria-label={t('dashboard.export.assignment')} value={v.assignmentId} onChange={(assignmentId: string) => set({ assignmentId })} options={assignments.items.map((a) => ({ value: a.assignment_id, label: a.title }))} popupMatchSelectWidth={false} />
+            <SearchSelect aria-label={t('dashboard.export.assignment')} value={v.assignmentId} onChange={(assignmentId: string) => set({ assignmentId })} options={assignments.items.map((a) => ({ value: a.assignment_id, label: a.title }))} popupMatchSelectWidth={false} />
           </Form.Item>
         ) : null}
         {show.subject ? (
           <Form.Item label={t('dashboard.filter.subject')} style={{ marginBottom: 0 }}>
-            <Select aria-label={t('dashboard.filter.subject')} value={v.subjectId} onChange={(subjectId: string) => set({ subjectId })} options={(subjects.data ?? []).map((s) => ({ value: s.subject_id, label: subjectLabel(s, i18n.language) }))} popupMatchSelectWidth={false} />
+            <SearchSelect aria-label={t('dashboard.filter.subject')} value={v.subjectId} onChange={(subjectId: string) => set({ subjectId })} options={(subjects.data ?? []).map((s) => ({ value: s.subject_id, label: subjectLabel(s, i18n.language) }))} popupMatchSelectWidth={false} />
           </Form.Item>
         ) : null}
         {show.period ? (
           <Form.Item label={t('dashboard.reference.period')} style={{ marginBottom: 0 }}>
-            <Select<AssessmentPeriod> aria-label={t('dashboard.reference.period')} value={v.period} onChange={(period) => set({ period })} options={PERIODS.map((p) => ({ value: p, label: t(`dashboard.reference.periods.${p}`) }))} popupMatchSelectWidth={false} />
+            <SearchSelect<AssessmentPeriod> aria-label={t('dashboard.reference.period')} value={v.period} onChange={(period) => set({ period })} options={PERIODS.map((p) => ({ value: p, label: t(`dashboard.reference.periods.${p}`) }))} popupMatchSelectWidth={false} />
           </Form.Item>
         ) : null}
         {show.range ? <DashboardRangePicker value={v.range} limits={RANGE_LIMITS} onChange={(range) => set({ range })} /> : null}
@@ -159,7 +160,7 @@ function TenantSummaryTab() {
     <Flex vertical gap="middle" data-testid="tenant-summary">
       <Flex wrap gap="small" align="end">
         <Form.Item label={t('dashboard.summary.schools')} style={{ marginBottom: 0 }}>
-          <Select
+          <SearchSelect
             mode="multiple"
             allowClear
             aria-label={t('dashboard.summary.schools')}
@@ -172,7 +173,7 @@ function TenantSummaryTab() {
           />
         </Form.Item>
         <Form.Item label={t('dashboard.filter.grade')} style={{ marginBottom: 0 }}>
-          <Select allowClear aria-label={t('dashboard.filter.grade')} placeholder={t('dashboard.filter.allGrades')} value={grade} onChange={(g?: number) => setGrade(g)} options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: t('dashboard.filter.gradeN', { n: i + 1 }) }))} popupMatchSelectWidth={false} />
+          <SearchSelect allowClear aria-label={t('dashboard.filter.grade')} placeholder={t('dashboard.filter.allGrades')} value={grade} onChange={(g?: number) => setGrade(g)} options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: t('dashboard.filter.gradeN', { n: i + 1 }) }))} popupMatchSelectWidth={false} />
         </Form.Item>
         <DashboardRangePicker value={range} limits={RANGE_LIMITS} onChange={setRange} />
       </Flex>

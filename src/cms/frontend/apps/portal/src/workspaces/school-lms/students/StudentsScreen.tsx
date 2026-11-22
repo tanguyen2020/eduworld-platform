@@ -3,7 +3,7 @@
 // (listTenantGradeStudents, cursor, optional search), read-only with the "SIS" tag (SIS/CSV owns them, ADR-0060), last
 // game login and days without the game. Actions: login history (ActionGate student_activity.view) and password reset
 // (ActionGate students.reset_password). No class, no "học sinh chưa có lớp" (gone with the class concept).
-import { Button, Flex, Form, Input, Select, Space, Typography } from 'antd';
+import { Button, Flex, Form, Input, Space, Typography } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +19,7 @@ import { SingleTenantGate } from '../common/scope';
 import { PageTitle, SourceTag, StatusTag } from '../common/ui';
 import { useGradeStudents, useSchoolGrades, type GradeStudent } from '../lms/api/targets';
 import { ResetStudentPasswordDialog } from './ResetStudentPasswordDialog';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 /** Path of a student's login history in the `menu.school_lms.student_activity` screen (path from the catalog). */
 export function studentActivityPath(studentId: string): string {
@@ -46,7 +47,7 @@ export function SchoolGradeFields({ p }: { p: ReturnType<typeof useSchoolGradePi
         <SchoolSelect value={p.schoolId} onChange={p.setSchoolId} />
       </Form.Item>
       <Form.Item label={t('portal.school_lms.students.grade')} style={{ marginBottom: 0 }}>
-        <Select
+        <SearchSelect
           aria-label={t('portal.school_lms.students.grade')}
           value={p.grade}
           onChange={(g: number) => p.setGrade(g)}

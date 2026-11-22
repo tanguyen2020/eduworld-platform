@@ -1,6 +1,6 @@
 // Scope target of a UserRole (F052-AC-16, ADR-0072): a school (listTenantSchools — a School Admin only sees their
 // own) or a subject (listSubjects of the tenant). "Đơn vị" has no target. No class scope exists.
-import { Form, Select } from 'antd';
+import { Form } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { qk, useApi } from '../common/api';
@@ -8,6 +8,7 @@ import { localizedName } from '../common/format';
 import { useSchoolLmsScope } from '../common/scope';
 import { useSchoolList } from '../schools/useSchools';
 import type { GrantMode, GrantScope } from './canGrant';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 function useSubjects(enabled: boolean) {
   const api = useApi();
@@ -31,7 +32,7 @@ export function ScopeTargetField({ scopeType, mode }: { scopeType: GrantScope | 
   const subjectOptions = (subjects.data ?? []).map((s) => ({ value: s.subject_id, label: s.name.vi ?? s.code }));
   return (
     <Form.Item name="scope_id" label={t(`portal.school_lms.userRoles.target.${scopeType}`)} rules={[{ required: true, message: t('portal.school_lms.userRoles.targetRequired') }]}>
-      <Select showSearch optionFilterProp="label" loading={scopeType === 'school' ? schools.isFetching : subjects.isFetching} options={scopeType === 'school' ? schoolOptions : subjectOptions} />
+      <SearchSelect showSearch optionFilterProp="label" loading={scopeType === 'school' ? schools.isFetching : subjects.isFetching} options={scopeType === 'school' ? schoolOptions : subjectOptions} />
     </Form.Item>
   );
 }

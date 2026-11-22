@@ -1,7 +1,8 @@
 // Tenant hooks (F057 T039, F057-AC-17): listTenants (cursor, `q`, `tenant_type`), createTenant (Idempotency-Key),
 // updateTenant (merge patch, If-Match, Idempotency-Key). If-Match = `version` of the list row (OQ F057-3 resolved
 // 2026-11-20); a stale version gets 412 VERSION_MISMATCH, shown by its code.
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTenantOptions } from '../../../shared/api/hooks/useTenantOptions';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { pageQuery, reloadOnStaleVersion, useCursorList, usePlatformApi, versionIfMatch, type CursorPage, type Schemas } from './common';
 
@@ -23,16 +24,10 @@ export function useTenantList(q: string, tenantType: TenantType | undefined) {
   );
 }
 
-/** Tenant id → summary of the first page of listTenants (names of the Tenant column); unknown ids show the raw id. */
+/** Tenant id → summary of EVERY tenant (fetchAllPages over listTenants, shared cache with useTenantOptions) for the
+ * Tenant column; unknown ids show the raw id. */
 export function useTenantDirectory(enabled = true) {
-  const api = usePlatformApi();
-  const q = useQuery({
-    queryKey: ['platform', 'tenant-directory'],
-    queryFn: () => api.call<CursorPage<TenantSummary>>(api.client.GET('/admin/tenants', { params: { query: { limit: 100 } } })),
-    enabled,
-    staleTime: 60_000,
-  });
-  return new Map((q.data?.data ?? []).map((t) => [t.tenant_id, t] as const));
+  return new Map(useTenantOptions('', enabled).items.map((t) => [t.tenant_id, t] as const));
 }
 
 export function useCreateTenant() {
@@ -45,7 +40,7 @@ export function useCreateTenant() {
       api.etags.remember(tenantPath(data.tenant_id), (await pending).response.headers.get('ETag'));
       return data;
     },
-    { onSuccess: () => qc.invalidateQueries({ queryKey: ['platform', 'tenants'] }) },
+    { onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: ['platform', 'tenants'] }), qc.invalidateQueries({ queryKey: ['admin', 'tenants'] })]) },
   );
 }
 

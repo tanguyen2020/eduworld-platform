@@ -1,7 +1,7 @@
 // "Người dùng" (F052 T032, F052-AC-12, F052-AC-13, F052-AC-16): listTenantUsers filtered by q / type / school / role;
 // students are read-only with the "SIS" tag and never get a portal-role action (ADR-0066); staff open their UserRole
 // panel and, with edit_users, "Đổi email" (OQ F012-1). "Thêm nhân sự" behind ActionGate edit_users. Roles offered come from grantableRoles (display only).
-import { Button, Flex, Form, Input, Select, Space } from 'antd';
+import { Button, Flex, Form, Input, Space } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,19 +13,20 @@ import { FIELDS } from '../common/fieldSchemas';
 import { ResponsiveTable } from '../common/ResponsiveTable';
 import { SchoolSelect } from '../common/SchoolSelect';
 import { SourceTag, StatusTag } from '../common/ui';
-import { useRoleList } from '../roles/useRoles';
+import { useRoleOptions } from '../roles/useRoles';
 import { grantableRoles, grantMode } from './canGrant';
 import { ChangeEmailDialog } from './ChangeEmailDialog';
 import { CreateStaffForm } from './CreateStaffForm';
 import { UserRolesPanel } from './UserRolesPanel';
 import { useUserList, type User, type UserFilters } from './useUsers';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export function UserListPage() {
   const { t } = useTranslation();
   const { view } = usePermissions();
   const [filters, setFilters] = useState<UserFilters>({ userType: 'staff' });
   const users = useUserList(filters);
-  const roles = useRoleList();
+  const roles = useRoleOptions();
   const grantable = grantableRoles(roles.items, view?.permissions ?? []);
   const mode = grantMode(useMyPermissions().data?.roles);
   const [adding, setAdding] = useState(false);
@@ -66,7 +67,7 @@ export function UserListPage() {
           <Input.Search allowClear placeholder={t('portal.school_lms.users.searchHint')} maxLength={FIELDS.userSearch.maxLength} onSearch={(q) => setFilters((f) => ({ ...f, q }))} />
         </Form.Item>
         <Form.Item label={t('portal.school_lms.users.type')}>
-          <Select
+          <SearchSelect
             allowClear
             aria-label={t('portal.school_lms.users.type')}
             value={filters.userType}
@@ -78,7 +79,7 @@ export function UserListPage() {
           <SchoolSelect value={filters.schoolId} onChange={(schoolId) => setFilters((f) => ({ ...f, schoolId }))} allowClear autoSelect={false} />
         </Form.Item>
         <Form.Item label={t('portal.school_lms.users.role')}>
-          <Select allowClear aria-label={t('portal.school_lms.users.role')} value={filters.roleCode} onChange={(roleCode) => setFilters((f) => ({ ...f, roleCode }))} options={roles.items.map((r) => ({ value: r.code, label: r.code }))} />
+          <SearchSelect allowClear aria-label={t('portal.school_lms.users.role')} value={filters.roleCode} onChange={(roleCode) => setFilters((f) => ({ ...f, roleCode }))} truncated={roles.truncated} options={roles.items.map((r) => ({ value: r.code, label: r.code }))} />
         </Form.Item>
         <ActionGate actionKey="action.school_lms.access_control.edit_users">
           <Button type="primary" onClick={() => setAdding(true)}>

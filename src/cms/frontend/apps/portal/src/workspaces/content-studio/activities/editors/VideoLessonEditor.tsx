@@ -5,7 +5,7 @@
 // the seek policy and the completion rule prefilled from `video_completion`, a length warning by grade, and a preview
 // (MP4 variant, chapters, subtitles, pause at each cue). Early checks only (videoRules); module learning decides.
 import { DeleteOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Checkbox, Flex, Form, Input, InputNumber, Radio, Select, Space, Switch, Table, Typography } from 'antd';
+import { Alert, Button, Card, Checkbox, Flex, Form, Input, InputNumber, Radio, Space, Switch, Table, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MediaPicker } from '../../media/MediaPicker';
@@ -14,6 +14,7 @@ import { QuestionPicker } from '../../question-sets/SelectionRuleEditor';
 import type { Config } from '../activityModel';
 import type { ActivityEditorProps, BlockerContext } from '../editorRegistry';
 import { recommendedMinutes, videoIssues, type Branch, type Chapter, type Cue, type Segment, type Subtitle, type VideoContent } from '../validators/videoRules';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 /** video_completion (CONFIG_DEFAULTS): watched ≥ 90 % + required cues answered. */
 export const VIDEO_COMPLETION = { mode: 'min_watched_ratio', min_watched_ratio: 0.9, require_required_cues: true } as const;
@@ -169,7 +170,7 @@ export function VideoLessonEditor({ config, onChange, readOnly, errors, gradeLev
         <Flex vertical gap="small">
           {subs.map((s, i) => (
             <Flex key={i} gap="small" align="center" data-testid={`subtitle-${i}`}>
-              <Select aria-label={t('content_studio.activity.video.subtitleLanguageOf', { n: i + 1 })} disabled={readOnly} value={s.language} style={{ width: 90 }} options={['vi', 'en'].map((l) => ({ value: l, label: l }))} onChange={(v: string) => set({ subtitles: upd(subs, i, { language: v }) })} />
+              <SearchSelect aria-label={t('content_studio.activity.video.subtitleLanguageOf', { n: i + 1 })} disabled={readOnly} value={s.language} style={{ width: 90 }} options={['vi', 'en'].map((l) => ({ value: l, label: l }))} onChange={(v: string) => set({ subtitles: upd(subs, i, { language: v }) })} />
               <MediaPicker id={`subtitle_${i}`} kind="subtitle" value={s.subtitle_asset_id} disabled={readOnly} onChange={(v) => set({ subtitles: upd(subs, i, { subtitle_asset_id: v }) })} onStatus={onMediaStatus} />
               <Radio aria-label={t('content_studio.activity.video.subtitleDefaultOf', { n: i + 1 })} disabled={readOnly} checked={!!s.is_default} onChange={() => set({ subtitles: subs.map((x, k) => ({ ...x, is_default: k === i })) })}>
                 {t('content_studio.activity.video.subtitleDefault')}
@@ -238,7 +239,7 @@ export function VideoLessonEditor({ config, onChange, readOnly, errors, gradeLev
               {b.options.map((o, j) => (
                 <Flex key={j} gap="small">
                   <Input aria-label={t('content_studio.activity.video.optionLabelOf', { n: j + 1 })} maxLength={128} disabled={readOnly} value={o.label?.vi ?? ''} onChange={(e) => set({ branches: upd(branches, i, { options: upd(b.options, j, { label: { vi: e.target.value } }) }) })} />
-                  <Select aria-label={t('content_studio.activity.video.optionTargetOf', { n: j + 1 })} disabled={readOnly} style={{ width: 160 }} value={o.target_segment_id || undefined} options={segments.map((s) => ({ value: s.segment_id, label: s.segment_id }))} onChange={(v: string) => set({ branches: upd(branches, i, { options: upd(b.options, j, { target_segment_id: v }) }) })} />
+                  <SearchSelect aria-label={t('content_studio.activity.video.optionTargetOf', { n: j + 1 })} disabled={readOnly} style={{ width: 160 }} value={o.target_segment_id || undefined} options={segments.map((s) => ({ value: s.segment_id, label: s.segment_id }))} onChange={(v: string) => set({ branches: upd(branches, i, { options: upd(b.options, j, { target_segment_id: v }) }) })} />
                 </Flex>
               ))}
               {!readOnly && b.options.length < 4 && <Button size="small" onClick={() => set({ branches: upd(branches, i, { options: [...b.options, { option_id: `o${b.options.length + 1}`, label: {}, target_segment_id: '' }] }) })}>{t('content_studio.activity.video.addOption')}</Button>}
@@ -253,10 +254,10 @@ export function VideoLessonEditor({ config, onChange, readOnly, errors, gradeLev
       <Card size="small" title={t('content_studio.activity.video.rules')}>
         <Form layout="vertical" component="div" disabled={readOnly}>
           <Form.Item label={t('content_studio.activity.video.seek')}>
-            <Select aria-label={t('content_studio.activity.video.seek')} value={interaction.allow_seek as string | undefined} options={SEEKS.map((s) => ({ value: s, label: t(`content_studio.activity.video.seekPolicy.${s}`) }))} onChange={(v: string) => onChange({ ...config, interaction: { ...interaction, allow_seek: v } })} />
+            <SearchSelect aria-label={t('content_studio.activity.video.seek')} value={interaction.allow_seek as string | undefined} options={SEEKS.map((s) => ({ value: s, label: t(`content_studio.activity.video.seekPolicy.${s}`) }))} onChange={(v: string) => onChange({ ...config, interaction: { ...interaction, allow_seek: v } })} />
           </Form.Item>
           <Form.Item label={t('content_studio.activity.video.rates')}>
-            <Select mode="multiple" aria-label={t('content_studio.activity.video.rates')} value={(interaction.playback_rates as number[] | undefined) ?? []} options={RATES.map((r) => ({ value: r, label: `${r}×` }))} onChange={(v: number[]) => onChange({ ...config, interaction: { ...interaction, playback_rates: v } })} />
+            <SearchSelect mode="multiple" aria-label={t('content_studio.activity.video.rates')} value={(interaction.playback_rates as number[] | undefined) ?? []} options={RATES.map((r) => ({ value: r, label: `${r}×` }))} onChange={(v: number[]) => onChange({ ...config, interaction: { ...interaction, playback_rates: v } })} />
           </Form.Item>
           <Flex gap="middle" align="center">
             <Form.Item label={t('content_studio.activity.video.minWatched')}>

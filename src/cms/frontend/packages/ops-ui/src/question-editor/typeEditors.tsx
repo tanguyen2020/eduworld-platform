@@ -1,7 +1,7 @@
 // Editors of the 11 QuestionType values (F053-AC-01, AC-02, AC-03; QUESTION_BANK §3). Each edits the type's
 // `render_payload` + `answer_key` (question.schema.json `$defs/<type>`); ids come from itemId (never A/B/C/D).
 // Registry only — QuestionEditor picks the editor of the draft type.
-import { Button, Card, Checkbox, Flex, Form, Input, InputNumber, Radio, Select, Space, Switch, Typography } from 'antd';
+import { Button, Card, Checkbox, Flex, Form, Input, InputNumber, Radio, Space, Switch, Typography } from 'antd';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BilingualField } from '../i18n-field/BilingualField';
@@ -12,6 +12,7 @@ import { emptyRichContent } from '../rich-content/types';
 import { itemId, type ItemPrefix } from './itemId';
 import { LIMITS, type OptionItem, type QuestionDraft, type QuestionType, type TextMatch } from './mappers';
 import { OptionFeedbackFields } from './OptionFeedbackFields';
+import { SearchSelect } from '../select/SearchSelect';
 
 export interface TypeEditorProps {
   draft: QuestionDraft;
@@ -242,7 +243,7 @@ function AcceptedAnswers({ value, onChange, p, field }: { value: Partial<TextMat
   const accepted = value.accepted ?? [];
   return (
     <Flex vertical gap="small" data-field={field}>
-      <Select
+      <SearchSelect
         mode="tags"
         aria-label={t('question.accepted')}
         placeholder={t('question.accepted')}
@@ -253,7 +254,7 @@ function AcceptedAnswers({ value, onChange, p, field }: { value: Partial<TextMat
         onChange={(v: string[]) => onChange({ ...value, accepted: v.map((x) => x.slice(0, LIMITS.acceptedAnswer)).filter((x) => x.trim()) })}
       />
       <Space wrap>
-        <Select
+        <SearchSelect
           aria-label={t('question.match')}
           value={value.match ?? 'normalized'}
           disabled={p.readOnly}
@@ -306,7 +307,7 @@ function FillBlankEditor(p: TypeEditorProps) {
         )}>
           <Flex vertical gap="small">
             <Space wrap>
-              <Select
+              <SearchSelect
                 aria-label={t('question.blankInput')}
                 value={b.input}
                 disabled={p.readOnly}
@@ -316,7 +317,7 @@ function FillBlankEditor(p: TypeEditorProps) {
               <InputNumber aria-label={t('question.maxLength')} min={1} max={200} value={b.max_length} disabled={p.readOnly} onChange={(v) => setBlanks(blanks.map((x) => (x.id === b.id ? { ...x, max_length: v ?? undefined } : x)))} />
             </Space>
             {b.input === 'dropdown' && (
-              <Select mode="tags" open={false} aria-label={t('question.choices')} placeholder={t('question.choices')} value={b.choices ?? []} disabled={p.readOnly} onChange={(v: string[]) => setBlanks(blanks.map((x) => (x.id === b.id ? { ...x, choices: v.map((c) => c.slice(0, LIMITS.label)) } : x)))} />
+              <SearchSelect mode="tags" open={false} aria-label={t('question.choices')} placeholder={t('question.choices')} value={b.choices ?? []} disabled={p.readOnly} onChange={(v: string[]) => setBlanks(blanks.map((x) => (x.id === b.id ? { ...x, choices: v.map((c) => c.slice(0, LIMITS.label)) } : x)))} />
             )}
             <AcceptedAnswers field={`answer_key.blanks.${b.id}`} value={keys[b.id] ?? {}} p={p} onChange={(v) => setBlanks(blanks, { ...keys, [b.id]: v })} />
           </Flex>
@@ -328,7 +329,7 @@ function FillBlankEditor(p: TypeEditorProps) {
         </Button>
       )}
       <Form.Item label={t('question.wordBank')}>
-        <Select mode="tags" open={false} aria-label={t('question.wordBank')} value={arr<string>(rp.word_bank)} disabled={p.readOnly} onChange={(v: string[]) => p.set({ render_payload: { ...rp, word_bank: v.map((x) => x.slice(0, LIMITS.wordBank)) } })} />
+        <SearchSelect mode="tags" open={false} aria-label={t('question.wordBank')} value={arr<string>(rp.word_bank)} disabled={p.readOnly} onChange={(v: string[]) => p.set({ render_payload: { ...rp, word_bank: v.map((x) => x.slice(0, LIMITS.wordBank)) } })} />
       </Form.Item>
       <FieldError errors={p.errors} field="stem" />
     </Flex>
@@ -345,7 +346,7 @@ function ShortAnswerEditor(p: TypeEditorProps) {
           <InputNumber min={1} max={500} value={rp.max_length as number | undefined} disabled={p.readOnly} onChange={(v) => p.set({ render_payload: { ...rp, max_length: v ?? 100 } })} />
         </Form.Item>
         <Form.Item label={t('question.keyboard')}>
-          <Select value={(rp.keyboard as string) ?? 'text'} disabled={p.readOnly} options={['text', 'numeric'].map((v) => ({ value: v, label: t(`question.keyboards.${v}`) }))} onChange={(keyboard) => p.set({ render_payload: { ...rp, keyboard } })} />
+          <SearchSelect value={(rp.keyboard as string) ?? 'text'} disabled={p.readOnly} options={['text', 'numeric'].map((v) => ({ value: v, label: t(`question.keyboards.${v}`) }))} onChange={(keyboard) => p.set({ render_payload: { ...rp, keyboard } })} />
         </Form.Item>
       </Space>
       <AcceptedAnswers field="answer_key.accepted" value={p.draft.answer_key as Partial<TextMatch>} p={p} onChange={(v) => p.set({ answer_key: { ...v } })} />
@@ -365,7 +366,7 @@ function NumericEditor(p: TypeEditorProps) {
           <InputNumber aria-label={t('question.numericValue')} value={typeof ak.value === 'number' ? ak.value : null} disabled={p.readOnly} onChange={(v) => p.set({ answer_key: { ...ak, value: v ?? undefined } })} />
         </Form.Item>
         <Form.Item label={t('question.tolerance')}>
-          <Select value={tol.type ?? 'exact'} disabled={p.readOnly} options={['exact', 'absolute', 'relative'].map((v) => ({ value: v, label: t(`question.tolerances.${v}`) }))} onChange={(type) => p.set({ answer_key: { ...ak, tolerance: type === 'exact' ? { type } : { type, value: tol.value ?? 0 } } })} />
+          <SearchSelect value={tol.type ?? 'exact'} disabled={p.readOnly} options={['exact', 'absolute', 'relative'].map((v) => ({ value: v, label: t(`question.tolerances.${v}`) }))} onChange={(type) => p.set({ answer_key: { ...ak, tolerance: type === 'exact' ? { type } : { type, value: tol.value ?? 0 } } })} />
         </Form.Item>
         {tol.type && tol.type !== 'exact' && (
           <Form.Item label={t('question.toleranceValue')}>
@@ -383,7 +384,7 @@ function NumericEditor(p: TypeEditorProps) {
         <Checkbox checked={ak.accept_equivalent_forms !== false} disabled={p.readOnly} onChange={(e) => p.set({ answer_key: { ...ak, accept_equivalent_forms: e.target.checked } })}>
           {t('question.acceptEquivalent')}
         </Checkbox>
-        <Select aria-label={t('question.decimalSeparator')} value={(rp.decimal_separator as string) ?? ','} disabled={p.readOnly} options={[{ value: ',', label: ',' }, { value: '.', label: '.' }]} onChange={(decimal_separator) => p.set({ render_payload: { ...rp, decimal_separator } })} />
+        <SearchSelect aria-label={t('question.decimalSeparator')} value={(rp.decimal_separator as string) ?? ','} disabled={p.readOnly} options={[{ value: ',', label: ',' }, { value: '.', label: '.' }]} onChange={(decimal_separator) => p.set({ render_payload: { ...rp, decimal_separator } })} />
       </Space>
     </Flex>
   );
@@ -410,7 +411,7 @@ function MatchingEditor(p: TypeEditorProps) {
         p={p}
         onChange={(next) => p.set({ render_payload: { ...rp, left: next }, answer_key: { pairs: prune(next, right) } })}
         extra={(o) => (
-          <Select
+          <SearchSelect
             aria-label={t('question.pairWith')}
             placeholder={t('question.pairWith')}
             allowClear
@@ -489,7 +490,7 @@ function DragDropEditor(p: TypeEditorProps) {
         p={p}
         onChange={(next) => p.set({ render_payload: { ...rp, draggables: next }, answer_key: { placements: Object.fromEntries(Object.entries(placements).filter(([d]) => next.some((x) => x.id === d))) } })}
         extra={(d) => (
-          <Select
+          <SearchSelect
             aria-label={t('question.placeIn')}
             placeholder={t('question.distractor')}
             allowClear
@@ -549,7 +550,7 @@ function ImageBasedEditor(p: TypeEditorProps) {
       <Space wrap>
         {num(t('question.imageWidth'), size.w, (w) => p.set({ render_payload: { ...rp, image_size: { ...size, w } } }))}
         {num(t('question.imageHeight'), size.h, (h) => p.set({ render_payload: { ...rp, image_size: { ...size, h } } }))}
-        <Select
+        <SearchSelect
           aria-label={t('question.interaction')}
           value={hotspot ? 'hotspot' : 'label'}
           disabled={p.readOnly}
@@ -570,7 +571,7 @@ function ImageBasedEditor(p: TypeEditorProps) {
           {regions.map((r) => (
             <Space key={r.id} wrap>
               <Typography.Text code>{r.id}</Typography.Text>
-              <Select value={r.shape} disabled={p.readOnly} aria-label={t('question.shape')} options={['circle', 'rect'].map((v) => ({ value: v, label: t(`question.shapes.${v}`) }))} onChange={(shape) => setRegion(r.id, { shape })} />
+              <SearchSelect value={r.shape} disabled={p.readOnly} aria-label={t('question.shape')} options={['circle', 'rect'].map((v) => ({ value: v, label: t(`question.shapes.${v}`) }))} onChange={(shape) => setRegion(r.id, { shape })} />
               {r.shape === 'circle' ? (
                 <>
                   {num(t('question.coords.cx'), r.cx, (cx) => setRegion(r.id, { cx }))}
@@ -618,7 +619,7 @@ function ImageBasedEditor(p: TypeEditorProps) {
             p={p}
             onChange={(next) => p.set({ render_payload: { ...rp, labels: next } })}
             extra={(l) => (
-              <Select
+              <SearchSelect
                 aria-label={t('question.placeIn')}
                 allowClear
                 value={placements[l.id]}

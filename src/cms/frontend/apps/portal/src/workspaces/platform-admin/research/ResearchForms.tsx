@@ -1,8 +1,9 @@
 // Small form pieces of the research screens (F035 US8): UUID inputs, number inputs bounded by the OpenAPI limits,
 // status tags. Presentational only — the backend validates every field (422 VALIDATION_FAILED mapped to the fields).
-import { Form, InputNumber, Input, Select, Tag } from 'antd';
+import { Form, InputNumber, Input, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { FieldLimit } from '../limits';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -28,7 +29,7 @@ export function UuidListField({ name, label, limit, required = false }: { name: 
         { validator: (_, v?: string[]) => ((v ?? []).every((x) => UUID_PATTERN.test(x)) ? Promise.resolve() : Promise.reject(new Error(t('platform.research.form.uuid')))) },
       ]}
     >
-      <Select mode="tags" open={false} aria-label={label} maxCount={limit.maxItems} tokenSeparators={[',', ' ', '\n']} />
+      <SearchSelect mode="tags" open={false} aria-label={label} maxCount={limit.maxItems} tokenSeparators={[',', ' ', '\n']} />
     </Form.Item>
   );
 }

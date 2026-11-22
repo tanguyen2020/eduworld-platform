@@ -1,13 +1,14 @@
 // Tenant form (F057 T039, F057-AC-17, F057-AC-21): create (`TenantCreate`: code 2–64, name ≤ 255, type, Keycloak
 // alias pattern, default locale, optional reason) or edit the name (`TenantUpdate`, reason 3–500). Limits come from
 // the OpenAPI schema with a character counter; `409 CONFLICT` is shown on the code field (identifier_uniqueness).
-import { Alert, App as AntApp, Form, Modal, Select } from 'antd';
+import { Alert, App as AntApp, Form, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { TENANT_TYPES, useCreateTenant, useUpdateTenant, type TenantCreate, type TenantSummary } from '../api/tenants';
 import { LIMITS } from '../limits';
 import { applyFieldErrors, LimitedField, ReasonField } from '../ui';
+import { SearchSelect } from '@eduworld/ops-ui';
 
 const LOCALES = ['vi-VN', 'en-US'] as const;
 
@@ -53,11 +54,11 @@ export function TenantForm({ tenant, onClose }: { tenant: TenantSummary | null; 
         {tenant ? null : (
           <>
             <Form.Item name="tenant_type" label={t('platform.tenants.type')} rules={[{ required: true }]}>
-              <Select options={TENANT_TYPES.map((x) => ({ value: x, label: t(`shell.tenantType.${x}`) }))} />
+              <SearchSelect options={TENANT_TYPES.map((x) => ({ value: x, label: t(`shell.tenantType.${x}`) }))} />
             </Form.Item>
             <LimitedField name="keycloak_org_alias" label={t('platform.tenants.alias')} help={t('platform.tenants.aliasHelp')} limit={LIMITS.tenantAlias} required />
             <Form.Item name="default_locale" label={t('platform.tenants.locale')}>
-              <Select options={LOCALES.map((x) => ({ value: x, label: t(`shell.locale.${x}`) }))} />
+              <SearchSelect options={LOCALES.map((x) => ({ value: x, label: t(`shell.locale.${x}`) }))} />
             </Form.Item>
           </>
         )}

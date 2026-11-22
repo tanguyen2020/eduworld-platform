@@ -2,11 +2,13 @@
 // listCurriculumVersions, listCmsTopics, listCmsObjectives (reads, cache keys with the session scope); updateTopic and
 // update/createObjective with If-Match (`W/"<row_version>"` of the list item, contract delta of F053); createTopic,
 // createObjective, createCurriculum (Idempotency-Key); curriculum version workflow (transitionCurriculumVersion,
-// publishCurriculumVersion — If-Match + Idempotency-Key).
+// publishCurriculumVersion — If-Match + Idempotency-Key). Lists feed dropdowns and the tree: every cursor page is read
+// (fetchAllPages, owner rule 2026-11-22), never a single page.
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
 import type { components } from '../../../shared/api/schema.gen';
+import { fetchAllAsPage } from '../../../shared/api/fetchAllPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { withEtag } from '../questions/useQuestion';
 
@@ -18,7 +20,6 @@ export type LearningObjective = components['schemas']['LearningObjective'];
 export type LearningObjectiveInput = components['schemas']['LearningObjectiveInput'];
 export type TopicPatch = components['schemas']['TopicPatch'];
 
-type Page<T> = { data: T[] };
 
 /** If-Match of a list item (row_version, F053 contract delta); none when the server does not send it yet. */
 export const ifMatchOf = (rowVersion: number | undefined): Record<string, string> => (rowVersion ? { 'If-Match': `W/"${rowVersion}"` } : {});
@@ -28,13 +29,13 @@ const key = (scope: string, ...rest: unknown[]) => ['content-studio', ...rest.sl
 export function useSubjects() {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useQuery({ queryKey: key(scopeKey, 'subjects'), queryFn: () => api.call<Page<Subject>>(api.client.GET('/cms/learning/subjects', { params: { query: { limit: 100 } as never } })) });
+  return useQuery({ queryKey: key(scopeKey, 'subjects'), queryFn: () => fetchAllAsPage<Subject>((query) => api.call(api.client.GET('/cms/learning/subjects', { params: { query } }))) });
 }
 
 export function useCurricula(enabled = true) {
   const { api } = usePortalRuntime();
   const { scopeKey } = useSession();
-  return useQuery({ queryKey: key(scopeKey, 'curricula'), queryFn: () => api.call<Page<Curriculum>>(api.client.GET('/cms/learning/curricula', { params: { query: { limit: 100 } as never } })), enabled });
+  return useQuery({ queryKey: key(scopeKey, 'curricula'), queryFn: () => fetchAllAsPage<Curriculum>((query) => api.call(api.client.GET('/cms/learning/curricula', { params: { query } }))), enabled });
 }
 
 /** Current curriculum version picked for a subject × grade (khối). */
@@ -99,13 +100,11 @@ export function useCurriculumVersions(curriculumId: string | undefined) {
   const { scopeKey } = useSession();
   return useQuery({
     queryKey: key(scopeKey, 'curriculum-versions', curriculumId),
-    queryFn: () => api.call<Page<CurriculumVersion>>(api.client.GET('/cms/learning/curricula/{curriculum_id}/versions', { params: { path: { curriculum_id: curriculumId! }, query: { limit: 50 } as never } })),
+    queryFn: () =>
+      fetchAllAsPage<CurriculumVersion>((query) => api.call(api.client.GET('/cms/learning/curricula/{curriculum_id}/versions', { params: { path: { curriculum_id: curriculumId! }, query } }))),
     enabled: !!curriculumId,
   });
 }
-
-/** components/parameters/Limit of the contract: 1–100 (a larger limit is 422 VALIDATION_FAILED). */
-export const LIST_LIMIT_MAX = 100;
 
 /**
  * listCmsTopics: curriculum_version_id is required by the contract, so nothing is requested without it (a picker that
@@ -118,7 +117,7 @@ export function useTopics(filters: { curriculum_version_id?: string; subject_id?
   return useQuery({
     queryKey: key(scopeKey, 'topics', filters),
     queryFn: () =>
-      api.call<Page<Topic>>(api.client.GET('/cms/learning/topics', { params: { query: { ...filters, curriculum_version_id: version!, limit: LIST_LIMIT_MAX } } })),
+      fetchAllAsPage<Topic>((page) => api.call(api.client.GET('/cms/learning/topics', { params: { query: { ...filters, curriculum_version_id: version!, ...page } } }))),
     enabled: enabled && !!version,
   });
 }
@@ -128,7 +127,7 @@ export function useObjectives(filters: { curriculum_version_id?: string; topic_i
   const { scopeKey } = useSession();
   return useQuery({
     queryKey: key(scopeKey, 'objectives', filters),
-    queryFn: () => api.call<Page<LearningObjective>>(api.client.GET('/cms/learning/objectives', { params: { query: { ...filters, limit: LIST_LIMIT_MAX } } })),
+    queryFn: () => fetchAllAsPage<LearningObjective>((page) => api.call(api.client.GET('/cms/learning/objectives', { params: { query: { ...filters, ...page } } }))),
     enabled: enabled && !!(filters.curriculum_version_id || filters.topic_id || filters.subject_id),
   });
 }
