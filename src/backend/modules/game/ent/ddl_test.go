@@ -27,6 +27,8 @@ var migrations = map[string][]string{
 	"20261226000001_f071_world.sql": {"world_areas", "world_area_versions", "story_chapters", "story_chapter_versions",
 		"npc_dialogues", "npc_dialogue_versions", "level_definitions", "level_versions", "content_releases", "level_sessions",
 		"world_area_unlocks", "exploration_progress", "story_progress", "world_unlock_facts"},
+	"20261227000001_f072_quest.sql": {"quest_definitions", "quest_versions", "quest_progress", "quest_step_attempts",
+		"periodic_quest_grants", "tenant_resource_assignments"},
 }
 
 func schemas() map[string]string {
@@ -39,7 +41,10 @@ func schemas() map[string]string {
 		"story_chapter_versions": c.StoryChapterVersion, "npc_dialogues": c.NpcDialogue, "npc_dialogue_versions": c.NpcDialogueVersion,
 		"level_definitions": c.LevelDefinition, "level_versions": c.LevelVersion, "content_releases": c.ContentRelease,
 		"level_sessions": c.LevelSession, "world_area_unlocks": c.WorldAreaUnlock, "exploration_progress": c.ExplorationProgress,
-		"story_progress": c.StoryProgress, "world_unlock_facts": c.WorldUnlockFact}
+		"story_progress": c.StoryProgress, "world_unlock_facts": c.WorldUnlockFact,
+		"quest_definitions": c.QuestDefinition, "quest_versions": c.QuestVersion, "quest_progress": c.QuestProgress,
+		"quest_step_attempts": c.QuestStepAttempt, "periodic_quest_grants": c.PeriodicQuestGrant,
+		"tenant_resource_assignments": c.TenantResourceAssignment}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

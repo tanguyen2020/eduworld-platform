@@ -129,3 +129,15 @@ const ExamQualityName = "learning.exam_quality"
 
 // ExamQualitySubjects are the filter subjects of learning.exam_quality.
 func ExamQualitySubjects() []string { return []string{natsx.EventSubject("learning", "exam.closed")} }
+
+// QuestLearningEventName is the durable consumer that records the learning event quest.completed of the quests of module
+// game that carry learning objectives (F072-AC-21, EVENT_DESIGN §5.2).
+const QuestLearningEventName = "learning.learning_event_on_quest_completed"
+
+// GameStream is the stream of module game (EVT_GAME).
+var GameStream = natsx.EventStream("game")
+
+// QuestLearningEventSubjects are the filter subjects of learning.learning_event_on_quest_completed.
+func QuestLearningEventSubjects() []string {
+	return []string{natsx.EventSubject("game", "quest.completed")}
+}

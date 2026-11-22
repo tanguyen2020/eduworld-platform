@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/quest.completed.v1.schema.json",
+  "title": "Payload quest.completed v1 (module game, owner F072)",
+  "description": "Quest hoàn thành (completion_rule thỏa), đúng một lần cho mỗi quest_progress_id (QUEST_SYSTEM §5, §7). rewards là ý định thưởng: Reward Engine (F074) cấp theo reward rule; quest engine không cộng XP/Xu/item. Consumer: game.unlock_on_events (chương truyện, mở khu — cần quest_id), Reward Engine, module learning (learning event quest.completed khi có objective_ids), realtime, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "quest_progress_id",
+    "quest_id",
+    "quest_version_id",
+    "quest_type",
+    "student_id",
+    "objective_ids",
+    "completion_no",
+    "rewards",
+    "completed_at"
+  ],
+  "properties": {
+    "quest_progress_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_type": {
+      "type": "string",
+      "enum": [
+        "main",
+        "side",
+        "daily",
+        "weekly",
+        "learning",
+        "exploration",
+        "social",
+        "party",
+        "challenge",
+        "seasonal",
+        "special_event",
+        "boss"
+      ]
+    },
+    "subject_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "objective_ids": {
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "completion_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "period_key": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 16
+    },
+    "party_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "story_chapter_code": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64
+    },
+    "area_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64
+    },
+    "rewards": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "Phần thưởng dự kiến của quest version (quest.schema.json $defs.reward) — chỉ là ý định",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "xp",
+              "currency",
+              "item",
+              "badge",
+              "title",
+              "collection_item"
+            ]
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "currency_code": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "item_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "badge_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "title_code": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "collection_item_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "first_completion_only": {
+            "type": "boolean"
+          },
+          "reward_rule_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "quest_progress_id": "0193a5f4-6c1e-7b2a-9d1f-000000072901",
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071101",
+      "quest_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000072902",
+      "quest_type": "main",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "subject_id": null,
+      "objective_ids": [],
+      "completion_no": 1,
+      "period_key": null,
+      "party_id": null,
+      "story_chapter_code": "chapter.0.invitation",
+      "area_id": "main_hub",
+      "rewards": [
+        {
+          "type": "xp",
+          "amount": 50
+        }
+      ],
+      "started_at": "2026-11-22T01:00:00Z",
+      "completed_at": "2026-11-22T01:10:00Z"
+    }
+  ]
+}

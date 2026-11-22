@@ -32,7 +32,13 @@ var contentTables = map[string]contentTable{
 		versionCol: "dialogue_version_id", parent: []string{"npc_id"}, columns: []string{"npc_id", "grade_levels"}},
 	write.ItemLevel: {identity: "level_definitions", idCol: "level_id", versions: "level_versions", versionCol: "level_version_id",
 		parent: []string{"area_id"}, columns: []string{"bundle_id", "bundle_url", "bundle_sha256", "size_bytes"}},
+	write.ItemQuest: {identity: "quest_definitions", idCol: "quest_id", versions: "quest_versions", versionCol: "quest_version_id",
+		parent: []string{"code"}, columns: []string{"code", "quest_type", "grade_levels", "subject_id", "subject_code", "area_id",
+			"giver_npc_id", "story_chapter_code", "start_trigger", "objective_ids", "available_from", "available_to"}},
 }
+
+// jsonColumns are the typed version columns stored as jsonb.
+var jsonColumns = map[string]bool{"grade_levels": true, "objective_ids": true}
 
 // GameContentRepo implements write.GameContentStore (platform content, written under PlatformScope only).
 type GameContentRepo struct{}
@@ -106,7 +112,7 @@ func (GameContentRepo) Publish(ctx context.Context, v write.ContentVersion) erro
 	for i, c := range ct.columns {
 		cols += ", " + c
 		val := v.Columns[c]
-		if c == "grade_levels" {
+		if jsonColumns[c] {
 			b, err := json.Marshal(val)
 			if err != nil {
 				return err

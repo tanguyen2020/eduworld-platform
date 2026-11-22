@@ -19,7 +19,7 @@ import (
 )
 
 // gameItemTypes are the manifest item types owned by the game release core (replaced on every game rebuild).
-var gameItemTypes = []string{write.ItemWorldArea, write.ItemStoryChapter, write.ItemNPCDialogue, write.ItemLevel}
+var gameItemTypes = []string{write.ItemWorldArea, write.ItemStoryChapter, write.ItemNPCDialogue, write.ItemLevel, write.ItemQuest}
 
 // GameManifest rebuilds the game part of the content manifest of every active tenant when game content is released
 // (F071-AC-05, ADR-0043 §6): items of the game types, areas and bundles are replaced by the published content; the
@@ -29,6 +29,9 @@ type GameManifest struct {
 	Store   write.ManifestStore
 	Tenants write.TenantLister
 	Content port.WorldContent
+	// Quests lists the quests assigned to each tenant (F072 T010: a tenant manifest holds only its assigned quests); nil =
+	// no quest entries.
+	Quests  port.QuestContent
 	Events  write.EventPublisher
 	Metrics ManifestMetrics
 	// BuildSeconds observes eduworld_game_manifest_build_seconds; nil = not observed.
@@ -160,6 +163,19 @@ func (h GameManifest) rebuildOne(ctx context.Context, tenant uuid.UUID, g gameEn
 		kept = append(kept, it)
 	}
 	kept = append(kept, g.items...)
+	if h.Quests != nil {
+		quests, err := h.Quests.AssignedQuests(ctx, tenant, 0)
+		if err != nil {
+			return err
+		}
+		for _, q := range quests {
+			it, err := manifestItem(write.ItemQuest, q.QuestID, q.Version.Code, q.VersionID, q.VersionNo, q.SHA256)
+			if err != nil {
+				return err
+			}
+			kept = append(kept, it)
+		}
+	}
 	var errs [3]error
 	doc["items"], errs[0] = json.Marshal(kept)
 	doc["areas"], errs[1] = json.Marshal(nonNilMaps(g.areas))

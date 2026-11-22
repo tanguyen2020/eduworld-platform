@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/quest/quest_marker_3d.gd" id="1_script"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_marker"]
+radius = 0.25
+height = 0.5
+
+[node name="QuestMarker3D" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_marker")

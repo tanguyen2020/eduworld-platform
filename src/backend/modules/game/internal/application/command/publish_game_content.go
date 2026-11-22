@@ -14,6 +14,7 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/world"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -27,7 +28,8 @@ import (
 const EventContentPublished = "content.published"
 
 // publishOrder publishes areas before their levels and chapters before the dialogues that reference their quests.
-var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemNPCDialogue}
+// Quests (F072) come before the dialogues that give them.
+var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemQuest, write.ItemNPCDialogue}
 
 // ContentItem is one authored game content payload to publish.
 type ContentItem struct {
@@ -67,7 +69,10 @@ type PublishGameContent struct {
 	Events      write.EventPublisher
 	Audit       write.Auditor
 	Cache       port.SnapshotCache // nil: no snapshot cache
-	Now         func() time.Time
+	// Quests are the quest checks (F072: JSON Schema + QuestPublishValidator); QuestContent reads the published quests.
+	Quests       *QuestPublishRules
+	QuestContent port.QuestContent
+	Now          func() time.Time
 }
 
 type parsedItem struct {
@@ -80,6 +85,7 @@ type parsedItem struct {
 	chapter *world.Chapter
 	level   *world.Level
 	dlg     *world.Dialogue
+	quest   *quest.Version
 }
 
 // Publish publishes items in one platform transaction; key makes the release rows idempotent per item.
@@ -94,7 +100,13 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 	}
 	parsed := make([]parsedItem, 0, len(items))
 	for _, it := range items {
-		p, err := parse(it)
+		var p parsedItem
+		var err error
+		if questItem(it.Type) {
+			p, err = parseQuest(it, h.Quests)
+		} else {
+			p, err = parse(it)
+		}
 		if err != nil {
 			return res, err
 		}
@@ -240,6 +252,21 @@ func (h PublishGameContent) checkRefs(ctx context.Context, items []parsedItem) e
 				quests[q] = true
 			}
 		}
+		if p.quest != nil {
+			quests[p.quest.QuestID] = true
+		}
+	}
+	if h.QuestContent != nil {
+		current, err := h.QuestContent.CurrentQuests(ctx)
+		if err != nil {
+			return err
+		}
+		for _, r := range current {
+			quests[r.QuestID.String()] = true
+		}
+	}
+	if err := h.checkQuests(ctx, items, areas, chapters); err != nil {
+		return err
 	}
 	grades := map[string][]struct {
 		id     string
@@ -321,6 +348,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 	}
 	vid := ids.New()
 	stored := canonical
+	if p.quest != nil {
+		if stored, err = questStored(p.doc, vid, head.NextVersionNo); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
 	if p.Type == write.ItemNPCDialogue {
 		doc := map[string]any{}
 		for k, v := range p.doc {

@@ -32,9 +32,15 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/queststepattempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapter"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapterversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/tenantresourceassignment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaversion"
@@ -82,12 +88,24 @@ type Client struct {
 	NpcDialogue *NpcDialogueClient
 	// NpcDialogueVersion is the client for interacting with the NpcDialogueVersion builders.
 	NpcDialogueVersion *NpcDialogueVersionClient
+	// PeriodicQuestGrant is the client for interacting with the PeriodicQuestGrant builders.
+	PeriodicQuestGrant *PeriodicQuestGrantClient
+	// QuestDefinition is the client for interacting with the QuestDefinition builders.
+	QuestDefinition *QuestDefinitionClient
+	// QuestProgress is the client for interacting with the QuestProgress builders.
+	QuestProgress *QuestProgressClient
+	// QuestStepAttempt is the client for interacting with the QuestStepAttempt builders.
+	QuestStepAttempt *QuestStepAttemptClient
+	// QuestVersion is the client for interacting with the QuestVersion builders.
+	QuestVersion *QuestVersionClient
 	// StoryChapter is the client for interacting with the StoryChapter builders.
 	StoryChapter *StoryChapterClient
 	// StoryChapterVersion is the client for interacting with the StoryChapterVersion builders.
 	StoryChapterVersion *StoryChapterVersionClient
 	// StoryProgress is the client for interacting with the StoryProgress builders.
 	StoryProgress *StoryProgressClient
+	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
+	TenantResourceAssignment *TenantResourceAssignmentClient
 	// WorldArea is the client for interacting with the WorldArea builders.
 	WorldArea *WorldAreaClient
 	// WorldAreaUnlock is the client for interacting with the WorldAreaUnlock builders.
@@ -124,9 +142,15 @@ func (c *Client) init() {
 	c.NicknameChange = NewNicknameChangeClient(c.config)
 	c.NpcDialogue = NewNpcDialogueClient(c.config)
 	c.NpcDialogueVersion = NewNpcDialogueVersionClient(c.config)
+	c.PeriodicQuestGrant = NewPeriodicQuestGrantClient(c.config)
+	c.QuestDefinition = NewQuestDefinitionClient(c.config)
+	c.QuestProgress = NewQuestProgressClient(c.config)
+	c.QuestStepAttempt = NewQuestStepAttemptClient(c.config)
+	c.QuestVersion = NewQuestVersionClient(c.config)
 	c.StoryChapter = NewStoryChapterClient(c.config)
 	c.StoryChapterVersion = NewStoryChapterVersionClient(c.config)
 	c.StoryProgress = NewStoryProgressClient(c.config)
+	c.TenantResourceAssignment = NewTenantResourceAssignmentClient(c.config)
 	c.WorldArea = NewWorldAreaClient(c.config)
 	c.WorldAreaUnlock = NewWorldAreaUnlockClient(c.config)
 	c.WorldAreaVersion = NewWorldAreaVersionClient(c.config)
@@ -224,32 +248,38 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                     ctx,
-		config:                  cfg,
-		AvatarPreset:            NewAvatarPresetClient(cfg),
-		CharacterCatalog:        NewCharacterCatalogClient(cfg),
-		CharacterCatalogVersion: NewCharacterCatalogVersionClient(cfg),
-		ContentRelease:          NewContentReleaseClient(cfg),
-		ExplorationProgress:     NewExplorationProgressClient(cfg),
-		GameProfile:             NewGameProfileClient(cfg),
-		GameSession:             NewGameSessionClient(cfg),
-		InventoryItem:           NewInventoryItemClient(cfg),
-		ItemDefinition:          NewItemDefinitionClient(cfg),
-		ItemDefinitionVersion:   NewItemDefinitionVersionClient(cfg),
-		LevelDefinition:         NewLevelDefinitionClient(cfg),
-		LevelSession:            NewLevelSessionClient(cfg),
-		LevelVersion:            NewLevelVersionClient(cfg),
-		LoginEvent:              NewLoginEventClient(cfg),
-		NicknameChange:          NewNicknameChangeClient(cfg),
-		NpcDialogue:             NewNpcDialogueClient(cfg),
-		NpcDialogueVersion:      NewNpcDialogueVersionClient(cfg),
-		StoryChapter:            NewStoryChapterClient(cfg),
-		StoryChapterVersion:     NewStoryChapterVersionClient(cfg),
-		StoryProgress:           NewStoryProgressClient(cfg),
-		WorldArea:               NewWorldAreaClient(cfg),
-		WorldAreaUnlock:         NewWorldAreaUnlockClient(cfg),
-		WorldAreaVersion:        NewWorldAreaVersionClient(cfg),
-		WorldUnlockFact:         NewWorldUnlockFactClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		AvatarPreset:             NewAvatarPresetClient(cfg),
+		CharacterCatalog:         NewCharacterCatalogClient(cfg),
+		CharacterCatalogVersion:  NewCharacterCatalogVersionClient(cfg),
+		ContentRelease:           NewContentReleaseClient(cfg),
+		ExplorationProgress:      NewExplorationProgressClient(cfg),
+		GameProfile:              NewGameProfileClient(cfg),
+		GameSession:              NewGameSessionClient(cfg),
+		InventoryItem:            NewInventoryItemClient(cfg),
+		ItemDefinition:           NewItemDefinitionClient(cfg),
+		ItemDefinitionVersion:    NewItemDefinitionVersionClient(cfg),
+		LevelDefinition:          NewLevelDefinitionClient(cfg),
+		LevelSession:             NewLevelSessionClient(cfg),
+		LevelVersion:             NewLevelVersionClient(cfg),
+		LoginEvent:               NewLoginEventClient(cfg),
+		NicknameChange:           NewNicknameChangeClient(cfg),
+		NpcDialogue:              NewNpcDialogueClient(cfg),
+		NpcDialogueVersion:       NewNpcDialogueVersionClient(cfg),
+		PeriodicQuestGrant:       NewPeriodicQuestGrantClient(cfg),
+		QuestDefinition:          NewQuestDefinitionClient(cfg),
+		QuestProgress:            NewQuestProgressClient(cfg),
+		QuestStepAttempt:         NewQuestStepAttemptClient(cfg),
+		QuestVersion:             NewQuestVersionClient(cfg),
+		StoryChapter:             NewStoryChapterClient(cfg),
+		StoryChapterVersion:      NewStoryChapterVersionClient(cfg),
+		StoryProgress:            NewStoryProgressClient(cfg),
+		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
+		WorldArea:                NewWorldAreaClient(cfg),
+		WorldAreaUnlock:          NewWorldAreaUnlockClient(cfg),
+		WorldAreaVersion:         NewWorldAreaVersionClient(cfg),
+		WorldUnlockFact:          NewWorldUnlockFactClient(cfg),
 	}, nil
 }
 
@@ -267,32 +297,38 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                     ctx,
-		config:                  cfg,
-		AvatarPreset:            NewAvatarPresetClient(cfg),
-		CharacterCatalog:        NewCharacterCatalogClient(cfg),
-		CharacterCatalogVersion: NewCharacterCatalogVersionClient(cfg),
-		ContentRelease:          NewContentReleaseClient(cfg),
-		ExplorationProgress:     NewExplorationProgressClient(cfg),
-		GameProfile:             NewGameProfileClient(cfg),
-		GameSession:             NewGameSessionClient(cfg),
-		InventoryItem:           NewInventoryItemClient(cfg),
-		ItemDefinition:          NewItemDefinitionClient(cfg),
-		ItemDefinitionVersion:   NewItemDefinitionVersionClient(cfg),
-		LevelDefinition:         NewLevelDefinitionClient(cfg),
-		LevelSession:            NewLevelSessionClient(cfg),
-		LevelVersion:            NewLevelVersionClient(cfg),
-		LoginEvent:              NewLoginEventClient(cfg),
-		NicknameChange:          NewNicknameChangeClient(cfg),
-		NpcDialogue:             NewNpcDialogueClient(cfg),
-		NpcDialogueVersion:      NewNpcDialogueVersionClient(cfg),
-		StoryChapter:            NewStoryChapterClient(cfg),
-		StoryChapterVersion:     NewStoryChapterVersionClient(cfg),
-		StoryProgress:           NewStoryProgressClient(cfg),
-		WorldArea:               NewWorldAreaClient(cfg),
-		WorldAreaUnlock:         NewWorldAreaUnlockClient(cfg),
-		WorldAreaVersion:        NewWorldAreaVersionClient(cfg),
-		WorldUnlockFact:         NewWorldUnlockFactClient(cfg),
+		ctx:                      ctx,
+		config:                   cfg,
+		AvatarPreset:             NewAvatarPresetClient(cfg),
+		CharacterCatalog:         NewCharacterCatalogClient(cfg),
+		CharacterCatalogVersion:  NewCharacterCatalogVersionClient(cfg),
+		ContentRelease:           NewContentReleaseClient(cfg),
+		ExplorationProgress:      NewExplorationProgressClient(cfg),
+		GameProfile:              NewGameProfileClient(cfg),
+		GameSession:              NewGameSessionClient(cfg),
+		InventoryItem:            NewInventoryItemClient(cfg),
+		ItemDefinition:           NewItemDefinitionClient(cfg),
+		ItemDefinitionVersion:    NewItemDefinitionVersionClient(cfg),
+		LevelDefinition:          NewLevelDefinitionClient(cfg),
+		LevelSession:             NewLevelSessionClient(cfg),
+		LevelVersion:             NewLevelVersionClient(cfg),
+		LoginEvent:               NewLoginEventClient(cfg),
+		NicknameChange:           NewNicknameChangeClient(cfg),
+		NpcDialogue:              NewNpcDialogueClient(cfg),
+		NpcDialogueVersion:       NewNpcDialogueVersionClient(cfg),
+		PeriodicQuestGrant:       NewPeriodicQuestGrantClient(cfg),
+		QuestDefinition:          NewQuestDefinitionClient(cfg),
+		QuestProgress:            NewQuestProgressClient(cfg),
+		QuestStepAttempt:         NewQuestStepAttemptClient(cfg),
+		QuestVersion:             NewQuestVersionClient(cfg),
+		StoryChapter:             NewStoryChapterClient(cfg),
+		StoryChapterVersion:      NewStoryChapterVersionClient(cfg),
+		StoryProgress:            NewStoryProgressClient(cfg),
+		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
+		WorldArea:                NewWorldAreaClient(cfg),
+		WorldAreaUnlock:          NewWorldAreaUnlockClient(cfg),
+		WorldAreaVersion:         NewWorldAreaVersionClient(cfg),
+		WorldUnlockFact:          NewWorldUnlockFactClient(cfg),
 	}, nil
 }
 
@@ -326,8 +362,10 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ExplorationProgress, c.GameProfile, c.GameSession, c.InventoryItem,
 		c.ItemDefinition, c.ItemDefinitionVersion, c.LevelDefinition, c.LevelSession,
 		c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
-		c.NpcDialogueVersion, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
-		c.WorldArea, c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact,
+		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.QuestDefinition, c.QuestProgress,
+		c.QuestStepAttempt, c.QuestVersion, c.StoryChapter, c.StoryChapterVersion,
+		c.StoryProgress, c.TenantResourceAssignment, c.WorldArea, c.WorldAreaUnlock,
+		c.WorldAreaVersion, c.WorldUnlockFact,
 	} {
 		n.Use(hooks...)
 	}
@@ -341,8 +379,10 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ExplorationProgress, c.GameProfile, c.GameSession, c.InventoryItem,
 		c.ItemDefinition, c.ItemDefinitionVersion, c.LevelDefinition, c.LevelSession,
 		c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
-		c.NpcDialogueVersion, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
-		c.WorldArea, c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact,
+		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.QuestDefinition, c.QuestProgress,
+		c.QuestStepAttempt, c.QuestVersion, c.StoryChapter, c.StoryChapterVersion,
+		c.StoryProgress, c.TenantResourceAssignment, c.WorldArea, c.WorldAreaUnlock,
+		c.WorldAreaVersion, c.WorldUnlockFact,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -385,12 +425,24 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.NpcDialogue.mutate(ctx, m)
 	case *NpcDialogueVersionMutation:
 		return c.NpcDialogueVersion.mutate(ctx, m)
+	case *PeriodicQuestGrantMutation:
+		return c.PeriodicQuestGrant.mutate(ctx, m)
+	case *QuestDefinitionMutation:
+		return c.QuestDefinition.mutate(ctx, m)
+	case *QuestProgressMutation:
+		return c.QuestProgress.mutate(ctx, m)
+	case *QuestStepAttemptMutation:
+		return c.QuestStepAttempt.mutate(ctx, m)
+	case *QuestVersionMutation:
+		return c.QuestVersion.mutate(ctx, m)
 	case *StoryChapterMutation:
 		return c.StoryChapter.mutate(ctx, m)
 	case *StoryChapterVersionMutation:
 		return c.StoryChapterVersion.mutate(ctx, m)
 	case *StoryProgressMutation:
 		return c.StoryProgress.mutate(ctx, m)
+	case *TenantResourceAssignmentMutation:
+		return c.TenantResourceAssignment.mutate(ctx, m)
 	case *WorldAreaMutation:
 		return c.WorldArea.mutate(ctx, m)
 	case *WorldAreaUnlockMutation:
@@ -2698,6 +2750,681 @@ func (c *NpcDialogueVersionClient) mutate(ctx context.Context, m *NpcDialogueVer
 	}
 }
 
+// PeriodicQuestGrantClient is a client for the PeriodicQuestGrant schema.
+type PeriodicQuestGrantClient struct {
+	config
+}
+
+// NewPeriodicQuestGrantClient returns a client for the PeriodicQuestGrant from the given config.
+func NewPeriodicQuestGrantClient(c config) *PeriodicQuestGrantClient {
+	return &PeriodicQuestGrantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `periodicquestgrant.Hooks(f(g(h())))`.
+func (c *PeriodicQuestGrantClient) Use(hooks ...Hook) {
+	c.hooks.PeriodicQuestGrant = append(c.hooks.PeriodicQuestGrant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `periodicquestgrant.Intercept(f(g(h())))`.
+func (c *PeriodicQuestGrantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PeriodicQuestGrant = append(c.inters.PeriodicQuestGrant, interceptors...)
+}
+
+// Create returns a builder for creating a PeriodicQuestGrant entity.
+func (c *PeriodicQuestGrantClient) Create() *PeriodicQuestGrantCreate {
+	mutation := newPeriodicQuestGrantMutation(c.config, OpCreate)
+	return &PeriodicQuestGrantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PeriodicQuestGrant entities.
+func (c *PeriodicQuestGrantClient) CreateBulk(builders ...*PeriodicQuestGrantCreate) *PeriodicQuestGrantCreateBulk {
+	return &PeriodicQuestGrantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PeriodicQuestGrantClient) MapCreateBulk(slice any, setFunc func(*PeriodicQuestGrantCreate, int)) *PeriodicQuestGrantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PeriodicQuestGrantCreateBulk{err: fmt.Errorf("calling to PeriodicQuestGrantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PeriodicQuestGrantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PeriodicQuestGrantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PeriodicQuestGrant.
+func (c *PeriodicQuestGrantClient) Update() *PeriodicQuestGrantUpdate {
+	mutation := newPeriodicQuestGrantMutation(c.config, OpUpdate)
+	return &PeriodicQuestGrantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PeriodicQuestGrantClient) UpdateOne(_m *PeriodicQuestGrant) *PeriodicQuestGrantUpdateOne {
+	mutation := newPeriodicQuestGrantMutation(c.config, OpUpdateOne, withPeriodicQuestGrant(_m))
+	return &PeriodicQuestGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PeriodicQuestGrantClient) UpdateOneID(id uuid.UUID) *PeriodicQuestGrantUpdateOne {
+	mutation := newPeriodicQuestGrantMutation(c.config, OpUpdateOne, withPeriodicQuestGrantID(id))
+	return &PeriodicQuestGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PeriodicQuestGrant.
+func (c *PeriodicQuestGrantClient) Delete() *PeriodicQuestGrantDelete {
+	mutation := newPeriodicQuestGrantMutation(c.config, OpDelete)
+	return &PeriodicQuestGrantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PeriodicQuestGrantClient) DeleteOne(_m *PeriodicQuestGrant) *PeriodicQuestGrantDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PeriodicQuestGrantClient) DeleteOneID(id uuid.UUID) *PeriodicQuestGrantDeleteOne {
+	builder := c.Delete().Where(periodicquestgrant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PeriodicQuestGrantDeleteOne{builder}
+}
+
+// Query returns a query builder for PeriodicQuestGrant.
+func (c *PeriodicQuestGrantClient) Query() *PeriodicQuestGrantQuery {
+	return &PeriodicQuestGrantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePeriodicQuestGrant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PeriodicQuestGrant entity by its id.
+func (c *PeriodicQuestGrantClient) Get(ctx context.Context, id uuid.UUID) (*PeriodicQuestGrant, error) {
+	return c.Query().Where(periodicquestgrant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PeriodicQuestGrantClient) GetX(ctx context.Context, id uuid.UUID) *PeriodicQuestGrant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PeriodicQuestGrantClient) Hooks() []Hook {
+	hooks := c.hooks.PeriodicQuestGrant
+	return append(hooks[:len(hooks):len(hooks)], periodicquestgrant.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PeriodicQuestGrantClient) Interceptors() []Interceptor {
+	inters := c.inters.PeriodicQuestGrant
+	return append(inters[:len(inters):len(inters)], periodicquestgrant.Interceptors[:]...)
+}
+
+func (c *PeriodicQuestGrantClient) mutate(ctx context.Context, m *PeriodicQuestGrantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PeriodicQuestGrantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PeriodicQuestGrantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PeriodicQuestGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PeriodicQuestGrantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PeriodicQuestGrant mutation op: %q", m.Op())
+	}
+}
+
+// QuestDefinitionClient is a client for the QuestDefinition schema.
+type QuestDefinitionClient struct {
+	config
+}
+
+// NewQuestDefinitionClient returns a client for the QuestDefinition from the given config.
+func NewQuestDefinitionClient(c config) *QuestDefinitionClient {
+	return &QuestDefinitionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `questdefinition.Hooks(f(g(h())))`.
+func (c *QuestDefinitionClient) Use(hooks ...Hook) {
+	c.hooks.QuestDefinition = append(c.hooks.QuestDefinition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `questdefinition.Intercept(f(g(h())))`.
+func (c *QuestDefinitionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.QuestDefinition = append(c.inters.QuestDefinition, interceptors...)
+}
+
+// Create returns a builder for creating a QuestDefinition entity.
+func (c *QuestDefinitionClient) Create() *QuestDefinitionCreate {
+	mutation := newQuestDefinitionMutation(c.config, OpCreate)
+	return &QuestDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of QuestDefinition entities.
+func (c *QuestDefinitionClient) CreateBulk(builders ...*QuestDefinitionCreate) *QuestDefinitionCreateBulk {
+	return &QuestDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QuestDefinitionClient) MapCreateBulk(slice any, setFunc func(*QuestDefinitionCreate, int)) *QuestDefinitionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QuestDefinitionCreateBulk{err: fmt.Errorf("calling to QuestDefinitionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QuestDefinitionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QuestDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for QuestDefinition.
+func (c *QuestDefinitionClient) Update() *QuestDefinitionUpdate {
+	mutation := newQuestDefinitionMutation(c.config, OpUpdate)
+	return &QuestDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *QuestDefinitionClient) UpdateOne(_m *QuestDefinition) *QuestDefinitionUpdateOne {
+	mutation := newQuestDefinitionMutation(c.config, OpUpdateOne, withQuestDefinition(_m))
+	return &QuestDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *QuestDefinitionClient) UpdateOneID(id uuid.UUID) *QuestDefinitionUpdateOne {
+	mutation := newQuestDefinitionMutation(c.config, OpUpdateOne, withQuestDefinitionID(id))
+	return &QuestDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for QuestDefinition.
+func (c *QuestDefinitionClient) Delete() *QuestDefinitionDelete {
+	mutation := newQuestDefinitionMutation(c.config, OpDelete)
+	return &QuestDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *QuestDefinitionClient) DeleteOne(_m *QuestDefinition) *QuestDefinitionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *QuestDefinitionClient) DeleteOneID(id uuid.UUID) *QuestDefinitionDeleteOne {
+	builder := c.Delete().Where(questdefinition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &QuestDefinitionDeleteOne{builder}
+}
+
+// Query returns a query builder for QuestDefinition.
+func (c *QuestDefinitionClient) Query() *QuestDefinitionQuery {
+	return &QuestDefinitionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeQuestDefinition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a QuestDefinition entity by its id.
+func (c *QuestDefinitionClient) Get(ctx context.Context, id uuid.UUID) (*QuestDefinition, error) {
+	return c.Query().Where(questdefinition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *QuestDefinitionClient) GetX(ctx context.Context, id uuid.UUID) *QuestDefinition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *QuestDefinitionClient) Hooks() []Hook {
+	hooks := c.hooks.QuestDefinition
+	return append(hooks[:len(hooks):len(hooks)], questdefinition.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *QuestDefinitionClient) Interceptors() []Interceptor {
+	inters := c.inters.QuestDefinition
+	return append(inters[:len(inters):len(inters)], questdefinition.Interceptors[:]...)
+}
+
+func (c *QuestDefinitionClient) mutate(ctx context.Context, m *QuestDefinitionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QuestDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QuestDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QuestDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QuestDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown QuestDefinition mutation op: %q", m.Op())
+	}
+}
+
+// QuestProgressClient is a client for the QuestProgress schema.
+type QuestProgressClient struct {
+	config
+}
+
+// NewQuestProgressClient returns a client for the QuestProgress from the given config.
+func NewQuestProgressClient(c config) *QuestProgressClient {
+	return &QuestProgressClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `questprogress.Hooks(f(g(h())))`.
+func (c *QuestProgressClient) Use(hooks ...Hook) {
+	c.hooks.QuestProgress = append(c.hooks.QuestProgress, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `questprogress.Intercept(f(g(h())))`.
+func (c *QuestProgressClient) Intercept(interceptors ...Interceptor) {
+	c.inters.QuestProgress = append(c.inters.QuestProgress, interceptors...)
+}
+
+// Create returns a builder for creating a QuestProgress entity.
+func (c *QuestProgressClient) Create() *QuestProgressCreate {
+	mutation := newQuestProgressMutation(c.config, OpCreate)
+	return &QuestProgressCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of QuestProgress entities.
+func (c *QuestProgressClient) CreateBulk(builders ...*QuestProgressCreate) *QuestProgressCreateBulk {
+	return &QuestProgressCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QuestProgressClient) MapCreateBulk(slice any, setFunc func(*QuestProgressCreate, int)) *QuestProgressCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QuestProgressCreateBulk{err: fmt.Errorf("calling to QuestProgressClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QuestProgressCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QuestProgressCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for QuestProgress.
+func (c *QuestProgressClient) Update() *QuestProgressUpdate {
+	mutation := newQuestProgressMutation(c.config, OpUpdate)
+	return &QuestProgressUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *QuestProgressClient) UpdateOne(_m *QuestProgress) *QuestProgressUpdateOne {
+	mutation := newQuestProgressMutation(c.config, OpUpdateOne, withQuestProgress(_m))
+	return &QuestProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *QuestProgressClient) UpdateOneID(id uuid.UUID) *QuestProgressUpdateOne {
+	mutation := newQuestProgressMutation(c.config, OpUpdateOne, withQuestProgressID(id))
+	return &QuestProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for QuestProgress.
+func (c *QuestProgressClient) Delete() *QuestProgressDelete {
+	mutation := newQuestProgressMutation(c.config, OpDelete)
+	return &QuestProgressDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *QuestProgressClient) DeleteOne(_m *QuestProgress) *QuestProgressDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *QuestProgressClient) DeleteOneID(id uuid.UUID) *QuestProgressDeleteOne {
+	builder := c.Delete().Where(questprogress.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &QuestProgressDeleteOne{builder}
+}
+
+// Query returns a query builder for QuestProgress.
+func (c *QuestProgressClient) Query() *QuestProgressQuery {
+	return &QuestProgressQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeQuestProgress},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a QuestProgress entity by its id.
+func (c *QuestProgressClient) Get(ctx context.Context, id uuid.UUID) (*QuestProgress, error) {
+	return c.Query().Where(questprogress.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *QuestProgressClient) GetX(ctx context.Context, id uuid.UUID) *QuestProgress {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *QuestProgressClient) Hooks() []Hook {
+	hooks := c.hooks.QuestProgress
+	return append(hooks[:len(hooks):len(hooks)], questprogress.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *QuestProgressClient) Interceptors() []Interceptor {
+	inters := c.inters.QuestProgress
+	return append(inters[:len(inters):len(inters)], questprogress.Interceptors[:]...)
+}
+
+func (c *QuestProgressClient) mutate(ctx context.Context, m *QuestProgressMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QuestProgressCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QuestProgressUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QuestProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QuestProgressDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown QuestProgress mutation op: %q", m.Op())
+	}
+}
+
+// QuestStepAttemptClient is a client for the QuestStepAttempt schema.
+type QuestStepAttemptClient struct {
+	config
+}
+
+// NewQuestStepAttemptClient returns a client for the QuestStepAttempt from the given config.
+func NewQuestStepAttemptClient(c config) *QuestStepAttemptClient {
+	return &QuestStepAttemptClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `queststepattempt.Hooks(f(g(h())))`.
+func (c *QuestStepAttemptClient) Use(hooks ...Hook) {
+	c.hooks.QuestStepAttempt = append(c.hooks.QuestStepAttempt, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `queststepattempt.Intercept(f(g(h())))`.
+func (c *QuestStepAttemptClient) Intercept(interceptors ...Interceptor) {
+	c.inters.QuestStepAttempt = append(c.inters.QuestStepAttempt, interceptors...)
+}
+
+// Create returns a builder for creating a QuestStepAttempt entity.
+func (c *QuestStepAttemptClient) Create() *QuestStepAttemptCreate {
+	mutation := newQuestStepAttemptMutation(c.config, OpCreate)
+	return &QuestStepAttemptCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of QuestStepAttempt entities.
+func (c *QuestStepAttemptClient) CreateBulk(builders ...*QuestStepAttemptCreate) *QuestStepAttemptCreateBulk {
+	return &QuestStepAttemptCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QuestStepAttemptClient) MapCreateBulk(slice any, setFunc func(*QuestStepAttemptCreate, int)) *QuestStepAttemptCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QuestStepAttemptCreateBulk{err: fmt.Errorf("calling to QuestStepAttemptClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QuestStepAttemptCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QuestStepAttemptCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for QuestStepAttempt.
+func (c *QuestStepAttemptClient) Update() *QuestStepAttemptUpdate {
+	mutation := newQuestStepAttemptMutation(c.config, OpUpdate)
+	return &QuestStepAttemptUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *QuestStepAttemptClient) UpdateOne(_m *QuestStepAttempt) *QuestStepAttemptUpdateOne {
+	mutation := newQuestStepAttemptMutation(c.config, OpUpdateOne, withQuestStepAttempt(_m))
+	return &QuestStepAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *QuestStepAttemptClient) UpdateOneID(id uuid.UUID) *QuestStepAttemptUpdateOne {
+	mutation := newQuestStepAttemptMutation(c.config, OpUpdateOne, withQuestStepAttemptID(id))
+	return &QuestStepAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for QuestStepAttempt.
+func (c *QuestStepAttemptClient) Delete() *QuestStepAttemptDelete {
+	mutation := newQuestStepAttemptMutation(c.config, OpDelete)
+	return &QuestStepAttemptDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *QuestStepAttemptClient) DeleteOne(_m *QuestStepAttempt) *QuestStepAttemptDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *QuestStepAttemptClient) DeleteOneID(id uuid.UUID) *QuestStepAttemptDeleteOne {
+	builder := c.Delete().Where(queststepattempt.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &QuestStepAttemptDeleteOne{builder}
+}
+
+// Query returns a query builder for QuestStepAttempt.
+func (c *QuestStepAttemptClient) Query() *QuestStepAttemptQuery {
+	return &QuestStepAttemptQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeQuestStepAttempt},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a QuestStepAttempt entity by its id.
+func (c *QuestStepAttemptClient) Get(ctx context.Context, id uuid.UUID) (*QuestStepAttempt, error) {
+	return c.Query().Where(queststepattempt.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *QuestStepAttemptClient) GetX(ctx context.Context, id uuid.UUID) *QuestStepAttempt {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *QuestStepAttemptClient) Hooks() []Hook {
+	hooks := c.hooks.QuestStepAttempt
+	return append(hooks[:len(hooks):len(hooks)], queststepattempt.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *QuestStepAttemptClient) Interceptors() []Interceptor {
+	inters := c.inters.QuestStepAttempt
+	return append(inters[:len(inters):len(inters)], queststepattempt.Interceptors[:]...)
+}
+
+func (c *QuestStepAttemptClient) mutate(ctx context.Context, m *QuestStepAttemptMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QuestStepAttemptCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QuestStepAttemptUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QuestStepAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QuestStepAttemptDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown QuestStepAttempt mutation op: %q", m.Op())
+	}
+}
+
+// QuestVersionClient is a client for the QuestVersion schema.
+type QuestVersionClient struct {
+	config
+}
+
+// NewQuestVersionClient returns a client for the QuestVersion from the given config.
+func NewQuestVersionClient(c config) *QuestVersionClient {
+	return &QuestVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `questversion.Hooks(f(g(h())))`.
+func (c *QuestVersionClient) Use(hooks ...Hook) {
+	c.hooks.QuestVersion = append(c.hooks.QuestVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `questversion.Intercept(f(g(h())))`.
+func (c *QuestVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.QuestVersion = append(c.inters.QuestVersion, interceptors...)
+}
+
+// Create returns a builder for creating a QuestVersion entity.
+func (c *QuestVersionClient) Create() *QuestVersionCreate {
+	mutation := newQuestVersionMutation(c.config, OpCreate)
+	return &QuestVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of QuestVersion entities.
+func (c *QuestVersionClient) CreateBulk(builders ...*QuestVersionCreate) *QuestVersionCreateBulk {
+	return &QuestVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *QuestVersionClient) MapCreateBulk(slice any, setFunc func(*QuestVersionCreate, int)) *QuestVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &QuestVersionCreateBulk{err: fmt.Errorf("calling to QuestVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*QuestVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &QuestVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for QuestVersion.
+func (c *QuestVersionClient) Update() *QuestVersionUpdate {
+	mutation := newQuestVersionMutation(c.config, OpUpdate)
+	return &QuestVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *QuestVersionClient) UpdateOne(_m *QuestVersion) *QuestVersionUpdateOne {
+	mutation := newQuestVersionMutation(c.config, OpUpdateOne, withQuestVersion(_m))
+	return &QuestVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *QuestVersionClient) UpdateOneID(id uuid.UUID) *QuestVersionUpdateOne {
+	mutation := newQuestVersionMutation(c.config, OpUpdateOne, withQuestVersionID(id))
+	return &QuestVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for QuestVersion.
+func (c *QuestVersionClient) Delete() *QuestVersionDelete {
+	mutation := newQuestVersionMutation(c.config, OpDelete)
+	return &QuestVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *QuestVersionClient) DeleteOne(_m *QuestVersion) *QuestVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *QuestVersionClient) DeleteOneID(id uuid.UUID) *QuestVersionDeleteOne {
+	builder := c.Delete().Where(questversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &QuestVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for QuestVersion.
+func (c *QuestVersionClient) Query() *QuestVersionQuery {
+	return &QuestVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeQuestVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a QuestVersion entity by its id.
+func (c *QuestVersionClient) Get(ctx context.Context, id uuid.UUID) (*QuestVersion, error) {
+	return c.Query().Where(questversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *QuestVersionClient) GetX(ctx context.Context, id uuid.UUID) *QuestVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *QuestVersionClient) Hooks() []Hook {
+	hooks := c.hooks.QuestVersion
+	return append(hooks[:len(hooks):len(hooks)], questversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *QuestVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.QuestVersion
+	return append(inters[:len(inters):len(inters)], questversion.Interceptors[:]...)
+}
+
+func (c *QuestVersionClient) mutate(ctx context.Context, m *QuestVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&QuestVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&QuestVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&QuestVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&QuestVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown QuestVersion mutation op: %q", m.Op())
+	}
+}
+
 // StoryChapterClient is a client for the StoryChapter schema.
 type StoryChapterClient struct {
 	config
@@ -3100,6 +3827,141 @@ func (c *StoryProgressClient) mutate(ctx context.Context, m *StoryProgressMutati
 		return (&StoryProgressDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown StoryProgress mutation op: %q", m.Op())
+	}
+}
+
+// TenantResourceAssignmentClient is a client for the TenantResourceAssignment schema.
+type TenantResourceAssignmentClient struct {
+	config
+}
+
+// NewTenantResourceAssignmentClient returns a client for the TenantResourceAssignment from the given config.
+func NewTenantResourceAssignmentClient(c config) *TenantResourceAssignmentClient {
+	return &TenantResourceAssignmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tenantresourceassignment.Hooks(f(g(h())))`.
+func (c *TenantResourceAssignmentClient) Use(hooks ...Hook) {
+	c.hooks.TenantResourceAssignment = append(c.hooks.TenantResourceAssignment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tenantresourceassignment.Intercept(f(g(h())))`.
+func (c *TenantResourceAssignmentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TenantResourceAssignment = append(c.inters.TenantResourceAssignment, interceptors...)
+}
+
+// Create returns a builder for creating a TenantResourceAssignment entity.
+func (c *TenantResourceAssignmentClient) Create() *TenantResourceAssignmentCreate {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpCreate)
+	return &TenantResourceAssignmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TenantResourceAssignment entities.
+func (c *TenantResourceAssignmentClient) CreateBulk(builders ...*TenantResourceAssignmentCreate) *TenantResourceAssignmentCreateBulk {
+	return &TenantResourceAssignmentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TenantResourceAssignmentClient) MapCreateBulk(slice any, setFunc func(*TenantResourceAssignmentCreate, int)) *TenantResourceAssignmentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TenantResourceAssignmentCreateBulk{err: fmt.Errorf("calling to TenantResourceAssignmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TenantResourceAssignmentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TenantResourceAssignmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TenantResourceAssignment.
+func (c *TenantResourceAssignmentClient) Update() *TenantResourceAssignmentUpdate {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpUpdate)
+	return &TenantResourceAssignmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TenantResourceAssignmentClient) UpdateOne(_m *TenantResourceAssignment) *TenantResourceAssignmentUpdateOne {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpUpdateOne, withTenantResourceAssignment(_m))
+	return &TenantResourceAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TenantResourceAssignmentClient) UpdateOneID(id uuid.UUID) *TenantResourceAssignmentUpdateOne {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpUpdateOne, withTenantResourceAssignmentID(id))
+	return &TenantResourceAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TenantResourceAssignment.
+func (c *TenantResourceAssignmentClient) Delete() *TenantResourceAssignmentDelete {
+	mutation := newTenantResourceAssignmentMutation(c.config, OpDelete)
+	return &TenantResourceAssignmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TenantResourceAssignmentClient) DeleteOne(_m *TenantResourceAssignment) *TenantResourceAssignmentDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TenantResourceAssignmentClient) DeleteOneID(id uuid.UUID) *TenantResourceAssignmentDeleteOne {
+	builder := c.Delete().Where(tenantresourceassignment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TenantResourceAssignmentDeleteOne{builder}
+}
+
+// Query returns a query builder for TenantResourceAssignment.
+func (c *TenantResourceAssignmentClient) Query() *TenantResourceAssignmentQuery {
+	return &TenantResourceAssignmentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTenantResourceAssignment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TenantResourceAssignment entity by its id.
+func (c *TenantResourceAssignmentClient) Get(ctx context.Context, id uuid.UUID) (*TenantResourceAssignment, error) {
+	return c.Query().Where(tenantresourceassignment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TenantResourceAssignmentClient) GetX(ctx context.Context, id uuid.UUID) *TenantResourceAssignment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TenantResourceAssignmentClient) Hooks() []Hook {
+	hooks := c.hooks.TenantResourceAssignment
+	return append(hooks[:len(hooks):len(hooks)], tenantresourceassignment.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *TenantResourceAssignmentClient) Interceptors() []Interceptor {
+	inters := c.inters.TenantResourceAssignment
+	return append(inters[:len(inters):len(inters)], tenantresourceassignment.Interceptors[:]...)
+}
+
+func (c *TenantResourceAssignmentClient) mutate(ctx context.Context, m *TenantResourceAssignmentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TenantResourceAssignmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TenantResourceAssignmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TenantResourceAssignmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TenantResourceAssignmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TenantResourceAssignment mutation op: %q", m.Op())
 	}
 }
 
@@ -3649,49 +4511,57 @@ type (
 		AvatarPreset, CharacterCatalog, CharacterCatalogVersion, ContentRelease,
 		ExplorationProgress, GameProfile, GameSession, InventoryItem, ItemDefinition,
 		ItemDefinitionVersion, LevelDefinition, LevelSession, LevelVersion, LoginEvent,
-		NicknameChange, NpcDialogue, NpcDialogueVersion, StoryChapter,
-		StoryChapterVersion, StoryProgress, WorldArea, WorldAreaUnlock,
-		WorldAreaVersion, WorldUnlockFact []ent.Hook
+		NicknameChange, NpcDialogue, NpcDialogueVersion, PeriodicQuestGrant,
+		QuestDefinition, QuestProgress, QuestStepAttempt, QuestVersion, StoryChapter,
+		StoryChapterVersion, StoryProgress, TenantResourceAssignment, WorldArea,
+		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact []ent.Hook
 	}
 	inters struct {
 		AvatarPreset, CharacterCatalog, CharacterCatalogVersion, ContentRelease,
 		ExplorationProgress, GameProfile, GameSession, InventoryItem, ItemDefinition,
 		ItemDefinitionVersion, LevelDefinition, LevelSession, LevelVersion, LoginEvent,
-		NicknameChange, NpcDialogue, NpcDialogueVersion, StoryChapter,
-		StoryChapterVersion, StoryProgress, WorldArea, WorldAreaUnlock,
-		WorldAreaVersion, WorldUnlockFact []ent.Interceptor
+		NicknameChange, NpcDialogue, NpcDialogueVersion, PeriodicQuestGrant,
+		QuestDefinition, QuestProgress, QuestStepAttempt, QuestVersion, StoryChapter,
+		StoryChapterVersion, StoryProgress, TenantResourceAssignment, WorldArea,
+		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		AvatarPreset:            tableSchemas[0],
-		CharacterCatalog:        tableSchemas[0],
-		CharacterCatalogVersion: tableSchemas[0],
-		ContentRelease:          tableSchemas[0],
-		ExplorationProgress:     tableSchemas[0],
-		GameProfile:             tableSchemas[0],
-		GameSession:             tableSchemas[0],
-		InventoryItem:           tableSchemas[0],
-		ItemDefinition:          tableSchemas[0],
-		ItemDefinitionVersion:   tableSchemas[0],
-		LevelDefinition:         tableSchemas[0],
-		LevelSession:            tableSchemas[0],
-		LevelVersion:            tableSchemas[0],
-		LoginEvent:              tableSchemas[0],
-		NicknameChange:          tableSchemas[0],
-		NpcDialogue:             tableSchemas[0],
-		NpcDialogueVersion:      tableSchemas[0],
-		StoryChapter:            tableSchemas[0],
-		StoryChapterVersion:     tableSchemas[0],
-		StoryProgress:           tableSchemas[0],
-		WorldArea:               tableSchemas[0],
-		WorldAreaUnlock:         tableSchemas[0],
-		WorldAreaVersion:        tableSchemas[0],
-		WorldUnlockFact:         tableSchemas[0],
+		AvatarPreset:             tableSchemas[0],
+		CharacterCatalog:         tableSchemas[0],
+		CharacterCatalogVersion:  tableSchemas[0],
+		ContentRelease:           tableSchemas[0],
+		ExplorationProgress:      tableSchemas[0],
+		GameProfile:              tableSchemas[0],
+		GameSession:              tableSchemas[0],
+		InventoryItem:            tableSchemas[0],
+		ItemDefinition:           tableSchemas[0],
+		ItemDefinitionVersion:    tableSchemas[0],
+		LevelDefinition:          tableSchemas[0],
+		LevelSession:             tableSchemas[0],
+		LevelVersion:             tableSchemas[0],
+		LoginEvent:               tableSchemas[0],
+		NicknameChange:           tableSchemas[0],
+		NpcDialogue:              tableSchemas[0],
+		NpcDialogueVersion:       tableSchemas[0],
+		PeriodicQuestGrant:       tableSchemas[0],
+		QuestDefinition:          tableSchemas[0],
+		QuestProgress:            tableSchemas[0],
+		QuestStepAttempt:         tableSchemas[0],
+		QuestVersion:             tableSchemas[0],
+		StoryChapter:             tableSchemas[0],
+		StoryChapterVersion:      tableSchemas[0],
+		StoryProgress:            tableSchemas[0],
+		TenantResourceAssignment: tableSchemas[1],
+		WorldArea:                tableSchemas[0],
+		WorldAreaUnlock:          tableSchemas[0],
+		WorldAreaVersion:         tableSchemas[0],
+		WorldUnlockFact:          tableSchemas[0],
 	}
-	tableSchemas = [...]string{"game"}
+	tableSchemas = [...]string{"game", "infra"}
 )
 
 // SchemaConfig represents alternative schema names for all tables

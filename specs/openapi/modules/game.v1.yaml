@@ -606,7 +606,12 @@ paths:
       tags:
         - game
       operationId: listQuests
-      summary: Danh sách quest khả dụng
+      summary: Danh sách quest của học sinh (khả dụng theo khối, gán tenant, availability, môn bật) và quest đang làm/đã xong
+      description: |
+        Chỉ quest platform published được gán cho tenant (ADR-0029), có `grade_levels` chứa khối của học sinh, trong
+        `availability` và thuộc môn trường bật (F072-AC-01). `status = available` là quest nhận được ngay hoặc còn thiếu
+        điều kiện (`locked_reason`); các trạng thái khác lấy từ `QuestProgress` gần nhất của học sinh. Văn bản trả đủ
+        `vi`/`en` (ADR-0056). Quest không gán/sai khối không xuất hiện.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -617,7 +622,13 @@ paths:
         - name: status
           in: query
           schema:
-            $ref: '#/components/schemas/QuestProgressStatus'
+            $ref: '#/components/schemas/QuestStatus'
+        - name: area_id
+          in: query
+          schema:
+            type: string
+            maxLength: 64
+            pattern: ^[a-z0-9_.]{1,64}$
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -633,6 +644,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/QuestSummary'
                   page:
@@ -642,13 +654,19 @@ paths:
               $ref: '#/components/headers/ContentLanguage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /game/quests/{quest_id}:
     get:
       x-service: game
       tags:
         - game
       operationId: getQuest
-      summary: Chi tiết quest và tiến độ
+      summary: Chi tiết quest (bản delivery của version đã ghim hoặc version hiện hành) và tiến độ
+      description: |
+        Bản delivery không chứa thông tin chấm (`content_ref`, `pass_rule`): tên, mô tả, narrative, NPC giao, khu,
+        bước (tiêu đề, gợi ý, `optional`, `depends_on`), phần thưởng dự kiến, tiến độ (F072-AC-03). Quest không gán cho
+        tenant hoặc không có khối của học sinh → `404` (F072-AC-02).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -663,6 +681,10 @@ paths:
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
   /game/quests/{quest_id}:accept:
@@ -671,15 +693,30 @@ paths:
       tags:
         - game
       operationId: acceptQuest
-      summary: Nhận quest
+      summary: Nhận quest — tạo QuestProgress ghim version hiện hành (ADR-0043)
+      description: |
+        Quest đang làm → trả progress hiện có (F072-AC-06). Lỗi: `404` quest không gán/sai khối; `403
+        QUEST_PREREQUISITE_NOT_MET` kèm `missing_requirements`; `409 QUEST_ACTIVE_LIMIT` (`max_active_quests`),
+        `QUEST_ALREADY_COMPLETED` (`once` đã xong, vượt `max_completions`, kỳ đã xong), `QUEST_COOLDOWN` (kèm `retry_after`).
+        Gửi lại cùng `Idempotency-Key` trả cùng kết quả.
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
         - $ref: '#/components/parameters/QuestId'
         - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                party_id:
+                  $ref: '#/components/schemas/Uuid'
       responses:
         '200':
-          description: Đã nhận quest
+          description: Đã nhận quest (hoặc progress đang làm)
           content:
             application/json:
               schema:
@@ -689,10 +726,24 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          description: QUEST_PREREQUISITE_NOT_MET (kèm `missing_requirements`), GAME_ACCESS_STUDENT_ONLY, TENANT_MISMATCH
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          description: QUEST_ACTIVE_LIMIT, QUEST_ALREADY_COMPLETED, QUEST_COOLDOWN (kèm `retry_after`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /game/quests/{quest_id}:abandon:
     post:
       x-service: game
@@ -700,6 +751,7 @@ paths:
         - game
       operationId: abandonQuest
       summary: Bỏ quest đang làm (không ảnh hưởng attempt/learning record đã ghi)
+      description: Progress `active` → `abandoned`, phát `quest.abandoned` (`reason = player`); không có progress đang làm → `404` (F072-AC-07).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -717,6 +769,10 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -727,7 +783,12 @@ paths:
       tags:
         - game
       operationId: reportQuestStep
-      summary: Báo bước tương tác (talk_npc / go_to / collect) — server kiểm tra điều kiện (STEP_PRECONDITION_FAILED)
+      summary: Báo bước tương tác (talk_npc / go_to / collect) — server kiểm tra phiên, presence và id rồi ghi nhận
+      description: |
+        Server kiểm `game_session_id` active của học sinh, presence ở instance của `area_id` của bước, `npc_id`/`interactable_id`
+        thuộc bước (F072-AC-09). Sai area/instance, id không thuộc bước, bước học tập (`activity`) hoặc `discover` →
+        `409 STEP_PRECONDITION_FAILED` (mã lỗi theo API_DESIGN §4.1); bước `locked`/`completed` → `422 INVALID_STATE_TRANSITION`
+        (F072-AC-10, AC-16). Cùng `Idempotency-Key` hoặc cùng `interactable_id` của bước `collect` tính một lần (F072-AC-11).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -752,10 +813,18 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          description: STEP_PRECONDITION_FAILED (không ở đúng area/instance, id không thuộc bước, bước học tập/khám phá), CONFLICT (game session không active)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '422':
           $ref: '#/components/responses/ValidationFailed'
   /game/quests/{quest_id}/steps/{step_id}/activities:start:
@@ -764,13 +833,28 @@ paths:
       tags:
         - game
       operationId: startQuestActivity
-      summary: Bắt đầu activity học tập của bước quest → tạo Attempt (mode quest)
+      summary: Bắt đầu activity học tập của bước quest → tạo Attempt (mode quest) qua facade module learning
+      description: |
+        Bước `activity` đang `active`: module game gọi `createAttempt` (mode `quest`, context `quest_step`) với nội dung đã
+        khóa trong quest version và trả attempt; client lấy render payload và nộp bài qua `/learning/activity-attempts/{attempt_id}`
+        (ADR-0059). Vượt `pass_rule.max_attempts_per_day` → `409 QUEST_STEP_ATTEMPT_LIMIT` ("hãy quay lại ngày mai"); module
+        learning lỗi/timeout → `503 UNAVAILABLE` có `Retry-After`, tiến độ không đổi (F072-AC-14, AC-17, AC-18).
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
         - $ref: '#/components/parameters/QuestId'
         - $ref: '#/components/parameters/StepId'
         - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                game_session_id:
+                  $ref: '#/components/schemas/Uuid'
       responses:
         '201':
           description: Attempt đã tạo
@@ -783,10 +867,29 @@ paths:
               $ref: '#/components/headers/IdempotentReplayed'
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          description: QUEST_STEP_ATTEMPT_LIMIT, STEP_PRECONDITION_FAILED (bước không phải bước học tập), CONFLICT
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '503':
+          description: UNAVAILABLE — module learning tạm thời không trả lời; thử lại theo Retry-After, tiến độ quest không đổi
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /game/minigames/{minigame_config_id}:start:
     post:
       x-service: game
@@ -4807,6 +4910,9 @@ components:
         - NICKNAME_CHANGE_LIMIT
         - QUEST_ALREADY_COMPLETED
         - QUEST_COOLDOWN
+        - QUEST_PREREQUISITE_NOT_MET
+        - QUEST_ACTIVE_LIMIT
+        - QUEST_STEP_ATTEMPT_LIMIT
         - AREA_LOCKED
         - DISCOVERY_ALREADY_FOUND
         - CHALLENGE_NOT_ELIGIBLE
@@ -5843,46 +5949,211 @@ components:
           description: 'break_reminder_shown: số phút chơi liên tục client đếm lúc nhắc; chỉ dùng cho thống kê chơi lành mạnh'
     QuestType:
       type: string
+      description: 12 loại quest của quest.schema.json v2 (QUEST_SYSTEM §2.3)
       enum:
-        - educational
-        - exploration
+        - main
+        - side
         - daily
         - weekly
+        - learning
+        - exploration
+        - social
+        - party
         - challenge
-        - cooperative
-        - competition
-    QuestProgressStatus:
+        - seasonal
+        - special_event
+        - boss
+    QuestStatus:
       type: string
+      description: Trạng thái quest trong danh sách của học sinh — `available` (chưa có progress đang làm) hoặc trạng thái progress gần nhất
       enum:
         - available
-        - accepted
-        - in_progress
+        - active
         - completed
         - expired
-        - locked
+        - abandoned
+        - failed
     QuestSummary:
       type: object
       required:
         - quest_id
         - quest_version_id
+        - code
         - name
         - quest_type
+        - grade_levels
         - status
       properties:
         quest_id:
           $ref: '#/components/schemas/Uuid'
         quest_version_id:
           $ref: '#/components/schemas/Uuid'
+          description: Version đã ghim khi đang làm, ngược lại version hiện hành
+        code:
+          type: string
+          maxLength: 64
         name:
-          $ref: '#/components/schemas/LocalizedName'
+          $ref: '#/components/schemas/LocalizedText'
         quest_type:
           $ref: '#/components/schemas/QuestType'
+        grade_levels:
+          type: array
+          maxItems: 9
+          items:
+            type: integer
+            minimum: 1
+            maximum: 9
         subject_id:
+          $ref: '#/components/schemas/Uuid'
+        subject_code:
+          type: string
+          maxLength: 64
+        area_id:
+          type: string
+          maxLength: 64
+        giver_npc_id:
+          type: string
+          maxLength: 64
+        story_chapter_code:
+          type: string
+          maxLength: 64
+        start_trigger:
+          type: string
+          maxLength: 64
+          description: npc, quest_board, auto_daily, auto_weekly, chain, discovery, level_reached…
+        status:
+          $ref: '#/components/schemas/QuestStatus'
+        can_accept:
+          type: boolean
+          description: Quest `available` nhận được ngay (đủ điều kiện, chưa vượt giới hạn)
+        locked_reason:
+          type: string
+          enum:
+            - prerequisite_not_met
+            - cooldown
+            - already_completed
+        missing_requirements:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/QuestRequirement'
+        available_until:
+          $ref: '#/components/schemas/Timestamp'
+        retry_after:
+          $ref: '#/components/schemas/Timestamp'
+          description: Thời điểm nhận lại được khi đang cooldown
+        progress:
+          $ref: '#/components/schemas/QuestProgress'
+    QuestRequirement:
+      type: object
+      description: Điều kiện còn thiếu để nhận quest (thân thiện, không lộ dữ liệu người khác)
+      required:
+        - kind
+        - met
+      properties:
+        kind:
+          type: string
+          enum:
+            - completed_quest
+            - unlocked_area
+            - min_level
+            - learning_objective
+            - discovery
+        ref:
+          type: string
+          maxLength: 64
+        met:
+          type: boolean
+        current:
+          type: integer
+          minimum: 0
+        target:
+          type: integer
+          minimum: 0
+        min_mastery_level:
+          type: string
+          enum:
+            - beginning
+            - developing
+            - proficient
+            - mastered
+    QuestProgress:
+      type: object
+      required:
+        - quest_progress_id
+        - quest_id
+        - quest_version_id
+        - status
+        - step_states
+        - started_at
+      properties:
+        quest_progress_id:
+          $ref: '#/components/schemas/Uuid'
+        quest_id:
+          $ref: '#/components/schemas/Uuid'
+        quest_version_id:
           $ref: '#/components/schemas/Uuid'
         status:
           $ref: '#/components/schemas/QuestProgressStatus'
-        available_until:
+        step_states:
+          type: object
+          maxProperties: 30
+          additionalProperties:
+            $ref: '#/components/schemas/QuestStepState'
+        start_trigger:
+          type: string
+          maxLength: 64
+        period_key:
+          type: string
+          maxLength: 16
+        completion_no:
+          type: integer
+          minimum: 1
+        party_id:
+          $ref: '#/components/schemas/Uuid'
+        started_at:
           $ref: '#/components/schemas/Timestamp'
+        completed_at:
+          $ref: '#/components/schemas/Timestamp'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        deadline_at:
+          $ref: '#/components/schemas/Timestamp'
+          description: Hết giờ theo availability.time_limit_minutes
+        failed_at:
+          $ref: '#/components/schemas/Timestamp'
+    QuestProgressStatus:
+      type: string
+      description: Trạng thái QuestProgress (QUEST_SYSTEM §5)
+      enum:
+        - active
+        - completed
+        - expired
+        - abandoned
+        - failed
+    QuestStepState:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/QuestStepStatus'
+        count:
+          type: integer
+          minimum: 0
+        target:
+          type: integer
+          minimum: 1
+        attempt_count:
+          type: integer
+          minimum: 0
+          description: Số attempt học tập đã mở cho bước
+    QuestStepStatus:
+      type: string
+      enum:
+        - locked
+        - active
+        - completed
     PageInfo:
       type: object
       required:
@@ -5902,44 +6173,118 @@ components:
       allOf:
         - $ref: '#/components/schemas/QuestSummary'
         - type: object
+          required:
+            - description
+            - steps
           properties:
             description:
               $ref: '#/components/schemas/LocalizedText'
+            narrative:
+              $ref: '#/components/schemas/LocalizedText'
             objective_ids:
               type: array
+              maxItems: 50
               items:
                 $ref: '#/components/schemas/Uuid'
+            estimated_minutes:
+              type: integer
+              minimum: 1
+              maximum: 120
+            repeatability:
+              type: string
+              enum:
+                - once
+                - per_period
+                - repeatable
             steps:
               type: array
+              maxItems: 30
               items:
-                type: object
-                required:
-                  - step_id
-                  - step_type
-                properties:
-                  step_id:
+                $ref: '#/components/schemas/QuestStepView'
+            completion_rule:
+              type: object
+              required:
+                - type
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - all_required_steps
+                    - any_n_of
+                'n':
+                  type: integer
+                  minimum: 1
+                step_ids:
+                  type: array
+                  maxItems: 30
+                  items:
                     type: string
                     maxLength: 64
-                  step_type:
-                    type: string
-                    enum:
-                      - talk_npc
-                      - go_to
-                      - activity
-                      - collect
-                      - minigame
-                      - party_activity
-                  title:
-                    $ref: '#/components/schemas/LocalizedName'
-                  target_ref:
-                    type: string
-                    maxLength: 255
             rewards_preview:
               type: array
+              maxItems: 20
+              description: Phần thưởng dự kiến (ý định — Reward Engine F074 cấp theo reward rule)
               items:
                 $ref: '#/components/schemas/RewardPreview'
-            progress:
-              $ref: '#/components/schemas/QuestProgress'
+    QuestStepView:
+      type: object
+      required:
+        - step_id
+        - order
+        - step_type
+        - title
+        - optional
+      properties:
+        step_id:
+          type: string
+          maxLength: 64
+        order:
+          type: integer
+          minimum: 1
+        step_type:
+          $ref: '#/components/schemas/QuestStepType'
+        title:
+          $ref: '#/components/schemas/LocalizedText'
+        hint:
+          $ref: '#/components/schemas/LocalizedText'
+        optional:
+          type: boolean
+        depends_on:
+          type: array
+          maxItems: 30
+          items:
+            type: string
+            maxLength: 64
+        area_id:
+          type: string
+          maxLength: 64
+        npc_id:
+          type: string
+          maxLength: 64
+        interactable_ids:
+          type: array
+          maxItems: 50
+          description: Vật thể đích của bước go_to/collect/discover (để đặt marker); không có thông tin chấm
+          items:
+            type: string
+            maxLength: 64
+        count:
+          type: integer
+          minimum: 1
+    QuestStepType:
+      type: string
+      description: Loại bước của quest.schema.json v2 (QUEST_SYSTEM §3); F072 xử lý talk_npc, go_to, collect, discover, activity
+      enum:
+        - talk_npc
+        - go_to
+        - collect
+        - discover
+        - activity
+        - minigame
+        - party_activity
+        - interdependent
+        - challenge
+        - boss
     RewardPreview:
       type: object
       properties:
@@ -5949,35 +6294,19 @@ components:
             - xp
             - item
             - badge
+            - currency
+            - title
+            - collection_item
         amount:
           type: integer
         item_id:
           $ref: '#/components/schemas/Uuid'
-    QuestProgress:
-      type: object
-      required:
-        - quest_version_id
-        - status
-      properties:
-        quest_version_id:
-          $ref: '#/components/schemas/Uuid'
-        status:
-          $ref: '#/components/schemas/QuestProgressStatus'
-        step_states:
-          type: object
-          additionalProperties:
-            type: string
-            enum:
-              - locked
-              - available
-              - in_progress
-              - completed
-        party_id:
-          $ref: '#/components/schemas/Uuid'
-        started_at:
-          $ref: '#/components/schemas/Timestamp'
-        completed_at:
-          $ref: '#/components/schemas/Timestamp'
+        ref:
+          type: string
+          maxLength: 64
+          description: Mã item/badge/currency/title/collection của phần thưởng quest (quest.schema.json v2)
+        first_completion_only:
+          type: boolean
     QuestStepReport:
       type: object
       required:

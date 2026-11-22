@@ -1002,6 +1002,9 @@ msgstr ""
 msgid "ui.quality.title"
 msgstr ""
 
+msgid "ui.quest.accept"
+msgstr ""
+
 msgid "ui.quest.due"
 msgstr ""
 
@@ -1017,10 +1020,46 @@ msgstr ""
 msgid "ui.quest.loading"
 msgstr ""
 
+msgid "ui.quest.locked.cooldown"
+msgstr ""
+
+msgid "ui.quest.locked.prerequisite"
+msgstr ""
+
+msgid "ui.quest.none"
+msgstr ""
+
+msgid "ui.quest.notice.active_limit"
+msgstr ""
+
+msgid "ui.quest.notice.already_completed"
+msgstr ""
+
+msgid "ui.quest.notice.come_back_tomorrow"
+msgstr ""
+
+msgid "ui.quest.notice.cooldown"
+msgstr ""
+
+msgid "ui.quest.notice.not_here"
+msgstr ""
+
+msgid "ui.quest.notice.prerequisite"
+msgstr ""
+
+msgid "ui.quest.notice.try_again"
+msgstr ""
+
+msgid "ui.quest.notice.unavailable"
+msgstr ""
+
 msgid "ui.quest.overdue"
 msgstr ""
 
 msgid "ui.quest.start"
+msgstr ""
+
+msgid "ui.quest.status.completed"
 msgstr ""
 
 msgid "ui.quest.status.excused"
@@ -1041,10 +1080,19 @@ msgstr ""
 msgid "ui.quest.status.unsupported"
 msgstr ""
 
+msgid "ui.quest.tab.active"
+msgstr ""
+
 msgid "ui.quest.tab.assigned"
 msgstr ""
 
+msgid "ui.quest.tab.available"
+msgstr ""
+
 msgid "ui.quest.title"
+msgstr ""
+
+msgid "ui.quest.tracker.count"
 msgstr ""
 
 msgid "ui.question.backspace"

@@ -583,6 +583,229 @@ var (
 			},
 		},
 	}
+	// PeriodicQuestGrantsColumns holds the columns for the "periodic_quest_grants" table.
+	PeriodicQuestGrantsColumns = []*schema.Column{
+		{Name: "grant_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "kind", Type: field.TypeString, Size: 64},
+		{Name: "period_key", Type: field.TypeString, Size: 16},
+		{Name: "quest_ids", Type: field.TypeJSON},
+		{Name: "granted_at", Type: field.TypeTime},
+	}
+	// PeriodicQuestGrantsTable holds the schema information for the "periodic_quest_grants" table.
+	PeriodicQuestGrantsTable = &schema.Table{
+		Name:       "periodic_quest_grants",
+		Columns:    PeriodicQuestGrantsColumns,
+		PrimaryKey: []*schema.Column{PeriodicQuestGrantsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "periodic_quest_grants_uq",
+				Unique:  true,
+				Columns: []*schema.Column{PeriodicQuestGrantsColumns[1], PeriodicQuestGrantsColumns[10], PeriodicQuestGrantsColumns[11], PeriodicQuestGrantsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// QuestDefinitionsColumns holds the columns for the "quest_definitions" table.
+	QuestDefinitionsColumns = []*schema.Column{
+		{Name: "quest_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "platform"},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// QuestDefinitionsTable holds the schema information for the "quest_definitions" table.
+	QuestDefinitionsTable = &schema.Table{
+		Name:       "quest_definitions",
+		Columns:    QuestDefinitionsColumns,
+		PrimaryKey: []*schema.Column{QuestDefinitionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "quest_definitions_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{QuestDefinitionsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// QuestProgressColumns holds the columns for the "quest_progress" table.
+	QuestProgressColumns = []*schema.Column{
+		{Name: "quest_progress_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "quest_id", Type: field.TypeUUID},
+		{Name: "quest_version_id", Type: field.TypeUUID},
+		{Name: "quest_type", Type: field.TypeString, Size: 64},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "step_states", Type: field.TypeJSON},
+		{Name: "start_trigger", Type: field.TypeString, Size: 64},
+		{Name: "period_key", Type: field.TypeString, Nullable: true, Size: 16},
+		{Name: "completion_no", Type: field.TypeInt, Default: 1},
+		{Name: "party_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deadline_at", Type: field.TypeTime, Nullable: true},
+		{Name: "failed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+	}
+	// QuestProgressTable holds the schema information for the "quest_progress" table.
+	QuestProgressTable = &schema.Table{
+		Name:       "quest_progress",
+		Columns:    QuestProgressColumns,
+		PrimaryKey: []*schema.Column{QuestProgressColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "quest_progress_one_active_uq",
+				Unique:  true,
+				Columns: []*schema.Column{QuestProgressColumns[1], QuestProgressColumns[10], QuestProgressColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'active' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "quest_progress_period_uq",
+				Unique:  true,
+				Columns: []*schema.Column{QuestProgressColumns[1], QuestProgressColumns[10], QuestProgressColumns[12], QuestProgressColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "period_key IS NOT NULL AND status IN ('active', 'completed') AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "quest_progress_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{QuestProgressColumns[1], QuestProgressColumns[10], QuestProgressColumns[15]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// QuestStepAttemptsColumns holds the columns for the "quest_step_attempts" table.
+	QuestStepAttemptsColumns = []*schema.Column{
+		{Name: "quest_step_attempt_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "quest_progress_id", Type: field.TypeUUID},
+		{Name: "step_id", Type: field.TypeString, Size: 64},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "attempt_id", Type: field.TypeUUID},
+		{Name: "content_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "started_on", Type: field.TypeString, Size: 10},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "correct_count", Type: field.TypeInt, Nullable: true},
+		{Name: "item_count", Type: field.TypeInt, Nullable: true},
+		{Name: "graded_at", Type: field.TypeTime, Nullable: true},
+	}
+	// QuestStepAttemptsTable holds the schema information for the "quest_step_attempts" table.
+	QuestStepAttemptsTable = &schema.Table{
+		Name:       "quest_step_attempts",
+		Columns:    QuestStepAttemptsColumns,
+		PrimaryKey: []*schema.Column{QuestStepAttemptsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "quest_step_attempts_attempt_uq",
+				Unique:  true,
+				Columns: []*schema.Column{QuestStepAttemptsColumns[1], QuestStepAttemptsColumns[13]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "quest_step_attempts_day_idx",
+				Unique:  false,
+				Columns: []*schema.Column{QuestStepAttemptsColumns[1], QuestStepAttemptsColumns[10], QuestStepAttemptsColumns[11], QuestStepAttemptsColumns[15]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// QuestVersionsColumns holds the columns for the "quest_versions" table.
+	QuestVersionsColumns = []*schema.Column{
+		{Name: "quest_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "quest_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "quest_type", Type: field.TypeString, Size: 64},
+		{Name: "grade_levels", Type: field.TypeJSON},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "subject_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "area_id", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "giver_npc_id", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "story_chapter_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "start_trigger", Type: field.TypeString, Size: 64},
+		{Name: "objective_ids", Type: field.TypeJSON},
+		{Name: "available_from", Type: field.TypeTime, Nullable: true},
+		{Name: "available_to", Type: field.TypeTime, Nullable: true},
+	}
+	// QuestVersionsTable holds the schema information for the "quest_versions" table.
+	QuestVersionsTable = &schema.Table{
+		Name:       "quest_versions",
+		Columns:    QuestVersionsColumns,
+		PrimaryKey: []*schema.Column{QuestVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "quest_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{QuestVersionsColumns[9], QuestVersionsColumns[10]},
+			},
+		},
+	}
 	// StoryChaptersColumns holds the columns for the "story_chapters" table.
 	StoryChaptersColumns = []*schema.Column{
 		{Name: "chapter_code", Type: field.TypeString, Size: 64},
@@ -672,6 +895,47 @@ var (
 				Name:    "story_progress_uq",
 				Unique:  true,
 				Columns: []*schema.Column{StoryProgressColumns[1], StoryProgressColumns[10], StoryProgressColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// TenantResourceAssignmentsColumns holds the columns for the "tenant_resource_assignments" table.
+	TenantResourceAssignmentsColumns = []*schema.Column{
+		{Name: "assignment_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "resource_type", Type: field.TypeString, Size: 64},
+		{Name: "resource_id", Type: field.TypeUUID},
+		{Name: "assigned_by", Type: field.TypeUUID},
+		{Name: "assigned_at", Type: field.TypeTime},
+	}
+	// TenantResourceAssignmentsTable holds the schema information for the "tenant_resource_assignments" table.
+	TenantResourceAssignmentsTable = &schema.Table{
+		Name:       "tenant_resource_assignments",
+		Columns:    TenantResourceAssignmentsColumns,
+		PrimaryKey: []*schema.Column{TenantResourceAssignmentsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tra_active_uq",
+				Unique:  true,
+				Columns: []*schema.Column{TenantResourceAssignmentsColumns[10], TenantResourceAssignmentsColumns[11], TenantResourceAssignmentsColumns[1]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "tra_tenant_idx",
+				Unique:  false,
+				Columns: []*schema.Column{TenantResourceAssignmentsColumns[1], TenantResourceAssignmentsColumns[10], TenantResourceAssignmentsColumns[11]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -824,9 +1088,15 @@ var (
 		NicknameChangesTable,
 		NpcDialoguesTable,
 		NpcDialogueVersionsTable,
+		PeriodicQuestGrantsTable,
+		QuestDefinitionsTable,
+		QuestProgressTable,
+		QuestStepAttemptsTable,
+		QuestVersionsTable,
 		StoryChaptersTable,
 		StoryChapterVersionsTable,
 		StoryProgressTable,
+		TenantResourceAssignmentsTable,
 		WorldAreasTable,
 		WorldAreaUnlocksTable,
 		WorldAreaVersionsTable,
@@ -886,6 +1156,21 @@ func init() {
 	NpcDialogueVersionsTable.Annotation = &entsql.Annotation{
 		Table: "npc_dialogue_versions",
 	}
+	PeriodicQuestGrantsTable.Annotation = &entsql.Annotation{
+		Table: "periodic_quest_grants",
+	}
+	QuestDefinitionsTable.Annotation = &entsql.Annotation{
+		Table: "quest_definitions",
+	}
+	QuestProgressTable.Annotation = &entsql.Annotation{
+		Table: "quest_progress",
+	}
+	QuestStepAttemptsTable.Annotation = &entsql.Annotation{
+		Table: "quest_step_attempts",
+	}
+	QuestVersionsTable.Annotation = &entsql.Annotation{
+		Table: "quest_versions",
+	}
 	StoryChaptersTable.Annotation = &entsql.Annotation{
 		Table: "story_chapters",
 	}
@@ -894,6 +1179,9 @@ func init() {
 	}
 	StoryProgressTable.Annotation = &entsql.Annotation{
 		Table: "story_progress",
+	}
+	TenantResourceAssignmentsTable.Annotation = &entsql.Annotation{
+		Table: "tenant_resource_assignments",
 	}
 	WorldAreasTable.Annotation = &entsql.Annotation{
 		Table: "world_areas",

@@ -213,6 +213,66 @@ func (f NpcDialogueVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NpcDialogueVersionMutation", m)
 }
 
+// The PeriodicQuestGrantFunc type is an adapter to allow the use of ordinary
+// function as PeriodicQuestGrant mutator.
+type PeriodicQuestGrantFunc func(context.Context, *ent.PeriodicQuestGrantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PeriodicQuestGrantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PeriodicQuestGrantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PeriodicQuestGrantMutation", m)
+}
+
+// The QuestDefinitionFunc type is an adapter to allow the use of ordinary
+// function as QuestDefinition mutator.
+type QuestDefinitionFunc func(context.Context, *ent.QuestDefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestDefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestDefinitionMutation", m)
+}
+
+// The QuestProgressFunc type is an adapter to allow the use of ordinary
+// function as QuestProgress mutator.
+type QuestProgressFunc func(context.Context, *ent.QuestProgressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestProgressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestProgressMutation", m)
+}
+
+// The QuestStepAttemptFunc type is an adapter to allow the use of ordinary
+// function as QuestStepAttempt mutator.
+type QuestStepAttemptFunc func(context.Context, *ent.QuestStepAttemptMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestStepAttemptFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestStepAttemptMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestStepAttemptMutation", m)
+}
+
+// The QuestVersionFunc type is an adapter to allow the use of ordinary
+// function as QuestVersion mutator.
+type QuestVersionFunc func(context.Context, *ent.QuestVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f QuestVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.QuestVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestVersionMutation", m)
+}
+
 // The StoryChapterFunc type is an adapter to allow the use of ordinary
 // function as StoryChapter mutator.
 type StoryChapterFunc func(context.Context, *ent.StoryChapterMutation) (ent.Value, error)
@@ -247,6 +307,18 @@ func (f StoryProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Valu
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StoryProgressMutation", m)
+}
+
+// The TenantResourceAssignmentFunc type is an adapter to allow the use of ordinary
+// function as TenantResourceAssignment mutator.
+type TenantResourceAssignmentFunc func(context.Context, *ent.TenantResourceAssignmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TenantResourceAssignmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TenantResourceAssignmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantResourceAssignmentMutation", m)
 }
 
 // The WorldAreaFunc type is an adapter to allow the use of ordinary

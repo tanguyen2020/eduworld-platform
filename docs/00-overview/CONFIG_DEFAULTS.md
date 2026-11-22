@@ -51,10 +51,10 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
-| `daily_quests_per_day` | 3 | quest | platform | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
-| `weekly_quests_per_week` | 3 | quest | platform | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
-| `quest_reset_time` | 04:00 ICT; weekly: thứ Hai 04:00 | — | platform | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
-| `max_active_quests` | 10 | quest | platform | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
+| `daily_quests_per_day` | 3 | quest | platform (env `EW_GAME_DAILY_QUESTS_PER_DAY`, 0–10, tới khi có khóa platform settings — F072) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
+| `weekly_quests_per_week` | 3 | quest | platform (env `EW_GAME_WEEKLY_QUESTS_PER_WEEK`, 0–10 — F072) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
+| `quest_reset_time` | 04:00 ICT; weekly: thứ Hai 04:00 | — | platform (env `EW_GAME_QUEST_RESET_TIME` HH:MM ICT — F072) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
+| `max_active_quests` | 10 | quest | platform (env `EW_GAME_MAX_ACTIVE_QUESTS`, 1–50 — F072) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | `quest_pass_rule` | tỷ lệ đúng 0,7; tối thiểu 8 câu; 5 lần/ngày | — | platform (theo quest) | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | `coop_quest_reconnect_grace` | 120 | giây | platform | [Confirmed] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) |
 | `interdependent_roles` | 2–4 vai mỗi bước `interdependent` | vai | platform | [Confirmed — Technical Architect 2026-11-15] | [QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md) §3.2 |

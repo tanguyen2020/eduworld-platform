@@ -184,6 +184,10 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer(messaging.MasteryName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.MasteryOptions(consumer.MasteryOnGraded{Apply: w.mastery}, core.UoW, core.App, js)
 	})
+	r.Consumer(messaging.QuestLearningEventName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LearningEventOnQuestCompletedOptions(consumer.LearningEventOnQuestCompleted{Recorder: command.QuestLearningEvents{
+			Students: read.SchoolSettings{}, Learning: write.LearningEventWriter{}}}, core.UoW, core.App, js)
+	})
 	r.Consumer(messaging.LessonCompletionName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LessonCompletionOptions(consumer.LessonCompletion{Lessons: w.lessons}, core.UoW, core.App, js)
 	})

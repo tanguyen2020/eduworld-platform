@@ -79,7 +79,7 @@
     },
     "openapi/AttemptResult.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#/components/schemas/AttemptResult",
-      "sha256": "4d51eb9ae719aacc927d35edfd2829316bd3d4396b21511095c5b850bdcb454a"
+      "sha256": "ed629a1fb70af7a286e1fc613dac9d4eb3f1ca8b5724be98e8028bb47c0fa738"
     },
     "openapi/listMyAssignments.200.json": {
       "source": "specs/openapi/eduworld-api.v1.yaml#listMyAssignments/responses/200/example",
@@ -123,7 +123,7 @@
     },
     "examples/quest.math-g3-multiplication.json": {
       "source": "specs/examples/quest.math-g3-multiplication.json",
-      "sha256": "cf8531bf9161fcbe2f661282a8acec7911b0a54ecc6c743be33e5f19b4a6f6c4"
+      "sha256": "db2bb35e3c22734c2ec0e967bde7a7702c60ea87c3b89f997999f3d7c92b9d86"
     },
     "examples/season-track.season-1.json": {
       "source": "specs/examples/season-track.season-1.json",

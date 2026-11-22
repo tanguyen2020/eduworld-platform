@@ -166,6 +166,9 @@ type env struct {
 	rate      *memRate
 	worldPush *memWorldPush
 	hub       port.HubPositions
+	// F072 quest doubles (R17): the learning facade (generated Fake) and the quest.progress.updated pushes.
+	learning  *fakeLearning
+	questPush *questPush
 }
 
 func open(t *testing.T, dsn string) *sql.DB {
@@ -193,7 +196,7 @@ func setup(ctx context.Context, t *testing.T, o envOpts) *env {
 		migrator: open(t, cl.ModuleDSN("game", "migrator")), relay: open(t, cl.ModuleDSN("game", "relay")),
 		tenantA: uuid.New(), tenantB: uuid.New(), schoolA: uuid.New(), schoolA2: uuid.New(), schoolB: uuid.New(),
 		clock: &clock{now: time.Date(2026, 11, 19, 3, 0, 0, 0, time.UTC)}, pushes: &pushes{},
-		presence: &memPresence{m: map[uuid.UUID]port.Presence{}}, rate: &memRate{n: map[string]int{}}, worldPush: &memWorldPush{}}
+		presence: &memPresence{m: map[uuid.UUID]port.Presence{}}, rate: &memRate{n: map[string]int{}}, worldPush: &memWorldPush{}, learning: newFakeLearning(), questPush: &questPush{}}
 	var err error
 	if e.writer, err = outbox.NewWriter("game", "core", nil); err != nil {
 		t.Fatal(err)
@@ -278,7 +281,7 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 			Config: command.TicketConfig{URL: e.realtimeURL, TTL: time.Minute, Rate: 10, RateWindow: time.Minute}},
 		Profiles: e.profiles, ProfileQueries: query.Profile{Read: e.read, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
 			Options: e.options, TTL: e.profileCfg.SuggestionTTL},
-		World: worldProxy{e}, WorldQueries: e.worldQueries()}
+		World: worldProxy{e}, WorldQueries: e.worldQueries(), Quests: questProxy{e}, QuestQueries: questQueryProxy{e}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

@@ -29,6 +29,9 @@ func _ready() -> void:
 	runner.action_handler = actions.handle
 	actions.notice_requested.connect(_on_notice)
 	actions.activity_opened.connect(_on_activity_opened)
+	var services: ServiceLocator = AppState.get_services()
+	if services != null and services.quest != null:
+		actions.quest_api = services.quest.dialogue_action # give_quest / complete_step (F072)
 
 
 ## `args.npc_id`: fetches the dialogue (ETag cache in WorldService) and starts it.

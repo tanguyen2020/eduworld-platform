@@ -8067,6 +8067,9 @@ components:
         - NICKNAME_CHANGE_LIMIT
         - QUEST_ALREADY_COMPLETED
         - QUEST_COOLDOWN
+        - QUEST_PREREQUISITE_NOT_MET
+        - QUEST_ACTIVE_LIMIT
+        - QUEST_STEP_ATTEMPT_LIMIT
         - AREA_LOCKED
         - DISCOVERY_ALREADY_FOUND
         - CHALLENGE_NOT_ELIGIBLE
@@ -9947,10 +9950,19 @@ components:
             - xp
             - item
             - badge
+            - currency
+            - title
+            - collection_item
         amount:
           type: integer
         item_id:
           $ref: '#/components/schemas/Uuid'
+        ref:
+          type: string
+          maxLength: 64
+          description: Mã item/badge/currency/title/collection của phần thưởng quest (quest.schema.json v2)
+        first_completion_only:
+          type: boolean
     AttemptReview:
       type: object
       required:

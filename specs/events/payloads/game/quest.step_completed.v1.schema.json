@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/quest.step_completed.v1.schema.json",
+  "title": "Payload quest.step_completed v1 (module game, owner F072)",
+  "description": "Một bước quest hoàn thành do server xác nhận (report hợp lệ, world.discovery_found, pass_rule của activity.graded — QUEST_SYSTEM §3). Bước khung không mang giá trị học tập. Consumer: realtime, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "quest_progress_id",
+    "quest_id",
+    "quest_version_id",
+    "student_id",
+    "step_id",
+    "step_type",
+    "completed_at"
+  ],
+  "properties": {
+    "quest_progress_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "step_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]{1,32}$"
+    },
+    "step_type": {
+      "type": "string",
+      "enum": [
+        "talk_npc",
+        "go_to",
+        "collect",
+        "discover",
+        "activity",
+        "minigame",
+        "party_activity",
+        "interdependent",
+        "challenge",
+        "boss"
+      ]
+    },
+    "attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "quest_progress_id": "0193a5f4-6c1e-7b2a-9d1f-000000072901",
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071101",
+      "quest_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000072902",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "step_id": "meet_cloudy",
+      "step_type": "talk_npc",
+      "attempt_id": null,
+      "completed_at": "2026-11-22T01:05:00Z"
+    }
+  ]
+}

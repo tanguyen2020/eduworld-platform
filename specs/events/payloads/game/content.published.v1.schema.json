@@ -26,13 +26,14 @@
         "npc_dialogue",
         "level",
         "character_catalog",
-        "item"
+        "item",
+        "quest"
       ]
     },
     "item_id": {
       "type": "string",
       "maxLength": 64,
-      "description": "area_id, chapter_code, dialogue_id hoặc level_id"
+      "description": "area_id, chapter_code, dialogue_id, level_id hoặc quest_id (F072)"
     },
     "from_version_id": {
       "type": [

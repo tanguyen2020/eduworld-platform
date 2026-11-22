@@ -1,0 +1,67 @@
+{
+  "schema_version": 2,
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "party_mode": "solo",
+  "completion_rule": {
+    "type": "all_required_steps"
+  },
+  "objective_ids": [],
+  "rewards": [
+    {
+      "type": "xp",
+      "amount": 20
+    }
+  ],
+  "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000072002",
+  "code": "daily.hub.lanterns",
+  "quest_type": "exploration",
+  "name": {
+    "vi": "Đèn sáng mỗi ngày",
+    "en": "Daily Lanterns"
+  },
+  "description": {
+    "vi": "Mỗi ngày, thắp lại hai ngọn đèn ở Quảng trường Trung tâm.",
+    "en": "Every day, light the two lanterns of the Central Square again."
+  },
+  "area_id": "main_hub",
+  "grade_levels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "subject_id": "0193a5f4-6c1e-7b2a-9d1f-0000000720f0",
+  "estimated_minutes": 3,
+  "start_trigger": {
+    "kind": "auto_daily"
+  },
+  "availability": {
+    "recurrence": "daily"
+  },
+  "repeatability": {
+    "mode": "per_period"
+  },
+  "steps": [
+    {
+      "step_id": "light_lanterns",
+      "order": 1,
+      "type": "collect",
+      "title": {
+        "vi": "Thắp 2 ngọn đèn",
+        "en": "Light 2 lanterns"
+      },
+      "area_id": "main_hub",
+      "interactable_ids": [
+        "quest.hub.lantern_east",
+        "quest.hub.lantern_west"
+      ],
+      "count": 2
+    }
+  ]
+}

@@ -46,3 +46,45 @@ func World(dir string) ([]command.ContentItem, error) {
 	}
 	return out, nil
 }
+
+// Quests reads seed/quests/*.v1.json (one quest per file, quest.schema.json v2) except assignments.v1.json.
+func Quests(dir string) ([]command.ContentItem, error) {
+	files, err := filepath.Glob(filepath.Join(dir, "quests", "*.v1.json"))
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(files)
+	var out []command.ContentItem
+	for _, f := range files {
+		if filepath.Base(f) == "assignments.v1.json" {
+			continue
+		}
+		raw, err := os.ReadFile(f) //nolint:gosec // repository seed path
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, command.ContentItem{Type: write.ItemQuest, Payload: raw})
+	}
+	return out, nil
+}
+
+// QuestAssignment is one entry of seed/quests/assignments.v1.json: the tenant codes a seed quest is assigned to.
+type QuestAssignment struct {
+	QuestID string   `json:"quest_id"`
+	Tenants []string `json:"tenants"`
+}
+
+// QuestAssignments reads seed/quests/assignments.v1.json.
+func QuestAssignments(dir string) ([]QuestAssignment, error) {
+	raw, err := os.ReadFile(filepath.Join(dir, "quests", "assignments.v1.json")) //nolint:gosec // repository seed path
+	if err != nil {
+		return nil, err
+	}
+	var doc struct {
+		Assignments []QuestAssignment `json:"assignments"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return nil, fmt.Errorf("assignments.v1.json: %w", err)
+	}
+	return doc.Assignments, nil
+}

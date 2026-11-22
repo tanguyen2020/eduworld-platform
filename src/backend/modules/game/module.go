@@ -15,6 +15,7 @@ import (
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
@@ -54,12 +55,15 @@ type Facade interface {
 // discovery); nil = presence only. Everything else is projections and events (ADR-0037).
 type Imports struct {
 	Competition modules.CompetitionHub
+	// Learning is createAttempt of the learning facade (F072: learning steps of the quests); nil = startQuestActivity 503.
+	Learning modules.LearningFacade
 }
 
 // Module is the registered module.
 type Module struct {
-	facade Facade
-	hub    *modules.LateHub
+	facade   Facade
+	hub      *modules.LateHub
+	learning *modules.LateLearning
 }
 
 // Facade returns the in-process facade of module game (nil in a binary that does not load its use cases).
@@ -70,13 +74,18 @@ func (m *Module) Wire(in Imports) {
 	if m.hub != nil {
 		m.hub.Set(in.Competition)
 	}
+	if m.learning != nil {
+		m.learning.Set(in.Learning)
+	}
 }
 
 // Register wires the module into the running binary (OQ F014-7, F010-2): health checks everywhere; the F014 routes in
 // core-api; the outbox relay and the consumers game.projection_identity, game.session_end_on_revoke,
 // game.platform_settings (platform_curfew), game.manifest_on_learning_content and the F071 consumers
-// game.manifest_on_game_content, game.unlock_on_events, game.mastery_projection in worker events; the F071 world routes; the jobs
-// session-timeout and curfew-session-closer in worker jobs; createRealtimeTicket and the NATS command
+// game.manifest_on_game_content, game.unlock_on_events, game.mastery_projection and the F072 consumers
+// game.quest_on_activity_graded, game.quest_on_discovery_found, game.periodic_quests_on_session_started in worker events;
+// the F071 world and F072 quest routes; the jobs session-timeout, curfew-session-closer, quest-period-expiry and
+// quest-failure-timer in worker jobs; createRealtimeTicket and the NATS command
 // ew.cmd.game.session.heartbeat of the realtime gateway in core-api (F090).
 func Register(r *module.Registry) (*Module, error) {
 	pool, err := r.Database(Name)
@@ -86,7 +95,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(pool))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(pool, migrations.Latest()))
 	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
-		return &Module{hub: &modules.LateHub{}}, nil
+		return &Module{hub: &modules.LateHub{}, learning: &modules.LateLearning{}}, nil
 	}
 	core, err := r.Core(Name)
 	if err != nil {
@@ -108,11 +117,16 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.RegisterManifest(r.Metrics())
 	observability.RegisterProfile(r.Metrics())
 	observability.RegisterWorld(r.Metrics())
+	observability.RegisterQuest(r.Metrics())
 	profileCfg, err := gameconfig.ProfileFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
 	}
 	worldCfg, err := gameconfig.WorldFrom(r.Config(), cfg.UseCase.HeartbeatTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	questCfg, err := gameconfig.QuestFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
 	}
@@ -125,7 +139,12 @@ func Register(r *module.Registry) (*Module, error) {
 	worldUC := command.World{UoW: core.UoW, AfterCommit: entx.AfterCommit, Content: worldsql.Content{}, Store: write.WorldRepo{},
 		Sessions: write.SessionRepo{}, Manifests: write.ManifestRepo{}, Events: write.Publisher{W: core.Writer}, Presence: presence,
 		Rate: cache.RateLimiter{C: vk}, Realtime: realtime.WorldPublisher{C: vk}, Hub: hub, Metrics: observability.WorldMetrics{}, Config: worldCfg}
-	m := &Module{hub: hub, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
+	// F072 quests: createAttempt of module learning when wired (Module.Wire), 503 otherwise.
+	learningLate := &modules.LateLearning{}
+	questUC := command.Quests{UoW: core.UoW, AfterCommit: entx.AfterCommit, Content: questsql.Content{}, World: worldsql.Content{},
+		Store: write.QuestRepo{}, Sessions: write.SessionRepo{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
+		Presence: presence, Learning: learningLate, Realtime: realtime.QuestPublisher{C: vk}, Metrics: observability.QuestMetrics{}, Config: questCfg}
+	m := &Module{hub: hub, learning: learningLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
 		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}}}}
 	options := cache.NicknameOptionStore{C: vk}
 	profiles := command.Profiles{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: write.ProfileRepo{}, Catalog: write.CatalogRepo{},
@@ -138,7 +157,9 @@ func Register(r *module.Registry) (*Module, error) {
 		Tickets:     command.RealtimeTickets{Sessions: sessions, Store: realtime.TicketStore{C: vk}, Config: cfg.Tickets},
 		Profiles:    profiles, ProfileQueries: query.Profile{Read: core.ReadSession, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
 			Options: options, TTL: profileCfg.SuggestionTTL},
-		World: worldUC, WorldQueries: query.World{Read: core.ReadSession, Content: worldsql.Content{}, Manifests: read.Manifests{}}}
+		World: worldUC, WorldQueries: query.World{Read: core.ReadSession, Content: worldsql.Content{}, Manifests: read.Manifests{}},
+		Quests: questUC, QuestQueries: query.Quests{Read: core.ReadSession, Content: questsql.Content{}, World: worldsql.Content{}, Cursors: cursors,
+			Reset: questCfg.Reset}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -170,7 +191,7 @@ func Register(r *module.Registry) (*Module, error) {
 	})
 	r.Consumer("game.manifest_on_game_content", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.ManifestOnGameContentOptions(consumer.ManifestOnGameContent{Manifests: command.GameManifest{UoW: core.UoW,
-			Store: write.ManifestRepo{}, Tenants: write.ManifestRepo{}, Content: worldsql.Content{}, Events: write.Publisher{W: core.Writer},
+			Store: write.ManifestRepo{}, Tenants: write.ManifestRepo{}, Content: worldsql.Content{}, Quests: questsql.Content{}, Events: write.Publisher{W: core.Writer},
 			Metrics: observability.ManifestMetrics{}, BuildSeconds: observability.ManifestBuild}}, core.UoW, core.App, js)
 	})
 	r.Consumer("game.unlock_on_events", func(js jetstream.JetStream) outbox.ConsumerOptions {
@@ -179,6 +200,17 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("game.mastery_projection", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.MasteryProjectionOptions(consumer.MasteryProjection{World: worldUC, Mastery: write.MasteryRepo{}}, core.UoW, core.App, js)
 	})
+	r.Consumer("game.quest_on_activity_graded", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.QuestOnActivityGradedOptions(consumer.QuestOnActivityGraded{Quests: questUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.quest_on_discovery_found", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.QuestOnDiscoveryFoundOptions(consumer.QuestOnDiscoveryFound{Quests: questUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.periodic_quests_on_session_started", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.PeriodicQuestsOptions(consumer.PeriodicQuestsOnSessionStarted{Quests: questUC}, core.UoW, core.App, js)
+	})
+	r.Job(Name, job.QuestPeriodExpiry, questCfg.JobInterval, module.JobFunc(job.QuestPeriodExpiryJob(questUC)))
+	r.Job(Name, job.QuestFailureTimer, questCfg.JobInterval, module.JobFunc(job.QuestFailureTimerJob(questUC)))
 	r.Job(Name, job.SessionTimeout, cfg.TimeoutScan, module.JobFunc(job.SessionTimeoutJob(sessions)))
 	r.Job(Name, job.CurfewSessionCloser, job.CurfewCloserInterval, module.JobFunc(job.CurfewSessionCloserJob(sessions)))
 	return m, nil

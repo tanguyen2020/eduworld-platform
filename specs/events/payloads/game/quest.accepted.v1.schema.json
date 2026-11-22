@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/quest.accepted.v1.schema.json",
+  "title": "Payload quest.accepted v1 (module game, owner F072)",
+  "description": "Học sinh nhận quest hoặc server cấp daily/weekly (QUEST_SYSTEM §4, §5): QuestProgress active ghim quest_version_id (ADR-0043). Envelope tenant_id = tenant của phiên. Consumer: analytics, realtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "quest_progress_id",
+    "quest_id",
+    "quest_version_id",
+    "quest_type",
+    "student_id",
+    "start_trigger",
+    "accepted_at"
+  ],
+  "properties": {
+    "quest_progress_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_type": {
+      "type": "string",
+      "enum": [
+        "main",
+        "side",
+        "daily",
+        "weekly",
+        "learning",
+        "exploration",
+        "social",
+        "party",
+        "challenge",
+        "seasonal",
+        "special_event",
+        "boss"
+      ]
+    },
+    "start_trigger": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "npc",
+        "quest_board",
+        "auto_daily",
+        "auto_weekly",
+        "assignment",
+        "event",
+        "chain",
+        "discovery",
+        "level_reached"
+      ]
+    },
+    "period_key": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 16
+    },
+    "party_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "quest_progress_id": "0193a5f4-6c1e-7b2a-9d1f-000000072901",
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071101",
+      "quest_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000072902",
+      "quest_type": "main",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "start_trigger": "npc",
+      "period_key": null,
+      "party_id": null,
+      "accepted_at": "2026-11-22T01:00:00Z"
+    }
+  ]
+}

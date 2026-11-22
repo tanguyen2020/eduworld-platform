@@ -354,7 +354,7 @@ msgid "ui.error.NOT_FOUND"
 msgstr "[!! Ţĥïš áçţïvïţý çöüĺđñ'ţ ƀë ƒöüñđ. ~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.NO_ACTIVE_ENROLLMENT"
-msgstr "[!! Ýöü ĥávë ñöţ ƀëëñ þĺáçëđ ïñ á çĺášš ƒöŕ ţĥïš šçĥööĺ ýëáŕ. ~~~~~~~~~~~~~~~~~~~~~~~ !!]"
+msgstr "[!! Ýöüŕ šçĥööĺ áñđ ğŕáđë ƒöŕ ţĥïš šçĥööĺ ýëáŕ áŕë ñöţ šëţ ýëţ. ~~~~~~~~~~~~~~~~~~~~~~~~ !!]"
 
 msgid "ui.error.RATE_LIMITED"
 msgstr "[!! Ţöö ɱáñý ţŕïëš. Pĺëášë ŵáïţ á ɱöɱëñţ áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~~ !!]"
@@ -1004,6 +1004,9 @@ msgstr "[!! Ţĥë ğáɱë ïš ŕüññïñğ á ƀïţ šĺöŵĺý. Å ĺö�
 msgid "ui.quality.title"
 msgstr "[!! Ğŕáþĥïçš ~~~~ !!]"
 
+msgid "ui.quest.accept"
+msgstr "[!! Åççëþţ ~~~ !!]"
+
 msgid "ui.quest.due"
 msgstr "[!! Đüë: {date} {time} ~~~~~~~~ !!]"
 
@@ -1019,14 +1022,65 @@ msgstr "[!! Ţĥë ĺïšţ çöüĺđ ñöţ ƀë ĺöáđëđ. Pĺëášë ţ�
 msgid "ui.quest.loading"
 msgstr "[!! Ĺöáđïñğ… ~~~~ !!]"
 
+msgid "ui.quest.locked.cooldown"
+msgstr "[!! Çöɱë ƀáçķ ĺáţëŕ ~~~~~~ !!]"
+
+msgid "ui.quest.locked.prerequisite"
+msgstr "[!! Fïñïšĥ ţĥë ëáŕĺïëŕ qüëšţ ƒïŕšţ ~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.none"
+msgstr "[!! Ñö qüëšţš ĥëŕë ýëţ. ~~~~~~~~ !!]"
+
+msgid "ui.quest.notice.active_limit"
+msgstr "[!! Ýöü áĺŕëáđý ĥávë ɱáñý qüëšţš. Fïñïšĥ šöɱë ƒïŕšţ! ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.notice.already_completed"
+msgstr "[!! Ýöü ĥávë áĺŕëáđý çöɱþĺëţëđ ţĥïš qüëšţ. ~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.notice.come_back_tomorrow"
+msgstr "[!! Ýöü ţŕïëđ ĥáŕđ ţöđáý. Çöɱë ƀáçķ ţöɱöŕŕöŵ! ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.notice.cooldown"
+msgstr "[!! Ţĥïš qüëšţ öþëñš áğáïñ ĺáţëŕ, çöɱë ƀáçķ šööñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.notice.not_here"
+msgstr "[!! Ğö ţö ţĥë ŕïğĥţ þĺáçë öƒ ţĥë qüëšţ áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.notice.prerequisite"
+msgstr "[!! Ýöü ñëëđ ţö ƒïñïšĥ áñ ëáŕĺïëŕ qüëšţ ƒïŕšţ. ~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.notice.try_again"
+msgstr "[!! Åĺɱöšţ ţĥëŕë! Ŕëvïëŵ á ĺïţţĺë áñđ ţŕý áğáïñ. ~~~~~~~~~~~~~~~~~~ !!]"
+
+msgid "ui.quest.notice.unavailable"
+msgstr "[!! Çöüĺđ ñöţ çöññëçţ, þĺëášë ţŕý áğáïñ ïñ á ɱöɱëñţ. ~~~~~~~~~~~~~~~~~~~~ !!]"
+
 msgid "ui.quest.overdue"
 msgstr "[!! Pášţ đüë ~~~~ !!]"
 
 msgid "ui.quest.start"
 msgstr "[!! Šţáŕţ ~~ !!]"
 
+msgid "ui.quest.status.abandoned"
+msgstr "[!! Åƀáñđöñëđ ~~~~ !!]"
+
+msgid "ui.quest.status.active"
+msgstr "[!! Ïñ þŕöğŕëšš ~~~~~ !!]"
+
+msgid "ui.quest.status.available"
+msgstr "[!! Åváïĺáƀĺë ~~~~ !!]"
+
+msgid "ui.quest.status.completed"
+msgstr "[!! Çöɱþĺëţëđ ~~~~ !!]"
+
 msgid "ui.quest.status.excused"
 msgstr "[!! Ẹxçüšëđ ~~~ !!]"
+
+msgid "ui.quest.status.expired"
+msgstr "[!! Ẹxþïŕëđ ~~~ !!]"
+
+msgid "ui.quest.status.failed"
+msgstr "[!! Ñöţ ƒïñïšĥëđ ţĥïš ţïɱë ~~~~~~~~~ !!]"
 
 msgid "ui.quest.status.graded"
 msgstr "[!! Ŕëšüĺţš ŕëáđý ~~~~~~ !!]"
@@ -1043,11 +1097,23 @@ msgstr "[!! Šüƀɱïţţëđ ~~~~ !!]"
 msgid "ui.quest.status.unsupported"
 msgstr "[!! Ñöţ šüþþöŕţëđ ~~~~~~ !!]"
 
+msgid "ui.quest.tab.active"
+msgstr "[!! Ïñ þŕöğŕëšš ~~~~~ !!]"
+
 msgid "ui.quest.tab.assigned"
 msgstr "[!! Fŕöɱ šçĥööĺ ~~~~~ !!]"
 
+msgid "ui.quest.tab.available"
+msgstr "[!! Åváïĺáƀĺë ~~~~ !!]"
+
 msgid "ui.quest.title"
 msgstr "[!! Qüëšţ ĵöüŕñáĺ ~~~~~~ !!]"
+
+msgid "ui.quest.track"
+msgstr "[!! Ţŕáçķ ~~ !!]"
+
+msgid "ui.quest.tracker.count"
+msgstr "[!! {step} ({count}/{target}) ~~~~~~~~~~ !!]"
 
 msgid "ui.question.backspace"
 msgstr "[!! Đëĺëţë ~~~ !!]"

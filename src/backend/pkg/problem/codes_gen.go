@@ -135,8 +135,11 @@ const (
 	PreconditionRequired             Code = "PRECONDITION_REQUIRED"
 	PurchaseLimitReached             Code = "PURCHASE_LIMIT_REACHED"
 	QuestionPoolInsufficient         Code = "QUESTION_POOL_INSUFFICIENT"
+	QuestActiveLimit                 Code = "QUEST_ACTIVE_LIMIT"
 	QuestAlreadyCompleted            Code = "QUEST_ALREADY_COMPLETED"
 	QuestCooldown                    Code = "QUEST_COOLDOWN"
+	QuestPrerequisiteNotMet          Code = "QUEST_PREREQUISITE_NOT_MET"
+	QuestStepAttemptLimit            Code = "QUEST_STEP_ATTEMPT_LIMIT"
 	RateLimited                      Code = "RATE_LIMITED"
 	RefreshTokenDeviceMismatch       Code = "REFRESH_TOKEN_DEVICE_MISMATCH"
 	RefreshTokenInvalid              Code = "REFRESH_TOKEN_INVALID"
@@ -310,8 +313,11 @@ var statusByCode = map[Code]int{
 	PreconditionRequired:             428,
 	PurchaseLimitReached:             409,
 	QuestionPoolInsufficient:         422,
+	QuestActiveLimit:                 409,
 	QuestAlreadyCompleted:            409,
 	QuestCooldown:                    409,
+	QuestPrerequisiteNotMet:          403,
+	QuestStepAttemptLimit:            409,
 	RateLimited:                      429,
 	RefreshTokenDeviceMismatch:       401,
 	RefreshTokenInvalid:              401,
@@ -485,8 +491,11 @@ var allCodes = []Code{
 	PreconditionRequired,
 	PurchaseLimitReached,
 	QuestionPoolInsufficient,
+	QuestActiveLimit,
 	QuestAlreadyCompleted,
 	QuestCooldown,
+	QuestPrerequisiteNotMet,
+	QuestStepAttemptLimit,
 	RateLimited,
 	RefreshTokenDeviceMismatch,
 	RefreshTokenInvalid,

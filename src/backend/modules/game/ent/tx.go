@@ -46,12 +46,24 @@ type Tx struct {
 	NpcDialogue *NpcDialogueClient
 	// NpcDialogueVersion is the client for interacting with the NpcDialogueVersion builders.
 	NpcDialogueVersion *NpcDialogueVersionClient
+	// PeriodicQuestGrant is the client for interacting with the PeriodicQuestGrant builders.
+	PeriodicQuestGrant *PeriodicQuestGrantClient
+	// QuestDefinition is the client for interacting with the QuestDefinition builders.
+	QuestDefinition *QuestDefinitionClient
+	// QuestProgress is the client for interacting with the QuestProgress builders.
+	QuestProgress *QuestProgressClient
+	// QuestStepAttempt is the client for interacting with the QuestStepAttempt builders.
+	QuestStepAttempt *QuestStepAttemptClient
+	// QuestVersion is the client for interacting with the QuestVersion builders.
+	QuestVersion *QuestVersionClient
 	// StoryChapter is the client for interacting with the StoryChapter builders.
 	StoryChapter *StoryChapterClient
 	// StoryChapterVersion is the client for interacting with the StoryChapterVersion builders.
 	StoryChapterVersion *StoryChapterVersionClient
 	// StoryProgress is the client for interacting with the StoryProgress builders.
 	StoryProgress *StoryProgressClient
+	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
+	TenantResourceAssignment *TenantResourceAssignmentClient
 	// WorldArea is the client for interacting with the WorldArea builders.
 	WorldArea *WorldAreaClient
 	// WorldAreaUnlock is the client for interacting with the WorldAreaUnlock builders.
@@ -208,9 +220,15 @@ func (tx *Tx) init() {
 	tx.NicknameChange = NewNicknameChangeClient(tx.config)
 	tx.NpcDialogue = NewNpcDialogueClient(tx.config)
 	tx.NpcDialogueVersion = NewNpcDialogueVersionClient(tx.config)
+	tx.PeriodicQuestGrant = NewPeriodicQuestGrantClient(tx.config)
+	tx.QuestDefinition = NewQuestDefinitionClient(tx.config)
+	tx.QuestProgress = NewQuestProgressClient(tx.config)
+	tx.QuestStepAttempt = NewQuestStepAttemptClient(tx.config)
+	tx.QuestVersion = NewQuestVersionClient(tx.config)
 	tx.StoryChapter = NewStoryChapterClient(tx.config)
 	tx.StoryChapterVersion = NewStoryChapterVersionClient(tx.config)
 	tx.StoryProgress = NewStoryProgressClient(tx.config)
+	tx.TenantResourceAssignment = NewTenantResourceAssignmentClient(tx.config)
 	tx.WorldArea = NewWorldAreaClient(tx.config)
 	tx.WorldAreaUnlock = NewWorldAreaUnlockClient(tx.config)
 	tx.WorldAreaVersion = NewWorldAreaVersionClient(tx.config)

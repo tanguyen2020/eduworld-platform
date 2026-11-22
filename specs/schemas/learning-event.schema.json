@@ -514,8 +514,11 @@
         "quest_version_id": { "$ref": "#/$defs/uuid" },
         "quest_type": {
           "type": "string",
-          "enum": ["educational", "exploration", "daily", "weekly", "challenge", "cooperative", "competition"]
+          "enum": ["main", "side", "daily", "weekly", "learning", "exploration", "social", "party", "challenge", "seasonal", "special_event", "boss"],
+          "description": "quest_type của quest.schema.json v2 (12 loại, QUEST_SYSTEM §2.3)"
         },
+        "quest_progress_id": { "$ref": "#/$defs/uuid" },
+        "quest_id": { "$ref": "#/$defs/uuid" },
         "party_id": { "$ref": "#/$defs/uuid" },
         "duration_ms": { "type": "integer", "minimum": 0 }
       }

@@ -17,6 +17,7 @@ const BENCHMARK_HOLD: StringName = &"quality_benchmark"
 const UPDATE_REQUIRED_KEY: String = "ui.activity_player.update_required"
 ## Stable area_id of Quảng trường Tia Sáng (WORLD_DESIGN §3, the spawn of a first entry).
 const HUB_AREA_ID: String = "main_hub"
+const QUEST_TRACKER_SCENE: PackedScene = preload("res://scenes/quest/QuestTracker.tscn")
 
 var zone: ZoneRoot = null
 var panels: Dictionary = {}
@@ -321,6 +322,8 @@ func _bind_zone(z: ZoneRoot) -> void:
 	z.portal_requested.connect(_on_portal_requested)
 	z.npc_requested.connect(_on_npc_requested)
 	z.discovery_requested.connect(_on_discovery_requested)
+	z.quest_object_requested.connect(_on_quest_object_requested)
+	_bind_quests()
 
 
 ## "Về Quảng trường" (≤ 1 action from any area, WORLD_DESIGN §6): the hub spawn, or a zone change back to main_hub.
@@ -387,7 +390,50 @@ func _on_area_change_failed(_area_id: String, code: String, missing: Array) -> v
 		_notice.call("open", "ui.world.area_unavailable")
 
 
+## F072: the Quest Tracker on the HUD and the markers of the targets of the tracked quest follow QuestService.
+func _bind_quests() -> void:
+	var quests: QuestService = AppState.get_services().quest
+	if quests == null:
+		return
+	if _hud.get_node_or_null(^"QuestTracker") == null:
+		var tracker: Control = QUEST_TRACKER_SCENE.instantiate() as Control
+		tracker.name = "QuestTracker"
+		_hud.add_child(tracker)
+	if not quests.progress_updated.is_connected(_on_quest_progress):
+		quests.progress_updated.connect(_on_quest_progress)
+		quests.tracked_changed.connect(_on_quest_progress)
+		quests.notice_requested.connect(_on_quest_notice)
+	_on_quest_progress(quests.tracked_quest_id)
+	quests.refresh()
+
+
+func _on_quest_progress(_quest_id: String) -> void:
+	var quests: QuestService = AppState.get_services().quest
+	var q: QuestModel = quests.quest(quests.tracked_quest_id) if quests != null else null
+	var ids: PackedStringArray = []
+	if q != null and q.is_active():
+		for s: Dictionary in q.active_steps():
+			for id: Variant in (s.get("interactable_ids", []) as Array if s.get("interactable_ids") is Array else []):
+				ids.append(String(id))
+	if zone != null:
+		zone.mark_quest_targets(ids)
+
+
+func _on_quest_notice(key: String) -> void:
+	_hud.call("show_banner", key, {})
+
+
+## F072: a quest object reports the active quest step it belongs to (the server checks presence, area and ids).
+func _on_quest_object_requested(interactable_id: String) -> void:
+	var quests: QuestService = AppState.get_services().quest
+	if quests != null:
+		await quests.on_interaction(zone.area_id, interactable_id)
+
+
 func _on_npc_requested(npc_id: String, _interactable_id: String) -> void:
+	var quests: QuestService = AppState.get_services().quest
+	if quests != null:
+		await quests.on_interaction(zone.area_id, "", npc_id) # talk_npc of an active quest; the dialogue opens anyway
 	if zone.player != null:
 		activity_return.remember(zone.area_id, zone.player.global_position)
 	EventBus.ui_requested.emit(&"npc_dialogue", {"npc_id": npc_id})

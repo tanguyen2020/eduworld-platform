@@ -140,6 +140,7 @@ func subjectOf(e write.LearningEvent, payload json.RawMessage) (string, string) 
 		Position    int    `json:"position"`
 		ObjectiveID string `json:"objective_id"`
 		LessonID    string `json:"lesson_id"`
+		QuestID     string `json:"quest_id"`
 	}
 	_ = json.Unmarshal(payload, &p)
 	switch e.Type {
@@ -150,6 +151,10 @@ func subjectOf(e write.LearningEvent, payload json.RawMessage) (string, string) 
 	case "learning_objective.progressed", "learning_objective.mastered":
 		if p.ObjectiveID != "" {
 			return "learning_objective", p.ObjectiveID
+		}
+	case "quest.completed":
+		if p.QuestID != "" {
+			return "quest", p.QuestID
 		}
 	case "lesson.completed":
 		if e.ContentID != nil {

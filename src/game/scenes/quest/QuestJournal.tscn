@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scenes/quest/quest_journal.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud/NoticeDialog.tscn" id="2_notice"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_tabs"]
 
 [node name="QuestJournal" type="Control"]
 layout_mode = 3
@@ -48,7 +50,22 @@ unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 button_pressed = true
+button_group = SubResource("ButtonGroup_tabs")
 text = "ui.quest.tab.assigned"
+
+[node name="TabActive" type="Button" parent="Window/Box/Tabs"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "ui.quest.tab.active"
+
+[node name="TabAvailable" type="Button" parent="Window/Box/Tabs"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "ui.quest.tab.available"
 
 [node name="StateLabel" type="Label" parent="Window/Box"]
 unique_name_in_owner = true
@@ -71,6 +88,18 @@ size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="Content" type="Control" parent="Window/Box/List"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="QuestScroll" type="ScrollContainer" parent="Window/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="QuestRows" type="VBoxContainer" parent="Window/Box/QuestScroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

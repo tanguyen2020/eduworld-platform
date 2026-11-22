@@ -1331,3 +1331,69 @@ msgstr "Bản đồ thế giới"
 
 msgid "ui.worldmap.travel"
 msgstr "Đến đây"
+
+msgid "ui.quest.tab.active"
+msgstr "Đang làm"
+
+msgid "ui.quest.tab.available"
+msgstr "Khả dụng"
+
+msgid "ui.quest.accept"
+msgstr "Nhận"
+
+msgid "ui.quest.track"
+msgstr "Theo dõi"
+
+msgid "ui.quest.none"
+msgstr "Chưa có nhiệm vụ nào ở đây."
+
+msgid "ui.quest.status.active"
+msgstr "Đang làm"
+
+msgid "ui.quest.status.available"
+msgstr "Có thể nhận"
+
+msgid "ui.quest.status.completed"
+msgstr "Đã xong"
+
+msgid "ui.quest.status.expired"
+msgstr "Đã hết hạn"
+
+msgid "ui.quest.status.abandoned"
+msgstr "Đã bỏ"
+
+msgid "ui.quest.status.failed"
+msgstr "Chưa xong lần này"
+
+msgid "ui.quest.locked.prerequisite"
+msgstr "Cần hoàn thành nhiệm vụ trước"
+
+msgid "ui.quest.locked.cooldown"
+msgstr "Quay lại sau nhé"
+
+msgid "ui.quest.tracker.count"
+msgstr "{step} ({count}/{target})"
+
+msgid "ui.quest.notice.prerequisite"
+msgstr "Em cần làm xong nhiệm vụ trước đã."
+
+msgid "ui.quest.notice.active_limit"
+msgstr "Em đang làm nhiều nhiệm vụ rồi. Hãy hoàn thành bớt nhé!"
+
+msgid "ui.quest.notice.already_completed"
+msgstr "Em đã hoàn thành nhiệm vụ này rồi."
+
+msgid "ui.quest.notice.cooldown"
+msgstr "Nhiệm vụ này sẽ mở lại sau, em quay lại nhé."
+
+msgid "ui.quest.notice.come_back_tomorrow"
+msgstr "Hôm nay em đã cố gắng nhiều rồi. Hãy quay lại ngày mai nhé!"
+
+msgid "ui.quest.notice.not_here"
+msgstr "Hãy đến đúng chỗ trong nhiệm vụ rồi thử lại nhé."
+
+msgid "ui.quest.notice.unavailable"
+msgstr "Chưa kết nối được, em thử lại sau một chút nhé."
+
+msgid "ui.quest.notice.try_again"
+msgstr "Gần đúng rồi! Em ôn lại một chút và thử lại nhé."

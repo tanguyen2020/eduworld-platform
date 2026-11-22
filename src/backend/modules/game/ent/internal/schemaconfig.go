@@ -7,30 +7,36 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
-	AvatarPreset            string // AvatarPreset table.
-	CharacterCatalog        string // CharacterCatalog table.
-	CharacterCatalogVersion string // CharacterCatalogVersion table.
-	ContentRelease          string // ContentRelease table.
-	ExplorationProgress     string // ExplorationProgress table.
-	GameProfile             string // GameProfile table.
-	GameSession             string // GameSession table.
-	InventoryItem           string // InventoryItem table.
-	ItemDefinition          string // ItemDefinition table.
-	ItemDefinitionVersion   string // ItemDefinitionVersion table.
-	LevelDefinition         string // LevelDefinition table.
-	LevelSession            string // LevelSession table.
-	LevelVersion            string // LevelVersion table.
-	LoginEvent              string // LoginEvent table.
-	NicknameChange          string // NicknameChange table.
-	NpcDialogue             string // NpcDialogue table.
-	NpcDialogueVersion      string // NpcDialogueVersion table.
-	StoryChapter            string // StoryChapter table.
-	StoryChapterVersion     string // StoryChapterVersion table.
-	StoryProgress           string // StoryProgress table.
-	WorldArea               string // WorldArea table.
-	WorldAreaUnlock         string // WorldAreaUnlock table.
-	WorldAreaVersion        string // WorldAreaVersion table.
-	WorldUnlockFact         string // WorldUnlockFact table.
+	AvatarPreset             string // AvatarPreset table.
+	CharacterCatalog         string // CharacterCatalog table.
+	CharacterCatalogVersion  string // CharacterCatalogVersion table.
+	ContentRelease           string // ContentRelease table.
+	ExplorationProgress      string // ExplorationProgress table.
+	GameProfile              string // GameProfile table.
+	GameSession              string // GameSession table.
+	InventoryItem            string // InventoryItem table.
+	ItemDefinition           string // ItemDefinition table.
+	ItemDefinitionVersion    string // ItemDefinitionVersion table.
+	LevelDefinition          string // LevelDefinition table.
+	LevelSession             string // LevelSession table.
+	LevelVersion             string // LevelVersion table.
+	LoginEvent               string // LoginEvent table.
+	NicknameChange           string // NicknameChange table.
+	NpcDialogue              string // NpcDialogue table.
+	NpcDialogueVersion       string // NpcDialogueVersion table.
+	PeriodicQuestGrant       string // PeriodicQuestGrant table.
+	QuestDefinition          string // QuestDefinition table.
+	QuestProgress            string // QuestProgress table.
+	QuestStepAttempt         string // QuestStepAttempt table.
+	QuestVersion             string // QuestVersion table.
+	StoryChapter             string // StoryChapter table.
+	StoryChapterVersion      string // StoryChapterVersion table.
+	StoryProgress            string // StoryProgress table.
+	TenantResourceAssignment string // TenantResourceAssignment table.
+	WorldArea                string // WorldArea table.
+	WorldAreaUnlock          string // WorldAreaUnlock table.
+	WorldAreaVersion         string // WorldAreaVersion table.
+	WorldUnlockFact          string // WorldUnlockFact table.
 }
 
 type schemaCtxKey struct{}

@@ -57,6 +57,9 @@ func Compose(r *module.Registry) (*Composition, error) {
 	if f := cmp.Facade(); f != nil {
 		gin.Competition = f // getHubPosition: interaction distance of a discovery (F071 T049)
 	}
+	if f := lrn.Facade(); f != nil {
+		gin.Learning = f // createAttempt: learning steps of the quests (F072)
+	}
 	gam.Wire(gin)
 	// Party and team names go through the chat moderation pipeline (moderateDisplayText, F116); without the chat facade
 	// (a binary that does not load the pipeline) they fall back to the generated default name.

@@ -226,6 +226,36 @@
             -6
           ],
           "interact_radius_m": 3
+        },
+        {
+          "interactable_id": "quest.hub.lantern_east",
+          "kind": "quest_object",
+          "position": [
+            14,
+            0,
+            -2
+          ],
+          "interact_radius_m": 2
+        },
+        {
+          "interactable_id": "quest.hub.lantern_west",
+          "kind": "quest_object",
+          "position": [
+            -14,
+            0,
+            -2
+          ],
+          "interact_radius_m": 2
+        },
+        {
+          "interactable_id": "quest.hub.welcome_sign",
+          "kind": "quest_object",
+          "position": [
+            0,
+            0,
+            12
+          ],
+          "interact_radius_m": 2
         }
       ]
     }
@@ -502,6 +532,46 @@
             0,
             0,
             -14
+          ],
+          "interact_radius_m": 2
+        },
+        {
+          "interactable_id": "quest.math.fruit_stall",
+          "kind": "quest_object",
+          "position": [
+            8,
+            0,
+            6
+          ],
+          "interact_radius_m": 2
+        },
+        {
+          "interactable_id": "quest.math.apple_basket_1",
+          "kind": "quest_object",
+          "position": [
+            10,
+            0,
+            9
+          ],
+          "interact_radius_m": 2
+        },
+        {
+          "interactable_id": "quest.math.apple_basket_2",
+          "kind": "quest_object",
+          "position": [
+            12,
+            0,
+            8
+          ],
+          "interact_radius_m": 2
+        },
+        {
+          "interactable_id": "quest.math.apple_basket_3",
+          "kind": "quest_object",
+          "position": [
+            14,
+            0,
+            10
           ],
           "interact_radius_m": 2
         }

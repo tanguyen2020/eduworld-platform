@@ -14,6 +14,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	writerepo "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/seedfiles"
@@ -52,7 +53,7 @@ func hex12(v int) string {
 // publisher is the release core of game content on the test databases.
 func (e *env) publisher() command.PublishGameContent {
 	return command.PublishGameContent{UoW: e.uow, Store: writerepo.GameContentRepo{}, Content: worldsql.Content{},
-		Events: writerepo.Publisher{W: e.writer}, Audit: writerepo.Auditor{R: e.rec}, Now: e.clock.Now}
+		Events: writerepo.Publisher{W: e.writer}, Audit: writerepo.Auditor{R: e.rec}, Now: e.clock.Now, Quests: questRules(), QuestContent: questsql.Content{}}
 }
 
 // publish runs PublishGameContent under the system platform scope of the seed.

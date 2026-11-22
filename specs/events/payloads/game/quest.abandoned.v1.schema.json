@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/quest.abandoned.v1.schema.json",
+  "title": "Payload quest.abandoned v1 (module game, owner F072)",
+  "description": "QuestProgress kết thúc mà không hoàn thành: học sinh bỏ (player), hết kỳ daily/weekly hoặc availability (expired), điều kiện thất bại on_fail = fail_quest (failed). Không phạt XP/Xu, không streak (QUEST_SYSTEM §2.5). Consumer: analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "quest_progress_id",
+    "quest_id",
+    "quest_version_id",
+    "quest_type",
+    "student_id",
+    "reason",
+    "abandoned_at"
+  ],
+  "properties": {
+    "quest_progress_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_type": {
+      "type": "string",
+      "enum": [
+        "main",
+        "side",
+        "daily",
+        "weekly",
+        "learning",
+        "exploration",
+        "social",
+        "party",
+        "challenge",
+        "seasonal",
+        "special_event",
+        "boss"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "player",
+        "expired",
+        "failed"
+      ]
+    },
+    "step_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64
+    },
+    "failure_kind": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "time_limit_exceeded",
+        "availability_ended",
+        null
+      ]
+    },
+    "period_key": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 16
+    },
+    "abandoned_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "quest_progress_id": "0193a5f4-6c1e-7b2a-9d1f-000000072901",
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071101",
+      "quest_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000072902",
+      "quest_type": "daily",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "reason": "expired",
+      "step_id": null,
+      "failure_kind": null,
+      "period_key": "2026-11-22",
+      "abandoned_at": "2026-11-22T21:00:00Z"
+    }
+  ]
+}

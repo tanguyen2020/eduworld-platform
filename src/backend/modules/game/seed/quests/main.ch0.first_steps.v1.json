@@ -1,0 +1,111 @@
+{
+  "schema_version": 2,
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "party_mode": "solo",
+  "completion_rule": {
+    "type": "all_required_steps"
+  },
+  "objective_ids": [],
+  "rewards": [
+    {
+      "type": "xp",
+      "amount": 50
+    }
+  ],
+  "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071102",
+  "code": "main.ch0.first_steps",
+  "quest_type": "main",
+  "name": {
+    "vi": "Những bước đầu tiên",
+    "en": "First Steps"
+  },
+  "description": {
+    "vi": "Làm quen với bảng nhiệm vụ và tìm Cây Tia Sáng.",
+    "en": "Get to know the quest board and find the Spark Tree."
+  },
+  "narrative": {
+    "vi": "Bác Đưa Thư có một lá thư mời từ khắp thế giới gửi đến bạn.",
+    "en": "Postie has an invitation letter from all over the world for you."
+  },
+  "giver_npc_id": "npc.postie",
+  "area_id": "main_hub",
+  "story_chapter_code": "chapter.0.invitation",
+  "grade_levels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "subject_id": "0193a5f4-6c1e-7b2a-9d1f-0000000720f0",
+  "estimated_minutes": 6,
+  "start_trigger": {
+    "kind": "chain"
+  },
+  "prerequisites": {
+    "completed_quest_ids": [
+      "0193a5f4-6c1e-7b2a-9d1f-000000071101"
+    ]
+  },
+  "repeatability": {
+    "mode": "once"
+  },
+  "steps": [
+    {
+      "step_id": "meet_postie",
+      "order": 1,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Gặp Bác Đưa Thư",
+        "en": "Meet Postie"
+      },
+      "npc_id": "npc.postie",
+      "area_id": "main_hub"
+    },
+    {
+      "step_id": "check_board",
+      "order": 2,
+      "type": "go_to",
+      "title": {
+        "vi": "Xem bảng nhiệm vụ",
+        "en": "Check the quest board"
+      },
+      "area_id": "main_hub",
+      "interactable_id": "board.school_assignments"
+    },
+    {
+      "step_id": "find_spark_tree",
+      "order": 3,
+      "type": "discover",
+      "title": {
+        "vi": "Tìm Cây Tia Sáng",
+        "en": "Find the Spark Tree"
+      },
+      "hint": {
+        "vi": "Cây phát sáng ở phía bắc quảng trường.",
+        "en": "The glowing tree is north of the square."
+      },
+      "area_id": "main_hub",
+      "interactable_ids": [
+        "discovery.hub.spark_tree"
+      ],
+      "count": 1
+    },
+    {
+      "step_id": "report_cloudy",
+      "order": 4,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Kể cho Mây nghe",
+        "en": "Tell Cloudy"
+      },
+      "npc_id": "npc.cloudy",
+      "area_id": "main_hub"
+    }
+  ]
+}

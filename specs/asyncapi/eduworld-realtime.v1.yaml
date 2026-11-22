@@ -2834,10 +2834,19 @@ components:
                 required: [quest_id, status]
                 properties:
                   quest_id: { type: string, format: uuid }
+                  quest_progress_id: { type: string, format: uuid }
                   quest_version_id: { type: string, format: uuid }
-                  status: { type: string, enum: [active, completed, failed, abandoned] }
+                  status: { type: string, enum: [active, completed, failed, abandoned, expired] }
                   step_id: { type: string, maxLength: 64 }
                   step_status: { type: string, enum: [locked, active, completed, failed] }
+                  count: { type: integer, minimum: 0, description: Tiến độ bước collect/discover (F072) }
+                  target: { type: integer, minimum: 1 }
+                  passed: { type: boolean, description: 'Kết quả pass_rule của attempt vừa chấm (bước học tập, F072-AC-15); false = bước vẫn active, gợi ý ôn và thử lại' }
+                  hint: { $ref: '#/components/schemas/LocalizedText', description: Gợi ý ôn của bước khi chưa đạt }
+                  next_step_ids:
+                    type: array
+                    maxItems: 30
+                    items: { type: string, maxLength: 64 }
                   progress_label: { $ref: '#/components/schemas/LocalizedName' }
                   completed_at: { type: string, format: date-time }
     WorldAreaUnlocked:

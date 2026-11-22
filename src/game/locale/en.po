@@ -1331,3 +1331,69 @@ msgstr "World map"
 
 msgid "ui.worldmap.travel"
 msgstr "Go"
+
+msgid "ui.quest.tab.active"
+msgstr "In progress"
+
+msgid "ui.quest.tab.available"
+msgstr "Available"
+
+msgid "ui.quest.accept"
+msgstr "Accept"
+
+msgid "ui.quest.track"
+msgstr "Track"
+
+msgid "ui.quest.none"
+msgstr "No quests here yet."
+
+msgid "ui.quest.status.active"
+msgstr "In progress"
+
+msgid "ui.quest.status.available"
+msgstr "Available"
+
+msgid "ui.quest.status.completed"
+msgstr "Completed"
+
+msgid "ui.quest.status.expired"
+msgstr "Expired"
+
+msgid "ui.quest.status.abandoned"
+msgstr "Abandoned"
+
+msgid "ui.quest.status.failed"
+msgstr "Not finished this time"
+
+msgid "ui.quest.locked.prerequisite"
+msgstr "Finish the earlier quest first"
+
+msgid "ui.quest.locked.cooldown"
+msgstr "Come back later"
+
+msgid "ui.quest.tracker.count"
+msgstr "{step} ({count}/{target})"
+
+msgid "ui.quest.notice.prerequisite"
+msgstr "You need to finish an earlier quest first."
+
+msgid "ui.quest.notice.active_limit"
+msgstr "You already have many quests. Finish some first!"
+
+msgid "ui.quest.notice.already_completed"
+msgstr "You have already completed this quest."
+
+msgid "ui.quest.notice.cooldown"
+msgstr "This quest opens again later, come back soon."
+
+msgid "ui.quest.notice.come_back_tomorrow"
+msgstr "You tried hard today. Come back tomorrow!"
+
+msgid "ui.quest.notice.not_here"
+msgstr "Go to the right place of the quest and try again."
+
+msgid "ui.quest.notice.unavailable"
+msgstr "Could not connect, please try again in a moment."
+
+msgid "ui.quest.notice.try_again"
+msgstr "Almost there! Review a little and try again."

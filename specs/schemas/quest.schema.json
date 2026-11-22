@@ -121,6 +121,12 @@
     "subject_id": {
       "$ref": "#/$defs/uuid"
     },
+    "subject_code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]{1,63}$",
+      "description": "Mã môn (danh mục subjects của module learning, vd. math); module game lọc theo môn trường bật (enabled_subject_codes) — bắt buộc khi publish (F072)"
+    },
     "topic_ids": {
       "type": "array",
       "uniqueItems": true,
@@ -178,6 +184,17 @@
         },
         "event_id": {
           "$ref": "#/$defs/uuid"
+        },
+        "interactable_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "description": "Điểm khám phá mở quest ẩn (kind = discovery, F072): quest hiện khi học sinh đã tìm thấy một trong các điểm này",
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
         }
       },
       "allOf": [
@@ -195,6 +212,23 @@
             ],
             "properties": {
               "npc_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "discovery"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "interactable_ids"
+            ],
+            "properties": {
+              "interactable_ids": true
             }
           }
         }
@@ -561,8 +595,10 @@
           "enum": [
             "question_set",
             "lesson",
-            "assessment"
-          ]
+            "assessment",
+            "activity"
+          ],
+          "description": "activity = learning activity đã publish (FR-CNT-013, ADR-0048, createAttempt của F030); F072 chỉ mở bước activity (lesson/question_set/assessment bị validator từ chối cho tới khi createAttempt hỗ trợ)"
         },
         "id": {
           "$ref": "#/$defs/uuid"
@@ -571,6 +607,10 @@
           "type": "integer",
           "minimum": 1,
           "description": "Bỏ trống = version published mới nhất tại thời điểm publish quest (được khóa khi publish)."
+        },
+        "version_id": {
+          "$ref": "#/$defs/uuid",
+          "description": "content_version_id đã khóa của activity (gửi xuống createAttempt); bỏ trống = version published hiện hành lúc mở attempt (F072)"
         }
       }
     },

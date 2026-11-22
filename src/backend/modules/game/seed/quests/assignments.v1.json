@@ -1,0 +1,36 @@
+{
+  "$comment": "DEV SEED ONLY: tenant codes the seed quests are assigned to (ADR-0029, infra.tenant_resource_assignments of eduworld_game); a tenant not projected yet is skipped (run make seed-game again after make seed-check).",
+  "assignments": [
+    {
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071101",
+      "tenants": [
+        "th-demo-a",
+        "pgd-demo",
+        "common"
+      ]
+    },
+    {
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071102",
+      "tenants": [
+        "th-demo-a",
+        "pgd-demo",
+        "common"
+      ]
+    },
+    {
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000072001",
+      "tenants": [
+        "th-demo-a",
+        "pgd-demo"
+      ]
+    },
+    {
+      "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000072002",
+      "tenants": [
+        "th-demo-a",
+        "pgd-demo",
+        "common"
+      ]
+    }
+  ]
+}

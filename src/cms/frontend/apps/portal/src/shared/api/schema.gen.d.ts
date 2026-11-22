@@ -5317,7 +5317,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách quest khả dụng */
+        /**
+         * Danh sách quest của học sinh (khả dụng theo khối, gán tenant, availability, môn bật) và quest đang làm/đã xong
+         * @description Chỉ quest platform published được gán cho tenant (ADR-0029), có `grade_levels` chứa khối của học sinh, trong
+         *     `availability` và thuộc môn trường bật (F072-AC-01). `status = available` là quest nhận được ngay hoặc còn thiếu
+         *     điều kiện (`locked_reason`); các trạng thái khác lấy từ `QuestProgress` gần nhất của học sinh. Văn bản trả đủ
+         *     `vi`/`en` (ADR-0056). Quest không gán/sai khối không xuất hiện.
+         */
         get: operations["listQuests"];
         put?: never;
         post?: never;
@@ -5334,7 +5340,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Chi tiết quest và tiến độ */
+        /**
+         * Chi tiết quest (bản delivery của version đã ghim hoặc version hiện hành) và tiến độ
+         * @description Bản delivery không chứa thông tin chấm (`content_ref`, `pass_rule`): tên, mô tả, narrative, NPC giao, khu,
+         *     bước (tiêu đề, gợi ý, `optional`, `depends_on`), phần thưởng dự kiến, tiến độ (F072-AC-03). Quest không gán cho
+         *     tenant hoặc không có khối của học sinh → `404` (F072-AC-02).
+         */
         get: operations["getQuest"];
         put?: never;
         post?: never;
@@ -5353,7 +5364,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bỏ quest đang làm (không ảnh hưởng attempt/learning record đã ghi) */
+        /**
+         * Bỏ quest đang làm (không ảnh hưởng attempt/learning record đã ghi)
+         * @description Progress `active` → `abandoned`, phát `quest.abandoned` (`reason = player`); không có progress đang làm → `404` (F072-AC-07).
+         */
         post: operations["abandonQuest"];
         delete?: never;
         options?: never;
@@ -5370,7 +5384,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Nhận quest */
+        /**
+         * Nhận quest — tạo QuestProgress ghim version hiện hành (ADR-0043)
+         * @description Quest đang làm → trả progress hiện có (F072-AC-06). Lỗi: `404` quest không gán/sai khối; `403
+         *     QUEST_PREREQUISITE_NOT_MET` kèm `missing_requirements`; `409 QUEST_ACTIVE_LIMIT` (`max_active_quests`),
+         *     `QUEST_ALREADY_COMPLETED` (`once` đã xong, vượt `max_completions`, kỳ đã xong), `QUEST_COOLDOWN` (kèm `retry_after`).
+         *     Gửi lại cùng `Idempotency-Key` trả cùng kết quả.
+         */
         post: operations["acceptQuest"];
         delete?: never;
         options?: never;
@@ -5387,7 +5407,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Báo bước tương tác (talk_npc / go_to / collect) — server kiểm tra điều kiện (STEP_PRECONDITION_FAILED) */
+        /**
+         * Báo bước tương tác (talk_npc / go_to / collect) — server kiểm tra phiên, presence và id rồi ghi nhận
+         * @description Server kiểm `game_session_id` active của học sinh, presence ở instance của `area_id` của bước, `npc_id`/`interactable_id`
+         *     thuộc bước (F072-AC-09). Sai area/instance, id không thuộc bước, bước học tập (`activity`) hoặc `discover` →
+         *     `409 STEP_PRECONDITION_FAILED` (mã lỗi theo API_DESIGN §4.1); bước `locked`/`completed` → `422 INVALID_STATE_TRANSITION`
+         *     (F072-AC-10, AC-16). Cùng `Idempotency-Key` hoặc cùng `interactable_id` của bước `collect` tính một lần (F072-AC-11).
+         */
         post: operations["reportQuestStep"];
         delete?: never;
         options?: never;
@@ -5404,7 +5430,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bắt đầu activity học tập của bước quest → tạo Attempt (mode quest) */
+        /**
+         * Bắt đầu activity học tập của bước quest → tạo Attempt (mode quest) qua facade module learning
+         * @description Bước `activity` đang `active`: module game gọi `createAttempt` (mode `quest`, context `quest_step`) với nội dung đã
+         *     khóa trong quest version và trả attempt; client lấy render payload và nộp bài qua `/learning/activity-attempts/{attempt_id}`
+         *     (ADR-0059). Vượt `pass_rule.max_attempts_per_day` → `409 QUEST_STEP_ATTEMPT_LIMIT` ("hãy quay lại ngày mai"); module
+         *     learning lỗi/timeout → `503 UNAVAILABLE` có `Retry-After`, tiến độ không đổi (F072-AC-14, AC-17, AC-18).
+         */
         post: operations["startQuestActivity"];
         delete?: never;
         options?: never;
@@ -13827,7 +13859,7 @@ export interface components {
          * @description Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
          * @enum {string}
          */
-        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
+        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
         ProgressionLevel: {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
@@ -13910,17 +13942,21 @@ export interface components {
         /** @enum {string} */
         QualityPreset: "low" | "medium" | "high";
         QuestDetail: components["schemas"]["QuestSummary"] & {
-            description?: components["schemas"]["LocalizedText"];
-            objective_ids?: components["schemas"]["Uuid"][];
-            progress?: components["schemas"]["QuestProgress"];
-            rewards_preview?: components["schemas"]["RewardPreview"][];
-            steps?: {
-                step_id: string;
+            completion_rule?: {
+                n?: number;
+                step_ids?: string[];
                 /** @enum {string} */
-                step_type: "talk_npc" | "go_to" | "activity" | "collect" | "minigame" | "party_activity";
-                target_ref?: string;
-                title?: components["schemas"]["LocalizedName"];
-            }[];
+                type: "all_required_steps" | "any_n_of";
+            };
+            description: components["schemas"]["LocalizedText"];
+            estimated_minutes?: number;
+            narrative?: components["schemas"]["LocalizedText"];
+            objective_ids?: components["schemas"]["Uuid"][];
+            /** @enum {string} */
+            repeatability?: "once" | "per_period" | "repeatable";
+            /** @description Phần thưởng dự kiến (ý định — Reward Engine F074 cấp theo reward rule) */
+            rewards_preview?: components["schemas"]["RewardPreview"][];
+            steps: components["schemas"]["QuestStepView"][];
         };
         QuestionAuthoring: components["schemas"]["ContentVersion"] & components["schemas"]["QuestionAuthoringInput"];
         /**
@@ -14089,33 +14125,109 @@ export interface components {
         };
         QuestProgress: {
             completed_at?: components["schemas"]["Timestamp"];
+            completion_no?: number;
+            /** @description Hết giờ theo availability.time_limit_minutes */
+            deadline_at?: components["schemas"]["Timestamp"];
+            expires_at?: components["schemas"]["Timestamp"];
+            failed_at?: components["schemas"]["Timestamp"];
             party_id?: components["schemas"]["Uuid"];
+            period_key?: string;
+            quest_id: components["schemas"]["Uuid"];
+            quest_progress_id: components["schemas"]["Uuid"];
             quest_version_id: components["schemas"]["Uuid"];
-            started_at?: components["schemas"]["Timestamp"];
+            start_trigger?: string;
+            started_at: components["schemas"]["Timestamp"];
             status: components["schemas"]["QuestProgressStatus"];
-            step_states?: {
-                [key: string]: "locked" | "available" | "in_progress" | "completed";
+            step_states: {
+                [key: string]: components["schemas"]["QuestStepState"];
             };
         };
-        /** @enum {string} */
-        QuestProgressStatus: "available" | "accepted" | "in_progress" | "completed" | "expired" | "locked";
+        /**
+         * @description Trạng thái QuestProgress (QUEST_SYSTEM §5)
+         * @enum {string}
+         */
+        QuestProgressStatus: "active" | "completed" | "expired" | "abandoned" | "failed";
+        /** @description Điều kiện còn thiếu để nhận quest (thân thiện, không lộ dữ liệu người khác) */
+        QuestRequirement: {
+            current?: number;
+            /** @enum {string} */
+            kind: "completed_quest" | "unlocked_area" | "min_level" | "learning_objective" | "discovery";
+            met: boolean;
+            /** @enum {string} */
+            min_mastery_level?: "beginning" | "developing" | "proficient" | "mastered";
+            ref?: string;
+            target?: number;
+        };
+        /**
+         * @description Trạng thái quest trong danh sách của học sinh — `available` (chưa có progress đang làm) hoặc trạng thái progress gần nhất
+         * @enum {string}
+         */
+        QuestStatus: "available" | "active" | "completed" | "expired" | "abandoned" | "failed";
         QuestStepReport: {
             area_id?: string;
             game_session_id: components["schemas"]["Uuid"];
             interactable_id?: string;
             npc_id?: string;
         };
-        QuestSummary: {
-            available_until?: components["schemas"]["Timestamp"];
-            name: components["schemas"]["LocalizedName"];
-            quest_id: components["schemas"]["Uuid"];
-            quest_type: components["schemas"]["QuestType"];
-            quest_version_id: components["schemas"]["Uuid"];
-            status: components["schemas"]["QuestProgressStatus"];
-            subject_id?: components["schemas"]["Uuid"];
+        QuestStepState: {
+            /** @description Số attempt học tập đã mở cho bước */
+            attempt_count?: number;
+            count?: number;
+            status: components["schemas"]["QuestStepStatus"];
+            target?: number;
         };
         /** @enum {string} */
-        QuestType: "educational" | "exploration" | "daily" | "weekly" | "challenge" | "cooperative" | "competition";
+        QuestStepStatus: "locked" | "active" | "completed";
+        /**
+         * @description Loại bước của quest.schema.json v2 (QUEST_SYSTEM §3); F072 xử lý talk_npc, go_to, collect, discover, activity
+         * @enum {string}
+         */
+        QuestStepType: "talk_npc" | "go_to" | "collect" | "discover" | "activity" | "minigame" | "party_activity" | "interdependent" | "challenge" | "boss";
+        QuestStepView: {
+            area_id?: string;
+            count?: number;
+            depends_on?: string[];
+            hint?: components["schemas"]["LocalizedText"];
+            /** @description Vật thể đích của bước go_to/collect/discover (để đặt marker); không có thông tin chấm */
+            interactable_ids?: string[];
+            npc_id?: string;
+            optional: boolean;
+            order: number;
+            step_id: string;
+            step_type: components["schemas"]["QuestStepType"];
+            title: components["schemas"]["LocalizedText"];
+        };
+        QuestSummary: {
+            area_id?: string;
+            available_until?: components["schemas"]["Timestamp"];
+            /** @description Quest `available` nhận được ngay (đủ điều kiện, chưa vượt giới hạn) */
+            can_accept?: boolean;
+            code: string;
+            giver_npc_id?: string;
+            grade_levels: number[];
+            /** @enum {string} */
+            locked_reason?: "prerequisite_not_met" | "cooldown" | "already_completed";
+            missing_requirements?: components["schemas"]["QuestRequirement"][];
+            name: components["schemas"]["LocalizedText"];
+            progress?: components["schemas"]["QuestProgress"];
+            quest_id: components["schemas"]["Uuid"];
+            quest_type: components["schemas"]["QuestType"];
+            /** @description Version đã ghim khi đang làm, ngược lại version hiện hành */
+            quest_version_id: components["schemas"]["Uuid"];
+            /** @description Thời điểm nhận lại được khi đang cooldown */
+            retry_after?: components["schemas"]["Timestamp"];
+            /** @description npc, quest_board, auto_daily, auto_weekly, chain, discovery, level_reached… */
+            start_trigger?: string;
+            status: components["schemas"]["QuestStatus"];
+            story_chapter_code?: string;
+            subject_code?: string;
+            subject_id?: components["schemas"]["Uuid"];
+        };
+        /**
+         * @description 12 loại quest của quest.schema.json v2 (QUEST_SYSTEM §2.3)
+         * @enum {string}
+         */
+        QuestType: "main" | "side" | "daily" | "weekly" | "learning" | "exploration" | "social" | "party" | "challenge" | "seasonal" | "special_event" | "boss";
         QuickMessage: {
             /** @enum {string} */
             category: "greeting" | "teamwork" | "encouragement" | "thanks" | "strategy" | "safety" | "other";
@@ -14407,9 +14519,12 @@ export interface components {
         };
         RewardPreview: {
             amount?: number;
+            first_completion_only?: boolean;
             item_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
-            kind?: "xp" | "item" | "badge";
+            kind?: "xp" | "item" | "badge" | "currency" | "title" | "collection_item";
+            /** @description Mã item/badge/currency/title/collection của phần thưởng quest (quest.schema.json v2) */
+            ref?: string;
         };
         Role: {
             active_user_role_count?: number;
@@ -29774,11 +29889,12 @@ export interface operations {
     listQuests: {
         parameters: {
             query?: {
+                area_id?: string;
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
                 quest_type?: components["schemas"]["QuestType"];
-                status?: components["schemas"]["QuestProgressStatus"];
+                status?: components["schemas"]["QuestStatus"];
             };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
@@ -29809,6 +29925,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getQuest: {
@@ -29841,6 +29958,8 @@ export interface operations {
                     "application/json": components["schemas"]["QuestDetail"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -29881,6 +30000,8 @@ export interface operations {
                     "application/json": components["schemas"]["QuestProgress"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
         };
@@ -29909,9 +30030,15 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    party_id?: components["schemas"]["Uuid"];
+                };
+            };
+        };
         responses: {
-            /** @description Đã nhận quest */
+            /** @description Đã nhận quest (hoặc progress đang làm) */
             200: {
                 headers: {
                     "Content-Language": components["headers"]["ContentLanguage"];
@@ -29922,8 +30049,27 @@ export interface operations {
                     "application/json": components["schemas"]["QuestProgress"];
                 };
             };
-            403: components["responses"]["Forbidden"];
-            409: components["responses"]["Conflict"];
+            401: components["responses"]["Unauthenticated"];
+            /** @description QUEST_PREREQUISITE_NOT_MET (kèm `missing_requirements`), GAME_ACCESS_STUDENT_ONLY, TENANT_MISMATCH */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            /** @description QUEST_ACTIVE_LIMIT, QUEST_ALREADY_COMPLETED, QUEST_COOLDOWN (kèm `retry_after`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            422: components["responses"]["ValidationFailed"];
         };
     };
     reportQuestStep: {
@@ -29968,8 +30114,18 @@ export interface operations {
                     "application/json": components["schemas"]["QuestProgress"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
-            409: components["responses"]["Conflict"];
+            /** @description STEP_PRECONDITION_FAILED (không ở đúng area/instance, id không thuộc bước, bước học tập/khám phá), CONFLICT (game session không active) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             422: components["responses"]["ValidationFailed"];
         };
     };
@@ -29998,7 +30154,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    game_session_id?: components["schemas"]["Uuid"];
+                };
+            };
+        };
         responses: {
             /** @description Attempt đã tạo */
             201: {
@@ -30011,8 +30173,29 @@ export interface operations {
                     "application/json": components["schemas"]["Attempt"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
-            409: components["responses"]["Conflict"];
+            404: components["responses"]["NotFound"];
+            /** @description QUEST_STEP_ATTEMPT_LIMIT, STEP_PRECONDITION_FAILED (bước không phải bước học tập), CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            422: components["responses"]["ValidationFailed"];
+            /** @description UNAVAILABLE — module learning tạm thời không trả lời; thử lại theo Retry-After, tiến độ quest không đổi */
+            503: {
+                headers: {
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     getSeasonTrack: {

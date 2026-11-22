@@ -144,3 +144,38 @@ func (WorldMetrics) Discovery(result string) { discovery.WithLabelValues(result)
 
 // ManifestBuild observes one rebuild of the game manifests.
 func ManifestBuild(d float64) { manifestBuild.Observe(d) }
+
+var (
+	questAccept = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_game_quest_accept_total",
+		Help: "acceptQuest calls by result (ok or problem code)."}, []string{"result"})
+	questStepReport = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_game_quest_step_report_total",
+		Help: "reportQuestStep calls by step type and result (ok or problem code)."}, []string{"type", "result"})
+	questCompleted = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "eduworld_game_quest_completed_total",
+		Help: "Quests completed by quest type (once per progress)."}, []string{"quest_type"})
+	questLag = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "eduworld_game_quest_progress_lag_seconds",
+		Help: "Time from activity.graded to the quest step update.", Buckets: []float64{.05, .1, .25, .5, 1, 2, 5, 10, 30}})
+)
+
+// RegisterQuest registers the F072 quest metrics (once per registry).
+func RegisterQuest(r prometheus.Registerer) {
+	for _, c := range []prometheus.Collector{questAccept, questStepReport, questCompleted, questLag} {
+		_ = r.Register(c)
+	}
+}
+
+// QuestMetrics implements command.QuestMetrics.
+type QuestMetrics struct{}
+
+// Accept counts one acceptQuest.
+func (QuestMetrics) Accept(result string) { questAccept.WithLabelValues(result).Inc() }
+
+// StepReport counts one reportQuestStep.
+func (QuestMetrics) StepReport(stepType, result string) {
+	questStepReport.WithLabelValues(stepType, result).Inc()
+}
+
+// Completed counts one completed quest.
+func (QuestMetrics) Completed(questType string) { questCompleted.WithLabelValues(questType).Inc() }
+
+// ProgressLag observes the lag between the graded attempt and the quest update.
+func (QuestMetrics) ProgressLag(seconds float64) { questLag.Observe(seconds) }

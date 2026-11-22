@@ -1,0 +1,109 @@
+{
+  "schema_version": 2,
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "party_mode": "solo",
+  "completion_rule": {
+    "type": "all_required_steps"
+  },
+  "objective_ids": [],
+  "rewards": [
+    {
+      "type": "xp",
+      "amount": 50
+    }
+  ],
+  "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000071101",
+  "code": "main.ch0.awakening",
+  "quest_type": "main",
+  "name": {
+    "vi": "Tia Sáng đầu tiên",
+    "en": "The First Spark"
+  },
+  "description": {
+    "vi": "Giúp Mây thắp lại những ngọn đèn ở Quảng trường Trung tâm.",
+    "en": "Help Cloudy light the lanterns of the Central Square again."
+  },
+  "narrative": {
+    "vi": "Tia Sáng của thế giới đã mờ đi. Mây cần một người bạn dũng cảm để bắt đầu hành trình.",
+    "en": "The Spark of the world has faded. Cloudy needs a brave friend to start the journey."
+  },
+  "giver_npc_id": "npc.cloudy",
+  "area_id": "main_hub",
+  "story_chapter_code": "chapter.0.invitation",
+  "grade_levels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "subject_id": "0193a5f4-6c1e-7b2a-9d1f-0000000720f0",
+  "estimated_minutes": 5,
+  "start_trigger": {
+    "kind": "npc",
+    "npc_id": "npc.cloudy",
+    "area_id": "main_hub"
+  },
+  "repeatability": {
+    "mode": "once"
+  },
+  "steps": [
+    {
+      "step_id": "meet_cloudy",
+      "order": 1,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Nói chuyện với Mây",
+        "en": "Talk to Cloudy"
+      },
+      "npc_id": "npc.cloudy",
+      "area_id": "main_hub"
+    },
+    {
+      "step_id": "read_sign",
+      "order": 2,
+      "type": "go_to",
+      "title": {
+        "vi": "Đọc bảng chào mừng",
+        "en": "Read the welcome sign"
+      },
+      "hint": {
+        "vi": "Bảng gỗ ở phía nam quảng trường.",
+        "en": "The wooden sign is south of the square."
+      },
+      "area_id": "main_hub",
+      "interactable_id": "quest.hub.welcome_sign"
+    },
+    {
+      "step_id": "light_lanterns",
+      "order": 3,
+      "type": "collect",
+      "title": {
+        "vi": "Thắp 2 ngọn đèn",
+        "en": "Light 2 lanterns"
+      },
+      "area_id": "main_hub",
+      "interactable_ids": [
+        "quest.hub.lantern_east",
+        "quest.hub.lantern_west"
+      ],
+      "count": 2
+    },
+    {
+      "step_id": "report_cloudy",
+      "order": 4,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Báo lại với Mây",
+        "en": "Report back to Cloudy"
+      },
+      "npc_id": "npc.cloudy",
+      "area_id": "main_hub"
+    }
+  ]
+}

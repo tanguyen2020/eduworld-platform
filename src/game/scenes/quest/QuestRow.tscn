@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/quest/quest_row.gd" id="1_script"]
+
+[node name="QuestRow" type="PanelContainer"]
+theme_type_variation = &"QuestCard"
+script = ExtResource("1_script")
+
+[node name="Box" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Main" type="VBoxContainer" parent="Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="Box/Main"]
+unique_name_in_owner = true
+layout_mode = 2
+auto_translate_mode = 2
+text_overrun_behavior = 3
+
+[node name="Step" type="Label" parent="Box/Main"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+auto_translate_mode = 2
+text_overrun_behavior = 3
+
+[node name="Action" type="Button" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ui.quest.accept"

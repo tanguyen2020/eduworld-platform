@@ -1,5 +1,6 @@
 extends Control
-## Quest journal — tab "Nhà trường giao" only in F062 (STUDENT_GAME_UX_CORE S05; other tabs: F072). Opening it
+## Quest journal — tabs "Nhà trường giao" (F062) and "Đang làm" / "Khả dụng" of the quests (F072, QuestService:
+## accept, start the learning step, track; the list is the server's for the grade and tenant of the student). Opening it
 ## refreshes `listMyAssignments` through AssignmentService (F062-AC-07); rows show the student's own assignments
 ## (F062-AC-08/11) in a virtualised list (≤ 12 row nodes, S05 §13); "Bắt đầu" asks the service for the intent
 ## (F062-AC-09) and shows `ui.activity_player.update_required` when this client has no screen for it (F062-AC-10).
@@ -8,9 +9,12 @@ extends Control
 signal closed()
 
 const ROW_SCENE: PackedScene = preload("res://scenes/quest/AssignmentRow.tscn")
+const QUEST_ROW_SCENE: PackedScene = preload("res://scenes/quest/QuestRow.tscn")
 ## S05 §13: at most 12 row nodes alive at once.
 const MAX_ROW_NODES: int = 12
 const TAB_ASSIGNED: String = "assigned"
+const TAB_ACTIVE: String = "active"
+const TAB_AVAILABLE: String = "available"
 
 var tab: String = TAB_ASSIGNED
 var rows: Array[Control] = []
@@ -23,6 +27,10 @@ var row_height: float = 0.0
 @onready var _content: Control = %Content
 @onready var _notice: PanelContainer = %Notice
 @onready var _tab_assigned: Button = %TabAssigned
+@onready var _tab_active: Button = %TabActive
+@onready var _tab_available: Button = %TabAvailable
+@onready var _quest_scroll: ScrollContainer = %QuestScroll
+@onready var _quest_rows: VBoxContainer = %QuestRows
 
 
 func _ready() -> void:
@@ -35,10 +43,21 @@ func _ready() -> void:
 	var service: AssignmentService = _service()
 	if service != null:
 		service.state_changed.connect(_on_service_state_changed)
+	_tab_assigned.pressed.connect(_select_tab.bind(TAB_ASSIGNED))
+	_tab_active.pressed.connect(_select_tab.bind(TAB_ACTIVE))
+	_tab_available.pressed.connect(_select_tab.bind(TAB_AVAILABLE))
+	var quests: QuestService = _quests()
+	if quests != null:
+		quests.quests_updated.connect(_on_quests_updated)
+		quests.progress_updated.connect(_on_quest_changed)
 	_render_state()
 
 
 func _exit_tree() -> void:
+	var quests: QuestService = _quests()
+	if quests != null and quests.quests_updated.is_connected(_on_quests_updated):
+		quests.quests_updated.disconnect(_on_quests_updated)
+		quests.progress_updated.disconnect(_on_quest_changed)
 	if AppState.assignments_changed.is_connected(_on_assignments_changed):
 		AppState.assignments_changed.disconnect(_on_assignments_changed)
 	var service: AssignmentService = _service()
@@ -48,11 +67,8 @@ func _exit_tree() -> void:
 
 ## WorldRoot: `ui_requested("quest_journal", {"tab": "assigned"})`.
 func open(args: Dictionary = {}) -> void:
-	tab = String(args.get("tab", TAB_ASSIGNED))
-	_tab_assigned.button_pressed = true
 	show()
-	_rebuild()
-	refresh()
+	_select_tab(String(args.get("tab", TAB_ASSIGNED)))
 
 
 func close() -> void:
@@ -115,7 +131,7 @@ func _layout_rows() -> void:
 
 
 func _render_state() -> void:
-	if _state == null:
+	if _state == null or tab != TAB_ASSIGNED:
 		return
 	var service: AssignmentService = _service()
 	var state: int = service.state if service != null else AssignmentService.State.IDLE
@@ -161,3 +177,74 @@ func _on_locale_changed(_locale: String) -> void:
 func _service() -> AssignmentService:
 	var services: ServiceLocator = AppState.get_services()
 	return services.assignments if services != null else null
+
+
+func _select_tab(next: String) -> void:
+	tab = next
+	_tab_assigned.button_pressed = tab == TAB_ASSIGNED
+	_tab_active.button_pressed = tab == TAB_ACTIVE
+	_tab_available.button_pressed = tab == TAB_AVAILABLE
+	var quest_tab: bool = tab != TAB_ASSIGNED
+	_scroll.visible = not quest_tab
+	_quest_scroll.visible = quest_tab
+	if quest_tab:
+		_render_quests()
+		var quests: QuestService = _quests()
+		if quests != null:
+			quests.refresh()
+	else:
+		_rebuild()
+		refresh()
+
+
+## Rows of the quests of the tab: "Đang làm" = active, "Khả dụng" = available (accept or the reason it waits).
+func _render_quests() -> void:
+	for c: Node in _quest_rows.get_children():
+		c.queue_free()
+	var quests: QuestService = _quests()
+	if quests == null:
+		return
+	var n: int = 0
+	for q: QuestModel in quests.quests:
+		var wanted: bool = q.is_active() if tab == TAB_ACTIVE else q.status == QuestModel.STATUS_AVAILABLE
+		if not wanted:
+			continue
+		var row: Control = QUEST_ROW_SCENE.instantiate() as Control
+		row.connect("action_pressed", _on_quest_action)
+		_quest_rows.add_child(row)
+		row.call("bind", q)
+		n += 1
+	_state.text = tr("ui.quest.none") if n == 0 else ""
+	_state.visible = n == 0
+
+
+func _on_quest_action(quest_id: String, action: String) -> void:
+	var quests: QuestService = _quests()
+	if quests == null:
+		return
+	match action:
+		"accept":
+			await quests.accept(quest_id)
+		"start":
+			var q: QuestModel = quests.quest(quest_id)
+			if q != null:
+				await quests.start_activity(quest_id, String(q.activity_step().get("step_id", "")))
+		"track":
+			quests.track(quest_id)
+	if tab != TAB_ASSIGNED:
+		_render_quests()
+
+
+func _on_quests_updated(_count: int) -> void:
+	if visible and tab != TAB_ASSIGNED:
+		_render_quests()
+
+
+func _on_quest_changed(_quest_id: String) -> void:
+	if visible and tab != TAB_ASSIGNED:
+		_render_quests()
+
+
+func _quests() -> QuestService:
+	var services: ServiceLocator = AppState.get_services()
+	return services.quest if services != null else null

@@ -32,7 +32,8 @@ func TestPlayerRoutesStaffDenied(t *testing.T) {
 	for _, id := range gamehttp.PlayerOperations {
 		o := gamehttp.Operations[id]
 		path := strings.NewReplacer("{game_session_id}", session, "{slot}", "1", "{area_id}", "main_hub", "{level_id}", session,
-			"{level_session_id}", session, "{npc_id}", "npc.cloudy", "{interactable_id}", "discovery.hub.spark_tree").Replace(o.Pattern)
+			"{level_session_id}", session, "{npc_id}", "npc.cloudy", "{interactable_id}", "discovery.hub.spark_tree", "{quest_id}", session,
+			"{step_id}", "meet").Replace(o.Pattern)
 		for role, sub := range subs {
 			tok := e.idp.Token(sub, "eduworld-portal", nowWall())
 			h := map[string]string{"X-Tenant-Id": e.tenantA.String(), "X-Device-Id": uuid.NewString(), "Idempotency-Key": newKey()}

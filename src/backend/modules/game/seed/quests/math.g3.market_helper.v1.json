@@ -1,0 +1,124 @@
+{
+  "schema_version": 2,
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "party_mode": "solo",
+  "completion_rule": {
+    "type": "all_required_steps"
+  },
+  "objective_ids": [],
+  "rewards": [
+    {
+      "type": "xp",
+      "amount": 30
+    }
+  ],
+  "quest_id": "0193a5f4-6c1e-7b2a-9d1f-000000072001",
+  "code": "math.g3.market_helper",
+  "quest_type": "side",
+  "name": {
+    "vi": "Phụ giúp phiên chợ",
+    "en": "Market Helper"
+  },
+  "description": {
+    "vi": "Ông Số cần người giúp sắp xếp sạp trái cây.",
+    "en": "Mr. Numbers needs help to set up the fruit stall."
+  },
+  "narrative": {
+    "vi": "Phiên chợ của Vương quốc Số sắp mở. Hãy giúp Ông Số chuẩn bị nhé!",
+    "en": "The market of the Number Kingdom is about to open. Help Mr. Numbers get ready!"
+  },
+  "giver_npc_id": "npc.mr_numbers",
+  "area_id": "learning_zone.math",
+  "grade_levels": [
+    3
+  ],
+  "subject_id": "0193a5f4-6c1e-7b2a-9d1f-0000000720f1",
+  "subject_code": "math",
+  "estimated_minutes": 5,
+  "start_trigger": {
+    "kind": "quest_board",
+    "area_id": "learning_zone.math"
+  },
+  "repeatability": {
+    "mode": "repeatable",
+    "cooldown_hours": 24,
+    "max_completions": 3
+  },
+  "steps": [
+    {
+      "step_id": "meet_mr_numbers",
+      "order": 1,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Gặp Ông Số",
+        "en": "Meet Mr. Numbers"
+      },
+      "npc_id": "npc.mr_numbers",
+      "area_id": "learning_zone.math"
+    },
+    {
+      "step_id": "go_fruit_stall",
+      "order": 2,
+      "type": "go_to",
+      "title": {
+        "vi": "Đến sạp trái cây",
+        "en": "Go to the fruit stall"
+      },
+      "area_id": "learning_zone.math",
+      "interactable_id": "quest.math.fruit_stall"
+    },
+    {
+      "step_id": "collect_baskets",
+      "order": 3,
+      "type": "collect",
+      "title": {
+        "vi": "Nhặt 3 giỏ táo",
+        "en": "Pick up 3 apple baskets"
+      },
+      "hint": {
+        "vi": "Các giỏ táo nằm cạnh sạp.",
+        "en": "The baskets are next to the stall."
+      },
+      "area_id": "learning_zone.math",
+      "interactable_ids": [
+        "quest.math.apple_basket_1",
+        "quest.math.apple_basket_2",
+        "quest.math.apple_basket_3"
+      ],
+      "count": 3
+    },
+    {
+      "step_id": "find_old_well",
+      "order": 4,
+      "type": "discover",
+      "title": {
+        "vi": "Ghé Giếng Cổ",
+        "en": "Visit the Old Well"
+      },
+      "optional": true,
+      "depends_on": [
+        "go_fruit_stall"
+      ],
+      "area_id": "learning_zone.math",
+      "interactable_ids": [
+        "discovery.math.old_well"
+      ],
+      "count": 1
+    },
+    {
+      "step_id": "report_back",
+      "order": 5,
+      "type": "talk_npc",
+      "title": {
+        "vi": "Báo lại Ông Số",
+        "en": "Report back to Mr. Numbers"
+      },
+      "depends_on": [
+        "collect_baskets"
+      ],
+      "npc_id": "npc.mr_numbers",
+      "area_id": "learning_zone.math"
+    }
+  ]
+}

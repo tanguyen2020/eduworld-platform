@@ -29,9 +29,15 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/queststepattempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapter"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapterversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/tenantresourceassignment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaversion"
@@ -96,30 +102,36 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			avatarpreset.Table:            avatarpreset.ValidColumn,
-			charactercatalog.Table:        charactercatalog.ValidColumn,
-			charactercatalogversion.Table: charactercatalogversion.ValidColumn,
-			contentrelease.Table:          contentrelease.ValidColumn,
-			explorationprogress.Table:     explorationprogress.ValidColumn,
-			gameprofile.Table:             gameprofile.ValidColumn,
-			gamesession.Table:             gamesession.ValidColumn,
-			inventoryitem.Table:           inventoryitem.ValidColumn,
-			itemdefinition.Table:          itemdefinition.ValidColumn,
-			itemdefinitionversion.Table:   itemdefinitionversion.ValidColumn,
-			leveldefinition.Table:         leveldefinition.ValidColumn,
-			levelsession.Table:            levelsession.ValidColumn,
-			levelversion.Table:            levelversion.ValidColumn,
-			loginevent.Table:              loginevent.ValidColumn,
-			nicknamechange.Table:          nicknamechange.ValidColumn,
-			npcdialogue.Table:             npcdialogue.ValidColumn,
-			npcdialogueversion.Table:      npcdialogueversion.ValidColumn,
-			storychapter.Table:            storychapter.ValidColumn,
-			storychapterversion.Table:     storychapterversion.ValidColumn,
-			storyprogress.Table:           storyprogress.ValidColumn,
-			worldarea.Table:               worldarea.ValidColumn,
-			worldareaunlock.Table:         worldareaunlock.ValidColumn,
-			worldareaversion.Table:        worldareaversion.ValidColumn,
-			worldunlockfact.Table:         worldunlockfact.ValidColumn,
+			avatarpreset.Table:             avatarpreset.ValidColumn,
+			charactercatalog.Table:         charactercatalog.ValidColumn,
+			charactercatalogversion.Table:  charactercatalogversion.ValidColumn,
+			contentrelease.Table:           contentrelease.ValidColumn,
+			explorationprogress.Table:      explorationprogress.ValidColumn,
+			gameprofile.Table:              gameprofile.ValidColumn,
+			gamesession.Table:              gamesession.ValidColumn,
+			inventoryitem.Table:            inventoryitem.ValidColumn,
+			itemdefinition.Table:           itemdefinition.ValidColumn,
+			itemdefinitionversion.Table:    itemdefinitionversion.ValidColumn,
+			leveldefinition.Table:          leveldefinition.ValidColumn,
+			levelsession.Table:             levelsession.ValidColumn,
+			levelversion.Table:             levelversion.ValidColumn,
+			loginevent.Table:               loginevent.ValidColumn,
+			nicknamechange.Table:           nicknamechange.ValidColumn,
+			npcdialogue.Table:              npcdialogue.ValidColumn,
+			npcdialogueversion.Table:       npcdialogueversion.ValidColumn,
+			periodicquestgrant.Table:       periodicquestgrant.ValidColumn,
+			questdefinition.Table:          questdefinition.ValidColumn,
+			questprogress.Table:            questprogress.ValidColumn,
+			queststepattempt.Table:         queststepattempt.ValidColumn,
+			questversion.Table:             questversion.ValidColumn,
+			storychapter.Table:             storychapter.ValidColumn,
+			storychapterversion.Table:      storychapterversion.ValidColumn,
+			storyprogress.Table:            storyprogress.ValidColumn,
+			tenantresourceassignment.Table: tenantresourceassignment.ValidColumn,
+			worldarea.Table:                worldarea.ValidColumn,
+			worldareaunlock.Table:          worldareaunlock.ValidColumn,
+			worldareaversion.Table:         worldareaversion.ValidColumn,
+			worldunlockfact.Table:          worldunlockfact.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

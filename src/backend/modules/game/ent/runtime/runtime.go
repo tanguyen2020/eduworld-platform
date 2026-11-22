@@ -23,10 +23,16 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/nicknamechange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questdefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/queststepattempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/schema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapter"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapterversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/tenantresourceassignment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaversion"
@@ -814,6 +820,271 @@ func init() {
 	npcdialogueversionDescID := npcdialogueversionMixinFields0[0].Descriptor()
 	// npcdialogueversion.DefaultID holds the default value on creation for the id field.
 	npcdialogueversion.DefaultID = npcdialogueversionDescID.Default.(func() uuid.UUID)
+	periodicquestgrantMixin := schema.PeriodicQuestGrant{}.Mixin()
+	periodicquestgrantMixinHooks0 := periodicquestgrantMixin[0].Hooks()
+	periodicquestgrant.Hooks[0] = periodicquestgrantMixinHooks0[0]
+	periodicquestgrantMixinInters0 := periodicquestgrantMixin[0].Interceptors()
+	periodicquestgrant.Interceptors[0] = periodicquestgrantMixinInters0[0]
+	periodicquestgrantMixinFields0 := periodicquestgrantMixin[0].Fields()
+	_ = periodicquestgrantMixinFields0
+	periodicquestgrantFields := schema.PeriodicQuestGrant{}.Fields()
+	_ = periodicquestgrantFields
+	// periodicquestgrantDescCreatedAt is the schema descriptor for created_at field.
+	periodicquestgrantDescCreatedAt := periodicquestgrantMixinFields0[2].Descriptor()
+	// periodicquestgrant.DefaultCreatedAt holds the default value on creation for the created_at field.
+	periodicquestgrant.DefaultCreatedAt = periodicquestgrantDescCreatedAt.Default.(func() time.Time)
+	// periodicquestgrantDescUpdatedAt is the schema descriptor for updated_at field.
+	periodicquestgrantDescUpdatedAt := periodicquestgrantMixinFields0[4].Descriptor()
+	// periodicquestgrant.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	periodicquestgrant.DefaultUpdatedAt = periodicquestgrantDescUpdatedAt.Default.(func() time.Time)
+	// periodicquestgrant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	periodicquestgrant.UpdateDefaultUpdatedAt = periodicquestgrantDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// periodicquestgrantDescDeleteReason is the schema descriptor for delete_reason field.
+	periodicquestgrantDescDeleteReason := periodicquestgrantMixinFields0[8].Descriptor()
+	// periodicquestgrant.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	periodicquestgrant.DeleteReasonValidator = periodicquestgrantDescDeleteReason.Validators[0].(func(string) error)
+	// periodicquestgrantDescVersion is the schema descriptor for version field.
+	periodicquestgrantDescVersion := periodicquestgrantMixinFields0[9].Descriptor()
+	// periodicquestgrant.DefaultVersion holds the default value on creation for the version field.
+	periodicquestgrant.DefaultVersion = periodicquestgrantDescVersion.Default.(int64)
+	// periodicquestgrantDescKind is the schema descriptor for kind field.
+	periodicquestgrantDescKind := periodicquestgrantFields[1].Descriptor()
+	// periodicquestgrant.KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	periodicquestgrant.KindValidator = periodicquestgrantDescKind.Validators[0].(func(string) error)
+	// periodicquestgrantDescPeriodKey is the schema descriptor for period_key field.
+	periodicquestgrantDescPeriodKey := periodicquestgrantFields[2].Descriptor()
+	// periodicquestgrant.PeriodKeyValidator is a validator for the "period_key" field. It is called by the builders before save.
+	periodicquestgrant.PeriodKeyValidator = periodicquestgrantDescPeriodKey.Validators[0].(func(string) error)
+	// periodicquestgrantDescGrantedAt is the schema descriptor for granted_at field.
+	periodicquestgrantDescGrantedAt := periodicquestgrantFields[4].Descriptor()
+	// periodicquestgrant.DefaultGrantedAt holds the default value on creation for the granted_at field.
+	periodicquestgrant.DefaultGrantedAt = periodicquestgrantDescGrantedAt.Default.(func() time.Time)
+	// periodicquestgrantDescID is the schema descriptor for id field.
+	periodicquestgrantDescID := periodicquestgrantMixinFields0[0].Descriptor()
+	// periodicquestgrant.DefaultID holds the default value on creation for the id field.
+	periodicquestgrant.DefaultID = periodicquestgrantDescID.Default.(func() uuid.UUID)
+	questdefinitionMixin := schema.QuestDefinition{}.Mixin()
+	questdefinitionMixinHooks0 := questdefinitionMixin[0].Hooks()
+	questdefinition.Hooks[0] = questdefinitionMixinHooks0[0]
+	questdefinitionMixinInters0 := questdefinitionMixin[0].Interceptors()
+	questdefinition.Interceptors[0] = questdefinitionMixinInters0[0]
+	questdefinitionMixinFields0 := questdefinitionMixin[0].Fields()
+	_ = questdefinitionMixinFields0
+	questdefinitionFields := schema.QuestDefinition{}.Fields()
+	_ = questdefinitionFields
+	// questdefinitionDescCreatedAt is the schema descriptor for created_at field.
+	questdefinitionDescCreatedAt := questdefinitionMixinFields0[1].Descriptor()
+	// questdefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
+	questdefinition.DefaultCreatedAt = questdefinitionDescCreatedAt.Default.(func() time.Time)
+	// questdefinitionDescUpdatedAt is the schema descriptor for updated_at field.
+	questdefinitionDescUpdatedAt := questdefinitionMixinFields0[3].Descriptor()
+	// questdefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	questdefinition.DefaultUpdatedAt = questdefinitionDescUpdatedAt.Default.(func() time.Time)
+	// questdefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	questdefinition.UpdateDefaultUpdatedAt = questdefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// questdefinitionDescDeleteReason is the schema descriptor for delete_reason field.
+	questdefinitionDescDeleteReason := questdefinitionMixinFields0[7].Descriptor()
+	// questdefinition.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	questdefinition.DeleteReasonValidator = questdefinitionDescDeleteReason.Validators[0].(func(string) error)
+	// questdefinitionDescVersion is the schema descriptor for version field.
+	questdefinitionDescVersion := questdefinitionMixinFields0[8].Descriptor()
+	// questdefinition.DefaultVersion holds the default value on creation for the version field.
+	questdefinition.DefaultVersion = questdefinitionDescVersion.Default.(int64)
+	// questdefinitionDescCode is the schema descriptor for code field.
+	questdefinitionDescCode := questdefinitionFields[0].Descriptor()
+	// questdefinition.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	questdefinition.CodeValidator = questdefinitionDescCode.Validators[0].(func(string) error)
+	// questdefinitionDescOwnerScope is the schema descriptor for owner_scope field.
+	questdefinitionDescOwnerScope := questdefinitionFields[1].Descriptor()
+	// questdefinition.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	questdefinition.DefaultOwnerScope = questdefinitionDescOwnerScope.Default.(string)
+	// questdefinition.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	questdefinition.OwnerScopeValidator = questdefinitionDescOwnerScope.Validators[0].(func(string) error)
+	// questdefinitionDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	questdefinitionDescLatestVersionNo := questdefinitionFields[3].Descriptor()
+	// questdefinition.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	questdefinition.DefaultLatestVersionNo = questdefinitionDescLatestVersionNo.Default.(int)
+	// questdefinitionDescID is the schema descriptor for id field.
+	questdefinitionDescID := questdefinitionMixinFields0[0].Descriptor()
+	// questdefinition.DefaultID holds the default value on creation for the id field.
+	questdefinition.DefaultID = questdefinitionDescID.Default.(func() uuid.UUID)
+	questprogressMixin := schema.QuestProgress{}.Mixin()
+	questprogressMixinHooks0 := questprogressMixin[0].Hooks()
+	questprogress.Hooks[0] = questprogressMixinHooks0[0]
+	questprogressMixinInters0 := questprogressMixin[0].Interceptors()
+	questprogress.Interceptors[0] = questprogressMixinInters0[0]
+	questprogressMixinFields0 := questprogressMixin[0].Fields()
+	_ = questprogressMixinFields0
+	questprogressFields := schema.QuestProgress{}.Fields()
+	_ = questprogressFields
+	// questprogressDescCreatedAt is the schema descriptor for created_at field.
+	questprogressDescCreatedAt := questprogressMixinFields0[2].Descriptor()
+	// questprogress.DefaultCreatedAt holds the default value on creation for the created_at field.
+	questprogress.DefaultCreatedAt = questprogressDescCreatedAt.Default.(func() time.Time)
+	// questprogressDescUpdatedAt is the schema descriptor for updated_at field.
+	questprogressDescUpdatedAt := questprogressMixinFields0[4].Descriptor()
+	// questprogress.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	questprogress.DefaultUpdatedAt = questprogressDescUpdatedAt.Default.(func() time.Time)
+	// questprogress.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	questprogress.UpdateDefaultUpdatedAt = questprogressDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// questprogressDescDeleteReason is the schema descriptor for delete_reason field.
+	questprogressDescDeleteReason := questprogressMixinFields0[8].Descriptor()
+	// questprogress.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	questprogress.DeleteReasonValidator = questprogressDescDeleteReason.Validators[0].(func(string) error)
+	// questprogressDescVersion is the schema descriptor for version field.
+	questprogressDescVersion := questprogressMixinFields0[9].Descriptor()
+	// questprogress.DefaultVersion holds the default value on creation for the version field.
+	questprogress.DefaultVersion = questprogressDescVersion.Default.(int64)
+	// questprogressDescQuestType is the schema descriptor for quest_type field.
+	questprogressDescQuestType := questprogressFields[4].Descriptor()
+	// questprogress.QuestTypeValidator is a validator for the "quest_type" field. It is called by the builders before save.
+	questprogress.QuestTypeValidator = questprogressDescQuestType.Validators[0].(func(string) error)
+	// questprogressDescStatus is the schema descriptor for status field.
+	questprogressDescStatus := questprogressFields[5].Descriptor()
+	// questprogress.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	questprogress.StatusValidator = questprogressDescStatus.Validators[0].(func(string) error)
+	// questprogressDescStartTrigger is the schema descriptor for start_trigger field.
+	questprogressDescStartTrigger := questprogressFields[7].Descriptor()
+	// questprogress.StartTriggerValidator is a validator for the "start_trigger" field. It is called by the builders before save.
+	questprogress.StartTriggerValidator = questprogressDescStartTrigger.Validators[0].(func(string) error)
+	// questprogressDescPeriodKey is the schema descriptor for period_key field.
+	questprogressDescPeriodKey := questprogressFields[8].Descriptor()
+	// questprogress.PeriodKeyValidator is a validator for the "period_key" field. It is called by the builders before save.
+	questprogress.PeriodKeyValidator = questprogressDescPeriodKey.Validators[0].(func(string) error)
+	// questprogressDescCompletionNo is the schema descriptor for completion_no field.
+	questprogressDescCompletionNo := questprogressFields[9].Descriptor()
+	// questprogress.DefaultCompletionNo holds the default value on creation for the completion_no field.
+	questprogress.DefaultCompletionNo = questprogressDescCompletionNo.Default.(int)
+	// questprogressDescStartedAt is the schema descriptor for started_at field.
+	questprogressDescStartedAt := questprogressFields[11].Descriptor()
+	// questprogress.DefaultStartedAt holds the default value on creation for the started_at field.
+	questprogress.DefaultStartedAt = questprogressDescStartedAt.Default.(func() time.Time)
+	// questprogressDescID is the schema descriptor for id field.
+	questprogressDescID := questprogressMixinFields0[0].Descriptor()
+	// questprogress.DefaultID holds the default value on creation for the id field.
+	questprogress.DefaultID = questprogressDescID.Default.(func() uuid.UUID)
+	queststepattemptMixin := schema.QuestStepAttempt{}.Mixin()
+	queststepattemptMixinHooks0 := queststepattemptMixin[0].Hooks()
+	queststepattempt.Hooks[0] = queststepattemptMixinHooks0[0]
+	queststepattemptMixinInters0 := queststepattemptMixin[0].Interceptors()
+	queststepattempt.Interceptors[0] = queststepattemptMixinInters0[0]
+	queststepattemptMixinFields0 := queststepattemptMixin[0].Fields()
+	_ = queststepattemptMixinFields0
+	queststepattemptFields := schema.QuestStepAttempt{}.Fields()
+	_ = queststepattemptFields
+	// queststepattemptDescCreatedAt is the schema descriptor for created_at field.
+	queststepattemptDescCreatedAt := queststepattemptMixinFields0[2].Descriptor()
+	// queststepattempt.DefaultCreatedAt holds the default value on creation for the created_at field.
+	queststepattempt.DefaultCreatedAt = queststepattemptDescCreatedAt.Default.(func() time.Time)
+	// queststepattemptDescUpdatedAt is the schema descriptor for updated_at field.
+	queststepattemptDescUpdatedAt := queststepattemptMixinFields0[4].Descriptor()
+	// queststepattempt.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	queststepattempt.DefaultUpdatedAt = queststepattemptDescUpdatedAt.Default.(func() time.Time)
+	// queststepattempt.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	queststepattempt.UpdateDefaultUpdatedAt = queststepattemptDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// queststepattemptDescDeleteReason is the schema descriptor for delete_reason field.
+	queststepattemptDescDeleteReason := queststepattemptMixinFields0[8].Descriptor()
+	// queststepattempt.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	queststepattempt.DeleteReasonValidator = queststepattemptDescDeleteReason.Validators[0].(func(string) error)
+	// queststepattemptDescVersion is the schema descriptor for version field.
+	queststepattemptDescVersion := queststepattemptMixinFields0[9].Descriptor()
+	// queststepattempt.DefaultVersion holds the default value on creation for the version field.
+	queststepattempt.DefaultVersion = queststepattemptDescVersion.Default.(int64)
+	// queststepattemptDescStepID is the schema descriptor for step_id field.
+	queststepattemptDescStepID := queststepattemptFields[1].Descriptor()
+	// queststepattempt.StepIDValidator is a validator for the "step_id" field. It is called by the builders before save.
+	queststepattempt.StepIDValidator = queststepattemptDescStepID.Validators[0].(func(string) error)
+	// queststepattemptDescStartedOn is the schema descriptor for started_on field.
+	queststepattemptDescStartedOn := queststepattemptFields[5].Descriptor()
+	// queststepattempt.StartedOnValidator is a validator for the "started_on" field. It is called by the builders before save.
+	queststepattempt.StartedOnValidator = queststepattemptDescStartedOn.Validators[0].(func(string) error)
+	// queststepattemptDescStatus is the schema descriptor for status field.
+	queststepattemptDescStatus := queststepattemptFields[6].Descriptor()
+	// queststepattempt.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	queststepattempt.StatusValidator = queststepattemptDescStatus.Validators[0].(func(string) error)
+	// queststepattemptDescID is the schema descriptor for id field.
+	queststepattemptDescID := queststepattemptMixinFields0[0].Descriptor()
+	// queststepattempt.DefaultID holds the default value on creation for the id field.
+	queststepattempt.DefaultID = queststepattemptDescID.Default.(func() uuid.UUID)
+	questversionMixin := schema.QuestVersion{}.Mixin()
+	questversionMixinHooks0 := questversionMixin[0].Hooks()
+	questversion.Hooks[0] = questversionMixinHooks0[0]
+	questversionMixinInters0 := questversionMixin[0].Interceptors()
+	questversion.Interceptors[0] = questversionMixinInters0[0]
+	questversionMixinFields0 := questversionMixin[0].Fields()
+	_ = questversionMixinFields0
+	questversionFields := schema.QuestVersion{}.Fields()
+	_ = questversionFields
+	// questversionDescCreatedAt is the schema descriptor for created_at field.
+	questversionDescCreatedAt := questversionMixinFields0[1].Descriptor()
+	// questversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	questversion.DefaultCreatedAt = questversionDescCreatedAt.Default.(func() time.Time)
+	// questversionDescUpdatedAt is the schema descriptor for updated_at field.
+	questversionDescUpdatedAt := questversionMixinFields0[3].Descriptor()
+	// questversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	questversion.DefaultUpdatedAt = questversionDescUpdatedAt.Default.(func() time.Time)
+	// questversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	questversion.UpdateDefaultUpdatedAt = questversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// questversionDescDeleteReason is the schema descriptor for delete_reason field.
+	questversionDescDeleteReason := questversionMixinFields0[7].Descriptor()
+	// questversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	questversion.DeleteReasonValidator = questversionDescDeleteReason.Validators[0].(func(string) error)
+	// questversionDescVersion is the schema descriptor for version field.
+	questversionDescVersion := questversionMixinFields0[8].Descriptor()
+	// questversion.DefaultVersion holds the default value on creation for the version field.
+	questversion.DefaultVersion = questversionDescVersion.Default.(int64)
+	// questversionDescStatus is the schema descriptor for status field.
+	questversionDescStatus := questversionFields[2].Descriptor()
+	// questversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	questversion.StatusValidator = questversionDescStatus.Validators[0].(func(string) error)
+	// questversionDescPayloadSha256 is the schema descriptor for payload_sha256 field.
+	questversionDescPayloadSha256 := questversionFields[4].Descriptor()
+	// questversion.PayloadSha256Validator is a validator for the "payload_sha256" field. It is called by the builders before save.
+	questversion.PayloadSha256Validator = questversionDescPayloadSha256.Validators[0].(func(string) error)
+	// questversionDescChangeNote is the schema descriptor for change_note field.
+	questversionDescChangeNote := questversionFields[5].Descriptor()
+	// questversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	questversion.ChangeNoteValidator = questversionDescChangeNote.Validators[0].(func(string) error)
+	// questversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	questversionDescSnapshotKey := questversionFields[6].Descriptor()
+	// questversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	questversion.SnapshotKeyValidator = questversionDescSnapshotKey.Validators[0].(func(string) error)
+	// questversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	questversionDescSnapshotSha256 := questversionFields[7].Descriptor()
+	// questversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	questversion.SnapshotSha256Validator = questversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// questversionDescCode is the schema descriptor for code field.
+	questversionDescCode := questversionFields[11].Descriptor()
+	// questversion.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	questversion.CodeValidator = questversionDescCode.Validators[0].(func(string) error)
+	// questversionDescQuestType is the schema descriptor for quest_type field.
+	questversionDescQuestType := questversionFields[12].Descriptor()
+	// questversion.QuestTypeValidator is a validator for the "quest_type" field. It is called by the builders before save.
+	questversion.QuestTypeValidator = questversionDescQuestType.Validators[0].(func(string) error)
+	// questversionDescSubjectCode is the schema descriptor for subject_code field.
+	questversionDescSubjectCode := questversionFields[15].Descriptor()
+	// questversion.SubjectCodeValidator is a validator for the "subject_code" field. It is called by the builders before save.
+	questversion.SubjectCodeValidator = questversionDescSubjectCode.Validators[0].(func(string) error)
+	// questversionDescAreaID is the schema descriptor for area_id field.
+	questversionDescAreaID := questversionFields[16].Descriptor()
+	// questversion.AreaIDValidator is a validator for the "area_id" field. It is called by the builders before save.
+	questversion.AreaIDValidator = questversionDescAreaID.Validators[0].(func(string) error)
+	// questversionDescGiverNpcID is the schema descriptor for giver_npc_id field.
+	questversionDescGiverNpcID := questversionFields[17].Descriptor()
+	// questversion.GiverNpcIDValidator is a validator for the "giver_npc_id" field. It is called by the builders before save.
+	questversion.GiverNpcIDValidator = questversionDescGiverNpcID.Validators[0].(func(string) error)
+	// questversionDescStoryChapterCode is the schema descriptor for story_chapter_code field.
+	questversionDescStoryChapterCode := questversionFields[18].Descriptor()
+	// questversion.StoryChapterCodeValidator is a validator for the "story_chapter_code" field. It is called by the builders before save.
+	questversion.StoryChapterCodeValidator = questversionDescStoryChapterCode.Validators[0].(func(string) error)
+	// questversionDescStartTrigger is the schema descriptor for start_trigger field.
+	questversionDescStartTrigger := questversionFields[19].Descriptor()
+	// questversion.StartTriggerValidator is a validator for the "start_trigger" field. It is called by the builders before save.
+	questversion.StartTriggerValidator = questversionDescStartTrigger.Validators[0].(func(string) error)
+	// questversionDescID is the schema descriptor for id field.
+	questversionDescID := questversionMixinFields0[0].Descriptor()
+	// questversion.DefaultID holds the default value on creation for the id field.
+	questversion.DefaultID = questversionDescID.Default.(func() uuid.UUID)
 	storychapterMixin := schema.StoryChapter{}.Mixin()
 	storychapterMixinHooks0 := storychapterMixin[0].Hooks()
 	storychapter.Hooks[0] = storychapterMixinHooks0[0]
@@ -969,6 +1240,45 @@ func init() {
 	storyprogressDescID := storyprogressMixinFields0[0].Descriptor()
 	// storyprogress.DefaultID holds the default value on creation for the id field.
 	storyprogress.DefaultID = storyprogressDescID.Default.(func() uuid.UUID)
+	tenantresourceassignmentMixin := schema.TenantResourceAssignment{}.Mixin()
+	tenantresourceassignmentMixinHooks0 := tenantresourceassignmentMixin[0].Hooks()
+	tenantresourceassignment.Hooks[0] = tenantresourceassignmentMixinHooks0[0]
+	tenantresourceassignmentMixinInters0 := tenantresourceassignmentMixin[0].Interceptors()
+	tenantresourceassignment.Interceptors[0] = tenantresourceassignmentMixinInters0[0]
+	tenantresourceassignmentMixinFields0 := tenantresourceassignmentMixin[0].Fields()
+	_ = tenantresourceassignmentMixinFields0
+	tenantresourceassignmentFields := schema.TenantResourceAssignment{}.Fields()
+	_ = tenantresourceassignmentFields
+	// tenantresourceassignmentDescCreatedAt is the schema descriptor for created_at field.
+	tenantresourceassignmentDescCreatedAt := tenantresourceassignmentMixinFields0[2].Descriptor()
+	// tenantresourceassignment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tenantresourceassignment.DefaultCreatedAt = tenantresourceassignmentDescCreatedAt.Default.(func() time.Time)
+	// tenantresourceassignmentDescUpdatedAt is the schema descriptor for updated_at field.
+	tenantresourceassignmentDescUpdatedAt := tenantresourceassignmentMixinFields0[4].Descriptor()
+	// tenantresourceassignment.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tenantresourceassignment.DefaultUpdatedAt = tenantresourceassignmentDescUpdatedAt.Default.(func() time.Time)
+	// tenantresourceassignment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tenantresourceassignment.UpdateDefaultUpdatedAt = tenantresourceassignmentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// tenantresourceassignmentDescDeleteReason is the schema descriptor for delete_reason field.
+	tenantresourceassignmentDescDeleteReason := tenantresourceassignmentMixinFields0[8].Descriptor()
+	// tenantresourceassignment.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	tenantresourceassignment.DeleteReasonValidator = tenantresourceassignmentDescDeleteReason.Validators[0].(func(string) error)
+	// tenantresourceassignmentDescVersion is the schema descriptor for version field.
+	tenantresourceassignmentDescVersion := tenantresourceassignmentMixinFields0[9].Descriptor()
+	// tenantresourceassignment.DefaultVersion holds the default value on creation for the version field.
+	tenantresourceassignment.DefaultVersion = tenantresourceassignmentDescVersion.Default.(int64)
+	// tenantresourceassignmentDescResourceType is the schema descriptor for resource_type field.
+	tenantresourceassignmentDescResourceType := tenantresourceassignmentFields[0].Descriptor()
+	// tenantresourceassignment.ResourceTypeValidator is a validator for the "resource_type" field. It is called by the builders before save.
+	tenantresourceassignment.ResourceTypeValidator = tenantresourceassignmentDescResourceType.Validators[0].(func(string) error)
+	// tenantresourceassignmentDescAssignedAt is the schema descriptor for assigned_at field.
+	tenantresourceassignmentDescAssignedAt := tenantresourceassignmentFields[3].Descriptor()
+	// tenantresourceassignment.DefaultAssignedAt holds the default value on creation for the assigned_at field.
+	tenantresourceassignment.DefaultAssignedAt = tenantresourceassignmentDescAssignedAt.Default.(func() time.Time)
+	// tenantresourceassignmentDescID is the schema descriptor for id field.
+	tenantresourceassignmentDescID := tenantresourceassignmentMixinFields0[0].Descriptor()
+	// tenantresourceassignment.DefaultID holds the default value on creation for the id field.
+	tenantresourceassignment.DefaultID = tenantresourceassignmentDescID.Default.(func() uuid.UUID)
 	worldareaMixin := schema.WorldArea{}.Mixin()
 	worldareaMixinHooks0 := worldareaMixin[0].Hooks()
 	worldarea.Hooks[0] = worldareaMixinHooks0[0]

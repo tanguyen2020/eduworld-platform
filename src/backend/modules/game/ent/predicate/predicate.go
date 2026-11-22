@@ -57,6 +57,21 @@ type NpcDialogue func(*sql.Selector)
 // NpcDialogueVersion is the predicate function for npcdialogueversion builders.
 type NpcDialogueVersion func(*sql.Selector)
 
+// PeriodicQuestGrant is the predicate function for periodicquestgrant builders.
+type PeriodicQuestGrant func(*sql.Selector)
+
+// QuestDefinition is the predicate function for questdefinition builders.
+type QuestDefinition func(*sql.Selector)
+
+// QuestProgress is the predicate function for questprogress builders.
+type QuestProgress func(*sql.Selector)
+
+// QuestStepAttempt is the predicate function for queststepattempt builders.
+type QuestStepAttempt func(*sql.Selector)
+
+// QuestVersion is the predicate function for questversion builders.
+type QuestVersion func(*sql.Selector)
+
 // StoryChapter is the predicate function for storychapter builders.
 type StoryChapter func(*sql.Selector)
 
@@ -65,6 +80,9 @@ type StoryChapterVersion func(*sql.Selector)
 
 // StoryProgress is the predicate function for storyprogress builders.
 type StoryProgress func(*sql.Selector)
+
+// TenantResourceAssignment is the predicate function for tenantresourceassignment builders.
+type TenantResourceAssignment func(*sql.Selector)
 
 // WorldArea is the predicate function for worldarea builders.
 type WorldArea func(*sql.Selector)

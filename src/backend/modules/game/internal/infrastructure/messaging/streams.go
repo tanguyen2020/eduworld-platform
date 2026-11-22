@@ -92,3 +92,22 @@ const MasteryProjectionName = "game.mastery_projection"
 
 // MasteryProjectionEvents are the learning events it handles.
 var MasteryProjectionEvents = []string{"learning_objective.progressed"}
+
+// QuestActivityGradedName evaluates the pass rule of the quest steps on the graded attempts of module learning (F072
+// T031): activity.graded of an attempt linked to a quest step (game.quest_step_attempts).
+const QuestActivityGradedName = "game.quest_on_activity_graded"
+
+// QuestActivityGradedEvents are the learning events it handles (owner F030).
+var QuestActivityGradedEvents = []string{"activity.graded"}
+
+// QuestDiscoveryName advances the discover steps of the active quests on world.discovery_found (F072 T024).
+const QuestDiscoveryName = "game.quest_on_discovery_found"
+
+// QuestDiscoveryEvents are the game events it handles (owner F071).
+var QuestDiscoveryEvents = []string{"world.discovery_found"}
+
+// PeriodicQuestsName grants the daily/weekly quests on the first game session of a period (F072 T038).
+const PeriodicQuestsName = "game.periodic_quests_on_session_started"
+
+// PeriodicQuestsEvents are the game events it handles (owner F014).
+var PeriodicQuestsEvents = []string{"game_session.started"}

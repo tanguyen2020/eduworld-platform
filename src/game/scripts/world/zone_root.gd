@@ -12,9 +12,12 @@ signal player_spawned(spawn_point_id: String)
 signal portal_requested(portal_id: String, target_area_id: String)
 signal npc_requested(npc_id: String, interactable_id: String)
 signal discovery_requested(interactable_id: String)
+## A quest object of the layout (F072): the quest service reports it for the active step it belongs to.
+signal quest_object_requested(interactable_id: String)
 
 ## Screen opened by each Interactable kind (data, not logic: the screen decides what to show).
 ## `exam_board`: the Exam Zone greybox entry of the Main Hub (F064 T015; the full `exam_zone` scene is F071).
+const QUEST_MARKER_SCENE: PackedScene = preload("res://scenes/quest/QuestMarker3D.tscn")
 const KIND_SCREENS: Dictionary = {"quest_board": &"quest_journal", "exam_board": &"exam_lobby"}
 ## Arguments per interactable id (the school assignments board opens the "Nhà trường giao" tab).
 const INTERACTABLE_ARGS: Dictionary = {"board.school_assignments": {"tab": "assigned"}}
@@ -165,6 +168,9 @@ func _on_interacted(interactable_id: String, item: Interactable) -> void:
 		"discovery", "collectible":
 			discovery_requested.emit(interactable_id)
 			return
+		"quest_object":
+			quest_object_requested.emit(interactable_id)
+			return
 	var screen: StringName = KIND_SCREENS.get(item.kind, &"") as StringName
 	if screen.is_empty():
 		Log.debug("interactable_without_screen", {"interactable_id": interactable_id})
@@ -181,3 +187,18 @@ func _on_quality_changed(_preset: String) -> void:
 	if light != null:
 		light.light_color = Art3dTokens.LIGHT_SUN_COLOR
 		light.shadow_enabled = QualityManager.shadows_enabled()
+
+
+## F072: puts a QuestMarker3D above every interactable whose id is in ids (targets of the active steps of the tracked
+## quest, from the server delivery) and removes the others.
+func mark_quest_targets(ids: PackedStringArray) -> void:
+	for node: Node in find_children("*", "Interactable", true, false):
+		var item: Interactable = node as Interactable
+		var marker: Node = item.get_node_or_null(^"QuestMarker3D")
+		var wanted: bool = item.interactable_id in ids
+		if wanted and marker == null:
+			var m: Node3D = QUEST_MARKER_SCENE.instantiate() as Node3D
+			m.name = "QuestMarker3D"
+			item.add_child(m)
+		elif not wanted and marker != null:
+			marker.queue_free()

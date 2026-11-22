@@ -215,6 +215,9 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 409 | `NICKNAME_CHANGE_LIMIT` | Vượt `nickname_change_monthly_limit` trong tháng, kèm `retry_after` (F070) |
 | 409 | `QUEST_ALREADY_COMPLETED` | Nhận lại quest `once` đã hoàn thành |
 | 409 | `QUEST_COOLDOWN` | Nhận quest `repeatable` khi đang cooldown (kèm `retry_after`) |
+| 403 | `QUEST_PREREQUISITE_NOT_MET` | Nhận quest khi chưa thỏa `prerequisites` (quest trước, khu đã mở, `min_level`) hoặc `learning_requirements`; kèm `missing_requirements` thân thiện (F072) |
+| 409 | `QUEST_ACTIVE_LIMIT` | Nhận quest khi đã có `max_active_quests` quest đang làm (F072) |
+| 409 | `QUEST_STEP_ATTEMPT_LIMIT` | Bắt đầu bước học tập quá `pass_rule.max_attempts_per_day` trong ngày — "hãy quay lại ngày mai" (F072) |
 | 403 | `AREA_LOCKED` | Vào area chưa mở khóa (kèm điều kiện còn thiếu) |
 | 409 | `DISCOVERY_ALREADY_FOUND` | Báo lại điểm khám phá đã tìm |
 | 403 | `CHALLENGE_NOT_ELIGIBLE` | Sai khối, chưa mở khóa, ngoài thời gian |

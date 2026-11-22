@@ -75,3 +75,21 @@ func (p WorldPublisher) AreaUnlocked(ctx context.Context, student uuid.UUID, are
 	}
 	return rt.Publisher{C: p.C, Timeout: p.Timeout}.ToUser(ctx, student, e)
 }
+
+// QuestPublisher implements port.QuestRealtime: quest.progress.updated to every connection of the student (AsyncAPI
+// QuestProgressUpdated, F072) through Valkey ew:rt:user:<id>.
+type QuestPublisher struct {
+	C       valkey.Client
+	Timeout time.Duration
+}
+
+var _ port.QuestRealtime = QuestPublisher{}
+
+// QuestProgressUpdated implements port.QuestRealtime.
+func (p QuestPublisher) QuestProgressUpdated(ctx context.Context, student uuid.UUID, payload map[string]any, at time.Time) error {
+	e, err := rt.NewMessage("quest.progress.updated", payload, at)
+	if err != nil {
+		return err
+	}
+	return rt.Publisher{C: p.C, Timeout: p.Timeout}.ToUser(ctx, student, e)
+}
