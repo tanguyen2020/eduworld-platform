@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/season.ended.v1.schema.json",
+  "title": "Payload season.ended v1 (module competition, owner F106)",
+  "description": "Mùa giải (platform, tenant_id = null) kết thúc đúng một lần (idempotent theo season_id, F106-AC-22) sau khi kết quả mùa của mọi học sinh (rating cuối, RD, tier cao nhất, số trận, Competition Points) đã lưu vào competition.season_results (không xóa, F106-AC-23). Consumer: module game (đóng season track, thưởng theo tier cao nhất — F077).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["season_id", "code", "ended_at", "source_version"],
+  "properties": {
+    "season_id": { "type": "string", "format": "uuid" },
+    "code": { "type": "string", "maxLength": 64 },
+    "ended_at": { "type": "string", "format": "date-time" },
+    "results_count": { "type": "integer", "minimum": 0 },
+    "source_version": { "type": "integer", "minimum": 1 }
+  },
+  "examples": [
+    { "season_id": "01936a00-0000-7000-8000-000000106001", "code": "pre-season", "ended_at": "2027-01-04T00:00:00+07:00", "results_count": 1200, "source_version": 1798995600000001 }
+  ]
+}

@@ -12,7 +12,7 @@ Ba module trong module `competition`: `ranking` (hàm thuần `glicko2.Update`, 
 |---|---|
 | Language/Version | Go ≥ 1.24 |
 | Primary Dependencies | chi, ent, Atlas, oapi-codegen, nats.go (JetStream consumer), go-redis, `src/backend/pkg/outbox`, `src/backend/pkg/entx` (`UnitOfWork`), `src/backend/pkg/tenancy`, `src/backend/pkg/clock` |
-| Storage | PostgreSQL `eduworld_competition` (`competition`, `ref`); Valkey `ew:competition:lb:*` (Rebuildable) |
+| Storage | PostgreSQL `eduworld_competition` (`competition`, `ref`); Valkey `ew:lb:*` (Rebuildable, VALKEY_DESIGN) |
 | Testing | go test (vector Glickman, property test tier/visibility), testcontainers (PostgreSQL, Valkey, NATS), đồng hồ giả cho kỳ/mùa |
 | Target Platform | Linux container (module `competition` nạp trong `core-api` + `worker-events`, `worker-jobs`) |
 | Project Type | backend module |
@@ -98,7 +98,7 @@ Không có. Công thức Glicko-2, tier, point table, effort points, visibility,
 |---|---|---|
 | domain | `glicko2.Update`, `TierPolicy`, `ProvisionalPolicy`, `PointTable`, `EffortRules`, `LeaderboardDefinition` (invariant: scope school/grade ≠ `xp`; không scope `class`), `VisibilityPolicy`, `GradeGoal` (gộp + che ô < 5), `PeriodKey` (ICT), `SoftReset` | Thuần |
 | application | Command `ApplyMatchRating`, `InflateInactiveRD`, `AwardMatchPoints`, `RecordContribution`, `ClosePeriod`, `RebuildLeaderboard`, `MaterializeDefinitions`, `StartSeason`, `EndSeason` · Query `GetMyRatings`, `ListLeaderboards`, `GetLeaderboard`, `GetMyLeaderboardPosition`, `GetLeaderboardHistory`, `ListSeasons`, `GetSeason` | Command (`command/`, `UnitOfWork`) / query (`query/`, chỉ đọc) tách, gọi qua interface có kiểu |
-| infrastructure | ent repo; Valkey store; SQL đọc snapshot | Key `ew:competition:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>` |
+| infrastructure | ent repo; Valkey store; SQL đọc snapshot | Key `ew:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>` (VALKEY_DESIGN) |
 | presentation | Handler `getMyRatings`, `listLeaderboards`, `getLeaderboard`, `getMyLeaderboardPosition`, `getLeaderboardHistory`, `listSeasons`, `getSeason`; consumer; job | |
 
 ### Tích hợp và phụ thuộc

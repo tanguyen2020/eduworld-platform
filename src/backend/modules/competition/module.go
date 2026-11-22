@@ -14,6 +14,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/battlehost"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/cache"
 	hubconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/messaging"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/infrastructure/persistence"
@@ -160,7 +161,19 @@ func Register(r *module.Registry) (*Module, error) {
 		Directory: persistence.PartyDirectory{}, Parties: persistence.Parties{}, Events: persistence.Publisher{W: core.Writer},
 		Audit: persistence.Auditor{R: core.Recorder}, Store: mmStore, Realtime: realtime.PartyPublisher{P: pub}, Presence: presence,
 		Metrics: observability.Matchmaking{}, Settings: mmCfg.Settings, Configs: command.NewConfigCache(mmCfg.Settings.ConfigTTL),
-		Tracker: command.NewTicketTracker()}
+		Tracker: command.NewTicketTracker(), Ratings: persistence.RatingReader{}}
+
+	// F106 — Game Ratings, Competition Points, leaderboards (ledgers in PostgreSQL, open periods in Valkey) and seasons.
+	observability.RegisterRanking(r.Metrics())
+	boardStore := cache.LeaderboardStore{C: vk}
+	rankRepo := persistence.RankingStore{}
+	ranks := command.Ranking{Repo: rankRepo, Boards: command.Boards{Store: boardStore, Repo: rankRepo, Metrics: observability.Ranking{}},
+		Events: persistence.Publisher{W: core.Writer}, Push: realtime.PartyPublisher{P: pub}, Metrics: observability.Ranking{},
+		AfterCommit: entx.AfterCommit}
+	boards := command.Leaderboards{UoW: core.UoW, Repo: rankRepo, Ranking: rankRepo, Seasons: rankRepo, Store: boardStore,
+		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Metrics: observability.Ranking{}}
+	seasons := command.Seasons{UoW: core.UoW, Repo: rankRepo, Ranking: rankRepo, Events: persistence.Publisher{W: core.Writer},
+		Audit: persistence.Auditor{R: core.Recorder}}
 
 	// F105 — battle engine: match rooms hosted by core-api (lease + checkpoint in Valkey), results in PostgreSQL.
 	btCfg, err := hubconfig.BattleFrom(r.Config())
@@ -179,7 +192,8 @@ func Register(r *module.Registry) (*Module, error) {
 		h := competitionhttp.Handlers{Commands: parties, Queries: query.Parties{Read: core.ReadSession, Reader: persistence.Parties{},
 			Presence: presence, Lobby: lobbies, LobbyReader: persistence.LobbyRead{}, Game: m.game, PrivateCapacity: lobbyCfg.PrivateCapacity},
 			Matchmaking: matchmaking, MatchmakingQueries: query.Matchmaking{Read: core.ReadSession, Reader: persistence.Matchmaking{}, Store: mmStore},
-			Battles: query.Battles{Read: core.ReadSession, Reader: persistence.BattleRead{}, Plans: m.learning}}
+			Battles:  query.Battles{Read: core.ReadSession, Reader: persistence.BattleRead{}, Plans: m.learning},
+			Rankings: query.Rankings{Read: core.ReadSession, Reader: persistence.RankingRead{}, Store: boardStore}}
 		r.HTTP(Name, func(s *httpx.Server) error { return competitionhttp.Register(s, h) })
 	}
 	// Room host, realtime commands (F091 US1, US2) and the party presence store (F100): core-api.
@@ -254,6 +268,21 @@ func Register(r *module.Registry) (*Module, error) {
 		return matchmaking.ExpireDuels(ctx, persistence.Matchmaking{}, 500)
 	}
 	r.Job(Name, job.DuelExpiry, job.DuelExpiryInterval, module.JobFunc(job.MatchmakingJob(expireDuels)))
+	// F106 consumers (match.completed twice — ratings and points on durables of their own — and activity.graded) and jobs.
+	r.Consumer(messaging.RankingMatchName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.RankingMatchOptions(consumer.MatchCompleted{H: ranks.ApplyMatchRating}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.PointsMatchName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.PointsMatchOptions(consumer.MatchCompleted{H: ranks.AwardMatchPoints}, core.UoW, core.App, js)
+	})
+	r.Consumer(messaging.LeaderboardEffortName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LeaderboardEffortOptions(consumer.LeaderboardEffort{H: ranks.RecordEffort}, core.UoW, core.App, js)
+	})
+	r.Job(Name, job.LeaderboardPeriodClose, job.PeriodCloseInterval, module.JobFunc(job.RankingJob(boards.ClosePeriods)))
+	r.Job(Name, job.LeaderboardRebuild, job.RebuildInterval, module.JobFunc(job.RankingJob(boards.RebuildQueued)))
+	r.Job(Name, job.LeaderboardReconcile, job.ReconcileInterval, module.JobFunc(job.RankingJob(boards.Reconcile)))
+	r.Job(Name, job.SeasonScheduler, job.SeasonInterval, module.JobFunc(job.RankingJob(seasons.Tick)))
+	r.Job(Name, job.RDInflation, job.RDInflationInterval, module.JobFunc(job.RankingJob(seasons.InflateRD)))
 	r.Job(Name, job.PartyPresenceSweeper, job.SweepInterval,
 		module.JobFunc(job.PartyPresenceSweeperJob(command.NewSweeper(parties, job.SweepInterval))))
 	return m, nil

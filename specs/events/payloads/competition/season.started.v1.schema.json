@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/season.started.v1.schema.json",
+  "title": "Payload season.started v1 (module competition, owner F106)",
+  "description": "Mùa giải (platform, tenant_id = null) chuyển sang active đúng một lần (idempotent theo season_id, F106-AC-22); rating mùa mới theo season_soft_reset, Competition Points từ 0. Consumer: module game (projection ref.seasons, mở season track — F077).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["season_id", "code", "name", "starts_at", "ends_at", "source_version"],
+  "properties": {
+    "season_id": { "type": "string", "format": "uuid" },
+    "code": { "type": "string", "maxLength": 64 },
+    "name": { "type": "string", "maxLength": 128 },
+    "theme_code": { "type": ["string", "null"], "maxLength": 64 },
+    "starts_at": { "type": "string", "format": "date-time" },
+    "ends_at": { "type": "string", "format": "date-time" },
+    "previous_season_id": { "type": ["string", "null"], "format": "uuid" },
+    "source_version": { "type": "integer", "minimum": 1 }
+  },
+  "examples": [
+    { "season_id": "01936a00-0000-7000-8000-000000106002", "code": "2027-s1", "name": "Mùa Phép Nhân", "theme_code": "multiplication", "starts_at": "2027-01-04T00:00:00+07:00", "ends_at": "2027-03-01T00:00:00+07:00", "previous_season_id": "01936a00-0000-7000-8000-000000106001", "source_version": 1798995600000000 }
+  ]
+}

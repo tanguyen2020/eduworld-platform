@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// CompetitionPointEntry is the predicate function for competitionpointentry builders.
+type CompetitionPointEntry func(*sql.Selector)
+
 // CompetitionRestriction is the predicate function for competitionrestriction builders.
 type CompetitionRestriction func(*sql.Selector)
 
@@ -20,6 +23,15 @@ type GameConfig func(*sql.Selector)
 
 // GameConfigVersion is the predicate function for gameconfigversion builders.
 type GameConfigVersion func(*sql.Selector)
+
+// LeaderboardContribution is the predicate function for leaderboardcontribution builders.
+type LeaderboardContribution func(*sql.Selector)
+
+// LeaderboardDefinition is the predicate function for leaderboarddefinition builders.
+type LeaderboardDefinition func(*sql.Selector)
+
+// LeaderboardSnapshot is the predicate function for leaderboardsnapshot builders.
+type LeaderboardSnapshot func(*sql.Selector)
 
 // Match is the predicate function for match builders.
 type Match func(*sql.Selector)
@@ -45,8 +57,20 @@ type PartyMember func(*sql.Selector)
 // PartyPolicy is the predicate function for partypolicy builders.
 type PartyPolicy func(*sql.Selector)
 
+// Rating is the predicate function for rating builders.
+type Rating func(*sql.Selector)
+
+// RatingChange is the predicate function for ratingchange builders.
+type RatingChange func(*sql.Selector)
+
 // Room is the predicate function for room builders.
 type Room func(*sql.Selector)
+
+// Season is the predicate function for season builders.
+type Season func(*sql.Selector)
+
+// SeasonResult is the predicate function for seasonresult builders.
+type SeasonResult func(*sql.Selector)
 
 // SessionMembership is the predicate function for sessionmembership builders.
 type SessionMembership func(*sql.Selector)

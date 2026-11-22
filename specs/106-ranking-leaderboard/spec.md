@@ -25,6 +25,24 @@
 - Q: Nhân sự xem bảng bằng quyền nào? → A: `lms.student.read` (đổi tên từ `lms.class.read`, ADR-0095 mục 6), phạm vi trường của UserRole; xem bảng trường/khối và mục tiêu của khối, không có bảng lớp.
 - Q: Ngưỡng ẩn ô đóng góp? → A: `analytics_min_cell_size` (5, CONFIG_DEFAULTS) — cùng ngưỡng FR-ANL-016 [Proposed — dùng lại tham số sẵn có thay vì thêm tham số mới].
 
+### Session 2026-11-22 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+Quyết định của agent khi tài liệu thiếu/mâu thuẫn, theo hướng bảo thủ (an toàn trẻ em trước), không mở rộng phạm vi (R34):
+
+- Q: Bảng scope `global` (liên tenant) đọc thế nào khi học sinh chỉ có `TenantScope`? → A: **Không phục vụ trong F106**: đọc dữ liệu học sinh của tenant khác cần projection liên tenant và ADR (R8 — chỉ `system_admin` liên tenant). Definition `global_season` vẫn hợp lệ, seed `status = retired` (platform chưa bật), `listLeaderboards` không liệt kê, `getLeaderboard` → `404`. Scope `team`, `tournament` cũng hợp lệ nhưng chưa phục vụ (chờ thực thể đội/giải của F107) → `404`. Bảng "ngoài trường" trong tenant đơn vị (scope `tenant`) phục vụ đầy đủ, chỉ gồm trường có `allow_cross_school_listing = true`.
+- Q: Bảng `tenant`/`global` có trộn mọi khối? → A: Không — chia theo khối của người xem (scope key `<tenant_id>:g<khối>`, `g<khối>`), như ràng buộc công bằng khối (COMPETITION_SYSTEM §5).
+- Q: `team_points` lấy từ đâu khi chưa có thực thể đội bền vững? → A: Competition Points mà học sinh nhận trong trận `team_battle` rated (`leaderboard_contributions.source_type = team_match`); bảng "Đội" = scope `school`, lớp 6–9. Filter (`subject_id`, `topic_id`, `mode`) chỉ cho metric có trong sổ cái: `competition_points`, `rating` (`topic_id` chỉ `competition_points`); definition khác có filter bị từ chối.
+- Q: Nhân sự chọn khối của bảng khối thế nào (contract chỉ có `scope_id`)? → A: Thêm query `grade_level` (1–9) cho `getLeaderboard`/`getLeaderboardHistory`; nhân sự bắt buộc `scope_id` (trường) và `grade_level` (bảng khối) — thiếu → `422`; học sinh luôn là trường + khối của mình (khác → `404`). `?show_real_names` **không làm** trong F106: module competition không có tên thật (chỉ projection nickname), cần facade identity — nhân sự cũng chỉ thấy nickname.
+- Q: "Hoạt động ôn tập do hệ thống gợi ý hoặc nhà trường giao" nhận diện thế nào? → A: `activity.graded` có `assignment_id` (nhà trường giao) hoặc `recommendation_id` (hệ thống gợi ý) → +2. `activity.graded.v1` thêm tùy chọn `rapid_guess_flagged` (vắng = `false`) và `recommendation_id` (vắng = `null`); module learning **chưa điền** hai trường này — cho tới khi F031/F032 điền, attempt gắn cờ rapid guess chưa bị loại khỏi `effort_points` (theo dõi ở mục Việc tiếp theo của báo cáo F106).
+- Q: Mục tiêu tuần của `grade_goal`? → A: `display.grade_goal_target = 300` trong seed `leaderboard_definitions.json` [Proposed — F108 chỉnh].
+- Q: "Nhóm X%" lớp 4–5? → A: Nhóm 10/25/50/100% (`percentile_bucket`); người xếp cuối không hiển thị cho người khác (vẫn thấy chính mình); `leaderboard.position.updated` không làm (không thông báo "bị vượt").
+- Q: `analytics_min_cell_size` đọc từ đâu (module competition không đọc platform settings của analytics)? → A: Ranking Rules mang `analytics_min_cell_size: 5` (giá trị = CONFIG_DEFAULTS, tài liệu sở hữu vẫn là GAME_ANALYTICS) cùng `friends_max: 200`.
+- Q: "Thắng đối thủ tier cao hơn" ở team battle? → A: So thứ hạng tier của mình với **trung bình thứ hạng tier** đội đối phương trước trận (từ `rating_changes.before` hoặc rating hiện tại); học sinh hoặc đối thủ còn provisional (không có tier) → không có +5.
+- Q: Soft reset khi mùa mới bắt đầu? → A: Job `season-scheduler` tạo rating mùa mới (soft reset) cho mọi rating của mùa trước rồi mới chuyển mùa sang `active`; trận đầu tiên của học sinh chưa có rating mùa mới dùng soft reset từ rating mùa gần nhất. Mùa đang `active` kết thúc khi qua `ends_at` **hoặc** khi một mùa `scheduled` tới `starts_at` (pre-season seed `ends_at` 2099 nên kết thúc khi F108 publish mùa đầu).
+- Q: Snapshot partition theo tháng? → A: Chưa partition trong F106 (bảng TA + index lịch sử; giữ 3 năm theo DATABASE_DESIGN) [Proposed — partition khi khối lượng cần, migration expand riêng].
+- Q: `xp`, `quest_completed` khi payload `xp.awarded`/`quest.completed` chưa có (owner F074/F072)? → A: Metric và definition được hỗ trợ (bảng `friends_xp_weekly` seed), consumer `xp.awarded`/`quest.completed` **không** tạo trong F106 (không tự viết schema của feature khác) — bảng rỗng tới khi các feature đó phát event.
+- Q: Đấu trường môn và Xếp hạng rating (cần `subject_id` cụ thể)? → A: Engine hỗ trợ (filter môn/mode, rating theo mode × môn), nhưng **không seed** — F108 publish definition theo từng môn.
+
 ## User Scenarios & Testing *(bắt buộc)*
 
 ### User Story 1 — Rating Glicko-2 sau trận ranked (Priority: P1) 🎯 MVP

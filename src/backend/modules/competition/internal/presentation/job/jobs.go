@@ -74,3 +74,33 @@ type MatchmakingRunner func(ctx context.Context) (int, error)
 
 // MatchmakingJob returns one run of a matchmaking job.
 func MatchmakingJob(run MatchmakingRunner) func(ctx context.Context) (int, error) { return run }
+
+// F106 — ranking, leaderboards, seasons (worker jobs, one replica per run under the job lock).
+const (
+	// LeaderboardPeriodClose snapshots the closed periods (F106-AC-15) and materializes the published definitions.
+	LeaderboardPeriodClose = "leaderboard-period-close"
+	// LeaderboardRebuild rebuilds the boards lost in Valkey or queued (F106-AC-14).
+	LeaderboardRebuild = "leaderboard-rebuild"
+	// LeaderboardReconcile compares the boards with the ledgers every hour and repairs a drift (F106-AC-14).
+	LeaderboardReconcile = "leaderboard-reconcile"
+	// SeasonScheduler starts and ends the seasons (F106-AC-22, AC-23).
+	SeasonScheduler = "season-scheduler"
+	// RDInflation raises the RD of the ratings not played for a week (F106-AC-06).
+	RDInflation = "rd-inflation"
+)
+
+// Intervals of the F106 jobs (code constants: the close runs past the 5-minute margin of §9.5; RD inflation weekly runs
+// are idempotent within the week).
+const (
+	PeriodCloseInterval = 5 * time.Minute
+	RebuildInterval     = 15 * time.Second
+	ReconcileInterval   = time.Hour
+	SeasonInterval      = time.Minute
+	RDInflationInterval = 6 * time.Hour
+)
+
+// Runner runs one pass of a job and returns the number of items handled.
+type Runner func(ctx context.Context) (int, error)
+
+// RankingJob returns one run of an F106 job.
+func RankingJob(run Runner) func(ctx context.Context) (int, error) { return run }

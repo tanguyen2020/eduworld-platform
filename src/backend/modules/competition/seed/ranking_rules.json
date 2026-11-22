@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "glicko2_params": { "r0": 1500, "rd0": 350, "sigma0": 0.06, "tau": 0.5, "rd_min": 50, "rd_max": 350, "epsilon": 0.000001 },
+  "rating_provisional": { "min_games": 10, "max_rd": 110 },
+  "tiers": {
+    "hysteresis": 50,
+    "levels": [
+      { "code": "T1", "min_rating": null, "names": { "vi-VN": "Mầm Non Tri Thức", "en-US": "Knowledge Sprout" } },
+      { "code": "T2", "min_rating": 1300, "names": { "vi-VN": "Hạt Giống", "en-US": "Seed" } },
+      { "code": "T3", "min_rating": 1450, "names": { "vi-VN": "Chồi Non", "en-US": "Young Bud" } },
+      { "code": "T4", "min_rating": 1600, "names": { "vi-VN": "Cây Xanh", "en-US": "Green Tree" } },
+      { "code": "T5", "min_rating": 1750, "names": { "vi-VN": "Đại Thụ", "en-US": "Great Tree" } },
+      { "code": "T6", "min_rating": 1900, "names": { "vi-VN": "Rừng Trí Tuệ", "en-US": "Forest of Wisdom" } }
+    ]
+  },
+  "season_soft_reset": { "factor": 0.5, "rd_floor": 150 },
+  "competition_points": { "completed": 10, "win": 15, "draw": 7, "correct": 1, "correct_max": 10, "upset": 5, "abandon": -5, "daily_cap": 300, "daily_matches": 20 },
+  "effort_points": { "activity": 1, "activity_daily_max": 10, "review": 2, "active_day": 3, "daily_cap": 25 },
+  "leaderboard_visibility": {
+    "g1_3": { "personal_rank": false, "top": 0, "percentile": false, "hide_last": true, "around": 0 },
+    "g4_5": { "personal_rank": true, "top": 10, "percentile": true, "hide_last": true, "around": 0 },
+    "g6_9": { "personal_rank": true, "top": 50, "percentile": false, "hide_last": false, "around": 3 }
+  },
+  "analytics_min_cell_size": 5,
+  "friends_max": 200
+}

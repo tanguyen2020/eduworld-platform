@@ -9,6 +9,51 @@ import (
 )
 
 var (
+	// CompetitionPointLedgerColumns holds the columns for the "competition_point_ledger" table.
+	CompetitionPointLedgerColumns = []*schema.Column{
+		{Name: "entry_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "grade_level", Type: field.TypeInt16},
+		{Name: "season_id", Type: field.TypeUUID},
+		{Name: "subject_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "topic_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "mode", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "amount", Type: field.TypeInt},
+		{Name: "source_type", Type: field.TypeString, Size: 64},
+		{Name: "source_id", Type: field.TypeUUID},
+		{Name: "reason", Type: field.TypeString, Size: 64},
+		{Name: "breakdown", Type: field.TypeJSON},
+		{Name: "rule_version_id", Type: field.TypeUUID},
+		{Name: "day_key", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "occurred_at", Type: field.TypeTime},
+	}
+	// CompetitionPointLedgerTable holds the schema information for the "competition_point_ledger" table.
+	CompetitionPointLedgerTable = &schema.Table{
+		Name:       "competition_point_ledger",
+		Columns:    CompetitionPointLedgerColumns,
+		PrimaryKey: []*schema.Column{CompetitionPointLedgerColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "competition_point_ledger_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CompetitionPointLedgerColumns[12], CompetitionPointLedgerColumns[13], CompetitionPointLedgerColumns[5]},
+			},
+			{
+				Name:    "competition_point_ledger_day_idx",
+				Unique:  false,
+				Columns: []*schema.Column{CompetitionPointLedgerColumns[1], CompetitionPointLedgerColumns[5], CompetitionPointLedgerColumns[17]},
+			},
+			{
+				Name:    "competition_point_ledger_scope_idx",
+				Unique:  false,
+				Columns: []*schema.Column{CompetitionPointLedgerColumns[1], CompetitionPointLedgerColumns[7], CompetitionPointLedgerColumns[4], CompetitionPointLedgerColumns[6]},
+			},
+		},
+	}
 	// CompetitionRestrictionsColumns holds the columns for the "competition_restrictions" table.
 	CompetitionRestrictionsColumns = []*schema.Column{
 		{Name: "restriction_id", Type: field.TypeUUID},
@@ -192,6 +237,133 @@ var (
 				Name:    "game_config_versions_active_idx",
 				Unique:  false,
 				Columns: []*schema.Column{GameConfigVersionsColumns[9], GameConfigVersionsColumns[11], GameConfigVersionsColumns[14]},
+			},
+		},
+	}
+	// LeaderboardContributionsColumns holds the columns for the "leaderboard_contributions" table.
+	LeaderboardContributionsColumns = []*schema.Column{
+		{Name: "contribution_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "grade_level", Type: field.TypeInt16},
+		{Name: "metric", Type: field.TypeString, Size: 64},
+		{Name: "amount", Type: field.TypeInt},
+		{Name: "source_type", Type: field.TypeString, Size: 64},
+		{Name: "source_id", Type: field.TypeString, Size: 64},
+		{Name: "day_key", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "rule_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "occurred_at", Type: field.TypeTime},
+	}
+	// LeaderboardContributionsTable holds the schema information for the "leaderboard_contributions" table.
+	LeaderboardContributionsTable = &schema.Table{
+		Name:       "leaderboard_contributions",
+		Columns:    LeaderboardContributionsColumns,
+		PrimaryKey: []*schema.Column{LeaderboardContributionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "leaderboard_contributions_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{LeaderboardContributionsColumns[7], LeaderboardContributionsColumns[9], LeaderboardContributionsColumns[10], LeaderboardContributionsColumns[5]},
+			},
+			{
+				Name:    "leaderboard_contributions_day_idx",
+				Unique:  false,
+				Columns: []*schema.Column{LeaderboardContributionsColumns[1], LeaderboardContributionsColumns[7], LeaderboardContributionsColumns[11], LeaderboardContributionsColumns[5]},
+			},
+			{
+				Name:    "leaderboard_contributions_grade_idx",
+				Unique:  false,
+				Columns: []*schema.Column{LeaderboardContributionsColumns[1], LeaderboardContributionsColumns[4], LeaderboardContributionsColumns[6], LeaderboardContributionsColumns[7], LeaderboardContributionsColumns[11]},
+			},
+		},
+	}
+	// LeaderboardDefinitionsColumns holds the columns for the "leaderboard_definitions" table.
+	LeaderboardDefinitionsColumns = []*schema.Column{
+		{Name: "leaderboard_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "title", Type: field.TypeString, Size: 128},
+		{Name: "metric", Type: field.TypeString, Size: 64},
+		{Name: "scope_type", Type: field.TypeString, Size: 64},
+		{Name: "period", Type: field.TypeString, Size: 64},
+		{Name: "filters", Type: field.TypeJSON},
+		{Name: "grade_levels", Type: field.TypeJSON},
+		{Name: "display", Type: field.TypeJSON},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "active"},
+		{Name: "config_version_id", Type: field.TypeUUID, Nullable: true},
+	}
+	// LeaderboardDefinitionsTable holds the schema information for the "leaderboard_definitions" table.
+	LeaderboardDefinitionsTable = &schema.Table{
+		Name:       "leaderboard_definitions",
+		Columns:    LeaderboardDefinitionsColumns,
+		PrimaryKey: []*schema.Column{LeaderboardDefinitionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "leaderboard_definitions_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{LeaderboardDefinitionsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// LeaderboardSnapshotsColumns holds the columns for the "leaderboard_snapshots" table.
+	LeaderboardSnapshotsColumns = []*schema.Column{
+		{Name: "snapshot_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "leaderboard_id", Type: field.TypeUUID},
+		{Name: "scope_id", Type: field.TypeString, Size: 80},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "grade_level", Type: field.TypeInt16, Nullable: true},
+		{Name: "period_key", Type: field.TypeString, Size: 64},
+		{Name: "student_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "rank", Type: field.TypeInt, Nullable: true},
+		{Name: "value", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(12,2)"}},
+		{Name: "target", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "numeric(12,2)"}},
+		{Name: "reached", Type: field.TypeBool, Nullable: true},
+		{Name: "members", Type: field.TypeInt, Nullable: true},
+		{Name: "captured_at", Type: field.TypeTime},
+	}
+	// LeaderboardSnapshotsTable holds the schema information for the "leaderboard_snapshots" table.
+	LeaderboardSnapshotsTable = &schema.Table{
+		Name:       "leaderboard_snapshots",
+		Columns:    LeaderboardSnapshotsColumns,
+		PrimaryKey: []*schema.Column{LeaderboardSnapshotsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "leaderboard_snapshots_member_uq",
+				Unique:  true,
+				Columns: []*schema.Column{LeaderboardSnapshotsColumns[4], LeaderboardSnapshotsColumns[5], LeaderboardSnapshotsColumns[8], LeaderboardSnapshotsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "student_id IS NOT NULL",
+				},
+			},
+			{
+				Name:    "leaderboard_snapshots_collective_uq",
+				Unique:  true,
+				Columns: []*schema.Column{LeaderboardSnapshotsColumns[4], LeaderboardSnapshotsColumns[5], LeaderboardSnapshotsColumns[8]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "student_id IS NULL",
+				},
+			},
+			{
+				Name:    "leaderboard_snapshots_history_idx",
+				Unique:  false,
+				Columns: []*schema.Column{LeaderboardSnapshotsColumns[1], LeaderboardSnapshotsColumns[4], LeaderboardSnapshotsColumns[5], LeaderboardSnapshotsColumns[15]},
 			},
 		},
 	}
@@ -579,6 +751,83 @@ var (
 			},
 		},
 	}
+	// RatingsColumns holds the columns for the "ratings" table.
+	RatingsColumns = []*schema.Column{
+		{Name: "rating_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "season_id", Type: field.TypeUUID},
+		{Name: "grade_level", Type: field.TypeInt16},
+		{Name: "rating", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(9,4)"}},
+		{Name: "rd", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(9,4)"}},
+		{Name: "volatility", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(9,6)"}},
+		{Name: "games_played", Type: field.TypeInt, Default: 0},
+		{Name: "tier_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "peak_tier_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "last_played_at", Type: field.TypeTime, Nullable: true},
+		{Name: "rule_version_id", Type: field.TypeUUID},
+	}
+	// RatingsTable holds the schema information for the "ratings" table.
+	RatingsTable = &schema.Table{
+		Name:       "ratings",
+		Columns:    RatingsColumns,
+		PrimaryKey: []*schema.Column{RatingsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ratings_key_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RatingsColumns[11], RatingsColumns[12], RatingsColumns[13], RatingsColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "ratings_season_played_idx",
+				Unique:  false,
+				Columns: []*schema.Column{RatingsColumns[1], RatingsColumns[14], RatingsColumns[22]},
+			},
+		},
+	}
+	// RatingChangesColumns holds the columns for the "rating_changes" table.
+	RatingChangesColumns = []*schema.Column{
+		{Name: "change_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "match_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "season_id", Type: field.TypeUUID},
+		{Name: "before", Type: field.TypeJSON},
+		{Name: "after", Type: field.TypeJSON},
+		{Name: "rule_version_id", Type: field.TypeUUID},
+	}
+	// RatingChangesTable holds the schema information for the "rating_changes" table.
+	RatingChangesTable = &schema.Table{
+		Name:       "rating_changes",
+		Columns:    RatingChangesColumns,
+		PrimaryKey: []*schema.Column{RatingChangesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "rating_changes_match_student_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RatingChangesColumns[4], RatingChangesColumns[5]},
+			},
+		},
+	}
 	// RoomsColumns holds the columns for the "rooms" table.
 	RoomsColumns = []*schema.Column{
 		{Name: "room_id", Type: field.TypeUUID},
@@ -613,6 +862,79 @@ var (
 				Annotation: &entsql.IndexAnnotation{
 					Where: "status = 'open' AND deleted_at IS NULL",
 				},
+			},
+		},
+	}
+	// SeasonsColumns holds the columns for the "seasons" table.
+	SeasonsColumns = []*schema.Column{
+		{Name: "season_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeString, Size: 128},
+		{Name: "theme_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "ends_at", Type: field.TypeTime},
+		{Name: "status", Type: field.TypeString, Size: 64, Default: "scheduled"},
+		{Name: "rules", Type: field.TypeJSON},
+		{Name: "config_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+	}
+	// SeasonsTable holds the schema information for the "seasons" table.
+	SeasonsTable = &schema.Table{
+		Name:       "seasons",
+		Columns:    SeasonsColumns,
+		PrimaryKey: []*schema.Column{SeasonsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "seasons_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SeasonsColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "seasons_status_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SeasonsColumns[14], SeasonsColumns[12]},
+			},
+		},
+	}
+	// SeasonResultsColumns holds the columns for the "season_results" table.
+	SeasonResultsColumns = []*schema.Column{
+		{Name: "result_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "season_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "final_rating", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(9,4)"}},
+		{Name: "final_rd", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric(9,4)"}},
+		{Name: "peak_tier_code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "games_played", Type: field.TypeInt},
+		{Name: "competition_points", Type: field.TypeInt},
+	}
+	// SeasonResultsTable holds the schema information for the "season_results" table.
+	SeasonResultsTable = &schema.Table{
+		Name:       "season_results",
+		Columns:    SeasonResultsColumns,
+		PrimaryKey: []*schema.Column{SeasonResultsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "season_results_key_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SeasonResultsColumns[4], SeasonResultsColumns[5], SeasonResultsColumns[6], SeasonResultsColumns[7]},
 			},
 		},
 	}
@@ -673,11 +995,15 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CompetitionPointLedgerTable,
 		CompetitionRestrictionsTable,
 		ContentReleasesTable,
 		DuelsTable,
 		GameConfigsTable,
 		GameConfigVersionsTable,
+		LeaderboardContributionsTable,
+		LeaderboardDefinitionsTable,
+		LeaderboardSnapshotsTable,
 		MatchesTable,
 		MatchParticipantsTable,
 		MatchResultsTable,
@@ -686,12 +1012,19 @@ var (
 		PartyInvitationsTable,
 		PartyMembersTable,
 		PartyPoliciesTable,
+		RatingsTable,
+		RatingChangesTable,
 		RoomsTable,
+		SeasonsTable,
+		SeasonResultsTable,
 		SessionMembershipsTable,
 	}
 )
 
 func init() {
+	CompetitionPointLedgerTable.Annotation = &entsql.Annotation{
+		Table: "competition_point_ledger",
+	}
 	CompetitionRestrictionsTable.Annotation = &entsql.Annotation{
 		Table: "competition_restrictions",
 	}
@@ -706,6 +1039,15 @@ func init() {
 	}
 	GameConfigVersionsTable.Annotation = &entsql.Annotation{
 		Table: "game_config_versions",
+	}
+	LeaderboardContributionsTable.Annotation = &entsql.Annotation{
+		Table: "leaderboard_contributions",
+	}
+	LeaderboardDefinitionsTable.Annotation = &entsql.Annotation{
+		Table: "leaderboard_definitions",
+	}
+	LeaderboardSnapshotsTable.Annotation = &entsql.Annotation{
+		Table: "leaderboard_snapshots",
 	}
 	MatchesTable.Annotation = &entsql.Annotation{
 		Table: "matches",
@@ -731,8 +1073,20 @@ func init() {
 	PartyPoliciesTable.Annotation = &entsql.Annotation{
 		Table: "party_policies",
 	}
+	RatingsTable.Annotation = &entsql.Annotation{
+		Table: "ratings",
+	}
+	RatingChangesTable.Annotation = &entsql.Annotation{
+		Table: "rating_changes",
+	}
 	RoomsTable.Annotation = &entsql.Annotation{
 		Table: "rooms",
+	}
+	SeasonsTable.Annotation = &entsql.Annotation{
+		Table: "seasons",
+	}
+	SeasonResultsTable.Annotation = &entsql.Annotation{
+		Table: "season_results",
 	}
 	SessionMembershipsTable.Annotation = &entsql.Annotation{
 		Table: "session_memberships",

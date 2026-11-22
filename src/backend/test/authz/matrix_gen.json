@@ -2193,6 +2193,18 @@
     ]
   },
   {
+    "operation_id": "getLeaderboardHistory",
+    "module": "competition",
+    "method": "GET",
+    "path": "/leaderboards/{leaderboard_id}/history",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "getLearningActivity",
     "module": "learning",
     "method": "GET",
@@ -2643,6 +2655,18 @@
     "module": "identity",
     "method": "GET",
     "path": "/schools/{school_id}/settings",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "getSeason",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/seasons/{season_id}",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -3688,6 +3712,17 @@
     ]
   },
   {
+    "operation_id": "listLeaderboards",
+    "module": "competition",
+    "method": "GET",
+    "path": "/leaderboards",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listLearningExperiments",
     "module": "learning",
     "method": "GET",
@@ -4066,6 +4101,17 @@
     "module": "game",
     "method": "GET",
     "path": "/game/season-track/history",
+    "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSeasons",
+    "module": "competition",
+    "method": "GET",
+    "path": "/competition/seasons",
     "tenant_scoped": true,
     "required": [
       "cross_tenant",

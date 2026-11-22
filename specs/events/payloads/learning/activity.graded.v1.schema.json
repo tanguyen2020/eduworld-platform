@@ -28,6 +28,8 @@
     "item_count": { "type": ["integer", "null"], "minimum": 0 },
     "result_release": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ResultRelease" },
     "results_visible_at": { "type": ["string", "null"], "format": "date-time", "description": "Thời điểm học sinh được xem kết quả; null khi manual chưa công bố" },
-    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } }
+    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
+    "rapid_guess_flagged": { "type": "boolean", "description": "true khi attempt gắn cờ rapid_guess (LEARNING_ANALYTICS): module competition không cộng effort_points (F106-AC-16). Vắng = false (bổ sung bởi F106, module learning điền khi phát)." },
+    "recommendation_id": { "type": ["string", "null"], "format": "uuid", "description": "Gợi ý ôn tập của hệ thống mà attempt thực hiện (F032); có giá trị hoặc assignment_id ≠ null → hoạt động ôn tập +2 effort_points (COMPETITION_SYSTEM §9.2)." }
   }
 }

@@ -2947,14 +2947,22 @@ paths:
       x-service: competition
       tags: [competition]
       operationId: getMyRatings
-      summary: Rating/tier của mình theo mode, môn, mùa
+      summary: Tier của mình theo mode, môn, mùa
+      description: |
+        Học sinh (`game_player`). Chỉ tier, trạng thái provisional và số trận — không bao giờ có số rating/RD thô (ADR-0018,
+        F106-AC-07). Không có `season_id` → mùa đang diễn ra. Nhân sự gọi bằng token game → `403 GAME_ACCESS_STUDENT_ONLY`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
+        - name: season_id
+          in: query
+          schema: { $ref: '#/components/schemas/Uuid' }
       responses:
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '200':
-          description: Rating/tier theo mode × subject × season (không phải chỉ số học tập)
+          description: Tier theo mode × subject × season (không phải chỉ số học tập)
           content:
             application/json:
               schema:
@@ -2964,6 +2972,62 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/Rating' }
+          headers:
+            Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+  /competition/seasons:
+    get:
+      x-service: competition
+      tags: [competition]
+      operationId: listSeasons
+      summary: Mùa giải hiện tại và đã qua
+      description: |
+        Học sinh (token game) hoặc nhân sự của tenant (token portal). Học sinh nhận thêm tier cao nhất của chính mình trong
+        mùa (`my_peak_tier_code`); không số rating (F106-AC-24).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '200':
+          description: Mùa mới nhất trước
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Season' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
+          headers:
+            Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+  /competition/seasons/{season_id}:
+    get:
+      x-service: competition
+      tags: [competition]
+      operationId: getSeason
+      summary: Một mùa giải
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: season_id
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Uuid' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Season' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
   /competition/tournaments:
@@ -2996,20 +3060,55 @@ paths:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
 
   # ---------------------------------------------------------------- leaderboards
+  /leaderboards:
+    get:
+      x-service: competition
+      tags: [leaderboards]
+      operationId: listLeaderboards
+      summary: Các bảng xếp hạng được xem
+      description: |
+        Học sinh (token game): bảng đã lọc theo khối (`leaderboard_visibility` — lớp 1–3 chỉ có mục tiêu của khối), policy
+        trường (`disabled_leaderboard_definitions`, `allow_cross_school_listing`) và cấu hình platform; `scope_id` là phạm vi
+        chứa em. Nhân sự có `lms.student.read` (token portal): các bảng scope trường/khối (F106-AC-21).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 100
+                    items: { $ref: '#/components/schemas/LeaderboardSummary' }
+          headers:
+            Content-Language: { $ref: '#/components/headers/ContentLanguage' }
   /leaderboards/{leaderboard_id}:
     get:
       x-service: competition
       tags: [leaderboards]
       operationId: getLeaderboard
       summary: Trang bảng xếp hạng
+      description: |
+        Học sinh chỉ đọc phạm vi chứa mình (trường/khối khác, tenant khác → `404`); hiển thị theo `leaderboard_visibility`
+        của khối người xem (lớp 4–5: top 10 + nhóm %, không người cuối; lớp 6–9: top 50 + ±3 quanh mình). Mục tiêu của khối
+        (`visibility = grade_goal`) không có `entries`, không nickname/tên học sinh khác, ô < `analytics_min_cell_size` ẩn.
+        Nhân sự có `lms.student.read` đọc bảng trường/khối của trường thuộc scope (`scope_id` = trường, `grade_level`).
+        Key Valkey mất → dựng lại từ sổ cái, `stale = true` (F106-AC-14).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
         - $ref: '#/components/parameters/LeaderboardId'
-        - name: period_key
-          in: query
-          description: vd. 2026-W46, 2026-11, season-2026-1
-          schema: { type: string, maxLength: 64 }
+        - $ref: '#/components/parameters/LeaderboardScopeId'
+        - $ref: '#/components/parameters/LeaderboardGradeLevel'
+        - $ref: '#/components/parameters/LeaderboardPeriodKey'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -3021,29 +3120,71 @@ paths:
                 $ref: '#/components/schemas/LeaderboardPage'
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
   /leaderboards/{leaderboard_id}/me:
     get:
       x-service: competition
       tags: [leaderboards]
       operationId: getMyLeaderboardPosition
       summary: Vị trí của mình trên bảng xếp hạng
+      description: Học sinh (`game_player`) — `me` và `around_me` theo `leaderboard_visibility`; lớp 1–3 chỉ phần đóng góp của em vào mục tiêu của khối.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
         - $ref: '#/components/parameters/LeaderboardId'
-        - name: period_key
-          in: query
-          schema: { type: string, maxLength: 64 }
+        - $ref: '#/components/parameters/LeaderboardScopeId'
+        - $ref: '#/components/parameters/LeaderboardPeriodKey'
       responses:
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
         '200':
-          description: Vị trí của mình ±5
+          description: Vị trí của mình (không có entries)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LeaderboardPage'
+          headers:
+            Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+  /leaderboards/{leaderboard_id}/history:
+    get:
+      x-service: competition
+      tags: [leaderboards]
+      operationId: getLeaderboardHistory
+      summary: Các kỳ đã đóng của bảng (snapshot)
+      description: |
+        Kỳ đã đóng từ `leaderboard_snapshots` (F106-AC-15, AC-21), mới nhất trước, cùng quy tắc phạm vi và hiển thị như
+        getLeaderboard; mục tiêu của khối chỉ có tổng tập thể và trạng thái đạt mục tiêu.
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/LeaderboardId'
+        - $ref: '#/components/parameters/LeaderboardScopeId'
+        - $ref: '#/components/parameters/LeaderboardGradeLevel'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 100
+                    items: { $ref: '#/components/schemas/LeaderboardPeriod' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
 
@@ -16764,6 +16905,21 @@ components:
       in: path
       required: true
       schema: { $ref: '#/components/schemas/Uuid' }
+    LeaderboardScopeId:
+      name: scope_id
+      in: query
+      description: Phạm vi của bảng — trường (scope school/grade), tenant (scope tenant). Học sinh bỏ trống = phạm vi chứa mình.
+      schema: { $ref: '#/components/schemas/Uuid' }
+    LeaderboardGradeLevel:
+      name: grade_level
+      in: query
+      description: Khối của bảng scope khối (chỉ nhân sự; học sinh luôn là khối của mình — ADR-0095).
+      schema: { $ref: '#/components/schemas/GradeLevel' }
+    LeaderboardPeriodKey:
+      name: period_key
+      in: query
+      description: 'Kỳ (giờ Asia/Ho_Chi_Minh) — daily 2026-11-22, weekly 2026-W47, monthly 2026-11, season s-<season_id>, all_time all. Bỏ trống = kỳ đang mở.'
+      schema: { type: string, maxLength: 64 }
     ChannelId:
       name: channel_id
       in: path
@@ -19880,15 +20036,90 @@ components:
               my_points: { type: [integer, 'null'] }
     Rating:
       type: object
-      required: [mode, subject_id, season_id, tier]
+      description: |
+        Tier thi đấu của chính học sinh theo mode × môn × mùa (ADR-0018, COMPETITION_SYSTEM §8.2). Không bao giờ chứa số
+        rating/RD thô (F106-AC-07); không phải chỉ số học tập (F106-AC-09).
+      required: [mode, subject_id, season_id, provisional, provisional_games_required, games_played]
       properties:
         mode: { $ref: '#/components/schemas/MatchMode' }
         subject_id: { $ref: '#/components/schemas/Uuid' }
         season_id: { $ref: '#/components/schemas/Uuid' }
-        tier: { type: string, maxLength: 64, description: 'Hiển thị thân thiện (vd. Đồng, Bạc, Vàng)' }
-        rating: { type: number }
-        rd: { type: number }
-        games_played: { type: integer }
+        tier_code: { type: [string, 'null'], maxLength: 64, description: 'null khi còn provisional' }
+        tier_name: { type: [string, 'null'], maxLength: 128, description: 'Tên tier theo Accept-Language (Ranking Rules `tiers`)' }
+        peak_tier_code: { type: [string, 'null'], maxLength: 64, description: 'Tier cao nhất đạt trong mùa' }
+        provisional: { type: boolean, description: '"Đang xếp hạng (x/N)" — `games_played`/`provisional_games_required`' }
+        provisional_games_required: { type: integer, minimum: 1 }
+        games_played: { type: integer, minimum: 0 }
+    Season:
+      type: object
+      required: [season_id, code, name, starts_at, ends_at, status]
+      properties:
+        season_id: { $ref: '#/components/schemas/Uuid' }
+        code: { type: string, maxLength: 64 }
+        name: { type: string, maxLength: 128 }
+        theme_code: { type: [string, 'null'], maxLength: 64 }
+        starts_at: { $ref: '#/components/schemas/Timestamp' }
+        ends_at: { $ref: '#/components/schemas/Timestamp' }
+        status: { type: string, enum: [scheduled, active, ended] }
+        my_peak_tier_code: { type: [string, 'null'], maxLength: 64, description: 'Chỉ cho học sinh: tier cao nhất của chính em trong mùa' }
+    LeaderboardMetric:
+      type: string
+      description: 'Không có Learning Score/Mastery; `xp` chỉ scope friends; `grade_goal` là mục tiêu tập thể của khối (ADR-0095), không xếp hạng'
+      enum: [competition_points, effort_points, grade_goal, xp, quest_completed, rating, team_points]
+    LeaderboardScopeType:
+      type: string
+      description: Không có bảng cấp lớp (ADR-0095); `grade` = một khối trong một trường
+      enum: [global, tenant, school, grade, friends, team, tournament]
+    LeaderboardFilters:
+      type: object
+      properties:
+        subject_id: { type: [string, 'null'], format: uuid }
+        topic_id: { type: [string, 'null'], format: uuid }
+        mode: { type: [string, 'null'], maxLength: 64 }
+    LeaderboardSummary:
+      type: object
+      required: [leaderboard_id, code, title, metric, scope_type, period]
+      properties:
+        leaderboard_id: { $ref: '#/components/schemas/Uuid' }
+        code: { type: string, maxLength: 64 }
+        title: { type: string, maxLength: 128 }
+        metric: { $ref: '#/components/schemas/LeaderboardMetric' }
+        scope_type: { $ref: '#/components/schemas/LeaderboardScopeType' }
+        period: { type: string, enum: [daily, weekly, monthly, season, all_time] }
+        scope_id: { type: [string, 'null'], format: uuid, description: 'Phạm vi chứa người xem (trường/tenant); null với friends' }
+        grade_level: { type: [integer, 'null'], minimum: 1, maximum: 9 }
+        filters: { $ref: '#/components/schemas/LeaderboardFilters' }
+    LeaderboardEntry:
+      type: object
+      required: [rank, player]
+      properties:
+        rank: { type: integer, minimum: 1 }
+        player: { $ref: '#/components/schemas/PlayerCard' }
+        value: { type: number, description: 'Không có với metric rating (chỉ tier + thứ hạng)' }
+        tier_code: { type: [string, 'null'], maxLength: 64, description: 'Chỉ metric rating' }
+        is_me: { type: boolean }
+    LeaderboardPeriod:
+      type: object
+      required: [period_key, entries]
+      properties:
+        period_key: { type: string, maxLength: 64 }
+        captured_at: { $ref: '#/components/schemas/Timestamp' }
+        entries:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/LeaderboardEntry' }
+        grade_goal: { $ref: '#/components/schemas/GradeGoal' }
+    GradeGoal:
+      type: object
+      description: Mục tiêu tập thể của khối trong trường (ADR-0095) — không thứ hạng, không nickname/tên học sinh khác
+      required: [grade_level, current, target]
+      properties:
+        grade_level: { type: integer, minimum: 1, maximum: 9 }
+        current: { type: number, minimum: 0 }
+        target: { type: number, minimum: 0 }
+        reached: { type: boolean }
+        my_contribution: { type: [number, 'null'], minimum: 0, description: 'Phần đóng góp của chính học sinh xem (null với nhân sự)' }
+        contributors_count: { type: [integer, 'null'], minimum: 0, description: 'null khi < analytics_min_cell_size học sinh (ẩn ô nhỏ)' }
     TournamentCreate:
       type: object
       description: |
@@ -19922,20 +20153,33 @@ components:
       required: [leaderboard_id, period_key, entries]
       properties:
         leaderboard_id: { $ref: '#/components/schemas/Uuid' }
-        scope_type: { type: string, enum: [global, organization, school, grade, subject, topic, game_mode, friends, team], description: 'Không có bảng cấp lớp (ADR-0095); mục tiêu tập thể của khối (`grade_goal`) không phải bảng xếp hạng' }
-        metric: { type: string, enum: [competition_points, xp, quests_completed, rating] }
+        scope_type: { $ref: '#/components/schemas/LeaderboardScopeType' }
+        scope_id: { type: [string, 'null'], format: uuid }
+        metric: { $ref: '#/components/schemas/LeaderboardMetric' }
         period: { type: string, enum: [daily, weekly, monthly, season, all_time] }
         period_key: { type: string, maxLength: 64 }
+        filters: { $ref: '#/components/schemas/LeaderboardFilters' }
+        visibility:
+          type: string
+          enum: [ranked, top_n_percentile, grade_goal]
+          description: 'Theo khối người xem (leaderboard_visibility): grade_goal (lớp 1–3 và mọi mục tiêu của khối), top_n_percentile (lớp 4–5), ranked (lớp 6–9, nhân sự)'
+        stale: { type: boolean, description: 'true khi bảng đang được dựng lại từ sổ cái (F106-AC-14)' }
         entries:
           type: array
-          items:
-            type: object
-            required: [rank, player, value]
-            properties:
-              rank: { type: integer }
-              player: { $ref: '#/components/schemas/PlayerCard' }
-              value: { type: number }
-              is_me: { type: boolean }
+          maxItems: 100
+          items: { $ref: '#/components/schemas/LeaderboardEntry' }
+        me:
+          type: [object, 'null']
+          properties:
+            rank: { type: [integer, 'null'], minimum: 1, description: 'null khi ngoài top của lớp 4–5 (xem percentile_bucket)' }
+            value: { type: [number, 'null'] }
+            tier_code: { type: [string, 'null'], maxLength: 64 }
+            percentile_bucket: { type: [integer, 'null'], minimum: 1, maximum: 100, description: '"Em đang ở nhóm X%" (lớp 4–5 ngoài top 10): 10, 25, 50 hoặc 100' }
+        around_me:
+          type: array
+          maxItems: 7
+          items: { $ref: '#/components/schemas/LeaderboardEntry' }
+        grade_goal: { $ref: '#/components/schemas/GradeGoal' }
         page: { $ref: '#/components/schemas/PageInfo' }
 
     # ---------- chat / social / notification

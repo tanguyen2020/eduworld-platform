@@ -12,11 +12,15 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionrestriction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/duel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfig"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfigversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboardcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboarddefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboardsnapshot"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/match"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchparticipant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchresult"
@@ -25,7 +29,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/rating"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/ratingchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/room"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/season"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/seasonresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
 )
 
@@ -87,21 +95,29 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			competitionrestriction.Table: competitionrestriction.ValidColumn,
-			contentrelease.Table:         contentrelease.ValidColumn,
-			duel.Table:                   duel.ValidColumn,
-			gameconfig.Table:             gameconfig.ValidColumn,
-			gameconfigversion.Table:      gameconfigversion.ValidColumn,
-			match.Table:                  match.ValidColumn,
-			matchparticipant.Table:       matchparticipant.ValidColumn,
-			matchresult.Table:            matchresult.ValidColumn,
-			party.Table:                  party.ValidColumn,
-			partyactivity.Table:          partyactivity.ValidColumn,
-			partyinvitation.Table:        partyinvitation.ValidColumn,
-			partymember.Table:            partymember.ValidColumn,
-			partypolicy.Table:            partypolicy.ValidColumn,
-			room.Table:                   room.ValidColumn,
-			sessionmembership.Table:      sessionmembership.ValidColumn,
+			competitionpointentry.Table:   competitionpointentry.ValidColumn,
+			competitionrestriction.Table:  competitionrestriction.ValidColumn,
+			contentrelease.Table:          contentrelease.ValidColumn,
+			duel.Table:                    duel.ValidColumn,
+			gameconfig.Table:              gameconfig.ValidColumn,
+			gameconfigversion.Table:       gameconfigversion.ValidColumn,
+			leaderboardcontribution.Table: leaderboardcontribution.ValidColumn,
+			leaderboarddefinition.Table:   leaderboarddefinition.ValidColumn,
+			leaderboardsnapshot.Table:     leaderboardsnapshot.ValidColumn,
+			match.Table:                   match.ValidColumn,
+			matchparticipant.Table:        matchparticipant.ValidColumn,
+			matchresult.Table:             matchresult.ValidColumn,
+			party.Table:                   party.ValidColumn,
+			partyactivity.Table:           partyactivity.ValidColumn,
+			partyinvitation.Table:         partyinvitation.ValidColumn,
+			partymember.Table:             partymember.ValidColumn,
+			partypolicy.Table:             partypolicy.ValidColumn,
+			rating.Table:                  rating.ValidColumn,
+			ratingchange.Table:            ratingchange.ValidColumn,
+			room.Table:                    room.ValidColumn,
+			season.Table:                  season.ValidColumn,
+			seasonresult.Table:            seasonresult.ValidColumn,
+			sessionmembership.Table:       sessionmembership.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

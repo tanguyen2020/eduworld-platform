@@ -77,7 +77,7 @@ Index `(tenant_id, metric, day_key, student_id)` · `(tenant_id, school_id, grad
 
 Season: `scheduled → active → ended`. Period bảng: mở (Valkey) → đóng (snapshot PG, key TTL hết kỳ + 7 ngày). Rating: provisional → có tier.
 
-Valkey (Rebuildable, [VALKEY_DESIGN §3.1](../../docs/07-backend/VALKEY_DESIGN.md)): `ew:competition:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>` ZSET (score = điểm × 1e6 − thời điểm đạt để phá hòa; `grade_goal` dùng `scope_id = <school_id>:<grade_level>`, chỉ đọc tổng) + `:meta` HASH `{rebuilt_at, source_version, checksum}`. Key theo VALKEY_DESIGN (tenant đứng đầu, RB-412).
+Valkey (Rebuildable, [VALKEY_DESIGN §3.1](../../docs/07-backend/VALKEY_DESIGN.md)): `ew:lb:<tenant_id>:<leaderboard_id>:<scope_id>:<period_key>` ZSET (score = điểm × 1e7 + phần phá hòa theo thời điểm đạt — ai đạt trước xếp trên; `grade_goal` dùng `scope_id = <school_id>:<grade_level>`, chỉ đọc tổng) + `:meta` HASH `{rebuilt_at, source_version, checksum}`. Key theo VALKEY_DESIGN (tenant đứng đầu, RB-412).
 
 ## 3. Quy tắc kiểm tra dữ liệu
 

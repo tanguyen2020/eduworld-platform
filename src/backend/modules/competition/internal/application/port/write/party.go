@@ -36,6 +36,8 @@ type Event struct {
 	// SchemaVersion of the payload (0 = 1); party.created is v2 since ADR-0095 (party_type study_party, no class
 	// visibility).
 	SchemaVersion int
+	// Platform marks a platform event (tenant_id null: season.started/ended of the platform seasons, F106).
+	Platform bool
 }
 
 // EventPublisher writes events into the outbox of the transaction.

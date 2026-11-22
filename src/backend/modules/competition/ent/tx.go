@@ -12,6 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// CompetitionPointEntry is the client for interacting with the CompetitionPointEntry builders.
+	CompetitionPointEntry *CompetitionPointEntryClient
 	// CompetitionRestriction is the client for interacting with the CompetitionRestriction builders.
 	CompetitionRestriction *CompetitionRestrictionClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
@@ -22,6 +24,12 @@ type Tx struct {
 	GameConfig *GameConfigClient
 	// GameConfigVersion is the client for interacting with the GameConfigVersion builders.
 	GameConfigVersion *GameConfigVersionClient
+	// LeaderboardContribution is the client for interacting with the LeaderboardContribution builders.
+	LeaderboardContribution *LeaderboardContributionClient
+	// LeaderboardDefinition is the client for interacting with the LeaderboardDefinition builders.
+	LeaderboardDefinition *LeaderboardDefinitionClient
+	// LeaderboardSnapshot is the client for interacting with the LeaderboardSnapshot builders.
+	LeaderboardSnapshot *LeaderboardSnapshotClient
 	// Match is the client for interacting with the Match builders.
 	Match *MatchClient
 	// MatchParticipant is the client for interacting with the MatchParticipant builders.
@@ -38,8 +46,16 @@ type Tx struct {
 	PartyMember *PartyMemberClient
 	// PartyPolicy is the client for interacting with the PartyPolicy builders.
 	PartyPolicy *PartyPolicyClient
+	// Rating is the client for interacting with the Rating builders.
+	Rating *RatingClient
+	// RatingChange is the client for interacting with the RatingChange builders.
+	RatingChange *RatingChangeClient
 	// Room is the client for interacting with the Room builders.
 	Room *RoomClient
+	// Season is the client for interacting with the Season builders.
+	Season *SeasonClient
+	// SeasonResult is the client for interacting with the SeasonResult builders.
+	SeasonResult *SeasonResultClient
 	// SessionMembership is the client for interacting with the SessionMembership builders.
 	SessionMembership *SessionMembershipClient
 
@@ -173,11 +189,15 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.CompetitionPointEntry = NewCompetitionPointEntryClient(tx.config)
 	tx.CompetitionRestriction = NewCompetitionRestrictionClient(tx.config)
 	tx.ContentRelease = NewContentReleaseClient(tx.config)
 	tx.Duel = NewDuelClient(tx.config)
 	tx.GameConfig = NewGameConfigClient(tx.config)
 	tx.GameConfigVersion = NewGameConfigVersionClient(tx.config)
+	tx.LeaderboardContribution = NewLeaderboardContributionClient(tx.config)
+	tx.LeaderboardDefinition = NewLeaderboardDefinitionClient(tx.config)
+	tx.LeaderboardSnapshot = NewLeaderboardSnapshotClient(tx.config)
 	tx.Match = NewMatchClient(tx.config)
 	tx.MatchParticipant = NewMatchParticipantClient(tx.config)
 	tx.MatchResult = NewMatchResultClient(tx.config)
@@ -186,7 +206,11 @@ func (tx *Tx) init() {
 	tx.PartyInvitation = NewPartyInvitationClient(tx.config)
 	tx.PartyMember = NewPartyMemberClient(tx.config)
 	tx.PartyPolicy = NewPartyPolicyClient(tx.config)
+	tx.Rating = NewRatingClient(tx.config)
+	tx.RatingChange = NewRatingChangeClient(tx.config)
 	tx.Room = NewRoomClient(tx.config)
+	tx.Season = NewSeasonClient(tx.config)
+	tx.SeasonResult = NewSeasonResultClient(tx.config)
 	tx.SessionMembership = NewSessionMembershipClient(tx.config)
 }
 
@@ -197,7 +221,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: CompetitionRestriction.QueryXXX(), the query will be executed
+// applies a query, for example: CompetitionPointEntry.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

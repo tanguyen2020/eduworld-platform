@@ -26,6 +26,8 @@ var migrations = map[string][]string{
 	"20261231000001_f104_matchmaking.sql": {"matches", "match_participants", "duels", "competition_restrictions", "game_configs",
 		"game_config_versions", "content_releases"},
 	"20261231000003_f105_battle.sql": {"match_results"},
+	"20261231000005_f106_ranking.sql": {"ratings", "rating_changes", "competition_point_ledger", "leaderboard_contributions",
+		"leaderboard_definitions", "leaderboard_snapshots", "seasons", "season_results"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -87,7 +89,10 @@ func schemas() map[string]string {
 		"party_members": c.PartyMember, "party_invitations": c.PartyInvitation, "party_policies": c.PartyPolicy,
 		"party_activities": c.PartyActivity, "matches": c.Match, "match_participants": c.MatchParticipant, "duels": c.Duel,
 		"competition_restrictions": c.CompetitionRestriction, "game_configs": c.GameConfig, "game_config_versions": c.GameConfigVersion,
-		"content_releases": c.ContentRelease, "match_results": c.MatchResult}
+		"content_releases": c.ContentRelease, "match_results": c.MatchResult, "ratings": c.Rating, "rating_changes": c.RatingChange,
+		"competition_point_ledger": c.CompetitionPointEntry, "leaderboard_contributions": c.LeaderboardContribution,
+		"leaderboard_definitions": c.LeaderboardDefinition, "leaderboard_snapshots": c.LeaderboardSnapshot, "seasons": c.Season,
+		"season_results": c.SeasonResult}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

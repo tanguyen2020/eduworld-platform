@@ -416,7 +416,7 @@ Matchmaking configuration, Ranking Rules (tham số Glicko, ngưỡng provisiona
 
 ### 14.1. Dữ liệu (module competition, `eduworld_competition`)
 
-`matches`, `match_participants`, `match_results` (unique `match_id`), `ratings`, `rating_changes` (unique `(match_id, student_id)`), `seasons`, `season_results`, `competition_point_ledger`, `ranking_rule_versions`, `leaderboard_definitions`, `leaderboard_snapshots`, `tournaments`, `tournament_entries`, `tournament_groups`, `bracket_nodes`, `tournament_results`. DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md).
+`matches`, `match_participants`, `match_results` (unique `match_id`), `ratings`, `rating_changes` (unique `(match_id, student_id)`), `seasons`, `season_results`, `competition_point_ledger`, `ranking_rule_versions`, `leaderboard_definitions`, `leaderboard_snapshots`, `tournaments`, `tournament_entries`, `tournament_groups`, `bracket_nodes`, `tournament_results`. DDL: [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md). Hiện thực rating, tier, Competition Points, bảng xếp hạng và mùa: [F106](../../specs/106-ranking-leaderboard/spec.md) (quyết định triển khai ở [Clarifications 2026-11-22](../../specs/106-ranking-leaderboard/spec.md#session-2026-11-22-triển-khai--confirmed-owner-chốt-2026-11-20)); Ranking Rules lưu ở `game_config_versions` (`config_type = ranking-rules`), `leaderboard_contributions` giữ điểm nỗ lực/XP/quest/đội theo khối tại thời điểm ghi.
 
 ### 14.2. API
 

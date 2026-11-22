@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "definitions": [
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106101", "code": "grade_goal_weekly", "title": "Mục tiêu của khối", "metric": "grade_goal", "scope_type": "grade", "period": "weekly", "filters": {}, "grade_levels": [1, 2, 3, 4, 5, 6, 7, 8, 9], "display": { "grade_goal_target": 300 }, "sort_order": 10, "status": "active" },
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106102", "code": "school_arena_weekly", "title": "Đấu trường trường (tuần)", "metric": "competition_points", "scope_type": "grade", "period": "weekly", "filters": {}, "grade_levels": [4, 5, 6, 7, 8, 9], "display": {}, "sort_order": 20, "status": "active" },
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106103", "code": "school_arena_season", "title": "Đấu trường trường (mùa)", "metric": "competition_points", "scope_type": "grade", "period": "season", "filters": {}, "grade_levels": [4, 5, 6, 7, 8, 9], "display": {}, "sort_order": 30, "status": "active" },
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106104", "code": "friends_points_weekly", "title": "Bạn bè — điểm thi đấu", "metric": "competition_points", "scope_type": "friends", "period": "weekly", "filters": {}, "grade_levels": [4, 5, 6, 7, 8, 9], "display": {}, "sort_order": 40, "status": "active" },
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106105", "code": "friends_effort_weekly", "title": "Bạn bè — nỗ lực", "metric": "effort_points", "scope_type": "friends", "period": "weekly", "filters": {}, "grade_levels": [4, 5, 6, 7, 8, 9], "display": {}, "sort_order": 50, "status": "active" },
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106106", "code": "friends_xp_weekly", "title": "Bạn bè — XP", "metric": "xp", "scope_type": "friends", "period": "weekly", "filters": {}, "grade_levels": [4, 5, 6, 7, 8, 9], "display": {}, "sort_order": 60, "status": "active" },
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106107", "code": "team_season", "title": "Đội", "metric": "team_points", "scope_type": "school", "period": "season", "filters": {}, "grade_levels": [6, 7, 8, 9], "display": {}, "sort_order": 70, "status": "active" },
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106108", "code": "global_season", "title": "Toàn hệ thống", "metric": "competition_points", "scope_type": "global", "period": "season", "filters": {}, "grade_levels": [6, 7, 8, 9], "display": {}, "sort_order": 80, "status": "retired" }
+  ]
+}

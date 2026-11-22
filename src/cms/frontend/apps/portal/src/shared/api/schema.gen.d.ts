@@ -4092,8 +4092,50 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Rating/tier của mình theo mode, môn, mùa */
+        /**
+         * Tier của mình theo mode, môn, mùa
+         * @description Học sinh (`game_player`). Chỉ tier, trạng thái provisional và số trận — không bao giờ có số rating/RD thô (ADR-0018,
+         *     F106-AC-07). Không có `season_id` → mùa đang diễn ra. Nhân sự gọi bằng token game → `403 GAME_ACCESS_STUDENT_ONLY`.
+         */
         get: operations["getMyRatings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/seasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mùa giải hiện tại và đã qua
+         * @description Học sinh (token game) hoặc nhân sự của tenant (token portal). Học sinh nhận thêm tier cao nhất của chính mình trong
+         *     mùa (`my_peak_tier_code`); không số rating (F106-AC-24).
+         */
+        get: operations["listSeasons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/competition/seasons/{season_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Một mùa giải */
+        get: operations["getSeason"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5712,6 +5754,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/leaderboards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Các bảng xếp hạng được xem
+         * @description Học sinh (token game): bảng đã lọc theo khối (`leaderboard_visibility` — lớp 1–3 chỉ có mục tiêu của khối), policy
+         *     trường (`disabled_leaderboard_definitions`, `allow_cross_school_listing`) và cấu hình platform; `scope_id` là phạm vi
+         *     chứa em. Nhân sự có `lms.student.read` (token portal): các bảng scope trường/khối (F106-AC-21).
+         */
+        get: operations["listLeaderboards"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/leaderboards/{leaderboard_id}": {
         parameters: {
             query?: never;
@@ -5719,8 +5783,36 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Trang bảng xếp hạng */
+        /**
+         * Trang bảng xếp hạng
+         * @description Học sinh chỉ đọc phạm vi chứa mình (trường/khối khác, tenant khác → `404`); hiển thị theo `leaderboard_visibility`
+         *     của khối người xem (lớp 4–5: top 10 + nhóm %, không người cuối; lớp 6–9: top 50 + ±3 quanh mình). Mục tiêu của khối
+         *     (`visibility = grade_goal`) không có `entries`, không nickname/tên học sinh khác, ô < `analytics_min_cell_size` ẩn.
+         *     Nhân sự có `lms.student.read` đọc bảng trường/khối của trường thuộc scope (`scope_id` = trường, `grade_level`).
+         *     Key Valkey mất → dựng lại từ sổ cái, `stale = true` (F106-AC-14).
+         */
         get: operations["getLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/leaderboards/{leaderboard_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Các kỳ đã đóng của bảng (snapshot)
+         * @description Kỳ đã đóng từ `leaderboard_snapshots` (F106-AC-15, AC-21), mới nhất trước, cùng quy tắc phạm vi và hiển thị như
+         *     getLeaderboard; mục tiêu của khối chỉ có tổng tập thể và trạng thái đạt mục tiêu.
+         */
+        get: operations["getLeaderboardHistory"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5736,7 +5828,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Vị trí của mình trên bảng xếp hạng */
+        /**
+         * Vị trí của mình trên bảng xếp hạng
+         * @description Học sinh (`game_player`) — `me` và `around_me` theo `leaderboard_visibility`; lớp 1–3 chỉ phần đóng góp của em vào mục tiêu của khối.
+         */
         get: operations["getMyLeaderboardPosition"];
         put?: never;
         post?: never;
@@ -11932,6 +12027,17 @@ export interface components {
             /** @description true khi ô khối < analytics_min_cell_size học sinh bị che */
             suppressed: boolean;
         };
+        /** @description Mục tiêu tập thể của khối trong trường (ADR-0095) — không thứ hạng, không nickname/tên học sinh khác */
+        GradeGoal: {
+            /** @description null khi < analytics_min_cell_size học sinh (ẩn ô nhỏ) */
+            contributors_count?: number | null;
+            current: number;
+            grade_level: number;
+            /** @description Phần đóng góp của chính học sinh xem (null với nhân sự) */
+            my_contribution?: number | null;
+            reached?: boolean;
+            target: number;
+        };
         GradeLevel: number;
         /** @description Học sinh hiệu lực của một khối trong trường (chỉ đọc, dữ liệu SIS/CSV — ADR-0095). Không có ngày sinh, liên hệ phụ huynh, IP, mã thiết bị (ADR-0031). */
         GradeStudent: {
@@ -12079,25 +12185,83 @@ export interface components {
         };
         /** @enum {string} */
         ItemRarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
+        LeaderboardEntry: {
+            is_me?: boolean;
+            player: components["schemas"]["PlayerCard"];
+            rank: number;
+            /** @description Chỉ metric rating */
+            tier_code?: string | null;
+            /** @description Không có với metric rating (chỉ tier + thứ hạng) */
+            value?: number;
+        };
+        LeaderboardFilters: {
+            mode?: string | null;
+            /** Format: uuid */
+            subject_id?: string | null;
+            /** Format: uuid */
+            topic_id?: string | null;
+        };
+        /**
+         * @description Không có Learning Score/Mastery; `xp` chỉ scope friends; `grade_goal` là mục tiêu tập thể của khối (ADR-0095), không xếp hạng
+         * @enum {string}
+         */
+        LeaderboardMetric: "competition_points" | "effort_points" | "grade_goal" | "xp" | "quest_completed" | "rating" | "team_points";
         LeaderboardPage: {
-            entries: {
-                is_me?: boolean;
-                player: components["schemas"]["PlayerCard"];
-                rank: number;
-                value: number;
-            }[];
+            around_me?: components["schemas"]["LeaderboardEntry"][];
+            entries: components["schemas"]["LeaderboardEntry"][];
+            filters?: components["schemas"]["LeaderboardFilters"];
+            grade_goal?: components["schemas"]["GradeGoal"];
             leaderboard_id: components["schemas"]["Uuid"];
-            /** @enum {string} */
-            metric?: "competition_points" | "xp" | "quests_completed" | "rating";
+            me?: {
+                /** @description "Em đang ở nhóm X%" (lớp 4–5 ngoài top 10): 10, 25, 50 hoặc 100 */
+                percentile_bucket?: number | null;
+                /** @description null khi ngoài top của lớp 4–5 (xem percentile_bucket) */
+                rank?: number | null;
+                tier_code?: string | null;
+                value?: number | null;
+            } | null;
+            metric?: components["schemas"]["LeaderboardMetric"];
             page?: components["schemas"]["PageInfo"];
             /** @enum {string} */
             period?: "daily" | "weekly" | "monthly" | "season" | "all_time";
             period_key: string;
+            /** Format: uuid */
+            scope_id?: string | null;
+            scope_type?: components["schemas"]["LeaderboardScopeType"];
+            /** @description true khi bảng đang được dựng lại từ sổ cái (F106-AC-14) */
+            stale?: boolean;
             /**
-             * @description Không có bảng cấp lớp (ADR-0095); mục tiêu tập thể của khối (`grade_goal`) không phải bảng xếp hạng
+             * @description Theo khối người xem (leaderboard_visibility): grade_goal (lớp 1–3 và mọi mục tiêu của khối), top_n_percentile (lớp 4–5), ranked (lớp 6–9, nhân sự)
              * @enum {string}
              */
-            scope_type?: "global" | "organization" | "school" | "grade" | "subject" | "topic" | "game_mode" | "friends" | "team";
+            visibility?: "ranked" | "top_n_percentile" | "grade_goal";
+        };
+        LeaderboardPeriod: {
+            captured_at?: components["schemas"]["Timestamp"];
+            entries: components["schemas"]["LeaderboardEntry"][];
+            grade_goal?: components["schemas"]["GradeGoal"];
+            period_key: string;
+        };
+        /**
+         * @description Không có bảng cấp lớp (ADR-0095); `grade` = một khối trong một trường
+         * @enum {string}
+         */
+        LeaderboardScopeType: "global" | "tenant" | "school" | "grade" | "friends" | "team" | "tournament";
+        LeaderboardSummary: {
+            code: string;
+            filters?: components["schemas"]["LeaderboardFilters"];
+            grade_level?: number | null;
+            leaderboard_id: components["schemas"]["Uuid"];
+            metric: components["schemas"]["LeaderboardMetric"];
+            /** @enum {string} */
+            period: "daily" | "weekly" | "monthly" | "season" | "all_time";
+            /**
+             * Format: uuid
+             * @description Phạm vi chứa người xem (trường/tenant); null với friends
+             */
+            scope_id?: string | null;
+            scope_type: components["schemas"]["LeaderboardScopeType"];
+            title: string;
         };
         /** @enum {string} */
         LearningContentType: "question" | "question_set" | "assessment_blueprint" | "lesson" | "learning_material" | "activity";
@@ -13967,15 +14131,24 @@ export interface components {
             excerpt_start?: number;
             message_id: components["schemas"]["Uuid"];
         };
+        /**
+         * @description Tier thi đấu của chính học sinh theo mode × môn × mùa (ADR-0018, COMPETITION_SYSTEM §8.2). Không bao giờ chứa số
+         *     rating/RD thô (F106-AC-07); không phải chỉ số học tập (F106-AC-09).
+         */
         Rating: {
-            games_played?: number;
+            games_played: number;
             mode: components["schemas"]["MatchMode"];
-            rating?: number;
-            rd?: number;
+            /** @description Tier cao nhất đạt trong mùa */
+            peak_tier_code?: string | null;
+            /** @description "Đang xếp hạng (x/N)" — `games_played`/`provisional_games_required` */
+            provisional: boolean;
+            provisional_games_required: number;
             season_id: components["schemas"]["Uuid"];
             subject_id: components["schemas"]["Uuid"];
-            /** @description Hiển thị thân thiện (vd. Đồng, Bạc, Vàng) */
-            tier: string;
+            /** @description null khi còn provisional */
+            tier_code?: string | null;
+            /** @description Tên tier theo Accept-Language (Ranking Rules `tiers`) */
+            tier_name?: string | null;
         };
         ReactionSummary: {
             /** @description emoji_code → số lượng */
@@ -14578,6 +14751,18 @@ export interface components {
             /** @description Chỉ đơn vị `active` */
             province_code?: string;
             school_level?: components["schemas"]["SchoolLevel"];
+        };
+        Season: {
+            code: string;
+            ends_at: components["schemas"]["Timestamp"];
+            /** @description Chỉ cho học sinh: tier cao nhất của chính em trong mùa */
+            my_peak_tier_code?: string | null;
+            name: string;
+            season_id: components["schemas"]["Uuid"];
+            starts_at: components["schemas"]["Timestamp"];
+            /** @enum {string} */
+            status: "scheduled" | "active" | "ended";
+            theme_code?: string | null;
         };
         /** @description Season track miễn phí — không có premium track (EVENT_SEASON_SYSTEM §7.2) */
         SeasonTrack: {
@@ -16013,7 +16198,13 @@ export interface components {
         InvitationId: components["schemas"]["Uuid"];
         /** @description Vị trí item trong attempt (bắt đầu từ 1) */
         ItemPositionPath: number;
+        /** @description Khối của bảng scope khối (chỉ nhân sự; học sinh luôn là khối của mình — ADR-0095). */
+        LeaderboardGradeLevel: components["schemas"]["GradeLevel"];
         LeaderboardId: components["schemas"]["Uuid"];
+        /** @description Kỳ (giờ Asia/Ho_Chi_Minh) — daily 2026-11-22, weekly 2026-W47, monthly 2026-11, season s-<season_id>, all_time all. Bỏ trống = kỳ đang mở. */
+        LeaderboardPeriodKey: string;
+        /** @description Phạm vi của bảng — trường (scope school/grade), tenant (scope tenant). Học sinh bỏ trống = phạm vi chứa mình. */
+        LeaderboardScopeId: components["schemas"]["Uuid"];
         LearningContentType: components["schemas"]["LearningContentType"];
         LearningMaterialIdPath: components["schemas"]["Uuid"];
         LessonIdPath: components["schemas"]["Uuid"];
@@ -26844,7 +27035,9 @@ export interface operations {
     };
     getMyRatings: {
         parameters: {
-            query?: never;
+            query?: {
+                season_id?: components["schemas"]["Uuid"];
+            };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
                 "Accept-Language"?: components["parameters"]["AcceptLanguage"];
@@ -26860,7 +27053,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Rating/tier theo mode × subject × season (không phải chỉ số học tập) */
+            /** @description Tier theo mode × subject × season (không phải chỉ số học tập) */
             200: {
                 headers: {
                     "Content-Language": components["headers"]["ContentLanguage"];
@@ -26873,6 +27066,83 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listSeasons: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Mùa mới nhất trước */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Season"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getSeason: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                season_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Season"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listTournaments: {
@@ -30512,14 +30782,52 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
         };
     };
+    listLeaderboards: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LeaderboardSummary"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     getLeaderboard: {
         parameters: {
             query?: {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
+                /** @description Khối của bảng scope khối (chỉ nhân sự; học sinh luôn là khối của mình — ADR-0095). */
+                grade_level?: components["parameters"]["LeaderboardGradeLevel"];
                 limit?: components["parameters"]["Limit"];
-                /** @description vd. 2026-W46, 2026-11, season-2026-1 */
-                period_key?: string;
+                /** @description Kỳ (giờ Asia/Ho_Chi_Minh) — daily 2026-11-22, weekly 2026-W47, monthly 2026-11, season s-<season_id>, all_time all. Bỏ trống = kỳ đang mở. */
+                period_key?: components["parameters"]["LeaderboardPeriodKey"];
+                /** @description Phạm vi của bảng — trường (scope school/grade), tenant (scope tenant). Học sinh bỏ trống = phạm vi chứa mình. */
+                scope_id?: components["parameters"]["LeaderboardScopeId"];
             };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
@@ -30548,13 +30856,22 @@ export interface operations {
                     "application/json": components["schemas"]["LeaderboardPage"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
-    getMyLeaderboardPosition: {
+    getLeaderboardHistory: {
         parameters: {
             query?: {
-                period_key?: string;
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Khối của bảng scope khối (chỉ nhân sự; học sinh luôn là khối của mình — ADR-0095). */
+                grade_level?: components["parameters"]["LeaderboardGradeLevel"];
+                limit?: components["parameters"]["Limit"];
+                /** @description Phạm vi của bảng — trường (scope school/grade), tenant (scope tenant). Học sinh bỏ trống = phạm vi chứa mình. */
+                scope_id?: components["parameters"]["LeaderboardScopeId"];
             };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
@@ -30573,7 +30890,51 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Vị trí của mình ±5 */
+            /** @description OK */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LeaderboardPeriod"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getMyLeaderboardPosition: {
+        parameters: {
+            query?: {
+                /** @description Kỳ (giờ Asia/Ho_Chi_Minh) — daily 2026-11-22, weekly 2026-W47, monthly 2026-11, season s-<season_id>, all_time all. Bỏ trống = kỳ đang mở. */
+                period_key?: components["parameters"]["LeaderboardPeriodKey"];
+                /** @description Phạm vi của bảng — trường (scope school/grade), tenant (scope tenant). Học sinh bỏ trống = phạm vi chứa mình. */
+                scope_id?: components["parameters"]["LeaderboardScopeId"];
+            };
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                leaderboard_id: components["parameters"]["LeaderboardId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Vị trí của mình (không có entries) */
             200: {
                 headers: {
                     "Content-Language": components["headers"]["ContentLanguage"];
@@ -30584,7 +30945,9 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     getLearningActivity: {

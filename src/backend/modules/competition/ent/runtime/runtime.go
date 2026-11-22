@@ -6,11 +6,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionrestriction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/duel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfig"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfigversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboardcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboarddefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboardsnapshot"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/match"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchparticipant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchresult"
@@ -19,8 +23,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/rating"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/ratingchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/room"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/schema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/season"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/seasonresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
 )
 
@@ -28,6 +36,35 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	competitionpointentryMixin := schema.CompetitionPointEntry{}.Mixin()
+	competitionpointentryMixinHooks0 := competitionpointentryMixin[0].Hooks()
+	competitionpointentry.Hooks[0] = competitionpointentryMixinHooks0[0]
+	competitionpointentryMixinInters0 := competitionpointentryMixin[0].Interceptors()
+	competitionpointentry.Interceptors[0] = competitionpointentryMixinInters0[0]
+	competitionpointentryMixinFields0 := competitionpointentryMixin[0].Fields()
+	_ = competitionpointentryMixinFields0
+	competitionpointentryFields := schema.CompetitionPointEntry{}.Fields()
+	_ = competitionpointentryFields
+	// competitionpointentryDescCreatedAt is the schema descriptor for created_at field.
+	competitionpointentryDescCreatedAt := competitionpointentryMixinFields0[2].Descriptor()
+	// competitionpointentry.DefaultCreatedAt holds the default value on creation for the created_at field.
+	competitionpointentry.DefaultCreatedAt = competitionpointentryDescCreatedAt.Default.(func() time.Time)
+	// competitionpointentryDescMode is the schema descriptor for mode field.
+	competitionpointentryDescMode := competitionpointentryFields[6].Descriptor()
+	// competitionpointentry.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	competitionpointentry.ModeValidator = competitionpointentryDescMode.Validators[0].(func(string) error)
+	// competitionpointentryDescSourceType is the schema descriptor for source_type field.
+	competitionpointentryDescSourceType := competitionpointentryFields[8].Descriptor()
+	// competitionpointentry.SourceTypeValidator is a validator for the "source_type" field. It is called by the builders before save.
+	competitionpointentry.SourceTypeValidator = competitionpointentryDescSourceType.Validators[0].(func(string) error)
+	// competitionpointentryDescReason is the schema descriptor for reason field.
+	competitionpointentryDescReason := competitionpointentryFields[10].Descriptor()
+	// competitionpointentry.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	competitionpointentry.ReasonValidator = competitionpointentryDescReason.Validators[0].(func(string) error)
+	// competitionpointentryDescID is the schema descriptor for id field.
+	competitionpointentryDescID := competitionpointentryMixinFields0[0].Descriptor()
+	// competitionpointentry.DefaultID holds the default value on creation for the id field.
+	competitionpointentry.DefaultID = competitionpointentryDescID.Default.(func() uuid.UUID)
 	competitionrestrictionMixin := schema.CompetitionRestriction{}.Mixin()
 	competitionrestrictionMixinHooks0 := competitionrestrictionMixin[0].Hooks()
 	competitionrestriction.Hooks[0] = competitionrestrictionMixinHooks0[0]
@@ -225,6 +262,121 @@ func init() {
 	gameconfigversionDescID := gameconfigversionMixinFields0[0].Descriptor()
 	// gameconfigversion.DefaultID holds the default value on creation for the id field.
 	gameconfigversion.DefaultID = gameconfigversionDescID.Default.(func() uuid.UUID)
+	leaderboardcontributionMixin := schema.LeaderboardContribution{}.Mixin()
+	leaderboardcontributionMixinHooks0 := leaderboardcontributionMixin[0].Hooks()
+	leaderboardcontribution.Hooks[0] = leaderboardcontributionMixinHooks0[0]
+	leaderboardcontributionMixinInters0 := leaderboardcontributionMixin[0].Interceptors()
+	leaderboardcontribution.Interceptors[0] = leaderboardcontributionMixinInters0[0]
+	leaderboardcontributionMixinFields0 := leaderboardcontributionMixin[0].Fields()
+	_ = leaderboardcontributionMixinFields0
+	leaderboardcontributionFields := schema.LeaderboardContribution{}.Fields()
+	_ = leaderboardcontributionFields
+	// leaderboardcontributionDescCreatedAt is the schema descriptor for created_at field.
+	leaderboardcontributionDescCreatedAt := leaderboardcontributionMixinFields0[2].Descriptor()
+	// leaderboardcontribution.DefaultCreatedAt holds the default value on creation for the created_at field.
+	leaderboardcontribution.DefaultCreatedAt = leaderboardcontributionDescCreatedAt.Default.(func() time.Time)
+	// leaderboardcontributionDescMetric is the schema descriptor for metric field.
+	leaderboardcontributionDescMetric := leaderboardcontributionFields[3].Descriptor()
+	// leaderboardcontribution.MetricValidator is a validator for the "metric" field. It is called by the builders before save.
+	leaderboardcontribution.MetricValidator = leaderboardcontributionDescMetric.Validators[0].(func(string) error)
+	// leaderboardcontributionDescSourceType is the schema descriptor for source_type field.
+	leaderboardcontributionDescSourceType := leaderboardcontributionFields[5].Descriptor()
+	// leaderboardcontribution.SourceTypeValidator is a validator for the "source_type" field. It is called by the builders before save.
+	leaderboardcontribution.SourceTypeValidator = leaderboardcontributionDescSourceType.Validators[0].(func(string) error)
+	// leaderboardcontributionDescSourceID is the schema descriptor for source_id field.
+	leaderboardcontributionDescSourceID := leaderboardcontributionFields[6].Descriptor()
+	// leaderboardcontribution.SourceIDValidator is a validator for the "source_id" field. It is called by the builders before save.
+	leaderboardcontribution.SourceIDValidator = leaderboardcontributionDescSourceID.Validators[0].(func(string) error)
+	// leaderboardcontributionDescID is the schema descriptor for id field.
+	leaderboardcontributionDescID := leaderboardcontributionMixinFields0[0].Descriptor()
+	// leaderboardcontribution.DefaultID holds the default value on creation for the id field.
+	leaderboardcontribution.DefaultID = leaderboardcontributionDescID.Default.(func() uuid.UUID)
+	leaderboarddefinitionMixin := schema.LeaderboardDefinition{}.Mixin()
+	leaderboarddefinitionMixinHooks0 := leaderboarddefinitionMixin[0].Hooks()
+	leaderboarddefinition.Hooks[0] = leaderboarddefinitionMixinHooks0[0]
+	leaderboarddefinitionMixinInters0 := leaderboarddefinitionMixin[0].Interceptors()
+	leaderboarddefinition.Interceptors[0] = leaderboarddefinitionMixinInters0[0]
+	leaderboarddefinitionMixinFields0 := leaderboarddefinitionMixin[0].Fields()
+	_ = leaderboarddefinitionMixinFields0
+	leaderboarddefinitionFields := schema.LeaderboardDefinition{}.Fields()
+	_ = leaderboarddefinitionFields
+	// leaderboarddefinitionDescCreatedAt is the schema descriptor for created_at field.
+	leaderboarddefinitionDescCreatedAt := leaderboarddefinitionMixinFields0[1].Descriptor()
+	// leaderboarddefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
+	leaderboarddefinition.DefaultCreatedAt = leaderboarddefinitionDescCreatedAt.Default.(func() time.Time)
+	// leaderboarddefinitionDescUpdatedAt is the schema descriptor for updated_at field.
+	leaderboarddefinitionDescUpdatedAt := leaderboarddefinitionMixinFields0[3].Descriptor()
+	// leaderboarddefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	leaderboarddefinition.DefaultUpdatedAt = leaderboarddefinitionDescUpdatedAt.Default.(func() time.Time)
+	// leaderboarddefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	leaderboarddefinition.UpdateDefaultUpdatedAt = leaderboarddefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// leaderboarddefinitionDescDeleteReason is the schema descriptor for delete_reason field.
+	leaderboarddefinitionDescDeleteReason := leaderboarddefinitionMixinFields0[7].Descriptor()
+	// leaderboarddefinition.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	leaderboarddefinition.DeleteReasonValidator = leaderboarddefinitionDescDeleteReason.Validators[0].(func(string) error)
+	// leaderboarddefinitionDescVersion is the schema descriptor for version field.
+	leaderboarddefinitionDescVersion := leaderboarddefinitionMixinFields0[8].Descriptor()
+	// leaderboarddefinition.DefaultVersion holds the default value on creation for the version field.
+	leaderboarddefinition.DefaultVersion = leaderboarddefinitionDescVersion.Default.(int64)
+	// leaderboarddefinitionDescCode is the schema descriptor for code field.
+	leaderboarddefinitionDescCode := leaderboarddefinitionFields[0].Descriptor()
+	// leaderboarddefinition.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	leaderboarddefinition.CodeValidator = leaderboarddefinitionDescCode.Validators[0].(func(string) error)
+	// leaderboarddefinitionDescTitle is the schema descriptor for title field.
+	leaderboarddefinitionDescTitle := leaderboarddefinitionFields[1].Descriptor()
+	// leaderboarddefinition.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	leaderboarddefinition.TitleValidator = leaderboarddefinitionDescTitle.Validators[0].(func(string) error)
+	// leaderboarddefinitionDescMetric is the schema descriptor for metric field.
+	leaderboarddefinitionDescMetric := leaderboarddefinitionFields[2].Descriptor()
+	// leaderboarddefinition.MetricValidator is a validator for the "metric" field. It is called by the builders before save.
+	leaderboarddefinition.MetricValidator = leaderboarddefinitionDescMetric.Validators[0].(func(string) error)
+	// leaderboarddefinitionDescScopeType is the schema descriptor for scope_type field.
+	leaderboarddefinitionDescScopeType := leaderboarddefinitionFields[3].Descriptor()
+	// leaderboarddefinition.ScopeTypeValidator is a validator for the "scope_type" field. It is called by the builders before save.
+	leaderboarddefinition.ScopeTypeValidator = leaderboarddefinitionDescScopeType.Validators[0].(func(string) error)
+	// leaderboarddefinitionDescPeriod is the schema descriptor for period field.
+	leaderboarddefinitionDescPeriod := leaderboarddefinitionFields[4].Descriptor()
+	// leaderboarddefinition.PeriodValidator is a validator for the "period" field. It is called by the builders before save.
+	leaderboarddefinition.PeriodValidator = leaderboarddefinitionDescPeriod.Validators[0].(func(string) error)
+	// leaderboarddefinitionDescSortOrder is the schema descriptor for sort_order field.
+	leaderboarddefinitionDescSortOrder := leaderboarddefinitionFields[8].Descriptor()
+	// leaderboarddefinition.DefaultSortOrder holds the default value on creation for the sort_order field.
+	leaderboarddefinition.DefaultSortOrder = leaderboarddefinitionDescSortOrder.Default.(int)
+	// leaderboarddefinitionDescStatus is the schema descriptor for status field.
+	leaderboarddefinitionDescStatus := leaderboarddefinitionFields[9].Descriptor()
+	// leaderboarddefinition.DefaultStatus holds the default value on creation for the status field.
+	leaderboarddefinition.DefaultStatus = leaderboarddefinitionDescStatus.Default.(string)
+	// leaderboarddefinition.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	leaderboarddefinition.StatusValidator = leaderboarddefinitionDescStatus.Validators[0].(func(string) error)
+	// leaderboarddefinitionDescID is the schema descriptor for id field.
+	leaderboarddefinitionDescID := leaderboarddefinitionMixinFields0[0].Descriptor()
+	// leaderboarddefinition.DefaultID holds the default value on creation for the id field.
+	leaderboarddefinition.DefaultID = leaderboarddefinitionDescID.Default.(func() uuid.UUID)
+	leaderboardsnapshotMixin := schema.LeaderboardSnapshot{}.Mixin()
+	leaderboardsnapshotMixinHooks0 := leaderboardsnapshotMixin[0].Hooks()
+	leaderboardsnapshot.Hooks[0] = leaderboardsnapshotMixinHooks0[0]
+	leaderboardsnapshotMixinInters0 := leaderboardsnapshotMixin[0].Interceptors()
+	leaderboardsnapshot.Interceptors[0] = leaderboardsnapshotMixinInters0[0]
+	leaderboardsnapshotMixinFields0 := leaderboardsnapshotMixin[0].Fields()
+	_ = leaderboardsnapshotMixinFields0
+	leaderboardsnapshotFields := schema.LeaderboardSnapshot{}.Fields()
+	_ = leaderboardsnapshotFields
+	// leaderboardsnapshotDescCreatedAt is the schema descriptor for created_at field.
+	leaderboardsnapshotDescCreatedAt := leaderboardsnapshotMixinFields0[2].Descriptor()
+	// leaderboardsnapshot.DefaultCreatedAt holds the default value on creation for the created_at field.
+	leaderboardsnapshot.DefaultCreatedAt = leaderboardsnapshotDescCreatedAt.Default.(func() time.Time)
+	// leaderboardsnapshotDescScopeID is the schema descriptor for scope_id field.
+	leaderboardsnapshotDescScopeID := leaderboardsnapshotFields[1].Descriptor()
+	// leaderboardsnapshot.ScopeIDValidator is a validator for the "scope_id" field. It is called by the builders before save.
+	leaderboardsnapshot.ScopeIDValidator = leaderboardsnapshotDescScopeID.Validators[0].(func(string) error)
+	// leaderboardsnapshotDescPeriodKey is the schema descriptor for period_key field.
+	leaderboardsnapshotDescPeriodKey := leaderboardsnapshotFields[4].Descriptor()
+	// leaderboardsnapshot.PeriodKeyValidator is a validator for the "period_key" field. It is called by the builders before save.
+	leaderboardsnapshot.PeriodKeyValidator = leaderboardsnapshotDescPeriodKey.Validators[0].(func(string) error)
+	// leaderboardsnapshotDescID is the schema descriptor for id field.
+	leaderboardsnapshotDescID := leaderboardsnapshotMixinFields0[0].Descriptor()
+	// leaderboardsnapshot.DefaultID holds the default value on creation for the id field.
+	leaderboardsnapshot.DefaultID = leaderboardsnapshotDescID.Default.(func() uuid.UUID)
 	matchMixin := schema.Match{}.Mixin()
 	matchMixinHooks0 := matchMixin[0].Hooks()
 	match.Hooks[0] = matchMixinHooks0[0]
@@ -621,6 +773,74 @@ func init() {
 	partypolicyDescID := partypolicyMixinFields0[0].Descriptor()
 	// partypolicy.DefaultID holds the default value on creation for the id field.
 	partypolicy.DefaultID = partypolicyDescID.Default.(func() uuid.UUID)
+	ratingMixin := schema.Rating{}.Mixin()
+	ratingMixinHooks0 := ratingMixin[0].Hooks()
+	rating.Hooks[0] = ratingMixinHooks0[0]
+	ratingMixinInters0 := ratingMixin[0].Interceptors()
+	rating.Interceptors[0] = ratingMixinInters0[0]
+	ratingMixinFields0 := ratingMixin[0].Fields()
+	_ = ratingMixinFields0
+	ratingFields := schema.Rating{}.Fields()
+	_ = ratingFields
+	// ratingDescCreatedAt is the schema descriptor for created_at field.
+	ratingDescCreatedAt := ratingMixinFields0[2].Descriptor()
+	// rating.DefaultCreatedAt holds the default value on creation for the created_at field.
+	rating.DefaultCreatedAt = ratingDescCreatedAt.Default.(func() time.Time)
+	// ratingDescUpdatedAt is the schema descriptor for updated_at field.
+	ratingDescUpdatedAt := ratingMixinFields0[4].Descriptor()
+	// rating.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	rating.DefaultUpdatedAt = ratingDescUpdatedAt.Default.(func() time.Time)
+	// rating.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	rating.UpdateDefaultUpdatedAt = ratingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// ratingDescDeleteReason is the schema descriptor for delete_reason field.
+	ratingDescDeleteReason := ratingMixinFields0[8].Descriptor()
+	// rating.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	rating.DeleteReasonValidator = ratingDescDeleteReason.Validators[0].(func(string) error)
+	// ratingDescVersion is the schema descriptor for version field.
+	ratingDescVersion := ratingMixinFields0[9].Descriptor()
+	// rating.DefaultVersion holds the default value on creation for the version field.
+	rating.DefaultVersion = ratingDescVersion.Default.(int64)
+	// ratingDescMode is the schema descriptor for mode field.
+	ratingDescMode := ratingFields[2].Descriptor()
+	// rating.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	rating.ModeValidator = ratingDescMode.Validators[0].(func(string) error)
+	// ratingDescGamesPlayed is the schema descriptor for games_played field.
+	ratingDescGamesPlayed := ratingFields[9].Descriptor()
+	// rating.DefaultGamesPlayed holds the default value on creation for the games_played field.
+	rating.DefaultGamesPlayed = ratingDescGamesPlayed.Default.(int)
+	// ratingDescTierCode is the schema descriptor for tier_code field.
+	ratingDescTierCode := ratingFields[10].Descriptor()
+	// rating.TierCodeValidator is a validator for the "tier_code" field. It is called by the builders before save.
+	rating.TierCodeValidator = ratingDescTierCode.Validators[0].(func(string) error)
+	// ratingDescPeakTierCode is the schema descriptor for peak_tier_code field.
+	ratingDescPeakTierCode := ratingFields[11].Descriptor()
+	// rating.PeakTierCodeValidator is a validator for the "peak_tier_code" field. It is called by the builders before save.
+	rating.PeakTierCodeValidator = ratingDescPeakTierCode.Validators[0].(func(string) error)
+	// ratingDescID is the schema descriptor for id field.
+	ratingDescID := ratingMixinFields0[0].Descriptor()
+	// rating.DefaultID holds the default value on creation for the id field.
+	rating.DefaultID = ratingDescID.Default.(func() uuid.UUID)
+	ratingchangeMixin := schema.RatingChange{}.Mixin()
+	ratingchangeMixinHooks0 := ratingchangeMixin[0].Hooks()
+	ratingchange.Hooks[0] = ratingchangeMixinHooks0[0]
+	ratingchangeMixinInters0 := ratingchangeMixin[0].Interceptors()
+	ratingchange.Interceptors[0] = ratingchangeMixinInters0[0]
+	ratingchangeMixinFields0 := ratingchangeMixin[0].Fields()
+	_ = ratingchangeMixinFields0
+	ratingchangeFields := schema.RatingChange{}.Fields()
+	_ = ratingchangeFields
+	// ratingchangeDescCreatedAt is the schema descriptor for created_at field.
+	ratingchangeDescCreatedAt := ratingchangeMixinFields0[2].Descriptor()
+	// ratingchange.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ratingchange.DefaultCreatedAt = ratingchangeDescCreatedAt.Default.(func() time.Time)
+	// ratingchangeDescMode is the schema descriptor for mode field.
+	ratingchangeDescMode := ratingchangeFields[3].Descriptor()
+	// ratingchange.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	ratingchange.ModeValidator = ratingchangeDescMode.Validators[0].(func(string) error)
+	// ratingchangeDescID is the schema descriptor for id field.
+	ratingchangeDescID := ratingchangeMixinFields0[0].Descriptor()
+	// ratingchange.DefaultID holds the default value on creation for the id field.
+	ratingchange.DefaultID = ratingchangeDescID.Default.(func() uuid.UUID)
 	roomMixin := schema.Room{}.Mixin()
 	roomMixinHooks0 := roomMixin[0].Hooks()
 	room.Hooks[0] = roomMixinHooks0[0]
@@ -670,6 +890,80 @@ func init() {
 	roomDescID := roomMixinFields0[0].Descriptor()
 	// room.DefaultID holds the default value on creation for the id field.
 	room.DefaultID = roomDescID.Default.(func() uuid.UUID)
+	seasonMixin := schema.Season{}.Mixin()
+	seasonMixinHooks0 := seasonMixin[0].Hooks()
+	season.Hooks[0] = seasonMixinHooks0[0]
+	seasonMixinInters0 := seasonMixin[0].Interceptors()
+	season.Interceptors[0] = seasonMixinInters0[0]
+	seasonMixinFields0 := seasonMixin[0].Fields()
+	_ = seasonMixinFields0
+	seasonFields := schema.Season{}.Fields()
+	_ = seasonFields
+	// seasonDescCreatedAt is the schema descriptor for created_at field.
+	seasonDescCreatedAt := seasonMixinFields0[1].Descriptor()
+	// season.DefaultCreatedAt holds the default value on creation for the created_at field.
+	season.DefaultCreatedAt = seasonDescCreatedAt.Default.(func() time.Time)
+	// seasonDescUpdatedAt is the schema descriptor for updated_at field.
+	seasonDescUpdatedAt := seasonMixinFields0[3].Descriptor()
+	// season.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	season.DefaultUpdatedAt = seasonDescUpdatedAt.Default.(func() time.Time)
+	// season.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	season.UpdateDefaultUpdatedAt = seasonDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// seasonDescDeleteReason is the schema descriptor for delete_reason field.
+	seasonDescDeleteReason := seasonMixinFields0[7].Descriptor()
+	// season.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	season.DeleteReasonValidator = seasonDescDeleteReason.Validators[0].(func(string) error)
+	// seasonDescVersion is the schema descriptor for version field.
+	seasonDescVersion := seasonMixinFields0[8].Descriptor()
+	// season.DefaultVersion holds the default value on creation for the version field.
+	season.DefaultVersion = seasonDescVersion.Default.(int64)
+	// seasonDescCode is the schema descriptor for code field.
+	seasonDescCode := seasonFields[0].Descriptor()
+	// season.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	season.CodeValidator = seasonDescCode.Validators[0].(func(string) error)
+	// seasonDescName is the schema descriptor for name field.
+	seasonDescName := seasonFields[1].Descriptor()
+	// season.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	season.NameValidator = seasonDescName.Validators[0].(func(string) error)
+	// seasonDescThemeCode is the schema descriptor for theme_code field.
+	seasonDescThemeCode := seasonFields[2].Descriptor()
+	// season.ThemeCodeValidator is a validator for the "theme_code" field. It is called by the builders before save.
+	season.ThemeCodeValidator = seasonDescThemeCode.Validators[0].(func(string) error)
+	// seasonDescStatus is the schema descriptor for status field.
+	seasonDescStatus := seasonFields[5].Descriptor()
+	// season.DefaultStatus holds the default value on creation for the status field.
+	season.DefaultStatus = seasonDescStatus.Default.(string)
+	// season.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	season.StatusValidator = seasonDescStatus.Validators[0].(func(string) error)
+	// seasonDescID is the schema descriptor for id field.
+	seasonDescID := seasonMixinFields0[0].Descriptor()
+	// season.DefaultID holds the default value on creation for the id field.
+	season.DefaultID = seasonDescID.Default.(func() uuid.UUID)
+	seasonresultMixin := schema.SeasonResult{}.Mixin()
+	seasonresultMixinHooks0 := seasonresultMixin[0].Hooks()
+	seasonresult.Hooks[0] = seasonresultMixinHooks0[0]
+	seasonresultMixinInters0 := seasonresultMixin[0].Interceptors()
+	seasonresult.Interceptors[0] = seasonresultMixinInters0[0]
+	seasonresultMixinFields0 := seasonresultMixin[0].Fields()
+	_ = seasonresultMixinFields0
+	seasonresultFields := schema.SeasonResult{}.Fields()
+	_ = seasonresultFields
+	// seasonresultDescCreatedAt is the schema descriptor for created_at field.
+	seasonresultDescCreatedAt := seasonresultMixinFields0[2].Descriptor()
+	// seasonresult.DefaultCreatedAt holds the default value on creation for the created_at field.
+	seasonresult.DefaultCreatedAt = seasonresultDescCreatedAt.Default.(func() time.Time)
+	// seasonresultDescMode is the schema descriptor for mode field.
+	seasonresultDescMode := seasonresultFields[2].Descriptor()
+	// seasonresult.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	seasonresult.ModeValidator = seasonresultDescMode.Validators[0].(func(string) error)
+	// seasonresultDescPeakTierCode is the schema descriptor for peak_tier_code field.
+	seasonresultDescPeakTierCode := seasonresultFields[7].Descriptor()
+	// seasonresult.PeakTierCodeValidator is a validator for the "peak_tier_code" field. It is called by the builders before save.
+	seasonresult.PeakTierCodeValidator = seasonresultDescPeakTierCode.Validators[0].(func(string) error)
+	// seasonresultDescID is the schema descriptor for id field.
+	seasonresultDescID := seasonresultMixinFields0[0].Descriptor()
+	// seasonresult.DefaultID holds the default value on creation for the id field.
+	seasonresult.DefaultID = seasonresultDescID.Default.(func() uuid.UUID)
 	sessionmembershipMixin := schema.SessionMembership{}.Mixin()
 	sessionmembershipMixinHooks0 := sessionmembershipMixin[0].Hooks()
 	sessionmembership.Hooks[0] = sessionmembershipMixinHooks0[0]

@@ -9,6 +9,18 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent"
 )
 
+// The CompetitionPointEntryFunc type is an adapter to allow the use of ordinary
+// function as CompetitionPointEntry mutator.
+type CompetitionPointEntryFunc func(context.Context, *ent.CompetitionPointEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CompetitionPointEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CompetitionPointEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CompetitionPointEntryMutation", m)
+}
+
 // The CompetitionRestrictionFunc type is an adapter to allow the use of ordinary
 // function as CompetitionRestriction mutator.
 type CompetitionRestrictionFunc func(context.Context, *ent.CompetitionRestrictionMutation) (ent.Value, error)
@@ -67,6 +79,42 @@ func (f GameConfigVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GameConfigVersionMutation", m)
+}
+
+// The LeaderboardContributionFunc type is an adapter to allow the use of ordinary
+// function as LeaderboardContribution mutator.
+type LeaderboardContributionFunc func(context.Context, *ent.LeaderboardContributionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LeaderboardContributionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LeaderboardContributionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LeaderboardContributionMutation", m)
+}
+
+// The LeaderboardDefinitionFunc type is an adapter to allow the use of ordinary
+// function as LeaderboardDefinition mutator.
+type LeaderboardDefinitionFunc func(context.Context, *ent.LeaderboardDefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LeaderboardDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LeaderboardDefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LeaderboardDefinitionMutation", m)
+}
+
+// The LeaderboardSnapshotFunc type is an adapter to allow the use of ordinary
+// function as LeaderboardSnapshot mutator.
+type LeaderboardSnapshotFunc func(context.Context, *ent.LeaderboardSnapshotMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LeaderboardSnapshotFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LeaderboardSnapshotMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LeaderboardSnapshotMutation", m)
 }
 
 // The MatchFunc type is an adapter to allow the use of ordinary
@@ -165,6 +213,30 @@ func (f PartyPolicyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartyPolicyMutation", m)
 }
 
+// The RatingFunc type is an adapter to allow the use of ordinary
+// function as Rating mutator.
+type RatingFunc func(context.Context, *ent.RatingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RatingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RatingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RatingMutation", m)
+}
+
+// The RatingChangeFunc type is an adapter to allow the use of ordinary
+// function as RatingChange mutator.
+type RatingChangeFunc func(context.Context, *ent.RatingChangeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RatingChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RatingChangeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RatingChangeMutation", m)
+}
+
 // The RoomFunc type is an adapter to allow the use of ordinary
 // function as Room mutator.
 type RoomFunc func(context.Context, *ent.RoomMutation) (ent.Value, error)
@@ -175,6 +247,30 @@ func (f RoomFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoomMutation", m)
+}
+
+// The SeasonFunc type is an adapter to allow the use of ordinary
+// function as Season mutator.
+type SeasonFunc func(context.Context, *ent.SeasonMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SeasonFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SeasonMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SeasonMutation", m)
+}
+
+// The SeasonResultFunc type is an adapter to allow the use of ordinary
+// function as SeasonResult mutator.
+type SeasonResultFunc func(context.Context, *ent.SeasonResultMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SeasonResultFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SeasonResultMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SeasonResultMutation", m)
 }
 
 // The SessionMembershipFunc type is an adapter to allow the use of ordinary

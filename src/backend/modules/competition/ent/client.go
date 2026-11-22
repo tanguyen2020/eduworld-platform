@@ -15,11 +15,15 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionpointentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/competitionrestriction"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/duel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfig"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/gameconfigversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboardcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboarddefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/leaderboardsnapshot"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/match"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchparticipant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/matchresult"
@@ -28,7 +32,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partyinvitation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partymember"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/partypolicy"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/rating"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/ratingchange"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/room"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/season"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/seasonresult"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/sessionmembership"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/ent/internal"
@@ -39,6 +47,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// CompetitionPointEntry is the client for interacting with the CompetitionPointEntry builders.
+	CompetitionPointEntry *CompetitionPointEntryClient
 	// CompetitionRestriction is the client for interacting with the CompetitionRestriction builders.
 	CompetitionRestriction *CompetitionRestrictionClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
@@ -49,6 +59,12 @@ type Client struct {
 	GameConfig *GameConfigClient
 	// GameConfigVersion is the client for interacting with the GameConfigVersion builders.
 	GameConfigVersion *GameConfigVersionClient
+	// LeaderboardContribution is the client for interacting with the LeaderboardContribution builders.
+	LeaderboardContribution *LeaderboardContributionClient
+	// LeaderboardDefinition is the client for interacting with the LeaderboardDefinition builders.
+	LeaderboardDefinition *LeaderboardDefinitionClient
+	// LeaderboardSnapshot is the client for interacting with the LeaderboardSnapshot builders.
+	LeaderboardSnapshot *LeaderboardSnapshotClient
 	// Match is the client for interacting with the Match builders.
 	Match *MatchClient
 	// MatchParticipant is the client for interacting with the MatchParticipant builders.
@@ -65,8 +81,16 @@ type Client struct {
 	PartyMember *PartyMemberClient
 	// PartyPolicy is the client for interacting with the PartyPolicy builders.
 	PartyPolicy *PartyPolicyClient
+	// Rating is the client for interacting with the Rating builders.
+	Rating *RatingClient
+	// RatingChange is the client for interacting with the RatingChange builders.
+	RatingChange *RatingChangeClient
 	// Room is the client for interacting with the Room builders.
 	Room *RoomClient
+	// Season is the client for interacting with the Season builders.
+	Season *SeasonClient
+	// SeasonResult is the client for interacting with the SeasonResult builders.
+	SeasonResult *SeasonResultClient
 	// SessionMembership is the client for interacting with the SessionMembership builders.
 	SessionMembership *SessionMembershipClient
 }
@@ -80,11 +104,15 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.CompetitionPointEntry = NewCompetitionPointEntryClient(c.config)
 	c.CompetitionRestriction = NewCompetitionRestrictionClient(c.config)
 	c.ContentRelease = NewContentReleaseClient(c.config)
 	c.Duel = NewDuelClient(c.config)
 	c.GameConfig = NewGameConfigClient(c.config)
 	c.GameConfigVersion = NewGameConfigVersionClient(c.config)
+	c.LeaderboardContribution = NewLeaderboardContributionClient(c.config)
+	c.LeaderboardDefinition = NewLeaderboardDefinitionClient(c.config)
+	c.LeaderboardSnapshot = NewLeaderboardSnapshotClient(c.config)
 	c.Match = NewMatchClient(c.config)
 	c.MatchParticipant = NewMatchParticipantClient(c.config)
 	c.MatchResult = NewMatchResultClient(c.config)
@@ -93,7 +121,11 @@ func (c *Client) init() {
 	c.PartyInvitation = NewPartyInvitationClient(c.config)
 	c.PartyMember = NewPartyMemberClient(c.config)
 	c.PartyPolicy = NewPartyPolicyClient(c.config)
+	c.Rating = NewRatingClient(c.config)
+	c.RatingChange = NewRatingChangeClient(c.config)
 	c.Room = NewRoomClient(c.config)
+	c.Season = NewSeasonClient(c.config)
+	c.SeasonResult = NewSeasonResultClient(c.config)
 	c.SessionMembership = NewSessionMembershipClient(c.config)
 }
 
@@ -188,23 +220,31 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                    ctx,
-		config:                 cfg,
-		CompetitionRestriction: NewCompetitionRestrictionClient(cfg),
-		ContentRelease:         NewContentReleaseClient(cfg),
-		Duel:                   NewDuelClient(cfg),
-		GameConfig:             NewGameConfigClient(cfg),
-		GameConfigVersion:      NewGameConfigVersionClient(cfg),
-		Match:                  NewMatchClient(cfg),
-		MatchParticipant:       NewMatchParticipantClient(cfg),
-		MatchResult:            NewMatchResultClient(cfg),
-		Party:                  NewPartyClient(cfg),
-		PartyActivity:          NewPartyActivityClient(cfg),
-		PartyInvitation:        NewPartyInvitationClient(cfg),
-		PartyMember:            NewPartyMemberClient(cfg),
-		PartyPolicy:            NewPartyPolicyClient(cfg),
-		Room:                   NewRoomClient(cfg),
-		SessionMembership:      NewSessionMembershipClient(cfg),
+		ctx:                     ctx,
+		config:                  cfg,
+		CompetitionPointEntry:   NewCompetitionPointEntryClient(cfg),
+		CompetitionRestriction:  NewCompetitionRestrictionClient(cfg),
+		ContentRelease:          NewContentReleaseClient(cfg),
+		Duel:                    NewDuelClient(cfg),
+		GameConfig:              NewGameConfigClient(cfg),
+		GameConfigVersion:       NewGameConfigVersionClient(cfg),
+		LeaderboardContribution: NewLeaderboardContributionClient(cfg),
+		LeaderboardDefinition:   NewLeaderboardDefinitionClient(cfg),
+		LeaderboardSnapshot:     NewLeaderboardSnapshotClient(cfg),
+		Match:                   NewMatchClient(cfg),
+		MatchParticipant:        NewMatchParticipantClient(cfg),
+		MatchResult:             NewMatchResultClient(cfg),
+		Party:                   NewPartyClient(cfg),
+		PartyActivity:           NewPartyActivityClient(cfg),
+		PartyInvitation:         NewPartyInvitationClient(cfg),
+		PartyMember:             NewPartyMemberClient(cfg),
+		PartyPolicy:             NewPartyPolicyClient(cfg),
+		Rating:                  NewRatingClient(cfg),
+		RatingChange:            NewRatingChangeClient(cfg),
+		Room:                    NewRoomClient(cfg),
+		Season:                  NewSeasonClient(cfg),
+		SeasonResult:            NewSeasonResultClient(cfg),
+		SessionMembership:       NewSessionMembershipClient(cfg),
 	}, nil
 }
 
@@ -222,30 +262,38 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                    ctx,
-		config:                 cfg,
-		CompetitionRestriction: NewCompetitionRestrictionClient(cfg),
-		ContentRelease:         NewContentReleaseClient(cfg),
-		Duel:                   NewDuelClient(cfg),
-		GameConfig:             NewGameConfigClient(cfg),
-		GameConfigVersion:      NewGameConfigVersionClient(cfg),
-		Match:                  NewMatchClient(cfg),
-		MatchParticipant:       NewMatchParticipantClient(cfg),
-		MatchResult:            NewMatchResultClient(cfg),
-		Party:                  NewPartyClient(cfg),
-		PartyActivity:          NewPartyActivityClient(cfg),
-		PartyInvitation:        NewPartyInvitationClient(cfg),
-		PartyMember:            NewPartyMemberClient(cfg),
-		PartyPolicy:            NewPartyPolicyClient(cfg),
-		Room:                   NewRoomClient(cfg),
-		SessionMembership:      NewSessionMembershipClient(cfg),
+		ctx:                     ctx,
+		config:                  cfg,
+		CompetitionPointEntry:   NewCompetitionPointEntryClient(cfg),
+		CompetitionRestriction:  NewCompetitionRestrictionClient(cfg),
+		ContentRelease:          NewContentReleaseClient(cfg),
+		Duel:                    NewDuelClient(cfg),
+		GameConfig:              NewGameConfigClient(cfg),
+		GameConfigVersion:       NewGameConfigVersionClient(cfg),
+		LeaderboardContribution: NewLeaderboardContributionClient(cfg),
+		LeaderboardDefinition:   NewLeaderboardDefinitionClient(cfg),
+		LeaderboardSnapshot:     NewLeaderboardSnapshotClient(cfg),
+		Match:                   NewMatchClient(cfg),
+		MatchParticipant:        NewMatchParticipantClient(cfg),
+		MatchResult:             NewMatchResultClient(cfg),
+		Party:                   NewPartyClient(cfg),
+		PartyActivity:           NewPartyActivityClient(cfg),
+		PartyInvitation:         NewPartyInvitationClient(cfg),
+		PartyMember:             NewPartyMemberClient(cfg),
+		PartyPolicy:             NewPartyPolicyClient(cfg),
+		Rating:                  NewRatingClient(cfg),
+		RatingChange:            NewRatingChangeClient(cfg),
+		Room:                    NewRoomClient(cfg),
+		Season:                  NewSeasonClient(cfg),
+		SeasonResult:            NewSeasonResultClient(cfg),
+		SessionMembership:       NewSessionMembershipClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		CompetitionRestriction.
+//		CompetitionPointEntry.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -268,9 +316,11 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.CompetitionRestriction, c.ContentRelease, c.Duel, c.GameConfig,
-		c.GameConfigVersion, c.Match, c.MatchParticipant, c.MatchResult, c.Party,
-		c.PartyActivity, c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room,
+		c.CompetitionPointEntry, c.CompetitionRestriction, c.ContentRelease, c.Duel,
+		c.GameConfig, c.GameConfigVersion, c.LeaderboardContribution,
+		c.LeaderboardDefinition, c.LeaderboardSnapshot, c.Match, c.MatchParticipant,
+		c.MatchResult, c.Party, c.PartyActivity, c.PartyInvitation, c.PartyMember,
+		c.PartyPolicy, c.Rating, c.RatingChange, c.Room, c.Season, c.SeasonResult,
 		c.SessionMembership,
 	} {
 		n.Use(hooks...)
@@ -281,9 +331,11 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.CompetitionRestriction, c.ContentRelease, c.Duel, c.GameConfig,
-		c.GameConfigVersion, c.Match, c.MatchParticipant, c.MatchResult, c.Party,
-		c.PartyActivity, c.PartyInvitation, c.PartyMember, c.PartyPolicy, c.Room,
+		c.CompetitionPointEntry, c.CompetitionRestriction, c.ContentRelease, c.Duel,
+		c.GameConfig, c.GameConfigVersion, c.LeaderboardContribution,
+		c.LeaderboardDefinition, c.LeaderboardSnapshot, c.Match, c.MatchParticipant,
+		c.MatchResult, c.Party, c.PartyActivity, c.PartyInvitation, c.PartyMember,
+		c.PartyPolicy, c.Rating, c.RatingChange, c.Room, c.Season, c.SeasonResult,
 		c.SessionMembership,
 	} {
 		n.Intercept(interceptors...)
@@ -293,6 +345,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *CompetitionPointEntryMutation:
+		return c.CompetitionPointEntry.mutate(ctx, m)
 	case *CompetitionRestrictionMutation:
 		return c.CompetitionRestriction.mutate(ctx, m)
 	case *ContentReleaseMutation:
@@ -303,6 +357,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.GameConfig.mutate(ctx, m)
 	case *GameConfigVersionMutation:
 		return c.GameConfigVersion.mutate(ctx, m)
+	case *LeaderboardContributionMutation:
+		return c.LeaderboardContribution.mutate(ctx, m)
+	case *LeaderboardDefinitionMutation:
+		return c.LeaderboardDefinition.mutate(ctx, m)
+	case *LeaderboardSnapshotMutation:
+		return c.LeaderboardSnapshot.mutate(ctx, m)
 	case *MatchMutation:
 		return c.Match.mutate(ctx, m)
 	case *MatchParticipantMutation:
@@ -319,12 +379,155 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PartyMember.mutate(ctx, m)
 	case *PartyPolicyMutation:
 		return c.PartyPolicy.mutate(ctx, m)
+	case *RatingMutation:
+		return c.Rating.mutate(ctx, m)
+	case *RatingChangeMutation:
+		return c.RatingChange.mutate(ctx, m)
 	case *RoomMutation:
 		return c.Room.mutate(ctx, m)
+	case *SeasonMutation:
+		return c.Season.mutate(ctx, m)
+	case *SeasonResultMutation:
+		return c.SeasonResult.mutate(ctx, m)
 	case *SessionMembershipMutation:
 		return c.SessionMembership.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// CompetitionPointEntryClient is a client for the CompetitionPointEntry schema.
+type CompetitionPointEntryClient struct {
+	config
+}
+
+// NewCompetitionPointEntryClient returns a client for the CompetitionPointEntry from the given config.
+func NewCompetitionPointEntryClient(c config) *CompetitionPointEntryClient {
+	return &CompetitionPointEntryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `competitionpointentry.Hooks(f(g(h())))`.
+func (c *CompetitionPointEntryClient) Use(hooks ...Hook) {
+	c.hooks.CompetitionPointEntry = append(c.hooks.CompetitionPointEntry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `competitionpointentry.Intercept(f(g(h())))`.
+func (c *CompetitionPointEntryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CompetitionPointEntry = append(c.inters.CompetitionPointEntry, interceptors...)
+}
+
+// Create returns a builder for creating a CompetitionPointEntry entity.
+func (c *CompetitionPointEntryClient) Create() *CompetitionPointEntryCreate {
+	mutation := newCompetitionPointEntryMutation(c.config, OpCreate)
+	return &CompetitionPointEntryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CompetitionPointEntry entities.
+func (c *CompetitionPointEntryClient) CreateBulk(builders ...*CompetitionPointEntryCreate) *CompetitionPointEntryCreateBulk {
+	return &CompetitionPointEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CompetitionPointEntryClient) MapCreateBulk(slice any, setFunc func(*CompetitionPointEntryCreate, int)) *CompetitionPointEntryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CompetitionPointEntryCreateBulk{err: fmt.Errorf("calling to CompetitionPointEntryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CompetitionPointEntryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CompetitionPointEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CompetitionPointEntry.
+func (c *CompetitionPointEntryClient) Update() *CompetitionPointEntryUpdate {
+	mutation := newCompetitionPointEntryMutation(c.config, OpUpdate)
+	return &CompetitionPointEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CompetitionPointEntryClient) UpdateOne(_m *CompetitionPointEntry) *CompetitionPointEntryUpdateOne {
+	mutation := newCompetitionPointEntryMutation(c.config, OpUpdateOne, withCompetitionPointEntry(_m))
+	return &CompetitionPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CompetitionPointEntryClient) UpdateOneID(id uuid.UUID) *CompetitionPointEntryUpdateOne {
+	mutation := newCompetitionPointEntryMutation(c.config, OpUpdateOne, withCompetitionPointEntryID(id))
+	return &CompetitionPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CompetitionPointEntry.
+func (c *CompetitionPointEntryClient) Delete() *CompetitionPointEntryDelete {
+	mutation := newCompetitionPointEntryMutation(c.config, OpDelete)
+	return &CompetitionPointEntryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CompetitionPointEntryClient) DeleteOne(_m *CompetitionPointEntry) *CompetitionPointEntryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CompetitionPointEntryClient) DeleteOneID(id uuid.UUID) *CompetitionPointEntryDeleteOne {
+	builder := c.Delete().Where(competitionpointentry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CompetitionPointEntryDeleteOne{builder}
+}
+
+// Query returns a query builder for CompetitionPointEntry.
+func (c *CompetitionPointEntryClient) Query() *CompetitionPointEntryQuery {
+	return &CompetitionPointEntryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCompetitionPointEntry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CompetitionPointEntry entity by its id.
+func (c *CompetitionPointEntryClient) Get(ctx context.Context, id uuid.UUID) (*CompetitionPointEntry, error) {
+	return c.Query().Where(competitionpointentry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CompetitionPointEntryClient) GetX(ctx context.Context, id uuid.UUID) *CompetitionPointEntry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CompetitionPointEntryClient) Hooks() []Hook {
+	hooks := c.hooks.CompetitionPointEntry
+	return append(hooks[:len(hooks):len(hooks)], competitionpointentry.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CompetitionPointEntryClient) Interceptors() []Interceptor {
+	inters := c.inters.CompetitionPointEntry
+	return append(inters[:len(inters):len(inters)], competitionpointentry.Interceptors[:]...)
+}
+
+func (c *CompetitionPointEntryClient) mutate(ctx context.Context, m *CompetitionPointEntryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CompetitionPointEntryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CompetitionPointEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CompetitionPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CompetitionPointEntryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CompetitionPointEntry mutation op: %q", m.Op())
 	}
 }
 
@@ -999,6 +1202,411 @@ func (c *GameConfigVersionClient) mutate(ctx context.Context, m *GameConfigVersi
 		return (&GameConfigVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown GameConfigVersion mutation op: %q", m.Op())
+	}
+}
+
+// LeaderboardContributionClient is a client for the LeaderboardContribution schema.
+type LeaderboardContributionClient struct {
+	config
+}
+
+// NewLeaderboardContributionClient returns a client for the LeaderboardContribution from the given config.
+func NewLeaderboardContributionClient(c config) *LeaderboardContributionClient {
+	return &LeaderboardContributionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `leaderboardcontribution.Hooks(f(g(h())))`.
+func (c *LeaderboardContributionClient) Use(hooks ...Hook) {
+	c.hooks.LeaderboardContribution = append(c.hooks.LeaderboardContribution, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `leaderboardcontribution.Intercept(f(g(h())))`.
+func (c *LeaderboardContributionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LeaderboardContribution = append(c.inters.LeaderboardContribution, interceptors...)
+}
+
+// Create returns a builder for creating a LeaderboardContribution entity.
+func (c *LeaderboardContributionClient) Create() *LeaderboardContributionCreate {
+	mutation := newLeaderboardContributionMutation(c.config, OpCreate)
+	return &LeaderboardContributionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LeaderboardContribution entities.
+func (c *LeaderboardContributionClient) CreateBulk(builders ...*LeaderboardContributionCreate) *LeaderboardContributionCreateBulk {
+	return &LeaderboardContributionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LeaderboardContributionClient) MapCreateBulk(slice any, setFunc func(*LeaderboardContributionCreate, int)) *LeaderboardContributionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LeaderboardContributionCreateBulk{err: fmt.Errorf("calling to LeaderboardContributionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LeaderboardContributionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LeaderboardContributionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LeaderboardContribution.
+func (c *LeaderboardContributionClient) Update() *LeaderboardContributionUpdate {
+	mutation := newLeaderboardContributionMutation(c.config, OpUpdate)
+	return &LeaderboardContributionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LeaderboardContributionClient) UpdateOne(_m *LeaderboardContribution) *LeaderboardContributionUpdateOne {
+	mutation := newLeaderboardContributionMutation(c.config, OpUpdateOne, withLeaderboardContribution(_m))
+	return &LeaderboardContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LeaderboardContributionClient) UpdateOneID(id uuid.UUID) *LeaderboardContributionUpdateOne {
+	mutation := newLeaderboardContributionMutation(c.config, OpUpdateOne, withLeaderboardContributionID(id))
+	return &LeaderboardContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LeaderboardContribution.
+func (c *LeaderboardContributionClient) Delete() *LeaderboardContributionDelete {
+	mutation := newLeaderboardContributionMutation(c.config, OpDelete)
+	return &LeaderboardContributionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LeaderboardContributionClient) DeleteOne(_m *LeaderboardContribution) *LeaderboardContributionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LeaderboardContributionClient) DeleteOneID(id uuid.UUID) *LeaderboardContributionDeleteOne {
+	builder := c.Delete().Where(leaderboardcontribution.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LeaderboardContributionDeleteOne{builder}
+}
+
+// Query returns a query builder for LeaderboardContribution.
+func (c *LeaderboardContributionClient) Query() *LeaderboardContributionQuery {
+	return &LeaderboardContributionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLeaderboardContribution},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LeaderboardContribution entity by its id.
+func (c *LeaderboardContributionClient) Get(ctx context.Context, id uuid.UUID) (*LeaderboardContribution, error) {
+	return c.Query().Where(leaderboardcontribution.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LeaderboardContributionClient) GetX(ctx context.Context, id uuid.UUID) *LeaderboardContribution {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LeaderboardContributionClient) Hooks() []Hook {
+	hooks := c.hooks.LeaderboardContribution
+	return append(hooks[:len(hooks):len(hooks)], leaderboardcontribution.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LeaderboardContributionClient) Interceptors() []Interceptor {
+	inters := c.inters.LeaderboardContribution
+	return append(inters[:len(inters):len(inters)], leaderboardcontribution.Interceptors[:]...)
+}
+
+func (c *LeaderboardContributionClient) mutate(ctx context.Context, m *LeaderboardContributionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LeaderboardContributionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LeaderboardContributionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LeaderboardContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LeaderboardContributionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LeaderboardContribution mutation op: %q", m.Op())
+	}
+}
+
+// LeaderboardDefinitionClient is a client for the LeaderboardDefinition schema.
+type LeaderboardDefinitionClient struct {
+	config
+}
+
+// NewLeaderboardDefinitionClient returns a client for the LeaderboardDefinition from the given config.
+func NewLeaderboardDefinitionClient(c config) *LeaderboardDefinitionClient {
+	return &LeaderboardDefinitionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `leaderboarddefinition.Hooks(f(g(h())))`.
+func (c *LeaderboardDefinitionClient) Use(hooks ...Hook) {
+	c.hooks.LeaderboardDefinition = append(c.hooks.LeaderboardDefinition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `leaderboarddefinition.Intercept(f(g(h())))`.
+func (c *LeaderboardDefinitionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LeaderboardDefinition = append(c.inters.LeaderboardDefinition, interceptors...)
+}
+
+// Create returns a builder for creating a LeaderboardDefinition entity.
+func (c *LeaderboardDefinitionClient) Create() *LeaderboardDefinitionCreate {
+	mutation := newLeaderboardDefinitionMutation(c.config, OpCreate)
+	return &LeaderboardDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LeaderboardDefinition entities.
+func (c *LeaderboardDefinitionClient) CreateBulk(builders ...*LeaderboardDefinitionCreate) *LeaderboardDefinitionCreateBulk {
+	return &LeaderboardDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LeaderboardDefinitionClient) MapCreateBulk(slice any, setFunc func(*LeaderboardDefinitionCreate, int)) *LeaderboardDefinitionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LeaderboardDefinitionCreateBulk{err: fmt.Errorf("calling to LeaderboardDefinitionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LeaderboardDefinitionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LeaderboardDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LeaderboardDefinition.
+func (c *LeaderboardDefinitionClient) Update() *LeaderboardDefinitionUpdate {
+	mutation := newLeaderboardDefinitionMutation(c.config, OpUpdate)
+	return &LeaderboardDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LeaderboardDefinitionClient) UpdateOne(_m *LeaderboardDefinition) *LeaderboardDefinitionUpdateOne {
+	mutation := newLeaderboardDefinitionMutation(c.config, OpUpdateOne, withLeaderboardDefinition(_m))
+	return &LeaderboardDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LeaderboardDefinitionClient) UpdateOneID(id uuid.UUID) *LeaderboardDefinitionUpdateOne {
+	mutation := newLeaderboardDefinitionMutation(c.config, OpUpdateOne, withLeaderboardDefinitionID(id))
+	return &LeaderboardDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LeaderboardDefinition.
+func (c *LeaderboardDefinitionClient) Delete() *LeaderboardDefinitionDelete {
+	mutation := newLeaderboardDefinitionMutation(c.config, OpDelete)
+	return &LeaderboardDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LeaderboardDefinitionClient) DeleteOne(_m *LeaderboardDefinition) *LeaderboardDefinitionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LeaderboardDefinitionClient) DeleteOneID(id uuid.UUID) *LeaderboardDefinitionDeleteOne {
+	builder := c.Delete().Where(leaderboarddefinition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LeaderboardDefinitionDeleteOne{builder}
+}
+
+// Query returns a query builder for LeaderboardDefinition.
+func (c *LeaderboardDefinitionClient) Query() *LeaderboardDefinitionQuery {
+	return &LeaderboardDefinitionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLeaderboardDefinition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LeaderboardDefinition entity by its id.
+func (c *LeaderboardDefinitionClient) Get(ctx context.Context, id uuid.UUID) (*LeaderboardDefinition, error) {
+	return c.Query().Where(leaderboarddefinition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LeaderboardDefinitionClient) GetX(ctx context.Context, id uuid.UUID) *LeaderboardDefinition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LeaderboardDefinitionClient) Hooks() []Hook {
+	hooks := c.hooks.LeaderboardDefinition
+	return append(hooks[:len(hooks):len(hooks)], leaderboarddefinition.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LeaderboardDefinitionClient) Interceptors() []Interceptor {
+	inters := c.inters.LeaderboardDefinition
+	return append(inters[:len(inters):len(inters)], leaderboarddefinition.Interceptors[:]...)
+}
+
+func (c *LeaderboardDefinitionClient) mutate(ctx context.Context, m *LeaderboardDefinitionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LeaderboardDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LeaderboardDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LeaderboardDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LeaderboardDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LeaderboardDefinition mutation op: %q", m.Op())
+	}
+}
+
+// LeaderboardSnapshotClient is a client for the LeaderboardSnapshot schema.
+type LeaderboardSnapshotClient struct {
+	config
+}
+
+// NewLeaderboardSnapshotClient returns a client for the LeaderboardSnapshot from the given config.
+func NewLeaderboardSnapshotClient(c config) *LeaderboardSnapshotClient {
+	return &LeaderboardSnapshotClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `leaderboardsnapshot.Hooks(f(g(h())))`.
+func (c *LeaderboardSnapshotClient) Use(hooks ...Hook) {
+	c.hooks.LeaderboardSnapshot = append(c.hooks.LeaderboardSnapshot, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `leaderboardsnapshot.Intercept(f(g(h())))`.
+func (c *LeaderboardSnapshotClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LeaderboardSnapshot = append(c.inters.LeaderboardSnapshot, interceptors...)
+}
+
+// Create returns a builder for creating a LeaderboardSnapshot entity.
+func (c *LeaderboardSnapshotClient) Create() *LeaderboardSnapshotCreate {
+	mutation := newLeaderboardSnapshotMutation(c.config, OpCreate)
+	return &LeaderboardSnapshotCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LeaderboardSnapshot entities.
+func (c *LeaderboardSnapshotClient) CreateBulk(builders ...*LeaderboardSnapshotCreate) *LeaderboardSnapshotCreateBulk {
+	return &LeaderboardSnapshotCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LeaderboardSnapshotClient) MapCreateBulk(slice any, setFunc func(*LeaderboardSnapshotCreate, int)) *LeaderboardSnapshotCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LeaderboardSnapshotCreateBulk{err: fmt.Errorf("calling to LeaderboardSnapshotClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LeaderboardSnapshotCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LeaderboardSnapshotCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LeaderboardSnapshot.
+func (c *LeaderboardSnapshotClient) Update() *LeaderboardSnapshotUpdate {
+	mutation := newLeaderboardSnapshotMutation(c.config, OpUpdate)
+	return &LeaderboardSnapshotUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LeaderboardSnapshotClient) UpdateOne(_m *LeaderboardSnapshot) *LeaderboardSnapshotUpdateOne {
+	mutation := newLeaderboardSnapshotMutation(c.config, OpUpdateOne, withLeaderboardSnapshot(_m))
+	return &LeaderboardSnapshotUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LeaderboardSnapshotClient) UpdateOneID(id uuid.UUID) *LeaderboardSnapshotUpdateOne {
+	mutation := newLeaderboardSnapshotMutation(c.config, OpUpdateOne, withLeaderboardSnapshotID(id))
+	return &LeaderboardSnapshotUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LeaderboardSnapshot.
+func (c *LeaderboardSnapshotClient) Delete() *LeaderboardSnapshotDelete {
+	mutation := newLeaderboardSnapshotMutation(c.config, OpDelete)
+	return &LeaderboardSnapshotDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LeaderboardSnapshotClient) DeleteOne(_m *LeaderboardSnapshot) *LeaderboardSnapshotDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LeaderboardSnapshotClient) DeleteOneID(id uuid.UUID) *LeaderboardSnapshotDeleteOne {
+	builder := c.Delete().Where(leaderboardsnapshot.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LeaderboardSnapshotDeleteOne{builder}
+}
+
+// Query returns a query builder for LeaderboardSnapshot.
+func (c *LeaderboardSnapshotClient) Query() *LeaderboardSnapshotQuery {
+	return &LeaderboardSnapshotQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLeaderboardSnapshot},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LeaderboardSnapshot entity by its id.
+func (c *LeaderboardSnapshotClient) Get(ctx context.Context, id uuid.UUID) (*LeaderboardSnapshot, error) {
+	return c.Query().Where(leaderboardsnapshot.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LeaderboardSnapshotClient) GetX(ctx context.Context, id uuid.UUID) *LeaderboardSnapshot {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LeaderboardSnapshotClient) Hooks() []Hook {
+	hooks := c.hooks.LeaderboardSnapshot
+	return append(hooks[:len(hooks):len(hooks)], leaderboardsnapshot.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LeaderboardSnapshotClient) Interceptors() []Interceptor {
+	inters := c.inters.LeaderboardSnapshot
+	return append(inters[:len(inters):len(inters)], leaderboardsnapshot.Interceptors[:]...)
+}
+
+func (c *LeaderboardSnapshotClient) mutate(ctx context.Context, m *LeaderboardSnapshotMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LeaderboardSnapshotCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LeaderboardSnapshotUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LeaderboardSnapshotUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LeaderboardSnapshotDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LeaderboardSnapshot mutation op: %q", m.Op())
 	}
 }
 
@@ -2082,6 +2690,276 @@ func (c *PartyPolicyClient) mutate(ctx context.Context, m *PartyPolicyMutation) 
 	}
 }
 
+// RatingClient is a client for the Rating schema.
+type RatingClient struct {
+	config
+}
+
+// NewRatingClient returns a client for the Rating from the given config.
+func NewRatingClient(c config) *RatingClient {
+	return &RatingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rating.Hooks(f(g(h())))`.
+func (c *RatingClient) Use(hooks ...Hook) {
+	c.hooks.Rating = append(c.hooks.Rating, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `rating.Intercept(f(g(h())))`.
+func (c *RatingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Rating = append(c.inters.Rating, interceptors...)
+}
+
+// Create returns a builder for creating a Rating entity.
+func (c *RatingClient) Create() *RatingCreate {
+	mutation := newRatingMutation(c.config, OpCreate)
+	return &RatingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Rating entities.
+func (c *RatingClient) CreateBulk(builders ...*RatingCreate) *RatingCreateBulk {
+	return &RatingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RatingClient) MapCreateBulk(slice any, setFunc func(*RatingCreate, int)) *RatingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RatingCreateBulk{err: fmt.Errorf("calling to RatingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RatingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RatingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Rating.
+func (c *RatingClient) Update() *RatingUpdate {
+	mutation := newRatingMutation(c.config, OpUpdate)
+	return &RatingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RatingClient) UpdateOne(_m *Rating) *RatingUpdateOne {
+	mutation := newRatingMutation(c.config, OpUpdateOne, withRating(_m))
+	return &RatingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RatingClient) UpdateOneID(id uuid.UUID) *RatingUpdateOne {
+	mutation := newRatingMutation(c.config, OpUpdateOne, withRatingID(id))
+	return &RatingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Rating.
+func (c *RatingClient) Delete() *RatingDelete {
+	mutation := newRatingMutation(c.config, OpDelete)
+	return &RatingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RatingClient) DeleteOne(_m *Rating) *RatingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RatingClient) DeleteOneID(id uuid.UUID) *RatingDeleteOne {
+	builder := c.Delete().Where(rating.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RatingDeleteOne{builder}
+}
+
+// Query returns a query builder for Rating.
+func (c *RatingClient) Query() *RatingQuery {
+	return &RatingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRating},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Rating entity by its id.
+func (c *RatingClient) Get(ctx context.Context, id uuid.UUID) (*Rating, error) {
+	return c.Query().Where(rating.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RatingClient) GetX(ctx context.Context, id uuid.UUID) *Rating {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RatingClient) Hooks() []Hook {
+	hooks := c.hooks.Rating
+	return append(hooks[:len(hooks):len(hooks)], rating.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RatingClient) Interceptors() []Interceptor {
+	inters := c.inters.Rating
+	return append(inters[:len(inters):len(inters)], rating.Interceptors[:]...)
+}
+
+func (c *RatingClient) mutate(ctx context.Context, m *RatingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RatingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RatingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RatingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RatingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Rating mutation op: %q", m.Op())
+	}
+}
+
+// RatingChangeClient is a client for the RatingChange schema.
+type RatingChangeClient struct {
+	config
+}
+
+// NewRatingChangeClient returns a client for the RatingChange from the given config.
+func NewRatingChangeClient(c config) *RatingChangeClient {
+	return &RatingChangeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ratingchange.Hooks(f(g(h())))`.
+func (c *RatingChangeClient) Use(hooks ...Hook) {
+	c.hooks.RatingChange = append(c.hooks.RatingChange, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ratingchange.Intercept(f(g(h())))`.
+func (c *RatingChangeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RatingChange = append(c.inters.RatingChange, interceptors...)
+}
+
+// Create returns a builder for creating a RatingChange entity.
+func (c *RatingChangeClient) Create() *RatingChangeCreate {
+	mutation := newRatingChangeMutation(c.config, OpCreate)
+	return &RatingChangeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RatingChange entities.
+func (c *RatingChangeClient) CreateBulk(builders ...*RatingChangeCreate) *RatingChangeCreateBulk {
+	return &RatingChangeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RatingChangeClient) MapCreateBulk(slice any, setFunc func(*RatingChangeCreate, int)) *RatingChangeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RatingChangeCreateBulk{err: fmt.Errorf("calling to RatingChangeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RatingChangeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RatingChangeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RatingChange.
+func (c *RatingChangeClient) Update() *RatingChangeUpdate {
+	mutation := newRatingChangeMutation(c.config, OpUpdate)
+	return &RatingChangeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RatingChangeClient) UpdateOne(_m *RatingChange) *RatingChangeUpdateOne {
+	mutation := newRatingChangeMutation(c.config, OpUpdateOne, withRatingChange(_m))
+	return &RatingChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RatingChangeClient) UpdateOneID(id uuid.UUID) *RatingChangeUpdateOne {
+	mutation := newRatingChangeMutation(c.config, OpUpdateOne, withRatingChangeID(id))
+	return &RatingChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RatingChange.
+func (c *RatingChangeClient) Delete() *RatingChangeDelete {
+	mutation := newRatingChangeMutation(c.config, OpDelete)
+	return &RatingChangeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RatingChangeClient) DeleteOne(_m *RatingChange) *RatingChangeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RatingChangeClient) DeleteOneID(id uuid.UUID) *RatingChangeDeleteOne {
+	builder := c.Delete().Where(ratingchange.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RatingChangeDeleteOne{builder}
+}
+
+// Query returns a query builder for RatingChange.
+func (c *RatingChangeClient) Query() *RatingChangeQuery {
+	return &RatingChangeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRatingChange},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RatingChange entity by its id.
+func (c *RatingChangeClient) Get(ctx context.Context, id uuid.UUID) (*RatingChange, error) {
+	return c.Query().Where(ratingchange.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RatingChangeClient) GetX(ctx context.Context, id uuid.UUID) *RatingChange {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RatingChangeClient) Hooks() []Hook {
+	hooks := c.hooks.RatingChange
+	return append(hooks[:len(hooks):len(hooks)], ratingchange.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RatingChangeClient) Interceptors() []Interceptor {
+	inters := c.inters.RatingChange
+	return append(inters[:len(inters):len(inters)], ratingchange.Interceptors[:]...)
+}
+
+func (c *RatingChangeClient) mutate(ctx context.Context, m *RatingChangeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RatingChangeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RatingChangeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RatingChangeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RatingChangeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RatingChange mutation op: %q", m.Op())
+	}
+}
+
 // RoomClient is a client for the Room schema.
 type RoomClient struct {
 	config
@@ -2214,6 +3092,276 @@ func (c *RoomClient) mutate(ctx context.Context, m *RoomMutation) (Value, error)
 		return (&RoomDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Room mutation op: %q", m.Op())
+	}
+}
+
+// SeasonClient is a client for the Season schema.
+type SeasonClient struct {
+	config
+}
+
+// NewSeasonClient returns a client for the Season from the given config.
+func NewSeasonClient(c config) *SeasonClient {
+	return &SeasonClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `season.Hooks(f(g(h())))`.
+func (c *SeasonClient) Use(hooks ...Hook) {
+	c.hooks.Season = append(c.hooks.Season, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `season.Intercept(f(g(h())))`.
+func (c *SeasonClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Season = append(c.inters.Season, interceptors...)
+}
+
+// Create returns a builder for creating a Season entity.
+func (c *SeasonClient) Create() *SeasonCreate {
+	mutation := newSeasonMutation(c.config, OpCreate)
+	return &SeasonCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Season entities.
+func (c *SeasonClient) CreateBulk(builders ...*SeasonCreate) *SeasonCreateBulk {
+	return &SeasonCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SeasonClient) MapCreateBulk(slice any, setFunc func(*SeasonCreate, int)) *SeasonCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SeasonCreateBulk{err: fmt.Errorf("calling to SeasonClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SeasonCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SeasonCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Season.
+func (c *SeasonClient) Update() *SeasonUpdate {
+	mutation := newSeasonMutation(c.config, OpUpdate)
+	return &SeasonUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SeasonClient) UpdateOne(_m *Season) *SeasonUpdateOne {
+	mutation := newSeasonMutation(c.config, OpUpdateOne, withSeason(_m))
+	return &SeasonUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SeasonClient) UpdateOneID(id uuid.UUID) *SeasonUpdateOne {
+	mutation := newSeasonMutation(c.config, OpUpdateOne, withSeasonID(id))
+	return &SeasonUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Season.
+func (c *SeasonClient) Delete() *SeasonDelete {
+	mutation := newSeasonMutation(c.config, OpDelete)
+	return &SeasonDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SeasonClient) DeleteOne(_m *Season) *SeasonDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SeasonClient) DeleteOneID(id uuid.UUID) *SeasonDeleteOne {
+	builder := c.Delete().Where(season.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SeasonDeleteOne{builder}
+}
+
+// Query returns a query builder for Season.
+func (c *SeasonClient) Query() *SeasonQuery {
+	return &SeasonQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSeason},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Season entity by its id.
+func (c *SeasonClient) Get(ctx context.Context, id uuid.UUID) (*Season, error) {
+	return c.Query().Where(season.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SeasonClient) GetX(ctx context.Context, id uuid.UUID) *Season {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SeasonClient) Hooks() []Hook {
+	hooks := c.hooks.Season
+	return append(hooks[:len(hooks):len(hooks)], season.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SeasonClient) Interceptors() []Interceptor {
+	inters := c.inters.Season
+	return append(inters[:len(inters):len(inters)], season.Interceptors[:]...)
+}
+
+func (c *SeasonClient) mutate(ctx context.Context, m *SeasonMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SeasonCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SeasonUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SeasonUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SeasonDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Season mutation op: %q", m.Op())
+	}
+}
+
+// SeasonResultClient is a client for the SeasonResult schema.
+type SeasonResultClient struct {
+	config
+}
+
+// NewSeasonResultClient returns a client for the SeasonResult from the given config.
+func NewSeasonResultClient(c config) *SeasonResultClient {
+	return &SeasonResultClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `seasonresult.Hooks(f(g(h())))`.
+func (c *SeasonResultClient) Use(hooks ...Hook) {
+	c.hooks.SeasonResult = append(c.hooks.SeasonResult, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `seasonresult.Intercept(f(g(h())))`.
+func (c *SeasonResultClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SeasonResult = append(c.inters.SeasonResult, interceptors...)
+}
+
+// Create returns a builder for creating a SeasonResult entity.
+func (c *SeasonResultClient) Create() *SeasonResultCreate {
+	mutation := newSeasonResultMutation(c.config, OpCreate)
+	return &SeasonResultCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SeasonResult entities.
+func (c *SeasonResultClient) CreateBulk(builders ...*SeasonResultCreate) *SeasonResultCreateBulk {
+	return &SeasonResultCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SeasonResultClient) MapCreateBulk(slice any, setFunc func(*SeasonResultCreate, int)) *SeasonResultCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SeasonResultCreateBulk{err: fmt.Errorf("calling to SeasonResultClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SeasonResultCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SeasonResultCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SeasonResult.
+func (c *SeasonResultClient) Update() *SeasonResultUpdate {
+	mutation := newSeasonResultMutation(c.config, OpUpdate)
+	return &SeasonResultUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SeasonResultClient) UpdateOne(_m *SeasonResult) *SeasonResultUpdateOne {
+	mutation := newSeasonResultMutation(c.config, OpUpdateOne, withSeasonResult(_m))
+	return &SeasonResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SeasonResultClient) UpdateOneID(id uuid.UUID) *SeasonResultUpdateOne {
+	mutation := newSeasonResultMutation(c.config, OpUpdateOne, withSeasonResultID(id))
+	return &SeasonResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SeasonResult.
+func (c *SeasonResultClient) Delete() *SeasonResultDelete {
+	mutation := newSeasonResultMutation(c.config, OpDelete)
+	return &SeasonResultDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SeasonResultClient) DeleteOne(_m *SeasonResult) *SeasonResultDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SeasonResultClient) DeleteOneID(id uuid.UUID) *SeasonResultDeleteOne {
+	builder := c.Delete().Where(seasonresult.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SeasonResultDeleteOne{builder}
+}
+
+// Query returns a query builder for SeasonResult.
+func (c *SeasonResultClient) Query() *SeasonResultQuery {
+	return &SeasonResultQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSeasonResult},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SeasonResult entity by its id.
+func (c *SeasonResultClient) Get(ctx context.Context, id uuid.UUID) (*SeasonResult, error) {
+	return c.Query().Where(seasonresult.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SeasonResultClient) GetX(ctx context.Context, id uuid.UUID) *SeasonResult {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SeasonResultClient) Hooks() []Hook {
+	hooks := c.hooks.SeasonResult
+	return append(hooks[:len(hooks):len(hooks)], seasonresult.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SeasonResultClient) Interceptors() []Interceptor {
+	inters := c.inters.SeasonResult
+	return append(inters[:len(inters):len(inters)], seasonresult.Interceptors[:]...)
+}
+
+func (c *SeasonResultClient) mutate(ctx context.Context, m *SeasonResultMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SeasonResultCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SeasonResultUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SeasonResultUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SeasonResultDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SeasonResult mutation op: %q", m.Op())
 	}
 }
 
@@ -2355,35 +3503,47 @@ func (c *SessionMembershipClient) mutate(ctx context.Context, m *SessionMembersh
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		CompetitionRestriction, ContentRelease, Duel, GameConfig, GameConfigVersion,
-		Match, MatchParticipant, MatchResult, Party, PartyActivity, PartyInvitation,
-		PartyMember, PartyPolicy, Room, SessionMembership []ent.Hook
+		CompetitionPointEntry, CompetitionRestriction, ContentRelease, Duel, GameConfig,
+		GameConfigVersion, LeaderboardContribution, LeaderboardDefinition,
+		LeaderboardSnapshot, Match, MatchParticipant, MatchResult, Party,
+		PartyActivity, PartyInvitation, PartyMember, PartyPolicy, Rating, RatingChange,
+		Room, Season, SeasonResult, SessionMembership []ent.Hook
 	}
 	inters struct {
-		CompetitionRestriction, ContentRelease, Duel, GameConfig, GameConfigVersion,
-		Match, MatchParticipant, MatchResult, Party, PartyActivity, PartyInvitation,
-		PartyMember, PartyPolicy, Room, SessionMembership []ent.Interceptor
+		CompetitionPointEntry, CompetitionRestriction, ContentRelease, Duel, GameConfig,
+		GameConfigVersion, LeaderboardContribution, LeaderboardDefinition,
+		LeaderboardSnapshot, Match, MatchParticipant, MatchResult, Party,
+		PartyActivity, PartyInvitation, PartyMember, PartyPolicy, Rating, RatingChange,
+		Room, Season, SeasonResult, SessionMembership []ent.Interceptor
 	}
 )
 
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		CompetitionRestriction: tableSchemas[0],
-		ContentRelease:         tableSchemas[0],
-		Duel:                   tableSchemas[0],
-		GameConfig:             tableSchemas[0],
-		GameConfigVersion:      tableSchemas[0],
-		Match:                  tableSchemas[0],
-		MatchParticipant:       tableSchemas[0],
-		MatchResult:            tableSchemas[0],
-		Party:                  tableSchemas[1],
-		PartyActivity:          tableSchemas[1],
-		PartyInvitation:        tableSchemas[1],
-		PartyMember:            tableSchemas[1],
-		PartyPolicy:            tableSchemas[1],
-		Room:                   tableSchemas[1],
-		SessionMembership:      tableSchemas[1],
+		CompetitionPointEntry:   tableSchemas[0],
+		CompetitionRestriction:  tableSchemas[0],
+		ContentRelease:          tableSchemas[0],
+		Duel:                    tableSchemas[0],
+		GameConfig:              tableSchemas[0],
+		GameConfigVersion:       tableSchemas[0],
+		LeaderboardContribution: tableSchemas[0],
+		LeaderboardDefinition:   tableSchemas[0],
+		LeaderboardSnapshot:     tableSchemas[0],
+		Match:                   tableSchemas[0],
+		MatchParticipant:        tableSchemas[0],
+		MatchResult:             tableSchemas[0],
+		Party:                   tableSchemas[1],
+		PartyActivity:           tableSchemas[1],
+		PartyInvitation:         tableSchemas[1],
+		PartyMember:             tableSchemas[1],
+		PartyPolicy:             tableSchemas[1],
+		Rating:                  tableSchemas[0],
+		RatingChange:            tableSchemas[0],
+		Room:                    tableSchemas[1],
+		Season:                  tableSchemas[0],
+		SeasonResult:            tableSchemas[0],
+		SessionMembership:       tableSchemas[1],
 	}
 	tableSchemas = [...]string{"competition", "multiplayer"}
 )

@@ -167,6 +167,8 @@ channels:
       MatchmakingProposalUpdated: { $ref: '#/components/messages/MatchmakingProposalUpdated' }
       MatchmakingProposalCancelled: { $ref: '#/components/messages/MatchmakingProposalCancelled' }
       MatchmakingMatchAssigned: { $ref: '#/components/messages/MatchmakingMatchAssigned' }
+      # ---------- ranking (F106) ----------
+      CompetitionTierUpdated: { $ref: '#/components/messages/CompetitionTierUpdated' }
       # ---------- hub ----------
       HubInstanceJoin: { $ref: '#/components/messages/HubInstanceJoin' }
       HubPlayerMove: { $ref: '#/components/messages/HubPlayerMove' }
@@ -350,6 +352,12 @@ operations:
       - $ref: '#/channels/realtime/messages/MatchmakingProposalUpdated'
       - $ref: '#/channels/realtime/messages/MatchmakingProposalCancelled'
       - $ref: '#/channels/realtime/messages/MatchmakingMatchAssigned'
+  sendRankingEvents:
+    action: send
+    channel: { $ref: '#/channels/realtime' }
+    summary: 'Tier của chính học sinh sau trận ranked (F106-AC-07): không số rating/RD; không có thông báo "bị vượt" (COMPETITION_SYSTEM §9.4).'
+    messages:
+      - $ref: '#/channels/realtime/messages/CompetitionTierUpdated'
   receiveHubCommands:
     action: receive
     x-routing: { module: competition, room_input: [hub.player.move] }
@@ -2060,6 +2068,26 @@ components:
                   matchmaking_type: { type: string, maxLength: 64, description: 'Kiểu ghép của ticket (random, skill, grade, subject, topic, team — F104-AC-18).' }
                   bot_offer_available: { type: boolean, description: 'Chờ quá mm_bot_after — client có thể đề nghị "Đấu với Robot Học Giỏi" (startBotMatch, F104-AC-12).' }
                   requeued: { type: boolean, description: 'Về lại hàng đợi sau khi proposal bị hủy, giữ nguyên thời gian chờ (F104-AC-06).' }
+    CompetitionTierUpdated:
+      name: competition.tier.updated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/ServerEnvelope'
+          - type: object
+            properties:
+              type: { const: competition.tier.updated }
+              payload:
+                type: object
+                additionalProperties: false
+                required: [mode, subject_id, season_id, provisional, games_played]
+                properties:
+                  mode: { type: string, enum: [battle_1v1, team_battle, timed_quiz] }
+                  subject_id: { $ref: '#/components/schemas/Uuid' }
+                  season_id: { $ref: '#/components/schemas/Uuid' }
+                  tier_code: { type: [string, 'null'], maxLength: 64, description: 'null khi còn provisional' }
+                  provisional: { type: boolean }
+                  provisional_games_required: { type: integer, minimum: 1 }
+                  games_played: { type: integer, minimum: 0 }
     MatchmakingProposalCreated:
       name: matchmaking.proposal.created
       payload:

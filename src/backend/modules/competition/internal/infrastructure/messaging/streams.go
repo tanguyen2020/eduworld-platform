@@ -88,3 +88,23 @@ const BattleOpenName = "competition.battle_open"
 
 // BattleOpenEvents are the competition events it handles.
 var BattleOpenEvents = []string{"match.created"}
+
+// LearningStream is the stream of the producer learning.
+var LearningStream = natsx.EventStream("learning")
+
+// RankingMatchName updates the Game Ratings of a rated match (F106-AC-01…AC-05): match.completed (owner F105).
+const RankingMatchName = "competition.ranking_match"
+
+// PointsMatchName records the Competition Points of a rated match (F106-AC-10, AC-11) — a durable of its own so a
+// failure of one never blocks the other (plan F106).
+const PointsMatchName = "competition.points_match"
+
+// MatchCompletedEvents are the competition events both handle.
+var MatchCompletedEvents = []string{"match.completed"}
+
+// LeaderboardEffortName credits effort_points from graded learning activities (F106-AC-16): activity.graded of module
+// learning (rapid guesses excluded).
+const LeaderboardEffortName = "competition.leaderboard_effort"
+
+// LeaderboardEffortEvents are the learning events it handles.
+var LeaderboardEffortEvents = []string{"activity.graded"}

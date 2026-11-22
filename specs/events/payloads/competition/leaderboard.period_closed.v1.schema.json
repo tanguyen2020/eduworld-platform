@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/competition/leaderboard.period_closed.v1.schema.json",
+  "title": "Payload leaderboard.period_closed v1 (module competition, owner F106)",
+  "description": "Một kỳ của một bảng ở một phạm vi đã đóng (giờ Asia/Ho_Chi_Minh) và snapshot đã ghi vào competition.leaderboard_snapshots (F106-AC-15). Phát một lần theo (leaderboard_id, scope_id, period_key). Với mục tiêu của khối (metric grade_goal): top rỗng, chỉ tổng tập thể và reached — không thứ hạng cá nhân (ADR-0095). Chỉ id học sinh, không nickname/tên (R16); thưởng theo ngưỡng, không theo thứ hạng.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["leaderboard_id", "code", "metric", "scope_type", "scope_id", "period_key", "top"],
+  "properties": {
+    "leaderboard_id": { "type": "string", "format": "uuid" },
+    "code": { "type": "string", "maxLength": 64 },
+    "metric": { "type": "string", "enum": ["competition_points", "effort_points", "grade_goal", "xp", "quest_completed", "rating", "team_points"] },
+    "scope_type": { "type": "string", "enum": ["global", "tenant", "school", "grade", "friends", "team", "tournament"] },
+    "scope_id": { "type": "string", "maxLength": 80, "pattern": "^[0-9a-z:-]+$", "description": "<school_id> | <school_id>:g<khối> | <tenant_id>:g<khối>" },
+    "school_id": { "type": ["string", "null"], "format": "uuid" },
+    "grade_level": { "type": ["integer", "null"], "minimum": 1, "maximum": 9 },
+    "period_key": { "type": "string", "maxLength": 64 },
+    "members": { "type": "integer", "minimum": 0 },
+    "top": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["student_id", "rank", "value"],
+        "properties": {
+          "student_id": { "type": "string", "format": "uuid" },
+          "rank": { "type": "integer", "minimum": 1 },
+          "value": { "type": "number" }
+        }
+      }
+    },
+    "grade_goal": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["current", "target", "reached"],
+      "properties": {
+        "current": { "type": "number", "minimum": 0 },
+        "target": { "type": "number", "minimum": 0 },
+        "reached": { "type": "boolean" }
+      }
+    }
+  },
+  "examples": [
+    { "leaderboard_id": "01936a00-0000-7000-8000-000000106101", "code": "grade_goal_weekly", "metric": "grade_goal", "scope_type": "grade", "scope_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011:g3", "school_id": "0193a5f4-6c1e-7b2a-9d1f-000000000011", "grade_level": 3, "period_key": "2026-W47", "members": 12, "top": [], "grade_goal": { "current": 412, "target": 400, "reached": true } }
+  ]
+}

@@ -1292,3 +1292,30 @@ exceptions:
     operation: POST
     path: /tenant/trash/{resource_type}/{resource_id}:restore
     text: enum value 'learning_path'
+  - adr: ADR-0018
+    reason: 'F106: học sinh chỉ thấy tier, không số rating — Rating bỏ tier bắt buộc (tier_code null khi provisional, F106-AC-05, AC-07)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/competition.v1.yaml
+    id: response-required-property-removed
+    operation: GET
+    path: /competition/ratings/me
+    text: removed the required property 'data/items/tier' from the response with the '200' status
+  - adr: ADR-0018
+    reason: 'F106: bảng metric rating hiển thị tier + thứ hạng, không có value (không số rating thô)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/competition.v1.yaml
+    id: response-property-became-optional
+    operation: GET
+    path: /leaderboards/{leaderboard_id}
+    text: the response property 'entries/items/value' became optional for the status '200'
+  - adr: ADR-0018
+    reason: 'F106: bảng metric rating hiển thị tier + thứ hạng, không có value (không số rating thô)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/competition.v1.yaml
+    id: response-property-became-optional
+    operation: GET
+    path: /leaderboards/{leaderboard_id}/me
+    text: the response property 'entries/items/value' became optional for the status '200'

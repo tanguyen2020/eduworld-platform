@@ -3,6 +3,7 @@ package contract
 import (
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -47,8 +48,8 @@ func TestPartyOperationsMatchSpec(t *testing.T) {
 			if public := op.Security != nil && len(*op.Security) == 0; public || o.Public {
 				t.Errorf("%s: public route", id)
 			}
-			// getMatch serves participants (game) and school staff (portal): its use case checks the channel (F105-AC-25).
-			if o.Guard&httpx.GuardGamePlayer == 0 && id != "getMatch" {
+			// getMatch (F105-AC-25), seasons and leaderboards (F106) also serve school staff (portal): the use case checks the channel.
+			if o.Guard&httpx.GuardGamePlayer == 0 && !slices.Contains(competitionhttp.StaffOperations, id) {
 				t.Errorf("%s: a player route needs the game_player guard", id)
 			}
 			var params []string
@@ -80,8 +81,8 @@ func TestPartyOperationsMatchSpec(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != len(competitionhttp.Operations) || len(found) != 30 {
-		t.Fatalf("F100/F101/F104/F105 operations found in the spec: %v", found)
+	if len(found) != len(competitionhttp.Operations) || len(found) != 37 {
+		t.Fatalf("F100/F101/F104/F105/F106 operations found in the spec: %v", found)
 	}
 	for _, id := range []string{"createParty", "inviteToParty", "acceptPartyInvitation", "joinParty", "transferPartyLeader",
 		"startPartySession", "createMatchmakingTicket", "createDuel", "acceptDuel", "startBotMatch"} {

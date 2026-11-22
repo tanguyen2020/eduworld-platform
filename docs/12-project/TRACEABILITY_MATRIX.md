@@ -31,7 +31,7 @@
 | `MM` Matchmaking | module competition | 6 | 6 | 0 | 4 | 0 | MM (4) | 1 | 0 | 0 / 8 |
 | `CMP` Competition / Battle | module competition | 6 | 6 | 0 | 7 | 0 | CMP (10) | 0 | 6 | 0 / 13 |
 | `RNK` Ranking | module competition | 4 | 4 | 0 | 1 | 0 | CMP (10) | 0 | 0 | 0 / 6 |
-| `LDB` Leaderboard | module competition | 5 | 5 | 0 | 2 | 0 | CMP (10) | 1 | 0 | 0 / 7 |
+| `LDB` Leaderboard | module competition | 5 | 5 | 0 | 4 | 0 | CMP (10) | 1 | 0 | 0 / 7 |
 | `TRN` Tournament | module competition | 3 | 3 | 0 | 1 | 0 | CMP (10) | 1 | 0 | 0 / 8 |
 | `SOC` Social | module chat | 4 | 4 | 0 | 35 | 0 | SOC (9) | 1 | 0 | 0 / 11 |
 | `CHAT` Chat | module chat | 17 | 17 | 0 | 15 | 0 | CHAT (48) | 2 | 15 | 0 / 0 |
@@ -46,7 +46,7 @@
 | `LMS` LMS | module learning | 10 | 10 | 1 | 31 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 21 | 546 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 21 | 550 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -467,11 +467,11 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 7 AC, 0 US — [COMPETITION_SYSTEM
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-LDB-001 | Bảng: Global, School, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season | P4 (Global trong Release 1.0; quy tắc hiển thị nickname theo FR-LDB-003) | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | _suy luận:_ 2 op | _suy luận:_ TC-CMP |
-| FR-LDB-002 | Leaderboard cache bằng Valkey sorted set, nguồn từ PostgreSQL | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-CMP |
-| FR-LDB-003 | Leaderboard ngoài phạm vi trường chỉ hiển thị nickname, không tên trường/khối chi tiết | P4 | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-CMP |
-| FR-LDB-004 | Trường có thể tắt leaderboard công khai cho lớp 1–3 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-CMP |
-| FR-LDB-005 | Mục tiêu tập thể của khối trong trường (grade_goal) thay bảng của lớp: hiển thị tiến độ chung, không xếp hạ… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 2 op | _suy luận:_ TC-CMP |
+| FR-LDB-001 | Bảng: Global, School, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season | P4 (Global trong Release 1.0; quy tắc hiển thị nickname theo FR-LDB-003) | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi](../adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | _suy luận:_ 4 op | _suy luận:_ TC-CMP |
+| FR-LDB-002 | Leaderboard cache bằng Valkey sorted set, nguồn từ PostgreSQL | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-CMP |
+| FR-LDB-003 | Leaderboard ngoài phạm vi trường chỉ hiển thị nickname, không tên trường/khối chi tiết | P4 | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-CMP |
+| FR-LDB-004 | Trường có thể tắt leaderboard công khai cho lớp 1–3 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-CMP |
+| FR-LDB-005 | Mục tiêu tập thể của khối trong trường (grade_goal) thay bảng của lớp: hiển thị tiến độ chung, không xếp hạ… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 4 op | _suy luận:_ TC-CMP |
 
 ### 3.20. `TRN` Tournament
 

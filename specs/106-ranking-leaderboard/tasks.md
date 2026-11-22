@@ -4,17 +4,17 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Tạo package `ranking`, `points`, `leaderboard`, `season`; đăng ký consumer (durable `competition.<handler>`), job, handler trong composition root — file: `src/backend/modules/competition/module.go` (nối vào `src/backend/cmd/core-api`, `src/backend/cmd/worker`)
-- [ ] T002 [P] Seed Ranking Rules, mùa "pre-season", danh mục leaderboard mặc định — file: `src/backend/modules/competition/seed/ranking_rules.json`, `src/backend/modules/competition/seed/leaderboard_definitions.json`, `src/backend/modules/competition/seed/seasons.json`
+- [x] T001 Tạo package `ranking`, `points`, `leaderboard`, `season`; đăng ký consumer (durable `competition.<handler>`), job, handler trong composition root — file: `src/backend/modules/competition/module.go` (nối vào `src/backend/cmd/core-api`, `src/backend/cmd/worker`) — ✅ composition root `module.go` (3 consumer, 5 job, 7 route; `RatingReader` thật cho matchmaking)
+- [x] T002 [P] Seed Ranking Rules, mùa "pre-season", danh mục leaderboard mặc định — file: `src/backend/modules/competition/seed/ranking_rules.json`, `src/backend/modules/competition/seed/leaderboard_definitions.json`, `src/backend/modules/competition/seed/seasons.json` — ✅ `seed/{ranking_rules,leaderboard_definitions,seasons}.json` + migration `20261231000005_f106_ranking.sql`; `TestF106SeedMatchesMigration` PASS
 
 ## Phase 2: Foundational (chặn mọi user story)
 
-- [ ] T003 Delta OpenAPI: sửa `Rating`, `LeaderboardPage`, `getMyRatings`, `getLeaderboard`, `getMyLeaderboardPosition`; thêm `listLeaderboards`, `getLeaderboardHistory`, `listSeasons`, `getSeason` — file: `specs/openapi/modules/competition.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=competition`
-- [ ] T004 [P] AsyncAPI `competition.tier.updated` — file: `specs/asyncapi/eduworld-realtime.v1.yaml` — kiểm: `make specs-lint`
-- [ ] T005 [P] Payload schema `rating.updated.v1`, `competition_points.awarded.v1`, `leaderboard.period_closed.v1`, `season.started.v1`, `season.ended.v1`; catalog EVENT_DESIGN §4.8 — file: `specs/events/payloads/competition/`, `docs/07-backend/EVENT_DESIGN.md` — kiểm: `make specs-lint`
-- [ ] T006 [P] Delta `activity.graded.v1` thêm `rapid_guess_flagged`, `recommendation_id` (phối hợp nhóm learning) — file: `specs/events/payloads/learning/activity.graded.v1.schema.json` — kiểm: `make specs-lint`
-- [ ] T007 ent schema: cột mới `ratings`, `rating_changes`, `competition_point_ledger`, `leaderboard_definitions`, `leaderboard_snapshots` (partition tháng), `seasons`; bảng mới `leaderboard_contributions`, `season_results`; CHECK scope ≠ `xp` — file: `src/backend/modules/competition/ent/schema/` — kiểm: `make migrate-diff MOD=competition name=f106_ranking`, `make migrate-lint MOD=competition`
-- [ ] T008 [P] Cập nhật DATABASE_DESIGN §2.10/§2.16, COMPETITION_SYSTEM §7.3/§9.3/§14.1 (tên bảng, key Valkey) — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/01-game-design/COMPETITION_SYSTEM.md`
+- [x] T003 Delta OpenAPI: sửa `Rating`, `LeaderboardPage`, `getMyRatings`, `getLeaderboard`, `getMyLeaderboardPosition`; thêm `listLeaderboards`, `getLeaderboardHistory`, `listSeasons`, `getSeason` — file: `specs/openapi/modules/competition.v1.yaml`, `specs/openapi/eduworld-api.v1.yaml` — kiểm: `make specs-lint`, `make specs-breaking`, `make gen MOD=competition` — ✅ `split-public --check`, `check-maxlength`, `TestPartyOperationsMatchSpec` (37 op) PASS; thêm query `grade_level` (Clarifications 2026-11-22)
+- [x] T004 [P] AsyncAPI `competition.tier.updated` — file: `specs/asyncapi/eduworld-realtime.v1.yaml` — kiểm: `make specs-lint` — ✅ `CompetitionTierUpdated` + `sendRankingEvents`; `TestNoRawRatingInRealtime` PASS
+- [x] T005 [P] Payload schema `rating.updated.v1`, `competition_points.awarded.v1`, `leaderboard.period_closed.v1`, `season.started.v1`, `season.ended.v1`; catalog EVENT_DESIGN §4.8 — file: `specs/events/payloads/competition/`, `docs/07-backend/EVENT_DESIGN.md` — kiểm: `make specs-lint` — ✅ 5 payload schema + EVENT_DESIGN §4.8; `validate-schemas` 0 lỗi; `checkSchemasOf` trong integration PASS
+- [x] T006 [P] Delta `activity.graded.v1` thêm `rapid_guess_flagged`, `recommendation_id` (phối hợp nhóm learning) — file: `specs/events/payloads/learning/activity.graded.v1.schema.json` — kiểm: `make specs-lint` — ✅ thêm tùy chọn `rapid_guess_flagged`, `recommendation_id` (learning chưa điền — Clarifications 2026-11-22)
+- [x] T007 ent schema: cột mới `ratings`, `rating_changes`, `competition_point_ledger`, `leaderboard_definitions`, `leaderboard_snapshots` (partition tháng), `seasons`; bảng mới `leaderboard_contributions`, `season_results`; CHECK scope ≠ `xp` — file: `src/backend/modules/competition/ent/schema/` — kiểm: `make migrate-diff MOD=competition name=f106_ranking`, `make migrate-lint MOD=competition` — ✅ 8 ent schema `ent/schema/ranking.go`; `TestMigrationMatchesEnt` PASS; `atlas.sum` cập nhật; tenancyguard/entlint PASS
+- [x] T008 [P] Cập nhật DATABASE_DESIGN §2.10/§2.16, COMPETITION_SYSTEM §7.3/§9.3/§14.1 (tên bảng, key Valkey) — file: `docs/07-backend/DATABASE_DESIGN.md`, `docs/01-game-design/COMPETITION_SYSTEM.md` — ✅ DATABASE_DESIGN §2.10 (ratings, rating_changes, definitions, contributions.grade_level, snapshots, seasons), EVENT_DESIGN §4.8; key Valkey theo VALKEY_DESIGN (`ew:lb:`)
 
 **Checkpoint**: nền tảng sẵn sàng, các story có thể bắt đầu.
 
@@ -26,15 +26,15 @@
 
 ### Tests cho User Story 1
 
-- [ ] T009 [P] [US1] Unit test F106-AC-01, F106-AC-04: vector Glickman (sai số < 0.01), Illinois hội tụ, team "đối thủ ảo", abandon/forfeit = 0 — file: `src/backend/modules/competition/tests/unit/ranking/glicko2_test.go` — phải FAIL trước khi code
-- [ ] T010 [P] [US1] Integration test F106-AC-02, F106-AC-03 (TC-CMP-008, TC-CMP-009): replay `match.completed` → 1 lần; unranked/bot/duel/giải/aborted không đổi; `rating.updated` sau commit — file: `src/backend/modules/competition/tests/integration/ranking/apply_match_rating_test.go`
-- [ ] T011 [P] [US1] Unit test F106-AC-05, F106-AC-06: provisional theo `rating_provisional`; bước "no games" tăng RD không vượt max, không đổi rating — file: `src/backend/modules/competition/tests/unit/ranking/provisional_rd_test.go`
+- [x] T009 [P] [US1] Unit test F106-AC-01, F106-AC-04: vector Glickman (sai số < 0.01), Illinois hội tụ, team "đối thủ ảo", abandon/forfeit = 0 — file: `src/backend/modules/competition/tests/unit/ranking/glicko2_test.go` — phải FAIL trước khi code — ✅ `tests/unit/rnk_glicko2_test.go` — vector Glickman r′=1464.06, RD′=151.52 PASS
+- [x] T010 [P] [US1] Integration test F106-AC-02, F106-AC-03 (TC-CMP-008, TC-CMP-009): replay `match.completed` → 1 lần; unranked/bot/duel/giải/aborted không đổi; `rating.updated` sau commit — file: `src/backend/modules/competition/tests/integration/ranking/apply_match_rating_test.go` — ✅ `tests/integration/f106_rating_points_test.go` (TestF106RatingAppliedOnce, TestF106UnratedMatchesChangeNothing, TestF106TeamBattleVirtualOpponent) PASS
+- [x] T011 [P] [US1] Unit test F106-AC-05, F106-AC-06: provisional theo `rating_provisional`; bước "no games" tăng RD không vượt max, không đổi rating — file: `src/backend/modules/competition/tests/unit/ranking/provisional_rd_test.go` — ✅ `tests/unit/rnk_provisional_rd_test.go` + `TestF106RDInflationJob` PASS
 
 ### Implementation cho User Story 1
 
-- [ ] T012 [P] [US1] Domain `glicko2.Update`, `ProvisionalPolicy` — file: `src/backend/modules/competition/internal/domain/ranking/glicko2.go`, `src/backend/modules/competition/internal/domain/ranking/provisional.go`
-- [ ] T013 [US1] Command `ApplyMatchRating` (tx: `ratings` + `rating_changes` + outbox) + consumer `match.completed` — file: `src/backend/modules/competition/internal/application/command/ranking/apply_match_rating.go`, `src/backend/modules/competition/internal/presentation/consumer/match_completed_ranking.go`
-- [ ] T014 [US1] Command `InflateInactiveRD` + job tuần; `RatingReader` thật thay `DefaultRatingReader` (F104) — file: `src/backend/modules/competition/internal/application/command/ranking/inflate_inactive_rd.go`, `src/backend/modules/competition/internal/presentation/job/rd_inflation.go`, `src/backend/modules/competition/internal/infrastructure/persistence/rating_reader.go`
+- [x] T012 [P] [US1] Domain `glicko2.Update`, `ProvisionalPolicy` — file: `src/backend/modules/competition/internal/domain/ranking/glicko2.go`, `src/backend/modules/competition/internal/domain/ranking/provisional.go` — ✅ `internal/domain/ranking/glicko2.go`, `tier.go` (provisional), `rules.go`
+- [x] T013 [US1] Command `ApplyMatchRating` (tx: `ratings` + `rating_changes` + outbox) + consumer `match.completed` — file: `src/backend/modules/competition/internal/application/command/ranking/apply_match_rating.go`, `src/backend/modules/competition/internal/presentation/consumer/match_completed_ranking.go` — ✅ `command/ranking.go` ApplyMatchRating + `consumer/ranking.go` (durable `competition.ranking_match`)
+- [x] T014 [US1] Command `InflateInactiveRD` + job tuần; `RatingReader` thật thay `DefaultRatingReader` (F104) — file: `src/backend/modules/competition/internal/application/command/ranking/inflate_inactive_rd.go`, `src/backend/modules/competition/internal/presentation/job/rd_inflation.go`, `src/backend/modules/competition/internal/infrastructure/persistence/rating_reader.go` — ✅ `command/season.go` InflateRD + job `rd-inflation`; `persistence.RatingReader` thay mặc định F104 (`TestF106RatingReaderForMatchmaking` PASS)
 
 **Checkpoint**: User Story 1 chạy và kiểm độc lập được.
 
@@ -46,13 +46,13 @@
 
 ### Tests cho User Story 2
 
-- [ ] T015 [P] [US2] Unit test F106-AC-08: ngưỡng/tên tier từ `tiers`, hysteresis — file: `src/backend/modules/competition/tests/unit/ranking/tier_test.go` — phải FAIL trước khi code
-- [ ] T016 [P] [US2] Contract test F106-AC-07, F106-AC-09: quét response mọi route học sinh + message realtime không có `rating`/`rd`; không có operation facade/trường event cấp rating cho learning — file: `src/backend/modules/competition/tests/contract/no_raw_rating_test.go`
+- [x] T015 [P] [US2] Unit test F106-AC-08: ngưỡng/tên tier từ `tiers`, hysteresis — file: `src/backend/modules/competition/tests/unit/ranking/tier_test.go` — phải FAIL trước khi code — ✅ `tests/unit/rnk_tier_test.go` PASS
+- [x] T016 [P] [US2] Contract test F106-AC-07, F106-AC-09: quét response mọi route học sinh + message realtime không có `rating`/`rd`; không có operation facade/trường event cấp rating cho learning — file: `src/backend/modules/competition/tests/contract/no_raw_rating_test.go` — ✅ `tests/contract/no_raw_rating_test.go` (3 test) PASS
 
 ### Implementation cho User Story 2
 
-- [ ] T017 [P] [US2] Domain `TierPolicy` — file: `src/backend/modules/competition/internal/domain/ranking/tier.go`
-- [ ] T018 [US2] Query `GetMyRatings` + handler `getMyRatings`; eventmap `rating.updated` → `competition.tier.updated` (chỉ tier) — file: `src/backend/modules/competition/internal/application/query/ranking/get_my_ratings.go`, `src/backend/modules/competition/internal/presentation/http/public/ranking_handler.go`, `src/backend/modules/competition/internal/presentation/realtime/eventmap.go`
+- [x] T017 [P] [US2] Domain `TierPolicy` — file: `src/backend/modules/competition/internal/domain/ranking/tier.go` — ✅ `internal/domain/ranking/tier.go`
+- [x] T018 [US2] Query `GetMyRatings` + handler `getMyRatings`; eventmap `rating.updated` → `competition.tier.updated` (chỉ tier) — file: `src/backend/modules/competition/internal/application/query/ranking/get_my_ratings.go`, `src/backend/modules/competition/internal/presentation/http/public/ranking_handler.go`, `src/backend/modules/competition/internal/presentation/realtime/eventmap.go` — ✅ `query/ranking.go` GetMyRatings + `http/ranking.go`; push `competition.tier.updated` sau commit (`TestF106GetMyRatings` PASS)
 
 **Checkpoint**: User Story 2 chạy độc lập.
 
@@ -64,11 +64,11 @@
 
 ### Tests cho User Story 3
 
-- [ ] T019 [P] [US3] Unit + integration test F106-AC-10, F106-AC-11: bảng điểm, thua không trừ, abandon không dưới 0, trần ngày/số trận (`capped`), unique nguồn, `competition_points.awarded` — file: `src/backend/modules/competition/tests/integration/points/award_points_test.go` — phải FAIL trước khi code
+- [x] T019 [P] [US3] Unit + integration test F106-AC-10, F106-AC-11: bảng điểm, thua không trừ, abandon không dưới 0, trần ngày/số trận (`capped`), unique nguồn, `competition_points.awarded` — file: `src/backend/modules/competition/tests/integration/points/award_points_test.go` — phải FAIL trước khi code — ✅ `tests/unit/pts_table_test.go` + `TestF106CompetitionPoints` PASS
 
 ### Implementation cho User Story 3
 
-- [ ] T020 [US3] Domain `PointTable` + command `AwardMatchPoints` + consumer `match.completed` (durable riêng) — file: `src/backend/modules/competition/internal/domain/points/table.go`, `src/backend/modules/competition/internal/application/command/points/award_match_points.go`, `src/backend/modules/competition/internal/presentation/consumer/match_completed_points.go`
+- [x] T020 [US3] Domain `PointTable` + command `AwardMatchPoints` + consumer `match.completed` (durable riêng) — file: `src/backend/modules/competition/internal/domain/points/table.go`, `src/backend/modules/competition/internal/application/command/points/award_match_points.go`, `src/backend/modules/competition/internal/presentation/consumer/match_completed_points.go` — ✅ `domain/points/table.go`, `command/ranking.go` AwardMatchPoints, durable `competition.points_match`
 
 **Checkpoint**: User Story 3 chạy độc lập.
 
@@ -80,19 +80,19 @@
 
 ### Tests cho User Story 4
 
-- [ ] T021 [P] [US4] Unit test F106-AC-12, F106-AC-16: definition hợp lệ (12 loại), từ chối `xp` ở scope school/grade, từ chối scope `class`/metric `class_goal`; `effort_points` theo bảng, trần ngày, bỏ `rapid_guess`; `grade_goal` gộp theo (trường, khối tại thời điểm ghi), không rank/nickname, ô < 5 học sinh → `null` — file: `src/backend/modules/competition/tests/unit/leaderboard/definition_effort_test.go` — phải FAIL trước khi code
-- [ ] T022 [P] [US4] Unit test F106-AC-17: `VisibilityPolicy` lớp 1–3/4–5/6–9 (lớp 1–3 chỉ `grade_goal` không tên, percentile, ±3) — file: `src/backend/modules/competition/tests/unit/leaderboard/visibility_test.go`
-- [ ] T023 [P] [US4] Integration test F106-AC-13, F106-AC-14: dedupe `processed_events` trước ZINCRBY; xóa key → `stale = true` → rebuild khớp sổ cái; job đối chiếu sửa lệch — file: `src/backend/modules/competition/tests/integration/leaderboard/zset_rebuild_test.go`
-- [ ] T024 [P] [US4] Integration test (đồng hồ giả) F106-AC-15: đóng kỳ ICT, snapshot top 100 + rank mọi thành viên trường/khối, dòng tổng `grade_goal`, `leaderboard.period_closed` idempotent, singleton lock — file: `src/backend/modules/competition/tests/integration/leaderboard/period_close_test.go`
-- [ ] T025 [P] [US4] Integration test F106-AC-18, F106-AC-19: chỉ nickname/avatar (không tên lớp); `allow_cross_school_listing`; sanction bị loại; `disabled_leaderboard_definitions` → ẩn + `404` — file: `src/backend/modules/competition/tests/integration/leaderboard/privacy_policy_test.go`
-- [ ] T026 [P] [US4] Test tenant isolation + authorization F106-AC-20, F106-AC-21: học sinh chỉ scope chứa mình; nhân sự `lms.student.read` theo scope; tenant khác → 404; header sai → `403 TENANT_MISMATCH`; nhân sự gọi route game → `403 GAME_ACCESS_STUDENT_ONLY`; tham số vượt `maxLength` → `422` — file: `src/backend/modules/competition/tests/integration/leaderboard/authz_tenant_test.go`
+- [x] T021 [P] [US4] Unit test F106-AC-12, F106-AC-16: definition hợp lệ (12 loại), từ chối `xp` ở scope school/grade, từ chối scope `class`/metric `class_goal`; `effort_points` theo bảng, trần ngày, bỏ `rapid_guess`; `grade_goal` gộp theo (trường, khối tại thời điểm ghi), không rank/nickname, ô < 5 học sinh → `null` — file: `src/backend/modules/competition/tests/unit/leaderboard/definition_effort_test.go` — phải FAIL trước khi code — ✅ `tests/unit/ldb_definition_effort_test.go` + `TestF106GradeGoal` PASS
+- [x] T022 [P] [US4] Unit test F106-AC-17: `VisibilityPolicy` lớp 1–3/4–5/6–9 (lớp 1–3 chỉ `grade_goal` không tên, percentile, ±3) — file: `src/backend/modules/competition/tests/unit/leaderboard/visibility_test.go` — ✅ `tests/unit/ldb_visibility_test.go` + `TestF106VisibilityPrivacy` PASS
+- [x] T023 [P] [US4] Integration test F106-AC-13, F106-AC-14: dedupe `processed_events` trước ZINCRBY; xóa key → `stale = true` → rebuild khớp sổ cái; job đối chiếu sửa lệch — file: `src/backend/modules/competition/tests/integration/leaderboard/zset_rebuild_test.go` — ✅ `TestF106BoardRebuildAndReplay` PASS
+- [x] T024 [P] [US4] Integration test (đồng hồ giả) F106-AC-15: đóng kỳ ICT, snapshot top 100 + rank mọi thành viên trường/khối, dòng tổng `grade_goal`, `leaderboard.period_closed` idempotent, singleton lock — file: `src/backend/modules/competition/tests/integration/leaderboard/period_close_test.go` — ✅ `TestF106PeriodClose` PASS
+- [x] T025 [P] [US4] Integration test F106-AC-18, F106-AC-19: chỉ nickname/avatar (không tên lớp); `allow_cross_school_listing`; sanction bị loại; `disabled_leaderboard_definitions` → ẩn + `404` — file: `src/backend/modules/competition/tests/integration/leaderboard/privacy_policy_test.go` — ✅ `TestF106VisibilityPrivacy`, `TestF106SchoolPolicy` PASS
+- [x] T026 [P] [US4] Test tenant isolation + authorization F106-AC-20, F106-AC-21: học sinh chỉ scope chứa mình; nhân sự `lms.student.read` theo scope; tenant khác → 404; header sai → `403 TENANT_MISMATCH`; nhân sự gọi route game → `403 GAME_ACCESS_STUDENT_ONLY`; tham số vượt `maxLength` → `422` — file: `src/backend/modules/competition/tests/integration/leaderboard/authz_tenant_test.go` — ✅ `TestF106LeaderboardAuthzTenant` PASS (+ `authztest.Cover` mọi op mới, routematrix 0 vấn đề)
 
 ### Implementation cho User Story 4
 
-- [ ] T027 [P] [US4] Domain `LeaderboardDefinition`, `VisibilityPolicy`, `GradeGoal` (gộp trường × khối, che ô < `analytics_min_cell_size`), `PeriodKey`, `EffortRules` — file: `src/backend/modules/competition/internal/domain/leaderboard/`
-- [ ] T028 [US4] Adapter Valkey `LeaderboardStore` (ZINCRBY, ZREVRANGE, ZMSCORE friends, meta) — file: `src/backend/modules/competition/internal/infrastructure/cache/leaderboard_store.go`
-- [ ] T029 [US4] Command `RecordContribution`, `ClosePeriod`, `RebuildLeaderboard`, `MaterializeDefinitions`; consumer `activity.graded`, `xp.awarded`, `quest.completed`, cộng điểm từ `competition_points.awarded`; job `period_close`, `leaderboard_rebuild` — file: `src/backend/modules/competition/internal/application/command/leaderboard/`, `src/backend/modules/competition/internal/presentation/consumer/activity_graded_effort.go`, `src/backend/modules/competition/internal/presentation/job/period_close.go`
-- [ ] T030 [US4] Query `ListLeaderboards`, `GetLeaderboard`, `GetMyLeaderboardPosition`, `GetLeaderboardHistory` + handler (port `SchoolPolicyReader` đọc `ref.schools.settings_subset`) — file: `src/backend/modules/competition/internal/application/query/leaderboard/`, `src/backend/modules/competition/internal/presentation/http/public/leaderboard_handler.go`
+- [x] T027 [P] [US4] Domain `LeaderboardDefinition`, `VisibilityPolicy`, `GradeGoal` (gộp trường × khối, che ô < `analytics_min_cell_size`), `PeriodKey`, `EffortRules` — file: `src/backend/modules/competition/internal/domain/leaderboard/` — ✅ `internal/domain/leaderboard/{definition,period,visibility,effort}.go`
+- [x] T028 [US4] Adapter Valkey `LeaderboardStore` (ZINCRBY, ZREVRANGE, ZMSCORE friends, meta) — file: `src/backend/modules/competition/internal/infrastructure/cache/leaderboard_store.go` — ✅ `infrastructure/cache/leaderboard.go` (Lua incr/set, rebuild thay nguyên khối, hàng đợi rebuild)
+- [x] T029 [US4] Command `RecordContribution`, `ClosePeriod`, `RebuildLeaderboard`, `MaterializeDefinitions`; consumer `activity.graded`, `xp.awarded`, `quest.completed`, cộng điểm từ `competition_points.awarded`; job `period_close`, `leaderboard_rebuild` — file: `src/backend/modules/competition/internal/application/command/leaderboard/`, `src/backend/modules/competition/internal/presentation/consumer/activity_graded_effort.go`, `src/backend/modules/competition/internal/presentation/job/period_close.go` — ✅ `command/leaderboard.go` (Boards.Plan/Apply, Rebuild, Reconcile, ClosePeriods, Materialize), `command/ranking.go` RecordEffort, consumer `competition.leaderboard_effort`, job `leaderboard-period-close`/`-rebuild`/`-reconcile`; consumer `xp.awarded`/`quest.completed` không làm (Clarifications 2026-11-22)
+- [x] T030 [US4] Query `ListLeaderboards`, `GetLeaderboard`, `GetMyLeaderboardPosition`, `GetLeaderboardHistory` + handler (port `SchoolPolicyReader` đọc `ref.schools.settings_subset`) — file: `src/backend/modules/competition/internal/application/query/leaderboard/`, `src/backend/modules/competition/internal/presentation/http/public/leaderboard_handler.go` — ✅ `query/ranking.go` + `http/ranking.go` (SchoolPolicy từ `ref.schools.settings_subset`)
 
 **Checkpoint**: User Story 4 chạy độc lập.
 
@@ -104,21 +104,21 @@
 
 ### Tests cho User Story 5
 
-- [ ] T031 [P] [US5] Unit test F106-AC-23: `SoftReset` theo `season_soft_reset` (RD ≥ ngưỡng, volatility giữ) — file: `src/backend/modules/competition/tests/unit/season/soft_reset_test.go` — phải FAIL trước khi code
-- [ ] T032 [P] [US5] Integration test (đồng hồ giả) F106-AC-22, F106-AC-23, F106-AC-24: `season.started/ended` một lần; `season_results` tier cao nhất; rating mùa mới, points từ 0; `listSeasons`/`getSeason` — file: `src/backend/modules/competition/tests/integration/season/season_lifecycle_test.go`
+- [x] T031 [P] [US5] Unit test F106-AC-23: `SoftReset` theo `season_soft_reset` (RD ≥ ngưỡng, volatility giữ) — file: `src/backend/modules/competition/tests/unit/season/soft_reset_test.go` — phải FAIL trước khi code — ✅ `tests/unit/season_soft_reset_test.go` PASS
+- [x] T032 [P] [US5] Integration test (đồng hồ giả) F106-AC-22, F106-AC-23, F106-AC-24: `season.started/ended` một lần; `season_results` tier cao nhất; rating mùa mới, points từ 0; `listSeasons`/`getSeason` — file: `src/backend/modules/competition/tests/integration/season/season_lifecycle_test.go` — ✅ `tests/integration/f106_season_test.go` PASS
 
 ### Implementation cho User Story 5
 
-- [ ] T033 [US5] Domain `SoftReset`; command `StartSeason`, `EndSeason`; job `season_scheduler` — file: `src/backend/modules/competition/internal/domain/season/soft_reset.go`, `src/backend/modules/competition/internal/application/command/season/`, `src/backend/modules/competition/internal/presentation/job/season_scheduler.go`
-- [ ] T034 [US5] Query `ListSeasons`, `GetSeason` + handler — file: `src/backend/modules/competition/internal/application/query/season/`, `src/backend/modules/competition/internal/presentation/http/public/season_handler.go`
+- [x] T033 [US5] Domain `SoftReset`; command `StartSeason`, `EndSeason`; job `season_scheduler` — file: `src/backend/modules/competition/internal/domain/season/soft_reset.go`, `src/backend/modules/competition/internal/application/command/season/`, `src/backend/modules/competition/internal/presentation/job/season_scheduler.go` — ✅ `command/season.go` Tick (end → start, soft reset), job `season-scheduler`
+- [x] T034 [US5] Query `ListSeasons`, `GetSeason` + handler — file: `src/backend/modules/competition/internal/application/query/season/`, `src/backend/modules/competition/internal/presentation/http/public/season_handler.go` — ✅ `query/ranking.go` ListSeasons/GetSeason
 
 **Checkpoint**: User Story 5 chạy độc lập.
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T035 [P] Metric/span theo plan.md §Quan sát; alert lệch bảng — file: `src/backend/modules/competition/internal/infrastructure/observability/ranking_metrics.go`
+- [x] T035 [P] Metric/span theo plan.md §Quan sát; alert lệch bảng — file: `src/backend/modules/competition/internal/infrastructure/observability/ranking_metrics.go` — ✅ `infrastructure/observability/ranking.go` (5 metric); alert rule chưa thêm (Việc tiếp theo)
 - [ ] T036 [P] Bài đo rebuild 50.000 học sinh (SC-005) — file: `tests/perf/seed_leaderboard.go`
-- [ ] T037 [P] CHANGELOG, trạng thái F106 trong CODE_PLAN — file: `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md`
+- [x] T037 [P] CHANGELOG, trạng thái F106 trong CODE_PLAN — file: `CHANGELOG.md`, `docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md` — ✅ CHANGELOG, CODE_PLAN
 - [ ] T038 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — file: `specs/106-ranking-leaderboard/quickstart.md`
 
 ## Dependencies & Execution Order
