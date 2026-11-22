@@ -13,7 +13,16 @@
     "locale": {
       "label": "Language",
       "vi-VN": "Tiếng Việt",
-      "en-US": "English"
+      "en-US": "English",
+      "short": {
+        "vi-VN": "VI",
+        "en-US": "EN"
+      }
+    },
+    "header": {
+      "language": "Language {{current}} — switch to {{next}}",
+      "themeToDark": "Switch to dark theme",
+      "themeToLight": "Switch to light theme"
     },
     "login": {
       "title": "Sign in",
@@ -137,9 +146,6 @@
     },
     "userMenu": {
       "label": "Account",
-      "theme": "Theme",
-      "light": "Light",
-      "dark": "Dark",
       "compact": "Compact density",
       "logout": "Sign out"
     },

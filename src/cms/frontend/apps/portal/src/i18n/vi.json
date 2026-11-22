@@ -13,7 +13,16 @@
     "locale": {
       "label": "Ngôn ngữ",
       "vi-VN": "Tiếng Việt",
-      "en-US": "English"
+      "en-US": "English",
+      "short": {
+        "vi-VN": "VI",
+        "en-US": "EN"
+      }
+    },
+    "header": {
+      "language": "Ngôn ngữ {{current}} — chuyển sang {{next}}",
+      "themeToDark": "Chuyển sang giao diện tối",
+      "themeToLight": "Chuyển sang giao diện sáng"
     },
     "login": {
       "title": "Đăng nhập",
@@ -137,9 +146,6 @@
     },
     "userMenu": {
       "label": "Tài khoản",
-      "theme": "Giao diện",
-      "light": "Sáng",
-      "dark": "Tối",
       "compact": "Mật độ gọn",
       "logout": "Đăng xuất"
     },
