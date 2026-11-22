@@ -1,6 +1,9 @@
 // ESLint rule ew/no-hardcoded-style (F050-AC-06, TC-UI-003, AGENTS R32, NFR-MAINT-007): no color, font,
 // font size or spacing literal in TS/TSX. Values come from the theme (antd token, ops-ui) or `var(--ew-*)`.
 // Files generated from design tokens are ignored in eslint.config.mjs.
+// Tailwind (ADR-0098): the theme only holds token variables, so an arbitrary value in a class string
+// (`bg-[#fff]`, `p-[13px]`, `[color:red]`) is the one way left to hardcode a value — it is reported unless it is a
+// single `var(--ew-*)` token (`bg-[var(--ew-ops-color-sider-bg)]`).
 
 const COLOR_IN_STRING = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(/;
 
@@ -19,6 +22,32 @@ const STYLE_KEYS = new Set([
 // geometric values (circle, full size) are not design values
 const ALWAYS_OK = new Set(['inherit', 'initial', 'unset', 'revert', 'currentColor', 'currentcolor', 'transparent', 'auto', 'none', '0', 'normal', '50%', '100%']);
 
+// utility part of one class (after the variants): `utility-[value]` or `[property:value]`, optional `!`/`-`
+const TW_ARBITRARY = /^!?-?(?:[a-z][a-z0-9-]*-\[([^\]\s]+)\]|\[([a-z-]+:[^\]\s]+)\])$/;
+// the only arbitrary value allowed: one token variable, optionally with a type hint (`color:var(--ew-…)`)
+const TW_TOKEN_VALUE = /^(?:[a-z-]+:)?var\(--ew-[a-z0-9-]+\)$/;
+
+/** The utility of a Tailwind class without its variants (`md:hover:p-2` → `p-2`; `[&>a]:p-2` → `p-2`). */
+function utilityOf(cls) {
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < cls.length; i++) {
+    const c = cls[i];
+    if (c === '[') depth++;
+    else if (c === ']') depth--;
+    else if (c === ':' && depth === 0) start = i + 1;
+  }
+  return cls.slice(start);
+}
+
+/** Arbitrary Tailwind values in a class-like string that are not a design-token variable. */
+export function tailwindArbitraryValues(text) {
+  return text.split(/\s+/).filter((cls) => {
+    const m = TW_ARBITRARY.exec(utilityOf(cls));
+    return m !== null && !TW_TOKEN_VALUE.test(m[1] ?? m[2]);
+  });
+}
+
 function keyName(prop) {
   if (prop.computed) return null;
   if (prop.key.type === 'Identifier') return prop.key.name;
@@ -33,6 +62,7 @@ export default {
     messages: {
       color: 'Hardcoded color "{{value}}": use a design token (antd theme token, domainColors or var(--ew-*)).',
       style: 'Hardcoded {{key}} "{{value}}": use a design token (antd theme token or var(--ew-*)).',
+      tailwind: 'Tailwind arbitrary value "{{value}}": use a theme class mapped to the admin tokens (ADR-0098), or [var(--ew-*)].',
     },
     schema: [{ type: 'object', properties: { allow: { type: 'array', items: { type: 'string' } } }, additionalProperties: false }],
   },
@@ -49,6 +79,10 @@ export default {
       if (allow.has(text)) return;
       const m = COLOR_IN_STRING.exec(text);
       if (m) report(node, 'color', { value: m[0] });
+      else {
+        const [arbitrary] = tailwindArbitraryValues(text);
+        if (arbitrary) report(node, 'tailwind', { value: arbitrary });
+      }
     };
     return {
       Literal(node) {

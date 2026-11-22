@@ -2,6 +2,10 @@
 
 Phiên bản token theo semver (`design/package.json`, DESIGN_SYSTEM §3, §8). Đổi tên hoặc xóa token cần tăng MAJOR; token bị xóa phải mang `$deprecated` ít nhất một phiên bản trước (kiểm bởi `design/checks/semver.mjs`).
 
+## tokens@0.7.0
+
+- 2026-11-22 — Sidebar Admin Portal tông xanh thương hiệu đậm (owner yêu cầu, ADR-0098, DESIGN_SYSTEM §4.1): primitive `ops.palette.navy.{100,150,700,800,850,900}`; mode `ops.mode.sider.{bg,hover-bg,selected-bg,text,selected-text}` (light: nền `#163A7A`, chữ `#DCE6FA`, mục chọn là ô trắng chữ xanh đậm; dark: nền `#0E1C3A`, chữ `#C9D6F2`, mục chọn nền brand primary chữ trắng); semantic `ops.color.sider.{bg,hover-bg,selected-bg,text.default,text.selected}` có cặp tương phản (chữ ≥ 4,5:1, ô chọn ≥ 3:1 so với nền sidebar); component token `antd.components.Layout.siderBg` đổi sang `ops.color.sider.bg` và `antd.components.Menu.dark{ItemBg,SubMenuItemBg,PopupBg,ItemColor,ItemHoverBg,ItemHoverColor,ItemSelectedBg,ItemSelectedColor}` (menu sidebar dùng `theme="dark"`). Thang khoảng cách `ops.size.space.{4,8,12,16,24,32,48}` (sinh `--ew-ops-size-space-*`) cho lớp tiện ích Tailwind (ADR-0098). MINOR vì chỉ thêm token và đổi giá trị.
+
 ## tokens@0.6.0
 
 - 2026-11-21 — Giao diện Admin hướng B "Sổ tay giáo viên" và màn đăng nhập hướng A "Sân trường" (owner chốt, DESIGN_SYSTEM §4.1, ADMIN_PORTAL §1.3b): primitive `ops.palette.slate.{50,200,600,900}`, `ops.palette.neutral.800`, `ops.size.font.{15,18,20,24,28,30}`, `ops.size.radius.{8,12}`, `ops.size.control.{36,40,48}`, `ops.size.border.4`; semantic `ops.color.border-subtle`, `dashboard.accent.width`; seed `antd.colorBgLayout`, `colorBorderSecondary`, `fontSizeHeading1…5`, `borderRadiusLG`; component token `antd.components.{Layout,Card,Menu,Statistic}.*` (sinh vào `ThemeConfig.components`); theme đăng nhập `auth.antd.*` (sinh `authTheme`). Đổi giá trị: `fontSize` 14 → 15, `borderRadius` 6 → 8, `controlHeight` 32 → 36, nền trang sáng `#F5F5F5` → `#F7F8FA`, chữ sáng `#1F1F1F`/`#595959` → `#1F2430`/`#4B5263`; compact giữ 13/28. MINOR vì chỉ thêm token và đổi giá trị.

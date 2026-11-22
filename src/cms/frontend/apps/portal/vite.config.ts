@@ -3,9 +3,11 @@
 // the app reads /config.json at runtime (AGENTS R3). Game imports fail the build (F050-AC-07).
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from 'tailwindcss';
 import fs from 'node:fs';
 import path from 'node:path';
 import { forbidGameImports } from '../../tooling/forbid-game-imports.mjs';
+import tailwindConfig from './tailwind.config';
 import { DEV_INTERNAL_ENV, DEV_INTERNAL_PREFIX, devInternalProxy } from './scripts/dev-internal-proxy.mjs';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../..');
@@ -42,6 +44,8 @@ export default defineConfig(({ mode }) => {
   const internalProxy = devInternalProxy({ ...loadEnv(mode, __dirname, 'EW_'), ...process.env });
   return {
     plugins: [forbidGameImports() as Plugin, react(), devRuntimeConfig(internalProxy !== null)],
+    // Tailwind CSS utility layer (ADR-0098): PostCSS plugin configured inline, theme = admin token variables
+    css: { postcss: { plugins: [tailwindcss(tailwindConfig)] } },
     server: {
       port: 5173,
       strictPort: true,

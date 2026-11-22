@@ -149,6 +149,33 @@
           "$value": "#1F2430",
           "$description": "Primary text (light)."
         }
+      },
+      "navy": {
+        "100": {
+          "$value": "#DCE6FA",
+          "$description": "Sidebar item text (light)."
+        },
+        "150": {
+          "$value": "#C9D6F2",
+          "$description": "Sidebar item text (dark)."
+        },
+        "700": {
+          "$value": "#1F4A94",
+          "$description": "Sidebar item hover background (light)."
+        },
+        "800": {
+          "$value": "#163A7A",
+          "$description": "Sidebar background (light); selected item text on the white tile."
+        },
+        "850": {
+          "$value": "#1A2E58",
+          "$description": "Sidebar item hover background (dark)."
+        },
+        "900": {
+          "$value": "#0E1C3A",
+          "$description": "Sidebar background (dark)."
+        },
+        "$description": "Deep brand-blue sidebar palette (DESIGN_SYSTEM §4.1, owner 2026-11-22, ADR-0098)."
       }
     },
     "size": {
@@ -232,6 +259,37 @@
           "$value": "4px",
           "$description": "Accent border width (top border of KPI cards)."
         }
+      },
+      "space": {
+        "4": {
+          "$value": "4px",
+          "$description": "Spacing XXS."
+        },
+        "8": {
+          "$value": "8px",
+          "$description": "Spacing XS."
+        },
+        "12": {
+          "$value": "12px",
+          "$description": "Spacing SM."
+        },
+        "16": {
+          "$value": "16px",
+          "$description": "Spacing MD."
+        },
+        "24": {
+          "$value": "24px",
+          "$description": "Spacing LG."
+        },
+        "32": {
+          "$value": "32px",
+          "$description": "Spacing XL."
+        },
+        "48": {
+          "$value": "48px",
+          "$description": "Spacing XXL."
+        },
+        "$description": "Spacing scale shared by Ant Design paddings/margins and the Tailwind utility layer (ADR-0098)."
       }
     },
     "number": {
@@ -401,8 +459,8 @@
         },
         "siderBg": {
           "$type": "color",
-          "$value": "{ops.color.bg.container}",
-          "$description": "Sidebar background."
+          "$value": "{ops.color.sider.bg}",
+          "$description": "Sidebar background: deep brand blue (owner 2026-11-22, ADR-0098)."
         },
         "bodyBg": {
           "$type": "color",
@@ -427,6 +485,46 @@
           "$type": "dimension",
           "$value": "{ops.size.radius.8}",
           "$description": "Sidebar item radius."
+        },
+        "darkItemBg": {
+          "$type": "color",
+          "$value": "{ops.color.sider.bg}",
+          "$description": "Sidebar menu (Menu theme=\"dark\") item background."
+        },
+        "darkSubMenuItemBg": {
+          "$type": "color",
+          "$value": "{ops.color.sider.bg}",
+          "$description": "Sidebar sub-menu background."
+        },
+        "darkPopupBg": {
+          "$type": "color",
+          "$value": "{ops.color.sider.bg}",
+          "$description": "Sidebar popup background."
+        },
+        "darkItemColor": {
+          "$type": "color",
+          "$value": "{ops.color.sider.text.default}",
+          "$description": "Sidebar item text and icons."
+        },
+        "darkItemHoverBg": {
+          "$type": "color",
+          "$value": "{ops.color.sider.hover-bg}",
+          "$description": "Sidebar item hover background."
+        },
+        "darkItemHoverColor": {
+          "$type": "color",
+          "$value": "{ops.color.sider.text.default}",
+          "$description": "Sidebar item hover text."
+        },
+        "darkItemSelectedBg": {
+          "$type": "color",
+          "$value": "{ops.color.sider.selected-bg}",
+          "$description": "Sidebar selected item background."
+        },
+        "darkItemSelectedColor": {
+          "$type": "color",
+          "$value": "{ops.color.sider.text.selected}",
+          "$description": "Sidebar selected item text."
         }
       },
       "Statistic": {

@@ -15,6 +15,13 @@
       },
       "border": { "$value": "{ops.palette.neutral.300}", "$description": "Border (light)." },
       "border-subtle": { "$value": "{ops.palette.slate.200}", "$description": "Subtle border of cards, header and sidebar (light)." },
+      "sider": {
+        "bg": { "$value": "{ops.palette.navy.800}", "$description": "Sidebar background (light)." },
+        "hover-bg": { "$value": "{ops.palette.navy.700}", "$description": "Sidebar item hover background (light)." },
+        "selected-bg": { "$value": "{ops.palette.white}", "$description": "Selected sidebar item tile (light): white on deep blue." },
+        "text": { "$value": "{ops.palette.navy.100}", "$description": "Sidebar item text (light)." },
+        "selected-text": { "$value": "{ops.palette.navy.800}", "$description": "Selected sidebar item text (light)." }
+      },
       "banner": {
         "info": { "$value": "{ops.palette.banner.info-light}", "$description": "Info banner (light)." },
         "warning": { "$value": "{ops.palette.banner.warning-light}", "$description": "Warning banner (light)." },

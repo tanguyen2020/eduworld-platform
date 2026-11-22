@@ -115,6 +115,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0095](ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md) | Bỏ khái niệm lớp: học sinh thuộc trường theo khối (bỏ enrollment, course, learning path, lịch, nhóm học tập; DROP một lần) | Accepted · supersedes ADR-0084 · một phần supersedes ADR-0005, 0020, 0021, 0026, 0027, 0034, 0043, 0046, 0050, 0060, 0061, 0062, 0063, 0072, 0080 · ngoại lệ mục 2 ADR-0070 | — |
 | [0096](ADR-0096-chan-hoc-sinh-o-portal-khong-tinh-la-dang-nhap-sai.md) | Chặn học sinh ở Admin Portal không được tính là đăng nhập sai | Accepted · một phần supersedes ADR-0066, 0091, 0094 | — |
 | [0097](ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md) | Bỏ "Yêu cầu dữ liệu cá nhân" và "Dịch nội dung học tập" khỏi Admin Portal Release 1 | Accepted (rủi ro được chấp nhận) | — |
+| [0098](ADR-0098-tailwind-css-lam-lop-tien-ich-bo-cuc-cho-admin-portal.md) | Tailwind CSS làm lớp tiện ích bố cục cho Admin Portal (bổ sung ADR-0047) | Accepted · bổ sung ADR-0047 | — |
 
 ## Quyết định hiện hành theo chủ đề
 
@@ -240,6 +241,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0027](ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) | Một Admin Portal 5 workspace; tenant chỉ Learning Management; System Admin liên tenant |
 | [0022](ADR-0022-cms-lms-web-la-react-typescript-spa.md) | Portal là React SPA |
 | [0047](ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) | Hai design system: Game (Godot 3D) và Admin/Ops (Ant Design 5) |
+| [0098](ADR-0098-tailwind-css-lam-lop-tien-ich-bo-cuc-cho-admin-portal.md) | Portal dùng thêm Tailwind CSS v3 (ghim phiên bản) chỉ cho bố cục/tiện ích: Preflight tắt, theme chỉ trỏ biến admin token `var(--ew-*)`, cấm arbitrary value (ESLint/stylelint/test); Ant Design vẫn là thư viện component |
 | [0066](ADR-0066-dang-nhap-rieng-cho-portal-va-phan-quyen-role-userrole.md) | Đăng nhập portal riêng (màn đăng nhập theo 0091); màn quản trị Role / UserRole |
 | [0091](ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) | Portal đăng nhập bằng form riêng: `identity` gọi Keycloak Direct Access Grant (client `eduworld-portal` confidential), username/email + mật khẩu (không OTP, ADR-0094); refresh token trong cookie HttpOnly; tenant qua `X-Tenant-Id` |
 | [0090](ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md) | Danh mục menu/action portal trong `specs/portal/menu-catalog.yaml` + bản sao DB; System Admin bật/tắt qua `platform.feature_flags` (platform/tenant); backend chặn bằng `featuregate` → `403 FEATURE_DISABLED` |

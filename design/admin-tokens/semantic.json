@@ -35,7 +35,36 @@
         "layout": { "$value": "{ops.mode.bg.layout}", "$description": "Page layout background." }
       },
       "border": { "$value": "{ops.mode.border}", "$description": "Default border." },
-      "border-subtle": { "$value": "{ops.mode.border-subtle}", "$description": "Subtle border of cards, header and sidebar." }
+      "border-subtle": { "$value": "{ops.mode.border-subtle}", "$description": "Subtle border of cards, header and sidebar." },
+      "sider": {
+        "$description": "Admin Portal sidebar: deep brand-blue tone, light text, clear selected tile (owner 2026-11-22, ADR-0098).",
+        "bg": { "$value": "{ops.mode.sider.bg}", "$description": "Sidebar and mobile navigation drawer background." },
+        "hover-bg": { "$value": "{ops.mode.sider.hover-bg}", "$description": "Sidebar item hover background." },
+        "selected-bg": {
+          "$value": "{ops.mode.sider.selected-bg}",
+          "$description": "Selected sidebar item tile; a graphic object against the sidebar (WCAG 1.4.11).",
+          "$extensions": { "eduworld": { "contrastWith": [
+            { "token": "ops.color.sider.bg", "level": "graphic" }
+          ] } }
+        },
+        "text": {
+          "default": {
+            "$value": "{ops.mode.sider.text}",
+            "$description": "Sidebar item text and icons, drawer title.",
+            "$extensions": { "eduworld": { "contrastWith": [
+              { "token": "ops.color.sider.bg", "level": "normal" },
+              { "token": "ops.color.sider.hover-bg", "level": "normal" }
+            ] } }
+          },
+          "selected": {
+            "$value": "{ops.mode.sider.selected-text}",
+            "$description": "Selected sidebar item text.",
+            "$extensions": { "eduworld": { "contrastWith": [
+              { "token": "ops.color.sider.selected-bg", "level": "normal" }
+            ] } }
+          }
+        }
+      }
     }
   },
   "status": {

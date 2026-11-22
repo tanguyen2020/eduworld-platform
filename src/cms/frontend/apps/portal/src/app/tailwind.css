@@ -1,0 +1,5 @@
+/* Tailwind CSS utility layer of the portal (ADR-0098): Preflight is off in tailwind.config.ts, so `base` only adds
+   the --tw-* defaults of the utilities in use; every theme value is a var(--ew-*) admin token. No @apply. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

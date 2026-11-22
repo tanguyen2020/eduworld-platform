@@ -1,5 +1,7 @@
 // Stylelint for src/cms/frontend (F050 T019, F050-AC-06, TC-UI-003, AGENTS R32): no color, font, font size or
 // spacing literal in CSS; use var(--ew-*) from the generated tokens.css. Generated token files are ignored.
+// Tailwind (ADR-0098): only the @tailwind directives are allowed in CSS; utilities stay in the markup, so @apply and
+// theme() are rejected (an arbitrary value hidden in @apply would bypass the ESLint check).
 const TOKEN = 'var\\(--ew-[a-z0-9-]+\\)';
 const tokenList = (extra) => new RegExp(`^((${TOKEN}|${extra})\\s*)+$`);
 
@@ -15,7 +17,9 @@ export default {
   rules: {
     'color-no-hex': true,
     'color-named': 'never',
-    'function-disallowed-list': ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch'],
+    'function-disallowed-list': ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'theme', 'screen'],
+    'at-rule-no-unknown': [true, { ignoreAtRules: ['tailwind'] }],
+    'at-rule-disallowed-list': ['apply', 'layer', 'config', 'variants', 'responsive', 'screen'],
     'declaration-property-value-allowed-list': {
       '/^(margin|padding|gap|row-gap|column-gap)(-|$)/': [tokenList('0|auto|inherit')],
       'font-size': [tokenList('inherit')],

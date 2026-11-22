@@ -7,6 +7,7 @@ import { App } from './app/App';
 import { readPreferences } from './app/preferences';
 import { loadRuntimeConfig, RuntimeConfigError } from './app/runtime-config';
 import { createI18n } from './i18n';
+import './app/tailwind.css';
 
 async function start() {
   const root = createRoot(document.getElementById('root')!);

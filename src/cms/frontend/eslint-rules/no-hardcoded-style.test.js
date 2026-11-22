@@ -26,6 +26,10 @@ tester.run('ew/no-hardcoded-style', rule, {
     { code: 'const el = <span style={{ backgroundColor: domainColors[key][mode] }} />;' },
     { code: 'const id = "#main";' },
     { code: 'const x = { color: "#ABCDEF" };', options: [{ allow: ['#ABCDEF'] }] },
+    // Tailwind (ADR-0098): theme classes, arbitrary variants and token-variable arbitrary values
+    { code: 'const el = <div className="h-dvh overflow-hidden md:p-4 bg-sider text-sider-fg" />;' },
+    { code: 'const el = <div className="[&>a]:p-2 bg-[var(--ew-ops-color-sider-bg)] text-[color:var(--ew-x)]" />;' },
+    { code: 'const sel = document.querySelector("[data-theme=dark] input[type=text]");' },
   ],
   invalid: [
     { code: 'const el = <div style={{ color: "#fff" }} />;', errors: [{ messageId: 'color' }] },
@@ -37,6 +41,12 @@ tester.run('ew/no-hardcoded-style', rule, {
     { code: 'const s = { marginTop: -4 };', errors: [{ messageId: 'style' }] },
     { code: 'const theme = { token: { colorPrimary: "#2F6BFF" } };', errors: [{ messageId: 'color' }] },
     { code: 'const css = `border: 1px solid #ccc`;', errors: [{ messageId: 'color' }] },
+    { code: 'const el = <div className="bg-[#fff]" />;', errors: [{ messageId: 'color' }] },
+    { code: 'const el = <div className="flex p-[13px]" />;', errors: [{ messageId: 'tailwind' }] },
+    { code: 'const el = <div className="md:hover:text-[14px]" />;', errors: [{ messageId: 'tailwind' }] },
+    { code: 'const el = <div className="[color:red]" />;', errors: [{ messageId: 'tailwind' }] },
+    { code: 'const cls = `${a} !-mt-[2px]`;', errors: [{ messageId: 'tailwind' }] },
+    { code: 'const el = <div className="[&>a]:w-[37px]" />;', errors: [{ messageId: 'tailwind' }] },
   ],
 });
 
@@ -69,6 +79,13 @@ describe('stylelint', () => {
   it('accepts token variables', async () => {
     const { results } = await lint('.a {\n  margin: var(--ew-space-sm) 0;\n  color: var(--ew-ops-color-text-primary);\n  font-size: var(--ew-antd-font-size);\n}\n');
     expect(results[0].warnings).toEqual([]);
+  });
+
+  it('Tailwind (ADR-0098): @tailwind directives pass, @apply and theme() in CSS are rejected', async () => {
+    const ok = await lint('@tailwind base;\n@tailwind utilities;\n', 'apps/portal/src/app/tailwind.css');
+    expect(ok.results[0].warnings).toEqual([]);
+    const { results } = await lint('.a {\n  @apply p-2;\n  color: theme("colors.primary");\n}\n', 'apps/portal/src/app/x.css');
+    expect(results[0].warnings.map((w) => w.rule)).toEqual(expect.arrayContaining(['at-rule-disallowed-list', 'function-disallowed-list']));
   });
 
   it('ignores the generated tokens.css', async () => {
