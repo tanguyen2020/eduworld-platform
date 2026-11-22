@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz/authztest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx/httpxtest"
 )
@@ -97,8 +98,12 @@ func TestF106SeasonLifecycle(t *testing.T) {
 		http.StatusForbidden || res.code() != "TENANT_MISMATCH" {
 		t.Fatalf("tenant mismatch: %d %s", res.status, res.raw)
 	}
-	if res := r.staffGet(r.platformToken("system_admin"), r.tenantA, "/competition/seasons"); res.status < 400 {
-		t.Fatalf("platform principal without tenant: %d", res.status)
+	// a student with a portal token is refused (PORTAL_ACCESS_STAFF_ONLY): role denied
+	sub := "kc-" + uuid.NewString()
+	tt := r.tenantA
+	r.res.Set(sub, authz.PrincipalData{UserID: a.id, UserType: authz.UserTypeStudent, TenantID: &tt, TenantType: authz.TenantTypeSchool})
+	if res := r.staffGet(r.idp.Token(sub, httpxtest.PortalClient, time.Now()), r.tenantA, "/competition/seasons"); res.status != http.StatusForbidden {
+		t.Fatalf("student with a portal token: %d %s", res.status, res.raw)
 	}
 	// past the end of the new season: ended, results kept
 	r.clock.Add(9 * 7 * 24 * time.Hour)

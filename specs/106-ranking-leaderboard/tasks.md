@@ -128,8 +128,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F106-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F106-AC-* có test pass (ghi mã test/TC) — ✅ AC-01…24: unit `tests/unit/{rnk,pts,ldb,season}_*`, integration `tests/integration/f106_*`, contract `no_raw_rating_test.go`
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration` (và `make web-test`/`make godot-test` nếu có client) xanh
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
