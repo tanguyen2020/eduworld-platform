@@ -90,6 +90,10 @@
 - [x] T038 [P] Metric `eduworld_party_lobby_update_seconds`, `eduworld_party_session_start_total`, `eduworld_party_leader_auto_transfer_total`, `eduworld_party_activity_end_total` — file: `src/backend/modules/competition/internal/infrastructure/observability/metrics.go` — **Xong 2026-11-21:** `observability/party.go` (`RegisterLobby`, 4 metric)
 - [ ] T039 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — **2026-11-21:** cần stack compose + F103 (quest/boss); kịch bản 1–16 đã có test tự động tương ứng
 
+## Nhận từ F117 (owner chốt 2026-11-22)
+
+- [ ] T040 Party và trận (F101/F105) trả `chat_channel_id` / `chat_channel_ids` cho client, sinh bằng `src/backend/pkg/chatid` (UUIDv5 cố định theo party/match/team, cùng hàm module chat dùng) — contract + test khớp id với channel chat đã mở — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 → US3, US4 song song → Polish.

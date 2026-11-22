@@ -97,6 +97,10 @@
 - [x] T038 [P] WebSocket fuzz (envelope ngẫu nhiên, frame lớn) theo SECURITY_ARCHITECTURE §16 — file: `src/backend/modules/realtime/tests/fuzz/envelope_fuzz_test.go` — ✅ `tests/fuzz/envelope_fuzz_test.go` — `FuzzClientFrame` (~200k exec/20 s), `FuzzPubSubEnvelope` (~267k exec/20 s) không lỗi
 - [ ] T039 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — kịch bản quickstart 1–18 chạy bằng integration test (bảng trên); chạy tay trên compose (`make up` + client headless) chưa làm
 
+## Nhận từ F117 (owner chốt 2026-11-22)
+
+- [ ] T043 Gateway tự đăng ký kết nối của thành viên vào channel khi nhận `chat.channel_opened` và hủy khi `chat.channel_closed` (F117), để chat trận/đội/party có ngay không cần client gọi thêm — test integration — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T008 trước mọi story gateway) → US1 → US2, US3 song song → US4 → US5 → Polish.
