@@ -52,7 +52,7 @@
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│ [Logo] [Workspace ▾] [🔍 Tìm kiếm toàn portal]   [Tenant: Tất cả ▾]*  [🔔] [Trạng thái HT] [👤 ▾] │  ← Topbar
+│ [Logo] [Workspace ▾] [🔍 Tìm kiếm toàn portal] [Tenant: Tất cả ▾]* [🌐 VI] [☾] [🔔] [HT] [👤 ▾] │  ← Topbar cố định
 ├───────────────┬──────────────────────────────────────────────────────────────┬───────────┤
 │ Sidebar theo  │ Breadcrumb: Workspace / Module / Mục                          │ Panel     │
 │ permission    │ [Thanh trạng thái item: Bản nháp · Đã xuất bản v3 · Đã lưu ✓]│ thuộc tính│
@@ -69,8 +69,10 @@
 | **Bộ chọn tenant** | System Admin: bộ **lọc** tenant, dropdown tìm kiếm, mặc định "Tất cả tenant", chọn nhiều (§2.5), áp cho mọi màn có dữ liệu theo tenant. Nhân sự thuộc nhiều tenant: bộ **chọn đơn vị làm việc** (chọn một; đổi = đổi `X-Tenant-Id`, không xin token mới, §1.3b). Nhân sự một tenant: chỉ hiển thị tên đơn vị |
 | **Thông báo** | Review chờ duyệt, publish hẹn giờ, job clone/import xong, thông báo vụ việc an toàn (nhà trường) / case mới (Safety Team), sự cố live-ops |
 | **Trạng thái hệ thống** | Chấm màu tổng quan (lấy từ health API), banner cảnh báo cố định khi có sự cố hoặc "Đang tắt kiểm duyệt" (ADR-0030) |
-| **User menu** | Hồ sơ, đổi ngôn ngữ (vi/en), chế độ sáng/tối, mật độ, đăng xuất |
-| **Sidebar** | Menu của workspace hiện tại sinh từ danh mục menu (§2.7), lọc theo permission và trạng thái bật/tắt; nhóm mục có thể thu gọn |
+| **Nút nhanh ngôn ngữ, sáng/tối** | Hai nút biểu tượng trên topbar, ngoài user menu (owner 2026-11-22): địa cầu + mã ngôn ngữ hiện tại (`VI`/`EN`) — bấm là đổi sang ngôn ngữ còn lại ngay; mặt trăng/mặt trời — đổi sáng/tối ngay. Có tooltip và `aria-label` dịch (mã ngôn ngữ hiển thị nằm trong tên truy cập), dùng được bằng bàn phím, ≥ 44 px dưới desktop; lưu cùng nơi với tùy chọn người dùng (`ew.portal.prefs`). Màn đăng nhập giữ ô chọn ngôn ngữ riêng (§1.3b) |
+| **User menu** | Tên người dùng (hồ sơ), mật độ gọn, đăng xuất |
+| **Sidebar** | Menu của workspace hiện tại sinh từ danh mục menu (§2.7), lọc theo permission và trạng thái bật/tắt; nhóm mục có thể thu gọn. Tông xanh thương hiệu đậm, chữ sáng, mục đang chọn là ô nổi rõ (token `ops.color.sider.*`, [DESIGN_SYSTEM §4.1](../05-ux/DESIGN_SYSTEM.md#41-theme-ant-design-đề-xuất-confirmed)) |
+| **Cố định khi cuộn** | Topbar (và banner cảnh báo) cùng sidebar đứng yên; chỉ vùng nội dung cuộn, sidebar tự cuộn khi menu dài; không cuộn ngang trang. Bố cục bằng lớp tiện ích Tailwind trỏ token (ADR-0098, [DESIGN_SYSTEM §4.2a](../05-ux/DESIGN_SYSTEM.md#42a-tailwind-css--lớp-tiện-ích-bố-cục-adr-0098)) |
 | **Breadcrumb** | Workspace / Module / Mục (/ Phiên bản) |
 | **Thanh trạng thái item** | Trạng thái workflow, version đang xuất bản, autosave ("Đang lưu…", "Đã lưu lúc 10:42", "Lỗi lưu, thử lại") |
 | **Panel thuộc tính bên phải** | Metadata (LO, khối, môn, độ khó, tag), quyền, lịch sử version, tenant được gán; thu gọn được |
@@ -207,7 +209,7 @@ Portal là web app (React + Ant Design 5, ADR-0047), chạy trên trình duyệt
 
 | Quy tắc | Mô tả |
 |---|---|
-| Sidebar | Desktop: mở mặc định, nhớ trạng thái thu gọn theo người dùng; tablet/mobile: drawer đè nội dung, đóng khi chọn mục |
+| Sidebar | Desktop: mở mặc định, cố định khi cuộn nội dung, nhớ trạng thái thu gọn theo người dùng; tablet/mobile: drawer đè nội dung (cùng tông màu sidebar), đóng khi chọn mục |
 | Bảng → thẻ | Component `ResponsiveTable` (`src/cms/frontend/packages/ops-ui`): khai báo cột có `priority` (1 = luôn hiện) và `cardTitle`; < 768 px tự render thẻ; thao tác hàng loạt chuyển thành chế độ chọn nhiều bằng nhấn giữ |
 | Form | 1 cột trên mobile; nhóm trường thành bước (step) khi > 8 trường; trường công thức dùng `MathInput` (MathLive) có bàn phím ảo riêng |
 | Vùng chạm | ≥ 44 px trên mobile/tablet |
@@ -330,7 +332,7 @@ Game song ngữ `vi` + `en` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.m
 | **Preview theo ngôn ngữ** | `GamePreviewFrame` và preview học tập có công tắc `vi` / `en` / "song song" để người duyệt xem đúng bản học sinh thấy |
 | **Xuất / nhập file dịch** | Nội dung học tập (`learning_content.translate`): ⛔ ngoài Release 1 ([ADR-0097](../adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md), owner chốt 2026-11-22 — không có menu "Bản dịch" hay nút xuất/nhập trên trình soạn). Nội dung game (`game.content.translate`, F082): xuất các trường cần dịch của một hoặc nhiều nội dung ra **XLIFF 2.1** hoặc **CSV** (khóa ổn định = `<content_type>/<id>/<version>/<json-pointer>`) cho người dịch ngoài hệ thống; nhập lại tạo Draft mới, so khớp khóa, báo trường không khớp; chỉ người có permission `learning_content.translate` hoặc `game.content.translate` (§2.2) |
 | **Bản dịch lỗi thời** | Sửa bản gốc sau khi đã dịch → field dịch tự đánh dấu `Lỗi thời`, hiện diff bản gốc cũ/mới cho người dịch |
-| **Giao diện portal** | Ngôn ngữ giao diện `vi` (mặc định) / `en` chọn ở user menu [Confirmed]; chuỗi UI portal qua i18n của React (khóa `portal.<workspace>.<screen>.<element>`), không phụ thuộc ngôn ngữ nội dung đang soạn |
+| **Giao diện portal** | Ngôn ngữ giao diện `vi` (mặc định) / `en` chọn bằng nút nhanh trên topbar (§1.3) [Confirmed]; chuỗi UI portal qua i18n của React (khóa `portal.<workspace>.<screen>.<element>`), không phụ thuộc ngôn ngữ nội dung đang soạn |
 | **Không dịch máy tự động** | Không tự dịch khi publish. Gợi ý dịch máy (nếu bật sau này) chỉ điền Draft, người duyệt phải xác nhận [Confirmed] |
 
 ## 2. Permission model

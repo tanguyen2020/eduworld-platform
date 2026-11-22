@@ -1,5 +1,5 @@
 // @vitest-environment node
-// ADR-0097 (Tailwind as the layout/utility layer, complements ADR-0047, AGENTS R32): Preflight is off; colours,
+// ADR-0098 (Tailwind as the layout/utility layer, complements ADR-0047, AGENTS R32): Preflight is off; colours,
 // spacing, font sizes, font family and radii come only from the admin token variables `var(--ew-*)`; the CSS that
 // Tailwind generates for the portal sources holds no colour literal and no length outside the breakpoint queries;
 // every token variable the theme refers to exists in the generated tokens.css.
@@ -19,7 +19,7 @@ function leaves(obj: unknown, prefix = ''): [string, string][] {
   return Object.entries(obj as Record<string, unknown>).flatMap(([k, v]) => leaves(v, prefix ? `${prefix}.${k}` : k));
 }
 
-describe('tailwind.config (ADR-0097)', () => {
+describe('tailwind.config (ADR-0098)', () => {
   it('Preflight is disabled (Ant Design keeps its own reset) and every class carries the tw- prefix', () => {
     expect(config.corePlugins).toMatchObject({ preflight: false });
     expect(config.prefix).toBe('tw-');

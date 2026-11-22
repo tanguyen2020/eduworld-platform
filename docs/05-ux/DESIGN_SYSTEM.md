@@ -80,10 +80,12 @@ flowchart LR
 | `colorBgLayout` | sáng `#F7F8FA` (nền trang ngả ấm nhẹ), tối `#000000` | Nền trang tách khỏi thẻ nền trắng |
 | `colorBorderSecondary` | sáng `#E3E7EE`, tối `#303030` | Viền 1 px của thẻ, header, sidebar |
 | `colorText` / `colorTextSecondary` | sáng `#1F2430` / `#4B5263`; tối `#E8E8E8` / `#A6A6A6` | Đạt AA trên nền thẻ và nền trang (kiểm khi build token) |
-| `components` | `Layout` (header và sidebar nền thẻ, thân nền trang), `Card` (tiêu đề 18 px), `Menu` (mục cao 40 px, bo 8 px), `Statistic` (số KPI 30 px, nhãn 14 px) | Khai báo ở nhánh `antd.components.*` của `design/admin-tokens/seed.json`, sinh vào `ThemeConfig.components` |
+| Sidebar (`ops.color.sider.*`) | sáng: nền `#163A7A`, chữ `#DCE6FA`, hover `#1F4A94`, mục chọn ô trắng chữ `#163A7A`; tối: nền `#0E1C3A`, chữ `#C9D6F2`, hover `#1A2E58`, mục chọn nền `colorPrimary` chữ trắng | Tông xanh thương hiệu đậm (owner 2026-11-22); menu sidebar dùng `Menu theme="dark"` với token `Menu.dark*`; chữ ≥ 4,5:1 trên nền và hover, ô chọn ≥ 3:1 so với nền sidebar (kiểm khi build token) |
+| Khoảng cách (`ops.size.space.*`) | 4 / 8 / 12 / 16 / 24 / 32 / 48 | Trùng `paddingXXS`…`paddingXL` của Ant Design; là thang `spacing` của lớp Tailwind (§4.2a, ADR-0098) |
+| `components` | `Layout` (header nền thẻ, sidebar `ops.color.sider.bg`, thân nền trang), `Card` (tiêu đề 18 px), `Menu` (mục cao 40 px, bo 8 px), `Statistic` (số KPI 30 px, nhãn 14 px) | Khai báo ở nhánh `antd.components.*` của `design/admin-tokens/seed.json`, sinh vào `ThemeConfig.components` |
 | Thẻ KPI/widget | Viền trên 4 px (`dashboard.accent.width`) theo màu ngữ nghĩa (`colorPrimary`, `colorSuccess`, `colorWarning`, `colorInfo`, `colorError`) hoặc mã màu nghiệp vụ §6 | Màu chỉ là kênh phụ; thẻ luôn có tiêu đề bằng chữ |
 | Theme màn đăng nhập (`authTheme`) | `controlHeight` 48, `borderRadius` 12, chữ trong ô nhập 16 px | Chỉ áp trong `AuthLayout` bằng `ConfigProvider` lồng (hướng A "Sân trường", [ADMIN_PORTAL §1.3b](../04-admin-portal/ADMIN_PORTAL.md#13b-đăng-nhập-portal-và-chọn-tenant-sau-đăng-nhập-adr-0091-adr-0066-adr-0067)) |
-| Algorithm | `defaultAlgorithm` / `darkAlgorithm`; compact bằng seed token (`fontSize` 13, `fontSizeSM` 13, `controlHeight` 28 — `compactOverrides`), **không** dùng `compactAlgorithm` vì nó hạ cỡ chữ cơ sở xuống 12 px, dưới mức tối thiểu §4.5 | Người dùng chọn sáng/tối và tự bật compact trong menu tài khoản; mặc định là mật độ thường (15 px) từ 2026-11-21 |
+| Algorithm | `defaultAlgorithm` / `darkAlgorithm`; compact bằng seed token (`fontSize` 13, `fontSizeSM` 13, `controlHeight` 28 — `compactOverrides`), **không** dùng `compactAlgorithm` vì nó hạ cỡ chữ cơ sở xuống 12 px, dưới mức tối thiểu §4.5 | Người dùng chọn sáng/tối bằng nút nhanh trên header và tự bật compact trong menu tài khoản; mặc định là mật độ thường (15 px) từ 2026-11-21 |
 | Locale | `vi_VN` (Ant Design) + `dayjs/locale/vi` | Định dạng ngày `DD/MM/YYYY`, số `1.234,5` |
 
 Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qua token và `components` token của `ConfigProvider`.
@@ -92,21 +94,33 @@ Không override CSS nội bộ của component Ant Design; chỉ tùy chỉnh qu
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ [■] EduWorld | [Workspace ▾] [Tenant ▾ tìm kiếm] (System Admin)   🔔 👤 │  ← Header nền thẻ, viền dưới 1 px
+│ [■] EduWorld | [Workspace ▾] [Tenant ▾] (System Admin)  🌐VI ☾ 🔔 👤 │  ← Header nền thẻ, viền dưới 1 px, cố định
 ├───────────────┬──────────────────────────────────────────────────────────┤
 │ Sidebar menu  │ ⚠ Banner cảnh báo (vd "Đang tắt kiểm duyệt cho tenant X")  │
 │ (theo         │ Breadcrumb / Tiêu đề trang                    [Hành động] │
 │  permission,  │ ┌────────────────────────────────────────────────────────┐ │
 │  ADR-0027)    │ │ Nội dung trang (danh sách / chi tiết / form / dashboard) │ │
-│               │ └────────────────────────────────────────────────────────┘ │
+│ (nền xanh     │ └────────────────────────────────────────────────────────┘ │
+│  đậm, cố định)│                    ↕ chỉ vùng nội dung cuộn                │
 └───────────────┴──────────────────────────────────────────────────────────┘
 ```
 
 - **ProLayout** với menu sinh từ `GET /api/v1/me/permissions` (ẩn menu chỉ là tiện ích, backend vẫn quyết định).
-- **Header:** bộ chọn tenant dạng Select có tìm kiếm (chỉ System Admin, mặc định "Tất cả tenant", chọn nhiều; ADR-0027 §6); chỉ báo trạng thái hệ thống (lấy từ endpoint health tổng hợp); thông báo; menu tài khoản (đổi sáng/tối, ngôn ngữ, đăng xuất).
+- **Header:** bộ chọn tenant dạng Select có tìm kiếm (chỉ System Admin, mặc định "Tất cả tenant", chọn nhiều; ADR-0027 §6); chỉ báo trạng thái hệ thống (lấy từ endpoint health tổng hợp); thông báo; **nút nhanh ngôn ngữ** (biểu tượng địa cầu + mã `VI`/`EN`, bấm là đổi ngay) và **nút sáng/tối** (mặt trời/mặt trăng), có tooltip và `aria-label` dịch, dùng được bằng bàn phím; menu tài khoản (tên người dùng, mật độ gọn, đăng xuất).
 - **Banner cảnh báo hệ thống** dùng `Alert` banner cố định đầu vùng nội dung: tắt kiểm duyệt (ADR-0030), bảo trì, sự cố SIS sync, purge tồn đọng.
-- **Giao diện "Sổ tay giáo viên" (owner chốt 2026-11-21):** header và sidebar nền thẻ với viền 1 px `colorBorderSecondary`, logo vuông màu `colorPrimary` cạnh tên sản phẩm; nền trang `colorBgLayout`; vùng nội dung lề `paddingXL`; thẻ viền 1 px, bo 12 px. Màn tổng quan dashboard mở đầu bằng **lời chào theo buổi** ("Chào buổi sáng, thầy cô") cùng hành động chính nổi bật ("+ Giao bài mới", nút `primary` cỡ lớn) ở bên phải; các widget là thẻ KPI có viền trên 4 px theo màu ngữ nghĩa, tiến độ dùng `Progress`. Mọi giá trị qua token (§4.1), không số liệu dựng sẵn.
+- **Header và sidebar cố định (owner 2026-11-22):** trang không cuộn; header (và banner) luôn ở trên, sidebar tự cuộn khi menu dài, chỉ vùng nội dung cuộn; dưới 1280 px sidebar thành drawer (☰) cùng tông màu sidebar; không cuộn ngang trang.
+- **Giao diện "Sổ tay giáo viên" (owner chốt 2026-11-21, sidebar đổi tông 2026-11-22):** header nền thẻ với viền 1 px `colorBorderSecondary`, sidebar tông xanh thương hiệu đậm (§4.1), logo vuông màu `colorPrimary` cạnh tên sản phẩm; nền trang `colorBgLayout`; vùng nội dung lề `paddingXL`; thẻ viền 1 px, bo 12 px. Màn tổng quan dashboard mở đầu bằng **lời chào theo buổi** ("Chào buổi sáng, thầy cô") cùng hành động chính nổi bật ("+ Giao bài mới", nút `primary` cỡ lớn) ở bên phải; các widget là thẻ KPI có viền trên 4 px theo màu ngữ nghĩa, tiến độ dùng `Progress`. Mọi giá trị qua token (§4.1), không số liệu dựng sẵn.
 - Một Admin Portal duy nhất (`src/cms/frontend/apps/portal`, ADR-0027 mục 7): mọi workspace dùng chung layout và `ops-ui`; mã mỗi workspace nằm trong `src/cms/frontend/apps/portal/src/workspaces/` theo tên thư mục ở [ADMIN_PORTAL §1.2](../04-admin-portal/ADMIN_PORTAL.md#12-admin-portal-5-workspace-adr-0027-mục-7-master-prompt-tái-cấu-trúc-16); topbar có workspace switcher, sidebar khác nhau theo workspace và permission ([ADMIN_PORTAL §1.3](../04-admin-portal/ADMIN_PORTAL.md#13-information-architecture-bố-cục-chung)).
+
+### 4.2a. Tailwind CSS — lớp tiện ích bố cục (ADR-0098)
+
+Portal (`apps/portal`) dùng thêm **Tailwind CSS v3** (ghim phiên bản) cho bố cục/tiện ích của shell; Ant Design vẫn là thư viện component (ADR-0047). Ràng buộc:
+
+- Mọi class có **tiền tố `tw-`** (tránh đè DOM của MathLive/MathJax dùng tên class như `hidden`, `table`).
+- **Preflight tắt**; plugin có mặc định là màu/độ dài thô (shadow, ring, blur, filter) tắt.
+- `colors`, `spacing`, `fontSize`, `fontFamily`, `borderRadius`, `borderWidth` **thay hẳn** mặc định và chỉ trỏ `var(--ew-*)` của `tokens.css` (ví dụ `tw-bg-sider`, `tw-text-fg-secondary`, `tw-p-4` = `--ew-ops-size-space-16`); `screens` chỉ `md` 768 px và `xl` 1280 px (ADMIN_PORTAL §1.5).
+- Không dùng arbitrary value (`tw-bg-[#…]`, `tw-p-[13px]`, `tw-[color:red]`) trừ `[var(--ew-*)]`: ESLint `ew/no-hardcoded-style` chặn; CSS chỉ chứa `@tailwind` (stylelint cấm `@apply`, `theme()`); `tailwind.test.ts` kiểm cấu hình và CSS sinh ra.
+- Không dùng class Tailwind cho thuộc tính mà style Ant Design của component đã đặt (thứ tự cascade không bảo đảm); khi cần, dùng prop hoặc `style` với token.
 
 ### 4.3. Mẫu màn hình
 

@@ -1,7 +1,7 @@
 // F051 T028/T031/T035 at unit level — F051-AC-16, F051-AC-17, F051-AC-18, F051-AC-19 (TC-I18N-006/007, TC-UI-004):
 // desktop sidebar ≥ 1280 px, drawer (☰) below, tenant controls inside the drawer below 768 px; user menu switches
 // language, dark theme and compact density at once without reload; skip link + landmarks. MOCK backend harness.
-// Owner 2026-11-22 (ADR-0097): language and light/dark are icon buttons in the header (not in the account dropdown);
+// Owner 2026-11-22 (ADR-0098): language and light/dark are icon buttons in the header (not in the account dropdown);
 // header and sidebar stay fixed — only the content area scrolls; the sidebar (and its drawer) wears the sider tone.
 import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -50,7 +50,7 @@ describe('responsive shell (F051-AC-19)', () => {
   });
 });
 
-describe('fixed shell (owner 2026-11-22, ADR-0097)', () => {
+describe('fixed shell (owner 2026-11-22, ADR-0098)', () => {
   it('desktop: the page does not scroll — header and sidebar stay, the sidebar and the content scroll on their own', async () => {
     await qlcmInThDemoA();
     const shell = screen.getByTestId('portal-shell');

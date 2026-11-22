@@ -5,7 +5,7 @@
 // ≥ 44 px below desktop. Skip link, landmarks and labels for keyboard/screen readers. No business logic (AGENTS R1).
 // Look of direction B "Sổ tay giáo viên" (DESIGN_SYSTEM §4.2, owner 2026-11-21): topbar and sidebar on the container
 // colour with a 1 px subtle border, brand mark next to the product name, roomier content area — tokens only.
-// Owner 2026-11-22 (ADR-0097): deep brand-blue sidebar (Menu theme="dark" + admin tokens ops.color.sider.*), fixed
+// Owner 2026-11-22 (ADR-0098): deep brand-blue sidebar (Menu theme="dark" + admin tokens ops.color.sider.*), fixed
 // header and sidebar — only the content area scrolls (Tailwind utility classes mapped to the admin tokens) — and
 // language / light-dark as icon buttons in the header (no longer in the account dropdown).
 import { CloseOutlined, GlobalOutlined, MenuOutlined, MoonOutlined, SunOutlined, UserOutlined } from '@ant-design/icons';
@@ -36,7 +36,7 @@ export const TOUCH_TARGET_PX = 44;
 export const MAIN_ID = 'ew-main';
 
 /**
- * Shell layout classes (Tailwind, ADR-0097): the page itself never scrolls — header (and banner) stay on top, the
+ * Shell layout classes (Tailwind, ADR-0098): the page itself never scrolls — header (and banner) stay on top, the
  * sidebar scrolls on its own and only the content area scrolls (a too-wide table scrolls inside it), so no horizontal
  * page scroll on a phone. Exported for the layout test.
  */
