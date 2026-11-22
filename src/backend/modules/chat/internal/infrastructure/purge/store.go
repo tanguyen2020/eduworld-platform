@@ -320,6 +320,9 @@ func (Store) PurgeChannel(ctx context.Context, c port.ExpiredChannel, contextN, 
 		if err != nil {
 			return out, err
 		}
+		if err := withRevisions(ctx, t, c.TenantID, window); err != nil {
+			return out, err
+		}
 		ctxMap := map[string]string{"channel_type": c.ChannelType, "case_id": r.caseID.String(), "source": "gameplay-chat-purge"}
 		for _, k := range []string{"match_id", "party_id", "team_no"} {
 			if v := scopeRef[k]; v != "" {
@@ -342,7 +345,14 @@ func (Store) PurgeChannel(ctx context.Context, c port.ExpiredChannel, contextN, 
 			out.Evidence++
 		}
 	}
-	// 3. Delete in batches: messages, then members, then the channel; mark the daily partitions.
+	// 3. Delete the side tables of the channel (F118: revisions, reactions, pins — their evidence is in the snapshots of
+	// step 2), then the messages in batches, then members, then the channel; mark the daily partitions.
+	for _, tb := range []string{"message_revisions", "message_reactions", "pinned_messages"} {
+		// tenancyguard:ok physical delete of the purge (ADR-0033): side rows of the closed gameplay channel of the tenant
+		if _, err := t.ExecContext(ctx, `DELETE FROM chat.`+tb+` WHERE tenant_id = $1 AND channel_id = $2`, c.TenantID, c.ID); err != nil {
+			return out, fmt.Errorf("purge: delete %s: %w", tb, err)
+		}
+	}
 	for {
 		// tenancyguard:ok physical delete of the purge (ADR-0033): messages of the closed gameplay channel of the tenant
 		res, err := t.ExecContext(ctx, `DELETE FROM chat.gameplay_messages WHERE (message_id, created_on) IN (
@@ -682,6 +692,40 @@ func dayStats(rows *sql.Rows, channelType string) ([]port.DayStats, error) {
 		}
 		s.Day = s.Day.UTC()
 		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
+// withRevisions attaches to each message of an evidence window its rows of chat.message_revisions (earlier versions and
+// held edit proposals, F118-AC-06): the purge copies them before deleting them.
+func withRevisions(ctx context.Context, t *sql.Tx, tenant uuid.UUID, ms []message) error {
+	for i := range ms {
+		rv, err := revisionsOf(ctx, t, tenant, ms[i].MessageID)
+		if err != nil {
+			return err
+		}
+		ms[i].Revisions = rv
+	}
+	return nil
+}
+
+func revisionsOf(ctx context.Context, t *sql.Tx, tenant, msg uuid.UUID) ([]read.CaseRevision, error) {
+	// tenancyguard:ok evidence rows of one message of the session tenant (append-only table, no deleted_at)
+	rows, err := t.QueryContext(ctx, `SELECT r.revision, r.state, r.body, r.body_display, r.decision, r.edited_at
+		FROM chat.message_revisions r WHERE r.tenant_id = $1 AND r.message_id = $2 ORDER BY r.revision, r.state`, tenant, msg)
+	if err != nil {
+		return nil, fmt.Errorf("purge: revisions: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []read.CaseRevision
+	for rows.Next() {
+		var rv read.CaseRevision
+		var body, display sql.NullString
+		if err := rows.Scan(&rv.Revision, &rv.State, &body, &display, &rv.Decision, &rv.EditedAt); err != nil {
+			return nil, fmt.Errorf("purge: revisions: %w", err)
+		}
+		rv.Body, rv.BodyDisplay, rv.EditedAt = str(body), str(display), rv.EditedAt.UTC()
+		out = append(out, rv)
 	}
 	return out, rows.Err()
 }

@@ -53,6 +53,8 @@ type Chat struct {
 	Recent port.RecentBuffer
 	Fanout port.Fanout // WS pushes (chat.history.loaded); nil for REST only
 	Config ChatConfig
+	// Decor decorates the pages (F118: reply excerpts, reactions, pins); nil: none.
+	Decor *Features
 }
 
 // MessageView is one message of a history with the card of its sender.
@@ -60,6 +62,12 @@ type MessageView struct {
 	Envelope message.Envelope
 	Sender   read.ChatCard
 	Recalled bool
+	// F118 decoration (Features.Decorate): reply excerpt of the moderated original (nil: none or gone), reactions, pin.
+	ReplyExcerpt *string
+	Reactions    map[string]int
+	MyReactions  []string
+	Pinned       bool
+	Mentions     []read.ChatCard
 }
 
 // MessagePage is a page of history in seq order.
@@ -194,7 +202,7 @@ func (q Chat) push(ctx context.Context, v Viewer, facts *read.ChannelFacts, m ch
 	if q.Fanout != nil && v.ConnID != "" {
 		items := make([]port.HistoryItem, len(p.Data))
 		for i, x := range p.Data {
-			items[i] = port.HistoryItem{Envelope: x.Envelope, Sender: x.Sender, Recalled: x.Recalled}
+			items[i] = port.HistoryItem{Envelope: x.Envelope, Sender: x.Sender, Recalled: x.Recalled, Extras: x.Extras()}
 		}
 		if err := q.Fanout.History(ctx, v.UserID, v.ConnID, facts.Channel.ID, items, p.HasMore); err != nil {
 			return 0, false, unavailableProblem()
@@ -247,16 +255,33 @@ func (q Chat) page(ctx context.Context, v Viewer, facts *read.ChannelFacts, m ch
 		}
 		slog.WarnContext(ctx, "chat: recent buffer unavailable", "error", rerr)
 	}
-	seen := map[uuid.UUID]bool{}
+	seen := map[uuid.UUID]int{}
 	var all []MessageView
 	add := func(e message.Envelope, recalled bool) {
-		if seen[e.MessageID] || facts.Hidden(v.UserID, e.SenderID) { // block both ways, mute one way (F117-AC-12)
+		if facts.Hidden(v.UserID, e.SenderID) { // block both ways, mute one way (F117-AC-12)
 			return
 		}
-		seen[e.MessageID] = true
+		recalled = recalled || e.Recalled()
+		if i, ok := seen[e.MessageID]; ok {
+			// The newest revision wins (an edit or recall not applied by chat-persister yet, F118); a recall seen
+			// anywhere stays a recall and never shows content again.
+			prev := all[i]
+			if e.Revision > prev.Envelope.Revision {
+				all[i].Envelope = e
+			}
+			if recalled || prev.Recalled {
+				all[i].Recalled = true
+				all[i].Envelope.BodyDisplay, all[i].Envelope.BodyOriginal, all[i].Envelope.Quote = nil, nil, nil
+			}
+			return
+		}
+		seen[e.MessageID] = len(all)
 		card, ok := facts.Cards[e.SenderID]
 		if !ok {
 			card = read.ChatCard{UserID: e.SenderID, Level: 1}
+		}
+		if recalled {
+			e.BodyDisplay, e.BodyOriginal, e.Quote = nil, nil, nil
 		}
 		all = append(all, MessageView{Envelope: e, Sender: card, Recalled: recalled})
 	}
@@ -284,6 +309,11 @@ func (q Chat) page(ctx context.Context, v Viewer, facts *read.ChannelFacts, m ch
 	if !asc {
 		for i, j := 0, len(all)-1; i < j; i, j = i+1, j-1 {
 			all[i], all[j] = all[j], all[i]
+		}
+	}
+	if q.Decor != nil {
+		if err := q.Decor.Decorate(ctx, v, facts, all, recent); err != nil {
+			slog.WarnContext(ctx, "chat: history decoration unavailable", "error", err)
 		}
 	}
 	return MessagePage{Data: all, HasMore: more, Limit: limit}, nil
@@ -327,4 +357,10 @@ func (q Chat) ListMyChannels(ctx context.Context, v Viewer) (out []ChannelView, 
 			MyReadSeq: r.MyReadSeq})
 	}
 	return out, nil
+}
+
+// Extras returns the read-time parts of the view.
+func (m MessageView) Extras() port.MessageExtras {
+	return port.MessageExtras{ReplyExcerpt: m.ReplyExcerpt, Reactions: m.Reactions, MyReactions: m.MyReactions, Pinned: m.Pinned,
+		Mentions: m.Mentions}
 }

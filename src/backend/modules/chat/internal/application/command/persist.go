@@ -15,6 +15,8 @@ const (
 	EventMessageCreated = "chat.message_created"
 	// EventMessageHeld: a held message (hold_for_review / block_and_alert) was stored (F116-AC-06); consumed by F121.
 	EventMessageHeld = "chat.message_held"
+	// EventMessageForwarded: a forwarded copy was stored (F118-AC-09).
+	EventMessageForwarded = "chat.message_forwarded"
 )
 
 // Persist is the use case of chat-persister (F115 US3, R25): one batch of envelopes of one tenant is written in one
@@ -44,6 +46,15 @@ func (h Persist) Persist(ctx context.Context, tenant uuid.UUID, es []message.Env
 					"seq": e.Seq, "sender_id": e.SenderID, "kind": string(e.MsgKind), "moderation_state": string(e.Moderation.State),
 					"created_at": e.CreatedAt.UTC()}}); err != nil {
 				return err
+			}
+			if e.ForwardedFrom != nil { // F118-AC-09: a forwarded copy (ids only)
+				if err := h.Events.Publish(ctx, write.Event{Type: EventMessageForwarded, SubjectType: "chat_message", SubjectID: e.MessageID.String(),
+					PartitionKey: e.ChannelID.String(), TenantID: &t, OccurredAt: e.CreatedAt, Payload: map[string]any{
+						"tenant_id": e.TenantID, "message_id": e.MessageID, "channel_id": e.ChannelID, "channel_type": e.ChannelType,
+						"sender_id": e.SenderID, "source_message_id": e.ForwardedFrom.MessageID, "source_channel_type": e.ForwardedFrom.ChannelType,
+						"created_at": e.CreatedAt.UTC()}}); err != nil {
+					return err
+				}
 			}
 			if e.Moderation.State == message.StateHeld {
 				reasons := e.Moderation.CategoryCodes

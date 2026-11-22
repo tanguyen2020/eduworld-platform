@@ -4567,6 +4567,17 @@
     ]
   },
   {
+    "operation_id": "presignChatAssetUpload",
+    "module": "chat",
+    "method": "POST",
+    "path": "/game-admin/{config_type}/{config_id}/assets:presign",
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "presignGameMediaUpload",
     "module": "game",
     "method": "POST",
@@ -5509,6 +5520,18 @@
     "method": "POST",
     "path": "/admin/chat/sensitive-terms:test",
     "tenant_scoped": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "toggleMessageReaction",
+    "module": "chat",
+    "method": "POST",
+    "path": "/chat/messages/{message_id}/reactions",
+    "tenant_scoped": true,
+    "has_id_param": true,
     "required": [
       "cross_tenant",
       "role_denied"

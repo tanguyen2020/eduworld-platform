@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/content.published.v1.schema.json",
+  "title": "Payload content.published v1 (module chat, owner F118, ADR-0043)",
+  "description": "Một sticker pack hoặc GIF của thư viện platform được Game Studio publish (version bất biến từ đây, R31; EVENT_DESIGN §4.2). Envelope tenant_id = null (nội dung platform; tenant thấy sticker pack qua tenant_resource_assignments). Consumer: snapshot/CDN worker, AUD. Không chứa tệp, chỉ id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["item_type", "item_id", "version_id", "version", "published_by", "published_at"],
+  "properties": {
+    "item_type": { "enum": ["sticker_pack", "gif"] },
+    "item_id": { "type": "string", "format": "uuid" },
+    "version_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "published_by": { "type": "string", "format": "uuid" },
+    "published_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    { "item_type": "gif", "item_id": "0193a6b2-0000-7000-8000-0000000000a1", "version_id": "0193a6b2-0000-7000-8000-0000000000a2", "version": 1, "published_by": "0193a5f4-6c1e-7b2a-9d1f-000000000009", "published_at": "2026-11-22T08:30:12.345Z" }
+  ]
+}

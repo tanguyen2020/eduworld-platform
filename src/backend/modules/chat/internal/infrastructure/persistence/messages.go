@@ -21,15 +21,15 @@ var _ write.MessageStore = Messages{}
 
 const insertMessageSQL = `INSERT INTO chat.messages (message_id, channel_id, seq, tenant_id, school_id, sender_id,
 	client_message_id, kind, body, body_display, quick_message_id, sticker_id, gif_id, reply_to_message_id, mentions, revision,
-	moderation_state, filter_verdict, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::uuid[], $16, $17, $18::jsonb, $19)
+	moderation_state, filter_verdict, created_at, quote, forwarded_from)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::uuid[], $16, $17, $18::jsonb, $19, $20::jsonb, $21::jsonb)
 	ON CONFLICT DO NOTHING`
 
 const insertGameplaySQL = `INSERT INTO chat.gameplay_messages (message_id, channel_id, seq, tenant_id, school_id, sender_id,
 	client_message_id, kind, body, body_display, quick_message_id, sticker_id, gif_id, reply_to_message_id, mentions, revision,
-	moderation_state, filter_verdict, created_at, created_on)
+	moderation_state, filter_verdict, created_at, created_on, quote, forwarded_from)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::uuid[], $16, $17, $18::jsonb, $19,
-		($19::timestamptz AT TIME ZONE 'UTC')::date)
+		($19::timestamptz AT TIME ZONE 'UTC')::date, $20::jsonb, $21::jsonb)
 	ON CONFLICT DO NOTHING`
 
 // Insert implements write.MessageStore.
@@ -89,7 +89,8 @@ func (Messages) Insert(ctx context.Context, tenant uuid.UUID, es []message.Envel
 		}
 		r, err := t.ExecContext(ctx, query, e.MessageID, e.ChannelID, e.Seq, e.TenantID, e.SchoolID, e.SenderID, e.ClientMessageID,
 			string(e.MsgKind), e.Body(), e.BodyDisplay, e.QuickMessageID, e.StickerID, e.GifID, e.ReplyToMessageID,
-			idStrings(e.Mentions), max(e.Revision, 1), string(e.Moderation.State), string(verdict), e.CreatedAt.UTC())
+			idStrings(e.Mentions), max(e.Revision, 1), string(e.Moderation.State), string(verdict), e.CreatedAt.UTC(), jsonOrNil(e.Quote),
+			jsonOrNil(e.ForwardedFrom))
 		if err != nil {
 			return res, fmt.Errorf("chat: persist message: %w", err)
 		}
@@ -105,6 +106,11 @@ func (Messages) Insert(ctx context.Context, tenant uuid.UUID, es []message.Envel
 		}
 		if err := insertDecision(ctx, EnvelopeDecision(e)); err != nil { // decision log of a stored message (F116-AC-09)
 			return res, err
+		}
+		if _, deliver, _, _ := e.Moderation.Decision.Outcome(); deliver && len(e.Mentions) > 0 { // F118-AC-19
+			if err := raiseMentions(ctx, t, tenant, e.ChannelID, e.Mentions, e.Seq); err != nil {
+				return res, err
+			}
 		}
 		res.Inserted = append(res.Inserted, e)
 		lastSeq[e.ChannelID] = max(lastSeq[e.ChannelID], e.Seq)
@@ -189,4 +195,16 @@ func messageExists(ctx context.Context, e message.Envelope, gameplay bool) (bool
 		return false, fmt.Errorf("chat: duplicate check: %w", err)
 	}
 	return n > 0, nil
+}
+
+// jsonOrNil encodes v for a jsonb column (nil pointer: NULL).
+func jsonOrNil[T any](v *T) any {
+	if v == nil {
+		return nil
+	}
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil
+	}
+	return string(b)
 }

@@ -57,7 +57,7 @@ func at(t *time.Time, e outbox.Envelope) time.Time {
 // Handle implements outbox.Handler.
 func (c Gameplay) Handle(ctx context.Context, e outbox.Envelope) error {
 	switch e.EventType {
-	case "party.created", "party.member_joined", "party.member_left", "party.member_kicked", "party.disbanded":
+	case "party.created", "party.member_joined", "party.member_left", "party.member_kicked", "party.disbanded", "party.leader_transferred":
 		change, err := c.party(e)
 		if err != nil {
 			return outbox.Permanent(err)
@@ -80,6 +80,8 @@ func (c Gameplay) party(e outbox.Envelope) (command.PartyChange, error) {
 		SchoolID     *uuid.UUID `json:"school_id"`
 		LeaderID     uuid.UUID  `json:"leader_id"`
 		StudentID    uuid.UUID  `json:"student_id"`
+		From         uuid.UUID  `json:"from"`
+		To           uuid.UUID  `json:"to"`
 		StateVersion *int64     `json:"state_version"`
 		CreatedAt    *time.Time `json:"created_at"`
 		JoinedAt     *time.Time `json:"joined_at"`
@@ -102,6 +104,13 @@ func (c Gameplay) party(e outbox.Envelope) (command.PartyChange, error) {
 			return ch, invalid(e.EventType, "leader_id")
 		}
 		ch.StudentID, ch.Join, ch.At = p.LeaderID, true, at(p.CreatedAt, e)
+		ch.Leader = true
+	case "party.leader_transferred":
+		if p.To == uuid.Nil || p.From == uuid.Nil {
+			return ch, invalid(e.EventType, "from/to")
+		}
+		ch.OldLeader, ch.NewLeader, ch.At = p.From, p.To, e.OccurredAt.UTC()
+		return ch, nil
 	case "party.member_joined":
 		ch.StudentID, ch.Join, ch.At = p.StudentID, true, at(p.JoinedAt, e)
 	case "party.member_left", "party.member_kicked":

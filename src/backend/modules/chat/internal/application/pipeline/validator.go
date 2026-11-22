@@ -151,7 +151,7 @@ func (v *Validator) Validate(ctx context.Context, in port.ValidationInput) (verd
 	}
 	view := v.Engine.View(text)
 	var spam *moderation.SpamCounts
-	if sw.On(moderation.StepSpam) && strings.TrimSpace(text) != "" {
+	if sw.On(moderation.StepSpam) && !in.Derived && strings.TrimSpace(text) != "" {
 		c, err := v.Spam.Record(ctx, in.SenderID, in.ChannelID, moderation.Fingerprint(view), now)
 		if err != nil {
 			return port.Verdict{}, fmt.Errorf("%w: spam window: %w", port.ErrUnavailable, err)

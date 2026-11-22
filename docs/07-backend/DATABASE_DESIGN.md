@@ -498,7 +498,10 @@ Nguồn: [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), ADR-0050, A
 | `gameplay_purge_runs` | T* (append-only, trigger) | `row_id`, `run_id`, `started_at`, `finished_at`, `tenant_id` (NULL = dòng cấp lượt chạy), `kind` (`gameplay`/`ephemeral`), `channels_purged`, `messages_purged`, `partitions_dropped`, `deferred_open_case`, `evidence_copied`, `status` (`succeeded`/`partial`/`failed`/`blocked` — `blocked`: module moderation chưa sẵn sàng, không xóa gì, F117) | UNIQUE `(run_id, kind, coalesce(tenant_id, 0))`; bản ghi tổng hợp, không chứa nội dung |
 | `channel_members` | T | `channel_member_id`, `channel_id`, `user_id`, `school_id`, `role`, `joined_at`, `left_at`, `muted_until`, `last_delivered_seq`, `last_read_seq`, `unread_mentions`, `show_read_receipts`, `notification_level` | PK `channel_member_id` (ent cần khóa một cột, F115) + UNIQUE `(channel_id, user_id) WHERE deleted_at IS NULL`; con trỏ chỉ tăng |
 | `messages` | **P** | xem DDL §3.8 — gồm `kind` (text/emoji/quick/sticker/gif/system), `body`/`body_display`, `reply_to_message_id`, `quote`, `forwarded_from`, `mentions`, `revision`, `edited_at`, `recalled_at`, `search_tsv` | UNIQUE `(channel_id, seq, created_at)`; GIN `search_tsv` |
-| `message_revisions` | T | `message_id`, `revision`, `body`, `body_display`, `decision`, `edited_at` | PK `(message_id, revision)`; bằng chứng khi sửa (ADR-0034) |
+| `message_revisions` | T | `message_id`, `revision`, `state` (`previous`/`held`), `body`, `body_display`, `mentions`, `decision`, `edited_at` | PK `(message_id, revision, state)`; bằng chứng khi sửa (ADR-0034); `held` = bản sửa bị giữ chờ duyệt (F118) |
+| `chat_asset_versions`, `chat_asset_releases` | G | `config_type` (`sticker-packs`/`gifs`), `config_id`, `version`, `status`, `payload` | Version sticker pack/GIF của Game Studio, bất biến sau publish (trigger); releases append-only (F118) |
+| `ref.sticker_unlocks` | T (projection) | `student_id`, `pack_id`, `unlocked_at`, `source_version` | Pack sticker khóa học sinh đã sở hữu (event mở khóa module game, F075) |
+| `infra.tenant_resource_assignments` | infra | `resource_type` (`sticker_pack`), `resource_id`, `tenant_id` | Gán sticker pack cho tenant (ADR-0029); ghi bởi bước gán của System Admin |
 | `message_reactions` | T | `channel_id`, `message_id`, `user_id`, `emoji_code` | PK `(message_id, user_id, emoji_code)`; ≤ 3/người/tin (use case) |
 | `pinned_messages` | T | `channel_id`, `message_id`, `pinned_by`, `pinned_at` | PK `(channel_id, message_id)`; ≤ 3 active/channel |
 | `sticker_packs`, `stickers` | G (platform) | xem DDL §3.8a | `owner_scope = 'platform'`; tenant thấy qua `tenant_resource_assignments` |
@@ -660,8 +663,9 @@ ALTER DEFAULT PRIVILEGES FOR ROLE <module>_migrator REVOKE DELETE, TRUNCATE ON T
 REVOKE CONNECT ON DATABASE <db_of_other_modules> FROM <module>_app, <module>_platform;  -- không truy cập chéo database (cùng cụm)
 
 -- ADR-0033 (chỉ trong eduworld_chat): ngoại lệ DUY NHẤT — role chat_purger chỉ được xóa dữ liệu chat gameplay.
--- Hiện thực: migration chat 20261231000004_f117_gameplay_purge.sql (F117). message_revisions, message_reactions, pinned_messages
--- được thêm vào danh sách khi F118 tạo các bảng này (cùng điều kiện channel gameplay đã đóng).
+-- Hiện thực: migration chat 20261231000004_f117_gameplay_purge.sql (F117) và 20261231000005_f118_messaging.sql (F118:
+-- SELECT, DELETE trên message_revisions, message_reactions, pinned_messages — cùng điều kiện channel gameplay đã đóng; job chép
+-- revision vào moderation_evidence trước khi xóa).
 GRANT SELECT, UPDATE, DELETE ON chat.gameplay_messages, chat.channels, chat.channel_members, chat.ephemeral_messages,
   chat.gameplay_partition_channels TO chat_purger;
 -- nguồn hoãn/bằng chứng (chỉ đọc) và chat_retention của platform

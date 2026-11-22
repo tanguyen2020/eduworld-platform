@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/chat-change.v1.schema.json",
+  "title": "ChatChange v1 — thay đổi của một tin trên NATS JetStream (module chat, owner F118)",
+  "description": "Bản ghi trên subject ew.chat.<tenant_id>.evt.<channel_id> của stream CHAT_MESSAGES (ADR-0035, EVENT_DESIGN §4.10): sửa, sửa bị giữ chờ duyệt, thu hồi, bật/tắt reaction, ghim/bỏ ghim. Chỉ được phát cho thành viên SAU khi JetStream ack (R25). Consumer duy nhất: persister-evt của worker-chat, áp theo revision (bỏ bản cũ đến muộn; bản bị thay luôn được giữ ở chat.message_revisions làm bằng chứng). Header Nats-Msg-Id = change_id. body_original chỉ có khi khác body_display; stream không mở cho client (R25). Không chứa tên thật, trường (R16).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "kind", "op", "change_id", "tenant_id", "channel_id", "channel_type", "is_gameplay", "message_id", "actor_id", "at"],
+  "properties": {
+    "v": { "const": 1 },
+    "kind": { "const": "evt" },
+    "op": { "enum": ["edit", "edit_held", "recall", "reaction_set", "reaction_unset", "pin", "unpin"] },
+    "change_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "channel_id": { "type": "string", "format": "uuid" },
+    "channel_type": { "enum": ["world", "area", "match", "party", "team", "direct"] },
+    "is_gameplay": { "type": "boolean" },
+    "message_id": { "type": "string", "format": "uuid" },
+    "actor_id": { "type": "string", "format": "uuid" },
+    "revision": { "type": "integer", "minimum": 2, "description": "edit/edit_held/recall: revision mới (đề xuất với edit_held)" },
+    "body_display": { "type": "string", "maxLength": 1000 },
+    "body_original": { "type": "string", "maxLength": 1000 },
+    "mentions": { "type": "array", "maxItems": 5, "items": { "type": "string", "format": "uuid" } },
+    "moderation": { "type": "object", "description": "Quyết định pipeline của nội dung mới (như ChatEnvelope.moderation)", "additionalProperties": true },
+    "previous": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "decision"],
+      "description": "edit: bản bị thay (bằng chứng)",
+      "properties": {
+        "revision": { "type": "integer", "minimum": 1 },
+        "body_display": { "type": ["string", "null"], "maxLength": 1000 },
+        "body_original": { "type": ["string", "null"], "maxLength": 1000 },
+        "mentions": { "type": ["array", "null"], "maxItems": 5, "items": { "type": "string", "format": "uuid" } },
+        "decision": { "enum": ["allow", "unchecked", "mask", "hold_for_review", "block_and_alert"] }
+      }
+    },
+    "emoji_code": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9_]{1,64}$" },
+    "at": { "type": "string", "format": "date-time" },
+    "trace_id": { "type": "string", "maxLength": 64 }
+  },
+  "examples": [
+    { "v": 1, "kind": "evt", "op": "recall", "change_id": "0193a6b2-0000-7000-8000-000000000031", "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "channel_id": "0193a1aa-0000-7000-8000-000000000020", "channel_type": "party", "is_gameplay": true, "message_id": "0193a6b2-0000-7000-8000-000000000010", "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "revision": 2, "at": "2026-11-22T08:31:00Z" }
+  ]
+}

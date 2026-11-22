@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat.message_edited.v1.schema.json",
+  "title": "Payload chat.message_edited v1 (module chat, owner F118)",
+  "description": "Tin đã được sửa và chat-persister đã ghi (revision mới, bản cũ giữ trong chat.message_revisions làm bằng chứng — ADR-0034, F118-AC-01). KHÔNG chứa nội dung. Consumer: AUD, MOD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "message_id", "channel_id", "channel_type", "actor_id", "occurred_at", "revision"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "message_id": { "type": "string", "format": "uuid" },
+    "channel_id": { "type": "string", "format": "uuid" },
+    "channel_type": { "enum": ["world", "area", "match", "party", "team", "direct"] },
+    "actor_id": { "type": "string", "format": "uuid", "description": "Học sinh thực hiện thao tác (người gửi khi sửa/thu hồi, người ghim)" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "revision": { "type": "integer", "minimum": 2 }
+  },
+  "examples": [
+    { "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "message_id": "0193a6b2-0000-7000-8000-000000000010", "channel_id": "0193a1aa-0000-7000-8000-000000000020", "channel_type": "party", "actor_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "occurred_at": "2026-11-22T08:30:12.345Z", "revision": 2 }
+  ]
+}

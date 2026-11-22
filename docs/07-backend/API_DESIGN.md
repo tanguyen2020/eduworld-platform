@@ -298,6 +298,7 @@ Bảng này và enum `ProblemCode` trong [OpenAPI](../../specs/openapi/eduworld-
 | 403 | `CHAT_FORWARD_NOT_ALLOWED` | Forward khác tenant, sang channel không có quyền gửi, ra khỏi world/area, hoặc tin đã thu hồi/bị che/bị gỡ/đang held |
 | 409 | `CHAT_PIN_LIMIT_REACHED` | Channel đã có 3 tin ghim |
 | 422 | `CHAT_MENTION_LIMIT` | Hơn 5 mention trong một tin. Mention người không phải thành viên hoặc đã block **không** lỗi: server loại mention đó khỏi tin ([CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md)) |
+| 422 | `CHAT_REACTION_LIMIT` | Đã có 3 reaction của mình trên tin (`chat_reactions_per_user`, F118-AC-16) |
 | 503 | `CHAT_TEMPORARILY_UNAVAILABLE` | NATS JetStream hoặc cấp `seq` không sẵn sàng; client thử lại (ADR-0035) — có `Retry-After` |
 | 403 | `CHAT_FEATURE_DISABLED` | Tính năng (pin/typing/receipts/forward/search…) không bật cho loại channel này (§7.1 CHAT_SYSTEM) |
 | 409 | `MODERATION_CASE_CLOSED` | Xử lý (trừ `reopen`), gán hoặc áp sanction gắn case đã `resolved` ([MODERATION §6.2](../03-social-multiplayer/MODERATION.md)) |

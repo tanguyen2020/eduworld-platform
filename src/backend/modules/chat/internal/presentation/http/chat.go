@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/message"
@@ -170,7 +171,7 @@ func (h ChatHandlers) listChannelMessages(w http.ResponseWriter, r *http.Request
 	}
 	data := make([]map[string]any, len(p.Data))
 	for i, m := range p.Data {
-		data[i] = Message(m.Envelope, m.Sender, m.Recalled)
+		data[i] = renderView(m)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": data, "page": map[string]any{"has_more": p.HasMore, "limit": p.Limit,
 		"next_cursor": nil}})
@@ -187,6 +188,7 @@ type messageCreate struct {
 	GifID            *uuid.UUID        `json:"gif_id"`
 	ReplyToMessageID *uuid.UUID        `json:"reply_to_message_id"`
 	Mentions         []uuid.UUID       `json:"mentions"`
+	Quote            *message.Quote    `json:"quote"`
 }
 
 func (h ChatHandlers) sendChannelMessage(w http.ResponseWriter, r *http.Request) {
@@ -207,7 +209,7 @@ func (h ChatHandlers) sendChannelMessage(w http.ResponseWriter, r *http.Request)
 	}
 	res, err := h.Send.Send(r.Context(), command.Sender{TenantID: tenant, UserID: user}, message.Request{ChannelID: id,
 		ClientMessageID: b.ClientMessageID, Kind: message.Kind(b.Kind), Body: b.Body, Emoji: b.Emoji, QuickMessageID: b.QuickMessageID,
-		Params: b.Params, StickerID: b.StickerID, GifID: b.GifID, ReplyToMessageID: b.ReplyToMessageID, Mentions: b.Mentions})
+		Params: b.Params, StickerID: b.StickerID, GifID: b.GifID, ReplyToMessageID: b.ReplyToMessageID, Mentions: b.Mentions, Quote: clientQuote(b.Quote)})
 	if err != nil {
 		var pe *problem.Error
 		if errors.As(err, &pe) && pe.Code == problem.ChatTemporarilyUnavailable {
@@ -217,6 +219,7 @@ func (h ChatHandlers) sendChannelMessage(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	body := Message(res.Envelope, res.Sender, false)
+	MessageFeatures(body, res.Envelope, false, port.MessageExtras{})
 	h.Send.RecordResult(r.Context(), tenant, body)
 	writeJSON(w, http.StatusCreated, body)
 }
@@ -261,4 +264,12 @@ func (h ChatHandlers) listQuickMessages(w http.ResponseWriter, r *http.Request) 
 		data[i] = m
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+}
+
+// clientQuote keeps only the reference and bounds of a quote: the excerpt is always cut by the server (F118-AC-08).
+func clientQuote(q *message.Quote) *message.Quote {
+	if q == nil {
+		return nil
+	}
+	return &message.Quote{MessageID: q.MessageID, Start: q.Start, End: q.End}
 }

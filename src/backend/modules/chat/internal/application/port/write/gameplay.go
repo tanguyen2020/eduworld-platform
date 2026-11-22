@@ -55,3 +55,14 @@ type GameplayRepository interface {
 	// of the recent buffer (not persisted yet); ok false when user is not an active member.
 	MarkRead(ctx context.Context, tenant, channel, user uuid.UUID, seq, known int64, at time.Time) (unread int64, ok bool, err error)
 }
+
+// CursorRepository writes the receipt cursors of a member (F118, CHAT_SYSTEM §8.1–§8.2): never moving back, never past the
+// newest known seq; no row per message × member.
+type CursorRepository interface {
+	// MarkDelivered raises last_delivered_seq of the active member (ok false: not an active member); returns the
+	// delivered and read cursors after the write.
+	MarkDelivered(ctx context.Context, tenant, channel, user uuid.UUID, seq, known int64, at time.Time) (delivered, read int64, ok bool, err error)
+	// ResetMentions recomputes unread_mentions of the member from its read cursor (mentions of delivered, not recalled
+	// messages after last_read_seq) and returns the delivered and read cursors and the mention count.
+	ResetMentions(ctx context.Context, tenant, channel, user uuid.UUID) (delivered, read, mentions int64, err error)
+}

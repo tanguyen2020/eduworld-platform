@@ -235,7 +235,8 @@ func platformDoc() *policy.Document {
 		{"channel_type":"party","enabled":true,"allowed_kinds":["text","emoji","quick","sticker","gif"],"max_text_length":200,
 		 "rate":{"messages_per_minute":12,"burst":3},"validation":{"strictness":"strict"}},
 		{"channel_type":"direct","enabled":true,"allowed_kinds":["text","emoji","quick","sticker","gif"],"max_text_length":300,
-		 "rate":{"messages_per_minute":10,"burst":3},"validation":{"strictness":"strict"}}]}`), &d)
+		 "rate":{"messages_per_minute":10,"burst":3},"validation":{"strictness":"strict"},
+		 "features":{"sticker":true,"gif":true,"reply":true,"quote":true,"mention":true,"reaction":true}}]}`), &d)
 	return &d
 }
 
@@ -272,7 +273,7 @@ func newHarness(t channel.Type) *harness {
 		Config: service.FactsConfig{FactsFresh: time.Minute, PolicyCache: time.Minute, CurfewFresh: time.Minute, PlatformCurfew: curfew,
 			CurfewLocation: ict}},
 		Validator: h.validator, Seq: h.seq, Stream: h.stream, Fanout: h.fanout, Recent: recent{}, Rate: &rate{}, Dedupe: &dedupe{},
-		Config: command.SendConfig{RatePerUser: 30}, Now: func() time.Time { return noon }}
+		Config: command.SendConfig{RatePerUser: 30}, Now: func() time.Time { return noon }, Assets: allowAssets{}, Emoji: allowEmoji{}}
 	return h
 }
 
@@ -295,3 +296,17 @@ func (h *harness) req(kind message.Kind) message.Request {
 }
 
 var errBoom = errors.New("boom")
+
+// allowAssets is a TEST DOUBLE (R17) of the sticker/GIF library: every asset is available.
+type allowAssets struct{}
+
+func (allowAssets) Sticker(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) (bool, error) {
+	return true, nil
+}
+func (allowAssets) Gif(context.Context, uuid.UUID, uuid.UUID) (bool, error) { return true, nil }
+
+// allowEmoji is a TEST DOUBLE (R17) of the platform emoji set: every well-formed code is allowed.
+type allowEmoji struct{}
+
+func (allowEmoji) Emoji(string) bool    { return true }
+func (allowEmoji) Reaction(string) bool { return true }

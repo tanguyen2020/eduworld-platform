@@ -40,6 +40,11 @@ func TestPolicyIntersect(t *testing.T) {
 	if err != nil || e.MaxTextLength != 300 || e.Rate.MessagesPerMinute != 15 || e.GlobalPerMinute != 30 || len(e.AllowedKinds) != 5 {
 		t.Fatalf("platform default direct: %+v %v", e, err)
 	}
+	// F118: features come from the platform level only; the tenant and school documents never change them.
+	platformFeatures := e.Features
+	if !platformFeatures.Edit || platformFeatures.ReceiptMode() != policy.ReceiptsPerMember {
+		t.Fatalf("platform features of direct: %+v", platformFeatures)
+	}
 	tenant := doc(t, `{"scope_type":"tenant","global_rate":{"messages_per_minute":20},"rules":[{"channel_type":"direct","enabled":true,
 		"allowed_kinds":["text","emoji","quick"],"max_text_length":500,"rate":{"messages_per_minute":8}}]}`)
 	school := doc(t, `{"scope_type":"school","rules":[{"channel_type":"direct","enabled":true,"allowed_kinds":["text","quick","gif"],
@@ -49,7 +54,8 @@ func TestPolicyIntersect(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := policy.Effective{ChannelType: "direct", AllowedKinds: []policy.Kind{"text", "quick"}, MaxTextLength: 150,
-		Rate: policy.Rate{MessagesPerMinute: 8, Burst: 2}, GlobalPerMinute: 20, SlowModeSeconds: 3, Strictness: "very_strict"}
+		Rate: policy.Rate{MessagesPerMinute: 8, Burst: 2}, GlobalPerMinute: 20, SlowModeSeconds: 3, Strictness: "very_strict",
+		Features: platformFeatures}
 	if !reflect.DeepEqual(e, want) {
 		t.Fatalf("intersection:\n got %+v\nwant %+v", e, want)
 	}

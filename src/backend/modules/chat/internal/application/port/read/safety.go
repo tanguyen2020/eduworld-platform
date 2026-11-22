@@ -92,6 +92,18 @@ type CaseMessage struct {
 	ModerationState string     `json:"moderation_state"`
 	RecalledAt      *time.Time `json:"recalled_at,omitempty"`
 	CreatedAt       time.Time  `json:"created_at"`
+	// Revisions are the earlier versions and held edit proposals of the message (F118, evidence of an edit).
+	Revisions []CaseRevision `json:"revisions,omitempty"`
+}
+
+// CaseRevision is one row of chat.message_revisions in an evidence snapshot.
+type CaseRevision struct {
+	Revision    int       `json:"revision"`
+	State       string    `json:"state"`
+	Body        *string   `json:"body,omitempty"`
+	BodyDisplay *string   `json:"body_display,omitempty"`
+	Decision    string    `json:"decision"`
+	EditedAt    time.Time `json:"edited_at"`
 }
 
 // SanctionDetail is a sanction of chat.sanctions as the Safety Team sees it.

@@ -1,6 +1,6 @@
 # Feature Specification: F118 — Bộ tính năng nhắn tin đầy đủ (sửa/thu hồi, reply/forward, mention, receipts) và sticker/GIF
 
-**Feature Branch**: `118-chat-messaging-features` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `chat` · **Mốc**: M4b · **Phụ thuộc**: F117
+**Feature Branch**: `118-chat-messaging-features` · **Created**: 2026-11-16 · **Status**: Done · **Module**: module `chat` · **Mốc**: M4b · **Phụ thuộc**: F117
 **Input**: Bộ tính năng tin nhắn ADR-0034 trên lõi F115–F117: sửa tin (chạy lại kiểm duyệt, lưu revision), thu hồi (placeholder, giữ bằng chứng), reply/quote (từ bản đã che), forward (cùng tenant, chạy lại kiểm duyệt channel đích), emoji, sticker (pack platform, mở khóa bằng phần thưởng), GIF (thư viện nội bộ), reaction, mention `@nickname`, pin, typing, Sent/Delivered/Read theo con trỏ, unread + mention count. Kèm backend soạn sticker pack/GIF cho Game Studio. FR nguồn: FR-CHAT-012…016.
 
 ## Clarifications
@@ -24,6 +24,28 @@
 ### Session 2026-11-22 (ADR-0094 — [Confirmed])
 
 - Q: Văn bản còn mô tả MFA/`MFA_REQUIRED`/step-up như hành vi hiện hành? → A: [Confirmed] Viết lại theo [ADR-0094](../../docs/adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md), giữ nguyên mã AC: F118-AC-17. Route platform chỉ còn gateway nội bộ + `azp = eduworld-portal` + `user_type = staff` + role platform; thiếu → `403 PERMISSION_DENIED` + `authz.denied`; không còn `403 MFA_REQUIRED` hay hộp đăng nhập lại (step-up). Câu trả lời Clarifications cũ nhắc MFA là lịch sử.
+
+### Session 2026-11-22 (triển khai — [Confirmed], owner chốt 2026-11-20)
+
+Quyết định lúc triển khai, theo phương án bảo thủ (an toàn trẻ em trước), không mở rộng phạm vi (R34):
+
+- Q: Bảng mới tạo bằng ent hay viết tay? → A: Viết tay trong migration `20261231000005_f118_messaging.sql` (tiền lệ F115/F117): `message_revisions`/`message_reactions`/`pinned_messages` chỉ do `chat-persister` ghi bằng SQL tường minh (R25) và bị purge vật lý cùng channel gameplay; thư viện sticker/GIF là bảng G platform ghi bằng SQL tường minh dưới `PlatformScope`. Mọi SQL có `tenancyguard:ok`, chuỗi có giới hạn (R28).
+- Q: `message_revisions` lưu bản sửa bị giữ chờ duyệt thế nào? → A: Thêm cột `state` (`previous` = bản bị thay; `held` = bản đề xuất bị `hold_for_review`/`block_and_alert`), PK `(message_id, revision, state)`. Sửa bị giữ không đổi revision của tin, người khác vẫn thấy bản cũ, mở case qua `chat.message_held` (F121); F121 chưa có hành động "thả" tin held → bản sửa held không bao giờ tự hiện.
+- Q: Thứ tự áp thay đổi? → A: Mọi thay đổi (sửa, thu hồi, reaction, ghim) publish lên `ew.chat.<tenant>.evt.<channel>` (ChatChange v1, `specs/events/chat-change.v1.schema.json`) trước khi báo ai; consumer bền `persister-evt` (worker-chat) áp theo revision; bản bị thay luôn ghi vào `message_revisions` dù đến muộn (sự kiện mang `previous`). Revision serialize bằng compare-and-set Valkey `ew:chat:msgrev:<id>`. Tin chưa persist → NAK có độ trễ.
+- Q: `412` dùng mã nào? → A: `412 VERSION_MISMATCH` (mã có trong ProblemCode/API_DESIGN; "PRECONDITION_FAILED" ở AC-02 đọc là mã này).
+- Q: Người không phải người gửi thu hồi? → A: `409 CHAT_RECALL_WINDOW_EXPIRED` (đối xứng với sửa ở AC-02); thu hồi lại tin đã thu hồi là idempotent (204).
+- Q: Mention quá 5 bị chặn ở tầng validate contract (`maxItems: 5`) trước use case? → A: Nâng `maxItems` của `mentions` (MessageCreate, MessageEdit, AsyncAPI send/edit) lên 20 để use case trả đúng `422 CHAT_MENTION_LIMIT` (> `chat_mentions_max`); envelope/DB vẫn ≤ 5. Tự mention mình bị loại như mention không hợp lệ.
+- Q: Trích dẫn qua pipeline thế nào mà không đếm spam hai lần? → A: Excerpt chạy pipeline riêng với `ValidationInput.Derived = true` (bỏ cửa sổ spam của người gửi); quyết định khác allow/unchecked/mask → `CHAT_CONTENT_BLOCKED`. Server chỉ nhận `message_id`, `excerpt_start`, `excerpt_end` từ client.
+- Q: Trả "trích ngắn ≤ 80" của reply ở đâu? → A: Thêm trường đọc `reply_excerpt` (≤ 80) vào `Message` (OpenAPI) và `ChatMessage` (AsyncAPI), tính lúc đọc từ bản đã che hiện hành; tin gốc thu hồi/gỡ/held → vắng mặt; quote mất `excerpt` khi tin gốc không còn (F118-AC-05).
+- Q: Forward qua WS không có `Idempotency-Key`? → A: `client_message_id` của mỗi bản sao suy ra (UUIDv5) từ (khóa REST hoặc "ws", người gửi, tin nguồn, channel đích) → gửi lại trong `chat_cmid_ttl` trả cùng tin. Kiểm mọi đích trước khi tạo tin; một đích không hợp lệ → `CHAT_FORWARD_NOT_ALLOWED` cho cả lệnh.
+- Q: Ai đọc `getMessageReceipts`? → A: Mọi thành viên đang hoạt động; không liệt kê người gửi hay người có quan hệ chặn với người gọi; `mode = count` khi channel > 8 thành viên.
+- Q: Bộ emoji/reaction cho phép? → A: `seed/emoji/emoji_sets.json` (mã trung tính, không emoji có thể dùng để bắt nạt/gợi dục), nhúng vào binary; tin `emoji` hay reaction ngoài bộ → `422 VALIDATION_FAILED`.
+- Q: Trần sticker/GIF tính theo gì? → A: `chat_sticker_gif_rate` = 4/phút **mỗi người gửi mỗi channel** (cùng đơn vị với rate channel), sticker + GIF chung, `EW_CHAT_STICKER_GIF_RATE`.
+- Q: Gán sticker pack cho tenant? → A: F118 tạo `infra.tenant_resource_assignments` (resource_type `sticker_pack`) trong `eduworld_chat` và chỉ **đọc**; bước ghi qua facade `applyTenantAssignments`/`revokeTenantAssignments` của chat do saga F045 gọi chưa làm (follow-up F045). Chưa gán → không dùng được (fail-closed). GIF là thư viện platform chung (AC-13 không yêu cầu gán).
+- Q: Sở hữu pack khóa? → A: Projection `ref.sticker_unlocks` tạo sẵn; consumer sự kiện mở khóa của module game chưa có (F075 chưa phát `item.granted`) → pack khóa không chọn được (fail-closed), đúng Clarification 2026-11-16.
+- Q: Route `/game-admin/{config_type}` dùng chung nhiều module? → A: Module chat phục vụ các operation gộp `listGameConfigs`, `createGameConfig`, `getGameConfigVersion`, `updateGameConfigDraft`, `transitionGameConfigVersion`, `listGameConfigVersions`, `publishGameConfigVersion` chỉ cho `sticker-packs`/`gifs`; loại khác → `404` ở đây. Khi module game/competition phục vụ route này cần bộ định tuyến theo `config_type` dùng chung trong `pkg/httpx` (follow-up F078/F108). `diffGameConfigVersions`, `rollbackGameConfig`, `unpublishGameConfig`, `listGameConfigReleases` cho chat chưa làm (ngoài AC-17; follow-up F082). Thêm `presignChatAssetUpload` (`POST /game-admin/{config_type}/{config_id}/assets:presign`).
+- Q: Quyền từng bước Game Studio? → A: Tạo/sửa/nộp duyệt/presign: `game.chat_assets.write`; duyệt/từ chối: `game.content.review`; publish: `game.content.publish` (khớp `menu.game_ops.chat_assets`). GIF: người duyệt ≠ người sửa cuối (CHECK DB + use case). Tệp kiểm lúc `submit_review` và lại lúc publish, đọc từ bucket (sha256 khớp khóa, định dạng sniff, kích thước, ≤ 480 px, preview tĩnh). Role tenant → `403 PERMISSION_DENIED` (guard `/game-admin/`).
+- Q: Purge (F117 để lại)? → A: `chat_purger` có `SELECT, DELETE` trên 3 bảng phụ (RLS chỉ channel gameplay đã đóng); job chép revision vào snapshot bằng chứng (`messages[].revisions`) **trước**, rồi xóa revision/reaction/pin của channel, sau đó mới xóa tin.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

@@ -54,6 +54,10 @@ type Handlers struct {
 	Switches *SwitchHandlers
 	// Safety serves reports, the Safety Team queue, sanctions and school notifications (F121, core-api; nil: unmounted).
 	Safety *SafetyHandlers
+	// Features serves the message features and the sticker/GIF library of the players (F118, core-api; nil: unmounted).
+	Features *FeatureHandlers
+	// Assets serves the Game Studio sticker/GIF administration (F118, core-api; nil: unmounted).
+	Assets *AssetHandlers
 }
 
 func op(id, method, pattern string, idem httpx.IdempotencyMode, status int) httpx.Operation {
@@ -123,6 +127,16 @@ func Register(s *httpx.Server, h Handlers) error {
 	}
 	if h.Safety != nil {
 		if err := registerSafety(s, h.Safety); err != nil {
+			return err
+		}
+	}
+	if h.Features != nil {
+		if err := registerFeatures(s, h.Features); err != nil {
+			return err
+		}
+	}
+	if h.Assets != nil {
+		if err := registerAssets(s, h.Assets); err != nil {
 			return err
 		}
 	}

@@ -200,7 +200,9 @@ func TestCoreAPIMountsEveryImplementedOperation(t *testing.T) {
 			}
 		}
 		for id, owner := range mounted {
-			if owner == m && !spec[id] {
+			// An operation routed to several modules by a parameter (x-service-routing, e.g. /game-admin/{config_type})
+			// is listed in the module spec as <operationId>_<module> (scripts/openapi/split-public.mjs, F118).
+			if owner == m && !spec[id] && !spec[id+"_"+m] {
 				t.Errorf("%s: mounted operation %s is not in specs/openapi/modules/%s.v1.yaml", m, id, m)
 			}
 		}
@@ -300,7 +302,8 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 }
 
 // Profile chat loads module chat only: no identity, learning or game entry point is declared; it runs chat-persister
-// (F115 T003) and the jobs of the role chat_purger: gameplay-chat-purge and chat-partition-maintainer (F117, ADR-0033).
+// (F115 T003), persister-evt of the message changes (F118) and the jobs of the role chat_purger: gameplay-chat-purge and
+// chat-partition-maintainer (F117, ADR-0033).
 func TestWorkerChatProfileLoadsChatOnly(t *testing.T) {
 	r := registry(t, "worker", "chat")
 	if _, err := wiring.Compose(r); err != nil {
@@ -312,14 +315,14 @@ func TestWorkerChatProfileLoadsChatOnly(t *testing.T) {
 			continue
 		}
 		active++
-		ok := d.Module == "chat" && ((d.Kind == module.KindConsumer && d.Name == "chat.persister") ||
+		ok := d.Module == "chat" && ((d.Kind == module.KindConsumer && (d.Name == "chat.persister" || d.Name == "chat.persister_evt")) ||
 			(d.Kind == module.KindJob && (d.Name == "chat.gameplay-chat-purge" || d.Name == "chat.chat-partition-maintainer")))
 		if !ok {
 			t.Errorf("profile chat runs %s %s", d.Kind, d.Name)
 		}
 	}
-	if active != 3 || len(r.Workers()) != 3 {
-		t.Errorf("profile chat: %d active declarations, %d workers (want chat.persister + the two purger jobs)", active, len(r.Workers()))
+	if active != 4 || len(r.Workers()) != 4 {
+		t.Errorf("profile chat: %d active declarations, %d workers (want chat.persister, chat.persister_evt + the two purger jobs)", active, len(r.Workers()))
 	}
 }
 

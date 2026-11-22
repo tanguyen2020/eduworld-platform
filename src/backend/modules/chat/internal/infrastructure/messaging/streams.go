@@ -50,5 +50,5 @@ var CompetitionStream = natsx.EventStream("competition")
 const GameplayChannelsName = "chat.gameplay_channels"
 
 // GameplayChannelsEvents are the competition events it consumes (party.created v1 and v2 accepted).
-var GameplayChannelsEvents = []string{"party.created", "party.member_joined", "party.member_left", "party.member_kicked",
+var GameplayChannelsEvents = []string{"party.created", "party.member_joined", "party.member_left", "party.member_kicked", "party.leader_transferred",
 	"party.disbanded", "match.started", "match.completed", "match.aborted"}

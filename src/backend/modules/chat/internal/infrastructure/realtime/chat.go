@@ -55,7 +55,7 @@ func PublicPlayer(c read.ChatCard) map[string]any {
 }
 
 // ChatMessage renders AsyncAPI ChatMessage: body_display for text, the code for emoji/quick, never the original body.
-func ChatMessage(e message.Envelope, sender read.ChatCard, recalled bool) map[string]any {
+func ChatMessage(e message.Envelope, sender read.ChatCard, recalled bool, x port.MessageExtras) map[string]any {
 	m := map[string]any{"message_id": e.MessageID, "channel_id": e.ChannelID, "seq": e.Seq, "sender": PublicPlayer(sender),
 		"kind": string(e.MsgKind), "revision": max(e.Revision, 1), "moderation_state": string(e.Moderation.State),
 		"created_at": e.CreatedAt.UnixMilli()}
@@ -82,12 +82,71 @@ func ChatMessage(e message.Envelope, sender read.ChatCard, recalled bool) map[st
 	if e.ReplyToMessageID != nil {
 		m["reply_to_message_id"] = *e.ReplyToMessageID
 	}
+	addFeatures(m, e, recalled, x, true)
 	return m
+}
+
+// addFeatures renders the F118 parts of a message (AsyncAPI ChatMessage when epoch, OpenAPI Message otherwise): quote
+// (excerpt left out when the original is gone — F118-AC-05), forward origin, edit, reply excerpt, mentions, reactions, pin.
+func addFeatures(m map[string]any, e message.Envelope, recalled bool, x port.MessageExtras, epoch bool) {
+	if e.EditedAt != nil {
+		if epoch {
+			m["edited_at"] = e.EditedAt.UnixMilli()
+		} else {
+			m["edited_at"] = e.EditedAt.UTC()
+		}
+	}
+	if e.ForwardedFrom != nil {
+		m["forwarded_from"] = map[string]any{"message_id": e.ForwardedFrom.MessageID, "channel_type": e.ForwardedFrom.ChannelType,
+			"sender_nickname": e.ForwardedFrom.SenderNickname}
+	}
+	if recalled {
+		return
+	}
+	if e.Quote != nil {
+		q := map[string]any{"message_id": e.Quote.MessageID}
+		if !epoch {
+			q["excerpt_start"], q["excerpt_end"] = e.Quote.Start, e.Quote.End
+		}
+		if e.Quote.Excerpt != "" {
+			q["excerpt"] = e.Quote.Excerpt
+		}
+		m["quote"] = q
+	}
+	if x.ReplyExcerpt != nil {
+		m["reply_excerpt"] = *x.ReplyExcerpt
+	}
+	if len(x.Mentions) > 0 {
+		ms := make([]map[string]any, len(x.Mentions))
+		for i, c := range x.Mentions {
+			ms[i] = PublicPlayer(c)
+		}
+		m["mentions"] = ms
+	}
+	if len(x.Reactions) > 0 {
+		if epoch {
+			m["reactions"] = x.Reactions
+		} else {
+			mine := x.MyReactions
+			if mine == nil {
+				mine = []string{}
+			}
+			m["reactions"] = map[string]any{"counts": x.Reactions, "mine": mine}
+		}
+	}
+	if x.Pinned {
+		m["pinned"] = true
+	}
+}
+
+// AddFeatures renders the F118 parts of an OpenAPI Message (RFC 3339 timestamps).
+func AddFeatures(m map[string]any, e message.Envelope, recalled bool, x port.MessageExtras) {
+	addFeatures(m, e, recalled, x, false)
 }
 
 // Created implements port.Fanout.
 func (f ChatFanout) Created(ctx context.Context, e message.Envelope, sender read.ChatCard, recipients []uuid.UUID) error {
-	env, err := rt.NewMessage(TypeMessageCreated, ChatMessage(e, sender, false), f.now())
+	env, err := rt.NewMessage(TypeMessageCreated, ChatMessage(e, sender, false, port.MessageExtras{}), f.now())
 	if err != nil {
 		return err
 	}
@@ -132,7 +191,7 @@ func (f ChatFanout) Held(ctx context.Context, user uuid.UUID, conn string, e mes
 func (f ChatFanout) History(ctx context.Context, user uuid.UUID, conn string, channel uuid.UUID, items []port.HistoryItem, hasMore bool) error {
 	msgs := make([]map[string]any, len(items))
 	for i, it := range items {
-		msgs[i] = ChatMessage(it.Envelope, it.Sender, it.Recalled)
+		msgs[i] = ChatMessage(it.Envelope, it.Sender, it.Recalled, it.Extras)
 	}
 	return f.toConn(ctx, user, conn, TypeHistoryLoaded, map[string]any{"channel_id": channel, "messages": msgs, "has_more": hasMore})
 }

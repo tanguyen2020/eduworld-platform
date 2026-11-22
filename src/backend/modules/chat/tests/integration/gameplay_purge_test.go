@@ -156,6 +156,18 @@ func TestGameplayPurge(t *testing.T) {
 	ms := c.messageIDs(p1)
 	resolved := c.caseOf(c.tenantA, "message", ms[1], &p1, "resolved")
 	c.report(c.tenantA, an.id, ms[1], resolved, "linked")
+	// F118 side rows (edit evidence, reaction, pin) of the party P1 and of the durable club channel.
+	c.exec(`INSERT INTO chat.message_revisions (tenant_id, channel_id, message_id, revision, state, body, body_display, decision, edited_at)
+		VALUES ($1, $2, $3, 1, 'previous', 'hai cu', 'hai cu', 'allow', now())`, c.tenantA, p1, ms[1])
+	for _, ch := range []uuid.UUID{p1, club} {
+		msg := uuid.New()
+		if ch == p1 {
+			msg = ms[0]
+		}
+		c.exec(`INSERT INTO chat.message_reactions (tenant_id, channel_id, message_id, user_id, emoji_code) VALUES ($1, $2, $3, $4, 'heart')`,
+			c.tenantA, ch, msg, an.id)
+		c.exec(`INSERT INTO chat.pinned_messages (tenant_id, channel_id, message_id, pinned_by) VALUES ($1, $2, $3, $4)`, c.tenantA, ch, msg, an.id)
+	}
 	// Match M1 on day 2 with an open case on its channel (deferred).
 	c.clock.now = day1.AddDate(0, 0, 1)
 	m1 := uuid.New()
@@ -241,6 +253,21 @@ func TestGameplayPurge(t *testing.T) {
 	}
 	if !c.exists(m1ch) || c.count(`SELECT count(*) FROM chat.gameplay_messages WHERE channel_id = $1`, m1ch) != 1 {
 		t.Fatal("the channel with an open case was purged")
+	}
+	// F118 (left by F117): revisions, reactions and pins of the purged channel are gone, the durable club keeps its rows,
+	// and the evidence of the reported message carries its earlier version (F118-AC-06).
+	for _, tb := range []string{"message_revisions", "message_reactions", "pinned_messages"} {
+		if n := c.count(`SELECT count(*) FROM chat.`+tb+` WHERE channel_id = $1`, p1); n != 0 {
+			t.Fatalf("%s of the purged channel left: %d", tb, n)
+		}
+	}
+	if c.count(`SELECT count(*) FROM chat.message_reactions WHERE channel_id = $1`, club) != 1 ||
+		c.count(`SELECT count(*) FROM chat.pinned_messages WHERE channel_id = $1`, club) != 1 {
+		t.Fatal("the purge touched the side rows of a durable channel")
+	}
+	if n := c.count(`SELECT count(*) FROM chat.moderation_evidence e, jsonb_array_elements(e.snapshot->'messages') m,
+		jsonb_array_elements(m->'revisions') r WHERE e.case_id = $1 AND r->>'body' = 'hai cu'`, resolved); n != 1 {
+		t.Fatalf("evidence without the revision of the reported message: %d", n)
 	}
 	// Evidence of the reported message: original content, sender, time, channel type, party id, context (F117-AC-17).
 	var target, kind, channelType, partyID, body string
@@ -416,7 +443,7 @@ func TestPurgerPrivileges(t *testing.T) {
 		_ = rows.Scan(&v, &role, &obj, &priv)
 		t.Errorf("db-privileges violation: %s %s %s %s", v, role, obj, priv)
 	}
-	if n := c.count(`SELECT count(*) FROM information_schema.role_table_grants WHERE grantee = 'chat_purger' AND privilege_type = 'DELETE'`); n != 5 {
-		t.Fatalf("chat_purger DELETE grants: %d (want the 5 gameplay tables)", n)
+	if n := c.count(`SELECT count(*) FROM information_schema.role_table_grants WHERE grantee = 'chat_purger' AND privilege_type = 'DELETE'`); n != 8 {
+		t.Fatalf("chat_purger DELETE grants: %d (want the 5 gameplay tables + revisions, reactions, pins of F118)", n)
 	}
 }

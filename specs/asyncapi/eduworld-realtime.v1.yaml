@@ -584,6 +584,7 @@ components:
         - CHAT_FORWARD_NOT_ALLOWED
         - CHAT_PIN_LIMIT_REACHED
         - CHAT_MENTION_LIMIT
+        - CHAT_REACTION_LIMIT
         - CHAT_TEMPORARILY_UNAVAILABLE
         - CHAT_FEATURE_DISABLED
         - CHAT_ASSET_NOT_AVAILABLE
@@ -632,6 +633,7 @@ components:
         sticker_id: { $ref: '#/components/schemas/Uuid' }
         gif_id: { $ref: '#/components/schemas/Uuid' }
         reply_to_message_id: { $ref: '#/components/schemas/Uuid' }
+        reply_excerpt: { type: string, maxLength: 80, description: 'Trích ngắn từ nội dung đã che của tin được trả lời; vắng mặt khi tin gốc đã thu hồi/gỡ (F118-AC-05, AC-07)' }
         quote:
           type: object
           properties:
@@ -1289,7 +1291,7 @@ components:
                       message_id: { $ref: '#/components/schemas/Uuid' }
                       excerpt_start: { type: integer, minimum: 0 }
                       excerpt_end: { type: integer, minimum: 0 }
-                  mentions: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/Uuid' } }
+                  mentions: { type: array, maxItems: 20, description: "Vượt chat_mentions_max (5) → CHAT_MENTION_LIMIT; id không hợp lệ bị loại (CHAT_SYSTEM §7.7)", items: { $ref: '#/components/schemas/Uuid' } }
     ChatReactionToggle:
       name: chat.reaction.toggle
       payload:
@@ -1431,7 +1433,7 @@ components:
                   message_id: { $ref: '#/components/schemas/Uuid' }
                   body: { type: string, minLength: 1, maxLength: 300 }
                   revision_expected: { type: integer, minimum: 1 }
-                  mentions: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/Uuid' } }
+                  mentions: { type: array, maxItems: 20, description: "Vượt chat_mentions_max (5) → CHAT_MENTION_LIMIT", items: { $ref: '#/components/schemas/Uuid' } }
     ChatMessageRecall:
       name: chat.message.recall
       summary: Thu hồi tin của chính mình trong 24 giờ; nội dung gốc giữ làm bằng chứng (ADR-0034).

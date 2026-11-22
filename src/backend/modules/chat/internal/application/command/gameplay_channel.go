@@ -227,6 +227,10 @@ type PartyChange struct {
 	Disband   bool
 	Version   int64 // state_version of the party after the change
 	At        time.Time
+	// Leader: the student joins as the leader (party.created, F118: the leader may pin).
+	Leader bool
+	// OldLeader → NewLeader: party.leader_transferred (F118, CHAT_SYSTEM §7.8).
+	OldLeader, NewLeader uuid.UUID
 }
 
 // ApplyParty applies one party event to the channel party (F117-AC-01, AC-03, AC-04, AC-05).
@@ -252,6 +256,16 @@ func (h Gameplay) ApplyParty(ctx context.Context, c PartyChange) (err error) {
 			st.Disbanded = true
 		case st.Disbanded:
 			h.skipped(ctx, SkipClosed, string(channel.Party)) // member_joined after party.disbanded (edge case)
+		case c.NewLeader != uuid.Nil:
+			if c.Version < st.Version {
+				h.skipped(ctx, SkipStale, string(channel.Party))
+				break
+			}
+			moved, err := h.transfer(ctx, ch, c.OldLeader, c.NewLeader)
+			if err != nil {
+				return err
+			}
+			changed = changed || moved
 		default:
 			prev, known := st.Members[c.StudentID]
 			if known && prev.V >= c.Version {
@@ -262,6 +276,12 @@ func (h Gameplay) ApplyParty(ctx context.Context, c PartyChange) (err error) {
 			var moved bool
 			if c.Join {
 				moved, err = h.add(ctx, ch, c.StudentID)
+				if err == nil && c.Leader {
+					var led bool
+					if led, err = h.setRole(ctx, ch, c.StudentID, channel.RoleLeader); led {
+						moved = true
+					}
+				}
 			} else {
 				moved, err = h.remove(ctx, ch, c.StudentID)
 			}
@@ -402,4 +422,26 @@ func (h Gameplay) ApplyMatch(ctx context.Context, m MatchChange) (err error) {
 func itoa(i int) string {
 	b, _ := json.Marshal(i)
 	return string(b)
+}
+
+// setRole sets the role of an active member of a party channel when the repository supports roles.
+func (h Gameplay) setRole(ctx context.Context, ch channel.Channel, user uuid.UUID, role string) (bool, error) {
+	r, ok := h.Repo.(write.RoleRepository)
+	if !ok || !ch.Open() {
+		return false, nil
+	}
+	return r.SetRole(ctx, ch.TenantID, ch.ID, user, role)
+}
+
+// transfer moves the leader role of a party channel (party.leader_transferred, F118-AC-20).
+func (h Gameplay) transfer(ctx context.Context, ch channel.Channel, from, to uuid.UUID) (bool, error) {
+	a, err := h.setRole(ctx, ch, from, channel.RoleMember)
+	if err != nil {
+		return false, err
+	}
+	b, err := h.setRole(ctx, ch, to, channel.RoleLeader)
+	if err != nil {
+		return false, err
+	}
+	return a || b, nil
 }

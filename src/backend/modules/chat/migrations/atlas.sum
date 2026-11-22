@@ -1,4 +1,4 @@
-h1:cjzMYPojCOSmBcfMqc2EuDoE2ZnXspCsFO1J4Pc+QdE=
+h1:Sduw3PnUvhfCROel5vKuhin5IBOWUocKSFCnORE21yQ=
 00000000000001_baseline.sql h1:wc7xyCo08C8jl13udXq9Ytx5V54bC8iUX7ADvvpvTQo=
 20261118000001_infra.sql h1:ACdpfGkvAlDrzIAhwhKlWx7aVVSEYKIudADUsey4ZOI=
 20261119000010_infra_platform_grants.sql h1:YfekoCj38qBcHrZLVdRhTTjXdAZFbCiXO8h4sqPNiKw=
@@ -9,3 +9,4 @@ h1:cjzMYPojCOSmBcfMqc2EuDoE2ZnXspCsFO1J4Pc+QdE=
 20261231000002_adr0095_noclass.sql h1:VXXgUpzpOYrTadVdOOT3TbbIweh5XHaTLQiAfWLO6/M=
 20261231000003_adr0095_check_values.sql h1:U5juiCt1vQLFut96dQIIyPy/jFJLKJlNtdpe4011RHc=
 20261231000004_f117_gameplay_purge.sql h1:bfXjVu0T6avmFe622TV47thczhmO6i1upIcG78Zps/Y=
+20261231000005_f118_messaging.sql h1:Iyo9IrhLX0UuM99Xg4cn+9hLhMyU3xgm9PQBk3N7QgM=

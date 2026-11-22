@@ -406,8 +406,80 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '451':
           $ref: '#/components/responses/MessageBlocked'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /chat/messages/{message_id}/reactions:
+    post:
+      x-service: chat
+      tags:
+        - chat
+      operationId: toggleMessageReaction
+      summary: Bật/tắt một reaction trên tin (REST fallback của chat.reaction.toggle)
+      description: |
+        Chỉ reaction trong bộ cho phép của platform; tối đa `chat_reactions_per_user` reaction mỗi người mỗi tin (vượt →
+        `422 CHAT_REACTION_LIMIT`); không reaction tin đã thu hồi (F118-AC-16). Số đếm đồng bộ mọi client qua
+        `chat.reaction.updated`.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/MessageId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reaction
+              properties:
+                reaction:
+                  type: string
+                  maxLength: 64
+                  pattern: ^[a-z0-9_]{1,64}$
+                  description: Mã reaction trong bộ cho phép
+      responses:
+        '200':
+          description: Trạng thái reaction sau khi bật/tắt
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message_id
+                  - active
+                  - reactions
+                properties:
+                  message_id:
+                    $ref: '#/components/schemas/Uuid'
+                  active:
+                    type: boolean
+                    description: Reaction đang bật sau thao tác
+                  reactions:
+                    $ref: '#/components/schemas/ReactionSummary'
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
   /chat/search:
@@ -3928,6 +4000,100 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /game-admin/{config_type}/{config_id}/assets:presign:
+    post:
+      x-service: chat
+      tags:
+        - game-admin
+      operationId: presignChatAssetUpload
+      x-portal-action: action.game_ops.chat_assets.edit
+      summary: Presigned URL tải lên một tệp sticker/GIF của thư viện (Game Studio, F118)
+      description: |
+        Khóa bất biến `media/<sha256>/<file_name>` (R31) tính từ `sha256` khai báo; server đọc lại tệp và kiểm sha256, định dạng
+        (sniff từ nội dung), kích thước và số pixel khi `submit_review`/publish (`chat_asset_file_max`: sticker WebP/PNG ≤ 512 KB;
+        GIF ≤ 2 MB, ≤ 480 px, có preview tĩnh). Không có upload của học sinh. Chỉ role platform có `game.chat_assets.write`.
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - name: config_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - sticker-packs
+              - gifs
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - file_name
+                - content_type
+                - size_bytes
+                - sha256
+              properties:
+                file_name:
+                  type: string
+                  maxLength: 200
+                  pattern: ^[A-Za-z0-9._-]{1,200}$
+                content_type:
+                  type: string
+                  enum:
+                    - image/webp
+                    - image/png
+                    - image/gif
+                size_bytes:
+                  type: integer
+                  minimum: 1
+                  maximum: 2097152
+                sha256:
+                  type: string
+                  pattern: ^[0-9a-f]{64}$
+                  maxLength: 64
+      responses:
+        '201':
+          description: URL PUT đã ký (Content-Length phải đúng size_bytes)
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - asset_key
+                  - upload_url
+                  - expires_at
+                properties:
+                  asset_key:
+                    type: string
+                    maxLength: 512
+                  upload_url:
+                    type: string
+                    format: uri
+                    maxLength: 4096
+                  expires_at:
+                    $ref: '#/components/schemas/Timestamp'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   parameters:
     TenantIdHeader:
@@ -4382,6 +4548,7 @@ components:
         - CHAT_FORWARD_NOT_ALLOWED
         - CHAT_PIN_LIMIT_REACHED
         - CHAT_MENTION_LIMIT
+        - CHAT_REACTION_LIMIT
         - CHAT_TEMPORARILY_UNAVAILABLE
         - CHAT_FEATURE_DISABLED
         - CHAT_ASSET_NOT_AVAILABLE
@@ -4446,6 +4613,11 @@ components:
           $ref: '#/components/schemas/Uuid'
         reply_to_message_id:
           $ref: '#/components/schemas/Uuid'
+        reply_excerpt:
+          type: string
+          maxLength: 80
+          readOnly: true
+          description: Trích ngắn (≤ 80 ký tự) từ nội dung đã che của tin được trả lời; vắng mặt khi tin gốc đã thu hồi/gỡ (client hiển thị "Tin nhắn gốc không còn", F118-AC-05, AC-07)
         quote:
           $ref: '#/components/schemas/QuoteRef'
         forwarded_from:
@@ -4696,7 +4868,8 @@ components:
           $ref: '#/components/schemas/QuoteRef'
         mentions:
           type: array
-          maxItems: 5
+          maxItems: 20
+          description: Người được mention (thành viên channel); vượt chat_mentions_max (5) → 422 CHAT_MENTION_LIMIT, id không hợp lệ bị loại khỏi tin (CHAT_SYSTEM §7.7)
           items:
             $ref: '#/components/schemas/Uuid'
     ValidationProblem:
@@ -4823,7 +4996,8 @@ components:
           maxLength: 300
         mentions:
           type: array
-          maxItems: 5
+          maxItems: 20
+          description: Vượt chat_mentions_max (5) → 422 CHAT_MENTION_LIMIT (CHAT_SYSTEM §7.7)
           items:
             $ref: '#/components/schemas/Uuid'
     ForwardRequest:

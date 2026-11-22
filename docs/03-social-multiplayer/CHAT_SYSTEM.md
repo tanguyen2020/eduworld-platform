@@ -369,7 +369,7 @@ Phía người chơi: màn hình lịch sử trận/party ghi rõ "Tin nhắn tr
 
 - Lệnh `chat.message.edit {message_id, body, revision_expected}`. Chỉ người gửi, trong **15 phút** kể từ `created_at` [Confirmed]; quá hạn → `CHAT_EDIT_WINDOW_EXPIRED`. Chỉ sửa `text` (sticker/GIF/quick không sửa).
 - Nội dung mới **chạy lại toàn bộ pipeline** (ADR-0030, theo công tắc). `block` → giữ bản cũ, trả `CHAT_CONTENT_BLOCKED`; `hold_for_review` → bản mới chờ duyệt, người khác vẫn thấy bản cũ.
-- Bản cũ lưu `chat.message_revisions (message_id, revision, body, decision, edited_at)`; `messages.edit_count`, `edited_at`. Người dùng chỉ thấy nhãn "đã chỉnh sửa", **không** xem được bản cũ; moderator xem trong case.
+- Bản cũ lưu `chat.message_revisions (message_id, revision, state, body, decision, edited_at)` (`state = previous`; bản sửa bị giữ chờ duyệt lưu `state = held`, không đổi revision của tin, mở case qua `chat.message_held` — F118); `messages.edit_count`, `edited_at`. Người dùng chỉ thấy nhãn "đã chỉnh sửa", **không** xem được bản cũ; moderator xem trong case. Revision serialize bằng compare-and-set (`If-Match`/`revision_expected` lệch → `412 VERSION_MISMATCH`); sự kiện đi qua stream `ew.chat.<tenant>.evt.<channel>` trước khi phát (F118).
 - Sự kiện: JetStream `chat.message_edited` → fan-out `chat.message.edited {message_id, seq, body, edited_at, revision}`.
 
 ### 7.3. Thu hồi
@@ -384,16 +384,16 @@ Phía người chơi: màn hình lịch sử trận/party ghi rõ "Tin nhắn tr
 
 | Tính năng | Dữ liệu | Quy tắc |
 |---|---|---|
-| Reply | `reply_to_message_id` (cùng channel) | Client hiển thị trích ngắn (≤ 80 ký tự) của bản **đã kiểm duyệt** của tin gốc; tin gốc thu hồi/gỡ/purge → "Tin nhắn gốc không còn" |
+| Reply | `reply_to_message_id` (cùng channel) | Server trả `reply_excerpt` (≤ 80 ký tự) tính lúc đọc từ bản **đã kiểm duyệt** của tin gốc; tin gốc thu hồi/gỡ/held/purge → vắng `reply_excerpt`, client hiển thị "Tin nhắn gốc không còn" (F118) |
 | Quote | `quote: {message_id, excerpt_start, excerpt_end}` | Server tự cắt `excerpt` từ bản đã kiểm duyệt (đã che); client **không** gửi nội dung trích. Excerpt ≤ 200 ký tự |
 | Forward | Lệnh `chat.message.forward {message_id, target_channel_ids[≤5]}` → tạo tin mới ở mỗi channel đích với `forwarded_from: {message_id, channel_type, sender_nickname}` | Chỉ trong **cùng tenant**; người dùng phải được gửi tin ở channel đích; **chạy lại pipeline và policy của channel đích**; không forward tin đã thu hồi/bị che/bị gỡ/đang held; không forward ra khỏi `world`/`area`. Vi phạm → `CHAT_FORWARD_NOT_ALLOWED` |
 
 ### 7.5. Emoji, Sticker, GIF
 
-- **Emoji**: bộ Unicode giới hạn đã duyệt (danh sách cấu hình platform), loại emoji có thể dùng để bắt nạt/gợi dục.
+- **Emoji**: bộ Unicode giới hạn đã duyệt (danh sách cấu hình platform: `src/backend/modules/chat/seed/emoji/emoji_sets.json`, mã emoji và tập con dùng làm reaction), loại emoji có thể dùng để bắt nạt/gợi dục; ngoài bộ → `422 VALIDATION_FAILED` (F118).
 - **Sticker**: `chat.sticker_packs` → `chat.stickers`, do **Game Studio (platform-only, ADR-0027)** quản lý; pack có thể **mở khóa làm phần thưởng** (`unlock_rule` tham chiếu reward rule) hoặc mặc định cho mọi người. Tin `kind = sticker` gửi `sticker_id`; server kiểm tra pack đã publish, được gán cho tenant (ADR-0029) và học sinh đã sở hữu (nếu pack bị khóa).
 - **GIF**: **thư viện nội bộ đã duyệt** (`chat.gif_assets` + `chat.gif_tags`), platform upload qua presigned URL, kiểm tra kích thước (≤ 2 MB, ≤ 480 px), gắn tag tiếng Việt/Anh, publish; phục vụ từ CDN EduWorld. Học sinh tìm theo tag (`GET /chat/gifs?tag=`). **Không** gọi Giphy/Tenor hay dịch vụ GIF bên thứ ba.
-- **Không có upload ảnh/file của người dùng**. Sticker/GIF không qua bước kiểm tra văn bản (đã duyệt trước) nhưng vẫn chịu rate limit `chat_sticker_gif_rate` (sticker/GIF tính chung, tối đa 4/phút/channel) **[Confirmed — Technical Architect 2026-11-16]**; file theo `chat_asset_file_max` (sticker WebP/PNG ≤ 512 KB; GIF ≤ 2 MB, ≤ 480 px, có preview tĩnh).
+- **Không có upload ảnh/file của người dùng**. Sticker/GIF không qua bước kiểm tra văn bản (đã duyệt trước) nhưng vẫn chịu rate limit `chat_sticker_gif_rate` (sticker/GIF tính chung, tối đa 4/phút mỗi người gửi mỗi channel — cùng đơn vị với rate channel, F118) **[Confirmed — Technical Architect 2026-11-16]**; file theo `chat_asset_file_max` (sticker WebP/PNG ≤ 512 KB; GIF ≤ 2 MB, ≤ 480 px, có preview tĩnh).
 
 ### 7.6. Reactions
 

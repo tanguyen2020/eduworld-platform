@@ -91,6 +91,10 @@ type Request struct {
 	GifID            *uuid.UUID
 	ReplyToMessageID *uuid.UUID
 	Mentions         []uuid.UUID
+	// Quote is the quoted message and its excerpt bounds (the server cuts the excerpt, F118-AC-08).
+	Quote *Quote
+	// ForwardedFrom is set by ForwardMessage only (never by a client).
+	ForwardedFrom *ForwardedFrom
 }
 
 // Errors of a request (VALIDATION_FAILED).
@@ -198,6 +202,13 @@ type Envelope struct {
 	Moderation       Moderation        `json:"moderation"`
 	CreatedAt        time.Time         `json:"created_at"`
 	TraceID          *string           `json:"trace_id"`
+	// F118: quote, forward and the state after edits/recall (the recent buffer keeps the newest revision).
+	Quote         *Quote         `json:"quote,omitempty"`
+	ForwardedFrom *ForwardedFrom `json:"forwarded_from,omitempty"`
+	EditCount     int            `json:"edit_count,omitempty"`
+	EditedAt      *time.Time     `json:"edited_at,omitempty"`
+	RecalledAt    *time.Time     `json:"recalled_at,omitempty"`
+	RecalledBy    *uuid.UUID     `json:"recalled_by,omitempty"`
 }
 
 // EnvelopeKind is envelope.kind of a new message.

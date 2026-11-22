@@ -34,7 +34,7 @@
 | `LDB` Leaderboard | module competition | 5 | 5 | 0 | 4 | 0 | CMP (10) | 1 | 0 | 0 / 7 |
 | `TRN` Tournament | module competition | 3 | 3 | 0 | 1 | 0 | CMP (10) | 1 | 0 | 0 / 8 |
 | `SOC` Social | module chat | 4 | 4 | 0 | 35 | 0 | SOC (9) | 1 | 0 | 0 / 11 |
-| `CHAT` Chat | module chat | 17 | 17 | 0 | 15 | 0 | CHAT (48) | 2 | 15 | 0 / 0 |
+| `CHAT` Chat | module chat | 17 | 17 | 0 | 16 | 0 | CHAT (48) | 2 | 15 | 0 / 0 |
 | `MOD` Moderation & Child Safety | module chat | 18 | 18 | 0 | 35 | 0 | CHAT (48) | 4 | 6 | 0 / 25 |
 | `NTF` Notification | module chat | 3 | 3 | 1 | 1 | 0 | SOC (9) | 0 | 0 | 0 / 0 |
 | `GAM` XP, level, tiến trình | module game | 11 | 11 | 0 | 5 | 0 | GAM (12) | 1 | 4 | 0 / 10 |
@@ -42,11 +42,11 @@
 | `CHL` Challenge & Boss | module game | 3 | 3 | 0 | 13 | 0 | CHL (8) | 0 | 0 | 0 / 8 |
 | `ECO` Kinh tế, vật phẩm, sưu tầm | module game | 5 | 5 | 0 | 11 | 0 | ECO (8) | 0 | 0 | 0 / 8 |
 | `EVT` Event & Season (live-ops) | module game | 8 | 8 | 0 | 18 | 0 | EVT (12) | 0 | 0 | 0 / 12 |
-| `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 125 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
+| `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 126 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
 | `LMS` LMS | module learning | 10 | 10 | 1 | 31 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 21 | 544 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 21 | 546 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -510,23 +510,23 @@ AC: AC-CHAT-001, AC-CHAT-002, AC-CHAT-003, AC-CHAT-004, AC-CHAT-005, AC-CHAT-006
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-CHAT-001 | Channel: World, Area, Match, Party, Team, Direct Message; cấu hình bằng policy; không có channel Class/Stud… | P4 (Match/Party/Team theo trận), P5 (còn lại) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-002 | Không có rule = deny; quyền vào channel theo quan hệ (cùng trường/instance/nhóm/bạn bè) và policy, như nhau… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-003 | Text, emoji, reactions, quick messages, group chat, history, unread count, notifications | P4 (channel gameplay), P5 (còn lại) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-004 | Một bộ quy tắc chat cho mọi lớp 1–9 (không điều kiện theo grade_level/grade_band): đủ 7 channel; World = cù… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-005 | Mọi tin nhắn phải hợp lệ: pipeline đồng bộ phía server cho mọi kind — normalize → định dạng/độ dài → profan… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-006 | Lịch sử chat theo quyền và retention job (mặc định 180 ngày; rà soát thời hạn theo luật: Deferred ADR-0082) | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-007 | Không có voice chat trong Release 1.0; điểm mở rộng chỉ ở mức thiết kế, không hiện thực (ADR-0051, ADR-0070) | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-008 | Giao tin nhắn realtime qua /realtime/v1, gửi qua REST hoặc WS có idempotency client message id | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-009 | Chat gameplay luôn có (ADR-0020 mục 6): vào trận 1v1 → channel match; trận đội → team mỗi đội + match chung… | P4 | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-010 | UI chat trong lobby/trận/party: panel thu gọn được nhưng không tắt; quick message một chạm; tab Đội/Cả trận… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-011 | Purge chat gameplay (ADR-0033): channel match, team theo trận, party (sau giải tán) bị xóa vật lý sau gamep… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-012 | Sửa tin trong 15 phút (chạy lại kiểm duyệt, lưu revision) và thu hồi trong 24 giờ (placeholder, giữ bằng ch… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-013 | Reply, Quote (trích từ bản đã che), Forward (cùng tenant, ≤ 5 đích, chạy lại kiểm duyệt) — ADR-0034 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-014 | Emoji, Sticker (pack platform, có thể mở khóa bằng phần thưởng), GIF (thư viện nội bộ đã duyệt, không dịch… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-015 | Mention @nickname (≤ 5/tin, thông báo + đếm riêng), Pin (≤ 3/channel), Copy (bản đã che), Typing indicator… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-016 | Trạng thái Sent/Delivered/Read theo con trỏ, Unread count + mention count, Lịch sử phân trang và tìm kiếm f… | P4 (tìm kiếm P5) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
-| FR-CHAT-017 | Truyền tải chat qua NATS JetStream (bền vững, trước khi xác nhận Sent) + Valkey Pub/Sub (fan-out realtime),… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 15 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-001 | Channel: World, Area, Match, Party, Team, Direct Message; cấu hình bằng policy; không có channel Class/Stud… | P4 (Match/Party/Team theo trận), P5 (còn lại) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-002 | Không có rule = deny; quyền vào channel theo quan hệ (cùng trường/instance/nhóm/bạn bè) và policy, như nhau… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-003 | Text, emoji, reactions, quick messages, group chat, history, unread count, notifications | P4 (channel gameplay), P5 (còn lại) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-004 | Một bộ quy tắc chat cho mọi lớp 1–9 (không điều kiện theo grade_level/grade_band): đủ 7 channel; World = cù… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-005 | Mọi tin nhắn phải hợp lệ: pipeline đồng bộ phía server cho mọi kind — normalize → định dạng/độ dài → profan… | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-006 | Lịch sử chat theo quyền và retention job (mặc định 180 ngày; rà soát thời hạn theo luật: Deferred ADR-0082) | P5 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-007 | Không có voice chat trong Release 1.0; điểm mở rộng chỉ ở mức thiết kế, không hiện thực (ADR-0051, ADR-0070) | — | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-008 | Giao tin nhắn realtime qua /realtime/v1, gửi qua REST hoặc WS có idempotency client message id | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-009 | Chat gameplay luôn có (ADR-0020 mục 6): vào trận 1v1 → channel match; trận đội → team mỗi đội + match chung… | P4 | [CHAT_SYSTEM](../03-social-multiplayer/CHAT_SYSTEM.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) · [SPEC_RECONCILIATION_BACKLOG](SPEC_RECONCILIATION_BACKLOG.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-010 | UI chat trong lobby/trận/party: panel thu gọn được nhưng không tắt; quick message một chạm; tab Đội/Cả trận… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-011 | Purge chat gameplay (ADR-0033): channel match, team theo trận, party (sau giải tán) bị xóa vật lý sau gamep… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-012 | Sửa tin trong 15 phút (chạy lại kiểm duyệt, lưu revision) và thu hồi trong 24 giờ (placeholder, giữ bằng ch… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-013 | Reply, Quote (trích từ bản đã che), Forward (cùng tenant, ≤ 5 đích, chạy lại kiểm duyệt) — ADR-0034 | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-014 | Emoji, Sticker (pack platform, có thể mở khóa bằng phần thưởng), GIF (thư viện nội bộ đã duyệt, không dịch… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-015 | Mention @nickname (≤ 5/tin, thông báo + đếm riêng), Pin (≤ 3/channel), Copy (bản đã che), Typing indicator… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-016 | Trạng thái Sent/Delivered/Read theo con trỏ, Unread count + mention count, Lịch sử phân trang và tìm kiếm f… | P4 (tìm kiếm P5) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
+| FR-CHAT-017 | Truyền tải chat qua NATS JetStream (bền vững, trước khi xác nhận Sent) + Valkey Pub/Sub (fan-out realtime),… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 16 op | _suy luận:_ TC-CHAT |
 
 ### 3.23. `MOD` Moderation & Child Safety
 
@@ -650,24 +650,24 @@ AC: AC-CMS-001, AC-CMS-002, AC-CMS-003, AC-CMS-004, AC-CMS-005 · US: US-CMS-001
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-CMS-001 | Vai trò tenant: tenant_admin, school_admin, academic_manager, tenant_content_editor, tenant_content_reviewe… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-002 | Curriculum Management (chương trình, khối, môn, chủ đề, LO) | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-003 | Content Management: lesson, material, media, question bank, question set, assessment, exercise, learning ac… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-004 | Game Content: quest, mini-game config, game level, NPC dialogue, reward config, world event, game activity… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-005 | Competition Management: matchmaking config, ranking rules, tournament/challenge template, season, competiti… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-006 | Workflow, versioning, preview (Godot Web export nhúng cho nội dung game), publishing, rollback theo chính s… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-007 | CMS không làm thay đổi lịch sử bài đã hoàn thành | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-008 | Nội dung phạm vi tenant do tenant_content_editor soạn, tenant_content_reviewer duyệt (OQ-07 đã trả lời bằng… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-009 | Một Admin Portal React (TypeScript) src/cms/frontend/apps/portal với 5 workspace (School & Learning Managem… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-016 | Dashboard live-ops trong CMS/Admin: CCU, trận đang chạy, hàng chờ ghép trận, đăng nhập/hàng chờ đăng nhập,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-017 | Thumbnail/turntable render tự động từ asset 3D của game cho mọi version publish, hiển thị trong CMS như dữ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-018 | Danh mục menu/action của Admin Portal và bật/tắt trong DB (ADR-0090): danh mục workspace → menu → action là… | P1 | _suy luận:_ [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-010 | Vận hành của mỗi tenant đăng nhập Admin Portal (workspace School & Learning Management, Learning Content St… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-011 | Vận hành tenant không thấy và không thao tác được menu/cấu hình game; các lớp chặn: gateway nội bộ, azp + r… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
+| FR-CMS-001 | Vai trò tenant: tenant_admin, school_admin, academic_manager, tenant_content_editor, tenant_content_reviewe… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-002 | Curriculum Management (chương trình, khối, môn, chủ đề, LO) | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-003 | Content Management: lesson, material, media, question bank, question set, assessment, exercise, learning ac… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-004 | Game Content: quest, mini-game config, game level, NPC dialogue, reward config, world event, game activity… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-005 | Competition Management: matchmaking config, ranking rules, tournament/challenge template, season, competiti… | P4 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-006 | Workflow, versioning, preview (Godot Web export nhúng cho nội dung game), publishing, rollback theo chính s… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-007 | CMS không làm thay đổi lịch sử bài đã hoàn thành | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-008 | Nội dung phạm vi tenant do tenant_content_editor soạn, tenant_content_reviewer duyệt (OQ-07 đã trả lời bằng… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-009 | Một Admin Portal React (TypeScript) src/cms/frontend/apps/portal với 5 workspace (School & Learning Managem… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-016 | Dashboard live-ops trong CMS/Admin: CCU, trận đang chạy, hàng chờ ghép trận, đăng nhập/hàng chờ đăng nhập,… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-017 | Thumbnail/turntable render tự động từ asset 3D của game cho mọi version publish, hiển thị trong CMS như dữ… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-018 | Danh mục menu/action của Admin Portal và bật/tắt trong DB (ADR-0090): danh mục workspace → menu → action là… | P1 | _suy luận:_ [ADMIN_PORTAL](../04-admin-portal/ADMIN_PORTAL.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-010 | Vận hành của mỗi tenant đăng nhập Admin Portal (workspace School & Learning Management, Learning Content St… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-011 | Vận hành tenant không thấy và không thao tác được menu/cấu hình game; các lớp chặn: gateway nội bộ, azp + r… | P3 | [SCHOOL_LMS](../04-admin-portal/SCHOOL_LMS.md) · [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
 | FR-CMS-012 | Menu dựng từ GET /api/v1/me/permissions; permission catalog trong code, role tenant không có game.*/competi… | P1 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | `getMyPermissions` | _suy luận:_ TC-CMS |
-| FR-CMS-013 | System Admin là người duy nhất xem dữ liệu liên tenant: dropdown tìm kiếm tenant (mặc định "Tất cả", chọn n… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-014 | Xóa = soft-delete; dữ liệu đã xóa không hiển thị; Thùng rác cho System Admin (Tenant Admin nếu được cấp) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
-| FR-CMS-015 | System Admin gán dữ liệu platform cho tenant (chỉ đọc với tenant) và clone dữ liệu cấu hình/nội dung giữa t… | P2 (gán) – P3 (clone) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 125 op | _suy luận:_ TC-CMS |
+| FR-CMS-013 | System Admin là người duy nhất xem dữ liệu liên tenant: dropdown tìm kiếm tenant (mặc định "Tất cả", chọn n… | P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-014 | Xóa = soft-delete; dữ liệu đã xóa không hiển thị; Thùng rác cho System Admin (Tenant Admin nếu được cấp) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
+| FR-CMS-015 | System Admin gán dữ liệu platform cho tenant (chỉ đọc với tenant) và clone dữ liệu cấu hình/nội dung giữa t… | P2 (gán) – P3 (clone) | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 126 op | _suy luận:_ TC-CMS |
 
 ### 3.31. `LMS` LMS
 

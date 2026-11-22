@@ -16,8 +16,10 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/chatasset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/cache"
 	chatconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/emoji"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/moderation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/natsstream"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
@@ -26,6 +28,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/realtime"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/regression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/security"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/storage"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/consumer"
 	chatfacade "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/facade"
 	chathttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/presentation/http"
@@ -107,6 +110,7 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.RegisterChat(r.Metrics())
 	observability.RegisterModeration(r.Metrics())
 	observability.RegisterSafety(r.Metrics())
+	observability.RegisterFeatures(r.Metrics())
 	recent := cache.Recent{C: vk, Size: chatCfg.RecentBuffer, TTL: chatCfg.RecentTTL}
 	factsCache := cache.Facts{C: vk, StaleTTL: chatCfg.StaleTTL, OnStale: observability.StaleFacts}
 	// NFR-SAFE-001, F115-AC-06, F116: the send path (core-api) and worker-chat refuse to start without a real
@@ -169,8 +173,39 @@ func Register(r *module.Registry) (*Module, error) {
 			Stream: natsstream.Publisher{JS: js, Timeout: chatCfg.PublishAckTimeout}, Fanout: fanout,
 			Dedupe: cache.Dedupe{C: vk, TTL: chatCfg.CmidTTL}, Metrics: observability.Chat{}, UoW: core.UoW,
 			Audit: persistence.Auditor{R: core.Recorder}, Config: command.SendConfig{RatePerUser: chatCfg.RatePerUser}}
+		// F118: message features (edit/recall/forward/reactions/pins/typing/receipts) and the sticker/GIF library.
+		assetsCfg, err := chatconfig.AssetsFrom(r.Config())
+		if err != nil {
+			return nil, fmt.Errorf("chat: %w", err)
+		}
+		emojiSet, err := emoji.Load()
+		if err != nil {
+			return nil, fmt.Errorf("chat: %w", err)
+		}
+		state := cache.FeatureState{C: vk}
+		lookup := service.Lookup{Read: core.ReadSession, Reader: persistence.Features{}, Recent: recent, Index: state}
+		send.Lookup, send.Assets, send.Emoji, send.AssetRate, send.Index, send.Notify = &lookup,
+			service.Assets{Read: core.ReadSession, Reader: persistence.Features{}}, emojiSet, state, state, fanout
+		send.Config.StickerGifPerMinute = assetsCfg.StickerGifPerMinute
+		messaging := command.Messaging{Send: send, Lookup: lookup, Features: persistence.Features{},
+			Changes: natsstream.Publisher{JS: js, Timeout: chatCfg.PublishAckTimeout}, Gate: state, Reactions: state, Pins: state,
+			Typing: state, Fanout: fanout, Emoji: emojiSet, Metrics: observability.Features{}}
+		// Game Studio uploads (F118-AC-17): the S3-compatible bucket EW_CHAT_ASSET_BUCKET when EW_S3_* is configured;
+		// without it presign and the file checks answer 503 (nothing is published unchecked).
+		var objects port.AssetStorage
+		if r.Config().String("EW_S3_ENDPOINT") != "" && r.Config().String("EW_S3_ACCESS_KEY") != "" {
+			s3, err := storage.New(storage.Config{Endpoint: r.Config().String("EW_S3_ENDPOINT"), Region: r.Config().String("EW_S3_REGION"),
+				AccessKey: r.Config().String("EW_S3_ACCESS_KEY"), SecretKey: r.Config().String("EW_S3_SECRET_KEY"), Bucket: assetsCfg.Bucket,
+				Timeout: r.Config().Duration("EW_S3_TIMEOUT", 0)}, nil)
+			if err != nil {
+				return nil, fmt.Errorf("chat: asset storage: %w", err)
+			}
+			objects = s3
+		}
+		featureReads := query.Features{Read: core.ReadSession, Reader: persistence.Features{}, Facts: facts, Lookup: lookup, Recent: recent}
 		reads := query.Chat{Read: core.ReadSession, Reader: persistence.ChatReader{}, Facts: facts, Recent: recent, Fanout: fanout,
 			Config: query.ChatConfig{RecentBuffer: chatCfg.RecentBuffer}}
+		reads.Decor = &featureReads
 		// Sensitive-term catalogue administration (F116 US2): writes stay drafts until a publish passes the regression
 		// suite (embedded placeholder corpus; the operational corpus is a regression.Source outside the repository).
 		corpus, err := regression.LoadEmbedded()
@@ -189,7 +224,13 @@ func Register(r *module.Registry) (*Module, error) {
 			Quick: query.QuickMessages{Catalog: pipe.Quick}}, Catalog: &chathttp.CatalogHandlers{Commands: catalogAdmin, Queries: catalogReads},
 			Switches: &chathttp.SwitchHandlers{Commands: switchAdmin, Queries: query.Switches{Read: core.ReadSession, Reader: persistence.Switches{},
 				Moderation: persistence.ModerationReader{}, Cursors: cursors}},
-			Safety: &chathttp.SafetyHandlers{Commands: safetyCmd, Queries: safetyReads}}
+			Safety:   &chathttp.SafetyHandlers{Commands: safetyCmd, Queries: safetyReads},
+			Features: &chathttp.FeatureHandlers{Commands: messaging, Queries: featureReads, AssetURL: assetsCfg.URL, Recorder: send.RecordResult},
+			Assets: &chathttp.AssetHandlers{Commands: command.ChatAssets{UoW: core.UoW, Repo: persistence.Assets{}, Storage: objects,
+				Inspector: storage.Inspector{Storage: objects}, Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder},
+				Metrics: observability.Features{}, Limits: chatasset.Limits{StickerMaxBytes: assetsCfg.StickerMaxBytes, GifMaxBytes: assetsCfg.GifMaxBytes,
+					GifMaxPixels: assetsCfg.GifMaxPixels}},
+				Queries: query.ChatAssets{Read: core.ReadSession, Reader: persistence.Assets{}}}}
 		r.HTTP(Name, func(s *httpx.Server) error { return chathttp.Register(s, h) })
 		// Chat commands of the gateway (F115): ew.cmd.chat.message.send, channel.join/leave, history.fetch, channel.sync.
 		if nc := r.NATS(); nc != nil {
@@ -204,8 +245,9 @@ func Register(r *module.Registry) (*Module, error) {
 		// chat.unread.updated to every device of the member.
 		if nc := r.NATS(); nc != nil {
 			receipts := command.Receipts{UoW: core.UoW, Facts: facts, Repo: persistence.Gameplay{}, Buffer: cache.Cursor{C: vk}, Recent: recent,
-				Push: fanout}
+				Push: fanout, Cursors: persistence.Gameplay{}, Delivered: cache.Cursor{C: vk, Kind: "delivered:"}, Mentions: fanout, Fanout: fanout}
 			r.Go("chat.receipts", func(ctx context.Context) error { return natscmd.ServeReceipts(ctx, nc, receipts) })
+			r.Go("chat.features", func(ctx context.Context) error { return natscmd.ServeFeatures(ctx, nc, messaging, receipts) })
 		}
 		// Presence fan-out (F095 US4): core-api, queue group chat.presence_fanout (one replica per signal).
 		if nc := r.NATS(); nc != nil {
@@ -227,6 +269,23 @@ func Register(r *module.Registry) (*Module, error) {
 		}
 		w, err := persister.New(ctx, persister.Options{JS: js, Persist: persist, DB: core.App, Batch: chatCfg.PersisterBatch,
 			Wait: chatCfg.PersisterWait, MaxDeliver: chatCfg.MaxDeliver, AckWait: chatCfg.AckWait, Stream: stream})
+		if err != nil {
+			return err
+		}
+		return w.Run(ctx)
+	})
+	// persister-evt (worker-chat, F118): the message changes (edit, recall, reactions, pins) applied by revision (R25).
+	applyChange := command.ApplyChange{UoW: core.UoW, Store: persistence.Changes{}, Events: persistence.Publisher{W: core.Writer}}
+	r.Background(Name, module.KindConsumer, persister.ChangesName, runsChat, func(ctx context.Context) error {
+		js, err := r.JetStream()
+		if err != nil {
+			return err
+		}
+		if err := natsstream.EnsureStream(ctx, js, stream); err != nil {
+			return err
+		}
+		w, err := persister.NewChanges(ctx, persister.Options{JS: js, DB: core.App, Batch: chatCfg.PersisterBatch, Wait: chatCfg.PersisterWait,
+			MaxDeliver: chatCfg.MaxDeliver, AckWait: chatCfg.AckWait, Stream: stream}, applyChange)
 		if err != nil {
 			return err
 		}

@@ -2363,6 +2363,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/messages/{message_id}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bật/tắt một reaction trên tin (REST fallback của chat.reaction.toggle)
+         * @description Chỉ reaction trong bộ cho phép của platform; tối đa `chat_reactions_per_user` reaction mỗi người mỗi tin (vượt →
+         *     `422 CHAT_REACTION_LIMIT`); không reaction tin đã thu hồi (F118-AC-16). Số đếm đồng bộ mọi client qua
+         *     `chat.reaction.updated`.
+         */
+        post: operations["toggleMessageReaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chat/quick-messages": {
         parameters: {
             query?: never;
@@ -4366,6 +4388,28 @@ export interface paths {
         put?: never;
         /** Gỡ xuất bản cấu hình game */
         post: operations["unpublishGameConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-admin/{config_type}/{config_id}/assets:presign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Presigned URL tải lên một tệp sticker/GIF của thư viện (Game Studio, F118)
+         * @description Khóa bất biến `media/<sha256>/<file_name>` (R31) tính từ `sha256` khai báo; server đọc lại tệp và kiểm sha256, định dạng
+         *     (sniff từ nội dung), kích thước và số pixel khi `submit_review`/publish (`chat_asset_file_max`: sticker WebP/PNG ≤ 512 KB;
+         *     GIF ≤ 2 MB, ≤ 480 px, có preview tĩnh). Không có upload của học sinh. Chỉ role platform có `game.chat_assets.write`.
+         */
+        post: operations["presignChatAssetUpload"];
         delete?: never;
         options?: never;
         head?: never;
@@ -12885,6 +12929,8 @@ export interface components {
             quote?: components["schemas"]["QuoteRef"];
             reactions?: components["schemas"]["ReactionSummary"];
             recalled?: boolean;
+            /** @description Trích ngắn (≤ 80 ký tự) từ nội dung đã che của tin được trả lời; vắng mặt khi tin gốc đã thu hồi/gỡ (client hiển thị "Tin nhắn gốc không còn", F118-AC-05, AC-07) */
+            readonly reply_excerpt?: string;
             reply_to_message_id?: components["schemas"]["Uuid"];
             revision?: number;
             sender: components["schemas"]["PlayerCard"];
@@ -12901,6 +12947,7 @@ export interface components {
             gif_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
             kind: "text" | "emoji" | "quick" | "sticker" | "gif";
+            /** @description Người được mention (thành viên channel); vượt chat_mentions_max (5) → 422 CHAT_MENTION_LIMIT, id không hợp lệ bị loại khỏi tin (CHAT_SYSTEM §7.7) */
             mentions?: components["schemas"]["Uuid"][];
             /** @description kind=quick: tham số của quick message có chỗ trống ({n}); mỗi giá trị qua pipeline kiểm duyệt như text (F116-AC-28) */
             params?: {
@@ -12914,6 +12961,7 @@ export interface components {
         };
         MessageEdit: {
             body: string;
+            /** @description Vượt chat_mentions_max (5) → 422 CHAT_MENTION_LIMIT (CHAT_SYSTEM §7.7) */
             mentions?: components["schemas"]["Uuid"][];
         };
         /** @enum {string} */
@@ -13753,7 +13801,7 @@ export interface components {
          * @description Mã lỗi ổn định — catalog đầy đủ trong docs/07-backend/API_DESIGN.md §4.1. Client phải chấp nhận giá trị lạ.
          * @enum {string}
          */
-        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
+        ProblemCode: "BAD_REQUEST" | "TENANT_HEADER_REQUIRED" | "UNAUTHENTICATED" | "TOKEN_EXPIRED" | "PERMISSION_DENIED" | "CALLER_NOT_ALLOWED" | "POLICY_DENIED" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_FAILED" | "INVALID_STATE_TRANSITION" | "VERSION_MISMATCH" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "RATE_LIMITED" | "INTERNAL" | "UNAVAILABLE" | "MAINTENANCE" | "ACCOUNT_NOT_PROVISIONED" | "INVALID_CREDENTIALS" | "LOGIN_TICKET_INVALID" | "REFRESH_TOKEN_INVALID" | "REFRESH_TOKEN_REUSED" | "REFRESH_TOKEN_DEVICE_MISMATCH" | "CLIENT_VERSION_UNSUPPORTED" | "LOGIN_QUEUE_BUSY" | "PORTAL_ACCESS_STAFF_ONLY" | "ACCOUNT_SETUP_REQUIRED" | "SETUP_TICKET_INVALID" | "PASSWORD_RESET_TOKEN_INVALID" | "CSRF_TOKEN_INVALID" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "ACCOUNT_LOCKED" | "ACCOUNT_DEACTIVATED" | "NO_ACTIVE_ENROLLMENT" | "TENANT_ACCESS_DISABLED" | "ACCESS_OUTSIDE_ALLOWED_HOURS" | "CURFEW_ACTIVE" | "DAILY_PLAY_LIMIT_REACHED" | "IDENTITY_CONFLICT" | "TENANT_NOT_SELECTED" | "TENANT_MISMATCH" | "GAME_ACCESS_STUDENT_ONLY" | "ACTIVE_SESSION_ON_OTHER_DEVICE" | "RETENTION_BELOW_MINIMUM" | "RESOURCE_NOT_ASSIGNED" | "CONTENT_NOT_EDITABLE" | "CONTENT_VERSION_CONFLICT" | "CONTENT_NOT_PUBLISHED" | "ROLLBACK_TARGET_INVALID" | "MEDIA_TYPE_NOT_ALLOWED" | "MEDIA_TOO_LARGE" | "MEDIA_NOT_READY" | "AUDIO_REQUIRED" | "SIS_SCHOOL_ALREADY_CONNECTED" | "SIS_SYNC_ALREADY_RUNNING" | "SIS_CONNECTION_NOT_ACTIVE" | "SIS_CONTRACT_VERSION_UNSUPPORTED" | "SIS_UNAVAILABLE" | "QUESTION_POOL_INSUFFICIENT" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_NOT_IN_PROGRESS" | "ATTEMPT_ALREADY_SUBMITTED" | "ATTEMPT_DEADLINE_PASSED" | "ATTEMPT_EXPIRED" | "ANSWER_LIMIT_REACHED" | "INVALID_RESPONSE" | "ASSIGNMENT_NOT_OPEN" | "ASSIGNMENT_MAX_ATTEMPTS" | "ASSIGNMENT_NOT_EDITABLE" | "HINTS_NOT_ALLOWED" | "HINTS_EXHAUSTED" | "ACTIVITY_TYPE_NOT_SUPPORTED" | "ACTIVITY_CONFIG_INVALID" | "EVALUATION_NOT_EDITABLE" | "MATH_RENDER_FAILED" | "VIDEO_NOT_READY" | "VIDEO_SEEK_NOT_ALLOWED" | "CUE_ANSWER_REQUIRED" | "RESPONSE_TOO_LONG" | "SIMULATION_LOG_INVALID" | "AUDIO_PLAY_LIMIT_REACHED" | "SIMULATION_RUN_LIMIT_REACHED" | "EXAM_NOT_ASSIGNED" | "EXAM_NOT_OPEN" | "EXAM_WINDOW_CLOSED" | "EXAM_MAX_ATTEMPTS" | "EXAM_ACTIVE_ON_OTHER_DEVICE" | "EXAM_TIME_OVER" | "EXAM_ALREADY_SUBMITTED" | "EXAM_RESULTS_NOT_RELEASED" | "STEP_PRECONDITION_FAILED" | "ITEM_NOT_OWNED" | "EQUIP_SLOT_INVALID" | "NICKNAME_UNAVAILABLE" | "NICKNAME_CHANGE_LIMIT" | "QUEST_ALREADY_COMPLETED" | "QUEST_COOLDOWN" | "QUEST_PREREQUISITE_NOT_MET" | "QUEST_ACTIVE_LIMIT" | "QUEST_STEP_ATTEMPT_LIMIT" | "AREA_LOCKED" | "DISCOVERY_ALREADY_FOUND" | "CHALLENGE_NOT_ELIGIBLE" | "CHALLENGE_ATTEMPT_LIMIT" | "BOSS_ENCOUNTER_FULL" | "BOSS_PHASE_CLOSED" | "INSUFFICIENT_BALANCE" | "PURCHASE_LIMIT_REACHED" | "SHOP_ITEM_UNAVAILABLE" | "ITEM_ALREADY_OWNED" | "TRADE_DISABLED" | "PARTY_ALREADY_IN_PARTY" | "PARTY_FULL" | "PARTY_NOT_FOUND" | "PARTY_NOT_LEADER" | "PARTY_INVITE_NOT_ALLOWED" | "PARTY_INVITE_RATE_LIMITED" | "PARTY_INVITATION_EXPIRED" | "PARTY_POLICY_VIOLATION" | "PARTY_MEMBER_NOT_ONLINE" | "PARTY_ACTIVITY_NOT_ELIGIBLE" | "PARTY_NOT_READY" | "ROOM_NOT_MEMBER" | "MM_TICKET_ALREADY_ACTIVE" | "MATCH_RESULT_ALREADY_RECORDED" | "DUEL_EXPIRED" | "SOCIAL_SCOPE_VIOLATION" | "FRIEND_LIMIT_REACHED" | "FRIEND_CODE_INVALID" | "CLUB_FULL" | "CLUB_LIMIT_REACHED" | "CLUB_NOT_APPROVED" | "CHAT_NOT_ALLOWED" | "CHAT_KIND_NOT_ALLOWED" | "CHAT_CONTENT_BLOCKED" | "CHAT_MUTED" | "CHAT_RATE_LIMITED" | "CHAT_POLICY_ALWAYS_ON" | "CHAT_CHANNEL_CLOSED" | "CHAT_POLICY_RELAX_NOT_ALLOWED" | "CHAT_EDIT_WINDOW_EXPIRED" | "CHAT_RECALL_WINDOW_EXPIRED" | "CHAT_FORWARD_NOT_ALLOWED" | "CHAT_PIN_LIMIT_REACHED" | "CHAT_MENTION_LIMIT" | "CHAT_REACTION_LIMIT" | "CHAT_TEMPORARILY_UNAVAILABLE" | "CHAT_FEATURE_DISABLED" | "CHAT_ASSET_NOT_AVAILABLE" | "CHAT_CONTENT_HELD" | "MODERATION_SWITCH_REASON_REQUIRED" | "MODERATION_SWITCH_STEP_NOT_ALLOWED" | "MODERATION_SWITCH_EXPIRY_REQUIRED" | "MODERATION_SWITCH_SELF_APPROVAL" | "TENANT_TOGGLE_NOT_ALLOWED" | "SENSITIVE_TERM_INVALID" | "SENSITIVE_CATALOG_REGRESSION_FAILED" | "ITEM_REF_INVALID" | "TRANSLATION_INCOMPLETE" | "EVENT_NOT_AVAILABLE" | "EVENT_ENDED" | "EVENT_MILESTONE_NOT_REACHED" | "SEASON_TIER_NOT_REACHED" | "EVENT_TEMPLATE_PARAM_NOT_ALLOWED" | "DASHBOARD_RANGE_TOO_LARGE" | "DASHBOARD_BUSY" | "DASHBOARD_QUERY_TIMEOUT" | "EXPORT_LIMIT_REACHED" | "MODERATION_CASE_CLOSED" | "ROLE_NOT_FOUND" | "FEATURE_DISABLED" | "FEATURE_NOT_DISABLEABLE";
         ProgressionLevel: {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
@@ -21923,6 +21971,9 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            429: components["responses"]["RateLimited"];
             451: components["responses"]["MessageBlocked"];
             503: components["responses"]["ServiceUnavailable"];
         };
@@ -21957,6 +22008,63 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    toggleMessageReaction: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                message_id: components["parameters"]["MessageId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Mã reaction trong bộ cho phép */
+                    reaction: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Trạng thái reaction sau khi bật/tắt */
+            200: {
+                headers: {
+                    "Content-Language": components["headers"]["ContentLanguage"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Reaction đang bật sau thao tác */
+                        active: boolean;
+                        message_id: components["schemas"]["Uuid"];
+                        reactions: components["schemas"]["ReactionSummary"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -27637,6 +27745,57 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    presignChatAssetUpload: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                config_id: components["schemas"]["Uuid"];
+                config_type: "sticker-packs" | "gifs";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    content_type: "image/webp" | "image/png" | "image/gif";
+                    file_name: string;
+                    sha256: string;
+                    size_bytes: number;
+                };
+            };
+        };
+        responses: {
+            /** @description URL PUT đã ký (Content-Length phải đúng size_bytes) */
+            201: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        asset_key: string;
+                        expires_at: components["schemas"]["Timestamp"];
+                        /** Format: uri */
+                        upload_url: string;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     listGameConfigReleases: {

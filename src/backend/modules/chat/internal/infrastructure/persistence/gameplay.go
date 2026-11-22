@@ -172,3 +172,57 @@ func (Gameplay) MarkRead(ctx context.Context, tenant, id, user uuid.UUID, seq, k
 	}
 	return unread, true, nil
 }
+
+var _ write.CursorRepository = Gameplay{}
+
+// MarkDelivered implements write.CursorRepository.
+func (Gameplay) MarkDelivered(ctx context.Context, tenant, id, user uuid.UUID, seq, known int64, at time.Time) (int64, int64, bool, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return 0, 0, false, err
+	}
+	var delivered, readSeq int64
+	// tenancyguard:ok chat.channel_members joined with chat.channels, both of the session tenant, live rows only
+	err = t.QueryRowContext(ctx, `UPDATE chat.channel_members m SET last_delivered_seq = GREATEST(m.last_delivered_seq,
+			LEAST($4::bigint, GREATEST(c.last_seq, $6::bigint))), updated_at = $5
+		FROM chat.channels c
+		WHERE m.tenant_id = $1 AND m.channel_id = $2 AND m.user_id = $3 AND m.deleted_at IS NULL AND m.left_at IS NULL
+			AND c.tenant_id = m.tenant_id AND c.channel_id = m.channel_id AND c.deleted_at IS NULL
+		RETURNING m.last_delivered_seq, m.last_read_seq`, tenant, id, user, seq, at, known).Scan(&delivered, &readSeq)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, 0, false, nil
+	}
+	if err != nil {
+		return 0, 0, false, fmt.Errorf("chat: mark delivered: %w", err)
+	}
+	return delivered, readSeq, true, nil
+}
+
+// ResetMentions implements write.CursorRepository.
+func (Gameplay) ResetMentions(ctx context.Context, tenant, id, user uuid.UUID) (int64, int64, int64, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	var delivered, readSeq, mentions int64
+	// tenancyguard:ok member of the session tenant; the mentions counted in both message tables of the tenant (live,
+	// delivered, not recalled), the channel lives in exactly one of them
+	err = t.QueryRowContext(ctx, `UPDATE chat.channel_members m SET unread_mentions = (
+			SELECT count(*) FROM (
+				SELECT 1 FROM chat.messages x WHERE x.tenant_id = $1 AND x.channel_id = $2 AND x.seq > m.last_read_seq
+					AND $3 = ANY(x.mentions) AND x.deleted_at IS NULL AND x.recalled_at IS NULL
+					AND x.moderation_state IN ('allowed','masked','unchecked')
+				UNION ALL
+				SELECT 1 FROM chat.gameplay_messages x WHERE x.tenant_id = $1 AND x.channel_id = $2 AND x.seq > m.last_read_seq
+					AND $3 = ANY(x.mentions) AND x.deleted_at IS NULL AND x.recalled_at IS NULL
+					AND x.moderation_state IN ('allowed','masked','unchecked')) n)
+		WHERE m.tenant_id = $1 AND m.channel_id = $2 AND m.user_id = $3 AND m.deleted_at IS NULL AND m.left_at IS NULL
+		RETURNING m.last_delivered_seq, m.last_read_seq, m.unread_mentions`, tenant, id, user).Scan(&delivered, &readSeq, &mentions)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, 0, 0, nil
+	}
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("chat: reset mentions: %w", err)
+	}
+	return delivered, readSeq, mentions, nil
+}

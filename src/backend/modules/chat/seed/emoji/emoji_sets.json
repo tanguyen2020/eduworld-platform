@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "notes": "Bộ emoji/reaction cho phép của platform (CHAT_SYSTEM §7.5–§7.6, F118 T002). Chỉ mã trung tính, phù hợp trẻ em; bỏ các emoji có thể dùng để bắt nạt/gợi dục. Đổi bộ = sửa file này và phát hành (cấu hình platform có version).",
+  "emoji": ["smile", "laugh", "grin", "wink", "heart", "thumbs_up", "clap", "star", "sparkles", "party", "trophy", "medal",
+    "fire", "rocket", "rainbow", "sun", "book", "pencil", "light_bulb", "check", "hundred", "muscle", "wave", "hug", "thinking",
+    "surprised", "sad", "sleepy", "ok_hand", "pray"],
+  "reactions": ["thumbs_up", "heart", "laugh", "clap", "star", "fire", "surprised", "sad", "thinking", "party"]
+}

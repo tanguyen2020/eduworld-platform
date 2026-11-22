@@ -28,6 +28,10 @@
     "gif_id": { "type": ["string", "null"], "format": "uuid" },
     "reply_to_message_id": { "type": ["string", "null"], "format": "uuid" },
     "mentions": { "type": "array", "maxItems": 5, "items": { "type": "string", "format": "uuid" } },
+    "quote": { "type": "object", "additionalProperties": false, "required": ["message_id", "excerpt_start", "excerpt_end", "excerpt"], "description": "Trích dẫn (F118-AC-08): excerpt do server cắt từ nội dung đã che của tin gốc, ≤ 200 ký tự, qua pipeline; bất biến sau khi gửi",
+      "properties": { "message_id": { "type": "string", "format": "uuid" }, "excerpt_start": { "type": "integer", "minimum": 0 }, "excerpt_end": { "type": "integer", "minimum": 0 }, "excerpt": { "type": "string", "maxLength": 200 } } },
+    "forwarded_from": { "type": "object", "additionalProperties": false, "required": ["message_id", "channel_type", "sender_nickname"], "description": "Tin chuyển tiếp (F118-AC-09): nickname hồ sơ game, không username (R16)",
+      "properties": { "message_id": { "type": "string", "format": "uuid" }, "channel_type": { "enum": ["world", "area", "match", "party", "team", "direct"] }, "sender_nickname": { "type": "string", "maxLength": 32 } } },
     "moderation": {
       "type": "object",
       "additionalProperties": false,

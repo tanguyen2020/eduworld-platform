@@ -91,5 +91,6 @@ func ApplyAlwaysOn(e Effective) Effective {
 	if e.SlowModeSeconds > MaxAlwaysOnSlowMode {
 		e.SlowModeSeconds = MaxAlwaysOnSlowMode
 	}
+	e.Features = alwaysOnFeatures(e.Features)
 	return e
 }

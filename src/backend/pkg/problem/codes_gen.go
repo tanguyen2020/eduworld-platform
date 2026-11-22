@@ -45,6 +45,7 @@ const (
 	ChatPolicyAlwaysOn               Code = "CHAT_POLICY_ALWAYS_ON"
 	ChatPolicyRelaxNotAllowed        Code = "CHAT_POLICY_RELAX_NOT_ALLOWED"
 	ChatRateLimited                  Code = "CHAT_RATE_LIMITED"
+	ChatReactionLimit                Code = "CHAT_REACTION_LIMIT"
 	ChatRecallWindowExpired          Code = "CHAT_RECALL_WINDOW_EXPIRED"
 	ChatTemporarilyUnavailable       Code = "CHAT_TEMPORARILY_UNAVAILABLE"
 	ClientVersionUnsupported         Code = "CLIENT_VERSION_UNSUPPORTED"
@@ -223,6 +224,7 @@ var statusByCode = map[Code]int{
 	ChatPolicyAlwaysOn:               422,
 	ChatPolicyRelaxNotAllowed:        422,
 	ChatRateLimited:                  429,
+	ChatReactionLimit:                422,
 	ChatRecallWindowExpired:          409,
 	ChatTemporarilyUnavailable:       503,
 	ClientVersionUnsupported:         426,
@@ -401,6 +403,7 @@ var allCodes = []Code{
 	ChatPolicyAlwaysOn,
 	ChatPolicyRelaxNotAllowed,
 	ChatRateLimited,
+	ChatReactionLimit,
 	ChatRecallWindowExpired,
 	ChatTemporarilyUnavailable,
 	ClientVersionUnsupported,

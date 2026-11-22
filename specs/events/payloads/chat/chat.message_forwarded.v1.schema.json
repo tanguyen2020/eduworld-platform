@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat.message_forwarded.v1.schema.json",
+  "title": "Payload chat.message_forwarded v1 (module chat, owner F118)",
+  "description": "Một bản chuyển tiếp đã được chat-persister ghi (tin mới ở channel đích, cùng tenant, đã qua pipeline của channel đích — F118-AC-09). KHÔNG chứa nội dung. Consumer: AUD, MOD (lần theo phát tán).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "message_id", "channel_id", "channel_type", "sender_id", "source_message_id", "source_channel_type", "created_at"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "message_id": { "type": "string", "format": "uuid", "description": "Tin mới ở channel đích" },
+    "channel_id": { "type": "string", "format": "uuid" },
+    "channel_type": { "enum": ["world", "area", "match", "party", "team", "direct"] },
+    "sender_id": { "type": "string", "format": "uuid", "description": "Học sinh chuyển tiếp" },
+    "source_message_id": { "type": "string", "format": "uuid" },
+    "source_channel_type": { "enum": ["world", "area", "match", "party", "team", "direct"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    { "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001", "message_id": "0193a6b2-0000-7000-8000-000000000040", "channel_id": "0193a1aa-0000-7000-8000-000000000021", "channel_type": "match", "sender_id": "0193a5f4-6c1e-7b2a-9d1f-000000000002", "source_message_id": "0193a6b2-0000-7000-8000-000000000010", "source_channel_type": "party", "created_at": "2026-11-22T08:30:12.345Z" }
+  ]
+}

@@ -1616,6 +1616,7 @@ workspaces:
             title: Tạo và sửa bản nháp
             required_permissions: [game.chat_assets.write]
             operation_ids:
+              - "presignChatAssetUpload"
               - "createGameConfig[config_type=sticker-packs]"
               - "updateGameConfigDraft[config_type=sticker-packs]"
               - "createGameConfig[config_type=gifs]"

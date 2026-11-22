@@ -28,6 +28,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/message"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/policy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/cache"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/emoji"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/moderation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/natsstream"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
@@ -217,6 +218,12 @@ func setupChat(t *testing.T, o chatOpts) *chatEnv {
 		Stream: natsstream.Publisher{JS: js, Timeout: 2 * time.Second}, Fanout: fanout, Dedupe: cache.Dedupe{C: vk, TTL: 10 * time.Minute},
 		Metrics: observability.Chat{}, UoW: e.uow, Audit: persistence.Auditor{R: e.rec}, Config: command.SendConfig{RatePerUser: 30},
 		Now: e.clock.Now}
+	// F118: the platform emoji set and the sticker/GIF library are wired as in core-api (fail closed without them).
+	set, err := emoji.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.send.Emoji, c.send.Assets = set, service.Assets{Read: e.read, Reader: persistence.Features{}}
 	if o.real {
 		p, err := moderation.Real(moderation.Deps{Read: e.read, Cache: c.facts.Cache, Valkey: vk, UoW: e.uow,
 			Events: persistence.Publisher{W: e.writer}, Audit: persistence.Auditor{R: e.rec}, Push: fanout, Now: e.clock.Now})

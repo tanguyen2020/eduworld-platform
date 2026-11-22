@@ -34,9 +34,10 @@ type Sender struct {
 	ConnID   string
 }
 
-// SendConfig is the configuration of SendMessage (chat_rate_per_user cap).
+// SendConfig is the configuration of SendMessage (chat_rate_per_user cap; chat_sticker_gif_rate, 0 = no ceiling).
 type SendConfig struct {
-	RatePerUser int
+	RatePerUser         int
+	StickerGifPerMinute int
 }
 
 // AuditChannelAccessDenied is recorded when a student targets a channel it is not a member of (no content).
@@ -60,6 +61,15 @@ type Send struct {
 	Audit     write.Auditor    // nil: none
 	Config    SendConfig
 	Now       func() time.Time
+	// F118: the newest state of replied/quoted messages, the sticker/GIF library, the allowed emoji set, the sticker/GIF
+	// ceiling, the message index (edits by message_id) and the mention notifications. Assets or Emoji nil: stickers,
+	// GIFs and emoji are refused (fail closed, F118-AC-12, AC-15).
+	Lookup    *service.Lookup
+	Assets    port.AssetChecker
+	Emoji     port.EmojiSet
+	AssetRate port.ExtraRate     // nil: no sticker/GIF ceiling
+	Index     port.MessageIndex  // nil: none
+	Notify    port.FeatureFanout // nil: no chat.mention.created
 }
 
 // SendResult is the outcome of a send: the envelope acked by the stream and the card of the sender.
@@ -238,6 +248,13 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 		h.rejected(problem.ChatKindNotAllowed)
 		return SendResult{}, problem.New(problem.ChatKindNotAllowed, "")
 	}
+	if err := h.prepare(ctx, s, facts, eff, &req); err != nil {
+		var pe *problem.Error
+		if errors.As(err, &pe) {
+			h.rejected(pe.Code)
+		}
+		return SendResult{}, err
+	}
 	if err := req.Validate(eff.MaxTextLength); err != nil {
 		h.rejected(problem.ValidationFailed)
 		field := "body"
@@ -246,7 +263,25 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 		}
 		return SendResult{}, problem.Invalid(field, problem.SubInvalid, err.Error())
 	}
+	if err := h.asset(ctx, s, req); err != nil {
+		var pe *problem.Error
+		if errors.As(err, &pe) {
+			h.rejected(pe.Code)
+		}
+		return SendResult{}, err
+	}
 	msgID := ids.New()
+	if (req.Kind == message.KindSticker || req.Kind == message.KindGif) && h.AssetRate != nil {
+		ok, retry, err := h.AssetRate.AllowAsset(ctx, s.UserID, ch.ID, msgID, h.Config.StickerGifPerMinute, now)
+		switch {
+		case err != nil:
+			h.rejected(problem.ChatTemporarilyUnavailable)
+			return SendResult{}, temporarily()
+		case !ok:
+			h.rejected(problem.ChatRateLimited)
+			return SendResult{}, RetryAfter{Err: problem.New(problem.ChatRateLimited, "").Retry(), After: retry}
+		}
+	}
 	perUser := h.Config.RatePerUser
 	if eff.GlobalPerMinute > 0 && (perUser <= 0 || eff.GlobalPerMinute < perUser) {
 		perUser = eff.GlobalPerMinute
@@ -279,6 +314,13 @@ func (h Send) send(ctx context.Context, s Sender, req message.Request) (SendResu
 	if err != nil {
 		h.rejected(problem.ChatTemporarilyUnavailable)
 		return SendResult{}, temporarily()
+	}
+	if stored && req.Quote != nil {
+		// The excerpt is new content in this channel: it goes through the pipeline too (F118-AC-08); anything but a
+		// delivered decision refuses the message.
+		if err := h.quoteVerdict(ctx, s, school, ch, eff, &req); err != nil {
+			return SendResult{}, err
+		}
 	}
 	if !stored { // block: no seq, no publish, no content kept
 		if h.Metrics != nil {
@@ -336,10 +378,16 @@ func (h Send) acked(ctx context.Context, s Sender, e message.Envelope, card read
 	if err := h.Recent.Push(bg, e); err != nil {
 		slog.WarnContext(ctx, "chat: recent buffer not updated", "error", err)
 	}
+	if h.Index != nil {
+		if err := h.Index.Put(bg, e.MessageID, e.TenantID, e.ChannelID); err != nil {
+			slog.WarnContext(ctx, "chat: message index not updated", "error", err)
+		}
+	}
 	_, deliver, _, _ := e.Moderation.Decision.Outcome()
 	if deliver {
 		facts, err := h.Facts.Channel(bg, s.TenantID, e.ChannelID)
 		if err == nil && facts != nil {
+			notifyMentions(bg, h.Notify, facts, e, e.Mentions)
 			recipients := make([]uuid.UUID, 0, len(facts.Members))
 			for _, id := range facts.Members.ActiveIDs() {
 				if !facts.Hidden(id, e.SenderID) { // block both ways, mute one way (F117-AC-12)
@@ -365,7 +413,7 @@ func envelope(tenant uuid.UUID, school *uuid.UUID, facts *read.ChannelFacts, sen
 	e := message.Envelope{V: 1, Kind: message.EnvelopeKind, MessageID: id, TenantID: tenant, SchoolID: school, ChannelID: ch.ID,
 		ChannelType: string(ch.Type), IsGameplay: ch.IsGameplay, Seq: seq, Revision: 1, SenderID: sender, ClientMessageID: &cmid,
 		MsgKind: req.Kind, StickerID: req.StickerID, GifID: req.GifID, ReplyToMessageID: req.ReplyToMessageID,
-		Mentions: append([]uuid.UUID{}, req.Mentions...), CreatedAt: now,
+		Mentions: append([]uuid.UUID{}, req.Mentions...), CreatedAt: now, Quote: req.Quote, ForwardedFrom: req.ForwardedFrom,
 		Moderation: message.Moderation{Decision: v.Decision, State: state, CategoryCodes: v.CategoryCodes, StepsRun: v.StepsRun,
 			StepsSkipped: v.StepsSkipped, CatalogVersion: v.CatalogVersion, CatalogVersionTenant: v.CatalogVersionTenant,
 			SwitchSnapshotID: v.SwitchSnapshotID, LatencyMS: v.LatencyMS}}

@@ -312,14 +312,60 @@ func (ChatReader) MyChannels(ctx context.Context, tenant, user uuid.UUID, limit 
 
 // messagesSQL reads one channel of chat.messages or chat.gameplay_messages ({table}, {dir}): tenant, deleted_at, from
 // joined_at, held only for the reader, removed never.
-const messagesSQL = `SELECT m.message_id, m.seq, m.school_id, m.sender_id, m.client_message_id, m.kind, m.body_display,
-	m.quick_message_id, m.sticker_id, m.gif_id, m.reply_to_message_id, array_to_string(m.mentions, ','), m.revision,
-	m.moderation_state, m.created_at, m.recalled_at IS NOT NULL, m.filter_verdict->'params'
+const messagesSQL = `SELECT ` + messageColumns + `
 	FROM chat.{table} m
 	WHERE m.tenant_id = $1 AND m.channel_id = $2 AND m.deleted_at IS NULL AND m.created_at >= $3
 		AND m.moderation_state <> 'removed' AND (m.moderation_state <> 'held' OR m.sender_id = $4)
 		AND ($5::bigint IS NULL OR m.seq < $5) AND ($6::bigint IS NULL OR m.seq > $6)
 	ORDER BY m.seq {dir} LIMIT $7`
+
+// messageColumns are the display columns of a stored message (never the original body: F115-AC-18, R25). A recalled
+// message keeps its body in the table (evidence) but body_display is not returned for it.
+const messageColumns = `m.message_id, m.channel_id, m.seq, m.school_id, m.sender_id, m.client_message_id, m.kind,
+	CASE WHEN m.recalled_at IS NULL THEN m.body_display END, m.quick_message_id, m.sticker_id, m.gif_id, m.reply_to_message_id,
+	array_to_string(m.mentions, ','), m.revision, m.moderation_state, m.created_at, m.recalled_at, m.filter_verdict->'params',
+	CASE WHEN m.recalled_at IS NULL THEN m.quote END, m.forwarded_from, m.edit_count, m.edited_at`
+
+// scanMessage reads one row of messageColumns.
+func scanMessage(rows interface{ Scan(dest ...any) error }, tenant uuid.UUID, gameplay bool) (read.StoredMessage, error) {
+	e := message.Envelope{V: 1, Kind: message.EnvelopeKind, TenantID: tenant, IsGameplay: gameplay}
+	var school, cmid, sticker, gif, reply uuid.NullUUID
+	var display, quick sql.NullString
+	var mentions, kind, state string
+	var recalled, edited sql.NullTime
+	var params, quote, forwarded []byte
+	if err := rows.Scan(&e.MessageID, &e.ChannelID, &e.Seq, &school, &e.SenderID, &cmid, &kind, &display, &quick, &sticker, &gif,
+		&reply, &mentions, &e.Revision, &state, &e.CreatedAt, &recalled, &params, &quote, &forwarded, &e.EditCount, &edited); err != nil {
+		return read.StoredMessage{}, fmt.Errorf("chat: messages: %w", err)
+	}
+	e.SchoolID, e.ClientMessageID, e.StickerID, e.GifID, e.ReplyToMessageID = nullUUID(school), nullUUID(cmid), nullUUID(sticker),
+		nullUUID(gif), nullUUID(reply)
+	e.MsgKind, e.Moderation.State, e.CreatedAt = message.Kind(kind), message.State(state), e.CreatedAt.UTC()
+	e.BodyDisplay, e.QuickMessageID = nullString(display), nullString(quick)
+	e.RecalledAt, e.EditedAt = nullTime(recalled), nullTime(edited)
+	if len(params) > 0 && string(params) != "null" { // quick message parameters (F116-AC-28)
+		_ = json.Unmarshal(params, &e.Params)
+	}
+	if len(quote) > 0 && string(quote) != "null" {
+		var q message.Quote
+		if json.Unmarshal(quote, &q) == nil {
+			e.Quote = &q
+		}
+	}
+	if len(forwarded) > 0 && string(forwarded) != "null" {
+		var f message.ForwardedFrom
+		if json.Unmarshal(forwarded, &f) == nil {
+			e.ForwardedFrom = &f
+		}
+	}
+	e.Mentions = []uuid.UUID{}
+	for _, s := range strings.Split(mentions, ",") {
+		if u, err := uuid.Parse(s); err == nil {
+			e.Mentions = append(e.Mentions, u)
+		}
+	}
+	return read.StoredMessage{Envelope: e, Recalled: recalled.Valid}, nil
+}
 
 // Messages implements read.ChatReader.
 func (ChatReader) Messages(ctx context.Context, q read.MessageQuery) ([]read.StoredMessage, error) {
@@ -342,30 +388,11 @@ func (ChatReader) Messages(ctx context.Context, q read.MessageQuery) ([]read.Sto
 	defer func() { _ = rows.Close() }()
 	var out []read.StoredMessage
 	for rows.Next() {
-		e := message.Envelope{V: 1, Kind: message.EnvelopeKind, TenantID: q.Tenant, ChannelID: q.Channel, IsGameplay: q.Gameplay}
-		var school, cmid, sticker, gif, reply uuid.NullUUID
-		var display, quick sql.NullString
-		var mentions, kind, state string
-		var recalled bool
-		var params []byte
-		if err := rows.Scan(&e.MessageID, &e.Seq, &school, &e.SenderID, &cmid, &kind, &display, &quick, &sticker, &gif, &reply,
-			&mentions, &e.Revision, &state, &e.CreatedAt, &recalled, &params); err != nil {
-			return nil, fmt.Errorf("chat: messages: %w", err)
+		m, err := scanMessage(rows, q.Tenant, q.Gameplay)
+		if err != nil {
+			return nil, err
 		}
-		e.SchoolID, e.ClientMessageID, e.StickerID, e.GifID, e.ReplyToMessageID = nullUUID(school), nullUUID(cmid), nullUUID(sticker),
-			nullUUID(gif), nullUUID(reply)
-		e.MsgKind, e.Moderation.State, e.CreatedAt = message.Kind(kind), message.State(state), e.CreatedAt.UTC()
-		e.BodyDisplay, e.QuickMessageID = nullString(display), nullString(quick)
-		if len(params) > 0 && string(params) != "null" { // quick message parameters (F116-AC-28)
-			_ = json.Unmarshal(params, &e.Params)
-		}
-		e.Mentions = []uuid.UUID{}
-		for _, s := range strings.Split(mentions, ",") {
-			if u, err := uuid.Parse(s); err == nil {
-				e.Mentions = append(e.Mentions, u)
-			}
-		}
-		out = append(out, read.StoredMessage{Envelope: e, Recalled: recalled})
+		out = append(out, m)
 	}
 	return out, rows.Err()
 }
@@ -453,6 +480,20 @@ func (Channels) LeaveMember(ctx context.Context, tenant, id, user uuid.UUID, at 
 		WHERE tenant_id = $1 AND channel_id = $2 AND user_id = $3 AND deleted_at IS NULL AND left_at IS NULL`, tenant, id, user, at)
 	if err != nil {
 		return false, fmt.Errorf("chat: leave member: %w", err)
+	}
+	return n == 1, nil
+}
+
+var _ write.RoleRepository = Channels{}
+
+// SetRole implements write.RoleRepository.
+func (Channels) SetRole(ctx context.Context, tenant, id, user uuid.UUID, role string) (bool, error) {
+	// tenancyguard:ok chat.channel_members of the session tenant, live active rows only
+	n, err := exec(ctx, `UPDATE chat.channel_members SET role = $4, updated_at = now(), version = version + 1
+		WHERE tenant_id = $1 AND channel_id = $2 AND user_id = $3 AND deleted_at IS NULL AND left_at IS NULL AND role <> $4`,
+		tenant, id, user, role)
+	if err != nil {
+		return false, fmt.Errorf("chat: set role: %w", err)
 	}
 	return n == 1, nil
 }

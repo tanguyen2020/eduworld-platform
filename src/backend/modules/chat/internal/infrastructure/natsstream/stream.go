@@ -108,3 +108,56 @@ func (p Publisher) Publish(ctx context.Context, e message.Envelope) error {
 	}
 	return nil
 }
+
+// ChangeSubject is ew.chat.<tenant_id>.evt.<channel_id>.
+func ChangeSubject(c message.Change) string {
+	return "ew.chat." + c.TenantID.String() + ".evt." + c.ChannelID.String()
+}
+
+// ChangesFilter is the subject filter of the durable consumer "persister-evt" (F118).
+const ChangesFilter = "ew.chat.*.evt.*"
+
+// ChangesConsumer is the durable consumer of the message changes.
+const ChangesConsumer = "persister-evt"
+
+var _ port.ChangeStream = Publisher{}
+
+// PublishChange implements port.ChangeStream (Nats-Msg-Id = change_id).
+func (p Publisher) PublishChange(ctx context.Context, c message.Change) error {
+	if p.JS == nil {
+		return port.ErrUnavailable
+	}
+	b, err := json.Marshal(c)
+	if err != nil {
+		return err
+	}
+	timeout := p.Timeout
+	if dl, ok := ctx.Deadline(); ok {
+		margin := p.Margin
+		if margin <= 0 {
+			margin = 150 * time.Millisecond
+		}
+		if left := time.Until(dl) - margin; left < timeout {
+			timeout = left
+		}
+	}
+	if timeout <= 0 {
+		return port.ErrUnavailable
+	}
+	cctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), timeout)
+	defer cancel()
+	m := nats.NewMsg(ChangeSubject(c))
+	m.Data = b
+	m.Header.Set(natsx.HeaderTenantID, c.TenantID.String())
+	if c.TraceID != nil {
+		m.Header.Set("Ew-Trace-Id", *c.TraceID)
+	}
+	ack, err := p.JS.PublishMsg(cctx, m, jetstream.WithMsgID(c.ChangeID.String()), jetstream.WithExpectStream(StreamName))
+	if err != nil {
+		return fmt.Errorf("%w: %w", port.ErrUnavailable, err)
+	}
+	if ack == nil || ack.Stream != StreamName {
+		return fmt.Errorf("%w: %w", port.ErrUnavailable, errors.New("unexpected stream ack"))
+	}
+	return nil
+}

@@ -297,7 +297,7 @@ Chấm tay, trả bài và bài nói ngoài version này (ADR-0082): không có 
 | `party.settings_updated` | party | RT, AUD | `party_id`, `changed_fields[]` |
 | `party.invitation_sent` / `_accepted` / `_rejected` / `_expired` / `_cancelled` | party | RT, NTF, AUD | `invitation_id`, `inviter_id`, `invitee_id` |
 | `party.member_joined` / `party.member_left` / `party.member_kicked` | party | RT, chat, AUD | `party_id`, `student_id`, `reason` |
-| `party.leader_transferred` | party | RT, chat (vai trò leader trong channel `party`), game (co-op), AUD | `party_id`, `from`, `to`, `reason` (`manual`/`leader_disconnected`/`leader_left`) |
+| `party.leader_transferred` | party | RT, chat (vai trò leader trong channel `party` — consumer `chat.gameplay_channels`, F118), game (co-op), AUD | `party_id`, `from`, `to`, `reason` (`manual`/`leader_disconnected`/`leader_left`) |
 | `party.activity_selected` | party | RT | `party_id`, `activity_type` (gồm `boss`, [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md)), `activity_ref` |
 | `party.activity_started` | party | RT, QST, AUD | `party_id`, `activity_ref`, `room_id`, `game_session_ref` |
 | `party.activity_ended` | party | RT, AUD | `party_id`, `outcome` (completed/failed/abandoned/aborted) |

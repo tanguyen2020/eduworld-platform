@@ -26,6 +26,9 @@ type ValidationInput struct {
 	Params     map[string]string
 	Mentions   int
 	Strictness string
+	// Derived marks content derived from an already moderated message (a quote excerpt): checked like a text, but the
+	// spam window of the sender is not counted again (F118).
+	Derived bool
 }
 
 // Verdict is the pipeline result: the decision, the display text (masked when mask) and metadata without content
@@ -78,6 +81,17 @@ type HistoryItem struct {
 	Envelope message.Envelope
 	Sender   read.ChatCard
 	Recalled bool
+	Extras   MessageExtras
+}
+
+// MessageExtras are the read-time parts of a rendered message (F118): the reply excerpt of the moderated original (nil:
+// none or gone), the reactions and the pin flag.
+type MessageExtras struct {
+	ReplyExcerpt *string
+	Reactions    map[string]int
+	MyReactions  []string
+	Pinned       bool
+	Mentions     []read.ChatCard
 }
 
 // Fanout pushes realtime events through Valkey Pub/Sub after the JetStream ack (R25) and renders the AsyncAPI payloads:

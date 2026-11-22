@@ -90,6 +90,7 @@ type sendPayload struct {
 	GifID            *uuid.UUID        `json:"gif_id"`
 	ReplyToMessageID *uuid.UUID        `json:"reply_to_message_id"`
 	Mentions         []uuid.UUID       `json:"mentions"`
+	Quote            *message.Quote    `json:"quote"`
 }
 
 // MessageSend handles ew.cmd.chat.message.send: the same use case as REST sendChannelMessage (F115-AC-05); the result
@@ -103,7 +104,7 @@ func MessageSend(h Sender) rt.CommandHandler {
 		res, err := h.Send(ctx, command.Sender{TenantID: c.TenantID, UserID: c.UserID, ConnID: c.ConnID}, message.Request{
 			ChannelID: p.ChannelID, ClientMessageID: p.ClientMessageID, Kind: message.Kind(p.Kind), Body: p.Body, Emoji: p.Emoji,
 			QuickMessageID: p.QuickMessageID, Params: p.Params, StickerID: p.StickerID, GifID: p.GifID, ReplyToMessageID: p.ReplyToMessageID,
-			Mentions: p.Mentions})
+			Mentions: p.Mentions, Quote: clientQuote(p.Quote)})
 		if err != nil {
 			return failure(ctx, err)
 		}
@@ -225,4 +226,12 @@ func Serve(ctx context.Context, nc *nats.Conn, send Sender, read Reader) error {
 		}
 	}
 	return first
+}
+
+// clientQuote keeps only the reference and bounds of a quote: the excerpt is always cut by the server (F118-AC-08).
+func clientQuote(q *message.Quote) *message.Quote {
+	if q == nil {
+		return nil
+	}
+	return &message.Quote{MessageID: q.MessageID, Start: q.Start, End: q.End}
 }

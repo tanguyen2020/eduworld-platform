@@ -1,0 +1,462 @@
+package command
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"log/slog"
+	"path"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/chatasset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/ids"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/problem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/tenancy"
+)
+
+// Audit actions and events of the Game Studio library (ids only).
+const (
+	AuditChatAssetCreated     = "chat_asset.created"
+	AuditChatAssetUpdated     = "chat_asset.updated"
+	AuditChatAssetTransition  = "chat_asset.transitioned"
+	AuditChatAssetPublished   = "chat_asset.published"
+	AuditChatAssetPresigned   = "chat_asset.upload_presigned"
+	EventContentPublished     = "content.published"
+	PresignTTL                = 15 * time.Minute
+	assetPresignMaxFileLength = 200
+)
+
+// AssetMetrics count refused uploads (reason label only).
+type AssetMetrics interface {
+	AssetRejected(reason string)
+}
+
+// ChatAssets are the Game Studio use cases of the sticker/GIF library (F118-AC-17; /game-admin/{sticker-packs|gifs},
+// internal gateway, platform role with game.chat_assets.write — AGENTS R20): create, edit a draft, workflow, publish
+// (versioned, immutable once published — R31), presigned upload; every action audited. A tenant role is refused with
+// 403 PERMISSION_DENIED.
+type ChatAssets struct {
+	UoW       write.UnitOfWork
+	Repo      write.AssetRepository
+	Storage   port.AssetStorage
+	Inspector port.AssetInspector
+	Events    write.EventPublisher
+	Audit     write.Auditor
+	Metrics   AssetMetrics // nil: none
+	Limits    chatasset.Limits
+	Now       func() time.Time
+}
+
+func (h ChatAssets) now() time.Time {
+	if h.Now != nil {
+		return h.Now().UTC()
+	}
+	return time.Now().UTC()
+}
+
+// assetWrite authorizes a Game Studio action and returns the actor and the platform scope.
+func assetWrite(ctx context.Context) (authz.Principal, tenancy.Scope, error) {
+	return platformWrite(ctx, authz.PermGameChatAssetsWrite)
+}
+
+func assetType(t string) (chatasset.Type, error) {
+	ct := chatasset.Type(t)
+	if !ct.Valid() {
+		return "", problem.New(problem.NotFound, "")
+	}
+	return ct, nil
+}
+
+func fieldProblem(err error) error {
+	var fe chatasset.FieldError
+	if errors.As(err, &fe) {
+		return problem.Invalid(fe.Field, problem.SubInvalid, fe.Reason)
+	}
+	var fl chatasset.FileError
+	if errors.As(err, &fl) {
+		return problem.Invalid("payload."+fl.Field, problem.SubInvalid, "file refused: "+fl.Reason)
+	}
+	return err
+}
+
+// normalize decodes and validates a payload of t; new stickers get their id here (server side).
+func normalize(t chatasset.Type, raw json.RawMessage) ([]byte, *chatasset.Pack, error) {
+	switch t {
+	case chatasset.TypeStickerPacks:
+		var p chatasset.Pack
+		if err := json.Unmarshal(raw, &p); err != nil {
+			return nil, nil, problem.Invalid("payload", problem.SubInvalid, "sticker pack payload")
+		}
+		if err := p.Check(); err != nil {
+			return nil, nil, fieldProblem(err)
+		}
+		for i := range p.Stickers {
+			if p.Stickers[i].StickerID == uuid.Nil {
+				p.Stickers[i].StickerID = ids.New()
+			}
+		}
+		b, err := json.Marshal(p)
+		return b, &p, err
+	default:
+		var g chatasset.Gif
+		if err := json.Unmarshal(raw, &g); err != nil {
+			return nil, nil, problem.Invalid("payload", problem.SubInvalid, "gif payload")
+		}
+		if err := g.Check(); err != nil {
+			return nil, nil, fieldProblem(err)
+		}
+		b, err := json.Marshal(g)
+		return b, nil, err
+	}
+}
+
+func (h ChatAssets) record(ctx context.Context, action string, t chatasset.Type, id uuid.UUID, meta map[string]any) error {
+	if meta == nil {
+		meta = map[string]any{}
+	}
+	meta["config_type"] = string(t)
+	return h.Audit.Record(ctx, audit.Event{Action: action, TargetType: t.ItemType(), TargetID: id.String(), Result: audit.ResultSuccess,
+		Metadata: meta})
+}
+
+// Create is createGameConfig for sticker-packs/gifs: a new item at version 1 (draft).
+func (h ChatAssets) Create(ctx context.Context, typ, title string, payload json.RawMessage) (v port.AssetVersion, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.CreateChatAsset")
+	defer func() { done(err) }()
+	t, err := assetType(typ)
+	if err != nil {
+		return v, err
+	}
+	p, sc, err := assetWrite(ctx)
+	if err != nil {
+		return v, err
+	}
+	b, pack, err := normalize(t, payload)
+	if err != nil {
+		return v, err
+	}
+	now := h.now()
+	v = port.AssetVersion{VersionID: ids.New(), Type: t, ConfigID: ids.New(), Version: 1, Status: chatasset.StatusDraft, Title: title,
+		Payload: b, AuthorID: p.UserID, UpdatedAt: now}
+	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
+		if pack != nil {
+			taken, err := h.Repo.CodeTaken(ctx, pack.Code, v.ConfigID)
+			if err != nil {
+				return err
+			}
+			if taken {
+				return problem.New(problem.Conflict, "a sticker pack with this code exists")
+			}
+		}
+		if err := h.Repo.CreateItem(ctx, v, pack); err != nil {
+			return err
+		}
+		return h.record(ctx, AuditChatAssetCreated, t, v.ConfigID, map[string]any{"version": 1})
+	})
+	return v, err
+}
+
+// UpdateDraft is updateGameConfigDraft: changes a draft; on the newest published/archived version it starts the next
+// version as a draft (a published version is never changed, R31).
+func (h ChatAssets) UpdateDraft(ctx context.Context, typ string, id uuid.UUID, version int, title string, payload json.RawMessage) (v port.AssetVersion, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.UpdateChatAssetDraft")
+	defer func() { done(err) }()
+	t, err := assetType(typ)
+	if err != nil {
+		return v, err
+	}
+	p, sc, err := assetWrite(ctx)
+	if err != nil {
+		return v, err
+	}
+	b, pack, err := normalize(t, payload)
+	if err != nil {
+		return v, err
+	}
+	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
+		cur, err := h.Repo.Version(ctx, t, id, version)
+		if err != nil {
+			return err
+		}
+		if cur == nil {
+			return problem.New(problem.NotFound, "")
+		}
+		if pack != nil {
+			taken, err := h.Repo.CodeTaken(ctx, pack.Code, id)
+			if err != nil {
+				return err
+			}
+			if taken {
+				return problem.New(problem.Conflict, "a sticker pack with this code exists")
+			}
+		}
+		switch cur.Status {
+		case chatasset.StatusDraft, chatasset.StatusRejected:
+			cur.Payload, cur.Title, cur.Status, cur.UpdatedAt, cur.ReviewerID, cur.ReviewedAt = b, title, chatasset.StatusDraft, h.now(), nil, nil
+			cur.AuthorID = p.UserID // the last editor answers for the content (four-eyes of the GIF review)
+			if err := h.Repo.SaveVersion(ctx, *cur); err != nil {
+				return err
+			}
+			v = *cur
+		case chatasset.StatusPublished, chatasset.StatusArchived:
+			latest, err := h.Repo.Latest(ctx, t, id)
+			if err != nil {
+				return err
+			}
+			if latest != version {
+				return problem.New(problem.VersionMismatch, "")
+			}
+			v = port.AssetVersion{VersionID: ids.New(), Type: t, ConfigID: id, Version: latest + 1, Status: chatasset.StatusDraft, Title: title,
+				Payload: b, AuthorID: p.UserID, UpdatedAt: h.now()}
+			if err := h.Repo.InsertVersion(ctx, v); err != nil {
+				return err
+			}
+		default:
+			return problem.New(problem.InvalidStateTransition, "").Wrap(chatasset.ErrImmutable)
+		}
+		return h.record(ctx, AuditChatAssetUpdated, t, id, map[string]any{"version": v.Version})
+	})
+	return v, err
+}
+
+// inspect applies the file rules of chat_asset_file_max to the files of a version (F118-AC-17): read from the bucket,
+// never trusted from the client.
+func (h ChatAssets) inspect(ctx context.Context, t chatasset.Type, payload []byte) error {
+	reject := func(err error) error {
+		var fl chatasset.FileError
+		if errors.As(err, &fl) && h.Metrics != nil {
+			h.Metrics.AssetRejected(fl.Reason)
+		}
+		return fieldProblem(err)
+	}
+	open := func(key string, maxBytes int) (chatasset.File, error) {
+		f, err := h.Inspector.Inspect(ctx, key, maxBytes)
+		if errors.Is(err, port.ErrObjectNotFound) {
+			return f, reject(chatasset.FileError{Field: "asset_key", Reason: chatasset.RejectMissing})
+		}
+		if err != nil {
+			return f, problem.New(problem.Unavailable, "object storage unavailable").Retry()
+		}
+		return f, nil
+	}
+	switch t {
+	case chatasset.TypeStickerPacks:
+		var p chatasset.Pack
+		if err := json.Unmarshal(payload, &p); err != nil {
+			return err
+		}
+		if len(p.Stickers) == 0 {
+			return problem.Invalid("payload.stickers", problem.SubInvalid, "at least one sticker")
+		}
+		for _, s := range p.Stickers {
+			if s.AssetKey == "" {
+				return problem.Invalid("payload.stickers.asset_key", problem.SubInvalid, "required")
+			}
+			f, err := open(s.AssetKey, h.Limits.StickerMaxBytes)
+			if err != nil {
+				return err
+			}
+			if err := chatasset.CheckSticker(f, h.Limits); err != nil {
+				return reject(err)
+			}
+		}
+	default:
+		var g chatasset.Gif
+		if err := json.Unmarshal(payload, &g); err != nil {
+			return err
+		}
+		if g.AssetKey == "" || g.PreviewKey == "" {
+			return problem.Invalid("payload.asset_key", problem.SubInvalid, "asset_key and preview_key are required")
+		}
+		a, err := open(g.AssetKey, h.Limits.GifMaxBytes)
+		if err != nil {
+			return err
+		}
+		pv, err := open(g.PreviewKey, h.Limits.GifMaxBytes)
+		if err != nil {
+			return err
+		}
+		if err := chatasset.CheckGif(a, pv, h.Limits); err != nil {
+			return reject(err)
+		}
+	}
+	return nil
+}
+
+// Transition is transitionGameConfigVersion: submit_review (files checked), approve (a GIF by someone else than its
+// author), reject, archive.
+func (h ChatAssets) Transition(ctx context.Context, typ string, id uuid.UUID, version int, action string) (v port.AssetVersion, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.TransitionChatAsset")
+	defer func() { done(err) }()
+	t, err := assetType(typ)
+	if err != nil {
+		return v, err
+	}
+	perm := authz.PermGameChatAssetsWrite
+	if action == chatasset.ActionApprove || action == chatasset.ActionReject {
+		perm = authz.PermGameContentReview // review is a separate right (menu.game_ops.chat_assets)
+	}
+	p, sc, err := platformWrite(ctx, perm)
+	if err != nil {
+		return v, err
+	}
+	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
+		cur, err := h.Repo.Version(ctx, t, id, version)
+		if err != nil {
+			return err
+		}
+		if cur == nil {
+			return problem.New(problem.NotFound, "")
+		}
+		next, err := chatasset.Next(t, cur.Status, action, p.UserID, cur.AuthorID)
+		switch {
+		case errors.Is(err, chatasset.ErrSelfReview):
+			return problem.New(problem.PermissionDenied, "a GIF is approved by another reviewer than its author")
+		case err != nil:
+			return problem.New(problem.InvalidStateTransition, "")
+		}
+		if action == chatasset.ActionSubmit {
+			if err := h.inspect(ctx, t, cur.Payload); err != nil {
+				return err
+			}
+		}
+		if action == chatasset.ActionApprove {
+			at, by := h.now(), p.UserID
+			cur.ReviewerID, cur.ReviewedAt = &by, &at
+		}
+		cur.Status, cur.UpdatedAt = next, h.now()
+		if err := h.Repo.SaveVersion(ctx, *cur); err != nil {
+			return err
+		}
+		v = *cur
+		return h.record(ctx, AuditChatAssetTransition, t, id, map[string]any{"version": version, "action": action, "to": string(next)})
+	})
+	return v, err
+}
+
+// Publish is publishGameConfigVersion: an approved version becomes the library state (immutable from now on), the version
+// published before is archived, content.published is written (item_type sticker_pack|gif).
+func (h ChatAssets) Publish(ctx context.Context, typ string, id uuid.UUID, version int, note string) (r port.AssetRelease, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.PublishChatAsset")
+	defer func() { done(err) }()
+	t, err := assetType(typ)
+	if err != nil {
+		return r, err
+	}
+	p, sc, err := platformWrite(ctx, authz.PermGameContentPublish)
+	if err != nil {
+		return r, err
+	}
+	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
+		cur, err := h.Repo.Version(ctx, t, id, version)
+		if err != nil {
+			return err
+		}
+		if cur == nil {
+			return problem.New(problem.NotFound, "")
+		}
+		if cur.Status != chatasset.StatusApproved {
+			return problem.New(problem.InvalidStateTransition, "").Wrap(chatasset.ErrNotPublished)
+		}
+		if t == chatasset.TypeGifs && (cur.ReviewerID == nil || *cur.ReviewerID == cur.AuthorID) {
+			return problem.New(problem.PermissionDenied, "a GIF is approved by another reviewer than its author")
+		}
+		if err := h.inspect(ctx, t, cur.Payload); err != nil { // the files are still there and unchanged
+			return err
+		}
+		prev, err := h.Repo.Published(ctx, t, id)
+		if err != nil {
+			return err
+		}
+		now := h.now()
+		by := p.UserID
+		cur.Status, cur.PublishedBy, cur.PublishedAt, cur.UpdatedAt = chatasset.StatusPublished, &by, &now, now
+		to := cur.Version
+		r = port.AssetRelease{ReleaseID: ids.New(), Type: t, ConfigID: id, Action: "publish", ToVersion: &to, Reason: note, ActorID: by, At: now}
+		if prev != nil {
+			from := prev.Version
+			r.FromVersion = &from
+		}
+		if err := h.Repo.Publish(ctx, *cur, prev, r); err != nil {
+			return err
+		}
+		if err := h.Events.Publish(ctx, write.Event{Type: EventContentPublished, SubjectType: t.ItemType(), SubjectID: id.String(),
+			PartitionKey: id.String(), Platform: true, OccurredAt: now, Payload: map[string]any{"item_type": t.ItemType(), "item_id": id,
+				"version_id": cur.VersionID, "version": cur.Version, "published_by": by, "published_at": now}}); err != nil {
+			return err
+		}
+		return h.record(ctx, AuditChatAssetPublished, t, id, map[string]any{"version": version})
+	})
+	if err != nil {
+		var pe *problem.Error
+		if !errors.As(err, &pe) {
+			slog.ErrorContext(ctx, "chat assets: publish failed", "error", err)
+		}
+	}
+	return r, err
+}
+
+var fileNameRe = regexp.MustCompile(`^[A-Za-z0-9._-]{1,200}$`)
+
+// Presign is the presigned upload of one library file (F118 contract delta): the key media/<sha256>/<file> is derived
+// from the declared sha256 and checked again against the bytes at submit (the client is never trusted); the size and
+// format limits of the type are applied before signing.
+func (h ChatAssets) Presign(ctx context.Context, typ string, id uuid.UUID, file, contentType, sha string, size int) (key, url string, expires time.Time, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.PresignChatAsset")
+	defer func() { done(err) }()
+	t, err := assetType(typ)
+	if err != nil {
+		return "", "", expires, err
+	}
+	_, sc, err := assetWrite(ctx)
+	if err != nil {
+		return "", "", expires, err
+	}
+	file = path.Base(strings.TrimSpace(file))
+	maxBytes := h.Limits.StickerMaxBytes
+	allowed := map[string]bool{"image/webp": true, "image/png": true}
+	if t == chatasset.TypeGifs {
+		maxBytes, allowed = h.Limits.GifMaxBytes, map[string]bool{"image/gif": true, "image/webp": true, "image/png": true}
+	}
+	switch {
+	case !fileNameRe.MatchString(file) || len(file) > assetPresignMaxFileLength:
+		return "", "", expires, problem.Invalid("file_name", problem.SubInvalid, "^[A-Za-z0-9._-]{1,200}$")
+	case !regexp.MustCompile(`^[0-9a-f]{64}$`).MatchString(sha):
+		return "", "", expires, problem.Invalid("sha256", problem.SubInvalid, "64 lowercase hex characters")
+	case !allowed[contentType]:
+		return "", "", expires, problem.Invalid("content_type", problem.SubInvalid, "format not allowed for this type")
+	case size <= 0 || size > maxBytes:
+		return "", "", expires, problem.Invalid("size_bytes", problem.SubInvalid, "over the file limit of the type")
+	}
+	key = "media/" + sha + "/" + file
+	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
+		latest, err := h.Repo.Latest(ctx, t, id)
+		if err != nil {
+			return err
+		}
+		if latest == 0 {
+			return problem.New(problem.NotFound, "")
+		}
+		return h.record(ctx, AuditChatAssetPresigned, t, id, map[string]any{"key_sha256": sha, "size_bytes": size})
+	})
+	if err != nil {
+		return "", "", expires, err
+	}
+	if h.Storage == nil {
+		return "", "", expires, problem.New(problem.Unavailable, "object storage not configured").Retry()
+	}
+	url, err = h.Storage.PresignPut(ctx, key, int64(size), PresignTTL)
+	if err != nil {
+		return "", "", expires, problem.New(problem.Unavailable, "object storage unavailable").Retry()
+	}
+	return key, url, h.now().Add(PresignTTL), nil
+}

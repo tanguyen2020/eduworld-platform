@@ -63,6 +63,8 @@ type Rule struct {
 	// AllowedHours is kept raw: the resolver never applies it (curfew is ADR-0078); ValidateAlwaysOn refuses it on
 	// match/team/party.
 	AllowedHours json.RawMessage `json:"allowed_hours,omitempty"`
+	// Features is read from the platform level only (CHAT_SYSTEM §7.1, F118).
+	Features *Features `json:"features,omitempty"`
 }
 
 // Document is the policy document of one level (chat-policy.schema.json v5).
@@ -109,6 +111,8 @@ type Effective struct {
 	SlowModeSeconds int    `json:"slow_mode_seconds,omitempty"`
 	Strictness      string `json:"strictness,omitempty"`
 	Preset          string `json:"preset,omitempty"`
+	// Features are the message features of the channel type (platform level only; always-on ones forced, F118).
+	Features Features `json:"features"`
 }
 
 // Allows reports a kind allowed by the effective policy.
@@ -145,6 +149,9 @@ func Intersect(channelType string, alwaysOn bool, l Levels) (Effective, error) {
 		return Effective{}, ErrDenied
 	}
 	e := Effective{ChannelType: channelType, AllowedKinds: validKinds(base.AllowedKinds)}
+	if base.Features != nil { // no features block: every feature off (fail closed), except the always-on ones
+		e.Features = *base.Features
+	}
 	apply(&e, base, true)
 	if l.Platform.GlobalRate != nil {
 		e.GlobalPerMinute = l.Platform.GlobalRate.MessagesPerMinute
