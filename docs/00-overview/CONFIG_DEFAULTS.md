@@ -116,7 +116,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `speed_bonus_min_grade` | 6 (lớp 1–5 không có bonus tốc độ ở 1v1 và Timed Quiz) | khối | platform | [Confirmed — Technical Architect 2026-11-15] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) §3.1 |
 | `effort_points` | +1/hoạt động (tối đa 10/ngày), +2/hoạt động ôn tập, +3/ngày hoạt động; trần 25/ngày | điểm | platform | [Confirmed — Technical Architect 2026-11-15] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) §9.2 |
 | `disabled_leaderboard_definitions` | Rỗng (chính sách trường; school_admin tắt được bảng khối/trường của trường mình — không còn bảng lớp, ADR-0095) | — | tenant | [Confirmed — Technical Architect 2026-11-15] | [COMPETITION_SYSTEM](../01-game-design/COMPETITION_SYSTEM.md) §9.2 |
-| `grade_goal_target` | 300 điểm nỗ lực/tuần cho mục tiêu của khối (`display.grade_goal_target` của definition `grade_goal_weekly`) | điểm | platform | [Proposed — F106 2026-11-22] | [F106 Clarifications 2026-11-22](../../specs/106-ranking-leaderboard/spec.md#session-2026-11-22-triển-khai--confirmed-owner-chốt-2026-11-20) |
+| `grade_goal_target` | 300 điểm nỗ lực/tuần cho mục tiêu của khối (`display.grade_goal_target` của definition `grade_goal_weekly`) | điểm | platform | [Confirmed — F106 2026-11-22] | [F106 Clarifications 2026-11-22](../../specs/106-ranking-leaderboard/spec.md#session-2026-11-22-triển-khai--confirmed-owner-chốt-2026-11-20) |
 | `leaderboard_friends_max` | 200 bạn gần đây nhất được tính ở bảng bạn bè (`friends_max` của Ranking Rules) | bạn | platform | [Confirmed] (edge case F106) | [F106 spec](../../specs/106-ranking-leaderboard/spec.md#edge-cases) |
 
 ### 8.1. Sự kiện và season track

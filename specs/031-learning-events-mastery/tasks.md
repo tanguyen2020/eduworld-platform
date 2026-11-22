@@ -133,6 +133,10 @@
 - [x] T059 Integration test `TestGradeAtEventTime` (F031-AC-31) và `TestGradeBackfill` (F031-AC-32) — file: `src/backend/modules/learning/tests/integration/grade_at_event_test.go`
 - [ ] T060 (WP-L2) Rollup/dashboard đọc `grade_level` của dòng thay `COALESCE(c.grade_level, st.grade_level)` qua lớp; ngừng ghi `class_id`
 
+## Nhận từ F106 (owner chốt 2026-11-22)
+
+- [ ] T061 `activity.graded` mang `rapid_guess_flagged` (attempt bị gắn cờ đoán nhanh) và `recommendation_id` (khi attempt bắt nguồn từ gợi ý F032) — producer learning + contract test; competition (F106) đã loại attempt gắn cờ khỏi `effort_points` — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational → US1 → US2 → (US3, US4 song song) → US5 → US6 (sau US1, song song US2–US5) → Polish.

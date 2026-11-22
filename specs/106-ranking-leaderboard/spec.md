@@ -21,9 +21,9 @@
 - Q: Bỏ khái niệm lớp ảnh hưởng bảng xếp hạng thế nào? → A: Theo [ADR-0095 mục 5 (D5)](../../docs/adr/ADR-0095-bo-khai-niem-lop-hoc-sinh-theo-khoi.md#5-game-xã-hội-chat-d2-d5-d7-confirmed--owner-2026-11-21): bỏ scope `class`, metric `class_goal`, các bảng "Mục tiêu lớp", "Lớp em tuần này", "Nhiệm vụ của lớp" và cài đặt trường `class_leaderboard_enabled`; thay bằng **mục tiêu tập thể của khối trong trường** — metric `grade_goal`, scope school + grade, kỳ tuần, khối 1–9: chỉ tiến độ chung `current/target` và phần đóng góp của chính em, không thứ hạng cá nhân, không nickname/tên học sinh khác, ô đóng góp < 5 học sinh bị ẩn ([COMPETITION_SYSTEM §9.2](../../docs/01-game-design/COMPETITION_SYSTEM.md#92-danh-mục-bảng-mặc-định-confirmed), FR-LDB-005).
 - Q: Còn bao nhiêu loại bảng? → A: **12** loại của FR-LDB-001 (Global, School, Grade, Subject, Topic, Game Mode, Friends, Team, Daily, Weekly, Monthly, Season); danh mục mặc định còn 8 dòng (Mục tiêu của khối, Đấu trường trường, Đấu trường môn, Bạn bè, Đội, Toàn hệ thống, Xếp hạng rating, Giải đấu). Tiêu đề feature đổi "13" → "12".
 - Q: Khối của học sinh lấy từ đâu? → A: `ref.students(school_id, grade_level)` cập nhật theo `student.placement_changed` (ADR-0095 mục 2, 7) thay `ref.enrollments`; đóng góp ghi `grade_level` **tại thời điểm** ghi điểm (không suy ngược từ khối hiện tại).
-- Q: Lớp 1–3 còn "Bạn nổi bật tuần này"? → A: Không — `grade_goal` không hiển thị tên (ADR-0095) nên bỏ phần nickname ngẫu nhiên gắn với mục tiêu lớp cũ; lớp 1–3 chỉ có mục tiêu của khối [Proposed — WP-S, chốt ở COMPETITION_SYSTEM §9.4].
+- Q: Lớp 1–3 còn "Bạn nổi bật tuần này"? → A: Không — `grade_goal` không hiển thị tên (ADR-0095) nên bỏ phần nickname ngẫu nhiên gắn với mục tiêu lớp cũ; lớp 1–3 chỉ có mục tiêu của khối [Confirmed — WP-S, chốt ở COMPETITION_SYSTEM §9.4].
 - Q: Nhân sự xem bảng bằng quyền nào? → A: `lms.student.read` (đổi tên từ `lms.class.read`, ADR-0095 mục 6), phạm vi trường của UserRole; xem bảng trường/khối và mục tiêu của khối, không có bảng lớp.
-- Q: Ngưỡng ẩn ô đóng góp? → A: `analytics_min_cell_size` (5, CONFIG_DEFAULTS) — cùng ngưỡng FR-ANL-016 [Proposed — dùng lại tham số sẵn có thay vì thêm tham số mới].
+- Q: Ngưỡng ẩn ô đóng góp? → A: `analytics_min_cell_size` (5, CONFIG_DEFAULTS) — cùng ngưỡng FR-ANL-016 [Confirmed — dùng lại tham số sẵn có thay vì thêm tham số mới].
 
 ### Session 2026-11-22 (triển khai — [Confirmed], owner chốt 2026-11-20)
 
@@ -34,12 +34,12 @@ Quyết định của agent khi tài liệu thiếu/mâu thuẫn, theo hướng 
 - Q: `team_points` lấy từ đâu khi chưa có thực thể đội bền vững? → A: Competition Points mà học sinh nhận trong trận `team_battle` rated (`leaderboard_contributions.source_type = team_match`); bảng "Đội" = scope `school`, lớp 6–9. Filter (`subject_id`, `topic_id`, `mode`) chỉ cho metric có trong sổ cái: `competition_points`, `rating` (`topic_id` chỉ `competition_points`); definition khác có filter bị từ chối.
 - Q: Nhân sự chọn khối của bảng khối thế nào (contract chỉ có `scope_id`)? → A: Thêm query `grade_level` (1–9) cho `getLeaderboard`/`getLeaderboardHistory`; nhân sự bắt buộc `scope_id` (trường) và `grade_level` (bảng khối) — thiếu → `422`; học sinh luôn là trường + khối của mình (khác → `404`). `?show_real_names` **không làm** trong F106: module competition không có tên thật (chỉ projection nickname), cần facade identity — nhân sự cũng chỉ thấy nickname.
 - Q: "Hoạt động ôn tập do hệ thống gợi ý hoặc nhà trường giao" nhận diện thế nào? → A: `activity.graded` có `assignment_id` (nhà trường giao) hoặc `recommendation_id` (hệ thống gợi ý) → +2. `activity.graded.v1` thêm tùy chọn `rapid_guess_flagged` (vắng = `false`) và `recommendation_id` (vắng = `null`); module learning **chưa điền** hai trường này — cho tới khi F031/F032 điền, attempt gắn cờ rapid guess chưa bị loại khỏi `effort_points` (theo dõi ở mục Việc tiếp theo của báo cáo F106).
-- Q: Mục tiêu tuần của `grade_goal`? → A: `display.grade_goal_target = 300` trong seed `leaderboard_definitions.json` [Proposed — F108 chỉnh].
+- Q: Mục tiêu tuần của `grade_goal`? → A: `display.grade_goal_target = 300` trong seed `leaderboard_definitions.json` [Confirmed — F108 chỉnh].
 - Q: "Nhóm X%" lớp 4–5? → A: Nhóm 10/25/50/100% (`percentile_bucket`); người xếp cuối không hiển thị cho người khác (vẫn thấy chính mình); `leaderboard.position.updated` không làm (không thông báo "bị vượt").
 - Q: `analytics_min_cell_size` đọc từ đâu (module competition không đọc platform settings của analytics)? → A: Ranking Rules mang `analytics_min_cell_size: 5` (giá trị = CONFIG_DEFAULTS, tài liệu sở hữu vẫn là GAME_ANALYTICS) cùng `friends_max: 200`.
 - Q: "Thắng đối thủ tier cao hơn" ở team battle? → A: So thứ hạng tier của mình với **trung bình thứ hạng tier** đội đối phương trước trận (từ `rating_changes.before` hoặc rating hiện tại); học sinh hoặc đối thủ còn provisional (không có tier) → không có +5.
 - Q: Soft reset khi mùa mới bắt đầu? → A: Job `season-scheduler` tạo rating mùa mới (soft reset) cho mọi rating của mùa trước rồi mới chuyển mùa sang `active`; trận đầu tiên của học sinh chưa có rating mùa mới dùng soft reset từ rating mùa gần nhất. Mùa đang `active` kết thúc khi qua `ends_at` **hoặc** khi một mùa `scheduled` tới `starts_at` (pre-season seed `ends_at` 2099 nên kết thúc khi F108 publish mùa đầu).
-- Q: Snapshot partition theo tháng? → A: Chưa partition trong F106 (bảng TA + index lịch sử; giữ 3 năm theo DATABASE_DESIGN) [Proposed — partition khi khối lượng cần, migration expand riêng].
+- Q: Snapshot partition theo tháng? → A: Chưa partition trong F106 (bảng TA + index lịch sử; giữ 3 năm theo DATABASE_DESIGN) [Confirmed — partition khi khối lượng cần, migration expand riêng].
 - Q: `xp`, `quest_completed` khi payload `xp.awarded`/`quest.completed` chưa có (owner F074/F072)? → A: Metric và definition được hỗ trợ (bảng `friends_xp_weekly` seed), consumer `xp.awarded`/`quest.completed` **không** tạo trong F106 (không tự viết schema của feature khác) — bảng rỗng tới khi các feature đó phát event.
 - Q: Đấu trường môn và Xếp hạng rating (cần `subject_id` cụ thể)? → A: Engine hỗ trợ (filter môn/mode, rating theo mode × môn), nhưng **không seed** — F108 publish definition theo từng môn.
 
@@ -190,7 +190,7 @@ Học sinh hoàn thành trận ranked được điểm tham gia, thắng/hòa đ
 | `effort_points` | Bảng điểm nỗ lực, trần ngày |
 | `leaderboard_visibility` | Hiển thị theo khối |
 | `disabled_leaderboard_definitions` | Bảng trường đã tắt |
-| `analytics_min_cell_size` | Ẩn ô đóng góp của `grade_goal` có < 5 học sinh [Proposed — dùng lại] |
+| `analytics_min_cell_size` | Ẩn ô đóng góp của `grade_goal` có < 5 học sinh [Confirmed — dùng lại] |
 
 ### Ràng buộc phi chức năng
 

@@ -105,6 +105,10 @@ Việc phát sinh khi owner chốt câu hỏi mở ngày 2026-11-20 (nguồn: Cl
 
 - [ ] T041 **OQ chốt 2026-11-20** (OQ F016-2) Bước gộp ledger XP bằng bản ghi bù trong `mergeUserData` của module game, idempotent theo `merge_id` — file: `src/backend/modules/game/internal/application/command/` — kiểm: `make test-integration MOD=game` — cỡ S
 
+## Nhận từ F106 (owner chốt 2026-11-22)
+
+- [ ] T042 Khi có schema `xp.awarded` (F074) và `quest.completed` (F072): thêm consumer competition ghi contribution cho bảng `friends_xp_weekly` (F106 đã seed definition, hiện rỗng) — integration test competition — cỡ S
+
 ## Dependencies & Execution Order
 
 - Setup → Foundational (T006 cần module learning; T007–T008 trước mọi test integration) → US1 → US2 → US3 (song song US2 sau T018) → US4 → US5 → Polish.
