@@ -133,4 +133,7 @@ type ProjectionWriter interface {
 	PlayerProfile(ctx context.Context, student, tenant uuid.UUID, nickname *string, level int, avatar []byte, version int64) (bool, error)
 	School(ctx context.Context, school, tenant uuid.UUID, status *string, settings []byte, version int64) (bool, error)
 	PlatformSetting(ctx context.Context, key string, value []byte, version int64) (bool, error)
+	// TenantRetention stores gameplay_chat_retention_days of a tenant (nil: inherit the platform; F117 research R4); ok
+	// false while the tenant is not projected.
+	TenantRetention(ctx context.Context, tenant uuid.UUID, days *int, version int64) (bool, error)
 }

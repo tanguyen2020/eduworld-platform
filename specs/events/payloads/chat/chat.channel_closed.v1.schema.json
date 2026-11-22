@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat.channel_closed.v1.schema.json",
+  "title": "Payload chat.channel_closed v1 (module chat, owner F117)",
+  "description": "Channel gameplay đóng read-only khi match.completed / match.aborted / party.disbanded (F117-AC-05, AC-15): purge_after = closed_at + gameplay_chat_retention_days hiệu lực của tenant (tối thiểu 3 ngày, ADR-0033), chốt lúc đóng. Không nội dung. Consumer: RT (khóa ô nhập), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["channel_id", "channel_type", "tenant_id", "scope_ref", "closed_at", "purge_after"],
+  "properties": {
+    "channel_id": { "type": "string", "format": "uuid" },
+    "channel_type": { "type": "string", "enum": ["match", "team", "party"] },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "scope_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "match_id": { "type": "string", "format": "uuid" },
+        "party_id": { "type": "string", "format": "uuid" },
+        "team_no": { "type": "string", "enum": ["0", "1"] }
+      }
+    },
+    "closed_at": { "type": "string", "format": "date-time" },
+    "purge_after": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "channel_id": "5b7e0f6c-3d2a-5c1b-8e4f-9a0b1c2d3e4f",
+      "channel_type": "match",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "scope_ref": { "match_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000c1" },
+      "closed_at": "2026-11-21T08:04:10Z",
+      "purge_after": "2026-11-28T08:04:10Z"
+    }
+  ]
+}

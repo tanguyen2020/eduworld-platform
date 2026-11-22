@@ -12,9 +12,9 @@ Database `eduworld_chat`. Bảng `chat.channels`, `chat.channel_members`, `chat.
 |---|---|---|---|
 | `party_id` | uuid | PK | |
 | `tenant_id` | uuid | NOT NULL | |
-| `member_ids` | `uuid[]` | CHECK `cardinality ≤ 8` | |
-| `status` | `varchar(64)` | `open/in_activity/disbanded` | |
-| `source_version` | bigint | | chỉ áp bản mới hơn |
+| `member_versions` | jsonb | CHECK object, `octet_length ≤ 16384` | student_id → `{v, in}`: `state_version` của thay đổi cuối đã áp (thay `member_ids`, Clarifications 2026-11-22) |
+| `status` | `varchar(64)` | `open/disbanded` | |
+| `source_version` | bigint | | `state_version` lớn nhất đã áp |
 
 ### GameplayChatDailyStats — `chat.gameplay_chat_daily_stats` (Có sẵn, T)
 
@@ -22,7 +22,7 @@ Database `eduworld_chat`. Bảng `chat.channels`, `chat.channel_members`, `chat.
 
 ### GameplayPurgeRun — `chat.gameplay_purge_runs` (Có sẵn, G append-only)
 
-`run_id`, `started_at`, `finished_at`, `tenant_id`, `kind varchar(64)` CHECK `gameplay/ephemeral`, `channels_purged int`, `messages_purged bigint`, `partitions_dropped int`, `deferred_open_case int`, `evidence_copied int`, `status varchar(64)` CHECK `succeeded/partial/failed/blocked` (giá trị `blocked` **Mới** — R3 research).
+`row_id` (PK), `run_id`, `started_at`, `finished_at`, `tenant_id` (NULL = dòng cấp lượt chạy), `kind varchar(64)` CHECK `gameplay/ephemeral`, `channels_purged int`, `messages_purged bigint`, `partitions_dropped int`, `deferred_open_case int`, `evidence_copied int`, `status varchar(64)` CHECK `succeeded/partial/failed/blocked` (giá trị `blocked` **Mới** — R3 research).
 
 ### ModerationEvidence — `chat.moderation_evidence` (Có sẵn, T, bất biến; migration F121 tạo bảng và ghi snapshot report, F117 ghi thêm bản sao trước purge + grant `chat_purger`)
 
@@ -31,7 +31,7 @@ Database `eduworld_chat`. Bảng `chat.channels`, `chat.channel_members`, `chat.
 | `evidence_id` | UUIDv7 | PK | |
 | `tenant_id`, `school_id` | uuid | NOT NULL `tenant_id` | |
 | `case_id` | uuid | | NULL khi chỉ có report/sanction lúc sao (F121 gắn sau) |
-| `source_ref` | jsonb | CHECK `octet_length ≤ 2048` | **Mới**: `{report_id?, case_id?, sanction_id?}` để biết lý do giữ |
+| `source_ref` | — | — | Không thêm cột (Clarifications 2026-11-22): nguồn giữ (`report_id`, `case_id`, `source`) nằm trong `snapshot.context`; `case_id` giữ NOT NULL |
 | `snapshot` | jsonb | CHECK `octet_length ≤ 65536` | tin + revision + ±`evidence_context` tin, `sender_id`, `created_at`, `channel_type`, `match_id`/`party_id`, `catalog_version`, kết quả filter |
 | `sha256` | bytea | CHECK `octet_length = 32` | |
 | `created_at` | timestamptz | | |
@@ -71,4 +71,4 @@ Closed → Purged (job gameplay-chat-purge, role chat_purger)
 | `chat.channel_closed` | Đóng channel (`closed_at`, `purge_after`) | `specs/events/payloads/chat/chat.channel_closed.v1.schema.json` (Mới) |
 | `chat.gameplay_purged` | Kết thúc lượt purge | `specs/events/payloads/chat/chat.gameplay_purged.v1.schema.json` (Mới) |
 | `chat.daily_stats` | Rollup ngày | `specs/events/payloads/chat/chat.daily_stats.v1.schema.json` (Mới) |
-| JetStream `ew.chat.<tenant_id>.cursor.<channel_id>` | Con trỏ đọc gộp | `specs/events/payloads/chat/chat-cursor.v1.schema.json` (Mới) |
+| (không dùng) JetStream `cursor` | Con trỏ đọc ghi trực tiếp `last_read_seq` (Clarifications 2026-11-22) | — |

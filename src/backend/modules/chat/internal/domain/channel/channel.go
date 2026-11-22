@@ -72,6 +72,7 @@ type Channel struct {
 	LastSeq    int64
 	OpenedAt   time.Time
 	ClosedAt   *time.Time
+	PurgeAfter *time.Time // gameplay channels: closed_at + effective retention, set when closing (F117-AC-15)
 }
 
 // Gameplay reports match, party and team bound to a match (DATABASE_DESIGN §2.12 CHECK).

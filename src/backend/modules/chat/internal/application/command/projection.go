@@ -99,6 +99,25 @@ func (p Projection) PlatformCurfew(ctx context.Context, value []byte, version in
 	return p.Refs.PlatformSetting(ctx, "platform_curfew", value, version)
 }
 
+// PlatformChatRetention applies platform_settings.changed key chat_retention (scope platform): the value of identity
+// {gameplay_chat_retention_days, ephemeral_retention_hours, allow_tenant_override} (F117 research R4).
+func (p Projection) PlatformChatRetention(ctx context.Context, value []byte, version int64) (bool, error) {
+	return p.Refs.PlatformSetting(ctx, "chat_retention", value, version)
+}
+
+// ErrTenantNotProjected: a tenant setting of a tenant not projected yet (retried until tenant.created arrives).
+var ErrTenantNotProjected = errors.New("chat: tenant not projected yet")
+
+// TenantChatRetention applies platform_settings.changed key tenant_settings (scope tenant): the tenant override of
+// gameplay_chat_retention_days (nil: inherit the platform).
+func (p Projection) TenantChatRetention(ctx context.Context, tenant uuid.UUID, days *int, version int64) (bool, error) {
+	ok, err := p.Refs.TenantRetention(ctx, tenant, days, version)
+	if err == nil && !ok {
+		return false, ErrTenantNotProjected
+	}
+	return ok, err
+}
+
 // Expiry is the job expire-friend-requests (F095-AC-07): pending requests past friend_request_ttl become expired
 // without any notification; expired friend codes are soft-deleted (never physically deleted, ADR-0028).
 type Expiry struct {

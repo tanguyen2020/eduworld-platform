@@ -342,7 +342,7 @@ func (h Send) acked(ctx context.Context, s Sender, e message.Envelope, card read
 		if err == nil && facts != nil {
 			recipients := make([]uuid.UUID, 0, len(facts.Members))
 			for _, id := range facts.Members.ActiveIDs() {
-				if !facts.Blocked(id, e.SenderID) {
+				if !facts.Hidden(id, e.SenderID) { // block both ways, mute one way (F117-AC-12)
 					recipients = append(recipients, id)
 				}
 			}

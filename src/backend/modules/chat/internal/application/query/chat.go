@@ -250,7 +250,7 @@ func (q Chat) page(ctx context.Context, v Viewer, facts *read.ChannelFacts, m ch
 	seen := map[uuid.UUID]bool{}
 	var all []MessageView
 	add := func(e message.Envelope, recalled bool) {
-		if seen[e.MessageID] || facts.Blocked(v.UserID, e.SenderID) {
+		if seen[e.MessageID] || facts.Hidden(v.UserID, e.SenderID) { // block both ways, mute one way (F117-AC-12)
 			return
 		}
 		seen[e.MessageID] = true

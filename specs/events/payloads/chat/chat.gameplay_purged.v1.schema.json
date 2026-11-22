@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat.gameplay_purged.v1.schema.json",
+  "title": "Payload chat.gameplay_purged v1 (module chat, owner F117)",
+  "description": "Một lượt job gameplay-chat-purge (ADR-0033, F117-AC-22): số liệu tổng hợp theo tenant (tenant_id) hoặc dòng cấp lượt chạy (tenant_id null: partition đã drop, lượt bị chặn). KHÔNG nội dung, không người dùng (R14). status blocked = module moderation chưa sẵn sàng, không xóa gì (F117-AC-19). Consumer: AUD (tổng hợp), MON.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "tenant_id", "kind", "status", "channels", "messages", "partitions_dropped", "deferred_open_case",
+    "evidence_copied", "started_at", "finished_at"],
+  "properties": {
+    "run_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "kind": { "type": "string", "enum": ["gameplay", "ephemeral"] },
+    "status": { "type": "string", "enum": ["succeeded", "partial", "failed", "blocked"] },
+    "channels": { "type": "integer", "minimum": 0 },
+    "messages": { "type": "integer", "minimum": 0 },
+    "partitions_dropped": { "type": "integer", "minimum": 0 },
+    "deferred_open_case": { "type": "integer", "minimum": 0 },
+    "evidence_copied": { "type": "integer", "minimum": 0 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "run_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000f1",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "kind": "gameplay",
+      "status": "succeeded",
+      "channels": 12,
+      "messages": 340,
+      "partitions_dropped": 0,
+      "deferred_open_case": 1,
+      "evidence_copied": 2,
+      "started_at": "2026-11-28T09:00:00Z",
+      "finished_at": "2026-11-28T09:00:04Z"
+    }
+  ]
+}

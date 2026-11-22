@@ -4,9 +4,12 @@ package chat
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/valkey-io/valkey-go"
 
 	chatapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
@@ -19,6 +22,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/natsstream"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/persistence"
+	purgestore "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/purge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/realtime"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/regression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/infrastructure/security"
@@ -196,6 +200,13 @@ func Register(r *module.Registry) (*Module, error) {
 				return natscmd.Serve(ctx, nc, send, reads)
 			})
 		}
+		// chat.receipt.read (F117-AC-13): the read cursor of a member, coalesced ≤ 1 durable write per 2 s, then
+		// chat.unread.updated to every device of the member.
+		if nc := r.NATS(); nc != nil {
+			receipts := command.Receipts{UoW: core.UoW, Facts: facts, Repo: persistence.Gameplay{}, Buffer: cache.Cursor{C: vk}, Recent: recent,
+				Push: fanout}
+			r.Go("chat.receipts", func(ctx context.Context) error { return natscmd.ServeReceipts(ctx, nc, receipts) })
+		}
 		// Presence fan-out (F095 US4): core-api, queue group chat.presence_fanout (one replica per signal).
 		if nc := r.NATS(); nc != nil {
 			fanout := command.PresenceFanout{Read: core.ReadSession, Relations: persistence.Reader{}, Store: presence, Cache: friends,
@@ -221,6 +232,18 @@ func Register(r *module.Registry) (*Module, error) {
 		}
 		return w.Run(ctx)
 	})
+	purgeCfg, err := chatconfig.PurgeFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("chat: %w", err)
+	}
+	observability.RegisterGameplay(r.Metrics())
+	// gameplay-chat-purge + chat-partition-maintainer (worker-chat, also worker all; ADR-0033, F117 US4): the ONLY physical
+	// delete of the platform, on the pool of the role chat_purger (EW_DB_CHAT_PURGER_DSN / _URL_FILE), never in another
+	// profile or binary. Without that DSN the jobs do not run and eduworld_chat_purge_blocked{reason="purger_not_configured"}
+	// = 1 raises the alert (fail-closed: data kept longer, never deleted by another role).
+	if err := registerPurge(r, runsChat, purgeCfg, vk, factsCache); err != nil {
+		return nil, err
+	}
 	if runsChat && !r.RunsEvents() && !r.RunsJobs() {
 		// Profile chat: the persister only; the outbox relay of EVT_CHAT runs in worker events.
 		if err := r.Relay(Name); err != nil {
@@ -240,6 +263,15 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("chat.projection_game", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.GameProjectionOptions(consumer.GameProjection{P: projection}, core.UoW, core.App, js)
 	})
+	// chat.gameplay_channels (F117 US1): party.* and match.* of module competition open, fill and close the always-on
+	// gameplay channels (deterministic ids of pkg/chatid; purge_after fixed at closing from the tenant retention).
+	gameplay := command.Gameplay{Channels: command.Channels{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Channels{},
+		Audit: persistence.Auditor{R: core.Recorder}, Facts: facts}, Gameplay: persistence.Gameplay{},
+		Events: persistence.Publisher{W: core.Writer}, Metrics: observability.Gameplay{}, Seq: cache.Seq{C: vk},
+		Config: command.GameplayConfig{DefaultRetentionDays: purgeCfg.GameplayRetentionDays}}
+	r.Consumer("chat.gameplay_channels", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.GameplayOptions(consumer.Gameplay{H: gameplay}, core.UoW, core.App, js)
+	})
 	// chat.moderation_cases (F121-AC-03): chat.message_held opens the case of the held message.
 	r.Consumer("chat.moderation_cases", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.MessageHeldOptions(consumer.MessageHeld{H: safetyCmd}, core.UoW, core.App, js)
@@ -255,4 +287,44 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, job.SchoolNotificationReminder, command.SafetyTick, module.JobFunc(job.ReminderJob(safetyCmd)))
 	r.Job(Name, job.SanctionExpirer, command.SafetyTick, module.JobFunc(job.SanctionExpirerJob(safetyCmd)))
 	return mod, nil
+}
+
+// registerPurge declares the jobs of worker-chat on the chat_purger pool (active only where runsChat).
+func registerPurge(r *module.Registry, runsChat bool, cfg chatconfig.Purge, vk valkey.Client, facts port.Cache) error {
+	purgeName, partitionName := Name+"."+job.GameplayChatPurge, Name+"."+job.ChatPartitionMaintainer
+	if !runsChat {
+		r.Background(Name, module.KindJob, purgeName, false, nil)
+		r.Background(Name, module.KindJob, partitionName, false, nil)
+		return nil
+	}
+	db, err := r.SQL(Name, "purger")
+	if err != nil {
+		if !errors.Is(err, module.ErrDatabaseNotConfigured) {
+			return fmt.Errorf("chat: purger pool: %w", err)
+		}
+		slog.Error("chat: EW_DB_CHAT_PURGER_DSN not configured: gameplay-chat-purge does not run (nothing deleted)", "alert", "P2")
+		observability.Purge{}.Blocked("purger_not_configured", true)
+		r.Background(Name, module.KindJob, purgeName, false, nil)
+		r.Background(Name, module.KindJob, partitionName, false, nil)
+		return nil
+	}
+	w, err := outbox.NewWriter(Name, "purge", nil)
+	if err != nil {
+		return fmt.Errorf("chat: %w", err)
+	}
+	rec := outbox.NewAuditRecorder(w, db)
+	uow, err := entx.NewUnitOfWork(entx.Options{Module: Name, DBs: entx.DBs{App: db, Platform: db}, Events: w, Audit: rec})
+	if err != nil {
+		return fmt.Errorf("chat: %w", err)
+	}
+	purge := command.GameplayPurge{UoW: uow, Store: purgestore.Store{}, Events: persistence.Publisher{W: w},
+		Audit: persistence.Auditor{R: rec}, Lock: cache.JobLock{C: vk}, Metrics: observability.Purge{},
+		Facts: service.Facts{Cache: facts},
+		Config: command.PurgeConfig{EvidenceContext: cfg.EvidenceContext, Batch: cfg.Batch, BacklogAlert: cfg.BacklogAlert,
+			EphemeralRetention: cfg.EphemeralRetention, LockTTL: cfg.Interval}}
+	partitions := command.PartitionMaintainer{UoW: uow, Store: purgestore.Store{}, Metrics: observability.Purge{},
+		Days: cfg.PartitionDaysAhead}
+	r.Background(Name, module.KindJob, partitionName, true, job.Every(partitionName, cfg.Interval, partitions))
+	r.Background(Name, module.KindJob, purgeName, true, job.Every(purgeName, cfg.Interval, purge))
+	return nil
 }

@@ -77,6 +77,7 @@ var limits = social.Limits{MaxPending: 10, MaxPerDay: 20, MaxFriends: 100, DayLo
 type env struct {
 	t                          *testing.T
 	app, platform, relay       *sql.DB
+	purger                     *sql.DB // chat_purger (F117: gameplay-chat-purge only)
 	su                         *sql.DB // superuser of the test database: seeds and assertions across tenants (RLS FORCE)
 	uow                        *entx.UnitOfWork
 	read                       *entx.ReadSession
@@ -118,7 +119,7 @@ func setup(t *testing.T, o envOpts) *env {
 	ctx := context.Background()
 	cl := testkit.Isolated(ctx, t)
 	e := &env{t: t, app: open(t, cl.ModuleDSN("chat", "app")), platform: open(t, cl.ModuleDSN("chat", "platform")),
-		relay: open(t, cl.ModuleDSN("chat", "relay")), clock: &clock{now: time.Date(2026, 11, 21, 3, 0, 0, 0, time.UTC)},
+		relay: open(t, cl.ModuleDSN("chat", "relay")), purger: open(t, cl.ModuleDSN("chat", "purger")), clock: &clock{now: time.Date(2026, 11, 21, 3, 0, 0, 0, time.UTC)},
 		tenantA: uuid.New(), tenantB: uuid.New(), tenantU: uuid.New(), schoolA: uuid.New(), schoolA2: uuid.New(), schoolB: uuid.New(),
 		schoolU1: uuid.New(), schoolU2: uuid.New()}
 	migrator := open(t, cl.ModuleDSN("chat", "migrator"))

@@ -493,7 +493,7 @@ Nguồn: [SOCIAL_SYSTEM](../03-social-multiplayer/SOCIAL_SYSTEM.md), ADR-0050, A
 | `gameplay_messages` | **P (ngày `created_on`)** | Tin nhắn của channel gameplay (ADR-0033), cùng cột tính năng với `messages`. Xem DDL §3.8b | Purge theo channel hết hạn (xóa lô) + `DROP PARTITION` khi mọi channel của ngày đó đã purge (role `chat_purger`) |
 | `gameplay_partition_channels` | G | `partition_day`, `channel_id`, `tenant_id`, `purged_at` | PK `(partition_day, channel_id)`; quyết định khi nào drop partition |
 | `gameplay_chat_daily_stats` | T | `tenant_id`, `day`, `channel_type`, `channels`, `messages`, `masked`, `blocked`, `reported` | PK `(tenant_id, day, channel_type)`; rollup **trước** khi purge, giữ lâu dài cho analytics |
-| `gameplay_purge_runs` | G (append-only) | `run_id`, `started_at`, `finished_at`, `tenant_id`, `kind` (`gameplay`/`ephemeral`), `channels_purged`, `messages_purged`, `partitions_dropped`, `deferred_open_case`, `evidence_copied`, `status` | Bản ghi tổng hợp, không chứa nội dung |
+| `gameplay_purge_runs` | T* (append-only, trigger) | `row_id`, `run_id`, `started_at`, `finished_at`, `tenant_id` (NULL = dòng cấp lượt chạy), `kind` (`gameplay`/`ephemeral`), `channels_purged`, `messages_purged`, `partitions_dropped`, `deferred_open_case`, `evidence_copied`, `status` (`succeeded`/`partial`/`failed`/`blocked` — `blocked`: module moderation chưa sẵn sàng, không xóa gì, F117) | UNIQUE `(run_id, kind, coalesce(tenant_id, 0))`; bản ghi tổng hợp, không chứa nội dung |
 | `channel_members` | T | `channel_member_id`, `channel_id`, `user_id`, `school_id`, `role`, `joined_at`, `left_at`, `muted_until`, `last_delivered_seq`, `last_read_seq`, `unread_mentions`, `show_read_receipts`, `notification_level` | PK `channel_member_id` (ent cần khóa một cột, F115) + UNIQUE `(channel_id, user_id) WHERE deleted_at IS NULL`; con trỏ chỉ tăng |
 | `messages` | **P** | xem DDL §3.8 — gồm `kind` (text/emoji/quick/sticker/gif/system), `body`/`body_display`, `reply_to_message_id`, `quote`, `forwarded_from`, `mentions`, `revision`, `edited_at`, `recalled_at`, `search_tsv` | UNIQUE `(channel_id, seq, created_at)`; GIN `search_tsv` |
 | `message_revisions` | T | `message_id`, `revision`, `body`, `body_display`, `decision`, `edited_at` | PK `(message_id, revision)`; bằng chứng khi sửa (ADR-0034) |
@@ -583,14 +583,14 @@ Cột bổ sung trên bảng có sẵn: `identity.users.status` thêm `anonymize
 
 | Bảng projection | Có trong database | Nguồn (module · event) | Cột (tối thiểu cần dùng) |
 |---|---|---|---|
-| `ref.tenants` | learning, game, competition, chat | identity · `tenant.created/updated`, `tenant.status_changed` | `tenant_id`, `code varchar(64)`, `tenant_type varchar(64)`, `status varchar(64)`, `is_qa boolean` (idx `WHERE is_qa`, dashboard/analytics loại bằng anti-join), `settings_subset jsonb` (chat đọc `cross_school_social_enabled` — ADR-0054 — và `common_social_enabled` [Proposed F095] — ADR-0078), `source_version bigint` |
+| `ref.tenants` | learning, game, competition, chat | identity · `tenant.created/updated`, `tenant.status_changed` | `tenant_id`, `code varchar(64)`, `tenant_type varchar(64)`, `status varchar(64)`, `is_qa boolean` (idx `WHERE is_qa`, dashboard/analytics loại bằng anti-join), `settings_subset jsonb` (chat đọc `cross_school_social_enabled` — ADR-0054 — và `common_social_enabled` [Proposed F095] — ADR-0078), `source_version bigint`; riêng chat: `gameplay_chat_retention_days smallint` (NULL = theo platform) + `retention_version bigint` từ `platform_settings.changed` key `tenant_settings` (F117) |
 | `ref.schools` | learning, game, competition, chat | identity · `school.synced`, `school.updated` | `school_id`, `tenant_id`, `name varchar(255)`, `name_i18n jsonb`, `province_code varchar(64)`, `province_name_i18n jsonb` (phi chuẩn hóa để hiển thị), `school_level varchar(64)`, `is_virtual`, `status`, `settings_subset jsonb` (cài đặt trường cần cho module nhận, vd. competition: `allowed_hours` (H5 matchmaking, F104 — competition chỉ có `school_id`, `tenant_id`, `status`, `settings_subset`, `source_version`, gộp khóa theo từng `school.updated`), `disabled_leaderboard_definitions`, `allow_cross_school_listing`; chat (F115): `curfew_window`; game (F071): `enabled_subject_codes` — vắng = mọi môn bật; identity phát trong `school.updated`) |
 | `ref.provinces` | learning, game | identity · `province.updated` | `code varchar(64)`, `country_code varchar(2)`, `name_i18n jsonb`, `status varchar(64)` (báo cáo theo tỉnh) |
 | `ref.students` | learning, game, competition, chat | identity · `student.placement_changed`, `student.synced`, `student.cleaned_up`, `student.restored`, `user.status_changed` | `student_id`, `tenant_id`, `school_id`, `grade_level`, `status`, `deleted_at`; learning thêm `academic_year_id` (năm học hiện tại của trường, từ `student.placement_changed` — ADR-0095) |
 | `ref.player_profiles` | competition, chat | game · `game_profile.updated` | `student_id`, `tenant_id`, `nickname varchar(32)`, `avatar_thumb_key varchar(512)`, `level`, `avatar_config jsonb` (≤ 4 KB, competition — hub F091; chat — `PlayerCard` F095) |
 | `ref.world_areas` | competition | game · `content.published`/`content.unpublished` (`item_type = world_area`, owner F071/F078) | `area_id varchar(64)` PK, `capacity` (1–40), `max_speed_mps numeric(5,2)`, `bounds jsonb` (`{min,max}` ≤ 16 KB), `spawn_points jsonb` (≤ 8 KB), `allowed_grade_bands varchar(64)[]`, `requires_unlock`, `status`, `source_version`; nội dung platform (G, không `tenant_id`, chỉ `competition_platform` ghi) — tạo ở F091, consumer thêm khi F071 chốt payload |
 | `ref.area_unlocks` | competition | game · `world.area_unlocked` (owner F071) | `tenant_id`, `student_id`, `area_id varchar(64)`, `unlocked_at`, `source_version`; PK `(student_id, area_id)` — tạo ở F091 |
-| `ref.parties` | chat | competition · `party.created/disbanded`, `party.member_joined/left` | `party_id`, `tenant_id`, `member_ids uuid[]`, `status` |
+| `ref.parties` | chat | competition · `party.created` (v1/v2), `party.disbanded`, `party.member_joined/left/kicked` | `party_id`, `tenant_id`, `status` (`open`/`disbanded`), `member_versions jsonb` (student_id → `{v: state_version, in}` của thay đổi cuối đã áp: event cũ hơn bị bỏ qua — F117-AC-03), `source_version` |
 | `ref.mastery_summary` | game | learning · `learning_objective.progressed` | `student_id`, `tenant_id`, `objective_id`, `level varchar(64)`, `value numeric(5,4)`, `source_version bigint`; PK `(tenant_id, student_id, objective_id)` (mở khóa khu/quest theo mastery; F071) |
 | `ref.friendships` | competition | chat · `friend.added`, `friend.removed` | `user_low_id`, `user_high_id` (chuẩn hóa thứ tự như `social.friendships`), `tenant_id`, `active boolean`, `source_version bigint`; PK `(user_low_id, user_high_id)` (ưu tiên bạn bè trong hub, mời party) — tạo ở F091, F100/F104 chỉ đọc |
 | `ref.blocks` | competition | chat · `user.blocked`, `user.unblocked` | `blocker_id`, `blocked_id`, `tenant_id`, `active boolean`, `source_version bigint`; PK `(blocker_id, blocked_id)` (chặn mời party, ghép trận, duel) — tạo ở F091, F100/F104 chỉ đọc |
@@ -658,14 +658,23 @@ ALTER DEFAULT PRIVILEGES FOR ROLE <module>_migrator REVOKE DELETE, TRUNCATE ON T
 REVOKE CONNECT ON DATABASE <db_of_other_modules> FROM <module>_app, <module>_platform;  -- không truy cập chéo database (cùng cụm)
 
 -- ADR-0033 (chỉ trong eduworld_chat): ngoại lệ DUY NHẤT — role chat_purger chỉ được xóa dữ liệu chat gameplay.
+-- Hiện thực: migration chat 20261231000004_f117_gameplay_purge.sql (F117). message_revisions, message_reactions, pinned_messages
+-- được thêm vào danh sách khi F118 tạo các bảng này (cùng điều kiện channel gameplay đã đóng).
 GRANT SELECT, UPDATE, DELETE ON chat.gameplay_messages, chat.channels, chat.channel_members, chat.ephemeral_messages,
-  chat.message_revisions, chat.message_reactions, chat.pinned_messages, chat.gameplay_partition_channels TO chat_purger;
--- purger chỉ xóa revision/reaction/pin của tin thuộc channel gameplay đã hết hạn (điều kiện trong query + RLS theo channel)
-GRANT INSERT ON chat.moderation_evidence, chat.gameplay_chat_daily_stats, chat.gameplay_purge_runs, infra.outbox_events TO chat_purger;  -- audit gửi qua outbox (§1.3)
-REVOKE TRUNCATE ON ALL TABLES IN SCHEMA chat FROM chat_purger;
--- RLS cho purger: chỉ thấy/xóa channel gameplay đã đóng
+  chat.gameplay_partition_channels TO chat_purger;
+-- nguồn hoãn/bằng chứng (chỉ đọc) và chat_retention của platform
+GRANT SELECT ON chat.reports, chat.moderation_cases, chat.moderation_actions, chat.sanctions, ref.platform_settings TO chat_purger;
+GRANT SELECT, INSERT ON chat.moderation_evidence, chat.gameplay_purge_runs TO chat_purger;
+GRANT SELECT, INSERT, UPDATE ON chat.gameplay_chat_daily_stats TO chat_purger;   -- upsert rollup
+GRANT INSERT ON infra.outbox_events TO chat_purger;  -- audit + chat.gameplay_purged qua outbox (§1.3)
+GRANT EXECUTE ON FUNCTION chat.ensure_message_partitions, chat.message_partition_days_ahead, chat.drop_gameplay_partition,
+  chat.drop_ephemeral_partition TO chat_purger;  -- SECURITY DEFINER: DETACH/DROP partition chỉ qua các hàm này
+REVOKE TRUNCATE ON ALL TABLES IN SCHEMA chat, ref, infra FROM chat_purger;
+-- RLS cho purger (permissive, cộng với policy tenant): chỉ thấy/xóa channel gameplay ĐÃ ĐÓNG và member/tin của chúng
 CREATE POLICY purger_gameplay_only ON chat.channels FOR ALL TO chat_purger
-  USING (is_gameplay AND closed_at IS NOT NULL);
+  USING (is_gameplay AND status = 'closed' AND closed_at IS NOT NULL);
+-- cùng điều kiện (EXISTS channel gameplay đã đóng) trên chat.channel_members, chat.gameplay_messages;
+-- chat.ephemeral_messages: chỉ dòng created_at < now() − 1 giờ (sàn của ephemeral_chat_retention)
 -- CI kiểm tra: ngoài các GRANT trên, không role ứng dụng nào có DELETE/TRUNCATE (test `db-privileges`).
 ```
 

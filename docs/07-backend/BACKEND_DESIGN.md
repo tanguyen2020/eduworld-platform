@@ -830,7 +830,7 @@ func (w *Writer) Publish(ctx context.Context, e Event) error
 | `command.SendMessage/Edit/Recall/Forward/React/Pin` | `core-api` (handler NATS `ew.cmd.chat.*` + REST fallback) | Membership, policy, features, rate limit → moderation pipeline → `SeqAllocator` (Valkey Lua) → `ChatPublisher` (JetStream `ew.chat.<tenant>.msg.<channel>`) → reply acked → `Fanout` (Valkey Pub/Sub) |
 | `chat-persister` | `worker-chat` | Pull consumer `persister`; ghi lô `eduworld_chat` (`ON CONFLICT DO NOTHING`), cập nhật `channels.last_seq`, con trỏ; ack sau commit; DLQ sau 5 lần |
 | `chat-notifier`, `chat-moderation-async`, `chat-stats` | `worker-chat` | Mention offline, bước `async_analysis` (ADR-0030), rollup trước purge (ADR-0033) |
-| `chat-channel-closer`, `gameplay-chat-purge` | `worker-chat` | Đóng channel gameplay khi `match.completed`/`match.aborted`/`party.disbanded`; purge bằng DSN của role `chat_purger` (chỉ cấp cho profile `chat`) |
+| `gameplay-chat-purge`, `chat-partition-maintainer` | `worker-chat` | Purge chat gameplay và partition ngày của bảng tin bằng DSN của role `chat_purger` (`EW_DB_CHAT_PURGER_DSN`/`_URL_FILE`, chỉ cấp cho profile `chat`); việc đóng channel gameplay khi `match.completed`/`match.aborted`/`party.disbanded` do consumer `chat.gameplay_channels` (worker events, F117) làm |
 
 Stream/consumer tạo idempotent khi `worker` khởi động (`CreateOrUpdateStream`). Integration test dùng testcontainers `nats:2.10-alpine -js` + Valkey + PostgreSQL.
 

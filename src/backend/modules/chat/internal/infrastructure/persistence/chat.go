@@ -62,12 +62,13 @@ func scanChannel(row interface{ Scan(...any) error }, extra ...any) (channel.Cha
 	var c channel.Channel
 	var school uuid.NullUUID
 	var scope []byte
-	var closed sql.NullTime
-	dest := append([]any{&c.ID, &c.TenantID, &school, &c.Type, &c.IsGameplay, &scope, &c.Status, &c.LastSeq, &c.OpenedAt, &closed}, extra...)
+	var closed, purge sql.NullTime
+	dest := append([]any{&c.ID, &c.TenantID, &school, &c.Type, &c.IsGameplay, &scope, &c.Status, &c.LastSeq, &c.OpenedAt, &closed, &purge},
+		extra...)
 	if err := row.Scan(dest...); err != nil {
 		return c, err
 	}
-	c.SchoolID, c.ClosedAt, c.OpenedAt = nullUUID(school), nullTime(closed), c.OpenedAt.UTC()
+	c.SchoolID, c.ClosedAt, c.PurgeAfter, c.OpenedAt = nullUUID(school), nullTime(closed), nullTime(purge), c.OpenedAt.UTC()
 	if len(scope) > 0 {
 		_ = json.Unmarshal(scope, &c.ScopeRef)
 	}
@@ -75,7 +76,7 @@ func scanChannel(row interface{ Scan(...any) error }, extra ...any) (channel.Cha
 }
 
 const channelColumns = `c.channel_id, c.tenant_id, c.school_id, c.channel_type, c.is_gameplay, c.scope_ref, c.status, c.last_seq,
-	c.opened_at, c.closed_at`
+	c.opened_at, c.closed_at, c.purge_after`
 
 // ChannelFacts implements read.ChatReader.
 func (ChatReader) ChannelFacts(ctx context.Context, tenant, id uuid.UUID) (*read.ChannelFacts, error) {
@@ -158,7 +159,25 @@ func (ChatReader) ChannelFacts(ctx context.Context, tenant, id uuid.UUID) (*read
 		}
 		f.Blocks = append(f.Blocks, b)
 	}
-	return f, blocks.Err()
+	if err := blocks.Err(); err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok social.mutes of the session tenant, live rows between members only (F117-AC-12)
+	mutes, err := t.QueryContext(ctx, `SELECT mu.muter_id, mu.muted_id FROM social.mutes mu
+		WHERE mu.tenant_id = $1 AND mu.deleted_at IS NULL AND mu.muter_id = ANY($2::uuid[]) AND mu.muted_id = ANY($2::uuid[])`,
+		tenant, idStrings(all))
+	if err != nil {
+		return nil, fmt.Errorf("chat: mutes: %w", err)
+	}
+	defer func() { _ = mutes.Close() }()
+	for mutes.Next() {
+		var m read.Mute
+		if err := mutes.Scan(&m.Muter, &m.Muted); err != nil {
+			return nil, fmt.Errorf("chat: mutes: %w", err)
+		}
+		f.Mutes = append(f.Mutes, m)
+	}
+	return f, mutes.Err()
 }
 
 // PolicyLevels implements read.ChatReader: the platform document (tenant NULL) and the tenant and school documents of

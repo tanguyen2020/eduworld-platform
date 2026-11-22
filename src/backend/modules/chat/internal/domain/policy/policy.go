@@ -60,6 +60,9 @@ type Rule struct {
 	Rate            *Rate       `json:"rate,omitempty"`
 	SlowModeSeconds *int        `json:"slow_mode_seconds,omitempty"`
 	Validation      *Validation `json:"validation,omitempty"`
+	// AllowedHours is kept raw: the resolver never applies it (curfew is ADR-0078); ValidateAlwaysOn refuses it on
+	// match/team/party.
+	AllowedHours json.RawMessage `json:"allowed_hours,omitempty"`
 }
 
 // Document is the policy document of one level (chat-policy.schema.json v5).
@@ -136,7 +139,9 @@ func Intersect(channelType string, alwaysOn bool, l Levels) (Effective, error) {
 		return Effective{}, ErrDenied
 	}
 	base, ok := l.Platform.rule(channelType)
-	if !ok || (base.Enabled != nil && !*base.Enabled) {
+	// An always-on channel ignores enabled at every level, the platform included (ADR-0020 §6, F117-AC-08); a missing
+	// platform rule is refused by ValidateAlwaysOn on every policy write.
+	if !ok || (!alwaysOn && base.Enabled != nil && !*base.Enabled) {
 		return Effective{}, ErrDenied
 	}
 	e := Effective{ChannelType: channelType, AllowedKinds: validKinds(base.AllowedKinds)}
@@ -169,8 +174,8 @@ func Intersect(channelType string, alwaysOn bool, l Levels) (Effective, error) {
 		e.Preset = PresetQuickEmote
 		e.AllowedKinds = intersectKinds(e.AllowedKinds, presetKinds)
 	}
-	if alwaysOn && e.SlowModeSeconds > maxAlwaysOnSlowMode {
-		e.SlowModeSeconds = maxAlwaysOnSlowMode
+	if alwaysOn {
+		e = ApplyAlwaysOn(e)
 	}
 	if len(e.AllowedKinds) == 0 && e.Preset == "" {
 		return Effective{}, ErrDenied

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat.daily_stats.v1.schema.json",
+  "title": "Payload chat.daily_stats v1 (module chat, owner F117)",
+  "description": "Phần cộng thêm vào thống kê ngày chat gameplay (chat.gameplay_chat_daily_stats) do lượt purge rollup trước khi xóa (F117-AC-16): theo tenant, ngày tạo tin và channel_type. KHÔNG nội dung, KHÔNG theo người (R14, GAME_ANALYTICS chat_daily_volume). blocked = tin held/removed đã lưu (tin bị chặn ngay không bao giờ được lưu). Consumer: ANA.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "stat_date", "channel_type", "channels", "messages", "masked", "blocked", "reported"],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "stat_date": { "type": "string", "format": "date" },
+    "channel_type": { "type": "string", "enum": ["match", "team", "party"] },
+    "channels": { "type": "integer", "minimum": 0 },
+    "messages": { "type": "integer", "minimum": 0 },
+    "masked": { "type": "integer", "minimum": 0 },
+    "blocked": { "type": "integer", "minimum": 0 },
+    "reported": { "type": "integer", "minimum": 0 }
+  },
+  "examples": [
+    {
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "stat_date": "2026-11-21",
+      "channel_type": "match",
+      "channels": 3,
+      "messages": 57,
+      "masked": 2,
+      "blocked": 1,
+      "reported": 1
+    }
+  ]
+}

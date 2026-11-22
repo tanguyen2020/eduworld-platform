@@ -123,3 +123,8 @@ func (Refs) PlatformSetting(ctx context.Context, key string, value []byte, versi
 		ON CONFLICT (key) DO UPDATE SET value = $2::jsonb, source_version = $3, updated_at = now()
 		WHERE ps.source_version < $3`, key, string(value), version)
 }
+
+// TenantRetention implements write.ProjectionWriter (ref.tenants.gameplay_chat_retention_days, F117).
+func (Refs) TenantRetention(ctx context.Context, tenant uuid.UUID, days *int, version int64) (bool, error) {
+	return Gameplay{}.TenantRetention(ctx, tenant, days, version)
+}

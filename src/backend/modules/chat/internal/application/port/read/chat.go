@@ -21,6 +21,12 @@ type ChatCard struct {
 	Avatar   json.RawMessage `json:"avatar,omitempty"`
 }
 
+// Mute is one live mute (muter → muted) between two members: only the messages of muted are hidden from muter.
+type Mute struct {
+	Muter uuid.UUID `json:"muter"`
+	Muted uuid.UUID `json:"muted"`
+}
+
 // Block is one live block (blocker → blocked) between two members of a channel: messages are hidden both ways.
 type Block struct {
 	Blocker uuid.UUID `json:"blocker"`
@@ -34,12 +40,30 @@ type ChannelFacts struct {
 	Members channel.Members        `json:"members"`
 	Cards   map[uuid.UUID]ChatCard `json:"cards"`
 	Blocks  []Block                `json:"blocks,omitempty"`
+	Mutes   []Mute                 `json:"mutes,omitempty"`
 }
 
 // Blocked reports a live block between a and b in either direction.
 func (f ChannelFacts) Blocked(a, b uuid.UUID) bool {
 	for _, x := range f.Blocks {
 		if (x.Blocker == a && x.Blocked == b) || (x.Blocker == b && x.Blocked == a) {
+			return true
+		}
+	}
+	return false
+}
+
+// Hidden reports that viewer must not see the messages of sender in this channel (F117-AC-12): a block in either direction
+// or a mute of sender by viewer. Nobody leaves the channel for it.
+func (f ChannelFacts) Hidden(viewer, sender uuid.UUID) bool {
+	if viewer == sender {
+		return false
+	}
+	if f.Blocked(viewer, sender) {
+		return true
+	}
+	for _, m := range f.Mutes {
+		if m.Muter == viewer && m.Muted == sender {
 			return true
 		}
 	}

@@ -142,6 +142,8 @@ services:
     environment:
       <<: [*common-env, *db-env, *module-env]
       OTEL_SERVICE_NAME: worker
+      # F117: role chat_purger of the job gameplay-chat-purge only (worker-chat / all), ADR-0033 — never core-api or realtime.
+      EW_DB_CHAT_PURGER_DSN: postgres://chat_purger:${EW_DB_ROLE_PASSWORD:-change-me-local}@postgres:5432/eduworld_chat?sslmode=disable
     ports: ["9200:9090"]
     volumes: *sis-secrets
     depends_on: *app-deps

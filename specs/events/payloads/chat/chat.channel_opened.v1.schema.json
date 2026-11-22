@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/chat.channel_opened.v1.schema.json",
+  "title": "Payload chat.channel_opened v1 (module chat, owner F117)",
+  "description": "Channel gameplay match/team/party được tạo hoặc đổi membership (consumer chat.gameplay_channels, ADR-0020 mục 6, F117-AC-04). channel_id là UUIDv5 tất định (pkg/chatid). member_ids = thành viên đang hoạt động (chỉ học sinh). Không nickname, không nội dung (R14, R16). Consumer: RT (tự đăng ký nhận tin cho thành viên online, F090).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["channel_id", "channel_type", "tenant_id", "scope_ref", "member_ids", "opened_at"],
+  "properties": {
+    "channel_id": { "type": "string", "format": "uuid" },
+    "channel_type": { "type": "string", "enum": ["match", "team", "party"] },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "scope_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "match_id": { "type": "string", "format": "uuid" },
+        "party_id": { "type": "string", "format": "uuid" },
+        "team_no": { "type": "string", "enum": ["0", "1"] }
+      }
+    },
+    "member_ids": { "type": "array", "maxItems": 40, "items": { "type": "string", "format": "uuid" } },
+    "opened_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "channel_id": "5b7e0f6c-3d2a-5c1b-8e4f-9a0b1c2d3e4f",
+      "channel_type": "party",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "scope_ref": { "party_id": "0193a5f4-6c1e-7b2a-9d1f-0000000000a1" },
+      "member_ids": ["0193a5f4-6c1e-7b2a-9d1f-000000000005", "0193a5f4-6c1e-7b2a-9d1f-000000000006"],
+      "opened_at": "2026-11-21T03:00:01Z"
+    }
+  ]
+}

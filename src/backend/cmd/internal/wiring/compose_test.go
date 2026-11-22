@@ -237,6 +237,8 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 		"chat": {"expire-friend-requests", "moderation-switch-expirer", "moderation-sla-escalator", "school-notification-reminder",
 			"sanction-expirer"},
 	}
+	// Jobs of worker-chat (profile chat, also all) on the chat_purger pool, scheduled by the module itself (F117, ADR-0033).
+	chatJobs := map[string][]string{"chat": {"gameplay-chat-purge", "chat-partition-maintainer"}}
 	for _, profile := range []string{"events", "jobs", "all"} {
 		t.Run(profile, func(t *testing.T) {
 			r := registry(t, "worker", profile)
@@ -263,10 +265,15 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 						t.Errorf("job %s.%s: %+v (want active=%v with an interval)", m, j, d, jobsOn)
 					}
 				}
+				for _, j := range chatJobs[m] { // worker-chat jobs (ADR-0033): active in profile all only, never in events/jobs
+					if d, ok := js[m+"."+j]; !ok || d.Active != (profile == "all") {
+						t.Errorf("worker-chat job %s.%s: declared=%v %+v (want active=%v)", m, j, ok, d, profile == "all")
+					}
+				}
 			}
 			for name, d := range js {
 				m, j, _ := strings.Cut(name, ".")
-				if !contains(jobs[m], j) {
+				if !contains(jobs[m], j) && !contains(chatJobs[m], j) {
 					t.Errorf("job %s (%+v) is not in the expected list of the test", name, d)
 				}
 			}
@@ -292,7 +299,7 @@ func TestWorkerProfilesRegisterRelaysConsumersAndJobs(t *testing.T) {
 }
 
 // Profile chat loads module chat only: no identity, learning or game entry point is declared; it runs chat-persister
-// (F115 T003) and nothing else.
+// (F115 T003) and the jobs of the role chat_purger: gameplay-chat-purge and chat-partition-maintainer (F117, ADR-0033).
 func TestWorkerChatProfileLoadsChatOnly(t *testing.T) {
 	r := registry(t, "worker", "chat")
 	if _, err := wiring.Compose(r); err != nil {
@@ -304,12 +311,14 @@ func TestWorkerChatProfileLoadsChatOnly(t *testing.T) {
 			continue
 		}
 		active++
-		if d.Module != "chat" || d.Kind != module.KindConsumer || d.Name != "chat.persister" {
+		ok := d.Module == "chat" && ((d.Kind == module.KindConsumer && d.Name == "chat.persister") ||
+			(d.Kind == module.KindJob && (d.Name == "chat.gameplay-chat-purge" || d.Name == "chat.chat-partition-maintainer")))
+		if !ok {
 			t.Errorf("profile chat runs %s %s", d.Kind, d.Name)
 		}
 	}
-	if active != 1 || len(r.Workers()) != 1 {
-		t.Errorf("profile chat: %d active declarations, %d workers (want chat.persister only)", active, len(r.Workers()))
+	if active != 3 || len(r.Workers()) != 3 {
+		t.Errorf("profile chat: %d active declarations, %d workers (want chat.persister + the two purger jobs)", active, len(r.Workers()))
 	}
 }
 

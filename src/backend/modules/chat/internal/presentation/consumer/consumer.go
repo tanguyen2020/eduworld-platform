@@ -151,11 +151,14 @@ func (c IdentityProjection) school(ctx context.Context, e outbox.Envelope) (bool
 	return c.P.School(ctx, tenant, p.SchoolID, p.Status, settings, version(p.SourceVersion, e))
 }
 
-// platformSettings keeps platform_curfew (key platform_curfew, scope platform; other keys are not used by module chat).
+// platformSettings keeps platform_curfew (key platform_curfew, scope platform), chat_retention (scope platform) and the
+// tenant override of gameplay_chat_retention_days (key tenant_settings, scope tenant, F117); other keys are not used.
 func (c IdentityProjection) platformSettings(ctx context.Context, e outbox.Envelope) (bool, error) {
 	var p struct {
-		Key          string `json:"key"`
-		Scope        string `json:"scope"`
+		Key          string          `json:"key"`
+		Scope        string          `json:"scope"`
+		TenantID     *uuid.UUID      `json:"tenant_id"`
+		After        json.RawMessage `json:"after"`
 		CurfewWindow *struct {
 			Start string `json:"start"`
 			End   string `json:"end"`
@@ -163,6 +166,12 @@ func (c IdentityProjection) platformSettings(ctx context.Context, e outbox.Envel
 	}
 	if err := decode(e, &p); err != nil {
 		return false, err
+	}
+	switch {
+	case p.Key == "chat_retention" && p.Scope == "platform":
+		return c.chatRetention(ctx, e, p.After)
+	case p.Key == "tenant_settings" && p.Scope == "tenant":
+		return c.tenantRetention(ctx, e, p.TenantID, p.After)
 	}
 	if p.Key != "platform_curfew" || p.Scope != "platform" {
 		return false, nil
@@ -176,6 +185,46 @@ func (c IdentityProjection) platformSettings(ctx context.Context, e outbox.Envel
 	}
 	value, _ := json.Marshal(map[string]string{"start": w.Start, "end": w.End})
 	return c.P.PlatformCurfew(ctx, value, e.OccurredAt.UTC().UnixMicro())
+}
+
+// chatRetention keeps chat_retention of the platform (ref.platform_settings): purge_after of the gameplay channels and the
+// ephemeral retention of the purge (F117-AC-15, AC-21).
+func (c IdentityProjection) chatRetention(ctx context.Context, e outbox.Envelope, after json.RawMessage) (bool, error) {
+	var v struct {
+		Days  *int `json:"gameplay_chat_retention_days"`
+		Hours *int `json:"ephemeral_retention_hours"`
+	}
+	switch {
+	case e.TenantID != nil:
+		return false, invalid(e.EventType, "chat_retention is a platform setting")
+	case len(after) == 0 || len(after) > 16384 || json.Unmarshal(after, &v) != nil || v.Days == nil || *v.Days < 1 || *v.Days > 365 ||
+		(v.Hours != nil && (*v.Hours < 1 || *v.Hours > 168)):
+		return false, invalid(e.EventType, "chat_retention {gameplay_chat_retention_days 1..365, ephemeral_retention_hours 1..168}")
+	}
+	return c.P.PlatformChatRetention(ctx, after, e.OccurredAt.UTC().UnixMicro())
+}
+
+// tenantRetention keeps the tenant override of gameplay_chat_retention_days (ref.tenants; absent or null = inherit).
+func (c IdentityProjection) tenantRetention(ctx context.Context, e outbox.Envelope, payloadTenant *uuid.UUID, after json.RawMessage) (bool, error) {
+	tenant, err := envTenant(e)
+	if err != nil {
+		return false, err
+	}
+	if payloadTenant != nil && *payloadTenant != tenant {
+		return false, invalid(e.EventType, "tenant_id")
+	}
+	var v struct {
+		Days *int `json:"gameplay_chat_retention_days"`
+	}
+	if len(after) > 0 && string(after) != "null" {
+		if err := json.Unmarshal(after, &v); err != nil {
+			return false, invalid(e.EventType, "after")
+		}
+	}
+	if v.Days != nil && (*v.Days < 1 || *v.Days > 365) {
+		return false, invalid(e.EventType, "gameplay_chat_retention_days 1..365")
+	}
+	return c.P.TenantChatRetention(ctx, tenant, v.Days, e.OccurredAt.UTC().UnixMicro())
 }
 
 var curfewRe = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)

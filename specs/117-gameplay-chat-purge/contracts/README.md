@@ -39,7 +39,7 @@
 | `chat.channel_opened`, `chat.channel_closed` | chat → RT, worker `chat-channel-closer` | `specs/events/payloads/chat/chat.channel_opened.v1.schema.json`, `chat.channel_closed.v1.schema.json` | Cần thêm |
 | `chat.gameplay_purged` | job purge → AUD, MON | `specs/events/payloads/chat/chat.gameplay_purged.v1.schema.json` | Cần thêm |
 | `chat.daily_stats` | job rollup → analytics (module game) | `specs/events/payloads/chat/chat.daily_stats.v1.schema.json` | Cần thêm |
-| JetStream `ew.chat.<tenant_id>.cursor.<channel_id>` | module chat → persister | `specs/events/payloads/chat/chat-cursor.v1.schema.json` | Cần thêm |
+| (không dùng) JetStream `cursor` | — | — | Bỏ: con trỏ đọc ghi trực tiếp (Clarifications 2026-11-22) |
 
 ## 5. JSON Schema nội dung
 

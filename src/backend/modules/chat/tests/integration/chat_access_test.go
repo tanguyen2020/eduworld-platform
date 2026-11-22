@@ -273,12 +273,19 @@ func TestSendPresetAndSameRulesForEveryGrade(t *testing.T) {
 	if r := c.sendWS(other, "c", otherParty, "truong khac"); !r.OK {
 		t.Fatalf("other school: %+v", r.Problem)
 	}
-	// F115-AC-08: remove the platform party rule (fixture) → CHAT_NOT_ALLOWED for everyone.
+	// F117-AC-09: the platform rule of an always-on channel (party) cannot be removed (CHECK chat_policies_always_on_chk).
+	if _, err := c.su.Exec(`UPDATE chat.chat_policies SET rules = jsonb_set(rules, '{rules}', (SELECT jsonb_agg(r) FROM jsonb_array_elements(rules->'rules') r
+		WHERE r->>'channel_type' <> 'party')) WHERE scope_type = 'platform' AND deleted_at IS NULL`); err == nil {
+		t.Fatal("the platform party rule was removed")
+	}
+	// F115-AC-08: remove the platform direct rule (fixture) → CHAT_NOT_ALLOWED for everyone.
+	peer := c.student(c.tenantA, c.schoolA2)
+	dm := c.open(channel.Direct, other, peer)
 	c.exec(`UPDATE chat.chat_policies SET rules = jsonb_set(rules, '{rules}', (SELECT jsonb_agg(r) FROM jsonb_array_elements(rules->'rules') r
-		WHERE r->>'channel_type' <> 'party')) WHERE scope_type = 'platform' AND deleted_at IS NULL`)
-	_ = c.facts.Cache.Invalidate(context.Background(), "policy:"+c.tenantA.String()+":"+c.schoolA2.String()+":party") // no class segment since ADR-0095
-	if r := c.sendWS(other, "c", otherParty, "khong duoc"); r.OK || replyCode(r) != "CHAT_NOT_ALLOWED" {
-		t.Fatalf("no platform party rule: %+v", r)
+		WHERE r->>'channel_type' <> 'direct')) WHERE scope_type = 'platform' AND deleted_at IS NULL`)
+	_ = c.facts.Cache.Invalidate(context.Background(), "policy:"+c.tenantA.String()+":"+c.schoolA2.String()+":direct") // no class segment since ADR-0095
+	if r := c.sendWS(other, "c", dm, "khong duoc"); r.OK || replyCode(r) != "CHAT_NOT_ALLOWED" {
+		t.Fatalf("no platform direct rule: %+v", r)
 	}
 	c.validator.set(message.Allow, "")
 }

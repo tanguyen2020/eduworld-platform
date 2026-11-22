@@ -42,3 +42,13 @@ func Subjects(producer string, events []string) []string {
 	}
 	return out
 }
+
+// CompetitionStream is the stream of the producer competition (party and match lifecycle, F100/F101/F104/F105).
+var CompetitionStream = natsx.EventStream("competition")
+
+// GameplayChannelsName opens, fills and closes the always-on gameplay channels match/team/party (F117 US1, ADR-0020 §6).
+const GameplayChannelsName = "chat.gameplay_channels"
+
+// GameplayChannelsEvents are the competition events it consumes (party.created v1 and v2 accepted).
+var GameplayChannelsEvents = []string{"party.created", "party.member_joined", "party.member_left", "party.member_kicked",
+	"party.disbanded", "match.started", "match.completed", "match.aborted"}

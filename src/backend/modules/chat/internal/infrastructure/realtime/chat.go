@@ -156,3 +156,20 @@ func (f ChatFanout) MessageRemoved(ctx context.Context, channel, msg uuid.UUID) 
 	}
 	return f.P.Publish(ctx, rt.ChatFanoutChannel(channel.String()), env)
 }
+
+// TypeUnreadUpdated is chat.unread.updated (AsyncAPI ChatUnreadUpdated).
+const TypeUnreadUpdated = "chat.unread.updated"
+
+// Unread implements port.UnreadPush: chat.unread.updated {counts} to every connection of the user (all devices,
+// F117-AC-13); counts only, no content.
+func (f ChatFanout) Unread(ctx context.Context, user uuid.UUID, counts map[uuid.UUID]int64) error {
+	c := make(map[string]int64, len(counts))
+	for id, n := range counts {
+		c[id.String()] = n
+	}
+	env, err := rt.NewMessage(TypeUnreadUpdated, map[string]any{"counts": c}, f.now())
+	if err != nil {
+		return err
+	}
+	return f.P.ToUser(ctx, user, env)
+}
