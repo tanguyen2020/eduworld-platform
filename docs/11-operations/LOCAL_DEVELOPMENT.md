@@ -16,7 +16,7 @@ Mục tiêu: developer mới chạy được toàn bộ stack (3 binary backend 
 | Công cụ | Phiên bản | Ghi chú |
 |---|---|---|
 | Git | ≥ 2.40 | Bật `core.autocrlf=input` trên Windows |
-| Docker Desktop / Docker Engine + Compose v2 | Compose ≥ 2.24 | RAM cấp cho Docker ≥ **8 GB** (3 binary + hạ tầng; trước đây 12 GB cho 6 service) |
+| Docker Desktop / Docker Engine / Kiri + Compose v2 | Compose ≥ 2.24 | RAM cấp cho Docker ≥ **8 GB** (3 binary + hạ tầng; trước đây 12 GB cho 6 service). Kiri (engine tương thích Docker API) dùng được thay Docker Desktop — xem §1.1 |
 | Go | Stable mới nhất (≥ 1.24) | Một `go.mod` duy nhất ở `src/backend/` (ADR-0074, [ADR-0092](../adr/ADR-0092-to-chuc-ma-nguon-trong-src.md)), gồm `src/backend/{cmd,modules,pkg,tools,test}`; không dùng `go.work`. Lệnh Go chạy trong `src/backend` (`go -C src/backend …`) hoặc qua `make` |
 | ent CLI | ghim trong `tools/versions.mk`, `make tools` cài vào `./bin` | Sinh code ORM từ schema (ADR-0039) |
 | Atlas CLI | image ghim `arigaio/atlas:0.38.0` (`tools/versions.mk`) | Versioned migrations từng module (ADR-0039). Không cần cài local: `make` chạy Atlas bằng container trên network compose `eduworld_default` (cần `make up` trước) |
@@ -29,6 +29,18 @@ Mục tiêu: developer mới chạy được toàn bộ stack (3 binary backend 
 | Tùy chọn | `k6`, `pgcli`, `valkey-cli`, `nats` CLI, Android SDK + JDK 17 | |
 
 Hệ điều hành hỗ trợ: Windows 11 (khuyến nghị WSL2 cho backend), macOS, Linux.
+
+### 1.1. Chạy trên Kiri thay Docker Desktop (Windows)
+
+Kiri cung cấp `docker` CLI và named pipe tương thích (`//./pipe/docker_engine` và `//./pipe/kiri`); compose, testcontainers và Atlas (container) chạy không đổi, với các điểm khác dưới đây (đã kiểm trên stack local 2026-11-21/22):
+
+| Việc | Trên Kiri |
+|---|---|
+| Kiểm tra | `(Get-Command docker).Source` trỏ tới `%LOCALAPPDATA%\Kiri\bin\docker.exe`; `docker context ls` có `kiri` và `default` (cả hai tới Kiri); `docker info --format '{{.MemTotal}}'` ≥ 7,5 GB (`scripts/dev/check-docker.sh`) |
+| testcontainers-go | Đặt `TESTCONTAINERS_RYUK_DISABLED=true` (Ryuk không chạy được). Không có Ryuk thì container của test bị ngắt giữa chừng còn sót: dọn bằng `docker ps --filter label=org.testcontainers=true` rồi `docker rm -f …` khi không còn test chạy. Cổng mapped mở muộn hơn Docker Desktop — `pkg/testkit` đã chờ cổng sẵn sàng. RAM của Kiri chỉ đủ **một** bộ testcontainers mỗi lúc: chạy integration tuần tự |
+| Build image | `docker compose build` / `up --build` (bake) bị Kiri chặn với `additional privileges requested: pass "--allow=fs.read=…"` → build bằng `docker build -f deploy/docker/<binary>.Dockerfile -t eduworld/<binary>:local .` rồi `COMPOSE_BAKE=false docker compose … --profile app up -d --no-build --wait --force-recreate core-api realtime worker` |
+| Image distroless | Kiri từ chối chuyển vào thư mục làm việc sau khi đổi user: image `core-api`, `realtime`, `migrate` đặt `WORKDIR /app` trước `USER 10001:10001` (đã có trong Dockerfile) |
+| Giải phóng RAM | `docker stats --no-stream`; builder nhàn rỗi `buildx_buildkit_*` (~900 MB) có thể `docker stop`, tự bật lại khi build |
 
 ## 2. Cấu trúc mã nguồn backend
 

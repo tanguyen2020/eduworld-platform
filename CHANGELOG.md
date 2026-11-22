@@ -275,6 +275,7 @@ Nhóm mục: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `
   - SIS contract 1.2.0 bỏ giáo viên/phân công. Mã lỗi còn 150.
 
 ### Docs
+- 2026-11-22 — LOCAL_DEVELOPMENT §1.1 "Chạy trên Kiri thay Docker Desktop": Ryuk tắt và dọn container còn sót, build image bằng `docker build` khi compose bake bị chặn, `WORKDIR /app` của image distroless, giải phóng RAM.
 - 2026-11-15 — Viết lại toàn bộ tài liệu theo ADR-0072 và lấp chỗ hổng từ EDU_FIT_REVIEW:
   - **Tài liệu sản phẩm, quản trị:** PRD (FR liên quan đánh dấu "Removed (ADR-0072)", thêm FR mới), personas, ADMIN_PORTAL, SCHOOL_LMS.
   - **Học tập:** ACTIVITY_ENGINE, EXAM_ENGINE, LEARNING_ANALYTICS (gợi ý, `rapid_guess`, hệ số đoán trúng, bài chẩn đoán, interleaving), CURRICULUM_MODEL (`yccd_ref`, `competency_ids`), CONTENT_MODEL (audio bắt buộc cho g1_3).
