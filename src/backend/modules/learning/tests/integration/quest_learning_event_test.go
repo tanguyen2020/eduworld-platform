@@ -73,7 +73,7 @@ func TestLearningEventOnQuestCompleted(t *testing.T) {
 		t.Fatalf("malformed: %v", err)
 	}
 	var total, inB int
-	_ = e.migrator.QueryRowContext(ctx, `SELECT count(*) FROM learning.learning_events WHERE event_type = 'quest.completed'`).Scan(&total)
+	_ = e.platform.QueryRowContext(ctx, `SELECT count(*) FROM learning.learning_events WHERE event_type = 'quest.completed'`).Scan(&total)
 	_ = e.uow.InTenantTx(ctx, scopeOf(t, e.tenantB), func(ctx context.Context) error {
 		tx, _ := entx.Tx(ctx)
 		return tx.QueryRowContext(ctx, `SELECT count(*) FROM learning.learning_events WHERE event_type = 'quest.completed'`).Scan(&inB)

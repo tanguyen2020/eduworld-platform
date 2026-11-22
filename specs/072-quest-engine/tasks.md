@@ -124,8 +124,8 @@
 
 ## Definition of Done
 
-- [ ] Mọi tiêu chí F072-AC-* có test pass (ghi mã test/TC)
-- [ ] `make gen-check`, `make lint`, `make test`, `make test-integration` (module game, phần module learning liên quan), `make test-contract`, `make godot-test` xanh
-- [ ] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17)
-- [ ] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi
-- [ ] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
+- [x] Mọi tiêu chí F072-AC-* có test pass (ghi mã test/TC) — 28/28: xem T011–T042, T049; AC-24 phần rollback con trỏ chờ F078 (lõi F071 chưa có rollback)
+- [x] `make gen-check`, `make lint`, `make test`, `make test-integration` (module game, phần module learning liên quan), `make test-contract`, `make godot-test` xanh — 2026-11-22: golangci (+ arch) 0 issue, unit 82 package ok, integration `modules/game/...` ok (378 s), learning quest/facade ok, GdUnit4 727 (0 lỗi, 10 skip), export check + scan_artifact OK
+- [x] Constitution Check trong plan.md vẫn đạt; không mock trong đường chạy thật (R17) — double chỉ trong test (gắn nhãn TEST DOUBLE)
+- [x] Tài liệu sở hữu, CONFIG_DEFAULTS, CHANGELOG cập nhật nếu có thay đổi — API_DESIGN §4.1, DATABASE_DESIGN §2.8, EVENT_DESIGN §4.5, CONFIG_DEFAULTS (env), CHANGELOG
+- [x] Trạng thái feature trong [CODE_PLAN](../../docs/12-project/CODE_PLAN_CMS_LMS_FIRST.md) cập nhật
