@@ -32,12 +32,13 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
   it('one portalLogin request with username, password, device_id, locale (no otp when empty) → 1 tenant → straight in', async () => {
     const { backend, user, router } = await renderPortal({ url: '/login' });
     await signIn(user, 'AD.TRUONG.A@THDEMO.EDU.VN');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Tổng quan' })).toBeInTheDocument();
+    // the first menu of workspace C since the Overview menu left Release 1 (owner 2026-11-22, catalog 2026.11.22.1)
+    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/schools'), { timeout: 30_000 });
     const logins = backend.calls('POST', '/auth/portal/login');
     expect(logins).toHaveLength(1);
     expect(Object.keys(logins[0]!.body as object).sort()).toEqual(['device_id', 'locale', 'password', 'username']);
     expect(logins[0]!.body).toMatchObject({ username: 'AD.TRUONG.A@THDEMO.EDU.VN', locale: 'vi-VN' });
-    expect(router.state.location.pathname).toBe('/school-lms/overview');
+    expect(router.state.location.pathname).toBe('/school-lms/schools');
     expect(backend.calls('GET', '/me/tenants')[0]!.headers['x-tenant-id']).toBeUndefined();
     expect(backend.calls('GET', '/me/permissions')[0]!.headers['x-tenant-id']).toBe('0193a4d2-0000-7000-8000-00000000000a');
     expect(backend.requests.every((r) => r.gateway === 'public' || r.path.startsWith('/admin/'))).toBe(true);
@@ -69,7 +70,7 @@ describe('/login (F051-AC-01, F051-AC-30)', () => {
     window.localStorage.setItem('ew.portal.otpHint', 'true');
     const { backend, user, router } = await renderPortal({ url: '/login' });
     await signIn(user, 'sa.admin');
-    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/overview'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/schools'));
     const logins = backend.calls('POST', '/auth/portal/login');
     expect(logins).toHaveLength(1);
     expect(logins[0]!.body).not.toHaveProperty('otp');

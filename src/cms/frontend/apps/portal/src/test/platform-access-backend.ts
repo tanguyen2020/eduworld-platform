@@ -350,7 +350,7 @@ export function withAccessMock(backend: MockPortalBackend, state: AccessState = 
       return json(200, page([conn].filter((c) => !tenantIds.length || tenantIds.includes(c.tenant_id)), 'data'));
     }
     if (rec.method === 'GET' && rec.path === `/admin/sis/connections/${AIDS.sis}/schools`) {
-      return json(200, { data: [{ sis_connection_id: AIDS.sis, school_id: AIDS.school, tenant_id: TENANTS.thDemoA.tenant_id, school_name: 'Trường TH A', active: true, assigned_at: '2026-10-01T00:00:00Z' }] });
+      return json(200, page([{ sis_connection_id: AIDS.sis, school_id: AIDS.school, tenant_id: TENANTS.thDemoA.tenant_id, school_name: 'Trường TH A', active: true, assigned_at: '2026-10-01T00:00:00Z' }], 'data'));
     }
     if (rec.method === 'GET' && rec.path === `/sis/connections/${AIDS.sis}/sync-runs`) {
       return json(200, page([{ sync_run_id: AIDS.run, kind: 'delta', status: 'partially_failed', started_at: '2026-11-19T02:00:00Z', finished_at: '2026-11-19T02:05:00Z', stats: { rows_rejected: 3 } }], 'data'));
