@@ -132,6 +132,20 @@ describe('Danh mục từ nhạy cảm (F122-AC-07, AC-08)', () => {
 });
 
 describe('Công tắc kiểm duyệt (F122-AC-10, AC-11, AC-12, AC-27)', () => {
+  it('tenant rows are cursor pages of the query (owner rule 2026-11-23): page 1, then "Tải thêm" appends page 2 with the cursor', async () => {
+    const { state, backend, user } = await renderSafety('/platform-admin/moderation-switches');
+    state.switchPageSize = 1;
+    tenantFilterStore.set([T_A, T_B]);
+    expect(await screen.findByRole('switch', { name: 'Lọc spam — TH Demo A' })).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Lọc spam — THCS Demo B' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Tải thêm' }));
+    expect(await screen.findByRole('switch', { name: 'Lọc spam — THCS Demo B' })).toBeInTheDocument();
+    expect(screen.getAllByRole('switch', { name: 'Lọc spam — TH Demo A' })).toHaveLength(1);
+    const calls = backend.calls('GET', '/admin/chat/moderation-switches').map((r) => new URLSearchParams(r.search).get('cursor'));
+    expect(calls).toContain('1');
+    expect(screen.queryByRole('button', { name: 'Tải thêm' })).toBeNull();
+  });
+
   it('platform row + filtered tenants; PII and grooming "Luôn bật"; a step off at platform level is locked on tenant rows', async () => {
     const { state, user } = await renderSafety('/platform-admin/moderation-switches');
     tenantFilterStore.set([T_A, T_B]);

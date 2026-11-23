@@ -108,16 +108,25 @@ export function useTestTerms() {
 
 const SWITCHES = ['platform', 'moderation-switches'] as const;
 
-/** listModerationSwitches: the platform row + the tenants of the topbar filter (`tenant_ids[]`, none = platform only). */
+type SwitchPage = { platform: SwitchState; tenants: SwitchState[]; page: { has_more: boolean; next_cursor?: string | null; limit: number } };
+
+/**
+ * listModerationSwitches: the platform row + one cursor page of the tenants of the topbar filter (`tenant_ids[]`, none =
+ * platform only) — the tenant rows are paged by the query (owner rule 2026-11-23, API_DESIGN §5); "Tải thêm" appends.
+ */
 export function useSwitches() {
   const api = useApi();
   const scope = useCrossTenantScope();
   const query = scope.filter.length ? { tenant_ids: [...scope.filter] } : {};
-  return useQuery({
-    queryKey: [...SWITCHES, 'state', query],
-    queryFn: () => api.call<{ platform: SwitchState; tenants: SwitchState[] }>(api.client.GET('/admin/chat/moderation-switches', { params: { query } })),
-    refetchInterval: 30_000,
-  });
+  const q = useCursorPages<SwitchState, SwitchPage & { data: SwitchState[] }>(
+    [...SWITCHES, 'state', query],
+    async (cursor) => {
+      const p = await api.call<SwitchPage>(api.client.GET('/admin/chat/moderation-switches', { params: { query: { ...query, ...pageQuery(cursor) } } }));
+      return { ...p, data: p.tenants };
+    },
+    { refetchInterval: 30_000 },
+  );
+  return { ...q, platform: q.data?.pages[0]?.platform };
 }
 
 export function useSwitchHistory() {

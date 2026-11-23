@@ -237,6 +237,7 @@ Quy tắc ở [API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filterin
 | Operation | Feature sở hữu | Lý do chưa chuyển | Việc |
 |---|---|---|---|
 | `listQuests` (game client) | F072 (module `game`) | Trạng thái/hiển thị quest là luật domain (`quest.Decide`, `CanRepeat`) trên lịch sử học sinh; thứ tự (trạng thái, mã) phụ thuộc kết quả đó; tập ứng viên chặn theo quest đã publish gán cho tenant × khối | Read model trạng thái quest theo học sinh (projection), rồi keyset `(status_rank, code, quest_id)` trong SQL [TBD] |
+| `listSensitiveCategories`, `listTenantSensitiveCategories` | F122 (portal) / F120 (module `chat`) | Ngoại lệ §5.1 (danh mục do platform quản lý); màn bảng F122 vào main 2026-11-23 sau đợt rà soát | Thêm `limit`/`cursor` + `page`, keyset `(code, category_id)` trong SQL, bảng dùng `useCursorPages`, dropdown đọc mọi trang [TBD] |
 
 ## 5. Lộ trình theo mốc (CMS/LMS trước)
 

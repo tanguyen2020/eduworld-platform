@@ -155,11 +155,12 @@ function SwitchTable({ large }: { large: boolean }) {
   const q = useSwitches();
   const me = useMe();
   const [change, setChange] = useState<Change | null>(null);
-  const platformOff = (s: keyof Steps) => q.data ? !q.data.platform.effective.enabled_all || !q.data.platform.effective.steps[s] : false;
-  const rows = q.data ? [q.data.platform, ...q.data.tenants] : [];
+  const platform = q.platform;
+  const platformOff = (s: keyof Steps) => platform ? !platform.effective.enabled_all || !platform.effective.steps[s] : false;
+  const rows = platform ? [platform, ...q.rows] : [];
   const cell = (level: SwitchState, target: Target) => {
     const on = target === 'enabled_all' ? level.effective.enabled_all : level.effective.steps[target];
-    const lockedByPlatform = level.scope === 'tenant' && (target === 'enabled_all' ? !q.data!.platform.effective.enabled_all : platformOff(target));
+    const lockedByPlatform = level.scope === 'tenant' && (target === 'enabled_all' ? !platform!.effective.enabled_all : platformOff(target));
     const name = target === 'enabled_all' ? t('chatSafety.switches.all') : t(`chatSafety.step.${target}`);
     if (lockedByPlatform) {
       return (
@@ -194,6 +195,11 @@ function SwitchTable({ large }: { large: boolean }) {
       <Alert type="info" showIcon message={t('chatSafety.switches.alwaysOnNote')} />
       {q.error ? <SafetyError error={q.error} /> : null}
       <Table rowKey={(r) => r.tenant_id ?? 'platform'} columns={columns} dataSource={rows} loading={q.isFetching && !q.data} pagination={false} scroll={{ x: true }} />
+      {q.hasNextPage ? (
+        <Button onClick={() => q.fetchNextPage()} loading={q.isFetchingNextPage}>
+          {t('chatSafety.common.loadMore')}
+        </Button>
+      ) : null}
       <PendingRequests levels={rows} me={me.data?.user_id} />
       {change ? <SwitchConfirmModal change={change} onClose={() => setChange(null)} /> : null}
     </Flex>

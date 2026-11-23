@@ -114,6 +114,8 @@ export function chatSafetyState() {
       { catalog_version: 7, scope: 'platform', tenant_id: null, published_at: iso(-200), published_by: CS.moderator, change_summary: 'Bản đầu', term_count: 1, regression: { recall: 0.97, false_positive_rate: 0.01 } },
     ] as Record<string, unknown>[],
     tenantCategoryOff: new Set<string>(),
+    /** MOCK page size of listModerationSwitches (the screen asks 50; tests force small pages). */
+    switchPageSize: 0,
     switches: {
       platform: { scope: 'platform', tenant_id: null, configured: null, effective: { enabled_all: true, steps: steps() }, disabled_steps: [] as string[], pending_requests: [] as unknown[] },
       tenants: {
@@ -353,8 +355,10 @@ export function installChatSafetyMock(backend: MockPortalBackend, state: ChatSaf
     }
     // ---- moderation switches ----
     if (key === 'GET /admin/chat/moderation-switches') {
-      const tenants = q.getAll('tenant_ids');
-      return json(200, { platform: state.switches.platform, tenants: tenants.map((t) => state.switches.tenants[t]).filter(Boolean) });
+      // one cursor page of the tenants of tenant_ids, the platform level on every page (API_DESIGN §5)
+      const tenants = q.getAll('tenant_ids').map((t) => state.switches.tenants[t]).filter(Boolean);
+      const { data, page } = paged(tenants, q, state.switchPageSize || Number(q.get('limit') ?? 20));
+      return json(200, { platform: state.switches.platform, tenants: data, page });
     }
     if (key === 'PUT /admin/chat/moderation-switches') {
       if (!body.reason || String(body.reason).length < 10) return problem(422, 'MODERATION_SWITCH_REASON_REQUIRED', { errors: [{ field: 'reason', code: 'MODERATION_SWITCH_REASON_REQUIRED' }] });

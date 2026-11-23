@@ -7,7 +7,7 @@ import type { CursorPageLike } from './fetchAllPages';
 export function useCursorPages<T, P extends CursorPageLike<T> = CursorPageLike<T>>(
   queryKey: QueryKey,
   fetchPage: (cursor: string | undefined) => Promise<P>,
-  opts: { enabled?: boolean } = {},
+  opts: { enabled?: boolean; refetchInterval?: number } = {},
 ) {
   const q = useInfiniteQuery({
     queryKey,
@@ -15,6 +15,7 @@ export function useCursorPages<T, P extends CursorPageLike<T> = CursorPageLike<T
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (p: P) => (p.page?.has_more ? (p.page.next_cursor ?? undefined) : undefined),
     enabled: opts.enabled ?? true,
+    ...(opts.refetchInterval ? { refetchInterval: opts.refetchInterval } : {}),
   });
   const rows: T[] = q.data?.pages.flatMap((p) => p.data ?? p.items ?? []) ?? [];
   return { ...q, rows };
