@@ -410,8 +410,61 @@ paths:
         '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
         '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
         '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
+  /internal/v1/moderation/texts:screen:
+    post:
+      tags: [moderation]
+      operationId: screenText
+      summary: Kiểm tra từ nhạy cảm của văn bản nhà trường nhập (tên, mô tả sự kiện trường) qua pipeline của module chat
+      description: |
+        Gọi trong tiến trình trước khi lưu văn bản tenant nhập cho sự kiện trường (EVENT_SEASON_SYSTEM §10, F077-AC-23,
+        AGENTS R15). Cùng chuẩn hóa, danh mục hiệu lực (platform + tenant, cài đặt danh mục, công tắc hiệu lực; PII luôn chạy)
+        như tên hiển thị. Chỉ trả `allowed` và **chỉ số** các văn bản vi phạm (`violations[]`): **không** trả từ đã khớp,
+        vị trí khớp hay danh mục (R15). Lỗi hoặc hết deadline → bên gọi trả `503 UNAVAILABLE` và không lưu (không fail-open).
+      x-allowed-callers: [game]
+      x-context-required: [tenant_scope]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TextScreenRequest' }
+      responses:
+        '200':
+          description: Kết quả kiểm tra
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TextScreenResult' }
+        '401': { $ref: 'common/internal-common.v1.yaml#/components/responses/Unauthorized' }
+        '403': { $ref: 'common/internal-common.v1.yaml#/components/responses/CallerNotAllowed' }
+        '422': { $ref: 'common/internal-common.v1.yaml#/components/responses/ValidationFailed' }
 components:
   schemas:
+    TextScreenRequest:
+      type: object
+      additionalProperties: false
+      required: [tenant_id, locale, texts]
+      properties:
+        tenant_id: { type: string, format: uuid }
+        locale: { type: string, enum: [vi, en] }
+        texts:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items: { type: string, minLength: 1, maxLength: 4000 }
+      examples:
+        - { tenant_id: 0193a5f4-6c1e-7b2a-9d1f-000000000001, locale: vi, texts: [Tuần lễ Toán học, Cả trường cùng giải toán] }
+    TextScreenResult:
+      type: object
+      additionalProperties: false
+      required: [allowed, violations]
+      properties:
+        allowed: { type: boolean }
+        violations:
+          type: array
+          maxItems: 10
+          description: Chỉ số (0-based) của các văn bản vi phạm — không có từ khớp, vị trí hay danh mục (R15)
+          items: { type: integer, minimum: 0, maximum: 9 }
+      examples:
+        - { allowed: true, violations: [] }
     DisplayTextCheckRequest:
       type: object
       additionalProperties: false

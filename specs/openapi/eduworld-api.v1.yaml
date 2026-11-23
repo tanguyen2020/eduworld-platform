@@ -13941,6 +13941,8 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /game-admin/events/{event_id}/runs/{run_id}:resume:
     post:
       x-service: game
@@ -13972,6 +13974,8 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /game-admin/events/{event_id}/runs/{run_id}:cancel:
     post:
       x-service: game
@@ -14003,6 +14007,8 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /game-admin/events/{event_id}/runs/{run_id}/stats:
     get:
       x-service: game
@@ -14993,6 +14999,7 @@ paths:
               schema: { $ref: '#/components/schemas/EventJoinResult' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /game/events/{event_id}/milestones/{milestone_id}:claim:
     post:
       x-service: game
@@ -17069,7 +17076,10 @@ paths:
               schema: { $ref: '#/components/schemas/SchoolEvent' }
         '401': *a1
         '403': *a2
+        '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /lms/school-events/{event_id}:
     get:
       x-service: game
@@ -17097,6 +17107,7 @@ paths:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/EventIdPath'
         - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -17105,6 +17116,8 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/SchoolEvent' }
@@ -17112,6 +17125,8 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /lms/school-events/{event_id}:cancel:
     post:
       x-service: game
@@ -17138,6 +17153,7 @@ paths:
               schema: { $ref: '#/components/schemas/SchoolEvent' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
 components:
   securitySchemes:
     keycloakBearer:
@@ -22285,7 +22301,7 @@ components:
         updated_at: { $ref: '#/components/schemas/Timestamp' }
     AchievementCategory:
       type: string
-      enum: [first_time, progress, learning, exploration, social, team, competition, seasonal, hidden]
+      enum: [first_time, progress, learning, exploration, social, team, competition, seasonal, event, hidden]
     AchievementProgress:
       type: object
       required: [achievement_id, code, category, unlocked]

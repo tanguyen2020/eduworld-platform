@@ -129,6 +129,42 @@ func (f CollectionVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CollectionVersionMutation", m)
 }
 
+// The CommunityGoalFunc type is an adapter to allow the use of ordinary
+// function as CommunityGoal mutator.
+type CommunityGoalFunc func(context.Context, *ent.CommunityGoalMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommunityGoalFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommunityGoalMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommunityGoalMutation", m)
+}
+
+// The CommunityGoalContributionFunc type is an adapter to allow the use of ordinary
+// function as CommunityGoalContribution mutator.
+type CommunityGoalContributionFunc func(context.Context, *ent.CommunityGoalContributionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommunityGoalContributionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommunityGoalContributionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommunityGoalContributionMutation", m)
+}
+
+// The CommunityGoalProgressFunc type is an adapter to allow the use of ordinary
+// function as CommunityGoalProgress mutator.
+type CommunityGoalProgressFunc func(context.Context, *ent.CommunityGoalProgressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CommunityGoalProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CommunityGoalProgressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CommunityGoalProgressMutation", m)
+}
+
 // The ContentReleaseFunc type is an adapter to allow the use of ordinary
 // function as ContentRelease mutator.
 type ContentReleaseFunc func(context.Context, *ent.ContentReleaseMutation) (ent.Value, error)
@@ -175,6 +211,90 @@ func (f EconomyAdjustmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EconomyAdjustmentMutation", m)
+}
+
+// The EventFunc type is an adapter to allow the use of ordinary
+// function as Event mutator.
+type EventFunc func(context.Context, *ent.EventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
+}
+
+// The EventParticipationFunc type is an adapter to allow the use of ordinary
+// function as EventParticipation mutator.
+type EventParticipationFunc func(context.Context, *ent.EventParticipationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventParticipationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventParticipationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventParticipationMutation", m)
+}
+
+// The EventPointEntryFunc type is an adapter to allow the use of ordinary
+// function as EventPointEntry mutator.
+type EventPointEntryFunc func(context.Context, *ent.EventPointEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventPointEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventPointEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventPointEntryMutation", m)
+}
+
+// The EventRunFunc type is an adapter to allow the use of ordinary
+// function as EventRun mutator.
+type EventRunFunc func(context.Context, *ent.EventRunMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventRunFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventRunMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventRunMutation", m)
+}
+
+// The EventTemplateFunc type is an adapter to allow the use of ordinary
+// function as EventTemplate mutator.
+type EventTemplateFunc func(context.Context, *ent.EventTemplateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventTemplateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventTemplateMutation", m)
+}
+
+// The EventTemplateVersionFunc type is an adapter to allow the use of ordinary
+// function as EventTemplateVersion mutator.
+type EventTemplateVersionFunc func(context.Context, *ent.EventTemplateVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventTemplateVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventTemplateVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventTemplateVersionMutation", m)
+}
+
+// The EventVersionFunc type is an adapter to allow the use of ordinary
+// function as EventVersion mutator.
+type EventVersionFunc func(context.Context, *ent.EventVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventVersionMutation", m)
 }
 
 // The ExplorationProgressFunc type is an adapter to allow the use of ordinary
@@ -487,6 +607,54 @@ func (f RewardRuleVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RewardRuleVersionMutation", m)
+}
+
+// The SeasonPointEntryFunc type is an adapter to allow the use of ordinary
+// function as SeasonPointEntry mutator.
+type SeasonPointEntryFunc func(context.Context, *ent.SeasonPointEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SeasonPointEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SeasonPointEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SeasonPointEntryMutation", m)
+}
+
+// The SeasonTrackFunc type is an adapter to allow the use of ordinary
+// function as SeasonTrack mutator.
+type SeasonTrackFunc func(context.Context, *ent.SeasonTrackMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SeasonTrackFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SeasonTrackMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SeasonTrackMutation", m)
+}
+
+// The SeasonTrackProgressFunc type is an adapter to allow the use of ordinary
+// function as SeasonTrackProgress mutator.
+type SeasonTrackProgressFunc func(context.Context, *ent.SeasonTrackProgressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SeasonTrackProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SeasonTrackProgressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SeasonTrackProgressMutation", m)
+}
+
+// The SeasonTrackVersionFunc type is an adapter to allow the use of ordinary
+// function as SeasonTrackVersion mutator.
+type SeasonTrackVersionFunc func(context.Context, *ent.SeasonTrackVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SeasonTrackVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SeasonTrackVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SeasonTrackVersionMutation", m)
 }
 
 // The ShopItemFunc type is an adapter to allow the use of ordinary

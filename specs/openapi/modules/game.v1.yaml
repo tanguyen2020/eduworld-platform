@@ -2247,6 +2247,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game-admin/events/{event_id}/runs/{run_id}:resume:
     post:
       x-service: game
@@ -2286,6 +2290,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game-admin/events/{event_id}/runs/{run_id}:cancel:
     post:
       x-service: game
@@ -2325,6 +2333,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game-admin/events/{event_id}/runs/{run_id}/stats:
     get:
       x-service: game
@@ -3490,6 +3502,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game/events/{event_id}/milestones/{milestone_id}:claim:
     post:
       x-service: game
@@ -4396,8 +4410,14 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /lms/school-events/{event_id}:
     get:
       x-service: game
@@ -4429,6 +4449,7 @@ paths:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/EventIdPath'
         - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -4438,6 +4459,9 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -4450,6 +4474,10 @@ paths:
           $ref: '#/components/responses/PreconditionFailed'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /lms/school-events/{event_id}:cancel:
     post:
       x-service: game
@@ -4482,6 +4510,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
 components:
   parameters:
     TenantIdHeader:
@@ -8671,6 +8701,7 @@ components:
         - team
         - competition
         - seasonal
+        - event
         - hidden
     AchievementProgress:
       type: object
@@ -10057,6 +10088,15 @@ components:
             $ref: '#/components/schemas/Problem'
     UnsupportedMediaType:
       description: MEDIA_TYPE_NOT_ALLOWED — loại file không được phép hoặc magic bytes không khớp
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Dịch vụ phụ thuộc tạm thời không sẵn sàng (vd. CHAT_TEMPORARILY_UNAVAILABLE khi NATS JetStream lỗi) — client thử lại theo Retry-After
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
       content:
         application/problem+json:
           schema:

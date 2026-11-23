@@ -7,10 +7,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/gamesession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -96,6 +99,9 @@ type GetContentManifest struct {
 	Read             read.Session
 	Manifests        read.ManifestReadModel
 	MinClientVersion string
+	// Students reads the school and grade of the student (F077-AC-07: the event entries of the tenant manifest are kept
+	// for the audience of the student only); nil = no event filter.
+	Students port.StudentDirectory
 }
 
 // EmptyETag is the ETag of the empty manifest of a tenant (manifest_version 0): stable per tenant.
@@ -125,9 +131,66 @@ func (h GetContentManifest) Handle(ctx context.Context) (out ContentManifest, er
 		}
 		at := m.GeneratedAt
 		out.ManifestVersion, out.ETag, out.GeneratedAt, out.Entries = m.Version, m.ETag, &at, m.Entries
+		if h.Students == nil {
+			return nil
+		}
+		st, err := h.Students.Student(ctx, tenant, p.UserID)
+		if err != nil {
+			return err
+		}
+		school, grade := uuid.Nil, 0
+		if st != nil {
+			school, grade = st.SchoolID, st.Grade
+		}
+		out.Entries, out.ETag = filterEvents(m.Entries, m.ETag, school, grade)
 		return nil
 	})
 	return out, err
+}
+
+// filterEvents drops the event entries whose audience (schools, grades) does not hold the student (F077-AC-07); the
+// ETag of a filtered view names what was dropped (a student of another audience never reuses a cached body).
+func filterEvents(entries json.RawMessage, etag string, school uuid.UUID, grade int) (json.RawMessage, string) {
+	doc := map[string]json.RawMessage{}
+	if len(entries) == 0 || json.Unmarshal(entries, &doc) != nil {
+		return entries, etag
+	}
+	var items []json.RawMessage
+	if json.Unmarshal(doc["items"], &items) != nil {
+		return entries, etag
+	}
+	kept := make([]json.RawMessage, 0, len(items))
+	var dropped []string
+	for _, it := range items {
+		var head struct {
+			ItemType string `json:"item_type"`
+			ItemID   string `json:"item_id"`
+			Audience *struct {
+				SchoolIDs   []uuid.UUID `json:"school_ids"`
+				GradeLevels []int       `json:"grade_levels"`
+			} `json:"audience"`
+		}
+		if json.Unmarshal(it, &head) == nil && head.ItemType == "event" && head.Audience != nil &&
+			((len(head.Audience.SchoolIDs) > 0 && !slices.Contains(head.Audience.SchoolIDs, school)) || !slices.Contains(head.Audience.GradeLevels, grade)) {
+			dropped = append(dropped, head.ItemID)
+			continue
+		}
+		kept = append(kept, it)
+	}
+	if len(dropped) == 0 {
+		return entries, etag
+	}
+	b, err := json.Marshal(kept)
+	if err != nil {
+		return entries, etag
+	}
+	doc["items"] = b
+	out, err := json.Marshal(doc)
+	if err != nil {
+		return entries, etag
+	}
+	sum := sha256.Sum256([]byte(strings.Join(dropped, ",")))
+	return out, etag + "-" + hex.EncodeToString(sum[:4])
 }
 
 // ---------- login history (F014 US2) ----------

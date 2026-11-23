@@ -121,3 +121,29 @@ func (p ProgressionPublisher) XPUpdated(ctx context.Context, student uuid.UUID, 
 func (p ProgressionPublisher) LevelReached(ctx context.Context, student uuid.UUID, payload map[string]any, at time.Time) error {
 	return p.send(ctx, "progression.level.reached", student, payload, at)
 }
+
+// LiveOpsPublisher implements port.LiveOpsRealtime: event.status.changed, event.progress.updated,
+// event.community_goal.updated and season.track.updated (AsyncAPI, F077) to every connection of each student through
+// Valkey ew:rt:user:<id> — best effort after commit.
+type LiveOpsPublisher struct {
+	C       valkey.Client
+	Timeout time.Duration
+}
+
+var _ port.LiveOpsRealtime = LiveOpsPublisher{}
+
+// Push implements port.LiveOpsRealtime.
+func (p LiveOpsPublisher) Push(ctx context.Context, typ string, students []uuid.UUID, payload map[string]any, at time.Time) error {
+	e, err := rt.NewMessage(typ, payload, at)
+	if err != nil {
+		return err
+	}
+	pub := rt.Publisher{C: p.C, Timeout: p.Timeout}
+	var first error
+	for _, s := range students {
+		if err := pub.ToUser(ctx, s, e); err != nil && first == nil {
+			first = err
+		}
+	}
+	return first
+}

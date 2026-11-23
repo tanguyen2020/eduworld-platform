@@ -16,6 +16,7 @@ var AllowedCallers = map[string][]string{
 	"restoreStudentData":      {"identity"},
 	"restoreTrashItem":        {"identity"},
 	"revokeTenantAssignments": {"identity"},
+	"screenText":              {"game"},
 }
 
 // ContextRequired maps facade operationIds to their x-context-required (tenant_scope, idempotency_key);
@@ -30,4 +31,5 @@ var ContextRequired = map[string][]string{
 	"restoreStudentData":      {"idempotency_key", "tenant_scope"},
 	"restoreTrashItem":        {"idempotency_key", "tenant_scope"},
 	"revokeTenantAssignments": {"idempotency_key"},
+	"screenText":              {"tenant_scope"},
 }

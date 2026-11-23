@@ -36,6 +36,15 @@ type CollectionProgress func(*sql.Selector)
 // CollectionVersion is the predicate function for collectionversion builders.
 type CollectionVersion func(*sql.Selector)
 
+// CommunityGoal is the predicate function for communitygoal builders.
+type CommunityGoal func(*sql.Selector)
+
+// CommunityGoalContribution is the predicate function for communitygoalcontribution builders.
+type CommunityGoalContribution func(*sql.Selector)
+
+// CommunityGoalProgress is the predicate function for communitygoalprogress builders.
+type CommunityGoalProgress func(*sql.Selector)
+
 // ContentRelease is the predicate function for contentrelease builders.
 type ContentRelease func(*sql.Selector)
 
@@ -47,6 +56,27 @@ type CurrencyLedgerEntry func(*sql.Selector)
 
 // EconomyAdjustment is the predicate function for economyadjustment builders.
 type EconomyAdjustment func(*sql.Selector)
+
+// Event is the predicate function for event builders.
+type Event func(*sql.Selector)
+
+// EventParticipation is the predicate function for eventparticipation builders.
+type EventParticipation func(*sql.Selector)
+
+// EventPointEntry is the predicate function for eventpointentry builders.
+type EventPointEntry func(*sql.Selector)
+
+// EventRun is the predicate function for eventrun builders.
+type EventRun func(*sql.Selector)
+
+// EventTemplate is the predicate function for eventtemplate builders.
+type EventTemplate func(*sql.Selector)
+
+// EventTemplateVersion is the predicate function for eventtemplateversion builders.
+type EventTemplateVersion func(*sql.Selector)
+
+// EventVersion is the predicate function for eventversion builders.
+type EventVersion func(*sql.Selector)
 
 // ExplorationProgress is the predicate function for explorationprogress builders.
 type ExplorationProgress func(*sql.Selector)
@@ -125,6 +155,18 @@ type RewardRule func(*sql.Selector)
 
 // RewardRuleVersion is the predicate function for rewardruleversion builders.
 type RewardRuleVersion func(*sql.Selector)
+
+// SeasonPointEntry is the predicate function for seasonpointentry builders.
+type SeasonPointEntry func(*sql.Selector)
+
+// SeasonTrack is the predicate function for seasontrack builders.
+type SeasonTrack func(*sql.Selector)
+
+// SeasonTrackProgress is the predicate function for seasontrackprogress builders.
+type SeasonTrackProgress func(*sql.Selector)
+
+// SeasonTrackVersion is the predicate function for seasontrackversion builders.
+type SeasonTrackVersion func(*sql.Selector)
 
 // ShopItem is the predicate function for shopitem builders.
 type ShopItem func(*sql.Selector)

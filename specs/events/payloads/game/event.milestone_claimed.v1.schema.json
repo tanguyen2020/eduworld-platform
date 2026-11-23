@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/event.milestone_claimed.v1.schema.json",
+  "title": "Payload event.milestone_claimed v1 (module game, owner F077)",
+  "description": "Phần thưởng một mốc điểm sự kiện đã cấp qua Reward Engine, một lần mỗi (run, mốc, học sinh): học sinh nhận (auto_granted = false) hoặc tự cấp khi run lưu trữ (true) — F077-AC-05, AC-10. Consumer: achievement-evaluator, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_run_id",
+    "milestone_id",
+    "student_id",
+    "auto_granted",
+    "claimed_at"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_run_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "milestone_id": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "auto_granted": {
+      "type": "boolean"
+    },
+    "claimed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

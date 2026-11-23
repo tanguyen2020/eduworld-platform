@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/season_track.reward_claimed.v1.schema.json",
+  "title": "Payload season_track.reward_claimed v1 (module game, owner F077)",
+  "description": "Phần thưởng một cấp season track đã cấp qua Reward Engine, một lần mỗi (mùa, cấp, học sinh): học sinh nhận (auto_granted = false) hoặc tự cấp khi hết mùa (true) — F077-AC-19, AC-20. Consumer: RT, analytics, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "season_id",
+    "season_track_id",
+    "student_id",
+    "tier",
+    "auto_granted",
+    "claimed_at"
+  ],
+  "properties": {
+    "season_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "season_track_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "auto_granted": {
+      "type": "boolean"
+    },
+    "claimed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

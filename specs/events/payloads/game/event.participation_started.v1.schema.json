@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/event.participation_started.v1.schema.json",
+  "title": "Payload event.participation_started v1 (module game, owner F077)",
+  "description": "Học sinh tham gia một run lần đầu (joinGameEvent hoặc hoạt động đầu tiên thuộc sự kiện — F077-AC-08), một lần mỗi run. Consumer: achievement-evaluator (trigger), world unlock facts, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_run_id",
+    "event_kind",
+    "student_id",
+    "school_id",
+    "joined_at"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_run_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_kind": {
+      "type": "string",
+      "enum": [
+        "world_festival",
+        "weekend",
+        "school",
+        "community_goal",
+        "learning_campaign",
+        "special_boss",
+        "limited_quest"
+      ]
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "school_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "joined_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

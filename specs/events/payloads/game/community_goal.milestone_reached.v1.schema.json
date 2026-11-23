@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/community_goal.milestone_reached.v1.schema.json",
+  "title": "Payload community_goal.milestone_reached v1 (module game, owner F077)",
+  "description": "Tổng community goal của một phạm vi đạt một mốc (một lần mỗi phạm vi và mốc — F077-AC-15); mọi học sinh có ≥ 1 đóng góp trong phạm vi nhận thưởng mốc đúng một lần. Không có danh tính hay xếp hạng học sinh. Consumer: RT, WLD (đổi trang trí), analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal_id",
+    "event_run_id",
+    "event_id",
+    "goal_code",
+    "scope",
+    "scope_id",
+    "milestone_pct",
+    "total",
+    "target",
+    "reached_at"
+  ],
+  "properties": {
+    "goal_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_run_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "goal_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "school",
+        "tenant",
+        "platform"
+      ]
+    },
+    "scope_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "milestone_pct": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "target": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "world_change_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "reached_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

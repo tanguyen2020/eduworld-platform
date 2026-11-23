@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/community_goal.completed.v1.schema.json",
+  "title": "Payload community_goal.completed v1 (module game, owner F077)",
+  "description": "Community goal của một phạm vi đạt 100 % (một lần — F077-AC-15). Sự kiện của phạm vi, không mang học sinh nên không là trigger thành tựu (spec Clarifications). Consumer: RT, WLD, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal_id",
+    "event_run_id",
+    "event_id",
+    "goal_code",
+    "scope",
+    "scope_id",
+    "total",
+    "target",
+    "completed_at"
+  ],
+  "properties": {
+    "goal_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_run_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "goal_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "school",
+        "tenant",
+        "platform"
+      ]
+    },
+    "scope_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "target": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

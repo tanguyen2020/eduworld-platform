@@ -452,7 +452,7 @@ operations:
   sendEventSeasonEvents:
     action: send
     channel: { $ref: '#/channels/realtime' }
-    summary: Sự kiện game và season track (module game, Valkey ew:rt:user:<user_id>; community goal gộp tối đa 1 lần/10 giây mỗi phạm vi rồi đẩy tới các room hub đang mở thuộc phạm vi qua ew:rt:room:<room_id> [Proposed]).
+    summary: Sự kiện game và season track (module game, Valkey ew:rt:user:<user_id>; community goal gộp tối đa 1 lần mỗi `community_goal_progress_flush_seconds` (30 giây) mỗi phạm vi rồi đẩy tới học sinh của phạm vi đang có phiên game qua ew:rt:user:<user_id> — F077).
     messages:
       - $ref: '#/channels/realtime/messages/EventProgressUpdated'
       - $ref: '#/channels/realtime/messages/EventCommunityGoalUpdated'
@@ -2932,7 +2932,7 @@ components:
                     description: milestone_id vừa đạt (chưa nhận thưởng)
     EventCommunityGoalUpdated:
       name: event.community_goal.updated
-      summary: Tiến độ community goal (gộp tối đa 1 lần/10 giây mỗi phạm vi [Proposed]) — không có xếp hạng cá nhân.
+      summary: Tiến độ community goal (tối đa 1 lần mỗi `community_goal_progress_flush_seconds` mỗi phạm vi, CONFIG_DEFAULTS — F077) — không có xếp hạng cá nhân, không danh tính học sinh.
       payload:
         allOf:
           - $ref: '#/components/schemas/ServerEnvelope'

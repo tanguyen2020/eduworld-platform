@@ -8786,7 +8786,7 @@ export interface components {
             start_date: string;
         };
         /** @enum {string} */
-        AchievementCategory: "first_time" | "progress" | "learning" | "exploration" | "social" | "team" | "competition" | "seasonal" | "hidden";
+        AchievementCategory: "first_time" | "progress" | "learning" | "exploration" | "social" | "team" | "competition" | "seasonal" | "event" | "hidden";
         AchievementProgress: {
             achievement_id: components["schemas"]["Uuid"];
             category: components["schemas"]["AchievementCategory"];
@@ -28641,6 +28641,8 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     resumeEventRun: {
@@ -28680,6 +28682,8 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     suspendEventRun: {
@@ -28719,6 +28723,8 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     getEventRunStats: {
@@ -29757,6 +29763,7 @@ export interface operations {
             };
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     claimEventMilestone: {
@@ -33430,7 +33437,10 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     getSchoolEvent: {
@@ -33467,6 +33477,12 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
                 "If-Match"?: components["parameters"]["IfMatch"];
                 /**
                  * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
@@ -33489,6 +33505,7 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -33499,6 +33516,8 @@ export interface operations {
             409: components["responses"]["Conflict"];
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     cancelSchoolEvent: {
@@ -33541,6 +33560,7 @@ export interface operations {
             };
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     getSchoolAnalyticsSeries: {

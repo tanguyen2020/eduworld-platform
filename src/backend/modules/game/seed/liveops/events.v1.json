@@ -1,0 +1,126 @@
+[
+  {
+    "schema_version": 1,
+    "event_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7701",
+    "code": "festival.mid_autumn_2027",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "event_kind": "world_festival",
+    "name": {
+      "vi": "Lễ hội Trăng Rằm",
+      "en": "Mid-Autumn Lantern Festival"
+    },
+    "description": {
+      "vi": "Cùng cả trường thắp sáng đèn lồng bằng cách giải toán và khám phá!",
+      "en": "Light up lanterns with your whole school by solving maths and exploring!"
+    },
+    "short_tagline": {
+      "vi": "Thắp đèn lồng cùng bạn bè",
+      "en": "Light lanterns with friends"
+    },
+    "theme_code": "mid_autumn",
+    "schedule": {
+      "start_at": "2027-09-08T17:00:00Z",
+      "end_at": "2027-09-19T16:59:59Z",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "claim_grace_hours": 72
+    },
+    "audience": {
+      "scope": "platform",
+      "grade_levels": [
+        3,
+        4,
+        5
+      ]
+    },
+    "components": {
+      "community_goal": {
+        "goal_code": "lanterns_math",
+        "name": {
+          "vi": "Thắp 1.000 đèn lồng",
+          "en": "Light 1,000 lanterns"
+        },
+        "metric": "correct_answers",
+        "scope": "school",
+        "target": 1000,
+        "per_student_daily_cap": 50,
+        "show_grade_contributions": true,
+        "milestones": [
+          {
+            "percent": 25,
+            "rewards": [
+              {
+                "type": "currency",
+                "currency_code": "xu",
+                "amount": 10
+              }
+            ],
+            "world_change_code": "lanterns_stage_1"
+          },
+          {
+            "percent": 50,
+            "rewards": [
+              {
+                "type": "currency",
+                "currency_code": "xu",
+                "amount": 20
+              }
+            ],
+            "world_change_code": "lanterns_stage_2"
+          },
+          {
+            "percent": 100,
+            "rewards": [
+              {
+                "type": "item",
+                "item_id": "frame_gold_01"
+              }
+            ],
+            "world_change_code": "lanterns_full"
+          }
+        ]
+      }
+    },
+    "event_points": {
+      "enabled": true,
+      "daily_cap": 200,
+      "sources": [
+        {
+          "source_code": "quest.completed",
+          "points": 20
+        },
+        {
+          "source_code": "learning_activity.completed",
+          "points": 5
+        },
+        {
+          "source_code": "discovery.found",
+          "points": 10
+        }
+      ]
+    },
+    "milestone_rewards": [
+      {
+        "milestone_id": "m1",
+        "event_points": 50,
+        "rewards": [
+          {
+            "type": "currency",
+            "currency_code": "xu",
+            "amount": 20
+          }
+        ]
+      },
+      {
+        "milestone_id": "m2",
+        "event_points": 150,
+        "rewards": [
+          {
+            "type": "badge",
+            "badge_id": "badge_explorer_01"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -25,10 +25,20 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoal"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currencyledgerentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/economyadjustment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/event"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventparticipation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventpointentry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventrun"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventtemplate"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventtemplateversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/explorationprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
@@ -55,6 +65,10 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardrule"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardruleversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasonpointentry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrack"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrackprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrackversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shopitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shopitemversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shoppurchase"
@@ -99,6 +113,12 @@ type Client struct {
 	CollectionProgress *CollectionProgressClient
 	// CollectionVersion is the client for interacting with the CollectionVersion builders.
 	CollectionVersion *CollectionVersionClient
+	// CommunityGoal is the client for interacting with the CommunityGoal builders.
+	CommunityGoal *CommunityGoalClient
+	// CommunityGoalContribution is the client for interacting with the CommunityGoalContribution builders.
+	CommunityGoalContribution *CommunityGoalContributionClient
+	// CommunityGoalProgress is the client for interacting with the CommunityGoalProgress builders.
+	CommunityGoalProgress *CommunityGoalProgressClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
 	ContentRelease *ContentReleaseClient
 	// Currency is the client for interacting with the Currency builders.
@@ -107,6 +127,20 @@ type Client struct {
 	CurrencyLedgerEntry *CurrencyLedgerEntryClient
 	// EconomyAdjustment is the client for interacting with the EconomyAdjustment builders.
 	EconomyAdjustment *EconomyAdjustmentClient
+	// Event is the client for interacting with the Event builders.
+	Event *EventClient
+	// EventParticipation is the client for interacting with the EventParticipation builders.
+	EventParticipation *EventParticipationClient
+	// EventPointEntry is the client for interacting with the EventPointEntry builders.
+	EventPointEntry *EventPointEntryClient
+	// EventRun is the client for interacting with the EventRun builders.
+	EventRun *EventRunClient
+	// EventTemplate is the client for interacting with the EventTemplate builders.
+	EventTemplate *EventTemplateClient
+	// EventTemplateVersion is the client for interacting with the EventTemplateVersion builders.
+	EventTemplateVersion *EventTemplateVersionClient
+	// EventVersion is the client for interacting with the EventVersion builders.
+	EventVersion *EventVersionClient
 	// ExplorationProgress is the client for interacting with the ExplorationProgress builders.
 	ExplorationProgress *ExplorationProgressClient
 	// GameProfile is the client for interacting with the GameProfile builders.
@@ -159,6 +193,14 @@ type Client struct {
 	RewardRule *RewardRuleClient
 	// RewardRuleVersion is the client for interacting with the RewardRuleVersion builders.
 	RewardRuleVersion *RewardRuleVersionClient
+	// SeasonPointEntry is the client for interacting with the SeasonPointEntry builders.
+	SeasonPointEntry *SeasonPointEntryClient
+	// SeasonTrack is the client for interacting with the SeasonTrack builders.
+	SeasonTrack *SeasonTrackClient
+	// SeasonTrackProgress is the client for interacting with the SeasonTrackProgress builders.
+	SeasonTrackProgress *SeasonTrackProgressClient
+	// SeasonTrackVersion is the client for interacting with the SeasonTrackVersion builders.
+	SeasonTrackVersion *SeasonTrackVersionClient
 	// ShopItem is the client for interacting with the ShopItem builders.
 	ShopItem *ShopItemClient
 	// ShopItemVersion is the client for interacting with the ShopItemVersion builders.
@@ -210,10 +252,20 @@ func (c *Client) init() {
 	c.CollectionItem = NewCollectionItemClient(c.config)
 	c.CollectionProgress = NewCollectionProgressClient(c.config)
 	c.CollectionVersion = NewCollectionVersionClient(c.config)
+	c.CommunityGoal = NewCommunityGoalClient(c.config)
+	c.CommunityGoalContribution = NewCommunityGoalContributionClient(c.config)
+	c.CommunityGoalProgress = NewCommunityGoalProgressClient(c.config)
 	c.ContentRelease = NewContentReleaseClient(c.config)
 	c.Currency = NewCurrencyClient(c.config)
 	c.CurrencyLedgerEntry = NewCurrencyLedgerEntryClient(c.config)
 	c.EconomyAdjustment = NewEconomyAdjustmentClient(c.config)
+	c.Event = NewEventClient(c.config)
+	c.EventParticipation = NewEventParticipationClient(c.config)
+	c.EventPointEntry = NewEventPointEntryClient(c.config)
+	c.EventRun = NewEventRunClient(c.config)
+	c.EventTemplate = NewEventTemplateClient(c.config)
+	c.EventTemplateVersion = NewEventTemplateVersionClient(c.config)
+	c.EventVersion = NewEventVersionClient(c.config)
 	c.ExplorationProgress = NewExplorationProgressClient(c.config)
 	c.GameProfile = NewGameProfileClient(c.config)
 	c.GameSession = NewGameSessionClient(c.config)
@@ -240,6 +292,10 @@ func (c *Client) init() {
 	c.RewardGrant = NewRewardGrantClient(c.config)
 	c.RewardRule = NewRewardRuleClient(c.config)
 	c.RewardRuleVersion = NewRewardRuleVersionClient(c.config)
+	c.SeasonPointEntry = NewSeasonPointEntryClient(c.config)
+	c.SeasonTrack = NewSeasonTrackClient(c.config)
+	c.SeasonTrackProgress = NewSeasonTrackProgressClient(c.config)
+	c.SeasonTrackVersion = NewSeasonTrackVersionClient(c.config)
 	c.ShopItem = NewShopItemClient(c.config)
 	c.ShopItemVersion = NewShopItemVersionClient(c.config)
 	c.ShopPurchase = NewShopPurchaseClient(c.config)
@@ -348,63 +404,77 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                      ctx,
-		config:                   cfg,
-		Achievement:              NewAchievementClient(cfg),
-		AchievementProgressEvent: NewAchievementProgressEventClient(cfg),
-		AchievementVersion:       NewAchievementVersionClient(cfg),
-		AvatarPreset:             NewAvatarPresetClient(cfg),
-		CharacterCatalog:         NewCharacterCatalogClient(cfg),
-		CharacterCatalogVersion:  NewCharacterCatalogVersionClient(cfg),
-		Collection:               NewCollectionClient(cfg),
-		CollectionItem:           NewCollectionItemClient(cfg),
-		CollectionProgress:       NewCollectionProgressClient(cfg),
-		CollectionVersion:        NewCollectionVersionClient(cfg),
-		ContentRelease:           NewContentReleaseClient(cfg),
-		Currency:                 NewCurrencyClient(cfg),
-		CurrencyLedgerEntry:      NewCurrencyLedgerEntryClient(cfg),
-		EconomyAdjustment:        NewEconomyAdjustmentClient(cfg),
-		ExplorationProgress:      NewExplorationProgressClient(cfg),
-		GameProfile:              NewGameProfileClient(cfg),
-		GameSession:              NewGameSessionClient(cfg),
-		InventoryItem:            NewInventoryItemClient(cfg),
-		ItemDefinition:           NewItemDefinitionClient(cfg),
-		ItemDefinitionVersion:    NewItemDefinitionVersionClient(cfg),
-		ItemLedgerEntry:          NewItemLedgerEntryClient(cfg),
-		LevelDefinition:          NewLevelDefinitionClient(cfg),
-		LevelHistory:             NewLevelHistoryClient(cfg),
-		LevelSession:             NewLevelSessionClient(cfg),
-		LevelVersion:             NewLevelVersionClient(cfg),
-		LoginEvent:               NewLoginEventClient(cfg),
-		NicknameChange:           NewNicknameChangeClient(cfg),
-		NpcDialogue:              NewNpcDialogueClient(cfg),
-		NpcDialogueVersion:       NewNpcDialogueVersionClient(cfg),
-		PeriodicQuestGrant:       NewPeriodicQuestGrantClient(cfg),
-		ProgressionCurve:         NewProgressionCurveClient(cfg),
-		ProgressionCurveVersion:  NewProgressionCurveVersionClient(cfg),
-		ProgressionLevel:         NewProgressionLevelClient(cfg),
-		QuestDefinition:          NewQuestDefinitionClient(cfg),
-		QuestProgress:            NewQuestProgressClient(cfg),
-		QuestStepAttempt:         NewQuestStepAttemptClient(cfg),
-		QuestVersion:             NewQuestVersionClient(cfg),
-		RewardGrant:              NewRewardGrantClient(cfg),
-		RewardRule:               NewRewardRuleClient(cfg),
-		RewardRuleVersion:        NewRewardRuleVersionClient(cfg),
-		ShopItem:                 NewShopItemClient(cfg),
-		ShopItemVersion:          NewShopItemVersionClient(cfg),
-		ShopPurchase:             NewShopPurchaseClient(cfg),
-		StoryChapter:             NewStoryChapterClient(cfg),
-		StoryChapterVersion:      NewStoryChapterVersionClient(cfg),
-		StoryProgress:            NewStoryProgressClient(cfg),
-		StudentAchievement:       NewStudentAchievementClient(cfg),
-		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
-		Wallet:                   NewWalletClient(cfg),
-		WorldArea:                NewWorldAreaClient(cfg),
-		WorldAreaUnlock:          NewWorldAreaUnlockClient(cfg),
-		WorldAreaVersion:         NewWorldAreaVersionClient(cfg),
-		WorldUnlockFact:          NewWorldUnlockFactClient(cfg),
-		XpDailyCap:               NewXpDailyCapClient(cfg),
-		XpLedgerEntry:            NewXpLedgerEntryClient(cfg),
+		ctx:                       ctx,
+		config:                    cfg,
+		Achievement:               NewAchievementClient(cfg),
+		AchievementProgressEvent:  NewAchievementProgressEventClient(cfg),
+		AchievementVersion:        NewAchievementVersionClient(cfg),
+		AvatarPreset:              NewAvatarPresetClient(cfg),
+		CharacterCatalog:          NewCharacterCatalogClient(cfg),
+		CharacterCatalogVersion:   NewCharacterCatalogVersionClient(cfg),
+		Collection:                NewCollectionClient(cfg),
+		CollectionItem:            NewCollectionItemClient(cfg),
+		CollectionProgress:        NewCollectionProgressClient(cfg),
+		CollectionVersion:         NewCollectionVersionClient(cfg),
+		CommunityGoal:             NewCommunityGoalClient(cfg),
+		CommunityGoalContribution: NewCommunityGoalContributionClient(cfg),
+		CommunityGoalProgress:     NewCommunityGoalProgressClient(cfg),
+		ContentRelease:            NewContentReleaseClient(cfg),
+		Currency:                  NewCurrencyClient(cfg),
+		CurrencyLedgerEntry:       NewCurrencyLedgerEntryClient(cfg),
+		EconomyAdjustment:         NewEconomyAdjustmentClient(cfg),
+		Event:                     NewEventClient(cfg),
+		EventParticipation:        NewEventParticipationClient(cfg),
+		EventPointEntry:           NewEventPointEntryClient(cfg),
+		EventRun:                  NewEventRunClient(cfg),
+		EventTemplate:             NewEventTemplateClient(cfg),
+		EventTemplateVersion:      NewEventTemplateVersionClient(cfg),
+		EventVersion:              NewEventVersionClient(cfg),
+		ExplorationProgress:       NewExplorationProgressClient(cfg),
+		GameProfile:               NewGameProfileClient(cfg),
+		GameSession:               NewGameSessionClient(cfg),
+		InventoryItem:             NewInventoryItemClient(cfg),
+		ItemDefinition:            NewItemDefinitionClient(cfg),
+		ItemDefinitionVersion:     NewItemDefinitionVersionClient(cfg),
+		ItemLedgerEntry:           NewItemLedgerEntryClient(cfg),
+		LevelDefinition:           NewLevelDefinitionClient(cfg),
+		LevelHistory:              NewLevelHistoryClient(cfg),
+		LevelSession:              NewLevelSessionClient(cfg),
+		LevelVersion:              NewLevelVersionClient(cfg),
+		LoginEvent:                NewLoginEventClient(cfg),
+		NicknameChange:            NewNicknameChangeClient(cfg),
+		NpcDialogue:               NewNpcDialogueClient(cfg),
+		NpcDialogueVersion:        NewNpcDialogueVersionClient(cfg),
+		PeriodicQuestGrant:        NewPeriodicQuestGrantClient(cfg),
+		ProgressionCurve:          NewProgressionCurveClient(cfg),
+		ProgressionCurveVersion:   NewProgressionCurveVersionClient(cfg),
+		ProgressionLevel:          NewProgressionLevelClient(cfg),
+		QuestDefinition:           NewQuestDefinitionClient(cfg),
+		QuestProgress:             NewQuestProgressClient(cfg),
+		QuestStepAttempt:          NewQuestStepAttemptClient(cfg),
+		QuestVersion:              NewQuestVersionClient(cfg),
+		RewardGrant:               NewRewardGrantClient(cfg),
+		RewardRule:                NewRewardRuleClient(cfg),
+		RewardRuleVersion:         NewRewardRuleVersionClient(cfg),
+		SeasonPointEntry:          NewSeasonPointEntryClient(cfg),
+		SeasonTrack:               NewSeasonTrackClient(cfg),
+		SeasonTrackProgress:       NewSeasonTrackProgressClient(cfg),
+		SeasonTrackVersion:        NewSeasonTrackVersionClient(cfg),
+		ShopItem:                  NewShopItemClient(cfg),
+		ShopItemVersion:           NewShopItemVersionClient(cfg),
+		ShopPurchase:              NewShopPurchaseClient(cfg),
+		StoryChapter:              NewStoryChapterClient(cfg),
+		StoryChapterVersion:       NewStoryChapterVersionClient(cfg),
+		StoryProgress:             NewStoryProgressClient(cfg),
+		StudentAchievement:        NewStudentAchievementClient(cfg),
+		TenantResourceAssignment:  NewTenantResourceAssignmentClient(cfg),
+		Wallet:                    NewWalletClient(cfg),
+		WorldArea:                 NewWorldAreaClient(cfg),
+		WorldAreaUnlock:           NewWorldAreaUnlockClient(cfg),
+		WorldAreaVersion:          NewWorldAreaVersionClient(cfg),
+		WorldUnlockFact:           NewWorldUnlockFactClient(cfg),
+		XpDailyCap:                NewXpDailyCapClient(cfg),
+		XpLedgerEntry:             NewXpLedgerEntryClient(cfg),
 	}, nil
 }
 
@@ -422,63 +492,77 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                      ctx,
-		config:                   cfg,
-		Achievement:              NewAchievementClient(cfg),
-		AchievementProgressEvent: NewAchievementProgressEventClient(cfg),
-		AchievementVersion:       NewAchievementVersionClient(cfg),
-		AvatarPreset:             NewAvatarPresetClient(cfg),
-		CharacterCatalog:         NewCharacterCatalogClient(cfg),
-		CharacterCatalogVersion:  NewCharacterCatalogVersionClient(cfg),
-		Collection:               NewCollectionClient(cfg),
-		CollectionItem:           NewCollectionItemClient(cfg),
-		CollectionProgress:       NewCollectionProgressClient(cfg),
-		CollectionVersion:        NewCollectionVersionClient(cfg),
-		ContentRelease:           NewContentReleaseClient(cfg),
-		Currency:                 NewCurrencyClient(cfg),
-		CurrencyLedgerEntry:      NewCurrencyLedgerEntryClient(cfg),
-		EconomyAdjustment:        NewEconomyAdjustmentClient(cfg),
-		ExplorationProgress:      NewExplorationProgressClient(cfg),
-		GameProfile:              NewGameProfileClient(cfg),
-		GameSession:              NewGameSessionClient(cfg),
-		InventoryItem:            NewInventoryItemClient(cfg),
-		ItemDefinition:           NewItemDefinitionClient(cfg),
-		ItemDefinitionVersion:    NewItemDefinitionVersionClient(cfg),
-		ItemLedgerEntry:          NewItemLedgerEntryClient(cfg),
-		LevelDefinition:          NewLevelDefinitionClient(cfg),
-		LevelHistory:             NewLevelHistoryClient(cfg),
-		LevelSession:             NewLevelSessionClient(cfg),
-		LevelVersion:             NewLevelVersionClient(cfg),
-		LoginEvent:               NewLoginEventClient(cfg),
-		NicknameChange:           NewNicknameChangeClient(cfg),
-		NpcDialogue:              NewNpcDialogueClient(cfg),
-		NpcDialogueVersion:       NewNpcDialogueVersionClient(cfg),
-		PeriodicQuestGrant:       NewPeriodicQuestGrantClient(cfg),
-		ProgressionCurve:         NewProgressionCurveClient(cfg),
-		ProgressionCurveVersion:  NewProgressionCurveVersionClient(cfg),
-		ProgressionLevel:         NewProgressionLevelClient(cfg),
-		QuestDefinition:          NewQuestDefinitionClient(cfg),
-		QuestProgress:            NewQuestProgressClient(cfg),
-		QuestStepAttempt:         NewQuestStepAttemptClient(cfg),
-		QuestVersion:             NewQuestVersionClient(cfg),
-		RewardGrant:              NewRewardGrantClient(cfg),
-		RewardRule:               NewRewardRuleClient(cfg),
-		RewardRuleVersion:        NewRewardRuleVersionClient(cfg),
-		ShopItem:                 NewShopItemClient(cfg),
-		ShopItemVersion:          NewShopItemVersionClient(cfg),
-		ShopPurchase:             NewShopPurchaseClient(cfg),
-		StoryChapter:             NewStoryChapterClient(cfg),
-		StoryChapterVersion:      NewStoryChapterVersionClient(cfg),
-		StoryProgress:            NewStoryProgressClient(cfg),
-		StudentAchievement:       NewStudentAchievementClient(cfg),
-		TenantResourceAssignment: NewTenantResourceAssignmentClient(cfg),
-		Wallet:                   NewWalletClient(cfg),
-		WorldArea:                NewWorldAreaClient(cfg),
-		WorldAreaUnlock:          NewWorldAreaUnlockClient(cfg),
-		WorldAreaVersion:         NewWorldAreaVersionClient(cfg),
-		WorldUnlockFact:          NewWorldUnlockFactClient(cfg),
-		XpDailyCap:               NewXpDailyCapClient(cfg),
-		XpLedgerEntry:            NewXpLedgerEntryClient(cfg),
+		ctx:                       ctx,
+		config:                    cfg,
+		Achievement:               NewAchievementClient(cfg),
+		AchievementProgressEvent:  NewAchievementProgressEventClient(cfg),
+		AchievementVersion:        NewAchievementVersionClient(cfg),
+		AvatarPreset:              NewAvatarPresetClient(cfg),
+		CharacterCatalog:          NewCharacterCatalogClient(cfg),
+		CharacterCatalogVersion:   NewCharacterCatalogVersionClient(cfg),
+		Collection:                NewCollectionClient(cfg),
+		CollectionItem:            NewCollectionItemClient(cfg),
+		CollectionProgress:        NewCollectionProgressClient(cfg),
+		CollectionVersion:         NewCollectionVersionClient(cfg),
+		CommunityGoal:             NewCommunityGoalClient(cfg),
+		CommunityGoalContribution: NewCommunityGoalContributionClient(cfg),
+		CommunityGoalProgress:     NewCommunityGoalProgressClient(cfg),
+		ContentRelease:            NewContentReleaseClient(cfg),
+		Currency:                  NewCurrencyClient(cfg),
+		CurrencyLedgerEntry:       NewCurrencyLedgerEntryClient(cfg),
+		EconomyAdjustment:         NewEconomyAdjustmentClient(cfg),
+		Event:                     NewEventClient(cfg),
+		EventParticipation:        NewEventParticipationClient(cfg),
+		EventPointEntry:           NewEventPointEntryClient(cfg),
+		EventRun:                  NewEventRunClient(cfg),
+		EventTemplate:             NewEventTemplateClient(cfg),
+		EventTemplateVersion:      NewEventTemplateVersionClient(cfg),
+		EventVersion:              NewEventVersionClient(cfg),
+		ExplorationProgress:       NewExplorationProgressClient(cfg),
+		GameProfile:               NewGameProfileClient(cfg),
+		GameSession:               NewGameSessionClient(cfg),
+		InventoryItem:             NewInventoryItemClient(cfg),
+		ItemDefinition:            NewItemDefinitionClient(cfg),
+		ItemDefinitionVersion:     NewItemDefinitionVersionClient(cfg),
+		ItemLedgerEntry:           NewItemLedgerEntryClient(cfg),
+		LevelDefinition:           NewLevelDefinitionClient(cfg),
+		LevelHistory:              NewLevelHistoryClient(cfg),
+		LevelSession:              NewLevelSessionClient(cfg),
+		LevelVersion:              NewLevelVersionClient(cfg),
+		LoginEvent:                NewLoginEventClient(cfg),
+		NicknameChange:            NewNicknameChangeClient(cfg),
+		NpcDialogue:               NewNpcDialogueClient(cfg),
+		NpcDialogueVersion:        NewNpcDialogueVersionClient(cfg),
+		PeriodicQuestGrant:        NewPeriodicQuestGrantClient(cfg),
+		ProgressionCurve:          NewProgressionCurveClient(cfg),
+		ProgressionCurveVersion:   NewProgressionCurveVersionClient(cfg),
+		ProgressionLevel:          NewProgressionLevelClient(cfg),
+		QuestDefinition:           NewQuestDefinitionClient(cfg),
+		QuestProgress:             NewQuestProgressClient(cfg),
+		QuestStepAttempt:          NewQuestStepAttemptClient(cfg),
+		QuestVersion:              NewQuestVersionClient(cfg),
+		RewardGrant:               NewRewardGrantClient(cfg),
+		RewardRule:                NewRewardRuleClient(cfg),
+		RewardRuleVersion:         NewRewardRuleVersionClient(cfg),
+		SeasonPointEntry:          NewSeasonPointEntryClient(cfg),
+		SeasonTrack:               NewSeasonTrackClient(cfg),
+		SeasonTrackProgress:       NewSeasonTrackProgressClient(cfg),
+		SeasonTrackVersion:        NewSeasonTrackVersionClient(cfg),
+		ShopItem:                  NewShopItemClient(cfg),
+		ShopItemVersion:           NewShopItemVersionClient(cfg),
+		ShopPurchase:              NewShopPurchaseClient(cfg),
+		StoryChapter:              NewStoryChapterClient(cfg),
+		StoryChapterVersion:       NewStoryChapterVersionClient(cfg),
+		StoryProgress:             NewStoryProgressClient(cfg),
+		StudentAchievement:        NewStudentAchievementClient(cfg),
+		TenantResourceAssignment:  NewTenantResourceAssignmentClient(cfg),
+		Wallet:                    NewWalletClient(cfg),
+		WorldArea:                 NewWorldAreaClient(cfg),
+		WorldAreaUnlock:           NewWorldAreaUnlockClient(cfg),
+		WorldAreaVersion:          NewWorldAreaVersionClient(cfg),
+		WorldUnlockFact:           NewWorldUnlockFactClient(cfg),
+		XpDailyCap:                NewXpDailyCapClient(cfg),
+		XpLedgerEntry:             NewXpLedgerEntryClient(cfg),
 	}, nil
 }
 
@@ -510,15 +594,19 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Achievement, c.AchievementProgressEvent, c.AchievementVersion, c.AvatarPreset,
 		c.CharacterCatalog, c.CharacterCatalogVersion, c.Collection, c.CollectionItem,
-		c.CollectionProgress, c.CollectionVersion, c.ContentRelease, c.Currency,
-		c.CurrencyLedgerEntry, c.EconomyAdjustment, c.ExplorationProgress,
-		c.GameProfile, c.GameSession, c.InventoryItem, c.ItemDefinition,
-		c.ItemDefinitionVersion, c.ItemLedgerEntry, c.LevelDefinition, c.LevelHistory,
-		c.LevelSession, c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
+		c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
+		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ContentRelease,
+		c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment, c.Event,
+		c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
+		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress, c.GameProfile,
+		c.GameSession, c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion,
+		c.ItemLedgerEntry, c.LevelDefinition, c.LevelHistory, c.LevelSession,
+		c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
 		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.ProgressionCurve,
 		c.ProgressionCurveVersion, c.ProgressionLevel, c.QuestDefinition,
 		c.QuestProgress, c.QuestStepAttempt, c.QuestVersion, c.RewardGrant,
-		c.RewardRule, c.RewardRuleVersion, c.ShopItem, c.ShopItemVersion,
+		c.RewardRule, c.RewardRuleVersion, c.SeasonPointEntry, c.SeasonTrack,
+		c.SeasonTrackProgress, c.SeasonTrackVersion, c.ShopItem, c.ShopItemVersion,
 		c.ShopPurchase, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
 		c.StudentAchievement, c.TenantResourceAssignment, c.Wallet, c.WorldArea,
 		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
@@ -534,15 +622,19 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Achievement, c.AchievementProgressEvent, c.AchievementVersion, c.AvatarPreset,
 		c.CharacterCatalog, c.CharacterCatalogVersion, c.Collection, c.CollectionItem,
-		c.CollectionProgress, c.CollectionVersion, c.ContentRelease, c.Currency,
-		c.CurrencyLedgerEntry, c.EconomyAdjustment, c.ExplorationProgress,
-		c.GameProfile, c.GameSession, c.InventoryItem, c.ItemDefinition,
-		c.ItemDefinitionVersion, c.ItemLedgerEntry, c.LevelDefinition, c.LevelHistory,
-		c.LevelSession, c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
+		c.CollectionProgress, c.CollectionVersion, c.CommunityGoal,
+		c.CommunityGoalContribution, c.CommunityGoalProgress, c.ContentRelease,
+		c.Currency, c.CurrencyLedgerEntry, c.EconomyAdjustment, c.Event,
+		c.EventParticipation, c.EventPointEntry, c.EventRun, c.EventTemplate,
+		c.EventTemplateVersion, c.EventVersion, c.ExplorationProgress, c.GameProfile,
+		c.GameSession, c.InventoryItem, c.ItemDefinition, c.ItemDefinitionVersion,
+		c.ItemLedgerEntry, c.LevelDefinition, c.LevelHistory, c.LevelSession,
+		c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
 		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.ProgressionCurve,
 		c.ProgressionCurveVersion, c.ProgressionLevel, c.QuestDefinition,
 		c.QuestProgress, c.QuestStepAttempt, c.QuestVersion, c.RewardGrant,
-		c.RewardRule, c.RewardRuleVersion, c.ShopItem, c.ShopItemVersion,
+		c.RewardRule, c.RewardRuleVersion, c.SeasonPointEntry, c.SeasonTrack,
+		c.SeasonTrackProgress, c.SeasonTrackVersion, c.ShopItem, c.ShopItemVersion,
 		c.ShopPurchase, c.StoryChapter, c.StoryChapterVersion, c.StoryProgress,
 		c.StudentAchievement, c.TenantResourceAssignment, c.Wallet, c.WorldArea,
 		c.WorldAreaUnlock, c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap,
@@ -575,6 +667,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CollectionProgress.mutate(ctx, m)
 	case *CollectionVersionMutation:
 		return c.CollectionVersion.mutate(ctx, m)
+	case *CommunityGoalMutation:
+		return c.CommunityGoal.mutate(ctx, m)
+	case *CommunityGoalContributionMutation:
+		return c.CommunityGoalContribution.mutate(ctx, m)
+	case *CommunityGoalProgressMutation:
+		return c.CommunityGoalProgress.mutate(ctx, m)
 	case *ContentReleaseMutation:
 		return c.ContentRelease.mutate(ctx, m)
 	case *CurrencyMutation:
@@ -583,6 +681,20 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.CurrencyLedgerEntry.mutate(ctx, m)
 	case *EconomyAdjustmentMutation:
 		return c.EconomyAdjustment.mutate(ctx, m)
+	case *EventMutation:
+		return c.Event.mutate(ctx, m)
+	case *EventParticipationMutation:
+		return c.EventParticipation.mutate(ctx, m)
+	case *EventPointEntryMutation:
+		return c.EventPointEntry.mutate(ctx, m)
+	case *EventRunMutation:
+		return c.EventRun.mutate(ctx, m)
+	case *EventTemplateMutation:
+		return c.EventTemplate.mutate(ctx, m)
+	case *EventTemplateVersionMutation:
+		return c.EventTemplateVersion.mutate(ctx, m)
+	case *EventVersionMutation:
+		return c.EventVersion.mutate(ctx, m)
 	case *ExplorationProgressMutation:
 		return c.ExplorationProgress.mutate(ctx, m)
 	case *GameProfileMutation:
@@ -635,6 +747,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.RewardRule.mutate(ctx, m)
 	case *RewardRuleVersionMutation:
 		return c.RewardRuleVersion.mutate(ctx, m)
+	case *SeasonPointEntryMutation:
+		return c.SeasonPointEntry.mutate(ctx, m)
+	case *SeasonTrackMutation:
+		return c.SeasonTrack.mutate(ctx, m)
+	case *SeasonTrackProgressMutation:
+		return c.SeasonTrackProgress.mutate(ctx, m)
+	case *SeasonTrackVersionMutation:
+		return c.SeasonTrackVersion.mutate(ctx, m)
 	case *ShopItemMutation:
 		return c.ShopItem.mutate(ctx, m)
 	case *ShopItemVersionMutation:
@@ -2019,6 +2139,411 @@ func (c *CollectionVersionClient) mutate(ctx context.Context, m *CollectionVersi
 	}
 }
 
+// CommunityGoalClient is a client for the CommunityGoal schema.
+type CommunityGoalClient struct {
+	config
+}
+
+// NewCommunityGoalClient returns a client for the CommunityGoal from the given config.
+func NewCommunityGoalClient(c config) *CommunityGoalClient {
+	return &CommunityGoalClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `communitygoal.Hooks(f(g(h())))`.
+func (c *CommunityGoalClient) Use(hooks ...Hook) {
+	c.hooks.CommunityGoal = append(c.hooks.CommunityGoal, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `communitygoal.Intercept(f(g(h())))`.
+func (c *CommunityGoalClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CommunityGoal = append(c.inters.CommunityGoal, interceptors...)
+}
+
+// Create returns a builder for creating a CommunityGoal entity.
+func (c *CommunityGoalClient) Create() *CommunityGoalCreate {
+	mutation := newCommunityGoalMutation(c.config, OpCreate)
+	return &CommunityGoalCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CommunityGoal entities.
+func (c *CommunityGoalClient) CreateBulk(builders ...*CommunityGoalCreate) *CommunityGoalCreateBulk {
+	return &CommunityGoalCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CommunityGoalClient) MapCreateBulk(slice any, setFunc func(*CommunityGoalCreate, int)) *CommunityGoalCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CommunityGoalCreateBulk{err: fmt.Errorf("calling to CommunityGoalClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CommunityGoalCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CommunityGoalCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CommunityGoal.
+func (c *CommunityGoalClient) Update() *CommunityGoalUpdate {
+	mutation := newCommunityGoalMutation(c.config, OpUpdate)
+	return &CommunityGoalUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CommunityGoalClient) UpdateOne(_m *CommunityGoal) *CommunityGoalUpdateOne {
+	mutation := newCommunityGoalMutation(c.config, OpUpdateOne, withCommunityGoal(_m))
+	return &CommunityGoalUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CommunityGoalClient) UpdateOneID(id uuid.UUID) *CommunityGoalUpdateOne {
+	mutation := newCommunityGoalMutation(c.config, OpUpdateOne, withCommunityGoalID(id))
+	return &CommunityGoalUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CommunityGoal.
+func (c *CommunityGoalClient) Delete() *CommunityGoalDelete {
+	mutation := newCommunityGoalMutation(c.config, OpDelete)
+	return &CommunityGoalDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CommunityGoalClient) DeleteOne(_m *CommunityGoal) *CommunityGoalDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CommunityGoalClient) DeleteOneID(id uuid.UUID) *CommunityGoalDeleteOne {
+	builder := c.Delete().Where(communitygoal.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CommunityGoalDeleteOne{builder}
+}
+
+// Query returns a query builder for CommunityGoal.
+func (c *CommunityGoalClient) Query() *CommunityGoalQuery {
+	return &CommunityGoalQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCommunityGoal},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CommunityGoal entity by its id.
+func (c *CommunityGoalClient) Get(ctx context.Context, id uuid.UUID) (*CommunityGoal, error) {
+	return c.Query().Where(communitygoal.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CommunityGoalClient) GetX(ctx context.Context, id uuid.UUID) *CommunityGoal {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CommunityGoalClient) Hooks() []Hook {
+	hooks := c.hooks.CommunityGoal
+	return append(hooks[:len(hooks):len(hooks)], communitygoal.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CommunityGoalClient) Interceptors() []Interceptor {
+	inters := c.inters.CommunityGoal
+	return append(inters[:len(inters):len(inters)], communitygoal.Interceptors[:]...)
+}
+
+func (c *CommunityGoalClient) mutate(ctx context.Context, m *CommunityGoalMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CommunityGoalCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CommunityGoalUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CommunityGoalUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CommunityGoalDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CommunityGoal mutation op: %q", m.Op())
+	}
+}
+
+// CommunityGoalContributionClient is a client for the CommunityGoalContribution schema.
+type CommunityGoalContributionClient struct {
+	config
+}
+
+// NewCommunityGoalContributionClient returns a client for the CommunityGoalContribution from the given config.
+func NewCommunityGoalContributionClient(c config) *CommunityGoalContributionClient {
+	return &CommunityGoalContributionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `communitygoalcontribution.Hooks(f(g(h())))`.
+func (c *CommunityGoalContributionClient) Use(hooks ...Hook) {
+	c.hooks.CommunityGoalContribution = append(c.hooks.CommunityGoalContribution, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `communitygoalcontribution.Intercept(f(g(h())))`.
+func (c *CommunityGoalContributionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CommunityGoalContribution = append(c.inters.CommunityGoalContribution, interceptors...)
+}
+
+// Create returns a builder for creating a CommunityGoalContribution entity.
+func (c *CommunityGoalContributionClient) Create() *CommunityGoalContributionCreate {
+	mutation := newCommunityGoalContributionMutation(c.config, OpCreate)
+	return &CommunityGoalContributionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CommunityGoalContribution entities.
+func (c *CommunityGoalContributionClient) CreateBulk(builders ...*CommunityGoalContributionCreate) *CommunityGoalContributionCreateBulk {
+	return &CommunityGoalContributionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CommunityGoalContributionClient) MapCreateBulk(slice any, setFunc func(*CommunityGoalContributionCreate, int)) *CommunityGoalContributionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CommunityGoalContributionCreateBulk{err: fmt.Errorf("calling to CommunityGoalContributionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CommunityGoalContributionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CommunityGoalContributionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CommunityGoalContribution.
+func (c *CommunityGoalContributionClient) Update() *CommunityGoalContributionUpdate {
+	mutation := newCommunityGoalContributionMutation(c.config, OpUpdate)
+	return &CommunityGoalContributionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CommunityGoalContributionClient) UpdateOne(_m *CommunityGoalContribution) *CommunityGoalContributionUpdateOne {
+	mutation := newCommunityGoalContributionMutation(c.config, OpUpdateOne, withCommunityGoalContribution(_m))
+	return &CommunityGoalContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CommunityGoalContributionClient) UpdateOneID(id uuid.UUID) *CommunityGoalContributionUpdateOne {
+	mutation := newCommunityGoalContributionMutation(c.config, OpUpdateOne, withCommunityGoalContributionID(id))
+	return &CommunityGoalContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CommunityGoalContribution.
+func (c *CommunityGoalContributionClient) Delete() *CommunityGoalContributionDelete {
+	mutation := newCommunityGoalContributionMutation(c.config, OpDelete)
+	return &CommunityGoalContributionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CommunityGoalContributionClient) DeleteOne(_m *CommunityGoalContribution) *CommunityGoalContributionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CommunityGoalContributionClient) DeleteOneID(id uuid.UUID) *CommunityGoalContributionDeleteOne {
+	builder := c.Delete().Where(communitygoalcontribution.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CommunityGoalContributionDeleteOne{builder}
+}
+
+// Query returns a query builder for CommunityGoalContribution.
+func (c *CommunityGoalContributionClient) Query() *CommunityGoalContributionQuery {
+	return &CommunityGoalContributionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCommunityGoalContribution},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CommunityGoalContribution entity by its id.
+func (c *CommunityGoalContributionClient) Get(ctx context.Context, id uuid.UUID) (*CommunityGoalContribution, error) {
+	return c.Query().Where(communitygoalcontribution.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CommunityGoalContributionClient) GetX(ctx context.Context, id uuid.UUID) *CommunityGoalContribution {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CommunityGoalContributionClient) Hooks() []Hook {
+	hooks := c.hooks.CommunityGoalContribution
+	return append(hooks[:len(hooks):len(hooks)], communitygoalcontribution.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CommunityGoalContributionClient) Interceptors() []Interceptor {
+	inters := c.inters.CommunityGoalContribution
+	return append(inters[:len(inters):len(inters)], communitygoalcontribution.Interceptors[:]...)
+}
+
+func (c *CommunityGoalContributionClient) mutate(ctx context.Context, m *CommunityGoalContributionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CommunityGoalContributionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CommunityGoalContributionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CommunityGoalContributionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CommunityGoalContributionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CommunityGoalContribution mutation op: %q", m.Op())
+	}
+}
+
+// CommunityGoalProgressClient is a client for the CommunityGoalProgress schema.
+type CommunityGoalProgressClient struct {
+	config
+}
+
+// NewCommunityGoalProgressClient returns a client for the CommunityGoalProgress from the given config.
+func NewCommunityGoalProgressClient(c config) *CommunityGoalProgressClient {
+	return &CommunityGoalProgressClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `communitygoalprogress.Hooks(f(g(h())))`.
+func (c *CommunityGoalProgressClient) Use(hooks ...Hook) {
+	c.hooks.CommunityGoalProgress = append(c.hooks.CommunityGoalProgress, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `communitygoalprogress.Intercept(f(g(h())))`.
+func (c *CommunityGoalProgressClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CommunityGoalProgress = append(c.inters.CommunityGoalProgress, interceptors...)
+}
+
+// Create returns a builder for creating a CommunityGoalProgress entity.
+func (c *CommunityGoalProgressClient) Create() *CommunityGoalProgressCreate {
+	mutation := newCommunityGoalProgressMutation(c.config, OpCreate)
+	return &CommunityGoalProgressCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CommunityGoalProgress entities.
+func (c *CommunityGoalProgressClient) CreateBulk(builders ...*CommunityGoalProgressCreate) *CommunityGoalProgressCreateBulk {
+	return &CommunityGoalProgressCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CommunityGoalProgressClient) MapCreateBulk(slice any, setFunc func(*CommunityGoalProgressCreate, int)) *CommunityGoalProgressCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CommunityGoalProgressCreateBulk{err: fmt.Errorf("calling to CommunityGoalProgressClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CommunityGoalProgressCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CommunityGoalProgressCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CommunityGoalProgress.
+func (c *CommunityGoalProgressClient) Update() *CommunityGoalProgressUpdate {
+	mutation := newCommunityGoalProgressMutation(c.config, OpUpdate)
+	return &CommunityGoalProgressUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CommunityGoalProgressClient) UpdateOne(_m *CommunityGoalProgress) *CommunityGoalProgressUpdateOne {
+	mutation := newCommunityGoalProgressMutation(c.config, OpUpdateOne, withCommunityGoalProgress(_m))
+	return &CommunityGoalProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CommunityGoalProgressClient) UpdateOneID(id uuid.UUID) *CommunityGoalProgressUpdateOne {
+	mutation := newCommunityGoalProgressMutation(c.config, OpUpdateOne, withCommunityGoalProgressID(id))
+	return &CommunityGoalProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CommunityGoalProgress.
+func (c *CommunityGoalProgressClient) Delete() *CommunityGoalProgressDelete {
+	mutation := newCommunityGoalProgressMutation(c.config, OpDelete)
+	return &CommunityGoalProgressDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CommunityGoalProgressClient) DeleteOne(_m *CommunityGoalProgress) *CommunityGoalProgressDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CommunityGoalProgressClient) DeleteOneID(id uuid.UUID) *CommunityGoalProgressDeleteOne {
+	builder := c.Delete().Where(communitygoalprogress.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CommunityGoalProgressDeleteOne{builder}
+}
+
+// Query returns a query builder for CommunityGoalProgress.
+func (c *CommunityGoalProgressClient) Query() *CommunityGoalProgressQuery {
+	return &CommunityGoalProgressQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCommunityGoalProgress},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CommunityGoalProgress entity by its id.
+func (c *CommunityGoalProgressClient) Get(ctx context.Context, id uuid.UUID) (*CommunityGoalProgress, error) {
+	return c.Query().Where(communitygoalprogress.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CommunityGoalProgressClient) GetX(ctx context.Context, id uuid.UUID) *CommunityGoalProgress {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CommunityGoalProgressClient) Hooks() []Hook {
+	hooks := c.hooks.CommunityGoalProgress
+	return append(hooks[:len(hooks):len(hooks)], communitygoalprogress.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CommunityGoalProgressClient) Interceptors() []Interceptor {
+	inters := c.inters.CommunityGoalProgress
+	return append(inters[:len(inters):len(inters)], communitygoalprogress.Interceptors[:]...)
+}
+
+func (c *CommunityGoalProgressClient) mutate(ctx context.Context, m *CommunityGoalProgressMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CommunityGoalProgressCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CommunityGoalProgressUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CommunityGoalProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CommunityGoalProgressDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CommunityGoalProgress mutation op: %q", m.Op())
+	}
+}
+
 // ContentReleaseClient is a client for the ContentRelease schema.
 type ContentReleaseClient struct {
 	config
@@ -2555,6 +3080,951 @@ func (c *EconomyAdjustmentClient) mutate(ctx context.Context, m *EconomyAdjustme
 		return (&EconomyAdjustmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown EconomyAdjustment mutation op: %q", m.Op())
+	}
+}
+
+// EventClient is a client for the Event schema.
+type EventClient struct {
+	config
+}
+
+// NewEventClient returns a client for the Event from the given config.
+func NewEventClient(c config) *EventClient {
+	return &EventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `event.Hooks(f(g(h())))`.
+func (c *EventClient) Use(hooks ...Hook) {
+	c.hooks.Event = append(c.hooks.Event, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `event.Intercept(f(g(h())))`.
+func (c *EventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Event = append(c.inters.Event, interceptors...)
+}
+
+// Create returns a builder for creating a Event entity.
+func (c *EventClient) Create() *EventCreate {
+	mutation := newEventMutation(c.config, OpCreate)
+	return &EventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Event entities.
+func (c *EventClient) CreateBulk(builders ...*EventCreate) *EventCreateBulk {
+	return &EventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventClient) MapCreateBulk(slice any, setFunc func(*EventCreate, int)) *EventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventCreateBulk{err: fmt.Errorf("calling to EventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Event.
+func (c *EventClient) Update() *EventUpdate {
+	mutation := newEventMutation(c.config, OpUpdate)
+	return &EventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventClient) UpdateOne(_m *Event) *EventUpdateOne {
+	mutation := newEventMutation(c.config, OpUpdateOne, withEvent(_m))
+	return &EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventClient) UpdateOneID(id uuid.UUID) *EventUpdateOne {
+	mutation := newEventMutation(c.config, OpUpdateOne, withEventID(id))
+	return &EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Event.
+func (c *EventClient) Delete() *EventDelete {
+	mutation := newEventMutation(c.config, OpDelete)
+	return &EventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventClient) DeleteOne(_m *Event) *EventDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventClient) DeleteOneID(id uuid.UUID) *EventDeleteOne {
+	builder := c.Delete().Where(event.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventDeleteOne{builder}
+}
+
+// Query returns a query builder for Event.
+func (c *EventClient) Query() *EventQuery {
+	return &EventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Event entity by its id.
+func (c *EventClient) Get(ctx context.Context, id uuid.UUID) (*Event, error) {
+	return c.Query().Where(event.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventClient) GetX(ctx context.Context, id uuid.UUID) *Event {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EventClient) Hooks() []Hook {
+	hooks := c.hooks.Event
+	return append(hooks[:len(hooks):len(hooks)], event.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventClient) Interceptors() []Interceptor {
+	inters := c.inters.Event
+	return append(inters[:len(inters):len(inters)], event.Interceptors[:]...)
+}
+
+func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Event mutation op: %q", m.Op())
+	}
+}
+
+// EventParticipationClient is a client for the EventParticipation schema.
+type EventParticipationClient struct {
+	config
+}
+
+// NewEventParticipationClient returns a client for the EventParticipation from the given config.
+func NewEventParticipationClient(c config) *EventParticipationClient {
+	return &EventParticipationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventparticipation.Hooks(f(g(h())))`.
+func (c *EventParticipationClient) Use(hooks ...Hook) {
+	c.hooks.EventParticipation = append(c.hooks.EventParticipation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventparticipation.Intercept(f(g(h())))`.
+func (c *EventParticipationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventParticipation = append(c.inters.EventParticipation, interceptors...)
+}
+
+// Create returns a builder for creating a EventParticipation entity.
+func (c *EventParticipationClient) Create() *EventParticipationCreate {
+	mutation := newEventParticipationMutation(c.config, OpCreate)
+	return &EventParticipationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventParticipation entities.
+func (c *EventParticipationClient) CreateBulk(builders ...*EventParticipationCreate) *EventParticipationCreateBulk {
+	return &EventParticipationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventParticipationClient) MapCreateBulk(slice any, setFunc func(*EventParticipationCreate, int)) *EventParticipationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventParticipationCreateBulk{err: fmt.Errorf("calling to EventParticipationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventParticipationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventParticipationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventParticipation.
+func (c *EventParticipationClient) Update() *EventParticipationUpdate {
+	mutation := newEventParticipationMutation(c.config, OpUpdate)
+	return &EventParticipationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventParticipationClient) UpdateOne(_m *EventParticipation) *EventParticipationUpdateOne {
+	mutation := newEventParticipationMutation(c.config, OpUpdateOne, withEventParticipation(_m))
+	return &EventParticipationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventParticipationClient) UpdateOneID(id uuid.UUID) *EventParticipationUpdateOne {
+	mutation := newEventParticipationMutation(c.config, OpUpdateOne, withEventParticipationID(id))
+	return &EventParticipationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventParticipation.
+func (c *EventParticipationClient) Delete() *EventParticipationDelete {
+	mutation := newEventParticipationMutation(c.config, OpDelete)
+	return &EventParticipationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventParticipationClient) DeleteOne(_m *EventParticipation) *EventParticipationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventParticipationClient) DeleteOneID(id uuid.UUID) *EventParticipationDeleteOne {
+	builder := c.Delete().Where(eventparticipation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventParticipationDeleteOne{builder}
+}
+
+// Query returns a query builder for EventParticipation.
+func (c *EventParticipationClient) Query() *EventParticipationQuery {
+	return &EventParticipationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventParticipation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventParticipation entity by its id.
+func (c *EventParticipationClient) Get(ctx context.Context, id uuid.UUID) (*EventParticipation, error) {
+	return c.Query().Where(eventparticipation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventParticipationClient) GetX(ctx context.Context, id uuid.UUID) *EventParticipation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EventParticipationClient) Hooks() []Hook {
+	hooks := c.hooks.EventParticipation
+	return append(hooks[:len(hooks):len(hooks)], eventparticipation.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventParticipationClient) Interceptors() []Interceptor {
+	inters := c.inters.EventParticipation
+	return append(inters[:len(inters):len(inters)], eventparticipation.Interceptors[:]...)
+}
+
+func (c *EventParticipationClient) mutate(ctx context.Context, m *EventParticipationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventParticipationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventParticipationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventParticipationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventParticipationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventParticipation mutation op: %q", m.Op())
+	}
+}
+
+// EventPointEntryClient is a client for the EventPointEntry schema.
+type EventPointEntryClient struct {
+	config
+}
+
+// NewEventPointEntryClient returns a client for the EventPointEntry from the given config.
+func NewEventPointEntryClient(c config) *EventPointEntryClient {
+	return &EventPointEntryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventpointentry.Hooks(f(g(h())))`.
+func (c *EventPointEntryClient) Use(hooks ...Hook) {
+	c.hooks.EventPointEntry = append(c.hooks.EventPointEntry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventpointentry.Intercept(f(g(h())))`.
+func (c *EventPointEntryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventPointEntry = append(c.inters.EventPointEntry, interceptors...)
+}
+
+// Create returns a builder for creating a EventPointEntry entity.
+func (c *EventPointEntryClient) Create() *EventPointEntryCreate {
+	mutation := newEventPointEntryMutation(c.config, OpCreate)
+	return &EventPointEntryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventPointEntry entities.
+func (c *EventPointEntryClient) CreateBulk(builders ...*EventPointEntryCreate) *EventPointEntryCreateBulk {
+	return &EventPointEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventPointEntryClient) MapCreateBulk(slice any, setFunc func(*EventPointEntryCreate, int)) *EventPointEntryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventPointEntryCreateBulk{err: fmt.Errorf("calling to EventPointEntryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventPointEntryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventPointEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventPointEntry.
+func (c *EventPointEntryClient) Update() *EventPointEntryUpdate {
+	mutation := newEventPointEntryMutation(c.config, OpUpdate)
+	return &EventPointEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventPointEntryClient) UpdateOne(_m *EventPointEntry) *EventPointEntryUpdateOne {
+	mutation := newEventPointEntryMutation(c.config, OpUpdateOne, withEventPointEntry(_m))
+	return &EventPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventPointEntryClient) UpdateOneID(id uuid.UUID) *EventPointEntryUpdateOne {
+	mutation := newEventPointEntryMutation(c.config, OpUpdateOne, withEventPointEntryID(id))
+	return &EventPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventPointEntry.
+func (c *EventPointEntryClient) Delete() *EventPointEntryDelete {
+	mutation := newEventPointEntryMutation(c.config, OpDelete)
+	return &EventPointEntryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventPointEntryClient) DeleteOne(_m *EventPointEntry) *EventPointEntryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventPointEntryClient) DeleteOneID(id uuid.UUID) *EventPointEntryDeleteOne {
+	builder := c.Delete().Where(eventpointentry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventPointEntryDeleteOne{builder}
+}
+
+// Query returns a query builder for EventPointEntry.
+func (c *EventPointEntryClient) Query() *EventPointEntryQuery {
+	return &EventPointEntryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventPointEntry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventPointEntry entity by its id.
+func (c *EventPointEntryClient) Get(ctx context.Context, id uuid.UUID) (*EventPointEntry, error) {
+	return c.Query().Where(eventpointentry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventPointEntryClient) GetX(ctx context.Context, id uuid.UUID) *EventPointEntry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EventPointEntryClient) Hooks() []Hook {
+	hooks := c.hooks.EventPointEntry
+	return append(hooks[:len(hooks):len(hooks)], eventpointentry.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventPointEntryClient) Interceptors() []Interceptor {
+	inters := c.inters.EventPointEntry
+	return append(inters[:len(inters):len(inters)], eventpointentry.Interceptors[:]...)
+}
+
+func (c *EventPointEntryClient) mutate(ctx context.Context, m *EventPointEntryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventPointEntryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventPointEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventPointEntryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventPointEntry mutation op: %q", m.Op())
+	}
+}
+
+// EventRunClient is a client for the EventRun schema.
+type EventRunClient struct {
+	config
+}
+
+// NewEventRunClient returns a client for the EventRun from the given config.
+func NewEventRunClient(c config) *EventRunClient {
+	return &EventRunClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventrun.Hooks(f(g(h())))`.
+func (c *EventRunClient) Use(hooks ...Hook) {
+	c.hooks.EventRun = append(c.hooks.EventRun, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventrun.Intercept(f(g(h())))`.
+func (c *EventRunClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventRun = append(c.inters.EventRun, interceptors...)
+}
+
+// Create returns a builder for creating a EventRun entity.
+func (c *EventRunClient) Create() *EventRunCreate {
+	mutation := newEventRunMutation(c.config, OpCreate)
+	return &EventRunCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventRun entities.
+func (c *EventRunClient) CreateBulk(builders ...*EventRunCreate) *EventRunCreateBulk {
+	return &EventRunCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventRunClient) MapCreateBulk(slice any, setFunc func(*EventRunCreate, int)) *EventRunCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventRunCreateBulk{err: fmt.Errorf("calling to EventRunClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventRunCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventRunCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventRun.
+func (c *EventRunClient) Update() *EventRunUpdate {
+	mutation := newEventRunMutation(c.config, OpUpdate)
+	return &EventRunUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventRunClient) UpdateOne(_m *EventRun) *EventRunUpdateOne {
+	mutation := newEventRunMutation(c.config, OpUpdateOne, withEventRun(_m))
+	return &EventRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventRunClient) UpdateOneID(id uuid.UUID) *EventRunUpdateOne {
+	mutation := newEventRunMutation(c.config, OpUpdateOne, withEventRunID(id))
+	return &EventRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventRun.
+func (c *EventRunClient) Delete() *EventRunDelete {
+	mutation := newEventRunMutation(c.config, OpDelete)
+	return &EventRunDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventRunClient) DeleteOne(_m *EventRun) *EventRunDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventRunClient) DeleteOneID(id uuid.UUID) *EventRunDeleteOne {
+	builder := c.Delete().Where(eventrun.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventRunDeleteOne{builder}
+}
+
+// Query returns a query builder for EventRun.
+func (c *EventRunClient) Query() *EventRunQuery {
+	return &EventRunQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventRun},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventRun entity by its id.
+func (c *EventRunClient) Get(ctx context.Context, id uuid.UUID) (*EventRun, error) {
+	return c.Query().Where(eventrun.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventRunClient) GetX(ctx context.Context, id uuid.UUID) *EventRun {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EventRunClient) Hooks() []Hook {
+	hooks := c.hooks.EventRun
+	return append(hooks[:len(hooks):len(hooks)], eventrun.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventRunClient) Interceptors() []Interceptor {
+	inters := c.inters.EventRun
+	return append(inters[:len(inters):len(inters)], eventrun.Interceptors[:]...)
+}
+
+func (c *EventRunClient) mutate(ctx context.Context, m *EventRunMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventRunCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventRunUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventRunDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventRun mutation op: %q", m.Op())
+	}
+}
+
+// EventTemplateClient is a client for the EventTemplate schema.
+type EventTemplateClient struct {
+	config
+}
+
+// NewEventTemplateClient returns a client for the EventTemplate from the given config.
+func NewEventTemplateClient(c config) *EventTemplateClient {
+	return &EventTemplateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventtemplate.Hooks(f(g(h())))`.
+func (c *EventTemplateClient) Use(hooks ...Hook) {
+	c.hooks.EventTemplate = append(c.hooks.EventTemplate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventtemplate.Intercept(f(g(h())))`.
+func (c *EventTemplateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventTemplate = append(c.inters.EventTemplate, interceptors...)
+}
+
+// Create returns a builder for creating a EventTemplate entity.
+func (c *EventTemplateClient) Create() *EventTemplateCreate {
+	mutation := newEventTemplateMutation(c.config, OpCreate)
+	return &EventTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventTemplate entities.
+func (c *EventTemplateClient) CreateBulk(builders ...*EventTemplateCreate) *EventTemplateCreateBulk {
+	return &EventTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventTemplateClient) MapCreateBulk(slice any, setFunc func(*EventTemplateCreate, int)) *EventTemplateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventTemplateCreateBulk{err: fmt.Errorf("calling to EventTemplateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventTemplateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventTemplate.
+func (c *EventTemplateClient) Update() *EventTemplateUpdate {
+	mutation := newEventTemplateMutation(c.config, OpUpdate)
+	return &EventTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventTemplateClient) UpdateOne(_m *EventTemplate) *EventTemplateUpdateOne {
+	mutation := newEventTemplateMutation(c.config, OpUpdateOne, withEventTemplate(_m))
+	return &EventTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventTemplateClient) UpdateOneID(id uuid.UUID) *EventTemplateUpdateOne {
+	mutation := newEventTemplateMutation(c.config, OpUpdateOne, withEventTemplateID(id))
+	return &EventTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventTemplate.
+func (c *EventTemplateClient) Delete() *EventTemplateDelete {
+	mutation := newEventTemplateMutation(c.config, OpDelete)
+	return &EventTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventTemplateClient) DeleteOne(_m *EventTemplate) *EventTemplateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventTemplateClient) DeleteOneID(id uuid.UUID) *EventTemplateDeleteOne {
+	builder := c.Delete().Where(eventtemplate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventTemplateDeleteOne{builder}
+}
+
+// Query returns a query builder for EventTemplate.
+func (c *EventTemplateClient) Query() *EventTemplateQuery {
+	return &EventTemplateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventTemplate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventTemplate entity by its id.
+func (c *EventTemplateClient) Get(ctx context.Context, id uuid.UUID) (*EventTemplate, error) {
+	return c.Query().Where(eventtemplate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventTemplateClient) GetX(ctx context.Context, id uuid.UUID) *EventTemplate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EventTemplateClient) Hooks() []Hook {
+	hooks := c.hooks.EventTemplate
+	return append(hooks[:len(hooks):len(hooks)], eventtemplate.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventTemplateClient) Interceptors() []Interceptor {
+	inters := c.inters.EventTemplate
+	return append(inters[:len(inters):len(inters)], eventtemplate.Interceptors[:]...)
+}
+
+func (c *EventTemplateClient) mutate(ctx context.Context, m *EventTemplateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventTemplate mutation op: %q", m.Op())
+	}
+}
+
+// EventTemplateVersionClient is a client for the EventTemplateVersion schema.
+type EventTemplateVersionClient struct {
+	config
+}
+
+// NewEventTemplateVersionClient returns a client for the EventTemplateVersion from the given config.
+func NewEventTemplateVersionClient(c config) *EventTemplateVersionClient {
+	return &EventTemplateVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventtemplateversion.Hooks(f(g(h())))`.
+func (c *EventTemplateVersionClient) Use(hooks ...Hook) {
+	c.hooks.EventTemplateVersion = append(c.hooks.EventTemplateVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventtemplateversion.Intercept(f(g(h())))`.
+func (c *EventTemplateVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventTemplateVersion = append(c.inters.EventTemplateVersion, interceptors...)
+}
+
+// Create returns a builder for creating a EventTemplateVersion entity.
+func (c *EventTemplateVersionClient) Create() *EventTemplateVersionCreate {
+	mutation := newEventTemplateVersionMutation(c.config, OpCreate)
+	return &EventTemplateVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventTemplateVersion entities.
+func (c *EventTemplateVersionClient) CreateBulk(builders ...*EventTemplateVersionCreate) *EventTemplateVersionCreateBulk {
+	return &EventTemplateVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventTemplateVersionClient) MapCreateBulk(slice any, setFunc func(*EventTemplateVersionCreate, int)) *EventTemplateVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventTemplateVersionCreateBulk{err: fmt.Errorf("calling to EventTemplateVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventTemplateVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventTemplateVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventTemplateVersion.
+func (c *EventTemplateVersionClient) Update() *EventTemplateVersionUpdate {
+	mutation := newEventTemplateVersionMutation(c.config, OpUpdate)
+	return &EventTemplateVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventTemplateVersionClient) UpdateOne(_m *EventTemplateVersion) *EventTemplateVersionUpdateOne {
+	mutation := newEventTemplateVersionMutation(c.config, OpUpdateOne, withEventTemplateVersion(_m))
+	return &EventTemplateVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventTemplateVersionClient) UpdateOneID(id uuid.UUID) *EventTemplateVersionUpdateOne {
+	mutation := newEventTemplateVersionMutation(c.config, OpUpdateOne, withEventTemplateVersionID(id))
+	return &EventTemplateVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventTemplateVersion.
+func (c *EventTemplateVersionClient) Delete() *EventTemplateVersionDelete {
+	mutation := newEventTemplateVersionMutation(c.config, OpDelete)
+	return &EventTemplateVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventTemplateVersionClient) DeleteOne(_m *EventTemplateVersion) *EventTemplateVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventTemplateVersionClient) DeleteOneID(id uuid.UUID) *EventTemplateVersionDeleteOne {
+	builder := c.Delete().Where(eventtemplateversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventTemplateVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for EventTemplateVersion.
+func (c *EventTemplateVersionClient) Query() *EventTemplateVersionQuery {
+	return &EventTemplateVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventTemplateVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventTemplateVersion entity by its id.
+func (c *EventTemplateVersionClient) Get(ctx context.Context, id uuid.UUID) (*EventTemplateVersion, error) {
+	return c.Query().Where(eventtemplateversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventTemplateVersionClient) GetX(ctx context.Context, id uuid.UUID) *EventTemplateVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EventTemplateVersionClient) Hooks() []Hook {
+	hooks := c.hooks.EventTemplateVersion
+	return append(hooks[:len(hooks):len(hooks)], eventtemplateversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventTemplateVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.EventTemplateVersion
+	return append(inters[:len(inters):len(inters)], eventtemplateversion.Interceptors[:]...)
+}
+
+func (c *EventTemplateVersionClient) mutate(ctx context.Context, m *EventTemplateVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventTemplateVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventTemplateVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventTemplateVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventTemplateVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventTemplateVersion mutation op: %q", m.Op())
+	}
+}
+
+// EventVersionClient is a client for the EventVersion schema.
+type EventVersionClient struct {
+	config
+}
+
+// NewEventVersionClient returns a client for the EventVersion from the given config.
+func NewEventVersionClient(c config) *EventVersionClient {
+	return &EventVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventversion.Hooks(f(g(h())))`.
+func (c *EventVersionClient) Use(hooks ...Hook) {
+	c.hooks.EventVersion = append(c.hooks.EventVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventversion.Intercept(f(g(h())))`.
+func (c *EventVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventVersion = append(c.inters.EventVersion, interceptors...)
+}
+
+// Create returns a builder for creating a EventVersion entity.
+func (c *EventVersionClient) Create() *EventVersionCreate {
+	mutation := newEventVersionMutation(c.config, OpCreate)
+	return &EventVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventVersion entities.
+func (c *EventVersionClient) CreateBulk(builders ...*EventVersionCreate) *EventVersionCreateBulk {
+	return &EventVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventVersionClient) MapCreateBulk(slice any, setFunc func(*EventVersionCreate, int)) *EventVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventVersionCreateBulk{err: fmt.Errorf("calling to EventVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventVersion.
+func (c *EventVersionClient) Update() *EventVersionUpdate {
+	mutation := newEventVersionMutation(c.config, OpUpdate)
+	return &EventVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventVersionClient) UpdateOne(_m *EventVersion) *EventVersionUpdateOne {
+	mutation := newEventVersionMutation(c.config, OpUpdateOne, withEventVersion(_m))
+	return &EventVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventVersionClient) UpdateOneID(id uuid.UUID) *EventVersionUpdateOne {
+	mutation := newEventVersionMutation(c.config, OpUpdateOne, withEventVersionID(id))
+	return &EventVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventVersion.
+func (c *EventVersionClient) Delete() *EventVersionDelete {
+	mutation := newEventVersionMutation(c.config, OpDelete)
+	return &EventVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventVersionClient) DeleteOne(_m *EventVersion) *EventVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventVersionClient) DeleteOneID(id uuid.UUID) *EventVersionDeleteOne {
+	builder := c.Delete().Where(eventversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for EventVersion.
+func (c *EventVersionClient) Query() *EventVersionQuery {
+	return &EventVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventVersion entity by its id.
+func (c *EventVersionClient) Get(ctx context.Context, id uuid.UUID) (*EventVersion, error) {
+	return c.Query().Where(eventversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventVersionClient) GetX(ctx context.Context, id uuid.UUID) *EventVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EventVersionClient) Hooks() []Hook {
+	hooks := c.hooks.EventVersion
+	return append(hooks[:len(hooks):len(hooks)], eventversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.EventVersion
+	return append(inters[:len(inters):len(inters)], eventversion.Interceptors[:]...)
+}
+
+func (c *EventVersionClient) mutate(ctx context.Context, m *EventVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventVersion mutation op: %q", m.Op())
 	}
 }
 
@@ -6067,6 +7537,546 @@ func (c *RewardRuleVersionClient) mutate(ctx context.Context, m *RewardRuleVersi
 	}
 }
 
+// SeasonPointEntryClient is a client for the SeasonPointEntry schema.
+type SeasonPointEntryClient struct {
+	config
+}
+
+// NewSeasonPointEntryClient returns a client for the SeasonPointEntry from the given config.
+func NewSeasonPointEntryClient(c config) *SeasonPointEntryClient {
+	return &SeasonPointEntryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `seasonpointentry.Hooks(f(g(h())))`.
+func (c *SeasonPointEntryClient) Use(hooks ...Hook) {
+	c.hooks.SeasonPointEntry = append(c.hooks.SeasonPointEntry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `seasonpointentry.Intercept(f(g(h())))`.
+func (c *SeasonPointEntryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SeasonPointEntry = append(c.inters.SeasonPointEntry, interceptors...)
+}
+
+// Create returns a builder for creating a SeasonPointEntry entity.
+func (c *SeasonPointEntryClient) Create() *SeasonPointEntryCreate {
+	mutation := newSeasonPointEntryMutation(c.config, OpCreate)
+	return &SeasonPointEntryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SeasonPointEntry entities.
+func (c *SeasonPointEntryClient) CreateBulk(builders ...*SeasonPointEntryCreate) *SeasonPointEntryCreateBulk {
+	return &SeasonPointEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SeasonPointEntryClient) MapCreateBulk(slice any, setFunc func(*SeasonPointEntryCreate, int)) *SeasonPointEntryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SeasonPointEntryCreateBulk{err: fmt.Errorf("calling to SeasonPointEntryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SeasonPointEntryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SeasonPointEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SeasonPointEntry.
+func (c *SeasonPointEntryClient) Update() *SeasonPointEntryUpdate {
+	mutation := newSeasonPointEntryMutation(c.config, OpUpdate)
+	return &SeasonPointEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SeasonPointEntryClient) UpdateOne(_m *SeasonPointEntry) *SeasonPointEntryUpdateOne {
+	mutation := newSeasonPointEntryMutation(c.config, OpUpdateOne, withSeasonPointEntry(_m))
+	return &SeasonPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SeasonPointEntryClient) UpdateOneID(id uuid.UUID) *SeasonPointEntryUpdateOne {
+	mutation := newSeasonPointEntryMutation(c.config, OpUpdateOne, withSeasonPointEntryID(id))
+	return &SeasonPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SeasonPointEntry.
+func (c *SeasonPointEntryClient) Delete() *SeasonPointEntryDelete {
+	mutation := newSeasonPointEntryMutation(c.config, OpDelete)
+	return &SeasonPointEntryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SeasonPointEntryClient) DeleteOne(_m *SeasonPointEntry) *SeasonPointEntryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SeasonPointEntryClient) DeleteOneID(id uuid.UUID) *SeasonPointEntryDeleteOne {
+	builder := c.Delete().Where(seasonpointentry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SeasonPointEntryDeleteOne{builder}
+}
+
+// Query returns a query builder for SeasonPointEntry.
+func (c *SeasonPointEntryClient) Query() *SeasonPointEntryQuery {
+	return &SeasonPointEntryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSeasonPointEntry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SeasonPointEntry entity by its id.
+func (c *SeasonPointEntryClient) Get(ctx context.Context, id uuid.UUID) (*SeasonPointEntry, error) {
+	return c.Query().Where(seasonpointentry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SeasonPointEntryClient) GetX(ctx context.Context, id uuid.UUID) *SeasonPointEntry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SeasonPointEntryClient) Hooks() []Hook {
+	hooks := c.hooks.SeasonPointEntry
+	return append(hooks[:len(hooks):len(hooks)], seasonpointentry.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SeasonPointEntryClient) Interceptors() []Interceptor {
+	inters := c.inters.SeasonPointEntry
+	return append(inters[:len(inters):len(inters)], seasonpointentry.Interceptors[:]...)
+}
+
+func (c *SeasonPointEntryClient) mutate(ctx context.Context, m *SeasonPointEntryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SeasonPointEntryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SeasonPointEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SeasonPointEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SeasonPointEntryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SeasonPointEntry mutation op: %q", m.Op())
+	}
+}
+
+// SeasonTrackClient is a client for the SeasonTrack schema.
+type SeasonTrackClient struct {
+	config
+}
+
+// NewSeasonTrackClient returns a client for the SeasonTrack from the given config.
+func NewSeasonTrackClient(c config) *SeasonTrackClient {
+	return &SeasonTrackClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `seasontrack.Hooks(f(g(h())))`.
+func (c *SeasonTrackClient) Use(hooks ...Hook) {
+	c.hooks.SeasonTrack = append(c.hooks.SeasonTrack, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `seasontrack.Intercept(f(g(h())))`.
+func (c *SeasonTrackClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SeasonTrack = append(c.inters.SeasonTrack, interceptors...)
+}
+
+// Create returns a builder for creating a SeasonTrack entity.
+func (c *SeasonTrackClient) Create() *SeasonTrackCreate {
+	mutation := newSeasonTrackMutation(c.config, OpCreate)
+	return &SeasonTrackCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SeasonTrack entities.
+func (c *SeasonTrackClient) CreateBulk(builders ...*SeasonTrackCreate) *SeasonTrackCreateBulk {
+	return &SeasonTrackCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SeasonTrackClient) MapCreateBulk(slice any, setFunc func(*SeasonTrackCreate, int)) *SeasonTrackCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SeasonTrackCreateBulk{err: fmt.Errorf("calling to SeasonTrackClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SeasonTrackCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SeasonTrackCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SeasonTrack.
+func (c *SeasonTrackClient) Update() *SeasonTrackUpdate {
+	mutation := newSeasonTrackMutation(c.config, OpUpdate)
+	return &SeasonTrackUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SeasonTrackClient) UpdateOne(_m *SeasonTrack) *SeasonTrackUpdateOne {
+	mutation := newSeasonTrackMutation(c.config, OpUpdateOne, withSeasonTrack(_m))
+	return &SeasonTrackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SeasonTrackClient) UpdateOneID(id uuid.UUID) *SeasonTrackUpdateOne {
+	mutation := newSeasonTrackMutation(c.config, OpUpdateOne, withSeasonTrackID(id))
+	return &SeasonTrackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SeasonTrack.
+func (c *SeasonTrackClient) Delete() *SeasonTrackDelete {
+	mutation := newSeasonTrackMutation(c.config, OpDelete)
+	return &SeasonTrackDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SeasonTrackClient) DeleteOne(_m *SeasonTrack) *SeasonTrackDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SeasonTrackClient) DeleteOneID(id uuid.UUID) *SeasonTrackDeleteOne {
+	builder := c.Delete().Where(seasontrack.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SeasonTrackDeleteOne{builder}
+}
+
+// Query returns a query builder for SeasonTrack.
+func (c *SeasonTrackClient) Query() *SeasonTrackQuery {
+	return &SeasonTrackQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSeasonTrack},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SeasonTrack entity by its id.
+func (c *SeasonTrackClient) Get(ctx context.Context, id uuid.UUID) (*SeasonTrack, error) {
+	return c.Query().Where(seasontrack.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SeasonTrackClient) GetX(ctx context.Context, id uuid.UUID) *SeasonTrack {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SeasonTrackClient) Hooks() []Hook {
+	hooks := c.hooks.SeasonTrack
+	return append(hooks[:len(hooks):len(hooks)], seasontrack.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SeasonTrackClient) Interceptors() []Interceptor {
+	inters := c.inters.SeasonTrack
+	return append(inters[:len(inters):len(inters)], seasontrack.Interceptors[:]...)
+}
+
+func (c *SeasonTrackClient) mutate(ctx context.Context, m *SeasonTrackMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SeasonTrackCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SeasonTrackUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SeasonTrackUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SeasonTrackDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SeasonTrack mutation op: %q", m.Op())
+	}
+}
+
+// SeasonTrackProgressClient is a client for the SeasonTrackProgress schema.
+type SeasonTrackProgressClient struct {
+	config
+}
+
+// NewSeasonTrackProgressClient returns a client for the SeasonTrackProgress from the given config.
+func NewSeasonTrackProgressClient(c config) *SeasonTrackProgressClient {
+	return &SeasonTrackProgressClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `seasontrackprogress.Hooks(f(g(h())))`.
+func (c *SeasonTrackProgressClient) Use(hooks ...Hook) {
+	c.hooks.SeasonTrackProgress = append(c.hooks.SeasonTrackProgress, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `seasontrackprogress.Intercept(f(g(h())))`.
+func (c *SeasonTrackProgressClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SeasonTrackProgress = append(c.inters.SeasonTrackProgress, interceptors...)
+}
+
+// Create returns a builder for creating a SeasonTrackProgress entity.
+func (c *SeasonTrackProgressClient) Create() *SeasonTrackProgressCreate {
+	mutation := newSeasonTrackProgressMutation(c.config, OpCreate)
+	return &SeasonTrackProgressCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SeasonTrackProgress entities.
+func (c *SeasonTrackProgressClient) CreateBulk(builders ...*SeasonTrackProgressCreate) *SeasonTrackProgressCreateBulk {
+	return &SeasonTrackProgressCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SeasonTrackProgressClient) MapCreateBulk(slice any, setFunc func(*SeasonTrackProgressCreate, int)) *SeasonTrackProgressCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SeasonTrackProgressCreateBulk{err: fmt.Errorf("calling to SeasonTrackProgressClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SeasonTrackProgressCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SeasonTrackProgressCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SeasonTrackProgress.
+func (c *SeasonTrackProgressClient) Update() *SeasonTrackProgressUpdate {
+	mutation := newSeasonTrackProgressMutation(c.config, OpUpdate)
+	return &SeasonTrackProgressUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SeasonTrackProgressClient) UpdateOne(_m *SeasonTrackProgress) *SeasonTrackProgressUpdateOne {
+	mutation := newSeasonTrackProgressMutation(c.config, OpUpdateOne, withSeasonTrackProgress(_m))
+	return &SeasonTrackProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SeasonTrackProgressClient) UpdateOneID(id uuid.UUID) *SeasonTrackProgressUpdateOne {
+	mutation := newSeasonTrackProgressMutation(c.config, OpUpdateOne, withSeasonTrackProgressID(id))
+	return &SeasonTrackProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SeasonTrackProgress.
+func (c *SeasonTrackProgressClient) Delete() *SeasonTrackProgressDelete {
+	mutation := newSeasonTrackProgressMutation(c.config, OpDelete)
+	return &SeasonTrackProgressDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SeasonTrackProgressClient) DeleteOne(_m *SeasonTrackProgress) *SeasonTrackProgressDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SeasonTrackProgressClient) DeleteOneID(id uuid.UUID) *SeasonTrackProgressDeleteOne {
+	builder := c.Delete().Where(seasontrackprogress.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SeasonTrackProgressDeleteOne{builder}
+}
+
+// Query returns a query builder for SeasonTrackProgress.
+func (c *SeasonTrackProgressClient) Query() *SeasonTrackProgressQuery {
+	return &SeasonTrackProgressQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSeasonTrackProgress},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SeasonTrackProgress entity by its id.
+func (c *SeasonTrackProgressClient) Get(ctx context.Context, id uuid.UUID) (*SeasonTrackProgress, error) {
+	return c.Query().Where(seasontrackprogress.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SeasonTrackProgressClient) GetX(ctx context.Context, id uuid.UUID) *SeasonTrackProgress {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SeasonTrackProgressClient) Hooks() []Hook {
+	hooks := c.hooks.SeasonTrackProgress
+	return append(hooks[:len(hooks):len(hooks)], seasontrackprogress.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SeasonTrackProgressClient) Interceptors() []Interceptor {
+	inters := c.inters.SeasonTrackProgress
+	return append(inters[:len(inters):len(inters)], seasontrackprogress.Interceptors[:]...)
+}
+
+func (c *SeasonTrackProgressClient) mutate(ctx context.Context, m *SeasonTrackProgressMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SeasonTrackProgressCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SeasonTrackProgressUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SeasonTrackProgressUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SeasonTrackProgressDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SeasonTrackProgress mutation op: %q", m.Op())
+	}
+}
+
+// SeasonTrackVersionClient is a client for the SeasonTrackVersion schema.
+type SeasonTrackVersionClient struct {
+	config
+}
+
+// NewSeasonTrackVersionClient returns a client for the SeasonTrackVersion from the given config.
+func NewSeasonTrackVersionClient(c config) *SeasonTrackVersionClient {
+	return &SeasonTrackVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `seasontrackversion.Hooks(f(g(h())))`.
+func (c *SeasonTrackVersionClient) Use(hooks ...Hook) {
+	c.hooks.SeasonTrackVersion = append(c.hooks.SeasonTrackVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `seasontrackversion.Intercept(f(g(h())))`.
+func (c *SeasonTrackVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SeasonTrackVersion = append(c.inters.SeasonTrackVersion, interceptors...)
+}
+
+// Create returns a builder for creating a SeasonTrackVersion entity.
+func (c *SeasonTrackVersionClient) Create() *SeasonTrackVersionCreate {
+	mutation := newSeasonTrackVersionMutation(c.config, OpCreate)
+	return &SeasonTrackVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SeasonTrackVersion entities.
+func (c *SeasonTrackVersionClient) CreateBulk(builders ...*SeasonTrackVersionCreate) *SeasonTrackVersionCreateBulk {
+	return &SeasonTrackVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SeasonTrackVersionClient) MapCreateBulk(slice any, setFunc func(*SeasonTrackVersionCreate, int)) *SeasonTrackVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SeasonTrackVersionCreateBulk{err: fmt.Errorf("calling to SeasonTrackVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SeasonTrackVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SeasonTrackVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SeasonTrackVersion.
+func (c *SeasonTrackVersionClient) Update() *SeasonTrackVersionUpdate {
+	mutation := newSeasonTrackVersionMutation(c.config, OpUpdate)
+	return &SeasonTrackVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SeasonTrackVersionClient) UpdateOne(_m *SeasonTrackVersion) *SeasonTrackVersionUpdateOne {
+	mutation := newSeasonTrackVersionMutation(c.config, OpUpdateOne, withSeasonTrackVersion(_m))
+	return &SeasonTrackVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SeasonTrackVersionClient) UpdateOneID(id uuid.UUID) *SeasonTrackVersionUpdateOne {
+	mutation := newSeasonTrackVersionMutation(c.config, OpUpdateOne, withSeasonTrackVersionID(id))
+	return &SeasonTrackVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SeasonTrackVersion.
+func (c *SeasonTrackVersionClient) Delete() *SeasonTrackVersionDelete {
+	mutation := newSeasonTrackVersionMutation(c.config, OpDelete)
+	return &SeasonTrackVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SeasonTrackVersionClient) DeleteOne(_m *SeasonTrackVersion) *SeasonTrackVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SeasonTrackVersionClient) DeleteOneID(id uuid.UUID) *SeasonTrackVersionDeleteOne {
+	builder := c.Delete().Where(seasontrackversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SeasonTrackVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for SeasonTrackVersion.
+func (c *SeasonTrackVersionClient) Query() *SeasonTrackVersionQuery {
+	return &SeasonTrackVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSeasonTrackVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SeasonTrackVersion entity by its id.
+func (c *SeasonTrackVersionClient) Get(ctx context.Context, id uuid.UUID) (*SeasonTrackVersion, error) {
+	return c.Query().Where(seasontrackversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SeasonTrackVersionClient) GetX(ctx context.Context, id uuid.UUID) *SeasonTrackVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SeasonTrackVersionClient) Hooks() []Hook {
+	hooks := c.hooks.SeasonTrackVersion
+	return append(hooks[:len(hooks):len(hooks)], seasontrackversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *SeasonTrackVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.SeasonTrackVersion
+	return append(inters[:len(inters):len(inters)], seasontrackversion.Interceptors[:]...)
+}
+
+func (c *SeasonTrackVersionClient) mutate(ctx context.Context, m *SeasonTrackVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SeasonTrackVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SeasonTrackVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SeasonTrackVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SeasonTrackVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SeasonTrackVersion mutation op: %q", m.Op())
+	}
+}
+
 // ShopItemClient is a client for the ShopItem schema.
 type ShopItemClient struct {
 	config
@@ -8097,15 +10107,18 @@ type (
 	hooks struct {
 		Achievement, AchievementProgressEvent, AchievementVersion, AvatarPreset,
 		CharacterCatalog, CharacterCatalogVersion, Collection, CollectionItem,
-		CollectionProgress, CollectionVersion, ContentRelease, Currency,
-		CurrencyLedgerEntry, EconomyAdjustment, ExplorationProgress, GameProfile,
-		GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion,
-		ItemLedgerEntry, LevelDefinition, LevelHistory, LevelSession, LevelVersion,
-		LoginEvent, NicknameChange, NpcDialogue, NpcDialogueVersion,
-		PeriodicQuestGrant, ProgressionCurve, ProgressionCurveVersion,
-		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
-		QuestVersion, RewardGrant, RewardRule, RewardRuleVersion, ShopItem,
-		ShopItemVersion, ShopPurchase, StoryChapter, StoryChapterVersion,
+		CollectionProgress, CollectionVersion, CommunityGoal,
+		CommunityGoalContribution, CommunityGoalProgress, ContentRelease, Currency,
+		CurrencyLedgerEntry, EconomyAdjustment, Event, EventParticipation,
+		EventPointEntry, EventRun, EventTemplate, EventTemplateVersion, EventVersion,
+		ExplorationProgress, GameProfile, GameSession, InventoryItem, ItemDefinition,
+		ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition, LevelHistory,
+		LevelSession, LevelVersion, LoginEvent, NicknameChange, NpcDialogue,
+		NpcDialogueVersion, PeriodicQuestGrant, ProgressionCurve,
+		ProgressionCurveVersion, ProgressionLevel, QuestDefinition, QuestProgress,
+		QuestStepAttempt, QuestVersion, RewardGrant, RewardRule, RewardRuleVersion,
+		SeasonPointEntry, SeasonTrack, SeasonTrackProgress, SeasonTrackVersion,
+		ShopItem, ShopItemVersion, ShopPurchase, StoryChapter, StoryChapterVersion,
 		StoryProgress, StudentAchievement, TenantResourceAssignment, Wallet, WorldArea,
 		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact, XpDailyCap,
 		XpLedgerEntry []ent.Hook
@@ -8113,15 +10126,18 @@ type (
 	inters struct {
 		Achievement, AchievementProgressEvent, AchievementVersion, AvatarPreset,
 		CharacterCatalog, CharacterCatalogVersion, Collection, CollectionItem,
-		CollectionProgress, CollectionVersion, ContentRelease, Currency,
-		CurrencyLedgerEntry, EconomyAdjustment, ExplorationProgress, GameProfile,
-		GameSession, InventoryItem, ItemDefinition, ItemDefinitionVersion,
-		ItemLedgerEntry, LevelDefinition, LevelHistory, LevelSession, LevelVersion,
-		LoginEvent, NicknameChange, NpcDialogue, NpcDialogueVersion,
-		PeriodicQuestGrant, ProgressionCurve, ProgressionCurveVersion,
-		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
-		QuestVersion, RewardGrant, RewardRule, RewardRuleVersion, ShopItem,
-		ShopItemVersion, ShopPurchase, StoryChapter, StoryChapterVersion,
+		CollectionProgress, CollectionVersion, CommunityGoal,
+		CommunityGoalContribution, CommunityGoalProgress, ContentRelease, Currency,
+		CurrencyLedgerEntry, EconomyAdjustment, Event, EventParticipation,
+		EventPointEntry, EventRun, EventTemplate, EventTemplateVersion, EventVersion,
+		ExplorationProgress, GameProfile, GameSession, InventoryItem, ItemDefinition,
+		ItemDefinitionVersion, ItemLedgerEntry, LevelDefinition, LevelHistory,
+		LevelSession, LevelVersion, LoginEvent, NicknameChange, NpcDialogue,
+		NpcDialogueVersion, PeriodicQuestGrant, ProgressionCurve,
+		ProgressionCurveVersion, ProgressionLevel, QuestDefinition, QuestProgress,
+		QuestStepAttempt, QuestVersion, RewardGrant, RewardRule, RewardRuleVersion,
+		SeasonPointEntry, SeasonTrack, SeasonTrackProgress, SeasonTrackVersion,
+		ShopItem, ShopItemVersion, ShopPurchase, StoryChapter, StoryChapterVersion,
 		StoryProgress, StudentAchievement, TenantResourceAssignment, Wallet, WorldArea,
 		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact, XpDailyCap,
 		XpLedgerEntry []ent.Interceptor
@@ -8131,61 +10147,75 @@ type (
 var (
 	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
 	DefaultSchemaConfig = SchemaConfig{
-		Achievement:              tableSchemas[1],
-		AchievementProgressEvent: tableSchemas[1],
-		AchievementVersion:       tableSchemas[1],
-		AvatarPreset:             tableSchemas[0],
-		CharacterCatalog:         tableSchemas[0],
-		CharacterCatalogVersion:  tableSchemas[0],
-		Collection:               tableSchemas[1],
-		CollectionItem:           tableSchemas[1],
-		CollectionProgress:       tableSchemas[1],
-		CollectionVersion:        tableSchemas[1],
-		ContentRelease:           tableSchemas[0],
-		Currency:                 tableSchemas[1],
-		CurrencyLedgerEntry:      tableSchemas[1],
-		EconomyAdjustment:        tableSchemas[1],
-		ExplorationProgress:      tableSchemas[0],
-		GameProfile:              tableSchemas[0],
-		GameSession:              tableSchemas[0],
-		InventoryItem:            tableSchemas[0],
-		ItemDefinition:           tableSchemas[0],
-		ItemDefinitionVersion:    tableSchemas[0],
-		ItemLedgerEntry:          tableSchemas[1],
-		LevelDefinition:          tableSchemas[0],
-		LevelHistory:             tableSchemas[0],
-		LevelSession:             tableSchemas[0],
-		LevelVersion:             tableSchemas[0],
-		LoginEvent:               tableSchemas[0],
-		NicknameChange:           tableSchemas[0],
-		NpcDialogue:              tableSchemas[0],
-		NpcDialogueVersion:       tableSchemas[0],
-		PeriodicQuestGrant:       tableSchemas[0],
-		ProgressionCurve:         tableSchemas[0],
-		ProgressionCurveVersion:  tableSchemas[0],
-		ProgressionLevel:         tableSchemas[0],
-		QuestDefinition:          tableSchemas[0],
-		QuestProgress:            tableSchemas[0],
-		QuestStepAttempt:         tableSchemas[0],
-		QuestVersion:             tableSchemas[0],
-		RewardGrant:              tableSchemas[1],
-		RewardRule:               tableSchemas[1],
-		RewardRuleVersion:        tableSchemas[1],
-		ShopItem:                 tableSchemas[1],
-		ShopItemVersion:          tableSchemas[1],
-		ShopPurchase:             tableSchemas[1],
-		StoryChapter:             tableSchemas[0],
-		StoryChapterVersion:      tableSchemas[0],
-		StoryProgress:            tableSchemas[0],
-		StudentAchievement:       tableSchemas[1],
-		TenantResourceAssignment: tableSchemas[2],
-		Wallet:                   tableSchemas[1],
-		WorldArea:                tableSchemas[0],
-		WorldAreaUnlock:          tableSchemas[0],
-		WorldAreaVersion:         tableSchemas[0],
-		WorldUnlockFact:          tableSchemas[0],
-		XpDailyCap:               tableSchemas[1],
-		XpLedgerEntry:            tableSchemas[1],
+		Achievement:               tableSchemas[1],
+		AchievementProgressEvent:  tableSchemas[1],
+		AchievementVersion:        tableSchemas[1],
+		AvatarPreset:              tableSchemas[0],
+		CharacterCatalog:          tableSchemas[0],
+		CharacterCatalogVersion:   tableSchemas[0],
+		Collection:                tableSchemas[1],
+		CollectionItem:            tableSchemas[1],
+		CollectionProgress:        tableSchemas[1],
+		CollectionVersion:         tableSchemas[1],
+		CommunityGoal:             tableSchemas[0],
+		CommunityGoalContribution: tableSchemas[0],
+		CommunityGoalProgress:     tableSchemas[0],
+		ContentRelease:            tableSchemas[0],
+		Currency:                  tableSchemas[1],
+		CurrencyLedgerEntry:       tableSchemas[1],
+		EconomyAdjustment:         tableSchemas[1],
+		Event:                     tableSchemas[0],
+		EventParticipation:        tableSchemas[0],
+		EventPointEntry:           tableSchemas[0],
+		EventRun:                  tableSchemas[0],
+		EventTemplate:             tableSchemas[0],
+		EventTemplateVersion:      tableSchemas[0],
+		EventVersion:              tableSchemas[0],
+		ExplorationProgress:       tableSchemas[0],
+		GameProfile:               tableSchemas[0],
+		GameSession:               tableSchemas[0],
+		InventoryItem:             tableSchemas[0],
+		ItemDefinition:            tableSchemas[0],
+		ItemDefinitionVersion:     tableSchemas[0],
+		ItemLedgerEntry:           tableSchemas[1],
+		LevelDefinition:           tableSchemas[0],
+		LevelHistory:              tableSchemas[0],
+		LevelSession:              tableSchemas[0],
+		LevelVersion:              tableSchemas[0],
+		LoginEvent:                tableSchemas[0],
+		NicknameChange:            tableSchemas[0],
+		NpcDialogue:               tableSchemas[0],
+		NpcDialogueVersion:        tableSchemas[0],
+		PeriodicQuestGrant:        tableSchemas[0],
+		ProgressionCurve:          tableSchemas[0],
+		ProgressionCurveVersion:   tableSchemas[0],
+		ProgressionLevel:          tableSchemas[0],
+		QuestDefinition:           tableSchemas[0],
+		QuestProgress:             tableSchemas[0],
+		QuestStepAttempt:          tableSchemas[0],
+		QuestVersion:              tableSchemas[0],
+		RewardGrant:               tableSchemas[1],
+		RewardRule:                tableSchemas[1],
+		RewardRuleVersion:         tableSchemas[1],
+		SeasonPointEntry:          tableSchemas[0],
+		SeasonTrack:               tableSchemas[0],
+		SeasonTrackProgress:       tableSchemas[0],
+		SeasonTrackVersion:        tableSchemas[0],
+		ShopItem:                  tableSchemas[1],
+		ShopItemVersion:           tableSchemas[1],
+		ShopPurchase:              tableSchemas[1],
+		StoryChapter:              tableSchemas[0],
+		StoryChapterVersion:       tableSchemas[0],
+		StoryProgress:             tableSchemas[0],
+		StudentAchievement:        tableSchemas[1],
+		TenantResourceAssignment:  tableSchemas[2],
+		Wallet:                    tableSchemas[1],
+		WorldArea:                 tableSchemas[0],
+		WorldAreaUnlock:           tableSchemas[0],
+		WorldAreaVersion:          tableSchemas[0],
+		WorldUnlockFact:           tableSchemas[0],
+		XpDailyCap:                tableSchemas[1],
+		XpLedgerEntry:             tableSchemas[1],
 	}
 	tableSchemas = [...]string{"game", "gamification", "infra"}
 )

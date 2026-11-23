@@ -1,0 +1,350 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:season-track:1",
+  "title": "SeasonTrackVersion",
+  "description": "Season track miễn phí (module game). Lịch mùa thuộc module competition; track tham chiếu season_id. Không có track trả phí. Xem docs/01-game-design/EVENT_SEASON_SYSTEM.md §7.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "season_track_id",
+    "season_track_version_id",
+    "code",
+    "version",
+    "status",
+    "owner_scope",
+    "season_id",
+    "name",
+    "paid_track",
+    "points",
+    "tiers",
+    "end_of_season"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "season_track_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "season_track_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "const": "platform"
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "season_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "name": {
+      "$ref": "#/$defs/localized_text",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "properties": {
+        "vi": true,
+        "en": true
+      },
+      "type": "object"
+    },
+    "theme_code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "paid_track": {
+      "const": false,
+      "description": "Luôn false — không có premium track (ADR-0049)"
+    },
+    "points": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "per_tier",
+        "daily_cap",
+        "sources"
+      ],
+      "properties": {
+        "per_tier": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000
+        },
+        "daily_cap": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source_code",
+              "points"
+            ],
+            "properties": {
+              "source_code": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "points": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "tiers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tier",
+          "rewards"
+        ],
+        "properties": {
+          "tier": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "is_milestone": {
+            "type": "boolean",
+            "default": false
+          },
+          "rewards": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "items": {
+              "$ref": "#/$defs/reward"
+            }
+          }
+        }
+      }
+    },
+    "end_of_season": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unclaimed_rewards"
+      ],
+      "properties": {
+        "unclaimed_rewards": {
+          "const": "auto_grant"
+        },
+        "items_may_return_later": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "localized_text": {
+      "type": "object",
+      "required": [
+        "vi"
+      ],
+      "properties": {
+        "vi": true
+      },
+      "propertyNames": {
+        "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "reward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "xp",
+            "currency",
+            "item",
+            "badge",
+            "title",
+            "collection_item"
+          ]
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "currency_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "item_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "badge_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "title_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "collection_item_id": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "xp",
+                  "currency"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "amount"
+            ],
+            "properties": {
+              "amount": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "currency"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "currency_code"
+            ],
+            "properties": {
+              "currency_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "item_id"
+            ],
+            "properties": {
+              "item_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "badge"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "badge_id"
+            ],
+            "properties": {
+              "badge_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "title"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "title_code"
+            ],
+            "properties": {
+              "title_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "collection_item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "collection_item_id"
+            ],
+            "properties": {
+              "collection_item_id": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

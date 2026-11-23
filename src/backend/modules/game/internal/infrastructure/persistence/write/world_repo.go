@@ -51,6 +51,13 @@ var contentTables = map[string]contentTable{
 		versionCol: "collection_version_id", parent: []string{"code"}, columns: []string{"code", "collection_type", "visibility", "item_count"}},
 	write.ItemAchievement: {schema: "gamification", identity: "achievements", idCol: "achievement_id", versions: "achievement_versions",
 		versionCol: "achievement_version_id", parent: []string{"code"}, columns: []string{"code", "category", "visibility", "trigger_event_types"}},
+	// F077: platform events (G/T tables, platform rows only here), school event templates, season tracks.
+	write.ItemEvent: {identity: "events", idCol: "event_id", versions: "event_versions", versionCol: "event_version_id",
+		parent: []string{"code", "event_kind"}, columns: []string{"event_kind", "start_at", "end_at", "decoration_areas", "effective_from"}},
+	write.ItemEventTemplate: {identity: "event_templates", idCol: "template_id", versions: "event_template_versions",
+		versionCol: "template_version_id", parent: []string{"code"}, columns: []string{"code", "event_kind", "allowed_params", "max_duration_days"}},
+	write.ItemSeasonTrack: {identity: "season_tracks", idCol: "season_track_id", versions: "season_track_versions",
+		versionCol: "season_track_version_id", parent: []string{"season_id", "code"}, columns: []string{"season_id"}},
 }
 
 // sch is the schema of the tables of a content type.
@@ -63,7 +70,7 @@ func (c contentTable) sch() string {
 
 // jsonColumns are the typed version columns stored as jsonb.
 var jsonColumns = map[string]bool{"grade_levels": true, "objective_ids": true, "name": true, "sources": true, "asset_refs": true,
-	"trigger_event_types": true}
+	"trigger_event_types": true, "decoration_areas": true, "allowed_params": true}
 
 // GameContentRepo implements write.GameContentStore (platform content, written under PlatformScope only).
 type GameContentRepo struct{}

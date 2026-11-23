@@ -1698,3 +1698,12 @@ exceptions:
     path: /game/world/areas/{area_id}/discoveries/{interactable_id}:discover
     text: the 'rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
 
+  - adr: ADR-0010
+    reason: 'F077-AC-22 (AGENTS R10): sửa sự kiện trường là thao tác quan trọng — updateSchoolEvent nhận Idempotency-Key như createSchoolEvent/cancelSchoolEvent (contracts F077 §6); chưa có client nào gọi (màn workspace C chưa có mã)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: new-required-request-parameter
+    operation: PATCH
+    path: /lms/school-events/{event_id}
+    text: added the new required 'header' request parameter 'Idempotency-Key'

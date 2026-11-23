@@ -36,3 +36,23 @@ func (v *Validator) CheckDisplayText(ctx context.Context, tenant uuid.UUID, text
 	}
 	return out.Decision == moderation.DecisionAllow || out.Decision == moderation.DecisionUnchecked, nil
 }
+
+// ScreenTexts is screenText of the chat facade (school event name and description typed by school staff, F077-AC-23,
+// EVENT_SEASON_SYSTEM §10, R15): each text goes through the same normalisation, catalogue and switches as a display
+// name; the result is only the positions of the texts that are not clean — never the matched term, its position or its
+// category. An error (catalogue not loaded) is returned: the caller answers 503 and stores nothing (never fail-open).
+func (v *Validator) ScreenTexts(ctx context.Context, tenant uuid.UUID, texts []string) (violations []int, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.pipeline.ScreenTexts")
+	defer func() { done(err) }()
+	violations = []int{}
+	for i, t := range texts {
+		ok, err := v.CheckDisplayText(ctx, tenant, t)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			violations = append(violations, i)
+		}
+	}
+	return violations, nil
+}

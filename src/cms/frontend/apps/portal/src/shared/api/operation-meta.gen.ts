@@ -433,7 +433,7 @@ export const operations: readonly OperationMeta[] = [
   { operationId: "listSchoolEvents", method: "GET", path: "/lms/school-events", service: "game", gateway: "public", tenantHeader: "required", idempotency: false, ifMatch: false },
   { operationId: "createSchoolEvent", method: "POST", path: "/lms/school-events", service: "game", gateway: "public", tenantHeader: "required", idempotency: true, ifMatch: false },
   { operationId: "getSchoolEvent", method: "GET", path: "/lms/school-events/{event_id}", service: "game", gateway: "public", tenantHeader: "required", idempotency: false, ifMatch: false },
-  { operationId: "updateSchoolEvent", method: "PATCH", path: "/lms/school-events/{event_id}", service: "game", gateway: "public", tenantHeader: "required", idempotency: false, ifMatch: true },
+  { operationId: "updateSchoolEvent", method: "PATCH", path: "/lms/school-events/{event_id}", service: "game", gateway: "public", tenantHeader: "required", idempotency: true, ifMatch: true },
   { operationId: "cancelSchoolEvent", method: "POST", path: "/lms/school-events/{event_id}:cancel", service: "game", gateway: "public", tenantHeader: "required", idempotency: true, ifMatch: false },
   { operationId: "getSchoolAnalyticsSeries", method: "GET", path: "/lms/schools/{school_id}/analytics/series", service: "learning", gateway: "public", tenantHeader: "required", idempotency: false, ifMatch: false },
   { operationId: "getSchoolCurriculumSettings", method: "GET", path: "/lms/schools/{school_id}/curriculum-settings", service: "learning", gateway: "public", tenantHeader: "required", idempotency: false, ifMatch: false },

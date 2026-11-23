@@ -1,0 +1,11 @@
+{
+  "$comment": "DEV SEED ONLY: event templates assigned to tenants (ADR-0029, infra.tenant_resource_assignments resource_type event_template); a tenant not projected yet is skipped (run make seed-game again after make seed-check).",
+  "assignments": [
+    {
+      "template_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7710",
+      "tenants": [
+        "th-demo-a"
+      ]
+    }
+  ]
+}

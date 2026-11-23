@@ -13,9 +13,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/cache"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/liveopsschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/liveopssql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
@@ -60,6 +62,8 @@ type Imports struct {
 	Competition modules.CompetitionHub
 	// Learning is createAttempt of the learning facade (F072: learning steps of the quests); nil = startQuestActivity 503.
 	Learning modules.LearningFacade
+	// Chat is screenText of the chat facade (F077: school event texts); nil = createSchoolEvent/updateSchoolEvent 503.
+	Chat modules.ChatScreening
 }
 
 // Module is the registered module.
@@ -67,6 +71,7 @@ type Module struct {
 	facade   Facade
 	hub      *modules.LateHub
 	learning *modules.LateLearning
+	chat     *modules.LateChat
 }
 
 // Facade returns the in-process facade of module game (nil in a binary that does not load its use cases).
@@ -80,6 +85,9 @@ func (m *Module) Wire(in Imports) {
 	if m.learning != nil {
 		m.learning.Set(in.Learning)
 	}
+	if m.chat != nil {
+		m.chat.Set(in.Chat)
+	}
 }
 
 // Register wires the module into the running binary (OQ F014-7, F010-2): health checks everywhere; the F014 routes in
@@ -91,7 +99,8 @@ func (m *Module) Wire(in Imports) {
 // quest-failure-timer in worker jobs; the F074 consumers game.reward_engine, game.reward_engine_game,
 // game.grade_transition, the progression routes and the jobs curve-rollout, xp-reconcile; the F075 economy routes, the
 // consumers game.achievement_evaluator (game, learning, competition streams) and game.collection_on_mastery and the job
-// wallet-reconcile; createRealtimeTicket and the NATS command
+// wallet-reconcile; the F077 live-ops routes, the consumers game.liveops_progress (game, learning, competition streams) and
+// game.season_projection and the jobs event-scheduler, goal-recompute; createRealtimeTicket and the NATS command
 // ew.cmd.game.session.heartbeat of the realtime gateway in core-api (F090).
 func Register(r *module.Registry) (*Module, error) {
 	pool, err := r.Database(Name)
@@ -101,7 +110,7 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Health().Register("db:"+Name, health.Readiness, health.PostgresCheck(pool))
 	r.Health().Register("atlas:"+Name, health.Readiness, health.AtlasRevisionCheck(pool, migrations.Latest()))
 	if !r.ServesHTTP() && !r.RunsEvents() && !r.RunsJobs() {
-		return &Module{hub: &modules.LateHub{}, learning: &modules.LateLearning{}}, nil
+		return &Module{hub: &modules.LateHub{}, learning: &modules.LateLearning{}, chat: &modules.LateChat{}}, nil
 	}
 	core, err := r.Core(Name)
 	if err != nil {
@@ -126,6 +135,7 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.RegisterQuest(r.Metrics())
 	observability.RegisterProgression(r.Metrics())
 	observability.RegisterEconomy(r.Metrics())
+	observability.RegisterLiveOps(r.Metrics())
 	profileCfg, err := gameconfig.ProfileFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
@@ -143,6 +153,10 @@ func Register(r *module.Registry) (*Module, error) {
 		return nil, fmt.Errorf("game: %w", err)
 	}
 	ecoPolicy, err := gameconfig.EconomyFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	liveCfg, err := gameconfig.LiveOpsFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
 	}
@@ -169,13 +183,23 @@ func Register(r *module.Registry) (*Module, error) {
 	// economy grants its own rewards (tiers, completions, cards) through the same registry.
 	economyUC := &command.Economy{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: write.EconomyRepo{}, Grants: write.ProgressionRepo{},
 		Achievements: write.AchievementRepo{}, Adjustments: write.AdjustmentRepo{}, Scan: write.EconomyRepo{}, Content: economysql.Content{},
-		Students: worldsql.Content{}, LiveOps: economysql.NoLiveOps{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
+		Students: worldsql.Content{}, LiveOps: liveopssql.Store{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
 		Metrics: observability.EconomyMetrics{}, Policy: ecoPolicy}
 	appliers := rewardinfra.WithEconomy(economyUC)
 	economyUC.Registry = appliers
 	progressionUC.Appliers = appliers
 	economyUC.XP = progressionUC
-	m := &Module{hub: hub, learning: learningLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
+	// F077 live-ops: runs, participation, community goals, season track, school events; rewards through the same registry
+	// (Xu cap kept); school texts screened by module chat (wired by Module.Wire, 503 until then).
+	gameManifest := command.GameManifest{UoW: core.UoW, Store: write.ManifestRepo{}, Tenants: write.ManifestRepo{}, Content: worldsql.Content{},
+		Quests: questsql.Content{}, LiveOps: liveopssql.Store{}, Events: write.Publisher{W: core.Writer}, Metrics: observability.ManifestMetrics{},
+		BuildSeconds: observability.ManifestBuild}
+	chatLate := &modules.LateChat{}
+	liveOpsUC := &command.LiveOps{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: liveopssql.Store{}, Students: worldsql.Content{},
+		Tenants: write.ManifestRepo{}, Manifests: gameManifest, Grants: write.ProgressionRepo{}, Registry: appliers, EventSchema: liveopsschema.Event{},
+		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Screener: chatLate, Counter: cache.GoalCounter{C: vk},
+		Realtime: realtime.LiveOpsPublisher{C: vk}, Lock: cache.JobLock{C: vk}, Metrics: observability.LiveOpsMetrics{}, Policy: liveCfg.Command}
+	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
 		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC}}}
 	options := cache.NicknameOptionStore{C: vk}
 	profiles := command.Profiles{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: write.ProfileRepo{}, Catalog: write.CatalogRepo{},
@@ -183,7 +207,8 @@ func Register(r *module.Registry) (*Module, error) {
 		Options: options, Events: write.Publisher{W: core.Writer}, Metrics: observability.ProfileMetrics{}, Config: profileCfg}
 
 	h := gamehttp.Handlers{Sessions: sessions, ClientConfig: cfg.ClientConfig,
-		Manifest:    query.GetContentManifest{Read: core.ReadSession, Manifests: read.Manifests{}, MinClientVersion: cfg.UseCase.MinClientVersion},
+		Manifest: query.GetContentManifest{Read: core.ReadSession, Manifests: read.Manifests{}, MinClientVersion: cfg.UseCase.MinClientVersion,
+			Students: worldsql.Content{}},
 		LoginEvents: query.LoginEvents{Read: core.ReadSession, Events: read.LoginEvents{}, Students: read.Students{}, Cursors: cursors},
 		Tickets:     command.RealtimeTickets{Sessions: sessions, Store: realtime.TicketStore{C: vk}, Config: cfg.Tickets},
 		Profiles:    profiles, ProfileQueries: query.Profile{Read: core.ReadSession, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
@@ -193,7 +218,9 @@ func Register(r *module.Registry) (*Module, error) {
 			Reset: questCfg.Reset},
 		ProgressionQueries: query.Progression{Read: core.ReadSession, Curves: progressionsql.Content{}, Data: read.Progression{}, Cursors: cursors,
 			DailyCap: policy.DailyCap},
-		EconomyQueries: query.Economy{Read: core.ReadSession, Data: read.Economy{}, Cursors: cursors}, EconomyCommands: economyUC}
+		EconomyQueries: query.Economy{Read: core.ReadSession, Data: read.Economy{}, Cursors: cursors}, EconomyCommands: economyUC,
+		LiveOpsQueries: query.LiveOps{Read: core.ReadSession, Data: liveopssql.Store{}, Students: worldsql.Content{}, Counter: cache.GoalCounter{C: vk},
+			Cursors: cursors, Policy: liveCfg.Query}, LiveOpsCommands: liveOpsUC}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -224,9 +251,7 @@ func Register(r *module.Registry) (*Module, error) {
 			Store: write.ManifestRepo{}, Events: write.Publisher{W: core.Writer}, Metrics: observability.ManifestMetrics{}}}, core.UoW, core.App, js)
 	})
 	r.Consumer("game.manifest_on_game_content", func(js jetstream.JetStream) outbox.ConsumerOptions {
-		return consumer.ManifestOnGameContentOptions(consumer.ManifestOnGameContent{Manifests: command.GameManifest{UoW: core.UoW,
-			Store: write.ManifestRepo{}, Tenants: write.ManifestRepo{}, Content: worldsql.Content{}, Quests: questsql.Content{}, Events: write.Publisher{W: core.Writer},
-			Metrics: observability.ManifestMetrics{}, BuildSeconds: observability.ManifestBuild}}, core.UoW, core.App, js)
+		return consumer.ManifestOnGameContentOptions(consumer.ManifestOnGameContent{Manifests: gameManifest}, core.UoW, core.App, js)
 	})
 	r.Consumer("game.unlock_on_events", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.UnlockOnEventsOptions(consumer.UnlockOnEvents{World: worldUC}, core.UoW, core.App, js)
@@ -264,6 +289,20 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("game.collection_on_mastery", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.CollectionOnMasteryOptions(consumer.CollectionOnMastery{Cards: economyUC}, core.UoW, core.App, js)
 	})
+	r.Consumer("game.liveops_progress", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LiveOpsProgressOptions(consumer.LiveOpsProgress{LiveOps: liveOpsUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.liveops_progress_learning", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LiveOpsProgressLearningOptions(consumer.LiveOpsProgress{LiveOps: liveOpsUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.liveops_progress_competition", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LiveOpsProgressCompetitionOptions(consumer.LiveOpsProgress{LiveOps: liveOpsUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.season_projection", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.SeasonProjectionOptions(consumer.SeasonProjection{Seasons: liveOpsUC}, core.UoW, core.App, js)
+	})
+	r.Job(Name, job.EventScheduler, gameconfig.EventSchedulerInterval, module.JobFunc(job.EventSchedulerJob(liveOpsUC, gameconfig.LiveOpsJobBatch)))
+	r.Job(Name, job.GoalRecompute, gameconfig.GoalRecomputeInterval, module.JobFunc(job.GoalRecomputeJob(liveOpsUC, gameconfig.LiveOpsJobBatch)))
 	r.Job(Name, job.WalletReconcile, gameconfig.WalletReconcileInterval, module.JobFunc(job.WalletReconcileJob(economyUC)))
 	r.Job(Name, job.CurveRollout, gameconfig.CurveRolloutInterval, module.JobFunc(job.CurveRolloutJob(progressionUC)))
 	r.Job(Name, job.XPReconcile, gameconfig.XPReconcileInterval, module.JobFunc(job.XPReconcileJob(progressionUC)))

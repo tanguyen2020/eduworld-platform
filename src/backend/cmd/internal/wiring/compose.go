@@ -60,6 +60,9 @@ func Compose(r *module.Registry) (*Composition, error) {
 	if f := lrn.Facade(); f != nil {
 		gin.Learning = f // createAttempt: learning steps of the quests (F072)
 	}
+	if f := cht.Facade(); f != nil {
+		gin.Chat = f // screenText: school event texts (F077)
+	}
 	gam.Wire(gin)
 	// Party and team names go through the chat moderation pipeline (moderateDisplayText, F116); without the chat facade
 	// (a binary that does not load the pipeline) they fall back to the generated default name.

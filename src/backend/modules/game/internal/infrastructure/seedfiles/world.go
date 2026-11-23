@@ -155,3 +155,47 @@ func ShopAssignments(dir string) ([]QuestAssignment, error) {
 	}
 	return out, nil
 }
+
+// LiveOps reads seed/liveops/{templates,season-tracks,events}.v1.json (arrays): the F077 platform content (event
+// templates, season tracks, platform events).
+func LiveOps(dir string) ([]command.ContentItem, error) {
+	root := filepath.Join(dir, "liveops")
+	var out []command.ContentItem
+	for _, f := range []struct{ file, typ string }{{"templates.v1.json", write.ItemEventTemplate}, {"season-tracks.v1.json", write.ItemSeasonTrack},
+		{"events.v1.json", write.ItemEvent}} {
+		raw, err := os.ReadFile(filepath.Join(root, f.file)) //nolint:gosec // repository seed path
+		if err != nil {
+			return nil, err
+		}
+		var docs []json.RawMessage
+		if err := json.Unmarshal(raw, &docs); err != nil {
+			return nil, fmt.Errorf("%s: %w", f.file, err)
+		}
+		for _, d := range docs {
+			out = append(out, command.ContentItem{Type: f.typ, Payload: d})
+		}
+	}
+	return out, nil
+}
+
+// TemplateAssignments reads seed/liveops/assignments.v1.json: the event templates assigned to tenants (DEV seed).
+func TemplateAssignments(dir string) ([]QuestAssignment, error) {
+	raw, err := os.ReadFile(filepath.Join(dir, "liveops", "assignments.v1.json")) //nolint:gosec // repository seed path
+	if err != nil {
+		return nil, err
+	}
+	var doc struct {
+		Assignments []struct {
+			TemplateID string   `json:"template_id"`
+			Tenants    []string `json:"tenants"`
+		} `json:"assignments"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return nil, fmt.Errorf("liveops assignments.v1.json: %w", err)
+	}
+	out := make([]QuestAssignment, 0, len(doc.Assignments))
+	for _, a := range doc.Assignments {
+		out = append(out, QuestAssignment{QuestID: a.TemplateID, Tenants: a.Tenants})
+	}
+	return out, nil
+}

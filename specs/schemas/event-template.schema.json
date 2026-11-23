@@ -1,0 +1,493 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:event-template:1",
+  "title": "EventTemplateVersion",
+  "description": "Mẫu sự kiện trường do platform tạo và gán cho tenant (module game, ADR-0029). Nhà trường chỉ điền tham số trong allowed_params, chọn quest/challenge/phần thưởng trong danh sách của mẫu; luật chơi, cách tính điểm, mốc community goal do mẫu cố định (ADR-0027). Bất biến sau khi publish (ADR-0043). Xem docs/01-game-design/EVENT_SEASON_SYSTEM.md §10.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "template_id",
+    "template_version_id",
+    "code",
+    "version",
+    "status",
+    "owner_scope",
+    "event_kind",
+    "name",
+    "allowed_params",
+    "max_duration_days",
+    "community_goal"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "template_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "template_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(.[a-z0-9_]+)+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "const": "platform"
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "event_kind": {
+      "enum": [
+        "school",
+        "community_goal",
+        "learning_campaign"
+      ]
+    },
+    "name": {
+      "$ref": "#/$defs/localized_text",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "properties": {
+        "vi": true,
+        "en": true
+      },
+      "type": "object"
+    },
+    "description": {
+      "$ref": "#/$defs/localized_text",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "properties": {
+        "vi": true,
+        "en": true
+      },
+      "type": "object"
+    },
+    "allowed_params": {
+      "type": "array",
+      "maxItems": 30,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "description",
+          "audience.school_ids",
+          "audience.grade_levels",
+          "community_goal_target",
+          "quest_ids",
+          "challenge_ids",
+          "reward_option_id"
+        ]
+      },
+      "description": "Tham số tùy chọn nhà trường được điền; name, starts_at, ends_at và audience (trong phạm vi trường/tenant của người tạo) luôn điền. Tham số ngoài danh sách → 422 EVENT_TEMPLATE_PARAM_NOT_ALLOWED"
+    },
+    "max_duration_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 28,
+      "description": "Thời lượng tối đa của sự kiện tạo từ mẫu (không vượt school_event_max_duration_days)"
+    },
+    "quest_options": {
+      "type": "array",
+      "maxItems": 100,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/uuid"
+      }
+    },
+    "challenge_options": {
+      "type": "array",
+      "maxItems": 100,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/uuid"
+      }
+    },
+    "reward_options": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reward_option_id",
+          "label",
+          "rewards"
+        ],
+        "properties": {
+          "reward_option_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "label": {
+            "$ref": "#/$defs/localized_text",
+            "required": [
+              "vi",
+              "en"
+            ],
+            "properties": {
+              "vi": true,
+              "en": true
+            },
+            "type": "object"
+          },
+          "rewards": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+              "$ref": "#/$defs/reward"
+            },
+            "description": "Cấp ở mốc cao nhất của community goal"
+          }
+        }
+      }
+    },
+    "event_points": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "daily_cap": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "sources": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source_code",
+              "points"
+            ],
+            "properties": {
+              "source_code": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "points": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "milestone_rewards": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "milestone_id",
+          "event_points",
+          "rewards"
+        ],
+        "properties": {
+          "milestone_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "event_points": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "rewards": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+              "$ref": "#/$defs/reward"
+            }
+          }
+        }
+      }
+    },
+    "community_goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "goal_code",
+        "metric",
+        "scope",
+        "default_target",
+        "milestones"
+      ],
+      "properties": {
+        "goal_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "metric": {
+          "enum": [
+            "correct_answers",
+            "activities_completed",
+            "quests_completed",
+            "discoveries_found",
+            "boss_phases_cleared",
+            "coop_sessions"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "school",
+            "tenant"
+          ]
+        },
+        "default_target": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000000
+        },
+        "per_student_daily_cap": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "show_grade_contributions": {
+          "type": "boolean",
+          "default": true
+        },
+        "milestones": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "percent",
+              "rewards"
+            ],
+            "properties": {
+              "percent": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "rewards": {
+                "type": "array",
+                "maxItems": 10,
+                "items": {
+                  "$ref": "#/$defs/reward"
+                }
+              },
+              "world_change_code": {
+                "type": "string",
+                "maxLength": 64,
+                "description": "Thay đổi trang trí thế giới khi đạt mốc"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "localized_text": {
+      "type": "object",
+      "required": [
+        "vi"
+      ],
+      "properties": {
+        "vi": true
+      },
+      "propertyNames": {
+        "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "reward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "xp",
+            "currency",
+            "item",
+            "badge",
+            "title",
+            "collection_item"
+          ]
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "currency_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "item_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "badge_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "title_code": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "collection_item_id": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "xp",
+                  "currency"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "amount"
+            ],
+            "properties": {
+              "amount": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "currency"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "currency_code"
+            ],
+            "properties": {
+              "currency_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "item_id"
+            ],
+            "properties": {
+              "item_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "badge"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "badge_id"
+            ],
+            "properties": {
+              "badge_id": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "title"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "title_code"
+            ],
+            "properties": {
+              "title_code": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "collection_item"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "collection_item_id"
+            ],
+            "properties": {
+              "collection_item_id": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/season_track.tier_reached.v1.schema.json",
+  "title": "Payload season_track.tier_reached v1 (module game, owner F077)",
+  "description": "Học sinh vừa đạt một cấp season track (một lần mỗi cấp — F077-AC-18). Consumer: achievement-evaluator, RT, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "season_id",
+    "season_track_id",
+    "student_id",
+    "tier",
+    "points",
+    "reached_at"
+  ],
+  "properties": {
+    "season_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "season_track_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "points": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reached_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

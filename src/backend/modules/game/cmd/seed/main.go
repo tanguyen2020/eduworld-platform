@@ -36,7 +36,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/economyschema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/liveopsschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/liveopssql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
@@ -152,6 +154,17 @@ func run(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
+	liveOpsItems, err := seedfiles.LiveOps(dir)
+	if err != nil {
+		return err
+	}
+	liveCfg, err := gameconfig.LiveOpsFrom(config.Load())
+	if err != nil {
+		return err
+	}
+	// F077: a published platform event gets its scheduled run (event.scheduled) in the same transaction.
+	liveOps := &command.LiveOps{UoW: uow, Store: liveopssql.Store{}, Events: write.Publisher{W: w}, Audit: write.Auditor{R: rec},
+		Policy: liveCfg.Command}
 	qcfg, err := gameconfig.QuestFrom(config.Load())
 	if err != nil {
 		return err
@@ -163,8 +176,10 @@ func run(ctx context.Context, dir string) error {
 			Appliers: rewardinfra.Types(), Levels: write.GameContentRepo{}, Curves: progressionsql.Content{}},
 		Economy: &command.EconomyPublishRules{ItemSchema: economyschema.Item{}, ShopSchema: economyschema.ShopItem{},
 			CollectionSchema: economyschema.Collection{}, AchievementSchema: economyschema.Achievement{}, Appliers: rewardinfra.Types(),
-			Items: economysql.Content{}, CollectionItems: write.GameContentRepo{}}}
-	all := append(append(append(worldItems, questItems...), progressionItems...), economyItems...)
+			Items: economysql.Content{}, CollectionItems: write.GameContentRepo{}},
+		LiveOps: &command.LiveOpsPublishRules{EventSchema: liveopsschema.Event{}, TemplateSchema: liveopsschema.Template{},
+			TrackSchema: liveopsschema.Track{}, Reader: liveopssql.Store{}, Hook: liveOps, Policy: liveCfg.Command.Rules}}
+	all := append(append(append(append(worldItems, questItems...), progressionItems...), economyItems...), liveOpsItems...)
 	wres, err := wh.Publish(tenancy.WithScope(ctx, sc), all, "seed world v1", "")
 	if err != nil {
 		return err
@@ -210,6 +225,27 @@ func run(ctx context.Context, dir string) error {
 		slog.WarnContext(ctx, "shop assignments skipped: tenants not projected yet, run the seed again after make seed-check", "tenants", shopSkipped)
 	}
 	assigned += shopAssigned
+	tplAssign, err := seedfiles.TemplateAssignments(dir)
+	if err != nil {
+		return err
+	}
+	var tpls []command.SeedAssignment
+	for _, a := range tplAssign {
+		id, err := uuid.Parse(a.QuestID)
+		if err != nil {
+			return fmt.Errorf("liveops assignments.v1.json: %w", err)
+		}
+		tpls = append(tpls, command.SeedAssignment{QuestID: id, Tenants: a.Tenants})
+	}
+	tplAssigned, tplSkipped, err := command.AssignSeedQuests{UoW: uow, Assignments: write.QuestRepo{}, Audit: write.Auditor{R: rec},
+		ItemType: writeport.ItemEventTemplate}.Assign(tenancy.WithScope(ctx, sc), tpls)
+	if err != nil {
+		return err
+	}
+	if len(tplSkipped) > 0 {
+		slog.WarnContext(ctx, "event template assignments skipped: tenants not projected yet, run the seed again after make seed-check", "tenants", tplSkipped)
+	}
+	assigned += tplAssigned
 	slog.InfoContext(ctx, "game seed done", "catalog_published", res.CatalogPublished, "items_published", res.ItemsPublished,
 		"world_published", wres.Published, "world_unchanged", wres.Unchanged, "quest_assignments", assigned)
 	return nil

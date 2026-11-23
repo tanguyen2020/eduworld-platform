@@ -150,7 +150,8 @@ const AchievementEvaluatorName = "game.achievement_evaluator"
 
 // AchievementEvaluatorGameEvents are the game events of the achievement trigger catalog (owners F070–F076, F075).
 var AchievementEvaluatorGameEvents = []string{"avatar.created", "quest.completed", "challenge.completed", "boss.encounter_completed",
-	"world.discovery_found", "world.area_completed", "world.area_unlocked", "level.reached", "collection.completed", "shop.item_purchased"}
+	"world.discovery_found", "world.area_completed", "world.area_unlocked", "level.reached", "collection.completed", "shop.item_purchased",
+	"event.participation_started", "event.milestone_claimed", "season_track.tier_reached"}
 
 // AchievementEvaluatorLearningName is the achievement-evaluator on the learning events.
 const AchievementEvaluatorLearningName = "game.achievement_evaluator_learning"
@@ -169,3 +170,29 @@ const CollectionOnMasteryName = "game.collection_on_mastery"
 
 // CollectionOnMasteryEvents are the learning events it handles (owner F031).
 var CollectionOnMasteryEvents = []string{"learning_objective.progressed"}
+
+// LiveOpsProgressName is the live-ops progress on the events of module game (F077 T024: event points, community goal
+// contributions, season points from verified server events). One durable consumer per stream, same handler.
+const LiveOpsProgressName = "game.liveops_progress"
+
+// LiveOpsProgressGameEvents are the game events it handles (owners F071, F072).
+var LiveOpsProgressGameEvents = []string{"quest.completed", "world.discovery_found"}
+
+// LiveOpsProgressLearningName is the live-ops progress on the learning events.
+const LiveOpsProgressLearningName = "game.liveops_progress_learning"
+
+// LiveOpsProgressLearningEvents are the learning events it handles (owner F030).
+var LiveOpsProgressLearningEvents = []string{"activity.graded"}
+
+// LiveOpsProgressCompetitionName is the live-ops progress on the competition events.
+const LiveOpsProgressCompetitionName = "game.liveops_progress_competition"
+
+// LiveOpsProgressCompetitionEvents are the competition events it handles (owners F101, F105).
+var LiveOpsProgressCompetitionEvents = []string{"party.activity_completed", "match.completed"}
+
+// SeasonProjectionName keeps ref.seasons from the season calendar of module competition and closes the season track
+// (F077 T029, platform events).
+const SeasonProjectionName = "game.season_projection"
+
+// SeasonProjectionEvents are the competition events it handles (owner F106).
+var SeasonProjectionEvents = []string{"season.started", "season.ended"}

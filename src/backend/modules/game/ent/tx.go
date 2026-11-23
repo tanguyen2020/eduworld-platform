@@ -32,6 +32,12 @@ type Tx struct {
 	CollectionProgress *CollectionProgressClient
 	// CollectionVersion is the client for interacting with the CollectionVersion builders.
 	CollectionVersion *CollectionVersionClient
+	// CommunityGoal is the client for interacting with the CommunityGoal builders.
+	CommunityGoal *CommunityGoalClient
+	// CommunityGoalContribution is the client for interacting with the CommunityGoalContribution builders.
+	CommunityGoalContribution *CommunityGoalContributionClient
+	// CommunityGoalProgress is the client for interacting with the CommunityGoalProgress builders.
+	CommunityGoalProgress *CommunityGoalProgressClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
 	ContentRelease *ContentReleaseClient
 	// Currency is the client for interacting with the Currency builders.
@@ -40,6 +46,20 @@ type Tx struct {
 	CurrencyLedgerEntry *CurrencyLedgerEntryClient
 	// EconomyAdjustment is the client for interacting with the EconomyAdjustment builders.
 	EconomyAdjustment *EconomyAdjustmentClient
+	// Event is the client for interacting with the Event builders.
+	Event *EventClient
+	// EventParticipation is the client for interacting with the EventParticipation builders.
+	EventParticipation *EventParticipationClient
+	// EventPointEntry is the client for interacting with the EventPointEntry builders.
+	EventPointEntry *EventPointEntryClient
+	// EventRun is the client for interacting with the EventRun builders.
+	EventRun *EventRunClient
+	// EventTemplate is the client for interacting with the EventTemplate builders.
+	EventTemplate *EventTemplateClient
+	// EventTemplateVersion is the client for interacting with the EventTemplateVersion builders.
+	EventTemplateVersion *EventTemplateVersionClient
+	// EventVersion is the client for interacting with the EventVersion builders.
+	EventVersion *EventVersionClient
 	// ExplorationProgress is the client for interacting with the ExplorationProgress builders.
 	ExplorationProgress *ExplorationProgressClient
 	// GameProfile is the client for interacting with the GameProfile builders.
@@ -92,6 +112,14 @@ type Tx struct {
 	RewardRule *RewardRuleClient
 	// RewardRuleVersion is the client for interacting with the RewardRuleVersion builders.
 	RewardRuleVersion *RewardRuleVersionClient
+	// SeasonPointEntry is the client for interacting with the SeasonPointEntry builders.
+	SeasonPointEntry *SeasonPointEntryClient
+	// SeasonTrack is the client for interacting with the SeasonTrack builders.
+	SeasonTrack *SeasonTrackClient
+	// SeasonTrackProgress is the client for interacting with the SeasonTrackProgress builders.
+	SeasonTrackProgress *SeasonTrackProgressClient
+	// SeasonTrackVersion is the client for interacting with the SeasonTrackVersion builders.
+	SeasonTrackVersion *SeasonTrackVersionClient
 	// ShopItem is the client for interacting with the ShopItem builders.
 	ShopItem *ShopItemClient
 	// ShopItemVersion is the client for interacting with the ShopItemVersion builders.
@@ -263,10 +291,20 @@ func (tx *Tx) init() {
 	tx.CollectionItem = NewCollectionItemClient(tx.config)
 	tx.CollectionProgress = NewCollectionProgressClient(tx.config)
 	tx.CollectionVersion = NewCollectionVersionClient(tx.config)
+	tx.CommunityGoal = NewCommunityGoalClient(tx.config)
+	tx.CommunityGoalContribution = NewCommunityGoalContributionClient(tx.config)
+	tx.CommunityGoalProgress = NewCommunityGoalProgressClient(tx.config)
 	tx.ContentRelease = NewContentReleaseClient(tx.config)
 	tx.Currency = NewCurrencyClient(tx.config)
 	tx.CurrencyLedgerEntry = NewCurrencyLedgerEntryClient(tx.config)
 	tx.EconomyAdjustment = NewEconomyAdjustmentClient(tx.config)
+	tx.Event = NewEventClient(tx.config)
+	tx.EventParticipation = NewEventParticipationClient(tx.config)
+	tx.EventPointEntry = NewEventPointEntryClient(tx.config)
+	tx.EventRun = NewEventRunClient(tx.config)
+	tx.EventTemplate = NewEventTemplateClient(tx.config)
+	tx.EventTemplateVersion = NewEventTemplateVersionClient(tx.config)
+	tx.EventVersion = NewEventVersionClient(tx.config)
 	tx.ExplorationProgress = NewExplorationProgressClient(tx.config)
 	tx.GameProfile = NewGameProfileClient(tx.config)
 	tx.GameSession = NewGameSessionClient(tx.config)
@@ -293,6 +331,10 @@ func (tx *Tx) init() {
 	tx.RewardGrant = NewRewardGrantClient(tx.config)
 	tx.RewardRule = NewRewardRuleClient(tx.config)
 	tx.RewardRuleVersion = NewRewardRuleVersionClient(tx.config)
+	tx.SeasonPointEntry = NewSeasonPointEntryClient(tx.config)
+	tx.SeasonTrack = NewSeasonTrackClient(tx.config)
+	tx.SeasonTrackProgress = NewSeasonTrackProgressClient(tx.config)
+	tx.SeasonTrackVersion = NewSeasonTrackVersionClient(tx.config)
 	tx.ShopItem = NewShopItemClient(tx.config)
 	tx.ShopItemVersion = NewShopItemVersionClient(tx.config)
 	tx.ShopPurchase = NewShopPurchaseClient(tx.config)

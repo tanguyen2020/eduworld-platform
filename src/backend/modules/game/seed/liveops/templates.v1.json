@@ -1,0 +1,78 @@
+[
+  {
+    "schema_version": 1,
+    "template_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7710",
+    "code": "template.math_week",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "event_kind": "school",
+    "name": {
+      "vi": "Tuần lễ Toán học",
+      "en": "Maths Week"
+    },
+    "description": {
+      "vi": "Cả trường cùng giải toán để thắp sáng sân trường.",
+      "en": "The whole school solves maths to light up the schoolyard."
+    },
+    "allowed_params": [
+      "description",
+      "audience.school_ids",
+      "audience.grade_levels",
+      "community_goal_target",
+      "reward_option_id"
+    ],
+    "max_duration_days": 14,
+    "reward_options": [
+      {
+        "reward_option_id": "school_badge",
+        "label": {
+          "vi": "Huy hiệu trường",
+          "en": "School badge"
+        },
+        "rewards": [
+          {
+            "type": "badge",
+            "badge_id": "badge_explorer_01"
+          }
+        ]
+      },
+      {
+        "reward_option_id": "school_frame",
+        "label": {
+          "vi": "Khung ảnh vàng",
+          "en": "Gold frame"
+        },
+        "rewards": [
+          {
+            "type": "item",
+            "item_id": "frame_gold_01"
+          }
+        ]
+      }
+    ],
+    "community_goal": {
+      "goal_code": "math_week_answers",
+      "metric": "correct_answers",
+      "scope": "school",
+      "default_target": 5000,
+      "per_student_daily_cap": 50,
+      "show_grade_contributions": true,
+      "milestones": [
+        {
+          "percent": 50,
+          "rewards": [
+            {
+              "type": "currency",
+              "currency_code": "xu",
+              "amount": 20
+            }
+          ]
+        },
+        {
+          "percent": 100,
+          "rewards": []
+        }
+      ]
+    }
+  }
+]

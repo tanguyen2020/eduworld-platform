@@ -56,6 +56,24 @@ func (e DisplayTextCheckResultDecision) Valid() bool {
 	}
 }
 
+// Defines values for TextScreenRequestLocale.
+const (
+	En TextScreenRequestLocale = "en"
+	Vi TextScreenRequestLocale = "vi"
+)
+
+// Valid indicates whether the value is a known member of the TextScreenRequestLocale enum.
+func (e TextScreenRequestLocale) Valid() bool {
+	switch e {
+	case En:
+		return true
+	case Vi:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CommonInternalCommonV1ResourceType.
 const (
 	Activity            CommonInternalCommonV1ResourceType = "activity"
@@ -299,6 +317,24 @@ type DisplayTextCheckResult struct {
 
 // DisplayTextCheckResultDecision defines model for DisplayTextCheckResult.Decision.
 type DisplayTextCheckResultDecision string
+
+// TextScreenRequest Examples: {"locale":"vi","tenant_id":"0193a5f4-6c1e-7b2a-9d1f-000000000001","texts":["Tuần lễ Toán học","Cả trường cùng giải toán"]}
+type TextScreenRequest struct {
+	Locale   TextScreenRequestLocale `json:"locale"`
+	TenantId openapi_types.UUID      `json:"tenant_id"`
+	Texts    []string                `json:"texts"`
+}
+
+// TextScreenRequestLocale defines model for TextScreenRequest.Locale.
+type TextScreenRequestLocale string
+
+// TextScreenResult Examples: {"allowed":true,"violations":[]}
+type TextScreenResult struct {
+	Allowed bool `json:"allowed"`
+
+	// Violations Chỉ số (0-based) của các văn bản vi phạm — không có từ khớp, vị trí hay danh mục (R15)
+	Violations []int `json:"violations"`
+}
 
 // CommonInternalCommonV1PageInfo defines model for common_internal-common.v1_PageInfo.
 type CommonInternalCommonV1PageInfo struct {
@@ -565,6 +601,9 @@ type ListTrashParams struct {
 // ModerateDisplayTextJSONRequestBody defines body for ModerateDisplayText for application/json ContentType.
 type ModerateDisplayTextJSONRequestBody = DisplayTextCheckRequest
 
+// ScreenTextJSONRequestBody defines body for ScreenText for application/json ContentType.
+type ScreenTextJSONRequestBody = TextScreenRequest
+
 // CleanupStudentDataJSONRequestBody defines body for CleanupStudentData for application/json ContentType.
 type CleanupStudentDataJSONRequestBody = CommonInternalCommonV1StudentCleanupRequest
 
@@ -594,6 +633,9 @@ type ServerInterface interface {
 	// ModerateDisplayText Kiểm duyệt tên hiển thị do học sinh tự đặt (tên party, tên đội) qua pipeline của module chat
 	// (POST /internal/v1/moderation/display-text:check)
 	ModerateDisplayText(w http.ResponseWriter, r *http.Request)
+	// ScreenText Kiểm tra từ nhạy cảm của văn bản nhà trường nhập (tên, mô tả sự kiện trường) qua pipeline của module chat
+	// (POST /internal/v1/moderation/texts:screen)
+	ScreenText(w http.ResponseWriter, r *http.Request)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(w http.ResponseWriter, r *http.Request, studentId CommonInternalCommonV1StudentIdPath)
@@ -640,6 +682,20 @@ func (siw *ServerInterfaceWrapper) ModerateDisplayText(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ModerateDisplayText(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ScreenText operation middleware
+func (siw *ServerInterfaceWrapper) ScreenText(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScreenText(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1107,6 +1163,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/moderation/display-text:check", wrapper.ModerateDisplayText)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/moderation/texts:screen", wrapper.ScreenText)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:cleanup", wrapper.CleanupStudentData)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/internal/v1/platform/students/{student_id}:restore", wrapper.RestoreStudentData)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/internal/v1/platform/tenant-assignments", wrapper.ListResourceAssignments)
@@ -1194,6 +1251,76 @@ type ModerateDisplayText422ApplicationProblemPlusJSONResponse struct {
 }
 
 func (response ModerateDisplayText422ApplicationProblemPlusJSONResponse) VisitModerateDisplayTextResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScreenTextRequestObject struct {
+	Body *ScreenTextJSONRequestBody
+}
+
+type ScreenTextResponseObject interface {
+	VisitScreenTextResponse(w http.ResponseWriter) error
+}
+
+type ScreenText200JSONResponse TextScreenResult
+
+func (response ScreenText200JSONResponse) VisitScreenTextResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScreenText401ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1UnauthorizedApplicationProblemPlusJSONResponse
+}
+
+func (response ScreenText401ApplicationProblemPlusJSONResponse) VisitScreenTextResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScreenText403ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1CallerNotAllowedApplicationProblemPlusJSONResponse
+}
+
+func (response ScreenText403ApplicationProblemPlusJSONResponse) VisitScreenTextResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ScreenText422ApplicationProblemPlusJSONResponse struct {
+	CommonInternalCommonV1ValidationFailedApplicationProblemPlusJSONResponse
+}
+
+func (response ScreenText422ApplicationProblemPlusJSONResponse) VisitScreenTextResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response); err != nil {
@@ -2013,6 +2140,9 @@ type StrictServerInterface interface {
 	// ModerateDisplayText Kiểm duyệt tên hiển thị do học sinh tự đặt (tên party, tên đội) qua pipeline của module chat
 	// (POST /internal/v1/moderation/display-text:check)
 	ModerateDisplayText(ctx context.Context, request ModerateDisplayTextRequestObject) (ModerateDisplayTextResponseObject, error)
+	// ScreenText Kiểm tra từ nhạy cảm của văn bản nhà trường nhập (tên, mô tả sự kiện trường) qua pipeline của module chat
+	// (POST /internal/v1/moderation/texts:screen)
+	ScreenText(ctx context.Context, request ScreenTextRequestObject) (ScreenTextResponseObject, error)
 	// CleanupStudentData Soft-delete dữ liệu của học sinh trong module này khi bị dọn do không đăng nhập (ADR-0032)
 	// (POST /internal/v1/platform/students/{student_id}:cleanup)
 	CleanupStudentData(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
@@ -2108,6 +2238,37 @@ func (sh *strictHandler) ModerateDisplayText(w http.ResponseWriter, r *http.Requ
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ModerateDisplayTextResponseObject); ok {
 		if err := validResponse.VisitModerateDisplayTextResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ScreenText operation middleware
+func (sh *strictHandler) ScreenText(w http.ResponseWriter, r *http.Request) {
+	var request ScreenTextRequestObject
+
+	var body ScreenTextJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ScreenText(ctx, request.(ScreenTextRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScreenText")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ScreenTextResponseObject); ok {
+		if err := validResponse.VisitScreenTextResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -2434,6 +2595,7 @@ var ErrNotFaked = errors.New("api: operation not faked")
 // Fake implements StrictServerInterface for caller tests: each method calls its <Name>Func.
 type Fake struct {
 	ModerateDisplayTextFunc     func(ctx context.Context, request ModerateDisplayTextRequestObject) (ModerateDisplayTextResponseObject, error)
+	ScreenTextFunc              func(ctx context.Context, request ScreenTextRequestObject) (ScreenTextResponseObject, error)
 	CleanupStudentDataFunc      func(ctx context.Context, request CleanupStudentDataRequestObject) (CleanupStudentDataResponseObject, error)
 	RestoreStudentDataFunc      func(ctx context.Context, request RestoreStudentDataRequestObject) (RestoreStudentDataResponseObject, error)
 	ListResourceAssignmentsFunc func(ctx context.Context, request ListResourceAssignmentsRequestObject) (ListResourceAssignmentsResponseObject, error)
@@ -2454,6 +2616,14 @@ func (f *Fake) ModerateDisplayText(a0 context.Context, a1 ModerateDisplayTextReq
 		return nil, ErrNotFaked
 	}
 	return f.ModerateDisplayTextFunc(a0, a1)
+}
+
+// ScreenText calls ScreenTextFunc.
+func (f *Fake) ScreenText(a0 context.Context, a1 ScreenTextRequestObject) (ScreenTextResponseObject, error) {
+	if f.ScreenTextFunc == nil {
+		return nil, ErrNotFaked
+	}
+	return f.ScreenTextFunc(a0, a1)
 }
 
 // CleanupStudentData calls CleanupStudentDataFunc.

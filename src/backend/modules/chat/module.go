@@ -53,9 +53,11 @@ import (
 const Name = "chat"
 
 // Facade is the part of the chat facade (api.StrictServerInterface, specs/openapi/modules/chat.internal.v1.yaml)
-// implemented: moderateDisplayText (F116, x-allowed-callers: competition — party and team names).
+// implemented: moderateDisplayText (F116, x-allowed-callers: competition — party and team names) and screenText (F077,
+// x-allowed-callers: game — school event texts).
 type Facade interface {
 	ModerateDisplayText(ctx context.Context, req chatapi.ModerateDisplayTextRequestObject) (chatapi.ModerateDisplayTextResponseObject, error)
+	ScreenText(ctx context.Context, req chatapi.ScreenTextRequestObject) (chatapi.ScreenTextResponseObject, error)
 }
 
 // Module is the registered module; Facade() serves the facade operations of module chat.

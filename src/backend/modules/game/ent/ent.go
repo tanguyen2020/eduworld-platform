@@ -22,10 +22,20 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoal"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalcontribution"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/communitygoalprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/contentrelease"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currency"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currencyledgerentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/economyadjustment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/event"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventparticipation"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventpointentry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventrun"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventtemplate"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventtemplateversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/eventversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/explorationprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
@@ -52,6 +62,10 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardrule"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardruleversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasonpointentry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrack"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrackprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/seasontrackversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shopitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shopitemversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shoppurchase"
@@ -127,61 +141,75 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			achievement.Table:              achievement.ValidColumn,
-			achievementprogressevent.Table: achievementprogressevent.ValidColumn,
-			achievementversion.Table:       achievementversion.ValidColumn,
-			avatarpreset.Table:             avatarpreset.ValidColumn,
-			charactercatalog.Table:         charactercatalog.ValidColumn,
-			charactercatalogversion.Table:  charactercatalogversion.ValidColumn,
-			collection.Table:               collection.ValidColumn,
-			collectionitem.Table:           collectionitem.ValidColumn,
-			collectionprogress.Table:       collectionprogress.ValidColumn,
-			collectionversion.Table:        collectionversion.ValidColumn,
-			contentrelease.Table:           contentrelease.ValidColumn,
-			currency.Table:                 currency.ValidColumn,
-			currencyledgerentry.Table:      currencyledgerentry.ValidColumn,
-			economyadjustment.Table:        economyadjustment.ValidColumn,
-			explorationprogress.Table:      explorationprogress.ValidColumn,
-			gameprofile.Table:              gameprofile.ValidColumn,
-			gamesession.Table:              gamesession.ValidColumn,
-			inventoryitem.Table:            inventoryitem.ValidColumn,
-			itemdefinition.Table:           itemdefinition.ValidColumn,
-			itemdefinitionversion.Table:    itemdefinitionversion.ValidColumn,
-			itemledgerentry.Table:          itemledgerentry.ValidColumn,
-			leveldefinition.Table:          leveldefinition.ValidColumn,
-			levelhistory.Table:             levelhistory.ValidColumn,
-			levelsession.Table:             levelsession.ValidColumn,
-			levelversion.Table:             levelversion.ValidColumn,
-			loginevent.Table:               loginevent.ValidColumn,
-			nicknamechange.Table:           nicknamechange.ValidColumn,
-			npcdialogue.Table:              npcdialogue.ValidColumn,
-			npcdialogueversion.Table:       npcdialogueversion.ValidColumn,
-			periodicquestgrant.Table:       periodicquestgrant.ValidColumn,
-			progressioncurve.Table:         progressioncurve.ValidColumn,
-			progressioncurveversion.Table:  progressioncurveversion.ValidColumn,
-			progressionlevel.Table:         progressionlevel.ValidColumn,
-			questdefinition.Table:          questdefinition.ValidColumn,
-			questprogress.Table:            questprogress.ValidColumn,
-			queststepattempt.Table:         queststepattempt.ValidColumn,
-			questversion.Table:             questversion.ValidColumn,
-			rewardgrant.Table:              rewardgrant.ValidColumn,
-			rewardrule.Table:               rewardrule.ValidColumn,
-			rewardruleversion.Table:        rewardruleversion.ValidColumn,
-			shopitem.Table:                 shopitem.ValidColumn,
-			shopitemversion.Table:          shopitemversion.ValidColumn,
-			shoppurchase.Table:             shoppurchase.ValidColumn,
-			storychapter.Table:             storychapter.ValidColumn,
-			storychapterversion.Table:      storychapterversion.ValidColumn,
-			storyprogress.Table:            storyprogress.ValidColumn,
-			studentachievement.Table:       studentachievement.ValidColumn,
-			tenantresourceassignment.Table: tenantresourceassignment.ValidColumn,
-			wallet.Table:                   wallet.ValidColumn,
-			worldarea.Table:                worldarea.ValidColumn,
-			worldareaunlock.Table:          worldareaunlock.ValidColumn,
-			worldareaversion.Table:         worldareaversion.ValidColumn,
-			worldunlockfact.Table:          worldunlockfact.ValidColumn,
-			xpdailycap.Table:               xpdailycap.ValidColumn,
-			xpledgerentry.Table:            xpledgerentry.ValidColumn,
+			achievement.Table:               achievement.ValidColumn,
+			achievementprogressevent.Table:  achievementprogressevent.ValidColumn,
+			achievementversion.Table:        achievementversion.ValidColumn,
+			avatarpreset.Table:              avatarpreset.ValidColumn,
+			charactercatalog.Table:          charactercatalog.ValidColumn,
+			charactercatalogversion.Table:   charactercatalogversion.ValidColumn,
+			collection.Table:                collection.ValidColumn,
+			collectionitem.Table:            collectionitem.ValidColumn,
+			collectionprogress.Table:        collectionprogress.ValidColumn,
+			collectionversion.Table:         collectionversion.ValidColumn,
+			communitygoal.Table:             communitygoal.ValidColumn,
+			communitygoalcontribution.Table: communitygoalcontribution.ValidColumn,
+			communitygoalprogress.Table:     communitygoalprogress.ValidColumn,
+			contentrelease.Table:            contentrelease.ValidColumn,
+			currency.Table:                  currency.ValidColumn,
+			currencyledgerentry.Table:       currencyledgerentry.ValidColumn,
+			economyadjustment.Table:         economyadjustment.ValidColumn,
+			event.Table:                     event.ValidColumn,
+			eventparticipation.Table:        eventparticipation.ValidColumn,
+			eventpointentry.Table:           eventpointentry.ValidColumn,
+			eventrun.Table:                  eventrun.ValidColumn,
+			eventtemplate.Table:             eventtemplate.ValidColumn,
+			eventtemplateversion.Table:      eventtemplateversion.ValidColumn,
+			eventversion.Table:              eventversion.ValidColumn,
+			explorationprogress.Table:       explorationprogress.ValidColumn,
+			gameprofile.Table:               gameprofile.ValidColumn,
+			gamesession.Table:               gamesession.ValidColumn,
+			inventoryitem.Table:             inventoryitem.ValidColumn,
+			itemdefinition.Table:            itemdefinition.ValidColumn,
+			itemdefinitionversion.Table:     itemdefinitionversion.ValidColumn,
+			itemledgerentry.Table:           itemledgerentry.ValidColumn,
+			leveldefinition.Table:           leveldefinition.ValidColumn,
+			levelhistory.Table:              levelhistory.ValidColumn,
+			levelsession.Table:              levelsession.ValidColumn,
+			levelversion.Table:              levelversion.ValidColumn,
+			loginevent.Table:                loginevent.ValidColumn,
+			nicknamechange.Table:            nicknamechange.ValidColumn,
+			npcdialogue.Table:               npcdialogue.ValidColumn,
+			npcdialogueversion.Table:        npcdialogueversion.ValidColumn,
+			periodicquestgrant.Table:        periodicquestgrant.ValidColumn,
+			progressioncurve.Table:          progressioncurve.ValidColumn,
+			progressioncurveversion.Table:   progressioncurveversion.ValidColumn,
+			progressionlevel.Table:          progressionlevel.ValidColumn,
+			questdefinition.Table:           questdefinition.ValidColumn,
+			questprogress.Table:             questprogress.ValidColumn,
+			queststepattempt.Table:          queststepattempt.ValidColumn,
+			questversion.Table:              questversion.ValidColumn,
+			rewardgrant.Table:               rewardgrant.ValidColumn,
+			rewardrule.Table:                rewardrule.ValidColumn,
+			rewardruleversion.Table:         rewardruleversion.ValidColumn,
+			seasonpointentry.Table:          seasonpointentry.ValidColumn,
+			seasontrack.Table:               seasontrack.ValidColumn,
+			seasontrackprogress.Table:       seasontrackprogress.ValidColumn,
+			seasontrackversion.Table:        seasontrackversion.ValidColumn,
+			shopitem.Table:                  shopitem.ValidColumn,
+			shopitemversion.Table:           shopitemversion.ValidColumn,
+			shoppurchase.Table:              shoppurchase.ValidColumn,
+			storychapter.Table:              storychapter.ValidColumn,
+			storychapterversion.Table:       storychapterversion.ValidColumn,
+			storyprogress.Table:             storyprogress.ValidColumn,
+			studentachievement.Table:        studentachievement.ValidColumn,
+			tenantresourceassignment.Table:  tenantresourceassignment.ValidColumn,
+			wallet.Table:                    wallet.ValidColumn,
+			worldarea.Table:                 worldarea.ValidColumn,
+			worldareaunlock.Table:           worldareaunlock.ValidColumn,
+			worldareaversion.Table:          worldareaversion.ValidColumn,
+			worldunlockfact.Table:           worldunlockfact.ValidColumn,
+			xpdailycap.Table:                xpdailycap.ValidColumn,
+			xpledgerentry.Table:             xpledgerentry.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

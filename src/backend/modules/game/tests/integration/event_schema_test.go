@@ -23,7 +23,10 @@ var gameEventTypes = append(append([]string{}, sessionEventTypes...), "avatar.cr
 	"content.published", "content.manifest_updated", "world.area_entered", "world.area_unlocked", "world.discovery_found", "world.area_completed",
 	"story.chapter_completed", "quest.accepted", "quest.step_completed", "quest.completed", "quest.abandoned", "xp.awarded", "level.reached",
 	"reward.granted", "currency.credited", "currency.debited", "shop.item_purchased", "item.granted", "collection.item_added",
-	"collection.completed", "achievement.progressed", "achievement.unlocked", "economy.adjusted")
+	"collection.completed", "achievement.progressed", "achievement.unlocked", "economy.adjusted",
+	"event.scheduled", "event.started", "event.suspended", "event.resumed", "event.ended", "event.cancelled", "event.participation_started",
+	"event.milestone_claimed", "community_goal.milestone_reached", "community_goal.completed", "season_track.tier_reached",
+	"season_track.reward_claimed")
 
 // checkEventSchemas validates every F014 event in the outbox: envelope (specs/events/envelope.schema.json) and payload
 // (specs/events/payloads/game/<type>.v1.schema.json, contract first) — the consumers of identity, learning and the

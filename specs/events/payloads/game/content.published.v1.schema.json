@@ -32,13 +32,16 @@
         "reward_rule",
         "shop_item",
         "collection",
-        "achievement"
+        "achievement",
+        "event",
+        "event_template",
+        "season_track"
       ]
     },
     "item_id": {
       "type": "string",
       "maxLength": 64,
-      "description": "area_id, chapter_code, dialogue_id, level_id, quest_id (F072), curve_id hoặc reward_rule_id (F074), item_id (mã vật phẩm), shop_item_id, collection_id, achievement_id (F075)"
+      "description": "area_id, chapter_code, dialogue_id, level_id, quest_id (F072), curve_id hoặc reward_rule_id (F074), item_id (mã vật phẩm), shop_item_id, collection_id, achievement_id (F075), event_id, template_id, season_track_id (F077)"
     },
     "from_version_id": {
       "type": [

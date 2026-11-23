@@ -17,9 +17,11 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/achievement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/collection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/economy"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/liveops"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/progression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/reward"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/season"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/world"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -35,7 +37,8 @@ const EventContentPublished = "content.published"
 // publishOrder publishes areas before their levels and chapters before the dialogues that reference their quests.
 // Quests (F072) come before the dialogues that give them.
 var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemQuest, write.ItemNPCDialogue,
-	write.ItemProgressionCurve, write.ItemGameItem, write.ItemRewardRule, write.ItemShopItem, write.ItemCollection, write.ItemAchievement}
+	write.ItemProgressionCurve, write.ItemGameItem, write.ItemRewardRule, write.ItemShopItem, write.ItemCollection, write.ItemAchievement,
+	write.ItemEventTemplate, write.ItemSeasonTrack, write.ItemEvent}
 
 // ContentItem is one authored game content payload to publish.
 type ContentItem struct {
@@ -82,26 +85,31 @@ type PublishGameContent struct {
 	Progression *ProgressionPublishRules
 	// Economy are the F075 checks (items, shop items, collections, achievements) and the collection item store.
 	Economy *EconomyPublishRules
+	// LiveOps are the F077 checks (events, event templates, season tracks) and the run hook of a published event.
+	LiveOps *LiveOpsPublishRules
 	Now     func() time.Time
 }
 
 type parsedItem struct {
 	ContentItem
-	id      string
-	parent  map[string]any
-	columns map[string]any
-	doc     map[string]any // canonical authored content
-	area    *world.Area
-	chapter *world.Chapter
-	level   *world.Level
-	dlg     *world.Dialogue
-	quest   *quest.Version
-	curve   *progression.Curve
-	rule    *reward.Rule
-	item    *economy.Item
-	shop    *economy.ShopItem
-	coll    *collection.Collection
-	ach     *achievement.Definition
+	id       string
+	parent   map[string]any
+	columns  map[string]any
+	doc      map[string]any // canonical authored content
+	area     *world.Area
+	chapter  *world.Chapter
+	level    *world.Level
+	dlg      *world.Dialogue
+	quest    *quest.Version
+	curve    *progression.Curve
+	rule     *reward.Rule
+	item     *economy.Item
+	shop     *economy.ShopItem
+	coll     *collection.Collection
+	ach      *achievement.Definition
+	event    *liveops.Definition
+	template *liveops.Template
+	track    *season.Track
 }
 
 // Publish publishes items in one platform transaction; key makes the release rows idempotent per item.
@@ -129,6 +137,8 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 			p, err = parseProgression(it, h.Progression, now)
 		case economyItem(it.Type):
 			p, err = parseEconomy(it, h.Economy)
+		case liveOpsItem(it.Type):
+			p, err = parseLiveOps(it, h.LiveOps)
 		default:
 			p, err = parse(it)
 		}
@@ -295,6 +305,11 @@ func (h PublishGameContent) checkRefs(ctx context.Context, items []parsedItem) e
 	if err := h.checkEconomy(ctx, items); err != nil {
 		return err
 	}
+	if h.LiveOps != nil {
+		if err := h.checkLiveOps(ctx, items); err != nil {
+			return err
+		}
+	}
 	grades := map[string][]struct {
 		id     string
 		grades []int
@@ -390,6 +405,18 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 			return GameRelease{}, false, err
 		}
 	}
+	if liveOpsItem(p.Type) {
+		if stored, err = liveOpsStored(p, vid, head.NextVersionNo); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
+	if p.event != nil {
+		eff, err := h.LiveOps.Hook.EffectiveFrom(ctx, p.event.EventID, *p.event, now)
+		if err != nil {
+			return GameRelease{}, false, err
+		}
+		p.columns["effective_from"] = eff
+	}
 	if p.Type == write.ItemNPCDialogue {
 		doc := map[string]any{}
 		for k, v := range p.doc {
@@ -414,6 +441,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 	}
 	if p.coll != nil {
 		if err := h.insertCollectionItems(ctx, p, vid); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
+	if p.event != nil {
+		if err := h.LiveOps.Hook.EventPublished(ctx, *p.event, vid, head.NextVersionNo, now); err != nil {
 			return GameRelease{}, false, err
 		}
 	}

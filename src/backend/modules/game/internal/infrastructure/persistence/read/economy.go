@@ -194,8 +194,9 @@ func (Economy) Inventory(ctx context.Context, tenant, student uuid.UUID, kind, a
 }
 
 // Shop implements read.EconomyReadModel (F075-AC-06): published current versions on sale now, assigned to the tenant (or
-// to every tenant), of the grade of the student when grades are set; a listing limited to an event or a season is not
-// listed while no event run exists (fail closed like port.LiveOps until F077).
+// to every tenant), of the grade of the student when grades are set; a listing limited to an event is listed while the
+// event has a live run of the tenant's audience, one limited to a season while the season is started and holds now (F077,
+// same rule as port.LiveOps of the purchase).
 func (Economy) Shop(ctx context.Context, f read.ShopFilter) ([]read.ShopRow, error) {
 	t, err := tx(ctx)
 	if err != nil {
@@ -207,6 +208,7 @@ func (Economy) Shop(ctx context.Context, f read.ShopFilter) ([]read.ShopRow, err
 	}
 	// tenancyguard:ok platform content (G tables, deleted_at filtered) + infra.tenant_resource_assignments (explicit tenant_id + deleted_at)
 	// + the tenant tables of the student (shop_purchases append-only, inventory_items live rows), explicit tenant_id (RLS as well)
+	// + the G/T event runs (platform rows or explicit tenant_id, deleted_at filtered) and the platform projection ref.seasons
 	rows, err := t.QueryContext(ctx, `SELECT s.shop_item_id, v.item_id, iv.kind, iv.rarity, iv.name, iv.payload->'description', v.price_amount,
 			v.currency_code, v.purchase_limit, v.available_to, v.featured_order,
 			(SELECT coalesce(sum(p.quantity), 0) FROM gamification.shop_purchases p WHERE p.tenant_id = $1 AND p.student_id = $2
@@ -220,7 +222,11 @@ func (Economy) Shop(ctx context.Context, f read.ShopFilter) ([]read.ShopRow, err
 		WHERE s.deleted_at IS NULL AND v.currency_code = 'xu' AND v.price_amount > 0
 			AND (v.available_from IS NULL OR v.available_from <= $3) AND (v.available_to IS NULL OR v.available_to > $3)
 			AND (jsonb_array_length(v.grade_levels) = 0 OR v.grade_levels @> to_jsonb($4::int))
-			AND v.event_id IS NULL AND v.season_id IS NULL
+			AND (v.event_id IS NULL OR EXISTS (SELECT 1 FROM game.event_runs r WHERE r.event_id = v.event_id AND r.status = 'live'
+				AND r.deleted_at IS NULL AND (r.tenant_id = $1 OR (r.tenant_id IS NULL
+					AND (jsonb_array_length(coalesce(r.audience->'tenant_ids', '[]'::jsonb)) = 0 OR r.audience->'tenant_ids' @> to_jsonb($1::text))))))
+			AND (v.season_id IS NULL OR EXISTS (SELECT 1 FROM ref.seasons se WHERE se.season_id = v.season_id AND se.status = 'started'
+				AND se.starts_at <= $3 AND se.ends_at > $3))
 			AND (NOT EXISTS (SELECT 1 FROM infra.tenant_resource_assignments a WHERE a.resource_type = 'shop_item'
 					AND a.resource_id = s.shop_item_id AND a.deleted_at IS NULL)
 				OR EXISTS (SELECT 1 FROM infra.tenant_resource_assignments a WHERE a.resource_type = 'shop_item' AND a.resource_id = s.shop_item_id

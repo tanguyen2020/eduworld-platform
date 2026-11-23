@@ -19,7 +19,7 @@ import (
 )
 
 // gameItemTypes are the manifest item types owned by the game release core (replaced on every game rebuild).
-var gameItemTypes = []string{write.ItemWorldArea, write.ItemStoryChapter, write.ItemNPCDialogue, write.ItemLevel, write.ItemQuest}
+var gameItemTypes = []string{write.ItemWorldArea, write.ItemStoryChapter, write.ItemNPCDialogue, write.ItemLevel, write.ItemQuest, write.ItemEvent}
 
 // GameManifest rebuilds the game part of the content manifest of every active tenant when game content is released
 // (F071-AC-05, ADR-0043 §6): items of the game types, areas and bundles are replaced by the published content; the
@@ -31,7 +31,9 @@ type GameManifest struct {
 	Content port.WorldContent
 	// Quests lists the quests assigned to each tenant (F072 T010: a tenant manifest holds only its assigned quests); nil =
 	// no quest entries.
-	Quests  port.QuestContent
+	Quests port.QuestContent
+	// LiveOps lists the event entries of a tenant (F077: live runs whose audience holds the tenant); nil = no event entry.
+	LiveOps port.ManifestEvents
 	Events  write.EventPublisher
 	Metrics ManifestMetrics
 	// BuildSeconds observes eduworld_game_manifest_build_seconds; nil = not observed.
@@ -59,6 +61,25 @@ func (h GameManifest) Rebuild(ctx context.Context, cause uuid.UUID, itemType str
 	if err != nil {
 		return err
 	}
+	return h.rebuild(ctx, tenants, cause, itemType, releasedAt)
+}
+
+// RebuildTenants rebuilds the manifest of tenants (F077-AC-02: a run became live, suspended, ended or cancelled — the
+// event entries are added or removed); cause is the run. Runs each tenant in its own transaction.
+func (h GameManifest) RebuildTenants(ctx context.Context, tenants []uuid.UUID, cause uuid.UUID, itemType string) (err error) {
+	ctx, done := observability.UseCase(ctx, "game.command.RebuildTenantManifests")
+	defer func() { done(err) }()
+	if len(tenants) == 0 {
+		return nil
+	}
+	ps, err := authz.SystemPlatformScope("event-scheduler")
+	if err != nil {
+		return err
+	}
+	return h.UoW.InTenantTx(ctx, ps, func(ctx context.Context) error { return h.rebuild(ctx, tenants, cause, itemType, time.Time{}) })
+}
+
+func (h GameManifest) rebuild(ctx context.Context, tenants []uuid.UUID, cause uuid.UUID, itemType string, releasedAt time.Time) error {
 	entries, err := h.entries(ctx)
 	if err != nil {
 		return err
@@ -163,6 +184,19 @@ func (h GameManifest) rebuildOne(ctx context.Context, tenant uuid.UUID, g gameEn
 		kept = append(kept, it)
 	}
 	kept = append(kept, g.items...)
+	if h.LiveOps != nil {
+		events, err := h.LiveOps.ManifestEvents(ctx, tenant)
+		if err != nil {
+			return err
+		}
+		for _, ev := range events {
+			it, err := json.Marshal(ev)
+			if err != nil {
+				return err
+			}
+			kept = append(kept, it)
+		}
+	}
 	if h.Quests != nil {
 		quests, err := h.Quests.AssignedQuests(ctx, tenant, 0)
 		if err != nil {

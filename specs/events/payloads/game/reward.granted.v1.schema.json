@@ -31,7 +31,11 @@
         "level_up",
         "achievement",
         "collection",
-        "knowledge_card"
+        "knowledge_card",
+        "event_participation",
+        "event_milestone",
+        "community_goal",
+        "season_tier"
       ]
     },
     "items": {

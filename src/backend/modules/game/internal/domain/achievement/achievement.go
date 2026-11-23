@@ -37,10 +37,11 @@ func invalid(field, format string, args ...any) error {
 // and completion — never a login, a session, online time or a chat message.
 var TriggerEvents = []string{"avatar.created", "quest.completed", "lesson.completed", "exercise.submitted", "learning_objective.mastered",
 	"challenge.completed", "boss.encounter_completed", "world.discovery_found", "world.area_completed", "world.area_unlocked",
-	"level.reached", "party.activity_completed", "match.completed", "collection.completed", "shop.item_purchased"}
+	"level.reached", "party.activity_completed", "match.completed", "collection.completed", "shop.item_purchased",
+	"event.participation_started", "event.milestone_claimed", "season_track.tier_reached"} // F077 (per-student events)
 
-// Categories of an achievement (AchievementCategory; event joins with F077).
-var Categories = []string{"first_time", "progress", "learning", "exploration", "social", "team", "competition", "seasonal", "hidden"}
+// Categories of an achievement (AchievementCategory; event joined with F077).
+var Categories = []string{"first_time", "progress", "learning", "exploration", "social", "team", "competition", "seasonal", "event", "hidden"}
 
 // Tier codes in rank order.
 var Tiers = []string{"single", "bronze", "silver", "gold", "platinum"}

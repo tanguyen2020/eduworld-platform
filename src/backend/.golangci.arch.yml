@@ -31,8 +31,6 @@ linters:
         module-game:
           files: ["**/modules/game/**"]
           deny:
-            - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/api"
-              desc: "game is not in x-allowed-callers of chat"
             - pkg: "github.com/tanguyen2020/eduworld-platform/src/backend/modules/realtime/api"
               desc: "game is not in x-allowed-callers of realtime"
         module-identity:

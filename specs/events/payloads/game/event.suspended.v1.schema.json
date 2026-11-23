@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/event.suspended.v1.schema.json",
+  "title": "Payload event.suspended v1 (module game, owner F077)",
+  "description": "Vận hành dừng khẩn cấp run đang live (game.event.operate, lý do bắt buộc, audit — F077-AC-03): thành phần sự kiện ẩn, không cấp thưởng mới, lượt chơi đang dở kết thúc theo version ghim. Consumer: manifest, RT (Event Center), NTF trong game, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_run_id",
+    "event_version_id",
+    "event_kind",
+    "owner_scope",
+    "status",
+    "starts_at",
+    "ends_at",
+    "claim_until",
+    "audience",
+    "changed_at"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_run_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_kind": {
+      "type": "string",
+      "enum": [
+        "world_festival",
+        "weekend",
+        "school",
+        "community_goal",
+        "learning_campaign",
+        "special_boss",
+        "limited_quest"
+      ]
+    },
+    "owner_scope": {
+      "type": "string",
+      "enum": [
+        "platform",
+        "tenant"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "live",
+        "suspended",
+        "ended",
+        "cancelled"
+      ]
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "claim_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "audience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "grade_levels"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": [
+            "platform",
+            "tenant",
+            "school"
+          ]
+        },
+        "tenant_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "school_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "grade_levels": {
+          "type": "array",
+          "maxItems": 9,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        }
+      },
+      "description": "Đối tượng của version ghim: tenant, trường, khối — không có lớp (ADR-0095)"
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 1000,
+      "description": "Lý do của thao tác vận hành (dừng khẩn cấp, tiếp tục, hủy); null khi scheduler chuyển theo lịch"
+    },
+    "changed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -32,6 +32,9 @@ var migrations = map[string][]string{
 	"20261228000001_f074_progression.sql": {"xp_ledger", "xp_daily_caps", "reward_rules", "reward_rule_versions", "reward_grants",
 		"progression_curves", "progression_curve_versions", "progression_levels", "level_history"},
 	"20261229000001_f075_economy.sql": {"currencies", "wallets", "currency_ledger", "item_ledger", "shop_items", "shop_item_versions", "shop_purchases", "collections", "collection_versions", "collection_items", "collection_progress", "achievements", "achievement_versions", "student_achievements", "achievement_progress_events", "economy_adjustments"},
+	"20261230000770_f077_liveops.sql": {"events", "event_versions", "event_templates", "event_template_versions", "event_runs",
+		"event_participation", "event_point_ledger", "community_goals", "community_goal_contributions", "community_goal_progress", "season_tracks",
+		"season_track_versions", "season_point_ledger", "season_track_progress"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -80,7 +83,12 @@ func schemas() map[string]string {
 		"reward_rules": c.RewardRule, "reward_rule_versions": c.RewardRuleVersion, "reward_grants": c.RewardGrant,
 		"progression_curves": c.ProgressionCurve, "progression_curve_versions": c.ProgressionCurveVersion,
 		"progression_levels": c.ProgressionLevel, "level_history": c.LevelHistory,
-		"currencies": c.Currency, "wallets": c.Wallet, "currency_ledger": c.CurrencyLedgerEntry, "item_ledger": c.ItemLedgerEntry, "shop_items": c.ShopItem, "shop_item_versions": c.ShopItemVersion, "shop_purchases": c.ShopPurchase, "collections": c.Collection, "collection_versions": c.CollectionVersion, "collection_items": c.CollectionItem, "collection_progress": c.CollectionProgress, "achievements": c.Achievement, "achievement_versions": c.AchievementVersion, "student_achievements": c.StudentAchievement, "achievement_progress_events": c.AchievementProgressEvent, "economy_adjustments": c.EconomyAdjustment}
+		"currencies": c.Currency, "wallets": c.Wallet, "currency_ledger": c.CurrencyLedgerEntry, "item_ledger": c.ItemLedgerEntry, "shop_items": c.ShopItem, "shop_item_versions": c.ShopItemVersion, "shop_purchases": c.ShopPurchase, "collections": c.Collection, "collection_versions": c.CollectionVersion, "collection_items": c.CollectionItem, "collection_progress": c.CollectionProgress, "achievements": c.Achievement, "achievement_versions": c.AchievementVersion, "student_achievements": c.StudentAchievement, "achievement_progress_events": c.AchievementProgressEvent, "economy_adjustments": c.EconomyAdjustment,
+		"events": c.Event, "event_versions": c.EventVersion, "event_templates": c.EventTemplate, "event_template_versions": c.EventTemplateVersion,
+		"event_runs": c.EventRun, "event_participation": c.EventParticipation, "event_point_ledger": c.EventPointEntry,
+		"community_goals": c.CommunityGoal, "community_goal_contributions": c.CommunityGoalContribution,
+		"community_goal_progress": c.CommunityGoalProgress, "season_tracks": c.SeasonTrack, "season_track_versions": c.SeasonTrackVersion,
+		"season_point_ledger": c.SeasonPointEntry, "season_track_progress": c.SeasonTrackProgress}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

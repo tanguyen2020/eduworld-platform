@@ -26,6 +26,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/profile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/security"
 	gamehttp "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/http"
@@ -274,7 +275,7 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 			Maintenance: func() query.Maintenance {
 				return query.Maintenance{Active: maint.Active, Message: maint.Message}
 			}},
-		Manifest:    query.GetContentManifest{Read: e.read, Manifests: read.Manifests{}, MinClientVersion: MinVersion},
+		Manifest:    query.GetContentManifest{Read: e.read, Manifests: read.Manifests{}, MinClientVersion: MinVersion, Students: worldsql.Content{}},
 		LoginEvents: query.LoginEvents{Read: e.read, Events: read.LoginEvents{}, Students: read.Students{}, Cursors: codec},
 		IPHasher:    security.NewIPHasher([]byte(strings.Repeat("h", 32))),
 		Tickets: command.RealtimeTickets{Sessions: e.sessions, Store: e.tickets,
@@ -282,7 +283,8 @@ func (e *env) server(ctx context.Context, t *testing.T) {
 		Profiles: e.profiles, ProfileQueries: query.Profile{Read: e.read, Profiles: read.Profiles{}, Catalog: read.Catalogs{},
 			Options: e.options, TTL: e.profileCfg.SuggestionTTL},
 		World: worldProxy{e}, WorldQueries: e.worldQueries(), Quests: questProxy{e}, QuestQueries: questQueryProxy{e},
-		ProgressionQueries: progressionQueryProxy{e}, EconomyQueries: economyQueryProxy{e}, EconomyCommands: economyCommandProxy{e}}
+		ProgressionQueries: progressionQueryProxy{e}, EconomyQueries: economyQueryProxy{e}, EconomyCommands: economyCommandProxy{e},
+		LiveOpsQueries: liveQueryProxy{e}, LiveOpsCommands: liveCommandProxy{e}}
 	if err := gamehttp.Register(s, h); err != nil {
 		t.Fatal(err)
 	}

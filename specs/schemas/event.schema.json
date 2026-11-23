@@ -283,6 +283,12 @@
               "type": "string",
               "maxLength": 64
             },
+            "bundle_size_bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1073741824,
+              "description": "Kích thước gói trang trí trên mobile (byte) — bắt buộc khi có bundle_id; publish chặn khi vượt event_decoration_bundle_max_mb (ADR-0057, F077-AC-28)"
+            },
             "low_preset_bundle_id": {
               "type": "string",
               "maxLength": 64,

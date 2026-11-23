@@ -342,6 +342,116 @@ var (
 			},
 		},
 	}
+	// CommunityGoalsColumns holds the columns for the "community_goals" table.
+	CommunityGoalsColumns = []*schema.Column{
+		{Name: "goal_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "event_run_id", Type: field.TypeUUID},
+		{Name: "goal_code", Type: field.TypeString, Size: 64},
+		{Name: "metric", Type: field.TypeString, Size: 32},
+		{Name: "scope", Type: field.TypeString, Size: 16},
+		{Name: "target", Type: field.TypeInt64},
+		{Name: "per_student_daily_cap", Type: field.TypeInt},
+		{Name: "show_grade_contributions", Type: field.TypeBool, Default: true},
+		{Name: "milestones", Type: field.TypeJSON},
+		{Name: "metric_filter", Type: field.TypeJSON, Nullable: true},
+	}
+	// CommunityGoalsTable holds the schema information for the "community_goals" table.
+	CommunityGoalsTable = &schema.Table{
+		Name:       "community_goals",
+		Columns:    CommunityGoalsColumns,
+		PrimaryKey: []*schema.Column{CommunityGoalsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "community_goals_run_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CommunityGoalsColumns[10], CommunityGoalsColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// CommunityGoalContributionsColumns holds the columns for the "community_goal_contributions" table.
+	CommunityGoalContributionsColumns = []*schema.Column{
+		{Name: "contribution_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "goal_id", Type: field.TypeUUID},
+		{Name: "scope_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "grade_level", Type: field.TypeInt, Nullable: true},
+		{Name: "amount", Type: field.TypeInt},
+		{Name: "source_event_id", Type: field.TypeUUID},
+		{Name: "contributed_on", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+	}
+	// CommunityGoalContributionsTable holds the schema information for the "community_goal_contributions" table.
+	CommunityGoalContributionsTable = &schema.Table{
+		Name:       "community_goal_contributions",
+		Columns:    CommunityGoalContributionsColumns,
+		PrimaryKey: []*schema.Column{CommunityGoalContributionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "community_goal_contributions_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CommunityGoalContributionsColumns[4], CommunityGoalContributionsColumns[10], CommunityGoalContributionsColumns[6]},
+			},
+			{
+				Name:    "community_goal_contributions_day_idx",
+				Unique:  false,
+				Columns: []*schema.Column{CommunityGoalContributionsColumns[4], CommunityGoalContributionsColumns[6], CommunityGoalContributionsColumns[11]},
+			},
+			{
+				Name:    "community_goal_contributions_scope_idx",
+				Unique:  false,
+				Columns: []*schema.Column{CommunityGoalContributionsColumns[4], CommunityGoalContributionsColumns[5]},
+			},
+		},
+	}
+	// CommunityGoalProgressColumns holds the columns for the "community_goal_progress" table.
+	CommunityGoalProgressColumns = []*schema.Column{
+		{Name: "progress_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "goal_id", Type: field.TypeUUID},
+		{Name: "scope_id", Type: field.TypeUUID},
+		{Name: "total", Type: field.TypeInt64, Default: 0},
+		{Name: "milestones_reached", Type: field.TypeJSON},
+		{Name: "recomputed_at", Type: field.TypeTime, Nullable: true},
+	}
+	// CommunityGoalProgressTable holds the schema information for the "community_goal_progress" table.
+	CommunityGoalProgressTable = &schema.Table{
+		Name:       "community_goal_progress",
+		Columns:    CommunityGoalProgressColumns,
+		PrimaryKey: []*schema.Column{CommunityGoalProgressColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "community_goal_progress_scope_uq",
+				Unique:  true,
+				Columns: []*schema.Column{CommunityGoalProgressColumns[10], CommunityGoalProgressColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
 	// ContentReleasesColumns holds the columns for the "content_releases" table.
 	ContentReleasesColumns = []*schema.Column{
 		{Name: "release_id", Type: field.TypeUUID},
@@ -476,6 +586,252 @@ var (
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
+			},
+		},
+	}
+	// EventsColumns holds the columns for the "events" table.
+	EventsColumns = []*schema.Column{
+		{Name: "event_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "owner_scope", Type: field.TypeString, Size: 16, Default: "platform"},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "event_kind", Type: field.TypeString, Size: 32},
+		{Name: "template_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "school_params", Type: field.TypeJSON, Nullable: true},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// EventsTable holds the schema information for the "events" table.
+	EventsTable = &schema.Table{
+		Name:       "events",
+		Columns:    EventsColumns,
+		PrimaryKey: []*schema.Column{EventsColumns[0]},
+	}
+	// EventParticipationColumns holds the columns for the "event_participation" table.
+	EventParticipationColumns = []*schema.Column{
+		{Name: "participation_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "event_run_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "joined_at", Type: field.TypeTime},
+		{Name: "event_points", Type: field.TypeInt, Default: 0},
+		{Name: "reached_milestones", Type: field.TypeJSON},
+		{Name: "claimed_milestones", Type: field.TypeJSON},
+		{Name: "auto_granted_milestones", Type: field.TypeJSON},
+	}
+	// EventParticipationTable holds the schema information for the "event_participation" table.
+	EventParticipationTable = &schema.Table{
+		Name:       "event_participation",
+		Columns:    EventParticipationColumns,
+		PrimaryKey: []*schema.Column{EventParticipationColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "event_participation_run_student_uq",
+				Unique:  true,
+				Columns: []*schema.Column{EventParticipationColumns[10], EventParticipationColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// EventPointLedgerColumns holds the columns for the "event_point_ledger" table.
+	EventPointLedgerColumns = []*schema.Column{
+		{Name: "entry_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "event_run_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "delta", Type: field.TypeInt},
+		{Name: "source_code", Type: field.TypeString, Size: 64},
+		{Name: "source_event_id", Type: field.TypeUUID},
+		{Name: "capped", Type: field.TypeBool, Default: false},
+		{Name: "earned_on", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+	}
+	// EventPointLedgerTable holds the schema information for the "event_point_ledger" table.
+	EventPointLedgerTable = &schema.Table{
+		Name:       "event_point_ledger",
+		Columns:    EventPointLedgerColumns,
+		PrimaryKey: []*schema.Column{EventPointLedgerColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "event_point_ledger_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{EventPointLedgerColumns[4], EventPointLedgerColumns[8], EventPointLedgerColumns[5]},
+			},
+			{
+				Name:    "event_point_ledger_day_idx",
+				Unique:  false,
+				Columns: []*schema.Column{EventPointLedgerColumns[1], EventPointLedgerColumns[4], EventPointLedgerColumns[5], EventPointLedgerColumns[10]},
+			},
+		},
+	}
+	// EventRunsColumns holds the columns for the "event_runs" table.
+	EventRunsColumns = []*schema.Column{
+		{Name: "event_run_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "event_id", Type: field.TypeUUID},
+		{Name: "event_version_id", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "scheduled"},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "ends_at", Type: field.TypeTime},
+		{Name: "claim_until", Type: field.TypeTime},
+		{Name: "suspended_reason", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "status_changed_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "status_version", Type: field.TypeInt, Default: 1},
+		{Name: "audience", Type: field.TypeJSON},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cancelled_at", Type: field.TypeTime, Nullable: true},
+		{Name: "archived_at", Type: field.TypeTime, Nullable: true},
+	}
+	// EventRunsTable holds the schema information for the "event_runs" table.
+	EventRunsTable = &schema.Table{
+		Name:       "event_runs",
+		Columns:    EventRunsColumns,
+		PrimaryKey: []*schema.Column{EventRunsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "event_runs_status_starts_idx",
+				Unique:  false,
+				Columns: []*schema.Column{EventRunsColumns[12], EventRunsColumns[13]},
+			},
+			{
+				Name:    "event_runs_status_ends_idx",
+				Unique:  false,
+				Columns: []*schema.Column{EventRunsColumns[12], EventRunsColumns[14]},
+			},
+			{
+				Name:    "event_runs_status_claim_idx",
+				Unique:  false,
+				Columns: []*schema.Column{EventRunsColumns[12], EventRunsColumns[15]},
+			},
+			{
+				Name:    "event_runs_event_idx",
+				Unique:  false,
+				Columns: []*schema.Column{EventRunsColumns[10]},
+			},
+		},
+	}
+	// EventTemplatesColumns holds the columns for the "event_templates" table.
+	EventTemplatesColumns = []*schema.Column{
+		{Name: "template_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// EventTemplatesTable holds the schema information for the "event_templates" table.
+	EventTemplatesTable = &schema.Table{
+		Name:       "event_templates",
+		Columns:    EventTemplatesColumns,
+		PrimaryKey: []*schema.Column{EventTemplatesColumns[0]},
+	}
+	// EventTemplateVersionsColumns holds the columns for the "event_template_versions" table.
+	EventTemplateVersionsColumns = []*schema.Column{
+		{Name: "template_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "template_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "event_kind", Type: field.TypeString, Size: 32},
+		{Name: "allowed_params", Type: field.TypeJSON},
+		{Name: "max_duration_days", Type: field.TypeInt},
+	}
+	// EventTemplateVersionsTable holds the schema information for the "event_template_versions" table.
+	EventTemplateVersionsTable = &schema.Table{
+		Name:       "event_template_versions",
+		Columns:    EventTemplateVersionsColumns,
+		PrimaryKey: []*schema.Column{EventTemplateVersionsColumns[0]},
+	}
+	// EventVersionsColumns holds the columns for the "event_versions" table.
+	EventVersionsColumns = []*schema.Column{
+		{Name: "event_version_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "event_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "event_kind", Type: field.TypeString, Size: 32},
+		{Name: "start_at", Type: field.TypeTime},
+		{Name: "end_at", Type: field.TypeTime},
+		{Name: "effective_from", Type: field.TypeTime, Nullable: true},
+		{Name: "decoration_areas", Type: field.TypeJSON},
+	}
+	// EventVersionsTable holds the schema information for the "event_versions" table.
+	EventVersionsTable = &schema.Table{
+		Name:       "event_versions",
+		Columns:    EventVersionsColumns,
+		PrimaryKey: []*schema.Column{EventVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "event_versions_event_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{EventVersionsColumns[10], EventVersionsColumns[11]},
 			},
 		},
 	}
@@ -1429,6 +1785,127 @@ var (
 			},
 		},
 	}
+	// SeasonPointLedgerColumns holds the columns for the "season_point_ledger" table.
+	SeasonPointLedgerColumns = []*schema.Column{
+		{Name: "entry_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "season_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "delta", Type: field.TypeInt},
+		{Name: "source_code", Type: field.TypeString, Size: 64},
+		{Name: "source_event_id", Type: field.TypeUUID},
+		{Name: "capped", Type: field.TypeBool, Default: false},
+		{Name: "earned_on", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+	}
+	// SeasonPointLedgerTable holds the schema information for the "season_point_ledger" table.
+	SeasonPointLedgerTable = &schema.Table{
+		Name:       "season_point_ledger",
+		Columns:    SeasonPointLedgerColumns,
+		PrimaryKey: []*schema.Column{SeasonPointLedgerColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "season_point_ledger_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SeasonPointLedgerColumns[4], SeasonPointLedgerColumns[8], SeasonPointLedgerColumns[5]},
+			},
+			{
+				Name:    "season_point_ledger_day_idx",
+				Unique:  false,
+				Columns: []*schema.Column{SeasonPointLedgerColumns[1], SeasonPointLedgerColumns[4], SeasonPointLedgerColumns[5], SeasonPointLedgerColumns[10]},
+			},
+		},
+	}
+	// SeasonTracksColumns holds the columns for the "season_tracks" table.
+	SeasonTracksColumns = []*schema.Column{
+		{Name: "season_track_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "season_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// SeasonTracksTable holds the schema information for the "season_tracks" table.
+	SeasonTracksTable = &schema.Table{
+		Name:       "season_tracks",
+		Columns:    SeasonTracksColumns,
+		PrimaryKey: []*schema.Column{SeasonTracksColumns[0]},
+	}
+	// SeasonTrackProgressColumns holds the columns for the "season_track_progress" table.
+	SeasonTrackProgressColumns = []*schema.Column{
+		{Name: "progress_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "season_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "points", Type: field.TypeInt, Default: 0},
+		{Name: "tier", Type: field.TypeInt, Default: 0},
+		{Name: "claimed_tiers", Type: field.TypeJSON},
+		{Name: "auto_granted_tiers", Type: field.TypeJSON},
+		{Name: "auto_granted_at", Type: field.TypeTime, Nullable: true},
+	}
+	// SeasonTrackProgressTable holds the schema information for the "season_track_progress" table.
+	SeasonTrackProgressTable = &schema.Table{
+		Name:       "season_track_progress",
+		Columns:    SeasonTrackProgressColumns,
+		PrimaryKey: []*schema.Column{SeasonTrackProgressColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "season_track_progress_student_uq",
+				Unique:  true,
+				Columns: []*schema.Column{SeasonTrackProgressColumns[10], SeasonTrackProgressColumns[11]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// SeasonTrackVersionsColumns holds the columns for the "season_track_versions" table.
+	SeasonTrackVersionsColumns = []*schema.Column{
+		{Name: "season_track_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "season_track_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "season_id", Type: field.TypeUUID},
+	}
+	// SeasonTrackVersionsTable holds the schema information for the "season_track_versions" table.
+	SeasonTrackVersionsTable = &schema.Table{
+		Name:       "season_track_versions",
+		Columns:    SeasonTrackVersionsColumns,
+		PrimaryKey: []*schema.Column{SeasonTrackVersionsColumns[0]},
+	}
 	// ShopItemsColumns holds the columns for the "shop_items" table.
 	ShopItemsColumns = []*schema.Column{
 		{Name: "shop_item_id", Type: field.TypeUUID},
@@ -1952,10 +2429,20 @@ var (
 		CollectionItemsTable,
 		CollectionProgressTable,
 		CollectionVersionsTable,
+		CommunityGoalsTable,
+		CommunityGoalContributionsTable,
+		CommunityGoalProgressTable,
 		ContentReleasesTable,
 		CurrenciesTable,
 		CurrencyLedgerTable,
 		EconomyAdjustmentsTable,
+		EventsTable,
+		EventParticipationTable,
+		EventPointLedgerTable,
+		EventRunsTable,
+		EventTemplatesTable,
+		EventTemplateVersionsTable,
+		EventVersionsTable,
 		ExplorationProgressTable,
 		GameProfilesTable,
 		GameSessionsTable,
@@ -1982,6 +2469,10 @@ var (
 		RewardGrantsTable,
 		RewardRulesTable,
 		RewardRuleVersionsTable,
+		SeasonPointLedgerTable,
+		SeasonTracksTable,
+		SeasonTrackProgressTable,
+		SeasonTrackVersionsTable,
 		ShopItemsTable,
 		ShopItemVersionsTable,
 		ShopPurchasesTable,
@@ -2031,6 +2522,15 @@ func init() {
 	CollectionVersionsTable.Annotation = &entsql.Annotation{
 		Table: "collection_versions",
 	}
+	CommunityGoalsTable.Annotation = &entsql.Annotation{
+		Table: "community_goals",
+	}
+	CommunityGoalContributionsTable.Annotation = &entsql.Annotation{
+		Table: "community_goal_contributions",
+	}
+	CommunityGoalProgressTable.Annotation = &entsql.Annotation{
+		Table: "community_goal_progress",
+	}
 	ContentReleasesTable.Annotation = &entsql.Annotation{
 		Table: "content_releases",
 	}
@@ -2042,6 +2542,27 @@ func init() {
 	}
 	EconomyAdjustmentsTable.Annotation = &entsql.Annotation{
 		Table: "economy_adjustments",
+	}
+	EventsTable.Annotation = &entsql.Annotation{
+		Table: "events",
+	}
+	EventParticipationTable.Annotation = &entsql.Annotation{
+		Table: "event_participation",
+	}
+	EventPointLedgerTable.Annotation = &entsql.Annotation{
+		Table: "event_point_ledger",
+	}
+	EventRunsTable.Annotation = &entsql.Annotation{
+		Table: "event_runs",
+	}
+	EventTemplatesTable.Annotation = &entsql.Annotation{
+		Table: "event_templates",
+	}
+	EventTemplateVersionsTable.Annotation = &entsql.Annotation{
+		Table: "event_template_versions",
+	}
+	EventVersionsTable.Annotation = &entsql.Annotation{
+		Table: "event_versions",
 	}
 	ExplorationProgressTable.Annotation = &entsql.Annotation{
 		Table: "exploration_progress",
@@ -2120,6 +2641,18 @@ func init() {
 	}
 	RewardRuleVersionsTable.Annotation = &entsql.Annotation{
 		Table: "reward_rule_versions",
+	}
+	SeasonPointLedgerTable.Annotation = &entsql.Annotation{
+		Table: "season_point_ledger",
+	}
+	SeasonTracksTable.Annotation = &entsql.Annotation{
+		Table: "season_tracks",
+	}
+	SeasonTrackProgressTable.Annotation = &entsql.Annotation{
+		Table: "season_track_progress",
+	}
+	SeasonTrackVersionsTable.Annotation = &entsql.Annotation{
+		Table: "season_track_versions",
 	}
 	ShopItemsTable.Annotation = &entsql.Annotation{
 		Table: "shop_items",

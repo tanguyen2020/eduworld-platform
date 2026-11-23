@@ -74,6 +74,9 @@ type Handlers struct {
 	// EconomyQueries and EconomyCommands are the F075 economy use cases.
 	EconomyQueries  EconomyQueries
 	EconomyCommands EconomyCommands
+	// LiveOpsQueries and LiveOpsCommands are the F077 live-ops use cases.
+	LiveOpsQueries  LiveOpsQueries
+	LiveOpsCommands LiveOpsCommands
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -167,8 +170,9 @@ var PlayerOperations = []string{"createGameSession", "endGameSession", "heartbea
 // Register mounts every F014 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
 	if h.Sessions == nil || h.ClientConfig == nil || h.Manifest == nil || h.LoginEvents == nil || h.Tickets == nil ||
-		h.Profiles == nil || h.ProfileQueries == nil || h.World == nil || h.WorldQueries == nil || h.Quests == nil || h.QuestQueries == nil || h.ProgressionQueries == nil || h.EconomyQueries == nil || h.EconomyCommands == nil {
-		return errors.New("game: every F014/F090/F070/F071/F072/F074/F075 handler is required")
+		h.Profiles == nil || h.ProfileQueries == nil || h.World == nil || h.WorldQueries == nil || h.Quests == nil || h.QuestQueries == nil || h.ProgressionQueries == nil || h.EconomyQueries == nil || h.EconomyCommands == nil ||
+		h.LiveOpsQueries == nil || h.LiveOpsCommands == nil {
+		return errors.New("game: every F014/F090/F070/F071/F072/F074/F075/F077 handler is required")
 	}
 	routes := map[string]http.HandlerFunc{
 		"createGameSession":            h.createGameSession,
@@ -190,6 +194,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn
 	}
 	for id, fn := range h.economyRoutes() {
+		routes[id] = fn
+	}
+	for id, fn := range h.liveOpsRoutes() {
 		routes[id] = fn
 	}
 	for id, fn := range h.profileRoutes() {

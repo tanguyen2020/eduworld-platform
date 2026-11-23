@@ -65,6 +65,7 @@
         "team",
         "competition",
         "seasonal",
+        "event",
         "hidden"
       ]
     },
@@ -106,7 +107,10 @@
               "party.activity_completed",
               "match.completed",
               "collection.completed",
-              "shop.item_purchased"
+              "shop.item_purchased",
+              "event.participation_started",
+              "event.milestone_claimed",
+              "season_track.tier_reached"
             ]
           }
         },
