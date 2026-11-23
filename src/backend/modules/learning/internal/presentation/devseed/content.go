@@ -104,6 +104,7 @@ type Client struct {
 // Result lists what the seed found or created.
 type Result struct {
 	CurriculumID uuid.UUID
+	SubjectID    string // subject of the curriculum seed (assignment subject, RunAssignments)
 	Questions    []uuid.UUID
 	QuestionSet  uuid.UUID
 	Activity     uuid.UUID
@@ -122,6 +123,7 @@ func Run(ctx context.Context, c Client, a Assigner, f File) (Result, error) {
 		return out, err
 	}
 	out.CurriculumID = refs.curriculum
+	out.SubjectID = refs.subject
 	var versions []string
 	for _, q := range f.Questions {
 		id, vid, n, err := c.question(ctx, f, refs, q)

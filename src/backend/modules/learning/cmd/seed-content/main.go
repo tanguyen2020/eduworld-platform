@@ -3,7 +3,9 @@
 // demo tenants through the System Admin API (ADR-0029; sa.admin also reviews the activity, which needs
 // learning_content.activity.review) — LOCAL_DEVELOPMENT §5, `make seed-content` after
 // `make up-app && make seed-check`. Accounts: author cm.noidung, reviewer cm.duyet, System Admin sa.admin (demo users of
-// the dev realm). Running it again creates nothing.
+// the dev realm). Then, when -assignments names a file (default seed/assignments/demoa1_g3.dev.json, empty = skip), the
+// school admin of that file (ad.truong.a) creates and publishes the DEV school assignments of that content for one grade of
+// one school (F041 createAssignment/publishAssignment). Running it again creates nothing.
 //
 // Configuration (no default URL in code, AGENTS R3): EW_SEED_API_URL (public gateway, …/api/v1),
 // EW_SEED_INTERNAL_API_URL (internal gateway, …/api/v1), EW_SEED_PASSWORD (demo password, never logged), EW_ENV=local.
@@ -29,10 +31,12 @@ import (
 
 func main() {
 	file := flag.String("file", filepath.Join("modules", "learning", "seed", "content", "math_g3.dev.json"), "seed content file")
+	assignments := flag.String("assignments", filepath.Join("modules", "learning", "seed", "assignments", "demoa1_g3.dev.json"),
+		"DEV school assignment seed file (empty = skip)")
 	flag.Parse()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if err := run(ctx, *file); err != nil {
+	if err := run(ctx, *file, *assignments); err != nil {
 		slog.Error("learning content seed failed", "error", err)
 		os.Exit(1)
 	}
@@ -46,7 +50,7 @@ func env(k string) (string, error) {
 	return v, nil
 }
 
-func run(ctx context.Context, path string) error {
+func run(ctx context.Context, path, assignmentsPath string) error {
 	if os.Getenv("EW_ENV") != "local" {
 		return errors.New("seed-content is a local dev seed: EW_ENV must be local")
 	}
@@ -70,6 +74,19 @@ func run(ctx context.Context, path string) error {
 	if err := json.Unmarshal(b, &f); err != nil {
 		return fmt.Errorf("%s: %w", path, err)
 	}
+	var af devseed.AssignmentFile
+	if assignmentsPath != "" {
+		ab, err := os.ReadFile(assignmentsPath) //nolint:gosec // seed file of the repository
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(ab, &af); err != nil {
+			return fmt.Errorf("%s: %w", assignmentsPath, err)
+		}
+		if err := af.Validate(); err != nil {
+			return fmt.Errorf("%s: %w", assignmentsPath, err)
+		}
+	}
 	hc := &http.Client{Timeout: 30 * time.Second}
 	login := func(u string) (string, error) { return devseed.PortalLogin(ctx, hc, api, u, pw) }
 	author, err := login("cm.noidung")
@@ -91,5 +108,19 @@ func run(ctx context.Context, path string) error {
 	}
 	slog.InfoContext(ctx, "learning content seed done", "questions", len(res.Questions), "question_set", res.QuestionSet,
 		"activity", res.Activity, "lesson", res.Lesson, "published_now", res.Published, "tenants", strings.Join(f.TenantCodes, ","))
+	if assignmentsPath == "" {
+		return nil
+	}
+	schoolAdmin, err := login(af.Author)
+	if err != nil {
+		return err
+	}
+	ar, err := devseed.RunAssignments(ctx, devseed.AssignmentClient{BaseURL: api, HTTP: hc, Token: schoolAdmin},
+		&devseed.AdminAssigner{HTTP: hc, BaseURL: internal, Token: admin, Codes: []string{af.TenantCode}}, af, res)
+	if err != nil {
+		return err
+	}
+	slog.InfoContext(ctx, "learning assignment seed done", "tenant", af.TenantCode, "school", af.SchoolCode,
+		"assignments", len(ar.Assignments), "created_now", ar.Created, "published_now", ar.Published)
 	return nil
 }

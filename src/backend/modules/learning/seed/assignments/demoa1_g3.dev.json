@@ -1,0 +1,25 @@
+{
+  "$comment": "DEV SEED ONLY (LOCAL_DEVELOPMENT §5): school assignments of the dev content (seed/content/math_g3.dev.json) for th-demo-a, school DEMOA1, khối 3, created and published by the school admin ad.truong.a through the public LMS API by `make seed-content`. Nothing for pgd-demo (keeps the tenant isolation check of F062 T018 meaningful). No exam: no assessment blueprint is seeded. Fake data, never for real tenants.",
+  "tenant_code": "th-demo-a",
+  "school_code": "DEMOA1",
+  "author": "ad.truong.a",
+  "window_days": 365,
+  "assignments": [
+    {
+      "title": "[DEV] Luyện bảng nhân (activity)",
+      "instructions": "Dữ liệu dev: làm bài luyện bảng nhân trong game.",
+      "content": "activity",
+      "mode": "practice",
+      "grade_level": 3,
+      "max_attempts": 3
+    },
+    {
+      "title": "[DEV] Bộ câu hỏi bảng nhân (question set)",
+      "instructions": "Dữ liệu dev: bộ câu hỏi bảng nhân.",
+      "content": "question_set",
+      "mode": "practice",
+      "grade_level": 3,
+      "max_attempts": 3
+    }
+  ]
+}
