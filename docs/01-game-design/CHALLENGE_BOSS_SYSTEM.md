@@ -1,6 +1,6 @@
 # Challenge & Boss System
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Systems Designer + EdTech Specialist · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Systems Designer + EdTech Specialist · Cập nhật: 2026-11-24 (F076: challenge solo, room host dùng chung) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [PARTY_SYSTEM](../03-social-multiplayer/PARTY_SYSTEM.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [REALTIME_ARCHITECTURE](../06-architecture/REALTIME_ARCHITECTURE.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [ADR-0016, ADR-0043, ADR-0048, ADR-0049](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -24,7 +24,7 @@
 |---|---|---|
 | `time` | Hoàn thành N hoạt động/câu trong thời gian giới hạn | Hết giờ hoặc xong mục tiêu |
 | `perfect` | Đạt độ chính xác mục tiêu (ví dụ 100% hoặc ≥ 90%) | Xong số câu; trượt ngưỡng thì kết thúc vòng, được thử lại |
-| `survival` | Có "sức bền" (ví dụ 3 trái tim); mỗi câu sai mất 1, câu đúng liên tiếp hồi | Hết sức bền hoặc qua đủ vòng |
+| `survival` | Có "sức bền" (ví dụ 3 trái tim); mỗi câu sai mất 1, câu đúng liên tiếp hồi (1 sức bền sau `challenge_survival_regen_streak` = 3 vòng đúng hết liên tiếp, không vượt sức bền của mức) [Confirmed]; mỗi vòng một câu | Hết sức bền hoặc qua đủ vòng |
 | `puzzle` | Giải câu đố nhiều bước (activity loại puzzle/interactive) | Giải xong hoặc hết giờ |
 | `knowledge` | Bộ câu hỏi theo LO, độ khó tăng dần | Xong bộ câu |
 | `boss` | Boss nhiều phase (§3) | Boss bị hạ hoặc hết giờ |
@@ -77,13 +77,15 @@ stateDiagram-v2
 
 - `ChallengeAttempt` ghim `challenge_version` và các `activity_version` (ADR-0043).
 - Mỗi câu/hoạt động trong challenge tạo **Attempt học tập cá nhân** ở module learning (mode `challenge` [Confirmed], ADR-0048) qua facade `attempts` của module learning (gọi trong tiến trình, ADR-0074). Chấm điểm luôn ở module learning (ADR-0016).
-- Thời gian dùng giờ server (`started_at`, `deadline_at`).
+- Thời gian dùng giờ server (`started_at`, `deadline_at` = `time_limit_seconds` × hệ số khối 1–3). Challenge không có `time_limit_seconds` không có hạn chót: học sinh tiếp tục (kể cả từ thiết bị khác) trong `attempt_resume_window` tính từ `started_at`, sau đó attempt `abandoned` [Confirmed].
+- Mỗi `ChallengeAttempt` `in_progress` là một room `challenge_solo` trên thư viện room host dùng chung (`src/backend/pkg/roomhost`, §4): một node giữ lease, timer theo giờ server kết thúc attempt tại hạn + `deadline_grace`; node khác chiếm lease sau TTL và khôi phục từ checkpoint (dòng `challenge_attempts` ở PostgreSQL). Job `challenge-deadline` kết thúc attempt quá hạn từ PostgreSQL khi Valkey/room host không khả dụng. Kết quả chấm tới sau hạn + `deadline_grace` không đổi challenge (bản ghi học tập vẫn ở module learning).
+- Câu hỏi của mỗi hoạt động: module learning chọn câu đã publish theo môn của activity, đúng khối học sinh, trong dải độ khó của mức và LO của challenge (activity là định dạng hiển thị) [Confirmed]. Điểm = số câu đúng; mục tiêu theo `goal.metric`; `perfect`/`knowledge` đi một lượt hoạt động, loại khác lặp danh sách.
 
 ### 2.4. Thử lại và giới hạn
 
 | Thuộc tính | Mặc định [Confirmed] |
 |---|---|
-| `max_attempts_per_day` | 5 (weekly/seasonal: theo kỳ) |
+| `max_attempts_per_day` | 5 (weekly: theo tuần ISO; seasonal: cả mùa); lượt bỏ cuộc vẫn tính [Confirmed] |
 | `retry_policy` | Câu hỏi mới mỗi lần thử (`new_questions`) |
 | `cooldown_seconds` sau `failed` | 0 cho easy/normal, 60 cho hard trở lên |
 | Phần thưởng lần đầu | `first_clear_rewards` chỉ một lần; lần sau theo giảm dần của reward rule |
@@ -153,6 +155,8 @@ Party vào boss **chỉ** qua Party Lobby: leader chọn hoạt động `boss` (
 
 Mất kết nối: grace 120 s như quest co-op; encounter tiếp tục nếu số người còn lại ≥ `party_size.min`; người quay lại (kể cả từ thiết bị khác, ADR-0031) nhận lại trạng thái từ checkpoint.
 
+Thư viện room host dùng chung (`src/backend/pkg/roomhost`, F076) [Confirmed]: `Host` cấp lease độc quyền mỗi room qua Valkey (`ew:rt:room:<room_id>:lease`, TTL 10 s, gia hạn 3 s), quét room mất owner (index orphan riêng mỗi module, vd. `ew:rt:rooms:game`), chiếm lease sau TTL và khôi phục từ checkpoint do module cung cấp (PostgreSQL là nguồn sự thật), chạy timer theo giờ server với grace theo loại room; không chứa nghiệp vụ — mỗi module viết handler của loại room (`challenge_solo` của F076; boss F103, battle F105 dùng lại).
+
 ## 5. Anti-cheat
 
 | Rủi ro | Biện pháp |
@@ -182,7 +186,7 @@ Chi tiết: [DATABASE_DESIGN §2.8a](../07-backend/DATABASE_DESIGN.md).
 |---|---|---|---|
 | GET | `/game/challenges?type=&area_id=&difficulty=` | Challenge khả dụng cho học sinh (đã lọc grade/unlock) | T |
 | GET | `/game/challenges/{challenge_id}` | Chi tiết + lượt thử còn lại hôm nay | T |
-| POST | `/game/challenges/{challenge_id}:start` | Bắt đầu (body: `difficulty`, `party_id?`) → `ChallengeAttempt` + hoạt động đầu tiên | B |
+| POST | `/game/challenges/{challenge_id}:start` | Bắt đầu (body: `difficulty`; `party_id` bị từ chối ở challenge solo) → `ChallengeAttempt`; hoạt động đầu tiên lấy bằng `activities:next` [Confirmed] | B |
 | POST | `/game/challenge-attempts/{challenge_attempt_id}/activities:next` | Lấy hoạt động tiếp (attempt học tập mới) | B |
 | POST | `/game/challenge-attempts/{challenge_attempt_id}:abandon` | Bỏ | B |
 | GET | `/game/challenge-attempts/{challenge_attempt_id}` | Trạng thái, điểm, sức bền | T |
@@ -202,7 +206,7 @@ Cấu hình (Game Studio): `/api/v1/game-admin/challenges`, `/api/v1/game-admin/
 | Event | Producer | Consumers | Payload chính |
 |---|---|---|---|
 | `challenge.started` | module game | LA | `challenge_attempt_id`, `challenge_version_id`, `difficulty` |
-| `challenge.completed` | module game | reward (XP), achievement, LA | `status` (succeeded/failed/abandoned), `score`, `difficulty`, `objective_ids[]` |
+| `challenge.completed` | module game | reward (XP), achievement, LA | đúng một lần mỗi attempt: `status` (succeeded/failed/abandoned), `end_reason`, `score`, `difficulty`, `reward_multiplier`, `first_clear`, `objective_ids[]` ([schema](../../specs/events/payloads/game/challenge.completed.v1.schema.json)) |
 | `boss.encounter_started` | module game | RT, LA | `encounter_id`, `boss_version_id`, `member_ids[]` |
 | `boss.phase_completed` | module game | RT | `encounter_id`, `phase_id` |
 | `boss.encounter_completed` | module game | reward, achievement, LA | `encounter_id`, `result` (defeated/ended), `contributions[]` (`student_id`, `eligible`) |

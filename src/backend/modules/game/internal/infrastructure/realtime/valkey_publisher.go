@@ -147,3 +147,21 @@ func (p LiveOpsPublisher) Push(ctx context.Context, typ string, students []uuid.
 	}
 	return first
 }
+
+// ChallengePublisher implements port.ChallengeRealtime: challenge.attempt.updated to every connection of the student
+// (AsyncAPI ChallengeAttemptUpdated, F076) through Valkey ew:rt:user:<id>.
+type ChallengePublisher struct {
+	C       valkey.Client
+	Timeout time.Duration
+}
+
+var _ port.ChallengeRealtime = ChallengePublisher{}
+
+// ChallengeAttemptUpdated implements port.ChallengeRealtime.
+func (p ChallengePublisher) ChallengeAttemptUpdated(ctx context.Context, student uuid.UUID, payload map[string]any, at time.Time) error {
+	e, err := rt.NewMessage("challenge.attempt.updated", payload, at)
+	if err != nil {
+		return err
+	}
+	return rt.Publisher{C: p.C, Timeout: p.Timeout}.ToUser(ctx, student, e)
+}

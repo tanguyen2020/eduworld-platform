@@ -16,6 +16,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementprogressevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challenge"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeattempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collection"
@@ -148,6 +151,9 @@ func checkColumn(t, c string) error {
 			achievementprogressevent.Table:  achievementprogressevent.ValidColumn,
 			achievementversion.Table:        achievementversion.ValidColumn,
 			avatarpreset.Table:              avatarpreset.ValidColumn,
+			challenge.Table:                 challenge.ValidColumn,
+			challengeattempt.Table:          challengeattempt.ValidColumn,
+			challengeversion.Table:          challengeversion.ValidColumn,
 			charactercatalog.Table:          charactercatalog.ValidColumn,
 			charactercatalogversion.Table:   charactercatalogversion.ValidColumn,
 			collection.Table:                collection.ValidColumn,

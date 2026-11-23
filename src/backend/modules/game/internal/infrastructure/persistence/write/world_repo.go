@@ -62,6 +62,10 @@ var contentTables = map[string]contentTable{
 		versionCol: "template_version_id", parent: []string{"code"}, columns: []string{"code", "event_kind", "allowed_params", "max_duration_days"}},
 	write.ItemSeasonTrack: {identity: "season_tracks", idCol: "season_track_id", versions: "season_track_versions",
 		versionCol: "season_track_version_id", parent: []string{"season_id", "code"}, columns: []string{"season_id"}},
+	// F076: solo challenges (platform content, assigned to tenants).
+	write.ItemChallenge: {identity: "challenges", idCol: "challenge_id", versions: "challenge_versions", versionCol: "challenge_version_id",
+		parent: []string{"code"}, columns: []string{"code", "challenge_type", "mode", "grade_levels", "subject_id", "objective_ids", "area_id",
+			"available_from", "available_to"}},
 }
 
 // sch is the schema of the tables of a content type.

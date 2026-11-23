@@ -63,10 +63,13 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
-| `difficulty_levels` | Easy, Normal, Hard, Expert, Legendary (bảng tham số theo mức) | — | platform | [Confirmed] tên mức · [Confirmed] tham số | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
+| `difficulty_levels` | Easy, Normal, Hard, Expert, Legendary (bảng tham số theo mức) | — | platform (hằng số code của bảng sở hữu; version challenge ghi đè theo profile — F076) | [Confirmed] tên mức · [Confirmed] tham số | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
 | `g1_3_challenge_rules` | thời gian ×1,5; chỉ Easy–Hard | — | platform | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
-| `challenge_attempts_per_day` | 5 | lượt | platform | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
-| `challenge_fail_cooldown` | 60 (từ mức Hard) | giây | platform | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
+| `challenge_attempts_per_day` | 5 | lượt | platform (env `EW_GAME_CHALLENGE_ATTEMPTS_PER_DAY` — F076) | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
+| `challenge_fail_cooldown` | 60 (từ mức Hard) | giây | platform (env `EW_GAME_CHALLENGE_FAIL_COOLDOWN` — F076) | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
+| `challenge_survival_regen_streak` | 3 (vòng đúng hết liên tiếp hồi 1 sức bền, không vượt sức bền của mức) | vòng | code | [Confirmed] (F076) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §2.1 |
+| `challenge_room_lease` | lease 10 s, gia hạn 3 s, quét room mất owner 2 s, timer 250 ms (room `challenge_solo`, `src/backend/pkg/roomhost`) | — | code | [Confirmed] (F076) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §4 |
+| `challenge_deadline_scan` | 15 (job `challenge-deadline`, dự phòng timer room host) | giây | code | [Proposed] (F076) | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) §2.3 |
 | `boss_reconnect_grace` | 120 | giây | platform | [Confirmed] | [CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md) |
 
 ## 6. Kinh tế, vật phẩm, sưu tầm
@@ -254,7 +257,7 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 | `experiment_guardrail_drop_pp` | ≥ 5 (arm thấp hơn control từ mức này thì dừng sớm) | điểm phần trăm | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §6 |
 | `experiment_eval_delay_days` | 7 (độ trễ đánh giá chỉ số chính: câu mới cùng LO) | ngày | platform | [Confirmed] (F035) | [LEARNING_EFFICACY_PLAN](../02-learning/LEARNING_EFFICACY_PLAN.md) §6 |
 | `attempt_idle_timeout` | 5 | phút | platform | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
-| `attempt_resume_window` | 24 giờ (practice/retry/quest/challenge) | — | platform | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
+| `attempt_resume_window` | 24 giờ (practice/retry/quest/challenge) | — | platform (module game: env `EW_GAME_ATTEMPT_RESUME_WINDOW` cho challenge không giới hạn giờ — F076) | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
 | `deadline_grace` | 2 | giây | code | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
 | `suspicious_speed_flag` | < 1,5 s/câu trên ≥ 10 câu | — | platform | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |
 | `score_scale` | thang 10, làm tròn 1 chữ số | — | tenant | [Confirmed] | [ACTIVITY_ENGINE](../02-learning/ACTIVITY_ENGINE.md) |

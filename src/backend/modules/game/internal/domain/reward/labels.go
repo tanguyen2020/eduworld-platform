@@ -13,6 +13,7 @@ var SourceLabels = map[string]map[string]string{
 	"exploration.discovery":      {"vi": "Khám phá một điểm mới", "en": "New discovery"},
 	"exploration.area_completed": {"vi": "Khám phá trọn một khu vực", "en": "Area fully explored"},
 	"merge.adjustment":           {"vi": "Gộp tài khoản", "en": "Account merge"},
+	"challenge.completed":        {"vi": "Hoàn thành thử thách", "en": "Challenge completed"},
 }
 
 // SourceLabel is the label of a source code in lang ("vi" or "en"; vi by default); "" when unknown.

@@ -47,7 +47,7 @@ Mỗi lần cộng XP gắn một `source_code` trong catalog cấu hình (Game 
 | `lesson.completed` | `lesson.completed` | 20 | |
 | `exploration.discovery` | `world.discovery_found` | 10 | Mỗi điểm khám phá một lần ([WORLD_DESIGN](WORLD_DESIGN.md) §8) |
 | `exploration.area_completed` | `world.area_completed` | 100 | |
-| `challenge.completed` | `challenge.completed` | 20–200 theo độ khó | [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) |
+| `challenge.completed` | `challenge.completed` | 20–200 theo độ khó | Mặc định chỉ `succeeded` (`failed` khi rule ghi `conditions.challenge_statuses`; `abandoned` không bao giờ; không trừ XP); `grants[].scale_by = reward_multiplier` nhân theo mức khó trước giảm dần và cap; `first_completion_only` theo `first_clear` của payload; một lần mỗi `challenge_attempt_id` (F076) — [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) |
 | `boss.defeated` | `boss.encounter_completed` | 100–300 | Chia theo đóng góp tối thiểu |
 | `coop.contribution` | `party.activity_completed` | 30 | Đủ `min_contribution` |
 | `achievement.unlocked` | `achievement.unlocked` | 0–100 | Cấu hình theo achievement |

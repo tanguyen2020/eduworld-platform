@@ -54,7 +54,7 @@ func hex12(v int) string {
 func (e *env) publisher() command.PublishGameContent {
 	return command.PublishGameContent{UoW: e.uow, Store: writerepo.GameContentRepo{}, Content: worldsql.Content{},
 		Events: writerepo.Publisher{W: e.writer}, Audit: writerepo.Auditor{R: e.rec}, Now: e.clock.Now, Quests: questRules(), QuestContent: questsql.Content{},
-		Progression: progressionRules(), Economy: economyRules(), LiveOps: e.liveOpsRules(), MiniGames: e.minigameRules()}
+		Progression: progressionRules(), Economy: economyRules(), LiveOps: e.liveOpsRules(), MiniGames: e.minigameRules(), Challenges: challengeRules()}
 }
 
 // publish runs PublishGameContent under the system platform scope of the seed.

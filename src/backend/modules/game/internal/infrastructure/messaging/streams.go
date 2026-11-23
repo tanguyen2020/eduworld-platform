@@ -127,8 +127,16 @@ var RewardEngineLearningEvents = []string{"activity.graded", "lesson.completed",
 // a JetStream consumer reads one stream); minigame.completed since F073.
 const RewardEngineGameName = "game.reward_engine_game"
 
-// RewardEngineGameEvents are the game events it handles (owners F071, F072, F073).
-var RewardEngineGameEvents = []string{"quest.completed", "world.discovery_found", "world.area_completed", "minigame.completed"}
+// RewardEngineGameEvents are the game events it handles (owners F071, F072, F073, F076).
+var RewardEngineGameEvents = []string{"quest.completed", "world.discovery_found", "world.area_completed", "minigame.completed",
+	"challenge.completed"}
+
+// ChallengeProgressName updates the challenge attempts in progress on the graded learning attempts they opened (F076
+// T025): score, lives and goal from the result of module learning only (ADR-0016).
+const ChallengeProgressName = "game.challenge_progress"
+
+// ChallengeProgressEvents are the learning events it handles (owner F030).
+var ChallengeProgressEvents = []string{"activity.graded"}
 
 // GradeTransitionName applies the school-year grade transition of a student (F074 T035, FR-GAM-010).
 const GradeTransitionName = "game.grade_transition"

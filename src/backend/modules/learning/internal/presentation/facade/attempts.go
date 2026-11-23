@@ -32,10 +32,16 @@ func (f Facade) CreateAttempt(ctx context.Context, req learningapi.CreateAttempt
 		return nil, problem.New(problem.Internal, "attempts are not wired")
 	}
 	b := *req.Body
+	var objectives []uuid.UUID
+	if b.Activity.ObjectiveIds != nil {
+		objectives = *b.Activity.ObjectiveIds
+	}
 	created, err := idempotent(ctx, f.Idempotency, "createAttempt", b, func(ctx context.Context) (command.InternalCreated, error) {
 		return f.AttemptOpener.CreateInternal(ctx, command.CreateInternalInput{StudentID: b.StudentId, Mode: string(b.Mode),
 			ContentType: string(b.Activity.ContentType), ContentID: b.Activity.ContentId, ContentVersionID: b.Activity.ContentVersionId,
-			ContextType: string(b.Context.ContextType), ContextID: b.Context.ContextId})
+			ContextType: string(b.Context.ContextType), ContextID: b.Context.ContextId,
+			DifficultyMin: b.Activity.DifficultyMin, DifficultyMax: b.Activity.DifficultyMax, GradeLevel: b.Activity.GradeLevel,
+			ObjectiveIDs: objectives, QuestionCount: b.Activity.QuestionCount, TimeLimitSeconds: b.Activity.TimeLimitSeconds})
 	})
 	if err != nil {
 		return nil, err

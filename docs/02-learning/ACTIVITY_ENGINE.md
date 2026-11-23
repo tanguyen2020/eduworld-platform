@@ -121,7 +121,7 @@ type Registry interface {
 | `mode` | Ngữ cảnh trong game/lớp học | Ai khởi tạo | Đặc điểm |
 |---|---|---|---|
 | `quest` | Một bước quest NPC giao ([QUEST_SYSTEM](../01-game-design/QUEST_SYSTEM.md)) | Quest | `context_ref = {quest_progress_id, step_id}`; hoàn thành theo `completion_rule` của step |
-| `challenge` | Challenge, boss phase ([CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)) | module game gọi internal API | `context_ref = {challenge_attempt_id | encounter_id, phase}` |
+| `challenge` | Challenge, boss phase ([CHALLENGE_BOSS_SYSTEM](../01-game-design/CHALLENGE_BOSS_SYSTEM.md)) | module game gọi internal API (`createAttempt` mode `challenge`: bắt buộc dải độ khó của mức + khối học sinh; câu chọn từ pool đã publish theo môn của activity, đúng khối, trong dải, theo LO của challenge — F076) | `context_ref = {challenge_attempt_id | encounter_id, phase}` |
 | `minigame` | Mini-game trong khu học tập | Mini-game | Như practice, thêm timer/cấu hình mini-game |
 | `practice` | Tự luyện ở Practice Zone (chủ đề, lớp, mức độ, kỹ năng, luyện trộn chủ đề) | Học sinh | Phản hồi ngay, có gợi ý, không giới hạn lượt |
 | `retry_wrong` | "Ôn câu sai" (gợi ý của NPC/hệ thống) | Học sinh | Ưu tiên **câu anh em** của câu đã sai (cùng LO, cùng loại, cùng độ khó, khác `question_id`); hết câu anh em mới dùng lại cùng `question_id` ([QUESTION_BANK §6](QUESTION_BANK.md#6-chọn-câu-ngẫu-nhiên-theo-điều-kiện)) |

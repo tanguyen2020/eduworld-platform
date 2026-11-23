@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/challenge.started.v1.schema.json",
+  "title": "Payload challenge.started v1 (module game, owner F076)",
+  "description": "Học sinh bắt đầu một challenge solo: ChallengeAttempt in_progress ghim challenge_version_id, deadline_at theo giờ server (null = không giới hạn giờ, tiếp tục trong attempt_resume_window). Không có điểm/kết quả. Consumer: LA, analytics (CHALLENGE_BOSS_SYSTEM §8).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "challenge_attempt_id",
+    "challenge_id",
+    "challenge_version_id",
+    "challenge_type",
+    "student_id",
+    "difficulty",
+    "period_key",
+    "started_at"
+  ],
+  "properties": {
+    "challenge_attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "challenge_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "challenge_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "challenge_type": {
+      "type": "string",
+      "enum": [
+        "time",
+        "perfect",
+        "survival",
+        "puzzle",
+        "knowledge",
+        "weekly",
+        "seasonal"
+      ]
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "normal",
+        "hard",
+        "expert",
+        "legendary"
+      ]
+    },
+    "party_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Luôn null ở F076 (solo)"
+    },
+    "period_key": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "YYYY-MM-DD (ICT), YYYY-Www (weekly) hoặc S<YYYY-MM-DD> (seasonal)"
+    },
+    "deadline_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "challenge_attempt_id": "0193a5f4-6c1e-7b2a-9d1f-000000076901",
+      "challenge_id": "0193a5f4-6c1e-7b2a-9d1f-000000076101",
+      "challenge_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000076102",
+      "challenge_type": "time",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "difficulty": "hard",
+      "party_id": null,
+      "period_key": "2026-11-24",
+      "deadline_at": "2026-11-24T03:05:00Z",
+      "started_at": "2026-11-24T03:00:00Z"
+    }
+  ]
+}

@@ -25,10 +25,10 @@ paths:
     post:
       tags: [attempts]
       operationId: createAttempt
-      summary: Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game)
+      summary: Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game, challenge)
       description: |
-        Module game gọi khi học sinh bắt đầu bước `activity`/`minigame`. Module learning chọn câu hỏi
-        theo nội dung đã publish, tạo attempt `mode = quest|minigame`, trả `attempt_id`. Godot sau đó
+        Module game gọi khi học sinh bắt đầu bước `activity`/`minigame` hoặc lấy hoạt động tiếp của challenge (F076). Module learning chọn câu hỏi
+        theo nội dung đã publish, tạo attempt `mode = quest|minigame|challenge`, trả `attempt_id`. Godot sau đó
         dùng API public `/api/v1/learning/activity-attempts/{attempt_id}` để lấy render payload và nộp câu trả lời (ADR-0059).
         Kết quả cuối được phát qua event `activity.submitted`/`activity.graded` (ADR-0042); module game
         có thể gọi `GET` bên dưới khi cần đối soát.
@@ -580,8 +580,16 @@ components:
           description: activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish; minigame_config = cấu hình mini-game của module game (F073, content_id = minigame_config_id, content_version_id = version ghim, bắt buộc; đọc projection ref.minigame_config_versions)
         content_id: { type: string, format: uuid }
         content_version_id: { type: [string, 'null'], format: uuid, description: Bỏ trống = version published hiện hành }
-        question_count: { type: [integer, 'null'], minimum: 1, maximum: 50 }
-        time_limit_seconds: { type: [integer, 'null'], minimum: 10, maximum: 7200 }
+        question_count: { type: [integer, 'null'], minimum: 1, maximum: 50, description: "Mode challenge: số câu chọn (vắng = số câu tự nhiên của activity); mode khác bỏ qua" }
+        time_limit_seconds: { type: [integer, 'null'], minimum: 10, maximum: 7200, description: "Mode challenge: thời gian attempt theo giờ server (giây/câu của mức × số câu); mode khác bỏ qua" }
+        difficulty_min: { type: [integer, 'null'], minimum: 1, maximum: 5, description: "Mode challenge (F076): cận dưới dải độ khó câu của mức khó, bắt buộc với challenge" }
+        difficulty_max: { type: [integer, 'null'], minimum: 1, maximum: 5, description: "Mode challenge (F076): cận trên dải độ khó câu, ≥ difficulty_min" }
+        grade_level: { type: [integer, 'null'], minimum: 1, maximum: 9, description: "Mode challenge (F076): khối của học sinh; chỉ chọn câu của khối này (ADR-0095)" }
+        objective_ids:
+          type: array
+          maxItems: 30
+          items: { type: string, format: uuid }
+          description: Mode challenge (F076) — LO của challenge; câu chọn thuộc một trong các LO (rỗng = không lọc LO)
 
     AttemptCreateRequest:
       type: object
@@ -590,7 +598,7 @@ components:
         student_id: { type: string, format: uuid }
         mode:
           $ref: '#/components/schemas/AttemptMode'
-          description: module game chỉ được mở `quest` hoặc `minigame` (giá trị khác → 422)
+          description: module game chỉ được mở `quest`, `minigame` hoặc `challenge` (F076; giá trị khác → 422). Mode `challenge` bắt buộc context `challenge_attempt`, `activity.difficulty_min/max` và `activity.grade_level`; module learning chọn câu đã publish của tenant theo môn của activity, khối, dải độ khó và LO (không lấy câu khối khác, ngoài dải)
         activity: { $ref: '#/components/schemas/ActivityRef' }
         context:
           type: object
@@ -599,7 +607,7 @@ components:
             context_type:
               type: string
               enum: [quest_step, minigame_session, challenge_attempt, boss_encounter]
-              description: challenge_attempt (F076) và boss_encounter (+ phase, F103) cho mode challenge [Proposed]; F030 chỉ mở quest/minigame
+              description: challenge_attempt (F076, mode challenge) và boss_encounter (+ phase, F103, mode challenge); quest_step ↔ quest, minigame_session ↔ minigame
             context_id: { type: string, format: uuid }
             quest_version_id: { type: [string, 'null'], format: uuid }
             step_id: { type: [string, 'null'], maxLength: 64 }

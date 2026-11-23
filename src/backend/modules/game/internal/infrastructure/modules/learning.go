@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/google/uuid"
+
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	learningapi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/api"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/idempotency"
@@ -102,4 +104,66 @@ func (l *LateLearning) CreateAttempt(ctx context.Context, in port.LearningAttemp
 	f := l.f
 	l.mu.RUnlock()
 	return LearningAttempts{F: f}.CreateAttempt(ctx, in)
+}
+
+var _ port.ChallengeLearning = LearningAttempts{}
+
+// CreateChallengeAttempt implements port.ChallengeLearning (F076 T008): createAttempt mode challenge, context
+// challenge_attempt, with the difficulty band of the level, the grade of the student and the objectives of the
+// challenge; the Idempotency-Key of nextChallengeActivity is forwarded (a retry opens the same attempt, F076-AC-12). A
+// deadline or a 5xx of module learning is port.ErrLearningUnavailable (503 + Retry-After, nothing changes); an
+// activity that is not published is 422 ITEM_REF_INVALID.
+func (l LearningAttempts) CreateChallengeAttempt(ctx context.Context, in port.ChallengeLearningAttempt) (port.LearningAttemptCreated, error) {
+	var out port.LearningAttemptCreated
+	if l.F == nil {
+		return out, port.ErrLearningUnavailable
+	}
+	if p, ok := idempotency.PendingFrom(ctx); ok {
+		ctx = modcall.WithIdempotencyKey(ctx, p.Key.Key.String())
+	}
+	lo, hi, grade := in.DifficultyMin, in.DifficultyMax, in.GradeLevel
+	objectives := append([]uuid.UUID{}, in.ObjectiveIDs...)
+	body := learningapi.AttemptCreateRequest{StudentId: in.StudentID, Mode: learningapi.AttemptModeChallenge,
+		Activity: learningapi.ActivityRef{ContentType: learningapi.ActivityRefContentTypeActivity, ContentId: in.ActivityID,
+			DifficultyMin: &lo, DifficultyMax: &hi, GradeLevel: &grade, ObjectiveIds: &objectives, QuestionCount: in.QuestionCount,
+			TimeLimitSeconds: in.TimeLimitSeconds}}
+	body.Context.ContextType = learningapi.ChallengeAttempt
+	body.Context.ContextId = in.ChallengeAttemptID
+	body.Context.GameSessionId = in.GameSessionID
+	return l.create(ctx, body)
+}
+
+// create calls createAttempt through pkg/modcall and maps its answer.
+func (l LearningAttempts) create(ctx context.Context, body learningapi.AttemptCreateRequest) (port.LearningAttemptCreated, error) {
+	var out port.LearningAttemptCreated
+	op := modcall.Op{Caller: "game", Callee: "learning", Operation: "createAttempt", Kind: modcall.Write,
+		AllowedCallers: learningapi.AllowedCallers["createAttempt"], ContextRequired: learningapi.ContextRequired["createAttempt"]}
+	resp, err := modcall.Call(ctx, op, func(ctx context.Context) (learningapi.CreateAttemptResponseObject, error) {
+		return l.F.CreateAttempt(ctx, learningapi.CreateAttemptRequestObject{Body: &body})
+	})
+	var pe *problem.Error
+	switch {
+	case errors.As(err, &pe) && (pe.Code == problem.NotFound || pe.Code == problem.ContentNotPublished):
+		return out, problem.New(problem.ItemRefInvalid, "the learning activity is not published").Wrap(err)
+	case errors.As(err, &pe) && problem.Status(pe.Code) < 500:
+		return out, err
+	case err != nil:
+		return out, errors.Join(port.ErrLearningUnavailable, err)
+	}
+	v, ok := resp.(learningapi.CreateAttempt201JSONResponse)
+	if !ok {
+		return out, port.ErrLearningUnavailable
+	}
+	return port.LearningAttemptCreated{AttemptID: v.AttemptId, Status: string(v.Status), QuestionCount: v.QuestionCount, StartedAt: v.StartedAt.UTC(),
+		DeadlineAt: v.DeadlineAt, ContentVersionID: v.ContentVersionId}, nil
+}
+
+var _ port.ChallengeLearning = (*LateLearning)(nil)
+
+// CreateChallengeAttempt implements port.ChallengeLearning.
+func (l *LateLearning) CreateChallengeAttempt(ctx context.Context, in port.ChallengeLearningAttempt) (port.LearningAttemptCreated, error) {
+	l.mu.RLock()
+	f := l.f
+	l.mu.RUnlock()
+	return LearningAttempts{F: f}.CreateChallengeAttempt(ctx, in)
 }

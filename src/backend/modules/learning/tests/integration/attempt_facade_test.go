@@ -163,3 +163,80 @@ func TestAttemptAdHoc(t *testing.T) {
 		t.Fatalf("staff: %d", r.status)
 	}
 }
+
+// F076-AC-08, AC-09 (learning side of the F076 delta): module game opens a challenge attempt (mode challenge, context
+// challenge_attempt) with the difficulty band of the level and the grade of the student; module learning draws only
+// published questions of that grade inside the band (never another grade, never outside the band) and pins them; a
+// band without question is QUESTION_POOL_INSUFFICIENT; mode challenge without band, another grade or another context
+// is 422.
+func TestAttemptFacadeChallenge(t *testing.T) {
+	ctx := context.Background()
+	c := newCurEnv(ctx, t)
+	s := c.attemptSetup(ctx, t, nil) // 3 questions of grade 3, difficulty 2 (the activity's own items)
+	hard := c.published(ctx, t, qlcmA, s.qc, map[string]any{"difficulty": 4})
+	c.published(ctx, t, qlcmA, s.qc, map[string]any{"difficulty": 3, "grade_levels": []int{4}}) // in the band, another grade
+	c.published(ctx, t, qlcmA, s.qc, map[string]any{"difficulty": 5})                           // grade 3, outside the band
+	f := facade.Facade{AttemptOpener: c.att, AttemptResults: c.attq, Idempotency: idempotency.NewStore(c.app, 0, nil)}
+	an := authz.NewPrincipal(c.users[hsAn])
+	sctx := authztest.Ctx(ctx, an)
+	challenge := uuid.New()
+	objective := uuid.MustParse(s.qc.lo)
+	band := func(lo, hi, grade int, count *int) learningapi.CreateAttemptJSONRequestBody {
+		b := learningapi.CreateAttemptJSONRequestBody{StudentId: an.UserID, Mode: learningapi.AttemptModeChallenge,
+			Activity: learningapi.ActivityRef{ContentType: learningapi.ActivityRefContentTypeActivity, ContentId: uuid.MustParse(s.activityID),
+				DifficultyMin: &lo, DifficultyMax: &hi, GradeLevel: &grade, QuestionCount: count, ObjectiveIds: &[]uuid.UUID{objective}}}
+		b.Context.ContextType, b.Context.ContextId = "challenge_attempt", challenge
+		return b
+	}
+	create := func(key string, b learningapi.CreateAttemptJSONRequestBody) (learningapi.CreateAttemptResponseObject, error) {
+		return asModule(sctx, "game", "createAttempt", key, func(ctx context.Context) (learningapi.CreateAttemptResponseObject, error) {
+			return f.CreateAttempt(ctx, learningapi.CreateAttemptRequestObject{Body: &b})
+		})
+	}
+	one := 1
+	body := band(3, 4, 3, &one)
+	key := newKey()
+	res, err := create(key, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	created := res.(learningapi.CreateAttempt201JSONResponse)
+	if created.QuestionCount != 1 {
+		t.Fatalf("created: %+v", created)
+	}
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM assessment.attempts WHERE attempt_id = $1 AND mode = 'challenge'
+		AND context_type = 'challenge_attempt' AND context_id = $2 AND student_id = $3`, created.AttemptId, challenge, an.UserID); n != 1 {
+		t.Fatal("challenge attempt row of the student")
+	}
+	// The only question of grade 3 in the band 3–4 is the difficulty 4 one (SC-002: never another grade or band).
+	if n := count(ctx, t, c.platform, `SELECT count(*) FROM assessment.attempt_items WHERE attempt_id = $1 AND question_version_id = $2
+		AND deleted_at IS NULL`, created.AttemptId, hard); n != 1 {
+		t.Fatal("the item is the grade 3 question of the band")
+	}
+	again, err := create(key, body)
+	if err != nil || again.(learningapi.CreateAttempt201JSONResponse).AttemptId != created.AttemptId {
+		t.Fatalf("idempotent create: %+v %v", again, err)
+	}
+	// Two questions asked: the band holds one question of the grade.
+	two := 2
+	if _, err := create(newKey(), band(3, 4, 3, &two)); code(err) != problem.QuestionPoolInsufficient {
+		t.Fatalf("band too small: %v", err)
+	}
+	// Mode challenge without a band, with another grade than the student's, with a quest context: 422.
+	noBand := band(3, 4, 3, &one)
+	noBand.Activity.DifficultyMin = nil
+	if _, err := create(newKey(), noBand); code(err) != problem.ValidationFailed {
+		t.Fatalf("no band: %v", err)
+	}
+	if _, err := create(newKey(), band(3, 4, 4, &one)); code(err) != problem.ValidationFailed {
+		t.Fatalf("another grade: %v", err)
+	}
+	if _, err := create(newKey(), band(4, 3, 3, &one)); code(err) != problem.ValidationFailed {
+		t.Fatalf("min > max: %v", err)
+	}
+	wrongCtx := band(3, 4, 3, &one)
+	wrongCtx.Context.ContextType = "quest_step"
+	if _, err := create(newKey(), wrongCtx); code(err) != problem.ValidationFailed {
+		t.Fatalf("quest context for a challenge: %v", err)
+	}
+}

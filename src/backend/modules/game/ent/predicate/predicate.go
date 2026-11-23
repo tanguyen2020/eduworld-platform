@@ -18,6 +18,15 @@ type AchievementVersion func(*sql.Selector)
 // AvatarPreset is the predicate function for avatarpreset builders.
 type AvatarPreset func(*sql.Selector)
 
+// Challenge is the predicate function for challenge builders.
+type Challenge func(*sql.Selector)
+
+// ChallengeAttempt is the predicate function for challengeattempt builders.
+type ChallengeAttempt func(*sql.Selector)
+
+// ChallengeVersion is the predicate function for challengeversion builders.
+type ChallengeVersion func(*sql.Selector)
+
 // CharacterCatalog is the predicate function for charactercatalog builders.
 type CharacterCatalog func(*sql.Selector)
 

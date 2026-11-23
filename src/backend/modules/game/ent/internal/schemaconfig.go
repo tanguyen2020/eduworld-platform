@@ -11,6 +11,9 @@ type SchemaConfig struct {
 	AchievementProgressEvent  string // AchievementProgressEvent table.
 	AchievementVersion        string // AchievementVersion table.
 	AvatarPreset              string // AvatarPreset table.
+	Challenge                 string // Challenge table.
+	ChallengeAttempt          string // ChallengeAttempt table.
+	ChallengeVersion          string // ChallengeVersion table.
 	CharacterCatalog          string // CharacterCatalog table.
 	CharacterCatalogVersion   string // CharacterCatalogVersion table.
 	Collection                string // Collection table.

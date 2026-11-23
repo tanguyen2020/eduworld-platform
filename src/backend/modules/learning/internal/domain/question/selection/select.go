@@ -65,6 +65,9 @@ type Request struct {
 	Rule   Rule
 	Seed   uint64
 	Recent []uuid.UUID
+	// Strict keeps the difficulty band and the question types (challenge of a difficulty level, F076-AC-09): only the
+	// recently seen questions may be relaxed, never the band (±1) nor the types.
+	Strict bool
 }
 
 // Relaxation levels (QUESTION_BANK §6 step 4).
@@ -82,7 +85,11 @@ func Select(pool []Candidate, req Request) ([]Candidate, error) {
 	}
 	sorted := slices.Clone(pool)
 	slices.SortFunc(sorted, func(a, b Candidate) int { return strings.Compare(a.VersionID.String(), b.VersionID.String()) })
-	for level := strict; level <= anyType; level++ {
+	last := anyType
+	if req.Strict {
+		last = allowRecent
+	}
+	for level := strict; level <= last; level++ {
 		if out, ok := attempt(sorted, req, level); ok {
 			return out, nil
 		}

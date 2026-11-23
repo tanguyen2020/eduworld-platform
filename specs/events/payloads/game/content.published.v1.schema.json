@@ -36,7 +36,8 @@
         "event",
         "event_template",
         "season_track",
-        "minigame_config"
+        "minigame_config",
+        "challenge"
       ]
     },
     "item_id": {

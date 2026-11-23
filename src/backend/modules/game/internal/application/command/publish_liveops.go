@@ -181,6 +181,18 @@ func (h PublishGameContent) checkLiveOps(ctx context.Context, items []parsedItem
 					daily++
 				}
 			}
+			if len(d.Components.ChallengeIDs) > 0 {
+				// F076: the challenges of an event are published challenges (or in the batch).
+				known, err := h.knownChallenges(ctx, items, d.Components.ChallengeIDs)
+				if err != nil {
+					return err
+				}
+				for i, c := range d.Components.ChallengeIDs {
+					if !known[c] {
+						return problem.New(problem.ItemRefInvalid, fmt.Sprintf("components.challenge_ids/%d is an unknown challenge", i))
+					}
+				}
+			}
 			if err := d.Validate(h.LiveOps.Policy, daily); err != nil {
 				return liveOpsFieldProblem(err)
 			}

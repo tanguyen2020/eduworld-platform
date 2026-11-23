@@ -137,6 +137,150 @@ var (
 			},
 		},
 	}
+	// ChallengesColumns holds the columns for the "challenges" table.
+	ChallengesColumns = []*schema.Column{
+		{Name: "challenge_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "owner_scope", Type: field.TypeString, Size: 64, Default: "platform"},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// ChallengesTable holds the schema information for the "challenges" table.
+	ChallengesTable = &schema.Table{
+		Name:       "challenges",
+		Columns:    ChallengesColumns,
+		PrimaryKey: []*schema.Column{ChallengesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "challenges_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ChallengesColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ChallengeAttemptsColumns holds the columns for the "challenge_attempts" table.
+	ChallengeAttemptsColumns = []*schema.Column{
+		{Name: "challenge_attempt_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID},
+		{Name: "challenge_id", Type: field.TypeUUID},
+		{Name: "challenge_version_id", Type: field.TypeUUID},
+		{Name: "challenge_type", Type: field.TypeString, Size: 64},
+		{Name: "difficulty", Type: field.TypeString, Size: 64},
+		{Name: "party_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "end_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "score", Type: field.TypeInt, Default: 0},
+		{Name: "items_answered", Type: field.TypeInt, Default: 0},
+		{Name: "correct_streak", Type: field.TypeInt, Default: 0},
+		{Name: "lives_left", Type: field.TypeInt, Nullable: true},
+		{Name: "goal_progress", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "numeric(10,2)"}},
+		{Name: "activities_completed", Type: field.TypeInt, Default: 0},
+		{Name: "period_key", Type: field.TypeString, Size: 16},
+		{Name: "first_clear", Type: field.TypeBool, Default: false},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "deadline_at", Type: field.TypeTime, Nullable: true},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true},
+		{Name: "learning_attempt_ids", Type: field.TypeJSON},
+		{Name: "processed_attempt_ids", Type: field.TypeJSON},
+	}
+	// ChallengeAttemptsTable holds the schema information for the "challenge_attempts" table.
+	ChallengeAttemptsTable = &schema.Table{
+		Name:       "challenge_attempts",
+		Columns:    ChallengeAttemptsColumns,
+		PrimaryKey: []*schema.Column{ChallengeAttemptsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "challenge_attempts_one_active_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ChallengeAttemptsColumns[10]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "status = 'in_progress' AND deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "challenge_attempts_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ChallengeAttemptsColumns[1], ChallengeAttemptsColumns[10], ChallengeAttemptsColumns[27]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "challenge_attempts_period_idx",
+				Unique:  false,
+				Columns: []*schema.Column{ChallengeAttemptsColumns[1], ChallengeAttemptsColumns[10], ChallengeAttemptsColumns[12], ChallengeAttemptsColumns[25]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ChallengeVersionsColumns holds the columns for the "challenge_versions" table.
+	ChallengeVersionsColumns = []*schema.Column{
+		{Name: "challenge_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "challenge_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "challenge_type", Type: field.TypeString, Size: 64},
+		{Name: "mode", Type: field.TypeString, Size: 64},
+		{Name: "grade_levels", Type: field.TypeJSON},
+		{Name: "subject_id", Type: field.TypeUUID},
+		{Name: "objective_ids", Type: field.TypeJSON},
+		{Name: "area_id", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "available_from", Type: field.TypeTime, Nullable: true},
+		{Name: "available_to", Type: field.TypeTime, Nullable: true},
+	}
+	// ChallengeVersionsTable holds the schema information for the "challenge_versions" table.
+	ChallengeVersionsTable = &schema.Table{
+		Name:       "challenge_versions",
+		Columns:    ChallengeVersionsColumns,
+		PrimaryKey: []*schema.Column{ChallengeVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "challenge_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ChallengeVersionsColumns[9], ChallengeVersionsColumns[10]},
+			},
+		},
+	}
 	// CharacterCatalogsColumns holds the columns for the "character_catalogs" table.
 	CharacterCatalogsColumns = []*schema.Column{
 		{Name: "catalog_id", Type: field.TypeUUID},
@@ -2552,6 +2696,9 @@ var (
 		AchievementProgressEventsTable,
 		AchievementVersionsTable,
 		AvatarPresetsTable,
+		ChallengesTable,
+		ChallengeAttemptsTable,
+		ChallengeVersionsTable,
 		CharacterCatalogsTable,
 		CharacterCatalogVersionsTable,
 		CollectionsTable,
@@ -2635,6 +2782,15 @@ func init() {
 	}
 	AvatarPresetsTable.Annotation = &entsql.Annotation{
 		Table: "avatar_presets",
+	}
+	ChallengesTable.Annotation = &entsql.Annotation{
+		Table: "challenges",
+	}
+	ChallengeAttemptsTable.Annotation = &entsql.Annotation{
+		Table: "challenge_attempts",
+	}
+	ChallengeVersionsTable.Annotation = &entsql.Annotation{
+		Table: "challenge_versions",
 	}
 	CharacterCatalogsTable.Annotation = &entsql.Annotation{
 		Table: "character_catalogs",

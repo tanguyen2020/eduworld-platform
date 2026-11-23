@@ -17,6 +17,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/messaging"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/challengesql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/liveopssql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/minigamesql"
@@ -27,6 +28,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/realtime"
 	rewardinfra "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/reward"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/room"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/security"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/consumer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/facade"
@@ -40,6 +42,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/module"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/outbox"
 	rt "github.com/tanguyen2020/eduworld-platform/src/backend/pkg/realtime"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/roomhost"
 
 	_ "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/runtime" // ent mixin hooks and interceptors (R27)
 )
@@ -101,7 +104,8 @@ func (m *Module) Wire(in Imports) {
 // quest-failure-timer in worker jobs; the F074 consumers game.reward_engine, game.reward_engine_game,
 // game.grade_transition, the progression routes and the jobs curve-rollout, xp-reconcile; the F075 economy routes, the
 // consumers game.achievement_evaluator (game, learning, competition streams) and game.collection_on_mastery and the job
-// wallet-reconcile; the F077 live-ops routes, the consumers game.liveops_progress (game, learning, competition streams) and
+// wallet-reconcile; the F076 challenge routes, the consumer game.challenge_progress, the room host of the challenge
+// rooms (worker events) and the job challenge-deadline; the F077 live-ops routes, the consumers game.liveops_progress (game, learning, competition streams) and
 // game.season_projection and the jobs event-scheduler, goal-recompute; createRealtimeTicket and the NATS command
 // ew.cmd.game.session.heartbeat of the realtime gateway in core-api (F090).
 func Register(r *module.Registry) (*Module, error) {
@@ -163,6 +167,16 @@ func Register(r *module.Registry) (*Module, error) {
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
 	}
+	challengeCfg, err := gameconfig.ChallengeFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	roomCfg, err := gameconfig.ChallengeRoomFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	observability.RegisterChallenge(r.Metrics())
+	roomhost.RegisterMetrics(r.Metrics())
 	presence := cache.PresenceStore{C: vk}
 	hub := &modules.LateHub{}
 	sessions := command.Sessions{UoW: core.UoW, AfterCommit: entx.AfterCommit, Sessions: write.SessionRepo{}, Logins: write.LoginEventRepo{},
@@ -206,6 +220,14 @@ func Register(r *module.Registry) (*Module, error) {
 		Tenants: write.ManifestRepo{}, Manifests: gameManifest, Grants: write.ProgressionRepo{}, Registry: appliers, EventSchema: liveopsschema.Event{},
 		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder}, Screener: chatLate, Counter: cache.GoalCounter{C: vk},
 		Realtime: realtime.LiveOpsPublisher{C: vk}, Lock: cache.JobLock{C: vk}, Metrics: observability.LiveOpsMetrics{}, Policy: liveCfg.Command}
+	// F076 solo challenges: createAttempt of module learning (mode challenge) when wired; one room per attempt in progress
+	// on the shared room host (timer on the server clock), the job challenge-deadline as fallback from PostgreSQL.
+	rooms := roomhost.ValkeyRegistry{C: vk, Index: gameconfig.ChallengeRoomIndex}
+	challengeUC := command.Challenges{UoW: core.UoW, AfterCommit: entx.AfterCommit, Content: challengesql.Content{}, World: worldsql.Content{},
+		Quests: questsql.Content{}, Store: challengesql.Store{}, Events: write.Publisher{W: core.Writer}, Learning: learningLate,
+		Realtime: realtime.ChallengePublisher{C: vk}, Metrics: observability.ChallengeMetrics{}, Config: challengeCfg}
+	challengeRoom := room.Challenges{Registry: rooms, Type: gameconfig.ChallengeRoomType, Expirer: challengeUC}
+	challengeUC.Room = challengeRoom
 	m := &Module{hub: hub, learning: learningLate, chat: chatLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
 		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC}}}
 	options := cache.NicknameOptionStore{C: vk}
@@ -227,7 +249,9 @@ func Register(r *module.Registry) (*Module, error) {
 			DailyCap: policy.DailyCap},
 		EconomyQueries: query.Economy{Read: core.ReadSession, Data: read.Economy{}, Cursors: cursors}, EconomyCommands: economyUC,
 		LiveOpsQueries: query.LiveOps{Read: core.ReadSession, Data: liveopssql.Store{}, Students: worldsql.Content{}, Counter: cache.GoalCounter{C: vk},
-			Cursors: cursors, Policy: liveCfg.Query}, LiveOpsCommands: liveOpsUC, MiniGames: miniGameUC}
+			Cursors: cursors, Policy: liveCfg.Query}, LiveOpsCommands: liveOpsUC, MiniGames: miniGameUC,
+		Challenges: challengeUC, ChallengeQueries: query.Challenges{Read: core.ReadSession, Content: challengesql.Content{}, World: worldsql.Content{},
+			Quests: questsql.Content{}, Cursors: cursors, Rules: challengeCfg.Rules, Reset: challengeCfg.Reset}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -247,7 +271,7 @@ func Register(r *module.Registry) (*Module, error) {
 			core.UoW, core.App, js)
 	})
 	r.Consumer("game.session_end_on_revoke", func(js jetstream.JetStream) outbox.ConsumerOptions {
-		return consumer.SessionEndOnRevokeOptions(consumer.SessionEndOnRevoke{Sessions: sessions}, core.UoW, core.App, js)
+		return consumer.SessionEndOnRevokeOptions(consumer.SessionEndOnRevoke{Sessions: sessions, Challenges: challengeUC}, core.UoW, core.App, js)
 	})
 	r.Consumer("game.platform_settings", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.PlatformSettingsOptions(consumer.PlatformSettings{Settings: command.PlatformSettings{Refs: write.RefPlatformSettings{}}},
@@ -308,6 +332,13 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("game.liveops_progress_competition", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LiveOpsProgressCompetitionOptions(consumer.LiveOpsProgress{LiveOps: liveOpsUC}, core.UoW, core.App, js)
 	})
+	r.Consumer("game.challenge_progress", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.ChallengeProgressOptions(consumer.ChallengeProgress{Challenges: challengeUC}, core.UoW, core.App, js)
+	})
+	// The room host of the challenge rooms (pkg/roomhost): worker events, several instances share the rooms by lease.
+	host := roomhost.NewHost(roomCfg, rooms, challengeRoom, nil, roomhost.PromMetrics{})
+	host.Handle(gameconfig.ChallengeRoomType, challengeRoom)
+	r.Background(Name, "roomhost", "game.challenge_room_host", r.RunsEvents(), host.Run)
 	r.Consumer("game.season_projection", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.SeasonProjectionOptions(consumer.SeasonProjection{Seasons: liveOpsUC}, core.UoW, core.App, js)
 	})
@@ -316,6 +347,8 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Job(Name, job.WalletReconcile, gameconfig.WalletReconcileInterval, module.JobFunc(job.WalletReconcileJob(economyUC)))
 	r.Job(Name, job.CurveRollout, gameconfig.CurveRolloutInterval, module.JobFunc(job.CurveRolloutJob(progressionUC)))
 	r.Job(Name, job.XPReconcile, gameconfig.XPReconcileInterval, module.JobFunc(job.XPReconcileJob(progressionUC)))
+	r.Job(Name, job.ChallengeDeadline, gameconfig.ChallengeDeadlineInterval, module.JobFunc(job.ChallengeDeadlineJob(challengeUC,
+		challengeCfg.JobBatch)))
 	r.Job(Name, job.QuestPeriodExpiry, questCfg.JobInterval, module.JobFunc(job.QuestPeriodExpiryJob(questUC)))
 	r.Job(Name, job.QuestFailureTimer, questCfg.JobInterval, module.JobFunc(job.QuestFailureTimerJob(questUC)))
 	r.Job(Name, job.SessionTimeout, cfg.TimeoutScan, module.JobFunc(job.SessionTimeoutJob(sessions)))

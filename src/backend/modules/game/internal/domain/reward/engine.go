@@ -34,7 +34,10 @@ func invalid(field, format string, args ...any) error {
 // TriggerEvents are the server events a reward rule of F074 may react to (reward-rule.schema.json trigger.event_type
 // of the F074 sources). None of them is a login, a session, online time, speed or a streak (F074-AC-09, NFR-SAFE-003).
 var TriggerEvents = []string{"activity.graded", "lesson.completed", "quest.completed", "minigame.completed",
-	"learning_objective.mastered", "world.discovery_found", "world.area_completed"}
+	"learning_objective.mastered", "world.discovery_found", "world.area_completed", "challenge.completed"}
+
+// ChallengeStatuses are the end statuses of challenge.completed a rule may reward (F076): abandoned never is.
+var ChallengeStatuses = []string{"succeeded", "failed"}
 
 // SourceCodes is the catalog of XP sources of PROGRESSION_SYSTEM §3.1 (reward-rule.schema.json source_code).
 var SourceCodes = []string{"quest.main_completed", "quest.side_completed", "quest.daily_completed", "quest.weekly_completed",
@@ -61,6 +64,10 @@ type Trigger struct {
 	RecommendationID *uuid.UUID
 	// RuleID restricts the trigger to one reward rule (reward_rule_id of a mini-game config, F073); nil = every matching rule.
 	RuleID *uuid.UUID
+	// challenge.completed (F076): end status, reward_multiplier of the level, first clear of the student.
+	ChallengeStatus  string
+	RewardMultiplier float64
+	FirstClear       bool
 }
 
 // Conditions are the rule conditions (reward-rule.schema.json conditions).
@@ -73,6 +80,7 @@ type Conditions struct {
 	SourceIDs           []uuid.UUID `json:"source_ids"`
 	MinPartySize        *int        `json:"min_party_size"`
 	MinContribution     *int        `json:"min_individual_contribution"`
+	ChallengeStatuses   []string    `json:"challenge_statuses"`
 }
 
 // Grant is one grant of a rule (xp, title in F074; currency, item, badge, collection_item by the appliers of F075).
@@ -85,7 +93,13 @@ type Grant struct {
 	BadgeID          string `json:"badge_id,omitempty"`
 	CurrencyCode     string `json:"currency_code,omitempty"`
 	CollectionItemID string `json:"collection_item_id,omitempty"`
+	// ScaleBy reward_multiplier: the XP (amount, per_correct_answer) and the Xu of the grant are multiplied by the
+	// reward_multiplier of challenge.completed (F076), rounded down, before diminishing and caps.
+	ScaleBy string `json:"scale_by,omitempty"`
 }
+
+// ScaleReward is the scale_by value of a challenge grant.
+const ScaleReward = "reward_multiplier"
 
 // Scaled returns the grant with its Xu scaled by the diminishing factor of the award, rounded down; ok is false when a
 // currency grant scales to 0 (nothing to give).
@@ -180,6 +194,14 @@ func (r Rule) Validate(hasApplier func(grantType string) bool) error {
 		if g.Type == "currency" && (g.CurrencyCode != "xu" || g.Amount < 1) {
 			return invalid(fmt.Sprintf("grants/%d", i), "a currency grant gives an amount of xu")
 		}
+		if g.ScaleBy != "" && (g.ScaleBy != ScaleReward || r.EventType != "challenge.completed") {
+			return invalid(fmt.Sprintf("grants/%d/scale_by", i), "reward_multiplier scales challenge.completed grants only")
+		}
+	}
+	for _, s := range r.Conditions.ChallengeStatuses {
+		if r.EventType != "challenge.completed" || !slices.Contains(ChallengeStatuses, s) {
+			return invalid("conditions/challenge_statuses", "succeeded or failed of challenge.completed only")
+		}
 	}
 	if d := r.Diminishing; d != nil && (len(d.Multipliers) == 0 || d.WindowDays < 1) {
 		return invalid("diminishing_returns", "multipliers and window_days ≥ 1 are required")
@@ -268,11 +290,18 @@ func (p Policy) Evaluate(t Trigger, rules []Rule, st Student, history func(Rule)
 		a := Award{Rule: r, Bucket: r.Bucket(t.SourceType)}
 		base := 0
 		for _, g := range r.Grants {
+			scale := 1.0
+			if g.ScaleBy == ScaleReward && t.RewardMultiplier > 0 {
+				scale = t.RewardMultiplier
+			}
 			if g.Type != "xp" {
+				if g.Type == "currency" && scale != 1 {
+					g.Amount = int(math.Floor(float64(g.Amount)*scale + 1e-9))
+				}
 				a.Rewarded = append(a.Rewarded, g)
 				continue
 			}
-			base += g.Amount + g.PerCorrect*firstTry(t)
+			base += int(math.Floor(float64(g.Amount+g.PerCorrect*firstTry(t))*scale + 1e-9))
 		}
 		a.Base = base
 		factor := 1.0
@@ -341,6 +370,18 @@ func conditionsHold(c Conditions, t Trigger, st Student, h History) bool {
 	}
 	if c.FirstCompletionOnly && h.Ever > 0 {
 		return false
+	}
+	if t.EventType == "challenge.completed" {
+		statuses := c.ChallengeStatuses
+		if len(statuses) == 0 {
+			statuses = []string{"succeeded"}
+		}
+		if !slices.Contains(ChallengeStatuses, t.ChallengeStatus) || !slices.Contains(statuses, t.ChallengeStatus) {
+			return false // abandoned is never rewarded; a failure only by a rule that lists it (never negative)
+		}
+		if c.FirstCompletionOnly && !t.FirstClear {
+			return false // first_clear of the payload: the first succeeded attempt of the student on the challenge
+		}
 	}
 	if len(c.GradeLevels) > 0 && !slices.Contains(c.GradeLevels, st.Grade) {
 		return false

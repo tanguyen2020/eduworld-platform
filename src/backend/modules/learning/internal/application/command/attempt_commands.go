@@ -189,10 +189,14 @@ func displayLanguage(acceptLanguage string, title json.RawMessage, contentLangua
 }
 
 // newActivityAttempt pins the items of an activity version and inserts the attempt with its activity.started events.
+// A challenge draw (F076, at most one) replaces the activity items by questions of the grade and difficulty band.
 func (h Attempts) newActivityAttempt(ctx context.Context, p authz.Principal, school uuid.UUID, src ActivitySource, mode attempt.Mode, ctxType string,
-	ctxID uuid.UUID, recommendation *uuid.UUID, acceptLanguage, key string, now time.Time) (attempt.Attempt, []question.Rendered, error) {
+	ctxID uuid.UUID, recommendation *uuid.UUID, acceptLanguage, key string, now time.Time, draw ...*challengeDraw) (attempt.Attempt, []question.Rendered, error) {
 	// Mini-game activities (F073-AC-14): the configuration version is pinned and the items come from its question source.
 	if _, ok := src.Plugin.(activity.GameScored); ok {
+		if len(draw) > 0 && draw[0] != nil {
+			return attempt.Attempt{}, nil, problem.New(problem.ActivityConfigInvalid, "a challenge activity draws questions (no mini-game)")
+		}
 		return h.startMinigameActivity(ctx, p, school, src, minigameStart{mode: mode, ctxType: ctxType, ctxID: ctxID,
 			recommendation: recommendation, acceptLanguage: acceptLanguage, key: key, now: now})
 	}
@@ -216,6 +220,18 @@ func (h Attempts) newActivityAttempt(ctx context.Context, p authz.Principal, sch
 			return attempt.Attempt{}, nil, err
 		}
 	}
+	timeLimit := src.TimeLimit()
+	if len(draw) > 0 && draw[0] != nil {
+		if media {
+			return attempt.Attempt{}, nil, problem.New(problem.ActivityConfigInvalid, "a challenge activity draws questions (no media or simulation)")
+		}
+		if qids, err = h.challengeQuestions(ctx, *draw[0], src, allowed, len(qids), seed); err != nil {
+			return attempt.Attempt{}, nil, err
+		}
+		if draw[0].timeLimit != nil {
+			timeLimit = draw[0].timeLimit
+		}
+	}
 	var items []attempt.Item
 	var rendered []question.Rendered
 	if !media || len(qids) > 0 {
@@ -226,7 +242,7 @@ func (h Attempts) newActivityAttempt(ctx context.Context, p authz.Principal, sch
 	activityID := src.Doc.ID
 	a := attempt.New(attempt.Start{ID: ids.New(), TenantID: *p.TenantID, SchoolID: school, StudentID: p.UserID, Mode: mode, ContextType: ctxType,
 		ContextID: ctxID, ActivityID: &activityID, ActivityType: src.Body.ActivityType, SourceKind: "activity", SourceVersionID: src.Version.ID,
-		Seed: seed, Now: now, TimeLimitSeconds: src.TimeLimit(), ActivityFeedback: src.Config.Feedback.Timing,
+		Seed: seed, Now: now, TimeLimitSeconds: timeLimit, ActivityFeedback: src.Config.Feedback.Timing,
 		DisplayLanguage: displayLanguage(acceptLanguage, src.Version.Title, src.Version.ContentLanguage), RecommendationID: recommendation,
 		IdempotencyKey: key, Items: items})
 	if err := h.Store.InsertAttempt(ctx, a); err != nil {

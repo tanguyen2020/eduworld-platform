@@ -20,6 +20,12 @@ type Tx struct {
 	AchievementVersion *AchievementVersionClient
 	// AvatarPreset is the client for interacting with the AvatarPreset builders.
 	AvatarPreset *AvatarPresetClient
+	// Challenge is the client for interacting with the Challenge builders.
+	Challenge *ChallengeClient
+	// ChallengeAttempt is the client for interacting with the ChallengeAttempt builders.
+	ChallengeAttempt *ChallengeAttemptClient
+	// ChallengeVersion is the client for interacting with the ChallengeVersion builders.
+	ChallengeVersion *ChallengeVersionClient
 	// CharacterCatalog is the client for interacting with the CharacterCatalog builders.
 	CharacterCatalog *CharacterCatalogClient
 	// CharacterCatalogVersion is the client for interacting with the CharacterCatalogVersion builders.
@@ -291,6 +297,9 @@ func (tx *Tx) init() {
 	tx.AchievementProgressEvent = NewAchievementProgressEventClient(tx.config)
 	tx.AchievementVersion = NewAchievementVersionClient(tx.config)
 	tx.AvatarPreset = NewAvatarPresetClient(tx.config)
+	tx.Challenge = NewChallengeClient(tx.config)
+	tx.ChallengeAttempt = NewChallengeAttemptClient(tx.config)
+	tx.ChallengeVersion = NewChallengeVersionClient(tx.config)
 	tx.CharacterCatalog = NewCharacterCatalogClient(tx.config)
 	tx.CharacterCatalogVersion = NewCharacterCatalogVersionClient(tx.config)
 	tx.Collection = NewCollectionClient(tx.config)

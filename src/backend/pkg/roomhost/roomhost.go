@@ -1,7 +1,9 @@
-// Package roomhost holds the building blocks of a room host (REALTIME_ARCHITECTURE §5.1, F091 T002): a fixed-rate tick
-// loop with its duration budget and a lease keeper that renews the ownership of a room and reports its loss. The room
-// state, the lease keys and what a tick does belong to the module that hosts the room (competition: hub instance in
-// F091; lobby, battle, co-op, boss later). No I/O here besides calling the functions it is given.
+// Package roomhost is the shared room host library of the server-authoritative rooms (REALTIME_ARCHITECTURE §5.1,
+// CHALLENGE_BOSS_SYSTEM §4; F091 T002, F076 T032): a fixed-rate tick loop and a lease keeper (hub rooms of module
+// competition), and Host — one owner node per room through a Valkey lease (ValkeyRegistry), failover from the
+// checkpoint the module keeps in its database (CheckpointStore), timers on the server clock (pkg/clock) with a grace per
+// room type, used by the solo challenges of module game (F076) and reused by boss (F103) and battle (F105). No business
+// code: what a room does is the Handler of the module (R13); Valkey holds the registry and the lease only (ADR-0004).
 package roomhost
 
 import (

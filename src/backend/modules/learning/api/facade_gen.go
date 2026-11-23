@@ -545,8 +545,24 @@ type ActivityRef struct {
 
 	// ContentVersionId Bỏ trống = version published hiện hành
 	ContentVersionId *openapi_types.UUID `json:"content_version_id,omitempty"`
-	QuestionCount    *int                `json:"question_count,omitempty"`
-	TimeLimitSeconds *int                `json:"time_limit_seconds,omitempty"`
+
+	// DifficultyMax Mode challenge (F076): cận trên dải độ khó câu, ≥ difficulty_min
+	DifficultyMax *int `json:"difficulty_max,omitempty"`
+
+	// DifficultyMin Mode challenge (F076): cận dưới dải độ khó câu của mức khó, bắt buộc với challenge
+	DifficultyMin *int `json:"difficulty_min,omitempty"`
+
+	// GradeLevel Mode challenge (F076): khối của học sinh; chỉ chọn câu của khối này (ADR-0095)
+	GradeLevel *int `json:"grade_level,omitempty"`
+
+	// ObjectiveIds Mode challenge (F076) — LO của challenge; câu chọn thuộc một trong các LO (rỗng = không lọc LO)
+	ObjectiveIds *[]openapi_types.UUID `json:"objective_ids,omitempty"`
+
+	// QuestionCount Mode challenge: số câu chọn (vắng = số câu tự nhiên của activity); mode khác bỏ qua
+	QuestionCount *int `json:"question_count,omitempty"`
+
+	// TimeLimitSeconds Mode challenge: thời gian attempt theo giờ server (giây/câu của mức × số câu); mode khác bỏ qua
+	TimeLimitSeconds *int `json:"time_limit_seconds,omitempty"`
 }
 
 // ActivityRefContentType activity = learning activity đã publish (F030, ghim version); question_set = bộ câu hỏi đã publish; minigame_config = cấu hình mini-game của module game (F073, content_id = minigame_config_id, content_version_id = version ghim, bắt buộc; đọc projection ref.minigame_config_versions)
@@ -558,7 +574,7 @@ type AttemptCreateRequest struct {
 	Context  struct {
 		ContextId openapi_types.UUID `json:"context_id"`
 
-		// ContextType challenge_attempt (F076) và boss_encounter (+ phase, F103) cho mode challenge [Proposed]; F030 chỉ mở quest/minigame
+		// ContextType challenge_attempt (F076, mode challenge) và boss_encounter (+ phase, F103, mode challenge); quest_step ↔ quest, minigame_session ↔ minigame
 		ContextType   AttemptCreateRequestContextContextType `json:"context_type"`
 		GameSessionId *openapi_types.UUID                    `json:"game_session_id,omitempty"`
 		PartyId       *openapi_types.UUID                    `json:"party_id,omitempty"`
@@ -569,12 +585,12 @@ type AttemptCreateRequest struct {
 		StepId         *string             `json:"step_id,omitempty"`
 	} `json:"context"`
 
-	// Mode module game chỉ được mở `quest` hoặc `minigame` (giá trị khác → 422)
+	// Mode module game chỉ được mở `quest`, `minigame` hoặc `challenge` (F076; giá trị khác → 422). Mode `challenge` bắt buộc context `challenge_attempt`, `activity.difficulty_min/max` và `activity.grade_level`; module learning chọn câu đã publish của tenant theo môn của activity, khối, dải độ khó và LO (không lấy câu khối khác, ngoài dải)
 	Mode      AttemptMode        `json:"mode"`
 	StudentId openapi_types.UUID `json:"student_id"`
 }
 
-// AttemptCreateRequestContextContextType challenge_attempt (F076) và boss_encounter (+ phase, F103) cho mode challenge [Proposed]; F030 chỉ mở quest/minigame
+// AttemptCreateRequestContextContextType challenge_attempt (F076, mode challenge) và boss_encounter (+ phase, F103, mode challenge); quest_step ↔ quest, minigame_session ↔ minigame
 type AttemptCreateRequestContextContextType string
 
 // AttemptCreated defines model for AttemptCreated.
@@ -1492,7 +1508,7 @@ func (t *QuestionResponse) UnmarshalJSON(b []byte) error {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// CreateAttempt Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game)
+	// CreateAttempt Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game, challenge)
 	// (POST /internal/v1/attempts)
 	CreateAttempt(w http.ResponseWriter, r *http.Request)
 	// GetAttemptResult Lấy trạng thái và kết quả đã chấm của attempt (không có đáp án)
@@ -3511,7 +3527,7 @@ func (response RevealPlanItem409ApplicationProblemPlusJSONResponse) VisitRevealP
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// CreateAttempt Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game)
+	// CreateAttempt Mở attempt cho một hoạt động học tập được kích hoạt từ game (bước quest, mini-game, challenge)
 	// (POST /internal/v1/attempts)
 	CreateAttempt(ctx context.Context, request CreateAttemptRequestObject) (CreateAttemptResponseObject, error)
 	// GetAttemptResult Lấy trạng thái và kết quả đã chấm của attempt (không có đáp án)

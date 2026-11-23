@@ -28,6 +28,14 @@ type SessionEnder interface {
 // Idempotency per event_id is pkg/outbox.Consumer (processed_events); an ended session is never ended again.
 type SessionEndOnRevoke struct {
 	Sessions SessionEnder
+	// Challenges ends as abandoned the challenge attempts in progress of the student (F076 edge case: student locked or
+	// cleaned up); nil = none. A password change keeps them (the student logs in again before the deadline).
+	Challenges ChallengeAbandoner
+}
+
+// ChallengeAbandoner abandons the challenge attempts of a student (command.Challenges.AbandonForStudent).
+type ChallengeAbandoner interface {
+	AbandonForStudent(ctx context.Context, tenant *uuid.UUID, student uuid.UUID) (int, error)
 }
 
 // SessionEndOnRevokeOptions returns the outbox consumer options (user.* may be platform events: Platform true).
@@ -99,6 +107,13 @@ func (c SessionEndOnRevoke) Handle(ctx context.Context, e outbox.Envelope) error
 	default:
 		return outbox.Permanent(fmt.Errorf("unexpected event %s", e.EventType))
 	}
-	_, err := c.Sessions.EndSessionsForUser(ctx, r)
-	return err
+	if _, err := c.Sessions.EndSessionsForUser(ctx, r); err != nil {
+		return err
+	}
+	if c.Challenges != nil && r.Realtime != "password_changed" {
+		if _, err := c.Challenges.AbandonForStudent(ctx, r.TenantID, r.StudentID); err != nil {
+			return err
+		}
+	}
+	return nil
 }

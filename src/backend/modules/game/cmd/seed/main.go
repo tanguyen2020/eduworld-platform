@@ -34,9 +34,11 @@ import (
 	writeport "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/catalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/challengeschema"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/economyschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/liveopsschema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/challengesql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/liveopssql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
@@ -169,6 +171,10 @@ func run(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
+	chlCfg, err := gameconfig.ChallengeFrom(config.Load())
+	if err != nil {
+		return err
+	}
 	wh := command.PublishGameContent{UoW: uow, Store: write.GameContentRepo{}, Content: worldsql.Content{}, Events: write.Publisher{W: w},
 		Audit: write.Auditor{R: rec}, QuestContent: questsql.Content{}, Quests: &command.QuestPublishRules{Schema: questschema.Validator{},
 			Validator: quest.ValidatorConfig{PassRule: qcfg.PassRule, BlockMaxByBand: qcfg.BlockMax}},
@@ -178,7 +184,8 @@ func run(ctx context.Context, dir string) error {
 			CollectionSchema: economyschema.Collection{}, AchievementSchema: economyschema.Achievement{}, Appliers: rewardinfra.Types(),
 			Items: economysql.Content{}, CollectionItems: write.GameContentRepo{}},
 		LiveOps: &command.LiveOpsPublishRules{EventSchema: liveopsschema.Event{}, TemplateSchema: liveopsschema.Template{},
-			TrackSchema: liveopsschema.Track{}, Reader: liveopssql.Store{}, Hook: liveOps, Policy: liveCfg.Command.Rules}}
+			TrackSchema: liveopsschema.Track{}, Reader: liveopssql.Store{}, Hook: liveOps, Policy: liveCfg.Command.Rules},
+		Challenges: &command.ChallengePublishRules{Schema: challengeschema.Validator{}, Rules: chlCfg.Rules, Content: challengesql.Content{}}}
 	all := append(append(append(append(worldItems, questItems...), progressionItems...), economyItems...), liveOpsItems...)
 	wres, err := wh.Publish(tenancy.WithScope(ctx, sc), all, "seed world v1", "")
 	if err != nil {

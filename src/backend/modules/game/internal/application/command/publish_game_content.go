@@ -15,6 +15,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/achievement"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/challenge"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/collection"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/economy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/liveops"
@@ -39,7 +40,7 @@ const EventContentPublished = "content.published"
 // Quests (F072) come before the dialogues that give them.
 var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemMiniGameConfig, write.ItemQuest, write.ItemNPCDialogue,
 	write.ItemProgressionCurve, write.ItemGameItem, write.ItemRewardRule, write.ItemShopItem, write.ItemCollection, write.ItemAchievement,
-	write.ItemEventTemplate, write.ItemSeasonTrack, write.ItemEvent}
+	write.ItemChallenge, write.ItemEventTemplate, write.ItemSeasonTrack, write.ItemEvent}
 
 // ContentItem is one authored game content payload to publish.
 type ContentItem struct {
@@ -90,7 +91,9 @@ type PublishGameContent struct {
 	LiveOps *LiveOpsPublishRules
 	// MiniGames are the F073 checks of a mini-game config (JSON Schema, validateMinigameQuestionSource of module learning).
 	MiniGames *MiniGamePublishRules
-	Now       func() time.Time
+	// Challenges are the F076 checks (challenge.schema.json, profiles, sources) and the published challenges.
+	Challenges *ChallengePublishRules
+	Now        func() time.Time
 }
 
 type parsedItem struct {
@@ -114,6 +117,7 @@ type parsedItem struct {
 	minigame *minigame.Config
 	template *liveops.Template
 	track    *season.Track
+	chal     *challenge.Version
 }
 
 // Publish publishes items in one platform transaction; key makes the release rows idempotent per item.
@@ -145,6 +149,8 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 			p, err = parseMiniGame(ctx, it, h.MiniGames)
 		case liveOpsItem(it.Type):
 			p, err = parseLiveOps(it, h.LiveOps)
+		case challengeItem(it.Type):
+			p, err = parseChallenge(it, h.Challenges)
 		default:
 			p, err = parse(it)
 		}
@@ -305,6 +311,9 @@ func (h PublishGameContent) checkRefs(ctx context.Context, items []parsedItem) e
 	if err := h.checkQuests(ctx, items, areas, chapters); err != nil {
 		return err
 	}
+	if err := h.checkChallenges(ctx, items, known, quests); err != nil {
+		return err
+	}
 	if err := h.checkCurve(ctx, items); err != nil {
 		return err
 	}
@@ -398,6 +407,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 	stored := canonical
 	if p.quest != nil {
 		if stored, err = questStored(p.doc, vid, head.NextVersionNo); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
+	if p.chal != nil {
+		if stored, err = challengeStored(p.doc, vid, head.NextVersionNo); err != nil {
 			return GameRelease{}, false, err
 		}
 	}

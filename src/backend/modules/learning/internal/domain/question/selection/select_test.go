@@ -116,3 +116,23 @@ func TestRelaxation(t *testing.T) {
 		t.Fatal("count 0")
 	}
 }
+
+// F076-AC-09, SC-002: a strict request (challenge of a difficulty level) never widens the band nor the types; only the
+// recently seen questions come back.
+func TestStrictSelection(t *testing.T) {
+	p := pool(6, func(i int) Candidate { return Candidate{Type: "single_choice", Difficulty: 3} })
+	p = append(p, pool(2, func(int) Candidate { return Candidate{Type: "numeric", Difficulty: 4} })...)
+	recent := []uuid.UUID{p[0].QuestionID}
+	band := Filters{Types: []string{"single_choice"}, Difficulty: &Range{Min: 3, Max: 3}}
+	got, err := Select(p, Request{Rule: Rule{Count: 6, Filters: band}, Recent: recent, Seed: 1, Strict: true})
+	if err != nil || len(got) != 6 {
+		t.Fatalf("recent relaxed: %v", err)
+	}
+	if _, err := Select(p, Request{Rule: Rule{Count: 7, Filters: band}, Seed: 1, Strict: true}); !errors.Is(err, ErrPoolInsufficient) {
+		t.Fatalf("band widened: %v", err)
+	}
+	if _, err := Select(p, Request{Rule: Rule{Count: 7, Filters: Filters{Types: []string{"single_choice"}}}, Seed: 1, Strict: true}); !errors.Is(err,
+		ErrPoolInsufficient) {
+		t.Fatalf("types relaxed: %v", err)
+	}
+}

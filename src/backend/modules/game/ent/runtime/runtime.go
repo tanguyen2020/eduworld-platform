@@ -10,6 +10,9 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementprogressevent"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challenge"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeattempt"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/challengeversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collection"
@@ -243,6 +246,197 @@ func init() {
 	avatarpresetDescID := avatarpresetMixinFields0[0].Descriptor()
 	// avatarpreset.DefaultID holds the default value on creation for the id field.
 	avatarpreset.DefaultID = avatarpresetDescID.Default.(func() uuid.UUID)
+	challengeMixin := schema.Challenge{}.Mixin()
+	challengeMixinHooks0 := challengeMixin[0].Hooks()
+	challenge.Hooks[0] = challengeMixinHooks0[0]
+	challengeMixinInters0 := challengeMixin[0].Interceptors()
+	challenge.Interceptors[0] = challengeMixinInters0[0]
+	challengeMixinFields0 := challengeMixin[0].Fields()
+	_ = challengeMixinFields0
+	challengeFields := schema.Challenge{}.Fields()
+	_ = challengeFields
+	// challengeDescCreatedAt is the schema descriptor for created_at field.
+	challengeDescCreatedAt := challengeMixinFields0[1].Descriptor()
+	// challenge.DefaultCreatedAt holds the default value on creation for the created_at field.
+	challenge.DefaultCreatedAt = challengeDescCreatedAt.Default.(func() time.Time)
+	// challengeDescUpdatedAt is the schema descriptor for updated_at field.
+	challengeDescUpdatedAt := challengeMixinFields0[3].Descriptor()
+	// challenge.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	challenge.DefaultUpdatedAt = challengeDescUpdatedAt.Default.(func() time.Time)
+	// challenge.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	challenge.UpdateDefaultUpdatedAt = challengeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// challengeDescDeleteReason is the schema descriptor for delete_reason field.
+	challengeDescDeleteReason := challengeMixinFields0[7].Descriptor()
+	// challenge.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	challenge.DeleteReasonValidator = challengeDescDeleteReason.Validators[0].(func(string) error)
+	// challengeDescVersion is the schema descriptor for version field.
+	challengeDescVersion := challengeMixinFields0[8].Descriptor()
+	// challenge.DefaultVersion holds the default value on creation for the version field.
+	challenge.DefaultVersion = challengeDescVersion.Default.(int64)
+	// challengeDescCode is the schema descriptor for code field.
+	challengeDescCode := challengeFields[0].Descriptor()
+	// challenge.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	challenge.CodeValidator = challengeDescCode.Validators[0].(func(string) error)
+	// challengeDescOwnerScope is the schema descriptor for owner_scope field.
+	challengeDescOwnerScope := challengeFields[1].Descriptor()
+	// challenge.DefaultOwnerScope holds the default value on creation for the owner_scope field.
+	challenge.DefaultOwnerScope = challengeDescOwnerScope.Default.(string)
+	// challenge.OwnerScopeValidator is a validator for the "owner_scope" field. It is called by the builders before save.
+	challenge.OwnerScopeValidator = challengeDescOwnerScope.Validators[0].(func(string) error)
+	// challengeDescLatestVersionNo is the schema descriptor for latest_version_no field.
+	challengeDescLatestVersionNo := challengeFields[3].Descriptor()
+	// challenge.DefaultLatestVersionNo holds the default value on creation for the latest_version_no field.
+	challenge.DefaultLatestVersionNo = challengeDescLatestVersionNo.Default.(int)
+	// challengeDescID is the schema descriptor for id field.
+	challengeDescID := challengeMixinFields0[0].Descriptor()
+	// challenge.DefaultID holds the default value on creation for the id field.
+	challenge.DefaultID = challengeDescID.Default.(func() uuid.UUID)
+	challengeattemptMixin := schema.ChallengeAttempt{}.Mixin()
+	challengeattemptMixinHooks0 := challengeattemptMixin[0].Hooks()
+	challengeattempt.Hooks[0] = challengeattemptMixinHooks0[0]
+	challengeattemptMixinInters0 := challengeattemptMixin[0].Interceptors()
+	challengeattempt.Interceptors[0] = challengeattemptMixinInters0[0]
+	challengeattemptMixinFields0 := challengeattemptMixin[0].Fields()
+	_ = challengeattemptMixinFields0
+	challengeattemptFields := schema.ChallengeAttempt{}.Fields()
+	_ = challengeattemptFields
+	// challengeattemptDescCreatedAt is the schema descriptor for created_at field.
+	challengeattemptDescCreatedAt := challengeattemptMixinFields0[2].Descriptor()
+	// challengeattempt.DefaultCreatedAt holds the default value on creation for the created_at field.
+	challengeattempt.DefaultCreatedAt = challengeattemptDescCreatedAt.Default.(func() time.Time)
+	// challengeattemptDescUpdatedAt is the schema descriptor for updated_at field.
+	challengeattemptDescUpdatedAt := challengeattemptMixinFields0[4].Descriptor()
+	// challengeattempt.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	challengeattempt.DefaultUpdatedAt = challengeattemptDescUpdatedAt.Default.(func() time.Time)
+	// challengeattempt.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	challengeattempt.UpdateDefaultUpdatedAt = challengeattemptDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// challengeattemptDescDeleteReason is the schema descriptor for delete_reason field.
+	challengeattemptDescDeleteReason := challengeattemptMixinFields0[8].Descriptor()
+	// challengeattempt.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	challengeattempt.DeleteReasonValidator = challengeattemptDescDeleteReason.Validators[0].(func(string) error)
+	// challengeattemptDescVersion is the schema descriptor for version field.
+	challengeattemptDescVersion := challengeattemptMixinFields0[9].Descriptor()
+	// challengeattempt.DefaultVersion holds the default value on creation for the version field.
+	challengeattempt.DefaultVersion = challengeattemptDescVersion.Default.(int64)
+	// challengeattemptDescChallengeType is the schema descriptor for challenge_type field.
+	challengeattemptDescChallengeType := challengeattemptFields[4].Descriptor()
+	// challengeattempt.ChallengeTypeValidator is a validator for the "challenge_type" field. It is called by the builders before save.
+	challengeattempt.ChallengeTypeValidator = challengeattemptDescChallengeType.Validators[0].(func(string) error)
+	// challengeattemptDescDifficulty is the schema descriptor for difficulty field.
+	challengeattemptDescDifficulty := challengeattemptFields[5].Descriptor()
+	// challengeattempt.DifficultyValidator is a validator for the "difficulty" field. It is called by the builders before save.
+	challengeattempt.DifficultyValidator = challengeattemptDescDifficulty.Validators[0].(func(string) error)
+	// challengeattemptDescStatus is the schema descriptor for status field.
+	challengeattemptDescStatus := challengeattemptFields[7].Descriptor()
+	// challengeattempt.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	challengeattempt.StatusValidator = challengeattemptDescStatus.Validators[0].(func(string) error)
+	// challengeattemptDescEndReason is the schema descriptor for end_reason field.
+	challengeattemptDescEndReason := challengeattemptFields[8].Descriptor()
+	// challengeattempt.EndReasonValidator is a validator for the "end_reason" field. It is called by the builders before save.
+	challengeattempt.EndReasonValidator = challengeattemptDescEndReason.Validators[0].(func(string) error)
+	// challengeattemptDescScore is the schema descriptor for score field.
+	challengeattemptDescScore := challengeattemptFields[9].Descriptor()
+	// challengeattempt.DefaultScore holds the default value on creation for the score field.
+	challengeattempt.DefaultScore = challengeattemptDescScore.Default.(int)
+	// challengeattemptDescItemsAnswered is the schema descriptor for items_answered field.
+	challengeattemptDescItemsAnswered := challengeattemptFields[10].Descriptor()
+	// challengeattempt.DefaultItemsAnswered holds the default value on creation for the items_answered field.
+	challengeattempt.DefaultItemsAnswered = challengeattemptDescItemsAnswered.Default.(int)
+	// challengeattemptDescCorrectStreak is the schema descriptor for correct_streak field.
+	challengeattemptDescCorrectStreak := challengeattemptFields[11].Descriptor()
+	// challengeattempt.DefaultCorrectStreak holds the default value on creation for the correct_streak field.
+	challengeattempt.DefaultCorrectStreak = challengeattemptDescCorrectStreak.Default.(int)
+	// challengeattemptDescGoalProgress is the schema descriptor for goal_progress field.
+	challengeattemptDescGoalProgress := challengeattemptFields[13].Descriptor()
+	// challengeattempt.DefaultGoalProgress holds the default value on creation for the goal_progress field.
+	challengeattempt.DefaultGoalProgress = challengeattemptDescGoalProgress.Default.(float64)
+	// challengeattemptDescActivitiesCompleted is the schema descriptor for activities_completed field.
+	challengeattemptDescActivitiesCompleted := challengeattemptFields[14].Descriptor()
+	// challengeattempt.DefaultActivitiesCompleted holds the default value on creation for the activities_completed field.
+	challengeattempt.DefaultActivitiesCompleted = challengeattemptDescActivitiesCompleted.Default.(int)
+	// challengeattemptDescPeriodKey is the schema descriptor for period_key field.
+	challengeattemptDescPeriodKey := challengeattemptFields[15].Descriptor()
+	// challengeattempt.PeriodKeyValidator is a validator for the "period_key" field. It is called by the builders before save.
+	challengeattempt.PeriodKeyValidator = challengeattemptDescPeriodKey.Validators[0].(func(string) error)
+	// challengeattemptDescFirstClear is the schema descriptor for first_clear field.
+	challengeattemptDescFirstClear := challengeattemptFields[16].Descriptor()
+	// challengeattempt.DefaultFirstClear holds the default value on creation for the first_clear field.
+	challengeattempt.DefaultFirstClear = challengeattemptDescFirstClear.Default.(bool)
+	// challengeattemptDescStartedAt is the schema descriptor for started_at field.
+	challengeattemptDescStartedAt := challengeattemptFields[17].Descriptor()
+	// challengeattempt.DefaultStartedAt holds the default value on creation for the started_at field.
+	challengeattempt.DefaultStartedAt = challengeattemptDescStartedAt.Default.(func() time.Time)
+	// challengeattemptDescID is the schema descriptor for id field.
+	challengeattemptDescID := challengeattemptMixinFields0[0].Descriptor()
+	// challengeattempt.DefaultID holds the default value on creation for the id field.
+	challengeattempt.DefaultID = challengeattemptDescID.Default.(func() uuid.UUID)
+	challengeversionMixin := schema.ChallengeVersion{}.Mixin()
+	challengeversionMixinHooks0 := challengeversionMixin[0].Hooks()
+	challengeversion.Hooks[0] = challengeversionMixinHooks0[0]
+	challengeversionMixinInters0 := challengeversionMixin[0].Interceptors()
+	challengeversion.Interceptors[0] = challengeversionMixinInters0[0]
+	challengeversionMixinFields0 := challengeversionMixin[0].Fields()
+	_ = challengeversionMixinFields0
+	challengeversionFields := schema.ChallengeVersion{}.Fields()
+	_ = challengeversionFields
+	// challengeversionDescCreatedAt is the schema descriptor for created_at field.
+	challengeversionDescCreatedAt := challengeversionMixinFields0[1].Descriptor()
+	// challengeversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	challengeversion.DefaultCreatedAt = challengeversionDescCreatedAt.Default.(func() time.Time)
+	// challengeversionDescUpdatedAt is the schema descriptor for updated_at field.
+	challengeversionDescUpdatedAt := challengeversionMixinFields0[3].Descriptor()
+	// challengeversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	challengeversion.DefaultUpdatedAt = challengeversionDescUpdatedAt.Default.(func() time.Time)
+	// challengeversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	challengeversion.UpdateDefaultUpdatedAt = challengeversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// challengeversionDescDeleteReason is the schema descriptor for delete_reason field.
+	challengeversionDescDeleteReason := challengeversionMixinFields0[7].Descriptor()
+	// challengeversion.DeleteReasonValidator is a validator for the "delete_reason" field. It is called by the builders before save.
+	challengeversion.DeleteReasonValidator = challengeversionDescDeleteReason.Validators[0].(func(string) error)
+	// challengeversionDescVersion is the schema descriptor for version field.
+	challengeversionDescVersion := challengeversionMixinFields0[8].Descriptor()
+	// challengeversion.DefaultVersion holds the default value on creation for the version field.
+	challengeversion.DefaultVersion = challengeversionDescVersion.Default.(int64)
+	// challengeversionDescStatus is the schema descriptor for status field.
+	challengeversionDescStatus := challengeversionFields[2].Descriptor()
+	// challengeversion.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	challengeversion.StatusValidator = challengeversionDescStatus.Validators[0].(func(string) error)
+	// challengeversionDescPayloadSha256 is the schema descriptor for payload_sha256 field.
+	challengeversionDescPayloadSha256 := challengeversionFields[4].Descriptor()
+	// challengeversion.PayloadSha256Validator is a validator for the "payload_sha256" field. It is called by the builders before save.
+	challengeversion.PayloadSha256Validator = challengeversionDescPayloadSha256.Validators[0].(func(string) error)
+	// challengeversionDescChangeNote is the schema descriptor for change_note field.
+	challengeversionDescChangeNote := challengeversionFields[5].Descriptor()
+	// challengeversion.ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	challengeversion.ChangeNoteValidator = challengeversionDescChangeNote.Validators[0].(func(string) error)
+	// challengeversionDescSnapshotKey is the schema descriptor for snapshot_key field.
+	challengeversionDescSnapshotKey := challengeversionFields[6].Descriptor()
+	// challengeversion.SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	challengeversion.SnapshotKeyValidator = challengeversionDescSnapshotKey.Validators[0].(func(string) error)
+	// challengeversionDescSnapshotSha256 is the schema descriptor for snapshot_sha256 field.
+	challengeversionDescSnapshotSha256 := challengeversionFields[7].Descriptor()
+	// challengeversion.SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	challengeversion.SnapshotSha256Validator = challengeversionDescSnapshotSha256.Validators[0].(func(string) error)
+	// challengeversionDescCode is the schema descriptor for code field.
+	challengeversionDescCode := challengeversionFields[11].Descriptor()
+	// challengeversion.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	challengeversion.CodeValidator = challengeversionDescCode.Validators[0].(func(string) error)
+	// challengeversionDescChallengeType is the schema descriptor for challenge_type field.
+	challengeversionDescChallengeType := challengeversionFields[12].Descriptor()
+	// challengeversion.ChallengeTypeValidator is a validator for the "challenge_type" field. It is called by the builders before save.
+	challengeversion.ChallengeTypeValidator = challengeversionDescChallengeType.Validators[0].(func(string) error)
+	// challengeversionDescMode is the schema descriptor for mode field.
+	challengeversionDescMode := challengeversionFields[13].Descriptor()
+	// challengeversion.ModeValidator is a validator for the "mode" field. It is called by the builders before save.
+	challengeversion.ModeValidator = challengeversionDescMode.Validators[0].(func(string) error)
+	// challengeversionDescAreaID is the schema descriptor for area_id field.
+	challengeversionDescAreaID := challengeversionFields[17].Descriptor()
+	// challengeversion.AreaIDValidator is a validator for the "area_id" field. It is called by the builders before save.
+	challengeversion.AreaIDValidator = challengeversionDescAreaID.Validators[0].(func(string) error)
+	// challengeversionDescID is the schema descriptor for id field.
+	challengeversionDescID := challengeversionMixinFields0[0].Descriptor()
+	// challengeversion.DefaultID holds the default value on creation for the id field.
+	challengeversion.DefaultID = challengeversionDescID.Default.(func() uuid.UUID)
 	charactercatalogMixin := schema.CharacterCatalog{}.Mixin()
 	charactercatalogMixinHooks0 := charactercatalogMixin[0].Hooks()
 	charactercatalog.Hooks[0] = charactercatalogMixinHooks0[0]

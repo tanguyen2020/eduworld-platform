@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/challenge.completed.v1.schema.json",
+  "title": "Payload challenge.completed v1 (module game, owner F076)",
+  "description": "ChallengeAttempt kết thúc đúng một lần: succeeded (đạt goal), failed (hết sức bền, trượt ngưỡng perfect, quá deadline_at) hoặc abandoned (bỏ, quá attempt_resume_window, học sinh bị khóa/dọn). Kết quả chỉ từ kết quả chấm của module learning (ADR-0016). Reward Engine (F074) thưởng theo rule trigger challenge.completed; reward_multiplier là hệ số thưởng của mức khó; first_clear = lần succeeded đầu tiên của học sinh với challenge. Không bao giờ trừ XP/Xu. Consumer: reward, achievement, LA, analytics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "challenge_attempt_id",
+    "challenge_id",
+    "challenge_version_id",
+    "challenge_type",
+    "student_id",
+    "status",
+    "end_reason",
+    "score",
+    "difficulty",
+    "reward_multiplier",
+    "first_clear",
+    "objective_ids",
+    "activities_completed",
+    "started_at",
+    "ended_at"
+  ],
+  "properties": {
+    "challenge_attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "challenge_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "challenge_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "challenge_type": {
+      "type": "string",
+      "enum": [
+        "time",
+        "perfect",
+        "survival",
+        "puzzle",
+        "knowledge",
+        "weekly",
+        "seasonal"
+      ]
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "succeeded",
+        "failed",
+        "abandoned"
+      ]
+    },
+    "end_reason": {
+      "type": "string",
+      "enum": [
+        "goal_reached",
+        "lives_depleted",
+        "accuracy_missed",
+        "deadline_passed",
+        "player",
+        "resume_expired",
+        "student_unavailable",
+        "activities_exhausted"
+      ]
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "normal",
+        "hard",
+        "expert",
+        "legendary"
+      ]
+    },
+    "reward_multiplier": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 5
+    },
+    "first_clear": {
+      "type": "boolean"
+    },
+    "subject_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "objective_ids": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "activities_completed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 200
+    },
+    "period_key": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 16
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "challenge_attempt_id": "0193a5f4-6c1e-7b2a-9d1f-000000076901",
+      "challenge_id": "0193a5f4-6c1e-7b2a-9d1f-000000076101",
+      "challenge_version_id": "0193a5f4-6c1e-7b2a-9d1f-000000076102",
+      "challenge_type": "survival",
+      "student_id": "0193a5f4-6c1e-7b2a-9d1f-000000000101",
+      "status": "succeeded",
+      "end_reason": "goal_reached",
+      "score": 5,
+      "difficulty": "hard",
+      "reward_multiplier": 1.6,
+      "first_clear": true,
+      "subject_id": "0193a5f4-6c1e-7b2a-9d1f-000000000201",
+      "objective_ids": [
+        "0193a5f4-6c1e-7b2a-9d1f-000000000301"
+      ],
+      "activities_completed": 5,
+      "period_key": "2026-11-24",
+      "started_at": "2026-11-24T03:00:00Z",
+      "ended_at": "2026-11-24T03:04:10Z"
+    }
+  ]
+}

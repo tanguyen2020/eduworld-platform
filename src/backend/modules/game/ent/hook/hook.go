@@ -57,6 +57,42 @@ func (f AvatarPresetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AvatarPresetMutation", m)
 }
 
+// The ChallengeFunc type is an adapter to allow the use of ordinary
+// function as Challenge mutator.
+type ChallengeFunc func(context.Context, *ent.ChallengeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChallengeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChallengeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChallengeMutation", m)
+}
+
+// The ChallengeAttemptFunc type is an adapter to allow the use of ordinary
+// function as ChallengeAttempt mutator.
+type ChallengeAttemptFunc func(context.Context, *ent.ChallengeAttemptMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChallengeAttemptFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChallengeAttemptMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChallengeAttemptMutation", m)
+}
+
+// The ChallengeVersionFunc type is an adapter to allow the use of ordinary
+// function as ChallengeVersion mutator.
+type ChallengeVersionFunc func(context.Context, *ent.ChallengeVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChallengeVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChallengeVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChallengeVersionMutation", m)
+}
+
 // The CharacterCatalogFunc type is an adapter to allow the use of ordinary
 // function as CharacterCatalog mutator.
 type CharacterCatalogFunc func(context.Context, *ent.CharacterCatalogMutation) (ent.Value, error)

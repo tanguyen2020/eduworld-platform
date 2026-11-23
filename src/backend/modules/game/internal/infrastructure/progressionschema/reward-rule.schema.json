@@ -106,6 +106,7 @@
             "exercise.submitted",
             "quest.completed",
             "minigame.completed",
+            "challenge.completed",
             "match.completed",
             "achievement.unlocked",
             "learning_objective.mastered",
@@ -169,6 +170,18 @@
         "min_individual_contribution": {
           "type": "integer",
           "minimum": 1
+        },
+        "challenge_statuses": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "succeeded",
+              "failed"
+            ]
+          },
+          "description": "Chỉ với trigger challenge.completed (F076): trạng thái kết thúc được thưởng; vắng = chỉ succeeded. abandoned không bao giờ được thưởng, không trừ XP khi failed"
         }
       }
     },
@@ -237,6 +250,12 @@
             "maxLength": 64,
             "pattern": "^[a-z0-9_]+$",
             "description": "Mã vật phẩm thuộc một collection (F075)"
+          },
+          "scale_by": {
+            "enum": [
+              "reward_multiplier"
+            ],
+            "description": "Nhân amount/per_correct_answer (XP) và amount (Xu) với reward_multiplier của mức khó trong payload challenge.completed (F076), làm tròn xuống, trước giảm dần và cap; trigger khác bỏ qua"
           }
         },
         "allOf": [

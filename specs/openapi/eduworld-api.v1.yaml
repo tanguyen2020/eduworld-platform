@@ -14737,12 +14737,17 @@ paths:
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
   /game/challenges/{challenge_id}:
     get:
       x-service: game
       tags: [game]
       operationId: getGameChallenge
       summary: Chi tiết challenge + lượt thử còn lại hôm nay/kỳ
+      description: |
+        Challenge không khả dụng với học sinh (khác khối, chưa mở khóa, ngoài thời gian, chưa gán cho tenant, loại/mode không
+        chơi một mình được) → `404 NOT_FOUND`, không tiết lộ sự tồn tại (F076-AC-02).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -14755,13 +14760,20 @@ paths:
               schema: { $ref: '#/components/schemas/GameChallengeDetail' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
   /game/challenges/{challenge_id}:start:
     post:
       x-service: game
       tags: [game]
       operationId: startGameChallenge
-      summary: Bắt đầu challenge → ChallengeAttempt (ghim version) + hoạt động đầu tiên (CHALLENGE_NOT_ELIGIBLE, CHALLENGE_ATTEMPT_LIMIT)
+      summary: Bắt đầu challenge → ChallengeAttempt (ghim version) (CHALLENGE_NOT_ELIGIBLE, CHALLENGE_ATTEMPT_LIMIT)
+      description: |
+        Module game ghim version hiện hành, đặt `deadline_at` theo giờ server và `lives_left` theo mức khó; hoạt động đầu tiên lấy
+        bằng `nextChallengeActivity` (F076 Clarifications 2026-11-24). Sai khối/chưa mở khóa/ngoài thời gian/mức không cho phép với
+        khối/gửi `party_id` → `403 CHALLENGE_NOT_ELIGIBLE`; hết lượt ngày/kỳ hoặc đang nghỉ chờ → `409 CHALLENGE_ATTEMPT_LIMIT`
+        (`retry_after`); đang có challenge `in_progress` khác → `409 CONFLICT`; thiếu `Idempotency-Key` → `428`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -14786,14 +14798,19 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /game/challenge-attempts/{challenge_attempt_id}:
     get:
       x-service: game
       tags: [game]
       operationId: getGameChallengeAttempt
       summary: Trạng thái, điểm, sức bền, thời hạn (giờ server)
+      description: Trạng thái từ checkpoint PostgreSQL (tiếp tục sau mất kết nối hoặc đổi thiết bị); attempt của học sinh khác → `404`.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -14806,6 +14823,8 @@ paths:
               schema: { $ref: '#/components/schemas/GameChallengeAttempt' }
           headers:
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
   /game/challenge-attempts/{challenge_attempt_id}/activities:next:
     post:
@@ -14813,6 +14832,11 @@ paths:
       tags: [game]
       operationId: nextChallengeActivity
       summary: Lấy hoạt động tiếp theo — module game tạo Attempt học tập (mode challenge) qua module learning
+      description: |
+        Module game gọi `createAttempt` (mode `challenge`, context `challenge_attempt`, dải độ khó của mức, khối học sinh) qua facade
+        `learning`; payload không có đáp án. Quá `deadline_at` hoặc challenge đã kết thúc → `422 INVALID_STATE_TRANSITION`; nội dung
+        tham chiếu chưa publish → `422 ITEM_REF_INVALID`; module learning lỗi/timeout → `503 UNAVAILABLE` có `Retry-After`, challenge
+        không đổi; gọi lại cùng `Idempotency-Key` → cùng attempt học tập (F076-AC-08, AC-12, AC-13).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -14827,14 +14851,26 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+        '503':
+          description: UNAVAILABLE — module learning tạm thời không trả lời; thử lại theo Retry-After, challenge không đổi
+          headers:
+            Retry-After: { $ref: '#/components/headers/RetryAfter' }
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
   /game/challenge-attempts/{challenge_attempt_id}:abandon:
     post:
       x-service: game
       tags: [game]
       operationId: abandonGameChallengeAttempt
       summary: Bỏ challenge (learning attempt đã ghi giữ nguyên)
+      description: Attempt đã kết thúc → `422 INVALID_STATE_TRANSITION` (F076-AC-14).
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
         - $ref: '#/components/parameters/AcceptLanguage'
@@ -14849,8 +14885,12 @@ paths:
           headers:
             Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
             Content-Language: { $ref: '#/components/headers/ContentLanguage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /game/bosses:
     get:
       x-service: game

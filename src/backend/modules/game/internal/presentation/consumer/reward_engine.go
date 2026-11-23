@@ -199,6 +199,35 @@ func Trigger(e outbox.Envelope) (uuid.UUID, reward.Trigger, error) {
 			t.SourceCodes = []string{"activity.completed"}
 		}
 		return p.StudentID, t, nil
+	case "challenge.completed":
+		var p struct {
+			ChallengeAttemptID uuid.UUID  `json:"challenge_attempt_id"`
+			ChallengeID        uuid.UUID  `json:"challenge_id"`
+			ChallengeVersionID uuid.UUID  `json:"challenge_version_id"`
+			StudentID          uuid.UUID  `json:"student_id"`
+			Status             string     `json:"status"`
+			RewardMultiplier   float64    `json:"reward_multiplier"`
+			FirstClear         bool       `json:"first_clear"`
+			SubjectID          *uuid.UUID `json:"subject_id"`
+		}
+		if err := decode(e, &p); err != nil {
+			return uuid.Nil, t, err
+		}
+		if p.StudentID == uuid.Nil || p.ChallengeAttemptID == uuid.Nil || p.ChallengeID == uuid.Nil || len(p.Status) > 64 ||
+			p.RewardMultiplier < 0 || p.RewardMultiplier > 5 {
+			return uuid.Nil, t, invalid(e.EventType, "challenge_attempt_id, challenge_id, student_id and a valid multiplier are required")
+		}
+		// One posting per (student, challenge attempt, rule): a replayed or repeated event rewards once (F076-AC-11, SC-005);
+		// the repeat key is the pinned version (diminishing per version, F074); first_clear comes from the payload.
+		challenge := p.ChallengeID
+		t.SourceType, t.SourceID, t.ContentID, t.SubjectID = "challenge", p.ChallengeAttemptID, &challenge, p.SubjectID
+		if p.ChallengeVersionID != uuid.Nil {
+			v := p.ChallengeVersionID
+			t.ContentVersionID = &v
+		}
+		t.ChallengeStatus, t.RewardMultiplier, t.FirstClear = p.Status, p.RewardMultiplier, p.FirstClear
+		t.SourceCodes = []string{"challenge.completed"}
+		return p.StudentID, t, nil
 	case "world.discovery_found":
 		var p struct {
 			StudentID      uuid.UUID `json:"student_id"`
