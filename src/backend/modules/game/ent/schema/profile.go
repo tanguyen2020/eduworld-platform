@@ -40,6 +40,7 @@ func (GameProfile) Fields() []ent.Field {
 		field.JSON("settings", map[string]any{}).Default(map[string]any{}),
 		field.String("preferred_language").MaxLen(64).Optional().Nillable(),
 		field.Time("last_game_login_at").Optional().Nillable(),
+		field.String("grade_transition_year").MaxLen(16).Optional().Nillable(), // F074: school year of the last ApplyGradeTransition
 	}
 }
 func (GameProfile) Indexes() []ent.Index {

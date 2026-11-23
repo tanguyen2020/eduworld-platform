@@ -196,6 +196,7 @@ var (
 		{Name: "settings", Type: field.TypeJSON},
 		{Name: "preferred_language", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "last_game_login_at", Type: field.TypeTime, Nullable: true},
+		{Name: "grade_transition_year", Type: field.TypeString, Nullable: true, Size: 16},
 	}
 	// GameProfilesTable holds the schema information for the "game_profiles" table.
 	GameProfilesTable = &schema.Table{
@@ -384,6 +385,33 @@ var (
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
+			},
+		},
+	}
+	// LevelHistoryColumns holds the columns for the "level_history" table.
+	LevelHistoryColumns = []*schema.Column{
+		{Name: "level_history_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "from_level", Type: field.TypeInt},
+		{Name: "to_level", Type: field.TypeInt},
+		{Name: "curve_id", Type: field.TypeUUID},
+		{Name: "curve_version", Type: field.TypeInt},
+		{Name: "trigger_xp_entry_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "reached_at", Type: field.TypeTime},
+	}
+	// LevelHistoryTable holds the schema information for the "level_history" table.
+	LevelHistoryTable = &schema.Table{
+		Name:       "level_history",
+		Columns:    LevelHistoryColumns,
+		PrimaryKey: []*schema.Column{LevelHistoryColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "level_history_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{LevelHistoryColumns[1], LevelHistoryColumns[4], LevelHistoryColumns[10]},
 			},
 		},
 	}
@@ -617,6 +645,101 @@ var (
 			},
 		},
 	}
+	// ProgressionCurvesColumns holds the columns for the "progression_curves" table.
+	ProgressionCurvesColumns = []*schema.Column{
+		{Name: "curve_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// ProgressionCurvesTable holds the schema information for the "progression_curves" table.
+	ProgressionCurvesTable = &schema.Table{
+		Name:       "progression_curves",
+		Columns:    ProgressionCurvesColumns,
+		PrimaryKey: []*schema.Column{ProgressionCurvesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "progression_curves_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ProgressionCurvesColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// ProgressionCurveVersionsColumns holds the columns for the "progression_curve_versions" table.
+	ProgressionCurveVersionsColumns = []*schema.Column{
+		{Name: "curve_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "curve_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "max_level", Type: field.TypeInt},
+		{Name: "level_floor_protection", Type: field.TypeBool, Default: true},
+	}
+	// ProgressionCurveVersionsTable holds the schema information for the "progression_curve_versions" table.
+	ProgressionCurveVersionsTable = &schema.Table{
+		Name:       "progression_curve_versions",
+		Columns:    ProgressionCurveVersionsColumns,
+		PrimaryKey: []*schema.Column{ProgressionCurveVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "progression_curve_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ProgressionCurveVersionsColumns[9], ProgressionCurveVersionsColumns[10]},
+			},
+		},
+	}
+	// ProgressionLevelsColumns holds the columns for the "progression_levels" table.
+	ProgressionLevelsColumns = []*schema.Column{
+		{Name: "progression_level_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "curve_version_id", Type: field.TypeUUID},
+		{Name: "level", Type: field.TypeInt},
+		{Name: "xp_required", Type: field.TypeInt64, Nullable: true},
+		{Name: "xp_cumulative", Type: field.TypeInt64},
+		{Name: "title_code", Type: field.TypeString, Size: 64},
+		{Name: "rewards", Type: field.TypeJSON},
+	}
+	// ProgressionLevelsTable holds the schema information for the "progression_levels" table.
+	ProgressionLevelsTable = &schema.Table{
+		Name:       "progression_levels",
+		Columns:    ProgressionLevelsColumns,
+		PrimaryKey: []*schema.Column{ProgressionLevelsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "progression_levels_uq",
+				Unique:  true,
+				Columns: []*schema.Column{ProgressionLevelsColumns[3], ProgressionLevelsColumns[4]},
+			},
+		},
+	}
 	// QuestDefinitionsColumns holds the columns for the "quest_definitions" table.
 	QuestDefinitionsColumns = []*schema.Column{
 		{Name: "quest_id", Type: field.TypeUUID},
@@ -803,6 +926,121 @@ var (
 				Name:    "quest_versions_no_uq",
 				Unique:  true,
 				Columns: []*schema.Column{QuestVersionsColumns[9], QuestVersionsColumns[10]},
+			},
+		},
+	}
+	// RewardGrantsColumns holds the columns for the "reward_grants" table.
+	RewardGrantsColumns = []*schema.Column{
+		{Name: "reward_grant_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "rule_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "trigger_event_id", Type: field.TypeUUID},
+		{Name: "trigger_kind", Type: field.TypeString, Size: 64},
+		{Name: "level", Type: field.TypeInt, Nullable: true},
+		{Name: "curve_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "grants", Type: field.TypeJSON},
+		{Name: "idempotency_key", Type: field.TypeString, Size: 64},
+		{Name: "granted_at", Type: field.TypeTime},
+	}
+	// RewardGrantsTable holds the schema information for the "reward_grants" table.
+	RewardGrantsTable = &schema.Table{
+		Name:       "reward_grants",
+		Columns:    RewardGrantsColumns,
+		PrimaryKey: []*schema.Column{RewardGrantsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "reward_grants_idem_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RewardGrantsColumns[12]},
+			},
+			{
+				Name:    "reward_grants_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{RewardGrantsColumns[1], RewardGrantsColumns[4], RewardGrantsColumns[13]},
+			},
+		},
+	}
+	// RewardRulesColumns holds the columns for the "reward_rules" table.
+	RewardRulesColumns = []*schema.Column{
+		{Name: "reward_rule_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "code", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "current_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "latest_version_no", Type: field.TypeInt, Default: 0},
+	}
+	// RewardRulesTable holds the schema information for the "reward_rules" table.
+	RewardRulesTable = &schema.Table{
+		Name:       "reward_rules",
+		Columns:    RewardRulesColumns,
+		PrimaryKey: []*schema.Column{RewardRulesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "reward_rules_code_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RewardRulesColumns[9]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// RewardRuleVersionsColumns holds the columns for the "reward_rule_versions" table.
+	RewardRuleVersionsColumns = []*schema.Column{
+		{Name: "reward_rule_version_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "reward_rule_id", Type: field.TypeUUID},
+		{Name: "version_no", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Size: 64},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "payload_sha256", Type: field.TypeString, Size: 64},
+		{Name: "change_note", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "snapshot_key", Type: field.TypeString, Nullable: true, Size: 512},
+		{Name: "snapshot_sha256", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "based_on_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "code", Type: field.TypeString, Size: 64},
+		{Name: "trigger_event_type", Type: field.TypeString, Size: 64},
+		{Name: "source_code", Type: field.TypeString, Size: 64},
+		{Name: "effective_from", Type: field.TypeTime},
+		{Name: "active_to", Type: field.TypeTime, Nullable: true},
+	}
+	// RewardRuleVersionsTable holds the schema information for the "reward_rule_versions" table.
+	RewardRuleVersionsTable = &schema.Table{
+		Name:       "reward_rule_versions",
+		Columns:    RewardRuleVersionsColumns,
+		PrimaryKey: []*schema.Column{RewardRuleVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "reward_rule_versions_no_uq",
+				Unique:  true,
+				Columns: []*schema.Column{RewardRuleVersionsColumns[9], RewardRuleVersionsColumns[10]},
+			},
+			{
+				Name:    "reward_rule_versions_trigger_idx",
+				Unique:  false,
+				Columns: []*schema.Column{RewardRuleVersionsColumns[21], RewardRuleVersionsColumns[23]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
 			},
 		},
 	}
@@ -1069,6 +1307,86 @@ var (
 			},
 		},
 	}
+	// XpDailyCapsColumns holds the columns for the "xp_daily_caps" table.
+	XpDailyCapsColumns = []*schema.Column{
+		{Name: "xp_daily_cap_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "updated_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "delete_reason", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "version", Type: field.TypeInt64, Default: 1},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "cap_date", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "bucket", Type: field.TypeString, Size: 64},
+		{Name: "granted", Type: field.TypeInt, Default: 0},
+	}
+	// XpDailyCapsTable holds the schema information for the "xp_daily_caps" table.
+	XpDailyCapsTable = &schema.Table{
+		Name:       "xp_daily_caps",
+		Columns:    XpDailyCapsColumns,
+		PrimaryKey: []*schema.Column{XpDailyCapsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "xp_daily_caps_uq",
+				Unique:  true,
+				Columns: []*schema.Column{XpDailyCapsColumns[1], XpDailyCapsColumns[10], XpDailyCapsColumns[11], XpDailyCapsColumns[12]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+		},
+	}
+	// XpLedgerColumns holds the columns for the "xp_ledger" table.
+	XpLedgerColumns = []*schema.Column{
+		{Name: "xp_entry_id", Type: field.TypeUUID},
+		{Name: "tenant_id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "student_id", Type: field.TypeUUID},
+		{Name: "school_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "amount", Type: field.TypeInt},
+		{Name: "reason_code", Type: field.TypeString, Size: 64, Default: "reward"},
+		{Name: "source_type", Type: field.TypeString, Size: 64},
+		{Name: "source_code", Type: field.TypeString, Size: 64},
+		{Name: "source_id", Type: field.TypeUUID},
+		{Name: "content_version_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "rule_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "rule_version", Type: field.TypeInt, Nullable: true},
+		{Name: "capped", Type: field.TypeBool, Default: false},
+		{Name: "idempotency_key", Type: field.TypeString, Size: 64},
+	}
+	// XpLedgerTable holds the schema information for the "xp_ledger" table.
+	XpLedgerTable = &schema.Table{
+		Name:       "xp_ledger",
+		Columns:    XpLedgerColumns,
+		PrimaryKey: []*schema.Column{XpLedgerColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "xp_ledger_source_uq",
+				Unique:  true,
+				Columns: []*schema.Column{XpLedgerColumns[4], XpLedgerColumns[8], XpLedgerColumns[10], XpLedgerColumns[12]},
+			},
+			{
+				Name:    "xp_ledger_idem_uq",
+				Unique:  true,
+				Columns: []*schema.Column{XpLedgerColumns[15]},
+			},
+			{
+				Name:    "xp_ledger_student_idx",
+				Unique:  false,
+				Columns: []*schema.Column{XpLedgerColumns[1], XpLedgerColumns[4], XpLedgerColumns[2]},
+			},
+			{
+				Name:    "xp_ledger_content_idx",
+				Unique:  false,
+				Columns: []*schema.Column{XpLedgerColumns[1], XpLedgerColumns[4], XpLedgerColumns[11], XpLedgerColumns[2]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AvatarPresetsTable,
@@ -1082,6 +1400,7 @@ var (
 		ItemDefinitionsTable,
 		ItemDefinitionVersionsTable,
 		LevelDefinitionsTable,
+		LevelHistoryTable,
 		LevelSessionsTable,
 		LevelVersionsTable,
 		LoginEventsTable,
@@ -1089,10 +1408,16 @@ var (
 		NpcDialoguesTable,
 		NpcDialogueVersionsTable,
 		PeriodicQuestGrantsTable,
+		ProgressionCurvesTable,
+		ProgressionCurveVersionsTable,
+		ProgressionLevelsTable,
 		QuestDefinitionsTable,
 		QuestProgressTable,
 		QuestStepAttemptsTable,
 		QuestVersionsTable,
+		RewardGrantsTable,
+		RewardRulesTable,
+		RewardRuleVersionsTable,
 		StoryChaptersTable,
 		StoryChapterVersionsTable,
 		StoryProgressTable,
@@ -1101,6 +1426,8 @@ var (
 		WorldAreaUnlocksTable,
 		WorldAreaVersionsTable,
 		WorldUnlockFactsTable,
+		XpDailyCapsTable,
+		XpLedgerTable,
 	}
 )
 
@@ -1138,6 +1465,9 @@ func init() {
 	LevelDefinitionsTable.Annotation = &entsql.Annotation{
 		Table: "level_definitions",
 	}
+	LevelHistoryTable.Annotation = &entsql.Annotation{
+		Table: "level_history",
+	}
 	LevelSessionsTable.Annotation = &entsql.Annotation{
 		Table: "level_sessions",
 	}
@@ -1159,6 +1489,15 @@ func init() {
 	PeriodicQuestGrantsTable.Annotation = &entsql.Annotation{
 		Table: "periodic_quest_grants",
 	}
+	ProgressionCurvesTable.Annotation = &entsql.Annotation{
+		Table: "progression_curves",
+	}
+	ProgressionCurveVersionsTable.Annotation = &entsql.Annotation{
+		Table: "progression_curve_versions",
+	}
+	ProgressionLevelsTable.Annotation = &entsql.Annotation{
+		Table: "progression_levels",
+	}
 	QuestDefinitionsTable.Annotation = &entsql.Annotation{
 		Table: "quest_definitions",
 	}
@@ -1170,6 +1509,15 @@ func init() {
 	}
 	QuestVersionsTable.Annotation = &entsql.Annotation{
 		Table: "quest_versions",
+	}
+	RewardGrantsTable.Annotation = &entsql.Annotation{
+		Table: "reward_grants",
+	}
+	RewardRulesTable.Annotation = &entsql.Annotation{
+		Table: "reward_rules",
+	}
+	RewardRuleVersionsTable.Annotation = &entsql.Annotation{
+		Table: "reward_rule_versions",
 	}
 	StoryChaptersTable.Annotation = &entsql.Annotation{
 		Table: "story_chapters",
@@ -1194,5 +1542,11 @@ func init() {
 	}
 	WorldUnlockFactsTable.Annotation = &entsql.Annotation{
 		Table: "world_unlock_facts",
+	}
+	XpDailyCapsTable.Annotation = &entsql.Annotation{
+		Table: "xp_daily_caps",
+	}
+	XpLedgerTable.Annotation = &entsql.Annotation{
+		Table: "xp_ledger",
 	}
 }

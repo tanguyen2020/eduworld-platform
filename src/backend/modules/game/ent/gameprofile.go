@@ -65,7 +65,9 @@ type GameProfile struct {
 	PreferredLanguage *string `json:"preferred_language,omitempty"`
 	// LastGameLoginAt holds the value of the "last_game_login_at" field.
 	LastGameLoginAt *time.Time `json:"last_game_login_at,omitempty"`
-	selectValues    sql.SelectValues
+	// GradeTransitionYear holds the value of the "grade_transition_year" field.
+	GradeTransitionYear *string `json:"grade_transition_year,omitempty"`
+	selectValues        sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -79,7 +81,7 @@ func (*GameProfile) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case gameprofile.FieldVersion, gameprofile.FieldLevel, gameprofile.FieldXpTotal, gameprofile.FieldCurveVersion:
 			values[i] = new(sql.NullInt64)
-		case gameprofile.FieldDeleteReason, gameprofile.FieldNickname, gameprofile.FieldTitleCode, gameprofile.FieldAvatarConfigHash, gameprofile.FieldLastAreaID, gameprofile.FieldPreferredLanguage:
+		case gameprofile.FieldDeleteReason, gameprofile.FieldNickname, gameprofile.FieldTitleCode, gameprofile.FieldAvatarConfigHash, gameprofile.FieldLastAreaID, gameprofile.FieldPreferredLanguage, gameprofile.FieldGradeTransitionYear:
 			values[i] = new(sql.NullString)
 		case gameprofile.FieldCreatedAt, gameprofile.FieldUpdatedAt, gameprofile.FieldDeletedAt, gameprofile.FieldAvatarCreatedAt, gameprofile.FieldLastGameLoginAt:
 			values[i] = new(sql.NullTime)
@@ -261,6 +263,13 @@ func (_m *GameProfile) assignValues(columns []string, values []any) error {
 				_m.LastGameLoginAt = new(time.Time)
 				*_m.LastGameLoginAt = value.Time
 			}
+		case gameprofile.FieldGradeTransitionYear:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field grade_transition_year", values[i])
+			} else if value.Valid {
+				_m.GradeTransitionYear = new(string)
+				*_m.GradeTransitionYear = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -390,6 +399,11 @@ func (_m *GameProfile) String() string {
 	if v := _m.LastGameLoginAt; v != nil {
 		builder.WriteString("last_game_login_at=")
 		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.GradeTransitionYear; v != nil {
+		builder.WriteString("grade_transition_year=")
+		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')
 	return builder.String()

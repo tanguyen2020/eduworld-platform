@@ -23,6 +23,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinitionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/leveldefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelhistory"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
@@ -30,10 +31,16 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurve"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurveversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressionlevel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questdefinition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/queststepattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardrule"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardruleversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapter"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapterversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
@@ -42,6 +49,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldunlockfact"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/xpdailycap"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/xpledgerentry"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -113,6 +122,7 @@ func checkColumn(t, c string) error {
 			itemdefinition.Table:           itemdefinition.ValidColumn,
 			itemdefinitionversion.Table:    itemdefinitionversion.ValidColumn,
 			leveldefinition.Table:          leveldefinition.ValidColumn,
+			levelhistory.Table:             levelhistory.ValidColumn,
 			levelsession.Table:             levelsession.ValidColumn,
 			levelversion.Table:             levelversion.ValidColumn,
 			loginevent.Table:               loginevent.ValidColumn,
@@ -120,10 +130,16 @@ func checkColumn(t, c string) error {
 			npcdialogue.Table:              npcdialogue.ValidColumn,
 			npcdialogueversion.Table:       npcdialogueversion.ValidColumn,
 			periodicquestgrant.Table:       periodicquestgrant.ValidColumn,
+			progressioncurve.Table:         progressioncurve.ValidColumn,
+			progressioncurveversion.Table:  progressioncurveversion.ValidColumn,
+			progressionlevel.Table:         progressionlevel.ValidColumn,
 			questdefinition.Table:          questdefinition.ValidColumn,
 			questprogress.Table:            questprogress.ValidColumn,
 			queststepattempt.Table:         queststepattempt.ValidColumn,
 			questversion.Table:             questversion.ValidColumn,
+			rewardgrant.Table:              rewardgrant.ValidColumn,
+			rewardrule.Table:               rewardrule.ValidColumn,
+			rewardruleversion.Table:        rewardruleversion.ValidColumn,
 			storychapter.Table:             storychapter.ValidColumn,
 			storychapterversion.Table:      storychapterversion.ValidColumn,
 			storyprogress.Table:            storyprogress.ValidColumn,
@@ -132,6 +148,8 @@ func checkColumn(t, c string) error {
 			worldareaunlock.Table:          worldareaunlock.ValidColumn,
 			worldareaversion.Table:         worldareaversion.ValidColumn,
 			worldunlockfact.Table:          worldunlockfact.ValidColumn,
+			xpdailycap.Table:               xpdailycap.ValidColumn,
+			xpledgerentry.Table:            xpledgerentry.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

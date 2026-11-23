@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/xp.awarded.v1.schema.json",
+  "title": "Payload xp.awarded v1 (module game, owner F074)",
+  "description": "Một bút toán XP vừa ghi vào gamification.xp_ledger (Reward Engine, ADR-0049), kể cả bút toán 0 XP bị cap cắt hết (capped = true). Phát trong cùng transaction với ledger (outbox). Envelope subject = {type: student, id: student_id}, tenant_id = tenant của học sinh. Consumer: RT, LDB (bảng friends_xp_weekly, F106), ANA. Chỉ ID và số — không PII (R14).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "xp_entry_id",
+    "student_id",
+    "amount",
+    "source_type",
+    "source_code",
+    "source_id",
+    "capped",
+    "xp_total",
+    "level",
+    "awarded_at"
+  ],
+  "properties": {
+    "xp_entry_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "amount": {
+      "type": "integer",
+      "minimum": -10000000,
+      "maximum": 10000000,
+      "description": "XP đã cộng sau giảm dần và cap; 0 khi cap cắt hết; âm chỉ với bút toán bù (reason_code = adjustment)"
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "reward",
+        "adjustment"
+      ],
+      "description": "reward = Reward Engine; adjustment = bút toán bù (gộp tài khoản F074 T041, điều chỉnh có duyệt F075)"
+    },
+    "source_type": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "activity",
+        "quest",
+        "minigame",
+        "lesson",
+        "objective",
+        "world",
+        "merge",
+        "adjustment"
+      ]
+    },
+    "source_code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]+(.[a-z0-9_]+)+$"
+    },
+    "source_id": {
+      "description": "Thực thể gốc: attempt, quest_progress, objective, lesson_version, UUIDv5 của interactable/area, merge_id",
+      "type": "string",
+      "format": "uuid"
+    },
+    "content_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "rule_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Reward rule đã áp; null với bút toán bù"
+    },
+    "rule_version": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "capped": {
+      "type": "boolean"
+    },
+    "xp_total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Tổng XP sau bút toán (cache game_profiles.xp_total)"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200
+    },
+    "awarded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

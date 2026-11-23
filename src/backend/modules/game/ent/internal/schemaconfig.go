@@ -18,6 +18,7 @@ type SchemaConfig struct {
 	ItemDefinition           string // ItemDefinition table.
 	ItemDefinitionVersion    string // ItemDefinitionVersion table.
 	LevelDefinition          string // LevelDefinition table.
+	LevelHistory             string // LevelHistory table.
 	LevelSession             string // LevelSession table.
 	LevelVersion             string // LevelVersion table.
 	LoginEvent               string // LoginEvent table.
@@ -25,10 +26,16 @@ type SchemaConfig struct {
 	NpcDialogue              string // NpcDialogue table.
 	NpcDialogueVersion       string // NpcDialogueVersion table.
 	PeriodicQuestGrant       string // PeriodicQuestGrant table.
+	ProgressionCurve         string // ProgressionCurve table.
+	ProgressionCurveVersion  string // ProgressionCurveVersion table.
+	ProgressionLevel         string // ProgressionLevel table.
 	QuestDefinition          string // QuestDefinition table.
 	QuestProgress            string // QuestProgress table.
 	QuestStepAttempt         string // QuestStepAttempt table.
 	QuestVersion             string // QuestVersion table.
+	RewardGrant              string // RewardGrant table.
+	RewardRule               string // RewardRule table.
+	RewardRuleVersion        string // RewardRuleVersion table.
 	StoryChapter             string // StoryChapter table.
 	StoryChapterVersion      string // StoryChapterVersion table.
 	StoryProgress            string // StoryProgress table.
@@ -37,6 +44,8 @@ type SchemaConfig struct {
 	WorldAreaUnlock          string // WorldAreaUnlock table.
 	WorldAreaVersion         string // WorldAreaVersion table.
 	WorldUnlockFact          string // WorldUnlockFact table.
+	XpDailyCap               string // XpDailyCap table.
+	XpLedgerEntry            string // XpLedgerEntry table.
 }
 
 type schemaCtxKey struct{}

@@ -39,6 +39,9 @@ type ItemDefinitionVersion func(*sql.Selector)
 // LevelDefinition is the predicate function for leveldefinition builders.
 type LevelDefinition func(*sql.Selector)
 
+// LevelHistory is the predicate function for levelhistory builders.
+type LevelHistory func(*sql.Selector)
+
 // LevelSession is the predicate function for levelsession builders.
 type LevelSession func(*sql.Selector)
 
@@ -60,6 +63,15 @@ type NpcDialogueVersion func(*sql.Selector)
 // PeriodicQuestGrant is the predicate function for periodicquestgrant builders.
 type PeriodicQuestGrant func(*sql.Selector)
 
+// ProgressionCurve is the predicate function for progressioncurve builders.
+type ProgressionCurve func(*sql.Selector)
+
+// ProgressionCurveVersion is the predicate function for progressioncurveversion builders.
+type ProgressionCurveVersion func(*sql.Selector)
+
+// ProgressionLevel is the predicate function for progressionlevel builders.
+type ProgressionLevel func(*sql.Selector)
+
 // QuestDefinition is the predicate function for questdefinition builders.
 type QuestDefinition func(*sql.Selector)
 
@@ -71,6 +83,15 @@ type QuestStepAttempt func(*sql.Selector)
 
 // QuestVersion is the predicate function for questversion builders.
 type QuestVersion func(*sql.Selector)
+
+// RewardGrant is the predicate function for rewardgrant builders.
+type RewardGrant func(*sql.Selector)
+
+// RewardRule is the predicate function for rewardrule builders.
+type RewardRule func(*sql.Selector)
+
+// RewardRuleVersion is the predicate function for rewardruleversion builders.
+type RewardRuleVersion func(*sql.Selector)
 
 // StoryChapter is the predicate function for storychapter builders.
 type StoryChapter func(*sql.Selector)
@@ -95,3 +116,9 @@ type WorldAreaVersion func(*sql.Selector)
 
 // WorldUnlockFact is the predicate function for worldunlockfact builders.
 type WorldUnlockFact func(*sql.Selector)
+
+// XpDailyCap is the predicate function for xpdailycap builders.
+type XpDailyCap func(*sql.Selector)
+
+// XpLedgerEntry is the predicate function for xpledgerentry builders.
+type XpLedgerEntry func(*sql.Selector)

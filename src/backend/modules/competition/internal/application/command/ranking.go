@@ -452,3 +452,50 @@ func (h Ranking) RecordEffort(ctx context.Context, tenant uuid.UUID, a ActivityG
 	}
 	return n, h.after(ctx, func(ctx context.Context) { h.Boards.Apply(ctx, plan) })
 }
+
+// XPAwarded is one xp.awarded of module game (F074): a positive XP posting of the Reward Engine.
+type XPAwarded struct {
+	Entry   uuid.UUID
+	Student uuid.UUID
+	Amount  int
+	At      time.Time
+}
+
+// RecordXP credits the xp metric of the friends boards (friends_xp_weekly, F106 seed; F074 T042) with one XP posting,
+// once per posting (unique source key). 0 XP postings (capped) and compensating entries (merge, adjustment) add
+// nothing. The school and grade come from ref.students at that time (ADR-0095); a student not projected yet is retried.
+func (h Ranking) RecordXP(ctx context.Context, tenant uuid.UUID, x XPAwarded) (n int, err error) {
+	ctx, done := observability.UseCase(ctx, "competition.command.RecordXP")
+	defer func() { done(err) }()
+	if x.Amount <= 0 {
+		return 0, nil
+	}
+	st, err := h.Repo.Student(ctx, tenant, x.Student)
+	if err != nil {
+		return 0, err
+	}
+	if st == nil {
+		return 0, ErrStudentNotProjected
+	}
+	if !st.Active {
+		return 0, nil
+	}
+	day := ldb.DayKey(x.At)
+	c := write.Contribution{Tenant: tenant, School: st.School, Student: x.Student, Grade: st.Grade, Metric: ldb.MetricXP, Amount: x.Amount,
+		SourceType: ldb.SourceXPAwarded, SourceID: x.Entry.String(), Day: day, At: x.At}
+	ok, err := h.Repo.InsertContribution(ctx, c)
+	if err != nil || !ok {
+		return 0, err
+	}
+	season, err := h.Repo.SeasonAt(ctx, x.At)
+	if err != nil {
+		return 1, err
+	}
+	member := ldb.Member{Tenant: tenant, School: st.School, Grade: st.Grade}
+	plan, err := h.Boards.Plan(ctx, season, []Increment{{Metric: ldb.MetricXP, Tenant: tenant, Member: member, Student: x.Student,
+		Amount: float64(x.Amount), At: x.At}})
+	if err != nil {
+		return 1, fmt.Errorf("xp boards: %w", err)
+	}
+	return 1, h.after(ctx, func(ctx context.Context) { h.Boards.Apply(ctx, plan) })
+}

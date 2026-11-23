@@ -111,3 +111,23 @@ const PeriodicQuestsName = "game.periodic_quests_on_session_started"
 
 // PeriodicQuestsEvents are the game events it handles (owner F014).
 var PeriodicQuestsEvents = []string{"game_session.started"}
+
+// RewardEngineName is the Reward Engine on the learning events (F074 T020, DLQ ew.dlq.game.reward_engine): XP from
+// graded activities, completed lessons and mastered objectives.
+const RewardEngineName = "game.reward_engine"
+
+// RewardEngineLearningEvents are the learning events it handles (owners F030, F031).
+var RewardEngineLearningEvents = []string{"activity.graded", "lesson.completed", "learning_objective.mastered"}
+
+// RewardEngineGameName is the Reward Engine on the events of module game itself (one durable consumer per stream:
+// a JetStream consumer reads one stream). minigame.completed joins when F073 defines its payload.
+const RewardEngineGameName = "game.reward_engine_game"
+
+// RewardEngineGameEvents are the game events it handles (owners F071, F072).
+var RewardEngineGameEvents = []string{"quest.completed", "world.discovery_found", "world.area_completed"}
+
+// GradeTransitionName applies the school-year grade transition of a student (F074 T035, FR-GAM-010).
+const GradeTransitionName = "game.grade_transition"
+
+// GradeTransitionEvents are the identity events it handles (owners F010, F013).
+var GradeTransitionEvents = []string{"student.synced", "student.placement_changed"}

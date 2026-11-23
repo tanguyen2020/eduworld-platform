@@ -160,6 +160,11 @@ func LastGameLoginAt(v time.Time) predicate.GameProfile {
 	return predicate.GameProfile(sql.FieldEQ(FieldLastGameLoginAt, v))
 }
 
+// GradeTransitionYear applies equality check predicate on the "grade_transition_year" field. It's identical to GradeTransitionYearEQ.
+func GradeTransitionYear(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldEQ(FieldGradeTransitionYear, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v uuid.UUID) predicate.GameProfile {
 	return predicate.GameProfile(sql.FieldEQ(FieldTenantID, v))
@@ -1288,6 +1293,81 @@ func LastGameLoginAtIsNil() predicate.GameProfile {
 // LastGameLoginAtNotNil applies the NotNil predicate on the "last_game_login_at" field.
 func LastGameLoginAtNotNil() predicate.GameProfile {
 	return predicate.GameProfile(sql.FieldNotNull(FieldLastGameLoginAt))
+}
+
+// GradeTransitionYearEQ applies the EQ predicate on the "grade_transition_year" field.
+func GradeTransitionYearEQ(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldEQ(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearNEQ applies the NEQ predicate on the "grade_transition_year" field.
+func GradeTransitionYearNEQ(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldNEQ(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearIn applies the In predicate on the "grade_transition_year" field.
+func GradeTransitionYearIn(vs ...string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldIn(FieldGradeTransitionYear, vs...))
+}
+
+// GradeTransitionYearNotIn applies the NotIn predicate on the "grade_transition_year" field.
+func GradeTransitionYearNotIn(vs ...string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldNotIn(FieldGradeTransitionYear, vs...))
+}
+
+// GradeTransitionYearGT applies the GT predicate on the "grade_transition_year" field.
+func GradeTransitionYearGT(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldGT(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearGTE applies the GTE predicate on the "grade_transition_year" field.
+func GradeTransitionYearGTE(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldGTE(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearLT applies the LT predicate on the "grade_transition_year" field.
+func GradeTransitionYearLT(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldLT(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearLTE applies the LTE predicate on the "grade_transition_year" field.
+func GradeTransitionYearLTE(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldLTE(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearContains applies the Contains predicate on the "grade_transition_year" field.
+func GradeTransitionYearContains(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldContains(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearHasPrefix applies the HasPrefix predicate on the "grade_transition_year" field.
+func GradeTransitionYearHasPrefix(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldHasPrefix(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearHasSuffix applies the HasSuffix predicate on the "grade_transition_year" field.
+func GradeTransitionYearHasSuffix(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldHasSuffix(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearIsNil applies the IsNil predicate on the "grade_transition_year" field.
+func GradeTransitionYearIsNil() predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldIsNull(FieldGradeTransitionYear))
+}
+
+// GradeTransitionYearNotNil applies the NotNil predicate on the "grade_transition_year" field.
+func GradeTransitionYearNotNil() predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldNotNull(FieldGradeTransitionYear))
+}
+
+// GradeTransitionYearEqualFold applies the EqualFold predicate on the "grade_transition_year" field.
+func GradeTransitionYearEqualFold(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldEqualFold(FieldGradeTransitionYear, v))
+}
+
+// GradeTransitionYearContainsFold applies the ContainsFold predicate on the "grade_transition_year" field.
+func GradeTransitionYearContainsFold(v string) predicate.GameProfile {
+	return predicate.GameProfile(sql.FieldContainsFold(FieldGradeTransitionYear, v))
 }
 
 // And groups predicates with the AND operator between them.

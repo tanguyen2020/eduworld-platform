@@ -34,6 +34,8 @@ type Tx struct {
 	ItemDefinitionVersion *ItemDefinitionVersionClient
 	// LevelDefinition is the client for interacting with the LevelDefinition builders.
 	LevelDefinition *LevelDefinitionClient
+	// LevelHistory is the client for interacting with the LevelHistory builders.
+	LevelHistory *LevelHistoryClient
 	// LevelSession is the client for interacting with the LevelSession builders.
 	LevelSession *LevelSessionClient
 	// LevelVersion is the client for interacting with the LevelVersion builders.
@@ -48,6 +50,12 @@ type Tx struct {
 	NpcDialogueVersion *NpcDialogueVersionClient
 	// PeriodicQuestGrant is the client for interacting with the PeriodicQuestGrant builders.
 	PeriodicQuestGrant *PeriodicQuestGrantClient
+	// ProgressionCurve is the client for interacting with the ProgressionCurve builders.
+	ProgressionCurve *ProgressionCurveClient
+	// ProgressionCurveVersion is the client for interacting with the ProgressionCurveVersion builders.
+	ProgressionCurveVersion *ProgressionCurveVersionClient
+	// ProgressionLevel is the client for interacting with the ProgressionLevel builders.
+	ProgressionLevel *ProgressionLevelClient
 	// QuestDefinition is the client for interacting with the QuestDefinition builders.
 	QuestDefinition *QuestDefinitionClient
 	// QuestProgress is the client for interacting with the QuestProgress builders.
@@ -56,6 +64,12 @@ type Tx struct {
 	QuestStepAttempt *QuestStepAttemptClient
 	// QuestVersion is the client for interacting with the QuestVersion builders.
 	QuestVersion *QuestVersionClient
+	// RewardGrant is the client for interacting with the RewardGrant builders.
+	RewardGrant *RewardGrantClient
+	// RewardRule is the client for interacting with the RewardRule builders.
+	RewardRule *RewardRuleClient
+	// RewardRuleVersion is the client for interacting with the RewardRuleVersion builders.
+	RewardRuleVersion *RewardRuleVersionClient
 	// StoryChapter is the client for interacting with the StoryChapter builders.
 	StoryChapter *StoryChapterClient
 	// StoryChapterVersion is the client for interacting with the StoryChapterVersion builders.
@@ -72,6 +86,10 @@ type Tx struct {
 	WorldAreaVersion *WorldAreaVersionClient
 	// WorldUnlockFact is the client for interacting with the WorldUnlockFact builders.
 	WorldUnlockFact *WorldUnlockFactClient
+	// XpDailyCap is the client for interacting with the XpDailyCap builders.
+	XpDailyCap *XpDailyCapClient
+	// XpLedgerEntry is the client for interacting with the XpLedgerEntry builders.
+	XpLedgerEntry *XpLedgerEntryClient
 
 	// lazily loaded.
 	client     *Client
@@ -214,6 +232,7 @@ func (tx *Tx) init() {
 	tx.ItemDefinition = NewItemDefinitionClient(tx.config)
 	tx.ItemDefinitionVersion = NewItemDefinitionVersionClient(tx.config)
 	tx.LevelDefinition = NewLevelDefinitionClient(tx.config)
+	tx.LevelHistory = NewLevelHistoryClient(tx.config)
 	tx.LevelSession = NewLevelSessionClient(tx.config)
 	tx.LevelVersion = NewLevelVersionClient(tx.config)
 	tx.LoginEvent = NewLoginEventClient(tx.config)
@@ -221,10 +240,16 @@ func (tx *Tx) init() {
 	tx.NpcDialogue = NewNpcDialogueClient(tx.config)
 	tx.NpcDialogueVersion = NewNpcDialogueVersionClient(tx.config)
 	tx.PeriodicQuestGrant = NewPeriodicQuestGrantClient(tx.config)
+	tx.ProgressionCurve = NewProgressionCurveClient(tx.config)
+	tx.ProgressionCurveVersion = NewProgressionCurveVersionClient(tx.config)
+	tx.ProgressionLevel = NewProgressionLevelClient(tx.config)
 	tx.QuestDefinition = NewQuestDefinitionClient(tx.config)
 	tx.QuestProgress = NewQuestProgressClient(tx.config)
 	tx.QuestStepAttempt = NewQuestStepAttemptClient(tx.config)
 	tx.QuestVersion = NewQuestVersionClient(tx.config)
+	tx.RewardGrant = NewRewardGrantClient(tx.config)
+	tx.RewardRule = NewRewardRuleClient(tx.config)
+	tx.RewardRuleVersion = NewRewardRuleVersionClient(tx.config)
 	tx.StoryChapter = NewStoryChapterClient(tx.config)
 	tx.StoryChapterVersion = NewStoryChapterVersionClient(tx.config)
 	tx.StoryProgress = NewStoryProgressClient(tx.config)
@@ -233,6 +258,8 @@ func (tx *Tx) init() {
 	tx.WorldAreaUnlock = NewWorldAreaUnlockClient(tx.config)
 	tx.WorldAreaVersion = NewWorldAreaVersionClient(tx.config)
 	tx.WorldUnlockFact = NewWorldUnlockFactClient(tx.config)
+	tx.XpDailyCap = NewXpDailyCapClient(tx.config)
+	tx.XpLedgerEntry = NewXpLedgerEntryClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

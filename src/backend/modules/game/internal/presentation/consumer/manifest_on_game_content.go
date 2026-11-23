@@ -44,5 +44,8 @@ func (c ManifestOnGameContent) Handle(ctx context.Context, e outbox.Envelope) er
 		observability.ConsumerRejected().WithLabelValues(messaging.ManifestGameName, "invalid_payload").Inc()
 		return outbox.Permanent(fmt.Errorf("%s: invalid payload", e.EventType))
 	}
+	if p.ItemType == "progression_curve" || p.ItemType == "reward_rule" {
+		return nil // server-side progression content (F074): not part of the client manifest
+	}
 	return c.Manifests.Rebuild(ctx, p.ReleaseID, p.ItemType, p.ReleasedAt)
 }

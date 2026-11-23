@@ -278,6 +278,9 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer(messaging.LeaderboardEffortName, func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.LeaderboardEffortOptions(consumer.LeaderboardEffort{H: ranks.RecordEffort}, core.UoW, core.App, js)
 	})
+	r.Consumer(messaging.LeaderboardXPName, func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.LeaderboardXPOptions(consumer.LeaderboardXP{H: ranks.RecordXP}, core.UoW, core.App, js)
+	})
 	r.Job(Name, job.LeaderboardPeriodClose, job.PeriodCloseInterval, module.JobFunc(job.RankingJob(boards.ClosePeriods)))
 	r.Job(Name, job.LeaderboardRebuild, job.RebuildInterval, module.JobFunc(job.RankingJob(boards.RebuildQueued)))
 	r.Job(Name, job.LeaderboardReconcile, job.ReconcileInterval, module.JobFunc(job.RankingJob(boards.Reconcile)))

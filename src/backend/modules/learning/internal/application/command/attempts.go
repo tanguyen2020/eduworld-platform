@@ -510,7 +510,11 @@ func (h Attempts) graded(ctx context.Context, a attempt.Attempt, r activity.Resu
 	ev := map[string]any{"attempt_id": a.ID, "student_id": a.StudentID, "evaluation_id": evaluationID, "activity_id": nullableID(a.ActivityID),
 		"activity_type": a.ActivityType, "mode": a.Mode, "source": "system", "strategies": r.Strategies, "score": *a.Score,
 		"max_score": *a.MaxScore, "correct_count": correct, "item_count": len(a.Items), "result_release": release,
-		"results_visible_at": visibleAt, "objective_ids": nonNilUUIDs(a.ObjectiveIDs), "assignment_id": assignmentOf(a)}
+		"results_visible_at": visibleAt, "objective_ids": nonNilUUIDs(a.ObjectiveIDs), "assignment_id": assignmentOf(a),
+		// F074 delta (Reward Engine): pinned content version, the recommendation followed and the first-try correct answers.
+		// One submit per attempt and no per-item explanation or rapid-guess tracking yet: every correct answer is a first try
+		// [Proposed — F074 Clarifications 2026-11-23]; content_grade_levels stays absent until the attempt carries the grades.
+		"content_version_id": a.SourceVersionID, "recommendation_id": nullableID(a.RecommendationID), "first_try_correct_count": correct}
 	if r.Passed != nil {
 		ev["passed"] = *r.Passed
 	}

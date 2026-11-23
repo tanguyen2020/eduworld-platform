@@ -2,36 +2,124 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:eduworld:schema:reward-rule:1",
   "title": "RewardRule",
-  "description": "Quy tắc thưởng của Reward Engine (gamification). Áp dụng phía server khi nhận domain event; có cap và diminishing returns để chống farm. Reward không ảnh hưởng điểm/mastery/kết quả đánh giá chính thức. Xem docs/06-architecture/DOMAIN_MODEL.md §8.",
+  "description": "Quy tắc thưởng của Reward Engine (gamification). Áp dụng phía server khi nhận domain event; có cap và diminishing returns để chống farm. Reward không ảnh hưởng điểm/mastery/kết quả đánh giá chính thức. source_code theo catalog PROGRESSION_SYSTEM §3.1 (F074). Xem docs/06-architecture/DOMAIN_MODEL.md §8.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "reward_rule_id", "code", "version", "status", "owner_scope", "trigger", "grants", "caps"],
+  "required": [
+    "schema_version",
+    "reward_rule_id",
+    "code",
+    "version",
+    "status",
+    "owner_scope",
+    "source_code",
+    "trigger",
+    "grants",
+    "caps"
+  ],
   "properties": {
-    "schema_version": { "const": 1 },
-    "reward_rule_id": { "$ref": "#/$defs/uuid" },
-    "code": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$" },
-    "version": { "type": "integer", "minimum": 1 },
-    "status": { "enum": ["draft", "in_review", "approved", "published", "archived", "rejected"] },
-    "owner_scope": { "const": "platform", "description": "Cấu hình game chỉ thuộc platform, sửa qua /api/v1/game-admin (ADR-0027); tenant dùng khi được gán (ADR-0029)" },
-    "tenant_id": { "type": "null", "description": "Luôn null: dữ liệu platform" },
-    "description": { "type": "string", "maxLength": 500 },
-    "priority": { "type": "integer", "minimum": 0, "maximum": 1000, "default": 100 },
-    "active_from": { "type": "string", "format": "date-time" },
-    "active_to": { "type": "string", "format": "date-time" },
+    "schema_version": {
+      "const": 1
+    },
+    "reward_rule_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+    },
+    "source_code": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "quest.main_completed",
+        "quest.side_completed",
+        "quest.daily_completed",
+        "quest.weekly_completed",
+        "activity.completed",
+        "mastery.objective_mastered",
+        "lesson.completed",
+        "exploration.discovery",
+        "exploration.area_completed",
+        "challenge.completed",
+        "boss.defeated",
+        "coop.contribution",
+        "achievement.unlocked",
+        "event.participation",
+        "competition.participation"
+      ],
+      "description": "Mã nguồn XP trong catalog PROGRESSION_SYSTEM §3.1; ghi vào xp_ledger.source_code (F074). Reward Engine chỉ áp rule có source_code khớp nguồn suy ra từ event."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "const": "platform",
+      "description": "Cấu hình game chỉ thuộc platform, sửa qua /api/v1/game-admin (ADR-0027); tenant dùng khi được gán (ADR-0029)"
+    },
+    "tenant_id": {
+      "type": "null",
+      "description": "Luôn null: dữ liệu platform"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000,
+      "default": 100
+    },
+    "active_from": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event có occurred_at từ thời điểm này mới áp version này (F074-AC-24); vắng = từ lúc publish"
+    },
+    "active_to": {
+      "type": "string",
+      "format": "date-time"
+    },
     "trigger": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["event_type"],
+      "required": [
+        "event_type"
+      ],
       "properties": {
         "event_type": {
           "enum": [
-            "lesson.completed", "exercise.submitted", "quest.completed", "minigame.completed",
-            "match.completed", "achievement.unlocked", "learning_objective.mastered", "party.activity_completed"
+            "activity.graded",
+            "lesson.completed",
+            "exercise.submitted",
+            "quest.completed",
+            "minigame.completed",
+            "match.completed",
+            "achievement.unlocked",
+            "learning_objective.mastered",
+            "party.activity_completed",
+            "world.discovery_found",
+            "world.area_completed"
           ]
         },
         "attempt_modes": {
-          "type": "array", "uniqueItems": true,
-          "items": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode" },
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode"
+          },
           "description": "Giới hạn theo Attempt.mode. Mặc định đề xuất không gồm exam chính thức."
         }
       }
@@ -40,14 +128,48 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "min_correct_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
-        "min_questions_answered": { "type": "integer", "minimum": 1 },
-        "first_completion_only": { "type": "boolean", "default": false },
-        "grade_levels": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 9 } },
-        "subject_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
-        "source_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" }, "description": "Quest/minigame/question set cụ thể" },
-        "min_party_size": { "type": "integer", "minimum": 2 },
-        "min_individual_contribution": { "type": "integer", "minimum": 1 }
+        "min_correct_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "min_questions_answered": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "first_completion_only": {
+          "type": "boolean",
+          "default": false
+        },
+        "grade_levels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          }
+        },
+        "subject_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uuid"
+          }
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uuid"
+          },
+          "description": "Quest/minigame/question set cụ thể"
+        },
+        "min_party_size": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "min_individual_contribution": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "grants": {
@@ -56,51 +178,213 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "properties": {
-          "type": { "enum": ["xp", "item", "badge", "achievement_progress"] },
-          "amount": { "type": "integer", "minimum": 1, "maximum": 1000 },
-          "per_correct_answer": { "type": "integer", "minimum": 0, "maximum": 50 },
-          "item_id": { "type": "string", "maxLength": 64 },
-          "badge_id": { "type": "string", "maxLength": 64 },
-          "achievement_id": { "type": "string", "maxLength": 64 },
-          "progress": { "type": "integer", "minimum": 1 }
+          "type": {
+            "enum": [
+              "xp",
+              "title",
+              "item",
+              "badge",
+              "achievement_progress"
+            ]
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "per_correct_answer": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "item_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "badge_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "title_code": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "achievement_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "progress": {
+            "type": "integer",
+            "minimum": 1
+          }
         },
         "allOf": [
-          { "if": { "properties": { "type": { "const": "xp" } } }, "then": { "anyOf": [{ "required": ["amount"], "properties": { "amount": true } }, { "required": ["per_correct_answer"], "properties": { "per_correct_answer": true } }] } },
-          { "if": { "properties": { "type": { "const": "item" } } }, "then": { "required": ["item_id"], "properties": { "item_id": true } } },
-          { "if": { "properties": { "type": { "const": "badge" } } }, "then": { "required": ["badge_id"], "properties": { "badge_id": true } } },
-          { "if": { "properties": { "type": { "const": "achievement_progress" } } }, "then": { "required": ["achievement_id", "progress"], "properties": { "achievement_id": true, "progress": true } } }
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "xp"
+                }
+              }
+            },
+            "then": {
+              "anyOf": [
+                {
+                  "required": [
+                    "amount"
+                  ],
+                  "properties": {
+                    "amount": true
+                  }
+                },
+                {
+                  "required": [
+                    "per_correct_answer"
+                  ],
+                  "properties": {
+                    "per_correct_answer": true
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "title"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "title_code"
+              ],
+              "properties": {
+                "title_code": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "item"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "item_id"
+              ],
+              "properties": {
+                "item_id": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "badge"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "badge_id"
+              ],
+              "properties": {
+                "badge_id": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "achievement_progress"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "achievement_id",
+                "progress"
+              ],
+              "properties": {
+                "achievement_id": true,
+                "progress": true
+              }
+            }
+          }
         ]
       }
     },
     "caps": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["xp_per_day"],
+      "required": [
+        "xp_per_day"
+      ],
       "properties": {
-        "xp_per_day": { "type": "integer", "minimum": 0 },
-        "xp_per_week": { "type": "integer", "minimum": 0 },
-        "grants_per_source_per_day": { "type": "integer", "minimum": 1 }
+        "xp_per_day": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Cap XP/ngày (ngày lịch Asia/Ho_Chi_Minh) của bucket; phải ≥ 1 khi publish (F074-AC-23)"
+        },
+        "xp_per_week": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "grants_per_source_per_day": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bucket": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^xp:[a-z0-9_.:]+$",
+          "description": "Bucket đếm cap trong xp_daily_caps; vắng = xp:src:<source_type> của nguồn (F074)"
+        }
       }
     },
     "diminishing_returns": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["multipliers", "window_days"],
+      "required": [
+        "multipliers",
+        "window_days"
+      ],
       "description": "Hệ số áp dụng cho lần hoàn thành lặp lại cùng nguồn nội dung trong cửa sổ thời gian. Phần tử cuối áp dụng cho mọi lần tiếp theo.",
       "properties": {
         "multipliers": {
-          "type": "array", "minItems": 1, "maxItems": 10,
-          "items": { "type": "number", "minimum": 0, "maximum": 1 }
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
         },
-        "window_days": { "type": "integer", "minimum": 1, "maximum": 90 }
+        "window_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        }
       }
     }
   },
   "$defs": {
     "uuid": {
-      "type": "string", "maxLength": 64,
+      "type": "string",
+      "maxLength": 64,
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     }
   }

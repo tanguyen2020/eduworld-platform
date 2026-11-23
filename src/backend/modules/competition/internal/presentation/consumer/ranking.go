@@ -135,3 +135,42 @@ func (c LeaderboardEffort) Handle(ctx context.Context, e outbox.Envelope) error 
 	// command.ErrStudentNotProjected is retried (backoff, then DLQ): the identity projection catches up.
 	return err
 }
+
+// XPRecorder is RecordXP (command.Ranking).
+type XPRecorder func(ctx context.Context, tenant uuid.UUID, x command.XPAwarded) (int, error)
+
+// LeaderboardXP is the consumer competition.leaderboard_xp: xp.awarded (owner F074) → the xp metric of the friends
+// boards (friends_xp_weekly). The payload carries no school nor grade: the use case reads ref.students and retries while
+// the student is not projected yet.
+type LeaderboardXP struct{ H XPRecorder }
+
+// LeaderboardXPOptions returns its options.
+func LeaderboardXPOptions(h LeaderboardXP, uow *entx.UnitOfWork, dlq *sql.DB, js jetstream.JetStream) outbox.ConsumerOptions {
+	return outbox.ConsumerOptions{Module: "competition", Name: messaging.LeaderboardXPName, Stream: messaging.GameStream,
+		Subjects: messaging.Subjects("game", messaging.LeaderboardXPEvents), UoW: uow, DLQDB: dlq, JS: js, Handler: h.Handle}
+}
+
+// Handle implements outbox.Handler.
+func (c LeaderboardXP) Handle(ctx context.Context, e outbox.Envelope) error {
+	if e.EventType != "xp.awarded" {
+		return nil
+	}
+	var p struct {
+		EntryID   uuid.UUID `json:"xp_entry_id"`
+		StudentID uuid.UUID `json:"student_id"`
+		Amount    int       `json:"amount"`
+		Reason    string    `json:"reason_code"`
+	}
+	if err := decode(e, &p); err != nil {
+		return outbox.Permanent(err)
+	}
+	tenant, err := envTenant(e)
+	if err != nil || p.EntryID == uuid.Nil || p.StudentID == uuid.Nil {
+		return outbox.Permanent(invalid(e.EventType, "xp_entry_id/student_id/tenant"))
+	}
+	if p.Reason == "adjustment" {
+		return nil // compensating entries (merge, adjustment) are not effort of the week
+	}
+	_, err = c.H(ctx, tenant, command.XPAwarded{Entry: p.EntryID, Student: p.StudentID, Amount: p.Amount, At: e.OccurredAt.UTC()})
+	return err
+}

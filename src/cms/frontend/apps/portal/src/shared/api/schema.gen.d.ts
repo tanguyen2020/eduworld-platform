@@ -11735,7 +11735,7 @@ export interface components {
          * @description Loại cấu hình game — mỗi loại có JSON Schema trong specs/schemas (nếu có)
          * @enum {string}
          */
-        GameConfigType: "quests" | "minigame-configs" | "npc-dialogues" | "world-areas" | "story-chapters" | "items" | "reward-rules" | "levels" | "progression-curves" | "challenges" | "bosses" | "achievements" | "collections" | "shop-items" | "currencies" | "matchmaking-configs" | "ranking-rules" | "seasons" | "tournament-templates" | "challenge-templates" | "leaderboard-definitions" | "sticker-packs" | "gifs" | "events" | "event-templates" | "season-tracks";
+        GameConfigType: "quests" | "minigame-configs" | "npc-dialogues" | "world-areas" | "story-chapters" | "items" | "reward-rules" | "progression-levels" | "progression-curves" | "challenges" | "bosses" | "achievements" | "collections" | "shop-items" | "currencies" | "matchmaking-configs" | "ranking-rules" | "seasons" | "tournament-templates" | "challenge-templates" | "leaderboard-definitions" | "sticker-packs" | "gifs" | "events" | "event-templates" | "season-tracks";
         GameConfigVersion: {
             author_id?: components["schemas"]["Uuid"];
             config_id: components["schemas"]["Uuid"];
@@ -13806,6 +13806,9 @@ export interface components {
             level: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
             title_code?: string;
+            /** @description XP tích lũy để đạt level này (F074) */
+            xp_cumulative?: number;
+            /** @description XP cần để từ level này lên level kế (progression_levels.xp_required); 0 tại max_level (F074) */
             xp_required: number;
         };
         ProgressionStatus: {

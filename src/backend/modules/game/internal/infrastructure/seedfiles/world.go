@@ -88,3 +88,26 @@ func QuestAssignments(dir string) ([]QuestAssignment, error) {
 	}
 	return doc.Assignments, nil
 }
+
+// Progression reads the F074 seed: seed/progression/curve.default.v1.json (the platform curve) and
+// seed/progression/reward-rules.v1.json (an array: one reward rule per XP source of PROGRESSION_SYSTEM §3.1).
+func Progression(dir string) ([]command.ContentItem, error) {
+	root := filepath.Join(dir, "progression")
+	curve, err := os.ReadFile(filepath.Join(root, "curve.default.v1.json")) //nolint:gosec // repository seed path
+	if err != nil {
+		return nil, err
+	}
+	out := []command.ContentItem{{Type: write.ItemProgressionCurve, Payload: curve}}
+	raw, err := os.ReadFile(filepath.Join(root, "reward-rules.v1.json")) //nolint:gosec // repository seed path
+	if err != nil {
+		return nil, err
+	}
+	var rules []json.RawMessage
+	if err := json.Unmarshal(raw, &rules); err != nil {
+		return nil, fmt.Errorf("reward-rules.v1.json: %w", err)
+	}
+	for _, r := range rules {
+		out = append(out, command.ContentItem{Type: write.ItemRewardRule, Payload: r})
+	}
+	return out, nil
+}

@@ -61,6 +61,8 @@ const (
 	FieldPreferredLanguage = "preferred_language"
 	// FieldLastGameLoginAt holds the string denoting the last_game_login_at field in the database.
 	FieldLastGameLoginAt = "last_game_login_at"
+	// FieldGradeTransitionYear holds the string denoting the grade_transition_year field in the database.
+	FieldGradeTransitionYear = "grade_transition_year"
 	// Table holds the table name of the gameprofile in the database.
 	Table = "game_profiles"
 )
@@ -91,6 +93,7 @@ var Columns = []string{
 	FieldSettings,
 	FieldPreferredLanguage,
 	FieldLastGameLoginAt,
+	FieldGradeTransitionYear,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -137,6 +140,8 @@ var (
 	DefaultSettings map[string]interface{}
 	// PreferredLanguageValidator is a validator for the "preferred_language" field. It is called by the builders before save.
 	PreferredLanguageValidator func(string) error
+	// GradeTransitionYearValidator is a validator for the "grade_transition_year" field. It is called by the builders before save.
+	GradeTransitionYearValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -252,4 +257,9 @@ func ByPreferredLanguage(opts ...sql.OrderTermOption) OrderOption {
 // ByLastGameLoginAt orders the results by the last_game_login_at field.
 func ByLastGameLoginAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastGameLoginAt, opts...).ToFunc()
+}
+
+// ByGradeTransitionYear orders the results by the grade_transition_year field.
+func ByGradeTransitionYear(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGradeTransitionYear, opts...).ToFunc()
 }

@@ -27,13 +27,15 @@
         "level",
         "character_catalog",
         "item",
-        "quest"
+        "quest",
+        "progression_curve",
+        "reward_rule"
       ]
     },
     "item_id": {
       "type": "string",
       "maxLength": 64,
-      "description": "area_id, chapter_code, dialogue_id, level_id hoặc quest_id (F072)"
+      "description": "area_id, chapter_code, dialogue_id, level_id, quest_id (F072), curve_id hoặc reward_rule_id (F074)"
     },
     "from_version_id": {
       "type": [

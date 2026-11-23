@@ -5,31 +5,158 @@
   "description": "Evaluation có hiệu lực của một attempt (server tự chấm, source = system). Phát ngay sau activity.submitted khi chấm đồng bộ, hoặc khi chấm trì hoãn hoàn tất. Consumer: learning_record (evidence), LMS, NTF (theo ResultRelease), GAM. Chấm lại do nội dung lỗi phát attempt.re_evaluated, không phát lại event này.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["attempt_id", "student_id", "evaluation_id", "activity_type", "mode", "source", "score", "max_score", "result_release", "objective_ids"],
+  "required": [
+    "attempt_id",
+    "student_id",
+    "evaluation_id",
+    "activity_type",
+    "mode",
+    "source",
+    "score",
+    "max_score",
+    "result_release",
+    "objective_ids"
+  ],
   "properties": {
-    "attempt_id": { "type": "string", "format": "uuid" },
-    "student_id": { "type": "string", "format": "uuid" },
-    "evaluation_id": { "type": "string", "format": "uuid" },
-    "activity_id": { "type": ["string", "null"], "format": "uuid" },
-    "activity_type": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType" },
-    "mode": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode" },
-    "assignment_id": { "type": ["string", "null"], "format": "uuid" },
-    "source": { "const": "system", "description": "Mọi hoạt động trong Release do server tự chấm (ADR-0072)" },
+    "attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "evaluation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "activity_type": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ActivityType"
+    },
+    "mode": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/AttemptMode"
+    },
+    "assignment_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "source": {
+      "const": "system",
+      "description": "Mọi hoạt động trong Release do server tự chấm (ADR-0072)"
+    },
     "strategies": {
       "type": "array",
       "maxItems": 7,
       "uniqueItems": true,
-      "items": { "type": "string", "enum": ["auto", "exact", "accepted_answers", "rule", "numeric_tolerance", "completion", "deterministic_check"] }
+      "items": {
+        "type": "string",
+        "enum": [
+          "auto",
+          "exact",
+          "accepted_answers",
+          "rule",
+          "numeric_tolerance",
+          "completion",
+          "deterministic_check"
+        ]
+      }
     },
-    "score": { "type": "number", "minimum": 0 },
-    "max_score": { "type": "number", "minimum": 0 },
-    "passed": { "type": ["boolean", "null"] },
-    "correct_count": { "type": ["integer", "null"], "minimum": 0 },
-    "item_count": { "type": ["integer", "null"], "minimum": 0 },
-    "result_release": { "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ResultRelease" },
-    "results_visible_at": { "type": ["string", "null"], "format": "date-time", "description": "Thời điểm học sinh được xem kết quả; null khi manual chưa công bố" },
-    "objective_ids": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "format": "uuid" } },
-    "rapid_guess_flagged": { "type": "boolean", "description": "true khi attempt gắn cờ rapid_guess (LEARNING_ANALYTICS): module competition không cộng effort_points (F106-AC-16). Vắng = false (bổ sung bởi F106, module learning điền khi phát)." },
-    "recommendation_id": { "type": ["string", "null"], "format": "uuid", "description": "Gợi ý ôn tập của hệ thống mà attempt thực hiện (F032); có giá trị hoặc assignment_id ≠ null → hoạt động ôn tập +2 effort_points (COMPETITION_SYSTEM §9.2)." }
+    "score": {
+      "type": "number",
+      "minimum": 0
+    },
+    "max_score": {
+      "type": "number",
+      "minimum": 0
+    },
+    "passed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "correct_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "item_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "result_release": {
+      "$ref": "https://schemas.eduworld.vn/common/enums.schema.json#/$defs/ResultRelease"
+    },
+    "results_visible_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Thời điểm học sinh được xem kết quả; null khi manual chưa công bố"
+    },
+    "objective_ids": {
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "rapid_guess_flagged": {
+      "type": "boolean",
+      "description": "true khi attempt gắn cờ rapid_guess (LEARNING_ANALYTICS): module competition không cộng effort_points (F106-AC-16). Vắng = false (bổ sung bởi F106, module learning điền khi phát)."
+    },
+    "recommendation_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Gợi ý ôn tập của hệ thống mà attempt thực hiện (F032); có giá trị hoặc assignment_id ≠ null → hoạt động ôn tập +2 effort_points (COMPETITION_SYSTEM §9.2)."
+    },
+    "content_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Version nội dung đã ghim khi bắt đầu attempt (R31); Reward Engine đếm giảm dần theo content version (F074)"
+    },
+    "first_try_correct_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Số câu đúng ngay lần đầu, không gắn cờ rapid_guess, không trả lời sau khi đã xem giải thích của câu (F074-AC-06). Vắng = Reward Engine dùng correct_count khi rapid_guess_flagged không true"
+    },
+    "content_grade_levels": {
+      "type": "array",
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      },
+      "description": "Khối lớp của version nội dung (Reward Engine áp xp_below_grade_multiplier, F074-AC-07); vắng/rỗng = không giảm theo khối"
+    }
   }
 }

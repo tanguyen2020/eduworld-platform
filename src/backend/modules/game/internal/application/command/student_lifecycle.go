@@ -37,7 +37,14 @@ type StudentLifecycle struct {
 	Sessions write.SessionRepository
 	Profiles write.ProfileRepository
 	Presets  write.PresetRepository
-	Now      func() time.Time
+	// XP moves the XP ledger of the source to the target (F074 T041); nil = no ledger step.
+	XP  XPMerger
+	Now func() time.Time
+}
+
+// XPMerger is the XP step of mergeUserData (command.Progression.MergeXP).
+type XPMerger interface {
+	MergeXP(ctx context.Context, tenant, from, into, mergeID uuid.UUID) (bool, error)
 }
 
 func (h StudentLifecycle) now() time.Time {
@@ -136,7 +143,7 @@ func (h StudentLifecycle) Anonymize(ctx context.Context, userID uuid.UUID) (stat
 // move to the free slots of the target, then the target keeps its own profile and the source profile is
 // soft-deleted, or the target takes the source profile when it has none. An active game session of the source
 // blocks the step.
-func (h StudentLifecycle) Merge(ctx context.Context, from, into uuid.UUID) (status, blockedReason string, err error) {
+func (h StudentLifecycle) Merge(ctx context.Context, from, into, mergeID uuid.UUID) (status, blockedReason string, err error) {
 	ctx, done := observability.UseCase(ctx, "game.command.MergeUserData")
 	defer func() { done(err) }()
 	tenant, err := scopeTenant(ctx, "mergeUserData")
@@ -168,6 +175,11 @@ func (h StudentLifecycle) Merge(ctx context.Context, from, into uuid.UUID) (stat
 			return err
 		}
 		now := h.now()
+		if h.XP != nil && mergeID != uuid.Nil {
+			if _, err := h.XP.MergeXP(ctx, tenant, from, into, mergeID); err != nil {
+				return err
+			}
+		}
 		if err := h.Presets.MoveStudent(ctx, tenant, from, into, ReasonUserMerge, now); err != nil {
 			return err
 		}

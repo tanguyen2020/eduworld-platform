@@ -2,7 +2,7 @@
 // catalog v1 (seed/character_catalog.v1.json: presets, palette, default items and emotes, nickname words vi/en), the
 // default item definitions (seed/items.default.v1.json) and the world v1 (seed/world: 12 areas of 8 regions, 7 story
 // chapters, 14 dialogues of 13 NPCs, 12 greybox level packages), the quests v1 of F072 (seed/quests, assigned to the
-// demo tenants of seed/quests/assignments.v1.json) through the publish use cases under a PlatformScope —
+// demo tenants of seed/quests/assignments.v1.json), the progression curve and the reward rules of F074 (seed/progression) through the publish use cases under a PlatformScope —
 // never SQL by hand. Running it again publishes nothing (identical versions are skipped).
 //
 //	go -C src/backend run ./modules/game/cmd/seed [-dir modules/game/seed]
@@ -32,10 +32,13 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/catalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/progressionschema"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/questschema"
+	rewardinfra "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/reward"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/seedfiles"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/config"
@@ -136,14 +139,20 @@ func run(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
+	progressionItems, err := seedfiles.Progression(dir)
+	if err != nil {
+		return err
+	}
 	qcfg, err := gameconfig.QuestFrom(config.Load())
 	if err != nil {
 		return err
 	}
 	wh := command.PublishGameContent{UoW: uow, Store: write.GameContentRepo{}, Content: worldsql.Content{}, Events: write.Publisher{W: w},
 		Audit: write.Auditor{R: rec}, QuestContent: questsql.Content{}, Quests: &command.QuestPublishRules{Schema: questschema.Validator{},
-			Validator: quest.ValidatorConfig{PassRule: qcfg.PassRule, BlockMaxByBand: qcfg.BlockMax}}}
-	wres, err := wh.Publish(tenancy.WithScope(ctx, sc), append(worldItems, questItems...), "seed world v1", "")
+			Validator: quest.ValidatorConfig{PassRule: qcfg.PassRule, BlockMaxByBand: qcfg.BlockMax}},
+		Progression: &command.ProgressionPublishRules{CurveSchema: progressionschema.Curve{}, RuleSchema: progressionschema.Rule{},
+			Appliers: rewardinfra.Default(), Levels: write.GameContentRepo{}, Curves: progressionsql.Content{}}}
+	wres, err := wh.Publish(tenancy.WithScope(ctx, sc), append(append(worldItems, questItems...), progressionItems...), "seed world v1", "")
 	if err != nil {
 		return err
 	}

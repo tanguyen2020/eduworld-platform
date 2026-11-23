@@ -29,6 +29,35 @@ var migrations = map[string][]string{
 		"world_area_unlocks", "exploration_progress", "story_progress", "world_unlock_facts"},
 	"20261227000001_f072_quest.sql": {"quest_definitions", "quest_versions", "quest_progress", "quest_step_attempts",
 		"periodic_quest_grants", "tenant_resource_assignments"},
+	"20261228000001_f074_progression.sql": {"xp_ledger", "xp_daily_caps", "reward_rules", "reward_rule_versions", "reward_grants",
+		"progression_curves", "progression_curve_versions", "progression_levels", "level_history"},
+}
+
+// added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
+// (ALTER TABLE … ADD COLUMN in its entddl block); earlier blocks are checked without them.
+type addition struct {
+	table            string
+	columns, indexes []string
+}
+
+var added = map[string][]addition{
+	"20261228000001_f074_progression.sql": {{"game_profiles", []string{"grade_transition_year"}, nil}},
+}
+
+// before returns tables as file created them: without the columns/indexes added by later migrations.
+func before(file string, tbs []*schema.Table) []*schema.Table {
+	out := make([]*schema.Table, 0, len(tbs))
+	for _, tb := range tbs {
+		for f, as := range added {
+			for _, a := range as {
+				if f != file && a.table == tb.Name {
+					tb = entx.Without(tb, a.columns, a.indexes)
+				}
+			}
+		}
+		out = append(out, tb)
+	}
+	return out
 }
 
 func schemas() map[string]string {
@@ -44,7 +73,10 @@ func schemas() map[string]string {
 		"story_progress": c.StoryProgress, "world_unlock_facts": c.WorldUnlockFact,
 		"quest_definitions": c.QuestDefinition, "quest_versions": c.QuestVersion, "quest_progress": c.QuestProgress,
 		"quest_step_attempts": c.QuestStepAttempt, "periodic_quest_grants": c.PeriodicQuestGrant,
-		"tenant_resource_assignments": c.TenantResourceAssignment}
+		"tenant_resource_assignments": c.TenantResourceAssignment, "xp_ledger": c.XpLedgerEntry, "xp_daily_caps": c.XpDailyCap,
+		"reward_rules": c.RewardRule, "reward_rule_versions": c.RewardRuleVersion, "reward_grants": c.RewardGrant,
+		"progression_curves": c.ProgressionCurve, "progression_curve_versions": c.ProgressionCurveVersion,
+		"progression_levels": c.ProgressionLevel, "level_history": c.LevelHistory}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {
@@ -81,9 +113,16 @@ func TestMigrationMatchesEnt(t *testing.T) {
 		}
 	}
 	for file, names := range migrations {
-		want, err := entx.DDL(tablesOf(t, names), func(table string) string { return sc[table] })
+		want, err := entx.DDL(before(file, tablesOf(t, names)), func(table string) string { return sc[table] })
 		if err != nil {
 			t.Fatal(err)
+		}
+		for _, a := range added[file] {
+			alter, err := entx.AddedDDL(tablesOf(t, []string{a.table})[0], a.columns, a.indexes, func(table string) string { return sc[table] })
+			if err != nil {
+				t.Fatal(err)
+			}
+			want += alter
 		}
 		if *printDDL == file {
 			_, _ = os.Stdout.WriteString(want)

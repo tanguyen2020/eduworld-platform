@@ -481,10 +481,10 @@ Trường, lớp, khối, tỉnh của học sinh trả trong `PlayerBootstrap.s
 | POST | `/game/minigames/{minigame_config_id}:start` | Bắt đầu mini-game **tự chơi hoặc trong quest** → `Attempt` (mode `minigame`, module game mở attempt qua learning internal) + render payload. Mini-game **được giao** chạy qua `startActivityAttempt` của module learning (§9.3.1) — `startMiniGame` | STU | B | P2 |
 | GET | `/game/inventory` | Inventory | STU (self) | T | P2 |
 | GET | `/game/achievements` | Achievement/badge + tiến độ | STU (self) | T | P2 |
-| GET | `/game/xp` | Level, XP, cap còn lại hôm nay (giữ tương thích; thay bằng `/game/progression`) | STU (self) | T | P2 |
-| GET | `/game/progression` | Level, danh hiệu, XP trong level, XP cần, cap còn lại hôm nay, curve version | STU (self) | T | P2 |
-| GET | `/game/progression/xp-history?cursor=` | Lịch sử giao dịch XP thân thiện | STU (self) | T | P2 |
-| GET | `/game/progression/levels` | Bảng level + phần thưởng sắp tới | STU | T | P2 |
+| GET | `/game/xp` | Level, XP, cap còn lại hôm nay (giữ tương thích; thay bằng `/game/progression`; `xp_to_next_level = 0` tại `max_level`) — F074 | STU (self) | T | P2 |
+| GET | `/game/progression` | Level, danh hiệu, XP trong level, XP cần (`null` tại `max_level`), cap còn lại hôm nay, curve version — F074; chưa có curve published → `503 UNAVAILABLE` | STU (self) | T | P2 |
+| GET | `/game/progression/xp-history?cursor=` | Lịch sử giao dịch XP thân thiện (`source_label` theo `Accept-Language`, không `source_id`/`rule_id`/`idempotency_key`; cursor sai/`limit` ngoài 1–100 → `422 VALIDATION_FAILED`) — F074 | STU (self) | T | P2 |
+| GET | `/game/progression/levels` | Bảng level (`xp_required`, `xp_cumulative`, danh hiệu) + phần thưởng của curve version hiện hành — F074 | STU | T | P2 |
 | GET | `/game/world/exploration` | Tiến độ khám phá từng area, khu đã mở, điều kiện mở khu tiếp | STU (self) | T | P2 |
 | POST | `/game/world/areas/{area_id}/discoveries/{interactable_id}:discover` | Báo tìm thấy điểm khám phá/vật sưu tầm (`DISCOVERY_ALREADY_FOUND`) | STU | B | P2 |
 | GET | `/game/avatar-presets` · PUT `/game/avatar-presets/{slot}` | Bộ phối đồ lưu nhanh (1–3) | STU (self) | T | P2 |

@@ -21,7 +21,8 @@ var sessionEventTypes = []string{"game_session.started", "game_session.ended", "
 // gameEventTypes are the events checked against their schema: F014 plus the profile events of F070.
 var gameEventTypes = append(append([]string{}, sessionEventTypes...), "avatar.created", "avatar.updated", "game_profile.updated",
 	"content.published", "content.manifest_updated", "world.area_entered", "world.area_unlocked", "world.discovery_found", "world.area_completed",
-	"story.chapter_completed", "quest.accepted", "quest.step_completed", "quest.completed", "quest.abandoned")
+	"story.chapter_completed", "quest.accepted", "quest.step_completed", "quest.completed", "quest.abandoned", "xp.awarded", "level.reached",
+	"reward.granted")
 
 // checkEventSchemas validates every F014 event in the outbox: envelope (specs/events/envelope.schema.json) and payload
 // (specs/events/payloads/game/<type>.v1.schema.json, contract first) — the consumers of identity, learning and the

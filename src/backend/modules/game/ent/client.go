@@ -26,6 +26,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinitionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/leveldefinition"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelhistory"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/loginevent"
@@ -33,10 +34,16 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogue"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/npcdialogueversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/periodicquestgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurve"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressioncurveversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/progressionlevel"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questdefinition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/queststepattempt"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/questversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardgrant"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardrule"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardruleversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapter"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapterversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
@@ -45,6 +52,8 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldunlockfact"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/xpdailycap"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/xpledgerentry"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/internal"
 )
@@ -76,6 +85,8 @@ type Client struct {
 	ItemDefinitionVersion *ItemDefinitionVersionClient
 	// LevelDefinition is the client for interacting with the LevelDefinition builders.
 	LevelDefinition *LevelDefinitionClient
+	// LevelHistory is the client for interacting with the LevelHistory builders.
+	LevelHistory *LevelHistoryClient
 	// LevelSession is the client for interacting with the LevelSession builders.
 	LevelSession *LevelSessionClient
 	// LevelVersion is the client for interacting with the LevelVersion builders.
@@ -90,6 +101,12 @@ type Client struct {
 	NpcDialogueVersion *NpcDialogueVersionClient
 	// PeriodicQuestGrant is the client for interacting with the PeriodicQuestGrant builders.
 	PeriodicQuestGrant *PeriodicQuestGrantClient
+	// ProgressionCurve is the client for interacting with the ProgressionCurve builders.
+	ProgressionCurve *ProgressionCurveClient
+	// ProgressionCurveVersion is the client for interacting with the ProgressionCurveVersion builders.
+	ProgressionCurveVersion *ProgressionCurveVersionClient
+	// ProgressionLevel is the client for interacting with the ProgressionLevel builders.
+	ProgressionLevel *ProgressionLevelClient
 	// QuestDefinition is the client for interacting with the QuestDefinition builders.
 	QuestDefinition *QuestDefinitionClient
 	// QuestProgress is the client for interacting with the QuestProgress builders.
@@ -98,6 +115,12 @@ type Client struct {
 	QuestStepAttempt *QuestStepAttemptClient
 	// QuestVersion is the client for interacting with the QuestVersion builders.
 	QuestVersion *QuestVersionClient
+	// RewardGrant is the client for interacting with the RewardGrant builders.
+	RewardGrant *RewardGrantClient
+	// RewardRule is the client for interacting with the RewardRule builders.
+	RewardRule *RewardRuleClient
+	// RewardRuleVersion is the client for interacting with the RewardRuleVersion builders.
+	RewardRuleVersion *RewardRuleVersionClient
 	// StoryChapter is the client for interacting with the StoryChapter builders.
 	StoryChapter *StoryChapterClient
 	// StoryChapterVersion is the client for interacting with the StoryChapterVersion builders.
@@ -114,6 +137,10 @@ type Client struct {
 	WorldAreaVersion *WorldAreaVersionClient
 	// WorldUnlockFact is the client for interacting with the WorldUnlockFact builders.
 	WorldUnlockFact *WorldUnlockFactClient
+	// XpDailyCap is the client for interacting with the XpDailyCap builders.
+	XpDailyCap *XpDailyCapClient
+	// XpLedgerEntry is the client for interacting with the XpLedgerEntry builders.
+	XpLedgerEntry *XpLedgerEntryClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -136,6 +163,7 @@ func (c *Client) init() {
 	c.ItemDefinition = NewItemDefinitionClient(c.config)
 	c.ItemDefinitionVersion = NewItemDefinitionVersionClient(c.config)
 	c.LevelDefinition = NewLevelDefinitionClient(c.config)
+	c.LevelHistory = NewLevelHistoryClient(c.config)
 	c.LevelSession = NewLevelSessionClient(c.config)
 	c.LevelVersion = NewLevelVersionClient(c.config)
 	c.LoginEvent = NewLoginEventClient(c.config)
@@ -143,10 +171,16 @@ func (c *Client) init() {
 	c.NpcDialogue = NewNpcDialogueClient(c.config)
 	c.NpcDialogueVersion = NewNpcDialogueVersionClient(c.config)
 	c.PeriodicQuestGrant = NewPeriodicQuestGrantClient(c.config)
+	c.ProgressionCurve = NewProgressionCurveClient(c.config)
+	c.ProgressionCurveVersion = NewProgressionCurveVersionClient(c.config)
+	c.ProgressionLevel = NewProgressionLevelClient(c.config)
 	c.QuestDefinition = NewQuestDefinitionClient(c.config)
 	c.QuestProgress = NewQuestProgressClient(c.config)
 	c.QuestStepAttempt = NewQuestStepAttemptClient(c.config)
 	c.QuestVersion = NewQuestVersionClient(c.config)
+	c.RewardGrant = NewRewardGrantClient(c.config)
+	c.RewardRule = NewRewardRuleClient(c.config)
+	c.RewardRuleVersion = NewRewardRuleVersionClient(c.config)
 	c.StoryChapter = NewStoryChapterClient(c.config)
 	c.StoryChapterVersion = NewStoryChapterVersionClient(c.config)
 	c.StoryProgress = NewStoryProgressClient(c.config)
@@ -155,6 +189,8 @@ func (c *Client) init() {
 	c.WorldAreaUnlock = NewWorldAreaUnlockClient(c.config)
 	c.WorldAreaVersion = NewWorldAreaVersionClient(c.config)
 	c.WorldUnlockFact = NewWorldUnlockFactClient(c.config)
+	c.XpDailyCap = NewXpDailyCapClient(c.config)
+	c.XpLedgerEntry = NewXpLedgerEntryClient(c.config)
 }
 
 type (
@@ -261,6 +297,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ItemDefinition:           NewItemDefinitionClient(cfg),
 		ItemDefinitionVersion:    NewItemDefinitionVersionClient(cfg),
 		LevelDefinition:          NewLevelDefinitionClient(cfg),
+		LevelHistory:             NewLevelHistoryClient(cfg),
 		LevelSession:             NewLevelSessionClient(cfg),
 		LevelVersion:             NewLevelVersionClient(cfg),
 		LoginEvent:               NewLoginEventClient(cfg),
@@ -268,10 +305,16 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		NpcDialogue:              NewNpcDialogueClient(cfg),
 		NpcDialogueVersion:       NewNpcDialogueVersionClient(cfg),
 		PeriodicQuestGrant:       NewPeriodicQuestGrantClient(cfg),
+		ProgressionCurve:         NewProgressionCurveClient(cfg),
+		ProgressionCurveVersion:  NewProgressionCurveVersionClient(cfg),
+		ProgressionLevel:         NewProgressionLevelClient(cfg),
 		QuestDefinition:          NewQuestDefinitionClient(cfg),
 		QuestProgress:            NewQuestProgressClient(cfg),
 		QuestStepAttempt:         NewQuestStepAttemptClient(cfg),
 		QuestVersion:             NewQuestVersionClient(cfg),
+		RewardGrant:              NewRewardGrantClient(cfg),
+		RewardRule:               NewRewardRuleClient(cfg),
+		RewardRuleVersion:        NewRewardRuleVersionClient(cfg),
 		StoryChapter:             NewStoryChapterClient(cfg),
 		StoryChapterVersion:      NewStoryChapterVersionClient(cfg),
 		StoryProgress:            NewStoryProgressClient(cfg),
@@ -280,6 +323,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		WorldAreaUnlock:          NewWorldAreaUnlockClient(cfg),
 		WorldAreaVersion:         NewWorldAreaVersionClient(cfg),
 		WorldUnlockFact:          NewWorldUnlockFactClient(cfg),
+		XpDailyCap:               NewXpDailyCapClient(cfg),
+		XpLedgerEntry:            NewXpLedgerEntryClient(cfg),
 	}, nil
 }
 
@@ -310,6 +355,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ItemDefinition:           NewItemDefinitionClient(cfg),
 		ItemDefinitionVersion:    NewItemDefinitionVersionClient(cfg),
 		LevelDefinition:          NewLevelDefinitionClient(cfg),
+		LevelHistory:             NewLevelHistoryClient(cfg),
 		LevelSession:             NewLevelSessionClient(cfg),
 		LevelVersion:             NewLevelVersionClient(cfg),
 		LoginEvent:               NewLoginEventClient(cfg),
@@ -317,10 +363,16 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		NpcDialogue:              NewNpcDialogueClient(cfg),
 		NpcDialogueVersion:       NewNpcDialogueVersionClient(cfg),
 		PeriodicQuestGrant:       NewPeriodicQuestGrantClient(cfg),
+		ProgressionCurve:         NewProgressionCurveClient(cfg),
+		ProgressionCurveVersion:  NewProgressionCurveVersionClient(cfg),
+		ProgressionLevel:         NewProgressionLevelClient(cfg),
 		QuestDefinition:          NewQuestDefinitionClient(cfg),
 		QuestProgress:            NewQuestProgressClient(cfg),
 		QuestStepAttempt:         NewQuestStepAttemptClient(cfg),
 		QuestVersion:             NewQuestVersionClient(cfg),
+		RewardGrant:              NewRewardGrantClient(cfg),
+		RewardRule:               NewRewardRuleClient(cfg),
+		RewardRuleVersion:        NewRewardRuleVersionClient(cfg),
 		StoryChapter:             NewStoryChapterClient(cfg),
 		StoryChapterVersion:      NewStoryChapterVersionClient(cfg),
 		StoryProgress:            NewStoryProgressClient(cfg),
@@ -329,6 +381,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		WorldAreaUnlock:          NewWorldAreaUnlockClient(cfg),
 		WorldAreaVersion:         NewWorldAreaVersionClient(cfg),
 		WorldUnlockFact:          NewWorldUnlockFactClient(cfg),
+		XpDailyCap:               NewXpDailyCapClient(cfg),
+		XpLedgerEntry:            NewXpLedgerEntryClient(cfg),
 	}, nil
 }
 
@@ -360,12 +414,14 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AvatarPreset, c.CharacterCatalog, c.CharacterCatalogVersion, c.ContentRelease,
 		c.ExplorationProgress, c.GameProfile, c.GameSession, c.InventoryItem,
-		c.ItemDefinition, c.ItemDefinitionVersion, c.LevelDefinition, c.LevelSession,
-		c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
-		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.QuestDefinition, c.QuestProgress,
-		c.QuestStepAttempt, c.QuestVersion, c.StoryChapter, c.StoryChapterVersion,
+		c.ItemDefinition, c.ItemDefinitionVersion, c.LevelDefinition, c.LevelHistory,
+		c.LevelSession, c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
+		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.ProgressionCurve,
+		c.ProgressionCurveVersion, c.ProgressionLevel, c.QuestDefinition,
+		c.QuestProgress, c.QuestStepAttempt, c.QuestVersion, c.RewardGrant,
+		c.RewardRule, c.RewardRuleVersion, c.StoryChapter, c.StoryChapterVersion,
 		c.StoryProgress, c.TenantResourceAssignment, c.WorldArea, c.WorldAreaUnlock,
-		c.WorldAreaVersion, c.WorldUnlockFact,
+		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
 	} {
 		n.Use(hooks...)
 	}
@@ -377,12 +433,14 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AvatarPreset, c.CharacterCatalog, c.CharacterCatalogVersion, c.ContentRelease,
 		c.ExplorationProgress, c.GameProfile, c.GameSession, c.InventoryItem,
-		c.ItemDefinition, c.ItemDefinitionVersion, c.LevelDefinition, c.LevelSession,
-		c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
-		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.QuestDefinition, c.QuestProgress,
-		c.QuestStepAttempt, c.QuestVersion, c.StoryChapter, c.StoryChapterVersion,
+		c.ItemDefinition, c.ItemDefinitionVersion, c.LevelDefinition, c.LevelHistory,
+		c.LevelSession, c.LevelVersion, c.LoginEvent, c.NicknameChange, c.NpcDialogue,
+		c.NpcDialogueVersion, c.PeriodicQuestGrant, c.ProgressionCurve,
+		c.ProgressionCurveVersion, c.ProgressionLevel, c.QuestDefinition,
+		c.QuestProgress, c.QuestStepAttempt, c.QuestVersion, c.RewardGrant,
+		c.RewardRule, c.RewardRuleVersion, c.StoryChapter, c.StoryChapterVersion,
 		c.StoryProgress, c.TenantResourceAssignment, c.WorldArea, c.WorldAreaUnlock,
-		c.WorldAreaVersion, c.WorldUnlockFact,
+		c.WorldAreaVersion, c.WorldUnlockFact, c.XpDailyCap, c.XpLedgerEntry,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -413,6 +471,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ItemDefinitionVersion.mutate(ctx, m)
 	case *LevelDefinitionMutation:
 		return c.LevelDefinition.mutate(ctx, m)
+	case *LevelHistoryMutation:
+		return c.LevelHistory.mutate(ctx, m)
 	case *LevelSessionMutation:
 		return c.LevelSession.mutate(ctx, m)
 	case *LevelVersionMutation:
@@ -427,6 +487,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.NpcDialogueVersion.mutate(ctx, m)
 	case *PeriodicQuestGrantMutation:
 		return c.PeriodicQuestGrant.mutate(ctx, m)
+	case *ProgressionCurveMutation:
+		return c.ProgressionCurve.mutate(ctx, m)
+	case *ProgressionCurveVersionMutation:
+		return c.ProgressionCurveVersion.mutate(ctx, m)
+	case *ProgressionLevelMutation:
+		return c.ProgressionLevel.mutate(ctx, m)
 	case *QuestDefinitionMutation:
 		return c.QuestDefinition.mutate(ctx, m)
 	case *QuestProgressMutation:
@@ -435,6 +501,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.QuestStepAttempt.mutate(ctx, m)
 	case *QuestVersionMutation:
 		return c.QuestVersion.mutate(ctx, m)
+	case *RewardGrantMutation:
+		return c.RewardGrant.mutate(ctx, m)
+	case *RewardRuleMutation:
+		return c.RewardRule.mutate(ctx, m)
+	case *RewardRuleVersionMutation:
+		return c.RewardRuleVersion.mutate(ctx, m)
 	case *StoryChapterMutation:
 		return c.StoryChapter.mutate(ctx, m)
 	case *StoryChapterVersionMutation:
@@ -451,6 +523,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.WorldAreaVersion.mutate(ctx, m)
 	case *WorldUnlockFactMutation:
 		return c.WorldUnlockFact.mutate(ctx, m)
+	case *XpDailyCapMutation:
+		return c.XpDailyCap.mutate(ctx, m)
+	case *XpLedgerEntryMutation:
+		return c.XpLedgerEntry.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -1940,6 +2016,141 @@ func (c *LevelDefinitionClient) mutate(ctx context.Context, m *LevelDefinitionMu
 	}
 }
 
+// LevelHistoryClient is a client for the LevelHistory schema.
+type LevelHistoryClient struct {
+	config
+}
+
+// NewLevelHistoryClient returns a client for the LevelHistory from the given config.
+func NewLevelHistoryClient(c config) *LevelHistoryClient {
+	return &LevelHistoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `levelhistory.Hooks(f(g(h())))`.
+func (c *LevelHistoryClient) Use(hooks ...Hook) {
+	c.hooks.LevelHistory = append(c.hooks.LevelHistory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `levelhistory.Intercept(f(g(h())))`.
+func (c *LevelHistoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.LevelHistory = append(c.inters.LevelHistory, interceptors...)
+}
+
+// Create returns a builder for creating a LevelHistory entity.
+func (c *LevelHistoryClient) Create() *LevelHistoryCreate {
+	mutation := newLevelHistoryMutation(c.config, OpCreate)
+	return &LevelHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of LevelHistory entities.
+func (c *LevelHistoryClient) CreateBulk(builders ...*LevelHistoryCreate) *LevelHistoryCreateBulk {
+	return &LevelHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *LevelHistoryClient) MapCreateBulk(slice any, setFunc func(*LevelHistoryCreate, int)) *LevelHistoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &LevelHistoryCreateBulk{err: fmt.Errorf("calling to LevelHistoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*LevelHistoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &LevelHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for LevelHistory.
+func (c *LevelHistoryClient) Update() *LevelHistoryUpdate {
+	mutation := newLevelHistoryMutation(c.config, OpUpdate)
+	return &LevelHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LevelHistoryClient) UpdateOne(_m *LevelHistory) *LevelHistoryUpdateOne {
+	mutation := newLevelHistoryMutation(c.config, OpUpdateOne, withLevelHistory(_m))
+	return &LevelHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LevelHistoryClient) UpdateOneID(id uuid.UUID) *LevelHistoryUpdateOne {
+	mutation := newLevelHistoryMutation(c.config, OpUpdateOne, withLevelHistoryID(id))
+	return &LevelHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for LevelHistory.
+func (c *LevelHistoryClient) Delete() *LevelHistoryDelete {
+	mutation := newLevelHistoryMutation(c.config, OpDelete)
+	return &LevelHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *LevelHistoryClient) DeleteOne(_m *LevelHistory) *LevelHistoryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *LevelHistoryClient) DeleteOneID(id uuid.UUID) *LevelHistoryDeleteOne {
+	builder := c.Delete().Where(levelhistory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LevelHistoryDeleteOne{builder}
+}
+
+// Query returns a query builder for LevelHistory.
+func (c *LevelHistoryClient) Query() *LevelHistoryQuery {
+	return &LevelHistoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeLevelHistory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a LevelHistory entity by its id.
+func (c *LevelHistoryClient) Get(ctx context.Context, id uuid.UUID) (*LevelHistory, error) {
+	return c.Query().Where(levelhistory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LevelHistoryClient) GetX(ctx context.Context, id uuid.UUID) *LevelHistory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LevelHistoryClient) Hooks() []Hook {
+	hooks := c.hooks.LevelHistory
+	return append(hooks[:len(hooks):len(hooks)], levelhistory.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *LevelHistoryClient) Interceptors() []Interceptor {
+	inters := c.inters.LevelHistory
+	return append(inters[:len(inters):len(inters)], levelhistory.Interceptors[:]...)
+}
+
+func (c *LevelHistoryClient) mutate(ctx context.Context, m *LevelHistoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&LevelHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&LevelHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&LevelHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&LevelHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown LevelHistory mutation op: %q", m.Op())
+	}
+}
+
 // LevelSessionClient is a client for the LevelSession schema.
 type LevelSessionClient struct {
 	config
@@ -2885,6 +3096,410 @@ func (c *PeriodicQuestGrantClient) mutate(ctx context.Context, m *PeriodicQuestG
 	}
 }
 
+// ProgressionCurveClient is a client for the ProgressionCurve schema.
+type ProgressionCurveClient struct {
+	config
+}
+
+// NewProgressionCurveClient returns a client for the ProgressionCurve from the given config.
+func NewProgressionCurveClient(c config) *ProgressionCurveClient {
+	return &ProgressionCurveClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `progressioncurve.Hooks(f(g(h())))`.
+func (c *ProgressionCurveClient) Use(hooks ...Hook) {
+	c.hooks.ProgressionCurve = append(c.hooks.ProgressionCurve, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `progressioncurve.Intercept(f(g(h())))`.
+func (c *ProgressionCurveClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProgressionCurve = append(c.inters.ProgressionCurve, interceptors...)
+}
+
+// Create returns a builder for creating a ProgressionCurve entity.
+func (c *ProgressionCurveClient) Create() *ProgressionCurveCreate {
+	mutation := newProgressionCurveMutation(c.config, OpCreate)
+	return &ProgressionCurveCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProgressionCurve entities.
+func (c *ProgressionCurveClient) CreateBulk(builders ...*ProgressionCurveCreate) *ProgressionCurveCreateBulk {
+	return &ProgressionCurveCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProgressionCurveClient) MapCreateBulk(slice any, setFunc func(*ProgressionCurveCreate, int)) *ProgressionCurveCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProgressionCurveCreateBulk{err: fmt.Errorf("calling to ProgressionCurveClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProgressionCurveCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProgressionCurveCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProgressionCurve.
+func (c *ProgressionCurveClient) Update() *ProgressionCurveUpdate {
+	mutation := newProgressionCurveMutation(c.config, OpUpdate)
+	return &ProgressionCurveUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProgressionCurveClient) UpdateOne(_m *ProgressionCurve) *ProgressionCurveUpdateOne {
+	mutation := newProgressionCurveMutation(c.config, OpUpdateOne, withProgressionCurve(_m))
+	return &ProgressionCurveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProgressionCurveClient) UpdateOneID(id uuid.UUID) *ProgressionCurveUpdateOne {
+	mutation := newProgressionCurveMutation(c.config, OpUpdateOne, withProgressionCurveID(id))
+	return &ProgressionCurveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProgressionCurve.
+func (c *ProgressionCurveClient) Delete() *ProgressionCurveDelete {
+	mutation := newProgressionCurveMutation(c.config, OpDelete)
+	return &ProgressionCurveDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProgressionCurveClient) DeleteOne(_m *ProgressionCurve) *ProgressionCurveDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProgressionCurveClient) DeleteOneID(id uuid.UUID) *ProgressionCurveDeleteOne {
+	builder := c.Delete().Where(progressioncurve.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProgressionCurveDeleteOne{builder}
+}
+
+// Query returns a query builder for ProgressionCurve.
+func (c *ProgressionCurveClient) Query() *ProgressionCurveQuery {
+	return &ProgressionCurveQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProgressionCurve},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProgressionCurve entity by its id.
+func (c *ProgressionCurveClient) Get(ctx context.Context, id uuid.UUID) (*ProgressionCurve, error) {
+	return c.Query().Where(progressioncurve.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProgressionCurveClient) GetX(ctx context.Context, id uuid.UUID) *ProgressionCurve {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProgressionCurveClient) Hooks() []Hook {
+	hooks := c.hooks.ProgressionCurve
+	return append(hooks[:len(hooks):len(hooks)], progressioncurve.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProgressionCurveClient) Interceptors() []Interceptor {
+	inters := c.inters.ProgressionCurve
+	return append(inters[:len(inters):len(inters)], progressioncurve.Interceptors[:]...)
+}
+
+func (c *ProgressionCurveClient) mutate(ctx context.Context, m *ProgressionCurveMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProgressionCurveCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProgressionCurveUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProgressionCurveUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProgressionCurveDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProgressionCurve mutation op: %q", m.Op())
+	}
+}
+
+// ProgressionCurveVersionClient is a client for the ProgressionCurveVersion schema.
+type ProgressionCurveVersionClient struct {
+	config
+}
+
+// NewProgressionCurveVersionClient returns a client for the ProgressionCurveVersion from the given config.
+func NewProgressionCurveVersionClient(c config) *ProgressionCurveVersionClient {
+	return &ProgressionCurveVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `progressioncurveversion.Hooks(f(g(h())))`.
+func (c *ProgressionCurveVersionClient) Use(hooks ...Hook) {
+	c.hooks.ProgressionCurveVersion = append(c.hooks.ProgressionCurveVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `progressioncurveversion.Intercept(f(g(h())))`.
+func (c *ProgressionCurveVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProgressionCurveVersion = append(c.inters.ProgressionCurveVersion, interceptors...)
+}
+
+// Create returns a builder for creating a ProgressionCurveVersion entity.
+func (c *ProgressionCurveVersionClient) Create() *ProgressionCurveVersionCreate {
+	mutation := newProgressionCurveVersionMutation(c.config, OpCreate)
+	return &ProgressionCurveVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProgressionCurveVersion entities.
+func (c *ProgressionCurveVersionClient) CreateBulk(builders ...*ProgressionCurveVersionCreate) *ProgressionCurveVersionCreateBulk {
+	return &ProgressionCurveVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProgressionCurveVersionClient) MapCreateBulk(slice any, setFunc func(*ProgressionCurveVersionCreate, int)) *ProgressionCurveVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProgressionCurveVersionCreateBulk{err: fmt.Errorf("calling to ProgressionCurveVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProgressionCurveVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProgressionCurveVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProgressionCurveVersion.
+func (c *ProgressionCurveVersionClient) Update() *ProgressionCurveVersionUpdate {
+	mutation := newProgressionCurveVersionMutation(c.config, OpUpdate)
+	return &ProgressionCurveVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProgressionCurveVersionClient) UpdateOne(_m *ProgressionCurveVersion) *ProgressionCurveVersionUpdateOne {
+	mutation := newProgressionCurveVersionMutation(c.config, OpUpdateOne, withProgressionCurveVersion(_m))
+	return &ProgressionCurveVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProgressionCurveVersionClient) UpdateOneID(id uuid.UUID) *ProgressionCurveVersionUpdateOne {
+	mutation := newProgressionCurveVersionMutation(c.config, OpUpdateOne, withProgressionCurveVersionID(id))
+	return &ProgressionCurveVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProgressionCurveVersion.
+func (c *ProgressionCurveVersionClient) Delete() *ProgressionCurveVersionDelete {
+	mutation := newProgressionCurveVersionMutation(c.config, OpDelete)
+	return &ProgressionCurveVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProgressionCurveVersionClient) DeleteOne(_m *ProgressionCurveVersion) *ProgressionCurveVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProgressionCurveVersionClient) DeleteOneID(id uuid.UUID) *ProgressionCurveVersionDeleteOne {
+	builder := c.Delete().Where(progressioncurveversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProgressionCurveVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for ProgressionCurveVersion.
+func (c *ProgressionCurveVersionClient) Query() *ProgressionCurveVersionQuery {
+	return &ProgressionCurveVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProgressionCurveVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProgressionCurveVersion entity by its id.
+func (c *ProgressionCurveVersionClient) Get(ctx context.Context, id uuid.UUID) (*ProgressionCurveVersion, error) {
+	return c.Query().Where(progressioncurveversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProgressionCurveVersionClient) GetX(ctx context.Context, id uuid.UUID) *ProgressionCurveVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProgressionCurveVersionClient) Hooks() []Hook {
+	hooks := c.hooks.ProgressionCurveVersion
+	return append(hooks[:len(hooks):len(hooks)], progressioncurveversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProgressionCurveVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.ProgressionCurveVersion
+	return append(inters[:len(inters):len(inters)], progressioncurveversion.Interceptors[:]...)
+}
+
+func (c *ProgressionCurveVersionClient) mutate(ctx context.Context, m *ProgressionCurveVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProgressionCurveVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProgressionCurveVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProgressionCurveVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProgressionCurveVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProgressionCurveVersion mutation op: %q", m.Op())
+	}
+}
+
+// ProgressionLevelClient is a client for the ProgressionLevel schema.
+type ProgressionLevelClient struct {
+	config
+}
+
+// NewProgressionLevelClient returns a client for the ProgressionLevel from the given config.
+func NewProgressionLevelClient(c config) *ProgressionLevelClient {
+	return &ProgressionLevelClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `progressionlevel.Hooks(f(g(h())))`.
+func (c *ProgressionLevelClient) Use(hooks ...Hook) {
+	c.hooks.ProgressionLevel = append(c.hooks.ProgressionLevel, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `progressionlevel.Intercept(f(g(h())))`.
+func (c *ProgressionLevelClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProgressionLevel = append(c.inters.ProgressionLevel, interceptors...)
+}
+
+// Create returns a builder for creating a ProgressionLevel entity.
+func (c *ProgressionLevelClient) Create() *ProgressionLevelCreate {
+	mutation := newProgressionLevelMutation(c.config, OpCreate)
+	return &ProgressionLevelCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProgressionLevel entities.
+func (c *ProgressionLevelClient) CreateBulk(builders ...*ProgressionLevelCreate) *ProgressionLevelCreateBulk {
+	return &ProgressionLevelCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProgressionLevelClient) MapCreateBulk(slice any, setFunc func(*ProgressionLevelCreate, int)) *ProgressionLevelCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProgressionLevelCreateBulk{err: fmt.Errorf("calling to ProgressionLevelClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProgressionLevelCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProgressionLevelCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProgressionLevel.
+func (c *ProgressionLevelClient) Update() *ProgressionLevelUpdate {
+	mutation := newProgressionLevelMutation(c.config, OpUpdate)
+	return &ProgressionLevelUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProgressionLevelClient) UpdateOne(_m *ProgressionLevel) *ProgressionLevelUpdateOne {
+	mutation := newProgressionLevelMutation(c.config, OpUpdateOne, withProgressionLevel(_m))
+	return &ProgressionLevelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProgressionLevelClient) UpdateOneID(id uuid.UUID) *ProgressionLevelUpdateOne {
+	mutation := newProgressionLevelMutation(c.config, OpUpdateOne, withProgressionLevelID(id))
+	return &ProgressionLevelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProgressionLevel.
+func (c *ProgressionLevelClient) Delete() *ProgressionLevelDelete {
+	mutation := newProgressionLevelMutation(c.config, OpDelete)
+	return &ProgressionLevelDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProgressionLevelClient) DeleteOne(_m *ProgressionLevel) *ProgressionLevelDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProgressionLevelClient) DeleteOneID(id uuid.UUID) *ProgressionLevelDeleteOne {
+	builder := c.Delete().Where(progressionlevel.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProgressionLevelDeleteOne{builder}
+}
+
+// Query returns a query builder for ProgressionLevel.
+func (c *ProgressionLevelClient) Query() *ProgressionLevelQuery {
+	return &ProgressionLevelQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProgressionLevel},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProgressionLevel entity by its id.
+func (c *ProgressionLevelClient) Get(ctx context.Context, id uuid.UUID) (*ProgressionLevel, error) {
+	return c.Query().Where(progressionlevel.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProgressionLevelClient) GetX(ctx context.Context, id uuid.UUID) *ProgressionLevel {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProgressionLevelClient) Hooks() []Hook {
+	hooks := c.hooks.ProgressionLevel
+	return append(hooks[:len(hooks):len(hooks)], progressionlevel.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProgressionLevelClient) Interceptors() []Interceptor {
+	return c.inters.ProgressionLevel
+}
+
+func (c *ProgressionLevelClient) mutate(ctx context.Context, m *ProgressionLevelMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProgressionLevelCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProgressionLevelUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProgressionLevelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProgressionLevelDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProgressionLevel mutation op: %q", m.Op())
+	}
+}
+
 // QuestDefinitionClient is a client for the QuestDefinition schema.
 type QuestDefinitionClient struct {
 	config
@@ -3422,6 +4037,411 @@ func (c *QuestVersionClient) mutate(ctx context.Context, m *QuestVersionMutation
 		return (&QuestVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown QuestVersion mutation op: %q", m.Op())
+	}
+}
+
+// RewardGrantClient is a client for the RewardGrant schema.
+type RewardGrantClient struct {
+	config
+}
+
+// NewRewardGrantClient returns a client for the RewardGrant from the given config.
+func NewRewardGrantClient(c config) *RewardGrantClient {
+	return &RewardGrantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rewardgrant.Hooks(f(g(h())))`.
+func (c *RewardGrantClient) Use(hooks ...Hook) {
+	c.hooks.RewardGrant = append(c.hooks.RewardGrant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `rewardgrant.Intercept(f(g(h())))`.
+func (c *RewardGrantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RewardGrant = append(c.inters.RewardGrant, interceptors...)
+}
+
+// Create returns a builder for creating a RewardGrant entity.
+func (c *RewardGrantClient) Create() *RewardGrantCreate {
+	mutation := newRewardGrantMutation(c.config, OpCreate)
+	return &RewardGrantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RewardGrant entities.
+func (c *RewardGrantClient) CreateBulk(builders ...*RewardGrantCreate) *RewardGrantCreateBulk {
+	return &RewardGrantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RewardGrantClient) MapCreateBulk(slice any, setFunc func(*RewardGrantCreate, int)) *RewardGrantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RewardGrantCreateBulk{err: fmt.Errorf("calling to RewardGrantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RewardGrantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RewardGrantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RewardGrant.
+func (c *RewardGrantClient) Update() *RewardGrantUpdate {
+	mutation := newRewardGrantMutation(c.config, OpUpdate)
+	return &RewardGrantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RewardGrantClient) UpdateOne(_m *RewardGrant) *RewardGrantUpdateOne {
+	mutation := newRewardGrantMutation(c.config, OpUpdateOne, withRewardGrant(_m))
+	return &RewardGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RewardGrantClient) UpdateOneID(id uuid.UUID) *RewardGrantUpdateOne {
+	mutation := newRewardGrantMutation(c.config, OpUpdateOne, withRewardGrantID(id))
+	return &RewardGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RewardGrant.
+func (c *RewardGrantClient) Delete() *RewardGrantDelete {
+	mutation := newRewardGrantMutation(c.config, OpDelete)
+	return &RewardGrantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RewardGrantClient) DeleteOne(_m *RewardGrant) *RewardGrantDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RewardGrantClient) DeleteOneID(id uuid.UUID) *RewardGrantDeleteOne {
+	builder := c.Delete().Where(rewardgrant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RewardGrantDeleteOne{builder}
+}
+
+// Query returns a query builder for RewardGrant.
+func (c *RewardGrantClient) Query() *RewardGrantQuery {
+	return &RewardGrantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRewardGrant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RewardGrant entity by its id.
+func (c *RewardGrantClient) Get(ctx context.Context, id uuid.UUID) (*RewardGrant, error) {
+	return c.Query().Where(rewardgrant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RewardGrantClient) GetX(ctx context.Context, id uuid.UUID) *RewardGrant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RewardGrantClient) Hooks() []Hook {
+	hooks := c.hooks.RewardGrant
+	return append(hooks[:len(hooks):len(hooks)], rewardgrant.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RewardGrantClient) Interceptors() []Interceptor {
+	inters := c.inters.RewardGrant
+	return append(inters[:len(inters):len(inters)], rewardgrant.Interceptors[:]...)
+}
+
+func (c *RewardGrantClient) mutate(ctx context.Context, m *RewardGrantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RewardGrantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RewardGrantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RewardGrantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RewardGrantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RewardGrant mutation op: %q", m.Op())
+	}
+}
+
+// RewardRuleClient is a client for the RewardRule schema.
+type RewardRuleClient struct {
+	config
+}
+
+// NewRewardRuleClient returns a client for the RewardRule from the given config.
+func NewRewardRuleClient(c config) *RewardRuleClient {
+	return &RewardRuleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rewardrule.Hooks(f(g(h())))`.
+func (c *RewardRuleClient) Use(hooks ...Hook) {
+	c.hooks.RewardRule = append(c.hooks.RewardRule, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `rewardrule.Intercept(f(g(h())))`.
+func (c *RewardRuleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RewardRule = append(c.inters.RewardRule, interceptors...)
+}
+
+// Create returns a builder for creating a RewardRule entity.
+func (c *RewardRuleClient) Create() *RewardRuleCreate {
+	mutation := newRewardRuleMutation(c.config, OpCreate)
+	return &RewardRuleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RewardRule entities.
+func (c *RewardRuleClient) CreateBulk(builders ...*RewardRuleCreate) *RewardRuleCreateBulk {
+	return &RewardRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RewardRuleClient) MapCreateBulk(slice any, setFunc func(*RewardRuleCreate, int)) *RewardRuleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RewardRuleCreateBulk{err: fmt.Errorf("calling to RewardRuleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RewardRuleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RewardRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RewardRule.
+func (c *RewardRuleClient) Update() *RewardRuleUpdate {
+	mutation := newRewardRuleMutation(c.config, OpUpdate)
+	return &RewardRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RewardRuleClient) UpdateOne(_m *RewardRule) *RewardRuleUpdateOne {
+	mutation := newRewardRuleMutation(c.config, OpUpdateOne, withRewardRule(_m))
+	return &RewardRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RewardRuleClient) UpdateOneID(id uuid.UUID) *RewardRuleUpdateOne {
+	mutation := newRewardRuleMutation(c.config, OpUpdateOne, withRewardRuleID(id))
+	return &RewardRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RewardRule.
+func (c *RewardRuleClient) Delete() *RewardRuleDelete {
+	mutation := newRewardRuleMutation(c.config, OpDelete)
+	return &RewardRuleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RewardRuleClient) DeleteOne(_m *RewardRule) *RewardRuleDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RewardRuleClient) DeleteOneID(id uuid.UUID) *RewardRuleDeleteOne {
+	builder := c.Delete().Where(rewardrule.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RewardRuleDeleteOne{builder}
+}
+
+// Query returns a query builder for RewardRule.
+func (c *RewardRuleClient) Query() *RewardRuleQuery {
+	return &RewardRuleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRewardRule},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RewardRule entity by its id.
+func (c *RewardRuleClient) Get(ctx context.Context, id uuid.UUID) (*RewardRule, error) {
+	return c.Query().Where(rewardrule.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RewardRuleClient) GetX(ctx context.Context, id uuid.UUID) *RewardRule {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RewardRuleClient) Hooks() []Hook {
+	hooks := c.hooks.RewardRule
+	return append(hooks[:len(hooks):len(hooks)], rewardrule.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RewardRuleClient) Interceptors() []Interceptor {
+	inters := c.inters.RewardRule
+	return append(inters[:len(inters):len(inters)], rewardrule.Interceptors[:]...)
+}
+
+func (c *RewardRuleClient) mutate(ctx context.Context, m *RewardRuleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RewardRuleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RewardRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RewardRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RewardRuleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RewardRule mutation op: %q", m.Op())
+	}
+}
+
+// RewardRuleVersionClient is a client for the RewardRuleVersion schema.
+type RewardRuleVersionClient struct {
+	config
+}
+
+// NewRewardRuleVersionClient returns a client for the RewardRuleVersion from the given config.
+func NewRewardRuleVersionClient(c config) *RewardRuleVersionClient {
+	return &RewardRuleVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rewardruleversion.Hooks(f(g(h())))`.
+func (c *RewardRuleVersionClient) Use(hooks ...Hook) {
+	c.hooks.RewardRuleVersion = append(c.hooks.RewardRuleVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `rewardruleversion.Intercept(f(g(h())))`.
+func (c *RewardRuleVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RewardRuleVersion = append(c.inters.RewardRuleVersion, interceptors...)
+}
+
+// Create returns a builder for creating a RewardRuleVersion entity.
+func (c *RewardRuleVersionClient) Create() *RewardRuleVersionCreate {
+	mutation := newRewardRuleVersionMutation(c.config, OpCreate)
+	return &RewardRuleVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RewardRuleVersion entities.
+func (c *RewardRuleVersionClient) CreateBulk(builders ...*RewardRuleVersionCreate) *RewardRuleVersionCreateBulk {
+	return &RewardRuleVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RewardRuleVersionClient) MapCreateBulk(slice any, setFunc func(*RewardRuleVersionCreate, int)) *RewardRuleVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RewardRuleVersionCreateBulk{err: fmt.Errorf("calling to RewardRuleVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RewardRuleVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RewardRuleVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RewardRuleVersion.
+func (c *RewardRuleVersionClient) Update() *RewardRuleVersionUpdate {
+	mutation := newRewardRuleVersionMutation(c.config, OpUpdate)
+	return &RewardRuleVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RewardRuleVersionClient) UpdateOne(_m *RewardRuleVersion) *RewardRuleVersionUpdateOne {
+	mutation := newRewardRuleVersionMutation(c.config, OpUpdateOne, withRewardRuleVersion(_m))
+	return &RewardRuleVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RewardRuleVersionClient) UpdateOneID(id uuid.UUID) *RewardRuleVersionUpdateOne {
+	mutation := newRewardRuleVersionMutation(c.config, OpUpdateOne, withRewardRuleVersionID(id))
+	return &RewardRuleVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RewardRuleVersion.
+func (c *RewardRuleVersionClient) Delete() *RewardRuleVersionDelete {
+	mutation := newRewardRuleVersionMutation(c.config, OpDelete)
+	return &RewardRuleVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RewardRuleVersionClient) DeleteOne(_m *RewardRuleVersion) *RewardRuleVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RewardRuleVersionClient) DeleteOneID(id uuid.UUID) *RewardRuleVersionDeleteOne {
+	builder := c.Delete().Where(rewardruleversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RewardRuleVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for RewardRuleVersion.
+func (c *RewardRuleVersionClient) Query() *RewardRuleVersionQuery {
+	return &RewardRuleVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRewardRuleVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RewardRuleVersion entity by its id.
+func (c *RewardRuleVersionClient) Get(ctx context.Context, id uuid.UUID) (*RewardRuleVersion, error) {
+	return c.Query().Where(rewardruleversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RewardRuleVersionClient) GetX(ctx context.Context, id uuid.UUID) *RewardRuleVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RewardRuleVersionClient) Hooks() []Hook {
+	hooks := c.hooks.RewardRuleVersion
+	return append(hooks[:len(hooks):len(hooks)], rewardruleversion.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *RewardRuleVersionClient) Interceptors() []Interceptor {
+	inters := c.inters.RewardRuleVersion
+	return append(inters[:len(inters):len(inters)], rewardruleversion.Interceptors[:]...)
+}
+
+func (c *RewardRuleVersionClient) mutate(ctx context.Context, m *RewardRuleVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RewardRuleVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RewardRuleVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RewardRuleVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RewardRuleVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RewardRuleVersion mutation op: %q", m.Op())
 	}
 }
 
@@ -4505,25 +5525,301 @@ func (c *WorldUnlockFactClient) mutate(ctx context.Context, m *WorldUnlockFactMu
 	}
 }
 
+// XpDailyCapClient is a client for the XpDailyCap schema.
+type XpDailyCapClient struct {
+	config
+}
+
+// NewXpDailyCapClient returns a client for the XpDailyCap from the given config.
+func NewXpDailyCapClient(c config) *XpDailyCapClient {
+	return &XpDailyCapClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `xpdailycap.Hooks(f(g(h())))`.
+func (c *XpDailyCapClient) Use(hooks ...Hook) {
+	c.hooks.XpDailyCap = append(c.hooks.XpDailyCap, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `xpdailycap.Intercept(f(g(h())))`.
+func (c *XpDailyCapClient) Intercept(interceptors ...Interceptor) {
+	c.inters.XpDailyCap = append(c.inters.XpDailyCap, interceptors...)
+}
+
+// Create returns a builder for creating a XpDailyCap entity.
+func (c *XpDailyCapClient) Create() *XpDailyCapCreate {
+	mutation := newXpDailyCapMutation(c.config, OpCreate)
+	return &XpDailyCapCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of XpDailyCap entities.
+func (c *XpDailyCapClient) CreateBulk(builders ...*XpDailyCapCreate) *XpDailyCapCreateBulk {
+	return &XpDailyCapCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *XpDailyCapClient) MapCreateBulk(slice any, setFunc func(*XpDailyCapCreate, int)) *XpDailyCapCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &XpDailyCapCreateBulk{err: fmt.Errorf("calling to XpDailyCapClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*XpDailyCapCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &XpDailyCapCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for XpDailyCap.
+func (c *XpDailyCapClient) Update() *XpDailyCapUpdate {
+	mutation := newXpDailyCapMutation(c.config, OpUpdate)
+	return &XpDailyCapUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *XpDailyCapClient) UpdateOne(_m *XpDailyCap) *XpDailyCapUpdateOne {
+	mutation := newXpDailyCapMutation(c.config, OpUpdateOne, withXpDailyCap(_m))
+	return &XpDailyCapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *XpDailyCapClient) UpdateOneID(id uuid.UUID) *XpDailyCapUpdateOne {
+	mutation := newXpDailyCapMutation(c.config, OpUpdateOne, withXpDailyCapID(id))
+	return &XpDailyCapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for XpDailyCap.
+func (c *XpDailyCapClient) Delete() *XpDailyCapDelete {
+	mutation := newXpDailyCapMutation(c.config, OpDelete)
+	return &XpDailyCapDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *XpDailyCapClient) DeleteOne(_m *XpDailyCap) *XpDailyCapDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *XpDailyCapClient) DeleteOneID(id uuid.UUID) *XpDailyCapDeleteOne {
+	builder := c.Delete().Where(xpdailycap.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &XpDailyCapDeleteOne{builder}
+}
+
+// Query returns a query builder for XpDailyCap.
+func (c *XpDailyCapClient) Query() *XpDailyCapQuery {
+	return &XpDailyCapQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeXpDailyCap},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a XpDailyCap entity by its id.
+func (c *XpDailyCapClient) Get(ctx context.Context, id uuid.UUID) (*XpDailyCap, error) {
+	return c.Query().Where(xpdailycap.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *XpDailyCapClient) GetX(ctx context.Context, id uuid.UUID) *XpDailyCap {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *XpDailyCapClient) Hooks() []Hook {
+	hooks := c.hooks.XpDailyCap
+	return append(hooks[:len(hooks):len(hooks)], xpdailycap.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *XpDailyCapClient) Interceptors() []Interceptor {
+	inters := c.inters.XpDailyCap
+	return append(inters[:len(inters):len(inters)], xpdailycap.Interceptors[:]...)
+}
+
+func (c *XpDailyCapClient) mutate(ctx context.Context, m *XpDailyCapMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&XpDailyCapCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&XpDailyCapUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&XpDailyCapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&XpDailyCapDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown XpDailyCap mutation op: %q", m.Op())
+	}
+}
+
+// XpLedgerEntryClient is a client for the XpLedgerEntry schema.
+type XpLedgerEntryClient struct {
+	config
+}
+
+// NewXpLedgerEntryClient returns a client for the XpLedgerEntry from the given config.
+func NewXpLedgerEntryClient(c config) *XpLedgerEntryClient {
+	return &XpLedgerEntryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `xpledgerentry.Hooks(f(g(h())))`.
+func (c *XpLedgerEntryClient) Use(hooks ...Hook) {
+	c.hooks.XpLedgerEntry = append(c.hooks.XpLedgerEntry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `xpledgerentry.Intercept(f(g(h())))`.
+func (c *XpLedgerEntryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.XpLedgerEntry = append(c.inters.XpLedgerEntry, interceptors...)
+}
+
+// Create returns a builder for creating a XpLedgerEntry entity.
+func (c *XpLedgerEntryClient) Create() *XpLedgerEntryCreate {
+	mutation := newXpLedgerEntryMutation(c.config, OpCreate)
+	return &XpLedgerEntryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of XpLedgerEntry entities.
+func (c *XpLedgerEntryClient) CreateBulk(builders ...*XpLedgerEntryCreate) *XpLedgerEntryCreateBulk {
+	return &XpLedgerEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *XpLedgerEntryClient) MapCreateBulk(slice any, setFunc func(*XpLedgerEntryCreate, int)) *XpLedgerEntryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &XpLedgerEntryCreateBulk{err: fmt.Errorf("calling to XpLedgerEntryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*XpLedgerEntryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &XpLedgerEntryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for XpLedgerEntry.
+func (c *XpLedgerEntryClient) Update() *XpLedgerEntryUpdate {
+	mutation := newXpLedgerEntryMutation(c.config, OpUpdate)
+	return &XpLedgerEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *XpLedgerEntryClient) UpdateOne(_m *XpLedgerEntry) *XpLedgerEntryUpdateOne {
+	mutation := newXpLedgerEntryMutation(c.config, OpUpdateOne, withXpLedgerEntry(_m))
+	return &XpLedgerEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *XpLedgerEntryClient) UpdateOneID(id uuid.UUID) *XpLedgerEntryUpdateOne {
+	mutation := newXpLedgerEntryMutation(c.config, OpUpdateOne, withXpLedgerEntryID(id))
+	return &XpLedgerEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for XpLedgerEntry.
+func (c *XpLedgerEntryClient) Delete() *XpLedgerEntryDelete {
+	mutation := newXpLedgerEntryMutation(c.config, OpDelete)
+	return &XpLedgerEntryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *XpLedgerEntryClient) DeleteOne(_m *XpLedgerEntry) *XpLedgerEntryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *XpLedgerEntryClient) DeleteOneID(id uuid.UUID) *XpLedgerEntryDeleteOne {
+	builder := c.Delete().Where(xpledgerentry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &XpLedgerEntryDeleteOne{builder}
+}
+
+// Query returns a query builder for XpLedgerEntry.
+func (c *XpLedgerEntryClient) Query() *XpLedgerEntryQuery {
+	return &XpLedgerEntryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeXpLedgerEntry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a XpLedgerEntry entity by its id.
+func (c *XpLedgerEntryClient) Get(ctx context.Context, id uuid.UUID) (*XpLedgerEntry, error) {
+	return c.Query().Where(xpledgerentry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *XpLedgerEntryClient) GetX(ctx context.Context, id uuid.UUID) *XpLedgerEntry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *XpLedgerEntryClient) Hooks() []Hook {
+	hooks := c.hooks.XpLedgerEntry
+	return append(hooks[:len(hooks):len(hooks)], xpledgerentry.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *XpLedgerEntryClient) Interceptors() []Interceptor {
+	inters := c.inters.XpLedgerEntry
+	return append(inters[:len(inters):len(inters)], xpledgerentry.Interceptors[:]...)
+}
+
+func (c *XpLedgerEntryClient) mutate(ctx context.Context, m *XpLedgerEntryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&XpLedgerEntryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&XpLedgerEntryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&XpLedgerEntryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&XpLedgerEntryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown XpLedgerEntry mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
 		AvatarPreset, CharacterCatalog, CharacterCatalogVersion, ContentRelease,
 		ExplorationProgress, GameProfile, GameSession, InventoryItem, ItemDefinition,
-		ItemDefinitionVersion, LevelDefinition, LevelSession, LevelVersion, LoginEvent,
-		NicknameChange, NpcDialogue, NpcDialogueVersion, PeriodicQuestGrant,
-		QuestDefinition, QuestProgress, QuestStepAttempt, QuestVersion, StoryChapter,
+		ItemDefinitionVersion, LevelDefinition, LevelHistory, LevelSession,
+		LevelVersion, LoginEvent, NicknameChange, NpcDialogue, NpcDialogueVersion,
+		PeriodicQuestGrant, ProgressionCurve, ProgressionCurveVersion,
+		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
+		QuestVersion, RewardGrant, RewardRule, RewardRuleVersion, StoryChapter,
 		StoryChapterVersion, StoryProgress, TenantResourceAssignment, WorldArea,
-		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact []ent.Hook
+		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact, XpDailyCap,
+		XpLedgerEntry []ent.Hook
 	}
 	inters struct {
 		AvatarPreset, CharacterCatalog, CharacterCatalogVersion, ContentRelease,
 		ExplorationProgress, GameProfile, GameSession, InventoryItem, ItemDefinition,
-		ItemDefinitionVersion, LevelDefinition, LevelSession, LevelVersion, LoginEvent,
-		NicknameChange, NpcDialogue, NpcDialogueVersion, PeriodicQuestGrant,
-		QuestDefinition, QuestProgress, QuestStepAttempt, QuestVersion, StoryChapter,
+		ItemDefinitionVersion, LevelDefinition, LevelHistory, LevelSession,
+		LevelVersion, LoginEvent, NicknameChange, NpcDialogue, NpcDialogueVersion,
+		PeriodicQuestGrant, ProgressionCurve, ProgressionCurveVersion,
+		ProgressionLevel, QuestDefinition, QuestProgress, QuestStepAttempt,
+		QuestVersion, RewardGrant, RewardRule, RewardRuleVersion, StoryChapter,
 		StoryChapterVersion, StoryProgress, TenantResourceAssignment, WorldArea,
-		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact []ent.Interceptor
+		WorldAreaUnlock, WorldAreaVersion, WorldUnlockFact, XpDailyCap,
+		XpLedgerEntry []ent.Interceptor
 	}
 )
 
@@ -4541,6 +5837,7 @@ var (
 		ItemDefinition:           tableSchemas[0],
 		ItemDefinitionVersion:    tableSchemas[0],
 		LevelDefinition:          tableSchemas[0],
+		LevelHistory:             tableSchemas[0],
 		LevelSession:             tableSchemas[0],
 		LevelVersion:             tableSchemas[0],
 		LoginEvent:               tableSchemas[0],
@@ -4548,20 +5845,28 @@ var (
 		NpcDialogue:              tableSchemas[0],
 		NpcDialogueVersion:       tableSchemas[0],
 		PeriodicQuestGrant:       tableSchemas[0],
+		ProgressionCurve:         tableSchemas[0],
+		ProgressionCurveVersion:  tableSchemas[0],
+		ProgressionLevel:         tableSchemas[0],
 		QuestDefinition:          tableSchemas[0],
 		QuestProgress:            tableSchemas[0],
 		QuestStepAttempt:         tableSchemas[0],
 		QuestVersion:             tableSchemas[0],
+		RewardGrant:              tableSchemas[1],
+		RewardRule:               tableSchemas[1],
+		RewardRuleVersion:        tableSchemas[1],
 		StoryChapter:             tableSchemas[0],
 		StoryChapterVersion:      tableSchemas[0],
 		StoryProgress:            tableSchemas[0],
-		TenantResourceAssignment: tableSchemas[1],
+		TenantResourceAssignment: tableSchemas[2],
 		WorldArea:                tableSchemas[0],
 		WorldAreaUnlock:          tableSchemas[0],
 		WorldAreaVersion:         tableSchemas[0],
 		WorldUnlockFact:          tableSchemas[0],
+		XpDailyCap:               tableSchemas[1],
+		XpLedgerEntry:            tableSchemas[1],
 	}
-	tableSchemas = [...]string{"game", "infra"}
+	tableSchemas = [...]string{"game", "gamification", "infra"}
 )
 
 // SchemaConfig represents alternative schema names for all tables

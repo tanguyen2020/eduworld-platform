@@ -303,6 +303,20 @@ func (_c *GameProfileCreate) SetNillableLastGameLoginAt(v *time.Time) *GameProfi
 	return _c
 }
 
+// SetGradeTransitionYear sets the "grade_transition_year" field.
+func (_c *GameProfileCreate) SetGradeTransitionYear(v string) *GameProfileCreate {
+	_c.mutation.SetGradeTransitionYear(v)
+	return _c
+}
+
+// SetNillableGradeTransitionYear sets the "grade_transition_year" field if the given value is not nil.
+func (_c *GameProfileCreate) SetNillableGradeTransitionYear(v *string) *GameProfileCreate {
+	if v != nil {
+		_c.SetGradeTransitionYear(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *GameProfileCreate) SetID(v uuid.UUID) *GameProfileCreate {
 	_c.mutation.SetID(v)
@@ -453,6 +467,11 @@ func (_c *GameProfileCreate) check() error {
 			return &ValidationError{Name: "preferred_language", err: fmt.Errorf(`ent: validator failed for field "GameProfile.preferred_language": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.GradeTransitionYear(); ok {
+		if err := gameprofile.GradeTransitionYearValidator(v); err != nil {
+			return &ValidationError{Name: "grade_transition_year", err: fmt.Errorf(`ent: validator failed for field "GameProfile.grade_transition_year": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -580,6 +599,10 @@ func (_c *GameProfileCreate) createSpec() (*GameProfile, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.LastGameLoginAt(); ok {
 		_spec.SetField(gameprofile.FieldLastGameLoginAt, field.TypeTime, value)
 		_node.LastGameLoginAt = &value
+	}
+	if value, ok := _c.mutation.GradeTransitionYear(); ok {
+		_spec.SetField(gameprofile.FieldGradeTransitionYear, field.TypeString, value)
+		_node.GradeTransitionYear = &value
 	}
 	return _node, _spec
 }

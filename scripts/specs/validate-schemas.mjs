@@ -20,6 +20,7 @@ const EXAMPLES = {
   'chat-policy.platform-default.json': 'schemas/chat-policy.schema.json',
   'sensitive-term-catalog.placeholder.json': 'schemas/sensitive-term-catalog.schema.json',
   'progression-curve.default.json': 'schemas/progression-curve.schema.json',
+  'reward-rule.activity-completed.json': 'schemas/reward-rule.schema.json',
   'challenge.math-g3-time-attack.json': 'schemas/challenge.schema.json',
   'boss.math-fraction-dragon.json': 'schemas/boss.schema.json',
   'achievement.explorer-math-zone.json': 'schemas/achievement.schema.json',

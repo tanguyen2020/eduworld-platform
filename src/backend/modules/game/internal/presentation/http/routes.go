@@ -69,6 +69,8 @@ type Handlers struct {
 	// Quests and QuestQueries are the F072 quest use cases.
 	Quests       QuestCommands
 	QuestQueries QuestQueries
+	// ProgressionQueries are the F074 progression read use cases.
+	ProgressionQueries ProgressionQueries
 	// IPHasher hashes the client address for game.login_events.ip_hash (nil = no hash). The raw IP stops here.
 	IPHasher port.IPHasher
 }
@@ -142,6 +144,14 @@ var Operations = map[string]httpx.Operation{
 		httpx.IdempotencyRequired, http.StatusOK, httpx.GuardGamePlayer),
 	"startQuestActivity": op("startQuestActivity", http.MethodPost, "/game/quests/{quest_id}/steps/{step_id}/activities:start",
 		httpx.TenantRequired, httpx.IdempotencyRequired, http.StatusCreated, httpx.GuardGamePlayer),
+	// F074 progression (game_player, X-Tenant-Id; read only, the student is always the principal).
+	"getProgression": op("getProgression", http.MethodGet, "/game/progression", httpx.TenantRequired, httpx.IdempotencyNone, http.StatusOK,
+		httpx.GuardGamePlayer),
+	"listXpHistory": op("listXpHistory", http.MethodGet, "/game/progression/xp-history", httpx.TenantRequired, httpx.IdempotencyNone,
+		http.StatusOK, httpx.GuardGamePlayer),
+	"listProgressionLevels": op("listProgressionLevels", http.MethodGet, "/game/progression/levels", httpx.TenantRequired,
+		httpx.IdempotencyNone, http.StatusOK, httpx.GuardGamePlayer),
+	"getXpStatus": op("getXpStatus", http.MethodGet, "/game/xp", httpx.TenantRequired, httpx.IdempotencyNone, http.StatusOK, httpx.GuardGamePlayer),
 }
 
 // PlayerOperations are the player routes of F014 (F014-AC-18: staff tokens get 403 GAME_ACCESS_STUDENT_ONLY).
@@ -149,13 +159,13 @@ var PlayerOperations = []string{"createGameSession", "endGameSession", "heartbea
 	"createRealtimeTicket", "getGameProfile", "updateGameProfile", "suggestNicknames", "updateAvatar", "listAvatarPresets",
 	"saveAvatarPreset", "getCharacterCatalog", "getWorldManifest", "listWorldAreas", "enterWorldArea", "startLevel", "endLevelSession",
 	"getNpcDialogue", "getWorldExploration", "reportDiscovery", "listQuests", "getQuest", "acceptQuest", "abandonQuest", "reportQuestStep",
-	"startQuestActivity"}
+	"startQuestActivity", "getProgression", "listXpHistory", "listProgressionLevels", "getXpStatus"}
 
 // Register mounts every F014 operation on the server.
 func Register(s *httpx.Server, h Handlers) error {
 	if h.Sessions == nil || h.ClientConfig == nil || h.Manifest == nil || h.LoginEvents == nil || h.Tickets == nil ||
-		h.Profiles == nil || h.ProfileQueries == nil || h.World == nil || h.WorldQueries == nil || h.Quests == nil || h.QuestQueries == nil {
-		return errors.New("game: every F014/F090/F070/F071/F072 handler is required")
+		h.Profiles == nil || h.ProfileQueries == nil || h.World == nil || h.WorldQueries == nil || h.Quests == nil || h.QuestQueries == nil || h.ProgressionQueries == nil {
+		return errors.New("game: every F014/F090/F070/F071/F072/F074 handler is required")
 	}
 	routes := map[string]http.HandlerFunc{
 		"createGameSession":            h.createGameSession,
@@ -171,6 +181,9 @@ func Register(s *httpx.Server, h Handlers) error {
 		routes[id] = fn
 	}
 	for id, fn := range h.questRoutes() {
+		routes[id] = fn
+	}
+	for id, fn := range h.progressionRoutes() {
 		routes[id] = fn
 	}
 	for id, fn := range h.profileRoutes() {

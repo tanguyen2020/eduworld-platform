@@ -57,7 +57,7 @@ func (f Facade) MergeUserData(ctx context.Context, req api.MergeUserDataRequestO
 	if req.Body == nil {
 		return nil, problem.Invalid("body", problem.SubRequired, "merge request required")
 	}
-	status, reason, err := f.Lifecycle.Merge(ctx, req.UserId, req.Body.TargetUserId)
+	status, reason, err := f.Lifecycle.Merge(ctx, req.UserId, req.Body.TargetUserId, req.Body.MergeId)
 	if err != nil {
 		return nil, err
 	}

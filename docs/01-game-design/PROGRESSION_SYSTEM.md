@@ -1,6 +1,6 @@
 # Progression System — XP, Level, phần thưởng lên cấp
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Game Systems Designer · Cập nhật: 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.4 · Owner: Game Director + Game Systems Designer · Cập nhật: 2026-11-23 (F074: ngày cap theo lịch ICT, đếm giảm dần, `curve-rollout`, `progression-levels`, `reward.granted`) · 2026-11-21 (ADR-0095: bỏ lớp, theo khối) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [LEARNING_ANALYTICS](../02-learning/LEARNING_ANALYTICS.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [ADR-0018, ADR-0043, ADR-0049](../adr/README.md)
 
 ## 1. Mục đích và phạm vi
@@ -60,7 +60,8 @@ Không có XP cho: đăng nhập hằng ngày đơn thuần, thời gian online,
 
 Tài liệu này **sở hữu** các quy tắc XP dưới đây; [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) chỉ mô tả cách phát hiện và xử lý gian lận:
 - Giảm dần khi lặp cùng nội dung, trong cửa sổ 7 ngày theo content version: lần 1 = 100%, lần 2 = 50%, lần 3 = 25%, từ lần 4 = 0% [Confirmed].
-- Cap tổng **1.000 XP/ngày** và cap theo nhóm nguồn (`xp_daily_caps`) [Confirmed].
+- Cap tổng **1.000 XP/ngày** và cap theo nhóm nguồn (`xp_daily_caps`) [Confirmed]. **Ngày** của cap là ngày lịch `Asia/Ho_Chi_Minh` (00:00–24:00 ICT) [Confirmed — F074]. Bucket: `xp:total` (cap tổng) và bucket của rule (`caps.bucket`, mặc định `xp:src:<source_type>`, cap `caps.xp_per_day` ≥ 1); hai event đồng thời không vượt cap (khóa dòng counter trong transaction cấp thưởng).
+- Thứ tự tính một rule: điều kiện → XP gốc (`amount` + `per_correct_answer` × số câu đúng lần đầu) → hệ số khối → hệ số lặp → cắt cap; làm tròn xuống. Đếm lặp theo `(student_id, content_version_id, source_code)` trong cửa sổ; bút toán 0 XP vẫn được ghi (đếm lần hoàn thành, cờ `capped`).
 - Câu sai không cho XP; câu đúng sau khi đã xem giải thích của chính câu đó: 0 XP.
 - Nội dung có độ khó thấp hơn khối hiện tại của học sinh ≥ 2 khối: XP × 0,25 [Confirmed], **trừ** hoạt động ôn tập LO tiên quyết do **hệ thống gợi ý** (attempt mang `recommendation_id` từ recommendation rule R3, [LEARNING_ANALYTICS §6](../02-learning/LEARNING_ANALYTICS.md#6-recommendation-rules)) hoặc do **nhà trường giao** (attempt mode `assignment`): các hoạt động này nhận XP đầy đủ, để XP không ngược với gợi ý ôn tập [Confirmed]. Giảm dần khi lặp và cap ngày vẫn áp dụng.
 - Cap Xu/ngày và cách Xu áp cùng cơ chế giảm dần: [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) (nơi sở hữu).
@@ -107,7 +108,8 @@ Mục tiêu cân bằng [Confirmed]: học sinh chơi đều 20–30 phút/ngày
 
 ### 4.2. Đổi đường cong khi đang vận hành
 
-- Publish version mới của curve **không làm giảm level** của ai. Level hiện tại giữ nguyên; XP còn thiếu tính theo curve mới từ level hiện tại (`level_floor_protection = true`).
+- Publish version mới của curve **không làm giảm level** của ai. Level hiện tại giữ nguyên; XP còn thiếu tính theo curve mới từ level hiện tại (`level_floor_protection = true`): `xp_to_next` = ngưỡng tích lũy của level kế theo curve mới − `xp_total`, `xp_in_level` không âm.
+- Job `curve-rollout` (module game, worker jobs) chuyển dần mọi hồ sơ chưa ở curve version hiện hành sang version đó, mỗi hồ sơ một transaction trong tenant của nó; chạy lại không đổi gì (F074).
 - Khi curve mới khiến một học sinh đủ XP lên nhiều cấp, server phát lần lượt từng `level.reached` (có gộp thông báo ở client).
 - `game_profiles` lưu `curve_version` đang áp dụng.
 
@@ -187,10 +189,11 @@ Học sinh ở lại khối (`grade_level` không đổi): không có thay đổ
 | Bảng | Loại | Cột chính |
 |---|---|---|
 | `progression_curves`, `progression_curve_versions` | G, có con trỏ `current_version_id` | `formula jsonb`, `max_level`, `level_overrides jsonb`, `titles jsonb` |
-| `progression_levels` | G | `curve_version_id`, `level`, `xp_required`, `title_code`, `rewards jsonb` |
+| `progression_levels` | GA | `curve_version_id`, `level`, `xp_required` (NULL tại `max_level`), `xp_cumulative`, `title_code`, `rewards jsonb` — sinh khi publish curve |
 | `xp_ledger` | T, P (tháng) | §3.3 |
-| `xp_daily_caps` | T | `student_id`, `date`, `bucket`, `granted` |
-| `level_history` | T | §4.6 |
+| `xp_daily_caps` | T | `student_id`, `cap_date` (ngày ICT), `bucket`, `granted` |
+| `reward_grants` | TA | `trigger_kind` (`event_rule`, `level_up`), `grants jsonb`, `idempotency_key` — thưởng lên cấp idempotent theo `(student_id, level, curve_id)` |
+| `level_history` | TA | §4.6 |
 
 Chi tiết DDL: [DATABASE_DESIGN §2.8a](../07-backend/DATABASE_DESIGN.md).
 
@@ -204,7 +207,7 @@ Học sinh (`/api/v1/game`, module game):
 | GET | `/game/progression/xp-history?cursor=` | Lịch sử giao dịch XP (thân thiện) | T |
 | GET | `/game/progression/levels` | Bảng level + phần thưởng sắp tới (theo curve hiện hành) | T |
 
-Cấu hình (`/api/v1/game-admin/{config_type}`, platform-only): `progression-curves`, `progression_levels` (bảng level dùng trường `xp_required`). API khám phá/mở vùng: [WORLD_DESIGN](WORLD_DESIGN.md) §12.
+Cấu hình (`/api/v1/game-admin/{config_type}`, platform-only, permission `game.progression.write` / `game.reward_rule.write`; HTTP ở F078): `progression-curves`, `progression-levels` (bảng level chỉ đọc/ghi đè theo level, trường `xp_required`), `reward-rules`. Trước F078 nội dung published nạp bằng lệnh seed của module game (`seed/progression`). API khám phá/mở vùng: [WORLD_DESIGN](WORLD_DESIGN.md) §12.
 
 ## 8. Event
 
@@ -212,6 +215,7 @@ Cấu hình (`/api/v1/game-admin/{config_type}`, platform-only): `progression-cu
 |---|---|---|
 | `xp.awarded` | module game | `amount`, `source_code`, `source_id`, `rule_id`, `capped` |
 | `level.reached` | module game | `from_level`, `to_level`, `curve_version`, `title_code` |
+| `reward.granted` | module game | `grant_id`, `trigger_kind`, `items[]`, `xp`, `source_event_id` |
 
 ## 9. Lỗi
 

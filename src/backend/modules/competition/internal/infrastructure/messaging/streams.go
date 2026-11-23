@@ -108,3 +108,10 @@ const LeaderboardEffortName = "competition.leaderboard_effort"
 
 // LeaderboardEffortEvents are the learning events it handles.
 var LeaderboardEffortEvents = []string{"activity.graded"}
+
+// LeaderboardXPName credits the xp metric of the friends boards from the XP postings of module game (F074 T042,
+// friends_xp_weekly of the F106 seed).
+const LeaderboardXPName = "competition.leaderboard_xp"
+
+// LeaderboardXPEvents are the game events it handles (owner F074).
+var LeaderboardXPEvents = []string{"xp.awarded"}

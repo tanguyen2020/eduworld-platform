@@ -430,3 +430,10 @@ func (v Version) MissingTranslations() []string {
 	})
 	return out
 }
+
+// ExpiresOnGradeChange reports a quest that ends (expired, no penalty) when the student moves to grade (PROGRESSION_SYSTEM
+// §5.1, FR-GAM-010, F074-AC-25): a learning, daily or weekly quest whose grade_levels do not hold the new grade.
+// Exploration and social quests, and quests of every grade, stay.
+func (v Version) ExpiresOnGradeChange(grade int) bool {
+	return v.MandatoryLearning() && len(v.GradeLevels) > 0 && !slices.Contains(v.GradeLevels, grade)
+}

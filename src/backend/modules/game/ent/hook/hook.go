@@ -141,6 +141,18 @@ func (f LevelDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Va
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LevelDefinitionMutation", m)
 }
 
+// The LevelHistoryFunc type is an adapter to allow the use of ordinary
+// function as LevelHistory mutator.
+type LevelHistoryFunc func(context.Context, *ent.LevelHistoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LevelHistoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LevelHistoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LevelHistoryMutation", m)
+}
+
 // The LevelSessionFunc type is an adapter to allow the use of ordinary
 // function as LevelSession mutator.
 type LevelSessionFunc func(context.Context, *ent.LevelSessionMutation) (ent.Value, error)
@@ -225,6 +237,42 @@ func (f PeriodicQuestGrantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PeriodicQuestGrantMutation", m)
 }
 
+// The ProgressionCurveFunc type is an adapter to allow the use of ordinary
+// function as ProgressionCurve mutator.
+type ProgressionCurveFunc func(context.Context, *ent.ProgressionCurveMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProgressionCurveFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProgressionCurveMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProgressionCurveMutation", m)
+}
+
+// The ProgressionCurveVersionFunc type is an adapter to allow the use of ordinary
+// function as ProgressionCurveVersion mutator.
+type ProgressionCurveVersionFunc func(context.Context, *ent.ProgressionCurveVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProgressionCurveVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProgressionCurveVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProgressionCurveVersionMutation", m)
+}
+
+// The ProgressionLevelFunc type is an adapter to allow the use of ordinary
+// function as ProgressionLevel mutator.
+type ProgressionLevelFunc func(context.Context, *ent.ProgressionLevelMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProgressionLevelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProgressionLevelMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProgressionLevelMutation", m)
+}
+
 // The QuestDefinitionFunc type is an adapter to allow the use of ordinary
 // function as QuestDefinition mutator.
 type QuestDefinitionFunc func(context.Context, *ent.QuestDefinitionMutation) (ent.Value, error)
@@ -271,6 +319,42 @@ func (f QuestVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestVersionMutation", m)
+}
+
+// The RewardGrantFunc type is an adapter to allow the use of ordinary
+// function as RewardGrant mutator.
+type RewardGrantFunc func(context.Context, *ent.RewardGrantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RewardGrantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RewardGrantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RewardGrantMutation", m)
+}
+
+// The RewardRuleFunc type is an adapter to allow the use of ordinary
+// function as RewardRule mutator.
+type RewardRuleFunc func(context.Context, *ent.RewardRuleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RewardRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RewardRuleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RewardRuleMutation", m)
+}
+
+// The RewardRuleVersionFunc type is an adapter to allow the use of ordinary
+// function as RewardRuleVersion mutator.
+type RewardRuleVersionFunc func(context.Context, *ent.RewardRuleVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RewardRuleVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RewardRuleVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RewardRuleVersionMutation", m)
 }
 
 // The StoryChapterFunc type is an adapter to allow the use of ordinary
@@ -367,6 +451,30 @@ func (f WorldUnlockFactFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Va
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorldUnlockFactMutation", m)
+}
+
+// The XpDailyCapFunc type is an adapter to allow the use of ordinary
+// function as XpDailyCap mutator.
+type XpDailyCapFunc func(context.Context, *ent.XpDailyCapMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f XpDailyCapFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.XpDailyCapMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.XpDailyCapMutation", m)
+}
+
+// The XpLedgerEntryFunc type is an adapter to allow the use of ordinary
+// function as XpLedgerEntry mutator.
+type XpLedgerEntryFunc func(context.Context, *ent.XpLedgerEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f XpLedgerEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.XpLedgerEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.XpLedgerEntryMutation", m)
 }
 
 // Condition is a hook condition function.

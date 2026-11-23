@@ -378,6 +378,26 @@ func (_u *GameProfileUpdate) ClearLastGameLoginAt() *GameProfileUpdate {
 	return _u
 }
 
+// SetGradeTransitionYear sets the "grade_transition_year" field.
+func (_u *GameProfileUpdate) SetGradeTransitionYear(v string) *GameProfileUpdate {
+	_u.mutation.SetGradeTransitionYear(v)
+	return _u
+}
+
+// SetNillableGradeTransitionYear sets the "grade_transition_year" field if the given value is not nil.
+func (_u *GameProfileUpdate) SetNillableGradeTransitionYear(v *string) *GameProfileUpdate {
+	if v != nil {
+		_u.SetGradeTransitionYear(*v)
+	}
+	return _u
+}
+
+// ClearGradeTransitionYear clears the value of the "grade_transition_year" field.
+func (_u *GameProfileUpdate) ClearGradeTransitionYear() *GameProfileUpdate {
+	_u.mutation.ClearGradeTransitionYear()
+	return _u
+}
+
 // Mutation returns the GameProfileMutation object of the builder.
 func (_u *GameProfileUpdate) Mutation() *GameProfileMutation {
 	return _u.mutation
@@ -455,6 +475,11 @@ func (_u *GameProfileUpdate) check() error {
 	if v, ok := _u.mutation.PreferredLanguage(); ok {
 		if err := gameprofile.PreferredLanguageValidator(v); err != nil {
 			return &ValidationError{Name: "preferred_language", err: fmt.Errorf(`ent: validator failed for field "GameProfile.preferred_language": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.GradeTransitionYear(); ok {
+		if err := gameprofile.GradeTransitionYearValidator(v); err != nil {
+			return &ValidationError{Name: "grade_transition_year", err: fmt.Errorf(`ent: validator failed for field "GameProfile.grade_transition_year": %w`, err)}
 		}
 	}
 	return nil
@@ -582,6 +607,12 @@ func (_u *GameProfileUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	}
 	if _u.mutation.LastGameLoginAtCleared() {
 		_spec.ClearField(gameprofile.FieldLastGameLoginAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.GradeTransitionYear(); ok {
+		_spec.SetField(gameprofile.FieldGradeTransitionYear, field.TypeString, value)
+	}
+	if _u.mutation.GradeTransitionYearCleared() {
+		_spec.ClearField(gameprofile.FieldGradeTransitionYear, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.GameProfile
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -953,6 +984,26 @@ func (_u *GameProfileUpdateOne) ClearLastGameLoginAt() *GameProfileUpdateOne {
 	return _u
 }
 
+// SetGradeTransitionYear sets the "grade_transition_year" field.
+func (_u *GameProfileUpdateOne) SetGradeTransitionYear(v string) *GameProfileUpdateOne {
+	_u.mutation.SetGradeTransitionYear(v)
+	return _u
+}
+
+// SetNillableGradeTransitionYear sets the "grade_transition_year" field if the given value is not nil.
+func (_u *GameProfileUpdateOne) SetNillableGradeTransitionYear(v *string) *GameProfileUpdateOne {
+	if v != nil {
+		_u.SetGradeTransitionYear(*v)
+	}
+	return _u
+}
+
+// ClearGradeTransitionYear clears the value of the "grade_transition_year" field.
+func (_u *GameProfileUpdateOne) ClearGradeTransitionYear() *GameProfileUpdateOne {
+	_u.mutation.ClearGradeTransitionYear()
+	return _u
+}
+
 // Mutation returns the GameProfileMutation object of the builder.
 func (_u *GameProfileUpdateOne) Mutation() *GameProfileMutation {
 	return _u.mutation
@@ -1043,6 +1094,11 @@ func (_u *GameProfileUpdateOne) check() error {
 	if v, ok := _u.mutation.PreferredLanguage(); ok {
 		if err := gameprofile.PreferredLanguageValidator(v); err != nil {
 			return &ValidationError{Name: "preferred_language", err: fmt.Errorf(`ent: validator failed for field "GameProfile.preferred_language": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.GradeTransitionYear(); ok {
+		if err := gameprofile.GradeTransitionYearValidator(v); err != nil {
+			return &ValidationError{Name: "grade_transition_year", err: fmt.Errorf(`ent: validator failed for field "GameProfile.grade_transition_year": %w`, err)}
 		}
 	}
 	return nil
@@ -1187,6 +1243,12 @@ func (_u *GameProfileUpdateOne) sqlSave(ctx context.Context) (_node *GameProfile
 	}
 	if _u.mutation.LastGameLoginAtCleared() {
 		_spec.ClearField(gameprofile.FieldLastGameLoginAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.GradeTransitionYear(); ok {
+		_spec.SetField(gameprofile.FieldGradeTransitionYear, field.TypeString, value)
+	}
+	if _u.mutation.GradeTransitionYearCleared() {
+		_spec.ClearField(gameprofile.FieldGradeTransitionYear, field.TypeString)
 	}
 	_spec.Node.Schema = _u.schemaConfig.GameProfile
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

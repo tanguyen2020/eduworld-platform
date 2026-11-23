@@ -752,3 +752,34 @@ func (h Quests) ApplyDiscovery(ctx context.Context, d Discovery) error {
 	}
 	return nil
 }
+
+// ExpireForGrade ends as expired (quest.abandoned reason expired, no penalty) every active quest of the student that
+// does not serve the new grade (F074-AC-25 through command.Progression.ApplyGradeTransition). Runs in the caller's
+// transaction; returns how many ended.
+func (h Quests) ExpireForGrade(ctx context.Context, tenant, student uuid.UUID, grade int, at time.Time) (int, error) {
+	if err := h.Store.LockStudent(ctx, student); err != nil {
+		return 0, err
+	}
+	ps, err := h.Store.ActiveOfStudent(ctx, tenant, student)
+	if err != nil {
+		return 0, err
+	}
+	n := 0
+	for _, p := range ps {
+		v, err := h.version(ctx, p)
+		if err != nil {
+			return n, err
+		}
+		if !v.ExpiresOnGradeChange(grade) {
+			continue
+		}
+		if err := h.end(ctx, p, v, AbandonExpired, "", "", at); err != nil {
+			return n, err
+		}
+		n++
+		push := progressPush(p, "", nil)
+		st := p.StudentID
+		h.after(ctx, func(ctx context.Context) { h.push(ctx, st, push, at) })
+	}
+	return n, nil
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "curve_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7400",
+  "code": "progression.default",
+  "owner_scope": "platform",
+  "tenant_id": null,
+  "description": "Đường cong XP mặc định Release 1.0 (CONFIG_DEFAULTS xp_curve, max_level, level_titles_at, level_floor_protection) — hiệu chỉnh bằng dữ liệu pilot.",
+  "max_level": 60,
+  "formula": { "kind": "power_linear", "base": 100, "exponent": 1.35, "linear": 20 },
+  "titles": [
+    { "code": "beginner", "from_level": 1, "name": { "vi": "Tân binh", "en": "Beginner" } },
+    { "code": "explorer", "from_level": 10, "name": { "vi": "Nhà thám hiểm", "en": "Explorer" } },
+    { "code": "adventurer", "from_level": 20, "name": { "vi": "Người phiêu lưu", "en": "Adventurer" } },
+    { "code": "champion", "from_level": 35, "name": { "vi": "Nhà vô địch", "en": "Champion" } },
+    { "code": "master", "from_level": 50, "name": { "vi": "Bậc thầy", "en": "Master" } }
+  ],
+  "level_rewards": [
+    { "level": 10, "rewards": [ { "type": "title", "title_code": "explorer" } ] },
+    { "level": 20, "rewards": [ { "type": "title", "title_code": "adventurer" } ] },
+    { "level": 35, "rewards": [ { "type": "title", "title_code": "champion" } ] },
+    { "level": 50, "rewards": [ { "type": "title", "title_code": "master" } ] }
+  ],
+  "level_floor_protection": true
+}

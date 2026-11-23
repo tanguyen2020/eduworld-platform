@@ -1128,11 +1128,11 @@ workspaces:
             title: Xem danh sách, version, lịch sử phát hành
             required_permissions: [game.progression.write, game.content.review, game.content.publish]
             operation_ids:
-              - "listGameConfigs[config_type=levels]"
-              - "getGameConfigVersion[config_type=levels]"
-              - "listGameConfigVersions[config_type=levels]"
-              - "diffGameConfigVersions[config_type=levels]"
-              - "listGameConfigReleases[config_type=levels]"
+              - "listGameConfigs[config_type=progression-levels]"
+              - "getGameConfigVersion[config_type=progression-levels]"
+              - "listGameConfigVersions[config_type=progression-levels]"
+              - "diffGameConfigVersions[config_type=progression-levels]"
+              - "listGameConfigReleases[config_type=progression-levels]"
               - "listGameConfigs[config_type=progression-curves]"
               - "getGameConfigVersion[config_type=progression-curves]"
               - "listGameConfigVersions[config_type=progression-curves]"
@@ -1144,8 +1144,8 @@ workspaces:
             title: Tạo và sửa bản nháp
             required_permissions: [game.progression.write]
             operation_ids:
-              - "createGameConfig[config_type=levels]"
-              - "updateGameConfigDraft[config_type=levels]"
+              - "createGameConfig[config_type=progression-levels]"
+              - "updateGameConfigDraft[config_type=progression-levels]"
               - "createGameConfig[config_type=progression-curves]"
               - "updateGameConfigDraft[config_type=progression-curves]"
             can_disable: true
@@ -1153,21 +1153,21 @@ workspaces:
             label_key: portal.action.game_ops.progression.workflow
             title: Gửi duyệt / duyệt / từ chối
             required_permissions: [game.progression.write, game.content.review]
-            operation_ids: ["transitionGameConfigVersion[config_type=levels]", "transitionGameConfigVersion[config_type=progression-curves]"]
+            operation_ids: ["transitionGameConfigVersion[config_type=progression-levels]", "transitionGameConfigVersion[config_type=progression-curves]"]
             can_disable: true
           - key: action.game_ops.progression.publish
             label_key: portal.action.game_ops.progression.publish
             title: Xuất bản (ngay hoặc hẹn giờ)
             required_permissions: [game.content.publish]
-            operation_ids: ["publishGameConfigVersion[config_type=levels]", "publishGameConfigVersion[config_type=progression-curves]"]
+            operation_ids: ["publishGameConfigVersion[config_type=progression-levels]", "publishGameConfigVersion[config_type=progression-curves]"]
             can_disable: true
           - key: action.game_ops.progression.rollback
             label_key: portal.action.game_ops.progression.rollback
             title: Rollback / gỡ xuất bản
             required_permissions: [content.release.rollback]
             operation_ids:
-              - "rollbackGameConfig[config_type=levels]"
-              - "unpublishGameConfig[config_type=levels]"
+              - "rollbackGameConfig[config_type=progression-levels]"
+              - "unpublishGameConfig[config_type=progression-levels]"
               - "rollbackGameConfig[config_type=progression-curves]"
               - "unpublishGameConfig[config_type=progression-curves]"
             can_disable: true

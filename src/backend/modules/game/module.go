@@ -15,11 +15,13 @@ import (
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/realtime"
+	rewardinfra "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/reward"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/security"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/consumer"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/presentation/facade"
@@ -85,7 +87,8 @@ func (m *Module) Wire(in Imports) {
 // game.manifest_on_game_content, game.unlock_on_events, game.mastery_projection and the F072 consumers
 // game.quest_on_activity_graded, game.quest_on_discovery_found, game.periodic_quests_on_session_started in worker events;
 // the F071 world and F072 quest routes; the jobs session-timeout, curfew-session-closer, quest-period-expiry and
-// quest-failure-timer in worker jobs; createRealtimeTicket and the NATS command
+// quest-failure-timer in worker jobs; the F074 consumers game.reward_engine, game.reward_engine_game,
+// game.grade_transition, the progression routes and the jobs curve-rollout, xp-reconcile; createRealtimeTicket and the NATS command
 // ew.cmd.game.session.heartbeat of the realtime gateway in core-api (F090).
 func Register(r *module.Registry) (*Module, error) {
 	pool, err := r.Database(Name)
@@ -118,6 +121,7 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.RegisterProfile(r.Metrics())
 	observability.RegisterWorld(r.Metrics())
 	observability.RegisterQuest(r.Metrics())
+	observability.RegisterProgression(r.Metrics())
 	profileCfg, err := gameconfig.ProfileFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
@@ -127,6 +131,10 @@ func Register(r *module.Registry) (*Module, error) {
 		return nil, fmt.Errorf("game: %w", err)
 	}
 	questCfg, err := gameconfig.QuestFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	policy, err := gameconfig.ProgressionFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
 	}
@@ -144,8 +152,13 @@ func Register(r *module.Registry) (*Module, error) {
 	questUC := command.Quests{UoW: core.UoW, AfterCommit: entx.AfterCommit, Content: questsql.Content{}, World: worldsql.Content{},
 		Store: write.QuestRepo{}, Sessions: write.SessionRepo{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
 		Presence: presence, Learning: learningLate, Realtime: realtime.QuestPublisher{C: vk}, Metrics: observability.QuestMetrics{}, Config: questCfg}
+	// F074 progression: the Reward Engine, level-ups, curve rollout, grade transition, XP reconciliation, ledger merge.
+	progressionUC := command.Progression{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: write.ProgressionRepo{}, Scan: write.ProgressionRepo{},
+		Profiles: write.ProfileRepo{}, Students: worldsql.Content{}, Rules: progressionsql.Content{}, Curves: progressionsql.Content{},
+		Appliers: rewardinfra.Default(), Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
+		Realtime: realtime.ProgressionPublisher{C: vk}, Quests: questUC, Metrics: observability.ProgressionMetrics{}, Policy: policy}
 	m := &Module{hub: hub, learning: learningLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
-		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}}}}
+		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC}}}
 	options := cache.NicknameOptionStore{C: vk}
 	profiles := command.Profiles{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: write.ProfileRepo{}, Catalog: write.CatalogRepo{},
 		Owned: write.OwnershipRepo{}, Presets: write.PresetRepo{}, Directory: write.Directory{}, Schools: write.Directory{},
@@ -159,7 +172,9 @@ func Register(r *module.Registry) (*Module, error) {
 			Options: options, TTL: profileCfg.SuggestionTTL},
 		World: worldUC, WorldQueries: query.World{Read: core.ReadSession, Content: worldsql.Content{}, Manifests: read.Manifests{}},
 		Quests: questUC, QuestQueries: query.Quests{Read: core.ReadSession, Content: questsql.Content{}, World: worldsql.Content{}, Cursors: cursors,
-			Reset: questCfg.Reset}}
+			Reset: questCfg.Reset},
+		ProgressionQueries: query.Progression{Read: core.ReadSession, Curves: progressionsql.Content{}, Data: read.Progression{}, Cursors: cursors,
+			DailyCap: policy.DailyCap}}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -209,6 +224,17 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("game.periodic_quests_on_session_started", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.PeriodicQuestsOptions(consumer.PeriodicQuestsOnSessionStarted{Quests: questUC}, core.UoW, core.App, js)
 	})
+	r.Consumer("game.reward_engine", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.RewardEngineOptions(consumer.RewardEngine{Awards: progressionUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.reward_engine_game", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.RewardEngineGameOptions(consumer.RewardEngine{Awards: progressionUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.grade_transition", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.GradeTransitionOptions(consumer.GradeTransition{Progression: progressionUC}, core.UoW, core.App, js)
+	})
+	r.Job(Name, job.CurveRollout, gameconfig.CurveRolloutInterval, module.JobFunc(job.CurveRolloutJob(progressionUC)))
+	r.Job(Name, job.XPReconcile, gameconfig.XPReconcileInterval, module.JobFunc(job.XPReconcileJob(progressionUC)))
 	r.Job(Name, job.QuestPeriodExpiry, questCfg.JobInterval, module.JobFunc(job.QuestPeriodExpiryJob(questUC)))
 	r.Job(Name, job.QuestFailureTimer, questCfg.JobInterval, module.JobFunc(job.QuestFailureTimerJob(questUC)))
 	r.Job(Name, job.SessionTimeout, cfg.TimeoutScan, module.JobFunc(job.SessionTimeoutJob(sessions)))

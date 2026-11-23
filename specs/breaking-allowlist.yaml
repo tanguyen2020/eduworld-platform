@@ -1373,3 +1373,113 @@ exceptions:
     operation: POST
     path: /cms/learning/translations:import
     text: api path removed without deprecation
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-property-enum-value-removed
+    operation: POST
+    path: /game-admin/preview/sessions
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /game-admin/{config_type}
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /game-admin/{config_type}
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /game-admin/{config_type}/{config_id}/releases
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /game-admin/{config_type}/{config_id}/versions
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /game-admin/{config_type}/{config_id}/versions/{version}
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: PATCH
+    path: /game-admin/{config_type}/{config_id}/versions/{version}
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: GET
+    path: /game-admin/{config_type}/{config_id}/versions/{version}:diff
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /game-admin/{config_type}/{config_id}/versions/{version}:publish
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /game-admin/{config_type}/{config_id}/versions/{version}:transition
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /game-admin/{config_type}/{config_id}:rollback
+    text: enum value 'levels'
+  - adr: ADR-0099
+    reason: 'Config type bảng cấp độ XP đổi `levels` → `progression-levels` (F074 T039, RB-308); route /game-admin/* chưa hiện thực (F078)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-parameter-enum-value-removed
+    operation: POST
+    path: /game-admin/{config_type}/{config_id}:unpublish
+    text: enum value 'levels'
+
+base origin/main: 0 breaking change(s) allowed by ADR exceptions, others rejected

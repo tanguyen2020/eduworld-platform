@@ -1,6 +1,6 @@
 # Feature Specification: F074 — XP ledger, level, đường cong XP, danh hiệu, Reward Engine có cap
 
-**Feature Branch**: `074-xp-level-reward-engine` · **Created**: 2026-11-16 · **Status**: Ready · **Module**: module `game` · **Mốc**: M2 · **Phụ thuộc**: F072
+**Feature Branch**: `074-xp-level-reward-engine` · **Created**: 2026-11-16 · **Status**: Done · **Module**: module `game` · **Mốc**: M2 · **Phụ thuộc**: F072
 **Input**: Reward Engine phía server cộng XP từ domain event đã kiểm chứng (quest, activity, mastery, bài học, khám phá) theo reward rule có cap ngày, giảm dần khi lặp, miễn giảm cho ôn LO tiên quyết; sổ cái XP append-only idempotent; level theo đường cong XP có version, danh hiệu theo khoảng level, phần thưởng lên cấp một lần; API tiến trình cho học sinh; quy tắc chuyển năm học. FR nguồn: FR-GAM-001…008, FR-GAM-010, FR-GAM-011, FR-RWD-003, NFR-SAFE-003.
 
 ## Clarifications
@@ -20,6 +20,26 @@
 ### Session 2026-11-20 (owner chốt — việc nhận từ OQ F016-2/F045-3)
 
 - Gộp tài khoản (`mergeUserData` của module game) → **Chốt:** F074 cộng gộp ledger XP/phần thưởng của user nguồn vào user đích bằng bản ghi bù (append-only, không sửa dòng cũ), idempotent theo `merge_id` (IDENTITY_MAPPING §7).
+
+### Session 2026-11-23 (triển khai — quyết định của agent, [Proposed] chờ owner xác nhận)
+
+- Consumer: **hai** durable — `game.reward_engine` (stream learning: `activity.graded`, `lesson.completed`, `learning_objective.mastered`, DLQ `ew.dlq.game.reward_engine`) và `game.reward_engine_game` (stream game: `quest.completed`, `world.discovery_found`, `world.area_completed`) vì một JetStream consumer chỉ đọc một stream; cùng handler `RewardEngine`.
+- `minigame.completed` chưa có payload schema (owner F073, đang Ready): chưa subscribe; ánh xạ thêm khi F073 định nghĩa payload — **Câu hỏi mở F074-1** (F074-AC-01 phủ 6/7 trigger).
+- Delta `activity.graded.v1` (owner F030) áp trong cùng MR: module learning điền `content_version_id`, `recommendation_id`, `first_try_correct_count` (= `correct_count`: một lần nộp mỗi attempt, chưa theo dõi xem giải thích/rapid guess từng câu); `content_grade_levels` chưa điền vì attempt chưa mang khối của nội dung → hoạt động chưa bị giảm theo khối cho tới khi learning bổ sung — **Câu hỏi mở F074-2** (owner F030). `lesson.completed` đã có `grade_levels` nên áp đủ F074-AC-27.
+- Tham số `xp_daily_cap`, `xp_repeat_multipliers`, `xp_below_grade_multiplier` đọc từ env `EW_GAME_XP_*` với giá trị CONFIG_DEFAULTS (chưa có khóa platform settings, cùng cách F072); XP từng nguồn (gồm `xp_objective_mastered` = 50) nằm trong reward rule seed.
+- Reward rule và progression curve là nội dung game trên lõi phát hành F071 (item type `reward_rule`, `progression_curve`; kiểm tra JSON Schema + domain trong `PublishGameContent`, `ProgressionPublishRules`) vì `ConfigTypeRegistry` thuộc F078; seed ở `src/backend/modules/game/seed/progression` (lệnh `cmd/seed`).
+- Chọn version rule: `effective_from = coalesce(active_from, published_at)`; áp version mới nhất có `effective_from ≤ occurred_at` (version cũ `archived` vẫn dùng cho event trước đó) và chưa quá `active_to` (F074-AC-24). Không có cache Valkey cho rule (đọc bảng G có index mỗi event).
+- Nguồn quest: `main` → `quest.main_completed`; `side`/`learning`/`exploration` → `quest.side_completed`; `daily`/`weekly` → mã tương ứng; loại khác chưa có nguồn XP. Số XP lấy từ reward rule, không từ `rewards` (ý định) của quest version.
+- Giảm dần khi lặp chỉ áp khi biết content version: attempt (`content_version_id`), bài học (`lesson_version_id`), quest phụ lặp (`quest_version_id`); quest daily/weekly không giảm dần (theo `period_key`). Đếm theo `(student_id, content_version_id, source_code)`, kể cả bút toán 0 XP.
+- "Ngưỡng tăng đơn điệu" hiểu là `xp_to_next` không giảm theo level (override không làm level sau dễ hơn level trước).
+- Applier `title`: dòng `reward_grants` là bản ghi danh hiệu được trao (danh hiệu hiển thị vẫn suy từ khoảng level); applier `xp`: XP của rule đã ghi ở ledger nên không ghi lần hai.
+- Tiến độ theo ngưỡng tích lũy: `xp_to_next` = ngưỡng tích lũy của level kế − `xp_total`; `xp_in_level` không âm (curve tăng ngưỡng + floor protection). `getXpStatus.xp_to_next_level` = 0 tại `max_level` (schema integer); `ProgressionLevel` thêm `xp_cumulative`, `xp_required` = 0 tại `max_level`.
+- Curve mới được áp bởi job định kỳ `curve-rollout` (1 phút, theo lô, mỗi hồ sơ một transaction tenant) thay cho trigger `OnPublished`; Reward Engine cũng áp curve hiện hành khi cộng XP.
+- Chuyển năm học: năm học bắt đầu 01/08 theo lịch ICT; lệnh idempotent = hết hạn quest không hợp khối mới + ghi `grade_transition_year` (lần lặp không còn gì để đổi; sửa khối trong cùng năm vẫn hết hạn quest không hợp).
+- Học sinh chưa có hồ sơ game nhận XP → tạo hồ sơ (vẫn `setup_required`); học sinh không `active`/đã dọn → không cộng, event được tiêu thụ.
+- `level_history`, `reward_grants` là bảng TA (append-only) thay vì T; `xp_daily_caps.date` đổi tên `cap_date`; khóa thay thế + unique thay PK ghép (ent).
+- T041 gộp tài khoản: hai bút toán bù `reason_code = adjustment`, `source_type = merge`, `rule_id` NULL, idempotent theo `merge_id`; học sinh đích giữ level cao hơn rồi áp curve với tổng XP.
+- T042 (nhận từ F106): consumer `competition.leaderboard_xp` ghi contribution metric `xp` (`source_type = xp_awarded`) cho bảng `friends_xp_weekly`; bỏ bút toán 0 XP và bút toán bù.
 
 ## User Scenarios & Testing *(bắt buộc)*
 

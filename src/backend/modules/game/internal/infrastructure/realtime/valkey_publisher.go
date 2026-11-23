@@ -93,3 +93,31 @@ func (p QuestPublisher) QuestProgressUpdated(ctx context.Context, student uuid.U
 	}
 	return rt.Publisher{C: p.C, Timeout: p.Timeout}.ToUser(ctx, student, e)
 }
+
+// ProgressionPublisher implements port.ProgressionRealtime: progression.xp.updated and progression.level.reached to
+// every connection of the student (AsyncAPI ProgressionXpUpdated, ProgressionLevelReached, F074) through Valkey
+// ew:rt:user:<id>.
+type ProgressionPublisher struct {
+	C       valkey.Client
+	Timeout time.Duration
+}
+
+var _ port.ProgressionRealtime = ProgressionPublisher{}
+
+func (p ProgressionPublisher) send(ctx context.Context, typ string, student uuid.UUID, payload map[string]any, at time.Time) error {
+	e, err := rt.NewMessage(typ, payload, at)
+	if err != nil {
+		return err
+	}
+	return rt.Publisher{C: p.C, Timeout: p.Timeout}.ToUser(ctx, student, e)
+}
+
+// XPUpdated implements port.ProgressionRealtime.
+func (p ProgressionPublisher) XPUpdated(ctx context.Context, student uuid.UUID, payload map[string]any, at time.Time) error {
+	return p.send(ctx, "progression.xp.updated", student, payload, at)
+}
+
+// LevelReached implements port.ProgressionRealtime.
+func (p ProgressionPublisher) LevelReached(ctx context.Context, student uuid.UUID, payload map[string]any, at time.Time) error {
+	return p.send(ctx, "progression.level.reached", student, payload, at)
+}

@@ -17,6 +17,7 @@ import (
 
 // contentTable describes the identity and version tables of a game content type (F071 release core).
 type contentTable struct {
+	schema               string // "" = game
 	identity, idCol      string
 	versions, versionCol string
 	parent               []string // extra identity columns (npc_id, area_id)
@@ -35,6 +36,19 @@ var contentTables = map[string]contentTable{
 	write.ItemQuest: {identity: "quest_definitions", idCol: "quest_id", versions: "quest_versions", versionCol: "quest_version_id",
 		parent: []string{"code"}, columns: []string{"code", "quest_type", "grade_levels", "subject_id", "subject_code", "area_id",
 			"giver_npc_id", "story_chapter_code", "start_trigger", "objective_ids", "available_from", "available_to"}},
+	write.ItemProgressionCurve: {identity: "progression_curves", idCol: "curve_id", versions: "progression_curve_versions",
+		versionCol: "curve_version_id", parent: []string{"code"}, columns: []string{"code", "max_level", "level_floor_protection"}},
+	write.ItemRewardRule: {schema: "gamification", identity: "reward_rules", idCol: "reward_rule_id", versions: "reward_rule_versions",
+		versionCol: "reward_rule_version_id", parent: []string{"code"}, columns: []string{"code", "trigger_event_type", "source_code",
+			"effective_from", "active_to"}},
+}
+
+// sch is the schema of the tables of a content type.
+func (c contentTable) sch() string {
+	if c.schema == "" {
+		return "game"
+	}
+	return c.schema
 }
 
 // jsonColumns are the typed version columns stored as jsonb.
@@ -74,16 +88,16 @@ func (GameContentRepo) Head(ctx context.Context, itemType, itemID string, parent
 		ph += fmt.Sprintf(", $%d", i+4)
 	}
 	// tenancyguard:ok platform content (G table, no tenant_id); written under PlatformScope only; table names from a closed map
-	if _, err := t.ExecContext(ctx, fmt.Sprintf(`INSERT INTO game.%s (%s, created_at, created_by, updated_at%s) VALUES ($1, $2, $3, $2%s)
-		ON CONFLICT (%s) DO NOTHING`, ct.identity, ct.idCol, cols, ph, ct.idCol), vals...); err != nil {
+	if _, err := t.ExecContext(ctx, fmt.Sprintf(`INSERT INTO %s.%s (%s, created_at, created_by, updated_at%s) VALUES ($1, $2, $3, $2%s)
+		ON CONFLICT (%s) DO NOTHING`, ct.sch(), ct.identity, ct.idCol, cols, ph, ct.idCol), vals...); err != nil {
 		return h, fmt.Errorf("%s: %w", ct.identity, err)
 	}
 	var current uuid.NullUUID
 	var sha sql.NullString
 	// tenancyguard:ok platform content (G tables, no tenant_id); deleted_at filtered; table names from a closed map
-	err = t.QueryRowContext(ctx, fmt.Sprintf(`SELECT i.latest_version_no + 1, i.current_version_id, v.payload_sha256 FROM game.%s i
-		LEFT JOIN game.%s v ON v.%s = i.current_version_id AND v.deleted_at IS NULL
-		WHERE i.%s::text = $1 AND i.deleted_at IS NULL FOR UPDATE OF i`, ct.identity, ct.versions, ct.versionCol, ct.idCol), itemID).
+	err = t.QueryRowContext(ctx, fmt.Sprintf(`SELECT i.latest_version_no + 1, i.current_version_id, v.payload_sha256 FROM %s.%s i
+		LEFT JOIN %s.%s v ON v.%s = i.current_version_id AND v.deleted_at IS NULL
+		WHERE i.%s::text = $1 AND i.deleted_at IS NULL FOR UPDATE OF i`, ct.sch(), ct.identity, ct.sch(), ct.versions, ct.versionCol, ct.idCol), itemID).
 		Scan(&h.NextVersionNo, &current, &sha)
 	if err != nil {
 		return h, fmt.Errorf("%s: head: %w", ct.identity, err)
@@ -126,21 +140,21 @@ func (GameContentRepo) Publish(ctx context.Context, v write.ContentVersion) erro
 		vals = append(vals, val)
 	}
 	// tenancyguard:ok platform content (G table, no tenant_id); written under PlatformScope only; table names from a closed map
-	if _, err := t.ExecContext(ctx, fmt.Sprintf(`INSERT INTO game.%s (%s, created_at, created_by, updated_at, %s, version_no, status, payload,
+	if _, err := t.ExecContext(ctx, fmt.Sprintf(`INSERT INTO %s.%s (%s, created_at, created_by, updated_at, %s, version_no, status, payload,
 			payload_sha256, change_note, snapshot_key, snapshot_sha256, published_at, published_by%s)
-		VALUES ($1, $2, $3, $2, $4, $5, 'published', $6::jsonb, $7, $8, $9, $10, $2, $3%s)`, ct.versions, ct.versionCol, ct.idCol, cols, ph),
+		VALUES ($1, $2, $3, $2, $4, $5, 'published', $6::jsonb, $7, $8, $9, $10, $2, $3%s)`, ct.sch(), ct.versions, ct.versionCol, ct.idCol, cols, ph),
 		vals...); err != nil {
 		return fmt.Errorf("%s: insert: %w", ct.versions, err)
 	}
 	// tenancyguard:ok platform content (G table, no tenant_id); the previous published version is archived, never changed otherwise
-	if _, err := t.ExecContext(ctx, fmt.Sprintf(`UPDATE game.%s SET status = 'archived', updated_at = $3
-		WHERE %s::text = $1 AND %s <> $2 AND status = 'published' AND deleted_at IS NULL`, ct.versions, ct.idCol, ct.versionCol),
+	if _, err := t.ExecContext(ctx, fmt.Sprintf(`UPDATE %s.%s SET status = 'archived', updated_at = $3
+		WHERE %s::text = $1 AND %s <> $2 AND status = 'published' AND deleted_at IS NULL`, ct.sch(), ct.versions, ct.idCol, ct.versionCol),
 		v.ItemID, v.VersionID, v.At); err != nil {
 		return fmt.Errorf("%s: archive: %w", ct.versions, err)
 	}
 	// tenancyguard:ok platform content (G table, no tenant_id); deleted_at filtered; table names from a closed map
-	if _, err := t.ExecContext(ctx, fmt.Sprintf(`UPDATE game.%s SET current_version_id = $2, latest_version_no = $3, updated_at = $4,
-		updated_by = $5, version = version + 1 WHERE %s::text = $1 AND deleted_at IS NULL`, ct.identity, ct.idCol),
+	if _, err := t.ExecContext(ctx, fmt.Sprintf(`UPDATE %s.%s SET current_version_id = $2, latest_version_no = $3, updated_at = $4,
+		updated_by = $5, version = version + 1 WHERE %s::text = $1 AND deleted_at IS NULL`, ct.sch(), ct.identity, ct.idCol),
 		v.ItemID, v.VersionID, v.VersionNo, v.At, v.By); err != nil {
 		return fmt.Errorf("%s: pointer: %w", ct.identity, err)
 	}
@@ -347,6 +361,34 @@ func (WorldRepo) EndLevelSession(ctx context.Context, tenant, id uuid.UUID, stat
 		WHERE tenant_id = $1 AND level_session_id = $2 AND status = 'active' AND deleted_at IS NULL`, tenant, id, status, at)
 	if err != nil {
 		return fmt.Errorf("level session: end: %w", err)
+	}
+	return nil
+}
+
+var _ write.LevelTableStore = GameContentRepo{}
+
+// InsertLevels implements write.LevelTableStore: the level table of a curve version, in the publish transaction.
+func (GameContentRepo) InsertLevels(ctx context.Context, curveVersionID uuid.UUID, levels []write.LevelRow) error {
+	t, err := tx(ctx)
+	if err != nil {
+		return err
+	}
+	now := time.Now().UTC()
+	for _, l := range levels {
+		rewards := l.Rewards
+		if rewards == nil {
+			rewards = []map[string]any{}
+		}
+		raw, err := json.Marshal(rewards)
+		if err != nil {
+			return err
+		}
+		// tenancyguard:ok platform content (GA table game.progression_levels, no tenant_id, append-only); PlatformScope only
+		if _, err := t.ExecContext(ctx, `INSERT INTO game.progression_levels (progression_level_id, created_at, created_by, curve_version_id, level,
+				xp_required, xp_cumulative, title_code, rewards) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
+			ids.New(), now, actor(ctx), curveVersionID, l.Level, l.XPRequired, l.Cumulative, l.TitleCode, string(raw)); err != nil {
+			return fmt.Errorf("progression levels: %w", err)
+		}
 	}
 	return nil
 }

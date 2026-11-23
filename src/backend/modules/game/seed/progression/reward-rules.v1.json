@@ -1,0 +1,207 @@
+[
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7401",
+    "code": "xp.quest_main_completed",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "quest.main_completed",
+    "description": "Hoàn thành quest chính: 150 XP, một lần cho mỗi quest (PROGRESSION_SYSTEM §3.1)",
+    "priority": 100,
+    "trigger": {
+      "event_type": "quest.completed"
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "amount": 150
+      }
+    ],
+    "caps": {
+      "xp_per_day": 1000
+    }
+  },
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7402",
+    "code": "xp.quest_side_completed",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "quest.side_completed",
+    "description": "Hoàn thành quest phụ/học tập/khám phá: 80 XP (khoảng 60–100 của PROGRESSION_SYSTEM §3.1) [Proposed]",
+    "priority": 100,
+    "trigger": {
+      "event_type": "quest.completed"
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "amount": 80
+      }
+    ],
+    "caps": {
+      "xp_per_day": 1000
+    }
+  },
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7403",
+    "code": "xp.quest_daily_completed",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "quest.daily_completed",
+    "description": "Quest hằng ngày: 40 XP theo period_key",
+    "priority": 100,
+    "trigger": {
+      "event_type": "quest.completed"
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "amount": 40
+      }
+    ],
+    "caps": {
+      "xp_per_day": 1000
+    }
+  },
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7404",
+    "code": "xp.quest_weekly_completed",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "quest.weekly_completed",
+    "description": "Quest hằng tuần: 120 XP theo period_key",
+    "priority": 100,
+    "trigger": {
+      "event_type": "quest.completed"
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "amount": 120
+      }
+    ],
+    "caps": {
+      "xp_per_day": 1000
+    }
+  },
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7405",
+    "code": "xp.activity_completed",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "activity.completed",
+    "description": "Bài tập đạt pass_rule: 3 XP mỗi câu đúng ngay lần đầu (5–30 XP theo độ dài) [Proposed]",
+    "priority": 100,
+    "trigger": {
+      "event_type": "activity.graded",
+      "attempt_modes": [
+        "practice",
+        "assignment",
+        "quest",
+        "minigame",
+        "retry_wrong"
+      ]
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "per_correct_answer": 3
+      }
+    ],
+    "caps": {
+      "xp_per_day": 600
+    }
+  },
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7406",
+    "code": "xp.objective_mastered",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "mastery.objective_mastered",
+    "description": "Thành thạo một LO: 50 XP một lần cho mỗi (học sinh, LO) — xp_objective_mastered",
+    "priority": 100,
+    "trigger": {
+      "event_type": "learning_objective.mastered"
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "amount": 50
+      }
+    ],
+    "caps": {
+      "xp_per_day": 1000
+    }
+  },
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7407",
+    "code": "xp.lesson_completed",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "lesson.completed",
+    "description": "Hoàn thành bài học: 20 XP, một lần cho mỗi version bài",
+    "priority": 100,
+    "trigger": {
+      "event_type": "lesson.completed"
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "amount": 20
+      }
+    ],
+    "caps": {
+      "xp_per_day": 1000
+    }
+  },
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7408",
+    "code": "xp.exploration_discovery",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "exploration.discovery",
+    "description": "Mỗi điểm khám phá một lần: 10 XP",
+    "priority": 100,
+    "trigger": {
+      "event_type": "world.discovery_found"
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "amount": 10
+      }
+    ],
+    "caps": {
+      "xp_per_day": 1000
+    }
+  },
+  {
+    "schema_version": 1,
+    "reward_rule_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7409",
+    "code": "xp.exploration_area_completed",
+    "owner_scope": "platform",
+    "tenant_id": null,
+    "source_code": "exploration.area_completed",
+    "description": "Khám phá trọn một khu vực: 100 XP",
+    "priority": 100,
+    "trigger": {
+      "event_type": "world.area_completed"
+    },
+    "grants": [
+      {
+        "type": "xp",
+        "amount": 100
+      }
+    ],
+    "caps": {
+      "xp_per_day": 1000
+    }
+  }
+]

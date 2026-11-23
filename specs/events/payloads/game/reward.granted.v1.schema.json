@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/reward.granted.v1.schema.json",
+  "title": "Payload reward.granted v1 (module game, owner F074)",
+  "description": "Một RewardGrant idempotent vừa được trao (thưởng lên cấp; F075–F077 thêm achievement, collection, event_milestone…). Phát cùng transaction với gamification.reward_grants. Consumer: RT, AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant_id",
+    "student_id",
+    "trigger_kind",
+    "items",
+    "xp",
+    "source_event_id",
+    "granted_at"
+  ],
+  "properties": {
+    "grant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "trigger_kind": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "event_rule",
+        "level_up"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "xp",
+              "title",
+              "currency",
+              "item",
+              "badge",
+              "collection_item"
+            ]
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "currency_code": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "item_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "badge_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "title_code": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "collection_item_id": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      }
+    },
+    "xp": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000,
+      "description": "Tổng XP trong items (0 khi không có)"
+    },
+    "level": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 2,
+      "maximum": 200,
+      "description": "Level được thưởng (trigger_kind = level_up)"
+    },
+    "curve_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "source_event_id": {
+      "description": "event_id gốc; lên cấp: UUIDv5 (curve_id, level, student_id)",
+      "type": "string",
+      "format": "uuid"
+    },
+    "granted_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

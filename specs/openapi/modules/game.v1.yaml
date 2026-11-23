@@ -1126,7 +1126,7 @@ paths:
           minigame-configs: action.game_ops.minigames.view
           challenges: action.game_ops.challenges.view
           bosses: action.game_ops.bosses.view
-          levels: action.game_ops.progression.view
+          progression-levels: action.game_ops.progression.view
           progression-curves: action.game_ops.progression.view
           achievements: action.game_ops.achievements.view
           items: action.game_ops.items.view
@@ -1164,7 +1164,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1217,7 +1217,7 @@ paths:
           minigame-configs: action.game_ops.minigames.edit
           challenges: action.game_ops.challenges.edit
           bosses: action.game_ops.bosses.edit
-          levels: action.game_ops.progression.edit
+          progression-levels: action.game_ops.progression.edit
           progression-curves: action.game_ops.progression.edit
           achievements: action.game_ops.achievements.edit
           items: action.game_ops.items.edit
@@ -1255,7 +1255,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1305,7 +1305,7 @@ paths:
           minigame-configs: action.game_ops.minigames.view
           challenges: action.game_ops.challenges.view
           bosses: action.game_ops.bosses.view
-          levels: action.game_ops.progression.view
+          progression-levels: action.game_ops.progression.view
           progression-curves: action.game_ops.progression.view
           achievements: action.game_ops.achievements.view
           items: action.game_ops.items.view
@@ -1343,7 +1343,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1385,7 +1385,7 @@ paths:
           minigame-configs: action.game_ops.minigames.edit
           challenges: action.game_ops.challenges.edit
           bosses: action.game_ops.bosses.edit
-          levels: action.game_ops.progression.edit
+          progression-levels: action.game_ops.progression.edit
           progression-curves: action.game_ops.progression.edit
           achievements: action.game_ops.achievements.edit
           items: action.game_ops.items.edit
@@ -1423,7 +1423,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1477,7 +1477,7 @@ paths:
           minigame-configs: action.game_ops.minigames.workflow
           challenges: action.game_ops.challenges.workflow
           bosses: action.game_ops.bosses.workflow
-          levels: action.game_ops.progression.workflow
+          progression-levels: action.game_ops.progression.workflow
           progression-curves: action.game_ops.progression.workflow
           achievements: action.game_ops.achievements.workflow
           items: action.game_ops.items.workflow
@@ -1515,7 +1515,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1584,7 +1584,7 @@ paths:
           minigame-configs: action.game_ops.minigames.view
           challenges: action.game_ops.challenges.view
           bosses: action.game_ops.bosses.view
-          levels: action.game_ops.progression.view
+          progression-levels: action.game_ops.progression.view
           progression-curves: action.game_ops.progression.view
           achievements: action.game_ops.achievements.view
           items: action.game_ops.items.view
@@ -1622,7 +1622,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1665,7 +1665,7 @@ paths:
           minigame-configs: action.game_ops.minigames.view
           challenges: action.game_ops.challenges.view
           bosses: action.game_ops.bosses.view
-          levels: action.game_ops.progression.view
+          progression-levels: action.game_ops.progression.view
           progression-curves: action.game_ops.progression.view
           achievements: action.game_ops.achievements.view
           items: action.game_ops.items.view
@@ -1703,7 +1703,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1751,7 +1751,7 @@ paths:
           minigame-configs: action.game_ops.minigames.publish
           challenges: action.game_ops.challenges.publish
           bosses: action.game_ops.bosses.publish
-          levels: action.game_ops.progression.publish
+          progression-levels: action.game_ops.progression.publish
           progression-curves: action.game_ops.progression.publish
           achievements: action.game_ops.achievements.publish
           items: action.game_ops.items.publish
@@ -1789,7 +1789,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1855,7 +1855,7 @@ paths:
           minigame-configs: action.game_ops.minigames.rollback
           challenges: action.game_ops.challenges.rollback
           bosses: action.game_ops.bosses.rollback
-          levels: action.game_ops.progression.rollback
+          progression-levels: action.game_ops.progression.rollback
           progression-curves: action.game_ops.progression.rollback
           achievements: action.game_ops.achievements.rollback
           items: action.game_ops.items.rollback
@@ -1893,7 +1893,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -1946,7 +1946,7 @@ paths:
           minigame-configs: action.game_ops.minigames.rollback
           challenges: action.game_ops.challenges.rollback
           bosses: action.game_ops.bosses.rollback
-          levels: action.game_ops.progression.rollback
+          progression-levels: action.game_ops.progression.rollback
           progression-curves: action.game_ops.progression.rollback
           achievements: action.game_ops.achievements.rollback
           items: action.game_ops.items.rollback
@@ -1984,7 +1984,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -2035,7 +2035,7 @@ paths:
           minigame-configs: action.game_ops.minigames.view
           challenges: action.game_ops.challenges.view
           bosses: action.game_ops.bosses.view
-          levels: action.game_ops.progression.view
+          progression-levels: action.game_ops.progression.view
           progression-curves: action.game_ops.progression.view
           achievements: action.game_ops.achievements.view
           items: action.game_ops.items.view
@@ -2073,7 +2073,7 @@ paths:
               - story-chapters
               - items
               - reward-rules
-              - levels
+              - progression-levels
               - progression-curves
               - challenges
               - bosses
@@ -7592,7 +7592,7 @@ components:
         - story-chapters
         - items
         - reward-rules
-        - levels
+        - progression-levels
         - progression-curves
         - challenges
         - bosses
@@ -8395,6 +8395,11 @@ components:
         xp_required:
           type: integer
           minimum: 0
+          description: XP cần để từ level này lên level kế (progression_levels.xp_required); 0 tại max_level (F074)
+        xp_cumulative:
+          type: integer
+          minimum: 0
+          description: XP tích lũy để đạt level này (F074)
         title_code:
           type: string
           maxLength: 64

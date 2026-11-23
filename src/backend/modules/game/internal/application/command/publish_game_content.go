@@ -14,7 +14,9 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/progression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/reward"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/world"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -29,7 +31,8 @@ const EventContentPublished = "content.published"
 
 // publishOrder publishes areas before their levels and chapters before the dialogues that reference their quests.
 // Quests (F072) come before the dialogues that give them.
-var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemQuest, write.ItemNPCDialogue}
+var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemQuest, write.ItemNPCDialogue,
+	write.ItemProgressionCurve, write.ItemRewardRule}
 
 // ContentItem is one authored game content payload to publish.
 type ContentItem struct {
@@ -72,7 +75,9 @@ type PublishGameContent struct {
 	// Quests are the quest checks (F072: JSON Schema + QuestPublishValidator); QuestContent reads the published quests.
 	Quests       *QuestPublishRules
 	QuestContent port.QuestContent
-	Now          func() time.Time
+	// Progression are the F074 checks (progression curves, reward rules) and the level table store.
+	Progression *ProgressionPublishRules
+	Now         func() time.Time
 }
 
 type parsedItem struct {
@@ -86,6 +91,8 @@ type parsedItem struct {
 	level   *world.Level
 	dlg     *world.Dialogue
 	quest   *quest.Version
+	curve   *progression.Curve
+	rule    *reward.Rule
 }
 
 // Publish publishes items in one platform transaction; key makes the release rows idempotent per item.
@@ -98,13 +105,20 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 	if len(key) > 64 {
 		return res, problem.Invalid("idempotency_key", problem.SubInvalid, "at most 64 characters")
 	}
+	now := time.Now().UTC()
+	if h.Now != nil {
+		now = h.Now().UTC()
+	}
 	parsed := make([]parsedItem, 0, len(items))
 	for _, it := range items {
 		var p parsedItem
 		var err error
-		if questItem(it.Type) {
+		switch {
+		case questItem(it.Type):
 			p, err = parseQuest(it, h.Quests)
-		} else {
+		case progressionItem(it.Type):
+			p, err = parseProgression(it, h.Progression, now)
+		default:
 			p, err = parse(it)
 		}
 		if err != nil {
@@ -115,10 +129,6 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 	slices.SortStableFunc(parsed, func(a, b parsedItem) int {
 		return slices.Index(publishOrder, a.Type) - slices.Index(publishOrder, b.Type)
 	})
-	now := time.Now().UTC()
-	if h.Now != nil {
-		now = h.Now().UTC()
-	}
 	by := uuid.Nil // system actor (seed); F078 passes the platform staff principal
 	if p, ok := authz.PrincipalFrom(ctx); ok && p.UserID != uuid.Nil {
 		by = p.UserID
@@ -268,6 +278,9 @@ func (h PublishGameContent) checkRefs(ctx context.Context, items []parsedItem) e
 	if err := h.checkQuests(ctx, items, areas, chapters); err != nil {
 		return err
 	}
+	if err := h.checkCurve(ctx, items); err != nil {
+		return err
+	}
 	grades := map[string][]struct {
 		id     string
 		grades []int
@@ -353,6 +366,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 			return GameRelease{}, false, err
 		}
 	}
+	if p.curve != nil || p.rule != nil {
+		if stored, err = h.progressionStored(ctx, p, vid, head.NextVersionNo); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
 	if p.Type == write.ItemNPCDialogue {
 		doc := map[string]any{}
 		for k, v := range p.doc {
@@ -369,6 +387,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 	if err := h.Store.Publish(ctx, write.ContentVersion{ItemType: p.Type, ItemID: p.id, VersionID: vid, VersionNo: head.NextVersionNo,
 		Payload: stored, SHA256: sha, Note: note, SnapshotKey: snapKey, SnapshotSHA256: snapSHA, At: now, By: by, Columns: p.columns}); err != nil {
 		return GameRelease{}, false, err
+	}
+	if p.curve != nil {
+		if err := h.insertLevels(ctx, p, vid, head.NextVersionNo); err != nil {
+			return GameRelease{}, false, err
+		}
 	}
 	rid := ids.New()
 	idem := key

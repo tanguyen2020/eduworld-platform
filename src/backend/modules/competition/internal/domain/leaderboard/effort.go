@@ -58,3 +58,6 @@ func Effort(t ranking.EffortTable, a Activity, d EffortDay) EffortAward {
 	}
 	return out
 }
+
+// SourceXPAwarded is the source of xp contributions: one xp.awarded posting of module game (F074 T042).
+const SourceXPAwarded = "xp_awarded"

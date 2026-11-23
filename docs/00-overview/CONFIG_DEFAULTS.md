@@ -37,15 +37,15 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
-| `xp_curve` | `power_linear`: base 100, exponent 1,35, linear 20 | — | platform (version hóa) | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
+| `xp_curve` | `power_linear`: base 100, exponent 1,35, linear 20 | — | platform (version hóa: curve seed `seed/progression/curve.default.v1.json` — F074) | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
 | `max_level` | 60 | level | platform | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
 | `level_titles_at` | 1 / 10 / 20 / 35 / 50 | level | platform | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
 | `level_floor_protection` | true | — | platform | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
-| `xp_repeat_multipliers` | 100% / 50% / 25% / 0% trong 7 ngày (theo content version) | — | platform | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
-| `xp_daily_cap` | 1.000 | XP/ngày | platform | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
+| `xp_repeat_multipliers` | 100% / 50% / 25% / 0% trong 7 ngày (theo content version) | — | platform (env `EW_GAME_XP_REPEAT_MULTIPLIERS` danh sách 0–1, `EW_GAME_XP_REPEAT_WINDOW_DAYS` 1–90, tới khi có khóa platform settings; rule có `diminishing_returns` riêng thì dùng của rule — F074) | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
+| `xp_daily_cap` | 1.000 | XP/ngày (ngày lịch ICT) | platform (env `EW_GAME_XP_DAILY_CAP`, 1–100000 — F074) | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
 | `xp_competition_matches_per_day` | 10 | trận/ngày | platform | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
-| `xp_below_grade_multiplier` | ×0,25 khi nội dung thấp hơn ≥ 2 khối | — | platform | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
-| `xp_objective_mastered` | 50 XP, một lần cho mỗi LO khi đạt mức mastered | XP | platform | [Confirmed — Technical Architect 2026-11-15] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) §3.1 |
+| `xp_below_grade_multiplier` | ×0,25 khi nội dung thấp hơn ≥ 2 khối | — | platform (env `EW_GAME_XP_BELOW_GRADE_MULTIPLIER`, 0–1 — F074) | [Confirmed] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) |
+| `xp_objective_mastered` | 50 XP, một lần cho mỗi LO khi đạt mức mastered | XP | platform (reward rule seed `xp.objective_mastered` — F074) | [Confirmed — Technical Architect 2026-11-15] | [PROGRESSION_SYSTEM](../01-game-design/PROGRESSION_SYSTEM.md) §3.1 |
 
 ## 4. Quest
 
