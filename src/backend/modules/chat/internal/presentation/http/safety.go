@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -36,7 +37,8 @@ type SafetyQueries interface {
 	ListModerationCaseMessages(ctx context.Context, id uuid.UUID, q string, limit int, cursor string) (query.CaseMessagePage, error)
 	ListSanctions(ctx context.Context, tenants []uuid.UUID, user *uuid.UUID, active *bool, limit int, cursor string) (query.SanctionPage, error)
 	ListSchoolNotificationsPlatform(ctx context.Context, tenants []uuid.UUID, acknowledged, overdue *bool, limit int, cursor string) (query.NotificationPage, error)
-	ListSchoolNotifications(ctx context.Context, school *uuid.UUID, acknowledged *bool, limit int, cursor string) (query.NotificationPage, error)
+	ListSchoolNotifications(ctx context.Context, school *uuid.UUID, acknowledged *bool, createdFrom *time.Time, limit int, cursor string) (query.NotificationPage, error)
+	ListModerationCaseTenants(ctx context.Context, limit int, cursor string) (query.CaseTenantPage, error)
 }
 
 // SafetyHandlers serve the operations of the Safety Team (core-api): createReport (player route, game_player guard),
@@ -50,12 +52,15 @@ type SafetyHandlers struct {
 // SafetyOperations are the F121 operations (checked against the spec by the contract test).
 var SafetyOperations = []string{"createReport", "listModerationCases", "getModerationCase", "listModerationCaseMessages",
 	"assignModerationCase", "actOnModerationCase", "notifySchoolForCase", "listSanctions", "createSanction", "revokeSanction",
-	"listSchoolSafetyNotificationsPlatform", "listSchoolSafetyNotifications", "acknowledgeSchoolSafetyNotification"}
+	"listSchoolSafetyNotificationsPlatform", "listSchoolSafetyNotifications", "acknowledgeSchoolSafetyNotification",
+	"listModerationCaseTenants"}
 
 func init() {
 	Operations["createReport"] = op("createReport", http.MethodPost, "/chat/reports", httpx.IdempotencyRequired, http.StatusCreated)
 	for _, o := range []httpx.Operation{
 		{ID: "listModerationCases", Method: http.MethodGet, Pattern: "/admin/moderation/cases", Tenant: httpx.TenantNone,
+			SuccessStatus: http.StatusOK},
+		{ID: "listModerationCaseTenants", Method: http.MethodGet, Pattern: "/admin/moderation/case-tenants", Tenant: httpx.TenantNone,
 			SuccessStatus: http.StatusOK},
 		{ID: "getModerationCase", Method: http.MethodGet, Pattern: "/admin/moderation/cases/{case_id}", Tenant: httpx.TenantNone,
 			SuccessStatus: http.StatusOK},
@@ -94,6 +99,7 @@ func registerSafety(s *httpx.Server, h *SafetyHandlers) error {
 	routes := map[string]http.HandlerFunc{
 		"createReport":                          h.createReport,
 		"listModerationCases":                   h.listCases,
+		"listModerationCaseTenants":             h.listCaseTenants,
 		"getModerationCase":                     h.getCase,
 		"listModerationCaseMessages":            h.caseMessages,
 		"assignModerationCase":                  h.assign,
@@ -191,6 +197,26 @@ func (h SafetyHandlers) listCases(w http.ResponseWriter, r *http.Request) {
 	data := make([]map[string]any, len(p.Data))
 	for i, c := range p.Data {
 		data[i] = service.CaseBody(c)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": data, "page": p.Page})
+}
+
+func (h SafetyHandlers) listCaseTenants(w http.ResponseWriter, r *http.Request) {
+	p, err := h.Queries.ListModerationCaseTenants(r.Context(), limitOf(r), r.URL.Query().Get("cursor"))
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	data := make([]map[string]any, len(p.Data))
+	for i, t := range p.Data {
+		m := map[string]any{"tenant_id": t.TenantID}
+		if t.Name != nil {
+			m["tenant_name"] = *t.Name
+		}
+		if t.Type != nil {
+			m["tenant_type"] = *t.Type
+		}
+		data[i] = m
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": data, "page": p.Page})
 }
@@ -470,7 +496,16 @@ func (h SafetyHandlers) listNotifications(w http.ResponseWriter, r *http.Request
 		fail(w, r, err)
 		return
 	}
-	p, err := h.Queries.ListSchoolNotifications(r.Context(), school, ack, limitOf(r), r.URL.Query().Get("cursor"))
+	var from *time.Time
+	if v := r.URL.Query().Get("created_from"); v != "" {
+		t, err := time.Parse(time.RFC3339Nano, v)
+		if err != nil {
+			fail(w, r, problem.Invalid("created_from", problem.SubInvalid, "must be a date-time"))
+			return
+		}
+		from = &t
+	}
+	p, err := h.Queries.ListSchoolNotifications(r.Context(), school, ack, from, limitOf(r), r.URL.Query().Get("cursor"))
 	if err != nil {
 		fail(w, r, err)
 		return

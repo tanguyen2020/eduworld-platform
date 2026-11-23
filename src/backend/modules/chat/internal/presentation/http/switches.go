@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/httpx"
@@ -20,6 +21,7 @@ import (
 type SwitchCommands interface {
 	SetModerationSwitches(ctx context.Context, in command.SwitchInput) (command.SwitchResult, error)
 	ApproveModerationSwitchChange(ctx context.Context, id uuid.UUID) (command.SwitchState, error)
+	RejectModerationSwitchChange(ctx context.Context, id uuid.UUID, version int64, reason string) (read.SwitchRequestRow, error)
 }
 
 // SwitchQueries are the read use cases of the moderation switches (query.Switches).
@@ -37,7 +39,7 @@ type SwitchHandlers struct {
 
 // SwitchOperations are the F116 US3 operations (checked against the spec by the contract test).
 var SwitchOperations = []string{"listModerationSwitches", "setModerationSwitches", "listModerationSwitchHistory",
-	"approveModerationSwitchChange"}
+	"approveModerationSwitchChange", "rejectModerationSwitchChange"}
 
 func init() {
 	for _, o := range []httpx.Operation{
@@ -49,6 +51,9 @@ func init() {
 			Tenant: httpx.TenantNone, SuccessStatus: http.StatusOK},
 		{ID: "approveModerationSwitchChange", Module: "chat", Method: http.MethodPost,
 			Pattern: "/admin/chat/moderation-switches/requests/{request_id}:approve", Tenant: httpx.TenantOptional,
+			Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusOK},
+		{ID: "rejectModerationSwitchChange", Module: "chat", Method: http.MethodPost,
+			Pattern: "/admin/chat/moderation-switches/requests/{request_id}:reject", Tenant: httpx.TenantOptional,
 			Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusOK},
 	} {
 		Operations[o.ID] = o
@@ -65,6 +70,7 @@ func registerSwitches(s *httpx.Server, h *SwitchHandlers) error {
 		"setModerationSwitches":         h.set,
 		"listModerationSwitchHistory":   h.history,
 		"approveModerationSwitchChange": h.approve,
+		"rejectModerationSwitchChange":  h.reject,
 	}
 	for _, id := range SwitchOperations {
 		if err := s.Handle(Operations[id], routes[id]); err != nil {
@@ -84,7 +90,11 @@ func (h SwitchHandlers) list(w http.ResponseWriter, r *http.Request) {
 	for i, t := range res.Tenants {
 		tenants[i] = t.Body()
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"platform": res.Platform.Body(), "tenants": tenants, "page": res.Page})
+	body := map[string]any{"platform": res.Platform.Body(), "tenants": tenants, "page": res.Page}
+	if res.DisabledTenantCount != nil {
+		body["disabled_tenant_count"] = *res.DisabledTenantCount
+	}
+	writeJSON(w, http.StatusOK, body)
 }
 
 func (h SwitchHandlers) set(w http.ResponseWriter, r *http.Request) {
@@ -138,4 +148,30 @@ func (h SwitchHandlers) approve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, st.Body())
+}
+
+func (h SwitchHandlers) reject(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "request_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	version, err := ifMatch(r)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var b struct {
+		Reason string `json:"reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+		fail(w, r, problem.Invalid("reason", problem.SubRequired, "required"))
+		return
+	}
+	req, err := h.Commands.RejectModerationSwitchChange(r.Context(), id, version, b.Reason)
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, service.RequestBody(req))
 }

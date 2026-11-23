@@ -8,22 +8,25 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-service: chat`). `/admin/*` chỉ
 
 | operationId | Method + path | Spec | Permission | Trạng thái |
 |---|---|---|---|---|
-| `listModerationCases` · `getModerationCase` · `listModerationCaseMessages` | `GET /api/v1/admin/moderation/cases[/{case_id}[/messages]]` | eduworld-api | `moderation.case.read`, `moderation.case.messages.read` | Có sẵn (sửa schema ở F121) |
+| `listModerationCases` · `getModerationCase` · `listModerationCaseMessages` | `GET /api/v1/admin/moderation/cases[/{case_id}[/messages]]` | eduworld-api | `moderation.case.read`, `moderation.case.messages.read` | Có sẵn (sửa schema ở F121); `ModerationCase.tenant_name` (F122 T064) |
+| `listModerationCaseTenants` | `GET /api/v1/admin/moderation/case-tenants` | eduworld-api | `moderation.case.read` (`tenancy.Bypass(moderation_case)`, keyset) | Mới (F122 T064) |
 | `assignModerationCase` · `actOnModerationCase` · `notifySchoolForCase` | `POST /api/v1/admin/moderation/cases/{case_id}:assign|:act|:notify-school` | eduworld-api | `moderation.case.act`, `moderation.school_notification.send` | Có sẵn |
 | `listSanctions` · `createSanction` · `revokeSanction` | `/api/v1/admin/moderation/sanctions[/{sanction_id}:revoke]` | eduworld-api | `moderation.sanction.read/write` | Có sẵn |
 | `listSchoolSafetyNotificationsPlatform` | `GET /api/v1/admin/safety/school-notifications` | eduworld-api | `moderation.school_notification.send` | Có sẵn |
 | `listSchoolSafetyNotifications` · `acknowledgeSchoolSafetyNotification` | `GET /api/v1/tenant/safety/school-notifications` · `POST …/{notification_id}:acknowledge` | eduworld-api | `moderation.school_notification.read/acknowledge` | Có sẵn |
 | `listSensitiveCategories` · `createSensitiveCategory` · `updateSensitiveCategory` · `deleteSensitiveCategory` | `/api/v1/admin/chat/sensitive-categories[/{category_id}]` | eduworld-api | `chat.sensitive_terms.read/write` | Có sẵn |
-| `listSensitiveTerms` · `createSensitiveTerm` · `updateSensitiveTerm` · `deleteSensitiveTerm` · `testSensitiveTerms` | `/api/v1/admin/chat/sensitive-terms[/{term_id}|:test]` | eduworld-api | `chat.sensitive_terms.read/write` | Có sẵn |
+| `listSensitiveTerms` · `createSensitiveTerm` · `updateSensitiveTerm` · `deleteSensitiveTerm` · `testSensitiveTerms` | `/api/v1/admin/chat/sensitive-terms[/{term_id}|:test]` | eduworld-api | `chat.sensitive_terms.read/write` | Có sẵn; `listSensitiveTerms` thêm `locale`, `match_type`, `status` lọc trong SQL (F122 T063) |
 | `listSensitiveAllowlist` · `createSensitiveAllowlistEntry` · `deleteSensitiveAllowlistEntry` | `/api/v1/admin/chat/sensitive-allowlist[/{entry_id}]` | eduworld-api | `chat.sensitive_terms.write` | Có sẵn |
 | `publishSensitiveCatalog` · `listSensitiveCatalogVersions` | `POST /api/v1/admin/chat/sensitive-catalog:publish` · `GET …/versions` | eduworld-api | `chat.sensitive_terms.write` / `.read` | Có sẵn |
-| `listModerationSwitches` · `setModerationSwitches` · `listModerationSwitchHistory` | `/api/v1/admin/chat/moderation-switches[/history]` | eduworld-api | `chat.policy.toggle` (đọc: + Safety Moderator) | Có sẵn |
+| `listModerationSwitches` · `setModerationSwitches` · `listModerationSwitchHistory` | `/api/v1/admin/chat/moderation-switches[/history]` | eduworld-api | `chat.policy.toggle` (đọc: + Safety Moderator) | Có sẵn; `listModerationSwitches` không lọc tenant trả `disabled_tenant_count` (F122 T065) |
+| `rejectModerationSwitchChange` | `POST /api/v1/admin/chat/moderation-switches/requests/{request_id}:reject` | eduworld-api | `chat.policy.toggle` (System Admin khác người đề xuất; `Idempotency-Key`, `If-Match`, `reason` ≤ 500) | Mới (F122 T060) |
 | `listTenantSensitiveTerms` · `createTenantSensitiveTerm` · `updateTenantSensitiveTerm` · `deleteTenantSensitiveTerm` · `publishTenantSensitiveCatalog` | `/api/v1/admin/chat/tenant-terms[/{term_id}|:publish]` | eduworld-api | `chat.tenant_terms.write` | Có sẵn |
 | `toggleTenantSensitiveCategory` | `POST /api/v1/admin/chat/tenant-categories/{code}:toggle` | eduworld-api | `chat.tenant_category.toggle` | Có sẵn |
 | `listTenantSensitiveCategories` | `GET /api/v1/tenant/chat/categories` | eduworld-api | `chat.sensitive_terms.read` | Có sẵn |
 | `getTenantModerationStatus` | `GET /api/v1/tenant/chat/moderation-status` | eduworld-api | nhân sự tenant đã đăng nhập (`tenant.settings.read` hoặc `school.settings.read`) | Có sẵn (F122 T004/T005, 2026-11-23; `x-portal-shell`) |
 | `getChatPolicy` · `putChatPolicy` · `getEffectiveChatPolicy` | `/api/v1/tenant/chat-policies/…` | eduworld-api | `school.settings.read/write` | Có sẵn (F120) |
-| `listClubs` · `approveClub` · `archiveClub` · `removeClubMember` | `/api/v1/social/clubs…` | eduworld-api | `social.club.approve` | Có sẵn (F120) — `removeClubMember` là route `game_player`, nhân sự không gọi được (câu hỏi mở, spec Clarifications 2026-11-23) |
+| `listClubs` · `approveClub` · `archiveClub` | `/api/v1/social/clubs…` | eduworld-api | `social.club.approve` | Có sẵn (F120) — `removeClubMember`/`listClubMembers` là route `game_player`, nhân sự không gọi |
+| `listSchoolClubMembers` · `removeSchoolClubMember` | `GET /api/v1/tenant/social/clubs/{club_id}/members` · `POST …/members/{user_id}:remove` | eduworld-api | `social.club.approve` (phạm vi trường của grant, trường khác → 404; gỡ: lý do, `Idempotency-Key`) | Mới (F122 T061) |
 | `getMyPermissions` | `GET /api/v1/me/permissions` | eduworld-api | đã đăng nhập | Có sẵn |
 
 ## 2. Internal API
@@ -42,7 +45,7 @@ Spec: `specs/openapi/eduworld-api.v1.yaml` (`x-service: chat`). `/admin/*` chỉ
 
 | Event | Phát / Tiêu thụ | Payload schema | Trạng thái |
 |---|---|---|---|
-| — | Portal không phát/tiêu thụ | — | — |
+| `moderation_switch.change_rejected` | Phát: chat (`rejectModerationSwitchChange`, outbox cùng transaction) | `specs/events/payloads/chat/moderation_switch.change_rejected.v1.schema.json` | Mới (F122 T060) |
 
 ## 5. JSON Schema nội dung
 

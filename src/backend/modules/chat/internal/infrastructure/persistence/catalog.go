@@ -490,15 +490,18 @@ func (Catalog) TenantTerms(ctx context.Context, tenant, category uuid.UUID) (int
 // ---------- read side
 
 // Categories implements read.CatalogAdminReader.
-func (Catalog) Categories(ctx context.Context) ([]read.CategoryRow, error) {
+func (Catalog) Categories(ctx context.Context, after *read.CategoryCursor, limit int) ([]read.CategoryRow, error) {
 	t, err := readTx(ctx)
 	if err != nil {
 		return nil, err
 	}
+	code, id := categoryKeyset(after)
 	// tenancyguard:ok categories are platform-only (tenant_id NULL); the term count covers live platform terms only
 	rows, err := t.QueryContext(ctx, `SELECT `+categoryColumns+`, (SELECT count(*) FROM chat.sensitive_terms t
 			WHERE t.category_id = c.category_id AND t.tenant_id IS NULL AND t.deleted_at IS NULL)
-		FROM chat.sensitive_term_categories c WHERE c.tenant_id IS NULL AND c.deleted_at IS NULL ORDER BY c.code`)
+		FROM chat.sensitive_term_categories c WHERE c.tenant_id IS NULL AND c.deleted_at IS NULL
+			AND ($1::varchar IS NULL OR (c.code, c.category_id) > ($1::varchar, $2::uuid))
+		ORDER BY c.code, c.category_id LIMIT $3`, code, id, limit)
 	if err != nil {
 		return nil, fmt.Errorf("chat: categories: %w", err)
 	}
@@ -512,6 +515,15 @@ func (Catalog) Categories(ctx context.Context) ([]read.CategoryRow, error) {
 		out = append(out, r)
 	}
 	return out, rows.Err()
+}
+
+// categoryKeyset returns the (code, category_id) bounds of a category page (nil code: first page).
+func categoryKeyset(after *read.CategoryCursor) (*string, uuid.UUID) {
+	if after == nil {
+		return nil, uuid.Nil
+	}
+	c := after.Code
+	return &c, after.ID
 }
 
 // Terms implements read.CatalogAdminReader.
@@ -530,6 +542,15 @@ func (Catalog) Terms(ctx context.Context, q read.TermQuery) ([]catalog.StoredTer
 	}
 	if q.CategoryID != nil {
 		conds = append(conds, "t.category_id = "+arg(*q.CategoryID))
+	}
+	if q.Locale != "" {
+		conds = append(conds, "t.locale = "+arg(q.Locale))
+	}
+	if q.MatchType != "" {
+		conds = append(conds, "t.match_type = "+arg(q.MatchType))
+	}
+	if q.Status != "" {
+		conds = append(conds, "t.status = "+arg(q.Status))
 	}
 	if q.Text != "" {
 		esc := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(strings.ToLower(q.Text))
@@ -636,17 +657,20 @@ func (Catalog) Versions(ctx context.Context, tenants []uuid.UUID, before int64, 
 }
 
 // TenantCategories implements read.CatalogAdminReader.
-func (Catalog) TenantCategories(ctx context.Context, tenant uuid.UUID) ([]read.TenantCategoryRow, error) {
+func (Catalog) TenantCategories(ctx context.Context, tenant uuid.UUID, after *read.CategoryCursor, limit int) ([]read.TenantCategoryRow, error) {
 	t, err := readTx(ctx)
 	if err != nil {
 		return nil, err
 	}
+	code, id := categoryKeyset(after)
 	// tenancyguard:ok categories are platform-only (tenant_id NULL); the setting and the term count are of this tenant only
 	rows, err := t.QueryContext(ctx, `SELECT `+categoryColumns+`,
 			(SELECT s.enabled FROM chat.tenant_category_settings s WHERE s.tenant_id = $1 AND s.category_id = c.category_id
 				AND s.deleted_at IS NULL),
 			(SELECT count(*) FROM chat.sensitive_terms t WHERE t.tenant_id = $1 AND t.category_id = c.category_id AND t.deleted_at IS NULL)
-		FROM chat.sensitive_term_categories c WHERE c.tenant_id IS NULL AND c.deleted_at IS NULL ORDER BY c.code`, tenant)
+		FROM chat.sensitive_term_categories c WHERE c.tenant_id IS NULL AND c.deleted_at IS NULL
+			AND ($2::varchar IS NULL OR (c.code, c.category_id) > ($2::varchar, $3::uuid))
+		ORDER BY c.code, c.category_id LIMIT $4`, tenant, code, id, limit)
 	if err != nil {
 		return nil, fmt.Errorf("chat: tenant categories: %w", err)
 	}

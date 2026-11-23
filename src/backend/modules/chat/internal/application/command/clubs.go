@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -788,6 +789,93 @@ func (h Clubs) Remove(ctx context.Context, id, user uuid.UUID) (err error) {
 			return err
 		}
 		if err := h.record(ctx, AuditClubMemberRemove, *c, map[string]any{"user_id": user.String()}); err != nil {
+			return err
+		}
+		return h.afterCommit(ctx, *c, MembershipRemoved, channel.StatusOpen, user)
+	})
+}
+
+// StaffRemoveReasonMax is maxLength of the reason of removeSchoolClubMember.
+const StaffRemoveReasonMax = 500
+
+// staffSchools is the club scope of staff from its UserRole grants holding social.club.approve: nil = the whole tenant;
+// no grant at all → 403 PERMISSION_DENIED (audited by authz.Require).
+func staffSchools(ctx context.Context, p authz.Principal, tenant uuid.UUID) ([]uuid.UUID, error) {
+	var out []uuid.UUID
+	held := false
+	for _, g := range p.Grants {
+		if !slices.Contains(g.Permissions, authz.PermSocialClubApprove) {
+			continue
+		}
+		held = true
+		if g.SchoolID == nil {
+			return nil, nil
+		}
+		out = append(out, *g.SchoolID)
+	}
+	if !held {
+		t := tenant
+		return nil, authz.Require(ctx, p, authz.PermSocialClubApprove, authz.Resource{TenantID: &t})
+	}
+	return out, nil
+}
+
+// RemoveByStaff implements removeSchoolClubMember (F122 T061, F122-AC-23): staff holding social.club.approve for the
+// school of the club (another school or tenant → 404, never telling it exists) removes a member — never the owner (404)
+// — with a reason (1–500). In one transaction, as removeClubMember (F120-AC-20): membership ended (removed), member_count,
+// the member leaves the fixed team channel, club.member_left (removed); audit club.member_removed with the reason.
+func (h Clubs) RemoveByStaff(ctx context.Context, id, user uuid.UUID, reason string) (err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.RemoveSchoolClubMember")
+	defer func() { done(err) }()
+	a, err := h.actor(ctx)
+	if err != nil {
+		return err
+	}
+	if a.isStudent() {
+		return problem.New(problem.PortalAccessStaffOnly, "")
+	}
+	reason = strings.TrimSpace(reason)
+	switch {
+	case reason == "":
+		return problem.Invalid("reason", problem.SubRequired, "a reason is required")
+	case utf8.RuneCountInString(reason) > StaffRemoveReasonMax:
+		return problem.Invalid("reason", problem.SubMaxLength, "at most 500 characters")
+	}
+	schools, err := staffSchools(ctx, a.p, a.tenant)
+	if err != nil {
+		return err
+	}
+	now := h.now()
+	return h.UoW.Do(ctx, func(ctx context.Context) error {
+		c, err := h.Store.Club(ctx, a.tenant, id, true)
+		if err != nil {
+			return err
+		}
+		if c == nil || (schools != nil && (c.SchoolID == nil || !slices.Contains(schools, *c.SchoolID))) {
+			return notFound()
+		}
+		target, err := h.Store.Member(ctx, a.tenant, c.ID, user)
+		if err != nil {
+			return err
+		}
+		if target == nil || target.Role == club.RoleOwner {
+			return notFound()
+		}
+		if err := h.leave(ctx, c, *target, "removed", a.p.UserID, now); err != nil {
+			return err
+		}
+		if err := h.Store.SaveClub(ctx, *c, a.p.UserID, now); err != nil {
+			return err
+		}
+		e := audit.Event{Action: AuditClubMemberRemove, TargetType: "club", TargetID: c.ID.String(), Result: audit.ResultSuccess,
+			Reason: reason, Metadata: map[string]any{"user_id": user.String(), "by": "staff"}}
+		if c.SchoolID != nil {
+			e.SchoolID = c.SchoolID.String()
+		}
+		if err := h.Audit.Record(ctx, e); err != nil {
+			return err
+		}
+		if err := idempotency.SetResult(ctx, nil); err != nil {
 			return err
 		}
 		return h.afterCommit(ctx, *c, MembershipRemoved, channel.StatusOpen, user)

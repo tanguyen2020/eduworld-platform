@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/chat/moderation_switch.change_rejected.v1.schema.json",
+  "title": "Payload moderation_switch.change_rejected v1 (module chat, owner F122)",
+  "description": "Một System Admin khác người đề xuất từ chối yêu cầu tắt công tắc kiểm duyệt đang chờ phê duyệt (rejectModerationSwitchChange, F122 T060, ADR-0078). Giá trị hiệu lực không đổi. Consumer: AUD, MON. Không có nội dung chat; lý do là văn bản của System Admin.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "scope", "enabled_all", "steps", "proposed_by", "rejected_by", "reason", "rejected_at"],
+  "properties": {
+    "request_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "scope": { "enum": ["platform", "tenant"] },
+    "enabled_all": { "type": "boolean", "description": "enabled_all của yêu cầu bị từ chối" },
+    "steps": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Các bước của yêu cầu bị từ chối (false = yêu cầu tắt); không có pii/grooming (luôn chạy)",
+      "properties": {
+        "sensitive_terms": { "type": "boolean" },
+        "spam": { "type": "boolean" },
+        "bullying": { "type": "boolean" },
+        "async_analysis": { "type": "boolean" }
+      }
+    },
+    "proposed_by": { "type": "string", "format": "uuid" },
+    "rejected_by": { "type": "string", "format": "uuid" },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "rejected_at": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    {
+      "request_id": "0193a6c1-0000-7000-8000-000000000003",
+      "tenant_id": "0193a5f4-6c1e-7b2a-9d1f-000000000001",
+      "scope": "tenant",
+      "enabled_all": true,
+      "steps": { "sensitive_terms": true, "spam": false, "bullying": true, "async_analysis": true },
+      "proposed_by": "0193a5f4-6c1e-7b2a-9d1f-000000000002",
+      "rejected_by": "0193a5f4-6c1e-7b2a-9d1f-000000000009",
+      "reason": "Chưa có bằng chứng lọc nhầm, giữ kiểm duyệt",
+      "rejected_at": "2026-11-24T08:30:12.345Z"
+    }
+  ]
+}

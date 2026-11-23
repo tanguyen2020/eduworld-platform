@@ -79,6 +79,8 @@ type SwitchRequestRow struct {
 	CreatedAt        time.Time
 	DecidedAt        *time.Time
 	RequestExpiresAt time.Time
+	// Version is the If-Match value of rejectModerationSwitchChange (F122 T060).
+	Version int64
 }
 
 // Statuses of a switch request.
@@ -118,4 +120,10 @@ type SwitchAdminReader interface {
 	// DisabledSwitches returns every live switch row with a value off (platform and every tenant: the gauge
 	// eduworld_chat_policy_disabled of a system job).
 	DisabledSwitches(ctx context.Context) ([]SwitchRow, error)
+	// DisabledTenantCount counts the tenants whose live tenant-level switch has a value off still in force at now
+	// (enabled_all false or a switchable step false, expires_at not reached) — a count only, never a list (System Admin,
+	// listModerationSwitches without tenant_ids, F122 T065).
+	DisabledTenantCount(ctx context.Context, now time.Time) (int, error)
+	// TenantNames returns the projected names of tenants (ref.tenants: name, code until a name is known).
+	TenantNames(ctx context.Context, tenants []uuid.UUID) (map[uuid.UUID]string, error)
 }

@@ -27,6 +27,7 @@ type ClubCommands interface {
 	Archive(ctx context.Context, id uuid.UUID) error
 	SetRole(ctx context.Context, id, user uuid.UUID, role string) (write.ClubMember, error)
 	Remove(ctx context.Context, id, user uuid.UUID) error
+	RemoveByStaff(ctx context.Context, id, user uuid.UUID, reason string) error
 	RequestJoin(ctx context.Context, id uuid.UUID) (write.ClubRequest, error)
 	DecideRequest(ctx context.Context, requestID uuid.UUID, accept bool) (write.ClubMember, error)
 	Invite(ctx context.Context, id uuid.UUID, invitees []uuid.UUID) ([]write.ClubInvitation, error)
@@ -40,6 +41,7 @@ type ClubQueries interface {
 	List(ctx context.Context, in query.ClubListInput) (query.ClubPage, error)
 	Get(ctx context.Context, id uuid.UUID) (read.ClubRow, bool, error)
 	Members(ctx context.Context, id uuid.UUID, cursor string, limit int) (query.MemberPage, error)
+	StaffMembers(ctx context.Context, id uuid.UUID, cursor string, limit int) (query.MemberPage, error)
 	Requests(ctx context.Context, id uuid.UUID, cursor string, limit int) (query.RequestPage, error)
 	Goals(ctx context.Context, id uuid.UUID) ([]read.ClubGoalRow, error)
 	Events(ctx context.Context, id uuid.UUID, cursor string, limit int) (query.EventPage, error)
@@ -60,10 +62,13 @@ type ClubHandlers struct {
 var ClubOperations = []string{"listClubs", "createClub", "getClub", "updateClub", "approveClub", "leaveClub", "archiveClub",
 	"listClubMembers", "updateClubMemberRole", "removeClubMember", "listClubJoinRequests", "requestJoinClub", "acceptClubJoinRequest",
 	"rejectClubJoinRequest", "inviteToClub", "acceptClubInvitation", "declineClubInvitation", "listClubGoals", "createClubGoal",
-	"listClubEvents", "createClubEvent"}
+	"listClubEvents", "createClubEvent", "listSchoolClubMembers", "removeSchoolClubMember"}
 
 // mixedClubOperations serve students (game client) and staff (portal): the use case checks the caller (x-portal-action).
 var mixedClubOperations = map[string]bool{"listClubs": true, "getClub": true, "archiveClub": true}
+
+// staffClubOperations are portal-only routes of school staff (F122 T061).
+var staffClubOperations = map[string]bool{"listSchoolClubMembers": true, "removeSchoolClubMember": true}
 
 func init() {
 	for _, o := range []httpx.Operation{
@@ -97,10 +102,14 @@ func init() {
 		{ID: "listClubEvents", Method: http.MethodGet, Pattern: "/social/clubs/{club_id}/events", SuccessStatus: http.StatusOK},
 		{ID: "createClubEvent", Method: http.MethodPost, Pattern: "/social/clubs/{club_id}/events", Idempotency: httpx.IdempotencyRequired,
 			SuccessStatus: http.StatusCreated},
+		// Staff routes of F122 T061 (portal, /tenant/: GuardPortalStaff added by httpx).
+		{ID: "listSchoolClubMembers", Method: http.MethodGet, Pattern: "/tenant/social/clubs/{club_id}/members", SuccessStatus: http.StatusOK},
+		{ID: "removeSchoolClubMember", Method: http.MethodPost, Pattern: "/tenant/social/clubs/{club_id}/members/{user_id}:remove",
+			Idempotency: httpx.IdempotencyRequired, SuccessStatus: http.StatusNoContent},
 	} {
 		o.Module, o.Tenant = "chat", httpx.TenantRequired
 		switch {
-		case o.ID == "approveClub":
+		case o.ID == "approveClub", staffClubOperations[o.ID]:
 			o.Guard = httpx.GuardPortalStaff
 		case mixedClubOperations[o.ID]:
 			o.Guard = httpx.GuardNone
@@ -120,7 +129,8 @@ func registerClubs(s *httpx.Server, h *ClubHandlers) error {
 		"updateClubMemberRole": h.setRole, "removeClubMember": h.remove, "listClubJoinRequests": h.requests,
 		"requestJoinClub": h.requestJoin, "acceptClubJoinRequest": h.decideRequest(true), "rejectClubJoinRequest": h.decideRequest(false),
 		"inviteToClub": h.invite, "acceptClubInvitation": h.decideInvitation(true), "declineClubInvitation": h.decideInvitation(false),
-		"listClubGoals": h.goals, "createClubGoal": h.createGoal, "listClubEvents": h.events, "createClubEvent": h.createEvent}
+		"listClubGoals": h.goals, "createClubGoal": h.createGoal, "listClubEvents": h.events, "createClubEvent": h.createEvent,
+		"listSchoolClubMembers": h.staffMembers, "removeSchoolClubMember": h.staffRemove}
 	for _, id := range ClubOperations {
 		if err := s.Handle(Operations[id], routes[id]); err != nil {
 			return err
@@ -276,6 +286,11 @@ func (h ClubHandlers) members(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
+	writeMembers(w, id, p)
+}
+
+// writeMembers renders a page of ClubMember (nicknames only, R16).
+func writeMembers(w http.ResponseWriter, id uuid.UUID, p query.MemberPage) {
 	data := make([]map[string]any, len(p.Data))
 	for i, m := range p.Data {
 		nick := ""
@@ -521,4 +536,43 @@ func (h ClubHandlers) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, command.EventBody(e))
+}
+
+func (h ClubHandlers) staffMembers(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "club_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	p, err := h.Queries.StaffMembers(r.Context(), id, r.URL.Query().Get("cursor"), limitOf(r))
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	writeMembers(w, id, p)
+}
+
+func (h ClubHandlers) staffRemove(w http.ResponseWriter, r *http.Request) {
+	id, err := pathUUID(r, "club_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	user, err := pathUUID(r, "user_id")
+	if err != nil {
+		fail(w, r, err)
+		return
+	}
+	var b struct {
+		Reason string `json:"reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+		fail(w, r, problem.Invalid("reason", problem.SubRequired, "required"))
+		return
+	}
+	if err := h.Commands.RemoveByStaff(r.Context(), id, user, b.Reason); err != nil {
+		fail(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

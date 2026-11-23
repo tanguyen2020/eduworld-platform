@@ -322,6 +322,51 @@ func (q Clubs) Members(ctx context.Context, id uuid.UUID, cursor string, limit i
 	return out, nil
 }
 
+// StaffMembers serves listSchoolClubMembers (F122 T061): staff holding social.club.approve for the school of the club
+// (scope of the UserRole grants; another school or tenant → 404) lists its active members — nicknames only (R16) —
+// keyset paginated in SQL (joined_at, user_id).
+func (q Clubs) StaffMembers(ctx context.Context, id uuid.UUID, cursor string, limit int) (out MemberPage, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.query.ListSchoolClubMembers")
+	defer func() { done(err) }()
+	v, err := q.viewer(ctx)
+	if err != nil {
+		return out, err
+	}
+	if v.isStudent() {
+		return out, problem.New(problem.PortalAccessStaffOnly, "")
+	}
+	after, err := q.cursor(cursor)
+	if err != nil {
+		return out, err
+	}
+	schools, err := q.schools(ctx, v)
+	if err != nil {
+		return out, err
+	}
+	limit = page.Limit(limit)
+	err = q.Read.Read(ctx, func(ctx context.Context) error {
+		row, err := q.Reader.Club(ctx, v.tenant, id, nil)
+		if err != nil {
+			return err
+		}
+		if row == nil || (schools != nil && (row.Club.SchoolID == nil || !containsID(schools, *row.Club.SchoolID))) {
+			return problem.New(problem.NotFound, "")
+		}
+		out.Data, err = q.Reader.Members(ctx, v.tenant, id, after, limit+1)
+		return err
+	})
+	if err != nil {
+		return out, err
+	}
+	out.Page = page.Info{Limit: limit}
+	if len(out.Data) > limit {
+		out.Data = out.Data[:limit]
+		last := out.Data[len(out.Data)-1]
+		out.Page.NextCursor, out.Page.HasMore = q.next(last.JoinedAt, last.UserID), true
+	}
+	return out, nil
+}
+
 // RequestPage is a page of pending join requests.
 type RequestPage struct {
 	Data []read.ClubRequestRow

@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -135,6 +136,9 @@ func (Safety) Notifications(ctx context.Context, f read.NotificationFilter) ([]r
 			where = append(where, "NOT "+cond)
 		}
 	}
+	if f.CreatedFrom != nil {
+		where = append(where, "n.created_at >= "+arg(&args, f.CreatedFrom.UTC()))
+	}
 	if f.After != nil {
 		where = append(where, fmt.Sprintf("(n.created_at, n.notification_id) < (%s, %s)", arg(&args, f.After.At), arg(&args, f.After.ID)))
 	}
@@ -142,6 +146,39 @@ func (Safety) Notifications(ctx context.Context, f read.NotificationFilter) ([]r
 	// tenancyguard:ok school notifications: tenant_ids filter (tenant_id = ANY, or the tenant session) and deleted_at IS NULL
 	return notifications(ctx, `SELECT `+notificationCols+` FROM chat.school_safety_notifications n WHERE `+strings.Join(where, " AND ")+
 		` ORDER BY n.created_at DESC, n.notification_id DESC LIMIT `+limit, args...)
+}
+
+// CaseTenants implements read.SafetyReader: the tenants having live cases, tenant_id order (keyset), with the name
+// projected into ref.tenants (code until a name is known).
+func (Safety) CaseTenants(ctx context.Context, after *uuid.UUID, limit int) ([]read.CaseTenant, error) {
+	t, err := readTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	from := uuid.Nil
+	if after != nil {
+		from = *after
+	}
+	// tenancyguard:ok tenants of the cases of every tenant under tenancy.Bypass(moderation_case) (ADR-0072): ids and names only, deleted_at IS NULL
+	rows, err := t.QueryContext(ctx, `SELECT d.tenant_id, rt.name_or_code, rt.tenant_type
+		FROM (SELECT DISTINCT c.tenant_id FROM chat.moderation_cases c WHERE c.deleted_at IS NULL AND c.tenant_id > $1) d
+		LEFT JOIN LATERAL (SELECT coalesce(x.name, x.code) AS name_or_code, x.tenant_type FROM ref.tenants x WHERE x.tenant_id = d.tenant_id) rt ON true
+		ORDER BY d.tenant_id LIMIT $2`, from, limit)
+	if err != nil {
+		return nil, fmt.Errorf("chat: case tenants: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	out := []read.CaseTenant{}
+	for rows.Next() {
+		var ct read.CaseTenant
+		var name, typ sql.NullString
+		if err := rows.Scan(&ct.TenantID, &name, &typ); err != nil {
+			return nil, fmt.Errorf("chat: case tenants: %w", err)
+		}
+		ct.Name, ct.Type = nullString(name), nullString(typ)
+		out = append(out, ct)
+	}
+	return out, rows.Err()
 }
 
 // OpenCounts implements read.SafetyReader (every tenant, platform job).

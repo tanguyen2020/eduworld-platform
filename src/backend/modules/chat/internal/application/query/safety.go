@@ -187,6 +187,54 @@ func (q Safety) ListModerationCases(ctx context.Context, f CaseFilter) (out Case
 	return out, nil
 }
 
+// CaseTenantPage is a page of listModerationCaseTenants.
+type CaseTenantPage struct {
+	Data []read.CaseTenant
+	Page page.Info
+}
+
+// ListModerationCaseTenants implements listModerationCaseTenants (F122 T064, F122-AC-01): the tenants having cases — the
+// source of the tenant filter of the Safety Team, which does not hold listTenants (R20) — keyset paginated in SQL, under
+// tenancy.Bypass(ctx, "moderation_case") (audited, counted); ids and projected names only.
+func (q Safety) ListModerationCaseTenants(ctx context.Context, limit int, cursor string) (out CaseTenantPage, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.query.ListModerationCaseTenants")
+	defer func() { done(err) }()
+	if _, err := moderator(ctx, authz.PermModerationCaseRead); err != nil {
+		return out, err
+	}
+	limit = page.Limit(limit)
+	var after *uuid.UUID
+	if cursor != "" && q.Cursors != nil {
+		cur, err := q.Cursors.Decode(cursor)
+		if err != nil || cur == nil {
+			return out, problem.New(problem.BadRequest, "invalid cursor")
+		}
+		id := cur.ID
+		after = &id
+	}
+	bctx, err := bypass(ctx, nil)
+	if err != nil {
+		return out, err
+	}
+	var rows []read.CaseTenant
+	if err = q.Read.Read(bctx, func(ctx context.Context) error {
+		rows, err = q.Reader.CaseTenants(ctx, after, limit+1)
+		return err
+	}); err != nil {
+		return out, err
+	}
+	out.Page = page.Info{Limit: limit}
+	if len(rows) > limit {
+		rows = rows[:limit]
+		if q.Cursors != nil {
+			s := q.Cursors.Encode(page.Cursor{Key: "t", ID: rows[len(rows)-1].TenantID})
+			out.Page.NextCursor, out.Page.HasMore = &s, true
+		}
+	}
+	out.Data = rows
+	return out, nil
+}
+
 // readable loads a case through the bypass and checks that the caller may read its content: the assignee or a team lead
 // (F121-AC-07); anyone else is 403 PERMISSION_DENIED (audited).
 func (q Safety) readable(ctx context.Context, p authz.Principal, id uuid.UUID, fn func(ctx context.Context, c read.CaseRow) error) error {
@@ -445,8 +493,10 @@ func (q Safety) notifications(ctx context.Context, f read.NotificationFilter, li
 
 // ListSchoolNotifications implements listSchoolSafetyNotifications (F121-AC-18): a school admin sees the notifications of
 // the schools of their grants, a tenant admin those of every school of the tenant; a school outside the grants is 403.
+// created_from (F122 T066) keeps the notifications created at or after it (SQL).
 // Summary, students (ids, role), severity, measures and deadlines only — never message content.
-func (q Safety) ListSchoolNotifications(ctx context.Context, school *uuid.UUID, acknowledged *bool, limit int, cursor string) (out NotificationPage, err error) {
+func (q Safety) ListSchoolNotifications(ctx context.Context, school *uuid.UUID, acknowledged *bool, createdFrom *time.Time, limit int,
+	cursor string) (out NotificationPage, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.query.ListSchoolNotifications")
 	defer func() { done(err) }()
 	p, ok := authz.PrincipalFrom(ctx)
@@ -463,7 +513,7 @@ func (q Safety) ListSchoolNotifications(ctx context.Context, school *uuid.UUID, 
 			return out, err
 		}
 	}
-	f := read.NotificationFilter{TenantIDs: []uuid.UUID{tenant}, Acknowledged: acknowledged}
+	f := read.NotificationFilter{TenantIDs: []uuid.UUID{tenant}, Acknowledged: acknowledged, CreatedFrom: createdFrom}
 	if school != nil {
 		f.SchoolIDs = []uuid.UUID{*school}
 	} else {

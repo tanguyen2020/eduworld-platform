@@ -41,6 +41,7 @@ func (q Switches) now() time.Time {
 // SwitchLevel is ModerationSwitchState of one level with its pending requests.
 type SwitchLevel struct {
 	TenantID   *uuid.UUID
+	TenantName string // projected name (ref.tenants), empty when unknown
 	Configured *read.SwitchRow
 	Effective  moderation.Effective
 	Pending    []read.SwitchRequestRow
@@ -48,7 +49,11 @@ type SwitchLevel struct {
 
 // Body renders the level (ModerationSwitchState with pending_requests).
 func (l SwitchLevel) Body() map[string]any {
-	return service.StateBody(l.TenantID, l.Configured, l.Effective, l.Pending)
+	m := service.StateBody(l.TenantID, l.Configured, l.Effective, l.Pending)
+	if l.TenantName != "" {
+		m["tenant_name"] = l.TenantName
+	}
+	return m
 }
 
 // SwitchOverview is the response of listModerationSwitches: the platform level and one keyset page of the tenant levels.
@@ -56,6 +61,8 @@ type SwitchOverview struct {
 	Platform SwitchLevel
 	Tenants  []SwitchLevel
 	Page     page.Info
+	// DisabledTenantCount is set without tenant_ids only: the tenants with a value off at the tenant level (F122 T065).
+	DisabledTenantCount *int
 }
 
 // SwitchHistoryPage is a page of listModerationSwitchHistory.
@@ -81,7 +88,8 @@ func switchReader(ctx context.Context) error {
 // ListModerationSwitches implements listModerationSwitches: the platform level and one page of the tenants of tenant_ids
 // (System Admin CrossTenantScope, audited; none without tenant_ids) with the configured and effective values, the steps
 // off and the requests waiting for approval. The tenants are paged in tenant_id order after the cursor and only the
-// tenants of the page are read from the database (API_DESIGN §5, owner rule 2026-11-23).
+// tenants of the page are read from the database (API_DESIGN §5, owner rule 2026-11-23). Without tenant_ids, the number
+// of tenants with a value off is counted in SQL, never listed (F122 T065).
 func (q Switches) ListModerationSwitches(ctx context.Context, limit int, cursor string) (out SwitchOverview, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.query.ListModerationSwitches")
 	defer func() { done(err) }()
@@ -112,6 +120,7 @@ func (q Switches) ListModerationSwitches(ctx context.Context, limit int, cursor 
 	var platform *read.SwitchRow
 	rows := map[uuid.UUID]*read.SwitchRow{}
 	var platformPending, tenantPending []read.SwitchRequestRow
+	names := map[uuid.UUID]string{}
 	err = q.Read.Read(ctx, func(ctx context.Context) error {
 		if platform, _, err = q.Moderation.Switches(ctx, uuid.Nil); err != nil {
 			return err
@@ -119,10 +128,18 @@ func (q Switches) ListModerationSwitches(ctx context.Context, limit int, cursor 
 		if platformPending, err = q.Reader.PendingRequests(ctx, nil, now, maxPending); err != nil {
 			return err
 		}
+		if len(scoped) == 0 { // no tenant_ids: how many tenants are off, counted in SQL, never listed (F122 T065)
+			n, err := q.Reader.DisabledTenantCount(ctx, now)
+			out.DisabledTenantCount = &n
+			return err
+		}
 		if len(tenants) == 0 {
 			return nil
 		}
 		if rows, err = q.Reader.TenantSwitches(ctx, tenants); err != nil {
+			return err
+		}
+		if names, err = q.Reader.TenantNames(ctx, tenants); err != nil {
 			return err
 		}
 		tenantPending, err = q.Reader.PendingRequests(ctx, tenants, now, maxPending*len(tenants))
@@ -146,7 +163,7 @@ func (q Switches) ListModerationSwitches(ctx context.Context, limit int, cursor 
 		if pending == nil {
 			pending = []read.SwitchRequestRow{}
 		}
-		out.Tenants = append(out.Tenants, SwitchLevel{TenantID: &t, Configured: rows[t], Effective: service.EffectiveOf(platform, rows[t], now),
+		out.Tenants = append(out.Tenants, SwitchLevel{TenantID: &t, TenantName: names[t], Configured: rows[t], Effective: service.EffectiveOf(platform, rows[t], now),
 			Pending: pending})
 	}
 	return out, nil

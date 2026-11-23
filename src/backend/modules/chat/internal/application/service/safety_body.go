@@ -20,6 +20,8 @@ func CaseBody(c read.CaseRow) map[string]any {
 		"target_type": c.TargetType, "target_id": c.TargetID, "school_ids": c.SchoolIDs, "report_count": c.ReportCount,
 		"first_response_due_at": c.FirstResponseDue, "sla_due_at": c.SLADue, "contact_path": c.ContactPath, "version": c.Version,
 		"created_at": c.CreatedAt, "updated_at": c.UpdatedAt}
+	setOpt(m, "tenant_name", c.TenantName)
+	setOpt(m, "tenant_type", c.TenantType)
 	setOpt(m, "category_code", c.Category)
 	setOpt(m, "channel_id", c.ChannelID)
 	setOpt(m, "channel_type", c.ChannelType)

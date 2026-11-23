@@ -109,18 +109,60 @@ func (q Catalog) next(at time.Time, id uuid.UUID) *string {
 	return &s
 }
 
-// ListCategories implements listSensitiveCategories.
-func (q Catalog) ListCategories(ctx context.Context) (rows []read.CategoryRow, err error) {
+// CategoryPage is a page of listSensitiveCategories.
+type CategoryPage struct {
+	Data []read.CategoryRow
+	Page page.Info
+}
+
+// categoryCursor decodes the cursor of a category page ((code, category_id), owner rule 2026-11-23: paged in SQL).
+func (q Catalog) categoryCursor(cursor string) (*read.CategoryCursor, error) {
+	cur, err := q.decode(cursor)
+	if err != nil || cur == nil {
+		return nil, err
+	}
+	return &read.CategoryCursor{Code: cur.Key, ID: cur.ID}, nil
+}
+
+func (q Catalog) nextCategory(code string, id uuid.UUID) *string {
+	if q.Cursors == nil {
+		return nil
+	}
+	s := q.Cursors.Encode(page.Cursor{Key: code, ID: id})
+	return &s
+}
+
+// ListCategories implements listSensitiveCategories: one keyset page (code, category_id) read in SQL.
+func (q Catalog) ListCategories(ctx context.Context, limit int, cursor string) (out CategoryPage, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.query.ListSensitiveCategories")
 	defer func() { done(err) }()
 	if _, err := platformStaff(ctx); err != nil {
-		return nil, err
+		return out, err
 	}
+	limit = page.Limit(limit)
+	after, err := q.categoryCursor(cursor)
+	if err != nil {
+		return out, err
+	}
+	var rows []read.CategoryRow
 	err = q.Read.Read(ctx, func(ctx context.Context) error {
-		rows, err = q.Reader.Categories(ctx)
+		rows, err = q.Reader.Categories(ctx, after, limit+1)
 		return err
 	})
-	return rows, err
+	if err != nil {
+		return out, err
+	}
+	out.Page = page.Info{Limit: limit}
+	if len(rows) > limit {
+		rows = rows[:limit]
+		last := rows[len(rows)-1]
+		out.Page.NextCursor, out.Page.HasMore = q.nextCategory(last.Code, last.ID), true
+	}
+	if rows == nil {
+		rows = []read.CategoryRow{}
+	}
+	out.Data = rows
+	return out, nil
 }
 
 // crossTenants returns the tenants of a System Admin cross-tenant read (tenant_ids → CrossTenantScope); nil = platform.
@@ -133,7 +175,16 @@ func crossTenants(ctx context.Context) []uuid.UUID {
 	return nil
 }
 
-func (q Catalog) terms(ctx context.Context, tenants []uuid.UUID, category *uuid.UUID, text string, limit int, cursor string) (TermPage, error) {
+// TermFilter is the filter of listSensitiveTerms / listTenantSensitiveTerms, applied in SQL (F122 T063).
+type TermFilter struct {
+	Category  *uuid.UUID
+	Text      string
+	Locale    string
+	MatchType string
+	Status    string
+}
+
+func (q Catalog) terms(ctx context.Context, tenants []uuid.UUID, f TermFilter, limit int, cursor string) (TermPage, error) {
 	var out TermPage
 	limit = page.Limit(limit)
 	cur, err := q.decode(cursor)
@@ -146,7 +197,8 @@ func (q Catalog) terms(ctx context.Context, tenants []uuid.UUID, category *uuid.
 	}
 	var rows []catalog.StoredTerm
 	err = q.Read.Read(ctx, func(ctx context.Context) error {
-		rows, err = q.Reader.Terms(ctx, read.TermQuery{Tenants: tenants, CategoryID: category, Text: text, After: after, Limit: limit + 1})
+		rows, err = q.Reader.Terms(ctx, read.TermQuery{Tenants: tenants, CategoryID: f.Category, Text: f.Text, Locale: f.Locale,
+			MatchType: f.MatchType, Status: f.Status, After: after, Limit: limit + 1})
 		return err
 	})
 	if err != nil {
@@ -163,14 +215,14 @@ func (q Catalog) terms(ctx context.Context, tenants []uuid.UUID, category *uuid.
 }
 
 // ListTerms implements listSensitiveTerms: the platform terms, or the extra terms of the tenants of a System Admin
-// cross-tenant read (tenant_ids).
-func (q Catalog) ListTerms(ctx context.Context, category *uuid.UUID, text string, limit int, cursor string) (out TermPage, err error) {
+// cross-tenant read (tenant_ids); category, text, locale, match_type and status filter in SQL, keyset kept (F122 T063).
+func (q Catalog) ListTerms(ctx context.Context, f TermFilter, limit int, cursor string) (out TermPage, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.query.ListSensitiveTerms")
 	defer func() { done(err) }()
 	if _, err := platformStaff(ctx); err != nil {
 		return out, err
 	}
-	return q.terms(ctx, crossTenants(ctx), category, text, limit, cursor)
+	return q.terms(ctx, crossTenants(ctx), f, limit, cursor)
 }
 
 // ListTenantTerms implements listTenantSensitiveTerms: the extra terms of the target tenant (X-Tenant-Id).
@@ -188,7 +240,7 @@ func (q Catalog) ListTenantTerms(ctx context.Context, category *uuid.UUID, limit
 	if !p.HasPlatformRole() {
 		return out, problem.New(problem.PermissionDenied, "")
 	}
-	return q.terms(ctx, []uuid.UUID{tenant}, category, "", limit, cursor)
+	return q.terms(ctx, []uuid.UUID{tenant}, TermFilter{Category: category}, limit, cursor)
 }
 
 // ListAllowlist implements listSensitiveAllowlist (platform entries).
@@ -397,6 +449,7 @@ func (q Catalog) TestTerms(ctx context.Context, in TestInput) (out TestResult, e
 // TenantCategories is the response of listTenantSensitiveCategories.
 type TenantCategories struct {
 	Data     []TenantCategoryView
+	Page     page.Info
 	Switches SwitchState
 }
 
@@ -422,7 +475,7 @@ type SwitchState struct {
 // ListTenantCategories implements listTenantSensitiveCategories (/tenant/chat/categories; tenant roles holding
 // chat.sensitive_terms.read, F116-AC-18): the platform categories with their state in the tenant and the effective
 // moderation switches (banner); never a term, an allowlist entry or a compiled catalogue.
-func (q Catalog) ListTenantCategories(ctx context.Context) (out TenantCategories, err error) {
+func (q Catalog) ListTenantCategories(ctx context.Context, limit int, cursor string) (out TenantCategories, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.query.ListTenantSensitiveCategories")
 	defer func() { done(err) }()
 	p, ok := authz.PrincipalFrom(ctx)
@@ -433,10 +486,15 @@ func (q Catalog) ListTenantCategories(ctx context.Context) (out TenantCategories
 	if _, err := readPrincipal(ctx, &tenant); err != nil {
 		return out, err
 	}
+	limit = page.Limit(limit)
+	after, err := q.categoryCursor(cursor)
+	if err != nil {
+		return out, err
+	}
 	var rows []read.TenantCategoryRow
 	var platformSw, tenantSw *read.SwitchRow
 	err = q.Read.Read(ctx, func(ctx context.Context) error {
-		if rows, err = q.Reader.TenantCategories(ctx, tenant); err != nil {
+		if rows, err = q.Reader.TenantCategories(ctx, tenant, after, limit+1); err != nil {
 			return err
 		}
 		platformSw, tenantSw, err = q.Moderation.Switches(ctx, tenant)
@@ -444,6 +502,12 @@ func (q Catalog) ListTenantCategories(ctx context.Context) (out TenantCategories
 	})
 	if err != nil {
 		return out, err
+	}
+	out.Page = page.Info{Limit: limit}
+	if len(rows) > limit {
+		rows = rows[:limit]
+		last := rows[len(rows)-1]
+		out.Page.NextCursor, out.Page.HasMore = q.nextCategory(last.Code, last.ID), true
 	}
 	out.Data = make([]TenantCategoryView, 0, len(rows))
 	for _, r := range rows {

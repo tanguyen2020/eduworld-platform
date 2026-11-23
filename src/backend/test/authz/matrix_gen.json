@@ -3772,6 +3772,15 @@
     ]
   },
   {
+    "operation_id": "listModerationCaseTenants",
+    "module": "chat",
+    "method": "GET",
+    "path": "/admin/moderation/case-tenants",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listModerationCases",
     "module": "chat",
     "method": "GET",
@@ -4032,6 +4041,18 @@
     "module": "identity",
     "method": "GET",
     "path": "/schools/{school_id}/academic-years",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "listSchoolClubMembers",
+    "module": "chat",
+    "method": "GET",
+    "path": "/tenant/social/clubs/{club_id}/members",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [
@@ -4974,6 +4995,18 @@
     ]
   },
   {
+    "operation_id": "rejectModerationSwitchChange",
+    "module": "chat",
+    "method": "POST",
+    "path": "/admin/chat/moderation-switches/requests/{request_id}:reject",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "rejectPartyInvitation",
     "module": "competition",
     "method": "POST",
@@ -5050,6 +5083,18 @@
     "module": "chat",
     "method": "DELETE",
     "path": "/social/friends/{user_id}",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "removeSchoolClubMember",
+    "module": "chat",
+    "method": "POST",
+    "path": "/tenant/social/clubs/{club_id}/members/{user_id}:remove",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

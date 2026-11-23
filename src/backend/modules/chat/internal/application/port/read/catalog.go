@@ -9,6 +9,12 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/catalog"
 )
 
+// CategoryCursor is the keyset position after the last category of a page.
+type CategoryCursor struct {
+	Code string
+	ID   uuid.UUID
+}
+
 // CategoryRow is a live platform category with the number of its live platform terms.
 type CategoryRow struct {
 	catalog.StoredCategory
@@ -28,6 +34,9 @@ type TermQuery struct {
 	Tenants    []uuid.UUID
 	CategoryID *uuid.UUID
 	Text       string // case-insensitive substring of the term (staff with chat.sensitive_terms.read only)
+	Locale     string // vi | en; empty = any (F122 T063, SQL)
+	MatchType  string // word | phrase | contains | pattern; empty = any
+	Status     string // draft | published; empty = any
 	After      *Cursor
 	Limit      int
 }
@@ -41,12 +50,14 @@ type Cursor struct {
 // CatalogAdminReader is the read side of the catalogue administration (read session; explicit tenant and deleted_at
 // conditions).
 type CatalogAdminReader interface {
-	Categories(ctx context.Context) ([]CategoryRow, error)
+	// Categories returns one keyset page of the live platform categories after after, (code, category_id) order (owner rule
+	// 2026-11-23: paged in SQL).
+	Categories(ctx context.Context, after *CategoryCursor, limit int) ([]CategoryRow, error)
 	Terms(ctx context.Context, q TermQuery) ([]catalog.StoredTerm, error)
 	Allowlist(ctx context.Context, after *Cursor, limit int) ([]catalog.StoredAllow, error)
 	// Versions lists the versions of the platform (tenants nil) or of tenants, newest first, before version (0: none).
 	Versions(ctx context.Context, tenants []uuid.UUID, before int64, limit int) ([]catalog.StoredVersion, error)
-	TenantCategories(ctx context.Context, tenant uuid.UUID) ([]TenantCategoryRow, error)
+	TenantCategories(ctx context.Context, tenant uuid.UUID, after *CategoryCursor, limit int) ([]TenantCategoryRow, error)
 	// LiveSnapshot is CatalogRepository.LiveSnapshot in the read session (testSensitiveTerms with drafts).
 	LiveSnapshot(ctx context.Context, tenant *uuid.UUID) (catalog.Snapshot, []uuid.UUID, error)
 }

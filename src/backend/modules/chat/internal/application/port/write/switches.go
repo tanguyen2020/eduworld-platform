@@ -60,6 +60,9 @@ type SwitchRepository interface {
 	LockRequest(ctx context.Context, tenant *uuid.UUID, id uuid.UUID) (*read.SwitchRequestRow, error)
 	// DecideRequest sets the status of a pending request (approved with its approver, expired, rejected).
 	DecideRequest(ctx context.Context, id uuid.UUID, status string, approver *uuid.UUID, now time.Time) error
+	// RejectRequest marks a pending request rejected by a second System Admin (updated_by = by, approved_by stays NULL)
+	// when its version is still version (ErrStale otherwise), F122 T060.
+	RejectRequest(ctx context.Context, id, by uuid.UUID, version int64, now time.Time) error
 	// ExpiredSwitches returns the levels whose disabled values lapsed at now (system job: every tenant).
 	ExpiredSwitches(ctx context.Context, now time.Time, limit int) ([]SwitchLevel, error)
 	// ExpiredRequests returns the requests pending_approval past request_expires_at at now (system job: every tenant).

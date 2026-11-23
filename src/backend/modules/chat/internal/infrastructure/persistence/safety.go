@@ -30,23 +30,26 @@ type scanner interface{ Scan(...any) error }
 const caseCols = `c.case_id, c.tenant_id, c.status, c.severity, c.source, c.category_code, c.channel_id, c.channel_type, c.target_type,
 	c.target_id, c.school_ids, c.subject_user_ids, c.assignee_moderator_id, c.assigned_via, c.report_count, c.first_response_due_at,
 	c.sla_due_at, c.first_response_at, c.escalated_at, c.hold_sanction_id, c.school_notified_at, c.school_ack_at, c.acknowledged_by,
-	c.contact_outcome, c.contact_path, c.resolved_at, c.source_event_id, c.created_at, c.updated_at, c.version`
+	c.contact_outcome, c.contact_path, c.resolved_at, c.source_event_id, c.created_at, c.updated_at, c.version,
+	(SELECT coalesce(rt.name, rt.code) FROM ref.tenants rt WHERE rt.tenant_id = c.tenant_id),
+	(SELECT rt.tenant_type FROM ref.tenants rt WHERE rt.tenant_id = c.tenant_id)` // tenant_name, tenant_type (ref.tenants projection, F122 T064)
 
 func scanCase(sc scanner) (*read.CaseRow, error) {
 	var c read.CaseRow
-	var category, channelType, via, outcome sql.NullString
+	var category, channelType, via, outcome, tenantName, tenantType sql.NullString
 	var channel, assignee, hold, ackBy, event uuid.NullUUID
 	var firstAt, escAt, notified, acked, resolved sql.NullTime
 	var schools, subjects []byte
 	if err := sc.Scan(&c.ID, &c.TenantID, &c.Status, &c.Severity, &c.Source, &category, &channel, &channelType, &c.TargetType, &c.TargetID,
 		&schools, &subjects, &assignee, &via, &c.ReportCount, &c.FirstResponseDue, &c.SLADue, &firstAt, &escAt, &hold, &notified, &acked,
-		&ackBy, &outcome, &c.ContactPath, &resolved, &event, &c.CreatedAt, &c.UpdatedAt, &c.Version); err != nil {
+		&ackBy, &outcome, &c.ContactPath, &resolved, &event, &c.CreatedAt, &c.UpdatedAt, &c.Version, &tenantName, &tenantType); err != nil {
 		return nil, err
 	}
 	c.Category, c.ChannelID, c.ChannelType, c.Assignee, c.AssignedVia = nullString(category), nullUUID(channel), nullString(channelType),
 		nullUUID(assignee), nullString(via)
 	c.FirstResponseAt, c.EscalatedAt, c.HoldSanctionID, c.SchoolNotifiedAt, c.SchoolAckAt = nullTime(firstAt), nullTime(escAt),
 		nullUUID(hold), nullTime(notified), nullTime(acked)
+	c.TenantName, c.TenantType = nullString(tenantName), nullString(tenantType)
 	c.AcknowledgedBy, c.ContactOutcome, c.ResolvedAt, c.SourceEventID = nullUUID(ackBy), nullString(outcome), nullTime(resolved), nullUUID(event)
 	c.FirstResponseDue, c.SLADue, c.CreatedAt, c.UpdatedAt = c.FirstResponseDue.UTC(), c.SLADue.UTC(), c.CreatedAt.UTC(), c.UpdatedAt.UTC()
 	if err := json.Unmarshal(schools, &c.SchoolIDs); err != nil {

@@ -46,8 +46,8 @@ func (p Projection) owned(ctx context.Context, tenant uuid.UUID, table string, i
 }
 
 // Tenant applies tenant.created/updated (the envelope tenant is the tenant itself).
-func (p Projection) Tenant(ctx context.Context, tenant uuid.UUID, code *string, typ, status string, isQA *bool, settings []byte, version int64) (bool, error) {
-	return p.Refs.Tenant(ctx, tenant, code, typ, status, isQA, settings, version)
+func (p Projection) Tenant(ctx context.Context, tenant uuid.UUID, code, name *string, typ, status string, isQA *bool, settings []byte, version int64) (bool, error) {
+	return p.Refs.Tenant(ctx, tenant, code, name, typ, status, isQA, settings, version)
 }
 
 // Student applies student.synced; a deactivated student gets its pending requests cancelled.

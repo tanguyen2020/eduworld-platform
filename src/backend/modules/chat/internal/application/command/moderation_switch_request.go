@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/audit"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -76,6 +79,91 @@ func (h SwitchAdmin) ApproveModerationSwitchChange(ctx context.Context, id uuid.
 	var pe *problem.Error
 	if errors.As(err, &pe) && pe.Code == problem.ModerationSwitchSelfApproval { // audited outside the rolled-back transaction
 		authz.RecordDenied(ctx, string(problem.ModerationSwitchSelfApproval), map[string]any{"request_id": id})
+	}
+	return out, err
+}
+
+// Event and audit action of a rejected request (F122 T060).
+const (
+	EventSwitchChangeRejected  = "moderation_switch.change_rejected"
+	AuditSwitchRequestRejected = "chat.moderation_switch_request.rejected"
+	// RejectReasonMax is maxLength of the reason of rejectModerationSwitchChange.
+	RejectReasonMax = 500
+)
+
+// RejectModerationSwitchChange implements rejectModerationSwitchChange (F122 T060, F122-AC-27, ADR-0078): a System Admin
+// other than the proposer rejects a pending request of the level of X-Tenant-Id (none: a platform request) with a reason
+// (1–500 characters) and If-Match = the version of the request. The proposer → 403 MODERATION_SWITCH_SELF_APPROVAL
+// (audited denial); unknown in that level → 404; no longer pending or past its approval window → 409 CONFLICT; another
+// version → 412 VERSION_MISMATCH. Nothing changes in force and no history row is written; the rejection is audited (proposer,
+// rejecter, reason) and moderation_switch.change_rejected is published in the same transaction.
+func (h SwitchAdmin) RejectModerationSwitchChange(ctx context.Context, id uuid.UUID, version int64, reason string) (out read.SwitchRequestRow, err error) {
+	ctx, done := observability.UseCase(ctx, "chat.command.RejectModerationSwitchChange")
+	defer func() { done(err) }()
+	p, err := switchAuthorize(ctx)
+	if err != nil {
+		return out, err
+	}
+	reason = strings.TrimSpace(reason)
+	switch {
+	case reason == "":
+		return out, problem.Invalid("reason", problem.SubRequired, "a reason is required")
+	case utf8.RuneCountInString(reason) > RejectReasonMax:
+		return out, problem.Invalid("reason", problem.SubMaxLength, "at most 500 characters")
+	}
+	var target *uuid.UUID
+	if p.TenantID != nil {
+		t := *p.TenantID
+		target = &t
+	}
+	sc, err := levelScope(p, target)
+	if err != nil {
+		return out, err
+	}
+	now := h.now()
+	err = h.UoW.InTenantTx(ctx, sc, func(ctx context.Context) error {
+		req, err := h.Repo.LockRequest(ctx, target, id)
+		if err != nil {
+			return err
+		}
+		if req == nil {
+			return notFound()
+		}
+		if req.ProposedBy == p.UserID {
+			return problem.New(problem.ModerationSwitchSelfApproval, "")
+		}
+		if req.Status != read.RequestPending || !now.Before(req.RequestExpiresAt) {
+			return problem.New(problem.Conflict, "the request is no longer pending approval")
+		}
+		if req.Version != version {
+			return problem.New(problem.VersionMismatch, "")
+		}
+		if err := h.Repo.RejectRequest(ctx, req.ID, p.UserID, version, now); err != nil {
+			return switchProblem(err)
+		}
+		req.Status, req.DecidedAt, req.Version = read.RequestRejected, &now, version+1
+		scope := "platform"
+		if target != nil {
+			scope = "tenant"
+		}
+		sw := moderation.SwitchChange{EnabledAll: req.EnabledAll, Steps: req.Steps}.Config()
+		steps := service.StepsBody(func(st string) bool { v, ok := sw.Steps[st]; return !ok || v })
+		payload := map[string]any{"request_id": req.ID, "tenant_id": target, "scope": scope, "enabled_all": req.EnabledAll, "steps": steps,
+			"proposed_by": req.ProposedBy, "rejected_by": p.UserID, "reason": reason, "rejected_at": now}
+		if err := h.Events.Publish(ctx, eventOf(EventSwitchChangeRejected, "moderation_switch_request", req.ID.String(), target, now, payload)); err != nil {
+			return err
+		}
+		if err := h.Audit.Record(ctx, audit.Event{Action: AuditSwitchRequestRejected, TargetType: "moderation_switch_request",
+			TargetID: req.ID.String(), Result: audit.ResultSuccess, Reason: reason, Metadata: map[string]any{"scope": scope,
+				"level": levelID(target), "disabled": offList(sw), "proposed_by": req.ProposedBy, "rejected_by": p.UserID}}); err != nil {
+			return err
+		}
+		out = *req
+		return idempotency.SetResult(ctx, service.RequestBody(out))
+	})
+	var pe *problem.Error
+	if errors.As(err, &pe) && pe.Code == problem.ModerationSwitchSelfApproval { // audited outside the rolled-back transaction
+		authz.RecordDenied(ctx, string(problem.ModerationSwitchSelfApproval), map[string]any{"request_id": id, "operation": "reject"})
 	}
 	return out, err
 }

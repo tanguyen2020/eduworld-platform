@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -137,7 +138,7 @@ func (Switches) InsertChange(ctx context.Context, c write.SwitchChangeRecord) er
 // ---------- requests
 
 const requestColumns = `r.request_id, r.tenant_id, r.enabled_all, r.steps, r.reason, r.switch_expires_at, r.status, r.proposed_by,
-	r.approved_by, r.created_at, r.decided_at, r.request_expires_at`
+	r.approved_by, r.created_at, r.decided_at, r.request_expires_at, r.version`
 
 func scanRequest(sc interface{ Scan(...any) error }) (read.SwitchRequestRow, error) {
 	var r read.SwitchRequestRow
@@ -145,7 +146,7 @@ func scanRequest(sc interface{ Scan(...any) error }) (read.SwitchRequestRow, err
 	var steps []byte
 	var decided sql.NullTime
 	if err := sc.Scan(&r.ID, &tenant, &r.EnabledAll, &steps, &r.Reason, &r.ExpiresAt, &r.Status, &r.ProposedBy, &by, &r.CreatedAt,
-		&decided, &r.RequestExpiresAt); err != nil {
+		&decided, &r.RequestExpiresAt, &r.Version); err != nil {
 		return r, err
 	}
 	r.TenantID, r.ApprovedBy, r.DecidedAt = nullUUID(tenant), nullUUID(by), nullTime(decided)
@@ -206,6 +207,21 @@ func (Switches) DecideRequest(ctx context.Context, id uuid.UUID, status string, 
 		id, status, approver, now)
 	if err != nil {
 		return fmt.Errorf("chat: decide switch request: %w", err)
+	}
+	if n == 0 {
+		return write.ErrStale
+	}
+	return nil
+}
+
+// RejectRequest implements write.SwitchRepository.
+func (Switches) RejectRequest(ctx context.Context, id, by uuid.UUID, version int64, now time.Time) error {
+	// tenancyguard:ok the row was locked by LockRequest in the scope of its level (RLS for a tenant session)
+	n, err := exec(ctx, `UPDATE chat.moderation_switch_requests SET status = 'rejected', decided_at = $3, updated_at = $3, updated_by = $2,
+		version = version + 1 WHERE request_id = $1 AND status = 'pending_approval' AND version = $4 AND deleted_at IS NULL`,
+		id, by, now, version)
+	if err != nil {
+		return fmt.Errorf("chat: reject switch request: %w", err)
 	}
 	if n == 0 {
 		return write.ErrStale
@@ -372,6 +388,52 @@ func (Switches) History(ctx context.Context, tenants []uuid.UUID, after *read.Cu
 			return nil, err
 		}
 		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+// DisabledTenantCount implements read.SwitchAdminReader.
+func (Switches) DisabledTenantCount(ctx context.Context, now time.Time) (int, error) {
+	t, err := readTx(ctx)
+	if err != nil {
+		return 0, err
+	}
+	var n int
+	// tenancyguard:ok System Admin platform read (chat.policy.toggle, platform scope): a count of tenant rows, never a list; deleted_at IS NULL
+	err = t.QueryRowContext(ctx, `SELECT count(DISTINCT s.tenant_id) FROM chat.moderation_switches s
+		WHERE s.tenant_id IS NOT NULL AND s.deleted_at IS NULL AND (s.expires_at IS NULL OR s.expires_at > $1)
+		AND (NOT s.enabled_all OR EXISTS (SELECT 1 FROM jsonb_each(s.steps) e WHERE e.key = ANY($2::text[]) AND e.value = 'false'::jsonb))`,
+		now, "{"+strings.Join(moderation.SwitchableSteps, ",")+"}").Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("chat: disabled tenant count: %w", err)
+	}
+	return n, nil
+}
+
+// TenantNames implements read.SwitchAdminReader.
+func (Switches) TenantNames(ctx context.Context, tenants []uuid.UUID) (map[uuid.UUID]string, error) {
+	out := map[uuid.UUID]string{}
+	if len(tenants) == 0 {
+		return out, nil
+	}
+	t, err := readTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// tenancyguard:ok ref.tenants is the tenant registry projection (not tenant-scoped, no deleted_at); the given tenants only
+	rows, err := t.QueryContext(ctx, `SELECT rt.tenant_id, coalesce(rt.name, rt.code) FROM ref.tenants rt
+		WHERE rt.tenant_id = ANY($1::uuid[]) AND coalesce(rt.name, rt.code) IS NOT NULL`, idStrings(tenants))
+	if err != nil {
+		return nil, fmt.Errorf("chat: tenant names: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var id uuid.UUID
+		var name string
+		if err := rows.Scan(&id, &name); err != nil {
+			return nil, fmt.Errorf("chat: tenant names: %w", err)
+		}
+		out[id] = name
 	}
 	return out, rows.Err()
 }

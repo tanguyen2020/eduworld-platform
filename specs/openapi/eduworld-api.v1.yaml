@@ -4428,6 +4428,74 @@ paths:
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /tenant/social/clubs/{club_id}/members:
+    get:
+      x-service: chat
+      tags: [tenant]
+      operationId: listSchoolClubMembers
+      x-portal-action: action.school_lms.clubs.view
+      summary: Thành viên club của trường cho nhân sự (social.club.approve trong phạm vi trường của grant; nickname, vai trò)
+      description: |
+        Route nhân sự (portal). Phạm vi lấy từ UserRole: grant `social.club.approve` cấp trường chỉ thấy club của trường đó;
+        cấp tenant thấy mọi trường. Club của trường khác hoặc không tồn tại → `404` (không lộ sự tồn tại). Thành viên đang
+        hoạt động, phân trang keyset (`joined_at`, `user_id`) trong SQL. Chỉ nickname (R16), không có nội dung chat (F122 T061).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/ClubIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ClubMember' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tenant/social/clubs/{club_id}/members/{user_id}:remove:
+    post:
+      x-service: chat
+      tags: [tenant]
+      operationId: removeSchoolClubMember
+      x-portal-action: action.school_lms.clubs.approve
+      summary: Nhân sự trường gỡ thành viên khỏi club (social.club.approve, lý do bắt buộc)
+      description: |
+        Route nhân sự (portal), phạm vi như `listSchoolClubMembers` (trường khác → `404`). Không gỡ được chủ club (`404`;
+        lưu trữ club thay thế). Cùng một transaction: kết thúc membership (`left_reason = removed`), giảm `member_count`, gỡ khỏi
+        channel `team` cố định của club, audit `club.member_removed` (kèm lý do, người gỡ) và phát `club.member_left`
+        (`reason = removed`) như gỡ thành viên của F120. Gỡ lần hai (cùng Idempotency-Key) trả lại kết quả cũ (F122 T061).
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/ClubIdPath'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              additionalProperties: false
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 500, description: Lý do gỡ (audit) }
+      responses:
+        '204':
+          description: Đã gỡ
+          headers:
+            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
   /social/clubs/{club_id}/join-requests:
     get:
       x-service: chat
@@ -11285,9 +11353,13 @@ paths:
       operationId: listSensitiveCategories
       x-portal-action: action.platform_admin.chat_safety.view
       summary: Danh sách category từ nhạy cảm của platform
+      description: Một trang keyset `(code, category_id)` trong SQL (`limit`/`cursor`, API_DESIGN §5 — owner 2026-11-23).
       x-internal: true
       security:
         - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -11295,11 +11367,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [data]
+                required: [data, page]
                 properties:
                   data:
                     type: array
+                    maxItems: 100
                     items: { $ref: '#/components/schemas/SensitiveTermCategory' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
         '403': { $ref: '#/components/responses/Forbidden' }
     post:
       x-service: chat
@@ -11383,6 +11457,7 @@ paths:
       operationId: listSensitiveTerms
       x-portal-action: action.platform_admin.chat_safety.view
       summary: Danh sách term (platform; term của tenant khi lọc tenant_ids)
+      description: Mọi bộ lọc áp trong SQL; phân trang keyset (`created_at`, `term_id`) giữ nguyên (F122 T063).
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -11395,6 +11470,18 @@ paths:
           in: query
           required: false
           schema: { type: string, maxLength: 100 }
+        - name: locale
+          in: query
+          required: false
+          schema: { type: string, enum: [vi, en] }
+        - name: match_type
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/SensitiveMatchType' }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [draft, published] }
         - $ref: '#/components/parameters/TenantIds'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -11644,6 +11731,8 @@ paths:
         `platform` luôn có (mọi trang); `tenants` là một trang keyset theo `tenant_id` (`limit`/`cursor`) của các tenant của
         `tenant_ids` (System Admin, đọc liên tenant có audit) — không có `tenant_ids` thì rỗng; chỉ các tenant của trang được đọc
         từ DB (API_DESIGN §5). Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
+        Không có `tenant_ids`: trả thêm `disabled_tenant_count` = số tenant đang có ít nhất một giá trị tắt còn hiệu lực ở cấp
+        tenant (`expires_at` chưa qua), đếm trong SQL, không liệt kê tenant (banner System Admin, F122 T065).
       x-internal: true
       security:
         - keycloakAdminBearer: []
@@ -11666,6 +11755,10 @@ paths:
                     maxItems: 100
                     items: { $ref: '#/components/schemas/ModerationSwitchState' }
                   page: { $ref: '#/components/schemas/PageInfo' }
+                  disabled_tenant_count:
+                    type: integer
+                    minimum: 0
+                    description: Chỉ khi không có `tenant_ids` — số tenant đang tắt ít nhất một bước ở cấp tenant (không liệt kê)
         '403': { $ref: '#/components/responses/Forbidden' }
     put:
       x-service: chat
@@ -11749,6 +11842,56 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+  /admin/chat/moderation-switches/requests/{request_id}:reject:
+    post:
+      x-service: chat
+      tags: [admin]
+      operationId: rejectModerationSwitchChange
+      x-portal-action: action.platform_admin.moderation_switches.toggle
+      summary: Từ chối yêu cầu tắt công tắc kiểm duyệt (System Admin thứ hai)
+      description: |
+        Chỉ System Admin (`chat.policy.toggle`) **khác** người đề xuất (người đề xuất tự từ chối →
+        `403 MODERATION_SWITCH_SELF_APPROVAL`, có audit từ chối quyền). `reason` bắt buộc (1–500 ký tự, không chỉ khoảng trắng).
+        `If-Match` = `version` của yêu cầu (`W/"<version>"`; thiếu → `428`, lệch → `412 VERSION_MISMATCH`). Yêu cầu của tenant:
+        gửi `X-Tenant-Id` = tenant của yêu cầu (không có → chỉ tìm yêu cầu platform); không thấy → `404`. Yêu cầu không còn
+        `pending_approval` hoặc đã quá `request_expires_at` → `409 CONFLICT`. Yêu cầu chuyển `rejected` (`decided_at`), giá trị
+        hiệu lực không đổi, không ghi `moderation_switch_changes`; audit `chat.moderation_switch_request.rejected` (người đề xuất,
+        người từ chối, lý do) và phát `moderation_switch.change_rejected` cùng transaction (F122 T060, ADR-0078).
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
+        - name: request_id
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              additionalProperties: false
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 500, description: Lý do từ chối }
+      responses:
+        '200':
+          description: Yêu cầu đã bị từ chối (`status = rejected`); trạng thái hiệu lực không đổi
+          headers:
+            Idempotent-Replayed: { $ref: '#/components/headers/IdempotentReplayed' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ModerationSwitchRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /admin/chat/moderation-switches/history:
     get:
       x-service: chat
@@ -11995,8 +12138,11 @@ paths:
       operationId: listTenantSensitiveCategories
       x-portal-action: action.school_lms.chat_safety.view
       summary: Category platform, trạng thái bật/tắt trong tenant và trạng thái công tắc hiệu lực (cho banner)
+      description: Category là một trang keyset `(code, category_id)` trong SQL (`limit`/`cursor`, API_DESIGN §5 — owner 2026-11-23); `moderation_switches` có ở mọi trang.
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeader' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -12004,11 +12150,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [data, moderation_switches]
+                required: [data, page, moderation_switches]
                 properties:
                   data:
                     type: array
+                    maxItems: 100
                     items: { $ref: '#/components/schemas/TenantSensitiveCategory' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
                   moderation_switches: { $ref: '#/components/schemas/ModerationSwitchState' }
         '403': { $ref: '#/components/responses/Forbidden' }
   /tenant/chat/moderation-status:
@@ -12110,6 +12258,38 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/ModerationCase' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/moderation/case-tenants:
+    get:
+      x-service: chat
+      tags: [moderation]
+      operationId: listModerationCaseTenants
+      x-internal: true
+      x-portal-action: action.live_ops.moderation_cases.view
+      summary: Tenant đang có case kiểm duyệt (nguồn bộ lọc tenant của Platform Safety Team; moderation.case.read)
+      description: |
+        Chỉ gateway nội bộ + role platform (ADR-0027, ADR-0072 §4). Không gửi `X-Tenant-Id`. Liệt kê các tenant có ít nhất một
+        case chưa xóa, kèm `tenant_name` chiếu từ dữ liệu tham chiếu `ref.tenants` của module chat (event `tenant.created`/
+        `tenant.updated` của identity — không gọi identity đồng bộ). Đọc liên tenant chỉ qua
+        `tenancy.Bypass(ctx, "moderation_case")` (audit + metric). Phân trang keyset theo `tenant_id` trong SQL (F122 T064).
+        Không thay `listTenants` (Safety Moderator không có quyền đó — R20).
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ModerationCaseTenant' }
                   page: { $ref: '#/components/schemas/PageInfo' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
@@ -12398,6 +12578,10 @@ paths:
         - name: acknowledged
           in: query
           schema: { type: boolean }
+        - name: created_from
+          in: query
+          description: Chỉ thông báo gửi từ thời điểm này trở đi (lọc trong SQL; portal mặc định bây giờ − 30 ngày, F122 T066)
+          schema: { type: string, format: date-time }
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -18344,6 +18528,10 @@ components:
           description: Hết hạn chờ duyệt (≤ 24 giờ sau khi tạo, không muộn hơn expires_at)
           allOf:
             - $ref: '#/components/schemas/Timestamp'
+        version:
+          type: integer
+          minimum: 1
+          description: Giá trị If-Match của rejectModerationSwitchChange (`W/"<version>"`)
     ModerationSwitchChange:
       type: object
       required: [change_id, scope, before, after, reason, actor_id, changed_at]
@@ -24039,12 +24227,31 @@ components:
       type: string
       description: Trạng thái case theo MODERATION §6.2
       enum: [open, in_review, escalated, resolved, reopened]
+    ModerationCaseTenant:
+      type: object
+      description: Một tenant có case kiểm duyệt (listModerationCaseTenants, F122 T064)
+      required: [tenant_id]
+      properties:
+        tenant_id: { $ref: '#/components/schemas/Uuid' }
+        tenant_name:
+          type: string
+          maxLength: 255
+          description: Tên tenant chiếu từ ref.tenants của module chat (tên; chưa có tên thì mã tenant); vắng mặt khi tenant chưa được chiếu
+        tenant_type: { type: string, enum: [school, unit, common], description: Loại tenant chiếu từ ref.tenants (vắng mặt khi chưa chiếu) }
     ModerationCase:
       type: object
       required: [case_id, tenant_id, status, severity, created_at]
       properties:
         case_id: { $ref: '#/components/schemas/Uuid' }
         tenant_id: { $ref: '#/components/schemas/Uuid' }
+        tenant_name:
+          type: string
+          maxLength: 255
+          description: Tên tenant chiếu từ ref.tenants của module chat (tên; chưa có tên thì mã tenant) — không gọi identity đồng bộ (F122 T064)
+        tenant_type:
+          type: string
+          enum: [school, unit, common]
+          description: Loại tenant chiếu từ ref.tenants (tenant common → không gửi thông báo trường, Safety Team liên hệ trực tiếp; F122 T064)
         status: { $ref: '#/components/schemas/ModerationCaseStatus' }
         severity: { type: string, enum: [p1, p2, p3] }
         source: { type: string, enum: [report, filter_alert, async_analysis, self_harm_signal] }

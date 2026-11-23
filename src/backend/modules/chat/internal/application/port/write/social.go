@@ -126,7 +126,7 @@ type ExpiryRepository interface {
 // ProjectionWriter writes the ref.* projections (consumers only, DATABASE_DESIGN §2.17).
 type ProjectionWriter interface {
 	OwnerTenant(ctx context.Context, table string, id uuid.UUID) (*uuid.UUID, error)
-	Tenant(ctx context.Context, tenant uuid.UUID, code *string, typ, status string, isQA *bool, settings []byte, version int64) (bool, error)
+	Tenant(ctx context.Context, tenant uuid.UUID, code, name *string, typ, status string, isQA *bool, settings []byte, version int64) (bool, error)
 	Student(ctx context.Context, student, tenant, school uuid.UUID, grade *int, status *string, version int64) (bool, error)
 	StudentStatus(ctx context.Context, student uuid.UUID, tenant *uuid.UUID, status string) (bool, error)
 	StudentDeleted(ctx context.Context, student, tenant uuid.UUID, deleted bool, at time.Time) (bool, error)

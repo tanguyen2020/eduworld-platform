@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/command"
-	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/application/service"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/chat/internal/domain/moderation/catalog"
@@ -42,13 +42,13 @@ type CatalogCommands interface {
 
 // CatalogQueries are the read use cases of the catalogue (query.Catalog).
 type CatalogQueries interface {
-	ListCategories(ctx context.Context) ([]read.CategoryRow, error)
-	ListTerms(ctx context.Context, category *uuid.UUID, text string, limit int, cursor string) (query.TermPage, error)
+	ListCategories(ctx context.Context, limit int, cursor string) (query.CategoryPage, error)
+	ListTerms(ctx context.Context, f query.TermFilter, limit int, cursor string) (query.TermPage, error)
 	ListTenantTerms(ctx context.Context, category *uuid.UUID, limit int, cursor string) (query.TermPage, error)
 	ListAllowlist(ctx context.Context, limit int, cursor string) (query.AllowPage, error)
 	ListVersions(ctx context.Context, limit int, cursor string) (query.VersionPage, error)
 	TestTerms(ctx context.Context, in query.TestInput) (query.TestResult, error)
-	ListTenantCategories(ctx context.Context) (query.TenantCategories, error)
+	ListTenantCategories(ctx context.Context, limit int, cursor string) (query.TenantCategories, error)
 	TenantModerationStatus(ctx context.Context, now time.Time) (query.ModerationStatus, error)
 }
 
@@ -263,16 +263,16 @@ func versionBody(v catalog.StoredVersion) map[string]any {
 // ---------- handlers
 
 func (h CatalogHandlers) listCategories(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.Queries.ListCategories(r.Context())
+	p, err := h.Queries.ListCategories(r.Context(), limitOf(r), r.URL.Query().Get("cursor"))
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	data := make([]map[string]any, len(rows))
-	for i := range rows {
-		data[i] = categoryBody(rows[i].StoredCategory, &rows[i].TermCount)
+	data := make([]map[string]any, len(p.Data))
+	for i := range p.Data {
+		data[i] = categoryBody(p.Data[i].StoredCategory, &p.Data[i].TermCount)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+	writeJSON(w, http.StatusOK, map[string]any{"data": data, "page": p.Page})
 }
 
 type categoryIn struct {
@@ -421,7 +421,19 @@ func (h CatalogHandlers) listTerms(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
-	p, err := h.Queries.ListTerms(r.Context(), cat, r.URL.Query().Get("q"), limitOf(r), r.URL.Query().Get("cursor"))
+	qs := r.URL.Query()
+	f := query.TermFilter{Category: cat, Text: qs.Get("q"), Locale: qs.Get("locale"), MatchType: qs.Get("match_type"), Status: qs.Get("status")}
+	for name, v := range map[string]struct {
+		got     string
+		allowed []string
+	}{"locale": {f.Locale, []string{"vi", "en"}}, "match_type": {f.MatchType, []string{"word", "phrase", "contains", "pattern"}},
+		"status": {f.Status, []string{"draft", "published"}}} {
+		if v.got != "" && !slices.Contains(v.allowed, v.got) {
+			fail(w, r, problem.Invalid(name, problem.SubInvalid, "not an allowed value"))
+			return
+		}
+	}
+	p, err := h.Queries.ListTerms(r.Context(), f, limitOf(r), qs.Get("cursor"))
 	if err != nil {
 		fail(w, r, err)
 		return
@@ -550,7 +562,7 @@ func switchState(s query.SwitchState) map[string]any {
 }
 
 func (h CatalogHandlers) listTenantCategories(w http.ResponseWriter, r *http.Request) {
-	res, err := h.Queries.ListTenantCategories(r.Context())
+	res, err := h.Queries.ListTenantCategories(r.Context(), limitOf(r), r.URL.Query().Get("cursor"))
 	if err != nil {
 		fail(w, r, err)
 		return
@@ -559,7 +571,7 @@ func (h CatalogHandlers) listTenantCategories(w http.ResponseWriter, r *http.Req
 	for i, v := range res.Data {
 		data[i] = tenantCategoryBody(v)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data, "moderation_switches": switchState(res.Switches)})
+	writeJSON(w, http.StatusOK, map[string]any{"data": data, "page": res.Page, "moderation_switches": switchState(res.Switches)})
 }
 
 func (h CatalogHandlers) toggle(w http.ResponseWriter, r *http.Request) {

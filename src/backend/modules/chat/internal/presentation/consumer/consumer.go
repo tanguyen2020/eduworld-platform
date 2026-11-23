@@ -235,6 +235,7 @@ func (c IdentityProjection) tenant(ctx context.Context, e outbox.Envelope) (bool
 	var p struct {
 		TenantID       uuid.UUID      `json:"tenant_id"`
 		Code           *string        `json:"code"`
+		Name           *string        `json:"name"`
 		TenantType     string         `json:"tenant_type"`
 		Status         string         `json:"status"`
 		IsQA           *bool          `json:"is_qa"`
@@ -253,10 +254,10 @@ func (c IdentityProjection) tenant(ctx context.Context, e outbox.Envelope) (bool
 		return false, invalid(e.EventType, "tenant_id")
 	case !slices.Contains([]string{"school", "unit", "common"}, p.TenantType), p.Status != "active" && p.Status != "disabled":
 		return false, invalid(e.EventType, "tenant_type/status")
-	case !maxLen(p.Code, 64) || len(settings) > 16384:
+	case !maxLen(p.Code, 64) || !maxLen(p.Name, 255) || len(settings) > 16384:
 		return false, invalid(e.EventType, "length")
 	}
-	return c.P.Tenant(ctx, p.TenantID, p.Code, p.TenantType, p.Status, p.IsQA, settings, version(p.SourceVersion, e))
+	return c.P.Tenant(ctx, p.TenantID, p.Code, p.Name, p.TenantType, p.Status, p.IsQA, settings, version(p.SourceVersion, e))
 }
 
 func (c IdentityProjection) student(ctx context.Context, e outbox.Envelope) (bool, error) {

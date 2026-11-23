@@ -13,6 +13,8 @@ import (
 type CaseRow struct {
 	ID               uuid.UUID
 	TenantID         uuid.UUID
+	TenantName       *string // ref.tenants name (code until a name is projected), F122 T064
+	TenantType       *string // ref.tenants tenant_type (school, unit, common)
 	Status           string
 	Severity         string
 	Source           string
@@ -194,6 +196,7 @@ type NotificationFilter struct {
 	SchoolIDs    []uuid.UUID // nil: every school of the tenants
 	Acknowledged *bool
 	Overdue      *bool
+	CreatedFrom  *time.Time // created_at ≥ (listSchoolSafetyNotifications created_from, F122 T066)
 	Now          time.Time
 	After        *Cursor
 	Limit        int
@@ -206,6 +209,14 @@ type OpenCount struct {
 	Count    int
 	// OldestUnclaimed is the creation time of the oldest open case without assignee (zero when none).
 	OldestUnclaimed time.Time
+}
+
+// CaseTenant is one tenant having moderation cases (listModerationCaseTenants): name from ref.tenants (code until a
+// name is projected; nil when the tenant is not projected).
+type CaseTenant struct {
+	TenantID uuid.UUID
+	Name     *string
+	Type     *string
 }
 
 // SafetyReader is the read side of the Safety Team (F121). Callers run it inside a read session of the tenant, or
@@ -225,6 +236,9 @@ type SafetyReader interface {
 	ChannelExists(ctx context.Context, tenant, channel uuid.UUID) (string, bool, error)
 	Sanctions(ctx context.Context, f SanctionFilter) ([]SanctionDetail, error)
 	Notifications(ctx context.Context, f NotificationFilter) ([]NotificationRow, error)
+	// CaseTenants lists the tenants having at least one live case after the tenant id after (keyset, tenant_id order),
+	// with the projected tenant name — under tenancy.Bypass(moderation_case) only (F122 T064).
+	CaseTenants(ctx context.Context, after *uuid.UUID, limit int) ([]CaseTenant, error)
 	// OpenCounts returns the open cases (not resolved) per severity and assignment, every tenant (platform job).
 	OpenCounts(ctx context.Context) ([]OpenCount, error)
 	// OverdueNotifications counts the unacknowledged notifications past ack_due_at at now (every tenant).

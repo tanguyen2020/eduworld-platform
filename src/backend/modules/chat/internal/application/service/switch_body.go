@@ -73,7 +73,7 @@ func RequestBody(r read.SwitchRequestRow) map[string]any {
 	return map[string]any{"request_id": r.ID, "scope": scope, "tenant_id": r.TenantID, "enabled_all": r.EnabledAll,
 		"steps": StepsBody(configuredOn(r.Steps)), "reason": r.Reason, "expires_at": r.ExpiresAt.UTC(), "status": r.Status,
 		"proposed_by": r.ProposedBy, "approved_by": r.ApprovedBy, "created_at": r.CreatedAt.UTC(), "decided_at": utc(r.DecidedAt),
-		"request_expires_at": r.RequestExpiresAt.UTC()}
+		"request_expires_at": r.RequestExpiresAt.UTC(), "version": max(r.Version, 1)}
 }
 
 // ChangeBody renders ModerationSwitchChange.

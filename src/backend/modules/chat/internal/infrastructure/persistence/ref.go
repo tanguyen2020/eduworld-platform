@@ -37,18 +37,19 @@ func (Refs) OwnerTenant(ctx context.Context, table string, id uuid.UUID) (*uuid.
 	return &owner.UUID, nil
 }
 
-// Tenant upserts ref.tenants.
-func (Refs) Tenant(ctx context.Context, tenant uuid.UUID, code *string, typ, status string, isQA *bool, settings []byte, version int64) (bool, error) {
+// Tenant upserts ref.tenants (name: the display name for the Safety Team, F122 T064; absent → kept).
+func (Refs) Tenant(ctx context.Context, tenant uuid.UUID, code, name *string, typ, status string, isQA *bool, settings []byte, version int64) (bool, error) {
 	var s any
 	if len(settings) > 0 {
 		s = string(settings)
 	}
 	// tenancyguard:ok projection upsert of the tenant registry ref.tenants (key = tenant_id, no deleted_at: rule 2)
-	return changed(ctx, `INSERT INTO ref.tenants AS t (tenant_id, code, tenant_type, status, is_qa, settings_subset, source_version)
-		VALUES ($1, $2::varchar, $3, $4, coalesce($5::boolean, false), coalesce($6::jsonb, '{}'::jsonb), $7)
+	return changed(ctx, `INSERT INTO ref.tenants AS t (tenant_id, code, tenant_type, status, is_qa, settings_subset, source_version, name)
+		VALUES ($1, $2::varchar, $3, $4, coalesce($5::boolean, false), coalesce($6::jsonb, '{}'::jsonb), $7, $8::varchar)
 		ON CONFLICT (tenant_id) DO UPDATE SET code = coalesce($2, t.code), tenant_type = $3, status = $4,
-			is_qa = coalesce($5, t.is_qa), settings_subset = coalesce($6::jsonb, t.settings_subset), source_version = $7
-		WHERE t.source_version < $7`, tenant, code, typ, status, isQA, s, version)
+			is_qa = coalesce($5, t.is_qa), settings_subset = coalesce($6::jsonb, t.settings_subset), source_version = $7,
+			name = coalesce($8, t.name)
+		WHERE t.source_version < $7`, tenant, code, typ, status, isQA, s, version, name)
 }
 
 // Student upserts ref.students.
