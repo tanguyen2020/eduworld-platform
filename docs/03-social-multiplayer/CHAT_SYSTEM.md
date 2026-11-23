@@ -117,7 +117,7 @@ Một bảng duy nhất theo channel, áp dụng cho mọi học sinh lớp 1–
 | `party`/`team` | Party/team events, đội trong trận | `party.created` (tạo), `party.member_joined/left`, `party.disbanded` (đóng); `match.started` tạo channel `team` cho từng đội |
 | `direct` | 2 người (bạn bè, không block) | Mở bằng `openDirectChannel` (id tất định theo cặp, tạo một lần — F120). Consumer `chat.membership`: `user.blocked` → `frozen` (gửi → `CHAT_NOT_ALLOWED`), `user.unblocked` → `open` khi còn là bạn bè; bạn bè trở lại → mở lại khi gọi `openDirectChannel` |
 | `team` cố định (club) | Thành viên club ([SOCIAL_SYSTEM §6](SOCIAL_SYSTEM.md#6-club--guild-nhóm-bền-vững--adr-0050-confirmed)) | Cùng transaction với lệnh club (vào/rời/bị gỡ: `joined_at`/`left_at`); lưu trữ club → `read_only` |
-| `world`/`area` | Không lưu `channel_members`; quyền kiểm tra động: World theo trường (`ref.students`) hoặc tenant (`world_scope = tenant`, chỉ tenant `unit`), Area theo phòng gateway báo trong tín hiệu presence (`room_id`) | Id tất định; `listMyChannels` liệt kê; hàng `chat.channels` tạo lười ở lần join/gửi đầu tiên; lịch sử chỉ từ bộ đệm gần nhất (F120) |
+| `world`/`area` | Không lưu `channel_members`; quyền kiểm tra động: World theo trường (`ref.students`) hoặc tenant (`world_scope = tenant`, chỉ tenant `unit`), Area theo phòng gateway báo trong tín hiệu presence (`room_id`) | Id tất định; `listMyChannels` liệt kê; hàng `chat.channels` tạo lười ở lần join/gửi đầu tiên; lịch sử chỉ từ bộ đệm gần nhất (F120). **Lọc block/mute phía server** (F120 T061, CHILD_SAFETY §3.4): fan-out sau JetStream ack mang `target.exclude_user_ids` = học sinh có block hai chiều với người gửi hoặc đã tắt tiếng người gửi (gateway không giao cho họ; đọc quan hệ không được → không phát, fail closed); lịch sử từ bộ đệm bỏ tin của người gửi mà người xem đã block/bị block/tắt tiếng. Quan hệ của học sinh cache `chat_facts_cache`, xóa ngay khi block/mute đổi; client không tự ẩn |
 
 `chat.channel_members(channel_id, user_id, role, joined_at, left_at, muted_until, last_read_seq, notification_level)`.
 
@@ -477,6 +477,8 @@ Tính năng client: copy **nội dung đang hiển thị** (bản đã che, plac
 | Mute user (cá nhân) | Ẩn tin của người đó với mình; người kia không biết | `POST /api/v1/social/mutes` |
 | Mute channel | Không thông báo | `PATCH /api/v1/chat/channels/{id}/membership {notification_level}` |
 | Block | Ẩn tin hai chiều trong channel chung, chặn DM, lời mời, friend request | `POST /api/v1/social/blocks` |
+
+Ẩn tin do **server** làm ở mọi loại channel, kể cả World/Area (không có danh sách thành viên — lọc theo quan hệ của người gửi khi fan-out và của người xem khi trả lịch sử, §2 bảng membership); client không phải nguồn quyết định.
 | Report message / user | Tạo `report` → [MODERATION](MODERATION.md); báo cáo được cả tin **đã thu hồi** hoặc **đã sửa** (moderator thấy bản gốc và các revision) | `POST /api/v1/chat/reports` |
 
 Quy tắc quan hệ block/mute (hiệu lực ngoài chat: lời mời, ghép trận, instance) thuộc [SOCIAL_SYSTEM §5](SOCIAL_SYSTEM.md#5-block-mute-report-điểm-vào).

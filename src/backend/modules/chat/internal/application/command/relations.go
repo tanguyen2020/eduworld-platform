@@ -110,6 +110,9 @@ func (h Social) BlockUser(ctx context.Context, other uuid.UUID) (err error) {
 		if h.Metrics != nil {
 			h.Metrics.Block()
 		}
+		if err := h.invalidateRelations(ctx, tenant, me, other); err != nil {
+			return err
+		}
 		return h.invalidate(ctx, me, other)
 	})
 }
@@ -146,6 +149,9 @@ func (h Social) UnblockUser(ctx context.Context, other uuid.UUID) (err error) {
 			return err
 		}
 		if err := h.record(ctx, AuditUserUnblocked, other, nil); err != nil {
+			return err
+		}
+		if err := h.invalidateRelations(ctx, tenant, me, other); err != nil {
 			return err
 		}
 		return h.invalidate(ctx, me, other)
@@ -193,6 +199,9 @@ func (h Social) setMute(ctx context.Context, other uuid.UUID, on bool) (err erro
 			"source_version": version(now)}); err != nil {
 			return err
 		}
-		return h.record(ctx, action, other, nil)
+		if err := h.record(ctx, action, other, nil); err != nil {
+			return err
+		}
+		return h.invalidateRelations(ctx, tenant, me, other)
 	})
 }

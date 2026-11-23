@@ -435,9 +435,7 @@ func (h Send) acked(ctx context.Context, s Sender, e message.Envelope, card read
 		facts, err := h.Facts.Channel(bg, s.TenantID, e.ChannelID)
 		if err == nil && facts != nil && facts.Channel.Type.Implicit() {
 			if h.Broadcast != nil { // World/Area: every subscriber that passed the access check of chat.channel.join
-				if err := h.Broadcast.Broadcast(bg, e, card); err != nil {
-					slog.WarnContext(ctx, "chat: fan-out failed", "error", err)
-				}
+				h.broadcast(ctx, bg, s.TenantID, e, card)
 			}
 		} else if err == nil && facts != nil {
 			notifyMentions(bg, h.Notify, facts, e, e.Mentions)
@@ -457,6 +455,24 @@ func (h Send) acked(ctx context.Context, s Sender, e message.Envelope, card read
 		}
 	}
 	return SendResult{Envelope: e, Sender: card, Replayed: replayed}, nil
+}
+
+// broadcast fans a World/Area message out after the JetStream ack (R25) to every joined connection except the students
+// hidden from the sender (F120 T061, Clarifications 2026-11-23: the server decides, never the client): a block in either
+// direction or a mute of the sender. The relations are read through the cache (chat_facts_cache); when they cannot be
+// read the message is not broadcast at all (fail closed; it stays in the recent buffer, whose history is filtered too).
+func (h Send) broadcast(ctx, bg context.Context, tenant uuid.UUID, e message.Envelope, card read.ChatCard) {
+	if h.Implicit == nil { // no relations source: never broadcast unfiltered
+		return
+	}
+	rel, err := h.Implicit.Relations(bg, tenant, e.SenderID)
+	if err != nil {
+		slog.WarnContext(ctx, "chat: world/area relations unavailable, message not broadcast", "error", err)
+		return
+	}
+	if err := h.Broadcast.Broadcast(bg, e, card, rel.HiddenFrom()); err != nil {
+		slog.WarnContext(ctx, "chat: fan-out failed", "error", err)
+	}
 }
 
 func envelope(tenant uuid.UUID, school *uuid.UUID, facts *read.ChannelFacts, sender uuid.UUID, req message.Request, id uuid.UUID,

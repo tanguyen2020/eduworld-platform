@@ -53,3 +53,9 @@ const (
 	ResultLimit    = "limit_reached"
 	ResultRate     = "rate_limited"
 )
+
+// RelationCache drops the cached block/mute relations of students after a block or mute changed (F120 T061: the
+// World/Area fan-out and history filter read them through service.Implicit.Relations).
+type RelationCache interface {
+	InvalidateRelations(ctx context.Context, tenant uuid.UUID, users ...uuid.UUID) error
+}

@@ -162,7 +162,7 @@ func Register(r *module.Registry) (*Module, error) {
 		Cache: factsCache, Notifier: cache.Notifier{C: vk}, Gauge: gauge}
 	social := command.Social{UoW: core.UoW, AfterCommit: entx.AfterCommit, Repo: persistence.Social{}, Directory: persistence.Directory{},
 		Events: persistence.Publisher{W: core.Writer}, Audit: persistence.Auditor{R: core.Recorder}, Codes: security.Codes{},
-		Friends: friends, Metrics: observability.Social{}, Holds: persistence.Safety{}, Config: cfg.UseCase}
+		Friends: friends, Relations: implicit, Metrics: observability.Social{}, Holds: persistence.Safety{}, Config: cfg.UseCase}
 	// Platform Safety Team (F121): reports, cases, sanctions, school notifications; cross-tenant reads only in query.Safety
 	// through tenancy.Bypass(moderation_case) (ADR-0072).
 	safetyCmd := command.Safety{UoW: core.UoW, Store: persistence.Safety{}, Events: persistence.Publisher{W: core.Writer},

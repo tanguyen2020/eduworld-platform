@@ -172,3 +172,43 @@ func (s Implicit) Card(ctx context.Context, tenant, user uuid.UUID) read.ChatCar
 	}
 	return card
 }
+
+func relationsKey(tenant, user uuid.UUID) string {
+	return "rel:" + tenant.String() + ":" + user.String()
+}
+
+// Relations returns the live block and mute relations of a student (F120 T061: the World/Area fan-out leaves out the
+// students it hides from, the history leaves out the senders it hides), cached chat_facts_cache like the blocks of the
+// channel facts and dropped by InvalidateRelations when a relation changes. An error means the caller fails closed.
+func (s Implicit) Relations(ctx context.Context, tenant, user uuid.UUID) (read.UserRelations, error) {
+	raw, err := s.Cache.Get(ctx, relationsKey(tenant, user), s.Facts.Config.FactsFresh, func(ctx context.Context) ([]byte, error) {
+		var r read.UserRelations
+		err := s.Facts.read(ctx, tenant, func(ctx context.Context) error {
+			var err error
+			r, err = s.Reader.Relations(ctx, tenant, user)
+			return err
+		})
+		if err != nil {
+			return nil, err
+		}
+		return json.Marshal(r)
+	})
+	if err != nil {
+		return read.UserRelations{}, unavailable(err)
+	}
+	var r read.UserRelations
+	if err := json.Unmarshal(raw, &r); err != nil {
+		return read.UserRelations{}, unavailable(err)
+	}
+	return r, nil
+}
+
+// InvalidateRelations implements port.RelationCache: drops the cached relations of the students of a changed block or
+// mute (both sides: a block hides both ways, a mute changes Muting of one and MutedBy of the other).
+func (s Implicit) InvalidateRelations(ctx context.Context, tenant uuid.UUID, users ...uuid.UUID) error {
+	keys := make([]string, len(users))
+	for i, u := range users {
+		keys[i] = relationsKey(tenant, u)
+	}
+	return s.Cache.Invalidate(ctx, keys...)
+}

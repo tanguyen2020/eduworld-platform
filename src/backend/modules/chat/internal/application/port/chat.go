@@ -178,9 +178,11 @@ type PolicyGenerations interface {
 }
 
 // BroadcastFanout publishes chat.message.created to every connection subscribed to an implicit channel (world, area —
-// F120-AC-12, AC-13): the gateway joined them after the access check of chat.channel.join; there is no member list.
+// F120-AC-12, AC-13): the gateway joined them after the access check of chat.channel.join; there is no member list. exclude
+// are the students hidden from the sender (block either way, mute of the sender — F120 T061): the gateway never delivers to
+// them (more than the envelope bound → an error and nothing is published: fail closed).
 type BroadcastFanout interface {
-	Broadcast(ctx context.Context, e message.Envelope, sender read.ChatCard) error
+	Broadcast(ctx context.Context, e message.Envelope, sender read.ChatCard, exclude []uuid.UUID) error
 }
 
 // MembershipPush sends chat.channel.membership_changed to one student after a commit (F120: club join/leave, direct

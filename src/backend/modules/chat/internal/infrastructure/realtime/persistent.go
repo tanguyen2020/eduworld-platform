@@ -2,6 +2,7 @@ package realtime
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 
@@ -19,12 +20,19 @@ var (
 	_ port.MembershipPush  = ChatFanout{}
 )
 
-// Broadcast implements port.BroadcastFanout: chat.message.created on ew:chat:fanout:<channel_id> without target — every
-// connection the gateway subscribed after the access check of chat.channel.join (World/Area, F120-AC-12, AC-13).
-func (f ChatFanout) Broadcast(ctx context.Context, e message.Envelope, sender read.ChatCard) error {
+// Broadcast implements port.BroadcastFanout: chat.message.created on ew:chat:fanout:<channel_id> to every connection the
+// gateway subscribed after the access check of chat.channel.join (World/Area, F120-AC-12, AC-13) except the students of
+// target.exclude_user_ids (F120 T061: the gateway drops them before delivery). Too many to exclude → error, nothing sent.
+func (f ChatFanout) Broadcast(ctx context.Context, e message.Envelope, sender read.ChatCard, exclude []uuid.UUID) error {
+	if len(exclude) > rt.MaxExcludeUsers {
+		return fmt.Errorf("chat: broadcast: %d students to exclude, bound %d", len(exclude), rt.MaxExcludeUsers)
+	}
 	env, err := rt.NewMessage(TypeMessageCreated, ChatMessage(e, sender, false, port.MessageExtras{}), f.now())
 	if err != nil {
 		return err
+	}
+	if len(exclude) > 0 {
+		env.Target = &rt.Target{ExcludeUserIDs: append([]uuid.UUID{}, exclude...)}
 	}
 	return f.P.Publish(ctx, rt.ChatFanoutChannel(e.ChannelID.String()), env)
 }

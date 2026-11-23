@@ -122,7 +122,7 @@ Khuyến nghị vận hành [Confirmed]: chỉ tắt từng bước có lý do c
 | Mời party | Bạn bè (party `friend`) hoặc học sinh cùng trường theo luật party (lớp 1–3 cùng đúng khối, khác trường chỉ trong tenant bật liên trường — ADR-0095, ADR-0054); không mời người lạ ngoài tenant |
 | Party liên trường | Không (mặc định Release 1.0) [Confirmed] |
 | Party khác grade band | Được nếu cùng trường và thỏa điều kiện ghép nhóm ([PARTY_SYSTEM §6.2](../03-social-multiplayer/PARTY_SYSTEM.md#62-kiểm-tra-ở-bước-3--eligibility): cùng band hoặc band liền kề khi activity cho phép); câu hỏi theo khối thấp hơn của nhóm ([COMPETITION_SYSTEM §5](../01-game-design/COMPETITION_SYSTEM.md#5-công-bằng-theo-khối-lớp)). Đây là điều kiện ghép **hoạt động học tập**, không áp vào chat (ADR-0020) |
-| Block | Chặn mọi tương tác (chat, mời, ghép party, ghép trận nếu còn lựa chọn khác) |
+| Block | Chặn mọi tương tác (chat, mời, ghép party, ghép trận nếu còn lựa chọn khác). Ẩn tin do server quyết định ở mọi channel, kể cả World/Area: không giao tin của người đã block/bị block hoặc đã bị tắt tiếng, cả realtime lẫn lịch sử bộ đệm (F120 T061, [CHAT_SYSTEM §2](../03-social-multiplayer/CHAT_SYSTEM.md)) |
 
 ### 3.5. Preset "chỉ quick message + emote" (ADR-0078)
 

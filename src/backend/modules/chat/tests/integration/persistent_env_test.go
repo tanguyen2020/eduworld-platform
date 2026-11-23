@@ -80,6 +80,7 @@ func setupPersistent(t *testing.T, o chatOpts) *pEnv {
 		c.send.Facts, c.send.Implicit, c.send.Ensure, c.send.Broadcast, c.send.HoursLoc = c.facts, p.implicit, p.persistent.EnsureImplicit,
 			fanout, ict
 		c.reads.Facts, c.reads.Implicit = c.facts, p.implicit
+		c.social.Relations = p.implicit // F120 T061: a block/mute drops the cached relations of the World/Area filter
 		c.chatHandlers = &chathttp.ChatHandlers{Send: c.send, Queries: c.reads}
 		curfew, _ := policy.ParseWindow("21:30-06:30", ict)
 		p.policies = command.PolicyAdmin{UoW: c.uow, AfterCommit: entx.AfterCommit, Store: persistence.Policies{}, Schema: policyschema.Validator{},

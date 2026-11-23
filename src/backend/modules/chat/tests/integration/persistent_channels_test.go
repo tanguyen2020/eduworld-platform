@@ -316,3 +316,136 @@ func TestCommonTenantDefaults(t *testing.T) {
 		t.Fatalf("area text after re-enable: %+v", r.Problem)
 	}
 }
+
+// delivered reports whether the gateway would deliver env to a connection of s (the same target filter as
+// revocation.Decide of the realtime gateway).
+func delivered(env *rt.Envelope, s student) bool {
+	return env != nil && env.Target.Accepts(s.id, uuid.Nil, "conn-"+s.id.String()[:6])
+}
+
+// historyFrom pushes chat.history.fetch for s on ch and returns the senders of the messages of chat.history.loaded.
+func (p *pEnv) historyFrom(s student, ch uuid.UUID, box <-chan rt.Envelope) []string {
+	p.t.Helper()
+	conn := "conn-" + s.id.String()[:6]
+	if r := p.ws(s, conn, "chat.history.fetch", map[string]any{"channel_id": ch}); !r.OK {
+		p.t.Fatalf("history fetch: %+v", r.Problem)
+	}
+	env := next(box, "chat.history.loaded", 3*time.Second)
+	if env == nil {
+		p.t.Fatal("no chat.history.loaded")
+	}
+	var out []string
+	for _, m := range payloadOf(env)["messages"].([]any) {
+		out = append(out, m.(map[string]any)["sender"].(map[string]any)["user_id"].(string))
+	}
+	return out
+}
+
+func countID(ids []string, id uuid.UUID) int {
+	n := 0
+	for _, x := range ids {
+		if x == id.String() {
+			n++
+		}
+	}
+	return n
+}
+
+// T061 — Clarifications 2026-11-23 (orchestrator, CHILD_SAFETY: the server decides): a World/Area message is never
+// delivered to a connection whose student blocked the sender, was blocked by the sender or muted the sender, neither over
+// realtime (target of the fan-out envelope, applied by the gateway) nor in the history served from the recent buffer; an
+// unrelated student still receives it; a block/mute made after the relations were cached applies to the next message,
+// an unblock lets the messages through again. The fan-out still follows the JetStream ack (R25).
+func TestWorldAreaBlockMuteFiltered(t *testing.T) {
+	c := setupPersistent(t, chatOpts{})
+	an := c.student(c.tenantA, c.schoolA)
+	binh, chi, dung, em := c.student(c.tenantA, c.schoolA), c.student(c.tenantA, c.schoolA), c.student(c.tenantA, c.schoolA),
+		c.student(c.tenantA, c.schoolA)
+	put := func(s student, path string, other student) {
+		t.Helper()
+		if r := c.call(s, http.MethodPut, path+other.id.String(), "", nil); r.status != http.StatusNoContent {
+			t.Fatalf("PUT %s: %d %s", path, r.status, r.raw)
+		}
+	}
+	put(binh, "/social/blocks/", an) // binh blocked the sender
+	put(an, "/social/blocks/", chi)  // the sender blocked chi
+	put(dung, "/social/mutes/", an)  // dung muted the sender
+	world := channel.WorldID(c.tenantA, &c.schoolA)
+	for _, s := range []student{an, binh, chi, dung, em} {
+		if r := c.ws(s, "conn-"+s.id.String()[:6], "chat.channel.join", map[string]any{"channel_id": world}); !r.OK {
+			t.Fatalf("join world: %+v", r.Problem)
+		}
+	}
+	box := channelInbox(t, c.vk, world)
+	if r := c.wsText(an, world, "chao ca truong"); !r.OK {
+		t.Fatalf("send world: %+v", r.Problem)
+	}
+	env := next(box, "chat.message.created", 3*time.Second)
+	if env == nil {
+		t.Fatal("world message not broadcast")
+	}
+	if !delivered(env, em) || !delivered(env, an) {
+		t.Fatalf("unrelated student or sender must receive: target %+v", env.Target)
+	}
+	for name, s := range map[string]student{"blocker": binh, "blocked": chi, "muter": dung} {
+		if delivered(env, s) {
+			t.Fatalf("%s receives the world message: target %+v", name, env.Target)
+		}
+	}
+	// A message of an unrelated sender reaches everybody (the filter is per sender).
+	if r := c.wsText(em, world, "xin chao"); !r.OK {
+		t.Fatalf("send world em: %+v", r.Problem)
+	}
+	if env := next(box, "chat.message.created", 3*time.Second); env == nil || !delivered(env, binh) || !delivered(env, chi) ||
+		!delivered(env, dung) {
+		t.Fatalf("unrelated sender filtered: %+v", env)
+	}
+	// History from the recent buffer: nothing of the sender for binh, chi, dung; em sees both.
+	for name, s := range map[string]student{"blocker": binh, "blocked": chi, "muter": dung} {
+		h := c.historyFrom(s, world, inbox(t, c.vk, s.id))
+		if countID(h, an.id) != 0 || countID(h, em.id) != 1 {
+			t.Fatalf("%s history: %v", name, h)
+		}
+	}
+	if h := c.historyFrom(em, world, inbox(t, c.vk, em.id)); countID(h, an.id) != 1 || countID(h, em.id) != 1 {
+		t.Fatalf("unrelated history: %v", h)
+	}
+	// Relations changed after they were cached: em mutes the sender, binh unblocks it.
+	put(em, "/social/mutes/", an)
+	if r := c.call(binh, http.MethodDelete, "/social/blocks/"+an.id.String(), "", nil); r.status != http.StatusNoContent {
+		t.Fatalf("unblock: %d %s", r.status, r.raw)
+	}
+	if r := c.wsText(an, world, "lan hai"); !r.OK {
+		t.Fatalf("send world again: %+v", r.Problem)
+	}
+	env = next(box, "chat.message.created", 3*time.Second)
+	if env == nil || delivered(env, em) || !delivered(env, binh) || delivered(env, chi) || delivered(env, dung) {
+		t.Fatalf("after mute/unblock: %+v", env)
+	}
+	// Area: the same filter (room of the gateway).
+	ctx := context.Background()
+	for _, s := range []student{an, chi, binh} {
+		if err := c.rooms.SetRoom(ctx, c.tenantA, s.id, "hub:main_hub:07"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	area := channel.AreaID(c.tenantA, "hub:main_hub:07")
+	for _, s := range []student{chi, binh} {
+		if r := c.ws(s, "conn-"+s.id.String()[:6], "chat.channel.join", map[string]any{"channel_id": area}); !r.OK {
+			t.Fatalf("join area: %+v", r.Problem)
+		}
+	}
+	abox := channelInbox(t, c.vk, area)
+	if r := c.wsText(an, area, "o day vui qua"); !r.OK {
+		t.Fatalf("send area: %+v", r.Problem)
+	}
+	if env := next(abox, "chat.message.created", 3*time.Second); env == nil || delivered(env, chi) || !delivered(env, binh) {
+		t.Fatalf("area fan-out: %+v", env)
+	}
+	if h := c.historyFrom(chi, area, inbox(t, c.vk, chi.id)); countID(h, an.id) != 0 {
+		t.Fatalf("area history of the blocked student: %v", h)
+	}
+	if h := c.historyFrom(binh, area, inbox(t, c.vk, binh.id)); countID(h, an.id) != 1 {
+		t.Fatalf("area history of binh: %v", h)
+	}
+}

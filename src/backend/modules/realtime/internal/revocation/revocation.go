@@ -30,19 +30,8 @@ type Conn struct {
 // Decide applies the target filter and the close rules. Session messages and controls are honored only on the
 // user's own channel and on the node channel (userChannel = true); elsewhere they are ignored.
 func Decide(e rt.Envelope, c Conn, userChannel bool) Action {
-	if t := e.Target; t != nil {
-		if t.GameSessionID != nil && *t.GameSessionID != c.GameSessionID {
-			return Action{} // F090-AC-26: another session of the student, never close this connection
-		}
-		if t.ConnID != "" && t.ConnID != c.ConnID {
-			return Action{}
-		}
-		if t.ExcludeConnID != "" && t.ExcludeConnID == c.ConnID {
-			return Action{}
-		}
-		if len(t.UserIDs) > 0 && !contains(t.UserIDs, c.UserID) {
-			return Action{}
-		}
+	if !e.Target.Accepts(c.UserID, c.GameSessionID, c.ConnID) {
+		return Action{} // F090-AC-26: another session of the student is never closed by it
 	}
 	switch e.Kind {
 	case rt.KindControl:
@@ -101,13 +90,4 @@ func control(c rt.Control) Action {
 		return Action{EndedReason: c.Reason, Close: rt.CloseSessionDone, ClearResume: true}
 	}
 	return Action{}
-}
-
-func contains(ids []uuid.UUID, id uuid.UUID) bool {
-	for _, x := range ids {
-		if x == id {
-			return true
-		}
-	}
-	return false
 }

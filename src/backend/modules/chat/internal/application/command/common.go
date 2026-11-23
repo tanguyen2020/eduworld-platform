@@ -5,6 +5,7 @@ package command
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,7 +62,9 @@ type Social struct {
 	Audit       write.Auditor
 	Codes       port.CodeGenerator
 	Friends     port.FriendCache // nil: no cache
-	Metrics     port.Metrics     // nil: no metrics
+	// Relations drops the cached block/mute relations of the World/Area filter (F120 T061); nil: none.
+	Relations port.RelationCache
+	Metrics   port.Metrics // nil: no metrics
 	// Holds reports a temporary safety hold of the sender (F121-AC-04: no new friend request while held); nil: none.
 	Holds  HoldChecker
 	Config SocialConfig
@@ -174,6 +177,19 @@ func (h Social) invalidate(ctx context.Context, users ...uuid.UUID) error {
 		return nil
 	}
 	return h.AfterCommit(ctx, func(ctx context.Context) { _ = h.Friends.Invalidate(ctx, users...) })
+}
+
+// invalidateRelations drops the cached block/mute relations of both students after the commit (F120 T061), so the next
+// World/Area message and history apply the change at once.
+func (h Social) invalidateRelations(ctx context.Context, tenant uuid.UUID, users ...uuid.UUID) error {
+	if h.Relations == nil || h.AfterCommit == nil {
+		return nil
+	}
+	return h.AfterCommit(ctx, func(ctx context.Context) {
+		if err := h.Relations.InvalidateRelations(ctx, tenant, users...); err != nil {
+			slog.WarnContext(ctx, "chat: relations cache not invalidated", "error", err)
+		}
+	})
 }
 
 // version is the source_version of the relation events (projections keep the newest, DATABASE_DESIGN §2.17).

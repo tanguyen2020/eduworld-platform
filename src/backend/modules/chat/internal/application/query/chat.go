@@ -273,10 +273,23 @@ func (q Chat) page(ctx context.Context, v Viewer, facts *read.ChannelFacts, m ch
 		}
 		slog.WarnContext(ctx, "chat: recent buffer unavailable", "error", rerr)
 	}
+	// World/Area have no member list, so the channel facts carry no blocks: the relations of the viewer hide the senders it
+	// blocked, was blocked by or muted (F120 T061). Unreadable relations → nothing is served (fail closed).
+	var rel read.UserRelations
+	if ch.Type.Implicit() {
+		if q.Implicit == nil {
+			return MessagePage{}, notFound()
+		}
+		var relErr error
+		if rel, relErr = q.Implicit.Relations(ctx, v.TenantID, v.UserID); relErr != nil {
+			return MessagePage{}, unavailableProblem()
+		}
+	}
 	seen := map[uuid.UUID]int{}
 	var all []MessageView
 	add := func(e message.Envelope, recalled bool) {
-		if facts.Hidden(v.UserID, e.SenderID) { // block both ways, mute one way (F117-AC-12)
+		// block both ways, mute one way (F117-AC-12; World/Area through the viewer's relations, F120 T061)
+		if facts.Hidden(v.UserID, e.SenderID) || (e.SenderID != v.UserID && rel.HidesSender(e.SenderID)) {
 			return
 		}
 		recalled = recalled || e.Recalled()

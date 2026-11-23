@@ -15,6 +15,7 @@
       "description": "Lọc người nhận trên node; vắng = mọi kết nối local đã đăng ký kênh",
       "properties": {
         "user_ids": { "type": "array", "maxItems": 500, "uniqueItems": true, "items": { "type": "string", "format": "uuid" }, "description": "Chỉ giao cho các học sinh này (gộp snapshot theo node, F091)" },
+        "exclude_user_ids": { "type": "array", "maxItems": 1000, "uniqueItems": true, "items": { "type": "string", "format": "uuid" }, "description": "Không giao cho các học sinh này (World/Area: học sinh có quan hệ block hai chiều với người gửi hoặc đã mute người gửi, F120 T061)" },
         "game_session_id": { "type": "string", "format": "uuid", "description": "Chỉ áp cho kết nối đang giữ game session này (F090-AC-26)" },
         "conn_id": { "type": "string", "maxLength": 64, "description": "Chỉ kết nối này (kênh ew:rt:node:<node_id>:in: thay kết nối khác node, F090-AC-28)" },
         "exclude_conn_id": { "type": "string", "maxLength": 64 }

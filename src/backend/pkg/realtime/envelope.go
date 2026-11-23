@@ -70,12 +70,48 @@ func (b *Bundle) Item(user uuid.UUID) json.RawMessage {
 	return nil
 }
 
+// MaxExcludeUsers bounds target.exclude_user_ids (RtPubSubEnvelope).
+const MaxExcludeUsers = 1000
+
 // Target filters the local receivers of an envelope (nil: every local connection subscribed to the channel).
 type Target struct {
-	UserIDs       []uuid.UUID `json:"user_ids,omitempty"`
-	GameSessionID *uuid.UUID  `json:"game_session_id,omitempty"`
-	ConnID        string      `json:"conn_id,omitempty"`
-	ExcludeConnID string      `json:"exclude_conn_id,omitempty"`
+	UserIDs []uuid.UUID `json:"user_ids,omitempty"`
+	// ExcludeUserIDs are never delivered to (World/Area: the students with a block relation with the sender or who muted it,
+	// F120 T061); at most MaxExcludeUsers.
+	ExcludeUserIDs []uuid.UUID `json:"exclude_user_ids,omitempty"`
+	GameSessionID  *uuid.UUID  `json:"game_session_id,omitempty"`
+	ConnID         string      `json:"conn_id,omitempty"`
+	ExcludeConnID  string      `json:"exclude_conn_id,omitempty"`
+}
+
+// Accepts reports whether a local connection (user, game session, conn id) passes the target filter; a nil target
+// accepts every connection subscribed to the channel. The gateway applies it before delivering (revocation.Decide).
+func (t *Target) Accepts(user, gameSession uuid.UUID, conn string) bool {
+	if t == nil {
+		return true
+	}
+	switch {
+	case t.GameSessionID != nil && *t.GameSessionID != gameSession:
+		return false
+	case t.ConnID != "" && t.ConnID != conn:
+		return false
+	case t.ExcludeConnID != "" && t.ExcludeConnID == conn:
+		return false
+	case len(t.UserIDs) > 0 && !hasID(t.UserIDs, user):
+		return false
+	case hasID(t.ExcludeUserIDs, user):
+		return false
+	}
+	return true
+}
+
+func hasID(ids []uuid.UUID, id uuid.UUID) bool {
+	for _, x := range ids {
+		if x == id {
+			return true
+		}
+	}
+	return false
 }
 
 // Message is a server message without seq (the gateway assigns seq on delivery).
@@ -130,7 +166,7 @@ func (e Envelope) Validate() error {
 	if e.V != 1 {
 		return fmt.Errorf("%w: v", ErrInvalidEnvelope)
 	}
-	if t := e.Target; t != nil && (len(t.UserIDs) > 500 || len(t.ConnID) > 64 || len(t.ExcludeConnID) > 64) {
+	if t := e.Target; t != nil && (len(t.UserIDs) > 500 || len(t.ExcludeUserIDs) > MaxExcludeUsers || len(t.ConnID) > 64 || len(t.ExcludeConnID) > 64) {
 		return fmt.Errorf("%w: target", ErrInvalidEnvelope)
 	}
 	switch e.Kind {

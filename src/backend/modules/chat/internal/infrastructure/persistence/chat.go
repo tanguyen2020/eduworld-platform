@@ -567,6 +567,52 @@ func (ChatReader) Card(ctx context.Context, tenant, student uuid.UUID) (*read.Ch
 	return &c, nil
 }
 
+// Relations implements read.ImplicitReader: the live blocks of student in either direction and its live mutes in both
+// directions (F120 T061), one query on each table of the session tenant.
+func (ChatReader) Relations(ctx context.Context, tenant, student uuid.UUID) (read.UserRelations, error) {
+	t, err := anyTx(ctx)
+	if err != nil {
+		return read.UserRelations{}, err
+	}
+	var r read.UserRelations
+	// tenancyguard:ok social.blocks of the session tenant, live rows of the student in either direction
+	blocks, err := t.QueryContext(ctx, `SELECT CASE WHEN b.blocker_id = $2 THEN b.blocked_id ELSE b.blocker_id END FROM social.blocks b
+		WHERE b.tenant_id = $1 AND b.deleted_at IS NULL AND (b.blocker_id = $2 OR b.blocked_id = $2)`, tenant, student)
+	if err != nil {
+		return read.UserRelations{}, fmt.Errorf("chat: relations blocks: %w", err)
+	}
+	defer func() { _ = blocks.Close() }()
+	for blocks.Next() {
+		var id uuid.UUID
+		if err := blocks.Scan(&id); err != nil {
+			return read.UserRelations{}, fmt.Errorf("chat: relations blocks: %w", err)
+		}
+		r.Blocked = append(r.Blocked, id)
+	}
+	if err := blocks.Err(); err != nil {
+		return read.UserRelations{}, err
+	}
+	// tenancyguard:ok social.mutes of the session tenant, live rows of the student as muter or muted
+	mutes, err := t.QueryContext(ctx, `SELECT mu.muter_id, mu.muted_id FROM social.mutes mu
+		WHERE mu.tenant_id = $1 AND mu.deleted_at IS NULL AND (mu.muter_id = $2 OR mu.muted_id = $2)`, tenant, student)
+	if err != nil {
+		return read.UserRelations{}, fmt.Errorf("chat: relations mutes: %w", err)
+	}
+	defer func() { _ = mutes.Close() }()
+	for mutes.Next() {
+		var muter, muted uuid.UUID
+		if err := mutes.Scan(&muter, &muted); err != nil {
+			return read.UserRelations{}, fmt.Errorf("chat: relations mutes: %w", err)
+		}
+		if muter == student {
+			r.Muting = append(r.Muting, muted)
+		} else {
+			r.MutedBy = append(r.MutedBy, muter)
+		}
+	}
+	return r, mutes.Err()
+}
+
 var _ write.StatusRepository = Channels{}
 
 // SetStatus implements write.StatusRepository.

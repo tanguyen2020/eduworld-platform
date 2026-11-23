@@ -130,4 +130,41 @@ type ImplicitReader interface {
 	StudentSchool(ctx context.Context, tenant, student uuid.UUID) (*uuid.UUID, error)
 	// Card returns the public card of a student (nil when no profile).
 	Card(ctx context.Context, tenant, student uuid.UUID) (*ChatCard, error)
+	// Relations returns the live blocks (either direction) and mutes (both directions) of a student in tenant: what the
+	// World/Area fan-out and history filter need without a member list (F120 T061).
+	Relations(ctx context.Context, tenant, student uuid.UUID) (UserRelations, error)
+}
+
+// UserRelations are the live block and mute relations of one student (social.blocks, social.mutes of its tenant).
+type UserRelations struct {
+	Blocked []uuid.UUID `json:"blocked,omitempty"`  // a block in either direction
+	Muting  []uuid.UUID `json:"muting,omitempty"`   // the students this student muted
+	MutedBy []uuid.UUID `json:"muted_by,omitempty"` // the students who muted this student
+}
+
+// HiddenFrom are the students who must not receive a message of this student (a block either way, or they muted it).
+func (r UserRelations) HiddenFrom() []uuid.UUID {
+	seen := make(map[uuid.UUID]bool, len(r.Blocked)+len(r.MutedBy))
+	out := make([]uuid.UUID, 0, len(r.Blocked)+len(r.MutedBy))
+	for _, ids := range [][]uuid.UUID{r.Blocked, r.MutedBy} {
+		for _, id := range ids {
+			if !seen[id] {
+				seen[id] = true
+				out = append(out, id)
+			}
+		}
+	}
+	return out
+}
+
+// HidesSender reports that this student must not see a message of sender (a block either way, or it muted sender).
+func (r UserRelations) HidesSender(sender uuid.UUID) bool {
+	for _, ids := range [][]uuid.UUID{r.Blocked, r.Muting} {
+		for _, id := range ids {
+			if id == sender {
+				return true
+			}
+		}
+	}
+	return false
 }
