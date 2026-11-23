@@ -18,6 +18,21 @@ type SnapshotPeriod struct {
 	Rows     []port.SnapshotRow
 }
 
+// PeriodKeyset is the position after the last closed period of a page of getLeaderboardHistory (newest first).
+type PeriodKeyset struct {
+	Captured time.Time
+	Period   string
+}
+
+// SnapshotView is the result of SnapshotWindow: the capture instant, the member count, the ranked rows asked (by
+// rank) and the viewer's own row.
+type SnapshotView struct {
+	Captured time.Time
+	Total    int
+	Rows     []ldb.Ranked
+	Me       *ldb.Ranked
+}
+
 // RankWindowQuery is the part of a board to rank in SQL: ranks From..To (1-based) and, when Viewer is set, the
 // viewer and Around ranks on each side of it.
 type RankWindowQuery struct {
@@ -62,10 +77,11 @@ type RankingReader interface {
 	Excluded(ctx context.Context, tenant uuid.UUID, students []uuid.UUID, at time.Time) (map[uuid.UUID]bool, error)
 	// Tiers returns the tier codes of students for a rating board.
 	Tiers(ctx context.Context, tenant uuid.UUID, students []uuid.UUID, mode string, subject, season uuid.UUID) (map[uuid.UUID]*string, error)
-	// Snapshots returns the closed periods of a board in a scope, newest first.
-	Snapshots(ctx context.Context, tenant, board uuid.UUID, scope string, limit, offset int) ([]SnapshotPeriod, error)
-	// SnapshotRank returns the snapshot row of one member of a closed period (its rank beyond the top 100).
-	SnapshotRank(ctx context.Context, tenant, board uuid.UUID, scope, period string, student uuid.UUID) (*port.SnapshotRow, error)
-	// Snapshot returns one closed period (nil when not snapshotted).
-	Snapshot(ctx context.Context, tenant, board uuid.UUID, scope, period string) (*SnapshotPeriod, error)
+	// SnapshotPeriods returns one page of the closed periods of a board in a scope, newest first: keyset (captured_at,
+	// period_key) after After and LIMIT limit in SQL (API_DESIGN §5); Rows hold the collective row of the period only.
+	SnapshotPeriods(ctx context.Context, tenant, board uuid.UUID, scope string, after *PeriodKeyset, limit int) ([]SnapshotPeriod, error)
+	// SnapshotWindow reads the shown part of one closed period in SQL (nil when not snapshotted): the member count, the
+	// members ranked [From, To] and, with a viewer, its own row (any rank) and the members ranked [its rank − Around,
+	// its rank + Around] — rows only from the shown top of the snapshot (rank ≤ 100), never the whole period.
+	SnapshotWindow(ctx context.Context, tenant, board uuid.UUID, scope, period string, w RankWindowQuery) (*SnapshotView, error)
 }

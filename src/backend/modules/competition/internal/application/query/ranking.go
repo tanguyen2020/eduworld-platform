@@ -120,6 +120,25 @@ func offsetOf(cursor string) (int, error) {
 	return n, nil
 }
 
+// periodCursor is the opaque keyset cursor of getLeaderboardHistory after p: "p<captured_at in µs>.<period_key>".
+func periodCursor(p read.SnapshotPeriod) string {
+	return "p" + strconv.FormatInt(p.Captured.UnixMicro(), 10) + "." + p.Period
+}
+
+// periodKeysetOf decodes a cursor of periodCursor ("" = first page); an offset cursor of the former OFFSET paging is
+// refused like any other foreign cursor.
+func periodKeysetOf(cursor string) (*read.PeriodKeyset, error) {
+	if cursor == "" {
+		return nil, nil
+	}
+	at, period, ok := strings.Cut(strings.TrimPrefix(cursor, "p"), ".")
+	us, err := strconv.ParseInt(at, 10, 64)
+	if !strings.HasPrefix(cursor, "p") || !ok || err != nil || period == "" {
+		return nil, problem.Invalid("cursor", problem.SubInvalid, "is not a cursor of this list")
+	}
+	return &read.PeriodKeyset{Captured: time.UnixMicro(us).UTC(), Period: period}, nil
+}
+
 // ListSeasons implements listSeasons (F106-AC-24): newest first; a student also gets the peak tier of the season.
 func (q Rankings) ListSeasons(ctx context.Context, limit int, cursor string) (page SeasonPage, err error) {
 	ctx, done := observability.UseCase(ctx, "competition.query.ListSeasons")
@@ -634,12 +653,12 @@ func (q Rankings) ranking(ctx context.Context, b board, p BoardParams) (rankingV
 	}
 	scope := ldb.ScopeKey(b.def, b.member)
 	if !b.end.After(q.now()) {
-		snap, err := q.Reader.Snapshot(ctx, b.v.tenant, b.def.ID, scope, b.key)
+		r, ok, err := q.fromSnapshot(ctx, b, scope, off, size, around)
 		if err != nil {
 			return rankingView{}, nil, err
 		}
-		if snap != nil {
-			return q.fromSnapshot(ctx, b, scope, *snap, off, size, around)
+		if ok {
+			return r, nil, nil
 		}
 	}
 	k := port.BoardKey{Tenant: b.v.tenant, Board: b.def.ID, Scope: scope, Period: b.key}
@@ -708,24 +727,28 @@ func (q Rankings) window(ctx context.Context, bq port.BoardQuery, v viewer, off,
 	if err != nil {
 		return rankingView{}, err
 	}
-	r := rankingView{total: res.Total}
+	var me *ldb.Ranked
 	for _, x := range res.Rows {
+		if v.student && x.Student == v.user {
+			m := x
+			me = &m
+		}
+	}
+	return split(res.Total, res.Rows, me, w), nil
+}
+
+// split sorts the rows read in SQL for a window w into the page [From, To] and the ranks within Around of me.
+func split(total int, rows []ldb.Ranked, me *ldb.Ranked, w read.RankWindowQuery) rankingView {
+	r := rankingView{total: total, me: me}
+	for _, x := range rows {
 		if x.Rank >= w.From && x.Rank <= w.To {
 			r.top = append(r.top, x)
 		}
-		if v.student && x.Student == v.user {
-			me := x
-			r.me = &me
+		if me != nil && x.Rank >= me.Rank-w.Around && x.Rank <= me.Rank+w.Around {
+			r.around = append(r.around, x)
 		}
 	}
-	if r.me != nil {
-		for _, x := range res.Rows {
-			if x.Rank >= r.me.Rank-around && x.Rank <= r.me.Rank+around {
-				r.around = append(r.around, x)
-			}
-		}
-	}
-	return r, nil
+	return r
 }
 
 func fromList(all []ldb.Ranked, v viewer, off, size, around int) rankingView {
@@ -764,30 +787,20 @@ func (q Rankings) fromStore(ctx context.Context, b board, k port.BoardKey, off, 
 	return r, nil, nil
 }
 
-func (q Rankings) fromSnapshot(ctx context.Context, b board, scope string, s read.SnapshotPeriod, off, size, around int) (rankingView, *port.BoardKey, error) {
-	var all []ldb.Ranked
-	total := 0
-	for _, row := range s.Rows {
-		if row.Student == nil || row.Rank == nil {
-			continue
-		}
-		all = append(all, ldb.Ranked{Student: *row.Student, Rank: *row.Rank, Value: row.Value})
-		if row.Members != nil {
-			total = *row.Members
-		}
-	}
-	r := rankingView{total: max(total, len(all)), top: window(all, off+1, off+size)}
+// fromSnapshot reads the shown part of a closed period from its snapshot: the page off+1..off+size of the shown top
+// and, for a student, its own rank and the ranks around it — cut in SQL (API_DESIGN §5); ok is false when the period
+// was not snapshotted.
+func (q Rankings) fromSnapshot(ctx context.Context, b board, scope string, off, size, around int) (rankingView, bool, error) {
+	w := read.RankWindowQuery{From: off + 1, To: off + size}
 	if b.v.student {
-		me, err := q.Reader.SnapshotRank(ctx, b.v.tenant, b.def.ID, scope, b.key, b.v.user)
-		if err != nil {
-			return r, nil, err
-		}
-		if me != nil && me.Rank != nil {
-			r.me = &ldb.Ranked{Student: b.v.user, Rank: *me.Rank, Value: me.Value}
-			r.around = window(all, *me.Rank-around, *me.Rank+around)
-		}
+		u := b.v.user
+		w.Viewer, w.Around = &u, around
 	}
-	return r, nil, nil
+	s, err := q.Reader.SnapshotWindow(ctx, b.v.tenant, b.def.ID, scope, b.key, w)
+	if err != nil || s == nil {
+		return rankingView{}, false, err
+	}
+	return split(s.Total, s.Rows, s.Me, w), true, nil
 }
 
 // friends reads a friends board (§9.3: ZMSCORE of ≤ friends_max friends on the tenant-wide set of the board).
@@ -960,7 +973,7 @@ func (q Rankings) GetLeaderboardHistory(ctx context.Context, id uuid.UUID, p Boa
 			return page, err
 		}
 	}
-	off, err := offsetOf(p.Cursor)
+	after, err := periodKeysetOf(p.Cursor)
 	if err != nil {
 		return page, err
 	}
@@ -975,13 +988,13 @@ func (q Rankings) GetLeaderboardHistory(ctx context.Context, id uuid.UUID, p Boa
 			return nil
 		}
 		scope := ldb.ScopeKey(b.def, b.member)
-		periods, err := q.Reader.Snapshots(ctx, v.tenant, b.def.ID, scope, limit+1, off)
+		periods, err := q.Reader.SnapshotPeriods(ctx, v.tenant, b.def.ID, scope, after, limit+1)
 		if err != nil {
 			return err
 		}
 		if len(periods) > limit {
 			periods = periods[:limit]
-			page.Next = "o" + strconv.Itoa(off+limit)
+			page.Next = periodCursor(periods[limit-1])
 		}
 		page.Data = make([]map[string]any, 0, len(periods))
 		for _, sp := range periods {
@@ -993,7 +1006,7 @@ func (q Rankings) GetLeaderboardHistory(ctx context.Context, id uuid.UUID, p Boa
 			}
 			bb := b
 			bb.key = sp.Period
-			r, _, err := q.fromSnapshot(ctx, bb, scope, sp, 0, snapshotHead(bb), 0)
+			r, _, err := q.fromSnapshot(ctx, bb, scope, 0, snapshotHead(bb), 0)
 			if err != nil {
 				return err
 			}

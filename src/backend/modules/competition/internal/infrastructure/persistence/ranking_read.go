@@ -3,7 +3,6 @@ package persistence
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port/write"
+	ldb "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/leaderboard"
 	mm "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/matchmaking"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/ranking"
 )
@@ -213,32 +213,55 @@ func scanSnapshot(s interface{ Scan(...any) error }) (write.SnapshotRow, error) 
 	return r, nil
 }
 
-// Snapshots implements read.RankingReader: closed periods newest first, each with its top 100 and collective row.
-func (q RankingRead) Snapshots(ctx context.Context, tenant, board uuid.UUID, scope string, limit, offset int) ([]read.SnapshotPeriod, error) {
+// snapshotTop is the shown top of a snapshot (COMPETITION_SYSTEM §9.3: the top 100 plus the rank of every member of a
+// school/grade scope).
+const snapshotTop = 100
+
+// SnapshotPeriods implements read.RankingReader: one page of the closed periods, newest first, keyset (captured_at,
+// period_key) and LIMIT in SQL (API_DESIGN §5), each with its collective row (grade_goal) only.
+func (RankingRead) SnapshotPeriods(ctx context.Context, tenant, board uuid.UUID, scope string, after *read.PeriodKeyset, limit int) ([]read.SnapshotPeriod, error) {
 	t, err := tx(ctx)
 	if err != nil {
 		return nil, err
 	}
+	var afterAt, afterKey any
+	if after != nil {
+		afterAt, afterKey = after.Captured, after.Period
+	}
 	// tenancyguard:ok append-only snapshots of the session tenant (RLS + explicit tenant_id, TA)
 	rows, err := t.QueryContext(ctx, `SELECT period_key, MAX(captured_at) FROM competition.leaderboard_snapshots WHERE tenant_id = $1
-		AND leaderboard_id = $2 AND scope_id = $3 GROUP BY period_key ORDER BY 2 DESC, 1 DESC LIMIT $4 OFFSET $5`, tenant, board, scope, limit, offset)
+		AND leaderboard_id = $2 AND scope_id = $3 GROUP BY period_key
+		HAVING $4::timestamptz IS NULL OR (MAX(captured_at), period_key) < ($4::timestamptz, $5::text)
+		ORDER BY 2 DESC, 1 DESC LIMIT $6`, tenant, board, scope, afterAt, afterKey, limit)
 	if err != nil {
 		return nil, fmt.Errorf("snapshot periods: %w", err)
 	}
 	periods, err := scanPeriods(rows)
-	if err != nil {
-		return nil, err
+	if err != nil || len(periods) == 0 {
+		return periods, err
 	}
-	for i := range periods {
-		p, err := q.Snapshot(ctx, tenant, board, scope, periods[i].Period)
+	keys := make([]string, len(periods))
+	at := make(map[string]int, len(periods))
+	for i, p := range periods {
+		keys[i], at[p.Period] = p.Period, i
+	}
+	// tenancyguard:ok append-only snapshots of the session tenant (RLS + explicit tenant_id, TA): the collective rows of the page
+	crows, err := t.QueryContext(ctx, `SELECT `+snapshotCols+` FROM competition.leaderboard_snapshots WHERE tenant_id = $1 AND leaderboard_id = $2
+		AND scope_id = $3 AND period_key = ANY($4::text[]) AND student_id IS NULL ORDER BY period_key`, tenant, board, scope, keys)
+	if err != nil {
+		return nil, fmt.Errorf("snapshot collective rows: %w", err)
+	}
+	defer func() { _ = crows.Close() }()
+	for crows.Next() {
+		r, err := scanSnapshot(crows)
 		if err != nil {
 			return nil, err
 		}
-		if p != nil {
-			periods[i].Rows = p.Rows
+		if i, ok := at[r.Period]; ok {
+			periods[i].Rows = append(periods[i].Rows, r)
 		}
 	}
-	return periods, nil
+	return periods, crows.Err()
 }
 
 func scanPeriods(rows *sql.Rows) ([]read.SnapshotPeriod, error) {
@@ -249,54 +272,66 @@ func scanPeriods(rows *sql.Rows) ([]read.SnapshotPeriod, error) {
 		if err := rows.Scan(&p.Period, &p.Captured); err != nil {
 			return nil, err
 		}
+		p.Captured = p.Captured.UTC()
 		periods = append(periods, p)
 	}
 	return periods, rows.Err()
 }
 
-// Snapshot implements read.RankingReader: the collective row and the top 100 of one closed period.
-func (RankingRead) Snapshot(ctx context.Context, tenant, board uuid.UUID, scope, period string) (*read.SnapshotPeriod, error) {
+// SnapshotWindow implements read.RankingReader: the shown part of one closed period, cut in SQL (API_DESIGN §5: never
+// the whole period in memory) — the count and capture instant of the shown top (rows ranked ≤ 100 or collective), the
+// viewer's own row at any rank, and the members of the top ranked [From, To] or within Around of the viewer.
+func (RankingRead) SnapshotWindow(ctx context.Context, tenant, board uuid.UUID, scope, period string, w read.RankWindowQuery) (*read.SnapshotView, error) {
 	t, err := tx(ctx)
 	if err != nil {
 		return nil, err
+	}
+	var viewer any
+	if w.Viewer != nil {
+		viewer = *w.Viewer
 	}
 	// tenancyguard:ok append-only snapshots of the session tenant (RLS + explicit tenant_id, TA)
-	rows, err := t.QueryContext(ctx, `SELECT `+snapshotCols+` FROM competition.leaderboard_snapshots WHERE tenant_id = $1 AND leaderboard_id = $2
-		AND scope_id = $3 AND period_key = $4 AND (rank IS NULL OR rank <= 100) ORDER BY rank NULLS FIRST LIMIT 101`, tenant, board, scope, period)
+	rows, err := t.QueryContext(ctx, `WITH s AS (SELECT student_id, rank, value::float8 AS value, members, captured_at
+			FROM competition.leaderboard_snapshots WHERE tenant_id = $1 AND leaderboard_id = $2 AND scope_id = $3 AND period_key = $4),
+		head AS (SELECT count(*) AS n, MIN(captured_at) AS captured,
+				GREATEST(COALESCE(MAX(members) FILTER (WHERE student_id IS NOT NULL AND rank IS NOT NULL), 0),
+					count(*) FILTER (WHERE student_id IS NOT NULL AND rank IS NOT NULL)) AS total
+			FROM s WHERE rank IS NULL OR rank <= $9),
+		me AS (SELECT s.rank, s.value FROM s WHERE $7::uuid IS NOT NULL AND s.student_id = $7::uuid AND s.rank IS NOT NULL LIMIT 1)
+		SELECT head.n, head.captured, head.total, me.rank, me.value, r.student_id, r.rank, r.value
+		FROM head LEFT JOIN me ON true
+		LEFT JOIN s r ON r.student_id IS NOT NULL AND r.rank <= $9
+			AND (r.rank BETWEEN $5 AND $6 OR r.rank BETWEEN me.rank - $8 AND me.rank + $8)
+		ORDER BY r.rank`, tenant, board, scope, period, w.From, w.To, viewer, w.Around, snapshotTop)
 	if err != nil {
-		return nil, fmt.Errorf("snapshot: %w", err)
+		return nil, fmt.Errorf("snapshot window: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	var out *read.SnapshotPeriod
+	var out *read.SnapshotView
 	for rows.Next() {
-		r, err := scanSnapshot(rows)
-		if err != nil {
+		var n int
+		var captured sql.NullTime
+		var total int
+		var meRank, rank sql.NullInt64
+		var meValue, value sql.NullFloat64
+		var student uuid.NullUUID
+		if err := rows.Scan(&n, &captured, &total, &meRank, &meValue, &student, &rank, &value); err != nil {
 			return nil, err
 		}
-		if out == nil {
-			out = &read.SnapshotPeriod{Period: period, Captured: r.Captured}
+		if n == 0 {
+			return nil, rows.Err()
 		}
-		out.Rows = append(out.Rows, r)
+		if out == nil {
+			out = &read.SnapshotView{Captured: captured.Time.UTC(), Total: total}
+			if meRank.Valid && w.Viewer != nil {
+				out.Me = &ldb.Ranked{Student: *w.Viewer, Rank: int(meRank.Int64), Value: meValue.Float64}
+			}
+		}
+		if student.Valid {
+			out.Rows = append(out.Rows, ldb.Ranked{Student: student.UUID, Rank: int(rank.Int64), Value: value.Float64})
+		}
 	}
 	return out, rows.Err()
-}
-
-// SnapshotRank returns the snapshot row of one member (its rank beyond the top 100).
-func (RankingRead) SnapshotRank(ctx context.Context, tenant, board uuid.UUID, scope, period string, student uuid.UUID) (*write.SnapshotRow, error) {
-	t, err := tx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// tenancyguard:ok append-only snapshots of the session tenant (RLS + explicit tenant_id, TA) of the caller only
-	r, err := scanSnapshot(t.QueryRowContext(ctx, `SELECT `+snapshotCols+` FROM competition.leaderboard_snapshots WHERE tenant_id = $1
-		AND leaderboard_id = $2 AND scope_id = $3 AND period_key = $4 AND student_id = $5`, tenant, board, scope, period, student))
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("snapshot rank: %w", err)
-	}
-	return &r, nil
 }
 
 // RatingReader implements port.RatingReader of matchmaking (F104) on the Game Ratings of the active season (F106 T014):
