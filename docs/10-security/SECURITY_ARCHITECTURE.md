@@ -476,7 +476,7 @@ LaTeX do người biên tập nhập trên Admin Portal và **SVG do trình duy�
 
 Chi tiết biện pháp gian lận: [ANTI_CHEAT](ANTI_CHEAT.md). Biện pháp an toàn trẻ em: [CHILD_SAFETY](CHILD_SAFETY.md).
 
-**Rủi ro được chấp nhận — yêu cầu dữ liệu cá nhân ([ADR-0097](../adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md), owner 2026-11-22):** Release 1 không có API/menu tiếp nhận yêu cầu của chủ thể dữ liệu (`/admin/data-requests` đã gỡ, permission `platform.data_request.write` không còn operation). Yêu cầu theo Nghị định 13/2023 do vận hành xử lý thủ công ([DATA_PRIVACY §3.1](DATA_PRIVACY.md#31-release-1-không-có-kênh-portal-xử-lý-thủ-công)): thao tác khóa/vô hiệu hóa trên Portal có audit, nhưng trích xuất dữ liệu (quyền truy cập) làm ngoài hệ thống, không có audit theo mã yêu cầu — RISK-57.
+**Rủi ro được chấp nhận — yêu cầu dữ liệu cá nhân ([ADR-0097](../adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md), owner 2026-11-22, bỏ quy trình thủ công 2026-11-23):** Release 1 không có API/menu hay quy trình thủ công tiếp nhận yêu cầu của chủ thể dữ liệu theo Nghị định 13/2023 (`/admin/data-requests` đã gỡ, permission `platform.data_request.write` không còn operation; [DATA_PRIVACY §3.1](DATA_PRIVACY.md#31-release-1-không-có-quy-trình-yêu-cầu-dữ-liệu)) — RISK-57.
 
 ## 10. Logging bảo mật và xử lý lỗi
 

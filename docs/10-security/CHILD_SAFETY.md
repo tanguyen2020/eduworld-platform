@@ -350,7 +350,7 @@ Quyền moderation (`moderation.case.*`, `moderation.sanction.*`) chỉ được
 - Màn hình "Quy tắc ứng xử" bằng hình ảnh khi vào game lần đầu (g1_5) / dạng chữ ngắn (g6_9); học sinh xác nhận đã đọc.
 - Thông báo rõ: "Tin nhắn có thể được đội an toàn EduWorld xem khi có báo cáo" — phù hợp lứa tuổi.
 - Đồng ý xử lý dữ liệu và vai trò dữ liệu: ngoài version này (ADR-0082).
-- **Rủi ro được chấp nhận ([ADR-0097](../adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md), owner 2026-11-22):** Release 1 không có kênh Portal để phụ huynh/nhà trường gửi và theo dõi yêu cầu về dữ liệu cá nhân của học sinh (truy cập, xóa, hạn chế xử lý theo Nghị định 13/2023); yêu cầu được vận hành xử lý thủ công theo [DATA_PRIVACY §3.1](DATA_PRIVACY.md#31-release-1-không-có-kênh-portal-xử-lý-thủ-công) (RISK-57).
+- **Rủi ro được chấp nhận ([ADR-0097](../adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md), owner 2026-11-22, bỏ quy trình thủ công 2026-11-23):** Release 1 không có quy trình nào (Portal hay thủ công) để phụ huynh/nhà trường gửi và theo dõi yêu cầu về dữ liệu cá nhân của học sinh (truy cập, xóa, hạn chế xử lý theo Nghị định 13/2023) — [DATA_PRIVACY §3.1](DATA_PRIVACY.md#31-release-1-không-có-quy-trình-yêu-cầu-dữ-liệu) (RISK-57).
 
 ## 14. Chỉ số theo dõi
 

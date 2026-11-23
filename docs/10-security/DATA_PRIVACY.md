@@ -1,6 +1,6 @@
 # Data Privacy
 
-> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Identity & Security Engineer + Product Manager · Cập nhật: 2026-11-16 (ADR-0086: phiên đăng nhập game)
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Identity & Security Engineer + Product Manager · Cập nhật: 2026-11-23 (§3.1: bỏ quy trình yêu cầu dữ liệu thủ công, owner) · 2026-11-16 (ADR-0086: phiên đăng nhập game)
 > Liên quan: [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md) · [CHILD_SAFETY](CHILD_SAFETY.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0082](../adr/ADR-0082-spec-driven-development-va-noi-dung-deferred.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0070](../adr/ADR-0070-release-1-khong-voice-chat-khong-xoa-vat-ly-khong-purge-analytics.md) · [SIS_INTEGRATION](../09-identity/SIS_INTEGRATION.md) · [DATABASE_DESIGN](../07-backend/DATABASE_DESIGN.md) · OQ-13
 
 **Mục đích & phạm vi.** Nguồn duy nhất về **nguyên tắc kỹ thuật** bảo vệ dữ liệu cá nhân: inventory, mục đích, **retention**, yêu cầu về dữ liệu học sinh (xuất, ẩn danh hóa, khóa xử lý), xóa/ẩn danh hóa, luồng dữ liệu, kiểm soát kỹ thuật. An toàn trẻ em → [CHILD_SAFETY](CHILD_SAFETY.md); bảo mật kỹ thuật → [SECURITY_ARCHITECTURE](SECURITY_ARCHITECTURE.md).
@@ -67,20 +67,10 @@ Yêu cầu về dữ liệu học sinh đi qua **nhà trường** (đơn vị k�
 
 Mọi yêu cầu được ghi `audit` với mã yêu cầu (`dsr_id`).
 
-### 3.1. Release 1: không có kênh Portal, xử lý thủ công
+### 3.1. Release 1: không có quy trình yêu cầu dữ liệu
 
 > [!WARNING]
-> **Rủi ro được chấp nhận ([ADR-0097](../adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md), owner chốt 2026-11-22; [RISKS](../12-project/RISKS.md) RISK-57).** Release 1 **không có** chức năng Portal nào để tiếp nhận, theo dõi hay thực hiện yêu cầu của chủ thể dữ liệu theo Nghị định 13/2023/NĐ-CP: menu "Yêu cầu dữ liệu" và API `/admin/data-requests` đã gỡ, chức năng "Xuất dữ liệu học sinh" ở bảng trên chưa có. Bảng trên là thiết kế đích; đáp ứng đúng thời hạn phụ thuộc hoàn toàn vào quy trình thủ công dưới đây.
-
-Quy trình thủ công [Proposed] (chưa có runbook riêng; người thực hiện là System Admin được vận hành chỉ định; owner duyệt trước pilot):
-
-1. **Tiếp nhận:** chỉ nhận văn bản từ nhà trường (đơn vị ký thỏa thuận). Ghi vào sổ theo dõi ngoài hệ thống (mã yêu cầu `dsr_id`, ngày nhận, trường, `user_id` học sinh, loại yêu cầu, hạn xử lý theo bảng trên). Không ghi họ tên/ngày sinh vào ticket, chat hay log (R14).
-2. **Xác minh:** đối chiếu `user_id` với tenant của trường gửi yêu cầu trên Portal (đọc theo tenant đó, có audit); từ chối nếu học sinh không thuộc tenant.
-3. **Thực hiện:**
-   - *Hạn chế xử lý:* khóa tài khoản (`lockUser`, lý do ghi `dsr_id`).
-   - *Xóa:* vô hiệu hóa tài khoản (`deactivateUser`, lý do ghi `dsr_id`); ẩn danh hóa chạy bằng job `retention-anonymizer` khi hết `student_data_retention` (CONFIG_DEFAULTS). Nếu thời hạn luật ngắn hơn retention, báo owner — Release 1 **không có** đường ẩn danh hóa ngay theo yêu cầu.
-   - *Truy cập:* trích xuất thủ công từ read replica bởi DBA có quyền, chỉ dữ liệu của học sinh đó, gửi lại nhà trường qua kênh đã thỏa thuận; ghi audit thủ công vào sổ theo dõi.
-4. **Đóng:** ghi ngày hoàn tất và người thực hiện vào sổ theo dõi; thao tác trên Portal (khóa, vô hiệu hóa) đã có audit với lý do chứa `dsr_id`.
+> **Rủi ro được chấp nhận ([ADR-0097](../adr/ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md); owner chốt 2026-11-22, bỏ luôn quy trình thủ công 2026-11-23; [RISKS](../12-project/RISKS.md) RISK-57) [Confirmed].** Release 1 **không có** quy trình nào — trên Portal hay thủ công — để tiếp nhận, theo dõi hay thực hiện yêu cầu của chủ thể dữ liệu theo Nghị định 13/2023/NĐ-CP: menu "Yêu cầu dữ liệu" và API `/admin/data-requests` đã gỡ, chức năng "Xuất dữ liệu học sinh" ở bảng trên chưa có, không có sổ theo dõi `dsr_id` hay runbook vận hành. Bảng trên là thiết kế đích cho release sau (cần ADR mới). Ẩn danh hóa theo retention (§4, saga `user_anonymize`, job `retention-anonymizer`) vẫn chạy.
 
 ## 4. Xóa & ẩn danh hóa
 
