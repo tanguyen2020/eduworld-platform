@@ -3484,6 +3484,15 @@
     ]
   },
   {
+    "operation_id": "listEconomyAdjustments",
+    "module": "game",
+    "method": "GET",
+    "path": "/admin/economy/adjustments",
+    "required": [
+      "role_denied"
+    ]
+  },
+  {
     "operation_id": "listEfficacyStudies",
     "module": "learning",
     "method": "GET",
@@ -4922,6 +4931,18 @@
     "module": "chat",
     "method": "POST",
     "path": "/social/club-join-requests/{request_id}:reject",
+    "tenant_scoped": true,
+    "has_id_param": true,
+    "required": [
+      "cross_tenant",
+      "role_denied"
+    ]
+  },
+  {
+    "operation_id": "rejectEconomyAdjustment",
+    "module": "game",
+    "method": "POST",
+    "path": "/admin/economy/adjustments/{adjustment_id}:reject",
     "tenant_scoped": true,
     "has_id_param": true,
     "required": [

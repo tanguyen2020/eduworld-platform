@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/achievement.progressed.v1.schema.json",
+  "title": "Payload achievement.progressed v1 (module game, owner F075)",
+  "description": "Tiến độ một thành tựu của học sinh vừa tăng (consumer achievement-evaluator). Tiến độ không bao giờ giảm (F075-AC-24). Consumer: RT.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "achievement_id",
+    "code",
+    "student_id",
+    "progress",
+    "progressed_at"
+  ],
+  "properties": {
+    "achievement_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "progress": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "target": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 100000,
+      "description": "Ngưỡng bậc kế tiếp (null khi đã mở hết bậc)"
+    },
+    "tier": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64,
+      "enum": [
+        "single",
+        "bronze",
+        "silver",
+        "gold",
+        "platinum",
+        null
+      ],
+      "description": "Bậc cao nhất đã mở khóa"
+    },
+    "hidden": {
+      "type": "boolean",
+      "description": "Thành tựu ẩn (client không hiện tiến độ tới khi mở khóa)"
+    },
+    "progressed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

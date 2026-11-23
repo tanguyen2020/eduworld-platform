@@ -73,9 +73,9 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
-| `xu_daily_cap` | 300 | Xu/ngày | platform | [Confirmed] | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
-| `duplicate_item_xu` | 5 / 10 / 25 / 50 / 100 theo độ hiếm | Xu | platform | [Confirmed] | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
-| `shop_purchase_limit_default` | 1 | lần/item | platform (theo item) | [Confirmed] | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
+| `xu_daily_cap` | 300 | Xu/ngày (ngày lịch ICT) | platform (`gamification.currencies.daily_cap` của dòng `xu`, migration `f075_economy`; Game Ops sửa qua config type `currencies` — F075) | [Confirmed] | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
+| `duplicate_item_xu` | 5 / 10 / 25 / 50 / 100 theo độ hiếm | Xu | platform (env `EW_GAME_DUPLICATE_ITEM_XU` = `common=5,uncommon=10,rare=25,epic=50,legendary=100`, mỗi giá trị 1–100000 — F075) | [Confirmed] | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
+| `shop_purchase_limit_default` | 1 | lần/item | platform (theo item; env `EW_GAME_SHOP_PURCHASE_LIMIT_DEFAULT` 1–999 — F075) | [Confirmed] | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
 | `badges_displayed_max` | 3 | huy hiệu | platform | [Confirmed] | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
 | `trading_enabled` | false | — | platform | [Confirmed] (tắt đến khi được review) | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |
 | `real_money_purchase` | không có | — | — | [Confirmed, OQ-14] | [INVENTORY_ECONOMY](../01-game-design/INVENTORY_ECONOMY.md) |

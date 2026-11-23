@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/shop.item_purchased.v1.schema.json",
+  "title": "Payload shop.item_purchased v1 (module game, owner F075)",
+  "description": "Học sinh vừa mua một mặt hàng cosmetic bằng Xu (giá server, Idempotency-Key): bút toán Xu âm, bút toán vật phẩm, inventory và shop_purchases cùng một transaction. Consumer: RT, achievement-evaluator (F075), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "purchase_id",
+    "student_id",
+    "shop_item_id",
+    "shop_item_version_id",
+    "item_id",
+    "item_kind",
+    "price",
+    "quantity",
+    "currency_code",
+    "balance_after",
+    "currency_entry_id",
+    "purchased_at"
+  ],
+  "properties": {
+    "purchase_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "shop_item_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "shop_item_version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "item_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Mã vật phẩm (RB-308, ADR-0100)"
+    },
+    "item_kind": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "outfit",
+        "hair",
+        "accessory",
+        "emote",
+        "pet",
+        "title",
+        "badge",
+        "frame",
+        "decoration",
+        "knowledge_card",
+        "consumable_cosmetic"
+      ]
+    },
+    "price": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000000,
+      "description": "Tổng Xu đã trừ (giá × số lượng)"
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99
+    },
+    "currency_code": {
+      "type": "string",
+      "maxLength": 64,
+      "const": "xu"
+    },
+    "balance_after": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "currency_entry_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "purchased_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

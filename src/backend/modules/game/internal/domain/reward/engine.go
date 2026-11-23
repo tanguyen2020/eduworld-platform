@@ -73,14 +73,26 @@ type Conditions struct {
 	MinContribution     *int        `json:"min_individual_contribution"`
 }
 
-// Grant is one grant of a rule (xp, title in F074; item, badge… by the appliers of F075).
+// Grant is one grant of a rule (xp, title in F074; currency, item, badge, collection_item by the appliers of F075).
 type Grant struct {
-	Type       string `json:"type"`
-	Amount     int    `json:"amount,omitempty"`
-	PerCorrect int    `json:"per_correct_answer,omitempty"`
-	TitleCode  string `json:"title_code,omitempty"`
-	ItemID     string `json:"item_id,omitempty"`
-	BadgeID    string `json:"badge_id,omitempty"`
+	Type             string `json:"type"`
+	Amount           int    `json:"amount,omitempty"`
+	PerCorrect       int    `json:"per_correct_answer,omitempty"`
+	TitleCode        string `json:"title_code,omitempty"`
+	ItemID           string `json:"item_id,omitempty"`
+	BadgeID          string `json:"badge_id,omitempty"`
+	CurrencyCode     string `json:"currency_code,omitempty"`
+	CollectionItemID string `json:"collection_item_id,omitempty"`
+}
+
+// Scaled returns the grant with its Xu scaled by the diminishing factor of the award, rounded down; ok is false when a
+// currency grant scales to 0 (nothing to give).
+func (g Grant) Scaled(factor float64) (Grant, bool) {
+	if g.Type != "currency" {
+		return g, true
+	}
+	g.Amount = int(math.Floor(float64(g.Amount)*factor + 1e-9))
+	return g, g.Amount > 0
 }
 
 // Caps are the rule caps; Bucket "" counts in xp:src:<source_type>.
@@ -163,6 +175,9 @@ func (r Rule) Validate(hasApplier func(grantType string) bool) error {
 		if g.Type == "xp" && g.Amount < 1 && g.PerCorrect < 1 {
 			return invalid("grants", "an xp grant needs amount or per_correct_answer")
 		}
+		if g.Type == "currency" && (g.CurrencyCode != "xu" || g.Amount < 1) {
+			return invalid(fmt.Sprintf("grants/%d", i), "a currency grant gives an amount of xu")
+		}
 	}
 	if d := r.Diminishing; d != nil && (len(d.Multipliers) == 0 || d.WindowDays < 1) {
 		return invalid("diminishing_returns", "multipliers and window_days ≥ 1 are required")
@@ -220,6 +235,9 @@ type Award struct {
 	Capped   bool
 	Bucket   string
 	Rewarded []Grant // non-XP grants of the rule
+	// Factor is the grade × repeat multiplier the XP got (1 without one); the Xu of a currency grant gets the same
+	// diminishing returns (F075-AC-02, INVENTORY_ECONOMY §4.3) before the Xu daily cap.
+	Factor float64
 }
 
 // Evaluate applies every matching rule to the trigger, highest priority first (then code), sharing the cap counters
@@ -255,16 +273,17 @@ func (p Policy) Evaluate(t Trigger, rules []Rule, st Student, history func(Rule)
 			base += g.Amount + g.PerCorrect*firstTry(t)
 		}
 		a.Base = base
-		x := float64(base)
+		factor := 1.0
 		if p.belowGrade(t, st) {
-			x *= p.BelowGradeMultiplier
+			factor *= p.BelowGradeMultiplier
 		}
 		if t.ContentVersionID != nil {
 			if ms := p.multipliers(r); len(ms) > 0 {
-				x *= ms[min(h.Repeats, len(ms)-1)]
+				factor *= ms[min(h.Repeats, len(ms)-1)]
 			}
 		}
-		want := int(math.Floor(x + 1e-9))
+		a.Factor = factor
+		want := int(math.Floor(float64(base)*factor + 1e-9))
 		remaining := min(p.DailyCap-granted[TotalBucket], r.Caps.XPPerDay-granted[a.Bucket])
 		a.Amount = max(0, min(want, remaining))
 		a.Capped = remaining <= 0 || a.Amount < want

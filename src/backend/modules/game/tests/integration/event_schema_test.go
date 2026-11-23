@@ -22,7 +22,8 @@ var sessionEventTypes = []string{"game_session.started", "game_session.ended", "
 var gameEventTypes = append(append([]string{}, sessionEventTypes...), "avatar.created", "avatar.updated", "game_profile.updated",
 	"content.published", "content.manifest_updated", "world.area_entered", "world.area_unlocked", "world.discovery_found", "world.area_completed",
 	"story.chapter_completed", "quest.accepted", "quest.step_completed", "quest.completed", "quest.abandoned", "xp.awarded", "level.reached",
-	"reward.granted")
+	"reward.granted", "currency.credited", "currency.debited", "shop.item_purchased", "item.granted", "collection.item_added",
+	"collection.completed", "achievement.progressed", "achievement.unlocked", "economy.adjusted")
 
 // checkEventSchemas validates every F014 event in the outbox: envelope (specs/events/envelope.schema.json) and payload
 // (specs/events/payloads/game/<type>.v1.schema.json, contract first) — the consumers of identity, learning and the

@@ -1,0 +1,11 @@
+{
+  "$comment": "DEV SEED ONLY: shop items sold to some tenants only (ADR-0029, infra.tenant_resource_assignments resource_type shop_item); a shop item without a row is sold to every tenant; a tenant not projected yet is skipped (run make seed-game again after make seed-check).",
+  "assignments": [
+    {
+      "shop_item_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7503",
+      "tenants": [
+        "th-demo-a"
+      ]
+    }
+  ]
+}

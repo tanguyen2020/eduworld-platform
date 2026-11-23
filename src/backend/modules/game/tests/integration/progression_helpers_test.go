@@ -48,7 +48,7 @@ const (
 // progressionRules are the publish checks of the F074 content (JSON Schemas, appliers xp/title, level table).
 func progressionRules() *command.ProgressionPublishRules {
 	return &command.ProgressionPublishRules{CurveSchema: progressionschema.Curve{}, RuleSchema: progressionschema.Rule{},
-		Appliers: rewardinfra.Default(), Levels: writerepo.GameContentRepo{}, Curves: progressionsql.Content{}}
+		Appliers: rewardinfra.Types(), Levels: writerepo.GameContentRepo{}, Curves: progressionsql.Content{}}
 }
 
 // defaultPolicy is the CONFIG_DEFAULTS policy of the progression.

@@ -31,6 +31,7 @@ var migrations = map[string][]string{
 		"periodic_quest_grants", "tenant_resource_assignments"},
 	"20261228000001_f074_progression.sql": {"xp_ledger", "xp_daily_caps", "reward_rules", "reward_rule_versions", "reward_grants",
 		"progression_curves", "progression_curve_versions", "progression_levels", "level_history"},
+	"20261229000001_f075_economy.sql": {"currencies", "wallets", "currency_ledger", "item_ledger", "shop_items", "shop_item_versions", "shop_purchases", "collections", "collection_versions", "collection_items", "collection_progress", "achievements", "achievement_versions", "student_achievements", "achievement_progress_events", "economy_adjustments"},
 }
 
 // added lists, per migration file, the columns and indexes it adds to ent tables created by an earlier migration
@@ -42,6 +43,8 @@ type addition struct {
 
 var added = map[string][]addition{
 	"20261228000001_f074_progression.sql": {{"game_profiles", []string{"grade_transition_year"}, nil}},
+	"20261229000001_f075_economy.sql": {{"item_definition_versions", []string{"stackable", "max_stack", "payload", "payload_sha256", "change_note",
+		"snapshot_key", "snapshot_sha256", "published_at", "published_by"}, nil}},
 }
 
 // before returns tables as file created them: without the columns/indexes added by later migrations.
@@ -76,7 +79,8 @@ func schemas() map[string]string {
 		"tenant_resource_assignments": c.TenantResourceAssignment, "xp_ledger": c.XpLedgerEntry, "xp_daily_caps": c.XpDailyCap,
 		"reward_rules": c.RewardRule, "reward_rule_versions": c.RewardRuleVersion, "reward_grants": c.RewardGrant,
 		"progression_curves": c.ProgressionCurve, "progression_curve_versions": c.ProgressionCurveVersion,
-		"progression_levels": c.ProgressionLevel, "level_history": c.LevelHistory}
+		"progression_levels": c.ProgressionLevel, "level_history": c.LevelHistory,
+		"currencies": c.Currency, "wallets": c.Wallet, "currency_ledger": c.CurrencyLedgerEntry, "item_ledger": c.ItemLedgerEntry, "shop_items": c.ShopItem, "shop_item_versions": c.ShopItemVersion, "shop_purchases": c.ShopPurchase, "collections": c.Collection, "collection_versions": c.CollectionVersion, "collection_items": c.CollectionItem, "collection_progress": c.CollectionProgress, "achievements": c.Achievement, "achievement_versions": c.AchievementVersion, "student_achievements": c.StudentAchievement, "achievement_progress_events": c.AchievementProgressEvent, "economy_adjustments": c.EconomyAdjustment}
 }
 
 func tablesOf(t *testing.T, names []string) []*schema.Table {

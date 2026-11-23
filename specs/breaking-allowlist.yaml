@@ -1481,5 +1481,220 @@ exceptions:
     operation: POST
     path: /game-admin/{config_type}/{config_id}:unpublish
     text: enum value 'levels'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-property-min-length-increased
+    operation: POST
+    path: /admin/economy/adjustments
+    text: the 'item_id' request property's minLength was increased from '0' to '1'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-property-pattern-added
+    operation: POST
+    path: /admin/economy/adjustments
+    text: added the pattern '^[a-z0-9_]+$' to the request property 'item_id'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: request-property-type-changed
+    operation: POST
+    path: /admin/economy/adjustments
+    text: the 'item_id' request property type/format changed from 'string'/'uuid' to 'string'/''
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /admin/economy/adjustments
+    text: the '/allOf[#/components/schemas/EconomyAdjustmentRequest]/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '202'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /admin/economy/adjustments/{adjustment_id}:approve
+    text: the '/allOf[#/components/schemas/EconomyAdjustmentRequest]/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/achievements
+    text: the 'data/items/rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/challenge-attempts/{challenge_attempt_id}
+    text: the 'rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /game/challenge-attempts/{challenge_attempt_id}/activities:next
+    text: the 'challenge_attempt/rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /game/challenge-attempts/{challenge_attempt_id}:abandon
+    text: the 'rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/challenges/{challenge_id}
+    text: 'the ''/allOf[subschema #2]/first_clear_rewards/items/item_id'' response''s property type/format changed from ''string''/''uuid'' to ''string''/'''' for status ''200'''
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /game/challenges/{challenge_id}:start
+    text: the 'rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '201'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/collections/{collection_id}
+    text: 'the ''/allOf[subschema #2]/completion_rewards/items/item_id'' response''s property type/format changed from ''string''/''uuid'' to ''string''/'''' for status ''200'''
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/collections/{collection_id}
+    text: 'the ''/allOf[subschema #2]/items/items/item_id'' response''s property type/format changed from ''string''/''uuid'' to ''string''/'''' for status ''200'''
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/events/{event_id}
+    text: 'the ''/allOf[subschema #2]/milestones/items/rewards/items/item_id'' response''s property type/format changed from ''string''/''uuid'' to ''string''/'''' for status ''200'''
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /game/events/{event_id}/milestones/{milestone_id}:claim
+    text: the 'rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/inventory
+    text: the 'data/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/inventory/history
+    text: the 'data/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/progression
+    text: the 'next_level_rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/progression/levels
+    text: the 'levels/items/rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/season-track
+    text: the 'tiers/items/rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /game/season-track/tiers/{tier}:claim
+    text: the 'rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: GET
+    path: /game/shop/items
+    text: the 'data/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /game/shop/items/{shop_item_id}:purchase
+    text: the 'item/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
+  - adr: ADR-0100
+    reason: 'item_id là mã chuỗi `CatalogCode` (varchar 64), không phải UUID, ở mọi hợp đồng vật phẩm (F075, RB-308)'
+    file:
+      - specs/openapi/eduworld-api.v1.yaml
+      - specs/openapi/modules/game.v1.yaml
+    id: response-property-type-changed
+    operation: POST
+    path: /game/world/areas/{area_id}/discoveries/{interactable_id}:discover
+    text: the 'rewards/items/item_id' response's property type/format changed from 'string'/'uuid' to 'string'/'' for status '200'
 
-base origin/main: 0 breaking change(s) allowed by ADR exceptions, others rejected

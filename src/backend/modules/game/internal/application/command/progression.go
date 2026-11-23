@@ -221,10 +221,10 @@ func (h Progression) AwardFromEvent(ctx context.Context, tenant, studentID uuid.
 			PartitionKey: studentID.String(), TenantID: &tenant, OccurredAt: now, Payload: xpAwardedPayload(e, state.XPTotal, state.Level)}); err != nil {
 			return err
 		}
-		if len(a.Rewarded) > 0 {
+		if rewarded := scaled(a); len(rewarded) > 0 {
 			vid := a.Rule.VersionID
 			if err := h.grant(ctx, write.RewardGrant{ID: ids.New(), TenantID: tenant, StudentID: studentID, SchoolID: &school, RuleVersionID: &vid,
-				TriggerEventID: t.EventID, TriggerKind: write.GrantEventRule, Grants: grantMaps(a.Rewarded),
+				TriggerEventID: t.EventID, TriggerKind: write.GrantEventRule, Grants: grantMaps(rewarded),
 				IdempotencyKey: Key("event_rule", t.EventID.String(), vid.String(), studentID.String()), At: now}, nil); err != nil {
 				return err
 			}
@@ -273,6 +273,18 @@ func uniq(xs ...string) []string {
 	return out
 }
 
+// scaled are the non-XP grants of an award with the Xu diminished like the XP (F075-AC-02); a currency grant that
+// scales to 0 is dropped.
+func scaled(a reward.Award) []reward.Grant {
+	out := make([]reward.Grant, 0, len(a.Rewarded))
+	for _, g := range a.Rewarded {
+		if s, ok := g.Scaled(a.Factor); ok {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 func grantMaps(gs []reward.Grant) []map[string]any {
 	out := make([]map[string]any, 0, len(gs))
 	for _, g := range gs {
@@ -280,7 +292,8 @@ func grantMaps(gs []reward.Grant) []map[string]any {
 		if g.Amount > 0 && g.Type != "xp" {
 			m["amount"] = g.Amount
 		}
-		for k, v := range map[string]string{"title_code": g.TitleCode, "item_id": g.ItemID, "badge_id": g.BadgeID} {
+		for k, v := range map[string]string{"title_code": g.TitleCode, "item_id": g.ItemID, "badge_id": g.BadgeID, "currency_code": g.CurrencyCode,
+			"collection_item_id": g.CollectionItemID} {
 			if v != "" {
 				m[k] = v
 			}
@@ -371,13 +384,23 @@ func (h Progression) levelUp(ctx context.Context, tenant, student uuid.UUID, sch
 // grant appends a RewardGrant once (its idempotency key), applies its grants through the registered appliers and
 // writes reward.granted; an existing key gives nothing again (F074-AC-14).
 func (h Progression) grant(ctx context.Context, g write.RewardGrant, level *int) error {
-	inserted, err := h.Store.InsertGrant(ctx, g)
+	_, err := applyGrant(ctx, h.Store, h.Appliers, h.Events, g, level)
+	return err
+}
+
+// applyGrant is the grant step shared by the Reward Engine (rules, level-ups) and the economy (achievement tiers,
+// collection completions, knowledge cards, F075): append the RewardGrant once, apply every grant through its applier in
+// the same transaction, write reward.granted. Returns false when the idempotency key already exists (nothing given).
+func applyGrant(ctx context.Context, store write.ProgressionStore, appliers write.GrantApplierRegistry, events write.EventPublisher,
+	g write.RewardGrant, level *int) (bool, error) {
+	inserted, err := store.InsertGrant(ctx, g)
 	if err != nil || !inserted {
-		return err
+		return false, err
 	}
-	if h.Appliers != nil {
-		if err := h.Appliers.Apply(ctx, write.GrantContext{TenantID: g.TenantID, StudentID: g.StudentID, GrantID: g.ID, At: g.At}, g.Grants); err != nil {
-			return err
+	if appliers != nil {
+		if err := appliers.Apply(ctx, write.GrantContext{TenantID: g.TenantID, StudentID: g.StudentID, GrantID: g.ID, At: g.At,
+			SchoolID: g.SchoolID, TriggerKind: g.TriggerKind, RuleVersionID: g.RuleVersionID}, g.Grants); err != nil {
+			return false, err
 		}
 	}
 	xp := 0
@@ -388,7 +411,7 @@ func (h Progression) grant(ctx context.Context, g write.RewardGrant, level *int)
 			}
 		}
 	}
-	return h.Events.Publish(ctx, write.Event{Type: EventRewardGranted, SubjectType: "student", SubjectID: g.StudentID.String(),
+	return true, events.Publish(ctx, write.Event{Type: EventRewardGranted, SubjectType: "student", SubjectID: g.StudentID.String(),
 		PartitionKey: g.StudentID.String(), TenantID: &g.TenantID, OccurredAt: g.At, Payload: map[string]any{"grant_id": g.ID,
 			"student_id": g.StudentID, "trigger_kind": g.TriggerKind, "items": g.Grants, "xp": xp, "level": level, "curve_id": g.CurveID,
 			"source_event_id": g.TriggerEventID, "granted_at": g.At}})

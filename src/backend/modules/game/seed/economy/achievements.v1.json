@@ -1,0 +1,81 @@
+[
+  {
+    "schema_version": 1,
+    "achievement_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7530",
+    "code": "progress.quest_explorer",
+    "owner_scope": "platform",
+    "category": "progress",
+    "name": {
+      "vi": "Nhà thám hiểm",
+      "en": "Explorer"
+    },
+    "description": {
+      "vi": "Hoàn thành nhiệm vụ trong thế giới",
+      "en": "Complete quests in the world"
+    },
+    "trigger": {
+      "event_types": [
+        "quest.completed"
+      ]
+    },
+    "progress_metric": {
+      "kind": "count"
+    },
+    "visibility": "visible",
+    "tiers": [
+      {
+        "tier": "bronze",
+        "threshold": 3,
+        "rewards": [
+          {
+            "type": "currency",
+            "currency_code": "xu",
+            "amount": 20
+          }
+        ]
+      },
+      {
+        "tier": "silver",
+        "threshold": 10,
+        "rewards": [
+          {
+            "type": "badge",
+            "badge_id": "badge_explorer_01"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "achievement_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7531",
+    "code": "hidden.first_purchase",
+    "owner_scope": "platform",
+    "category": "hidden",
+    "name": {
+      "vi": "Người mua sắm đầu tiên",
+      "en": "First shopper"
+    },
+    "trigger": {
+      "event_types": [
+        "shop.item_purchased"
+      ]
+    },
+    "progress_metric": {
+      "kind": "count"
+    },
+    "visibility": "hidden_until_unlocked",
+    "tiers": [
+      {
+        "tier": "single",
+        "threshold": 1,
+        "rewards": [
+          {
+            "type": "badge",
+            "badge_id": "badge_shopper_01"
+          }
+        ]
+      }
+    ]
+  }
+]

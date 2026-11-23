@@ -41,6 +41,16 @@ var contentTables = map[string]contentTable{
 	write.ItemRewardRule: {schema: "gamification", identity: "reward_rules", idCol: "reward_rule_id", versions: "reward_rule_versions",
 		versionCol: "reward_rule_version_id", parent: []string{"code"}, columns: []string{"code", "trigger_event_type", "source_code",
 			"effective_from", "active_to"}},
+	// F075: items (F070 tables, now with the release columns), shop items, collections, achievements.
+	write.ItemGameItem: {identity: "item_definitions", idCol: "item_id", versions: "item_definition_versions", versionCol: "item_version_id",
+		columns: []string{"kind", "equip_slot", "rarity", "name", "sources", "asset_refs", "stackable", "max_stack"}},
+	write.ItemShopItem: {schema: "gamification", identity: "shop_items", idCol: "shop_item_id", versions: "shop_item_versions",
+		versionCol: "shop_item_version_id", columns: []string{"item_id", "item_kind", "price_amount", "currency_code", "purchase_limit",
+			"available_from", "available_to", "grade_levels", "featured_order", "event_id", "season_id"}},
+	write.ItemCollection: {schema: "gamification", identity: "collections", idCol: "collection_id", versions: "collection_versions",
+		versionCol: "collection_version_id", parent: []string{"code"}, columns: []string{"code", "collection_type", "visibility", "item_count"}},
+	write.ItemAchievement: {schema: "gamification", identity: "achievements", idCol: "achievement_id", versions: "achievement_versions",
+		versionCol: "achievement_version_id", parent: []string{"code"}, columns: []string{"code", "category", "visibility", "trigger_event_types"}},
 }
 
 // sch is the schema of the tables of a content type.
@@ -52,7 +62,8 @@ func (c contentTable) sch() string {
 }
 
 // jsonColumns are the typed version columns stored as jsonb.
-var jsonColumns = map[string]bool{"grade_levels": true, "objective_ids": true}
+var jsonColumns = map[string]bool{"grade_levels": true, "objective_ids": true, "name": true, "sources": true, "asset_refs": true,
+	"trigger_event_types": true}
 
 // GameContentRepo implements write.GameContentStore (platform content, written under PlatformScope only).
 type GameContentRepo struct{}

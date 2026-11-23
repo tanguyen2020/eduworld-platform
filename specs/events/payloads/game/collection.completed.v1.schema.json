@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/collection.completed.v1.schema.json",
+  "title": "Payload collection.completed v1 (module game, owner F075)",
+  "description": "Học sinh vừa có đủ món của bộ sưu tập (một lần); phần thưởng hoàn thành cấp qua Reward Engine trong cùng transaction. Consumer: RT, achievement-evaluator (trigger collection.completed), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection_id",
+    "code",
+    "student_id",
+    "total_count",
+    "completed_at"
+  ],
+  "properties": {
+    "collection_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "collection_type": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "pet",
+        "knowledge_card",
+        "cosmetic",
+        "badge",
+        "exploration",
+        "event"
+      ]
+    },
+    "total_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500
+    },
+    "grant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

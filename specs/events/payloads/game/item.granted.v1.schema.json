@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/item.granted.v1.schema.json",
+  "title": "Payload item.granted v1 (module game, owner F075)",
+  "description": "Vật phẩm vừa vào inventory của học sinh (phần thưởng, mua, collection, điều chỉnh): bút toán gamification.item_ledger + game.inventory_items cùng transaction. Consumer: RT, AUD, chat (ref.sticker_unlocks — mở khóa sticker theo item_id, F118).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entry_id",
+    "student_id",
+    "item_id",
+    "item_kind",
+    "quantity",
+    "quantity_total",
+    "reason_code",
+    "source_type",
+    "source_id",
+    "granted_at"
+  ],
+  "properties": {
+    "entry_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "item_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Mã vật phẩm (RB-308, ADR-0100)"
+    },
+    "item_kind": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "outfit",
+        "hair",
+        "accessory",
+        "emote",
+        "pet",
+        "title",
+        "badge",
+        "frame",
+        "decoration",
+        "knowledge_card",
+        "consumable_cosmetic"
+      ]
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 999,
+      "description": "Số lượng vừa nhận"
+    },
+    "quantity_total": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 999,
+      "description": "Số lượng sở hữu sau khi nhận"
+    },
+    "reason_code": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "reward",
+        "shop_purchase",
+        "collection",
+        "adjustment"
+      ]
+    },
+    "source_type": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "reward_grant",
+        "shop_purchase",
+        "adjustment"
+      ]
+    },
+    "source_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "grant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "RewardGrant nguồn (null khi mua hoặc điều chỉnh)"
+    },
+    "rule_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid",
+      "description": "Version reward rule của grant (null khi không đến từ reward rule)"
+    },
+    "granted_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

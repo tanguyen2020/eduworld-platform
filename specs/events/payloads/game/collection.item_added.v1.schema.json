@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/collection.item_added.v1.schema.json",
+  "title": "Payload collection.item_added v1 (module game, owner F075)",
+  "description": "Một món của bộ sưu tập vừa vào inventory: tiến độ collection_progress tăng. Consumer: RT, achievement-evaluator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collection_id",
+    "code",
+    "student_id",
+    "item_id",
+    "owned_count",
+    "total_count",
+    "added_at"
+  ],
+  "properties": {
+    "collection_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "item_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Mã vật phẩm (RB-308, ADR-0100)"
+    },
+    "owned_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500
+    },
+    "total_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500
+    },
+    "added_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

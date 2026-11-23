@@ -1,0 +1,39 @@
+[
+  {
+    "schema_version": 1,
+    "collection_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7520",
+    "code": "cards.starter",
+    "owner_scope": "platform",
+    "collection_type": "knowledge_card",
+    "visibility": "hidden_until_first",
+    "title": {
+      "vi": "Thẻ kiến thức khởi đầu",
+      "en": "Starter knowledge cards"
+    },
+    "items": [
+      {
+        "item_id": "card_times_table_7",
+        "objective_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7521",
+        "source_hint": {
+          "vi": "Thành thạo bảng cửu chương 7",
+          "en": "Master the 7 times table"
+        }
+      },
+      {
+        "item_id": "card_frog_lifecycle",
+        "objective_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7522",
+        "source_hint": {
+          "vi": "Thành thạo bài Vòng đời của ếch",
+          "en": "Master the life cycle of a frog"
+        }
+      }
+    ],
+    "completion_rewards": [
+      {
+        "type": "currency",
+        "currency_code": "xu",
+        "amount": 50
+      }
+    ]
+  }
+]

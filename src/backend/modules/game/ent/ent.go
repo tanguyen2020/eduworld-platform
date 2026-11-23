@@ -12,16 +12,27 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievement"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementprogressevent"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/achievementversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/avatarpreset"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/charactercatalogversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collection"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/collectionversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/contentrelease"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currency"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/currencyledgerentry"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/economyadjustment"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/explorationprogress"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gameprofile"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/gamesession"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/inventoryitem"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemdefinitionversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/itemledgerentry"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/leveldefinition"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelhistory"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/levelsession"
@@ -41,10 +52,15 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardgrant"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardrule"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/rewardruleversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shopitem"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shopitemversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/shoppurchase"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapter"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storychapterversion"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/storyprogress"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/studentachievement"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/tenantresourceassignment"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/wallet"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldarea"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaunlock"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/worldareaversion"
@@ -111,16 +127,27 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			achievement.Table:              achievement.ValidColumn,
+			achievementprogressevent.Table: achievementprogressevent.ValidColumn,
+			achievementversion.Table:       achievementversion.ValidColumn,
 			avatarpreset.Table:             avatarpreset.ValidColumn,
 			charactercatalog.Table:         charactercatalog.ValidColumn,
 			charactercatalogversion.Table:  charactercatalogversion.ValidColumn,
+			collection.Table:               collection.ValidColumn,
+			collectionitem.Table:           collectionitem.ValidColumn,
+			collectionprogress.Table:       collectionprogress.ValidColumn,
+			collectionversion.Table:        collectionversion.ValidColumn,
 			contentrelease.Table:           contentrelease.ValidColumn,
+			currency.Table:                 currency.ValidColumn,
+			currencyledgerentry.Table:      currencyledgerentry.ValidColumn,
+			economyadjustment.Table:        economyadjustment.ValidColumn,
 			explorationprogress.Table:      explorationprogress.ValidColumn,
 			gameprofile.Table:              gameprofile.ValidColumn,
 			gamesession.Table:              gamesession.ValidColumn,
 			inventoryitem.Table:            inventoryitem.ValidColumn,
 			itemdefinition.Table:           itemdefinition.ValidColumn,
 			itemdefinitionversion.Table:    itemdefinitionversion.ValidColumn,
+			itemledgerentry.Table:          itemledgerentry.ValidColumn,
 			leveldefinition.Table:          leveldefinition.ValidColumn,
 			levelhistory.Table:             levelhistory.ValidColumn,
 			levelsession.Table:             levelsession.ValidColumn,
@@ -140,10 +167,15 @@ func checkColumn(t, c string) error {
 			rewardgrant.Table:              rewardgrant.ValidColumn,
 			rewardrule.Table:               rewardrule.ValidColumn,
 			rewardruleversion.Table:        rewardruleversion.ValidColumn,
+			shopitem.Table:                 shopitem.ValidColumn,
+			shopitemversion.Table:          shopitemversion.ValidColumn,
+			shoppurchase.Table:             shoppurchase.ValidColumn,
 			storychapter.Table:             storychapter.ValidColumn,
 			storychapterversion.Table:      storychapterversion.ValidColumn,
 			storyprogress.Table:            storyprogress.ValidColumn,
+			studentachievement.Table:       studentachievement.ValidColumn,
 			tenantresourceassignment.Table: tenantresourceassignment.ValidColumn,
+			wallet.Table:                   wallet.ValidColumn,
 			worldarea.Table:                worldarea.ValidColumn,
 			worldareaunlock.Table:          worldareaunlock.ValidColumn,
 			worldareaversion.Table:         worldareaversion.ValidColumn,

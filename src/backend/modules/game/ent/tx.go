@@ -12,14 +12,34 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Achievement is the client for interacting with the Achievement builders.
+	Achievement *AchievementClient
+	// AchievementProgressEvent is the client for interacting with the AchievementProgressEvent builders.
+	AchievementProgressEvent *AchievementProgressEventClient
+	// AchievementVersion is the client for interacting with the AchievementVersion builders.
+	AchievementVersion *AchievementVersionClient
 	// AvatarPreset is the client for interacting with the AvatarPreset builders.
 	AvatarPreset *AvatarPresetClient
 	// CharacterCatalog is the client for interacting with the CharacterCatalog builders.
 	CharacterCatalog *CharacterCatalogClient
 	// CharacterCatalogVersion is the client for interacting with the CharacterCatalogVersion builders.
 	CharacterCatalogVersion *CharacterCatalogVersionClient
+	// Collection is the client for interacting with the Collection builders.
+	Collection *CollectionClient
+	// CollectionItem is the client for interacting with the CollectionItem builders.
+	CollectionItem *CollectionItemClient
+	// CollectionProgress is the client for interacting with the CollectionProgress builders.
+	CollectionProgress *CollectionProgressClient
+	// CollectionVersion is the client for interacting with the CollectionVersion builders.
+	CollectionVersion *CollectionVersionClient
 	// ContentRelease is the client for interacting with the ContentRelease builders.
 	ContentRelease *ContentReleaseClient
+	// Currency is the client for interacting with the Currency builders.
+	Currency *CurrencyClient
+	// CurrencyLedgerEntry is the client for interacting with the CurrencyLedgerEntry builders.
+	CurrencyLedgerEntry *CurrencyLedgerEntryClient
+	// EconomyAdjustment is the client for interacting with the EconomyAdjustment builders.
+	EconomyAdjustment *EconomyAdjustmentClient
 	// ExplorationProgress is the client for interacting with the ExplorationProgress builders.
 	ExplorationProgress *ExplorationProgressClient
 	// GameProfile is the client for interacting with the GameProfile builders.
@@ -32,6 +52,8 @@ type Tx struct {
 	ItemDefinition *ItemDefinitionClient
 	// ItemDefinitionVersion is the client for interacting with the ItemDefinitionVersion builders.
 	ItemDefinitionVersion *ItemDefinitionVersionClient
+	// ItemLedgerEntry is the client for interacting with the ItemLedgerEntry builders.
+	ItemLedgerEntry *ItemLedgerEntryClient
 	// LevelDefinition is the client for interacting with the LevelDefinition builders.
 	LevelDefinition *LevelDefinitionClient
 	// LevelHistory is the client for interacting with the LevelHistory builders.
@@ -70,14 +92,24 @@ type Tx struct {
 	RewardRule *RewardRuleClient
 	// RewardRuleVersion is the client for interacting with the RewardRuleVersion builders.
 	RewardRuleVersion *RewardRuleVersionClient
+	// ShopItem is the client for interacting with the ShopItem builders.
+	ShopItem *ShopItemClient
+	// ShopItemVersion is the client for interacting with the ShopItemVersion builders.
+	ShopItemVersion *ShopItemVersionClient
+	// ShopPurchase is the client for interacting with the ShopPurchase builders.
+	ShopPurchase *ShopPurchaseClient
 	// StoryChapter is the client for interacting with the StoryChapter builders.
 	StoryChapter *StoryChapterClient
 	// StoryChapterVersion is the client for interacting with the StoryChapterVersion builders.
 	StoryChapterVersion *StoryChapterVersionClient
 	// StoryProgress is the client for interacting with the StoryProgress builders.
 	StoryProgress *StoryProgressClient
+	// StudentAchievement is the client for interacting with the StudentAchievement builders.
+	StudentAchievement *StudentAchievementClient
 	// TenantResourceAssignment is the client for interacting with the TenantResourceAssignment builders.
 	TenantResourceAssignment *TenantResourceAssignmentClient
+	// Wallet is the client for interacting with the Wallet builders.
+	Wallet *WalletClient
 	// WorldArea is the client for interacting with the WorldArea builders.
 	WorldArea *WorldAreaClient
 	// WorldAreaUnlock is the client for interacting with the WorldAreaUnlock builders.
@@ -221,16 +253,27 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Achievement = NewAchievementClient(tx.config)
+	tx.AchievementProgressEvent = NewAchievementProgressEventClient(tx.config)
+	tx.AchievementVersion = NewAchievementVersionClient(tx.config)
 	tx.AvatarPreset = NewAvatarPresetClient(tx.config)
 	tx.CharacterCatalog = NewCharacterCatalogClient(tx.config)
 	tx.CharacterCatalogVersion = NewCharacterCatalogVersionClient(tx.config)
+	tx.Collection = NewCollectionClient(tx.config)
+	tx.CollectionItem = NewCollectionItemClient(tx.config)
+	tx.CollectionProgress = NewCollectionProgressClient(tx.config)
+	tx.CollectionVersion = NewCollectionVersionClient(tx.config)
 	tx.ContentRelease = NewContentReleaseClient(tx.config)
+	tx.Currency = NewCurrencyClient(tx.config)
+	tx.CurrencyLedgerEntry = NewCurrencyLedgerEntryClient(tx.config)
+	tx.EconomyAdjustment = NewEconomyAdjustmentClient(tx.config)
 	tx.ExplorationProgress = NewExplorationProgressClient(tx.config)
 	tx.GameProfile = NewGameProfileClient(tx.config)
 	tx.GameSession = NewGameSessionClient(tx.config)
 	tx.InventoryItem = NewInventoryItemClient(tx.config)
 	tx.ItemDefinition = NewItemDefinitionClient(tx.config)
 	tx.ItemDefinitionVersion = NewItemDefinitionVersionClient(tx.config)
+	tx.ItemLedgerEntry = NewItemLedgerEntryClient(tx.config)
 	tx.LevelDefinition = NewLevelDefinitionClient(tx.config)
 	tx.LevelHistory = NewLevelHistoryClient(tx.config)
 	tx.LevelSession = NewLevelSessionClient(tx.config)
@@ -250,10 +293,15 @@ func (tx *Tx) init() {
 	tx.RewardGrant = NewRewardGrantClient(tx.config)
 	tx.RewardRule = NewRewardRuleClient(tx.config)
 	tx.RewardRuleVersion = NewRewardRuleVersionClient(tx.config)
+	tx.ShopItem = NewShopItemClient(tx.config)
+	tx.ShopItemVersion = NewShopItemVersionClient(tx.config)
+	tx.ShopPurchase = NewShopPurchaseClient(tx.config)
 	tx.StoryChapter = NewStoryChapterClient(tx.config)
 	tx.StoryChapterVersion = NewStoryChapterVersionClient(tx.config)
 	tx.StoryProgress = NewStoryProgressClient(tx.config)
+	tx.StudentAchievement = NewStudentAchievementClient(tx.config)
 	tx.TenantResourceAssignment = NewTenantResourceAssignmentClient(tx.config)
+	tx.Wallet = NewWalletClient(tx.config)
 	tx.WorldArea = NewWorldAreaClient(tx.config)
 	tx.WorldAreaUnlock = NewWorldAreaUnlockClient(tx.config)
 	tx.WorldAreaVersion = NewWorldAreaVersionClient(tx.config)
@@ -269,7 +317,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: AvatarPreset.QueryXXX(), the query will be executed
+// applies a query, for example: Achievement.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

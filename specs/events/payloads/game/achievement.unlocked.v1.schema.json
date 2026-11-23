@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/achievement.unlocked.v1.schema.json",
+  "title": "Payload achievement.unlocked v1 (module game, owner F075)",
+  "description": "Một bậc thành tựu vừa mở khóa, đúng một lần mỗi (student_id, achievement_id, tier) kể cả event lặp; phần thưởng của bậc cấp qua Reward Engine cùng transaction. Consumer: RT, NTF (F123), game.unlock_on_events (F071), AUD.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "achievement_id",
+    "code",
+    "student_id",
+    "tier",
+    "category",
+    "unlocked_at"
+  ],
+  "properties": {
+    "achievement_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tier": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "single",
+        "bronze",
+        "silver",
+        "gold",
+        "platinum"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "first_time",
+        "progress",
+        "learning",
+        "exploration",
+        "social",
+        "team",
+        "competition",
+        "seasonal",
+        "hidden"
+      ]
+    },
+    "hidden": {
+      "type": "boolean"
+    },
+    "grant_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "unlocked_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

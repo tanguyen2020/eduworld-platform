@@ -479,8 +479,8 @@ Trường, lớp, khối, tỉnh của học sinh trả trong `PlayerBootstrap.s
 | POST | `/game/quests/{quest_id}/steps/{step_id}:report` | Báo bước tương tác (`talk_npc`/`go_to`/`collect`), server kiểm tra điều kiện (`STEP_PRECONDITION_FAILED`) | STU | B | P2 |
 | POST | `/game/quests/{quest_id}/steps/{step_id}/activities:start` | Bắt đầu activity học tập của bước → tạo `Attempt` (mode `quest`) | STU | B | P2 |
 | POST | `/game/minigames/{minigame_config_id}:start` | Bắt đầu mini-game **tự chơi hoặc trong quest** → `Attempt` (mode `minigame`, module game mở attempt qua learning internal) + render payload. Mini-game **được giao** chạy qua `startActivityAttempt` của module learning (§9.3.1) — `startMiniGame` | STU | B | P2 |
-| GET | `/game/inventory` | Inventory | STU (self) | T | P2 |
-| GET | `/game/achievements` | Achievement/badge + tiến độ | STU (self) | T | P2 |
+| GET | `/game/inventory?kind=&cursor=` | Inventory của mình (keyset theo mã vật phẩm, `item_id` là mã — ADR-0100) — F075 | STU (self) | T | P2 |
+| GET | `/game/achievements?category=&cursor=` | Achievement/badge + tiến độ; thành tựu ẩn chưa mở không xuất hiện — F075 | STU (self) | T | P2 |
 | GET | `/game/xp` | Level, XP, cap còn lại hôm nay (giữ tương thích; thay bằng `/game/progression`; `xp_to_next_level = 0` tại `max_level`) — F074 | STU (self) | T | P2 |
 | GET | `/game/progression` | Level, danh hiệu, XP trong level, XP cần (`null` tại `max_level`), cap còn lại hôm nay, curve version — F074; chưa có curve published → `503 UNAVAILABLE` | STU (self) | T | P2 |
 | GET | `/game/progression/xp-history?cursor=` | Lịch sử giao dịch XP thân thiện (`source_label` theo `Accept-Language`, không `source_id`/`rule_id`/`idempotency_key`; cursor sai/`limit` ngoài 1–100 → `422 VALIDATION_FAILED`) — F074 | STU (self) | T | P2 |
@@ -498,12 +498,12 @@ Trường, lớp, khối, tỉnh của học sinh trả trong `PlayerBootstrap.s
 | POST | `/game/bosses/{boss_id}/encounters` | Tạo encounter solo hoặc cho party (leader) | STU | B | P3 |
 | GET | `/game/boss-encounters/{encounter_id}` | Trạng thái encounter (dự phòng khi mất WS) | STU (member) | T | P3 |
 | POST | `/game/boss-encounters/{encounter_id}:leave` | Rời encounter | STU (member) | B | P3 |
-| GET | `/game/inventory/history?cursor=` | Lịch sử nhận/dùng vật phẩm | STU (self) | T | P2 |
-| GET | `/game/wallet` | Số dư Xu, cap Xu còn lại hôm nay | STU (self) | T | P2 |
-| GET | `/game/wallet/ledger?cursor=` | Lịch sử Xu | STU (self) | T | P2 |
-| GET | `/game/shop/items?kind=` | Hàng cosmetic đang bán | STU | T | P2 |
-| POST | `/game/shop/items/{shop_item_id}:purchase` | Mua bằng Xu (`INSUFFICIENT_BALANCE`, `PURCHASE_LIMIT_REACHED`, `SHOP_ITEM_UNAVAILABLE`, `ITEM_ALREADY_OWNED`) | STU | B | P2 |
-| GET | `/game/collections` · `/game/collections/{collection_id}` | Bộ sưu tập + tiến độ + cách nhận | STU (self) | T | P2 |
+| GET | `/game/inventory/history?cursor=` | Lịch sử nhận/dùng vật phẩm (nhãn thân thiện, không id kỹ thuật) — F075 | STU (self) | T | P2 |
+| GET | `/game/wallet` | Số dư Xu, cap Xu còn lại hôm nay — F075 | STU (self) | T | P2 |
+| GET | `/game/wallet/ledger?cursor=` | Lịch sử Xu (`source_label` theo `Accept-Language`, không `source_id`/`entry_id`/key) — F075 | STU (self) | T | P2 |
+| GET | `/game/shop/items?kind=&cursor=` | Hàng cosmetic đang bán cho học sinh (gán tenant, khối, thời gian bán; keyset `featured_order`, `shop_item_id`) — F075 | STU | T | P2 |
+| POST | `/game/shop/items/{shop_item_id}:purchase` | Mua bằng Xu (`INSUFFICIENT_BALANCE`, `PURCHASE_LIMIT_REACHED`, `SHOP_ITEM_UNAVAILABLE`, `ITEM_ALREADY_OWNED`; `expected_price` khác giá → `409 CONFLICT`; `Idempotency-Key` bắt buộc) — F075 | STU | B | P2 |
+| GET | `/game/collections?cursor=` · `/game/collections/{collection_id}` | Bộ sưu tập + tiến độ + cách nhận (`hidden_until_first` ẩn tới món đầu, chi tiết ẩn → `404`) — F075 | STU (self) | T | P2 |
 | POST | `/game/telemetry` | Telemetry không PII, theo lô: `events[]` với `type` ∈ `screen_view`, `tutorial_step`, `perf_sample`, `load_time`, `client_error`, `crash`, `network_sample` (RTT/reconnect — thay `samples[kind=network]` cũ); mỗi lô kèm `platform`, `client_version`, `device_tier`, `preset`, `renderer`, `locale` (thuộc tính: [GAME_ANALYTICS §3.2](../11-operations/GAME_ANALYTICS.md#32-nguồn-client-telemetry-post-apiv1gametelemetry)); server tách lỗi → error tracking, phần còn lại → analytics (`TelemetryBatch`, tối đa 100 event/lô) | STU | — | P2 |
 | GET | `/game/events?status=live,upcoming` | Sự kiện đang chạy/sắp diễn ra trong phạm vi học sinh ([EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md)) | STU | T | P3 |
 | GET | `/game/events/{event_id}` | Chi tiết run hiện tại: thành phần, lịch, phần thưởng, tiến độ của mình (`EVENT_NOT_AVAILABLE`) | STU | T | P3 |
@@ -1034,7 +1034,9 @@ Kinh tế game (module game, ADR-0049):
 | Method | Path | Mô tả | Role | Idem | Phase |
 |---|---|---|---|---|---|
 | POST | `/admin/economy/adjustments` | **→ module `game`.** Bút toán bù Xu/vật phẩm/XP, lý do bắt buộc, trạng thái `pending_approval` | SYS · `game.economy.adjust` | B | P2 |
-| POST | `/admin/economy/adjustments/{adjustment_id}:approve` | **→ module `game`.** Người thứ hai (khác người tạo) duyệt → ghi sổ cái | SYS · `game.economy.adjust` | B | P2 |
+| POST | `/admin/economy/adjustments/{adjustment_id}:approve` | **→ module `game`.** Người thứ hai (khác người tạo, nếu không `403 PERMISSION_DENIED`) duyệt → ghi sổ cái (âm số dư `409 INSUFFICIENT_BALANCE`, đã xử lý `422 INVALID_STATE_TRANSITION`) — F075 | SYS · `game.economy.adjust` | B | P2 |
+| POST | `/admin/economy/adjustments/{adjustment_id}:reject` | **→ module `game`.** Người thứ hai từ chối với lý do; không ghi sổ — F075 | SYS · `game.economy.adjust` | B | P2 |
+| GET | `/admin/economy/adjustments?status=&student_id=&tenant_ids=&cursor=` | **→ module `game`.** Danh sách bút toán bù (người duyệt tìm điều chỉnh chờ; vắng `tenant_ids` = mọi tenant qua bypass có audit) — F075 | SYS · `game.economy.adjust` | T | P2 |
 
 ### 9.17. Route nội bộ — tiền tố và luồng machine-to-machine
 

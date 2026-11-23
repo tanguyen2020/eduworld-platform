@@ -131,3 +131,41 @@ const GradeTransitionName = "game.grade_transition"
 
 // GradeTransitionEvents are the identity events it handles (owners F010, F013).
 var GradeTransitionEvents = []string{"student.synced", "student.placement_changed"}
+
+// CompetitionStream is the stream of module competition (EVT_COMPETITION).
+var CompetitionStream = natsx.EventStream("competition")
+
+// CompetitionSubjects returns the exact subjects of competition events.
+func CompetitionSubjects(events []string) []string {
+	out := make([]string, len(events))
+	for i, e := range events {
+		out[i] = natsx.EventSubject("competition", e)
+	}
+	return out
+}
+
+// AchievementEvaluatorName is the achievement-evaluator on the events of module game (F075 T035): one durable consumer per
+// stream (a JetStream consumer reads one stream), same handler.
+const AchievementEvaluatorName = "game.achievement_evaluator"
+
+// AchievementEvaluatorGameEvents are the game events of the achievement trigger catalog (owners F070–F076, F075).
+var AchievementEvaluatorGameEvents = []string{"avatar.created", "quest.completed", "challenge.completed", "boss.encounter_completed",
+	"world.discovery_found", "world.area_completed", "world.area_unlocked", "level.reached", "collection.completed", "shop.item_purchased"}
+
+// AchievementEvaluatorLearningName is the achievement-evaluator on the learning events.
+const AchievementEvaluatorLearningName = "game.achievement_evaluator_learning"
+
+// AchievementEvaluatorLearningEvents are the learning events of the trigger catalog (owners F030, F031).
+var AchievementEvaluatorLearningEvents = []string{"lesson.completed", "exercise.submitted", "learning_objective.mastered"}
+
+// AchievementEvaluatorCompetitionName is the achievement-evaluator on the competition events.
+const AchievementEvaluatorCompetitionName = "game.achievement_evaluator_competition"
+
+// AchievementEvaluatorCompetitionEvents are the competition events of the trigger catalog (owners F101, F105).
+var AchievementEvaluatorCompetitionEvents = []string{"party.activity_completed", "match.completed"}
+
+// CollectionOnMasteryName grants the knowledge card of an objective at mastery proficient or above (F075 T030).
+const CollectionOnMasteryName = "game.collection_on_mastery"
+
+// CollectionOnMasteryEvents are the learning events it handles (owner F031).
+var CollectionOnMasteryEvents = []string{"learning_objective.progressed"}

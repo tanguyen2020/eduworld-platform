@@ -627,7 +627,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Bút toán bù theo trạng thái (người duyệt tìm điều chỉnh chờ duyệt; System Admin, liên tenant theo tenant_ids) */
+        get: operations["listEconomyAdjustments"];
         put?: never;
         /** Bút toán bù Xu/vật phẩm/XP (System Admin, lý do bắt buộc, cần người thứ hai duyệt — ADR-0049) */
         post: operations["createEconomyAdjustment"];
@@ -648,6 +649,23 @@ export interface paths {
         put?: never;
         /** Người thứ hai duyệt bút toán bù (không được trùng người tạo) → ghi ledger */
         post: operations["approveEconomyAdjustment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/economy/adjustments/{adjustment_id}:reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Người thứ hai từ chối bút toán bù đang chờ duyệt (lý do bắt buộc; không ghi sổ cái) */
+        post: operations["rejectEconomyAdjustment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5026,7 +5044,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Bộ sưu tập và tiến độ (pet, knowledge card, cosmetic, badge, exploration, event) */
+        /** Bộ sưu tập và tiến độ (pet, knowledge card, cosmetic, badge, exploration, event; collection ẩn tới khi có món đầu tiên) */
         get: operations["listCollections"];
         put?: never;
         post?: never;
@@ -5162,7 +5180,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Inventory của mình */
+        /** Inventory của mình (lọc theo loại; trang theo cursor) */
         get: operations["listInventory"];
         put?: never;
         post?: never;
@@ -8754,8 +8772,11 @@ export interface components {
             progress_current?: number;
             progress_target?: number;
             rewards?: components["schemas"]["RewardGrantSummary"][];
-            /** @enum {string} */
-            tier?: "none" | "bronze" | "silver" | "gold";
+            /**
+             * @description Bậc cao nhất đã mở khóa (none = chưa mở)
+             * @enum {string}
+             */
+            tier?: "none" | "single" | "bronze" | "silver" | "gold" | "platinum";
             title?: components["schemas"]["LocalizedName"];
             unlocked: boolean;
             unlocked_at?: components["schemas"]["Timestamp"];
@@ -10622,7 +10643,7 @@ export interface components {
             items?: {
                 /** @description Nguồn nhận công khai, xác định */
                 how_to_obtain?: string;
-                item_id: components["schemas"]["Uuid"];
+                item_id: components["schemas"]["CatalogCode"];
                 name?: string;
                 owned: boolean;
                 rarity?: components["schemas"]["ItemRarity"];
@@ -11224,6 +11245,9 @@ export interface components {
             approved_by?: components["schemas"]["Uuid"];
             created_at: components["schemas"]["Timestamp"];
             created_by: components["schemas"]["Uuid"];
+            reject_reason?: string;
+            rejected_at?: components["schemas"]["Timestamp"];
+            rejected_by?: components["schemas"]["Uuid"];
             /** @enum {string} */
             status: "pending_approval" | "applied" | "rejected";
         };
@@ -11231,7 +11255,7 @@ export interface components {
             currency_code?: string;
             /** @description Âm để thu hồi, dương để bù; số dư không được âm */
             delta: number;
-            item_id?: components["schemas"]["Uuid"];
+            item_id?: components["schemas"]["CatalogCode"];
             /** @enum {string} */
             kind: "currency" | "item" | "xp";
             reason: string;
@@ -12347,7 +12371,9 @@ export interface components {
         };
         InventoryItem: {
             acquired_at: components["schemas"]["Timestamp"];
-            item_id: components["schemas"]["Uuid"];
+            /** @description Ô trang bị của vật phẩm (none = không trang bị được) */
+            equip_slot?: string;
+            item_id: components["schemas"]["CatalogCode"];
             kind: components["schemas"]["ItemKind"];
             name?: components["schemas"]["LocalizedName"];
             /** @description Chỉ với vật phẩm xếp chồng */
@@ -12363,7 +12389,7 @@ export interface components {
         ItemLedgerEntry: {
             created_at: components["schemas"]["Timestamp"];
             delta: number;
-            item_id: components["schemas"]["Uuid"];
+            item_id: components["schemas"]["CatalogCode"];
             item_name?: string;
             kind?: components["schemas"]["ItemKind"];
             /** @enum {string} */
@@ -14674,9 +14700,9 @@ export interface components {
         RewardGrantSummary: {
             amount?: number;
             currency_code?: string;
-            item_id?: components["schemas"]["Uuid"];
+            item_id?: components["schemas"]["CatalogCode"];
             /** @enum {string} */
-            kind: "xp" | "currency" | "item" | "badge" | "title";
+            kind: "xp" | "currency" | "item" | "badge" | "title" | "collection_item";
             label?: components["schemas"]["LocalizedName"];
         };
         RewardPreview: {
@@ -15166,7 +15192,7 @@ export interface components {
             available_to?: components["schemas"]["Timestamp"];
             currency_code?: string;
             description?: components["schemas"]["LocalizedText"];
-            item_id: components["schemas"]["Uuid"];
+            item_id: components["schemas"]["CatalogCode"];
             kind: components["schemas"]["ItemKind"];
             name: components["schemas"]["LocalizedName"];
             owned?: boolean;
@@ -18175,6 +18201,43 @@ export interface operations {
             428: components["responses"]["PreconditionRequired"];
         };
     };
+    listEconomyAdjustments: {
+        parameters: {
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+                status?: "pending_approval" | "applied" | "rejected";
+                student_id?: components["schemas"]["Uuid"];
+                /**
+                 * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
+                 *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
+                 */
+                tenant_ids?: components["parameters"]["TenantIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EconomyAdjustment"][];
+                        page: components["schemas"]["PageInfo"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     createEconomyAdjustment: {
         parameters: {
             query?: never;
@@ -18250,7 +18313,52 @@ export interface operations {
                 };
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    rejectEconomyAdjustment: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUIDv7 do client sinh cho mỗi thao tác (ADR-0010, ADR-0089 §4); timestamp trong key lệch quá `idempotency_record_ttl`
+                 *     (24 h) so với giờ server hoặc key không phải UUIDv7 → `400 BAD_REQUEST`. Bản ghi giữ trong `idempotency_record_ttl`;
+                 *     gửi lại cùng key + cùng body → response đã lưu kèm `Idempotent-Replayed: true`; khác body → `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                /**
+                 * @description Tenant của phiên (ADR-0065). Lấy từ `PlayerBootstrap.tenant_id` (game) hoặc tenant đã chọn sau đăng nhập portal (`GET /me/tenants`).
+                 *     Gateway trả `400 TENANT_HEADER_REQUIRED` khi thiếu, `400 BAD_REQUEST` khi sai định dạng; backend kiểm tra khớp token + membership,
+                 *     lệch → `403 TENANT_MISMATCH`. `Principal.tenant_id` lấy từ kết quả kiểm tra, không lấy thẳng từ header.
+                 */
+                "X-Tenant-Id"?: components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                adjustment_id: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã từ chối */
+            200: {
+                headers: {
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EconomyAdjustment"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     listFeatureFlags: {
@@ -29376,7 +29484,11 @@ export interface operations {
     };
     listCollections: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
                 "Accept-Language"?: components["parameters"]["AcceptLanguage"];
@@ -29401,6 +29513,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["CollectionProgress"][];
+                        page?: components["schemas"]["PageInfo"];
                     };
                 };
             };
@@ -29657,6 +29770,7 @@ export interface operations {
             query?: {
                 /** @description Cursor opaque từ page.next_cursor */
                 cursor?: components["parameters"]["Cursor"];
+                kind?: components["schemas"]["ItemKind"];
                 limit?: components["parameters"]["Limit"];
             };
             header?: {
@@ -30844,6 +30958,8 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
         };
     };
     postTelemetry: {

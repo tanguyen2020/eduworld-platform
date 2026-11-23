@@ -187,6 +187,124 @@ func (_c *ItemDefinitionVersionCreate) SetStatus(v string) *ItemDefinitionVersio
 	return _c
 }
 
+// SetStackable sets the "stackable" field.
+func (_c *ItemDefinitionVersionCreate) SetStackable(v bool) *ItemDefinitionVersionCreate {
+	_c.mutation.SetStackable(v)
+	return _c
+}
+
+// SetNillableStackable sets the "stackable" field if the given value is not nil.
+func (_c *ItemDefinitionVersionCreate) SetNillableStackable(v *bool) *ItemDefinitionVersionCreate {
+	if v != nil {
+		_c.SetStackable(*v)
+	}
+	return _c
+}
+
+// SetMaxStack sets the "max_stack" field.
+func (_c *ItemDefinitionVersionCreate) SetMaxStack(v int) *ItemDefinitionVersionCreate {
+	_c.mutation.SetMaxStack(v)
+	return _c
+}
+
+// SetNillableMaxStack sets the "max_stack" field if the given value is not nil.
+func (_c *ItemDefinitionVersionCreate) SetNillableMaxStack(v *int) *ItemDefinitionVersionCreate {
+	if v != nil {
+		_c.SetMaxStack(*v)
+	}
+	return _c
+}
+
+// SetPayload sets the "payload" field.
+func (_c *ItemDefinitionVersionCreate) SetPayload(v map[string]interface{}) *ItemDefinitionVersionCreate {
+	_c.mutation.SetPayload(v)
+	return _c
+}
+
+// SetPayloadSha256 sets the "payload_sha256" field.
+func (_c *ItemDefinitionVersionCreate) SetPayloadSha256(v string) *ItemDefinitionVersionCreate {
+	_c.mutation.SetPayloadSha256(v)
+	return _c
+}
+
+// SetNillablePayloadSha256 sets the "payload_sha256" field if the given value is not nil.
+func (_c *ItemDefinitionVersionCreate) SetNillablePayloadSha256(v *string) *ItemDefinitionVersionCreate {
+	if v != nil {
+		_c.SetPayloadSha256(*v)
+	}
+	return _c
+}
+
+// SetChangeNote sets the "change_note" field.
+func (_c *ItemDefinitionVersionCreate) SetChangeNote(v string) *ItemDefinitionVersionCreate {
+	_c.mutation.SetChangeNote(v)
+	return _c
+}
+
+// SetNillableChangeNote sets the "change_note" field if the given value is not nil.
+func (_c *ItemDefinitionVersionCreate) SetNillableChangeNote(v *string) *ItemDefinitionVersionCreate {
+	if v != nil {
+		_c.SetChangeNote(*v)
+	}
+	return _c
+}
+
+// SetSnapshotKey sets the "snapshot_key" field.
+func (_c *ItemDefinitionVersionCreate) SetSnapshotKey(v string) *ItemDefinitionVersionCreate {
+	_c.mutation.SetSnapshotKey(v)
+	return _c
+}
+
+// SetNillableSnapshotKey sets the "snapshot_key" field if the given value is not nil.
+func (_c *ItemDefinitionVersionCreate) SetNillableSnapshotKey(v *string) *ItemDefinitionVersionCreate {
+	if v != nil {
+		_c.SetSnapshotKey(*v)
+	}
+	return _c
+}
+
+// SetSnapshotSha256 sets the "snapshot_sha256" field.
+func (_c *ItemDefinitionVersionCreate) SetSnapshotSha256(v string) *ItemDefinitionVersionCreate {
+	_c.mutation.SetSnapshotSha256(v)
+	return _c
+}
+
+// SetNillableSnapshotSha256 sets the "snapshot_sha256" field if the given value is not nil.
+func (_c *ItemDefinitionVersionCreate) SetNillableSnapshotSha256(v *string) *ItemDefinitionVersionCreate {
+	if v != nil {
+		_c.SetSnapshotSha256(*v)
+	}
+	return _c
+}
+
+// SetPublishedAt sets the "published_at" field.
+func (_c *ItemDefinitionVersionCreate) SetPublishedAt(v time.Time) *ItemDefinitionVersionCreate {
+	_c.mutation.SetPublishedAt(v)
+	return _c
+}
+
+// SetNillablePublishedAt sets the "published_at" field if the given value is not nil.
+func (_c *ItemDefinitionVersionCreate) SetNillablePublishedAt(v *time.Time) *ItemDefinitionVersionCreate {
+	if v != nil {
+		_c.SetPublishedAt(*v)
+	}
+	return _c
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (_c *ItemDefinitionVersionCreate) SetPublishedBy(v uuid.UUID) *ItemDefinitionVersionCreate {
+	_c.mutation.SetPublishedBy(v)
+	return _c
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_c *ItemDefinitionVersionCreate) SetNillablePublishedBy(v *uuid.UUID) *ItemDefinitionVersionCreate {
+	if v != nil {
+		_c.SetPublishedBy(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *ItemDefinitionVersionCreate) SetID(v uuid.UUID) *ItemDefinitionVersionCreate {
 	_c.mutation.SetID(v)
@@ -255,6 +373,14 @@ func (_c *ItemDefinitionVersionCreate) defaults() error {
 	if _, ok := _c.mutation.Version(); !ok {
 		v := itemdefinitionversion.DefaultVersion
 		_c.mutation.SetVersion(v)
+	}
+	if _, ok := _c.mutation.Stackable(); !ok {
+		v := itemdefinitionversion.DefaultStackable
+		_c.mutation.SetStackable(v)
+	}
+	if _, ok := _c.mutation.MaxStack(); !ok {
+		v := itemdefinitionversion.DefaultMaxStack
+		_c.mutation.SetMaxStack(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
 		if itemdefinitionversion.DefaultID == nil {
@@ -329,6 +455,32 @@ func (_c *ItemDefinitionVersionCreate) check() error {
 	if v, ok := _c.mutation.Status(); ok {
 		if err := itemdefinitionversion.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ItemDefinitionVersion.status": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Stackable(); !ok {
+		return &ValidationError{Name: "stackable", err: errors.New(`ent: missing required field "ItemDefinitionVersion.stackable"`)}
+	}
+	if _, ok := _c.mutation.MaxStack(); !ok {
+		return &ValidationError{Name: "max_stack", err: errors.New(`ent: missing required field "ItemDefinitionVersion.max_stack"`)}
+	}
+	if v, ok := _c.mutation.PayloadSha256(); ok {
+		if err := itemdefinitionversion.PayloadSha256Validator(v); err != nil {
+			return &ValidationError{Name: "payload_sha256", err: fmt.Errorf(`ent: validator failed for field "ItemDefinitionVersion.payload_sha256": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.ChangeNote(); ok {
+		if err := itemdefinitionversion.ChangeNoteValidator(v); err != nil {
+			return &ValidationError{Name: "change_note", err: fmt.Errorf(`ent: validator failed for field "ItemDefinitionVersion.change_note": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.SnapshotKey(); ok {
+		if err := itemdefinitionversion.SnapshotKeyValidator(v); err != nil {
+			return &ValidationError{Name: "snapshot_key", err: fmt.Errorf(`ent: validator failed for field "ItemDefinitionVersion.snapshot_key": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.SnapshotSha256(); ok {
+		if err := itemdefinitionversion.SnapshotSha256Validator(v); err != nil {
+			return &ValidationError{Name: "snapshot_sha256", err: fmt.Errorf(`ent: validator failed for field "ItemDefinitionVersion.snapshot_sha256": %w`, err)}
 		}
 	}
 	return nil
@@ -434,6 +586,42 @@ func (_c *ItemDefinitionVersionCreate) createSpec() (*ItemDefinitionVersion, *sq
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(itemdefinitionversion.FieldStatus, field.TypeString, value)
 		_node.Status = value
+	}
+	if value, ok := _c.mutation.Stackable(); ok {
+		_spec.SetField(itemdefinitionversion.FieldStackable, field.TypeBool, value)
+		_node.Stackable = value
+	}
+	if value, ok := _c.mutation.MaxStack(); ok {
+		_spec.SetField(itemdefinitionversion.FieldMaxStack, field.TypeInt, value)
+		_node.MaxStack = value
+	}
+	if value, ok := _c.mutation.Payload(); ok {
+		_spec.SetField(itemdefinitionversion.FieldPayload, field.TypeJSON, value)
+		_node.Payload = value
+	}
+	if value, ok := _c.mutation.PayloadSha256(); ok {
+		_spec.SetField(itemdefinitionversion.FieldPayloadSha256, field.TypeString, value)
+		_node.PayloadSha256 = &value
+	}
+	if value, ok := _c.mutation.ChangeNote(); ok {
+		_spec.SetField(itemdefinitionversion.FieldChangeNote, field.TypeString, value)
+		_node.ChangeNote = &value
+	}
+	if value, ok := _c.mutation.SnapshotKey(); ok {
+		_spec.SetField(itemdefinitionversion.FieldSnapshotKey, field.TypeString, value)
+		_node.SnapshotKey = &value
+	}
+	if value, ok := _c.mutation.SnapshotSha256(); ok {
+		_spec.SetField(itemdefinitionversion.FieldSnapshotSha256, field.TypeString, value)
+		_node.SnapshotSha256 = &value
+	}
+	if value, ok := _c.mutation.PublishedAt(); ok {
+		_spec.SetField(itemdefinitionversion.FieldPublishedAt, field.TypeTime, value)
+		_node.PublishedAt = &value
+	}
+	if value, ok := _c.mutation.PublishedBy(); ok {
+		_spec.SetField(itemdefinitionversion.FieldPublishedBy, field.TypeUUID, value)
+		_node.PublishedBy = &value
 	}
 	return _node, _spec
 }

@@ -1330,7 +1330,7 @@ workspaces:
             label_key: portal.action.game_ops.shop.adjust
             title: Bút toán bù kinh tế (hai người duyệt)
             required_permissions: [game.economy.adjust]
-            operation_ids: [createEconomyAdjustment, approveEconomyAdjustment]
+            operation_ids: [listEconomyAdjustments, createEconomyAdjustment, approveEconomyAdjustment, rejectEconomyAdjustment]
             can_disable: true
       - key: menu.game_ops.rewards
         label_key: portal.menu.game_ops.rewards

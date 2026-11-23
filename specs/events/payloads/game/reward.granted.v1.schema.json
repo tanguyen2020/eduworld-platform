@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.eduworld.vn/events/payloads/game/reward.granted.v1.schema.json",
   "title": "Payload reward.granted v1 (module game, owner F074)",
-  "description": "Một RewardGrant idempotent vừa được trao (thưởng lên cấp; F075–F077 thêm achievement, collection, event_milestone…). Phát cùng transaction với gamification.reward_grants. Consumer: RT, AUD.",
+  "description": "Một RewardGrant idempotent vừa được trao (thưởng rule, lên cấp; F075: achievement, collection, knowledge_card; F077 thêm event_milestone…). Phát cùng transaction với gamification.reward_grants. Consumer: RT, AUD.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -28,7 +28,10 @@
       "maxLength": 64,
       "enum": [
         "event_rule",
-        "level_up"
+        "level_up",
+        "achievement",
+        "collection",
+        "knowledge_card"
       ]
     },
     "items": {
@@ -76,6 +79,12 @@
           "collection_item_id": {
             "type": "string",
             "maxLength": 64
+          },
+          "duplicate_xu": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "description": "F075: vật phẩm không xếp chồng đã sở hữu được quy đổi thành số Xu này (duplicate_item_xu theo độ hiếm)"
           }
         }
       }

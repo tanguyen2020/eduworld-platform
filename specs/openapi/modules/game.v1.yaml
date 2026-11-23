@@ -944,10 +944,14 @@ paths:
       tags:
         - game
       operationId: listInventory
-      summary: Inventory của mình
+      summary: Inventory của mình (lọc theo loại; trang theo cursor)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
+        - name: kind
+          in: query
+          schema:
+            $ref: '#/components/schemas/ItemKind'
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -3336,16 +3340,22 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /game/collections:
     get:
       x-service: game
       tags:
         - game
       operationId: listCollections
-      summary: Bộ sưu tập và tiến độ (pet, knowledge card, cosmetic, badge, exploration, event)
+      summary: Bộ sưu tập và tiến độ (pet, knowledge card, cosmetic, badge, exploration, event; collection ẩn tới khi có món đầu tiên)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeader'
         - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -3361,6 +3371,8 @@ paths:
                     maxItems: 500
                     items:
                       $ref: '#/components/schemas/CollectionProgress'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
           headers:
             Content-Language:
               $ref: '#/components/headers/ContentLanguage'
@@ -3599,6 +3611,55 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
   /admin/economy/adjustments:
+    get:
+      x-service: game
+      tags:
+        - admin
+      operationId: listEconomyAdjustments
+      x-portal-action: action.game_ops.shop.adjust
+      summary: Bút toán bù theo trạng thái (người duyệt tìm điều chỉnh chờ duyệt; System Admin, liên tenant theo tenant_ids)
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIds'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending_approval
+              - applied
+              - rejected
+        - name: student_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - page
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EconomyAdjustment'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
     post:
       x-service: game
       tags:
@@ -3663,8 +3724,53 @@ paths:
                 $ref: '#/components/schemas/EconomyAdjustment'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /admin/economy/adjustments/{adjustment_id}:reject:
+    post:
+      x-service: game
+      tags:
+        - admin
+      operationId: rejectEconomyAdjustment
+      x-portal-action: action.game_ops.shop.adjust
+      summary: Người thứ hai từ chối bút toán bù đang chờ duyệt (lý do bắt buộc; không ghi sổ cái)
+      x-internal: true
+      security:
+        - keycloakAdminBearer: []
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: adjustment_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: Đã từ chối
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EconomyAdjustment'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
   /admin/analytics/game/metrics:
     get:
       x-service: game
@@ -7319,27 +7425,6 @@ components:
           type: object
           description: Cấu hình hiển thị (time_limit, scoring display, feedback_timing, feedback_display) — không có đáp án
           additionalProperties: true
-    InventoryItem:
-      type: object
-      required:
-        - item_id
-        - kind
-        - acquired_at
-      properties:
-        item_id:
-          $ref: '#/components/schemas/Uuid'
-        kind:
-          $ref: '#/components/schemas/ItemKind'
-        rarity:
-          $ref: '#/components/schemas/ItemRarity'
-        quantity:
-          type: integer
-          minimum: 1
-          description: Chỉ với vật phẩm xếp chồng
-        acquired_at:
-          $ref: '#/components/schemas/Timestamp'
-        name:
-          $ref: '#/components/schemas/LocalizedName'
     ItemKind:
       type: string
       enum:
@@ -7354,6 +7439,31 @@ components:
         - decoration
         - knowledge_card
         - consumable_cosmetic
+    InventoryItem:
+      type: object
+      required:
+        - item_id
+        - kind
+        - acquired_at
+      properties:
+        item_id:
+          $ref: '#/components/schemas/CatalogCode'
+        equip_slot:
+          type: string
+          maxLength: 64
+          description: Ô trang bị của vật phẩm (none = không trang bị được)
+        kind:
+          $ref: '#/components/schemas/ItemKind'
+        rarity:
+          $ref: '#/components/schemas/ItemRarity'
+        quantity:
+          type: integer
+          minimum: 1
+          description: Chỉ với vật phẩm xếp chồng
+        acquired_at:
+          $ref: '#/components/schemas/Timestamp'
+        name:
+          $ref: '#/components/schemas/LocalizedName'
     ItemRarity:
       type: string
       enum:
@@ -8350,6 +8460,7 @@ components:
             - item
             - badge
             - title
+            - collection_item
         amount:
           type: integer
           minimum: 0
@@ -8357,7 +8468,7 @@ components:
           type: string
           maxLength: 64
         item_id:
-          $ref: '#/components/schemas/Uuid'
+          $ref: '#/components/schemas/CatalogCode'
         label:
           $ref: '#/components/schemas/LocalizedName'
     XpLedgerEntry:
@@ -8588,9 +8699,12 @@ components:
           type: string
           enum:
             - none
+            - single
             - bronze
             - silver
             - gold
+            - platinum
+          description: Bậc cao nhất đã mở khóa (none = chưa mở)
         progress_current:
           type: number
           minimum: 0
@@ -8857,7 +8971,7 @@ components:
         - created_at
       properties:
         item_id:
-          $ref: '#/components/schemas/Uuid'
+          $ref: '#/components/schemas/CatalogCode'
         item_name:
           type: string
           maxLength: 255
@@ -8937,7 +9051,7 @@ components:
         shop_item_id:
           $ref: '#/components/schemas/Uuid'
         item_id:
-          $ref: '#/components/schemas/Uuid'
+          $ref: '#/components/schemas/CatalogCode'
         name:
           $ref: '#/components/schemas/LocalizedName'
         description:
@@ -9031,7 +9145,7 @@ components:
                   - owned
                 properties:
                   item_id:
-                    $ref: '#/components/schemas/Uuid'
+                    $ref: '#/components/schemas/CatalogCode'
                   name:
                     type: string
                     maxLength: 255
@@ -9313,6 +9427,39 @@ components:
             minimum: 1
         ended_at:
           $ref: '#/components/schemas/Timestamp'
+    EconomyAdjustment:
+      allOf:
+        - $ref: '#/components/schemas/EconomyAdjustmentRequest'
+        - type: object
+          required:
+            - adjustment_id
+            - status
+            - created_by
+            - created_at
+          properties:
+            adjustment_id:
+              $ref: '#/components/schemas/Uuid'
+            status:
+              type: string
+              enum:
+                - pending_approval
+                - applied
+                - rejected
+            created_by:
+              $ref: '#/components/schemas/Uuid'
+            approved_by:
+              $ref: '#/components/schemas/Uuid'
+            rejected_by:
+              $ref: '#/components/schemas/Uuid'
+            reject_reason:
+              type: string
+              maxLength: 500
+            created_at:
+              $ref: '#/components/schemas/Timestamp'
+            applied_at:
+              $ref: '#/components/schemas/Timestamp'
+            rejected_at:
+              $ref: '#/components/schemas/Timestamp'
     EconomyAdjustmentRequest:
       type: object
       required:
@@ -9336,7 +9483,7 @@ components:
           type: string
           maxLength: 64
         item_id:
-          $ref: '#/components/schemas/Uuid'
+          $ref: '#/components/schemas/CatalogCode'
         delta:
           type: integer
           description: Âm để thu hồi, dương để bù; số dư không được âm
@@ -9348,32 +9495,6 @@ components:
           type: string
           maxLength: 128
           description: Mã yêu cầu hỗ trợ/sự cố
-    EconomyAdjustment:
-      allOf:
-        - $ref: '#/components/schemas/EconomyAdjustmentRequest'
-        - type: object
-          required:
-            - adjustment_id
-            - status
-            - created_by
-            - created_at
-          properties:
-            adjustment_id:
-              $ref: '#/components/schemas/Uuid'
-            status:
-              type: string
-              enum:
-                - pending_approval
-                - applied
-                - rejected
-            created_by:
-              $ref: '#/components/schemas/Uuid'
-            approved_by:
-              $ref: '#/components/schemas/Uuid'
-            created_at:
-              $ref: '#/components/schemas/Timestamp'
-            applied_at:
-              $ref: '#/components/schemas/Timestamp'
     GameMetricsResponse:
       type: object
       required:

@@ -1,6 +1,6 @@
 # Inventory, Economy, Achievement & Collection
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Systems Designer + Product Manager · Cập nhật: 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Systems Designer + Product Manager · Cập nhật: 2026-11-23 (F075: ví Xu, Shop, inventory, collection, achievement, bút toán bù đã hiện thực trong module `game`; `item_id` là mã — ADR-0100) · 2026-11-15
 > Liên quan: [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [CHARACTER_SYSTEM](CHARACTER_SYSTEM.md) · [GAME_DESIGN](GAME_DESIGN.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) · [ADR-0028, ADR-0043, ADR-0049](../adr/README.md) · OQ-14
 
 ## 1. Mục đích và phạm vi
@@ -66,13 +66,13 @@ Xu **không** mua được bằng tiền thật và **không** đổi ra tiền 
 ### 4.2. Wallet và sổ cái
 
 - `wallets(student_id, currency_code, balance, version)`: số dư là cache, cập nhật cùng transaction với `currency_ledger`.
-- `currency_ledger`: `entry_id`, `tenant_id`, `student_id`, `currency_code`, `delta`, `balance_after`, `reason_code` (`reward`, `shop_purchase`, `adjustment`, `refund`), `source_type`, `source_id`, `idempotency_key` (UNIQUE), `created_at`, `created_by` (hệ thống hoặc người duyệt điều chỉnh).
+- `currency_ledger`: `entry_id`, `tenant_id`, `student_id`, `currency_code`, `delta`, `balance_after`, `reason_code` (`reward`, `shop_purchase`, `adjustment`, `refund`, `duplicate_conversion`), `source_type` (`reward_grant`, `shop_purchase`, `adjustment`), `source_id`, `item_id` (vật phẩm quy đổi/đã mua), `capped`, `idempotency_key` (UNIQUE), `created_at`, `created_by` (hệ thống hoặc người duyệt điều chỉnh). Chưa partition tháng (như `xp_ledger`, partition khi lớn — F075).
 - Không có số dư âm (CHECK `balance >= 0`); mua hàng khóa dòng wallet hoặc dùng `version`.
-- Đối soát hằng đêm: `wallets.balance` = tổng `currency_ledger.delta`; lệch → alert, không tự sửa.
+- Đối soát hằng đêm (job `wallet-reconcile`): `wallets.balance` = tổng `currency_ledger.delta`; lệch → metric `eduworld_game_ledger_mismatch_total{ledger="currency"}` + audit `game.currency_ledger.mismatch`, không tự sửa.
 
 ### 4.3. Giới hạn kiếm Xu
 
-Tài liệu này **sở hữu** cap Xu: **300 Xu/ngày** [Confirmed] (`currencies.daily_cap`), áp cùng cơ chế giảm dần khi lặp nội dung như XP ([PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.2); phát hiện lạm dụng ở [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) §7. Mục tiêu: một món cosmetic phổ biến cần vài ngày chơi bình thường, không cần chơi dài.
+Tài liệu này **sở hữu** cap Xu: **300 Xu/ngày** [Confirmed] (`currencies.daily_cap`, ngày lịch ICT, bucket `currency:xu` dùng chung bảng cap của XP), áp cùng cơ chế giảm dần khi lặp nội dung như XP ([PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) §3.2: Xu của grant `currency` nhân cùng hệ số khối × lặp của award rồi làm tròn xuống trước khi chịu cap); Xu quy đổi vật phẩm trùng và bút toán bù không tính vào cap; phát hiện lạm dụng ở [ANTI_CHEAT](../10-security/ANTI_CHEAT.md) §7. Mục tiêu: một món cosmetic phổ biến cần vài ngày chơi bình thường, không cần chơi dài.
 
 ## 5. Shop và danh mục phần thưởng
 
@@ -87,7 +87,7 @@ Tài liệu này **sở hữu** cap Xu: **300 Xu/ngày** [Confirmed] (`currencie
 | `grade_levels` | Tùy chọn |
 | `tenant_assignment` | Mặc định mọi tenant; có thể chỉ gán một số tenant (ADR-0029) |
 
-Quy tắc: giá hiển thị trước, vật phẩm xác định (không hộp bí ẩn), xác nhận trước khi mua, hoàn Xu khi giao dịch lỗi. Mua hàng: `POST /game/shop/items/{shop_item_id}:purchase` với `Idempotency-Key`.
+Quy tắc: giá hiển thị trước, vật phẩm xác định (không hộp bí ẩn), xác nhận trước khi mua (`expected_price` khác giá server → `409 CONFLICT`), hoàn Xu khi giao dịch lỗi (một transaction nên không có trạng thái "trừ rồi chưa giao"). Mua hàng: `POST /game/shop/items/{shop_item_id}:purchase` với `Idempotency-Key`; khóa theo học sinh (advisory lock + ví `FOR UPDATE`) nên hai lần mua đồng thời chỉ đủ Xu cho một thì đúng một thành công. Mặt hàng gắn sự kiện/mùa chỉ bán khi event run của F077 đang chạy — trước F077 không bán (fail closed). `purchase_limit` đếm tổng số lượng mọi version của mặt hàng; vật phẩm không xếp chồng giới hạn 1.
 
 ```mermaid
 sequenceDiagram
@@ -136,7 +136,7 @@ sequenceDiagram
 
 ### 6.3. Trùng lặp
 
-Nhận lại món đã có (không xếp chồng): quy đổi Xu theo độ hiếm [Confirmed: common 5, uncommon 10, rare 25, epic 50, legendary 100], ghi rõ trong thông báo.
+Nhận lại món đã có (không xếp chồng): quy đổi Xu theo độ hiếm [Confirmed: common 5, uncommon 10, rare 25, epic 50, legendary 100], ghi rõ trong thông báo (bút toán `duplicate_conversion` kèm `item_id`; mục phần thưởng trong `reward.granted` có `duplicate_xu`). Vật phẩm xếp chồng cộng `quantity` tới `max_stack`, phần vượt quy đổi như trùng.
 
 ### 6.4. Trao đổi (trading)
 
@@ -160,6 +160,7 @@ Quy tắc:
 - Achievement xã hội chỉ dựa trên hành vi tích cực (giúp bạn trong co-op), không dựa trên số tin nhắn.
 - Đánh giá bởi consumer `achievement-evaluator` trong module game, idempotent theo `(student_id, achievement_id, tier)`.
 - Đổi điều kiện bằng version mới: tiến độ đã đạt không bị giảm; học sinh đã mở khóa giữ nguyên.
+- Thành tựu `hidden_until_unlocked` chưa mở không xuất hiện trong danh sách của học sinh. Phần thưởng bậc là Xu, vật phẩm, huy hiệu, danh hiệu, `collection_item` — XP của thành tựu đi qua reward rule nguồn `achievement.unlocked` [Proposed, F075]. Metric `distinct_count` ≤ 300 giá trị, `distinct_days_in_week` ≤ 7; trường đếm/cộng chứa thời gian chơi, đăng nhập, phiên, tin nhắn, điểm chính thức bị từ chối khi publish.
 
 ## 8. Dữ liệu (module game, `eduworld_game`)
 
@@ -172,11 +173,13 @@ Quy tắc:
 | `wallets` | T | PK `(student_id, currency_code)`, `balance` CHECK ≥ 0, `version` |
 | `currency_ledger` | T, P (tháng) | §4.2 |
 | `shop_items`, `shop_item_versions` | G | §5.1 |
-| `shop_purchases` | T | `purchase_id`, `student_id`, `shop_item_version_id`, `price`, `ledger_entry_id`, `created_at` |
+| `shop_purchases` | TA | `purchase_id`, `student_id`, `shop_item_id`, `shop_item_version_id`, `item_id`, `price_amount`, `quantity`, `currency_ledger_entry_id`, `idempotency_key`, `created_at` |
 | `collections`, `collection_versions`, `collection_items` | G | §6.1 |
 | `collection_progress` | T | PK `(student_id, collection_id)` |
 | `achievements`, `achievement_versions` | G | §7 |
-| `student_achievements` | T | PK `(student_id, achievement_id, tier)`, `progress`, `unlocked_at` |
+| `student_achievements` | T | một dòng mỗi `(student_id, achievement_id)`: `progress` (không giảm), `progress_state`, `tier` (bậc cao nhất), `achievement_version`, `unlocked_at`; mở khóa từng bậc = `reward_grants` `trigger_kind = achievement` duy nhất mỗi (student, achievement, tier) (F075) |
+| `achievement_progress_events` | TA | `(student_id, achievement_id, event_id)` UNIQUE — event giao lại không cộng tiến độ lần hai (F075) |
+| `economy_adjustments` | T | bút toán bù chờ duyệt four-eyes ([DATABASE_DESIGN §2.8a](../07-backend/DATABASE_DESIGN.md)) |
 
 Chi tiết: [DATABASE_DESIGN §2.8a](../07-backend/DATABASE_DESIGN.md).
 
@@ -191,22 +194,22 @@ Chi tiết: [DATABASE_DESIGN §2.8a](../07-backend/DATABASE_DESIGN.md).
 | GET | `/game/wallet/ledger?cursor=` | Lịch sử Xu | T |
 | GET | `/game/shop/items?kind=` | Hàng đang bán cho học sinh | T |
 | POST | `/game/shop/items/{shop_item_id}:purchase` | Mua | B |
-| GET | `/game/collections` | Bộ sưu tập + tiến độ | T |
+| GET | `/game/collections?cursor=` | Bộ sưu tập + tiến độ (collection `hidden_until_first` hiện từ món đầu tiên) | T |
 | GET | `/game/collections/{collection_id}` | Chi tiết, cách nhận từng món | T |
 | GET | `/game/achievements` | Thành tựu + tiến độ (đã có) | T |
 
-Cấu hình (`/api/v1/game-admin/{config_type}`): `items`, `currencies`, `shop-items`, `collections`, `achievements`, `reward-rules`. Điều chỉnh số dư/vật phẩm (bút toán bù): `POST /api/v1/admin/economy/adjustments` (System Admin, lý do bắt buộc, four-eyes [Confirmed]).
+Cấu hình (`/api/v1/game-admin/{config_type}`): `items`, `currencies`, `shop-items`, `collections`, `achievements`, `reward-rules` (workflow F078; F075 publish qua lõi phát hành nội bộ và seed `seed/economy`). Điều chỉnh số dư/vật phẩm/XP (bút toán bù, System Admin có `game.economy.adjust`, chỉ gateway nội bộ, lý do 10–1000 ký tự, four-eyes [Confirmed]): `POST /api/v1/admin/economy/adjustments` (`202 pending_approval`), `POST …/{adjustment_id}:approve` (người thứ hai; người tạo → `403 PERMISSION_DENIED`; âm số dư → `409 INSUFFICIENT_BALANCE`; đã xử lý → `422 INVALID_STATE_TRANSITION`), `POST …/{adjustment_id}:reject`, `GET /api/v1/admin/economy/adjustments?status=&tenant_ids=` (F075).
 
 ## 10. Event
 
 | Event | Producer | Payload chính |
 |---|---|---|
-| `currency.credited` / `currency.debited` | module game | `currency_code`, `delta`, `balance_after`, `reason_code`, `source_id` |
-| `shop.item_purchased` | module game | `shop_item_version_id`, `item_id`, `price` |
-| `item.granted` | module game | `item_id`, `quantity`, `grant_id` (đã có) |
+| `currency.credited` / `currency.debited` | module game | `entry_id`, `currency_code`, `delta`, `balance_after`, `reason_code`, `source_type`, `source_id`, `item_id?`, `capped?` |
+| `shop.item_purchased` | module game | `purchase_id`, `shop_item_id`, `shop_item_version_id`, `item_id`, `price`, `quantity`, `balance_after` |
+| `item.granted` | module game | `item_id`, `item_kind`, `quantity`, `quantity_total`, `reason_code`, `grant_id?`, `rule_version_id?` (chat F118 mở khóa sticker theo `item_id`) |
 | `collection.item_added` / `collection.completed` | module game | `collection_id`, `item_id` |
-| `achievement.progressed` / `achievement.unlocked` | module game | `achievement_id`, `tier`, `progress` |
-| `economy.adjusted` | module game | `entry_ids[]`, `reason`, `approved_by` |
+| `achievement.progressed` / `achievement.unlocked` | module game | `achievement_id`, `code`, `tier`, `progress`/`target`, `hidden`, `grant_id?` |
+| `economy.adjusted` | module game | `adjustment_id`, `kind`, `delta`, `entry_ids[]`, `reason`, `created_by`, `approved_by` |
 
 ## 11. Lỗi
 
@@ -218,7 +221,8 @@ Cấu hình (`/api/v1/game-admin/{config_type}`): `items`, `currencies`, `shop-i
 | 409 | `ITEM_ALREADY_OWNED` | Mua vật phẩm không xếp chồng đã có |
 | 422 | `ITEM_NOT_OWNED` | Trang bị vật phẩm không sở hữu (đã có) |
 | 422 | `EQUIP_SLOT_INVALID` | Vật phẩm không hợp với slot |
-| 403 | `TRADE_DISABLED` | Mọi yêu cầu trao đổi (dự phòng) |
+| 403 | `TRADE_DISABLED` | Mọi yêu cầu trao đổi (dự phòng; Release 1.0 không có route trao đổi) |
+| 428 / 409 | `IDEMPOTENCY_KEY_REQUIRED` / `IDEMPOTENCY_KEY_REUSED` | Mua/điều chỉnh thiếu `Idempotency-Key` / cùng key khác nội dung ([API_DESIGN](../07-backend/API_DESIGN.md)) |
 
 ## 12. Acceptance criteria
 

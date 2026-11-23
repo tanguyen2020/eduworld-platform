@@ -9,6 +9,42 @@ import (
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent"
 )
 
+// The AchievementFunc type is an adapter to allow the use of ordinary
+// function as Achievement mutator.
+type AchievementFunc func(context.Context, *ent.AchievementMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AchievementFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AchievementMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AchievementMutation", m)
+}
+
+// The AchievementProgressEventFunc type is an adapter to allow the use of ordinary
+// function as AchievementProgressEvent mutator.
+type AchievementProgressEventFunc func(context.Context, *ent.AchievementProgressEventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AchievementProgressEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AchievementProgressEventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AchievementProgressEventMutation", m)
+}
+
+// The AchievementVersionFunc type is an adapter to allow the use of ordinary
+// function as AchievementVersion mutator.
+type AchievementVersionFunc func(context.Context, *ent.AchievementVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AchievementVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AchievementVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AchievementVersionMutation", m)
+}
+
 // The AvatarPresetFunc type is an adapter to allow the use of ordinary
 // function as AvatarPreset mutator.
 type AvatarPresetFunc func(context.Context, *ent.AvatarPresetMutation) (ent.Value, error)
@@ -45,6 +81,54 @@ func (f CharacterCatalogVersionFunc) Mutate(ctx context.Context, m ent.Mutation)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CharacterCatalogVersionMutation", m)
 }
 
+// The CollectionFunc type is an adapter to allow the use of ordinary
+// function as Collection mutator.
+type CollectionFunc func(context.Context, *ent.CollectionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CollectionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CollectionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CollectionMutation", m)
+}
+
+// The CollectionItemFunc type is an adapter to allow the use of ordinary
+// function as CollectionItem mutator.
+type CollectionItemFunc func(context.Context, *ent.CollectionItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CollectionItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CollectionItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CollectionItemMutation", m)
+}
+
+// The CollectionProgressFunc type is an adapter to allow the use of ordinary
+// function as CollectionProgress mutator.
+type CollectionProgressFunc func(context.Context, *ent.CollectionProgressMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CollectionProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CollectionProgressMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CollectionProgressMutation", m)
+}
+
+// The CollectionVersionFunc type is an adapter to allow the use of ordinary
+// function as CollectionVersion mutator.
+type CollectionVersionFunc func(context.Context, *ent.CollectionVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CollectionVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CollectionVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CollectionVersionMutation", m)
+}
+
 // The ContentReleaseFunc type is an adapter to allow the use of ordinary
 // function as ContentRelease mutator.
 type ContentReleaseFunc func(context.Context, *ent.ContentReleaseMutation) (ent.Value, error)
@@ -55,6 +139,42 @@ func (f ContentReleaseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContentReleaseMutation", m)
+}
+
+// The CurrencyFunc type is an adapter to allow the use of ordinary
+// function as Currency mutator.
+type CurrencyFunc func(context.Context, *ent.CurrencyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CurrencyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CurrencyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CurrencyMutation", m)
+}
+
+// The CurrencyLedgerEntryFunc type is an adapter to allow the use of ordinary
+// function as CurrencyLedgerEntry mutator.
+type CurrencyLedgerEntryFunc func(context.Context, *ent.CurrencyLedgerEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CurrencyLedgerEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CurrencyLedgerEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CurrencyLedgerEntryMutation", m)
+}
+
+// The EconomyAdjustmentFunc type is an adapter to allow the use of ordinary
+// function as EconomyAdjustment mutator.
+type EconomyAdjustmentFunc func(context.Context, *ent.EconomyAdjustmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EconomyAdjustmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EconomyAdjustmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EconomyAdjustmentMutation", m)
 }
 
 // The ExplorationProgressFunc type is an adapter to allow the use of ordinary
@@ -127,6 +247,18 @@ func (f ItemDefinitionVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ItemDefinitionVersionMutation", m)
+}
+
+// The ItemLedgerEntryFunc type is an adapter to allow the use of ordinary
+// function as ItemLedgerEntry mutator.
+type ItemLedgerEntryFunc func(context.Context, *ent.ItemLedgerEntryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ItemLedgerEntryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ItemLedgerEntryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ItemLedgerEntryMutation", m)
 }
 
 // The LevelDefinitionFunc type is an adapter to allow the use of ordinary
@@ -357,6 +489,42 @@ func (f RewardRuleVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RewardRuleVersionMutation", m)
 }
 
+// The ShopItemFunc type is an adapter to allow the use of ordinary
+// function as ShopItem mutator.
+type ShopItemFunc func(context.Context, *ent.ShopItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ShopItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ShopItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ShopItemMutation", m)
+}
+
+// The ShopItemVersionFunc type is an adapter to allow the use of ordinary
+// function as ShopItemVersion mutator.
+type ShopItemVersionFunc func(context.Context, *ent.ShopItemVersionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ShopItemVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ShopItemVersionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ShopItemVersionMutation", m)
+}
+
+// The ShopPurchaseFunc type is an adapter to allow the use of ordinary
+// function as ShopPurchase mutator.
+type ShopPurchaseFunc func(context.Context, *ent.ShopPurchaseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ShopPurchaseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ShopPurchaseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ShopPurchaseMutation", m)
+}
+
 // The StoryChapterFunc type is an adapter to allow the use of ordinary
 // function as StoryChapter mutator.
 type StoryChapterFunc func(context.Context, *ent.StoryChapterMutation) (ent.Value, error)
@@ -393,6 +561,18 @@ func (f StoryProgressFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Valu
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StoryProgressMutation", m)
 }
 
+// The StudentAchievementFunc type is an adapter to allow the use of ordinary
+// function as StudentAchievement mutator.
+type StudentAchievementFunc func(context.Context, *ent.StudentAchievementMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StudentAchievementFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StudentAchievementMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StudentAchievementMutation", m)
+}
+
 // The TenantResourceAssignmentFunc type is an adapter to allow the use of ordinary
 // function as TenantResourceAssignment mutator.
 type TenantResourceAssignmentFunc func(context.Context, *ent.TenantResourceAssignmentMutation) (ent.Value, error)
@@ -403,6 +583,18 @@ func (f TenantResourceAssignmentFunc) Mutate(ctx context.Context, m ent.Mutation
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantResourceAssignmentMutation", m)
+}
+
+// The WalletFunc type is an adapter to allow the use of ordinary
+// function as Wallet mutator.
+type WalletFunc func(context.Context, *ent.WalletMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WalletFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WalletMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WalletMutation", m)
 }
 
 // The WorldAreaFunc type is an adapter to allow the use of ordinary

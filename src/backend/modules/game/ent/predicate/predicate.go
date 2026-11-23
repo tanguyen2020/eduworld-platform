@@ -6,6 +6,15 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Achievement is the predicate function for achievement builders.
+type Achievement func(*sql.Selector)
+
+// AchievementProgressEvent is the predicate function for achievementprogressevent builders.
+type AchievementProgressEvent func(*sql.Selector)
+
+// AchievementVersion is the predicate function for achievementversion builders.
+type AchievementVersion func(*sql.Selector)
+
 // AvatarPreset is the predicate function for avatarpreset builders.
 type AvatarPreset func(*sql.Selector)
 
@@ -15,8 +24,29 @@ type CharacterCatalog func(*sql.Selector)
 // CharacterCatalogVersion is the predicate function for charactercatalogversion builders.
 type CharacterCatalogVersion func(*sql.Selector)
 
+// Collection is the predicate function for collection builders.
+type Collection func(*sql.Selector)
+
+// CollectionItem is the predicate function for collectionitem builders.
+type CollectionItem func(*sql.Selector)
+
+// CollectionProgress is the predicate function for collectionprogress builders.
+type CollectionProgress func(*sql.Selector)
+
+// CollectionVersion is the predicate function for collectionversion builders.
+type CollectionVersion func(*sql.Selector)
+
 // ContentRelease is the predicate function for contentrelease builders.
 type ContentRelease func(*sql.Selector)
+
+// Currency is the predicate function for currency builders.
+type Currency func(*sql.Selector)
+
+// CurrencyLedgerEntry is the predicate function for currencyledgerentry builders.
+type CurrencyLedgerEntry func(*sql.Selector)
+
+// EconomyAdjustment is the predicate function for economyadjustment builders.
+type EconomyAdjustment func(*sql.Selector)
 
 // ExplorationProgress is the predicate function for explorationprogress builders.
 type ExplorationProgress func(*sql.Selector)
@@ -35,6 +65,9 @@ type ItemDefinition func(*sql.Selector)
 
 // ItemDefinitionVersion is the predicate function for itemdefinitionversion builders.
 type ItemDefinitionVersion func(*sql.Selector)
+
+// ItemLedgerEntry is the predicate function for itemledgerentry builders.
+type ItemLedgerEntry func(*sql.Selector)
 
 // LevelDefinition is the predicate function for leveldefinition builders.
 type LevelDefinition func(*sql.Selector)
@@ -93,6 +126,15 @@ type RewardRule func(*sql.Selector)
 // RewardRuleVersion is the predicate function for rewardruleversion builders.
 type RewardRuleVersion func(*sql.Selector)
 
+// ShopItem is the predicate function for shopitem builders.
+type ShopItem func(*sql.Selector)
+
+// ShopItemVersion is the predicate function for shopitemversion builders.
+type ShopItemVersion func(*sql.Selector)
+
+// ShopPurchase is the predicate function for shoppurchase builders.
+type ShopPurchase func(*sql.Selector)
+
 // StoryChapter is the predicate function for storychapter builders.
 type StoryChapter func(*sql.Selector)
 
@@ -102,8 +144,14 @@ type StoryChapterVersion func(*sql.Selector)
 // StoryProgress is the predicate function for storyprogress builders.
 type StoryProgress func(*sql.Selector)
 
+// StudentAchievement is the predicate function for studentachievement builders.
+type StudentAchievement func(*sql.Selector)
+
 // TenantResourceAssignment is the predicate function for tenantresourceassignment builders.
 type TenantResourceAssignment func(*sql.Selector)
+
+// Wallet is the predicate function for wallet builders.
+type Wallet func(*sql.Selector)
 
 // WorldArea is the predicate function for worldarea builders.
 type WorldArea func(*sql.Selector)

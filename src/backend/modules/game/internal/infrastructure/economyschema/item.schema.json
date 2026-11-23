@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eduworld:schema:item:1",
+  "title": "ItemDefinitionVersion",
+  "description": "Định nghĩa vật phẩm cosmetic (module game, F075). Chỉ trang trí/biểu cảm: không tăng điểm, XP hay lợi thế; không trao đổi (tradable luôn false, trading tắt trong Release 1.0). item_id là mã chuỗi ổn định, không phải UUID (RB-308, ADR-0100). Xem docs/01-game-design/INVENTORY_ECONOMY.md §2.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "item_id",
+    "version",
+    "status",
+    "owner_scope",
+    "kind",
+    "rarity",
+    "equip_slot",
+    "name",
+    "sources",
+    "tradable"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "item_id": {
+      "$ref": "#/$defs/code"
+    },
+    "item_version_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "in_review",
+        "approved",
+        "published",
+        "archived",
+        "rejected"
+      ]
+    },
+    "owner_scope": {
+      "const": "platform"
+    },
+    "tenant_id": {
+      "type": "null"
+    },
+    "kind": {
+      "enum": [
+        "outfit",
+        "hair",
+        "accessory",
+        "emote",
+        "pet",
+        "title",
+        "badge",
+        "frame",
+        "decoration",
+        "knowledge_card",
+        "consumable_cosmetic"
+      ],
+      "description": "INVENTORY_ECONOMY §2.1 — không có loại tăng sức mạnh, tăng XP hay bỏ qua bài học"
+    },
+    "rarity": {
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "epic",
+        "legendary"
+      ]
+    },
+    "equip_slot": {
+      "enum": [
+        "hair",
+        "outfit",
+        "head",
+        "face",
+        "back",
+        "hand",
+        "emote",
+        "pet",
+        "title",
+        "frame",
+        "badge",
+        "none"
+      ],
+      "description": "Ô trang bị (emote = emote_1..6, badge = badge_showcase_1..3 của CHARACTER_SYSTEM); none = không trang bị được (decoration, knowledge_card, consumable_cosmetic)"
+    },
+    "stackable": {
+      "type": "boolean",
+      "default": false
+    },
+    "max_stack": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 999,
+      "default": 1
+    },
+    "tradable": {
+      "const": false,
+      "description": "Luôn false: không có API trao đổi vật phẩm giữa học sinh (trading_enabled = false, INVENTORY_ECONOMY §6.4)"
+    },
+    "name": {
+      "$ref": "#/$defs/localized_name"
+    },
+    "description": {
+      "$ref": "#/$defs/localized_text"
+    },
+    "asset_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "icon": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "thumbnail": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "model": {
+          "type": "string",
+          "maxLength": 512
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "maxItems": 20,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "default",
+          "shop",
+          "quest",
+          "challenge",
+          "boss",
+          "achievement",
+          "level_up",
+          "collection",
+          "event",
+          "season",
+          "mastery",
+          "exploration",
+          "competition",
+          "adjustment"
+        ]
+      },
+      "description": "Nguồn có thể nhận (công khai, xác định — không ngẫu nhiên trả phí); default = miễn phí cho mọi học sinh (F070)"
+    },
+    "grade_restriction": {
+      "type": "array",
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "stackable": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "max_stack": {
+            "const": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "decoration",
+              "knowledge_card",
+              "consumable_cosmetic"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "equip_slot": {
+            "const": "none"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "localized_name": {
+      "type": "object",
+      "description": "Tên song ngữ bắt buộc đủ vi và en (ADR-0056 mục 2).",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        }
+      }
+    },
+    "localized_text": {
+      "type": "object",
+      "required": [
+        "vi",
+        "en"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "vi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    }
+  }
+}

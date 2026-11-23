@@ -21,7 +21,9 @@ type AssignSeedQuests struct {
 	UoW         write.UnitOfWork
 	Assignments write.AssignmentStore
 	Audit       write.Auditor
-	Now         func() time.Time
+	// ItemType is the resource type assigned ("" = quest; F075 assigns shop_item with the same flow).
+	ItemType string
+	Now      func() time.Time
 }
 
 // SeedAssignment is one quest and the tenant codes it goes to.
@@ -43,6 +45,10 @@ func (h AssignSeedQuests) Assign(ctx context.Context, items []SeedAssignment) (c
 	if p, ok := authz.PrincipalFrom(ctx); ok {
 		by = p.UserID
 	}
+	itemType := h.ItemType
+	if itemType == "" {
+		itemType = write.ItemQuest
+	}
 	err = h.UoW.Do(ctx, func(ctx context.Context) error {
 		created, skipped = 0, nil
 		for _, it := range items {
@@ -55,7 +61,7 @@ func (h AssignSeedQuests) Assign(ctx context.Context, items []SeedAssignment) (c
 					skipped = append(skipped, code)
 					continue
 				}
-				ok, err := h.Assignments.Assign(ctx, write.ItemQuest, it.QuestID, *tenant, by, at)
+				ok, err := h.Assignments.Assign(ctx, itemType, it.QuestID, *tenant, by, at)
 				if err != nil || !ok {
 					if err != nil {
 						return err
@@ -63,7 +69,7 @@ func (h AssignSeedQuests) Assign(ctx context.Context, items []SeedAssignment) (c
 					continue
 				}
 				created++
-				if err := h.Audit.Record(ctx, audit.Event{Action: "tenant_data.assigned", TargetType: "quest", TargetID: it.QuestID.String(),
+				if err := h.Audit.Record(ctx, audit.Event{Action: "tenant_data.assigned", TargetType: itemType, TargetID: it.QuestID.String(),
 					Result: audit.ResultSuccess, Metadata: map[string]any{"tenant_id": tenant.String(), "source": "seed"}}); err != nil {
 					return err
 				}

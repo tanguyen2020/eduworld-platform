@@ -145,6 +145,12 @@ type GrantContext struct {
 	StudentID uuid.UUID
 	GrantID   uuid.UUID
 	At        time.Time
+	// F075: the school of the student, the kind and rule version of the grant, and the position of the grant being
+	// applied in the list (a per-grant ledger key).
+	SchoolID      *uuid.UUID
+	TriggerKind   string
+	RuleVersionID *uuid.UUID
+	Index         int
 }
 
 // GrantApplierRegistry applies the grants of a RewardGrant by type (F074: xp, title; F075 registers currency, item,

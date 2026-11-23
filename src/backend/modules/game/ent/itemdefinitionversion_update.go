@@ -151,6 +151,46 @@ func (_u *ItemDefinitionVersionUpdate) SetNillableStatus(v *string) *ItemDefinit
 	return _u
 }
 
+// SetPublishedAt sets the "published_at" field.
+func (_u *ItemDefinitionVersionUpdate) SetPublishedAt(v time.Time) *ItemDefinitionVersionUpdate {
+	_u.mutation.SetPublishedAt(v)
+	return _u
+}
+
+// SetNillablePublishedAt sets the "published_at" field if the given value is not nil.
+func (_u *ItemDefinitionVersionUpdate) SetNillablePublishedAt(v *time.Time) *ItemDefinitionVersionUpdate {
+	if v != nil {
+		_u.SetPublishedAt(*v)
+	}
+	return _u
+}
+
+// ClearPublishedAt clears the value of the "published_at" field.
+func (_u *ItemDefinitionVersionUpdate) ClearPublishedAt() *ItemDefinitionVersionUpdate {
+	_u.mutation.ClearPublishedAt()
+	return _u
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (_u *ItemDefinitionVersionUpdate) SetPublishedBy(v uuid.UUID) *ItemDefinitionVersionUpdate {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *ItemDefinitionVersionUpdate) SetNillablePublishedBy(v *uuid.UUID) *ItemDefinitionVersionUpdate {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *ItemDefinitionVersionUpdate) ClearPublishedBy() *ItemDefinitionVersionUpdate {
+	_u.mutation.ClearPublishedBy()
+	return _u
+}
+
 // Mutation returns the ItemDefinitionVersionMutation object of the builder.
 func (_u *ItemDefinitionVersionUpdate) Mutation() *ItemDefinitionVersionMutation {
 	return _u.mutation
@@ -266,6 +306,33 @@ func (_u *ItemDefinitionVersionUpdate) sqlSave(ctx context.Context) (_node int, 
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(itemdefinitionversion.FieldStatus, field.TypeString, value)
+	}
+	if _u.mutation.PayloadCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldPayload, field.TypeJSON)
+	}
+	if _u.mutation.PayloadSha256Cleared() {
+		_spec.ClearField(itemdefinitionversion.FieldPayloadSha256, field.TypeString)
+	}
+	if _u.mutation.ChangeNoteCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldChangeNote, field.TypeString)
+	}
+	if _u.mutation.SnapshotKeyCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldSnapshotKey, field.TypeString)
+	}
+	if _u.mutation.SnapshotSha256Cleared() {
+		_spec.ClearField(itemdefinitionversion.FieldSnapshotSha256, field.TypeString)
+	}
+	if value, ok := _u.mutation.PublishedAt(); ok {
+		_spec.SetField(itemdefinitionversion.FieldPublishedAt, field.TypeTime, value)
+	}
+	if _u.mutation.PublishedAtCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldPublishedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(itemdefinitionversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldPublishedBy, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ItemDefinitionVersion
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)
@@ -407,6 +474,46 @@ func (_u *ItemDefinitionVersionUpdateOne) SetNillableStatus(v *string) *ItemDefi
 	if v != nil {
 		_u.SetStatus(*v)
 	}
+	return _u
+}
+
+// SetPublishedAt sets the "published_at" field.
+func (_u *ItemDefinitionVersionUpdateOne) SetPublishedAt(v time.Time) *ItemDefinitionVersionUpdateOne {
+	_u.mutation.SetPublishedAt(v)
+	return _u
+}
+
+// SetNillablePublishedAt sets the "published_at" field if the given value is not nil.
+func (_u *ItemDefinitionVersionUpdateOne) SetNillablePublishedAt(v *time.Time) *ItemDefinitionVersionUpdateOne {
+	if v != nil {
+		_u.SetPublishedAt(*v)
+	}
+	return _u
+}
+
+// ClearPublishedAt clears the value of the "published_at" field.
+func (_u *ItemDefinitionVersionUpdateOne) ClearPublishedAt() *ItemDefinitionVersionUpdateOne {
+	_u.mutation.ClearPublishedAt()
+	return _u
+}
+
+// SetPublishedBy sets the "published_by" field.
+func (_u *ItemDefinitionVersionUpdateOne) SetPublishedBy(v uuid.UUID) *ItemDefinitionVersionUpdateOne {
+	_u.mutation.SetPublishedBy(v)
+	return _u
+}
+
+// SetNillablePublishedBy sets the "published_by" field if the given value is not nil.
+func (_u *ItemDefinitionVersionUpdateOne) SetNillablePublishedBy(v *uuid.UUID) *ItemDefinitionVersionUpdateOne {
+	if v != nil {
+		_u.SetPublishedBy(*v)
+	}
+	return _u
+}
+
+// ClearPublishedBy clears the value of the "published_by" field.
+func (_u *ItemDefinitionVersionUpdateOne) ClearPublishedBy() *ItemDefinitionVersionUpdateOne {
+	_u.mutation.ClearPublishedBy()
 	return _u
 }
 
@@ -555,6 +662,33 @@ func (_u *ItemDefinitionVersionUpdateOne) sqlSave(ctx context.Context) (_node *I
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(itemdefinitionversion.FieldStatus, field.TypeString, value)
+	}
+	if _u.mutation.PayloadCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldPayload, field.TypeJSON)
+	}
+	if _u.mutation.PayloadSha256Cleared() {
+		_spec.ClearField(itemdefinitionversion.FieldPayloadSha256, field.TypeString)
+	}
+	if _u.mutation.ChangeNoteCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldChangeNote, field.TypeString)
+	}
+	if _u.mutation.SnapshotKeyCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldSnapshotKey, field.TypeString)
+	}
+	if _u.mutation.SnapshotSha256Cleared() {
+		_spec.ClearField(itemdefinitionversion.FieldSnapshotSha256, field.TypeString)
+	}
+	if value, ok := _u.mutation.PublishedAt(); ok {
+		_spec.SetField(itemdefinitionversion.FieldPublishedAt, field.TypeTime, value)
+	}
+	if _u.mutation.PublishedAtCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldPublishedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.PublishedBy(); ok {
+		_spec.SetField(itemdefinitionversion.FieldPublishedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.PublishedByCleared() {
+		_spec.ClearField(itemdefinitionversion.FieldPublishedBy, field.TypeUUID)
 	}
 	_spec.Node.Schema = _u.schemaConfig.ItemDefinitionVersion
 	ctx = internal.NewSchemaConfigContext(ctx, _u.schemaConfig)

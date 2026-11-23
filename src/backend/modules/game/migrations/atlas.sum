@@ -1,4 +1,4 @@
-h1:xCcACkVZs8SEpkNUXkz4kEeaHT09o8Wi9/bfj/tptJs=
+h1:/nDWWNEjUzFDScMedr7s7pq5VZjQ9vx9PiGDeTomPwc=
 00000000000001_baseline.sql h1:WreCSBdAYTYkGe694PcUFXKiPa0uhokOHJyWHZ5ly2s=
 20261118000001_infra.sql h1:YU0AXTuwBEq964n8p4Lag+gP6CEZd0G61Pv3IA4t3nU=
 20261119000010_infra_platform_grants.sql h1:NE31C5rhg1Lwnc1Vh6Z6D240GQx/wVqzlIh+gaOofkE=
@@ -9,3 +9,4 @@ h1:xCcACkVZs8SEpkNUXkz4kEeaHT09o8Wi9/bfj/tptJs=
 20261226000001_f071_world.sql h1:JE9iPpik0rymVa5P0JOa+rvKD3y43pz8GMjpl2pEIco=
 20261227000001_f072_quest.sql h1:m/AeKyyVUHNIsZNtWeTgaXdpu3Xr4easTXYVdJURRcs=
 20261228000001_f074_progression.sql h1:oONxwPX3Z+4ZehRqXuI9GPk3vqerBb7QgI5Yu9cOfCI=
+20261229000001_f075_economy.sql h1:0PlhB/Et/otCxD4Xgnd03eYOqzpo33fDf73vHgahTOQ=

@@ -186,8 +186,10 @@
             "enum": [
               "xp",
               "title",
+              "currency",
               "item",
               "badge",
+              "collection_item",
               "achievement_progress"
             ]
           },
@@ -201,13 +203,21 @@
             "minimum": 0,
             "maximum": 50
           },
+          "currency_code": {
+            "const": "xu",
+            "description": "Chỉ tiền trong game Xu (ADR-0049, OQ-14); số Xu nhân hệ số giảm dần khi lặp như XP rồi bị cap `xu_daily_cap` (F075)"
+          },
           "item_id": {
             "type": "string",
-            "maxLength": 64
+            "maxLength": 64,
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Mã vật phẩm (game.item_definitions.item_id, RB-308)"
           },
           "badge_id": {
             "type": "string",
-            "maxLength": 64
+            "maxLength": 64,
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Mã vật phẩm loại badge (F075: badge là vật phẩm kind = badge)"
           },
           "title_code": {
             "type": "string",
@@ -221,6 +231,12 @@
           "progress": {
             "type": "integer",
             "minimum": 1
+          },
+          "collection_item_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Mã vật phẩm thuộc một collection (F075)"
           }
         },
         "allOf": [
@@ -320,6 +336,42 @@
               "properties": {
                 "achievement_id": true,
                 "progress": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "currency"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "amount",
+                "currency_code"
+              ],
+              "properties": {
+                "amount": true,
+                "currency_code": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "collection_item"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "collection_item_id"
+              ],
+              "properties": {
+                "collection_item_id": true
               }
             }
           }

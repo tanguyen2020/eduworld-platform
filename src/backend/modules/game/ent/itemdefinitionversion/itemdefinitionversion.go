@@ -49,6 +49,24 @@ const (
 	FieldAssetRefs = "asset_refs"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldStackable holds the string denoting the stackable field in the database.
+	FieldStackable = "stackable"
+	// FieldMaxStack holds the string denoting the max_stack field in the database.
+	FieldMaxStack = "max_stack"
+	// FieldPayload holds the string denoting the payload field in the database.
+	FieldPayload = "payload"
+	// FieldPayloadSha256 holds the string denoting the payload_sha256 field in the database.
+	FieldPayloadSha256 = "payload_sha256"
+	// FieldChangeNote holds the string denoting the change_note field in the database.
+	FieldChangeNote = "change_note"
+	// FieldSnapshotKey holds the string denoting the snapshot_key field in the database.
+	FieldSnapshotKey = "snapshot_key"
+	// FieldSnapshotSha256 holds the string denoting the snapshot_sha256 field in the database.
+	FieldSnapshotSha256 = "snapshot_sha256"
+	// FieldPublishedAt holds the string denoting the published_at field in the database.
+	FieldPublishedAt = "published_at"
+	// FieldPublishedBy holds the string denoting the published_by field in the database.
+	FieldPublishedBy = "published_by"
 	// Table holds the table name of the itemdefinitionversion in the database.
 	Table = "item_definition_versions"
 )
@@ -73,6 +91,15 @@ var Columns = []string{
 	FieldSources,
 	FieldAssetRefs,
 	FieldStatus,
+	FieldStackable,
+	FieldMaxStack,
+	FieldPayload,
+	FieldPayloadSha256,
+	FieldChangeNote,
+	FieldSnapshotKey,
+	FieldSnapshotSha256,
+	FieldPublishedAt,
+	FieldPublishedBy,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -113,6 +140,18 @@ var (
 	RarityValidator func(string) error
 	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	StatusValidator func(string) error
+	// DefaultStackable holds the default value on creation for the "stackable" field.
+	DefaultStackable bool
+	// DefaultMaxStack holds the default value on creation for the "max_stack" field.
+	DefaultMaxStack int
+	// PayloadSha256Validator is a validator for the "payload_sha256" field. It is called by the builders before save.
+	PayloadSha256Validator func(string) error
+	// ChangeNoteValidator is a validator for the "change_note" field. It is called by the builders before save.
+	ChangeNoteValidator func(string) error
+	// SnapshotKeyValidator is a validator for the "snapshot_key" field. It is called by the builders before save.
+	SnapshotKeyValidator func(string) error
+	// SnapshotSha256Validator is a validator for the "snapshot_sha256" field. It is called by the builders before save.
+	SnapshotSha256Validator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -193,4 +232,44 @@ func ByRarity(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByStackable orders the results by the stackable field.
+func ByStackable(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStackable, opts...).ToFunc()
+}
+
+// ByMaxStack orders the results by the max_stack field.
+func ByMaxStack(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMaxStack, opts...).ToFunc()
+}
+
+// ByPayloadSha256 orders the results by the payload_sha256 field.
+func ByPayloadSha256(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPayloadSha256, opts...).ToFunc()
+}
+
+// ByChangeNote orders the results by the change_note field.
+func ByChangeNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldChangeNote, opts...).ToFunc()
+}
+
+// BySnapshotKey orders the results by the snapshot_key field.
+func BySnapshotKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSnapshotKey, opts...).ToFunc()
+}
+
+// BySnapshotSha256 orders the results by the snapshot_sha256 field.
+func BySnapshotSha256(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSnapshotSha256, opts...).ToFunc()
+}
+
+// ByPublishedAt orders the results by the published_at field.
+func ByPublishedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublishedAt, opts...).ToFunc()
+}
+
+// ByPublishedBy orders the results by the published_by field.
+func ByPublishedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublishedBy, opts...).ToFunc()
 }

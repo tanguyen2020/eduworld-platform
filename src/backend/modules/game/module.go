@@ -15,6 +15,7 @@ import (
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/modules"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/observability"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/read"
@@ -88,7 +89,9 @@ func (m *Module) Wire(in Imports) {
 // game.quest_on_activity_graded, game.quest_on_discovery_found, game.periodic_quests_on_session_started in worker events;
 // the F071 world and F072 quest routes; the jobs session-timeout, curfew-session-closer, quest-period-expiry and
 // quest-failure-timer in worker jobs; the F074 consumers game.reward_engine, game.reward_engine_game,
-// game.grade_transition, the progression routes and the jobs curve-rollout, xp-reconcile; createRealtimeTicket and the NATS command
+// game.grade_transition, the progression routes and the jobs curve-rollout, xp-reconcile; the F075 economy routes, the
+// consumers game.achievement_evaluator (game, learning, competition streams) and game.collection_on_mastery and the job
+// wallet-reconcile; createRealtimeTicket and the NATS command
 // ew.cmd.game.session.heartbeat of the realtime gateway in core-api (F090).
 func Register(r *module.Registry) (*Module, error) {
 	pool, err := r.Database(Name)
@@ -122,6 +125,7 @@ func Register(r *module.Registry) (*Module, error) {
 	observability.RegisterWorld(r.Metrics())
 	observability.RegisterQuest(r.Metrics())
 	observability.RegisterProgression(r.Metrics())
+	observability.RegisterEconomy(r.Metrics())
 	profileCfg, err := gameconfig.ProfileFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
@@ -135,6 +139,10 @@ func Register(r *module.Registry) (*Module, error) {
 		return nil, fmt.Errorf("game: %w", err)
 	}
 	policy, err := gameconfig.ProgressionFrom(r.Config())
+	if err != nil {
+		return nil, fmt.Errorf("game: %w", err)
+	}
+	ecoPolicy, err := gameconfig.EconomyFrom(r.Config())
 	if err != nil {
 		return nil, fmt.Errorf("game: %w", err)
 	}
@@ -155,8 +163,18 @@ func Register(r *module.Registry) (*Module, error) {
 	// F074 progression: the Reward Engine, level-ups, curve rollout, grade transition, XP reconciliation, ledger merge.
 	progressionUC := command.Progression{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: write.ProgressionRepo{}, Scan: write.ProgressionRepo{},
 		Profiles: write.ProfileRepo{}, Students: worldsql.Content{}, Rules: progressionsql.Content{}, Curves: progressionsql.Content{},
-		Appliers: rewardinfra.Default(), Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
+		Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
 		Realtime: realtime.ProgressionPublisher{C: vk}, Quests: questUC, Metrics: observability.ProgressionMetrics{}, Policy: policy}
+	// F075 economy: the appliers currency, item, badge, collection_item join the registry of the Reward Engine; the
+	// economy grants its own rewards (tiers, completions, cards) through the same registry.
+	economyUC := &command.Economy{UoW: core.UoW, AfterCommit: entx.AfterCommit, Store: write.EconomyRepo{}, Grants: write.ProgressionRepo{},
+		Achievements: write.AchievementRepo{}, Adjustments: write.AdjustmentRepo{}, Scan: write.EconomyRepo{}, Content: economysql.Content{},
+		Students: worldsql.Content{}, LiveOps: economysql.NoLiveOps{}, Events: write.Publisher{W: core.Writer}, Audit: write.Auditor{R: core.Recorder},
+		Metrics: observability.EconomyMetrics{}, Policy: ecoPolicy}
+	appliers := rewardinfra.WithEconomy(economyUC)
+	economyUC.Registry = appliers
+	progressionUC.Appliers = appliers
+	economyUC.XP = progressionUC
 	m := &Module{hub: hub, learning: learningLate, facade: facade.Facade{Lifecycle: command.StudentLifecycle{UoW: core.UoW, Sessions: write.SessionRepo{},
 		Profiles: write.ProfileRepo{}, Presets: write.PresetRepo{}, XP: progressionUC}}}
 	options := cache.NicknameOptionStore{C: vk}
@@ -174,7 +192,8 @@ func Register(r *module.Registry) (*Module, error) {
 		Quests: questUC, QuestQueries: query.Quests{Read: core.ReadSession, Content: questsql.Content{}, World: worldsql.Content{}, Cursors: cursors,
 			Reset: questCfg.Reset},
 		ProgressionQueries: query.Progression{Read: core.ReadSession, Curves: progressionsql.Content{}, Data: read.Progression{}, Cursors: cursors,
-			DailyCap: policy.DailyCap}}
+			DailyCap: policy.DailyCap},
+		EconomyQueries: query.Economy{Read: core.ReadSession, Data: read.Economy{}, Cursors: cursors}, EconomyCommands: economyUC}
 	if len(cfg.IPHashKey) > 0 {
 		h.IPHasher = security.NewIPHasher(cfg.IPHashKey)
 	}
@@ -233,6 +252,19 @@ func Register(r *module.Registry) (*Module, error) {
 	r.Consumer("game.grade_transition", func(js jetstream.JetStream) outbox.ConsumerOptions {
 		return consumer.GradeTransitionOptions(consumer.GradeTransition{Progression: progressionUC}, core.UoW, core.App, js)
 	})
+	r.Consumer("game.achievement_evaluator", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.AchievementEvaluatorOptions(consumer.AchievementConsumer{Achievements: economyUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.achievement_evaluator_learning", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.AchievementEvaluatorLearningOptions(consumer.AchievementConsumer{Achievements: economyUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.achievement_evaluator_competition", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.AchievementEvaluatorCompetitionOptions(consumer.AchievementConsumer{Achievements: economyUC}, core.UoW, core.App, js)
+	})
+	r.Consumer("game.collection_on_mastery", func(js jetstream.JetStream) outbox.ConsumerOptions {
+		return consumer.CollectionOnMasteryOptions(consumer.CollectionOnMastery{Cards: economyUC}, core.UoW, core.App, js)
+	})
+	r.Job(Name, job.WalletReconcile, gameconfig.WalletReconcileInterval, module.JobFunc(job.WalletReconcileJob(economyUC)))
 	r.Job(Name, job.CurveRollout, gameconfig.CurveRolloutInterval, module.JobFunc(job.CurveRolloutJob(progressionUC)))
 	r.Job(Name, job.XPReconcile, gameconfig.XPReconcileInterval, module.JobFunc(job.XPReconcileJob(progressionUC)))
 	r.Job(Name, job.QuestPeriodExpiry, questCfg.JobInterval, module.JobFunc(job.QuestPeriodExpiryJob(questUC)))

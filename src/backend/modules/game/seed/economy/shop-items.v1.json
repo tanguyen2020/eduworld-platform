@@ -1,0 +1,41 @@
+[
+  {
+    "schema_version": 1,
+    "shop_item_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7501",
+    "owner_scope": "platform",
+    "item_id": "hat_star_01",
+    "item_kind": "accessory",
+    "price": {
+      "currency_code": "xu",
+      "amount": 120
+    },
+    "purchase_limit": 1,
+    "featured_order": 1
+  },
+  {
+    "schema_version": 1,
+    "shop_item_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7502",
+    "owner_scope": "platform",
+    "item_id": "firework_01",
+    "item_kind": "consumable_cosmetic",
+    "price": {
+      "currency_code": "xu",
+      "amount": 10
+    },
+    "purchase_limit": 20,
+    "featured_order": 2
+  },
+  {
+    "schema_version": 1,
+    "shop_item_id": "0193a5f4-6c1e-7b2a-9d1f-0000000f7503",
+    "owner_scope": "platform",
+    "item_id": "wings_paper_01",
+    "item_kind": "accessory",
+    "price": {
+      "currency_code": "xu",
+      "amount": 300
+    },
+    "purchase_limit": 1,
+    "featured_order": 3
+  }
+]

@@ -14,6 +14,9 @@ import (
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/achievement"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/collection"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/economy"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/progression"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/reward"
@@ -32,7 +35,7 @@ const EventContentPublished = "content.published"
 // publishOrder publishes areas before their levels and chapters before the dialogues that reference their quests.
 // Quests (F072) come before the dialogues that give them.
 var publishOrder = []string{write.ItemWorldArea, write.ItemLevel, write.ItemStoryChapter, write.ItemQuest, write.ItemNPCDialogue,
-	write.ItemProgressionCurve, write.ItemRewardRule}
+	write.ItemProgressionCurve, write.ItemGameItem, write.ItemRewardRule, write.ItemShopItem, write.ItemCollection, write.ItemAchievement}
 
 // ContentItem is one authored game content payload to publish.
 type ContentItem struct {
@@ -77,7 +80,9 @@ type PublishGameContent struct {
 	QuestContent port.QuestContent
 	// Progression are the F074 checks (progression curves, reward rules) and the level table store.
 	Progression *ProgressionPublishRules
-	Now         func() time.Time
+	// Economy are the F075 checks (items, shop items, collections, achievements) and the collection item store.
+	Economy *EconomyPublishRules
+	Now     func() time.Time
 }
 
 type parsedItem struct {
@@ -93,6 +98,10 @@ type parsedItem struct {
 	quest   *quest.Version
 	curve   *progression.Curve
 	rule    *reward.Rule
+	item    *economy.Item
+	shop    *economy.ShopItem
+	coll    *collection.Collection
+	ach     *achievement.Definition
 }
 
 // Publish publishes items in one platform transaction; key makes the release rows idempotent per item.
@@ -118,6 +127,8 @@ func (h PublishGameContent) Publish(ctx context.Context, items []ContentItem, no
 			p, err = parseQuest(it, h.Quests)
 		case progressionItem(it.Type):
 			p, err = parseProgression(it, h.Progression, now)
+		case economyItem(it.Type):
+			p, err = parseEconomy(it, h.Economy)
 		default:
 			p, err = parse(it)
 		}
@@ -281,6 +292,9 @@ func (h PublishGameContent) checkRefs(ctx context.Context, items []parsedItem) e
 	if err := h.checkCurve(ctx, items); err != nil {
 		return err
 	}
+	if err := h.checkEconomy(ctx, items); err != nil {
+		return err
+	}
 	grades := map[string][]struct {
 		id     string
 		grades []int
@@ -371,6 +385,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 			return GameRelease{}, false, err
 		}
 	}
+	if economyItem(p.Type) {
+		if stored, err = economyStored(p, vid, head.NextVersionNo); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
 	if p.Type == write.ItemNPCDialogue {
 		doc := map[string]any{}
 		for k, v := range p.doc {
@@ -390,6 +409,11 @@ func (h PublishGameContent) publishOne(ctx context.Context, p parsedItem, note, 
 	}
 	if p.curve != nil {
 		if err := h.insertLevels(ctx, p, vid, head.NextVersionNo); err != nil {
+			return GameRelease{}, false, err
+		}
+	}
+	if p.coll != nil {
+		if err := h.insertCollectionItems(ctx, p, vid); err != nil {
 			return GameRelease{}, false, err
 		}
 	}

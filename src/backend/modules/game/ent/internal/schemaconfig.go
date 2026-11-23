@@ -7,16 +7,27 @@ import "context"
 // SchemaConfig represents alternative schema names for all tables
 // that can be passed at runtime.
 type SchemaConfig struct {
+	Achievement              string // Achievement table.
+	AchievementProgressEvent string // AchievementProgressEvent table.
+	AchievementVersion       string // AchievementVersion table.
 	AvatarPreset             string // AvatarPreset table.
 	CharacterCatalog         string // CharacterCatalog table.
 	CharacterCatalogVersion  string // CharacterCatalogVersion table.
+	Collection               string // Collection table.
+	CollectionItem           string // CollectionItem table.
+	CollectionProgress       string // CollectionProgress table.
+	CollectionVersion        string // CollectionVersion table.
 	ContentRelease           string // ContentRelease table.
+	Currency                 string // Currency table.
+	CurrencyLedgerEntry      string // CurrencyLedgerEntry table.
+	EconomyAdjustment        string // EconomyAdjustment table.
 	ExplorationProgress      string // ExplorationProgress table.
 	GameProfile              string // GameProfile table.
 	GameSession              string // GameSession table.
 	InventoryItem            string // InventoryItem table.
 	ItemDefinition           string // ItemDefinition table.
 	ItemDefinitionVersion    string // ItemDefinitionVersion table.
+	ItemLedgerEntry          string // ItemLedgerEntry table.
 	LevelDefinition          string // LevelDefinition table.
 	LevelHistory             string // LevelHistory table.
 	LevelSession             string // LevelSession table.
@@ -36,10 +47,15 @@ type SchemaConfig struct {
 	RewardGrant              string // RewardGrant table.
 	RewardRule               string // RewardRule table.
 	RewardRuleVersion        string // RewardRuleVersion table.
+	ShopItem                 string // ShopItem table.
+	ShopItemVersion          string // ShopItemVersion table.
+	ShopPurchase             string // ShopPurchase table.
 	StoryChapter             string // StoryChapter table.
 	StoryChapterVersion      string // StoryChapterVersion table.
 	StoryProgress            string // StoryProgress table.
+	StudentAchievement       string // StudentAchievement table.
 	TenantResourceAssignment string // TenantResourceAssignment table.
+	Wallet                   string // Wallet table.
 	WorldArea                string // WorldArea table.
 	WorldAreaUnlock          string // WorldAreaUnlock table.
 	WorldAreaVersion         string // WorldAreaVersion table.

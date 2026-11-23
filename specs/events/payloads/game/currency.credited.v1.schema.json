@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.eduworld.vn/events/payloads/game/currency.credited.v1.schema.json",
+  "title": "Payload currency.credited v1 (module game, owner F075)",
+  "description": "Một bút toán Xu dương vừa ghi vào gamification.currency_ledger (ADR-0049), cùng transaction với số dư ví (outbox). Envelope subject = {type: student, id: student_id}. Consumer: RT, AUD, ANA. Chỉ ID và số — không PII (R14).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entry_id",
+    "student_id",
+    "currency_code",
+    "delta",
+    "balance_after",
+    "reason_code",
+    "source_type",
+    "source_id",
+    "created_at"
+  ],
+  "properties": {
+    "entry_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "student_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "currency_code": {
+      "type": "string",
+      "maxLength": 64,
+      "const": "xu"
+    },
+    "delta": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "balance_after": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reason_code": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "reward",
+        "adjustment",
+        "refund",
+        "duplicate_conversion"
+      ]
+    },
+    "source_type": {
+      "type": "string",
+      "maxLength": 64,
+      "enum": [
+        "reward_grant",
+        "shop_purchase",
+        "adjustment"
+      ]
+    },
+    "source_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "item_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Vật phẩm trùng được quy đổi (reason_code = duplicate_conversion) hoặc vật phẩm đã mua"
+    },
+    "capped": {
+      "type": "boolean",
+      "description": "Cap Xu/ngày (xu_daily_cap) đã cắt một phần phần thưởng"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

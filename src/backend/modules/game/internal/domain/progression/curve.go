@@ -157,6 +157,14 @@ func (c Curve) Validate(hasApplier func(rewardType string) bool) error {
 			if hasApplier == nil || !hasApplier(r.Type()) {
 				return invalid(fmt.Sprintf("level_rewards/%d/rewards/%d/type", i, j), "no grant applier for reward type %q", r.Type())
 			}
+			if r.Type() == "currency" { // F075: Xu only, a positive amount (the applier would fail the level-up otherwise)
+				if code, _ := r["currency_code"].(string); code != "xu" {
+					return invalid(fmt.Sprintf("level_rewards/%d/rewards/%d/currency_code", i, j), "only xu")
+				}
+				if n, _ := r["amount"].(float64); n < 1 {
+					return invalid(fmt.Sprintf("level_rewards/%d/rewards/%d/amount", i, j), "must be ≥ 1")
+				}
+			}
 		}
 	}
 	return nil

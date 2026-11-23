@@ -94,7 +94,7 @@ Cột "Feature đã chọn" là **quyết định đã chốt** (Technical Archi
 | RB-305 | Đường bắt đầu mini-game: `startMiniGame` (game) vs `startActivityAttempt` (learning) | Tự chơi/quest qua game; bài giao qua learning | P2 | F073 |
 | RB-306 | EVENT_DESIGN §3.2 learning tiêu thụ `minigame.completed` trùng evidence | Bỏ | P2 | F073 |
 | RB-307 | `ref.mastery_summary` chưa có trong DATABASE_DESIGN §2.17 | Thêm | P3 | F071 |
-| RB-308 | `item_id` uuid (OpenAPI) vs `varchar(64)` (DB, schema); `xp_required` vs `xp_to_next`; config type `levels` trùng `game.level_definitions` | Đã áp phần F074 (2026-11-23: `progression-levels`, `xp_required`, ADR-0099); `item_id` thuộc F075 | P1 | F074, F075 |
+| RB-308 | `item_id` uuid (OpenAPI) vs `varchar(64)` (DB, schema); `xp_required` vs `xp_to_next`; config type `levels` trùng `game.level_definitions` | Đã áp (2026-11-23): F074 `progression-levels`, `xp_required` (ADR-0099); F075 `item_id` = `CatalogCode` ở mọi hợp đồng (ADR-0100) | P1 | F074, F075 |
 | RB-309 | Live-ops thiếu `content.release.rollback` (§2.3 vs §3.11); `game.progression.write` vs `game.level.write`; `game.collection.write`, `game.shop.write` chưa có trong catalog | Bổ sung catalog | P2 | F078, F079 |
 | RB-310 | `listGameActivities` ghi `x-service: learning` nhưng dữ liệu ở game | module game + projection learning | P2 | F078 |
 | RB-311 | Nhịp đẩy community goal 10 s vs 30 s; `event_runs.suspended_reason varchar(500)` < 1000; DATABASE_DESIGN thiếu `economy_adjustments`, `preview_sessions`, `render_jobs`, `media_assets.kind = render_*` | Chưa chốt | P2 | F077, F078 |

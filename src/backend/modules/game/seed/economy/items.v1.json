@@ -1,0 +1,184 @@
+[
+  {
+    "schema_version": 1,
+    "item_id": "hat_star_01",
+    "owner_scope": "platform",
+    "kind": "accessory",
+    "rarity": "rare",
+    "equip_slot": "head",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Mũ ngôi sao",
+      "en": "Star hat"
+    },
+    "sources": [
+      "shop"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "wings_paper_01",
+    "owner_scope": "platform",
+    "kind": "accessory",
+    "rarity": "epic",
+    "equip_slot": "back",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Cánh giấy",
+      "en": "Paper wings"
+    },
+    "sources": [
+      "shop",
+      "event"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "emote_cheer_01",
+    "owner_scope": "platform",
+    "kind": "emote",
+    "rarity": "common",
+    "equip_slot": "emote",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Cổ vũ",
+      "en": "Cheer"
+    },
+    "sources": [
+      "shop"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "pet_cat_01",
+    "owner_scope": "platform",
+    "kind": "pet",
+    "rarity": "uncommon",
+    "equip_slot": "pet",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Mèo con",
+      "en": "Kitten"
+    },
+    "sources": [
+      "quest"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "frame_gold_01",
+    "owner_scope": "platform",
+    "kind": "frame",
+    "rarity": "rare",
+    "equip_slot": "frame",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Khung vàng",
+      "en": "Gold frame"
+    },
+    "sources": [
+      "achievement"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "badge_explorer_01",
+    "owner_scope": "platform",
+    "kind": "badge",
+    "rarity": "rare",
+    "equip_slot": "badge",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Huy hiệu Nhà thám hiểm",
+      "en": "Explorer badge"
+    },
+    "sources": [
+      "achievement"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "badge_shopper_01",
+    "owner_scope": "platform",
+    "kind": "badge",
+    "rarity": "uncommon",
+    "equip_slot": "badge",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Huy hiệu Người mua sắm",
+      "en": "Shopper badge"
+    },
+    "sources": [
+      "achievement"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "card_times_table_7",
+    "owner_scope": "platform",
+    "kind": "knowledge_card",
+    "rarity": "common",
+    "equip_slot": "none",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Bảng cửu chương 7",
+      "en": "The 7 times table"
+    },
+    "sources": [
+      "mastery"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "card_frog_lifecycle",
+    "owner_scope": "platform",
+    "kind": "knowledge_card",
+    "rarity": "common",
+    "equip_slot": "none",
+    "stackable": false,
+    "max_stack": 1,
+    "tradable": false,
+    "name": {
+      "vi": "Vòng đời của ếch",
+      "en": "Life cycle of a frog"
+    },
+    "sources": [
+      "mastery"
+    ]
+  },
+  {
+    "schema_version": 1,
+    "item_id": "firework_01",
+    "owner_scope": "platform",
+    "kind": "consumable_cosmetic",
+    "rarity": "common",
+    "equip_slot": "none",
+    "stackable": true,
+    "max_stack": 99,
+    "tradable": false,
+    "name": {
+      "vi": "Pháo hoa",
+      "en": "Fireworks"
+    },
+    "sources": [
+      "shop",
+      "level_up"
+    ]
+  }
+]

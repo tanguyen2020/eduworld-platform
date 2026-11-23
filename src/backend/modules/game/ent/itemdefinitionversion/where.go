@@ -125,6 +125,46 @@ func Status(v string) predicate.ItemDefinitionVersion {
 	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldStatus, v))
 }
 
+// Stackable applies equality check predicate on the "stackable" field. It's identical to StackableEQ.
+func Stackable(v bool) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldStackable, v))
+}
+
+// MaxStack applies equality check predicate on the "max_stack" field. It's identical to MaxStackEQ.
+func MaxStack(v int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldMaxStack, v))
+}
+
+// PayloadSha256 applies equality check predicate on the "payload_sha256" field. It's identical to PayloadSha256EQ.
+func PayloadSha256(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldPayloadSha256, v))
+}
+
+// ChangeNote applies equality check predicate on the "change_note" field. It's identical to ChangeNoteEQ.
+func ChangeNote(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldChangeNote, v))
+}
+
+// SnapshotKey applies equality check predicate on the "snapshot_key" field. It's identical to SnapshotKeyEQ.
+func SnapshotKey(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldSnapshotKey, v))
+}
+
+// SnapshotSha256 applies equality check predicate on the "snapshot_sha256" field. It's identical to SnapshotSha256EQ.
+func SnapshotSha256(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldSnapshotSha256, v))
+}
+
+// PublishedAt applies equality check predicate on the "published_at" field. It's identical to PublishedAtEQ.
+func PublishedAt(v time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldPublishedAt, v))
+}
+
+// PublishedBy applies equality check predicate on the "published_by" field. It's identical to PublishedByEQ.
+func PublishedBy(v uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ItemDefinitionVersion {
 	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldCreatedAt, v))
@@ -893,6 +933,466 @@ func StatusEqualFold(v string) predicate.ItemDefinitionVersion {
 // StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.ItemDefinitionVersion {
 	return predicate.ItemDefinitionVersion(sql.FieldContainsFold(FieldStatus, v))
+}
+
+// StackableEQ applies the EQ predicate on the "stackable" field.
+func StackableEQ(v bool) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldStackable, v))
+}
+
+// StackableNEQ applies the NEQ predicate on the "stackable" field.
+func StackableNEQ(v bool) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNEQ(FieldStackable, v))
+}
+
+// MaxStackEQ applies the EQ predicate on the "max_stack" field.
+func MaxStackEQ(v int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldMaxStack, v))
+}
+
+// MaxStackNEQ applies the NEQ predicate on the "max_stack" field.
+func MaxStackNEQ(v int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNEQ(FieldMaxStack, v))
+}
+
+// MaxStackIn applies the In predicate on the "max_stack" field.
+func MaxStackIn(vs ...int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIn(FieldMaxStack, vs...))
+}
+
+// MaxStackNotIn applies the NotIn predicate on the "max_stack" field.
+func MaxStackNotIn(vs ...int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotIn(FieldMaxStack, vs...))
+}
+
+// MaxStackGT applies the GT predicate on the "max_stack" field.
+func MaxStackGT(v int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGT(FieldMaxStack, v))
+}
+
+// MaxStackGTE applies the GTE predicate on the "max_stack" field.
+func MaxStackGTE(v int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGTE(FieldMaxStack, v))
+}
+
+// MaxStackLT applies the LT predicate on the "max_stack" field.
+func MaxStackLT(v int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLT(FieldMaxStack, v))
+}
+
+// MaxStackLTE applies the LTE predicate on the "max_stack" field.
+func MaxStackLTE(v int) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLTE(FieldMaxStack, v))
+}
+
+// PayloadIsNil applies the IsNil predicate on the "payload" field.
+func PayloadIsNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIsNull(FieldPayload))
+}
+
+// PayloadNotNil applies the NotNil predicate on the "payload" field.
+func PayloadNotNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotNull(FieldPayload))
+}
+
+// PayloadSha256EQ applies the EQ predicate on the "payload_sha256" field.
+func PayloadSha256EQ(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldPayloadSha256, v))
+}
+
+// PayloadSha256NEQ applies the NEQ predicate on the "payload_sha256" field.
+func PayloadSha256NEQ(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNEQ(FieldPayloadSha256, v))
+}
+
+// PayloadSha256In applies the In predicate on the "payload_sha256" field.
+func PayloadSha256In(vs ...string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIn(FieldPayloadSha256, vs...))
+}
+
+// PayloadSha256NotIn applies the NotIn predicate on the "payload_sha256" field.
+func PayloadSha256NotIn(vs ...string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotIn(FieldPayloadSha256, vs...))
+}
+
+// PayloadSha256GT applies the GT predicate on the "payload_sha256" field.
+func PayloadSha256GT(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGT(FieldPayloadSha256, v))
+}
+
+// PayloadSha256GTE applies the GTE predicate on the "payload_sha256" field.
+func PayloadSha256GTE(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGTE(FieldPayloadSha256, v))
+}
+
+// PayloadSha256LT applies the LT predicate on the "payload_sha256" field.
+func PayloadSha256LT(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLT(FieldPayloadSha256, v))
+}
+
+// PayloadSha256LTE applies the LTE predicate on the "payload_sha256" field.
+func PayloadSha256LTE(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLTE(FieldPayloadSha256, v))
+}
+
+// PayloadSha256Contains applies the Contains predicate on the "payload_sha256" field.
+func PayloadSha256Contains(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldContains(FieldPayloadSha256, v))
+}
+
+// PayloadSha256HasPrefix applies the HasPrefix predicate on the "payload_sha256" field.
+func PayloadSha256HasPrefix(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldHasPrefix(FieldPayloadSha256, v))
+}
+
+// PayloadSha256HasSuffix applies the HasSuffix predicate on the "payload_sha256" field.
+func PayloadSha256HasSuffix(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldHasSuffix(FieldPayloadSha256, v))
+}
+
+// PayloadSha256IsNil applies the IsNil predicate on the "payload_sha256" field.
+func PayloadSha256IsNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIsNull(FieldPayloadSha256))
+}
+
+// PayloadSha256NotNil applies the NotNil predicate on the "payload_sha256" field.
+func PayloadSha256NotNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotNull(FieldPayloadSha256))
+}
+
+// PayloadSha256EqualFold applies the EqualFold predicate on the "payload_sha256" field.
+func PayloadSha256EqualFold(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEqualFold(FieldPayloadSha256, v))
+}
+
+// PayloadSha256ContainsFold applies the ContainsFold predicate on the "payload_sha256" field.
+func PayloadSha256ContainsFold(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldContainsFold(FieldPayloadSha256, v))
+}
+
+// ChangeNoteEQ applies the EQ predicate on the "change_note" field.
+func ChangeNoteEQ(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldChangeNote, v))
+}
+
+// ChangeNoteNEQ applies the NEQ predicate on the "change_note" field.
+func ChangeNoteNEQ(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNEQ(FieldChangeNote, v))
+}
+
+// ChangeNoteIn applies the In predicate on the "change_note" field.
+func ChangeNoteIn(vs ...string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIn(FieldChangeNote, vs...))
+}
+
+// ChangeNoteNotIn applies the NotIn predicate on the "change_note" field.
+func ChangeNoteNotIn(vs ...string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotIn(FieldChangeNote, vs...))
+}
+
+// ChangeNoteGT applies the GT predicate on the "change_note" field.
+func ChangeNoteGT(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGT(FieldChangeNote, v))
+}
+
+// ChangeNoteGTE applies the GTE predicate on the "change_note" field.
+func ChangeNoteGTE(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGTE(FieldChangeNote, v))
+}
+
+// ChangeNoteLT applies the LT predicate on the "change_note" field.
+func ChangeNoteLT(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLT(FieldChangeNote, v))
+}
+
+// ChangeNoteLTE applies the LTE predicate on the "change_note" field.
+func ChangeNoteLTE(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLTE(FieldChangeNote, v))
+}
+
+// ChangeNoteContains applies the Contains predicate on the "change_note" field.
+func ChangeNoteContains(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldContains(FieldChangeNote, v))
+}
+
+// ChangeNoteHasPrefix applies the HasPrefix predicate on the "change_note" field.
+func ChangeNoteHasPrefix(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldHasPrefix(FieldChangeNote, v))
+}
+
+// ChangeNoteHasSuffix applies the HasSuffix predicate on the "change_note" field.
+func ChangeNoteHasSuffix(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldHasSuffix(FieldChangeNote, v))
+}
+
+// ChangeNoteIsNil applies the IsNil predicate on the "change_note" field.
+func ChangeNoteIsNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIsNull(FieldChangeNote))
+}
+
+// ChangeNoteNotNil applies the NotNil predicate on the "change_note" field.
+func ChangeNoteNotNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotNull(FieldChangeNote))
+}
+
+// ChangeNoteEqualFold applies the EqualFold predicate on the "change_note" field.
+func ChangeNoteEqualFold(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEqualFold(FieldChangeNote, v))
+}
+
+// ChangeNoteContainsFold applies the ContainsFold predicate on the "change_note" field.
+func ChangeNoteContainsFold(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldContainsFold(FieldChangeNote, v))
+}
+
+// SnapshotKeyEQ applies the EQ predicate on the "snapshot_key" field.
+func SnapshotKeyEQ(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyNEQ applies the NEQ predicate on the "snapshot_key" field.
+func SnapshotKeyNEQ(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNEQ(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyIn applies the In predicate on the "snapshot_key" field.
+func SnapshotKeyIn(vs ...string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIn(FieldSnapshotKey, vs...))
+}
+
+// SnapshotKeyNotIn applies the NotIn predicate on the "snapshot_key" field.
+func SnapshotKeyNotIn(vs ...string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotIn(FieldSnapshotKey, vs...))
+}
+
+// SnapshotKeyGT applies the GT predicate on the "snapshot_key" field.
+func SnapshotKeyGT(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGT(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyGTE applies the GTE predicate on the "snapshot_key" field.
+func SnapshotKeyGTE(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGTE(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyLT applies the LT predicate on the "snapshot_key" field.
+func SnapshotKeyLT(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLT(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyLTE applies the LTE predicate on the "snapshot_key" field.
+func SnapshotKeyLTE(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLTE(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyContains applies the Contains predicate on the "snapshot_key" field.
+func SnapshotKeyContains(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldContains(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyHasPrefix applies the HasPrefix predicate on the "snapshot_key" field.
+func SnapshotKeyHasPrefix(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldHasPrefix(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyHasSuffix applies the HasSuffix predicate on the "snapshot_key" field.
+func SnapshotKeyHasSuffix(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldHasSuffix(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyIsNil applies the IsNil predicate on the "snapshot_key" field.
+func SnapshotKeyIsNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIsNull(FieldSnapshotKey))
+}
+
+// SnapshotKeyNotNil applies the NotNil predicate on the "snapshot_key" field.
+func SnapshotKeyNotNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotNull(FieldSnapshotKey))
+}
+
+// SnapshotKeyEqualFold applies the EqualFold predicate on the "snapshot_key" field.
+func SnapshotKeyEqualFold(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEqualFold(FieldSnapshotKey, v))
+}
+
+// SnapshotKeyContainsFold applies the ContainsFold predicate on the "snapshot_key" field.
+func SnapshotKeyContainsFold(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldContainsFold(FieldSnapshotKey, v))
+}
+
+// SnapshotSha256EQ applies the EQ predicate on the "snapshot_sha256" field.
+func SnapshotSha256EQ(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256NEQ applies the NEQ predicate on the "snapshot_sha256" field.
+func SnapshotSha256NEQ(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNEQ(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256In applies the In predicate on the "snapshot_sha256" field.
+func SnapshotSha256In(vs ...string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIn(FieldSnapshotSha256, vs...))
+}
+
+// SnapshotSha256NotIn applies the NotIn predicate on the "snapshot_sha256" field.
+func SnapshotSha256NotIn(vs ...string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotIn(FieldSnapshotSha256, vs...))
+}
+
+// SnapshotSha256GT applies the GT predicate on the "snapshot_sha256" field.
+func SnapshotSha256GT(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGT(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256GTE applies the GTE predicate on the "snapshot_sha256" field.
+func SnapshotSha256GTE(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGTE(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256LT applies the LT predicate on the "snapshot_sha256" field.
+func SnapshotSha256LT(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLT(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256LTE applies the LTE predicate on the "snapshot_sha256" field.
+func SnapshotSha256LTE(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLTE(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256Contains applies the Contains predicate on the "snapshot_sha256" field.
+func SnapshotSha256Contains(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldContains(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256HasPrefix applies the HasPrefix predicate on the "snapshot_sha256" field.
+func SnapshotSha256HasPrefix(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldHasPrefix(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256HasSuffix applies the HasSuffix predicate on the "snapshot_sha256" field.
+func SnapshotSha256HasSuffix(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldHasSuffix(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256IsNil applies the IsNil predicate on the "snapshot_sha256" field.
+func SnapshotSha256IsNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIsNull(FieldSnapshotSha256))
+}
+
+// SnapshotSha256NotNil applies the NotNil predicate on the "snapshot_sha256" field.
+func SnapshotSha256NotNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotNull(FieldSnapshotSha256))
+}
+
+// SnapshotSha256EqualFold applies the EqualFold predicate on the "snapshot_sha256" field.
+func SnapshotSha256EqualFold(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEqualFold(FieldSnapshotSha256, v))
+}
+
+// SnapshotSha256ContainsFold applies the ContainsFold predicate on the "snapshot_sha256" field.
+func SnapshotSha256ContainsFold(v string) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldContainsFold(FieldSnapshotSha256, v))
+}
+
+// PublishedAtEQ applies the EQ predicate on the "published_at" field.
+func PublishedAtEQ(v time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldPublishedAt, v))
+}
+
+// PublishedAtNEQ applies the NEQ predicate on the "published_at" field.
+func PublishedAtNEQ(v time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNEQ(FieldPublishedAt, v))
+}
+
+// PublishedAtIn applies the In predicate on the "published_at" field.
+func PublishedAtIn(vs ...time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIn(FieldPublishedAt, vs...))
+}
+
+// PublishedAtNotIn applies the NotIn predicate on the "published_at" field.
+func PublishedAtNotIn(vs ...time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotIn(FieldPublishedAt, vs...))
+}
+
+// PublishedAtGT applies the GT predicate on the "published_at" field.
+func PublishedAtGT(v time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGT(FieldPublishedAt, v))
+}
+
+// PublishedAtGTE applies the GTE predicate on the "published_at" field.
+func PublishedAtGTE(v time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGTE(FieldPublishedAt, v))
+}
+
+// PublishedAtLT applies the LT predicate on the "published_at" field.
+func PublishedAtLT(v time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLT(FieldPublishedAt, v))
+}
+
+// PublishedAtLTE applies the LTE predicate on the "published_at" field.
+func PublishedAtLTE(v time.Time) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLTE(FieldPublishedAt, v))
+}
+
+// PublishedAtIsNil applies the IsNil predicate on the "published_at" field.
+func PublishedAtIsNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIsNull(FieldPublishedAt))
+}
+
+// PublishedAtNotNil applies the NotNil predicate on the "published_at" field.
+func PublishedAtNotNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotNull(FieldPublishedAt))
+}
+
+// PublishedByEQ applies the EQ predicate on the "published_by" field.
+func PublishedByEQ(v uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldEQ(FieldPublishedBy, v))
+}
+
+// PublishedByNEQ applies the NEQ predicate on the "published_by" field.
+func PublishedByNEQ(v uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNEQ(FieldPublishedBy, v))
+}
+
+// PublishedByIn applies the In predicate on the "published_by" field.
+func PublishedByIn(vs ...uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByNotIn applies the NotIn predicate on the "published_by" field.
+func PublishedByNotIn(vs ...uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotIn(FieldPublishedBy, vs...))
+}
+
+// PublishedByGT applies the GT predicate on the "published_by" field.
+func PublishedByGT(v uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGT(FieldPublishedBy, v))
+}
+
+// PublishedByGTE applies the GTE predicate on the "published_by" field.
+func PublishedByGTE(v uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldGTE(FieldPublishedBy, v))
+}
+
+// PublishedByLT applies the LT predicate on the "published_by" field.
+func PublishedByLT(v uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLT(FieldPublishedBy, v))
+}
+
+// PublishedByLTE applies the LTE predicate on the "published_by" field.
+func PublishedByLTE(v uuid.UUID) predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldLTE(FieldPublishedBy, v))
+}
+
+// PublishedByIsNil applies the IsNil predicate on the "published_by" field.
+func PublishedByIsNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldIsNull(FieldPublishedBy))
+}
+
+// PublishedByNotNil applies the NotNil predicate on the "published_by" field.
+func PublishedByNotNil() predicate.ItemDefinitionVersion {
+	return predicate.ItemDefinitionVersion(sql.FieldNotNull(FieldPublishedBy))
 }
 
 // And groups predicates with the AND operator between them.

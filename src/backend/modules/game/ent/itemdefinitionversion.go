@@ -52,7 +52,25 @@ type ItemDefinitionVersion struct {
 	// AssetRefs holds the value of the "asset_refs" field.
 	AssetRefs map[string]interface{} `json:"asset_refs,omitempty"`
 	// Status holds the value of the "status" field.
-	Status       string `json:"status,omitempty"`
+	Status string `json:"status,omitempty"`
+	// Stackable holds the value of the "stackable" field.
+	Stackable bool `json:"stackable,omitempty"`
+	// MaxStack holds the value of the "max_stack" field.
+	MaxStack int `json:"max_stack,omitempty"`
+	// Payload holds the value of the "payload" field.
+	Payload map[string]interface{} `json:"payload,omitempty"`
+	// PayloadSha256 holds the value of the "payload_sha256" field.
+	PayloadSha256 *string `json:"payload_sha256,omitempty"`
+	// ChangeNote holds the value of the "change_note" field.
+	ChangeNote *string `json:"change_note,omitempty"`
+	// SnapshotKey holds the value of the "snapshot_key" field.
+	SnapshotKey *string `json:"snapshot_key,omitempty"`
+	// SnapshotSha256 holds the value of the "snapshot_sha256" field.
+	SnapshotSha256 *string `json:"snapshot_sha256,omitempty"`
+	// PublishedAt holds the value of the "published_at" field.
+	PublishedAt *time.Time `json:"published_at,omitempty"`
+	// PublishedBy holds the value of the "published_by" field.
+	PublishedBy  *uuid.UUID `json:"published_by,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -61,15 +79,17 @@ func (*ItemDefinitionVersion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case itemdefinitionversion.FieldCreatedBy, itemdefinitionversion.FieldUpdatedBy, itemdefinitionversion.FieldDeletedBy:
+		case itemdefinitionversion.FieldCreatedBy, itemdefinitionversion.FieldUpdatedBy, itemdefinitionversion.FieldDeletedBy, itemdefinitionversion.FieldPublishedBy:
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case itemdefinitionversion.FieldName, itemdefinitionversion.FieldSources, itemdefinitionversion.FieldAssetRefs:
+		case itemdefinitionversion.FieldName, itemdefinitionversion.FieldSources, itemdefinitionversion.FieldAssetRefs, itemdefinitionversion.FieldPayload:
 			values[i] = new([]byte)
-		case itemdefinitionversion.FieldVersion, itemdefinitionversion.FieldVersionNo:
+		case itemdefinitionversion.FieldStackable:
+			values[i] = new(sql.NullBool)
+		case itemdefinitionversion.FieldVersion, itemdefinitionversion.FieldVersionNo, itemdefinitionversion.FieldMaxStack:
 			values[i] = new(sql.NullInt64)
-		case itemdefinitionversion.FieldDeleteReason, itemdefinitionversion.FieldItemID, itemdefinitionversion.FieldKind, itemdefinitionversion.FieldEquipSlot, itemdefinitionversion.FieldRarity, itemdefinitionversion.FieldStatus:
+		case itemdefinitionversion.FieldDeleteReason, itemdefinitionversion.FieldItemID, itemdefinitionversion.FieldKind, itemdefinitionversion.FieldEquipSlot, itemdefinitionversion.FieldRarity, itemdefinitionversion.FieldStatus, itemdefinitionversion.FieldPayloadSha256, itemdefinitionversion.FieldChangeNote, itemdefinitionversion.FieldSnapshotKey, itemdefinitionversion.FieldSnapshotSha256:
 			values[i] = new(sql.NullString)
-		case itemdefinitionversion.FieldCreatedAt, itemdefinitionversion.FieldUpdatedAt, itemdefinitionversion.FieldDeletedAt:
+		case itemdefinitionversion.FieldCreatedAt, itemdefinitionversion.FieldUpdatedAt, itemdefinitionversion.FieldDeletedAt, itemdefinitionversion.FieldPublishedAt:
 			values[i] = new(sql.NullTime)
 		case itemdefinitionversion.FieldID:
 			values[i] = new(uuid.UUID)
@@ -207,6 +227,68 @@ func (_m *ItemDefinitionVersion) assignValues(columns []string, values []any) er
 			} else if value.Valid {
 				_m.Status = value.String
 			}
+		case itemdefinitionversion.FieldStackable:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field stackable", values[i])
+			} else if value.Valid {
+				_m.Stackable = value.Bool
+			}
+		case itemdefinitionversion.FieldMaxStack:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field max_stack", values[i])
+			} else if value.Valid {
+				_m.MaxStack = int(value.Int64)
+			}
+		case itemdefinitionversion.FieldPayload:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field payload", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Payload); err != nil {
+					return fmt.Errorf("unmarshal field payload: %w", err)
+				}
+			}
+		case itemdefinitionversion.FieldPayloadSha256:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field payload_sha256", values[i])
+			} else if value.Valid {
+				_m.PayloadSha256 = new(string)
+				*_m.PayloadSha256 = value.String
+			}
+		case itemdefinitionversion.FieldChangeNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field change_note", values[i])
+			} else if value.Valid {
+				_m.ChangeNote = new(string)
+				*_m.ChangeNote = value.String
+			}
+		case itemdefinitionversion.FieldSnapshotKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field snapshot_key", values[i])
+			} else if value.Valid {
+				_m.SnapshotKey = new(string)
+				*_m.SnapshotKey = value.String
+			}
+		case itemdefinitionversion.FieldSnapshotSha256:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field snapshot_sha256", values[i])
+			} else if value.Valid {
+				_m.SnapshotSha256 = new(string)
+				*_m.SnapshotSha256 = value.String
+			}
+		case itemdefinitionversion.FieldPublishedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field published_at", values[i])
+			} else if value.Valid {
+				_m.PublishedAt = new(time.Time)
+				*_m.PublishedAt = value.Time
+			}
+		case itemdefinitionversion.FieldPublishedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field published_by", values[i])
+			} else if value.Valid {
+				_m.PublishedBy = new(uuid.UUID)
+				*_m.PublishedBy = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -303,6 +385,45 @@ func (_m *ItemDefinitionVersion) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)
+	builder.WriteString(", ")
+	builder.WriteString("stackable=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Stackable))
+	builder.WriteString(", ")
+	builder.WriteString("max_stack=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MaxStack))
+	builder.WriteString(", ")
+	builder.WriteString("payload=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Payload))
+	builder.WriteString(", ")
+	if v := _m.PayloadSha256; v != nil {
+		builder.WriteString("payload_sha256=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.ChangeNote; v != nil {
+		builder.WriteString("change_note=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.SnapshotKey; v != nil {
+		builder.WriteString("snapshot_key=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.SnapshotSha256; v != nil {
+		builder.WriteString("snapshot_sha256=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.PublishedAt; v != nil {
+		builder.WriteString("published_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.PublishedBy; v != nil {
+		builder.WriteString("published_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

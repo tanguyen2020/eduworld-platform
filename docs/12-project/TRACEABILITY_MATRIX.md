@@ -38,15 +38,15 @@
 | `MOD` Moderation & Child Safety | module chat | 18 | 18 | 0 | 35 | 0 | CHAT (48) | 4 | 6 | 0 / 25 |
 | `NTF` Notification | module chat | 3 | 3 | 1 | 1 | 0 | SOC (9) | 0 | 0 | 0 / 0 |
 | `GAM` XP, level, tiến trình | module game | 11 | 11 | 0 | 5 | 0 | GAM (12) | 1 | 4 | 0 / 10 |
-| `RWD` Phần thưởng | module game | 3 | 3 | 0 | 10 | 0 | GAM (12), ECO (8) | 0 | 0 | 0 / 0 |
+| `RWD` Phần thưởng | module game | 3 | 3 | 0 | 12 | 0 | GAM (12), ECO (8) | 0 | 0 | 0 / 0 |
 | `CHL` Challenge & Boss | module game | 3 | 3 | 0 | 13 | 0 | CHL (8) | 0 | 0 | 0 / 8 |
-| `ECO` Kinh tế, vật phẩm, sưu tầm | module game | 5 | 5 | 0 | 11 | 0 | ECO (8) | 0 | 0 | 0 / 8 |
+| `ECO` Kinh tế, vật phẩm, sưu tầm | module game | 5 | 5 | 0 | 13 | 0 | ECO (8) | 0 | 0 | 0 / 8 |
 | `EVT` Event & Season (live-ops) | module game | 8 | 8 | 0 | 18 | 0 | EVT (12) | 0 | 0 | 0 / 12 |
 | `CMS` CMS | module learning · module game (game-admin) | 18 | 17 | 1 | 126 | 0 | CMS (4) | 2 | 5 | 0 / 0 |
 | `LMS` LMS | module learning | 10 | 10 | 1 | 31 | 0 | LMS (3), DASH (10) | 11 | 0 | 0 / 17 |
 | `AUD` Audit | module identity | 2 | 2 | 0 | 27 | 0 | AUD (5) | 0 | 0 | 0 / 4 |
 | `OPS` Vận hành | src/backend/pkg/ (platform kit) · mọi module | 5 | 5 | 0 | 20 | 0 | SVC (17), PERF (25) | 0 | 0 | 0 / 0 |
-| **Tổng** | | **346** | 345 | 21 | 554 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
+| **Tổng** | | **346** | 345 | 21 | 556 op trong spec | 1 | 410 TC | 43 | 112 | 0 / 473 |
 
 ## 3. Ma trận FR
 
@@ -595,9 +595,9 @@ Service: module game · Tài liệu sở hữu: [PROGRESSION_SYSTEM](../01-game-
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-RWD-001 | Inventory, cosmetic (outfit, hair, accessory, emote) mở khóa bằng bài tập, quest, sự kiện, thành tựu, thi đấu | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 10 op | _suy luận:_ TC-GAM, TC-ECO |
-| FR-RWD-002 | Không cơ chế trả tiền để có kết quả học tập tốt hơn; không loot box | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 10 op | _suy luận:_ TC-GAM, TC-ECO |
-| FR-RWD-003 | Reward có giá trị nghiệp vụ chỉ do server trao | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 10 op | _suy luận:_ TC-GAM, TC-ECO |
+| FR-RWD-001 | Inventory, cosmetic (outfit, hair, accessory, emote) mở khóa bằng bài tập, quest, sự kiện, thành tựu, thi đấu | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-GAM, TC-ECO |
+| FR-RWD-002 | Không cơ chế trả tiền để có kết quả học tập tốt hơn; không loot box | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-GAM, TC-ECO |
+| FR-RWD-003 | Reward có giá trị nghiệp vụ chỉ do server trao | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 12 op | _suy luận:_ TC-GAM, TC-ECO |
 
 ### 3.27. `CHL` Challenge & Boss
 
@@ -619,11 +619,11 @@ Mở rộng ở tài liệu sở hữu: 0 FR, 8 AC, 0 US — [INVENTORY_ECONOMY]
 
 | FR | Yêu cầu | Phase | Tài liệu thiết kế | Operation | TC |
 |---|---|---|---|---|---|
-| FR-ECO-001 | Item catalog (cosmetic, outfit, hair, accessory, emote, pet, title, badge, frame, decoration, knowledge car… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 11 op | _suy luận:_ TC-ECO |
-| FR-ECO-002 | Tiền trong game "Xu" + sổ cái append-only, ví không âm, đối soát; không mua bằng tiền thật (ADR-0049) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 11 op | _suy luận:_ TC-ECO |
-| FR-ECO-003 | Shop chỉ cosmetic, giá Xu, giới hạn mua, vật phẩm xác định; không loot box/hộp ngẫu nhiên trả phí | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 11 op | _suy luận:_ TC-ECO |
-| FR-ECO-004 | Collection (pet, knowledge card, cosmetic, badge, exploration, event), xử lý trùng lặp, trading tắt mặc định | P2–P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 11 op | _suy luận:_ TC-ECO |
-| FR-ECO-005 | Achievement có định nghĩa, trigger, điều kiện, tiến độ, ẩn, tier, version; không dựa trên thời gian chơi | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 11 op | _suy luận:_ TC-ECO |
+| FR-ECO-001 | Item catalog (cosmetic, outfit, hair, accessory, emote, pet, title, badge, frame, decoration, knowledge car… | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-ECO |
+| FR-ECO-002 | Tiền trong game "Xu" + sổ cái append-only, ví không âm, đối soát; không mua bằng tiền thật (ADR-0049) | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-ECO |
+| FR-ECO-003 | Shop chỉ cosmetic, giá Xu, giới hạn mua, vật phẩm xác định; không loot box/hộp ngẫu nhiên trả phí | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-ECO |
+| FR-ECO-004 | Collection (pet, knowledge card, cosmetic, badge, exploration, event), xử lý trùng lặp, trading tắt mặc định | P2–P3 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-ECO |
+| FR-ECO-005 | Achievement có định nghĩa, trigger, điều kiện, tiến độ, ẩn, tier, version; không dựa trên thời gian chơi | P2 | [CODE_PLAN_CMS_LMS_FIRST](CODE_PLAN_CMS_LMS_FIRST.md) | _suy luận:_ 13 op | _suy luận:_ TC-ECO |
 
 ### 3.29. `EVT` Event & Season (live-ops)
 

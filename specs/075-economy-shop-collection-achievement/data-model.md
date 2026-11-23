@@ -63,6 +63,10 @@ Version: `code varchar(64)`, `category varchar(64)`, `trigger jsonb`, `progress_
 
 `tenant_id`, `student_id`, `achievement_id`, `tier varchar(64)`, `progress int`, **Thêm cột** `progress_state jsonb` (tập ngày/khóa đã đếm, CHECK ≤ 4096 byte), `unlocked_at`. PK `(student_id, achievement_id, tier)`.
 
+### AchievementProgressEvent — `gamification.achievement_progress_events` (Mới, TA)
+
+`progress_event_id`, `tenant_id`, `student_id`, `achievement_id`, `event_id`, `event_type varchar(64)`, `created_at`; UNIQUE `(student_id, achievement_id, event_id)` — event giao lại không cộng tiến độ lần hai (thêm khi triển khai, spec Clarifications 2026-11-23). `student_achievements` khi triển khai là một dòng mỗi `(student_id, achievement_id)` (bậc cao nhất trong `tier`), mở khóa từng bậc ghi bằng `reward_grants` `trigger_kind = achievement`.
+
 ### EconomyAdjustment — `gamification.economy_adjustments` (Mới, T)
 
 | Trường | Kiểu | Ràng buộc |

@@ -42,12 +42,13 @@ func (r *Registry) Has(grantType string) bool {
 // Apply implements write.GrantApplierRegistry: every grant through the applier of its type; an unknown type fails the
 // transaction (never silently skipped).
 func (r *Registry) Apply(ctx context.Context, gc write.GrantContext, grants []map[string]any) error {
-	for _, g := range grants {
+	for i, g := range grants {
 		t, _ := g["type"].(string)
 		a, ok := r.appliers[t]
 		if !ok {
 			return fmt.Errorf("reward: no grant applier for %q", t)
 		}
+		gc.Index = i
 		if err := a.Apply(ctx, gc, g); err != nil {
 			return err
 		}
@@ -79,3 +80,63 @@ func (Title) Apply(_ context.Context, _ write.GrantContext, g map[string]any) er
 	}
 	return nil
 }
+
+// EconomyGranter is the economy use case behind the F075 appliers (command.Economy): Xu up to the daily cap, items into
+// the inventory with the duplicate conversion and the collections.
+type EconomyGranter interface {
+	GrantCurrency(ctx context.Context, gc write.GrantContext, grant map[string]any) error
+	GrantItem(ctx context.Context, gc write.GrantContext, grant map[string]any, field, kind string) error
+}
+
+// Currency is the applier of currency grants (F075): {type: currency, currency_code: xu, amount}.
+type Currency struct{ E EconomyGranter }
+
+// Type implements Applier.
+func (Currency) Type() string { return "currency" }
+
+// Apply implements Applier.
+func (a Currency) Apply(ctx context.Context, gc write.GrantContext, g map[string]any) error {
+	return a.E.GrantCurrency(ctx, gc, g)
+}
+
+// Item is the applier of item grants (F075): {type: item, item_id}.
+type Item struct{ E EconomyGranter }
+
+// Type implements Applier.
+func (Item) Type() string { return "item" }
+
+// Apply implements Applier.
+func (a Item) Apply(ctx context.Context, gc write.GrantContext, g map[string]any) error {
+	return a.E.GrantItem(ctx, gc, g, "item_id", "")
+}
+
+// Badge is the applier of badge grants (F075): a badge is an item of kind badge, {type: badge, badge_id}.
+type Badge struct{ E EconomyGranter }
+
+// Type implements Applier.
+func (Badge) Type() string { return "badge" }
+
+// Apply implements Applier.
+func (a Badge) Apply(ctx context.Context, gc write.GrantContext, g map[string]any) error {
+	return a.E.GrantItem(ctx, gc, g, "badge_id", "badge")
+}
+
+// CollectionItem is the applier of collection_item grants (F075): {type: collection_item, collection_item_id}.
+type CollectionItem struct{ E EconomyGranter }
+
+// Type implements Applier.
+func (CollectionItem) Type() string { return "collection_item" }
+
+// Apply implements Applier.
+func (a CollectionItem) Apply(ctx context.Context, gc write.GrantContext, g map[string]any) error {
+	return a.E.GrantItem(ctx, gc, g, "collection_item_id", "")
+}
+
+// WithEconomy is the registry of F075: the F074 appliers plus currency, item, badge and collection_item.
+func WithEconomy(e EconomyGranter) *Registry {
+	return NewRegistry(XP{}, Title{}, Currency{E: e}, Item{E: e}, Badge{E: e}, CollectionItem{E: e})
+}
+
+// Types is a registry that only answers Has for every grant type of F074 and F075 — for the publish checks of the seed and
+// the release core, which never apply a grant (Apply of the economy appliers needs WithEconomy).
+func Types() *Registry { return WithEconomy(nil) }

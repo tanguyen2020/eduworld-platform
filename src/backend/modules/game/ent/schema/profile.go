@@ -186,6 +186,17 @@ func (ItemDefinitionVersion) Fields() []ent.Field {
 		field.JSON("sources", []string{}).Immutable(),
 		field.JSON("asset_refs", map[string]any{}).Optional().Immutable(),
 		field.String("status").MaxLen(64),
+		// F075: items published through the release core (item.schema.json) — stack rules and the release columns of
+		// DATABASE_DESIGN §3.13; NULL on the default items of the F070 seed.
+		field.Bool("stackable").Default(false).Immutable(),
+		field.Int("max_stack").Default(1).Immutable(),
+		field.JSON("payload", map[string]any{}).Optional().Immutable(),
+		field.String("payload_sha256").MaxLen(64).Optional().Nillable().Immutable(),
+		field.String("change_note").MaxLen(500).Optional().Nillable().Immutable(),
+		field.String("snapshot_key").MaxLen(512).Optional().Nillable().Immutable(),
+		field.String("snapshot_sha256").MaxLen(64).Optional().Nillable().Immutable(),
+		field.Time("published_at").Optional().Nillable(),
+		field.UUID("published_by", uuid.UUID{}).Optional().Nillable(),
 	}
 }
 func (ItemDefinitionVersion) Indexes() []ent.Index {

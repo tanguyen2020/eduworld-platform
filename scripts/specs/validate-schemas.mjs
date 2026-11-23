@@ -25,6 +25,8 @@ const EXAMPLES = {
   'boss.math-fraction-dragon.json': 'schemas/boss.schema.json',
   'achievement.explorer-math-zone.json': 'schemas/achievement.schema.json',
   'shop-item.explorer-hat.json': 'schemas/shop-item.schema.json',
+  'item.star-hat.json': 'schemas/item.schema.json',
+  'collection.math-g3-cards.json': 'schemas/collection.schema.json',
   'event.mid-autumn-festival.json': 'schemas/event.schema.json',
   'season-track.season-1.json': 'schemas/season-track.schema.json',
   'activity.video-lesson.science-g4-water-cycle.json': 'schemas/activities/video-lesson.schema.json',

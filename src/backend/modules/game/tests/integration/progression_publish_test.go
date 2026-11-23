@@ -24,16 +24,18 @@ func TestProgressionPublishChecks(t *testing.T) {
 		"level_overrides": progressionItem(t, seedCurve, func(m map[string]any) {
 			m["level_overrides"] = []any{map[string]any{"level": 5, "xp_to_next": 10}}
 		}),
-		"level_rewards/0/rewards/0/type": progressionItem(t, seedCurve, func(m map[string]any) {
-			m["level_rewards"] = []any{map[string]any{"level": 5, "rewards": []any{map[string]any{"type": "currency", "currency_code": "xu", "amount": 50}}}}
+		// F075 registers the currency applier: a level reward in another currency is refused (Xu only, ADR-0049).
+		"level_rewards/0/rewards/0/currency_code": progressionItem(t, seedCurve, func(m map[string]any) {
+			m["level_rewards"] = []any{map[string]any{"level": 5, "rewards": []any{map[string]any{"type": "currency", "currency_code": "vnd", "amount": 50}}}}
 		}),
 		"caps/xp_per_day": progressionItem(t, ruleLesson, func(m map[string]any) { m["caps"] = map[string]any{"xp_per_day": 0} }),
 		"source_code":     progressionItem(t, ruleLesson, func(m map[string]any) { m["source_code"] = "login.daily" }),
 		"trigger/event_type": progressionItem(t, ruleLesson, func(m map[string]any) {
 			m["trigger"] = map[string]any{"event_type": "game_session.started"}
 		}),
+		// item has an applier since F075; achievement_progress (in the schema) still has none.
 		"grants/0/type": progressionItem(t, ruleLesson, func(m map[string]any) {
-			m["grants"] = []any{map[string]any{"type": "item", "item_id": "hat_red"}}
+			m["grants"] = []any{map[string]any{"type": "achievement_progress", "achievement_id": "a", "progress": 1}}
 		}),
 		"trigger/event_type ": progressionItem(t, ruleLesson, func(m map[string]any) {
 			m["trigger"] = map[string]any{"event_type": "match.completed"} // in the schema, not a Reward Engine trigger of F074

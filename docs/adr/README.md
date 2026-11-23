@@ -117,6 +117,7 @@ ADR ghi lại các quyết định kiến trúc và sản phẩm quan trọng c�
 | [0097](ADR-0097-bo-yeu-cau-du-lieu-ca-nhan-va-dich-noi-dung-hoc-tap-khoi-portal-release-1.md) | Bỏ "Yêu cầu dữ liệu cá nhân" và "Dịch nội dung học tập" khỏi Admin Portal Release 1 | Accepted (rủi ro được chấp nhận) | — |
 | [0098](ADR-0098-tailwind-css-lam-lop-tien-ich-bo-cuc-cho-admin-portal.md) | Tailwind CSS làm lớp tiện ích bố cục cho Admin Portal (bổ sung ADR-0047) | Accepted · bổ sung ADR-0047 | — |
 | [0099](ADR-0099-doi-ten-config-type-levels-thanh-progression-levels.md) | Đổi tên config type `levels` thành `progression-levels` | Accepted | — |
+| [0100](ADR-0100-item-id-la-ma-chuoi-trong-moi-hop-dong-vat-pham.md) | `item_id` là mã chuỗi trong mọi hợp đồng vật phẩm | Accepted | — |
 
 ## Quyết định hiện hành theo chủ đề
 
@@ -206,6 +207,7 @@ Danh sách dưới đây chỉ gồm ADR **đang có hiệu lực** (Accepted). 
 | [0015](ADR-0015-content-versioning-bat-bien-sau-publish.md) | Version nội dung bất biến sau publish (phần còn hiệu lực) |
 | [0043](ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) | Draft/Publish, release pointer, giữ phiên bản khi đang chơi, rollback, cache |
 | [0099](ADR-0099-doi-ten-config-type-levels-thanh-progression-levels.md) | Config type bảng cấp độ XP là `progression-levels` (không còn `levels`); gói màn chơi là `level-packages` |
+| [0100](ADR-0100-item-id-la-ma-chuoi-trong-moi-hop-dong-vat-pham.md) | `item_id` vật phẩm là mã `CatalogCode` (varchar 64) ở DB, OpenAPI, JSON Schema, event; `badge_id`/`collection_item_id` là mã vật phẩm |
 
 ### Học tập
 

@@ -111,3 +111,47 @@ func Progression(dir string) ([]command.ContentItem, error) {
 	}
 	return out, nil
 }
+
+// Economy reads the F075 seed of seed/economy (arrays of payloads): items.v1.json (item.schema.json), shop-items.v1.json,
+// collections.v1.json, achievements.v1.json — items first so the shop items and collections find them.
+func Economy(dir string) ([]command.ContentItem, error) {
+	root := filepath.Join(dir, "economy")
+	var out []command.ContentItem
+	for _, f := range []struct{ file, typ string }{{"items.v1.json", write.ItemGameItem}, {"shop-items.v1.json", write.ItemShopItem},
+		{"collections.v1.json", write.ItemCollection}, {"achievements.v1.json", write.ItemAchievement}} {
+		raw, err := os.ReadFile(filepath.Join(root, f.file)) //nolint:gosec // repository seed path
+		if err != nil {
+			return nil, err
+		}
+		var docs []json.RawMessage
+		if err := json.Unmarshal(raw, &docs); err != nil {
+			return nil, fmt.Errorf("%s: %w", f.file, err)
+		}
+		for _, d := range docs {
+			out = append(out, command.ContentItem{Type: f.typ, Payload: d})
+		}
+	}
+	return out, nil
+}
+
+// ShopAssignments reads seed/economy/assignments.v1.json: the shop items assigned to some tenants only (DEV seed).
+func ShopAssignments(dir string) ([]QuestAssignment, error) {
+	raw, err := os.ReadFile(filepath.Join(dir, "economy", "assignments.v1.json")) //nolint:gosec // repository seed path
+	if err != nil {
+		return nil, err
+	}
+	var doc struct {
+		Assignments []struct {
+			ShopItemID string   `json:"shop_item_id"`
+			Tenants    []string `json:"tenants"`
+		} `json:"assignments"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return nil, fmt.Errorf("economy assignments.v1.json: %w", err)
+	}
+	out := make([]QuestAssignment, 0, len(doc.Assignments))
+	for _, a := range doc.Assignments {
+		out = append(out, QuestAssignment{QuestID: a.ShopItemID, Tenants: a.Tenants})
+	}
+	return out, nil
+}

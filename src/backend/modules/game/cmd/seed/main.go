@@ -2,7 +2,9 @@
 // catalog v1 (seed/character_catalog.v1.json: presets, palette, default items and emotes, nickname words vi/en), the
 // default item definitions (seed/items.default.v1.json) and the world v1 (seed/world: 12 areas of 8 regions, 7 story
 // chapters, 14 dialogues of 13 NPCs, 12 greybox level packages), the quests v1 of F072 (seed/quests, assigned to the
-// demo tenants of seed/quests/assignments.v1.json), the progression curve and the reward rules of F074 (seed/progression) through the publish use cases under a PlatformScope —
+// demo tenants of seed/quests/assignments.v1.json), the progression curve and the reward rules of F074 (seed/progression), the
+// items, shop items (one sold to th-demo-a only), knowledge card collection and achievements of F075 (seed/economy) through
+// the publish use cases under a PlatformScope —
 // never SQL by hand. Running it again publishes nothing (identical versions are skipped).
 //
 //	go -C src/backend run ./modules/game/cmd/seed [-dir modules/game/seed]
@@ -29,9 +31,12 @@ import (
 
 	_ "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/ent/runtime" // mixin hooks, interceptors
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/command"
+	writeport "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/application/port/write"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/catalog"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/domain/quest"
 	gameconfig "github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/config"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/economyschema"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/economysql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/progressionsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/questsql"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/game/internal/infrastructure/persistence/worldsql"
@@ -143,6 +148,10 @@ func run(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
+	economyItems, err := seedfiles.Economy(dir)
+	if err != nil {
+		return err
+	}
 	qcfg, err := gameconfig.QuestFrom(config.Load())
 	if err != nil {
 		return err
@@ -151,8 +160,12 @@ func run(ctx context.Context, dir string) error {
 		Audit: write.Auditor{R: rec}, QuestContent: questsql.Content{}, Quests: &command.QuestPublishRules{Schema: questschema.Validator{},
 			Validator: quest.ValidatorConfig{PassRule: qcfg.PassRule, BlockMaxByBand: qcfg.BlockMax}},
 		Progression: &command.ProgressionPublishRules{CurveSchema: progressionschema.Curve{}, RuleSchema: progressionschema.Rule{},
-			Appliers: rewardinfra.Default(), Levels: write.GameContentRepo{}, Curves: progressionsql.Content{}}}
-	wres, err := wh.Publish(tenancy.WithScope(ctx, sc), append(append(worldItems, questItems...), progressionItems...), "seed world v1", "")
+			Appliers: rewardinfra.Types(), Levels: write.GameContentRepo{}, Curves: progressionsql.Content{}},
+		Economy: &command.EconomyPublishRules{ItemSchema: economyschema.Item{}, ShopSchema: economyschema.ShopItem{},
+			CollectionSchema: economyschema.Collection{}, AchievementSchema: economyschema.Achievement{}, Appliers: rewardinfra.Types(),
+			Items: economysql.Content{}, CollectionItems: write.GameContentRepo{}}}
+	all := append(append(append(worldItems, questItems...), progressionItems...), economyItems...)
+	wres, err := wh.Publish(tenancy.WithScope(ctx, sc), all, "seed world v1", "")
 	if err != nil {
 		return err
 	}
@@ -176,6 +189,27 @@ func run(ctx context.Context, dir string) error {
 	if len(skipped) > 0 {
 		slog.WarnContext(ctx, "quest assignments skipped: tenants not projected yet, run the seed again after make seed-check", "tenants", skipped)
 	}
+	shopAssign, err := seedfiles.ShopAssignments(dir)
+	if err != nil {
+		return err
+	}
+	var shops []command.SeedAssignment
+	for _, a := range shopAssign {
+		id, err := uuid.Parse(a.QuestID)
+		if err != nil {
+			return fmt.Errorf("economy assignments.v1.json: %w", err)
+		}
+		shops = append(shops, command.SeedAssignment{QuestID: id, Tenants: a.Tenants})
+	}
+	shopAssigned, shopSkipped, err := command.AssignSeedQuests{UoW: uow, Assignments: write.QuestRepo{}, Audit: write.Auditor{R: rec},
+		ItemType: writeport.ItemShopItem}.Assign(tenancy.WithScope(ctx, sc), shops)
+	if err != nil {
+		return err
+	}
+	if len(shopSkipped) > 0 {
+		slog.WarnContext(ctx, "shop assignments skipped: tenants not projected yet, run the seed again after make seed-check", "tenants", shopSkipped)
+	}
+	assigned += shopAssigned
 	slog.InfoContext(ctx, "game seed done", "catalog_published", res.CatalogPublished, "items_published", res.ItemsPublished,
 		"world_published", wres.Published, "world_unchanged", wres.Unchanged, "quest_assignments", assigned)
 	return nil
