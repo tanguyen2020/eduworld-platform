@@ -87,9 +87,11 @@ func refresh() -> bool:
 	return ok
 
 
-## F062-AC-09/10: "Bắt đầu". `activity` → `activity_host`, `assessment` → `exam_lobby`; any other kind has no
-## screen in this client → returns empty (the UI shows `ui.activity_player.update_required`) and queues the
-## `client_unsupported_assignment_kind` telemetry. Returns the requested screen id.
+## F062-AC-09/10: "Bắt đầu". `activity` → `activity_host {activity_id}`, `question_set` → `activity_host
+## {question_set_id}` (OQ F062-2: ActivityHost starts an ad-hoc attempt in `mode = assignment`, F063),
+## `assessment` → `exam_lobby`; any other kind has no screen in this client → returns empty (the UI shows
+## `ui.activity_player.update_required`) and queues the `client_unsupported_assignment_kind` telemetry. Returns the
+## requested screen id.
 func start(assignment: MyAssignmentModel) -> StringName:
 	var screen: StringName = &""
 	var args: Dictionary = {}
@@ -98,6 +100,12 @@ func start(assignment: MyAssignmentModel) -> StringName:
 			screen = SCREEN_ACTIVITY_HOST
 			args = {
 				"activity_id": assignment.content_ref, "mode": "assignment", "context_type": "assignment",
+				"context_id": assignment.assignment_id,
+			}
+		MyAssignmentModel.KIND_QUESTION_SET:
+			screen = SCREEN_ACTIVITY_HOST
+			args = {
+				"question_set_id": assignment.content_ref, "mode": "assignment", "context_type": "assignment",
 				"context_id": assignment.assignment_id,
 			}
 		MyAssignmentModel.KIND_ASSESSMENT:

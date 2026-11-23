@@ -132,6 +132,52 @@ func test_start_activity_and_assessment_emit_the_right_intents() -> void:
 	})
 
 
+func test_question_set_opens_the_activity_host_with_the_set_id() -> void:
+	# OQ F062-2 (T037): `question_set` is no longer "update required" — ActivityHost (F063) starts an ad-hoc attempt.
+	var body: Dictionary = AssignmentFixtures.question_set()
+	var item: Dictionary = (body["data"] as Array)[0] as Dictionary
+	var r: Array = await _open(body)
+	var journal: Control = r[1] as Control
+	_press_start(_row_for(journal, String(item["title"])))
+	assert_int(_intents.size()).is_equal(1)
+	assert_str(String(_intents[0][0])).is_equal("activity_host")
+	assert_dict(_intents[0][1] as Dictionary).is_equal({
+		"question_set_id": item["content_ref"], "mode": "assignment", "context_type": "assignment",
+		"context_id": item["assignment_id"],
+	})
+	assert_bool((journal.find_child("Notice", true, false) as Control).visible).is_false()
+	assert_int(AppState.services.telemetry.queue.size()).is_equal(0)
+	# The intent is exactly what LearningService turns into `startAdHocAttempt` (source.kind = question_set).
+	var request: ApiRequest = LearningService.start_request(_intents[0][1] as Dictionary)
+	assert_str(request.path).is_equal(LearningService.PATH_ATTEMPTS)
+	assert_dict(request.body as Dictionary).is_equal({
+		"mode": "assignment", "context_type": "assignment", "context_id": item["assignment_id"],
+		"source": {"kind": "question_set", "question_set_id": item["content_ref"]},
+	})
+
+
+func test_row_shows_the_subject_name_only_when_the_server_sends_it() -> void:
+	# OQ F062-1 (T036): the subject comes from `MyAssignment.subject_name` (no catalogue lookup in the client).
+	var r: Array = await _open(AssignmentFixtures.subjects())
+	var runner: GdUnitSceneRunner = r[0] as GdUnitSceneRunner
+	var journal: Control = r[1] as Control
+	var named: Label = _row_for(journal, "Bài 1").find_child("Subject", true, false) as Label
+	var unnamed: Label = _row_for(journal, "Bài 2").find_child("Subject", true, false) as Label
+	var vi_only: Label = _row_for(journal, "Bài 3").find_child("Subject", true, false) as Label
+	assert_bool(named.visible).is_true()
+	assert_str(named.text).is_equal("Toán")
+	assert_int(named.auto_translate_mode).is_equal(Node.AUTO_TRANSLATE_MODE_DISABLED)
+	assert_bool(unnamed.visible).is_false()
+	assert_str(unnamed.text).is_empty()
+	assert_str(vi_only.text).is_equal("Tiếng Việt")
+	# Locale change picks the other language; a name without that language falls back to the one sent.
+	Settings.set_locale("en-US", false)
+	await runner.simulate_frames(1)
+	assert_str(named.text).is_equal("Mathematics")
+	assert_str(vi_only.text).is_equal("Tiếng Việt")
+	assert_bool(unnamed.visible).is_false()
+
+
 func test_kind_without_screen_shows_update_required_and_telemetry() -> void:
 	var r: Array = await _open(AssignmentFixtures.unsupported_kinds())
 	var journal: Control = r[1] as Control

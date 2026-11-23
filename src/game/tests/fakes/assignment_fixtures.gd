@@ -48,6 +48,25 @@ static func unsupported_kinds() -> Dictionary:
 	return page([quest, lesson, future])
 
 
+## OQ F062-1 (T036): "Bài 1" carries `subject_name` (vi + en), "Bài 2" has no `subject_name` field at all (an
+## older server / a subject without a name), "Bài 3" only the content language (vi).
+static func subjects() -> Dictionary:
+	var named: Dictionary = item_sample(0)
+	named["subject_name"] = {"vi": "Toán", "en": "Mathematics"}
+	var unnamed: Dictionary = item_sample(1)
+	unnamed.erase("subject_name")
+	var vi_only: Dictionary = item_sample(2)
+	vi_only["subject_name"] = {"vi": "Tiếng Việt"}
+	return page([named, unnamed, vi_only])
+
+
+## OQ F062-2 (T037): one `question_set` assignment.
+static func question_set() -> Dictionary:
+	var item: Dictionary = item_sample(0)
+	item["content_kind"] = MyAssignmentModel.KIND_QUESTION_SET
+	return page([item])
+
+
 static func many(count: int) -> Dictionary:
 	var items: Array = []
 	for i: int in count:

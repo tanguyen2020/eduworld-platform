@@ -158,3 +158,19 @@ func test_model_parses_contract_and_ignores_unknown_fields() -> void:
 	assert_bool(m.allow_late).is_true()
 	assert_int(m.late_window_hours).is_equal(168)
 	assert_object(MyAssignmentModel.from_dict({"assignment_id": "not-a-uuid", "title": "x", "status": "graded"})).is_null()
+
+
+func test_model_reads_subject_name_and_ignores_a_malformed_one() -> void:
+	# OQ F062-1 (T036): `subject_name` is a LearningName {vi?, en?}; absent or malformed → no subject shown.
+	var items: Array = AssignmentFixtures.subjects()["data"] as Array
+	var named: MyAssignmentModel = MyAssignmentModel.from_dict(items[0] as Dictionary)
+	assert_dict(named.subject_name).is_equal({"vi": "Toán", "en": "Mathematics"})
+	assert_str(named.subject_text("vi-VN")).is_equal("Toán")
+	assert_str(named.subject_text("en-US")).is_equal("Mathematics")
+	assert_str(MyAssignmentModel.from_dict(items[1] as Dictionary).subject_text("vi-VN")).is_empty()
+	var odd: Dictionary = AssignmentFixtures.item_sample(5)
+	for bad: Variant in ["Toán", 3, {"vi": 7, "en": ""}, null]:
+		odd["subject_name"] = bad
+		assert_str(MyAssignmentModel.from_dict(odd).subject_text("vi-VN")).override_failure_message(str(bad)).is_empty()
+	odd["subject_name"] = {"vi": "x".repeat(400)}
+	assert_int(MyAssignmentModel.from_dict(odd).subject_text("vi-VN").length()).is_equal(MyAssignmentModel.NAME_MAX_LENGTH)

@@ -8,15 +8,21 @@ extends RefCounted
 const STATUSES: PackedStringArray = ["not_started", "in_progress", "submitted", "graded", "overdue", "excused"]
 const KINDS: PackedStringArray = ["activity", "question_set", "assessment", "quest", "lesson"]
 const KIND_ACTIVITY: String = "activity"
+const KIND_QUESTION_SET: String = "question_set"
 const KIND_ASSESSMENT: String = "assessment"
 const STATUS_OVERDUE: String = "overdue"
 ## `MyAssignment.title` maxLength (specs/openapi).
 const TITLE_MAX_LENGTH: int = 255
+## `LearningName` maxLength per language (specs/openapi, `MyAssignment.subject_name`).
+const NAME_MAX_LENGTH: int = 255
 
 var assignment_id: String = ""
 ## Shown verbatim (the school typed it; never translated, NFR-I18N-003).
 var title: String = ""
 var subject_id: String = ""
+## `subject_name` (`LearningName` {vi?, en?}) from the server's subject catalogue (OQ F062-1); the client never looks
+## the subject up itself. Empty when the server did not send it (the row then shows no subject).
+var subject_name: Dictionary = {}
 var content_kind: String = ""
 var content_ref: String = ""
 var exam_session_id: String = ""
@@ -44,6 +50,7 @@ static func from_dict(data: Dictionary) -> MyAssignmentModel:
 	m.title = (raw_title as String).left(TITLE_MAX_LENGTH)
 	m.status = raw_status as String
 	m.subject_id = _uuid(data, "subject_id")
+	m.subject_name = _name(data, "subject_name")
 	m.content_kind = _text(data, "content_kind")
 	m.content_ref = _uuid(data, "content_ref")
 	m.exam_session_id = _uuid(data, "exam_session_id")
@@ -79,6 +86,11 @@ func is_known_kind() -> bool:
 	return content_kind in KINDS
 
 
+## Subject name in the UI locale (`L10n.pick`, falls back to another language the server sent), "" when absent.
+func subject_text(locale: String = "") -> String:
+	return L10n.pick(subject_name, locale) if not subject_name.is_empty() else ""
+
+
 ## Unix seconds of `due_at` (0 when absent or not a timestamp).
 func due_unix() -> int:
 	if due_at.is_empty():
@@ -89,6 +101,19 @@ func due_unix() -> int:
 static func _text(data: Dictionary, key: String) -> String:
 	var v: Variant = data.get(key)
 	return v as String if v is String else ""
+
+
+## A `LearningName` object: only non-empty string values are kept, each cut to NAME_MAX_LENGTH; anything else → {}.
+static func _name(data: Dictionary, key: String) -> Dictionary:
+	var v: Variant = data.get(key)
+	var out: Dictionary = {}
+	if not v is Dictionary:
+		return out
+	for language: Variant in (v as Dictionary).keys():
+		var text: Variant = (v as Dictionary)[language]
+		if language is String and text is String and not (text as String).is_empty():
+			out[language] = (text as String).left(NAME_MAX_LENGTH)
+	return out
 
 
 static func _uuid(data: Dictionary, key: String) -> String:

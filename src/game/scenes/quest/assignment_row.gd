@@ -1,7 +1,8 @@
 extends PanelContainer
 ## One row of "Nhà trường giao" (STUDENT_GAME_UX_CORE S05, F062-AC-08/11): status icon + text, the title exactly as
 ## the school typed it (one line, ellipsis + tooltip), the due date in the UI locale (LocaleFormat, not the OS) and
-## "Bắt đầu". Only the student's own data: no score, no other student, no teacher comment (AGENTS R16).
+## "Bắt đầu". The subject name (`subject_name`, OQ F062-1) is server data picked in the UI locale, hidden when absent.
+## Only the student's own data: no score, no other student, no teacher comment (AGENTS R16).
 
 signal start_pressed(assignment: MyAssignmentModel)
 
@@ -22,6 +23,7 @@ var assignment: MyAssignmentModel = null
 
 @onready var _icon: Label = %StatusIcon
 @onready var _title: Label = %Title
+@onready var _subject: Label = %Subject
 @onready var _due: Label = %Due
 @onready var _status: Label = %Status
 @onready var _start: Button = %Start
@@ -41,6 +43,8 @@ func render() -> void:
 		return
 	_title.text = assignment.title
 	_title.tooltip_text = assignment.title
+	_subject.text = assignment.subject_text()
+	_subject.visible = not _subject.text.is_empty()
 	_icon.text = String(STATUS_ICONS.get(assignment.status, "?"))
 	var status_text: String = tr(String(STATUS_KEYS.get(assignment.status, UNKNOWN_STATUS_KEY)))
 	if assignment.status == MyAssignmentModel.STATUS_OVERDUE and assignment.allow_late:
