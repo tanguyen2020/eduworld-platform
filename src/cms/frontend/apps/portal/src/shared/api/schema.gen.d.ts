@@ -5309,7 +5309,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bắt đầu mini-game (tạo Attempt mode minigame) */
+        /**
+         * Bắt đầu mini-game tự chơi (tạo Attempt mode minigame, ghim version cấu hình)
+         * @description Chỉ học sinh (`game_player`, R23). Cấu hình phải đã publish, được gán cho tenant phiên và có khối của học sinh
+         *     (khác → `404`). Module game ghim version cấu hình theo con trỏ hiện hành, gọi `createAttempt` của module learning
+         *     (mode `minigame`, `Idempotency-Key` chuyển tiếp) và ghi lượt chơi. Client lấy câu hỏi (render payload, không
+         *     đáp án) qua `GET /learning/activity-attempts/{attempt_id}`, trả lời và nộp qua họ API `/learning/activity-attempts`;
+         *     điểm học tập và điểm vui do server tính (F073). Bước quest `minigame` bắt đầu qua `startQuestActivity`; bài nhà
+         *     trường giao qua `startActivityAttempt` (`context_type = assignment` ở đây → `422`).
+         */
         post: operations["startMiniGame"];
         delete?: never;
         options?: never;
@@ -9097,6 +9105,8 @@ export interface components {
             explanation_math_assets?: components["schemas"]["MathAssetRef"][];
             /** @description Phản hồi theo phương án đã chọn (options[].feedback) — null khi FeedbackTiming chưa cho hiện */
             feedback?: components["schemas"]["AnswerFeedback"] | null;
+            /** @description Mini-game (F073): điểm vui của câu trả lời này do server tính (giờ server, chuỗi đúng); null khi feedback chưa cho hiện */
+            game_points?: number | null;
             /** @description Số gợi ý đã mở trước lần trả lời này */
             hints_used?: number;
             /** @description null khi feedback policy chưa cho hiện */
@@ -9104,6 +9114,8 @@ export interface components {
             next_segment_id?: string;
             position?: number;
             score?: number | null;
+            /** @description Mini-game (F073): chuỗi câu đúng liên tiếp hiện tại; null khi feedback chưa cho hiện */
+            streak?: number | null;
         };
         /** @description Một câu trả lời trong attempt (thay AnswerSubmission/ActivityPartialResponse — ADR-0059). Server chấm; client không gửi điểm. `response` bắt buộc với kind question/cue_answer/simulation_question (thiếu → 422 INVALID_RESPONSE); kind branch_choice gửi `branch_point_id` + `option_id`, không có response (F065-AC-24). */
         ActivityResponseSubmission: {
@@ -11607,11 +11619,15 @@ export interface components {
         };
         Evaluation: {
             attempt_id: components["schemas"]["Uuid"];
+            /** @description Mini-game (F073): completion_rule của cấu hình thỏa */
+            completion_met?: boolean;
             created_at: components["schemas"]["Timestamp"];
             effective: boolean;
             evaluation_id: components["schemas"]["Uuid"];
             /** @description Nhận xét tự động theo kết quả (không có nhận xét của người chấm) */
             feedback?: string;
+            /** @description Mini-game (F073): điểm vui server tính; không ảnh hưởng mastery (score là điểm học tập) */
+            game_score?: number;
             max_score?: number;
             passed?: boolean;
             reason?: string;
@@ -13360,15 +13376,50 @@ export interface components {
             highlight?: string;
             message: components["schemas"]["Message"];
         };
+        /** @description Phần cấu hình client cần để chơi (F073-AC-07) — không có question_source, đáp án, scoring_rule hay phản hồi theo phương án. */
+        MiniGameDisplayConfig: {
+            /** @enum {string} */
+            feedback_display?: "end_of_round" | "end_of_game";
+            feedback_timing: components["schemas"]["FeedbackTiming"];
+            grade_levels: number[];
+            instructions?: components["schemas"]["LocalizedName"];
+            name: components["schemas"]["LocalizedName"];
+            per_item_time_seconds?: number;
+            /** @description true với timed_challenge: client nhận sẵn lô câu, không chờ mạng giữa câu */
+            prefetch_items: boolean;
+            presentation?: {
+                background_music_id?: string;
+                mascot_npc_id?: string;
+                scene_variant?: string;
+                theme?: string;
+            };
+            question_count: number;
+            /** @description false với timed_challenge (thoát = abandoned) */
+            resumable: boolean;
+            scoring: {
+                points_per_correct: number;
+                streak_bonus_enabled: boolean;
+                /** @description Luôn false cho học sinh khối 1–5 */
+                time_bonus_enabled: boolean;
+            };
+            show_correct_answer: boolean;
+            show_explanation: boolean;
+            time_limit_seconds?: number;
+        };
         MiniGameSession: {
             attempt: components["schemas"]["Attempt"];
-            /** @description Cấu hình hiển thị (time_limit, scoring display, feedback_timing, feedback_display) — không có đáp án */
-            config: {
-                [key: string]: unknown;
-            };
-            /** @enum {string} */
-            minigame_type: "multiple_choice" | "true_false" | "fill_in_blank" | "drag_drop" | "matching" | "ordering" | "calculation" | "puzzle" | "word_game" | "science_simulation" | "timed_challenge";
+            config: components["schemas"]["MiniGameDisplayConfig"];
+            deadline_at?: components["schemas"]["Timestamp"];
+            minigame_config_version_id: components["schemas"]["Uuid"];
+            minigame_type: components["schemas"]["MiniGameType"];
+            play_id?: components["schemas"]["Uuid"];
+            server_time: components["schemas"]["Timestamp"];
         };
+        /**
+         * @description Đồng bộ với specs/schemas/minigame-config.schema.json minigame_type (MINIGAME_ENGINE §2).
+         * @enum {string}
+         */
+        MiniGameType: "multiple_choice" | "true_false" | "fill_in_blank" | "drag_and_drop" | "matching" | "ordering" | "calculation" | "puzzle" | "word_game" | "science_simulation" | "timed_challenge";
         ModerationActionRequest: {
             /** @enum {string} */
             action: "warn" | "mute" | "restrict" | "remove_message" | "escalate" | "dismiss" | "close" | "reopen";
@@ -30257,13 +30308,17 @@ export interface operations {
             content: {
                 "application/json": {
                     context_id?: components["schemas"]["Uuid"];
-                    /** @enum {string} */
+                    /**
+                     * @description assignment → 422 VALIDATION_FAILED (bài giao chạy qua startActivityAttempt)
+                     * @default free_play
+                     * @enum {string}
+                     */
                     context_type?: "quest_step" | "free_play" | "assignment";
                 };
             };
         };
         responses: {
-            /** @description Mini-game session (Attempt + cấu hình hiển thị) */
+            /** @description Mini-game session (Attempt + cấu hình hiển thị, không có đáp án) */
             201: {
                 headers: {
                     "Content-Language": components["headers"]["ContentLanguage"];
@@ -30275,7 +30330,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            /** @description UNAVAILABLE — module learning tạm thời không trả lời hoặc projection cấu hình chưa nhận version vừa publish; thử lại theo Retry-After */
+            503: {
+                headers: {
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             default: components["responses"]["Problem"];
         };
     };
