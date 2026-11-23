@@ -3,10 +3,14 @@
 // X-Tenant-Id; remembered choice; topbar switch confirms unsaved drafts, clears the old tenant cache, reloads
 // permissions and goes to the workspace overview, with no request carrying the old header afterwards;
 // 403 TENANT_MISMATCH / TENANT_ACCESS_DISABLED → message + back to the picker. Backend = MOCK harness.
-import { screen, waitFor, within } from '@testing-library/react';
+import { configure, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { problem, renderPortal, signIn, stopPortals, TENANTS } from '../test/portal-harness';
 import { clearUnsavedChangesForTest, registerUnsavedChanges } from './unsavedChangesGuard';
+
+// The workspace C chunk loads lazily (seconds on a loaded CPU). Alone, this file kept the 1 s default of findBy*; in a
+// batch it inherited 30 s from a harness loaded earlier in the same worker — set it here so the file is self-contained.
+configure({ asyncUtilTimeout: 30_000 });
 
 afterEach(() => {
   stopPortals();
@@ -26,7 +30,7 @@ describe('tenant selection after sign-in (F051-AC-05, F051-AC-06)', () => {
     await user.click(screen.getByRole('radio', { name: /Phòng GD Demo/ }));
     await user.click(screen.getByRole('checkbox', { name: 'Nhớ lựa chọn cho lần sau' }));
     await user.click(screen.getByRole('button', { name: 'Vào' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/overview'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/students'));
     expect(backend.calls('POST', '/auth/portal/login')).toHaveLength(1);
     expect(backend.calls('POST', '/auth/portal/token:refresh')).toHaveLength(1); // the start-up restore only
     const perms = backend.calls('GET', '/me/permissions');
@@ -59,7 +63,8 @@ describe('switching tenant on the topbar (F051-AC-20)', () => {
     const { backend, user, router, runtime } = await signedInQlcm();
     await user.click(screen.getByRole('radio', { name: /TH Demo A/ }));
     await user.click(screen.getByRole('button', { name: 'Vào' }));
-    await screen.findByRole('heading', { level: 1, name: 'Tổng quan' });
+    // in the school tenant TH Demo A the first menu of qlcm is Trường (Overview left Release 1, catalog 2026.11.22.1)
+    await screen.findByRole('heading', { level: 1, name: 'Trường' });
     await router.navigate('/school-lms/students');
     await screen.findByRole('heading', { level: 1, name: 'Học sinh theo khối' });
     const oldKeys = runtime.queryClient.getQueryCache().getAll().map((q) => JSON.stringify(q.queryKey));
@@ -76,7 +81,7 @@ describe('switching tenant on the topbar (F051-AC-20)', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Đổi đơn vị' }));
 
     // back to the overview of the workspace (F051-AC-20)
-    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/overview'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/school-lms/students'));
     const after = backend.requests.slice(before);
     expect(after.some((r) => r.path === '/me/permissions' && r.headers['x-tenant-id'] === TENANTS.pgdDemo.tenant_id)).toBe(true);
     expect(after.filter((r) => r.headers['x-tenant-id']).every((r) => r.headers['x-tenant-id'] === TENANTS.pgdDemo.tenant_id)).toBe(true);
@@ -91,7 +96,8 @@ describe('tenant access changed (F051-AC-21)', () => {
     const { backend, user, router, runtime } = await signedInQlcm();
     await user.click(screen.getByRole('radio', { name: /TH Demo A/ }));
     await user.click(screen.getByRole('button', { name: 'Vào' }));
-    await screen.findByRole('heading', { level: 1, name: 'Tổng quan' });
+    // in the school tenant TH Demo A the first menu of qlcm is Trường (Overview left Release 1, catalog 2026.11.22.1)
+    await screen.findByRole('heading', { level: 1, name: 'Trường' });
     backend.overrides.push((r) => (r.path === '/me/permissions' ? problem(403, code) : undefined));
     await runtime.queryClient.refetchQueries({ queryKey: ['me', 'permissions'] });
     expect(await screen.findByText('Đơn vị làm việc đã thay đổi quyền truy cập.')).toBeInTheDocument();

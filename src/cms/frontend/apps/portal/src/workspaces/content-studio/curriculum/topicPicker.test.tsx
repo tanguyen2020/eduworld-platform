@@ -87,7 +87,8 @@ describe('topic pickers (T066, whole portal)', () => {
     const { ID, setup } = setupActivity(true);
     const { backend } = await renderPublishing(`/content-studio/activities/${ID}`, { account: tenantUser(), setup });
     // both pickers name the inferred version; they share one listCmsTopics query (same key, react-query dedupes)
-    expect((await screen.findAllByText('Chủ đề theo chương trình Chương trình 700, phiên bản 2.0', {}, { timeout: 60_000 })).length).toBeGreaterThanOrEqual(2);
+    // findAllBy resolves on the first match; wait until BOTH pickers rendered the text (race seen under load)
+    await waitFor(() => expect(screen.getAllByText('Chủ đề theo chương trình Chương trình 700, phiên bản 2.0').length).toBeGreaterThanOrEqual(2), { timeout: 60_000 });
     await waitFor(() => expect(backend.calls('GET', '/cms/learning/topics').length).toBeGreaterThan(0));
     for (const r of backend.requests.filter((x) => x.method === 'GET' && x.path === '/cms/learning/topics')) {
       const q = new URLSearchParams(r.search);
@@ -101,7 +102,7 @@ describe('topic pickers (T066, whole portal)', () => {
   it('no current curriculum version for subject × grade → no listCmsTopics, an explanation instead', async () => {
     const { ID, setup } = setupActivity(false);
     const { backend } = await renderPublishing(`/content-studio/activities/${ID}`, { account: tenantUser(), setup });
-    expect((await screen.findAllByText(/Chưa có chương trình học đã xuất bản cho môn và khối này/, {}, { timeout: 60_000 })).length).toBeGreaterThanOrEqual(2);
+    await waitFor(() => expect(screen.getAllByText(/Chưa có chương trình học đã xuất bản cho môn và khối này/).length).toBeGreaterThanOrEqual(2), { timeout: 60_000 });
     await waitFor(() => expect(backend.calls('GET', '/cms/learning/curricula').length).toBeGreaterThan(0));
     expect(backend.calls('GET', '/cms/learning/topics')).toHaveLength(0);
   });

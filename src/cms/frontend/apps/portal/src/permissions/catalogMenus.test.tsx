@@ -59,7 +59,7 @@ describe('menus from getMyPermissions (F051-AC-09, F051-AC-35)', () => {
   it('turned-off menu: hidden in the sidebar, its URL shows "Tính năng đang tắt" (not 403) and no screen', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
     backend.disabledMenus = ['menu.school_lms.assignments'];
-    const { router } = await renderPortal({ url: '/school-lms/overview', backend });
+    const { router } = await renderPortal({ url: '/school-lms/schools', backend });
     const nav = await screen.findByRole('navigation', { name: 'Menu điều hướng' });
     expect(within(nav).queryByText('Bài tập, đề, bài chẩn đoán')).toBeNull();
     expect(within(nav).getByText('Học sinh theo khối')).toBeInTheDocument();

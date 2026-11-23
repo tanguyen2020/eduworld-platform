@@ -21,8 +21,8 @@ describe('portal routes', () => {
 
   it('school admin: `/` → first visible workspace; only the school-lms chunk is imported (F051-AC-10)', async () => {
     const { loaders, router } = await renderPortal({ url: '/', backend: new MockPortalBackend().withSession('ad.truong.a') });
-    expect(await screen.findByRole('heading', { level: 1, name: 'Tổng quan' })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/school-lms/overview');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Trường' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/school-lms/schools');
     expect(loaders.school_lms).toHaveBeenCalledTimes(1);
     for (const k of ['content_studio', 'game_ops', 'live_ops', 'platform_admin'] as const) expect(loaders[k]).not.toHaveBeenCalled();
   });

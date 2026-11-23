@@ -76,7 +76,7 @@ describe('idle limit (F051-AC-29)', () => {
     });
     const { user } = await renderPortal({ url: '/login' });
     await signIn(user, 'ad.truong.a');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Tổng quan' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Trường' })).toBeInTheDocument();
   });
 });
 
@@ -102,7 +102,7 @@ describe('staff only (F051-AC-04)', () => {
   it('403 PORTAL_ACCESS_STAFF_ONLY from an API → student page, sign-out, no workspace', async () => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
     backend.overrides.push((r) => (r.path === '/me/tenants' ? problem(403, 'PORTAL_ACCESS_STAFF_ONLY') : undefined));
-    const { loaders, runtime } = await renderPortal({ url: '/school-lms/overview', backend });
+    const { loaders, runtime } = await renderPortal({ url: '/school-lms/schools', backend });
     expect(await screen.findByText('Tài khoản học sinh không dùng được cổng quản trị')).toBeInTheDocument();
     await waitFor(() => expect(backend.calls('POST', '/auth/portal/logout')).toHaveLength(1));
     expect(runtime.tokens.get()).toBeNull();
@@ -116,8 +116,8 @@ describe('sign-out (F051-AC-08)', () => {
     ['network failure', true],
   ])('%s: portalLogout with X-EW-CSRF, token + cache + tab tenant cleared, /login', async (_label, offline) => {
     const backend = new MockPortalBackend().withSession('ad.truong.a');
-    const { router, runtime, user } = await renderPortal({ url: '/school-lms/overview', backend });
-    await screen.findByRole('heading', { level: 1, name: 'Tổng quan' });
+    const { router, runtime, user } = await renderPortal({ url: '/school-lms/schools', backend });
+    await screen.findByRole('heading', { level: 1, name: 'Trường' });
     const csrf = backend.csrf;
     if (offline) backend.overrides.push((r) => (r.path === '/auth/portal/logout' ? Promise.reject(new TypeError('offline')) : undefined));
     await user.click(screen.getByRole('button', { name: 'Tài khoản' }));
