@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "item_id": "hat_star_01",
+  "version": 1,
+  "status": "published",
+  "owner_scope": "platform",
+  "kind": "accessory",
+  "rarity": "rare",
+  "equip_slot": "head",
+  "stackable": false,
+  "max_stack": 1,
+  "tradable": false,
+  "name": {
+    "vi": "Mũ ngôi sao",
+    "en": "Star hat"
+  },
+  "sources": [
+    "shop",
+    "quest"
+  ]
+}

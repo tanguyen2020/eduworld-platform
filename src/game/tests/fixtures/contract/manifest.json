@@ -109,9 +109,21 @@
       "source": "specs/examples/challenge.math-g3-time-attack.json",
       "sha256": "dccb179e852d73636ae92f1966e1bc5372e66231951c3274368b75818760c643"
     },
+    "examples/collection.math-g3-cards.json": {
+      "source": "specs/examples/collection.math-g3-cards.json",
+      "sha256": "478e0c85a0cf06acec7587d49dfb68214115b23117bdee7405238905c20f262a"
+    },
+    "examples/event-template.math-week.json": {
+      "source": "specs/examples/event-template.math-week.json",
+      "sha256": "8d474962f491137d2d3d73560c31f76b134c9c576cf57a6d46225076adb631df"
+    },
     "examples/event.mid-autumn-festival.json": {
       "source": "specs/examples/event.mid-autumn-festival.json",
-      "sha256": "e4a86f4c97f24801764531ac7b51bce8c93eaa8b733b68531c68afb462bd121c"
+      "sha256": "c3e21080401ac3b3ea831d4dbb2767beb8e0721d17f1f0d12909711636d69562"
+    },
+    "examples/item.star-hat.json": {
+      "source": "specs/examples/item.star-hat.json",
+      "sha256": "411330a2431600879f4b47a4b551795253eac6efff84621a09595d9e44f161f4"
     },
     "examples/minigame.math-g3-matching.json": {
       "source": "specs/examples/minigame.math-g3-matching.json",
@@ -124,6 +136,10 @@
     "examples/quest.math-g3-multiplication.json": {
       "source": "specs/examples/quest.math-g3-multiplication.json",
       "sha256": "db2bb35e3c22734c2ec0e967bde7a7702c60ea87c3b89f997999f3d7c92b9d86"
+    },
+    "examples/reward-rule.activity-completed.json": {
+      "source": "specs/examples/reward-rule.activity-completed.json",
+      "sha256": "9dd3fdaa2f7013f3094e8298a7d8c6a18785fa484d6666ec655f389a6b9619f2"
     },
     "examples/season-track.season-1.json": {
       "source": "specs/examples/season-track.season-1.json",

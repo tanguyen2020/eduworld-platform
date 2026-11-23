@@ -48,6 +48,7 @@
     "decoration": {
       "environment_preset_id": "env.mid_autumn_night",
       "bundle_id": "bundle.festival_mid_autumn_v1",
+      "bundle_size_bytes": 15728640,
       "low_preset_bundle_id": "bundle.festival_mid_autumn_v1_low",
       "areas": ["main_hub"]
     }
