@@ -80,3 +80,37 @@ Lệnh (Windows không có `make`; gọi trực tiếp lệnh của target `godo
 - F062-AC-20, SC-002, SC-004: đo FPS p10/khởi động lạnh trên DEV-PC-MID, DEV-AND-MID1 và lab thiết bị (chạy `res://tests/perf/MainHubBenchmark.tscn -- --seconds=20` với renderer) — chưa có thiết bị/lane F133.
 - F062-AC-16 phần nhiệt Android: logic hạ trần có test, nguồn trạng thái nhiệt (plugin `PowerManager`) chờ F133. F062-AC-17 trên thiết bị: cơ chế ghi `user://renderer_override.cfg` (`application/config/project_settings_override`) có test, chưa thử với driver lỗi thật.
 - `gdlint` chỉ chạy ở CI (`godot.yml`); mã viết theo cấu hình mặc định gdtoolkit.
+
+## 6. Bằng chứng (2026-11-24, T036–T038 + chạy với backend thật, Godot 4.7.2 console)
+
+**Tự động (local Windows, máy đang tải 100 % CPU bởi agent khác):**
+
+| Lệnh | Kết quả |
+|---|---|
+| GdUnit4 `-a res://tests` (= `make godot-test`) | **778 test: 767 pass, 1 fail, 10 skip** (integration tự skip khi thiếu `EDUWORLD_IT_API_BASE_URL`). Fail duy nhất: `test_character_creation_scene.gd::test_every_choice_redraws_the_preview_without_a_request` (F070, timing) — xem dưới |
+| Suite F062 sửa/thêm: `test_quest_journal_assigned.gd`, `test_assignment_service.gd`, `test_activity_host.gd` | 9/9, 11/11, 11/11 (mới: `test_question_set_opens_the_activity_host_with_the_set_id`, `test_row_shows_the_subject_name_only_when_the_server_sends_it`, `test_model_reads_subject_name_and_ignores_a_malformed_one`) |
+| `check_typed`, `lint_theme_overrides`, `lint_layers`, `lint_signals`, `extract_pot --check`, `pseudo_locale --check` | OK (413 / 376 / 214 / 241 / 334 file; pseudo 1 file) |
+| `node src/game/tools/gen_fixtures.mjs --check`, `check_no_admin_ui.sh` | `gen_fixtures: OK (62 files)`, OK |
+| `scan_artifact_test.sh`, `--export-pack "Windows Desktop"` + `scan_artifact.sh` | 20/20; `scan_artifact: OK (1 artifact(s), 13 patterns)` |
+| `node scripts/specs/check-features.mjs` | 92 feature, 0 lỗi |
+
+Test timing F070: chạy riêng 3 lần đều fail (183 ms > 100 ms) khi máy 100 % CPU. Đã đổi sang best of 3 lượt + dung sai CI 5 % (cách của `minigame_benchmark_test.gd`, không đổi ngưỡng 100 ms): lượt chậm nhất mỗi lượt đo được `[137208, 123551, 101884]` µs (pass) và `[122516, 119652, 113895]` µs (fail) — mọi nút chậm đều (~50 ms/nút, mũi tên tóc/trang phục ~100 ms), tức tải máy kéo dài chứ không phải một lần giật; cần chạy lại khi máy rảnh.
+
+**Backend thật** (gateway `http://localhost:9080/api/v1`, stack compose local của owner; không khởi động lại/đổi cấu hình container; mật khẩu chỉ qua biến môi trường trong lệnh; mỗi học sinh đăng nhập một lần mỗi lượt, không thử lại):
+
+```bash
+EW_E2E_PASSWORD=*** bash -c 'EDUWORLD_IT_STUDENT_PASSWORD="$EW_E2E_PASSWORD" EDUWORLD_IT_CLIENT_VERSION=0.1.0 \
+  EDUWORLD_IT_API_BASE_URL=http://localhost:9080/api/v1 godot --headless --path src/game \
+  -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -c \
+  -a res://tests/integration/learning/test_my_assignments_isolation.gd'
+```
+
+| Lượt (giờ VN) | Kết quả |
+|---|---|
+| 05:40 | Cả hai `POST /auth/game/login` → `426 CLIENT_VERSION_UNSUPPORTED` (client `0.0.0-dev` < `EW_GAME_MIN_CLIENT_VERSION`; server kiểm trước mật khẩu) → thêm `EDUWORLD_IT_CLIENT_VERSION` (Clarifications 2026-11-24) |
+| 05:43 | `hs.an.3a` → `503 UNAVAILABLE` sau 3,4 s (trace `eac424c65e938df2c8480df4f8386eb7`, nghi Keycloak quá `keycloak_token_call_timeout` 3 s); `hs.dung.7a` → `403 CURFEW_ACTIVE` (trace `fa15541f3614faaaa9955192c2e17e80`, giờ giới nghiêm 21:30–06:30). Không thử lại |
+| 06:32 | Cả hai: `login` 200 → `POST /game/sessions` 201 → `GET /game/profile` 200 (`setup_required` → S02, state `CHARACTER_CREATION`) → `GET /learning/my-assignments` **200** có `X-Tenant-Id` đúng tenant của phiên → `:end` 204 → `logout` 204. `hs.an.3a` (tenant `01a1fc6d-7d54-…21f0`, trace `ac50c8ab4c797ed0b2e86328562b4895`): **0 bài**; `hs.dung.7a` (tenant `01a1fc6d-7d92-…9397`, trace `2bbc5c2c453657053d89534dbdb4452d`): **0 bài**. Test **FAIL** ở `assert_array(an).is_not_empty()` — stack local chưa có bài giao nào cho DEMOA1 khối 3 |
+
+Kết luận: đường đăng nhập → phiên game → `listMyAssignments` (F041 thật, header tenant) chạy được trên backend thật; **chưa chứng minh được cô lập tenant có dữ liệu** (T018/TC-LMS-002) và các bước §2 cần bài giao (3–7) vì không có bài nào, mà phạm vi được giao chỉ cho đọc/chơi (không tạo bài bằng `ad.truong.a`). Bước §2 cần màn hình/thiết bị (2, 8, 9, 10, 12) chưa chạy (agent headless).
+
+**Còn lại để Done:** (1) seed/giao ít nhất 1 bài `activity` (và nếu có, 1 `question_set`, 1 đề) cho DEMOA1 khối 3 bằng `ad.truong.a` (F041), rồi chạy lại đúng lệnh trên ngoài giờ giới nghiêm → T018 pass; (2) T033: chạy §2 bước 1–11 bằng client có giao diện (`--env=local` cần `client_version` ≥ `EW_GAME_MIN_CLIENT_VERSION`); (3) test F070 timing chạy lại khi máy rảnh; (4) F062-AC-20/SC-002 đo thiết bị — hoãn sang F133 (đã thống nhất).
