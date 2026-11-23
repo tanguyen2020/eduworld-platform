@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 	"testing"
@@ -218,6 +219,28 @@ func TestModerationSwitches(t *testing.T) {
 	}
 	if r = c.admin(sa, http.MethodGet, "/admin/chat/moderation-switches", nil); len(r.body["tenants"].([]any)) != 0 {
 		t.Fatalf("list without tenant_ids: %s", r.raw)
+	}
+	// Owner rule 2026-11-23 (API_DESIGN §5): the tenant levels are one keyset page (tenant_id order) — page 2 continues
+	// page 1, the platform level is on every page, only the tenants of tenant_ids ever appear, a bad cursor is 400.
+	pagePath := "/admin/chat/moderation-switches?limit=1&tenant_ids=" + c.tenantA.String() + "," + c.tenantB.String()
+	p1 := c.admin(sa, http.MethodGet, pagePath, nil)
+	pg1, _ := p1.body["page"].(map[string]any)
+	t1, _ := p1.body["tenants"].([]any)
+	if p1.status != http.StatusOK || len(t1) != 1 || pg1["has_more"] != true || p1.body["platform"] == nil {
+		t.Fatalf("switches page 1: %d %s", p1.status, p1.raw)
+	}
+	p2 := c.admin(sa, http.MethodGet, pagePath+"&cursor="+url.QueryEscape(pg1["next_cursor"].(string)), nil)
+	pg2, _ := p2.body["page"].(map[string]any)
+	t2, _ := p2.body["tenants"].([]any)
+	if p2.status != http.StatusOK || len(t2) != 1 || pg2["has_more"] != false || p2.body["platform"] == nil {
+		t.Fatalf("switches page 2: %d %s", p2.status, p2.raw)
+	}
+	got := []string{t1[0].(map[string]any)["tenant_id"].(string), t2[0].(map[string]any)["tenant_id"].(string)}
+	if got[0] == got[1] || !slices.Contains(got, tA.String()) || !slices.Contains(got, c.tenantB.String()) {
+		t.Fatalf("switch pages: %v", got)
+	}
+	if r := c.admin(sa, http.MethodGet, pagePath+"&cursor=garbage", nil); r.status != http.StatusBadRequest {
+		t.Fatalf("garbage cursor: %d", r.status)
 	}
 	// listModerationSwitchHistory: platform changes, or the changes of tenant_ids (newest first, paged).
 	if r = c.admin(sa, http.MethodGet, "/admin/chat/moderation-switches/history", nil); len(r.data()) != 1 ||

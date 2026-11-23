@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { TenantFilter } from '../../../shell/TenantControls';
-import { SCHOOL_LEVELS, SCHOOL_STATUSES, useCatalogSchools, useProvinces, type School, type SchoolFilter, type SchoolLevel, type SchoolStatus } from '../api/catalog';
+import { SCHOOL_LEVELS, SCHOOL_STATUSES, useCatalogSchools, useProvinceOptions, type School, type SchoolFilter, type SchoolLevel, type SchoolStatus } from '../api/catalog';
 import { useTenantDirectory } from '../api/tenants';
 import { LIMITS } from '../limits';
 import { TenantCell } from '../ui';
@@ -18,7 +18,7 @@ import { SearchSelect } from '@eduworld/ops-ui';
 export function SchoolCatalogPage() {
   const { t, i18n } = useTranslation();
   const [filter, setFilter] = useState<SchoolFilter>({});
-  const provinces = useProvinces('active');
+  const provinces = useProvinceOptions('active');
   const list = useCatalogSchools(filter);
   const scope = useCrossTenantScope();
   const directory = useTenantDirectory(scope.crossTenant);
@@ -46,7 +46,8 @@ export function SchoolCatalogPage() {
           optionFilterProp="label"
           value={filter.province}
           onChange={(province?: string) => setFilter((f) => ({ ...f, province }))}
-          options={(provinces.data?.items ?? []).map((p) => ({ value: p.code, label: p.name.vi }))}
+          truncated={provinces.truncated}
+          options={provinces.items.map((p) => ({ value: p.code, label: p.name.vi }))}
         />
         <SearchSelect
           aria-label={t('platform.catalog.schoolLevel')}

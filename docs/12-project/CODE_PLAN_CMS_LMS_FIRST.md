@@ -230,21 +230,13 @@ Quy tắc chung mọi WP: theo AGENTS §3 (contract trước → `make gen MOD=`
 
 Lịch gợi ý (≤ 3 agent song song): đợt 0 WP0 → đợt 1 WP-S (bước đầu trước), WP-L1, WP-C1 → đợt 2 WP-L2, WP-I1, WP-P1a (→ P1b) → đợt 3 WP-R. Ước lượng ~12–14 agent-ngày (WP-I1 tăng ~0,5–1 ngày vì bỏ enrollment). Chi tiết inventory theo file nằm trong báo cáo kế hoạch của owner (không lưu trong repo).
 
-### 4.3. Nợ phân trang còn lại (quy tắc owner 2026-11-22)
+### 4.3. Phân trang trong truy vấn (quy tắc owner 2026-11-22, 2026-11-23)
 
-Quy tắc ở [API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting) và [ADMIN_PORTAL §1.6](../04-admin-portal/ADMIN_PORTAL.md#16-danh-sách-bảng-và-dropdown-quy-tắc-phân-trang). Đã sửa 2026-11-22: `listRegradeRequests`, `getContentUsages`, `listSisConnectionSchools` (thêm cursor + `page`), `listStudentCleanupRuns` (cursor thật), `previewTenantStudentCleanup` (keyset SQL), portal (bảng "Tải thêm", dropdown `fetchAllPages` + `SearchSelect`). Còn lại — contract đúng nhưng DB đọc hết rồi phân trang trong bộ nhớ, giao cho feature sở hữu khi chạm lại:
+Quy tắc ở [API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting) và [ADMIN_PORTAL §1.6](../04-admin-portal/ADMIN_PORTAL.md#16-danh-sách-bảng-và-dropdown-quy-tắc-phân-trang). Đã sửa 2026-11-22: `listRegradeRequests`, `getContentUsages`, `listSisConnectionSchools` (thêm cursor + `page`), `listStudentCleanupRuns` (cursor thật), `previewTenantStudentCleanup` (keyset SQL), portal (bảng "Tải thêm", dropdown `fetchAllPages` + `SearchSelect`). Đã sửa 2026-11-23 (owner: "không được cắt trang trong bộ nhớ, luôn pagination khi query"): mọi operation của danh sách nợ cũ — `searchQuestions`, fallback DB `getLeaderboard`/`getMyLeaderboardPosition`, `listContentVersions` + bảng phụ version của `listContentReleases`, danh mục CMS curriculum (`listCms*`, textbook, `listLearningObjectives`), `listResearchAgreements`, `listEfficacyStudies`, `listEfficacyStudyCohorts`, `listLearningExperiments`, `listMyWrongQuestions` (bỏ trần 1000), `listModerationSwitches` — đọc một trang keyset trong SQL/ent; ngoại lệ §5.1 hiện trong bảng Portal (`listCountries`, `listProvinces`, `listAllPermissions`, `listEfficacyWaves`) thêm `limit`/`cursor` + `page`; bảng Portal dùng `useCursorPages`; điều khiển header của shell dùng `SearchSelect` (bỏ ngoại lệ ESLint, owner 2026-11-23). Còn lại:
 
-| Operation | Feature sở hữu | Việc |
-|---|---|---|
-| `searchQuestions` | F022/F024 | Keyset + full-text trong SQL |
-| `listQuests` | F072 | Keyset trên quest được giao + tiến độ |
-| fallback DB `getLeaderboard`/`getMyLeaderboardPosition` | F106 | `LIMIT` + vị trí theo window function |
-| `listContentVersions`, `listContentReleases` (bảng phụ version) | F026 | Keyset theo `version_no` |
-| `listCms*` curriculum, textbook | F021 | Keyset (hiện chặn theo giới hạn import) |
-| `listResearchAgreements`, `listEfficacyStudies`, `listEfficacyStudyCohorts`, `listLearningExperiments` | F035/F036 | Keyset |
-| `listMyWrongQuestions` (chặn 1000) | F034 | Keyset |
-| `listModerationSwitches` (mọi tenant) | F121 | Cursor theo tenant |
-| Điều khiển header/đăng nhập của shell (Select ngôn ngữ, tenant) | F051 (portal shell) | Chuyển sang `SearchSelect`, bỏ ngoại lệ ESLint |
+| Operation | Feature sở hữu | Lý do chưa chuyển | Việc |
+|---|---|---|---|
+| `listQuests` (game client) | F072 (module `game`) | Trạng thái/hiển thị quest là luật domain (`quest.Decide`, `CanRepeat`) trên lịch sử học sinh; thứ tự (trạng thái, mã) phụ thuộc kết quả đó; tập ứng viên chặn theo quest đã publish gán cho tenant × khối | Read model trạng thái quest theo học sinh (projection), rồi keyset `(status_rank, code, quest_id)` trong SQL [TBD] |
 
 ## 5. Lộ trình theo mốc (CMS/LMS trước)
 

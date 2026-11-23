@@ -238,7 +238,12 @@ function WavesTab({ study }: { study: EfficacyStudy }) {
         </Button>
       </ActionGate>
       {waves.error ? <ProblemMessage error={waves.error} /> : null}
-      <Table rowKey="wave_id" columns={columns} dataSource={waves.data?.items ?? []} loading={waves.isFetching} pagination={false} locale={{ emptyText: t('platform.research.common.empty') }} />
+      <Table rowKey="wave_id" columns={columns} dataSource={waves.rows} loading={waves.isFetching} pagination={false} locale={{ emptyText: t('platform.research.common.empty') }} />
+      {waves.hasNextPage ? (
+        <Button onClick={() => waves.fetchNextPage()} loading={waves.isFetchingNextPage}>
+          {t('platform.research.common.loadMore')}
+        </Button>
+      ) : null}
       {scheduling ? <ScheduleWaveDialog study={study} onClose={() => setScheduling(false)} /> : null}
     </Space>
   );

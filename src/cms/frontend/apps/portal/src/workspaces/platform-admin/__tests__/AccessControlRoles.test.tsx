@@ -8,7 +8,7 @@ import { configure, fireEvent, screen, waitFor, within } from '@testing-library/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { tenantFilterStore } from '../../../shell/tenantFilterStore';
 import { problem, stopPortals } from '../../../test/portal-harness';
-import { AIDS, renderAccess } from '../../../test/platform-access-backend';
+import { accessState, AIDS, renderAccess } from '../../../test/platform-access-backend';
 
 // whole-portal flows with several Ant Design selects and dialogs are slow on the throttled shared CPU (2 workers max)
 vi.setConfig({ testTimeout: 600_000 });
@@ -36,6 +36,37 @@ describe('Permission catalog (F059-AC-01)', () => {
     await waitFor(() => expect(screen.queryByText('platform.role.read')).toBeNull());
     expect(screen.getByText('lms.student.read')).toBeInTheDocument();
     for (const name of ['Sửa', 'Xóa', 'Thêm', 'Tạo role']) expect(screen.queryByRole('button', { name })).toBeNull();
+  });
+});
+
+describe('Permission catalog theo trang cursor (owner 2026-11-23, API_DESIGN §5)', () => {
+  const extra = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ code: `zz.extra.p${String(i).padStart(3, '0')}`, scope_kind: 'platform', group_code: 'zz_extra', name: { vi: `Quyền ${i}`, en: `Perm ${i}` } }));
+
+  it('the grid shows the first page; "Tải thêm" asks the next page with the cursor and appends it', async () => {
+    const state = accessState();
+    state.extraPermissions = extra(60);
+    const { backend, user } = await renderAccess('/platform-admin/access-control?tab=permissions', { state });
+    expect(await screen.findByText('platform.role.read')).toBeInTheDocument();
+    const pages = () => backend.calls('GET', '/admin/permissions').filter((r) => new URLSearchParams(r.search).get('limit') === '50');
+    expect(pages().map((r) => new URLSearchParams(r.search).get('cursor'))).toEqual([null]);
+    expect(screen.queryByText('zz.extra.p059')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Tải thêm' }));
+    expect(await screen.findByText('zz.extra.p059')).toBeInTheDocument();
+    expect(pages().map((r) => new URLSearchParams(r.search).get('cursor'))).toEqual([null, 'c50']);
+    expect(screen.getAllByText('platform.role.read')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Tải thêm' })).toBeNull();
+  });
+
+  it('the role editor picker reads every page of the catalog (limit 100 until has_more = false)', async () => {
+    const state = accessState();
+    state.extraPermissions = extra(150);
+    const { backend, user } = await renderAccess('/platform-admin/access-control?tab=roles', { state });
+    await user.click(await screen.findByRole('button', { name: 'Tạo role' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByText('zz.extra.p149 — Quyền 149')).toBeInTheDocument();
+    const all = backend.calls('GET', '/admin/permissions').filter((r) => new URLSearchParams(r.search).get('limit') === '100');
+    expect(all.map((r) => new URLSearchParams(r.search).get('cursor'))).toEqual([null, 'c100']);
   });
 });
 

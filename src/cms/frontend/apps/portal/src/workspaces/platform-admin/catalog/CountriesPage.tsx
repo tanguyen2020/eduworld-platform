@@ -62,7 +62,12 @@ export function CountriesPage() {
   return (
     <section aria-label={t('platform.catalog.countries')}>
       {countries.error ? <ProblemMessage error={countries.error} /> : null}
-      <Table rowKey="country_code" columns={columns} dataSource={countries.data?.items ?? []} loading={countries.isFetching} pagination={false} />
+      <Table rowKey="country_code" columns={columns} dataSource={countries.rows} loading={countries.isFetching} pagination={false} />
+      {countries.hasNextPage ? (
+        <Button onClick={() => countries.fetchNextPage()} loading={countries.isFetchingNextPage}>
+          {t('platform.common.loadMore')}
+        </Button>
+      ) : null}
       <ReasonDialog
         open={!!toggling}
         title={toggling ? t('platform.catalog.toggleTitle', { name: toggling.name.vi }) : ''}

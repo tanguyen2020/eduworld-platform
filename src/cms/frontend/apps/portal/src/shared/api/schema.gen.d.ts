@@ -256,8 +256,9 @@ export interface paths {
         };
         /**
          * Trạng thái công tắc kiểm duyệt (platform và từng tenant, kèm giá trị hiệu lực)
-         * @description `platform` luôn có; `tenants` gồm các tenant của `tenant_ids` (System Admin, đọc liên tenant có audit) — không có
-         *     `tenant_ids` thì rỗng. Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
+         * @description `platform` luôn có (mọi trang); `tenants` là một trang keyset theo `tenant_id` (`limit`/`cursor`) của các tenant của
+         *     `tenant_ids` (System Admin, đọc liên tenant có audit) — không có `tenant_ids` thì rỗng; chỉ các tenant của trang được đọc
+         *     từ DB (API_DESIGN §5). Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
          */
         get: operations["listModerationSwitches"];
         /**
@@ -912,7 +913,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Đợt kiểm tra của nghiên cứu — số mời/đã làm/vắng theo lớp, không có điểm */
+        /** Đợt kiểm tra của nghiên cứu — số mời/đã làm/vắng theo cụm, không có điểm; trang keyset (window_start, wave_id) trong truy vấn (API_DESIGN §5) */
         get: operations["listEfficacyWaves"];
         put?: never;
         /** Lập đợt validation/pre/post — tạo một ExamSession đo hiệu quả cho mỗi lớp đích trong tenant của lớp (F035-AC-12, F035-AC-13) */
@@ -1210,7 +1211,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Catalog permission đầy đủ (tenant + platform, scope_kind) */
+        /** Catalog permission đầy đủ (tenant + platform, scope_kind); trang keyset (group_code, permission_code) trong truy vấn (API_DESIGN §5) */
         get: operations["listAllPermissions"];
         put?: never;
         post?: never;
@@ -2225,7 +2226,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh mục quốc gia đang dùng (song ngữ theo Accept-Language) */
+        /** Danh mục quốc gia đang dùng (song ngữ theo Accept-Language); trang keyset theo country_code trong truy vấn (API_DESIGN §5) */
         get: operations["listCountries"];
         put?: never;
         post?: never;
@@ -11473,6 +11474,7 @@ export interface components {
         EfficacyWaveKind: "validation" | "pre" | "post";
         EfficacyWaveList: {
             items: components["schemas"]["EfficacyWave"][];
+            page: components["schemas"]["PageInfo"];
         };
         EfficacyWithdrawal: {
             /** @description Số participant chuyển withdrawn */
@@ -13746,6 +13748,11 @@ export interface components {
         PermissionList: {
             catalog_version: string;
             items: components["schemas"]["Permission"][];
+        };
+        PermissionPage: {
+            catalog_version: string;
+            items: components["schemas"]["Permission"][];
+            page: components["schemas"]["PageInfo"];
         };
         /** @enum {string} */
         PermissionScopeKind: "tenant" | "platform";
@@ -17290,6 +17297,9 @@ export interface operations {
     listModerationSwitches: {
         parameters: {
             query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
                 /**
                  * @description Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
                  *     Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
@@ -17309,6 +17319,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        page: components["schemas"]["PageInfo"];
                         platform: components["schemas"]["ModerationSwitchState"];
                         tenants: components["schemas"]["ModerationSwitchState"][];
                     };
@@ -18930,7 +18941,11 @@ export interface operations {
     };
     listEfficacyWaves: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
             header?: never;
             path: {
                 study_id: components["parameters"]["EfficacyStudyIdPath"];
@@ -19745,7 +19760,11 @@ export interface operations {
     };
     listAllPermissions: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
                 "Accept-Language"?: components["parameters"]["AcceptLanguage"];
@@ -19761,7 +19780,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PermissionList"];
+                    "application/json": components["schemas"]["PermissionPage"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
@@ -21958,7 +21977,11 @@ export interface operations {
     };
     listCountries: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
             header?: {
                 /** @description Ngôn ngữ hiển thị mong muốn (`vi-VN` mặc định, `en-US`). Server chọn ngôn ngữ trả về và đặt `Content-Language` (ADR-0056). Dữ liệu cache dài (manifest, snapshot) luôn trả đủ vi+en. */
                 "Accept-Language"?: components["parameters"]["AcceptLanguage"];
@@ -21983,6 +22006,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         items: components["schemas"]["Country"][];
+                        page: components["schemas"]["PageInfo"];
                     };
                 };
             };
@@ -21993,6 +22017,9 @@ export interface operations {
         parameters: {
             query?: {
                 country?: string;
+                /** @description Cursor opaque từ page.next_cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
                 /** @description `all`/`inactive` chỉ cho System Admin (`platform.catalog.write`) */
                 status?: "active" | "inactive" | "all";
             };
@@ -22011,7 +22038,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description OK (trang keyset (code, province_id) trong truy vấn — API_DESIGN §5) */
             200: {
                 headers: {
                     ETag: components["headers"]["ETag"];
@@ -22020,6 +22047,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         items: components["schemas"]["Province"][];
+                        page: components["schemas"]["PageInfo"];
                     };
                 };
             };

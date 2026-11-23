@@ -35,7 +35,7 @@ export function ContentListPage({ type, title }: { type: ListType; title: string
   const tenantColumn = useTenantColumn<ContentRow>(new Map((tenants.data ?? []).map((x) => [x.tenant_id, x])));
   const [deleting, setDeleting] = useState<ContentRow | null>(null);
   const actions = CONTENT_TYPES[type].actions;
-  const rows = (list.data?.pages ?? []).flatMap((p) => p.data);
+  const rows = list.rows;
   const name = (r: ContentRow) => {
     const title = r.title ? ((i18n.language.startsWith('en') ? (r.title.en ?? r.title.vi) : (r.title.vi ?? r.title.en)) ?? '') : '';
     return title || t('content_studio.list.untitled', { id: r.content_id.slice(-8), type: r.type ? t(`ops-ui:question.types.${r.type}`) : '' });

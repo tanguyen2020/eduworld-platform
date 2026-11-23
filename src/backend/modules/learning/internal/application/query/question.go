@@ -120,8 +120,12 @@ func (q Questions) Search(ctx context.Context, f read.QuestionFilter, in PageInp
 	if f.Source == "platform" && p.TenantID != nil {
 		return out, problem.Invalid("source", problem.SubInvalid, "platform is for platform staff; tenants read assigned questions")
 	}
+	seek, limit, err := seekOf(q.Cursors, in)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		hits, err := q.Model.Search(ctx, f)
+		hits, err := q.Model.Search(ctx, f, seek)
 		if err != nil {
 			return err
 		}
@@ -129,8 +133,8 @@ func (q Questions) Search(ctx context.Context, f read.QuestionFilter, in PageInp
 		for i, h := range hits {
 			views[i] = viewOf(p, h.Question, h.Version)
 		}
-		out, err = paginate(views, func(v QuestionView) uuid.UUID { return v.Question.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(views, limit, q.Cursors, func(v QuestionView) (uuid.UUID, []any) { return v.Question.ID, nil })
+		return nil
 	})
 	return out, err
 }

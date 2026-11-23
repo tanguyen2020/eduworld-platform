@@ -15,15 +15,24 @@ import (
 var _ read.RoleReader = PrincipalModel{}
 
 // Permissions returns the live catalog copy (tenant permissions only when tenantOnly).
-func (m PrincipalModel) Permissions(ctx context.Context, tenantOnly bool) (out []read.PermissionView, version string, err error) {
+func (m PrincipalModel) Permissions(ctx context.Context, tenantOnly bool, after *read.PermissionKey, limit int) (out []read.PermissionView, version string, err error) {
 	err = m.read(ctx, func(tx *sql.Tx) error {
 		// tenancyguard:ok identity.permissions is global (G, no tenant_id); deleted_at filtered
 		q := `SELECT permission_code, scope_kind, group_code, name_vi, name_en, catalog_version FROM identity.permissions WHERE deleted_at IS NULL`
 		if tenantOnly {
 			q += ` AND scope_kind = 'tenant'`
 		}
+		var group, code, lim any
+		if after != nil {
+			group, code = after.Group, after.Code
+		}
+		if limit > 0 {
+			lim = limit
+		}
+		// one keyset page (group_code, permission_code) — API_DESIGN §5; LIMIT NULL = the whole catalog (bounded reads)
 		// tenancyguard:ok identity.permissions is global (G, no tenant_id)
-		rows, err := tx.QueryContext(ctx, q+` ORDER BY group_code, permission_code`)
+		rows, err := tx.QueryContext(ctx, q+` AND ($1::text IS NULL OR (group_code, permission_code) > ($1::text, $2::text))
+			ORDER BY group_code, permission_code LIMIT $3`, group, code, lim)
 		if err != nil {
 			return err
 		}
@@ -37,7 +46,12 @@ func (m PrincipalModel) Permissions(ctx context.Context, tenantOnly bool) (out [
 			p.Name.En = &en
 			out = append(out, p)
 		}
-		return rows.Err()
+		if err := rows.Err(); err != nil || version != "" {
+			return err
+		}
+		// a page past the end still names the catalog version
+		// tenancyguard:ok identity.permissions is global (G, no tenant_id); deleted_at filtered
+		return tx.QueryRowContext(ctx, `SELECT COALESCE(max(catalog_version), '') FROM identity.permissions WHERE deleted_at IS NULL`).Scan(&version)
 	})
 	return out, version, err
 }

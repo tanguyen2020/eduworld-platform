@@ -48,15 +48,18 @@ func optInt(n sql.NullInt64) *int {
 }
 
 // Agreements implements read.EfficacyReadModel.
-func (EfficacyModel) Agreements(ctx context.Context, tenants []uuid.UUID, status string) ([]write.AgreementRow, error) {
+func (EfficacyModel) Agreements(ctx context.Context, tenants []uuid.UUID, status string, seek read.Seek) ([]write.AgreementRow, error) {
 	tx, err := sqlTx(ctx)
 	if err != nil {
 		return nil, err
 	}
+	// one keyset page (tenant_id, created_at, agreement_id) — API_DESIGN §5
 	rows, err := tx.QueryContext(ctx, `SELECT agreement_id, tenant_id, agreement_ref, to_jsonb(covers), agreed_on, status, revoked_at, revoked_by,
 		revoke_reason, recorded_by, version, created_at FROM learning.research_agreements
-		WHERE tenant_id = ANY($1::uuid[]) AND ($2 = '' OR status = $2) AND deleted_at IS NULL ORDER BY tenant_id, created_at, agreement_id`,
-		uuidArray(tenants), status)
+		WHERE tenant_id = ANY($1::uuid[]) AND ($2 = '' OR status = $2) AND deleted_at IS NULL
+			AND ($3::uuid IS NULL OR (tenant_id, created_at, agreement_id) > ($3::uuid, $4::timestamptz, $5::uuid))
+		ORDER BY tenant_id, created_at, agreement_id LIMIT $6`,
+		append([]any{uuidArray(tenants), status}, seekArgs(seek, 2)...)...)
 	if err != nil {
 		return nil, fmt.Errorf("research agreements: %w", err)
 	}
@@ -105,7 +108,7 @@ func scanStudyRead(r rowScanner) (write.StudyRow, error) {
 }
 
 // Studies implements read.EfficacyReadModel: tenants filters the studies with a class of one of them.
-func (EfficacyModel) Studies(ctx context.Context, status string, tenants []uuid.UUID) ([]write.StudyRow, error) {
+func (EfficacyModel) Studies(ctx context.Context, status string, tenants []uuid.UUID, seek read.Seek) ([]write.StudyRow, error) {
 	tx, err := sqlTx(ctx)
 	if err != nil {
 		return nil, err
@@ -114,7 +117,8 @@ func (EfficacyModel) Studies(ctx context.Context, status string, tenants []uuid.
 	rows, err := tx.QueryContext(ctx, `SELECT `+studyReadCols+` FROM learning.efficacy_studies s WHERE s.deleted_at IS NULL
 		AND ($1 = '' OR s.status = $1) AND ($2::uuid[] IS NULL OR EXISTS (SELECT 1 FROM learning.efficacy_study_cohorts c
 			WHERE c.study_id = s.study_id AND c.tenant_id = ANY($2::uuid[]) AND c.deleted_at IS NULL))
-		ORDER BY s.created_at DESC, s.study_id`, status, idsParam(tenants))
+		AND ($3::timestamptz IS NULL OR (s.created_at, s.study_id) < ($3::timestamptz, $4::uuid))
+		ORDER BY s.created_at DESC, s.study_id DESC LIMIT $5`, append([]any{status, idsParam(tenants)}, seekArgs(seek, 1)...)...)
 	if err != nil {
 		return nil, fmt.Errorf("efficacy studies: %w", err)
 	}
@@ -149,7 +153,7 @@ func (EfficacyModel) Study(ctx context.Context, id uuid.UUID) (*write.StudyRow, 
 }
 
 // StudyCohorts implements read.EfficacyReadModel.
-func (EfficacyModel) StudyCohorts(ctx context.Context, studyID uuid.UUID, tenants []uuid.UUID) ([]read.StudyCohortRead, error) {
+func (EfficacyModel) StudyCohorts(ctx context.Context, studyID uuid.UUID, tenants []uuid.UUID, seek read.Seek) ([]read.StudyCohortRead, error) {
 	tx, err := sqlTx(ctx)
 	if err != nil {
 		return nil, err
@@ -161,7 +165,8 @@ func (EfficacyModel) StudyCohorts(ctx context.Context, studyID uuid.UUID, tenant
 			AND p.tenant_id = c.tenant_id AND p.status = 'active' AND p.deleted_at IS NULL)
 		FROM learning.efficacy_study_cohorts c
 		WHERE c.study_id = $1 AND ($2::uuid[] IS NULL OR c.tenant_id = ANY($2::uuid[])) AND c.deleted_at IS NULL
-		ORDER BY c.pair_no NULLS LAST, c.school_id`, studyID, idsParam(tenants))
+			AND ($3::int IS NULL OR (COALESCE(c.pair_no, `+cohortNoPair+`), c.school_id) > ($3::int, $4::uuid))
+		ORDER BY COALESCE(c.pair_no, `+cohortNoPair+`), c.school_id LIMIT $5`, append([]any{studyID, idsParam(tenants)}, seekArgs(seek, 1)...)...)
 	if err != nil {
 		return nil, fmt.Errorf("study cohorts: %w", err)
 	}
@@ -187,15 +192,21 @@ func (EfficacyModel) StudyCohorts(ctx context.Context, studyID uuid.UUID, tenant
 	return out, rows.Err()
 }
 
-// Waves implements read.EfficacyReadModel.
-func (EfficacyModel) Waves(ctx context.Context, studyID uuid.UUID) ([]write.WaveRow, error) {
+// cohortNoPair sorts the cohorts without a pair (validation arm) after every pair (pair_no ≤ 200): the keyset of
+// listEfficacyStudyCohorts is (COALESCE(pair_no, 32767), school_id).
+const cohortNoPair = "32767" // = read.CohortNoPair
+
+// Waves implements read.EfficacyReadModel (keyset (window_start, wave_id)).
+func (EfficacyModel) Waves(ctx context.Context, studyID uuid.UUID, seek read.Seek) ([]write.WaveRow, error) {
 	tx, err := sqlTx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// tenancyguard:ok platform table learning.efficacy_waves (G, no tenant_id), deleted_at IS NULL
 	rows, err := tx.QueryContext(ctx, `SELECT wave_id, study_id, kind, form, window_start, window_end, duration_sec, status, opened_at, closed_at,
-		created_by, version, created_at FROM learning.efficacy_waves WHERE study_id = $1 AND deleted_at IS NULL ORDER BY window_start, wave_id`, studyID)
+		created_by, version, created_at FROM learning.efficacy_waves WHERE study_id = $1 AND deleted_at IS NULL
+			AND ($2::timestamptz IS NULL OR (window_start, wave_id) > ($2::timestamptz, $3::uuid))
+		ORDER BY window_start, wave_id LIMIT $4`, append([]any{studyID}, seekArgs(seek, 1)...)...)
 	if err != nil {
 		return nil, fmt.Errorf("efficacy waves: %w", err)
 	}

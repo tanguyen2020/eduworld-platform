@@ -8,8 +8,9 @@
 // Owner 2026-11-22 (ADR-0098): deep brand-blue sidebar (Menu theme="dark" + admin tokens ops.color.sider.*), fixed
 // header and sidebar — only the content area scrolls (Tailwind utility classes mapped to the admin tokens) — and
 // language / light-dark as icon buttons in the header (no longer in the account dropdown).
-import { CloseOutlined, GlobalOutlined, MenuOutlined, MoonOutlined, SunOutlined, UserOutlined } from '@ant-design/icons';
-import { Breadcrumb, Button, Drawer, Flex, Layout, Menu, Popover, Select, Switch, Tooltip, Typography, theme } from 'antd';
+import { CloseOutlined, MenuOutlined, UserOutlined } from '@ant-design/icons';
+import { SearchSelect } from '@eduworld/ops-ui';
+import { Breadcrumb, Button, Drawer, Flex, Layout, Menu, Popover, Switch, Typography, theme } from 'antd';
 import type { CSSProperties } from 'react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,13 +20,13 @@ import type { WorkspaceDef } from '../generated/menu-catalog';
 import { menuForPath, visibleMenus, visibleWorkspaces, workspaceForPath } from '../permissions/menuRegistry';
 import { Loading } from '../permissions/RequirePermission';
 import { usePermissions } from '../permissions/usePermissions';
-import { LOCALES } from '../i18n';
 import { INTERNAL_WORKSPACES } from '../permissions/workspaceRegistry';
 import { useSession } from '../session/SessionProvider';
 import { useMe } from '../shared/api/hooks/useMe';
 import { readItem, STORAGE_KEYS, writeItem } from '../shared/storage';
 import { ProblemMessage } from './ProblemMessage';
 import { NoAccessPage, VpnRequiredNotice } from './StatusPages';
+import { LocaleToggle, ThemeToggle } from './PreferenceToggles';
 import { TenantFilter, TenantSwitcher } from './TenantControls';
 import { useMediaQuery } from './useMediaQuery';
 import { useModerationDisabledBanner } from './banners/ModerationDisabledBanner';
@@ -95,7 +96,7 @@ export function WorkspaceSwitcher({ workspaces, current }: { workspaces: Workspa
   const navigate = useNavigate();
   const { userKey } = useSession();
   return (
-    <Select
+    <SearchSelect<string>
       aria-label={t('shell.layout.workspace')}
       value={current?.key}
       placeholder={t('shell.layout.workspace')}
@@ -108,46 +109,6 @@ export function WorkspaceSwitcher({ workspaces, current }: { workspaces: Workspa
       }}
       options={workspaces.map((w) => ({ value: w.key, label: t(w.labelKey) }))}
     />
-  );
-}
-
-/**
- * Header quick toggles (ADMIN_PORTAL §1.3, owner 2026-11-22): language (globe + current code, switches to the other
- * locale at once) and light/dark (sun/moon). Same PreferencesProvider + storage as before (AC-16/17); tooltip and
- * accessible name translated; the visible code is part of the accessible name (WCAG 2.5.3).
- */
-export function LocaleToggle({ style }: { style?: CSSProperties }) {
-  const { t } = useTranslation();
-  const { preferences, update } = usePreferences();
-  const current = preferences.locale;
-  const next = LOCALES[(LOCALES.indexOf(current) + 1) % LOCALES.length]!;
-  const code = t(`shell.locale.short.${current}`);
-  const label = t('shell.header.language', { current: code, next: t(`shell.locale.${next}`) });
-  return (
-    <Tooltip title={label}>
-      <Button type="text" icon={<GlobalOutlined />} aria-label={label} onClick={() => update({ locale: next })} style={style} data-testid="locale-toggle">
-        {code}
-      </Button>
-    </Tooltip>
-  );
-}
-
-export function ThemeToggle({ style }: { style?: CSSProperties }) {
-  const { t } = useTranslation();
-  const { preferences, update } = usePreferences();
-  const dark = preferences.theme === 'dark';
-  const label = dark ? t('shell.header.themeToLight') : t('shell.header.themeToDark');
-  return (
-    <Tooltip title={label}>
-      <Button
-        type="text"
-        icon={dark ? <SunOutlined /> : <MoonOutlined />}
-        aria-label={label}
-        onClick={() => update({ theme: dark ? 'light' : 'dark' })}
-        style={style}
-        data-testid="theme-toggle"
-      />
-    </Tooltip>
   );
 }
 

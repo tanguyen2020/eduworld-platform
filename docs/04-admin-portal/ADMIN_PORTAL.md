@@ -1,6 +1,6 @@
 # Admin Portal — CMS/LMS cho vận hành game
 
-> Trạng thái: Draft · Phiên bản: 0.8 (một Admin Portal, 5 workspace; nhà trường quản trị, kiểm duyệt tập trung — ADR-0072) · Owner: Product Manager + Backend Architect + UX Architect · Cập nhật: 2026-11-22 (ADR-0097: bỏ menu "Yêu cầu dữ liệu" và "Bản dịch" nội dung học tập khỏi Release 1; §1.6 quy tắc bảng/dropdown phân trang) · 2026-11-20 (owner chốt: Game Dashboard tối thiểu của workspace A thuộc F079; audit action `student_profile.viewed`) · 2026-11-17 (màn đăng nhập riêng qua backend — ADR-0091; danh mục menu/action và bật/tắt trong DB — ADR-0090)
+> Trạng thái: Draft · Phiên bản: 0.8 (một Admin Portal, 5 workspace; nhà trường quản trị, kiểm duyệt tập trung — ADR-0072) · Owner: Product Manager + Backend Architect + UX Architect · Cập nhật: 2026-11-23 (§1.3b: `/login` luôn tiếng Anh, không chọn ngôn ngữ; §1.6: shell dùng `SearchSelect`, trang của bảng do truy vấn cắt — owner) · 2026-11-22 (ADR-0097: bỏ menu "Yêu cầu dữ liệu" và "Bản dịch" nội dung học tập khỏi Release 1; §1.6 quy tắc bảng/dropdown phân trang) · 2026-11-20 (owner chốt: Game Dashboard tối thiểu của workspace A thuộc F079; audit action `student_profile.viewed`) · 2026-11-17 (màn đăng nhập riêng qua backend — ADR-0091; danh mục menu/action và bật/tắt trong DB — ADR-0090)
 > Liên quan: [ADR-0027](../adr/ADR-0027-cms-tach-vung-tenant-chi-thao-tac-learning-management-cau-hi.md) · [ADR-0005](../adr/ADR-0005-mo-hinh-multi-tenancy-shared-database-tenant-id-rls.md) · [ADR-0026](../adr/ADR-0026-dang-nhap-theo-tenant-xac-dinh-tenant-kiem-tra-cheo-mac-dinh.md) · [ADR-0028](../adr/ADR-0028-chi-soft-delete-khong-hard-delete-mac-dinh-khong-doc-du-lieu.md) · [ADR-0029](../adr/ADR-0029-system-admin-gan-du-lieu-cho-tenant-va-clone-du-lieu-giua-te.md) · [ADR-0022](../adr/ADR-0022-cms-lms-web-la-react-typescript-spa.md) · [ADR-0015](../adr/ADR-0015-content-versioning-bat-bien-sau-publish.md) · [ADR-0047](../adr/ADR-0047-hai-he-thong-giao-dien-game-godot-3d-va-admin-ops-cms-lms.md) · [DESIGN_SYSTEM](../05-ux/DESIGN_SYSTEM.md) · [CONTENT_MODEL](../02-learning/CONTENT_MODEL.md) · [SCHOOL_LMS](SCHOOL_LMS.md) · [SECURITY_ARCHITECTURE](../10-security/SECURITY_ARCHITECTURE.md) · [MULTITENANCY](../06-architecture/MULTITENANCY.md) · [ADR-0072](../adr/ADR-0072-bo-vai-tro-giao-vien-hoc-sinh-tu-hoc-kiem-duyet-tap-trung.md) · [ADR-0090](../adr/ADR-0090-danh-muc-menu-action-portal-bat-tat-trong-db.md) · [ADR-0091](../adr/ADR-0091-dang-nhap-portal-bang-form-rieng-qua-backend.md) · [OQ-07](../12-project/OPEN_QUESTIONS.md)
 
 ## 1. Định vị
@@ -84,49 +84,51 @@ Responsive: chi tiết ở §1.5.
 
 Admin Portal có **màn đăng nhập riêng do portal tự vẽ** (trang `/login`, Ant Design, theme sinh từ `design/admin-tokens/` — ADR-0047), **không chuyển hướng sang trang Keycloak** (ADR-0091 thay luồng Authorization Code + PKCE của ADR-0066 mục 1). Portal gửi form tới `POST /api/v1/auth/portal/login` (`portalLogin`); module identity gọi token endpoint Keycloak bằng client confidential `eduworld-portal` (Direct Access Grant, cấu hình ở [KEYCLOAK_SSO §3.3](../09-identity/KEYCLOAK_SSO.md)). **Học sinh không đăng nhập được** (chặn hai lớp: flow Keycloak chỉ cho realm role `tenant_staff`/`platform_staff`, và backend `403 PORTAL_ACCESS_STAFF_ONLY`). **Không chọn tenant/trường trước khi đăng nhập**; không có URL theo tenant.
 
-**Giao diện đăng nhập — hướng A "Sân trường" (owner chốt 2026-11-21, [Confirmed]):** hai cột trên desktop, một cột ở chiều rộng điện thoại (< 768 px). Cột trái là **banner** nền `colorPrimary` nói rõ cổng quản trị vận hành **toàn bộ nền tảng EduWorld**, không chỉ việc dạy học của trường: logo + "EduWorld" + "Nền tảng học tập và game giáo dục", tiêu đề "Cổng quản trị EduWorld", dòng phụ "Soạn nội dung học tập, quản lý thế giới game và theo dõi học sinh — trong một nơi.", hình minh họa ghép từ hình khối đơn giản (thẻ câu hỏi, sách bài học, ghim bản đồ có ngôi sao của thế giới game, biểu đồ tiến bộ — màu lấy từ token: nền thẻ, `color.brand.secondary`, màu môn học; `aria-hidden`, không emoji, không tài sản art của game — R32) và danh sách 5 năng lực có icon nét nhỏ (`aria-hidden`): "Ngân hàng câu hỏi & đề thi", "Bài học & hoạt động tương tác", "Thế giới game: nhiệm vụ, vật phẩm, sự kiện", "Giao bài theo khối & theo dõi tiến bộ", "An toàn & kiểm duyệt cộng đồng" (dùng "khối", không "lớp" — ADR-0095). Cột phải: chọn ngôn ngữ, thẻ "Chào mừng thầy cô trở lại" / "Đăng nhập để tiếp tục công việc của bạn." với ô nhập cao 48 px, chữ 16 px, bo 12 px (theme `authTheme`, DESIGN_SYSTEM §4.1), hộp gợi ý cho học sinh và dòng cuối về bảo vệ dữ liệu. Link chính sách bảo mật và link mở game chỉ hiện khi cấu hình runtime có URL (R3); hiện chưa có khóa cấu hình nên chỉ giữ câu chữ. Điện thoại: banner thu thành dải đầu trang chỉ có logo và tiêu đề. Các màn `/forgot-password`, `/reset-password`, `/account-setup`, chọn đơn vị dùng chung khung này.
+**Giao diện đăng nhập — hướng A "Sân trường" (owner chốt 2026-11-21, [Confirmed]):** hai cột trên desktop, một cột ở chiều rộng điện thoại (< 768 px). Cột trái là **banner** nền `colorPrimary` nói rõ cổng quản trị vận hành **toàn bộ nền tảng EduWorld**, không chỉ việc dạy học của trường: logo + "EduWorld" + "Nền tảng học tập và game giáo dục", tiêu đề "Cổng quản trị EduWorld", dòng phụ "Soạn nội dung học tập, quản lý thế giới game và theo dõi học sinh — trong một nơi.", hình minh họa ghép từ hình khối đơn giản (thẻ câu hỏi, sách bài học, ghim bản đồ có ngôi sao của thế giới game, biểu đồ tiến bộ — màu lấy từ token: nền thẻ, `color.brand.secondary`, màu môn học; `aria-hidden`, không emoji, không tài sản art của game — R32) và danh sách 5 năng lực có icon nét nhỏ (`aria-hidden`): "Ngân hàng câu hỏi & đề thi", "Bài học & hoạt động tương tác", "Thế giới game: nhiệm vụ, vật phẩm, sự kiện", "Giao bài theo khối & theo dõi tiến bộ", "An toàn & kiểm duyệt cộng đồng" (dùng "khối", không "lớp" — ADR-0095). Cột phải: thẻ "Chào mừng thầy cô trở lại" / "Đăng nhập để tiếp tục công việc của bạn." (trên `/login` là bản tiếng Anh, xem đoạn dưới) với ô nhập cao 48 px, chữ 16 px, bo 12 px (theme `authTheme`, DESIGN_SYSTEM §4.1), hộp gợi ý cho học sinh và dòng cuối về bảo vệ dữ liệu. Link chính sách bảo mật và link mở game chỉ hiện khi cấu hình runtime có URL (R3); hiện chưa có khóa cấu hình nên chỉ giữ câu chữ. Điện thoại: banner thu thành dải đầu trang chỉ có logo và tiêu đề. Các màn `/forgot-password`, `/reset-password`, `/account-setup`, chọn đơn vị dùng chung khung này.
+
+**Ngôn ngữ màn đăng nhập (owner chốt 2026-11-23 — "Màn hình login luôn luôn là tiếng anh", [Confirmed]):** trang `/login` **luôn** hiển thị tiếng Anh (`en-US`) bất kể ngôn ngữ trình duyệt hay lựa chọn đã lưu (`ew.portal.prefs`), và **không có** điều khiển chọn ngôn ngữ. Chuỗi vẫn lấy từ catalog i18n (catalog `en`, không hardcode — R2, lint `i18next/no-literal-string`); thông điệp lỗi trên trang (ánh xạ Problem Details theo `code`) và thông báo (phiên hết hạn, đã đổi/đặt lại mật khẩu) cũng tiếng Anh; request `portalLogin` gửi `locale: en-US` và `Accept-Language: en-US`. Trang đăng nhập không ghi đè ngôn ngữ đã lưu: sau khi đăng nhập, ngôn ngữ đã lưu áp dụng như trước (nút nhanh VI/EN trên header). Các màn `/forgot-password`, `/reset-password`, `/account-setup`, chọn đơn vị giữ ngôn ngữ đã lưu và có nút nhanh ngôn ngữ (địa cầu + mã) phía trên thẻ.
 
 ```text
-Desktop (≥ 768 px)
+Desktop (≥ 768 px) — /login luôn tiếng Anh, không có chọn ngôn ngữ (owner 2026-11-23)
 ┌────────────────────────────────┬─────────────────────────────────────────┐
-│ [■] EduWorld                   │                Ngôn ngữ [Tiếng Việt ▾]  │
-│     Nền tảng học tập và game   │  ┌───────────────────────────────────┐  │
-│     giáo dục                   │  │ Chào mừng thầy cô trở lại         │  │
-│                                │  │ Đăng nhập để tiếp tục công việc   │  │
-│ Cổng quản trị EduWorld         │  │ của bạn.                          │  │
-│ Soạn nội dung học tập, quản lý │  │ Tên đăng nhập hoặc email          │  │
-│ thế giới game và theo dõi học  │  │ [ ad.truong.a                  ]  │  │
-│ sinh — trong một nơi.          │  │ Mật khẩu                          │  │
-│  (thẻ câu hỏi, sách, ghim bản  │  │ [ ••••••••                  👁 ]  │  │
-│   đồ ★, biểu đồ tiến bộ)       │  │ [           Đăng nhập           ] │  │
-│ [?] Ngân hàng câu hỏi & đề thi │  │ Quên mật khẩu?  Cần hỗ trợ? Liên  │  │
-│ [▭] Bài học & hoạt động tương  │  │                 hệ quản trị trường│  │
-│     tác                        │  └───────────────────────────────────┘  │
-│ [⌖] Thế giới game: nhiệm vụ,   │  👤 Em là học sinh? Hãy mở game         │
-│     vật phẩm, sự kiện          │     EduWorld để vào học nhé.            │
-│ [▥] Giao bài theo khối & theo  │  Dữ liệu học sinh được bảo vệ theo Nghị │
-│     dõi tiến bộ                │  định 13/2023. Nhớ đăng xuất khi dùng   │
-│ [⛉] An toàn & kiểm duyệt cộng  │  máy tính chung.                        │
-│     đồng                       │                                         │
+│ [■] EduWorld                   │                                         │
+│     Learning and educational   │  ┌───────────────────────────────────┐  │
+│     game platform              │  │ Welcome back, teachers            │  │
+│                                │  │ Sign in to continue your work.    │  │
+│ EduWorld administration portal │  │ Username or email                 │  │
+│ Author learning content, run   │  │ [ ad.truong.a                  ]  │  │
+│ the game world and follow      │  │ Password                          │  │
+│ students — all in one place.   │  │ [ ••••••••                  👁 ]  │  │
+│  (thẻ câu hỏi, sách, ghim bản  │  │ [            Sign in            ] │  │
+│   đồ ★, biểu đồ tiến bộ)       │  │ Forgot password?  Need help?      │  │
+│ [?] Question bank & exams      │  │   Contact your school administrator│ │
+│ [▭] Lessons & interactive      │  └───────────────────────────────────┘  │
+│     activities                 │  👤 Are you a student? Open the         │
+│ [⌖] Game world: quests, items, │     EduWorld game to start learning.    │
+│     events                     │  Student data is protected under Decree │
+│ [▥] Assign work by grade &     │  13/2023. Remember to sign out on       │
+│     follow progress            │  shared computers.                      │
+│ [⛉] Safety & community         │                                         │
+│     moderation                 │                                         │
 └────────────────────────────────┴─────────────────────────────────────────┘
 
 Mobile (< 768 px): một cột
 ┌────────────────────────────┐
 │ [■] EduWorld               │  ← banner thu gọn: logo + tiêu đề
-│ Cổng quản trị EduWorld     │
+│ EduWorld administration    │
+│ portal                     │
 ├────────────────────────────┤
-│        Ngôn ngữ [VI ▾]     │
-│ Chào mừng thầy cô trở lại  │
-│ Tên đăng nhập hoặc email   │
+│ Welcome back, teachers     │
+│ Username or email          │
 │ [ ad.truong.a           ]  │
-│ Mật khẩu                   │
+│ Password                   │
 │ [ ••••••••          👁 ]   │
-│ [       Đăng nhập       ]  │
-│ Quên mật khẩu?             │
-│ Cần hỗ trợ? Liên hệ quản   │
-│ trị trường                 │
-│ 👤 Em là học sinh? ...     │
-│ Dữ liệu học sinh được ...  │
+│ [        Sign in        ]  │
+│ Forgot password?           │
+│ Need help? Contact your    │
+│ school administrator       │
+│ 👤 Are you a student? ...  │
+│ Student data is ...        │
 └────────────────────────────┘
 ```
 
@@ -145,7 +147,7 @@ Mobile (< 768 px): một cột
 
 **Form đăng nhập (ADR-0091 mục 1):**
 
-- Một form gửi **một lần** tên đăng nhập/email và mật khẩu, kèm `device_id` (sinh ngẫu nhiên, lưu per-browser) và `locale`. **Không có ô mã xác thực 6 số** (owner chốt 2026-11-21: bỏ MFA của portal — [ADR-0094](../adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) thay ADR-0091 mục 2); portal không gửi `otp` và không nhớ cờ "lần trước dùng mã".
+- Một form gửi **một lần** tên đăng nhập/email và mật khẩu, kèm `device_id` (sinh ngẫu nhiên, lưu per-browser) và `locale` (luôn `en-US` — owner 2026-11-23). **Không có ô mã xác thực 6 số** (owner chốt 2026-11-21: bỏ MFA của portal — [ADR-0094](../adr/ADR-0094-bo-mfa-totp-cho-dang-nhap-admin-portal.md) thay ADR-0091 mục 2); portal không gửi `otp` và không nhớ cờ "lần trước dùng mã".
 - Không nhớ mật khẩu; trình duyệt chỉ nhớ ngôn ngữ và `device_id`.
 - Mọi lỗi xác thực (sai tên, sai mật khẩu, tài khoản bị khóa tạm) hiện **một** thông điệp chung (bảng lỗi bên dưới).
 - Giới hạn số lần thử theo username, theo `device_id` và toàn cục (không theo IP — R30): tham số `portal_login_rate` ([SECURITY_ARCHITECTURE §14](../10-security/SECURITY_ARCHITECTURE.md)).
@@ -337,14 +339,14 @@ Game song ngữ `vi` + `en` ([ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.m
 
 ### 1.6. Danh sách, bảng và dropdown (quy tắc phân trang)
 
-Quy tắc owner 2026-11-22 [Confirmed]: **dropdown tải toàn bộ lựa chọn và phải tìm được; bảng/lưới phải phân trang.** Backend luôn phân trang theo cursor ([API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting)).
+Quy tắc owner 2026-11-22 [Confirmed]: **dropdown tải toàn bộ lựa chọn và phải tìm được; bảng/lưới phải phân trang.** Owner 2026-11-23 [Confirmed]: trang của bảng/lưới do **truy vấn** cắt (keyset trong SQL, [API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting)), không bao giờ cắt trong bộ nhớ — kể cả các bảng danh mục quốc gia, tỉnh/thành, catalog permission và đợt kiểm tra của nghiên cứu (trước đây là danh sách có giới hạn); mọi bảng dùng `useCursorPages`. Backend luôn phân trang theo cursor ([API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting)).
 
 | Thành phần | Quy tắc |
 |---|---|
 | Bảng, lưới, danh sách hiển thị theo dòng | Phân trang theo cursor của server: hiện trang đầu (page size mặc định của API), nút **"Tải thêm"** nối trang kế khi `page.has_more`; không bao giờ tải hết. Hook dùng chung: `useCursorPages` (`apps/portal/src/shared/api/useCursorPages.ts`), `useCursorList` (workspace D), `usePagedList` (workspace C) |
 | Dữ liệu của dropdown/Select | Đọc **mọi** trang cursor bằng helper dùng chung `fetchAllPages`/`useAllPages` (`apps/portal/src/shared/api/fetchAllPages.ts`): mỗi request `limit: 100`, dừng khi `has_more = false`, cache bằng react-query; trần an toàn 5.000 mục — vượt thì cắt và hiện cảnh báo (`truncated`). **Không bao giờ** coi một lần gọi `limit: 100` là đủ |
 | Select | Chỉ dùng `SearchSelect` (`@eduworld/ops-ui`): luôn `showSearch`, lọc phía client không phân biệt hoa thường và dấu tiếng Việt (`viFilterOption`/`foldVi`: "da nang" tìm thấy "Đà Nẵng"), trạng thái rỗng rõ ràng ("Không có mục phù hợp"), cảnh báo khi danh sách bị cắt. Không cần tham số `q` của server chỉ để phục vụ dropdown |
-| Kiểm tra tự động | ESLint `ew/no-single-page-list` chặn `limit` ≥ 100 dạng literal và vòng lặp tự viết theo `next_cursor`; `no-restricted-imports` chặn `Select` của antd ngoài `SearchSelect` (ngoại lệ tạm: điều khiển header/đăng nhập của shell) |
+| Kiểm tra tự động | ESLint `ew/no-single-page-list` chặn `limit` ≥ 100 dạng literal và vòng lặp tự viết theo `next_cursor`; `no-restricted-imports` chặn `Select` của antd ngoài `SearchSelect` (không còn ngoại lệ: chọn workspace, đổi đơn vị làm việc, lọc tenant, tenant đích của header/shell đều là `SearchSelect`; trang đăng nhập không có chọn ngôn ngữ — owner 2026-11-23) |
 
 ## 2. Permission model
 
@@ -1030,7 +1032,7 @@ Mỗi màn dưới đây áp dụng bố cục §1.3 và editor §1.4. Lỗi API
 | Builder game (quest, challenge, boss, level/XP, achievement, item) | Cấu hình nội dung game | Game Designer, Live-ops | `ContentEditorShell`, graph/kéo-thả, thumbnail 3D, `GamePreviewFrame` | Soạn, preview Godot, gửi duyệt, publish, rollback, gán tenant | Cấu hình version, tham chiếu activity/scene | Như editor | Schema + tham chiếu tồn tại trong client manifest | `PERMISSION_DENIED`, `CONTENT_VERSION_CONFLICT` | `game.*` | Chỉ desktop |
 | Live dashboard | Giám sát vận hành | Live-ops, System Admin | StatisticCard, chart thời gian thực (làm mới 15–30 s), bảng sự kiện | Lọc tenant/khu vực, mở chi tiết, chuyển sang kiểm duyệt | CCU, phiên, trận, hàng chờ, tin bị chặn, lỗi | Bình thường / cảnh báo / sự cố | — | Mất kết nối gateway nội bộ ("Cần VPN") | `game.liveops.read` [Confirmed] | Desktop; tablet xem |
 | Quản lý tenant | Tạo/sửa tenant | System Admin | ProTable + ProForm | Tạo, kích hoạt/tắt, cấu hình SIS, gán nội dung | Mã, loại, trạng thái, số trường/học sinh | Đang hoạt động / tạm tắt | Mã tenant duy nhất, ≤ 64 ký tự | `CONFLICT` | `platform.tenant.manage` | Desktop |
-| Đăng nhập portal (`/login`, §1.3b) | Nhân sự đăng nhập không rời portal | Mọi nhân sự (học sinh bị chặn) | Bố cục hai cột hướng A "Sân trường" (§1.3b): form username/email + mật khẩu (không ô mã), chọn ngôn ngữ, link Quên mật khẩu, gợi ý cho học sinh | Đăng nhập (một request), đổi mật khẩu tạm, quên/đặt lại mật khẩu | Không lưu mật khẩu | Đang gửi, lỗi chung, cần thiết lập tài khoản, bị giới hạn số lần thử | Username/email ≤ 254 | `INVALID_CREDENTIALS`, `ACCOUNT_SETUP_REQUIRED`, `PORTAL_ACCESS_STAFF_ONLY`, `RATE_LIMITED` | Không cần token | Mọi breakpoint |
+| Đăng nhập portal (`/login`, §1.3b) | Nhân sự đăng nhập không rời portal | Mọi nhân sự (học sinh bị chặn) | Bố cục hai cột hướng A "Sân trường" (§1.3b): form username/email + mật khẩu (không ô mã), luôn tiếng Anh và không chọn ngôn ngữ (owner 2026-11-23), link Quên mật khẩu, gợi ý cho học sinh | Đăng nhập (một request), đổi mật khẩu tạm, quên/đặt lại mật khẩu | Không lưu mật khẩu | Đang gửi, lỗi chung, cần thiết lập tài khoản, bị giới hạn số lần thử | Username/email ≤ 254 | `INVALID_CREDENTIALS`, `ACCOUNT_SETUP_REQUIRED`, `PORTAL_ACCESS_STAFF_ONLY`, `RATE_LIMITED` | Không cần token | Mọi breakpoint |
 | Bật/tắt menu & action (§3.18) | Ngừng/mở lại menu, action của portal không cần deploy | System Admin | Tree + ProTable, chọn phạm vi platform/tenant, ModalForm lý do | Bật/tắt/kế thừa theo phạm vi, xem nhật ký | Danh mục (workspace → menu → action), mặc định, ghi đè tenant, hiệu lực, version | Bật / tắt / tắt do menu cha / khóa (không tắt được) | Lý do bắt buộc ≤ 1000 ký tự, `If-Match` | `FEATURE_NOT_DISABLEABLE`, `VERSION_MISMATCH`, `PERMISSION_DENIED` | `platform.feature_flag.write` | Desktop |
 
 

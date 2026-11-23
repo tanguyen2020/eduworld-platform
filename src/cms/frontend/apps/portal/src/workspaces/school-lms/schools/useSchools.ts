@@ -3,6 +3,7 @@
 // Hooks only call the API; status rules (pending_review → active, province required) are enforced by the server.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PAGE_SIZE, qk, useApi, usePagedList, type Schemas } from '../common/api';
+import { fetchAllPages } from '../../../shared/api/fetchAllPages';
 import { useSchoolLmsScope } from '../common/scope';
 
 export type School = Schemas['School'];
@@ -41,7 +42,9 @@ export function useActiveProvinces(enabled = true) {
   const scope = useSchoolLmsScope();
   return useQuery({
     queryKey: qk('provinces', scope, 'active'),
-    queryFn: async () => (await api.call(api.client.GET('/catalog/provinces', { params: { query: { status: 'active' } }, headers: scope.headers }))).items,
+    // dropdown: every page of the keyset list (fetchAllPages, ADMIN_PORTAL §1.6)
+    queryFn: async () =>
+      (await fetchAllPages<Province>((query) => api.call(api.client.GET('/catalog/provinces', { params: { query: { status: 'active', ...query } }, headers: scope.headers })))).items,
     enabled: scope.ready && enabled,
     staleTime: 10 * 60_000,
   });

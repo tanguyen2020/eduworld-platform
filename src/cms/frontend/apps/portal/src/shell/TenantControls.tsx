@@ -7,7 +7,8 @@
 //   pages follow the cursor while scrolling and a disabled tenant stays listed with "đã tắt" (F057 edge cases).
 // - TenantTargetField (F051-AC-25): mandatory target tenant of a System Admin write (optionally "Platform"), no
 //   "all tenants" choice. tenantColumn (F051-AC-23): standard "Tenant" column (name + type) for lists.
-import { App as AntApp, Form, Select, Tag, Typography, theme } from 'antd';
+import { SearchSelect } from '@eduworld/ops-ui';
+import { App as AntApp, Form, Tag, Typography, theme } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useState, type UIEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -65,12 +66,10 @@ const tenantOption = (x: TenantLike, t: Translate) => ({ value: x.tenant_id, lab
 export function TenantSwitcherView({ tenants, value, onChange }: { tenants: readonly TenantLike[]; value: string; onChange: (tenantId: string) => void }) {
   const { t } = useTranslation();
   return (
-    <Select
+    <SearchSelect<string>
       aria-label={t('shell.tenantSwitcher.label')}
       value={value}
       onChange={onChange}
-      showSearch
-      optionFilterProp="label"
       popupMatchSelectWidth={false}
       options={tenants.map((x) => tenantOption(x, t))}
     />
@@ -93,13 +92,12 @@ export function TenantFilterView({ options, value, onChange, search, onSearch, l
   const { t } = useTranslation();
   const { token } = theme.useToken();
   return (
-    <Select
+    <SearchSelect<string[]>
       mode="multiple"
       aria-label={t('shell.tenantFilter.label')}
       placeholder={t('shell.tenantFilter.all')}
       value={[...value]}
       onChange={onChange}
-      showSearch
       filterOption={false}
       searchValue={search}
       onSearch={(v) => onSearch(clampTenantSearch(v))}
@@ -139,8 +137,7 @@ export function TenantTargetField({ name = 'tenant_target', allowPlatform = fals
   const items = (options.data ?? []).map((x) => tenantOption(x, t));
   return (
     <Form.Item name={name} label={t('shell.tenantTarget.label')} rules={[{ required: true, message: t('shell.tenantTarget.required') }]}>
-      <Select
-        showSearch
+      <SearchSelect<string>
         filterOption={false}
         searchValue={search}
         onSearch={(v) => setSearch(clampTenantSearch(v))}

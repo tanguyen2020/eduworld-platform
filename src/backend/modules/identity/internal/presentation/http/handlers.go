@@ -18,22 +18,22 @@ import (
 // ---------- catalog ----------
 
 func (h Handlers) listCountries(w http.ResponseWriter, r *http.Request) {
-	out, err := h.Org.ListCountries(r.Context())
+	out, err := h.Org.ListCountries(r.Context(), list(r))
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"items": out})
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (h Handlers) listProvinces(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	out, err := h.Org.ListProvinces(r.Context(), q.Get("country"), q.Get("status"))
+	out, err := h.Org.ListProvinces(r.Context(), q.Get("country"), q.Get("status"), list(r))
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"items": out})
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (h Handlers) listCatalogSchools(w http.ResponseWriter, r *http.Request) {

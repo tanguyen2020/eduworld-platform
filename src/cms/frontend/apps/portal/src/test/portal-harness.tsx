@@ -93,9 +93,9 @@ export function stopPortals(): void {
   viewportWidth = 1440;
 }
 
-/** Fills and submits the /login form of the portal. */
+/** Fills and submits the /login form of the portal (always English — owner 2026-11-23). */
 export async function signIn(user: ReturnType<typeof userEvent.setup>, username: string, password = 'Demo@12345'): Promise<void> {
-  fireEvent.change(await screen.findByLabelText('Tên đăng nhập hoặc email'), { target: { value: username } });
-  fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: password } });
-  await user.click(screen.getByRole('button', { name: 'Đăng nhập' }));
+  fireEvent.change(await screen.findByLabelText('Username or email'), { target: { value: username } });
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: password } });
+  await user.click(screen.getByRole('button', { name: 'Sign in' }));
 }

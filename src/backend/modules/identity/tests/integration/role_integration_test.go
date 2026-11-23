@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -61,8 +62,30 @@ func TestRoles(t *testing.T) {
 		strings.Contains(r.raw, `"scope_kind":"platform"`) || !strings.Contains(r.raw, `"lms.student.read"`) {
 		t.Fatalf("tenant permissions: %d", r.status)
 	}
-	if r := h.do(t, "GET", "/admin/permissions", saTok, nil, nil); r.status != 200 || !strings.Contains(r.raw, `"game.quest.write"`) {
-		t.Fatalf("all permissions: %d", r.status)
+	// listAllPermissions is one keyset page (group_code, permission_code) read in SQL: walk every page (API_DESIGN §5)
+	seen := map[string]bool{}
+	last := ""
+	for path, i := "/admin/permissions?limit=50", 0; ; i++ {
+		r := h.do(t, "GET", path, saTok, nil, nil)
+		if r.status != 200 || i > 20 || r.body["catalog_version"] == "" {
+			t.Fatalf("all permissions page %d: %d %s", i, r.status, r.raw)
+		}
+		for _, it := range r.body["items"].([]any) {
+			p := it.(map[string]any)
+			k := p["group_code"].(string) + "\n" + p["code"].(string)
+			if seen[p["code"].(string)] {
+				t.Fatalf("permission %s repeated or out of order after %q", k, last)
+			}
+			seen[p["code"].(string)], last = true, k
+		}
+		pg := r.body["page"].(map[string]any)
+		if pg["has_more"] != true {
+			break
+		}
+		path = "/admin/permissions?limit=50&cursor=" + url.QueryEscape(pg["next_cursor"].(string))
+	}
+	if !seen["game.quest.write"] || !seen["lms.student.read"] {
+		t.Fatalf("all permissions: %d codes, game.quest.write=%v", len(seen), seen["game.quest.write"])
 	}
 
 	// AC-16: a custom tenant role with a platform permission → 422 PERMISSION_NOT_ALLOWED_FOR_SCOPE.

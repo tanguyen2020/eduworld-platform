@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/application/port/write"
 	ldb "github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/leaderboard"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/competition/internal/domain/ranking"
@@ -81,15 +82,12 @@ func nullStr(p *string) any {
 	return *p
 }
 
-// Ranking implements write.LeaderboardRepository and read.RankingReader: the board computed from the ledgers of the
-// tenant of ctx (competition_point_ledger, leaderboard_contributions or ratings), best first, ties broken by who reached
-// the value first. Sanctioned (restrict_competition), inactive or cleaned-up students are out (F106-AC-18); a board
-// across schools keeps only the schools allowing allow_cross_school_listing.
-func (RankingStore) Ranking(ctx context.Context, q write.BoardQuery) ([]port.BoardMember, error) {
-	t, err := tx(ctx)
-	if err != nil {
-		return nil, err
-	}
+// rankingBase is the board computed from the ledgers of the tenant of ctx (competition_point_ledger,
+// leaderboard_contributions or ratings) as SQL returning (student_id, value, at, k): the board is ordered by k DESC
+// (the value, or the raw rating), then who reached it first (at), then student_id. Sanctioned (restrict_competition),
+// inactive or cleaned-up students are out (F106-AC-18); a board across schools keeps only the schools allowing
+// allow_cross_school_listing. ok is false when the board has no ledger to read (a rating board without season).
+func rankingBase(q write.BoardQuery) (query string, args []any, ok bool) {
 	var students any
 	if q.Students != nil {
 		students = uuidArray(q.Students)
@@ -104,34 +102,47 @@ func (RankingStore) Ranking(ctx context.Context, q write.BoardQuery) ([]port.Boa
 			AND s.deleted_at IS NULL)
 		AND (NOT $8::boolean OR EXISTS (SELECT 1 FROM ref.schools sc WHERE sc.school_id = x.school_id AND sc.tenant_id = x.tenant_id
 			AND (sc.settings_subset->>'allow_cross_school_listing')::boolean IS TRUE))`
-	var rows *sql.Rows
 	f := q.Def.Filters
 	switch q.Def.Metric {
 	case ldb.MetricCompetitionPoints:
 		// tenancyguard:ok append-only ledger of the session tenant (RLS + explicit tenant_id, TA: no deleted_at); restrictions live rows
-		rows, err = t.QueryContext(ctx, `SELECT x.student_id, SUM(x.amount)::float8,
-			COALESCE(MAX(x.occurred_at) FILTER (WHERE x.amount <> 0), MIN(x.occurred_at))
-			FROM competition.competition_point_ledger x WHERE x.tenant_id = $1 AND x.occurred_at >= $2 AND x.occurred_at < $3`+common+`
+		return `SELECT x.student_id, SUM(x.amount)::float8 AS value,
+			COALESCE(MAX(x.occurred_at) FILTER (WHERE x.amount <> 0), MIN(x.occurred_at)) AS at, SUM(x.amount)::float8 AS k
+			FROM competition.competition_point_ledger x WHERE x.tenant_id = $1 AND x.occurred_at >= $2 AND x.occurred_at < $3` + common + `
 			AND ($9::uuid IS NULL OR x.subject_id = $9) AND ($10::uuid IS NULL OR x.topic_id = $10) AND ($11::text IS NULL OR x.mode = $11)
-			GROUP BY x.student_id HAVING SUM(x.amount) > 0 ORDER BY 2 DESC, 3, 1`, q.Tenant, q.Start, q.End, nullUUIDPtr(q.School),
-			nullInt(q.Grade), students, q.At, cross, nullUUIDPtr(f.SubjectID), nullUUIDPtr(f.TopicID), nullStr(f.Mode))
+			GROUP BY x.student_id HAVING SUM(x.amount) > 0`, []any{q.Tenant, q.Start, q.End, nullUUIDPtr(q.School),
+			nullInt(q.Grade), students, q.At, cross, nullUUIDPtr(f.SubjectID), nullUUIDPtr(f.TopicID), nullStr(f.Mode)}, true
 	case ldb.MetricRating:
 		if q.Season == nil || f.Mode == nil || f.SubjectID == nil {
-			return nil, nil
+			return "", nil, false
 		}
 		// tenancyguard:ok ratings of the session tenant (RLS + explicit tenant_id), live rows only
-		rows, err = t.QueryContext(ctx, `SELECT x.student_id, round(x.rating)::float8, x.updated_at FROM competition.ratings x
-			WHERE x.tenant_id = $1 AND x.updated_at >= $2 AND x.updated_at < $3 AND x.deleted_at IS NULL`+common+`
-			AND x.season_id = $9 AND x.mode = $10 AND x.subject_id = $11 AND x.games_played >= $12 AND x.rd <= $13
-			ORDER BY x.rating DESC, x.updated_at, x.student_id`, q.Tenant, q.Start, q.End, nullUUIDPtr(q.School), nullInt(q.Grade), students,
-			q.At, cross, *q.Season, *f.Mode, *f.SubjectID, q.Provisional.MinGames, q.Provisional.MaxRD)
+		return `SELECT x.student_id, round(x.rating)::float8 AS value, x.updated_at AS at, x.rating::float8 AS k FROM competition.ratings x
+			WHERE x.tenant_id = $1 AND x.updated_at >= $2 AND x.updated_at < $3 AND x.deleted_at IS NULL` + common + `
+			AND x.season_id = $9 AND x.mode = $10 AND x.subject_id = $11 AND x.games_played >= $12 AND x.rd <= $13`,
+			[]any{q.Tenant, q.Start, q.End, nullUUIDPtr(q.School), nullInt(q.Grade), students, q.At, cross, *q.Season, *f.Mode, *f.SubjectID,
+				q.Provisional.MinGames, q.Provisional.MaxRD}, true
 	default:
 		// tenancyguard:ok append-only contributions of the session tenant (RLS + explicit tenant_id, TA: no deleted_at)
-		rows, err = t.QueryContext(ctx, `SELECT x.student_id, SUM(x.amount)::float8, MAX(x.occurred_at)
-			FROM competition.leaderboard_contributions x WHERE x.tenant_id = $1 AND x.occurred_at >= $2 AND x.occurred_at < $3`+common+`
-			AND x.metric = $9 GROUP BY x.student_id HAVING SUM(x.amount) > 0 ORDER BY 2 DESC, 3, 1`, q.Tenant, q.Start, q.End,
-			nullUUIDPtr(q.School), nullInt(q.Grade), students, q.At, cross, q.Def.Metric)
+		return `SELECT x.student_id, SUM(x.amount)::float8 AS value, MAX(x.occurred_at) AS at, SUM(x.amount)::float8 AS k
+			FROM competition.leaderboard_contributions x WHERE x.tenant_id = $1 AND x.occurred_at >= $2 AND x.occurred_at < $3` + common + `
+			AND x.metric = $9 GROUP BY x.student_id HAVING SUM(x.amount) > 0`, []any{q.Tenant, q.Start, q.End,
+			nullUUIDPtr(q.School), nullInt(q.Grade), students, q.At, cross, q.Def.Metric}, true
 	}
+}
+
+// Ranking implements write.LeaderboardRepository (the rebuild of a Valkey board and the period close need every
+// member): the board computed from the ledgers, best first, ties broken by who reached the value first.
+func (RankingStore) Ranking(ctx context.Context, q write.BoardQuery) ([]port.BoardMember, error) {
+	t, err := tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	base, args, ok := rankingBase(q)
+	if !ok {
+		return nil, nil
+	}
+	rows, err := t.QueryContext(ctx, `SELECT b.student_id, b.value, b.at FROM (`+base+`) b ORDER BY b.k DESC, b.at, b.student_id`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("leaderboard ranking: %w", err)
 	}
@@ -145,6 +156,53 @@ func (RankingStore) Ranking(ctx context.Context, q write.BoardQuery) ([]port.Boa
 		}
 		m.Tick = ldb.Tick(q.Start, at)
 		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+// RankingWindow implements read.RankingReader: the stale path of getLeaderboard/getMyLeaderboardPosition while the
+// Valkey board is rebuilt (F106-AC-14) reads only what the page shows, ranked in SQL (row_number over the board order):
+// the members ranked [from, to], and the viewer's row with the members ranked [its rank − around, its rank + around];
+// the member count comes from the same statement (API_DESIGN §5: pagination in the query, never in memory).
+func (RankingStore) RankingWindow(ctx context.Context, q write.BoardQuery, w read.RankWindowQuery) (read.RankWindow, error) {
+	var out read.RankWindow
+	t, err := tx(ctx)
+	if err != nil {
+		return out, err
+	}
+	base, args, ok := rankingBase(q)
+	if !ok {
+		return out, nil
+	}
+	n := len(args)
+	var viewer any
+	if w.Viewer != nil {
+		viewer = *w.Viewer
+	}
+	args = append(args, w.From, w.To, viewer, w.Around)
+	// tenancyguard:ok ranks the rows of rankingBase (session tenant, live rows; the ledgers are append-only)
+	rows, err := t.QueryContext(ctx, fmt.Sprintf(`WITH b AS (`+base+`),
+		r AS (SELECT b.student_id, b.value, row_number() OVER (ORDER BY b.k DESC, b.at, b.student_id) AS rank FROM b),
+		me AS (SELECT r.rank FROM r WHERE $%[3]d::uuid IS NOT NULL AND r.student_id = $%[3]d::uuid)
+		SELECT (SELECT count(*) FROM b), r.student_id, r.value, r.rank
+		FROM (SELECT 1) one LEFT JOIN r ON r.rank BETWEEN $%[1]d AND $%[2]d
+			OR r.rank BETWEEN (SELECT me.rank FROM me) - $%[4]d AND (SELECT me.rank FROM me) + $%[4]d
+		ORDER BY r.rank`, n+1, n+2, n+3, n+4), args...)
+	if err != nil {
+		return out, fmt.Errorf("leaderboard ranking window: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var student uuid.NullUUID
+		var value sql.NullFloat64
+		var rank sql.NullInt64
+		if err := rows.Scan(&out.Total, &student, &value, &rank); err != nil {
+			return out, err
+		}
+		if !student.Valid {
+			continue
+		}
+		out.Rows = append(out.Rows, ldb.Ranked{Student: student.UUID, Rank: int(rank.Int64), Value: value.Float64})
 	}
 	return out, rows.Err()
 }

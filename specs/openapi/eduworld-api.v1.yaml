@@ -633,10 +633,12 @@ paths:
       tags: [catalog]
       operationId: listCountries
       x-portal-shell: true
-      summary: Danh mục quốc gia đang dùng (song ngữ theo Accept-Language)
+      summary: Danh mục quốc gia đang dùng (song ngữ theo Accept-Language); trang keyset theo country_code trong truy vấn (API_DESIGN §5)
       parameters:
         - { $ref: '#/components/parameters/TenantIdHeaderOptional' }
         - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -646,12 +648,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [items]
+                required: [items, page]
                 properties:
                   items:
                     type: array
-                    maxItems: 300
+                    maxItems: 100
                     items: { $ref: '#/components/schemas/Country' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
   /catalog/provinces:
     get:
@@ -672,21 +675,24 @@ paths:
           description: '`all`/`inactive` chỉ cho System Admin (`platform.catalog.write`)'
           schema: { type: string, enum: [active, inactive, all], default: active }
         - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
-          description: OK
+          description: OK (trang keyset (code, province_id) trong truy vấn — API_DESIGN §5)
           headers:
             ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema:
                 type: object
-                required: [items]
+                required: [items, page]
                 properties:
                   items:
                     type: array
-                    maxItems: 500
+                    maxItems: 100
                     items: { $ref: '#/components/schemas/Province' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
   /catalog/schools:
@@ -9805,15 +9811,17 @@ paths:
       security:
         - { keycloakAdminBearer: [] }
       x-internal: true
-      summary: Catalog permission đầy đủ (tenant + platform, scope_kind)
+      summary: Catalog permission đầy đủ (tenant + platform, scope_kind); trang keyset (group_code, permission_code) trong truy vấn (API_DESIGN §5)
       parameters:
         - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PermissionList' }
+              schema: { $ref: '#/components/schemas/PermissionPage' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403': { $ref: '#/components/responses/Forbidden' }
   /admin/user-roles:
@@ -11617,13 +11625,16 @@ paths:
       x-portal-action: action.platform_admin.moderation_switches.view
       summary: Trạng thái công tắc kiểm duyệt (platform và từng tenant, kèm giá trị hiệu lực)
       description: |
-        `platform` luôn có; `tenants` gồm các tenant của `tenant_ids` (System Admin, đọc liên tenant có audit) — không có
-        `tenant_ids` thì rỗng. Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
+        `platform` luôn có (mọi trang); `tenants` là một trang keyset theo `tenant_id` (`limit`/`cursor`) của các tenant của
+        `tenant_ids` (System Admin, đọc liên tenant có audit) — không có `tenant_ids` thì rỗng; chỉ các tenant của trang được đọc
+        từ DB (API_DESIGN §5). Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
       x-internal: true
       security:
         - keycloakAdminBearer: []
       parameters:
         - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -11631,12 +11642,14 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [platform, tenants]
+                required: [platform, tenants, page]
                 properties:
                   platform: { $ref: '#/components/schemas/ModerationSwitchState' }
                   tenants:
                     type: array
+                    maxItems: 100
                     items: { $ref: '#/components/schemas/ModerationSwitchState' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
         '403': { $ref: '#/components/responses/Forbidden' }
     put:
       x-service: chat
@@ -16036,9 +16049,11 @@ paths:
       security:
         - { keycloakAdminBearer: [] }
       x-internal: true
-      summary: Đợt kiểm tra của nghiên cứu — số mời/đã làm/vắng theo lớp, không có điểm
+      summary: Đợt kiểm tra của nghiên cứu — số mời/đã làm/vắng theo cụm, không có điểm; trang keyset (window_start, wave_id) trong truy vấn (API_DESIGN §5)
       parameters:
         - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -25639,6 +25654,16 @@ components:
           maxItems: 1000
           items: { $ref: '#/components/schemas/Permission' }
         catalog_version: { type: string, maxLength: 64 }
+    PermissionPage:
+      type: object
+      required: [items, catalog_version, page]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/Permission' }
+        catalog_version: { type: string, maxLength: 64 }
+        page: { $ref: '#/components/schemas/PageInfo' }
     RoleInput:
       type: object
       required: [code, name, permission_codes]
@@ -26677,12 +26702,13 @@ components:
               absent_count: { type: integer, minimum: 0 }
     EfficacyWaveList:
       type: object
-      required: [items]
+      required: [items, page]
       properties:
         items:
           type: array
           maxItems: 20
           items: { $ref: '#/components/schemas/EfficacyWave' }
+        page: { $ref: '#/components/schemas/PageInfo' }
     EfficacyWithdrawalCreate:
       type: object
       required: [scope, reason]

@@ -11,6 +11,7 @@ import (
 	entcountry "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/country"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/predicate"
 	entprovince "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/province"
+	entsucc "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/provincesuccession"
 	entschool "github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/ent/school"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/port/read"
@@ -34,10 +35,17 @@ func date(t *time.Time) *string {
 	return &s
 }
 
-// Countries returns every live country.
-func (m OrgModel) Countries(ctx context.Context) (out []dto.Country, err error) {
+// Countries returns one keyset page of the live countries (country_code order) — API_DESIGN §5.
+func (m OrgModel) Countries(ctx context.Context, after *string, limit int) (out []dto.Country, err error) {
 	err = m.Session.Read(ctx, func(ctx context.Context) error {
-		rows, err := cl(ctx).Country.Query().Order(ent.Asc(entcountry.FieldID)).All(ctx)
+		q := cl(ctx).Country.Query()
+		if after != nil {
+			q = q.Where(entcountry.IDGT(*after))
+		}
+		if limit > 0 {
+			q = q.Limit(limit)
+		}
+		rows, err := q.Order(ent.Asc(entcountry.FieldID)).All(ctx)
 		for _, r := range rows {
 			out = append(out, dto.Country{CountryCode: r.ID, Name: r.NameI18n, DefaultLocale: r.DefaultLocale, Status: r.Status,
 				Version: r.Version})
@@ -47,8 +55,9 @@ func (m OrgModel) Countries(ctx context.Context) (out []dto.Country, err error) 
 	return out, err
 }
 
-// Provinces returns the provinces of a country (optionally by status) with the successor code of former units.
-func (m OrgModel) Provinces(ctx context.Context, country, status string) (out []dto.Province, err error) {
+// Provinces returns one keyset page (code, province_id) of the provinces of a country (optionally by status) with the
+// successor code of the former units of the page — API_DESIGN §5.
+func (m OrgModel) Provinces(ctx context.Context, country, status string, after *page.Cursor, limit int) (out []dto.Province, err error) {
 	err = m.Session.Read(ctx, func(ctx context.Context) error {
 		c := cl(ctx)
 		q := c.Province.Query()
@@ -58,20 +67,37 @@ func (m OrgModel) Provinces(ctx context.Context, country, status string) (out []
 		if status != "" {
 			q = q.Where(entprovince.Status(status))
 		}
-		rows, err := q.Order(ent.Asc(entprovince.FieldCode)).All(ctx)
+		if after != nil {
+			key, id := after.Key, after.ID
+			q = q.Where(predicate.Province(func(s *sql.Selector) {
+				s.Where(sql.CompositeGT(s.Columns(entprovince.FieldCode, entprovince.FieldID), key, id))
+			}))
+		}
+		if limit > 0 {
+			q = q.Limit(limit)
+		}
+		rows, err := q.Order(ent.Asc(entprovince.FieldCode), ent.Asc(entprovince.FieldID)).All(ctx)
 		if err != nil {
 			return err
 		}
-		succ, err := c.ProvinceSuccession.Query().All(ctx)
+		pageIDs := make([]uuid.UUID, len(rows))
+		for i, r := range rows {
+			pageIDs[i] = r.ID
+		}
+		succ, err := c.ProvinceSuccession.Query().Where(entsucc.IDIn(pageIDs...)).All(ctx)
 		if err != nil {
 			return err
 		}
-		all, err := c.Province.Query().All(ctx)
+		newIDs := make([]uuid.UUID, 0, len(succ))
+		for _, s := range succ {
+			newIDs = append(newIDs, s.NewProvinceID)
+		}
+		successors, err := c.Province.Query().Where(entprovince.IDIn(newIDs...)).All(ctx)
 		if err != nil {
 			return err
 		}
 		codes := map[uuid.UUID]string{}
-		for _, p := range all {
+		for _, p := range successors {
 			codes[p.ID] = p.Code
 		}
 		next := map[uuid.UUID]string{}

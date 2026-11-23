@@ -33,35 +33,6 @@ type PageInput struct {
 	Limit  int
 }
 
-// paginate pages an ordered list in memory: the lists of a curriculum version are bounded by the import limits
-// (≤ 200 subject × grade, ≤ 500 topics each), so the read model returns them whole and the cursor is the id of the
-// last row.
-func paginate[T any](items []T, id func(T) uuid.UUID, in PageInput, codec *page.Codec) (Page[T], error) {
-	limit := page.Limit(in.Limit)
-	start := 0
-	cur, err := codec.Decode(in.Cursor)
-	if err != nil {
-		return Page[T]{}, problem.New(problem.BadRequest, "invalid cursor")
-	}
-	if cur != nil {
-		i := slices.IndexFunc(items, func(x T) bool { return id(x) == cur.ID })
-		if i < 0 {
-			return Page[T]{}, problem.New(problem.BadRequest, "invalid cursor")
-		}
-		start = i + 1
-	}
-	end := min(start+limit, len(items))
-	out := Page[T]{Data: items[start:end], Limit: limit, HasMore: end < len(items)}
-	if out.HasMore {
-		s := codec.Encode(page.Cursor{ID: id(items[end-1])})
-		out.NextCursor = &s
-	}
-	if out.Data == nil {
-		out.Data = []T{}
-	}
-	return out, nil
-}
-
 // Curriculum holds the read side of the curriculum (F021): CMS lists and details (curriculum.read) and the public
 // reads of /learning/* (any principal of the tenant, published versions only).
 type Curriculum struct {
@@ -89,13 +60,17 @@ func (q Curriculum) ListCurricula(ctx context.Context, ownerScope string, in Pag
 	if err := q.cms(ctx); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kText)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		cs, err := q.Model.Curricula(ctx, ownerScope)
+		cs, err := q.Model.Curricula(ctx, ownerScope, seek)
 		if err != nil {
 			return err
 		}
-		out, err = paginate(cs, func(c dto.Curriculum) uuid.UUID { return c.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(cs, limit, q.Cursors, func(c dto.Curriculum) (uuid.UUID, []any) { return c.ID, []any{c.Code} })
+		return nil
 	})
 	return out, err
 }
@@ -121,13 +96,17 @@ func (q Curriculum) ListVersions(ctx context.Context, curriculumID uuid.UUID, in
 	if err := q.cms(ctx); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kInt)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		vs, err := q.Model.Versions(ctx, curriculumID)
+		vs, err := q.Model.Versions(ctx, curriculumID, seek)
 		if err != nil {
 			return err
 		}
-		out, err = paginate(vs, func(v dto.CurriculumVersion) uuid.UUID { return v.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(vs, limit, q.Cursors, func(v dto.CurriculumVersion) (uuid.UUID, []any) { return v.ID, []any{v.VersionNo} })
+		return nil
 	})
 	return out, err
 }
@@ -165,13 +144,17 @@ func (q Curriculum) ListSubjects(ctx context.Context, grade *int, in PageInput) 
 	if err := q.cms(ctx); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kText)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		ss, err := q.Model.Subjects(ctx, grade)
+		ss, err := q.Model.Subjects(ctx, grade, seek)
 		if err != nil {
 			return err
 		}
-		out, err = paginate(ss, func(s dto.Subject) uuid.UUID { return s.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(ss, limit, q.Cursors, func(s dto.Subject) (uuid.UUID, []any) { return s.ID, []any{s.Code} })
+		return nil
 	})
 	return out, err
 }
@@ -183,20 +166,24 @@ func (q Curriculum) ListTopics(ctx context.Context, versionID uuid.UUID, subject
 	if err := q.cms(ctx); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kInt, kInt, kText)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
 		if _, err := q.version(ctx, versionID); err != nil {
 			if pe, ok := asProblem(err); ok && pe.Code == problem.NotFound {
-				out = Page[dto.Topic]{Data: []dto.Topic{}, Limit: page.Limit(in.Limit)}
+				out = Page[dto.Topic]{Data: []dto.Topic{}, Limit: limit}
 				return nil
 			}
 			return err
 		}
-		ts, err := q.Model.Topics(ctx, read.TopicFilter{VersionIDs: []uuid.UUID{versionID}, SubjectID: subject, GradeLevel: grade})
+		ts, err := q.Model.Topics(ctx, read.TopicFilter{VersionIDs: []uuid.UUID{versionID}, SubjectID: subject, GradeLevel: grade}, seek)
 		if err != nil {
 			return err
 		}
-		out, err = paginate(ts, func(t dto.Topic) uuid.UUID { return t.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(ts, limit, q.Cursors, func(t dto.Topic) (uuid.UUID, []any) { return t.ID, []any{t.GradeLevel, t.SortOrder, t.Code} })
+		return nil
 	})
 	return out, err
 }
@@ -222,48 +209,47 @@ func (q Curriculum) ListObjectives(ctx context.Context, in ObjectiveListInput) (
 	if in.VersionID == nil && in.TopicID == nil && in.SectionID == nil {
 		return out, problem.Invalid("curriculum_version_id", problem.SubRequired, "give curriculum_version_id, topic_id or textbook_section_id")
 	}
+	seek, limit, err := seekOf(q.Cursors, in.Page, kInt, kText)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
 		f := read.ObjectiveFilter{TopicID: in.TopicID, SubjectID: in.SubjectID, GradeLevel: in.Grade, SectionID: in.SectionID, YccdRef: in.YccdRef}
 		if in.VersionID != nil {
 			f.VersionIDs = []uuid.UUID{*in.VersionID}
 		}
-		los, err := q.Model.Objectives(ctx, f)
+		out = Page[dto.Objective]{Data: []dto.Objective{}, Limit: limit}
+		live, err := q.liveVersionIDs(ctx, f)
+		if err != nil || len(live) == 0 {
+			return err
+		}
+		f.VersionIDs = live
+		los, err := q.Model.Objectives(ctx, f, seek)
 		if err != nil {
 			return err
 		}
-		los, err = q.liveObjectives(ctx, los)
-		if err != nil {
-			return err
-		}
-		out, err = paginate(los, func(o dto.Objective) uuid.UUID { return o.ID }, in.Page, q.Cursors)
-		return err
+		out = keysetPage(los, limit, q.Cursors, objectiveKey)
+		return nil
 	})
 	return out, err
 }
 
-// liveObjectives keeps the objectives whose version (and curriculum) is visible and live.
-func (q Curriculum) liveObjectives(ctx context.Context, los []dto.Objective) ([]dto.Objective, error) {
-	seen := map[uuid.UUID]bool{}
-	var vids []uuid.UUID
-	for _, o := range los {
-		if !seen[o.VersionID] {
-			seen[o.VersionID] = true
-			vids = append(vids, o.VersionID)
-		}
+func objectiveKey(o dto.Objective) (uuid.UUID, []any) { return o.ID, []any{o.SortOrder, o.Code} }
+
+// liveVersionIDs returns the versions of the objectives matching f whose version (and curriculum) is visible and live,
+// so the keyset read of the objectives filters them in SQL (curriculum_version_id IN …) instead of after the page.
+func (q Curriculum) liveVersionIDs(ctx context.Context, f read.ObjectiveFilter) ([]uuid.UUID, error) {
+	vids, err := q.Model.ObjectiveVersionIDs(ctx, f)
+	if err != nil || len(vids) == 0 {
+		return nil, err
 	}
 	vs, err := q.Model.VersionsByID(ctx, vids)
 	if err != nil {
 		return nil, err
 	}
-	live := map[uuid.UUID]bool{}
+	out := make([]uuid.UUID, 0, len(vs))
 	for _, v := range vs {
-		live[v.ID] = true
-	}
-	out := los[:0:0]
-	for _, o := range los {
-		if live[o.VersionID] {
-			out = append(out, o)
-		}
+		out = append(out, v.ID)
 	}
 	return out, nil
 }
@@ -275,20 +261,24 @@ func (q Curriculum) ListCompetencies(ctx context.Context, versionID uuid.UUID, i
 	if err := q.cms(ctx); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kText)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
 		if _, err := q.version(ctx, versionID); err != nil {
 			if pe, ok := asProblem(err); ok && pe.Code == problem.NotFound {
-				out = Page[dto.Competency]{Data: []dto.Competency{}, Limit: page.Limit(in.Limit)}
+				out = Page[dto.Competency]{Data: []dto.Competency{}, Limit: limit}
 				return nil
 			}
 			return err
 		}
-		cs, err := q.Model.Competencies(ctx, versionID)
+		cs, err := q.Model.Competencies(ctx, versionID, seek)
 		if err != nil {
 			return err
 		}
-		out, err = paginate(cs, func(c dto.Competency) uuid.UUID { return c.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(cs, limit, q.Cursors, func(c dto.Competency) (uuid.UUID, []any) { return c.ID, []any{c.Code} })
+		return nil
 	})
 	return out, err
 }
@@ -317,7 +307,7 @@ func (q Curriculum) LoMappings(ctx context.Context, curriculumID uuid.UUID, vers
 		if v.SupersedesID == nil {
 			return nil
 		}
-		old, err := q.Model.Objectives(ctx, read.ObjectiveFilter{VersionIDs: []uuid.UUID{*v.SupersedesID}})
+		old, err := q.Model.Objectives(ctx, read.ObjectiveFilter{VersionIDs: []uuid.UUID{*v.SupersedesID}}, read.Seek{})
 		if err != nil {
 			return err
 		}
@@ -340,13 +330,17 @@ func (q Curriculum) ListSeries(ctx context.Context, in PageInput) (out Page[dto.
 	if err := q.cms(ctx); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kText)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		ss, err := q.Model.TextbookSeries(ctx)
+		ss, err := q.Model.TextbookSeries(ctx, seek)
 		if err != nil {
 			return err
 		}
-		out, err = paginate(ss, func(s dto.TextbookSeries) uuid.UUID { return s.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(ss, limit, q.Cursors, func(s dto.TextbookSeries) (uuid.UUID, []any) { return s.ID, []any{s.Code} })
+		return nil
 	})
 	return out, err
 }
@@ -358,13 +352,17 @@ func (q Curriculum) ListTextbooks(ctx context.Context, f read.TextbookFilter, in
 	if err := q.cms(ctx); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kInt, kInt)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		ts, err := q.Model.Textbooks(ctx, f)
+		ts, err := q.Model.Textbooks(ctx, f, seek)
 		if err != nil {
 			return err
 		}
-		out, err = paginate(ts, func(t dto.Textbook) uuid.UUID { return t.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(ts, limit, q.Cursors, func(t dto.Textbook) (uuid.UUID, []any) { return t.ID, []any{t.GradeLevel, t.Volume} })
+		return nil
 	})
 	return out, err
 }
@@ -376,13 +374,17 @@ func (q Curriculum) ListSections(ctx context.Context, textbookID uuid.UUID, in P
 	if err := q.cms(ctx); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kInt)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		ss, err := q.Model.Sections(ctx, textbookID)
+		ss, err := q.Model.Sections(ctx, textbookID, seek)
 		if err != nil {
 			return err
 		}
-		out, err = paginate(ss, func(s dto.TextbookSection) uuid.UUID { return s.ID }, in, q.Cursors)
-		return err
+		out = keysetPage(ss, limit, q.Cursors, func(s dto.TextbookSection) (uuid.UUID, []any) { return s.ID, []any{s.LessonNo} })
+		return nil
 	})
 	return out, err
 }
@@ -436,7 +438,7 @@ func (q Curriculum) fileOf(ctx context.Context, curriculumID uuid.UUID, versionN
 	if err != nil {
 		return dto.CurriculumFile{}, err
 	}
-	subjects, err := q.Model.Subjects(ctx, nil)
+	subjects, err := q.Model.Subjects(ctx, nil, read.Seek{})
 	if err != nil {
 		return dto.CurriculumFile{}, err
 	}
@@ -444,7 +446,7 @@ func (q Curriculum) fileOf(ctx context.Context, curriculumID uuid.UUID, versionN
 	for _, s := range subjects {
 		subjectCode[s.ID] = s.Code
 	}
-	comps, err := q.Model.Competencies(ctx, v.ID)
+	comps, err := q.Model.Competencies(ctx, v.ID, read.Seek{})
 	if err != nil {
 		return dto.CurriculumFile{}, err
 	}
@@ -460,11 +462,11 @@ func (q Curriculum) fileOf(ctx context.Context, curriculumID uuid.UUID, versionN
 		}
 		f.Competencies = append(f.Competencies, fc)
 	}
-	topics, err := q.Model.Topics(ctx, read.TopicFilter{VersionIDs: []uuid.UUID{v.ID}})
+	topics, err := q.Model.Topics(ctx, read.TopicFilter{VersionIDs: []uuid.UUID{v.ID}}, read.Seek{})
 	if err != nil {
 		return f, err
 	}
-	los, err := q.Model.Objectives(ctx, read.ObjectiveFilter{VersionIDs: []uuid.UUID{v.ID}})
+	los, err := q.Model.Objectives(ctx, read.ObjectiveFilter{VersionIDs: []uuid.UUID{v.ID}}, read.Seek{})
 	if err != nil {
 		return f, err
 	}
@@ -543,7 +545,7 @@ func (q Curriculum) today() time.Time {
 // curriculum, else the published version whose effective range contains today (highest version), else the release
 // pointer.
 func (q Curriculum) applied(ctx context.Context, p authz.Principal, grade *int) ([]AppliedCurriculum, error) {
-	cs, err := q.Model.Curricula(ctx, "")
+	cs, err := q.Model.Curricula(ctx, "", read.Seek{})
 	if err != nil {
 		return nil, err
 	}
@@ -574,7 +576,7 @@ func (q Curriculum) applied(ctx context.Context, p authz.Principal, grade *int) 
 	today := q.today()
 	var out []AppliedCurriculum
 	for _, c := range cs {
-		vs, err := q.Model.Versions(ctx, c.ID)
+		vs, err := q.Model.Versions(ctx, c.ID, read.Seek{})
 		if err != nil {
 			return nil, err
 		}
@@ -643,7 +645,7 @@ func (q Curriculum) PublicSubjects(ctx context.Context, grade *int) (out []dto.S
 		return nil, err
 	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		out, err = q.Model.Subjects(ctx, grade)
+		out, err = q.Model.Subjects(ctx, grade, read.Seek{})
 		return err
 	})
 	return out, err
@@ -682,7 +684,7 @@ func (q Curriculum) PublicTopics(ctx context.Context, curriculumID, subject *uui
 			return err
 		}
 		lang = l
-		out, err = q.Model.Topics(ctx, read.TopicFilter{VersionIDs: ids, SubjectID: subject, GradeLevel: grade})
+		out, err = q.Model.Topics(ctx, read.TopicFilter{VersionIDs: ids, SubjectID: subject, GradeLevel: grade}, read.Seek{})
 		return err
 	})
 	return out, lang, err
@@ -705,21 +707,27 @@ func (q Curriculum) PublicObjectives(ctx context.Context, in PublicObjectiveInpu
 	if err != nil {
 		return out, "", err
 	}
+	seek, limit, err := seekOf(q.Cursors, in.Page, kInt, kText)
+	if err != nil {
+		return out, "", err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
 		ids, l, err := q.appliedVersions(ctx, p, in.CurriculumID, in.Grade)
 		if err != nil {
 			return err
 		}
 		lang = l
-		var los []dto.Objective
-		if len(ids) > 0 {
-			if los, err = q.Model.Objectives(ctx, read.ObjectiveFilter{VersionIDs: ids, TopicID: in.TopicID, SubjectID: in.SubjectID,
-				GradeLevel: in.Grade}); err != nil {
-				return err
-			}
+		out = Page[dto.Objective]{Data: []dto.Objective{}, Limit: limit}
+		if len(ids) == 0 {
+			return nil
 		}
-		out, err = paginate(los, func(o dto.Objective) uuid.UUID { return o.ID }, in.Page, q.Cursors)
-		return err
+		los, err := q.Model.Objectives(ctx, read.ObjectiveFilter{VersionIDs: ids, TopicID: in.TopicID, SubjectID: in.SubjectID,
+			GradeLevel: in.Grade}, seek)
+		if err != nil {
+			return err
+		}
+		out = keysetPage(los, limit, q.Cursors, objectiveKey)
+		return nil
 	})
 	return out, lang, err
 }
@@ -733,7 +741,7 @@ func (q Curriculum) PublicObjective(ctx context.Context, id uuid.UUID) (out dto.
 		return out, "", err
 	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		los, err := q.Model.Objectives(ctx, read.ObjectiveFilter{IDs: []uuid.UUID{id}})
+		los, err := q.Model.Objectives(ctx, read.ObjectiveFilter{IDs: []uuid.UUID{id}}, read.Seek{})
 		if err != nil {
 			return err
 		}

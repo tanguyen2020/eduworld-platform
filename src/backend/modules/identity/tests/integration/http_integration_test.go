@@ -221,8 +221,13 @@ func TestIdentityHTTP(t *testing.T) {
 		t.Fatalf("former province: %d %s", r.status, r.raw)
 	}
 	// Catalog for any portal user.
-	if r := h.do(t, "GET", "/catalog/provinces?country=VN&status=active", taTok, nil, nil); r.status != 200 || len(r.body["items"].([]any)) != 34 {
+	if r := h.do(t, "GET", "/catalog/provinces?country=VN&status=active&limit=100", taTok, nil, nil); r.status != 200 || len(r.body["items"].([]any)) != 34 {
 		t.Fatalf("provinces: %d", r.status)
+	}
+	// one keyset page in SQL (API_DESIGN §5): the default page is 20 rows with a cursor to the next one
+	if r := h.do(t, "GET", "/catalog/provinces?country=VN&status=active", taTok, nil, nil); r.status != 200 || len(r.body["items"].([]any)) != 20 ||
+		r.body["page"].(map[string]any)["has_more"] != true {
+		t.Fatalf("provinces default page: %d %s", r.status, r.raw)
 	}
 
 	// OQ F057-3: list items carry the version If-Match expects (tenant updated once above → 2).

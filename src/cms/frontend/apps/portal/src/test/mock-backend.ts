@@ -127,6 +127,19 @@ export const problem = (status: number, code: string, extra: Record<string, unkn
     headers: { 'Content-Type': 'application/problem+json' },
   });
 
+/**
+ * MOCK cursor page (test only) of a list the backend reads as a keyset page in SQL (owner rule 2026-11-23): honours
+ * `limit` (default `defaultLimit`, max 100) and `cursor` (an opaque "c<offset>" here), returns `{ [key]: rows, page }`.
+ */
+export function cursorPage(rows: readonly unknown[], q: URLSearchParams, key: 'items' | 'data' = 'items', defaultLimit = 20) {
+  const limit = Math.min(Number(q.get('limit') ?? defaultLimit) || defaultLimit, 100);
+  const cur = q.get('cursor');
+  const from = cur ? Number(cur.replace(/^c/, '')) : 0;
+  const slice = rows.slice(from, from + limit);
+  const more = from + limit < rows.length;
+  return { [key]: slice, page: { has_more: more, next_cursor: more ? `c${from + limit}` : null, limit } };
+}
+
 const b64url = (s: string) => btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 /** MOCK JWT (unsigned, test only) carrying `sub` so the shell can key per-viewer storage. */

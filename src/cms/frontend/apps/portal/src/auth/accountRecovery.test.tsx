@@ -34,7 +34,7 @@ describe('account setup (F051-AC-31)', () => {
     fireEvent.change(screen.getByLabelText('Mật khẩu mới'), { target: { value: 'LongEnough@2026' } });
     fireEvent.change(screen.getByLabelText('Nhập lại mật khẩu mới'), { target: { value: 'LongEnough@2026' } });
     await user.click(screen.getByRole('button', { name: 'Lưu và đăng nhập lại' }));
-    expect(await screen.findByText('Đã đổi mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.')).toBeInTheDocument();
+    expect(await screen.findByText('Password changed. Sign in with your new password.')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
     expect(backend.calls('POST', '/auth/portal/setup:password')).toHaveLength(2);
     expect(setupTicketStore.get()).toBeNull();
@@ -62,7 +62,7 @@ describe('account setup (F051-AC-31)', () => {
     fireEvent.change(screen.getByLabelText('Mật khẩu mới'), { target: { value: 'LongEnough@2026' } });
     fireEvent.change(screen.getByLabelText('Nhập lại mật khẩu mới'), { target: { value: 'LongEnough@2026' } });
     await user.click(screen.getByRole('button', { name: 'Lưu và đăng nhập lại' }));
-    expect(await screen.findByText('Phiên thiết lập tài khoản đã hết hạn. Vui lòng đăng nhập lại.')).toBeInTheDocument();
+    expect(await screen.findByText('The account setup has expired. Please sign in again.')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
   });
 
@@ -96,7 +96,7 @@ describe('forgot and reset password (F051-AC-32)', () => {
     fireEvent.change(await screen.findByLabelText('Mật khẩu mới'), { target: { value: 'LongEnough@2026' } });
     fireEvent.change(screen.getByLabelText('Nhập lại mật khẩu mới'), { target: { value: 'LongEnough@2026' } });
     await first.user.click(screen.getByRole('button', { name: 'Đặt lại mật khẩu' }));
-    expect(await screen.findByText('Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.')).toBeInTheDocument();
+    expect(await screen.findByText('Password reset. Sign in with your new password.')).toBeInTheDocument();
     expect(first.backend.calls('POST', '/auth/portal/password:reset')[0]!.body).toMatchObject({ token: RESET });
   });
 

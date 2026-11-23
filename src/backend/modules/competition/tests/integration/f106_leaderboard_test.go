@@ -429,3 +429,80 @@ func TestF106LeaderboardAuthzTenant(t *testing.T) {
 	}
 	authztest.Cover(t, "getMyLeaderboardPosition", authztest.CrossTenant, authztest.RoleDenied)
 }
+
+// Owner rule 2026-11-23 (API_DESIGN §5): the stale path of getLeaderboard (board not built in Valkey) ranks and cuts the
+// board in SQL — staff pages of 2 walk the whole board in order without duplicates or gaps, the count comes from the
+// same query, a student's own place (getMyLeaderboardPosition) is ranked in SQL too, and tenant B never sees tenant A.
+func TestF106StaleBoardWindowPages(t *testing.T) {
+	r := setupRank(t)
+	now := r.clock.Now()
+	ks := []kid{r.kid(r.tenantA, r.schoolA, 7), r.kid(r.tenantA, r.schoolA, 7), r.kid(r.tenantA, r.schoolA, 7), r.kid(r.tenantA, r.schoolA, 7),
+		r.kid(r.tenantA, r.schoolA, 7)}
+	// 50, 40 (first), 40 (later), 30, 10 → expected order ks[0..4]
+	r.points(ks[0], 50, now.Add(-5*time.Minute))
+	r.points(ks[1], 40, now.Add(-4*time.Minute))
+	r.points(ks[2], 40, now.Add(-3*time.Minute))
+	r.points(ks[3], 30, now.Add(-2*time.Minute))
+	r.points(ks[4], 10, now.Add(-1*time.Minute))
+	bk := r.kid(r.tenantB, r.schoolB, 7)
+	r.points(bk, 99, now)
+	staff := r.staffAt(r.tenantA, r.schoolA, httpxtest.PortalClient)
+	base := "/leaderboards/" + lbArenaWeekly.String() + "?scope_id=" + r.schoolA.String() + "&grade_level=7&limit=2"
+	var got []string
+	ranks := []float64{}
+	cursor := ""
+	for i := 0; i < 5; i++ {
+		path := base
+		if cursor != "" {
+			path += "&cursor=" + cursor
+		}
+		res := r.staffGet(staff, r.tenantA, path)
+		if res.status != http.StatusOK || res.body["stale"] != true {
+			t.Fatalf("page %d: %d %s", i+1, res.status, res.raw)
+		}
+		es := entriesOf(res)
+		if len(es) > 2 {
+			t.Fatalf("page %d larger than the limit: %s", i+1, res.raw)
+		}
+		for _, e := range es {
+			got = append(got, nickOf(e))
+			ranks = append(ranks, e["rank"].(float64))
+		}
+		pg := res.body["page"].(map[string]any)
+		if pg["has_more"] != true {
+			if pg["next_cursor"] != nil {
+				t.Fatalf("last page with a cursor: %s", res.raw)
+			}
+			break
+		}
+		if len(es) != 2 {
+			t.Fatalf("short page with has_more: %s", res.raw)
+		}
+		cursor = pg["next_cursor"].(string)
+	}
+	want := []string{ks[0].nickname, ks[1].nickname, ks[2].nickname, ks[3].nickname, ks[4].nickname}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("pages = %v, want %v", got, want)
+	}
+	for i, rk := range ranks {
+		if int(rk) != i+1 {
+			t.Fatalf("ranks %v: gap or duplicate", ranks)
+		}
+	}
+	// the viewer's own place is ranked in SQL (rank 4 of 5), never another tenant's member
+	me := r.board(lbArenaWeekly, ks[3], "")
+	if m, _ := me.body["me"].(map[string]any); me.status != http.StatusOK || m == nil || m["rank"].(float64) != 4 {
+		t.Fatalf("student rank: %d %s", me.status, me.raw)
+	}
+	if strings.Contains(me.raw, bk.nickname) {
+		t.Fatalf("tenant B member on a tenant A board: %s", me.raw)
+	}
+	pos := r.get(ks[3], "/leaderboards/"+lbArenaWeekly.String()+"/me")
+	if m, _ := pos.body["me"].(map[string]any); pos.status != http.StatusOK || m == nil || m["rank"].(float64) != 4 {
+		t.Fatalf("getMyLeaderboardPosition: %d %s", pos.status, pos.raw)
+	}
+	// tenant B: its own board holds its member only
+	if res := r.board(lbArenaWeekly, bk, ""); res.status != http.StatusOK || strings.Contains(res.raw, ks[0].nickname) {
+		t.Fatalf("tenant B board: %d %s", res.status, res.raw)
+	}
+}

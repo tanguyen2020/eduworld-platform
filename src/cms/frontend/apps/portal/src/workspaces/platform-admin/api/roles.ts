@@ -8,13 +8,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../../../shared/api/middleware/problem';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
-import { useAllPages } from '../../../shared/api/fetchAllPages';
+import { fetchAllPages, useAllPages } from '../../../shared/api/fetchAllPages';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { LIMITS } from '../limits';
-import { useCursorList, usePlatformApi, type CursorPage, type PageInfo, type Schemas } from './common';
+import { pageQuery, useCursorList, usePlatformApi, type CursorPage, type PageInfo, type Schemas } from './common';
 
 export type Role = Schemas['Role'];
 export type RoleInput = Schemas['RoleInput'];
 export type PermissionList = Schemas['PermissionList'];
+export type PermissionPage = Schemas['PermissionPage'];
+export type Permission = Schemas['Permission'];
 export type PermissionScopeKind = Schemas['PermissionScopeKind'];
 
 export const SCOPE_KINDS: readonly PermissionScopeKind[] = ['platform', 'tenant'];
@@ -36,13 +39,33 @@ export function rejectedPermissions(error: unknown, sent: readonly string[]): st
     .filter((x): x is string => !!x);
 }
 
+/**
+ * The whole permission catalog for the role editor's picker: every cursor page of listAllPermissions (fetchAllPages,
+ * ADMIN_PORTAL §1.6); `catalog_version` from the first page, `truncated` when the safety cap cut the list.
+ */
 export function usePermissionCatalog() {
   const api = usePlatformApi();
   return useQuery({
-    queryKey: ['platform', 'permission-catalog'],
-    queryFn: () => api.call<PermissionList>(api.client.GET('/admin/permissions')),
+    queryKey: ['platform', 'permission-catalog', 'all'],
+    queryFn: async () => {
+      let version = '';
+      const all = await fetchAllPages<Permission>(async (query) => {
+        const p = await api.call<PermissionPage>(api.client.GET('/admin/permissions', { params: { query } }));
+        version ||= p.catalog_version;
+        return p;
+      });
+      return { items: all.items, catalog_version: version, truncated: all.truncated };
+    },
     staleTime: 60_000,
   });
+}
+
+/** Read-only catalog grid: cursor pages of listAllPermissions (keyset in the query, owner rule 2026-11-23 — "Tải thêm"). */
+export function usePermissionCatalogPages() {
+  const api = usePlatformApi();
+  return useCursorPages<Permission, PermissionPage>(['platform', 'permission-catalog', 'pages'], (cursor) =>
+    api.call<PermissionPage>(api.client.GET('/admin/permissions', { params: { query: pageQuery(cursor) } })),
+  );
 }
 
 export function useRoleList(roleScopeKind: PermissionScopeKind | undefined) {

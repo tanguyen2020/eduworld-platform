@@ -1,33 +1,19 @@
 // AuthLayout (F051 T058, ADMIN_PORTAL §1.3b — direction A "Sân trường", owner 2026-11-21): frame of the pages drawn by
 // the portal itself (/login, /forgot-password, /reset-password, /account-setup, tenant picker). Two columns on desktop:
 // a banner (primary colour, "Cổng quản trị EduWorld" for the whole platform, capability list with small icons, an
-// illustration of simple shapes in token colours, all decorative SVG hidden from assistive tech) and the main column (language switch, one card, optional content below it). One
+// illustration of simple shapes in token colours, all decorative SVG hidden from assistive tech) and the main column (language toggle, one card, optional content below it). Owner 2026-11-23: /login is always English and
+// shows no language control (`languageToggle={false}`, see loginLocale.tsx); the other pages keep the header toggle. One
 // column at phone width (< screenMD) with a compact header (logo + headline). Sizes of the sign-in controls come from the generated
 // `authTheme` (nested ConfigProvider); every other value is an Ant Design theme token (AGENTS R32, ADR-0047).
 import { authTheme, domainColors, useOpsTheme } from '@eduworld/ops-ui';
-import { Card, ConfigProvider, Flex, Select, Typography, theme } from 'antd';
+import { Card, ConfigProvider, Flex, Typography, theme } from 'antd';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePreferences } from '../app/PreferencesProvider';
-import { LOCALES, type Locale } from '../i18n';
+import { LocaleToggle } from '../shell/PreferenceToggles';
 import { useMediaQuery } from '../shell/useMediaQuery';
 
 /** What the portal manages, listed on the banner (i18n `shell.brand.capability.<key>`; grade wording — ADR-0095). */
 export const BRAND_CAPABILITIES = ['questionBank', 'lessons', 'gameWorld', 'gradeProgress', 'safety'] as const;
-
-export function LanguageSelect() {
-  const { t } = useTranslation();
-  const { preferences, update } = usePreferences();
-  return (
-    <Select<Locale>
-      aria-label={t('shell.locale.label')}
-      value={preferences.locale}
-      onChange={(locale) => update({ locale })}
-      options={LOCALES.map((l) => ({ value: l, label: t(`shell.locale.${l}`) }))}
-      popupMatchSelectWidth={false}
-    />
-  );
-}
 
 /** Graduation cap on a light tile (decorative; the product name next to it is the text). */
 function LogoMark() {
@@ -222,9 +208,11 @@ export interface AuthLayoutProps {
   children: ReactNode;
   /** Content under the card (hints, data protection line). */
   below?: ReactNode;
+  /** Language toggle above the card (default on; off on /login — owner 2026-11-23, always English). */
+  languageToggle?: boolean;
 }
 
-export function AuthLayout({ title, subtitle, children, below }: AuthLayoutProps) {
+export function AuthLayout({ title, subtitle, children, below, languageToggle = true }: AuthLayoutProps) {
   const { token } = theme.useToken();
   const compact = !useMediaQuery(`(min-width: ${token.screenMD}px)`);
   return (
@@ -237,9 +225,11 @@ export function AuthLayout({ title, subtitle, children, below }: AuthLayoutProps
         <BrandPanel compact={compact} />
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: compact ? token.paddingMD : token.paddingXL }}>
           <Flex vertical gap="large" style={{ width: '100%', maxWidth: token.screenXS }}>
-            <Flex justify="flex-end">
-              <LanguageSelect />
-            </Flex>
+            {languageToggle ? (
+              <Flex justify="flex-end">
+                <LocaleToggle />
+              </Flex>
+            ) : null}
             <Card>
               <Typography.Title level={1} style={{ marginTop: 0, marginBottom: token.marginXXS, fontSize: token.fontSizeHeading2 }}>
                 {title}

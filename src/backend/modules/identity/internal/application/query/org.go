@@ -84,27 +84,57 @@ func tenantRead(ctx context.Context, perm authz.Permission, school *uuid.UUID) (
 
 func schoolKey(s dto.School) (string, uuid.UUID) { return s.Code, s.SchoolID }
 
-// ListCountries is listCountries (any authenticated user).
-func (q Org) ListCountries(ctx context.Context) (out []dto.Country, err error) {
+// keyID is the id half of the cursor of a list keyed by a code only (countries, permissions): a stable non-nil id
+// derived from the code (the code alone orders and identifies the row).
+func keyID(key string) uuid.UUID { return uuid.NewSHA1(uuid.NameSpaceURL, []byte("eduworld:"+key)) }
+
+// ListCountries is listCountries (any authenticated user): one keyset page by country_code (API_DESIGN §5).
+func (q Org) ListCountries(ctx context.Context, in ListInput) (out Page[dto.Country], err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListCountries")
 	defer func() { done(err) }()
 	if _, err = authenticated(ctx); err != nil {
-		return nil, err
+		return out, err
 	}
-	return q.Model.Countries(ctx)
+	cur, err := q.cursor(in.Cursor)
+	if err != nil {
+		return out, err
+	}
+	var after *string
+	if cur != nil {
+		if cur.ID != keyID(cur.Key) {
+			return out, problem.New(problem.BadRequest, "invalid cursor")
+		}
+		after = &cur.Key
+	}
+	limit := page.Limit(in.Limit)
+	rows, err := q.Model.Countries(ctx, after, limit+1)
+	if err != nil {
+		return out, err
+	}
+	return pageOf(q.Cursors, rows, limit, func(c dto.Country) (string, uuid.UUID) { return c.CountryCode, keyID(c.CountryCode) }), nil
 }
 
-// ListProvinces is listProvinces (any authenticated user), filtered by country and status.
-func (q Org) ListProvinces(ctx context.Context, country, status string) (out []dto.Province, err error) {
+// ListProvinces is listProvinces (any authenticated user), filtered by country and status: one keyset page by
+// (code, province_id) (API_DESIGN §5).
+func (q Org) ListProvinces(ctx context.Context, country, status string, in ListInput) (out Page[dto.Province], err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListProvinces")
 	defer func() { done(err) }()
 	if _, err = authenticated(ctx); err != nil {
-		return nil, err
+		return out, err
 	}
 	if status != "" && status != "active" && status != "inactive" {
-		return nil, problem.Invalid("status", problem.SubInvalid, "must be active or inactive")
+		return out, problem.Invalid("status", problem.SubInvalid, "must be active or inactive")
 	}
-	return q.Model.Provinces(ctx, country, status)
+	cur, err := q.cursor(in.Cursor)
+	if err != nil {
+		return out, err
+	}
+	limit := page.Limit(in.Limit)
+	rows, err := q.Model.Provinces(ctx, country, status, cur, limit+1)
+	if err != nil {
+		return out, err
+	}
+	return pageOf(q.Cursors, rows, limit, func(p dto.Province) (string, uuid.UUID) { return p.Code, p.ProvinceID }), nil
 }
 
 // CatalogSchoolsInput filters listCatalogSchools.

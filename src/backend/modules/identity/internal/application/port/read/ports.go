@@ -65,8 +65,11 @@ type SchoolFilter struct {
 
 // OrgReadModel reads the catalog and the organization of the scope (keyset pages return Limit+1 rows).
 type OrgReadModel interface {
-	Countries(ctx context.Context) ([]dto.Country, error)
-	Provinces(ctx context.Context, country, status string) ([]dto.Province, error)
+	// Countries is one keyset page of the live countries ordered by country_code, after the code after (nil = first
+	// page); limit rows (the query layer asks limit+1).
+	Countries(ctx context.Context, after *string, limit int) ([]dto.Country, error)
+	// Provinces is one keyset page (code, province_id) of the provinces of a country (optionally by status).
+	Provinces(ctx context.Context, country, status string, after *page.Cursor, limit int) ([]dto.Province, error)
 	Schools(ctx context.Context, f SchoolFilter) ([]dto.School, error)
 	School(ctx context.Context, id uuid.UUID) (dto.School, error)
 	// AcademicYears returns the live academic years of a school of the scope, newest first (listSchoolAcademicYears).

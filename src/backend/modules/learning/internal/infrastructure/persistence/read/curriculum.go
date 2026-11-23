@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"sort"
 
+	entsql "entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent"
@@ -62,10 +64,16 @@ func refOf(v dto.CurriculumVersion) *dto.VersionRef {
 }
 
 // Curricula implements read.CurriculumReadModel.
-func (m CurriculumModel) Curricula(ctx context.Context, ownerScope string) ([]dto.Curriculum, error) {
+func (m CurriculumModel) Curricula(ctx context.Context, ownerScope string, seek read.Seek) ([]dto.Curriculum, error) {
 	q := client(ctx).Curriculum.Query()
 	if ownerScope != "" {
 		q = q.Where(entcur.OwnerScope(ownerScope))
+	}
+	if p := seekAfter(seek.After, false, entcur.FieldID, entcur.FieldCode); p != nil {
+		q = q.Where(predicate.Curriculum(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
 	}
 	rows, err := q.Order(ent.Asc(entcur.FieldCode), ent.Asc(entcur.FieldID)).All(ctx)
 	if err != nil {
@@ -121,7 +129,19 @@ func (m CurriculumModel) Curriculum(ctx context.Context, id uuid.UUID) (dto.Curr
 }
 
 func (m CurriculumModel) versions(ctx context.Context, ps ...predicate.CurriculumVersion) ([]dto.CurriculumVersion, error) {
-	rows, err := client(ctx).CurriculumVersion.Query().Where(ps...).Order(ent.Desc(entver.FieldVersionNo)).All(ctx)
+	return m.versionsPage(ctx, read.Seek{}, ps...)
+}
+
+// versionsPage is one keyset page of versions, newest first (version_no DESC, curriculum_version_id DESC).
+func (m CurriculumModel) versionsPage(ctx context.Context, seek read.Seek, ps ...predicate.CurriculumVersion) ([]dto.CurriculumVersion, error) {
+	q := client(ctx).CurriculumVersion.Query().Where(ps...)
+	if p := seekAfter(seek.After, true, entver.FieldID, entver.FieldVersionNo); p != nil {
+		q = q.Where(predicate.CurriculumVersion(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
+	}
+	rows, err := q.Order(ent.Desc(entver.FieldVersionNo), ent.Desc(entver.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -181,11 +201,11 @@ func (m CurriculumModel) liveCurricula(ctx context.Context, vs []dto.CurriculumV
 }
 
 // Versions implements read.CurriculumReadModel.
-func (m CurriculumModel) Versions(ctx context.Context, curriculumID uuid.UUID) ([]dto.CurriculumVersion, error) {
+func (m CurriculumModel) Versions(ctx context.Context, curriculumID uuid.UUID, seek read.Seek) ([]dto.CurriculumVersion, error) {
 	if _, err := m.Curriculum(ctx, curriculumID); err != nil {
 		return nil, err
 	}
-	vs, err := m.versions(ctx, entver.CurriculumID(curriculumID))
+	vs, err := m.versionsPage(ctx, seek, entver.CurriculumID(curriculumID))
 	if err != nil {
 		return nil, err
 	}
@@ -219,28 +239,28 @@ func (m CurriculumModel) VersionsByID(ctx context.Context, idList []uuid.UUID) (
 }
 
 // Subjects implements read.CurriculumReadModel.
-func (CurriculumModel) Subjects(ctx context.Context, gradeLevel *int) ([]dto.Subject, error) {
-	rows, err := client(ctx).Subject.Query().Order(ent.Asc(entsubj.FieldCode)).All(ctx)
+func (CurriculumModel) Subjects(ctx context.Context, gradeLevel *int, seek read.Seek) ([]dto.Subject, error) {
+	q := client(ctx).Subject.Query()
+	if gradeLevel != nil {
+		// jsonb array containment in SQL: grade_levels @> <grade>
+		g := *gradeLevel
+		q = q.Where(predicate.Subject(func(s *entsql.Selector) { s.Where(sqljson.ValueContains(s.C(entsubj.FieldGradeLevels), g)) }))
+	}
+	if p := seekAfter(seek.After, false, entsubj.FieldID, entsubj.FieldCode); p != nil {
+		q = q.Where(predicate.Subject(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
+	}
+	rows, err := q.Order(ent.Asc(entsubj.FieldCode), ent.Asc(entsubj.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]dto.Subject, 0, len(rows))
 	for _, r := range rows {
-		if gradeLevel != nil && !containsInt(r.GradeLevels, *gradeLevel) {
-			continue
-		}
 		out = append(out, dto.Subject{ID: r.ID, Code: r.Code, Name: r.Name, GradeLevels: r.GradeLevels, IconKey: r.IconKey, RowVersion: r.Version})
 	}
 	return out, nil
-}
-
-func containsInt(xs []int, x int) bool {
-	for _, v := range xs {
-		if v == x {
-			return true
-		}
-	}
-	return false
 }
 
 func topicOf(r *ent.Topic) dto.Topic {
@@ -249,7 +269,7 @@ func topicOf(r *ent.Topic) dto.Topic {
 }
 
 // Topics implements read.CurriculumReadModel.
-func (CurriculumModel) Topics(ctx context.Context, f read.TopicFilter) ([]dto.Topic, error) {
+func (CurriculumModel) Topics(ctx context.Context, f read.TopicFilter, seek read.Seek) ([]dto.Topic, error) {
 	q := client(ctx).Topic.Query().Where(enttopic.CurriculumVersionIDIn(f.VersionIDs...))
 	if f.SubjectID != nil {
 		q = q.Where(enttopic.SubjectID(*f.SubjectID))
@@ -257,7 +277,14 @@ func (CurriculumModel) Topics(ctx context.Context, f read.TopicFilter) ([]dto.To
 	if f.GradeLevel != nil {
 		q = q.Where(enttopic.GradeLevel(int16(*f.GradeLevel))) //nolint:gosec // 1–9 (contract)
 	}
-	rows, err := q.Order(ent.Asc(enttopic.FieldGradeLevel), ent.Asc(enttopic.FieldSortOrder), ent.Asc(enttopic.FieldCode)).All(ctx)
+	if p := seekAfter(seek.After, false, enttopic.FieldID, enttopic.FieldGradeLevel, enttopic.FieldSortOrder, enttopic.FieldCode); p != nil {
+		q = q.Where(predicate.Topic(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
+	}
+	rows, err := q.Order(ent.Asc(enttopic.FieldGradeLevel), ent.Asc(enttopic.FieldSortOrder), ent.Asc(enttopic.FieldCode),
+		ent.Asc(enttopic.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +296,33 @@ func (CurriculumModel) Topics(ctx context.Context, f read.TopicFilter) ([]dto.To
 }
 
 // Objectives implements read.CurriculumReadModel.
-func (m CurriculumModel) Objectives(ctx context.Context, f read.ObjectiveFilter) ([]dto.Objective, error) {
+func (m CurriculumModel) Objectives(ctx context.Context, f read.ObjectiveFilter, seek read.Seek) ([]dto.Objective, error) {
+	q, err := objectiveQuery(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+	if p := seekAfter(seek.After, false, entlo.FieldID, entlo.FieldSortOrder, entlo.FieldCode); p != nil {
+		q = q.Where(predicate.LearningObjective(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
+	}
+	return objectivesOf(ctx, q)
+}
+
+// ObjectiveVersionIDs implements read.CurriculumReadModel.
+func (m CurriculumModel) ObjectiveVersionIDs(ctx context.Context, f read.ObjectiveFilter) ([]uuid.UUID, error) {
+	q, err := objectiveQuery(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+	var ids []uuid.UUID
+	err = q.Unique(true).Select(entlo.FieldCurriculumVersionID).Scan(ctx, &ids)
+	return ids, err
+}
+
+// objectiveQuery is the filtered objective query of f (not yet ordered nor limited).
+func objectiveQuery(ctx context.Context, f read.ObjectiveFilter) (*ent.LearningObjectiveQuery, error) {
 	c := client(ctx)
 	q := c.LearningObjective.Query()
 	if len(f.VersionIDs) > 0 {
@@ -312,6 +365,12 @@ func (m CurriculumModel) Objectives(ctx context.Context, f read.ObjectiveFilter)
 		}
 		q = q.Where(entlo.TopicIDIn(topicIDs...))
 	}
+	return q, nil
+}
+
+// objectivesOf reads the objectives of q in the list order with the subject and grade of their topic.
+func objectivesOf(ctx context.Context, q *ent.LearningObjectiveQuery) ([]dto.Objective, error) {
+	c := client(ctx)
 	rows, err := q.Order(ent.Asc(entlo.FieldSortOrder), ent.Asc(entlo.FieldCode), ent.Asc(entlo.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
@@ -346,8 +405,15 @@ func (m CurriculumModel) Objectives(ctx context.Context, f read.ObjectiveFilter)
 }
 
 // Competencies implements read.CurriculumReadModel.
-func (CurriculumModel) Competencies(ctx context.Context, versionID uuid.UUID) ([]dto.Competency, error) {
-	rows, err := client(ctx).Competency.Query().Where(entcomp.CurriculumVersionID(versionID)).Order(ent.Asc(entcomp.FieldCode)).All(ctx)
+func (CurriculumModel) Competencies(ctx context.Context, versionID uuid.UUID, seek read.Seek) ([]dto.Competency, error) {
+	q := client(ctx).Competency.Query().Where(entcomp.CurriculumVersionID(versionID))
+	if p := seekAfter(seek.After, false, entcomp.FieldID, entcomp.FieldCode); p != nil {
+		q = q.Where(predicate.Competency(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
+	}
+	rows, err := q.Order(ent.Asc(entcomp.FieldCode), ent.Asc(entcomp.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -373,8 +439,15 @@ func (CurriculumModel) Mappings(ctx context.Context, versionID uuid.UUID) (curri
 }
 
 // TextbookSeries implements read.CurriculumReadModel.
-func (CurriculumModel) TextbookSeries(ctx context.Context) ([]dto.TextbookSeries, error) {
-	rows, err := client(ctx).TextbookSeries.Query().Order(ent.Asc(entseries.FieldCode)).All(ctx)
+func (CurriculumModel) TextbookSeries(ctx context.Context, seek read.Seek) ([]dto.TextbookSeries, error) {
+	q := client(ctx).TextbookSeries.Query()
+	if p := seekAfter(seek.After, false, entseries.FieldID, entseries.FieldCode); p != nil {
+		q = q.Where(predicate.TextbookSeries(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
+	}
+	rows, err := q.Order(ent.Asc(entseries.FieldCode), ent.Asc(entseries.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +459,7 @@ func (CurriculumModel) TextbookSeries(ctx context.Context) ([]dto.TextbookSeries
 }
 
 // Textbooks implements read.CurriculumReadModel.
-func (CurriculumModel) Textbooks(ctx context.Context, f read.TextbookFilter) ([]dto.Textbook, error) {
+func (CurriculumModel) Textbooks(ctx context.Context, f read.TextbookFilter, seek read.Seek) ([]dto.Textbook, error) {
 	q := client(ctx).Textbook.Query()
 	if f.SeriesID != nil {
 		q = q.Where(enttb.SeriesID(*f.SeriesID))
@@ -396,6 +469,12 @@ func (CurriculumModel) Textbooks(ctx context.Context, f read.TextbookFilter) ([]
 	}
 	if f.GradeLevel != nil {
 		q = q.Where(enttb.GradeLevel(int16(*f.GradeLevel))) //nolint:gosec // 1–9 (contract)
+	}
+	if p := seekAfter(seek.After, false, enttb.FieldID, enttb.FieldGradeLevel, enttb.FieldVolume); p != nil {
+		q = q.Where(predicate.Textbook(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
 	}
 	rows, err := q.Order(ent.Asc(enttb.FieldGradeLevel), ent.Asc(enttb.FieldVolume), ent.Asc(enttb.FieldID)).All(ctx)
 	if err != nil {
@@ -409,9 +488,16 @@ func (CurriculumModel) Textbooks(ctx context.Context, f read.TextbookFilter) ([]
 }
 
 // Sections implements read.CurriculumReadModel: the LOs listed per section are those visible to the scope.
-func (CurriculumModel) Sections(ctx context.Context, textbookID uuid.UUID) ([]dto.TextbookSection, error) {
+func (CurriculumModel) Sections(ctx context.Context, textbookID uuid.UUID, seek read.Seek) ([]dto.TextbookSection, error) {
 	c := client(ctx)
-	rows, err := c.TextbookSection.Query().Where(entsec.TextbookID(textbookID)).Order(ent.Asc(entsec.FieldLessonNo), ent.Asc(entsec.FieldID)).All(ctx)
+	q := c.TextbookSection.Query().Where(entsec.TextbookID(textbookID))
+	if p := seekAfter(seek.After, false, entsec.FieldID, entsec.FieldLessonNo); p != nil {
+		q = q.Where(predicate.TextbookSection(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		q = q.Limit(n)
+	}
+	rows, err := q.Order(ent.Asc(entsec.FieldLessonNo), ent.Asc(entsec.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
 	}

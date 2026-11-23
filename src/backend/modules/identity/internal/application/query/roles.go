@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -23,6 +24,13 @@ type Roles struct {
 type PermissionList struct {
 	Items          []read.PermissionView `json:"items"`
 	CatalogVersion string                `json:"catalog_version"`
+}
+
+// PermissionPage is PermissionPage of the spec: one keyset page of the full catalog (listAllPermissions).
+type PermissionPage struct {
+	Items          []read.PermissionView `json:"items"`
+	CatalogVersion string                `json:"catalog_version"`
+	Page           page.Info             `json:"page"`
 }
 
 // RolePage is RolePage of the spec.
@@ -69,19 +77,41 @@ func (q Roles) ListTenantPermissions(ctx context.Context) (out PermissionList, e
 	if ctx, _, _, err = tenantRoleRead(ctx); err != nil {
 		return out, err
 	}
-	items, v, err := q.Model.Permissions(ctx, true)
+	// the role editor of the tenant needs the whole tenant catalog (a bounded code catalog, API_DESIGN §5.1)
+	items, v, err := q.Model.Permissions(ctx, true, nil, 0)
 	return PermissionList{Items: nonNilPerms(items), CatalogVersion: v}, err
 }
 
-// ListAllPermissions is listAllPermissions (platform.role.read).
-func (q Roles) ListAllPermissions(ctx context.Context) (out PermissionList, err error) {
+// ListAllPermissions is listAllPermissions (platform.role.read): one keyset page (group_code, permission_code) of the
+// catalog read in SQL (API_DESIGN §5; the portal grid pages it, the role editor reads every page).
+func (q Roles) ListAllPermissions(ctx context.Context, in ListInput) (out PermissionPage, err error) {
 	ctx, done := observability.UseCase(ctx, "identity.query.ListAllPermissions")
 	defer func() { done(err) }()
 	if _, err = platformRoleRead(ctx); err != nil {
 		return out, err
 	}
-	items, v, err := q.Model.Permissions(ctx, false)
-	return PermissionList{Items: nonNilPerms(items), CatalogVersion: v}, err
+	cur, err := Org{Cursors: q.Cursors}.cursor(in.Cursor)
+	if err != nil {
+		return out, err
+	}
+	var after *read.PermissionKey
+	if cur != nil {
+		group, code, ok := strings.Cut(cur.Key, "\n")
+		if !ok || cur.ID != keyID(cur.Key) {
+			return out, problem.New(problem.BadRequest, "invalid cursor")
+		}
+		after = &read.PermissionKey{Group: group, Code: code}
+	}
+	limit := page.Limit(in.Limit)
+	items, v, err := q.Model.Permissions(ctx, false, after, limit+1)
+	if err != nil {
+		return out, err
+	}
+	pg := pageOf(q.Cursors, items, limit, func(p read.PermissionView) (string, uuid.UUID) {
+		k := p.GroupCode + "\n" + p.Code
+		return k, keyID(k)
+	})
+	return PermissionPage{Items: nonNilPerms(pg.Items), CatalogVersion: v, Page: pg.Page}, nil
 }
 
 func (q Roles) page(ctx context.Context, f read.RoleFilter, in ListInput) (out RolePage, err error) {

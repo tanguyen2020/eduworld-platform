@@ -5,7 +5,7 @@
 // lessons / blueprints with pool stats, imports (dry run / real run), tenant trash. Tenant isolation: another tenant's
 // item answers 404; a missing permission answers 403. Plugged into MockPortalBackend.overrides. NOT a backend: the
 // real rules live in module learning (F022–F027) and identity (F045).
-import { problem, type MockAccount, type MockPortalBackend, type RecordedRequest } from './mock-backend';
+import { cursorPage, problem, type MockAccount, type MockPortalBackend, type RecordedRequest } from './mock-backend';
 
 export const P = (n: number) => `0193a4d2-5000-7000-8000-${String(n).padStart(12, '0')}`;
 
@@ -92,6 +92,8 @@ export class MockPublishing {
   importErrors: Record<string, unknown>[] = [];
   readonly fail: { method: string; path: RegExp; response: () => Response; once?: boolean }[] = [];
   private n = 500;
+  /** Largest page the content lists answer (tests lower it to exercise the cursor; the backend allows 100). */
+  listPageSize = 50;
 
   constructor(private readonly backend: MockPortalBackend) {
     backend.overrides.push((r) => this.handle(r));
@@ -334,7 +336,10 @@ export class MockPublishing {
         const data = [...this.items.values()]
           .filter((it) => it.type === type && this.visible(r, it) && (!tenantIds.length || tenantIds.includes(it.tenant_id ?? '')) && (!q.get('status') || it.versions.at(-1)!.status === q.get('status')) && (!q.get('content_language') || (it.lang ?? 'vi') === q.get('content_language')) && (!q.get('translation_status') || it.versions.at(-1)!.translation_status === q.get('translation_status')) && (!q.get('q') || JSON.stringify(it.title ?? {}).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').includes(q.get('q')!.toLowerCase())))
           .map((it) => ({ ...this.doc(it, it.versions.at(-1)!), content_version_id: P(700 + it.versions.length) }));
-        return json(200, { data, page: { has_more: false, limit: 50 } });
+        // one cursor page (the backend cuts it in SQL — owner rule 2026-11-23)
+        const capped = new URLSearchParams(q);
+        capped.set('limit', String(Math.min(Number(q.get('limit') ?? 50), this.listPageSize)));
+        return json(200, cursorPage(data, capped, 'data', 50));
       }
       if (p === base && r.method === 'POST' && type !== 'question') {
         if (!perms.includes('learning_content.write')) return problem(403, 'PERMISSION_DENIED');

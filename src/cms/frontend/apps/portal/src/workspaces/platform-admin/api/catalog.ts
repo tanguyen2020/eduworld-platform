@@ -4,9 +4,11 @@
 // listCatalogSchools (OQ F057-4): the System Admin reads one or more tenants with `tenant_ids[]` (CrossTenantScope, no
 // X-Tenant-Id; the backend refuses a read without tenant_ids) and filters by `status`; a tenant user stays in the
 // tenant of the session.
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
+import { useAllPages } from '../../../shared/api/fetchAllPages';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { pageQuery, reloadOnStaleVersion, useCursorList, usePlatformApi, versionIfMatch, type Schemas } from './common';
 
@@ -28,9 +30,16 @@ export const SUCCESSION_KINDS: readonly ProvinceSuccessionInput['kind'][] = ['me
 const remember = async (api: ReturnType<typeof usePlatformApi>, path: string, pending: Promise<{ response: Response }>) =>
   api.etags.remember(path, (await pending).response.headers.get('ETag'));
 
+/** Countries table: cursor pages read one by one (keyset in the query, owner rule 2026-11-23 — "Tải thêm"). */
 export function useCountries() {
   const api = usePlatformApi();
-  return useQuery({ queryKey: ['platform', 'countries'], queryFn: () => api.call(api.client.GET('/catalog/countries', {})) });
+  return useCursorPages<Country>(['platform', 'countries', 'pages'], (cursor) => api.call(api.client.GET('/catalog/countries', { params: { query: pageQuery(cursor) } })));
+}
+
+/** Country dropdown: every page (fetchAllPages, ADMIN_PORTAL §1.6). */
+export function useCountryOptions() {
+  const api = usePlatformApi();
+  return useAllPages<Country>(['platform', 'countries'], (query) => api.call(api.client.GET('/catalog/countries', { params: { query } })));
 }
 
 export function useUpdateCountry() {
@@ -48,12 +57,18 @@ export function useUpdateCountry() {
   });
 }
 
+/** Provinces table: cursor pages read one by one (keyset (code, province_id) in the query — "Tải thêm"). */
 export function useProvinces(status: ProvinceStatusFilter) {
   const api = usePlatformApi();
-  return useQuery({
-    queryKey: ['platform', 'provinces', status],
-    queryFn: () => api.call(api.client.GET('/catalog/provinces', { params: { query: { status } } })),
-  });
+  return useCursorPages<Province>(['platform', 'provinces', status, 'pages'], (cursor) =>
+    api.call(api.client.GET('/catalog/provinces', { params: { query: { status, ...pageQuery(cursor) } } })),
+  );
+}
+
+/** Province dropdowns (school filter, succession dialog): every page (fetchAllPages, ADMIN_PORTAL §1.6). */
+export function useProvinceOptions(status: ProvinceStatusFilter) {
+  const api = usePlatformApi();
+  return useAllPages<Province>(['platform', 'provinces', status], (query) => api.call(api.client.GET('/catalog/provinces', { params: { query: { status, ...query } } })));
 }
 
 export function useCreateProvince() {

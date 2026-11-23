@@ -188,31 +188,35 @@ func (q Releases) History(ctx context.Context, typ string, id uuid.UUID, status 
 	if err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kInt)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
 		it, err := q.Reader.item(ctx, t, id)
 		if err != nil {
 			return err
 		}
-		vs, err := q.Model.Versions(ctx, t, id)
-		if err != nil {
-			return err
-		}
 		out = VersionHistory{ItemID: id, Data: []dto.VersionSummary{}}
-		var items []dto.VersionSummary
-		for _, v := range vs {
-			v.IsCurrent = it.Current != nil && *it.Current == v.ContentVersionID
-			if v.IsCurrent {
-				no := v.Version
+		if it.Current != nil {
+			// the number of the current release: one row read by id
+			cur, err := q.Model.Versions(ctx, t, id, read.VersionFilter{IDs: []uuid.UUID{*it.Current}})
+			if err != nil {
+				return err
+			}
+			if len(cur) == 1 {
+				no := cur[0].Version
 				out.CurrentVersion = &no
 			}
-			if status == "" || v.Status == status {
-				items = append(items, v)
-			}
 		}
-		p, err := paginate(items, func(v dto.VersionSummary) uuid.UUID { return v.ContentVersionID }, in, q.Cursors)
+		vs, err := q.Model.Versions(ctx, t, id, read.VersionFilter{Status: status, Seek: seek})
 		if err != nil {
 			return err
 		}
+		for i := range vs {
+			vs[i].IsCurrent = it.Current != nil && *it.Current == vs[i].ContentVersionID
+		}
+		p := keysetPage(vs, limit, q.Cursors, func(v dto.VersionSummary) (uuid.UUID, []any) { return v.ContentVersionID, []any{v.Version} })
 		out.Data = append(out.Data, p.Data...)
 		out.Page = PageInfo{NextCursor: p.NextCursor, HasMore: p.HasMore, Limit: p.Limit}
 		return nil
@@ -315,14 +319,6 @@ func (q Releases) ListReleases(ctx context.Context, typ string, id uuid.UUID, in
 		if _, err := q.Reader.item(ctx, t, id); err != nil {
 			return err
 		}
-		vs, err := q.Model.Versions(ctx, t, id)
-		if err != nil {
-			return err
-		}
-		nos := map[uuid.UUID]int{}
-		for _, v := range vs {
-			nos[v.ContentVersionID] = v.Version
-		}
 		rows, err := q.Model.Releases(ctx, t, id, after, limit+1)
 		if err != nil {
 			return err
@@ -332,6 +328,23 @@ func (q Releases) ListReleases(ctx context.Context, typ string, id uuid.UUID, in
 			out.HasMore, rows = true, rows[:limit]
 			s := q.Cursors.Encode(page.Cursor{ID: rows[limit-1].ID})
 			out.NextCursor = &s
+		}
+		// version numbers of the versions named by this page only (no read of the whole history)
+		ids := []uuid.UUID{}
+		for _, r := range rows {
+			for _, v := range []*uuid.UUID{r.FromVersionID, r.ToVersionID} {
+				if v != nil && !slices.Contains(ids, *v) {
+					ids = append(ids, *v)
+				}
+			}
+		}
+		vs, err := q.Model.Versions(ctx, t, id, read.VersionFilter{IDs: ids})
+		if err != nil {
+			return err
+		}
+		nos := map[uuid.UUID]int{}
+		for _, v := range vs {
+			nos[v.ContentVersionID] = v.Version
 		}
 		for _, r := range rows {
 			v := dto.ContentReleaseView{ReleaseID: r.ID, ItemType: r.ItemType, ItemID: r.ItemID, Action: r.Action, ScheduledFor: r.ScheduledFor,

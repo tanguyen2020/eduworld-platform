@@ -46,9 +46,13 @@ func (q Experiments) ListLearningExperiments(ctx context.Context, status, kind s
 	if err := efficacyReader(ctx, authz.PermPlatformLearningExperimentManage); err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kTime)
+	if err != nil {
+		return out, err
+	}
 	var views []dto.LearningExperimentView
 	if err := q.Session.Read(ctx, func(ctx context.Context) error {
-		rows, err := q.Model.Experiments(ctx, status, kind)
+		rows, err := q.Model.Experiments(ctx, status, kind, seek)
 		for _, e := range rows {
 			views = append(views, ExperimentView(e))
 		}
@@ -56,7 +60,7 @@ func (q Experiments) ListLearningExperiments(ctx context.Context, status, kind s
 	}); err != nil {
 		return out, err
 	}
-	return paginate(views, func(v dto.LearningExperimentView) uuid.UUID { return v.ExperimentID }, in, q.Cursors)
+	return keysetPage(views, limit, q.Cursors, func(v dto.LearningExperimentView) (uuid.UUID, []any) { return v.ExperimentID, []any{v.CreatedAt} }), nil
 }
 
 // GetLearningExperiment is getLearningExperiment.

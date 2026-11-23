@@ -2,14 +2,13 @@
 // (`/admin/learning/research-agreements*`, `/admin/learning/efficacy-studies*`, `/admin/learning/experiments*`,
 // `createPlatformReport efficacy_dataset`) answering per specs/openapi/eduworld-api.v1.yaml so the research screens can
 // be tested. It records the requests, enforces no authorization and computes no statistic; NOT a backend.
-import { MockPortalBackend, problem, TENANTS, type RecordedRequest } from './mock-backend';
+import { cursorPage, MockPortalBackend, problem, TENANTS, type RecordedRequest } from './mock-backend';
 import { withPlatformMock } from './platform-backend';
 
 type Obj = Record<string, unknown>;
 
 const json = (status: number, body: unknown, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...headers } });
-const page = (items: unknown[]) => ({ items, page: { has_more: false, next_cursor: null, limit: 20 } });
 
 export const RIDS = {
   study: '0193a4d2-5000-7000-8000-000000000001',
@@ -82,7 +81,7 @@ export function withResearchMock(backend: MockPortalBackend, state: ResearchStat
     if (route === `GET ${P}/research-agreements`) {
       const ids = q.getAll('tenant_ids');
       if (!ids.length) return problem(422, 'VALIDATION_FAILED');
-      return json(200, page(s.agreements.filter((a) => ids.includes(String(a.tenant_id)))));
+      return json(200, cursorPage(s.agreements.filter((a) => ids.includes(String(a.tenant_id))), q));
     }
     if (route === `POST ${P}/research-agreements`) {
       const tenant = rec.headers['x-tenant-id'];
@@ -98,7 +97,7 @@ export function withResearchMock(backend: MockPortalBackend, state: ResearchStat
       Object.assign(a, { status: 'revoked', revoked_at: '2026-11-21T09:00:00Z', revoke_reason: body.reason });
       return json(200, a);
     }
-    if (route === `GET ${P}/efficacy-studies`) return json(200, page(s.studies.filter((x) => !q.get('status') || x.status === q.get('status'))));
+    if (route === `GET ${P}/efficacy-studies`) return json(200, cursorPage(s.studies.filter((x) => !q.get('status') || x.status === q.get('status')), q));
     if (route === `POST ${P}/efficacy-studies`) {
       const st = { study_id: `0193a4d2-5200-7000-8000-${String(s.studies.length).padStart(12, '0')}`, ...body, status: 'draft', created_at: '2026-11-21T08:00:00Z', version: 1 };
       s.studies.push(st);
@@ -117,7 +116,7 @@ export function withResearchMock(backend: MockPortalBackend, state: ResearchStat
         return json(200, st);
       }
       if (rest === ':complete') return json(200, Object.assign(st, { status: 'completed' }));
-      if (rest === '/cohorts' && rec.method === 'GET') return json(200, page(s.cohorts));
+      if (rest === '/cohorts' && rec.method === 'GET') return json(200, cursorPage(s.cohorts, q));
       if (rest === '/cohorts' && rec.method === 'POST') {
         const tenant = rec.headers['x-tenant-id'];
         if (!tenant) return problem(400, 'TENANT_HEADER_REQUIRED');
@@ -125,7 +124,7 @@ export function withResearchMock(backend: MockPortalBackend, state: ResearchStat
         s.cohorts.push(c);
         return json(201, c);
       }
-      if (rest === '/waves' && rec.method === 'GET') return json(200, { items: s.waves });
+      if (rest === '/waves' && rec.method === 'GET') return json(200, cursorPage(s.waves, q));
       if (rest === '/waves' && rec.method === 'POST') {
         const w = { wave_id: RIDS.wave, study_id: st.study_id, status: 'scheduled', duration_seconds: 2400, cohorts: [], ...body };
         s.waves.push(w);
@@ -144,7 +143,7 @@ export function withResearchMock(backend: MockPortalBackend, state: ResearchStat
     if (route === `GET /admin/reports/${RIDS.dataset}`) {
       return json(200, { report_id: RIDS.dataset, report_type: 'efficacy_dataset', format: 'csv', status: 'succeeded', row_count: 49, download_url: 'https://files.example.test/efficacy.csv', download_expires_at: '2026-11-21T10:00:00Z', created_at: '2026-11-21T09:00:00Z' });
     }
-    if (route === `GET ${P}/experiments`) return json(200, page(s.experiments));
+    if (route === `GET ${P}/experiments`) return json(200, cursorPage(s.experiments, q));
     if (route === `POST ${P}/experiments`) {
       const e = { experiment_id: `0193a4d2-5300-7000-8000-${String(s.experiments.length).padStart(12, '0')}`, ...body, status: 'draft', revision: 1, created_at: '2026-11-21T08:00:00Z' };
       s.experiments.push(e);

@@ -692,10 +692,12 @@ paths:
         - catalog
       operationId: listCountries
       x-portal-shell: true
-      summary: Danh mục quốc gia đang dùng (song ngữ theo Accept-Language)
+      summary: Danh mục quốc gia đang dùng (song ngữ theo Accept-Language); trang keyset theo country_code trong truy vấn (API_DESIGN §5)
       parameters:
         - $ref: '#/components/parameters/TenantIdHeaderOptional'
         - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -708,12 +710,15 @@ paths:
                 type: object
                 required:
                   - items
+                  - page
                 properties:
                   items:
                     type: array
-                    maxItems: 300
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Country'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
         '401':
           $ref: '#/components/responses/Unauthenticated'
   /catalog/provinces:
@@ -746,9 +751,11 @@ paths:
               - all
             default: active
         - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
-          description: OK
+          description: OK (trang keyset (code, province_id) trong truy vấn — API_DESIGN §5)
           headers:
             ETag:
               $ref: '#/components/headers/ETag'
@@ -758,12 +765,15 @@ paths:
                 type: object
                 required:
                   - items
+                  - page
                 properties:
                   items:
                     type: array
-                    maxItems: 500
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Province'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -2663,16 +2673,18 @@ paths:
       security:
         - keycloakAdminBearer: []
       x-internal: true
-      summary: Catalog permission đầy đủ (tenant + platform, scope_kind)
+      summary: Catalog permission đầy đủ (tenant + platform, scope_kind); trang keyset (group_code, permission_code) trong truy vấn (API_DESIGN §5)
       parameters:
         - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PermissionList'
+                $ref: '#/components/schemas/PermissionPage'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
@@ -4768,20 +4780,6 @@ components:
         type: string
         format: uuid
         pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
-    TenantIds:
-      name: tenant_ids
-      in: query
-      required: false
-      description: |
-        Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
-        Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
-      style: form
-      explode: true
-      schema:
-        type: array
-        maxItems: 100
-        items:
-          $ref: '#/components/schemas/Uuid'
     Limit:
       name: limit
       in: query
@@ -4797,6 +4795,20 @@ components:
       schema:
         type: string
         maxLength: 512
+    TenantIds:
+      name: tenant_ids
+      in: query
+      required: false
+      description: |
+        Chỉ System Admin (platform.cross_tenant.read): lọc theo một hoặc nhiều tenant; vắng mặt = tất cả tenant.
+        Người dùng tenant gửi tham số này bị bỏ qua (luôn khóa vào tenant của phiên) — ADR-0027 §6.
+      style: form
+      explode: true
+      schema:
+        type: array
+        maxItems: 100
+        items:
+          $ref: '#/components/schemas/Uuid'
     StudentId:
       name: student_id
       in: path
@@ -6067,6 +6079,21 @@ components:
           type: integer
           minimum: 1
           description: Version hiện tại = giá trị `If-Match` của updateCountry (OQ F057-3)
+    PageInfo:
+      type: object
+      required:
+        - has_more
+        - limit
+      properties:
+        next_cursor:
+          type:
+            - string
+            - 'null'
+          maxLength: 512
+        has_more:
+          type: boolean
+        limit:
+          type: integer
     Province:
       type: object
       required:
@@ -6205,21 +6232,6 @@ components:
         version:
           type: integer
           minimum: 1
-    PageInfo:
-      type: object
-      required:
-        - has_more
-        - limit
-      properties:
-        next_cursor:
-          type:
-            - string
-            - 'null'
-          maxLength: 512
-        has_more:
-          type: boolean
-        limit:
-          type: integer
     SchoolAcademicYear:
       type: object
       additionalProperties: false
@@ -7946,20 +7958,23 @@ components:
           type: string
           maxLength: 1000
           description: Bắt buộc khi sửa role platform hoặc role dùng chung
-    PermissionList:
+    PermissionPage:
       type: object
       required:
         - items
         - catalog_version
+        - page
       properties:
         items:
           type: array
-          maxItems: 1000
+          maxItems: 100
           items:
             $ref: '#/components/schemas/Permission'
         catalog_version:
           type: string
           maxLength: 64
+        page:
+          $ref: '#/components/schemas/PageInfo'
     Permission:
       type: object
       required:
@@ -8333,6 +8348,20 @@ components:
             - active
             - locked
             - deactivated
+    PermissionList:
+      type: object
+      required:
+        - items
+        - catalog_version
+      properties:
+        items:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/Permission'
+        catalog_version:
+          type: string
+          maxLength: 64
     StudentPasswordResetRequest:
       type: object
       additionalProperties: false

@@ -5,7 +5,7 @@
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { stopPortals, TENANTS } from '../../../../test/portal-harness';
-import { renderResearch, RIDS } from '../../../../test/research-backend';
+import { renderResearch, researchState, RIDS } from '../../../../test/research-backend';
 import { tenantFilterStore } from '../../../../shell/tenantFilterStore';
 
 vi.setConfig({ testTimeout: 600_000 });
@@ -98,6 +98,46 @@ describe('Nghiên cứu hiệu quả (F035-AC-35)', () => {
     const r = backend.calls('POST', `/admin/learning/research-agreements/${RIDS.agreement}:revoke`)[0]!;
     expect(r.headers['x-tenant-id']).toBe(TENANTS.thDemoA.tenant_id);
     expect(r.body).toEqual({ reason: 'Trường rút khỏi pilot theo văn bản' });
+  });
+});
+
+describe('Bảng nghiên cứu theo trang cursor (owner 2026-11-23, API_DESIGN §5)', () => {
+  const wave = (i: number) => ({
+    wave_id: `0193a4d2-5300-7000-8000-${String(i).padStart(12, '0')}`, study_id: RIDS.study, kind: 'pre', status: 'scheduled', duration_seconds: 2400,
+    window_start: '2026-12-01T01:00:00Z', window_end: '2026-12-02T01:00:00Z', cohorts: [],
+  });
+
+  it('waves: the first page only, "Tải thêm" asks page 2 with the cursor and appends it without duplicates', async () => {
+    const state = researchState();
+    state.waves = Array.from({ length: 55 }, (_, i) => wave(i));
+    const { backend, user } = await renderResearch(`/platform-admin/efficacy-studies/${RIDS.study}`, { state });
+    await screen.findByRole('heading', { level: 1, name: 'math-g3-2026 · Toán 3 – học kỳ I' });
+    await user.click(screen.getByRole('tab', { name: 'Đợt kiểm tra' }));
+    const panel = await screen.findByRole('tabpanel', { name: 'Đợt kiểm tra' });
+    const rows = () => panel.querySelectorAll('tbody tr[data-row-key]');
+    await waitFor(() => expect(rows()).toHaveLength(50));
+    const first = backend.calls('GET', `/admin/learning/efficacy-studies/${RIDS.study}/waves`);
+    expect(new URLSearchParams(first.at(-1)!.search).get('cursor')).toBeNull();
+    await user.click(within(panel).getByRole('button', { name: 'Tải thêm' }));
+    await waitFor(() => expect(rows()).toHaveLength(55));
+    const keys = [...rows()].map((r) => r.getAttribute('data-row-key'));
+    expect(new Set(keys).size).toBe(55);
+    const calls = backend.calls('GET', `/admin/learning/efficacy-studies/${RIDS.study}/waves`);
+    expect(new URLSearchParams(calls.at(-1)!.search).get('cursor')).toBe('c50');
+    expect(within(panel).queryByRole('button', { name: 'Tải thêm' })).toBeNull();
+  });
+
+  it('studies: the list shows one page and appends the next one with the cursor', async () => {
+    const state = researchState();
+    const base = state.studies[0]!;
+    state.studies = Array.from({ length: 52 }, (_, i) => ({ ...base, study_id: `0193a4d2-5400-7000-8000-${String(i).padStart(12, '0')}`, code: `st-${String(i).padStart(2, '0')}` }));
+    const { backend, user } = await renderResearch('/platform-admin/efficacy-studies', { state });
+    expect(await screen.findByText('st-00')).toBeInTheDocument();
+    expect(screen.queryByText('st-51')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Tải thêm' }));
+    expect(await screen.findByText('st-51')).toBeInTheDocument();
+    expect(screen.getAllByText('st-00')).toHaveLength(1);
+    expect(new URLSearchParams(backend.calls('GET', '/admin/learning/efficacy-studies').at(-1)!.search).get('cursor')).toBe('c50');
   });
 });
 

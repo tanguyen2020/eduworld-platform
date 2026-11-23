@@ -28,11 +28,13 @@ var roleOperations = map[string]func(Handlers) http.HandlerFunc{
 
 func (h Handlers) listPermissions(tenantOnly bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		listFn := h.RoleList.ListAllPermissions
+		var out any
+		var err error
 		if tenantOnly {
-			listFn = h.RoleList.ListTenantPermissions
+			out, err = h.RoleList.ListTenantPermissions(r.Context())
+		} else {
+			out, err = h.RoleList.ListAllPermissions(r.Context(), list(r))
 		}
-		out, err := listFn(r.Context())
 		if err != nil {
 			fail(w, r, err)
 			return

@@ -36,7 +36,7 @@ type EfficacyQueries interface {
 	ListEfficacyStudies(ctx context.Context, status string, in query.PageInput) (query.Page[dto.EfficacyStudyView], error)
 	GetEfficacyStudy(ctx context.Context, id uuid.UUID) (dto.EfficacyStudyView, error)
 	ListEfficacyStudyCohorts(ctx context.Context, studyID uuid.UUID, in query.PageInput) (query.Page[dto.EfficacyStudyCohortView], error)
-	ListEfficacyWaves(ctx context.Context, studyID uuid.UUID) ([]dto.EfficacyWaveView, error)
+	ListEfficacyWaves(ctx context.Context, studyID uuid.UUID, in query.PageInput) (query.Page[dto.EfficacyWaveView], error)
 	GetEfficacyStudyReport(ctx context.Context, studyID, reportID uuid.UUID) (dto.EfficacyReportView, error)
 }
 
@@ -332,12 +332,12 @@ func (h Handlers) listEfficacyWaves(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, err)
 		return
 	}
-	ws, err := h.Efficacy.Queries.ListEfficacyWaves(r.Context(), id)
+	p, err := h.Efficacy.Queries.ListEfficacyWaves(r.Context(), id, pageIn(r))
 	if err != nil {
 		fail(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"items": ws})
+	listItems(w, p)
 }
 
 func (h Handlers) scheduleEfficacyWave(w http.ResponseWriter, r *http.Request) {

@@ -6214,9 +6214,11 @@ paths:
       security:
         - keycloakAdminBearer: []
       x-internal: true
-      summary: Đợt kiểm tra của nghiên cứu — số mời/đã làm/vắng theo lớp, không có điểm
+      summary: Đợt kiểm tra của nghiên cứu — số mời/đã làm/vắng theo cụm, không có điểm; trang keyset (window_start, wave_id) trong truy vấn (API_DESIGN §5)
       parameters:
         - $ref: '#/components/parameters/EfficacyStudyIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -14793,12 +14795,15 @@ components:
       type: object
       required:
         - items
+        - page
       properties:
         items:
           type: array
           maxItems: 20
           items:
             $ref: '#/components/schemas/EfficacyWave'
+        page:
+          $ref: '#/components/schemas/PageInfo'
     EfficacyWave:
       type: object
       required:

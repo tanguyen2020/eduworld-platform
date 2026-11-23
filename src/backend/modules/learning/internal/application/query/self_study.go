@@ -43,8 +43,12 @@ func (q SelfStudy) WrongQuestions(ctx context.Context, subjectID *uuid.UUID, in 
 	if err != nil {
 		return out, err
 	}
+	seek, limit, err := seekOf(q.Cursors, in, kTime)
+	if err != nil {
+		return out, err
+	}
 	err = q.Session.Read(ctx, func(ctx context.Context) error {
-		rs, err := q.Model.WrongQuestions(ctx, p.UserID, subjectID)
+		rs, err := q.Model.WrongQuestions(ctx, p.UserID, subjectID, seek)
 		if err != nil {
 			return err
 		}
@@ -53,8 +57,8 @@ func (q SelfStudy) WrongQuestions(ctx context.Context, subjectID *uuid.UUID, in 
 			views[i] = dto.WrongQuestionView{EntryID: r.EntryID, QuestionVersionID: r.QuestionVersionID, SubjectID: r.SubjectID,
 				ObjectiveIDs: r.ObjectiveIDs, WrongCount: r.WrongCount, LastWrongAt: r.LastWrongAt, NextReviewAt: r.NextDueAt}
 		}
-		out, err = paginate(views, func(v dto.WrongQuestionView) uuid.UUID { return v.EntryID }, in, q.Cursors)
-		return err
+		out = keysetPage(views, limit, q.Cursors, func(v dto.WrongQuestionView) (uuid.UUID, []any) { return v.EntryID, []any{v.NextReviewAt} })
+		return nil
 	})
 	return out, err
 }

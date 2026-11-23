@@ -40,7 +40,8 @@ type QuestionReadModel interface {
 	Version(ctx context.Context, questionID uuid.UUID, versionNo int) (dto.QuestionVersion, error)
 	// Latest returns the newest version of a question.
 	Latest(ctx context.Context, questionID uuid.UUID) (dto.QuestionVersion, error)
-	Search(ctx context.Context, f QuestionFilter) ([]QuestionHit, error)
+	// Search is one keyset page (question_id ASC) of the newest version of each visible question matching f.
+	Search(ctx context.Context, f QuestionFilter, seek Seek) ([]QuestionHit, error)
 }
 
 // PoolFilter narrows the pool read from the database (the rule is applied by selection.Select).

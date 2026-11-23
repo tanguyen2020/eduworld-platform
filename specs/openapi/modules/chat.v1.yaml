@@ -2505,13 +2505,16 @@ paths:
       x-portal-action: action.platform_admin.moderation_switches.view
       summary: Trạng thái công tắc kiểm duyệt (platform và từng tenant, kèm giá trị hiệu lực)
       description: |
-        `platform` luôn có; `tenants` gồm các tenant của `tenant_ids` (System Admin, đọc liên tenant có audit) — không có
-        `tenant_ids` thì rỗng. Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
+        `platform` luôn có (mọi trang); `tenants` là một trang keyset theo `tenant_id` (`limit`/`cursor`) của các tenant của
+        `tenant_ids` (System Admin, đọc liên tenant có audit) — không có `tenant_ids` thì rỗng; chỉ các tenant của trang được đọc
+        từ DB (API_DESIGN §5). Mỗi trạng thái kèm các yêu cầu tắt đang `pending_approval` của cấp đó (`pending_requests`).
       x-internal: true
       security:
         - keycloakAdminBearer: []
       parameters:
         - $ref: '#/components/parameters/TenantIds'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
           description: OK
@@ -2522,13 +2525,17 @@ paths:
                 required:
                   - platform
                   - tenants
+                  - page
                 properties:
                   platform:
                     $ref: '#/components/schemas/ModerationSwitchState'
                   tenants:
                     type: array
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/ModerationSwitchState'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
         '403':
           $ref: '#/components/responses/Forbidden'
     put:

@@ -26,7 +26,8 @@ type LiveArm struct {
 
 // ExperimentReadModel reads the experiments (F035 US5).
 type ExperimentReadModel interface {
-	Experiments(ctx context.Context, status, kind string) ([]ExperimentRow, error)
+	// Experiments is one keyset page (created_at DESC, experiment_id DESC).
+	Experiments(ctx context.Context, status, kind string, seek Seek) ([]ExperimentRow, error)
 	Experiment(ctx context.Context, id uuid.UUID) (*ExperimentRow, error)
 	LatestResult(ctx context.Context, id uuid.UUID) (json.RawMessage, *time.Time, bool, error)
 }

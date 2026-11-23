@@ -652,11 +652,10 @@ func (q Rankings) ranking(ctx context.Context, b board, p BoardParams) (rankingV
 			return q.fromStore(ctx, b, k, off, size, around)
 		}
 	}
-	all, err := q.Reader.Ranking(ctx, q.query(b, nil))
+	r, err := q.window(ctx, q.query(b, nil), b.v, off, size, around)
 	if err != nil {
 		return rankingView{}, nil, err
 	}
-	r := fromList(ranksOf(all), b.v, off, size, around)
 	var rebuild *port.BoardKey
 	if b.end.After(q.now()) {
 		r.stale = q.Store != nil
@@ -695,6 +694,38 @@ func commandScope(d ldb.Definition, scope string) (*uuid.UUID, *int, bool) {
 		return &id, &n, true
 	}
 	return nil, nil, true
+}
+
+// window reads the shown part of a board from the ledgers (the stale path): ranks off+1..off+size and, for a student,
+// its own row and the ranks around it — ranked and cut in SQL (API_DESIGN §5), never the whole board.
+func (q Rankings) window(ctx context.Context, bq port.BoardQuery, v viewer, off, size, around int) (rankingView, error) {
+	w := read.RankWindowQuery{From: off + 1, To: off + size}
+	if v.student {
+		u := v.user
+		w.Viewer, w.Around = &u, around
+	}
+	res, err := q.Reader.RankingWindow(ctx, bq, w)
+	if err != nil {
+		return rankingView{}, err
+	}
+	r := rankingView{total: res.Total}
+	for _, x := range res.Rows {
+		if x.Rank >= w.From && x.Rank <= w.To {
+			r.top = append(r.top, x)
+		}
+		if v.student && x.Student == v.user {
+			me := x
+			r.me = &me
+		}
+	}
+	if r.me != nil {
+		for _, x := range res.Rows {
+			if x.Rank >= r.me.Rank-around && x.Rank <= r.me.Rank+around {
+				r.around = append(r.around, x)
+			}
+		}
+	}
+	return r, nil
 }
 
 func fromList(all []ldb.Ranked, v viewer, off, size, around int) rankingView {
@@ -792,13 +823,17 @@ func (q Rankings) friends(ctx context.Context, b board, off, size, around int) (
 			}
 			return members[i].Student.String() < members[j].Student.String()
 		})
+	}
+	var r rankingView
+	if built {
+		r = fromList(ranksOf(members), b.v, off, size, around)
 	} else {
-		if members, err = q.Reader.Ranking(ctx, q.query(b, ids)); err != nil {
+		// stale path: ranked and cut in SQL over the friends of the viewer
+		if r, err = q.window(ctx, q.query(b, ids), b.v, off, size, around); err != nil {
 			return rankingView{}, nil, err
 		}
 		stale = q.Store != nil && b.end.After(q.now())
 	}
-	r := fromList(ranksOf(members), b.v, off, size, around)
 	r.stale = stale
 	if stale {
 		return r, &k, nil

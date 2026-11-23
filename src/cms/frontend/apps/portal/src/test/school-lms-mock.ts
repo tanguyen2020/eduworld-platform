@@ -3,7 +3,7 @@
 // (listSchoolReconciliationIssues, resolveSchoolReconciliationIssue are contract-only). No class route (ADR-0095).
 // Tenant isolation is simulated: data belongs to one tenant, another tenant's X-Tenant-Id gets 404 (AC-ORG-001).
 // Never imported by application code; NOT a real backend and no live integration.
-import { permissionsOf, problem, TENANTS, type MockAccount, type MockPortalBackend, type RecordedRequest } from './mock-backend';
+import { cursorPage, permissionsOf, problem, TENANTS, type MockAccount, type MockPortalBackend, type RecordedRequest } from './mock-backend';
 
 const json = (status: number, body: unknown, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...headers } });
@@ -111,7 +111,8 @@ export function installSchoolLmsMock(backend: MockPortalBackend): SchoolLmsMockS
     const m = r.method;
     let x: RegExpExecArray | null;
     if (m === 'GET' && p === '/catalog/provinces') {
-      return json(200, { items: [{ province_id: '0193a4d2-0000-7000-8000-0000000000a1', code: 'vn.ha-noi', country_code: 'VN', name: { vi: 'Hà Nội', en: 'Hanoi' }, short_name: { vi: 'HN', en: 'HN' }, province_type: 'municipality', status: 'active' }] });
+      // one cursor page of the keyset list (owner rule 2026-11-23)
+      return json(200, cursorPage([{ province_id: '0193a4d2-0000-7000-8000-0000000000a1', code: 'vn.ha-noi', country_code: 'VN', name: { vi: 'Hà Nội', en: 'Hanoi' }, short_name: { vi: 'HN', en: 'HN' }, province_type: 'municipality', status: 'active' }], new URLSearchParams(r.search)));
     }
     if (m === 'GET' && p === '/tenant/schools') {
       const status = new URLSearchParams(r.search).get('status');

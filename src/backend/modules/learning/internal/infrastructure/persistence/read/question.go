@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"slices"
 
+	entsql "entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent"
@@ -99,92 +99,104 @@ func (QuestionModel) Latest(ctx context.Context, questionID uuid.UUID) (dto.Ques
 	return vs[0], withObjectives(ctx, vs)
 }
 
-// Search implements read.QuestionReadModel: the latest version of each visible question matching the filter.
-func (QuestionModel) Search(ctx context.Context, f read.QuestionFilter) ([]read.QuestionHit, error) {
+// Search implements read.QuestionReadModel: one keyset page (question_id ASC) of the newest version of each visible
+// question matching the filter. Every filter is in SQL — newest version, source, version columns, objective link,
+// full-text — so the page is cut by the database (API_DESIGN §5); the ent interceptor keeps the tenant scope and live
+// rows (R8, R21, R27).
+func (QuestionModel) Search(ctx context.Context, f read.QuestionFilter, seek read.Seek) ([]read.QuestionHit, error) {
 	c := client(ctx)
-	qq := c.Question.Query()
+	vq := c.QuestionVersion.Query().Where(predicate.QuestionVersion(newestLiveVersion))
 	switch f.Source {
 	case "own":
-		qq = qq.Where(entq.TenantIDNotNil())
+		vq = vq.Where(entqv.TenantIDNotNil())
 	case "assigned", "platform":
-		qq = qq.Where(entq.TenantIDIsNil())
+		vq = vq.Where(entqv.TenantIDIsNil())
 	}
-	qs, err := qq.Order(ent.Asc(entq.FieldID)).All(ctx)
+	if f.SubjectID != nil {
+		vq = vq.Where(entqv.SubjectID(*f.SubjectID))
+	}
+	if f.TopicID != nil {
+		vq = vq.Where(entqv.TopicID(*f.TopicID))
+	}
+	if len(f.Difficulties) > 0 {
+		ds := make([]int16, len(f.Difficulties))
+		for i, d := range f.Difficulties {
+			ds[i] = int16(d) //nolint:gosec // 1–5 (contract)
+		}
+		vq = vq.Where(entqv.DifficultyIn(ds...))
+	}
+	if f.Status != "" {
+		vq = vq.Where(entqv.Status(f.Status))
+	}
+	if f.Type != "" {
+		vq = vq.Where(entqv.Type(f.Type))
+	}
+	if f.Efficacy != nil {
+		vq = vq.Where(entqv.EfficacyInstrument(*f.Efficacy))
+	}
+	if f.ObjectiveID != nil {
+		vq = vq.Where(predicate.QuestionVersion(linkedToObjective(*f.ObjectiveID)))
+	}
+	// grade (jsonb containment), content language, translation status and the accent-free full-text (F024-AC-17)
+	vq = vq.Where(docFilters[predicate.QuestionVersion](read.DocFilter{GradeLevel: f.GradeLevel, ContentLanguage: f.ContentLanguage,
+		TranslationStatus: f.TranslationStatus, Q: f.Q})...)
+	if p := seekAfter(seek.After, false, entqv.FieldQuestionID); p != nil {
+		vq = vq.Where(predicate.QuestionVersion(p))
+	}
+	if n := limitOf(seek); n > 0 {
+		vq = vq.Limit(n)
+	}
+	rows, err := vq.Order(ent.Asc(entqv.FieldQuestionID)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	qids := make([]uuid.UUID, len(qs))
-	for i, q := range qs {
-		qids[i] = q.ID
-	}
-	rows, err := c.QuestionVersion.Query().Where(entqv.QuestionIDIn(qids...)).Order(ent.Desc(entqv.FieldVersionNo)).All(ctx)
-	if err != nil {
-		return nil, err
-	}
-	latest := map[uuid.UUID]dto.QuestionVersion{}
-	for _, r := range rows {
-		if _, ok := latest[r.QuestionID]; !ok {
-			latest[r.QuestionID] = questionVersionOf(r)
-		}
-	}
-	vs := make([]dto.QuestionVersion, 0, len(latest))
-	for _, q := range qs {
-		if v, ok := latest[q.ID]; ok {
-			vs = append(vs, v)
-		}
-	}
-	if f.Q != "" && len(vs) > 0 {
-		// Full-text search without accents on the newest versions (F024-AC-17): search_tsv of the F024 migration.
-		vids := make([]uuid.UUID, len(vs))
-		for i, v := range vs {
-			vids[i] = v.ID
-		}
-		ps := docFilters[predicate.QuestionVersion](read.DocFilter{Q: f.Q})
-		hits, err := c.QuestionVersion.Query().Where(append(ps, entqv.IDIn(vids...))...).IDs(ctx)
-		if err != nil {
-			return nil, err
-		}
-		kept := vs[:0]
-		for _, v := range vs {
-			if slices.Contains(hits, v.ID) {
-				kept = append(kept, v)
-			}
-		}
-		vs = kept
+	vs := make([]dto.QuestionVersion, len(rows))
+	qids := make([]uuid.UUID, len(rows))
+	for i, r := range rows {
+		vs[i], qids[i] = questionVersionOf(r), r.QuestionID
 	}
 	if err := withObjectives(ctx, vs); err != nil {
 		return nil, err
 	}
-	byQ := map[uuid.UUID]dto.QuestionVersion{}
-	for _, v := range vs {
-		byQ[v.QuestionID] = v
+	qs, err := c.Question.Query().Where(entq.IDIn(qids...)).All(ctx)
+	if err != nil {
+		return nil, err
 	}
-	var out []read.QuestionHit
+	byID := make(map[uuid.UUID]*ent.Question, len(qs))
 	for _, q := range qs {
-		v, ok := byQ[q.ID]
-		if !ok || !matches(v, f) {
-			continue
+		byID[q.ID] = q
+	}
+	out := make([]read.QuestionHit, 0, len(vs))
+	for _, v := range vs {
+		if q, ok := byID[v.QuestionID]; ok {
+			out = append(out, read.QuestionHit{Question: questionOf(q), Version: v})
 		}
-		out = append(out, read.QuestionHit{Question: questionOf(q), Version: v})
 	}
 	return out, nil
 }
 
-func matches(v dto.QuestionVersion, f read.QuestionFilter) bool {
-	switch {
-	case f.SubjectID != nil && v.SubjectID != *f.SubjectID,
-		f.GradeLevel != nil && !slices.Contains(v.GradeLevels, *f.GradeLevel),
-		f.TopicID != nil && v.TopicID != *f.TopicID,
-		f.ObjectiveID != nil && !slices.Contains(v.ObjectiveIDs, *f.ObjectiveID),
-		len(f.Difficulties) > 0 && !slices.Contains(f.Difficulties, v.Difficulty),
-		f.Status != "" && string(v.Status) != f.Status,
-		f.Type != "" && v.Type != f.Type,
-		f.Efficacy != nil && v.EfficacyInstrument != *f.Efficacy,
-		f.ContentLanguage != "" && v.ContentLanguage != f.ContentLanguage,
-		f.TranslationStatus != "" && (v.TranslationStatus == nil || *v.TranslationStatus != f.TranslationStatus):
-		return false
+// newestLiveVersion keeps the newest version of a live question: version_no = questions.latest_version_no of the same
+// question (same tenant, deleted_at IS NULL).
+func newestLiveVersion(s *entsql.Selector) {
+	lq := entsql.Table(entq.Table).Schema("content").As("lq")
+	sub := entsql.Select(lq.C(entq.FieldLatestVersionNo)).From(lq).Where(entsql.And(
+		entsql.ColumnsEQ(lq.C(entq.FieldID), s.C(entqv.FieldQuestionID)),
+		entsql.Or(entsql.ColumnsEQ(lq.C(entq.FieldTenantID), s.C(entqv.FieldTenantID)),
+			entsql.And(entsql.IsNull(lq.C(entq.FieldTenantID)), entsql.IsNull(s.C(entqv.FieldTenantID)))),
+		entsql.IsNull(lq.C(entq.FieldDeletedAt))))
+	s.Where(entsql.P(func(b *entsql.Builder) {
+		b.Ident(s.C(entqv.FieldVersionNo)).WriteOp(entsql.OpEQ).Wrap(func(nb *entsql.Builder) { nb.Join(sub) })
+	}))
+}
+
+// linkedToObjective keeps the versions linked to an objective (content.question_version_objectives, live links).
+func linkedToObjective(objectiveID uuid.UUID) func(*entsql.Selector) {
+	return func(s *entsql.Selector) {
+		lo := entsql.Table(entqo.Table).Schema("content").As("qlo")
+		sub := entsql.Select(lo.C(entqo.FieldQuestionVersionID)).From(lo).Where(entsql.And(
+			entsql.EQ(lo.C(entqo.FieldObjectiveID), objectiveID), entsql.IsNull(lo.C(entqo.FieldDeletedAt))))
+		s.Where(entsql.In(s.C(entqv.FieldID), sub))
 	}
-	return true
 }
 
 // Delivery implements read.DeliveryReader with explicit SQL on content.question_delivery_v (no answer column) and,

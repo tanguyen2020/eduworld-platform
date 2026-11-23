@@ -4,7 +4,7 @@
 // listCatalogSchools with X-Tenant-Id or `tenant_ids[]` + `status`), school imports, platform settings, cleanup runs
 // (approve, cancel with reason + Idempotency-Key replay).
 // It records requests only; it is NOT a backend, enforces no authorization and is never imported by application code.
-import { MockPortalBackend, problem, TENANTS, type RecordedRequest } from './mock-backend';
+import { cursorPage, MockPortalBackend, problem, TENANTS, type RecordedRequest } from './mock-backend';
 
 /**
  * MOCK (test only): jsdom's Blob/File has neither arrayBuffer() nor stream(), which Node's fetch Request needs to read
@@ -77,6 +77,9 @@ export interface PlatformState {
   /** Idempotency-Key → run id of a cancelStudentCleanupRun already applied (replay answers 204 again). */
   cancels: Map<string, string>;
   importPolls: number;
+  /** Catalog rows served as cursor pages (keyset lists in the backend, owner rule 2026-11-23). */
+  countries: Record<string, unknown>[];
+  provinces: Record<string, unknown>[];
 }
 
 export function platformState(): PlatformState {
@@ -101,6 +104,8 @@ export function platformState(): PlatformState {
     ],
     cancels: new Map(),
     importPolls: 0,
+    countries: [{ country_code: 'VN', name: { vi: 'Việt Nam', en: 'Viet Nam' }, default_locale: 'vi-VN', status: 'active' }],
+    provinces: PROVINCES.map((p) => ({ ...p })),
   };
 }
 
@@ -211,7 +216,8 @@ export function withPlatformMock(backend: MockPortalBackend, state: PlatformStat
       return v;
     };
     if (route === 'GET /catalog/countries') {
-      return json(200, { items: [{ country_code: 'VN', name: { vi: 'Việt Nam', en: 'Viet Nam' }, default_locale: 'vi-VN', status: 'active', version: version('/admin/catalog/countries/VN') }] }, { ETag: 'W/"catalog-1"' });
+      const rows = s.countries.map((c) => ({ ...c, version: version(`/admin/catalog/countries/${String(c.country_code)}`) }));
+      return json(200, cursorPage(rows, q), { ETag: 'W/"catalog-1"' });
     }
     if (rec.method === 'PATCH' && rec.path.startsWith('/admin/catalog/countries/')) {
       const bad = ifMatchOk(rec, rec.path, s);
@@ -221,7 +227,8 @@ export function withPlatformMock(backend: MockPortalBackend, state: PlatformStat
     }
     if (route === 'GET /catalog/provinces') {
       const st = q.get('status') ?? 'active';
-      return json(200, { items: PROVINCES.filter((p) => st === 'all' || p.status === st).map((p) => ({ ...p, version: version(`/admin/catalog/provinces/${p.province_id}`) })) });
+      const rows = s.provinces.filter((p) => st === 'all' || p.status === st).map((p) => ({ ...p, version: version(`/admin/catalog/provinces/${String(p.province_id)}`) }));
+      return json(200, cursorPage(rows, q));
     }
     if (route === 'POST /admin/catalog/provinces') {
       const p = { ...PROVINCES[0], ...body, province_id: '0193a4d2-7777-7000-8000-000000000099' };

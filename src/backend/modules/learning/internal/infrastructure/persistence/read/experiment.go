@@ -54,10 +54,11 @@ func experimentRows(ctx context.Context, q string, args ...any) ([]write.Experim
 }
 
 // Experiments implements read.ExperimentReadModel.
-func (ExperimentModel) Experiments(ctx context.Context, status, kind string) ([]write.ExperimentRow, error) {
-	// tenancyguard:ok platform table learning.experiments (G, no tenant_id), deleted_at IS NULL
+func (ExperimentModel) Experiments(ctx context.Context, status, kind string, seek read.Seek) ([]write.ExperimentRow, error) {
+	// tenancyguard:ok platform table learning.experiments (G, no tenant_id), deleted_at IS NULL; one keyset page (created_at DESC, id DESC)
 	return experimentRows(ctx, `SELECT `+experimentReadCols+` FROM learning.experiments WHERE deleted_at IS NULL AND ($1 = '' OR status = $1)
-		AND ($2 = '' OR kind = $2) ORDER BY created_at DESC, experiment_id`, status, kind)
+		AND ($2 = '' OR kind = $2) AND ($3::timestamptz IS NULL OR (created_at, experiment_id) < ($3::timestamptz, $4::uuid))
+		ORDER BY created_at DESC, experiment_id DESC LIMIT $5`, append([]any{status, kind}, seekArgs(seek, 1)...)...)
 }
 
 // Experiment implements read.ExperimentReadModel.

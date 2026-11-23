@@ -65,8 +65,8 @@ export function createAuthApi(opts: AuthApiOptions): AuthApi {
   const fetchImpl = opts.fetch ?? ((...a: Parameters<typeof fetch>) => globalThis.fetch(...a));
   const now = opts.now ?? Date.now;
 
-  async function post<T>(path: string, body?: unknown, csrf?: string | null): Promise<AuthResult<T>> {
-    const headers = new Headers({ Accept: 'application/json, application/problem+json', 'Accept-Language': opts.getLocale(), traceparent: traceparent() });
+  async function post<T>(path: string, body?: unknown, csrf?: string | null, locale?: string): Promise<AuthResult<T>> {
+    const headers = new Headers({ Accept: 'application/json, application/problem+json', 'Accept-Language': locale ?? opts.getLocale(), traceparent: traceparent() });
     if (body !== undefined) headers.set('Content-Type', 'application/json');
     if (csrf) headers.set(CSRF_HEADER, csrf);
     let res: Response;
@@ -92,7 +92,8 @@ export function createAuthApi(opts: AuthApiOptions): AuthApi {
   }
 
   return {
-    login: (body) => post<PortalTokenResponse>(AUTH_PATHS.login, body),
+    // the login page is always English (owner 2026-11-23): its request asks for English Problem texts too
+    login: (body) => post<PortalTokenResponse>(AUTH_PATHS.login, body, undefined, body.locale),
     refresh: (csrf) => post<PortalTokenResponse>(AUTH_PATHS.refresh, undefined, csrf),
     logout: (csrf) => post<undefined>(AUTH_PATHS.logout, undefined, csrf),
     setupPassword: (body) => post<PortalSetupResult>(AUTH_PATHS.setupPassword, body),

@@ -4,11 +4,13 @@ package integration
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/dto"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/application/query"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/identity/internal/infrastructure/persistence/read"
 	"github.com/tanguyen2020/eduworld-platform/src/backend/pkg/authz"
@@ -41,13 +43,51 @@ func TestOrgQueries(t *testing.T) {
 
 	// Catalog: countries and provinces with successors.
 	anyUser := authztest.Ctx(ctx, authztest.Staff(ta, "tenant_admin"))
-	cs, err := q.ListCountries(anyUser)
-	if err != nil || len(cs) != 4 {
-		t.Fatalf("countries = %d %v", len(cs), err)
+	// Owner rule 2026-11-23 (API_DESIGN §5): the catalog grids read one keyset page in SQL — page 2 continues page 1
+	// with no duplicate and no gap, in code order (global catalog: the same rows for every tenant).
+	var countries []string
+	in := query.ListInput{Limit: 3}
+	for i := 0; ; i++ {
+		pg, err := q.ListCountries(anyUser, in)
+		if err != nil || len(pg.Items) > 3 || i > 3 {
+			t.Fatalf("countries page %d = %+v %v", i, pg, err)
+		}
+		for _, c := range pg.Items {
+			countries = append(countries, c.CountryCode)
+		}
+		if !pg.Page.HasMore {
+			break
+		}
+		in.Cursor = *pg.Page.NextCursor
 	}
-	ps, err := q.ListProvinces(anyUser, "VN", "inactive")
-	if err != nil || len(ps) != 63 || ps[0].SuccessorCode == nil {
-		t.Fatalf("former provinces = %d %v", len(ps), err)
+	if len(countries) != 4 || !sort.StringsAreSorted(countries) || len(dedupe(countries)) != 4 {
+		t.Fatalf("countries = %v", countries)
+	}
+	var former []dto.Province
+	pin := query.ListInput{Limit: 20}
+	for i := 0; ; i++ {
+		pg, err := q.ListProvinces(anyUser, "VN", "inactive", pin)
+		if err != nil || len(pg.Items) > 20 || i > 5 {
+			t.Fatalf("former provinces page %d = %+v %v", i, pg.Page, err)
+		}
+		former = append(former, pg.Items...)
+		if !pg.Page.HasMore {
+			break
+		}
+		pin.Cursor = *pg.Page.NextCursor
+	}
+	codes := make([]string, len(former))
+	for i, p := range former {
+		codes[i] = p.Code
+		if p.SuccessorCode == nil {
+			t.Fatalf("former province %s without successor (resolved for its page)", p.Code)
+		}
+	}
+	if len(former) != 63 || len(dedupe(codes)) != 63 {
+		t.Fatalf("former provinces = %d unique=%d", len(former), len(dedupe(codes)))
+	}
+	if _, err := q.ListProvinces(anyUser, "VN", "inactive", query.ListInput{Cursor: "garbage"}); code(err) != problem.BadRequest {
+		t.Fatalf("garbage cursor: %v (want 400)", err)
 	}
 
 	// AC-10/AC-17: tenant users see only their tenant; another tenant's school is 404.
@@ -192,4 +232,13 @@ func TestOrgQueries(t *testing.T) {
 		_, err := q.GetStudentProfile(authztest.Ctx(ctx, authztest.Student(ta)), ids.New())
 		return err
 	}())
+}
+
+// dedupe returns the distinct values of xs (a page walk must not repeat a row).
+func dedupe(xs []string) map[string]bool {
+	out := make(map[string]bool, len(xs))
+	for _, x := range xs {
+		out[x] = true
+	}
+	return out
 }

@@ -15,6 +15,7 @@ import (
 	entct "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/contenttransition"
 	entlmv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/learningmaterialversion"
 	entlv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/lessonversion"
+	"github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/predicate"
 	entqsi "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetitem"
 	entqsv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionsetversion"
 	entqv "github.com/tanguyen2020/eduworld-platform/src/backend/modules/learning/ent/questionversion"
@@ -52,13 +53,22 @@ func titleOfJSON(raw []byte, lang string) string {
 	return s
 }
 
-// Versions implements read.ReleaseReadModel (newest first).
-func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, itemID uuid.UUID) ([]dto.VersionSummary, error) {
+// Versions implements read.ReleaseReadModel: one keyset page of the versions of an item, newest first (version_no DESC,
+// id DESC), with the status and id filters in SQL (API_DESIGN §5).
+func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, itemID uuid.UUID, f read.VersionFilter) ([]dto.VersionSummary, error) {
+	if f.IDs != nil && len(f.IDs) == 0 {
+		return nil, nil
+	}
 	cl := client(ctx)
+	n := limitOf(f.Seek)
 	var out []dto.VersionSummary
 	switch t {
 	case contentmodel.TypeQuestion:
-		rows, err := cl.QuestionVersion.Query().Where(entqv.QuestionID(itemID)).Order(ent.Desc(entqv.FieldVersionNo)).All(ctx)
+		q := cl.QuestionVersion.Query().Where(entqv.QuestionID(itemID)).Where(versionPreds[predicate.QuestionVersion](f, entqv.FieldID)...)
+		if n > 0 {
+			q = q.Limit(n)
+		}
+		rows, err := q.Order(ent.Desc(entqv.FieldVersionNo), ent.Desc(entqv.FieldID)).All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +76,11 @@ func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, it
 			out = append(out, summary(r.VersionNo, r.ID, r.Status, r.ChangeNote, r.AuthorID, r.ReviewerID, r.PublishedBy, r.PublishedAt, r.PublishAt))
 		}
 	case contentmodel.TypeQuestionSet:
-		rows, err := cl.QuestionSetVersion.Query().Where(entqsv.QuestionSetID(itemID)).Order(ent.Desc(entqsv.FieldVersionNo)).All(ctx)
+		q := cl.QuestionSetVersion.Query().Where(entqsv.QuestionSetID(itemID)).Where(versionPreds[predicate.QuestionSetVersion](f, entqsv.FieldID)...)
+		if n > 0 {
+			q = q.Limit(n)
+		}
+		rows, err := q.Order(ent.Desc(entqsv.FieldVersionNo), ent.Desc(entqsv.FieldID)).All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +88,11 @@ func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, it
 			out = append(out, summary(r.VersionNo, r.ID, r.Status, r.ChangeNote, r.AuthorID, r.ReviewerID, r.PublishedBy, r.PublishedAt, r.PublishAt))
 		}
 	case contentmodel.TypeLesson:
-		rows, err := cl.LessonVersion.Query().Where(entlv.LessonID(itemID)).Order(ent.Desc(entlv.FieldVersionNo)).All(ctx)
+		q := cl.LessonVersion.Query().Where(entlv.LessonID(itemID)).Where(versionPreds[predicate.LessonVersion](f, entlv.FieldID)...)
+		if n > 0 {
+			q = q.Limit(n)
+		}
+		rows, err := q.Order(ent.Desc(entlv.FieldVersionNo), ent.Desc(entlv.FieldID)).All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +100,12 @@ func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, it
 			out = append(out, summary(r.VersionNo, r.ID, r.Status, r.ChangeNote, r.AuthorID, r.ReviewerID, r.PublishedBy, r.PublishedAt, r.PublishAt))
 		}
 	case contentmodel.TypeLearningMaterial:
-		rows, err := cl.LearningMaterialVersion.Query().Where(entlmv.LearningMaterialID(itemID)).Order(ent.Desc(entlmv.FieldVersionNo)).All(ctx)
+		q := cl.LearningMaterialVersion.Query().Where(entlmv.LearningMaterialID(itemID)).
+			Where(versionPreds[predicate.LearningMaterialVersion](f, entlmv.FieldID)...)
+		if n > 0 {
+			q = q.Limit(n)
+		}
+		rows, err := q.Order(ent.Desc(entlmv.FieldVersionNo), ent.Desc(entlmv.FieldID)).All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -90,8 +113,12 @@ func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, it
 			out = append(out, summary(r.VersionNo, r.ID, r.Status, r.ChangeNote, r.AuthorID, r.ReviewerID, r.PublishedBy, r.PublishedAt, r.PublishAt))
 		}
 	case contentmodel.TypeAssessmentBlueprint:
-		rows, err := cl.AssessmentBlueprintVersion.Query().Where(entabv.AssessmentBlueprintID(itemID)).
-			Order(ent.Desc(entabv.FieldVersionNo)).All(ctx)
+		q := cl.AssessmentBlueprintVersion.Query().Where(entabv.AssessmentBlueprintID(itemID)).
+			Where(versionPreds[predicate.AssessmentBlueprintVersion](f, entabv.FieldID)...)
+		if n > 0 {
+			q = q.Limit(n)
+		}
+		rows, err := q.Order(ent.Desc(entabv.FieldVersionNo), ent.Desc(entabv.FieldID)).All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +126,11 @@ func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, it
 			out = append(out, summary(r.VersionNo, r.ID, r.Status, r.ChangeNote, r.AuthorID, r.ReviewerID, r.PublishedBy, r.PublishedAt, r.PublishAt))
 		}
 	case contentmodel.TypeActivity:
-		rows, err := cl.ActivityVersion.Query().Where(entactv.ActivityID(itemID)).Order(ent.Desc(entactv.FieldVersionNo)).All(ctx)
+		q := cl.ActivityVersion.Query().Where(entactv.ActivityID(itemID)).Where(versionPreds[predicate.ActivityVersion](f, entactv.FieldID)...)
+		if n > 0 {
+			q = q.Limit(n)
+		}
+		rows, err := q.Order(ent.Desc(entactv.FieldVersionNo), ent.Desc(entactv.FieldID)).All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -110,6 +141,26 @@ func (ReleaseModel) Versions(ctx context.Context, t contentmodel.ContentType, it
 		return nil, problem.New(problem.Internal, "no version table for "+string(t))
 	}
 	return out, withFieldComments(ctx, out)
+}
+
+// versionPreds are the SQL filters of a version list: status, ids and the keyset position (version_no DESC, id DESC).
+func versionPreds[P ~func(*entsql.Selector)](f read.VersionFilter, idCol string) []P {
+	var out []P
+	if f.Status != "" {
+		st := f.Status
+		out = append(out, func(s *entsql.Selector) { s.Where(entsql.EQ(s.C("status"), st)) })
+	}
+	if len(f.IDs) > 0 {
+		ids := make([]any, len(f.IDs))
+		for i, id := range f.IDs {
+			ids[i] = id
+		}
+		out = append(out, func(s *entsql.Selector) { s.Where(entsql.In(s.C(idCol), ids...)) })
+	}
+	if p := seekAfter(f.Seek.After, true, idCol, "version_no"); p != nil {
+		out = append(out, p)
+	}
+	return out
 }
 
 // withFieldComments adds the per-field comments of the latest reject of each version (F025 T046, OQ F054-1).

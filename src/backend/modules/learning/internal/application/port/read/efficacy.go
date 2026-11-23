@@ -21,15 +21,23 @@ type WaveSessionRead struct {
 	Invited, Completed, Absent int
 }
 
+// CohortNoPair is the sort value of a cohort without a pair (validation arm) in the keyset of listEfficacyStudyCohorts:
+// after every pair (pair_no ≤ 200).
+const CohortNoPair = 32767
+
 // EfficacyReadModel reads the efficacy study (F035 US2–US3, US6) with explicit SQL: G tables have no tenant; T tables
 // filter the tenants given (CrossTenantScope or the audited bypass efficacy_study) and deleted_at.
 type EfficacyReadModel interface {
-	Agreements(ctx context.Context, tenants []uuid.UUID, status string) ([]write.AgreementRow, error)
-	Studies(ctx context.Context, status string, tenants []uuid.UUID) ([]write.StudyRow, error)
+	// Agreements is one keyset page (tenant_id, created_at, agreement_id) of the agreements of the tenants.
+	Agreements(ctx context.Context, tenants []uuid.UUID, status string, seek Seek) ([]write.AgreementRow, error)
+	// Studies is one keyset page (created_at DESC, study_id DESC); tenants nil = every study.
+	Studies(ctx context.Context, status string, tenants []uuid.UUID, seek Seek) ([]write.StudyRow, error)
 	Study(ctx context.Context, id uuid.UUID) (*write.StudyRow, error)
-	// StudyCohorts lists the cohorts of a study; tenants nil = every tenant of the study.
-	StudyCohorts(ctx context.Context, studyID uuid.UUID, tenants []uuid.UUID) ([]StudyCohortRead, error)
-	Waves(ctx context.Context, studyID uuid.UUID) ([]write.WaveRow, error)
+	// StudyCohorts is one keyset page (COALESCE(pair_no, 32767), school_id) of the cohorts of a study; tenants nil =
+	// every tenant of the study; Seek{} = every cohort (≤ 2 × 200 pairs + validation cohorts, the counts of a study).
+	StudyCohorts(ctx context.Context, studyID uuid.UUID, tenants []uuid.UUID, seek Seek) ([]StudyCohortRead, error)
+	// Waves is one keyset page (window_start, wave_id) of the waves of a study (Seek{} = every wave, the data export).
+	Waves(ctx context.Context, studyID uuid.UUID, seek Seek) ([]write.WaveRow, error)
 	WaveSessions(ctx context.Context, waveID uuid.UUID) ([]WaveSessionRead, error)
 	Report(ctx context.Context, studyID, reportID uuid.UUID) (*write.EfficacyReportRow, error)
 }

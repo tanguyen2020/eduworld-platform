@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActionGate } from '../../../permissions/ActionGate';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
-import { useCountries, useCreateProvince, useProvinces, useUpdateProvince, type Province, type ProvinceInput, type ProvinceStatusFilter } from '../api/catalog';
+import { useCountryOptions, useCreateProvince, useProvinceOptions, useProvinces, useUpdateProvince, type Province, type ProvinceInput, type ProvinceStatusFilter } from '../api/catalog';
 import { LIMITS } from '../limits';
 import { LimitedField, ReasonField } from '../ui';
 import { ProvinceSuccessionDialog } from './ProvinceSuccessionDialog';
@@ -35,7 +35,7 @@ function ProvinceForm({ province, onClose }: { province: Province | null; onClos
   const [form] = Form.useForm<FormValues>();
   const create = useCreateProvince();
   const update = useUpdateProvince();
-  const countries = useCountries();
+  const countries = useCountryOptions();
   const mutation = province ? update : create;
   const submit = async () => {
     const v = await form.validateFields().catch(() => null);
@@ -90,7 +90,7 @@ function ProvinceForm({ province, onClose }: { province: Province | null; onClos
         {province ? null : (
           <>
             <Form.Item name="country_code" label={t('platform.catalog.countryCode')} rules={[{ required: true }]}>
-              <SearchSelect options={(countries.data?.items ?? []).map((c) => ({ value: c.country_code, label: `${c.country_code} · ${c.name.vi}` }))} />
+              <SearchSelect truncated={countries.truncated} options={countries.items.map((c) => ({ value: c.country_code, label: `${c.country_code} · ${c.name.vi}` }))} />
             </Form.Item>
             <Form.Item name="province_type" label={t('platform.catalog.provinceType')} rules={[{ required: true }]}>
               <SearchSelect options={PROVINCE_TYPES.map((x) => ({ value: x, label: t(`platform.catalog.provinceTypes.${x}`) }))} />
@@ -116,9 +116,10 @@ export function ProvincesPage() {
   const [succession, setSuccession] = useState(false);
   const rows = useMemo(() => {
     const s = search.trim().toLowerCase();
-    const items = provinces.data?.items ?? [];
+    const items = provinces.rows;
     return s ? items.filter((p) => p.code.includes(s) || p.name.vi.toLowerCase().includes(s) || p.name.en.toLowerCase().includes(s) || (p.official_code ?? '').includes(s)) : items;
-  }, [provinces.data, search]);
+  }, [provinces.rows, search]);
+  const allProvinces = useProvinceOptions('all');
 
   const columns: ColumnsType<Province> = [
     { key: 'code', title: t('platform.catalog.provinceCode'), dataIndex: 'code' },
@@ -166,9 +167,14 @@ export function ProvincesPage() {
         </ActionGate>
       </Space>
       {provinces.error ? <ProblemMessage error={provinces.error} /> : null}
-      <Table rowKey="province_id" columns={columns} dataSource={rows} loading={provinces.isFetching} pagination={{ pageSize: 50, hideOnSinglePage: true }} />
+      <Table rowKey="province_id" columns={columns} dataSource={rows} loading={provinces.isFetching} pagination={false} />
+      {provinces.hasNextPage ? (
+        <Button onClick={() => provinces.fetchNextPage()} loading={provinces.isFetchingNextPage}>
+          {t('platform.common.loadMore')}
+        </Button>
+      ) : null}
       {editing ? <ProvinceForm province={editing === 'new' ? null : editing} onClose={() => setEditing(null)} /> : null}
-      {succession ? <ProvinceSuccessionDialog provinces={provinces.data?.items ?? []} onClose={() => setSuccession(false)} /> : null}
+      {succession ? <ProvinceSuccessionDialog provinces={allProvinces.items} onClose={() => setSuccession(false)} /> : null}
     </section>
   );
 }

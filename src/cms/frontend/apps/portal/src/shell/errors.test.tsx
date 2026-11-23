@@ -31,7 +31,7 @@ describe('no step-up re-login (F051-AC-13, ADR-0094)', () => {
   it('session ended (refresh 401 REFRESH_TOKEN_INVALID) → /login keeping the URL, no dialog', async () => {
     const backend = new MockPortalBackend();
     const { router } = await renderPortal({ url: '/platform-admin/tenants', backend });
-    expect(await screen.findByRole('heading', { level: 1, name: 'Chào mừng thầy cô trở lại' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Welcome back, teachers' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).toBeNull();
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
     expect(router.state.location.search).toBe('?returnUrl=%2Fplatform-admin%2Ftenants');

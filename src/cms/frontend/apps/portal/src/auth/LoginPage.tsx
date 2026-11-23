@@ -1,6 +1,7 @@
 // LoginPage (F051 T058, F051-AC-01/04/30/31, ADR-0091 mục 1; layout: ADMIN_PORTAL §1.3b direction A "Sân trường"):
-// the portal's own /login page — username or email, password (show/hide), "Quên mật khẩu?", language — sent as ONE
-// `portalLogin` request with `device_id` and `locale`. No 6-digit code (owner 2026-11-21: portal MFA removed,
+// the portal's own /login page — username or email, password (show/hide), "Forgot password?" — sent as ONE
+// `portalLogin` request with `device_id` and `locale`. Owner 2026-11-23: the page is always English (LoginLocale: en-US
+// catalog, no language control; Problem messages and the request `locale`/`Accept-Language` in English too). No 6-digit code (owner 2026-11-21: portal MFA removed,
 // ADR-0094): the request never carries `otp`. Every authentication failure shows one generic message
 // and clears the password. No redirect to Keycloak, no tenant choice before sign-in, no tenant in the URL. The privacy
 // policy and game links are not shown: the runtime config has no URL for them (AGENTS R3), only the sentences stay.
@@ -10,11 +11,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { usePortalRuntime } from '../app/runtime';
-import type { Locale } from '../i18n';
 import { useSession } from '../session/SessionProvider';
 import { removeItem, STORAGE_KEYS } from '../shared/storage';
 import { AuthLayout } from './AuthLayout';
 import { deviceId } from './deviceId';
+import { LOGIN_LOCALE, LoginLocale } from './loginLocale';
 import { setupTicketStore } from './memoryStores';
 import { returnTarget } from './returnUrl';
 
@@ -56,7 +57,15 @@ function LoginFooter() {
 }
 
 export function LoginPage() {
-  const { t, i18n } = useTranslation();
+  return (
+    <LoginLocale>
+      <LoginForm />
+    </LoginLocale>
+  );
+}
+
+function LoginForm() {
+  const { t } = useTranslation();
   const rt = usePortalRuntime();
   const session = useSession();
   const { notification } = AntApp.useApp();
@@ -69,7 +78,7 @@ export function LoginPage() {
 
   if (status === 'restoring') {
     return (
-      <AuthLayout title={t('shell.login.welcome')}>
+      <AuthLayout title={t('shell.login.welcome')} languageToggle={false}>
         <Spin aria-label={t('shell.session.restoring')} />
       </AuthLayout>
     );
@@ -84,7 +93,7 @@ export function LoginPage() {
       username: values.username.trim(),
       password: values.password,
       device_id: deviceId(),
-      locale: i18n.language as Locale,
+      locale: LOGIN_LOCALE,
     });
     setSubmitting(false);
     if (r.ok) {
@@ -115,7 +124,7 @@ export function LoginPage() {
 
   const notice = session.notice;
   return (
-    <AuthLayout title={t('shell.login.welcome')} subtitle={t('shell.login.subtitle')} below={<LoginFooter />}>
+    <AuthLayout title={t('shell.login.welcome')} subtitle={t('shell.login.subtitle')} below={<LoginFooter />} languageToggle={false}>
       <Flex vertical gap="middle">
         {notice ? <Alert type="info" showIcon message={t(`shell.login.notice.${notice}`)} /> : null}
         {failure?.kind === 'message' ? <Alert type="error" showIcon message={failure.text} role="alert" /> : null}

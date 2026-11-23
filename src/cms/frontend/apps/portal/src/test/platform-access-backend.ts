@@ -6,7 +6,7 @@
 // plugged into MockPortalBackend after the workspace D mock of platform-backend.ts. It mimics the contract answers the
 // screens must display (422/409/412/403 codes); it is NOT a backend, enforces no authorization and is never imported
 // by application code.
-import { MockPortalBackend, problem, TENANTS, type RecordedRequest } from './mock-backend';
+import { cursorPage, MockPortalBackend, problem, TENANTS, type RecordedRequest } from './mock-backend';
 import { withPlatformMock } from './platform-backend';
 
 const json = (status: number, body: unknown, headers: Record<string, string> = {}) =>
@@ -61,6 +61,8 @@ const role = (id: string, code: string, kind: string, extra: Obj = {}) => ({
 
 export interface AccessState {
   catalogVersion: string;
+  /** Extra catalog rows (paging tests of listAllPermissions, a keyset list in the backend). */
+  extraPermissions: Obj[];
   roles: ReturnType<typeof role>[];
   userRoles: Obj[];
   users: Obj[];
@@ -79,6 +81,7 @@ export interface AccessState {
 export function accessState(): AccessState {
   return {
     catalogVersion: '2026.11.19.1',
+    extraPermissions: [],
     roles: [
       role(AIDS.roleSystemAdmin, 'system_admin', 'platform', { is_system: true, permission_codes: ['platform.role.read', 'platform.role.write'], active_user_role_count: 1 }),
       role(AIDS.roleLiveops, 'liveops', 'platform', { is_system: true, permission_codes: ['game.quest.write', 'game.event.write'], active_user_role_count: 2 }),
@@ -141,7 +144,7 @@ export function withAccessMock(backend: MockPortalBackend, state: AccessState = 
     const tenantIds = q.getAll('tenant_ids');
     const body = (rec.body ?? {}) as Obj;
     const route = `${rec.method} ${rec.path}`;
-    if (route === 'GET /admin/permissions') return json(200, { items: PERMISSIONS, catalog_version: s.catalogVersion });
+    if (route === 'GET /admin/permissions') return json(200, { ...cursorPage([...PERMISSIONS, ...s.extraPermissions], q), catalog_version: s.catalogVersion });
     if (route === 'GET /admin/roles') {
       const kind = q.get('role_scope_kind');
       const rows = s.roles.filter((r) => (!kind || r.role_scope_kind === kind) && (!r.tenant_id || !tenantIds.length || tenantIds.includes(r.tenant_id)));

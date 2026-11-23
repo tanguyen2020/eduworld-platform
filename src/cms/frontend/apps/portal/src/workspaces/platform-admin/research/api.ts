@@ -3,7 +3,8 @@
 // requests — every rule (pairing, statistics, guardrails, small-cell suppression) is computed by the backend (AGENTS
 // R1, R7). Tenant writes carry the X-Tenant-Id of their target tenant; lists of tenant data carry `tenant_ids[]`
 // (CrossTenantScope, audit `cross_tenant.accessed`).
-import { useInfiniteQuery, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { useIdempotentMutation } from '../../../shared/api/useIdempotentMutation';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { pageQuery, usePlatformApi, versionIfMatch, type PageInfo, type Schemas } from '../api/common';
@@ -47,15 +48,9 @@ const KEY = ['platform', 'research'] as const;
 const studyKey = (id: string): QueryKey => [...KEY, 'study', id];
 const experimentKey = (id: string): QueryKey => [...KEY, 'experiment', id];
 
+/** Rows of a research table = cursor pages read one by one (owner rule 2026-11-23: pagination in the query, "Tải thêm"). */
 function useItemsList<T>(queryKey: QueryKey, fetchPage: (cursor: string | undefined) => Promise<ItemsPage<T>>, enabled = true) {
-  const q = useInfiniteQuery({
-    queryKey,
-    queryFn: ({ pageParam }) => fetchPage(pageParam),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last: ItemsPage<T>) => (last.page.has_more && last.page.next_cursor ? last.page.next_cursor : undefined),
-    enabled,
-  });
-  return { ...q, rows: q.data?.pages.flatMap((p) => p.items) ?? [] };
+  return useCursorPages<T, ItemsPage<T>>(queryKey, fetchPage, { enabled });
 }
 
 // ---------- agreements ----------
@@ -185,13 +180,14 @@ export function useRemoveStudyCohort(studyId: string) {
   );
 }
 
+/** listEfficacyWaves: cursor pages (keyset window_start, wave_id in the query — API_DESIGN §5), "Tải thêm" in the table. */
 export function useWaves(studyId: string) {
   const api = usePlatformApi();
-  return useQuery({
-    queryKey: [...studyKey(studyId), 'waves'],
-    queryFn: () =>
-      api.call<Schemas['EfficacyWaveList']>(api.client.GET('/admin/learning/efficacy-studies/{study_id}/waves', { params: { path: { study_id: studyId } } })),
-  });
+  return useItemsList<EfficacyWave>([...studyKey(studyId), 'waves'], (cursor) =>
+    api.call<ItemsPage<EfficacyWave>>(
+      api.client.GET('/admin/learning/efficacy-studies/{study_id}/waves', { params: { path: { study_id: studyId }, query: pageQuery(cursor) } }),
+    ),
+  );
 }
 
 export function useScheduleWave(studyId: string) {

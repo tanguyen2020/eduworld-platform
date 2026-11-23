@@ -52,7 +52,8 @@ type MasteryDetail struct {
 // SelfStudyReadModel reads the self-study read models of F032 in the scope of ctx (tenant + deleted_at, RLS T).
 type SelfStudyReadModel interface {
 	// WrongQuestions lists the active review entries of a student (one subject or all), soonest due first.
-	WrongQuestions(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID) ([]WrongQuestionRecord, error)
+	// WrongQuestions is one keyset page (next_due_at, entry_id) of the active review list of the student.
+	WrongQuestions(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID, seek Seek) ([]WrongQuestionRecord, error)
 	// Recommendations lists the active, not expired recommendations of a student (one subject or all) by priority.
 	Recommendations(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID, now time.Time) ([]RecommendationRecord, error)
 	// MasteryDetails lists the masteries of a student with the objective metadata (one subject and/or grade).

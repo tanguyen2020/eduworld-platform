@@ -17,6 +17,28 @@ function seed(m: MockPublishing, tenant: string | null = A) {
   m.add({ id: P(303), type: 'question', tenant_id: TENANTS.thcsDemoB.tenant_id, title: { vi: 'Câu trường B' }, versions: [{ status: 'draft' }] });
 }
 
+describe('Danh sách theo trang cursor (owner 2026-11-23, API_DESIGN §5)', () => {
+  it('searchQuestions: the table shows the first page; "Xem thêm" asks page 2 with the cursor and appends it', async () => {
+    const { backend, user } = await renderPublishing('/content-studio/question-bank', {
+      account: tenantUser(),
+      setup: (m) => {
+        m.listPageSize = 2; // the screen asks 50 rows; 2-row pages keep the test light and still exercise the cursor
+        for (let i = 0; i < 3; i++) m.add({ id: P(400 + i), type: 'question', tenant_id: A, title: { vi: `Câu số ${String(i).padStart(2, '0')}` }, versions: [{ status: 'draft', content: { type: 'single_choice' } }] });
+      },
+    });
+    // first test of the file: it pays the cold import of the lazy Content Studio chunk on the loaded shared CPU
+    expect(await screen.findByText('Câu số 00', undefined, { timeout: 90_000 })).toBeInTheDocument();
+    expect(screen.getByText('Câu số 01')).toBeInTheDocument();
+    expect(screen.queryByText('Câu số 02')).toBeNull();
+    expect(new URLSearchParams(backend.calls('GET', '/cms/learning/questions').at(-1)!.search).get('cursor')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Xem thêm' }));
+    expect(await screen.findByText('Câu số 02')).toBeInTheDocument();
+    expect(screen.getAllByText('Câu số 00')).toHaveLength(1);
+    expect(new URLSearchParams(backend.calls('GET', '/cms/learning/questions').at(-1)!.search).get('cursor')).toBe('c2');
+    expect(screen.queryByRole('button', { name: 'Xem thêm' })).toBeNull();
+  });
+});
+
 describe('Danh sách, tìm kiếm, xóa mềm (F054 US5)', () => {
   it('AC-24: search without diacritics and filters build the query; no tenant_ids for a tenant user; no "show deleted"', async () => {
     const { backend } = await renderPublishing('/content-studio/question-bank', { account: tenantUser(), setup: (m) => seed(m) });

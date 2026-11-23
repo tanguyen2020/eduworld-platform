@@ -24,7 +24,7 @@ type SwitchCommands interface {
 
 // SwitchQueries are the read use cases of the moderation switches (query.Switches).
 type SwitchQueries interface {
-	ListModerationSwitches(ctx context.Context) (query.SwitchOverview, error)
+	ListModerationSwitches(ctx context.Context, limit int, cursor string) (query.SwitchOverview, error)
 	ListModerationSwitchHistory(ctx context.Context, limit int, cursor string) (query.SwitchHistoryPage, error)
 }
 
@@ -75,7 +75,7 @@ func registerSwitches(s *httpx.Server, h *SwitchHandlers) error {
 }
 
 func (h SwitchHandlers) list(w http.ResponseWriter, r *http.Request) {
-	res, err := h.Queries.ListModerationSwitches(r.Context())
+	res, err := h.Queries.ListModerationSwitches(r.Context(), limitOf(r), r.URL.Query().Get("cursor"))
 	if err != nil {
 		fail(w, r, err)
 		return
@@ -84,7 +84,7 @@ func (h SwitchHandlers) list(w http.ResponseWriter, r *http.Request) {
 	for i, t := range res.Tenants {
 		tenants[i] = t.Body()
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"platform": res.Platform.Body(), "tenants": tenants})
+	writeJSON(w, http.StatusOK, map[string]any{"platform": res.Platform.Body(), "tenants": tenants, "page": res.Page})
 }
 
 func (h SwitchHandlers) set(w http.ResponseWriter, r *http.Request) {

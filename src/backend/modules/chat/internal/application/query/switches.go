@@ -1,7 +1,9 @@
 package query
 
 import (
+	"bytes"
 	"context"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -49,10 +51,11 @@ func (l SwitchLevel) Body() map[string]any {
 	return service.StateBody(l.TenantID, l.Configured, l.Effective, l.Pending)
 }
 
-// SwitchOverview is the response of listModerationSwitches.
+// SwitchOverview is the response of listModerationSwitches: the platform level and one keyset page of the tenant levels.
 type SwitchOverview struct {
 	Platform SwitchLevel
 	Tenants  []SwitchLevel
+	Page     page.Info
 }
 
 // SwitchHistoryPage is a page of listModerationSwitchHistory.
@@ -75,15 +78,36 @@ func switchReader(ctx context.Context) error {
 	return nil
 }
 
-// ListModerationSwitches implements listModerationSwitches: the platform level and each tenant of tenant_ids with the
-// configured and effective values, the steps off and the requests waiting for approval.
-func (q Switches) ListModerationSwitches(ctx context.Context) (out SwitchOverview, err error) {
+// ListModerationSwitches implements listModerationSwitches: the platform level and one page of the tenants of tenant_ids
+// (System Admin CrossTenantScope, audited; none without tenant_ids) with the configured and effective values, the steps
+// off and the requests waiting for approval. The tenants are paged in tenant_id order after the cursor and only the
+// tenants of the page are read from the database (API_DESIGN §5, owner rule 2026-11-23).
+func (q Switches) ListModerationSwitches(ctx context.Context, limit int, cursor string) (out SwitchOverview, err error) {
 	ctx, done := observability.UseCase(ctx, "chat.query.ListModerationSwitches")
 	defer func() { done(err) }()
 	if err := switchReader(ctx); err != nil {
 		return out, err
 	}
-	tenants := crossTenants(ctx)
+	limit = page.Limit(limit)
+	cur, err := q.Cursors.Decode(cursor)
+	if err != nil {
+		return out, problem.New(problem.BadRequest, "invalid cursor")
+	}
+	scoped := append([]uuid.UUID(nil), crossTenants(ctx)...)
+	slices.SortFunc(scoped, func(a, b uuid.UUID) int { return bytes.Compare(a[:], b[:]) })
+	scoped = slices.Compact(scoped)
+	var tenants []uuid.UUID
+	for _, t := range scoped {
+		if cur == nil || bytes.Compare(t[:], cur.ID[:]) > 0 {
+			tenants = append(tenants, t)
+		}
+	}
+	out.Page = page.Info{Limit: limit}
+	if len(tenants) > limit {
+		tenants = tenants[:limit]
+		next := q.Cursors.Encode(page.Cursor{ID: tenants[limit-1]})
+		out.Page.HasMore, out.Page.NextCursor = true, &next
+	}
 	now := q.now()
 	var platform *read.SwitchRow
 	rows := map[uuid.UUID]*read.SwitchRow{}

@@ -28,7 +28,7 @@ func idsOf(list string) []uuid.UUID {
 }
 
 // WrongQuestions implements read.SelfStudyReadModel.
-func (SelfStudyModel) WrongQuestions(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID) ([]read.WrongQuestionRecord, error) {
+func (SelfStudyModel) WrongQuestions(ctx context.Context, studentID uuid.UUID, subjectID *uuid.UUID, seek read.Seek) ([]read.WrongQuestionRecord, error) {
 	q, err := sqlTx(ctx)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,8 @@ func (SelfStudyModel) WrongQuestions(ctx context.Context, studentID uuid.UUID, s
 		FROM learning.wrong_question_entries
 		WHERE tenant_id = infra.current_tenant_id() AND student_id = $1 AND status = 'active' AND deleted_at IS NULL
 			AND ($2::uuid IS NULL OR subject_id = $2::uuid)
-		ORDER BY next_due_at, entry_id LIMIT 1000`, studentID, subjectID)
+			AND ($3::timestamptz IS NULL OR (next_due_at, entry_id) > ($3::timestamptz, $4::uuid))
+		ORDER BY next_due_at, entry_id LIMIT $5`, append([]any{studentID, subjectID}, seekArgs(seek, 1)...)...)
 	if err != nil {
 		return nil, fmt.Errorf("wrong questions: %w", err)
 	}

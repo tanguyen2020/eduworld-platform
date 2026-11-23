@@ -37,22 +37,34 @@ type TextbookFilter struct {
 // CurriculumReadModel reads the curriculum structure with the scope of ctx (entx filter: tenant rows and
 // assigned platform rows, never deleted rows).
 type CurriculumReadModel interface {
-	// Curricula lists the visible curricula (ownerScope "" = both) with their current and latest version refs.
-	Curricula(ctx context.Context, ownerScope string) ([]dto.Curriculum, error)
+	// Curricula lists the visible curricula (ownerScope "" = both) with their current and latest version refs, one keyset
+	// page ordered by (code, curriculum_id).
+	Curricula(ctx context.Context, ownerScope string, seek Seek) ([]dto.Curriculum, error)
 	Curriculum(ctx context.Context, id uuid.UUID) (dto.Curriculum, error)
-	// Versions lists the versions of a curriculum, newest first, with their subject × grade pairs.
-	Versions(ctx context.Context, curriculumID uuid.UUID) ([]dto.CurriculumVersion, error)
+	// Versions lists the versions of a curriculum, newest first (version_no DESC, id DESC), with their subject × grade
+	// pairs, one keyset page.
+	Versions(ctx context.Context, curriculumID uuid.UUID, seek Seek) ([]dto.CurriculumVersion, error)
 	Version(ctx context.Context, curriculumID uuid.UUID, versionNo int) (dto.CurriculumVersion, error)
 	// VersionsByID returns the visible versions of ids.
 	VersionsByID(ctx context.Context, ids []uuid.UUID) ([]dto.CurriculumVersion, error)
-	Subjects(ctx context.Context, gradeLevel *int) ([]dto.Subject, error)
-	Topics(ctx context.Context, f TopicFilter) ([]dto.Topic, error)
-	Objectives(ctx context.Context, f ObjectiveFilter) ([]dto.Objective, error)
-	Competencies(ctx context.Context, versionID uuid.UUID) ([]dto.Competency, error)
+	// Subjects is one keyset page of the subject catalog ordered by (code, subject_id); the grade filter is in SQL.
+	Subjects(ctx context.Context, gradeLevel *int, seek Seek) ([]dto.Subject, error)
+	// Topics is one keyset page ordered by (grade_level, sort_order, code, topic_id).
+	Topics(ctx context.Context, f TopicFilter, seek Seek) ([]dto.Topic, error)
+	// Objectives is one keyset page ordered by (sort_order, code, objective_id).
+	Objectives(ctx context.Context, f ObjectiveFilter, seek Seek) ([]dto.Objective, error)
+	// ObjectiveVersionIDs returns the distinct versions of the objectives matching f (bounded by the versions of the
+	// scope), so a list can keep the live visible versions in SQL before its keyset read.
+	ObjectiveVersionIDs(ctx context.Context, f ObjectiveFilter) ([]uuid.UUID, error)
+	// Competencies is one keyset page ordered by (code, competency_id).
+	Competencies(ctx context.Context, versionID uuid.UUID, seek Seek) ([]dto.Competency, error)
 	Mappings(ctx context.Context, versionID uuid.UUID) (curriculum.MappingSet, error)
-	TextbookSeries(ctx context.Context) ([]dto.TextbookSeries, error)
-	Textbooks(ctx context.Context, f TextbookFilter) ([]dto.Textbook, error)
-	Sections(ctx context.Context, textbookID uuid.UUID) ([]dto.TextbookSection, error)
+	// TextbookSeries is one keyset page ordered by (code, series_id).
+	TextbookSeries(ctx context.Context, seek Seek) ([]dto.TextbookSeries, error)
+	// Textbooks is one keyset page ordered by (grade_level, volume, textbook_id).
+	Textbooks(ctx context.Context, f TextbookFilter, seek Seek) ([]dto.Textbook, error)
+	// Sections is one keyset page ordered by (lesson_no, section_id).
+	Sections(ctx context.Context, textbookID uuid.UUID, seek Seek) ([]dto.TextbookSection, error)
 	ImportJob(ctx context.Context, id uuid.UUID) (dto.ImportJob, error)
 }
 

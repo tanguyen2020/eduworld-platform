@@ -21,12 +21,12 @@ func (m EfficacyModel) StudyOf(ctx context.Context, id uuid.UUID) (*write.StudyR
 
 // ClassesOf implements read.EfficacyDataReader.
 func (m EfficacyModel) CohortsOf(ctx context.Context, studyID uuid.UUID) ([]read.StudyCohortRead, error) {
-	return m.StudyCohorts(ctx, studyID, nil)
+	return m.StudyCohorts(ctx, studyID, nil, read.Seek{})
 }
 
 // WavesOf implements read.EfficacyDataReader.
 func (m EfficacyModel) WavesOf(ctx context.Context, studyID uuid.UUID) ([]write.WaveRow, error) {
-	return m.Waves(ctx, studyID)
+	return m.Waves(ctx, studyID, read.Seek{})
 }
 
 // ParticipantsOf implements read.EfficacyDataReader.

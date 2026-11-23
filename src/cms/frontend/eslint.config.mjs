@@ -52,9 +52,9 @@ export default tseslint.config(
     },
   },
   {
-    // SearchSelect wraps antd Select. Shell header/login controls are owned by the portal-shell work and already set
-    // showSearch (tenant controls) or hold two options (language) — to move to SearchSelect with that work.
-    files: ['packages/ops-ui/src/select/SearchSelect.tsx', 'apps/portal/src/shell/PortalLayout.tsx', 'apps/portal/src/shell/TenantControls.tsx', 'apps/portal/src/auth/AuthLayout.tsx'],
+    // SearchSelect wraps antd Select: the only file allowed to import it (shell header/tenant controls moved to
+    // SearchSelect and the login language Select removed — owner 2026-11-23).
+    files: ['packages/ops-ui/src/select/SearchSelect.tsx'],
     rules: { 'no-restricted-imports': 'off' },
   },
   {

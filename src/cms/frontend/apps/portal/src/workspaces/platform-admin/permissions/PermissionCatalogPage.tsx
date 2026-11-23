@@ -2,24 +2,26 @@
 // `group_code`, filtered by `scope_kind` and code text (≤ PermissionCode maxLength), with `catalog_version` and, per
 // permission, the roles (first page of listPlatformRoles) that contain it. Permissions are defined in code: there is
 // no add/edit/delete here.
-import { Collapse, Input, Space, Table, Tag, Typography } from 'antd';
+import { Button, Collapse, Input, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { groupPermissions, rolesByPermission, type Permission } from '../../../shared/authz/groupPermissions';
 import { ProblemMessage } from '../../../shell/ProblemMessage';
-import { SCOPE_KINDS, usePermissionCatalog, useRoleOptions, type PermissionScopeKind } from '../api/roles';
+import { SCOPE_KINDS, usePermissionCatalogPages, useRoleOptions, type PermissionScopeKind } from '../api/roles';
 import { LIMITS } from '../limits';
 import { limitInputProps } from '../ui';
 import { SearchSelect } from '@eduworld/ops-ui';
 
 export function PermissionCatalogPage() {
   const { t, i18n } = useTranslation();
-  const catalog = usePermissionCatalog();
+  // grid rows = the cursor pages loaded so far ("Tải thêm" loads the next one — owner rule 2026-11-23)
+  const catalog = usePermissionCatalogPages();
+  const version = catalog.data?.pages[0]?.catalog_version;
   const roles = useRoleOptions(undefined);
   const [scopeKind, setScopeKind] = useState<PermissionScopeKind | undefined>();
   const [text, setText] = useState('');
-  const groups = useMemo(() => groupPermissions(catalog.data?.items ?? [], { scopeKind, text }), [catalog.data, scopeKind, text]);
+  const groups = useMemo(() => groupPermissions(catalog.rows, { scopeKind, text }), [catalog.rows, scopeKind, text]);
   const holders = useMemo(() => rolesByPermission(roles.data ?? []), [roles.data]);
 
   const columns: ColumnsType<Permission> = [
@@ -51,7 +53,7 @@ export function PermissionCatalogPage() {
           onSearch={setText}
           {...limitInputProps(LIMITS.permissionSearch)}
         />
-        {catalog.data ? <Tag>{t('platform.permissions.catalogVersion', { version: catalog.data.catalog_version })}</Tag> : null}
+        {version ? <Tag>{t('platform.permissions.catalogVersion', { version })}</Tag> : null}
       </Space>
       <Typography.Paragraph type="secondary">{t('platform.permissions.readOnly')}</Typography.Paragraph>
       {catalog.error ? <ProblemMessage error={catalog.error} /> : null}
@@ -65,6 +67,11 @@ export function PermissionCatalogPage() {
           children: <Table rowKey="code" size="small" columns={columns} dataSource={g.items} pagination={false} />,
         }))}
       />
+      ) : null}
+      {catalog.hasNextPage ? (
+        <Button onClick={() => catalog.fetchNextPage()} loading={catalog.isFetchingNextPage}>
+          {t('platform.common.loadMore')}
+        </Button>
       ) : null}
       {!catalog.isFetching && !groups.length ? <Typography.Text type="secondary">{t('platform.common.empty')}</Typography.Text> : null}
     </section>

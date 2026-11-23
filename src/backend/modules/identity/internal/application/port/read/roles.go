@@ -49,9 +49,17 @@ type RoleFilter struct {
 	Limit         int
 }
 
+// PermissionKey is the keyset position of the permission catalog (the last row of the previous page).
+type PermissionKey struct {
+	Group string
+	Code  string
+}
+
 // RoleReader reads roles and the permission catalog copy.
 type RoleReader interface {
-	Permissions(ctx context.Context, tenantOnly bool) (items []PermissionView, catalogVersion string, err error)
+	// Permissions is the live catalog copy ordered by (group_code, permission_code): one keyset page after after (nil =
+	// first page) of limit rows, or the whole catalog when limit ≤ 0 (the tenant role editor, a bounded code catalog).
+	Permissions(ctx context.Context, tenantOnly bool, after *PermissionKey, limit int) (items []PermissionView, catalogVersion string, err error)
 	Roles(ctx context.Context, f RoleFilter) ([]RoleView, error)
 	// Role returns one live role visible with f (problem NotFound otherwise).
 	Role(ctx context.Context, id uuid.UUID, f RoleFilter) (RoleView, error)

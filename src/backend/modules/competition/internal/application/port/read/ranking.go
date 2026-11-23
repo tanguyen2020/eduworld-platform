@@ -18,6 +18,20 @@ type SnapshotPeriod struct {
 	Rows     []port.SnapshotRow
 }
 
+// RankWindowQuery is the part of a board to rank in SQL: ranks From..To (1-based) and, when Viewer is set, the
+// viewer and Around ranks on each side of it.
+type RankWindowQuery struct {
+	From, To int
+	Viewer   *uuid.UUID
+	Around   int
+}
+
+// RankWindow is the result of RankingWindow: the member count and the ranked rows asked, ordered by rank.
+type RankWindow struct {
+	Total int
+	Rows  []ldb.Ranked
+}
+
 // RankingReader is the read side of ranking, leaderboards and seasons (READ ONLY transaction of ctx).
 type RankingReader interface {
 	Rules(ctx context.Context, at time.Time) (ranking.Rules, error)
@@ -34,8 +48,10 @@ type RankingReader interface {
 	SchoolPolicy(ctx context.Context, tenant, school uuid.UUID) (port.SchoolPolicy, error)
 	// SchoolKnown reports whether school belongs to tenant (ref.schools or a projected student of it).
 	SchoolKnown(ctx context.Context, tenant, school uuid.UUID) (bool, error)
-	// Ranking computes a board from the ledgers (the stale path while the Valkey board is rebuilt, F106-AC-14).
-	Ranking(ctx context.Context, q port.BoardQuery) ([]port.BoardMember, error)
+	// RankingWindow computes the shown part of a board from the ledgers in SQL (the stale path while the Valkey board is
+	// rebuilt, F106-AC-14): the member count, the members ranked [From, To] and, with a viewer, its row and the members
+	// ranked [its rank − Around, its rank + Around] — never the whole board (API_DESIGN §5).
+	RankingWindow(ctx context.Context, q port.BoardQuery, w RankWindowQuery) (RankWindow, error)
 	GradeGoal(ctx context.Context, tenant, school uuid.UUID, grade int, start, end time.Time) (float64, int, error)
 	// MyEffort returns the effort of a student credited to one grade of one school in [start, end).
 	MyEffort(ctx context.Context, tenant, student, school uuid.UUID, grade int, start, end time.Time) (float64, error)

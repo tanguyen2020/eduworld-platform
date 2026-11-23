@@ -8,7 +8,7 @@ import { configure, fireEvent, screen, waitFor, within } from '@testing-library/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { tenantFilterStore } from '../../../shell/tenantFilterStore';
 import { stopPortals, TENANTS } from '../../../test/portal-harness';
-import { IDS, renderPlatform } from '../../../test/platform-backend';
+import { IDS, platformState, renderPlatform } from '../../../test/platform-backend';
 
 // whole-portal flows with several Ant Design selects and dialogs are slow on the throttled shared CPU (2 workers max)
 vi.setConfig({ testTimeout: 300_000 });
@@ -21,8 +21,8 @@ afterEach(() => {
 
 const UUIDV7 = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-async function openTab(name: string) {
-  const r = await renderPlatform('/platform-admin/catalog');
+async function openTab(name: string, state?: ReturnType<typeof platformState>) {
+  const r = await renderPlatform('/platform-admin/catalog', { state });
   await screen.findByRole('heading', { level: 1, name: 'Danh mục quốc gia, tỉnh, trường' });
   await r.user.click(screen.getByRole('tab', { name }));
   return r;
@@ -102,6 +102,46 @@ describe('Tỉnh/thành (F057-AC-12)', () => {
     expect(req.body).toEqual({ old_province_id: IDS.provinceOld, new_province_id: IDS.provinceHn, effective_date: '2008-08-01', kind: 'merged', reason: 'Sáp nhập theo nghị quyết' });
     expect(req.headers['idempotency-key']).toMatch(UUIDV7);
     expect(backend.requests.filter((r) => r.method === 'PATCH')).toHaveLength(0);
+  });
+});
+
+describe('Bảng danh mục theo trang cursor (owner 2026-11-23, API_DESIGN §5)', () => {
+  const province = (i: number) => ({
+    province_id: `0193a4d2-7700-7000-8000-${String(i).padStart(12, '0')}`, code: `vn.p${String(i).padStart(3, '0')}`, country_code: 'VN', official_code: null,
+    name: { vi: `Tỉnh ${String(i).padStart(3, '0')}`, en: `Province ${i}` }, short_name: { vi: 'T', en: 'P' }, province_type: 'province',
+    effective_from: null, effective_to: null, status: 'active', successor_code: null,
+  });
+
+  it('countries: first page only, "Tải thêm" asks page 2 with the cursor and appends it without duplicates', async () => {
+    const state = platformState();
+    state.countries = Array.from({ length: 55 }, (_, i) => ({ country_code: `C${String(i).padStart(2, '0')}`, name: { vi: `Nước ${String(i).padStart(2, '0')}`, en: `Country ${i}` }, default_locale: 'vi-VN', status: 'active' }));
+    const { backend, user } = await openTab('Quốc gia', state);
+    const section = await screen.findByRole('region', { name: 'Quốc gia' });
+    const rows = () => section.querySelectorAll('tbody tr[data-row-key]');
+    await waitFor(() => expect(rows()).toHaveLength(50));
+    expect(new URLSearchParams(backend.calls('GET', '/catalog/countries').at(-1)!.search).get('cursor')).toBeNull();
+    await user.click(within(section).getByRole('button', { name: 'Tải thêm' }));
+    await waitFor(() => expect(rows()).toHaveLength(55));
+    expect(new Set([...rows()].map((r) => r.getAttribute('data-row-key'))).size).toBe(55);
+    expect(new URLSearchParams(backend.calls('GET', '/catalog/countries').at(-1)!.search).get('cursor')).toBe('c50');
+    expect(within(section).queryByRole('button', { name: 'Tải thêm' })).toBeNull();
+  });
+
+  it('provinces: the table pages with the cursor; the succession dialog reads every page (dropdown)', async () => {
+    const state = platformState();
+    state.provinces = [...state.provinces, ...Array.from({ length: 120 }, (_, i) => province(i))];
+    const { backend, user } = await openTab('Tỉnh/thành', state);
+    const section = await screen.findByRole('region', { name: 'Tỉnh/thành' });
+    const rows = () => section.querySelectorAll('tbody tr[data-row-key]');
+    await waitFor(() => expect(rows()).toHaveLength(50));
+    await user.click(within(section).getByRole('button', { name: 'Tải thêm' }));
+    await waitFor(() => expect(rows()).toHaveLength(100));
+    expect(new Set([...rows()].map((r) => r.getAttribute('data-row-key'))).size).toBe(100);
+    // dropdown data: every page of status=all, limit 100, until has_more = false (122 rows → 2 requests)
+    await waitFor(() => {
+      const all = backend.calls('GET', '/catalog/provinces').filter((r) => new URLSearchParams(r.search).get('limit') === '100');
+      expect(all.map((r) => new URLSearchParams(r.search).get('cursor'))).toEqual([null, 'c100']);
+    });
   });
 });
 

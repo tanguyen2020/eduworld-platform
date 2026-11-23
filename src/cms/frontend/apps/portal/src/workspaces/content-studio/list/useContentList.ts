@@ -3,9 +3,10 @@
 // diacritics by the server; `content_language` / `translation_status` of the latest version, OQ F054-2), `tenant_ids[]` only from the System Admin filter, cursor pages; and the soft delete of an
 // item (deleteQuestion / deleteCms*: If-Match = ETag of a fresh read, reason in the body). Lists never offer "show
 // deleted" (ADR-0028): deleted items live in the Thùng rác.
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { usePortalRuntime } from '../../../app/runtime';
 import { useSession } from '../../../session/SessionProvider';
+import { useCursorPages } from '../../../shared/api/useCursorPages';
 import { readItem, writeItem } from '../../../shared/storage';
 import { useCrossTenantScope } from '../../../shared/tenancy/useCrossTenantScope';
 import { withEtag } from '../questions/useQuestion';
@@ -70,12 +71,10 @@ export function useContentList(type: ListType, filters: ContentFiltersValue) {
   const { scopeKey } = useSession();
   const scope = useCrossTenantScope();
   const query = scope.listQuery({ ...filtersToQuery(type, filters), limit: 50 });
-  return useInfiniteQuery({
-    queryKey: ['content-studio', 'list', scopeKey, type, query],
-    initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => api.call<Page>(api.client.GET(listPath(type) as never, { params: { query: { ...query, ...(pageParam ? { cursor: pageParam } : {}) } } } as never)),
-    getNextPageParam: (p) => (p.page?.has_more ? (p.page.next_cursor ?? undefined) : undefined),
-  });
+  // table rows = cursor pages read one by one (the backend cuts each page in SQL — owner rule 2026-11-23, "Tải thêm")
+  return useCursorPages<ContentRow, Page>(['content-studio', 'list', scopeKey, type, query], (cursor) =>
+    api.call<Page>(api.client.GET(listPath(type) as never, { params: { query: { ...query, ...(cursor ? { cursor } : {}) } } } as never)),
+  );
 }
 
 export function useDeleteContent(type: ListType) {
