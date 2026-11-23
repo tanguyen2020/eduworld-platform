@@ -4,7 +4,7 @@
   "realtime_url": "ws://localhost:9080/realtime/v1",
   "cdn_base_url": "http://localhost:8090",
   "login_path": "/auth/game/login",
-  "client_version": "0.0.0-dev",
+  "client_version": "0.1.0",
   "log_level": "debug",
   "feature_flags_default": {}
 }

@@ -4,9 +4,10 @@ extends RefCounted
 ## `make migrate`, `make seed`, `make up-app`). The tests are skipped unless EDUWORLD_IT_API_BASE_URL is set
 ## (e.g. http://localhost:9080/api/v1). Seed passwords come from the environment (EDUWORLD_IT_STUDENT_PASSWORD,
 ## EDUWORLD_IT_STAFF_PASSWORD) — never from the repository (AGENTS R3/R4). EDUWORLD_IT_CLIENT_VERSION (optional) is the
-## SemVer sent as `client_version`, like the version a release build embeds (GODOT_ARCHITECTURE §11): the env configs
-## carry the placeholder `0.0.0-dev`, below the compose `EW_GAME_MIN_CLIENT_VERSION` (0.1.0), which the server
-## refuses with `426` before checking the password. Defaults to `Config.client_version`.
+## SemVer sent as `client_version`, like the version a release build embeds (GODOT_ARCHITECTURE §11): the config loaded
+## by the tests may carry the placeholder `0.0.0-dev` (only `config/env/local.json` carries 0.1.0), below the compose
+## `EW_GAME_MIN_CLIENT_VERSION` (0.1.0), which the server refuses with `426` before checking the password. Defaults to
+## `Config.client_version`.
 
 
 const ENV_BASE: String = "EDUWORLD_IT_API_BASE_URL"
