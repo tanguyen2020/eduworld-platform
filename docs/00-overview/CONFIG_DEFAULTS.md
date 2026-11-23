@@ -123,21 +123,21 @@ Quy ước sở hữu đã chốt cho các vùng chồng lấn: trần và giả
 
 | Tham số | Mặc định | Đơn vị | Phạm vi | Nhãn | Sở hữu |
 |---|---|---|---|---|---|
-| `event_claim_grace_hours` | 72 | giờ | platform (theo sự kiện) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `event_festival_min_duration_days` | 7 | ngày | platform | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `event_extra_daily_quests_max` | 2 | quest/ngày | platform | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `event_points_daily_cap` | 200 | điểm sự kiện/ngày | platform (theo sự kiện) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `event_upcoming_visible_days` | 7 | ngày | platform | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `event_rule_change_effective` | 04:00 ICT hôm sau | — | code | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `community_goal_contribution_daily_cap` | 50 | đơn vị/học sinh/ngày | platform (theo goal) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `community_goal_progress_flush_seconds` | 30 (nhịp đẩy tiến độ community goal tới client) | giây | platform | [Confirmed — Technical Architect 2026-11-16] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `event_claim_grace_hours` | 72 | giờ | platform (theo sự kiện: `schedule.claim_grace_hours`; mặc định env `EW_GAME_EVENT_CLAIM_GRACE_HOURS` 0–336 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `event_festival_min_duration_days` | 7 | ngày | platform (env `EW_GAME_EVENT_FESTIVAL_MIN_DAYS` 1–60 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `event_extra_daily_quests_max` | 2 | quest/ngày | platform (env `EW_GAME_EVENT_EXTRA_DAILY_QUESTS_MAX` 0–20 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `event_points_daily_cap` | 200 | điểm sự kiện/ngày | platform (theo sự kiện: `event_points.daily_cap`; mặc định env `EW_GAME_EVENT_POINTS_DAILY_CAP` 1–10000 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `event_upcoming_visible_days` | 7 | ngày | platform (env `EW_GAME_EVENT_UPCOMING_VISIBLE_DAYS` 0–60 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `event_rule_change_effective` | 04:00 ICT hôm sau | — | code (giờ ICT của ngày sau: env `EW_GAME_EVENT_RULE_CHANGE_HOUR` 0–23, mặc định 4 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `community_goal_contribution_daily_cap` | 50 | đơn vị/học sinh/ngày | platform (theo goal: `per_student_daily_cap`; mặc định env `EW_GAME_CGOAL_CONTRIBUTION_DAILY_CAP` 1–10000 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `community_goal_progress_flush_seconds` | 30 (nhịp đẩy tiến độ community goal tới client) | giây | platform (env `EW_GAME_CGOAL_FLUSH_SECONDS` 1–3600 — F077) | [Confirmed — Technical Architect 2026-11-16] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `season_track_tiers` / `season_track_points_per_tier` | 30 cấp / 100 điểm | — | platform (theo track) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `season_points_daily_cap` | 100 | điểm mùa/ngày | platform (theo track) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `season_point_sources` | daily quest 20 · weekly quest 50 · hoạt động học tập 5 · hoạt động sự kiện 10 · co-op 10 · trận 5 | điểm | platform (theo track) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 | `season_unclaimed_rewards` | tự cấp khi hết mùa | — | code | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `school_event_max_duration_days` | 28 | ngày | platform | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `school_events_concurrent_per_tenant` | 3 | sự kiện | platform | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
-| `event_decoration_bundle_max_mb` | 20 | MB (mobile) | platform | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `school_event_max_duration_days` | 28 | ngày | platform (env `EW_GAME_SCHOOL_EVENT_MAX_DAYS` 1–28 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `school_events_concurrent_per_tenant` | 3 | sự kiện | platform (env `EW_GAME_SCHOOL_EVENTS_CONCURRENT` 1–50 — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
+| `event_decoration_bundle_max_mb` | 20 | MB (mobile) | platform (env `EW_GAME_EVENT_DECORATION_BUNDLE_MAX_MB` 1–1024; kích thước gói khai báo ở `decoration.bundle_size_bytes` — F077) | [Confirmed] | [EVENT_SEASON_SYSTEM](../01-game-design/EVENT_SEASON_SYSTEM.md) |
 
 ## 9. Party, bạn bè, club
 
@@ -427,7 +427,7 @@ Giá trị do [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md) sở
 | `analytics_player_days_retention_days` | 400 | ngày | platform | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §9 |
 | `analytics_rollup_retention_years` | 2 (ngày) · 3 (tuần) · 5 (tháng) | năm | platform | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §9 |
 | `analytics_player_key_rotation_months` | 24 | tháng | platform | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §2 |
-| `analytics_min_cell_size` | 5 | học sinh | platform | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §2 |
+| `analytics_min_cell_size` | 5 | học sinh | platform (module game: env `EW_GAME_ANALYTICS_MIN_CELL_SIZE` 1–100 cho `by_grade` của community goal — F077) | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §2 |
 | `analytics_active_session_min_seconds` | 60 | giây | code | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §4 |
 | `analytics_late_night_window` | 22:00–06:00 ICT (chỉ dùng cho chỉ số, không phải khung giờ truy cập) | — | platform | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §4.6 |
 | `analytics_late_event_window` | 48 | giờ | code | [Confirmed] | [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) §5 |

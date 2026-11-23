@@ -97,7 +97,7 @@ Cột "Feature đã chọn" là **quyết định đã chốt** (Technical Archi
 | RB-308 | `item_id` uuid (OpenAPI) vs `varchar(64)` (DB, schema); `xp_required` vs `xp_to_next`; config type `levels` trùng `game.level_definitions` | Đã áp (2026-11-23): F074 `progression-levels`, `xp_required` (ADR-0099); F075 `item_id` = `CatalogCode` ở mọi hợp đồng (ADR-0100) | P1 | F074, F075 |
 | RB-309 | Live-ops thiếu `content.release.rollback` (§2.3 vs §3.11); `game.progression.write` vs `game.level.write`; `game.collection.write`, `game.shop.write` chưa có trong catalog | Bổ sung catalog | P2 | F078, F079 |
 | RB-310 | `listGameActivities` ghi `x-service: learning` nhưng dữ liệu ở game | module game + projection learning | P2 | F078 |
-| RB-311 | Nhịp đẩy community goal 10 s vs 30 s; `event_runs.suspended_reason varchar(500)` < 1000; DATABASE_DESIGN thiếu `economy_adjustments`, `preview_sessions`, `render_jobs`, `media_assets.kind = render_*` | Chưa chốt | P2 | F077, F078 |
+| RB-311 | Nhịp đẩy community goal 10 s vs 30 s; `event_runs.suspended_reason varchar(500)` < 1000; DATABASE_DESIGN thiếu `economy_adjustments`, `preview_sessions`, `render_jobs`, `media_assets.kind = render_*` | Đã áp một phần (2026-11-23, F077): nhịp community goal = `community_goal_progress_flush_seconds` 30 s (AsyncAPI sửa), `suspended_reason varchar(1000)` (migration f077_liveops, DATABASE_DESIGN §2.8c); phần F078 còn lại | P2 | F077, F078 |
 | RB-312 | Rollup GAME_ANALYTICS §6 cột chiều vs DATABASE_DESIGN §2.8b `dims_hash` | `dims_hash` | P2 | F080 |
 
 ### 3.4. Realtime, party, thi đấu
@@ -119,7 +119,7 @@ Cột "Feature đã chọn" là **quyết định đã chốt** (Technical Archi
 | RB-413 | Rating/`rating_delta` hiển thị cho học sinh (GAME_NETWORKING §7) trái COMPETITION §8.2; FR-RNK-003 chỉ ẩn lớp 1–5 | Ẩn mọi khối | P1 | F106, F109 |
 | RB-414 | Hết grace 1v1: "câu còn lại 0" vs "thua do abandon"; thời điểm tạo question plan | Theo MULTIPLAYER §9.2; chưa chốt thời điểm | P2 | F105 |
 | RB-415 | `competition.config.reward.write` không có `config_type`; vị trí leaderboard ±5 vs ±3 | Chưa chốt | P3 | F106, F108 |
-| RB-416 | Season track (F077, M3) cần lịch mùa F106 (M4b); `src/backend/pkg/roomhost` (F076) chồng lấn F091 | Fixture tới M4b | P2 | F076, F077 |
+| RB-416 | Season track (F077, M3) cần lịch mùa F106 (M4b); `src/backend/pkg/roomhost` (F076) chồng lấn F091 | Fixture tới M4b — F077 (2026-11-23): track mở theo projection `ref.seasons` từ `season.started/ended` của F106 (đã có), test dùng fixture; seed track gắn mùa `pre-season` | P2 | F076, F077 |
 
 ### 3.5. Chat, kiểm duyệt, an toàn
 

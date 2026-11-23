@@ -1,6 +1,6 @@
 # Event & Season System — Sự kiện, Community Goal, Season Track (Live-ops)
 
-> Trạng thái: Draft · Phiên bản: 0.2 · Owner: Game Director + Live-ops Lead · Cập nhật: 2026-11-21 (ADR-0095: đối tượng và đóng góp community goal theo khối, không còn lớp) · 2026-11-15
+> Trạng thái: Draft · Phiên bản: 0.3 · Owner: Game Director + Live-ops Lead · Cập nhật: 2026-11-23 (F077 triển khai: danh mục nguồn điểm, effective_from, `screenText`, `bundle_size_bytes` — [spec F077 Clarifications](../../specs/077-event-season-liveops/spec.md)) · 2026-11-21 (ADR-0095: đối tượng và đóng góp community goal theo khối, không còn lớp) · 2026-11-15
 > Liên quan: [GAME_DESIGN](GAME_DESIGN.md) · [QUEST_SYSTEM](QUEST_SYSTEM.md) · [CHALLENGE_BOSS_SYSTEM](CHALLENGE_BOSS_SYSTEM.md) · [INVENTORY_ECONOMY](INVENTORY_ECONOMY.md) · [PROGRESSION_SYSTEM](PROGRESSION_SYSTEM.md) · [COMPETITION_SYSTEM](COMPETITION_SYSTEM.md) · [WORLD_DESIGN](WORLD_DESIGN.md) · [ADMIN_PORTAL §3.14](../04-admin-portal/ADMIN_PORTAL.md) · [CHILD_SAFETY](../10-security/CHILD_SAFETY.md) · [GAME_ANALYTICS](../11-operations/GAME_ANALYTICS.md) · [ADR-0043](../adr/ADR-0043-phat-hanh-noi-dung-draft-publish-con-tro-phien-ban-giu-phien.md) · [ADR-0049](../adr/ADR-0049-so-cai-phan-thuong-va-tien-te-trong-game-reward-currency-led.md) · [ADR-0056](../adr/ADR-0056-game-song-ngu-viet-anh.md) · [ADR-0057](../adr/ADR-0057-chay-tren-may-tam-trung-hang-thiet-bi-va-ngan-sach-hieu-nang.md)
 
 **Mục lục:** 1. Mục đích và phạm vi · 2. Nguyên tắc · 3. Loại sự kiện · 4. Mô hình dữ liệu sự kiện · 5. Vòng đời sự kiện · 6. Community goal · 7. Season và season track · 8. Daily/weekly · 9. Quy tắc lành mạnh · 10. Sự kiện của trường (tenant) · 11. Song ngữ · 12. Hiệu năng · 13. Dữ liệu · 14. API · 15. Event NATS · 16. Chỉ số · 17. Lỗi · 18. Acceptance criteria
@@ -106,7 +106,8 @@ stateDiagram-v2
 
 - Sửa chữ, trang trí: publish version mới, áp dụng ngay cho lượt chơi mới.
 - Sửa luật, phần thưởng, lịch kết thúc: version mới có hiệu lực từ **04:00 ICT hôm sau** [Confirmed]; tiến độ, điểm sự kiện và mốc đã đạt **không bao giờ bị giảm**.
-- Rút ngắn `end_at` khi đang chạy chỉ qua dừng khẩn cấp/hủy (có audit).
+- Rút ngắn `end_at` khi đang chạy chỉ qua dừng khẩn cấp/hủy (có audit); version có `end_at` sớm hơn run đang chạy bị từ chối `422`.
+- Cơ chế (F077): version publish khi run `live`/`suspended` mang `effective_from` = 04:00 ICT ngày sau (`event_rule_change_effective`); job `event-scheduler` ghim run sang version đó khi tới giờ (lịch không bao giờ ngắn lại); run `scheduled` ghim ngay. Mốc đã đạt lưu trong `reached_milestones` của tham gia — ngưỡng tăng không làm mất mốc.
 
 ## 6. Community goal
 
@@ -119,7 +120,9 @@ stateDiagram-v2
 | Chống gian lận | Khử trùng theo `source_event_id`; trần đóng góp mỗi học sinh mỗi ngày; bỏ đóng góp từ tài khoản đang bị cờ gian lận ([ANTI_CHEAT](../10-security/ANTI_CHEAT.md)); câu trả lời đúng chỉ tính khi attempt không bị đánh dấu `suspicious_speed` | [Confirmed] |
 | Tổng hợp | Đếm nhanh bằng Valkey (`ew:game:cgoal:<goal_id>:<scope_id>`), ghi bền vững bảng đóng góp append-only; tổng chính thức tính lại từ PostgreSQL định kỳ, mất Valkey thì dựng lại | [Confirmed] |
 | Hiển thị | Thanh tiến độ lớn trong hub (ví dụ cây đèn lồng sáng dần); mốc đạt được đổi trang trí thế giới cho cả trường; **không xếp hạng cá nhân**; khi sự kiện bật `show_grade_contributions`, nhà trường và học sinh xem được đóng góp theo **khối của trường** (chỉ khối 4–9; không tên, không xếp hạng, khối có < `analytics_min_cell_size` học sinh đóng góp bị ẩn — ADR-0095) | [Confirmed] |
-| Phần thưởng | Mọi học sinh trong phạm vi có **≥ 1 đóng góp** nhận phần thưởng mốc khi mốc đạt; không phụ thuộc lượng đóng góp cá nhân | [Confirmed] |
+| Phần thưởng | Mọi học sinh trong phạm vi có **≥ 1 đóng góp** nhận phần thưởng mốc khi mốc đạt; không phụ thuộc lượng đóng góp cá nhân; học sinh đóng góp lần đầu sau khi mốc đã đạt cũng nhận mốc đó (một lần) | [Confirmed] |
+| Nguồn theo metric (F077) | `correct_answers` = câu đúng lần đầu của `activity.graded`; `activities_completed` = `activity.graded`; `quests_completed` = `quest.completed`; `discoveries_found` = `world.discovery_found`; `coop_sessions` = `party.activity_completed`; `boss_phases_cleared` chưa có nguồn (boss F103). "`suspicious_speed`" là `rapid_guess_flagged` của `activity.graded`; cờ gian lận tài khoản áp dụng khi ANTI_CHEAT phát event cờ | [Confirmed] |
+| Phạm vi `platform` | Một dòng tiến độ mỗi tenant; tổng chung chỉ là số đếm (hàm `SECURITY DEFINER`), mỗi tenant thấy tổng chung + đóng góp của mình; job `goal-recompute` cấp mốc toàn cục cho người đóng góp của mọi tenant | [Confirmed] |
 
 ## 7. Season và season track
 
@@ -146,6 +149,7 @@ Season track (mốc M3) đọc lịch mùa của module competition qua projecti
 | `coop.completed` | 10 / phiên | Quest/boss co-op |
 | `match.completed` | 5 / trận | Không phụ thuộc thắng/thua |
 
+  Mã nguồn (danh mục đóng, dùng chung cho điểm sự kiện): `quest.completed`, `daily_quest.completed`, `weekly_quest.completed`, `learning_activity.completed`, `event_activity.completed`, `event_quest.completed`, `event_boss.phase_cleared` (khi có boss F103), `discovery.found`, `coop.completed`, `match.completed` — không có mã đăng nhập/điểm danh/chuỗi ngày/thời gian online (publish → `422`); mỗi sự kiện nguồn cộng một lần với nguồn điểm cao nhất (F077).
   Trần **100 điểm mùa/ngày** [Confirmed]; nguồn có giá trị bị giảm dần XP vẫn cho điểm mùa theo bảng trên (điểm mùa không thay XP).
 - **Cấp track:** 30 cấp × 100 điểm [Confirmed]. Chơi khoảng 4 ngày/tuần trong 8 tuần đạt cấp cuối; 3 ngày/tuần đạt khoảng cấp 24. Không có "mua cấp".
 - **Phần thưởng mỗi cấp:** Xu, vật phẩm trang trí theo chủ đề mùa, sticker, khung avatar; cấp 10/20/30 là mốc có danh hiệu/huy hiệu mùa. Không có phần thưởng ảnh hưởng học tập hay sức mạnh thi đấu.
@@ -173,7 +177,8 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 - School Admin/Tenant Admin tạo sự kiện trường ở workspace C (School & Learning Management) chỉ bằng cách điền tham số cho phép: tên (song ngữ: `vi` bắt buộc, `en` tùy chọn), mô tả, ngày bắt đầu/kết thúc (≤ `school_event_max_duration_days`), đối tượng (trường/khối trong tenant — không có lớp, ADR-0095), mục tiêu community goal, chọn quest/challenge **trong danh sách template cho phép**, chọn phần thưởng **trong bộ phần thưởng template cho phép** (thường là huy hiệu trường). Tham số ngoài danh sách → `422`.
 - Văn bản do tenant nhập đi qua kiểm tra từ nhạy cảm (ADR-0030) trước khi lưu [Confirmed].
 - Tenant không đổi được luật chơi, cách tính điểm, phần thưởng ngoài template (ADR-0027).
-- Tối đa `school_events_concurrent_per_tenant` sự kiện đang chạy mỗi tenant.
+- Tối đa `school_events_concurrent_per_tenant` sự kiện `scheduled`/`live`/`suspended` mỗi tenant (vượt → `409 CONFLICT`).
+- Danh mục `allowed_params` (F077, [`event-template.schema.json`](../../specs/schemas/event-template.schema.json)): `description`, `audience.school_ids`, `audience.grade_levels`, `community_goal_target`, `quest_ids`, `challenge_ids`, `reward_option_id`; `name`, `starts_at`, `ends_at`, `audience` luôn điền. Template có community goal cố định (phạm vi trường/tenant); phần thưởng của `reward_option` được cấp ở mốc cao nhất. School Admin tạo cho trường của mình; sự kiện toàn tenant cần quyền toàn tenant; nhân sự giới hạn trường chỉ thấy sự kiện của trường mình. Văn bản kiểm qua facade `chat` `screenText` — module chat lỗi → `503`, không lưu; chỉ sửa trước khi chạy (`If-Match`).
 
 ## 11. Song ngữ (ADR-0056)
 
@@ -185,7 +190,7 @@ Số lượng, giờ reset và cách chọn daily/weekly quest do [QUEST_SYSTEM 
 
 - Trang trí sự kiện dùng **environment preset** và **gói PCK riêng** (`bundle_id`), tải trước trong màn tải khi vào vùng; không thêm shader mới.
 - Ngân sách: gói trang trí ≤ `event_decoration_bundle_max_mb` trên mobile; tổng tam giác/draw call của vùng khi có trang trí vẫn trong ngân sách [PERFORMANCE_BUDGET](../08-game-client/PERFORMANCE_BUDGET.md); preset **Thấp** dùng biến thể trang trí rút gọn.
-- Mỗi vùng tối đa **một** bộ trang trí sự kiện hoạt động cùng lúc [Confirmed].
+- Mỗi vùng tối đa **một** bộ trang trí sự kiện hoạt động cùng lúc [Confirmed]; publish kiểm `decoration.bundle_size_bytes` (bắt buộc khi có `bundle_id`) ≤ `event_decoration_bundle_max_mb`, có `low_preset_bundle_id`, không chồng vùng/thời gian với sự kiện khác (F077).
 - Community goal hiển thị bằng một đối tượng 3D đơn giản + UI; cập nhật tiến độ tối đa mỗi `community_goal_progress_flush_seconds`, không đẩy realtime theo từng đóng góp.
 
 ## 13. Dữ liệu (module game, `eduworld_game`)
@@ -222,6 +227,8 @@ Quy ước cột (varchar(n), `tenant_id`, `deleted_at`, ledger chỉ INSERT): [
 | POST | `/api/v1/game/season-track/tiers/{tier}:claim` | Nhận thưởng cấp (`Idempotency-Key`) |
 | GET | `/api/v1/game/season-track/history` | Các mùa trước |
 
+**Quyền và tích hợp (F077):** route người chơi qua `game_player`; vận hành `/game-admin/events/*` cần role platform + `game.event.operate` (thống kê: `game.liveops.read`); sự kiện trường cần `lms.school_event.write` theo scope trường của UserRole. Văn bản sự kiện trường kiểm qua facade nội bộ `screenText` của module chat (`x-allowed-callers: [game]`). Worker: job `event-scheduler` (15 s, khóa `ew:lock:job:event-scheduler`), `goal-recompute`; consumer `game.liveops_progress` (stream game, learning, competition) và `game.season_projection` (`season.*`).
+
 **Tenant (workspace C, route ngoại lệ tới module game):** `GET /api/v1/lms/event-templates`, `GET/POST /api/v1/lms/school-events`, `GET/PATCH /api/v1/lms/school-events/{event_id}`, `POST /api/v1/lms/school-events/{event_id}:cancel`.
 
 **Game Studio (`/api/v1/game-admin/{config_type}`, gateway nội bộ):** `events` (thay `world-events`), `event-templates`, `season-tracks` (module game); `seasons` giữ ở module competition. Vận hành: `POST /api/v1/game-admin/events/{event_id}/runs/{run_id}:suspend` / `:resume` / `:cancel` (lý do bắt buộc), `GET .../runs/{run_id}/stats`.
@@ -253,6 +260,9 @@ Tỷ lệ tham gia sự kiện, tỷ lệ đạt mốc, nhịp tiến độ comm
 | `SEASON_TIER_NOT_REACHED` | 409 | Nhận thưởng cấp chưa đạt |
 | `EVENT_TEMPLATE_PARAM_NOT_ALLOWED` | 422 | Tenant điền tham số ngoài `allowed_params` |
 | `TRANSLATION_INCOMPLETE` | 422 | Publish sự kiện platform thiếu bản `en` |
+| `INVALID_STATE_TRANSITION` | 422 | Dừng/tiếp tục/hủy sai trạng thái run |
+| `CONFLICT` | 409 | Nhận thưởng khi run tạm dừng; mốc/cấp đã nhận; quá số sự kiện trường đồng thời; sửa sự kiện trường đã chạy |
+| `UNAVAILABLE` | 503 | Kiểm văn bản sự kiện trường (module chat) không khả dụng — không lưu |
 
 ## 18. Acceptance criteria
 

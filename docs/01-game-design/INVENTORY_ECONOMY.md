@@ -87,7 +87,7 @@ Tài liệu này **sở hữu** cap Xu: **300 Xu/ngày** [Confirmed] (`currencie
 | `grade_levels` | Tùy chọn |
 | `tenant_assignment` | Mặc định mọi tenant; có thể chỉ gán một số tenant (ADR-0029) |
 
-Quy tắc: giá hiển thị trước, vật phẩm xác định (không hộp bí ẩn), xác nhận trước khi mua (`expected_price` khác giá server → `409 CONFLICT`), hoàn Xu khi giao dịch lỗi (một transaction nên không có trạng thái "trừ rồi chưa giao"). Mua hàng: `POST /game/shop/items/{shop_item_id}:purchase` với `Idempotency-Key`; khóa theo học sinh (advisory lock + ví `FOR UPDATE`) nên hai lần mua đồng thời chỉ đủ Xu cho một thì đúng một thành công. Mặt hàng gắn sự kiện/mùa chỉ bán khi event run của F077 đang chạy — trước F077 không bán (fail closed). `purchase_limit` đếm tổng số lượng mọi version của mặt hàng; vật phẩm không xếp chồng giới hạn 1.
+Quy tắc: giá hiển thị trước, vật phẩm xác định (không hộp bí ẩn), xác nhận trước khi mua (`expected_price` khác giá server → `409 CONFLICT`), hoàn Xu khi giao dịch lỗi (một transaction nên không có trạng thái "trừ rồi chưa giao"). Mua hàng: `POST /game/shop/items/{shop_item_id}:purchase` với `Idempotency-Key`; khóa theo học sinh (advisory lock + ví `FOR UPDATE`) nên hai lần mua đồng thời chỉ đủ Xu cho một thì đúng một thành công. Mặt hàng gắn sự kiện chỉ hiện và bán khi sự kiện có run `live` thuộc đối tượng tenant; gắn mùa khi mùa `started` đang trong lịch (projection `ref.seasons`, F077) — ngoài đó không bán (fail closed). `purchase_limit` đếm tổng số lượng mọi version của mặt hàng; vật phẩm không xếp chồng giới hạn 1.
 
 ```mermaid
 sequenceDiagram

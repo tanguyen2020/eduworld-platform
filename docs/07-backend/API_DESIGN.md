@@ -898,7 +898,7 @@ Mã lỗi sự kiện/mùa (`EVENT_NOT_AVAILABLE`, `EVENT_ENDED`, `EVENT_MILESTO
 | GET/POST | `/lms/challenges` | Thử thách lớp / giải trường **tạo từ template platform**; chỉ điền `allowed_params` (tham số khác → `422`) — ADR-0027. **Route ngoại lệ → module `competition`** (bảng `competition.challenges`) | SA · `lms.challenge.write` | T/B | P4 |
 | GET | `/lms/event-templates` | Template sự kiện đã gán cho tenant. **Route ngoại lệ → module `game`** | TA, SA · `lms.school_event.write` | T | P3 |
 | GET/POST | `/lms/school-events` | Sự kiện trường tạo từ template; chỉ `allowed_params` (`EVENT_TEMPLATE_PARAM_NOT_ALLOWED`); tên qua kiểm tra từ nhạy cảm ([EVENT_SEASON_SYSTEM §10](../01-game-design/EVENT_SEASON_SYSTEM.md#10-sự-kiện-của-trường-tenant)). **Route ngoại lệ → module `game`** | TA, SA · `lms.school_event.write` | T/B | P3 |
-| GET/PATCH | `/lms/school-events/{event_id}` | Xem/sửa trước khi chạy (`If-Match`) | như trên | T | P3 |
+| GET/PATCH | `/lms/school-events/{event_id}` | Xem/sửa trước khi chạy (`If-Match` = `version`, `Idempotency-Key` — F077; đã chạy → `409`, kiểm văn bản lỗi → `503`) | như trên | T | P3 |
 | POST | `/lms/school-events/{event_id}:cancel` | Hủy sự kiện trường (lý do) | như trên | B | P3 |
 | GET | `/lms/catalog/challenge-templates` | Template thử thách/giải đấu đã publish (chỉ đọc) | SA, AM | T | P4 |
 | GET | `/lms/catalog/game-activities` | Quest/mini-game đã publish để giao bài (chỉ đọc; không cấu hình) | SA, AM | T | P2 |

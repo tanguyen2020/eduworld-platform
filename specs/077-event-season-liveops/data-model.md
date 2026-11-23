@@ -61,6 +61,13 @@ Index `(status, starts_at)`, `(status, ends_at)`, `(status, claim_until)`.
 
 `season_id`, `starts_at`, `ends_at`, `theme_code varchar(64)`, **Thêm cột** `status varchar(64)` (`started`/`ended`), `source_version bigint`.
 
+### Ghi chú triển khai (2026-11-23 — spec Clarifications)
+
+- Migration `20261230000770_f077_liveops.sql` (entddl + phần viết tay). Ledger chưa partition; UNIQUE idempotent `(event_run_id | season_id | goal_id, source_event_id, student_id)`; cột `earned_on`/`contributed_on` (date ICT) cho trần ngày.
+- Mảng của data-model là `jsonb` (`reached_milestones`, `claimed_milestones`, `auto_granted_milestones`, `milestones_reached`, `claimed_tiers`, `auto_granted_tiers`); khóa kỹ thuật `participation_id`/`progress_id` + UNIQUE nghiệp vụ partial.
+- Cột thêm: `events.school_id`, `events.school_params`; `event_runs.audience`, `school_id`, `cancelled_at`, `archived_at`, `status_version`; `event_versions.effective_from`, `decoration_areas`; `event_template_versions.code/event_kind/allowed_params/max_duration_days`; `season_track_versions.season_id`; `ref.seasons(code, name, ended_at, status, source_version)`. `suspended_reason varchar(1000)`.
+- RLS: bảng G/T (`events`, `event_versions`, `event_runs`, `community_goals`) đọc dòng platform + dòng tenant phiên, ghi chỉ dòng tenant phiên (dòng platform do `game_platform`); `community_goal_progress` không FORCE RLS để hàm `SECURITY DEFINER game.community_goal_platform_total` cộng tổng goal platform.
+
 ## 2. Vòng đời / trạng thái
 
 ```mermaid
