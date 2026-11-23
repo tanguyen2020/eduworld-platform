@@ -126,6 +126,7 @@
 - [x] T051 [P] Đăng ký `persistent_chat_retention_days` ở CONFIG_DEFAULTS §12 (sở hữu CHAT_SYSTEM) — file: `docs/00-overview/CONFIG_DEFAULTS.md`
 - [ ] T052 [P] Metric mới + alert lag membership — file: `src/backend/modules/chat/internal/infrastructure/metrics/metrics.go`, `deploy/observability/prometheus/rules/chat.yaml` — Một phần: metric `eduworld_chat_retention_anonymized_total{tenant}`, `eduworld_chat_policy_rejected_total{code}` đã có (`infrastructure/observability/persistent_metrics.go`); repo chưa có `deploy/observability/prometheus/rules/` nên chưa thêm alert, và chưa có metric `membership_sync_lag` (thành viên club đồng bộ cùng transaction, chỉ freeze DM đi qua event).
 - [x] T053 [P] CHANGELOG — file: `CHANGELOG.md`
+- [ ] T061 Lọc block/mute phía server khi fan-out và trả lịch sử World/Area (Clarifications 2026-11-23, orchestrator chốt): không giao tin tới kết nối có quan hệ block hai chiều với người gửi, không giao tin của người gửi đang bị mute; test integration chứng minh người bị block không nhận tin qua realtime và qua lịch sử bộ đệm — file: `src/backend/modules/chat/internal/infrastructure/realtime/persistent.go`, `src/backend/modules/chat/internal/application/command/persistent.go`, `src/backend/modules/chat/tests/integration/persistent_channels_test.go`
 - [ ] T054 Chạy [quickstart.md](quickstart.md) và ghi bằng chứng — Chưa chạy tay trên compose (stack local của owner không được động tới); kịch bản quickstart được phủ bằng integration test (bảng AC→test).
 
 ## OQ chốt 2026-11-20 (việc bổ sung)
