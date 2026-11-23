@@ -427,7 +427,7 @@ Matchmaking configuration, Ranking Rules (tham số Glicko, ngưỡng provisiona
 | `GET /api/v1/competition/matches?student=me`, `/matches/{match_id}` | Lịch sử trận, câu hỏi + giải thích sau trận |
 | `GET /api/v1/leaderboards` | Bảng học sinh được xem (đã lọc khối/policy) |
 | `GET /api/v1/leaderboards/{leaderboard_id}?scope_id=&period=&limit=&cursor=` | Top N + `me` + `around_me` |
-| `GET /api/v1/leaderboards/{leaderboard_id}/history?scope_id=` | Period đã đóng |
+| `GET /api/v1/leaderboards/{leaderboard_id}/history?scope_id=&limit=&cursor=` | Period đã đóng, mới nhất trước — trang keyset `(captured_at, period_key)` và top hiển thị của từng kỳ cắt trong SQL ([API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting)) |
 | `POST /api/v1/lms/challenges` (template `grade_challenge`/`school_tournament`) | module competition; School Admin (trường mình)/System Admin (tenant đích) — không có `POST /competition/tournaments` |
 | `GET /api/v1/competition/tournaments?scope=&status=` | Học sinh (trong phạm vi), staff |
 | `POST /api/v1/competition/tournaments/{id}:publish` / `:cancel` | Người tổ chức |

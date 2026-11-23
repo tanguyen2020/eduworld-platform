@@ -226,7 +226,7 @@ Quy tắc [Confirmed] (Addendum §4, §6):
 
 | Thao tác | Endpoint | Ghi chú |
 |---|---|---|
-| Danh sách quest | `GET /api/v1/game/quests?status=available\|active\|completed&area_id=&cursor=` | Trả tóm tắt + `quest_version_id` |
+| Danh sách quest | `GET /api/v1/game/quests?status=available\|active\|completed&area_id=&cursor=` | Trả tóm tắt + `quest_version_id`; trạng thái/hiển thị (§4, `quest.Decide`/`CanRepeat`) tính trong SQL trên progress của học sinh, trang keyset `(status_rank, code, quest_id)` ([API_DESIGN §5](../07-backend/API_DESIGN.md#5-pagination-filtering-sorting)) |
 | Định nghĩa quest | `GET /api/v1/game/quests/{quest_id}/versions/{version}` | Bản delivery: **bỏ** mọi thông tin chấm; cache theo version |
 | Nhận quest | `POST /api/v1/game/quests/{quest_id}:accept` (`Idempotency-Key`, body `{ party_id? }`) | Trả `QuestProgress` |
 | Báo bước tương tác | `POST /api/v1/game/quests/{quest_id}/steps/{step_id}:report` (`Idempotency-Key`, body `{ interactable_id, area_id, game_session_id }`) | Cho `talk_npc`/`go_to`/`collect` |
